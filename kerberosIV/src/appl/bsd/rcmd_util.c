@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2001 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -33,7 +33,7 @@
 
 #include "bsd_locl.h"
 
-RCSID("$KTH: rcmd_util.c,v 1.19 1999/12/02 16:58:28 joda Exp $");
+RCSID("$KTH: rcmd_util.c,v 1.23 2001/09/17 04:55:45 assar Exp $");
 
 int
 get_login_port(int kerberos, int encryption)
@@ -208,7 +208,7 @@ ip_options_and_die (int sock, struct sockaddr_in *fromp)
 #if defined(IP_OPTIONS) && defined(HAVE_GETSOCKOPT)
   u_char optbuf[BUFSIZ/3], *cp;
   char lbuf[BUFSIZ], *lp;
-  int optsize = sizeof(optbuf), ipproto;
+  socklen_t optsize = sizeof(optbuf), ipproto;
   struct protoent *ip;
 
   if ((ip = getprotobyname("ip")) != NULL)
@@ -244,4 +244,20 @@ warning(const char *fmt, ...)
 	vwarnx(fmt, args);
     }
     va_end(args);
+}
+
+/*
+ * setuid but work-around Linux 2.2.15 bug with setuid and capabilities
+ */
+
+void
+paranoid_setuid (uid_t uid)
+{
+    if (setuid (uid) < 0)
+	err (1, "setuid");
+    if (uid != 0 && setuid (0) == 0) {
+	syslog(LOG_ALERT | LOG_AUTH,
+	       "Failed to drop privileges for uid %u", (unsigned)uid);
+	err (1, "setuid");
+    }
 }
