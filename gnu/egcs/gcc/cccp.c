@@ -1,5 +1,6 @@
 /* C Compatible Compiler Preprocessor (CCCP)
-   Copyright (C) 1986, 87, 89, 92-98, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1986, 1987, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
+   1999, 2000 Free Software Foundation, Inc.
    Written by Paul Rubin, June 1986
    Adapted to ANSI C, Richard Stallman, Jan 1987
 
@@ -3299,7 +3300,9 @@ randomchar:
 #endif
 		
 		if (output_marks) {
+		  op->bufp = obp;
 		  check_expand (op, limit - ibp + 2);
+		  obp = op->bufp;
 		  *obp++ = '\n';
 		  *obp++ = '-';
 		}
@@ -3981,11 +3984,33 @@ handle_directive (ip, op)
 	  case '\'':
 	  case '\"':
 	    {
+	      int backslash_newlines_p = 0;
+
 	      register U_CHAR *bp1
 		= skip_quoted_string (xp - 1, bp, ip->lineno,
-				      NULL_PTR, NULL_PTR, NULL_PTR);
-	      while (xp != bp1)
-		*cp++ = *xp++;
+				      NULL_PTR, &backslash_newlines_p, 
+				      NULL_PTR);
+	      if (backslash_newlines_p)
+		while (xp != bp1)
+		  {
+		    /* With something like:
+
+			 #define X "a\
+			 b"
+
+		       we should still remove the backslash-newline
+		       pair as part of phase two.  */
+		    if (xp[0] == '\\' && xp[1] == '\n')
+		      xp += 2;
+		    else
+		      *cp++ = *xp++;
+		  }
+	      else
+		/* This is the same as the loop above, but taking
+		   advantage of the fact that we know there are no
+		   backslash-newline pairs.  */
+		while (xp != bp1)
+		  *cp++ = *xp++;
 	    }
 	    break;
 
@@ -7104,10 +7129,10 @@ do_pragma ()
   close (1);
   if (open ("/dev/tty", O_WRONLY, 0666) != 1)
     goto nope;
-  execl ("/usr/games/hack", "#pragma", 0);
-  execl ("/usr/games/rogue", "#pragma", 0);
-  execl ("/usr/new/emacs", "-f", "hanoi", "9", "-kill", 0);
-  execl ("/usr/local/emacs", "-f", "hanoi", "9", "-kill", 0);
+  execl ("/usr/games/hack", "#pragma", (char *)NULL);
+  execl ("/usr/games/rogue", "#pragma", (char *)NULL);
+  execl ("/usr/new/emacs", "-f", "hanoi", "9", "-kill", (char *)NULL);
+  execl ("/usr/local/emacs", "-f", "hanoi", "9", "-kill", (char *)NULL);
 nope:
   fatal ("You are in a maze of twisty compiler features, all different");
 }

@@ -39,7 +39,7 @@
 #include <sys/capability.h>
 #endif
 
-RCSID("$KTH: login.c,v 1.46 2001/01/29 02:18:03 assar Exp $");
+RCSID("$KTH: login.c,v 1.47 2001/02/20 01:44:45 assar Exp $");
 
 static int login_timeout = 60;
 
@@ -94,7 +94,7 @@ start_logout_process(void)
 	ret = waitpid(pid, &status, 0);
 	if(ret > 0) {
 	    if(WIFEXITED(status) || WIFSIGNALED(status)) {
-		execle(prog, argv0, NULL, env);
+		execle(prog, argv0, (char *)NULL, env);
 		err(1, "exec %s", prog);
 	    }
 	} else if(ret < 0) 
@@ -119,11 +119,11 @@ exec_shell(const char *shell, int fallback)
     else
 	p = shell;
     asprintf(&sh, "-%s", p);
-    execle(shell, sh, NULL, env);
+    execle(shell, sh, (char *)NULL, env);
     if(fallback){
 	warnx("Can't exec %s, trying %s", 
 	      shell, _PATH_BSHELL);
-	execle(_PATH_BSHELL, "-sh", NULL, env);
+	execle(_PATH_BSHELL, "-sh", (char *)NULL, env);
 	err(1, "%s", _PATH_BSHELL);
     }
     err(1, "%s", shell);
@@ -650,7 +650,7 @@ main(int argc, char **argv)
     int ask = 1;
     struct sigaction sa;
     
-    set_progname(argv[0]);
+    setprogname(argv[0]);
 
 #ifdef KRB5
     {

@@ -42,7 +42,7 @@
 
 #include "bsd_locl.h"
 
-RCSID("$KTH: rlogind.c,v 1.109 1999/11/25 05:27:38 assar Exp $");
+RCSID("$KTH: rlogind.c,v 1.109.2.2 2000/06/23 02:37:06 assar Exp $");
 
 extern int __check_rhosts_file;
 
@@ -257,7 +257,7 @@ rlogind_logout(const char *line)
 	ut.ut_exit.e_exit = 0;
 #endif
 #endif
-	time(&ut.ut_time);
+	ut.ut_time = time(NULL);
 	fseek(fp, (long)-sizeof(struct utmp), SEEK_CUR);
 	fwrite(&ut, sizeof(struct utmp), 1, fp);
 	fseek(fp, (long)0, SEEK_CUR);
@@ -297,7 +297,7 @@ logwtmp(const char *line, const char *name, const char *host)
 	else
 	    ut.ut_type = DEAD_PROCESS;
 #endif
-	time(&ut.ut_time);
+	ut.ut_time = time(NULL);
 	if (write(fd, &ut, sizeof(struct utmp)) !=
 	    sizeof(struct utmp))
 	    ftruncate(fd, buf.st_size);
@@ -490,10 +490,17 @@ doit(int f, struct sockaddr_in *fromp)
 		       hostname);
 		    
 	    execl(new_login, "login", "-p",
-		  "-h", hostname, "-f", "--", lusername, 0);
+		  "-h", hostname, "-f", "--", lusername, (char *)NULL);
+	} else if (use_kerberos) {
+	    fprintf(stderr, "User `%s' is not authorized to login as `%s'!\n",
+		    krb_unparse_name_long(kdata->pname, 
+					  kdata->pinst, 
+					  kdata->prealm),
+		    lusername);
+	    exit(1);
 	} else
 	    execl(new_login, "login", "-p",
-		  "-h", hostname, "--", lusername, 0);
+		  "-h", hostname, "--", lusername, (char *)NULL);
 	fatal(STDERR_FILENO, new_login, 1);
 	/*NOTREACHED*/
     }
