@@ -1,4 +1,4 @@
-/*	$OpenBSD: misc.c,v 1.4 1997/10/16 02:29:54 deraadt Exp $	*/
+/*	$OpenBSD: misc.c,v 1.5 1997/10/19 23:29:37 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -46,7 +46,7 @@ ask_cmd(cmd)
 	char lbuf[100], *cp, *buf;
 
 	/* Get input */
-	if(fgets(lbuf, sizeof lbuf, stdin) == NULL)
+	if (fgets(lbuf, sizeof lbuf, stdin) == NULL)
 		errx(1, "eof");
 	lbuf[strlen(lbuf)-1] = '\0';
 
@@ -59,7 +59,7 @@ ask_cmd(cmd)
 	buf = &cp[strspn(cp, " \t")];
 	strncpy(cmd->args, buf, 100);
 
-	return(0);
+	return (0);
 }
 
 int
@@ -124,10 +124,10 @@ ask_yn(str)
 	while (ch != '\n' && ch != EOF)
 		ch = getchar();
 
-	if(ch == EOF || first == EOF)
+	if (ch == EOF || first == EOF)
 		errx(1, "eof");
 
-	return(first == 'y' || first == 'Y');
+	return (first == 'y' || first == 'Y');
 }
 
 u_int16_t
@@ -136,7 +136,7 @@ getshort(p)
 {
 	unsigned char *cp = p;
 
-	return cp[0] | (cp[1] << 8);
+	return (cp[0] | (cp[1] << 8));
 }
 
 void
@@ -156,7 +156,7 @@ getlong(p)
 {
 	unsigned char *cp = p;
 
-	return cp[0] | (cp[1] << 8) | (cp[2] << 16) | (cp[3] << 24);
+	return (cp[0] | (cp[1] << 8) | (cp[2] << 16) | (cp[3] << 24));
 }
 
 void
@@ -171,4 +171,3 @@ putlong(p, l)
 	*cp++ = l >> 16;
 	*cp++ = l >> 24;
 }
-
