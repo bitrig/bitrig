@@ -62,7 +62,7 @@ push_pending_label (target_label)
 
 /* Note that TARGET_LABEL is a possible successor instruction.
    Merge the type state etc.
-   Return NULL on sucess, or an error message on failure. */
+   Return NULL on success, or an error message on failure. */
 
 static const char *
 check_pending_block (target_label)
@@ -300,6 +300,24 @@ type_stack_dup (size, offset)
     }
 }
 
+/* This keeps track of a start PC and corresponding initial index.  */
+struct pc_index
+{
+  int start_pc;
+  int index;
+};
+
+/* A helper that is used when sorting exception ranges.  */
+static int
+start_pc_cmp (xp, yp)
+     const GENERIC_PTR xp;
+     const GENERIC_PTR yp;
+{
+  struct pc_index *x = (struct pc_index *) xp;
+  struct pc_index *y = (struct pc_index *) yp;
+  return x->start_pc - y->start_pc;
+}
+
 /* This causes the next iteration to ignore the next instruction
    and look for some other unhandled instruction. */
 #define INVALIDATE_PC (prevpc = -1, oldpc = PC, PC = INVALID_PC)
@@ -322,7 +340,7 @@ type_stack_dup (size, offset)
 #define BCODE byte_ops
 
 /* Verify the bytecodes of the current method.
-   Return 1 on sucess, 0 on failure. */
+   Return 1 on success, 0 on failure. */
 int
 verify_jvm_instructions (jcf, byte_ops, length)
      JCF* jcf;
@@ -341,6 +359,8 @@ verify_jvm_instructions (jcf, byte_ops, length)
   struct eh_range *prev_eh_ranges = NULL_EH_RANGE;
   struct eh_range *eh_ranges;
   tree return_type = TREE_TYPE (TREE_TYPE (current_function_decl));
+  struct pc_index *starts;
+  int eh_count;
 
   jint int_value = -1;
 
@@ -349,17 +369,28 @@ verify_jvm_instructions (jcf, byte_ops, length)
   /* Handle the exception table. */
   method_init_exceptions ();
   JCF_SEEK (jcf, DECL_CODE_OFFSET (current_function_decl) + length);
-  i = JCF_readu2 (jcf);
+  eh_count = JCF_readu2 (jcf);
 
-  /* We read the exception backwards. */
-  p = jcf->read_ptr + 8 * i;
-  while (--i >= 0)
+  /* We read the exception handlers in order of increasing start PC.
+     To do this we first read and sort the start PCs.  */
+  starts = (struct pc_index *) xmalloc (eh_count * sizeof (struct pc_index));
+  for (i = 0; i < eh_count; ++i)
     {
-      int start_pc = GET_u2 (p-8);
-      int end_pc = GET_u2 (p-6);
-      int handler_pc = GET_u2 (p-4);
-      int catch_type = GET_u2 (p-2);
-      p -= 8;
+      starts[i].start_pc = GET_u2 (jcf->read_ptr + 8 * i);
+      starts[i].index = i;
+    }
+  qsort (starts, eh_count, sizeof (struct pc_index), start_pc_cmp);
+
+  for (i = 0; i < eh_count; ++i)
+    {
+      int start_pc, end_pc, handler_pc, catch_type;
+
+      p = jcf->read_ptr + 8 * starts[i].index;
+
+      start_pc = GET_u2 (p);
+      end_pc = GET_u2 (p+2);
+      handler_pc = GET_u2 (p+4);
+      catch_type = GET_u2 (p+6);
 
       if (start_pc < 0 || start_pc >= length
 	  || end_pc < 0 || end_pc > length || start_pc >= end_pc
@@ -370,20 +401,20 @@ verify_jvm_instructions (jcf, byte_ops, length)
 	  || ! (instruction_bits [handler_pc] & BCODE_INSTRUCTION_START))
 	{
 	  error ("bad pc in exception_table");
+	  free (starts);
 	  return 0;
 	}
 
-      if (! add_handler (start_pc, end_pc,
-			 lookup_label (handler_pc),
-			 catch_type == 0 ? NULL_TREE
-			 : get_class_constant (jcf, catch_type)))
-	{
-	  error ("overlapping exception ranges are not supported");
-	  return 0;
-	}
+      add_handler (start_pc, end_pc,
+		   lookup_label (handler_pc),
+		   catch_type == 0 ? NULL_TREE
+		   : get_class_constant (jcf, catch_type));
 
       instruction_bits [handler_pc] |= BCODE_EXCEPTION_TARGET;
     }
+
+  free (starts);
+  handle_nested_ranges ();
 
   for (PC = 0;;)
     {
@@ -395,6 +426,67 @@ verify_jvm_instructions (jcf, byte_ops, length)
 	{
 	  PUSH_PENDING (lookup_label (PC));
 	  INVALIDATE_PC;
+	}
+      /* Check if there are any more pending blocks in the current
+	 subroutine.  Because we push pending blocks in a
+	 last-in-first-out order, and because we don't push anything
+	 from our caller until we are done with this subroutine or
+	 anything nested in it, then we are done if the top of the
+	 pending_blocks stack is not in a subroutine, or it is in our
+	 caller. */
+      if (current_subr 
+	  && PC == INVALID_PC)
+	{
+	  tree caller = LABEL_SUBR_CONTEXT (current_subr);
+
+	  if (pending_blocks == NULL_TREE
+	      || ! LABEL_IN_SUBR (pending_blocks)
+	      || LABEL_SUBR_START (pending_blocks) == caller)
+	    {
+	      int size = DECL_MAX_LOCALS(current_function_decl)+stack_pointer;
+	      tree ret_map = LABEL_RETURN_TYPE_STATE (current_subr);
+	      tmp = LABEL_RETURN_LABELS (current_subr);
+	      
+	      /* FIXME: If we exit a subroutine via a throw, we might
+		 have returned to an earlier caller.  Obviously a
+		 "ret" can only return one level, but a throw may
+		 return many levels.*/
+	      current_subr = caller;
+
+	      if (RETURN_MAP_ADJUSTED (ret_map))
+		{
+		  /* Since we are done with this subroutine , set up
+		     the (so far known) return address as pending -
+		     with the merged type state. */
+		  for ( ; tmp != NULL_TREE;  tmp = TREE_CHAIN (tmp))
+		    {
+		      tree return_label = TREE_VALUE (tmp);
+		      tree return_state = LABEL_TYPE_STATE (return_label);
+		      if (return_state == NULL_TREE)
+			{
+			  /* This means means we had not verified the
+			     subroutine earlier, so this is the first jsr to
+			     call it.  In this case, the type_map of the return
+			     address is just the current type_map - and that
+			     is handled by the following PUSH_PENDING. */
+			}
+		      else
+			{
+			  /* In this case we have to do a merge.  But first
+			     restore the type_map for unused slots to those
+			     that were in effect at the jsr. */
+			  for (index = size;  --index >= 0; )
+			    {
+			      type_map[index] = TREE_VEC_ELT (ret_map, index);
+			      if (type_map[index] == TYPE_UNUSED)
+				type_map[index]
+				  = TREE_VEC_ELT (return_state, index);
+			    }
+			}
+		      PUSH_PENDING (return_label);
+		    }
+		}
+	    }
 	}
       if (PC == INVALID_PC)
 	{
@@ -417,6 +509,8 @@ verify_jvm_instructions (jcf, byte_ops, length)
 	}
       else if (PC >= length)
 	VERIFICATION_ERROR ("falling through end of method");
+
+      /* fprintf (stderr, "** %d\n", PC); */
 
       oldpc = PC;
 
@@ -968,6 +1062,7 @@ verify_jvm_instructions (jcf, byte_ops, length)
 	  break;
 
 	case OPCODE_athrow:
+	  // FIXME: athrow also empties the stack.
 	  pop_type (throwable_type_node);
 	  INVALIDATE_PC;
 	  break;
@@ -1166,57 +1261,15 @@ verify_jvm_instructions (jcf, byte_ops, length)
 		    }
 		}
 
-	      /* Check if there are any more pending blocks in this subroutine.
-		 Because we push pending blocks in a last-in-first-out order,
-		 and because we don't push anything from our caller until we
-		 are done with this subroutine or anything nested in it,
-		 then we are done if the top of the pending_blocks stack is
-		 not in a subroutine, or it is in our caller. */
-	      if (pending_blocks == NULL_TREE
-		  || ! LABEL_IN_SUBR (pending_blocks)
-		  || LABEL_SUBR_START (pending_blocks) == caller)
-		{
-		  /* Since we are done with this subroutine (i.e. this is the
-		     last ret from it), set up the (so far known) return
-		     address as pending - with the merged type state. */
-		  tmp = LABEL_RETURN_LABELS (current_subr);
-		  current_subr = caller;
-		  for ( ; tmp != NULL_TREE;  tmp = TREE_CHAIN (tmp))
-		    {
-		      tree return_label = TREE_VALUE (tmp);
-		      tree return_state = LABEL_TYPE_STATE (return_label);
-		      if (return_state == NULL_TREE)
-			{
-			  /* This means means we had not verified the
-			     subroutine earlier, so this is the first jsr to
-			     call it.  In this case, the type_map of the return
-			     address is just the current type_map - and that
-			     is handled by the following PUSH_PENDING. */
-			}
-		      else
-			{
-			  /* In this case we have to do a merge.  But first
-			     restore the type_map for unused slots to those
-			     that were in effect at the jsr. */
-			  for (index = size;  --index >= 0; )
-			    {
-			      type_map[index] = TREE_VEC_ELT (ret_map, index);
-			      if (type_map[index] == TYPE_UNUSED)
-				type_map[index]
-				  = TREE_VEC_ELT (return_state, index);
-			    }
-			}
-		      PUSH_PENDING (return_label);
-		    }
-		}
-	    }
-	  break;
-	case OPCODE_jsr_w:	  
-	case OPCODE_ret_w:
+
+            }
+          break;
+        case OPCODE_jsr_w:        
+        case OPCODE_ret_w:
         default:
-	  error ("unknown opcode %d@pc=%d during verification", op_code, PC-1);
-	  return 0;
-	}
+          error ("unknown opcode %d@pc=%d during verification", op_code, PC-1);
+          return 0;
+        }
 
       prevpc = oldpc;
 
