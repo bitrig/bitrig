@@ -30,6 +30,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 extern char *strdup();
 int linenumber;
 %}
+
+%a 10000
+%o 25000
+
 %%
 
 "ADDLIB"   	{ return ADDLIB; }

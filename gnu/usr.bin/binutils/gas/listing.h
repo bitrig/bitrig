@@ -1,5 +1,6 @@
 /* This file is listing.h
-   Copyright (C) 1987, 1988, 1989, 1990, 1991, 1992 Free Software Foundation, Inc.
+   Copyright (C) 1987, 88, 89, 90, 91, 92, 93, 94, 95, 1997
+   Free Software Foundation, Inc.
 
    This file is part of GAS, the GNU Assembler.
 
@@ -14,9 +15,9 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GAS; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
-
+   along with GAS; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA.  */
 
 #ifndef __listing_h__
 #define __listing_h__
@@ -26,14 +27,19 @@
 #define LISTING_NOFORM     4
 #define LISTING_HLL        8
 #define LISTING_NODEBUG   16
+#define LISTING_NOCOND	  32
+#define LISTING_MACEXP	  64
 
-#define LISTING_DEFAULT    (LISTING_LISTING | LISTING_HLL |  LISTING_SYMBOLS)
+#define LISTING_DEFAULT    (LISTING_LISTING | LISTING_HLL | LISTING_SYMBOLS)
 
 #ifndef NO_LISTING
-#define LISTING_NEWLINE() { if (listing) listing_newline(input_line_pointer); }
+#define LISTING_NEWLINE() { if (listing) listing_newline(NULL); }
 #else
 #define LISTING_NEWLINE() {;}
 #endif
+#define LISTING_EOF()     LISTING_NEWLINE()
+
+#define LISTING_SKIP_COND() ((listing & LISTING_NOCOND) != 0)
 
 void listing_eject PARAMS ((int));
 void listing_error PARAMS ((const char *message));
@@ -50,6 +56,11 @@ void listing_source_line PARAMS ((unsigned int));
 void listing_title PARAMS ((int depth));
 void listing_warning PARAMS ((const char *message));
 void listing_width PARAMS ((unsigned int x));
+
+extern int listing_lhs_width;
+extern int listing_lhs_width_second;
+extern int listing_lhs_cont_lines;
+extern int listing_rhs_width;
 
 #endif /* __listing_h__ */
 

@@ -13,3 +13,10 @@ run_dump_test irp
 run_dump_test rept
 
 gas_test_error "err.s" "" "macro infinite recursion"
+
+case $target_triplet in {
+    { hppa*-*-* } { }
+    default {
+	run_dump_test semi
+    }
+}
