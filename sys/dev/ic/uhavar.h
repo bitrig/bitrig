@@ -1,9 +1,8 @@
-/*	$OpenBSD: elink3var.h,v 1.7 1996/11/28 23:27:51 niklas Exp $	*/
-/*	$NetBSD: elink3var.h,v 1.6 1996/10/21 22:34:25 thorpej Exp $	*/
+/*	$OpenBSD: uhavar.h,v 1.1 1996/11/28 23:27:55 niklas Exp $	*/
+/*	$NetBSD: uhavar.h,v 1.3 1996/10/21 22:34:43 thorpej Exp $	*/
 
 /*
- * Copyright (c) 1994 Herb Peyerl <hpeyerl@beer.org>
- * All rights reserved.
+ * Copyright (c) 1994, 1996 Charles M. Hannum.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -15,8 +14,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *      This product includes software developed by Herb Peyerl.
- * 4. The name of Herb Peyerl may not be used to endorse or promote products
+ *	This product includes software developed by Charles M. Hannum.
+ * 4. The name of the author may not be used to endorse or promote products
  *    derived from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
@@ -31,40 +30,32 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Ethernet software status per interface.
- */
-struct ep_softc {
+#define UHA_MSCP_MAX	32	/* store up to 32 MSCPs at one time */
+#define	MSCP_HASH_SIZE	32	/* hash table size for phystokv */
+#define	MSCP_HASH_SHIFT	9
+#define MSCP_HASH(x)	((((long)(x))>>MSCP_HASH_SHIFT) & (MSCP_HASH_SIZE - 1))
+
+struct uha_softc {
 	struct device sc_dev;
+
+	bus_space_tag_t sc_iot;
+	bus_space_handle_t sc_ioh;
+
+	int sc_irq, sc_drq;
 	void *sc_ih;
 
-	struct arpcom sc_arpcom;	/* Ethernet common part		*/
-	bus_space_tag_t sc_iot;		/* bus cookie			*/
-	bus_space_handle_t sc_ioh;	/* bus i/o handle		*/
-#define MAX_MBS	8			/* # of mbufs we keep around	*/
-	struct mbuf *mb[MAX_MBS];	/* spare mbuf storage.		*/
-	int	next_mb;		/* Which mbuf to use next. 	*/
-	int	last_mb;		/* Last mbuf.			*/
-	int	tx_start_thresh;	/* Current TX_start_thresh.	*/
-	int	tx_succ_ok;		/* # packets sent in sequence   */
-					/* w/o underrun			*/
+	void (*start_mbox) __P((struct uha_softc *, struct uha_mscp *));
+	int (*poll) __P((struct uha_softc *, struct scsi_xfer *, int));
+	void (*init) __P((struct uha_softc *));
 
-	char    ep_connectors;		/* Connectors on this card.	*/
-	u_char	txashift;		/* shift in SET_TX_AVAIL_THRESH */
-	u_char	bustype;
-#define EP_BUS_ISA	  	0x0
-#define	EP_BUS_PCMCIA	  	0x1
-#define	EP_BUS_EISA	  	0x2
-#define EP_BUS_PCI	  	0x3
-
-#define EP_IS_BUS_32(a)	((a) & 0x2)
-
-	u_char	pcmcia_flags;
-#define EP_REATTACH		0x01
-#define EP_ABSENT		0x02
+	struct uha_mscp *sc_mscphash[MSCP_HASH_SIZE];
+	TAILQ_HEAD(, uha_mscp) sc_free_mscp;
+	int sc_nummscps;
+	int sc_scsi_dev;		/* our scsi id */
+	struct scsi_link sc_link;
 };
 
-u_int16_t epreadeeprom __P((bus_space_tag_t, bus_space_handle_t, int));
-void	epconfig __P((struct ep_softc *, u_int16_t));
-int	epintr __P((void *));
-void	epstop __P((struct ep_softc *));
+void	uha_attach __P((struct uha_softc *));
+void	uha_timeout __P((void *arg));
+struct	uha_mscp *uha_mscp_phys_kv __P((struct uha_softc *, u_long));
+void	uha_done __P((struct uha_softc *, struct uha_mscp *));
