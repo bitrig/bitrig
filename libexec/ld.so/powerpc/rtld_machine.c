@@ -1,4 +1,4 @@
-/*	$OpenBSD: rtld_machine.c,v 1.8 2002/05/24 04:21:27 deraadt Exp $ */
+/*	$OpenBSD: rtld_machine.c,v 1.9 2002/06/05 19:34:44 art Exp $ */
 
 /*
  * Copyright (c) 1999 Dale Rahn
@@ -60,7 +60,7 @@ _dl_md_reloc(elf_object_t *object, int rel, int relasz)
 	int	i;
 	int	numrela;
 	int	fails = 0;
-	load_list_t *load_list;
+	struct load_list *load_list;
 	Elf32_Addr loff;
 	Elf32_Rela  *relas;
 	/* for jmp table relocations */
