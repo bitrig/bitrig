@@ -1,4 +1,4 @@
-/*	$OpenBSD: ne2000var.h,v 1.1 1998/09/22 06:38:04 fgsch Exp $	*/
+/*	$OpenBSD: ne2000var.h,v 1.2 1998/11/06 06:32:15 fgsch Exp $	*/
 /*	$NetBSD: ne2000var.h,v 1.2 1997/10/14 22:54:12 thorpej Exp $	*/
 
 /*-
@@ -54,7 +54,8 @@ struct ne2000_softc {
 #define	NE2000_TYPE_NE1000	1
 #define	NE2000_TYPE_NE2000	2
 
-void	ne2000_attach __P((struct ne2000_softc *, u_int8_t *));
+void	ne2000_attach __P((struct ne2000_softc *, u_int8_t *,
+	    int *, int, int));
 int	ne2000_detect __P((bus_space_tag_t, bus_space_handle_t,
 	    bus_space_tag_t, bus_space_handle_t));
 
