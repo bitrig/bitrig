@@ -21,7 +21,7 @@ or implied warranty.
         
 #include "krb_locl.h"
 
-RCSID("$KTH: tf_util.c,v 1.39 1999/12/02 18:03:16 assar Exp $");
+RCSID("$KTH: tf_util.c,v 1.39.2.2 2000/06/23 04:03:58 assar Exp $");
 
 
 #define TOO_BIG -1
@@ -249,20 +249,6 @@ tf_init(char *tf_name, int rw)
 int
 tf_create(char *tf_name)
 {
-  struct stat statbuf;
-  char garbage[BUFSIZ];
-
-  fd = open(tf_name, O_RDWR | O_BINARY, 0);
-  if (fd >= 0) {
-    if (fstat (fd, &statbuf) == 0) {
-      int i;
-
-      for (i = 0; i < statbuf.st_size; i += sizeof(garbage))
-	write (fd, garbage, sizeof(garbage));
-    }
-    close (fd);
-  }
-
   if (unlink (tf_name) && errno != ENOENT)
     return TKT_FIL_ACC;
 
@@ -783,8 +769,6 @@ out:
 int
 tf_store_addr (const char *realm, struct in_addr *addr)
 {
-  CREDENTIALS c;
-  krb_principal princ;
   int ret;
   des_cblock s = { 0, 0, 0, 0, 0, 0, 0, 0 };
   KTEXT_ST t;
