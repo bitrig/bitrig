@@ -1,5 +1,5 @@
 /* Specific flags and argument handling of the Fortran front-end.
-   Copyright (C) 1997, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1997, 1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -50,6 +50,10 @@ Boston, MA 02111-1307, USA.  */
 
 #ifndef MATH_LIBRARY
 #define MATH_LIBRARY "-lm"
+#endif
+
+#ifndef FORTRAN_INIT
+#define FORTRAN_INIT "-lfrtbegin"
 #endif
 
 #ifndef FORTRAN_LIBRARY
@@ -286,6 +290,10 @@ lang_specific_driver (fn, in_argc, in_argv, in_added_libraries)
      2 => last two args were -l<library> -lm.  */
   int saw_library = 0;
 
+  /* 0 => initial/reset state
+     1 => FORTRAN_INIT linked in */
+  int use_init = 0;
+
   /* By default, we throw on the math library if we have one.  */
   int need_math = (MATH_LIBRARY[0] != '\0');
 
@@ -427,8 +435,8 @@ code-generation methodology, and so on.\n\
 For more information on g77 and gcc, type the commands `info -f g77'\n\
 and `info -f gcc' to read the Info documentation.\n\
 \n\
-Report bugs to <egcs-bugs@egcs.cygnus.com>.\n\
-See <URL:http://egcs.cygnus.com/faq.html#bugreport> for details.\n");
+For bug reporting instructions, please see:\n\
+%s.\n", GCCBUGURL);
 	  exit (0);
 	  break;
 #endif
@@ -519,7 +527,14 @@ See <URL:http://egcs.cygnus.com/faq.html#bugreport> for details.\n");
 	      if (saw_library == 1)
 		saw_library = 2;	/* -l<library> -lm. */
 	      else
-		append_arg (FORTRAN_LIBRARY);
+		{
+		  if (0 == use_init)
+		    {
+		      append_arg (FORTRAN_INIT);
+		      use_init = 1;
+		    }
+		  append_arg (FORTRAN_LIBRARY);
+		}
 	    }
 	  else if (strcmp (argv[i], FORTRAN_LIBRARY) == 0)
 	    saw_library = 1;	/* -l<library>. */
@@ -543,6 +558,11 @@ See <URL:http://egcs.cygnus.com/faq.html#bugreport> for details.\n");
       switch (saw_library)
 	{
 	case 0:
+	  if (0 == use_init)
+	    {
+	      append_arg (FORTRAN_INIT);
+	      use_init = 1;
+	    }
 	  append_arg (library);
 	case 1:
 	 if (need_math)
