@@ -598,7 +598,7 @@ static struct compiler default_compilers[] =
 	%{C} %{v} %{A*} %{I*} %{P} %{$} %I\
 	%{C:%{!E:%eGNU C does not support -C without using -E}}\
 	%{M} %{MM} %{MD:-MD %b.d} %{MMD:-MMD %b.d} %{MG}\
-        -D__GNUC__=%v1 -D__GNUC_MINOR__=%v2\
+        %{!no-gcc:-D__GNUC__=%v1 -D__GNUC_MINOR__=%v2}\
 	%{ansi|std=*:%{!std=gnu*:-trigraphs -D__STRICT_ANSI__}}\
 	%{!undef:%{!ansi:%{!std=*:%p}%{std=gnu*:%p}} %P} %{trigraphs}\
         %c %{Os:-D__OPTIMIZE_SIZE__} %{O*:%{!O0:-D__OPTIMIZE__}}\
@@ -612,7 +612,7 @@ static struct compiler default_compilers[] =
                   %{std*} %{nostdinc*} %{A*} %{I*} %I\
                   %{!Q:-quiet} -dumpbase %b.c %{d*} %{m*} %{a*}\
                   %{MD:-MD %b.d} %{MMD:-MMD %b.d} %{MG}\
-                  -D__GNUC__=%v1 -D__GNUC_MINOR__=%v2\
+                  %{!no-gcc:-D__GNUC__=%v1 -D__GNUC_MINOR__=%v2}\
 		  %{ansi|std=*:%{!std=gnu*:-trigraphs -D__STRICT_ANSI__}}\
 		  %{!undef:%{!ansi:%{!std=*:%p}%{std=gnu*:%p}} %P} %{trigraphs}\
                   %c %{Os:-D__OPTIMIZE_SIZE__} %{O*:%{!O0:-D__OPTIMIZE__}}\
@@ -634,7 +634,7 @@ static struct compiler default_compilers[] =
 	%{C} %{v} %{A*} %{I*} %{P} %{$} %I\
 	%{C:%{!E:%eGNU C does not support -C without using -E}}\
 	%{M} %{MM} %{MD:-MD %b.d} %{MMD:-MMD %b.d} %{MG}\
-        -D__GNUC__=%v1 -D__GNUC_MINOR__=%v2\
+        %{!no-gcc:-D__GNUC__=%v1 -D__GNUC_MINOR__=%v2}\
 	%{ansi|std=*:%{!std=gnu*:-trigraphs -D__STRICT_ANSI__}}\
 	%{!undef:%{!ansi:%{!std=*:%p}%{std=gnu*:%p}} %P} %{trigraphs}\
         %c %{Os:-D__OPTIMIZE_SIZE__} %{O*:%{!O0:-D__OPTIMIZE__}}\
@@ -662,7 +662,7 @@ static struct compiler default_compilers[] =
 	%{C} %{v} %{A*} %{I*} %{P} %{$} %I\
 	%{C:%{!E:%eGNU C does not support -C without using -E}}\
 	%{M} %{MM} %{MD:-MD %b.d} %{MMD:-MMD %b.d} %{MG}\
-        -D__GNUC__=%v1 -D__GNUC_MINOR__=%v2\
+        %{!no-gcc:-D__GNUC__=%v1 -D__GNUC_MINOR__=%v2}\
 	%{ansi|std=*:%{!std=gnu*:-trigraphs -D__STRICT_ANSI__}}\
 	%{!undef:%{!ansi:%{!std=*:%p}%{std=gnu*:%p}} %P} %{trigraphs}\
         %c %{Os:-D__OPTIMIZE_SIZE__} %{O*:%{!O0:-D__OPTIMIZE__}}\
@@ -679,7 +679,7 @@ static struct compiler default_compilers[] =
     cpp %{nostdinc*} %{C} %{v} %{A*} %{I*} %{P} %{$} %I\
 	%{C:%{!E:%eGNU C does not support -C without using -E}}\
 	%{M} %{MM} %{MD:-MD %b.d} %{MMD:-MMD %b.d} %{MG}\
-        -D__GNUC__=%v1 -D__GNUC_MINOR__=%v2\
+        %{!no-gcc:-D__GNUC__=%v1 -D__GNUC_MINOR__=%v2}\
 	%{std=*:%{!std=gnu*:-trigraphs -D__STRICT_ANSI__}}\
 	%{!undef:%{!std=*:%p}%{std=gnu*:%p} %P} %{trigraphs}\
         %c %{Os:-D__OPTIMIZE_SIZE__} %{O*:%{!O0:-D__OPTIMIZE__}}\
@@ -1287,8 +1287,6 @@ static int argbuf_index;
 #define MKTEMP_EACH_FILE
 
 #ifdef MKTEMP_EACH_FILE
-
-extern char *make_temp_file PROTO((const char *));
 
 /* This is the list of suffixes and codes (%g/%u/%U) and the associated
    temp file.  */
@@ -4818,18 +4816,7 @@ main (argc, argv)
   if (access (specs_file, R_OK) == 0)
     read_specs (specs_file, TRUE);
  
-  /* Process any user specified specs in the order given on the command
-     line.  */
-  for (uptr = user_specs_head; uptr; uptr = uptr->next)
-    {
-      char *filename = find_a_file (&startfile_prefixes, uptr->filename, R_OK);
-      read_specs (filename ? filename : uptr->filename, FALSE);
-    }
-
   /* If not cross-compiling, look for startfiles in the standard places.  */
-  /* The fact that these are done here, after reading the specs file,
-     means that it cannot be found in these directories.
-     But that's okay.  It should never be there anyway.  */
   if (*cross_compile == '0')
     {
 #ifdef MD_EXEC_PREFIX
@@ -4890,6 +4877,14 @@ main (argc, argv)
 		    concat (gcc_exec_prefix, machine_suffix,
 			    standard_startfile_prefix, NULL_PTR),
 		    "BINUTILS", 0, 0, NULL_PTR);
+    }
+
+  /* Process any user specified specs in the order given on the command
+     line.  */
+  for (uptr = user_specs_head; uptr; uptr = uptr->next)
+    {
+      char *filename = find_a_file (&startfile_prefixes, uptr->filename, R_OK);
+      read_specs (filename ? filename : uptr->filename, FALSE);
     }
 
   /* If we have a GCC_EXEC_PREFIX envvar, modify it for cpp's sake.  */
@@ -4965,8 +4960,8 @@ main (argc, argv)
 
       if (! verbose_flag)
 	{
-	  printf ("\nReport bugs to egcs-bugs@egcs.cygnus.com.\n");
-	  printf ("Please see the file BUGS (included with the sources) first.\n");
+	  printf ("\nFor bug reporting instructions, please see:\n");
+	  printf ("%s.\n", GCCBUGURL);
 	  
 	  exit (0);
 	}
@@ -5158,8 +5153,8 @@ main (argc, argv)
 
   if (print_help_list)
     {
-      printf ("\nReport bugs to egcs-bugs@egcs.cygnus.com.\n");
-      printf ("Please see the file BUGS (included with the sources) first.\n");
+      printf ("\nFor bug reporting instructions, please see:\n");
+      printf ("%s\n", GCCBUGURL);
     }
   
   exit (error_count > 0 ? (signal_count ? 2 : 1) : 0);
