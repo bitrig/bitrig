@@ -1,4 +1,6 @@
-/* @(#) $Header: /scm/cvs/src/usr.sbin/tcpdump/gnuc.h,v 1.2 1997/07/25 20:12:29 mickey Exp $ (LBL) */
+/*	$OpenBSD: gnuc.h,v 1.3 2000/10/03 14:31:55 ho Exp $	*/
+
+/* @(#) $Header: /scm/cvs/src/usr.sbin/tcpdump/gnuc.h,v 1.3 2000/10/03 14:31:55 ho Exp $ (LBL) */
 
 /* Define __P() macro, if necessary */
 #ifndef __P
