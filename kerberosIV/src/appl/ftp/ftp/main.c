@@ -36,7 +36,7 @@
  */
 
 #include "ftp_locl.h"
-RCSID("$KTH: main.c,v 1.27 1999/11/13 06:18:02 assar Exp $");
+RCSID("$KTH: main.c,v 1.27.2.1 2000/10/10 13:01:50 assar Exp $");
 
 int
 main(int argc, char **argv)
@@ -45,8 +45,6 @@ main(int argc, char **argv)
 	struct passwd *pw = NULL;
 	char homedir[MaxPathLen];
 	struct servent *sp;
-
-	set_progname(argv[0]);
 
 	sp = getservbyname("ftp", "tcp");
 	if (sp == 0)
@@ -244,8 +242,10 @@ cmdscanner(int top)
 	if (fromatty) {
 	    char *p;
 	    p = readline("ftp> ");
-	    if(p == NULL)
+	    if(p == NULL) {
+		printf("\n");
 		quit(0, 0);
+	    }
 	    strlcpy(line, p, sizeof(line));
 	    add_history(p);
 	    free(p);
