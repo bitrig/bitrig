@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997 - 2000 Kungliga Tekniska Högskolan
+ * Copyright (c) 1997 - 2001 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -33,7 +33,7 @@
 
 #include <krb5_locl.h>
 
-RCSID("$KTH: rd_req.c,v 1.44 2000/11/15 23:16:28 assar Exp $");
+RCSID("$KTH: rd_req.c,v 1.47 2001/06/18 02:48:18 assar Exp $");
 
 static krb5_error_code
 decrypt_tkt_enc_part (krb5_context context,
@@ -113,17 +113,46 @@ krb5_decode_ap_req(krb5_context context,
 	return ret;
     if (ap_req->pvno != 5){
 	free_AP_REQ(ap_req);
+	krb5_clear_error_string (context);
 	return KRB5KRB_AP_ERR_BADVERSION;
     }
     if (ap_req->msg_type != krb_ap_req){
 	free_AP_REQ(ap_req);
+	krb5_clear_error_string (context);
 	return KRB5KRB_AP_ERR_MSG_TYPE;
     }
     if (ap_req->ticket.tkt_vno != 5){
 	free_AP_REQ(ap_req);
+	krb5_clear_error_string (context);
 	return KRB5KRB_AP_ERR_BADVERSION;
     }
     return 0;
+}
+
+static krb5_error_code
+check_transited(krb5_context context, Ticket *ticket, EncTicketPart *enc)
+{
+    char **realms;
+    int num_realms;
+    krb5_error_code ret;
+	    
+    if(enc->transited.tr_type != DOMAIN_X500_COMPRESS)
+	return KRB5KDC_ERR_TRTYPE_NOSUPP;
+
+    if(enc->transited.contents.length == 0)
+	return 0;
+
+    ret = krb5_domain_x500_decode(context, enc->transited.contents, 
+				  &realms, &num_realms, 
+				  enc->crealm,
+				  ticket->realm);
+    if(ret)
+	return ret;
+    ret = krb5_check_transited(context, enc->crealm, 
+			       ticket->realm, 
+			       realms, num_realms, NULL);
+    free(realms);
+    return ret;
 }
 
 krb5_error_code
@@ -150,11 +179,21 @@ krb5_decrypt_ticket(krb5_context context,
 	   || (t.flags.invalid
 	       && !(flags & KRB5_VERIFY_AP_REQ_IGNORE_INVALID))) {
 	    free_EncTicketPart(&t);
+	    krb5_clear_error_string (context);
 	    return KRB5KRB_AP_ERR_TKT_NYV;
 	}
 	if(now - t.endtime > context->max_skew) {
 	    free_EncTicketPart(&t);
+	    krb5_clear_error_string (context);
 	    return KRB5KRB_AP_ERR_TKT_EXPIRED;
+	}
+	
+	if(!t.flags.transited_policy_checked) {
+	    ret = check_transited(context, ticket, &t);
+	    if(ret) {
+		free_EncTicketPart(&t);
+		return ret;
+	    }
 	}
     }
     
@@ -176,7 +215,7 @@ krb5_verify_authenticator_checksum(krb5_context context,
     krb5_authenticator authenticator;
     krb5_crypto crypto;
     
-    ret = krb5_auth_getauthenticator (context,
+    ret = krb5_auth_con_getauthenticator (context,
 				      ac,
 				      &authenticator);
     if(ret)
@@ -204,29 +243,6 @@ out:
     return ret;
 }
 
-#if 0
-static krb5_error_code
-check_transited(krb5_context context,
-		krb5_ticket *ticket)
-{
-    char **realms;
-    int num_realms;
-    krb5_error_code ret;
-
-    if(ticket->ticket.transited.tr_type != DOMAIN_X500_COMPRESS)
-	return KRB5KDC_ERR_TRTYPE_NOSUPP;
-
-    ret = krb5_domain_x500_decode(ticket->ticket.transited.contents, 
-				  &realms, &num_realms, 
-				  ticket->client->realm,
-				  ticket->server->realm);
-    if(ret)
-	return ret;
-    ret = krb5_check_transited_realms(context, realms, num_realms, NULL);
-    free(realms);
-    return ret;
-}
-#endif
 
 krb5_error_code
 krb5_verify_ap_req(krb5_context context,
@@ -320,6 +336,7 @@ krb5_verify_ap_req2(krb5_context context,
 	krb5_free_principal (context, p2);
 	if (!res) {
 	    ret = KRB5KRB_AP_ERR_BADMATCH;
+	    krb5_clear_error_string (context);
 	    goto out2;
 	}
     }
@@ -332,21 +349,21 @@ krb5_verify_ap_req2(krb5_context context,
 				 ac->remote_address,
 				 t.ticket.caddr)) {
 	ret = KRB5KRB_AP_ERR_BADADDR;
+	krb5_clear_error_string (context);
 	goto out2;
     }
 
     if (ac->authenticator->seq_number)
-	ac->remote_seqnumber = *ac->authenticator->seq_number;
+	krb5_auth_con_setremoteseqnumber(context, ac,
+					 *ac->authenticator->seq_number);
 
     /* XXX - Xor sequence numbers */
 
-    /* XXX - subkeys? */
-    /* And where should it be stored? */
-
     if (ac->authenticator->subkey) {
-	krb5_copy_keyblock(context, 
-			   ac->authenticator->subkey,
-			   &ac->remote_subkey);
+	ret = krb5_auth_con_setremotesubkey(context, ac,
+					    ac->authenticator->subkey);
+	if (ret)
+	    goto out2;
     }
 
     if (ap_req_options) {
