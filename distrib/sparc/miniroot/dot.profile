@@ -1,4 +1,4 @@
-#	$OpenBSD: dot.profile,v 1.11 1998/10/15 07:32:05 deraadt Exp $
+#	$OpenBSD: dot.profile,v 1.12 1998/10/15 07:33:31 deraadt Exp $
 #	$NetBSD: dot.profile,v 1.1 1995/12/18 22:54:43 pk Exp $
 #
 # Copyright (c) 1995 Jason R. Thorpe
@@ -46,11 +46,6 @@ set -o emacs # emacs-style command line editing
 # terminals believed to be in termcap, default TERM
 TERMS="sun vt* pcvt* pc3 dumb"
 TERM=sun
-
-# editors believed to be in $EDITBIN, smart and dumb defaults
-DUMB=ed
-EDITBIN=/bin
-EDITUBIN=/usr/bin
 
 if [ "X${DONEPROFILE}" = "X" ]; then
 	DONEPROFILE=YES
