@@ -1,4 +1,4 @@
-/*	$OpenBSD: var.c,v 1.23 2005/02/02 07:53:01 otto Exp $	*/
+/*	$OpenBSD: var.c,v 1.24 2005/03/28 21:28:22 deraadt Exp $	*/
 
 #include "sh.h"
 #include <time.h>
@@ -426,12 +426,12 @@ getint(struct tbl *vp, long int *nump, bool arith)
 	num = 0;
 	neg = 0;
 	if (arith && *s == '0' && *(s+1)) {
-	    	s++;
+		s++;
 		if (*s == 'x' || *s == 'X') {
-		    	s++;
+			s++;
 			base = 16;
 		} else
-		    	base = 8;
+			base = 8;
 		have_base++;
 	}
 	for (c = *s++; c ; c = *s++) {
