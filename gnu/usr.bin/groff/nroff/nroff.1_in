@@ -1,5 +1,5 @@
 .ig \"-*- nroff -*-
-Copyright (C) 1989-1995 Free Software Foundation, Inc.
+Copyright (C) 1989-1999 Free Software Foundation, Inc.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -16,41 +16,79 @@ versions, except that this permission notice may be included in
 translations approved by the Free Software Foundation instead of in
 the original English.
 ..
-.TH MSAFER @MAN7EXT@ "@MDATE@" "Groff Version @VERSION@"
+.TH @G@NROFF @MAN1EXT@ "@MDATE@" "Groff Version @VERSION@"
 .SH NAME
-msafer \- groff -msafer macros
+@g@nroff \- emulate nroff command with groff
 .SH SYNOPSIS
-.B groff
-.B \-msafer
+.B @g@nroff
 [
-.IR options .\|.\|.
+.B \-h
 ]
 [
-.IR files .\|.\|.
+.B \-i
+]
+[
+.BI \-m name
+]
+[
+.BI \-n num
+]
+[
+.BI \-o list
+]
+[
+.BI \-r cn
+]
+[
+.BI \-T name
+]
+[
+.I file\|.\|.\|.
 ]
 .SH DESCRIPTION
-The -msafer macros remove the
-.BR open ,
-.BR opena ,
-.BR pso ,
-.B sy
+The
+.B @g@nroff
+script emulates the
+.B nroff
+command using groff.
+The
+.B \-T
+option with an argument other than
+.B ascii
 and
-.B pi
-requests.
-These macros should be used when processing input from
-an untrustworthy source.
-For maximum safety,
-they should be the first -m option on the command-line.
-Normally they are invoked using the
+.B latin1
+will be ignored.
+The
+.B \-h
+option
+is equivalent to the
+.B grotty
+.B \-h
+option.
+The
+.BR \-i ,
+.BR \-n ,
+.BR \-m ,
+.B \-o
+and
+.B \-r
+options have the effect described in
+.BR @g@troff (@MAN1EXT@).
+In addition
+.B @g@nroff
+silently ignores options of
+.BR \-e ,
+.B \-q
+or
+.BR \-s .
+Options 
 .B \-S
-option of groff, which will also pass
-.B @g@pic
-the
+(safer) and
+.B \-U
+(unsafe) are passed to groff. 
 .B \-S
-flag.
-.SH FILES
-.B @MACRODIR@/tmac.safer
+is passed by default.
 .SH "SEE ALSO"
 .BR groff (@MAN1EXT@),
 .BR @g@troff (@MAN1EXT@),
-.BR @g@pic (@MAN1EXT@)
+.BR grotty (@MAN1EXT@)
