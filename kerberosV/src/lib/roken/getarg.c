@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997 - 2000 Kungliga Tekniska Högskolan
+ * Copyright (c) 1997 - 2001 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -33,7 +33,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: getarg.c,v 1.37 2000/12/25 17:03:15 assar Exp $");
+RCSID("$KTH: getarg.c,v 1.42 2001/07/23 04:30:11 assar Exp $");
 #endif
 
 #include <stdio.h>
@@ -43,6 +43,8 @@ RCSID("$KTH: getarg.c,v 1.37 2000/12/25 17:03:15 assar Exp $");
 #include "getarg.h"
 
 #define ISFLAG(X) ((X).type == arg_flag || (X).type == arg_negative_flag)
+
+extern char *__progname;
 
 static size_t
 print_arg (char *string, size_t len, int mdoc, int longp, struct getargs *arg)
@@ -139,7 +141,7 @@ mandoc_template(struct getargs *args,
 	    print_arg(buf, sizeof(buf), 1, 0, args + i);
 	    printf(".Oo Fl %c%s \\*(Ba Xo\n", args[i].short_name, buf);
 	    print_arg(buf, sizeof(buf), 1, 1, args + i);
-	    printf(".Fl -%s%s Oc\n.Xc\n", args[i].long_name, buf);
+	    printf(".Fl -%s%s\n.Xc\n.Oc\n", args[i].long_name, buf);
 	}
     /*
 	    if(args[i].type == arg_strings)
@@ -223,6 +225,23 @@ arg_printusage (struct getargs *args,
 	columns = 80;
     col = 0;
     col += fprintf (stderr, "Usage: %s", progname);
+    buf[0] = '\0';
+    for (i = 0; i < num_args; ++i) {
+	if(args[i].short_name && ISFLAG(args[i])) {
+	    char s[2];
+	    if(buf[0] == '\0')
+		strlcpy(buf, "[-", sizeof(buf));
+	    s[0] = args[i].short_name;
+	    s[1] = '\0';
+	    strlcat(buf, s, sizeof(buf));
+	}
+    }
+    if(buf[0] != '\0') {
+	strlcat(buf, "]", sizeof(buf));
+	col = check_column(stderr, col, strlen(buf) + 1, columns);
+	col += fprintf(stderr, " %s", buf);
+    }
+
     for (i = 0; i < num_args; ++i) {
 	size_t len = 0;
 
@@ -244,7 +263,7 @@ arg_printusage (struct getargs *args,
 	    col = check_column(stderr, col, strlen(buf) + 1, columns);
 	    col += fprintf(stderr, " %s", buf);
 	}
-	if (args[i].short_name) {
+	if (args[i].short_name && !ISFLAG(args[i])) {
 	    snprintf(buf, sizeof(buf), "[-%c", args[i].short_name);
 	    len += 2;
 	    len += print_arg(buf + strlen(buf), sizeof(buf) - strlen(buf), 
@@ -398,13 +417,8 @@ arg_match_long(struct getargs *args, size_t num_args,
 
 	if (*optarg == '\0')
 	    val = 1;
-	else {
-	    char *endstr;
-
-	    val = strtol (optarg, &endstr, 0);
-	    if (endstr == optarg)
-		return ARG_ERR_BAD_ARG;
-	}
+	else if(sscanf(optarg + 1, "%d", &val) != 1)
+	    return ARG_ERR_BAD_ARG;
 	*(int *)current->value += val;
 	return 0;
     }
@@ -526,6 +540,12 @@ getarg(struct getargs *args, size_t num_args,
     }
     *optind = i;
     return ret;
+}
+
+void
+free_getarg_strings (getarg_strings *s)
+{
+    free (s->strings);
 }
 
 #if TEST
