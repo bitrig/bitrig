@@ -28,8 +28,12 @@ Report problems and direct all questions to:
 
 /*
  * $Log: co.c,v $
- * Revision 1.1  1995/10/18 08:41:00  deraadt
- * Initial revision
+ * Revision 1.2  1996/04/19 12:40:04  mickey
+ * -L<string> option added to support LOCALID behaviour.
+ * maybe set up in RCSINIT environment variable.
+ *
+ * Revision 1.1.1.1  1995/10/18 08:41:00  deraadt
+ * initial import of NetBSD tree
  *
  * Revision 1.3  1995/02/24 02:07:49  mycroft
  * RCS 5.6.7.4
@@ -191,7 +195,7 @@ static struct hshentries *gendeltas;	/* deltas to be generated	*/
 static struct hshentry *targetdelta;	/* final delta to be generated	*/
 static struct stat workstat;
 
-mainProg(coId, "co", "$Id: co.c,v 1.1 1995/10/18 08:41:00 deraadt Exp $")
+mainProg(coId, "co", "$Id: co.c,v 1.2 1996/04/19 12:40:04 mickey Exp $")
 {
 	static char const cmdusage[] =
 		"\nco usage: co -{fIlMpqru}[rev] -ddate -jjoins -ksubst -sstate -T -w[who] -Vn -xsuff -zzone file ...";
@@ -308,6 +312,10 @@ mainProg(coId, "co", "$Id: co.c,v 1.1 1995/10/18 08:41:00 deraadt Exp $")
 		case 'z':
 			zonearg = *argv;
 			zone_set(a);
+			break;
+
+		case 'L':    /*  add local $Id: co.c,v 1.2 1996/04/19 12:40:04 mickey Exp $ keyword string */
+			setRCSlocalId(*argv+2);
 			break;
 
 		case 'k':    /*  set keyword expand mode  */
