@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997 - 2000 Kungliga Tekniska Högskolan
+ * Copyright (c) 1997 - 2001 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -32,7 +32,7 @@
  */
 
 /* 
- * $KTH: ktutil_locl.h,v 1.12 2000/07/19 13:58:19 assar Exp $
+ * $KTH: ktutil_locl.h,v 1.17 2001/08/22 20:30:18 assar Exp $
  */
 
 #ifndef __KTUTIL_LOCL_H__
@@ -54,7 +54,11 @@
 #include <parse_time.h>
 #include <roken.h>
 
+#ifdef HAVE_OPENSSL
 #include <des.h>
+#else
+#include <des.h>
+#endif
 
 #include <krb5.h>
 #include <kadm5/admin.h>
@@ -64,10 +68,11 @@
 #include <getarg.h>
 
 extern krb5_context context;
-extern krb5_keytab keytab;
 
 extern int verbose_flag;
 extern char *keytab_string; 
+
+krb5_keytab ktutil_open_keytab(void);
 
 int kt_add (int argc, char **argv);
 int kt_change (int argc, char **argv);
@@ -76,6 +81,7 @@ int kt_get (int argc, char **argv);
 int kt_list(int argc, char **argv);
 int kt_purge(int argc, char **argv);
 int kt_remove(int argc, char **argv);
+int kt_rename(int argc, char **argv);
 int srvconv(int argc, char **argv);
 int srvcreate(int argc, char **argv);
 
