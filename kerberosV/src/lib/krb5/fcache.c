@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997 - 2000 Kungliga Tekniska Högskolan
+ * Copyright (c) 1997 - 2002 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -33,7 +33,7 @@
 
 #include "krb5_locl.h"
 
-RCSID("$KTH: fcache.c,v 1.31 2000/12/05 09:15:10 joda Exp $");
+RCSID("$KTH: fcache.c,v 1.34 2002/04/18 14:01:29 joda Exp $");
 
 typedef struct krb5_fcache{
     char *filename;
@@ -58,7 +58,7 @@ struct fcc_cursor {
 
 #define FCC_CURSOR(C) ((struct fcc_cursor*)(C))
 
-static char*
+static const char*
 fcc_get_name(krb5_context context,
 	     krb5_ccache id)
 {
@@ -70,11 +70,14 @@ fcc_resolve(krb5_context context, krb5_ccache *id, const char *res)
 {
     krb5_fcache *f;
     f = malloc(sizeof(*f));
-    if(f == NULL)
+    if(f == NULL) {
+	krb5_set_error_string(context, "malloc: out of memory");
 	return KRB5_CC_NOMEM;
+    }
     f->filename = strdup(res);
     if(f->filename == NULL){
 	free(f);
+	krb5_set_error_string(context, "malloc: out of memory");
 	return KRB5_CC_NOMEM;
     }
     f->version = 0;
@@ -171,18 +174,23 @@ fcc_gen_new(krb5_context context, krb5_ccache *id)
     krb5_fcache *f;
     int fd;
     char *file;
+
     f = malloc(sizeof(*f));
-    if(f == NULL)
+    if(f == NULL) {
+	krb5_set_error_string(context, "malloc: out of memory");
 	return KRB5_CC_NOMEM;
-    asprintf (&file, "%sXXXXXX", KRB5_DEFAULT_CCFILE_ROOT);
+    }
+    asprintf (&file, "%sXXXXXXXXXX", KRB5_DEFAULT_CCFILE_ROOT);
     if(file == NULL) {
 	free(f);
+	krb5_set_error_string(context, "malloc: out of memory");
 	return KRB5_CC_NOMEM;
     }
     fd = mkstemp(file);
     if(fd < 0) {
 	free(f);
 	free(file);
+	krb5_set_error_string(context, "mkstemp %s", file);
 	return errno;
     }
     close(fd);
@@ -231,11 +239,16 @@ fcc_initialize(krb5_context context,
     unlink (filename);
   
     fd = open(filename, O_RDWR | O_CREAT | O_EXCL | O_BINARY, 0600);
-    if(fd == -1)
-	return errno;
+    if(fd == -1) {
+	ret = errno;
+	krb5_set_error_string(context, "open(%s): %s", filename,
+			      strerror(ret));
+	return ret;
+    }
     {
 	krb5_storage *sp;    
 	sp = krb5_storage_from_fd(fd);
+	krb5_storage_set_eof_code(sp, KRB5_CC_END);
 	if(context->fcache_vno != 0)
 	    f->version = context->fcache_vno;
 	else
@@ -259,8 +272,11 @@ fcc_initialize(krb5_context context,
 	krb5_storage_free(sp);
     }
     if(close(fd) < 0)
-	if (ret == 0)
+	if (ret == 0) {
 	    ret = errno;
+	    krb5_set_error_string (context, "close %s: %s", filename,
+				   strerror(ret));
+	}
 	
     return ret;
 }
@@ -298,18 +314,24 @@ fcc_store_cred(krb5_context context,
     f = FILENAME(id);
 
     fd = open(f, O_WRONLY | O_APPEND | O_BINARY);
-    if(fd < 0)
-	return errno;
+    if(fd < 0) {
+	ret = errno;
+	krb5_set_error_string (context, "open(%s): %s", f, strerror(ret));
+	return ret;
+    }
     {
 	krb5_storage *sp;
 	sp = krb5_storage_from_fd(fd);
+	krb5_storage_set_eof_code(sp, KRB5_CC_END);
 	storage_set_flags(context, sp, FCACHE(id)->version);
 	ret = krb5_store_creds(sp, creds);
 	krb5_storage_free(sp);
     }
     if (close(fd) < 0)
-	if (ret == 0)
+	if (ret == 0) {
 	    ret = errno;
+	    krb5_set_error_string (context, "close %s: %s", f, strerror(ret));
+	}
     return ret;
 }
 
@@ -339,9 +361,14 @@ init_fcc (krb5_context context,
     krb5_error_code ret;
 
     fd = open(fcache->filename, O_RDONLY | O_BINARY);
-    if(fd < 0)
-	return errno;
+    if(fd < 0) {
+	ret = errno;
+	krb5_set_error_string(context, "open(%s): %s", fcache->filename,
+			      strerror(ret));
+	return ret;
+    }
     sp = krb5_storage_from_fd(fd);
+    krb5_storage_set_eof_code(sp, KRB5_CC_END);
     ret = krb5_ret_int8(sp, &pvno);
     if(ret == KRB5_CC_END)
 	return ENOENT;
