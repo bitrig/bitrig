@@ -1,4 +1,4 @@
-/*	$OpenBSD: ohci.c,v 1.18 2001/01/28 09:43:41 aaron Exp $ */
+/*	$OpenBSD: ohci.c,v 1.19 2001/03/25 07:00:59 csapuntz Exp $ */
 /*	$NetBSD: ohci.c,v 1.93 2000/08/17 23:18:56 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/ohci.c,v 1.22 1999/11/17 22:33:40 n_hibma Exp $	*/
 
@@ -2045,6 +2045,7 @@ ohci_abort_xfer_end(void *v)
 #ifdef DIAGNOSTIC
 	if (p == NULL) {
 		printf("ohci_abort_xfer: hcpriv==0\n");
+		splx(s);
 		return;
 	}
 #endif
