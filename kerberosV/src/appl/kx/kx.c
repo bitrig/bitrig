@@ -33,7 +33,7 @@
 
 #include "kx.h"
 
-RCSID("$KTH: kx.c,v 1.67 2000/10/08 13:21:17 assar Exp $");
+RCSID("$KTH: kx.c,v 1.68 2001/02/20 01:44:45 assar Exp $");
 
 static int nchild;
 static int donep;
@@ -45,6 +45,7 @@ static int donep;
 static RETSIGTYPE
 childhandler (int sig)
 {
+     int save_errno = errno;
      pid_t pid;
      int status;
 
@@ -52,9 +53,10 @@ childhandler (int sig)
 	 pid = waitpid (-1, &status, WNOHANG|WUNTRACED);
 	 if (pid > 0 && (WIFEXITED(status) || WIFSIGNALED(status)))
 	     if (--nchild == 0 && donep)
-		 exit (0);
+		 _exit (0);
      } while(pid > 0);
      signal (SIGCHLD, childhandler);
+     errno = save_errno;
      SIGRETURN(0);
 }
 
@@ -82,7 +84,7 @@ usr2handler (int sig)
 {
     donep = 1;
     if (nchild == 0)
-	exit (0);
+	_exit (0);
 
     SIGRETURN(0);
 }
@@ -690,7 +692,7 @@ main(int argc, char **argv)
     int ret	= 1;
     char *host	= NULL;
 
-    set_progname (argv[0]);
+    setprogname (argv[0]);
 
     if (getarg (args, sizeof(args) / sizeof(args[0]), argc, argv,
 		&optind))
