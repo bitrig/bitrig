@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004, 2005  Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (C) 2004  Internet Systems Consortium, Inc. ("ISC")
  * Copyright (C) 2001-2003  Internet Software Consortium.
  *
  * Permission to use, copy, modify, and distribute this software for any
@@ -15,11 +15,10 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* $ISC: builtin.c,v 1.5.18.5 2005/08/23 04:12:38 marka Exp $ */
+/* $ISC: builtin.c,v 1.4.106.4 2004/03/08 04:04:18 marka Exp $ */
 
-/*! \file
- * \brief
- * The built-in "version", "hostname", "id", "authors" and "empty" databases.
+/*
+ * The built-in "version", "hostname", "id" and "authors" databases.
  */
 
 #include <config.h>
@@ -27,13 +26,12 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <isc/mem.h>
 #include <isc/print.h>
 #include <isc/result.h>
 #include <isc/util.h>
 
-#include <dns/result.h>
 #include <dns/sdb.h>
+#include <dns/result.h>
 
 #include <named/builtin.h>
 #include <named/globals.h>
@@ -46,7 +44,6 @@ static isc_result_t do_version_lookup(dns_sdblookup_t *lookup);
 static isc_result_t do_hostname_lookup(dns_sdblookup_t *lookup);
 static isc_result_t do_authors_lookup(dns_sdblookup_t *lookup);
 static isc_result_t do_id_lookup(dns_sdblookup_t *lookup);
-static isc_result_t do_empty_lookup(dns_sdblookup_t *lookup);
 
 /*
  * We can't use function pointers as the db_data directly
@@ -56,15 +53,12 @@ static isc_result_t do_empty_lookup(dns_sdblookup_t *lookup);
 
 struct builtin {
 	isc_result_t (*do_lookup)(dns_sdblookup_t *lookup);
-	char *server;
-	char *contact;
 };
 
-static builtin_t version_builtin = { do_version_lookup,  NULL, NULL };
-static builtin_t hostname_builtin = { do_hostname_lookup, NULL, NULL };
-static builtin_t authors_builtin = { do_authors_lookup, NULL, NULL };
-static builtin_t id_builtin = { do_id_lookup, NULL, NULL };
-static builtin_t empty_builtin = { do_empty_lookup, NULL, NULL };
+static builtin_t version_builtin = { do_version_lookup };
+static builtin_t hostname_builtin = { do_hostname_lookup };
+static builtin_t authors_builtin = { do_authors_lookup };
+static builtin_t id_builtin = { do_id_lookup };
 
 static dns_sdbimplementation_t *builtin_impl;
 
@@ -173,37 +167,16 @@ do_id_lookup(dns_sdblookup_t *lookup) {
 }
 
 static isc_result_t
-do_empty_lookup(dns_sdblookup_t *lookup) {
-
-	UNUSED(lookup);
-	return (ISC_R_SUCCESS);
-}
-
-static isc_result_t
 builtin_authority(const char *zone, void *dbdata, dns_sdblookup_t *lookup) {
 	isc_result_t result;
-	const char *contact = "hostmaster";
-	const char *server = "@";
-	builtin_t *b = (builtin_t *) dbdata;
 
 	UNUSED(zone);
 	UNUSED(dbdata);
 
-	if (b == &empty_builtin) {
-		server = ".";
-		contact = ".";
-	} else {
-		if (b->server != NULL)
-			server = b->server;
-		if (b->contact != NULL)
-			contact = b->contact;
-	}
-	
-	result = dns_sdb_putsoa(lookup, server, contact, 0);
+	result = dns_sdb_putsoa(lookup, "@", "hostmaster", 0);
 	if (result != ISC_R_SUCCESS)
 		return (ISC_R_FAILURE);
-
-	result = dns_sdb_putrr(lookup, "ns", 0, server);
+	result = dns_sdb_putrr(lookup, "ns", 0, "@");
 	if (result != ISC_R_SUCCESS)
 		return (ISC_R_FAILURE);
 
@@ -214,17 +187,10 @@ static isc_result_t
 builtin_create(const char *zone, int argc, char **argv,
 	       void *driverdata, void **dbdata)
 {
-	REQUIRE(argc >= 1);
-
 	UNUSED(zone);
 	UNUSED(driverdata);
-
-	if (strcmp(argv[0], "empty") == 0) {
-		if (argc != 3)
-			return (DNS_R_SYNTAX);
-	} else if (argc != 1)
+	if (argc != 1)
 		return (DNS_R_SYNTAX);
-
 	if (strcmp(argv[0], "version") == 0)
 		*dbdata = &version_builtin;
 	else if (strcmp(argv[0], "hostname") == 0)
@@ -233,54 +199,9 @@ builtin_create(const char *zone, int argc, char **argv,
 		*dbdata = &authors_builtin;
 	else if (strcmp(argv[0], "id") == 0)
 		*dbdata = &id_builtin;
-	else if (strcmp(argv[0], "empty") == 0) { 
-		builtin_t *empty;
-		char *server;
-		char *contact;
-		/*
-		 * We don't want built-in zones to fail.  Fallback to
-		 * the static configuration if memory allocation fails.
-		 */
-		empty = isc_mem_get(ns_g_mctx, sizeof(*empty));
-		server = isc_mem_strdup(ns_g_mctx, argv[1]);
-		contact = isc_mem_strdup(ns_g_mctx, argv[2]);
-		if (empty == NULL || server == NULL || contact == NULL) {
-			*dbdata = &empty_builtin;
-			if (server != NULL)
-				isc_mem_free(ns_g_mctx, server);
-			if (contact != NULL)
-				isc_mem_free(ns_g_mctx, contact);
-			if (empty != NULL)
-				isc_mem_put(ns_g_mctx, empty, sizeof (*empty));
-		} else {
-			memcpy(empty, &empty_builtin, sizeof (empty_builtin));
-			empty->server = server;
-			empty->contact = contact;
-			*dbdata = empty;
-		}
-	} else
+	else
 		return (ISC_R_NOTIMPLEMENTED);
 	return (ISC_R_SUCCESS);
-}
-
-static void
-builtin_destroy(const char *zone, void *driverdata, void **dbdata) {
-	builtin_t *b = (builtin_t *) *dbdata;
-
-	UNUSED(zone);
-	UNUSED(driverdata);
-
-	/*
-	 * Don't free the static versions.
-	 */
-	if (*dbdata == &version_builtin || *dbdata == &hostname_builtin ||
-	    *dbdata == &authors_builtin || *dbdata == &id_builtin ||
-	    *dbdata == &empty_builtin)
-		return;
-
-	isc_mem_free(ns_g_mctx, b->server);
-	isc_mem_free(ns_g_mctx, b->contact);
-	isc_mem_put(ns_g_mctx, b, sizeof (*b));
 }
 
 static dns_sdbmethods_t builtin_methods = {
@@ -288,7 +209,7 @@ static dns_sdbmethods_t builtin_methods = {
 	builtin_authority,
 	NULL,		/* allnodes */
 	builtin_create,
-	builtin_destroy
+	NULL		/* destroy */
 };
 
 isc_result_t
