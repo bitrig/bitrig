@@ -1,4 +1,4 @@
-/*	$OpenBSD: cache_c.c,v 1.1 1998/06/23 18:46:41 mickey Exp $	*/
+/*	$OpenBSD: cache_c.c,v 1.2 1998/07/08 21:34:31 mickey Exp $	*/
 /*	$NOWHERE: cache_c.c,v 2.1 1998/06/22 19:34:46 mickey Exp $	*/
 
 /*
@@ -42,8 +42,11 @@
 /*
  * HISTORY
  * $Log: cache_c.c,v $
- * Revision 1.1  1998/06/23 18:46:41  mickey
- * Initial revision
+ * Revision 1.2  1998/07/08 21:34:31  mickey
+ * use those new pdc call types
+ *
+ * Revision 1.1.1.1  1998/06/23 18:46:41  mickey
+ * ok, it boots, include and libkern to come
  *
  * Revision 2.1  1998/06/22 19:34:46  mickey
  * add cache manipulating routines
@@ -96,7 +99,6 @@ fall(c_base, c_count, c_loop, c_stride, rot)
  * Returns:
  *              Hopefully.
  */
-extern int (*pdc)();
 struct pdc_cache pdc_cacheinfo __attribute__ ((aligned(8)));
 
 void 
