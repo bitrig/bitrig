@@ -225,8 +225,15 @@ tree
 make_call_declarator (target, parms, cv_qualifiers, exception_specification)
      tree target, parms, cv_qualifiers, exception_specification;
 {
-  target = build_parse_node (CALL_EXPR, target, parms, cv_qualifiers);
-  TREE_TYPE (target) = exception_specification;
+  target = build_parse_node (CALL_EXPR, target,
+			   /* Both build_parse_node and
+			      decl_tree_cons build on the
+			      temp_decl_obstack.  */
+			   decl_tree_cons (parms, cv_qualifiers, NULL_TREE),
+			   /* The third operand is really RTL.  We
+			      shouldn't put anything there.  */
+			   NULL_TREE);
+  CALL_DECLARATOR_EXCEPTION_SPEC (target) = exception_specification;
   return target;
 }
 
@@ -234,8 +241,8 @@ void
 set_quals_and_spec (call_declarator, cv_qualifiers, exception_specification)
      tree call_declarator, cv_qualifiers, exception_specification;
 {
-  TREE_OPERAND (call_declarator, 2) = cv_qualifiers;
-  TREE_TYPE (call_declarator) = exception_specification;
+  CALL_DECLARATOR_QUALS (call_declarator) = cv_qualifiers;
+  CALL_DECLARATOR_EXCEPTION_SPEC (call_declarator) = exception_specification;
 }
 
 /* Build names and nodes for overloaded operators.  */
@@ -2869,6 +2876,14 @@ do_identifier (token, parsing, args)
 	       || TREE_CODE (field) == CONST_DECL
 	       || TREE_CODE (field) == TEMPLATE_DECL)
 	id = field;
+      else if (TREE_CODE (field) == TYPE_DECL
+               && DECL_ARTIFICIAL  (field)
+               && IMPLICIT_TYPENAME_P (TREE_TYPE (field)))
+        /* When we did name-lookup before, we will have eschewed
+           implicit typenames in favor of global bindings.  Therefore,
+           if lookup_field returns an implicit typename, but ID is not
+           an implicit typename, then we should skip this one, too.  */
+        ;
       else if (TREE_CODE (field) != FIELD_DECL)
 	my_friendly_abort (61);
       else
@@ -4674,7 +4689,6 @@ make_lang_type (code)
       TYPE_LANG_SPECIFIC (t) = pi;
       SET_CLASSTYPE_INTERFACE_UNKNOWN_X (t, interface_unknown);
       CLASSTYPE_INTERFACE_ONLY (t) = interface_only;
-      TYPE_BINFO (t) = make_binfo (integer_zero_node, t, NULL_TREE, NULL_TREE);
 
       /* Make sure this is laid out, for ease of use later.  In the
 	 presence of parse errors, the normal was of assuring this
@@ -4691,6 +4705,13 @@ make_lang_type (code)
        TYPE_ALIAS_SET is initialized to -1 by default, so we must
        clear it here.  */
     TYPE_ALIAS_SET (t) = 0;
+
+  /* We need to allocate a TYPE_BINFO even for TEMPALTE_TYPE_PARMs
+     since they can be virtual base types, and we then need a
+     canonical binfo for them.  Ideally, this would be done lazily for
+     all types.  */
+  if (IS_AGGR_TYPE_CODE (code) || code == TEMPLATE_TYPE_PARM)
+    TYPE_BINFO (t) = make_binfo (integer_zero_node, t, NULL_TREE, NULL_TREE);
 
   return t;
 }

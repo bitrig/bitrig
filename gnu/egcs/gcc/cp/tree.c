@@ -71,6 +71,7 @@ lvalue_p_1 (ref, treat_class_rvalues_as_lvalues)
     case WITH_CLEANUP_EXPR:
     case REALPART_EXPR:
     case IMAGPART_EXPR:
+    case NOP_EXPR:
       return lvalue_p_1 (TREE_OPERAND (ref, 0),
 			 treat_class_rvalues_as_lvalues);
 
@@ -193,7 +194,7 @@ build_cplus_new (type, init)
   tree rval;
 
   if (TREE_CODE (init) != CALL_EXPR && TREE_CODE (init) != AGGR_INIT_EXPR)
-    return init;
+    return convert (type, init);
 
   slot = build (VAR_DECL, type);
   DECL_ARTIFICIAL (slot) = 1;
@@ -1882,14 +1883,7 @@ mapcar (t, func)
       TREE_TYPE (t) = mapcar (TREE_TYPE (t), func);
       TREE_OPERAND (t, 0) = mapcar (TREE_OPERAND (t, 0), func);
       TREE_OPERAND (t, 1) = mapcar (TREE_OPERAND (t, 1), func);
-
-      /* tree.def says that operand two is RTL, but
-	 make_call_declarator puts trees in there.  */
-      if (TREE_OPERAND (t, 2)
-	  && TREE_CODE (TREE_OPERAND (t, 2)) == TREE_LIST)
-	TREE_OPERAND (t, 2) = mapcar (TREE_OPERAND (t, 2), func);
-      else
-	TREE_OPERAND (t, 2) = NULL_TREE;
+      TREE_OPERAND (t, 2) = NULL_TREE;
       return t;
 
     case CONVERT_EXPR:
@@ -1901,6 +1895,7 @@ mapcar (t, func)
     case NOP_EXPR:
     case COMPONENT_REF:
     case CLEANUP_POINT_EXPR:
+    case NON_LVALUE_EXPR:
       t = copy_node (t);
       TREE_TYPE (t) = mapcar (TREE_TYPE (t), func);
       TREE_OPERAND (t, 0) = mapcar (TREE_OPERAND (t, 0), func);
@@ -2789,3 +2784,21 @@ cp_valid_lang_attribute (attr_name, attr_args, decl, type)
 
   return 0;
 }
+
+/* Return a new PTRMEM_CST of the indicated TYPE.  The MEMBER is the
+   thing pointed to by the constant.  */
+
+tree
+make_ptrmem_cst (type, member)
+     tree type;
+     tree member;
+{
+  tree ptrmem_cst = make_node (PTRMEM_CST);
+  /* If would seem a great convenience if make_node would set
+     TREE_CONSTANT for things of class `c', but it does not.  */
+  TREE_CONSTANT (ptrmem_cst) = 1;
+  TREE_TYPE (ptrmem_cst) = type;
+  PTRMEM_CST_MEMBER (ptrmem_cst) = member;
+  return ptrmem_cst;
+}
+
