@@ -36,7 +36,7 @@
  */
 #include "bsd_locl.h"
 
-RCSID("$KTH: rlogin.c,v 1.67 1999/11/13 06:13:02 assar Exp $");
+RCSID("$KTH: rlogin.c,v 1.67.2.2 2000/10/10 12:54:26 assar Exp $");
 
 CREDENTIALS cred;
 Key_schedule schedule;
@@ -241,6 +241,8 @@ reader(void)
 		rcvcnt = 0;
 
 		FD_ZERO (&readfds);
+		if (rem >= FD_SETSIZE)
+		    errx (1, "fd too large");
 		FD_SET (rem, &readfds);
 		FD_ZERO (&exceptfds);
 		if (kludgep)
@@ -341,7 +343,7 @@ static void
 stop(int all)
 {
 	mode(0);
-	signal(SIGCHLD, SIG_IGN);
+	signal(SIGCHLD, SIG_DFL);
 	kill(all ? 0 : getpid(), SIGTSTP);
 	signal(SIGCHLD, catch_child);
 	mode(1);
@@ -490,7 +492,7 @@ doit(void)
 	    done(1);
 	}
 	if (child == 0) {
-	        signal(SIGCHLD, SIG_IGN);
+	        signal(SIGCHLD, SIG_DFL);
 	        signal(SIGTTOU, SIG_IGN);
 		if (reader() == 0)
 		    errx(1, "connection closed.\r");
@@ -641,7 +643,7 @@ main(int argc, char **argv)
 	get_window_size(0, &winsize);
 
 	if (use_kerberos) {
-	        setuid(getuid());
+	        paranoid_setuid(getuid());
 		rem = KSUCCESS;
 		errno = 0;
 		if (dest_realm == NULL)
@@ -703,7 +705,7 @@ main(int argc, char **argv)
 #endif /* IP_TOS */
 #endif /* HAVE_SETSOCKOPT */
 
-	setuid(uid);
+	paranoid_setuid(uid);
 	doit();
 	return 0;
 }
