@@ -5,10 +5,10 @@
 # based on original version by Alan R. Martello <al@ee.pitt.edu>
 # And by A.Macpherson@bnr.co.uk for multi-homed hosts
 #
-# $Header: /scm/cvs/src/gnu/usr.bin/perl/lib/Attic/ftp.pl,v 1.1 1996/08/19 10:12:34 downsj Exp $
+# $Header: /scm/cvs/src/gnu/usr.bin/perl/lib/Attic/ftp.pl,v 1.2 1997/11/30 07:56:58 millert Exp $
 # $Log: ftp.pl,v $
-# Revision 1.1  1996/08/19 10:12:34  downsj
-# Initial revision
+# Revision 1.2  1997/11/30 07:56:58  millert
+# perl 5.004_04
 #
 # Revision 1.17  1993/04/21  10:06:54  lmjm
 # Send all status reports to STDERR not to STDOUT (to allow use by ftpcat).
@@ -91,8 +91,9 @@
 # Initial revision
 #
 
-require 'chat2.pl';
-eval "require 'socket.ph'" || eval "require 'sys/socket.ph'" || die "socket.ph missing: $!\n";
+require 'chat2.pl';	# into main
+eval "require 'socket.ph'" || eval "require 'sys/socket.ph'"
+	|| die "socket.ph missing: $!\n";
 
 
 package ftp;
@@ -143,7 +144,7 @@ $real_site = "";
 $ftp_show = 0;
 sub ftp'debug
 {
-	$ftp_show = @_[0];
+	$ftp_show = $_[0];
 #	if( $ftp_show ){
 #		print STDERR "ftp debugging on\n";
 #	}
@@ -151,7 +152,7 @@ sub ftp'debug
 
 sub ftp'set_timeout
 {
-	$timeout = @_[0];
+	$timeout = $_[0];
 	$timeout_open = $timeout;
 	$timeout_read = 20 * $timeout;
 	if( $ftp_show ){
@@ -248,7 +249,7 @@ sub ftp'login
 	local( $remote_user, $remote_password ) = @_;
 
 	if( $proxy ){
-		&ftp'send( "USER $remote_user@$site" );
+		&ftp'send( "USER $remote_user\@$site" );
 	}
 	else {
 		&ftp'send( "USER $remote_user" );
