@@ -1,4 +1,4 @@
-/* crypto/des/cfb64enc.c */
+/* crypto/md5/md5.c */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -56,66 +56,72 @@
  * [including the GNU Public Licence.]
  */
 
-#include "des_locl.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <openssl/md5.h>
 
-/* The input and output encrypted as though 64bit cfb mode is being
- * used.  The extra state information to record how much of the
- * 64bit block we have used is contained in *num;
- */
+#define BUFSIZE	1024*16
 
-void des_cfb64_encrypt(const unsigned char *in, unsigned char *out,
-	     long length, des_key_schedule schedule, des_cblock *ivec,
-	     int *num, int enc)
+void do_fp(FILE *f);
+void pt(unsigned char *md);
+#ifndef _OSD_POSIX
+int read(int, void *, unsigned int);
+#endif
+
+int main(int argc, char **argv)
 	{
-	register DES_LONG v0,v1;
-	register long l=length;
-	register int n= *num;
-	DES_LONG ti[2];
-	unsigned char *iv,c,cc;
+	int i,err=0;
+	FILE *IN;
 
-	iv = &(*ivec)[0];
-	if (enc)
+	if (argc == 1)
 		{
-		while (l--)
-			{
-			if (n == 0)
-				{
-				c2l(iv,v0); ti[0]=v0;
-				c2l(iv,v1); ti[1]=v1;
-				des_encrypt1(ti,schedule,DES_ENCRYPT);
-				iv = &(*ivec)[0];
-				v0=ti[0]; l2c(v0,iv);
-				v0=ti[1]; l2c(v0,iv);
-				iv = &(*ivec)[0];
-				}
-			c= *(in++)^iv[n];
-			*(out++)=c;
-			iv[n]=c;
-			n=(n+1)&0x07;
-			}
+		do_fp(stdin);
 		}
 	else
 		{
-		while (l--)
+		for (i=1; i<argc; i++)
 			{
-			if (n == 0)
+			IN=fopen(argv[i],"r");
+			if (IN == NULL)
 				{
-				c2l(iv,v0); ti[0]=v0;
-				c2l(iv,v1); ti[1]=v1;
-				des_encrypt1(ti,schedule,DES_ENCRYPT);
-				iv = &(*ivec)[0];
-				v0=ti[0]; l2c(v0,iv);
-				v0=ti[1]; l2c(v0,iv);
-				iv = &(*ivec)[0];
+				perror(argv[i]);
+				err++;
+				continue;
 				}
-			cc= *(in++);
-			c=iv[n];
-			iv[n]=cc;
-			*(out++)=c^cc;
-			n=(n+1)&0x07;
+			printf("MD5(%s)= ",argv[i]);
+			do_fp(IN);
+			fclose(IN);
 			}
 		}
-	v0=v1=ti[0]=ti[1]=c=cc=0;
-	*num=n;
+	exit(err);
+	}
+
+void do_fp(FILE *f)
+	{
+	MD5_CTX c;
+	unsigned char md[MD5_DIGEST_LENGTH];
+	int fd;
+	int i;
+	static unsigned char buf[BUFSIZE];
+
+	fd=fileno(f);
+	MD5_Init(&c);
+	for (;;)
+		{
+		i=read(fd,buf,BUFSIZE);
+		if (i <= 0) break;
+		MD5_Update(&c,buf,(unsigned long)i);
+		}
+	MD5_Final(&(md[0]),&c);
+	pt(md);
+	}
+
+void pt(unsigned char *md)
+	{
+	int i;
+
+	for (i=0; i<MD5_DIGEST_LENGTH; i++)
+		printf("%02x",md[i]);
+	printf("\n");
 	}
 
