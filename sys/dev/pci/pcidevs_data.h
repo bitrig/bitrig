@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.144 1999/05/27 09:20:02 deraadt Exp 
+ *	OpenBSD: pcidevs,v 1.145 1999/05/27 21:46:54 deraadt Exp 
  */
 
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
@@ -900,13 +900,13 @@ struct pci_knowndev pci_knowndevs[] = {
 	    PCI_VENDOR_CIRRUS, PCI_PRODUCT_CIRRUS_CL_PD6832,
 	    0,
 	    "Cirrus Logic",
-	    "CL-PD6832",
+	    "CL-PD6832 PCI-CardBus",
 	},
 	{
 	    PCI_VENDOR_CIRRUS, PCI_PRODUCT_CIRRUS_CL_PD6833,
 	    0,
 	    "Cirrus Logic",
-	    "CL-PD6833",
+	    "CL-PD6833 PCI-CardBus",
 	},
 	{
 	    PCI_VENDOR_CIRRUS, PCI_PRODUCT_CIRRUS_CL_GD7542,
@@ -925,6 +925,18 @@ struct pci_knowndev pci_knowndevs[] = {
 	    0,
 	    "Cirrus Logic",
 	    "CL-GD7541",
+	},
+	{
+	    PCI_VENDOR_CIRRUS, PCI_PRODUCT_CIRRUS_CS4610,
+	    0,
+	    "Cirrus Logic",
+	    "CS4610 SoundFusion Audio",
+	},
+	{
+	    PCI_VENDOR_CIRRUS, PCI_PRODUCT_CIRRUS_CS4280,
+	    0,
+	    "Cirrus Logic",
+	    "CS4280 CrystalClear Audio",
 	},
 	{
 	    PCI_VENDOR_CMDTECH, PCI_PRODUCT_CMDTECH_640,
@@ -1809,12 +1821,6 @@ struct pci_knowndev pci_knowndevs[] = {
 	    "Collage 155 ATM adapter",
 	},
 	{
-	    PCI_VENDOR_MATROX, PCI_PRODUCT_MATROX_IMPRESSION,
-	    0,
-	    "Matrox",
-	    "MGA Impression",
-	},
-	{
 	    PCI_VENDOR_MATROX, PCI_PRODUCT_MATROX_ATLAS,
 	    0,
 	    "Matrox",
@@ -1855,6 +1861,12 @@ struct pci_knowndev pci_knowndevs[] = {
 	    0,
 	    "Matrox",
 	    "MGA Millennium G200 AGP",
+	},
+	{
+	    PCI_VENDOR_MATROX, PCI_PRODUCT_MATROX_IMPRESSION,
+	    0,
+	    "Matrox",
+	    "MGA Impression",
 	},
 	{
 	    PCI_VENDOR_MATROX, PCI_PRODUCT_MATROX_PRODUCTIVA_PCI,
