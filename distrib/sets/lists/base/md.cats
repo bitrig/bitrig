@@ -2201,3 +2201,7 @@
 ./usr/local/libdata/perl5/site_perl/arm-openbsd
 ./usr/sbin/wsconscfg
 ./usr/sbin/wsfontload
+./usr/libdata/perl5/site_perl/arm-openbsd/dev/ic/aic79xx.ph
+./usr/libdata/perl5/site_perl/arm-openbsd/dev/ic/aic79xx_inline.ph
+./usr/libdata/perl5/site_perl/arm-openbsd/dev/ic/aic79xx_openbsd.ph
+./usr/libdata/perl5/site_perl/arm-openbsd/dis-asm.ph

@@ -2180,3 +2180,7 @@
 ./usr/share/misc/pcvtfonts/vt220l.810
 ./usr/share/misc/pcvtfonts/vt220l.814
 ./usr/share/misc/pcvtfonts/vt220l.816
+./usr/libdata/perl5/site_perl/i386-openbsd/dev/ic/aic79xx.ph
+./usr/libdata/perl5/site_perl/i386-openbsd/dev/ic/aic79xx_inline.ph
+./usr/libdata/perl5/site_perl/i386-openbsd/dev/ic/aic79xx_openbsd.ph
+./usr/libdata/perl5/site_perl/i386-openbsd/dis-asm.ph

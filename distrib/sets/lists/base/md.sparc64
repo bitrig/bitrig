@@ -2155,3 +2155,7 @@
 ./usr/mdec/ofwboot.net
 ./usr/sbin/eeprom
 ./usr/sbin/wsconscfg
+./usr/libdata/perl5/site_perl/sparc64-openbsd/dev/ic/aic79xx.ph
+./usr/libdata/perl5/site_perl/sparc64-openbsd/dev/ic/aic79xx_inline.ph
+./usr/libdata/perl5/site_perl/sparc64-openbsd/dev/ic/aic79xx_openbsd.ph
+./usr/libdata/perl5/site_perl/sparc64-openbsd/dis-asm.ph

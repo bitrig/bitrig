@@ -1,3 +1,7 @@
+./usr/libdata/perl5/site_perl/m68k-openbsd/dev/ic/aic79xx.ph
+./usr/libdata/perl5/site_perl/m68k-openbsd/dev/ic/aic79xx_inline.ph
+./usr/libdata/perl5/site_perl/m68k-openbsd/dev/ic/aic79xx_openbsd.ph
+./usr/libdata/perl5/site_perl/m68k-openbsd/dis-asm.ph
 ./sbin/ldconfig
 ./sbin/pdisk
 ./usr/bin/ldd

@@ -2134,3 +2134,7 @@
 ./usr/mdec/installboot
 ./usr/mdec/mbr
 ./usr/sbin/wsconscfg
+./usr/libdata/perl5/site_perl/powerpc-openbsd/dev/ic/aic79xx.ph
+./usr/libdata/perl5/site_perl/powerpc-openbsd/dev/ic/aic79xx_inline.ph
+./usr/libdata/perl5/site_perl/powerpc-openbsd/dev/ic/aic79xx_openbsd.ph
+./usr/libdata/perl5/site_perl/powerpc-openbsd/dis-asm.ph

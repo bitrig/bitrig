@@ -2112,3 +2112,7 @@
 ./usr/mdec/netboot
 ./usr/mdec/stboot
 ./usr/mdec/tftpboot
+./usr/libdata/perl5/site_perl/m88k-openbsd/dev/ic/aic79xx.ph
+./usr/libdata/perl5/site_perl/m88k-openbsd/dev/ic/aic79xx_inline.ph
+./usr/libdata/perl5/site_perl/m88k-openbsd/dev/ic/aic79xx_openbsd.ph
+./usr/libdata/perl5/site_perl/m88k-openbsd/dis-asm.ph

@@ -2166,3 +2166,7 @@
 ./usr/mdec/rboot
 ./usr/mdec/sboot
 ./usr/mdec/stboot
+./usr/libdata/perl5/site_perl/m68k-openbsd/dev/ic/aic79xx.ph
+./usr/libdata/perl5/site_perl/m68k-openbsd/dev/ic/aic79xx_inline.ph
+./usr/libdata/perl5/site_perl/m68k-openbsd/dev/ic/aic79xx_openbsd.ph
+./usr/libdata/perl5/site_perl/m68k-openbsd/dis-asm.ph
