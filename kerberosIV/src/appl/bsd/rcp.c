@@ -33,7 +33,7 @@
 
 #include "bsd_locl.h"
 
-RCSID("$KTH: rcp.c,v 1.52 1999/11/16 16:54:16 bg Exp $");
+RCSID("$KTH: rcp.c,v 1.52.2.1 2000/06/23 02:35:16 assar Exp $");
 
 /* Globals */
 static char	dst_realm_buf[REALM_SZ];
@@ -145,18 +145,21 @@ run_err(const char *fmt, ...)
 	char errbuf[1024];
 
 	va_list args;
-	va_start(args, fmt);
 	++errs;
 #define RCPERR "\001rcp: "
 	strlcpy (errbuf, RCPERR, sizeof(errbuf));
+	va_start(args, fmt);
 	vsnprintf (errbuf + strlen(errbuf),
 		   sizeof(errbuf) - strlen(errbuf),
 		   fmt, args);
+	va_end(args);
 	strlcat (errbuf, "\n", sizeof(errbuf));
 	des_write (rem, errbuf, strlen(errbuf));
-	if (!iamremote)
+	if (!iamremote) {
+		va_start(args, fmt);
 		vwarnx(fmt, args);
-	va_end(args);
+		va_end(args);
+	}
 }
 
 static void
@@ -415,7 +418,7 @@ kerberos(char **host, char *bp, char *locuser, char *user)
         int sock = -1, err;
 
 	if (use_kerberos) {
-	        setuid(getuid());
+	        paranoid_setuid(getuid());
 		rem = KSUCCESS;
 		errno = 0;
 		if (dest_realm == NULL)
@@ -559,7 +562,7 @@ toremote(char *targ, int argc, char **argv)
 				if (response() < 0)
 					exit(1);
 				free(bp);
-				setuid(userid);
+				paranoid_setuid(userid);
 			}
 			source(1, argv+i);
 		}
@@ -1002,7 +1005,7 @@ main(int argc, char **argv)
 		response();
 	    if(do_osfc2_magic(pwd->pw_uid))
 		exit(1);
-	    setuid(userid);
+	    paranoid_setuid(userid);
 	    if (k_hasafs()) {
 		/* Sometimes we will need cell specific tokens
 		 * to be able to read and write files, thus,
