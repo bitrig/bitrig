@@ -1,5 +1,4 @@
-/*	$OpenBSD: rx_null.h,v 1.1 1998/09/14 21:53:16 art Exp $	*/
-/* $Header: /scm/cvs/src/usr.sbin/afs/src/rx/rx_null.h,v 1.1 1998/09/14 21:53:16 art Exp $ */
+/* $Header: /scm/cvs/src/usr.sbin/afs/src/rx/rx_null.h,v 1.2 2000/09/11 14:41:22 art Exp $ */
 /* $Source: /scm/cvs/src/usr.sbin/afs/src/rx/rx_null.h,v $ */
 
 /*
