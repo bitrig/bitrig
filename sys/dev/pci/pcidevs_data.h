@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.749 2004/07/18 03:55:22 deraadt Exp 
+ *	OpenBSD: pcidevs,v 1.750 2004/07/18 03:56:40 deraadt Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -2004,7 +2004,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_COMPAQ, PCI_PRODUCT_COMPAQ_DPNet100TX,
-	    "Dual Port Netelligent 10/100 TX",
+	    "DP Netelligent 10/100 TX",
 	},
 	{
 	    PCI_VENDOR_COMPAQ, PCI_PRODUCT_COMPAQ_IntPL100TX,
@@ -2884,7 +2884,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82546EB,
-	    "PRO/1000MT Dual Port (82546EB)",
+	    "PRO/1000MT DP (82546EB)",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82545EM_SC,
@@ -2892,7 +2892,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82546EB_SC,
-	    "PRO/1000MF Dual Port (82546EB)",
+	    "PRO/1000MF DP (82546EB)",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82541EI,
@@ -2928,7 +2928,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82546EB_QUAD,
-	    "PRO/1000MF Quad Port (82546EB)",
+	    "PRO/1000MF QP (82546EB)",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82540EP_LP,
@@ -3048,15 +3048,15 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82546EB_COPPER,
-	    "PRO/1000MT Dual Port (82546EB)",
+	    "PRO/1000MT DP (82546EB)",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82546EB_FIBER,
-	    "PRO/1000MF Dual Port (82546EB)",
+	    "PRO/1000MF DP (82546EB)",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82546EB_SERDES,
-	    "PRO/1000MB Dual Port (82546EB)",
+	    "PRO/1000MB DP (82546EB)",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82815_DC100_HUB,
