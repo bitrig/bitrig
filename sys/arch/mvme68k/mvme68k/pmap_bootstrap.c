@@ -1,6 +1,35 @@
-/*	$NetBSD: pmap_bootstrap.c,v 1.1.1.1 1995/07/25 23:12:02 chuck Exp $	*/
+/*	$Id: pmap_bootstrap.c,v 1.2 1995/11/07 08:50:24 deraadt Exp $ */
 
 /* 
+ * Copyright (c) 1995 Theo de Raadt
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. All advertising materials mentioning features or use of this software
+ *    must display the following acknowledgement:
+ *	This product includes software developed under OpenBSD by
+ *	Theo de Raadt for Willowglen Singapore.
+ * 4. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
  * Copyright (c) 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -42,9 +71,9 @@
 #include <sys/param.h>
 #include <sys/msgbuf.h>
 #include <machine/pte.h>
-#include <mvme68k/mvme68k/clockreg.h>
 #include <machine/vmparam.h>
 #include <machine/cpu.h>
+#include <machine/autoconf.h>
 
 #include <vm/vm.h>
 
@@ -53,6 +82,8 @@
 extern char *etext;
 extern int Sysptsize;
 extern char *extiobase, *proc0paddr;
+char *iiomapbase;
+int iiomapsize;
 extern st_entry_t *Sysseg;
 extern pt_entry_t *Sysptmap, *Sysmap;
 
@@ -60,9 +91,6 @@ extern int maxmem, physmem;
 extern vm_offset_t avail_start, avail_end, virtual_avail, virtual_end;
 extern vm_size_t mem_size;
 extern int protection_codes[];
-#ifdef HAVEVAC
-extern int pmap_aliasmask;
-#endif
 
 /*
  * Special purpose kernel virtual addresses, used for mapping
@@ -75,7 +103,9 @@ extern int pmap_aliasmask;
  */
 caddr_t		CADDR1, CADDR2, vmmap, ledbase;
 struct msgbuf	*msgbufp;
-extern void *ledatabuf; /* XXXCDC */
+#define ETHERPAGES 16
+void	*etherbuf;
+int	etherlen;
 
 /*
  * Bootstrap the VM system.
@@ -108,12 +138,12 @@ pmap_bootstrap(nextpa, firstpa)
 	 *			kernel PT pages		Sysptsize+ pages
 	 *
 	 *	iiopa		internal IO space
-	 *			PT pages		IIOMAPSIZE pages
+	 *			PT pages		iiomapsize pages
 	 *
 	 *	eiopa		external IO space
 	 *			PT pages		EIOMAPSIZE pages
 	 *
-	 * [ Sysptsize is the number of pages of PT, IIOMAPSIZE and
+	 * [ Sysptsize is the number of pages of PT, iiomapsize and
 	 *   EIOMAPSIZE are the number of PTEs, hence we need to round
 	 *   the total to a page boundary with IO maps at the end. ]
 	 *
@@ -134,20 +164,19 @@ pmap_bootstrap(nextpa, firstpa)
 	nextpa += kstsize * NBPG;
 	kptpa = nextpa;
 	nptpages = RELOC(Sysptsize, int) +
-		(IIOMAPSIZE + EIOMAPSIZE + NPTEPG - 1) / NPTEPG;
+		(RELOC(iiomapsize, int) + EIOMAPSIZE + NPTEPG - 1) / NPTEPG;
 	nextpa += nptpages * NBPG;
 	eiopa = nextpa - EIOMAPSIZE * sizeof(pt_entry_t);
-	iiopa = eiopa - IIOMAPSIZE * sizeof(pt_entry_t);
+	iiopa = eiopa - RELOC(iiomapsize, int) * sizeof(pt_entry_t);
 	kptmpa = nextpa;
 	nextpa += NBPG;
 	lkptpa = nextpa;
 	nextpa += NBPG;
 	p0upa = nextpa;
 	nextpa += USPACE;
-	{ /* XXXCDC */
-		ledatabuf = (void *)nextpa;
-		nextpa += 4 * NBPG;
-	} /* XXXCDC */
+
+	RELOC(etherbuf, void *) = (void *)nextpa;
+	nextpa += ETHERPAGES * NBPG;
 
 	/*
 	 * Initialize segment table and kernel page table map.
@@ -244,6 +273,13 @@ pmap_bootstrap(nextpa, firstpa)
 			*pte++ = protopte;
 			protopte += NBPG;
 		}
+		/*
+		 * Invalidate all but the last remaining entries in both.
+		 */
+		epte = &((u_int *)kptmpa)[NPTEPG-1];
+		while (pte < epte) {
+			*pte++ = PG_NV;
+		}
 		pte = &((u_int *)kptmpa)[NPTEPG-1];
 		*pte = lkptpa | PG_RW | PG_CI | PG_V;
 	} else {
@@ -309,6 +345,8 @@ pmap_bootstrap(nextpa, firstpa)
 #else
 	protopte = firstpa | PG_RO | PG_V;
 #endif
+	*pte++ = firstpa | PG_NV;		/* make *NULL fail in the kernel */
+	protopte += NBPG;
 	while (pte < epte) {
 		*pte++ = protopte;
 		protopte += NBPG;
@@ -329,14 +367,19 @@ pmap_bootstrap(nextpa, firstpa)
 		*pte++ = protopte;
 		protopte += NBPG;
 	}
-	{ /* XXXCDC -- uncache lebuf */
-		u_int *lepte = &((u_int *)kptpa)[m68k_btop(ledatabuf)];
 
-		lepte[0] = lepte[0] | PG_CI;
-		lepte[1] = lepte[1] | PG_CI;
-		lepte[2] = lepte[2] | PG_CI;
-		lepte[3] = lepte[3] | PG_CI;
-	} /* XXXCDC yuck */
+	pte = &((u_int *)kptpa)[m68k_btop(etherbuf)];
+	epte = pte + ETHERPAGES;
+	if (RELOC(mmutype, int) == MMU_68040)
+		while (pte < epte) {
+			*pte = (*pte & ~PG_CMASK) | PG_CIS;
+			pte++;
+		}
+	else
+		while (pte < epte) {
+			*pte++ |= PG_CI;
+		}
+	RELOC(etherlen, int) = ETHERPAGES * NBPG;
 
 	/*
 	 * Finally, validate the internal IO space PTEs (RW+CI).
@@ -347,7 +390,7 @@ pmap_bootstrap(nextpa, firstpa)
 	 */
 	pte = (u_int *)iiopa;
 	epte = (u_int *)eiopa;
-	protopte = INTIOBASE | PG_RW | PG_CI | PG_V;
+	protopte = RELOC(iiomapbase, int) | PG_RW | PG_CI | PG_V;
 	while (pte < epte) {
 		*pte++ = protopte;
 		protopte += NBPG;
@@ -374,13 +417,13 @@ pmap_bootstrap(nextpa, firstpa)
 		(pt_entry_t *)m68k_ptob(nptpages * NPTEPG);
 	/*
 	 * intiobase, intiolimit: base and end of internal (DIO) IO space.
-	 * IIOMAPSIZE pages prior to external IO space at end of static
+	 * iiomapsize pages prior to external IO space at end of static
 	 * kernel page table.
 	 */
-	RELOC(intiobase, char *) =
-		(char *)m68k_ptob(nptpages*NPTEPG - (IIOMAPSIZE+EIOMAPSIZE));
-	RELOC(intiolimit, char *) =
-		(char *)m68k_ptob(nptpages*NPTEPG - EIOMAPSIZE);
+	RELOC(intiobase, char *) = (char *)
+		m68k_ptob(nptpages*NPTEPG - (RELOC(iiomapsize, int)+EIOMAPSIZE));
+	RELOC(intiolimit, char *) = (char *)
+		m68k_ptob(nptpages*NPTEPG - EIOMAPSIZE);
 	/*
 	 * extiobase: base of external (DIO-II) IO space.
 	 * EIOMAPSIZE pages at the end of the static kernel page table.
@@ -418,17 +461,6 @@ pmap_bootstrap(nextpa, firstpa)
 	RELOC(virtual_avail, vm_offset_t) =
 		VM_MIN_KERNEL_ADDRESS + (nextpa - firstpa);
 	RELOC(virtual_end, vm_offset_t) = VM_MAX_KERNEL_ADDRESS;
-
-#ifdef HAVEVAC
-	/*
-	 * Determine VA aliasing distance if any
-	 */
-	if (RELOC(ectype, int) == EC_VIRT)
-		if (RELOC(machineid, int) == HP_320)
-			RELOC(pmap_aliasmask, int) = 0x3fff;	/* 16k */
-		else if (RELOC(machineid, int) == HP_350)
-			RELOC(pmap_aliasmask, int) = 0x7fff;	/* 32k */
-#endif
 
 	/*
 	 * Initialize protection array.
