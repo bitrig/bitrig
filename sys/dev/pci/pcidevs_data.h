@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *		OpenBSD: pcidevs,v 1.321 2000/09/19 08:37:30 niklas Exp 
+ *		OpenBSD: pcidevs,v 1.322 2000/09/22 15:09:38 aaron Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -4320,7 +4320,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	    PCI_VENDOR_SONY, PCI_PRODUCT_SONY_MEMSTICK_SLOT,
 	    0,
 	    "Sony",
-	    "Memory Stick Media Slot",
+	    "Memory Stick Slot",
 	},
 	{
 	    PCI_VENDOR_STB2, PCI_PRODUCT_STB2_RIVA128,
@@ -8400,6 +8400,12 @@ struct pci_knowndev pci_knowndevs[] = {
 	    PCI_VENDOR_BROADCOM, 0,
 	    PCI_KNOWNDEV_NOPROD,
 	    "Broadcom",
+	    NULL,
+	},
+	{
+	    PCI_VENDOR_CONEXANT, 0,
+	    PCI_KNOWNDEV_NOPROD,
+	    "Conexant",
 	    NULL,
 	},
 	{
