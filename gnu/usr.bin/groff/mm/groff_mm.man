@@ -16,7 +16,7 @@ versions, except that this permission notice may be included in
 translations approved by the Free Software Foundation instead of in
 the original English.
 ..
-.\" $Id: groff_mm.man,v 1.1 1996/09/14 19:01:55 etheisen Exp $
+.\" $Id: groff_mm.man,v 1.2 1997/04/22 14:07:31 kstailey Exp $
 .\"
 .de T2
 .ne 2v

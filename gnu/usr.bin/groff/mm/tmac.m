@@ -3,8 +3,8 @@
 .ds RE \\$2
 ..
 .\"
-.\" $Id: tmac.m,v 1.1 1996/09/14 19:01:55 etheisen Exp $
-.@revision $Revision: 1.1 $
+.\" $Id: tmac.m,v 1.2 1997/04/22 14:07:33 kstailey Exp $
+.@revision $Revision: 1.2 $
 .ig
 
 Copyright (C) 1991, 1992, 1993, 1994, 1995 Free Software Foundation, Inc.
