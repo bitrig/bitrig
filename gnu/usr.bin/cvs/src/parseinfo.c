@@ -3,15 +3,12 @@
  * Copyright (c) 1989-1992, Brian Berliner
  * 
  * You may distribute under the terms of the GNU General Public License as
- * specified in the README file that comes with the CVS 1.4 kit.
+ * specified in the README file that comes with the CVS source distribution.
  */
 
 #include "cvs.h"
-
-#ifndef lint
-static const char rcsid[] = "$CVSid: @(#)parseinfo.c 1.18 94/09/23 $";
-USE(rcsid);
-#endif
+#include "getline.h"
+#include <assert.h>
 
 /*
  * Parse the INFOFILE file for the specified REPOSITORY.  Invoke CALLPROC for
@@ -24,19 +21,21 @@ int
 Parse_Info (infofile, repository, callproc, all)
     char *infofile;
     char *repository;
-    int (*callproc) ();
+    CALLPROC callproc;
     int all;
 {
     int err = 0;
     FILE *fp_info;
-    char infopath[PATH_MAX];
-    char line[MAXLINELEN];
+    char *infopath;
+    char *line = NULL;
+    size_t line_allocated = 0;
     char *default_value = NULL;
+    char *expanded_value= NULL;
     int callback_done, line_number;
     char *cp, *exp, *value, *srepos;
     const char *regex_err;
 
-    if (CVSroot == NULL)
+    if (CVSroot_original == NULL)
     {
 	/* XXX - should be error maybe? */
 	error (0, 0, "CVSROOT variable not set");
@@ -44,21 +43,32 @@ Parse_Info (infofile, repository, callproc, all)
     }
 
     /* find the info file and open it */
-    (void) sprintf (infopath, "%s/%s/%s", CVSroot,
+    infopath = xmalloc (strlen (CVSroot_directory)
+			+ strlen (infofile)
+			+ sizeof (CVSROOTADM)
+			+ 10);
+    (void) sprintf (infopath, "%s/%s/%s", CVSroot_directory,
 		    CVSROOTADM, infofile);
-    if ((fp_info = fopen (infopath, "r")) == NULL)
-	return (0);			/* no file -> nothing special done */
+    fp_info = CVS_FOPEN (infopath, "r");
+    if (fp_info == NULL)
+    {
+	/* If no file, don't do anything special.  */
+	if (!existence_error (errno))
+	    error (0, errno, "cannot open %s", infopath);
+	free (infopath);
+	return 0;
+    }
 
     /* strip off the CVSROOT if repository was absolute */
     srepos = Short_Repository (repository);
 
     if (trace)
-	(void) fprintf (stderr, "-> ParseInfo(%s, %s, %s)\n",
+	(void) fprintf (stderr, " -> ParseInfo(%s, %s, %s)\n",
 			infopath, srepos, all ? "ALL" : "not ALL");
 
     /* search the info file for lines that match */
     callback_done = line_number = 0;
-    while (fgets (line, sizeof (line), fp_info) != NULL)
+    while (getline (&line, &line_allocated, fp_info) >= 0)
     {
 	line_number++;
 
@@ -97,42 +107,12 @@ Parse_Info (infofile, repository, callproc, all)
 	if ((cp = strrchr (value, '\n')) != NULL)
 	    *cp = '\0';
 
-	/* FIXME: probably should allow multiple occurrences of CVSROOT.  */
-	/* FIXME-maybe: perhaps should allow CVSREAD and other cvs
-	   settings (if there is a need for them, which isn't clear).  */
-	/* FIXME-maybe: Should there be a way to substitute arbitrary
-	   environment variables?  Probably not, because then what gets
-	   substituted would depend on who runs cvs.  A better feature might
-	   be to allow a file in CVSROOT to specify variables to be
-	   substituted.  */
+	if (expanded_value != NULL)
+	    free (expanded_value);
+	expanded_value = expand_path (value, infofile, line_number);
+	if (!expanded_value)
 	{
-	    char *p, envname[128];
-
-	    strcpy(envname, "$");
-	    /* FIXME: I'm not at all sure this should be CVSROOT_ENV as opposed
-	       to literal CVSROOT.  The value we subsitute is the cvs root
-	       in use which is not the same thing as the environment variable
-	       CVSROOT_ENV.  */
-	    strcat(envname, CVSROOT_ENV);
-
-	    cp = xstrdup(value);
-	    if ((p = strstr(cp, envname))) {
-		if (strlen(line) + strlen(CVSroot) + 1 > MAXLINELEN) {
-		    /* FIXME: there is no reason for this arbitrary limit.  */
-		    error(0, 0,
-			  "line %d in %s too long to expand $CVSROOT, ignored",
-			  line_number, infofile);
-		    continue;
-		}
-		if (p > cp) {
-		    strncpy(value, cp, p - cp);
-		    value[p - cp] = '\0';
-		    strcat(value, CVSroot);
-		} else
-		    strcpy(value, CVSroot);
-		strcat(value, p + strlen(envname));
-	    }
-	    free(cp);
+	    continue;
 	}
 
 	/*
@@ -145,7 +125,11 @@ Parse_Info (infofile, repository, callproc, all)
 	/* save the default value so we have it later if we need it */
 	if (strcmp (exp, "DEFAULT") == 0)
 	{
-	    default_value = xstrdup (value);
+	    /* Is it OK to silently ignore all but the last DEFAULT
+               expression?  */
+	    if (default_value != NULL)
+		free (default_value);
+	    default_value = xstrdup (expanded_value);
 	    continue;
 	}
 
@@ -157,7 +141,7 @@ Parse_Info (infofile, repository, callproc, all)
 	if (strcmp (exp, "ALL") == 0)
 	{
 	    if (all)
-		err += callproc (repository, value);
+		err += callproc (repository, expanded_value);
 	    else
 		error(0, 0, "Keyword `ALL' is ignored at line %d in %s file",
 		      line_number, infofile);
@@ -179,10 +163,13 @@ Parse_Info (infofile, repository, callproc, all)
 	    continue;				/* no match */
 
 	/* it did, so do the callback and note that we did one */
-	err += callproc (repository, value);
+	err += callproc (repository, expanded_value);
 	callback_done = 1;
     }
-    (void) fclose (fp_info);
+    if (ferror (fp_info))
+	error (0, errno, "cannot read %s", infopath);
+    if (fclose (fp_info) < 0)
+	error (0, errno, "cannot close %s", infopath);
 
     /* if we fell through and didn't callback at all, do the default */
     if (callback_done == 0 && default_value != NULL)
@@ -191,6 +178,215 @@ Parse_Info (infofile, repository, callproc, all)
     /* free up space if necessary */
     if (default_value != NULL)
 	free (default_value);
+    if (expanded_value != NULL)
+	free (expanded_value);
+    free (infopath);
+    if (line != NULL)
+	free (line);
 
     return (err);
+}
+
+
+/* Parse the CVS config file.  The syntax right now is a bit ad hoc
+   but tries to draw on the best or more common features of the other
+   *info files and various unix (or non-unix) config file syntaxes.
+   Lines starting with # are comments.  Settings are lines of the form
+   KEYWORD=VALUE.  There is currently no way to have a multi-line
+   VALUE (would be nice if there was, probably).
+
+   CVSROOT is the $CVSROOT directory (CVSroot_directory might not be
+   set yet).
+
+   Returns 0 for success, negative value for failure.  Call
+   error(0, ...) on errors in addition to the return value.  */
+int
+parse_config (cvsroot)
+    char *cvsroot;
+{
+    char *infopath;
+    FILE *fp_info;
+    char *line = NULL;
+    size_t line_allocated = 0;
+    size_t len;
+    char *p;
+    /* FIXME-reentrancy: If we do a multi-threaded server, this would need
+       to go to the per-connection data structures.  */
+    static int parsed = 0;
+
+    /* Authentication code and serve_root might both want to call us.
+       Let this happen smoothly.  */
+    if (parsed)
+	return 0;
+    parsed = 1;
+
+    infopath = malloc (strlen (cvsroot)
+			+ sizeof (CVSROOTADM_CONFIG)
+			+ sizeof (CVSROOTADM)
+			+ 10);
+    if (infopath == NULL)
+    {
+	error (0, 0, "out of memory; cannot allocate infopath");
+	goto error_return;
+    }
+
+    strcpy (infopath, cvsroot);
+    strcat (infopath, "/");
+    strcat (infopath, CVSROOTADM);
+    strcat (infopath, "/");
+    strcat (infopath, CVSROOTADM_CONFIG);
+
+    fp_info = CVS_FOPEN (infopath, "r");
+    if (fp_info == NULL)
+    {
+	/* If no file, don't do anything special.  */
+	if (!existence_error (errno))
+	{
+	    /* Just a warning message; doesn't affect return
+	       value, currently at least.  */
+	    error (0, errno, "cannot open %s", infopath);
+	}
+	free (infopath);
+	return 0;
+    }
+
+    while (getline (&line, &line_allocated, fp_info) >= 0)
+    {
+	/* Skip comments.  */
+	if (line[0] == '#')
+	    continue;
+
+	/* At least for the moment we don't skip whitespace at the start
+	   of the line.  Too picky?  Maybe.  But being insufficiently
+	   picky leads to all sorts of confusion, and it is a lot easier
+	   to start out picky and relax it than the other way around.
+
+	   Is there any kind of written standard for the syntax of this
+	   sort of config file?  Anywhere in POSIX for example (I guess
+	   makefiles are sort of close)?  Red Hat Linux has a bunch of
+	   these too (with some GUI tools which edit them)...
+
+	   Along the same lines, we might want a table of keywords,
+	   with various types (boolean, string, &c), as a mechanism
+	   for making sure the syntax is consistent.  Any good examples
+	   to follow there (Apache?)?  */
+
+	/* Strip the training newline.  There will be one unless we
+	   read a partial line without a newline, and then got end of
+	   file (or error?).  */
+
+	len = strlen (line) - 1;
+	if (line[len] == '\n')
+	    line[len] = '\0';
+
+	/* Skip blank lines.  */
+	if (line[0] == '\0')
+	    continue;
+
+	/* The first '=' separates keyword from value.  */
+	p = strchr (line, '=');
+	if (p == NULL)
+	{
+	    /* Probably should be printing line number.  */
+	    error (0, 0, "syntax error in %s: line '%s' is missing '='",
+		   infopath, line);
+	    goto error_return;
+	}
+
+	*p++ = '\0';
+
+	if (strcmp (line, "RCSBIN") == 0)
+	{
+	    /* This option used to specify the directory for RCS
+	       executables.  But since we don't run them any more,
+	       this is a noop.  Silently ignore it so that a
+	       repository can work with either new or old CVS.  */
+	    ;
+	}
+	else if (strcmp (line, "SystemAuth") == 0)
+	{
+	    if (strcmp (p, "no") == 0)
+#ifdef AUTH_SERVER_SUPPORT
+		system_auth = 0;
+#else
+		/* Still parse the syntax but ignore the
+		   option.  That way the same config file can
+		   be used for local and server.  */
+		;
+#endif
+	    else if (strcmp (p, "yes") == 0)
+#ifdef AUTH_SERVER_SUPPORT
+		system_auth = 1;
+#else
+		;
+#endif
+	    else
+	    {
+		error (0, 0, "unrecognized value '%s' for SystemAuth", p);
+		goto error_return;
+	    }
+	}
+	else if (strcmp (line, "tag") == 0) {
+	    RCS_citag = strdup(p);
+	    if (RCS_citag == NULL) {
+		error (0, 0, "%s: no memory for local tag '%s'",
+		       infopath, p);
+		goto error_return;
+	    }
+	}
+	else if (strcmp (line, "umask") == 0) {
+	    cvsumask = (mode_t)(strtol(p, NULL, 8) & 0777);
+	}
+	else if (strcmp (line, "dlimit") == 0) {
+#ifdef BSD
+#include <sys/resource.h>
+	    struct rlimit rl;
+
+	    if (getrlimit(RLIMIT_DATA, &rl) != -1) {
+		rl.rlim_cur = atoi(p);
+		rl.rlim_cur *= 1024;
+
+		(void) setrlimit(RLIMIT_DATA, &rl);
+	    }
+#endif /* BSD */
+	}
+	else
+	{
+	    /* We may be dealing with a keyword which was added in a
+	       subsequent version of CVS.  In that case it is a good idea
+	       to complain, as (1) the keyword might enable a behavior like
+	       alternate locking behavior, in which it is dangerous and hard
+	       to detect if some CVS's have it one way and others have it
+	       the other way, (2) in general, having us not do what the user
+	       had in mind when they put in the keyword violates the
+	       principle of least surprise.  Note that one corollary is
+	       adding new keywords to your CVSROOT/config file is not
+	       particularly recommended unless you are planning on using
+	       the new features.  */
+	    error (0, 0, "%s: unrecognized keyword '%s'",
+		   infopath, line);
+	    goto error_return;
+	}
+    }
+    if (ferror (fp_info))
+    {
+	error (0, errno, "cannot read %s", infopath);
+	goto error_return;
+    }
+    if (fclose (fp_info) < 0)
+    {
+	error (0, errno, "cannot close %s", infopath);
+	goto error_return;
+    }
+    free (infopath);
+    if (line != NULL)
+	free (line);
+    return 0;
+
+ error_return:
+    if (infopath != NULL)
+	free (infopath);
+    if (line != NULL)
+	free (line);
+    return -1;
 }
