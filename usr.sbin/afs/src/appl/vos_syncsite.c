@@ -1,6 +1,6 @@
-/*	$OpenBSD: mem.c,v 1.1 1998/09/14 21:53:24 art Exp $	*/
+/*	$OpenBSD: vos_syncsite.c,v 1.1 1999/04/30 01:59:06 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -37,53 +37,62 @@
  * SUCH DAMAGE.
  */
 
-/*
- *
- */
+#include "appl_locl.h"
+#include <sl.h>
+#include "vos_local.h"
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-RCSID("$KTH: mem.c,v 1.3 1998/02/22 11:22:17 assar Exp $");
-#endif
+RCSID("$KTH: vos_syncsite.c,v 1.2 1999/03/06 16:41:02 lha Exp $");
 
-#include <stdio.h>
-#include "mem.h"
+static int helpflag;
+static char *cell;
+static int resolvep = 1;
 
-/*
- * Like malloc, but write an error message if not succesful.
- */
+static struct getargs args[] = {
+    {"cell",	'c',  arg_string,	    &cell, "cell", NULL},
+    {"help",	'h',  arg_flag,             &helpflag, NULL, NULL},
+    {"resolve", 'n',  arg_negative_flag,    &resolvep, NULL, NULL}
+};
 
-void *
-emalloc(size_t sz)
+static void
+usage(void)
 {
-     void *tmp = malloc(sz);
-     
-     if( tmp )
-	  return tmp;
-     else {
-	  fprintf(stderr, "malloc for %u bytes failed\n", sz);
-	  exit(1);
-     }
+    arg_printusage(args, "vos syncsite", "", ARG_AFSSTYLE);
 }
 
-/*
- * Like realloc, but write an error message if not succesful.
- */
-
-void *
-erealloc (void *ptr, size_t sz)
+int 
+vos_syncsite (int argc, char **argv)
 {
-     void *tmp;
+    struct in_addr saddr;
+    int error;
+    int optind = 0;
 
-     if (ptr)
-	  tmp = realloc (ptr, sz);
-     else
-	  tmp = malloc (sz);
+    helpflag = 0;
+    cell = NULL;
 
-     if (tmp)
-	  return tmp;
-     else {
-	  fprintf (stderr, "realloc for %u bytes failed\n", sz);
-	  exit (1);
-     }
+    if (getarg (args, argc, argv, &optind, ARG_AFSSTYLE)) {
+	usage ();
+	return 0;
+    }
+	
+    if (helpflag) {
+	usage ();
+	return 0;
+    }
+
+    if (cell == NULL)
+	cell = (char *)cell_getthiscell();
+
+    error = arlalib_getsyncsite(cell, NULL, afsvldbport, &saddr.s_addr, 0);
+    if (error) {
+	fprintf(stderr, "syncsite: %s (%d)\n", koerr_gettext(error), error);
+	return 0;
+    }
+    
+    if (!resolvep)
+	printf("%s's vldb syncsite is %s.\n", cell, inet_ntoa(saddr));
+    else {
+	const char *name = ipgetname(&saddr);
+	printf("%s's vldb syncsite is %s (%s).\n", cell, name, inet_ntoa(saddr));
+    }
+    return 0;
 }

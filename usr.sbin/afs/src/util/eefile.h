@@ -1,6 +1,6 @@
-/*	$OpenBSD: timeprio.c,v 1.1 1998/09/14 21:53:24 art Exp $	*/
+/*	$OpenBSD: eefile.h,v 1.1 1999/04/30 01:59:16 art Exp $	*/
 /*
- * Copyright (c) 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -37,78 +37,25 @@
  * SUCH DAMAGE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-RCSID("$KTH: timeprio.c,v 1.1 1998/07/07 15:57:11 lha Exp $");
-#endif
+/* $KTH: eefile.h,v 1.1 1999/02/27 11:02:39 assar Exp $ */
 
+#ifndef _EEFILE_
+#define _EEFILE_
+
+#include <stdio.h>
 #include <stdlib.h>
-#include "bool.h"
-#include "timeprio.h"
 
+struct _fileblob {
+  FILE *stream;
+  char *curname;
+  char *newname;
+};
 
-static int 
-timeprio_cmp(void *a1, void *b1)
-{
-    Tpel *a = a1, *b = b1;
+typedef struct _fileblob fileblob;
+void eefopen(const char *name, const char *mode, fileblob *f);
+void eefclose(fileblob *);
+size_t eefread (void *ptr, size_t size, size_t nitems, fileblob *stream);
+size_t eefwrite (const void *ptr, size_t size, size_t nitems,
+		 fileblob *stream);
 
-    return a->time > b->time;
-}
-
-
-Timeprio *
-timeprionew(unsigned size)
-{
-    return (Timeprio *) prionew(size, timeprio_cmp);
-}
-
-void
-timepriofree(Timeprio *prio)
-{
-    priofree(prio);
-}
-
-int
-timeprioinsert(Timeprio *prio, time_t time, void *data)
-{
-    Tpel *el = malloc(sizeof(Tpel));
-    if (!el)
-	return -1;
-
-    el->time = time;
-    el->data = data;
-    if (prioinsert(prio, el)) {
-	free(el);
-	el = NULL;
-    }
-    return el ? 0 : -1;
-}
-
-void *
-timepriohead(Timeprio *prio)
-{
-    Tpel *el = priohead(prio);
-    
-    return el->data;
-}
-
-void
-timeprioremove(Timeprio *prio)
-{
-    void *el;
-
-    if (timeprioemptyp((Prio *)prio))
-	return;
-
-    el = priohead(prio);
-    if (el) free (el);
-    
-    prioremove((Prio *)prio);
-}
-    
-Bool 
-timeprioemptyp(Timeprio *prio)
-{
-    return prioemptyp(prio); 
-}
-
+#endif /* _EEFILE_ */

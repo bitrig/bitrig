@@ -1,6 +1,6 @@
-/*	$OpenBSD: timeprio.h,v 1.1 1998/09/14 21:53:26 art Exp $	*/
+/*	$OpenBSD: emalloc.c,v 1.1 1999/04/30 01:59:11 art Exp $	*/
 /*
- * Copyright (c) 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -37,34 +37,26 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _TIMEPRIO_H
-#define _TIMEPRIO_H 1
-
-#include <time.h>
-#include "prio.h"
-#include "bool.h"
-
-typedef struct tpel {
-    time_t time;
-    void *data;
-} Tpel;
-
-typedef Prio	Timeprio;
-
-Timeprio *timeprionew(unsigned size);
-
-void timepriofree(Timeprio *prio);
-
-int  timeprioinsert(Timeprio *prio, time_t time, void *data);
-
-void *timepriohead(Timeprio *prio);
-
-void timeprioremove(Timeprio *prio);
-
-Bool timeprioemptyp(Timeprio *prio);
-
-time_t timepriotimehead(Timeprio *prio);
-
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+RCSID("$KTH: emalloc.c,v 1.2 1999/02/13 05:10:55 assar Exp $");
 #endif
 
+#include <stdlib.h>
+#include <err.h>
 
+#include <roken.h>
+
+/*
+ * Like malloc but never fails.
+ */
+
+void *
+emalloc (size_t sz)
+{
+    void *tmp = malloc (sz);
+
+    if (tmp == NULL && sz != 0)
+	err (1, "malloc %u", sz);
+    return tmp;
+}

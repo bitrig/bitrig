@@ -1,6 +1,6 @@
-/*	$OpenBSD: mem.h,v 1.1 1998/09/14 21:53:24 art Exp $	*/
+/*	$OpenBSD: estrdup.c,v 1.1 1999/04/30 01:59:12 art Exp $	*/
 /*
- * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Högskolan
+ * Copyright (c) 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -37,14 +37,26 @@
  * SUCH DAMAGE.
  */
 
-/* $KTH: mem.h,v 1.2 1997/11/09 23:48:55 assar Exp $ */
-
-#ifndef _MEM_
-#define _MEM_
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+RCSID("$KTH: estrdup.c,v 1.1 1999/02/13 05:15:55 assar Exp $");
+#endif
 
 #include <stdlib.h>
+#include <err.h>
 
-void *emalloc(size_t sz);
-void *erealloc(void *ptr, size_t sz);
+#include <roken.h>
 
-#endif /* _MEM_ */
+/*
+ * Like strdup but never fails.
+ */
+
+char *
+estrdup (const char *str)
+{
+    char *tmp = strdup (str);
+
+    if (tmp == NULL)
+	err (1, "strdup");
+    return tmp;
+}

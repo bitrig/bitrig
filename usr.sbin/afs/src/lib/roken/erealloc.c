@@ -1,6 +1,6 @@
-/*	$OpenBSD: prio.h,v 1.1 1998/09/14 21:53:26 art Exp $	*/
+/*	$OpenBSD: erealloc.c,v 1.1 1999/04/30 01:59:12 art Exp $	*/
 /*
- * Copyright (c) 1998 Kungliga Tekniska Högskolan
+ * Copyright (c) 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -37,33 +37,26 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _PRIO_H
-#define _PRIO_H 1
-
-#include <time.h>
-#include <bool.h>
-
-typedef int (*prio_cmp)(void *, void *);
-
-typedef struct prio {
-    unsigned sz;	/* current size */
-    unsigned size;	/* max size */
-    prio_cmp cmp;
-    void **heap;
-} Prio;
-
-Prio *prionew(unsigned size, prio_cmp cmp);
-
-void priofree(Prio *prio);
-
-int  prioinsert(Prio *prio, void *data);
-
-void *priohead(Prio *prio);
-
-void prioremove(Prio *prio);
-
-Bool prioemptyp(Prio *prio);
-
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+RCSID("$KTH: erealloc.c,v 1.2 1999/02/13 05:10:56 assar Exp $");
 #endif
 
+#include <stdlib.h>
+#include <err.h>
 
+#include <roken.h>
+
+/*
+ * Like realloc but never fails.
+ */
+
+void *
+erealloc (void *ptr, size_t sz)
+{
+    void *tmp = realloc (ptr, sz);
+
+    if (tmp == NULL && sz != 0)
+	err (1, "realloc %u", sz);
+    return tmp;
+}
