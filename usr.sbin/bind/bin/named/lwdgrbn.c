@@ -1,23 +1,21 @@
 /*
- * Copyright (C) 2004-2006  Internet Systems Consortium, Inc. ("ISC")
- * Copyright (C) 2000, 2001, 2003  Internet Software Consortium.
+ * Copyright (C) 2000, 2001  Internet Software Consortium.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
  *
- * THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
- * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
- * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
- * OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS" AND INTERNET SOFTWARE CONSORTIUM
+ * DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL
+ * INTERNET SOFTWARE CONSORTIUM BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING
+ * FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+ * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
+ * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* $ISC: lwdgrbn.c,v 1.13.18.5 2006/12/07 23:57:58 marka Exp $ */
-
-/*! \file */
+/* $ISC: lwdgrbn.c,v 1.11 2001/01/24 01:42:41 bwelling Exp $ */
 
 #include <config.h>
 
@@ -102,7 +100,7 @@ iterate_node(lwres_grbnresponse_t *grbn, dns_db_t *db, dns_dbnode_t *node,
 		dns_rdataset_init(&set);
 		dns_rdatasetiter_current(iter, &set);
 
-		if (set.type != dns_rdatatype_rrsig) {
+		if (set.type != dns_rdatatype_sig) {
 			dns_rdataset_disassociate(&set);
 			continue;
 		}
@@ -185,6 +183,8 @@ iterate_node(lwres_grbnresponse_t *grbn, dns_db_t *db, dns_dbnode_t *node,
 		isc_mem_put(mctx, oldlens, oldsize * sizeof(*oldlens));
 	if (newrdatas != NULL)
 		isc_mem_put(mctx, newrdatas, used * sizeof(*oldrdatas));
+	if (newlens != NULL)
+		isc_mem_put(mctx, newlens, used * sizeof(*oldlens));
 	return (result);
 }
 
@@ -358,7 +358,7 @@ lookup_done(isc_task_t *task, isc_event_t *event) {
 	client->sendlength = r.length;
 	result = ns_lwdclient_sendreply(client, &r);
 	if (result != ISC_R_SUCCESS)
-		goto out2;
+		goto out;
 
 	NS_LWDCLIENT_SETSEND(client);
 
@@ -378,7 +378,7 @@ lookup_done(isc_task_t *task, isc_event_t *event) {
 	if (grbn->siglen != NULL)
 		isc_mem_put(cm->mctx, grbn->siglen,
 			    grbn->nsigs * sizeof(lwres_uint16_t));
- out2:
+
 	if (client->lookup != NULL)
 		dns_lookup_destroy(&client->lookup);
 	if (lwb.base != NULL)

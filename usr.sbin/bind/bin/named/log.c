@@ -1,23 +1,21 @@
 /*
- * Copyright (C) 2004-2006  Internet Systems Consortium, Inc. ("ISC")
- * Copyright (C) 1999-2002  Internet Software Consortium.
+ * Copyright (C) 1999-2001  Internet Software Consortium.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
  *
- * THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
- * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
- * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
- * OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS" AND INTERNET SOFTWARE CONSORTIUM
+ * DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL
+ * INTERNET SOFTWARE CONSORTIUM BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING
+ * FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+ * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
+ * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* $ISC: log.c,v 1.37.18.6 2006/06/09 00:54:08 marka Exp $ */
-
-/*! \file */
+/* $ISC: log.c,v 1.33.2.1 2001/10/31 22:44:15 marka Exp $ */
 
 #include <config.h>
 
@@ -27,14 +25,9 @@
 
 #include <named/log.h>
 
-#ifndef ISC_FACILITY
-#define ISC_FACILITY LOG_DAEMON
-#endif
-
-/*%
+/*
  * When adding a new category, be sure to add the appropriate
- * #define to <named/log.h> and to update the list in
- * bin/check/check-tool.c.
+ * #define to <named/log.h>.
  */
 static isc_logcategory_t categories[] = {
 	{ "",		 		0 },
@@ -43,11 +36,10 @@ static isc_logcategory_t categories[] = {
 	{ "update",	 		0 },
 	{ "queries",	 		0 },
 	{ "unmatched",	 		0 },
-	{ "update-security",		0 },
 	{ NULL, 			0 }
 };
 
-/*%
+/*
  * When adding a new module, be sure to add the appropriate
  * #define to <dns/log.h>.
  */
@@ -81,9 +73,6 @@ ns_log_init(isc_boolean_t safe) {
 	if (result != ISC_R_SUCCESS)
 		return (result);
 
-	/*
-	 * named-checktool.c:setup_logging() needs to be kept in sync.
-	 */
 	isc_log_registercategories(ns_g_lctx, ns_g_categories);
 	isc_log_registermodules(ns_g_lctx, ns_g_modules);
 	isc_log_setcontext(ns_g_lctx);
@@ -137,15 +126,6 @@ ns_log_setdefaultchannels(isc_logconfig_t *lcfg) {
 			goto cleanup;
 	}
 
-#if ISC_FACILITY != LOG_DAEMON
-	destination.facility = ISC_FACILITY;
-	result = isc_log_createchannel(lcfg, "default_syslog",
-				       ISC_LOG_TOSYSLOG, ISC_LOG_INFO,
-				       &destination, 0);
-	if (result != ISC_R_SUCCESS)
-		goto cleanup;
-#endif
-
 	/*
 	 * Set the initial debug level.
 	 */
@@ -160,9 +140,6 @@ ns_log_setdefaultchannels(isc_logconfig_t *lcfg) {
 isc_result_t
 ns_log_setsafechannels(isc_logconfig_t *lcfg) {
 	isc_result_t result;
-#if ISC_FACILITY != LOG_DAEMON
-	isc_logdestination_t destination;
-#endif
 
 	if (! ns_g_logstderr) {
 		result = isc_log_createchannel(lcfg, "default_debug",
@@ -180,15 +157,6 @@ ns_log_setsafechannels(isc_logconfig_t *lcfg) {
 	} else {
 		isc_log_setdebuglevel(ns_g_lctx, ns_g_debuglevel);
 	}
-
-#if ISC_FACILITY != LOG_DAEMON
-	destination.facility = ISC_FACILITY;
-	result = isc_log_createchannel(lcfg, "default_syslog",
-				       ISC_LOG_TOSYSLOG, ISC_LOG_INFO,
-				       &destination, 0);
-	if (result != ISC_R_SUCCESS)
-		goto cleanup;
-#endif
 
 	result = ISC_R_SUCCESS;
 

@@ -1,23 +1,21 @@
 /*
- * Copyright (C) 2004-2006  Internet Systems Consortium, Inc. ("ISC")
  * Copyright (C) 1999-2001  Internet Software Consortium.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
  *
- * THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
- * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
- * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
- * OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS" AND INTERNET SOFTWARE CONSORTIUM
+ * DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL
+ * INTERNET SOFTWARE CONSORTIUM BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING
+ * FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+ * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
+ * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* $ISC: tsigconf.c,v 1.22.18.6 2006/02/28 03:10:47 marka Exp $ */
-
-/*! \file */
+/* $ISC: tsigconf.c,v 1.21 2001/08/03 18:39:50 bwelling Exp $ */
 
 #include <config.h>
 
@@ -37,32 +35,28 @@
 #include <named/tsigconf.h>
 
 static isc_result_t
-add_initial_keys(const cfg_obj_t *list, dns_tsig_keyring_t *ring,
-		 isc_mem_t *mctx)
-{
-	dns_tsigkey_t *tsigkey = NULL;
-	const cfg_listelt_t *element;
-	const cfg_obj_t *key = NULL;
-	const char *keyid = NULL;
+add_initial_keys(cfg_obj_t *list, dns_tsig_keyring_t *ring, isc_mem_t *mctx) {
+	cfg_listelt_t *element;
+	cfg_obj_t *key = NULL;
+	char *keyid = NULL;
 	unsigned char *secret = NULL;
 	int secretalloc = 0;
 	int secretlen = 0;
 	isc_result_t ret;
 	isc_stdtime_t now;
-	isc_uint16_t bits;
 
 	for (element = cfg_list_first(list);
 	     element != NULL;
 	     element = cfg_list_next(element))
 	{
-		const cfg_obj_t *algobj = NULL;
-		const cfg_obj_t *secretobj = NULL;
+		cfg_obj_t *algobj = NULL;
+		cfg_obj_t *secretobj = NULL;
 		dns_name_t keyname;
 		dns_name_t *alg;
-		const char *algstr;
+		char *algstr;
 		char keynamedata[1024];
 		isc_buffer_t keynamesrc, keynamebuf;
-		const char *secretstr;
+		char *secretstr;
 		isc_buffer_t secretbuf;
 
 		key = cfg_listelt_value(element);
@@ -90,11 +84,10 @@ add_initial_keys(const cfg_obj_t *list, dns_tsig_keyring_t *ring,
 		 * Create the algorithm.
 		 */
 		algstr = cfg_obj_asstring(algobj);
-		if (ns_config_getkeyalgorithm(algstr, &alg, &bits)
-		    != ISC_R_SUCCESS) {
+		if (ns_config_getkeyalgorithm(algstr, &alg) != ISC_R_SUCCESS) {
 			cfg_obj_log(algobj, ns_g_lctx, ISC_LOG_ERROR,
-				    "key '%s': has a unsupported algorithm '%s'",
-				    keyid, algstr);
+				    "key '%s': the only supported algorithm "
+				    "is hmac-md5", keyid);
 			ret = DNS_R_BADALG;
 			goto failure;
 		}
@@ -115,16 +108,11 @@ add_initial_keys(const cfg_obj_t *list, dns_tsig_keyring_t *ring,
 		isc_stdtime_get(&now);
 		ret = dns_tsigkey_create(&keyname, alg, secret, secretlen,
 					 ISC_FALSE, NULL, now, now,
-					 mctx, ring, &tsigkey);
+					 mctx, ring, NULL);
 		isc_mem_put(mctx, secret, secretalloc);
 		secret = NULL;
 		if (ret != ISC_R_SUCCESS)
 			goto failure;
-		/*
-		 * Set digest bits.
-		 */
-		dst_key_setbits(tsigkey->key, bits);
-		dns_tsigkey_detach(&tsigkey);
 	}
 
 	return (ISC_R_SUCCESS);
@@ -137,14 +125,15 @@ add_initial_keys(const cfg_obj_t *list, dns_tsig_keyring_t *ring,
 	if (secret != NULL)
 		isc_mem_put(mctx, secret, secretalloc);
 	return (ret);
+
 }
 
 isc_result_t
-ns_tsigkeyring_fromconfig(const cfg_obj_t *config, const cfg_obj_t *vconfig,
+ns_tsigkeyring_fromconfig(cfg_obj_t *config, cfg_obj_t *vconfig,
 			  isc_mem_t *mctx, dns_tsig_keyring_t **ringp)
 {
-	const cfg_obj_t *maps[3];
-	const cfg_obj_t *keylist;
+	cfg_obj_t *maps[3];
+	cfg_obj_t *keylist;
 	dns_tsig_keyring_t *ring = NULL;
 	isc_result_t result;
 	int i;

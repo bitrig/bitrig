@@ -1,26 +1,24 @@
 /*
- * Copyright (C) 2004, 2005  Internet Systems Consortium, Inc. ("ISC")
- * Copyright (C) 1999-2002  Internet Software Consortium.
+ * Copyright (C) 1999-2001  Internet Software Consortium.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
  *
- * THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
- * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
- * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
- * OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS" AND INTERNET SOFTWARE CONSORTIUM
+ * DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL
+ * INTERNET SOFTWARE CONSORTIUM BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING
+ * FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+ * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
+ * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* $ISC: log.h,v 1.21.18.2 2005/04/29 00:15:35 marka Exp $ */
+/* $ISC: log.h,v 1.19 2001/05/28 05:17:02 marka Exp $ */
 
 #ifndef NAMED_LOG_H
 #define NAMED_LOG_H 1
-
-/*! \file */
 
 #include <isc/log.h>
 #include <isc/types.h>
@@ -35,7 +33,6 @@
 #define NS_LOGCATEGORY_UPDATE		(&ns_g_categories[3])
 #define NS_LOGCATEGORY_QUERIES		(&ns_g_categories[4])
 #define NS_LOGCATEGORY_UNMATCHED	(&ns_g_categories[5])
-#define NS_LOGCATEGORY_UPDATE_SECURITY	(&ns_g_categories[6])
 
 /*
  * Backwards compatibility.
@@ -56,7 +53,7 @@
 
 isc_result_t
 ns_log_init(isc_boolean_t safe);
-/*%
+/*
  * Initialize the logging system and set up an initial default
  * logging default configuration that will be used until the
  * config file has been read.
@@ -68,7 +65,7 @@ ns_log_init(isc_boolean_t safe);
 
 isc_result_t
 ns_log_setdefaultchannels(isc_logconfig_t *lcfg);
-/*%
+/*
  * Set up logging channels according to the named defaults, which
  * may differ from the logging library defaults.  Currently,
  * this just means setting up default_debug.
@@ -76,19 +73,19 @@ ns_log_setdefaultchannels(isc_logconfig_t *lcfg);
 
 isc_result_t
 ns_log_setsafechannels(isc_logconfig_t *lcfg);
-/*%
+/*
  * Like ns_log_setdefaultchannels(), but omits any logging to files.
  */
 
 isc_result_t
 ns_log_setdefaultcategory(isc_logconfig_t *lcfg);
-/*%
+/*
  * Set up "category default" to go to the right places.
  */
 
 isc_result_t
 ns_log_setunmatchedcategory(isc_logconfig_t *lcfg);
-/*%
+/*
  * Set up "category unmatched" to go to the right places.
  */
 
