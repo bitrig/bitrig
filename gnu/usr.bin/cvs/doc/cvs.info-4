@@ -1,5 +1,8 @@
-This is Info file cvs.info, produced by Makeinfo-1.55 from the input
-file ./cvs.texinfo.
+This is cvs.info, produced by makeinfo version 4.0 from cvs.texinfo.
+
+START-INFO-DIR-ENTRY
+* CVS: (cvs).          Concurrent Versions System
+END-INFO-DIR-ENTRY
 
    Copyright (C) 1992, 1993 Signum Support AB Copyright (C) 1993, 1994
 Free Software Foundation, Inc.
@@ -10,1264 +13,1277 @@ preserved on all copies.
 
    Permission is granted to copy and distribute modified versions of
 this manual under the conditions for verbatim copying, provided also
-that the section entitled "GNU General Public License" is included
-exactly as in the original, and provided that the entire resulting
-derived work is distributed under the terms of a permission notice
-identical to this one.
+that the entire resulting derived work is distributed under the terms
+of a permission notice identical to this one.
 
    Permission is granted to copy and distribute translations of this
 manual into another language, under the above conditions for modified
-versions, except that the section entitled "GNU General Public License"
-and this permission notice may be included in translations approved by
-the Free Software Foundation instead of in the original English.
+versions, except that this permission notice may be stated in a
+translation approved by the Free Software Foundation.
 
 
-File: cvs.info,  Node: release output,  Next: release examples,  Prev: release options,  Up: release
+File: cvs.info,  Node: Moving directories,  Prev: Moving files,  Up: Adding and removing
 
-release output
---------------
-
-   Before `release' releases your sources it will print a one-line
-message for any file that is not up-to-date.
-
-   *Warning:*  Any new directories that you have created, but not added
-to the CVS directory hierarchy with the `add' command (*note add::.)
-will be silently ignored (and deleted, if `-d' is specified), even if
-they contain files.
-
-`U FILE'
-     There exists a newer revision of this file in the repository, and
-     you have not modified your local copy of the file.
-
-`A FILE'
-     The file has been added to your private copy of the sources, but
-     has not yet been committed to the repository.  If you delete your
-     copy of the sources this file will be lost.
-
-`R FILE'
-     The file has been removed from your private copy of the sources,
-     but has not yet been removed from the repository, since you have
-     not yet committed the removal.  *Note commit::.
-
-`M FILE'
-     The file is modified in your working directory.  There might also
-     be a newer revision inside the repository.
-
-`? FILE'
-     FILE is in your working directory, but does not correspond to
-     anything in the source repository, and is not in the list of files
-     for CVS to ignore (see the description of the `-I' option, and
-     *note cvsignore::.).  If you remove your working sources, this
-     file will be lost.
-
-     Note that no warning message like this is printed for spurious
-     directories that CVS encounters.  The directory, and all its
-     contents, are silently ignored.
-
-
-File: cvs.info,  Node: release examples,  Prev: release output,  Up: release
-
-release examples
-----------------
-
-   Release the module, and delete your local working copy of the files.
-
-     $ cd ..         # You must stand immediately above the
-                     # sources when you issue `cvs release'.
-     $ cvs release -d tc
-     You have [0] altered files in this repository.
-     Are you sure you want to release (and delete) module `tc': y
-     $
-
-
-File: cvs.info,  Node: remove,  Next: rtag,  Prev: release,  Up: Invoking CVS
-
-remove--Remove an entry from the repository
-===========================================
-
-   * remove [-lR] [files...]
-
-   * Requires: Working directory.
-
-   * Changes: Working directory.
-
-   * Synonyms: rm, delete
-
-   Use this command to declare that you wish to remove files from the
-source repository.  Like most CVS commands, `cvs remove' works on files
-in your working directory, not directly on the repository.  As a
-safeguard, it also requires that you first erase the specified files
-from your working directory.
-
-   The files are not actually removed until you apply your changes to
-the repository with `commit'; at that point, the corresponding RCS
-files in the source repository are moved into the `Attic' directory
-(also within the source repository).
-
-   This command is recursive by default, scheduling all physically
-removed files that it finds for removal by the next commit.  Use the
-`-l' option to avoid this recursion, or just specify the actual files
-that you wish removed.
-
-* Menu:
-
-* remove options::              remove options
-* remove examples::             remove examples
-
-
-File: cvs.info,  Node: remove options,  Next: remove examples,  Up: remove
-
-remove options
---------------
-
-   Two of the standard options are the only options supported by
-`remove'.
-
-`-l'
-     Local; run only in current working directory.
-
-`-R'
-     Commit directories recursively.  This is on by default.
-
-
-File: cvs.info,  Node: remove examples,  Prev: remove options,  Up: remove
-
-remove examples
----------------
-
-Remove a couple of files.
-.........................
-
-     $ cd test
-     $ rm ?.c
-     $ cvs remove
-     cvs remove: Removing .
-     cvs remove: scheduling a.c for removal
-     cvs remove: scheduling b.c for removal
-     cvs remove: use 'cvs commit' to remove these files permanently
-     $ cvs ci -m "Removed unneeded files"
-     cvs commit: Examining .
-     cvs commit: Committing .
-
-Resurrecting removed files
-..........................
-
-   If you change your mind you can easily resurrect the file before you
-commit it, using the `add' command.
-
-     $ ls
-     CVS   ja.h  oj.c
-     $ rm oj.c
-     $ cvs remove oj.c
-     cvs remove: scheduling oj.c for removal
-     cvs remove: use 'cvs commit' to remove this file permanently
-     $ cvs add oj.c
-     U oj.c
-     cvs add: oj.c, version 1.1.1.1, resurrected
-
-   If you realize your mistake before you run the `remove' command you
-can use `update' to resurrect the file:
-
-     $ rm oj.c
-     $ cvs update oj.c
-     cvs update: warning: oj.c was lost
-     U oj.c
-
-
-File: cvs.info,  Node: rtag,  Next: status,  Prev: remove,  Up: Invoking CVS
-
-rtag--Add a tag to the RCS file
+Moving and renaming directories
 ===============================
 
-   * rtag [-falnRQq] [-b] [-d] [-r tag | -Ddate] symbolic_tag modules...
+   The normal way to rename or move a directory is to rename or move
+each file within it as described in *Note Outside::.  Then check out
+with the `-P' option, as described in *Note Removing directories::.
 
-   * Requires: repository.
+   If you really want to hack the repository to rename or delete a
+directory in the repository, you can do it like this:
 
-   * Changes: repository.
+  1. Inform everyone who has a checked out copy of the directory that
+     the directory will be renamed.  They should commit all their
+     changes, and remove their working copies, before you take the
+     steps below.
 
-   * Synonym: rfreeze
+  2. Rename the directory inside the repository.
 
-   You can use this command to assign symbolic tags to particular,
-explicitly specified source revisions in the repository.  `rtag' works
-directly on the repository contents (and requires no prior checkout).
-Use `tag' instead (*note tag::.), to base the selection of revisions on
-the contents of your working directory.
+          $ cd $CVSROOT/PARENT-DIR
+          $ mv OLD-DIR NEW-DIR
 
-   If you attempt to use a tag name that already exists, CVS will
-complain and not overwrite that tag.  Use the `-F' option to force the
-new tag value.
+  3. Fix the CVS administrative files, if necessary (for instance if
+     you renamed an entire module).
+
+  4. Tell everyone that they can check out again and continue working.
+
+
+   If someone had a working copy the CVS commands will cease to work
+for him, until he removes the directory that disappeared inside the
+repository.
+
+   It is almost always better to move the files in the directory
+instead of moving the directory.  If you move the directory you are
+unlikely to be able to retrieve old releases correctly, since they
+probably depend on the name of the directories.
+
+
+File: cvs.info,  Node: History browsing,  Next: Binary files,  Prev: Adding and removing,  Up: Top
+
+History browsing
+****************
+
+   Once you have used CVS to store a version control history--what
+files have changed when, how, and by whom, there are a variety of
+mechanisms for looking through the history.
 
 * Menu:
 
-* rtag options::                rtag options
+* log messages::                Log messages
+* history database::            The history database
+* user-defined logging::        User-defined logging
+* annotate::                    What revision modified each line of a file?
 
 
-File: cvs.info,  Node: rtag options,  Up: rtag
+File: cvs.info,  Node: log messages,  Next: history database,  Up: History browsing
 
-rtag options
-------------
+Log messages
+============
 
-   These standard options are supported by `rtag' (*note Common
-options::., for a complete description of them):
+   Whenever you commit a file you specify a log message.
 
-`-D DATE'
-     Tag the most recent revision no later than DATE.
-
-`-f'
-     Only useful with the `-D DATE' or `-r TAG' flags.  If no matching
-     revision is found, use the most recent revision (instead of
-     ignoring the file).
-
-`-F'
-     Overwrite an existing tag of the same name on a different
-     revision.  This option is new in CVS 1.4.  The old behavior is
-     matched by `cvs tag -F'.
-
-`-l'
-     Local; run only in current working directory.
-
-`-n'
-     Do not run any tag program that was specified with the `-t' flag
-     inside the `modules' file.  (*note modules::.).
-
-`-R'
-     Commit directories recursively.  This is on by default.
-
-`-r TAG'
-     Only tag those files that contain TAG.  This can be used to rename
-     a tag: tag only the files identified by the old tag, then delete
-     the old tag, leaving the new tag on exactly the same files as the
-     old tag.
-
-   In addition to the above common options, these options are available:
-
-`-a'
-     Use the `-a' option to have `rtag' look in the `Attic' (*note
-     Removing files::.) for removed files that contain the specified
-     tag.  The tag is removed from these files, which makes it
-     convenient to re-use a symbolic tag as development continues (and
-     files get removed from the up-coming distribution).
-
-`-b'
-     Make the tag a branch tag.  *Note Branches::.
-
-`-d'
-     Delete the tag instead of creating it.
-
-     In general, tags (often the symbolic names of software
-     distributions) should not be removed, but the `-d' option is
-     available as a means to remove completely obsolete symbolic names
-     if necessary (as might be the case for an Alpha release, or if you
-     mistagged a module).
+   To look through the log messages which have been specified for every
+revision which has been committed, use the `cvs log' command (*note
+log::).
 
 
-File: cvs.info,  Node: status,  Next: tag,  Prev: rtag,  Up: Invoking CVS
+File: cvs.info,  Node: history database,  Next: user-defined logging,  Prev: log messages,  Up: History browsing
 
-status--Status info on the revisions
-====================================
+The history database
+====================
 
-   * status [-lR] [-v] [files...]
+   You can use the history file (*note history file::) to log various
+CVS actions.  To retrieve the information from the history file, use
+the `cvs history' command (*note history::).
 
-   * Requires: working directory, repository.
+   Note: you can control what is logged to this file by using the
+`LogHistory' keyword in the `CVSROOT/config' file (*note config::).
 
-   * Changes: nothing.
+
+File: cvs.info,  Node: user-defined logging,  Next: annotate,  Prev: history database,  Up: History browsing
 
-   Display a brief report on the current status of files with respect
-to the source repository, including any sticky tags, dates, or `-k'
-options.
+User-defined logging
+====================
 
-   You can also use this command to determine the potential impact of a
-`cvs update' on your working source directory--but remember that things
-might change in the repository before you run `update'.
+   You can customize CVS to log various kinds of actions, in whatever
+manner you choose.  These mechanisms operate by executing a script at
+various times.  The script might append a message to a file listing the
+information and the programmer who created it, or send mail to a group
+of developers, or, perhaps, post a message to a particular newsgroup.
+To log commits, use the `loginfo' file (*note loginfo::).  To log
+commits, checkouts, exports, and tags, respectively, you can also use
+the `-i', `-o', `-e', and `-t' options in the modules file.  For a more
+flexible way of giving notifications to various users, which requires
+less in the way of keeping centralized scripts up to date, use the `cvs
+watch add' command (*note Getting Notified::); this command is useful
+even if you are not using `cvs watch on'.
+
+   The `taginfo' file defines programs to execute when someone executes
+a `tag' or `rtag' command.  The `taginfo' file has the standard form
+for administrative files (*note Administrative files::), where each
+line is a regular expression followed by a command to execute.  The
+arguments passed to the command are, in order, the TAGNAME, OPERATION
+(`add' for `tag', `mov' for `tag -F', and `del' for `tag -d'),
+REPOSITORY, and any remaining are pairs of FILENAME REVISION.  A
+non-zero exit of the filter program will cause the tag to be aborted.
+
+   Here is an example of using taginfo to log tag and rtag commands.
+In the taginfo file put:
+
+     ALL /usr/local/cvsroot/CVSROOT/loggit
+
+   Where `/usr/local/cvsroot/CVSROOT/loggit' contains the following
+script:
+
+     #!/bin/sh
+     echo "$@" >>/home/kingdon/cvsroot/CVSROOT/taglog
+
+
+File: cvs.info,  Node: annotate,  Prev: user-defined logging,  Up: History browsing
+
+Annotate command
+================
+
+ - Command: cvs annotate [`-flR'] [`-r rev'|`-D date'] files ...
+     For each file in FILES, print the head revision of the trunk,
+     together with information on the last modification for each line.
+     For example:
+
+          $ cvs annotate ssfile
+          Annotations for ssfile
+          ***************
+          1.1          (mary     27-Mar-96): ssfile line 1
+          1.2          (joe      28-Mar-96): ssfile line 2
+
+     The file `ssfile' currently contains two lines.  The `ssfile line
+     1' line was checked in by `mary' on March 27.  Then, on March 28,
+     `joe' added a line `ssfile line 2', without modifying the `ssfile
+     line 1' line.  This report doesn't tell you anything about lines
+     which have been deleted or replaced; you need to use `cvs diff'
+     for that (*note diff::).
+
+
+   The options to `cvs annotate' are listed in *Note Invoking CVS::,
+and can be used to select the files and revisions to annotate.  The
+options are described in more detail in *Note Common options::.
+
+
+File: cvs.info,  Node: Binary files,  Next: Multiple developers,  Prev: History browsing,  Up: Top
+
+Handling binary files
+*********************
+
+   The most common use for CVS is to store text files.  With text
+files, CVS can merge revisions, display the differences between
+revisions in a human-visible fashion, and other such operations.
+However, if you are willing to give up a few of these abilities, CVS
+can store binary files.  For example, one might store a web site in CVS
+including both text files and binary images.
 
 * Menu:
 
-* status options::              status options
+* Binary why::     More details on issues with binary files
+* Binary howto::   How to store them
 
 
-File: cvs.info,  Node: status options,  Up: status
+File: cvs.info,  Node: Binary why,  Next: Binary howto,  Up: Binary files
 
-status options
---------------
+The issues with binary files
+============================
 
-   These standard options are supported by `status' (*note Common
-options::., for a complete description of them):
+   While the need to manage binary files may seem obvious if the files
+that you customarily work with are binary, putting them into version
+control does present some additional issues.
 
-`-l'
-     Local; run only in current working directory.
+   One basic function of version control is to show the differences
+between two revisions.  For example, if someone else checked in a new
+version of a file, you may wish to look at what they changed and
+determine whether their changes are good.  For text files, CVS provides
+this functionality via the `cvs diff' command.  For binary files, it
+may be possible to extract the two revisions and then compare them with
+a tool external to CVS (for example, word processing software often has
+such a feature).  If there is no such tool, one must track changes via
+other mechanisms, such as urging people to write good log messages, and
+hoping that the changes they actually made were the changes that they
+intended to make.
 
-`-R'
-     Commit directories recursively.  This is on by default.
+   Another ability of a version control system is the ability to merge
+two revisions.  For CVS this happens in two contexts.  The first is
+when users make changes in separate working directories (*note Multiple
+developers::).  The second is when one merges explicitly with the
+`update -j' command (*note Branching and merging::).
 
-   There is one additional option:
+   In the case of text files, CVS can merge changes made independently,
+and signal a conflict if the changes conflict.  With binary files, the
+best that CVS can do is present the two different copies of the file,
+and leave it to the user to resolve the conflict.  The user may choose
+one copy or the other, or may run an external merge tool which knows
+about that particular file format, if one exists.  Note that having the
+user merge relies primarily on the user to not accidentally omit some
+changes, and thus is potentially error prone.
 
-`-v'
-     Verbose.  In addition to the information normally displayed, print
-     all symbolic tags, together with the numerical value of the
-     revision or branch they refer to.
+   If this process is thought to be undesirable, the best choice may be
+to avoid merging.  To avoid the merges that result from separate
+working directories, see the discussion of reserved checkouts (file
+locking) in *Note Multiple developers::.  To avoid the merges resulting
+from branches, restrict use of branches.
 
 
-File: cvs.info,  Node: tag,  Next: update,  Prev: status,  Up: Invoking CVS
+File: cvs.info,  Node: Binary howto,  Prev: Binary why,  Up: Binary files
 
-tag--Add a symbolic tag to checked out version of RCS file
-==========================================================
+How to store binary files
+=========================
 
-   * tag [-lQqR] [-b] [-d] symbolic_tag [files...]
+   There are two issues with using CVS to store binary files.  The
+first is that CVS by default converts line endings between the
+canonical form in which they are stored in the repository (linefeed
+only), and the form appropriate to the operating system in use on the
+client (for example, carriage return followed by line feed for Windows
+NT).
 
-   * Requires: working directory, repository.
+   The second is that a binary file might happen to contain data which
+looks like a keyword (*note Keyword substitution::), so keyword
+expansion must be turned off.
 
-   * Changes: repository.
+   The `-kb' option available with some CVS commands insures that
+neither line ending conversion nor keyword expansion will be done.
 
-   * Synonym: freeze
+   Here is an example of how you can create a new file using the `-kb'
+flag:
 
-   Use this command to assign symbolic tags to the nearest repository
-versions to your working sources.  The tags are applied immediately to
-the repository, as with `rtag', but the versions are supplied
-implicitly by the CVS records of your working files' history rather than
-applied explicitly.
+     $ echo '$Id: cvs.info-4,v 1.2 2001/09/29 00:00:39 tholo Exp $' > kotest
+     $ cvs add -kb -m"A test file" kotest
+     $ cvs ci -m"First checkin; contains a keyword" kotest
 
-   One use for tags is to record a snapshot of the current sources when
-the software freeze date of a project arrives.  As bugs are fixed after
-the freeze date, only those changed sources that are to be part of the
-release need be re-tagged.
+   If a file accidentally gets added without `-kb', one can use the
+`cvs admin' command to recover.  For example:
 
-   The symbolic tags are meant to permanently record which revisions of
-which files were used in creating a software distribution.  The
-`checkout' and `update' commands allow you to extract an exact copy of
-a tagged release at any time in the future, regardless of whether files
-have been changed, added, or removed since the release was tagged.
+     $ echo '$Id: cvs.info-4,v 1.2 2001/09/29 00:00:39 tholo Exp $' > kotest
+     $ cvs add -m"A test file" kotest
+     $ cvs ci -m"First checkin; contains a keyword" kotest
+     $ cvs admin -kb kotest
+     $ cvs update -A kotest
+     # For non-unix systems:
+     # Copy in a good copy of the file from outside CVS
+     $ cvs commit -m "make it binary" kotest
 
-   This command can also be used to delete a symbolic tag, or to create
-a branch.  See the options section below.
+   When you check in the file `kotest' the file is not preserved as a
+binary file, because you did not check it in as a binary file.  The `cvs
+admin -kb' command sets the default keyword substitution method for
+this file, but it does not alter the working copy of the file that you
+have.  If you need to cope with line endings (that is, you are using
+CVS on a non-unix system), then you need to check in a new copy of the
+file, as shown by the `cvs commit' command above.  On unix, the `cvs
+update -A' command suffices.
 
-   If you attempt to use a tag name that already exists, CVS will
-complain and not overwrite that tag.  Use the `-F' option to force the
-new tag value.
+   However, in using `cvs admin -k' to change the keyword expansion, be
+aware that the keyword expansion mode is not version controlled.  This
+means that, for example, that if you have a text file in old releases,
+and a binary file with the same name in new releases, CVS provides no
+way to check out the file in text or binary mode depending on what
+version you are checking out.  There is no good workaround for this
+problem.
+
+   You can also set a default for whether `cvs add' and `cvs import'
+treat a file as binary based on its name; for example you could say
+that files who names end in `.exe' are binary.  *Note Wrappers::.
+There is currently no way to have CVS detect whether a file is binary
+based on its contents.  The main difficulty with designing such a
+feature is that it is not clear how to distinguish between binary and
+non-binary files, and the rules to apply would vary considerably with
+the operating system.
+
+
+File: cvs.info,  Node: Multiple developers,  Next: Revision management,  Prev: Binary files,  Up: Top
+
+Multiple developers
+*******************
+
+   When more than one person works on a software project things often
+get complicated.  Often, two people try to edit the same file
+simultaneously.  One solution, known as "file locking" or "reserved
+checkouts", is to allow only one person to edit each file at a time.
+This is the only solution with some version control systems, including
+RCS and SCCS.  Currently the usual way to get reserved checkouts with
+CVS is the `cvs admin -l' command (*note admin options::).  This is not
+as nicely integrated into CVS as the watch features, described below,
+but it seems that most people with a need for reserved checkouts find
+it adequate.  It also may be possible to use the watches features
+described below, together with suitable procedures (not enforced by
+software), to avoid having two people edit at the same time.
+
+   The default model with CVS is known as "unreserved checkouts".  In
+this model, developers can edit their own "working copy" of a file
+simultaneously.  The first person that commits his changes has no
+automatic way of knowing that another has started to edit it.  Others
+will get an error message when they try to commit the file.  They must
+then use CVS commands to bring their working copy up to date with the
+repository revision.  This process is almost automatic.
+
+   CVS also supports mechanisms which facilitate various kinds of
+communication, without actually enforcing rules like reserved checkouts
+do.
+
+   The rest of this chapter describes how these various models work,
+and some of the issues involved in choosing between them.
 
 * Menu:
 
-* tag options::                 tag options
+* File status::                 A file can be in several states
+* Updating a file::             Bringing a file up-to-date
+* Conflicts example::           An informative example
+* Informing others::            To cooperate you must inform
+* Concurrency::                 Simultaneous repository access
+* Watches::                     Mechanisms to track who is editing files
+* Choosing a model::            Reserved or unreserved checkouts?
 
 
-File: cvs.info,  Node: tag options,  Up: tag
+File: cvs.info,  Node: File status,  Next: Updating a file,  Up: Multiple developers
 
-tag options
------------
+File status
+===========
 
-   These standard options are supported by `tag' (*note Common
-options::., for a complete description of them):
+   Based on what operations you have performed on a checked out file,
+and what operations others have performed to that file in the
+repository, one can classify a file in a number of states.  The states,
+as reported by the `status' command, are:
 
-`-F'
-     Overwrite an existing tag of the same name on a different
-     revision.  This option is new in CVS 1.4.  The old behavior is
-     matched by `cvs tag -F'.
+Up-to-date
+     The file is identical with the latest revision in the repository
+     for the branch in use.
 
-`-l'
-     Local; run only in current working directory.
+Locally Modified
+     You have edited the file, and not yet committed your changes.
 
-`-R'
-     Commit directories recursively.  This is on by default.
+Locally Added
+     You have added the file with `add', and not yet committed your
+     changes.
 
-   Two special options are available:
+Locally Removed
+     You have removed the file with `remove', and not yet committed
+     your changes.
 
-`-b'
-     The -b option makes the tag a branch tag (*note Branches::.),
-     allowing concurrent, isolated development.  This is most useful
-     for creating a patch to a previously released software
-     distribution.
+Needs Checkout
+     Someone else has committed a newer revision to the repository.
+     The name is slightly misleading; you will ordinarily use `update'
+     rather than `checkout' to get that newer revision.
 
-`-d'
-     Delete a tag.
+Needs Patch
+     Like Needs Checkout, but the CVS server will send a patch rather
+     than the entire file.  Sending a patch or sending an entire file
+     accomplishes the same thing.
 
-     If you use `cvs tag -d symbolic_tag', the symbolic tag you specify
-     is deleted instead of being added.  Warning: Be very certain of
-     your ground before you delete a tag; doing this permanently
-     discards some historical information, which may later turn out to
-     be valuable.
+Needs Merge
+     Someone else has committed a newer revision to the repository, and
+     you have also made modifications to the file.
 
-
-File: cvs.info,  Node: update,  Prev: tag,  Up: Invoking CVS
+File had conflicts on merge
+     This is like Locally Modified, except that a previous `update'
+     command gave a conflict.  If you have not already done so, you
+     need to resolve the conflict as described in *Note Conflicts
+     example::.
 
-update--Bring work tree in sync with repository
-===============================================
+Unknown
+     CVS doesn't know anything about this file.  For example, you have
+     created a new file and have not run `add'.
 
-   * update [-AdflPpQqR] [-d] [-r tag|-D date] files...
+   To help clarify the file status, `status' also reports the `Working
+revision' which is the revision that the file in the working directory
+derives from, and the `Repository revision' which is the latest
+revision in the repository for the branch in use.
 
-   * Requires: repository, working directory.
+   The options to `status' are listed in *Note Invoking CVS::.  For
+information on its `Sticky tag' and `Sticky date' output, see *Note
+Sticky tags::.  For information on its `Sticky options' output, see the
+`-k' option in *Note update options::.
 
-   * Changes: working directory.
-
-   After you've run checkout to create your private copy of source from
-the common repository, other developers will continue changing the
-central source.  From time to time, when it is convenient in your
-development process, you can use the `update' command from within your
-working directory to reconcile your work with any revisions applied to
-the source repository since your last checkout or update.
-
-* Menu:
-
-* update options::              update options
-* update output::               update output
-* update examples::             update examples
-
-
-File: cvs.info,  Node: update options,  Next: update output,  Up: update
-
-update options
---------------
-
-   These standard options are available with `update' (*note Common
-options::., for a complete description of them):
-
-`-D date'
-     Use the most recent revision no later than DATE.  This option is
-     sticky, and implies `-P'.
-
-`-f'
-     Only useful with the `-D DATE' or `-r TAG' flags.  If no matching
-     revision is found, retrieve the most recent revision (instead of
-     ignoring the file).
-
-`-k KFLAG'
-     Process RCS keywords according to KFLAG.  See co(1).  This option
-     is sticky; future updates of this file in this working directory
-     will use the same KFLAG.  The `status' command can be viewed to
-     see the sticky options.  *Note status::.
-
-`-l'
-     Local; run only in current working directory.
-
-`-P'
-     Prune empty directories.
-
-`-p'
-     Pipe files to the standard output.
-
-`-R'
-     Commit directories recursively.  This is on by default.
-
-`-r tag'
-     Retrieve revision TAG.  This option is sticky, and implies `-P'.
-
-   These special options are also available with `update'.
-
-`-A'
-     Reset any sticky tags, dates, or `-k' options.  (If you get a
-     working copy of a file by using one of the `-r', `-D', or `-k'
-     options, CVS remembers the corresponding tag, date, or KFLAG and
-     continues using it on future updates; use the `-A' option to make
-     CVS forget these specifications, and retrieve the head revision of
-     the file).
-
-`-d'
-     Create any directories that exist in the repository if they're
-     missing from the working directory.  Normally, `update' acts only
-     on directories and files that were already enrolled in your
-     working directory.
-
-     This is useful for updating directories that were created in the
-     repository since the initial checkout; but it has an unfortunate
-     side effect.  If you deliberately avoided certain directories in
-     the repository when you created your working directory (either
-     through use of a module name or by listing explicitly the files
-     and directories you wanted on the command line), then updating
-     with `-d' will create those directories, which may not be what you
-     want.
-
-`-I NAME'
-     Ignore files whose names match NAME (in your working directory)
-     during the update.  You can specify `-I' more than once on the
-     command line to specify several files to ignore.  By default,
-     `update' ignores files whose names match any of the following:
-
-                  RCSLOG  RCS     SCCS
-                  CVS*    cvslog.*
-                  tags    TAGS
-                  .make.state     .nse_depinfo
-                  *~      #*      .#*     ,*
-                  *.old   *.bak   *.BAK   *.orig  *.rej   .del-*
-                  *.a     *.o     *.so    *.Z     *.elc   *.ln
-                  core
-
-     Use `-I !' to avoid ignoring any files at all.  *Note cvsignore::,
-     for other ways to make CVS ignore some files.
-
-`-WSPEC'
-     Specify file names that should be filtered during update.  You can
-     use this option repeatedly.
-
-     SPEC can be a file name pattern of the same type that you can
-     specify in the `.cvswrappers' file. *Note Wrappers::.
-
-`-jBRANCH'
-     Merge the changes made between the resulting revision and the
-     revision that it is based on (e.g., if the tag refers to a branch,
-     CVS will merge all changes made in that branch into your working
-     file).
-
-     With two `-j' options, CVS will merge in the changes between the
-     two respective revisions.  This can be used to remove a certain
-     delta from your working file;  if the file `foo.c' is based on
-     revision 1.6 and you want to remove the changes made between 1.3
-     and 1.5, you might do:
-
-          $ cvs update -j1.5 -j1.3 foo.c   # note the order...
-
-     In addition, each -j option can contain an optional date
-     specification which, when used with branches, can limit the chosen
-     revision to one within a specific date.  An optional date is
-     specified by adding a colon (:) to the tag:
-     `-jSYMBOLIC_TAG:DATE_SPECIFIER'.
-
-
-File: cvs.info,  Node: update output,  Next: update examples,  Prev: update options,  Up: update
-
-update output
--------------
-
-   `update' keeps you informed of its progress by printing a line for
-each file, preceded by one character indicating the status of the file:
-
-`U FILE'
-     The file was brought up to date with respect to the repository.
-     This is done for any file that exists in the repository but not in
-     your source, and for files that you haven't changed but are not
-     the most recent versions available in the repository.
-
-`A FILE'
-     The file has been added to your private copy of the sources, and
-     will be added to the source repository when you run `commit' on
-     the file.  This is a reminder to you that the file needs to be
-     committed.
-
-`R FILE'
-     The file has been removed from your private copy of the sources,
-     and will be removed from the source repository when you run
-     `commit' on the file.  This is a reminder to you that the file
-     needs to be committed.
-
-`M FILE'
-     The file is modified in  your  working  directory.
-
-     `M' can indicate one of two states for a file you're working on:
-     either there were no modifications to the same file in the
-     repository, so that your file remains as you last saw it; or there
-     were modifications in the repository as well as in your copy, but
-     they were merged successfully, without conflict, in your working
-     directory.
-
-     CVS will print some messages if it merges your work, and a backup
-     copy of your working file (as it looked before you ran `update')
-     will be made.  The exact name of that file is printed while
-     `update' runs.
-
-`C FILE'
-     A conflict was detected while trying to merge your changes to FILE
-     with changes from the source repository.  FILE (the copy in your
-     working directory) is now the output of the rcsmerge(1) command on
-     the two revisions; an unmodified copy of your file is also in your
-     working directory, with the name `.#FILE.REVISION' where REVISION
-     is the RCS revision that your modified file started from.  (Note
-     that some systems automatically purge files that begin with `.#'
-     if they have not been accessed for a few days.  If you intend to
-     keep a copy of your original file, it is a very good idea to rename
-     it.)
-
-`? FILE'
-     FILE is in your working directory, but does not correspond to
-     anything in the source repository, and is not in the list of files
-     for CVS to ignore (see the description of the `-I' option, and
-     *note cvsignore::.).
-
-     Note that no warning message like this is printed for spurious
-     directories that CVS encounters.  The directory, and all its
-     contents, are silently ignored.
-
-
-File: cvs.info,  Node: update examples,  Prev: update output,  Up: update
-
-update examples
----------------
-
-   The following line will display all files which are not up-to-date
-without actually change anything in your working directory.  It can be
-used to check what has been going on with the project.
+   You can think of the `status' and `update' commands as somewhat
+complementary.  You use `update' to bring your files up to date, and you
+can use `status' to give you some idea of what an `update' would do (of
+course, the state of the repository might change before you actually run
+`update').  In fact, if you want a command to display file status in a
+more brief format than is displayed by the `status' command, you can
+invoke
 
      $ cvs -n -q update
 
-
-File: cvs.info,  Node: Administrative files,  Next: Environment variables,  Prev: Invoking CVS,  Up: Top
-
-Reference manual for the Administrative files
-*********************************************
-
-   Inside the repository, in the directory `$CVSROOT/CVSROOT', there
-are a number of supportive files for CVS.  You can use CVS in a limited
-fashion without any of them, but if they are set up properly they can
-help make life easier.
-
-   The most important of these files is the `modules' file, which
-defines the modules inside the repository.
-
-* Menu:
-
-* modules::                     Defining modules
-* Wrappers::                    Treat directories as files
-* commit files::                The commit support files
-* commitinfo::                  Pre-commit checking
-* editinfo::                    Specifying how log messages are created
-* loginfo::                     Where should log messages be sent?
-* rcsinfo::                     Templates for the log messages
-* cvsignore::                   Ignoring files via cvsignore
-* history file::                History information
-* Setting up::                  Setting up the repository
+   The `-n' option means to not actually do the update, but merely to
+display statuses; the `-q' option avoids printing the name of each
+directory.  For more information on the `update' command, and these
+options, see *Note Invoking CVS::.
 
 
-File: cvs.info,  Node: modules,  Next: Wrappers,  Up: Administrative files
+File: cvs.info,  Node: Updating a file,  Next: Conflicts example,  Prev: File status,  Up: Multiple developers
 
-The modules file
-================
+Bringing a file up to date
+==========================
 
-   The `modules' file records your definitions of names for collections
-of source code.  CVS will use these definitions if you create a file
-with the right format in `$CVSROOT/CVSROOT/modules,v'.  The
-mkmodules(1) command should be run whenever the modules file changes,
-so that the appropriate files can be generated (depending on how you
-have configured CVS operation).
+   When you want to update or merge a file, use the `update' command.
+For files that are not up to date this is roughly equivalent to a
+`checkout' command: the newest revision of the file is extracted from
+the repository and put in your working directory.
 
-   To allow convenient editing of the `modules' file itself, the file
-should include an entry like the following (where LOCALBIN represents
-the directory where your site installs programs like mkmodules(1)):
+   Your modifications to a file are never lost when you use `update'.
+If no newer revision exists, running `update' has no effect.  If you
+have edited the file, and a newer revision is available, CVS will merge
+all changes into your working copy.
 
-     modules    -i /LOCALBIN/mkmodules CVSROOT modules
+   For instance, imagine that you checked out revision 1.4 and started
+editing it.  In the meantime someone else committed revision 1.5, and
+shortly after that revision 1.6.  If you run `update' on the file now,
+CVS will incorporate all changes between revision 1.4 and 1.6 into your
+file.
 
-This defines the name `modules' as the module name for the file itself,
-so that you can use
-
-     $ cvs checkout modules
-
-to get a copy of the file that you can edit.  You should define similar
-module entries for the other configuration files described in this
-appendix, except `history').
-
-   The `modules' file may contain blank lines and comments (lines
-beginning with `#') as well as module definitions.  Long lines can be
-continued on the next line by specifying a backslash (`\') as the last
-character on the line.
-
-   A module definition is a single line of the `modules' file, in
-either of two formats.  In both cases, MNAME represents the symbolic
-module name, and the remainder of the line is its definition.
-
-`MNAME -a ALIASES...'
-     This represents the simplest way of defining a module MNAME.  The
-     `-a' flags the definition as a simple alias: CVS will treat any
-     use of MNAME (as a command argument) as if the list of names
-     ALIASES had been specified instead.  ALIASES may contain either
-     other module names or paths.  When you use paths in aliases,
-     `checkout' creates all intermediate directories in the working
-     directory, just as if the path had been specified explicitly in
-     the CVS arguments.
-
-`MNAME [ options ] DIR [ FILES... ] [ &MODULE... ]'
-     In the simplest case, this form of module definition reduces to
-     `MNAME DIR'.  This defines all the files in directory DIR as
-     module mname.  DIR is a relative path (from `$CVSROOT') to a
-     directory of source in the source repository.  In this case, on
-     checkout, a single directory called MNAME is created as a working
-     directory; no intermediate directory levels are used by default,
-     even if DIR was a path involving several directory levels.
-
-     By explicitly specifying files in the module definition after DIR,
-     you can select particular files from directory DIR.  The sample
-     definition for `modules' is an example of a module defined with a
-     single file from a particular directory.  Here is another example:
-
-          m4test  unsupported/gnu/m4 foreach.m4 forloop.m4
-
-     With this definition, executing `cvs checkout m4test' will create
-     a single working directory `m4test' containing the two files
-     listed, which both come from a common directory several levels deep
-     in the CVS source repository.
-
-     A module definition can refer to other modules by including
-     `&MODULE' in its definition.  `checkout' creates a subdirectory
-     for each such module, in your working directory.
-
-    `-d NAME'
-          Name the working directory something other than the module
-          name.
-
-    `-i PROG'
-          Specify a program PROG to run whenever files in a module are
-          committed.  PROG runs with a single argument, the full
-          pathname of the affected directory in a source repository.
-          The `commitinfo', `loginfo', and `editinfo' files provide
-          other ways to call a program on commit.
-
-    `-o PROG'
-          Specify a program PROG to run whenever files in a module are
-          checked out.  PROG runs with a single argument, the module
-          name.
-
-    `-s STATUS'
-          Assign a status to the module.  When the module file is
-          printed with `cvs checkout -s' the modules are sorted
-          according to primarily module status, and secondarily
-          according to the module name.  This option has no other
-          meaning.  You can use this option for several things besides
-          status: for instance, list the person that is responsible for
-          this module.
-
-    `-t PROG'
-          Specify a program PROG to run whenever files in a module are
-          tagged with `rtag'.  PROG runs with two arguments: the module
-          name and the symbolic tag specified to `rtag'.  There is no
-          way to specify a program to run when `tag' is executed.
-
-    `-u PROG'
-          Specify a program PROG to run whenever `cvs update' is
-          executed from the top-level directory of the checked-out
-          module.  PROG runs with a single argument, the full path to
-          the source repository for this module.
+   If any of the changes between 1.4 and 1.6 were made too close to any
+of the changes you have made, an "overlap" occurs.  In such cases a
+warning is printed, and the resulting file includes both versions of
+the lines that overlap, delimited by special markers.  *Note update::,
+for a complete description of the `update' command.
 
 
-File: cvs.info,  Node: Wrappers,  Next: commit files,  Prev: modules,  Up: Administrative files
+File: cvs.info,  Node: Conflicts example,  Next: Informing others,  Prev: Updating a file,  Up: Multiple developers
 
-The cvswrappers file
-====================
+Conflicts example
+=================
 
-   Wrappers are essentially directories that are to be treated as
-"files."  This package allows such wrappers to be "processed" on the
-way in and out of CVS.  The intended use is to wrap up a wrapper into a
-single tar, such that that tar can be treated as a single binary file
-in CVS.  Apparently this is particularly useful on NEXTSTEP.  To solve
-the problem effectively, it was also necessary to be able to prevent
-rcsmerge application at appropriate times.
+   Suppose revision 1.4 of `driver.c' contains this:
 
-   The file `cvswrappers' defines the script that will be run on a file
-when its name matches a regular expresion. There are two scripts that
-can be run on a file or directory.  A script to filter the
-directory/file before it gets checked in and another that is run when
-the file/directory gets checked out.
-
-   The `cvswrappers' also specifies the merge methodology that should
-be used when the file is updated, that is should a MERGE or a straight
-COPY of the diferences be used when checking into the repository.
-
-   The basic format of the file `cvswrappers' is given as such:
-
-     wildcard     [option value][option value]...
+     #include <stdio.h>
      
-     where option is one of
-     -f           from cvs filter         value: path tofilter
-     -t           to cvs filter           value: path to filter
-     -m           update methodology      value: MERGE or COPY
+     void main()
+     {
+         parse();
+         if (nerr == 0)
+             gencode();
+         else
+             fprintf(stderr, "No code generated.\n");
+         exit(nerr == 0 ? 0 : 1);
+     }
+
+Revision 1.6 of `driver.c' contains this:
+
+     #include <stdio.h>
      
-     and value is a single-quote delimited value.
+     int main(int argc,
+              char **argv)
+     {
+         parse();
+         if (argc != 1)
+         {
+             fprintf(stderr, "tc: No args expected.\n");
+             exit(1);
+         }
+         if (nerr == 0)
+             gencode();
+         else
+             fprintf(stderr, "No code generated.\n");
+         exit(!!nerr);
+     }
 
-     *.nib    -f 'uncom %s' -t 'comb %s %s' -m 'COPY'
-     *.rtfd   -f 'uncom %s' -t 'comb %s %s' -m 'COPY'
+Your working copy of `driver.c', based on revision 1.4, contains this
+before you run `cvs update':
 
-The above example of a `cvswrappers' file states that all
-files/directories that end with a `.nib' should be filtered with the
-`comb' program before checking the file into the repository. The file
-should be filtered though the `uncom' program when the file is checked
-out of the repository. The `cvswrappers' file also states that a `COPY'
-methodology should be used when updating the files in the repository
-(that is no merging should be performed).
+     #include <stdlib.h>
+     #include <stdio.h>
+     
+     void main()
+     {
+         init_scanner();
+         parse();
+         if (nerr == 0)
+             gencode();
+         else
+             fprintf(stderr, "No code generated.\n");
+         exit(nerr == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
+     }
 
-The `comb' filter is called with two arguments, the first is the name
-of the file/directory to filter and the second is the pathname to where
-the resulting filtered file should be placed.
+You run `cvs update':
 
-The `uncom' filter is called with one argument, which is the name of
-the file to filter from. The end result of the `uncom' filter will be a
-file/directory in the users current working directory, that represents
-the source before being filtered.
+     $ cvs update driver.c
+     RCS file: /usr/local/cvsroot/yoyodyne/tc/driver.c,v
+     retrieving revision 1.4
+     retrieving revision 1.6
+     Merging differences between 1.4 and 1.6 into driver.c
+     rcsmerge warning: overlaps during merge
+     cvs update: conflicts found in driver.c
+     C driver.c
 
-
-File: cvs.info,  Node: commit files,  Next: commitinfo,  Prev: Wrappers,  Up: Administrative files
+CVS tells you that there were some conflicts.  Your original working
+file is saved unmodified in `.#driver.c.1.4'.  The new version of
+`driver.c' contains this:
 
-The commit support files
-========================
+     #include <stdlib.h>
+     #include <stdio.h>
+     
+     int main(int argc,
+              char **argv)
+     {
+         init_scanner();
+         parse();
+         if (argc != 1)
+         {
+             fprintf(stderr, "tc: No args expected.\n");
+             exit(1);
+         }
+         if (nerr == 0)
+             gencode();
+         else
+             fprintf(stderr, "No code generated.\n");
+     <<<<<<< driver.c
+         exit(nerr == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
+     =======
+         exit(!!nerr);
+     >>>>>>> 1.6
+     }
 
-   The `-i' flag in the `modules' file can be used to run a certain
-program whenever files are committed (*note modules::.).  The files
-described in this section provide other, more flexible, ways to run
-programs whenever something is committed.
+Note how all non-overlapping modifications are incorporated in your
+working copy, and that the overlapping section is clearly marked with
+`<<<<<<<', `=======' and `>>>>>>>'.
 
-   There are three kind of programs that can be run on commit.  They
-are specified in files in the repository, as described below.  The
-following table summarizes the file names and the purpose of the
-corresponding programs.
+   You resolve the conflict by editing the file, removing the markers
+and the erroneous line.  Suppose you end up with this file:
+     #include <stdlib.h>
+     #include <stdio.h>
+     
+     int main(int argc,
+              char **argv)
+     {
+         init_scanner();
+         parse();
+         if (argc != 1)
+         {
+             fprintf(stderr, "tc: No args expected.\n");
+             exit(1);
+         }
+         if (nerr == 0)
+             gencode();
+         else
+             fprintf(stderr, "No code generated.\n");
+         exit(nerr == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
+     }
 
-`commitinfo'
-     The program is responsible for checking that the commit is
-     allowed.  If it exits with a non-zero exit status the commit will
-     be aborted.
+You can now go ahead and commit this as revision 1.7.
 
-`editinfo'
-     The specified program is used to edit the log message, and
-     possibly verify that it contains all required fields.  This is
-     most useful in combination with the `rcsinfo' file, which can hold
-     a log message template (*note rcsinfo::.).
-
-`loginfo'
-     The specified program is called when the commit is complete.  It
-     receives the log message and some additional information and can
-     store the log message in a file, or mail it to appropriate
-     persons, or maybe post it to a local newsgroup, or...  Your
-     imagination is the limit!
-
-* Menu:
-
-* syntax::                      The common syntax
-
-
-File: cvs.info,  Node: syntax,  Up: commit files
-
-The common syntax
------------------
-
-   The four files `commitinfo', `loginfo', `rcsinfo' and `editinfo' all
-have a common format.  The purpose of the files are described later on.
-The common syntax is described here.
-
-   Each line contains the following:
-   * A regular expression
-
-   * A whitespace separator--one or more spaces and/or tabs.
-
-   * A file name or command-line template.
-
-Blank lines are ignored.  Lines that start with the character `#' are
-treated as comments.  Long lines unfortunately can *not* be broken in
-two parts in any way.
-
-   The first regular expression that matches the current directory name
-in the repository is used.  The rest of the line is used as a file name
-or command-line as appropriate.
-
-
-File: cvs.info,  Node: commitinfo,  Next: editinfo,  Prev: commit files,  Up: Administrative files
-
-Commitinfo
-==========
-
-   The `commitinfo' file defines programs to execute whenever `cvs
-commit' is about to execute.  These programs are used for pre-commit
-checking to verify that the modified, added and removed files are really
-ready to be committed.  This could be used, for instance, to verify
-that the changed files conform to to your site's standards for coding
-practice.
-
-   As mentioned earlier, each line in the `commitinfo' file consists of
-a regular expression and a command-line template.  The template can
-include a program name and any number of arguments you wish to supply
-to it.  The full path to the current source repository is appended to
-the template, followed by the file names of any files involved in the
-commit (added, removed, and modified files).
-
-   The first line with a regular expression matching the relative path
-to the module will be used.  If the command returns a non-zero exit
-status the commit will be aborted.
-
-   If the repository name does not match any of the regular expressions
-in this file, the `DEFAULT' line is used, if it is specified.
-
-   All occurances of the name `ALL' appearing as a regular expression
-are used in addition to the first matching regular expression or the
-name `DEFAULT'.
-
-   Note: when CVS is accessing a remote repository, `commitinfo' will
-be run on the *remote* (i.e., server) side, not the client side (*note
-Remote repositories::.).
-
-
-File: cvs.info,  Node: editinfo,  Next: loginfo,  Prev: commitinfo,  Up: Administrative files
-
-Editinfo
-========
-
-   If you want to make sure that all log messages look the same way,
-you can use the `editinfo' file to specify a program that is used to
-edit the log message.  This program could be a custom-made editor that
-always enforces a certain style of the log message, or maybe a simple
-shell script that calls an editor, and checks that the entered message
-contains the required fields.
-
-   If no matching line is found in the `editinfo' file, the editor
-specified in the environment variable `$CVSEDITOR' is used instead.  If
-that variable is not set, then the environment variable `$EDITOR' is
-used instead.  If that variable is not set a precompiled default,
-normally `vi', will be used.
-
-   The `editinfo' file is often most useful together with the `rcsinfo'
-file, which can be used to specify a log message template.
-
-   Each line in the `editinfo' file consists of a regular expression
-and a command-line template.  The template must include a program name,
-and can include any number of arguments.  The full path to the current
-log message template file is appended to the template.
-
-   One thing that should be noted is that the `ALL' keyword is not
-supported.  If more than one matching line is found, the first one is
-used.  This can be useful for specifying a default edit script in a
-module, and then overriding it in a subdirectory.
-
-   If the repository name does not match any of the regular expressions
-in this file, the `DEFAULT' line is used, if it is specified.
-
-   If the edit script exits with a non-zero exit status, the commit is
-aborted.
-
-   Note: when CVS is accessing a remote repository, `editinfo' will be
-run on the *remote* (i.e., server) side, not the client side (*note
-Remote repositories::.).
-
-* Menu:
-
-* editinfo example::            Editinfo example
-
-
-File: cvs.info,  Node: editinfo example,  Up: editinfo
-
-Editinfo example
-----------------
-
-   The following is a little silly example of a `editinfo' file,
-together with the corresponding `rcsinfo' file, the log message
-template and an editor script.  We begin with the log message template.
-We want to always record a bug-id number on the first line of the log
-message.  The rest of log message is free text.  The following template
-is found in the file `/usr/cvssupport/tc.template'.
-
-     BugId:
-
-   The script `/usr/cvssupport/bugid.edit' is used to edit the log
-message.
-
-     #!/bin/sh
-     #
-     #       bugid.edit filename
-     #
-     #  Call $EDITOR on FILENAME, and verify that the
-     #  resulting file contains a valid bugid on the first
-     #  line.
-     if [ "x$EDITOR" = "x" ]; then EDITOR=vi; fi
-     if [ "x$CVSEDITOR" = "x" ]; then CVSEDITOR=$EDITOR; fi
-     $CVSEDITOR $1
-     until head -1|grep '^BugId:[ ]*[0-9][0-9]*$' < $1
-     do  echo -n  "No BugId found.  Edit again? ([y]/n)"
-         read ans
-         case ${ans} in
-             n*) exit 1;;
-         esac
-         $CVSEDITOR $1
+     $ cvs commit -m "Initialize scanner. Use symbolic exit values." driver.c
+     Checking in driver.c;
+     /usr/local/cvsroot/yoyodyne/tc/driver.c,v  <--  driver.c
+     new revision: 1.7; previous revision: 1.6
      done
 
-   The `editinfo' file contains this line:
+   For your protection, CVS will refuse to check in a file if a
+conflict occurred and you have not resolved the conflict.  Currently to
+resolve a conflict, you must change the timestamp on the file.  In
+previous versions of CVS, you also needed to insure that the file
+contains no conflict markers.  Because your file may legitimately
+contain conflict markers (that is, occurrences of `>>>>>>> ' at the
+start of a line that don't mark a conflict), the current version of CVS
+will print a warning and proceed to check in the file.
 
-     ^tc     /usr/cvssupport/bugid.edit
-
-   The `rcsinfo' file contains this line:
-
-     ^tc     /usr/cvssupport/tc.template
+   If you use release 1.04 or later of pcl-cvs (a GNU Emacs front-end
+for CVS) you can use an Emacs package called emerge to help you resolve
+conflicts.  See the documentation for pcl-cvs.
 
 
-File: cvs.info,  Node: loginfo,  Next: rcsinfo,  Prev: editinfo,  Up: Administrative files
+File: cvs.info,  Node: Informing others,  Next: Concurrency,  Prev: Conflicts example,  Up: Multiple developers
 
-Loginfo
-=======
+Informing others about commits
+==============================
 
-   The `loginfo' file is used to control where `cvs commit' log
-information is sent.  The first entry on a line is a regular expression
-which is tested against the directory that the change is being made to,
-relative to the `$CVSROOT'.  If a match is found, then the remainder of
-the line is a filter program that should expect log information on its
-standard input.
+   It is often useful to inform others when you commit a new revision
+of a file.  The `-i' option of the `modules' file, or the `loginfo'
+file, can be used to automate this process.  *Note modules::.  *Note
+loginfo::.  You can use these features of CVS to, for instance,
+instruct CVS to mail a message to all developers, or post a message to
+a local newsgroup.
 
-   The filter program may use one and only one % modifier (a la
-printf).  If `%s' is specified in the filter program, a brief title is
-included (enclosed in single quotes) showing the modified file names.
+
+File: cvs.info,  Node: Concurrency,  Next: Watches,  Prev: Informing others,  Up: Multiple developers
 
-   If the repository name does not match any of the regular expressions
-in this file, the `DEFAULT' line is used, if it is specified.
+Several developers simultaneously attempting to run CVS
+=======================================================
 
-   All occurances of the name `ALL' appearing as a regular expression
-are used in addition to the first matching regular expression or
-`DEFAULT'.
+   If several developers try to run CVS at the same time, one may get
+the following message:
 
-   The first matching regular expression is used.
+     [11:43:23] waiting for bach's lock in /usr/local/cvsroot/foo
 
-   *Note commit files::, for a description of the syntax of the
-`loginfo' file.
+   CVS will try again every 30 seconds, and either continue with the
+operation or print the message again, if it still needs to wait.  If a
+lock seems to stick around for an undue amount of time, find the person
+holding the lock and ask them about the cvs command they are running.
+If they aren't running a cvs command, look in the repository directory
+mentioned in the message and remove files which they own whose names
+start with `#cvs.rfl', `#cvs.wfl', or `#cvs.lock'.
 
-   Note: when CVS is accessing a remote repository, `loginfo' will be
-run on the *remote* (i.e., server) side, not the client side (*note
-Remote repositories::.).
+   Note that these locks are to protect CVS's internal data structures
+and have no relationship to the word "lock" in the sense used by
+RCS--which refers to reserved checkouts (*note Multiple developers::).
+
+   Any number of people can be reading from a given repository at a
+time; only when someone is writing do the locks prevent other people
+from reading or writing.
+
+   One might hope for the following property
+
+     If someone commits some changes in one cvs command,
+     then an update by someone else will either get all the
+     changes, or none of them.
+
+   but CVS does _not_ have this property.  For example, given the files
+
+     a/one.c
+     a/two.c
+     b/three.c
+     b/four.c
+
+   if someone runs
+
+     cvs ci a/two.c b/three.c
+
+   and someone else runs `cvs update' at the same time, the person
+running `update' might get only the change to `b/three.c' and not the
+change to `a/two.c'.
+
+
+File: cvs.info,  Node: Watches,  Next: Choosing a model,  Prev: Concurrency,  Up: Multiple developers
+
+Mechanisms to track who is editing files
+========================================
+
+   For many groups, use of CVS in its default mode is perfectly
+satisfactory.  Users may sometimes go to check in a modification only
+to find that another modification has intervened, but they deal with it
+and proceed with their check in.  Other groups prefer to be able to
+know who is editing what files, so that if two people try to edit the
+same file they can choose to talk about who is doing what when rather
+than be surprised at check in time.  The features in this section allow
+such coordination, while retaining the ability of two developers to
+edit the same file at the same time.
+
+   For maximum benefit developers should use `cvs edit' (not `chmod')
+to make files read-write to edit them, and `cvs release' (not `rm') to
+discard a working directory which is no longer in use, but CVS is not
+able to enforce this behavior.
 
 * Menu:
 
-* loginfo example::             Loginfo example
+* Setting a watch::             Telling CVS to watch certain files
+* Getting Notified::            Telling CVS to notify you
+* Editing files::               How to edit a file which is being watched
+* Watch information::           Information about who is watching and editing
+* Watches Compatibility::       Watches interact poorly with CVS 1.6 or earlier
 
 
-File: cvs.info,  Node: loginfo example,  Up: loginfo
+File: cvs.info,  Node: Setting a watch,  Next: Getting Notified,  Up: Watches
 
-Loginfo example
----------------
+Telling CVS to watch certain files
+----------------------------------
 
-   The following `loginfo' file, together with the tiny shell-script
-below, appends all log messages to the file
-`$CVSROOT/CVSROOT/commitlog', and any commits to the administrative
-files (inside the `CVSROOT' directory) are also logged in
-`/usr/adm/cvsroot-log' and mailed to ceder.
+   To enable the watch features, you first specify that certain files
+are to be watched.
 
-     ALL             /usr/local/bin/cvs-log $CVSROOT/CVSROOT/commitlog
-     ^CVSROOT        Mail -s %s ceder
-     ^CVSROOT        /usr/local/bin/cvs-log /usr/adm/cvsroot-log
+ - Command: cvs watch on [`-lR'] files ...
+     Specify that developers should run `cvs edit' before editing
+     FILES.  CVS will create working copies of FILES read-only, to
+     remind developers to run the `cvs edit' command before working on
+     them.
 
-   The shell-script `/usr/local/bin/cvs-log' looks like this:
+     If FILES includes the name of a directory, CVS arranges to watch
+     all files added to the corresponding repository directory, and
+     sets a default for files added in the future; this allows the user
+     to set notification policies on a per-directory basis.  The
+     contents of the directory are processed recursively, unless the
+     `-l' option is given.  The `-R' option can be used to force
+     recursion if the `-l' option is set in `~/.cvsrc' (*note
+     ~/.cvsrc::).
 
-     #!/bin/sh
-     (echo "-----------------------------------------------------------------";
-      echo -n $USER"  ";
-      date;
-      echo;
-      sed '1s+'${CVSROOT}'++') >> $1
+     If FILES is omitted, it defaults to the current directory.
 
-
-File: cvs.info,  Node: rcsinfo,  Next: cvsignore,  Prev: loginfo,  Up: Administrative files
 
-Rcsinfo
-=======
+ - Command: cvs watch off [`-lR'] files ...
+     Do not create FILES read-only on checkout; thus, developers will
+     not be reminded to use `cvs edit' and `cvs unedit'.
 
-   The `rcsinfo' file can be used to specify a form to edit when
-filling out the commit log.  The `rcsinfo' file has a syntax similar to
-the `editinfo', `commitinfo' and `loginfo' files.  *Note syntax::.
-Unlike the other files the second part is *not* a command-line
-template.  Instead, the part after the regular expression should be a
-full pathname to a file containing the log message template.
+     The FILES and options are processed as for `cvs watch on'.
 
-   If the repository name does not match any of the regular expressions
-in this file, the `DEFAULT' line is used, if it is specified.
-
-   All occurances of the name `ALL' appearing as a regular expression
-are used in addition to the first matching regular expression or
-`DEFAULT'.
-
-   The log message template will be used as a default log message.  If
-you specify a log message with `cvs commit -m MESSAGE' or `cvs commit -f
-FILE' that log message will override the template.
-
-   *Note editinfo example::, for an example `rcsinfo' file.
-
-   Note: when CVS is accessing a remote repository, `rcsinfo' will be
-run on the *remote* (i.e., server) side, not the client side (*note
-Remote repositories::.).
 
 
-File: cvs.info,  Node: cvsignore,  Next: history file,  Prev: rcsinfo,  Up: Administrative files
+File: cvs.info,  Node: Getting Notified,  Next: Editing files,  Prev: Setting a watch,  Up: Watches
 
-Ignoring files via cvsignore
-============================
+Telling CVS to notify you
+-------------------------
 
-   There are certain file names that frequently occur inside your
-working copy, but that you don't want to put under CVS control.
-Examples are all the object files that you get while you compile your
-sources.  Normally, when you run `cvs update', it prints a line for
-each file it encounters that it doesn't know about (*note update
-output::.).
+   You can tell CVS that you want to receive notifications about
+various actions taken on a file.  You can do this without using `cvs
+watch on' for the file, but generally you will want to use `cvs watch
+on', so that developers use the `cvs edit' command.
 
-   CVS has a list of files (or sh(1) file name patterns) that it should
-ignore while running `update', `import' and `release'.  This list is
-constructed in the following way.
+ - Command: cvs watch add [`-a' action] [`-lR'] files ...
+     Add the current user to the list of people to receive notification
+     of work done on FILES.
 
-   * The list is initialized to the following file name patterns:
+     The `-a' option specifies what kinds of events CVS should notify
+     the user about.  ACTION is one of the following:
 
-              RCSLOG  RCS     SCCS
-              CVS*    cvslog.*
-              tags    TAGS
-              .make.state     .nse_depinfo
-              *~      #*      .#*     ,*
-              *.old   *.bak   *.BAK   *.orig  *.rej   .del-*
-              *.a     *.o     *.so    *.Z     *.elc   *.ln
-              core
+    `edit'
+          Another user has applied the `cvs edit' command (described
+          below) to a file.
 
-   * The per-repository list in `$CVSROOT/CVSROOT/cvsignore' is
-     appended to the list, if that file exists.
+    `unedit'
+          Another user has applied the `cvs unedit' command (described
+          below) or the `cvs release' command to a file, or has deleted
+          the file and allowed `cvs update' to recreate it.
 
-   * The per-user list in `.cvsignore' in your home directory is
-     appended to the list, if it exists.
+    `commit'
+          Another user has committed changes to a file.
 
-   * Any entries in the environment variable `$CVSIGNORE' is appended
-     to the list.
+    `all'
+          All of the above.
 
-   * Any `-I' options given to CVS is appended.
+    `none'
+          None of the above.  (This is useful with `cvs edit',
+          described below.)
 
-   * As CVS traverses through your directories, the contents of any
-     `.cvsignore' will be appended to the list.  The patterns found in
-     `.cvsignore' are only valid for the directory that contains them,
-     not for any sub-directories.
+     The `-a' option may appear more than once, or not at all.  If
+     omitted, the action defaults to `all'.
 
-   In any of the 5 places listed above, a single exclamation mark (`!')
-clears the ignore list.  This can be used if you want to store any file
-which normally is ignored by CVS.
+     The FILES and options are processed as for the `cvs watch'
+     commands.
 
-
-File: cvs.info,  Node: history file,  Next: Setting up,  Prev: cvsignore,  Up: Administrative files
 
-The history file
-================
+ - Command: cvs watch remove [`-a' action] [`-lR'] files ...
+     Remove a notification request established using `cvs watch add';
+     the arguments are the same.  If the `-a' option is present, only
+     watches for the specified actions are removed.
 
-   The file `$CVSROOT/CVSROOT/history' is used to log information for
-the `history' command (*note history::.).  This file must be created to
-turn on logging.  This is done automatically if the `cvsinit' script is
-used to set up the repository.
 
-   The file format of the `history' file is unfortunately not yet
-documented anywhere, but it is fairly easy to understand most of it.
+   When the conditions exist for notification, CVS calls the `notify'
+administrative file.  Edit `notify' as one edits the other
+administrative files (*note Intro administrative files::).  This file
+follows the usual conventions for administrative files (*note
+syntax::), where each line is a regular expression followed by a
+command to execute.  The command should contain a single occurrence of
+`%s' which will be replaced by the user to notify; the rest of the
+information regarding the notification will be supplied to the command
+on standard input.  The standard thing to put in the `notify' file is
+the single line:
 
-
-File: cvs.info,  Node: Setting up,  Prev: history file,  Up: Administrative files
+     ALL mail %s -s "CVS notification"
 
-Setting up the repository
-=========================
+   This causes users to be notified by electronic mail.
 
-   When you install CVS for the first time, you should follow the
-instructions in the `INSTALL' file to set up the repository.
+   Note that if you set this up in the straightforward way, users
+receive notifications on the server machine.  One could of course write
+a `notify' script which directed notifications elsewhere, but to make
+this easy, CVS allows you to associate a notification address for each
+user.  To do so create a file `users' in `CVSROOT' with a line for each
+user in the format USER:VALUE.  Then instead of passing the name of the
+user to be notified to `notify', CVS will pass the VALUE (normally an
+email address on some other machine).
 
-   If you want to set up another repository, the easiest way to get a
-reasonable set of working administrative files is to run the `cvsinit'
-shell script.  It will set up an empty repository in the directory
-defined by the environment variable `$CVSROOT'.  (`cvsinit' is careful
-to never overwrite any existing files in the repository, so no harm is
-done if you run `cvsinit' on an already set-up repository.  In fact,
-running it on an already set-up repository is the best way to update
-the various scripts from the `contrib' directory.)
-
-
-File: cvs.info,  Node: Environment variables,  Next: Troubleshooting,  Prev: Administrative files,  Up: Top
-
-All environment variables which affect CVS
-******************************************
-
-   This is a complete list of all environment variables that affect CVS.
-
-`$CVSIGNORE'
-     A whitespace-separated list of file name patterns that CVS should
-     ignore. *Note cvsignore::.
-
-`$CVSWRAPPERS'
-     A whitespace-separated list of file name patterns that CVS should
-     treat as wrappers. *Note Wrappers::.
-
-`$CVSREAD'
-     If this is set, `checkout' and `update' will try hard to make the
-     files in your working directory read-only.  When this is not set,
-     the default behavior is to permit modification of your working
-     files.
-
-`$CVSROOT'
-     Should contain the full pathname to the root of the CVS source
-     repository (where the RCS history files are kept).  This
-     information must be available to CVS for most commands to execute;
-     if `$CVSROOT' is not set, or if you wish to override it for one
-     invocation, you can supply it on the command line: `cvs -d cvsroot
-     cvs_command...' You may not need to set `$CVSROOT' if your CVS
-     binary has the right path compiled in.
-
-`$EDITOR'
-`$CVSEDITOR'
-     Specifies the program to use for recording log messages during
-     commit.  If not set, the default is `/usr/ucb/vi'.  `$CVSEDITOR'
-     overrides `$EDITOR'.  `$CVSEDITOR' does not exist in CVS 1.3, but
-     the next release will probably include it.
-
-`$PATH'
-     If `$RCSBIN' is not set, and no path is compiled into CVS, it will
-     use `$PATH' to try to find all programs it uses.
-
-`$RCSBIN'
-     Specifies the full pathname of the location of RCS programs, such
-     as co(1) and ci(1).  If not set, a compiled-in value is used, or
-     your `$PATH' is searched.
-
-   CVS is a front-end to RCS.  The following environment variables
-affect RCS:
-
-`$LOGNAME'
-`$USER'
-     If set, they affect who RCS thinks you are.  If you have trouble
-     checking in files it might be because your login name differs from
-     the setting of e.g.  `$LOGNAME'.
-
-`$RCSINIT'
-     Options prepended to the argument list, separated by spaces.  A
-     backslash escapes spaces within an option.  The `$RCSINIT' options
-     are prepended to the argument lists of most RCS commands.
-
-`$TMPDIR'
-`$TMP'
-`$TEMP'
-     Name of the temporary directory.  The environment variables are
-     inspected in the order they appear above and the first value found
-     is taken; if none of them are set, a host-dependent default is
-     used, typically `/tmp'.
+   CVS does not notify you for your own changes.  Currently this check
+is done based on whether the user name of the person taking the action
+which triggers notification matches the user name of the person getting
+notification.  In fact, in general, the watches features only track one
+edit by each user.  It probably would be more useful if watches tracked
+each working directory separately, so this behavior might be worth
+changing.
 
 
-File: cvs.info,  Node: Troubleshooting,  Next: Copying,  Prev: Environment variables,  Up: Top
+File: cvs.info,  Node: Editing files,  Next: Watch information,  Prev: Getting Notified,  Up: Watches
 
-Troubleshooting
-***************
+How to edit a file which is being watched
+-----------------------------------------
+
+   Since a file which is being watched is checked out read-only, you
+cannot simply edit it.  To make it read-write, and inform others that
+you are planning to edit it, use the `cvs edit' command.  Some systems
+call this a "checkout", but CVS uses that term for obtaining a copy of
+the sources (*note Getting the source::), an operation which those
+systems call a "get" or a "fetch".
+
+ - Command: cvs edit [options] files ...
+     Prepare to edit the working files FILES.  CVS makes the FILES
+     read-write, and notifies users who have requested `edit'
+     notification for any of FILES.
+
+     The `cvs edit' command accepts the same OPTIONS as the `cvs watch
+     add' command, and establishes a temporary watch for the user on
+     FILES; CVS will remove the watch when FILES are `unedit'ed or
+     `commit'ted.  If the user does not wish to receive notifications,
+     she should specify `-a none'.
+
+     The FILES and options are processed as for the `cvs watch'
+     commands.
+
+
+   Normally when you are done with a set of changes, you use the `cvs
+commit' command, which checks in your changes and returns the watched
+files to their usual read-only state.  But if you instead decide to
+abandon your changes, or not to make any changes, you can use the `cvs
+unedit' command.
+
+ - Command: cvs unedit [`-lR'] files ...
+     Abandon work on the working files FILES, and revert them to the
+     repository versions on which they are based.  CVS makes those
+     FILES read-only for which users have requested notification using
+     `cvs watch on'.  CVS notifies users who have requested `unedit'
+     notification for any of FILES.
+
+     The FILES and options are processed as for the `cvs watch'
+     commands.
+
+     If watches are not in use, the `unedit' command probably does not
+     work, and the way to revert to the repository version is to remove
+     the file and then use `cvs update' to get a new copy.  The meaning
+     is not precisely the same; removing and updating may also bring in
+     some changes which have been made in the repository since the last
+     time you updated.
+
+   When using client/server CVS, you can use the `cvs edit' and `cvs
+unedit' commands even if CVS is unable to successfully communicate with
+the server; the notifications will be sent upon the next successful CVS
+command.
+
+
+File: cvs.info,  Node: Watch information,  Next: Watches Compatibility,  Prev: Editing files,  Up: Watches
+
+Information about who is watching and editing
+---------------------------------------------
+
+ - Command: cvs watchers [`-lR'] files ...
+     List the users currently watching changes to FILES.  The report
+     includes the files being watched, and the mail address of each
+     watcher.
+
+     The FILES and options are processed as for the `cvs watch'
+     commands.
+
+
+ - Command: cvs editors [`-lR'] files ...
+     List the users currently working on FILES.  The report includes
+     the mail address of each user, the time when the user began
+     working with the file, and the host and path of the working
+     directory containing the file.
+
+     The FILES and options are processed as for the `cvs watch'
+     commands.
+
+
+
+File: cvs.info,  Node: Watches Compatibility,  Prev: Watch information,  Up: Watches
+
+Using watches with old versions of CVS
+--------------------------------------
+
+   If you use the watch features on a repository, it creates `CVS'
+directories in the repository and stores the information about watches
+in that directory.  If you attempt to use CVS 1.6 or earlier with the
+repository, you get an error message such as the following (all on one
+line):
+
+     cvs update: cannot open CVS/Entries for reading:
+     No such file or directory
+
+   and your operation will likely be aborted.  To use the watch
+features, you must upgrade all copies of CVS which use that repository
+in local or server mode.  If you cannot upgrade, use the `watch off' and
+`watch remove' commands to remove all watches, and that will restore
+the repository to a state which CVS 1.6 can cope with.
+
+
+File: cvs.info,  Node: Choosing a model,  Prev: Watches,  Up: Multiple developers
+
+Choosing between reserved or unreserved checkouts
+=================================================
+
+   Reserved and unreserved checkouts each have pros and cons.  Let it
+be said that a lot of this is a matter of opinion or what works given
+different groups' working styles, but here is a brief description of
+some of the issues.  There are many ways to organize a team of
+developers.  CVS does not try to enforce a certain organization.  It is
+a tool that can be used in several ways.
+
+   Reserved checkouts can be very counter-productive.  If two persons
+want to edit different parts of a file, there may be no reason to
+prevent either of them from doing so.  Also, it is common for someone
+to take out a lock on a file, because they are planning to edit it, but
+then forget to release the lock.
+
+   People, especially people who are familiar with reserved checkouts,
+often wonder how often conflicts occur if unreserved checkouts are
+used, and how difficult they are to resolve.  The experience with many
+groups is that they occur rarely and usually are relatively
+straightforward to resolve.
+
+   The rarity of serious conflicts may be surprising, until one realizes
+that they occur only when two developers disagree on the proper design
+for a given section of code; such a disagreement suggests that the team
+has not been communicating properly in the first place.  In order to
+collaborate under _any_ source management regimen, developers must
+agree on the general design of the system; given this agreement,
+overlapping changes are usually straightforward to merge.
+
+   In some cases unreserved checkouts are clearly inappropriate.  If no
+merge tool exists for the kind of file you are managing (for example
+word processor files or files edited by Computer Aided Design
+programs), and it is not desirable to change to a program which uses a
+mergeable data format, then resolving conflicts is going to be
+unpleasant enough that you generally will be better off to simply avoid
+the conflicts instead, by using reserved checkouts.
+
+   The watches features described above in *Note Watches:: can be
+considered to be an intermediate model between reserved checkouts and
+unreserved checkouts.  When you go to edit a file, it is possible to
+find out who else is editing it.  And rather than having the system
+simply forbid both people editing the file, it can tell you what the
+situation is and let you figure out whether it is a problem in that
+particular case or not.  Therefore, for some groups it can be
+considered the best of both the reserved checkout and unreserved
+checkout worlds.
+
+
+File: cvs.info,  Node: Revision management,  Next: Keyword substitution,  Prev: Multiple developers,  Up: Top
+
+Revision management
+*******************
+
+   If you have read this far, you probably have a pretty good grasp on
+what CVS can do for you.  This chapter talks a little about things that
+you still have to decide.
+
+   If you are doing development on your own using CVS you could
+probably skip this chapter.  The questions this chapter takes up become
+more important when more than one person is working in a repository.
 
 * Menu:
 
-* Magic branch numbers::        Magic branch numbers
+* When to commit::              Some discussion on the subject
 
 
-File: cvs.info,  Node: Magic branch numbers,  Up: Troubleshooting
+File: cvs.info,  Node: When to commit,  Up: Revision management
 
-Magic branch numbers
-====================
+When to commit?
+===============
 
-   Externally, branch numbers consist of an odd number of dot-separated
-decimal integers.  *Note Revision numbers::.  That is not the whole
-truth, however.  For efficiency reasons CVS sometimes inserts an extra 0
-in the second rightmost position (1.2.3 becomes 1.2.0.3, 8.9.10.11.12
-becomes 8.9.10.11.0.12 and so on).
+   Your group should decide which policy to use regarding commits.
+Several policies are possible, and as your experience with CVS grows
+you will probably find out what works for you.
 
-   CVS does a pretty good job at hiding these so called magic branches,
-but in at least four places the hiding is incomplete.
+   If you commit files too quickly you might commit files that do not
+even compile.  If your partner updates his working sources to include
+your buggy file, he will be unable to compile the code.  On the other
+hand, other persons will not be able to benefit from the improvements
+you make to the code if you commit very seldom, and conflicts will
+probably be more common.
 
-   * The magic branch can appear in the output from `cvs status' in
-     vanilla CVS 1.3.  This is fixed in CVS 1.3-s2.
-
-   * The magic branch number appears in the output from `cvs log'.
-     This is much harder to fix, since `cvs log' runs `rlog' (which is
-     part of the RCS distribution), and modifying `rlog' to know about
-     magic branches would probably break someone's habits (if they use
-     branch 0 for their own purposes).
-
-   * You cannot specify a symbolic branch name to `cvs log'.
-
-   * You cannot specify a symbolic branch name to `cvs admin'.
-
-   You can use the `admin' command to reassign a symbolic name to a
-branch the way RCS expects it to be.  If `R4patches' is assigned to the
-branch 1.4.2 (magic branch number 1.4.0.2) in file `numbers.c' you can
-do this:
-
-     $ cvs admin -NR4patches:1.4.2 numbers.c
-
-   It only works if at least one revision is already committed on the
-branch.  Be very careful so that you do not assign the tag to the wrong
-number.  (There is no way to see how the tag was assigned yesterday).
+   It is common to only commit files after making sure that they can be
+compiled.  Some sites require that the files pass a test suite.
+Policies like this can be enforced using the commitinfo file (*note
+commitinfo::), but you should think twice before you enforce such a
+convention.  By making the development environment too controlled it
+might become too regimented and thus counter-productive to the real
+goal, which is to get software written.
 
 
-File: cvs.info,  Node: Copying,  Next: Index,  Prev: Troubleshooting,  Up: Top
+File: cvs.info,  Node: Keyword substitution,  Next: Tracking sources,  Prev: Revision management,  Up: Top
 
-GNU GENERAL PUBLIC LICENSE
-**************************
+Keyword substitution
+********************
+
+   As long as you edit source files inside a working directory you can
+always find out the state of your files via `cvs status' and `cvs log'.
+But as soon as you export the files from your development environment
+it becomes harder to identify which revisions they are.
+
+   CVS can use a mechanism known as "keyword substitution" (or "keyword
+expansion") to help identifying the files.  Embedded strings of the form
+`$KEYWORD$' and `$KEYWORD:...$' in a file are replaced with strings of
+the form `$KEYWORD:VALUE$' whenever you obtain a new revision of the
+file.
+
+* Menu:
+
+* Keyword list::                Keywords
+* Using keywords::              Using keywords
+* Avoiding substitution::       Avoiding substitution
+* Substitution modes::          Substitution modes
+* Log keyword::                 Problems with the $Log: cvs.info-4,v $
+* Log keyword::                 Problems with the Revision 1.2  2001/09/29 00:00:39  tholo
+* Log keyword::                 Problems with the Merge remaining local changes, correct build issues
+* Log keyword::                 Problems with the keyword.
+
+
+File: cvs.info,  Node: Keyword list,  Next: Using keywords,  Up: Keyword substitution
+
+Keyword List
+============
+
+   This is a list of the keywords:
+
+`$Author: tholo $'
+     The login name of the user who checked in the revision.
+
+`$Date: 2001/09/29 00:00:39 $'
+     The date and time (UTC) the revision was checked in.
+
+`$Header: /scm/cvs/src/gnu/usr.bin/cvs/doc/cvs.info-4,v 1.2 2001/09/29 00:00:39 tholo Exp $'
+     A standard header containing the full pathname of the RCS file,
+     the revision number, the date (UTC), the author, the state, and
+     the locker (if locked).  Files will normally never be locked when
+     you use CVS.
+
+`$Id: cvs.info-4,v 1.2 2001/09/29 00:00:39 tholo Exp $'
+     Same as `$Header: /scm/cvs/src/gnu/usr.bin/cvs/doc/cvs.info-4,v 1.2 2001/09/29 00:00:39 tholo Exp $', except that the RCS filename is without a path.
+
+`$Name:  $'
+     Tag name used to check out this file.  The keyword is expanded
+     only if one checks out with an explicit tag name.  For example,
+     when running the command `cvs co -r first', the keyword expands to
+     `Name: first'.
+
+`$Locker:  $'
+     The login name of the user who locked the revision (empty if not
+     locked, which is the normal case unless `cvs admin -l' is in use).
+
+`$Log: cvs.info-4,v $
+`Revision 1.2  2001/09/29 00:00:39  tholo
+`Merge remaining local changes, correct build issues
+`'
+     The log message supplied during commit, preceded by a header
+     containing the RCS filename, the revision number, the author, and
+     the date (UTC).  Existing log messages are _not_ replaced.
+     Instead, the new log message is inserted after `$Log: cvs.info-4,v $
+     Instead, the new log message is inserted after `Revision 1.2  2001/09/29 00:00:39  tholo
+     Instead, the new log message is inserted after `Merge remaining local changes, correct build issues
+     Instead, the new log message is inserted after `'.  Each
+     new line is prefixed with the same string which precedes the
+     `$Log' keyword.  For example, if the file contains
+
+            /* Here is what people have been up to:
+             *
+             * $Log: cvs.info-4,v $
+             * Revision 1.2  2001/09/29 00:00:39  tholo
+             * Merge remaining local changes, correct build issues
+             *
+             * Revision 1.1  1997/01/03 14:23:51  joe
+             * Add the superfrobnicate option
+             *
+             */
+
+     then additional lines which are added when expanding the `$Log'
+     keyword will be preceded by `   * '.  Unlike previous versions of
+     CVS and RCS, the "comment leader" from the RCS file is not used.
+     The `$Log' keyword is useful for accumulating a complete change
+     log in a source file, but for several reasons it can be
+     problematic.  *Note Log keyword::.
+
+`$RCSfile: cvs.info-4,v $'
+     The name of the RCS file without a path.
+
+`$Revision: 1.2 $'
+     The revision number assigned to the revision.
+
+`$Source: /scm/cvs/src/gnu/usr.bin/cvs/doc/cvs.info-4,v $'
+     The full pathname of the RCS file.
+
+`$State: Exp $'
+     The state assigned to the revision.  States can be assigned with
+     `cvs admin -s'--see *Note admin options::.
+
+
+File: cvs.info,  Node: Using keywords,  Next: Avoiding substitution,  Prev: Keyword list,  Up: Keyword substitution
+
+Using keywords
+==============
+
+   To include a keyword string you simply include the relevant text
+string, such as `$Id: cvs.info-4,v 1.2 2001/09/29 00:00:39 tholo Exp $', inside the file, and commit the file.  CVS will
+automatically expand the string as part of the commit operation.
+
+   It is common to embed the `$Id: cvs.info-4,v 1.2 2001/09/29 00:00:39 tholo Exp $' string in the source files so that
+it gets passed through to generated files.  For example, if you are
+managing computer program source code, you might include a variable
+which is initialized to contain that string.  Or some C compilers may
+provide a `#pragma ident' directive.  Or a document management system
+might provide a way to pass a string through to generated files.
+
+   The `ident' command (which is part of the RCS package) can be used
+to extract keywords and their values from a file.  This can be handy
+for text files, but it is even more useful for extracting keywords from
+binary files.
+
+     $ ident samp.c
+     samp.c:
+          $Id: cvs.info-4,v 1.2 2001/09/29 00:00:39 tholo Exp $
+     $ gcc samp.c
+     $ ident a.out
+     a.out:
+          $Id: cvs.info-4,v 1.2 2001/09/29 00:00:39 tholo Exp $
+
+   SCCS is another popular revision control system.  It has a command,
+`what', which is very similar to `ident' and used for the same purpose.
+Many sites without RCS have SCCS.  Since `what' looks for the
+character sequence `@(#)' it is easy to include keywords that are
+detected by either command.  Simply prefix the keyword with the magic
+SCCS phrase, like this:
+
+     static char *id="@(#) $Id: cvs.info-4,v 1.2 2001/09/29 00:00:39 tholo Exp $";
+
+
+File: cvs.info,  Node: Avoiding substitution,  Next: Substitution modes,  Prev: Using keywords,  Up: Keyword substitution
+
+Avoiding substitution
+=====================
+
+   Keyword substitution has its disadvantages.  Sometimes you might
+want the literal text string `$Author: tholo $' to appear inside a file without
+CVS interpreting it as a keyword and expanding it into something like
+`$Author: tholo $'.
+
+   There is unfortunately no way to selectively turn off keyword
+substitution.  You can use `-ko' (*note Substitution modes::) to turn
+off keyword substitution entirely.
+
+   In many cases you can avoid using keywords in the source, even
+though they appear in the final product.  For example, the source for
+this manual contains `$@asis{}Author$' whenever the text `$Author: tholo $'
+should appear.  In `nroff' and `troff' you can embed the null-character
+`\&' inside the keyword for a similar effect.
+
+
+File: cvs.info,  Node: Substitution modes,  Next: Log keyword,  Prev: Avoiding substitution,  Up: Keyword substitution
+
+Substitution modes
+==================
+
+   Each file has a stored default substitution mode, and each working
+directory copy of a file also has a substitution mode.  The former is
+set by the `-k' option to `cvs add' and `cvs admin'; the latter is set
+by the `-k' or `-A' options to `cvs checkout' or `cvs update'.  `cvs
+diff' also has a `-k' option.  For some examples, see *Note Binary
+files::, and *Note Merging and keywords::.
+
+   The modes available are:
+
+`-kkv'
+     Generate keyword strings using the default form, e.g.  `$Revision:
+     5.7 $' for the `Revision' keyword.
+
+`-kkvl'
+     Like `-kkv', except that a locker's name is always inserted if the
+     given revision is currently locked.  The locker's name is only
+     relevant if `cvs admin -l' is in use.
+
+`-kk'
+     Generate only keyword names in keyword strings; omit their values.
+     For example, for the `Revision' keyword, generate the string
+     `$Revision: 1.2 $' instead of `$Revision: 1.2 $'.  This option is useful
+     to ignore differences due to keyword substitution when comparing
+     different revisions of a file (*note Merging and keywords::).
+
+`-ko'
+     Generate the old keyword string, present in the working file just
+     before it was checked in.  For example, for the `Revision'
+     keyword, generate the string `$Revision: 1.2 $' instead of
+     `$Revision: 1.2 $' if that is how the string appeared when the
+     file was checked in.
+
+`-kb'
+     Like `-ko', but also inhibit conversion of line endings between
+     the canonical form in which they are stored in the repository
+     (linefeed only), and the form appropriate to the operating system
+     in use on the client.  For systems, like unix, which use linefeed
+     only to terminate lines, this is the same as `-ko'.  For more
+     information on binary files, see *Note Binary files::.
+
+`-kv'
+     Generate only keyword values for keyword strings.  For example,
+     for the `Revision' keyword, generate the string `5.7' instead of
+     `$Revision: 1.2 $'.  This can help generate files in programming
+     languages where it is hard to strip keyword delimiters like
+     `$Revision: 1.2 $' from a string.  However, further keyword
+     substitution cannot be performed once the keyword names are
+     removed, so this option should be used with care.
+
+     One often would like to use `-kv' with `cvs export'--*note
+     export::.  But be aware that doesn't handle an export containing
+     binary files correctly.
+
+
+File: cvs.info,  Node: Log keyword,  Prev: Substitution modes,  Up: Keyword substitution
+
+Problems with the $Log: cvs.info-4,v $
+Problems with the Revision 1.2  2001/09/29 00:00:39  tholo
+Problems with the Merge remaining local changes, correct build issues
+Problems with the keyword.
+================================
+
+   The `$Log: cvs.info-4,v $
+   The `Revision 1.2  2001/09/29 00:00:39  tholo
+   The `Merge remaining local changes, correct build issues
+   The `' keyword is somewhat controversial.  As long as you are
+working on your development system the information is easily accessible
+even if you do not use the `$Log: cvs.info-4,v $
+even if you do not use the `Revision 1.2  2001/09/29 00:00:39  tholo
+even if you do not use the `Merge remaining local changes, correct build issues
+even if you do not use the `' keyword--just do a `cvs log'.  Once
+you export the file the history information might be useless anyhow.
+
+   A more serious concern is that CVS is not good at handling `$Log: cvs.info-4,v $
+   A more serious concern is that CVS is not good at handling `Revision 1.2  2001/09/29 00:00:39  tholo
+   A more serious concern is that CVS is not good at handling `Merge remaining local changes, correct build issues
+   A more serious concern is that CVS is not good at handling `'
+entries when a branch is merged onto the main trunk.  Conflicts often
+result from the merging operation.
+
+   People also tend to "fix" the log entries in the file (correcting
+spelling mistakes and maybe even factual errors).  If that is done the
+information from `cvs log' will not be consistent with the information
+inside the file.  This may or may not be a problem in real life.
+
+   It has been suggested that the `$Log: cvs.info-4,v $
+   It has been suggested that the `Revision 1.2  2001/09/29 00:00:39  tholo
+   It has been suggested that the `Merge remaining local changes, correct build issues
+   It has been suggested that the `' keyword should be inserted
+_last_ in the file, and not in the files header, if it is to be used at
+all.  That way the long list of change messages will not interfere with
+everyday source file browsing.
+
+
+File: cvs.info,  Node: Tracking sources,  Next: Builds,  Prev: Keyword substitution,  Up: Top
+
+Tracking third-party sources
+****************************
+
+   If you modify a program to better fit your site, you probably want
+to include your modifications when the next release of the program
+arrives.  CVS can help you with this task.
+
+   In the terminology used in CVS, the supplier of the program is
+called a "vendor".  The unmodified distribution from the vendor is
+checked in on its own branch, the "vendor branch".  CVS reserves branch
+1.1.1 for this use.
+
+   When you modify the source and commit it, your revision will end up
+on the main trunk.  When a new release is made by the vendor, you
+commit it on the vendor branch and copy the modifications onto the main
+trunk.
+
+   Use the `import' command to create and update the vendor branch.
+When you import a new file, the vendor branch is made the `head'
+revision, so anyone that checks out a copy of the file gets that
+revision.  When a local modification is committed it is placed on the
+main trunk, and made the `head' revision.
+
+* Menu:
+
+* First import::                Importing for the first time
+* Update imports::              Updating with the import command
+* Reverting local changes::     Reverting to the latest vendor release
+* Binary files in imports::     Binary files require special handling
+* Keywords in imports::         Keyword substitution might be undesirable
+* Multiple vendor branches::    What if you get sources from several places?
 
