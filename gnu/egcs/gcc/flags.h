@@ -296,6 +296,12 @@ extern int flag_fast_math;
 
 extern int flag_errno_math;
 
+/* 0 means straightforward implementation of complex divide acceptable.
+   1 means wide ranges of inputs must work for complex divide.
+   2 means C9X-like requirements for complex divide (not yet implemented).  */
+
+extern int flag_complex_divide_method;
+
 /* Nonzero means to run loop optimizations twice.  */
 
 extern int flag_rerun_loop_opt;
@@ -532,3 +538,11 @@ extern enum graph_dump_types graph_dump_format;
    string identifying the compiler.  */
 
 extern int flag_no_ident;
+
+/* Nonzero means use propolice as a stack protection method */
+
+extern int flag_propolice_protection;
+
+/* Warn when not issuing stack smashing protection for some reason */
+
+extern int warn_stack_protector;

@@ -1394,6 +1394,7 @@ hash_expr_1 (x, mode, do_not_record_p)
 	  return 0;
 	}
       hash += (unsigned) MEM;
+      hash += MEM_ALIAS_SET (x);
       x = XEXP (x, 0);
       goto repeat;
 
@@ -1525,6 +1526,14 @@ expr_equiv_p (x, y)
 
     case REG:
       return REGNO (x) == REGNO (y);
+
+    case MEM:
+      /* Can't merge two expressions in different alias sets, since we can
+	 decide that the expression is transparent in a block when it isn't,
+	 due to it being set with the different alias set.  */
+      if (MEM_ALIAS_SET (x) != MEM_ALIAS_SET (y))
+	return 0;
+      break;
 
     /*  For commutative operations, check both orders.  */
     case PLUS:
@@ -3709,7 +3718,7 @@ cprop_insn (insn, alter_jumps)
       /* Find an assignment that sets reg_used and is available
 	 at the start of the block.  */
       set = find_avail_set (regno, insn);
-      if (! set)
+      if (! set || set->expr->volatil)
 	continue;
   
       pat = set->expr;
@@ -4189,9 +4198,26 @@ insert_insn_end_bb (expr, bb, pre)
 	    }
 	}
       
-      new_insn = emit_insn_before (pat, insn);
-      if (BLOCK_HEAD (bb) == insn)
-	BLOCK_HEAD (bb) = new_insn;
+      /* If we found all the parameter loads, then we want to insert
+	 before the first parameter load.
+
+	 If we did not find all the parameter loads, then we might have
+	 stopped on the head of the block, which could be a CODE_LABEL.
+	 If we inserted before the CODE_LABEL, then we would be putting
+	 the insn in the wrong basic block.  In that case, put the insn
+	 after the CODE_LABEL.
+
+	 ?!? Do we need to account for NOTE_INSN_BASIC_BLOCK here?  */
+      if (GET_CODE (insn) != CODE_LABEL)
+	{
+	  new_insn = emit_insn_before (pat, insn);
+	  if (BLOCK_HEAD (bb) == insn)
+	    BLOCK_HEAD (bb) = new_insn;
+	}
+      else
+	{
+	  new_insn = emit_insn_after (pat, insn);
+	}
     }
   else
     {
