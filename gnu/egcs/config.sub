@@ -105,7 +105,7 @@ case $os in
 	-scout)						# EGCS LOCAL
 		;;
 	-wrs)						# EGCS LOCAL
-		os=vxworks
+		os=-vxworks
 		basic_machine=$1
 		;;
 	-hiux*)
@@ -271,6 +271,12 @@ case $basic_machine in
 	am29k)
 		basic_machine=a29k-none
 		os=-bsd
+		;;
+	amd64)
+		basic_machine=x86_64-pc
+		;;
+	amd64-*)
+		basic_machine=x86_64-`echo $basic_machine | sed 's/^[^-]*-//'`
 		;;
 	amdahl)
 		basic_machine=580-amdahl
