@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.718 2004/03/10 00:47:50 deraadt Exp 
+ *	OpenBSD: pcidevs,v 1.719 2004/04/06 16:07:04 deraadt Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -2671,6 +2671,22 @@ static const struct pci_known_product pci_known_products[] = {
 	    "80312 I/O Companion",
 	},
 	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_E7710_PXH_HUB_A,
+	    "PCIE to PCIX Bridge Hub A",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_E7710_PXH_HUB_B,
+	    "PCIE to PCIX Bridge Hub B",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_IOP331_C0,
+	    "IOP331 Channel 0",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_IOP331_C1,
+	    "IOP331 Channel 1",
+	},
+	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_PCEB,
 	    "82375EB EISA",
 	},
@@ -3461,6 +3477,46 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_RCU32,
 	    "RCU32 I2O RAID",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_E7710_SMCH,
+	    "E7710 Server Memory Controller Hub",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_E7710_MCH_ERR,
+	    "E7710 MCH Error Reporting Register",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_E7710_MCH_DMA,
+	    "E7710 MCH DMA Register",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_E7710_MCH_PCIEA0,
+	    "E7710 MCH PCI Express Port A0",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_E7710_MCH_PCIEA1,
+	    "E7710 MCH PCI Express Port A1",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_E7710_MCH_PCIEB0,
+	    "E7710 MCH PCI Express Port B0",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_E7710_MCH_PCIEB1,
+	    "E7710 MCH PCI Express Port B1",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_E7710_MCH_PCIEC0,
+	    "E7710 MCH PCI Express Port C0",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_E7710_MCH_PCIEC1,
+	    "E7710 MCH PCI Express Port C1",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_E7710_WMCH,
+	    "E7710 Workstation Memory Controller Hub",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82371SB_ISA,
