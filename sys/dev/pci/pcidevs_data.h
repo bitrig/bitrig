@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.96 1998/10/21 01:51:36 deraadt Exp 
+ *	OpenBSD: pcidevs,v 1.97 1998/10/21 01:54:49 deraadt Exp 
  */
 
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
@@ -1470,7 +1470,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	    PCI_VENDOR_MACRONIX, PCI_PRODUCT_MACRONIX_MX98713,
 	    0,
 	    "Macronix",
-	    "PMAC 100/10base PCI MAC controller",
+	    "PMAC",
 	},
 	{
 	    PCI_VENDOR_MADGE, PCI_PRODUCT_MADGE_COLLAGE25,
@@ -1536,7 +1536,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	    PCI_VENDOR_MYLEX, PCI_PRODUCT_MYLEX_960P,
 	    0,
 	    "Mylex",
-	    "DAC960P RAID controller",
+	    "DAC960P RAID",
 	},
 	{
 	    PCI_VENDOR_MUTECH, PCI_PRODUCT_MUTECH_MV1000,
@@ -1998,7 +1998,7 @@ struct pci_knowndev pci_knowndevs[] = {
 	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_86C202,
 	    0,
 	    "Silicon Integrated System",
-	    "86C202 VGA Controller",
+	    "86C202 VGA",
 	},
 	{
 	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_86C205,

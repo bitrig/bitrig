@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.96 1998/10/21 01:51:36 deraadt Exp 
+ *	OpenBSD: pcidevs,v 1.97 1998/10/21 01:54:49 deraadt Exp 
  */
 
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
@@ -886,7 +886,7 @@
 #define	PCI_PRODUCT_LITEON_PNIC	0x0002		/* PNIC */
 
 /* Macronix */
-#define	PCI_PRODUCT_MACRONIX_MX98713	0x0512		/* PMAC 100/10base PCI MAC controller */
+#define	PCI_PRODUCT_MACRONIX_MX98713	0x0512		/* PMAC */
 
 /* Madge Networks products */
 #define	PCI_PRODUCT_MADGE_COLLAGE25	0x1000		/* Collage 25 ATM adapter */
@@ -903,7 +903,7 @@
 #define	PCI_PRODUCT_MATROX_PRODUCTIVA	0x1001		/* MGA Productiva G100 AGP */
 
 /* Mylex products */
-#define	PCI_PRODUCT_MYLEX_960P	0x0001		/* DAC960P RAID controller */
+#define	PCI_PRODUCT_MYLEX_960P	0x0001		/* DAC960P RAID */
 
 /* Mutech products */
 #define	PCI_PRODUCT_MUTECH_MV1000	0x0001		/* MV1000 */
@@ -1028,7 +1028,7 @@
 
 /* Silicon Integrated System products */
 #define	PCI_PRODUCT_SIS_86C201	0x0001		/* 86C201 Host-AGP Bridge */
-#define	PCI_PRODUCT_SIS_86C202	0x0002		/* 86C202 VGA Controller */
+#define	PCI_PRODUCT_SIS_86C202	0x0002		/* 86C202 VGA */
 #define	PCI_PRODUCT_SIS_86C205	0x0005		/* 86C205 */
 #define	PCI_PRODUCT_SIS_85C503	0x0008		/* 85C503 ISA Bridge */
 #define	PCI_PRODUCT_SIS_5595	0x0009		/* 5595 PCI System I/O Chipset */
