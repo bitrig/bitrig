@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.143 1999/05/27 09:16:28 deraadt Exp 
+ *	OpenBSD: pcidevs,v 1.144 1999/05/27 09:20:02 deraadt Exp 
  */
 
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
@@ -655,6 +655,12 @@ struct pci_knowndev pci_knowndevs[] = {
 	    0,
 	    "ATI Technologies",
 	    "Mach64 LP",
+	},
+	{
+	    PCI_VENDOR_ATI, PCI_PRODUCT_ATI_RAGE_MAGNUM,
+	    0,
+	    "ATI Technologies",
+	    "Rage Magnum",
 	},
 	{
 	    PCI_VENDOR_ATI, PCI_PRODUCT_ATI_MACH64_VT,

@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.143 1999/05/27 09:16:28 deraadt Exp 
+ *	OpenBSD: pcidevs,v 1.144 1999/05/27 09:20:02 deraadt Exp 
  */
 
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
@@ -686,6 +686,7 @@
 #define	PCI_PRODUCT_ATI_MACH64_LG	0x4c47		/* Mach64 LG */
 #define	PCI_PRODUCT_ATI_MACH64_LI	0x4c49		/* Mach64 LI */
 #define	PCI_PRODUCT_ATI_MACH64_LP	0x4c50		/* Mach64 LP */
+#define	PCI_PRODUCT_ATI_RAGE_MAGNUM	0x5246		/* Rage Magnum */
 #define	PCI_PRODUCT_ATI_MACH64_VT	0x5654		/* Mach64 VT */
 #define	PCI_PRODUCT_ATI_MACH64_VU	0x5655		/* Mach64 VU */
 #define	PCI_PRODUCT_ATI_MACH64_VV	0x5656		/* Mach64 VV */
