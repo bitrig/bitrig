@@ -1,4 +1,4 @@
-/*	$OpenBSD: rtld_machine.c,v 1.7 2002/05/24 04:17:01 deraadt Exp $ */
+/*	$OpenBSD: rtld_machine.c,v 1.8 2002/05/24 04:21:27 deraadt Exp $ */
 
 /*
  * Copyright (c) 1999 Dale Rahn
@@ -160,8 +160,8 @@ _dl_printf("object relocation size %x, numrela %x\n",
 #if 1
 		case RELOC_32:
 			if (ELF32_ST_BIND(sym->st_info) == STB_LOCAL &&
-			   (ELF32_ST_TYPE(sym->st_info) == STT_SECTION ||
-			   ELF32_ST_TYPE(sym->st_info) == STT_NOTYPE) ) {
+			    (ELF32_ST_TYPE(sym->st_info) == STT_SECTION ||
+			    ELF32_ST_TYPE(sym->st_info) == STT_NOTYPE) ) {
 				*r_addr = ooff + relas->r_addend;
 			} else {
 				*r_addr = ooff + this->st_value +
@@ -171,8 +171,8 @@ _dl_printf("object relocation size %x, numrela %x\n",
 #endif
 		case RELOC_RELATIVE:
 			if (ELF32_ST_BIND(sym->st_info) == STB_LOCAL &&
-			   (ELF32_ST_TYPE(sym->st_info) == STT_SECTION ||
-			   ELF32_ST_TYPE(sym->st_info) == STT_NOTYPE) ) {
+			    (ELF32_ST_TYPE(sym->st_info) == STT_SECTION ||
+			    ELF32_ST_TYPE(sym->st_info) == STT_NOTYPE) ) {
 				*r_addr = loff + relas->r_addend;
 
 #ifdef DL_PRINTF_DEBUG

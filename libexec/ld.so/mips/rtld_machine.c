@@ -1,4 +1,4 @@
-/*	$OpenBSD: rtld_machine.c,v 1.3 2002/05/24 04:17:00 deraadt Exp $ */
+/*	$OpenBSD: rtld_machine.c,v 1.4 2002/05/24 04:21:27 deraadt Exp $ */
 
 /*
  * Copyright (c) 1998 Per Fogelstrom, Opsycon AB
@@ -72,7 +72,7 @@ _dl_md_reloc(elf_object_t *object, int rel, int relsz)
 		symn = object->dyn.strtab + sym->st_name;
 
 		if (ELF32_R_SYM(relocs->r_info) &&
-		   !(ELF32_ST_BIND(sym->st_info) == STB_LOCAL &&
+		    !(ELF32_ST_BIND(sym->st_info) == STB_LOCAL &&
 		    ELF32_ST_TYPE (sym->st_info) == STT_NOTYPE)) {
 			ooff = _dl_find_symbol(symn, _dl_objects, &this, 0, 1);
 			if (!this && ELF32_ST_BIND(sym->st_info) == STB_GLOBAL) {
@@ -86,7 +86,7 @@ _dl_md_reloc(elf_object_t *object, int rel, int relsz)
 		switch (ELF32_R_TYPE(relocs->r_info)) {
 		case R_MIPS_REL32:
 			if (ELF32_ST_BIND(sym->st_info) == STB_LOCAL &&
-			   (ELF32_ST_TYPE(sym->st_info) == STT_SECTION ||
+			    (ELF32_ST_TYPE(sym->st_info) == STT_SECTION ||
 			    ELF32_ST_TYPE(sym->st_info) == STT_NOTYPE) ) {
 				*(u_int32_t *)r_addr += loff;
 			} else if (this)
