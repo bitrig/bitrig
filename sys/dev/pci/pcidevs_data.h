@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.145 1999/05/27 21:46:54 deraadt Exp 
+ *	OpenBSD: pcidevs,v 1.146 1999/05/27 21:50:35 deraadt Exp 
  */
 
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
@@ -1389,10 +1389,16 @@ struct pci_knowndev pci_knowndevs[] = {
 	    "ATM PCA-200e",
 	},
 	{
-	    PCI_VENDOR_FUJITSU4, PCI_PRODUCT_FUJITSU4_LTMODEM,
+	    PCI_VENDOR_LUCENT, PCI_PRODUCT_LUCENT_LTMODEM,
 	    0,
-	    "Fujitsu (4th ID)",
+	    "AT&T/Lucent",
 	    "K56flex DSVD LTMODEM",
+	},
+	{
+	    PCI_VENDOR_LUCENT, PCI_PRODUCT_LUCENT_USBHC,
+	    0,
+	    "AT&T/Lucent",
+	    "USB",
 	},
 	{
 	    PCI_VENDOR_FUTUREDOMAIN, PCI_PRODUCT_FUTUREDOMAIN_TMC_18C30,
@@ -2575,6 +2581,12 @@ struct pci_knowndev pci_knowndevs[] = {
 	    0,
 	    "Silicon Integrated System",
 	    "6205",
+	},
+	{
+	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_5597_USB,
+	    0,
+	    "Silicon Integrated System",
+	    "5597/5598 USB",
 	},
 	{
 	    PCI_VENDOR_SMC, PCI_PRODUCT_SMC_37C665,
@@ -5847,9 +5859,9 @@ struct pci_knowndev pci_knowndevs[] = {
 	    NULL,
 	},
 	{
-	    PCI_VENDOR_FUJITSU4, 0,
+	    PCI_VENDOR_LUCENT, 0,
 	    PCI_KNOWNDEV_NOPROD,
-	    "Fujitsu (4th ID)",
+	    "AT&T/Lucent",
 	    NULL,
 	},
 	{
