@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
-#include <regex.h>
 #include <assert.h>
 #include <stdlib.h>
 
+#include "hsregex.h"
 #include "main.ih"
 
 char *progname;
@@ -20,6 +20,8 @@ regoff_t endoff = 0;
 
 extern int split();
 extern void regprint();
+extern int optind;
+extern char *optarg;
 
 /*
  - main - do the simple case, hand off to regress() for regression
@@ -37,8 +39,6 @@ char *argv[];
 	int c;
 	int errflg = 0;
 	register int i;
-	extern int optind;
-	extern char *optarg;
 
 	progname = argv[0];
 
