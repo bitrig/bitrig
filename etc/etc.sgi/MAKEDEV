@@ -40,13 +40,11 @@
 #	vnd*	"file" pseudo-disk devices
 #	rd*	"rd" pseudo-disks
 #	ccd*	Concatenated disk devices
-# Console ports:
 # Terminal ports:
 #	tty[0-7][0-9a-f]	NS16x50 serial ports
 # Pseudo terminals:
 #	tty*	Set of 62 slave pseudo terminals
 #	pty*	Set of 62 master pseudo terminals
-# USB devices:
 # Special purpose devices:
 #	bpf*	Berkeley Packet Filter
 #	tun*	Network tunnel driver
