@@ -1,8 +1,8 @@
 #!/bin/sh
-
+# $Id: gen-dir-node,v 1.2 1999/01/11 16:38:15 espie Exp $
 # Generate the top-level Info node, given a directory of Info files
 # and (optionally) a skeleton file.  The output will be suitable for a
-# dir.info file.  The skeleton file contains info topic names in the
+# top-level dir file.  The skeleton file contains info topic names in the
 # order they should appear in the output.  There are three special
 # lines that alter the behavior: a line consisting of just "--" causes
 # the next line to be echoed verbatim to the output.  A line
@@ -42,9 +42,9 @@ if [ ! -d ${INFODIR} ] ; then
   exit 1
 fi
 
-### output the dir.info header
+### output the dir header
 echo "-*- Text -*-"
-echo "This file was generated automatically by the gen-dir-node script."
+echo "This file was generated automatically by $0."
 echo "This version was generated on `date`"
 echo "by `whoami`@`hostname` for `(cd ${INFODIR}; pwd)`"
 
@@ -164,9 +164,14 @@ else
 fi
 
 for file in ${infofiles}; do
+  case $file in
+    *.gz) zcat=zcat; file=`echo $file|sed 's/\.gz$//'`; gz=.gz;;
+    *) zcat=cat; gz=;;
+  esac
   infoname=`echo $file | sed 's/\.info$//'`
-  entry=`sed -e '1,/START-INFO-DIR-ENTRY/d' \
-	-e '/END-INFO-DIR-ENTRY/,$d' ${INFODIR}/${file}`
+  entry=`$zcat ${INFODIR}/${file}$gz \
+           |sed -e '1,/START-INFO-DIR-ENTRY/d' \
+		-e '/END-INFO-DIR-ENTRY/,$d'`
 
   if [ ! -z "${entry}" ] ; then
     echo "${entry}"
@@ -174,4 +179,3 @@ for file in ${infofiles}; do
     echo "* ${infoname}: (${file})."
   fi
 done
-

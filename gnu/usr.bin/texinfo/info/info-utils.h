@@ -1,9 +1,10 @@
-/* info-utils.h -- Exported functions and variables from info-util.c. */
+/* info-utils.h -- Exported functions and variables from info-util.c.
+   $Id: info-utils.h,v 1.2 1999/01/11 16:38:08 espie Exp $   
 
-/* This file is part of GNU Info, a program for reading online documentation
+   This file is part of GNU Info, a program for reading online documentation
    stored in Info format.
 
-   Copyright (C) 1993 Free Software Foundation, Inc.
+   Copyright (C) 1993, 96 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,8 +22,8 @@
 
    Written by Brian Fox (bfox@ai.mit.edu). */
 
-#if !defined (_INFO_UTILS_H_)
-#define _INFO_UTILS_H_
+#ifndef INFO_UTILS_H
+#define INFO_UTILS_H
 
 #if !defined (HAVE_STRCHR)
 #  undef strchr
@@ -30,11 +31,6 @@
 #  define strchr index
 #  define strrchr rindex
 #endif /* !HAVE_STRCHR */
-
-#if !defined (HAVE_MEMCPY)
-#  undef memcpy
-#  define memcpy(dest, source, count) bcopy(source, dest, count)
-#endif /* !HAVE_MEMCPY */
 
 #include "nodes.h"
 #include "window.h"
@@ -44,10 +40,10 @@
    cross reference.  Arrays of such references can be built by calling
    info_menus_of_node () or info_xrefs_of_node (). */
 typedef struct {
-  char *label;		/* User Label. */
-  char *filename;	/* File where this node can be found. */
-  char *nodename;	/* Name of the node. */
-  int start, end;	/* Offsets within the containing node of LABEL. */
+  char *label;          /* User Label. */
+  char *filename;       /* File where this node can be found. */
+  char *nodename;       /* Name of the node. */
+  int start, end;       /* Offsets within the containing node of LABEL. */
 } REFERENCE;
 
 /* When non-zero, various display and input functions handle ISO Latin
@@ -141,4 +137,4 @@ extern void info_parse_label (/* label, node */);
       info_parse_label (INFO_ALTPREV_LABEL, n); \
   } while (0)
 
-#endif /* !_INFO_UTILS_H_ */
+#endif /* not INFO_UTILS_H */
