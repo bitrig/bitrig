@@ -10,12 +10,22 @@
  * is provided ``as is'' without express or implied warranty.
  */
 
+/*
+  
+@deftypefn Supplemental int strncasecmp (const char *@var{s1}, const char *@var{s2})
+
+A case-insensitive @code{strncmp}.
+
+@end deftypefn
+
+*/
+
 #if defined(LIBC_SCCS) && !defined(lint)
 static char sccsid[] = "@(#)strcasecmp.c	5.5 (Berkeley) 11/24/87";
 #endif /* LIBC_SCCS and not lint */
 
 #include <ansidecl.h>
-#ifdef __STDC__
+#ifdef ANSI_PROTOTYPES
 #include <stddef.h>
 #else
 #define size_t unsigned long
@@ -26,7 +36,7 @@ static char sccsid[] = "@(#)strcasecmp.c	5.5 (Berkeley) 11/24/87";
  * together for a case independent comparison.  The mappings are
  * based upon ascii character sequences.
  */
-static unsigned char charmap[] = {
+static const unsigned char charmap[] = {
 	'\000', '\001', '\002', '\003', '\004', '\005', '\006', '\007',
 	'\010', '\011', '\012', '\013', '\014', '\015', '\016', '\017',
 	'\020', '\021', '\022', '\023', '\024', '\025', '\026', '\027',

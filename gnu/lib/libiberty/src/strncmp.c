@@ -1,8 +1,19 @@
 /* strncmp -- compare two strings, stop after n bytes.
    This function is in the public domain.  */
 
+/*
+
+@deftypefn Supplemental int strncmp (const char *@var{s1}, const char *@var{s2}, size_t @var{n})
+
+Compares the first @var{n} bytes of two strings, returning a value as
+@code{strcmp}.
+
+@end deftypefn
+
+*/
+
 #include <ansidecl.h>
-#ifdef __STDC__
+#ifdef ANSI_PROTOTYPES
 #include <stddef.h>
 #else
 #define size_t unsigned long
