@@ -1355,8 +1355,13 @@ comp_target_parms (parms1, parms2, strict)
 
   if (t1 == 0 && t2 != 0)
     {
-      cp_pedwarn ("ANSI C++ prohibits conversion from `(%#T)' to `(...)'",
-		  parms2);
+      if (! flag_strict_prototype && t2 == void_list_node)
+	/* t1 might be the arglist of a function pointer in extern "C"
+	   declared to take (), which we fudged to (...).  Don't make the
+	   user pay for our mistake.  */;
+      else
+	cp_pedwarn ("ANSI C++ prohibits conversion from `%#T' to `(...)'",
+		    parms2);
       return self_promoting_args_p (t2);
     }
   if (t2 == 0)
@@ -1609,6 +1614,11 @@ c_sizeof (type)
   t = size_binop (CEIL_DIV_EXPR, TYPE_SIZE (type), 
 		  size_int (TYPE_PRECISION (char_type_node)));
   t = convert (sizetype, t);
+
+  /* Keep track if the sizeof is of a pointer */
+  if (code == POINTER_TYPE)
+    SIZEOF_PTR_DERIVED (t) = 1;
+
   /* size_binop does not put the constant in range, so do it now.  */
   if (TREE_CODE (t) == INTEGER_CST && force_fit_type (t, 0))
     TREE_CONSTANT_OVERFLOW (t) = TREE_OVERFLOW (t) = 1;
@@ -1669,6 +1679,11 @@ c_sizeof_nowarn (type)
   t = size_binop (CEIL_DIV_EXPR, TYPE_SIZE (type), 
 		  size_int (TYPE_PRECISION (char_type_node)));
   t = convert (sizetype, t);
+
+  /* Keep track if the sizeof is of a pointer */
+  if (code == POINTER_TYPE)
+    SIZEOF_PTR_DERIVED (t) = 1;
+
   force_fit_type (t, 0);
   return t;
 }
@@ -3020,6 +3035,9 @@ build_function_call_real (function, params, require_complete, flags)
 
   if (warn_format && (name || assembler_name))
     check_function_format (name, assembler_name, coerced_params);
+
+  if (warn_bounded && (name || assembler_name))
+    check_function_bounds (name, assembler_name, coerced_params);
 
   /* Recognize certain built-in functions so we can make tree-codes
      other than CALL_EXPR.  We do this when it enables fold-const.c
@@ -4912,9 +4930,7 @@ unary_complex_lvalue (code, arg)
 	  type = build_offset_type (DECL_FIELD_CONTEXT (t), TREE_TYPE (t));
 	  type = build_pointer_type (type);
 
-	  t = make_node (PTRMEM_CST);
-	  TREE_TYPE (t) = type;
-	  PTRMEM_CST_MEMBER (t) = TREE_OPERAND (arg, 1);
+	  t = make_ptrmem_cst (type, TREE_OPERAND (arg, 1));
 	  return t;
 	}
     }
@@ -5079,17 +5095,20 @@ build_conditional_expr (ifexp, op1, op2)
       ifexp = op1 = save_expr (ifexp);
     }
 
+  type1 = TREE_TYPE (op1);
+  code1 = TREE_CODE (type1);
+  type2 = TREE_TYPE (op2);
+  code2 = TREE_CODE (type2);
+  if (op1 == error_mark_node || op2 == error_mark_node
+      || type1 == error_mark_node || type2 == error_mark_node)
+    return error_mark_node;
+
   ifexp = cp_convert (boolean_type_node, ifexp);
 
   if (TREE_CODE (ifexp) == ERROR_MARK)
     return error_mark_node;
 
   /* C++: REFERENCE_TYPES must be dereferenced.  */
-  type1 = TREE_TYPE (op1);
-  code1 = TREE_CODE (type1);
-  type2 = TREE_TYPE (op2);
-  code2 = TREE_CODE (type2);
-
   if (code1 == REFERENCE_TYPE)
     {
       op1 = convert_from_reference (op1);
@@ -6359,7 +6378,12 @@ build_x_modify_expr (lhs, modifycode, rhs)
 
 /* Get difference in deltas for different pointer to member function
    types.  Return integer_zero_node, if FROM cannot be converted to a
-   TO type.  If FORCE is true, then allow reverse conversions as well.  */
+   TO type.  If FORCE is true, then allow reverse conversions as well.
+
+   Note that the naming of FROM and TO is kind of backwards; the return
+   value is what we add to a TO in order to get a FROM.  They are named
+   this way because we call this function to find out how to convert from
+   a pointer to member of FROM to a pointer to member of TO.  */
 
 static tree
 get_delta_difference (from, to, force)
@@ -6515,15 +6539,15 @@ build_ptrmemfunc (type, pfn, force)
      tree type, pfn;
      int force;
 {
-  tree idx = integer_zero_node;
-  tree delta = integer_zero_node;
-  tree delta2 = integer_zero_node;
-  tree npfn = NULL_TREE;
   tree fn;
   
   /* Handle multiple conversions of pointer to member functions.  */
   if (TYPE_PTRMEMFUNC_P (TREE_TYPE (pfn)))
     {
+      tree idx = integer_zero_node;
+      tree delta = integer_zero_node;
+      tree delta2 = integer_zero_node;
+      tree npfn = NULL_TREE;
       tree ndelta, ndelta2;
       tree e1, e2, e3, n;
       tree pfn_type;
@@ -6537,18 +6561,42 @@ build_ptrmemfunc (type, pfn, force)
 	  && comp_target_types (type, pfn_type, 1) != 1)
 	cp_error ("conversion to `%T' from `%T'", type, pfn_type);
 
-      ndelta = cp_convert (ptrdiff_type_node, build_component_ref (pfn, delta_identifier, NULL_TREE, 0));
-      ndelta2 = cp_convert (ptrdiff_type_node, DELTA2_FROM_PTRMEMFUNC (pfn));
-      idx = build_component_ref (pfn, index_identifier, NULL_TREE, 0);
+      if (TREE_CODE (pfn) == PTRMEM_CST)
+	{
+	  /* We could just build the resulting CONSTRUCTOR now, but we
+	     don't, relying on the general machinery below, together
+	     with constant-folding, to do the right thing.  We don't
+	     want to return a PTRMEM_CST here, even though we could,
+	     because a pointer-to-member constant ceases to be a
+	     constant (from the point of view of the language) when it
+	     is cast to another type.  */
+
+	  expand_ptrmemfunc_cst (pfn, &ndelta, &idx, &npfn, &ndelta2);
+	  if (npfn)
+	    /* This constant points to a non-virtual function.
+	       NDELTA2 will be NULL, but it's value doesn't really
+	       matter since we won't use it anyhow.  */
+	    ndelta2 = integer_zero_node;
+	}
+      else
+	{
+	  ndelta = cp_convert (ptrdiff_type_node, 
+			       build_component_ref (pfn, 
+						    delta_identifier, 
+						    NULL_TREE, 0));
+	  ndelta2 = cp_convert (ptrdiff_type_node, 
+				DELTA2_FROM_PTRMEMFUNC (pfn));
+	  idx = build_component_ref (pfn, index_identifier, NULL_TREE, 0);
+	}
 
       n = get_delta_difference (TYPE_METHOD_BASETYPE (TREE_TYPE (pfn_type)),
 				TYPE_METHOD_BASETYPE (TREE_TYPE (type)),
 				force);
-
       delta = build_binary_op (PLUS_EXPR, ndelta, n);
       delta2 = build_binary_op (PLUS_EXPR, ndelta2, n);
       e1 = fold (build (GT_EXPR, boolean_type_node, idx, integer_zero_node));
 	  
+      /* If it's a virtual function, this is what we want.  */
       e2 = build_ptrmemfunc1 (TYPE_GET_PTRMEMFUNC_TYPE (type), delta, idx,
 			      NULL_TREE, delta2);
 
@@ -6556,8 +6604,10 @@ build_ptrmemfunc (type, pfn, force)
       npfn = build1 (NOP_EXPR, type, pfn);
       TREE_CONSTANT (npfn) = TREE_CONSTANT (pfn);
 
-      e3 = build_ptrmemfunc1 (TYPE_GET_PTRMEMFUNC_TYPE (type), delta, idx, npfn,
-			      NULL_TREE);
+      /* But if it's a non-virtual function, or NULL, we use this
+	 instead.  */
+      e3 = build_ptrmemfunc1 (TYPE_GET_PTRMEMFUNC_TYPE (type), delta,
+			      idx, npfn, NULL_TREE);
       return build_conditional_expr (e1, e2, e3);
     }
 
@@ -6575,10 +6625,7 @@ build_ptrmemfunc (type, pfn, force)
 
   fn = TREE_OPERAND (pfn, 0);
   my_friendly_assert (TREE_CODE (fn) == FUNCTION_DECL, 0);
-  npfn = make_node (PTRMEM_CST);
-  TREE_TYPE (npfn) = build_ptrmemfunc_type (type);
-  PTRMEM_CST_MEMBER (npfn) = fn;
-  return npfn;
+  return make_ptrmem_cst (build_ptrmemfunc_type (type), fn);
 }
 
 /* Return the DELTA, IDX, PFN, and DELTA2 values for the PTRMEM_CST
@@ -6594,38 +6641,41 @@ expand_ptrmemfunc_cst (cst, delta, idx, pfn, delta2)
 {
   tree type = TREE_TYPE (cst);
   tree fn = PTRMEM_CST_MEMBER (cst);
+  tree ptr_class, fn_class;
 
   my_friendly_assert (TREE_CODE (fn) == FUNCTION_DECL, 0);
-  
-  *delta 
-    = get_delta_difference (TYPE_METHOD_BASETYPE 
-			    (TREE_TYPE (fn)),
-			    TYPE_PTRMEMFUNC_OBJECT_TYPE (type),
-			    /*force=*/0);
+
+  /* The class that the function belongs to.  */
+  fn_class = DECL_CLASS_CONTEXT (fn);
+
+  /* The class that we're creating a pointer to member of.  */
+  ptr_class = TYPE_PTRMEMFUNC_OBJECT_TYPE (type);
+
+  /* First, calculate the adjustment to the function's class.  */
+  *delta = get_delta_difference (fn_class, ptr_class, /*force=*/0);
+
   if (!DECL_VIRTUAL_P (fn))
     {
-      *idx = size_binop (MINUS_EXPR, integer_zero_node,
-			 integer_one_node);
-      *pfn = build_addr_func (fn);
-      if (!same_type_p (TYPE_METHOD_BASETYPE (TREE_TYPE (fn)),
-			TYPE_PTRMEMFUNC_OBJECT_TYPE (type)))
-	*pfn = build1 (NOP_EXPR, TYPE_PTRMEMFUNC_FN_TYPE (type), 
-		       *pfn);
+      *idx = size_binop (MINUS_EXPR, integer_zero_node, integer_one_node);
+      *pfn = convert (TYPE_PTRMEMFUNC_FN_TYPE (type), build_addr_func (fn));
       *delta2 = NULL_TREE;
     }
   else
     {
-      *idx = size_binop (PLUS_EXPR, DECL_VINDEX (fn), 
-			 integer_one_node);
+      /* If we're dealing with a virtual function, we have to adjust 'this'
+         again, to point to the base which provides the vtable entry for
+         fn; the call will do the opposite adjustment.  */
+      tree orig_class = DECL_VIRTUAL_CONTEXT (fn);
+      tree binfo = binfo_or_else (orig_class, fn_class);
+      *delta = size_binop (PLUS_EXPR, *delta, BINFO_OFFSET (binfo));
+
+      /* Map everything down one to make room for the null PMF.  */
+      *idx = size_binop (PLUS_EXPR, DECL_VINDEX (fn), integer_one_node);
       *pfn = NULL_TREE;
-      *delta2 = get_binfo (DECL_CONTEXT (fn),
-			  DECL_CLASS_CONTEXT (fn),
-			  0);
-      *delta2 = get_vfield_offset (*delta2);
-      *delta2 = size_binop (PLUS_EXPR, *delta2,
-			   build_binary_op (PLUS_EXPR,
-					    *delta, 
-					    integer_zero_node));
+
+      /* Offset from an object of PTR_CLASS to the vptr for ORIG_CLASS.  */
+      *delta2 = size_binop (PLUS_EXPR, *delta,
+			    get_vfield_offset (TYPE_BINFO (orig_class)));
     }
 }
 
@@ -7329,7 +7379,7 @@ c_expand_return (retval)
        || DECL_NAME (current_function_decl) == ansi_opname[(int) VEC_NEW_EXPR])
       && !TYPE_NOTHROW_P (TREE_TYPE (current_function_decl))
       && null_ptr_cst_p (retval))
-    cp_pedwarn ("operator new should throw an exception, not return NULL");
+    cp_warning ("operator new should throw an exception, not return NULL");
   
   if (retval == NULL_TREE)
     {

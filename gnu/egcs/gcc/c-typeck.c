@@ -1,5 +1,6 @@
 /* Build expressions with type checking for C compiler.
-   Copyright (C) 1987, 88, 91-97, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1988, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
+   1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -167,7 +168,8 @@ static tree
 qualify_type (type, like)
      tree type, like;
 {
-  return c_build_qualified_type (type, TYPE_QUALS (like));
+  return c_build_qualified_type (type, 
+				 TYPE_QUALS (type) | TYPE_QUALS (like));
 }
 
 /* Return the common type of two types.
@@ -838,6 +840,8 @@ c_sizeof (type)
   t = size_binop (CEIL_DIV_EXPR, TYPE_SIZE (type), 
 		  size_int (TYPE_PRECISION (char_type_node)));
   t = convert (sizetype, t);
+  if (code == POINTER_TYPE)
+    SIZEOF_PTR_DERIVED (t) = 1;
   /* size_binop does not put the constant in range, so do it now.  */
   if (TREE_CODE (t) == INTEGER_CST && force_fit_type (t, 0))
     TREE_CONSTANT_OVERFLOW (t) = TREE_OVERFLOW (t) = 1;
@@ -862,6 +866,8 @@ c_sizeof_nowarn (type)
   t = size_binop (CEIL_DIV_EXPR, TYPE_SIZE (type), 
 		  size_int (TYPE_PRECISION (char_type_node)));
   t = convert (sizetype, t);
+  if (code == POINTER_TYPE)
+    SIZEOF_PTR_DERIVED (t) = 1;
   force_fit_type (t, 0);
   return t;
 }
@@ -1577,6 +1583,9 @@ build_function_call (function, params)
 
   if (warn_format && (name || assembler_name))
     check_function_format (name, assembler_name, coerced_params);
+
+  if (warn_bounded && (name || assembler_name))
+    check_function_bounds (name, assembler_name, coerced_params);
 
   /* Recognize certain built-in functions so we can make tree-codes
      other than CALL_EXPR.  We do this when it enables fold-const.c
@@ -5845,7 +5854,7 @@ add_pending_init (purpose, value)
 	  p = *q;
 	  if (tree_int_cst_lt (purpose, p->purpose))
 	    q = &p->left;
-	  else if (tree_int_cst_lt (p->purpose, purpose))
+	  else if (p->purpose != purpose)
 	    q = &p->right;
 	  else
 	    abort ();
@@ -5859,8 +5868,7 @@ add_pending_init (purpose, value)
 	  if (tree_int_cst_lt (DECL_FIELD_BITPOS (purpose),
 			       DECL_FIELD_BITPOS (p->purpose)))
 	    q = &p->left;
-	  else if (tree_int_cst_lt (DECL_FIELD_BITPOS (p->purpose),
-				    DECL_FIELD_BITPOS (purpose)))
+	  else if (p->purpose != purpose)
 	    q = &p->right;
 	  else
 	    abort ();
@@ -6045,7 +6053,7 @@ pending_init_member (field)
     {
       while (p)
 	{
-	  if (tree_int_cst_equal (field, p->purpose))
+	  if (field == p->purpose)
 	    return 1;
 	  else if (tree_int_cst_lt (field, p->purpose))
 	    p = p->left;

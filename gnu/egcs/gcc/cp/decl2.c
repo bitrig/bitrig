@@ -224,13 +224,20 @@ int warn_long_long = 1;
 
 int warn_ctor_dtor_privacy = 1;
 
-/* True if we want to implement vtables using "thunks".
-   The default is off.  */
+/* 1 or 2 if we want to implement vtables using "thunks".
+   The default is off. Version 1 indicates "old" implementation;
+   Version 2 passes the __vlist argument in pvbase cases.  */
 
 #ifndef DEFAULT_VTABLE_THUNKS
 #define DEFAULT_VTABLE_THUNKS 0
 #endif
 int flag_vtable_thunks = DEFAULT_VTABLE_THUNKS;
+
+#if DEFAULT_VTABLE_THUNKS == 2
+int flag_vtable_thunks_compat = 1;
+#else
+int flag_vtable_thunks_compat = 0;
+#endif
 
 /* True if we want to deal with repository information.  */
 
@@ -281,6 +288,10 @@ int warn_sign_compare;
 /* Warn about *printf or *scanf format/argument anomalies.  */
 
 int warn_format;
+
+/* Warn about potential overruns in static buffers.  */
+
+int warn_bounded;
 
 /* Warn about a subscript that has type char.  */
 
@@ -633,12 +644,43 @@ lang_decode_option (argc, argv)
           found = 1;
           cp_deprecated ("-fexternal-templates");
         }
+      else if (!strncmp (p, "vtable-thunks", 13))
+	{
+	  if (p[13] == '=')
+	    {
+	      flag_vtable_thunks = 
+		read_integral_parameter (p+14, p, 1);
+	    }
+	  else
+	    {
+	      /* If the machine file has a default setting, use that
+		 for -fvtable-thunks. Otherwise, set it to version
+		 2. */
+#if DEFAULT_VTABLE_THUNKS
+	      flag_vtable_thunks = DEFAULT_VTABLE_THUNKS;
+#else
+	      flag_vtable_thunks = 1;
+#endif
+	    }
+          if (flag_vtable_thunks == 2)
+            /* v2 is a compatibility mode between v1 and v3.  */
+            flag_vtable_thunks_compat = 1;
+          else if(flag_vtable_thunks == 3)
+            flag_vtable_thunks_compat = 0;
+	  found = 1;
+	}
+      else if (!strcmp (p, "handle-signatures"))
+        {
+          flag_handle_signatures = 1;
+          found = 1;
+          cp_deprecated ("-fhandle-signatures");
+        }
       else if (!strcmp (p, "new-abi"))
 	{
 	  flag_new_abi = 1;
 	  flag_do_squangling = 1;
 	  flag_honor_std = 1;
-	  flag_vtable_thunks = 1;
+	  flag_vtable_thunks = 2;
 	}
       else if (!strcmp (p, "no-new-abi"))
 	{
@@ -712,6 +754,8 @@ lang_decode_option (argc, argv)
 	warn_sign_compare = setting;
       else if (!strcmp (p, "format"))
 	warn_format = setting;
+      else if (!strcmp (p, "bounded"))
+	warn_bounded = setting;
       else if (!strcmp (p, "conversion"))
 	warn_conversion = setting;
       else if (!strcmp (p, "parentheses"))
@@ -759,6 +803,7 @@ lang_decode_option (argc, argv)
 	  warn_implicit = setting;
 	  warn_switch = setting;
 	  warn_format = setting;
+	  warn_bounded = setting;
 	  warn_parentheses = setting;
 	  warn_missing_braces = setting;
 	  warn_sign_compare = setting;
@@ -911,17 +956,27 @@ grok_x_components (specs)
 
    This function adds the "in-charge" flag to member function FN if
    appropriate.  It is called from grokclassfn and tsubst.
-   FN must be either a constructor or destructor.  */
+   FN must be either a constructor or destructor.
+
+   For vtable thunks, types with polymorphic virtual bases need an
+   additional "vlist" argument which is an array of virtual tables.
+   In addition, if backwards-compatibility to v1 thunks is requested,
+   a wrapper constructor may be needed as well.  */
 
 void
 maybe_retrofit_in_chrg (fn)
      tree fn;
 {
   tree basetype, arg_types, parms, parm, fntype;
+  tree wrapper;
+
+  if (CLASSTYPE_IS_TEMPLATE (DECL_CLASS_CONTEXT (fn)))
+    /* Never retrofit arguments on template methods. */
+    return;
 
   if (DECL_CONSTRUCTOR_P (fn)
       && TYPE_USES_VIRTUAL_BASECLASSES (DECL_CLASS_CONTEXT (fn))
-      && ! DECL_CONSTRUCTOR_FOR_VBASE_P (fn))
+      && DECL_CONSTRUCTOR_FOR_VBASE (fn) == 0)
     /* OK */;
   else if (! DECL_CONSTRUCTOR_P (fn)
 	   && TREE_CHAIN (DECL_ARGUMENTS (fn)) == NULL_TREE)
@@ -930,7 +985,41 @@ maybe_retrofit_in_chrg (fn)
     return;
 
   if (DECL_CONSTRUCTOR_P (fn))
-    DECL_CONSTRUCTOR_FOR_VBASE_P (fn) = 1;
+    {
+      if (TYPE_USES_PVBASES (DECL_CLASS_CONTEXT (fn)))
+	{
+	  DECL_CONSTRUCTOR_FOR_VBASE (fn) = CONSTRUCTOR_FOR_PVBASE;
+	  if (flag_vtable_thunks_compat && varargs_function_p (fn))
+	    sorry ("-fvtable-thunks=2 for vararg constructor", fn);
+	}
+      else
+	DECL_CONSTRUCTOR_FOR_VBASE (fn) = CONSTRUCTOR_FOR_VBASE;
+    }
+  else if (TYPE_USES_PVBASES (DECL_CLASS_CONTEXT (fn)))
+    DECL_CONSTRUCTOR_FOR_VBASE (fn) = DESTRUCTOR_FOR_PVBASE;
+
+  /* Retrieve the arguments, because it is potentially modified twice.  */
+  arg_types = TYPE_ARG_TYPES (TREE_TYPE (fn));
+  basetype = TREE_TYPE (TREE_VALUE (arg_types));
+  arg_types = TREE_CHAIN (arg_types);
+
+  if (DECL_CONSTRUCTOR_FOR_PVBASE_P (fn)
+      || DECL_DESTRUCTOR_FOR_PVBASE_P (fn))
+    {
+      /* Add the __vlist argument first. See __in_chrg below.  */
+      tree id = vlist_identifier;
+      if (DECL_DESTRUCTOR_FOR_PVBASE_P (fn))
+	id = get_identifier (VLIST1_NAME);
+      parm = build_decl (PARM_DECL, id, vlist_type_node);
+      SET_DECL_ARTIFICIAL (parm);
+      DECL_ARG_TYPE (parm) = vlist_type_node;
+      parms = DECL_ARGUMENTS (fn);
+      /* Add it after 'this'. */
+      TREE_CHAIN (parm) = TREE_CHAIN (parms);
+      TREE_CHAIN (parms) = parm;
+
+      arg_types = hash_tree_chain (vlist_type_node, arg_types);
+    }
 
   /* First add it to DECL_ARGUMENTS...  */
   parm = build_decl (PARM_DECL, in_charge_identifier, integer_type_node);
@@ -943,9 +1032,7 @@ maybe_retrofit_in_chrg (fn)
   TREE_CHAIN (parms) = parm;
 
   /* ...and then to TYPE_ARG_TYPES.  */
-  arg_types = TYPE_ARG_TYPES (TREE_TYPE (fn));
-  basetype = TREE_TYPE (TREE_VALUE (arg_types));
-  arg_types = hash_tree_chain (integer_type_node, TREE_CHAIN (arg_types));
+  arg_types = hash_tree_chain (integer_type_node, arg_types);
   fntype = build_cplus_method_type (basetype, TREE_TYPE (TREE_TYPE (fn)),
 				    arg_types);
   if (TYPE_RAISES_EXCEPTIONS (TREE_TYPE (fn)))
@@ -1036,7 +1123,8 @@ grokclassfn (ctype, function, flags, quals)
 
   if (flags == DTOR_FLAG)
     {
-      DECL_ASSEMBLER_NAME (function) = build_destructor_name (ctype);
+      DECL_ASSEMBLER_NAME (function) = 
+	build_destructor_name (ctype, DECL_DESTRUCTOR_FOR_PVBASE_P (function));
       TYPE_HAS_DESTRUCTOR (ctype) = 1;
     }
   else
@@ -2409,12 +2497,13 @@ mark_vtable_entries (decl)
       tree fnaddr;
       tree fn;
 
-      if (TREE_CODE (TREE_VALUE (entries)) == NOP_EXPR)
+      fnaddr = (flag_vtable_thunks ? TREE_VALUE (entries) 
+		: FNADDR_FROM_VTABLE_ENTRY (TREE_VALUE (entries)));
+
+      if (TREE_CODE (fnaddr) == NOP_EXPR)
 	/* RTTI offset.  */
 	continue;
 
-      fnaddr = (flag_vtable_thunks ? TREE_VALUE (entries) 
-		: FNADDR_FROM_VTABLE_ENTRY (TREE_VALUE (entries)));
       fn = TREE_OPERAND (fnaddr, 0);
       TREE_ADDRESSABLE (fn) = 1;
       if (DECL_LANG_SPECIFIC (fn) && DECL_ABSTRACT_VIRTUAL_P (fn))
@@ -2478,9 +2567,13 @@ void
 maybe_make_one_only (decl)
      tree decl;
 {
-  /* This is not necessary on targets that support weak symbols, because
-     the implicit instantiations will defer to the explicit one.  */     
-  if (! supports_one_only () || SUPPORTS_WEAK)
+  /* We used to say that this was not necessary on targets that support weak
+     symbols, because the implicit instantiations will defer to the explicit
+     one.  However, that's not actually the case in SVR4; a strong definition
+     after a weak one is an error.  Also, not making explicit
+     instantiations one_only means that we can end up with two copies of
+     some template instantiations. */
+  if (! supports_one_only ())
     return;
 
   /* We can't set DECL_COMDAT on functions, or finish_file will think
@@ -2768,6 +2861,30 @@ import_export_decl (decl)
       else
 	DECL_NOT_REALLY_EXTERN (decl) = 0;
     }
+  else if (DECL_VLIST_CTOR_WRAPPER_P (decl))
+    {
+      int implement;
+      tree ctype = DECL_CLASS_CONTEXT (decl);
+      import_export_class (ctype);
+      if (!DECL_THIS_INLINE (DECL_VLIST_CTOR_WRAPPED (decl)))
+	{
+	  /* No change.  */
+	}	  
+      else if (CLASSTYPE_INTERFACE_KNOWN (ctype))
+	{
+	  implement = !CLASSTYPE_INTERFACE_ONLY (ctype) 
+	    && flag_implement_inlines;
+	  DECL_NOT_REALLY_EXTERN (decl) = implement;
+	  DECL_EXTERNAL (decl) = !implement;
+	}
+      else
+	{
+	  DECL_NOT_REALLY_EXTERN (decl) = 1;
+	  DECL_EXTERNAL (decl) = 1;
+	}
+      if (flag_weak)
+	comdat_linkage (decl);
+    }
   else if (DECL_FUNCTION_MEMBER_P (decl))
     {
       tree ctype = DECL_CLASS_CONTEXT (decl);
@@ -2803,7 +2920,7 @@ import_export_decl (decl)
 	     since it will not be emitted when the vtable for the type
 	     is output (which is when the unqualified version is
 	     generated).  */
-	  && ctype == TYPE_MAIN_VARIANT (ctype))
+	  && same_type_p (ctype, TYPE_MAIN_VARIANT (ctype)))
 	{
 	  DECL_NOT_REALLY_EXTERN (decl)
 	    = ! (CLASSTYPE_INTERFACE_ONLY (ctype)
@@ -2814,7 +2931,8 @@ import_export_decl (decl)
 	  if (flag_weak)
 	    comdat_linkage (decl);
 	}
-      else if (TYPE_BUILT_IN (ctype) && ctype == TYPE_MAIN_VARIANT (ctype))
+      else if (TYPE_BUILT_IN (ctype) 
+	       && same_type_p (ctype, TYPE_MAIN_VARIANT (ctype)))
 	DECL_NOT_REALLY_EXTERN (decl) = 0;
       else
 	comdat_linkage (decl);
@@ -3087,7 +3205,7 @@ start_static_storage_duration_function ()
   /* Start the function itself.  This is equivalent to declarating the
      function as:
 
-       static inline void __ssdf (int __initialize_p, init __priority_p);
+       static void __ssdf (int __initialize_p, init __priority_p);
        
      It is static because we only need to call this function from the
      various constructor and destructor functions for this module.  */
@@ -3519,6 +3637,33 @@ generate_ctor_and_dtor_functions_for_priority (n, data)
   return 0;
 }
 
+/* Returns non-zero if T is a vlist ctor wrapper.  */
+
+static int
+vlist_ctor_wrapper_p (t, data)
+     tree t;
+     void *data ATTRIBUTE_UNUSED;
+{
+  return (TREE_CODE (t) == FUNCTION_DECL) && DECL_VLIST_CTOR_WRAPPER_P (t);
+}
+
+/* Emits a vlist ctor wrapper if necessary.  */
+
+static int
+finish_vlist_ctor_wrapper (t, data)
+     tree *t;
+     void *data ATTRIBUTE_UNUSED;
+{
+  import_export_decl (*t);
+  if (!DECL_EXTERNAL (*t) && !TREE_USED (*t))
+    {
+      mark_used (*t);
+      synthesize_method (*t);
+      return 1;
+    }
+  return 0;
+}
+
 /* This routine is called from the last rule in yyparse ().
    Its job is to create all the code needed to initialize and
    destroy the global aggregates.  We do the destruction
@@ -3572,15 +3717,9 @@ finish_file ()
 
   do 
     {
-      /* We need to start a new initialization function each time
-	 through the loop.  That's because we need to know which
-	 vtables have been referenced, and TREE_SYMBOL_REFERENCED
-	 isn't computed until a function is finished, and written out.
-	 That's a deficiency in the back-end.  When this is fixed,
-	 these initialization functions could all become inline, with
-	 resulting performance improvements.  */
-      start_static_storage_duration_function ();
-      push_to_top_level ();
+      /* Non-zero if we need a static storage duration function on
+	 this iteration through the loop.  */
+      int need_ssdf_p = 0;
 
       reconsider = 0;
 
@@ -3601,10 +3740,12 @@ finish_file ()
 			/*data=*/0))
 	reconsider = 1;
       
-      /* Come back to the static storage duration function; we're
-	 about to emit instructions there for static initializations
-	 and such.  */
-      pop_from_top_level ();
+      if (walk_globals (vlist_ctor_wrapper_p,
+			finish_vlist_ctor_wrapper,
+			/*data=*/0))
+	reconsider = 1;
+      
+
       /* The list of objects with static storage duration is built up
 	 in reverse order, so we reverse it here.  We also clear
 	 STATIC_AGGREGATES so that any new aggregates added during the
@@ -3616,6 +3757,20 @@ finish_file ()
 	{
 	  if (! TREE_ASM_WRITTEN (TREE_VALUE (vars)))
 	    rest_of_decl_compilation (TREE_VALUE (vars), 0, 1, 1);
+	  if (!need_ssdf_p)
+	    {
+	      /* We need to start a new initialization function each
+		 time through the loop.  That's because we need to
+		 know which vtables have been referenced, and
+		 TREE_SYMBOL_REFERENCED isn't computed until a
+		 function is finished, and written out.  That's a
+		 deficiency in the back-end.  When this is fixed,
+		 these initialization functions could all become
+		 inline, with resulting performance improvements.  */
+	      start_static_storage_duration_function ();
+	      need_ssdf_p = 1;
+	    }
+
 	  do_static_initialization_and_destruction (TREE_VALUE (vars), 
 						    TREE_PURPOSE (vars));
 	  reconsider = 1;
@@ -3624,7 +3779,8 @@ finish_file ()
       
       /* Finish up the static storage duration function for this
          round.  */
-      finish_static_storage_duration_function ();
+      if (need_ssdf_p)
+	finish_static_storage_duration_function ();
 
       /* Go through the various inline functions, and see if any need
 	 synthesizing.  */
@@ -3807,7 +3963,8 @@ reparse_absdcl_as_casts (decl, expr)
       expr = build_c_cast (type, expr);
     }
 
-  if (warn_old_style_cast)
+  if (warn_old_style_cast && ! in_system_header
+      && current_lang_name != lang_name_c)
     warning ("use of old-style cast");
 
   return expr;
@@ -3981,7 +4138,7 @@ build_expr_from_tree (t)
       else 
 	{
 	  tree fn = TREE_OPERAND (t, 0);
-	  
+
 	  /* We can get a TEMPLATE_ID_EXPR here on code like:
 
 	       x->f<2>();
@@ -3992,7 +4149,9 @@ build_expr_from_tree (t)
 	     build_expr_from_tree.  So, just use build_expr_from_tree
 	     when we really need it.  */
 	  if (TREE_CODE (fn) == TEMPLATE_ID_EXPR)
-	    fn = build_expr_from_tree (fn);
+	    fn = lookup_template_function
+	      (TREE_OPERAND (fn, 0),
+	       build_expr_from_tree (TREE_OPERAND (fn, 1)));
 
 	  return build_method_call
 	    (build_expr_from_tree (TREE_OPERAND (t, 1)),
@@ -4481,6 +4640,12 @@ set_decl_namespace (decl, scope, friendp)
       /* Since decl is a function, old should contain a function decl. */
       if (!is_overloaded_fn (old))
 	goto complain;
+      if (processing_template_decl || processing_specialization)
+	/* We have not yet called push_template_decl to turn the
+	   FUNCTION_DECL into a TEMPLATE_DECL, so the declarations
+	   won't match.  But, we'll check later, when we construct the
+	   template.  */
+	return;
       for (; old; old = OVL_NEXT (old))
 	if (decls_match (decl, OVL_CURRENT (old)))
 	  return;
@@ -4870,11 +5035,19 @@ lookup_arg_dependent (name, fns, args)
      tree args;
 {
   struct arg_lookup k;
+
   k.name = name;
   k.functions = fns;
-  k.namespaces = NULL_TREE;
   k.classes = NULL_TREE;
-  
+
+  /* Note that we've already looked at the current namespace during normal
+     unqualified lookup, unless we found a decl in function scope.  */
+  if (fns && ! TREE_PERMANENT (OVL_CURRENT (fns)))
+    k.namespaces = NULL_TREE;
+  else
+    k.namespaces = scratch_tree_cons (current_decl_namespace (),
+				      NULL_TREE, NULL_TREE);
+
   push_scratch_obstack ();
   arg_assoc_args (&k, args);
   pop_obstacks ();

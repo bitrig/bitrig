@@ -599,29 +599,6 @@ build_method_call (instance, name, parms, basetype_path, flags)
       return build_min_nt (METHOD_CALL_EXPR, name, instance, parms, NULL_TREE);
     }
 
-  /* This is the logic that magically deletes the second argument to
-     operator delete, if it is not needed.  */
-  if (name == ansi_opname[(int) DELETE_EXPR] && list_length (parms)==2)
-    {
-      tree save_last = TREE_CHAIN (parms);
-
-      /* get rid of unneeded argument */
-      TREE_CHAIN (parms) = NULL_TREE;
-      if (build_method_call (instance, name, parms, basetype_path,
-			     (LOOKUP_SPECULATIVELY|flags) & ~LOOKUP_COMPLAIN))
-	{
-	  /* If it finds a match, return it.  */
-	  return build_method_call (instance, name, parms, basetype_path, flags);
-	}
-      /* If it doesn't work, two argument delete must work */
-      TREE_CHAIN (parms) = save_last;
-    }
-  /* We already know whether it's needed or not for vec delete.  */
-  else if (name == ansi_opname[(int) VEC_DELETE_EXPR]
-	   && TYPE_LANG_SPECIFIC (TREE_TYPE (instance))
-	   && ! TYPE_VEC_DELETE_TAKES_SIZE (TREE_TYPE (instance)))
-    TREE_CHAIN (parms) = NULL_TREE;
-
   if (TREE_CODE (name) == BIT_NOT_EXPR)
     {
       if (parms)
@@ -1088,8 +1065,8 @@ add_function_candidate (candidates, fn, arglist, flags)
   tree parmnode, argnode;
   int viable = 1;
 
-  /* The `this' and `in_chrg' arguments to constructors are not considered
-     in overload resolution.  */
+  /* The `this', `in_chrg', and `vlist' arguments to constructors are
+     not considered in overload resolution.  */
   if (DECL_CONSTRUCTOR_P (fn))
     {
       parmlist = TREE_CHAIN (parmlist);
@@ -1098,6 +1075,22 @@ add_function_candidate (candidates, fn, arglist, flags)
 	{
 	  parmlist = TREE_CHAIN (parmlist);
 	  arglist = TREE_CHAIN (arglist);
+	}
+      if ((flags & LOOKUP_HAS_VLIST)
+	  && DECL_CONSTRUCTOR_FOR_PVBASE_P (fn))
+	{
+	  parmlist = TREE_CHAIN (parmlist);
+	  arglist = TREE_CHAIN (arglist);
+	}
+      else if (!(flags & LOOKUP_HAS_VLIST)
+	       && !DECL_CONSTRUCTOR_FOR_PVBASE_P (fn))
+	/* Ok */;
+      else
+	{
+	  /* The ctor expects a vlist and the arguments don't have
+	     one, or vice versa, so fn is not even a candidate, since
+	     the corresponding ctor would be the candidate.  */
+	  return candidates;
 	}
     }
 
@@ -2094,6 +2087,11 @@ build_user_type_conversion_1 (totype, expr, flags)
       tree t = build_int_2 (0, 0);
       TREE_TYPE (t) = build_pointer_type (totype);
       args = build_scratch_list (NULL_TREE, expr);
+      if (TYPE_USES_PVBASES (totype) && !flag_vtable_thunks_compat)
+	{
+	  args = scratch_tree_cons (NULL_TREE, vlist_zero_node, args);
+	  flags |= LOOKUP_HAS_VLIST;
+	}
       if (TYPE_USES_VIRTUAL_BASECLASSES (totype))
 	args = scratch_tree_cons (NULL_TREE, integer_one_node, args);
       args = scratch_tree_cons (NULL_TREE, t, args);
@@ -2461,7 +2459,11 @@ build_object_call (obj, args)
       return error_mark_node;
     }
 
-  if (DECL_NAME (cand->fn) == ansi_opname [CALL_EXPR])
+  /* Since cand->fn will be a type, not a function, for a conversion
+     function, we must be careful not to unconditionally look at
+     DECL_NAME here.  */
+  if (TREE_CODE (cand->fn) == FUNCTION_DECL
+      && DECL_NAME (cand->fn) == ansi_opname [CALL_EXPR])
     return build_over_call (cand, mem_args, LOOKUP_NORMAL);
 
   obj = convert_like (TREE_VEC_ELT (cand->convs, 0), obj);
@@ -2776,9 +2778,19 @@ build_new_op (code, flags, arg1, arg2, arg3)
     conv = TREE_OPERAND (conv, 0);
   arg1 = convert_like (conv, arg1);
   if (arg2)
-    arg2 = convert_like (TREE_VEC_ELT (cand->convs, 1), arg2);
+    {
+      conv = TREE_VEC_ELT (cand->convs, 1);
+      if (TREE_CODE (conv) == REF_BIND)
+        conv = TREE_OPERAND (conv, 0);
+      arg2 = convert_like (conv, arg2);
+    }
   if (arg3)
-    arg3 = convert_like (TREE_VEC_ELT (cand->convs, 2), arg3);
+    {
+      conv = TREE_VEC_ELT (cand->convs, 2);
+      if (TREE_CODE (conv) == REF_BIND)
+        conv = TREE_OPERAND (conv, 0);
+      arg3 = convert_like (conv, arg3);
+    }
 
 builtin:
   switch (code)
@@ -3047,6 +3059,7 @@ convert_like (convs, expr)
 	  = WRAPPER_PTR (TREE_OPERAND (convs, 1));
 	tree fn = cand->fn;
 	tree args;
+	int flags = LOOKUP_NORMAL;
 
 	if (DECL_CONSTRUCTOR_P (fn))
 	  {
@@ -3054,13 +3067,19 @@ convert_like (convs, expr)
 	    TREE_TYPE (t) = build_pointer_type (DECL_CONTEXT (fn));
 
 	    args = build_scratch_list (NULL_TREE, expr);
+	    if (TYPE_USES_PVBASES (DECL_CONTEXT (fn))
+                && !flag_vtable_thunks_compat)
+	      {
+		args = scratch_tree_cons (NULL_TREE, vlist_zero_node, args);
+		flags != LOOKUP_HAS_VLIST;
+	      }
 	    if (TYPE_USES_VIRTUAL_BASECLASSES (DECL_CONTEXT (fn)))
 	      args = scratch_tree_cons (NULL_TREE, integer_one_node, args);
 	    args = scratch_tree_cons (NULL_TREE, t, args);
 	  }
 	else
 	  args = build_this (expr);
-	expr = build_over_call (cand, args, LOOKUP_NORMAL);
+	expr = build_over_call (cand, args, flags);
 
 	/* If this is a constructor or a function returning an aggr type,
 	   we need to build up a TARGET_EXPR.  */
@@ -3269,6 +3288,13 @@ build_over_call (cand, args, flags)
 	  arg = TREE_CHAIN (arg);
 	  parm = TREE_CHAIN (parm);
 	}
+      if (flags & LOOKUP_HAS_VLIST)
+	{
+	  converted_args = expr_tree_cons
+	    (NULL_TREE, TREE_VALUE (arg), converted_args);
+	  arg = TREE_CHAIN (arg);
+	  parm = TREE_CHAIN (parm);
+	}
     }      
   /* Bypass access control for 'this' parameter.  */
   else if (TREE_CODE (TREE_TYPE (fn)) == METHOD_TYPE)
@@ -3365,6 +3391,10 @@ build_over_call (cand, args, flags)
     check_function_format (DECL_NAME (fn), DECL_ASSEMBLER_NAME (fn),
 			   converted_args); 
 
+  if (warn_bounded && (DECL_NAME (fn) || DECL_ASSEMBLER_NAME (fn)))
+    check_function_bounds (DECL_NAME (fn), DECL_ASSEMBLER_NAME (fn),
+			   converted_args);
+
   /* Avoid actually calling copy constructors and copy assignment operators,
      if possible.  */
 
@@ -3377,6 +3407,8 @@ build_over_call (cand, args, flags)
       tree targ;
       arg = TREE_CHAIN (converted_args);
       if (TYPE_USES_VIRTUAL_BASECLASSES (DECL_CONTEXT (fn)))
+	arg = TREE_CHAIN (arg);
+      if (flags & LOOKUP_HAS_VLIST)
 	arg = TREE_CHAIN (arg);
       arg = TREE_VALUE (arg);
 
@@ -3426,20 +3458,34 @@ build_over_call (cand, args, flags)
       else if (! real_lvalue_p (arg)
 	       || TYPE_HAS_TRIVIAL_INIT_REF (DECL_CONTEXT (fn)))
 	{
+	  tree address;
 	  tree to = stabilize_reference
 	    (build_indirect_ref (TREE_VALUE (args), 0));
 
-	  /* Don't copy the padding byte; it might not have been allocated
-	     if to is a base subobject.  */
-	  if (is_empty_class (DECL_CLASS_CONTEXT (fn)))
-	    return build_unary_op
-	      (ADDR_EXPR, build (COMPOUND_EXPR, TREE_TYPE (to),
-				 cp_convert (void_type_node, arg), to),
-	       0);
-
-	  val = build (INIT_EXPR, DECL_CONTEXT (fn), to, arg);
+	  /* If we're initializing an empty class, then we actually
+	     have to use a MODIFY_EXPR rather than an INIT_EXPR.  The
+	     reason is that the dummy padding member in the target may
+	     not actually be allocated if TO is a base class
+	     subobject.  Since we've set TYPE_NONCOPIED_PARTS on the
+	     padding, a MODIFY_EXPR will preserve its value, which is
+	     the right thing to do if it's not really padding at all.
+	  
+	     It's not safe to just throw away the ARG if we're looking
+	     at an empty class because the ARG might contain a
+	     TARGET_EXPR which wants to be bound to TO.  If it is not,
+	     expand_expr will assign a dummy slot for the TARGET_EXPR,
+	     and we will call a destructor for it, which is wrong,
+	     because we will also destroy TO, but will never have
+	     constructed it.  */
+	  val = build (is_empty_class (DECL_CLASS_CONTEXT (fn))
+		       ? MODIFY_EXPR : INIT_EXPR, 
+		       DECL_CONTEXT (fn), to, arg);
 	  TREE_SIDE_EFFECTS (val) = 1;
-	  return build_unary_op (ADDR_EXPR, val, 0);
+	  address = build_unary_op (ADDR_EXPR, val, 0);
+	  /* Avoid a warning about this expression, if the address is
+	     never used.  */
+	  TREE_USED (address) = 1;
+	  return address;
 	}
     }
   else if (DECL_NAME (fn) == ansi_opname[MODIFY_EXPR]
@@ -3450,12 +3496,6 @@ build_over_call (cand, args, flags)
 	(build_indirect_ref (TREE_VALUE (converted_args), 0));
 
       arg = build_indirect_ref (TREE_VALUE (TREE_CHAIN (converted_args)), 0);
-
-      /* Don't copy the padding byte; it might not have been allocated
-	 if to is a base subobject.  */
-      if (is_empty_class (DECL_CLASS_CONTEXT (fn)))
-	return build (COMPOUND_EXPR, TREE_TYPE (to),
-		      cp_convert (void_type_node, arg), to);
 
       val = build (MODIFY_EXPR, TREE_TYPE (to), to, arg);
       TREE_SIDE_EFFECTS (val) = 1;
@@ -3545,6 +3585,8 @@ build_new_method_call (instance, name, args, basetype_path, flags)
      remove it for error reporting.  */
   if (flags & LOOKUP_HAS_IN_CHARGE)
     user_args = TREE_CHAIN (args);
+  if (flags & LOOKUP_HAS_VLIST)
+    user_args = TREE_CHAIN (user_args);
 
   args = resolve_args (args);
 
@@ -3617,6 +3659,12 @@ build_new_method_call (instance, name, args, basetype_path, flags)
       if (name == ctor_identifier && TYPE_USES_VIRTUAL_BASECLASSES (basetype)
 	  && ! (flags & LOOKUP_HAS_IN_CHARGE))
 	{
+	  if (TYPE_USES_PVBASES(basetype)
+              && (!flag_vtable_thunks_compat || (name == dtor_identifier)))
+	    {
+	      args = scratch_tree_cons (NULL_TREE, vlist_zero_node, args);
+	      flags |= LOOKUP_HAS_VLIST;
+	    }
 	  flags |= LOOKUP_HAS_IN_CHARGE;
 	  args = scratch_tree_cons (NULL_TREE, integer_one_node, args);
 	}
@@ -4333,8 +4381,8 @@ joust (cand1, cand2, warn)
 	   != DECL_CONSTRUCTOR_P (cand2->fn))
 	  /* Don't warn if the two conv ops convert to the same type...  */
 	  || (! DECL_CONSTRUCTOR_P (cand1->fn)
-	      && ! same_type_p (TREE_TYPE (cand1->second_conv),
-				TREE_TYPE (cand2->second_conv)))))
+	      && ! same_type_p (TREE_TYPE (TREE_TYPE (cand1->fn)),
+				TREE_TYPE (TREE_TYPE (cand2->fn))))))
     {
       int comp = compare_ics (cand1->second_conv, cand2->second_conv);
       if (comp != winner)
