@@ -1,29 +1,31 @@
-.\" $KTH: kdc.8,v 1.11 2001/01/26 22:46:28 assar Exp $
+.\" $KTH: kdc.8,v 1.13 2001/06/08 21:35:32 joda Exp $
 .\"
 .Dd July 27, 1997
 .Dt KDC 8
 .Os HEIMDAL
 .Sh NAME
 .Nm kdc
-.Nd
-Kerberos 5 server
+.Nd Kerberos 5 server
 .Sh SYNOPSIS
 .Nm
 .Oo Fl c Ar file \*(Ba Xo
-.Fl -config-file= Ns Ar file Oc
+.Fl -config-file= Ns Ar file
 .Xc
+.Oc
 .Op Fl p | Fl -no-require-preauth
 .Op Fl -max-request= Ns Ar size
 .Op Fl H | Fl -enable-http
 .Oo Fl r Ar string \*(Ba Xo
-.Fl -v4-realm= Ns Ar string Oc
+.Fl -v4-realm= Ns Ar string
 .Xc
+.Oc
 .Op Fl K | Fl -no-kaserver
 .Op Fl r Ar realm
 .Op Fl -v4-realm= Ns Ar realm
 .Oo Fl P Ar string \*(Ba Xo
-.Fl -ports= Ns Ar string Oc
+.Fl -ports= Ns Ar string
 .Xc
+.Oc
 .Op Fl -addresses= Ns Ar list of addresses
 .Sh DESCRIPTION
 .Nm
@@ -97,9 +99,9 @@ The entity used for logging is
 The configuration file has the same syntax as the 
 .Pa krb5.conf
 file (you can actually put the configuration in
-.Pa /etc/krb5.conf ,
+.Pa /etc/kerberosV/krb5.conf ,
 and then start the KDC with
-.Fl -config-file= Ns Ar /etc/krb5.conf ) .
+.Fl -config-file= Ns Ar /etc/kerberosV/krb5.conf ) .
 All options should be in a section called
 .Dq kdc .
 All the command-line options can preferably be added in the
