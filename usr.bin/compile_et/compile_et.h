@@ -1,4 +1,3 @@
-%{
 /*
  * Copyright (c) 1998 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
@@ -37,91 +36,48 @@
  * SUCH DAMAGE. 
  */
 
-/*
- * This is to handle the definition of this symbol in some AIX
- * headers, which will conflict with the definition that lex will
- * generate for it.  It's only a problem for AIX lex.
- */
+/* $KTH: compile_et.h,v 1.3 1998/11/22 09:39:46 assar Exp $ */
 
-#undef ECHO
+#ifndef __COMPILE_ET_H__
+#define __COMPILE_ET_H__
 
-#include "compile_et.h"
-#include "error_table.h"
-
-/* RCSID("$KTH: lex.l,v 1.4 1998/11/20 05:58:52 assar Exp $"); */
-
-static unsigned lineno = 1;
-void error_message(char *, ...);
-int getstring(void);
-
-%}
-
-
-%%
-et			{ return ET; }
-error_table		{ return ET; }
-ec			{ return EC; }
-error_code		{ return EC; }
-prefix			{ return PREFIX; }
-index			{ return INDEX; }
-id			{ return ID; }
-end			{ return END; }
-[0-9]+			{ yylval.number = atoi(yytext); return NUMBER; }
-#[^\n]*			;
-[ \t]			;
-\n			{ lineno++; }
-\"			{ return getstring(); }
-[a-zA-Z0-9_]+		{ yylval.string = strdup(yytext); return STRING; }
-.			{ return *yytext; }
-%%
-
-#ifndef yywrap /* XXX */
-int
-yywrap () 
-{
-     return 1;
-}
+#ifdef HAVE_CONFIG_H
+#include <config.h>
 #endif
 
-int
-getstring(void)
-{
-    char x[128];
-    int i = 0;
-    int c;
-    int quote = 0;
-    while((c = input()) != EOF){
-	if(quote) {
-	    x[i++] = c;
-	    quote = 0;
-	    continue;
-	}
-	if(c == '\n'){
-	    error_message("unterminated string");
-	    lineno++;
-	    break;
-	}
-	if(c == '\\'){
-	    quote++;
-	    continue;
-	}
-	if(c == '\"')
-	    break;
-	x[i++] = c;
-    }
-    x[i] = '\0';
-    yylval.string = strdup(x);
-    return STRING;
-}
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <ctype.h>
 
-void
-error_message (char *format, ...)
-{
-     va_list args;
+extern long base;
+extern int number;
+extern char *prefix;
+extern char name[128];
+extern char *id_str;
+extern char *filename;
+extern int numerror;
 
-     va_start (args, format);
-     fprintf (stderr, "%s:%d:", filename, lineno);
-     vfprintf (stderr, format, args);
-     va_end (args);
-     numerror++;
-}
+struct error_code {
+    unsigned number;
+    char *name;
+    char *string;
+    struct error_code *next, **tail;
+};
+
+extern struct error_code *codes;
+
+#define APPEND(L, V) 				\
+do {						\
+    if((L) == NULL) {				\
+	(L) = (V);				\
+	(L)->tail = &(V)->next;			\
+	(L)->next = NULL;			\
+    }else{					\
+	*(L)->tail = (V);			\
+	(L)->tail = &(V)->next;			\
+    }						\
+}while(0)
+
+#endif /* __COMPILE_ET_H__ */
