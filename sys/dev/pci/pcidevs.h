@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *		OpenBSD: pcidevs,v 1.421 2001/07/27 17:00:15 deraadt Exp 
+ *		OpenBSD: pcidevs,v 1.422 2001/07/27 17:02:35 deraadt Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -877,7 +877,7 @@
 #define	PCI_PRODUCT_BLUESTEEL_5601	0x5601		/* 5601 */
 
 /* Broadcom */
-#define	PCI_PRODUCT_BROADCOM_BCM5700	0x1644		/* BCM5700 Gigabit MAC */
+#define	PCI_PRODUCT_BROADCOM_BCM5700	0x1644		/* BCM5700 */
 #define	PCI_PRODUCT_BROADCOM_5805	0x5805		/* 5805 */
 #define	PCI_PRODUCT_BROADCOM_5820	0x5820		/* 5820 */
 
@@ -1337,7 +1337,7 @@
 #define	PCI_PRODUCT_LEADTEK_S3_805	0x0000		/* S3 805 */
 
 /* Level 1 (Intel) */
-#define	PCI_PRODUCT_LEVEL1_LXT1001	0x0001		/* LXT1001 Gigabit MAC */
+#define	PCI_PRODUCT_LEVEL1_LXT1001	0x0001		/* LXT1001 */
 
 /* Lite-On Communications */
 #define	PCI_PRODUCT_LITEON_PNIC	0x0002		/* PNIC */
