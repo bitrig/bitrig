@@ -1,4 +1,4 @@
-/*	$OpenBSD: misc.c,v 1.5 1997/10/19 23:29:37 deraadt Exp $	*/
+/*	$OpenBSD: misc.c,v 1.6 1997/10/19 23:30:48 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -98,17 +98,17 @@ again:
 		num = strtol(lbuf, &cp, ((flags==ASK_HEX)?16:10));
 
 		/* Make sure only number present */
-		if(cp == lbuf)
+		if (cp == lbuf)
 			num = dflt;
-		if(*cp != '\0') {
+		if (*cp != '\0') {
 			printf("'%s' is not a valid number.\n", lbuf);
 			num = low - 1;
-		} else if(num < low || num > high) {
+		} else if (num < low || num > high) {
 			printf("'%d' is out of range.\n", num);
 		}
 	} while (num < low || num > high);
 
-	return(num);
+	return (num);
 }
 
 int

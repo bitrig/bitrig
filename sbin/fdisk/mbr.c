@@ -1,4 +1,4 @@
-/*	$OpenBSD: mbr.c,v 1.4 1997/10/19 23:29:37 deraadt Exp $	*/
+/*	$OpenBSD: mbr.c,v 1.5 1997/10/19 23:30:47 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -108,11 +108,11 @@ MBR_read(fd, where, buf)
 	where *= DEV_BSIZE;
 	off = lseek(fd, where, SEEK_SET);
 	if (off != where)
-		return(off);
+		return (off);
 	len = read(fd, buf, DEV_BSIZE);
 	if (len != DEV_BSIZE)
-		return(len);
-	return(0);
+		return (len);
+	return (0);
 }
 
 int
@@ -127,9 +127,9 @@ MBR_write(fd, where, buf)
 	where *= DEV_BSIZE;
 	off = lseek(fd, where, SEEK_SET);
 	if (off != where)
-		return(off);
+		return (off);
 	len = write(fd, buf, DEV_BSIZE);
 	if (len != DEV_BSIZE)
-		return(len);
-	return(0);
+		return (len);
+	return (0);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: disk.c,v 1.5 1997/10/19 23:29:36 deraadt Exp $	*/
+/*	$OpenBSD: disk.c,v 1.6 1997/10/19 23:30:46 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -63,7 +63,7 @@ DISK_open(disk, mode)
 		err(1, "%s", disk);
 	if (!S_ISCHR(st.st_mode) && !S_ISREG(st.st_mode))
 		err(1, "%s is not a character device or a regular file", disk);
-	return(fd);
+	return (fd);
 }
 
 int
@@ -71,7 +71,7 @@ DISK_close(fd)
 	int fd;
 {
 
-	return(close(fd));
+	return (close(fd));
 }
 
 /* Routine to go after the disklabel for geometry
@@ -104,7 +104,7 @@ DISK_getlabelmetrics(name)
 		DISK_close(fd);
 	}
 
-	return(lm);
+	return (lm);
 }
 
 #ifdef CPU_BIOS
@@ -149,7 +149,7 @@ DISK_getbiosmetrics(name)
 	bm->sectors = BIOSNSECTS(biosgeo);
 	bm->size = BIOSNTRACKS(biosgeo) * BIOSNHEADS(biosgeo) *
 	    BIOSNSECTS(biosgeo);
-	return(bm);
+	return (bm);
 }
 #else
 /*
@@ -160,7 +160,7 @@ DISK_metrics *
 DISK_getbiosmetrics(name)
 	char *name;
 {
-	return(NULL);
+	return (NULL);
 }
 #endif
 
@@ -223,6 +223,6 @@ DISK_printmetrics(disk)
 	else
 		printf("geometry: <none>\n");
 
-	return(0);
+	return (0);
 }
 

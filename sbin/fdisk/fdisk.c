@@ -1,4 +1,4 @@
-/*	$OpenBSD: fdisk.c,v 1.26 1997/10/19 23:29:36 deraadt Exp $	*/
+/*	$OpenBSD: fdisk.c,v 1.27 1997/10/19 23:30:47 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -161,6 +161,6 @@ main(argc, argv)
 	if (m_flag)
 		USER_modify(&disk, &mbr, 0);
 
-	return(0);
+	return (0);
 }
 
