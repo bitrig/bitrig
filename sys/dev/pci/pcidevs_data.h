@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.800 2004/11/21 09:29:34 grange Exp 
+ *	OpenBSD: pcidevs,v 1.801 2004/11/21 09:32:17 grange Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -5359,12 +5359,12 @@ static const struct pci_known_product pci_known_products[] = {
 	    "nForce3 LAN",
 	},
 	{
-	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_NFORCE3_250_ACA,
-	    "nForce3 250 AC-97 Audio",
-	},
-	{
 	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_NFORCE3_LAN5,
 	    "nForce3 LAN",
+	},
+	{
+	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_NFORCE3_250_ACA,
+	    "nForce3 250 AC-97 Audio",
 	},
 	{
 	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_GEFORCE256,
@@ -5607,12 +5607,12 @@ static const struct pci_known_product pci_known_products[] = {
 	    "Quadro4 700 XGL",
 	},
 	{
-	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_GEFORCEFX5600,
-	    "GeForce FX 5600",
-	},
-	{
 	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_GEFORCE4TI4200GO,
 	    "GeForce4 Ti 4200 Go",
+	},
+	{
+	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_GEFORCEFX5600,
+	    "GeForce FX 5600",
 	},
 	{
 	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_GEFORCEFX5200,
