@@ -8,6 +8,7 @@
 	sub fred {} $a = "fred" ; do $a()
 	sub fred {} $a = "fred" ; do $a(1)
 
+
 __END__
 # perly.y
 use warnings 'deprecated' ;
