@@ -1,6 +1,6 @@
 \input texinfo @c -*- texinfo -*-
 @c %**start of header
-@c $KTH: heimdal.texi,v 1.16 2000/07/28 15:43:36 assar Exp $
+@c $KTH: heimdal.texi,v 1.17 2001/02/24 05:09:24 assar Exp $
 @setfilename heimdal.info
 @settitle HEIMDAL
 @iftex
@@ -15,7 +15,7 @@
 @c %**end of header
 
 @c not yet @include version.texi
-@set UPDATED $KTH: 2000/07/28 15:43:36 $
+@set UPDATED $KTH: 2001/02/24 05:09:24 $
 @set EDITION 0.1
 @set VERSION 0.3a
 
@@ -154,12 +154,7 @@ are met:
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
 
-3. All advertising materials mentioning features or use of this software
-   must display the following acknowledgement:
-     This product includes software developed by the University of
-     California, Berkeley and its contributors.
-
-4. Neither the name of the University nor the names of its contributors
+3. Neither the name of the University nor the names of its contributors
    may be used to endorse or promote products derived from this software
    without specific prior written permission.
 
@@ -227,6 +222,7 @@ to the following restrictions:
 * Things in search for a better place::  
 * Kerberos 4 issues::           
 * Windows 2000 compatability::
+* Programming with Kerberos::
 * Migration::
 * Acknowledgments::             
 
@@ -238,8 +234,9 @@ to the following restrictions:
 @include setup.texi
 @include misc.texi
 @include kerberos4.texi
-@include migration.texi
 @include win2k.texi
+@include programming.texi
+@include migration.texi
 @include ack.texi
 
 @c @shortcontents
