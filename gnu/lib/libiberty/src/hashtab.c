@@ -35,20 +35,34 @@ Boston, MA 02111-1307, USA.  */
 #include "config.h"
 #endif
 
-#include <sys/types.h>
-
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 
-#include <stdio.h>
-
 #include "libiberty.h"
 #include "hashtab.h"
 
+#ifdef HASHTAB_STATS
+/* The following variable is used for debugging. Its value is number
+   of all calls of `find_hash_table_entry' for all hash tables. */
+
+static int all_searches = 0;
+
+/* The following variable is used for debugging. Its value is number
+   of collisions fixed for time of work with all hash tables. */
+
+static int all_collisions = 0;
+
+/* The following variable is used for debugging. Its value is number
+   of all table expansions fixed for time of work with all hash
+   tables. */
+
+static int all_expansions = 0;
+#endif
+
 /* This macro defines reserved value for empty table entry. */
 
-#define EMPTY_ENTRY    ((void *) 0)
+#define EMPTY_ENTRY    NULL
 
 /* This macro defines reserved value for table entry which contained
    a deleted element. */
@@ -59,27 +73,19 @@ Boston, MA 02111-1307, USA.  */
    greater than given source number. */
 
 static unsigned long
-higher_prime_number (n)
-     unsigned long n;
+higher_prime_number (number)
+     unsigned long number;
 {
   unsigned long i;
 
-  n |= 0x01;  /* Force N to be odd.  */
-  if (n < 9)
-    return n; /* All odd numbers < 9 are prime.  */
-
- next:
-  n += 2;
-  i = 3;
-  do
+  for (number = (number / 2) * 2 + 3;; number += 2)
     {
-      if (n % i == 0)
-	goto next;
-      i += 2;
+      for (i = 3; i * i <= number; i += 2)
+        if (number % i == 0)
+          break;
+      if (i * i > number)
+        return number;
     }
-  while ((i * i) <= n);
-
-  return n;
 }
 
 /* This function creates table with length slightly longer than given
@@ -87,22 +93,26 @@ higher_prime_number (n)
    hash table entries are EMPTY_ENTRY).  The function returns the
    created hash table. */
 
-htab_t
-htab_create (size, hash_f, eq_f, del_f)
+hash_table_t
+create_hash_table (size, hash_function, eq_function)
      size_t size;
-     htab_hash hash_f;
-     htab_eq eq_f;
-     htab_del del_f;
+     unsigned (*hash_function) PARAMS ((hash_table_entry_t));
+     int (*eq_function) PARAMS ((hash_table_entry_t, hash_table_entry_t));
 {
-  htab_t result;
+  hash_table_t result;
 
   size = higher_prime_number (size);
-  result = (htab_t) xcalloc (1, sizeof (struct htab));
-  result->entries = (void **) xcalloc (size, sizeof (void *));
+  result = (hash_table_t) xmalloc (sizeof (*result));
+  result->entries
+    = (hash_table_entry_t *) xmalloc (size * sizeof (hash_table_entry_t));
   result->size = size;
-  result->hash_f = hash_f;
-  result->eq_f = eq_f;
-  result->del_f = del_f;
+  result->hash_function = hash_function;
+  result->eq_function = eq_function;
+#ifdef HASHTAB_STATS
+  result->searches = 0;
+  result->collisions = 0;
+#endif
+  empty_hash_table (result);
   return result;
 }
 
@@ -110,18 +120,9 @@ htab_create (size, hash_f, eq_f, del_f)
    Naturally the hash table must already exist. */
 
 void
-htab_delete (htab)
-     htab_t htab;
+delete_hash_table (htab)
+     hash_table_t htab;
 {
-  int i;
-  if (htab->del_f)
-    for (i = htab->size - 1; i >= 0; i--)
-      {
-	if (htab->entries[i] != EMPTY_ENTRY
-	    && htab->entries[i] != DELETED_ENTRY)
-	  (*htab->del_f) (htab->entries[i]);
-      }
-
   free (htab->entries);
   free (htab);
 }
@@ -129,49 +130,12 @@ htab_delete (htab)
 /* This function clears all entries in the given hash table.  */
 
 void
-htab_empty (htab)
-     htab_t htab;
+empty_hash_table (htab)
+     hash_table_t htab;
 {
-  int i;
-  if (htab->del_f)
-    for (i = htab->size - 1; i >= 0; i--)
-      {
-	if (htab->entries[i] != EMPTY_ENTRY
-	    && htab->entries[i] != DELETED_ENTRY)
-	  (*htab->del_f) (htab->entries[i]);
-      }
-
-  memset (htab->entries, 0, htab->size * sizeof (void *));
-}
-
-/* Similar to htab_find_slot, but without several unwanted side effects:
-    - Does not call htab->eq_f when it finds an existing entry.
-    - Does not change the count of elements/searches/collisions in the
-      hash table.
-   This function also assumes there are no deleted entries in the table.
-   HASH is the hash value for the element to be inserted.  */
-static void **
-find_empty_slot_for_expand (htab, hash)
-     htab_t htab;
-     unsigned int hash;
-{
-  size_t size = htab->size;
-  unsigned int hash2 = 1 + hash % (size - 2);
-  unsigned int index = hash % size;
-
-  for (;;)
-    {
-      void **slot = htab->entries + index;
-      if (*slot == EMPTY_ENTRY)
-	return slot;
-
-      if (*slot == DELETED_ENTRY)
-	abort ();
-
-      index += hash2;
-      if (index >= size)
-	index -= size;
-    }
+  memset (htab->entries, 0, htab->size * sizeof (hash_table_entry_t));
+  htab->number_of_elements = 0;
+  htab->number_of_deleted_elements = 0;
 }
 
 /* The following function changes size of memory allocated for the
@@ -181,224 +145,120 @@ find_empty_slot_for_expand (htab, hash)
    table entries is changed. */
 
 static void
-htab_expand (htab)
-     htab_t htab;
+expand_hash_table (htab)
+     hash_table_t htab;
 {
-  void **oentries;
-  void **olimit;
-  void **p;
+  hash_table_t new_htab;
+  hash_table_entry_t *entry_ptr;
+  hash_table_entry_t *new_entry_ptr;
 
-  oentries = htab->entries;
-  olimit = oentries + htab->size;
+  new_htab = create_hash_table (htab->number_of_elements * 2,
+                                htab->hash_function, htab->eq_function);
+  for (entry_ptr = htab->entries; entry_ptr < htab->entries + htab->size;
+       entry_ptr++)
+    if (*entry_ptr != EMPTY_ENTRY && *entry_ptr != DELETED_ENTRY)
+      {
+        new_entry_ptr = find_hash_table_entry (new_htab, *entry_ptr, 1);
+        *new_entry_ptr = (*entry_ptr);
+      }
+  free (htab->entries);
+  *htab = (*new_htab);
+  free (new_htab);
+}
 
-  htab->size = higher_prime_number (htab->size * 2);
-  htab->entries = xcalloc (htab->size, sizeof (void **));
+/* This function searches for hash table entry which contains element
+   equal to given value or empty entry in which given value can be
+   placed (if the element with given value does not exist in the
+   table).  The function works in two regimes.  The first regime is
+   used only for search.  The second is used for search and
+   reservation empty entry for given value.  The table is expanded if
+   occupancy (taking into accout also deleted elements) is more than
+   75%.  Naturally the hash table must already exist.  If reservation
+   flag is TRUE then the element with given value should be inserted
+   into the table entry before another call of
+   `find_hash_table_entry'. */
 
-  htab->n_elements -= htab->n_deleted;
-  htab->n_deleted = 0;
+hash_table_entry_t *
+find_hash_table_entry (htab, element, reserve)
+     hash_table_t htab;
+     hash_table_entry_t element;
+     int reserve;
+{
+  hash_table_entry_t *entry_ptr;
+  hash_table_entry_t *first_deleted_entry_ptr;
+  unsigned index, hash_value, secondary_hash_value;
 
-  p = oentries;
-  do
+  if (htab->size * 3 <= htab->number_of_elements * 4)
     {
-      void *x = *p;
-      if (x != EMPTY_ENTRY && x != DELETED_ENTRY)
-	{
-	  void **q = find_empty_slot_for_expand (htab, (*htab->hash_f) (x));
-	  *q = x;
-	}
-      p++;
+#ifdef HASHTAB_STATS
+      all_expansions++;
+#endif
+      expand_hash_table (htab);
     }
-  while (p < olimit);
-  free (oentries);
-}
-
-/* This function searches for a hash table entry equal to the given
-   element.  It cannot be used to insert or delete an element.  */
-
-void *
-htab_find_with_hash (htab, element, hash)
-     htab_t htab;
-     const void *element;
-     unsigned int hash;
-{
-  unsigned int index, hash2;
-  size_t size;
-
+  hash_value = (*htab->hash_function) (element);
+  secondary_hash_value = 1 + hash_value % (htab->size - 2);
+  index = hash_value % htab->size;
+#ifdef HASHTAB_STATS
   htab->searches++;
-  size = htab->size;
-  hash2 = 1 + hash % (size - 2);
-  index = hash % size;
-
+  all_searches++;
+#endif
+  first_deleted_entry_ptr = NULL;
+#ifdef HASHTAB_STATS
+  for (;;htab->collisions++, all_collisions++)
+#else
   for (;;)
+#endif
     {
-      void *entry = htab->entries[index];
-      if (entry == EMPTY_ENTRY)
-	return NULL;
-      else if (entry != DELETED_ENTRY && (*htab->eq_f) (entry, element))
-	return entry;
-
-      htab->collisions++;
-      index += hash2;
-      if (index >= size)
-	index -= size;
-    }
-}
-
-/* Like htab_find_slot_with_hash, but compute the hash value from the
-   element.  */
-void *
-htab_find (htab, element)
-     htab_t htab;
-     const void *element;
-{
-  return htab_find_with_hash (htab, element, (*htab->hash_f) (element));
-}
-
-/* This function searches for a hash table slot containing an entry
-   equal to the given element.  To delete an entry, call this with
-   INSERT = 0, then call htab_clear_slot on the slot returned (possibly
-   after doing some checks).  To insert an entry, call this with
-   INSERT = 1, then write the value you want into the returned slot.  */
-
-void **
-htab_find_slot_with_hash (htab, element, hash, insert)
-     htab_t htab;
-     const void *element;
-     unsigned int hash;
-     int insert;
-{
-  void **first_deleted_slot;
-  unsigned int index, hash2;
-  size_t size;
-
-  if (insert && htab->size * 3 <= htab->n_elements * 4)
-    htab_expand (htab);
-
-  size = htab->size;
-  hash2 = 1 + hash % (size - 2);
-  index = hash % size;
-
-  htab->searches++;
-  first_deleted_slot = NULL;
-
-  for (;;)
-    {
-      void *entry = htab->entries[index];
-      if (entry == EMPTY_ENTRY)
-	{
-	  if (!insert)
-	    return NULL;
-
-	  htab->n_elements++;
-
-	  if (first_deleted_slot)
+      entry_ptr = htab->entries + index;
+      if (*entry_ptr == EMPTY_ENTRY)
+        {
+          if (reserve)
 	    {
-	      *first_deleted_slot = EMPTY_ENTRY;
-	      return first_deleted_slot;
+	      htab->number_of_elements++;
+	      if (first_deleted_entry_ptr != NULL)
+		{
+		  entry_ptr = first_deleted_entry_ptr;
+		  *entry_ptr = DELETED_ENTRY;
+		}
 	    }
-
-	  return &htab->entries[index];
-	}
-
-      if (entry == DELETED_ENTRY)
-	{
-	  if (!first_deleted_slot)
-	    first_deleted_slot = &htab->entries[index];
-	}
-      else
-	{
-	  if ((*htab->eq_f) (entry, element))
-	    return &htab->entries[index];
-	}
-      
-      htab->collisions++;
-      index += hash2;
-      if (index >= size)
-	index -= size;
+          break;
+        }
+      else if (*entry_ptr != DELETED_ENTRY)
+        {
+          if ((*htab->eq_function) (*entry_ptr, element))
+            break;
+        }
+      else if (first_deleted_entry_ptr == NULL)
+	first_deleted_entry_ptr = entry_ptr;
+      index += secondary_hash_value;
+      if (index >= htab->size)
+        index -= htab->size;
     }
+  return entry_ptr;
 }
 
-/* Like htab_find_slot_with_hash, but compute the hash value from the
-   element.  */
-void **
-htab_find_slot (htab, element, insert)
-     htab_t htab;
-     const void *element;
-     int insert;
-{
-  return htab_find_slot_with_hash (htab, element, (*htab->hash_f) (element),
-				   insert);
-}
-
-/* This function deletes an element with the given value from hash
-   table.  If there is no matching element in the hash table, this
-   function does nothing.  */
+/* This function deletes element with given value from hash table.
+   The hash table entry value will be `DELETED_ENTRY' after the
+   function call.  Naturally the hash table must already exist.  Hash
+   table entry for given value should be not empty (or deleted). */
 
 void
-htab_remove_elt (htab, element)
-     htab_t htab;
-     void *element;
+remove_element_from_hash_table_entry (htab, element)
+     hash_table_t htab;
+     hash_table_entry_t element;
 {
-  void **slot;
+  hash_table_entry_t *entry_ptr;
 
-  slot = htab_find_slot (htab, element, 0);
-  if (*slot == EMPTY_ENTRY)
-    return;
-
-  if (htab->del_f)
-    (*htab->del_f) (*slot);
-
-  *slot = DELETED_ENTRY;
-  htab->n_deleted++;
-}
-
-/* This function clears a specified slot in a hash table.  It is
-   useful when you've already done the lookup and don't want to do it
-   again.  */
-
-void
-htab_clear_slot (htab, slot)
-     htab_t htab;
-     void **slot;
-{
-  if (slot < htab->entries || slot >= htab->entries + htab->size
-      || *slot == EMPTY_ENTRY || *slot == DELETED_ENTRY)
-    abort ();
-  if (htab->del_f)
-    (*htab->del_f) (*slot);
-  *slot = DELETED_ENTRY;
-  htab->n_deleted++;
-}
-
-/* This function scans over the entire hash table calling
-   CALLBACK for each live entry.  If CALLBACK returns false,
-   the iteration stops.  INFO is passed as CALLBACK's second
-   argument.  */
-
-void
-htab_traverse (htab, callback, info)
-     htab_t htab;
-     htab_trav callback;
-     void *info;
-{
-  void **slot, **limit;
-  slot = htab->entries;
-  limit = slot + htab->size;
-  do
-    {
-      void *x = *slot;
-      if (x != EMPTY_ENTRY && x != DELETED_ENTRY)
-	if (!(*callback) (slot, info))
-	  break;
-    }
-  while (++slot < limit);
+  entry_ptr = find_hash_table_entry (htab, element, 0);
+  *entry_ptr = DELETED_ENTRY;
+  htab->number_of_deleted_elements++;
 }
 
 /* The following function returns current size of given hash table. */
 
 size_t
-htab_size (htab)
-     htab_t htab;
+hash_table_size (htab)
+     hash_table_t htab;
 {
   return htab->size;
 }
@@ -407,23 +267,39 @@ htab_size (htab)
    hash table. */
 
 size_t
-htab_elements (htab)
-     htab_t htab;
+hash_table_elements_number (htab)
+     hash_table_t htab;
 {
-  return htab->n_elements - htab->n_deleted;
+  return htab->number_of_elements - htab->number_of_deleted_elements;
 }
 
+#ifdef HASHTAB_STATS
 /* The following function returns number of percents of fixed
    collisions during all work with given hash table. */
 
-double
-htab_collisions (htab)
-     htab_t htab;
+int
+hash_table_collisions (htab)
+     hash_table_t htab;
 {
   int searches;
 
   searches = htab->searches;
   if (searches == 0)
-    return 0.0;
-  return (double)htab->collisions / (double)searches;
+    searches++;
+  return htab->collisions * 100 / searches;
 }
+
+/* The following function returns number of percents of fixed
+   collisions during all work with all hash tables. */
+
+int
+all_hash_table_collisions ()
+{
+  int searches;
+
+  searches = all_searches;
+  if (searches == 0)
+    searches++;
+  return all_collisions * 100 / searches;
+}
+#endif

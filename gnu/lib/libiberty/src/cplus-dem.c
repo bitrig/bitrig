@@ -53,12 +53,6 @@ char * realloc ();
 
 #define min(X,Y) (((X) < (Y)) ? (X) : (Y))
 
-/* A value at least one greater than the maximum number of characters
-   that will be output when using the `%d' format with `printf'.  */
-#define INTBUF_SIZE 32
-
-extern void fancy_abort PARAMS ((void)) ATTRIBUTE_NORETURN;
-
 static const char *mystrstr PARAMS ((const char *, const char *));
 
 static const char *
@@ -252,6 +246,49 @@ typedef enum type_kind_t
   tk_real
 } type_kind_t;
 
+struct demangler_engine libiberty_demanglers[] =
+{
+  {
+    AUTO_DEMANGLING_STYLE_STRING,
+      auto_demangling,
+      "Automatic selection based on executable"
+  }
+  ,
+  {
+    GNU_DEMANGLING_STYLE_STRING,
+      gnu_demangling,
+      "GNU (g++) style demangling"
+  }
+  ,
+  {
+    LUCID_DEMANGLING_STYLE_STRING,
+      lucid_demangling,
+      "Lucid (lcc) style demangling"
+  }
+  ,
+  {
+    ARM_DEMANGLING_STYLE_STRING,
+      arm_demangling,
+      "ARM style demangling"
+  }
+  ,
+  {
+    HP_DEMANGLING_STYLE_STRING,
+      hp_demangling,
+      "HP (aCC) style demangling"
+  }
+  ,
+  {
+    EDG_DEMANGLING_STYLE_STRING,
+      edg_demangling,
+      "EDG style demangling"
+  }
+  ,
+  {
+    NULL, unknown_demangling, NULL
+  }
+};
+
 #define STRING_EMPTY(str)	((str) -> b == (str) -> p)
 #define PREPEND_BLANK(str)	{if (!STRING_EMPTY(str)) \
     string_prepend(str, " ");}
@@ -351,9 +388,6 @@ string_prepend PARAMS ((string *, const char *));
 static void
 string_prependn PARAMS ((string *, const char *, int));
 
-static void
-string_append_template_idx PARAMS ((string *, int));
-
 static int
 get_count PARAMS ((const char **, int *));
 
@@ -430,25 +464,6 @@ qualifier_string PARAMS ((int));
 
 static const char*
 demangle_qualifier PARAMS ((int));
-
-static int
-demangle_expression PARAMS ((struct work_stuff *, const char **, string *, 
-			     type_kind_t));
-
-static int
-demangle_integral_value PARAMS ((struct work_stuff *, const char **,
-				 string *));
-
-static int
-demangle_real_value PARAMS ((struct work_stuff *, const char **, string *));
-
-static void
-demangle_arm_hp_template PARAMS ((struct work_stuff *, const char **, int,
-				  string *));
-
-static void
-recursively_demangle PARAMS ((struct work_stuff *, const char **, string *,
-			      int));
 
 /* Translate count to integer, consuming tokens in the process.
    Conversion terminates on the first non-digit character.
@@ -756,6 +771,40 @@ cplus_mangle_opname (opname, options)
 	return optable[i].in;
     }
   return (0);
+}
+
+/* Add a routine to set the demangling style to be sure it is valid and
+   allow for any demangler initialization that maybe necessary. */
+
+enum demangling_styles
+cplus_demangle_set_style (style)
+     enum demangling_styles style;
+{
+  struct demangler_engine *demangler = libiberty_demanglers; 
+
+  for (; demangler->demangling_style != unknown_demangling; ++demangler)
+    if (style == demangler->demangling_style)
+      {
+	current_demangling_style = style;
+	return current_demangling_style;
+      }
+
+  return unknown_demangling;
+}
+
+/* Do string name to style translation */
+
+enum demangling_styles
+cplus_demangle_name_to_style (name)
+     const char *name;
+{
+  struct demangler_engine *demangler = libiberty_demanglers; 
+
+  for (; demangler->demangling_style != unknown_demangling; ++demangler)
+    if (strcmp (name, demangler->demangling_style_name) == 0)
+      return demangler->demangling_style;
+
+  return unknown_demangling;
 }
 
 /* char *cplus_demangle (const char *mangled, int options)
@@ -1356,68 +1405,6 @@ demangle_template_template_parm (work, mangled, tname)
 }
 
 static int
-demangle_expression (work, mangled, s, tk)
-     struct work_stuff *work;
-     const char** mangled;
-     string* s;
-     type_kind_t tk;
-{
-  int need_operator = 0;
-  int success;
-
-  success = 1;
-  string_appendn (s, "(", 1);
-  (*mangled)++;
-  while (success && **mangled != 'W' && **mangled != '\0')
-    {
-      if (need_operator)
-	{
-	  size_t i;
-	  size_t len;
-
-	  success = 0;
-
-	  len = strlen (*mangled);
-
-	  for (i = 0;
-	       i < sizeof (optable) / sizeof (optable [0]);
-	       ++i)
-	    {
-	      size_t l = strlen (optable[i].in);
-
-	      if (l <= len
-		  && memcmp (optable[i].in, *mangled, l) == 0)
-		{
-		  string_appendn (s, " ", 1);
-		  string_append (s, optable[i].out);
-		  string_appendn (s, " ", 1);
-		  success = 1;
-		  (*mangled) += l;
-		  break;
-		}
-	    }
-
-	  if (!success)
-	    break;
-	}
-      else
-	need_operator = 1;
-
-      success = demangle_template_value_parm (work, mangled, s, tk);
-    }
-
-  if (**mangled != 'W')
-    success = 0;
-  else
-    {
-      string_appendn (s, ")", 1);
-      (*mangled)++;
-    }
-
-  return success;
-}
-
-static int
 demangle_integral_value (work, mangled, s)
      struct work_stuff *work;
      const char** mangled;
@@ -1426,85 +1413,79 @@ demangle_integral_value (work, mangled, s)
   int success;
 
   if (**mangled == 'E')
-    success = demangle_expression (work, mangled, s, tk_integral);
+    {
+      int need_operator = 0;
+
+      success = 1;
+      string_appendn (s, "(", 1);
+      (*mangled)++;
+      while (success && **mangled != 'W' && **mangled != '\0')
+	{
+	  if (need_operator)
+	    {
+	      size_t i;
+	      size_t len;
+
+	      success = 0;
+
+	      len = strlen (*mangled);
+
+	      for (i = 0;
+		   i < sizeof (optable) / sizeof (optable [0]);
+		   ++i)
+		{
+		  size_t l = strlen (optable[i].in);
+
+		  if (l <= len
+		      && memcmp (optable[i].in, *mangled, l) == 0)
+		    {
+		      string_appendn (s, " ", 1);
+		      string_append (s, optable[i].out);
+		      string_appendn (s, " ", 1);
+		      success = 1;
+		      (*mangled) += l;
+		      break;
+		    }
+		}
+
+	      if (!success)
+		break;
+	    }
+	  else
+	    need_operator = 1;
+
+	  success = demangle_template_value_parm (work, mangled, s,
+						  tk_integral);
+	}
+
+      if (**mangled != 'W')
+	  success = 0;
+      else
+	{
+	  string_appendn (s, ")", 1);
+	  (*mangled)++;
+	}
+    }
   else if (**mangled == 'Q' || **mangled == 'K')
     success = demangle_qualified (work, mangled, s, 0, 1);
   else
     {
-      int value;
-
       success = 0;
 
-      /* Negative numbers are indicated with a leading `m'.  */
       if (**mangled == 'm')
 	{
 	  string_appendn (s, "-", 1);
 	  (*mangled)++;
 	}
-
-      /* Read the rest of the number.  */
-      value = consume_count_with_underscores (mangled);
-      if (value != -1)
+      while (isdigit ((unsigned char)**mangled))
 	{
-	  char buf[INTBUF_SIZE];
-	  sprintf (buf, "%d", value);
-	  string_append (s, buf);
-
-	  /* If the next character is an underscore, skip it.  */
-	  if (**mangled == '_')
-	    (*mangled)++;
-
-	  /* All is well.  */
+	  string_appendn (s, *mangled, 1);
+	  (*mangled)++;
 	  success = 1;
 	}
     }
 
   return success;
-}
-
-/* Demangle the real value in MANGLED.  */
-
-static int
-demangle_real_value (work, mangled, s)
-     struct work_stuff *work;
-     const char **mangled;
-     string* s;
-{
-  if (**mangled == 'E')
-    return demangle_expression (work, mangled, s, tk_real);
-
-  if (**mangled == 'm')
-    {
-      string_appendn (s, "-", 1);
-      (*mangled)++;
-    }
-  while (isdigit ((unsigned char)**mangled))
-    {
-      string_appendn (s, *mangled, 1);
-      (*mangled)++;
-    }
-  if (**mangled == '.') /* fraction */
-    {
-      string_appendn (s, ".", 1);
-      (*mangled)++;
-      while (isdigit ((unsigned char)**mangled))
-	{
-	  string_appendn (s, *mangled, 1);
-	  (*mangled)++;
-	}
-    }
-  if (**mangled == 'e') /* exponent */
-    {
-      string_appendn (s, "e", 1);
-      (*mangled)++;
-      while (isdigit ((unsigned char)**mangled))
-	{
-	  string_appendn (s, *mangled, 1);
-	  (*mangled)++;
-	}
-    }
-
-  return 1;
 }
 
 static int
@@ -1530,7 +1511,11 @@ demangle_template_value_parm (work, mangled, s, tk)
       if (work->tmpl_argvec)
 	string_append (s, work->tmpl_argvec[idx]);
       else
-	string_append_template_idx (s, idx);
+	{
+	  char buf[10];
+	  sprintf(buf, "T%d", idx);
+	  string_append (s, buf);
+	}
     }
   else if (tk == tk_integral)
     success = demangle_integral_value (work, mangled, s);
@@ -1566,7 +1551,38 @@ demangle_template_value_parm (work, mangled, s, tk)
 	success = 0;
     }
   else if (tk == tk_real)
-    success = demangle_real_value (work, mangled, s);
+    {
+      if (**mangled == 'm')
+	{
+	  string_appendn (s, "-", 1);
+	  (*mangled)++;
+	}
+      while (isdigit ((unsigned char)**mangled))
+	{
+	  string_appendn (s, *mangled, 1);
+	  (*mangled)++;
+	}
+      if (**mangled == '.') /* fraction */
+	{
+	  string_appendn (s, ".", 1);
+	  (*mangled)++;
+	  while (isdigit ((unsigned char)**mangled))
+	    {
+	      string_appendn (s, *mangled, 1);
+	      (*mangled)++;
+	    }
+	}
+      if (**mangled == 'e') /* exponent */
+	{
+	  string_appendn (s, "e", 1);
+	  (*mangled)++;
+	  while (isdigit ((unsigned char)**mangled))
+	    {
+	      string_appendn (s, *mangled, 1);
+	      (*mangled)++;
+	    }
+	}
+    }
   else if (tk == tk_pointer || tk == tk_reference)
     {
       if (**mangled == 'Q')
@@ -1664,9 +1680,11 @@ demangle_template (work, mangled, tname, trawname, is_type, remember)
 	    }
 	  else
 	    {
-	      string_append_template_idx (tname, idx);
+	      char buf[10];
+	      sprintf(buf, "T%d", idx);
+	      string_append (tname, buf);
 	      if (trawname)
-		string_append_template_idx (trawname, idx);
+		string_append (trawname, buf);
 	    }
 	}
       else
@@ -2507,7 +2525,7 @@ gnu_special (work, mangled, declp)
 	  break;
 	default:
 	  n = consume_count (mangled);
-	  if (n < 0 || n > (long) strlen (*mangled))
+	  if (n < 0 || n > strlen (*mangled))
 	    {
 	      success = 0;
 	      break;
@@ -2674,7 +2692,7 @@ arm_special (mangled, declp)
 	{
 	  n = consume_count (mangled);
           if (n == -1
-	      || n > (long) strlen (*mangled))
+	      || n > strlen (*mangled))
 	    return 0;
 	  string_prependn (declp, *mangled, n);
 	  (*mangled) += n;
@@ -2735,6 +2753,7 @@ demangle_qualified (work, mangled, result, isfuncname, append)
 {
   int qualifiers = 0;
   int success = 1;
+  const char *p;
   char num[2];
   string temp;
   string last_name;
@@ -2766,10 +2785,19 @@ demangle_qualified (work, mangled, result, isfuncname, append)
       /* GNU mangled name with more than 9 classes.  The count is preceded
 	 by an underscore (to distinguish it from the <= 9 case) and followed
 	 by an underscore.  */
-      (*mangled)++;
-      qualifiers = consume_count_with_underscores (mangled);
-      if (qualifiers == -1)
+      p = *mangled + 2;
+      qualifiers = atoi (p);
+      if (!isdigit ((unsigned char)*p) || *p == '0')
 	success = 0;
+
+      /* Skip the digits.  */
+      while (isdigit ((unsigned char)*p))
+	++p;
+
+      if (*p != '_')
+	success = 0;
+
+      *mangled = p + 1;
       break;
 
     case '1':
@@ -2960,7 +2988,9 @@ get_count (type, count)
   int n;
 
   if (!isdigit ((unsigned char)**type))
-    return (0);
+    {
+      return (0);
+    }
   else
     {
       *count = **type - '0';
@@ -3099,12 +3129,7 @@ do_type (work, mangled, result)
 	    (*mangled)++;
 
 	    string_append (&decl, ")");
-
-	    /* We don't need to prepend `::' for a qualified name;
-	       demangle_qualified will do that for us.  */
-	    if (**mangled != 'Q')
-	      string_prepend (&decl, SCOPE_STRING (work));
-
+	    string_prepend (&decl, SCOPE_STRING (work));
 	    if (isdigit ((unsigned char)**mangled))
 	      {
 		n = consume_count (mangled);
@@ -3135,14 +3160,6 @@ do_type (work, mangled, result)
 		    string_clear (&temp);
 		  }
 		else
-		  break;
-	      }
-	    else if (**mangled == 'Q')
-	      {
-		success = demangle_qualified (work, mangled, &decl,
-					      /*isfuncnam=*/0, 
-					      /*append=*/0);
-		if (!success)
 		  break;
 	      }
 	    else
@@ -3257,7 +3274,11 @@ do_type (work, mangled, result)
 	if (work->tmpl_argvec)
 	  string_append (result, work->tmpl_argvec[idx]);
 	else
-	  string_append_template_idx (result, idx);
+	  {
+	    char buf[10];
+	    sprintf(buf, "T%d", idx);
+	    string_append (result, buf);
+	  }
 
 	success = 1;
       }
@@ -3437,7 +3458,7 @@ demangle_fund_type (work, mangled, result)
 	  int i;
 	  (*mangled)++;
 	  for (i = 0;
-	       i < (long) sizeof (buf) - 1 && **mangled && **mangled != '_';
+	       i < sizeof (buf) - 1 && **mangled && **mangled != '_';
 	       (*mangled)++, i++)
 	    buf[i] = **mangled;
 	  if (**mangled != '_')
@@ -3506,7 +3527,7 @@ demangle_fund_type (work, mangled, result)
 
 static int
 do_hpacc_template_const_value (work, mangled, result)
-     struct work_stuff *work ATTRIBUTE_UNUSED;
+     struct work_stuff *work;
      const char **mangled;
      string *result;
 {
@@ -4376,16 +4397,6 @@ string_prependn (p, s, n)
     }
 }
 
-static void
-string_append_template_idx (s, idx)
-     string *s;
-     int idx;
-{
-  char buf[INTBUF_SIZE + 1 /* 'T' */];
-  sprintf(buf, "T%d", idx);
-  string_append (s, buf);
-}
-
 /* To generate a standalone demangler program for testing purposes,
    just compile and link this file with -DMAIN and libiberty.a.  When
    run, it demangles each command line arg, or each stdin string, and
@@ -4395,13 +4406,13 @@ string_append_template_idx (s, idx)
 
 #include "getopt.h"
 
-static const char *program_name;
-static const char *program_version = VERSION;
+static char *program_name;
+static char *program_version = VERSION;
 static int flags = DMGL_PARAMS | DMGL_ANSI;
 
 static void demangle_it PARAMS ((char *));
-static void usage PARAMS ((FILE *, int)) ATTRIBUTE_NORETURN;
-static void fatal PARAMS ((const char *)) ATTRIBUTE_NORETURN;
+static void usage PARAMS ((FILE *, int));
+static void fatal PARAMS ((char *));
 
 static void
 demangle_it (mangled_name)
@@ -4462,12 +4473,6 @@ fancy_abort ()
 }
 
 
-static const char *
-standard_symbol_characters PARAMS ((void));
-
-static const char *
-hp_symbol_characters PARAMS ((void));
-
 /* Return the string of non-alnum characters that may occur 
    as a valid symbol component, in the standard assembler symbol
    syntax.  */
@@ -4516,8 +4521,6 @@ hp_symbol_characters ()
 }
 
 
-extern int main PARAMS ((int, char **));
-
 int
 main (argc, argv)
      int argc;
@@ -4525,7 +4528,7 @@ main (argc, argv)
 {
   char *result;
   int c;
-  const char *valid_symbols;
+  char *valid_symbols;
 
   program_name = argv[0];
 
@@ -4545,7 +4548,7 @@ main (argc, argv)
 	  break;
 	case 'v':
 	  printf ("GNU %s (C++ demangler), version %s\n", program_name, program_version);
-	  return (0);
+	  exit (0);
 	case '_':
 	  strip_underscore = 1;
 	  break;
@@ -4577,7 +4580,7 @@ main (argc, argv)
 	    {
 	      fprintf (stderr, "%s: unknown demangling style `%s'\n",
 		       program_name, optarg);
-	      return (1);
+	      exit (1);
 	    }
 	  break;
 	}
@@ -4655,12 +4658,12 @@ main (argc, argv)
 	}
     }
 
-  return (0);
+  exit (0);
 }
 
 static void
 fatal (str)
-     const char *str;
+     char *str;
 {
   fprintf (stderr, "%s: %s\n", program_name, str);
   exit (1);
