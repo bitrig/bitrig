@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.766 2004/09/23 18:39:36 grange Exp 
+ *	OpenBSD: pcidevs,v 1.767 2004/09/25 18:40:27 grange Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -8419,12 +8419,12 @@ static const struct pci_known_vendor pci_known_vendors[] = {
 	    "Avermedia",
 	},
 	{
-	    PCI_VENDOR_OXFORD,
-	    "Oxford",
-	},
-	{
 	    PCI_VENDOR_AIRONET,
 	    "Aironet",
+	},
+	{
+	    PCI_VENDOR_OXFORD,
+	    "Oxford",
 	},
 	{
 	    PCI_VENDOR_AVLAB,
