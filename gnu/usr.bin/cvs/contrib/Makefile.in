@@ -50,7 +50,7 @@ DISTFILES = \
 	Makefile.in clmerge.pl cln_hist.pl commit_prep.pl cvs_acls.pl \
 	cvscheck.sh cvscheck.man cvshelp.man descend.sh descend.man \
 	dirfns.shar log.pl log_accum.pl mfpipe.pl rcs-to-cvs.sh rcs2log.sh \
-	rcslock.pl sccs2rcs.csh
+	rcslock.pl sccs2rcs.csh rcs2sccs.sh
 
 # files installed in $(libdir)/cvs/contrib
 #
@@ -94,10 +94,11 @@ install: all $(libdir)/cvs/contrib
 	for f in $(PROGS) ; do\
 		$(INSTALL_PROGRAM) $$f $(bindir)/$$f; \
 	done
+	@echo "You might consider running 'cvsinit' to upgrade your repository(s)...."
 .PHONY: install
 
 $(libdir)/cvs/contrib:
-	$(top_srcdir)/mkinstalldirs $(libdir)/cvs/contrib
+	$(SHELL) $(top_srcdir)/mkinstalldirs $(libdir)/cvs/contrib
 
 tags:
 .PHONY: tags
@@ -114,7 +115,7 @@ clean:
 .PHONY: clean
 
 distclean: clean
-	rm -f Makefile pcl-cvs/Makefile $(PROGS) $(CONTRIB_PROGS)
+	rm -f Makefile elib/Makefile $(PROGS) $(CONTRIB_PROGS)
 .PHONY: distclean
 
 realclean: distclean
@@ -125,7 +126,7 @@ dist-dir:
 	for i in ${DISTFILES}; do \
 	  ln $(srcdir)/$${i} ${DISTDIR}; \
 	done
-	cd pcl-cvs; ${MAKE} dist-dir DISTDIR="../${DISTDIR}/pcl-cvs"
+	cd elib; ${MAKE} dist-dir DISTDIR="../${DISTDIR}/elib"
 .PHONY: dist-dir
 
 subdir = contrib
