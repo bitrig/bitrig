@@ -12,12 +12,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
-# $CVSid: @(#)Makefile.in 1.19 94/09/29 $
-
 SHELL = /bin/sh
 
 srcdir     = @srcdir@
@@ -43,33 +37,33 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 
 LIBS = @LIBS@
 
-SOURCES = add.c admin.c checkin.c checkout.c classify.c client.c commit.c \
-create_adm.c cvsrc.c diff.c entries.c find_names.c hash.c history.c ignore.c \
-import.c lock.c log.c logmsg.c main.c modules.c myndbm.c no_diff.c \
+SOURCES = add.c admin.c buffer.c checkin.c checkout.c classify.c client.c \
+commit.c create_adm.c cvsrc.c diff.c edit.c entries.c error.c expand_path.c \
+fileattr.c find_names.c hash.c history.c ignore.c import.c \
+lock.c log.c login.c logmsg.c main.c mkmodules.c modules.c myndbm.c no_diff.c \
 parseinfo.c patch.c rcs.c rcscmds.c recurse.c release.c remove.c repos.c \
-root.c rtag.c server.c status.c subr.c filesubr.c run.c tag.c update.c \
-wrapper.c vers_ts.c version.c
-MSOURCES = mkmodules.c
+root.c rtag.c scramble.c server.c status.c subr.c filesubr.c run.c \
+tag.c update.c watch.c wrapper.c vers_ts.c version.c zlib.c
 
-OBJECTS = add.o admin.o checkin.o checkout.o classify.o commit.o \
-create_adm.o cvsrc.o diff.o entries.o find_names.o hash.o history.o \
-ignore.o import.o lock.o log.o logmsg.o main.o modules.o myndbm.o no_diff.o \
+OBJECTS = add.o admin.o buffer.o checkin.o checkout.o classify.o client.o \
+commit.o create_adm.o cvsrc.o diff.o edit.o entries.o expand_path.o \
+fileattr.o find_names.o hash.o history.o ignore.o import.o \
+lock.o log.o login.o logmsg.o main.o mkmodules.o modules.o myndbm.o no_diff.o \
 parseinfo.o patch.o rcs.o rcscmds.o recurse.o release.o remove.o repos.o \
-root.o rtag.o status.o tag.o update.o wrapper.o vers_ts.o server.o client.o
+root.o rtag.o scramble.o server.o status.o tag.o update.o \
+watch.o wrapper.o vers_ts.o \
+subr.o filesubr.o run.o version.o error.o zlib.o
 
-MOBJECTS = hash.o mkmodules.o myndbm.o
+HEADERS = buffer.h cvs.h rcs.h hash.h myndbm.h \
+	update.h server.h client.h error.h fileattr.h edit.h watch.h
 
-COMMON_OBJECTS = subr.o filesubr.o run.o version.o
+TAGFILES = $(HEADERS) options.h.in $(SOURCES)
 
-HEADERS = cvs.h rcs.h hash.h myndbm.h patchlevel.h \
-	update.h server.h client.h
+DISTFILES = .cvsignore Makefile.in \
+	    ChangeLog ChangeLog-96 ChangeLog-9395 ChangeLog-9194 \
+            sanity.sh cvsbug.sh $(TAGFILES) build_src.com
 
-DISTFILES = .cvsignore Makefile.in ChangeLog ChangeLog.fsf \
-	    NOTES README-rm-add \
-            sanity.sh cvsbug.sh \
-            $(HEADERS) options.h.in $(SOURCES) $(MSOURCES) 
-
-PROGS = cvs mkmodules cvsbug
+PROGS = cvs cvsbug
 
 DEFS = @DEFS@ @includeopt@
 
@@ -82,7 +76,7 @@ INCLUDES = -I. -I.. -I$(srcdir) -I$(top_srcdir)/lib
 .c.o:
 	$(CC) $(CPPFLAGS) $(INCLUDES) $(DEFS) $(CFLAGS) -c $<
 
-all: $(PROGS)
+all: Makefile $(PROGS)
 .PHONY: all
 
 saber_cvs:
@@ -91,8 +85,7 @@ saber_cvs:
 lint:
 	@cd ..; $(MAKE) lint SUBDIRS=src
 
-# CYGNUS LOCAL: Do not depend upon installdirs
-install:
+install: installdirs
 	@for prog in $(PROGS); do \
 	  echo Installing $$prog in $(bindir); \
 	  $(INSTALL) $$prog $(bindir)/$$prog ; \
@@ -121,18 +114,18 @@ remotecheck: all
 	$(SHELL) $(srcdir)/sanity.sh -r `pwd`/cvs
 .PHONY: remotecheck
 
-tags: $(DISTFILES)
-	ctags $(DISTFILES)
+tags: $(TAGFILES)
+	ctags $(TAGFILES)
 
-TAGS: $(DISTFILES)
-	etags `for i in $(DISTFILES); do echo $(srcdir)/$$i; done`
+TAGS: $(TAGFILES)
+	etags `for i in $(TAGFILES); do echo $(srcdir)/$$i; done`
 
 ls:
 	@echo $(DISTFILES)
 .PHONY: ls
 
 clean:
-	/bin/rm -f $(PROGS) *.o core
+	/bin/rm -f $(PROGS) *.o core check.log check.plog
 .PHONY: clean
 
 distclean: clean
@@ -151,10 +144,10 @@ dist-dir:
 
 # Linking rules.
 
-$(PROGS): ../lib/libcvs.a
+$(PROGS): ../lib/libcvs.a $(ZLIB)
 
-cvs: $(OBJECTS) $(COMMON_OBJECTS)
-	$(CC) $(OBJECTS) $(COMMON_OBJECTS) ../lib/libcvs.a $(LIBS) $(LDFLAGS) -o $@ 
+cvs: $(OBJECTS)
+	$(CC) $(OBJECTS) ../lib/libcvs.a $(LIBS) $(LDFLAGS) -o $@ 
 
 xlint: $(SOURCES)
 	files= ; \
@@ -168,15 +161,24 @@ saber: $(SOURCES)
 	# load $(CFLAGS) $(SOURCES)
 	# load ../lib/libcvs.a $(LIBS)
 
-mkmodules: $(MOBJECTS) $(COMMON_OBJECTS)
-	$(CC) $(LDFLAGS) -o $@ $(MOBJECTS) $(COMMON_OBJECTS) ../lib/libcvs.a $(LIBS) $(LIBIBERTY)
-
-cvsbug: cvsbug.sh
-	cp $(srcdir)/cvsbug.sh cvsbug
+cvsbug: cvsbug.sh $(srcdir)/version.c
+	echo > .fname \
+	  cvs-`sed < $(srcdir)/version.c \
+		    -e '/version_string/!d' \
+		    -e 's/[^0-9.]*\([0-9.]*\).*/\1/' \
+		    -e q`
+	sed -e 's,xLIBDIRx,$(libdir)/cvs,g' \
+	    -e "s,xVERSIONx,`cat .fname`,g" $(srcdir)/$@.sh > $@-t
+	rm -f .fname
+	mv $@-t $@
+	chmod a+x $@
 
 # Compilation rules.
 
-$(OBJECTS) $(COMMON_OBJECTS) mkmodules.o: $(HEADERS) options.h
+$(OBJECTS): $(HEADERS) options.h
+
+zlib.o: zlib.c
+	$(CC) $(CPPFLAGS) $(INCLUDES) -I$(top_srcdir)/zlib $(DEFS) $(CFLAGS) -c $(srcdir)/zlib.c
 
 subdir = src
 Makefile: ../config.status Makefile.in
