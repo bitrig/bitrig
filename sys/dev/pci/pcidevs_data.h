@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *		OpenBSD: pcidevs,v 1.420 2001/07/26 16:47:40 brad Exp 
+ *		OpenBSD: pcidevs,v 1.421 2001/07/27 17:00:15 deraadt Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -2091,6 +2091,10 @@ static const struct pci_known_product pci_known_products[] = {
 	    "82801BA AC-97 Modem",
 	},
 	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801BAM_HPB,
+	    "82801BAM Hub-to-PCI",
+	},
+	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82562,
 	    "82562",
 	},
@@ -2101,6 +2105,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801BA_IDE,
 	    "82801BA IDE",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801BAM_LPC,
+	    "82801BAM LPC",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801BA_AGP,
@@ -3011,6 +3019,10 @@ static const struct pci_known_product pci_known_products[] = {
 	    "GeForce2 MX",
 	},
 	{
+	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_GEFORCE2GO,
+	    "GeForce2 Go",
+	},
+	{
 	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_GEFORCE2GTS,
 	    "GeForce2 GTS",
 	},
@@ -3675,6 +3687,10 @@ static const struct pci_known_product pci_known_products[] = {
 	    "TSB12LV26 FireWire",
 	},
 	{
+	    PCI_VENDOR_TI, PCI_PRODUCT_TI_PCI4451_FW,
+	    "PCI4451 OHCI FireWire",
+	},
+	{
 	    PCI_VENDOR_TI, PCI_PRODUCT_TI_PCI1130,
 	    "PCI1130 PCI-CardBus",
 	},
@@ -3725,6 +3741,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_TI, PCI_PRODUCT_TI_PCI2031,
 	    "PCI2031 PCI-PCI",
+	},
+	{
+	    PCI_VENDOR_TI, PCI_PRODUCT_TI_PCI4451_CB,
+	    "PCI4451 PCI-CardBus",
 	},
 	{
 	    PCI_VENDOR_TI, PCI_PRODUCT_TI_PCI1410,
