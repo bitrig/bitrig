@@ -33,24 +33,18 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-RCSID("$KTH: otp_md.c,v 1.14 2001/01/29 05:55:18 assar Exp $");
+RCSID("$KTH: otp_md.c,v 1.15 2001/08/22 20:30:32 assar Exp $");
 #endif
 #include "otp_locl.h"
 
 #include "otp_md.h"
-#ifdef HAVE_OPENSSL_MD4_H
+#ifdef HAVE_OPENSSL
 #include <openssl/md4.h>
-#else
-#include <md4.h>
-#endif
-#ifdef HAVE_OPENSSL_MD5_H
 #include <openssl/md5.h>
-#else
-#include <md5.h>
-#endif
-#ifdef HAVE_OPENSSL_SHA_H
 #include <openssl/sha.h>
 #else
+#include <md4.h>
+#include <md5.h>
 #include <sha.h>
 #endif
 
@@ -93,9 +87,9 @@ otp_md_init (OtpKey key,
   p = malloc (len + 1);
   if (p == NULL)
     return -1;
-  strcpy (p, seed);
+  strlcpy (p, seed, len+1);
   strlwr (p);
-  strcat (p, pwd);
+  strlcat (p, pwd, len+1);
   (*init)(arg);
   (*update)(arg, p, len);
   (*final)(res, arg);
