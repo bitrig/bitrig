@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: eisadevs,v 1.14 2000/03/13 20:32:15 maja Exp 
+ *	OpenBSD: eisadevs,v 1.15 2001/01/26 22:29:17 mickey Exp 
  */
 
 /*
