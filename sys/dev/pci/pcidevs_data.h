@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.788 2004/10/30 14:11:23 deraadt Exp 
+ *	OpenBSD: pcidevs,v 1.789 2004/10/30 14:12:16 deraadt Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -1599,12 +1599,12 @@ static const struct pci_known_product pci_known_products[] = {
 	    "AR5212",
 	},
 	{
-	    PCI_VENDOR_ATHEROS, PCI_PRODUCT_ATHEROS_AR5201_AP,
-	    "AR5201 (Early)",
+	    PCI_VENDOR_ATHEROS, PCI_PRODUCT_ATHEROS_AR5210_AP,
+	    "AR5210 (Early)",
 	},
 	{
-	    PCI_VENDOR_ATHEROS, PCI_PRODUCT_ATHEROS_AR5201_DEFAULT,
-	    "AR5201 (no eeprom)",
+	    PCI_VENDOR_ATHEROS, PCI_PRODUCT_ATHEROS_AR5210_DEFAULT,
+	    "AR5210 (no eeprom)",
 	},
 	{
 	    PCI_VENDOR_ATHEROS, PCI_PRODUCT_ATHEROS_AR5212_DEFAULT,
