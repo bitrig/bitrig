@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.747 2004/07/16 06:08:05 deraadt Exp 
+ *	OpenBSD: pcidevs,v 1.748 2004/07/18 03:52:43 deraadt Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -72,7 +72,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C_MPCI_MODEM,
-	    "Mini-PCI V.90 Modem",
+	    "V.90 Modem",
 	},
 	{
 	    PCI_VENDOR_3COM, PCI_PRODUCT_3COM_3C940,
@@ -936,11 +936,11 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_PBC768_ACA,
-	    "768 AC97 Audio",
+	    "768 AC97",
 	},
 	{
 	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_PBC768_MD,
-	    "768 AC97 Modem",
+	    "768 Modem",
 	},
 	{
 	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_PBC768_PPB,
@@ -992,7 +992,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_8111_ACA,
-	    "8111 AC97 Audio",
+	    "8111 AC97",
 	},
 	{
 	    PCI_VENDOR_AMI, PCI_PRODUCT_AMI_MEGARAID,
@@ -3224,11 +3224,11 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801AA_ACA,
-	    "82801AA AC97 Audio",
+	    "82801AA AC97",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801AA_ACM,
-	    "82801AA AC97 Modem",
+	    "82801AA Modem",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801AA_HPB,
@@ -3252,11 +3252,11 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801AB_ACA,
-	    "82801AB AC97 Audio",
+	    "82801AB AC97",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801AB_ACM,
-	    "82801AB AC97 Modem",
+	    "82801AB Modem",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801AB_HPB,
@@ -3280,11 +3280,11 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801BA_ACA,
-	    "82801BA AC97 Audio",
+	    "82801BA AC97",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801BA_ACM,
-	    "82801BA AC97 Modem",
+	    "82801BA Modem",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801BAM_HPB,
@@ -3336,7 +3336,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801CA_ACA,
-	    "82801CA/CAM AC97 Audio",
+	    "82801CA/CAM AC97",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801CA_ACM,
@@ -3376,7 +3376,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801DB_ACA,
-	    "82801DB AC97 Audio",
+	    "82801DB AC97",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801DB_ACM,
@@ -3424,11 +3424,11 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801EB_ACA,
-	    "82801EB/ER AC97 Audio",
+	    "82801EB/ER AC97",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801EB_MODEM,
-	    "82801EB/ER AC97 Modem",
+	    "82801EB/ER Modem",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82801EB_USB_3,
@@ -3800,11 +3800,11 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82440MX_ACA,
-	    "82440MX AC97 Audio",
+	    "82440MX AC97",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82440MX_ACM,
-	    "82440MX AC97 Modem",
+	    "82440MX Modem",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82440MX_ISA,
@@ -3900,7 +3900,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_INTERSIL, PCI_PRODUCT_INTERSIL_MINI_PCI_WLAN,
-	    "PRISM2.5 Mini-PCI WLAN",
+	    "PRISM2.5",
 	},
 	{
 	    PCI_VENDOR_INVERTEX, PCI_PRODUCT_INVERTEX_AEON,
@@ -6200,7 +6200,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_7012_ACA,
-	    "7012 AC97 Audio",
+	    "7012 AC97",
 	},
 	{
 	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_7013,
@@ -7072,11 +7072,11 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_VT82C686A_AC97,
-	    "VT82C686 AC97 Audio",
+	    "VT82C686 AC97",
 	},
 	{
 	    PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_VT8233_AC97,
-	    "VT8233 AC97 Audio",
+	    "VT8233 AC97",
 	},
 	{
 	    PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_RHINEII_2,
@@ -7084,7 +7084,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_VT82C686A_ACM,
-	    "VT82C686 AC97 Modem",
+	    "VT82C686 Modem",
 	},
 	{
 	    PCI_VENDOR_VIATECH, PCI_PRODUCT_VIATECH_VT8366_ISA,
@@ -8060,7 +8060,7 @@ static const struct pci_known_vendor pci_known_vendors[] = {
 	},
 	{
 	    PCI_VENDOR_SIEMENS,
-	    "Siemens AG / Siemens Nixdorf AG",
+	    "Siemens",
 	},
 	{
 	    PCI_VENDOR_ACCTON,
@@ -8160,7 +8160,7 @@ static const struct pci_known_vendor pci_known_vendors[] = {
 	},
 	{
 	    PCI_VENDOR_DOLPHIN,
-	    "Dolphin Interconnect Solutions",
+	    "Dolphin",
 	},
 	{
 	    PCI_VENDOR_MRTMAGMA,
@@ -8548,7 +8548,7 @@ static const struct pci_known_vendor pci_known_vendors[] = {
 	},
 	{
 	    PCI_VENDOR_ENDACE,
-	    "Endace Measurement Systems",
+	    "Endace",
 	},
 	{
 	    PCI_VENDOR_ARC,
