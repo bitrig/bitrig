@@ -1,5 +1,6 @@
 /* Process declarations and variables for C compiler.
-   Copyright (C) 1988, 92-98, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000
+   Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -1951,6 +1952,7 @@ duplicate_decls (newdecl, olddecl, different_binding_level)
 	{
 	  /* Since the type is OLDDECL's, make OLDDECL's size go with.  */
 	  DECL_SIZE (newdecl) = DECL_SIZE (olddecl);
+	  DECL_MODE (newdecl) = DECL_MODE (olddecl);
 	  if (TREE_CODE (olddecl) != FUNCTION_DECL)
 	    if (DECL_ALIGN (olddecl) > DECL_ALIGN (newdecl))
 	      DECL_ALIGN (newdecl) = DECL_ALIGN (olddecl);
@@ -3543,8 +3545,10 @@ init_decl_processing ()
       builtin_function ("memset", memset_ftype, BUILT_IN_MEMSET, NULL_PTR);
       builtin_function ("strcmp", int_ftype_string_string, BUILT_IN_STRCMP,
 			NULL_PTR);
+#ifndef NO_UNSAFE_BUILTINS
       builtin_function ("strcpy", string_ftype_ptr_ptr, BUILT_IN_STRCPY,
 			NULL_PTR);
+#endif
       builtin_function ("strlen", strlen_ftype, BUILT_IN_STRLEN, NULL_PTR);
       builtin_function ("sqrtf", float_ftype_float, BUILT_IN_FSQRT, NULL_PTR);
       builtin_function ("sqrt", double_ftype_double, BUILT_IN_FSQRT, NULL_PTR);
