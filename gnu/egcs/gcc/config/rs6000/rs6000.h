@@ -884,15 +884,19 @@ extern int rs6000_debug_arg;		/* debug argument handling */
    64-bit AIX reserves GPR13 for thread-private data.
    Conditionally disable FPRs.  */
 
-#define CONDITIONAL_REGISTER_USAGE	\
-{					\
-  if (! TARGET_POWER)			\
-    fixed_regs[64] = 1;			\
-  if (TARGET_64BIT)			\
-    fixed_regs[13] = call_used_regs[13] = 1; \
-  if (TARGET_SOFT_FLOAT)		\
-    for (i = 32; i < 64; i++)		\
-      fixed_regs[i] = call_used_regs[i] = 1; \
+#define CONDITIONAL_REGISTER_USAGE					\
+{									\
+  if (! TARGET_POWER)							\
+    fixed_regs[64] = 1;							\
+  if (TARGET_64BIT)							\
+    fixed_regs[13] = call_used_regs[13] = 1; 				\
+  if (TARGET_SOFT_FLOAT)						\
+    for (i = 32; i < 64; i++)						\
+      fixed_regs[i] = call_used_regs[i] = 1; 				\
+  if ((DEFAULT_ABI == ABI_V4 || DEFAULT_ABI == ABI_SOLARIS)		\
+      && flag_pic == 1)							\
+    fixed_regs[PIC_OFFSET_TABLE_REGNUM]					\
+      = call_used_regs[PIC_OFFSET_TABLE_REGNUM] = 1;			\
 }
 
 /* Specify the registers used for certain standard purposes.
@@ -924,12 +928,6 @@ extern int rs6000_debug_arg;		/* debug argument handling */
 
 /* Special register that represents memory, used for float/int conversions.  */
 #define FPMEM_REGNUM 76
-
-/* Register to use as a placeholder for the GOT/allocated TOC register.
-   FINALIZE_PIC will change all uses of this register to a an appropriate
-   pseudo register when it adds the code to setup the GOT.  We use r2
-   because it is a reserved register in all of the ABI's.  */
-#define GOT_TOC_REGNUM 2
 
 /* Place that structure value return address is placed.
 
@@ -1437,17 +1435,22 @@ extern int rs6000_sysv_varargs_p;
    floating-point register number, and the third says how many more args we
    have prototype types for.
 
+   For ABI_V4, we treat these slightly differently -- `sysv_gregno' is
+   the next availible GP register, `fregno' is the next available FP
+   register, and `words' is the number of words used on the stack.
+
    The varargs/stdarg support requires that this structure's size
-   be a multiple of sizeof(int). */
+   be a multiple of sizeof(int).  */
 
 typedef struct rs6000_args
 {
-  int words;			/* # words uses for passing GP registers */
+  int words;			/* # words used for passing GP registers */
   int fregno;			/* next available FP register */
   int nargs_prototype;		/* # args left in the current prototype */
   int orig_nargs;		/* Original value of nargs_prototype */
   int prototype;		/* Whether a prototype was defined */
   int call_cookie;		/* Do special things for this call */
+  int sysv_gregno;		/* next available GP register */
 } CUMULATIVE_ARGS;
 
 /* Define intermediate macro to compute the size (in registers) of an argument
@@ -1648,7 +1651,22 @@ typedef struct rs6000_args
 
 /* Length in units of the trampoline for entering a nested function.  */
 
+#ifdef __OpenBSD__
+	/* TRAMPOLINE_SIZE needs to be a constant, because
+	 * the function is not available in libgcc where this is used
+	 * this is the ABI_V4 32bit value.
+	 */
+#define TRAMPOLINE_SIZE 40
+#else
 #define TRAMPOLINE_SIZE rs6000_trampoline_size ()
+#endif
+
+/* Targets redefine this to invoke code to either flush the cache,
+   or enable stack execution (or both).  */
+
+#ifndef FINALIZE_TRAMPOLINE
+#define FINALIZE_TRAMPOLINE(TRAMP)
+#endif
 
 /* Emit RTL insns to initialize the variable parts of a trampoline.
    FNADDR is an RTX for the address of the function's pure code.
@@ -2105,7 +2123,7 @@ do {                                                                    \
    this macro is not defined, it is up to the machine-dependent files
    to allocate such a register (if necessary).  */
 
-/* #define PIC_OFFSET_TABLE_REGNUM */
+#define PIC_OFFSET_TABLE_REGNUM 30
 
 /* Define this macro if the register defined by
    `PIC_OFFSET_TABLE_REGNUM' is clobbered by calls.  Do not define
@@ -2128,7 +2146,7 @@ do {                                                                    \
    prologues being included in functions which used inline functions
    and were compiled to assembly language.)  */
 
-#define FINALIZE_PIC rs6000_finalize_pic ()
+/* #define FINALIZE_PIC */
 
 /* A C expression that is nonzero if X is a legitimate immediate
    operand on the target machine when generating position independent
@@ -2469,7 +2487,7 @@ extern int rs6000_trunc_used;
   rs6000_gen_section_name (&xcoff_read_only_section_name,	\
 			   main_input_filename, ".ro_");	\
 								\
-  output_file_directive (FILE, main_input_filename);		\
+  fprintf (FILE, "\t.file\t\"%s\"\n", main_input_filename);     \
   if (TARGET_64BIT)						\
     fputs ("\t.machine\t\"ppc64\"\n", FILE);			\
   toc_section ();						\
@@ -2531,11 +2549,12 @@ extern int rs6000_trunc_used;
 /* If we are referencing a function that is static or is known to be
    in this file, make the SYMBOL_REF special.  We can use this to indicate
    that we can branch to this function without emitting a no-op after the
-   call.  */
+   call.  Do not set this flag if the function is weakly defined. */
 
 #define ENCODE_SECTION_INFO(DECL)  \
   if (TREE_CODE (DECL) == FUNCTION_DECL			\
-      && (TREE_ASM_WRITTEN (DECL) || ! TREE_PUBLIC (DECL))) \
+      && (TREE_ASM_WRITTEN (DECL) || ! TREE_PUBLIC (DECL)) \
+      && !DECL_WEAK (DECL)) \
     SYMBOL_REF_FLAG (XEXP (DECL_RTL (DECL), 0)) = 1;
 
 /* Indicate that jump tables go in the text section.  */
@@ -3179,6 +3198,7 @@ do {									\
   {"reg_or_neg_short_operand", {SUBREG, REG, CONST_INT}},	\
   {"reg_or_u_short_operand", {SUBREG, REG, CONST_INT}}, 	\
   {"reg_or_cint_operand", {SUBREG, REG, CONST_INT}}, 		\
+  {"reg_or_u_cint_operand", {SUBREG, REG, CONST_INT, CONST_DOUBLE}}, \
   {"got_operand", {SYMBOL_REF, CONST, LABEL_REF}},		\
   {"got_no_const_operand", {SYMBOL_REF, LABEL_REF}},		\
   {"easy_fp_constant", {CONST_DOUBLE}},				\
@@ -3192,7 +3212,9 @@ do {									\
   {"and_operand", {SUBREG, REG, CONST_INT}},			\
   {"and64_operand", {SUBREG, REG, CONST_INT, CONST_DOUBLE}},	\
   {"logical_operand", {SUBREG, REG, CONST_INT}}, 		\
+  {"logical_u_operand", {SUBREG, REG, CONST_INT, CONST_DOUBLE}}, \
   {"non_logical_cint_operand", {CONST_INT}},			\
+  {"non_logical_u_cint_operand", {CONST_INT, CONST_DOUBLE}},	\
   {"mask_operand", {CONST_INT}},				\
   {"mask64_operand", {CONST_INT, CONST_DOUBLE}},		\
   {"count_register_operand", {REG}},				\
@@ -3226,13 +3248,13 @@ extern int flag_expensive_optimizations;
 extern int frame_pointer_needed;
 
 /* Declare functions in rs6000.c */
-extern int offsettable_mem_operand ();
 extern void optimization_options ();
 extern void output_options ();
 extern void rs6000_override_options ();
 extern void rs6000_file_start ();
 extern struct rtx_def *rs6000_float_const ();
 extern struct rtx_def *rs6000_got_register ();
+extern struct rtx_def *find_addr_reg();
 extern int direct_return ();
 extern int get_issue_rate ();
 extern int any_operand ();
@@ -3251,7 +3273,7 @@ extern int got_no_const_operand ();
 extern int num_insns_constant ();
 extern int easy_fp_constant ();
 extern int volatile_mem_operand ();
-extern int offsettable_addr_operand ();
+extern int offsettable_mem_operand ();
 extern int mem_or_easy_const_operand ();
 extern int add_operand ();
 extern int non_add_cint_operand ();
