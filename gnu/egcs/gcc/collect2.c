@@ -1011,9 +1011,9 @@ main (argc, argv)
   int first_file;
   int num_c_args	= argc+9;
 
-#if defined (COLLECT2_HOST_INITIALZATION)
+#if defined (COLLECT2_HOST_INITIALIZATION)
   /* Perform system dependant initialization, if neccessary.  */
-  COLLECT2_HOST_INITIALZATION;
+  COLLECT2_HOST_INITIALIZATION;
 #endif
 
 #ifdef HAVE_LC_MESSAGES
@@ -1379,7 +1379,7 @@ main (argc, argv)
 	}
       else if ((p = rindex (arg, '.')) != (char *) 0
 	       && (strcmp (p, ".o") == 0 || strcmp (p, ".a") == 0
-		   || strcmp (p, ".so") == 0))
+		   || strcmp (p, ".so") == 0 || strcmp (p, ".lo") == 0))
 	{
 	  if (first_file)
 	    {
@@ -1394,7 +1394,7 @@ main (argc, argv)
 		  *ld2++ = arg;
 		}
 	    }
-	  if (p[1] == 'o')
+	  if (p[1] == 'o' || p[1] == 'l')
 	    *object++ = arg;
 #ifdef COLLECT_EXPORT_LIST
 	  /* libraries can be specified directly, i.e. without -l flag.  */
@@ -1515,7 +1515,7 @@ main (argc, argv)
 
   /* On AIX we do this later.  */
 #ifndef COLLECT_EXPORT_LIST
-  do_tlink (ld1_argv, object_lst); 
+  do_tlink (ld1_argv, object_lst);
 #endif
 
   /* If -r or they will be run via some other method, do not build the
@@ -1527,6 +1527,9 @@ main (argc, argv)
       )
     {
 #ifdef COLLECT_EXPORT_LIST
+      /* Do the link we avoided above if we are exiting.  */
+      do_tlink (ld1_argv, object_lst);
+
       /* But make sure we delete the export file we may have created.  */
       if (export_file != 0 && export_file[0])
 	maybe_unlink (export_file);
@@ -1555,6 +1558,7 @@ main (argc, argv)
     {
       notice ("%d constructor(s) found\n", constructors.number);
       notice ("%d destructor(s)  found\n", destructors.number);
+      notice ("%d frame table(s) found\n", frame_tables.number);
     }
 
   if (constructors.number == 0 && destructors.number == 0
@@ -2372,6 +2376,7 @@ scan_prog_file (prog_name, which_pass)
 	case 5:
 	  if (which_pass != PASS_LIB)
 	    add_to_list (&frame_tables, name);
+	  break;
 
 	default:		/* not a constructor or destructor */
 	  continue;
@@ -2816,7 +2821,7 @@ scan_libraries (prog_name)
 #if defined(EXTENDED_COFF)
 #   define GCC_SYMBOLS(X)	(SYMHEADER(X).isymMax + SYMHEADER(X).iextMax)
 #   define GCC_SYMENT		SYMR
-#   define GCC_OK_SYMBOL(X)	((X).st == stProc && (X).sc == scText)
+#   define GCC_OK_SYMBOL(X)	((X).st == stProc || (X).st == stGlobal)
 #   define GCC_SYMINC(X)	(1)
 #   define GCC_SYMZERO(X)	(SYMHEADER(X).isymMax)
 #   define GCC_CHECK_HDR(X)	(PSYMTAB(X) != 0)
@@ -2955,6 +2960,11 @@ scan_prog_file (prog_name, which_pass)
 			    add_to_list (&destructors, name);
 			  break;
 #endif
+
+			case 5:
+			  if (! is_shared)
+			    add_to_list (&frame_tables, name);
+			  break;
 
 			default:	/* not a constructor or destructor */
 #ifdef COLLECT_EXPORT_LIST
