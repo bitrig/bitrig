@@ -91,6 +91,7 @@
 ./usr/lib/libreadline.a
 ./usr/lib/scrt0.o
 ./usr/share/man/cat1/gdb.0
+./usr/share/man/cat1/gdb.0
 ./usr/share/man/cat3/dlclose.0
 ./usr/share/man/cat3/dlclose.0
 ./usr/share/man/cat3/dlctl.0
