@@ -1,11 +1,19 @@
+/*	$OpenBSD: dltest.c,v 1.2 2001/01/28 19:34:29 niklas Exp $	*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <dlfcn.h>
 #include <ctype.h>
+#include <elf_abi.h>
+#include <machine/reloc.h>
+#include <nlist.h>
+#include "../powerpc/archdep.h"
+#include "../resolve.h"
 
 typedef void (*func_t)(const char *);
 
+#define DL_NOW 0
 void
 dltest(const char *s)
 {
@@ -15,6 +23,7 @@ dltest(const char *s)
 	}
 	putchar('\n');
 }
+struct elf_object *foo;
 
 main(int argc, char **argv)
 {
@@ -55,6 +64,7 @@ main(int argc, char **argv)
 		}
 	}
 
+	printf("opening library %s for function %s\n", libname, funcname);
 	handle = dlopen(libname, mode);
 	if(handle == NULL) {
 		fprintf(stderr, "%s: dlopen: '%s'\n", libname, dlerror());
@@ -77,15 +87,18 @@ main(int argc, char **argv)
 
 	(*fptr)(param);
 
+#ifdef __mips__
 	dlctl(handle, DL_DUMP_MAP, NULL);
+#endif /* __mips__ */
 
 	dlclose(handle);
 
 	printf("After 'dlclose()'\n");
+#ifdef __mips__
 	dlctl(handle, DL_DUMP_MAP, NULL);
+#endif /* __mips__ */
 
 	return(0);
 }
-
 
 
