@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.43 1998/04/02 20:13:30 deraadt Exp 
+ *	OpenBSD: pcidevs,v 1.44 1998/04/02 20:16:32 deraadt Exp 
  */
 
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
@@ -1647,10 +1647,64 @@ struct pci_knowndev pci_knowndevs[] = {
 	    "85C496",
 	},
 	{
+	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_85C596,
+	    0,
+	    "Silicon Integrated System",
+	    "85C596",
+	},
+	{
 	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_85C601,
 	    0,
 	    "Silicon Integrated System",
 	    "85C601",
+	},
+	{
+	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_5511,
+	    0,
+	    "Silicon Integrated System",
+	    "5511",
+	},
+	{
+	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_5513,
+	    0,
+	    "Silicon Integrated System",
+	    "5512",
+	},
+	{
+	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_5513,
+	    0,
+	    "Silicon Integrated System",
+	    "5513",
+	},
+	{
+	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_5581,
+	    0,
+	    "Silicon Integrated System",
+	    "5581",
+	},
+	{
+	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_5582,
+	    0,
+	    "Silicon Integrated System",
+	    "5582",
+	},
+	{
+	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_5596,
+	    0,
+	    "Silicon Integrated System",
+	    "5596",
+	},
+	{
+	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_6204,
+	    0,
+	    "Silicon Integrated System",
+	    "6204",
+	},
+	{
+	    PCI_VENDOR_SIS, PCI_PRODUCT_SIS_6205,
+	    0,
+	    "Silicon Integrated System",
+	    "6205",
 	},
 	{
 	    PCI_VENDOR_SMC, PCI_PRODUCT_SMC_37C665,
