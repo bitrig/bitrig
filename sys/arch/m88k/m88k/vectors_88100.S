@@ -1,4 +1,4 @@
-/*	$OpenBSD: vectors_88110.S,v 1.1 2003/01/14 03:20:16 miod Exp $	*/
+/*	$OpenBSD: vectors_88100.S,v 1.1 2004/04/29 14:33:27 miod Exp $	*/
 /*
  * Mach Operating System
  * Copyright (c) 1991, 1992 Carnegie Mellon University
@@ -40,23 +40,23 @@
 
 	data
 	.align 4096			  /* VBR points to page aligned list */
-GLOBAL(m88110_vector_list)
-	VECTOR(m88110_reset_handler)		/* 00 */
-	VECTOR(m88110_interrupt_handler)	/* 01 */
-	VECTOR(m88110_instruction_access_handler)	/* 02 */
-	VECTOR(m88110_data_exception_handler)	/* 03 */
-	VECTOR(m88110_misaligned_handler)	/* 04 */
-	VECTOR(m88110_unimplemented_handler)	/* 05 */
-	VECTOR(m88110_privilege_handler)	/* 06 */
-	VECTOR(m88110_bounds_handler)		/* 07 */
-	VECTOR(m88110_divide_handler)		/* 08 */
-	VECTOR(m88110_overflow_handler)		/* 09 */
-	VECTOR(m88110_error_handler)		/* 0a */
-	VECTOR(m88110_nonmaskable)		/* 0b */
-	VECTOR(m88110_data_read_miss)		/* 0c */
-	VECTOR(m88110_data_write_miss)		/* 0d */
-	VECTOR(m88110_inst_atc_miss)		/* 0e */
-	VECTOR(m88110_trace)			/* 0f */
+GLOBAL(vector_list)
+	VECTOR(reset_handler)			/* 00 */
+	VECTOR(interrupt_handler)		/* 01 */
+	VECTOR(instruction_access_handler)	/* 02 */
+	VECTOR(data_exception_handler)		/* 03 */
+	VECTOR(misaligned_handler)		/* 04 */
+	VECTOR(unimplemented_handler)		/* 05 */
+	VECTOR(privilege_handler)		/* 06 */
+	VECTOR(bounds_handler)			/* 07 */
+	VECTOR(divide_handler)			/* 08 */
+	VECTOR(overflow_handler)		/* 09 */
+	VECTOR(error_handler)			/* 0a */
+	word UNKNOWN_HANDLER			/* 0b */
+	word UNKNOWN_HANDLER			/* 0c */
+	word UNKNOWN_HANDLER			/* 0d */
+	word UNKNOWN_HANDLER			/* 0e */
+	word UNKNOWN_HANDLER			/* 0f */
 	UNDEFINED16				/* 1x */
 	UNDEFINED16				/* 2x */
 	UNDEFINED16				/* 3x */
@@ -65,24 +65,25 @@ GLOBAL(m88110_vector_list)
 	UNDEFINED16				/* 6x */
 	word UNKNOWN_HANDLER			/* 70 */
 	word UNKNOWN_HANDLER			/* 71 */
-	VECTOR(m88110_fp_precise_handler)	/* 72 */
-	word UNKNOWN_HANDLER			/* 73 */
-	VECTOR(m88110_unimplemented_handler)	/* 74 */
+	VECTOR(fp_precise_handler)		/* 72 */
+	VECTOR(fp_imprecise_handler)		/* 73 */
+	VECTOR(unimplemented_handler)		/* 74 */
 	word UNKNOWN_HANDLER			/* 75 */
-	VECTOR(m88110_unimplemented_handler)	/* 76 */
+	VECTOR(unimplemented_handler)		/* 76 */
 	word UNKNOWN_HANDLER			/* 77 */
-	VECTOR(m88110_unimplemented_handler)	/* 78 */
+	VECTOR(unimplemented_handler)		/* 78 */
 	word UNKNOWN_HANDLER			/* 79 */
-	VECTOR(m88110_unimplemented_handler)	/* 7a */
+	VECTOR(unimplemented_handler)		/* 7a */
 	word UNKNOWN_HANDLER			/* 7b */
-	VECTOR(m88110_unimplemented_handler)	/* 7c */
+	VECTOR(unimplemented_handler)		/* 7c */
 	word UNKNOWN_HANDLER			/* 7d */
-	VECTOR(m88110_unimplemented_handler)	/* 7e */
+	VECTOR(unimplemented_handler)		/* 7e */
 	word UNKNOWN_HANDLER			/* 7f */
-	VECTOR(m88110_syscall_handler)		/* 80 */
-	VECTOR(m88110_syscall_handler)		/* 81 */
-	VECTOR(m88110_break)			/* 82 */
-	VECTOR(m88110_trace)			/* 83 */
-	VECTOR(m88110_entry)			/* 84 */
-GLOBAL(m88110_vector_list_end)
+	VECTOR(syscall_handler)			/* 80 */
+	VECTOR(syscall_handler)			/* 81 */
+	VECTOR(break)				/* 82 */
+	VECTOR(trace)				/* 83 */
+	VECTOR(entry)				/* 84 */
+GLOBAL(vector_list_end)
 	word END_OF_VECTOR_LIST
+
