@@ -1,5 +1,6 @@
 /* Expands front end tree to back end RTL for GNU C-Compiler
-   Copyright (C) 1987, 88, 89, 92-98, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
+   1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -88,45 +89,6 @@ static rtx last_block_end_note;
 /* Number of binding contours started so far in this function.  */
 
 int block_start_count;
-
-/* Nonzero if function being compiled needs to
-   return the address of where it has put a structure value.  */
-
-extern int current_function_returns_pcc_struct;
-
-/* Label that will go on parm cleanup code, if any.
-   Jumping to this label runs cleanup code for parameters, if
-   such code must be run.  Following this code is the logical return label.  */
-
-extern rtx cleanup_label;
-
-/* Label that will go on function epilogue.
-   Jumping to this label serves as a "return" instruction
-   on machines which require execution of the epilogue on all returns.  */
-
-extern rtx return_label;
-
-/* Offset to end of allocated area of stack frame.
-   If stack grows down, this is the address of the last stack slot allocated.
-   If stack grows up, this is the address for the next slot.  */
-extern int frame_offset;
-
-/* Label to jump back to for tail recursion, or 0 if we have
-   not yet needed one for this function.  */
-extern rtx tail_recursion_label;
-
-/* Place after which to insert the tail_recursion_label if we need one.  */
-extern rtx tail_recursion_reentry;
-
-/* Location at which to save the argument pointer if it will need to be
-   referenced.  There are two cases where this is done: if nonlocal gotos
-   exist, or if vars whose is an offset from the argument pointer will be
-   needed by inner routines.  */
-
-extern rtx arg_pointer_save_area;
-
-/* Chain of all RTL_EXPRs that have insns in them.  */
-extern tree rtl_expr_chain;
 
 /* Functions and data structures for expanding case statements.  */
 
@@ -1390,7 +1352,7 @@ expand_asm_operands (string, outputs, inputs, clobbers, vol, filename, line)
 	}
       else
 	{
-	  output_rtx[i] = assign_temp (type, 0, 0, 0);
+	  output_rtx[i] = assign_temp (type, 0, 0, 1);
 	  TREE_VALUE (tail) = make_tree (type, output_rtx[i]);
 	}
 
@@ -2475,8 +2437,10 @@ preserve_subexpressions_p ()
 {
   rtx insn;
 
+#ifndef	BROKEN_PRESERVE_SUBEXPRESSIONS_P
   if (flag_expensive_optimizations)
     return 1;
+#endif
 
   if (optimize == 0 || loop_stack == 0)
     return 0;
@@ -2550,15 +2514,15 @@ expand_value_return (val)
 #ifdef PROMOTE_FUNCTION_RETURN
       tree type = TREE_TYPE (DECL_RESULT (current_function_decl));
       int unsignedp = TREE_UNSIGNED (type);
+      enum machine_mode old_mode
+	= DECL_MODE (DECL_RESULT (current_function_decl));
       enum machine_mode mode
-	= promote_mode (type, DECL_MODE (DECL_RESULT (current_function_decl)),
-			&unsignedp, 1);
+	= promote_mode (type, old_mode, &unsignedp, 1);
 
-      if (GET_MODE (val) != VOIDmode && GET_MODE (val) != mode)
-	convert_move (return_reg, val, unsignedp);
-      else
+      if (mode != old_mode)
+	val = convert_modes (mode, old_mode, val, unsignedp);
 #endif
-	emit_move_insn (return_reg, val);
+      emit_move_insn (return_reg, val);
     }
   if (GET_CODE (return_reg) == REG
       && REGNO (return_reg) < FIRST_PSEUDO_REGISTER)
@@ -2703,6 +2667,7 @@ expand_return (retval)
       tree expr;
 
       do_jump (TREE_OPERAND (retval_rhs, 0), label, NULL_RTX);
+      start_cleanup_deferral ();
       expr = build (MODIFY_EXPR, TREE_TYPE (TREE_TYPE (current_function_decl)),
 		    DECL_RESULT (current_function_decl),
 		    TREE_OPERAND (retval_rhs, 1));
@@ -2715,6 +2680,7 @@ expand_return (retval)
 		    TREE_OPERAND (retval_rhs, 2));
       TREE_SIDE_EFFECTS (expr) = 1;
       expand_return (expr);
+      end_cleanup_deferral ();
       return;
     }
 
@@ -3349,8 +3315,11 @@ expand_nl_goto_receivers (thisblock)
 }
 
 /* Generate RTL code to terminate a binding contour.
-   VARS is the chain of VAR_DECL nodes
-   for the variables bound in this contour.
+
+   VARS is the chain of VAR_DECL nodes for the variables bound in this
+   contour.  There may actually be other nodes in this chain, but any
+   nodes other than VAR_DECLS are ignored.
+
    MARK_ENDS is nonzero if we should put a note at the beginning
    and end of this binding contour.
 
@@ -3387,7 +3356,8 @@ expand_end_bindings (vars, mark_ends, dont_jump_in)
 
   if (warn_unused)
     for (decl = vars; decl; decl = TREE_CHAIN (decl))
-      if (! TREE_USED (decl) && TREE_CODE (decl) == VAR_DECL
+      if (TREE_CODE (decl) == VAR_DECL 
+	  && ! TREE_USED (decl)
 	  && ! DECL_IN_SYSTEM_HEADER (decl)
 	  && DECL_NAME (decl) && ! DECL_ARTIFICIAL (decl)) 
 	warning_with_decl (decl, "unused variable `%s'");
@@ -3493,11 +3463,8 @@ expand_end_bindings (vars, mark_ends, dont_jump_in)
 
   if (obey_regdecls)
     for (decl = vars; decl; decl = TREE_CHAIN (decl))
-      {
-	rtx rtl = DECL_RTL (decl);
-	if (TREE_CODE (decl) == VAR_DECL && rtl != 0)
-	  use_variable (rtl);
-      }
+      if (TREE_CODE (decl) == VAR_DECL && DECL_RTL (decl))
+	use_variable (DECL_RTL (decl));
 
   /* Restore the temporary level of TARGET_EXPRs.  */
   target_temp_slot_level = thisblock->data.block.target_temp_slot_level;
