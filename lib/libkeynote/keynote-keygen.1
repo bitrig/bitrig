@@ -1,4 +1,4 @@
-.\" $OpenBSD: keynote-verify.1,v 1.1 1999/05/23 22:11:07 angelos Exp $
+.\" $OpenBSD: keynote-keygen.1,v 1.1 1999/05/23 22:32:07 angelos Exp $
 .\"
 .\" The author of this code is Angelos D. Keromytis (angelos@dsl.cis.upenn.edu)
 .\"
@@ -21,23 +21,20 @@
 .\" PURPOSE.
 .\"
 .Dd April 29, 1999
-.Dt keynote-verify 1
+.Dt keynote-keygen 1
 .Os
-.\" .TH keynote-verify 1 local
+.\" .TH keynote-keygen 1 local
 .Sh NAME
-.Nm keynote-verify
-.Nd command line tool for evaluating
-.Xr KeyNote 3
-assertions
+.Nm keynote-keygen
+.Nd command line tool for generating public/private keys
 .Sh SYNOPSIS
-.Nm keynote-verify
-.Op Fl h
-.Op Fl e Ar file
-.Fl l Ar file
-.Fl r Ar retlist
-.Op Fl k Ar file
-.Op Fl l Ar file
-.Op Ar file ...
+.Nm keynote-keygen
+.Ar AlgorithmName
+.Ar KeySize
+.Ar PublicKeyFile
+.Ar PrivateKeyFile
+.Op print-offset
+.Op print-length
 .Sh DESCRIPTION
 For details on
 .Nm KeyNote ,
@@ -46,75 +43,53 @@ see the web page
  http://www.cis.upenn.edu/~keynote
 .Ed
 .Pp
-For each operand that names a
-.A file ,
-.Nm keynote-verify
-reads the file and parses the assertions contained therein (one
-assertion per file).
-.Pp
-Files given with the
-.Fl l
-flag are assumed to contain trusted assertions (no signature
-verification is performed, and the
-.Fa Authorizer
-field can contain non-key principals.
-There should be at least one assertion with the
-.Fa POLICY
-keyword in the
-.Fa Authorizer
-field.
-.Pp
-The
-.Fl r
-flag is used to provide a comma-separated list of return values, in
-increasing order of compliance from left to right.
-.Pp
-Files given with the
-.Fl e
-flag are assumed to contain environment variables and their values,
-in the format:
-.Bd -literal -offset indent
- varname = \"value\"
-.Ed
-.Pp
-.Fa varname
-can begin with any letter (upper or lower case) or number,
-and can contain underscores.
-.Fa value
-is a quoted string, and can contain any character, and escape
-(backslash) processing is performed, as specified in the KeyNote
-draft. 
-.Pp
-The remaining options are:
+.Nm keynote-keygen
+creates a public/private key of size
+.Fa KeySize ,
+for the algorithm specified by
+.Fa AlgorithmName .
+Typical keysizes are 512, 1024, or 2048 (bits). The minimum key size
+for DSA keys is 512 (bits). Supported
+.Fa AlgorithmName
+identifiers are:
 .Bl -tag -width indent
-.It Fl h
-Print a usage message and exit.
-.It Fl k Ar file
-Add a key from
-.Fa file
-in the action authorizers.
+.It ``dsa-hex:''
+.It ``dsa-base64:''
+.It ``rsa-hex:''
+.It ``rsa-base64:''
 .El
 .Pp
-Exactly one
-.Fl r
-and least one of each
-.Fl e ,
-.Fl l ,
-and
-.Fl k
-flags should be given per invocation. If no flags are given,
-.Nm keynote-verify
-prints the usage message and exits with error code -1.
+Notice that the trailing colon is required.
+The resulting public key is stored in file
+.Fa PublicKeyFile .
+Similarly, the resulting private key is stored in file
+.Fa PrivateKeyFile .
+Either of the filenames can be specified to be ``-'', in which
+case the corresponding key(s) will be printed in standard output.
 .Pp
-The
-.Nm keynote-verify
-exits with code -1 if there was an error, and 0 on success.
+The optional parameters
+.Fa print-offset
+and
+.Fa print-length
+specify the offset from the begining of the line where the key
+will be printed, and the number of characters of the key that will
+be printed per line.
+.Fa print-length
+includes
+.Fa AlgorithmName
+for the first line and has to be longer (by at least 2) than
+.Fa AlgorithmName .
+.Fa print-length
+also accounts for the line-continuation character (backslash) at
+the end of each line, and the doublequotes at the begining and end
+of the key encoding.  Default values are 12 and 50 respectively.
+.Pp
 .Sh SEE ALSO
 .Xr keynote 3 ,
 .Xr keynote 4 ,
-.Xr keynote-keygen 1 ,
 .Xr keynote-sign 1 ,
-.Xr keynote-sigver 1
+.Xr keynote-sigver 1 ,
+.Xr keynote-verify 1
 .Bl -tag -width "AAAAAAA"
 .It ``The KeyNote Trust-Management System'' 
 M. Blaze, J. Feigenbaum, A. D. Keromytis,
