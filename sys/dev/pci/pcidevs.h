@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *		OpenBSD: pcidevs,v 1.323 2000/09/22 18:01:33 aaron Exp 
+ *		OpenBSD: pcidevs,v 1.324 2000/09/22 18:03:52 aaron Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -1098,6 +1098,7 @@
 #define	PCI_PRODUCT_INTEL_82801AB_ACA	0x2425		/* 82801AB AC-97 Audio */
 #define	PCI_PRODUCT_INTEL_82801AB_ACM	0x2426		/* 82801AB AC-97 Modem */
 #define	PCI_PRODUCT_INTEL_82801AB_HPB	0x2428		/* 82801AB Hub-to-PCI */
+#define	PCI_PRODUCT_INTEL_82562	0x2449		/* 82562 */
 #define	PCI_PRODUCT_INTEL_82371SB_ISA	0x7000		/* 82371SB (Triton II) PCI-ISA */
 #define	PCI_PRODUCT_INTEL_82371SB_IDE	0x7010		/* 82371SB (Triton II) IDE */
 #define	PCI_PRODUCT_INTEL_82371USB	0x7020		/* 82371SB (Triton II) USB */
