@@ -1,10 +1,4 @@
-/*
- * This software may now be redistributed outside the US.
- *
- * $Source: /scm/cvs/src/kerberosIV/krb/Attic/pkt_cipher.c,v $
- *
- * $Locker:  $
- */
+/* $KTH: k_gethostname.c,v 1.10 1997/03/23 03:53:12 joda Exp $ */
 
 /* 
   Copyright (C) 1989 by the Massachusetts Institute of Technology
@@ -29,22 +23,18 @@ or implied warranty.
 
 #include "krb_locl.h"
 
+#include <sys/utsname.h>
+
 /*
- * This routine takes a reply packet from the Kerberos ticket-granting
- * service and returns a pointer to the beginning of the ciphertext in it.
- *
- * See "prot.h" for packet format.
+ * Return the local host's name in "name", up to "namelen" characters.
+ * "name" will be null-terminated if "namelen" is big enough.
+ * The return code is 0 on success, -1 on failure.  (The calling
+ * interface is identical to gethostname(2).)
  */
 
-char *
-pkt_cipher(packet)
-	KTEXT packet;
+int
+k_gethostname(char *name, int namelen)
 {
-    unsigned char *ptr = pkt_a_realm(packet) + 6
-	+ strlen((char *)pkt_a_realm(packet));
-    /* Skip a few more fields */
-    ptr += 3 + 4;		/* add 4 for exp_date */
+    return gethostname(name, namelen);
 
-    /* And return the pointer */
-    return((char*)ptr);
 }

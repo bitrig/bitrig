@@ -1,14 +1,8 @@
+/* $KTH: stime.c,v 1.6 1997/05/02 14:29:20 assar Exp $ */
+
 /*
- * This software may now be redistributed outside the US.
- *
- * $Source: /scm/cvs/src/kerberosIV/krb/Attic/fgetst.c,v $
- *
- * $Locker:  $
- */
-
-/* 
-  Copyright (C) 1989 by the Massachusetts Institute of Technology
-
+  Copyright 1985, 1986, 1987, 1988 by the Massachusetts Institute of Technology.
+ 
    Export of this software from the United States of America is assumed
    to require a specific license from the United States Government.
    It is the responsibility of any person or organization contemplating
@@ -25,31 +19,28 @@ permission.  M.I.T. makes no representations about the suitability of
 this software for any purpose.  It is provided "as is" without express
 or implied warranty.
 
-  */
+ */
 
 #include "krb_locl.h"
 
 /*
- * fgetst takes a file descriptor, a character pointer, and a count.
- * It reads from the file it has either read "count" characters, or
- * until it reads a null byte.  When finished, what has been read exists
- * in "s". If "count" characters were actually read, the last is changed
- * to a null, so the returned string is always null-terminated.  fgetst
- * returns the number of characters read, including the null terminator. 
+ * Given a pointer to a long containing the number of seconds
+ * since the beginning of time (midnight 1 Jan 1970 GMT), return
+ * a string containing the local time in the form:
+ *
+ * "25-Jan-1988 10:17:56"
  */
 
-int
-fgetst(f, s, n)
-	FILE *f;
-	register char *s;
-	int n;
+const char *
+krb_stime(time_t *t)
 {
-    register count = n;
-    int     ch;		/* NOT char; otherwise you don't see EOF */
+    static char st[40];
+    struct tm *tm;
 
-    while ((ch = getc(f)) != EOF && ch && --count) {
-	*s++ = ch;
-    }
-    *s = '\0';
-    return (n - count);
+    tm = localtime(t);
+    snprintf(st, sizeof(st),
+	     "%2d-%s-%04d %02d:%02d:%02d",tm->tm_mday,
+	     month_sname(tm->tm_mon + 1),tm->tm_year + 1900,
+	     tm->tm_hour, tm->tm_min, tm->tm_sec);
+    return st;
 }

@@ -1,11 +1,3 @@
-/*
- * This software may now be redistributed outside the US.
- *
- * $Source: /scm/cvs/src/kerberosIV/krb/Attic/one.c,v $
- *
- * $Locker:  $
- */
-
 /* 
   Copyright (C) 1989 by the Massachusetts Institute of Technology
 
