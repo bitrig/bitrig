@@ -1,4 +1,4 @@
-/*	$OpenBSD: resolve.h,v 1.1 2000/06/13 03:34:09 rahnds Exp $ */
+/*	$OpenBSD: resolve.h,v 1.2 2001/03/30 01:35:21 drahn Exp $ */
 
 /*
  * Copyright (c) 1998 Per Fogelstrom, Opsycon AB
@@ -37,6 +37,12 @@
 
 #include <link.h>
 
+typedef struct load_list {
+	struct load_list *next;
+	char       *start;
+	size_t     size;
+	int        prot;
+} load_list_t;
 
 /*
  *  Structure describing a loaded object.
@@ -51,6 +57,8 @@ typedef struct elf_object {
 	struct elf_object *next;
 	struct elf_object *prev;
 /* End struct link_map compatible */
+
+	load_list_t *load_list;
 
 	u_int32_t  load_size;
 
@@ -125,7 +133,11 @@ extern void         _dl_unload_shlib(elf_object_t *object);
 extern int  _dl_md_reloc(elf_object_t *object, int rel, int relsz);
 extern void _dl_md_reloc_got(elf_object_t *object, int lazy);
 
+Elf32_Addr _dl_find_symbol(const char *name, elf_object_t *startlook,
+			const Elf32_Sym **ref, int myself, int warnnotfound);
+
 void * _dl_malloc(const int size);
+void  _dl_free(void *);
 
 void _dl_rtld(elf_object_t *object);
 void _dl_call_init(elf_object_t *object);
