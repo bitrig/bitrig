@@ -1,4 +1,3 @@
-/*	$NetBSD: exec_sun.c,v 1.5 1996/01/29 23:41:06 gwr Exp $ */
 
 /*-
  * Copyright (c) 1982, 1986, 1990, 1993
