@@ -1,5 +1,5 @@
 %{
-/*      $OpenBSD: scan.l,v 1.2 2003/09/26 07:02:52 deraadt Exp $	*/
+/*      $OpenBSD: scan.l,v 1.3 2003/09/26 07:04:25 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2003, Otto Moerbeek <otto@drijf.net>
@@ -18,7 +18,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] = "$OpenBSD: scan.l,v 1.2 2003/09/26 07:02:52 deraadt Exp $";
+static const char rcsid[] = "$OpenBSD: scan.l,v 1.3 2003/09/26 07:04:25 deraadt Exp $";
 #endif /* not lint */
 
 #include <err.h>
@@ -183,7 +183,7 @@ add_str(const char *str)
 
 	if (strlen(strbuf) + arglen + 1> strbuf_sz) {
 		size_t newsize;
-		char * p;
+		char *p;
 
 		newsize = strbuf_sz + arglen + 1;
 		p = realloc(strbuf, newsize);
