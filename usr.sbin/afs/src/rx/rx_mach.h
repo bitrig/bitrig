@@ -1,7 +1,7 @@
 #ifndef _RX_MACHDEP_
 #define _RX_MACHDEP_
 
-/* $Header: /scm/cvs/src/usr.sbin/afs/src/rx/rx_mach.h,v 1.2 2000/09/11 14:41:22 art Exp $ */
+/* $KTH: /afs/stacken.kth.se/src/SourceRepository/arla/rx/rx_mach.h,v 1.3 1998/03/29 01:25:32 assar Exp $ */
 /*
 ****************************************************************************
 *        Copyright IBM Corporation 1988, 1989 - All Rights Reserved        *
