@@ -1,4 +1,4 @@
-.\"	$OpenBSD: shutdown.8,v 1.25 2001/01/28 19:25:25 marc Exp $
+.\"	$OpenBSD: shutdown.8,v 1.26 2001/06/05 15:23:44 aaron Exp $
 .\"	$NetBSD: shutdown.8,v 1.6 1995/03/18 15:01:07 cgd Exp $
 .\"
 .\" Copyright (c) 1988, 1991, 1993
@@ -39,7 +39,7 @@
 .Os
 .Sh NAME
 .Nm shutdown
-.Nd "close down the system at a given time"
+.Nd close down the system at a given time
 .Sh SYNOPSIS
 .Nm shutdown
 .Op Fl
@@ -190,8 +190,8 @@ before the system is shutdown
 .Xr login 1 ,
 .Xr wall 1 ,
 .Xr halt 8 ,
-.Xr reboot 8 ,
-.Xr rc.shutdown 8
+.Xr rc.shutdown 8 ,
+.Xr reboot 8
 .Sh COMPATIBILITY
 The hours and minutes in the second time format may be separated by
 a colon
