@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.98 1998/10/31 12:10:34 matthieu Exp 
+ *	OpenBSD: pcidevs,v 1.99 1998/10/31 12:15:36 matthieu Exp 
  */
 
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
@@ -640,7 +640,6 @@
 #define	PCI_PRODUCT_ATI_MACH64_CT	0x4354		/* Mach64 CT */
 #define	PCI_PRODUCT_ATI_MACH64_CX	0x4358		/* Mach64 CX */
 #define	PCI_PRODUCT_ATI_MACH64_ET	0x4554		/* Mach64 ET */
-#define	PCI_PRODUCT_ATI_MACH64_VT	0x4654		/* Mach64 VT */
 #define	PCI_PRODUCT_ATI_RAGEPRO	0x4742		/* Rage Pro */
 #define	PCI_PRODUCT_ATI_MACH64_GD	0x4744		/* Mach64 GD */
 #define	PCI_PRODUCT_ATI_MACH64_GI	0x4749		/* Mach64 GI */
@@ -984,7 +983,7 @@
 /* NVidia products */
 #define	PCI_PRODUCT_NVIDIA_NV1	0x0008		/* NV1 */
 #define	PCI_PRODUCT_NVIDIA_DAC64	0x0009		/* DAC64 */
-#define	PCI_PRODUCT_NVIDIA_Riva	TNT		/* 0x0020 Riva TNT */
+#define	PCI_PRODUCT_NVIDIA_RIVA_TNT	0x0020		/* Riva TNT */
 
 /* Oak Technologies products */
 #define	PCI_PRODUCT_OAKTECH_OTI1007	0x0107		/* OTI107 */

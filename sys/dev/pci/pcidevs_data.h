@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.98 1998/10/31 12:10:34 matthieu Exp 
+ *	OpenBSD: pcidevs,v 1.99 1998/10/31 12:15:36 matthieu Exp 
  */
 
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
@@ -493,12 +493,6 @@ struct pci_knowndev pci_knowndevs[] = {
 	    0,
 	    "ATI Technologies",
 	    "Mach64 ET",
-	},
-	{
-	    PCI_VENDOR_ATI, PCI_PRODUCT_ATI_MACH64_VT,
-	    0,
-	    "ATI Technologies",
-	    "Mach64 VT",
 	},
 	{
 	    PCI_VENDOR_ATI, PCI_PRODUCT_ATI_RAGEPRO,
@@ -1875,10 +1869,10 @@ struct pci_knowndev pci_knowndevs[] = {
 	    "DAC64",
 	},
 	{
-	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_Riva,
+	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_RIVA_TNT,
 	    0,
 	    "Nvidia",
-	    "0x0020 Riva TNT",
+	    "Riva TNT",
 	},
 	{
 	    PCI_VENDOR_OAKTECH, PCI_PRODUCT_OAKTECH_OTI1007,
