@@ -13,11 +13,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -38,7 +34,7 @@
 #if 1
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: vis.c,v 1.3 2000/12/10 23:10:48 assar Exp $");
+RCSID("$KTH: vis.c,v 1.5 2001/09/03 05:37:23 assar Exp $");
 #endif
 #include <roken.h>
 #ifndef _DIAGASSERT
@@ -107,71 +103,73 @@ do {									      \
  * extra:     Pointer to the list of extra characters to be
  *	      backslash-protected.
  */
-#define SVIS(dst, c, flag, nextc, extra)				      \
-do {									      \
-	int isextra, isc;						      \
-	isextra = strchr(extra, c) != NULL;				      \
-	if (!isextra && isascii(c) && (isgraph(c) || iswhite(c) ||	      \
-	    ((flag & VIS_SAFE) && issafe(c)))) {			      \
-		*dst++ = c;						      \
-		break;							      \
-	}								      \
-	isc = 0;							      \
-	if (flag & VIS_CSTYLE) {					      \
-		switch (c) {						      \
-		case '\n':						      \
-			isc = 1; *dst++ = '\\'; *dst++ = 'n';		      \
-			break;						      \
-		case '\r':						      \
-			isc = 1; *dst++ = '\\'; *dst++ = 'r';		      \
-			break;						      \
-		case '\b':						      \
-			isc = 1; *dst++ = '\\'; *dst++ = 'b';		      \
-			break;						      \
-		case BELL:						      \
-			isc = 1; *dst++ = '\\'; *dst++ = 'a';		      \
-			break;						      \
-		case '\v':						      \
-			isc = 1; *dst++ = '\\'; *dst++ = 'v';		      \
-			break;						      \
-		case '\t':						      \
-			isc = 1; *dst++ = '\\'; *dst++ = 't';		      \
-			break;						      \
-		case '\f':						      \
-			isc = 1; *dst++ = '\\'; *dst++ = 'f';		      \
-			break;						      \
-		case ' ':						      \
-			isc = 1; *dst++ = '\\'; *dst++ = 's';		      \
-			break;						      \
-		case '\0':						      \
-			isc = 1; *dst++ = '\\'; *dst++ = '0';		      \
-			if (isoctal(nextc)) {				      \
-				*dst++ = '0';				      \
-				*dst++ = '0';				      \
-			}						      \
-		}							      \
-	}								      \
-	if (isc) break;							      \
-	if (isextra || ((c & 0177) == ' ') || (flag & VIS_OCTAL)) {	      \
-		*dst++ = '\\';						      \
-		*dst++ = (u_char)(((unsigned)(u_char)c >> 6) & 03) + '0';     \
-		*dst++ = (u_char)(((unsigned)(u_char)c >> 3) & 07) + '0';     \
-		*dst++ =			     (c	      & 07) + '0';    \
-	} else {							      \
-		if ((flag & VIS_NOSLASH) == 0) *dst++ = '\\';		      \
-		if (c & 0200) {						      \
-			c &= 0177; *dst++ = 'M';			      \
-		}							      \
-		if (iscntrl(c)) {					      \
-			*dst++ = '^';					      \
-			if (c == 0177)					      \
-				*dst++ = '?';				      \
-			else						      \
-				*dst++ = c + '@';			      \
-		} else {						      \
-			*dst++ = '-'; *dst++ = c;			      \
-		}							      \
-	}								      \
+#define SVIS(dst, c, flag, nextc, extra)				   \
+do {									   \
+	int isextra, isc;						   \
+	isextra = strchr(extra, c) != NULL;				   \
+	if (!isextra &&							   \
+	    isascii((unsigned char)c) &&				   \
+	    (isgraph((unsigned char)c) || iswhite(c) ||			   \
+	    ((flag & VIS_SAFE) && issafe(c)))) {			   \
+		*dst++ = c;						   \
+		break;							   \
+	}								   \
+	isc = 0;							   \
+	if (flag & VIS_CSTYLE) {					   \
+		switch (c) {						   \
+		case '\n':						   \
+			isc = 1; *dst++ = '\\'; *dst++ = 'n';		   \
+			break;						   \
+		case '\r':						   \
+			isc = 1; *dst++ = '\\'; *dst++ = 'r';		   \
+			break;						   \
+		case '\b':						   \
+			isc = 1; *dst++ = '\\'; *dst++ = 'b';		   \
+			break;						   \
+		case BELL:						   \
+			isc = 1; *dst++ = '\\'; *dst++ = 'a';		   \
+			break;						   \
+		case '\v':						   \
+			isc = 1; *dst++ = '\\'; *dst++ = 'v';		   \
+			break;						   \
+		case '\t':						   \
+			isc = 1; *dst++ = '\\'; *dst++ = 't';		   \
+			break;						   \
+		case '\f':						   \
+			isc = 1; *dst++ = '\\'; *dst++ = 'f';		   \
+			break;						   \
+		case ' ':						   \
+			isc = 1; *dst++ = '\\'; *dst++ = 's';		   \
+			break;						   \
+		case '\0':						   \
+			isc = 1; *dst++ = '\\'; *dst++ = '0';		   \
+			if (isoctal(nextc)) {				   \
+				*dst++ = '0';				   \
+				*dst++ = '0';				   \
+			}						   \
+		}							   \
+	}								   \
+	if (isc) break;							   \
+	if (isextra || ((c & 0177) == ' ') || (flag & VIS_OCTAL)) {	   \
+		*dst++ = '\\';						   \
+		*dst++ = (u_char)(((unsigned)(u_char)c >> 6) & 03) + '0';  \
+		*dst++ = (u_char)(((unsigned)(u_char)c >> 3) & 07) + '0';  \
+		*dst++ =			     (c	      & 07) + '0'; \
+	} else {							   \
+		if ((flag & VIS_NOSLASH) == 0) *dst++ = '\\';		   \
+		if (c & 0200) {						   \
+			c &= 0177; *dst++ = 'M';			   \
+		}							   \
+		if (iscntrl((unsigned char)c)) {			   \
+			*dst++ = '^';					   \
+			if (c == 0177)					   \
+				*dst++ = '?';				   \
+			else						   \
+				*dst++ = c + '@';			   \
+		} else {						   \
+			*dst++ = '-'; *dst++ = c;			   \
+		}							   \
+	}								   \
 } while (/*CONSTCOND*/0)
 
 
