@@ -165,13 +165,15 @@ print_arelt_descr (file, abfd, verbose)
   fprintf (file, "%s\n", bfd_get_filename (abfd));
 }
 
-/* Return the name of a temporary file in the same directory as FILENAME.  */
+/* Return the name of a created temporary file in the same directory as 
+ FILENAME.  */
 
 char *
 make_tempname (filename)
      char *filename;
 {
-  static char template[] = "stXXXXXX";
+  static char template[] = "stXXXXXXXXXX";
+  int fd;
   char *tmpname;
   char *slash = strrchr (filename, '/');
 
@@ -182,14 +184,48 @@ make_tempname (filename)
       strcpy (tmpname, filename);
       strcat (tmpname, "/");
       strcat (tmpname, template);
-      mktemp (tmpname);
+      fd = mkstemp (tmpname);
       *slash = '/';
     }
   else
     {
       tmpname = xmalloc (sizeof (template));
       strcpy (tmpname, template);
-      mktemp (tmpname);
+      fd = mkstemp (tmpname);
+    }
+  if (fd == -1) 
+    return NULL;
+  else
+    close(fd);
+  return tmpname;
+}
+
+/* Return the name of a created temporary dir in the same directory as 
+ FILENAME.  */
+
+char *
+make_tempdir (filename)
+     char *filename;
+{
+  static char template[] = "stXXXXXXXXXX";
+  char *tmpname;
+  char *slash = strrchr (filename, '/');
+
+  if (slash != (char *) NULL)
+    {
+      *slash = 0;
+      tmpname = xmalloc (strlen (filename) + sizeof (template) + 1);
+      strcpy (tmpname, filename);
+      strcat (tmpname, "/");
+      strcat (tmpname, template);
+      mkdtemp (tmpname);
+      *slash = '/';
+    }
+  else
+    {
+      tmpname = xmalloc (sizeof (template));
+      strcpy (tmpname, template);
+      mkdtemp (tmpname);
     }
   return tmpname;
 }
