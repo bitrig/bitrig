@@ -219,11 +219,17 @@ EOF
     mac68k:OpenBSD:*:*)
 	echo m68k-unknown-openbsd${UNAME_RELEASE}
 	exit 0 ;;
+    macppc:OpenBSD:*:*)
+	echo powerpc-unknown-openbsd${UNAME_RELEASE}
+	exit 0 ;;
     mvme68k:OpenBSD:*:*)
 	echo m68k-unknown-openbsd${UNAME_RELEASE}
 	exit 0 ;;
     mvme88k:OpenBSD:*:*)
 	echo m88k-unknown-openbsd${UNAME_RELEASE}
+	exit 0 ;;
+    mvmeppc:OpenBSD:*:*)
+	echo powerpc-unknown-openbsd${UNAME_RELEASE}
 	exit 0 ;;
     powerpc:machten:*:*)
 	echo powerpc-apple-machten${UNAME_RELEASE}
@@ -580,7 +586,7 @@ EOF
 	  sparclinux) echo "${UNAME_MACHINE}-unknown-linux-gnuaout" ; exit 0 ;;
 	  armlinux)   echo "${UNAME_MACHINE}-unknown-linux-gnuaout" ; exit 0 ;;
 	  m68klinux)  echo "${UNAME_MACHINE}-unknown-linux-gnuaout" ; exit 0 ;;
-	  elf32ppc)
+	  elf32ppc | elf32ppclinux)
 		# Determine Lib Version
 		cat >dummy.c <<EOF
 #include <features.h>
@@ -826,6 +832,9 @@ EOF
 	echo mips-dde-sysv${UNAME_RELEASE}
 	exit 0 ;;
     RM*:SINIX-*:*:*)
+	echo mips-sni-sysv4
+	exit 0 ;;
+    RM*:ReliantUNIX-*:*:*)
 	echo mips-sni-sysv4
 	exit 0 ;;
     *:SINIX-*:*:*)
