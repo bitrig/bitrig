@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.767 2004/09/25 18:40:27 grange Exp 
+ *	OpenBSD: pcidevs,v 1.768 2004/09/25 18:43:33 grange Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -1484,6 +1484,7 @@
 #define	PCI_PRODUCT_LAVA_QUATTRO_CD2	0x0121		/* Dual Serial */
 #define	PCI_PRODUCT_LAVA_OCTOPUS550_0	0x0180		/* Quad Serial */
 #define	PCI_PRODUCT_LAVA_OCTOPUS550_1	0x0181		/* Quad Serial */
+#define	PCI_PRODUCT_LAVA_LAVAPORT_2	0x0200		/* Serial */
 #define	PCI_PRODUCT_LAVA_LAVAPORT_0	0x0201		/* Serial */
 #define	PCI_PRODUCT_LAVA_LAVAPORT_1	0x0202		/* Serial */
 #define	PCI_PRODUCT_LAVA_650	0x0600		/* Serial */
