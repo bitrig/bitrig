@@ -33,11 +33,13 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: sl.c,v 1.28 2001/01/26 14:58:26 joda Exp $");
+RCSID("$KTH: sl.c,v 1.29 2001/02/20 01:44:55 assar Exp $");
 #endif
 
 #include "sl_locl.h"
 #include <setjmp.h>
+
+extern char *__progname;
 
 static size_t
 print_sl (FILE *stream, int mdoc, int longp, SL_cmd *c)

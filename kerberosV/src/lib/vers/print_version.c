@@ -33,11 +33,13 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: print_version.c,v 1.1 2000/07/01 19:47:35 assar Exp $");
+RCSID("$KTH: print_version.c,v 1.3 2001/04/21 16:05:48 joda Exp $");
 #endif
 #include "roken.h"
 
 #include "print_version.h"
+
+char *__progname;
 
 void
 print_version(const char *progname)
@@ -72,7 +74,7 @@ print_version(const char *progname)
 	}
     }
     fprintf(stderr, "%s (%s)\n", progname, msg);
-    fprintf(stderr, "Copyright (c) 1999 - 2000 Kungliga Tekniska Högskolan\n");
+    fprintf(stderr, "Copyright (c) 1999-2001 Kungliga Tekniska Högskolan\n");
     if(num_args != 0)
 	free(msg);
 }

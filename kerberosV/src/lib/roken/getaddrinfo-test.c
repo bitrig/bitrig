@@ -33,7 +33,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: getaddrinfo-test.c,v 1.3 2000/07/08 14:22:09 assar Exp $");
+RCSID("$KTH: getaddrinfo-test.c,v 1.4 2001/02/20 01:44:54 assar Exp $");
 #endif
 
 #include "roken.h"
@@ -45,6 +45,8 @@ static int socktype;
 
 static int version_flag;
 static int help_flag;
+
+extern char *__progname;
 
 static struct getargs args[] = {
     {"flags",	0,	arg_integer,	&flags,		"flags",	NULL},
@@ -111,8 +113,6 @@ main(int argc, char **argv)
 {
     int optind = 0;
     int i;
-
-    set_progname (argv[0]);
 
     if (getarg (args, sizeof(args) / sizeof(args[0]), argc, argv,
 		&optind))

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000 Kungliga Tekniska Högskolan
+ * Copyright (c) 2000 - 2001 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -33,7 +33,7 @@
 
 #include "kadmin_locl.h"
 
-RCSID("$KTH: add-random-users.c,v 1.2 2000/12/31 07:43:39 assar Exp $");
+RCSID("$KTH: add-random-users.c,v 1.4 2001/07/31 01:21:50 assar Exp $");
 
 #define WORDS_FILENAME "/usr/share/dict/words"
 
@@ -146,11 +146,14 @@ main(int argc, char **argv)
 {
     int optind = 0;
 
-    set_progname(argv[0]);
     if(getarg(args, sizeof(args) / sizeof(args[0]), argc, argv, &optind))
 	usage(1);
     if (help_flag)
 	usage (0);
+    if (version_flag) {
+	print_version(NULL);
+	return 0;
+    }
     srand (0);
     add_users (NUSERS);
     return 0;

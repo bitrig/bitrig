@@ -33,7 +33,7 @@
 
 #include "hprop.h"
 
-RCSID("$KTH: hpropd.c,v 1.31 2001/01/25 12:37:39 assar Exp $");
+RCSID("$KTH: hpropd.c,v 1.33 2001/06/18 04:07:48 assar Exp $");
 
 #ifdef KRB4
 static des_cblock mkey4;
@@ -213,8 +213,6 @@ main(int argc, char **argv)
     int fd_out = -1;
 #endif
 
-    set_progname(argv[0]);
-
     ret = krb5_init_context(&context);
     if(ret)
 	exit(1);
@@ -307,9 +305,9 @@ main(int argc, char **argv)
 	free(server);
 	krb5_free_ticket (context, ticket);
 
-	ret = krb5_auth_getauthenticator(context, ac, &authent);
+	ret = krb5_auth_con_getauthenticator(context, ac, &authent);
 	if(ret)
-	    krb5_err(context, 1, ret, "krb5_auth_getauthenticator");
+	    krb5_err(context, 1, ret, "krb5_auth_con_getauthenticator");
 	
 	ret = krb5_make_principal(context, &c1, NULL, "kadmin", "hprop", NULL);
 	if(ret)
