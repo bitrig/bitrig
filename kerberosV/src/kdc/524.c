@@ -33,7 +33,7 @@
 
 #include "kdc_locl.h"
 
-RCSID("$KTH: 524.c,v 1.19 2001/01/30 01:44:07 assar Exp $");
+RCSID("$KTH: 524.c,v 1.23 2001/08/17 07:48:49 joda Exp $");
 
 #ifdef KRB4
 
@@ -136,7 +136,7 @@ set_address (EncTicketPart *et,
     if (v4_addr == NULL)
 	return ENOMEM;
 
-    ret = krb5_sockaddr2address(addr, v4_addr);
+    ret = krb5_sockaddr2address(context, addr, v4_addr);
     if(ret) {
 	free (v4_addr);
 	kdc_log(0, "Failed to convert address (%s)", from);
@@ -251,6 +251,14 @@ do_524(const Ticket *t, krb5_data *reply,
 	free_EncTicketPart(&et);
 	goto out;
     }
+    if (!enable_v4_cross_realm && strcmp (et.crealm, t->realm) != 0) {
+	kdc_log(0, "524 cross-realm %s -> %s disabled", et.crealm,
+		t->realm);
+	free_EncTicketPart(&et);
+	ret = KRB5KDC_ERR_POLICY;
+	goto out;
+    }
+
     ret = encode_v4_ticket(buf + sizeof(buf) - 1, sizeof(buf),
 			   &et, &t->sname, &len);
     free_EncTicketPart(&et);
@@ -258,9 +266,9 @@ do_524(const Ticket *t, krb5_data *reply,
 	kdc_log(0, "Failed to encode v4 ticket (%s)", spn);
 	goto out;
     }
-    ret = get_des_key(server, FALSE, &skey);
+    ret = get_des_key(server, TRUE, FALSE, &skey);
     if(ret){
-	kdc_log(0, "No DES key for server (%s)", spn);
+	kdc_log(0, "no suitable DES key for server (%s)", spn);
 	goto out;
     }
     ret = encrypt_v4_ticket(buf + sizeof(buf) - len, len, 
@@ -283,6 +291,7 @@ out:
 	free_EncryptedData(&ticket);
     }
     ret = krb5_storage_to_data(sp, reply);
+    reply->length = (*sp->seek)(sp, 0, SEEK_CUR);
     krb5_storage_free(sp);
     
     if(spn)
