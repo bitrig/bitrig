@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997 - 2000 Kungliga Tekniska Högskolan
+ * Copyright (c) 1997 - 2001 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -32,8 +32,9 @@
  */
 
 #include "iprop.h"
+#include <util.h>
 
-RCSID("$KTH: ipropd_master.c,v 1.21 2000/11/15 23:12:45 assar Exp $");
+RCSID("$KTH: ipropd_master.c,v 1.23 2001/08/30 15:15:50 nectar Exp $");
 
 static krb5_log_facility *log_facility;
 
@@ -380,6 +381,7 @@ main(int argc, char **argv)
 	exit(0);
     }
 
+    pidfile (NULL);
     krb5_openlog (context, "ipropd-master", &log_facility);
     krb5_set_warn_dest(context, log_facility);
 
@@ -472,8 +474,9 @@ main(int argc, char **argv)
 		send_diffs (context, p, log_fd, database, current_version);
 	}
 
-	for(p = slaves; p != NULL && ret--; p = p->next)
+	for(p = slaves; p != NULL; p = p->next)
 	    if (FD_ISSET(p->fd, &readset)) {
+		--ret;
 		if(process_msg (context, p, log_fd, database, current_version))
 		    remove_slave (context, p, &slaves);
 	    }

@@ -33,11 +33,9 @@
 
 #include "kdc_locl.h"
 
-RCSID("$KTH: kaserver.c,v 1.15 2001/01/28 21:51:05 assar Exp $");
+RCSID("$KTH: kaserver.c,v 1.18 2001/08/17 07:49:01 joda Exp $");
 
-#ifdef KASERVER
 
-#include "kerberos4.h"
 #include <rx.h>
 
 #define KA_AUTHENTICATION_SERVICE 731
@@ -261,11 +259,12 @@ create_reply_ticket (struct rx_header *hdr,
     struct rx_header reply_hdr;
     des_cblock zero;
     size_t pad;
-    unsigned fyrtiosjuelva;
+    unsigned fyrtiosjuelva; /* XXX better variable name 
+			       (this means 4711 in swedish. not kidding */
 
     /* create the ticket */
 
-    des_new_random_key(&session);
+    des_new_random_key((unsigned char *)&session);
 
     krb_create_ticket (&ticket, 0, name, instance, realm,
 		       addr->sin_addr.s_addr,
@@ -312,8 +311,8 @@ create_reply_ticket (struct rx_header *hdr,
 
     /* encrypt it */
     des_set_key (key, schedule);
-    des_pcbc_encrypt ((des_cblock *)enc_data.data,
-		      (des_cblock *)enc_data.data,
+    des_pcbc_encrypt (enc_data.data,
+		      enc_data.data,
 		      enc_data.length,
 		      schedule,
 		      key,
@@ -406,10 +405,10 @@ do_authenticate (struct rx_header *hdr,
     snprintf (client_name, sizeof(client_name), "%s.%s@%s",
 	      name, instance, v4_realm);
 
-    client_entry = db_fetch4 (name, instance, v4_realm);
-    if (client_entry == NULL) {
-	kdc_log(0, "Client not found in database: %s",
-		client_name);
+    ret = db_fetch4 (name, instance, v4_realm, &client_entry);
+    if (ret) {
+	kdc_log(0, "Client not found in database: %s: %s",
+		client_name, krb5_get_err_text(context, ret));
 	make_error_reply (hdr, KANOENT, reply);
 	goto out;
     }
@@ -417,9 +416,10 @@ do_authenticate (struct rx_header *hdr,
     snprintf (server_name, sizeof(server_name), "%s.%s@%s",
 	      "krbtgt", v4_realm, v4_realm);
 
-    server_entry = db_fetch4 ("krbtgt", v4_realm, v4_realm);
-    if (server_entry == NULL) {
-	kdc_log(0, "Server not found in database: %s", server_name);
+    ret = db_fetch4 ("krbtgt", v4_realm, v4_realm, &server_entry);
+    if (ret) {
+	kdc_log(0, "Server not found in database: %s: %s",
+		server_name, krb5_get_err_text(context, ret));
 	make_error_reply (hdr, KANOENT, reply);
 	goto out;
     }
@@ -433,17 +433,17 @@ do_authenticate (struct rx_header *hdr,
     }
 
     /* find a DES key */
-    ret = get_des_key(client_entry, TRUE, &ckey);
+    ret = get_des_key(client_entry, FALSE, TRUE, &ckey);
     if(ret){
-	kdc_log(0, "%s", krb5_get_err_text(context, ret));
+	kdc_log(0, "no suitable DES key for client");
 	make_error_reply (hdr, KANOKEYS, reply);
 	goto out;
     }
 
     /* find a DES key */
-    ret = get_des_key(server_entry, TRUE, &skey);
+    ret = get_des_key(server_entry, TRUE, TRUE, &skey);
     if(ret){
-	kdc_log(0, "%s", krb5_get_err_text(context, ret));
+	kdc_log(0, "no suitable DES key for server");
 	make_error_reply (hdr, KANOKEYS, reply);
 	goto out;
     }
@@ -451,8 +451,8 @@ do_authenticate (struct rx_header *hdr,
     /* try to decode the `request' */
     memcpy (&key, ckey->key.keyvalue.data, sizeof(key));
     des_set_key (&key, schedule);
-    des_pcbc_encrypt ((des_cblock *)request.data,
-		      (des_cblock *)request.data,
+    des_pcbc_encrypt (request.data,
+		      request.data,
 		      request.length,
 		      schedule,
 		      &key,
@@ -599,9 +599,10 @@ do_getticket (struct rx_header *hdr,
     snprintf (server_name, sizeof(server_name),
 	      "%s.%s@%s", name, instance, v4_realm);
 
-    server_entry = db_fetch4 (name, instance, v4_realm);
-    if (server_entry == NULL) {
-	kdc_log(0, "Server not found in database: %s", server_name);
+    ret = db_fetch4 (name, instance, v4_realm, &server_entry);
+    if (ret) {
+	kdc_log(0, "Server not found in database: %s: %s",
+		server_name, krb5_get_err_text(context, ret));
 	make_error_reply (hdr, KANOENT, reply);
 	goto out;
     }
@@ -614,26 +615,26 @@ do_getticket (struct rx_header *hdr,
 	goto out;
     }
 
-    krbtgt_entry = db_fetch4 ("krbtgt", v4_realm, v4_realm);
-    if (krbtgt_entry == NULL) {
-	kdc_log(0, "Server not found in database: %s.%s@%s",
-		"krbtgt", v4_realm, v4_realm);
+    ret = db_fetch4 ("krbtgt", v4_realm, v4_realm, &krbtgt_entry);
+    if (ret) {
+	kdc_log(0, "Server not found in database: %s.%s@%s: %s",
+		"krbtgt", v4_realm, v4_realm, krb5_get_err_text(context, ret));
 	make_error_reply (hdr, KANOENT, reply);
 	goto out;
     }
 
     /* find a DES key */
-    ret = get_des_key(krbtgt_entry, TRUE, &kkey);
+    ret = get_des_key(krbtgt_entry, TRUE, TRUE, &kkey);
     if(ret){
-	kdc_log(0, "%s", krb5_get_err_text(context, ret));
+	kdc_log(0, "no suitable DES key for krbtgt");
 	make_error_reply (hdr, KANOKEYS, reply);
 	goto out;
     }
 
     /* find a DES key */
-    ret = get_des_key(server_entry, TRUE, &skey);
+    ret = get_des_key(server_entry, TRUE, TRUE, &skey);
     if(ret){
-	kdc_log(0, "%s", krb5_get_err_text(context, ret));
+	kdc_log(0, "no suitable DES key for server");
 	make_error_reply (hdr, KANOKEYS, reply);
 	goto out;
     }
@@ -818,5 +819,3 @@ out:
     krb5_storage_free (sp);
     return ret;
 }
-
-#endif /* KASERVER */
