@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.748 2004/07/18 03:52:43 deraadt Exp 
+ *	OpenBSD: pcidevs,v 1.749 2004/07/18 03:55:22 deraadt Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -4944,7 +4944,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_NFORCE2_APU,
-	    "nForce2 Audio Processing unit",
+	    "nForce2 Audio",
 	},
 	{
 	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_NFORCE2_PPB,
@@ -5049,10 +5049,6 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_GEFORCE4MX460,
 	    "GeForce4 MX 460",
-	},
-	{
-	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_GEFORCE4MX440,
-	    "GeForce4 MX 440",
 	},
 	{
 	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_GEFORCE4MX420,
@@ -6376,7 +6372,7 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_SYMBOL, PCI_PRODUCT_SYMBOL_LA41X3,
-	    "Spectrum24 LA41X3 Series WLAN",
+	    "Spectrum24 LA41X3",
 	},
 	{
 	    PCI_VENDOR_SYMPHONY, PCI_PRODUCT_SYMPHONY_82C101,
