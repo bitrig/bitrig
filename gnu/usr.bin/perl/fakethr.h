@@ -1,12 +1,3 @@
-/*    fakethr.h
- *
- *    Copyright (C) 1999, by Larry Wall and others
- *
- *    You may distribute under the terms of either the GNU General Public
- *    License or the Artistic License, as specified in the README file.
- *
- */
-
 typedef int perl_mutex;
 typedef int perl_key;
 
@@ -63,13 +54,3 @@ struct thread_intern {
 #define THREAD_POST_CREATE(t)	NOOP
 
 #define YIELD	NOOP
-
-/*
- * Local variables:
- * c-indentation-style: bsd
- * c-basic-offset: 4
- * indent-tabs-mode: nil
- * End:
- *
- * ex: set ts=8 sts=4 sw=4 et:
- */
