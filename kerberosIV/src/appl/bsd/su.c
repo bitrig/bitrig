@@ -33,7 +33,7 @@
 
 #include "bsd_locl.h"
 
-RCSID ("$KTH: su.c,v 1.70 1999/11/13 06:14:11 assar Exp $");
+RCSID ("$KTH: su.c,v 1.70.2.1 2000/06/23 02:42:28 assar Exp $");
 
 #ifdef SYSV_SHADOW
 #include "sysv_shadow.h"
@@ -225,11 +225,21 @@ main (int argc, char **argv)
 
     if (setgid (pwd->pw_gid) < 0)
 	err (1, "setgid");
-    if (initgroups (user, pwd->pw_gid))
-	errx (1, "initgroups failed.");
+    if (initgroups (user, pwd->pw_gid)) {
+        if (errno == E2BIG)    /* Member of to many groups! */
+	    warn("initgroups failed.");
+	else
+	    errx(1, "initgroups failed.");
+    }
 
     if (setuid (pwd->pw_uid) < 0)
 	err (1, "setuid");
+
+    if (pwd->pw_uid != 0 && setuid(0) != -1) {
+      syslog(LOG_ALERT | LOG_AUTH,
+	     "Failed to drop privileges for user %s", pwd->pw_name);
+      errx(1, "Sorry");
+    }
 
     if (!asme) {
 	if (asthem) {
@@ -240,18 +250,24 @@ main (int argc, char **argv)
 	    if (environ == NULL)
 		err (1, "malloc");
 	    environ[0] = NULL;
-	    setenv ("PATH", _PATH_DEFPATH, 1);
+	    if(setenv ("PATH", _PATH_DEFPATH, 1) != 0)
+		errx(1, "cannot set PATH");
 	    if (t)
-		setenv ("TERM", t, 1);
+		if(setenv ("TERM", t, 1) != 0)
+		    errx(1, "cannot set TERM");
 	    if (k)
-		setenv ("KRBTKFILE", k, 1);
+		if(setenv ("KRBTKFILE", k, 1) != 0)
+		    errx(1, "cannot set KRBTKFILE");
 	    if (chdir (pwd->pw_dir) < 0)
 		errx (1, "no directory");
 	}
 	if (asthem || pwd->pw_uid)
-	    setenv ("USER", pwd->pw_name, 1);
-	setenv ("HOME", pwd->pw_dir, 1);
-	setenv ("SHELL", shell, 1);
+	    if(setenv ("USER", pwd->pw_name, 1) != 0)
+		errx(1, "cannot set USER");
+	if(setenv ("HOME", pwd->pw_dir, 1) != 0)
+	    errx(1, "cannot set HOME");
+	if(setenv ("SHELL", shell, 1) != 0)
+	    errx(1, "cannot set SHELL");
     }
     if (iscsh == YES) {
 	if (fastlogin)
@@ -343,7 +359,8 @@ kerberos (char *username, char *user, int uid)
 	      "%s_%s_to_%s_%u", TKT_ROOT, username, user,
 	     (unsigned) getpid ());
 
-    setenv ("KRBTKFILE", krbtkfile, 1);
+    if(setenv ("KRBTKFILE", krbtkfile, 1) != 0)
+	errx(1, "cannot set KRBTKFILE");
     krb_set_tkt_string (krbtkfile);
     /*
      * Set real as well as effective ID to 0 for the moment,
