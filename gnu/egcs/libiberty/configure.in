@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script
 
-AC_PREREQ(2.12.1)
+AC_PREREQ(2.13)
 AC_INIT(pexecute.c)
 
 dnl We use these options to decide which functions to include.
@@ -55,6 +55,7 @@ AC_PROG_CC_GNU
 
 if test $ac_cv_prog_gcc = yes; then
   GCC=yes
+  ac_libiberty_warn_cflags='-W -Wall -Wtraditional'
 dnl Check whether -g works, even if CFLAGS is set, in case the package
 dnl plays around with CFLAGS (such as to build both debugging and
 dnl normal versions of a library), tasteless as that idea is.
@@ -71,9 +72,11 @@ dnl normal versions of a library), tasteless as that idea is.
   fi
 else
   GCC=
+  ac_libiberty_warn_cflags=
   test "${CFLAGS+set}" = set || CFLAGS="-g"
 fi
 ])
+AC_SUBST(ac_libiberty_warn_cflags)
 
 LIB_AC_PROG_CC
 
@@ -106,7 +109,7 @@ AC_SUBST_FILE(host_makefile_frag)
 # It's OK to check for header files.  Although the compiler may not be
 # able to link anything, it had better be able to at least compile
 # something.
-AC_CHECK_HEADERS(sys/file.h sys/param.h stdlib.h string.h unistd.h strings.h sys/time.h sys/resource.h)
+AC_CHECK_HEADERS(sys/file.h sys/param.h stdlib.h string.h unistd.h strings.h sys/time.h sys/resource.h sys/stat.h)
 AC_HEADER_SYS_WAIT
 
 # This is the list of functions which libiberty will provide if they
@@ -130,9 +133,11 @@ funcs="$funcs memcpy"
 funcs="$funcs memmove"
 funcs="$funcs memset"
 funcs="$funcs mkstemps"
+funcs="$funcs putenv"
 funcs="$funcs random"
 funcs="$funcs rename"
 funcs="$funcs rindex"
+funcs="$funcs setenv"
 funcs="$funcs sigsetmask"
 funcs="$funcs strcasecmp"
 funcs="$funcs strchr"
@@ -154,21 +159,21 @@ funcs="$funcs waitpid"
 
 vars="sys_errlist sys_nerr sys_siglist"
 
-checkfuncs="getrusage on_exit psignal strerror strsignal sysconf times sbrk"
+checkfuncs="getrusage on_exit psignal strerror strsignal sysconf times sbrk gettimeofday"
 
 # These are neither executed nor required, but they help keep
 # autoheader happy without adding a bunch of text to acconfig.h.
 if test "x" = "y"; then
   AC_CHECK_FUNCS(asprintf atexit basename bcmp bcopy bzero calloc clock getcwd)
   AC_CHECK_FUNCS(getpagesize index insque mkstemps memchr memcmp memcpy memmove)
-  AC_CHECK_FUNCS(memset random rename rindex sigsetmask strcasecmp)
-  AC_CHECK_FUNCS(strchr strdup strncasecmp strrchr strstr strtod strtol)
+  AC_CHECK_FUNCS(memset putenv random rename rindex sigsetmask strcasecmp)
+  AC_CHECK_FUNCS(setenv strchr strdup strncasecmp strrchr strstr strtod strtol)
   AC_CHECK_FUNCS(strtoul tmpnam vasprintf vfprintf vprintf vsprintf waitpid)
   AC_DEFINE(HAVE_SYS_ERRLIST)
   AC_DEFINE(HAVE_SYS_NERR)
   AC_DEFINE(HAVE_SYS_SIGLIST)
   AC_CHECK_FUNCS(getrusage on_exit psignal strerror strsignal sysconf times)
-  AC_CHECK_FUNCS(sbrk)
+  AC_CHECK_FUNCS(sbrk gettimeofday)
 fi
 
 # For each of these functions, if the host does not provide the
@@ -291,6 +296,11 @@ if test -z "${setobjs}"; then
     # can hang configure; on other versions, vfork exists just as a stub.
     # FIXME: This should be removed once vfork in uwin's runtime is fixed.
     ac_cv_func_vfork_works=no
+    # Under uwin 2.0+, sys_nerr and sys_errlist exist, but they are
+    # macros (actually, these are imported from a DLL, but the end effect 
+    # is the same), so the test below won't find them.
+    AC_DEFINE(HAVE_SYS_NERR)
+    AC_DEFINE(HAVE_SYS_ERRLIST)
     ;;
 
   esac
