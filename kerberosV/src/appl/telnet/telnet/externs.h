@@ -33,7 +33,7 @@
  *	@(#)externs.h	8.3 (Berkeley) 5/30/95
  */
 
-/* $KTH: externs.h,v 1.20 2000/11/15 23:01:29 assar Exp $ */
+/* $KTH: externs.h,v 1.21 2001/03/06 20:10:13 assar Exp $ */
 
 #ifndef	BSD
 # define BSD 43
@@ -136,7 +136,7 @@ extern int (*decrypt_input) (int);
 #define	set_my_want_state_wont(opt)	{options[opt] &= ~MY_WANT_STATE_WILL;}
 
 /*
- * Make everything symetrical
+ * Make everything symmetrical
  */
 
 #define	HIS_STATE_WILL			MY_STATE_DO
@@ -223,7 +223,7 @@ int 	EncryptStatus (void);
 #endif
 
 #ifdef SIGINFO
-void ayt_status(int);
+RETSIGTYPE ayt_status(int);
 #endif
 int tn(int argc, char **argv);
 void command(int top, char *tbuf, int cnt);
@@ -428,3 +428,8 @@ extern Ring
     ttyoring,
     ttyiring;
 
+extern int resettermname;
+extern int linemode;
+#ifdef KLUDGELINEMODE
+extern int kludgelinemode;
+#endif
