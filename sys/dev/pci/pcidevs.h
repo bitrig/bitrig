@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *		OpenBSD: pcidevs,v 1.599 2003/02/27 18:22:14 grange Exp 
+ *		OpenBSD: pcidevs,v 1.600 2003/02/27 18:25:51 grange Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -1995,6 +1995,7 @@
 #define	PCI_PRODUCT_RCC_CSB5	0x0201		/* CSB5 SouthBridge */
 #define	PCI_PRODUCT_RCC_OSB4_IDE	0x0211		/* OSB4 IDE */
 #define	PCI_PRODUCT_RCC_CSB5_IDE	0x0212		/* CSB5 IDE */
+#define	PCI_PRODUCT_RCC_CSB6_IDE	0x0213		/* CSB6 IDE */
 #define	PCI_PRODUCT_RCC_USB	0x0220		/* OSB4/CSB5 USB */
 #define	PCI_PRODUCT_RCC_CSB5BRIDGE	0x0225		/* CSB5 PCI Bridge */
 #define	PCI_PRODUCT_RCC_ISA	0x0230		/* PCI/ISA Bridge */

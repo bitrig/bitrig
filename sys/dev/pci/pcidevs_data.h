@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *		OpenBSD: pcidevs,v 1.599 2003/02/27 18:22:14 grange Exp 
+ *		OpenBSD: pcidevs,v 1.600 2003/02/27 18:25:51 grange Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -4465,6 +4465,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_RCC, PCI_PRODUCT_RCC_CSB5_IDE,
 	    "CSB5 IDE",
+	},
+	{
+	    PCI_VENDOR_RCC, PCI_PRODUCT_RCC_CSB6_IDE,
+	    "CSB6 IDE",
 	},
 	{
 	    PCI_VENDOR_RCC, PCI_PRODUCT_RCC_USB,
