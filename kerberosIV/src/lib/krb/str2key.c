@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999 Kungliga Tekniska Högskolan
+ * Copyright (c) 1999, 2000 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -33,7 +33,7 @@
 
 #include "krb_locl.h"
 
-RCSID("$KTH: str2key.c,v 1.17 1999/12/02 16:58:44 joda Exp $");
+RCSID("$KTH: str2key.c,v 1.20 2001/09/16 22:41:58 assar Exp $");
 
 #define lowcase(c) (('A' <= (c) && (c) <= 'Z') ? ((c) - 'A' + 'a') : (c))
 
