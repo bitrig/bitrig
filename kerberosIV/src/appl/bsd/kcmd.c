@@ -33,7 +33,7 @@
 
 #include "bsd_locl.h"
 
-RCSID("$KTH: kcmd.c,v 1.20 1998/07/13 13:54:07 assar Exp $");
+RCSID("$KTH: kcmd.c,v 1.23 2001/09/17 04:57:22 assar Exp $");
 
 #define	START_PORT	5120	 /* arbitrary */
 
@@ -123,7 +123,7 @@ kcmd(int *sock,
 		s = getport(&lport);
 		if (s < 0) {
 			if (errno == EAGAIN)
-				warnx("kcmd(socket): All ports in use\n");
+				warnx("kcmd(socket): All ports in use");
 			else
 				warn("kcmd: socket");
 			return (-1);
@@ -168,7 +168,7 @@ kcmd(int *sock,
 	} else {
 		char num[8];
 		int s2 = getport(&lport), s3;
-		int len = sizeof(from);
+		socklen_t len = sizeof(from);
 
 		if (s2 < 0) {
 			status = -1;
@@ -185,6 +185,14 @@ kcmd(int *sock,
 		{
 		    fd_set fds;
 		    FD_ZERO(&fds);
+		    if (s >= FD_SETSIZE || s2 >= FD_SETSIZE) {
+			warnx("file descriptor too large");
+			close(s);
+			close(s2);
+			status = -1;
+			goto bad;
+		    }
+
 		    FD_SET(s, &fds);
 		    FD_SET(s2, &fds);
 		    status = select(FD_SETSIZE, &fds, NULL, NULL, NULL);
@@ -223,7 +231,7 @@ kcmd(int *sock,
 
 	/* set up the needed stuff for mutual auth, but only if necessary */
 	if (authopts & KOPT_DO_MUTUAL) {
-		int sin_len;
+		socklen_t sin_len;
 		*faddr = sin;
 
 		sin_len = sizeof(struct sockaddr_in);
