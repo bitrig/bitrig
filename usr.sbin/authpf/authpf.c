@@ -1,4 +1,4 @@
-/*	$OpenBSD: authpf.c,v 1.29 2002/11/23 07:54:45 mcbride Exp $	*/
+/*	$OpenBSD: authpf.c,v 1.30 2002/12/01 19:59:45 mcbride Exp $	*/
 
 /*
  * Copyright (C) 1998 - 2002 Bob Beck (beck@openbsd.org).
@@ -785,6 +785,11 @@ pfctl_add_rule(struct pfctl *pf, struct pf_rule *r)
 	}
 	if (pfctl_add_pool(pf, &r->rt_pool, r->af))
 		return (1);
+	if (Delete_Rules) {
+		if (ioctl(pf->dev, DIOCBEGINADDRS, &pf->paddr.ticket))
+			err(1, "DIOCBEGINADDRS");
+	}
+	pcr.pool_ticket = pf->paddr.ticket;
 	if ((pf->opts & PF_OPT_NOACTION) == 0) {
 		if (ioctl(pf->dev, DIOCCHANGERULE, &pcr))
 			syslog(LOG_INFO, "DIOCCHANGERULE %m");
@@ -811,6 +816,11 @@ pfctl_add_nat(struct pfctl *pf, struct pf_nat *n)
 	}
 	if (pfctl_add_pool(pf, &n->rpool, n->af))
 		return (1);
+	if (Delete_Rules) {
+		if (ioctl(pf->dev, DIOCBEGINADDRS, &pf->paddr.ticket))
+			err(1, "DIOCBEGINADDRS");
+	}
+	pcr.pool_ticket = pf->paddr.ticket;
 	if ((pf->opts & PF_OPT_NOACTION) == 0) {
 		if (ioctl(pf->dev, DIOCCHANGENAT, &pcr))
 			syslog(LOG_INFO, "DIOCCHANGENAT %m");
@@ -836,6 +846,11 @@ pfctl_add_rdr(struct pfctl *pf, struct pf_rdr *r)
 	}
 	if (pfctl_add_pool(pf, &r->rpool, r->af))
 		return (1);
+	if (Delete_Rules) {
+		if (ioctl(pf->dev, DIOCBEGINADDRS, &pf->paddr.ticket))
+			err(1, "DIOCBEGINADDRS");
+	}
+	pcr.pool_ticket = pf->paddr.ticket;
 	if ((pf->opts & PF_OPT_NOACTION) == 0) {
 		if (ioctl(pf->dev, DIOCCHANGERDR, &pcr))
 			syslog(LOG_INFO, "DIOCCHANGERDR %m");
