@@ -12,13 +12,9 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
-# $CVSid: @(#)Makefile.in 1.21 94/09/24 $
 srcdir     = @srcdir@
 top_srcdir = @top_srcdir@
+cvs_srcdir = @top_srcdir@/src
 VPATH      = @srcdir@
 
 SHELL = /bin/sh
@@ -27,47 +23,46 @@ prefix = @prefix@
 exec_prefix = @exec_prefix@
 
 SOURCES = \
-	alloca.c \
 	argmatch.c \
 	dup2.c \
-	error.c \
+	fncase.c \
 	fnmatch.c \
 	ftruncate.c \
 	getdate.c \
 	getdate.y \
+	getline.c \
 	getopt.c \
 	getopt1.c \
-	getwd.c \
 	hostname.c \
 	md5.c \
 	memmove.c \
 	mkdir.c \
 	regex.c \
 	rename.c \
-	save-cwd.c \
+	savecwd.c \
 	sighandle.c \
-	strdup.c \
 	strstr.c \
 	strerror.c \
-	strippath.c \
 	stripslash.c \
+	strtoul.c \
 	valloc.c \
 	waitpid.c \
 	xgetwd.c \
 	yesno.c
 
-HEADERS = getopt.h fnmatch.h regex.h system.h wait.h md5.h error.h save-cwd.h
+HEADERS = getline.h getopt.h fnmatch.h regex.h system.h wait.h md5.h savecwd.h
 
+# See long comment in ../configure.in concerning inclusion of regex.o.
 OBJECTS = \
-    @ALLOCA@ @LIBOBJS@ \
+    @LIBOBJS@ \
     argmatch.o \
-    error.o \
+    getline.o \
     getopt.o \
     getopt1.o \
     md5.o \
-    save-cwd.o \
+    regex.o \
+    savecwd.o \
     sighandle.o \
-    strippath.o \
     stripslash.o \
     xgetwd.o \
     yesno.o \
@@ -75,25 +70,29 @@ OBJECTS = \
 
 DISTFILES = \
 	.cvsignore ChangeLog ChangeLog.fsf Makefile.in \
-	${SOURCES} ${HEADERS}
+	${SOURCES} ${HEADERS} build_lib.com
 
 DEFS = @DEFS@
 RANLIB = @RANLIB@
 
 CC       = @CC@
-CFLAGS = -g
+CFLAGS = @CFLAGS@
 CPPFLAGS=
 
 YACC = @YACC@
 
 .c.o:
-	$(CC) $(CPPFLAGS) -I.. -I$(srcdir) $(DEFS) $(CFLAGS) -c $<
+	$(CC) $(CPPFLAGS) -I.. -I$(srcdir) -I$(cvs_srcdir) \
+              $(DEFS) $(CFLAGS) -c $<
 
 all: libcvs.a
 .PHONY: all
 
 install: all
 .PHONY: install
+
+installdirs:
+.PHONY: installdirs
 
 tags: $(DISTFILES)
 	ctags `for i in $(DISTFILES); do echo $(srcdir)/$$i; done`
@@ -144,8 +143,10 @@ getdate.c: getdate.y
 fnmatch.o: fnmatch.h
 getopt1.o: getopt.h
 regex.o: regex.h
-getwd.o: system.h
 md5.o: md5.h
+
+xlint:
+	@echo xlint does nothing
 
 subdir = lib
 Makefile: ../config.status Makefile.in
