@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *		OpenBSD: pcidevs,v 1.322 2000/09/22 15:09:38 aaron Exp 
+ *		OpenBSD: pcidevs,v 1.323 2000/09/22 18:01:33 aaron Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -1621,6 +1621,12 @@ struct pci_knowndev pci_knowndevs[] = {
 	    0,
 	    "Compex",
 	    "PMAC 98713",
+	},
+	{
+	    PCI_VENDOR_CONEXANT, PCI_PRODUCT_CONEXANT_SOFTK56_PCI,
+	    0,
+	    "Conexant",
+	    "SoftK56 PCI",
 	},
 	{
 	    PCI_VENDOR_CONTAQ, PCI_PRODUCT_CONTAQ_82C599,

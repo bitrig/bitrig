@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *		OpenBSD: pcidevs,v 1.322 2000/09/22 15:09:38 aaron Exp 
+ *		OpenBSD: pcidevs,v 1.323 2000/09/22 18:01:33 aaron Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $ 	*/
 
@@ -907,6 +907,9 @@
 #define	PCI_PRODUCT_COMPEX_COMPEXE	0x1401		/* Ethernet */
 #define	PCI_PRODUCT_COMPEX_RL100ATX	0x2011		/* RL100-ATX 10/100 */
 #define	PCI_PRODUCT_COMPEX_98713	0x9881		/* PMAC 98713 */
+
+/* Conexant products */
+#define	PCI_PRODUCT_CONEXANT_SOFTK56_PCI	0x2443		/* SoftK56 PCI */
 
 /* Contaq Microsystems products */
 #define	PCI_PRODUCT_CONTAQ_82C599	0x0600		/* 82C599 PCI-VLB */
