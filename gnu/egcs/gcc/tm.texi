@@ -195,8 +195,7 @@ linker command line.  This constant is placed both before and after
 the value of @code{LIB_SPEC}.
 
 If this macro is not defined, the GNU CC driver provides a default that
-passes the string @samp{-lgcc} to the linker unless the @samp{-shared}
-option is specified.
+passes the string @samp{-lgcc} to the linker.
 
 @findex STARTFILE_SPEC
 @item STARTFILE_SPEC
@@ -321,7 +320,8 @@ try when searching for the executable files of the compiler.
 If defined, this macro is an additional prefix to try after
 @code{STANDARD_EXEC_PREFIX}.  @code{MD_EXEC_PREFIX} is not searched
 when the @samp{-b} option is used, or the compiler is built as a cross
-compiler.
+compiler.  If you define @code{MD_EXEC_PREFIX}, then be sure to add it
+to the list of directories used to find the assembler in @file{configure.in}.
 
 @findex STANDARD_STARTFILE_PREFIX
 @item STANDARD_STARTFILE_PREFIX
