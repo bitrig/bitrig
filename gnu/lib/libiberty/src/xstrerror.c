@@ -2,6 +2,17 @@
    Fri Jun 16 18:30:00 1995  Pat Rankin  <rankin@eql.caltech.edu>
    This code is in the public domain.  */
 
+/*
+
+@deftypefn Replacement char* xstrerror (int @var{errnum})
+
+Behaves exactly like the standard @code{strerror} function, but
+will never return a @code{NULL} pointer.
+
+@end deftypefn
+
+*/
+
 #include <stdio.h>
 
 #include "libiberty.h"
@@ -49,7 +60,7 @@ xstrerror (errnum)
   /* If `errnum' is out of range, result might be NULL.  We'll fix that.  */
   if (!errstr)
     {
-      sprintf (xstrerror_buf, ERRSTR_FMT, errnum);
+      snprintf (xstrerror_buf, sizeof xstrerror_buf, ERRSTR_FMT, errnum);
       errstr = xstrerror_buf;
     }
   return errstr;
