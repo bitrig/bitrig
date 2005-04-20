@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 1998, 1999 Kungliga Tekniska Högskolan
+ * Copyright (c) 1997 - 2001 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -33,7 +33,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: parse_units.c,v 1.12 1999/12/02 16:58:51 joda Exp $");
+RCSID("$KTH: parse_units.c,v 1.14 2001/09/04 09:56:00 assar Exp $");
 #endif
 
 #include <stdio.h>
@@ -84,7 +84,8 @@ parse_something (const char *s, const struct units *units,
 	    ++p;
 
 	val = strtod (p, &next); /* strtol(p, &next, 0); */
-	if (val == 0 && p == next) {
+	if (p == next) {
+	    val = 0;
 	    if(!accept_no_val_p)
 		return -1;
 	    no_val_p = 1;
@@ -186,10 +187,11 @@ parse_flags (const char *s, const struct units *units,
 
 /*
  * Return a string representation according to `units' of `num' in `s'
- * with maximum length `len'.  The actual length is the function value.
+ * with maximum length `len'.  The actual length of the returned string
+ * is the returned value.
  */
 
-static size_t
+static int
 unparse_something (int num, const struct units *units, char *s, size_t len,
 		   int (*print) (char *s, size_t len, int div,
 				const char *name, int rem),
@@ -197,10 +199,16 @@ unparse_something (int num, const struct units *units, char *s, size_t len,
 		   const char *zero_string)
 {
     const struct units *u;
-    size_t ret = 0, tmp;
+    int ret = 0, tmp;
 
-    if (num == 0)
-	return snprintf (s, len, "%s", zero_string);
+    /* snprintf doesn't nul terminate on 0 length */	
+    if (len == 0)
+	return(0);
+
+    if (num == 0) {
+	(void) snprintf (s, len, "%s", zero_string);
+	return(strlen(s));
+    }
 
     for (u = units; num > 0 && u->name; ++u) {
 	int div;
@@ -209,6 +217,8 @@ unparse_something (int num, const struct units *units, char *s, size_t len,
 	if (div) {
 	    num = (*update) (num, u->mult);
 	    tmp = (*print) (s, len, div, u->name, num);
+	    if (tmp < 0)
+		return tmp;
 
 	    len -= tmp;
 	    s += tmp;
@@ -221,10 +231,11 @@ unparse_something (int num, const struct units *units, char *s, size_t len,
 static int
 print_unit (char *s, size_t len, int div, const char *name, int rem)
 {
-    return snprintf (s, len, "%u %s%s%s",
-		     div, name,
-		     div == 1 ? "" : "s",
-		     rem > 0 ? " " : "");
+    if (len == 0)
+	return(0);	
+    (void) snprintf (s, len, "%u %s%s%s",
+	div, name, div == 1 ? "" : "s", rem > 0 ? " " : "");
+    return(strlen(s));
 }
 
 static int
@@ -242,7 +253,7 @@ update_unit_approx (int in, unsigned mult)
 	return update_unit (in, mult);
 }
 
-size_t
+int
 unparse_units (int num, const struct units *units, char *s, size_t len)
 {
     return unparse_something (num, units, s, len,
@@ -251,7 +262,7 @@ unparse_units (int num, const struct units *units, char *s, size_t len)
 			      "0");
 }
 
-size_t
+int
 unparse_units_approx (int num, const struct units *units, char *s, size_t len)
 {
     return unparse_something (num, units, s, len,
@@ -296,7 +307,10 @@ print_units_table (const struct units *units, FILE *f)
 static int
 print_flag (char *s, size_t len, int div, const char *name, int rem)
 {
-    return snprintf (s, len, "%s%s", name, rem > 0 ? ", " : "");
+    if (len == 0)
+	return(0);	
+    (void) snprintf (s, len, "%s%s", name, rem > 0 ? ", " : "");
+    return(strlen(s));
 }
 
 static int
@@ -305,7 +319,7 @@ update_flag (int in, unsigned mult)
     return in - mult;
 }
 
-size_t
+int
 unparse_flags (int num, const struct units *units, char *s, size_t len)
 {
     return unparse_something (num, units, s, len,
