@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 1998, 1999 Kungliga Tekniska Högskolan
+ * Copyright (c) 1997 - 2001 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -34,19 +34,19 @@
 #include "krb5_locl.h"
 #include <resolve.h>
 
-RCSID("$KTH: get_host_realm.c,v 1.25 1999/12/11 23:14:07 assar Exp $");
+RCSID("$KTH: get_host_realm.c,v 1.29 2002/08/28 13:36:57 nectar Exp $");
 
 /* To automagically find the correct realm of a host (without
  * [domain_realm] in krb5.conf) add a text record for your domain with
  * the name of your realm, like this:
  *
- * krb5-realm	IN	TXT	FOO.SE
+ * _kerberos	IN	TXT	"FOO.SE"
  *
  * The search is recursive, so you can add entries for specific
  * hosts. To find the realm of host a.b.c, it first tries
- * krb5-realm.a.b.c, then krb5-realm.b.c and so on.
+ * _kerberos.a.b.c, then _kerberos.b.c and so on.
  *
- * Also supported is _kerberos (following draft-ietf-cat-krb-dns-locate-01.txt)
+ * This method is described in draft-ietf-cat-krb-dns-locate-03.txt.
  *
  */
 
@@ -92,23 +92,33 @@ copy_txt_to_realms (struct resource_record *head,
 static int
 dns_find_realm(krb5_context context,
 	       const char *domain,
-	       const char *dom_string,
 	       krb5_realm **realms)
 {
+    static char *default_labels[] = { "_kerberos", NULL };
     char dom[MAXHOSTNAMELEN];
     struct dns_reply *r;
-    int ret;
+    char **labels;
+    int i, j, ret;
     
+    labels = krb5_config_get_strings(context, NULL, "libdefaults",
+	"dns_lookup_realm_labels", NULL);
+    if(labels == NULL)
+	labels = default_labels;
     if(*domain == '.')
 	domain++;
-    snprintf(dom, sizeof(dom), "%s.%s.", dom_string, domain);
-    r = dns_lookup(dom, "TXT");
-    if(r == NULL)
-	return -1;
-
-    ret = copy_txt_to_realms (r->head, realms);
-    dns_free_data(r);
-    return ret;
+    for (i = 0; labels[i] != NULL; i++) {
+	j = snprintf(dom, sizeof(dom), "%s.%s.", labels[i], domain);
+	if (j >= sizeof(dom) || j < 0) /* fucking solaris assholes */
+	    return -1;
+    	r = dns_lookup(dom, "TXT");
+    	if(r != NULL) {
+	    ret = copy_txt_to_realms (r->head, realms);
+	    dns_free_data(r);
+	    if(ret == 0)
+		return 0;
+	}
+    }
+    return -1;
 }
 
 /*
@@ -142,34 +152,50 @@ config_find_realm(krb5_context context,
 krb5_error_code
 krb5_get_host_realm_int (krb5_context context,
 			 const char *host,
+			 krb5_boolean use_dns,
 			 krb5_realm **realms)
 {
-    const char *p;
+    const char *p, *q;
+    krb5_boolean dns_locate_enable;
 
+    dns_locate_enable = krb5_config_get_bool_default(context, NULL, TRUE,
+	"libdefaults", "dns_lookup_realm", NULL);
     for (p = host; p != NULL; p = strchr (p + 1, '.')) {
-	if(config_find_realm(context, p, realms) == 0)
-	    return 0;
-	else if(dns_find_realm(context, p, "krb5-realm", realms) == 0)
-	    return 0;
-	else if(dns_find_realm(context, p, "_kerberos", realms) == 0)
-	    return 0;
+	if(config_find_realm(context, p, realms) == 0) {
+	    if(strcasecmp(*realms[0], "dns_locate") == 0) {
+		if(use_dns)
+		    for (q = host; q != NULL; q = strchr(q + 1, '.'))
+			if(dns_find_realm(context, q, realms) == 0)
+			    return 0;
+		continue; 
+	    } else 
+	    	return 0;
+	}
+	else if(use_dns && dns_locate_enable) {
+	    if(dns_find_realm(context, p, realms) == 0)
+		return 0;
+	}
     }
     p = strchr(host, '.');
     if(p != NULL) {
 	p++;
 	*realms = malloc(2 * sizeof(krb5_realm));
-	if (*realms == NULL)
+	if (*realms == NULL) {
+	    krb5_set_error_string(context, "malloc: out of memory");
 	    return ENOMEM;
+	}
 
 	(*realms)[0] = strdup(p);
 	if((*realms)[0] == NULL) {
 	    free(*realms);
+	    krb5_set_error_string(context, "malloc: out of memory");
 	    return ENOMEM;
 	}
 	strupr((*realms)[0]);
 	(*realms)[1] = NULL;
 	return 0;
     }
+    krb5_set_error_string(context, "unable to find realm of host %s", host);
     return KRB5_ERR_HOST_REALM_UNKNOWN;
 }
 
@@ -190,5 +216,5 @@ krb5_get_host_realm(krb5_context context,
 	host = hostname;
     }
 
-    return krb5_get_host_realm_int (context, host, realms);
+    return krb5_get_host_realm_int (context, host, 1, realms);
 }
