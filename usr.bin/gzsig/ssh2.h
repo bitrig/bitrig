@@ -1,4 +1,4 @@
-/* $OpenBSD: ssh2.h,v 1.1.1.1 2005/05/28 01:57:30 marius Exp $ */
+/* $OpenBSD: ssh2.h,v 1.1 2005/05/28 01:57:30 marius Exp $ */
 /*
  * ssh2.h
  *
