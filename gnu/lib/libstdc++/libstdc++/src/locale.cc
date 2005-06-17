@@ -72,7 +72,7 @@ namespace std
   {
     &std::ctype<char>::id, 
     &codecvt<char, char, mbstate_t>::id,
-#ifdef _GLIBCPP_USE_WCHAR_T
+#if defined(_GLIBCPP_USE_WCHAR_T) || defined(_GLIBCPP_USE_TYPE_WCHAR_T)
     &std::ctype<wchar_t>::id,
     &codecvt<wchar_t, char, mbstate_t>::id,
 #endif
@@ -85,7 +85,7 @@ namespace std
     &num_get<char>::id,  
     &num_put<char>::id,  
     &numpunct<char>::id, 
-#ifdef _GLIBCPP_USE_WCHAR_T
+#if defined(_GLIBCPP_USE_WCHAR_T) || defined(_GLIBCPP_USE_TYPE_WCHAR_T)
     &num_get<wchar_t>::id,
     &num_put<wchar_t>::id,
     &numpunct<wchar_t>::id,
@@ -97,7 +97,7 @@ namespace std
   locale::_Impl::_S_id_collate[] =
   {
     &std::collate<char>::id,
-#ifdef _GLIBCPP_USE_WCHAR_T
+#if defined(_GLIBCPP_USE_WCHAR_T) || defined(_GLIBCPP_USE_TYPE_WCHAR_T)
     &std::collate<wchar_t>::id,
 #endif
     0
@@ -109,7 +109,7 @@ namespace std
     &__timepunct<char>::id, 
     &time_get<char>::id, 
     &time_put<char>::id, 
-#ifdef _GLIBCPP_USE_WCHAR_T
+#if defined(_GLIBCPP_USE_WCHAR_T) || defined(_GLIBCPP_USE_TYPE_WCHAR_T)
     &__timepunct<wchar_t>::id, 
     &time_get<wchar_t>::id,
     &time_put<wchar_t>::id,
@@ -124,7 +124,7 @@ namespace std
     &money_put<char>::id,        
     &moneypunct<char, false>::id, 
     &moneypunct<char, true >::id, 
-#ifdef _GLIBCPP_USE_WCHAR_T
+#if defined(_GLIBCPP_USE_WCHAR_T) || defined(_GLIBCPP_USE_TYPE_WCHAR_T)
     &money_get<wchar_t>::id,
     &money_put<wchar_t>::id,
     &moneypunct<wchar_t, false>::id,
@@ -137,7 +137,7 @@ namespace std
   locale::_Impl::_S_id_messages[] =
   {
     &std::messages<char>::id, 
-#ifdef _GLIBCPP_USE_WCHAR_T
+#if defined(_GLIBCPP_USE_WCHAR_T) || defined(_GLIBCPP_USE_TYPE_WCHAR_T)
     &std::messages<wchar_t>::id,
 #endif
     0
@@ -194,19 +194,19 @@ namespace std
 	      }
 	    else
 	      {
-		char* __res;
+		string __res;
 		// LANG may set a default different from "C".
 		char* __env = getenv("LANG");
 		if (!__env || strcmp(__env, "") == 0 || strcmp(__env, "C") == 0
 		    || strcmp(__env, "POSIX") == 0)
-		  __res = strdup("C");
+		  __res = "C";
 		else 
-		  __res = strdup(__env);
+		  __res = __env;
 		
 		// Scan the categories looking for the first one
 		// different from LANG.
 		size_t __i = 0;
-		if (strcmp(__res, "C") == 0)
+		if (__res == "C")
 		  for (; __i < _S_categories_size
 			 + _S_extra_categories_size; ++__i)
 		    {
@@ -222,7 +222,7 @@ namespace std
 		    {
 		      __env = getenv(_S_categories[__i]);
 		      if (__env && strcmp(__env, "") != 0 
-			  && strcmp(__env, __res) != 0) 
+			  && __res != __env) 
 			break;
 		    }
 	
@@ -273,11 +273,10 @@ namespace std
 		  }
 		// ... otherwise either an additional instance of
 		// the "C" locale or LANG.
-		else if (strcmp(__res, "C") == 0)
+		else if (__res == "C")
 		  (_M_impl = _S_classic)->_M_add_reference();
 		else
-		  _M_impl = new _Impl(__res, 1);
-		free(__res);
+		  _M_impl = new _Impl(__res.c_str(), 1);
 	      }
 	  }
       }
@@ -487,7 +486,7 @@ namespace std
       "IST", "EET", "CST", "JST"  
     };
  
-#ifdef _GLIBCPP_USE_WCHAR_T
+#if defined(_GLIBCPP_USE_WCHAR_T) || defined(_GLIBCPP_USE_TYPE_WCHAR_T)
   template<> 
     const wchar_t*
     __timepunct<wchar_t>::_S_timezones[14] =

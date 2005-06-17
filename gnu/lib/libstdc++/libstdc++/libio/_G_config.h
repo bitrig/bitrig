@@ -1,3 +1,28 @@
+/* Copyright (C) 1999, 2000, 2004 Free Software Foundation, Inc.
+   This file is part of the GNU IO Library.
+
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License as
+   published by the Free Software Foundation; either version 2, or (at
+   your option) any later version.
+
+   This library is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this library; see the file COPYING.  If not, write to
+   the Free Software Foundation, 59 Temple Place - Suite 330, Boston,
+   MA 02111-1307, USA.
+
+   As a special exception, if you link this library with files
+   compiled with a GNU compiler to produce an executable, this does
+   not cause the resulting executable to be covered by the GNU General
+   Public License.  This exception does not however invalidate any
+   other reasons why the executable file might be covered by the GNU
+   General Public License.  */
+
 /* This file is needed by libio to define various configuration parameters.
    These are always the same in the GNU C library.  */
 
@@ -52,7 +77,7 @@ typedef struct
 typedef size_t _G_size_t;
 
 
-#if defined _LIBC || defined _GLIBCPP_USE_WCHAR_T
+#if defined _LIBC || defined _GLIBCPP_USE_WCHAR_T || defined(_GLIBCPP_USE_TYPE_WCHAR_T)
 typedef struct
 {
   __off_t __pos;
@@ -76,7 +101,7 @@ typedef __off64_t _G_fpos64_t;
 #define _G_wchar_t	wchar_t
 #define _G_wint_t	wint_t
 #define _G_stat64	stat64
-#if defined _LIBC || defined _GLIBCPP_USE_WCHAR_T
+#if defined _LIBC || defined _GLIBCPP_USE_WCHAR_T || defined(_GLIBCPP_USE_TYPE_WCHAR_T)
 # include <iconv.h>
 typedef iconv_t _G_iconv_t;
 #endif
