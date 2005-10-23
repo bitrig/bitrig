@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.948 2005/10/23 20:12:41 brad Exp 
+ *	OpenBSD: pcidevs,v 1.949 2005/10/23 23:59:00 brad Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $	*/
 
@@ -1156,9 +1156,10 @@
 #define	PCI_PRODUCT_CYRIX_CX5530_VIDEO	0x0104		/* Cx5530 Video */
 
 /* Davicom Technologies */
+#define	PCI_PRODUCT_DAVICOM_DM9009	0x9009		/* DM9009 */
 #define	PCI_PRODUCT_DAVICOM_DM9100	0x9100		/* DM9100 */
 #define	PCI_PRODUCT_DAVICOM_DM9102	0x9102		/* DM9102 */
-#define	PCI_PRODUCT_DAVICOM_DM9009	0x9009		/* DM9009 */
+#define	PCI_PRODUCT_DAVICOM_DM9132	0x9132		/* DM9132 */
 
 /* DEC products */
 #define	PCI_PRODUCT_DEC_21050	0x0001		/* 21050 PCI-PCI */
