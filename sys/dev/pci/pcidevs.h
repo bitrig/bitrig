@@ -1342,6 +1342,7 @@
 #define	PCI_PRODUCT_HP_MERCURY	0x122e		/* Mercury Ropes-PCI */
 #define	PCI_PRODUCT_HP_QUICKSILVER	0x12b4		/* QuickSilver Ropes-PCI */
 #define	PCI_PRODUCT_HP_HPSAV100	0x3210		/* Smart Array V100 */
+#define	PCI_PRODUCT_HP_HPSASP600	0x3220		/* Smart Array P600 SAS */
 #define	PCI_PRODUCT_HP_HPSAP800	0x3223		/* Smart Array P800 */
 #define	PCI_PRODUCT_HP_HPSAP600	0x3225		/* Smart Array P600 */
 #define	PCI_PRODUCT_HP_HPSAE400	0x3231		/* Smart Array E400 */
