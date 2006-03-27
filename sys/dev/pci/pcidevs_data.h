@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.1044 2006/03/27 17:52:22 brad Exp 
+ *	OpenBSD: pcidevs,v 1.1045 2006/03/27 17:54:29 brad Exp 
  */
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $	*/
 
@@ -4111,7 +4111,7 @@ static const struct pci_known_product pci_known_products[] = {
 	    "PRO/1000CT Mobile (82547EI)",
 	},
 	{
-	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82546EB_QUAD_COPPER,
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_82546EB_QUAD_CPR,
 	    "PRO/1000MT QP (82546EB)",
 	},
 	{
