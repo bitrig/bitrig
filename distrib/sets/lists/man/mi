@@ -85,6 +85,7 @@
 ./usr/share/man/cat1/cpp.0
 ./usr/share/man/cat1/crontab.0
 ./usr/share/man/cat1/csh.0
+./usr/share/man/cat1/csplit.0
 ./usr/share/man/cat1/ctags.0
 ./usr/share/man/cat1/cu.0
 ./usr/share/man/cat1/cut.0
