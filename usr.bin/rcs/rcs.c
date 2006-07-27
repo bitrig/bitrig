@@ -1,4 +1,4 @@
-/*	$OpenBSD: rcs.c,v 1.25 2006/07/21 00:47:35 ray Exp $	*/
+/*	$OpenBSD: rcs.c,v 1.26 2006/07/27 02:57:19 deraadt Exp $	*/
 /*
  * Copyright (c) 2004 Jean-Francois Brousseau <jfb@openbsd.org>
  * All rights reserved.
@@ -1209,7 +1209,7 @@ rcs_getrev(RCSFILE *rfp, RCSNUM *frev)
 	 */
 	do {
 		found = 0;
-		
+
 		if (rcsnum_cmp(rfp->rf_head, rev, 0) == 0)
 			break;
 
