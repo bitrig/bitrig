@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997 - 2000 Kungliga Tekniska Högskolan
+ * Copyright (c) 1997 - 2002 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -33,17 +33,17 @@
 
 #include <krb5_locl.h>
 
-RCSID("$KTH: mk_req_ext.c,v 1.24 2000/11/15 07:01:26 assar Exp $");
+RCSID("$KTH: mk_req_ext.c,v 1.30 2005/01/05 06:31:01 lukeh Exp $");
 
 krb5_error_code
-krb5_mk_req_internal(krb5_context context,
-		     krb5_auth_context *auth_context,
-		     const krb5_flags ap_req_options,
-		     krb5_data *in_data,
-		     krb5_creds *in_creds,
-		     krb5_data *outbuf,
-		     krb5_key_usage checksum_usage,
-		     krb5_key_usage encrypt_usage)
+_krb5_mk_req_internal(krb5_context context,
+		      krb5_auth_context *auth_context,
+		      const krb5_flags ap_req_options,
+		      krb5_data *in_data,
+		      krb5_creds *in_creds,
+		      krb5_data *outbuf,
+		      krb5_key_usage checksum_usage,
+		      krb5_key_usage encrypt_usage)
 {
   krb5_error_code ret;
   krb5_data authenticator;
@@ -62,6 +62,12 @@ krb5_mk_req_internal(krb5_context context,
   if(ret)
       return ret;
       
+  if(ac->local_subkey == NULL && (ap_req_options & AP_OPTS_USE_SUBKEY)) {
+      ret = krb5_auth_con_generatelocalsubkey(context, ac, &in_creds->session);
+      if(ret)
+	  goto out;
+  }
+
 #if 0
   {
       /* This is somewhat bogus since we're possibly overwriting a
@@ -87,7 +93,9 @@ krb5_mk_req_internal(krb5_context context,
 #endif
 
   krb5_free_keyblock(context, ac->keyblock);
-  krb5_copy_keyblock(context, &in_creds->session, &ac->keyblock);
+  ret = krb5_copy_keyblock(context, &in_creds->session, &ac->keyblock);
+  if (ret)
+      goto out;
   
   /* it's unclear what type of checksum we can use.  try the best one, except:
    * a) if it's configured differently for the current realm, or
@@ -99,7 +107,18 @@ krb5_mk_req_internal(krb5_context context,
 	  /* this is to make DCE secd (and older MIT kdcs?) happy */
 	  ret = krb5_create_checksum(context, 
 				     NULL,
+				     0,
 				     CKSUMTYPE_RSA_MD4,
+				     in_data->data,
+				     in_data->length,
+				     &c);
+      } else if(ac->keyblock->keytype == ETYPE_ARCFOUR_HMAC_MD5 ||
+		ac->keyblock->keytype == ETYPE_ARCFOUR_HMAC_MD5_56) {
+	  /* this is to make MS kdc happy */ 
+	  ret = krb5_create_checksum(context, 
+				     NULL,
+				     0,
+				     CKSUMTYPE_RSA_MD5,
 				     in_data->data,
 				     in_data->length,
 				     &c);
@@ -108,20 +127,23 @@ krb5_mk_req_internal(krb5_context context,
 
 	  ret = krb5_crypto_init(context, ac->keyblock, 0, &crypto);
 	  if (ret)
-	      return ret;
+	      goto out;
 	  ret = krb5_create_checksum(context, 
 				     crypto,
 				     checksum_usage,
+				     0,
 				     in_data->data,
 				     in_data->length,
 				     &c);
-      
-	  krb5_crypto_destroy(context, crypto);
+      	  krb5_crypto_destroy(context, crypto);
       }
       c_opt = &c;
   } else {
       c_opt = NULL;
   }
+
+  if (ret)
+      goto out;
   
   ret = krb5_build_authenticator (context,
 				  ac,
@@ -134,16 +156,17 @@ krb5_mk_req_internal(krb5_context context,
   if (c_opt)
       free_Checksum (c_opt);
   if (ret)
-    return ret;
+    goto out;
 
   ret = krb5_build_ap_req (context, ac->keyblock->keytype, 
 			   in_creds, ap_req_options, authenticator, outbuf);
+out:
   if(auth_context == NULL)
       krb5_auth_con_free(context, ac);
   return ret;
 }
 
-krb5_error_code
+krb5_error_code KRB5_LIB_FUNCTION
 krb5_mk_req_extended(krb5_context context,
 		     krb5_auth_context *auth_context,
 		     const krb5_flags ap_req_options,
@@ -151,7 +174,7 @@ krb5_mk_req_extended(krb5_context context,
 		     krb5_creds *in_creds,
 		     krb5_data *outbuf)
 {
-    return krb5_mk_req_internal (context,
+    return _krb5_mk_req_internal (context,
 				 auth_context,
 				 ap_req_options,
 				 in_data,

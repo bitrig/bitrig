@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 1998, 1999 Kungliga Tekniska Högskolan
+ * Copyright (c) 1997 - 2002 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -33,7 +33,7 @@
 
 #include "krb5_locl.h"
 
-RCSID("$KTH: keytab_krb4.c,v 1.6 2000/12/15 17:10:40 joda Exp $");
+RCSID("$KTH: keytab_krb4.c,v 1.13 2005/05/19 04:13:18 lha Exp $");
 
 struct krb4_kt_data {
     char *filename;
@@ -45,11 +45,14 @@ krb4_kt_resolve(krb5_context context, const char *name, krb5_keytab id)
     struct krb4_kt_data *d;
 
     d = malloc (sizeof(*d));
-    if (d == NULL)
+    if (d == NULL) {
+	krb5_set_error_string (context, "malloc: out of memory");
 	return ENOMEM;
+    }
     d->filename = strdup (name);
     if (d->filename == NULL) {
 	free(d);
+	krb5_set_error_string (context, "malloc: out of memory");
 	return ENOMEM;
     }
     id->data = d;
@@ -84,6 +87,31 @@ struct krb4_cursor_extra_data {
     int num;
 };
 
+static int
+open_flock(const char *filename, int flags, int mode)
+{
+    int lock_mode;
+    int tries = 0;
+    int fd = open(filename, flags, mode);
+    if(fd < 0)
+	return fd;
+    if((flags & O_ACCMODE) == O_RDONLY)
+	lock_mode = LOCK_SH | LOCK_NB;
+    else
+	lock_mode = LOCK_EX | LOCK_NB;
+    while(flock(fd, lock_mode) < 0) {
+	if(++tries < 5) {
+	    sleep(1);
+	} else {
+	    close(fd);
+	    return -1;
+	}
+    }
+    return fd;
+}
+
+
+
 static krb5_error_code
 krb4_kt_start_seq_get_int (krb5_context context,
 			   krb5_keytab id,
@@ -92,19 +120,31 @@ krb4_kt_start_seq_get_int (krb5_context context,
 {
     struct krb4_kt_data *d = id->data;
     struct krb4_cursor_extra_data *ed;
+    int ret;
 
     ed = malloc (sizeof(*ed));
-    if (ed == NULL)
+    if (ed == NULL) {
+	krb5_set_error_string (context, "malloc: out of memory");
 	return ENOMEM;
+    }
     ed->entry.principal = NULL;
     ed->num = -1;
     c->data = ed;
-    c->fd = open (d->filename, flags);
+    c->fd = open_flock (d->filename, flags, 0);
     if (c->fd < 0) {
+	ret = errno;
 	free (ed);
-	return errno;
+	krb5_set_error_string(context, "open(%s): %s", d->filename,
+			      strerror(ret));
+	return ret;
     }
     c->sp = krb5_storage_from_fd(c->fd);
+    if(c->sp == NULL) {
+	close(c->fd);
+	free(ed);
+	return ENOMEM;
+    }
+    krb5_storage_set_eof_code(c->sp, KRB5_KT_END);
     return 0;
 }
 
@@ -122,10 +162,10 @@ read_v4_entry (krb5_context context,
 	       krb5_kt_cursor *c,
 	       struct krb4_cursor_extra_data *ed)
 {
+    unsigned char des_key[8];
     krb5_error_code ret;
     char *service, *instance, *realm;
     int8_t kvno;
-    des_cblock key;
 
     ret = krb5_ret_stringz(c->sp, &service);
     if (ret)
@@ -153,7 +193,7 @@ read_v4_entry (krb5_context context,
 	krb5_free_principal (context, ed->entry.principal);
 	return ret;
     }
-    ret = c->sp->fetch(c->sp, key, 8);
+    ret = krb5_storage_read(c->sp, des_key, sizeof(des_key));
     if (ret < 0) {
 	krb5_free_principal(context, ed->entry.principal);
 	return ret;
@@ -164,7 +204,7 @@ read_v4_entry (krb5_context context,
     }
     ed->entry.vno = kvno;
     ret = krb5_data_copy (&ed->entry.keyblock.keyvalue,
-			  key, 8);
+			  des_key, sizeof(des_key));
     if (ret)
 	return ret;
     ed->entry.timestamp = time(NULL);
@@ -219,46 +259,167 @@ krb4_kt_end_seq_get (krb5_context context,
 }
 
 static krb5_error_code
-krb4_kt_add_entry (krb5_context context,
-		   krb5_keytab id,
-		   krb5_keytab_entry *entry)
+krb4_store_keytab_entry(krb5_context context, 
+			krb5_keytab_entry *entry, 
+			krb5_storage *sp)
 {
-    struct krb4_kt_data *d = id->data;
     krb5_error_code ret;
-    int fd;
 #define ANAME_SZ 40
 #define INST_SZ 40
 #define REALM_SZ 40
     char service[ANAME_SZ];
     char instance[INST_SZ];
     char realm[REALM_SZ];
-    int8_t kvno;
-
-    fd = open (d->filename, O_WRONLY | O_APPEND | O_BINARY);
-    if (fd < 0) {
-	fd = open (d->filename,
-		   O_WRONLY | O_APPEND | O_BINARY | O_CREAT, 0600);
-	if (fd < 0)
-	    return errno;
-    }
     ret = krb5_524_conv_principal (context, entry->principal,
 				   service, instance, realm);
-    if (ret) {
-	close (fd);
+    if (ret)
 	return ret;
-    }
     if (entry->keyblock.keyvalue.length == 8
 	&& entry->keyblock.keytype == ETYPE_DES_CBC_MD5) {
-	write(fd, service, strlen(service)+1);
-	write(fd, instance, strlen(instance)+1);
-	write(fd, realm, strlen(realm)+1);
-	kvno = entry->vno;
-	write(fd, &kvno, sizeof(kvno));
-	write(fd, entry->keyblock.keyvalue.data, 8);
+	ret = krb5_store_stringz(sp, service);
+	ret = krb5_store_stringz(sp, instance);
+	ret = krb5_store_stringz(sp, realm);
+	ret = krb5_store_int8(sp, entry->vno);
+	ret = krb5_storage_write(sp, entry->keyblock.keyvalue.data, 8);
     }
-    close (fd);
     return 0;
 }
+
+static krb5_error_code
+krb4_kt_add_entry (krb5_context context,
+		   krb5_keytab id,
+		   krb5_keytab_entry *entry)
+{
+    struct krb4_kt_data *d = id->data;
+    krb5_storage *sp;
+    krb5_error_code ret;
+    int fd;
+
+    fd = open_flock (d->filename, O_WRONLY | O_APPEND | O_BINARY, 0);
+    if (fd < 0) {
+	fd = open_flock (d->filename,
+		   O_WRONLY | O_APPEND | O_BINARY | O_CREAT, 0600);
+	if (fd < 0) {
+	    ret = errno;
+	    krb5_set_error_string(context, "open(%s): %s", d->filename,
+				  strerror(ret));
+	    return ret;
+	}
+    }
+    sp = krb5_storage_from_fd(fd);
+    if(sp == NULL) {
+	close(fd);
+	return ENOMEM;
+    }
+    krb5_storage_set_eof_code(sp, KRB5_KT_END);
+    ret = krb4_store_keytab_entry(context, entry, sp);
+    krb5_storage_free(sp);
+    if(close (fd) < 0)
+	return errno;
+    return ret;
+}
+
+static krb5_error_code
+krb4_kt_remove_entry(krb5_context context,
+		 krb5_keytab id,
+		 krb5_keytab_entry *entry)
+{
+    struct krb4_kt_data *d = id->data;
+    krb5_error_code ret;
+    krb5_keytab_entry e;
+    krb5_kt_cursor cursor;
+    krb5_storage *sp;
+    int remove_flag = 0;
+    
+    sp = krb5_storage_emem();
+    if (sp == NULL) {
+	krb5_set_error_string(context, "malloc: out of memory");
+	return ENOMEM;
+    }
+    ret = krb5_kt_start_seq_get(context, id, &cursor);
+    if (ret) {
+	krb5_storage_free(sp);
+	return ret;
+    }	
+    while(krb5_kt_next_entry(context, id, &e, &cursor) == 0) {
+	if(!krb5_kt_compare(context, &e, entry->principal, 
+			    entry->vno, entry->keyblock.keytype)) {
+	    ret = krb4_store_keytab_entry(context, &e, sp);
+	    if(ret) {
+		krb5_kt_free_entry(context, &e);
+		krb5_storage_free(sp);
+		return ret;
+	    }
+	} else
+	    remove_flag = 1;
+	krb5_kt_free_entry(context, &e);
+    }
+    krb5_kt_end_seq_get(context, id, &cursor);
+    if(remove_flag) {
+	int fd;
+	unsigned char buf[1024];
+	ssize_t n;
+	krb5_data data;
+	struct stat st;
+
+	krb5_storage_to_data(sp, &data);
+	krb5_storage_free(sp);
+
+	fd = open_flock (d->filename, O_RDWR | O_BINARY, 0);
+	if(fd < 0) {
+	    memset(data.data, 0, data.length);
+	    krb5_data_free(&data);
+	    if(errno == EACCES || errno == EROFS) 
+		return KRB5_KT_NOWRITE;
+	    return errno;
+	}
+
+	if(write(fd, data.data, data.length) != data.length) {
+	    memset(data.data, 0, data.length);
+	    krb5_data_free(&data);
+	    close(fd);
+	    krb5_set_error_string(context, "failed writing to \"%s\"", d->filename);
+	    return errno;
+	}
+	memset(data.data, 0, data.length);
+	if(fstat(fd, &st) < 0) {
+	    krb5_data_free(&data);
+	    close(fd);
+	    krb5_set_error_string(context, "failed getting size of \"%s\"", d->filename);
+	    return errno;
+	}
+	st.st_size -= data.length;
+	memset(buf, 0, sizeof(buf));
+	while(st.st_size > 0) {
+	    n = min(st.st_size, sizeof(buf));
+	    n = write(fd, buf, n);
+	    if(n <= 0) {
+		krb5_data_free(&data);
+		close(fd);
+		krb5_set_error_string(context, "failed writing to \"%s\"", d->filename);
+		return errno;
+		
+	    }
+	    st.st_size -= n;
+	}
+	if(ftruncate(fd, data.length) < 0) {
+	    krb5_data_free(&data);
+	    close(fd);
+	    krb5_set_error_string(context, "failed truncating \"%s\"", d->filename);
+	    return errno;
+	}
+	krb5_data_free(&data);
+	if(close(fd) < 0) {
+	    krb5_set_error_string(context, "error closing \"%s\"", d->filename);
+	    return errno;
+	}
+	return 0;
+    } else {
+	krb5_storage_free(sp);
+	return KRB5_KT_NOTFOUND;
+    }
+}
+
 
 const krb5_kt_ops krb4_fkt_ops = {
     "krb4",
@@ -270,5 +431,18 @@ const krb5_kt_ops krb4_fkt_ops = {
     krb4_kt_next_entry,
     krb4_kt_end_seq_get,
     krb4_kt_add_entry,		/* add_entry */
-    NULL			/* remove_entry */
+    krb4_kt_remove_entry	/* remove_entry */
+};
+
+const krb5_kt_ops krb5_srvtab_fkt_ops = {
+    "SRVTAB",
+    krb4_kt_resolve,
+    krb4_kt_get_name,
+    krb4_kt_close,
+    NULL,			/* get */
+    krb4_kt_start_seq_get,
+    krb4_kt_next_entry,
+    krb4_kt_end_seq_get,
+    krb4_kt_add_entry,		/* add_entry */
+    krb4_kt_remove_entry	/* remove_entry */
 };
