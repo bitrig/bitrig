@@ -2208,6 +2208,10 @@
 ./usr/libdata/perl5/site_perl/m68k-openbsd/uvm/uvm_swap_encrypt.ph
 ./usr/libdata/perl5/site_perl/m68k-openbsd/uvm/uvm_vnode.ph
 ./usr/libdata/perl5/site_perl/m68k-openbsd/varargs.ph
+./usr/libdata/perl5/site_perl/m68k-openbsd/vesa
+./usr/libdata/perl5/site_perl/m68k-openbsd/vesa/vesabiosreg.ph
+./usr/libdata/perl5/site_perl/m68k-openbsd/vesa/vesabiosvar.ph
+./usr/libdata/perl5/site_perl/m68k-openbsd/vesa/vesafbvar.ph
 ./usr/libdata/perl5/site_perl/m68k-openbsd/vis.ph
 ./usr/libdata/perl5/site_perl/m68k-openbsd/wchar.ph
 ./usr/libdata/perl5/site_perl/m68k-openbsd/wctype.ph

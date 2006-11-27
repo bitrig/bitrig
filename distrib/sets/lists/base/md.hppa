@@ -2245,6 +2245,10 @@
 ./usr/libdata/perl5/site_perl/hppa-openbsd/uvm/uvm_swap_encrypt.ph
 ./usr/libdata/perl5/site_perl/hppa-openbsd/uvm/uvm_vnode.ph
 ./usr/libdata/perl5/site_perl/hppa-openbsd/varargs.ph
+./usr/libdata/perl5/site_perl/hppa-openbsd/vesa
+./usr/libdata/perl5/site_perl/hppa-openbsd/vesa/vesabiosreg.ph
+./usr/libdata/perl5/site_perl/hppa-openbsd/vesa/vesabiosvar.ph
+./usr/libdata/perl5/site_perl/hppa-openbsd/vesa/vesafbvar.ph
 ./usr/libdata/perl5/site_perl/hppa-openbsd/vis.ph
 ./usr/libdata/perl5/site_perl/hppa-openbsd/wchar.ph
 ./usr/libdata/perl5/site_perl/hppa-openbsd/wctype.ph

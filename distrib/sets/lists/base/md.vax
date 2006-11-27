@@ -1622,6 +1622,10 @@
 ./usr/libdata/perl5/site_perl/vax-openbsd/vax/varargs.ph
 ./usr/libdata/perl5/site_perl/vax-openbsd/vax/vmparam.ph
 ./usr/libdata/perl5/site_perl/vax-openbsd/vax/vsbus.ph
+./usr/libdata/perl5/site_perl/vax-openbsd/vesa
+./usr/libdata/perl5/site_perl/vax-openbsd/vesa/vesabiosreg.ph
+./usr/libdata/perl5/site_perl/vax-openbsd/vesa/vesabiosvar.ph
+./usr/libdata/perl5/site_perl/vax-openbsd/vesa/vesafbvar.ph
 ./usr/libdata/perl5/site_perl/vax-openbsd/vis.ph
 ./usr/libdata/perl5/site_perl/vax-openbsd/wchar.ph
 ./usr/libdata/perl5/site_perl/vax-openbsd/wctype.ph
