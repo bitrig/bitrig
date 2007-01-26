@@ -981,6 +981,7 @@
 ./usr/share/man/cat4/acpibat.0
 ./usr/share/man/cat4/acpibtn.0
 ./usr/share/man/cat4/acpicpu.0
+./usr/share/man/cat4/acpidock.0
 ./usr/share/man/cat4/acpiec.0
 ./usr/share/man/cat4/acpihpet.0
 ./usr/share/man/cat4/acpimadt.0
