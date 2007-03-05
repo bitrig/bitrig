@@ -1,4 +1,4 @@
-/*	$OpenBSD: irr_parser.c,v 1.7 2007/03/05 17:31:12 henning Exp $ */
+/*	$OpenBSD: irr_parser.c,v 1.8 2007/03/05 22:34:08 henning Exp $ */
 
 /*
  * Copyright (c) 2007 Henning Brauer <henning@openbsd.org>
@@ -409,6 +409,10 @@ parse_route(char *key, char *val)
 {
 	if (strcmp(key, "route"))	/* ignore everything else */
 		return (0);
+
+	/* route is single-value, but seen trailing , in the wild */
+	if (strlen(val) > 0 && val[strlen(val) - 1] == ',')
+		val[strlen(val) - 1] = '\0';
 
 	return (prefixset_addmember(val));
 }
