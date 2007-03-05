@@ -1,4 +1,4 @@
-/*	$OpenBSD: irr_parser.c,v 1.5 2007/03/04 18:13:13 henning Exp $ */
+/*	$OpenBSD: irr_parser.c,v 1.6 2007/03/05 17:28:59 henning Exp $ */
 
 /*
  * Copyright (c) 2007 Henning Brauer <henning@openbsd.org>
@@ -69,8 +69,7 @@ parse_response(FILE *f, enum qtype qtype)
 			warnx("no \":\" found!");
 			return (-1);
 		}
-		while (ISWS(*val))
-			val++;
+		EATWS(val);
 
 		switch (qtype) {
 		case QTYPE_OWNAS:
