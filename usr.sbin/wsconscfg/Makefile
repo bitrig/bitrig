@@ -1,12 +1,12 @@
-#	$OpenBSD: Makefile,v 1.24 2006/07/24 22:25:01 miod Exp $
+#	$OpenBSD: Makefile,v 1.25 2007/08/01 21:32:55 deraadt Exp $
 
 .if ${MACHINE} == "alpha" || ${MACHINE} == "amd64" || \
-   ${MACHINE} == "cats" || ${MACHINE} == "hp300" || \
-   ${MACHINE} == "hppa" || ${MACHINE} == "i386" || \
-   ${MACHINE} == "luna88k" || ${MACHINE} == "mac68k" || \
-   ${MACHINE} == "macppc" || ${MACHINE} == "sgi" || \
-   ${MACHINE} == "sparc" || ${MACHINE} == "sparc64" || \
-   ${MACHINE} == "vax" || ${MACHINE} == "zaurus"
+   ${MACHINE} == "hp300" || ${MACHINE} == "hppa" || \
+   ${MACHINE} == "i386" || ${MACHINE} == "luna88k" || \
+   ${MACHINE} == "mac68k" || ${MACHINE} == "macppc" || \
+   ${MACHINE} == "sgi" || ${MACHINE} == "sparc" || \
+   ${MACHINE} == "sparc64" || ${MACHINE} == "vax" || \
+   ${MACHINE} == "zaurus"
 
 PROG=	wsconscfg
 SRCS=	wsconscfg.c
