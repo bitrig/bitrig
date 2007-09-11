@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.16 2006/10/25 18:58:42 henning Exp $	*/
+/*	$OpenBSD: parse.y,v 1.17 2007/09/11 23:30:30 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2004 Ryan McBride <mcbride@openbsd.org>
@@ -79,7 +79,7 @@ struct ifsd_external	*new_external(char *, u_int32_t);
 
 typedef struct {
 	union {
-		u_int32_t	 number;
+		int64_t		 number;
 		char		*string;
 		struct in_addr	 addr;
 		u_short		 interface;
@@ -101,7 +101,7 @@ typedef struct {
 %left	UNARY
 %token	ERROR
 %token	<v.string>	STRING
-%type	<v.number>	number
+%token	<v.number>	NUMBER
 %type	<v.string>	string
 %type	<v.interface>	interface
 %type	<v.ifstate>	if_test
@@ -116,21 +116,6 @@ grammar		: /* empty */
 		| grammar action '\n'
 		| grammar state '\n'
 		| grammar error '\n'		{ errors++; }
-		;
-
-number		: STRING			{
-			u_int32_t	 uval;
-			const char	*errstr;
-
-			uval = strtonum($1, 0, UINT_MAX, &errstr);
-			if (errstr) {	
-				yyerror("number %s is %s", $1, errstr);
-				free($1);
-				YYERROR;
-			} else
-				$$ = uval;
-			free($1);
-		}
 		;
 
 string		: string STRING				{
@@ -271,7 +256,12 @@ if_test		: interface '.' LINK '.' UP		{
 		}
 		;
 
-ext_test	: STRING EVERY number {
+ext_test	: STRING EVERY NUMBER {
+			if ($3 <= 0) {
+				yyerror("invalid interval: %d", $3);
+				free($1);
+				YYERROR;
+			}
 			$$ = new_external($1, $3);
 			free($1);
 		}
@@ -572,6 +562,42 @@ top:
 		if (yylval.v.string == NULL)
 			errx(1, "yylex: strdup");
 		return (STRING);
+	}
+
+#define allowed_to_end_number(x) \
+	(isspace(x) || x == ')' || x ==',' || x == '/' || x == '}')
+
+	if (c == '-' || isdigit(c)) {
+		do {
+			*p++ = c;
+			if ((unsigned)(p-buf) >= sizeof(buf)) {
+				yyerror("string too long");
+				return (findeol());
+			}
+		} while ((c = lgetc(fin)) != EOF && isdigit(c));
+		lungetc(c);
+		if (p == buf + 1 && buf[0] == '-')
+			goto nodigits;
+		if (c == EOF || allowed_to_end_number(c)) {
+			const char *errstr = NULL;
+
+			*p = '\0';
+			yylval.v.number = strtonum(buf, LLONG_MIN,
+			    LLONG_MAX, &errstr);
+			if (errstr) {
+				yyerror("\"%s\" invalid number: %s",
+				    buf, errstr);
+				return (findeol());
+			}
+			return (NUMBER);
+		} else {
+nodigits:
+			while (p > buf + 1)
+				lungetc(*--p);
+			c = *--p;
+			if (c == '-')
+				return (c);
+		}
 	}
 
 #define allowed_in_string(x) \
