@@ -685,6 +685,7 @@
 ./usr/libdata/perl5/site_perl/amd64-openbsd/amd64/mutex.ph
 ./usr/libdata/perl5/site_perl/amd64-openbsd/amd64/param.ph
 ./usr/libdata/perl5/site_perl/amd64-openbsd/amd64/pcb.ph
+./usr/libdata/perl5/site_perl/amd64-openbsd/amd64/pctr.ph
 ./usr/libdata/perl5/site_perl/amd64-openbsd/amd64/pci_machdep.ph
 ./usr/libdata/perl5/site_perl/amd64-openbsd/amd64/pic.ph
 ./usr/libdata/perl5/site_perl/amd64-openbsd/amd64/pio.ph
