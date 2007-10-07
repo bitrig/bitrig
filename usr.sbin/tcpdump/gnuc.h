@@ -1,6 +1,6 @@
-/*	$OpenBSD: gnuc.h,v 1.4 2002/02/17 19:42:39 millert Exp $	*/
+/*	$OpenBSD: gnuc.h,v 1.5 2007/10/07 16:41:05 deraadt Exp $	*/
 
-/* @(#) $Header: /scm/cvs/src/usr.sbin/tcpdump/gnuc.h,v 1.4 2002/02/17 19:42:39 millert Exp $ (LBL) */
+/* @(#) $Id: gnuc.h,v 1.5 2007/10/07 16:41:05 deraadt Exp $ (LBL) */
 
 /* inline foo */
 #ifdef __GNUC__
