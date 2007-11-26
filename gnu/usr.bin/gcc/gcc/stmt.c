@@ -546,9 +546,9 @@ expand_computed_goto (exp)
     {
       cfun->computed_goto_common_reg = copy_to_mode_reg (Pmode, x);
       cfun->computed_goto_common_label = gen_label_rtx ();
-      emit_label (cfun->computed_goto_common_label);
   
       do_pending_stack_adjust ();
+      emit_label (cfun->computed_goto_common_label);
       emit_indirect_jump (cfun->computed_goto_common_reg);
 
       current_function_has_computed_jump = 1;
@@ -3995,6 +3995,9 @@ expand_decl (decl)
     /* Dynamic-size object: must push space on the stack.  */
     {
       rtx address, size, x;
+
+      if (warn_variable_decl)
+	warning ("variable-sized declaration");
 
       /* Record the stack pointer on entry to block, if have
 	 not already done so.  */
