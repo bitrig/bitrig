@@ -1915,6 +1915,8 @@
 ./usr/sbin/slstats
 ./usr/sbin/snkadm
 ./usr/sbin/snkinit
+./usr/sbin/snmpctl
+./usr/sbin/snmpd
 ./usr/sbin/spamdb
 ./usr/sbin/spray
 ./usr/sbin/sshd
