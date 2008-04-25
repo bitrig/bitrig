@@ -1,6 +1,6 @@
 ;;- Machine description for Hitachi / SuperH SH.
-;;  Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002
-;;  Free Software Foundation, Inc.
+;;  Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
+;;  2004 Free Software Foundation, Inc.
 ;;  Contributed by Steve Chamberlain (sac@cygnus.com).
 ;;  Improved by Jim Wilson (wilson@cygnus.com).
 
@@ -685,11 +685,14 @@
 
 (define_expand "cmpsi"
   [(set (reg:SI T_REG)
-	(compare (match_operand:SI 0 "arith_operand" "")
+	(compare (match_operand:SI 0 "cmpsi_operand" "")
 		 (match_operand:SI 1 "arith_operand" "")))]
   "TARGET_SH1"
   "
 {
+  if (GET_CODE (operands[0]) == REG && REGNO (operands[0]) == T_REG
+      && GET_CODE (operands[1]) != CONST_INT)
+    operands[0] = copy_to_mode_reg (SImode, operands[0]);
   sh_compare_op0 = operands[0];
   sh_compare_op1 = operands[1];
   DONE;
@@ -1147,7 +1150,9 @@
 			    (match_operand:SI 2 "arith_reg_operand" "r"))
 		  (reg:SI T_REG)))
    (set (reg:SI T_REG)
-	(gtu:SI (minus:SI (match_dup 1) (match_dup 2)) (match_dup 1)))]
+	(gtu:SI (minus:SI (minus:SI (match_dup 1) (match_dup 2))
+			  (reg:SI T_REG))
+		(match_dup 1)))]
   "TARGET_SH1"
   "subc	%2,%0"
   [(set_attr "type" "arith")])
@@ -1220,7 +1225,7 @@
 (define_insn "use_sfunc_addr"
   [(set (reg:SI PR_REG)
 	(unspec:SI [(match_operand:SI 0 "register_operand" "r")] UNSPEC_SFUNC))]
-  "TARGET_SH1"
+  "TARGET_SH1 && check_use_sfunc_addr (insn, operands[0])"
   ""
   [(set_attr "length" "0")])
 
@@ -2174,7 +2179,7 @@
 	parts[0] = gen_reg_rtx (SImode);
 	parts[1] = gen_reg_rtx (SImode);
 	emit_insn (gen_rotlsi3_16 (parts[2-choice], operands[1]));
-	parts[choice-1] = operands[1];
+	emit_move_insn (parts[choice-1], operands[1]);
 	emit_insn (gen_ashlsi3 (parts[0], parts[0], GEN_INT (8)));
 	emit_insn (gen_lshrsi3 (parts[1], parts[1], GEN_INT (8)));
 	emit_insn (gen_iorsi3 (operands[0], parts[0], parts[1]));
@@ -6414,7 +6419,7 @@
   ""
   "
 {
-  sh_expand_epilogue ();
+  sh_expand_epilogue (1);
   if (TARGET_SHCOMPACT)
     {
       rtx insn, set;
@@ -7158,7 +7163,7 @@
   ""
   "
 {
-  sh_expand_epilogue ();
+  sh_expand_epilogue (0);
   emit_jump_insn (gen_return ());
   DONE;
 }")
@@ -7223,6 +7228,10 @@
 	}
       DONE;
     }
+  if (sh_expand_t_scc (EQ, operands[0]))
+    DONE;
+  if (! rtx_equal_function_value_matters)
+    FAIL;
   operands[1] = prepare_scc_operands (EQ);
 }")
 
@@ -7269,6 +7278,8 @@
 	}
       DONE;
     }
+  if (! rtx_equal_function_value_matters)
+    FAIL;
   operands[1] = prepare_scc_operands (LT);
 }")
 
@@ -7371,6 +7382,8 @@
 	}
       DONE;
     }
+  if (! rtx_equal_function_value_matters)
+    FAIL;
   operands[1] = prepare_scc_operands (GT);
 }")
 
@@ -7423,6 +7436,8 @@
       DONE;
     }
 
+  if (! rtx_equal_function_value_matters)
+    FAIL;
   if (GET_MODE_CLASS (GET_MODE (sh_compare_op0)) == MODE_FLOAT)
     {
       if (TARGET_IEEE)
@@ -7462,6 +7477,8 @@
 				     sh_compare_op0, sh_compare_op1));
       DONE;
     }
+  if (! rtx_equal_function_value_matters)
+    FAIL;
   operands[1] = prepare_scc_operands (GTU);
 }")
 
@@ -7486,6 +7503,8 @@
 				     sh_compare_op1, sh_compare_op0));
       DONE;
     }
+  if (! rtx_equal_function_value_matters)
+    FAIL;
   operands[1] = prepare_scc_operands (LTU);
 }")
 
@@ -7515,6 +7534,8 @@
 
       DONE;
     }
+  if (! rtx_equal_function_value_matters)
+    FAIL;
   operands[1] = prepare_scc_operands (LEU);
 }")
 
@@ -7545,6 +7566,8 @@
       DONE;
     }
 
+  if (! rtx_equal_function_value_matters)
+    FAIL;
   operands[1] = prepare_scc_operands (GEU);
 }")
 
@@ -7592,8 +7615,12 @@
       DONE;
     }
 
-   operands[1] = prepare_scc_operands (EQ);
-   operands[2] = gen_reg_rtx (SImode);
+  if (sh_expand_t_scc (NE, operands[0]))
+    DONE;
+  if (! rtx_equal_function_value_matters)
+    FAIL;  
+  operands[1] = prepare_scc_operands (EQ);
+  operands[2] = gen_reg_rtx (SImode);
 }")
 
 (define_expand "sunordered"
