@@ -151,7 +151,6 @@
 ./sbin/restore
 ./sbin/route
 ./sbin/rrestore
-./sbin/rtquery
 ./sbin/rtsol
 ./sbin/savecore
 ./sbin/scan_ffs
