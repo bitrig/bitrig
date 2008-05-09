@@ -460,6 +460,7 @@
 ./usr/bin/talk
 ./usr/bin/tbl
 ./usr/bin/tcopy
+./usr/bin/tcpbench
 ./usr/bin/tee
 ./usr/bin/telnet
 ./usr/bin/texi2dvi
