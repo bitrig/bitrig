@@ -1,5 +1,5 @@
-/* Implement the stpcpy function.
-   Copyright (C) 2003 Free Software Foundation, Inc.
+/* Implement the xstrndup function.
+   Copyright (C) 2005 Free Software Foundation, Inc.
    Written by Kaveh R. Ghazi <ghazi@caip.rutgers.edu>.
 
 This file is part of the libiberty library.
@@ -20,24 +20,41 @@ Boston, MA 02110-1301, USA.  */
 
 /*
 
-@deftypefn Supplemental char* stpcpy (char *@var{dst}, const char *@var{src})
+@deftypefn Replacement char* xstrndup (const char *@var{s}, size_t @var{n})
 
-Copies the string @var{src} into @var{dst}.  Returns a pointer to
-@var{dst} + strlen(@var{src}).
+Returns a pointer to a copy of @var{s} with at most @var{n} characters
+without fail, using @code{xmalloc} to obtain memory.  The result is
+always NUL terminated.
 
 @end deftypefn
 
 */
 
-#include <ansidecl.h>
-#include <stddef.h>
-
-extern size_t strlen (const char *);
-extern PTR memcpy (PTR, const PTR, size_t);
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+#include <sys/types.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+# ifdef HAVE_STRINGS_H
+#  include <strings.h>
+# endif
+#endif
+#include "ansidecl.h"
+#include "libiberty.h"
 
 char *
-stpcpy (char *dst, const char *src)
+xstrndup (const char *s, size_t n)
 {
-  const size_t len = strlen (src);
-  return (char *) memcpy (dst, src, len + 1) + len;
+  char *result;
+  size_t len = strlen (s);
+
+  if (n < len)
+    len = n;
+
+  result = XNEWVEC (char, len + 1);
+
+  result[len] = '\0';
+  return (char *) memcpy (result, s, len);
 }

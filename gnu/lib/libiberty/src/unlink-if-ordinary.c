@@ -1,9 +1,5 @@
-/* Simple implementation of vsprintf for systems without it.
-   Highly system-dependent, but should work on most "traditional"
-   implementations of stdio; newer ones should already have vsprintf.
-   Written by Per Bothner of Cygnus Support.
-   Based on libg++'s "form" (written by Doug Lea; dl@rocky.oswego.edu).
-   Copyright (C) 1991, 1995, 2002 Free Software Foundation, Inc.
+/* unlink-if-ordinary.c - remove link to a file unless it is special
+   Copyright (C) 2004, 2005 Free Software Foundation, Inc.
 
 This file is part of the libiberty library.  This library is free
 software; you can redistribute it and/or modify it under the
@@ -26,31 +22,51 @@ the resulting executable to be covered by the GNU General Public License.
 This exception does not however invalidate any other reasons why
 the executable file might be covered by the GNU General Public License. */
 
-#include <ansidecl.h>
-#include <stdarg.h>
-#include <stdio.h>
-#undef vsprintf
+/*
 
-#if defined _IOSTRG && defined _IOWRT
+@deftypefn Supplemental int unlink_if_ordinary (const char*)
+
+Unlinks the named file, unless it is special (e.g. a device file).
+Returns 0 when the file was unlinked, a negative value (and errno set) when
+there was an error deleting the file, and a positive value if no attempt
+was made to unlink the file because it is special.
+
+@end deftypefn
+
+*/
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <sys/types.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
+
+#include "libiberty.h"
+
+#ifndef S_ISLNK
+#ifdef S_IFLNK
+#define S_ISLNK(m) (((m) & S_IFMT) == S_IFLNK)
+#else
+#define S_ISLNK(m) 0
+#define lstat stat
+#endif
+#endif
 
 int
-vsprintf (char *buf, const char *format, va_list ap)
+unlink_if_ordinary (const char *name)
 {
-  FILE b;
-  int ret;
-#ifdef VMS
-  b->_flag = _IOWRT|_IOSTRG;
-  b->_ptr = buf;
-  b->_cnt = 12000;
-#else
-  b._flag = _IOWRT|_IOSTRG;
-  b._ptr = buf;
-  b._cnt = 12000;
-#endif
-  ret = _doprnt(format, ap, &b);
-  putc('\0', &b);
-  return ret;
+  struct stat st;
 
+  if (lstat (name, &st) == 0
+      && (S_ISREG (st.st_mode) || S_ISLNK (st.st_mode)))
+    return unlink (name);
+
+  return 1;
 }
-
-#endif

@@ -1,5 +1,5 @@
-/* Implement the stpcpy function.
-   Copyright (C) 2003 Free Software Foundation, Inc.
+/* Implement the strndup function.
+   Copyright (C) 2005 Free Software Foundation, Inc.
    Written by Kaveh R. Ghazi <ghazi@caip.rutgers.edu>.
 
 This file is part of the libiberty library.
@@ -20,24 +20,36 @@ Boston, MA 02110-1301, USA.  */
 
 /*
 
-@deftypefn Supplemental char* stpcpy (char *@var{dst}, const char *@var{src})
+@deftypefn Extension char* strndup (const char *@var{s}, size_t @var{n})
 
-Copies the string @var{src} into @var{dst}.  Returns a pointer to
-@var{dst} + strlen(@var{src}).
+Returns a pointer to a copy of @var{s} with at most @var{n} characters
+in memory obtained from @code{malloc}, or @code{NULL} if insufficient
+memory was available.  The result is always NUL terminated.
 
 @end deftypefn
 
 */
 
-#include <ansidecl.h>
+#include "ansidecl.h"
 #include <stddef.h>
 
-extern size_t strlen (const char *);
-extern PTR memcpy (PTR, const PTR, size_t);
+extern size_t	strlen (const char*);
+extern PTR	malloc (size_t);
+extern PTR	memcpy (PTR, const PTR, size_t);
 
 char *
-stpcpy (char *dst, const char *src)
+strndup (const char *s, size_t n)
 {
-  const size_t len = strlen (src);
-  return (char *) memcpy (dst, src, len + 1) + len;
+  char *result;
+  size_t len = strlen (s);
+
+  if (n < len)
+    len = n;
+
+  result = (char *) malloc (len + 1);
+  if (!result)
+    return 0;
+
+  result[len] = '\0';
+  return (char *) memcpy (result, s, len);
 }
