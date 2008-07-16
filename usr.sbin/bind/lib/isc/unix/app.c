@@ -1,21 +1,23 @@
 /*
- * Copyright (C) 1999-2002  Internet Software Consortium.
+ * Copyright (C) 2004, 2005  Internet Systems Consortium, Inc. ("ISC")
+ * Copyright (C) 1999-2003  Internet Software Consortium.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
  *
- * THE SOFTWARE IS PROVIDED "AS IS" AND INTERNET SOFTWARE CONSORTIUM
- * DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL
- * INTERNET SOFTWARE CONSORTIUM BE LIABLE FOR ANY SPECIAL, DIRECT,
- * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING
- * FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
- * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
- * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+ * OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* $ISC: app.c,v 1.43.2.3 2002/08/05 06:57:16 marka Exp $ */
+/* $ISC: app.c,v 1.50.18.2 2005/04/29 00:17:06 marka Exp $ */
+
+/*! \file */
 
 #include <config.h>
 
@@ -54,7 +56,7 @@ static isc_eventlist_t		on_run;
 static isc_mutex_t		lock;
 static isc_boolean_t		shutdown_requested = ISC_FALSE;
 static isc_boolean_t		running = ISC_FALSE;
-/*
+/*!
  * We assume that 'want_shutdown' can be read and written atomically.
  */
 static isc_boolean_t		want_shutdown = ISC_FALSE;
@@ -69,14 +71,14 @@ static pthread_t		blockedthread;
 #endif /* ISC_PLATFORM_USETHREADS */
 
 #ifdef HAVE_LINUXTHREADS
-/*
+/*!
  * Linux has sigwait(), but it appears to prevent signal handlers from
  * running, even if they're not in the set being waited for.  This makes
  * it impossible to get the default actions for SIGILL, SIGSEGV, etc.
  * Instead of messing with it, we just use sigsuspend() instead.
  */
 #undef HAVE_SIGWAIT
-/*
+/*!
  * We need to remember which thread is the main thread...
  */
 static pthread_t		main_thread;
@@ -101,7 +103,7 @@ handle_signal(int sig, void (*handler)(int)) {
 	struct sigaction sa;
 	char strbuf[ISC_STRERRORSIZE];
 
-	memset(&sa, 0, sizeof sa);
+	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = handler;
 
 	if (sigfillset(&sa.sa_mask) != 0 ||
@@ -274,7 +276,7 @@ isc_app_onrun(isc_mem_t *mctx, isc_task_t *task, isc_taskaction_t action,
 	 */
 	isc_task_attach(task, &cloned_task);
 	event = isc_event_allocate(mctx, cloned_task, ISC_APPEVENT_SHUTDOWN,
-				   action, arg, sizeof *event);
+				   action, arg, sizeof(*event));
 	if (event == NULL) {
 		result = ISC_R_NOMEMORY;
 		goto unlock;
@@ -291,7 +293,7 @@ isc_app_onrun(isc_mem_t *mctx, isc_task_t *task, isc_taskaction_t action,
 }
 
 #ifndef ISC_PLATFORM_USETHREADS
-/*
+/*!
  * Event loop for nonthreaded programs.
  */
 static isc_result_t
@@ -301,15 +303,17 @@ evloop() {
 		int n;
 		isc_time_t when, now;
 		struct timeval tv, *tvp;
-		fd_set readfds, writefds;
+		fd_set *readfds, *writefds;
 		int maxfd;
 		isc_boolean_t readytasks;
+		isc_boolean_t call_timer_dispatch = ISC_FALSE;
 
 		readytasks = isc__taskmgr_ready();
 		if (readytasks) {
 			tv.tv_sec = 0;
 			tv.tv_usec = 0;
 			tvp = &tv;
+			call_timer_dispatch = ISC_TRUE;
 		} else {
 			result = isc__timermgr_nextevent(&when);
 			if (result != ISC_R_SUCCESS)
@@ -317,8 +321,10 @@ evloop() {
 			else {
 				isc_uint64_t us;
 
-				(void)isc_time_now(&now);
+				TIME_NOW(&now);
 				us = isc_time_microdiff(&when, &now);
+				if (us == 0)
+					call_timer_dispatch = ISC_TRUE;
 				tv.tv_sec = us / 1000000;
 				tv.tv_usec = us % 1000000;
 				tvp = &tv;
@@ -326,11 +332,27 @@ evloop() {
 		}
 
 		isc__socketmgr_getfdsets(&readfds, &writefds, &maxfd);
-		n = select(maxfd, &readfds, &writefds, NULL, tvp);
+		n = select(maxfd, readfds, writefds, NULL, tvp);
 
-		(void)isc__timermgr_dispatch();
+		if (n == 0 || call_timer_dispatch) {
+			/*
+			 * We call isc__timermgr_dispatch() only when
+			 * necessary, in order to reduce overhead.  If the
+			 * select() call indicates a timeout, we need the
+			 * dispatch.  Even if not, if we set the 0-timeout 
+			 * for the select() call, we need to check the timer
+			 * events.  In the 'readytasks' case, there may be no
+			 * timeout event actually, but there is no other way
+			 * to reduce the overhead.
+			 * Note that we do not have to worry about the case
+			 * where a new timer is inserted during the select()
+			 * call, since this loop only runs in the non-thread
+			 * mode.
+			 */
+			isc__timermgr_dispatch();
+		}
 		if (n > 0)
-			(void)isc__socketmgr_dispatch(&readfds, &writefds,
+			(void)isc__socketmgr_dispatch(readfds, writefds,
 						      maxfd);
 		(void)isc__taskmgr_dispatch();
 
@@ -351,14 +373,14 @@ evloop() {
  * is set by isc_condition_signal().
  */
 
-/*
- * True iff we are currently executing in the recursive
+/*!
+ * \brief True if we are currently executing in the recursive
  * event loop.
  */
 static isc_boolean_t in_recursive_evloop = ISC_FALSE;
 
-/*
- * True iff we are exiting the event loop as the result of
+/*!
+ * \brief True if we are exiting the event loop as the result of
  * a call to isc_condition_signal() rather than a shutdown
  * or reload.
  */
@@ -367,16 +389,16 @@ static isc_boolean_t signalled = ISC_FALSE;
 isc_result_t
 isc__nothread_wait_hack(isc_condition_t *cp, isc_mutex_t *mp) {
 	isc_result_t result;
-	
+
 	UNUSED(cp);
 	UNUSED(mp);
-	
+
 	INSIST(!in_recursive_evloop);
 	in_recursive_evloop = ISC_TRUE;
 
 	INSIST(*mp == 1); /* Mutex must be locked on entry. */
 	--*mp;
-	
+
 	result = evloop();
 	if (result == ISC_R_RELOAD)
 		want_reload = ISC_TRUE;
@@ -394,7 +416,7 @@ isc_result_t
 isc__nothread_signal_hack(isc_condition_t *cp) {
 
 	UNUSED(cp);
-	
+
 	INSIST(in_recursive_evloop);
 
 	want_shutdown = ISC_TRUE;
@@ -527,9 +549,6 @@ isc_app_run(void) {
 	result = evloop();
 	if (result != ISC_R_SUCCESS)
 		return (result);
-
-	while (isc__taskmgr_ready())
-		(void)isc__taskmgr_dispatch();
 
 #endif /* ISC_PLATFORM_USETHREADS */
 
