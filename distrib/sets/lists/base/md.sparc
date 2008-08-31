@@ -701,7 +701,7 @@
 ./usr/libdata/perl5/site_perl/sparc-openbsd/dev/pci/ubsecreg.ph
 ./usr/libdata/perl5/site_perl/sparc-openbsd/dev/pci/ubsecvar.ph
 ./usr/libdata/perl5/site_perl/sparc-openbsd/dev/pci/vga_pcivar.ph
-./usr/libdata/perl5/site_perl/sparc-openbsd/dev/pci/wdt50x.ph
+./usr/libdata/perl5/site_perl/sparc-openbsd/dev/pci/auacerreg.ph
 ./usr/libdata/perl5/site_perl/sparc-openbsd/dev/pci/ydsreg.ph
 ./usr/libdata/perl5/site_perl/sparc-openbsd/dev/pci/ydsvar.ph
 ./usr/libdata/perl5/site_perl/sparc-openbsd/dev/pckbc
