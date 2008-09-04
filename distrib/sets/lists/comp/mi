@@ -5702,14 +5702,12 @@
 ./usr/share/man/cat3/ypprot_err.0
 ./usr/share/man/cat3/zlibCompileFlags.0
 ./usr/share/man/cat3/zlibVersion.0
-./usr/share/man/cat9/FREE.0
 ./usr/share/man/cat9/FREF.0
 ./usr/share/man/cat9/FRELE.0
 ./usr/share/man/cat9/KASSERT.0
 ./usr/share/man/cat9/KDASSERT.0
 ./usr/share/man/cat9/KNOTE.0
 ./usr/share/man/cat9/KTRPOINT.0
-./usr/share/man/cat9/MALLOC.0
 ./usr/share/man/cat9/MCHTYPE.0
 ./usr/share/man/cat9/MCLGET.0
 ./usr/share/man/cat9/MD5Init.0
