@@ -1,5 +1,5 @@
 /* v3_pcons.c */
-/* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
+/* Written by Dr Stephen N Henson (shenson@bigfoot.com) for the OpenSSL
  * project.
  */
 /* ====================================================================
@@ -64,12 +64,10 @@
 #include <openssl/conf.h>
 #include <openssl/x509v3.h>
 
-static STACK_OF(CONF_VALUE) *
-i2v_POLICY_CONSTRAINTS(const X509V3_EXT_METHOD *method, void *bcons,
-		       STACK_OF(CONF_VALUE) *extlist);
-static void *v2i_POLICY_CONSTRAINTS(const X509V3_EXT_METHOD *method,
-				    X509V3_CTX *ctx,
-				    STACK_OF(CONF_VALUE) *values);
+static STACK_OF(CONF_VALUE) *i2v_POLICY_CONSTRAINTS(X509V3_EXT_METHOD *method,
+				void *bcons, STACK_OF(CONF_VALUE) *extlist);
+static void *v2i_POLICY_CONSTRAINTS(X509V3_EXT_METHOD *method,
+				X509V3_CTX *ctx, STACK_OF(CONF_VALUE) *values);
 
 const X509V3_EXT_METHOD v3_policy_constraints = {
 NID_policy_constraints, 0,
@@ -90,9 +88,8 @@ ASN1_SEQUENCE(POLICY_CONSTRAINTS) = {
 IMPLEMENT_ASN1_ALLOC_FUNCTIONS(POLICY_CONSTRAINTS)
 
 
-static STACK_OF(CONF_VALUE) *
-i2v_POLICY_CONSTRAINTS(const X509V3_EXT_METHOD *method, void *a,
-		       STACK_OF(CONF_VALUE) *extlist)
+static STACK_OF(CONF_VALUE) *i2v_POLICY_CONSTRAINTS(X509V3_EXT_METHOD *method,
+	     void *a, STACK_OF(CONF_VALUE) *extlist)
 {
 	POLICY_CONSTRAINTS *pcons = a;
 	X509V3_add_value_int("Require Explicit Policy",
@@ -102,9 +99,8 @@ i2v_POLICY_CONSTRAINTS(const X509V3_EXT_METHOD *method, void *a,
 	return extlist;
 }
 
-static void *v2i_POLICY_CONSTRAINTS(const X509V3_EXT_METHOD *method,
-				    X509V3_CTX *ctx,
-				    STACK_OF(CONF_VALUE) *values)
+static void *v2i_POLICY_CONSTRAINTS(X509V3_EXT_METHOD *method,
+	     X509V3_CTX *ctx, STACK_OF(CONF_VALUE) *values)
 {
 	POLICY_CONSTRAINTS *pcons=NULL;
 	CONF_VALUE *val;

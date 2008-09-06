@@ -60,8 +60,7 @@
 #include "cms.h"
 #include "cms_lcl.h"
 
-IMPLEMENT_ASN1_FUNCTIONS(CMS_ContentInfo)
-IMPLEMENT_ASN1_PRINT_FUNCTION(CMS_ContentInfo)
+IMPLEMENT_ASN1_FUNCTIONS_const(CMS_ContentInfo)
 
 DECLARE_ASN1_ITEM(CMS_CertificateChoices)
 DECLARE_ASN1_ITEM(CMS_RevocationInfoChoice)
@@ -347,10 +346,20 @@ void cms_DigestAlgorithm_set(X509_ALGOR *alg, const EVP_MD *md)
 	{
 	int param_type;
 
-	if (md->flags & EVP_MD_FLAG_DIGALGID_ABSENT)
+	switch (EVP_MD_type(md))
+		{
+		case NID_sha1:
+		case NID_sha224:
+		case NID_sha256:
+		case NID_sha384:
+		case NID_sha512:
 		param_type = V_ASN1_UNDEF;
-	else
+		break;
+	
+		default:
 		param_type = V_ASN1_NULL;
+		break;
+		}
 
 	X509_ALGOR_set0(alg, OBJ_nid2obj(EVP_MD_type(md)), param_type, NULL);
 
@@ -406,12 +415,11 @@ int cms_DigestAlgorithm_find_ctx(EVP_MD_CTX *mctx, BIO *chain,
 			return 0;
 			}
 		BIO_get_md_ctx(chain, &mtmp);
-		if (EVP_MD_CTX_type(mtmp) == nid
-		/* Workaround for broken implementations that use signature
-		 * algorithm  OID instead of digest.
-		 */
-			|| EVP_MD_pkey_type(EVP_MD_CTX_md(mtmp)) == nid)
-			return EVP_MD_CTX_copy_ex(mctx, mtmp);
+		if (EVP_MD_CTX_type(mtmp) == nid)
+			{
+			EVP_MD_CTX_copy_ex(mctx, mtmp);
+			return 1;
+			}
 		chain = BIO_next(chain);
 		}
 	}
@@ -463,6 +471,8 @@ int CMS_add0_cert(CMS_ContentInfo *cms, X509 *cert)
 	STACK_OF(CMS_CertificateChoices) **pcerts;
 	int i;
 	pcerts = cms_get0_certificate_choices(cms);
+	if (!pcerts)
+		return 0;
 	if (!pcerts)
 		return 0;
 	for (i = 0; i < sk_CMS_CertificateChoices_num(*pcerts); i++)
@@ -545,15 +555,6 @@ int CMS_add0_crl(CMS_ContentInfo *cms, X509_CRL *crl)
 	rch->type = CMS_REVCHOICE_CRL;
 	rch->d.crl = crl;
 	return 1;
-	}
-
-int CMS_add1_crl(CMS_ContentInfo *cms, X509_CRL *crl)
-	{
-	int r;
-	r = CMS_add0_crl(cms, crl);
-	if (r > 0)
-		CRYPTO_add(&crl->references, 1, CRYPTO_LOCK_X509_CRL);
-	return r;
 	}
 
 STACK_OF(X509) *CMS_get1_certs(CMS_ContentInfo *cms)
