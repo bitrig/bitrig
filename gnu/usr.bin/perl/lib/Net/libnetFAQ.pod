@@ -1,6 +1,6 @@
 =head1 NAME
 
-libnetFAQ - libnet Frequently Asked Questions
+Net::libnetFAQ - libnet Frequently Asked Questions
 
 =head1 DESCRIPTION
 
@@ -9,7 +9,7 @@ libnetFAQ - libnet Frequently Asked Questions
 This document is distributed with the libnet distribution, and is also
 available on the libnet web page at
 
-    http://www.pobox.com/~gbarr/libnet/
+    http://search.cpan.org/~gbarr/libnet/
 
 =head2 How to contribute to this document
 
@@ -70,7 +70,7 @@ in
 The latest release and information is also available on the libnet web page
 at
 
- http://www.pobox.com/~gbarr/libnet/
+ http://search.cpan.org/~gbarr/libnet/
 
 =head1 Using Net::FTP
 
@@ -84,7 +84,7 @@ An example taken from an article posted to comp.lang.perl.misc
 
     use Net::FTP;
 
-    # for debuging: $ftp = Net::FTP->new('site','Debug',10);
+    # for debugging: $ftp = Net::FTP->new('site','Debug',10);
     # open a connection and log in!
 
     $ftp = Net::FTP->new('target_site.somewhere.xxx');
@@ -300,8 +300,4 @@ being sent or response being received.
 
 Copyright (c) 1997 Graham Barr.
 All rights reserved.
-
-=for html <hr>
-
-I<$Id: //depot/libnet/Net/libnetFAQ.pod#5 $>
 

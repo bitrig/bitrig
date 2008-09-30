@@ -10,14 +10,14 @@
 package Pod::Select;
 
 use vars qw($VERSION);
-$VERSION = 1.12;  ## Current version of this package
+$VERSION = 1.35;  ## Current version of this package
 require  5.005;    ## requires this Perl version or later
 
 #############################################################################
 
 =head1 NAME
 
-Pod::Select, podselect() - extract selected sections of POD from input
+Pod::Select, podselect - extract selected sections of POD from input
 
 =head1 SYNOPSIS
 
@@ -92,7 +92,7 @@ The formal syntax of a section specification is:
 
 =over 4
 
-=item
+=item *
 
 I<head1-title-regex>/I<head2-title-regex>/...
 
@@ -109,33 +109,39 @@ Some example section specifications follow.
 
 =over 4
 
-=item
+=item *
+
 Match the C<NAME> and C<SYNOPSIS> sections and all of their subsections:
 
 C<NAME|SYNOPSIS>
 
-=item
+=item *
+
 Match only the C<Question> and C<Answer> subsections of the C<DESCRIPTION>
 section:
 
 C<DESCRIPTION/Question|Answer>
 
-=item
+=item *
+
 Match the C<Comments> subsection of I<all> sections:
 
 C</Comments>
 
-=item
+=item *
+
 Match all subsections of C<DESCRIPTION> I<except> for C<Comments>:
 
 C<DESCRIPTION/!Comments>
 
-=item
+=item *
+
 Match the C<DESCRIPTION> section but do I<not> match any of its subsections:
 
 C<DESCRIPTION/!.+>
 
-=item
+=item *
+
 Match all top level sections but none of their subsections:
 
 C</!.+>
@@ -160,7 +166,7 @@ The formal syntax of a range specification is:
 
 =over 4
 
-=item
+=item *
 
 /I<start-range-regex>/[../I<end-range-regex>/]
 
@@ -175,7 +181,7 @@ Where I<cmd-expr> is intended to match the name of one or more POD
 commands, and I<text-expr> is intended to match the paragraph text for
 the command. If a range-regex is supposed to match a POD command, then
 the first character of the regex (the one after the initial '/')
-absolutely I<must> be an single '=' character; it may not be anything
+absolutely I<must> be a single '=' character; it may not be anything
 else (not even a regex meta-character) if it is supposed to match
 against the name of a POD command.
 
@@ -499,7 +505,8 @@ sub is_selected {
 
     ## Keep track of current sections levels and headings
     $_ = $paragraph;
-    if (/^=((?:sub)*)(?:head(?:ing)?|sec(?:tion)?)(\d*)\s+(.*)\s*$/) {
+    if (/^=((?:sub)*)(?:head(?:ing)?|sec(?:tion)?)(\d*)\s+(.*?)\s*$/)
+    {
         ## This is a section heading command
         my ($level, $heading) = ($2, $3);
         $level = 1 + (length($1) / 3)  if ((! length $level) || (length $1));
@@ -568,22 +575,22 @@ are used.
 
 All other arguments should correspond to the names of input files
 containing POD sections. A file name of "-" or "<&STDIN" will
-be interpeted to mean standard input (which is the default if no
+be interpreted to mean standard input (which is the default if no
 filenames are given).
 
 =cut 
 
 sub podselect {
     my(@argv) = @_;
-    my %defaults   = ();
+    my %defaults = ();
     my $pod_parser = new Pod::Select(%defaults);
     my $num_inputs = 0;
     my $output = ">&STDOUT";
-    my %opts = ();
+    my %opts;
     local $_;
     for (@argv) {
         if (ref($_)) {
-            next unless (ref($_) eq 'HASH');
+        next unless (ref($_) eq 'HASH');
             %opts = (%defaults, %{$_});
 
             ##-------------------------------------------------------------
@@ -734,6 +741,8 @@ L<Pod::Parser>
 
 =head1 AUTHOR
 
+Please report bugs using L<http://rt.cpan.org>.
+
 Brad Appleton E<lt>bradapp@enteract.comE<gt>
 
 Based on code for B<pod2text> written by
@@ -742,4 +751,4 @@ Tom Christiansen E<lt>tchrist@mox.perl.comE<gt>
 =cut
 
 1;
-
+# vim: ts=4 sw=4 et
