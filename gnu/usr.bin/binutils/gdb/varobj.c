@@ -549,7 +549,7 @@ varobj_gen_name (void)
 
   /* generate a name for this object */
   id++;
-  xasprintf (&obj_name, "var%d", id);
+  obj_name = xstrprintf ("var%d", id);
 
   return obj_name;
 }
@@ -853,6 +853,62 @@ varobj_list (struct varobj ***varlist)
 
   return rootcount;
 }
+
+void
+varobj_refresh (void)
+{
+  struct varobj *var;
+  struct varobj_root *croot;
+  int mycount = rootcount;
+  char * name;
+                                                                                
+  croot = rootlist;
+  while ((croot != NULL) && (mycount > 0))
+    {
+      var = croot->rootvar;
+                                                                                
+      /* Get rid of the memory for the old expression.  This also
+         leaves var->root->exp == NULL, which is ok for the parsing
+         below.  */
+      free_current_contents ((char **) &var->root->exp);
+                                                                                
+      value_free (var->value);
+      var->type = NULL;
+
+      name = xstrdup (var->name);
+
+      /* Reparse the expression.  Wrap the call to parse expression,
+         so we can return a sensible error. */
+      if (!gdb_parse_exp_1 (&name, var->root->valid_block, 0, &var->root->exp))
+        {
+          return;
+        }
+                                                                                
+      /* We definitively need to catch errors here.
+         If evaluate_expression succeeds we got the value we wanted.
+         But if it fails, we still go on with a call to evaluate_type()  */
+      if (gdb_evaluate_expression (var->root->exp, &var->value))
+        {
+          /* no error */
+          release_value (var->value);
+          if (VALUE_LAZY (var->value))
+            gdb_value_fetch_lazy (var->value);
+        }
+      else
+        var->value = evaluate_type (var->root->exp);
+                                                                                
+      var->type = VALUE_TYPE (var->value);
+                                                                                
+      mycount--;
+      croot = croot->next;
+    }
+                                                                                
+  if (mycount || (croot != NULL))
+    warning
+      ("varobj_refresh: assertion failed - wrong tally of root vars (%d:%d)",
+       rootcount, mycount);
+}
+                                                                                
 
 /* Update the values for a variable and its children.  This is a
    two-pronged attack.  First, re-parse the value for the root's
@@ -1254,7 +1310,7 @@ create_child (struct varobj *parent, int index, char *name)
     child->error = 1;
   child->parent = parent;
   child->root = parent->root;
-  xasprintf (&childs_name, "%s.%s", parent->obj_name, name);
+  childs_name = xstrprintf ("%s.%s", parent->obj_name, name);
   child->obj_name = childs_name;
   install_variable (child);
 
@@ -1837,7 +1893,7 @@ c_name_of_child (struct varobj *parent, int index)
   switch (TYPE_CODE (type))
     {
     case TYPE_CODE_ARRAY:
-      xasprintf (&name, "%d", index);
+      name = xstrprintf ("%d", index);
       break;
 
     case TYPE_CODE_STRUCT:
@@ -1856,7 +1912,7 @@ c_name_of_child (struct varobj *parent, int index)
 	  break;
 
 	default:
-	  xasprintf (&name, "*%s", parent->name);
+	  name = xstrprintf ("*%s", parent->name);
 	  break;
 	}
       break;
@@ -2070,7 +2126,7 @@ c_value_of_variable (struct varobj *var)
     case TYPE_CODE_ARRAY:
       {
 	char *number;
-	xasprintf (&number, "[%d]", var->num_children);
+	number = xstrprintf ("[%d]", var->num_children);
 	return (number);
       }
       /* break; */
@@ -2558,7 +2614,7 @@ _initialize_varobj (void)
   varobj_table = xmalloc (sizeof_table);
   memset (varobj_table, 0, sizeof_table);
 
-  add_show_from_set (add_set_cmd ("debugvarobj", class_maintenance, var_zinteger, (char *) &varobjdebug, "Set varobj debugging.\n\
+  deprecated_add_show_from_set (add_set_cmd ("debugvarobj", class_maintenance, var_zinteger, (char *) &varobjdebug, "Set varobj debugging.\n\
 When non-zero, varobj debugging is enabled.", &setlist),
 		     &showlist);
 }

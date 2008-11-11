@@ -27,6 +27,7 @@
 #include "elf/common.h"
 #include "elf/mips.h"
 
+#include "auxv.h"
 #include "symtab.h"
 #include "bfd.h"
 #include "symfile.h"
@@ -34,6 +35,7 @@
 #include "gdbcore.h"
 #include "target.h"
 #include "inferior.h"
+#include "command.h"
 
 #include "solist.h"
 #include "solib-svr4.h"
@@ -179,7 +181,9 @@ static CORE_ADDR breakpoint_addr;	/* Address where end bkpt is set */
 
 /* Local function prototypes */
 
+#if 0
 static int match_main (char *);
+#endif
 
 static CORE_ADDR bfd_lookup_symbol (bfd *, char *, flagword);
 
@@ -272,133 +276,6 @@ bfd_lookup_symbol (bfd *abfd, char *symname, flagword sect_flags)
   return symaddr;
 }
 
-#ifdef HANDLE_SVR4_EXEC_EMULATORS
-
-/*
-   Solaris BCP (the part of Solaris which allows it to run SunOS4
-   a.out files) throws in another wrinkle. Solaris does not fill
-   in the usual a.out link map structures when running BCP programs,
-   the only way to get at them is via groping around in the dynamic
-   linker.
-   The dynamic linker and it's structures are located in the shared
-   C library, which gets run as the executable's "interpreter" by
-   the kernel.
-
-   Note that we can assume nothing about the process state at the time
-   we need to find these structures.  We may be stopped on the first
-   instruction of the interpreter (C shared library), the first
-   instruction of the executable itself, or somewhere else entirely
-   (if we attached to the process for example).
- */
-
-static char *debug_base_symbols[] =
-{
-  "r_debug",			/* Solaris 2.3 */
-  "_r_debug",			/* Solaris 2.1, 2.2 */
-  NULL
-};
-
-static int look_for_base (int, CORE_ADDR);
-
-/*
-
-   LOCAL FUNCTION
-
-   look_for_base -- examine file for each mapped address segment
-
-   SYNOPSYS
-
-   static int look_for_base (int fd, CORE_ADDR baseaddr)
-
-   DESCRIPTION
-
-   This function is passed to proc_iterate_over_mappings, which
-   causes it to get called once for each mapped address space, with
-   an open file descriptor for the file mapped to that space, and the
-   base address of that mapped space.
-
-   Our job is to find the debug base symbol in the file that this
-   fd is open on, if it exists, and if so, initialize the dynamic
-   linker structure base address debug_base.
-
-   Note that this is a computationally expensive proposition, since
-   we basically have to open a bfd on every call, so we specifically
-   avoid opening the exec file.
- */
-
-static int
-look_for_base (int fd, CORE_ADDR baseaddr)
-{
-  bfd *interp_bfd;
-  CORE_ADDR address = 0;
-  char **symbolp;
-
-  /* If the fd is -1, then there is no file that corresponds to this
-     mapped memory segment, so skip it.  Also, if the fd corresponds
-     to the exec file, skip it as well. */
-
-  if (fd == -1
-      || (exec_bfd != NULL
-	  && fdmatch (fileno ((FILE *) (exec_bfd->iostream)), fd)))
-    {
-      return (0);
-    }
-
-  /* Try to open whatever random file this fd corresponds to.  Note that
-     we have no way currently to find the filename.  Don't gripe about
-     any problems we might have, just fail. */
-
-  if ((interp_bfd = bfd_fdopenr ("unnamed", gnutarget, fd)) == NULL)
-    {
-      return (0);
-    }
-  if (!bfd_check_format (interp_bfd, bfd_object))
-    {
-      /* FIXME-leak: on failure, might not free all memory associated with
-         interp_bfd.  */
-      bfd_close (interp_bfd);
-      return (0);
-    }
-
-  /* Now try to find our debug base symbol in this file, which we at
-     least know to be a valid ELF executable or shared library. */
-
-  for (symbolp = debug_base_symbols; *symbolp != NULL; symbolp++)
-    {
-      address = bfd_lookup_symbol (interp_bfd, *symbolp, 0);
-      if (address != 0)
-	{
-	  break;
-	}
-    }
-  if (address == 0)
-    {
-      /* FIXME-leak: on failure, might not free all memory associated with
-         interp_bfd.  */
-      bfd_close (interp_bfd);
-      return (0);
-    }
-
-  /* Eureka!  We found the symbol.  But now we may need to relocate it
-     by the base address.  If the symbol's value is less than the base
-     address of the shared library, then it hasn't yet been relocated
-     by the dynamic linker, and we have to do it ourself.  FIXME: Note
-     that we make the assumption that the first segment that corresponds
-     to the shared library has the base address to which the library
-     was relocated. */
-
-  if (address < baseaddr)
-    {
-      address += baseaddr;
-    }
-  debug_base = address;
-  /* FIXME-leak: on failure, might not free all memory associated with
-     interp_bfd.  */
-  bfd_close (interp_bfd);
-  return (1);
-}
-#endif /* HANDLE_SVR4_EXEC_EMULATORS */
-
 /*
 
    LOCAL FUNCTION
@@ -428,10 +305,18 @@ elf_locate_base (void)
 {
   struct bfd_section *dyninfo_sect;
   int dyninfo_sect_size;
-  CORE_ADDR dyninfo_addr;
+  CORE_ADDR dyninfo_addr, relocated_dyninfo_addr, entry_addr;
   char *buf;
   char *bufend;
   int arch_size;
+
+  /* Find the address of the entry point of the program from the
+     auxv vector.  */
+  if (target_auxv_search (&current_target, AT_ENTRY, &entry_addr) != 1)
+    {
+      /* No auxv info, maybe an older kernel. Fake our way through.  */
+      entry_addr = bfd_get_start_address (exec_bfd); 
+    }
 
   /* Find the start address of the .dynamic section.  */
   dyninfo_sect = bfd_get_section_by_name (exec_bfd, ".dynamic");
@@ -439,10 +324,13 @@ elf_locate_base (void)
     return 0;
   dyninfo_addr = bfd_section_vma (exec_bfd, dyninfo_sect);
 
+  relocated_dyninfo_addr = dyninfo_addr
+    + entry_addr - bfd_get_start_address(exec_bfd);
+
   /* Read in .dynamic section, silently ignore errors.  */
   dyninfo_sect_size = bfd_section_size (exec_bfd, dyninfo_sect);
   buf = alloca (dyninfo_sect_size);
-  if (target_read_memory (dyninfo_addr, buf, dyninfo_sect_size))
+  if (target_read_memory (relocated_dyninfo_addr, buf, dyninfo_sect_size))
     return 0;
 
   /* Find the DT_DEBUG entry in the the .dynamic section.
@@ -579,11 +467,6 @@ locate_base (void)
       if (exec_bfd != NULL
 	  && bfd_get_flavour (exec_bfd) == bfd_target_elf_flavour)
 	debug_base = elf_locate_base ();
-#ifdef HANDLE_SVR4_EXEC_EMULATORS
-      /* Try it the hard way for emulated executables.  */
-      else if (!ptid_equal (inferior_ptid, null_ptid) && target_has_execution)
-	proc_iterate_over_mappings (look_for_base);
-#endif
     }
   return (debug_base);
 }
@@ -768,7 +651,47 @@ svr4_current_sos (void)
          does have a name, so we can no longer use a missing name to
          decide when to ignore it. */
       if (IGNORE_FIRST_LINK_MAP_ENTRY (new))
-	free_so (new);
+	{
+          /* It is the first link map entry, i.e. it is the main executable.  */
+
+	  if (bfd_get_start_address (exec_bfd) == entry_point_address ())
+	    {
+              /* Non-pie case, main executable has not been relocated.  */
+	      free_so (new);
+	    }
+	  else
+	    {
+              /* Pie case, main executable has been relocated.  */
+	      struct so_list *gdb_solib;
+
+	      strncpy (new->so_name, exec_bfd->filename,
+		       SO_NAME_MAX_PATH_SIZE - 1);
+	      new->so_name[SO_NAME_MAX_PATH_SIZE - 1] = '\0';
+	      strcpy (new->so_original_name, new->so_name);
+	      new->main_relocated = 0;
+            
+	      for (gdb_solib = master_so_list ();
+                   gdb_solib;
+                   gdb_solib = gdb_solib->next)
+		{
+		  if (strcmp (gdb_solib->so_name, new->so_name) == 0)
+		    if (gdb_solib->main_relocated)
+		      break;
+		}
+
+	      if ((gdb_solib && !gdb_solib->main_relocated) || (!gdb_solib))
+		{
+		  add_to_target_sections (0 /*from_tty*/, &current_target, new);
+		  new->main = 1;
+		}
+
+	      /* We need this in the list of shared libs we return because
+		 solib_add_stub will loop through it and add the symbol file.  */
+	      new->next = 0;
+	      *link_ptr = new;
+	      link_ptr = &new->next; 
+	    }
+	} /* End of IGNORE_FIRST_LINK_MAP_ENTRY  */
       else
 	{
 	  int errcode;
@@ -790,17 +713,10 @@ svr4_current_sos (void)
 	      strcpy (new->so_original_name, new->so_name);
 	    }
 
-	  /* If this entry has no name, or its name matches the name
-	     for the main executable, don't include it in the list.  */
-	  if (! new->so_name[0]
-	      || match_main (new->so_name))
-	    free_so (new);
-	  else
-	    {
-	      new->next = 0;
-	      *link_ptr = new;
-	      link_ptr = &new->next;
-	    }
+	  new->next = 0;
+	  *link_ptr = new;
+	  link_ptr = &new->next;
+
 	}
 
       discard_cleanups (old_chain);
@@ -886,6 +802,7 @@ svr4_fetch_objfile_link_map (struct objfile *objfile)
    the main executable file is by looking at its name.  Return
    non-zero iff SONAME matches one of the known main executable names.  */
 
+#if 0
 static int
 match_main (char *soname)
 {
@@ -899,6 +816,7 @@ match_main (char *soname)
 
   return (0);
 }
+#endif
 
 /* Return 1 if PC lies in the dynamic symbol resolution code of the
    SVR4 run time loader.  */
@@ -1004,7 +922,7 @@ enable_break (void)
       char *buf;
       CORE_ADDR load_addr = 0;
       int load_addr_found = 0;
-      struct so_list *inferior_sos;
+      struct so_list *so;
       bfd *tmp_bfd = NULL;
       struct target_ops *tmp_bfd_target;
       int tmp_fd = -1;
@@ -1047,23 +965,19 @@ enable_break (void)
          target will also close the underlying bfd.  */
       tmp_bfd_target = target_bfd_reopen (tmp_bfd);
 
-      /* If the entry in _DYNAMIC for the dynamic linker has already
-         been filled in, we can read its base address from there. */
-      inferior_sos = svr4_current_sos ();
-      if (inferior_sos)
+      /* On a running target, we can get the dynamic linker's base
+         address from the shared library table.  */
+      solib_add (NULL, 0, NULL, auto_solib_add);
+      so = master_so_list ();
+      while (so)
 	{
-	  /* Connected to a running target.  Update our shared library table. */
-	  solib_add (NULL, 0, NULL, auto_solib_add);
-	}
-      while (inferior_sos)
-	{
-	  if (strcmp (buf, inferior_sos->so_original_name) == 0)
+	  if (strcmp (buf, so->so_original_name) == 0)
 	    {
 	      load_addr_found = 1;
-	      load_addr = LM_ADDR (inferior_sos);
+	      load_addr = LM_ADDR (so);
 	      break;
 	    }
-	  inferior_sos = inferior_sos->next;
+	  so = so->next;
 	}
 
       /* Otherwise we find the dynamic linker's base address by examining
@@ -1375,6 +1289,8 @@ svr4_solib_create_inferior_hook (void)
   while (stop_signal != TARGET_SIGNAL_TRAP);
   stop_soon = NO_STOP_QUIETLY;
 #endif /* defined(_SCO_DS) */
+ 
+   disable_breakpoints_at_startup (1); 
 }
 
 static void
@@ -1490,7 +1406,7 @@ void
 set_solib_svr4_fetch_link_map_offsets (struct gdbarch *gdbarch,
                                        struct link_map_offsets *(*flmo) (void))
 {
-  set_gdbarch_data (gdbarch, fetch_link_map_offsets_gdbarch_data, flmo);
+  deprecated_set_gdbarch_data (gdbarch, fetch_link_map_offsets_gdbarch_data, flmo);
 }
 
 /* Initialize the architecture-specific link_map_offsets fetcher.
@@ -1588,7 +1504,7 @@ void
 _initialize_svr4_solib (void)
 {
   fetch_link_map_offsets_gdbarch_data =
-    register_gdbarch_data (init_fetch_link_map_offsets);
+    gdbarch_data_register_post_init (init_fetch_link_map_offsets);
 
   svr4_so_ops.relocate_section_addresses = svr4_relocate_section_addresses;
   svr4_so_ops.free_so = svr4_free_so;
