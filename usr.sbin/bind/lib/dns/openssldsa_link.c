@@ -1,9 +1,9 @@
 /*
- * Portions Copyright (C) 2004  Internet Systems Consortium, Inc. ("ISC")
+ * Portions Copyright (C) 2004-2007  Internet Systems Consortium, Inc. ("ISC")
  * Portions Copyright (C) 1999-2002  Internet Software Consortium.
  * Portions Copyright (C) 1995-2000 by Network Associates, Inc.
  *
- * Permission to use, copy, modify, and distribute this software for any
+ * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
  *
@@ -16,7 +16,7 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* $ISC: openssldsa_link.c,v 1.1.4.1 2004/12/09 04:07:18 marka Exp $ */
+/* $ISC: openssldsa_link.c,v 1.1.6.9 2007/08/28 07:20:04 tbox Exp $ */
 
 #ifdef OPENSSL
 
@@ -124,7 +124,7 @@ openssldsa_verify(dst_context_t *dctx, const isc_region_t *sig) {
 	if (sig->length < 2 * ISC_SHA1_DIGESTLENGTH + 1)
 		return (DST_R_VERIFYFAILURE);
 
-	cp++;	/* Skip T */
+	cp++;	/*%< Skip T */
 	dsasig = DSA_SIG_new();
 	dsasig->r = BN_bin2bn(cp, ISC_SHA1_DIGESTLENGTH, NULL);
 	cp += ISC_SHA1_DIGESTLENGTH;
@@ -133,7 +133,7 @@ openssldsa_verify(dst_context_t *dctx, const isc_region_t *sig) {
 
 	status = DSA_do_verify(digest, ISC_SHA1_DIGESTLENGTH, dsasig, dsa);
 	DSA_SIG_free(dsasig);
-	if (status == 0)
+	if (status <= 0)
 		return (dst__openssl_toresult(DST_R_VERIFYFAILURE));
 
 	return (ISC_R_SUCCESS);
@@ -171,6 +171,9 @@ openssldsa_compare(const dst_key_t *key1, const dst_key_t *key2) {
 
 static isc_result_t
 openssldsa_generate(dst_key_t *key, int unused) {
+#if OPENSSL_VERSION_NUMBER > 0x00908000L
+        BN_GENCB cb;
+#endif
 	DSA *dsa;
 	unsigned char rand_array[ISC_SHA1_DIGESTLENGTH];
 	isc_result_t result;
@@ -182,12 +185,27 @@ openssldsa_generate(dst_key_t *key, int unused) {
 	if (result != ISC_R_SUCCESS)
 		return (result);
 
+#if OPENSSL_VERSION_NUMBER > 0x00908000L
+        dsa = DSA_new();
+	if (dsa == NULL)
+		return (dst__openssl_toresult(DST_R_OPENSSLFAILURE));
+
+	BN_GENCB_set_old(&cb, NULL, NULL);
+  
+	if (!DSA_generate_parameters_ex(dsa, key->key_size, rand_array,
+					ISC_SHA1_DIGESTLENGTH,  NULL, NULL,
+					&cb))
+	{
+		DSA_free(dsa);
+		return (dst__openssl_toresult(DST_R_OPENSSLFAILURE));
+	}
+#else
 	dsa = DSA_generate_parameters(key->key_size, rand_array,
 				      ISC_SHA1_DIGESTLENGTH, NULL, NULL,
 				      NULL, NULL);
-
 	if (dsa == NULL)
 		return (dst__openssl_toresult(DST_R_OPENSSLFAILURE));
+#endif
 
 	if (DSA_generate_key(dsa) == 0) {
 		DSA_free(dsa);
@@ -413,9 +431,9 @@ static dst_func_t openssldsa_functions = {
 	openssldsa_adddata,
 	openssldsa_sign,
 	openssldsa_verify,
-	NULL, /* computesecret */
+	NULL, /*%< computesecret */
 	openssldsa_compare,
-	NULL, /* paramcompare */
+	NULL, /*%< paramcompare */
 	openssldsa_generate,
 	openssldsa_isprivate,
 	openssldsa_destroy,
@@ -423,7 +441,7 @@ static dst_func_t openssldsa_functions = {
 	openssldsa_fromdns,
 	openssldsa_tofile,
 	openssldsa_parse,
-	NULL, /* cleanup */
+	NULL, /*%< cleanup */
 };
 
 isc_result_t
@@ -441,3 +459,4 @@ dst__openssldsa_init(dst_func_t **funcp) {
 EMPTY_TRANSLATION_UNIT
 
 #endif /* OPENSSL */
+/*! \file */
