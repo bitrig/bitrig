@@ -50,7 +50,7 @@ proc g++_version { } {
 	set tmp [remote_exec host "$compiler -v"]
 	set status [lindex $tmp 0];
 	set output [lindex $tmp 1];
-	regexp "version.*$" $output version
+	regexp "version\[^\n\r\]*" $output version
 	if { $status == 0 && [info exists version] } then {
 	    if [is_remote host] {
 		clone_output "$compiler $version\n"
@@ -72,6 +72,7 @@ proc g++_version { } {
 #
 proc g++_include_flags { paths } {
     global srcdir
+    global objdir
     global HAVE_LIBSTDCXX_V3
     global TESTING_IN_BUILD_TREE
 
@@ -89,7 +90,7 @@ proc g++_include_flags { paths } {
     set gccpath ${paths}
 
     if { ${HAVE_LIBSTDCXX_V3} } {
-      set odir_v3 [lookfor_file ${gccpath} libstdc++-v3]
+      set odir_v3 ${objdir}/../../../lib/libstdc++
       append flags [exec sh ${odir_v3}/testsuite_flags --build-includes]
     } else {
       set odir_v2 [lookfor_file ${gccpath} libstdc++]
