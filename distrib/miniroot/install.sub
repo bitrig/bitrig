@@ -1,4 +1,4 @@
-#	$OpenBSD: install.sub,v 1.496 2009/04/29 20:30:53 deraadt Exp $
+#	$OpenBSD: install.sub,v 1.497 2009/04/29 22:43:46 deraadt Exp $
 #	$NetBSD: install.sub,v 1.5.2.8 1996/09/02 23:25:02 pk Exp $
 #
 # Copyright (c) 1997-2009 Todd Miller, Theo de Raadt, Ken Westerback
@@ -321,7 +321,7 @@ user_setup() {
 	_n=$resp
 
 	askpassword $_u
-	_encr=`/mnt/usr/bin/encrypt -b 8 -- "$_password"`
+	[[ -n "$_password" ]] && _encr=`/mnt/usr/bin/encrypt -b 8 -- "$_password"`
 	echo "${_u}:${_encr}:1000:10::0:0:${_n}:/home/${_u}:/bin/ksh" \
 	    >> /mnt/etc/master.passwd
 
@@ -953,7 +953,7 @@ enable_network() {
 					cmd2="$dt $dtaddr"
 					;;
 				esac
-				if [ ! -n "$name" ]; then
+				if [ -z "$name" ]; then
 					echo "/mnt/etc/hostname.$if: invalid network configuration file"
 					return
 				fi
