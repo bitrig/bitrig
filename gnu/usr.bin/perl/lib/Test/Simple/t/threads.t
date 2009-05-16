@@ -1,4 +1,5 @@
 #!/usr/bin/perl -w
+# $Id$
 
 BEGIN {
     if( $ENV{PERL_CORE} ) {
@@ -8,13 +9,16 @@ BEGIN {
 }
 
 use Config;
-unless ($Config{'useithreads'}) {
-    print "1..0 # Skip: no threads\n";
-    exit 0;
+BEGIN {
+    unless ( $] >= 5.008001 && $Config{'useithreads'} && 
+             eval { require threads; 'threads'->import; 1; }) 
+    {
+        print "1..0 # Skip: no working threads\n";
+        exit 0;
+    }
 }
 
 use strict;
-require threads;
 use Test::Builder;
 
 my $Test = Test::Builder->new;

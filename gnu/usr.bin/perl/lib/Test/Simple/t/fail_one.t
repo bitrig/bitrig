@@ -1,4 +1,5 @@
 #!/usr/bin/perl -w
+# $Id: fail_one.t,v 1.2 2009/05/16 21:42:57 simon Exp $
 
 BEGIN {
     if( $ENV{PERL_CORE} ) {
@@ -53,7 +54,7 @@ not ok 1
 OUT
 
     My::Test::ok($$err eq <<ERR) || print $$err;
-#   Failed test in $0 at line 45.
+#   Failed test at $0 line 45.
 # Looks like you failed 1 test of 1.
 ERR
 

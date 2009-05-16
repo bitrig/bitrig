@@ -1,4 +1,5 @@
 #!perl -w
+# $Id$
 
 BEGIN {
     if( $ENV{PERL_CORE} ) {
@@ -10,20 +11,11 @@ BEGIN {
 # Can't use Test.pm, that's a 5.005 thing.
 package My::Test;
 
-print "1..2\n";
-
-my $test_num = 1;
-# Utility testing functions.
-sub ok ($;$) {
-    my($test, $name) = @_;
-    my $ok = '';
-    $ok .= "not " unless $test;
-    $ok .= "ok $test_num";
-    $ok .= " - $name" if defined $name;
-    $ok .= "\n";
-    print $ok;
-    $test_num++;
-}
+# This has to be a require or else the END block below runs before
+# Test::Builder's own and the ending diagnostics don't come out right.
+require Test::Builder;
+my $TB = Test::Builder->create;
+$TB->plan(tests => 2);
 
 
 package main;
@@ -34,6 +26,7 @@ chdir 't';
 push @INC, '../t/lib/';
 require Test::Simple::Catch;
 my($out, $err) = Test::Simple::Catch::caught();
+local $ENV{HARNESS_ACTIVE} = 0;
 
 Test::Simple->import(tests => 3);
 
@@ -45,7 +38,7 @@ ok(1, 'Car');
 ok(0, 'Sar');
 
 END {
-    My::Test::ok($$out eq <<OUT);
+    $TB->is_eq($$out, <<OUT);
 1..3
 ok 1 - Foo
 not ok 2 - Bar
@@ -54,10 +47,13 @@ ok 4 - Car
 not ok 5 - Sar
 OUT
 
-    My::Test::ok($$err eq <<ERR);
-#     Failed test ($0 at line 31)
-#     Failed test ($0 at line 34)
-# Looks like you planned 3 tests but ran 2 extra.
+    $TB->is_eq($$err, <<ERR);
+#   Failed test 'Bar'
+#   at $0 line 31.
+#   Failed test 'Sar'
+#   at $0 line 34.
+# Looks like you planned 3 tests but ran 5.
+# Looks like you failed 2 tests of 5 run.
 ERR
 
     exit 0;

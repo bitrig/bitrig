@@ -1,4 +1,5 @@
 #!/usr/bin/perl -w
+# $Id: fork.t,v 1.2 2009/05/16 21:42:57 simon Exp $
 
 BEGIN {
     if( $ENV{PERL_CORE} ) {
@@ -10,7 +11,13 @@ BEGIN {
 use Test::More;
 use Config;
 
-if( !$Config{d_fork} ) {
+my $Can_Fork = $Config{d_fork} ||
+               (($^O eq 'MSWin32' || $^O eq 'NetWare') and
+                $Config{useithreads} and 
+                $Config{ccflags} =~ /-DPERL_IMPLICIT_SYS/
+               );
+
+if( !$Can_Fork ) {
     plan skip_all => "This system cannot fork";
 }
 else {
@@ -23,3 +30,4 @@ if( fork ) { # parent
 else {
     exit;   # child
 }
+
