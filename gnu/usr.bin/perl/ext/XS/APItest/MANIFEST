@@ -1,6 +1,0 @@
-Makefile.PL
-MANIFEST
-README
-APItest.pm
-APItest.xs
-t/printf.t
