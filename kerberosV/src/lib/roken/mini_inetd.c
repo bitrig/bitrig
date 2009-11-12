@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995 - 2000 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995 - 2001 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -33,7 +33,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$KTH: mini_inetd.c,v 1.28 2000/10/08 13:38:47 assar Exp $");
+RCSID("$KTH: mini_inetd.c,v 1.31 2005/04/12 11:28:56 lha Exp $");
 #endif
 
 #include <err.h>
@@ -59,29 +59,18 @@ accept_it (int s)
 }
 
 /*
- * Listen on `port' emulating inetd.
+ * Listen on a specified port, emulating inetd.
  */
 
-void
-mini_inetd (int port)
+void ROKEN_LIB_FUNCTION
+mini_inetd_addrinfo (struct addrinfo *ai)
 {
-    int error, ret;
-    struct addrinfo *ai, *a, hints;
-    char portstr[NI_MAXSERV];
+    int ret;
+    struct addrinfo *a;
     int n, nalloc, i;
     int *fds;
     fd_set orig_read_set, read_set;
     int max_fd = -1;
-
-    memset (&hints, 0, sizeof(hints));
-    hints.ai_flags    = AI_PASSIVE;
-    hints.ai_socktype = SOCK_STREAM;
-
-    snprintf (portstr, sizeof(portstr), "%d", ntohs(port));
-
-    error = getaddrinfo (NULL, portstr, &hints, &ai);
-    if (error)
-	errx (1, "getaddrinfo: %s", gai_strerror (error));
 
     for (nalloc = 0, a = ai; a != NULL; a = a->ai_next)
 	++nalloc;
@@ -95,21 +84,26 @@ mini_inetd (int port)
     for (i = 0, a = ai; a != NULL; a = a->ai_next) {
 	fds[i] = socket (a->ai_family, a->ai_socktype, a->ai_protocol);
 	if (fds[i] < 0) {
-	    warn ("socket");
+	    warn ("socket af = %d", a->ai_family);
 	    continue;
 	}
 	socket_set_reuseaddr (fds[i], 1);
-	if (bind (fds[i], a->ai_addr, a->ai_addrlen) < 0)
-	    err (1, "bind");
-	if (listen (fds[i], SOMAXCONN) < 0)
-	    err (1, "listen");
+	if (bind (fds[i], a->ai_addr, a->ai_addrlen) < 0) {
+	    warn ("bind af = %d", a->ai_family);
+	    close(fds[i]);
+	    continue;
+	}
+	if (listen (fds[i], SOMAXCONN) < 0) {
+	    warn ("listen af = %d", a->ai_family);
+	    close(fds[i]);
+	    continue;
+	}
 	if (fds[i] >= FD_SETSIZE)
 	    errx (1, "fd too large");
 	FD_SET(fds[i], &orig_read_set);
 	max_fd = max(max_fd, fds[i]);
 	++i;
     }
-    freeaddrinfo (ai);
     if (i == 0)
 	errx (1, "no sockets");
     n = i;
@@ -125,7 +119,32 @@ mini_inetd (int port)
     for (i = 0; i < n; ++i)
 	if (FD_ISSET (fds[i], &read_set)) {
 	    accept_it (fds[i]);
+	    free(fds);
 	    return;
 	}
+    free(fds);
     abort ();
+}
+
+void ROKEN_LIB_FUNCTION
+mini_inetd (int port)
+{
+    int error;
+    struct addrinfo *ai, hints;
+    char portstr[NI_MAXSERV];
+
+    memset (&hints, 0, sizeof(hints));
+    hints.ai_flags    = AI_PASSIVE;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_family   = PF_UNSPEC;
+
+    snprintf (portstr, sizeof(portstr), "%d", ntohs(port));
+
+    error = getaddrinfo (NULL, portstr, &hints, &ai);
+    if (error)
+	errx (1, "getaddrinfo: %s", gai_strerror (error));
+
+    mini_inetd_addrinfo(ai);
+    
+    freeaddrinfo(ai);
 }
