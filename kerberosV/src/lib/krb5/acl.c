@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000 Kungliga Tekniska Högskolan
+ * Copyright (c) 2000 - 2002, 2004 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  * 
@@ -34,7 +34,7 @@
 #include "krb5_locl.h"
 #include <fnmatch.h>
 
-RCSID("$KTH: acl.c,v 1.1 2000/06/12 11:17:52 joda Exp $");
+RCSID("$KTH: acl.c,v 1.5 2004/05/25 21:15:58 lha Exp $");
 
 struct acl_field {
     enum { acl_string, acl_fnmatch, acl_retval } type;
@@ -46,9 +46,24 @@ struct acl_field {
 };
 
 static void
-acl_free_list(struct acl_field *acl)
+free_retv(struct acl_field *acl)
+{
+    while(acl != NULL) {
+	if (acl->type == acl_retval) {
+	    if (*acl->u.retv)
+		free(*acl->u.retv);
+	    *acl->u.retv = NULL;
+	}
+	acl = acl->next;
+    }
+}
+
+static void
+acl_free_list(struct acl_field *acl, int retv)
 {
     struct acl_field *next;
+    if (retv)
+	free_retv(acl);
     while(acl != NULL) {
 	next = acl->next;
 	free(acl);
@@ -68,7 +83,8 @@ acl_parse_format(krb5_context context,
     for(p = format; *p != '\0'; p++) {
 	tmp = malloc(sizeof(*tmp));
 	if(tmp == NULL) {
-	    acl_free_list(acl);
+	    krb5_set_error_string(context, "malloc: out of memory");
+	    acl_free_list(acl, 0);
 	    return ENOMEM;
 	}
 	if(*p == 's') {
@@ -80,6 +96,13 @@ acl_parse_format(krb5_context context,
 	} else if(*p == 'r') {
 	    tmp->type = acl_retval;
 	    tmp->u.retv = va_arg(ap, char **);
+	    *tmp->u.retv = NULL;
+	} else {
+	    krb5_set_error_string(context, "acl_parse_format: "
+				  "unknown format specifier %c", *p);
+	    acl_free_list(acl, 0);
+	    free(tmp);
+	    return EINVAL;
 	}
 	tmp->next = NULL;
 	if(acl == NULL)
@@ -98,9 +121,9 @@ acl_match_field(krb5_context context,
 		struct acl_field *field)
 {
     if(field->type == acl_string) {
-	return !strcmp(string, field->u.cstr);
+	return !strcmp(field->u.cstr, string);
     } else if(field->type == acl_fnmatch) {
-	return !fnmatch(string, field->u.cstr, 0);
+	return !fnmatch(field->u.cstr, string, 0);
     } else if(field->type == acl_retval) {
 	*field->u.retv = strdup(string);
 	return TRUE;
@@ -114,25 +137,30 @@ acl_match_acl(krb5_context context,
 	      const char *string)
 {
     char buf[256];
-    for(;strsep_copy(&string, " \t", buf, sizeof(buf)) != -1; 
-	acl = acl->next) {
+    while(strsep_copy(&string, " \t", buf, sizeof(buf)) != -1) {
 	if(buf[0] == '\0')
 	    continue; /* skip ws */
+	if (acl == NULL)
+	    return FALSE;
 	if(!acl_match_field(context, buf, acl)) {
 	    return FALSE;
 	}
+	acl = acl->next;
     }
+    if (acl)
+	return FALSE;
     return TRUE;
 }
 
 
-krb5_error_code
+krb5_error_code KRB5_LIB_FUNCTION
 krb5_acl_match_string(krb5_context context,
-		      const char *acl_string,
+		      const char *string,
 		      const char *format,
 		      ...)
 {
     krb5_error_code ret;
+    krb5_boolean found;
     struct acl_field *acl;
 
     va_list ap;
@@ -142,13 +170,17 @@ krb5_acl_match_string(krb5_context context,
     if(ret)
 	return ret;
 
-    ret = acl_match_acl(context, acl, acl_string);
-
-    acl_free_list(acl);
-    return ret ? 0 : EACCES;
+    found = acl_match_acl(context, acl, string);
+    acl_free_list(acl, !found);
+    if (found) {
+	return 0;
+    } else {
+	krb5_set_error_string(context, "ACL did not match");
+	return EACCES;
+    }
 }
 	       
-krb5_error_code
+krb5_error_code KRB5_LIB_FUNCTION
 krb5_acl_match_file(krb5_context context,
 		    const char *file,
 		    const char *format,
@@ -159,10 +191,16 @@ krb5_acl_match_file(krb5_context context,
     char buf[256];
     va_list ap;
     FILE *f;
+    krb5_boolean found;
 
     f = fopen(file, "r");
-    if(f == NULL)
-	return errno;
+    if(f == NULL) {
+	int save_errno = errno;
+
+	krb5_set_error_string(context, "open(%s): %s", file,
+			      strerror(save_errno));
+	return save_errno;
+    }
 
     va_start(ap, format);
     ret = acl_parse_format(context, &acl, format, ap);
@@ -172,18 +210,23 @@ krb5_acl_match_file(krb5_context context,
 	return ret;
     }
 
-    ret = EACCES; /* XXX */
+    found = FALSE;
     while(fgets(buf, sizeof(buf), f)) {
 	if(buf[0] == '#')
 	    continue;
 	if(acl_match_acl(context, acl, buf)) {
-	    ret = 0;
-	    goto out;
+	    found = TRUE;
+	    break;
 	}
+	free_retv(acl);
     }
 
-  out:
     fclose(f);
-    acl_free_list(acl);
-    return ret;
+    acl_free_list(acl, !found);
+    if (found) {
+	return 0;
+    } else {
+	krb5_set_error_string(context, "ACL did not match");
+	return EACCES;
+    }
 }
