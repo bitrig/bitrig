@@ -120,9 +120,11 @@ addrinfo *malloc_ai(int port, u_long addr, const struct addrinfo *hints)
 {
 	struct addrinfo *ai;
 
-	ai = calloc(1, sizeof(*ai) + sizeof(struct sockaddr_in));
+	ai = malloc(sizeof(*ai) + sizeof(struct sockaddr_in));
 	if (ai == NULL)
 		return (NULL);
+	
+	memset(ai, '\0', sizeof(*ai) + sizeof(struct sockaddr_in));
 	
 	ai->ai_addr = (struct sockaddr *)(ai + 1);
 	/* XXX -- ssh doesn't use sa_len */
