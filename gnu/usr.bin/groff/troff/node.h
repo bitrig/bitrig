@@ -49,6 +49,7 @@ class token_node;
 
 struct node {
   node *next;
+  node *last;
   node();
   node(node *n);
   node *add_char(charinfo *c, environment *, hunits *widthp);
@@ -101,11 +102,11 @@ struct node {
   virtual const char *type() = 0;
 };
 
-inline node::node() : next(0)
+inline node::node() : next(0), last(0)
 {
 }
 
-inline node::node(node *n) : next(n)
+inline node::node(node *n) : next(n), last(0)
 {
 }
 
