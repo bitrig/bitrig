@@ -1,10 +1,6 @@
-#!perl
+#!perl -w
 
 BEGIN {
-    if ($ENV{PERL_CORE}) {
-	chdir 't' if -d 't';
-	@INC = '../lib';
-    }
     require Config; import Config;
     if ($Config{'extensions'} !~ /\bOpcode\b/
 	&& $Config{'extensions'} !~ /\bPOSIX\b/
@@ -30,7 +26,8 @@ $safe->reval( qq{\$_[1] = qq/\0/ x } . $masksize );
 
 # Check that it didn't work
 $safe->reval( q{$x + $y} );
-like( $@, qr/^'?addition \(\+\)'? trapped by operation mask/,
+# Written this way to keep the Test::More that comes with perl 5.6.2 happy
+ok( $@ =~ /^'?addition \(\+\)'? trapped by operation mask/,
 	    'opmask still in place with reval' );
 
 my $safe2 = new Safe;
@@ -43,6 +40,7 @@ EOF
 close $fh;
 $safe2->rdo('nasty.pl');
 $safe2->reval( q{$x + $y} );
-like( $@, qr/^'?addition \(\+\)'? trapped by operation mask/,
+# Written this way to keep the Test::More that comes with perl 5.6.2 happy
+ok( $@ =~ /^'?addition \(\+\)'? trapped by operation mask/,
 	    'opmask still in place with rdo' );
 END { unlink 'nasty.pl' }

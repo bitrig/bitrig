@@ -2,13 +2,9 @@
 # Tests that all ops can be trapped by a Safe compartment
 
 BEGIN {
-    if ($ENV{PERL_CORE}) {
-	chdir 't' if -d 't';
-	@INC = '../lib';
-    }
-    else {
+    unless ($ENV{PERL_CORE}) {
 	# this won't work outside of the core, so exit
-        print "1..0\n"; exit 0;
+        print "1..0 # skipped: PERL_CORE unset\n"; exit 0;
     }
 }
 use Config;
@@ -49,7 +45,7 @@ plan(tests => scalar @op);
 sub testop {
     my ($op, $opname, $code) = @_;
     pass("$op : skipped") and return if $code =~ /^SKIP/;
-    pass("$op : skipped") and return if $code =~ m://: && $] < 5.009; # no dor
+    pass("$op : skipped") and return if $code =~ m://|~~: && $] < 5.010;
     my $c = new Safe;
     $c->deny_only($op);
     $c->reval($code);
@@ -423,4 +419,10 @@ setstate	SKIP
 method_named	$x->y()
 dor		$x // $y
 dorassign	$x //= $y
+once		SKIP {use feature 'state'; state $foo = 42;}
+say		SKIP {use feature 'say'; say "foo";}
+smartmatch	$x ~~ $y
+aeach		SKIP each @t
+akeys		SKIP keys @t
+avalues		SKIP values @t
 custom		SKIP (no way)
