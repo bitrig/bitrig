@@ -1,8 +1,6 @@
 package Log::Message::Item;
-use if $] > 5.017, 'deprecate';
 
 use strict;
-use vars qw[$VERSION];
 use Params::Check qw[check];
 use Log::Message::Handlers;
 
@@ -12,7 +10,7 @@ use Carp ();
 BEGIN {
     use vars qw[$AUTOLOAD $VERSION];
 
-    $VERSION    =   '0.06';
+    $VERSION    =   $Log::Message::VERSION;
 }
 
 ### create a new item.
@@ -90,7 +88,7 @@ Log::Message::Item  - Message objects for Log::Message
     $item->remove;  # delete the item from the stack it was on
 
     # Besides these methods, you can also call the handlers on
-    # the object specifically.
+    # the object specificallly.
     # See the Log::Message::Handlers manpage for documentation on what
     # handlers are available by default and how to add your own
 

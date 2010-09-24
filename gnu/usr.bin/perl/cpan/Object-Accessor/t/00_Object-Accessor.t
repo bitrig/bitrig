@@ -23,7 +23,7 @@ $Object::Accessor::DEBUG = $Object::Accessor::DEBUG = 1 if @ARGV;
     isa_ok( $Object,            $Class );
 }
 
-### check non existent accessor
+### check non existant accessor
 {   my $warning;
     local $SIG{__WARN__} = sub { $warning .= "@_" };
 

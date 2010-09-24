@@ -1,5 +1,4 @@
 package Log::Message;
-use if $] > 5.017, 'deprecate';
 
 use strict;
 
@@ -12,7 +11,9 @@ local $Params::Check::VERBOSE = 1;
 
 BEGIN {
     use vars        qw[$VERSION @ISA $STACK $CONFIG];
-    $VERSION    =   '0.06';
+
+    $VERSION    =   0.02;
+
     $STACK      =   [];
 }
 
@@ -88,7 +89,7 @@ More on this below.
 
 These are individual message items, which are objects that contain
 the user message as well as the meta-data described above.
-See the L<Log::Message::Item> manpage to see how to extract this
+See the L<Log::Message::Item> manpage to see how to extract this 
 meta-data and how to work with the Item objects.
 You should never need to create your own Item objects, but knowing
 about their methods and accessors is important if you want to write
@@ -178,8 +179,8 @@ provided.
 =item verbose
 
 Log::Message makes use of another module to validate its arguments,
-which is called L<Params::Check>, which is a lightweight, yet
-powerful input checker and parser. (See the L<Params::Check>
+which is called L<Params::Check>, which is a lightweight, yet 
+powerful input checker and parser. (See the L<Params::Check> 
 manpage for details).
 
 The verbose setting will control whether this module will
@@ -313,7 +314,7 @@ sub _new_stack {
     };
 
     my $args = check( $tmpl, \%hash, $CONFIG->verbose ) or (
-        warn(loc(q[Could not create a new stack object: %1],
+        warn(loc(q[Could not create a new stack object: %1], 
                 Params::Check->last_error)
         ),
         return
@@ -398,9 +399,9 @@ sub store {
         %hash = @_;
     }
 
-    my $args = check( $tmpl, \%hash ) or (
-        warn( loc(q[Could not store error: %1], Params::Check->last_error) ),
-        return
+    my $args = check( $tmpl, \%hash ) or ( 
+        warn( loc(q[Could not store error: %1], Params::Check->last_error) ), 
+        return 
     );
 
     my $extra = delete $args->{extra};
@@ -487,10 +488,10 @@ sub retrieve {
     }
 
     my $args = check( $tmpl, \%hash ) or (
-        warn( loc(q[Could not parse input: %1], Params::Check->last_error) ),
-        return
+        warn( loc(q[Could not parse input: %1], Params::Check->last_error) ), 
+        return 
     );
-
+    
     my @list =
             grep { $_->tag      =~ /$args->{tag}/       ? 1 : 0 }
             grep { $_->level    =~ /$args->{level}/     ? 1 : 0 }
@@ -560,7 +561,7 @@ This removes all items from the stack and returns them to the caller
 
 sub flush {
     my $self = shift;
-
+    
     return splice @{$self->{STACK}};
 }
 

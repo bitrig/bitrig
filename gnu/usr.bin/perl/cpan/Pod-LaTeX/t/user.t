@@ -6,12 +6,12 @@
 #   Variant provided by
 #       Adriano Rodrigues Ferreira <ferreira@triang.com.br>
 
-use Test::More tests => 17;
+use Test;
 use strict;
 
-BEGIN {
-  use_ok( "Pod::LaTeX" );
-}
+BEGIN { plan tests => 17 }
+
+use Pod::LaTeX;
 
 # The link parsing changed between v0.22 and v0.30 of Pod::ParseUtils
 use Pod::ParseUtils;
@@ -21,6 +21,8 @@ my $linkver = $Pod::ParseUtils::VERSION;
 END {
   unlink "test.tex";
 };
+
+ok(1);
 
 # First thing to do is to read the expected output from
 # the DATA filehandle and store it in a scalar.
@@ -50,7 +52,7 @@ my %params = (
 );
 
 my $parser = Pod::LaTeX->new(%params);
-isa_ok($parser, "Pod::LaTeX");
+ok($parser);
 
 # Create an output file
 open(OUTFH, "> test.tex" ) or die "Unable to open test tex file: $!\n";
@@ -65,11 +67,11 @@ close(OUTFH) or die "Error closing OUTFH test.tex: $!\n";
 open(INFH, "< test.tex") or die "Unable to read test tex file: $!\n";
 my @output = <INFH>;
 
-is(scalar @output, scalar @reference, "Count lines");
+ok(@output, @reference);
 
 for my $i (0..$#reference) {
   next if $reference[$i] =~ /^%%/; # skip timestamp comments
-  is($output[$i], $reference[$i], "Compare line $i");
+  ok($output[$i], $reference[$i]);
 }
 
 close(INFH) or die "Error closing INFH test.tex: $!\n";

@@ -1,9 +1,9 @@
 #! perl -w
 
 use strict ;
-require 5.006 ;
+require 5.004 ;
 
-$::VERSION = '2.060' ;
+$::VERSION = '2.024' ;
 
 use private::MakeUtil;
 use ExtUtils::MakeMaker 5.16 ;
@@ -39,21 +39,13 @@ WriteMakefile(
         : ()
     ),
 
-    INSTALLDIRS => ($] >= 5.009 && $] < 5.011 ? 'perl' : 'site'),
-
-    EXE_FILES => ['bin/zipdetails'],
+    INSTALLDIRS => ($] >= 5.009 ? 'perl' : 'site'),
     
     (
     $] >= 5.009 && $] <= 5.011001 && ! $ENV{PERL_CORE}
         ? (INSTALLPRIVLIB    => '$(INSTALLARCHLIB)')
         : ()
     ),
-
-    META_MERGE => {
-        no_index => {
-            directory => [ 't', 'private' ],
-        },
-    },    
 
     ((ExtUtils::MakeMaker->VERSION() gt '6.30') ?
         ('LICENSE'  => 'perl')         : ()),    

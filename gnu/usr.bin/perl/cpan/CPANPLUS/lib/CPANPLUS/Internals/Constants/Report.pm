@@ -1,5 +1,4 @@
 package CPANPLUS::Internals::Constants::Report;
-use deprecate;
 
 use strict;
 use CPANPLUS::Error;
@@ -15,9 +14,10 @@ use Package::Constants;
 ### for the version
 require CPANPLUS::Internals;
 
-$VERSION = "0.9135";
+$VERSION    = $CPANPLUS::Internals::VERSION = $CPANPLUS::Internals::VERSION;
 @ISA        = qw[Exporter];
 @EXPORT     = Package::Constants->list( __PACKAGE__ );
+
 
 ### OS to regex map ###
 my %OS = (
@@ -80,10 +80,10 @@ use constant RELEVANT_TEST_RESULT
                                 my $name = $mod->module;
                                 my $specific;
                                 for my $platform (keys %OS) {
-                                    if( $name =~ /^$platform\b/i ) {
+                                    if( $name =~ /\b$platform\b/i ) {
                                         # beware the Mac != MAC
                                         next if($platform eq 'Mac' &&
-                                                $name !~ /^$platform\b/);
+                                                $name !~ /\b$platform\b/);
                                         $specific++;
                                         return 1 if
                                             $^O =~ /^(?:$OS{$platform})$/
@@ -100,7 +100,7 @@ use constant UNSUPPORTED_OS
                                     return 1;
                                 }
                                 return 0;
-                          };
+                          };                                            
 
 use constant PERL_VERSION_TOO_LOW
                             => sub {
@@ -116,7 +116,7 @@ use constant PERL_VERSION_TOO_LOW
                                     return 1;
                                 }
                                 return 0;
-                          };
+                          };                                            
 
 use constant NO_TESTS_DEFINED
                             => sub {
@@ -125,10 +125,10 @@ use constant NO_TESTS_DEFINED
                                   /(No tests defined( for [\w:]+ extension)?\.)/
                                   and $buffer !~ /\*\.t/m and
                                       $buffer !~ /test\.pl/m
-                                ) {
-                                    return $1
+                                ) { 
+                                    return $1 
                                 }
-
+                                
                                 return;
                             };
 
@@ -149,8 +149,8 @@ use constant MISSING_PREREQS_LIST
                                 my @list = map { s/.pm$//; s|/|::|g; $_ }
                                     ($last =~
                                         m/\bCan\'t locate (\S+) in \@INC/g);
-
-                                ### make sure every missing prereq is only
+                                
+                                ### make sure every missing prereq is only 
                                 ### listed once
                                 {   my %seen;
                                     @list = grep { !$seen{$_}++ } @list
@@ -162,7 +162,7 @@ use constant MISSING_PREREQS_LIST
 use constant MISSING_EXTLIBS_LIST
                             => sub {
                                 my $buffer = shift;
-                                my @list =
+                                my @list = 
                                     ($buffer =~
                                         m/No library found for -l([-\w]+)/g);
 
@@ -175,9 +175,9 @@ use constant REPORT_MESSAGE_HEADER
                                 return << ".";
 
 Dear $author,
-
+    
 This is a computer-generated error report created automatically by
-CPANPLUS, version $version. Testers personal comments may appear
+CPANPLUS, version $version. Testers personal comments may appear 
 at the end of this report.
 
 .
@@ -200,32 +200,15 @@ $buffer
 .
                             };
 
-use constant REPORT_MESSAGE_PASS_HEADER
-                            => sub {
-                                my($stage, $buffer) = @_;
-                                return << ".";
-
-Thank you for uploading your work to CPAN.  Congratulations!
-All tests were successful.
-
-TEST RESULTS:
-
-Below is the error stack from stage '$stage':
-
-$buffer
-
-.
-                            };
-
 use constant REPORT_MISSING_PREREQS
                             => sub {
                                 my ($author,$email,@missing) = @_;
-                                $author = ($author && $email)
-                                            ? "$author ($email)"
+                                $author = ($author && $email) 
+                                            ? "$author ($email)" 
                                             : 'Your Name Here';
-
+                                
                                 my $modules = join "\n", @missing;
-                                my $prereqs = join "\n",
+                                my $prereqs = join "\n", 
                                     map {"\t'$_'\t=> '0',".
                                          " # or a minimum working version"}
                                     @missing;
@@ -259,7 +242,7 @@ use constant REPORT_MISSING_TESTS
                                 return << ".";
 RECOMMENDATIONS:
 
-It would be very helpful if you could include even a simple test
+It would be very helpful if you could include even a simple test 
 script in the next release, so people can verify which platforms
 can successfully install them, as well as avoid regression bugs?
 
@@ -283,7 +266,7 @@ Thanks!  :-)
 .
                             };
 
-use constant REPORT_LOADED_PREREQS
+use constant REPORT_LOADED_PREREQS 
                             => sub {
                                 my $mod = shift;
                                 my $cb  = $mod->parent;
@@ -291,13 +274,13 @@ use constant REPORT_LOADED_PREREQS
 
                                 ### not every prereq may be coming from CPAN
                                 ### so maybe we wont find it in our module
-                                ### tree at all...
+                                ### tree at all... 
                                 ### skip ones that cant be found in teh list
                                 ### as reported in #12723
                                 my @prq = grep { defined }
                                           map { $cb->module_tree($_) }
                                           sort keys %$prq;
-
+                                
                                 ### no prereqs?
                                 return '' unless @prq;
 
@@ -305,27 +288,27 @@ use constant REPORT_LOADED_PREREQS
                                 my $str = << ".";
 PREREQUISITES:
 
-Here is a list of prerequisites you specified and versions we
+Here is a list of prerequisites you specified and versions we 
 managed to load:
-
+                                
 .
-                                $str .= join '',
-                                        map { sprintf "\t%s %-30s %8s %8s\n",
+                                $str .= join '', 
+                                        map { sprintf "\t%s %-30s %8s %8s\n", 
                                               @$_
-
+                                        
                                         } [' ', 'Module Name', 'Have', 'Want'],
                                           map { my $want = $prq->{$_->name};
-                                              [ do { $_->is_uptodate(
+                                              [ do { $_->is_uptodate( 
                                                     version => $want
-                                                   ) ? ' ' : '!'
+                                                   ) ? ' ' : '!' 
                                                 },
                                                 $_->name,
                                                 $_->installed_version,
                                                 $want
                                               ],
                                         ### might be empty entries in there
-                                        } grep { $_ } @prq;
-
+                                        } grep { $_ } @prq;   
+                                
                                 return $str;
                             };
 
@@ -347,8 +330,6 @@ use constant REPORT_TOOLCHAIN_VERSIONS
                                     ExtUtils::ParseXS
                                     File::Spec
                                     Module::Build
-                                    Pod::Parser
-                                    Pod::Simple
                                     Test::Harness
                                     Test::More
                                     version
@@ -367,23 +348,23 @@ use constant REPORT_TOOLCHAIN_VERSIONS
 
 Perl module toolchain versions installed:
 .
-                                $str .= join '',
-                                        map { sprintf "\t%-30s %8s\n",
+                                $str .= join '', 
+                                        map { sprintf "\t%-30s %8s\n", 
                                               @$_
-
+                                        
                                         } ['Module Name', 'Have'],
                                           map {
                                               [ $_->name,
                                                 $_->installed_version,
                                               ],
                                         ### might be empty entries in there
-                                        } @toolchain;
-
+                                        } @toolchain;   
+                                
                                 return $str;
                             };
 
 
-use constant REPORT_TESTS_SKIPPED
+use constant REPORT_TESTS_SKIPPED 
                             => sub {
                                 return << ".";
 
@@ -395,7 +376,7 @@ use constant REPORT_TESTS_SKIPPED
 
 .
                             };
-
+                            
 use constant REPORT_MESSAGE_FOOTER
                             => sub {
                                 return << ".";
@@ -403,7 +384,7 @@ use constant REPORT_MESSAGE_FOOTER
 ******************************** NOTE ********************************
 The comments above are created mechanically, possibly without manual
 checking by the sender.  As there are many people performing automatic
-tests on each upload to CPAN, it is likely that you will receive
+tests on each upload to CPAN, it is likely that you will receive 
 identical messages about the same problem.
 
 If you believe that the message is mistaken, please reply to the first
@@ -412,7 +393,7 @@ it personally.  We appreciate your patience. :)
 **********************************************************************
 
 Additional comments:
-
+ 
 .
                              };
 

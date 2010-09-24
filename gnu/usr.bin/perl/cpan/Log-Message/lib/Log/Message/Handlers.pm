@@ -1,9 +1,5 @@
 package Log::Message::Handlers;
-use if $] > 5.017, 'deprecate';
 use strict;
-use vars qw[$VERSION];
-
-$VERSION = '0.06';
 
 =pod
 
@@ -115,7 +111,7 @@ sub warn { warn shift->message; }
 =head2 trace
 
 Will provide a traceback of this error item back to the first one that
-occurred, clucking with every item as it comes across it.
+occurrent, clucking with every item as it comes across it.
 
 =cut
 

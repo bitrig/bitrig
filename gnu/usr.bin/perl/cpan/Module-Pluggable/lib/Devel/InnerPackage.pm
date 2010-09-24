@@ -4,14 +4,13 @@ use strict;
 use base qw(Exporter);
 use vars qw($VERSION @EXPORT_OK);
 
-use if $] > 5.017, 'deprecate';
-
-$VERSION = '0.4';
+$VERSION = '0.3';
 @EXPORT_OK = qw(list_packages);
 
 =pod
 
 =head1 NAME
+
 
 Devel::InnerPackage - find all the inner packages of a package
 
@@ -84,12 +83,12 @@ sub list_packages {
 sub _loaded {
        my ($class, $name) = @_;
 
-        no strict 'refs';
+    no strict 'refs';
 
        # Handle by far the two most common cases
        # This is very fast and handles 99% of cases.
        return 1 if defined ${"${name}::VERSION"};
-       return 1 if @{"${name}::ISA"};
+       return 1 if defined @{"${name}::ISA"};
 
        # Are there any symbol table entries other than other namespaces
        foreach ( keys %{"${name}::"} ) {
