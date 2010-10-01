@@ -1,4 +1,4 @@
-.TH "nsd\-xfer" "8" "Jan  6, 2010" "NLnet Labs" "nsd 3.2.4"
+.TH "nsd\-xfer" "8" "@date@" "NLnet Labs" "nsd @version@"
 .\" Copyright (c) 2001\-2008, NLnet Labs. All rights reserved.
 .\" See LICENSE for the license.
 .SH "NAME"
@@ -56,7 +56,8 @@ if the master server has a zone with a greater serial number.
 Use TSIG to verify the zone transfer. The
 .I tsiginfo
 file must contain the TSIG key information. The file is removed 
-upon successful reading of the key.
+upon successful reading of the key. The format of the tsiginfo file
+is described in the doc/README file (section 3.3).
 .TP 
 .B \-v
 Be more verbose.
@@ -74,7 +75,7 @@ To run this program the standard way type:
 .SH "SEE ALSO"
 .LP
 nsd(8), nsdc(8), nsd.conf(5), nsd-checkconf(8),
-nsd-notify(8), nsd-patch(8), zonec(8)
+nsd-notify(8), nsd-patch(8), nsd-zonec(8)
 .SH "AUTHORS"
 .LP
 .B NSD
