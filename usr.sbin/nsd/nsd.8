@@ -1,17 +1,17 @@
-.TH "NSD" "8" "Jan  6, 2010" "NLnet Labs" "NSD 3.2.4"
+.TH "NSD" "8" "@date@" "NLnet Labs" "NSD @version@"
 .\" Copyright (c) 2001\-2008, NLnet Labs. All rights reserved.
 .\" See LICENSE for the license.
 .SH "NAME"
 .LP
 .B nsd
-\- Name Server Daemon (NSD) version 3.2.4.
+\- Name Server Daemon (NSD) version @version@.
 .SH "SYNOPSIS"
 .LP
 .B nsd
 .RB [ \-4 ] 
 .RB [ \-6 ] 
 .RB [ \-a 
-.IR ip\-address ]
+.IR ip\-address[@port] ]
 .RB [ \-c
 .IR configfile ]
 .RB [ \-d ] 
@@ -56,11 +56,11 @@ argument and put itself into background and answers queries on port
 .I port
 option. The
 .I database
-must be generated beforehand with zonec(8). By default, 
+must be generated beforehand with nsd-zonec(8). By default, 
 .B NSD 
 will bind to all local interfaces available. Use the 
 .B \-a
-.I ip\-address
+.I ip\-address[@port]
 option to specify a single particular interface address to be
 bound. If this option is given more than once,
 .B NSD
@@ -93,16 +93,17 @@ Only listen to IPv4 connections.
 .B \-6
 Only listen to IPv6 connections.
 .TP
-.B \-a\fI ip\-address
+.B \-a\fI ip\-address[@port]
 Listen to the specified
 .IR ip\-address .
 The
 .I ip\-address
 must be specified in numeric format (using the standard IPv4 or IPv6
-notation). This flag can be specified multiple times to listen to
+notation). Optionally, a port number can be given.
+This flag can be specified multiple times to listen to
 multiple IP addresses. If this flag is not specified, 
 .B NSD
-listens to all IP addresses.
+listens to the wildcard interface.
 .TP
 .B \-c\fI configfile
 Read specified 
@@ -139,8 +140,7 @@ gethostname(3).
 Add the specified
 .I nsid
 to the EDNS section of the answer when queried with an NSID EDNS 
-enabled packet. This is disabled until IANA has given the NSID 
-option an OPCODE.
+enabled packet.
 .TP
 .B \-l\fI logfile
 Log messages to the specified 
@@ -249,7 +249,7 @@ option is specified.
 .SH "SEE ALSO"
 .LP
 nsdc(8), nsd.conf(5), nsd\-checkconf(8), nsd\-notify(8), 
-nsd\-patch(8), nsd\-xfer(8), zonec(8)
+nsd\-patch(8), nsd\-xfer(8), nsd-zonec(8)
 .SH "AUTHORS"
 .LP
 .B NSD
@@ -260,7 +260,7 @@ CREDITS file in the distribution for further details.
 .B NSD
 will answer the queries erroneously if the
 .I database
-was not properly compiled with zonec(8). Therefore problems with 
-misconfigured master zone files or zonec(8) bugs may not be visible 
+was not properly compiled with nsd-zonec(8). Therefore problems with 
+misconfigured master zone files or nsd-zonec(8) bugs may not be visible 
 until the queries are actually answered with
 .BR NSD .
