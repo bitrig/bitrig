@@ -1,9 +1,9 @@
-TP-WIDTH(1)                                                        TP-WIDTH(1)
+IP-WIDTH(1)                                                        IP-WIDTH(1)
 
 
 
 NNAAMMEE
-       TP-width - indentation width of indented paragraphs
+       IP-width - indentation width of indented paragraphs
 
 DDEESSCCRRIIPPTTIIOONN
        Regular mode:

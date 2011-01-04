@@ -1,11 +1,10 @@
-.TH TP-LITERAL 1
+.TH IP-LITERAL 1
 .SH NAME
-TP-literal \- indented paragraphs in literal context
+IP-literal \- indented paragraphs in literal context
 .SH DESCRIPTION
 regular
 text
-.TP 10n
-tag
+.IP tag 10n
 indented
 text
 .PP
@@ -14,8 +13,7 @@ text
 .nf
 literal
 text
-.TP 10n
-tag
+.IP tag 10n
 indented
 text
 .PP
