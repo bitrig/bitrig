@@ -51,7 +51,8 @@ Boston, MA 02111-1307, USA.  */
   || !strcmp (STR, "imacros") || !strcmp (STR, "aux-info") \
   || !strcmp (STR, "idirafter") || !strcmp (STR, "iprefix") \
   || !strcmp (STR, "iwithprefix") || !strcmp (STR, "iwithprefixbefore") \
-  || !strcmp (STR, "isystem") || !strcmp (STR, "specs"))
+  || !strcmp (STR, "isystem") || !strcmp (STR, "specs") \
+  || !strcmp (STR, "MF") || !strcmp(STR, "MT"))
 
 #ifndef WORD_SWITCH_TAKES_ARG
 #define WORD_SWITCH_TAKES_ARG(STR) DEFAULT_WORD_SWITCH_TAKES_ARG (STR)
@@ -83,6 +84,9 @@ lang_specific_driver (errfn, in_argc, in_argv, in_added_libraries)
 
   /* Do we need to insert -E? */
   int need_E = 1;
+
+  /* Do we need to insert -no-gcc? */
+  int need_no_gcc = 1;
 
   /* Have we seen an input file? */
   int seen_input = 0;
@@ -135,6 +139,8 @@ lang_specific_driver (errfn, in_argc, in_argv, in_added_libraries)
 	    }
 	  else if (argv[i][1] == 'x')
 	    need_fixups = 0;
+	  else if (argv[i][1] == 'g' && !strcmp(&argv[i][2], "cc"))
+	    need_no_gcc = 0;
 	  else if (WORD_SWITCH_TAKES_ARG (&argv[i][1]))
 	    quote = 1;
 	}
@@ -183,7 +189,7 @@ lang_specific_driver (errfn, in_argc, in_argv, in_added_libraries)
 
   /* If we don't need to edit the command line, we can bail early.  */
 
-  new_argc = argc + need_E + read_stdin
+  new_argc = argc + need_E + need_no_gcc + read_stdin
     + !!o_here + !!lang_c_here + !!lang_S_here;
 
   if (new_argc == argc)
@@ -196,6 +202,9 @@ lang_specific_driver (errfn, in_argc, in_argv, in_added_libraries)
 
   if (need_E)
     new_argv[j++] = "-E";
+
+  if (need_no_gcc)
+    new_argv[j++] = "-no-gcc";
 
   for (i = 1; i < argc; i++, j++)
     {
