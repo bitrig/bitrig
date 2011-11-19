@@ -11,7 +11,7 @@ CFLAGS+=-DSUDO_DEVEL
 SRCS=	audit.c check.c env.c getspwuid.c interfaces.c lbuf.c logging.c \
 	parse.c pwutil.c set_perms.c sudo.c sudo_edit.c sudo_nss.c term.c \
 	tgetpass.c sudo_auth.c bsdauth.c
-CPPFLAGS+=	-I..
+CPPFLAGS+=	-I.. -I${CURDIR}../lib -I${CURDIR}../../lib
 
 BINDIR=	/usr/bin
 POD2MAN=/usr/bin/pod2man
