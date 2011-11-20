@@ -1499,6 +1499,11 @@ sysmerge
 # ./var/db/sysmerge
 ..
 
+# ./var/db/yubikey
+yubikey		gname=auth mode=0770
+# ./var/db/yubikey
+..
+
 # ./var/db
 ..
 

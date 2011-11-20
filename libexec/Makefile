@@ -9,7 +9,7 @@ SUBDIR=	comsat fingerd ftpd getty identd lockspool \
 	talkd tcpd tftp-proxy tftpd uucpd
 
 SUBDIR+=login_passwd login_skey login_reject login_chpass \
-	login_lchpass login_token login_radius login_tis
+	login_lchpass login_token login_radius login_tis login_yubikey
 
 .if (${YP:L} == "yes")
 SUBDIR+=rpc.yppasswdd
