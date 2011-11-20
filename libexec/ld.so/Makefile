@@ -25,7 +25,7 @@ SRCS+=	library.c
 .include "${.CURDIR}/${MACHINE_CPU}/Makefile.inc"
 .PATH:	${.CURDIR}/${MACHINE_CPU}
 
-CFLAGS += -Wall -Werror
+CFLAGS += -Wall -fno-builtin
 CFLAGS += -I${.CURDIR} -I${.CURDIR}/${MACHINE_CPU} \
 	-Dstrsep=_dl_strsep
 INSTALL_STRIP=

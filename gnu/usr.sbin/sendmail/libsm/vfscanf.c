@@ -110,7 +110,7 @@ sm_vfscanf(fp, timeout, fmt0, ap)
 	register SM_FILE_T *fp;
 	int SM_NONVOLATILE timeout;
 	char const *fmt0;
-	va_list SM_NONVOLATILE ap;
+	va_list ap;
 {
 	register unsigned char *SM_NONVOLATILE fmt = (unsigned char *) fmt0;
 	register int c;		/* character from format, or conversion */
