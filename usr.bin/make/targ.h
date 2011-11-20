@@ -56,6 +56,17 @@ extern GNode *Targ_FindNodei(const char *, const char *, int);
 /* set of helpers for constant nodes */
 extern GNode *Targ_FindNodeih(const char *, const char *, uint32_t, int);
 
+#ifdef __GNUC__
+__only_inline GNode *
+Targ_FindNodeh(const char *name, size_t n, uint32_t hv, int flags)
+{
+	return Targ_FindNodeih(name, name + n - 1, hv, flags);
+}
+#else
+#define Targ_FindNodeh(name, n, hv, flags) \
+    Targ_FindNodeih(name, name + n - 1, hv, flags)
+#endif
+
 extern inline GNode *Targ_FindNodeh(const char *, size_t, uint32_t, int);
 extern void Targ_FindList(Lst, Lst);
 extern bool Targ_Ignore(GNode *);
