@@ -342,7 +342,7 @@ __END_DECLS
 __BEGIN_DECLS
 int	sm_rget __P((SM_FILE_T *, int));
 int	sm_vfscanf __P((SM_FILE_T *, int SM_NONVOLATILE, const char *,
-			va_list SM_NONVOLATILE));
+			va_list));
 int	sm_wbuf __P((SM_FILE_T *, int, int));
 __END_DECLS
 
