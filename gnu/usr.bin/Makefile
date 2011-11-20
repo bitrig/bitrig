@@ -4,14 +4,10 @@
 .include <bsd.own.mk>
 
 .if make(obj)
-SUBDIR+=	cc gcc ../egcs/gcc
+SUBDIR+=	cc gcc
 .else
-.  if ${COMPILER_VERSION:L} == "gcc3"
-SUBDIR+=	gcc
-.  elif ${COMPILER_VERSION:L} == "gcc4"
+.  if ${COMPILER_VERSION:L} == "gcc4"
 SUBDIR+=	cc
-.  elif ${COMPILER_VERSION:L} == "gcc2"
-SUBDIR+=	../egcs/gcc
 .  endif
 .endif
 
