@@ -4,7 +4,7 @@
 .include <bsd.own.mk>
 
 .if make(obj)
-SUBDIR+=	cc gcc
+SUBDIR+=	cc
 .else
 .  if ${COMPILER_VERSION:L} == "gcc4"
 SUBDIR+=	cc
@@ -25,13 +25,5 @@ SUBDIR+=	gas ld
 
 # Do these last; texinfo builds the info 'dir' file, perl must be after binutils
 SUBDIR+=	perl texinfo
-
-.if ${COMPILER_VERSION:L} == "gcc4"
-maninstall:
-	${INSTALL} ${INSTALL_COPY} -o ${MANOWN} -g ${MANGRP} -m ${MANMODE} \
-		gcc/protoize.1 ${DESTDIR}${MANDIR}1/protoize.1
-	@rm -f ${DESTDIR}${MANDIR}1/unprotoize.1
-	ln ${DESTDIR}${MANDIR}1/protoize.1 ${DESTDIR}${MANDIR}1/unprotoize.1
-.endif
 
 .include <bsd.subdir.mk>
