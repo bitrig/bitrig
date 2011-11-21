@@ -57,16 +57,10 @@ WDIRS=	../usr.sbin/httpd
 # before includes
 PWDIRS=
 
-.if ${COMPILER_VERSION:L} == "gcc3" 
-WDIRS+= ../gnu/lib/libstdc++ ../gnu/usr.bin/gcc ../gnu/lib/libobjc
-PWDIRS+= ../gnu/lib/libstdc++
-.elif ${COMPILER_VERSION:L} == "gcc4"
+.if ${COMPILER_VERSION:L} == "gcc4"
 RDIRS+= ../gnu/lib/libstdc++-v3 ../gnu/usr.bin/cc/libobjc
 PRDIRS+= ../gnu/lib/libstdc++-v3
 RDIRS+= ../gnu/usr.bin/cc/include
-.else
-WDIRS+= ../gnu/egcs/libio ../gnu/egcs/libstdc++ \
-	../gnu/lib/libobjc ../gnu/egcs/gcc
 .endif
 
 NOOBJ=	noobj
