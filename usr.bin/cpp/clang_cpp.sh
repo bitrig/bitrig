@@ -46,9 +46,9 @@ DOLLAR="@dollaropt@"
 INCS="-nostdinc"
 FOUNDFILES=false
 
-CPP=/usr/libexec/cpp
+CPP=/usr/local/bin/clang
 OPTS=""
-TRAD=-traditional
+TRAD=
 
 if [ ! -x $CPP ]; then
 	CPP=`cc -print-search-dirs | sed -ne '/^install: /s/install: \(.*\)/\1cpp/p'`;
@@ -88,7 +88,7 @@ do
 		;;
 	*)
 		FOUNDFILES=true
-		eval $CPP $TRAD $DGNUC $DOLLAR $INCS $STDINC $OPTS $A || exit $?
+		eval "$CPP -E $TRAD $DGNUC $DOLLAR $INCS $STDINC $OPTS $A" || exit $?
 		;;
 	esac
 done
@@ -96,7 +96,8 @@ done
 if ! $FOUNDFILES
 then
 	# read standard input
-	eval exec $CPP $TRAD $DGNUC $DOLLAR $INCS $STDINC $OPTS
+	eval exec "$CPP -E $TRAD $DGNUC $DOLLAR $INCS $STDINC $OPTS -"
 fi
 
 exit 0
+
