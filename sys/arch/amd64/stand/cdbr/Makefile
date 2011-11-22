@@ -1,8 +1,12 @@
 #	$OpenBSD: Makefile,v 1.3 2004/10/09 21:15:21 mickey Exp $
 #
+.include <bsd.own.mk>
 
 PROG=	cdbr
 SRCS=	cdbr.S
+.if ${COMPILER_VERSION:L} == "clang"
+AFLAGS+=-no-integrated-as
+.endif
 AFLAGS+=-m32 -I${.CURDIR} -I${.CURDIR}/../../.. #-Wa,-a
 AFLAGS+=-DOSREV=\"${OSREV}\"
 AFLAGS+=-DMACH=\"${MACHINE}\" -DMACH_U=\"${MACHINE:U}\"

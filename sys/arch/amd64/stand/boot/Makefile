@@ -1,4 +1,5 @@
 #	$OpenBSD: Makefile,v 1.8 2007/11/25 18:25:30 deraadt Exp $
+.include <bsd.own.mk>
 
 .include "${.CURDIR}/../Makefile.inc"
 
@@ -57,5 +58,10 @@ CPPFLAGS+=-DBOOTMAGIC=$(BOOTMAGIC) ${DEBUGFLAGS} -DLINKADDR=${LINKADDR}
 CPPFLAGS+=-DSLOW -DSMALL -DNOBYFOUR -DNO_GZIP -DDYNAMIC_CRC_TABLE
 CPPFLAGS+=-DHEAP_LIMIT=${HEAP_LIMIT} -I${S}/stand/boot #-DCOMPAT_UFS
 CFLAGS+=-m32 $(SACFLAGS) -D__INTERNAL_LIBSA_CREAD
+.if ${COMPILER_VERSION:L} == "clang"
+AFLAGS+=-no-integrated-as
+# XXX HACK kill this
+CC=cc
+.endif
 AFLAGS+=-m32 # -Wa,-R
 # AFLAGS+=-Wa,-a

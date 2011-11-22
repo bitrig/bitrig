@@ -1,8 +1,13 @@
 #	$OpenBSD: Makefile,v 1.3 2004/10/09 21:15:21 mickey Exp $
 #
+.include <bsd.own.mk>
 
 PROG=	mbr
 SRCS=	mbr.S
+
+.if ${COMPILER_VERSION:L} == "clang"
+AFLAGS+=-no-integrated-as
+.endif
 AFLAGS+=-m32 -I${.CURDIR} -I${.CURDIR}/../../.. #-Wa,-a
 LD=ld
 LDFLAGS=-melf_i386 -nostdlib -Ttext 0 -x -N -s -Bstatic -e start

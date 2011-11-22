@@ -1,5 +1,7 @@
 #	$OpenBSD: Makefile,v 1.3 2004/10/09 21:15:21 mickey Exp $
 
+.include <bsd.own.mk>
+
 MAN=	biosboot.8
 
 .if ${MACHINE} == "amd64"
@@ -18,6 +20,9 @@ ${PROG}: $(OBJS) $(DPADD)
 
 CPPFLAGS+=-DLOADADDR=$(LOADADDR) -DLINKADDR=$(LINKADDR) -DBOOTMAGIC=$(BOOTMAGIC)
 CPPFLAGS+=${DEBUGFLAGS}
+.if ${COMPILER_VERSION:L} == "clang"
+AFLAGS+=-no-integrated-as
+.endif
 AFLAGS+=-m32 # -Wa,-a
 .else
 NOPROG=
