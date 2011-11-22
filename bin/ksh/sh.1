@@ -2,7 +2,7 @@
 .\"
 .\"	Public Domain
 .\"
-.Dd $Mdocdate: September 3 2011 $
+.Dd $Mdocdate$
 .Dt SH 1
 .Os
 .Sh NAME
@@ -1494,11 +1494,11 @@ and
 .Sq :]
 stands for the list of all characters belonging to that class.
 Supported character classes:
-.Bd -literal -offset indent
-alnum	cntrl	lower	space
-alpha	digit	print	upper
-blank	graph	punct	xdigit
-.Ed
+.Bl -column "xdigit" "xdigit" "xdigit" -offset indent
+.It Li "alnum" Ta "cntrl" Ta "lower" Ta "space"
+.It Li "alpha" Ta "digit" Ta "print" Ta "upper"
+.It Li "blank" Ta "graph" Ta "punct" Ta "xdigit"
+.El
 .Pp
 These match characters using the macros specified in
 .Xr ctype 3 .

@@ -10,16 +10,9 @@ DEFS=	-Wall
 CFLAGS+=${DEFS} -I. -I${.CURDIR} -I${.CURDIR}/../../lib/libc/gen
 MAN=	ksh.1 sh.1
 
-CLEANFILES+=	emacs.out
-
 LINKS=	${BINDIR}/ksh ${BINDIR}/rksh
 LINKS+=	${BINDIR}/ksh ${BINDIR}/sh
 MLINKS=	ksh.1 rksh.1
-
-.depend emacs.o: emacs.out
-
-emacs.out: emacs.c
-	/bin/sh ${.CURDIR}/emacs-gen.sh ${.CURDIR}/emacs.c > emacs.out
 
 check test:
 	/usr/bin/perl ${.CURDIR}/tests/th -s ${.CURDIR}/tests -p ./ksh -C \

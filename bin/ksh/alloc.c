@@ -62,7 +62,7 @@ alloc(size_t size, Area *ap)
 {
 	struct link *l;
 
-	l = malloc(sizeof(struct link) + size);
+	l = calloc(1, sizeof(struct link) + size);
 	if (l == NULL)
 		internal_errorf(1, "unable to allocate memory");
 	l->next = ap->freelist;
