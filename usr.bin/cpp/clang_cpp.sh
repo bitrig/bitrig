@@ -88,7 +88,7 @@ do
 		;;
 	*)
 		FOUNDFILES=true
-		eval "$CPP -E $TRAD $DGNUC $DOLLAR $INCS $STDINC $OPTS $A" || exit $?
+		eval "$CPP -x c -E $TRAD $DGNUC $DOLLAR $INCS $STDINC $OPTS $A" || exit $?
 		;;
 	esac
 done
@@ -96,7 +96,7 @@ done
 if ! $FOUNDFILES
 then
 	# read standard input
-	eval exec "$CPP -E $TRAD $DGNUC $DOLLAR $INCS $STDINC $OPTS -"
+	eval exec "$CPP -x c -E $TRAD $DGNUC $DOLLAR $INCS $STDINC $OPTS -"
 fi
 
 exit 0
