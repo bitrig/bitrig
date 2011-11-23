@@ -9,7 +9,6 @@ HDRS=           ${RPCSRCS:R:S/$/.h/g}
 CLEANFILES+=	${SRCS} ${HDRS}
 
 LIB=		rpcsvc
-WANTLINT=
 NOMAN=
 
 all:		${HDRS}

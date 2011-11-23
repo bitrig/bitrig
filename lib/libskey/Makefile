@@ -1,7 +1,6 @@
 # $OpenBSD: Makefile,v 1.10 2005/11/24 20:49:21 deraadt Exp $
 
 LIB=	skey
-WANTLINT=
 SRCS=	skeylogin.c skeysubr.c put.c
 HDRS=	skey.h
 MAN+=	skey.3 skey.5

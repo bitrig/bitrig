@@ -14,7 +14,6 @@ AWK?=	/usr/bin/awk
 	${.CURDIR}/widechar
 
 LIB=    curses
-WANTLINT=
 SRCS=	codes.c comp_captab.c expanded.c fallback.c lib_gen.c lib_keyname.c \
 	names.c unctrl.c
 # base

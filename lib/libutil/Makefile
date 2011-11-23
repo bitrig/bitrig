@@ -2,7 +2,6 @@
 #	$NetBSD: Makefile,v 1.8 1996/05/16 07:03:28 thorpej Exp $
 
 LIB=	util
-WANTLINT=
 
 HDRS=	util.h imsg.h
 SRCS=	check_expire.c duid.c getmaxpartitions.c getrawpartition.c login.c \

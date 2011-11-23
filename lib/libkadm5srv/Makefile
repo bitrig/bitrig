@@ -4,7 +4,6 @@ KRB5DIR	= ${.CURDIR}/../../kerberosV
 .include <${.CURDIR}/../libkrb5/Makefile.common.inc>
 
 LIB=	kadm5srv
-WANTLINT=
 
 DIR_KADM5SRV=	${KRB5SRC}/lib/kadm5
 HDR_KADM5SRV=	admin.h kadm5-private.h kadm5-protos.h private.h

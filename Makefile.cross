@@ -392,16 +392,16 @@ cross-lib:	${CROSSGCC}
 	    for lib in csu libc; do \
 	    (cd $$lib; \
 	        eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-		    ${MAKE} WANTLINT=no depend all ;\
+		    ${MAKE} depend all ;\
 	        eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} DESTDIR=${CROSSDIR} \
-		    ${MAKE} WANTLINT=no install); \
+		    ${MAKE} install); \
 	    done; \
 	    eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
 	        SKIPDIR=\"${NO_CROSS} libocurses/PSD.doc\" \
-	        ${MAKE} WANTLINT=no depend all ; \
+	        ${MAKE} depend all ; \
 	    eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} DESTDIR=${CROSSDIR} \
 	        SKIPDIR=\"${NO_CROSS} libocurses/PSD.doc\" \
-	        ${MAKE} WANTLINT=no install)
+	        ${MAKE} install)
 
 cross-bin:	${CROSSOBJ}
 	MACHINE=${TARGET} \

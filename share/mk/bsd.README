@@ -237,8 +237,6 @@ NOPROFILE	Do not build profiled versions of system libraries.
 NOPIC		Do not build PIC versions of system libraries, and
 		do not build shared libraries.
 
-WANTLINT	Build lint libraries.
-
 DEBUG		Add -g to assembly, C compiler and linking passes.  Also
 		doesn't	set STRIP to -s per default if defined.
 

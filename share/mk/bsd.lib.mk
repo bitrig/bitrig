@@ -168,10 +168,6 @@ _LIBS+=lib${LIB}.so.${SHLIB_MAJOR}.${SHLIB_MINOR}
 .endif
 .endif
 
-.if defined(WANTLINT) && ${WANTLINT:L} != "no"
-_LIBS+=llib-l${LIB}.ln
-.endif
-
 all: ${_LIBS} _SUBDIRUSE
 
 OBJS+=	${SRCS:N*.h:R:S/$/.o/}
@@ -284,10 +280,6 @@ realinstall:
 .if !defined(NOPIC) && defined(SHLIB_MAJOR) && defined(SHLIB_MINOR)
 	${INSTALL} ${INSTALL_COPY} -S -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
 	    lib${LIB}.so.${SHLIB_MAJOR}.${SHLIB_MINOR} ${DESTDIR}${LIBDIR}
-.endif
-.if defined(WANTLINT) && ${WANTLINT:L} != "no"
-	${INSTALL} ${INSTALL_COPY} -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
-	    llib-l${LIB}.ln ${DESTDIR}${LINTLIBDIR}
 .endif
 .if defined(LINKS) && !empty(LINKS)
 .  for lnk file in ${LINKS}

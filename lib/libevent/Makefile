@@ -1,7 +1,6 @@
 #	$OpenBSD: Makefile,v 1.30 2010/04/21 21:02:46 nicm Exp $
 
 LIB=	event
-WANTLINT=
 SRCS=	buffer.c evbuffer.c event.c event_tagging.c evutil.c kqueue.c \
 	log.c poll.c select.c signal.c
 HDRS=	event.h evutil.h

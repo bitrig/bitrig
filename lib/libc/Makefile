@@ -10,7 +10,6 @@
 .include <bsd.own.mk>
 
 LIB=c
-WANTLINT=
 LINTFLAGS=-z
 CLEANFILES+=tags
 #CFLAGS+=-Werror

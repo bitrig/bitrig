@@ -3,7 +3,6 @@
 .PATH: ${.CURDIR}/lib
 
 LIB=	expat
-WANTLINT=
 SRCS=	xmlparse.c xmltok.c xmlrole.c
 CFLAGS+=-I${.CURDIR} -DHAVE_EXPAT_CONFIG_H
 

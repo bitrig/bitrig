@@ -7,7 +7,6 @@ GENDIR=		${.CURDIR}/generated
 .include "Makefile.common.inc"
 
 LIB	= krb5
-WANTLINT=
 
 .PATH:	${KRB5SRC}/lib
 .PATH:	${GENDIR}

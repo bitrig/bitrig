@@ -90,7 +90,6 @@ ARCH_SRCS = n_atan2.S n_cbrt.S n_hypot.S n_sincos.S n_support.S n_tan.S
 .PATH:	${.CURDIR}/noieee_src
 
 LIB=	m
-WANTLINT=
 COMMON_SRCS = b_exp__D.c b_log__D.c b_tgamma.c \
 	e_acos.c e_acosf.c e_acosh.c e_acoshf.c e_asin.c e_asinf.c \
 	e_atan2.c e_atan2f.c e_atanh.c e_atanhf.c e_cosh.c e_coshf.c e_exp.c \

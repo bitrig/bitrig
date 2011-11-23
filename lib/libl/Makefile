@@ -2,7 +2,6 @@
 #	$OpenBSD: Makefile,v 1.4 2005/11/24 20:49:18 deraadt Exp $
 
 LIB=	l
-WANTLINT=
 SRCS=	libmain.c libyywrap.c
 NOPIC=
 

@@ -3,7 +3,6 @@
 .PATH:		${.CURDIR}/..
 
 LIB=	smtpdfilter
-WANTLINT=no
 SRCS=	filter.c filter_api.c
 DEBUGLIBS= no
 NOPROFILE= yes

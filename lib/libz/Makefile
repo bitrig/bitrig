@@ -1,7 +1,6 @@
 #	$OpenBSD: Makefile,v 1.16 2011/05/26 13:52:55 jasper Exp $
 
 LIB=	z
-WANTLINT=
 HDRS=	zconf.h zlib.h
 SRCS=	adler32.c compress.c crc32.c deflate.c gzio.c infback.c \
 	inffast.c inflate.c inftrees.c trees.c uncompr.c zutil.c

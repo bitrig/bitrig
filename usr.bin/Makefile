@@ -25,8 +25,7 @@ SUBDIR= apply apropos ar arch asa asn1_compile at aucat audioctl awk banner \
 	tmux top touch tput tr true tset tsort tty usbhidaction usbhidctl \
 	ul uname unexpand unifdef uniq units \
 	unvis users uudecode uuencode vacation vi vis vmstat w wall wc \
-	what whatis which who whois write x99token xargs xinstall xlint \
-	xstr yacc yes
+	what whatis which who whois write x99token xargs xinstall xstr yacc yes
 
 .if (${YP:L} == "yes")
 SUBDIR+=ypcat ypmatch ypwhich

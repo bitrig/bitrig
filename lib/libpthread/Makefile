@@ -9,7 +9,6 @@ SRCDIR=		${.CURDIR}
 LIBCSRCDIR=	${.CURDIR}/../libc
 
 LIB=		pthread
-WANTLINT=
 LINTFLAGS=	-z
 CFLAGS+=	-DPTHREAD_KERNEL -D_POSIX_THREADS -D_THREAD_SAFE -Wall
 CFLAGS+=	-Wpointer-arith -Wwrite-strings -Wstrict-prototypes

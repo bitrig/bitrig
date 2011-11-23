@@ -8,4 +8,3 @@ POBJS+=	${ASM:.o=.po}
 CLEANFILES+= ${ASM} ${POBJS}
 
 LIB=    ${MACHINE_ARCH}
-WANTLINT=

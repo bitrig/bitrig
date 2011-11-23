@@ -2,7 +2,6 @@
 #	$NetBSD: Makefile,v 1.5 1999/07/23 09:44:38 mrg Exp $
 
 LIB=	usbhid
-WANTLINT=
 MAN=	usbhid.3
 
 MLINKS=	usbhid.3 hid_dispose_report_desc.3 \

@@ -2,7 +2,6 @@
 #	$NetBSD: Makefile,v 1.15 1995/09/07 07:17:53 jtc Exp $
 
 LIB=	compat
-WANTLINT=
 AINC=	-I${.CURDIR}/../libc/arch/${MACHINE_ARCH}
 .if defined(DESTDIR)
 AINC+=	-nostdinc -idirafter ${DESTDIR}/usr/include
