@@ -1,0 +1,11 @@
+obj
+CVS
+sys/arch/*/compile
+
+ID
+tags
+
+*.swp*
+*.diff*
+*.patch*
+*~
