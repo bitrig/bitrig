@@ -13,7 +13,7 @@
 #  ====================================================
 
 # SUBDIR is only used to install the infnan(3/VAX) manual page.
-SUBDIR = man
+# SUBDIR = man
 
 .if (${MACHINE_ARCH} == "alpha")
 .PATH:	${.CURDIR}/arch/alpha

@@ -1,12 +1,8 @@
 # $OpenBSD: Makefile,v 1.13 2010/07/20 02:05:51 deraadt Exp $
 
-.if ${MACHINE} == "alpha" || ${MACHINE} == "amd64" || \
-    ${MACHINE} == "armish" || ${MACHINE} == "hppa" || \
-    ${MACHINE} == "hppa64" || ${MACHINE} == "i386" || \
-    ${MACHINE} == "landisk" || ${MACHINE} == "loongson" || \
-    ${MACHINE} == "macppc" || ${MACHINE} == "palm" || \
-    ${MACHINE} == "sgi" || ${MACHINE} == "socppc" || \
-    ${MACHINE} == "sparc64" || ${MACHINE} == "zaurus"
+.if ${MACHINE} == "amd64" || ${MACHINE} == "armish" || \
+    ${MACHINE} == "i386" || ${MACHINE} == "macppc" || \
+    ${MACHINE} == "socppc" || ${MACHINE} == "zaurus"
 
 PROG=	hotplugd
 SRCS=	hotplugd.c

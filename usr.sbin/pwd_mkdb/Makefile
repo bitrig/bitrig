@@ -8,8 +8,4 @@ MAN=	pwd_mkdb.8
 LDADD+=	-lutil
 DPADD+=	${LIBUTIL}
 
-.if (${MACHINE_ARCH} == "m68k")
-CFLAGS+=-O1
-.endif
-
 .include <bsd.prog.mk>

@@ -16,11 +16,6 @@ SRCS=	alloc.c char.c const.c csh.c dir.c dol.c error.c exec.c exp.c file.c \
 
 CLEANFILES+=error.h const.h
 
-.if (${MACHINE_ARCH} == "vax")
-alloc.o:
-	${CC} ${CFLAGS} ${CPPFLAGS} -O0 -c $<
-.endif
-
 const.h: error.h
 
 error.h: error.c

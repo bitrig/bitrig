@@ -18,8 +18,4 @@ SRCS=	itime.c main.c optr.c dumprmt.c tape.c traverse.c
 MAN=	dump.8
 MLINKS+=dump.8 rdump.8
 
-.if (${MACHINE_ARCH} == "sparc")
-CFLAGS+= -O0
-.endif
-
 .include <bsd.prog.mk>
