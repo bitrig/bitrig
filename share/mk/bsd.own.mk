@@ -20,7 +20,7 @@ YP?=		yes
 # integrated support for libwrap.
 TCP_WRAPPERS?=	yes
 # Set `AFS` to `yes' to build with AFS support.
-AFS?=		yes
+AFS?=		no
 # Set `DEBUGLIBS' to `yes' to build libraries with debugging symbols
 DEBUGLIBS?=	no
 # Set toolchain to be able to know differences.
