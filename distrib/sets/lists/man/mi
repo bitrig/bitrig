@@ -377,7 +377,6 @@
 ./usr/share/man/man1/fmt.1
 ./usr/share/man/man1/fold.1
 ./usr/share/man/man1/from.1
-./usr/share/man/man1/fs.1
 ./usr/share/man/man1/fsplit.1
 ./usr/share/man/man1/fstat.1
 ./usr/share/man/man1/ftp.1
@@ -664,7 +663,6 @@
 ./usr/share/man/man1/ps.1
 ./usr/share/man/man1/psed.1
 ./usr/share/man/man1/pstruct.1
-./usr/share/man/man1/pts.1
 ./usr/share/man/man1/purgestat.1
 ./usr/share/man/man1/pwd.1
 ./usr/share/man/man1/quota.1
@@ -2021,14 +2019,8 @@
 ./usr/share/man/man4/zyd.4
 ./usr/share/man/man5
 ./usr/share/man/man5/.rhosts.5
-./usr/share/man/man5/AliasDB.5
-./usr/share/man/man5/CellServDB.5
-./usr/share/man/man5/DynRootDB.5
-./usr/share/man/man5/SuidCells.5
-./usr/share/man/man5/ThisCell.5
 ./usr/share/man/man5/a.out.5
 ./usr/share/man/man5/acct.5
-./usr/share/man/man5/afsd.conf.5
 ./usr/share/man/man5/aliases.5
 ./usr/share/man/man5/amd64
 ./usr/share/man/man5/amd64/boot.conf.5
@@ -2200,7 +2192,6 @@
 ./usr/share/man/man8/acpidump.8
 ./usr/share/man/man8/activadm.8
 ./usr/share/man/man8/activinit.8
-./usr/share/man/man8/afsd.8
 ./usr/share/man/man8/amd.8
 ./usr/share/man/man8/amd64
 ./usr/share/man/man8/amd64/MAKEDEV.8
@@ -2235,7 +2226,6 @@
 ./usr/share/man/man8/bioctl.8
 ./usr/share/man/man8/boot_config.8
 ./usr/share/man/man8/bootparamd.8
-./usr/share/man/man8/bos.8
 ./usr/share/man/man8/chat.8
 ./usr/share/man/man8/chown.8
 ./usr/share/man/man8/chroot.8
@@ -2582,7 +2572,6 @@
 ./usr/share/man/man8/visudo.8
 ./usr/share/man/man8/vmstat.8
 ./usr/share/man/man8/vnconfig.8
-./usr/share/man/man8/vos.8
 ./usr/share/man/man8/watchdogd.8
 ./usr/share/man/man8/weekly.8
 ./usr/share/man/man8/wsconscfg.8
