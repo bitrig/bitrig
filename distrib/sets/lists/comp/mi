@@ -1873,12 +1873,10 @@
 ./usr/share/man/man1/objcopy.1
 ./usr/share/man/man1/objdump.1
 ./usr/share/man/man1/pmdb.1
-./usr/share/man/man1/protoize.1
 ./usr/share/man/man1/ranlib.1
 ./usr/share/man/man1/readelf.1
 ./usr/share/man/man1/rpcgen.1
 ./usr/share/man/man1/strip.1
-./usr/share/man/man1/unprotoize.1
 ./usr/share/man/man1/xstr.1
 ./usr/share/man/man1/yacc.1
 ./usr/share/man/man2/EV_SET.2
