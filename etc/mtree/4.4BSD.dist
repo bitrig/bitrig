@@ -602,9 +602,14 @@ mdec
 # ./usr/mdec
 ..
 
-# ./usr/obj		XXX
+# ./usr/obj
 obj		gname=wsrc mode=0775
-# ./usr/obj		XXX
+# ./usr/obj
+..
+
+# ./usr/ports
+ports		gname=wsrc mode=0775
+# ./usr/ports
 ..
 
 # ./usr/sbin
@@ -1161,10 +1166,6 @@ amd64
 ..
 i386
 ..
-sparc
-..
-sparc64
-..
 
 # ./usr/share/man/man1
 ..
@@ -1172,8 +1173,6 @@ sparc64
 # ./usr/share/man/man2
 man2
 
-alpha
-..
 amd64
 ..
 armish
@@ -1189,13 +1188,6 @@ zaurus
 # ./usr/share/man/man3
 man3
 
-loongson
-..
-sgi
-..
-vax
-..
-
 # ./usr/share/man/man3
 ..
 
@@ -1207,43 +1199,11 @@ man3p
 # ./usr/share/man/man4
 man4
 
-alpha
-..
 amd64
 ..
 armish
 ..
-aviion
-..
-hp300
-..
-hppa
-..
 i386
-..
-landisk
-..
-loongson
-..
-luna88k
-..
-mac68k
-..
-macppc
-..
-mvme68k
-..
-mvme88k
-..
-sgi
-..
-socppc
-..
-sparc
-..
-sparc64
-..
-vax
 ..
 zaurus
 ..
@@ -1258,13 +1218,7 @@ amd64
 ..
 armish
 ..
-hppa
-..
-hppa64
-..
 i386
-..
-landisk
 ..
 socppc
 ..
@@ -1287,47 +1241,15 @@ man7
 # ./usr/share/man/man8
 man8
 
-alpha
-..
 amd64
 ..
 armish
 ..
-aviion
-..
-hp300
-..
-hppa
-..
-hppa64
-..
 i386
-..
-landisk
-..
-loongson
-..
-luna88k
-..
-mac68k
 ..
 macppc
 ..
-mvme68k
-..
-mvme88k
-..
-palm
-..
-sgi
-..
 socppc
-..
-sparc
-..
-sparc64
-..
-vax
 ..
 zaurus
 ..
@@ -1476,9 +1398,14 @@ US               gname=bin uname=root mode=0555
 ..
 
 # ./usr/src
-#src		gname=wsrc mode=0775
+src		gname=wsrc mode=0775
 # ./usr/src
-#..
+..
+
+# ./usr/xenocara
+xenocara	gname=wsrc mode=0775
+# ./usr/xenocara
+..
 
 # ./usr/xobj
 xobj		gname=wsrc mode=0775
