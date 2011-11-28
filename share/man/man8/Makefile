@@ -13,10 +13,7 @@ MLINKS+=daily.8 weekly.8 daily.8 monthly.8
 MLINKS+=rc.8 rc.firsttime.8 rc.8 rc.local.8 rc.8 rc.securelevel.8
 MLINKS+=rc.conf.8 rc.conf.local.8
 
-SUBDIR=	man8.alpha man8.amd64 man8.armish man8.aviion man8.hp300 \
-	man8.hppa man8.hppa64 man8.i386 man8.landisk man8.loongson \
-	man8.luna88k man8.mac68k \
-	man8.macppc man8.mvme68k man8.mvme88k man8.palm man8.sgi man8.socppc \
-	man8.sparc man8.sparc64 man8.vax man8.zaurus
+SUBDIR=	man8.amd64 man8.armish man8.i386 \
+	man8.macppc man8.socppc man8.zaurus
 
 .include <bsd.prog.mk>
