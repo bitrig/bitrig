@@ -34,6 +34,9 @@ BEFOREMAN= config.status
 clean cleandir:
 	-@if [ -e Makefile ]; then ${MAKE} distclean-am; fi
 
+install:
+	${MAKE} install
+
 depend:
 	# Nothing here so far...
 
