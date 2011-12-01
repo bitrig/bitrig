@@ -9,3 +9,4 @@ tags
 *.diff*
 *.patch*
 *~
+*.pyc
