@@ -23,6 +23,28 @@ _archdir?=	$S/arch/${_arch}
 
 INCLUDES=	-nostdinc -I. -I$S -I$S/arch
 CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL -MD -MP
+
+.if ${COMPILER_VERSION:L} == "clang"
+# XXX we need a -Werror sweep in clang
+CWARNFLAGS=	-Wall -Wstrict-prototypes -Wmissing-prototypes \
+		-Wno-main -Wno-uninitialized -Wno-format
+# these are to shutup clang vs gcc, should be ultimately fixed
+CWARNFLAGS+=	-Wno-pointer-sign
+CMACHFLAGS=	-mcmodel=kernel -mno-red-zone -mno-sse -mno-sse2 -mno-sse3 \
+		-mno-3dnow -mno-mmx -msoft-float -mno-avx
+CMACHFLAGS+=	-ffreestanding -no-integrated-as -fno-omit-frame-pointer \
+		-fno-asynchronous-unwind-tables
+.if ${IDENT:M-DNO_PROPOLICE}
+CMACHFLAGS+=	-fno-stack-protector
+.endif
+
+COPTS?=		-O3
+CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
+AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS}
+LINKFLAGS=	-Ttext 0xffffffff80100300 -e start --warn-common -z noexecstack
+
+.elif ${COMPILER_VERSION:L} == "gcc4"
+
 CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
 		-Wno-main -Wno-uninitialized -Wno-format \
 		-Wstack-larger-than-2047
@@ -40,6 +62,9 @@ COPTS?=		-O2
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS}
 LINKFLAGS=	-Ttext 0xffffffff801001e0 -e start --warn-common
+.else
+# XXX abort
+.endif
 
 .if ${IDENT:M-DDDB_STRUCT}
 DB_STRUCTINFO=	db_structinfo.h
