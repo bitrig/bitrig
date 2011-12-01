@@ -1,5 +1,8 @@
 .include <bsd.own.mk>
 
+# XXX force it for now
+MAKE=gmake
+
 XCFLAGS=	CC="${CC}" CFLAGS="${CFLAGS} ${COPTS}" LDFLAGS="${LDFLAGS}"
 CONFIGURE_OPTS=	--prefix=/usr/contrib \
 		--enable-bindings=no \
@@ -11,7 +14,7 @@ NOMAN=
 all:	gnu
 
 gnu:	config.status
-	gmake
+	${MAKE}
 
 .FORCE: .IGNORE
 
