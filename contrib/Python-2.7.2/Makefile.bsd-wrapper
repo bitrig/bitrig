@@ -31,7 +31,7 @@ config.status:
 BEFOREMAN= config.status
 
 clean cleandir:
-	-@if [ -e Makefile ]; then ${MAKE} distclean; fi
+	-@if [ -e Makefile ]; then ${MAKE} clean; fi
 
 install:
 	${MAKE} install
