@@ -1,0 +1,47 @@
+# Copyright (C) 1992, 1995, 2001, 2004, 2009
+#   Free Software Foundation, Inc.
+#      Written by James Clark (jjc@jclark.com)
+# 
+# This file is part of groff.
+# 
+# groff is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# groff is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Makefile.cpg
+#
+MAKEFILEPARTS=\
+  $(top_srcdir)/Makefile.comm \
+  $(top_builddir)/Makefile.cfg \
+  $(srcdir)/Makefile.sub \
+  $(top_srcdir)/Makefile.cpg \
+  Makefile.dep
+
+all: $(PROG) $(MANPAGES)
+
+$(PROG): $(OBJS) $(XLIBS)
+	$(LINK.c) -o $@ $(OBJS) $(XLIBS) $(EXTRA_LDFLAGS) $(LIBS) $(MLIB)
+
+install_bin: install_prog
+install_prog: $(PROG)
+install_data: install_man
+install_man: $(MANPAGES)
+uninstall_sub: uninstall_prog uninstall_man
+depend: depend_src
+depend.temp: $(GENSRCS) $(YTABC)
+distfiles: $(YTABC)
+TAGS: TAGS_src
+TAGS_src: $(CCSRCS) $(CSRCS) $(GRAM) $(HDRS)
+Makefile: $(MAKEFILEPARTS)
+Makefile.dep:
+	touch Makefile.dep
+$(top_builddir)/stamp-h $(MANPAGES): $(top_srcdir)/VERSION $(top_srcdir)/REVISION

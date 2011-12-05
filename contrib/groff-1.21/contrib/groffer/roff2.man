@@ -1,0 +1,249 @@
+.ig
+roff2@ROFF2MODE@.1 - man page for roff2@ROFF2MODE@ (section 1).
+
+Source file position: <groff_source_top>/contrib/groffer/roff2.man
+Installed position:   $prefix/share/man/man1/roff2@ROFF2MODE@.1
+
+Last update: 5 Jan 2009
+Simplified to use .SY/.OP/.YS
+..
+.
+.
+.de au
+This file was written by Bernd Warken.
+..
+.
+.
+.de co
+Copyright (C) 2006, 2007, 2009 Free Software Foundation, Inc.
+.
+.P
+This file is part of
+.IR \%groffer ,
+which is part of
+.IR \%groff ,
+a free software project.
+.
+You can redistribute it and/or modify it under the terms of the
+.nh
+.B "GNU General Public License"
+.hy
+as published by the
+.nh
+.BR "Free Software Foundation" ,
+.hy
+either version\~2, or (at your option) any later version.
+.
+.P
+You should have received a copy of the \f[CR]GNU General Public
+License\f[] along with
+.IR groff ,
+see the files \%\f[CB]COPYING\f[] and \%\f[CB]LICENSE\f[] in the top
+directory of the
+.I groff
+source package.
+.
+Or read the
+.I man\~page
+.BR gpl (1).
+You can also write to the
+.nh
+.B "Free Software Foundation, 51 Franklin St - Fifth Floor, Boston,"
+.BR "MA 02110-1301, USA" .
+.hy
+..
+.
+.
+.TH roff2@ROFF2MODE@ @MAN1EXT@ "@MDATE@" "Groff Version @VERSION@"
+.SH NAME
+roff2@ROFF2MODE@ \- transform roff code into @ROFF2MODE@ mode
+.
+.
+.\" --------------------------------------------------------------------
+.SH "SYNOPSIS"
+.
+.SY roff2@ROFF2MODE@
+.RI [ \%groffer_option .\|.\|.\&]
+.OP \-\-
+.RI [ \%filespec .\|.\|.\&]
+.
+.SY roff2@ROFF2MODE@
+.B \-h
+|
+.B \-\-help
+.
+.SY roff2@ROFF2MODE@
+.B \-v
+|
+.B \-\-version
+.YS
+.
+.P
+The options
+.B \-v
+and
+.B \%\-\-version
+print the version information of the program to standard output and exit.
+.
+The options
+.B \-h
+and
+.B \-\-help
+print a usage information of the program to standard output and stop
+the program instantly.
+.
+.
+.P
+All other options are assumed to be
+.B \%groffer
+options.
+.
+They are internally passed to
+.BR \%groffer .
+They override the behavior of the program.
+.
+The options are optional, they can be omitted.
+.
+.
+.P
+The
+.I \%filespec
+arguments correspond to the
+.I \%filespec
+arguments of
+.BR \%groffer .
+So they are either the names of existing, readable files or
+.B \-
+for standard input, or the name of a man page or a
+.BR \%groffer (@MAN1EXT@)
+man page search pattern.
+.
+If no
+.I \%filespec
+is specified standard input is assumed automatically.
+.
+.
+.\" --------------------------------------------------------------------
+.SH DESCRIPTION
+.
+.B \%roff2@ROFF2MODE@
+transforms
+.I roff
+code into
+.ie '@ROFF2MODE@'x' \{\
+.  I X
+mode corresponding to the
+.  I groff
+devices
+.  BR X *;
+this mode is suitable for
+.  BR \%gxditview (@MAN1EXT@).
+.\}
+.el \{\
+.  I \%@ROFF2MODE@
+mode.
+.\}
+.
+Print the result to standard output.
+.
+.
+.P
+There are more of these programs for generating other formats of
+.I \%roff
+input.
+.
+.if !'@ROFF2MODE@'dvi' \{\
+.  TP
+.  BR \%roff2dvi (@MAN1EXT@)
+is for
+.  I dvi
+mode.
+.\}
+.
+.if !'@ROFF2MODE@'html' \{\
+.  TP
+.  BR \%roff2html (@MAN1EXT@)
+generates
+.  I html
+output.
+.\}
+.
+.if !'@ROFF2MODE@'pdf' \{\
+.  TP
+.  BR \%roff2pdf (@MAN1EXT@)
+outputs
+.  I pdf
+mode.
+.\}
+.
+.if !'@ROFF2MODE@'ps' \{\
+.  TP
+.  BR \%roff2ps (@MAN1EXT@)
+prints
+.  I \%PostScript
+format to standard output.
+.\}
+.
+.if !'@ROFF2MODE@'text' \{\
+.  TP
+.  BR \%roff2text (@MAN1EXT@)
+generates text output in the
+.  B groff
+device
+.  IR latin1 .
+.\}
+.
+.if !'@ROFF2MODE@'x' \{\
+.  TP
+.  BR \%roff2x (@MAN1EXT@)
+prints the output in the
+.  B groff
+device
+.  B X
+that is suitable for programs like
+.  BR \%gxditview (@MAN1EXT@)
+or
+.  BR \%xditview (1).
+.\}
+.
+.
+.\" --------------------------------------------------------------------
+.SH "SEE ALSO"
+.\" --------------------------------------------------------------------
+.
+.BR \%groff (@MAN1EXT@),
+.BR \%groffer (@MAN1EXT@),
+.if !'@ROFF2MODE@'dvi' \
+.  BR \%roff2dvi (@MAN1EXT@),
+.if !'@ROFF2MODE@'html' \
+.  BR \%roff2html (@MAN1EXT@),
+.if !'@ROFF2MODE@'pdf' \
+.  BR \%roff2pdf (@MAN1EXT@),
+.if !'@ROFF2MODE@'ps' \
+.  BR \%roff2ps (@MAN1EXT@),
+.if !'@ROFF2MODE@'text' \
+.  BR \%roff2text (@MAN1EXT@),
+.if !'@ROFF2MODE@'x' \
+.  BR \%roff2x (@MAN1EXT@),
+.BR \%gxditview (@MAN1EXT@).
+.
+.
+.\" --------------------------------------------------------------------
+.SH "AUTHOR"
+.\" --------------------------------------------------------------------
+.au
+.
+.
+.\" --------------------------------------------------------------------
+.SH "COPYING"
+.\" --------------------------------------------------------------------
+.co
+.
+.
+.\" --------------------------------------------------------------------
+.\" Emacs settings
+.\" --------------------------------------------------------------------
+.
+.\" Local Variables:
+.\" mode: nroff
+.\" End:

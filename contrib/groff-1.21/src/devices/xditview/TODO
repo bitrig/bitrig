@@ -1,0 +1,21 @@
+Open the main window with the correct width and height, depending on
+both the selected device and the paper dimensions.
+
+Add a command line option to specify the paper dimensions (similar to
+other groff devices).
+
+Better error handling.
+
+Resource and command-line option to specify font path.
+
+Resource to specify name of environment variable from which to get the
+font path.
+
+Have character substitutions (currently done in draw.c:FakeCharacter)
+specified in a resource (similar format to FontMap).
+
+The initial width of the dialog box should expand to accommodate the
+default value.
+
+Option in Print dialog to specify that only the current page should be
+printed.

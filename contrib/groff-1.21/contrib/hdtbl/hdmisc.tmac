@@ -1,0 +1,325 @@
+.\"	-*-	mode: roff	-*-
+.ig
+
+hdmisc.tmac
+
+This file is part of groff, the GNU roff type-setting system.
+
+Copyright (C) 2005, 2006, 2009, 2010 Free Software Foundation, Inc.
+written by Joachim Walsdorff <Joachim.Walsdorff@urz.uni-heidelberg.de>.
+
+groff is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+groff is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+..
+.
+.
+.\" %beginstrip%
+.
+.if d t*getarg \
+.  nx
+.
+.
+.\"	******************************************************************
+.\"	**	Some macros and default settings needed by hdtbl	**
+.\"	******************************************************************
+.
+.
+.\"	Utility macro:	.getarg <key> ...
+.\"
+.\"		Get macro argument.  This macro searches <key> in the
+.\"		remaining arguments and assigns its value to a string
+.\"		register named <key>.  The following syntax forms are
+.\"		recognized.
+.\"
+.\"			<key>=<val>	Assign <val> to string <key>.
+.\"					<val> must not contain spaces.
+.\"			<key>='<val>'	Assign <val> to string <key>.
+.\"					<val> can contain spaces.
+.\"			<key>=		Assign `=' to string <key>.
+.\"			<key>		Assign `key' to string <key>.
+.\"
+.\"		After return, the string `args' contains the remaining
+.\"		arguments.
+.\"
+.\"		Example: With the definition of string `foo' as
+.\"
+.\"			.ds foo aaa=xxx bbb ccc='yyy zzz' ddd= eee
+.\"
+.\"		a call to `getarg' with
+.\"
+.\"			.getarg ccc \*[foo]
+.\"
+.\"		sets string `ccc' to value `yyy zzz'.  The string `args'
+.\"		now contains `aaa=xxx bbb ddd= eee'.  An additional call
+.\"		like
+.\"
+.\"			.getarg ddd \*[args]
+.\"
+.\"		sets string `ddd' to value `=', and `args' contains
+.\"		`aaa=xxx bbb eee'.
+.de t*getarg
+.  ds \\$1
+.  ds args
+.
+.  if (\\n[.$] < 2) \
+.    return
+.
+.  ds $1 \\$1\"
+.  shift
+.
+.  length * \\*[$1]
+.  while \\n[.$] \{\
+.    ds * "\\$1\"
+.    ds ** "\\$1\"
+.    length ** \\*[**]
+.    shift
+.    if (\\n[*] > \\n[**]) \{\
+.      as args " "\\*[**]"\"			value too short, repeat
+.      continue
+.    \}
+.    substring * 0 (\\n[*] - 1)
+.    \" The surrounding \? escapes emulate string comparison.
+.    ie !"\?\\*[$1]\?"\?\\*[*]\?" \{\
+.      as args " "\\*[**]"\"			key not found, repeat
+.      continue
+.    \}
+.    el \{\
+.      ie "\?\\*[**]\?"\?\\*[$1]\?" \
+.        ds \\*[$1] \\*[$1]\"			return key as string
+.      el \{\
+.        ie "\?\\*[**]\?"\?\\*[$1]=\?" \
+.          ds \\*[$1] =\"			return `='
+.        el \{\
+.          substring ** (\\n[*] + 1) -1
+.          ds * \\*[**]\"
+.          substring * 0 0
+.
+.          \" check whether value starts with quote
+.          if "\?\\*[*]\?"\?'\?" \{\
+.            substring ** 1 -1
+.            ds * \\*[**]\"
+.            substring * -1 -1
+.
+.            \" search final quote
+.            ie "\?\\*[*]\?"\?'\?" \
+.              substring ** 0 -2
+.            el \{\
+.              as \\*[$1] \\*[**] \"		not found, append argument
+.
+.              while 1 \{\
+.                ds ** \\$1\"			get next argument
+.                ds * \\$1\"
+.                shift
+.                substring * -1 -1
+.
+.                if "\?\\*[*]\?"\?'\?" \{\
+.                  substring ** 0 -2
+.                  break		\"	break if no final quote
+.                \}
+.
+.                as \\*[$1] \\*[**] \"		otherwise append and repeat
+.              \}
+.          \}\}
+.
+.          as \\*[$1] \\*[**]\"
+.        \}
+.
+.        as args " \\$@\"
+.    \}\}
+.
+.    return
+.  \}
+..
+.
+.
+.\"	Utility macro:	.index <string1> <string2>
+.\"
+.\"		Check whether <string2> is a substring of <string1> and
+.\"		return its position in number register `t*index', starting
+.\"		with 1.  If not found, return 0.  If <string2> is empty,
+.\"		set `t*index' to -999.
+.de t*index
+.  if "\\$2"" \{\
+.    nr t*index -999
+.    return
+.  \}
+.
+.  length ** \\$1
+.  length $2 \\$2
+.  nr * 0-1 1
+.
+.  while (\\n+[*] < \\n[**]) \{\
+.    ds * \\$1\"
+.    substring * \\n[*] (\\n[*] + \\n[$2] - 1)
+.    \" The surrounding \? escapes emulate string comparison.
+.    if "\?\\*[*]\?"\?\\$2\?" \
+.      break
+.  \}
+.
+.  ie (\\n[*] == \\n[**]) \
+.    nr t*index 0
+.  el \
+.    nr t*index (\\n[*] + 1)
+..
+.
+.
+.\"	******************************************************************
+.\"	********	non-accumulating space .t*SP [v]	**********
+.\"	**                                                              **
+.\"	**	nl vor erster Seite -1, oben auf Seite 0 resp. tH	**
+.\"	**	.k nach .sp oder .br 0,					**
+.\"	**		sonst Laenge der angefangenen Zeile		**
+.\"	**	Der Merker M# fuer vorangegangenes .t*SP wird in .HM am	**
+.\"	**	Seitenanfang zurueckgesetzt.				**
+.\"	**	ganz richtig ist .sp + .br = .br + .sp = .sp		**
+.\"	******************************************************************
+.de t*SP
+.  if (\\n[nl] < 0) \
+.    br			\"	start very first page
+.  nr * \\n[.p]		\"	save current page length
+.
+.  ie "\\$1"" \
+.    pl +1		\"	without arg increase page length by 1v
+.  el \
+.    pl +\\$1		\"	otherwise use \\$1
+.
+.  nr ** (\\n[.p] - \\n[*])	\" ** now holds arg for .t*SP in base units
+.  pl \\n[*]u		\"	restore page length
+.
+.  \" we do nothing at start of new page or column
+.  if ((\\n[nl] - \\n[tH]) & (\\n[nl] - \\n[<<]) : \\n[.k]) \{\
+.    ie ((\\n[.d] - \\n[M#]) : \\n[.k]) \{\
+.      sp \\n[**]u	\"	execute .sp
+.      nr S# \\n[**]	\"	store ** in S#
+.    \}
+.    el \{\
+.      if (\\n[**] - \\n[S#]) \{\
+.        sp (\\n[**]u - \\n[S#]u)\"	emit difference to previous .t*SP
+.        nr S# \\n[**]	\"	store ** in S#
+.    \}\}
+.
+.    nr M# \\n[.d]	\"	store vertical position .d in M#
+.  \}
+..
+.
+.
+.\"	******************************************************************
+.\"	**		Perform all arguments once			**
+.\"	**			P1 is nestable				**
+.\"	******************************************************************
+.de t*P1
+.  \" `while' command is about five times faster than recursion!
+.  while \\n[.$] \{\
+.    nop \\$1
+.    shift
+.  \}
+..
+.
+.
+.\"	******************************************************************
+.\"	**	Hilfsmakro zum Einstellen von Schriftgroesse und	**
+.\"	**	Zeilenabstand, bezogen auf Anfangswerte \n[t*s]		**
+.\"	**	und \n[t*v] sowie fuer Hyphenation:			**
+.\"	**		.pv s v hy# hart;  macht .br			**
+.\"	**	Bei 4. Argument setzen der Register s und v und hy.	**
+.\"	**	Fuer angefangene Zeile die vorgefundenen Einstellungen	**
+.\"	**								**
+.\"	**   Auxiliary macro to set internal registers for font size	**
+.\"	**   and line spacing, relative to initial values \n[t*s] and	**
+.\"	**   \n[t*v]. Optionally sets hyphenation. A fourth argument	**
+.\"	**   initializes internal registers to global default values.	**
+.\"	******************************************************************
+.de t*pv
+.  br
+.
+.  if \\n[.$] \
+.    ps (\\n[t*s]u * \\$1z / 1z)
+.
+.  ie (\\n[.$] - 1) \
+.    vs (\\n[t*v]u * \\$2p / 1p)
+.  el \{\
+.    vs (\\n[t*v]u * \\$1p / 1p)
+.    return
+.  \}
+.
+.  if !""\\$3" \
+.    hy \\$3
+.
+.  if !""\\$4" \{\
+.    nr t*v \\n[.v]
+.    nr t*s \\n[.ps]
+.    nr t*hy \\n[.hy]
+.  \}
+..
+.
+.
+.\"	******************************************************************
+.\"	**		Hilfsmakros pop/pops/popr (pop stackelement):	**
+.\"	**		pop or popr:	pop register			**
+.\"	**		pops:		pop string			**
+.\"	**		.pop[s|r] reg|string stackname			**
+.\"	**		    reg|string: name of reg/string to get the	**
+.\"	**			 popped element				**
+.\"	**		    stack: name of stack			**
+.\"	******************************************************************
+.de *pop
+.  ie "\\$1"pops" \
+.    ds \\$2 \\$4\"		pop first stackelement
+.  el \
+.    nr \\$2 \\$4
+.
+.  ds $3 \\$3\"			remember stackname
+.  shift 4		\"	shift four args
+.
+.  ds \\*[$3] "\\$@\"		fill stack with remaining elements
+..
+.
+.de pop
+.  *pop \\$0 \\$1 \\$2 \\*[\\$2]
+..
+.
+.als popr pop
+.als pops pop
+.
+.
+.\"	******************************************************************
+.\"	**		process diversion				**
+.\"	******************************************************************
+.de t*DI
+.  nr * \\n[.u]
+.  nf		\"	diversion is already formatted - output it unchanged
+.  \\$1		\"	output the diversion ...
+.  rm \\$1	\"	... and remove it
+.  if \\n[*] \
+.    fi		\"	reactivate formatting
+..
+.
+.\"	******************************************************************
+.\"	**		error checking at end				**
+.\"	******************************************************************
+.de t*EM
+.
+.  if !"\\*[t*kept]"" \{\
+.    tm1 "hdtbl: Not all tables have been printed.
+.    tm1 "       Add `.bp' at the end of your document.
+.  \}
+.  if !"\\*[t*held]"" \{\
+.    tm1 "hdtbl: There are held tables which haven't been printed.
+.    tm1 "       Add `.t*free' at the end of your document.
+.  \}
+.  if \\n[t*#] \
+.    tm hdtbl: Missing `.ETB' macro; last .TBL in \\*[t*FN] at line \\*[t*LN].
+..
+.
+.\" EOF

@@ -1,0 +1,327 @@
+2010-12-23  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	Update copyright notices; pdfmark.tmac bug-fix.
+
+	* pdfmark.tmac: Update copyright notices.
+	(pdf*href.mark.resolve): Avoid premature removal, by aliasing to...
+	(pdf*href.mark.begin): ...this, rather than renaming.
+
+	* pdfroff.sh, pdfroff.man: Update copyright notices.
+
+2010-12-14  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	Clean up handling of temporary files directory.
+
+	* .cvsignore (pdfroff-*): Ignore sub-directories matching this.
+	* Makefile.sub (MOSTLCLEANDIRADD): Schedule them for removal.
+
+2010-12-02  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	Address potential temporary file security vulnerabilities.
+
+	* pdfroff.sh (GROFF_TMPDIR): Use mktemp(1) to assign it, if possible;
+	fall back to ${TMPDIR}, ${TMP} or ${TEMP} if unsuccessful.
+	* pdfroff.man: Document it.
+
+2009-08-16  Colin Watson  <cjwatson@debian.org>
+
+	Make pdfroff's GhostScript invocation safer.
+
+	* pdfroff.sh (PDFROFF_POSTPROCESSOR_COMMAND): Add `-dSAFER' option.
+	* pdfroff.man: Document it.
+
+2008-12-28  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	Avoid phantom line wrapping in pdfhref hot-spots.
+
+	* pdfmark.tmac (pdf*href.mark.end): Emit hot-spot end markers within
+	scope of `\Z', to prevent possible output line length overflow which
+	may occur only in the layout computation passes, but not in the final
+	output pass.  Problem observed and identified by Nick Stoughton; it
+	causes some hot-spots to be displaced from their proper locations.
+
+2007-04-11  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	Avoid stray newlines in folded pdfmark literal content.
+
+	* pdfmark.tmac (pdf*pdfmark.dispatch.wrapped): New string; define it
+	when accumulating long literal content; make it undefined otherwise.
+	(PDFMARK.FOLDWIDTH, PDFMARK.FOLDWIDTH.MAX): Reserve space for two
+	extra characters, to accommodate a space and an escaped newline,
+	while accumulating literal content, in case folding is required.
+	(pdf*pdfmark.dispatch) [pdf*pdfmark.dispatch.wrapped]: Add them.
+
+2007-04-11  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	* pdfmark.tmac (pdfbookmark): Don't evaluate within diversions; defer
+	placement until diversion is copied out at top level.
+
+2007-02-06  Eric S. Raymond  <esr@snark.thyrsus.com>
+
+	* pdfroff.man: Update .UR/.UE and .MT/.ME to latest changes in
+	an-ext.tmac.
+
+2007-01-30  Werner LEMBERG  <wl@gnu.org>
+
+	* pdfroff.man: Updated.
+
+2007-01-21  Werner LEMBERG  <wl@gnu.org>
+
+	* pdfroff.man: Revised, based on a patch from Eric Raymond.  It now
+	uses the new macros from an-ext.tmac.  This is the first of a series
+	of man patches which Eric has contributed.
+
+2006-07-30  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	* pdfroff.sh (PDFROFF_KILL_NULL_PAGES): Require `%%BeginPageSetup' on
+	PostScript output line immediately following `%%Page:'.
+
+2006-07-29  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	* pdfroff.sh (PDFROFF_KILL_NULL_PAGES): Require `sed' to match a more
+	explicit regular expression, for detection of redundant pages.
+
+2006-07-14  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	* pdfroff.sh (PDFWRITE): Local shell variable replaced...
+	(PDFROFF_POSTPROCESSOR_COMMAND): by this new  environment variable...
+	(GROFF_GHOSTSCRIPT_INTERPRETER): with this bound to it.
+	(PDFROFF_COLLATE, PDFROFF_KILL_NULL_PAGES): New environment variables.
+	(--no-kill-null-pages): New command line option; implement it, and...
+	(--help): Add description for it.
+
+	* pdfroff.man (PDFROFF_POSTPROCESSOR_COMMAND): Document it.
+	(PDFROFF_COLLATE, PDFROFF_KILL_NULL_PAGES): Document them.
+	(--no-kill-null-pages): Document it.
+
+2006-07-14  Zvezdan Petkovic  <zpetkovic@acm.org>
+
+	* pdfroff.sh (--emit-ps): New command line option; implement it.
+	(--help): Add description for it.
+
+	* pdfroff.man (--emit-ps): Document it.
+
+2006-06-11  Werner LEMBERG  <wl@gnu.org>
+
+	* pdfroff.man: Add `.ig' block after NAME section to make mandb
+	happy.
+
+2006-03-31  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	Split `pdfmark' output as required, to avoid excessively long
+	`ps:exec' intermediate output records.
+
+	* pdfmark.tmac (pdfmark): Macro extended to deploy ...
+	(pdf*pdfmark.limit): New macro; use it to define ...
+	(PDFMARK.FOLDWIDTH, PDFMARK.FOLDWIDTH.MAX): New registers.
+	(pdf*compose.first, pdf*compose.next, pdf*compose.literal): New
+	macros; each will be aliased as required to ...
+	(pdf*compose): ... this, to dynamically construct ...
+	(pdf:composed.line, pdf:composed.literal): ... these new strings.
+	(pdf:compose.test): New dynamically constructed string; use it to
+	detect parenthesised literals in pdfmark content, so folding can be
+	avoided within them, subject to honouring of `PDFMARK.FOLDWIDTH'.
+	(pdf*length.increment): New macro; it triggers output folding when ...
+	(pdf:length): ... this new register exceeds `PDFMARK.FOLDWIDTH.MAX'.
+	(pdf*pdfmark.post.first, pdf*pdfmark.post.next): New macros; each will
+	be aliased as required to ...
+	(pdf*pdfmark.post): ... this, and invoked by ...
+	(pdf*pdfmark.dispatch): ... this new macro; use it to define ...
+	(pdf:composed): ... this dynamically constructed macro; use ...
+	(pdf*end): ... this new macro to terminate it.
+
+2006-03-09  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	Incorporate portability recommendations by Ralf Wildenhues
+	<ralf.wildenhues@gmx.de>
+
+	* pdfroff.sh: Avoid unsafe quoting in variable substitutions of
+	the form "${VAR+"set"}"; remove outer quotes everywhere; prefix
+	with `x' on each side of comparisons.
+	($NULLCMD): Define when `$ZSH_VERSION' is set, i.e. when host
+	has `/bin/sh -> zsh'; also...
+	(emulate sh): Invoke, for this case.
+
+	Enhancement/bug fix requested by Werner LEMBERG <wl@gnu.org>
+
+	* pdfroff.sh (--help): Direct output to `stdout', not `stderr'.
+	(--keep-temporary-files): New option; implement it.
+
+	* pdfroff.man (OPTIONS): Document `--keep-temporary-files' option.
+	(FILES): Note names and purpose of files it affects.
+
+	* Makefile.sub (PDFROFF): Add `--keep-temporary-files' option;
+	retain them in `GROFF_TMPDIR=.'.
+	(CLEANADD): Include temporary files matching `pdf[0-9]*'.
+
+2006-03-08  Werner LEMBERG  <wl@gnu.org>
+
+	* pdfmark.ms: Update URL for Adobe Reference Manual.
+
+2006-02-26  Claudio Fontana  <claudio@gnu.org>
+
+	* Makefile.sub: Add DESTDIR to install and uninstall targets
+	to support staged installations.
+
+2006-02-25  Werner LEMBERG  <wl@gnu.org>
+
+	* pdfmark.ms: Correct typo; reported by Thomas Klausner.
+
+2006-02-24  Werner LEMBERG  <wl@gnu.org>
+
+	* pdfmark.ms, pdfroff.sh: Replace legal/illegal with valid/invalid.
+
+2005-06-22  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	pdfroff.sh portability enhancement.
+
+	* pdfroff.sh (ARGLIST): Variable removed.
+	(GROFF_STYLE): Use it for all groff invocations.
+	(INPUT_FILES): Pass to all groff invocations, instead of ARGLIST.
+	(CS_MACRO, CE_MACRO): Initialize independently.
+	(CS_FILTER): Simplify quoting; it used to confuse some shells.
+	(Source): CVS keyword removed; replaced by...
+	(RCSfile, Revision): these.
+
+2005-06-17  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	* pdfroff.sh (MATCH): Correct quoting.
+	(Source): Add terminating `$' on CVS keyword.
+
+2005-06-17  Zvezdan Petkovic  <zpetkovic@acm.org>
+
+	* Makefile.sub: (RM): Define as `rm -f', for `make' programs
+	which don't predefine it.
+
+2005-06-16  Bernd Warken
+
+	* pdfroff.sh (NULLDEV): Correct misspelled instance of NULDEV.
+
+2005-05-28  Werner LEMBERG  <wl@gnu.org>
+
+	* Makefile.sub (.ms.pdf): Use `--stylesheet', not `--style'.
+
+2005-05-26  Werner LEMBERG  <wl@gnu.org>
+
+	* Makefile.sub, pdfmark.tmac, pdfroff.sh, spdf.tmac: Update postal
+	address for Free Software Foundation.
+
+2005-05-17  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	Improve portability of `pdfroff' shell script.
+
+	* pdfroff.sh: Add space in shebang, conforming to portability
+	guidelines in `autoconf' docs.
+	(searchpath): New shell function; use it instead of `type' command
+	to locate prerequisite helper programs.
+
+	* pdfroff.man: Document influence of `OSTYPE' and `PATH_SEPARATOR'
+	environment variables.
+
+	* Makefile.sub (pdfroff): Make it depend on SH_DEPS_SED_SCRIPT,
+	from arch/misc/shdeps.sh; use it to customize PATH_SEPARATOR
+	initialization code for `searchpath' function in pdfroff.sh.
+
+2005-05-16  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	Interim documentation update.
+
+	* pdfmark.ms (GROFF-WEBSITE): New string; use it in references and
+	examples.
+	(Section 2.5): Add definitions of D and Z operators, for use with
+	pdfhref macro.
+	(Section 2.5.4): Complete description of pdfhref macro usage for
+	`Linking to Internet Resources'; provide examples.
+
+2005-05-14  Nick Stoughton  <nick@usenix.org>
+
+	* pdfmark.tmac (LB): Renamed to ...
+	(PDFLB): This to avoid conflicts with mm's LB macro.
+
+2005-05-02  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	Handle parsing anomalies in Cygwin's `ash', and similar, shells.
+
+	* pdfroff.sh ($CAT, $GREP, $SED, $GROFF, $DIFF): Avoid interpreting
+	misdirected error messages, which `type' sends to `stdout' in some
+	shells, as a successful program file match.
+
+	($AWK, $GS): Likewise; also ensure that multiple choice match
+	prototypes are eval'ed as such, in case token splitting occurs
+	before variable expansion.
+
+2005-04-24  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	Add support for folded outlines in PDF documents.
+
+	* pdfmark.tmac (PDFOUTLINE.FOLDLEVEL): New register.
+	(pdf:bm.emit): Use it.
+
+	* pdfmark.ms: Document it.
+
+2005-03-25  Werner LEMBERG  <wl@gnu.org>
+
+	* Makefile.in: Removed.
+
+2005-03-24  Werner LEMBERG  <wl@gnu.org>
+
+	* Makefile: Renamed to...
+	* Makefile.in: This.
+
+2005-03-22  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	* pdfroff.sh: Eliminate invalid program reference to $AWK, when
+	invoked with `--no-reference-dictionary' option.
+
+2005-03-02  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	* contrib/pdfmark/Makefile.sub (install_data): Use $(INSTALL_SCRIPT)
+	to install `pdfroff'.
+	* contrib/pdfmark/pdfroff.man (opte): New macro.
+	Use it to remove spurious equal signs from SYNOPSIS.
+
+2005-02-28  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	Provide `pdfroff' shell script, and manpage to document it;
+	runs multiple groff passes, to format PDF documents.
+
+	* pdfroff.sh: New shell script template;
+	* pdfroff.man: New man page to document it.
+
+	Integrate `pdfmark' into normal groff build system;
+	install macro `pdfmark' packages, build and install `pdfroff',
+	and PDF format documentation.
+
+	* Makefile.sub: Rewritten.
+	* pdfmark.tmac: Modified.
+	(pdfhref): New macro operators, `D' and `Z'.
+	(pdf*href-D, pdf*href-Z): New macros: implement them.
+	(pdf*href.mark.resolve, pdf*href.mark.emit, pdf*href.mark.flush):
+	Modified macro algorithm, to eliminate inconsistencies between
+	`grohtml' representations of `opminy' from differing groff versions.
+	(pdf*href.mark, pdf*href.mark.release, pdf*href.mark.close):
+	deleted (redundant macros).
+	(PDFHREF.LEADING): Default value changed (was 2.5p; now -1.0p).
+	Global comment updates.
+
+	* TODO: Updated.
+
+2004-12-10  Werner LEMBERG  <wl@gnu.org>
+
+	* TODO: Updated.
+
+2004-12-08  Keith Marshall  <keith.d.marshall@ntlworld.com>
+
+	First import of pdfmark files.
+
+Copyright 2004, 2005, 2006, 2007, 2008
+  Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+Local Variables:
+version-control: never
+coding: latin-1
+End:

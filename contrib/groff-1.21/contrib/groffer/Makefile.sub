@@ -1,0 +1,148 @@
+# Makefile.sub for `groffer' (integration into the `groff' source tree)
+
+# File position: <groff-source>/contrib/groffer/Makefile.sub
+
+# Copyright (C) 2001, 2002, 2005, 2006, 2009
+#   Free Software Foundation, Inc.
+# Written by Werner Lemberg <wl@gnu.org> and Bernd Warken.
+
+# Last update: 5 Jan 2009
+
+# This file is part of `groffer' which is part of `groff'.
+
+# `groff' is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# `groff' is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+########################################################################
+
+ROFF2MODES=dvi html pdf ps text x
+ROFF2PROGS=`echo $(ROFF2MODES) | sed 's/[a-z][a-z]*/roff2&/g'`
+ROFF2MAN=`echo $(ROFF2MODES) | sed 's/[a-z][a-z]*/roff2&.man/g'`
+ROFF2MANN=`echo $(ROFF2MODES) | sed 's/[a-z][a-z]*/roff2&.n/g'`
+
+MAN1=groffer.n \
+     roff2dvi.n \
+     roff2html.n \
+     roff2pdf.n \
+     roff2ps.n \
+     roff2text.n \
+     roff2x.n
+
+MOSTLYCLEANADD=groffer HAVE_PERL HAVE_SHELL groffer.man \
+               $(MAN1) $(ROFF2MAN) $(ROFF2PROGS)
+
+# not all make programs have $(RM) predefined.
+RM=rm -f
+
+all: groffer
+
+GROFFER_PERL=$(srcdir)/perl/func.pl \
+             $(srcdir)/perl/man.pl \
+             $(srcdir)/perl/perl_test.pl \
+             $(srcdir)/perl/split_env.sh
+GROFFER_SHELL=$(srcdir)/shell/groffer2.sh
+GROFFER_REST=$(srcdir)/roff2.man \
+             $(srcdir)/version.sh \
+             $(srcdir)/perl/groffer.man \
+             $(srcdir)/perl/groffer.pl \
+             $(srcdir)/perl/roff2.pl \
+             $(srcdir)/shell/roff2.sh \
+             $(srcdir)/shell/groffer.man \
+             $(srcdir)/shell/groffer.sh
+
+GROFFER_PERL_=`echo $(GROFFER_PERL) | sed 's|$(srcdir)/perl/||g'`
+GROFFER_SHELL_=`echo $(GROFFER_SHELL) | sed 's|$(srcdir)/shell||g'`
+
+groffer_dir=$(libdir)/groff/groffer
+
+# TODO: Add perl check to configure script.
+groffer: $(GROFFER_PERL) $(GROFFER_SHELL) \
+         $(GROFFER_REST) $(SH_DEPS_SED_SCRIPT)
+	if perl $(srcdir)/perl/perl_test.pl 2>&1 >/dev/null; then \
+	  : >HAVE_PERL; \
+	  echo "Using perl version of groffer."; \
+	  sed -f "$(SH_DEPS_SED_SCRIPT)" \
+            -e "s|@g@|$(g)|g" \
+	    -e "s|@BINDIR@|$(DESTDIR)$(bindir)|g" \
+	    -e "s|@libdir@|$(DESTDIR)$(libdir)|g" \
+	    -e "s|@VERSION@|$(version)$(revision)|g" \
+	    -e "$(SH_SCRIPT_SED_CMD)" \
+	    $(srcdir)/perl/groffer.pl >$@; \
+	  $(INSTALL_DATA) $(srcdir)/perl/groffer.man groffer.man; \
+	  for f in $(ROFF2PROGS); do \
+	    $(INSTALL_SCRIPT) $(srcdir)/perl/roff2.pl $$f; \
+	  done; \
+	else \
+	  : >HAVE_SHELL; \
+	  echo "Using shell version of groffer."; \
+	  sed -f "$(SH_DEPS_SED_SCRIPT)" \
+            -e "s|@g@|$(g)|g" \
+	    -e "s|@BINDIR@|$(DESTDIR)$(bindir)|g" \
+	    -e "s|@libdir@|$(DESTDIR)$(libdir)|g" \
+	    -e "s|@VERSION@|$(version)$(revision)|g" \
+	    -e "$(SH_SCRIPT_SED_CMD)" \
+            $(srcdir)/shell/groffer.sh >$@; \
+	  $(INSTALL_DATA) $(srcdir)/shell/groffer.man groffer.man; \
+	  for f in $(ROFF2PROGS); do \
+	    $(INSTALL_SCRIPT) $(srcdir)/shell/roff2.sh $$f; \
+	  done; \
+	fi
+	chmod +x $@
+	for m in $(ROFF2MODES); do \
+	  cat $(srcdir)/roff2.man \
+	  | sed 's/@ROFF2MODE@/'"$$m"'/g' > roff2$${m}.man; \
+	done
+
+install_data: groffer
+	-test -d $(DESTDIR)$(bindir) || $(mkinstalldirs) $(DESTDIR)$(bindir)
+	$(RM) $(DESTDIR)$(bindir)/groffer
+	$(INSTALL_SCRIPT) groffer $(DESTDIR)$(bindir)/groffer
+	for f in $(ROFF2PROGS); do \
+	  $(RM) $(DESTDIR)$(bindir)/$$f; \
+	  $(INSTALL_SCRIPT) $$f $(DESTDIR)$(bindir)/$$f; \
+	done
+	-test -d $(DESTDIR)$(groffer_dir) \
+          || $(mkinstalldirs) $(DESTDIR)$(groffer_dir)
+	$(RM) $(DESTDIR)$(groffer_dir)/version.sh
+	$(INSTALL_DATA) $(srcdir)/version.sh \
+          $(DESTDIR)$(groffer_dir)/version.sh
+	for f in $(GROFFER_PERL_) $(GROFFER_SHELL_); do \
+          $(RM) $(DESTDIR)$(groffer_dir)/$$f; \
+        done
+	if test -f HAVE_PERL; then \
+          for f in $(GROFFER_PERL_); do \
+            $(INSTALL_SCRIPT) $(srcdir)/perl/$$f \
+              $(DESTDIR)$(groffer_dir)/$$f; \
+          done; \
+        elif test -f HAVE_SHELL; then \
+          for f in $(GROFFER_SHELL_); do \
+            $(INSTALL_SCRIPT) $(srcdir)/shell/$$f \
+              $(DESTDIR)$(groffer_dir)/$$f; \
+          done; \
+        fi;
+
+uninstall_sub:
+	$(RM) $(DESTDIR)$(bindir)/groffer
+	for f in $(ROFF2PROGS); do $(RM) $(DESTDIR)$(bindir)/$$f; done
+	for f in $(GROFFER_PERL_) $(GROFFER_SHELL_) version.sh; do \
+          $(RM) $(DESTDIR)$(groffer_dir)/$$f; \
+        done
+	-rmdir $(DESTDIR)$(libdir)/groff/groffer
+
+########################################################################
+# Emacs settings
+########################################################################
+#
+# Local Variables:
+# mode: makefile
+# End:

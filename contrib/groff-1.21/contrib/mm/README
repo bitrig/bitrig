@@ -1,0 +1,35 @@
+    Copyright (C) 1989-2000, 2001, 2002, 2009, 2010
+      Free Software Foundation, Inc.
+
+    Copying and distribution of this file, with or without modification,
+    are permitted in any medium without royalty provided the copyright
+    notice and this notice are preserved.
+
+This is mgm, a macro package for groff.
+
+It is supposed to be compatible with the DWB mm macros,
+and has several extensions.
+
+Send bug reports to bug-groff@gnu.org with a description of the problem
+and a sample of text which reproduces the error.
+
+Don't forget to mention the version of mgm (look in the beginning
+of m.tmac) and the version of groff.
+
+Any new ideas or improvements are welcome.
+
+Newest version is available here or at the groff CVS repository.
+ftp://ftp.axis.se/pub/groff/mm<something>.gz
+
+You can install mgm as a separate package without the configure in groff
+with the following command:
+
+make -f Makefile.sim install
+
+This README should be bigger :-)
+
+/Jörgen Hägg
+
+Thanks to everyone who have sent me bug-reports and fixes.
+
+

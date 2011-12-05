@@ -1,0 +1,161 @@
+# Copyright (C) 2002, 2003, 2004, 2005, 2006, 2009
+#   Free Software Foundation, Inc.
+#      Written by Werner Lemberg (wl@gnu.org)
+# 
+# This file is part of groff.
+# 
+# groff is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# groff is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# These may be overridden if cross-compiling.
+GROFFBIN=$(top_builddir)/src/roff/groff/groff
+GROFF_BIN_PATH=`echo $(groff_bin_dirs) | sed -e 's|  *|$(SH_SEP)|g'`
+
+groff_bin_dirs=\
+  $(top_builddir)/src/roff/groff \
+  $(top_builddir)/src/roff/troff \
+  $(top_builddir)/src/devices/grops
+
+FFLAG=-F$(top_builddir)/font -F$(top_srcdir)/font
+TFLAG=-M$(top_builddir)/tmac -M$(top_srcdir)/tmac -M$(srcdir)
+
+GROFF=GROFF_COMMAND_PREFIX=''; \
+      export GROFF_COMMAND_PREFIX; \
+      GROFF_BIN_PATH=$(GROFF_BIN_PATH); \
+      export GROFF_BIN_PATH; \
+      $(GROFFBIN) $(FFLAG) $(TFLAG)
+
+MAN7=\
+  groff_mom.n
+
+NORMALFILES=\
+  mom.tmac
+
+# These files are processed with `strip.sed'.
+STRIPFILES=\
+  om.tmac
+
+HTMLDOCFILES=\
+  momdoc/stylesheet.css \
+  momdoc/appendices.html \
+  momdoc/color.html \
+  momdoc/cover.html \
+  momdoc/definitions.html \
+  momdoc/docelement.html \
+  momdoc/docprocessing.html \
+  momdoc/goodies.html \
+  momdoc/graphical.html \
+  momdoc/headfootpage.html \
+  momdoc/images.html \
+  momdoc/inlines.html \
+  momdoc/intro.html \
+  momdoc/letters.html \
+  momdoc/macrolist.html \
+  momdoc/rectoverso.html \
+  momdoc/refer.html \
+  momdoc/reserved.html \
+  momdoc/tables-of-contents.html \
+  momdoc/toc.html \
+  momdoc/typesetting.html \
+  momdoc/using.html
+
+EXAMPLEFILES=\
+  examples/letter.mom \
+  examples/sample_docs.mom \
+  examples/typesetting.mom \
+  examples/README.txt \
+  examples/elvis_syntax \
+  examples/elvis_syntax.new \
+  examples/penguin.ps
+
+PROCESSEDEXAMPLEFILES=\
+  examples/letter.ps \
+  examples/sample_docs.ps \
+  examples/typesetting.ps
+
+HTMLDOCFILES_=`echo $(HTMLDOCFILES) | sed 's|momdoc/||g'`
+EXAMPLEFILES_=`echo $(EXAMPLEFILES) | sed 's|examples/||g'`
+PROCESSEDEXAMPLEFILES_=`echo $(PROCESSEDEXAMPLEFILES) | sed 's|examples/||g'`
+
+MOSTLYCLEANADD=\
+  stamp-strip \
+  penguin.ps \
+  $(PROCESSEDEXAMPLEFILES) \
+  examples/stamp \
+  om.tmac-s
+
+.SUFFIXES: .mom .ps
+.mom.ps:
+	$(GROFF) -Tps -mom $< >$@
+
+
+all: stamp-strip $(PROCESSEDEXAMPLEFILES)
+
+$(PROCESSEDEXAMPLEFILES): penguin.ps examples/stamp
+
+penguin.ps:
+	cp $(srcdir)/examples/penguin.ps .
+
+examples/stamp:
+	test -d examples || $(mkinstalldirs) examples
+	touch $@
+
+install_data: stamp-strip $(NORMALFILES) $(HTMLDOCFILES) \
+              $(EXAMPLEFILES) $(PROCESSEDEXAMPLEFILES)
+	-test -d $(DESTDIR)$(tmacdir) || $(mkinstalldirs) $(DESTDIR)$(tmacdir)
+	for f in $(NORMALFILES); do \
+	  rm -f $(DESTDIR)$(tmacdir)/$$f; \
+	  $(INSTALL_DATA) $(srcdir)/$$f $(DESTDIR)$(tmacdir)/$$f; \
+	done
+	for f in $(STRIPFILES); do \
+	  rm -f $(DESTDIR)$(tmacdir)/$$f; \
+	  $(INSTALL_DATA) $$f-s $(DESTDIR)$(tmacdir)/$$f; \
+	done
+	-test -d $(DESTDIR)$(htmldocdir)/mom \
+	  || $(mkinstalldirs) $(DESTDIR)$(htmldocdir)/mom
+	for f in $(HTMLDOCFILES_); do \
+	  rm -f $(DESTDIR)$(htmldocdir)/mom/$$f; \
+	  $(INSTALL_DATA) $(srcdir)/momdoc/$$f \
+	    $(DESTDIR)$(htmldocdir)/mom/$$f; \
+	done
+	-test -d $(DESTDIR)$(exampledir)/mom \
+	  || $(mkinstalldirs) $(DESTDIR)$(exampledir)/mom
+	for f in $(EXAMPLEFILES_); do \
+	  rm -f $(DESTDIR)$(exampledir)/mom/$$f; \
+	  $(INSTALL_DATA) $(srcdir)/examples/$$f \
+	    $(DESTDIR)$(exampledir)/mom/$$f; \
+	done
+	for f in $(PROCESSEDEXAMPLEFILES_); do \
+	  rm -f $(DESTDIR)$(exampledir)/mom/$$f; \
+	  $(INSTALL_DATA) examples/$$f $(DESTDIR)$(exampledir)/mom/$$f; \
+	done
+
+stamp-strip: $(STRIPFILES)
+	for f in $(STRIPFILES); do \
+	  rm -f $$f-s; \
+	  sed -f $(top_srcdir)/tmac/strip.sed $(srcdir)/$$f >$$f-s; \
+	done
+	touch $@
+
+uninstall_sub:
+	-for f in $(NORMALFILES) $(STRIPFILES); do \
+	  rm -f $(DESTDIR)$(tmacdir)/$$f; \
+	done
+	-for f in $(HTMLDOCFILES_); do \
+	  rm -f $(DESTDIR)$(htmldocdir)/mom/$$f; \
+	done
+	-rmdir $(DESTDIR)$(htmldocdir)/mom
+	-for f in $(EXAMPLEFILES_) $(PROCESSEDEXAMPLEFILES_); do \
+	  rm -f $(DESTDIR)$(exampledir)/mom/$$f; \
+	done
+	-rmdir $(DESTDIR)$(exampledir)/mom

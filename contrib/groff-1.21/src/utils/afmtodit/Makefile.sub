@@ -1,0 +1,29 @@
+MAN1=afmtodit.n
+MOSTLYCLEANADD=afmtodit
+
+all: afmtodit
+
+afmtodit: afmtodit.pl afmtodit.tables
+	if test -n "$(PERLPATH)"; then \
+	  sed -e "s|/usr/bin/perl|$(PERLPATH)|" \
+              -e "s|@VERSION@|$(version)$(revision)|" \
+              -e "s|@FONTDIR@|$(fontdir)|" \
+              -e "/@afmtodit.tables@/ r $(srcdir)/afmtodit.tables" \
+              -e "/@afmtodit.tables@/ d" \
+              $(srcdir)/afmtodit.pl >afmtodit; \
+	else \
+	  sed -e "s|@VERSION@|$(version)$(revision)|" \
+              -e "s|@FONTDIR@|$(fontdir)|" \
+              -e "/@afmtodit.tables@/ r $(srcdir)/afmtodit.tables" \
+              -e "/@afmtodit.tables@/ d" \
+              $(srcdir)/afmtodit.pl >afmtodit; \
+	fi
+	chmod +x afmtodit
+
+install_data: afmtodit
+	-test -d $(DESTDIR)$(bindir) || $(mkinstalldirs) $(DESTDIR)$(bindir)
+	-rm -f $(DESTDIR)$(bindir)/afmtodit
+	$(INSTALL_SCRIPT) afmtodit $(DESTDIR)$(bindir)/afmtodit
+
+uninstall_sub:
+	-rm -f $(DESTDIR)$(bindir)/afmtodit
