@@ -65,7 +65,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 .\"	**	for example "Sun Dec  5 22:27:57     2004"		**
 .\"	******************************************************************
 .de date
-.  pso bash -c "echo -n .ds *date\ ;date"
+.  pso sh -c "echo -n .ds *date\ ;date"
 .  tm \\*[*date] ***
 ..
 .
@@ -83,9 +83,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 .  ds * \\$1\"
 .  substring * 0 0
 .  ie "\\*[*]"s" \
-.    pso bash -c "echo -n .nr *time 0+;date +%s"
+.    pso sh -c "echo -n .nr *time 0+;date +%s"
 .  el \{\
-.   pso bash -c "echo -n .nr *time -;date +%s"
+.   pso sh -c "echo -n .nr *time -;date +%s"
 .   nr *time 0-\\n[*time]
 .   tm elapsed time: \\n[*time] seconds
 .  \}
