@@ -3,7 +3,7 @@
 BINDIR=		/usr/contrib/bin
 
 XCFLAGS=	CC="${CC}" CFLAGS="${CFLAGS} ${COPTS}" LDFLAGS="${LDFLAGS}"
-CONFIGURE_OPTS=	--prefix=/usr/contrib \
+CONFIGURE_OPTS=	--prefix=/usr/contrib --without-libiconv-prefix --without-gs --without-x
 
 PROG=	groff
 NOMAN=
