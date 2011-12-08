@@ -6253,6 +6253,14 @@ elf_section_ignore_discarded_relocs (asection *sec)
       break;
     }
 
+   if (strncmp (".stab", sec->name, 5) == 0
+       && (!sec->name[5] ||
+       (sec->name[5] == '.' && ISDIGIT (sec->name[6]))))
+     return TRUE;
+
+   if (strcmp (".eh_frame", sec->name) == 0)
+     return TRUE;
+
   bed = get_elf_backend_data (sec->owner);
   if (bed->elf_backend_ignore_discarded_relocs != NULL
       && (*bed->elf_backend_ignore_discarded_relocs) (sec))
