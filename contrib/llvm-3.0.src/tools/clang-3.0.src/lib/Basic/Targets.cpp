@@ -367,7 +367,9 @@ protected:
   }
 public:
   OpenBSDTargetInfo(const std::string &triple)
-    : OSTargetInfo<Target>(triple) {}
+    : OSTargetInfo<Target>(triple) {
+      this->UserLabelPrefix = "";
+    }
 };
 
 // PSP Target
