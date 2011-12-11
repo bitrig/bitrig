@@ -1,4 +1,0 @@
-dnl	$OpenBSD: whatis,v 1.11 2005/03/25 06:47:02 brad Exp $
-
-OpenBSD/MACHINE runs on 64-bit UltraSPARC-based machines, including most of
-Sun Microsystems workstations and their clones.

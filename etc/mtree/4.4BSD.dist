@@ -1205,10 +1205,6 @@ armish
 ..
 i386
 ..
-macppc
-..
-socppc
-..
 zaurus
 ..
 
@@ -1223,8 +1219,6 @@ amd64
 armish
 ..
 i386
-..
-socppc
 ..
 zaurus
 ..
@@ -1250,10 +1244,6 @@ amd64
 armish
 ..
 i386
-..
-macppc
-..
-socppc
 ..
 zaurus
 ..

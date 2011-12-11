@@ -1,2 +1,0 @@
-dnl	$OpenBSD: upgrade,v 1.2 2005/03/31 13:59:46 aoyama Exp $
-OpenBSDUpgrade({:-an installation tape, or a bsd.rd file on the root file system-:})

@@ -340,7 +340,7 @@ update-moduli:
 	bootblocks ${ALL_KERNELS}
 	
 
-SUBDIR+= etc.amd64 etc.armish etc.i386 etc.macppc etc.socppc etc.zaurus
+SUBDIR+= etc.amd64 etc.armish etc.i386 etc.zaurus
 
 .include <bsd.subdir.mk>
 .include <bsd.prog.mk>
