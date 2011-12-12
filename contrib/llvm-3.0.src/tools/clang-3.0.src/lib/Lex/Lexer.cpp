@@ -1853,6 +1853,7 @@ static bool isEndOfBlockCommentWithEscapedNewLine(const char *CurPtr,
   return true;
 }
 
+#undef __SSE2__
 #ifdef __SSE2__
 #include <emmintrin.h>
 #elif __ALTIVEC__

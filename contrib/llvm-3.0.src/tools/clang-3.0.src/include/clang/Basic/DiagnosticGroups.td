@@ -35,6 +35,7 @@ def : DiagGroup<"ctor-dtor-privacy">;
 def : DiagGroup<"declaration-after-statement">;
 def DefaultArgSpecialMember : DiagGroup<"default-arg-special-member">;
 def GNUDesignator : DiagGroup<"gnu-designator">;
+def : DiagGroup<"bounded">;
 
 def DeleteNonVirtualDtor : DiagGroup<"delete-non-virtual-dtor">;
 

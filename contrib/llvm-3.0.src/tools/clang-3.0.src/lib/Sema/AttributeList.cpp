@@ -201,6 +201,7 @@ AttributeList::Kind AttributeList::getKind(const IdentifierInfo *Name) {
     .Case("__fastcall", AT_fastcall)
     .Case("__thiscall", AT_thiscall)
     .Case("__pascal", AT_pascal)
+    .Case("bounded", IgnoredAttribute) // XXX
     .Case("constant", AT_constant)
     .Case("device", AT_device)
     .Case("global", AT_global)

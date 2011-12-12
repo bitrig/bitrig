@@ -8,7 +8,7 @@
 ##===----------------------------------------------------------------------===##
 
 LEVEL = ../..
-PARALLEL_DIRS = Utils Instrumentation Scalar InstCombine IPO Hello
+PARALLEL_DIRS = Utils Instrumentation Scalar InstCombine IPO
 
 include $(LEVEL)/Makefile.config
 
