@@ -549,11 +549,17 @@ _GLIBCXX_BEGIN_NAMESPACE(__gnu_cxx)
    */
   class free_list
   {
+#ifdef __clang__
+  public:
+#endif
     typedef size_t* 				value_type;
     typedef __detail::__mini_vector<value_type> vector_type;
     typedef vector_type::iterator 		iterator;
     typedef __mutex				__mutex_type;
 
+#ifdef __clang__
+  private:
+#endif
     struct _LT_pointer_compare
     {
       bool
@@ -735,13 +741,17 @@ _GLIBCXX_BEGIN_NAMESPACE(__gnu_cxx)
 	      value = _BSize + (modulus ? _AlignSize - (modulus) : 0)
 	    };
 	};
-
+#ifdef __clang__
+     public:
+#endif
       struct _Alloc_block
       {
 	char __M_unused[aligned_size<sizeof(value_type),
 			_BALLOC_ALIGN_BYTES>::value];
       };
-
+#ifdef __clang__
+     private:
+#endif
 
       typedef typename std::pair<_Alloc_block*, _Alloc_block*> _Block_pair;
 

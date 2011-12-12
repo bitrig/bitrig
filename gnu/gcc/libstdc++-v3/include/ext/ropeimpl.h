@@ -382,7 +382,11 @@ _GLIBCXX_BEGIN_NAMESPACE(__gnu_cxx)
 	  {
 	    _Rope_RopeLeaf<_CharT, _Alloc>* __l
 	      = (_Rope_RopeLeaf<_CharT, _Alloc>*)this;
+#ifdef __clang__
+	    __l->template _Rope_RopeLeaf<_CharT, _Alloc>::~_Rope_RopeLeaf();
+#else
 	    __l->_Rope_RopeLeaf<_CharT, _Alloc>::~_Rope_RopeLeaf();
+#endif
 	    _L_deallocate(__l, 1);
 	    break;
 	  }
@@ -390,7 +394,11 @@ _GLIBCXX_BEGIN_NAMESPACE(__gnu_cxx)
 	  {
 	    _Rope_RopeConcatenation<_CharT,_Alloc>* __c
 	      = (_Rope_RopeConcatenation<_CharT, _Alloc>*)this;
+#ifdef __clang__
+	    __c->template _Rope_RopeConcatenation<_CharT, _Alloc>::
+#else
 	    __c->_Rope_RopeConcatenation<_CharT, _Alloc>::
+#endif
 	      ~_Rope_RopeConcatenation();
 	    _C_deallocate(__c, 1);
 	    break;
@@ -399,7 +407,11 @@ _GLIBCXX_BEGIN_NAMESPACE(__gnu_cxx)
 	  {
 	    _Rope_RopeFunction<_CharT, _Alloc>* __f
 	      = (_Rope_RopeFunction<_CharT, _Alloc>*)this;
+#ifdef __clang__
+	    __f->template _Rope_RopeFunction<_CharT, _Alloc>::~_Rope_RopeFunction();
+#else
 	    __f->_Rope_RopeFunction<_CharT, _Alloc>::~_Rope_RopeFunction();
+#endif
 	    _F_deallocate(__f, 1);
 	    break;
 	  }
@@ -407,7 +419,11 @@ _GLIBCXX_BEGIN_NAMESPACE(__gnu_cxx)
 	  {
 	    _Rope_RopeSubstring<_CharT, _Alloc>* __ss =
 	      (_Rope_RopeSubstring<_CharT, _Alloc>*)this;
+#ifdef __clang__
+	    __ss->template _Rope_RopeSubstring<_CharT, _Alloc>::
+#else
 	    __ss->_Rope_RopeSubstring<_CharT, _Alloc>::
+#endif
 	      ~_Rope_RopeSubstring();
 	    _S_deallocate(__ss, 1);
 	    break;
@@ -433,7 +449,11 @@ _GLIBCXX_BEGIN_NAMESPACE(__gnu_cxx)
     {
       size_t __old_len = __r->_M_size;
       _CharT* __new_data = (_CharT*)
+#ifdef __clang__
+	_Rope_rep_base<_CharT, _Alloc>::_Data_allocate(_S_rounded_up_size(__old_len + __len));
+#else
 	_Data_allocate(_S_rounded_up_size(__old_len + __len));
+#endif
       _RopeLeaf* __result;
 
       uninitialized_copy_n(__r->_M_data, __old_len, __new_data);
@@ -817,7 +837,11 @@ _GLIBCXX_BEGIN_NAMESPACE(__gnu_cxx)
 	    if (__result_len > __lazy_threshold)
 	      goto lazy;
 	    __section = (_CharT*)
+#ifdef __clang__
+	      _Rope_rep_base<_CharT, _Alloc>::_Data_allocate(_S_rounded_up_size(__result_len));
+#else
 	      _Data_allocate(_S_rounded_up_size(__result_len));
+#endif
 	    try
 	      {	(*(__f->_M_fn))(__start, __result_len, __section); }
 	    catch(...)
