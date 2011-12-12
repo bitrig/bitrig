@@ -46,7 +46,7 @@ DOLLAR="@dollaropt@"
 INCS="-nostdinc"
 FOUNDFILES=false
 
-CPP=/usr/local/bin/clang
+CPP=/usr/contrib/bin/clang
 OPTS=""
 TRAD=
 
