@@ -3,24 +3,12 @@
 
 .include <bsd.own.mk>
 
-.if make(obj)
-SUBDIR+=	cc
-.else
-.  if ${COMPILER_VERSION:L} == "gcc4"
-SUBDIR+=	cc
-.  endif
-.endif
+SUBDIR+=	cc cxxfilt cvs lynx
 
-SUBDIR+=	cxxfilt cvs lynx
 .if make(obj)
 SUBDIR+=	binutils binutils-2.17
 .else
 SUBDIR+=	${BINUTILS_VERSION}
-.endif
-
-# most ports use binutils gas and ld, some do not (yet).
-.if ${ELF_TOOLCHAIN:L} == "no"
-SUBDIR+=	gas ld
 .endif
 
 # Do these last; texinfo builds the info 'dir' file, perl must be after binutils

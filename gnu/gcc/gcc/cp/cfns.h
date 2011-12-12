@@ -106,7 +106,9 @@ hash (register const char *str, register unsigned int len)
 }
 
 #ifdef __GNUC__
+#ifndef __clang__
 __inline
+#endif
 #endif
 const char *
 libc_name_p (register const char *str, register unsigned int len)
