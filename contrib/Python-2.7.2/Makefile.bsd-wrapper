@@ -1,9 +1,15 @@
 .include <bsd.own.mk>
 
-XCFLAGS=	CC="${CC}" CFLAGS="${CFLAGS} ${COPTS}" LDFLAGS="${LDFLAGS}"
 CONFIGURE_OPTS=	--prefix=/usr/contrib \
 		--without-cxx_main \
 		--with-system-expat
+
+.if ${COMPILER_VERSION:L} == "clang"
+CONFIGURE_OPTS+=ac_cv_header_libintl_h=no
+CFLAGS+=	-DHAVE_AS_X86_PCREL
+.endif
+
+XCFLAGS=	CC="${CC}" CFLAGS="${CFLAGS} ${COPTS}" LDFLAGS="${LDFLAGS}"
 
 PROG=	python
 NOMAN=
