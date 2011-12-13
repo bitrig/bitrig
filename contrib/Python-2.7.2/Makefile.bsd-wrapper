@@ -5,7 +5,7 @@ CONFIGURE_OPTS=	--prefix=/usr/contrib \
 		--with-system-expat
 
 .if ${COMPILER_VERSION:L} == "clang"
-CONFIGURE_OPTS+=ac_cv_header_libintl_h=no
+CONFIGURE_OPTS+=--without-gcc ac_cv_header_libintl_h=no
 CFLAGS+=	-DHAVE_AS_X86_PCREL
 .endif
 
