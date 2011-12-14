@@ -34,7 +34,12 @@ CC?=		cc
 
 PIPE?=		-pipe
 
-CFLAGS?=	-O2 ${PIPE} ${DEBUG}
+.if ${COMPILER_VERSION:L} == "gcc4"
+CFLAGS?=	-O2
+.else
+CFLAGS?=	-O3
+.endif
+CFLAGS?=	${PIPE} ${DEBUG}
 COMPILE.c?=	${CC} ${CFLAGS} ${CPPFLAGS} -c
 LINK.c?=	${CC} ${CFLAGS} ${CPPFLAGS} ${LDFLAGS}
 
@@ -49,7 +54,11 @@ CPP?=		cpp
 CPPFLAGS?=	
 
 FC?=		f77
+.if ${COMPILER_VERSION:L} == "gcc4"
 FFLAGS?=		-O2
+.else
+FFLAGS?=		-O3
+.endif
 RFLAGS?=
 COMPILE.f?=	${FC} ${FFLAGS} -c
 LINK.f?=	${FC} ${FFLAGS} ${LDFLAGS}
