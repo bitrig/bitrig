@@ -10,3 +10,5 @@ tags
 *.patch*
 *~
 *.pyc
+
+contrib/Python-2.7.2/Lib/plat-openbsd5/
