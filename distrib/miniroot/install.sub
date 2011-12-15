@@ -1246,52 +1246,6 @@ ftp_error() {
 	return 1
 }
 
-startftplist() {
-	# If no networks are configured, we do not need the ftplist file
-	(( nifs < 1 )) && return
-
-	# Make sure the ftp subshell gets its own process group
-	set -m
-	(
-		# ftp.openbsd.org == 129.128.5.191 and will remain at
-		# that address for the foreseeable future.
-		ftp $FTPOPTS -a -o - "http://129.128.5.191/cgi-bin/ftplist.cgi?path=$FTPSETDIR" \
-			2>/tmp/ftplisterr > $SERVERLISTALL
-
-		# Remember finish time for adjusting the received timestamp
-		echo -n $SECONDS >$SERVERLISTSEC
-	) & ftppid=$!
-	set +m
-
-	# If the ftp process takes more than 12 seconds, kill it
-	# XXX We are relying on the pid space not randomly biting us --
-	# XXX ftp could terminate early, and the pid could be reused
-	(sleep 12; kill -INT -$ftppid >/dev/null 2>&1) &
-}
-
-# Wait for the ftp process to finish, or be killed after the timeout
-# XXX contains a bit of debug code for now
-waitftplist() {
-	local _dot						# XXX
-
-	[[ -z $ftppid ]] && return
-	while [[ -n $(jobs $ftppid 2>/dev/null) ]]; do
-		echo -n .					# XXX
-		_dot=.						# XXX
-		sleep 0.2					# XXX
-	done
-	[[ -n $_dot ]] && echo					# XXX
-}
-
-# If possible, print the timestamp received from the ftplist.cgi output,
-# adjusted with the time elapsed since it was received
-ftp_time() {
-	local _ftplist_sec=$(cat $SERVERLISTSEC 2>&-)
-	local _time=$(sed '/^TIME=\([0-9]*\)$/!d;s//\1/;q' $SERVERLISTALL 2>&-)
-	[[ -n $_ftplist_sec && -n $_time ]] &&
-		echo $((_time + SECONDS - _ftplist_sec))
-}
-
 # Get several parameters from the user, and xfer
 # files from the server.
 # $1 = url type (ftp or http)
@@ -1302,7 +1256,6 @@ install_url() {
 	eval local _server_ip=\$_${_url_type}_server_ip \
 		_server_dir=\$_${_url_type}_server_dir
 
-	waitftplist
 	ask "HTTP/FTP proxy URL? (e.g. 'http://proxy:8080', or 'none')" \
 		"${ftp_proxy:-none}"
 	unset ftp_proxy http_proxy
@@ -1315,7 +1268,6 @@ install_url() {
 		set -- $(sed q $SERVERLIST)
 		_server_ip=${1%%/*}
 	else
-		echo "(Was not able to get ftplist from ftp.openbsd.org, but that is OK)"
 		_prompt="Server? (hostname or 'done')"
 	fi
 
@@ -1541,7 +1493,6 @@ set_timezone() {
 		TZ=${TZ#*${_zoneroot#/mnt}/}
 	fi
 
-	waitftplist
 	if [[ -s $SERVERLISTALL ]]; then
 		_tz=$(sed -ne '/^TZ=/s/TZ=//p' <$SERVERLISTALL)
 		[[ -n $_tz ]] && isin "$_tz" `cat $_zonefile` && TZ=$_tz
@@ -1647,10 +1598,6 @@ run_sysmerge() {
 	#		/mnt/usr/sbin/chroot /mnt /usr/sbin/sysmerge $SM_ARGS $SM_ARGSX
 	#	fi
 	#fi
-}
-
-update_firmware() {
-	echo "/usr/sbin/fw_update -v" >> /mnt/etc/rc.firsttime
 }
 
 # Create a skeletal but useful /etc/fstab from /tmp/fstab by stripping all
@@ -1992,8 +1939,6 @@ finish_up() {
 
 	[[ "$MODE" == upgrade ]] && run_sysmerge
 
-	update_firmware
-
 	# Pat on the back.
 	cat <<__EOT
 
@@ -2114,8 +2059,6 @@ if [[ $MODE == install ]]; then
 
 	echo
 	donetconfig
-
-	(( nifs != 0 )) && startftplist
 
 	echo
 	while :; do

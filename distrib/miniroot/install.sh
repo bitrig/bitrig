@@ -208,32 +208,6 @@ if [[ -z $TZ ]]; then
 	rm -f /mnt/tmp/tzlist
 fi
 
-# If we got a timestamp from the ftplist server, and that time diffs by more
-# than 120 seconds, ask if the user wants to adjust the time
-if _time=$(ftp_time) && _now=$(date +%s) && \
-	(( _now - _time > 120 || _time - _now > 120 )); then
-	_tz=/mnt/usr/share/zoneinfo/$TZ
-	ask_yn "Time appears wrong.  Set to '$(TZ=$_tz date -r "$(ftp_time)")'?" yes
-	if [[ $resp == y ]]; then
-		# We do not need to specify TZ below since both date
-		# invocations use the same one
-		date $(date -r "$(ftp_time)" "+%Y%m%d%H%M.%S") >&-
-		# N.B. This will screw up SECONDS
-	fi
-fi
-
-# If we managed to talk to the ftplist server before, tell it what
-# location we used... so it can perform magic next time
-if [[ -s $SERVERLISTALL ]]; then
-	_i=
-	[[ -n $installedfrom ]] && _i="install=$installedfrom"
-	[[ -n $TZ ]] && _i="$_i&TZ=$TZ"
-	[[ -n $method ]] && _i="$_i&method=$method"
-
-	[[ -n $_i ]] && ftp $FTPOPTS -a -o - \
-		"http://129.128.5.191/cgi-bin/ftpinstall.cgi?$_i" >/dev/null 2>&1 &
-fi
-
 # Ensure an enabled console has the correct speed in /etc/ttys.
 sed -e "/^console.*on.*secure.*$/s/std\.[0-9]*/std.$(stty speed)/" \
 	/mnt/etc/ttys >/tmp/ttys
