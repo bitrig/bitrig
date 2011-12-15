@@ -11,6 +11,6 @@ LDADD=	-lkvm
 DPADD=	${LIBKVM}
 
 MAN=		kbd.8
-MANSUBDIR=	amd64 i386 macppc socppc zaurus
+MANSUBDIR=	amd64 i386 zaurus
 
 .include <bsd.prog.mk>

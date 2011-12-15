@@ -2,7 +2,7 @@
 
 
 .if (${MACHINE} == "amd64") || (${MACHINE} == "i386") || \
-    (${MACHINE} == "macppc") || (${MACHINE} == "zaurus")
+    (${MACHINE} == "zaurus")
 
 SRCS=	apm.c apmsubr.c
 
@@ -16,7 +16,7 @@ NOPROG=yes
 .endif
 
 MAN=	apm.8
-MANSUBDIR=amd64 i386 macppc zaurus
+MANSUBDIR=amd64 i386 zaurus
 MLINKS=	apm.8 zzz.8
 
 .include <bsd.prog.mk>
