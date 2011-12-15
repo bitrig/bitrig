@@ -2,15 +2,15 @@
 
 .include <bsd.own.mk>
 
-SUBDIR+=libiberty libreadline
+SUBDIR+=libiberty libreadline libstdc++-v3 libsupc++-v3
 .if make(obj)
 SUBDIR+=libiberty libreadline ../usr.bin/cc/libobjc libstdc++-v3 libsupc++-v3
 .else
 .  if ${COMPILER_VERSION:L} == "gcc4"
-SUBDIR+=../usr.bin/cc/libobjc libstdc++-v3 libsupc++-v3
+SUBDIR+=../usr.bin/cc/libobjc
 .  elif ${COMPILER_VERSION:L} == "clang"
 # make this work with clang
-#SUBDIR+=../usr.bin/cc/libobjc libstdc++-v3 libsupc++-v3
+#SUBDIR+=../usr.bin/cc/libobjc
 .  endif
 .endif
 
