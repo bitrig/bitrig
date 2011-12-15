@@ -2,7 +2,7 @@
 #
 # sh/ksh initialization
 
-PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin:/usr/local/sbin:/usr/local/bin
+PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin:/usr/local/sbin:/usr/local/bin:/usr/contrib/bin
 export PATH
 : ${HOME='/root'}
 export HOME

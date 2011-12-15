@@ -5,7 +5,7 @@
 umask 022
 alias mail Mail
 set history=1000
-set path=(/sbin /usr/sbin /bin /usr/bin /usr/X11R6/bin /usr/local/sbin /usr/local/bin)
+set path=(/sbin /usr/sbin /bin /usr/bin /usr/X11R6/bin /usr/local/sbin /usr/local/bin /usr/contrib/bin)
 set filec
 
 setenv BLOCKSIZE 1k
