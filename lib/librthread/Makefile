@@ -1,6 +1,8 @@
 #	$OpenBSD: Makefile,v 1.19 2011/12/05 04:02:03 guenther Exp $
 
-LIB=rthread
+# install as pthread with the same version to overwrite pthreads
+#LIB=rthread
+LIB=pthread
 WANTLINT=
 LINTFLAGS=-z
 LIBCSRCDIR=	${.CURDIR}/../libc
