@@ -34,4 +34,4 @@ trap 'rm -f $TMP' 0 1 15
 
 sh makeflist > $TMP
 ( cd $DESTDIR ; find . \( -type d -o -type f -o -type l \) ) | \
-    grep -v -e '^.$' | sort -H | diff $TMP - 
+    grep -v -e '^.$' | sort -H | diff -uNp $TMP - 
