@@ -43,7 +43,7 @@ CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS}
 LINKFLAGS=	-Ttext 0xffffffff80100300 -e start --warn-common -z noexecstack
 
-.elif ${COMPILER_VERSION:L} == "gcc4"
+.else
 
 CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
 		-Wno-main -Wno-uninitialized -Wno-format \
@@ -62,8 +62,6 @@ COPTS?=		-O2
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS}
 LINKFLAGS=	-Ttext 0xffffffff801001e0 -e start --warn-common
-.else
-# XXX abort
 .endif
 
 .if ${IDENT:M-DDDB_STRUCT}
