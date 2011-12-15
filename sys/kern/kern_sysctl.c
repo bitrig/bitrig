@@ -127,7 +127,7 @@ int (*cpu_cpuspeed)(int *);
 void (*cpu_setperf)(int);
 int perflevel = 100;
 
-int rthreads_enabled = 0;
+int rthreads_enabled = 1;
 
 /*
  * Lock to avoid too many processes vslocking a large amount of memory
