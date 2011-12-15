@@ -34,6 +34,10 @@ CC?=		cc
 
 PIPE?=		-pipe
 
+.if !exists(COMPILER_VERSION)
+COMPILER_VERSION?="gcc4"
+.endif
+
 .if ${COMPILER_VERSION:L} == "gcc4"
 CFLAGS?=	-O2
 .else
