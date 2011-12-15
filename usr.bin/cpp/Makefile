@@ -9,10 +9,10 @@ SRCS=
 INSTALL_STRIP=
 
 cpp: cpp.sh
-.if ${COMPILER_VERSION:L} == "clang"
-	sed -e 's/@GNUC@//' -e 's/@dollaropt@//' ${.CURDIR}/clang_cpp.sh >$@
-.else
+#.if ${COMPILER_VERSION:L} == "clang"
+#	sed -e 's/@GNUC@//' -e 's/@dollaropt@//' ${.CURDIR}/clang_cpp.sh >$@
+#.else
 	sed -e 's/@GNUC@//' -e 's/@dollaropt@//' ${.CURDIR}/cpp.sh >$@
-.endif
+#.endif
 
 .include <bsd.prog.mk>
