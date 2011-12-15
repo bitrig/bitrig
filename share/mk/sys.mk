@@ -41,7 +41,8 @@ COMPILER_VERSION?="gcc4"
 .if ${COMPILER_VERSION:L} == "gcc4"
 CFLAGS?=	-O2
 .else
-CFLAGS?=	-O3
+# XXX remove -W ones once stand is fixed
+CFLAGS?=	-O3 -Wno-strict-aliasing -Wno-pointer-sign
 .endif
 CFLAGS?=	${PIPE} ${DEBUG}
 COMPILE.c?=	${CC} ${CFLAGS} ${CPPFLAGS} -c
