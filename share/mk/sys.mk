@@ -58,11 +58,7 @@ CPP?=		cpp
 CPPFLAGS?=	
 
 FC?=		f77
-.if ${COMPILER_VERSION:L} == "gcc4"
 FFLAGS?=		-O2
-.else
-FFLAGS?=		-O3
-.endif
 RFLAGS?=
 COMPILE.f?=	${FC} ${FFLAGS} -c
 LINK.f?=	${FC} ${FFLAGS} ${LDFLAGS}
