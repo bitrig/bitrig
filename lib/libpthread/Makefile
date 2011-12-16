@@ -7,7 +7,11 @@
 
 SRCDIR=		${.CURDIR}
 LIBCSRCDIR=	${.CURDIR}/../libc
+NOPROG=
+.include "${SRCDIR}/man/Makefile.inc"
+.include <bsd.prog.mk>
 
+.if 0
 LIB=		pthread
 LINTFLAGS=	-z
 CFLAGS+=	-DPTHREAD_KERNEL -D_POSIX_THREADS -D_THREAD_SAFE -Wall
@@ -33,3 +37,4 @@ CFLAGS+=	-D_PTHREADS_INVARIANTS
 .include "${SRCDIR}/man/Makefile.inc"
 
 .include <bsd.lib.mk>
+.endif
