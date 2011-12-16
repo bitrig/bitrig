@@ -9,6 +9,7 @@ SRCDIR=		${.CURDIR}
 LIBCSRCDIR=	${.CURDIR}/../libc
 NOPROG=
 .include "${SRCDIR}/man/Makefile.inc"
+.include "${SRCDIR}/include/Makefile.inc"
 .include <bsd.prog.mk>
 
 .if 0
