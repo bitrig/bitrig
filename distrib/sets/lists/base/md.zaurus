@@ -79,7 +79,6 @@
 ./usr/lib/libmilter.so.2.1
 ./usr/lib/libncurses.so.12.1
 ./usr/lib/libncursesw.so.12.1
-./usr/lib/libobjc.so.5.0
 ./usr/lib/libocurses.so.5.0
 ./usr/lib/libossaudio.so.3.1
 ./usr/lib/libotermcap.so.5.0
@@ -1145,6 +1144,7 @@
 ./usr/libdata/perl5/site_perl/arm-openbsd/dev/isa/spkrio.ph
 ./usr/libdata/perl5/site_perl/arm-openbsd/dev/isa/vga_isavar.ph
 ./usr/libdata/perl5/site_perl/arm-openbsd/dev/isa/viasioreg.ph
+./usr/libdata/perl5/site_perl/arm-openbsd/dev/isa/wbsioreg.ph
 ./usr/libdata/perl5/site_perl/arm-openbsd/dev/isa/wdsreg.ph
 ./usr/libdata/perl5/site_perl/arm-openbsd/dev/isa/wssreg.ph
 ./usr/libdata/perl5/site_perl/arm-openbsd/dev/isa/wssvar.ph
@@ -2089,20 +2089,6 @@
 ./usr/libdata/perl5/site_perl/arm-openbsd/ntfs/ntfs_subr.ph
 ./usr/libdata/perl5/site_perl/arm-openbsd/ntfs/ntfs_vfsops.ph
 ./usr/libdata/perl5/site_perl/arm-openbsd/ntfs/ntfsmount.ph
-./usr/libdata/perl5/site_perl/arm-openbsd/objc
-./usr/libdata/perl5/site_perl/arm-openbsd/objc/NXConstStr.ph
-./usr/libdata/perl5/site_perl/arm-openbsd/objc/Object.ph
-./usr/libdata/perl5/site_perl/arm-openbsd/objc/Protocol.ph
-./usr/libdata/perl5/site_perl/arm-openbsd/objc/encoding.ph
-./usr/libdata/perl5/site_perl/arm-openbsd/objc/hash.ph
-./usr/libdata/perl5/site_perl/arm-openbsd/objc/objc-api.ph
-./usr/libdata/perl5/site_perl/arm-openbsd/objc/objc-decls.ph
-./usr/libdata/perl5/site_perl/arm-openbsd/objc/objc-list.ph
-./usr/libdata/perl5/site_perl/arm-openbsd/objc/objc.ph
-./usr/libdata/perl5/site_perl/arm-openbsd/objc/runtime.ph
-./usr/libdata/perl5/site_perl/arm-openbsd/objc/sarray.ph
-./usr/libdata/perl5/site_perl/arm-openbsd/objc/thr.ph
-./usr/libdata/perl5/site_perl/arm-openbsd/objc/typedstream.ph
 ./usr/libdata/perl5/site_perl/arm-openbsd/ocurses.ph
 ./usr/libdata/perl5/site_perl/arm-openbsd/ohash.ph
 ./usr/libdata/perl5/site_perl/arm-openbsd/openssl

@@ -322,11 +322,6 @@ libmilter		gname=bin uname=root mode=0755
 # ./usr/include/libmilter
 ..
 
-# ./usr/include/objc
-objc		gname=bin uname=root mode=0755
-# ./usr/include/objc
-..
-
 # ./usr/include/openssl
 openssl		gname=bin uname=root mode=0755
 # ./usr/include/openssl
@@ -396,11 +391,6 @@ pkgconfig	gname=bin uname=root mode=0755
 
 # ./usr/libdata
 libdata
-
-# ./usr/libdata/lint
-lint
-# ./usr/libdata/lint
-..
 
 # ./usr/libdata/perl5
 perl5

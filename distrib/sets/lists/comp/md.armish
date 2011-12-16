@@ -642,8 +642,6 @@
 ./usr/include/g++/tr1/wctype.h
 ./usr/include/ieeefp.h
 ./usr/include/mmintrin.h
-./usr/include/objc/objc-decls.h
-./usr/include/objc/runtime.h
 ./usr/include/unwind.h
 ./usr/lib/crtbegin.o
 ./usr/lib/crtbeginS.o
@@ -677,7 +675,6 @@
 ./usr/lib/libmilter_pic.a
 ./usr/lib/libncurses_pic.a
 ./usr/lib/libncursesw_pic.a
-./usr/lib/libobjc_pic.a
 ./usr/lib/libocurses_pic.a
 ./usr/lib/libossaudio_pic.a
 ./usr/lib/libotermcap_pic.a
@@ -720,4 +717,3 @@
 ./usr/libdata/ldscripts/armelfb_obsd.xsc
 ./usr/libdata/ldscripts/armelfb_obsd.xu
 ./usr/libdata/ldscripts/armelfb_obsd.xz
-./usr/libdata/lint/llib-larm.ln

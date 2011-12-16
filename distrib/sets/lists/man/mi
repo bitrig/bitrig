@@ -707,6 +707,7 @@
 ./usr/share/man/man1/skeyinit.1
 ./usr/share/man/man1/sleep.1
 ./usr/share/man/man1/slogin.1
+./usr/share/man/man1/sndiod.1
 ./usr/share/man/man1/sort.1
 ./usr/share/man/man1/spell.1
 ./usr/share/man/man1/splain.1
@@ -2074,6 +2075,7 @@
 ./usr/share/man/man5/rndc.conf.5
 ./usr/share/man/man5/rpc.5
 ./usr/share/man/man5/rtadvd.conf.5
+./usr/share/man/man5/ruby-module.5
 ./usr/share/man/man5/sasyncd.conf.5
 ./usr/share/man/man5/securenet.5
 ./usr/share/man/man5/sensorsd.conf.5
