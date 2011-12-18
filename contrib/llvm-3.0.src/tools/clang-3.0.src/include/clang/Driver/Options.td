@@ -655,7 +655,7 @@ def print_search_dirs : Flag<"-print-search-dirs">,
 def private__bundle : Flag<"-private_bundle">;
 def pthreads : Flag<"-pthreads">;
 def pthread : Flag<"-pthread">;
-def p : Flag<"-p">;
+def p : Flag<"-p">, Alias<pg>;
 def pie : Flag<"-pie">;
 def read__only__relocs : Separate<"-read_only_relocs">;
 def remap : Flag<"-remap">;
