@@ -3,8 +3,12 @@
 BINDIR=		/usr/contrib/bin
 MAKE=		/usr/contrib/bin/gmake
 
-XCFLAGS=	CC="${CC}" CFLAGS="${CFLAGS} ${COPTS}" LDFLAGS="${LDFLAGS}"
-CONFIGURE_OPTS=	--prefix=/usr/contrib --without-libiconv-prefix --without-gs --without-x
+XCFLAGS=	CC="${CC}" CFLAGS="${CFLAGS} ${COPTS}" \
+		CXX="${CXX}" CXXFLAGS="${CXXFLAGS} ${COPTS}" \
+		LDFLAGS="${LDFLAGS}"
+CONFIGURE_OPTS=	--prefix=/usr/contrib \
+		--without-libiconv-prefix \
+		--without-gs --without-x
 
 PROG=	groff
 NOMAN=
@@ -21,14 +25,12 @@ config: .FORCE
 	PATH="/bin:/usr/bin:/sbin:/usr/sbin:/usr/contrib/bin" \
 	${XCFLAGS} \
 	INSTALL_PROGRAM="${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP}" \
-	CC=${CC} CXX=${CXX} \
 	sh ${.CURDIR}/configure ${CONFIGURE_OPTS}
 
 config.status:
 	PATH="/bin:/usr/bin:/sbin:/usr/sbin:/usr/contrib/bin" \
 	${XCFLAGS} \
 	INSTALL_PROGRAM="${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP}" \
-	CC=${CC} CXX=${CXX} \
 	sh ${.CURDIR}/configure ${CONFIGURE_OPTS}
 
 BEFOREMAN= config.status
