@@ -153,11 +153,10 @@
   else
   #
   # Creation of a private temporary directory was unsuccessful;
-  # fall back to user nominated directory, (using current directory
-  # as default), and schedule removal of only the temporary files.
-  #
-    GROFF_TMPDIR=${TMPDIR}
-    trap "rm -f ${GROFF_TMPDIR}/pdf$$.*" 0
+  # DO NOT fall back to user nominated directory,
+  # because that would allow symlink attacks.
+    echo >&2 "$CMD: mktemp(1) -d failure"
+    exit 1
   fi
   #
   # In the case of abnormal termination events, we force an exit

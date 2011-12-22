@@ -156,6 +156,7 @@ static symbol get_delim_name();
 static void init_registers();
 static void trapping_blank_line();
 
+#define input_iterator my_input_iterator
 class input_iterator;
 input_iterator *make_temp_iterator(const char *);
 const char *input_char_description(int);

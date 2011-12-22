@@ -1,4 +1,4 @@
-#! /usr/bin/env perl
+#!/usr/bin/perl
 
 # roff2* - transform roff files into other formats
 

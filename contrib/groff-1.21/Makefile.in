@@ -247,15 +247,15 @@ manroot=$(mandir)
 
 # `man1ext' is the man section for user commands.
 man1ext=1
-man1dir=$(manroot)/man$(man1ext)
+man1dir=$(manroot)/cat$(man1ext)
 
 # `man5ext' is the man section for file formats.
 man5ext=5
-man5dir=$(manroot)/man$(man5ext)
+man5dir=$(manroot)/cat$(man5ext)
 
 # `man7ext' is the man section for macros.
 man7ext=7
-man7dir=$(manroot)/man$(man7ext)
+man7dir=$(manroot)/cat$(man7ext)
 
 # The configure script checks whether all necessary utility programs for
 # grohtml are available -- only then we can build the HTML documentation.
@@ -686,7 +686,7 @@ subdir=src/roff/troff
 
 
 $(TARGETS):
-	@$(ENVSETUP); $(MAKE) $(MAKE_K_FLAG) $(MDEFINES) do=$@ $(dodirs)
+	@$(ENVSETUP); $(MAKE) $(MAKE_K_FLAG) do=$@ $(dodirs)
 
 dot: FORCE
 	@$(ENVSETUP); \

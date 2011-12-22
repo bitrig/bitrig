@@ -145,7 +145,17 @@
 .    ie (\\n[.$] > 3) .ds an-extra2 "\\$4\"
 .    el               .ds an-extra2 \"Sun Release 4.0
 .    ie (\\n[.$] > 4) .ds an-extra3 "\\$5\"
-.    el               .ds an-extra3 \"System Programmer's Manual
+.    el .ie '\\$2'1'  .ds an-extra3 OpenBSD Reference Manual
+.    el .ie '\\$2'2'  .ds an-extra3 OpenBSD Programmer's Manual
+.    el .ie '\\$2'3'  .ds an-extra3 OpenBSD Programmer's Manual
+.    el .ie '\\$2'3p' .ds an-extra3 Perl Programmers Reference Guide
+.    el .ie '\\$2'4'  .ds an-extra3 OpenBSD Programmer's Manual
+.    el .ie '\\$2'5'  .ds an-extra3 OpenBSD Programmer's Manual
+.    el .ie '\\$2'6'  .ds an-extra3 OpenBSD Reference Manual
+.    el .ie '\\$2'7'  .ds an-extra3 OpenBSD Reference Manual
+.    el .ie '\\$2'8'  .ds an-extra3 OpenBSD System Manager's Manual
+.    el .ie '\\$2'9'  .ds an-extra3 OpenBSD Kernel Manual
+.    el               .ds an-extra3
 .    ds an-init
 \\..
 .

@@ -176,27 +176,44 @@ install_man:
 	-test -d $(DESTDIR)$(man1dir) || $(mkinstalldirs) $(DESTDIR)$(man1dir)
 	@-pages="$(MAN1)"; \
 	for p in $$pages; do \
-	 prog=`basename $$p .n`; \
-	 target=$(DESTDIR)$(man1dir)/$(NAMEPREFIX)$$prog.$(man1ext); \
+	 p0="$${p%.n}.0"; \
+	 echo "groff -t -mandoc -Tascii -P -c $$p > $$p0"; \
+	 $(top_srcdir)/test-groff -t -mandoc -Tascii -P -c $$p > $$p0; \
+	 target=$(DESTDIR)$(man1dir)/$(NAMEPREFIX)$$p0; \
 	 rm -f $$target; \
-	 echo $(INSTALL_DATA) $$p $$target; \
-	 $(INSTALL_DATA) $$p $$target; \
+	 echo $(INSTALL_DATA) $$p0 $$target; \
+	 $(INSTALL_DATA) $$p0 $$target; \
 	done
 	-test -d $(DESTDIR)$(man5dir) || $(mkinstalldirs) $(DESTDIR)$(man5dir)
 	@-pages="$(MAN5)"; \
 	for p in $$pages; do \
-	 target=$(DESTDIR)$(man5dir)/`basename $$p .n`.$(man5ext); \
+	 p0="$${p%.n}.0"; \
+	 echo "groff -t -mandoc -Tascii -P -c $$p > $$p0"; \
+	 $(top_srcdir)/test-groff -t -mandoc -Tascii -P -c $$p > $$p0; \
+	 target=$(DESTDIR)$(man5dir)/$$p0; \
 	 rm -f $$target; \
-	 echo $(INSTALL_DATA) $$p $$target; \
-	 $(INSTALL_DATA) $$p $$target; \
+	 echo $(INSTALL_DATA) $$p0 $$target; \
+	 $(INSTALL_DATA) $$p0 $$target; \
 	done
 	-test -d $(DESTDIR)$(man7dir) || $(mkinstalldirs) $(DESTDIR)$(man7dir)
 	@-pages="$(MAN7)"; \
 	for p in $$pages; do \
-	 target=$(DESTDIR)$(man7dir)/`basename $$p .n`.$(man7ext); \
+	if [ "X$$p" = "Xgroff_mdoc.n" ]; then \
+	 mdocdir=$(DESTDIR)$(manroot)/man$(man7ext); \
+	 test -d $$mdocdir || $(mkinstalldirs) $$mdocdir; \
+	 target=$$mdocdir/groff_mdoc.7; \
 	 rm -f $$target; \
 	 echo $(INSTALL_DATA) $$p $$target; \
 	 $(INSTALL_DATA) $$p $$target; \
+	else \
+	 p0="$${p%.n}.0"; \
+	 echo "groff -t -mandoc -Tascii -P -c $$p > $$p0"; \
+	 $(top_srcdir)/test-groff -t -mandoc -Tascii -P -c $$p > $$p0; \
+	 target=$(DESTDIR)$(man7dir)/$$p0; \
+	 rm -f $$target; \
+	 echo $(INSTALL_DATA) $$p0 $$target; \
+	 $(INSTALL_DATA) $$p0 $$target; \
+	fi; \
 	done
 
 .PHONY: uninstall_man
