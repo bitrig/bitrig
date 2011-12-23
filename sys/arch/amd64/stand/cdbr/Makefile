@@ -4,7 +4,7 @@
 
 PROG=	cdbr
 SRCS=	cdbr.S
-.if ${COMPILER_VERSION:L} == "clang"
+.if ${COMPILER_VERSION:L} != "gcc4"
 AFLAGS+=-no-integrated-as
 .endif
 AFLAGS+=-m32 -I${.CURDIR} -I${.CURDIR}/../../.. #-Wa,-a

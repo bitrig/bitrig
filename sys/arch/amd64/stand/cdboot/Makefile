@@ -64,7 +64,7 @@ CPPFLAGS+=-DLINKADDR=${LINKADDR} -I${S}/stand/boot
 CFLAGS+=-m32 ${SACFLAGS} -D__INTERNAL_LIBSA_CREAD
 CFLAGS+=-DOSREV=\"${OSREV}\" -DMACHINE=\"${MACHINE}\"
 CFLAGS+=-DKERNEL=\"/${OSREV}/${MACHINE}/bsd.rd\"
-.if ${COMPILER_VERSION:L} == "clang"
+.if ${COMPILER_VERSION:L} != "gcc4"
 AFLAGS+=-no-integrated-as
 # XXX HACK kill this
 CC=cc
