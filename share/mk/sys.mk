@@ -30,27 +30,29 @@ LINK.s?=	${CC} ${AFLAGS} ${LDFLAGS}
 COMPILE.S?=	${CC} ${AFLAGS} ${CPPFLAGS} -c
 LINK.S?=	${CC} ${AFLAGS} ${CPPFLAGS} ${LDFLAGS}
 
-CC?=		cc
-
 PIPE?=		-pipe
 
 .if !exists(COMPILER_VERSION)
-COMPILER_VERSION?="gcc4"
+COMPILER_VERSION?="clang"
 .endif
 
 .if ${COMPILER_VERSION:L} == "gcc4"
+CC?=		cc
+CXX?=		c++
+HOSTCC?=	cc
 CFLAGS?=	-O2
 .else
 # XXX remove -W ones once stand is fixed
+CC?=		/usr/contrib/bin/clang
+CXX?=		/usr/contrib/bin/clang++
+HOSTCC?=	/usr/contrib/bin/clang
 CFLAGS?=	-O3 -Wno-strict-aliasing -Wno-pointer-sign
 .endif
-CFLAGS?=	${PIPE} ${DEBUG}
+
+CFLAGS+=	${PIPE} ${DEBUG}
 COMPILE.c?=	${CC} ${CFLAGS} ${CPPFLAGS} -c
 LINK.c?=	${CC} ${CFLAGS} ${CPPFLAGS} ${LDFLAGS}
 
-HOSTCC?=	cc
-
-CXX?=		c++
 CXXFLAGS?=	${CFLAGS}
 COMPILE.cc?=	${CXX} ${CXXFLAGS} ${CPPFLAGS} -c
 LINK.cc?=	${CXX} ${CXXFLAGS} ${CPPFLAGS} ${LDFLAGS}
@@ -59,7 +61,7 @@ CPP?=		cpp
 CPPFLAGS?=	
 
 FC?=		f77
-FFLAGS?=		-O2
+FFLAGS?=	-O2
 RFLAGS?=
 COMPILE.f?=	${FC} ${FFLAGS} -c
 LINK.f?=	${FC} ${FFLAGS} ${LDFLAGS}
