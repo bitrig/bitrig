@@ -1,6 +1,11 @@
 # $FreeBSD: src/gnu/lib/libobjc/Makefile,v 1.34.2.1 2009/08/03 08:13:06 kensmith Exp $
 # $OpenBSD: Makefile,v 1.1 2010/05/09 13:26:56 robert Exp $
 
+# XXX clang can not build libobjc
+COMPILER_VERSION=gcc4
+CC=cc
+CXX=g++
+
 OBJCDIR=${.CURDIR}/../../../gcc/libobjc
 GCCDIR=	${.CURDIR}/../../../gcc/gcc
 GCCLIB=	${.CURDIR}/../../../gcc
