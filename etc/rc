@@ -161,7 +161,7 @@ make_keys()
 
 	if [ ! -f /etc/isakmpd/private/local.key ]; then
 		echo -n "openssl: generating isakmpd/iked RSA key... "
-		if openssl genrsa -out /etc/isakmpd/private/local.key 2048 \
+		if openssl genrsa -out /etc/isakmpd/private/local.key 4096 \
 		    >/dev/null 2>&1; then
 			chmod 600 /etc/isakmpd/private/local.key
 			openssl rsa -out /etc/isakmpd/local.pub -in \
