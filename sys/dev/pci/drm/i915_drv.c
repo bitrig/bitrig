@@ -2590,6 +2590,7 @@ inteldrm_fault(struct drm_obj *obj, struct uvm_faultinfo *ufi, off_t offset,
 			dev_priv->entries--;
 			if (dev_priv->sc_flags & INTELDRM_QUIET)
 				wakeup(&dev_priv->entries);
+			pmap_update(pmap_kernel());
 			uvm_wait("intelflt");
 			return (VM_PAGER_REFAULT);
 		}

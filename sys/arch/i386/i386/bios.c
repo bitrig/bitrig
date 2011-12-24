@@ -278,6 +278,7 @@ biosattach(struct device *parent, struct device *self, void *aux)
 
 			for (; pa < end; pa+= NBPG, eva+= NBPG)
 				pmap_kenter_pa(eva, pa, VM_PROT_READ);
+			pmap_update(pmap_kernel());
 
 			printf(", SMBIOS rev. %d.%d @ 0x%lx (%d entries)",
 			    sh->majrev, sh->minrev, sh->addr, sh->count);
@@ -627,6 +628,7 @@ bios32_service(u_int32_t service, bios32_entry_t e, bios32_entry_info_t ei)
 			sva += NBPG;
 		}
 	}
+	pmap_update(pmap_kernel());
 
 	e->segment = GSEL(slot, SEL_KPL);
 	e->offset = (vaddr_t)ent;

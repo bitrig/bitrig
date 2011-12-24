@@ -1172,6 +1172,7 @@ map_tramps(void) {
 	struct pmap *kmp = pmap_kernel();
 
 	pmap_kenter_pa(lo32_vaddr, lo32_paddr, VM_PROT_ALL);
+	pmap_update(pmap_kernel());
 
 	/*
 	 * The initial PML4 pointer must be below 4G, so if the
@@ -1194,6 +1195,7 @@ map_tramps(void) {
 	pmap_kenter_pa((vaddr_t)ACPI_TRAMPOLINE, /* virtual */
 	    (paddr_t)ACPI_TRAMPOLINE,	/* physical */
 	    VM_PROT_ALL);		/* protection */
+	pmap_update(pmap_kernel());
 }
 #endif
 
@@ -1495,6 +1497,7 @@ init_x86_64(paddr_t first_avail)
 	pmap_kenter_pa(idt_vaddr, idt_paddr, VM_PROT_READ|VM_PROT_WRITE);
 	pmap_kenter_pa(idt_vaddr + PAGE_SIZE, idt_paddr + PAGE_SIZE,
 	    VM_PROT_READ|VM_PROT_WRITE);
+	pmap_update(pmap_kernel());
 
 #if defined(MULTIPROCESSOR) || \
     (NACPI > 0 && !defined(SMALL_KERNEL))

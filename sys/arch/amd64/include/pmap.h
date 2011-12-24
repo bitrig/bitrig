@@ -516,6 +516,7 @@ pmap_protect(struct pmap *pmap, vaddr_t sva, vaddr_t eva, vm_prot_t prot)
 			pmap_write_protect(pmap, sva, eva, prot);
 		} else {
 			pmap_remove(pmap, sva, eva);
+			pmap_update(pmap);
 		}
 	}
 }

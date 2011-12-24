@@ -264,6 +264,7 @@ mpbios_map(paddr_t pa, int len, struct mp_map *handle)
 		va += PAGE_SIZE;
 		pgpa += PAGE_SIZE;
 	} while (pgpa < endpa);
+	pmap_update(pmap_kernel());
 
 	return ((const void *)retva);
 }
@@ -272,6 +273,7 @@ void
 mpbios_unmap(struct mp_map *handle)
 {
 	pmap_kremove(handle->baseva, handle->vsize);
+	pmap_update(pmap_kernel());
 	km_free((void *)handle->baseva, handle->vsize, &kv_any, &kp_none);
 }
 

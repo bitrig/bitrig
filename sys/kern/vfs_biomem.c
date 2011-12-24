@@ -144,8 +144,8 @@ buf_map(struct buf *bp)
 
 			pmap_kenter_pa(va + ptoa(i), VM_PAGE_TO_PHYS(pg),
 			    VM_PROT_READ|VM_PROT_WRITE);
-			pmap_update(pmap_kernel());
 		}
+		pmap_update(pmap_kernel());
 		bp->b_data = (caddr_t)va;
 	} else {
 		TAILQ_REMOVE(&buf_valist, bp, b_valist);

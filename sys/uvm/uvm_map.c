@@ -1721,6 +1721,8 @@ uvm_unmap_kill_entry(struct vm_map *map, struct vm_map_entry *entry)
 		KASSERT(vm_map_pmap(map) == pmap_kernel());
 		uvm_km_pgremove_intrsafe(entry->start, entry->end);
 		pmap_kremove(entry->start, entry->end - entry->start);
+		pmap_update(pmap_kernel());
+
 	} else if (UVM_ET_ISOBJ(entry) &&
 	    UVM_OBJ_IS_KERN_OBJECT(entry->object.uvm_obj)) {
 		KASSERT(vm_map_pmap(map) == pmap_kernel());
@@ -1761,6 +1763,7 @@ uvm_unmap_kill_entry(struct vm_map *map, struct vm_map_entry *entry)
 		 * to vm_map_min(kernel_map).
 		 */
 		pmap_remove(pmap_kernel(), entry->start, entry->end);
+		pmap_update(pmap_kernel());
 		uvm_km_pgremove(entry->object.uvm_obj,
 		    entry->start - vm_map_min(kernel_map),
 		    entry->end - vm_map_min(kernel_map));
@@ -1776,6 +1779,7 @@ uvm_unmap_kill_entry(struct vm_map *map, struct vm_map_entry *entry)
 		 * remove mappings the standard way.
 		 */
 		pmap_remove(map->pmap, entry->start, entry->end);
+		pmap_update(map->pmap);
 	}
 }
 

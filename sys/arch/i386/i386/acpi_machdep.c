@@ -92,6 +92,7 @@ acpi_map(paddr_t pa, size_t len, struct acpi_mem_map *handle)
 		va += NBPG;
 		pgpa += NBPG;
 	} while (pgpa < endpa);
+	pmap_update(pmap_kernel());
 
 	return 0;
 }
@@ -100,6 +101,7 @@ void
 acpi_unmap(struct acpi_mem_map *handle)
 {
 	pmap_kremove(handle->baseva, handle->vsize);
+	pmap_update(pmap_kernel());
 	km_free((void *)handle->baseva, handle->vsize, &kv_any, &kp_none);
 }
 

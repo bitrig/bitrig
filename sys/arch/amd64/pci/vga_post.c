@@ -159,6 +159,7 @@ vga_post_init(int bus, int device, int function)
 	pmap_update(pmap_kernel());
 	memcpy((void *)sc->bios_data, (void *)sys_bios_data, PAGE_SIZE);
 	pmap_kremove(sys_bios_data, PAGE_SIZE);
+	pmap_update(pmap_kernel());
 	km_free((void *)sys_bios_data, PAGE_SIZE, &kv_any, &kp_none);
 
 	iter = 0;

@@ -2687,6 +2687,7 @@ dumpsys()
 #endif
 			pmap_enter(pmap_kernel(), dumpspace, maddr,
 			    VM_PROT_READ, PMAP_WIRED);
+			pmap_update(pmap_kernel());
 			if ((error = (*dump)(dumpdev, blkno,
 			    (caddr_t)dumpspace, NBPG)))
 				break;
@@ -3042,6 +3043,7 @@ init386(paddr_t first_avail)
 		pmap_enter(pmap_kernel(), (vaddr_t)bootargp, (paddr_t)bootargv,
 		    VM_PROT_READ|VM_PROT_WRITE,
 		    VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED);
+		pmap_update(pmap_kernel());
 
 		bios_getopt();
 
@@ -3204,6 +3206,7 @@ init386(paddr_t first_avail)
 	    (paddr_t)ACPI_TRAMPOLINE,           /* physical */
 	    VM_PROT_ALL);                       /* protection */
 #endif
+	pmap_update(pmap_kernel());
 
 	tlbflush();
 #if 0

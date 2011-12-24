@@ -261,6 +261,7 @@ vmapbuf(struct buf *bp, vsize_t len)
 		taddr += PAGE_SIZE;
 		len -= PAGE_SIZE;
 	}
+	pmap_update(pmap_kernel());
 }
 
 /*

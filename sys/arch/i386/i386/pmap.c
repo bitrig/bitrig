@@ -1117,6 +1117,7 @@ pmap_alloc_pvpage(struct pmap *pmap, int mode)
 
 	pmap_kenter_pa(pv_cachedva, VM_PAGE_TO_PHYS(pg),
 	    VM_PROT_READ|VM_PROT_WRITE);
+	pmap_update(pmap_kernel());
 	pvpage = (struct pv_page *) pv_cachedva;
 	pv_cachedva = 0;
 	return (pmap_add_pvpage(pvpage, mode != ALLOCPV_NONEED));

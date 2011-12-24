@@ -624,8 +624,10 @@ mp_cpu_start(struct cpu_info *ci)
 	dwordptr[1] = MP_TRAMPOLINE >> 4;
 
 	pmap_kenter_pa(0, 0, VM_PROT_READ|VM_PROT_WRITE);
+	pmap_update(pmap_kernel());
 	memcpy((u_int8_t *) 0x467, dwordptr, 4);
 	pmap_kremove(0, PAGE_SIZE);
+	pmap_update(pmap_kernel());
 
 #if NLAPIC > 0
 	/*

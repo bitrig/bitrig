@@ -133,6 +133,7 @@ bios_attach(struct device *parent, struct device *self, void *aux)
 
 		for (; pa < end; pa+= NBPG, va+= NBPG)
 			pmap_kenter_pa(va, pa, VM_PROT_READ);
+		pmap_update(pmap_kernel());
 
 		printf(": SMBIOS rev. %d.%d @ 0x%lx (%d entries)",
 		    hdr->majrev, hdr->minrev, hdr->addr, hdr->count);
