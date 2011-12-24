@@ -4,12 +4,14 @@ CONFIGURE_OPTS=	--prefix=/usr/contrib \
 		--without-cxx_main \
 		--with-system-expat
 
-.if ${COMPILER_VERSION:L} == "clang"
+.if ${COMPILER_VERSION:L} != "gcc4"
 CONFIGURE_OPTS+=--without-gcc ac_cv_header_libintl_h=no
 CFLAGS+=	-DHAVE_AS_X86_PCREL
 .endif
 
-XCFLAGS=	CC="${CC}" CFLAGS="${CFLAGS} ${COPTS}" LDFLAGS="${LDFLAGS}"
+XCFLAGS=	CC="${CC}" CFLAGS="${CFLAGS} ${COPTS}" \
+		CXX="${CXX}" CXXFLAGS="${CXXFLAGS} ${COPTS}" \
+		LDFLAGS="${LDFLAGS}"
 
 PROG=	python
 NOMAN=
