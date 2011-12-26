@@ -132,7 +132,7 @@ MANS = $(man_MANS)
 HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = glob config po doc w32
+DIST_SUBDIRS = glob config po
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -261,7 +261,7 @@ ACLOCAL_AMFLAGS = -I config
 @WINDOWSENV_TRUE@MAYBE_W32 = w32
 @WINDOWSENV_TRUE@W32INC = -I $(top_srcdir)/w32/include
 @WINDOWSENV_TRUE@W32LIB = -Lw32 -lw32
-SUBDIRS = glob config po doc $(MAYBE_W32)
+SUBDIRS = glob config po
 @USE_CUSTOMS_FALSE@remote = remote-stub.c
 @USE_CUSTOMS_TRUE@remote = remote-cstms.c
 make_SOURCES = ar.c arscan.c commands.c default.c dir.c expand.c file.c \
@@ -987,9 +987,9 @@ uninstall-man: uninstall-man1
 
 
 # Forward targets
-
-html:
-	cd doc && $(MAKE) $(AM_MAKEFLAGS) $@
+#
+#html:
+#	cd doc && $(MAKE) $(AM_MAKEFLAGS) $@
 
 .PHONY: html
 

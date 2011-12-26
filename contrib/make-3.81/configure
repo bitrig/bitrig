@@ -13786,7 +13786,7 @@ esac
 
 
 # Specify what files are to be created.
-                                                            ac_config_files="$ac_config_files Makefile glob/Makefile po/Makefile.in config/Makefile doc/Makefile w32/Makefile"
+ac_config_files="$ac_config_files Makefile glob/Makefile po/Makefile.in config/Makefile"
 
 
 # OK, do it!
@@ -14379,8 +14379,6 @@ do
   "glob/Makefile" ) CONFIG_FILES="$CONFIG_FILES glob/Makefile" ;;
   "po/Makefile.in" ) CONFIG_FILES="$CONFIG_FILES po/Makefile.in" ;;
   "config/Makefile" ) CONFIG_FILES="$CONFIG_FILES config/Makefile" ;;
-  "doc/Makefile" ) CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
-  "w32/Makefile" ) CONFIG_FILES="$CONFIG_FILES w32/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   "default-1" ) CONFIG_COMMANDS="$CONFIG_COMMANDS default-1" ;;
   "config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
