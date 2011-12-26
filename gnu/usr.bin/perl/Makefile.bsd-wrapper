@@ -19,7 +19,6 @@ CFLAGS+= -fno-strict-aliasing
 CFLAGS+= -fno-delete-null-pointer-checks
 .else
 MYCC=-Dcc='/usr/contrib/bin/clang'
-CFLAGS+=-fno-stack-protector
 .endif
 
 CONFIGURE_ARGS= -dsE -Dopenbsd_distribution=defined -Dccflags='-DNO_LOCALE_NUMERIC -DNO_LOCALE_COLLATE ${CFLAGS}' ${MYCC}
