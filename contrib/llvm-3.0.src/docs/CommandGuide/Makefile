@@ -65,7 +65,7 @@ $(DST_MAN_DIR)%.1: %.pod $(DST_MAN_DIR)/.dir
 	pod2man --release=CVS --center="LLVM Command Guide" $< $@
 
 $(DST_PS_DIR)%.ps: $(DST_MAN_DIR)%.1 $(DST_PS_DIR)/.dir
-	groff -Tps -man $< > $@
+	${GROFF} -Tps -man $< > $@
 
 
 html: $(HTML)

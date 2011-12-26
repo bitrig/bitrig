@@ -3,7 +3,11 @@
 # XXX force it for now
 MAKE=/usr/contrib/bin/gmake
 
-XCFLAGS=	CC="${CC}" CFLAGS="${CFLAGS} ${COPTS}" LDFLAGS="${LDFLAGS}"
+XCFLAGS=	CC="${CC}" CFLAGS="${CFLAGS} ${COPTS}" \
+		CXX="${CXX}" CXXFLAGS="${CXXFLAGS}" \
+		LDFLAGS="${LDFLAGS}" \
+		GROFF="/usr/bin/mandoc"
+
 CONFIGURE_OPTS=	--prefix=/usr/contrib \
 		--enable-bindings=no \
 		--enable-libffi=no \
