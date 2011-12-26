@@ -1,0 +1,26 @@
+    Copyright 2004, 2005, 2006, 2007, 2008, 2009
+      Free Software Foundation, Inc.
+
+    Copying and distribution of this file, with or without modification,
+    are permitted in any medium without royalty provided the copyright
+    notice and this notice are preserved.
+
+As of version 1.2, the items on this TODO list will only be dealt
+with if users request they be implemented.
+
+CROSS-REFERENCING
+-----------------
+
+TOC
+---
+Capability of generating a separate file for TOCs, for collating
+and processing with gs/ps2pdf.
+
+NUMBERED HEADS, SUBHEADS and PARAHEADS
+--------------------------------------
+Macros to set numbering style (roman, arabic, alpha, etc)?
+
+FOOTNOTES
+---------
+In columnar docs, maybe give user the choice of gathering all
+footnotes at the bottom of the last column?

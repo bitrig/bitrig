@@ -1,0 +1,24 @@
+.\"    Copyright (C) 1989, 2009
+.\"      Free Software Foundation, Inc.
+.\"
+.\"    Copying and distribution of this file, with or without modification,
+.\"    are permitted in any medium without royalty provided the copyright
+.\"    notice and this notice are preserved.
+.
+.nf
+----------------------------------------------------------------------
+.ce
+Testing
+----------------------------------------------------------------------
+Date = \*[DT]
+.ISODATE
+Date = \*[DT]
+.ISODATE 0
+
+.ND "13 August 1992"
+Date = \*[DT]
+
+.ISODATE
+.ND "14 August 1992"
+Date = \*[DT]
+----------------------------------------------------------------------

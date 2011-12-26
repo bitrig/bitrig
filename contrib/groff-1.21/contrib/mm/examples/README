@@ -1,0 +1,40 @@
+    Copyright (C) 1989, 2006, 2009
+      Free Software Foundation, Inc.
+
+    Copying and distribution of this file, with or without modification,
+    are permitted in any medium without royalty provided the copyright
+    notice and this notice are preserved.
+
+
+This directory contains examples of my enhancements to MM.
+
+APP		The appendix macro.
+B1B2		Box macro with text.
+COVER		My general cover macro, this example is using
+		ms.cov.
+IND		A general indexing method, see manual for INITI.
+LT		The letter macro.
+LT.se		A Swedish example with the extra
+		Swedish macros for getting a letter conforming
+		to Swedish standard letter, both left and right adjusted.
+ML		Marked list, an extended list type.
+MOVE		The MOVE macro, how to begin to print on an exact position.
+MUL		Enhanced multicolumn mode.
+NCOL		Start on next column. (Not for MUL*)
+ND		New date, with ISO date example.
+References	How to use references.
+SETR		General reference system, see manual for INITR.
+
+
+Examples that I should have:
+
+PIC		How to include postscript pictures, see manual for PIC.
+VERBON		Begin verbatim output.
+
+
+And remember, check the manual for all string and number registers,
+I've made sure that mgm is useful in several languages;
+all English output can be redefined.
+
+For Swedish localization, check the manual for groff_mse and the
+macro files `mse.tmac' and `sv.tmac'.

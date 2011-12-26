@@ -1,0 +1,66 @@
+# Copyright (C) 1989-2000, 2001, 2002, 2003, 2004, 2006, 2009
+#   Free Software Foundation, Inc.
+#      Written by James Clark (jjc@jclark.com)
+# 
+# This file is part of groff.
+# 
+# groff is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# groff is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Makefile.sub
+#
+DISTCLEANFILES=\
+  config.status \
+  config.log \
+  config.cache \
+  stamp-h \
+  Makefile \
+  test-groff \
+  src/include/config.h \
+  site.exp \
+  site.bak \
+  groff.sum \
+  groff.log
+MOSTLYCLEANADD=Makefile.cfg conftest*
+
+M4MACROS = \
+  $(srcdir)/m4/groff.m4 \
+  $(srcdir)/m4/codeset.m4 $(srcdir)/m4/glibc21.m4 \
+  $(srcdir)/m4/iconv.m4 \
+  $(srcdir)/m4/lib-link.m4 $(srcdir)/m4/lib-ld.m4 $(srcdir)/m4/lib-prefix.m4
+
+distfiles: configure
+
+$(srcdir)/configure: configure.ac $(srcdir)/aclocal.m4
+	cd $(srcdir) && autoconf && rm -rf autom4te.cache
+
+$(srcdir)/aclocal.m4: $(M4MACROS)
+	cd $(srcdir) && aclocal -I m4
+
+config.status: configure
+	$(SHELL) config.status --recheck
+
+# autoheader might not change config.hin, so touch a stamp file.
+$(srcdir)/config.hin: stamp-h.in
+$(srcdir)/stamp-h.in: configure.ac $(srcdir)/aclocal.m4
+	cd $(srcdir) && autoheader
+	echo timestamp > $(srcdir)/stamp-h.in
+     
+config.h: stamp-h
+stamp-h: config.hin config.status
+	$(SHELL) config.status
+
+# Always create the site-font directory as a guide to the user.
+install_data:
+	-test -d $(DESTDIR)$(localfontdir) \
+	  || $(mkinstalldirs) $(DESTDIR)$(localfontdir)

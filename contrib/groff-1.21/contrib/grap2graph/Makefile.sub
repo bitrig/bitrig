@@ -1,0 +1,39 @@
+# Copyright (C) 2003, 2006, 2009
+#   Free Software Foundation, Inc.
+# 
+# This file is part of groff.
+# 
+# groff is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# groff is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Makefile.sub
+#
+MAN1=grap2graph.n
+MOSTLYCLEANADD=grap2graph
+
+all: grap2graph
+
+grap2graph: grap2graph.sh
+	rm -f $@; \
+	sed -e "s|@g@|$(g)|g" \
+	    -e "s|@VERSION@|$(version)$(revision)|" \
+	    -e $(SH_SCRIPT_SED_CMD) $(srcdir)/grap2graph.sh >$@; \
+	chmod +x $@
+
+install_data: grap2graph
+	-test -d $(DESTDIR)$(bindir) || $(mkinstalldirs) $(DESTDIR)$(bindir)
+	-rm -f $(DESTDIR)$(bindir)/grap2graph
+	$(INSTALL_SCRIPT) grap2graph $(DESTDIR)$(bindir)/grap2graph
+
+uninstall_sub:
+	-rm -f $(DESTDIR)$(bindir)/grap2graph

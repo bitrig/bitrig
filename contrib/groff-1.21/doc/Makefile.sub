@@ -1,0 +1,247 @@
+# Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2009
+#   Free Software Foundation, Inc.
+#      Written by Werner Lemberg <wl@gnu.org>
+# 
+# This file is part of groff.
+# 
+# groff is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# groff is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# These may be overridden if cross-compiling.
+GROFFBIN=$(top_builddir)/src/roff/groff/groff
+GROFF_BIN_PATH=`echo $(groff_bin_dirs) | sed -e 's|  *|$(SH_SEP)|g'`
+
+groff_bin_dirs=\
+  $(top_builddir)/src/roff/groff \
+  $(top_builddir)/src/roff/troff \
+  $(top_builddir)/src/preproc/pic \
+  $(top_builddir)/src/preproc/eqn \
+  $(top_builddir)/src/preproc/tbl \
+  $(top_builddir)/src/preproc/grn \
+  $(top_builddir)/src/preproc/refer \
+  $(top_builddir)/src/preproc/soelim \
+  $(top_builddir)/src/preproc/html \
+  $(top_builddir)/src/devices/grops \
+  $(top_builddir)/src/devices/grohtml
+
+FFLAG=-F$(top_builddir)/font -F$(top_srcdir)/font
+TFLAG=-M$(top_builddir)/tmac -M$(top_srcdir)/tmac
+
+GROFF=\
+  GROFF_COMMAND_PREFIX=''; \
+  export GROFF_COMMAND_PREFIX; \
+  GROFF_BIN_PATH=$(GROFF_BIN_PATH); \
+  export GROFF_BIN_PATH; \
+  sed -e "s;@VERSION@;$(version)$(revision);" $< \
+  | $(GROFFBIN) $(TFLAG) $(FFLAG) -Upet -ww
+
+DOCFILES=\
+  meref.me \
+  meintro.me \
+  pic.ms
+
+PROCESSEDDOCFILES=\
+  meref.ps \
+  meintro.ps \
+  pic.ps
+
+HTMLDOCFILES=\
+  pic.html
+
+HTMLDOCFILESALL=\
+  pic*.html
+
+HTMLDOCIMAGEFILES=\
+  pic*
+
+EXAMPLEFILES=\
+  webpage.ms \
+  groff.css \
+  grnexmpl.g \
+  grnexmpl.me
+
+PROCESSEDEXAMPLEFILES=\
+  webpage.ps \
+  grnexmpl.ps
+
+HTMLEXAMPLEFILES=\
+  webpage.html
+
+HTMLEXAMPLEFILESALL=\
+  webpage*.html
+
+HTMLEXAMPLEIMAGEFILES=\
+  webpage*
+
+imagedir=img
+htmldocimagedir=$(htmldocdir)/$(imagedir)
+exampleimagedir=$(exampledir)/$(imagedir)
+
+MOSTLYCLEANADD=\
+  $(PROCESSEDDOCFILES) \
+  $(PROCESSEDEXAMPLEFILES) \
+  $(HTMLEXAMPLEFILESALL) \
+  $(HTMLDOCFILESALL) \
+  groff.aux groff.cp* groff.dvi groff.es* groff.fn* groff.html groff.ky* \
+  groff.log groff.ma* groff.op* groff.pdf groff.pg* groff.ps groff.rq* \
+  groff.st* groff.toc groff.tp groff.vr* \
+  examples.stamp
+
+MOSTLYCLEANDIRADD=\
+  $(imagedir)
+
+MOSTLYCLEANNOTSRCDIRADD=\
+  groff.css \
+  grnexmpl.g \
+  groff.info \
+  groff-*.info \
+  gnu.eps
+
+.SUFFIXES: .me .ms .ps .html
+
+# For simplicity, we always call grn and eqn.
+.me.ps:
+	$(GROFF) -Tps -ge -me >$@
+
+.ms.html:
+	$(GROFF) -P-p -P-b -P-I`basename $< | sed -e 's|.ms$$||'` \
+		 -P-D$(imagedir) -P-V -Thtml -ms >$@
+.ms.ps:
+	$(GROFF) -Tps -ms -mwww >$@
+
+
+all: groff.info $(PROCESSEDDOCFILES) prepare_examples \
+     $(PROCESSEDEXAMPLEFILES) $(make_html)
+
+html: $(HTMLDOCFILES) $(HTMLEXAMPLEFILES)
+
+prepare_examples: examples.stamp
+
+examples.stamp: grnexmpl.g groff.css gnu.eps
+	test -f grnexmpl.g || cp $(srcdir)/grnexmpl.g .
+	test -f groff.css || cp $(srcdir)/groff.css .
+	if test ! -f gnu.eps; then \
+	  if test -f $(srcdir)/gnu.eps; then \
+	    cp $(srcdir)/gnu.eps .; \
+	  elif test -f $(top_builddir)/contrib/pdfmark/gnu.eps; then \
+	    cp $(top_builddir)/contrib/pdfmark/gnu.eps .; \
+	  fi; \
+	fi
+	echo timestamp > $@
+
+groff.info: groff.texinfo
+	$(MAKEINFO) --enable-encoding -I$(srcdir) $(srcdir)/groff.texinfo
+
+gnu.eps: gnu.xpm
+	xpmtoppm $(srcdir)/gnu.xpm | pnmdepth 15 | \
+          $(pnmtops_nosetpage) -noturn -rle >$@
+
+pic.html: pic.ms
+	$(GROFF) -P-p -P-I`basename $< | sed -e 's|.ms$$||'` \
+                 -P-D$(imagedir) -P-j`basename $< | sed -e 's|.ms$$||'` \
+                 -Thtml -P-V -ms >$@
+
+webpage.html: webpage.ms gnu.eps groff.css
+	$(GROFF) -P-j`basename $< | sed -e 's|.ms$$||'` \
+                 -P-nrpb -P-I`basename $< | sed -e 's|.ms$$||'` \
+                 -P-D$(imagedir) -Thtml -ms >$@
+
+webpage.ps: gnu.eps
+
+grnexmpl.ps: grnexmpl.me grnexmpl.g
+
+distfiles: groff.info gnu.eps
+
+install_data: groff.info gnu.eps $(DOCFILES) $(PROCESSEDDOCFILES) \
+              $(make_install_html) $(EXAMPLEFILES) $(PROCESSEDEXAMPLEFILES)
+# Prefer info files in builddir over srcdir; we test for
+# the existence of `groff.info'.
+	-test -d $(DESTDIR)$(infodir) || $(mkinstalldirs) $(DESTDIR)$(infodir)
+	d=.; \
+	  test -f "groff.info" || d=$(srcdir); \
+	  for p in $$d/groff.info `ls $$d/groff.info*`; do \
+	    f=`basename $$p`; \
+	    rm -f $(DESTDIR)$(infodir)/$$f; \
+	    $(INSTALL_DATA) $$p $(DESTDIR)$(infodir)/$$f; \
+	  done
+	$(INSTALL_INFO) --info-dir=$(DESTDIR)$(infodir) \
+	  $(DESTDIR)$(infodir)/groff.info
+	-test -d $(DESTDIR)$(docdir) || $(mkinstalldirs) $(DESTDIR)$(docdir)
+	for f in $(DOCFILES); do \
+	  rm -f $(DESTDIR)$(docdir)/$$f; \
+	  $(INSTALL_DATA) $(srcdir)/$$f $(DESTDIR)$(docdir)/$$f; \
+	done
+	for f in $(PROCESSEDDOCFILES); do \
+	  rm -f $(DESTDIR)$(docdir)/$$f; \
+	  $(INSTALL_DATA) $$f $(DESTDIR)$(docdir)/$$f; \
+	done
+# Prefer gnu.eps in builddir over srcdir.
+	-test -d $(DESTDIR)$(exampledir) \
+	  || $(mkinstalldirs) $(DESTDIR)$(exampledir)
+	d=.; \
+	  test -f "gnu.eps" || d=$(srcdir); \
+	  rm -f $(DESTDIR)$(exampledir)/gnu.eps; \
+	  $(INSTALL_DATA) $$d/gnu.eps $(DESTDIR)$(exampledir)/gnu.eps
+	for f in $(EXAMPLEFILES); do \
+	  rm -f $(DESTDIR)$(exampledir)/$$f; \
+	  $(INSTALL_DATA) $(srcdir)/$$f $(DESTDIR)$(exampledir)/$$f; \
+	done
+	for f in $(PROCESSEDEXAMPLEFILES); do \
+	  rm -f $(DESTDIR)$(exampledir)/$$f; \
+	  $(INSTALL_DATA) $$f $(DESTDIR)$(exampledir)/$$f; \
+	done
+
+install_html: $(HTMLDOCFILES) $(HTMLEXAMPLEFILES)
+	-test -d $(DESTDIR)$(htmldocdir) \
+	  || $(mkinstalldirs) $(DESTDIR)$(htmldocdir)
+	for f in `ls $(HTMLDOCFILESALL)`; do \
+	  rm -f $(DESTDIR)$(htmldocdir)/$$f; \
+	  $(INSTALL_DATA) $$f $(DESTDIR)$(htmldocdir)/$$f; \
+	done
+	-test -d $(DESTDIR)$(htmldocimagedir) \
+	  || $(mkinstalldirs) $(DESTDIR)$(htmldocimagedir)
+	rm -f $(DESTDIR)$(htmldocimagedir)/$(HTMLDOCIMAGEFILES)
+	$(INSTALL_DATA) $(imagedir)/$(HTMLDOCIMAGEFILES) \
+	  $(DESTDIR)$(htmldocimagedir)
+	-test -d $(DESTDIR)$(exampledir) \
+	  || $(mkinstalldirs) $(DESTDIR)$(exampledir)
+	for f in `ls $(HTMLEXAMPLEFILESALL)`; do \
+	  rm -f $(DESTDIR)$(exampledir)/$$f; \
+	  $(INSTALL_DATA) $$f $(DESTDIR)$(exampledir)/$$f; \
+	done
+	-test -d $(DESTDIR)$(exampleimagedir) \
+	  || $(mkinstalldirs) $(DESTDIR)$(exampleimagedir)
+	rm -f $(DESTDIR)$(exampleimagedir)/$(HTMLEXAMPLEIMAGEFILES)
+	$(INSTALL_DATA) $(imagedir)/$(HTMLEXAMPLEIMAGEFILES) \
+	  $(DESTDIR)$(exampleimagedir)
+
+uninstall_sub:
+	-for f in groff `ls groff.info*`; do \
+	  rm -f $(DESTDIR)$(infodir)/$$f; \
+	done
+	$(INSTALL_INFO) --remove --info-dir=$(DESTDIR)$(infodir) \
+	  $(DESTDIR)$(infodir)/groff.info
+	-for f in $(DOCFILES) $(PROCESSEDDOCFILES); do \
+	  rm -f $(DESTDIR)$(docdir)/$$f; \
+	done
+	-for f in `ls $(HTMLDOCFILESALL)`; do \
+	  rm -f $(DESTDIR)$(htmldocdir)/$$f; \
+	done
+	-rm -f $(DESTDIR)$(htmldocimagedir)/$(HTMLDOCIMAGEFILES)
+	-rmdir $(DESTDIR)$(htmldocimagedir)
+	-for f in $(EXAMPLEFILES) $(PROCESSEDEXAMPLEFILES) \
+	          `ls $(HTMLEXAMPLEFILESALL)`; do \
+	  rm -f $(DESTDIR)$(exampledir)/$$f; \
+	done
+	-rm -f $(DESTDIR)$(exampleimagedir)/$(HTMLEXAMPLEIMAGEFILES)
+	-rmdir $(DESTDIR)$(exampleimagedir)

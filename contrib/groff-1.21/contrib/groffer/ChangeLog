@@ -1,0 +1,244 @@
+2009-01-03  Werner LEMBERG  <wl@gnu.org>
+
+	* version.sh: Prepare for groff release 1.20.
+
+2008-01-04  Werner LEMBERG  <wl@gnu.org>
+
+	* shell/groffer.man, perl/groffer.man: Insert `\:' in URLs where
+	appropriate.
+
+2007-02-15  Eric S. Raymond  <esr@snark.thyrsus.com>
+
+	* perl/groffer.man, perl/groffer.man: Fix non-portable `if'
+	expressions.
+
+2007-02-13  Eric S. Raymond  <esr@snark.thyrsus.com>
+
+	Use an-ext.tmac macros in groffer.man.
+
+	* perl/groffer.man, perl/groffer.man: Replace ShellCommand with
+	.EX/.EE pairs.
+	Don't use .TP for examples, as some viewers won't handle a display
+	macro as a tag line.  Use .SY/.OP/.YS rather than elaborate custom
+	macros.
+
+2007-02-02  Werner LEMBERG  <wl@gnu.org>
+
+	* roff2.man: Further refinements and normalizations.
+
+2007-02-02  Eric S. Raymond  <esr@snark.thyrsus.com>
+
+	* roff2.man: Converted to use .SY/.OP/.YS and for cross-viewer
+	portability.  Conversion checked using the protocol described in
+	tmac/TESTING-HINTS.
+
+2006-11-14  Werner LEMBERG  <wl@gnu.org>
+
+	* Makefile.sub (GROFFER_REST): Add roff2.man.
+	(groffer): Use $(INSTALL_DATA) for man pages.
+	Don't call `chmod' for $(ROFF2PROGS).
+	(roff2.man): Typographical fixes.
+
+2006-11-11  Bernd Warken
+       ________________________________________________________________
+        * release of groffer 1.1.1
+
+	* perl/roff2.pl, shell/roff2.sh: Create a new working mode without
+	`groffer' for `roff2*'.
+
+	* perl/groffer.pl: Fix test of temporary directory.
+
+2006-11-09  Bernd Warken
+       ________________________________________________________________
+        * release of groffer 1.1.0
+
+	* perl/groffer.pl, perl/func.pl, perl/groffer.man, \
+	shell/groffer2.sh, shell/groffer.man: Add `--debug-grog' to
+	display the `grog' output.
+
+	* perl/roff2.pl, shell/roff2.sh: New files for creating the roff2*
+	programs to transform roff code to different formats.
+
+	* roff2.man: New file to create man pages for the roff2*
+	programs.
+
+	* Makefile.sub: Add roff2* and some minor fixes.
+
+2006-11-04  Bernd Warken
+       ________________________________________________________________
+        * release of groffer 1.0.3
+
+	* Makefile.sub:
+	- Delete removing of $(CLEANADD) in `groffer'.
+	- Add $(MAN1) to `groffer'.
+
+	* perl/groffer.pl, perl/func.pl, shell/groffer2.sh:
+	- Add `groff' option with argument `-K'.
+	- Redesign the changed `grog'.
+
+2006-10-23  Bernd Warken
+       ________________________________________________________________
+        * release of groffer 1.0.2
+
+	* perl/groffer.pl:
+	- Move all variable declarations out of BEGIN.
+	- Move all `use' commands outside of BEGIN.  Fix the arising
+	errors.
+	- Correct new position of perl/perl_test.pl.
+
+	* perl/func.pl:
+	- version(): Fix the determination of the version of groff.
+	- usage(): Sort it among the functions in this file.
+
+	* perl/groffer.man, shell/groffer.man: Fix string variable
+	Ellipsis.
+
+	* shell/README_SH: Add information on Autobook.
+
+	* shell/groffer.sh:
+	- Extent simple shell tests by testing on support for functions.
+	Test standard shell on function support.  Add error reports on
+	shell tests.
+	- Set unset variables LANG LC_ALL LC_MESSAGES LC_CTYPES LANGUAGES
+	to `C', according to Autobook, ch. 22.
+	- Remove option `-e' from `sed'.
+
+	* shell/groffer2.sh:
+	- Add test on directory in man path find.
+	- Add Bourne compatibility for zsh shell.
+	- Replace `echo -n ""' by `:'.
+	- Remove -e option from sed.
+
+2006-10-23  Werner Lemberg
+
+        * perl_test.pl: Moved to...
+        * perl/perl_test.pl: Here.
+
+        * Makefile.sub: Rewritten.  Change PERL to HAVE_PERL and SHELL to
+	HAVE_SHELL.
+
+2006-10-14  Bernd Warken
+       ________________________________________________________________
+        * release of groffer 1.0.1
+
+	* perl/groffer.pl: Change $perl_test_pl to $file_perl_test_pl.
+
+	* perl/groffer.pl, perl/func.pl: Remove `\n' in `die' calls.
+
+2006-10-12  Bernd Warken
+       ________________________________________________________________
+        * release of groffer 1.0.0
+
+	Changements of the shell version since 0.9.31
+
+	* shell/groffer.sh: Use version.sh in the upper directory.
+
+2006-10-02  Bernd Warken
+
+	The groffer versions 1.* have two kinds of program, a shell
+	version and a Perl version.
+
+	The shell version is kept from the old shell only versions of
+	groffer 0.*.  Most of the former files in the main groffer
+	directory are now moved to the subdirectoy shell/.
+
+	The Perl version of groffer is a complete rewrite; most of its
+	files are found in the subdirectory perl/.
+
+	The Makefile.sub decides whether the shell or Perl version of
+	groffer is installed.  This is done by the program perl_test.pl.
+
+	In the following, all files in the groffer directory tree are
+	mentioned.
+
+	* ChangeLog: This file.  It contains information for `groffer'
+	versions >= 1.0.0 with shell and Perl kinds.  For older `groffer'
+	versions, see `shell/ChangeLog.0' which contains information for the
+	shell only versions of groffer 0.*.
+
+	* Makefile.sub: The old `Makefile.sub' was extended to support the
+	shell and the Perl version of `groffer' at the same time.  If the
+	test of `perl_test.pl' succeeds the `groffer' Perl version will be
+	installed, otherwise the shell version is used.
+
+	* perl_test.pl: This is used by `Makefile.sub' and installed with
+	the Perl version of `groffer'.  It is a test of the installed perl
+	version.  The installed Perl version should be greater or equal
+	than the version that is required by this file.
+
+	* version.sh: This is the old file kept from the shell version of
+	`groffer'.  It stores the `groffer' version, the date of the last
+	update, and the `groff' version.  It is used and installed for the
+	shell and Perl version of `groffer'.
+
+	* README: This is the old `README' file extended by information on
+	the shell and Perl kinds of `groffer'.
+
+	* perl/: Subdirectory for the Perl version of `groffer'.
+
+	* perl/groffer.pl: This is the `groffer' script of the Perl
+	version, a Perl source file that handles the complete groffer
+	functionality.
+
+	* perl/man.pl: This is the collection of functions that are
+	related to man pages, `apropos', and `whatis'.  It is loaded by
+	`perl/groffer.pl'.
+
+	* perl/func.pl: This is the collection of miscellaneous functions.
+	It is loaded by `perl/groffer.pl'.
+
+	* perl/split_env.sh: A shell script that is used by
+	`perl/groffer.pl' to split a large shell environment variable to a
+	Perl array.
+
+	* perl/groffer.man: This is the man page of the Perl version of
+	`groffer'.  It is derived from `groffer.man' of the shell version.
+	It will only be installed when the `Makefile.sub' chooses to
+	install the Perl version of 'groffer' instead of the shell
+	version.
+
+	* perl/README_PERL: This file contains information of the Perl
+	compatibility and details that are special to the Perl version.
+
+	* shell/: Subdirectory for the shell version of `groffer'.
+
+	* shell/ChangeLog.0: The former `ChangeLog' file of the groffer
+	versions 0.* was moved to this file.  It contains information of
+	the shell only version of groffer 0.*.
+
+	* shell/groffer.sh: This is the old `groffer.sh' file of the shell
+	version.
+
+	* shell/groffer2.sh: This is the old `groffer2.sh' file of the
+	shell version.
+
+	* shell/groffer.man: This is the old man page groffer.man of the
+	shell version.  The shell version keeps its own man page.  It will
+	only be installed when the `Makefile.sub' chooses to install the
+	shell version instead of the Perl version.
+
+	* shell/README_SH: This is the old `README_SH' file of the shell
+	version containing information of the shell compatibility.
+
+	The former part of the ChangeLog file is in `shell/ChangeLog.0'.
+
+2006-10-01  Bernd Warken
+	________________________________________________________________
+	License
+
+	Copyright (C) 2006, 2007, 2008, 2009
+	Free Software Foundation, Inc.
+	Written by Bernd Warken
+
+	Copying and distribution of this file, with or without
+	modification, are permitted provided the copyright notice and this
+	notice are preserved.
+
+	This file is part of `groffer', which is part of the `groff'
+	project.
+
+        ####### Emacs settings
+
+        Local Variables:
+        mode: change-log
+        End:

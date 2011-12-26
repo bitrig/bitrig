@@ -1,0 +1,54 @@
+.include <bsd.own.mk>
+
+BINDIR=		/usr/contrib/bin
+MAKE=		/usr/contrib/bin/gmake
+
+XCFLAGS=	CC="${CC}" CFLAGS="${CFLAGS} ${COPTS}" \
+		CXX="${CXX}" CXXFLAGS="${CXXFLAGS} ${COPTS}" \
+		LDFLAGS="${LDFLAGS}"
+CONFIGURE_OPTS=	--prefix=/usr/contrib \
+		--without-libiconv-prefix \
+		--without-gs --without-x
+
+PROG=	groff
+NOMAN=
+
+all:	gnu
+
+gnu:	config.status
+	${MAKE}
+
+.FORCE: .IGNORE
+
+config: .FORCE
+	-rm -f config.cache
+	PATH="/bin:/usr/bin:/sbin:/usr/sbin:/usr/contrib/bin" \
+	${XCFLAGS} \
+	INSTALL_PROGRAM="${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP}" \
+	sh ${.CURDIR}/configure ${CONFIGURE_OPTS}
+
+config.status:
+	PATH="/bin:/usr/bin:/sbin:/usr/sbin:/usr/contrib/bin" \
+	${XCFLAGS} \
+	INSTALL_PROGRAM="${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP}" \
+	sh ${.CURDIR}/configure ${CONFIGURE_OPTS}
+
+BEFOREMAN= config.status
+
+clean cleandir:
+	-@if [ -e Makefile ]; then ${MAKE} distclean; fi
+
+install:
+	${MAKE} install
+
+depend:
+	# Nothing here so far...
+
+lint:
+	# Nothing here so far...
+
+tags:
+	# Nothing here so far...
+
+.include <bsd.obj.mk>
+.include <bsd.subdir.mk>

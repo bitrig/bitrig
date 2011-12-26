@@ -1,0 +1,263 @@
+README_PERL
+
+Special description for the Perl version of `groffer'
+
+The files related to the Perl version are
+
+perl/groffer.pl	  perl main source file for groffer
+perl/func.pl	  selection of functions needed for groffer.pl
+perl/man.pl	  selection of man functions needed for groffer.pl
+perl/split_env.sh shell script called from groffer.pl to split a variable
+perl/groffer.man  manual file rewritten for the perl version of groffer
+perl/README_PERL  this file
+perl_test.pl	  test whether perl has a suitable version
+version.sh	  information on version number and last update
+
+
+Compatibility
+
+This is the Perl version of groffer.  It was written under Perl v5.8.8
+and needs an installed Perl version of at least version 5.6.1.
+
+It was written in Linux, but it seems to be independent of the
+operating system.  At least no directory slashes are used.
+
+For testing, `groffer.pl' may be used directly without a Makefile.  By
+`make' this file will be transformed into the file `groffer' that will
+be installed.
+
+The following options were removed compared to the shell version of
+groffer:
+
+--shell --debug-func --debug-not_func --debug-lm --debug-shell
+--debug-stacks --debug-user
+
+They can be used, but they are just ignored.
+
+Otherwise, the Perl version has the same functionality as the shell
+version.
+
+
+Temporary files
+
+The Perl version keeps more files for debug mode than the shell
+version.  The `file' and `so' temporaries are numbered and the files
+with .so request are copied.  All .so requests are handled; this is an
+extension to `man' that deals only with the first .so request.
+
+
+Comparison of variable names in both groffer versions
+
+shell				perl
+=======================================================================
+$GROFFER_OPT			$Env{GROFFER}
+$PATH				@Path
+$_ADDOPTS_GROFF			@Addopts_Groff
+$_ALL_PARAMS			@ARGV
+$_APROPOS_PROG			$Apropos_Prog
+$_APROPOS_SECTIONS		$Opt{APROPOS_SECTIONS}
+$_AT				$at
+$_AT_BINDIR_AT			$at_at{BINDIR}
+$_AT_G_AT			$at_at{G}
+$_AT_LIBDIR_AT			$at_at{LIBDIR}
+$_BAD				-
+$_BEFORE_MAKE			$before_make
+$_CONF_FILES			@Conf_Files
+$_CONF_FILE_ETC			@Conf_Files
+$_CONF_FILE_HOME		@Conf_Files
+$_DEBUG_FUNC_CHECK		-
+$_DEBUG_KEEP_FILES		@Debug{KEEP}
+$_DEBUG_LM			-
+$_DEBUG_PRINT_FILENAMES		@Debug{FILENAMES}
+$_DEBUG_PRINT_PARAMS		@Debug{PARAMS}
+$_DEBUG_PRINT_SHELL		-
+$_DEBUG_PRINT_TMPDIR		@Debug{TMPDIR}
+$_DEBUG_STACKS			-
+$_DEBUG_USER_WITH_STACK		-
+$_DEFAULT_MODES			$Default_Modes
+$_DEFAULT_RESOLUTION		$Default_Resolution
+$_DEFAULT_TTY_DEVICE		$Default_tty_Device
+$_DISPLAY_ARGS			$Display{ARGS}
+$_DISPLAY_MODE			$Display{MODE}
+$_DISPLAY_PROG			$Display{PROG}
+$_ERROR				-
+$_FILEARGS			@Filespecs
+$_FILESPEC_ARG			$Filespec_Arg
+$_FILESPEC_IS_MAN		$Filespec_Is_Man
+$_FUNC_STACK			-
+$_GOOD				-
+$_GROFFER2_SH			-
+$_GROFFER_LIBDIR		$groffer_libdir
+$_GROFFER_SH			_
+$_GROFF_VERSION			$Groff_Version
+$_GROFF_VERSION_PRESET		$groff_version_preset
+$_HAS_BZIP			$Has_bzip
+$_HAS_COMPRESSION		$Has_Compression
+$_LAST_UPDATE			$last_update
+$_MACRO_PACKAGES		$Macro_Packages
+$_MACRO_PKG			$Macro_Pkg
+$_MANOPT_ALL			-
+$_MANOPT_EXTENSION		-
+$_MANOPT_LANG			-
+$_MANOPT_PAGER			-
+$_MANOPT_PATH			-
+$_MANOPT_SEC			-
+$_MANOPT_SYS			-
+$_MAN_ALL			$Man{ALL}
+$_MAN_AUTO_SEC_CHARS		$Man{AUTO_SEC_CHARS}
+$_MAN_AUTO_SEC_LIST		@{$Man{AUTO_SEC}}
+$_MAN_ENABLE			$Man{ENABLE}
+$_MAN_EXT			$Man{EXT}
+$_MAN_FORCE			$Man{FORCE}
+$_MAN_IS_SETUP			$Man{IS_SETUP}
+$_MAN_LANG			$Man{LANG}
+$_MAN_LANG2			$Man{LANG2}
+$_MAN_PATH			@{$Man{PATH}}
+$_MAN_SEC			@{$Man{SEC}}
+$_MAN_SEC_CHARS			$Man{SEC_CHARS}
+$_MAN_SEC_LIST			-
+$_MAN_SYS			@{$Man{SYS}}
+$_NO				-
+$_NO_FILESPECS			$No_Filespecs
+$_NULL_DEV			$Dev_Null
+$_OK				-
+$_OPTS_CMDLINE_LONG_ARG		%Opts_Cmdline_Long with value 1
+$_OPTS_CMDLINE_LONG_NA		%Opts_Cmdline_Long with value 0
+$_OPTS_CMDLINE_SHORT_ARG	%Opts_Cmdline_Short with value 1
+$_OPTS_CMDLINE_SHORT_NA		%Opts_Cmdline_Short with value 0
+$_OPTS_GROFFER_LONG_ARG		-
+$_OPTS_GROFFER_LONG_NA		-
+$_OPTS_GROFFER_SHORT_ARG	-
+$_OPTS_GROFFER_SHORT_NA		-
+$_OPTS_GROFF_LONG_ARG		-
+$_OPTS_GROFF_LONG_NA		-
+$_OPTS_GROFF_SHORT_ARG		-
+$_OPTS_GROFF_SHORT_NA		-
+$_OPTS_MANOPT_LONG_ARG		-
+$_OPTS_MANOPT_LONG_NA		-
+$_OPTS_MANOPT_SHORT_ARG		-
+$_OPTS_MANOPT_SHORT_NA		-
+$_OPTS_MAN_LONG_ARG		-
+$_OPTS_MAN_LONG_NA		-
+$_OPTS_MAN_SHORT_ARG		-
+$_OPTS_MAN_SHORT_NA		-
+$_OPTS_X_LONG_ARG		-
+$_OPTS_X_LONG_NA		-
+$_OPTS_X_SHORT_ARG		-
+$_OPTS_X_SHORT_NA		-
+$_OPT_ALL			$Opt{ALL}
+$_OPT_APROPOS			$Opt{APROPOS}
+$_OPT_BD			$Opt{BD}
+$_OPT_BG			$Opt{BG}
+$_OPT_BW			$Opt{BW}
+$_OPT_DEFAULT_MODES		$Opt{DEFAULT_MODES}
+$_OPT_DEVICE			$Opt{DEVICE}
+$_OPT_DISPLAY			$Opt{DISPLAY}
+$_OPT_DO_NOTHING		$Opt{DO_NOTHING}
+$_OPT_EXTENSION			$Opt{EXTENSION}
+$_OPT_FG			$Opt{FG}
+$_OPT_FN			$Opt{FN}
+$_OPT_GEOMETRY			$Opt{GEOMETRY}
+$_OPT_ICONIC			$Opt{ICONIC}
+$_OPT_LANG			$Opt{LANG}
+$_OPT_MANPATH			$Opt{MANPATH}
+$_OPT_MODE			$Opt{MODE}
+$_OPT_PAGER			$Opt{PAGER}
+$_OPT_RESOLUTION		$Opt{RESOLUTION}
+$_OPT_RV			$Opt{RV}
+$_OPT_SECTIONS			$Opt{SECTIONS}
+$_OPT_SYSTEMS			$Opt{SYSTEMS}
+$_OPT_TEXT_DEVICE		$Opt{TEXT_DEVICE}
+$_OPT_TITLE			$Opt{TITLE}
+$_OPT_V				$Opt{V}
+$_OPT_VIEWER_DVI		$Opt{VIEWER_DVI}
+$_OPT_VIEWER_HTML		$Opt{VIEWER_HTML}
+$_OPT_VIEWER_PDF		$Opt{VIEWER_PDF}
+$_OPT_VIEWER_PS			$Opt{VIEWER_PS}
+$_OPT_VIEWER_X			$Opt{VIEWER_X}
+$_OPT_WHATIS			$Opt{WHATIS}
+$_OPT_XRM			@{$Opt{XRM}}
+$_OPT_Z				$Opt{Z}
+$_OUTPUT_FILE_NAME		$Output_File_Name
+$_PDF_DID_NOT_WORK		$PDF_Did_Not_Work
+$_PDF_HAS_GS			$PDF_Has_gs
+$_PDF_HAS_PS2PDF		$PDF_Has_ps2pdf
+$_PROCESS_ID			-
+$_PROGRAM_VERSION		$program_version
+$_REG_TITLE_LIST		@Reg_Title
+$_SHELL				-
+$_SP				-
+$_SPACE_CASE			-
+$_SPACE_SED			-
+$_SPECIAL_FILESPEC		$Special_Filespec
+$_SPECIAL_SETUP			$Special_Setup
+$_SQ				-
+$_START_DIR			$Start_Dir
+$_TAB				-
+$_TMP_CAT			$fh_cat, $tmp_cat
+$_TMP_DIR			$tmpdir
+$_TMP_MAN			-
+$_TMP_MANSPEC			$Manspec for @{Man{MANSPEC}{$Manspec}}
+$_TMP_STDIN			$fh_stdin, $tmp_stdin
+$_UNSET				-
+$_VIEWER_BACKGROUND		$Viewer_Background
+$_VIEWER_DVI_TTY		$Viewer_tty{'DVI'}
+$_VIEWER_DVI_X			$Viewer_X{'DVI'}
+$_VIEWER_HTML_TTY		$Viewer_tty{'HTML'}
+$_VIEWER_HTML_X			$Viewer_X{'HTML'}
+$_VIEWER_PDF_TTY		$Viewer_tty{'PDF'}
+$_VIEWER_PDF_X			$Viewer_X{'PDF'}
+$_VIEWER_PS_TTY			$Viewer_tty{'PS'}
+$_VIEWER_PS_X			$Viewer_X{'PS'}
+$_VIEWER_TTY_TTY		-
+$_VIEWER_TTY_X			-
+$_VIEWER_X_TTY			$Viewer_tty{'X'}
+$_VIEWER_X_X			$Viewer_X{'X'}
+$_YES				-
+$return_bad			-
+$return_error			-
+$return_good			-
+$return_no			-
+$return_ok			-
+$return_var			-
+$return_yes			-
+-				@ARGV
+-				@Manopt
+-				$Opt{LOCATION}
+-				$Opt{X}
+-				$File_Split_Env
+-				@Options
+-				@StartingARGV
+-				@StartingConf
+-				$Umask
+
+
+####### License
+
+Copyright (C) 2003, 2004, 2005, 2006, 2009
+  Free Software Foundation, Inc.
+Written by Bernd Warken.
+
+This file is part of `groffer', which is part of `groff'.
+
+`groff' is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+`groff' is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+Last update: 5 Jan 2009
+
+
+####### Emacs settings
+
+Local Variables:
+mode: text
+End:
