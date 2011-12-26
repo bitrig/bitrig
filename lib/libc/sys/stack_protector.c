@@ -37,8 +37,11 @@
 extern int __sysctl(int *, u_int, void *, size_t *, void *, size_t);
 
 long __guard[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+long __stack_chk_guard[8] __attribute__((alias("__guard")));
+
 static void __guard_setup(void) __attribute__ ((constructor));
 void __stack_smash_handler(char func[], int damaged __attribute__((unused)));
+void __attribute__((noreturn)) __stack_chk_fail(void);
 
 static void
 __guard_setup(void)
@@ -68,9 +71,15 @@ void
 __stack_smash_handler(char func[], int damaged)
 {
 	struct syslog_data sdata = SYSLOG_DATA_INIT;
-	const char message[] = "stack overflow in function %s";
+	const char *message = "stack overflow in function %s";
 	struct sigaction sa;
 	sigset_t mask;
+
+	/* clang can't tell us the function */
+	if (func == NULL) {
+		message = "stack overflow detected; terminated";
+		func = "";
+	}
 
 	/* Immediately block all signal handlers from running code */
 	sigfillset(&mask);
@@ -88,5 +97,13 @@ __stack_smash_handler(char func[], int damaged)
 
 	kill(getpid(), SIGABRT);
 
+	_exit(127);
+}
+
+void
+__stack_chk_fail(void)
+{
+	__stack_smash_handler(NULL, 0);
+	/* NOTREACHED */
 	_exit(127);
 }
