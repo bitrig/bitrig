@@ -40,6 +40,8 @@ config.status: Makefile.in configure
 	PATH="/bin:/usr/bin:/sbin:/usr/sbin" \
 	INSTALL_PROGRAM="${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP}" \
 	MAKEINFO='makeinfo --no-split' \
+	CC="${CC}" \
+	CFLAGS="${CFLAGS} ${COPTS}" \
 	/bin/sh ${.CURDIR}/src/configure \
 		--prefix=/usr --with-local-prefix=/usr ${CF} \
 		&& touch config.status
