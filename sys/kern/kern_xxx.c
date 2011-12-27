@@ -83,11 +83,18 @@ sys_reboot(struct proc *p, void *v, register_t *retval)
 
 #if !defined(NO_PROPOLICE)
 void __stack_smash_handler(char [], int __attribute__((unused)));
+void __stack_chk_fail(void);
 
 void
 __stack_smash_handler(char func[], int damaged)
 {
 	panic("smashed stack in %s", func);
+}
+
+void
+__stack_chk_fail(void)
+{
+	panic("smashed stack");
 }
 #endif
 
