@@ -89,9 +89,9 @@ TMP=`mktemp /tmp/mkdep.XXXXXXXXXX` || exit 1
 trap 'rm -f $TMP ; trap 2 ; kill -2 $$' 1 2 3 13 15
 
 if [ "x$file" = x ]; then
-	${CC:-cc} -M "$@"
+	${CC:-/usr/contrib/bin/clang} -M "$@"
 else
-	${CC:-cc} -M "$@" && cat "$file"
+	${CC:-/usr/contrib/bin/clang} -M "$@" && cat "$file"
 fi |
 if [ x$pflag = x ]; then
 	sed -e 's; \./; ;g' > $TMP
