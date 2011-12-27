@@ -39,6 +39,7 @@
  * this would end up dragging too much code from libc here.
  */
 long __guard[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+long __stack_chk_guard[8] __attribute__((alias("__guard")));
 
 void __stack_smash_handler(char [], int);
 
@@ -46,6 +47,13 @@ void
 __stack_smash_handler(char func[], int damaged)
 {
 	_dl_exit(127);
+}
+
+void
+__stack_chk_fail(void)
+{
+	__stack_smash_handler(NULL, 0);
+	/* NOTREACHED */
 }
 
 /*
