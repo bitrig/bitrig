@@ -1738,8 +1738,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     else if (A->getOption().matches(options::OPT_fstack_protector_all))
       StackProtectorLevel = 2;
   } else {
-    StackProtectorLevel =
-      getToolChain().GetDefaultStackProtectorLevel(KernelOrKext);
+      if (getToolChain().getTriple().getOS() == llvm::Triple::OpenBSD)
+          StackProtectorLevel = 1;
+      else
+          StackProtectorLevel =
+            getToolChain().GetDefaultStackProtectorLevel(KernelOrKext);
   }
   if (StackProtectorLevel) {
     CmdArgs.push_back("-stack-protector");
