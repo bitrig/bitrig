@@ -1018,7 +1018,7 @@ dnl something if the tool was available.
 AC_PATH_PROG(BZIP2, [bzip2])
 AC_PATH_PROG(CAT, [cat])
 AC_PATH_PROG(DOXYGEN, [doxygen])
-AC_PATH_PROG(GROFF, [groff])
+AC_PATH_PROG(GROFF, [mandoc])
 AC_PATH_PROG(GZIPBIN, [gzip])
 AC_PATH_PROG(POD2HTML, [pod2html])
 AC_PATH_PROG(POD2MAN, [pod2man])
