@@ -47,8 +47,10 @@ INCS="-nostdinc"
 FOUNDFILES=false
 
 CPP=/usr/contrib/bin/clang
+CLANGOPTS="-x c -E"
+CLANGSTDIN="-"
 OPTS=""
-TRAD=
+TRAD=""
 
 if [ ! -x $CPP ]; then
 	CPP=`cc -print-search-dirs | sed -ne '/^install: /s/install: \(.*\)/\1cpp/p'`;
@@ -68,7 +70,11 @@ do
 		STDINC=
 		;;
 	-traditional)
+		# use gcc cpp to preserve whitespace
 		TRAD=-traditional
+		CPP=/usr/libexec/cpp
+		CLANGOPTS=
+		CLANGSTDIN=
 		;;
 	-notraditional)
 		TRAD=
@@ -88,7 +94,7 @@ do
 		;;
 	*)
 		FOUNDFILES=true
-		eval "$CPP -x c -E $TRAD $DGNUC $DOLLAR $INCS $STDINC $OPTS $A" || exit $?
+		eval "$CPP $CLANGOPTS $TRAD $DGNUC $DOLLAR $INCS $STDINC $OPTS $A" || exit $?
 		;;
 	esac
 done
@@ -96,7 +102,7 @@ done
 if ! $FOUNDFILES
 then
 	# read standard input
-	eval exec "$CPP -x c -E $TRAD $DGNUC $DOLLAR $INCS $STDINC $OPTS -"
+	eval exec "$CPP $CLANGOPTS $TRAD $DGNUC $DOLLAR $INCS $STDINC $OPTS $CLANGSTDIN"
 fi
 
 exit 0
