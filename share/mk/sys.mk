@@ -18,20 +18,6 @@ OSrev=		$(OSMAJOR)$(OSMINOR)
 
 .LIBS:		.a
 
-AR?=		ar
-ARFLAGS?=	rl
-RANLIB?=	ranlib
-LORDER?=	lorder
-
-AS?=		as
-AFLAGS?=	${DEBUG}
-COMPILE.s?=	${CC} ${AFLAGS} -c
-LINK.s?=	${CC} ${AFLAGS} ${LDFLAGS}
-COMPILE.S?=	${CC} ${AFLAGS} ${CPPFLAGS} -c
-LINK.S?=	${CC} ${AFLAGS} ${CPPFLAGS} ${LDFLAGS}
-
-PIPE?=		-pipe
-
 .if !exists(COMPILER_VERSION)
 COMPILER_VERSION?="clang"
 .endif
@@ -48,6 +34,20 @@ CXX?=		/usr/contrib/bin/clang++
 HOSTCC?=	/usr/contrib/bin/clang
 CFLAGS?=	-O3 -Wno-strict-aliasing -Wno-pointer-sign
 .endif
+
+AR?=		ar
+ARFLAGS?=	rl
+RANLIB?=	ranlib
+LORDER?=	lorder
+
+AS?=		as
+AFLAGS?=	${DEBUG}
+COMPILE.s?=	${CC} ${AFLAGS} -c
+LINK.s?=	${CC} ${AFLAGS} ${LDFLAGS}
+COMPILE.S?=	${CC} ${AFLAGS} ${CPPFLAGS} -c
+LINK.S?=	${CC} ${AFLAGS} ${CPPFLAGS} ${LDFLAGS}
+
+PIPE?=		-pipe
 
 CFLAGS+=	${PIPE} ${DEBUG}
 COMPILE.c?=	${CC} ${CFLAGS} ${CPPFLAGS} -c
