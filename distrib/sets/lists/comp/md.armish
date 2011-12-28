@@ -675,6 +675,10 @@
 ./usr/lib/libmilter_pic.a
 ./usr/lib/libncurses_pic.a
 ./usr/lib/libncursesw_pic.a
+./usr/lib/libobjc.a
+./usr/lib/libobjc.so.5.0
+./usr/lib/libobjc_p.a
+./usr/lib/libobjc_pic.a
 ./usr/lib/libocurses_pic.a
 ./usr/lib/libossaudio_pic.a
 ./usr/lib/libotermcap_pic.a
