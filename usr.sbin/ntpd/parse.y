@@ -104,7 +104,9 @@ main		: LISTEN ON address listen_opts	{
 			struct listen_addr	*la;
 			struct ntp_addr		*h, *next;
 
-			if ((h = $3->a) == NULL && (h->rtable = $4.rtable) &&
+			if ($3->a)
+				$3->a->rtable = $4.rtable;
+			if ((h = $3->a) == NULL &&
 			    (host_dns($3->name, &h) == -1 || !h)) {
 				yyerror("could not resolve \"%s\"", $3->name);
 				free($3->name);
