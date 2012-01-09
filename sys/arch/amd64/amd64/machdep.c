@@ -1395,6 +1395,17 @@ init_x86_64(paddr_t first_avail)
 		uvm_page_physload(atop(seg_start), atop(seg_end),
 		    atop(seg_start), atop(seg_end), 0);
 	}
+	{
+		/* Load pages before kernel for remapped kernel */
+		paddr_t seg_start = round_page(0x100000);
+		paddr_t seg_end = trunc_page(KERNTEXTOFF - KERNBASE);
+		if (seg_start < seg_end) {
+			printf("load pre-kernel memory %x %x\n", seg_start, seg_end);
+			uvm_page_physload(atop(seg_start), atop(seg_end),
+			    atop(seg_start), atop(seg_end), 0);
+		}
+	}
+
 #if DEBUG_MEMLOAD
 	printf("avail_start = 0x%lx\n", avail_start);
 	printf("avail_end = 0x%lx\n", avail_end);

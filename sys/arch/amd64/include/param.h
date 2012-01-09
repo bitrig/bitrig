@@ -63,10 +63,10 @@
 #define	NPTEPG		(NBPG/(sizeof (pt_entry_t)))
 
 #define	KERNBASE	0xffffffff80000000 /* start of kernel virtual space */
-#define KERNTEXTOFF	(KERNBASE+0x100000)	/* start of kernel text */
+#define KERNTEXTOFF	(KERNBASE+0x1000000)	/* start of kernel text */
 
 #define KERNTEXTOFF_HI	0xffffffff
-#define KERNTEXTOFF_LO	0x80100000
+#define KERNTEXTOFF_LO	0x81000000
 
 #define KERNBASE_HI	0xffffffff
 #define KERNBASE_LO	0x80000000

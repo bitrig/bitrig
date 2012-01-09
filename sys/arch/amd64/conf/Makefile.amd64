@@ -41,7 +41,7 @@ CMACHFLAGS+=	-fno-stack-protector
 COPTS?=		-O2
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS}
-LINKFLAGS=	-Ttext 0xffffffff801001e0 -e start --warn-common
+LINKFLAGS=	-Ttext 0xffffffff810001e0 -e start --warn-common
 
 .else
 
@@ -61,7 +61,7 @@ CMACHFLAGS+=	-fno-stack-protector
 COPTS?=		-O3
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS}
-LINKFLAGS=	-Ttext 0xffffffff80100300 -e start --warn-common -z noexecstack
+LINKFLAGS=	-Ttext 0xffffffff81000300 -e start --warn-common -z noexecstack
 .endif
 
 .if ${IDENT:M-DDDB_STRUCT}
