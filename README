@@ -1,0 +1,115 @@
+Executive overview
+Foster an open source community with the goal of creating an operating
+system that is free and fun to work on.  Leverage other open source
+projects while being an active participant in said communities.
+
+
+Goals
+1. Modern hardware only
+	- Aggressive culling of deprecated hardware and drivers
+	- Target only active hardware amd64, arm and i386 (macppc, mips?)
+2. Slimed down base system
+	- Base system needs to be as small as possible in order to
+	  support a wide variety of embedded hardware
+	- Package based "fatter" distributions for desktop and/or server
+	  distribution (e.g. desktop = X, server = daemons)
+	- This enables the distribution to be able to use "best in
+	  class" software (e.g. postfix vs. sendmail etc)
+	- No click auto installer
+	- pkg_add predefined packages (e.g. pkg_add marco_desktop)
+3. Follow latest relevant trends
+	- Use social networks to decimate information
+	- Actively borrow ideas and code from other projects
+	- Use modern infrastructure components (jenkins, git, llvm etc)
+	- Shiny and pretty website
+4. Reward based development
+	- Cash for features
+	- GSoC process
+	- Intern process
+	- Low threshold to contribute
+5. Commercially friendly distribution
+	- Use the least amount of GPL possible in the base distribution
+	- Non encumbering license (ISC/MIT etc)
+	- Non threatening community
+	- Long lived releases
+	- Paid for maintenance
+6. Releases
+	- Annual release on Feb. 5th
+	- Quarterly releases of Release Candidate (RC)
+	- Each RC is accompanied with a state-of-the-union document
+	- RC4 becomes release
+
+
+Governing body
+1. Core team (3 members)
+	- Conflict mgmt
+	- Financial mgmt
+	- Vision / Roadmap mgmt
+	- Organizational mgmt
+2. Project lead / merge monkey (1 member)
+	- Lead architect of overall distribution
+	- Day-to-day operations
+	- Merger in chief
+	- Release mgmt
+	- Pusher in chief, patches shall not linger
+3. Subsystem leads
+	- Lead architect of subsystem
+	- Day-to-day operations of subsystem
+	- Committers
+	- Mentors
+4. Active contributors
+	- Allowed to commit random patches
+	- Require ok from subsystem leads
+	- Mentors
+5. External contributors
+	- Send in patches in mail or git-hub style
+	- Subsystem leads and/or active contributors can move forward
+	  with patch
+	- Patch must be accepted, improved or shut down within a reasonable
+	  amount of time
+
+
+Voting
+	* All developer decisions must come up for a vote
+		- joins are a community vote
+		- terminations must be considered by core team first
+		  then put up for a community vote
+	* Core team members are lifetime appointed however if the
+	  majority of the community votes for removal then a new core
+	  team member shall be vote for.  Majority is defined as >=51%
+	* All financial/vision/roadmap/organizational issues must be voted on
+	  by core team, majority rule wins.
+	* Code conflict is escalated upwards by subsystem leads to the
+	  project lead and if the issue remains then it can be escalated
+	  to the core team who will have final say.
+	* People are allowed to have multiple roles; for example the
+	  project lead may be a core team member.
+
+
+Financials
+	* Published balance sheet
+	* Foundation of sorts
+	* Donors will be anonymous by default
+	* Company/government contributors/donors will be anonymous by default
+	* Code for bounty
+	* Organized hack events
+
+
+Infrastructure
+	* git
+	* llvm/clang
+	* jenkins
+
+
+Automation
+	* Build robots
+	* Results published in real-time on the web
+	* Auto generation of snapshots
+	* Auto generation of packages
+
+
+Short term features
+	* Strong MP support
+	* Integrated VM support
+	* Strong cryptography booting
+	* Native llvm support
