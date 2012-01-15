@@ -271,8 +271,6 @@ distribution-etc-root-var: distrib-dirs
 	cd ../usr.bin/mail && exec ${MAKE} distribution
 	cd ../usr.sbin/ldapd && exec ${MAKE} distribution
 	cd mail && exec ${MAKE} distribution
-	${INSTALL} -c -o root -g wheel -m 600 root/root.mail \
-	    ${DESTDIR}/var/mail/root
 	${INSTALL} -c -o root -g wheel -m 440 ../usr.bin/sudo/sudoers \
 	    ${DESTDIR}/etc/sudoers
 	cd rc.d; \

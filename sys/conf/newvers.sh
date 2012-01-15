@@ -48,10 +48,6 @@ id=`basename ${d}`
 #	share/mk/sys.mk
 #		OSMAJOR
 #		OSMINOR
-#	etc/root/root.mail
-#		VERSION and other bits
-#	sys/arch/macppc/stand/tbxidata/bsd.tbxi
-#		change	/X.X/macppc/bsd.rd
 #
 # -current and -beta tagging:
 #	For release, select STATUS ""
