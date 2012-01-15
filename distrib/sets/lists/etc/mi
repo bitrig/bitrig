@@ -473,3 +473,4 @@
 ./var/www/icons/world1.png
 ./var/www/icons/world2.gif
 ./var/www/icons/world2.png
+./etc/wsconsctl.conf
