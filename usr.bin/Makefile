@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-SUBDIR= apply ar arch asa asn1_compile at aucat audioctl awk banner \
+SUBDIR= apply apropos ar arch asa asn1_compile at aucat audioctl awk banner \
 	basename bc bdes bgplg \
 	biff cal calendar cap_mkdb cdio chpass cmp col colrm \
 	column comm compile_et compress cpp crontab csplit ctags cut \
@@ -25,7 +25,8 @@ SUBDIR= apply ar arch asa asn1_compile at aucat audioctl awk banner \
 	tmux top touch tput tr true tset tsort tty usbhidaction usbhidctl \
 	ul uname unexpand unifdef uniq units \
 	unvis users uudecode uuencode vacation vi vis vmstat w wall wc \
-	what which who whois write x99token xargs xinstall xstr yacc yes
+	what whatis which who whois write x99token xargs xinstall xstr yacc yes
+
 
 .if (${YP:L} == "yes")
 SUBDIR+=ypcat ypmatch ypwhich
