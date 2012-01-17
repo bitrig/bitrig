@@ -284,7 +284,7 @@ distribution:
 	cd .. && exec ${SUDO} ${MAKE} install
 	touch ${DESTDIR}/var/db/sysmerge/etcsum
 	TMPSUM=`mktemp /tmp/_etcsum.XXXXXXXXXX` || exit 1; \
-	sort ../distrib/sets/lists/etc/{mi,md.${MACHINE}} > $${TMPSUM}; \
+	sort ../distrib/sets/lists/etc/mi > $${TMPSUM}; \
 	cd ${DESTDIR} && \
 		xargs cksum < $${TMPSUM} > ${DESTDIR}/var/db/sysmerge/etcsum; \
 	rm -f $${TMPSUM}
