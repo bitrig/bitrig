@@ -366,7 +366,6 @@
 ./usr/bin/mailx
 ./usr/bin/make
 ./usr/bin/makeinfo
-./usr/bin/makewhatis
 ./usr/bin/man
 ./usr/bin/mandoc
 ./usr/bin/merge
@@ -578,7 +577,7 @@
 ./usr/lib/apache/modules/mod_vhost_alias.so
 ./usr/lib/gcc-lib
 ./usr/lib/libasn1.so.18.0
-./usr/lib/libc.so.61.0
+./usr/lib/libc.so.62.0
 ./usr/lib/libcom_err.so.18.0
 ./usr/lib/libcrypto.so.20.1
 ./usr/lib/libcurses.so.12.1
@@ -605,7 +604,7 @@
 ./usr/lib/libpanelw.so.5.0
 ./usr/lib/libpcap.so.6.0
 ./usr/lib/libperl.so.12.0
-./usr/lib/libpthread.so.13.1
+./usr/lib/libpthread.so.13.2
 ./usr/lib/libreadline.so.3.0
 ./usr/lib/librpcsvc.so.1.2
 ./usr/lib/libskey.so.5.1
@@ -1031,6 +1030,14 @@
 ./usr/libdata/perl5/OpenBSD/LibSpec.pm
 ./usr/libdata/perl5/OpenBSD/LibSpec/Build.pm
 ./usr/libdata/perl5/OpenBSD/Log.pm
+./usr/libdata/perl5/OpenBSD/Makewhatis
+./usr/libdata/perl5/OpenBSD/Makewhatis.pm
+./usr/libdata/perl5/OpenBSD/Makewhatis/Check.pm
+./usr/libdata/perl5/OpenBSD/Makewhatis/Find.pm
+./usr/libdata/perl5/OpenBSD/Makewhatis/Formated.pm
+./usr/libdata/perl5/OpenBSD/Makewhatis/Subject.pm
+./usr/libdata/perl5/OpenBSD/Makewhatis/Unformated.pm
+./usr/libdata/perl5/OpenBSD/Makewhatis/Whatis.pm
 ./usr/libdata/perl5/OpenBSD/Mtree.pm
 ./usr/libdata/perl5/OpenBSD/OldLibs.pm
 ./usr/libdata/perl5/OpenBSD/PackageInfo.pm
@@ -3076,8 +3083,7 @@
 ./usr/share/man/man8/userdel.8
 ./usr/share/man/man8/userinfo.8
 ./usr/share/man/man8/usermod.8
-./usr/share/man/mandoc.db
-./usr/share/man/mandoc.index
+./usr/share/man/whatis.db
 ./usr/share/misc
 ./usr/share/misc/airport
 ./usr/share/misc/ascii
