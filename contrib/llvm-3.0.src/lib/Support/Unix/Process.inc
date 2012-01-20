@@ -18,9 +18,9 @@
 #ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #endif
-// DragonFly BSD has deprecated <malloc.h> for <stdlib.h> instead,
+// DragonFly BSD and OpenBSD have deprecated <malloc.h> for <stdlib.h> instead,
 //  Unix.h includes this for us already.
-#if defined(HAVE_MALLOC_H) && !defined(__DragonFly__)
+#if defined(HAVE_MALLOC_H) && !defined(__DragonFly__) && !defined(__OpenBSD__)
 #include <malloc.h>
 #endif
 #ifdef HAVE_MALLOC_MALLOC_H
