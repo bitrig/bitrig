@@ -82,12 +82,12 @@ int	hz = HZ;
 int	tick = 1000000 / HZ;
 int	tickadj = 240000 / (60 * HZ);		/* can adjust 240ms in 60s */
 struct	timezone tz = { TIMEZONE, DST };
-#define	NPROC (30 + 16 * MAXUSERS)
+#define	NPROC (65000)
 #define	NTEXT (80 + NPROC / 8)			/* actually the object cache */
-#define	NVNODE (NPROC * 2 + NTEXT + 100)	 
+#define	NVNODE (NPROC * 2 + NTEXT + 100)
 int	desiredvnodes = NVNODE;
 int	maxproc = NPROC;
-int	maxfiles = 5 * (NPROC + MAXUSERS) + 80;
+int	maxfiles = 65000;
 int	nmbclust = NMBCLUSTERS;
 
 #ifndef MBLOWAT

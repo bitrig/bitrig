@@ -72,7 +72,7 @@
 #define	NCARGS		ARG_MAX		/* max bytes for an exec function */
 #define	NGROUPS		NGROUPS_MAX	/* max number groups */
 #define	NOFILE		OPEN_MAX	/* max open files per process (soft) */
-#define	NOFILE_MAX	1024		/* max open files per process (hard) */
+#define	NOFILE_MAX	16384		/* max open files per process (hard) */
 #define	NOGROUP		65535		/* marker for empty group set member */
 #define MAXHOSTNAMELEN	256		/* max hostname size */
 
