@@ -55,7 +55,11 @@ cd $fsdir
 
 for i in base comp etc game man; do
 	echo -n "$i: "
-	sort ${lists}/$i/mi ${lists}/$i/md.${arch} > $TMP
+	if [[ $i == "base" || $i == "comp" ]]; then
+		sort ${lists}/$i/mi ${lists}/$i/md.${arch} > $TMP
+	else
+		sort ${lists}/$i/mi > $TMP
+	fi
 	cat $TMP | grep '^./usr/lib/lib' > $TMP2
 	cat $TMP | grep -v '^./usr/lib/lib' >> $TMP2
 	cat $TMP2 | pax -w -d | gzip > ${tardir}/$i${RELEASE}.tgz
