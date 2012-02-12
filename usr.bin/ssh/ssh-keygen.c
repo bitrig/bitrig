@@ -47,9 +47,9 @@
 #endif
 
 /* Number of bits in the RSA/DSA key.  This value can be set on the command line. */
-#define DEFAULT_BITS		4096
-#define DEFAULT_BITS_DSA	2048
-#define DEFAULT_BITS_ECDSA	521
+#define DEFAULT_BITS		2048
+#define DEFAULT_BITS_DSA	1024
+#define DEFAULT_BITS_ECDSA	256
 u_int32_t bits = 0;
 
 /*
