@@ -1,0 +1,10 @@
+This file details instructions for source upgrades on the
+integration branch for cases where the normal build process
+falls short.
+
+[15-02-2012 - Source upgrade to bitrig / OpenBSD 5.1]:
+- Install new mk files:
+  # cd /usr/src/share/mk
+  # make install
+- Build
+  Normal build, see release(8). 
