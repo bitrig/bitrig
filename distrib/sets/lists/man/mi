@@ -261,6 +261,7 @@
 ./usr/share/info/amdref.info
 ./usr/share/info/annotate.info
 ./usr/share/info/as.info
+./usr/share/info/binutils.info
 ./usr/share/info/cpp.info
 ./usr/share/info/cppinternals.info
 ./usr/share/info/cvs.info
@@ -274,6 +275,7 @@
 ./usr/share/info/history.info
 ./usr/share/info/info-stnd.info
 ./usr/share/info/info.info
+./usr/share/info/ld.info
 ./usr/share/info/libiberty.info
 ./usr/share/info/readline.info
 ./usr/share/info/stabs.info
@@ -2538,5 +2540,3 @@
 ./usr/share/man/man8/zdump.8
 ./usr/share/man/man8/zic.8
 ./usr/share/man/man9
-./usr/share/info/binutils.info
-./usr/share/info/ld.info
