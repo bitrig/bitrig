@@ -10,7 +10,7 @@
 
 unix=		We run OpenBSD.
 OSMAJOR=	5
-OSMINOR=	0
+OSMINOR=	1	
 OSREV=		$(OSMAJOR).$(OSMINOR)
 OSrev=		$(OSMAJOR)$(OSMINOR)
 
