@@ -145,10 +145,10 @@ wsemul_vt100_cnattach(const struct wsscreen_descr *type, void *cookie, int ccol,
 	edp->cbcookie = NULL;
 
 #ifndef WS_KERNEL_FG
-#define WS_KERNEL_FG WSCOL_WHITE
+#define WS_KERNEL_FG WSCOL_GREEN
 #endif
 #ifndef WS_KERNEL_BG
-#define WS_KERNEL_BG WSCOL_BLUE
+#define WS_KERNEL_BG WSCOL_BLACK
 #endif
 #ifndef WS_KERNEL_COLATTR
 #define WS_KERNEL_COLATTR 0
