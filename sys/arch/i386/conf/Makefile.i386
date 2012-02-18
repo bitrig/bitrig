@@ -25,7 +25,6 @@ INCLUDES=	-nostdinc -I. -I$S -I$S/arch
 CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL -MD -MP
 CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
 		-Wno-main -Wno-uninitialized -Wno-format \
-		-Wstack-larger-than-2047
 
 CMACHFLAGS=
 CMACHFLAGS+=	-fno-builtin-printf -fno-builtin-snprintf \
