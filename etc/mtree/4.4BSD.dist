@@ -188,6 +188,11 @@ mtree
 # ./etc/mtree
 ..
 
+# ./etc/nginx
+nginx
+# ./etc/nginx
+..
+
 # ./etc/ppp
 ppp
 # ./etc/ppp

@@ -82,6 +82,11 @@ mtree           type=dir mode=0755
 # ./etc/mtree
 ..
 
+# ./etc/nginx
+/set type=file gname=daemon uname=root mode=0755
+nginx           type=dir
+# ./etc/nginx
+..
 
 # ./etc/namedb
 /set type=file gname=wheel uname=root mode=0600
