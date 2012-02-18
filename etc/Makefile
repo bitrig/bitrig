@@ -279,21 +279,21 @@ distribution-etc-root-var: distrib-dirs
 		${INSTALL} -c -o ${BINOWN} -g ${BINGRP} -m 555 ${RCDAEMONS} \
 		    ${DESTDIR}/etc/rc.d
 	cd nginx; \
-		${INSTALL} -c -o -root -g daemon -m 644 fastcgi_params \
+		${INSTALL} -c -o root -g daemon -m 644 fastcgi_params \
 		    ${DESTDIR}/etc/nginx;\
-		${INSTALL} -c -o -root -g daemon -m 644 koi-utf \
+		${INSTALL} -c -o root -g daemon -m 644 koi-utf \
 		    ${DESTDIR}/etc/nginx;\
-		${INSTALL} -c -o -root -g daemon -m 644 koi-win \
+		${INSTALL} -c -o root -g daemon -m 644 koi-win \
 		    ${DESTDIR}/etc/nginx;\
-		${INSTALL} -c -o -root -g daemon -m 644 mime.types \
+		${INSTALL} -c -o root -g daemon -m 644 mime.types \
 		    ${DESTDIR}/etc/nginx;\
-		${INSTALL} -c -o -root -g daemon -m 644 nginx.conf \
+		${INSTALL} -c -o root -g daemon -m 644 nginx.conf \
 		    ${DESTDIR}/etc/nginx;\
-		${INSTALL} -c -o -root -g daemon -m 644 scgi_params \
+		${INSTALL} -c -o root -g daemon -m 644 scgi_params \
 		    ${DESTDIR}/etc/nginx;\
-		${INSTALL} -c -o -root -g daemon -m 644 uwsgi_params \
+		${INSTALL} -c -o root -g daemon -m 644 uwsgi_params \
 		    ${DESTDIR}/etc/nginx;\
-		${INSTALL} -c -o -root -g daemon -m 644 win-utf \
+		${INSTALL} -c -o root -g daemon -m 644 win-utf \
 		   ${DESTDIR}/etc/nginx;
 
 distribution:

@@ -2698,6 +2698,7 @@
 ./usr/sbin/named-checkzone
 ./usr/sbin/ndp
 ./usr/sbin/netgroup_mkdb
+./usr/sbin/nginx
 ./usr/sbin/nsd
 ./usr/sbin/nsd-checkconf
 ./usr/sbin/nsd-notify
