@@ -23,6 +23,8 @@ _archdir?=	$S/arch/${_arch}
 
 INCLUDES=	-nostdinc -I. -I$S -I$S/arch
 CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL -MD -MP
+
+.if ${COMPILER_VERSION:L} == "gcc4"
 CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
 		-Wno-main -Wno-uninitialized -Wno-format \
 
@@ -38,6 +40,27 @@ COPTS?=		-O2
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS}
 LINKFLAGS=	-Ttext 0xD0200120 -e start -N --warn-common
+
+.else
+
+# XXX we need a -Werror sweep in clang
+CWARNFLAGS=	-Wall -Wstrict-prototypes -Wmissing-prototypes \
+		-Wno-main -Wno-uninitialized -Wno-format
+# these are to shutup clang vs gcc, should be ultimately fixed
+CWARNFLAGS+=	-Wno-pointer-sign
+CMACHFLAGS=	-mcmodel=kernel -mno-red-zone -mno-sse -mno-sse2 -mno-sse3 \
+		-mno-3dnow -mno-mmx -msoft-float -mno-avx
+CMACHFLAGS+=	-ffreestanding -no-integrated-as -fno-omit-frame-pointer \
+		-fno-asynchronous-unwind-tables
+.if ${IDENT:M-DNO_PROPOLICE}
+CMACHFLAGS+=	-fno-stack-protector
+.endif
+
+COPTS?=		-O3
+CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
+AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS}
+LINKFLAGS=	-Ttext 0xD0200120 -e start --warn-common -z noexecstack
+.endif
 
 .if ${MACHINE} == "amd64"
 CFLAGS+=	-m32
