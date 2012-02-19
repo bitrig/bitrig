@@ -59,7 +59,7 @@ CMACHFLAGS+=	-fno-stack-protector
 COPTS?=		-O3
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS}
-LINKFLAGS=	-Ttext 0xD0200120 -e start --warn-common -z noexecstack
+LINKFLAGS=	-Ttext 0xD0200120 -e start -N --warn-common -z noexecstack
 .endif
 
 .if ${MACHINE} == "amd64"
