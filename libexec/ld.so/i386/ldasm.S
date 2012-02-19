@@ -89,7 +89,7 @@ _dl_start:
 	.section	".text"					;\
 	.align		4					;\
 	.global		__CONCAT(_dl_,n)			;\
-	.type		__CONCAT(_dl_,n)%function		;\
+	.type		__CONCAT(_dl_,n), @function		;\
 __CONCAT(_dl_,n):						;\
 	__DO_SYSCALL(c)						;\
 	jb	.L_cerr						;\
