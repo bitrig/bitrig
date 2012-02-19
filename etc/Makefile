@@ -50,8 +50,8 @@ BIN2=	motd
 # -r-xr-xr-x
 RCDAEMONS=	amd apmd bgpd bootparamd btd cron dhcpd dhcrelay dvmrpd \
 		ftpd ftpproxy hostapd hotplugd httpd identd ifstated iked \
-		inetd isakmpd ldapd ldattach ldpd lpd mopd mrouted named nsd \
-		ntpd ospfd ospf6d portmap pflogd rarpd rbootd relayd ripd \
+		inetd isakmpd ldapd ldattach ldpd lpd mopd mrouted named nginx \
+		nsd ntpd ospfd ospf6d portmap pflogd rarpd rbootd relayd ripd \
 		route6d rtadvd rtsold rwhod sasyncd sendmail sensorsd smtpd \
 		snmpd spamd sshd syslogd watchdogd wsmoused xdm ypbind ypldap \
 		yppasswdd ypserv kdc kadmind kpasswdd nfsd mountd lockd statd \
@@ -270,6 +270,7 @@ distribution-etc-root-var: distrib-dirs
 	cd ../usr.bin/bgplg && exec ${MAKE} distribution
 	cd ../usr.bin/mail && exec ${MAKE} distribution
 	cd ../usr.sbin/ldapd && exec ${MAKE} distribution
+	cd ../usr.sbin/nginx && exec ${MAKE} -f Makefile.bsd-wrapper distribution
 	cd mail && exec ${MAKE} distribution
 	${INSTALL} -c -o root -g wheel -m 440 ../usr.bin/sudo/sudoers \
 	    ${DESTDIR}/etc/sudoers
