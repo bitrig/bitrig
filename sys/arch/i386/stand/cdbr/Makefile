@@ -1,6 +1,7 @@
 #	$OpenBSD: Makefile,v 1.2 2004/08/24 15:24:05 tom Exp $
 #
 
+CC=cc
 PROG=	cdbr
 SRCS=	cdbr.S
 AFLAGS+=-I${.CURDIR} -I${.CURDIR}/../../.. #-Wa,-a

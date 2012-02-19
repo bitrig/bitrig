@@ -2,6 +2,7 @@
 
 .include "${.CURDIR}/../Makefile.inc"
 
+CC=	cc
 MAN=	pxeboot.8
 
 .if ${MACHINE} == "i386"

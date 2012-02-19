@@ -1,10 +1,13 @@
 #	$OpenBSD: Makefile,v 1.21 2003/04/17 03:43:18 drahn Exp $
 
+CC=cc
+
 MAN=	biosboot.8
 
 .if ${MACHINE} == "i386"
 PROG=	biosboot
 SRCS=	biosboot.S
+CFLAGS= -no-builtin-asm
 LD=ld
 LDFLAGS=-nostdlib -Ttext 0 -N -x -Bstatic
 INSTALL_STRIP=

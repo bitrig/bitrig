@@ -2,6 +2,8 @@
 
 .include "${.CURDIR}/../Makefile.inc"
 
+CC=cc
+
 LIB=	sa
 
 S=${.CURDIR}/../../../..
