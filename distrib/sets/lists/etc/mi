@@ -139,6 +139,7 @@
 ./etc/rc.d/mrouted
 ./etc/rc.d/named
 ./etc/rc.d/nfsd
+./etc/rc.d/nginx
 ./etc/rc.d/nsd
 ./etc/rc.d/ntpd
 ./etc/rc.d/ospf6d
