@@ -6,6 +6,8 @@ MAKE=/usr/contrib/bin/gmake
 XCFLAGS=	CC="${CC}" CFLAGS="${CFLAGS} ${COPTS}" \
 		CXX="${CXX}" CXXFLAGS="${CXXFLAGS}" \
 		LDFLAGS="${LDFLAGS}" \
+		REQUIRES_RTTI=1 \
+		VERBOSE=Yes \
 		GROFF="/usr/bin/mandoc"
 
 CONFIGURE_OPTS=	--prefix=/usr/contrib \
