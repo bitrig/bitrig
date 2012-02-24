@@ -18,7 +18,7 @@
 .\" Agency (DARPA) and Air Force Research Laboratory, Air Force
 .\" Materiel Command, USAF, under agreement number F39502-99-1-0512.
 .\"
-.Dd $Mdocdate: September 3 2010 $
+.Dd $Mdocdate: February 23 2012 $
 .Dt MD5 1
 .Os
 .Sh NAME
@@ -97,7 +97,9 @@ options are processed.
 .Sh SEE ALSO
 .Xr cksum 1 ,
 .Xr sha1 1 ,
-.Xr sha256 1
+.Xr sha256 1 ,
+.Xr sha384 1 ,
+.Xr sha512 1
 .Rs
 .%A R. Rivest
 .%T The MD5 Message-Digest Algorithm
@@ -107,5 +109,8 @@ options are processed.
 Since collisions have been found for
 .Em MD5 ,
 the use of
-.Xr sha256 1
+.Xr sha256 1 ,
+.Xr sha384 1 ,
+or
+.Xr sha512 1
 is recommended instead.
