@@ -37,6 +37,8 @@
 ./bin/sh
 ./bin/sha1
 ./bin/sha256
+./bin/sha384
+./bin/sha512
 ./bin/sleep
 ./bin/stty
 ./bin/sum
