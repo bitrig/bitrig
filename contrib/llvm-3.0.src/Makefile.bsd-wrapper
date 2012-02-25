@@ -13,7 +13,9 @@ XCFLAGS=	CC="${CC}" CFLAGS="${CFLAGS} ${COPTS}" \
 CONFIGURE_OPTS=	--prefix=/usr/contrib \
 		--enable-bindings=no \
 		--enable-libffi=no \
-		--enable-optimized
+		--enable-optimized \
+		--enable-targets=x86,x86_64,arm
+
 PROG=	clang
 NOMAN=
 
