@@ -57,7 +57,7 @@ in the first column), and if one
 is found, the boot block from that MBR partition is loaded and executed in
 place of the original (MBR) boot block.
 .Pp
-Some other architectures (like the zaurus), consider sector 0 of the disk
+Some other architectures, consider sector 0 of the disk
 to contain the MBR partition table, but do not use the MBR bootcode at all.
 .Pp
 Upon first access to a disk, the partition information is retrieved,
@@ -384,9 +384,6 @@ default MBR template
 .Xr boot_amd64 8 ,
 .Xr boot_armish 8 ,
 .Xr boot_i386 8 ,
-.Xr boot_landisk 8 ,
-.Xr boot_macppc 8 ,
-.Xr boot_zaurus 8 ,
 .Xr disklabel 8
 .Sh CAVEATS
 Hand crafted disk layouts are highly error prone.

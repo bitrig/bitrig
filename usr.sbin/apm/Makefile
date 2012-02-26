@@ -1,8 +1,6 @@
 #	$OpenBSD: Makefile,v 1.13 2010/02/28 08:36:36 otto Exp $
 
-
-.if (${MACHINE} == "amd64") || (${MACHINE} == "i386") || \
-    (${MACHINE} == "zaurus")
+.if (${MACHINE} == "amd64") || (${MACHINE} == "i386")
 
 SRCS=	apm.c apmsubr.c
 
@@ -16,7 +14,7 @@ NOPROG=yes
 .endif
 
 MAN=	apm.8
-MANSUBDIR=amd64 i386 zaurus
+MANSUBDIR=amd64 i386
 MLINKS=	apm.8 zzz.8
 
 .include <bsd.prog.mk>

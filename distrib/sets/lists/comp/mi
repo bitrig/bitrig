@@ -8205,9 +8205,6 @@
 ./usr/share/man/man2/waitpid.2
 ./usr/share/man/man2/write.2
 ./usr/share/man/man2/writev.2
-./usr/share/man/man2/zaurus
-./usr/share/man/man2/zaurus/arm_drain_writebuf.2
-./usr/share/man/man2/zaurus/arm_sync_icache.2
 ./usr/share/man/man3/ASN1_OBJECT_free.3
 ./usr/share/man/man3/ASN1_OBJECT_new.3
 ./usr/share/man/man3/ASN1_STRING_cmp.3

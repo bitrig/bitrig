@@ -7,34 +7,14 @@ cross-distrib:	cross-tools cross-bin cross-share cross-sys cross-etc-root-var
 # Have to compute TARGET_ARCH directly in the Makefile, for .if tests involving
 # this variable to work.
 .if	(${TARGET} == "armish" || ${TARGET} == "beagle" || \
-	 ${TARGET} == "gumstix" || ${TARGET} == "palm" || \
-	 ${TARGET} == "zaurus")
+	 ${TARGET} == "gumstix"
 TARGET_ARCH=	arm
-.elif	(${TARGET} == "hp300" || ${TARGET} == "mac68k" || \
-	 ${TARGET} == "mvme68k")
-TARGET_ARCH=	m68k
-.elif	(${TARGET} == "aviion" || ${TARGET} == "luna88k" || \
-	 ${TARGET} == "mvme88k")
-TARGET_ARCH=	m88k
-.elif	(${TARGET} == "sgi" || ${TARGET} == "octeon")
-TARGET_ARCH=	mips64
-.elif	(${TARGET} == "loongson")
-TARGET_ARCH=	mips64el
-TARGET_CPU=	mips64
-.elif	(${TARGET} == "solbourne")
-TARGET_ARCH=	sparc
-.elif	(${TARGET} == "macppc" || ${TARGET} == "socppc")
-TARGET_ARCH=	powerpc
-.elif	(${TARGET} == "landisk")
-TARGET_ARCH=	sh
-.else
-TARGET_ARCH=	${TARGET}
 .endif
 TARGET_CPU?=	${TARGET_ARCH}
 
 # List of LP64 archs
 # XXX move to bsd.*.mk?
-LP64_ARCH = amd64 alpha hppa64 ia64 mips64 sparc64 vax64
+LP64_ARCH = amd64
 
 TARGET_IS_LP64 =
 MACHINE_IS_LP64 =
@@ -89,7 +69,7 @@ CROSSGCC=	${CROSSDIR}/.gcc_done
 
 .include <bsd.own.mk>
 
-OLD_BINUTILS_ARCH=m68k m88k vax
+OLD_BINUTILS_ARCH=
 
 .for _arch in ${TARGET_ARCH}
 .if !empty(GCC2_ARCH:M${_arch})

@@ -18,7 +18,7 @@ all:	$(TARG)
 
 allarchs:
 	@cd $(.CURDIR); \
-	for arch in amd64 armish beagle i386 zaurus; \
+	for arch in amd64 armish beagle i386; \
 	do ${MAKE} M=$$arch; done
 
 $(TARG): $(DEP)

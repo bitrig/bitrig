@@ -2,11 +2,7 @@
 
 # Makefile for kernel tags files, init_sysent, etc.
 
-ARCH=	alpha amd64 armish aviion beagle hp300 \
-	hppa hppa64 i386 landisk loongson \
-	luna88k mac68k macppc mvme68k \
-	mvme88k palm sgi socppc \
-	solbourne sparc sparc64 vax zaurus
+ARCH=	amd64 armish i386
 
 all:
 	@echo "Doing nothing.  Did you want make syscalls?"

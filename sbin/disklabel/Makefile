@@ -30,12 +30,8 @@ manual.c:	disklabel.cat8
 CFLAGS+= -DSEEALSO="\"fdisk(8), installboot(8)\""
 .endif
 
-.if (${MACHINE} == "armish") || (${MACHINE} == "zaurus")
+.if (${MACHINE} == "armish")
 CFLAGS+= -DSEEALSO="\"fdisk(8)\""
-.endif
-
-.if (${MACHINE} == "macppc" || ${MACHINE} == "socppc")
-CFLAGS+= -DSEEALSO="\"fdisk(8), pdisk(8)\""
 .endif
 
 .ifdef NOPIC

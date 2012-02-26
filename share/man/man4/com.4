@@ -58,50 +58,13 @@
 .Cd "com* at hsq?"
 .Cd "com* at rtfps?"
 .Pp
-.Cd "# alpha and amd64"
+.Cd "# amd64"
 .Cd "com0 at isa? port 0x3f8 irq 4"
 .Cd "com1 at isa? port 0x2f8 irq 3"
 .Pp
 .Cd "# armish"
 .Cd "com0 at obio? addr 0xfe800000 xint 3"
 .Pp
-.Cd "# hppa"
-.Cd "com0 at gsc? offset 0x5000 irq 5"
-.Cd "com0 at gsc? offset 0x823000 irq 5"
-.Cd "com1 at gsc? offset 0x822000 irq 6"
-.Cd "com2 at gsc? irq 13"
-.Cd "com1 at dino? irq 11"
-.Cd "com0 at ssio? irq 4"
-.Cd "com1 at ssio? irq 3"
-.Pp
-.Cd "# macppc"
-.Cd "com* at puc?"
-.Cd "com* at pcmcia?"
-.Cd "com* at cardbus?"
-.Pp
-.Cd "# sgi"
-.Cd "com0 at macebus0 base 0x00390000 irq 5"
-.Cd "com1 at macebus0 base 0x00398000 irq 5"
-.Cd "com0 at ioc? base 0x00020178"
-.Cd "com1 at ioc? base 0x00020170"
-.Pp
-.Cd "# socppc"
-.Cd "com0 at obio? addr 0x04500 ivec 9"
-.Cd "com1 at obio? addr 0x04600 ivec 10"
-.Pp
-.Cd "# sparc"
-.Cd "com* at obio?                            " Pq "built-in modem on SPARCbook"
-.Pp
-.Cd "# sparc64"
-.Cd "com* at asio?"
-.Cd "com* at ebus?"
-.Cd "com* at puc?"
-.Pp
-.Cd "# zaurus"
-.Cd "com0 at pxaip? addr 0x40100000 intr 22           " Pq "full function UART"
-.Cd "com1 at pxaip? addr 0x40200000 intr 21           " Pq "bluetooth UART"
-.Cd "com2 at pxaip? addr 0x40700000 intr 20           " Pq "slow infrared UART"
-.Cd "com* at pcmcia?"
 .Sh DESCRIPTION
 The
 .Nm com

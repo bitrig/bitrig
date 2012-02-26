@@ -1174,8 +1174,6 @@ armish
 ..
 i386
 ..
-zaurus
-..
 
 # ./usr/share/man/man2
 ..
@@ -1200,8 +1198,6 @@ armish
 ..
 i386
 ..
-zaurus
-..
 
 # ./usr/share/man/man4
 ..
@@ -1214,8 +1210,6 @@ amd64
 armish
 ..
 i386
-..
-zaurus
 ..
 
 # ./usr/share/man/man5
@@ -1239,8 +1233,6 @@ amd64
 armish
 ..
 i386
-..
-zaurus
 ..
 
 # ./usr/share/man/man8

@@ -1,8 +1,6 @@
 #	$OpenBSD: Makefile,v 1.13 2009/09/09 12:10:35 marex Exp $
 
-.if ${MACHINE} == "i386" || ${MACHINE} == "amd64" || \
-    ${MACHINE} == "alpha" || ${MACHINE} == "hppa" || \
-    ${MACHINE} == "zaurus" || ${MACHINE} == "palm"
+.if ${MACHINE} == "i386" || ${MACHINE} == "amd64"
 
 PROG=	wsfontload
 SRCS=	wsfontload.c
