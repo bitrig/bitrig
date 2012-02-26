@@ -13,9 +13,11 @@ CPPFLAGS+=	-D_GLIBCXX_SJLJ_EXCEPTIONS=1
 .endif
 CPPFLAGS+=	-I${.CURDIR} -I${SUPDIR} -I${GCCDIR} -I${SRCDIR}/include
 CPPFLAGS+=	-I${GCCLIB}/include -I${SRCDIR}/include -I${.CURDIR}/../libiberty/include -I.
-CPPFLAGS+=	-frandom-seed=RepeatabilityConsideredGood
-CXXFLAGS+=	-fno-implicit-templates -ffunction-sections -fdata-sections \
-		-Wno-deprecated
+CXXFLAGS+=	-ffunction-sections -fdata-sections  -Wno-deprecated
+CXXFLAGS+=	-frandom-seed=RepeatabilityConsideredGood
+.if ${COMPILER_VERSION} == "gcc4"
+CXXFLAGS+=	-fno-implicit-templates
+.endif
 
 DPADD=		${LIBM}
 LDADD=		-lm

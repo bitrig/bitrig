@@ -13,9 +13,11 @@ SUPDIR=	${SRCDIR}/libsupc++
 CPPFLAGS+=	-DIN_GLIBCPP_V3 -DHAVE_CONFIG_H
 CPPFLAGS+=	-I${.CURDIR}/../libstdc++-v3/ -I${SUPDIR} -I${GCCDIR} -I${SRCDIR}/include
 CPPFLAGS+=	-I${GCCLIB}/include -I${SRCDIR}/include -I${.CURDIR}/../libiberty/include -I.
-CPPFLAGS+=	-frandom-seed=RepeatabilityConsideredGood
-CXXFLAGS+=	-fno-implicit-templates -ffunction-sections -fdata-sections \
-		-Wno-deprecated
+CXXFLAGS+=	-ffunction-sections -fdata-sections  -Wno-deprecated
+CXXFLAGS+=	-frandom-seed=RepeatabilityConsideredGood
+.if ${COMPILER_VERSION} == "gcc4"
+CXXFLAGS+=	-fno-implicit-templates
+.endif
 
 SUPSRCS=del_op.cc del_opnt.cc del_opv.cc del_opvnt.cc eh_alloc.cc eh_arm.cc \
 	eh_aux_runtime.cc eh_call.cc eh_catch.cc eh_exception.cc eh_globals.cc \
