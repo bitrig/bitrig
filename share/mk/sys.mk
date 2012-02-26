@@ -22,17 +22,22 @@ OSrev=		$(OSMAJOR)$(OSMINOR)
 COMPILER_VERSION?="clang"
 .endif
 
+CPP?=		cpp
+CPPFLAGS?=
+
 .if ${COMPILER_VERSION:L} == "gcc4"
 CC?=		cc
 CXX?=		c++
 HOSTCC?=	cc
 CFLAGS?=	-O2
+CXXLAGS?=	-O2
 .else
 # XXX remove -W ones once stand is fixed
 CC?=		/usr/contrib/bin/clang
 CXX?=		/usr/contrib/bin/clang++
 HOSTCC?=	/usr/contrib/bin/clang
 CFLAGS?=	-O3 -Wno-strict-aliasing -Wno-pointer-sign
+CXXFLAGS?=	-O3
 .endif
 
 AR?=		ar
@@ -53,12 +58,9 @@ CFLAGS+=	${PIPE} ${DEBUG}
 COMPILE.c?=	${CC} ${CFLAGS} ${CPPFLAGS} -c
 LINK.c?=	${CC} ${CFLAGS} ${CPPFLAGS} ${LDFLAGS}
 
-CXXFLAGS?=	${CFLAGS}
+CXXFLAGS?=	${PIPE} ${DEBUG}
 COMPILE.cc?=	${CXX} ${CXXFLAGS} ${CPPFLAGS} -c
 LINK.cc?=	${CXX} ${CXXFLAGS} ${CPPFLAGS} ${LDFLAGS}
-
-CPP?=		cpp
-CPPFLAGS?=	
 
 FC?=		f77
 FFLAGS?=	-O2
