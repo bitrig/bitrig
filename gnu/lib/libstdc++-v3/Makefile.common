@@ -10,10 +10,10 @@ SUPDIR=	${SRCDIR}/libsupc++
 	${SRCDIR}/include ${SUPDIR} ${.CURDIR}/../libiberty/src \
 	${.CURDIR}/../libstdc++-v3/obj
 
-CFLAGS+=	-DIN_GLIBCPP_V3 -DHAVE_CONFIG_H
-CFLAGS+=	-I${.CURDIR}/../libstdc++-v3/ -I${SUPDIR} -I${GCCDIR} -I${SRCDIR}/include
-CFLAGS+=	-I${GCCLIB}/include -I${SRCDIR}/include -I${.CURDIR}/../libiberty/include -I.
-CFLAGS+=	-frandom-seed=RepeatabilityConsideredGood
+CPPFLAGS+=	-DIN_GLIBCPP_V3 -DHAVE_CONFIG_H
+CPPFLAGS+=	-I${.CURDIR}/../libstdc++-v3/ -I${SUPDIR} -I${GCCDIR} -I${SRCDIR}/include
+CPPFLAGS+=	-I${GCCLIB}/include -I${SRCDIR}/include -I${.CURDIR}/../libiberty/include -I.
+CPPFLAGS+=	-frandom-seed=RepeatabilityConsideredGood
 CXXFLAGS+=	-fno-implicit-templates -ffunction-sections -fdata-sections \
 		-Wno-deprecated
 

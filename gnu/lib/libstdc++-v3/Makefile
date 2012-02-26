@@ -7,13 +7,13 @@ GCC_TARGET=	${MACHINE_ARCH}-unknown-openbsd${OSREV}
 
 LIB=		stdc++
 
-CFLAGS+=	-DIN_GLIBCPP_V3 -DHAVE_CONFIG_H
+CPPFLAGS+=	-DIN_GLIBCPP_V3 -DHAVE_CONFIG_H
 .if ${MACHINE_ARCH} == "arm"
-CFLAGS+=	-D_GLIBCXX_SJLJ_EXCEPTIONS=1
+CPPFLAGS+=	-D_GLIBCXX_SJLJ_EXCEPTIONS=1
 .endif
-CFLAGS+=	-I${.CURDIR} -I${SUPDIR} -I${GCCDIR} -I${SRCDIR}/include
-CFLAGS+=	-I${GCCLIB}/include -I${SRCDIR}/include -I${.CURDIR}/../libiberty/include -I.
-CFLAGS+=	-frandom-seed=RepeatabilityConsideredGood
+CPPFLAGS+=	-I${.CURDIR} -I${SUPDIR} -I${GCCDIR} -I${SRCDIR}/include
+CPPFLAGS+=	-I${GCCLIB}/include -I${SRCDIR}/include -I${.CURDIR}/../libiberty/include -I.
+CPPFLAGS+=	-frandom-seed=RepeatabilityConsideredGood
 CXXFLAGS+=	-fno-implicit-templates -ffunction-sections -fdata-sections \
 		-Wno-deprecated
 
