@@ -1,6 +1,6 @@
 /*	$OpenBSD: vfs_vops.c,v 1.4 2011/07/02 15:52:25 thib Exp $	*/
 /*
- * Copyright (c) 2010 Thordur I. Bjornsson <thib@openbsd.org> 
+ * Copyright (c) 2010 Thordur I. Bjornsson <thib@openbsd.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -69,7 +69,7 @@ VOP_ISLOCKED(struct vnode *vp)
 }
 
 int
-VOP_LOOKUP(struct vnode *dvp, struct vnode **vpp, 
+VOP_LOOKUP(struct vnode *dvp, struct vnode **vpp,
     struct componentname *cnp)
 {
 	struct vop_lookup_args a;
@@ -84,7 +84,7 @@ VOP_LOOKUP(struct vnode *dvp, struct vnode **vpp,
 }
 
 int
-VOP_CREATE(struct vnode *dvp, struct vnode **vpp, 
+VOP_CREATE(struct vnode *dvp, struct vnode **vpp,
     struct componentname *cnp, struct vattr *vap)
 {
 	struct vop_create_args a;
@@ -102,7 +102,7 @@ VOP_CREATE(struct vnode *dvp, struct vnode **vpp,
 }
 
 int
-VOP_MKNOD(struct vnode *dvp, struct vnode **vpp, 
+VOP_MKNOD(struct vnode *dvp, struct vnode **vpp,
     struct componentname *cnp, struct vattr *vap)
 {
 	struct vop_mknod_args a;
@@ -169,7 +169,7 @@ VOP_ACCESS(struct vnode *vp, int mode, struct ucred *cred, struct proc *p)
 }
 
 int
-VOP_GETATTR(struct vnode *vp, struct vattr *vap, struct ucred *cred, 
+VOP_GETATTR(struct vnode *vp, struct vattr *vap, struct ucred *cred,
     struct proc *p)
 {
 	struct vop_getattr_args a;
@@ -185,7 +185,7 @@ VOP_GETATTR(struct vnode *vp, struct vattr *vap, struct ucred *cred,
 }
 
 int
-VOP_SETATTR(struct vnode *vp, struct vattr *vap, struct ucred *cred, 
+VOP_SETATTR(struct vnode *vp, struct vattr *vap, struct ucred *cred,
     struct proc *p)
 {
 	struct vop_setattr_args a;
@@ -220,7 +220,7 @@ VOP_READ(struct vnode *vp, struct uio *uio, int ioflag, struct ucred *cred)
 }
 
 int
-VOP_WRITE(struct vnode *vp, struct uio *uio, int ioflag, 
+VOP_WRITE(struct vnode *vp, struct uio *uio, int ioflag,
     struct ucred *cred)
 {
 	struct vop_write_args a;
@@ -238,7 +238,7 @@ VOP_WRITE(struct vnode *vp, struct uio *uio, int ioflag,
 }
 
 int
-VOP_IOCTL(struct vnode *vp, u_long command, void *data, int fflag, 
+VOP_IOCTL(struct vnode *vp, u_long command, void *data, int fflag,
     struct ucred *cred, struct proc *p)
 {
 	struct vop_ioctl_args a;
@@ -297,7 +297,7 @@ VOP_REVOKE(struct vnode *vp, int flags)
 }
 
 int
-VOP_FSYNC(struct vnode *vp, struct ucred *cred, int waitfor, 
+VOP_FSYNC(struct vnode *vp, struct ucred *cred, int waitfor,
     struct proc *p)
 {
 	struct vop_fsync_args a;
@@ -348,8 +348,8 @@ VOP_LINK(struct vnode *dvp, struct vnode *vp, struct componentname *cnp)
 }
 
 int
-VOP_RENAME(struct vnode *fdvp, struct vnode *fvp, 
-    struct componentname *fcnp, struct vnode *tdvp, struct vnode *tvp, 
+VOP_RENAME(struct vnode *fdvp, struct vnode *fvp,
+    struct componentname *fcnp, struct vnode *tdvp, struct vnode *tvp,
     struct componentname *tcnp)
 {
 	struct vop_rename_args a;
@@ -362,14 +362,14 @@ VOP_RENAME(struct vnode *fdvp, struct vnode *fvp,
 
 	ASSERT_VP_ISLOCKED(tdvp);
 
-	if (fdvp->v_op->vop_rename == NULL) 
+	if (fdvp->v_op->vop_rename == NULL)
 		return (EOPNOTSUPP);
 
 	return ((fdvp->v_op->vop_rename)(&a));
 }
 
 int
-VOP_MKDIR(struct vnode *dvp, struct vnode **vpp, 
+VOP_MKDIR(struct vnode *dvp, struct vnode **vpp,
     struct componentname *cnp, struct vattr *vap)
 {
 	struct vop_mkdir_args a;
@@ -404,7 +404,7 @@ VOP_RMDIR(struct vnode *dvp, struct vnode *vp, struct componentname *cnp)
 }
 
 int
-VOP_SYMLINK(struct vnode *dvp, struct vnode **vpp, 
+VOP_SYMLINK(struct vnode *dvp, struct vnode **vpp,
     struct componentname *cnp, struct vattr *vap, char *target)
 {
 	struct vop_symlink_args a;
@@ -423,7 +423,7 @@ VOP_SYMLINK(struct vnode *dvp, struct vnode **vpp,
 }
 
 int
-VOP_READDIR(struct vnode *vp, struct uio *uio, struct ucred *cred, 
+VOP_READDIR(struct vnode *vp, struct uio *uio, struct ucred *cred,
     int *eofflag, int *ncookies, u_long **cookies)
 {
 	struct vop_readdir_args a;
@@ -528,7 +528,7 @@ VOP_UNLOCK(struct vnode *vp, int flags, struct proc *p)
 }
 
 int
-VOP_BMAP(struct vnode *vp, daddr64_t bn, struct vnode **vpp, 
+VOP_BMAP(struct vnode *vp, daddr64_t bn, struct vnode **vpp,
     daddr64_t *bnp, int *runp)
 {
 	struct vop_bmap_args a;
