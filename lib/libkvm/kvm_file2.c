@@ -87,9 +87,6 @@
 #include <nfs/nfs.h>
 #include <nfs/nfsnode.h>
 
-#include <nnpfs/nnpfs_config.h>
-#include <nnpfs/nnpfs_node.h>
-
 #include <msdosfs/bpb.h>
 #include <msdosfs/denode.h>
 #include <msdosfs/msdosfsmount.h>
@@ -789,25 +786,6 @@ nfs_filestat(kvm_t *kd, struct kinfo_file2 *kf, struct vnode *vp)
 }
 
 static int
-nnpfs_filestat(kvm_t *kd, struct kinfo_file2 *kf, struct vnode *vp)
-{
-	struct nnpfs_node nnpfs_node;
-
-	if (KREAD(kd, (u_long)VNODE_TO_XNODE(vp), &nnpfs_node)) {
-		_kvm_err(kd, kd->program, "can't read nnpfs_node at %p",
-		    VTOI(vp));
-		return (-1);
-	}
-	kf->va_fsid = nnpfs_node.attr.va_fsid;
-	kf->va_fileid = (long)nnpfs_node.attr.va_fileid;
-	kf->va_mode = nnpfs_node.attr.va_mode;
-	kf->va_size = nnpfs_node.attr.va_size;
-	kf->va_rdev = nnpfs_node.attr.va_rdev;
-
-	return (0);
-}
-
-static int
 spec_filestat(kvm_t *kd, struct kinfo_file2 *kf, struct vnode *vp)
 {
 	struct specinfo		specinfo;
@@ -856,14 +834,8 @@ filestat(kvm_t *kd, struct kinfo_file2 *kf, struct vnode *vp)
 		case VT_MSDOSFS:
 			ret = msdos_filestat(kd, kf, vp);
 			break;
-		case VT_NNPFS:
-			ret = nnpfs_filestat(kd, kf, vp);
-			break;
 		case VT_UDF:
 			ret = _kvm_stat_udf(kd, kf, vp);
-			break;
-		case VT_NTFS:
-			ret = _kvm_stat_ntfs(kd, kf, vp);
 			break;
 		case VT_NON:
 			if (vp->v_flag & VCLONE)

@@ -103,4 +103,3 @@ ssize_t	 _kvm_pread(kvm_t *, int, void *, size_t, off_t);
 ssize_t	 _kvm_pwrite(kvm_t *, int, const void *, size_t, off_t);
 int	 _kvm_stat_cd9660(kvm_t *, struct kinfo_file2 *, struct vnode *);
 int	 _kvm_stat_udf(kvm_t *, struct kinfo_file2 *, struct vnode *);
-int	 _kvm_stat_ntfs(kvm_t *, struct kinfo_file2 *, struct vnode *);

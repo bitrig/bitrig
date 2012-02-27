@@ -521,8 +521,6 @@ _mkdev(spif, spif*, {-case $U in
 	M bpp${nam}0 c major_bppsp_c Add($offset, 0) 600-})dnl
 __devitem(bpp, bpp*, Parallel port)dnl
 _mkdev(bpp, {-bpp*-}, {-M bpp$U c major_bpp_c $U 600-}, 600)dnl
-__devitem(nnpfs, nnpfs*, NNPFS filesystem node, mount_nnpfs 8)dnl
-_mcdev(nnpfs, nnpfs*, nnpfs, {-major_nnpfs_c-}, 600)dnl
 __devitem(vscsi, vscsi*, Virtual SCSI controller, vscsi 8)dnl
 _mcdev(vscsi, vscsi*, vscsi, {-major_vscsi_c-}, 600)dnl
 __devitem(rmidi, rmidi*, Raw MIDI devices,midi)dnl

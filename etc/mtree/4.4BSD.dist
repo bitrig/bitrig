@@ -23,11 +23,6 @@ dev
 # ./etc
 etc
 
-# ./etc/afs
-afs
-# ./etc/afs
-..
-
 # ./etc/amd
 amd
 # ./etc/amd

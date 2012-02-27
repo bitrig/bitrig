@@ -64,7 +64,7 @@ ASM=	accept.o access.o acct.o adjfreq.o adjtime.o bind.o chdir.o chflags.o \
 	setuid.o shmat.o shmctl.o shmdt.o shmget.o shutdown.o sigaction.o \
 	sigaltstack.o socket.o socketpair.o stat.o statfs.o swapctl.o \
 	symlink.o sync.o sysarch.o umask.o unlink.o unmount.o \
-	utimes.o wait4.o write.o writev.o nnpfspioctl.o __semctl.o \
+	utimes.o wait4.o write.o writev.o __semctl.o \
 	__syscall.o __sysctl.o __getcwd.o sched_yield.o getthrid.o \
 	__thrsleep.o __thrwakeup.o __threxit.o __thrsigdivert.o \
 	setrtable.o getrtable.o __set_tcb.o __get_tcb.o \

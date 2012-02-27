@@ -41,7 +41,6 @@
 /*
  * References:
  *	(1) Bach's "The Design of the UNIX Operating System",
- *	(2) sys/miscfs/procfs from UCB's 4.4BSD-Lite distribution,
  *	(3) the "4.4BSD Programmer's Reference Manual" published
  *		by USENIX and O'Reilly & Associates.
  * The 4.4BSD PRM does a reasonably good job of documenting what the various
@@ -502,7 +501,6 @@ sys_ptrace(struct proc *p, void *v, register_t *retval)
 
 	case  PT_ATTACH:
 		/*
-		 * As done in procfs:
 		 * Go ahead and set the trace flag.
 		 * Save the old parent (it's reset in
 		 *   _DETACH, and also in kern_exit.c:wait4()

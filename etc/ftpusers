@@ -32,7 +32,6 @@ _dhcp
 _mopd
 _tftpd
 _rbootd
-_afs
 _ppp
 _ntp
 _ftp

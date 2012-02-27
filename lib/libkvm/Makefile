@@ -20,7 +20,7 @@ SRCS=	kvm_${MACHINE_CPU}.c
 
 CFLAGS+= -D_LIBKVM
 SRCS+=	kvm.c kvm_file.c kvm_file2.c kvm_getloadavg.c kvm_proc.c kvm_proc2.c \
-	kvm_cd9660.c kvm_udf.c kvm_ntfs.c
+	kvm_cd9660.c kvm_udf.c
 
 MAN=	kvm.3 kvm_dump.3 kvm_geterr.3 kvm_getfiles.3 kvm_getloadavg.3 \
 	kvm_getprocs.3 kvm_nlist.3 kvm_open.3 kvm_read.3

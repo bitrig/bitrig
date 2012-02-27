@@ -54,8 +54,7 @@ k_pioctl(char *a_path,
 	 struct ViceIoctl *a_paramsP,
 	 int a_followSymlinks)
 {
-    return nnpfspioctl(AFSCALL_PIOCTL, a_path, o_opcode, a_paramsP,
-		     a_followSymlinks);
+    return ENXIO;
 }
 
 int
@@ -84,7 +83,7 @@ k_unlog(void)
 int
 k_setpag(void)
 {
-    return nnpfspioctl(AFSCALL_SETPAG, NULL, 0, NULL, 0);
+    return ENXIO;
 }
 
 int

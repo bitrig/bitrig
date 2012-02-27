@@ -201,25 +201,6 @@ struct nfs_args {
 };
 .Ed
 .Pp
-.Dv MOUNT_NTFS
-.Bd -literal -offset indent -compact
-struct ntfs_args {
-        char    *fspec;	/* block special device to mount */
-        struct  export_args export_info;
-			/* network export information */
-        uid_t   uid;	/* uid that owns ntfs files */
-        gid_t   gid;	/* gid that owns ntfs files */
-        mode_t  mode;	/* mask to be applied for ntfs perms */
-        u_long  flag;	/* additional flags */
-};
-
-/*
- * ntfs mount options:
- */
-#define     NTFS_MFLAG_CASEINS      0x00000001
-#define     NTFS_MFLAG_ALLNAMES     0x00000002
-.Ed
-.Pp
 .Dv MOUNT_UDF
 .Bd -literal -offset indent -compact
 struct udf_args {

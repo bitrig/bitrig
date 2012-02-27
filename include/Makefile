@@ -34,8 +34,8 @@ MFILES=	float.h frame.h
 LFILES=	fcntl.h syslog.h termios.h stdarg.h stdint.h varargs.h
 
 DIRS=	arpa protocols rpc rpcsvc
-LDIRS=	altq crypto ddb dev isofs miscfs msdosfs net netinet netinet6 \
-	netmpls netnatm net80211 netbt nfs nnpfs ntfs scsi sys ufs uvm
+LDIRS=	altq crypto ddb dev isofs msdosfs net netinet netinet6 \
+	netmpls netnatm net80211 netbt nfs ntfs scsi sys ufs uvm
 
 # Directories with an includes target
 RDIRS=	../lib/libpthread ../lib/libcompat ../lib/libcurses \

@@ -21,7 +21,6 @@ uucp:	root
 www:	root
 
 # Redirections for pseudo accounts that should not receive mail
-_afs: /dev/null
 _bgpd: /dev/null
 _btd: /dev/null
 _dhcp: /dev/null

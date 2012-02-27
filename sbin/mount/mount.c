@@ -574,13 +574,6 @@ prmount(struct statfs *sf)
 			(void)printf("%s%s", !f++ ? " (" : ", ", "gens");
 		if (iso_args->flags & ISOFSMNT_EXTATT)
 			(void)printf("%s%s", !f++ ? " (" : ", ", "extatt");
-	} else if (strcmp(sf->f_fstypename, MOUNT_PROCFS) == 0) {
-		struct procfs_args *procfs_args = &sf->mount_info.procfs_args;
-
-		if (verbose)
-			(void)printf("version %d", procfs_args->version);
-		if (procfs_args->flags & PROCFSMNT_LINUXCOMPAT)
-			(void)printf("%s%s", !f++ ? " (" : ", ", "linux");
 	}
 	(void)printf(f ? ")\n" : "\n");
 }

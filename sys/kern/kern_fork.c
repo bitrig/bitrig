@@ -343,7 +343,7 @@ fork1(struct proc *curp, int exitsig, int flags, void *stack, pid_t *tidptr,
 	if (flags & FORK_PTRACE)
 		atomic_setbits_int(&pr->ps_flags, curpr->ps_flags & PS_TRACED);
 
-	/* bump references to the text vnode (for procfs) */
+	/* bump references to the text vnode */
 	p->p_textvp = curp->p_textvp;
 	if (p->p_textvp)
 		vref(p->p_textvp);

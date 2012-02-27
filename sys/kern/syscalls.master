@@ -41,7 +41,6 @@
 #include <sys/syscallargs.h>
 #include <sys/poll.h>
 #include <sys/event.h>
-#include <nnpfs/nnpfs_pioctl.h>
 
 ; Reserved/unimplemented system calls in the range 0-150 inclusive
 ; are reserved for use in future Berkeley releases.
@@ -345,9 +344,7 @@
 206	STD		{ int sys_futimes(int fd, \
 			    const struct timeval *tptr); }
 207	STD		{ pid_t sys_getpgid(pid_t pid); }
-208	STD		{ int sys_nnpfspioctl(int operation, char *a_pathP, \
-			    int a_opcode, struct ViceIoctl *a_paramsP, \
-			    int a_followSymlinks); }
+208	OBSOL
 209	UNIMPL
 ;
 ; Syscalls 210-219 are reserved for dynamically loaded syscalls

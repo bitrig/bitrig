@@ -189,17 +189,6 @@ distribution-etc-root-var: distrib-dirs
 		    ${DESTDIR}/etc/ppp; \
 		${INSTALL} -c -o root -g wheel -m 644 ppp.secret.sample \
 		    ${DESTDIR}/etc/ppp
-	cd afs; \
-		${INSTALL} -c -o root -g wheel -m 644 afsd.conf \
-		    ${DESTDIR}/etc/afs; \
-		${INSTALL} -c -o root -g wheel -m 644 ThisCell \
-		    ${DESTDIR}/etc/afs; \
-		${INSTALL} -c -o root -g wheel -m 644 CellServDB \
-		    ${DESTDIR}/etc/afs; \
-		${INSTALL} -c -o root -g wheel -m 644 SuidCells \
-		    ${DESTDIR}/etc/afs; \
-		${INSTALL} -c -o root -g wheel -m 644 README \
-		    ${DESTDIR}/etc/afs
 	cd systrace; \
 		${INSTALL} -c -o root -g wheel -m 600 usr_sbin_lpd \
 		    ${DESTDIR}/etc/systrace; \

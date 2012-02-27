@@ -257,33 +257,10 @@ is kernel based, several user level daemons are needed for it to work.
 See
 .Xr mount_nfs 8
 for details on NFS.
-.It Cd option NTFS
-Includes support for reading NTFS file systems.
-See
-.Xr mount_ntfs 8
-for details.
-.It Cd option PROCFS
-Includes code for a special file system (conventionally mounted on
-.Pa /proc )
-in which the process space becomes visible in the file system.
-Among other things, the memory spaces of processes running on the system are
-visible as files, and signals may be sent to processes by writing to
-.Pa ctl
-files in the procfs namespace.
-See
-.Xr mount_procfs 8
-for details.
 .It Cd option UDF
 Includes code for the UDF file systems typically found on DVD discs.
 See
 .Xr mount_udf 8
-for details.
-.It Cd option NNPFS
-Includes the kernel support for the AFS-compatible Arla filesystem.
-Since the xfs interface is simple and generic it can be used for other
-filesystems as well.
-See
-.Xr mount_nnpfs 8
 for details.
 .El
 .Sh FILE SYSTEM OPTIONS

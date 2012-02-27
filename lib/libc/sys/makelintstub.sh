@@ -63,7 +63,6 @@ header()
 	#include <sys/ktrace.h>
 	#include <sys/mman.h>
 	#include <sys/event.h>
-	#include <nnpfs/nnpfs_pioctl.h>
 	#include <sys/wait.h>
 	#include <stdio.h>
 	#undef DIRBLKSIZ

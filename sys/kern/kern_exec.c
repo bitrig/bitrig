@@ -477,7 +477,7 @@ sys_execve(struct proc *p, void *v, register_t *retval)
 	p->p_comm[len] = 0;
 	p->p_acflag &= ~AFORK;
 
-	/* record proc's vnode, for use by procfs and others */
+	/* record proc's vnode */
 	if (p->p_textvp)
 		vrele(p->p_textvp);
 	vref(pack.ep_vp);
@@ -540,17 +540,6 @@ sys_execve(struct proc *p, void *v, register_t *retval)
 			 * shared because we're suid.
 			 */
 			fp = fd_getfile(p->p_fd, i);
-#ifdef PROCFS
-			/*
-			 * Close descriptors that are writing to procfs.
-			 */
-			if (fp && fp->f_type == DTYPE_VNODE &&
-			    ((struct vnode *)(fp->f_data))->v_tag == VT_PROCFS &&
-			    (fp->f_flag & FWRITE)) {
-				fdrelease(p, i);
-				fp = NULL;
-			}
-#endif
 
 			/*
 			 * Ensure that stdin, stdout, and stderr are already

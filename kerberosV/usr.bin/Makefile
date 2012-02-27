@@ -4,8 +4,7 @@
 
 # kf - not imported?
 
-SUBDIR=	afslog \
-	kauth \
+SUBDIR= kauth \
 	kdestroy \
 	kinit \
 	klist \

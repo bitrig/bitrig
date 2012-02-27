@@ -85,7 +85,6 @@ _DEV(iop, 75)
 dnl _DEV(joy, 26)
 _DEV(lkm, 28)
 _DEV(music, 53)
-_DEV(nnpfs, 51)
 _DEV(nvram, 85)
 _DEV(pci, 72)
 _DEV(pctr, 46)
@@ -122,7 +121,6 @@ dnl amd64 specific targets
 dnl
 twrget(all, au, audio, 0, 1, 2)dnl
 target(all, ch, 0)dnl
-target(all, nnpfs, 0)dnl
 target(all, vscsi, 0)dnl
 target(all, diskmap)dnl
 twrget(all, flo, fd, 0, 0B, 0C, 0D, 0E, 0F, 0G, 0H)dnl

@@ -35,7 +35,6 @@ DGEN=	compat compat/common \
 	kern \
 	lib/libkern lib/libkern/arch/${MACHINE} \
 	lib/libkern/arch/${MACHINE_ARCH} \
-	miscfs miscfs/deadfs miscfs/fifofs miscfs/procfs \
 	msdosfs \
 	net netinet netmpls \
 	nfs \

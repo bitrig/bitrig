@@ -65,24 +65,12 @@ extern	const struct vfsops msdosfs_vfsops;
 extern	const struct vfsops nfs_vfsops;
 #endif
 
-#ifdef PROCFS
-extern	const struct vfsops procfs_vfsops;
-#endif
-
 #ifdef CD9660
 extern	const struct vfsops cd9660_vfsops;
 #endif
 
 #ifdef EXT2FS
 extern	const struct vfsops ext2fs_vfsops;
-#endif
-
-#ifdef NNPFS
-extern  const struct vfsops nnpfs_vfsops;
-#endif
-
-#ifdef NTFS
-extern  const struct vfsops ntfs_vfsops;
 #endif
 
 #ifdef UDF
@@ -113,18 +101,6 @@ static struct vfsconf vfsconflist[] = {
 
 #ifdef NFSCLIENT
         { &nfs_vfsops, MOUNT_NFS, 2, 0, 0, NULL },
-#endif
-
-#ifdef NNPFS
-	{ &nnpfs_vfsops, MOUNT_NNPFS, 21, 0, 0, NULL },
-#endif
-
-#ifdef PROCFS
-        { &procfs_vfsops, MOUNT_PROCFS, 12, 0, 0, NULL },
-#endif
-
-#ifdef NTFS
-	{ &ntfs_vfsops, MOUNT_NTFS, 6, 0, MNT_LOCAL, NULL },
 #endif
 
 #ifdef UDF
