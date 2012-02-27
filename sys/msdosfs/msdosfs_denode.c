@@ -605,7 +605,7 @@ msdosfs_inactive(void *v)
 	struct vop_inactive_args *ap = v;
 	struct vnode *vp = ap->a_vp;
 	struct denode *dep = VTODE(vp);
-	struct proc *p = ap->a_p;
+	struct proc *p = curproc;
 	int error;
 #ifdef DIAGNOSTIC
 	extern int prtactive;
@@ -642,7 +642,7 @@ msdosfs_inactive(void *v)
 	deupdat(dep, 0);
 
 out:
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 	/*
 	 * If we are done with the denode, reclaim it
 	 * so that it can be reused immediately.

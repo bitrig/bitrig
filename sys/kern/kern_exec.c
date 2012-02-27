@@ -139,7 +139,7 @@ check_exec(struct proc *p, struct exec_package *epp)
 	}
 
 	/* get attributes */
-	if ((error = VOP_GETATTR(vp, epp->ep_vap, p->p_ucred, p)) != 0)
+	if ((error = VOP_GETATTR(vp, epp->ep_vap, p->p_ucred)) != 0)
 		goto bad1;
 
 	/* Check mount point */
@@ -152,7 +152,7 @@ check_exec(struct proc *p, struct exec_package *epp)
 		epp->ep_vap->va_mode &= ~(VSUID | VSGID);
 
 	/* check access.  for root we have to see if any exec bit on */
-	if ((error = VOP_ACCESS(vp, VEXEC, p->p_ucred, p)) != 0)
+	if ((error = VOP_ACCESS(vp, VEXEC, p->p_ucred)) != 0)
 		goto bad1;
 	if ((epp->ep_vap->va_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) == 0) {
 		error = EACCES;
@@ -160,11 +160,11 @@ check_exec(struct proc *p, struct exec_package *epp)
 	}
 
 	/* try to open it */
-	if ((error = VOP_OPEN(vp, FREAD, p->p_ucred, p)) != 0)
+	if ((error = VOP_OPEN(vp, FREAD, p->p_ucred)) != 0)
 		goto bad1;
 
 	/* unlock vp, we need it unlocked from here */
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 
 	/* now we have the file, get the exec header */
 	error = vn_rdwr(UIO_READ, vp, epp->ep_hdr, epp->ep_hdrlen, 0,
@@ -574,7 +574,7 @@ sys_execve(struct proc *p, void *v, register_t *retval)
 					closef(fp, p);
 					break;
 				}
-				if ((error = VOP_OPEN(vp, flags, p->p_ucred, p)) != 0) {
+				if ((error = VOP_OPEN(vp, flags, p->p_ucred)) != 0) {
 					fdremove(p->p_fd, indx);
 					closef(fp, p);
 					vrele(vp);

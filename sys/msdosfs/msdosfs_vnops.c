@@ -187,14 +187,6 @@ msdosfs_mknod(void *v)
 int
 msdosfs_open(void *v)
 {
-#if 0
-	struct vop_open_args /* {
-		struct vnode *a_vp;
-		int a_mode;
-		struct ucred *a_cred;
-		struct proc *a_p;
-	} */ *ap;
-#endif
 
 	return (0);
 }
@@ -349,7 +341,7 @@ msdosfs_setattr(void *v)
 
 #ifdef MSDOSFS_DEBUG
 	printf("msdosfs_setattr(): vp %08x, vap %08x, cred %08x, p %08x\n",
-	    ap->a_vp, vap, cred, ap->a_p);
+	    ap->a_vp, vap, cred, curproc);
 #endif
 	if ((vap->va_type != VNON) || (vap->va_nlink != VNOVAL) ||
 	    (vap->va_fsid != VNOVAL) || (vap->va_fileid != VNOVAL) ||
@@ -374,7 +366,7 @@ msdosfs_setattr(void *v)
 		return (0);
 
 	if (vap->va_size != VNOVAL) {
-		error = detrunc(dep, (uint32_t)vap->va_size, 0, cred, ap->a_p);
+		error = detrunc(dep, (uint32_t)vap->va_size, 0, cred, curproc);
 		if (error)
 			return (error);
 	}
@@ -382,7 +374,7 @@ msdosfs_setattr(void *v)
 		if (cred->cr_uid != dep->de_pmp->pm_uid &&
 		    (error = suser_ucred(cred)) &&
 		    ((vap->va_vaflags & VA_UTIMES_NULL) == 0 ||
-		    (error = VOP_ACCESS(ap->a_vp, VWRITE, cred, ap->a_p))))
+		    (error = VOP_ACCESS(ap->a_vp, VWRITE, cred))))
 			return (error);
 		if (!(dep->de_pmp->pm_flags & MSDOSFSMNT_NOWIN95)
 		    && vap->va_atime.tv_sec != VNOVAL)
@@ -710,16 +702,6 @@ errexit:
 int
 msdosfs_ioctl(void *v)
 {
-#if 0
-	struct vop_ioctl_args /* {
-		struct vnode *a_vp;
-		uint32_t a_command;
-		caddr_t a_data;
-		int a_fflag;
-		struct ucred *a_cred;
-		struct proc *a_p;
-	} */ *ap;
-#endif
 
 	return (ENOTTY);
 }
@@ -929,7 +911,7 @@ abortit:
 		    (fcnp->cn_flags & ISDOTDOT) ||
 		    (tcnp->cn_flags & ISDOTDOT) ||
 		    (ip->de_flag & DE_RENAME)) {
-			VOP_UNLOCK(fvp, 0, p);
+			VOP_UNLOCK(fvp, 0);
 			error = EINVAL;
 			goto abortit;
 		}
@@ -960,8 +942,8 @@ abortit:
 	 * to namei, as the parent directory is unlocked by the
 	 * call to doscheckpath().
 	 */
-	error = VOP_ACCESS(fvp, VWRITE, tcnp->cn_cred, tcnp->cn_proc);
-	VOP_UNLOCK(fvp, 0, p);
+	error = VOP_ACCESS(fvp, VWRITE, tcnp->cn_cred);
+	VOP_UNLOCK(fvp, 0);
 	if (VTODE(fdvp)->de_StartCluster != VTODE(tdvp)->de_StartCluster)
 		newparent = 1;
 	vrele(fdvp);
@@ -1030,7 +1012,7 @@ abortit:
 	if ((fcnp->cn_flags & SAVESTART) == 0)
 		panic("msdosfs_rename: lost from startdir");
 	if (!newparent)
-		VOP_UNLOCK(tdvp, 0, p);
+		VOP_UNLOCK(tdvp, 0);
 	(void) vfs_relookup(fdvp, &fvp, fcnp);
 	if (fvp == NULL) {
 		/*
@@ -1040,7 +1022,7 @@ abortit:
 			panic("rename: lost dir entry");
 		vrele(ap->a_fvp);
 		if (newparent)
-			VOP_UNLOCK(tdvp, 0, p);
+			VOP_UNLOCK(tdvp, 0);
 		vrele(tdvp);
 		return 0;
 	}
@@ -1061,7 +1043,7 @@ abortit:
 			panic("rename: lost dir entry");
 		vrele(ap->a_fvp);
 		if (newparent)
-			VOP_UNLOCK(fdvp, 0, p);
+			VOP_UNLOCK(fdvp, 0);
 		xp = NULL;
 	} else {
 		vrele(fvp);
@@ -1083,7 +1065,7 @@ abortit:
 		if (error) {
 			bcopy(oldname, ip->de_Name, 11);
 			if (newparent)
-				VOP_UNLOCK(fdvp, 0, p);
+				VOP_UNLOCK(fdvp, 0);
 			goto bad;
 		}
 		ip->de_refcnt++;
@@ -1091,7 +1073,7 @@ abortit:
 		if ((error = removede(zp, ip)) != 0) {
 			/* XXX should really panic here, fs is corrupt */
 			if (newparent)
-				VOP_UNLOCK(fdvp, 0, p);
+				VOP_UNLOCK(fdvp, 0);
 			goto bad;
 		}
 
@@ -1103,7 +1085,7 @@ abortit:
 			if (error) {
 				/* XXX should really panic here, fs is corrupt */
 				if (newparent)
-					VOP_UNLOCK(fdvp, 0, p);
+					VOP_UNLOCK(fdvp, 0);
 				goto bad;
 			}
 			if (ip->de_dirclust != MSDOSFSROOT)
@@ -1111,7 +1093,7 @@ abortit:
 		}
 		reinsert(ip);
 		if (newparent)
-			VOP_UNLOCK(fdvp, 0, p);
+			VOP_UNLOCK(fdvp, 0);
 	}
 
 	/*
@@ -1150,7 +1132,7 @@ abortit:
 	VN_KNOTE(fvp, NOTE_RENAME);
 
 bad:
-	VOP_UNLOCK(fvp, 0, p);
+	VOP_UNLOCK(fvp, 0);
 	vrele(fdvp);
 bad1:
 	if (xp)

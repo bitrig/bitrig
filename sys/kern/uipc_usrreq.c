@@ -452,7 +452,7 @@ unp_bind(struct unpcb *unp, struct mbuf *nam, struct proc *p)
 	unp->unp_connid.gid = p->p_ucred->cr_gid;
 	unp->unp_connid.pid = p->p_p->ps_mainproc->p_pid;
 	unp->unp_flags |= UNP_FEIDSBIND;
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 	return (0);
 }
 
@@ -481,7 +481,7 @@ unp_connect(struct socket *so, struct mbuf *nam, struct proc *p)
 		error = ENOTSOCK;
 		goto bad;
 	}
-	if ((error = VOP_ACCESS(vp, VWRITE, p->p_ucred, p)) != 0)
+	if ((error = VOP_ACCESS(vp, VWRITE, p->p_ucred)) != 0)
 		goto bad;
 	so2 = vp->v_socket;
 	if (so2 == NULL) {

@@ -1473,7 +1473,7 @@ disk_readlabel(struct disklabel *dl, dev_t dev, char *errbuf, size_t errsize)
 		return (errbuf);
 	}
 
-	error = VOP_OPEN(vn, FREAD, NOCRED, curproc);
+	error = VOP_OPEN(vn, FREAD, NOCRED);
 	if (error) {
 		snprintf(errbuf, errsize,
 		    "cannot open disk, 0x%x/0x%x, error %d",
@@ -1481,14 +1481,14 @@ disk_readlabel(struct disklabel *dl, dev_t dev, char *errbuf, size_t errsize)
 		goto done;
 	}
 
-	error = VOP_IOCTL(vn, DIOCGDINFO, (caddr_t)dl, FREAD, NOCRED, curproc);
+	error = VOP_IOCTL(vn, DIOCGDINFO, (caddr_t)dl, FREAD, NOCRED);
 	if (error) {
 		snprintf(errbuf, errsize,
 		    "cannot read disk label, 0x%x/0x%x, error %d",
 		    dev, rawdev, error);
 	}
 done:
-	VOP_CLOSE(vn, FREAD, NOCRED, curproc);
+	VOP_CLOSE(vn, FREAD, NOCRED);
 	vput(vn);
 	if (error)
 		return (errbuf);

@@ -1120,7 +1120,7 @@ fill_file2(struct kinfo_file2 *kf, struct file *fp, struct filedesc *fdp,
 			    vp->v_mount->mnt_stat.f_mntonname,
 			    sizeof(kf->f_mntonname));
 
-		if (VOP_GETATTR(vp, &va, p->p_ucred, p) == 0) {
+		if (VOP_GETATTR(vp, &va, p->p_ucred) == 0) {
 			kf->va_fileid = va.va_fileid;
 			kf->va_mode = MAKEIMODE(va.va_type, va.va_mode);
 			kf->va_size = va.va_size;

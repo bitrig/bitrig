@@ -683,7 +683,7 @@ sys_fpathconf(struct proc *p, void *v, register_t *retval)
 		vp = (struct vnode *)fp->f_data;
 		vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
 		error = VOP_PATHCONF(vp, SCARG(uap, name), retval);
-		VOP_UNLOCK(vp, 0, p);
+		VOP_UNLOCK(vp, 0);
 		break;
 
 	default:

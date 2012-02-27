@@ -180,12 +180,12 @@ cd9660_mount(mp, path, data, ndp, p)
 	 */
 	if (suser(p, 0) != 0) {
 		vn_lock(devvp, LK_EXCLUSIVE | LK_RETRY, p);
-		error = VOP_ACCESS(devvp, VREAD, p->p_ucred, p);
+		error = VOP_ACCESS(devvp, VREAD, p->p_ucred);
 		if (error) {
 			vput(devvp);
 			return (error);
 		}
-		VOP_UNLOCK(devvp, 0, p);
+		VOP_UNLOCK(devvp, 0);
 	}
 	if ((mp->mnt_flag & MNT_UPDATE) == 0)
 		error = iso_mountfs(devvp, mp, p, &args);
@@ -252,11 +252,11 @@ iso_mountfs(devvp, mp, p, argp)
 		return (EBUSY);
 	vn_lock(devvp, LK_EXCLUSIVE | LK_RETRY, p);
 	error = vinvalbuf(devvp, V_SAVE, p->p_ucred, p, 0, 0);
-	VOP_UNLOCK(devvp, 0, p);
+	VOP_UNLOCK(devvp, 0);
 	if (error)
 		return (error);
 
-	error = VOP_OPEN(devvp, ronly ? FREAD : FREAD|FWRITE, FSCRED, p);
+	error = VOP_OPEN(devvp, ronly ? FREAD : FREAD|FWRITE, FSCRED);
 	if (error)
 		return (error);
 	
@@ -274,7 +274,7 @@ iso_mountfs(devvp, mp, p, argp)
 	} else {
 		sess = 0;
 		error = VOP_IOCTL(devvp, CDIOREADMSADDR, (caddr_t)&sess, 0,
-		    FSCRED, p);
+		    FSCRED);
 		if (error)
 			sess = 0;
 	}
@@ -446,8 +446,8 @@ out:
 		brelse(supbp);
 
 	vn_lock(devvp, LK_EXCLUSIVE | LK_RETRY, p);
-	VOP_CLOSE(devvp, ronly ? FREAD : FREAD|FWRITE, NOCRED, p);
-	VOP_UNLOCK(devvp, 0, p);
+	VOP_CLOSE(devvp, ronly ? FREAD : FREAD|FWRITE, NOCRED);
+	VOP_UNLOCK(devvp, 0);
 
 	if (isomp) {
 		free((caddr_t)isomp, M_ISOFSMNT);
@@ -586,7 +586,7 @@ cd9660_unmount(mp, mntflags, p)
 	
 	isomp->im_devvp->v_specmountpoint = NULL;
 	vn_lock(isomp->im_devvp, LK_EXCLUSIVE | LK_RETRY, p);
-	error = VOP_CLOSE(isomp->im_devvp, FREAD, NOCRED, p);
+	error = VOP_CLOSE(isomp->im_devvp, FREAD, NOCRED);
 	vput(isomp->im_devvp);
 	free((caddr_t)isomp, M_ISOFSMNT);
 	mp->mnt_data = (qaddr_t)0;

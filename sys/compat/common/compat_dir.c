@@ -69,7 +69,7 @@ readdir_with_callback(fp, off, nbytes, appendfunc, arg)
 	if (vp->v_type != VDIR)
 		return (EINVAL);
 
-	if ((error = VOP_GETATTR(vp, &va, fp->f_cred, curproc)) != 0)
+	if ((error = VOP_GETATTR(vp, &va, fp->f_cred)) != 0)
 		return (error);
 
 	buflen = min(MAXBSIZE, nbytes);
@@ -168,7 +168,7 @@ out:
 	if (cookies)
 		free(cookies, M_TEMP);
 
-	VOP_UNLOCK(vp, 0, curproc);
+	VOP_UNLOCK(vp, 0);
 	free(buf, M_TEMP);
 	return (error);
 }

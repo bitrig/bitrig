@@ -676,7 +676,7 @@ sr_crypto_create_key_disk(struct sr_discipline *sd, dev_t dev)
 		sr_error(sc, "cannot open key disk %s", devname);
 		goto done;
 	}
-	if (VOP_OPEN(vn, FREAD | FWRITE, NOCRED, curproc)) {
+	if (VOP_OPEN(vn, FREAD | FWRITE, NOCRED)) {
 		DNPRINTF(SR_D_META,"%s: sr_crypto_create_key_disk cannot "
 		    "open %s\n", DEVNAME(sc), devname);
 		vput(vn);
@@ -687,10 +687,10 @@ sr_crypto_create_key_disk(struct sr_discipline *sd, dev_t dev)
 	/* Get partition details. */
 	part = DISKPART(dev);
 	if (VOP_IOCTL(vn, DIOCGDINFO, (caddr_t)&label,
-	    FREAD, NOCRED, curproc)) {
+	    FREAD, NOCRED)) {
 		DNPRINTF(SR_D_META, "%s: sr_crypto_create_key_disk ioctl "
 		    "failed\n", DEVNAME(sc));
-		VOP_CLOSE(vn, FREAD | FWRITE, NOCRED, curproc);
+		VOP_CLOSE(vn, FREAD | FWRITE, NOCRED);
 		vput(vn);
 		goto fail;
 	}
@@ -807,7 +807,7 @@ done:
 	if (sm)
 		free(sm, M_DEVBUF);
 	if (open) {
-		VOP_CLOSE(vn, FREAD | FWRITE, NOCRED, curproc);
+		VOP_CLOSE(vn, FREAD | FWRITE, NOCRED);
 		vput(vn);
 	}
 
@@ -849,7 +849,7 @@ sr_crypto_read_key_disk(struct sr_discipline *sd, dev_t dev)
 		sr_error(sc, "cannot open key disk %s", devname);
 		goto done;
 	}
-	if (VOP_OPEN(vn, FREAD | FWRITE, NOCRED, curproc)) {
+	if (VOP_OPEN(vn, FREAD | FWRITE, NOCRED)) {
 		DNPRINTF(SR_D_META,"%s: sr_crypto_read_key_disk cannot "
 		    "open %s\n", DEVNAME(sc), devname);
 		vput(vn);
@@ -860,10 +860,10 @@ sr_crypto_read_key_disk(struct sr_discipline *sd, dev_t dev)
 	/* Get partition details. */
 	part = DISKPART(dev);
 	if (VOP_IOCTL(vn, DIOCGDINFO, (caddr_t)&label, FREAD,
-	    NOCRED, curproc)) {
+	    NOCRED)) {
 		DNPRINTF(SR_D_META, "%s: sr_crypto_read_key_disk ioctl "
 		    "failed\n", DEVNAME(sc));
-		VOP_CLOSE(vn, FREAD | FWRITE, NOCRED, curproc);
+		VOP_CLOSE(vn, FREAD | FWRITE, NOCRED);
 		vput(vn);
 		goto done;
 	}
@@ -939,7 +939,7 @@ done:
 		free(sm, M_DEVBUF);
 
 	if (vn && open) {
-		VOP_CLOSE(vn, FREAD, NOCRED, curproc);
+		VOP_CLOSE(vn, FREAD, NOCRED);
 		vput(vn);
 	}
 

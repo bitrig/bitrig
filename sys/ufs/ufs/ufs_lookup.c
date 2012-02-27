@@ -149,7 +149,7 @@ ufs_lookup(void *v)
 	 */
 	if ((DIP(dp, mode) & IFMT) != IFDIR)
 		return (ENOTDIR);
-	if ((error = VOP_ACCESS(vdp, VEXEC, cred, cnp->cn_proc)) != 0)
+	if ((error = VOP_ACCESS(vdp, VEXEC, cred)) != 0)
 		return (error);
 
 	if ((flags & ISLASTCN) && (vdp->v_mount->mnt_flag & MNT_RDONLY) &&
@@ -382,7 +382,7 @@ notfound:
 		 * Access for write is interpreted as allowing
 		 * creation of files in the directory.
 		 */
-		error = VOP_ACCESS(vdp, VWRITE, cred, cnp->cn_proc);
+		error = VOP_ACCESS(vdp, VWRITE, cred);
 		if (error)
 			return (error);
 		/*
@@ -426,7 +426,7 @@ notfound:
 		 */
 		cnp->cn_flags |= SAVENAME;
 		if (!lockparent) {
-			VOP_UNLOCK(vdp, 0, p);
+			VOP_UNLOCK(vdp, 0);
 			cnp->cn_flags |= PDIRUNLOCK;
 		}
 		return (EJUSTRETURN);
@@ -471,7 +471,7 @@ found:
 		/*
 		 * Write access to directory required to delete files.
 		 */
-		error = VOP_ACCESS(vdp, VWRITE, cred, cnp->cn_proc);
+		error = VOP_ACCESS(vdp, VWRITE, cred);
 		if (error)
 			return (error);
 		/*
@@ -507,7 +507,7 @@ found:
 		}
 		*vpp = tdp;
 		if (!lockparent) {
-			VOP_UNLOCK(vdp, 0, p);
+			VOP_UNLOCK(vdp, 0);
 			cnp->cn_flags |= PDIRUNLOCK;
 		}
 		return (0);
@@ -521,7 +521,7 @@ found:
 	 */
 	if (nameiop == RENAME && wantparent &&
 	    (flags & ISLASTCN)) {
-		error = VOP_ACCESS(vdp, VWRITE, cred, cnp->cn_proc);
+		error = VOP_ACCESS(vdp, VWRITE, cred);
 		if (error)
 			return (error);
 		/*
@@ -536,7 +536,7 @@ found:
 		*vpp = tdp;
 		cnp->cn_flags |= SAVENAME;
 		if (!lockparent) {
-			VOP_UNLOCK(vdp, 0, p);
+			VOP_UNLOCK(vdp, 0);
 			cnp->cn_flags |= PDIRUNLOCK;
 		}
 		return (0);
@@ -563,7 +563,7 @@ found:
 	 */
 	pdp = vdp;
 	if (flags & ISDOTDOT) {
-		VOP_UNLOCK(pdp, 0, p);	/* race to get the inode */
+		VOP_UNLOCK(pdp, 0);	/* race to get the inode */
 		cnp->cn_flags |= PDIRUNLOCK;
 		error = VFS_VGET(vdp->v_mount, dp->i_ino, &tdp);
 		if (error) {
@@ -587,7 +587,7 @@ found:
 		if (error)
 			return (error);
 		if (!lockparent || !(flags & ISLASTCN)) {
-			VOP_UNLOCK(pdp, 0, p);
+			VOP_UNLOCK(pdp, 0);
 			cnp->cn_flags |= PDIRUNLOCK;
 		}
 		*vpp = tdp;
@@ -780,8 +780,8 @@ ufs_direnter(struct vnode *dvp, struct vnode *tvp, struct direct *dirp,
 			if ((error = VOP_BWRITE(bp)))
 				return (error);
 			if (tvp != NULL)
-				VOP_UNLOCK(tvp, 0, p);
-			error = VOP_FSYNC(dvp, p->p_ucred, MNT_WAIT, p);
+				VOP_UNLOCK(tvp, 0);
+			error = VOP_FSYNC(dvp, p->p_ucred, MNT_WAIT);
 			if (tvp != NULL)
 				vn_lock(tvp, LK_EXCLUSIVE | LK_RETRY, p);
 			return (error);
@@ -920,7 +920,7 @@ ufs_direnter(struct vnode *dvp, struct vnode *tvp, struct direct *dirp,
 
 	if (error == 0 && dp->i_endoff && dp->i_endoff < DIP(dp, size)) {
 		if (tvp != NULL)
-			VOP_UNLOCK(tvp, 0, p);
+			VOP_UNLOCK(tvp, 0);
 #ifdef UFS_DIRHASH
 		if (dp->i_dirhash != NULL)
 			ufsdirhash_dirtrunc(dp, dp->i_endoff);

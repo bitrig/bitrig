@@ -208,7 +208,7 @@ namei(struct nameidata *ndp)
 			return (0);
 		}
 		if ((cnp->cn_flags & LOCKPARENT) && (cnp->cn_flags & ISLASTCN))
-			VOP_UNLOCK(ndp->ni_dvp, 0, p);
+			VOP_UNLOCK(ndp->ni_dvp, 0);
 		if (ndp->ni_loopcnt++ >= MAXSYMLINKS) {
 			error = ELOOP;
 			break;
@@ -539,7 +539,7 @@ dirloop:
 	    (cnp->cn_flags & NOCROSSMOUNT) == 0) {
 		if (vfs_busy(mp, VB_READ|VB_WAIT))
 			continue;
-		VOP_UNLOCK(dp, 0, p);
+		VOP_UNLOCK(dp, 0);
 		error = VFS_ROOT(mp, &tdp);
 		vfs_unbusy(mp);
 		if (error) {
@@ -606,13 +606,13 @@ terminal:
 			vrele(ndp->ni_dvp);
 	}
 	if ((cnp->cn_flags & LOCKLEAF) == 0)
-		VOP_UNLOCK(dp, 0, p);
+		VOP_UNLOCK(dp, 0);
 	return (0);
 
 bad2:
 	if ((cnp->cn_flags & LOCKPARENT) && (cnp->cn_flags & ISLASTCN) &&
 	    ((cnp->cn_flags & PDIRUNLOCK) == 0))
-		VOP_UNLOCK(ndp->ni_dvp, 0, p);
+		VOP_UNLOCK(ndp->ni_dvp, 0);
 	vrele(ndp->ni_dvp);
 bad:
 	if (dpunlocked)
@@ -740,12 +740,12 @@ vfs_relookup(struct vnode *dvp, struct vnode **vpp, struct componentname *cnp)
 	if (!wantparent)
 		vrele(dvp);
 	if ((cnp->cn_flags & LOCKLEAF) == 0)
-		VOP_UNLOCK(dp, 0, p);
+		VOP_UNLOCK(dp, 0);
 	return (0);
 
 bad2:
 	if ((cnp->cn_flags & LOCKPARENT) && (cnp->cn_flags & ISLASTCN))
-		VOP_UNLOCK(dvp, 0, p);
+		VOP_UNLOCK(dvp, 0);
 	vrele(dvp);
 bad:
 	vput(dp);

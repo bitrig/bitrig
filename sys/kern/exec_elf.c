@@ -336,13 +336,13 @@ ELFNAME(load_file)(struct proc *p, char *path, struct exec_package *epp,
 		error = EACCES;
 		goto bad;
 	}
-	if ((error = VOP_GETATTR(vp, epp->ep_vap, p->p_ucred, p)) != 0)
+	if ((error = VOP_GETATTR(vp, epp->ep_vap, p->p_ucred)) != 0)
 		goto bad;
 	if (vp->v_mount->mnt_flag & MNT_NOEXEC) {
 		error = EACCES;
 		goto bad;
 	}
-	if ((error = VOP_ACCESS(vp, VREAD, p->p_ucred, p)) != 0)
+	if ((error = VOP_ACCESS(vp, VREAD, p->p_ucred)) != 0)
 		goto bad1;
 	if ((error = ELFNAME(read_from)(p, nd.ni_vp, 0,
 				    (caddr_t)&eh, sizeof(eh))) != 0)
@@ -475,7 +475,7 @@ ELFNAME(load_file)(struct proc *p, char *path, struct exec_package *epp,
 	vn_marktext(nd.ni_vp);
 
 bad1:
-	VOP_CLOSE(nd.ni_vp, FREAD, p->p_ucred, p);
+	VOP_CLOSE(nd.ni_vp, FREAD, p->p_ucred);
 bad:
 	if (ph != NULL)
 		free(ph, M_TEMP);

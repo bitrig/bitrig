@@ -233,7 +233,7 @@ cd9660_inactive(v)
 {
 	struct vop_inactive_args *ap = v;
 	struct vnode *vp = ap->a_vp;
-	struct proc *p = ap->a_p;
+	struct proc *p = curproc;
 	register struct iso_node *ip = VTOI(vp);
 	int error = 0;
 
@@ -243,7 +243,7 @@ cd9660_inactive(v)
 #endif
 	
 	ip->i_flag = 0;
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 	/*
 	 * If we are done with the inode, reclaim it
 	 * so that it can be reused immediately.

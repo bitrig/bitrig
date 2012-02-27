@@ -278,7 +278,7 @@ nfs_mountroot(void)
 	vfs_unbusy(mp);
 
 	/* Get root attributes (for the time). */
-	error = VOP_GETATTR(rootvp, &attr, procp->p_ucred, procp);
+	error = VOP_GETATTR(rootvp, &attr, procp->p_ucred);
 	if (error) panic("nfs_mountroot: getattr for root");
 	n = attr.va_atime.tv_sec;
 #ifdef	DEBUG
@@ -342,7 +342,7 @@ nfs_mountroot(void)
 		/*
 		 * Find out how large the swap file is.
 		 */
-		error = VOP_GETATTR(vp, &attr, procp->p_ucred, procp);
+		error = VOP_GETATTR(vp, &attr, procp->p_ucred);
 		if (error)
 			printf("nfs_mountroot: getattr for swap\n");
 		n = (long) (attr.va_size >> DEV_BSHIFT);
@@ -785,7 +785,7 @@ loop:
 			continue;
 		if (vget(vp, LK_EXCLUSIVE, p))
 			goto loop;
-		error = VOP_FSYNC(vp, cred, waitfor, p);
+		error = VOP_FSYNC(vp, cred, waitfor);
 		if (error)
 			allerror = error;
 		vput(vp);

@@ -114,9 +114,6 @@ mfs_open(void *v)
 int
 mfs_ioctl(void *v)
 {
-#if 0
-	struct vop_ioctl_args *ap = v;
-#endif
 
 	return (ENOTTY);
 }
@@ -212,7 +209,7 @@ mfs_close(void *v)
 	 * we must invalidate any in core blocks, so that
 	 * we can free up its vnode.
 	 */
-	if ((error = vinvalbuf(vp, V_SAVE, ap->a_cred, ap->a_p, 0, 0)) != 0)
+	if ((error = vinvalbuf(vp, V_SAVE, ap->a_cred, curproc, 0, 0)) != 0)
 		return (error);
 #ifdef DIAGNOSTIC
 	/*
@@ -244,7 +241,7 @@ mfs_inactive(void *v)
 		panic("mfs_inactive: not inactive (mfs_buflist %p)",
 			mfsp->mfs_buflist);
 #endif
-	VOP_UNLOCK(ap->a_vp, 0, ap->a_p);
+	VOP_UNLOCK(ap->a_vp, 0);
 	return (0);
 }
 

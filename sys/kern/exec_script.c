@@ -173,8 +173,8 @@ check_shell:
 	 * method of implementing "safe" set-id and x-only scripts.
 	 */
 	vn_lock(scriptvp, LK_EXCLUSIVE|LK_RETRY, p);
-	error = VOP_ACCESS(scriptvp, VREAD, p->p_ucred, p);
-	VOP_UNLOCK(scriptvp, 0, p);
+	error = VOP_ACCESS(scriptvp, VREAD, p->p_ucred);
+	VOP_UNLOCK(scriptvp, 0);
 	if (error == EACCES
 #ifdef SETUIDSCRIPTS
 	    || script_sbits

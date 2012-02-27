@@ -914,7 +914,7 @@ swap_on(struct proc *p, struct swapdev *sdp)
 	 * has already been opened when root was mounted (mountroot).
 	 */
 	if (vp != rootvp) {
-		if ((error = VOP_OPEN(vp, FREAD|FWRITE, p->p_ucred, p)))
+		if ((error = VOP_OPEN(vp, FREAD|FWRITE, p->p_ucred)))
 			return (error);
 	}
 
@@ -938,7 +938,7 @@ swap_on(struct proc *p, struct swapdev *sdp)
 		break;
 
 	case VREG:
-		if ((error = VOP_GETATTR(vp, &va, p->p_ucred, p)))
+		if ((error = VOP_GETATTR(vp, &va, p->p_ucred)))
 			goto bad;
 		nblocks = (int)btodb(va.va_size);
 		if ((error =
@@ -1067,7 +1067,7 @@ bad:
 	 * failure: close device if necessary and return error.
 	 */
 	if (vp != rootvp)
-		(void)VOP_CLOSE(vp, FREAD|FWRITE, p->p_ucred, p);
+		(void)VOP_CLOSE(vp, FREAD|FWRITE, p->p_ucred);
 	return (error);
 }
 
@@ -1119,7 +1119,7 @@ swap_off(struct proc *p, struct swapdev *sdp)
 	}
 	vrele(sdp->swd_vp);
 	if (sdp->swd_vp != rootvp) {
-		(void) VOP_CLOSE(sdp->swd_vp, FREAD|FWRITE, p->p_ucred, p);
+		(void) VOP_CLOSE(sdp->swd_vp, FREAD|FWRITE, p->p_ucred);
 	}
 
 	simple_lock(&uvm.swap_data_lock);
@@ -2078,5 +2078,5 @@ swapmount(void)
 		return;
 	}
 
-	VOP_UNLOCK(vp, 0, curproc);
+	VOP_UNLOCK(vp, 0);
 }

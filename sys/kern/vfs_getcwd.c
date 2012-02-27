@@ -72,7 +72,7 @@ vfs_getcwd_scandir(struct vnode **lvpp, struct vnode **uvpp, char **bpp,
 	 * current directory is still locked.
 	 */
 	if (bufp != NULL) {
-		error = VOP_GETATTR(lvp, &va, p->p_ucred, p);
+		error = VOP_GETATTR(lvp, &va, p->p_ucred);
 		if (error) {
 			vput(lvp);
 			*lvpp = NULL;
@@ -227,7 +227,7 @@ vfs_getcwd_getcache(struct vnode **lvpp, struct vnode **uvpp, char **bpp,
 
 
 	/* Release current lock before acquiring the parent lock */
-	VOP_UNLOCK(lvp, 0, p);
+	VOP_UNLOCK(lvp, 0);
 
 	error = vget(uvp, LK_EXCLUSIVE | LK_RETRY, p);
 	if (error)
@@ -307,7 +307,7 @@ vfs_getcwd_common(struct vnode *lvp, struct vnode *rvp, char **bpp, char *bufp,
 
 		/* Check for access if caller cares */
 		if (flags & GETCWD_CHECK_ACCESS) {
-			error = VOP_ACCESS(lvp, perms, p->p_ucred, p);
+			error = VOP_ACCESS(lvp, perms, p->p_ucred);
 			if (error)
 				goto out;
 			perms = VEXEC|VREAD;

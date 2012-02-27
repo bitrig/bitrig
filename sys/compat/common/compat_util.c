@@ -134,10 +134,10 @@ emul_find(p, sgp, prefix, path, pbuf, cflag)
 		if ((error = namei(&ndroot)) != 0)
 			goto bad2;
 
-		if ((error = VOP_GETATTR(nd.ni_vp, &vat, p->p_ucred, p)) != 0)
+		if ((error = VOP_GETATTR(nd.ni_vp, &vat, p->p_ucred)) != 0)
 			goto bad3;
 
-		if ((error = VOP_GETATTR(ndroot.ni_vp, &vatroot, p->p_ucred, p))
+		if ((error = VOP_GETATTR(ndroot.ni_vp, &vatroot, p->p_ucred))
 		    != 0)
 			goto bad3;
 

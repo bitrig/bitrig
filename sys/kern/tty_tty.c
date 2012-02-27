@@ -69,11 +69,11 @@ cttyopen(dev_t dev, int flag, int mode, struct proc *p)
 	 * to delete this test. (mckusick 5/93)
 	 */
 	error = VOP_ACCESS(ttyvp,
-	  (flag&FREAD ? VREAD : 0) | (flag&FWRITE ? VWRITE : 0), p->p_ucred, p);
+	  (flag&FREAD ? VREAD : 0) | (flag&FWRITE ? VWRITE : 0), p->p_ucred);
 	if (!error)
 #endif /* PARANOID */
-		error = VOP_OPEN(ttyvp, flag, NOCRED, p);
-	VOP_UNLOCK(ttyvp, 0, p);
+		error = VOP_OPEN(ttyvp, flag, NOCRED);
+	VOP_UNLOCK(ttyvp, 0);
 	return (error);
 }
 
@@ -89,7 +89,7 @@ cttyread(dev_t dev, struct uio *uio, int flag)
 		return (EIO);
 	vn_lock(ttyvp, LK_EXCLUSIVE | LK_RETRY, p);
 	error = VOP_READ(ttyvp, uio, flag, NOCRED);
-	VOP_UNLOCK(ttyvp, 0, p);
+	VOP_UNLOCK(ttyvp, 0);
 	return (error);
 }
 
@@ -105,7 +105,7 @@ cttywrite(dev_t dev, struct uio *uio, int flag)
 		return (EIO);
 	vn_lock(ttyvp, LK_EXCLUSIVE | LK_RETRY, p);
 	error = VOP_WRITE(ttyvp, uio, flag, NOCRED);
-	VOP_UNLOCK(ttyvp, 0, p);
+	VOP_UNLOCK(ttyvp, 0);
 	return (error);
 }
 
@@ -126,7 +126,7 @@ cttyioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 		} else
 			return (EINVAL);
 	}
-	return (VOP_IOCTL(ttyvp, cmd, addr, flag, NOCRED, p));
+	return (VOP_IOCTL(ttyvp, cmd, addr, flag, NOCRED));
 }
 
 /*ARGSUSED*/
@@ -137,7 +137,7 @@ cttypoll(dev_t dev, int events, struct proc *p)
 
 	if (ttyvp == NULL)	/* try operation to get EOF/failure */
 		return (seltrue(dev, events, p));
-	return (VOP_POLL(ttyvp, events, p));
+	return (VOP_POLL(ttyvp, events));
 }
 
 /*ARGSUSED*/

@@ -202,7 +202,7 @@ cache_lookup(struct vnode *dvp, struct vnode **vpp,
 		vref(dvp);
 		error = 0;
 	} else if (cnp->cn_flags & ISDOTDOT) {
-		VOP_UNLOCK(dvp, 0, p);
+		VOP_UNLOCK(dvp, 0);
 		cnp->cn_flags |= PDIRUNLOCK;
 		error = vget(vp, LK_EXCLUSIVE, p);
 		/*
@@ -223,7 +223,7 @@ cache_lookup(struct vnode *dvp, struct vnode **vpp,
 		 * ISLASTCN is set, unlock the directory vnode.
 		 */
 		if (error || (~cnp->cn_flags & (LOCKPARENT|ISLASTCN)) != 0) {
-			VOP_UNLOCK(dvp, 0, p);
+			VOP_UNLOCK(dvp, 0);
 			cnp->cn_flags |= PDIRUNLOCK;
 		}
 	}

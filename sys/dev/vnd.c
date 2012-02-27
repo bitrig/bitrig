@@ -457,16 +457,16 @@ vndioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 		if (nd.ni_vp->v_type == VBLK)
 			sc->sc_size = vndbdevsize(nd.ni_vp, p);
 		else {
-			error = VOP_GETATTR(nd.ni_vp, &vattr, p->p_ucred, p);
+			error = VOP_GETATTR(nd.ni_vp, &vattr, p->p_ucred);
 			if (error) {
-				VOP_UNLOCK(nd.ni_vp, 0, p);
+				VOP_UNLOCK(nd.ni_vp, 0);
 				vn_close(nd.ni_vp, VNDRW(sc), p->p_ucred, p);
 				disk_unlock(&sc->sc_dk);
 				return (error);
 			}
 			sc->sc_size = vattr.va_size / sc->sc_secsize;
 		}
-		VOP_UNLOCK(nd.ni_vp, 0, p);
+		VOP_UNLOCK(nd.ni_vp, 0);
 		sc->sc_vp = nd.ni_vp;
 		if ((error = vndsetcred(sc, p->p_ucred)) != 0) {
 			(void) vn_close(nd.ni_vp, VNDRW(sc), p->p_ucred, p);
@@ -557,7 +557,7 @@ vndioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 		sc = &vnd_softc[vnu->vnu_unit];
 
 		if (sc->sc_flags & VNF_INITED) {
-			error = VOP_GETATTR(sc->sc_vp, &vattr, p->p_ucred, p);
+			error = VOP_GETATTR(sc->sc_vp, &vattr, p->p_ucred);
 			if (error)
 				return (error);
 

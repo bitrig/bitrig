@@ -478,7 +478,7 @@ main(void *framep)
 		panic("cannot find root vnode");
 	p->p_fd->fd_cdir = rootvnode;
 	vref(p->p_fd->fd_cdir);
-	VOP_UNLOCK(rootvnode, 0, p);
+	VOP_UNLOCK(rootvnode, 0);
 	p->p_fd->fd_rdir = NULL;
 
 	/*

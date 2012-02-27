@@ -394,7 +394,7 @@ fail:
 	 * not expected to be a common occurrence. The error return from fsync
 	 * is ignored as we already have an error to return to the user.
 	 */
-	VOP_FSYNC(vp, p->p_ucred, MNT_WAIT, p);
+	VOP_FSYNC(vp, p->p_ucred, MNT_WAIT);
 	for (deallocated = 0, blkp = allociblk; blkp < allocblk; blkp++) {
 		ffs_blkfree(ip, *blkp, fs->fs_bsize);
 		deallocated += fs->fs_bsize;
@@ -424,7 +424,7 @@ fail:
 		ip->i_ffs1_blocks -= btodb(deallocated);
 		ip->i_flag |= IN_CHANGE | IN_UPDATE;
 	}
-	VOP_FSYNC(vp, p->p_ucred, MNT_WAIT, p);
+	VOP_FSYNC(vp, p->p_ucred, MNT_WAIT);
 	return (error);
 }
 
@@ -801,7 +801,7 @@ fail:
 	 * not expected to be a common occurrence. The error return from fsync
 	 * is ignored as we already have an error to return to the user.
 	 */
-	VOP_FSYNC(vp, p->p_ucred, MNT_WAIT, p);
+	VOP_FSYNC(vp, p->p_ucred, MNT_WAIT);
 	if (unwindidx >= 0) {
 		/*
 		 * First write out any buffers we've created to resolve their
@@ -880,7 +880,7 @@ fail:
 		ip->i_ffs2_blocks -= btodb(deallocated);
 		ip->i_flag |= IN_CHANGE | IN_UPDATE;
 	}
-	VOP_FSYNC(vp, p->p_ucred, MNT_WAIT, p);
+	VOP_FSYNC(vp, p->p_ucred, MNT_WAIT);
 	return (error);
 }
 #endif /* FFS2 */

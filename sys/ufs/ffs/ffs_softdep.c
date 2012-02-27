@@ -868,8 +868,8 @@ softdep_flushworklist(struct mount *oldmnt, int *countp, struct proc *p)
 	while ((count = softdep_process_worklist(oldmnt)) > 0) {
 		*countp += count;
 		vn_lock(devvp, LK_EXCLUSIVE | LK_RETRY, p);
-		error = VOP_FSYNC(devvp, p->p_ucred, MNT_WAIT, p);
-		VOP_UNLOCK(devvp, 0, p);
+		error = VOP_FSYNC(devvp, p->p_ucred, MNT_WAIT);
+		VOP_UNLOCK(devvp, 0);
 		if (error)
 			break;
 	}
@@ -4556,7 +4556,7 @@ softdep_fsync(struct vnode *vp)
 		 * ufs_lookup for details on possible races.
 		 */
 		FREE_LOCK(&lk);
-		VOP_UNLOCK(vp, 0, p);
+		VOP_UNLOCK(vp, 0);
 		error = VFS_VGET(mnt, parentino, &pvp);
 		vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
 		if (error != 0)
@@ -4577,7 +4577,7 @@ softdep_fsync(struct vnode *vp)
 				return (error);
 			}
 			if (pagedep->pd_state & NEWBLOCK) {
-				error = VOP_FSYNC(pvp, p->p_ucred, MNT_WAIT, p);
+				error = VOP_FSYNC(pvp, p->p_ucred, MNT_WAIT);
 				if (error) {
 					vput(pvp);
 					return (error);
@@ -4907,7 +4907,7 @@ loop:
 	if (vn_isdisk(vp, NULL) &&
 	    vp->v_specmountpoint && !VOP_ISLOCKED(vp) &&
 	    (error = VFS_SYNC(vp->v_specmountpoint, MNT_WAIT, ap->a_cred,
-	     ap->a_p)) != 0)
+	     curproc)) != 0)
 		return (error);
 	return (0);
 }
@@ -5059,8 +5059,8 @@ flush_pagedep_deps(struct vnode *pvp, struct mount *mp,
 			FREE_LOCK(&lk);
 			if ((error = VFS_VGET(mp, inum, &vp)) != 0)
 				break;
-			if ((error=VOP_FSYNC(vp, p->p_ucred, MNT_NOWAIT, p)) ||
-			    (error=VOP_FSYNC(vp, p->p_ucred, MNT_NOWAIT, p))) {
+			if ((error=VOP_FSYNC(vp, p->p_ucred, MNT_NOWAIT)) ||
+			    (error=VOP_FSYNC(vp, p->p_ucred, MNT_NOWAIT))) {
 				vput(vp);
 				break;
 			}
@@ -5320,7 +5320,7 @@ clear_remove(struct proc *p)
 #endif
 				return;
 			}
-			if ((error = VOP_FSYNC(vp, p->p_ucred, MNT_NOWAIT, p)))
+			if ((error = VOP_FSYNC(vp, p->p_ucred, MNT_NOWAIT)))
 				softdep_error("clear_remove: fsync", error);
 			drain_output(vp, 0);
 			vput(vp);
@@ -5401,10 +5401,10 @@ clear_inodedeps(struct proc *p)
 			return;
 		}
 		if (ino == lastino) {
-			if ((error = VOP_FSYNC(vp, p->p_ucred, MNT_WAIT, p)))
+			if ((error = VOP_FSYNC(vp, p->p_ucred, MNT_WAIT)))
 				softdep_error("clear_inodedeps: fsync1", error);
 		} else {
-			if ((error = VOP_FSYNC(vp, p->p_ucred, MNT_NOWAIT, p)))
+			if ((error = VOP_FSYNC(vp, p->p_ucred, MNT_NOWAIT)))
 				softdep_error("clear_inodedeps: fsync2", error);
 			drain_output(vp, 0);
 		}

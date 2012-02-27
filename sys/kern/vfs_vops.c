@@ -120,13 +120,12 @@ VOP_MKNOD(struct vnode *dvp, struct vnode **vpp,
 }
 
 int
-VOP_OPEN(struct vnode *vp, int mode, struct ucred *cred, struct proc *p)
+VOP_OPEN(struct vnode *vp, int mode, struct ucred *cred)
 {
 	struct vop_open_args a;
 	a.a_vp = vp;
 	a.a_mode = mode;
 	a.a_cred = cred;
-	a.a_p = p;
 
 	if (vp->v_op->vop_open == NULL)
 		return (EOPNOTSUPP);
@@ -135,13 +134,12 @@ VOP_OPEN(struct vnode *vp, int mode, struct ucred *cred, struct proc *p)
 }
 
 int
-VOP_CLOSE(struct vnode *vp, int fflag, struct ucred *cred, struct proc *p)
+VOP_CLOSE(struct vnode *vp, int fflag, struct ucred *cred)
 {
 	struct vop_close_args a;
 	a.a_vp = vp;
 	a.a_fflag = fflag;
 	a.a_cred = cred;
-	a.a_p = p;
 
 	ASSERT_VP_ISLOCKED(vp);
 
@@ -152,13 +150,12 @@ VOP_CLOSE(struct vnode *vp, int fflag, struct ucred *cred, struct proc *p)
 }
 
 int
-VOP_ACCESS(struct vnode *vp, int mode, struct ucred *cred, struct proc *p)
+VOP_ACCESS(struct vnode *vp, int mode, struct ucred *cred)
 {
 	struct vop_access_args a;
 	a.a_vp = vp;
 	a.a_mode = mode;
 	a.a_cred = cred;
-	a.a_p = p;
 
 	ASSERT_VP_ISLOCKED(vp);
 
@@ -169,14 +166,12 @@ VOP_ACCESS(struct vnode *vp, int mode, struct ucred *cred, struct proc *p)
 }
 
 int
-VOP_GETATTR(struct vnode *vp, struct vattr *vap, struct ucred *cred,
-    struct proc *p)
+VOP_GETATTR(struct vnode *vp, struct vattr *vap, struct ucred *cred)
 {
 	struct vop_getattr_args a;
 	a.a_vp = vp;
 	a.a_vap = vap;
 	a.a_cred = cred;
-	a.a_p = p;
 
 	if (vp->v_op->vop_getattr == NULL)
 		return (EOPNOTSUPP);
@@ -185,14 +180,12 @@ VOP_GETATTR(struct vnode *vp, struct vattr *vap, struct ucred *cred,
 }
 
 int
-VOP_SETATTR(struct vnode *vp, struct vattr *vap, struct ucred *cred,
-    struct proc *p)
+VOP_SETATTR(struct vnode *vp, struct vattr *vap, struct ucred *cred)
 {
 	struct vop_setattr_args a;
 	a.a_vp = vp;
 	a.a_vap = vap;
 	a.a_cred = cred;
-	a.a_p = p;
 
 	ASSERT_VP_ISLOCKED(vp);
 
@@ -239,7 +232,7 @@ VOP_WRITE(struct vnode *vp, struct uio *uio, int ioflag,
 
 int
 VOP_IOCTL(struct vnode *vp, u_long command, void *data, int fflag,
-    struct ucred *cred, struct proc *p)
+    struct ucred *cred)
 {
 	struct vop_ioctl_args a;
 	a.a_vp = vp;
@@ -247,7 +240,6 @@ VOP_IOCTL(struct vnode *vp, u_long command, void *data, int fflag,
 	a.a_data = data;
 	a.a_fflag = fflag;
 	a.a_cred = cred;
-	a.a_p = p;
 
 	if (vp->v_op->vop_ioctl == NULL)
 		return (EOPNOTSUPP);
@@ -257,12 +249,11 @@ VOP_IOCTL(struct vnode *vp, u_long command, void *data, int fflag,
 }
 
 int
-VOP_POLL(struct vnode *vp, int events, struct proc *p)
+VOP_POLL(struct vnode *vp, int events)
 {
 	struct vop_poll_args a;
 	a.a_vp = vp;
 	a.a_events = events;
-	a.a_p = p;
 
 	if (vp->v_op->vop_poll == NULL)
 		return (EOPNOTSUPP);
@@ -297,14 +288,12 @@ VOP_REVOKE(struct vnode *vp, int flags)
 }
 
 int
-VOP_FSYNC(struct vnode *vp, struct ucred *cred, int waitfor,
-    struct proc *p)
+VOP_FSYNC(struct vnode *vp, struct ucred *cred, int waitfor)
 {
 	struct vop_fsync_args a;
 	a.a_vp = vp;
 	a.a_cred = cred;
 	a.a_waitfor = waitfor;
-	a.a_p = p;
 
 	ASSERT_VP_ISLOCKED(vp);
 
@@ -472,11 +461,10 @@ VOP_ABORTOP(struct vnode *dvp, struct componentname *cnp)
 }
 
 int
-VOP_INACTIVE(struct vnode *vp, struct proc *p)
+VOP_INACTIVE(struct vnode *vp)
 {
 	struct vop_inactive_args a;
 	a.a_vp = vp;
-	a.a_p = p;
 
 	ASSERT_VP_ISLOCKED(vp);
 
@@ -487,11 +475,10 @@ VOP_INACTIVE(struct vnode *vp, struct proc *p)
 }
 
 int
-VOP_RECLAIM(struct vnode *vp, struct proc *p)
+VOP_RECLAIM(struct vnode *vp)
 {
 	struct vop_reclaim_args a;
 	a.a_vp = vp;
-	a.a_p = p;
 
 	if (vp->v_op->vop_reclaim == NULL)
 		return (EOPNOTSUPP);
@@ -500,12 +487,11 @@ VOP_RECLAIM(struct vnode *vp, struct proc *p)
 }
 
 int
-VOP_LOCK(struct vnode *vp, int flags, struct proc *p)
+VOP_LOCK(struct vnode *vp, int flags)
 {
 	struct vop_lock_args a;
 	a.a_vp = vp;
 	a.a_flags = flags;
-	a.a_p = p;
 
 	if (vp->v_op->vop_lock == NULL)
 		return (EOPNOTSUPP);
@@ -514,12 +500,11 @@ VOP_LOCK(struct vnode *vp, int flags, struct proc *p)
 }
 
 int
-VOP_UNLOCK(struct vnode *vp, int flags, struct proc *p)
+VOP_UNLOCK(struct vnode *vp, int flags)
 {
 	struct vop_unlock_args a;
 	a.a_vp = vp;
 	a.a_flags = flags;
-	a.a_p = p;
 
 	if (vp->v_op->vop_unlock == NULL)
 		return (EOPNOTSUPP);

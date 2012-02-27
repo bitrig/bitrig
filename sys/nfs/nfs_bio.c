@@ -106,12 +106,12 @@ nfs_bioread(struct vnode *vp, struct uio *uio, int ioflag, struct ucred *cred)
 	 */
 	if (np->n_flag & NMODIFIED) {
 		NFS_INVALIDATE_ATTRCACHE(np);
-		error = VOP_GETATTR(vp, &vattr, cred, p);
+		error = VOP_GETATTR(vp, &vattr, cred);
 		if (error)
 			return (error);
 		np->n_mtime = vattr.va_mtime;
 	} else {
-		error = VOP_GETATTR(vp, &vattr, cred, p);
+		error = VOP_GETATTR(vp, &vattr, cred);
 		if (error)
 			return (error);
 		if (timespeccmp(&np->n_mtime, &vattr.va_mtime, !=)) {
@@ -281,7 +281,7 @@ nfs_write(void *v)
 		}
 		if (ioflag & IO_APPEND) {
 			NFS_INVALIDATE_ATTRCACHE(np);
-			error = VOP_GETATTR(vp, &vattr, cred, p);
+			error = VOP_GETATTR(vp, &vattr, cred);
 			if (error)
 				return (error);
 			uio->uio_offset = np->n_size;

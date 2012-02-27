@@ -250,7 +250,7 @@ cd9660_getattr(void *v)
 		auio.uio_offset = 0;
 		auio.uio_rw = UIO_READ;
 		auio.uio_segflg = UIO_SYSSPACE;
-		auio.uio_procp = ap->a_p;
+		auio.uio_procp = curproc;
 		auio.uio_resid = MAXPATHLEN;
 		rdlnk.a_uio = &auio;
 		rdlnk.a_vp = ap->a_vp;
@@ -348,7 +348,6 @@ cd9660_ioctl(void *v)
 	return (ENOTTY);
 }
 
-/* ARGSUSED */
 int
 cd9660_poll(void *v)
 {

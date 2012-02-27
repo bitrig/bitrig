@@ -809,8 +809,8 @@ ttioctl(struct tty *tp, u_long cmd, caddr_t data, int flag, struct proc *p)
 			if (error)
 				return (error);
 			vn_lock(nid.ni_vp, LK_EXCLUSIVE | LK_RETRY, p);
-			error = VOP_ACCESS(nid.ni_vp, VREAD, p->p_ucred, p);
-			VOP_UNLOCK(nid.ni_vp, 0, p);
+			error = VOP_ACCESS(nid.ni_vp, VREAD, p->p_ucred);
+			VOP_UNLOCK(nid.ni_vp, 0);
 			vrele(nid.ni_vp);
 			if (error)
 				return (error);

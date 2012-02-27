@@ -1011,7 +1011,7 @@ udf_lookup(void *v)
 	/*
 	 * Make sure the process can scan the requested directory.
 	 */
-	error = VOP_ACCESS(dvp, VEXEC, ap->a_cnp->cn_cred, p);
+	error = VOP_ACCESS(dvp, VEXEC, ap->a_cnp->cn_cred);
 	if (error)
 		return (error);
 
@@ -1107,7 +1107,7 @@ lookloop:
 				nchstats.ncs_pass2++;
 			if (!(flags & LOCKPARENT) || !(flags & ISLASTCN)) {
 				ap->a_cnp->cn_flags |= PDIRUNLOCK;
-				VOP_UNLOCK(dvp, 0, p);
+				VOP_UNLOCK(dvp, 0);
 			}
 
 			*vpp = tdp;
@@ -1149,12 +1149,11 @@ udf_inactive(void *v)
 {
 	struct vop_inactive_args *ap = v;
 	struct vnode *vp = ap->a_vp;
-	struct proc *p = ap->a_p;
 
 	/*
 	 * No need to sync anything, so just unlock the vnode and return.
 	 */
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 
 	return (0);
 }

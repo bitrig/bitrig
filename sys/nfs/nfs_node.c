@@ -203,7 +203,7 @@ nfs_inactive(void *v)
 	}
 	np->n_flag &= (NMODIFIED | NFLUSHINPROG | NFLUSHWANT);
 
-	VOP_UNLOCK(ap->a_vp, 0, ap->a_p);
+	VOP_UNLOCK(ap->a_vp, 0);
 	return (0);
 }
 

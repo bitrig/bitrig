@@ -192,7 +192,7 @@ sys_mount(struct proc *p, void *v, register_t *retval)
 	 * If the user is not root, ensure that they own the directory
 	 * onto which we are attempting to mount.
 	 */
-	if ((error = VOP_GETATTR(vp, &va, p->p_ucred, p)) ||
+	if ((error = VOP_GETATTR(vp, &va, p->p_ucred)) ||
 	    (va.va_uid != p->p_ucred->cr_uid &&
 	    (error = suser(p, 0)))) {
 		vput(vp);
@@ -305,7 +305,7 @@ update:
 		vfsp->vfc_refcount++;
 		CIRCLEQ_INSERT_TAIL(&mountlist, mp, mnt_list);
 		checkdirs(vp);
-		VOP_UNLOCK(vp, 0, p);
+		VOP_UNLOCK(vp, 0);
  		if ((mp->mnt_flag & MNT_RDONLY) == 0)
  			error = vfs_allocate_syncvnode(mp);
 		vfs_unbusy(mp);
@@ -709,7 +709,7 @@ sys_fchdir(struct proc *p, void *v, register_t *retval)
 		return (ENOTDIR);
 	vref(vp);
 	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
-	error = VOP_ACCESS(vp, VEXEC, p->p_ucred, p);
+	error = VOP_ACCESS(vp, VEXEC, p->p_ucred);
 
 	while (!error && (mp = vp->v_mountedhere) != NULL) {
 		if (vfs_busy(mp, VB_READ|VB_WAIT))
@@ -725,7 +725,7 @@ sys_fchdir(struct proc *p, void *v, register_t *retval)
 		vput(vp);
 		return (error);
 	}
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 	vrele(fdp->fd_cdir);
 	fdp->fd_cdir = vp;
 	return (0);
@@ -803,11 +803,11 @@ change_dir(struct nameidata *ndp, struct proc *p)
 	if (vp->v_type != VDIR)
 		error = ENOTDIR;
 	else
-		error = VOP_ACCESS(vp, VEXEC, p->p_ucred, p);
+		error = VOP_ACCESS(vp, VEXEC, p->p_ucred);
 	if (error)
 		vput(vp);
 	else
-		VOP_UNLOCK(vp, 0, p);
+		VOP_UNLOCK(vp, 0);
 	return (error);
 }
 
@@ -900,7 +900,7 @@ doopenat(struct proc *p, int fd, const char *path, int oflags, mode_t mode,
 		type = F_FLOCK;
 		if ((flags & FNONBLOCK) == 0)
 			type |= F_WAIT;
-		VOP_UNLOCK(vp, 0, p);
+		VOP_UNLOCK(vp, 0);
 		error = VOP_ADVLOCK(vp, (caddr_t)fp, F_SETLK, &lf, type);
 		if (error) {
 			/* closef will vn_close the file for us. */
@@ -921,17 +921,17 @@ doopenat(struct proc *p, int fd, const char *path, int oflags, mode_t mode,
 		else if ((error = vn_writechk(vp)) == 0) {
 			VATTR_NULL(&vattr);
 			vattr.va_size = 0;
-			error = VOP_SETATTR(vp, &vattr, fp->f_cred, p);
+			error = VOP_SETATTR(vp, &vattr, fp->f_cred);
 		}
 		if (error) {
-			VOP_UNLOCK(vp, 0, p);
+			VOP_UNLOCK(vp, 0);
 			/* closef will close the file for us. */
 			fdremove(fdp, indx);
 			closef(fp, p);
 			goto out;
 		}
 	}
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 	if (flags & O_CLOEXEC)
 		fdp->fd_ofileflags[indx] |= UF_EXCLOSE;
 	*retval = indx;
@@ -1040,7 +1040,7 @@ sys_fhopen(struct proc *p, void *v, register_t *retval)
 		goto bad;
 	}
 	if (flags & FREAD) {
-		if ((error = VOP_ACCESS(vp, VREAD, cred, p)) != 0)
+		if ((error = VOP_ACCESS(vp, VREAD, cred)) != 0)
 			goto bad;
 	}
 	if (flags & (FWRITE | O_TRUNC)) {
@@ -1048,17 +1048,17 @@ sys_fhopen(struct proc *p, void *v, register_t *retval)
 			error = EISDIR;
 			goto bad;
 		}
-		if ((error = VOP_ACCESS(vp, VWRITE, cred, p)) != 0 ||
+		if ((error = VOP_ACCESS(vp, VWRITE, cred)) != 0 ||
 		    (error = vn_writechk(vp)) != 0)
 			goto bad;
 	}
 	if (flags & O_TRUNC) {
 		VATTR_NULL(&va);
 		va.va_size = 0;
-		if ((error = VOP_SETATTR(vp, &va, cred, p)) != 0)
+		if ((error = VOP_SETATTR(vp, &va, cred)) != 0)
 			goto bad;
 	}
-	if ((error = VOP_OPEN(vp, flags, cred, p)) != 0)
+	if ((error = VOP_OPEN(vp, flags, cred)) != 0)
 		goto bad;
 	if (flags & FWRITE)
 		vp->v_writecount++;
@@ -1080,7 +1080,7 @@ sys_fhopen(struct proc *p, void *v, register_t *retval)
 		type = F_FLOCK;
 		if ((flags & FNONBLOCK) == 0)
 			type |= F_WAIT;
-		VOP_UNLOCK(vp, 0, p);
+		VOP_UNLOCK(vp, 0);
 		error = VOP_ADVLOCK(vp, (caddr_t)fp, F_SETLK, &lf, type);
 		if (error) {
 			vp = NULL;	/* closef will vn_close the file */
@@ -1089,7 +1089,7 @@ sys_fhopen(struct proc *p, void *v, register_t *retval)
 		vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
 		fp->f_flag |= FHASLOCK;
 	}
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 	*retval = indx;
 	FILE_SET_MATURE(fp);
 
@@ -1577,7 +1577,7 @@ sys_lseek(struct proc *p, void *v, register_t *retval)
 		newoff = fp->f_offset + offarg;
 		break;
 	case SEEK_END:
-		error = VOP_GETATTR(vp, &vattr, cred, p);
+		error = VOP_GETATTR(vp, &vattr, cred);
 		if (error)
 			goto bad;
 		newoff = offarg + (off_t)vattr.va_size;
@@ -1670,7 +1670,7 @@ dofaccessat(struct proc *p, int fd, const char *path, int amode, int flag,
 		if (amode & X_OK)
 			vflags |= VEXEC;
 
-		error = VOP_ACCESS(vp, vflags, cred, p);
+		error = VOP_ACCESS(vp, vflags, cred);
 		if (!error && (vflags & VWRITE))
 			error = vn_writechk(vp);
 
@@ -1871,7 +1871,7 @@ sys_chflags(struct proc *p, void *v, register_t *retval)
 		error = EINVAL;
 	else {
 		if (suser(p, 0)) {
-			if ((error = VOP_GETATTR(vp, &vattr, p->p_ucred, p)) != 0)
+			if ((error = VOP_GETATTR(vp, &vattr, p->p_ucred)) != 0)
 				goto out;
 			if (vattr.va_type == VCHR || vattr.va_type == VBLK) {
 				error = EINVAL;
@@ -1880,7 +1880,7 @@ sys_chflags(struct proc *p, void *v, register_t *retval)
 		}
 		VATTR_NULL(&vattr);
 		vattr.va_flags = flags;
-		error = VOP_SETATTR(vp, &vattr, p->p_ucred, p);
+		error = VOP_SETATTR(vp, &vattr, p->p_ucred);
 	}
 out:
 	vput(vp);
@@ -1914,7 +1914,7 @@ sys_fchflags(struct proc *p, void *v, register_t *retval)
 		error = EINVAL;
 	else {
 		if (suser(p, 0)) {
-			if ((error = VOP_GETATTR(vp, &vattr, p->p_ucred, p))
+			if ((error = VOP_GETATTR(vp, &vattr, p->p_ucred))
 			    != 0)
 				goto out;
 			if (vattr.va_type == VCHR || vattr.va_type == VBLK) {
@@ -1924,10 +1924,10 @@ sys_fchflags(struct proc *p, void *v, register_t *retval)
 		}
 		VATTR_NULL(&vattr);
 		vattr.va_flags = flags;
-		error = VOP_SETATTR(vp, &vattr, p->p_ucred, p);
+		error = VOP_SETATTR(vp, &vattr, p->p_ucred);
 	}
 out:
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 	FRELE(fp);
 	return (error);
 }
@@ -1987,7 +1987,7 @@ dofchmodat(struct proc *p, int fd, const char *path, mode_t mode, int flag,
 	else {
 		VATTR_NULL(&vattr);
 		vattr.va_mode = mode & ALLPERMS;
-		error = VOP_SETATTR(vp, &vattr, p->p_ucred, p);
+		error = VOP_SETATTR(vp, &vattr, p->p_ucred);
 	}
 	vput(vp);
 	return (error);
@@ -2021,9 +2021,9 @@ sys_fchmod(struct proc *p, void *v, register_t *retval)
 	else {
 		VATTR_NULL(&vattr);
 		vattr.va_mode = SCARG(uap, mode) & ALLPERMS;
-		error = VOP_SETATTR(vp, &vattr, p->p_ucred, p);
+		error = VOP_SETATTR(vp, &vattr, p->p_ucred);
 	}
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 	FRELE(fp);
 	return (error);
 }
@@ -2084,7 +2084,7 @@ dofchownat(struct proc *p, int fd, const char *path, uid_t uid, gid_t gid,
 	else {
 		if ((uid != -1 || gid != -1) &&
 		    (suser(p, 0) || suid_clear)) {
-			error = VOP_GETATTR(vp, &vattr, p->p_ucred, p);
+			error = VOP_GETATTR(vp, &vattr, p->p_ucred);
 			if (error)
 				goto out;
 			mode = vattr.va_mode & ~(VSUID | VSGID);
@@ -2097,7 +2097,7 @@ dofchownat(struct proc *p, int fd, const char *path, uid_t uid, gid_t gid,
 		vattr.va_uid = uid;
 		vattr.va_gid = gid;
 		vattr.va_mode = mode;
-		error = VOP_SETATTR(vp, &vattr, p->p_ucred, p);
+		error = VOP_SETATTR(vp, &vattr, p->p_ucred);
 	}
 out:
 	vput(vp);
@@ -2134,7 +2134,7 @@ sys_lchown(struct proc *p, void *v, register_t *retval)
 	else {
 		if ((uid != -1 || gid != -1) &&
 		    (suser(p, 0) || suid_clear)) {
-			error = VOP_GETATTR(vp, &vattr, p->p_ucred, p);
+			error = VOP_GETATTR(vp, &vattr, p->p_ucred);
 			if (error)
 				goto out;
 			mode = vattr.va_mode & ~(VSUID | VSGID);
@@ -2147,7 +2147,7 @@ sys_lchown(struct proc *p, void *v, register_t *retval)
 		vattr.va_uid = uid;
 		vattr.va_gid = gid;
 		vattr.va_mode = mode;
-		error = VOP_SETATTR(vp, &vattr, p->p_ucred, p);
+		error = VOP_SETATTR(vp, &vattr, p->p_ucred);
 	}
 out:
 	vput(vp);
@@ -2183,7 +2183,7 @@ sys_fchown(struct proc *p, void *v, register_t *retval)
 	else {
 		if ((uid != -1 || gid != -1) &&
 		    (suser(p, 0) || suid_clear)) {
-			error = VOP_GETATTR(vp, &vattr, p->p_ucred, p);
+			error = VOP_GETATTR(vp, &vattr, p->p_ucred);
 			if (error)
 				goto out;
 			mode = vattr.va_mode & ~(VSUID | VSGID);
@@ -2195,10 +2195,10 @@ sys_fchown(struct proc *p, void *v, register_t *retval)
 		vattr.va_uid = uid;
 		vattr.va_gid = gid;
 		vattr.va_mode = mode;
-		error = VOP_SETATTR(vp, &vattr, p->p_ucred, p);
+		error = VOP_SETATTR(vp, &vattr, p->p_ucred);
 	}
 out:
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 	FRELE(fp);
 	return (error);
 }
@@ -2320,7 +2320,7 @@ dovutimens(struct proc *p, struct vnode *vp, struct timespec ts[2],
 	else {
 		vattr.va_atime = ts[0];
 		vattr.va_mtime = ts[1];
-		error = VOP_SETATTR(vp, &vattr, p->p_ucred, p);
+		error = VOP_SETATTR(vp, &vattr, p->p_ucred);
 	}
 	vput(vp);
 	return (error);
@@ -2417,11 +2417,11 @@ sys_truncate(struct proc *p, void *v, register_t *retval)
 	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
 	if (vp->v_type == VDIR)
 		error = EISDIR;
-	else if ((error = VOP_ACCESS(vp, VWRITE, p->p_ucred, p)) == 0 &&
+	else if ((error = VOP_ACCESS(vp, VWRITE, p->p_ucred)) == 0 &&
 	    (error = vn_writechk(vp)) == 0) {
 		VATTR_NULL(&vattr);
 		vattr.va_size = SCARG(uap, length);
-		error = VOP_SETATTR(vp, &vattr, p->p_ucred, p);
+		error = VOP_SETATTR(vp, &vattr, p->p_ucred);
 	}
 	vput(vp);
 	return (error);
@@ -2459,9 +2459,9 @@ sys_ftruncate(struct proc *p, void *v, register_t *retval)
 	else if ((error = vn_writechk(vp)) == 0) {
 		VATTR_NULL(&vattr);
 		vattr.va_size = len;
-		error = VOP_SETATTR(vp, &vattr, fp->f_cred, p);
+		error = VOP_SETATTR(vp, &vattr, fp->f_cred);
 	}
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 bad:
 	FRELE(fp);
 	return (error);
@@ -2485,13 +2485,13 @@ sys_fsync(struct proc *p, void *v, register_t *retval)
 		return (error);
 	vp = (struct vnode *)fp->f_data;
 	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
-	error = VOP_FSYNC(vp, fp->f_cred, MNT_WAIT, p);
+	error = VOP_FSYNC(vp, fp->f_cred, MNT_WAIT);
 #ifdef FFS_SOFTUPDATES
 	if (error == 0 && vp->v_mount && (vp->v_mount->mnt_flag & MNT_SOFTDEP))
 		error = softdep_fsync(vp);
 #endif
 
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 	FRELE(fp);
 	return (error);
 }
@@ -2723,7 +2723,7 @@ getdirentries_internal(struct proc *p, int fd, char *buf, int count,
 	*basep = auio.uio_offset = fp->f_offset;
 	error = VOP_READDIR(vp, &auio, fp->f_cred, &eofflag, 0, 0);
 	fp->f_offset = auio.uio_offset;
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 	if (error)
 		goto bad;
 	*retval = count - auio.uio_resid;
@@ -2811,7 +2811,7 @@ sys_revoke(struct proc *p, void *v, register_t *retval)
 	if ((error = namei(&nd)) != 0)
 		return (error);
 	vp = nd.ni_vp;
-	if ((error = VOP_GETATTR(vp, &vattr, p->p_ucred, p)) != 0)
+	if ((error = VOP_GETATTR(vp, &vattr, p->p_ucred)) != 0)
 		goto out;
 	if (p->p_ucred->cr_uid != vattr.va_uid &&
 	    (error = suser(p, 0)))

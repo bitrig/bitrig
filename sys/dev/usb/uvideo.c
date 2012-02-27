@@ -2710,7 +2710,7 @@ uvideo_debug_file_open(struct uvideo_softc *sc)
 	}
 
 	sc->sc_vp = nd.ni_vp;
-	VOP_UNLOCK(sc->sc_vp, 0, p);
+	VOP_UNLOCK(sc->sc_vp, 0);
 	if (nd.ni_vp->v_type != VREG) {
 		vn_close(nd.ni_vp, FWRITE, p->p_ucred, p);
 		return (EIO);

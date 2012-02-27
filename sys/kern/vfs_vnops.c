@@ -141,7 +141,7 @@ vn_open(struct nameidata *ndp, int fmode, int cmode)
 	}
 	if ((fmode & O_CREAT) == 0) {
 		if (fmode & FREAD) {
-			if ((error = VOP_ACCESS(vp, VREAD, cred, p)) != 0)
+			if ((error = VOP_ACCESS(vp, VREAD, cred)) != 0)
 				goto bad;
 		}
 		if (fmode & FWRITE) {
@@ -150,17 +150,17 @@ vn_open(struct nameidata *ndp, int fmode, int cmode)
 				goto bad;
 			}
 			if ((error = vn_writechk(vp)) != 0 ||
-			    (error = VOP_ACCESS(vp, VWRITE, cred, p)) != 0)
+			    (error = VOP_ACCESS(vp, VWRITE, cred)) != 0)
 				goto bad;
 		}
 	}
 	if ((fmode & O_TRUNC) && vp->v_type == VREG) {
 		VATTR_NULL(&va);
 		va.va_size = 0;
-		if ((error = VOP_SETATTR(vp, &va, cred, p)) != 0)
+		if ((error = VOP_SETATTR(vp, &va, cred)) != 0)
 			goto bad;
 	}
-	if ((error = VOP_OPEN(vp, fmode, cred, p)) != 0)
+	if ((error = VOP_OPEN(vp, fmode, cred)) != 0)
 		goto bad;
 
 	if (vp->v_flag & VCLONED) {
@@ -170,7 +170,7 @@ vn_open(struct nameidata *ndp, int fmode, int cmode)
 
 		ndp->ni_vp = cip->ci_vp;	/* return cloned vnode */
 		vp->v_data = cip->ci_data;	/* restore v_data */
-		VOP_UNLOCK(vp, 0, p);		/* keep a reference */
+		VOP_UNLOCK(vp, 0);		/* keep a reference */
 		vp = ndp->ni_vp;		/* for the increment below */
 
 		free(cip, M_TEMP);
@@ -242,7 +242,7 @@ vn_close(struct vnode *vp, int flags, struct ucred *cred, struct proc *p)
 	if (flags & FWRITE)
 		vp->v_writecount--;
 	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
-	error = VOP_CLOSE(vp, flags, cred, p);
+	error = VOP_CLOSE(vp, flags, cred);
 	vput(vp);
 	return (error);
 }
@@ -277,7 +277,7 @@ vn_rdwr(enum uio_rw rw, struct vnode *vp, caddr_t base, int len, off_t offset,
 		error = VOP_WRITE(vp, &auio, ioflg, cred);
 	}
 	if ((ioflg & IO_NODELOCKED) == 0)
-		VOP_UNLOCK(vp, 0, p);
+		VOP_UNLOCK(vp, 0);
 
 	if (aresid)
 		*aresid = auio.uio_resid;
@@ -308,7 +308,7 @@ vn_read(struct file *fp, off_t *poff, struct uio *uio, struct ucred *cred)
 		error = VOP_READ(vp, uio,
 		    (fp->f_flag & FNONBLOCK) ? IO_NDELAY : 0, cred);
 	*poff += count - uio->uio_resid;
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 	return (error);
 }
 
@@ -340,7 +340,7 @@ vn_write(struct file *fp, off_t *poff, struct uio *uio, struct ucred *cred)
 		*poff = uio->uio_offset;
 	else
 		*poff += count - uio->uio_resid;
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 	return (error);
 }
 
@@ -364,7 +364,7 @@ vn_stat(struct vnode *vp, struct stat *sb, struct proc *p)
 	int error;
 	mode_t mode;
 
-	error = VOP_GETATTR(vp, &va, p->p_ucred, p);
+	error = VOP_GETATTR(vp, &va, p->p_ucred);
 	if (error)
 		return (error);
 	/*
@@ -429,7 +429,7 @@ vn_ioctl(struct file *fp, u_long com, caddr_t data, struct proc *p)
 	case VREG:
 	case VDIR:
 		if (com == FIONREAD) {
-			error = VOP_GETATTR(vp, &vattr, p->p_ucred, p);
+			error = VOP_GETATTR(vp, &vattr, p->p_ucred);
 			if (error)
 				return (error);
 			*(int *)data = vattr.va_size - fp->f_offset;
@@ -444,7 +444,7 @@ vn_ioctl(struct file *fp, u_long com, caddr_t data, struct proc *p)
 	case VFIFO:
 	case VCHR:
 	case VBLK:
-		error = VOP_IOCTL(vp, com, data, fp->f_flag, p->p_ucred, p);
+		error = VOP_IOCTL(vp, com, data, fp->f_flag, p->p_ucred);
 		if (error == 0 && com == TIOCSCTTY) {
 			struct session *s = p->p_p->ps_session;
 			if (s->s_ttyvp)
@@ -462,7 +462,7 @@ vn_ioctl(struct file *fp, u_long com, caddr_t data, struct proc *p)
 int
 vn_poll(struct file *fp, int events, struct proc *p)
 {
-	return (VOP_POLL(((struct vnode *)fp->f_data), events, p));
+	return (VOP_POLL(((struct vnode *)fp->f_data), events));
 }
 
 /*
@@ -483,7 +483,7 @@ vn_lock(struct vnode *vp, int flags, struct proc *p)
 			tsleep(vp, PINOD, "vn_lock", 0);
 			error = ENOENT;
 		} else {
-			error = VOP_LOCK(vp, flags, p);
+			error = VOP_LOCK(vp, flags);
 			if (error == 0)
 				return (error);
 		}

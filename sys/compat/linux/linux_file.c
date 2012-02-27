@@ -424,7 +424,7 @@ linux_sys_fcntl(p, v, retval)
 		if (vp->v_type != VCHR)
 			return EINVAL;
 		FREF(fp);
-		error = VOP_GETATTR(vp, &va, p->p_ucred, p);
+		error = VOP_GETATTR(vp, &va, p->p_ucred);
 		FRELE(fp);
 		if (error)
 			return error;

@@ -512,7 +512,7 @@ sys_mmap(struct proc *p, void *v, register_t *retval)
 			 */
 			if (fp->f_flag & FWRITE) {
 				if ((error =
-				    VOP_GETATTR(vp, &va, p->p_ucred, p)))
+				    VOP_GETATTR(vp, &va, p->p_ucred)))
 					goto out;
 				if ((va.va_flags & (IMMUTABLE|APPEND)) == 0)
 					maxprot |= VM_PROT_WRITE;

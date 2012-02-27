@@ -69,7 +69,7 @@ loadfirmware(const char *name, u_char **bufp, size_t *buflen)
 #endif
 	if (error)
 		goto err;
-	error = VOP_GETATTR(nid.ni_vp, &va, p->p_ucred, p);
+	error = VOP_GETATTR(nid.ni_vp, &va, p->p_ucred);
 	if (error)
 		goto fail;
 	if (nid.ni_vp->v_type != VREG || va.va_size == 0) {

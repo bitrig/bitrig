@@ -212,8 +212,8 @@ ext2fs_mount(struct mount *mp, const char *path, void *data,
 				devvp = ump->um_devvp;
 				vn_lock(devvp, LK_EXCLUSIVE | LK_RETRY, p);
 				error = VOP_ACCESS(devvp, VREAD | VWRITE,
-				    p->p_ucred, p);
-				VOP_UNLOCK(devvp, 0, p);
+				    p->p_ucred);
+				VOP_UNLOCK(devvp, 0);
 				if (error)
 					return (error);
 			}
@@ -264,8 +264,8 @@ ext2fs_mount(struct mount *mp, const char *path, void *data,
 		if ((mp->mnt_flag & MNT_RDONLY) == 0)
 			accessmode |= VWRITE;
 		vn_lock(devvp, LK_EXCLUSIVE | LK_RETRY, p);
-		error = VOP_ACCESS(devvp, accessmode, p->p_ucred, p);
-		VOP_UNLOCK(devvp, 0, p);
+		error = VOP_ACCESS(devvp, accessmode, p->p_ucred);
+		VOP_UNLOCK(devvp, 0);
 		if (error)
 			goto error_devvp;
 	}
@@ -495,7 +495,7 @@ ext2fs_mountfs(struct vnode *devvp, struct mount *mp, struct proc *p)
 		return (error);
 
 	ronly = (mp->mnt_flag & MNT_RDONLY) != 0;
-	error = VOP_OPEN(devvp, ronly ? FREAD : FREAD|FWRITE, FSCRED, p);
+	error = VOP_OPEN(devvp, ronly ? FREAD : FREAD|FWRITE, FSCRED);
 	if (error)
 		return (error);
 
@@ -583,8 +583,8 @@ out:
 	if (bp)
 		brelse(bp);
 	vn_lock(devvp, LK_EXCLUSIVE | LK_RETRY, p);
-	(void)VOP_CLOSE(devvp, ronly ? FREAD : FREAD|FWRITE, cred, p);
-	VOP_UNLOCK(devvp, 0, p);
+	(void)VOP_CLOSE(devvp, ronly ? FREAD : FREAD|FWRITE, cred);
+	VOP_UNLOCK(devvp, 0);
 	if (ump) {
 		free(ump->um_e2fs, M_UFSMNT);
 		free(ump, M_UFSMNT);
@@ -621,7 +621,7 @@ ext2fs_unmount(struct mount *mp, int mntflags, struct proc *p)
 		ump->um_devvp->v_specmountpoint = NULL;
 	vn_lock(ump->um_devvp, LK_EXCLUSIVE | LK_RETRY, p);
 	error = VOP_CLOSE(ump->um_devvp, fs->e2fs_ronly ? FREAD : FREAD|FWRITE,
-	    NOCRED, p);
+	    NOCRED);
 	vput(ump->um_devvp);
 	free(fs->e2fs_gd, M_UFSMNT);
 	free(fs, M_UFSMNT);
@@ -650,8 +650,8 @@ ext2fs_flushfiles(struct mount *mp, int flags, struct proc *p)
 	 * Flush filesystem metadata.
 	 */
 	vn_lock(ump->um_devvp, LK_EXCLUSIVE | LK_RETRY, p);
-	error = VOP_FSYNC(ump->um_devvp, p->p_ucred, MNT_WAIT, p);
-	VOP_UNLOCK(ump->um_devvp, 0, p);
+	error = VOP_FSYNC(ump->um_devvp, p->p_ucred, MNT_WAIT);
+	VOP_UNLOCK(ump->um_devvp, 0);
 	return (error);
 }
 
@@ -731,7 +731,7 @@ ext2fs_sync_vnode(struct vnode *vp, void *args)
 	if (vget(vp, LK_EXCLUSIVE | LK_NOWAIT, esa->p))
 		return (0);
 
-	if ((error = VOP_FSYNC(vp, esa->cred, esa->waitfor, esa->p)) != 0)
+	if ((error = VOP_FSYNC(vp, esa->cred, esa->waitfor)) != 0)
 		esa->allerror = error;
 	vput(vp);
 	return (0);
@@ -774,9 +774,9 @@ ext2fs_sync(struct mount *mp, int waitfor, struct ucred *cred, struct proc *p)
 	 */
 	if (waitfor != MNT_LAZY) {
 		vn_lock(ump->um_devvp, LK_EXCLUSIVE | LK_RETRY, p);
-		if ((error = VOP_FSYNC(ump->um_devvp, cred, waitfor, p)) != 0)
+		if ((error = VOP_FSYNC(ump->um_devvp, cred, waitfor)) != 0)
 			allerror = error;
-		VOP_UNLOCK(ump->um_devvp, 0, p);
+		VOP_UNLOCK(ump->um_devvp, 0);
 	}
 	/*
 	 * Write back modified superblock.

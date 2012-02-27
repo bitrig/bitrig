@@ -1417,7 +1417,7 @@ coredump(struct proc *p)
 	 * owned by someone else.
 	 */
 	vp = nd.ni_vp;
-	if ((error = VOP_GETATTR(vp, &vattr, cred, p)) != 0)
+	if ((error = VOP_GETATTR(vp, &vattr, cred)) != 0)
 		goto out;
 	if (vp->v_type != VREG || vattr.va_nlink != 1 ||
 	    vattr.va_mode & ((VREAD | VWRITE) >> 3 | (VREAD | VWRITE) >> 6) ||
@@ -1427,7 +1427,7 @@ coredump(struct proc *p)
 	}
 	VATTR_NULL(&vattr);
 	vattr.va_size = 0;
-	VOP_SETATTR(vp, &vattr, cred, p);
+	VOP_SETATTR(vp, &vattr, cred);
 	p->p_acflag |= ACORE;
 
 	io.io_proc = p;
@@ -1437,7 +1437,7 @@ coredump(struct proc *p)
 
 	error = (*p->p_emul->e_coredump)(p, &io);
 out:
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 	error1 = vn_close(vp, FWRITE, cred, p);
 	crfree(cred);
 	if (error == 0)

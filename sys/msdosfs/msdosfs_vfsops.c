@@ -139,8 +139,8 @@ msdosfs_mount(struct mount *mp, const char *path, void *data,
 				devvp = pmp->pm_devvp;
 				vn_lock(devvp, LK_EXCLUSIVE | LK_RETRY, p);
 				error = VOP_ACCESS(devvp, VREAD | VWRITE,
-						   p->p_ucred, p);
-				VOP_UNLOCK(devvp, 0, p);
+						   p->p_ucred);
+				VOP_UNLOCK(devvp, 0);
 				if (error)
 					return (error);
 			}
@@ -197,8 +197,8 @@ msdosfs_mount(struct mount *mp, const char *path, void *data,
 		if ((mp->mnt_flag & MNT_RDONLY) == 0)
 			accessmode |= VWRITE;
 		vn_lock(devvp, LK_EXCLUSIVE | LK_RETRY, p);
-		error = VOP_ACCESS(devvp, accessmode, p->p_ucred, p);
-		VOP_UNLOCK(devvp, 0, p);
+		error = VOP_ACCESS(devvp, accessmode, p->p_ucred);
+		VOP_UNLOCK(devvp, 0);
 		if (error)
 			goto error_devvp;
 	}
@@ -292,12 +292,12 @@ msdosfs_mountfs(struct vnode *devvp, struct mount *mp, struct proc *p,
 		return (EBUSY);
 	vn_lock(devvp, LK_EXCLUSIVE | LK_RETRY, p);
 	error = vinvalbuf(devvp, V_SAVE, p->p_ucred, p, 0, 0);
-	VOP_UNLOCK(devvp, 0, p);
+	VOP_UNLOCK(devvp, 0);
 	if (error)
 		return (error);
 
 	ronly = (mp->mnt_flag & MNT_RDONLY) != 0;
-	error = VOP_OPEN(devvp, ronly ? FREAD : FREAD|FWRITE, FSCRED, p);
+	error = VOP_OPEN(devvp, ronly ? FREAD : FREAD|FWRITE, FSCRED);
 	if (error)
 		return (error);
 
@@ -573,8 +573,8 @@ error_exit:
 		brelse(bp);
 
 	vn_lock(devvp, LK_EXCLUSIVE|LK_RETRY, p);
-	(void) VOP_CLOSE(devvp, ronly ? FREAD : FREAD|FWRITE, NOCRED, p);
-	VOP_UNLOCK(devvp, 0, p);
+	(void) VOP_CLOSE(devvp, ronly ? FREAD : FREAD|FWRITE, NOCRED);
+	VOP_UNLOCK(devvp, 0);
 
 	if (pmp) {
 		if (pmp->pm_inusemap)
@@ -617,7 +617,7 @@ msdosfs_unmount(struct mount *mp, int mntflags,struct proc *p)
 #endif
 	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
 	error = VOP_CLOSE(vp,
-	   pmp->pm_flags & MSDOSFSMNT_RONLY ? FREAD : FREAD|FWRITE, NOCRED, p);
+	   pmp->pm_flags & MSDOSFSMNT_RONLY ? FREAD : FREAD|FWRITE, NOCRED);
 	vput(vp);
 	free(pmp->pm_inusemap, M_MSDOSFSFAT);
 	free(pmp, M_MSDOSFSMNT);
@@ -694,9 +694,9 @@ msdosfs_sync_vnode(struct vnode *vp, void *arg)
 	if (vget(vp, LK_EXCLUSIVE | LK_NOWAIT, msa->p))
 		return (0);
 
-	if ((error = VOP_FSYNC(vp, msa->cred, msa->waitfor, msa->p)) != 0)
+	if ((error = VOP_FSYNC(vp, msa->cred, msa->waitfor)) != 0)
 		msa->allerror = error;
-	VOP_UNLOCK(vp, 0, msa->p);
+	VOP_UNLOCK(vp, 0);
 	vrele(vp);
 
 	return (0);
@@ -736,9 +736,9 @@ msdosfs_sync(struct mount *mp, int waitfor, struct ucred *cred, struct proc *p)
 	 */
 	if (waitfor != MNT_LAZY) {
 		vn_lock(pmp->pm_devvp, LK_EXCLUSIVE | LK_RETRY, p);
-		if ((error = VOP_FSYNC(pmp->pm_devvp, cred, waitfor, p)) != 0)
+		if ((error = VOP_FSYNC(pmp->pm_devvp, cred, waitfor)) != 0)
 			msa.allerror = error;
-		VOP_UNLOCK(pmp->pm_devvp, 0, p);
+		VOP_UNLOCK(pmp->pm_devvp, 0);
 	}
 
 	return (msa.allerror);

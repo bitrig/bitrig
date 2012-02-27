@@ -213,8 +213,7 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 			 * rarely, we solve the problem by syncing the file
 			 * so that it will have no data structures left.
 			 */
-			if ((error = VOP_FSYNC(ovp, cred, MNT_WAIT,
-					       curproc)) != 0)
+			if ((error = VOP_FSYNC(ovp, cred, MNT_WAIT)) != 0)
 				return (error);
 		} else {
 			(void)ufs_quota_free_blocks(oip, DIP(oip, blocks),
@@ -263,8 +262,7 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 				 * buffers force a sync on the vnode to prevent
 				 * buffer cache exhaustion.
 				 */
-				VOP_FSYNC(ovp, curproc->p_ucred, MNT_WAIT,
-				    curproc);
+				VOP_FSYNC(ovp, curproc->p_ucred, MNT_WAIT);
 			}
 		return (error);
 	}
@@ -300,7 +298,7 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 		 */
 		if (DOINGSOFTDEP(ovp) && lbn < NDADDR &&
 		    fragroundup(fs, blkoff(fs, length)) < fs->fs_bsize &&
-		    (error = VOP_FSYNC(ovp, cred, MNT_WAIT, curproc)) != 0)
+		    (error = VOP_FSYNC(ovp, cred, MNT_WAIT)) != 0)
 			return (error);
 		DIP_ASSIGN(oip, size, length);
 		size = blksize(fs, oip, lbn);

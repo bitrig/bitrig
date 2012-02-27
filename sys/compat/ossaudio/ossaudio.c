@@ -558,7 +558,7 @@ getdevinfo(fp, p)
 	vp = (struct vnode *)fp->f_data;
 	if (vp->v_type != VCHR)
 		return 0;
-	if (VOP_GETATTR(vp, &va, p->p_ucred, p))
+	if (VOP_GETATTR(vp, &va, p->p_ucred))
 		return 0;
 	if (di->done && di->dev == va.va_rdev)
 		return di;

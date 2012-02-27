@@ -373,7 +373,7 @@ sys_ktrace(struct proc *curp, void *v, register_t *retval)
 			goto done;
 		vp = nd.ni_vp;
 
-		VOP_UNLOCK(vp, 0, curp);
+		VOP_UNLOCK(vp, 0);
 		if (vp->v_type != VREG) {
 			error = EACCES;
 			goto done;

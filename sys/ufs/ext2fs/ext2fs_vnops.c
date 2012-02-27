@@ -220,7 +220,7 @@ ext2fs_setattr(void *v)
 	struct vnode *vp = ap->a_vp;
 	struct inode *ip = VTOI(vp);
 	struct ucred *cred = ap->a_cred;
-	struct proc *p = ap->a_p;
+	struct proc *p = curproc;
 	int error;
 
 	/*
@@ -298,7 +298,7 @@ ext2fs_setattr(void *v)
 		if (cred->cr_uid != ip->i_e2fs_uid &&
 			(error = suser_ucred(cred)) &&
 			((vap->va_vaflags & VA_UTIMES_NULL) == 0 || 
-			(error = VOP_ACCESS(vp, VWRITE, cred, p))))
+			(error = VOP_ACCESS(vp, VWRITE, cred))))
 			return (error);
 		if (vap->va_mtime.tv_sec != VNOVAL)
 			ip->i_flag |= IN_CHANGE | IN_UPDATE;
@@ -470,7 +470,7 @@ ext2fs_link(void *v)
 	pool_put(&namei_pool, cnp->cn_pnbuf);
 out1:
 	if (dvp != vp)
-		VOP_UNLOCK(vp, 0, p);
+		VOP_UNLOCK(vp, 0);
 out2:
 	vput(dvp);
 	return (error);
@@ -578,26 +578,25 @@ abortit:
 	dp = VTOI(fdvp);
 	ip = VTOI(fvp);
 	if ((nlink_t)ip->i_e2fs_nlink >= LINK_MAX) {
-		VOP_UNLOCK(fvp, 0, p);
+		VOP_UNLOCK(fvp, 0);
 		error = EMLINK;
 		goto abortit;
 	}
 	if ((ip->i_e2fs_flags & (EXT2_IMMUTABLE | EXT2_APPEND)) ||
 		(dp->i_e2fs_flags & EXT2_APPEND)) {
-		VOP_UNLOCK(fvp, 0, p);
+		VOP_UNLOCK(fvp, 0);
 		error = EPERM;
 		goto abortit;
 	}
 	if ((ip->i_e2fs_mode & IFMT) == IFDIR) {
-        	error = VOP_ACCESS(fvp, VWRITE, tcnp->cn_cred, tcnp->cn_proc);
-        	if (!error && tvp)
-                	error = VOP_ACCESS(tvp, VWRITE, tcnp->cn_cred, 
-			    tcnp->cn_proc);
-        	if (error) {
-                	VOP_UNLOCK(fvp, 0, p);
-                	error = EACCES;
-                	goto abortit;
-        	}
+		error = VOP_ACCESS(fvp, VWRITE, tcnp->cn_cred);
+		if (!error && tvp)
+			error = VOP_ACCESS(tvp, VWRITE, tcnp->cn_cred);
+		if (error) {
+			VOP_UNLOCK(fvp, 0);
+			error = EACCES;
+			goto abortit;
+		}
 		/*
 		 * Avoid ".", "..", and aliases of "." for obvious reasons.
 		 */
@@ -606,7 +605,7 @@ abortit:
 			(fcnp->cn_flags&ISDOTDOT) ||
 			(tcnp->cn_flags & ISDOTDOT) ||
 		    (ip->i_flag & IN_RENAME)) {
-			VOP_UNLOCK(fvp, 0, p);
+			VOP_UNLOCK(fvp, 0);
 			error = EINVAL;
 			goto abortit;
 		}
@@ -634,7 +633,7 @@ abortit:
 	ip->i_e2fs_nlink++;
 	ip->i_flag |= IN_CHANGE;
 	if ((error = ext2fs_update(ip, NULL, NULL, 1)) != 0) {
-		VOP_UNLOCK(fvp, 0, p);
+		VOP_UNLOCK(fvp, 0);
 		goto bad;
 	}
 
@@ -648,8 +647,8 @@ abortit:
 	 * to namei, as the parent directory is unlocked by the
 	 * call to checkpath().
 	 */
-	error = VOP_ACCESS(fvp, VWRITE, tcnp->cn_cred, tcnp->cn_proc);
-	VOP_UNLOCK(fvp, 0, p);
+	error = VOP_ACCESS(fvp, VWRITE, tcnp->cn_cred);
+	VOP_UNLOCK(fvp, 0);
 	if (oldparent != dp->i_number)
 		newparent = dp->i_number;
 	if (doingdirectory && newparent) {

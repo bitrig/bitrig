@@ -329,7 +329,7 @@ sr_meta_probe(struct sr_discipline *sd, dev_t *dt, int no_chunk)
 			 * XXX leaving dev open for now; move this to attach
 			 * and figure out the open/close dance for unwind.
 			 */
-			error = VOP_OPEN(vn, FREAD | FWRITE, NOCRED, curproc);
+			error = VOP_OPEN(vn, FREAD | FWRITE, NOCRED);
 			if (error) {
 				DNPRINTF(SR_D_META,"%s: sr_meta_probe can't "
 				    "open %s\n", DEVNAME(sc), devname);
@@ -1016,7 +1016,7 @@ sr_meta_native_bootprobe(struct sr_softc *sc, dev_t devno,
 	}
 
 	/* open device */
-	error = VOP_OPEN(vn, FREAD, NOCRED, curproc);
+	error = VOP_OPEN(vn, FREAD, NOCRED);
 	if (error) {
 		DNPRINTF(SR_D_META, "%s: sr_meta_native_bootprobe open "
 		    "failed\n", DEVNAME(sc));
@@ -1025,18 +1025,17 @@ sr_meta_native_bootprobe(struct sr_softc *sc, dev_t devno,
 	}
 
 	/* get disklabel */
-	error = VOP_IOCTL(vn, DIOCGDINFO, (caddr_t)&label, FREAD, NOCRED,
-	    curproc);
+	error = VOP_IOCTL(vn, DIOCGDINFO, (caddr_t)&label, FREAD, NOCRED);
 	if (error) {
 		DNPRINTF(SR_D_META, "%s: sr_meta_native_bootprobe ioctl "
 		    "failed\n", DEVNAME(sc));
-		VOP_CLOSE(vn, FREAD, NOCRED, curproc);
+		VOP_CLOSE(vn, FREAD, NOCRED);
 		vput(vn);
 		goto done;
 	}
 
 	/* we are done, close device */
-	error = VOP_CLOSE(vn, FREAD, NOCRED, curproc);
+	error = VOP_CLOSE(vn, FREAD, NOCRED);
 	if (error) {
 		DNPRINTF(SR_D_META, "%s: sr_meta_native_bootprobe close "
 		    "failed\n", DEVNAME(sc));
@@ -1079,7 +1078,7 @@ sr_meta_native_bootprobe(struct sr_softc *sc, dev_t devno,
 			    "allocate vnode for partition");
 			goto done;
 		}
-		error = VOP_OPEN(vn, FREAD, NOCRED, curproc);
+		error = VOP_OPEN(vn, FREAD, NOCRED);
 		if (error) {
 			DNPRINTF(SR_D_META, "%s: sr_meta_native_bootprobe "
 			    "open failed, partition %d\n",
@@ -1091,14 +1090,14 @@ sr_meta_native_bootprobe(struct sr_softc *sc, dev_t devno,
 		if (sr_meta_native_read(fake_sd, rawdev, md, NULL)) {
 			sr_error(sc, "native bootprobe could not read native "
 			    "metadata");
-			VOP_CLOSE(vn, FREAD, NOCRED, curproc);
+			VOP_CLOSE(vn, FREAD, NOCRED);
 			vput(vn);
 			continue;
 		}
 
 		/* are we a softraid partition? */
 		if (md->ssdi.ssd_magic != SR_MAGIC) {
-			VOP_CLOSE(vn, FREAD, NOCRED, curproc);
+			VOP_CLOSE(vn, FREAD, NOCRED);
 			vput(vn);
 			continue;
 		}
@@ -1124,7 +1123,7 @@ sr_meta_native_bootprobe(struct sr_softc *sc, dev_t devno,
 		}
 
 		/* we are done, close partition */
-		VOP_CLOSE(vn, FREAD, NOCRED, curproc);
+		VOP_CLOSE(vn, FREAD, NOCRED);
 		vput(vn);
 	}
 
@@ -1544,7 +1543,7 @@ sr_meta_native_probe(struct sr_softc *sc, struct sr_chunk *ch_entry)
 
 	/* get disklabel */
 	error = VOP_IOCTL(ch_entry->src_vn, DIOCGDINFO, (caddr_t)&label, FREAD,
-	    NOCRED, curproc);
+	    NOCRED);
 	if (error) {
 		DNPRINTF(SR_D_META, "%s: %s can't obtain disklabel\n",
 		    DEVNAME(sc), devname);
@@ -2630,7 +2629,7 @@ sr_hotspare(struct sr_softc *sc, dev_t dev)
 		sr_error(sc, "sr_hotspare: cannot allocate vnode");
 		goto done;
 	}
-	if (VOP_OPEN(vn, FREAD | FWRITE, NOCRED, curproc)) {
+	if (VOP_OPEN(vn, FREAD | FWRITE, NOCRED)) {
 		DNPRINTF(SR_D_META,"%s: sr_hotspare cannot open %s\n",
 		    DEVNAME(sc), devname);
 		vput(vn);
@@ -2641,10 +2640,10 @@ sr_hotspare(struct sr_softc *sc, dev_t dev)
 	/* Get partition details. */
 	part = DISKPART(dev);
 	if (VOP_IOCTL(vn, DIOCGDINFO, (caddr_t)&label, FREAD,
-	    NOCRED, curproc)) {
+	    NOCRED)) {
 		DNPRINTF(SR_D_META, "%s: sr_hotspare ioctl failed\n",
 		    DEVNAME(sc));
-		VOP_CLOSE(vn, FREAD | FWRITE, NOCRED, curproc);
+		VOP_CLOSE(vn, FREAD | FWRITE, NOCRED);
 		vput(vn);
 		goto fail;
 	}
@@ -2758,7 +2757,7 @@ done:
 	if (sm)
 		free(sm, M_DEVBUF);
 	if (open) {
-		VOP_CLOSE(vn, FREAD | FWRITE, NOCRED, curproc);
+		VOP_CLOSE(vn, FREAD | FWRITE, NOCRED);
 		vput(vn);
 	}
 
@@ -2933,7 +2932,7 @@ sr_rebuild_init(struct sr_discipline *sd, dev_t dev, int hotspare)
 		    DEVNAME(sc));
 		goto done;
 	}
-	if (VOP_OPEN(vn, FREAD | FWRITE, NOCRED, curproc)) {
+	if (VOP_OPEN(vn, FREAD | FWRITE, NOCRED)) {
 		DNPRINTF(SR_D_META,"%s: sr_ioctl_setstate can't "
 		    "open %s\n", DEVNAME(sc), devname);
 		vput(vn);
@@ -2944,7 +2943,7 @@ sr_rebuild_init(struct sr_discipline *sd, dev_t dev, int hotspare)
 	/* Get disklabel and check partition. */
 	part = DISKPART(dev);
 	if (VOP_IOCTL(vn, DIOCGDINFO, (caddr_t)&label, FREAD,
-	    NOCRED, curproc)) {
+	    NOCRED)) {
 		DNPRINTF(SR_D_META, "%s: sr_ioctl_setstate ioctl failed\n",
 		    DEVNAME(sc));
 		goto done;
@@ -3018,7 +3017,7 @@ sr_rebuild_init(struct sr_discipline *sd, dev_t dev, int hotspare)
 	rv = 0;
 done:
 	if (open) {
-		VOP_CLOSE(vn, FREAD | FWRITE, NOCRED, curproc);
+		VOP_CLOSE(vn, FREAD | FWRITE, NOCRED);
 		vput(vn);
 	}
 
@@ -3580,8 +3579,7 @@ sr_chunks_unwind(struct sr_softc *sc, struct sr_chunk_head *cl)
 			 */
 			vn_lock(ch_entry->src_vn, LK_EXCLUSIVE |
 			    LK_RETRY, curproc);
-			VOP_CLOSE(ch_entry->src_vn, FREAD | FWRITE, NOCRED,
-			    curproc);
+			VOP_CLOSE(ch_entry->src_vn, FREAD | FWRITE, NOCRED);
 			vput(ch_entry->src_vn);
 		}
 		free(ch_entry, M_DEVBUF);

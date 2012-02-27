@@ -100,7 +100,7 @@ diskmapioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 
 	if (ovp->v_writecount == 0) {
 		vn_lock(ovp, LK_EXCLUSIVE | LK_RETRY, p);
-		VOP_CLOSE(ovp, fp->f_flag, p->p_ucred, p);
+		VOP_CLOSE(ovp, fp->f_flag, p->p_ucred);
 		vput(ovp);
 	}
 
@@ -114,7 +114,7 @@ diskmapioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 	fp->f_rbytes = 0;
 	fp->f_wbytes = 0;
 
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 
 	FRELE(fp);
 	fdpunlock(fdp);

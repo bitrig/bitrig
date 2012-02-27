@@ -124,7 +124,7 @@ nfs_kqpoll(void *arg)
 			/* save v_size, nfs_getattr() updates it */
 			osize = np->n_size;
 
-			error = VOP_GETATTR(ke->vp, &attr, p->p_ucred, p);
+			error = VOP_GETATTR(ke->vp, &attr, p->p_ucred);
 			if (error == ESTALE) {
 				NFS_INVALIDATE_ATTRCACHE(np);
 				VN_KNOTE(ke->vp, NOTE_DELETE);
@@ -297,7 +297,7 @@ nfs_kqfilter(void *v)
 	 * held. This is likely cheap due to attrcache, so do it now.
 	 */ 
 	memset(&attr, 0, sizeof(attr));
-	(void) VOP_GETATTR(vp, &attr, p->p_ucred, p);
+	(void) VOP_GETATTR(vp, &attr, p->p_ucred);
 
 	rw_enter_write(&nfskevq_lock);
 

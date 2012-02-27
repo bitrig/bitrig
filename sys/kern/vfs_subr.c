@@ -546,7 +546,7 @@ loop:
 	 * The vnodes created by bdevvp should not be aliased (why?).
 	 */
 
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 	vclean(vp, 0, p);
 	vp->v_op = nvp->v_op;
 	vp->v_tag = nvp->v_tag;
@@ -677,7 +677,7 @@ vput(struct vnode *vp)
 #endif
 	vp->v_usecount--;
 	if (vp->v_usecount > 0) {
-		VOP_UNLOCK(vp, 0, p);
+		VOP_UNLOCK(vp, 0);
 		return;
 	}
 
@@ -688,7 +688,7 @@ vput(struct vnode *vp)
 	}
 #endif
 
-	VOP_INACTIVE(vp, p);
+	VOP_INACTIVE(vp);
 
 	if (vp->v_usecount == 0 && !(vp->v_bioflag & VBIOONFREELIST))
 		vputonfreelist(vp);
@@ -733,7 +733,7 @@ vrele(struct vnode *vp)
 		return (1);
 	}
 
-	VOP_INACTIVE(vp, p);
+	VOP_INACTIVE(vp);
 
 	if (vp->v_usecount == 0 && !(vp->v_bioflag & VBIOONFREELIST))
 		vputonfreelist(vp);
@@ -919,7 +919,7 @@ vclean(struct vnode *vp, int flags, struct proc *p)
 	 * For active vnodes, it ensures that no other activity can
 	 * occur while the underlying object is being cleaned out.
 	 */
-	VOP_LOCK(vp, LK_DRAIN, p);
+	VOP_LOCK(vp, LK_DRAIN);
 
 	/*
 	 * Clean out any VM data associated with the vnode.
@@ -937,20 +937,20 @@ vclean(struct vnode *vp, int flags, struct proc *p)
 	 */
 	if (active) {
 		if (flags & DOCLOSE)
-			VOP_CLOSE(vp, FNONBLOCK, NOCRED, p);
-		VOP_INACTIVE(vp, p);
+			VOP_CLOSE(vp, FNONBLOCK, NOCRED);
+		VOP_INACTIVE(vp);
 	} else {
 		/*
 		 * Any other processes trying to obtain this lock must first
 		 * wait for VXLOCK to clear, then call the new lock operation.
 		 */
-		VOP_UNLOCK(vp, 0, p);
+		VOP_UNLOCK(vp, 0);
 	}
 
 	/*
 	 * Reclaim the vnode.
 	 */
-	if (VOP_RECLAIM(vp, p))
+	if (VOP_RECLAIM(vp))
 		panic("vclean: cannot reclaim");
 	if (active) {
 		vp->v_usecount--;
@@ -1827,7 +1827,7 @@ vinvalbuf(struct vnode *vp, int flags, struct ucred *cred, struct proc *p,
 		vwaitforio(vp, 0, "vinvalbuf", 0);
 		if (!LIST_EMPTY(&vp->v_dirtyblkhd)) {
 			splx(s);
-			if ((error = VOP_FSYNC(vp, cred, MNT_WAIT, p)) != 0)
+			if ((error = VOP_FSYNC(vp, cred, MNT_WAIT)) != 0)
 				return (error);
 			s = splbio();
 			if (vp->v_numoutput > 0 ||

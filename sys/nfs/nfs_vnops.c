@@ -331,7 +331,7 @@ nfs_access(void *v)
 		}
 		*tl = txdr_unsigned(mode);
 
-		info.nmi_procp = ap->a_p;
+		info.nmi_procp = curproc;
 		info.nmi_cred = ap->a_cred;
 		error = nfs_request(vp, NFSPROC_ACCESS, &info);
 
@@ -424,25 +424,25 @@ nfs_open(void *v)
 	}
 
 	if (np->n_flag & NMODIFIED) {
-		error = nfs_vinvalbuf(vp, V_SAVE, ap->a_cred, ap->a_p);
+		error = nfs_vinvalbuf(vp, V_SAVE, ap->a_cred, curproc);
 		if (error == EINTR)
 			return (error);
 		uvm_vnp_uncache(vp);
 		NFS_INVALIDATE_ATTRCACHE(np);
 		if (vp->v_type == VDIR)
 			np->n_direofoffset = 0;
-		error = VOP_GETATTR(vp, &vattr, ap->a_cred, ap->a_p);
+		error = VOP_GETATTR(vp, &vattr, ap->a_cred);
 		if (error)
 			return (error);
 		np->n_mtime = vattr.va_mtime;
 	} else {
-		error = VOP_GETATTR(vp, &vattr, ap->a_cred, ap->a_p);
+		error = VOP_GETATTR(vp, &vattr, ap->a_cred);
 		if (error)
 			return (error);
 		if (timespeccmp(&np->n_mtime, &vattr.va_mtime, !=)) {
 			if (vp->v_type == VDIR)
 				np->n_direofoffset = 0;
-			error = nfs_vinvalbuf(vp, V_SAVE, ap->a_cred, ap->a_p);
+			error = nfs_vinvalbuf(vp, V_SAVE, ap->a_cred, curproc);
 			if (error == EINTR)
 				return (error);
 			uvm_vnp_uncache(vp);
@@ -492,10 +492,10 @@ nfs_close(void *v)
 	if (vp->v_type == VREG) {
 	    if (np->n_flag & NMODIFIED) {
 		if (NFS_ISV3(vp)) {
-		    error = nfs_flush(vp, ap->a_cred, MNT_WAIT, ap->a_p, 0);
+		    error = nfs_flush(vp, ap->a_cred, MNT_WAIT, curproc, 0);
 		    np->n_flag &= ~NMODIFIED;
 		} else
-		    error = nfs_vinvalbuf(vp, V_SAVE, ap->a_cred, ap->a_p);
+		    error = nfs_vinvalbuf(vp, V_SAVE, ap->a_cred, curproc);
 		NFS_INVALIDATE_ATTRCACHE(np);
 	    }
 	    if (np->n_flag & NWRITEERR) {
@@ -535,7 +535,7 @@ nfs_getattr(void *v)
 	nfsstats.rpccnt[NFSPROC_GETATTR]++;
 	info.nmi_mb = info.nmi_mreq = nfsm_reqhead(NFSX_FH(info.nmi_v3));
 	nfsm_fhtom(&info, vp, info.nmi_v3);
-	info.nmi_procp = ap->a_p;
+	info.nmi_procp = curproc;
 	info.nmi_cred = ap->a_cred;
 	error = nfs_request(vp, NFSPROC_GETATTR, &info);
 	if (!error)
@@ -598,10 +598,10 @@ nfs_setattr(void *v)
 				return (EROFS);
 			if (vap->va_size == 0)
 				error = nfs_vinvalbuf(vp, 0,
-				     ap->a_cred, ap->a_p);
+				     ap->a_cred, curproc);
 			else
 				error = nfs_vinvalbuf(vp, V_SAVE,
-				     ap->a_cred, ap->a_p);
+				     ap->a_cred, curproc);
 			if (error)
 				return (error);
 			tsize = np->n_size;
@@ -612,9 +612,9 @@ nfs_setattr(void *v)
 		vap->va_atime.tv_sec != VNOVAL) &&
 		vp->v_type == VREG &&
 		(error = nfs_vinvalbuf(vp, V_SAVE, ap->a_cred,
-		    ap->a_p)) == EINTR)
+		    curproc)) == EINTR)
 		return (error);
-	error = nfs_setattrrpc(vp, vap, ap->a_cred, ap->a_p);
+	error = nfs_setattrrpc(vp, vap, ap->a_cred, curproc);
 	if (error && vap->va_size != VNOVAL) {
 		np->n_size = np->n_vattr.va_size = tsize;
 		uvm_vnp_setsize(vp, np->n_size);
@@ -754,7 +754,7 @@ nfs_lookup(void *v)
 			cnp->cn_flags &= ~PDIRUNLOCK;
 		}
 
-		err2 = VOP_ACCESS(dvp, VEXEC, cnp->cn_cred, cnp->cn_proc);
+		err2 = VOP_ACCESS(dvp, VEXEC, cnp->cn_cred);
 		if (err2 != 0) {
 			if (error == 0) {
 				if (*vpp != dvp)
@@ -767,9 +767,8 @@ nfs_lookup(void *v)
 		}
 
 		if (error == ENOENT) {
-			if (!VOP_GETATTR(dvp, &vattr, cnp->cn_cred,
-			    cnp->cn_proc) && vattr.va_mtime.tv_sec ==
-			    VTONFS(dvp)->n_ctime)
+			if (!VOP_GETATTR(dvp, &vattr, cnp->cn_cred) &&
+			    vattr.va_mtime.tv_sec == VTONFS(dvp)->n_ctime)
 				return (ENOENT);
 			cache_purge(dvp);
 			np->n_ctime = 0;
@@ -777,7 +776,7 @@ nfs_lookup(void *v)
 		}
 
 		newvp = *vpp;
-		if (!VOP_GETATTR(newvp, &vattr, cnp->cn_cred, cnp->cn_proc)
+		if (!VOP_GETATTR(newvp, &vattr, cnp->cn_cred)
 			&& vattr.va_ctime.tv_sec == VTONFS(newvp)->n_ctime)
 		{
 			nfsstats.lookupcache_hits++;
@@ -785,7 +784,7 @@ nfs_lookup(void *v)
 				cnp->cn_flags |= SAVENAME;
 			if ((!lockparent || !(flags & ISLASTCN)) &&
 			     newvp != dvp)
-				VOP_UNLOCK(dvp, 0, p);
+				VOP_UNLOCK(dvp, 0);
 			return (0);
 		}
 		cache_purge(newvp);
@@ -842,7 +841,7 @@ dorpc:
 		m_freem(info.nmi_mrep);
 		cnp->cn_flags |= SAVENAME;
 		if (!lockparent) {
-			VOP_UNLOCK(dvp, 0, p);
+			VOP_UNLOCK(dvp, 0);
 			cnp->cn_flags |= PDIRUNLOCK;
 		}
 		return (0);
@@ -863,7 +862,7 @@ dorpc:
 		} else
 			nfsm_loadattr(newvp, NULL);
 	} else if (flags & ISDOTDOT) {
-		VOP_UNLOCK(dvp, 0, p);
+		VOP_UNLOCK(dvp, 0);
 		cnp->cn_flags |= PDIRUNLOCK;
 
 		error = nfs_nget(dvp->v_mount, fhp, fhsize, &np);
@@ -903,7 +902,7 @@ dorpc:
 		} else
 			nfsm_loadattr(newvp, NULL);
 		if (!lockparent || !(flags & ISLASTCN)) {
-			VOP_UNLOCK(dvp, 0, p);
+			VOP_UNLOCK(dvp, 0);
 			cnp->cn_flags |= PDIRUNLOCK;
 		}
 	}
@@ -933,7 +932,7 @@ nfsmout:
 		if (newvp != NULLVP) {
 			vrele(newvp);
 			if (newvp != dvp)
-				VOP_UNLOCK(newvp, 0, p);
+				VOP_UNLOCK(newvp, 0);
 		}
 		if ((cnp->cn_nameiop == CREATE || cnp->cn_nameiop == RENAME) &&
 		    (flags & ISLASTCN) && error == ENOENT) {
@@ -1448,7 +1447,7 @@ nfs_remove(void *v)
 	if (vp->v_type == VDIR)
 		error = EPERM;
 	else if (vp->v_usecount == 1 || (np->n_sillyrename &&
-	    VOP_GETATTR(vp, &vattr, cnp->cn_cred, cnp->cn_proc) == 0 &&
+	    VOP_GETATTR(vp, &vattr, cnp->cn_cred) == 0 &&
 	    vattr.va_nlink > 1)) {
 		/*
 		 * Purge the name cache so that the chance of a lookup for
@@ -1696,7 +1695,7 @@ nfs_link(void *v)
 	 * doesn't get "out of sync" with the server.
 	 * XXX There should be a better way!
 	 */
-	VOP_FSYNC(vp, cnp->cn_cred, MNT_WAIT, cnp->cn_proc);
+	VOP_FSYNC(vp, cnp->cn_cred, MNT_WAIT);
 
 	nfsstats.rpccnt[NFSPROC_LINK]++;
 	info.nmi_mb = info.nmi_mreq = nfsm_reqhead(2 * NFSX_FH(info.nmi_v3) +
@@ -1977,7 +1976,7 @@ nfs_readdir(void *v)
 	 */
 	if (np->n_direofoffset != 0 && 
 	    uio->uio_offset == np->n_direofoffset) {
-		if (VOP_GETATTR(vp, &vattr, ap->a_cred, uio->uio_procp) == 0 &&
+		if (VOP_GETATTR(vp, &vattr, ap->a_cred) == 0 &&
 		    timespeccmp(&np->n_mtime, &vattr.va_mtime, ==)) {
 			nfsstats.direofcache_hits++;
 			*ap->a_eofflag = 1;
@@ -2755,7 +2754,7 @@ nfs_fsync(void *v)
 {
 	struct vop_fsync_args *ap = v;
 
-	return (nfs_flush(ap->a_vp, ap->a_cred, ap->a_waitfor, ap->a_p, 1));
+	return (nfs_flush(ap->a_vp, ap->a_cred, ap->a_waitfor, curproc, 1));
 }
 
 /*
@@ -3133,7 +3132,7 @@ nfsspec_access(void *v)
 		}
 	}
 
-	error = VOP_GETATTR(vp, &va, ap->a_cred, ap->a_p);
+	error = VOP_GETATTR(vp, &va, ap->a_cred);
 	if (error)
 		return (error);
 
@@ -3208,7 +3207,7 @@ nfsspec_close(void *v)
 				vattr.va_atime = np->n_atim;
 			if (np->n_flag & NUPD)
 				vattr.va_mtime = np->n_mtim;
-			(void)VOP_SETATTR(vp, &vattr, ap->a_cred, ap->a_p);
+			(void)VOP_SETATTR(vp, &vattr, ap->a_cred);
 		}
 	}
 	return (spec_close(ap));
@@ -3277,7 +3276,7 @@ nfsfifo_close(void *v)
 				vattr.va_atime = np->n_atim;
 			if (np->n_flag & NUPD)
 				vattr.va_mtime = np->n_mtim;
-			(void)VOP_SETATTR(vp, &vattr, ap->a_cred, ap->a_p);
+			(void)VOP_SETATTR(vp, &vattr, ap->a_cred);
 		}
 	}
 	return (fifo_close(ap));

@@ -433,7 +433,7 @@ ffs_write(void *v)
 				 * buffers force a sync on the vnode to prevent
 				 * buffer cache exhaustion.
 				 */
-				VOP_FSYNC(vp, NULL, MNT_WAIT, p);
+				VOP_FSYNC(vp, NULL, MNT_WAIT);
 			}
 	}
 	return (error);
@@ -560,7 +560,7 @@ ffs_reclaim(void *v)
 	struct inode *ip = VTOI(vp);
 	int error;
 
-	if ((error = ufs_reclaim(vp, ap->a_p)) != 0)
+	if ((error = ufs_reclaim(vp, curproc)) != 0)
 		return (error);
 
 	if (ip->i_din1 != NULL) {

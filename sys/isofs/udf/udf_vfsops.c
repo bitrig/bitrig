@@ -164,8 +164,8 @@ udf_mount(struct mount *mp, const char *path, void *data,
 	/* Check the access rights on the mount device */
 	if (p->p_ucred->cr_uid) {
 		vn_lock(devvp, LK_EXCLUSIVE | LK_RETRY, p);
-		error = VOP_ACCESS(devvp, VREAD, p->p_ucred, p);
-		VOP_UNLOCK(devvp, 0, p);
+		error = VOP_ACCESS(devvp, VREAD, p->p_ucred);
+		VOP_UNLOCK(devvp, 0);
 		if (error) {
 			vrele(devvp);
 			return (error);
@@ -243,11 +243,11 @@ udf_mountfs(struct vnode *devvp, struct mount *mp, uint32_t lb, struct proc *p)
 		return (EBUSY);
 	vn_lock(devvp, LK_EXCLUSIVE | LK_RETRY, p);
 	error = vinvalbuf(devvp, V_SAVE, p->p_ucred, p, 0, 0);
-	VOP_UNLOCK(devvp, 0, p);
+	VOP_UNLOCK(devvp, 0);
 	if (error)
 		return (error);
 
-	error = VOP_OPEN(devvp, FREAD, FSCRED, p);
+	error = VOP_OPEN(devvp, FREAD, FSCRED);
 	if (error)
 		return (error);
 
@@ -443,8 +443,8 @@ bail:
 		brelse(bp);
 
 	vn_lock(devvp, LK_EXCLUSIVE|LK_RETRY, p);
-	VOP_CLOSE(devvp, FREAD, FSCRED, p);
-	VOP_UNLOCK(devvp, 0, p);
+	VOP_CLOSE(devvp, FREAD, FSCRED);
+	VOP_UNLOCK(devvp, 0);
 
 	return (error);
 }
@@ -467,8 +467,8 @@ udf_unmount(struct mount *mp, int mntflags, struct proc *p)
 
 	vn_lock(devvp, LK_EXCLUSIVE | LK_RETRY, p);
 	vinvalbuf(devvp, V_SAVE, NOCRED, p, 0, 0);
-	error = VOP_CLOSE(devvp, FREAD, NOCRED, p);
-	VOP_UNLOCK(devvp, 0, p);
+	error = VOP_CLOSE(devvp, FREAD, NOCRED);
+	VOP_UNLOCK(devvp, 0);
 	if (error)
 		return (error);
 

@@ -1026,14 +1026,14 @@ ptm_vn_open(struct nameidata *ndp)
 	 * Get us a fresh cred with root privileges.
 	 */
 	cred = crget();
-	error = VOP_OPEN(vp, FREAD|FWRITE, cred, p);
+	error = VOP_OPEN(vp, FREAD|FWRITE, cred);
 	if (!error) {
 		/* update atime/mtime */
 		VATTR_NULL(&vattr);
 		getnanotime(&vattr.va_atime);
 		vattr.va_mtime = vattr.va_atime;
 		vattr.va_vaflags |= VA_UTIMES_NULL;
-		(void)VOP_SETATTR(vp, &vattr, p->p_ucred, p);
+		(void)VOP_SETATTR(vp, &vattr, p->p_ucred);
 	}
 	crfree(cred);
 
@@ -1128,7 +1128,7 @@ retry:
 		cfp->f_type = DTYPE_VNODE;
 		cfp->f_ops = &vnops;
 		cfp->f_data = (caddr_t) cnd.ni_vp;
-		VOP_UNLOCK(cnd.ni_vp, 0, p);
+		VOP_UNLOCK(cnd.ni_vp, 0);
 
 		/*
 		 * Open the slave.
@@ -1154,14 +1154,14 @@ retry:
 			vattr.va_mode = (S_IRUSR|S_IWUSR|S_IWGRP) & ALLPERMS;
 			/* Get a fake cred to pretend we're root. */
 			cred = crget();
-			error = VOP_SETATTR(snd.ni_vp, &vattr, cred, p);
+			error = VOP_SETATTR(snd.ni_vp, &vattr, cred);
 			crfree(cred);
 			if (error) {
 				vput(snd.ni_vp);
 				goto bad;
 			}
 		}
-		VOP_UNLOCK(snd.ni_vp, 0, p);
+		VOP_UNLOCK(snd.ni_vp, 0);
 		if (snd.ni_vp->v_usecount > 1 ||
 		    (snd.ni_vp->v_flag & (VALIASED)))
 			VOP_REVOKE(snd.ni_vp, REVOKEALL);
@@ -1181,7 +1181,7 @@ retry:
 		sfp->f_type = DTYPE_VNODE;
 		sfp->f_ops = &vnops;
 		sfp->f_data = (caddr_t) snd.ni_vp;
-		VOP_UNLOCK(snd.ni_vp, 0, p);
+		VOP_UNLOCK(snd.ni_vp, 0);
 
 		/* now, put the indexen and names into struct ptmget */
 		ptm->cfd = cindx;

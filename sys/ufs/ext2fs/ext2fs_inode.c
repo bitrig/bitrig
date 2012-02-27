@@ -110,7 +110,7 @@ ext2fs_inactive(void *v)
 	struct vop_inactive_args *ap = v;
 	struct vnode *vp = ap->a_vp;
 	struct inode *ip = VTOI(vp);
-	struct proc *p = ap->a_p;
+	struct proc *p = curproc;
 	struct timespec ts;
 	int error = 0;
 #ifdef DIAGNOSTIC
@@ -138,7 +138,7 @@ ext2fs_inactive(void *v)
 		ext2fs_update(ip, NULL, NULL, 0);
 	}
 out:
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 	/*
 	 * If we are done with the inode, reclaim it
 	 * so that it can be reused immediately.

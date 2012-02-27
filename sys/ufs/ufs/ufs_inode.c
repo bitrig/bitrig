@@ -64,7 +64,7 @@ ufs_inactive(void *v)
 	struct vop_inactive_args *ap = v;
 	struct vnode *vp = ap->a_vp;
 	struct inode *ip = VTOI(vp);
-	struct proc *p = ap->a_p;
+	struct proc *p = curproc;
 	mode_t mode;
 	int error = 0;
 #ifdef DIAGNOSTIC
@@ -113,7 +113,7 @@ ufs_inactive(void *v)
 		UFS_UPDATE(ip, 0);
 	}
 out:
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 
 	/*
 	 * If we are done with the inode, reclaim it

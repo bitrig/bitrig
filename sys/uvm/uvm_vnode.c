@@ -231,7 +231,7 @@ uvn_attach(void *arg, vm_prot_t accessprot)
 			    (u_quad_t)DL_GETPSIZE(pi.part);
 		}
 	} else {
-		result = VOP_GETATTR(vp, &vattr, curproc->p_ucred, curproc);
+		result = VOP_GETATTR(vp, &vattr, curproc->p_ucred);
 		if (result == 0)
 			used_vnode_size = vattr.va_size;
 	}
@@ -1364,7 +1364,7 @@ uvn_io(struct uvm_vnode *uvn, vm_page_t *pps, int npages, int flags, int rw)
 			result = VOP_WRITE(vn, &uio, 0, curproc->p_ucred);
 
 		if ((uvn->u_flags & UVM_VNODE_VNISLOCKED) == 0)
-			VOP_UNLOCK(vn, 0, curproc);
+			VOP_UNLOCK(vn, 0);
 	}
 
 	/* NOTE: vnode now unlocked (unless vnislocked) */
@@ -1506,7 +1506,7 @@ uvm_vnp_uncache(struct vnode *vp)
 	 * unlocked causing us to return TRUE when we should not.   we ignore
 	 * this as a false-positive return value doesn't hurt us.
 	 */
-	VOP_UNLOCK(vp, 0, curproc);
+	VOP_UNLOCK(vp, 0);
 	uvn_detach(&uvn->u_obj);
 	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curproc);
 
