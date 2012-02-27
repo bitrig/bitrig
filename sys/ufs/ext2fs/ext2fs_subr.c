@@ -48,7 +48,7 @@
 #include <ufs/ext2fs/ext2fs.h>
 #include <ufs/ext2fs/ext2fs_extern.h>
 
-#include <miscfs/fifofs/fifo.h>
+#include <sys/fifovnops.h>
 
 union _qcvt {
 	int64_t qcvt;

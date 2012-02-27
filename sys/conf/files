@@ -686,6 +686,7 @@ file kern/exec_elf32.c
 file kern/exec_elf64.c
 file kern/exec_script.c
 file kern/exec_subr.c
+file kern/fifo_vnops.c			fifo
 file kern/init_main.c
 file kern/init_sysent.c
 file kern/kern_acct.c			accounting
@@ -773,7 +774,6 @@ file kern/vfs_vops.c
 file kern/vfs_vnops.c
 file kern/vfs_getcwd.c
 file kern/spec_vnops.c
-file miscfs/fifofs/fifo_vnops.c		fifo
 file miscfs/procfs/procfs_cmdline.c	procfs
 file miscfs/procfs/procfs_linux.c	procfs
 file miscfs/procfs/procfs_status.c	procfs

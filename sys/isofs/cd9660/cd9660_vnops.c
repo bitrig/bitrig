@@ -58,7 +58,7 @@
 #include <sys/poll.h>
 #include <sys/specdev.h>
 
-#include <miscfs/fifofs/fifo.h>
+#include <sys/fifovnops.h>
 
 #include <isofs/cd9660/iso.h>
 #include <isofs/cd9660/cd9660_extern.h>

@@ -48,7 +48,8 @@
 #include <sys/malloc.h>
 #include <sys/poll.h>
 #include <sys/un.h>
-#include <miscfs/fifofs/fifo.h>
+
+#include <sys/fifovnops.h>
 
 /*
  * This structure is associated with the FIFO vnode and stores
@@ -113,7 +114,6 @@ struct filterops fifowrite_filtops =
  * Open called to set up a new instance of a fifo or
  * to find an active instance of a fifo.
  */
-/* ARGSUSED */
 int
 fifo_open(void *v)
 {
@@ -195,10 +195,6 @@ bad:
 	return (error);
 }
 
-/*
- * Vnode op for read
- */
-/* ARGSUSED */
 int
 fifo_read(void *v)
 {
@@ -228,10 +224,6 @@ fifo_read(void *v)
 	return (error);
 }
 
-/*
- * Vnode op for write
- */
-/* ARGSUSED */
 int
 fifo_write(void *v)
 {
@@ -254,10 +246,6 @@ fifo_write(void *v)
 	return (error);
 }
 
-/*
- * Device ioctl operation.
- */
-/* ARGSUSED */
 int
 fifo_ioctl(void *v)
 {
@@ -282,7 +270,6 @@ fifo_ioctl(void *v)
 	return (0);
 }
 
-/* ARGSUSED */
 int
 fifo_poll(void *v)
 {
@@ -324,11 +311,6 @@ fifo_inactive(void *v)
 	return (0);
 }
 
-
-/*
- * Device close routine
- */
-/* ARGSUSED */
 int
 fifo_close(void *v)
 {

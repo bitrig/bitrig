@@ -64,7 +64,7 @@
 
 #include <uvm/uvm_extern.h>
 
-#include <miscfs/fifofs/fifo.h>
+#include <sys/fifovnops.h>
 
 #include <nfs/rpcv2.h>
 #include <nfs/nfsproto.h>

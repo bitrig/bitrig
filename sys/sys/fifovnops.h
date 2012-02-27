@@ -32,10 +32,9 @@
  *	@(#)fifo.h	8.3 (Berkeley) 8/10/94
  */
 #ifdef FIFO
+#ifdef _KERNEL
 
-/*
- * Prototypes for fifo operations on vnodes.
- */
+/* Prototypes for fifo operations on vnodes. */
 int	fifo_badop(void *);
 int	fifo_ebadf(void *);
 
@@ -52,5 +51,7 @@ int	fifo_print(void *);
 int	fifo_pathconf(void *);
 int	fifo_advlock(void *);
 
-void 	fifo_printinfo(struct vnode *);
-#endif /* FIFO */
+void	fifo_printinfo(struct vnode *);
+
+#endif	/* _KERNEL */
+#endif	/* FIFO */
