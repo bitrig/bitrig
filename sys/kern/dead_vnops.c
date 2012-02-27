@@ -42,9 +42,6 @@
 #include <sys/proc.h>
 #include <sys/poll.h>
 
-/*
- * Prototypes for dead operations on vnodes.
- */
 int	dead_badop(void *);
 int	dead_ebadf(void *);
 
@@ -106,10 +103,6 @@ dead_open(void *v)
 	return (ENXIO);
 }
 
-/*
- * Vnode op for read
- */
-/* ARGSUSED */
 int
 dead_read(void *v)
 {
@@ -125,10 +118,6 @@ dead_read(void *v)
 	return (0);
 }
 
-/*
- * Vnode op for write
- */
-/* ARGSUSED */
 int
 dead_write(void *v)
 {
@@ -139,10 +128,6 @@ dead_write(void *v)
 	return (EIO);
 }
 
-/*
- * Device ioctl operation.
- */
-/* ARGSUSED */
 int
 dead_ioctl(void *v)
 {
@@ -157,13 +142,8 @@ dead_ioctl(void *v)
 int
 dead_poll(void *v)
 {
-#if 0
-	struct vop_poll_args *ap = v;
-#endif
 
-	/*
-	 * Let the user find out that the descriptor is gone.
-	 */
+	/* Let the user find out that the descriptor is gone. */
 	return (POLLHUP);
 }
 

@@ -678,6 +678,7 @@ file isofs/udf/udf_subr.c		udf
 file isofs/udf/udf_vfsops.c		udf
 file isofs/udf/udf_vnops.c		udf
 file kern/clock_subr.c
+file kern/dead_vnops.c
 file kern/exec_aout.c
 file kern/exec_conf.c
 file kern/exec_ecoff.c
@@ -772,7 +773,6 @@ file kern/vfs_vops.c
 file kern/vfs_vnops.c
 file kern/vfs_getcwd.c
 file kern/spec_vnops.c
-file miscfs/deadfs/dead_vnops.c
 file miscfs/fifofs/fifo_vnops.c		fifo
 file miscfs/procfs/procfs_cmdline.c	procfs
 file miscfs/procfs/procfs_linux.c	procfs
