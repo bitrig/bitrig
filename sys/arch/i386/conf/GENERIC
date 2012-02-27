@@ -25,9 +25,7 @@ option		APERTURE	# in-kernel aperture driver for XFree86
 
 option		COMPAT_LINUX	# binary compatibility with Linux
 
-option		PROCFS		# /proc
-option		NTFS		# NTFS support
-
+#option		PROCFS		# /proc
 config		bsd	swap generic
 
 mainbus0 at root
