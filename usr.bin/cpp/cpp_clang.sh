@@ -46,7 +46,7 @@ DOLLAR="@dollaropt@"
 INCS="-nostdinc"
 FOUNDFILES=false
 
-CPP=/usr/contrib/bin/clang
+CPP=clang
 CLANGOPTS="-x c -E"
 CLANGSTDIN="-"
 OPTS=""

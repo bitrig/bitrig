@@ -42,13 +42,13 @@ gnu:	config.status
 
 config: .FORCE
 	-rm -f config.cache
-	PATH="/bin:/usr/bin:/sbin:/usr/sbin" \
+	PATH="/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin" \
 	${XCFLAGS} \
 	INSTALL_PROGRAM="${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP}" \
 	sh ${.CURDIR}/configure ${CONFIGURE_OPTS}
 
 config.status:
-	PATH="/bin:/usr/bin:/sbin:/usr/sbin" \
+	PATH="/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin" \
 	${XCFLAGS} \
 	INSTALL_PROGRAM="${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP}" \
 	sh ${.CURDIR}/configure ${CONFIGURE_OPTS}

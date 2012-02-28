@@ -33,9 +33,9 @@ CFLAGS?=	-O2
 CXXLAGS?=	-O2
 .else
 # XXX remove -W ones once stand is fixed
-CC?=		/usr/contrib/bin/clang
-CXX?=		/usr/contrib/bin/clang++
-HOSTCC?=	/usr/contrib/bin/clang
+CC?=		clang
+CXX?=		clang++
+HOSTCC?=	clang
 CFLAGS?=	-O3 -Wno-strict-aliasing -Wno-pointer-sign
 CXXFLAGS?=	-O3
 .endif

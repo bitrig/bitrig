@@ -85,7 +85,7 @@ CF=
 .endif
 
 do-config: .USE
-	PATH="/bin:/usr/bin:/sbin:/usr/sbin:/usr/contrib/bin" \
+	PATH="/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin" \
 	MAKEINFO='makeinfo --no-split' \
 	CC="${CC}" \
 	CFLAGS="${CFLAGS} ${COPTS}" \

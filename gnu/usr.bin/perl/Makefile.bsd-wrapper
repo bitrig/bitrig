@@ -18,7 +18,7 @@ CFLAGS+= -fno-strict-aliasing
 .if ${COMPILER_VERSION:L} == "gcc3" || ${COMPILER_VERSION:L} == "gcc4"
 CFLAGS+= -fno-delete-null-pointer-checks
 .else
-MYCC=-Dcc='/usr/contrib/bin/clang'
+MYCC=-Dcc='clang'
 .endif
 
 CONFIGURE_ARGS= -dsE -Dopenbsd_distribution=defined -Dccflags='-DNO_LOCALE_NUMERIC -DNO_LOCALE_COLLATE ${CFLAGS}' ${MYCC}
