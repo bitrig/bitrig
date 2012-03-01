@@ -12,6 +12,6 @@ SUBDIR+=	${BINUTILS_VERSION}
 .endif
 
 # Do these last; texinfo builds the info 'dir' file, perl must be after binutils
-SUBDIR+=	perl texinfo
+SUBDIR+=	perl
 
 .include <bsd.subdir.mk>
