@@ -2,6 +2,6 @@
 
 .include <bsd.own.mk>
 
-SUBDIR+=libiberty libreadline libstdc++-v3 libsupc++-v3 ../usr.bin/cc/libobjc
+SUBDIR+= libstdc++-v3 libsupc++-v3 ../usr.bin/cc/libobjc
 
 .include <bsd.subdir.mk>
