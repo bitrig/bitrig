@@ -642,17 +642,6 @@ doc
 # ./usr/share/doc/html
 html
 
-# ./usr/share/doc/html/lynx_help
-lynx_help
-
-# ./usr/share/doc/html/lynx_help/keystrokes
-keystrokes
-# ./usr/share/doc/html/lynx_help/keystrokes
-..
-
-# ./usr/share/doc/html/lynx_help
-..
-
 # ./usr/share/doc/html/bind
 bind
 
