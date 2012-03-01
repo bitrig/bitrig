@@ -266,7 +266,6 @@ distribution-etc-root-var: distrib-dirs
 	cd ../usr.bin/ssh && exec ${MAKE} distribution
 	cd ../usr.sbin/httpd && exec ${MAKE} -f Makefile.bsd-wrapper distribution
 	cd ../lib/libssl && exec ${MAKE} distribution
-	cd ../gnu/usr.bin/lynx && exec ${MAKE} -f Makefile.bsd-wrapper distribution
 	cd ../usr.bin/bgplg && exec ${MAKE} distribution
 	cd ../usr.bin/mail && exec ${MAKE} distribution
 	cd ../usr.sbin/ldapd && exec ${MAKE} distribution
