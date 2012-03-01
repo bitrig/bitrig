@@ -5,12 +5,6 @@
 
 SUBDIR+=	cc cxxfilt lynx
 
-.if make(obj)
-SUBDIR+=	binutils
-.else
-SUBDIR+=	${BINUTILS_VERSION}
-.endif
-
 # Do these last; texinfo builds the info 'dir' file, perl must be after binutils
 SUBDIR+=	perl
 
