@@ -6,7 +6,7 @@
 SUBDIR+=	cc cxxfilt lynx
 
 .if make(obj)
-SUBDIR+=	binutils binutils-2.17
+SUBDIR+=	binutils
 .else
 SUBDIR+=	${BINUTILS_VERSION}
 .endif
