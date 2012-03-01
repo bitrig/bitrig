@@ -3,7 +3,7 @@
 
 .include <bsd.own.mk>
 
-SUBDIR+=	cc cxxfilt cvs lynx
+SUBDIR+=	cc cxxfilt lynx
 
 .if make(obj)
 SUBDIR+=	binutils binutils-2.17
