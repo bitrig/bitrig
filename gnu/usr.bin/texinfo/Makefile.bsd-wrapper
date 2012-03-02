@@ -1,0 +1,75 @@
+#	$OpenBSD: Makefile.bsd-wrapper,v 1.41 2007/11/03 15:13:56 espie Exp $
+
+INFODIR=	infodir=/usr/share/info
+INFOPATH=	DEFAULT_INFOPATH=/usr/local/info:/usr/share/info:.
+
+MAN=	doc/info.1 doc/install-info.1 doc/makeinfo.1 doc/texi2dvi.1
+MAN+= doc/texindex.1 doc/info.5 doc/texinfo.5 doc/infokey.1
+
+GNUCFLAGS=	CC="${CC}" CFLAGS="${CFLAGS} ${COPTS}" \
+	ACLOCAL=true AUTOHEADER=true AUTOCONF=true AUTOMAKE=true \
+	MAKEINFOFLAGS='--no-split'
+
+FSFMAKE=	${MAKE} ${GNUCFLAGS} ${INFODIR} ${INFOPATH} 
+FSFALL=all-recursive
+MAN+=		texi2pdf.1
+
+.include <bsd.own.mk>
+
+all:	config.status
+	${FSFMAKE} LDFLAGS=${LDSTATIC} $(FSFALL)
+
+.FORCE:	.IGNORE
+
+.ifdef GLOBAL_AUTOCONF_CACHE
+CF=	--cache-file=${GLOBAL_AUTOCONF_CACHE}
+.else
+CF=
+.endif
+
+config: .FORCE
+.ifndef GLOBAL_AUTOCONF_CACHE
+	-rm -f config.cache
+.endif
+	PATH="/bin:/usr/bin:/sbin:/usr/sbin" \
+	CFLAGS="${CFLAGS} ${COPTS}" \
+	INSTALL_PROGRAM="${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP}" \
+		/bin/sh ${.CURDIR}/configure --infodir=/usr/share/info --prefix=/usr --disable-nls ${CF}
+
+config.status:
+	PATH="/bin:/usr/bin:/sbin:/usr/sbin" \
+	CFLAGS="${CFLAGS} ${COPTS}" \
+	INSTALL_PROGRAM="${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP}" \
+		/bin/sh ${.CURDIR}/configure --infodir=/usr/share/info --prefix=/usr --disable-nls ${CF}
+
+BEFOREMAN=config.status
+
+.ifdef NOMAN
+maninstall:
+	@echo NOMAN is set
+.endif
+
+install:	maninstall
+	${FSFMAKE} mandir= INSTALL_MAN= DESTDIR=${DESTDIR} install
+	sh ${.CURDIR}/util/gen-dir-node ${DESTDIR}/usr/share/info > \
+	    ${DESTDIR}/usr/share/info/dir
+
+clean cleandir:
+	rm -f ${CLEANFILES}
+	if [ -e ${.OBJDIR}/Makefile ]; then \
+		$(FSFMAKE) distclean; fi
+
+depend:
+	# Nothing here so far...
+
+lint:
+	# Nothing here so far...
+
+tags:
+	# Nothing here so far...
+
+.include <bsd.obj.mk>
+.include <bsd.subdir.mk>
+.ifndef NOMAN
+.include <bsd.man.mk>
+.endif
