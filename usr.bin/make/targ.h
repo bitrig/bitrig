@@ -65,9 +65,9 @@ Targ_FindNodeh(const char *name, size_t n, uint32_t hv, int flags)
 #else
 #define Targ_FindNodeh(name, n, hv, flags) \
     Targ_FindNodeih(name, name + n - 1, hv, flags)
+extern inline GNode *Targ_FindNodeh(const char *, size_t, uint32_t, int);
 #endif
 
-extern inline GNode *Targ_FindNodeh(const char *, size_t, uint32_t, int);
 extern void Targ_FindList(Lst, Lst);
 extern bool Targ_Ignore(GNode *);
 extern bool Targ_Silent(GNode *);
