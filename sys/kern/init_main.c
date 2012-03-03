@@ -131,8 +131,8 @@ int	ncpusfound = 1;			/* number of cpus we find */
 __volatile int start_init_exec;		/* semaphore for start_init() */
 
 #if !defined(NO_PROPOLICE)
-long	__guard[8];
-long	__stack_chk_guard[8] __attribute__((alias("__guard")));
+long		__guard[8];
+extern long	__stack_chk_guard[8] __attribute__((alias("__guard")));
 #endif
 
 /* XXX return int so gcc -Werror won't complain */
