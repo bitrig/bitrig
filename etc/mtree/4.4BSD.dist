@@ -744,22 +744,6 @@ info
 # ./usr/share/info
 ..
 
-# ./usr/share/lkm
-lkm		gname=bin uname=root
-
-# ./usr/share/lkm/misc
-misc		gname=bin uname=root
-# ./usr/share/lkm/misc
-..
-
-# ./usr/share/lkm/syscall
-syscall		gname=bin uname=root
-# ./usr/share/lkm/syscall
-..
-
-# ./usr/share/lkm
-..
-
 # ./usr/share/locale
 locale
 # ./usr/share/locale/bg_BG.CP1251
