@@ -50,8 +50,4 @@ tags: ${SRCS}
 	    sed "s;\([^:]*\):\([^(]*\)(\([^, )]*\)\(.*\);\3	\1	/^\2(\3\4$$/;" \
 	    >> tags; sort -o tags tags
 
-beforeinstall:
-	${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 tags \
-		${DESTDIR}/var/db/lib${LIB}.tags
-
 .include <bsd.lib.mk>
