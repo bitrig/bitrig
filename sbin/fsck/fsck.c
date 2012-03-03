@@ -231,7 +231,7 @@ checkfs(const char *vfstype, const char *spec, const char *mntpt, void *auxarg,
 	const char *extra = getoptions(vfstype);
 
 	if (strcmp(vfstype, "ufs") == 0)
-		vfstype = MOUNT_UFS;
+		vfstype = MOUNT_FFS;
 
 	maxargc = 100;
 	argv = emalloc(sizeof(char *) * maxargc);

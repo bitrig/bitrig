@@ -67,14 +67,12 @@ enum vtype	{ VNON, VREG, VDIR, VBLK, VCHR, VLNK, VSOCK, VFIFO, VBAD };
  */
 enum vtagtype	{
 	VT_NON, VT_UFS, VT_NFS, VT_MFS, VT_MSDOSFS,
-	VT_PORTAL, VT_PROCFS, VT_AFS, VT_ISOFS, VT_ADOSFS,
-	VT_EXT2FS, VT_VFS, VT_NNPFS, VT_NTFS, VT_UDF, VT_XFS = VT_NNPFS
+	VT_ISOFS, VT_EXT2FS, VT_VFS, VT_UDF,
 };
 
-#define	VTAG_NAMES \
-    "NON", "UFS", "NFS", "MFS", "MSDOSFS",			\
-    "PORTAL", "PROCFS", "AFS", "ISOFS", "ADOSFS",		\
-    "EXT2FS", "VFS", "NNPFS", "NTFS", "UDF"
+#define	VTAG_NAMES				\
+    "NON", "UFS", "NFS", "MFS", "MSDOSFS",	\
+    "ISOFS", "EXT2FS", "VFS",  "UDF"
 
 /*
  * Each underlying filesystem allocates its own private area and hangs
@@ -301,11 +299,6 @@ struct vops {
 #ifdef _KERNEL
 extern struct vops dead_vops;
 extern struct vops spec_vops;
-
-struct vop_generic_args {
-	void		*a_garbage;
-	/* Other data probably follows; */
-};
 
 struct vop_islocked_args {
 	struct vnode *a_vp;
@@ -581,7 +574,7 @@ struct uio;
 struct vattr;
 struct vnode;
 
-/* vfs_subr */
+/* vfs_subr.c */
 int	bdevvp(dev_t, struct vnode **);
 int	cdevvp(dev_t, struct vnode **);
 struct vnode *checkalias(struct vnode *, dev_t, struct mount *);
@@ -649,6 +642,6 @@ void	vn_syncer_add_to_worklist(struct vnode *, int);
 /* misc */
 int	vn_isdisk(struct vnode *, int *);
 int	softdep_fsync(struct vnode *);
-int 	getvnode(struct filedesc *, int, struct file **);
+int	getvnode(struct filedesc *, int, struct file **);
 
 #endif /* _KERNEL */

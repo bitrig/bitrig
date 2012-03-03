@@ -131,27 +131,6 @@ struct nfs_args {
 	int		acdirmin;	/* ac for dir recently modified */
 	int		acdirmax;	/* ac for dir not recently modified */
 };
-/* NFS args version 3 (for backwards compatibility) */
-struct nfs_args3 {
-	int		version;	/* args structure version number */
-	struct sockaddr	*addr;		/* file server address */
-	int		addrlen;	/* length of address */
-	int		sotype;		/* Socket type */
-	int		proto;		/* and Protocol */
-	u_char		*fh;		/* File handle to be mounted */
-	int		fhsize;		/* Size, in bytes, of fh */
-	int		flags;		/* flags */
-	int		wsize;		/* write size in bytes */
-	int		rsize;		/* read size in bytes */
-	int		readdirsize;	/* readdir size in bytes */
-	int		timeo;		/* initial timeout in .1 secs */
-	int		retrans;	/* times to retry send */
-	int		maxgrouplist;	/* Max. size of group list */
-	int		readahead;	/* # of blocks to readahead */
-	int		leaseterm;	/* Term (sec) of lease */
-	int		deadthresh;	/* Retrans threshold */
-	char		*hostname;	/* server's name */
-};
 
 /*
  * NFS mount option flags
@@ -220,51 +199,11 @@ struct msdosfs_args {
 #define	MSDOSFSMNT_NOWIN95	0x04	/* Completely ignore Win95 entries */
 #define MSDOSFSMNT_ALLOWDIRX	0x10	/* dir is mode +x if r */
 
-/*
- * Arguments to mount ntfs filesystems
- */
-struct ntfs_args {
-	char	*fspec;			/* block special device to mount */
-	struct	export_args export_info;/* network export information */
-	uid_t	uid;			/* uid that owns ntfs files */
-	gid_t	gid;			/* gid that owns ntfs files */
-	mode_t	mode;			/* mask to be applied for ntfs perms */
-	u_long	flag;			/* additional flags */
-};
-
-/*
- * ntfs mount options:
- */
-#define	NTFS_MFLAG_CASEINS      0x00000001
-#define	NTFS_MFLAG_ALLNAMES     0x00000002
-
 /* Arguments to mount UDF file systems */
 struct udf_args {
 	char *fspec; /* Block special device to mount */
 	u_int32_t lastblock; /* Special device last block */
 };
-
-/*
- * Arguments to mount procfs filesystems
- */
-struct procfs_args {
-	int version;
-	int flags;
-};
-
-/*
- * procfs mount options:
- */
-#define PROCFS_ARGSVERSION      1
-#define PROCFSMNT_LINUXCOMPAT   0x01
-
-
-/*
- * file system statistics
- */
-
-#define	MFSNAMELEN	16	/* length of fs type name, including nul */
-#define	MNAMELEN	90	/* length of buffer for returned name */
 
 /* per-filesystem mount options */
 union mount_info {
@@ -272,11 +211,11 @@ union mount_info {
 	struct mfs_args mfs_args;
 	struct nfs_args nfs_args;
 	struct iso_args iso_args;
-	struct procfs_args procfs_args;
 	struct msdosfs_args msdosfs_args;
-	struct ntfs_args ntfs_args;
-	char __align[160];	/* 64-bit alignment and room to grow */
 };
+
+#define	MFSNAMELEN	16	/* length of fs type name, including nul */
+#define	MNAMELEN	90	/* length of buffer for returned name */
 
 /* new statfs structure with mount options and statvfs fields */
 struct statfs {
@@ -285,23 +224,23 @@ struct statfs {
 	u_int32_t	f_iosize;	/* optimal transfer block size */
 
 					/* unit is f_bsize */
-	u_int64_t  	f_blocks;	/* total data blocks in file system */
-	u_int64_t  	f_bfree;	/* free blocks in fs */
-	int64_t  	f_bavail;	/* free blocks avail to non-superuser */
+	u_int64_t	f_blocks;	/* total data blocks in file system */
+	u_int64_t	f_bfree;	/* free blocks in fs */
+	int64_t		f_bavail;	/* free blocks avail to non-superuser */ 
 
-	u_int64_t 	f_files;	/* total file nodes in file system */
-	u_int64_t  	f_ffree;	/* free file nodes in fs */
-	int64_t  	f_favail;	/* free file nodes avail to non-root */
+	u_int64_t	f_files;	/* total file nodes in file system */
+	u_int64_t	f_ffree;	/* free file nodes in fs */
+	int64_t		f_favail;	/* free file nodes avail to non-root */
 
-	u_int64_t  	f_syncwrites;	/* count of sync writes since mount */
-	u_int64_t  	f_syncreads;	/* count of sync reads since mount */
-	u_int64_t  	f_asyncwrites;	/* count of async writes since mount */
-	u_int64_t  	f_asyncreads;	/* count of async reads since mount */
+	u_int64_t	f_syncwrites;	/* count of sync writes since mount */
+	u_int64_t	f_syncreads;	/* count of sync reads since mount */
+	u_int64_t	f_asyncwrites;	/* count of async writes since mount */
+	u_int64_t	f_asyncreads;	/* count of async reads since mount */
 
-	fsid_t	   	f_fsid;		/* file system id */
+	fsid_t		f_fsid;		/* file system id */
 	u_int32_t	f_namemax;      /* maximum filename length */
-	uid_t	   	f_owner;	/* user that mounted the file system */
-	u_int32_t  	f_ctime;	/* last mount [-u] time */
+	uid_t		f_owner;	/* user that mounted the file system */
+	u_int32_t	f_ctime;	/* last mount [-u] time */
 	u_int32_t	f_spare[3];	/* spare for later */
 
 	char f_fstypename[MFSNAMELEN];	/* fs type name */
@@ -310,43 +249,15 @@ struct statfs {
 	union mount_info mount_info;	/* per-filesystem mount options */
 };
 
-/* old (pre-2.6) statfs structure */
-struct ostatfs {
-	short	f_type;			/* type of file system (unused; zero) */
-	short	f_flags;		/* copy of mount flags */
-	long	f_bsize;		/* fundamental file system block size */
-	long	f_iosize;		/* optimal transfer block size */
-	long	f_blocks;		/* total data blocks in file system */
-	long	f_bfree;		/* free blocks in fs */
-	long	f_bavail;		/* free blocks avail to non-superuser */
-	long	f_files;		/* total file nodes in file system */
-	long	f_ffree;		/* free file nodes in fs */
-	fsid_t	f_fsid;			/* file system id */
-	uid_t	f_owner;		/* user that mounted the file system */
-	long	f_syncwrites;		/* count of sync writes since mount */
-	long	f_asyncwrites;		/* count of async writes since mount */
-	long	f_spare[2];		/* spare for later */
-	char	f_fstypename[MFSNAMELEN]; /* fs type name */
-	char	f_mntonname[MNAMELEN];	  /* directory on which mounted */
-	char	f_mntfromname[MNAMELEN];  /* mounted file system */
-};
-
 /*
  * File system types.
  */
 #define	MOUNT_FFS	"ffs"		/* UNIX "Fast" Filesystem */
-#define	MOUNT_UFS	MOUNT_FFS	/* for compatibility */
 #define	MOUNT_NFS	"nfs"		/* Network Filesystem */
 #define	MOUNT_MFS	"mfs"		/* Memory Filesystem */
 #define	MOUNT_MSDOS	"msdos"		/* MSDOS Filesystem */
-#define	MOUNT_PROCFS	"procfs"	/* /proc Filesystem */
-#define	MOUNT_AFS	"afs"		/* Andrew Filesystem */
 #define	MOUNT_CD9660	"cd9660"	/* ISO9660 (aka CDROM) Filesystem */
 #define	MOUNT_EXT2FS	"ext2fs"	/* Second Extended Filesystem */
-#define	MOUNT_NCPFS	"ncpfs"		/* NetWare Network File System */
-#define	MOUNT_XFS	"nnpfs"		/* nnpfs (temp) */
-#define	MOUNT_NNPFS	"nnpfs"		/* nnpfs */
-#define	MOUNT_NTFS	"ntfs"		/* NTFS */
 #define	MOUNT_UDF	"udf"		/* UDF */
 
 /*
@@ -414,7 +325,7 @@ struct mount {
     "\014EXKERB\015LOCAL\016QUOTA\017ROOTFS"
 
 /*
- * filesystem control flags.
+ * Filesystem control flags.
  */
 #define	MNT_UPDATE	0x00010000	/* not a real mount, just an update */
 #define	MNT_DELEXPORT	0x00020000	/* delete export host lists */
@@ -457,7 +368,7 @@ typedef struct fhandle	fhandle_t;
 #define VFS_MAXTYPENUM	1	/* int: highest defined filesystem type */
 #define VFS_CONF	2	/* struct: vfsconf for filesystem given
 				   as next argument */
-#define VFS_BCACHESTAT	3	/* struct: buffer cache statistics given 
+#define VFS_BCACHESTAT	3	/* struct: buffer cache statistics given
 				   as next argument */
 #define	CTL_VFSGENCTL_NAMES { \
 	{ 0, 0 }, \
@@ -484,8 +395,8 @@ struct vfsconf {
 struct bcachestats {
 	int64_t numbufs;		/* number of buffers allocated */
 	int64_t numbufpages;		/* number of pages in buffer cache */
-	int64_t numdirtypages; 		/* number of dirty free pages */
-	int64_t numcleanpages; 		/* number of clean free pages */
+	int64_t numdirtypages;		/* number of dirty free pages */
+	int64_t numcleanpages;		/* number of clean free pages */
 	int64_t pendingwrites;		/* number of pending writes */
 	int64_t pendingreads;		/* number of pending reads */
 	int64_t numwrites;		/* total writes started */

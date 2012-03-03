@@ -577,22 +577,11 @@ nfs_mount(struct mount *mp, const char *path, void *data,
 	size_t len;
 	u_char nfh[NFSX_V3FHMAX];
 
-	error = copyin (data, &args, sizeof (args.version));
+	error = copyin(data, &args, sizeof(struct nfs_args));
 	if (error)
 		return (error);
-	if (args.version == 3) {
-		error = copyin (data, (caddr_t)&args,
-				sizeof (struct nfs_args3));
-		args.flags &= ~(NFSMNT_INTERNAL|NFSMNT_NOAC);
-	}
-	else if (args.version == NFS_ARGSVERSION) {
-		error = copyin(data, (caddr_t)&args, sizeof (struct nfs_args));
-		args.flags &= ~NFSMNT_NOAC; /* XXX - compatibility */
-	}
-	else
+	if (args.version != NFS_ARGSVERSION)
 		return (EPROGMISMATCH);
-	if (error)
-		return (error);
 
 	if ((args.flags & (NFSMNT_NFSV3|NFSMNT_RDIRPLUS)) == NFSMNT_RDIRPLUS)
 		return (EINVAL);
