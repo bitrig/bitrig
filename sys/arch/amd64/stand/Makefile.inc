@@ -1,6 +1,6 @@
 #	$OpenBSD: Makefile.inc,v 1.5 2007/11/25 18:25:30 deraadt Exp $
 
-CFLAGS=${DEBUG} ${COPTS} -Os -Wall -Werror
+CFLAGS=${DEBUG} ${COPTS} -Os -Wall
 CFLAGS+=	-fno-stack-protector
 CFLAGS+=	-Wno-strict-aliasing -Wno-pointer-sign
 
