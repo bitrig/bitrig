@@ -222,6 +222,7 @@
 ./usr/bin/apply
 ./usr/bin/apropos
 ./usr/bin/arch
+./usr/bin/asa
 ./usr/bin/asn1_compile
 ./usr/bin/at
 ./usr/bin/atq
@@ -292,8 +293,11 @@
 ./usr/bin/find
 ./usr/bin/find2perl
 ./usr/bin/finger
+./usr/bin/flex
+./usr/bin/flex++
 ./usr/bin/fmt
 ./usr/bin/fold
+./usr/bin/fpr
 ./usr/bin/from
 ./usr/bin/fsplit
 ./usr/bin/fstat
@@ -304,6 +308,7 @@
 ./usr/bin/getconf
 ./usr/bin/getent
 ./usr/bin/getopt
+./usr/bin/gprof
 ./usr/bin/grep
 ./usr/bin/groups
 ./usr/bin/gunzip
@@ -344,6 +349,7 @@
 ./usr/bin/leave
 ./usr/bin/less
 ./usr/bin/lesskey
+./usr/bin/lex
 ./usr/bin/libnetcfg
 ./usr/bin/lndir
 ./usr/bin/locate
@@ -352,6 +358,7 @@
 ./usr/bin/login
 ./usr/bin/logname
 ./usr/bin/look
+./usr/bin/lorder
 ./usr/bin/lpq
 ./usr/bin/lpr
 ./usr/bin/lprm
@@ -370,6 +377,7 @@
 ./usr/bin/mixerctl
 ./usr/bin/mkdep
 ./usr/bin/mklocale
+./usr/bin/mkstr
 ./usr/bin/mktemp
 ./usr/bin/modstat
 ./usr/bin/more
@@ -430,6 +438,7 @@
 ./usr/bin/reset
 ./usr/bin/rev
 ./usr/bin/rlog
+./usr/bin/rpcgen
 ./usr/bin/rpcinfo
 ./usr/bin/rs
 ./usr/bin/rsh
@@ -522,7 +531,9 @@
 ./usr/bin/write
 ./usr/bin/x99token
 ./usr/bin/xargs
+./usr/bin/xstr
 ./usr/bin/xsubpp
+./usr/bin/yacc
 ./usr/bin/yes
 ./usr/bin/ypcat
 ./usr/bin/ypmatch
@@ -2583,6 +2594,7 @@
 ./usr/obj
 ./usr/ports
 ./usr/sbin
+./usr/sbin/kgmon
 ./usr/sbin/ac
 ./usr/sbin/accton
 ./usr/sbin/activadm
