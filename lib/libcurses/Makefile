@@ -60,6 +60,7 @@ SRCS+=  charable.c lib_add_wch.c lib_box_set.c lib_cchar.c lib_erasewchar.c \
 	lib_pecho_wchar.c lib_slk_wset.c lib_unget_wch.c lib_vid_attr.c \
 	lib_vline_set.c lib_wacs.c lib_wunctrl.c
 
+HOSTCC?=	${CC}
 HOSTCFLAGS?=	${CFLAGS}
 HOSTLDFLAGS?=	${LDFLAGS}
 HOSTCFLAGS+=	-I. -I${.CURDIR} ${CURSESTRACE}

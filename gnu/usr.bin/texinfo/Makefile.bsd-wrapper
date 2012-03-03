@@ -31,13 +31,15 @@ config: .FORCE
 .ifndef GLOBAL_AUTOCONF_CACHE
 	-rm -f config.cache
 .endif
-	PATH="/bin:/usr/bin:/sbin:/usr/sbin" \
+	PATH="/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin" \
+	CC=${CC} \
 	CFLAGS="${CFLAGS} ${COPTS}" \
 	INSTALL_PROGRAM="${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP}" \
 		/bin/sh ${.CURDIR}/configure --infodir=/usr/share/info --prefix=/usr --disable-nls ${CF}
 
 config.status:
-	PATH="/bin:/usr/bin:/sbin:/usr/sbin" \
+	PATH="/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin" \
+	CC=${CC} \
 	CFLAGS="${CFLAGS} ${COPTS}" \
 	INSTALL_PROGRAM="${INSTALL} ${INSTALL_COPY} ${INSTALL_STRIP}" \
 		/bin/sh ${.CURDIR}/configure --infodir=/usr/share/info --prefix=/usr --disable-nls ${CF}
