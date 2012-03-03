@@ -233,15 +233,11 @@
 ./usr/share/doc/mg
 ./usr/share/doc/mg/tutorial
 ./usr/share/info/amdref.info
-./usr/share/info/cpp.info
-./usr/share/info/cppinternals.info
 ./usr/share/info/dir
-./usr/share/info/gcc.info
-./usr/share/info/gccint.info
 ./usr/share/info/heimdal.info
-./usr/share/info/history.info
-./usr/share/info/libiberty.info
-./usr/share/info/readline.info
+./usr/share/info/info-stnd.info
+./usr/share/info/info.info
+./usr/share/info/texinfo
 ./usr/share/man/man1/Mail.1
 ./usr/share/man/man1/[.1
 ./usr/share/man/man1/a2p.1
@@ -266,15 +262,12 @@
 ./usr/share/man/man1/bc.1
 ./usr/share/man/man1/bdes.1
 ./usr/share/man/man1/biff.1
-./usr/share/man/man1/c++.1
-./usr/share/man/man1/c++filt.1
 ./usr/share/man/man1/c2ph.1
 ./usr/share/man/man1/cal.1
 ./usr/share/man/man1/calendar.1
 ./usr/share/man/man1/cap_mkdb.1
 ./usr/share/man/man1/captoinfo.1
 ./usr/share/man/man1/cat.1
-./usr/share/man/man1/cc.1
 ./usr/share/man/man1/cdio.1
 ./usr/share/man/man1/chflags.1
 ./usr/share/man/man1/chfn.1
@@ -301,7 +294,6 @@
 ./usr/share/man/man1/cpan2dist.1
 ./usr/share/man/man1/cpanp.1
 ./usr/share/man/man1/cpio.1
-./usr/share/man/man1/cpp.1
 ./usr/share/man/man1/crontab.1
 ./usr/share/man/man1/csh.1
 ./usr/share/man/man1/csplit.1
@@ -350,10 +342,7 @@
 ./usr/share/man/man1/ftp.1
 ./usr/share/man/man1/fuser.1
 ./usr/share/man/man1/fw_update.1
-./usr/share/man/man1/g++.1
 ./usr/share/man/man1/gcc-local.1
-./usr/share/man/man1/gcc.1
-./usr/share/man/man1/gcov.1
 ./usr/share/man/man1/gencat.1
 ./usr/share/man/man1/getcap.1
 ./usr/share/man/man1/getconf.1
@@ -381,8 +370,11 @@
 ./usr/share/man/man1/id.1
 ./usr/share/man/man1/ident.1
 ./usr/share/man/man1/indent.1
+./usr/share/man/man1/info.1
 ./usr/share/man/man1/infocmp.1
+./usr/share/man/man1/infokey.1
 ./usr/share/man/man1/infotocap.1
+./usr/share/man/man1/install-info.1
 ./usr/share/man/man1/install.1
 ./usr/share/man/man1/instmodsh.1
 ./usr/share/man/man1/intro.1
@@ -429,6 +421,7 @@
 ./usr/share/man/man1/mail.1
 ./usr/share/man/man1/mailx.1
 ./usr/share/man/man1/make.1
+./usr/share/man/man1/makeinfo.1
 ./usr/share/man/man1/mandoc.1
 ./usr/share/man/man1/md5.1
 ./usr/share/man/man1/merge.1
@@ -618,7 +611,6 @@
 ./usr/share/man/man1/pkg_mklocatedb.1
 ./usr/share/man/man1/pkill.1
 ./usr/share/man/man1/pl2pm.1
-./usr/share/man/man1/pmdb.1
 ./usr/share/man/man1/pod2html.1
 ./usr/share/man/man1/pod2latex.1
 ./usr/share/man/man1/pod2man.1
@@ -705,6 +697,9 @@
 ./usr/share/man/man1/tee.1
 ./usr/share/man/man1/telnet.1
 ./usr/share/man/man1/test.1
+./usr/share/man/man1/texi2dvi.1
+./usr/share/man/man1/texi2pdf.1
+./usr/share/man/man1/texindex.1
 ./usr/share/man/man1/tftp.1
 ./usr/share/man/man1/tic.1
 ./usr/share/man/man1/time.1
@@ -4431,7 +4426,6 @@
 ./usr/share/man/man3/readdir.3
 ./usr/share/man/man3/readdir_r.3
 ./usr/share/man/man3/readlabelfs.3
-./usr/share/man/man3/readline.3
 ./usr/share/man/man3/readpass.3
 ./usr/share/man/man3/readpassphrase.3
 ./usr/share/man/man3/readskey.3
@@ -6388,6 +6382,7 @@
 ./usr/share/man/man5/ifstated.conf.5
 ./usr/share/man/man5/iked.conf.5
 ./usr/share/man/man5/inetd.conf.5
+./usr/share/man/man5/info.5
 ./usr/share/man/man5/inode.5
 ./usr/share/man/man5/intro.5
 ./usr/share/man/man5/ipsec.conf.5
@@ -6457,6 +6452,7 @@
 ./usr/share/man/man5/term.5
 ./usr/share/man/man5/termcap.5
 ./usr/share/man/man5/terminfo.5
+./usr/share/man/man5/texinfo.5
 ./usr/share/man/man5/ttys.5
 ./usr/share/man/man5/tzfile.5
 ./usr/share/man/man5/usermgmt.conf.5
@@ -6467,6 +6463,7 @@
 ./usr/share/man/man5/ypldap.conf.5
 ./usr/share/man/man5/ypserv.acl.5
 ./usr/share/man/man6
+./usr/share/man/man6/intro.6
 ./usr/share/man/man7/ascii.7
 ./usr/share/man/man7/environ.7
 ./usr/share/man/man7/eqn.7

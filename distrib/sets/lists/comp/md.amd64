@@ -99,5 +99,3 @@
 ./usr/include/mm_malloc.h
 ./usr/include/pmmintrin.h
 ./usr/include/xmmintrin.h
-./usr/lib/gcc-lib/amd64-unknown-openbsd5.1/4.2.1/cc1obj
-./usr/lib/gcc-lib/amd64-unknown-openbsd5.1/4.2.1/cc1plus
