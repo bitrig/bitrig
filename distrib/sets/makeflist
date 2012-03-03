@@ -35,7 +35,7 @@ for i in base comp; do
 done
 
 # etc game and man do not.
-for i in etc game man; do
+for i in etc man; do
 	cat ./lists/$i/mi >> $TMP
 done
 
