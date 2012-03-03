@@ -43,7 +43,6 @@ rm-from-libkern:
 .endif
 .endif
 
-all: tags
 tags: ${SRCS}
 	ctags -w ${.ALLSRC:M*.c}
 	egrep "^SYSENTRY(.*)|^ENTRY(.*)|^FUNC(.*)|^SYSCALL(.*)" \
