@@ -9,7 +9,7 @@ PROG=	biosboot
 SRCS=	biosboot.S
 LD=ld
 LDFLAGS=-melf_i386 -nostdlib -Ttext 0 -N -x -Bstatic
-LDFLAGS+=-L/usr/libdata 
+LDFLAGS+=-L/usr/local/libdata
 INSTALL_STRIP=
 SADIR=	${.CURDIR}/..
 

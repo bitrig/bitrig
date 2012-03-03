@@ -11,7 +11,7 @@ AFLAGS+=-no-integrated-as
 AFLAGS+=-m32 -I${.CURDIR} -I${.CURDIR}/../../.. #-Wa,-a
 LD=ld
 LDFLAGS=-melf_i386 -nostdlib -Ttext 0 -x -N -s -Bstatic -e start
-LDFLAGS+=-L/usr/libdata 
+LDFLAGS+=-L/usr/local/libdata
 
 NOMAN=
 #MAN+=	mbr.8
