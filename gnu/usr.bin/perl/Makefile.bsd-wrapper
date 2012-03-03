@@ -17,6 +17,7 @@ TARGET_MACHINE_ARCH?=	$(MACHINE_ARCH)
 CFLAGS+= -fno-strict-aliasing
 .if ${COMPILER_VERSION:L} == "gcc3" || ${COMPILER_VERSION:L} == "gcc4"
 CFLAGS+= -fno-delete-null-pointer-checks
+MYCC=-Dcc='egcc'
 .else
 MYCC=-Dcc='clang'
 .endif
@@ -82,7 +83,7 @@ perl.build:	perl.lib
 	cd ${.OBJDIR} && exec ${MAKE}
 
 config.sh:	${.CURDIR}/config.over
-	cd ${.OBJDIR} && PATH="/bin:/usr/bin:/sbin:/usr/sbin" \
+	cd ${.OBJDIR} && PATH="/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin" \
 	    exec /bin/sh ${.CURDIR}/Configure ${CONFIGURE_ARGS}
 
 Makefile cflags makeaperl makedepend makedir myconfig writemain:
