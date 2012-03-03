@@ -65,9 +65,12 @@ CPPFLAGS+=-DSLOW -DSMALL -DNOBYFOUR -DNO_GZIP -DDYNAMIC_CRC_TABLE
 CPPFLAGS+=-DHEAP_LIMIT=${HEAP_LIMIT} -I${S}/stand/boot #-DCOMPAT_UFS
 CFLAGS+=-m32 $(SACFLAGS) -D__INTERNAL_LIBSA_CREAD
 .if ${COMPILER_VERSION:L} != "gcc4"
-AFLAGS+=-no-integrated-as
+#AFLAGS+=-no-integrated-as
 # XXX HACK kill this
-CC=cc
-.endif
+CFLAGS+=-Wno-error
+CC=egcc
 AFLAGS+=-m32 # -Wa,-R
+.else
 # AFLAGS+=-Wa,-a
+AFLAGS+=-Wa,--32
+.endif

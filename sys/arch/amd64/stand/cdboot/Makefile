@@ -65,8 +65,12 @@ CFLAGS+=-m32 ${SACFLAGS} -D__INTERNAL_LIBSA_CREAD
 CFLAGS+=-DOSREV=\"${OSREV}\" -DMACHINE=\"${MACHINE}\"
 CFLAGS+=-DKERNEL=\"/${OSREV}/${MACHINE}/bsd.rd\"
 .if ${COMPILER_VERSION:L} != "gcc4"
-AFLAGS+=-no-integrated-as
+#AFLAGS+=-no-integrated-as
 # XXX HACK kill this
-CC=cc
+CFLAGS+=-Wno-error
+CC=egcc
+AFLAGS+=-m32 # -Wa,-R
+.else
+# AFLAGS+=-Wa,-a
+AFLAGS+=-Wa,--32
 .endif
-AFLAGS+=-m32
