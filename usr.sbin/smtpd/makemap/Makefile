@@ -14,7 +14,8 @@ CFLAGS+=	-g3 -ggdb -I${.CURDIR}/..
 CFLAGS+=	-Wall -Wstrict-prototypes -Wmissing-prototypes
 CFLAGS+=	-Wmissing-declarations
 CFLAGS+=	-Wshadow -Wpointer-arith -Wcast-qual
-CFLAGS+=	-Wsign-compare -Wbounded
+CFLAGS+=	-Wsign-compare
+#-Wbounded
 
 SRCS=	parse.y makemap.c aliases.c expand.c log.c util.c map.c \
 	map_db.c map_stdio.c

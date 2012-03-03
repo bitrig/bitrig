@@ -14,7 +14,8 @@ CFLAGS+=	-Wall -I${.CURDIR} -I${.CURDIR}/../../sbin/iked
 CFLAGS+=	-Wstrict-prototypes -Wmissing-prototypes
 CFLAGS+=	-Wmissing-declarations
 CFLAGS+=	-Wshadow -Wpointer-arith -Wcast-qual
-CFLAGS+=	-Wsign-compare -Wbounded
+CFLAGS+=	-Wsign-compare
+#-Wbounded
 
 #distribution:
 #	${INSTALL} -C -g wheel -m 0644 ${.CURDIR}/ikeca.cnf \
