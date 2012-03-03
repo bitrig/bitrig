@@ -36,7 +36,7 @@
 
 .include <bsd.own.mk>	# for NOMAN, if it's there.
 
-SUBDIR+= lib include bin libexec sbin usr.bin usr.sbin share games
+SUBDIR+= lib include bin libexec sbin usr.bin usr.sbin share
 SUBDIR+= gnu
 
 SUBDIR+= sys
