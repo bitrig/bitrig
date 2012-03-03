@@ -39,11 +39,14 @@
 ./sbin/iopctl
 ./sbin/mount_ntfs
 ./usr/bin/pctr
+./usr/lib/gcc-lib/i386-unknown-openbsd5.0/4.2.1/libgcc.a
 ./usr/lib/gcc-lib/i386-unknown-openbsd5.1
 ./usr/lib/gcc-lib/i386-unknown-openbsd5.1/4.2.1
 ./usr/lib/gcc-lib/i386-unknown-openbsd5.1/4.2.1/cc1
 ./usr/lib/gcc-lib/i386-unknown-openbsd5.1/4.2.1/collect2
 ./usr/lib/gcc-lib/i386-unknown-openbsd5.1/4.2.1/specs
+./usr/lib/libi386.a
+./usr/lib/libi386_p.a
 ./usr/libdata/perl5/i386-openbsd
 ./usr/libdata/perl5/i386-openbsd/5.12.2
 ./usr/libdata/perl5/i386-openbsd/5.12.2/.packlist

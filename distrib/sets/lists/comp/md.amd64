@@ -101,6 +101,3 @@
 ./usr/include/xmmintrin.h
 ./usr/lib/gcc-lib/amd64-unknown-openbsd5.1/4.2.1/cc1obj
 ./usr/lib/gcc-lib/amd64-unknown-openbsd5.1/4.2.1/cc1plus
-./usr/lib/gcc-lib/amd64-unknown-openbsd5.1/4.2.1/libgcc.a
-./usr/lib/libamd64.a
-./usr/lib/libamd64_p.a

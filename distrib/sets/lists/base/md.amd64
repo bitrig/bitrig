@@ -41,7 +41,10 @@
 ./usr/lib/gcc-lib/amd64-unknown-openbsd5.1/4.2.1
 ./usr/lib/gcc-lib/amd64-unknown-openbsd5.1/4.2.1/cc1
 ./usr/lib/gcc-lib/amd64-unknown-openbsd5.1/4.2.1/collect2
+./usr/lib/gcc-lib/amd64-unknown-openbsd5.1/4.2.1/libgcc.a
 ./usr/lib/gcc-lib/amd64-unknown-openbsd5.1/4.2.1/specs
+./usr/lib/libamd64.a
+./usr/lib/libamd64_p.a
 ./usr/libdata/perl5/amd64-openbsd
 ./usr/libdata/perl5/amd64-openbsd/5.12.2
 ./usr/libdata/perl5/amd64-openbsd/5.12.2/.packlist

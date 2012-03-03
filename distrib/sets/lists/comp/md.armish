@@ -120,6 +120,3 @@
 ./usr/include/g++/arm-unknown-openbsd5.0/bits/time_members.h
 ./usr/lib/gcc-lib/arm-unknown-openbsd5.0/4.2.1/cc1obj
 ./usr/lib/gcc-lib/arm-unknown-openbsd5.0/4.2.1/cc1plus
-./usr/lib/gcc-lib/arm-unknown-openbsd5.0/4.2.1/libgcc.a
-./usr/lib/libarm.a
-./usr/lib/libarm_p.a

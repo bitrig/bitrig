@@ -3,11 +3,14 @@
 ./etc/firmware/ral-rt2561s
 ./etc/firmware/ral-rt2661
 ./etc/firmware/ral-rt2860
+./usr/lib/gcc-lib/arm-unknown-openbsd5.0/4.2.1/libgcc.a
 ./usr/lib/gcc-lib/arm-unknown-openbsd5.1
 ./usr/lib/gcc-lib/arm-unknown-openbsd5.1/4.2.1
 ./usr/lib/gcc-lib/arm-unknown-openbsd5.1/4.2.1/cc1
 ./usr/lib/gcc-lib/arm-unknown-openbsd5.1/4.2.1/collect2
 ./usr/lib/gcc-lib/arm-unknown-openbsd5.1/4.2.1/specs
+./usr/lib/libarm.a
+./usr/lib/libarm_p.a
 ./usr/libdata/perl5/arm-openbsd
 ./usr/libdata/perl5/arm-openbsd/5.12.2
 ./usr/libdata/perl5/arm-openbsd/5.12.2/.packlist
