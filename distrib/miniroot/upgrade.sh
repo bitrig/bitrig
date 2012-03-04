@@ -73,8 +73,6 @@ THESETS="$THESETS site$VERSION-$(hostname -s).tgz"
 enable_network
 manual_net_cfg
 
-startftplist
-
 # Create fstab for use during upgrade.
 munge_fstab
 
