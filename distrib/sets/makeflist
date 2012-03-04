@@ -29,14 +29,10 @@ arch=`machine`
 TMP=`mktemp /tmp/_mkr.XXXXXXXXXX` || exit 1
 trap 'rm -f $TMP' 0 1 15
 
-# base & comp have MD parts.
-for i in base comp; do
-	cat ./lists/$i/mi ./lists/$i/md.${arch} >> $TMP
-done
+# baseXY.tgz
+cat ./lists/base/mi ./lists/base/md.${arch} >> $TMP
 
-# etc game and man do not.
-for i in etc man; do
-	cat ./lists/$i/mi >> $TMP
-done
+# etcXY.tgz
+cat ./lists/etc/mi >> $TMP
 
 sort $TMP

@@ -53,9 +53,9 @@ trap 'rm -f $TMP $TMP2; exit 1' 1 15
 
 cd $fsdir
 
-for i in base comp etc game man; do
+for i in base etc; do
 	echo -n "$i: "
-	if [[ $i == "base" || $i == "comp" ]]; then
+	if [[ $i == "base" ]]; then
 		sort ${lists}/$i/mi ${lists}/$i/md.${arch} > $TMP
 	else
 		sort ${lists}/$i/mi > $TMP
