@@ -720,8 +720,6 @@
 ./usr/libdata/perl5/amd64-openbsd/5.12.2/threads
 ./usr/libdata/perl5/amd64-openbsd/5.12.2/threads.pm
 ./usr/libdata/perl5/amd64-openbsd/5.12.2/threads/shared.pm
-./usr/libdata/perl5/site_perl/amd64-openbsd
-./usr/local/libdata/perl5/site_perl/amd64-openbsd
 ./usr/mdec/biosboot
 ./usr/mdec/boot
 ./usr/mdec/cdboot

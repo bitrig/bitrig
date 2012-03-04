@@ -57,8 +57,7 @@ RCDAEMONS=	amd apmd bgpd bootparamd btd cron dhcpd dhcrelay dvmrpd \
 		yppasswdd ypserv kdc kadmind kpasswdd nfsd mountd lockd statd \
 		spamlogd sndiod popa3d
 
-MISETS=	base${OSrev}.tgz comp${OSrev}.tgz \
-	man${OSrev}.tgz game${OSrev}.tgz etc${OSrev}.tgz
+MISETS=	base${OSrev}.tgz etc${OSrev}.tgz
 
 # Use NOGZIP on architectures where the gzip'ing would take too much time
 # (pmax or slower :-)).  This way you get only tar'ed snap files and you can
