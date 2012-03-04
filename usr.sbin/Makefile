@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-SUBDIR=	ac accton acpidump adduser amd apm apmd arp \
+SUBDIR=	ac accton acpidump adduser apm apmd arp \
 	authpf bgpctl bgpd bind chroot config cron crunchgen dev_mkdb \
 	dhcpd dhcrelay dvmrpctl dvmrpd edquota faithd fdformat \
 	ftp-proxy fw_update gpioctl hostapd hotplugd ifstated ikectl \
