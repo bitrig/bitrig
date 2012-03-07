@@ -116,18 +116,12 @@ x2p/cflags:
 perly.c perly.h: perly.y
 	-@true
 
-#install: install.lib install.perl maninstall
-#	-mkdir -p ${DESTDIR}/usr/libdata/perl5/site_perl/${MACHINE_ARCH}-openbsd
-#	(cd ${DESTDIR}/usr/include; ${H2PH} \
-#		-d ${DESTDIR}/usr/libdata/perl5/site_perl/${MACHINE_ARCH}-openbsd \
-#		`find . -name '*.h'`; \
-#		pax -rw `find . -type l \! -name '*.h' | sed 's/^..//'` \
-#		${DESTDIR}/usr/libdata/perl5/site_perl/${MACHINE_ARCH}-openbsd)
-#	-chmod -R a+rX ${DESTDIR}/usr/libdata/perl5
-
 install: install.lib install.perl maninstall
+	-mkdir -p ${DESTDIR}/usr/libdata/perl5/site_perl/${MACHINE_ARCH}-openbsd
+	(cd ${DESTDIR}/usr/include; ${H2PH} \
+		-d ${DESTDIR}/usr/libdata/perl5/site_perl/${MACHINE_ARCH}-openbsd \
+		`echo "sys/syscall.h sys/ioccom.h sys/ttycom.h"`;)
 	-chmod -R a+rX ${DESTDIR}/usr/libdata/perl5
-
 
 install.perl:
 	cd ${.OBJDIR}; INSTALL=${INSTALL} INSTALL_COPY=${INSTALL_COPY} \
