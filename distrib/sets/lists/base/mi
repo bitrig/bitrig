@@ -3827,6 +3827,12 @@
 ./usr/libdata/perl5/shellwords.pl
 ./usr/libdata/perl5/sigtrap.pm
 ./usr/libdata/perl5/site_perl
+./usr/libdata/perl5/site_perl/amd64-openbsd
+./usr/libdata/perl5/site_perl/amd64-openbsd/_h2ph_pre.ph
+./usr/libdata/perl5/site_perl/amd64-openbsd/sys
+./usr/libdata/perl5/site_perl/amd64-openbsd/sys/ioccom.ph
+./usr/libdata/perl5/site_perl/amd64-openbsd/sys/syscall.ph
+./usr/libdata/perl5/site_perl/amd64-openbsd/sys/ttycom.ph
 ./usr/libdata/perl5/sort.pm
 ./usr/libdata/perl5/stat.pl
 ./usr/libdata/perl5/strict.pm
@@ -4887,6 +4893,7 @@
 ./usr/local/libdata
 ./usr/local/libdata/perl5
 ./usr/local/libdata/perl5/site_perl
+./usr/local/libdata/perl5/site_perl/amd64-openbsd
 ./usr/local/libexec
 ./usr/local/man
 ./usr/local/man/cat1
