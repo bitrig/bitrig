@@ -29,6 +29,8 @@
 #include <ddb/db_command.h>
 #endif
 
+#include <machine/smbiosvar.h>
+
 #include <dev/acpi/acpireg.h>
 #include <dev/acpi/acpivar.h>
 #include <dev/acpi/amltypes.h>
@@ -88,6 +90,8 @@ int			aml_evalterm(struct aml_scope *scope,
 			    struct aml_value *raw, struct aml_value *dst);
 
 struct aml_opcode	*aml_findopcode(int);
+
+char			*fixstring(char *);
 
 #define acpi_os_malloc(sz) _acpi_os_malloc(sz, __FUNCTION__, __LINE__)
 #define acpi_os_free(ptr)  _acpi_os_free(ptr, __FUNCTION__, __LINE__)
@@ -1679,7 +1683,46 @@ int aml_fixup_node(struct aml_node *node, void *arg)
 void
 aml_postparse(void)
 {
+	struct aml_value *val;
+	struct aml_node *node;
+	struct smbtable enclosure;
+	struct smbios_enclosure *se;
+	char scratch[64];
+	int hp_workaround = 0;
+
 	aml_walknodes(&aml_root, AML_WALK_PRE, aml_fixup_node, NULL);
+
+	enclosure.cookie = 0;
+	if (smbios_find_table(SMBIOS_TYPE_ENCLOSURE, &enclosure)) {
+		se = enclosure.tblhdr;
+
+		if ((smbios_get_string(&enclosure, se->vendor, scratch,
+		    sizeof(scratch))) == NULL)
+			return;
+
+		/* XXX this heuristic might be too constrained */
+		if (!strcmp(scratch, "Hewlett-Packard") &&
+		    se->type == 0x0a /* notebook */) {
+			dnprintf(1, "\n aml_postparse: vendor %s type %d",
+			    fixstring(scratch), se->type);
+			hp_workaround = 1;
+		}
+	}
+
+	if (hp_workaround) {
+		/*
+		 * HP workaround
+		 * Evaluate \\_PR_.CPU0._PPC which in turn evaluates AML code
+		 * that dereferences the bits and pieces required by EC's _REG
+		 * method.  Without this evaluating _REG fails and acpiec does
+		 * not attach at all or properly.
+		 */
+		if ((node = aml_searchname(&aml_root, "\\_PR_.CPU0")) != NULL) {
+			aml_parsename(node, "_PPC", &val, 1);
+			_aml_setvalue(val, AML_OBJTYPE_INTEGER, 0, 0);
+			aml_delref(&val, "");
+		}
+	}
 }
 
 #ifndef SMALL_KERNEL
