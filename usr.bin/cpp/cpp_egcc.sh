@@ -46,7 +46,7 @@ DOLLAR="@dollaropt@"
 INCS="-nostdinc"
 FOUNDFILES=false
 
-CPP=/usr/local/bin/ecpp
+CPP=/usr/bin/ecpp
 OPTS=""
 TRAD=-traditional
 
