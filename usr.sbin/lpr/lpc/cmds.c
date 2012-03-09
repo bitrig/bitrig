@@ -1,4 +1,4 @@
-/*	$OpenBSD: cmds.c,v 1.22 2012/03/04 04:05:15 fgsch Exp $	*/
+/*	$OpenBSD: cmds.c,v 1.21 2009/10/29 20:11:09 sobrado Exp $	*/
 /*	$NetBSD: cmds.c,v 1.12 1997/10/05 15:12:06 mrg Exp $	*/
 
 /*
@@ -165,7 +165,7 @@ abortpr(int dis)
 		printf("\tcannot open lock file\n");
 		goto out;
 	}
-	if (!get_line(fp) || flock(fileno(fp), LOCK_SH|LOCK_NB) == 0) {
+	if (!getline(fp) || flock(fileno(fp), LOCK_SH|LOCK_NB) == 0) {
 		(void)fclose(fp);	/* unlocks as well */
 		printf("\tno daemon to abort\n");
 		goto out;
@@ -1098,7 +1098,7 @@ doarg(char *job)
 				close(fd);
 			continue;
 		}
-		while (get_line(fp) > 0)
+		while (getline(fp) > 0)
 			if (line[0] == 'P')
 				break;
 		(void)fclose(fp);

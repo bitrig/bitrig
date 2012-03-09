@@ -1,4 +1,4 @@
-/*	$OpenBSD: htpasswd.c,v 1.19 2012/03/04 04:05:15 fgsch Exp $ */
+/*	$OpenBSD: htpasswd.c,v 1.18 2008/08/11 17:15:56 tobias Exp $ */
 
 /* ====================================================================
  * The Apache Software License, Version 1.1
@@ -130,7 +130,7 @@ static char *tname_buf = NULL;
  * newline.
  */
 static int
-get_line(char *s, int n, FILE *f)
+getline(char *s, int n, FILE *f)
 {
 	int i = 0;
 
@@ -513,7 +513,7 @@ main(int argc, char *argv[])
 		char scratch[MAX_STRING_LEN];
 
 		fpw = fopen(pwfilename, "r");
-		while (! (get_line(line, sizeof(line), fpw))) {
+		while (! (getline(line, sizeof(line), fpw))) {
 			char *colon;
 
 			if ((line[0] == '#') || (line[0] == '\0')) {

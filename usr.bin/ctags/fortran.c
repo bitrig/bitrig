@@ -1,4 +1,4 @@
-/*	$OpenBSD: fortran.c,v 1.8 2012/03/04 04:05:15 fgsch Exp $	*/
+/*	$OpenBSD: fortran.c,v 1.7 2009/10/27 23:59:37 deraadt Exp $	*/
 /*	$NetBSD: fortran.c,v 1.3 1995/03/26 20:14:08 glass Exp $	*/
 
 /*
@@ -118,7 +118,7 @@ PF_funcs(void)
 			continue;
 		*cp = EOS;
 		(void)strlcpy(tok, lbp, sizeof tok);	/* possible trunc */
-		get_line();			/* process line for ex(1) */
+		getline();			/* process line for ex(1) */
 		pfnote(tok, lineno);
 		pfcnt = YES;
 	}

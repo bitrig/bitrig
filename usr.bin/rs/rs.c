@@ -1,4 +1,4 @@
-/*	$OpenBSD: rs.c,v 1.21 2012/03/04 04:05:15 fgsch Exp $	*/
+/*	$OpenBSD: rs.c,v 1.20 2009/10/27 23:59:42 deraadt Exp $	*/
 
 /*-
  * Copyright (c) 1993
@@ -78,7 +78,7 @@ int	owidth = 80, gutter = 2;
 void	  usage(void);
 void	  getargs(int, char *[]);
 void	  getfile(void);
-int	  get_line(void);
+int	  getline(void);
 char	**getptrs(char **);
 void	  prepfile(void);
 void	  prints(char *, int);
@@ -114,11 +114,11 @@ getfile(void)
 	char **padto;
 
 	while (skip--) {
-		get_line();
+		getline();
 		if (flags & SKIPPRINT)
 			puts(curline);
 	}
-	get_line();
+	getline();
 	if (flags & NOARGS && curlen < owidth)
 		flags |= ONEPERLINE;
 	if (flags & ONEPERLINE)
@@ -164,7 +164,7 @@ getfile(void)
 				INCR(ep);
 			}
 		}
-	} while (get_line() != EOF);
+	} while (getline() != EOF);
 	*ep = NULL;				/* mark end of pointers */
 	nelem = ep - elem;
 }
@@ -303,7 +303,7 @@ prepfile(void)
 char	ibuf[BSIZE];		/* two screenfuls should do */
 
 int
-get_line(void)	/* get line; maintain curline, curlen; manage storage */
+getline(void)	/* get line; maintain curline, curlen; manage storage */
 {
 	static	int putlength;
 	static	char *endblock = ibuf + BSIZE;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: C.c,v 1.14 2012/03/04 04:05:15 fgsch Exp $	*/
+/*	$OpenBSD: C.c,v 1.13 2010/11/03 19:39:38 millert Exp $	*/
 /*	$NetBSD: C.c,v 1.3 1995/03/26 20:14:02 glass Exp $	*/
 
 /*
@@ -155,7 +155,7 @@ endtok:			if (sp > tok) {
 				 *	foo\n
 				 *	(arg1,
 				 */
-				get_line();
+				getline();
 				curline = lineno;
 				if (func_entry()) {
 					++level;
@@ -184,7 +184,7 @@ endtok:			if (sp > tok) {
 		case ';':
 			if (t_def && level == t_level) {
 				t_def = NO;
-				get_line();
+				getline();
 				if (sp != tok)
 					*sp = EOS;
 				pfnote(tok, lineno);
@@ -233,7 +233,7 @@ endtok:			if (sp > tok) {
 					 * get line immediately;
 					 * may change before '{'
 					 */
-					get_line();
+					getline();
 					if (str_entry(c))
 						++level;
 					break;
@@ -413,7 +413,7 @@ hash_entry(void)
 	}
 	*sp = EOS;
 	if (dflag || c == '(') {	/* only want macros */
-		get_line();
+		getline();
 		pfnote(tok, curline);
 	}
 skip:	if (c == '\n') {		/* get rid of rest of define */

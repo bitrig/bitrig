@@ -1,4 +1,4 @@
-/*	$OpenBSD: common.c,v 1.34 2012/03/04 04:05:15 fgsch Exp $	*/
+/*	$OpenBSD: common.c,v 1.33 2009/10/27 23:59:51 deraadt Exp $	*/
 /*	$NetBSD: common.c,v 1.21 2000/08/09 14:28:50 itojun Exp $	*/
 
 /*
@@ -199,7 +199,7 @@ retryport:
  * Returns 0 at EOF or the number of characters read.
  */
 int
-get_line(FILE *cfp)
+getline(FILE *cfp)
 {
 	int linel = 0;
 	char *lp = line;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: print.c,v 1.7 2012/03/04 04:05:15 fgsch Exp $	*/
+/*	$OpenBSD: print.c,v 1.6 2009/10/27 23:59:37 deraadt Exp $	*/
 /*	$NetBSD: print.c,v 1.4 1995/09/27 01:06:58 jtc Exp $	*/
 
 /*
@@ -39,12 +39,12 @@
 #include "ctags.h"
 
 /*
- * get_line --
+ * getline --
  *	get the line the token of interest occurred on,
  *	prepare it for printing.
  */
 void
-get_line(void)
+getline(void)
 {
 	long	saveftell;
 	int	c;
