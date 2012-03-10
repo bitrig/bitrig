@@ -13,7 +13,7 @@ AFLAGS+=-DMACH=\"${MACHINE}\" -DMACH_U=\"${MACHINE:U}\"
 LD=ld
 ORG=	0x0000
 LDFLAGS=-melf_i386 -nostdlib -Ttext ${ORG} -x -N -s -Bstatic -e start
-LDFLAGS+=-L/usr/local/libdata
+LDFLAGS+=-L/usr/libdata
 
 NOMAN=
 #MAN+=	cdbr.8

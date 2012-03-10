@@ -14,7 +14,7 @@ SRCS=	srt0.S conf.c devopen.c net.c open.c
 LD?=	ld
 SIZE?=	size
 LDFLAGS+=-melf_i386 -nostdlib -Bstatic -Ttext $(LINKADDR) -N -x -noinhibit-exec
-LDFLAGS+=-L/usr/local/libdata
+LDFLAGS+=-L/usr/libdata
 INSTALL_STRIP=
 
 .PATH:	${SADIR}/libsa
