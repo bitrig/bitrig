@@ -82,8 +82,6 @@ build:
 	${SUDO} ${MAKE} cleandir
 	cd ${.CURDIR}/lib && ${MAKE} depend && ${MAKE} && \
 	    NOMAN=1 exec ${SUDO} ${MAKE} install
-	cd ${.CURDIR}/gnu/lib && ${MAKE} depend && ${MAKE} && \
-	    NOMAN=1 exec ${SUDO} ${MAKE} install
 	${MAKE} depend && ${MAKE} && exec ${SUDO} ${MAKE} install
 .endif
 
