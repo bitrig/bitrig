@@ -4,9 +4,6 @@
 .include <bsd.own.mk>
 
 SUBDIR+=	texinfo
-#SUBDIR+=	cc cxxfilt
-
-# Do these last; texinfo builds the info 'dir' file, perl must be after binutils
 SUBDIR+=	perl
 
 .include <bsd.subdir.mk>
