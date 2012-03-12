@@ -57,10 +57,6 @@ WDIRS=	../usr.sbin/httpd
 # before includes
 PWDIRS=
 
-RDIRS+= ../gnu/lib/libstdc++-v3
-PRDIRS+= ../gnu/lib/libstdc++-v3
-RDIRS+= ../gnu/usr.bin/cc/include
-
 NOOBJ=	noobj
 
 # Change SYS_INCLUDE in bsd.own.mk to "symlinks" if you don't want copies
