@@ -5,7 +5,7 @@
 SUBDIR=	ac accton acpidump adduser amd apm apmd arp \
 	authpf bgpctl bgpd bind chroot config cron crunchgen dev_mkdb \
 	dhcpd dhcrelay dvmrpctl dvmrpd edquota faithd fdformat \
-	ftp-proxy fw_update gpioctl hostapd hotplugd httpd ifstated ikectl \
+	ftp-proxy fw_update gpioctl hostapd hotplugd ifstated ikectl \
 	inetd iostat iscsictl iscsid \
 	kgmon kvm_mkdb ldapd ldapctl ldpd ldpctl lpr mailwrapper map-mbone \
 	memconfig mopd mrinfo mrouted mtrace mtree ndp netgroup_mkdb nginx \
