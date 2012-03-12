@@ -51,7 +51,7 @@ RDIRS=	../lib/libpthread ../lib/libcompat ../lib/libcurses \
 PRDIRS=
 
 # Directories with an includes target that use Makefile.bsd-wrapper
-WDIRS=	../usr.sbin/httpd
+WDIRS=
 
 # Places using Makefile.bsd-wrapper that needs a prerequisite target met
 # before includes

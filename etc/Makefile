@@ -49,7 +49,7 @@ BIN2=	motd
 
 # -r-xr-xr-x
 RCDAEMONS=	amd apmd bgpd bootparamd btd cron dhcpd dhcrelay dvmrpd \
-		ftpd ftpproxy hostapd hotplugd httpd identd ifstated iked \
+		ftpd ftpproxy hostapd hotplugd identd ifstated iked \
 		inetd isakmpd ldapd ldattach ldpd lpd mopd mrouted named nginx \
 		nsd ntpd ospfd ospf6d portmap pflogd rarpd rbootd relayd ripd \
 		route6d rtadvd rtsold rwhod sasyncd sendmail sensorsd smtpd \
@@ -263,7 +263,6 @@ distribution-etc-root-var: distrib-dirs
 	cd ../gnu/usr.sbin/sendmail/cf/cf && exec ${MAKE} distribution
 	cd ../usr.sbin/ypserv/ypinit && exec ${MAKE} distribution
 	cd ../usr.bin/ssh && exec ${MAKE} distribution
-	cd ../usr.sbin/httpd && exec ${MAKE} -f Makefile.bsd-wrapper distribution
 	cd ../lib/libssl && exec ${MAKE} distribution
 	cd ../usr.bin/bgplg && exec ${MAKE} distribution
 	cd ../usr.bin/mail && exec ${MAKE} distribution
