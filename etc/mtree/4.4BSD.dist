@@ -358,29 +358,6 @@ rpcsvc		gname=bin uname=root mode=0755
 # ./usr/lib
 lib
 
-# ./usr/lib/apache
-apache		gname=bin uname=root mode=0755
-
-
-# ./usr/lib/apache/modules
-modules		gname=bin uname=root mode=0755
-# ./usr/lib/apache/modules
-..
-
-# ./usr/lib/apache/include
-include		gname=bin uname=root mode=0755
-
-# ./usr/lib/apache/include/xml
-xml		gname=bin uname=root mode=0755
-# ./usr/lib/apache/include/xml
-..
-
-# ./usr/lib/apache/include
-..
-
-# ./usr/lib/apache
-..
-
 # ./usr/lib/debug
 debug		gname=bin uname=root mode=0755
 # ./usr/lib/debug
@@ -658,53 +635,6 @@ curses
 milter
 
 # ./usr/share/doc/html/milter
-..
-
-# ./usr/share/doc/html/httpd
-httpd  type=dir uname=root gname=wheel mode=755
-
-# ./usr/share/doc/html/httpd/mod
-mod  type=dir uname=root gname=wheel mode=755
-
-# ./usr/share/doc/html/httpd/mod/mod_ssl
-mod_ssl  type=dir uname=root gname=wheel mode=755
-# ./usr/share/doc/html/httpd/mod/mod_ssl
-..
-
-# ./usr/share/doc/html/httpd/mod
-..
-
-# ./usr/share/doc/html/httpd/images
-images  type=dir uname=root gname=wheel mode=755
-# ./usr/share/doc/html/httpd/images
-..
-
-# ./usr/share/doc/html/httpd/vhosts
-vhosts  type=dir uname=root gname=wheel mode=755
-# ./usr/share/doc/html/httpd/vhosts
-..
-
-# ./usr/share/doc/html/httpd/misc
-misc  type=dir uname=root gname=wheel mode=755
-# ./usr/share/doc/html/httpd/misc
-..
-
-# ./usr/share/doc/html/httpd/search
-search  type=dir uname=root gname=wheel mode=755
-# ./usr/share/doc/html/httpd/search
-..
-
-# ./usr/share/doc/html/httpd/howto
-howto  type=dir uname=root gname=wheel mode=755
-# ./usr/share/doc/html/httpd/howto
-..
-
-# ./usr/share/doc/html/httpd/programs
-programs  type=dir uname=root gname=wheel mode=755
-# ./usr/share/doc/html/httpd/programs
-..
-
-# ./usr/share/doc/html/httpd
 ..
 
 # ./usr/share/doc/html
