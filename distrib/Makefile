@@ -3,7 +3,7 @@
 SUBDIR=	special notes
 
 .if	make(obj)
-SUBDIR+=amd64 armish beagle i386
+SUBDIR+=amd64 i386
 .elif exists(${MACHINE})
 SUBDIR+=${MACHINE}
 .endif
