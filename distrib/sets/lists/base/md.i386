@@ -37,7 +37,6 @@
 ./etc/firmware/yds
 ./etc/firmware/yds-license
 ./sbin/iopctl
-./sbin/mount_ntfs
 ./usr/bin/pctr
 ./usr/include/i386
 ./usr/include/i386/_types.h
