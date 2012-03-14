@@ -23,9 +23,6 @@ option		APERTURE	# in-kernel aperture driver for XFree86
 #option		KGDB		# Remote debugger support; exclusive of DDB
 #option		"KGDB_DEVNAME=\"com\"",KGDBADDR=0x2f8,KGDBRATE=9600
 
-option		COMPAT_LINUX	# binary compatibility with Linux
-
-#option		PROCFS		# /proc
 config		bsd	swap generic
 
 mainbus0 at root
