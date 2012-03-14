@@ -2048,6 +2048,7 @@
 ./usr/include/utmp.h
 ./usr/include/uvm
 ./usr/include/uvm/uvm.h
+./usr/include/uvm/uvm_addr.h
 ./usr/include/uvm/uvm_amap.h
 ./usr/include/uvm/uvm_anon.h
 ./usr/include/uvm/uvm_aobj.h
@@ -2149,7 +2150,7 @@
 ./usr/lib/libkrb5_p.a
 ./usr/lib/libkrb5_pic.a
 ./usr/lib/libkvm.a
-./usr/lib/libkvm.so.12.0
+./usr/lib/libkvm.so.13.0
 ./usr/lib/libkvm_p.a
 ./usr/lib/libkvm_pic.a
 ./usr/lib/libl.a
@@ -5276,6 +5277,9 @@
 ./usr/share/man/man2/__set_tcb.2
 ./usr/share/man/man2/__syscall.2
 ./usr/share/man/man2/__tfork.2
+./usr/share/man/man2/__thrsigdivert.2
+./usr/share/man/man2/__thrsleep.2
+./usr/share/man/man2/__thrwakeup.2
 ./usr/share/man/man2/_exit.2
 ./usr/share/man/man2/accept.2
 ./usr/share/man/man2/access.2
