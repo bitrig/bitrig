@@ -295,6 +295,11 @@ arpa		gname=bin uname=root mode=0755
 # ./usr/include/arpa
 ..
 
+# ./usr/include/g++
+g++            gname=bin uname=root mode=0755
+# ./usr/include/g++
+..
+
 # ./usr/include/kerberosV
 kerberosV		gname=bin uname=root mode=0755
 

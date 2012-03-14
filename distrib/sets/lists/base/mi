@@ -1470,6 +1470,8 @@
 ./usr/include/fstab.h
 ./usr/include/fts.h
 ./usr/include/ftw.h
+./usr/include/g++
+./usr/include/g++/FlexLexer.h
 ./usr/include/getopt.h
 ./usr/include/glob.h
 ./usr/include/grp.h
