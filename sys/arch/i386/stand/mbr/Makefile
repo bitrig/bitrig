@@ -1,7 +1,7 @@
 #	$OpenBSD: Makefile,v 1.14 2003/04/17 03:43:19 drahn Exp $
 #
 
-CC=cc
+CC=egcc
 PROG=	mbr
 SRCS=	mbr.S
 AFLAGS+=-I${.CURDIR} -I${.CURDIR}/../../.. #-Wa,-a

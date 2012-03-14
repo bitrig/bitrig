@@ -1,6 +1,6 @@
 #	$OpenBSD: Makefile,v 1.21 2003/04/17 03:43:18 drahn Exp $
 
-CC=cc
+CC=egcc
 
 MAN=	biosboot.8
 
