@@ -10,7 +10,7 @@ INSTALL_STRIP=
 
 cpp: cpp.sh cpp_clang.sh
 #.if ${COMPILER_VERSION:L} == "gcc4"
-	sed -e 's/@GNUC@//' -e 's/@dollaropt@//' ${.CURDIR}/cpp_egcc.sh >$@
+	sed -e 's/@GNUC@//' -e 's/@dollaropt@//' ${.CURDIR}/cpp.sh >$@
 #.else
 #	sed -e 's/@GNUC@//' -e 's/@dollaropt@//' ${.CURDIR}/cpp_clang.sh >$@
 #.endif
