@@ -5,12 +5,11 @@ TOP=	${.CURDIR}/..
 .include "${TOP}/Makefile.inc"
 
 CDROM=		install${REV}.iso
-RELXDIR?=	/home/relx-${MACHINE}
-RELDIR?=	/home/rel-${MACHINE}
+RELXDIR?=	${RELEASEDIR}
+RELDIR?=	${RELEASEDIR}
 
-BASE=		${RELDIR}/base${OSrev}.tgz ${RELDIR}/comp${OSrev}.tgz \
-		${RELDIR}/etc${OSrev}.tgz ${RELDIR}/game${OSrev}.tgz \
-		${RELDIR}/man${OSrev}.tgz \
+BASE=		${RELDIR}/base${OSrev}.tgz \
+		${RELDIR}/etc${OSrev}.tgz  \
 		${RELDIR}/bsd ${RELDIR}/bsd.rd ${RELDIR}/bsd.mp \
 		${RELDIR}/INSTALL.${MACHINE}
 XBASE=		${RELXDIR}/xbase${OSrev}.tgz ${RELXDIR}/xetc${OSrev}.tgz \
