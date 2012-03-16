@@ -24,6 +24,12 @@ BOOT=		${DESTDIR}/usr/mdec/boot
 FLOPPYSIZE?=	2880
 FLOPPYTYPE?=	floppy3
 
+.if ${COMPILER_VERSION:L} == "gcc4"
+COPTS=	-Os
+.else
+COPTS=	-Oz
+.endif
+
 all:	${FS}
 
 ${FS}:	bsd.gz
@@ -66,7 +72,7 @@ bsd.rd:	${IMAGE} bsd rdsetroot
 bsd:
 	cd ${.CURDIR}/../../../sys/arch/amd64/conf && config ${RAMDISK}
 	cd ${.CURDIR}/../../../sys/arch/amd64/compile/${RAMDISK} && \
-	    COPTS=-Os exec ${MAKE}
+	    COPTS="${COPTS}" exec ${MAKE}
 #	    ${MAKE} clean && COPTS=-Os exec ${MAKE}
 	cp ${.CURDIR}/../../../sys/arch/amd64/compile/${RAMDISK}/bsd bsd
 

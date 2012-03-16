@@ -52,7 +52,12 @@ NBLKS?=          3872
 # minfree, opt, b/i, blks/cyl
 NEWFSARGS= -m 0 -o space -i 4096
 
-COPTS= -Os -mtune=i486
+.if ${COMPILER_VERSION:L} == "gcc4"
+COPTS=	-Os
+.else
+COPTS=	-Oz
+.endif
+COPTS+=	-mtune=i486
 
 bsd.gz: bsd.rd
 	cp bsd.rd bsd.strip
