@@ -180,9 +180,9 @@ udv_attach(void *arg, vm_prot_t accessprot, voff_t off, vsize_t size)
 			 * bump reference count, unhold, return.
 			 */
 
-			simple_lock(&lcv->u_obj.vmobjlock);
+			mtx_enter(&lcv->u_obj.vmobjlock);
 			lcv->u_obj.uo_refs++;
-			simple_unlock(&lcv->u_obj.vmobjlock);
+			mtx_leave(&lcv->u_obj.vmobjlock);
 
 			mtx_enter(&udv_lock);
 			if (lcv->u_flags & UVM_DEVICE_WANTED)
@@ -251,9 +251,9 @@ static void
 udv_reference(struct uvm_object *uobj)
 {
 
-	simple_lock(&uobj->vmobjlock);
+	mtx_enter(&uobj->vmobjlock);
 	uobj->uo_refs++;
-	simple_unlock(&uobj->vmobjlock);
+	mtx_leave(&uobj->vmobjlock);
 }
 
 /*
@@ -273,10 +273,10 @@ udv_detach(struct uvm_object *uobj)
 	 * loop until done
 	 */
 again:
-	simple_lock(&uobj->vmobjlock);
+	mtx_enter(&uobj->vmobjlock);
 	if (uobj->uo_refs > 1) {
 		uobj->uo_refs--;
-		simple_unlock(&uobj->vmobjlock);
+		mtx_leave(&uobj->vmobjlock);
 		return;
 	}
 	KASSERT(uobj->uo_npages == 0 && RB_EMPTY(&uobj->memt));
@@ -292,7 +292,7 @@ again:
 		 * lock interleaving. -- this is ok in this case since the
 		 * locks are both IPL_NONE
 		 */
-		simple_unlock(&uobj->vmobjlock);
+		mtx_leave(&uobj->vmobjlock);
 		msleep(udv, &udv_lock, PVM | PNORELOCK, "udv_detach", 0);
 		goto again;
 	}
@@ -305,7 +305,7 @@ again:
 	if (udv->u_flags & UVM_DEVICE_WANTED)
 		wakeup(udv);
 	mtx_leave(&udv_lock);
-	simple_unlock(&uobj->vmobjlock);
+	mtx_leave(&uobj->vmobjlock);
 	free(udv, M_TEMP);
 }
 
@@ -353,6 +353,8 @@ udv_fault(struct uvm_faultinfo *ufi, vaddr_t vaddr, vm_page_t *pps, int npages,
 	dev_t device;
 	paddr_t (*mapfn)(dev_t, off_t, int);
 	vm_prot_t mapprot;
+
+	UVM_ASSERT_OBJLOCKED(uobj);
 
 	/*
 	 * we do not allow device mappings to be mapped copy-on-write

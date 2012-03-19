@@ -1460,7 +1460,7 @@ i915_gem_object_move_to_active(struct drm_obj *obj)
 
 	/* Add a reference if we're newly entering the active list. */
 	if (!inteldrm_is_active(obj_priv)) {
-		drm_ref(&obj->uobj);
+		drm_ref_locked(&obj->uobj);
 		atomic_setbits_int(&obj->do_flags, I915_ACTIVE);
 	}
 
@@ -1556,10 +1556,10 @@ inteldrm_purge_obj(struct drm_obj *obj)
 	 * OpenGL) the pages are defined to be freed if they were cleared
 	 * so kill them and free up the memory
 	 */
-	simple_lock(&obj->uao->vmobjlock);
+	mtx_enter(&obj->uao->vmobjlock);
 	obj->uao->pgops->pgo_flush(obj->uao, 0, obj->size,
 	    PGO_ALLPAGES | PGO_FREE);
-	simple_unlock(&obj->uao->vmobjlock);
+	mtx_leave(&obj->uao->vmobjlock);
 
 	/*
 	 * If flush failed, it may have halfway through, so just

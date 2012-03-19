@@ -47,7 +47,7 @@
  */
 
 struct uvm_object {
-	simple_lock_data_t		 vmobjlock;	/* lock on memt */
+	struct mutex			 vmobjlock;	/* lock on memt */
 	struct uvm_pagerops		*pgops;		/* pager ops */
 	RB_HEAD(uvm_objtree, vm_page)	 memt;		/* pages in object */
 	int				 uo_npages;	/* # of pages in memt */
@@ -100,6 +100,14 @@ RB_PROTOTYPE(uvm_objtree, vm_page, objt, uvm_pagecmp)
 void	uvm_objinit(struct uvm_object *, struct uvm_pagerops *, int);
 int	uvm_objwire(struct uvm_object *, off_t, off_t, struct pglist *);
 void	uvm_objunwire(struct uvm_object *, off_t, off_t);
+
+#ifdef UVMLOCKDEBUG
+#	define UVM_ASSERT_OBJLOCKED(obj) MUTEX_ASSERT_LOCKED(&(obj)->vmobjlock)
+#	define UVM_ASSERT_OBJUNLOCKED(obj) MUTEX_ASSERT_UNLOCKED(&(obj)->vmobjlock)
+#else
+#	define UVM_ASSERT_OBJLOCKED(obj)
+#	define UVM_ASSERT_OBJUNLOCKED(obj)
+#endif	/* UVMLOCKDEBUG */
 
 #endif /* _KERNEL */
 

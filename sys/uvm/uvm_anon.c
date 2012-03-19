@@ -125,7 +125,7 @@ uvm_anfree(struct vm_anon *anon)
 			pg->loan_count--;
 			pg->uanon = NULL;
 			uvm_unlock_pageq();
-			simple_unlock(&pg->uobject->vmobjlock);
+			mtx_leave(&pg->uobject->vmobjlock);
 		} else {
 
 			/*
@@ -234,8 +234,7 @@ uvm_anon_lockloanpg(struct vm_anon *anon)
 
 			uvm_lock_pageq();
 			if (pg->uobject) {	/* the "real" check */
-				locked =
-				    simple_lock_try(&pg->uobject->vmobjlock);
+				locked = mtx_enter_try(&pg->uobject->vmobjlock);
 			} else {
 				/* object disowned before we got PQ lock */
 				locked = TRUE;
@@ -350,7 +349,7 @@ uvm_anon_pagein(struct vm_anon *anon)
 
 	simple_unlock(&anon->an_lock);
 	if (uobj) {
-		simple_unlock(&uobj->vmobjlock);
+		mtx_leave(&uobj->vmobjlock);
 	}
 	return FALSE;
 }

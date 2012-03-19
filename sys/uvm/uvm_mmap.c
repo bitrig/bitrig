@@ -259,7 +259,7 @@ sys_mincore(struct proc *p, void *v, register_t *retval)
 		uobj = entry->object.uvm_obj;	/* bottom layer */
 
 		if (uobj != NULL)
-			simple_lock(&uobj->vmobjlock);
+			mtx_enter(&uobj->vmobjlock);
 
 		for (/* nothing */; start < lim; start += PAGE_SIZE, pgi++) {
 			*pgi = 0;
@@ -292,7 +292,7 @@ sys_mincore(struct proc *p, void *v, register_t *retval)
 		}
 
 		if (uobj != NULL)
-			simple_unlock(&uobj->vmobjlock);
+			mtx_leave(&uobj->vmobjlock);
 	}
 
  out:

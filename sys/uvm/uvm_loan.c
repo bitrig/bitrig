@@ -140,7 +140,7 @@ uvm_loanentry(struct uvm_faultinfo *ufi, void ***output, int flags)
 	 * lock us the rest of the way down
 	 */
 	if (uobj)
-		simple_lock(&uobj->vmobjlock);
+		mtx_enter(&uobj->vmobjlock);
 
 	/*
 	 * loop until done
@@ -379,7 +379,7 @@ uvm_loananon(struct uvm_faultinfo *ufi, void ***output, int flags,
 
 	/* unlock anon and return success */
 	if (pg->uobject)
-		simple_unlock(&pg->uobject->vmobjlock);
+		mtx_leave(&pg->uobject->vmobjlock);
 	simple_unlock(&anon->an_lock);
 	return(1);
 }
@@ -459,7 +459,8 @@ uvm_loanuobj(struct uvm_faultinfo *ufi, void ***output, int flags, vaddr_t va)
 		 */
 
 		locked = uvmfault_relock(ufi);
-		simple_lock(&uobj->vmobjlock);
+		if (locked)
+			mtx_enter(&uobj->vmobjlock);
 
 		/*
 		 * Re-verify that amap slot is still free. if there is a
@@ -489,7 +490,7 @@ uvm_loanuobj(struct uvm_faultinfo *ufi, void ***output, int flags, vaddr_t va)
 			uvm_unlock_pageq();
 			atomic_clearbits_int(&pg->pg_flags, PG_BUSY|PG_WANTED);
 			UVM_PAGE_OWN(pg, NULL);
-			simple_unlock(&uobj->vmobjlock);
+			mtx_enter(&uobj->vmobjlock);
 			return (0);
 		}
 	}
@@ -566,6 +567,7 @@ uvm_loanuobj(struct uvm_faultinfo *ufi, void ***output, int flags, vaddr_t va)
 		wakeup(pg);
 	atomic_clearbits_int(&pg->pg_flags, PG_WANTED|PG_BUSY);
 	UVM_PAGE_OWN(pg, NULL);
+	mtx_leave(&uobj->vmobjlock);
 	return(1);
 }
 
@@ -595,7 +597,7 @@ uvm_loanzero(struct uvm_faultinfo *ufi, void ***output, int flags)
 			if (!uvmfault_relock(ufi))
 				return(0);
 			if (ufi->entry->object.uvm_obj)
-				simple_lock(
+				mtx_enter(
 				    &ufi->entry->object.uvm_obj->vmobjlock);
 			/* ... and try again */
 		}
@@ -634,7 +636,7 @@ uvm_loanzero(struct uvm_faultinfo *ufi, void ***output, int flags)
 
 		/* relock everything else */
 		if (ufi->entry->object.uvm_obj)
-			simple_lock(&ufi->entry->object.uvm_obj->vmobjlock);
+			mtx_enter(&ufi->entry->object.uvm_obj->vmobjlock);
 		/* ... and try again */
 	}
 

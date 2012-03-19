@@ -510,17 +510,17 @@ pmap_map_ptes(struct pmap *pmap)
 
 	/* if curpmap then we are always mapped */
 	if (pmap_is_curpmap(pmap)) {
-		simple_lock(&pmap->pm_obj.vmobjlock);
+		mtx_enter(&pmap->pm_obj.vmobjlock);
 		return(PTE_BASE);
 	}
 
 	/* need to lock both curpmap and pmap: use ordered locking */
 	if ((unsigned) pmap < (unsigned) curpcb->pcb_pmap) {
-		simple_lock(&pmap->pm_obj.vmobjlock);
-		simple_lock(&curpcb->pcb_pmap->pm_obj.vmobjlock);
+		mtx_enter(&pmap->pm_obj.vmobjlock);
+		mtx_enter(&curpcb->pcb_pmap->pm_obj.vmobjlock);
 	} else {
-		simple_lock(&curpcb->pcb_pmap->pm_obj.vmobjlock);
-		simple_lock(&pmap->pm_obj.vmobjlock);
+		mtx_enter(&curpcb->pcb_pmap->pm_obj.vmobjlock);
+		mtx_enter(&pmap->pm_obj.vmobjlock);
 	}
 
 	/* need to load a new alternate pt space into curpmap? */
@@ -549,14 +549,14 @@ pmap_unmap_ptes(struct pmap *pmap)
 		return;
 
 	if (pmap_is_curpmap(pmap)) {
-		simple_unlock(&pmap->pm_obj.vmobjlock);
+		mtx_leave(&pmap->pm_obj.vmobjlock);
 	} else {
 #if defined(MULTIPROCESSOR)
 		*APDP_PDE = 0;
 		pmap_apte_flush();
 #endif
-		simple_unlock(&pmap->pm_obj.vmobjlock);
-		simple_unlock(&curpcb->pcb_pmap->pm_obj.vmobjlock);
+		mtx_leave(&pmap->pm_obj.vmobjlock);
+		mtx_leave(&curpcb->pcb_pmap->pm_obj.vmobjlock);
 	}
 }
 
@@ -1368,6 +1368,9 @@ pmap_alloc_ptp(struct pmap *pmap, int pde_index, boolean_t just_try,
 {
 	struct vm_page *ptp;
 
+	/* Always should be called with pmap locked */
+	MUTEX_ASSERT_LOCKED(&pmap->pm_obj.vmobjlock);
+
 	ptp = uvm_pagealloc(&pmap->pm_obj, ptp_i2o(pde_index), NULL,
 			    UVM_PGA_USERESERVE|UVM_PGA_ZERO);
 	if (ptp == NULL)
@@ -1395,6 +1398,9 @@ pmap_get_ptp(struct pmap *pmap, int pde_index, boolean_t just_try)
 {
 	struct vm_page *ptp;
 
+	/* Must be called with pmap locked */
+	MUTEX_ASSERT_LOCKED(&pmap->pm_obj.vmobjlock);
+
 	if (pmap_valid_entry(pmap->pm_pdir[pde_index])) {
 
 		/* valid... check hint (saves us a PA->PG lookup) */
@@ -1420,6 +1426,8 @@ void
 pmap_drop_ptp(struct pmap *pm, vaddr_t va, struct vm_page *ptp,
     pt_entry_t *ptes)
 {
+	MUTEX_ASSERT_LOCKED(&pmap->pm_obj.vmobjlock);
+
 	i386_atomic_testset_ul(&pm->pm_pdir[pdei(va)], 0);
 	pmap_tlb_shootpage(curcpu()->ci_curpmap, ((vaddr_t)ptes) + ptp->offset);
 #ifdef MULTIPROCESSOR
@@ -1522,9 +1530,12 @@ pmap_destroy(struct pmap *pmap)
 	struct vm_page *pg;
 	int refs;
 
+	mtx_enter(&pmap->pm_obj.vmobjlock);
 	refs = --pmap->pm_obj.uo_refs;
-	if (refs > 0)
+	if (refs > 0) {
+		mtx_leave(&pmap->pm_obj.vmobjlock);
 		return;
+	}
 
 #ifdef MULTIPROCESSOR
 	pmap_tlb_droppmap(pmap);	
@@ -1534,11 +1545,15 @@ pmap_destroy(struct pmap *pmap)
 	LIST_REMOVE(pmap, pm_list);
 	simple_unlock(&pmaps_lock);
 
-	/* Free any remaining PTPs. */
+	/*
+	 * Free any remaining PTPs. pageqlock is unneeded because these
+	 * pagews were always wired and thus never on the queues.
+	 */
 	while ((pg = RB_ROOT(&pmap->pm_obj.memt)) != NULL) {
 		pg->wire_count = 0;
 		uvm_pagefree(pg);
 	}
+	mtx_leave(&pmap->pm_obj.vmobjlock);
 
 	pool_put(&pmap_pdp_pool, pmap->pm_pdir);
 	pmap->pm_pdir = NULL;
@@ -1568,9 +1583,9 @@ pmap_destroy(struct pmap *pmap)
 void
 pmap_reference(struct pmap *pmap)
 {
-	simple_lock(&pmap->pm_obj.vmobjlock);
+	mtx_enter(&pmap->pm_obj.vmobjlock);
 	pmap->pm_obj.uo_refs++;
-	simple_unlock(&pmap->pm_obj.vmobjlock);
+	mtx_leave(&pmap->pm_obj.vmobjlock);
 }
 
 #if defined(PMAP_FORK)
@@ -1582,8 +1597,9 @@ pmap_reference(struct pmap *pmap)
 void
 pmap_fork(struct pmap *pmap1, struct pmap *pmap2)
 {
-	simple_lock(&pmap1->pm_obj.vmobjlock);
-	simple_lock(&pmap2->pm_obj.vmobjlock);
+	/* XXX lock ordering *sigh* */
+	mtx_enter(&pmap1->pm_obj.vmobjlock);
+	mtx_enter(&pmap2->pm_obj.vmobjlock);
 
 #ifdef USER_LDT
 	/* Copy the LDT, if necessary. */
@@ -1602,8 +1618,8 @@ pmap_fork(struct pmap *pmap1, struct pmap *pmap2)
 	}
 #endif /* USER_LDT */
 
-	simple_unlock(&pmap2->pm_obj.vmobjlock);
-	simple_unlock(&pmap1->pm_obj.vmobjlock);
+	mtx_leave(&pmap2->pm_obj.vmobjlock);
+	mtx_leave(&pmap1->pm_obj.vmobjlock);
 }
 #endif /* PMAP_FORK */
 
@@ -1621,7 +1637,7 @@ pmap_ldt_cleanup(struct proc *p)
 	union descriptor *old_ldt = NULL;
 	size_t len = 0;
 
-	simple_lock(&pmap->pm_obj.vmobjlock);
+	mtx_enter(&pmap->pm_obj.vmobjlock);
 
 	if (pmap->pm_flags & PMF_USER_LDT) {
 		ldt_free(pmap);
@@ -1642,7 +1658,7 @@ pmap_ldt_cleanup(struct proc *p)
 		pmap->pm_flags &= ~PMF_USER_LDT;
 	}
 
-	simple_unlock(&pmap->pm_obj.vmobjlock);
+	mtx_leave(&pmap->pm_obj.vmobjlock);
 
 	if (old_ldt != NULL)
 		km_free(old_ldt, round_page(len), &kv_any, &kp_dirty);
@@ -2067,6 +2083,10 @@ pmap_do_remove(struct pmap *pmap, vaddr_t sva, vaddr_t eva, int flags)
 	pmap_tlb_shootwait();
 	pmap_unmap_ptes(pmap);
 	PMAP_MAP_TO_HEAD_UNLOCK();
+	/*
+	 * These pages are no longer in an object and were always wired.
+	 * therefore we need not hold any locks here.
+	 */
 	while ((ptp = TAILQ_FIRST(&empty_ptps)) != NULL) {
 		TAILQ_REMOVE(&empty_ptps, ptp, pageq);
 		uvm_pagefree(ptp);
@@ -2648,7 +2668,7 @@ pmap_growkernel(vaddr_t maxkvaddr)
 	 */
 
 	s = splhigh();	/* to be safe */
-	simple_lock(&kpm->pm_obj.vmobjlock);
+	mtx_enter(&kpm->pm_obj.vmobjlock);
 
 	for (/*null*/ ; nkpde < needed_kpde ; nkpde++) {
 
@@ -2678,8 +2698,11 @@ pmap_growkernel(vaddr_t maxkvaddr)
 		 * INVOKED WHILE pmap_init() IS RUNNING!
 		 */
 
-		while (!pmap_alloc_ptp(kpm, PDSLOT_KERN + nkpde, FALSE, 0))
+		while (!pmap_alloc_ptp(kpm, PDSLOT_KERN + nkpde, FALSE, 0)) {
+			mtx_leave(&kpm->pm_obj.vmobjlock);
 			uvm_wait("pmap_growkernel");
+			mtx_enter(&kpm->pm_obj.vmobjlock);
+		}
 
 		/* distribute new kernel PTP to all active pmaps */
 		simple_lock(&pmaps_lock);
@@ -2690,7 +2713,7 @@ pmap_growkernel(vaddr_t maxkvaddr)
 		simple_unlock(&pmaps_lock);
 	}
 
-	simple_unlock(&kpm->pm_obj.vmobjlock);
+	mtx_leave(&kpm->pm_obj.vmobjlock);
 	splx(s);
 
 out:

@@ -297,7 +297,7 @@ LIST_HEAD(pmap_head, pmap); /* struct pmap_head: head of a pmap list */
 /*
  * the pmap structure
  *
- * note that the pm_obj contains the simple_lock, the reference count,
+ * note that the pm_obj contains the lock, the reference count,
  * page list, and number of PTPs within the pmap.
  *
  * pm_lock is the same as the spinlock for vm object 0. Changes to

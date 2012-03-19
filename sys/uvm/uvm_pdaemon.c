@@ -485,12 +485,12 @@ uvmpd_scan_inactive(struct pglist *pglst)
 			} else {
 				uobj = p->uobject;
 				KASSERT(uobj != NULL);
-				if (!simple_lock_try(&uobj->vmobjlock)) {
+				if (!mtx_enter_try(&uobj->vmobjlock)) {
 					/* lock failed, skip this page */
 					continue;
 				}
 				if (p->pg_flags & PG_BUSY) {
-					simple_unlock(&uobj->vmobjlock);
+					mtx_leave(&uobj->vmobjlock);
 					uvmexp.pdbusy++;
 					/* someone else owns page, skip it */
 					continue;
@@ -532,7 +532,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 				} else {
 					/* pagefree has already removed the
 					 * page from the object */
-					simple_unlock(&uobj->vmobjlock);
+					mtx_leave(&uobj->vmobjlock);
 				}
 				continue;
 			}
@@ -546,7 +546,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 				if (anon) {
 					simple_unlock(&anon->an_lock);
 				} else {
-					simple_unlock(&uobj->vmobjlock);
+					mtx_leave(&uobj->vmobjlock);
 				}
 				continue;
 			}
@@ -566,7 +566,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 				if (anon) {
 					simple_unlock(&anon->an_lock);
 				} else {
-					simple_unlock(&uobj->vmobjlock);
+					mtx_leave(&uobj->vmobjlock);
 				}
 				continue;
 			}
@@ -647,7 +647,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 							simple_unlock(
 							    &anon->an_lock);
 						else
-							simple_unlock(
+							mtx_leave(
 							    &uobj->vmobjlock);
 						continue;
 					}
@@ -688,7 +688,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 				if (anon)
 					simple_unlock(&anon->an_lock);
 				else
-					simple_unlock(&uobj->vmobjlock);
+					mtx_leave(&uobj->vmobjlock);
 
 				/* cluster not full yet? */
 				if (swcpages < swnpages)
@@ -821,7 +821,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 				if (anon)
 					simple_lock(&anon->an_lock);
 				else
-					simple_lock(&uobj->vmobjlock);
+					mtx_enter(&uobj->vmobjlock);
 			}
 
 #ifdef DIAGNOSTIC
@@ -887,7 +887,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 			if (anon)
 				simple_unlock(&anon->an_lock);
 			else if (uobj)
-				simple_unlock(&uobj->vmobjlock);
+				mtx_leave(&uobj->vmobjlock);
 
 			if (nextpg && (nextpg->pg_flags & PQ_INACTIVE) == 0) {
 				nextpg = TAILQ_FIRST(pglst);	/* reload! */
@@ -1012,7 +1012,7 @@ uvmpd_scan(void)
 				atomic_setbits_int(&p->pg_flags, PQ_ANON);
 			}
 		} else {
-			if (!simple_lock_try(&p->uobject->vmobjlock))
+			if (!mtx_enter_try(&p->uobject->vmobjlock))
 				continue;
 		}
 
@@ -1024,7 +1024,7 @@ uvmpd_scan(void)
 			if (p->pg_flags & PQ_ANON)
 				simple_unlock(&p->uanon->an_lock);
 			else
-				simple_unlock(&p->uobject->vmobjlock);
+				mtx_leave(&p->uobject->vmobjlock);
 			continue;
 		}
 
@@ -1066,6 +1066,6 @@ uvmpd_scan(void)
 		if (p->pg_flags & PQ_ANON)
 			simple_unlock(&p->uanon->an_lock);
 		else
-			simple_unlock(&p->uobject->vmobjlock);
+			mtx_leave(&p->uobject->vmobjlock);
 	}
 }

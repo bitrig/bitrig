@@ -571,7 +571,7 @@ ReTry:
 			 */
 			if (uobj)
 				/* required for dropcluster */
-				simple_lock(&uobj->vmobjlock);
+				mtx_enter(&uobj->vmobjlock);
 			if (*npages > 1 || pg == NULL)
 				uvm_pager_dropcluster(uobj, pg, ppsp, npages,
 				    PGO_PDFREECLUST);
@@ -589,7 +589,7 @@ ReTry:
 
 	if (*npages > 1 || pg == NULL) {
 		if (uobj) {
-			simple_lock(&uobj->vmobjlock);
+			mtx_enter(&uobj->vmobjlock);
 		}
 		uvm_pager_dropcluster(uobj, pg, ppsp, npages, PGO_REALLOCSWAP);
 
@@ -608,11 +608,11 @@ ReTry:
 				pg->uanon->an_swslot = nswblk;
 				simple_unlock(&pg->uanon->an_lock);
 			} else {
-				simple_lock(&pg->uobject->vmobjlock);
+				mtx_enter(&pg->uobject->vmobjlock);
 				uao_set_swslot(pg->uobject,
 					       pg->offset >> PAGE_SHIFT,
 					       nswblk);
-				simple_unlock(&pg->uobject->vmobjlock);
+				mtx_leave(&pg->uobject->vmobjlock);
 			}
 		}
 		if (result == VM_PAGER_AGAIN) {
@@ -656,7 +656,7 @@ ReTry:
 	 */
 	
 	if (uobj && (flags & PGO_PDFREECLUST) != 0)
-		simple_lock(&uobj->vmobjlock);
+		mtx_enter(&uobj->vmobjlock);
 	return(result);
 }
 
@@ -711,7 +711,7 @@ uvm_pager_dropcluster(struct uvm_object *uobj, struct vm_page *pg,
 					  /* zap swap block */
 					  ppsp[lcv]->uanon->an_swslot = 0;
 			} else {
-				simple_lock(&ppsp[lcv]->uobject->vmobjlock);
+				mtx_enter(&ppsp[lcv]->uobject->vmobjlock);
 				if (flags & PGO_REALLOCSWAP)
 					uao_set_swslot(ppsp[lcv]->uobject,
 					    ppsp[lcv]->offset >> PAGE_SHIFT, 0);
@@ -762,7 +762,7 @@ uvm_pager_dropcluster(struct uvm_object *uobj, struct vm_page *pg,
 			if (ppsp[lcv]->pg_flags & PQ_ANON)
 				simple_unlock(&ppsp[lcv]->uanon->an_lock);
 			else
-				simple_unlock(&ppsp[lcv]->uobject->vmobjlock);
+				mtx_leave(&ppsp[lcv]->uobject->vmobjlock);
 		}
 	}
 }
@@ -828,7 +828,7 @@ uvm_aio_aiodone(struct buf *bp)
 			swap = (pg->pg_flags & PQ_SWAPBACKED) != 0;
 			if (!swap) {
 				uobj = pg->uobject;
-				simple_lock(&uobj->vmobjlock);
+				mtx_enter(&uobj->vmobjlock);
 			}
 		}
 		KASSERT(swap || pg->uobject == uobj);
@@ -836,7 +836,7 @@ uvm_aio_aiodone(struct buf *bp)
 			if (pg->pg_flags & PQ_ANON) {
 				simple_lock(&pg->uanon->an_lock);
 			} else {
-				simple_lock(&pg->uobject->vmobjlock);
+				mtx_enter(&pg->uobject->vmobjlock);
 			}
 		}
 
@@ -846,6 +846,8 @@ uvm_aio_aiodone(struct buf *bp)
 		 */
 		if (!write && error) {
 			atomic_setbits_int(&pg->pg_flags, PG_RELEASED);
+			if (swap)
+				goto out;
 			continue;
 		}
 		KASSERT(!write || (pgs[i]->pg_flags & PG_FAKE) == 0);
@@ -863,16 +865,30 @@ uvm_aio_aiodone(struct buf *bp)
 			atomic_clearbits_int(&pgs[i]->pg_flags, PG_FAKE);
 		}
 		if (swap) {
-			if (pg->pg_flags & PQ_ANON) {
+out:
+			/* since we may have many anons and several objects,
+			 * we unbusy the pages one at a time to keep locking
+			 * order.
+			 */
+			if (pg->uobject == NULL && pg->uanon->an_ref == 0 &&
+			    pg->pg_flags & PG_RELEASED) {
+				atomic_clearbits_int(&pg->pg_flags, PG_BUSY);
+				UVM_PAGE_OWN(pg, NULL);
 				simple_unlock(&pg->uanon->an_lock);
+				uvm_anfree(pg->uanon);
 			} else {
-				simple_unlock(&pg->uobject->vmobjlock);
+				uvm_page_unbusy(&pg, 1);
+				if (pg->pg_flags & PQ_ANON) {
+					simple_unlock(&pg->uanon->an_lock);
+				} else {
+					mtx_leave(&pg->uobject->vmobjlock);
+				}
 			}
 		}
 	}
-	uvm_page_unbusy(pgs, npages);
-	if (!swap) {
-		simple_unlock(&uobj->vmobjlock);
+	if (!swap || (!write && error)) {
+		uvm_page_unbusy(pgs, npages);
+		mtx_leave(&uobj->vmobjlock);
 	}
 
 #ifdef UVM_SWAP_ENCRYPT

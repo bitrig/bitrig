@@ -50,6 +50,7 @@ uvm_objinit(struct uvm_object *uobj, struct uvm_pagerops *pgops, int refs)
 {
 	uobj->pgops = pgops;
 	RB_INIT(&uobj->memt);
+	mtx_init(&uobj->vmobjlock, IPL_NONE);
 	uobj->uo_npages = 0;
 	uobj->uo_refs = refs;
 }
@@ -73,7 +74,7 @@ uvm_objwire(struct uvm_object *uobj, off_t start, off_t end,
 
 	left = (end - start) >> PAGE_SHIFT;
 
-	simple_lock(&uobj->vmobjlock);
+	mtx_enter(&uobj->vmobjlock);
 	while (left) {
 
 		npages = MIN(FETCH_PAGECOUNT, left);
@@ -87,7 +88,7 @@ uvm_objwire(struct uvm_object *uobj, off_t start, off_t end,
 		if (error)
 			goto error;
 
-		simple_lock(&uobj->vmobjlock);
+		mtx_enter(&uobj->vmobjlock);
 		for (i = 0; i < npages; i++) {
 
 			KASSERT(pgs[i] != NULL);
@@ -101,9 +102,9 @@ uvm_objwire(struct uvm_object *uobj, off_t start, off_t end,
 				while (pgs[i]->loan_count) {
 					pg = uvm_loanbreak(pgs[i]);
 					if (!pg) {
-						simple_unlock(&uobj->vmobjlock);
+						mtx_leave(&uobj->vmobjlock);
 						uvm_wait("uobjwirepg");
-						simple_lock(&uobj->vmobjlock);
+						mtx_enter(&uobj->vmobjlock);
 						continue;
 					}
 				}
@@ -133,7 +134,7 @@ uvm_objwire(struct uvm_object *uobj, off_t start, off_t end,
 		left -= npages;
 		offset += npages << PAGE_SHIFT;
 	}
-	simple_unlock(&uobj->vmobjlock);
+	mtx_leave(&uobj->vmobjlock);
 
 	return 0;
 
@@ -156,7 +157,7 @@ uvm_objunwire(struct uvm_object *uobj, off_t start, off_t end)
 	struct vm_page *pg;
 	off_t offset;
 
-	simple_lock(&uobj->vmobjlock);
+	mtx_enter(&uobj->vmobjlock);
 	uvm_lock_pageq();
 	for (offset = start; offset < end; offset += PAGE_SIZE) {
 		pg = uvm_pagelookup(uobj, offset);
@@ -167,6 +168,6 @@ uvm_objunwire(struct uvm_object *uobj, off_t start, off_t end)
 		uvm_pageunwire(pg);
 	}
 	uvm_unlock_pageq();
-	simple_unlock(&uobj->vmobjlock);
+	mtx_leave(&uobj->vmobjlock);
 }
 #endif /* !SMALL_KERNEL */

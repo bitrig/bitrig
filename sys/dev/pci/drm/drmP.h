@@ -717,13 +717,13 @@ drm_gem_object_unreference(struct drm_obj *obj)
 static __inline void 
 drm_lock_obj(struct drm_obj *obj)
 {
-	simple_lock(&obj->uobj);
+	mtx_enter(&obj->uobj.vmobjlock);
 }
 
 static __inline void 
 drm_unlock_obj(struct drm_obj *obj)
 {
-	simple_unlock(&obj->uobj);
+	mtx_leave(&obj->uobj.vmobjlock);
 }
 #ifdef DRMLOCKDEBUG
 

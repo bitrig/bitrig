@@ -136,6 +136,7 @@ buf_map(struct buf *bp)
 			va = buf_unmap(vbp);
 		}
 
+		mtx_enter(&bp->b_pobj->vmobjlock);
 		for (i = 0; i < atop(bp->b_bufsize); i++) {
 			struct vm_page *pg = uvm_pagelookup(bp->b_pobj,
 			    bp->b_poffs + ptoa(i));
@@ -145,6 +146,7 @@ buf_map(struct buf *bp)
 			pmap_kenter_pa(va + ptoa(i), VM_PAGE_TO_PHYS(pg),
 			    VM_PROT_READ|VM_PROT_WRITE);
 		}
+		mtx_leave(&bp->b_pobj->vmobjlock);
 		pmap_update(pmap_kernel());
 		bp->b_data = (caddr_t)va;
 	} else {
@@ -317,14 +319,17 @@ buf_free_pages(struct buf *bp)
 	bp->b_pobj = NULL;
 	bp->b_poffs = 0;
 
+	mtx_enter(&uobj->vmobjlock);
 	for (i = 0; i < atop(bp->b_bufsize); i++) {
 		pg = uvm_pagelookup(uobj, off + ptoa(i));
 		KASSERT(pg != NULL);
 		KASSERT(pg->wire_count == 1);
 		pg->wire_count = 0;
+		/* Never on a pageq, no pageqlock needed.  */
 		uvm_pagefree(pg);
 		bcstats.numbufpages--;
 	}
+	mtx_leave(&uobj->vmobjlock);
 	splx(s);
 }
 

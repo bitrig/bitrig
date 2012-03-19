@@ -644,6 +644,8 @@ int			uvm_mmap(vm_map_t, vaddr_t *, vsize_t,
 				caddr_t, voff_t, vsize_t, struct proc *);
 
 /* uvm_page.c */
+void			 uvm_objalloc_dma(struct uvm_object *,
+			     voff_t, vsize_t, paddr_t, paddr_t, int);
 struct vm_page		*uvm_pagealloc(struct uvm_object *,
 				voff_t, struct vm_anon *, int);
 vaddr_t			uvm_pagealloc_contig(vaddr_t, vaddr_t,

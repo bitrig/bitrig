@@ -152,6 +152,8 @@ uvm_pageinsert(struct vm_page *pg)
 {
 	struct vm_page	*dupe;
 
+	UVM_ASSERT_OBJLOCKED(pg->uobject);
+
 	KASSERT((pg->pg_flags & PG_TABLED) == 0);
 	dupe = RB_INSERT(uvm_objtree, &pg->uobject->memt, pg);
 	/* not allowed to insert over another page */
@@ -172,6 +174,8 @@ uvm_pageremove(struct vm_page *pg)
 {
 
 	KASSERT(pg->pg_flags & PG_TABLED);
+	UVM_ASSERT_OBJLOCKED(pg->uobject);
+
 	RB_REMOVE(uvm_objtree, &pg->uobject->memt, pg);
 
 	atomic_clearbits_int(&pg->pg_flags, PG_TABLED);
@@ -754,6 +758,9 @@ uvm_pagealloc_pg(struct vm_page *pg, struct uvm_object *obj, voff_t off,
 {
 	int	flags;
 
+	if (obj)
+		UVM_ASSERT_OBJLOCKED(obj);
+
 	flags = PG_BUSY | PG_FAKE;
 	pg->offset = off;
 	pg->uobject = obj;
@@ -862,6 +869,7 @@ uvm_pagealloc_multi(struct uvm_object *obj, voff_t off, vsize_t size,
 	    dma_constraint.ucr_high, 0, 0, &plist, atop(round_page(size)),
 	    UVM_PLA_WAITOK);
 	i = 0;
+	mtx_enter(&obj->vmobjlock);
 	while ((pg = TAILQ_FIRST(&plist)) != NULL) {
 		pg->wire_count = 1;
 		atomic_setbits_int(&pg->pg_flags, PG_CLEAN | PG_FAKE);
@@ -869,6 +877,7 @@ uvm_pagealloc_multi(struct uvm_object *obj, voff_t off, vsize_t size,
 		TAILQ_REMOVE(&plist, pg, pageq);
 		uvm_pagealloc_pg(pg, obj, off + ptoa(i++), NULL);
 	}
+	mtx_leave(&obj->vmobjlock);
 }
 
 /*
@@ -926,6 +935,8 @@ uvm_pagealloc(struct uvm_object *obj, voff_t off, struct vm_anon *anon,
 
 	KASSERT(obj == NULL || anon == NULL);
 	KASSERT(off == trunc_page(off));
+	if (obj)
+		UVM_ASSERT_OBJLOCKED(obj);
 
 	/* XXX these functions should share flags */
 	pmr_flags = UVM_PLA_NOWAIT;
@@ -959,6 +970,17 @@ void
 uvm_pagerealloc(struct vm_page *pg, struct uvm_object *newobj, voff_t newoff)
 {
 
+#ifdef UVMLOCKDEBUG
+	if (obj)
+		UVM_ASSERT_OBJLOCKED(obj);
+#endif
+#ifdef UVMLOCKDEBUG
+	if (pg->uobject)
+		UVM_ASSERT_OBJLOCKED(pg->uobject);
+	if (newobj)
+		UVM_ASSERT_OBJLOCKED(newobj);
+#endif /* UVMLOCKDEBUG */
+
 	/*
 	 * remove it from the old object
 	 */
@@ -986,7 +1008,10 @@ uvm_pagerealloc(struct vm_page *pg, struct uvm_object *newobj, voff_t newoff)
  * => erase page's identity (i.e. remove from object)
  * => put page on free list
  * => caller must lock owning object (either anon or uvm_object)
- * => caller must lock page queues
+ * => caller must lock page queues if the page has ever been on a page queue.
+ *	note that this means pmaps, etc that pagealloc to an object, use it
+ *	for their own needs, then eventually free it do *not* not to lock the
+ *	page queues.
  * => assumes all valid mappings of pg are gone
  */
 
@@ -1001,6 +1026,11 @@ uvm_pagefree(struct vm_page *pg)
 		panic("uvm_pagefree: freeing free page %p", pg);
 	}
 #endif
+
+#ifdef UVMLOCKDEBUG
+	if (pg->uobject)
+		UVM_ASSERT_OBJLOCKED(pg->uobject);
+#endif /* UVMLOCKDEBUG */
 
 	KASSERT((pg->pg_flags & PG_DEV) == 0);
 
@@ -1110,15 +1140,20 @@ uvm_pagefree(struct vm_page *pg)
  *
  * => pages must either all belong to the same object, or all belong to anons.
  * => if pages are object-owned, object must be locked.
- * => if pages are anon-owned, anons must be unlockd and have 0 refcount.
+ * => if pages are anon-owned, anons must be locked.
+ * => caller must ensure that anon-owned pages are not PG_RELEASED.
  */
 
 void
 uvm_page_unbusy(struct vm_page **pgs, int npgs)
 {
 	struct vm_page *pg;
-	struct uvm_object *uobj;
 	int i;
+
+#ifdef UVMLOCKDEBUG
+	if (pgs[0]->uobject)
+		UVM_ASSERT_OBJLOCKED(pgs[0]->uobject);
+#endif /* UVMLOCKDEBUG */
 
 	for (i = 0; i < npgs; i++) {
 		pg = pgs[i];
@@ -1130,21 +1165,16 @@ uvm_page_unbusy(struct vm_page **pgs, int npgs)
 			wakeup(pg);
 		}
 		if (pg->pg_flags & PG_RELEASED) {
-			uobj = pg->uobject;
-			if (uobj != NULL) {
-				uvm_lock_pageq();
-				pmap_page_protect(pg, VM_PROT_NONE);
-				/* XXX won't happen right now */
-				if (pg->pg_flags & PQ_AOBJ)
-					uao_dropswap(uobj,
-					    pg->offset >> PAGE_SHIFT);
-				uvm_pagefree(pg);
-				uvm_unlock_pageq();
-			} else {
-				atomic_clearbits_int(&pg->pg_flags, PG_BUSY);
-				UVM_PAGE_OWN(pg, NULL);
-				uvm_anfree(pg->uanon);
-			}
+			KASSERT(pg->uobject != NULL ||
+			    (pg->uanon != NULL && pg->uanon->an_ref > 0));
+			uvm_lock_pageq();
+			pmap_page_protect(pg, VM_PROT_NONE);
+			/* XXX won't happen right now */
+			if (pg->pg_flags & PQ_AOBJ)
+				uao_dropswap(pg->uobject,
+				    pg->offset >> PAGE_SHIFT);
+			uvm_pagefree(pg);
+			uvm_unlock_pageq();
 		} else {
 			atomic_clearbits_int(&pg->pg_flags, PG_WANTED|PG_BUSY);
 			UVM_PAGE_OWN(pg, NULL);
@@ -1365,6 +1395,8 @@ uvm_pagelookup(struct uvm_object *obj, voff_t off)
 	/* XXX if stack is too much, handroll */
 	struct vm_page pg;
 
+	UVM_ASSERT_OBJLOCKED(obj);
+
 	pg.offset = off;
 	return (RB_FIND(uvm_objtree, &obj->memt, &pg));
 }
@@ -1424,6 +1456,11 @@ uvm_pageunwire(struct vm_page *pg)
 void
 uvm_pagedeactivate(struct vm_page *pg)
 {
+#ifdef UVMLOCKDEBUG
+	if (pg->uobject)
+		UVM_ASSERT_OBJLOCKED(pg->uobject);
+#endif /* UVMLOCKDEBUG */
+
 	/*
 	 * XXX this isn't technically correct.
 	 * The normal clock hand algorithm would just clear the referenced bit
@@ -1509,6 +1546,11 @@ uvm_pageactivate(struct vm_page *pg)
 void
 uvm_pagezero(struct vm_page *pg)
 {
+#ifdef UVMLOCKDEBUG
+	if (pg->uobject)
+		UVM_ASSERT_OBJLOCKED(pg->uobject);
+#endif /* UVMLOCKDEBUG */
+
 	atomic_clearbits_int(&pg->pg_flags, PG_CLEAN);
 	pmap_zero_page(pg);
 }
@@ -1522,6 +1564,11 @@ uvm_pagezero(struct vm_page *pg)
 void
 uvm_pagecopy(struct vm_page *src, struct vm_page *dst)
 {
+#ifdef UVMLOCKDEBUG
+	if (dst->uobject)
+		UVM_ASSERT_OBJLOCKED(dst->uobject);
+#endif /* UVMLOCKDEBUG */
+
 	atomic_clearbits_int(&dst->pg_flags, PG_CLEAN);
 	pmap_copy_page(src, dst);
 }

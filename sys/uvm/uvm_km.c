@@ -276,13 +276,12 @@ uvm_km_pgremove(struct uvm_object *uobj, vaddr_t start, vaddr_t end)
 
 	KASSERT(uobj->pgops == &aobj_pager);
 
+	mtx_enter(&uobj->vmobjlock);
 	for (curoff = start ; curoff < end ; curoff += PAGE_SIZE) {
 		pp = uvm_pagelookup(uobj, curoff);
 		if (pp && pp->pg_flags & PG_BUSY) {
 			atomic_setbits_int(&pp->pg_flags, PG_WANTED);
-			UVM_UNLOCK_AND_WAIT(pp, &uobj->vmobjlock, 0,
-			    "km_pgrm", 0);
-			simple_lock(&uobj->vmobjlock);
+			msleep(pp, &uobj->vmobjlock, PVM, "km_pgrm", 0);
 			curoff -= PAGE_SIZE; /* loop back to us */
 			continue;
 		}
@@ -300,6 +299,7 @@ uvm_km_pgremove(struct uvm_object *uobj, vaddr_t start, vaddr_t end)
 			simple_unlock(&uvm.swap_data_lock);
 		}
 	}
+	mtx_leave(&uobj->vmobjlock);
 }
 
 

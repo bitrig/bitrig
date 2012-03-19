@@ -159,19 +159,17 @@ uvn_attach(void *arg, vm_prot_t accessprot)
 	/*
 	 * first get a lock on the uvn.
 	 */
-	simple_lock(&uvn->u_obj.vmobjlock);
+	mtx_enter(&uvn->u_obj.vmobjlock);
 	while (uvn->u_flags & UVM_VNODE_BLOCKED) {
 		uvn->u_flags |= UVM_VNODE_WANTED;
-		UVM_UNLOCK_AND_WAIT(uvn, &uvn->u_obj.vmobjlock, FALSE,
-		    "uvn_attach", 0);
-		simple_lock(&uvn->u_obj.vmobjlock);
+		msleep(uvn, &uvn->u_obj.vmobjlock, PVM, "uvn_attach", 0);
 	}
 
 	/*
 	 * if we're mapping a BLK device, make sure it is a disk.
 	 */
 	if (vp->v_type == VBLK && bdevsw[major(vp->v_rdev)].d_type != D_DISK) {
-		simple_unlock(&uvn->u_obj.vmobjlock); /* drop lock */
+		mtx_leave(&uvn->u_obj.vmobjlock);
 		return(NULL);
 	}
 
@@ -198,7 +196,7 @@ uvn_attach(void *arg, vm_prot_t accessprot)
 		}
 
 		/* unlock and return */
-		simple_unlock(&uvn->u_obj.vmobjlock);
+		mtx_leave(&uvn->u_obj.vmobjlock);
 		return (&uvn->u_obj);
 	}
 
@@ -211,7 +209,7 @@ uvn_attach(void *arg, vm_prot_t accessprot)
 	 * it.
 	 */
 	uvn->u_flags = UVM_VNODE_ALOCK;
-	simple_unlock(&uvn->u_obj.vmobjlock); /* drop lock in case we sleep */
+	mtx_leave(&uvn->u_obj.vmobjlock); /* drop lock in case we sleep */
 		/* XXX: curproc? */
 
 	if (vp->v_type == VBLK) {
@@ -237,13 +235,13 @@ uvn_attach(void *arg, vm_prot_t accessprot)
 	}
 
 	/* relock object */
-	simple_lock(&uvn->u_obj.vmobjlock);
+	mtx_enter(&uvn->u_obj.vmobjlock);
 
 	if (result != 0) {
 		if (uvn->u_flags & UVM_VNODE_WANTED)
 			wakeup(uvn);
 		uvn->u_flags = 0;
-		simple_unlock(&uvn->u_obj.vmobjlock); /* drop lock */
+		mtx_leave(&uvn->u_obj.vmobjlock); /* drop lock */
 		return(NULL);
 	}
 
@@ -258,8 +256,14 @@ uvn_attach(void *arg, vm_prot_t accessprot)
 
 	/*
 	 * now set up the uvn.
+	 * We don't use uvm_objinit here because the vnode subsystem is stupid.
+	 * We use the vmobjlock for other things, and thus init it at the
+	 * vnode allocation time.
 	 */
-	uvm_objinit(&uvn->u_obj, &uvm_vnodeops, 1);
+	uvn->u_obj.pgops = &uvm_vnodeops;
+	RB_INIT(&uvn->u_obj.memt);
+	uvn->u_obj.uo_npages = 0;
+	uvn->u_obj.uo_refs = 1;
 	oldflags = uvn->u_flags;
 	uvn->u_flags = UVM_VNODE_VALID|UVM_VNODE_CANPERSIST;
 	uvn->u_nio = 0;
@@ -277,7 +281,7 @@ uvn_attach(void *arg, vm_prot_t accessprot)
 	 * reference count goes to zero [and we either free or persist].
 	 */
 	vref(vp);
-	simple_unlock(&uvn->u_obj.vmobjlock);
+	mtx_leave(&uvn->u_obj.vmobjlock);
 	if (oldflags & UVM_VNODE_WANTED)
 		wakeup(uvn);
 
@@ -304,7 +308,7 @@ uvn_reference(struct uvm_object *uobj)
 	struct uvm_vnode *uvn = (struct uvm_vnode *) uobj;
 #endif
 
-	simple_lock(&uobj->vmobjlock);
+	mtx_enter(&uobj->vmobjlock);
 #ifdef DEBUG
 	if ((uvn->u_flags & UVM_VNODE_VALID) == 0) {
 		printf("uvn_reference: ref=%d, flags=0x%x\n", uvn->u_flags,
@@ -313,7 +317,7 @@ uvn_reference(struct uvm_object *uobj)
 	}
 #endif
 	uobj->uo_refs++;
-	simple_unlock(&uobj->vmobjlock);
+	mtx_leave(&uobj->vmobjlock);
 }
 
 /*
@@ -332,11 +336,11 @@ uvn_detach(struct uvm_object *uobj)
 	struct vnode *vp;
 	int oldflags;
 
-	simple_lock(&uobj->vmobjlock);
+	mtx_enter(&uobj->vmobjlock);
 
 	uobj->uo_refs--;			/* drop ref! */
 	if (uobj->uo_refs) {			/* still more refs */
-		simple_unlock(&uobj->vmobjlock);
+		mtx_leave(&uobj->vmobjlock);
 		return;
 	}
 
@@ -361,7 +365,7 @@ uvn_detach(struct uvm_object *uobj)
 	if (uvn->u_flags & UVM_VNODE_CANPERSIST) {
 		/* won't block */
 		uvn_flush(uobj, 0, 0, PGO_DEACTIVATE|PGO_ALLPAGES);
-		simple_unlock(&uobj->vmobjlock);
+		mtx_leave(&uobj->vmobjlock);
 		vrele(vp);			/* drop vnode reference */
 		return;
 	}
@@ -397,13 +401,13 @@ uvn_detach(struct uvm_object *uobj)
 	/* wait on any outstanding io */
 	while (uobj->uo_npages && uvn->u_flags & UVM_VNODE_RELKILL) {
 		uvn->u_flags |= UVM_VNODE_IOSYNC;
-		UVM_UNLOCK_AND_WAIT(&uvn->u_nio, &uvn->u_obj.vmobjlock, FALSE,
-		    "uvn_term",0);
-		simple_lock(&uvn->u_obj.vmobjlock);
+		msleep(&uvn->u_nio, &uvn->u_obj.vmobjlock, PVM, "uvn_term", 0);
 	}
 
-	if ((uvn->u_flags & UVM_VNODE_RELKILL) == 0)
+	if ((uvn->u_flags & UVM_VNODE_RELKILL) == 0) {
+		mtx_leave(&uobj->vmobjlock);
 		return;
+	}
 
 	/*
 	 * kill object now.   note that we can't be on the sync q because
@@ -415,11 +419,11 @@ uvn_detach(struct uvm_object *uobj)
 	KASSERT(RB_EMPTY(&uobj->memt));
 	oldflags = uvn->u_flags;
 	uvn->u_flags = 0;
-	simple_unlock(&uobj->vmobjlock);
 
 	/* wake up any sleepers */
 	if (oldflags & UVM_VNODE_WANTED)
 		wakeup(uvn);
+	mtx_leave(&uobj->vmobjlock);
 
 	/*
 	 * drop our reference to the vnode.
@@ -464,9 +468,9 @@ uvm_vnp_terminate(struct vnode *vp)
 	/*
 	 * lock object and check if it is valid
 	 */
-	simple_lock(&uvn->u_obj.vmobjlock);
+	mtx_enter(&uvn->u_obj.vmobjlock);
 	if ((uvn->u_flags & UVM_VNODE_VALID) == 0) {
-		simple_unlock(&uvn->u_obj.vmobjlock);
+		mtx_leave(&uvn->u_obj.vmobjlock);
 		return;
 	}
 
@@ -537,9 +541,7 @@ uvm_vnp_terminate(struct vnode *vp)
 		 */
 #endif
 		uvn->u_flags |= UVM_VNODE_IOSYNC;
-		UVM_UNLOCK_AND_WAIT(&uvn->u_nio, &uvn->u_obj.vmobjlock, FALSE,
-		    "uvn_term",0);
-		simple_lock(&uvn->u_obj.vmobjlock);
+		msleep(&uvn->u_nio, &uvn->u_obj.vmobjlock, PVM, "uvn_term", 0);
 	}
 
 	/*
@@ -578,7 +580,7 @@ uvm_vnp_terminate(struct vnode *vp)
 	if (oldflags & UVM_VNODE_WANTED)
 		wakeup(uvn);		/* object lock still held */
 
-	simple_unlock(&uvn->u_obj.vmobjlock);
+	mtx_leave(&uvn->u_obj.vmobjlock);
 
 }
 
@@ -665,6 +667,7 @@ uvn_flush(struct uvm_object *uobj, voff_t start, voff_t stop, int flags)
 	boolean_t retval, need_iosync, needs_clean;
 	voff_t curoff;
 
+	UVM_ASSERT_OBJLOCKED(uobj);
 	/*
 	 * get init vals and determine how we are going to traverse object
 	 */
@@ -752,9 +755,8 @@ uvn_flush(struct uvm_object *uobj, voff_t start, voff_t stop, int flags)
 					atomic_setbits_int(&pp->pg_flags,
 					    PG_WANTED);
 					uvm_unlock_pageq();
-					UVM_UNLOCK_AND_WAIT(pp,
-					    &uobj->vmobjlock, 0, "uvn_flsh", 0);
-					simple_lock(&uobj->vmobjlock);
+					msleep(pp, &uobj->vmobjlock, PVM,
+					    "uvn_flsh", 0);
 					uvm_lock_pageq();
 					curoff -= PAGE_SIZE;
 					continue;
@@ -787,8 +789,10 @@ ReTry:
 		npages = sizeof(pps) / sizeof(struct vm_page *);
 
 		/* locked: page queues, uobj */
+		UVM_ASSERT_OBJLOCKED(uobj);
 		result = uvm_pager_put(uobj, pp, &ppsp, &npages,
 			   flags | PGO_DOACTCLUST, start, stop);
+		UVM_ASSERT_OBJUNLOCKED(uobj);
 		/* unlocked: page queues, uobj */
 
 		/*
@@ -800,7 +804,7 @@ ReTry:
 		 */
 
 		/* relock! */
-		simple_lock(&uobj->vmobjlock);
+		mtx_enter(&uobj->vmobjlock);
 		uvm_lock_pageq();
 
 		/*
@@ -920,9 +924,8 @@ ReTry:
 	if (need_iosync) {
 		while (uvn->u_nio != 0) {
 			uvn->u_flags |= UVM_VNODE_IOSYNC;
-			UVM_UNLOCK_AND_WAIT(&uvn->u_nio, &uvn->u_obj.vmobjlock,
-			  FALSE, "uvn_flush",0);
-			simple_lock(&uvn->u_obj.vmobjlock);
+			msleep(&uvn->u_nio, &uvn->u_obj.vmobjlock, PVM,
+			    "uvn_flush", 0);
 		}
 		if (uvn->u_flags & UVM_VNODE_IOSYNCWANTED)
 			wakeup(&uvn->u_flags);
@@ -979,9 +982,9 @@ uvn_put(struct uvm_object *uobj, struct vm_page **pps, int npages, int flags)
 {
 	int retval;
 
-	/* note: object locked */
+	UVM_ASSERT_OBJLOCKED(uobj);
 	retval = uvn_io((struct uvm_vnode*)uobj, pps, npages, flags, UIO_WRITE);
-	/* note: object unlocked */
+	UVM_ASSERT_OBJUNLOCKED(uobj);
 
 	return(retval);
 }
@@ -1007,6 +1010,7 @@ uvn_get(struct uvm_object *uobj, voff_t offset, struct vm_page **pps,
 	int lcv, result, gotpages;
 	boolean_t done;
 
+	UVM_ASSERT_OBJLOCKED(uobj);
 	/*
 	 * step 1: handled the case where fault data structures are locked.
 	 */
@@ -1130,9 +1134,9 @@ uvn_get(struct uvm_object *uobj, voff_t offset, struct vm_page **pps,
 
 				/* out of RAM? */
 				if (ptmp == NULL) {
-					simple_unlock(&uobj->vmobjlock);
+					mtx_leave(&uobj->vmobjlock);
 					uvm_wait("uvn_getpage");
-					simple_lock(&uobj->vmobjlock);
+					mtx_enter(&uobj->vmobjlock);
 
 					/* goto top of pps while loop */
 					continue;
@@ -1148,9 +1152,8 @@ uvn_get(struct uvm_object *uobj, voff_t offset, struct vm_page **pps,
 			/* page is there, see if we need to wait on it */
 			if ((ptmp->pg_flags & PG_BUSY) != 0) {
 				atomic_setbits_int(&ptmp->pg_flags, PG_WANTED);
-				UVM_UNLOCK_AND_WAIT(ptmp,
-				    &uobj->vmobjlock, FALSE, "uvn_get",0);
-				simple_lock(&uobj->vmobjlock);
+				msleep(ptmp, &uobj->vmobjlock, PVM,
+				    "uvn_get", 0);
 				continue;	/* goto top of pps while loop */
 			}
 
@@ -1180,8 +1183,10 @@ uvn_get(struct uvm_object *uobj, voff_t offset, struct vm_page **pps,
 		 * locked going into uvn_io, but will be unlocked afterwards.
 		 */
 
+		UVM_ASSERT_OBJLOCKED(uobj);
 		result = uvn_io((struct uvm_vnode *) uobj, &ptmp, 1,
 		    PGO_SYNCIO, UIO_READ);
+		UVM_ASSERT_OBJUNLOCKED(uobj);
 
 		/*
 		 * I/O done.   object is unlocked (by uvn_io).   because we used
@@ -1190,7 +1195,7 @@ uvn_get(struct uvm_object *uobj, voff_t offset, struct vm_page **pps,
 		 */
 
 		/* lock object.   check for errors.   */
-		simple_lock(&uobj->vmobjlock);
+		mtx_enter(&uobj->vmobjlock);
 		if (result != VM_PAGER_OK) {
 			if (ptmp->pg_flags & PG_WANTED)
 				/* object lock still held */
@@ -1202,7 +1207,7 @@ uvn_get(struct uvm_object *uobj, voff_t offset, struct vm_page **pps,
 			uvm_lock_pageq();
 			uvm_pagefree(ptmp);
 			uvm_unlock_pageq();
-			simple_unlock(&uobj->vmobjlock);
+			mtx_leave(&uobj->vmobjlock);
 			return(result);
 		}
 
@@ -1228,7 +1233,7 @@ uvn_get(struct uvm_object *uobj, voff_t offset, struct vm_page **pps,
 	 * finally, unlock object and return.
 	 */
 
-	simple_unlock(&uobj->vmobjlock);
+	mtx_leave(&uobj->vmobjlock);
 	return (VM_PAGER_OK);
 }
 
@@ -1253,6 +1258,7 @@ uvn_io(struct uvm_vnode *uvn, vm_page_t *pps, int npages, int flags, int rw)
 	int waitf, result, mapinflags;
 	size_t got, wanted;
 
+	UVM_ASSERT_OBJLOCKED(&uvn->u_obj);
 	/*
 	 * init values
 	 */
@@ -1267,13 +1273,12 @@ uvn_io(struct uvm_vnode *uvn, vm_page_t *pps, int npages, int flags, int rw)
 
 	while (uvn->u_flags & UVM_VNODE_IOSYNC) {
 		if (waitf == M_NOWAIT) {
-			simple_unlock(&uvn->u_obj.vmobjlock);
+			mtx_leave(&uvn->u_obj.vmobjlock);
 			return(VM_PAGER_AGAIN);
 		}
 		uvn->u_flags |= UVM_VNODE_IOSYNCWANTED;
-		UVM_UNLOCK_AND_WAIT(&uvn->u_flags, &uvn->u_obj.vmobjlock,
-			FALSE, "uvn_iosync",0);
-		simple_lock(&uvn->u_obj.vmobjlock);
+		msleep(&uvn->u_flags, &uvn->u_obj.vmobjlock, PVM,
+		    "uvn_iosync", 0);
 	}
 
 	/*
@@ -1281,7 +1286,7 @@ uvn_io(struct uvm_vnode *uvn, vm_page_t *pps, int npages, int flags, int rw)
 	 */
 
 	if (file_offset >= uvn->u_size) {
-		simple_unlock(&uvn->u_obj.vmobjlock);
+		mtx_leave(&uvn->u_obj.vmobjlock);
 		return(VM_PAGER_BAD);
 	}
 
@@ -1294,7 +1299,7 @@ uvn_io(struct uvm_vnode *uvn, vm_page_t *pps, int npages, int flags, int rw)
 
 	kva = uvm_pagermapin(pps, npages, mapinflags);
 	if (kva == 0 && waitf == M_NOWAIT) {
-		simple_unlock(&uvn->u_obj.vmobjlock);
+		mtx_leave(&uvn->u_obj.vmobjlock);
 		return(VM_PAGER_AGAIN);
 	}
 
@@ -1305,7 +1310,7 @@ uvn_io(struct uvm_vnode *uvn, vm_page_t *pps, int npages, int flags, int rw)
 	 */
 
 	uvn->u_nio++;			/* we have an I/O in progress! */
-	simple_unlock(&uvn->u_obj.vmobjlock);
+	mtx_leave(&uvn->u_obj.vmobjlock);
 	/* NOTE: object now unlocked */
 	if (kva == 0)
 		kva = uvm_pagermapin(pps, npages,
@@ -1391,15 +1396,13 @@ uvn_io(struct uvm_vnode *uvn, vm_page_t *pps, int npages, int flags, int rw)
 	 * now clean up the object (i.e. drop I/O count)
 	 */
 
-	simple_lock(&uvn->u_obj.vmobjlock);
-	/* NOTE: object now locked! */
+	mtx_enter(&uvn->u_obj.vmobjlock);
 
 	uvn->u_nio--;			/* I/O DONE! */
 	if ((uvn->u_flags & UVM_VNODE_IOSYNC) != 0 && uvn->u_nio == 0) {
 		wakeup(&uvn->u_nio);
 	}
-	simple_unlock(&uvn->u_obj.vmobjlock);
-	/* NOTE: object now unlocked! */
+	mtx_leave(&uvn->u_obj.vmobjlock);
 
 	/*
 	 * done!
@@ -1456,10 +1459,10 @@ uvm_vnp_uncache(struct vnode *vp)
 	 * lock uvn part of the vnode and check to see if we need to do anything
 	 */
 
-	simple_lock(&uvn->u_obj.vmobjlock);
+	mtx_enter(&uvn->u_obj.vmobjlock);
 	if ((uvn->u_flags & UVM_VNODE_VALID) == 0 ||
 			(uvn->u_flags & UVM_VNODE_BLOCKED) != 0) {
-		simple_unlock(&uvn->u_obj.vmobjlock);
+		mtx_leave(&uvn->u_obj.vmobjlock);
 		return(TRUE);
 	}
 
@@ -1470,7 +1473,7 @@ uvm_vnp_uncache(struct vnode *vp)
 
 	uvn->u_flags &= ~UVM_VNODE_CANPERSIST;
 	if (uvn->u_obj.uo_refs) {
-		simple_unlock(&uvn->u_obj.vmobjlock);
+		mtx_leave(&uvn->u_obj.vmobjlock);
 		return(FALSE);
 	}
 
@@ -1481,7 +1484,7 @@ uvm_vnp_uncache(struct vnode *vp)
 
 	vref(vp);			/* seems ok, even with VOP_LOCK */
 	uvn->u_obj.uo_refs++;		/* value is now 1 */
-	simple_unlock(&uvn->u_obj.vmobjlock);
+	mtx_leave(&uvn->u_obj.vmobjlock);
 
 #ifdef VFSLCKDEBUG
 	/*
@@ -1539,7 +1542,7 @@ uvm_vnp_setsize(struct vnode *vp, voff_t newsize)
 	/*
 	 * lock uvn and check for valid object, and if valid: do it!
 	 */
-	simple_lock(&uvn->u_obj.vmobjlock);
+	mtx_enter(&uvn->u_obj.vmobjlock);
 	if (uvn->u_flags & UVM_VNODE_VALID) {
 
 		/*
@@ -1550,10 +1553,11 @@ uvm_vnp_setsize(struct vnode *vp, voff_t newsize)
 		if (uvn->u_size > newsize) {
 			(void)uvn_flush(&uvn->u_obj, newsize,
 			    uvn->u_size, PGO_FREE);
+			UVM_ASSERT_OBJLOCKED(&uvn->u_obj);
 		}
 		uvn->u_size = newsize;
 	}
-	simple_unlock(&uvn->u_obj.vmobjlock);
+	mtx_leave(&uvn->u_obj.vmobjlock);
 
 	/*
 	 * done
@@ -1610,11 +1614,13 @@ uvm_vnp_sync(struct mount *mp)
 		 * gain reference.   watch out for persisting uvns (need to
 		 * regain vnode REF).
 		 */
+		mtx_enter(&uvn->u_obj.vmobjlock);
 		if (uvn->u_obj.uo_refs == 0)
 			vref(vp);
 		uvn->u_obj.uo_refs++;
 
 		SIMPLEQ_INSERT_HEAD(&uvn_sync_q, uvn, u_syncq);
+		mtx_leave(&uvn->u_obj.vmobjlock);
 	}
 
 	/* step 3: we now have a list of uvn's that may need cleaning. */
@@ -1624,6 +1630,7 @@ uvm_vnp_sync(struct mount *mp)
 			printf("uvm_vnp_sync: dying vnode on sync list\n");
 		}
 #endif
+		mtx_enter(&uvn->u_obj.vmobjlock);
 		uvn_flush(&uvn->u_obj, 0, 0, PGO_CLEANIT|PGO_ALLPAGES|PGO_DOACTCLUST);
 
 		/*
@@ -1637,6 +1644,7 @@ uvm_vnp_sync(struct mount *mp)
 			LIST_REMOVE(uvn, u_wlist);
 			uvn->u_flags &= ~UVM_VNODE_WRITEABLE;
 		}
+		mtx_leave(&uvn->u_obj.vmobjlock);
 
 		/* now drop our reference to the uvn */
 		uvn_detach(&uvn->u_obj);

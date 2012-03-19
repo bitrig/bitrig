@@ -4228,11 +4228,11 @@ flush_object:
 		    ((flags & PGO_FREE) == 0 ||
 		     ((entry->max_protection & VM_PROT_WRITE) != 0 &&
 		      (entry->etype & UVM_ET_COPYONWRITE) == 0))) {
-			simple_lock(&uobj->vmobjlock);
+			mtx_enter(&uobj->vmobjlock);
 			rv = uobj->pgops->pgo_flush(uobj,
 			    cp_start - entry->start + entry->offset,
 			    cp_end - entry->start + entry->offset, flags);
-			simple_unlock(&uobj->vmobjlock);
+			mtx_leave(&uobj->vmobjlock);
 
 			if (rv == FALSE)
 				error = EFAULT;

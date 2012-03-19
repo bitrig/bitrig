@@ -220,6 +220,28 @@ pd_entry_t *alternate_pdes[] = APDES_INITIALIZER;
 #define COUNT(x)	/* nothing */
 
 /*
+ * This is a bit of a hack to ensure that UVMLOCKDEBUG asserts in
+ * uvm_page.c won't fire when we alloc in subobjects. We don't do
+ * anything otherwise because all allocations are protected
+ * by the lock on the first object.
+ */
+#ifdef UVMLOCKDEBUG
+#define PMAP_SUBOBJ_LOCK(pm, idx) do {				\
+	UVM_ASSERT_OBJLOCKED(&pm->pm_obj[0]);			\
+	if ((idx)) /* only if not idx 0 */			\
+		mtx_enter(&pm->pm_obj[(idx)].vmobjlock);	\
+} while (/* CONSTCOND */ 0)
+#define PMAP_SUBOBJ_UNLOCK(pm, idx) do {			\
+	if ((idx) != 0)						\
+		mtx_leave(&pm->pm_obj[(idx)].vmobjlock);	\
+	UVM_ASSERT_OBJLOCKED(&pm->pm_obj[0]);			\
+} while (/* CONSTCOND */ 0)
+#else
+#define PMAP_SUBOBJ_LOCK(pm, idx)	/* null */
+#define PMAP_SUBOBJ_UNLOCK(pm, idx)	/* null */
+#endif /* UVMLOCKDEBUG */
+
+/*
  * global data structures
  */
 
@@ -383,9 +405,24 @@ pmap_map_ptes(struct pmap *pmap, pt_entry_t **ptepp, pd_entry_t ***pdeppp)
 
 	/* if curpmap then we are always mapped */
 	if (pmap_is_curpmap(pmap)) {
+		/*
+		 * Kernel always has pages allocated and does not free them
+		 * so locking the memory object is not required.
+		 */
+		if (pmap != pmap_kernel())
+			mtx_enter(&pmap->pm_lock);
 		*ptepp = PTE_BASE;
 		*pdeppp = normal_pdes;
 		return;
+	}
+
+	/* need to lock both curpmap and pmap: use ordered locking */
+	if ((vaddr_t) pmap < (vaddr_t) curpcb->pcb_pmap) {
+		mtx_enter(&pmap->pm_lock);
+		mtx_enter(&curpcb->pcb_pmap->pm_lock);
+	} else {
+		mtx_enter(&curpcb->pcb_pmap->pm_lock);
+		mtx_enter(&pmap->pm_lock);
 	}
 
 	/* need to load a new alternate pt space into curpmap? */
@@ -403,14 +440,19 @@ pmap_map_ptes(struct pmap *pmap, pt_entry_t **ptepp, pd_entry_t ***pdeppp)
 void
 pmap_unmap_ptes(struct pmap *pmap)
 {
-	if (pmap_is_curpmap(pmap))
+	if (pmap_is_curpmap(pmap)) {
+		if (pmap != pmap_kernel())
+			mtx_leave(&pmap->pm_lock);
 		return;
+	}
 
 #if defined(MULTIPROCESSOR)
 	*APDP_PDE = 0;
 	pmap_apte_flush(curpcb->pcb_pmap);
 #endif
 	COUNT(apdp_pde_unmap);
+	mtx_leave(&pmap->pm_lock);
+	mtx_leave(&curpcb->pcb_pmap->pm_lock);
 }
 
 /*
@@ -796,11 +838,9 @@ pmap_find_ptp(struct pmap *pmap, vaddr_t va, paddr_t pa, int level)
 	    pa == VM_PAGE_TO_PHYS(pmap->pm_ptphint[lidx])) {
 		return (pmap->pm_ptphint[lidx]);
 	}
-	if (lidx == 0)
-		pg = uvm_pagelookup(&pmap->pm_obj[lidx], ptp_va2o(va, level));
-	else {
-		pg = uvm_pagelookup(&pmap->pm_obj[lidx], ptp_va2o(va, level));
-	}
+	PMAP_SUBOBJ_LOCK(pmap, lidx);
+	pg = uvm_pagelookup(&pmap->pm_obj[lidx], ptp_va2o(va, level));
+	PMAP_SUBOBJ_UNLOCK(pmap, lidx);
 	return pg;
 }
 
@@ -814,11 +854,16 @@ pmap_freepage(struct pmap *pmap, struct vm_page *ptp, int level,
 	lidx = level - 1;
 
 	obj = &pmap->pm_obj[lidx];
+	PMAP_SUBOBJ_LOCK(pmap, lidx);
 	pmap->pm_stats.resident_count--;
 	if (pmap->pm_ptphint[lidx] == ptp)
 		pmap->pm_ptphint[lidx] = RB_ROOT(&obj->memt);
 	ptp->wire_count = 0;
+	/* we do all the freeing once we've shot down all the tlbs, so
+	 * remove this from the backing object and put it on the list
+	 */
 	uvm_pagerealloc(ptp, NULL, 0);
+	PMAP_SUBOBJ_UNLOCK(pmap, lidx);
 	TAILQ_INSERT_TAIL(pagelist, ptp, pageq);
 }
 
@@ -894,9 +939,11 @@ pmap_get_ptp(struct pmap *pmap, vaddr_t va, pd_entry_t **pdes)
 			continue;
 		}
 
-		obj = &pmap->pm_obj[i-2];
+		obj = &pmap->pm_obj[i - 2];
+		PMAP_SUBOBJ_LOCK(pmap, i - 2);
 		ptp = uvm_pagealloc(obj, ptp_va2o(va, i - 1), NULL,
 		    UVM_PGA_USERESERVE|UVM_PGA_ZERO);
+		PMAP_SUBOBJ_UNLOCK(pmap, i - 2);
 
 		if (ptp == NULL)
 			return NULL;
@@ -1048,8 +1095,10 @@ pmap_destroy(struct pmap *pmap)
 	 * drop reference count
 	 */
 
+	mtx_enter(&pmap->pm_lock);
 	refs = --pmap->pm_obj[0].uo_refs;
 	if (refs > 0) {
+		mtx_leave(&pmap->pm_lock);
 		return;
 	}
 
@@ -1073,13 +1122,16 @@ pmap_destroy(struct pmap *pmap)
 	 */
 
 	for (i = 0; i < PTP_LEVELS - 1; i++) {
+		PMAP_SUBOBJ_LOCK(pmap, i);
 		while ((pg = RB_ROOT(&pmap->pm_obj[i].memt)) != NULL) {
 			KASSERT((pg->pg_flags & PG_BUSY) == 0);
 
 			pg->wire_count = 0;
 			uvm_pagefree(pg);
 		}
+		PMAP_SUBOBJ_UNLOCK(pmap, i);
 	}
+	mtx_leave(&pmap->pm_lock);
 
 	/*
 	 * MULTIPROCESSOR -- no need to flush out of other processors'
@@ -1098,7 +1150,9 @@ pmap_destroy(struct pmap *pmap)
 void
 pmap_reference(struct pmap *pmap)
 {
+	mtx_enter(&pmap->pm_lock);
 	pmap->pm_obj[0].uo_refs++;
+	mtx_leave(&pmap->pm_lock);
 }
 
 /*
@@ -1185,6 +1239,7 @@ pmap_extract(struct pmap *pmap, vaddr_t va, paddr_t *pap)
 
 	pmap_map_ptes(pmap, &ptes, &pdes);
 	if (pmap_pdes_valid(va, pdes, &pde) == FALSE) {
+		pmap_unmap_ptes(pmap);
 		return FALSE;
 	}
 
@@ -1587,6 +1642,10 @@ pmap_do_remove(struct pmap *pmap, vaddr_t sva, vaddr_t eva, int flags)
 	pmap_unmap_ptes(pmap);
 	PMAP_MAP_TO_HEAD_UNLOCK();
 
+	/*
+	 * ptps were already removed from the uvm_objects, and they have
+	 * never been on uvm page queues so no locking is needed.
+	 */
 	while ((ptp = TAILQ_FIRST(&empty_ptps)) != NULL) {
 		TAILQ_REMOVE(&empty_ptps, ptp, pageq);
 		uvm_pagefree(ptp);
@@ -2170,9 +2229,12 @@ pmap_get_physpage(vaddr_t va, int level, paddr_t *paddrp)
 		va = pmap_steal_memory(PAGE_SIZE, NULL, NULL);
 		*paddrp = PMAP_DIRECT_UNMAP(va);
 	} else {
+		PMAP_SUBOBJ_LOCK(kpm, level - 1);
 		ptp = uvm_pagealloc(&kpm->pm_obj[level - 1],
 				    ptp_va2o(va, level), NULL,
 				    UVM_PGA_USERESERVE|UVM_PGA_ZERO);
+		PMAP_SUBOBJ_UNLOCK(kpm, level - 1);
+
 		if (ptp == NULL)
 			panic("pmap_get_physpage: out of memory");
 		atomic_clearbits_int(&ptp->pg_flags, PG_BUSY);
@@ -2262,8 +2324,8 @@ pmap_growkernel(vaddr_t maxkvaddr)
 		needed_kptp[i] = target_nptp - nkptp[i] + 1;
 	}
 
-
 	s = splhigh();	/* to be safe */
+	mtx_enter(&kpm->pm_lock);
 	pmap_alloc_level(normal_pdes, pmap_maxkvaddr, PTP_LEVELS,
 	    needed_kptp);
 
@@ -2286,6 +2348,7 @@ pmap_growkernel(vaddr_t maxkvaddr)
 		pmap_pdp_cache_generation++;
 	}
 	pmap_maxkvaddr = maxkvaddr;
+	mtx_leave(&kpm->pm_lock);
 	splx(s);
 
 	return maxkvaddr;
