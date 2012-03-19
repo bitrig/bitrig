@@ -567,6 +567,8 @@ kvtopte(vaddr_t va)
 #define PMAP_DIRECT_UNMAP(va)	((paddr_t)va - PMAP_DIRECT_BASE)
 #define pmap_map_direct(pg)	PMAP_DIRECT_MAP(VM_PAGE_TO_PHYS(pg))
 #define pmap_unmap_direct(va)	PHYS_TO_VM_PAGE(PMAP_DIRECT_UNMAP(va))
+#define pmap_is_direct_mapped(va)	(va >= PMAP_DIRECT_BASE &&	\
+					    va <= PMAP_DIRECT_END)
 
 #define __HAVE_PMAP_DIRECT
 
