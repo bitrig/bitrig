@@ -214,6 +214,7 @@ typedef int		vm_prot_t;
 #define UVM_PLA_ZERO		0x0004	/* zero all pages before returning */
 #define UVM_PLA_TRYCONTIG	0x0008	/* try to allocate contig physmem */
 #define UVM_PLA_FAILOK		0x0010	/* caller can handle failure */
+#define UVM_PLA_USERESERVE	0x0020	/* ok to use reserve pages */
 
 /*
  * lockflags that control the locking behavior of various functions.
