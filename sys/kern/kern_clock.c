@@ -116,7 +116,8 @@ initclocks(void)
 {
 	int i;
 
-	softclock_si = softintr_establish(IPL_SOFTCLOCK, softclock, NULL);
+	softclock_si = softintr_establish_mpsafe(IPL_SOFTCLOCK,
+	    softclock, NULL);
 	if (softclock_si == NULL)
 		panic("initclocks: unable to register softclock intr");
 
