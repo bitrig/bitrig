@@ -69,7 +69,6 @@ struct cpu_info {
 	struct cpu_info *ci_next;
 
 	struct proc *ci_curproc;
-	struct simplelock ci_slock;
 	u_int ci_cpuid;
 	u_int ci_apicid;
 	u_int32_t ci_randseed;

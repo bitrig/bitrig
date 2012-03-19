@@ -424,7 +424,6 @@ IDTVEC(resume_lapic_ltimer)
 	INTRFASTEXIT
 #endif /* NLAPIC > 0 */
 
-
 #define voidop(num)
 
 

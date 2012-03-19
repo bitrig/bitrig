@@ -250,10 +250,13 @@ acpi_sleep_clocks(struct acpi_softc *sc, int state)
 void
 acpi_resume_clocks(struct acpi_softc *sc)
 {
+	extern struct mutex intr_lock;
 #if NISA > 0
 	i8259_default_setup();
 #endif
+	mtx_enter(&intr_lock);
 	intr_calculatemasks(curcpu());
+	mtx_leave(&intr_lock);
 
 #if NIOAPIC > 0
 	ioapic_enable();

@@ -439,8 +439,6 @@ cpu_attach(struct device *parent, struct device *self, void *aux)
 #endif
 	ci->ci_func = caa->cpu_func;
 
-	simple_lock_init(&ci->ci_slock);
-
 #if defined(MULTIPROCESSOR)
 	/*
 	 * Allocate USPACE pages for the idle PCB and stack.
