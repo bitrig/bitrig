@@ -340,8 +340,6 @@ uvm_anon_pagein(struct vm_anon *anon)
 	 * deactivate the page (to put it on a page queue)
 	 */
 
-	pmap_clear_reference(pg);
-	pmap_page_protect(pg, VM_PROT_NONE);
 	uvm_lock_pageq();
 	uvm_pagedeactivate(pg);
 	uvm_unlock_pageq();

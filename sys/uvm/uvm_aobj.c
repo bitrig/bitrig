@@ -771,10 +771,6 @@ uao_flush(struct uvm_object *uobj, voff_t start, voff_t stop, int flags)
 				continue;
 
 			uvm_lock_pageq();
-			/* zap all mappings for the page. */
-			pmap_page_protect(pp, VM_PROT_NONE);
-
-			/* ...and deactivate the page. */
 			uvm_pagedeactivate(pp);
 			uvm_unlock_pageq();
 

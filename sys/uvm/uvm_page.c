@@ -1452,6 +1452,22 @@ uvm_pageunwire(struct vm_page *pg)
 void
 uvm_pagedeactivate(struct vm_page *pg)
 {
+	/*
+	 * XXX this isn't technically correct.
+	 * The normal clock hand algorithm would just clear the referenced bit
+	 * on the page upon deactivation, whereas here we also remove all
+	 * mappings to the page so any new mappings with fault (and thus
+	 * activate the page again). This is more expensive, but due to pmap
+	 * bugs on some archs (sparc and alpha seem to both show it) we end up
+	 * with the referenced bit not being 100% reliable.
+	 *
+	 * With the current code the easy way to check is to see if
+	 * uvmexp.pdreact is non-zero. due to the page_protect this case will
+	 * never occur while we protect deactivated cases on kernels with
+	 * reliable referenced bits..
+	 */
+	pmap_page_protect(pg, VM_PROT_NONE);
+
 	if (pg->pg_flags & PQ_ACTIVE) {
 		TAILQ_REMOVE(&uvm.page_active, pg, pageq);
 		atomic_clearbits_int(&pg->pg_flags, PQ_ACTIVE);

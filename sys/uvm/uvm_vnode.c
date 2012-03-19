@@ -745,10 +745,8 @@ uvn_flush(struct uvm_object *uobj, voff_t start, voff_t stop, int flags)
 		 */
 		if (!needs_clean) {
 			if (flags & PGO_DEACTIVATE) {
-				if (pp->wire_count == 0) {
-					pmap_page_protect(pp, VM_PROT_NONE);
+				if (pp->wire_count == 0)
 					uvm_pagedeactivate(pp);
-				}
 			} else if (flags & PGO_FREE) {
 				if (pp->pg_flags & PG_BUSY) {
 					atomic_setbits_int(&pp->pg_flags,
@@ -888,10 +886,8 @@ ReTry:
 			 */
 
 			if (flags & PGO_DEACTIVATE) {
-				if (ptmp->wire_count == 0) {
-					pmap_page_protect(ptmp, VM_PROT_NONE);
+				if (ptmp->wire_count == 0)
 					uvm_pagedeactivate(ptmp);
-				}
 			} else if (flags & PGO_FREE &&
 			    result != VM_PAGER_PEND) {
 				if (result != VM_PAGER_OK) {

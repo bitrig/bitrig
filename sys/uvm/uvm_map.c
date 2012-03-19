@@ -4180,10 +4180,6 @@ deactivate_it:
 				}
 				KASSERT(pg->uanon == anon);
 
-				/* zap all mappings for the page. */
-				pmap_page_protect(pg, VM_PROT_NONE);
-
-				/* ...and deactivate the page. */
 				uvm_pagedeactivate(pg);
 
 				uvm_unlock_pageq();

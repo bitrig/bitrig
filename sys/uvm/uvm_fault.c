@@ -203,14 +203,8 @@ uvmfault_anonflush(struct vm_anon **anons, int n)
 		pg = anons[lcv]->an_page;
 		if (pg && (pg->pg_flags & PG_BUSY) == 0 && pg->loan_count == 0) {
 			uvm_lock_pageq();
-			if (pg->wire_count == 0) {
-#ifdef UBC
-				pmap_clear_reference(pg);
-#else
-				pmap_page_protect(pg, VM_PROT_NONE);
-#endif
+			if (pg->wire_count == 0)
 				uvm_pagedeactivate(pg);
-			}
 			uvm_unlock_pageq();
 		}
 		simple_unlock(&anons[lcv]->an_lock);

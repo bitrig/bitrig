@@ -512,7 +512,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 					simple_unlock(&uvm.swap_data_lock);
 				}
 
-				/* zap all mappings with pmap_page_protect... */
+				/* zap all mappings */
 				pmap_page_protect(p, VM_PROT_NONE);
 				uvm_pagefree(p);
 				uvmexp.pdfreed++;
@@ -1058,7 +1058,6 @@ uvmpd_scan(void)
 		 */
 
 		if (inactive_shortage > 0) {
-			pmap_page_protect(p, VM_PROT_NONE);
 			/* no need to check wire_count as pg is "active" */
 			uvm_pagedeactivate(p);
 			uvmexp.pddeact++;
