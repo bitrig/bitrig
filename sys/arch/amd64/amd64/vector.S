@@ -1004,15 +1004,9 @@ IDTVEC(softtty)
 	movl	$IPL_SOFTTTY, CPUVAR(ILEVEL)
 	sti
 	incl	CPUVAR(IDEPTH)
-#ifdef MULTIPROCESSOR
-	call	_C_LABEL(x86_softintlock)
-#endif
 	movq	CPUVAR(ISOURCES) + SIR_TTY * 8, %r12
 	movl	$X86_SOFTINTR_SOFTTTY,%edi
 	call	_C_LABEL(softintr_dispatch)
-#ifdef MULTIPROCESSOR	
-	call	_C_LABEL(x86_softintunlock)
-#endif
 	decl	CPUVAR(IDEPTH)
 	jmp	*%r13
 
@@ -1020,15 +1014,9 @@ IDTVEC(softnet)
 	movl	$IPL_SOFTNET, CPUVAR(ILEVEL)
 	sti
 	incl	CPUVAR(IDEPTH)
-#ifdef MULTIPROCESSOR	
-	call	_C_LABEL(x86_softintlock)
-#endif
 	movq	CPUVAR(ISOURCES) + SIR_NET * 8, %r12
 	movl	$X86_SOFTINTR_SOFTNET,%edi
 	call	_C_LABEL(softintr_dispatch)
-#ifdef MULTIPROCESSOR	
-	call	_C_LABEL(x86_softintunlock)	
-#endif
 	decl	CPUVAR(IDEPTH)
 	jmp	*%r13
 
@@ -1036,15 +1024,9 @@ IDTVEC(softclock)
 	movl	$IPL_SOFTCLOCK, CPUVAR(ILEVEL)
 	sti
 	incl	CPUVAR(IDEPTH)
-#ifdef MULTIPROCESSOR	
-	call	_C_LABEL(x86_softintlock)
-#endif
 	movq	CPUVAR(ISOURCES) + SIR_CLOCK * 8, %r12
 
 	movl	$X86_SOFTINTR_SOFTCLOCK,%edi
 	call	_C_LABEL(softintr_dispatch)
-#ifdef MULTIPROCESSOR	
-	call	_C_LABEL(x86_softintunlock)		
-#endif
 	decl	CPUVAR(IDEPTH)
 	jmp	*%r13

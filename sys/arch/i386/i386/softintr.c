@@ -49,6 +49,8 @@ const int i386_soft_intr_to_ssir[I386_NSOFTINTR] = {
 	SIR_TTY,
 };
 
+void	softintr_biglock_wrap(void *);
+
 /*
  * softintr_init:
  *
@@ -76,8 +78,10 @@ softintr_init(void)
 void
 softintr_dispatch(int which)
 {
-	struct i386_soft_intr *si = &i386_soft_intrs[which];
-	struct i386_soft_intrhand *sih;
+	struct i386_soft_intr		*si = &i386_soft_intrs[which];
+	struct i386_soft_intrhand	*sih;
+	void				*arg;
+	void				(*fn)(void *);
 
 	for (;;) {
 		mtx_enter(&si->softintr_lock);
@@ -90,12 +94,25 @@ softintr_dispatch(int which)
 		sih->sih_pending = 0;
 
 		uvmexp.softs++;
+		arg = sih->sih_arg;
+		fn = sih->sih_fn;
 
 		mtx_leave(&si->softintr_lock);
-
-		(*sih->sih_fn)(sih->sih_arg);
+		(*fn)(arg);
 	}
 }
+
+#ifdef MULTIPROCESSOR
+void
+softintr_biglock_wrap(void *arg)
+{
+	struct i386_soft_intrhand	*sih = arg;
+
+	__mp_lock(&kernel_lock);
+	(*sih->sih_fnwrap)(sih->sih_argwrap);
+	__mp_unlock(&kernel_lock);
+}
+#endif
 
 /*
  * softintr_establish:		[interface]
@@ -103,7 +120,7 @@ softintr_dispatch(int which)
  *	Register a software interrupt handler.
  */
 void *
-softintr_establish(int ipl, void (*func)(void *), void *arg)
+softintr_establish_flags(int ipl, void (*func)(void *), void *arg, int flags)
 {
 	struct i386_soft_intr *si;
 	struct i386_soft_intrhand *sih;
@@ -129,12 +146,22 @@ softintr_establish(int ipl, void (*func)(void *), void *arg)
 
 	si = &i386_soft_intrs[which];
 
-	sih = malloc(sizeof(*sih), M_DEVBUF, M_NOWAIT);
+	sih = malloc(sizeof(*sih), M_DEVBUF, M_NOWAIT | M_ZERO);
 	if (__predict_true(sih != NULL)) {
 		sih->sih_intrhead = si;
-		sih->sih_fn = func;
-		sih->sih_arg = arg;
-		sih->sih_pending = 0;
+#ifdef MULTIPROCESSOR
+		if (flags & SOFTINTR_ESTABLISH_MPSAFE) {
+#endif
+			sih->sih_fn = func;
+			sih->sih_arg = arg;
+#ifdef MULTIPROCESSOR
+		} else {
+			sih->sih_fnwrap = func;
+			sih->sih_argwrap = arg;
+			sih->sih_fn = softintr_biglock_wrap;
+			sih->sih_arg = sih;
+		}
+#endif
 	}
 	return (sih);
 }

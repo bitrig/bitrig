@@ -215,8 +215,6 @@ void x86_broadcast_ipi(int);
 void x86_ipi_handler(void);
 void x86_intlock(struct intrframe);
 void x86_intunlock(struct intrframe);
-void x86_softintlock(void);
-void x86_softintunlock(void);
 void x86_setperf_ipi(struct cpu_info *);
 
 extern void (*ipifunc[X86_NIPI])(struct cpu_info *);
@@ -241,7 +239,9 @@ struct x86_soft_intrhand {
 		sih_q;
 	struct x86_soft_intr *sih_intrhead;
 	void	(*sih_fn)(void *);
+	void	(*sih_fnwrap)(void *);
 	void	*sih_arg;
+	void	*sih_argwrap;
 	int	sih_pending;
 };
 
@@ -252,7 +252,13 @@ struct x86_soft_intr {
 	struct mutex	softintr_lock;
 };
 
-void	*softintr_establish(int, void (*)(void *), void *);
+#define	SOFTINTR_ESTABLISH_MPSAFE	0x01
+
+void	*softintr_establish_flags(int, void (*)(void *), void *, int);
+#define softintr_establish(i, f, a)					\
+	softintr_establish_flags(i, f, a, 0)
+#define softintr_establish_mpsafe(i, f, a)				\
+	softintr_establish_flags(i, f, a, SOFTINTR_ESTABLISH_MPSAFE)
 void	softintr_disestablish(void *);
 void	softintr_init(void);
 void	softintr_dispatch(int);
