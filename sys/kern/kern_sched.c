@@ -200,8 +200,10 @@ sched_exit(struct proc *p)
 
 	LIST_INSERT_HEAD(&spc->spc_deadproc, p, p_hash);
 
+#ifdef MULTIPROCESSOR
 	/* This process no longer needs to hold the kernel lock. */
-	KERNEL_UNLOCK();
+	__mp_release_all(&kernel_lock);
+#endif
 
 	SCHED_LOCK(s);
 	idle = spc->spc_idleproc;
