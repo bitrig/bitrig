@@ -1,4 +1,4 @@
-/*	$OpenBSD: nfs_serv.c,v 1.91 2010/09/09 10:37:04 thib Exp $	*/
+/*	$OpenBSD: nfs_serv.c,v 1.92 2012/03/21 16:33:21 kettenis Exp $	*/
 /*     $NetBSD: nfs_serv.c,v 1.34 1997/05/12 23:37:12 fvdl Exp $       */
 
 /*
@@ -896,7 +896,7 @@ nfsrv_create(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 		nfsm_reply(NFSX_WCCDATA(info.nmi_v3));
 		nfsm_srvwcc(nfsd, dirfor_ret, &dirfor, diraft_ret, &diraft,
 		    &info);
-		if (info.nmi_v3)
+		if (dirp)
 			vrele(dirp);
 		return (0);
 	}
@@ -1131,7 +1131,8 @@ nfsrv_mknod(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 		nfsm_reply(NFSX_WCCDATA(1));
 		nfsm_srvwcc(nfsd, dirfor_ret, &dirfor, diraft_ret, &diraft,
 		    &info);
-		vrele(dirp);
+		if (dirp)
+			vrele(dirp);
 		return (0);
 	}
 
@@ -1383,7 +1384,7 @@ nfsrv_rename(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 		    &info);
 		nfsm_srvwcc(nfsd, tdirfor_ret, &tdirfor, tdiraft_ret, &tdiraft,
 		    &info);
-		if (info.nmi_v3)
+		if (fdirp)
 			vrele(fdirp);
 		return (0);
 	}
@@ -1803,7 +1804,7 @@ nfsrv_mkdir(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 		nfsm_reply(NFSX_WCCDATA(info.nmi_v3));
 		nfsm_srvwcc(nfsd, dirfor_ret, &dirfor, diraft_ret, &diraft,
 		    &info);
-		if (info.nmi_v3)
+		if (dirp)
 			vrele(dirp);
 		return (0);
 	}
@@ -1919,7 +1920,7 @@ nfsrv_rmdir(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 		nfsm_reply(NFSX_WCCDATA(info.nmi_v3));
 		nfsm_srvwcc(nfsd, dirfor_ret, &dirfor, diraft_ret, &diraft,
 		    &info);
-		if (info.nmi_v3)
+		if (dirp)
 			vrele(dirp);
 		return (0);
 	}
