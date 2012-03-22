@@ -68,7 +68,7 @@ CFLAGS+=-m32 $(SACFLAGS) -D__INTERNAL_LIBSA_CREAD
 #AFLAGS+=-no-integrated-as
 # XXX HACK kill this
 CFLAGS+=-Wno-error
-CC=egcc
+CC=gcc
 AFLAGS+=-m32 # -Wa,-R
 .else
 # AFLAGS+=-Wa,-a
