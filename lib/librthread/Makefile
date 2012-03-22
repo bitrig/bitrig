@@ -1,14 +1,19 @@
-#	$OpenBSD: Makefile,v 1.19 2011/12/05 04:02:03 guenther Exp $
+#	$OpenBSD: Makefile,v 1.28 2012/03/22 00:44:55 guenther Exp $
 
-# install as pthread with the same version to overwrite pthreads
-#LIB=rthread
+# For ``COMPILER_VERSION''
+.include <bsd.own.mk>
+
 LIB=pthread
 WANTLINT=
 LINTFLAGS=-z
 LIBCSRCDIR=	${.CURDIR}/../libc
 
 CFLAGS+=-Wall -g -Werror -Wshadow
-CFLAGS+=-Wstrict-prototypes -Wmissing-prototypes -Wsign-compare
+.if ${COMPILER_VERSION:L} == "gcc3" || ${COMPILER_VERSION:L} == "gcc4"
+CFLAGS+=-Wmissing-prototypes
+.endif
+CFLAGS+=-Wstrict-prototypes
+CFLAGS+=-Wsign-compare
 CFLAGS+=-I${LIBCSRCDIR}/arch/${MACHINE_CPU} -I${LIBCSRCDIR}/include
 LDADD = -Wl,-znodelete,-zinitfirst
 
@@ -35,9 +40,13 @@ SRCS=	rthread.c \
 	rthread_tls.c \
 	sched_prio.c
 
-OBJS+= _atomic_lock.o rfork_thread.o cerror.o
+OBJS+= _atomic_lock.o cerror.o
 
 MAN+=	__tfork_thread.3
 MLINKS+=__tfork_thread.3 __tfork.2
 
+SRCDIR= ${.CURDIR}/../libpthread
+.include "${SRCDIR}/include/Makefile.inc"
+.include "${SRCDIR}/man/Makefile.inc"
 .include <bsd.lib.mk>
+
