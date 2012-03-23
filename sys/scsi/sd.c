@@ -164,7 +164,7 @@ sdattach(struct device *parent, struct device *self, void *aux)
 	int sd_autoconf = scsi_autoconf | SCSI_SILENT |
 	    SCSI_IGNORE_ILLEGAL_REQUEST | SCSI_IGNORE_MEDIA_CHANGE;
 	struct dk_cache dkc;
-	int error, result, sortby = BUFQ_DEFAULT;
+	int error, result;
 
 	SC_DEBUG(sc_link, SDEV_DB2, ("sdattach:\n"));
 
@@ -228,10 +228,6 @@ sdattach(struct device *parent, struct device *self, void *aux)
 		    sc->sc_dev.dv_xname,
 		    dp->disksize / (1048576 / dp->secsize), dp->secsize,
 		    dp->disksize);
-		if (ISSET(sc->flags, SDF_THIN)) {
-			sortby = BUFQ_FIFO;
-			printf(", thin");
-		}
 		printf("\n");
 		break;
 
@@ -249,7 +245,7 @@ sdattach(struct device *parent, struct device *self, void *aux)
 	 * Initialize disk structures.
 	 */
 	sc->sc_dk.dk_name = sc->sc_dev.dv_xname;
-	bufq_init(&sc->sc_bufq, sortby);
+	bufq_init(&sc->sc_bufq, BUFQ_FIFO);
 
 	/*
 	 * Enable write cache by default.
