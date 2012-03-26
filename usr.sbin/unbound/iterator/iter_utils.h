@@ -21,16 +21,16 @@
  * specific prior written permission.
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -43,7 +43,7 @@
 #ifndef ITERATOR_ITER_UTILS_H
 #define ITERATOR_ITER_UTILS_H
 #include "iterator/iter_resptype.h"
-struct sldns_buffer;
+#include <ldns/buffer.h>
 struct iter_env;
 struct iter_hints;
 struct iter_forwards;
@@ -102,7 +102,7 @@ struct delegpt_addr* iter_server_selection(struct iter_env* iter_env,
  * @param regional: regional to use for allocation.
  * @return newly allocated dns_msg, or NULL on memory error.
  */
-struct dns_msg* dns_alloc_msg(struct sldns_buffer* pkt, struct msg_parse* msg, 
+struct dns_msg* dns_alloc_msg(ldns_buffer* pkt, struct msg_parse* msg, 
 	struct regional* regional);
 
 /**
@@ -121,17 +121,11 @@ struct dns_msg* dns_copy_msg(struct dns_msg* from, struct regional* regional);
  * @param is_referral: If true, then the given message to be stored is a
  *	referral. The cache implementation may use this as a hint.
  * @param leeway: prefetch TTL leeway to expire old rrsets quicker.
- * @param pside: true if dp is parentside, thus message is 'fresh' and NS
- * 	can be prefetch-updates.
  * @param region: to copy modified (cache is better) rrs back to.
- * @return void, because we are not interested in alloc errors,
- * 	the iterator and validator can operate on the results in their
- * 	scratch space (the qstate.region) and are not dependent on the cache.
- * 	It is useful to log the alloc failure (for the server operator),
- * 	but the query resolution can continue without cache storage.
+ * @return 0 on alloc error (out of memory).
  */
-void iter_dns_store(struct module_env* env, struct query_info* qinf,
-	struct reply_info* rep, int is_referral, time_t leeway, int pside,
+int iter_dns_store(struct module_env* env, struct query_info* qinf,
+	struct reply_info* rep, int is_referral, uint32_t leeway,
 	struct regional* region);
 
 /**
@@ -216,10 +210,10 @@ int iter_msg_from_zone(struct dns_msg* msg, struct delegpt* dp,
  * @param p: reply one. The reply has rrset data pointers in region.
  * 	Does not check rrset-IDs
  * @param q: reply two
- * @param region: scratch buffer.
+ * @param buf: scratch buffer.
  * @return if one and two are equal.
  */
-int reply_equal(struct reply_info* p, struct reply_info* q, struct regional* region);
+int reply_equal(struct reply_info* p, struct reply_info* q, ldns_buffer* buf);
 
 /**
  * Store parent-side rrset in seperate rrset cache entries for later 
@@ -314,25 +308,5 @@ void iter_dec_attempts(struct delegpt* dp, int d);
  * @param old: old delegationpoint.
  */
 void iter_merge_retry_counts(struct delegpt* dp, struct delegpt* old);
-
-/**
- * See if a DS response (type ANSWER) is too low: a nodata answer with 
- * a SOA record in the authority section at-or-below the qchase.qname.
- * Also returns true if we are not sure (i.e. empty message, CNAME nosig).
- * @param msg: the response.
- * @param dp: the dp name is used to check if the RRSIG gives a clue that
- * 	it was originated from the correct nameserver.
- * @return true if too low.
- */
-int iter_ds_toolow(struct dns_msg* msg, struct delegpt* dp);
-
-/**
- * See if delegpt can go down a step to the qname or not
- * @param qinfo: the query name looked up.
- * @param dp: checked if the name can go lower to the qname
- * @return true if can go down, false if that would not be possible.
- * the current response seems to be the one and only, best possible, response.
- */
-int iter_dp_cangodown(struct query_info* qinfo, struct delegpt* dp);
 
 #endif /* ITERATOR_ITER_UTILS_H */

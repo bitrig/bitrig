@@ -21,16 +21,16 @@
  * specific prior written permission.
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -40,6 +40,7 @@
  * According to RFC 4034.
  */
 #include "config.h"
+#include <ldns/ldns.h>
 #include "validator/validator.h"
 #include "validator/val_anchor.h"
 #include "validator/val_kcache.h"
@@ -58,8 +59,6 @@
 #include "util/regional.h"
 #include "util/config_file.h"
 #include "util/fptr_wlist.h"
-#include "ldns/rrdef.h"
-#include "ldns/wire2str.h"
 
 /* forward decl for cache response and normal super inform calls of a DS */
 static void process_ds_response(struct module_qstate* qstate, 
@@ -295,12 +294,9 @@ needs_validation(struct module_qstate* qstate, int ret_rc,
 	else 	rcode = (int)FLAGS_GET_RCODE(ret_msg->rep->flags);
 
 	if(rcode != LDNS_RCODE_NOERROR && rcode != LDNS_RCODE_NXDOMAIN) {
-		if(verbosity >= VERB_ALGO) {
-			char rc[16];
-			rc[0]=0;
-			(void)sldns_wire2str_rcode_buf(rcode, rc, sizeof(rc));
-			verbose(VERB_ALGO, "cannot validate non-answer, rcode %s", rc);
-		}
+		verbose(VERB_ALGO, "cannot validate non-answer, rcode %s",
+			ldns_lookup_by_id(ldns_rcodes, rcode)?
+			ldns_lookup_by_id(ldns_rcodes, rcode)->name:"??");
 		return 0;
 	}
 
@@ -762,12 +758,11 @@ validate_nodata_response(struct module_env* env, struct val_env* ve,
  * @param chase_reply: answer to that query to validate.
  * @param kkey: the key entry, which is trusted, and which matches
  * 	the signer of the answer. The key entry isgood().
- * @param rcode: adjusted RCODE, in case of RCODE/proof mismatch leniency.
  */
 static void
 validate_nameerror_response(struct module_env* env, struct val_env* ve,
 	struct query_info* qchase, struct reply_info* chase_reply,
-	struct key_entry_key* kkey, int* rcode)
+	struct key_entry_key* kkey)
 {
 	int has_valid_nsec = 0;
 	int has_valid_wnsec = 0;
@@ -814,10 +809,6 @@ validate_nameerror_response(struct module_env* env, struct val_env* ve,
 		verbose(VERB_QUERY, "NameError response has failed to prove: "
 		          "qname does not exist");
 		chase_reply->security = sec_status_bogus;
-		/* Be lenient with RCODE in NSEC NameError responses */
-		validate_nodata_response(env, ve, qchase, chase_reply, kkey);
-		if (chase_reply->security == sec_status_secure)
-			*rcode = LDNS_RCODE_NOERROR;
 		return;
 	}
 
@@ -825,10 +816,6 @@ validate_nameerror_response(struct module_env* env, struct val_env* ve,
 		verbose(VERB_QUERY, "NameError response has failed to prove: "
 		          "covering wildcard does not exist");
 		chase_reply->security = sec_status_bogus;
-		/* Be lenient with RCODE in NSEC NameError responses */
-		validate_nodata_response(env, ve, qchase, chase_reply, kkey);
-		if (chase_reply->security == sec_status_secure)
-			*rcode = LDNS_RCODE_NOERROR;
 		return;
 	}
 
@@ -1035,13 +1022,6 @@ validate_cname_response(struct module_env* env, struct val_env* ve,
 				ntohs(s->rk.type), ntohs(s->rk.rrset_class));
 			chase_reply->security = sec_status_bogus;
 			return;
-		}
-
-		/* If we have found a CNAME, stop looking for one.
-		 * The iterator has placed the CNAME chain in correct
-		 * order. */
-		if (ntohs(s->rk.type) == LDNS_RR_TYPE_CNAME) {
-			break;
 		}
 	}
 
@@ -1577,7 +1557,6 @@ processValidate(struct module_qstate* qstate, struct val_qstate* vq,
 	struct val_env* ve, int id)
 {
 	enum val_classification subtype;
-	int rcode;
 
 	if(!vq->key_entry) {
 		verbose(VERB_ALGO, "validate: no key entry, failed");
@@ -1661,7 +1640,7 @@ processValidate(struct module_qstate* qstate, struct val_qstate* vq,
 			  	sec_status_to_string(
 				vq->chase_reply->security));
 			break;
-
+			
 		case VAL_CLASS_NODATA:
 			verbose(VERB_ALGO, "Validating a nodata response");
 			validate_nodata_response(qstate->env, ve,
@@ -1672,15 +1651,12 @@ processValidate(struct module_qstate* qstate, struct val_qstate* vq,
 			break;
 
 		case VAL_CLASS_NAMEERROR:
-			rcode = (int)FLAGS_GET_RCODE(vq->orig_msg->rep->flags);
 			verbose(VERB_ALGO, "Validating a nxdomain response");
 			validate_nameerror_response(qstate->env, ve, 
-				&vq->qchase, vq->chase_reply, vq->key_entry, &rcode);
+				&vq->qchase, vq->chase_reply, vq->key_entry);
 			verbose(VERB_DETAIL, "validate(nxdomain): %s",
 			  	sec_status_to_string(
 				vq->chase_reply->security));
-			FLAGS_SET_RCODE(vq->orig_msg->rep->flags, rcode);
-			FLAGS_SET_RCODE(vq->chase_reply->flags, rcode);
 			break;
 
 		case VAL_CLASS_CNAME:
@@ -1905,8 +1881,7 @@ processFinished(struct module_qstate* qstate, struct val_qstate* vq,
 	/* store overall validation result in orig_msg */
 	if(vq->rrset_skip == 0)
 		vq->orig_msg->rep->security = vq->chase_reply->security;
-	else if(subtype != VAL_CLASS_REFERRAL ||
-		vq->rrset_skip < vq->orig_msg->rep->an_numrrsets + 
+	else if(vq->rrset_skip < vq->orig_msg->rep->an_numrrsets + 
 		vq->orig_msg->rep->ns_numrrsets) {
 		/* ignore sec status of additional section if a referral 
 		 * type message skips there and
@@ -2002,17 +1977,15 @@ processFinished(struct module_qstate* qstate, struct val_qstate* vq,
 
 	/* store results in cache */
 	if(qstate->query_flags&BIT_RD) {
-		/* if secure, this will override cache anyway, no need
-		 * to check if from parentNS */
 		if(!dns_cache_store(qstate->env, &vq->orig_msg->qinfo, 
-			vq->orig_msg->rep, 0, qstate->prefetch_leeway, 0, NULL)) {
+			vq->orig_msg->rep, 0, qstate->prefetch_leeway, NULL)) {
 			log_err("out of memory caching validator results");
 		}
 	} else {
 		/* for a referral, store the verified RRsets */
 		/* and this does not get prefetched, so no leeway */
 		if(!dns_cache_store(qstate->env, &vq->orig_msg->qinfo, 
-			vq->orig_msg->rep, 1, 0, 0, NULL)) {
+			vq->orig_msg->rep, 1, 0, NULL)) {
 			log_err("out of memory caching validator results");
 		}
 	}
@@ -2361,13 +2334,12 @@ ds_response_to_ke(struct module_qstate* qstate, struct val_qstate* vq,
 	char* reason = NULL;
 	enum val_classification subtype;
 	if(rcode != LDNS_RCODE_NOERROR) {
-		char rc[16];
-		rc[0]=0;
-		(void)sldns_wire2str_rcode_buf(rcode, rc, sizeof(rc));
+		char* rc = ldns_pkt_rcode2str(rcode);
 		/* errors here pretty much break validation */
 		verbose(VERB_DETAIL, "DS response was error, thus bogus");
 		errinf(qstate, rc);
 		errinf(qstate, "no DS");
+		free(rc);
 		goto return_bogus;
 	}
 
@@ -2416,7 +2388,7 @@ ds_response_to_ke(struct module_qstate* qstate, struct val_qstate* vq,
 		subtype == VAL_CLASS_NAMEERROR) {
 		/* NODATA means that the qname exists, but that there was 
 		 * no DS.  This is a pretty normal case. */
-		time_t proof_ttl = 0;
+		uint32_t proof_ttl = 0;
 		enum sec_status sec;
 
 		/* make sure there are NSECs or NSEC3s with signatures */
@@ -2539,11 +2511,10 @@ ds_response_to_ke(struct module_qstate* qstate, struct val_qstate* vq,
 			"DS response, thus bogus.");
 		errinf(qstate, "no DS and");
 		if(FLAGS_GET_RCODE(msg->rep->flags) != LDNS_RCODE_NOERROR) {
-			char rc[16];
-			rc[0]=0;
-			(void)sldns_wire2str_rcode_buf((int)FLAGS_GET_RCODE(
-				msg->rep->flags), rc, sizeof(rc));
+			char* rc = ldns_pkt_rcode2str(
+				FLAGS_GET_RCODE(msg->rep->flags));
 			errinf(qstate, rc);
+			free(rc);
 		} else	errinf(qstate, val_classification_to_string(subtype));
 		errinf(qstate, "message fails to prove that");
 		goto return_bogus;
@@ -2952,6 +2923,7 @@ val_get_mem(struct module_env* env, int id)
 		return 0;
 	return sizeof(*ve) + key_cache_get_mem(ve->kcache) + 
 		val_neg_get_mem(ve->neg_cache) +
+		anchors_get_mem(env->anchors) + 
 		sizeof(size_t)*2*ve->nsec3_keyiter_count;
 }
 

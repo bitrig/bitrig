@@ -21,16 +21,16 @@
  * specific prior written permission.
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -43,6 +43,7 @@
  * send back to clients.
  */
 #include "config.h"
+#include <ldns/wire2host.h>
 #include "services/mesh.h"
 #include "services/outbound_list.h"
 #include "services/cache/dns.h"
@@ -55,7 +56,6 @@
 #include "util/fptr_wlist.h"
 #include "util/alloc.h"
 #include "util/config_file.h"
-#include "ldns/sbuffer.h"
 
 /** subtract timers and the values do not overflow or become negative */
 static void
@@ -162,7 +162,7 @@ mesh_create(struct module_stack* stack, struct module_env* env)
 		return NULL;
 	}
 	mesh->histogram = timehist_setup();
-	mesh->qbuf_bak = sldns_buffer_new(env->cfg->msg_buffer_size);
+	mesh->qbuf_bak = ldns_buffer_new(env->cfg->msg_buffer_size);
 	if(!mesh->histogram || !mesh->qbuf_bak) {
 		free(mesh);
 		log_err("mesh area alloc: out of memory");
@@ -210,7 +210,7 @@ mesh_delete(struct mesh_area* mesh)
 	while(mesh->all.count)
 		mesh_delete_helper(mesh->all.root);
 	timehist_delete(mesh->histogram);
-	sldns_buffer_free(mesh->qbuf_bak);
+	ldns_buffer_free(mesh->qbuf_bak);
 	free(mesh);
 }
 
@@ -234,7 +234,7 @@ mesh_delete_all(struct mesh_area* mesh)
 	mesh->jostle_last = NULL;
 }
 
-int mesh_make_new_space(struct mesh_area* mesh, sldns_buffer* qbuf)
+int mesh_make_new_space(struct mesh_area* mesh, ldns_buffer* qbuf)
 {
 	struct mesh_state* m = mesh->jostle_first;
 	/* free space is available */
@@ -253,7 +253,7 @@ int mesh_make_new_space(struct mesh_area* mesh, sldns_buffer* qbuf)
 				m->s.qinfo.qname, m->s.qinfo.qtype,
 				m->s.qinfo.qclass);
 			/* backup the query */
-			if(qbuf) sldns_buffer_copy(mesh->qbuf_bak, qbuf);
+			if(qbuf) ldns_buffer_copy(mesh->qbuf_bak, qbuf);
 			/* notify supers */
 			if(m->super_set.count > 0) {
 				verbose(VERB_ALGO, "notify supers of failure");
@@ -265,7 +265,7 @@ int mesh_make_new_space(struct mesh_area* mesh, sldns_buffer* qbuf)
 			mesh_state_delete(&m->s);
 			/* restore the query - note that the qinfo ptr to
 			 * the querybuffer is then correct again. */
-			if(qbuf) sldns_buffer_copy(qbuf, mesh->qbuf_bak);
+			if(qbuf) ldns_buffer_copy(qbuf, mesh->qbuf_bak);
 			return 1;
 		}
 	}
@@ -321,8 +321,6 @@ void mesh_new_client(struct mesh_area* mesh, struct query_info* qinfo,
 		}
 #ifdef UNBOUND_DEBUG
 		n =
-#else
-		(void)
 #endif
 		rbtree_insert(&mesh->all, &s->node);
 		log_assert(n != NULL);
@@ -372,7 +370,7 @@ void mesh_new_client(struct mesh_area* mesh, struct query_info* qinfo,
 
 int 
 mesh_new_callback(struct mesh_area* mesh, struct query_info* qinfo,
-	uint16_t qflags, struct edns_data* edns, sldns_buffer* buf, 
+	uint16_t qflags, struct edns_data* edns, ldns_buffer* buf, 
 	uint16_t qid, mesh_cb_func_t cb, void* cb_arg)
 {
 	struct mesh_state* s = mesh_area_find(mesh, qinfo, qflags&BIT_RD, 0);
@@ -392,8 +390,6 @@ mesh_new_callback(struct mesh_area* mesh, struct query_info* qinfo,
 		}
 #ifdef UNBOUND_DEBUG
 		n =
-#else
-		(void)
 #endif
 		rbtree_insert(&mesh->all, &s->node);
 		log_assert(n != NULL);
@@ -426,7 +422,7 @@ mesh_new_callback(struct mesh_area* mesh, struct query_info* qinfo,
 }
 
 void mesh_new_prefetch(struct mesh_area* mesh, struct query_info* qinfo,
-        uint16_t qflags, time_t leeway)
+        uint16_t qflags, uint32_t leeway)
 {
 	struct mesh_state* s = mesh_area_find(mesh, qinfo, qflags&BIT_RD, 0);
 #ifdef UNBOUND_DEBUG
@@ -454,8 +450,6 @@ void mesh_new_prefetch(struct mesh_area* mesh, struct query_info* qinfo,
 	}
 #ifdef UNBOUND_DEBUG
 	n =
-#else
-	(void)
 #endif
 	rbtree_insert(&mesh->all, &s->node);
 	log_assert(n != NULL);
@@ -663,8 +657,6 @@ void mesh_detach_subs(struct module_qstate* qstate)
 	RBTREE_FOR(ref, struct mesh_state_ref*, &qstate->mesh_info->sub_set) {
 #ifdef UNBOUND_DEBUG
 		n =
-#else
-		(void)
 #endif
 		rbtree_delete(&ref->s->super_set, &lookup);
 		log_assert(n != NULL); /* must have been present */
@@ -684,7 +676,6 @@ int mesh_attach_sub(struct module_qstate* qstate, struct query_info* qinfo,
 	/* find it, if not, create it */
 	struct mesh_area* mesh = qstate->env->mesh;
 	struct mesh_state* sub = mesh_area_find(mesh, qinfo, qflags, prime);
-	int was_detached;
 	if(mesh_detect_cycle_found(qstate, sub)) {
 		verbose(VERB_ALGO, "attach failed, cycle detected");
 		return 0;
@@ -701,8 +692,6 @@ int mesh_attach_sub(struct module_qstate* qstate, struct query_info* qinfo,
 		}
 #ifdef UNBOUND_DEBUG
 		n =
-#else
-		(void)
 #endif
 		rbtree_insert(&mesh->all, &sub->node);
 		log_assert(n != NULL);
@@ -711,20 +700,15 @@ int mesh_attach_sub(struct module_qstate* qstate, struct query_info* qinfo,
 		/* set new query state to run */
 #ifdef UNBOUND_DEBUG
 		n =
-#else
-		(void)
 #endif
 		rbtree_insert(&mesh->run, &sub->run_node);
 		log_assert(n != NULL);
 		*newq = &sub->s;
 	} else
 		*newq = NULL;
-	was_detached = (sub->super_set.count == 0);
 	if(!mesh_state_attachment(qstate->mesh_info, sub))
 		return 0;
-	/* if it was a duplicate  attachment, the count was not zero before */
-	if(!sub->reply_list && !sub->cb_list && was_detached && 
-		sub->super_set.count == 1) {
+	if(!sub->reply_list && !sub->cb_list && sub->super_set.count == 1) {
 		/* it used to be detached, before this one got added */
 		log_assert(mesh->num_detached_states > 0);
 		mesh->num_detached_states--;
@@ -751,22 +735,16 @@ int mesh_state_attachment(struct mesh_state* super, struct mesh_state* sub)
 	superref->s = super;
 	subref->node.key = subref;
 	subref->s = sub;
-	if(!rbtree_insert(&sub->super_set, &superref->node)) {
-		/* this should not happen, iterator and validator do not
-		 * attach subqueries that are identical. */
-		/* already attached, we are done, nothing todo.
-		 * since superref and subref already allocated in region,
-		 * we cannot free them */
-		return 1;
-	}
 #ifdef UNBOUND_DEBUG
 	n =
-#else
-	(void)
+#endif
+	rbtree_insert(&sub->super_set, &superref->node);
+	log_assert(n != NULL);
+#ifdef UNBOUND_DEBUG
+	n =
 #endif
 	rbtree_insert(&super->sub_set, &subref->node);
-	log_assert(n != NULL); /* we checked above if statement, the reverse
-	  administration should not fail now, unless they are out of sync */
+	log_assert(n != NULL);
 	return 1;
 }
 
@@ -800,7 +778,7 @@ mesh_do_callback(struct mesh_state* m, int rcode, struct reply_info* rep,
 		(*r->cb)(r->cb_arg, rcode, r->buf, sec_status_unchecked, NULL);
 	} else {
 		size_t udp_size = r->edns.udp_size;
-		sldns_buffer_clear(r->buf);
+		ldns_buffer_clear(r->buf);
 		r->edns.edns_version = EDNS_ADVERTISED_VERSION;
 		r->edns.udp_size = EDNS_ADVERTISED_SIZE;
 		r->edns.ext_rcode = 0;
@@ -858,11 +836,11 @@ mesh_send_reply(struct mesh_state* m, int rcode, struct reply_info* rep,
 		prev->edns.udp_size == r->edns.udp_size) {
 		/* if the previous reply is identical to this one, fix ID */
 		if(prev->query_reply.c->buffer != r->query_reply.c->buffer)
-			sldns_buffer_copy(r->query_reply.c->buffer, 
+			ldns_buffer_copy(r->query_reply.c->buffer, 
 				prev->query_reply.c->buffer);
-		sldns_buffer_write_at(r->query_reply.c->buffer, 0, 
+		ldns_buffer_write_at(r->query_reply.c->buffer, 0, 
 			&r->qid, sizeof(uint16_t));
-		sldns_buffer_write_at(r->query_reply.c->buffer, 12, 
+		ldns_buffer_write_at(r->query_reply.c->buffer, 12, 
 			r->qname, m->s.qinfo.qname_len);
 		comm_point_send_reply(&r->query_reply);
 	} else if(rcode) {
@@ -892,17 +870,17 @@ mesh_send_reply(struct mesh_state* m, int rcode, struct reply_info* rep,
 	m->s.env->mesh->num_reply_addrs--;
 	end_time = *m->s.env->now_tv;
 	timeval_subtract(&duration, &end_time, &r->start_time);
-	verbose(VERB_ALGO, "query took " ARG_LL "d.%6.6d sec",
-		(long long)duration.tv_sec, (int)duration.tv_usec);
+	verbose(VERB_ALGO, "query took %d.%6.6d sec",
+		(int)duration.tv_sec, (int)duration.tv_usec);
 	m->s.env->mesh->replies_sent++;
 	timeval_add(&m->s.env->mesh->replies_sum_wait, &duration);
 	timehist_insert(m->s.env->mesh->histogram, &duration);
 	if(m->s.env->cfg->stat_extended) {
-		uint16_t rc = FLAGS_GET_RCODE(sldns_buffer_read_u16_at(r->
+		uint16_t rc = FLAGS_GET_RCODE(ldns_buffer_read_u16_at(r->
 			query_reply.c->buffer, 2));
 		if(secure) m->s.env->mesh->ans_secure++;
 		m->s.env->mesh->ans_rcode[ rc ] ++;
-		if(rc == 0 && LDNS_ANCOUNT(sldns_buffer_begin(r->
+		if(rc == 0 && LDNS_ANCOUNT(ldns_buffer_begin(r->
 			query_reply.c->buffer)) == 0)
 			m->s.env->mesh->ans_nodata++;
 	}
@@ -956,7 +934,7 @@ struct mesh_state* mesh_area_find(struct mesh_area* mesh,
 }
 
 int mesh_state_add_cb(struct mesh_state* s, struct edns_data* edns,
-        sldns_buffer* buf, mesh_cb_func_t cb, void* cb_arg,
+        ldns_buffer* buf, mesh_cb_func_t cb, void* cb_arg,
 	uint16_t qid, uint16_t qflags)
 {
 	struct mesh_cb* r = regional_alloc(s->s.region, 
@@ -1138,8 +1116,7 @@ mesh_stats(struct mesh_area* mesh, const char* str)
 		timeval_divide(&avg, &mesh->replies_sum_wait, 
 			mesh->replies_sent);
 		log_info("average recursion processing time "
-			ARG_LL "d.%6.6d sec",
-			(long long)avg.tv_sec, (int)avg.tv_usec);
+			"%d.%6.6d sec", (int)avg.tv_sec, (int)avg.tv_usec);
 		log_info("histogram of recursion processing times");
 		timehist_log(mesh->histogram, "recursions");
 	}
@@ -1168,7 +1145,7 @@ mesh_get_mem(struct mesh_area* mesh)
 	struct mesh_state* m;
 	size_t s = sizeof(*mesh) + sizeof(struct timehist) +
 		sizeof(struct th_buck)*mesh->histogram->num +
-		sizeof(sldns_buffer) + sldns_buffer_capacity(mesh->qbuf_bak);
+		sizeof(ldns_buffer) + ldns_buffer_capacity(mesh->qbuf_bak);
 	RBTREE_FOR(m, struct mesh_state*, &mesh->all) {
 		/* all, including m itself allocated in qstate region */
 		s += regional_get_mem(m->s.region);

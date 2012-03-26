@@ -21,16 +21,16 @@
  * specific prior written permission.
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -74,15 +74,12 @@ struct dns_msg {
  *      It will store only the RRsets, not the message.
  * @param leeway: TTL value, if not 0, other rrsets are considered expired
  *	that many seconds before actual TTL expiry.
- * @param pside: if true, information came from a server which was fetched
- * 	from the parentside of the zonecut.  This means that the type NS
- * 	can be updated to full TTL even in prefetch situations.
  * @param region: region to allocate better entries from cache into.
  *   (used when is_referral is false).
  * @return 0 on alloc error (out of memory).
  */
 int dns_cache_store(struct module_env* env, struct query_info* qinf,
-        struct reply_info* rep, int is_referral, time_t leeway, int pside,
+        struct reply_info* rep, int is_referral, uint32_t leeway,
 	struct regional* region); 
 
 /**
@@ -98,14 +95,11 @@ int dns_cache_store(struct module_env* env, struct query_info* qinf,
  *	Adjusts the reply info TTLs to absolute time.
  * @param leeway: TTL value, if not 0, other rrsets are considered expired
  *	that many seconds before actual TTL expiry.
- * @param pside: if true, information came from a server which was fetched
- * 	from the parentside of the zonecut.  This means that the type NS
- * 	can be updated to full TTL even in prefetch situations.
  * @param qrep: message that can be altered with better rrs from cache.
  * @param region: to allocate into for qmsg.
  */
 void dns_cache_store_msg(struct module_env* env, struct query_info* qinfo,
-	hashvalue_t hash, struct reply_info* rep, time_t leeway, int pside,
+	hashvalue_t hash, struct reply_info* rep, uint32_t leeway,
 	struct reply_info* qrep, struct regional* region);
 
 /**
@@ -123,7 +117,7 @@ void dns_cache_store_msg(struct module_env* env, struct query_info* qinfo,
  */
 struct delegpt* dns_cache_find_delegation(struct module_env* env, 
 	uint8_t* qname, size_t qnamelen, uint16_t qtype, uint16_t qclass, 
-	struct regional* region, struct dns_msg** msg, time_t timenow);
+	struct regional* region, struct dns_msg** msg, uint32_t timenow);
 
 /** 
  * Find cached message 
@@ -177,6 +171,6 @@ struct dns_msg* dns_msg_create(uint8_t* qname, size_t qnamelen, uint16_t qtype,
  * @return true if worked, false on fail
  */
 int dns_msg_authadd(struct dns_msg* msg, struct regional* region, 
-	struct ub_packed_rrset_key* rrset, time_t now);
+	struct ub_packed_rrset_key* rrset, uint32_t now);
 
 #endif /* SERVICES_CACHE_DNS_H */
