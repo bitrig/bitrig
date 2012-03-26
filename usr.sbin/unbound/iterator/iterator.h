@@ -21,16 +21,16 @@
  * specific prior written permission.
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -57,7 +57,7 @@ struct iter_priv;
 /** max number of referrals. Makes sure resolver does not run away */
 #define MAX_REFERRAL_COUNT	130
 /** max number of queries-sent-out.  Make sure large NS set does not loop */
-#define MAX_SENT_COUNT		32
+#define MAX_SENT_COUNT		16
 /** at what query-sent-count to stop target fetch policy */
 #define TARGET_FETCH_STOP	3
 /** how nice is a server without further information, in msec 
@@ -69,6 +69,10 @@ struct iter_priv;
  * Equals RTT_MAX_TIMEOUT
  */
 #define USEFUL_SERVER_TOP_TIMEOUT	120000
+/** Number of lost messages in a row that get a host blacklisted.
+ * With 16, a couple different queries have to time out and no working
+ * queries are happening */
+#define USEFUL_SERVER_MAX_LOST	16
 /** number of retries on outgoing queries */
 #define OUTBOUND_MSG_RETRY 5
 /** RTT band, within this amount from the best, servers are chosen randomly.
@@ -82,6 +86,14 @@ struct iter_priv;
  * Global state for the iterator. 
  */
 struct iter_env {
+	/** 
+	 * The hints -- these aren't stored in the cache because they don't 
+	 * expire. The hints are always used to "prime" the cache. Note 
+	 * that both root hints and stub zone "hints" are stored in this 
+	 * data structure.
+	 */
+	struct iter_hints* hints;
+
 	/** A flag to indicate whether or not we have an IPv6 route */
 	int supports_ipv6;
 
@@ -150,10 +162,6 @@ enum iter_state {
 	/** Collecting query class information, for qclass=ANY, when
 	 * it spawns off queries for every class, it returns here. */
 	COLLECT_CLASS_STATE,
-
-	/** Find NS record to resolve DS record from, walking to the right
-	 * NS spot until we find it */
-	DSNS_FIND_STATE,
 
 	/** Responses that are to be returned upstream end at this state. 
 	 * As well as responses to target queries. */
@@ -230,8 +238,7 @@ struct iter_qstate {
 	int caps_fallback;
 	/** state for capsfail: current server number to try */
 	size_t caps_server;
-	/** state for capsfail: stored query for comparisons. Can be NULL if
-	 * no response had been seen prior to starting the fallback. */
+	/** state for capsfail: stored query for comparisons */
 	struct reply_info* caps_reply;
 
 	/** Current delegation message - returned for non-RD queries */
@@ -271,11 +278,6 @@ struct iter_qstate {
 	int query_for_pside_glue;
 	/** the parent-side-glue element (NULL if none, its first match) */
 	struct ub_packed_rrset_key* pside_glue;
-
-	/** If nonNULL we are walking upwards from DS query to find NS */
-	uint8_t* dsns_point;
-	/** length of the dname in dsns_point */
-	size_t dsns_point_len;
 
 	/** 
 	 * expected dnssec information for this iteration step. 
