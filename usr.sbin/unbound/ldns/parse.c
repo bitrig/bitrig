@@ -7,15 +7,13 @@
  * (c) NLnet Labs, 2005-2006
  * See the file LICENSE for the license
  */
-#include "config.h"
-#include "ldns/parse.h"
-#include "ldns/parseutil.h"
-#include "ldns/sbuffer.h"
+#include <ldns/config.h>
+#include <ldns/ldns.h>
 
 #include <limits.h>
 #include <strings.h>
 
-sldns_lookup_table sldns_directive_types[] = {
+ldns_lookup_table ldns_directive_types[] = {
         { LDNS_DIR_TTL, "$TTL" },
         { LDNS_DIR_ORIGIN, "$ORIGIN" },
         { LDNS_DIR_INCLUDE, "$INCLUDE" },
@@ -24,13 +22,13 @@ sldns_lookup_table sldns_directive_types[] = {
 
 /* add max_limit here? */
 ssize_t
-sldns_fget_token(FILE *f, char *token, const char *delim, size_t limit)
+ldns_fget_token(FILE *f, char *token, const char *delim, size_t limit)
 {
-	return sldns_fget_token_l(f, token, delim, limit, NULL);
+	return ldns_fget_token_l(f, token, delim, limit, NULL);
 }
 
 ssize_t
-sldns_fget_token_l(FILE *f, char *token, const char *delim, size_t limit, int *line_nr)
+ldns_fget_token_l(FILE *f, char *token, const char *delim, size_t limit, int *line_nr)
 {
 	int c, prev_c;
 	int p; /* 0 -> no parenthese seen, >0 nr of ( seen */
@@ -137,7 +135,7 @@ sldns_fget_token_l(FILE *f, char *token, const char *delim, size_t limit, int *l
 		if (c != '\0' && c != '\n') {
 			i++;
 		}
-		if (limit > 0 && (i >= limit || (size_t)(t-token) >= limit)) {
+		if (limit > 0 && i >= limit) {
 			*t = '\0';
 			return -1;
 		}
@@ -163,11 +161,7 @@ sldns_fget_token_l(FILE *f, char *token, const char *delim, size_t limit, int *l
 	return (ssize_t)i;
 
 tokenread:
-	if(*del == '"')
-		/* do not skip over quotes after the string, they are part
-		 * of the next string.  But skip over whitespace (if needed)*/
-		sldns_fskipcs_l(f, del+1, line_nr);
-	else	sldns_fskipcs_l(f, del, line_nr);
+	ldns_fskipcs_l(f, delim, line_nr);
 	*t = '\0';
 	if (p != 0) {
 		return -1;
@@ -177,15 +171,15 @@ tokenread:
 }
 
 ssize_t
-sldns_fget_keyword_data(FILE *f, const char *keyword, const char *k_del, char *data,
+ldns_fget_keyword_data(FILE *f, const char *keyword, const char *k_del, char *data,
                const char *d_del, size_t data_limit)
 {
-       return sldns_fget_keyword_data_l(f, keyword, k_del, data, d_del,
+       return ldns_fget_keyword_data_l(f, keyword, k_del, data, d_del,
 		       data_limit, NULL);
 }
 
 ssize_t
-sldns_fget_keyword_data_l(FILE *f, const char *keyword, const char *k_del, char *data,
+ldns_fget_keyword_data_l(FILE *f, const char *keyword, const char *k_del, char *data,
                const char *d_del, size_t data_limit, int *line_nr)
 {
        /* we assume: keyword|sep|data */
@@ -194,13 +188,13 @@ sldns_fget_keyword_data_l(FILE *f, const char *keyword, const char *k_del, char 
 
        if(strlen(keyword) >= LDNS_MAX_KEYWORDLEN)
                return -1;
-       fkeyword = (char*)malloc(LDNS_MAX_KEYWORDLEN);
+       fkeyword = LDNS_XMALLOC(char, LDNS_MAX_KEYWORDLEN);
        if(!fkeyword)
                return -1;
 
-       i = sldns_fget_token(f, fkeyword, k_del, LDNS_MAX_KEYWORDLEN);
+       i = ldns_fget_token(f, fkeyword, k_del, LDNS_MAX_KEYWORDLEN);
        if(i==0 || i==-1) {
-               free(fkeyword);
+               LDNS_FREE(fkeyword);
                return -1;
        }
 
@@ -208,36 +202,19 @@ sldns_fget_keyword_data_l(FILE *f, const char *keyword, const char *k_del, char 
        if (strncmp(fkeyword, keyword, LDNS_MAX_KEYWORDLEN - 1) == 0) {
                /* whee! */
                /* printf("%s\n%s\n", "Matching keyword", fkeyword); */
-               i = sldns_fget_token_l(f, data, d_del, data_limit, line_nr);
-               free(fkeyword);
+               i = ldns_fget_token_l(f, data, d_del, data_limit, line_nr);
+               LDNS_FREE(fkeyword);
                return i;
        } else {
                /*printf("no match for %s (read: %s)\n", keyword, fkeyword);*/
-               free(fkeyword);
+               LDNS_FREE(fkeyword);
                return -1;
        }
 }
 
-int
-sldns_bgetc(sldns_buffer *buffer)
-{
-	if (!sldns_buffer_available_at(buffer, buffer->_position, sizeof(uint8_t))) {
-		sldns_buffer_set_position(buffer, sldns_buffer_limit(buffer));
-		/* sldns_buffer_rewind(buffer);*/
-		return EOF;
-	}
-	return (int)sldns_buffer_read_u8(buffer);
-}
 
 ssize_t
-sldns_bget_token(sldns_buffer *b, char *token, const char *delim, size_t limit)
-{
-	return sldns_bget_token_par(b, token, delim, limit, NULL, NULL);
-}
-
-ssize_t
-sldns_bget_token_par(sldns_buffer *b, char *token, const char *delim,
-	size_t limit, int* par, const char* skipw)
+ldns_bget_token(ldns_buffer *b, char *token, const char *delim, size_t limit)
 {
 	int c, lc;
 	int p; /* 0 -> no parenthese seen, >0 nr of ( seen */
@@ -255,7 +232,7 @@ sldns_bget_token_par(sldns_buffer *b, char *token, const char *delim,
 		del = delim;
 	}
 
-	p = (par?*par:0);
+	p = 0;
 	i = 0;
 	com = 0;
 	quoted = 0;
@@ -265,13 +242,12 @@ sldns_bget_token_par(sldns_buffer *b, char *token, const char *delim,
 		quoted = 1;
 	}
 
-	while ((c = sldns_bgetc(b)) != EOF) {
+	while ((c = ldns_bgetc(b)) != EOF) {
 		if (c == '\r') /* carriage return */
 			c = ' ';
 		if (c == '(' && lc != '\\' && !quoted) {
 			/* this only counts for non-comments */
 			if (com == 0) {
-				if(par) (*par)++;
 				p++;
 			}
 			lc = c;
@@ -281,7 +257,6 @@ sldns_bget_token_par(sldns_buffer *b, char *token, const char *delim,
 		if (c == ')' && lc != '\\' && !quoted) {
 			/* this only counts for non-comments */
 			if (com == 0) {
-				if(par) (*par)--;
 				p--;
 			}
 			lc = c;
@@ -320,31 +295,20 @@ sldns_bget_token_par(sldns_buffer *b, char *token, const char *delim,
 
 		if (c == '\n' && p != 0) {
 			/* in parentheses */
-			/* do not write ' ' if we want to skip spaces */
-			if(!(skipw && (strchr(skipw, c)||strchr(skipw, ' '))))
-				*t++ = ' ';
+			*t++ = ' ';
 			lc = c;
 			continue;
 		}
 
-		/* check to skip whitespace at start, but also after ( */
-		if(skipw && i==0 && !com && !quoted && lc != '\\') {
-			if(strchr(skipw, c)) {
-				lc = c;
-				continue;
-			}
-		}
-
 		/* check if we hit the delim */
 		for (d = del; *d; d++) {
-			/* we can only exit if no parens or user tracks them */
-                        if (c == *d && lc != '\\' && (p == 0 || par)) {
+                        if (c == *d && lc != '\\' && p == 0) {
 				goto tokenread;
                         }
 		}
 
 		i++;
-		if (limit > 0 && (i >= limit || (size_t)(t-token) >= limit)) {
+		if (limit > 0 && i >= limit) {
 			*t = '\0';
 			return -1;
 		}
@@ -361,39 +325,47 @@ sldns_bget_token_par(sldns_buffer *b, char *token, const char *delim,
 		/* nothing read */
 		return -1;
 	}
-	if (!par && p != 0) {
+	if (p != 0) {
 		return -1;
 	}
 	return (ssize_t)i;
 
 tokenread:
-	if(*del == '"')
-		/* do not skip over quotes after the string, they are part
-		 * of the next string.  But skip over whitespace (if needed)*/
-		sldns_bskipcs(b, del+1);
-	else 	sldns_bskipcs(b, del);
+	ldns_bskipcs(b, delim);
 	*t = '\0';
 
-	if (!par && p != 0) {
+	if (p != 0) {
 		return -1;
 	}
 	return (ssize_t)i;
 }
 
+void
+ldns_bskipc(ldns_buffer *buffer, char c)
+{
+        while (c == (char) ldns_buffer_read_u8_at(buffer, ldns_buffer_position(buffer))) {
+                if (ldns_buffer_available_at(buffer,
+					buffer->_position + sizeof(char), sizeof(char))) {
+                        buffer->_position += sizeof(char);
+                } else {
+                        return;
+                }
+        }
+}
 
 void
-sldns_bskipcs(sldns_buffer *buffer, const char *s)
+ldns_bskipcs(ldns_buffer *buffer, const char *s)
 {
-        int found;
+        bool found;
         char c;
         const char *d;
 
-        while(sldns_buffer_available_at(buffer, buffer->_position, sizeof(char))) {
-                c = (char) sldns_buffer_read_u8_at(buffer, buffer->_position);
-                found = 0;
+        while(ldns_buffer_available_at(buffer, buffer->_position, sizeof(char))) {
+                c = (char) ldns_buffer_read_u8_at(buffer, buffer->_position);
+                found = false;
                 for (d = s; *d; d++) {
                         if (*d == c) {
-                                found = 1;
+                                found = true;
                         }
                 }
                 if (found && buffer->_limit > buffer->_position) {
@@ -405,15 +377,23 @@ sldns_bskipcs(sldns_buffer *buffer, const char *s)
 }
 
 void
-sldns_fskipcs(FILE *fp, const char *s)
+ldns_fskipc(FILE *fp, char c)
 {
-	sldns_fskipcs_l(fp, s, NULL);
+	fp = fp;
+	c = c;
+}
+
+
+void
+ldns_fskipcs(FILE *fp, const char *s)
+{
+	ldns_fskipcs_l(fp, s, NULL);
 }
 
 void
-sldns_fskipcs_l(FILE *fp, const char *s, int *line_nr)
+ldns_fskipcs_l(FILE *fp, const char *s, int *line_nr)
 {
-        int found;
+        bool found;
         int c;
         const char *d;
 
@@ -421,10 +401,10 @@ sldns_fskipcs_l(FILE *fp, const char *s, int *line_nr)
 		if (line_nr && c == '\n') {
 			*line_nr = *line_nr + 1;
 		}
-                found = 0;
+                found = false;
                 for (d = s; *d; d++) {
                         if (*d == c) {
-                                found = 1;
+                                found = true;
                         }
                 }
 		if (!found) {
@@ -436,7 +416,7 @@ sldns_fskipcs_l(FILE *fp, const char *s, int *line_nr)
 }
 
 ssize_t
-sldns_bget_keyword_data(sldns_buffer *b, const char *keyword, const char *k_del, char
+ldns_bget_keyword_data(ldns_buffer *b, const char *keyword, const char *k_del, char
 *data, const char *d_del, size_t data_limit)
 {
        /* we assume: keyword|sep|data */
@@ -445,25 +425,25 @@ sldns_bget_keyword_data(sldns_buffer *b, const char *keyword, const char *k_del,
 
        if(strlen(keyword) >= LDNS_MAX_KEYWORDLEN)
                return -1;
-       fkeyword = (char*)malloc(LDNS_MAX_KEYWORDLEN);
+       fkeyword = LDNS_XMALLOC(char, LDNS_MAX_KEYWORDLEN);
        if(!fkeyword)
                return -1; /* out of memory */
 
-       i = sldns_bget_token(b, fkeyword, k_del, data_limit);
+       i = ldns_bget_token(b, fkeyword, k_del, data_limit);
        if(i==0 || i==-1) {
-               free(fkeyword);
+               LDNS_FREE(fkeyword);
                return -1; /* nothing read */
        }
 
        /* case??? */
        if (strncmp(fkeyword, keyword, strlen(keyword)) == 0) {
-               free(fkeyword);
+               LDNS_FREE(fkeyword);
                /* whee, the match! */
                /* retrieve it's data */
-               i = sldns_bget_token(b, data, d_del, 0);
+               i = ldns_bget_token(b, data, d_del, 0);
                return i;
        } else {
-               free(fkeyword);
+               LDNS_FREE(fkeyword);
                return -1;
        }
 }
