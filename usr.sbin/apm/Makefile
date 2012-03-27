@@ -16,6 +16,6 @@ NOPROG=yes
 
 MAN=	apm.8
 MANSUBDIR=amd64 i386
-MLINKS=	apm.8 zzz.8 ZZZ.8
+MLINKS=	apm.8 zzz.8 apm.8 ZZZ.8
 
 .include <bsd.prog.mk>
