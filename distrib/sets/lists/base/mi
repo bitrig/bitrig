@@ -1862,6 +1862,7 @@
 ./usr/include/skey.h
 ./usr/include/sndio.h
 ./usr/include/soundcard.h
+./usr/include/spawn.h
 ./usr/include/spinlock.h
 ./usr/include/ssl
 ./usr/include/stab.h
@@ -2090,7 +2091,7 @@
 ./usr/lib/libasn1_p.a
 ./usr/lib/libasn1_pic.a
 ./usr/lib/libc.a
-./usr/lib/libc.so.62.0
+./usr/lib/libc.so.63.0
 ./usr/lib/libc_p.a
 ./usr/lib/libc_pic.a
 ./usr/lib/libcom_err.a
@@ -2209,7 +2210,7 @@
 ./usr/lib/libperl.so.12.0
 ./usr/lib/libperl_pic.a
 ./usr/lib/libpthread.a
-./usr/lib/libpthread.so.14.1
+./usr/lib/libpthread.so.15.0
 ./usr/lib/libpthread_p.a
 ./usr/lib/libpthread_pic.a
 ./usr/lib/librpcsvc.a
@@ -4228,6 +4229,7 @@
 ./usr/obj
 ./usr/ports
 ./usr/sbin
+./usr/sbin/ZZZ
 ./usr/sbin/ac
 ./usr/sbin/accton
 ./usr/sbin/activadm
@@ -7206,6 +7208,7 @@
 ./usr/share/man/man3/execlp.3
 ./usr/share/man/man3/execv.3
 ./usr/share/man/man3/execvp.3
+./usr/share/man/man3/execvpe.3
 ./usr/share/man/man3/exit.3
 ./usr/share/man/man3/exp.3
 ./usr/share/man/man3/exp2.3
@@ -7405,6 +7408,7 @@
 ./usr/share/man/man3/getcurx.3
 ./usr/share/man/man3/getcury.3
 ./usr/share/man/man3/getcwd.3
+./usr/share/man/man3/getdelim.3
 ./usr/share/man/man3/getdiskbyname.3
 ./usr/share/man/man3/getdomainname.3
 ./usr/share/man/man3/getdtablesize.3
@@ -7425,6 +7429,7 @@
 ./usr/share/man/man3/gethostid.3
 ./usr/share/man/man3/gethostname.3
 ./usr/share/man/man3/getifaddrs.3
+./usr/share/man/man3/getline.3
 ./usr/share/man/man3/getloadavg.3
 ./usr/share/man/man3/getmaxpartitions.3
 ./usr/share/man/man3/getmaxx.3
@@ -8781,6 +8786,27 @@
 ./usr/share/man/man3/pos_menu_cursor.3
 ./usr/share/man/man3/posix2time.3
 ./usr/share/man/man3/posix_memalign.3
+./usr/share/man/man3/posix_spawn.3
+./usr/share/man/man3/posix_spawn_file_actions_addclose.3
+./usr/share/man/man3/posix_spawn_file_actions_adddup2.3
+./usr/share/man/man3/posix_spawn_file_actions_addopen.3
+./usr/share/man/man3/posix_spawn_file_actions_destroy.3
+./usr/share/man/man3/posix_spawn_file_actions_init.3
+./usr/share/man/man3/posix_spawnattr_destroy.3
+./usr/share/man/man3/posix_spawnattr_getflags.3
+./usr/share/man/man3/posix_spawnattr_getpgroup.3
+./usr/share/man/man3/posix_spawnattr_getschedparam.3
+./usr/share/man/man3/posix_spawnattr_getschedpolicy.3
+./usr/share/man/man3/posix_spawnattr_getsigdefault.3
+./usr/share/man/man3/posix_spawnattr_getsigmask.3
+./usr/share/man/man3/posix_spawnattr_init.3
+./usr/share/man/man3/posix_spawnattr_setflags.3
+./usr/share/man/man3/posix_spawnattr_setpgroup.3
+./usr/share/man/man3/posix_spawnattr_setschedparam.3
+./usr/share/man/man3/posix_spawnattr_setschedpolicy.3
+./usr/share/man/man3/posix_spawnattr_setsigdefault.3
+./usr/share/man/man3/posix_spawnattr_setsigmask.3
+./usr/share/man/man3/posix_spawnp.3
 ./usr/share/man/man3/post_form.3
 ./usr/share/man/man3/post_menu.3
 ./usr/share/man/man3/pow.3
@@ -8829,7 +8855,6 @@
 ./usr/share/man/man3/pthread_key_delete.3
 ./usr/share/man/man3/pthread_kill.3
 ./usr/share/man/man3/pthread_main_np.3
-./usr/share/man/man3/pthread_multi_np.3
 ./usr/share/man/man3/pthread_mutex_destroy.3
 ./usr/share/man/man3/pthread_mutex_init.3
 ./usr/share/man/man3/pthread_mutex_lock.3
@@ -8846,8 +8871,6 @@
 ./usr/share/man/man3/pthread_mutexattr_setprotocol.3
 ./usr/share/man/man3/pthread_mutexattr_settype.3
 ./usr/share/man/man3/pthread_once.3
-./usr/share/man/man3/pthread_resume_all_np.3
-./usr/share/man/man3/pthread_resume_np.3
 ./usr/share/man/man3/pthread_rwlock_destroy.3
 ./usr/share/man/man3/pthread_rwlock_init.3
 ./usr/share/man/man3/pthread_rwlock_rdlock.3
@@ -8870,10 +8893,7 @@
 ./usr/share/man/man3/pthread_setschedparam.3
 ./usr/share/man/man3/pthread_setspecific.3
 ./usr/share/man/man3/pthread_sigmask.3
-./usr/share/man/man3/pthread_single_np.3
 ./usr/share/man/man3/pthread_stackseg_np.3
-./usr/share/man/man3/pthread_suspend_all_np.3
-./usr/share/man/man3/pthread_suspend_np.3
 ./usr/share/man/man3/pthread_testcancel.3
 ./usr/share/man/man3/pthread_yield.3
 ./usr/share/man/man3/pthreads.3
@@ -10995,6 +11015,7 @@
 ./usr/share/man/man8/afterboot.8
 ./usr/share/man/man8/amd64
 ./usr/share/man/man8/amd64/MAKEDEV.8
+./usr/share/man/man8/amd64/ZZZ.8
 ./usr/share/man/man8/amd64/apm.8
 ./usr/share/man/man8/amd64/apmd.8
 ./usr/share/man/man8/amd64/biosboot.8
@@ -11076,6 +11097,7 @@
 ./usr/share/man/man8/hpropd.8
 ./usr/share/man/man8/i386
 ./usr/share/man/man8/i386/MAKEDEV.8
+./usr/share/man/man8/i386/ZZZ.8
 ./usr/share/man/man8/i386/apm.8
 ./usr/share/man/man8/i386/apmd.8
 ./usr/share/man/man8/i386/biosboot.8
