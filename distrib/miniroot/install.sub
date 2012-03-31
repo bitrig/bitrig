@@ -57,7 +57,6 @@
 # Include machine-dependent functions and definitions.
 #
 # The following functions must be provided:
-#	md_congrats()		  - display friendly message
 #	md_installboot()	  - install boot-blocks on disk
 #	md_prep_disklabel()	  - put an OpenBSD disklabel on the disk
 #	md_consoleinfo()	  - set CDEV, CTTY, CSPEED, CPROM
@@ -1941,16 +1940,9 @@ finish_up() {
 
 	# Pat on the back.
 	cat <<__EOT
-
-CONGRATULATIONS! Your OpenBSD $MODE has been successfully completed!
-To boot the new system, enter 'reboot' at the command prompt.
+Completed $MODE. If applicable remove installation media before
+typing 'reboot' at the command prompt.
 __EOT
-	[[ $MODE == install ]] && cat <<__EOT
-When you login to your new system the first time, please read your mail
-using the 'mail' command.
-__EOT
-
-	md_congrats
 }
 
 # #######################################################################

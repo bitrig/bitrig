@@ -132,9 +132,6 @@ __EOT
 	disklabel $FSTABFLAG $_f -E $_disk
 }
 
-md_congrats() {
-}
-
 md_consoleinfo() {
 	local _u _d=com
 
