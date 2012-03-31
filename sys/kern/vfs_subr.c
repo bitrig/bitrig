@@ -662,12 +662,8 @@ vputonfreelist(struct vnode *vp)
 void
 vput(struct vnode *vp)
 {
-	struct proc *p = curproc;
 
-#ifdef DIAGNOSTIC
-	if (vp == NULL)
-		panic("vput: null vp");
-#endif
+	KASSERT(vp != NULL);
 
 #ifdef DIAGNOSTIC
 	if (vp->v_usecount == 0) {
@@ -704,10 +700,8 @@ vrele(struct vnode *vp)
 {
 	struct proc *p = curproc;
 
-#ifdef DIAGNOSTIC
-	if (vp == NULL)
-		panic("vrele: null vp");
-#endif
+	KASSERT(vp != NULL);
+
 #ifdef DIAGNOSTIC
 	if (vp->v_usecount == 0) {
 		vprint("vrele: bad ref count", vp);
