@@ -37,7 +37,11 @@
 extern int __sysctl(int *, u_int, void *, size_t *, void *, size_t);
 
 long __guard[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-extern long __stack_chk_guard[8] __attribute__((alias("__guard")));
+/* gcc requires extern here and clang falls over with it */
+#if !defined(__clang__)
+extern
+#endif
+long __stack_chk_guard[8] __attribute__((alias("__guard")));
 
 static void __guard_setup(void) __attribute__ ((constructor));
 void __stack_smash_handler(char func[], int damaged __attribute__((unused)));

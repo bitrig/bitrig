@@ -39,7 +39,10 @@
  * this would end up dragging too much code from libc here.
  */
 long __guard[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-extern long __stack_chk_guard[8] __attribute__((alias("__guard")));
+#if !defined(__clang__)
+extern
+#endif
+long __stack_chk_guard[8] __attribute__((alias("__guard")));
 
 void __stack_smash_handler(char [], int);
 
