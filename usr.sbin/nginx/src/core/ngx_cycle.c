@@ -1139,15 +1139,15 @@ ngx_reopen_files(ngx_cycle_t *cycle, ngx_uid_t user)
         len = file[i].pos - file[i].buffer;
 
         if ((ngx_process == NGX_PROCESS_WORKER) && ngx_chrooted && file[i].name.data[0] == '/') {
-            buf = malloc(file[i].name.len);
-            ngx_cpystrn(buf, file[i].name.data + strlen(NGX_PREFIX),
+            char *x, *buf = malloc(file[i].name.len);
+            x = ngx_cpystrn(buf, file[i].name.data + strlen(NGX_PREFIX),
                 file[i].name.len);
             while (buf[0] == '/') {
                 buf++;
             }
-            ngx_str_set(&file[i].name, buf);
-            free(buf);
-	}
+            file[i].name.len = (x - buf);
+            file[i].name.data = buf;
+        }
 
         if (file[i].buffer && len != 0) {
 
