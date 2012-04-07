@@ -1116,7 +1116,6 @@ ngx_reopen_files(ngx_cycle_t *cycle, ngx_uid_t user)
     ngx_uint_t        i;
     ngx_list_part_t  *part;
     ngx_open_file_t  *file;
-    u_char             *buf;
 
     part = &cycle->open_files.part;
     file = part->elts;

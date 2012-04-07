@@ -42,7 +42,7 @@ ${.OBJDIR}/objs/nginx.8: ${BEFOREMAN}
 ${.OBJDIR}/objs/ngx_auto_config.h: ${.OBJDIR}/configure
 	@cd ${.OBJDIR} && CC="${CC}" LD_SHLIB="${CC}" \
 		OPTIM="${CFLAGS} ${COPTS}" \
-		PATH="/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin" \
+		PATH="/sbin:/usr/sbin:/bin:/usr/bin" \
 			sh configure ${CONFIGURE_ARGS}
 
 .if !exists(${.OBJDIR}/configure)
