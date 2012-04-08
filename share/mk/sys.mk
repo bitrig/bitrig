@@ -1,4 +1,4 @@
-#	$OpenBSD: sys.mk,v 1.61 2011/07/18 07:07:52 deraadt Exp $
+#	$OpenBSD: sys.mk,v 1.63 2012/04/08 15:56:28 jsg Exp $
 #	$NetBSD: sys.mk,v 1.27 1996/04/10 05:47:19 mycroft Exp $
 #	@(#)sys.mk	5.11 (Berkeley) 3/13/91
 
@@ -14,7 +14,7 @@ OSMINOR=	1
 OSREV=		$(OSMAJOR).$(OSMINOR)
 OSrev=		$(OSMAJOR)$(OSMINOR)
 
-.SUFFIXES: .out .a .ln .o .c .cc .C .cxx .F .f .r .y .l .s .S .cl .p .h .sh .m4
+.SUFFIXES: .out .a .o .c .cc .C .cxx .F .f .r .y .l .s .S .cl .p .h .sh .m4
 
 .LIBS:		.a
 
@@ -79,9 +79,6 @@ LEX.l?=		${LEX} ${LFLAGS}
 LD?=		ld
 LDFLAGS+=	${DEBUG}
 
-LINT?=		lint
-LINTFLAGS?=	-hx
-
 MAKE?=		make
 
 PC?=		pc
@@ -108,8 +105,6 @@ CTAGS?=		/usr/bin/ctags
 	${COMPILE.c} ${.IMPSRC}
 	${AR} ${ARFLAGS} $@ $*.o
 	rm -f $*.o
-.c.ln:
-	${LINT} ${LINTFLAGS} ${CFLAGS:M-[IDU]*} ${CPPFLAGS:M-[IDU]*} -i ${.IMPSRC}
 
 # C++
 .cc:
@@ -207,11 +202,6 @@ CTAGS?=		/usr/bin/ctags
 	${LEX.l} ${.IMPSRC}
 	${COMPILE.c} -o ${.TARGET} lex.yy.c 
 	rm -f lex.yy.c
-.l.ln:
-	${LEX.l} ${.IMPSRC}
-	mv lex.yy.c ${.TARGET:R}.c
-	${LINT} ${LINTFLAGS} ${CFLAGS:M-[IDU]*} ${CPPFLAGS:M-[IDU]*} -i ${.TARGET:R}.c
-	rm -f ${.TARGET:R}.c
 
 # Yacc
 .y:
@@ -225,11 +215,6 @@ CTAGS?=		/usr/bin/ctags
 	${YACC.y} ${.IMPSRC}
 	${COMPILE.c} -o ${.TARGET} y.tab.c
 	rm -f y.tab.c
-.y.ln:
-	${YACC.y} ${.IMPSRC}
-	mv y.tab.c ${.TARGET:R}.c
-	${LINT} ${LINTFLAGS} ${CFLAGS:M-[IDU]*} ${CPPFLAGS:M-[IDU]*} -i ${.TARGET:R}.c
-	rm -f ${.TARGET:R}.c
 
 # Shell
 .sh:
