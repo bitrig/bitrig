@@ -73,7 +73,6 @@ static int fts3termConnectMethod(
   Fts3termTable *p;                /* Virtual table object to return */
   int iIndex = 0;
 
-  UNUSED_PARAMETER(pCtx);
   if( argc==5 ){
     iIndex = atoi(argv[4]);
     argc--;
@@ -88,9 +87,9 @@ static int fts3termConnectMethod(
   }
 
   zDb = argv[1]; 
-  nDb = (int)strlen(zDb);
+  nDb = strlen(zDb);
   zFts3 = argv[3];
-  nFts3 = (int)strlen(zFts3);
+  nFts3 = strlen(zFts3);
 
   rc = sqlite3_declare_vtab(db, FTS3_TERMS_SCHEMA);
   if( rc!=SQLITE_OK ) return rc;
@@ -232,12 +231,12 @@ static int fts3termNextMethod(sqlite3_vtab_cursor *pCursor){
 
   if( v==1 ){
     pCsr->pNext += sqlite3Fts3GetVarint(pCsr->pNext, &v);
-    pCsr->iCol += (int)v;
+    pCsr->iCol += v;
     pCsr->iPos = 0;
     pCsr->pNext += sqlite3Fts3GetVarint(pCsr->pNext, &v);
   }
 
-  pCsr->iPos += (int)(v - 2);
+  pCsr->iPos += (v - 2);
 
   return SQLITE_OK;
 }
@@ -358,10 +357,7 @@ int sqlite3Fts3InitTerm(sqlite3 *db){
      0,                           /* xCommit       */
      0,                           /* xRollback     */
      0,                           /* xFindFunction */
-     0,                           /* xRename       */
-     0,                           /* xSavepoint    */
-     0,                           /* xRelease      */
-     0                            /* xRollbackTo   */
+     0                            /* xRename       */
   };
   int rc;                         /* Return code */
 
