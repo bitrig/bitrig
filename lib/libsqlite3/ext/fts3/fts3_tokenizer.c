@@ -69,7 +69,7 @@ static void scalarFunc(
   if( argc==2 ){
     void *pOld;
     int n = sqlite3_value_bytes(argv[1]);
-    if( zName==0 || n!=sizeof(pPtr) ){
+    if( n!=sizeof(pPtr) ){
       sqlite3_result_error(context, "argument type mismatch", -1);
       return;
     }
@@ -80,9 +80,7 @@ static void scalarFunc(
       return;
     }
   }else{
-    if( zName ){
-      pPtr = sqlite3Fts3HashFind(pHash, zName, nName);
-    }
+    pPtr = sqlite3Fts3HashFind(pHash, zName, nName);
     if( !pPtr ){
       char *zErr = sqlite3_mprintf("unknown tokenizer: %s", zName);
       sqlite3_result_error(context, zErr, -1);
@@ -163,10 +161,6 @@ int sqlite3Fts3InitTokenizer(
   zEnd = &zCopy[strlen(zCopy)];
 
   z = (char *)sqlite3Fts3NextToken(zCopy, &n);
-  if( z==0 ){
-    assert( n==0 );
-    z = zCopy;
-  }
   z[n] = '\0';
   sqlite3Fts3Dequote(z);
 
@@ -215,9 +209,10 @@ int sqlite3Fts3InitTokenizer(
 /*
 ** Implementation of a special SQL scalar function for testing tokenizers 
 ** designed to be used in concert with the Tcl testing framework. This
-** function must be called with two or more arguments:
+** function must be called with two arguments:
 **
-**   SELECT <function-name>(<key-name>, ..., <input-string>);
+**   SELECT <function-name>(<key-name>, <input-string>);
+**   SELECT <function-name>(<key-name>, <pointer>);
 **
 ** where <function-name> is the name passed as the second argument
 ** to the sqlite3Fts3InitHashTable() function (e.g. 'fts3_tokenizer')
@@ -254,26 +249,26 @@ static void testFunc(
   const char *zInput;
   int nInput;
 
-  const char *azArg[64];
+  const char *zArg = 0;
 
   const char *zToken;
-  int nToken = 0;
-  int iStart = 0;
-  int iEnd = 0;
-  int iPos = 0;
-  int i;
+  int nToken;
+  int iStart;
+  int iEnd;
+  int iPos;
 
   Tcl_Obj *pRet;
 
-  if( argc<2 ){
-    sqlite3_result_error(context, "insufficient arguments", -1);
-    return;
-  }
+  assert( argc==2 || argc==3 );
 
   nName = sqlite3_value_bytes(argv[0]);
   zName = (const char *)sqlite3_value_text(argv[0]);
   nInput = sqlite3_value_bytes(argv[argc-1]);
   zInput = (const char *)sqlite3_value_text(argv[argc-1]);
+
+  if( argc==3 ){
+    zArg = (const char *)sqlite3_value_text(argv[1]);
+  }
 
   pHash = (Fts3Hash *)sqlite3_user_data(context);
   p = (sqlite3_tokenizer_module *)sqlite3Fts3HashFind(pHash, zName, nName+1);
@@ -288,11 +283,7 @@ static void testFunc(
   pRet = Tcl_NewObj();
   Tcl_IncrRefCount(pRet);
 
-  for(i=1; i<argc-1; i++){
-    azArg[i-1] = (const char *)sqlite3_value_text(argv[i]);
-  }
-
-  if( SQLITE_OK!=p->xCreate(argc-2, azArg, &pTokenizer) ){
+  if( SQLITE_OK!=p->xCreate(zArg ? 1 : 0, &zArg, &pTokenizer) ){
     zErr = "error in xCreate()";
     goto finish;
   }
@@ -434,7 +425,7 @@ static void intTestFunc(
 /*
 ** Set up SQL objects in database db used to access the contents of
 ** the hash table pointed to by argument pHash. The hash table must
-** been initialized to use string keys, and to take a private copy 
+** been initialised to use string keys, and to take a private copy 
 ** of the key when a value is inserted. i.e. by a call similar to:
 **
 **    sqlite3Fts3HashInit(pHash, FTS3_HASH_STRING, 1);
@@ -476,7 +467,10 @@ int sqlite3Fts3InitHashTable(
   }
 #ifdef SQLITE_TEST
   if( SQLITE_OK==rc ){
-    rc = sqlite3_create_function(db, zTest, -1, any, p, testFunc, 0, 0);
+    rc = sqlite3_create_function(db, zTest, 2, any, p, testFunc, 0, 0);
+  }
+  if( SQLITE_OK==rc ){
+    rc = sqlite3_create_function(db, zTest, 3, any, p, testFunc, 0, 0);
   }
   if( SQLITE_OK==rc ){
     rc = sqlite3_create_function(db, zTest2, 0, any, pdb, intTestFunc, 0, 0);

@@ -16,7 +16,7 @@
 ** sqlite3RegisterDateTimeFunctions() found at the bottom of the file.
 ** All other code has file scope.
 **
-** SQLite processes all times and dates as julian day numbers.  The
+** SQLite processes all times and dates as Julian Day numbers.  The
 ** dates and times are stored as the number of days since noon
 ** in Greenwich on November 24, 4714 B.C. according to the Gregorian
 ** calendar system. 
@@ -24,14 +24,14 @@
 ** 1970-01-01 00:00:00 is JD 2440587.5
 ** 2000-01-01 00:00:00 is JD 2451544.5
 **
-** This implementation requires years to be expressed as a 4-digit number
+** This implemention requires years to be expressed as a 4-digit number
 ** which means that only dates between 0000-01-01 and 9999-12-31 can
 ** be represented, even though julian day numbers allow a much wider
 ** range of dates.
 **
 ** The Gregorian calendar system is used for all dates and times,
 ** even those that predate the Gregorian calendar.  Historians usually
-** use the julian calendar for dates prior to 1582-10-15 and for some
+** use the Julian calendar for dates prior to 1582-10-15 and for some
 ** dates afterwards, depending on locale.  Beware of this difference.
 **
 ** The conversion algorithms are implemented based on descriptions
@@ -294,8 +294,8 @@ static int parseYyyyMmDd(const char *zDate, DateTime *p){
 ** Return the number of errors.
 */
 static int setDateTimeToCurrent(sqlite3_context *context, DateTime *p){
-  p->iJD = sqlite3StmtCurrentTime(context);
-  if( p->iJD>0 ){
+  sqlite3 *db = sqlite3_context_db_handle(context);
+  if( sqlite3OsCurrentTimeInt64(db->pVfs, &p->iJD)==SQLITE_OK ){
     p->validJD = 1;
     return 0;
   }else{
@@ -304,7 +304,7 @@ static int setDateTimeToCurrent(sqlite3_context *context, DateTime *p){
 }
 
 /*
-** Attempt to parse the given string into a julian day number.  Return
+** Attempt to parse the given string into a Julian Day Number.  Return
 ** the number of errors.
 **
 ** The following are acceptable forms for the input string:
@@ -412,9 +412,8 @@ static void clearYMD_HMS_TZ(DateTime *p){
 ** already, check for an MSVC build environment that provides 
 ** localtime_s().
 */
-#if !HAVE_LOCALTIME_R && !HAVE_LOCALTIME_S \
-    && defined(_MSC_VER) && defined(_CRT_INSECURE_DEPRECATE)
-#undef  HAVE_LOCALTIME_S
+#if !defined(HAVE_LOCALTIME_R) && !defined(HAVE_LOCALTIME_S) && \
+     defined(_MSC_VER) && defined(_CRT_INSECURE_DEPRECATE)
 #define HAVE_LOCALTIME_S 1
 #endif
 
@@ -427,14 +426,11 @@ static void clearYMD_HMS_TZ(DateTime *p){
 **
 ** If the sqlite3GlobalConfig.bLocaltimeFault variable is true then this
 ** routine will always fail.
-**
-** EVIDENCE-OF: R-62172-00036 In this implementation, the standard C
-** library function localtime_r() is used to assist in the calculation of
-** local time.
 */
 static int osLocaltime(time_t *t, struct tm *pTm){
   int rc;
-#if !HAVE_LOCALTIME_R && !HAVE_LOCALTIME_S
+#if (!defined(HAVE_LOCALTIME_R) || !HAVE_LOCALTIME_R) \
+      && (!defined(HAVE_LOCALTIME_S) || !HAVE_LOCALTIME_S)
   struct tm *pX;
 #if SQLITE_THREADSAFE>0
   sqlite3_mutex *mutex = sqlite3MutexAlloc(SQLITE_MUTEX_STATIC_MASTER);
@@ -451,7 +447,7 @@ static int osLocaltime(time_t *t, struct tm *pTm){
 #ifndef SQLITE_OMIT_BUILTIN_TEST
   if( sqlite3GlobalConfig.bLocaltimeFault ) return 1;
 #endif
-#if HAVE_LOCALTIME_R
+#if defined(HAVE_LOCALTIME_R) && HAVE_LOCALTIME_R
   rc = localtime_r(t, pTm)==0;
 #else
   rc = localtime_s(pTm, t);
@@ -486,11 +482,6 @@ static sqlite3_int64 localtimeOffset(
   x = *p;
   computeYMD_HMS(&x);
   if( x.Y<1971 || x.Y>=2038 ){
-    /* EVIDENCE-OF: R-55269-29598 The localtime_r() C function normally only
-    ** works for years between 1970 and 2037. For dates outside this range,
-    ** SQLite attempts to map the year into an equivalent year within this
-    ** range, do the calculation, then map the year back.
-    */
     x.Y = 2000;
     x.M = 1;
     x.D = 1;
@@ -875,7 +866,7 @@ static void dateFunc(
 **   %f  ** fractional seconds  SS.SSS
 **   %H  hour 00-24
 **   %j  day of year 000-366
-**   %J  ** julian day number
+**   %J  ** Julian day number
 **   %m  month 01-12
 **   %M  minute 00-59
 **   %s  seconds since 1970-01-01
@@ -895,10 +886,8 @@ static void strftimeFunc(
   size_t i,j;
   char *z;
   sqlite3 *db;
-  const char *zFmt;
+  const char *zFmt = (const char*)sqlite3_value_text(argv[0]);
   char zBuf[100];
-  if( argc==0 ) return;
-  zFmt = (const char*)sqlite3_value_text(argv[0]);
   if( zFmt==0 || isDate(context, argc-1, argv+1, &x) ) return;
   db = sqlite3_context_db_handle(context);
   for(i=0, n=1; zFmt[i]; i++, n++){
@@ -1089,10 +1078,10 @@ static void currentTimeFunc(
   UNUSED_PARAMETER(argc);
   UNUSED_PARAMETER(argv);
 
-  iT = sqlite3StmtCurrentTime(context);
-  if( iT<=0 ) return;
+  db = sqlite3_context_db_handle(context);
+  if( sqlite3OsCurrentTimeInt64(db->pVfs, &iT) ) return;
   t = iT/1000 - 10000*(sqlite3_int64)21086676;
-#if HAVE_GMTIME_R
+#ifdef HAVE_GMTIME_R
   pTm = gmtime_r(&t, &sNow);
 #else
   sqlite3_mutex_enter(sqlite3MutexAlloc(SQLITE_MUTEX_STATIC_MASTER));
