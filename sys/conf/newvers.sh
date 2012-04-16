@@ -59,6 +59,9 @@ id=`basename ${d}`
 ost="OpenBSD"
 osr="5.1"
 
+branch=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
+commit=`git log -1 --format="%H"`
+
 cat >vers.c <<eof
 #define STATUS "-current"		/* just after a release */
 #if 0
@@ -72,7 +75,10 @@ const char osversion[] = "${id}#${v}";
 const char sccs[] =
     "    @(#)${ost} ${osr}" STATUS " (${id}) #${v}: ${t}\n";
 const char version[] =
-    "${ost} ${osr}" STATUS " (${id}) #${v}: ${t}\n    ${u}@${h}:${d}\n";
+    "${ost} ${osr}" STATUS " (${id}) #${v}: ${t}\n    ${u}@${h}:${d}\n"
+    "    ${branch}:${commit}\n";
+const char osbranch[] = "${branch}";
+const char oscommit[] = "${commit}";
 eof
 
 expr ${v} + 1 > version
