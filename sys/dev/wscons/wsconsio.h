@@ -126,6 +126,7 @@ struct wscons_event {
 #define		WSKBD_TYPE_DOMAIN	17	/* Apollo Domain */
 #define		WSKBD_TYPE_BLUETOOTH	18	/* Bluetooth keyboard */
 #define		WSKBD_TYPE_KPC		19	/* Palm keypad */
+#define		WSKBD_TYPE_SGI		20	/* SGI serial keyboard */
 
 /* Manipulate the keyboard bell. */
 struct wskbd_bell_data {
