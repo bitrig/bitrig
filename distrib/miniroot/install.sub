@@ -485,14 +485,6 @@ showcols() {
 	rm -rf -- $_cdir
 }
 
-# Offer to shell out for manual network configuration, and do so if
-# the user accepts the offer.
-manual_net_cfg() {
-	ask_yn "Do you want to do any manual network configuration?"
-
-	[[ $resp == y ]] && { echo "Type 'exit' to return to $MODE." ; sh ; }
-}
-
 # Create a device.
 #
 # $1 = name of the device to create.
@@ -1786,8 +1778,6 @@ donetconfig() {
 		done
 		cp /tmp/resolv.conf /tmp/resolv.conf.shadow
 	fi
-
-	manual_net_cfg
 }
 
 populateusrlocal() {
