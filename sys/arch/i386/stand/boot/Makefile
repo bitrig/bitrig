@@ -2,7 +2,7 @@
 
 .include "${.CURDIR}/../Makefile.inc"
 
-CC=	egcc
+CC=	gcc
 MAN=	boot.8
 MLINKS=	boot.8 boot.conf.5
 

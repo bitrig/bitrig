@@ -2,7 +2,7 @@
 
 .include "${.CURDIR}/../Makefile.inc"
 
-CC=egcc
+CC=gcc
 
 LIB=	sa
 
