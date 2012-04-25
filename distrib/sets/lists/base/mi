@@ -1789,6 +1789,8 @@
 ./usr/include/soundcard.h
 ./usr/include/spawn.h
 ./usr/include/spinlock.h
+./usr/include/sqlite3.h
+./usr/include/sqlite3ext.h
 ./usr/include/ssl
 ./usr/include/stab.h
 ./usr/include/stdarg.h
@@ -2150,6 +2152,10 @@
 ./usr/lib/libsndio.so.4.0
 ./usr/lib/libsndio_p.a
 ./usr/lib/libsndio_pic.a
+./usr/lib/libsqlite3.a
+./usr/lib/libsqlite3.so.18.0
+./usr/lib/libsqlite3_p.a
+./usr/lib/libsqlite3_pic.a
 ./usr/lib/libssl.a
 ./usr/lib/libssl.so.17.1
 ./usr/lib/libssl_p.a
@@ -2184,6 +2190,7 @@
 ./usr/lib/pkgconfig/libcrypto.pc
 ./usr/lib/pkgconfig/libssl.pc
 ./usr/lib/pkgconfig/openssl.pc
+./usr/lib/pkgconfig/sqlite3.pc
 ./usr/lib/pkgconfig/zlib.pc
 ./usr/libdata
 ./usr/libdata/perl5
