@@ -464,6 +464,7 @@
 ./usr/bin/spell
 ./usr/bin/splain
 ./usr/bin/split
+./usr/bin/sqlite3
 ./usr/bin/ssh
 ./usr/bin/ssh-add
 ./usr/bin/ssh-agent
@@ -5108,6 +5109,7 @@
 ./usr/share/man/man1/spell.1
 ./usr/share/man/man1/splain.1
 ./usr/share/man/man1/split.1
+./usr/share/man/man1/sqlite3.1
 ./usr/share/man/man1/ssh-add.1
 ./usr/share/man/man1/ssh-agent.1
 ./usr/share/man/man1/ssh-keygen.1
