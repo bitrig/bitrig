@@ -255,7 +255,7 @@ extern int kbd_reset;
 #define	WSKBD_DEFAULT_BELL_PERIOD	100	/* 100ms */
 #endif
 #ifndef WSKBD_DEFAULT_BELL_VOLUME
-#define	WSKBD_DEFAULT_BELL_VOLUME	50	/* 50% volume */
+#define	WSKBD_DEFAULT_BELL_VOLUME	0	/* 0% volume */
 #endif
 
 struct wskbd_bell_data wskbd_default_bell_data = {
