@@ -1,6 +1,6 @@
 #	$OpenBSD: Makefile,v 1.4 2007/10/18 18:16:20 deraadt Exp $
 
-SUBDIR= ramdisk_cd ramdiskA cdfs
+SUBDIR= ramdisk_cd cdfs
 
 .if	make(obj) || make(cleandir) || make(clean)
 SUBDIR+= iso
@@ -8,6 +8,5 @@ SUBDIR+= iso
 
 unconfig:
 	cd ramdisk_cd; ${MAKE} unconfig
-	cd ramdiskA; ${MAKE} unconfig
 
 .include <bsd.subdir.mk>
