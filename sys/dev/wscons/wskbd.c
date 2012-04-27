@@ -1412,6 +1412,33 @@ internal_command(struct wskbd_softc *sc, u_int *type, keysym_t ksym,
 #endif
 #endif
 
+#if NWSDISPLAY > 0
+	/* mod commands */
+	if (!MOD_ONESET(sc->id, MOD_COMMAND) &&
+	    !MOD_ALLSET(sc->id, MOD_COMMAND2))
+		return (0);
+
+	if (sc->sc_displaydv == NULL)
+		return (0);
+
+	switch (ksym) {
+	case KS_Cmd_Screen0:
+	case KS_Cmd_Screen1:
+	case KS_Cmd_Screen2:
+	case KS_Cmd_Screen3:
+	case KS_Cmd_Screen4:
+	case KS_Cmd_Screen5:
+	case KS_Cmd_Screen6:
+	case KS_Cmd_Screen7:
+	case KS_Cmd_Screen8:
+	case KS_Cmd_Screen9:
+	case KS_Cmd_Screen10:
+	case KS_Cmd_Screen11:
+		wsdisplay_switch(sc->sc_displaydv, ksym - KS_Cmd_Screen0, 0);
+		return (1);
+	}
+#endif
+	/* ctrl-mod commands */
 	if (!MOD_ONESET(sc->id, MOD_COMMAND) &&
 	    !MOD_ALLSET(sc->id, MOD_COMMAND1 | MOD_COMMAND2))
 		return (0);
@@ -1431,20 +1458,6 @@ internal_command(struct wskbd_softc *sc, u_int *type, keysym_t ksym,
 		return (0);
 
 	switch (ksym) {
-	case KS_Cmd_Screen0:
-	case KS_Cmd_Screen1:
-	case KS_Cmd_Screen2:
-	case KS_Cmd_Screen3:
-	case KS_Cmd_Screen4:
-	case KS_Cmd_Screen5:
-	case KS_Cmd_Screen6:
-	case KS_Cmd_Screen7:
-	case KS_Cmd_Screen8:
-	case KS_Cmd_Screen9:
-	case KS_Cmd_Screen10:
-	case KS_Cmd_Screen11:
-		wsdisplay_switch(sc->sc_displaydv, ksym - KS_Cmd_Screen0, 0);
-		return (1);
 	case KS_Cmd_ResetEmul:
 		wsdisplay_reset(sc->sc_displaydv, WSDISPLAY_RESETEMUL);
 		return (1);
