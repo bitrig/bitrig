@@ -25,7 +25,7 @@ INCLUDES=	-nostdinc -I. -I$S -I$S/arch
 CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL -MD -MP
 
 .if ${COMPILER_VERSION:L} == "gcc4"
-CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
+CWARNFLAGS=	-Wall -Wstrict-prototypes -Wmissing-prototypes \
 		-Wno-main -Wno-uninitialized -Wno-format \
 
 CMACHFLAGS=
