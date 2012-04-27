@@ -36,7 +36,7 @@ CXXLAGS?=	-O2
 CC?=		clang
 CXX?=		clang++
 HOSTCC?=	clang
-CFLAGS?=	-O3 -Wno-strict-aliasing -Wno-pointer-sign
+CFLAGS?=	-O3
 CXXFLAGS?=	-O3
 .endif
 
