@@ -168,7 +168,7 @@ _start:
 
 	. = _start + 3
 
-	.asciz	"OpenBSD"
+	.asciz	"Bitrig"
 
 	/* BPB */
 	. = _start + 0x0b

@@ -236,14 +236,14 @@ write_bootblocks(int devfd, struct disklabel *dl)
 	if (dl->d_type != DTYPE_FLOPPY) {
 		start = findopenbsd(devfd, dl);
 		if (start == (u_int)-1)
- 			errx(1, "no OpenBSD partition");
+ 			errx(1, "no Bitrig partition");
 	}
 
 	if (verbose)
 		fprintf(stderr, "/boot will be written at sector %u\n", start);
 
 	if (start + (protosize / dl->d_secsize) > BOOTBIOS_MAXSEC)
-		warnx("/boot extends beyond sector %u. OpenBSD might not boot.",
+		warnx("/boot extends beyond sector %u. Bitrig might not boot.",
 		    BOOTBIOS_MAXSEC);
 
 	if (!nowrite) {
