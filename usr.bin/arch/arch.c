@@ -74,7 +74,7 @@ main(int argc, char *argv[])
 		/* NOTREACHED */
 	}
 	if (!short_form) {
-		fputs("OpenBSD", stdout);
+		fputs("Bitrig", stdout);
 		fputc('.', stdout);
 	}
 	fputs(arch, stdout);
