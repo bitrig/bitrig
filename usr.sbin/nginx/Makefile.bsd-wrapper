@@ -47,6 +47,7 @@ ${.OBJDIR}/objs/ngx_auto_config.h: ${.OBJDIR}/configure
 	@cd ${.OBJDIR} && CC="${CC}" LD_SHLIB="${CC}" \
 		OPTIM="${CFLAGS} ${COPTS}" \
 		PATH="/sbin:/usr/sbin:/bin:/usr/bin" \
+		CFLAGS="${CFLAGS}" \
 			sh configure ${CONFIGURE_ARGS}
 
 .if !exists(${.OBJDIR}/configure)

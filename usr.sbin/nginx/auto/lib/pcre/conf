@@ -84,7 +84,7 @@ if [ $PCRE != NONE ]; then
 
 else
 
-    if [ "$NGX_PLATFORM" != win32 -a `uname -s` != OpenBSD ]; then
+    if [ "$NGX_PLATFORM" != win32 -a `uname -s` != Bitrig ]; then
 
         PCRE=NO
 

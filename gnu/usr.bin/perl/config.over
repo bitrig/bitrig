@@ -60,7 +60,7 @@ cf_time='Thu Jan  1  0:00:00 UTC 1970'
 perladmin='root@localhost'
 mydomain=''
 myhostname=''
-myuname='openbsd'
+myuname='bitrig'
 
 # force to use ranlib
 ranlib='ranlib'

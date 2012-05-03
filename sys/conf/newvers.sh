@@ -56,8 +56,8 @@ id=`basename ${d}`
 #	A month or so before release, select STATUS "-beta"
 #	and disable POOL_DEBUG in sys/conf/GENERIC
 
-ost="OpenBSD"
-osr="5.1"
+ost="Bitrig"
+osr="0.0"
 
 branch=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
 commit=`git log -1 --format="%H"`
