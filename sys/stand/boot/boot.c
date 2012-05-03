@@ -62,7 +62,7 @@ boot(dev_t bootdev)
 	machdep();
 
 	snprintf(prog_ident, sizeof(prog_ident),
-	    ">> OpenBSD/" MACHINE " %s %s", progname, version);
+	    ">> Bitrig/" MACHINE " %s %s", progname, version);
 	printf("%s\n", prog_ident);
 
 	devboot(bootdev, cmd.bootdev);
