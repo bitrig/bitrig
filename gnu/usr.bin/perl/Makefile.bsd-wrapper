@@ -17,7 +17,7 @@ TARGET_MACHINE_ARCH?=	$(MACHINE_ARCH)
 CFLAGS+= -fno-strict-aliasing
 .if ${COMPILER_VERSION:L} == "gcc3" || ${COMPILER_VERSION:L} == "gcc4"
 CFLAGS+= -fno-delete-null-pointer-checks
-MYCC=-Dcc='egcc'
+MYCC=-Dcc='gcc'
 .else
 MYCC=-Dcc='clang'
 .endif
