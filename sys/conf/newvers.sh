@@ -57,7 +57,7 @@ id=`basename ${d}`
 #	and disable POOL_DEBUG in sys/conf/GENERIC
 
 ost="Bitrig"
-osr="0.0"
+osr="0.1"
 
 branch=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
 commit=`git log -1 --format="%H"`
