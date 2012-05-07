@@ -38,6 +38,7 @@ my %OSTYPES = qw(
 		 midnightbsd Unix
 		 mirbsd    Unix
 		 next      Unix
+		 bitrig    Unix
 		 openbsd   Unix
 		 netbsd    Unix
 		 dec_osf   Unix
