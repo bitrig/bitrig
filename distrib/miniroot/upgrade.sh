@@ -41,7 +41,7 @@
 MODE=upgrade
 
 # include common subroutines and initialization code
-. install.sub
+. /install.sub
 
 # Have the user confirm that $ROOTDEV is the root filesystem.
 while :; do

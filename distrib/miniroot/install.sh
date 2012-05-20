@@ -61,7 +61,7 @@
 MODE=install
 
 # include common subroutines and initialization code
-. install.sub
+. /install.sub
 
 DISK=
 DISKS_DONE=
