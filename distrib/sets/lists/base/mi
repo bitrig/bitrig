@@ -1315,7 +1315,6 @@
 ./usr/include/dev/usb/urio.h
 ./usr/include/dev/usb/usb.h
 ./usr/include/dev/usb/usb_mem.h
-./usr/include/dev/usb/usb_port.h
 ./usr/include/dev/usb/usb_quirks.h
 ./usr/include/dev/usb/usbcdc.h
 ./usr/include/dev/usb/usbdevs.h
@@ -2020,7 +2019,7 @@
 ./usr/lib/libasn1_p.a
 ./usr/lib/libasn1_pic.a
 ./usr/lib/libc.a
-./usr/lib/libc.so.64.0
+./usr/lib/libc.so.64.1
 ./usr/lib/libc_p.a
 ./usr/lib/libc_pic.a
 ./usr/lib/libcom_err.a
