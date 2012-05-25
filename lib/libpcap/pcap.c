@@ -1,4 +1,4 @@
-/*	$OpenBSD: pcap.c,v 1.12 2010/06/26 16:47:07 henning Exp $	*/
+/*	$OpenBSD: pcap.c,v 1.13 2012/05/25 01:58:08 lteo Exp $	*/
 
 /*
  * Copyright (c) 1993, 1994, 1995, 1996, 1997, 1998

@@ -1,4 +1,4 @@
-/*	$OpenBSD: pcap-bpf.c,v 1.20 2006/03/26 20:58:51 djm Exp $	*/
+/*	$OpenBSD: pcap-bpf.c,v 1.21 2012/05/25 01:58:08 lteo Exp $	*/
 
 /*
  * Copyright (c) 1993, 1994, 1995, 1996, 1998
@@ -50,9 +50,6 @@
 
 static int find_802_11(struct bpf_dltlist *);
 static int monitor_mode(pcap_t *, int);
-
-static int pcap_activate_bpf(pcap_t *p);
-static int pcap_setfilter_bpf(pcap_t *p, struct bpf_program *fp);
 
 int
 pcap_stats(pcap_t *p, struct pcap_stat *ps)
@@ -113,7 +110,7 @@ pcap_read(pcap_t *p, int cnt, pcap_handler callback, u_char *user)
 				 * XXX - we should really return
 				 * PCAP_ERROR_IFACE_NOT_UP, but
 				 * pcap_dispatch() etc. aren't
-				 * defined to retur that.
+				 * defined to return that.
 				 */
 				snprintf(p->errbuf, PCAP_ERRBUF_SIZE,
 				    "The interface went down");
@@ -293,9 +290,6 @@ get_dlt_list(int fd, int v, struct bpf_dltlist *bdlp, char *ebuf)
 {
 	memset(bdlp, 0, sizeof(*bdlp));
 	if (ioctl(fd, BIOCGDLTLIST, (caddr_t)bdlp) == 0) {
-		u_int i;
-		int is_ethernet;
-
 		bdlp->bfl_list = (u_int *) calloc(bdlp->bfl_len + 1, sizeof(u_int));
 		if (bdlp->bfl_list == NULL) {
 			(void)snprintf(ebuf, PCAP_ERRBUF_SIZE, "malloc: %s",
@@ -380,28 +374,28 @@ pcap_cleanup_bpf(pcap_t *p)
 				    sizeof(req.ifm_name));
 				if (ioctl(sock, SIOCGIFMEDIA, &req) < 0) {
 					fprintf(stderr,
-					    "Can't restore interface flags (SIOCGIFMEDIA failed: %s).\n"
+					    "Can't restore interface flags "
+					    "(SIOCGIFMEDIA failed: %s).\n"
 					    "Please adjust manually.\n",
 					    strerror(errno));
-				} else {
-					if (req.ifm_current & IFM_IEEE80211_MONITOR) {
-						/*
-						 * Rfmon mode is currently on;
-						 * turn it off.
-						 */
-						memset(&ifr, 0, sizeof(ifr));
-						(void)strlcpy(ifr.ifr_name,
-						    p->opt.source,
-						    sizeof(ifr.ifr_name));
-						ifr.ifr_media =
-						    req.ifm_current & ~IFM_IEEE80211_MONITOR;
-						if (ioctl(sock, SIOCSIFMEDIA,
-						    &ifr) == -1) {
-							fprintf(stderr,
-							    "Can't restore interface flags (SIOCSIFMEDIA failed: %s).\n"
-							    "Please adjust manually.\n",
-							    strerror(errno));
-						}
+				} else if (req.ifm_current & IFM_IEEE80211_MONITOR) {
+					/*
+					 * Rfmon mode is currently on;
+					 * turn it off.
+					 */
+					memset(&ifr, 0, sizeof(ifr));
+					(void)strlcpy(ifr.ifr_name,
+					    p->opt.source,
+					    sizeof(ifr.ifr_name));
+					ifr.ifr_media =
+					    req.ifm_current & ~IFM_IEEE80211_MONITOR;
+					if (ioctl(sock, SIOCSIFMEDIA,
+					    &ifr) == -1) {
+						fprintf(stderr,
+						    "Can't restore interface flags "
+						    "(SIOCSIFMEDIA failed: %s).\n"
+						    "Please adjust manually.\n",
+						    strerror(errno));
 					}
 				}
 				close(sock);
@@ -537,10 +531,12 @@ pcap_activate(pcap_t *p)
 		}
 	}
 
+	/*
+	 * Now bind to the device.
+	 */
 	(void)strlcpy(ifr.ifr_name, p->opt.source, sizeof(ifr.ifr_name));
 	if (ioctl(fd, BIOCSETIF, (caddr_t)&ifr) < 0) {
-		snprintf(p->errbuf, PCAP_ERRBUF_SIZE, "%s: %s",
-		    p->opt.source, pcap_strerror(errno));
+		status = check_setif_failure(p, errno);
 		goto bad;
 	}
 	/* Get the data link layer type. */

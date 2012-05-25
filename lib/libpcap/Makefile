@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.20 2009/08/13 19:54:58 jmc Exp $
+#	$OpenBSD: Makefile,v 1.21 2012/05/25 01:58:08 lteo Exp $
 #	$NetBSD: Makefile,v 1.3 1996/05/10 21:54:24 cgd Exp $
 
 LIB=	pcap

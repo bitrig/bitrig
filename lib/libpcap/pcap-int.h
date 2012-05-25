@@ -1,4 +1,4 @@
-/*	$OpenBSD: pcap-int.h,v 1.11 2006/03/26 20:58:51 djm Exp $	*/
+/*	$OpenBSD: pcap-int.h,v 1.12 2012/05/25 01:58:08 lteo Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995, 1996
@@ -32,7 +32,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * @(#) $Header: /scm/cvs/src/lib/libpcap/pcap-int.h,v 1.11 2006/03/26 20:58:51 djm Exp $ (LBL)
+ * @(#) $Header: /home/thib/bitrig/cvsync/cvs/src/lib/libpcap/pcap-int.h,v 1.12 2012/05/25 01:58:08 lteo Exp $ (LBL)
  */
 
 #ifndef pcap_int_h
