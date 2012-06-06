@@ -11,7 +11,7 @@ all:
 CFLAGS+=	-I${LIBCSRCDIR}/include
 
 # Include link-time warnings about unsafe API uses (ie. strcpy)
-CFLAGS+=-DAPIWARN
+#CFLAGS+=-DAPIWARN
 
 .if (${YP:L} == "yes")
 CFLAGS+=-DYP -I${LIBCSRCDIR}/yp
