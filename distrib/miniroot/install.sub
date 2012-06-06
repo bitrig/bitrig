@@ -1118,10 +1118,6 @@ install_files() {
 	fi
 
 	resp=y
-	isin INSTALL.$ARCH $_files ||
-		ask_yn "INSTALL.$ARCH not found. Use sets found here anyway?"
-	[[ $resp = n ]] && return
-
 	select_sets "$_sets" "$_get_sets"
 
 	[[ -n $resp ]] || return
@@ -1303,7 +1299,7 @@ install_url() {
 		_mirror=yes
 	fi
 
-	ask_until "Server directory?" "${resp:-pub/OpenBSD/$FTPSETDIR}"
+	ask_until "Server directory?" "${resp:-release/$FTPSETDIR}"
 	_server_dir=$resp
 	eval _${_url_type}_server_dir=$_server_dir
 
@@ -1952,7 +1948,7 @@ SM_ARGS=
 SM_ARGSX=
 
 SETDIR="$VNAME/$ARCH"
-FTPDIR="pub/OpenBSD/$VNAME"
+FTPDIR="release/$VNAME"
 FTPOPTS="-V"
 SERVERLISTALL=/tmp/serverlistall
 SERVERLISTSEC=/tmp/serverlistsec
@@ -1966,13 +1962,13 @@ for _opt in d f l m n p s; do
 done
 
 # Extract and save one boot's worth of dmesg
-dmesg | sed -ne '/^OpenBSD /h;/^OpenBSD /!H;${g;p;}' >/var/run/dmesg.boot
+dmesg | sed -ne '/^Bitrig /h;/^Bitrig /!H;${g;p;}' >/var/run/dmesg.boot
 
 # Are we in a real release, or a snapshot?  If this is a snapshot
 # install media, default us to a snapshot directory.
 FTPSETDIR=$SETDIR
-set -- $(scan_dmesg "/^OpenBSD $VNAME\([^ ]*\).*$/s//\1/p")
-[[ $1 == -!(stable) ]] && FTPSETDIR=snapshots/$ARCH
+set -- $(scan_dmesg "/^Bitrig $VNAME\([^ ]*\).*$/s//\1/p")
+[[ $1 == -!(stable) ]] && FTPSETDIR=snapshots/$ARCH/current/
 
 # Scan /var/run/dmesg.boot for interesting devices.
 MTDEVS=$(scan_dmesg "${MDMTDEVS:-/^[cms]t[0-9][0-9]* /s/ .*//p}")

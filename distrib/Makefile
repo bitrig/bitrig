@@ -1,6 +1,6 @@
 #	$OpenBSD: Makefile,v 1.39 2011/07/07 19:16:43 deraadt Exp $
 
-SUBDIR=	special notes
+SUBDIR=	special
 
 .if	make(obj)
 SUBDIR+=amd64 i386

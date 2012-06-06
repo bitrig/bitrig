@@ -7,4 +7,4 @@ bootblocks:
 	cp ${DESTDIR}/usr/mdec/cdboot ${RELEASEDIR}
 	cp ${DESTDIR}/usr/mdec/cdbr ${RELEASEDIR}
 
-MDEXT=	bsd.rd cd${OSrev}.iso floppy${OSrev}.fs pxeboot cdboot cdbr
+MDEXT=	bsd.rd cd${OSrev}.iso pxeboot cdboot cdbr

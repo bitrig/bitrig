@@ -37,9 +37,6 @@ STRIP?=		strip
 LISTS=		${.CURDIR}/list ${ARCHDIR}/list.local
 MTREE=		${UTILS}/mtree.conf
 
-FLOPPY?=	floppy${REV}.fs
-FLOPPYSIZE?=	2880
-FLOPPYTYPE?=	floppy
 INSTALLBOOT?=	installboot
 BOOT?=		${DESTDIR}/usr/mdec/boot
 BOOTIN?=	${MOUNT_POINT}/boot
@@ -48,8 +45,6 @@ BOOTXX?=	${DESTDIR}/usr/mdec/bootxx
 # old format, minfree, opt, b/i  trks, sects, cpg
 NEWFSOPTS=	-t ffs -m 0 -o space -f 1024 -b 8192
 NEWFSOPTS_RD?=	${NEWFSOPTS} -i 8192 -s ${IMAGESIZE}
-#NEWFSOPTS_FD=	${NEWFSOPTS} -i 524288 -c ${FLOPPYSIZE} -s ${FLOPPYSIZE}
-NEWFSOPTS_FD=	${NEWFSOPTS} -i 1048575 -c ${FLOPPYSIZE} -s ${FLOPPYSIZE}
 
 .ifndef DESTDIR
 all:
@@ -57,32 +52,7 @@ all:
 	@false
 .else
 
-.ifdef MAKEFLOPPY
-all:	bsd.rd ${FLOPPY}
-.else
 all:	bsd.rd
-.endif
-
-${FLOPPY}:	bsd.gz ${BOOT} ${BOOTXX}
-	dd if=/dev/zero of=${REALIMAGE} count=${FLOPPYSIZE}
-	vnconfig -v -c ${VND} ${REALIMAGE}
-	disklabel -w ${VND} ${FLOPPYTYPE}
-	newfs ${NEWFSOPTS_FD} ${VND_RDEV}
-	mount ${VND_DEV} ${MOUNT_POINT}
-	cp ${BOOT} ${MOUNT_POINT}/
-	cp bsd.gz ${MOUNT_POINT}/bsd
-	${INSTALLBOOT} -v ${BOOTIN} ${BOOTXX} \
-		`echo ${VND_RDEV} | sed -e 's/a$$/c/'`
-.if (${MACHINE_ARCH} == "vax")
-	disklabel -B -b ${BOOTXX} ${VND}
-.endif
-	@echo ""
-	@df -i ${MOUNT_POINT}
-	@echo ""
-	umount ${MOUNT_POINT}
-	vnconfig -u ${VND}
-	dd if=${REALIMAGE} of=${FLOPPY} count=${FLOPPYSIZE}
-	rm -f ${REALIMAGE}
 
 bsd:
 	cd ${.CURDIR}/../../sys/arch/${MACHINE}/conf && config ${KERNEL}
@@ -140,9 +110,6 @@ clean cleandir:
 .ifdef RELEASEDIR
 beforeinstall:
 	cp bsd.rd ${RELEASEDIR}
-.ifdef MAKEFLOPPY
-	cp ${FLOPPY} ${RELEASEDIR}
-.endif	# MAKEFLOPPY
 .endif	# RELEASEDIR
 
 unconfig:

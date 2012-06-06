@@ -270,9 +270,6 @@ if [[ -n $user ]]; then
 
 	mkdir -p /mnt/home/$user
 	(cd /mnt/etc/skel; cp -pR . /mnt/home/$user)
-	(umask 077 &&
-		sed "s,^To: root\$,To: ${username} <${user}>," \
-		/mnt/var/mail/root > /mnt/var/mail/$user )
 	chown -R 1000:1000 /mnt/home/$user /mnt/var/mail/$user
 	echo "1,s@wheel:.:0:root\$@wheel:\*:0:root,${user}@
 w

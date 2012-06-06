@@ -297,7 +297,7 @@ release-sets:
 
 sha:
 	-cd ${RELEASEDIR}; \
-	    sum -a sha256 INSTALL.`arch -ks` ${ALL_KERNELS} ${MDEXT} ${MISETS} > SHA256
+	    sum -a sha256 ${ALL_KERNELS} ${MDEXT} ${MISETS} > SHA256
 
 release: sha
 sha: distrib
