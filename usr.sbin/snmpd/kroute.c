@@ -1,4 +1,4 @@
-/*	$OpenBSD: kroute.c,v 1.18 2012/05/28 20:55:40 joel Exp $	*/
+/*	$OpenBSD: kroute.c,v 1.19 2012/06/10 14:52:46 jsg Exp $	*/
 
 /*
  * Copyright (c) 2007, 2008 Reyk Floeter <reyk@vantronix.net>
