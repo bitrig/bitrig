@@ -120,6 +120,7 @@ struct	plimit limit0;
 struct	vmspace vmspace0;
 struct	sigacts sigacts0;
 struct	proc *initproc;
+struct	proc *reaperproc;
 
 int	cmask = CMASK;
 extern	struct user *proc0paddr;
@@ -511,7 +512,7 @@ main(void *framep)
 		panic("fork pagedaemon");
 
 	/* Create the reaper daemon kernel thread. */
-	if (kthread_create(start_reaper, NULL, NULL, "reaper"))
+	if (kthread_create(start_reaper, NULL, &reaperproc, "reaper"))
 		panic("fork reaper");
 
 	/* Create the cleaner daemon kernel thread. */
