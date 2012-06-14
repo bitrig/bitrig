@@ -1095,8 +1095,8 @@ pmap_alloc_pvpage(struct pmap *pmap, int mode)
 
 	s = splvm();   /* must protect kmem_map with splvm! */
 	if (pv_cachedva == 0) {
-		pv_cachedva = uvm_km_kmemalloc(kmem_map, NULL,
-		    NBPG, UVM_KMF_TRYLOCK|UVM_KMF_VALLOC);
+		pv_cachedva = (vaddr_t)km_alloc(NBPG, &kv_intrsafe, &kp_none,
+		    &kd_trylock);
 	}
 	splx(s);
 	if (pv_cachedva == 0)
