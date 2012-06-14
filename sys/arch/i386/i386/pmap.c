@@ -1552,8 +1552,8 @@ pmap_destroy(struct pmap *pmap)
 		 * we're the last one to use it.
 		 */
 		ldt_free(pmap);
-		uvm_km_free(kernel_map, (vaddr_t)pmap->pm_ldt,
-			    pmap->pm_ldt_len * sizeof(union descriptor));
+		km_free(pmap->pm_ldt, round_page(pmap->pm_ldt_len *
+		    sizeof(union descriptor)), &kv_any, &kp_dirty);
 	}
 #endif
 	pool_put(&pmap_pmap_pool, pmap);
@@ -1591,11 +1591,8 @@ pmap_fork(struct pmap *pmap1, struct pmap *pmap2)
 		size_t len;
 
 		len = pmap1->pm_ldt_len * sizeof(union descriptor);
-		new_ldt = (union descriptor *)uvm_km_alloc(kernel_map, len);
-		if (new_ldt == NULL) {
-			/* XXX needs to be able to fail properly */
-			panic("pmap_fork: out of kva");
-		}
+		new_ldt = km_alloc(round_page(len), &kv_any,
+		    &kp_dirty, &kd_waitok);
 		bcopy(pmap1->pm_ldt, new_ldt, len);
 		pmap2->pm_ldt = new_ldt;
 		pmap2->pm_ldt_len = pmap1->pm_ldt_len;
@@ -1647,7 +1644,7 @@ pmap_ldt_cleanup(struct proc *p)
 	simple_unlock(&pmap->pm_obj.vmobjlock);
 
 	if (old_ldt != NULL)
-		uvm_km_free(kernel_map, (vaddr_t)old_ldt, len);
+		km_free(old_ldt, round_page(len), &kv_any, &kp_dirty);
 }
 #endif /* USER_LDT */
 
