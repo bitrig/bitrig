@@ -193,6 +193,11 @@ process_new(struct proc *p, struct process *parent)
 /* print the 'table full' message once per 10 seconds */
 struct timeval fork_tfmrate = { 10, 0 };
 
+struct kmem_va_mode kv_fork = {
+	.kv_map = &kernel_map,
+	.kv_align = USPACE_ALIGN
+};
+
 int
 fork1(struct proc *curp, int exitsig, int flags, void *stack, pid_t *tidptr,
     void (*func)(void *), void *arg, register_t *retval,
@@ -204,7 +209,7 @@ fork1(struct proc *curp, int exitsig, int flags, void *stack, pid_t *tidptr,
 	uid_t uid;
 	struct vmspace *vm;
 	int count;
-	vaddr_t uaddr;
+	struct user *uaddr;
 	int s;
 	struct  ptrace_state *newptstat = NULL;
 #if NSYSTRACE > 0
@@ -267,10 +272,7 @@ fork1(struct proc *curp, int exitsig, int flags, void *stack, pid_t *tidptr,
 		}
 	}
 
-	uaddr = uvm_km_kmemalloc_pla(kernel_map, uvm.kernel_object, USPACE,
-	    USPACE_ALIGN, UVM_KMF_ZERO,
-	    no_constraint.ucr_low, no_constraint.ucr_high,
-	    0, 0, USPACE/PAGE_SIZE);
+	uaddr = km_alloc(USPACE, &kv_fork, &kp_zero, &kd_waitok);
 	if (uaddr == 0) {
 		chgproccnt(uid, -1);
 		nprocesses--;

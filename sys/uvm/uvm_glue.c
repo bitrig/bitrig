@@ -347,9 +347,11 @@ uvm_fork(struct proc *p1, struct proc *p2, boolean_t shared, void *stack,
 void
 uvm_exit(struct proc *p)
 {
+	extern struct kmem_va_mode kv_fork;
+
 	uvmspace_free(p->p_vmspace);
 	p->p_vmspace = NULL;
-	uvm_km_free(kernel_map, (vaddr_t)p->p_addr, USPACE);
+	km_free(p->p_addr, USPACE, &kv_fork, &kp_dma);
 	p->p_addr = NULL;
 }
 
