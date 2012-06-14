@@ -2913,7 +2913,7 @@ cpu_alloc_ldt(struct cpu_info *ci)
 	union descriptor *cpu_ldt;
 	size_t len = sizeof(ldt);
 
-	cpu_ldt = (union descriptor *)uvm_km_alloc(kernel_map, len);
+	cpu_ldt = km_alloc(round_page(len), &kv_any, &kp_dirty, &kd_waitok);
 	bcopy(ldt, cpu_ldt, len);
 	ci->ci_ldt = cpu_ldt;
 	ci->ci_ldt_len = len;
