@@ -231,6 +231,11 @@ bad1:
 	return (error);
 }
 
+struct kmem_va_mode kv_exec = {
+	.kv_map = &exec_map,
+	.kv_wait = 1
+};
+
 /*
  * exec system call
  */
@@ -320,7 +325,7 @@ sys_execve(struct proc *p, void *v, register_t *retval)
 	/* XXX -- THE FOLLOWING SECTION NEEDS MAJOR CLEANUP */
 
 	/* allocate an argument buffer */
-	argp = (char *) uvm_km_valloc_wait(exec_map, NCARGS);
+	argp = km_alloc(NCARGS, &kv_exec, &kp_pageable, &kd_waitok);
 #ifdef DIAGNOSTIC
 	if (argp == NULL)
 		panic("execve: argp == NULL");
@@ -597,7 +602,7 @@ sys_execve(struct proc *p, void *v, register_t *retval)
 		splx(s);
 	}
 
-	uvm_km_free_wakeup(exec_map, (vaddr_t) argp, NCARGS);
+	km_free(argp, NCARGS, &kv_exec, &kp_pageable);
 
 	pool_put(&namei_pool, nid.ni_cnd.cn_pnbuf);
 	vn_close(pack.ep_vp, FREAD, cred, p);
@@ -697,7 +702,7 @@ bad:
 	/* close and put the exec'd file */
 	vn_close(pack.ep_vp, FREAD, cred, p);
 	pool_put(&namei_pool, nid.ni_cnd.cn_pnbuf);
-	uvm_km_free_wakeup(exec_map, (vaddr_t) argp, NCARGS);
+	km_free(argp, NCARGS, &kv_exec, &kp_pageable);
 
  freehdr:
 	free(pack.ep_hdr, M_EXEC);
@@ -726,7 +731,7 @@ exec_abort:
 		free(pack.ep_emul_arg, M_TEMP);
 	pool_put(&namei_pool, nid.ni_cnd.cn_pnbuf);
 	vn_close(pack.ep_vp, FREAD, cred, p);
-	uvm_km_free_wakeup(exec_map, (vaddr_t) argp, NCARGS);
+	km_free(argp, NCARGS, &kv_exec, &kp_pageable);
 
 free_pack_abort:
 	free(pack.ep_hdr, M_EXEC);
