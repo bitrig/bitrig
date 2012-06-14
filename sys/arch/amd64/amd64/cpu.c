@@ -266,9 +266,10 @@ cpu_attach(struct device *parent, struct device *self, void *aux)
 
 #if defined(MULTIPROCESSOR)
 	/*
-	 * Allocate UPAGES contiguous pages for the idle PCB and stack.
+	 * Allocate USPACE pages for the idle PCB and stack.
+	 * XXX should we just sleep here?
 	 */
-	kstack = uvm_km_alloc (kernel_map, USPACE);
+	kstack = (vaddr_t)km_alloc(USPACE, &kv_any, &kp_zero, &kd_nowait);
 	if (kstack == 0) {
 		if (caa->cpu_role != CPU_ROLE_AP) {
 			panic("cpu_attach: unable to allocate idle stack for"
@@ -278,8 +279,7 @@ cpu_attach(struct device *parent, struct device *self, void *aux)
 		    sc->sc_dev.dv_xname);
 		return;
 	}
-	pcb = ci->ci_idle_pcb = (struct pcb *) kstack;
-	memset(pcb, 0, USPACE);
+	pcb = ci->ci_idle_pcb = (struct pcb *)kstack;
 
 	pcb->pcb_kstack = kstack + USPACE - 16;
 	pcb->pcb_rbp = pcb->pcb_rsp = kstack + USPACE - 16;
