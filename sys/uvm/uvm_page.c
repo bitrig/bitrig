@@ -594,8 +594,12 @@ uvm_page_physload(paddr_t start, paddr_t end, paddr_t avail_start,
 
  		npages = end - start;  /* # of pages */
 
-		pgs = (struct vm_page *)uvm_km_zalloc(kernel_map,
-		    npages * sizeof(*pgs));
+		/*
+		 * if we don't have the space for it in kva we probably never
+		 * will, so don't bother sleeping.
+		 */
+		pgs = km_alloc(round_page(npages * sizeof(*pgs)), &kv_any,
+		    &kp_zero, &kd_nowait);
 		if (pgs == NULL) {
 			printf("uvm_page_physload: can not malloc vm_page "
 			    "structs for segment\n");
