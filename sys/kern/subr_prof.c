@@ -82,8 +82,8 @@ kmstartup(void)
 		p->tolimit = MAXARCS;
 	p->tossize = p->tolimit * sizeof(struct tostruct);
 	size = p->kcountsize + p->fromssize + p->tossize;
-	cp = (char *)uvm_km_zalloc(kernel_map, round_page(size));
-	if (cp == 0) {
+	cp = km_alloc(round_page(size), &kv_any, &kp_zero, &kd_nowait);
+	if (cp == NULL) {
 		printf("No memory for profiling.\n");
 		return;
 	}
