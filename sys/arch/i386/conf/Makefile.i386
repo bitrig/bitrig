@@ -36,7 +36,12 @@ CMACHFLAGS+=	-fno-builtin-printf -fno-builtin-snprintf \
 CMACHFLAGS+=	-fno-stack-protector
 .endif
 
+.if ${IDENT:M-DSMALL_KERNEL}
+COPTS?=		-Os
+.else
 COPTS?=		-O2
+.endif
+
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS}
 LINKFLAGS=	-Ttext 0xD0200120 -e start -N --warn-common
@@ -56,7 +61,12 @@ CMACHFLAGS+=	-ffreestanding -no-integrated-as -fno-omit-frame-pointer \
 CMACHFLAGS+=	-fno-stack-protector
 .endif
 
+.if ${IDENT:M-DSMALL_KERNEL}
+COPTS?=		-Oz
+.else
 COPTS?=		-O3
+.endif
+
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS}
 LINKFLAGS=	-Ttext 0xD0200120 -e start -N --warn-common -z noexecstack
