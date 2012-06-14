@@ -2868,7 +2868,7 @@ fix_f00f(void)
 	pt_entry_t *pte;
 
 	/* Allocate two new pages */
-	va = uvm_km_zalloc(kernel_map, NBPG*2);
+	va = (vaddr_t)km_alloc(PAGE_SIZE * 2, &kv_any, &kp_dirty, &kd_waitok);
 	p = (void *)(va + NBPG - 7*sizeof(*idt));
 
 	/* Copy over old IDT */
@@ -2913,7 +2913,7 @@ cpu_alloc_ldt(struct cpu_info *ci)
 	union descriptor *cpu_ldt;
 	size_t len = sizeof(ldt);
 
-	cpu_ldt = (union descriptor *)uvm_km_alloc(kernel_map, len);
+	cpu_ldt = km_alloc(round_page(len), &kv_any, &kp_dirty, &kd_waitok);
 	bcopy(ldt, cpu_ldt, len);
 	ci->ci_ldt = cpu_ldt;
 	ci->ci_ldt_len = len;
@@ -3623,7 +3623,7 @@ bus_mem_add_mapping(bus_addr_t bpa, bus_size_t size, int flags,
 
 	map_size = endpa - pa;
 
-	va = uvm_km_valloc(kernel_map, map_size);
+	va = (vaddr_t)km_alloc(map_size, &kv_any, &kp_none, &kd_nowait);
 	if (va == 0)
 		return (ENOMEM);
 
@@ -3679,7 +3679,7 @@ bus_space_unmap(bus_space_tag_t t, bus_space_handle_t bsh, bus_size_t size)
 		/*
 		 * Free the kernel virtual mapping.
 		 */
-		uvm_km_free(kernel_map, va, endva - va);
+		km_free((void *)va, endva - va, &kv_any, &kp_none);
 	} else
 		panic("bus_space_unmap: bad bus space tag");
 
@@ -3726,7 +3726,7 @@ _bus_space_unmap(bus_space_tag_t t, bus_space_handle_t bsh, bus_size_t size,
 		/*
 		 * Free the kernel virtual mapping.
 		 */
-		uvm_km_free(kernel_map, va, endva - va);
+		km_free((void *)va, endva - va, &kv_any, &kp_none);
 	} else
 		panic("bus_space_unmap: bad bus space tag");
 

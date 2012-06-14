@@ -175,16 +175,11 @@
  *  - there are three data structures that we must dynamically allocate:
  *
  * [A] new process' page directory page (PDP)
- *	- plan 1: done at pmap_create() we use
- *	  uvm_km_alloc(kernel_map, PAGE_SIZE)  [fka kmem_alloc] to do this
- *	  allocation.
+ *	- plan 1: done at pmap_create() we use a pool(9) to do this allocation.
  *
  * if we are low in free physical memory then we sleep in
- * uvm_km_alloc -- in this case this is ok since we are creating
+ * pool_get() -- in this case this is ok since we are creating
  * a new pmap and should not be holding any locks.
- *
- * if the kernel is totally out of virtual space
- * (i.e. uvm_km_alloc returns NULL), then we panic.
  *
  * XXX: the fork code currently has no way to return an "out of
  * memory, try again" error code since uvm_fork [fka vm_fork]

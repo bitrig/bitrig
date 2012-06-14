@@ -201,15 +201,6 @@ typedef int		vm_prot_t;
 				/* offset not known(obj) or don't care(!obj) */
 
 /*
- * the following defines are for uvm_km_kmemalloc's flags
- */
-#define UVM_KMF_NOWAIT	0x1			/* matches M_NOWAIT */
-#define UVM_KMF_VALLOC	0x2			/* allocate VA only */
-#define UVM_KMF_CANFAIL	0x4			/* caller handles failure */
-#define UVM_KMF_ZERO	0x08			/* zero pages */
-#define UVM_KMF_TRYLOCK	UVM_FLAG_TRYLOCK	/* try locking only */
-
-/*
  * flags for uvm_pagealloc()
  */
 #define UVM_PGA_USERESERVE	0x0001	/* ok to use reserve pages */
@@ -454,15 +445,6 @@ extern struct vm_map *kernel_map;
 extern struct vm_map *kmem_map;
 extern struct vm_map *phys_map;
 
-
-/*
- * macros
- */
-
-/* zalloc zeros memory, alloc does not */
-#define uvm_km_zalloc(MAP,SIZE) uvm_km_alloc1(MAP,SIZE,0,TRUE)
-#define uvm_km_alloc(MAP,SIZE)  uvm_km_alloc1(MAP,SIZE,0,FALSE)
-
 #endif /* _KERNEL */
 
 #ifdef	pmap_resident_count
@@ -530,22 +512,6 @@ void			uvm_init(void);
 int			uvm_io(vm_map_t, struct uio *, int);
 
 #define	UVM_IO_FIXPROT	0x01
-
-/* uvm_km.c */
-vaddr_t			uvm_km_alloc1(vm_map_t, vsize_t, vsize_t, boolean_t);
-void			uvm_km_free(vm_map_t, vaddr_t, vsize_t);
-void			uvm_km_free_wakeup(vm_map_t, vaddr_t, vsize_t);
-vaddr_t			uvm_km_kmemalloc_pla(struct vm_map *,
-			    struct uvm_object *, vsize_t, vsize_t, int,
-			    paddr_t, paddr_t, paddr_t, paddr_t, int);
-#define uvm_km_kmemalloc(map, obj, sz, flags)				\
-	uvm_km_kmemalloc_pla(map, obj, sz, 0, flags, 0, (paddr_t)-1, 0, 0, 0)
-vaddr_t			uvm_km_valloc(vm_map_t, vsize_t);
-vaddr_t			uvm_km_valloc_try(vm_map_t, vsize_t);
-vaddr_t			uvm_km_valloc_wait(vm_map_t, vsize_t);
-vaddr_t			uvm_km_valloc_align(struct vm_map *, vsize_t, vsize_t, int);
-vaddr_t			uvm_km_valloc_prefer_wait(vm_map_t, vsize_t,
-					voff_t);
 
 struct vm_map		*uvm_km_suballoc(vm_map_t, vaddr_t *,
 				vaddr_t *, vsize_t, int,

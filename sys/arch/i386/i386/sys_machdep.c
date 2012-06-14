@@ -260,8 +260,8 @@ i386_set_ldt(struct proc *p, void *args, register_t *retval)
 		new_len = ldt_len * sizeof(union descriptor);
 
 		simple_unlock(&pmap->pm_lock);
-		new_ldt = (union descriptor *)uvm_km_alloc(kernel_map,
-		    new_len);
+		new_ldt = km_alloc(round_page(new_len), &kv_any,
+		    &kp_dirty, &kd_nowait);
 		if (new_ldt == NULL) {
 			error = ENOMEM;
 			goto out;
@@ -272,12 +272,13 @@ i386_set_ldt(struct proc *p, void *args, register_t *retval)
 			/*
 			 * Another thread (re)allocated the LDT to
 			 * sufficient size while we were blocked in
-			 * uvm_km_alloc. Oh well. The new entries
+			 * km_alloc. Oh well. The new entries
 			 * will quite probably not be right, but
 			 * hey.. not our problem if user applications
 			 * have race conditions like that.
 			 */
-			uvm_km_free(kernel_map, (vaddr_t)new_ldt, new_len);
+			km_free(new_ldt, round_page(new_len), &kv_any,
+			    &kp_dirty);
 			goto copy;
 		}
 
@@ -294,7 +295,8 @@ i386_set_ldt(struct proc *p, void *args, register_t *retval)
 		memset((caddr_t)new_ldt + old_len, 0, new_len - old_len);
 
 		if (old_ldt != ldt)
-			uvm_km_free(kernel_map, (vaddr_t)old_ldt, old_len);
+			km_free(old_ldt, round_page(old_len),
+			    &kv_any, &kp_dirty);
 
 		pmap->pm_ldt = new_ldt;
 		pmap->pm_ldt_len = ldt_len;

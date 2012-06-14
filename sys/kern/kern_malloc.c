@@ -241,12 +241,8 @@ malloc(unsigned long size, int type, int flags)
 		else
 			allocsize = 1 << indx;
 		npg = atop(round_page(allocsize));
-		va = (caddr_t)uvm_km_kmemalloc_pla(kmem_map, NULL,
-		    (vsize_t)ptoa(npg), 0,
-		    ((flags & M_NOWAIT) ? UVM_KMF_NOWAIT : 0) |
-		    ((flags & M_CANFAIL) ? UVM_KMF_CANFAIL : 0),
-		    no_constraint.ucr_low, no_constraint.ucr_high,
-		    0, 0, 0);
+		va = km_alloc(ptoa(npg), &kv_intrsafe, &kp_dirty,
+		    (flags & M_NOWAIT) ? &kd_nowait : &kd_waitok);
 		if (va == NULL) {
 			/*
 			 * Kmem_malloc() can return NULL, even if it can
@@ -440,7 +436,7 @@ free(void *addr, int type)
 			addr, size, memname[type], alloc);
 #endif /* DIAGNOSTIC */
 	if (size > MAXALLOCSAVE) {
-		uvm_km_free(kmem_map, (vaddr_t)addr, ptoa(kup->ku_pagecnt));
+		km_free(addr, ptoa(kup->ku_pagecnt), &kv_intrsafe, &kp_dirty);
 #ifdef KMEMSTATS
 		size = kup->ku_pagecnt << PGSHIFT;
 		ksp->ks_memuse -= size;
@@ -586,8 +582,8 @@ kmeminit(void)
 	    FALSE, &kmem_map_store);
 	kmembase = (char *)base;
 	kmemlimit = (char *)limit;
-	kmemusage = (struct kmemusage *) uvm_km_zalloc(kernel_map,
-		(vsize_t)(nkmempages * sizeof(struct kmemusage)));
+	kmemusage = (struct kmemusage *)km_alloc(round_page(nkmempages *
+	    sizeof(struct kmemusage)), &kv_any, &kp_zero, &kd_waitok);
 #ifdef KMEMSTATS
 	for (indx = 0; indx < MINBUCKET + 16; indx++) {
 		if (1 << indx >= PAGE_SIZE)

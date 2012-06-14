@@ -173,9 +173,9 @@ free1:
 int
 pipespace(struct pipe *cpipe, u_int size)
 {
-	caddr_t buffer;
+	void *buffer;
 
-	buffer = (caddr_t)uvm_km_valloc(kernel_map, size);
+	buffer = km_alloc(size, &kv_any, &kp_pageable, &kd_waitok);
 	if (buffer == NULL) {
 		return (ENOMEM);
 	}
@@ -719,8 +719,8 @@ pipe_free_kmem(struct pipe *cpipe)
 		if (cpipe->pipe_buffer.size > PIPE_SIZE)
 			--nbigpipe;
 		amountpipekva -= cpipe->pipe_buffer.size;
-		uvm_km_free(kernel_map, (vaddr_t)cpipe->pipe_buffer.buffer,
-		    cpipe->pipe_buffer.size);
+		km_free(cpipe->pipe_buffer.buffer, cpipe->pipe_buffer.size,
+		    &kv_any, &kp_pageable);
 		cpipe->pipe_buffer.buffer = NULL;
 	}
 }

@@ -308,7 +308,8 @@ sti_rom_setup(struct sti_rom *rom, bus_space_tag_t iot, bus_space_tag_t memt,
 		return (EINVAL);
 	}
 
-	if (!(rom->rom_code = uvm_km_alloc(kernel_map, round_page(size)))) {
+	if ((rom->rom_code = (vaddr_t)km_alloc(round_page(size), &kv_any,
+	    &kp_dirty, &kd_nowait)) == 0) {
 		printf(": cannot allocate %u bytes for code\n", size);
 		return (ENOMEM);
 	}
@@ -340,7 +341,8 @@ sti_rom_setup(struct sti_rom *rom, bus_space_tag_t iot, bus_space_tag_t memt,
 	if ((error = uvm_map_protect(kernel_map, rom->rom_code,
 	    rom->rom_code + round_page(size), UVM_PROT_RX, FALSE))) {
 		printf(": uvm_map_protect failed (%d)\n", error);
-		uvm_km_free(kernel_map, rom->rom_code, round_page(size));
+		km_free((void *)rom->rom_code, round_page(size), &kv_any,
+		    &kp_dirty);
 		return (error);
 	}
 

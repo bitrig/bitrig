@@ -100,22 +100,14 @@ setgdt(int sel, void *base, size_t limit, int type, int dpl, int def32,
 void
 gdt_init()
 {
-	struct vm_page *pg;
-	vaddr_t va;
 	struct cpu_info *ci = &cpu_info_primary;
 
 	gdt_next = NGDT;
 	gdt_free = GNULL_SEL;
 
-	gdt = (union descriptor *)uvm_km_valloc(kernel_map, MAXGDTSIZ);
-	for (va = (vaddr_t)gdt; va < (vaddr_t)gdt + MAXGDTSIZ;
-	    va += PAGE_SIZE) {
-		pg = uvm_pagealloc(NULL, 0, NULL, UVM_PGA_ZERO);
-		if (pg == NULL)
-			panic("gdt_init: no pages");
-		pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg),
-		    VM_PROT_READ | VM_PROT_WRITE);
-	}
+	gdt = km_alloc(MAXGDTSIZ, &kv_any, &kp_zero, &kd_nowait);
+	if (gdt == NULL)
+		panic("gdt_init: can't alloc");
 	bcopy(bootstrap_gdt, gdt, NGDT * sizeof(union descriptor));
 	ci->ci_gdt = gdt;
 	setsegment(&ci->ci_gdt[GCPU_SEL].sd, ci, sizeof(struct cpu_info)-1,
@@ -131,21 +123,10 @@ gdt_init()
 void
 gdt_alloc_cpu(struct cpu_info *ci)
 {
-	struct vm_page *pg;
-	vaddr_t va;
-
-	ci->ci_gdt = (union descriptor *)uvm_km_valloc(kernel_map, MAXGDTSIZ);
-	uvm_map_pageable(kernel_map, (vaddr_t)ci->ci_gdt,
-	    (vaddr_t)ci->ci_gdt + MAXGDTSIZ, FALSE, FALSE);
-	for (va = (vaddr_t)ci->ci_gdt; va < (vaddr_t)ci->ci_gdt + MAXGDTSIZ;
-	    va += PAGE_SIZE) {
-		pg = uvm_pagealloc(NULL, 0, NULL, UVM_PGA_ZERO);
-		if (pg == NULL)
-			panic("gdt_init: no pages");
-		pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg),
-		    VM_PROT_READ | VM_PROT_WRITE);
-	}
-	bzero(ci->ci_gdt, MAXGDTSIZ);
+	/* Can't sleep, in autoconf */
+	ci->ci_gdt = km_alloc(MAXGDTSIZ, &kv_any, &kp_zero, &kd_nowait);
+	if (ci->ci_gdt == NULL)
+		panic("gdt_init: can't alloc");
 	bcopy(gdt, ci->ci_gdt, MAXGDTSIZ);
 	setsegment(&ci->ci_gdt[GCPU_SEL].sd, ci, sizeof(struct cpu_info)-1,
 	    SDT_MEMRWA, SEL_KPL, 0, 0);

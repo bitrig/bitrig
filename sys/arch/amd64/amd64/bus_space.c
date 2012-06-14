@@ -253,7 +253,7 @@ x86_mem_add_mapping(bus_addr_t bpa, bus_size_t size, int flags,
 
 	map_size = endpa - pa;
 
-	va = uvm_km_valloc(kernel_map, map_size);
+	va = (vaddr_t)km_alloc(map_size, &kv_any, &kp_none, &kd_nowait);
 	if (va == 0)
 		return (ENOMEM);
 
@@ -308,7 +308,7 @@ _bus_space_unmap(bus_space_tag_t t, bus_space_handle_t bsh, bus_size_t size,
 			panic("_bus_space_unmap: overflow");
 #endif
 
-		(void) pmap_extract(pmap_kernel(), va, &bpa);
+		(void)pmap_extract(pmap_kernel(), va, &bpa);
 		bpa += (bsh & PGOFSET);
 
 		pmap_kremove(va, endva - va);
@@ -317,7 +317,7 @@ _bus_space_unmap(bus_space_tag_t t, bus_space_handle_t bsh, bus_size_t size,
 		/*
 		 * Free the kernel virtual mapping.
 		 */
-		uvm_km_free(kernel_map, va, endva - va);
+		km_free((void *)va, endva - va, &kv_any, &kp_none);
 	} else
 		panic("bus_space_unmap: bad bus space tag");
 
@@ -362,7 +362,7 @@ bus_space_unmap(bus_space_tag_t t, bus_space_handle_t bsh, bus_size_t size)
 		/*
 		 * Free the kernel virtual mapping.
 		 */
-		uvm_km_free(kernel_map, va, endva - va);
+		km_free((void *)va, endva - va, &kv_any, &kp_none);
 	} else
 		panic("bus_space_unmap: bad bus space tag");
 

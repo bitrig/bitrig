@@ -86,7 +86,7 @@ kvm86_init()
 
 	vmdsize = round_page(sizeof(struct kvm86_data)) + PAGE_SIZE;
 
-	if ((buf = (char *)uvm_km_zalloc(kernel_map, vmdsize)) == NULL)
+	if ((buf = km_alloc(vmdsize, &kv_any, &kp_zero, &kd_waitok)) == NULL)
 		return;
 	
 	/* first page is stack */
@@ -114,14 +114,15 @@ kvm86_init()
 
 	/* prepare VM for BIOS calls */
 	kvm86_mapbios(vmd);
-	if ((bioscallscratchpage = (void *)uvm_km_alloc(kernel_map, PAGE_SIZE))
-	    == 0)
+	if ((bioscallscratchpage = km_alloc(PAGE_SIZE, &kv_any, &kp_dirty,
+	    &kd_waitok)) == NULL)
 		return;
 
 	pmap_extract(pmap_kernel(), (vaddr_t)bioscallscratchpage, &pa);
 	kvm86_map(vmd, pa, BIOSCALLSCRATCHPAGE_VMVA);
 	bioscallvmd = vmd;
-	bioscalltmpva = uvm_km_alloc(kernel_map, PAGE_SIZE);
+	bioscalltmpva = (vaddr_t)km_alloc(PAGE_SIZE, &kv_any, &kp_none,
+	    &kd_waitok);
 	mtx_init(&kvm86_mp_mutex, IPL_IPI);
 }
 
@@ -176,7 +177,8 @@ kvm86_bios_addpage(uint32_t vmva)
 	if (bioscallvmd->pgtbl[vmva >> 12]) /* allocated? */
 		return (NULL);
 
-	if ((mem = (void *)uvm_km_alloc(kernel_map, PAGE_SIZE)) == NULL)
+	if ((mem = (void *)km_alloc(PAGE_SIZE, &kv_any, &kp_dirty,
+	    &kd_waitok)) == NULL)
 		return (NULL);
 	
 	pmap_extract(pmap_kernel(), (vaddr_t)mem, &pa);	
@@ -190,7 +192,7 @@ kvm86_bios_delpage(uint32_t vmva, void *kva)
 {
 
 	bioscallvmd->pgtbl[vmva >> 12] = 0;
-	uvm_km_free(kernel_map, (vaddr_t)kva, PAGE_SIZE);
+	km_free(kva, PAGE_SIZE, &kv_any, &kp_dirty);
 }
 
 size_t

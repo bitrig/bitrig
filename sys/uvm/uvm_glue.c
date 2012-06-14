@@ -197,11 +197,9 @@ int
 uvm_vslock_device(struct proc *p, void *addr, size_t len,
     vm_prot_t access_type, void **retp)
 {
-	struct vm_page *pg;
-	struct pglist pgl;
 	int npages;
 	vaddr_t start, end, off;
-	vaddr_t sva, va;
+	void *va;
 	vsize_t sz;
 	int error, i;
 
@@ -234,36 +232,17 @@ uvm_vslock_device(struct proc *p, void *addr, size_t len,
 		return (0);
 	}
 
-	if ((va = uvm_km_valloc(kernel_map, sz)) == 0) {
+	if ((va = km_alloc(sz, &kv_any, &kp_dma, &kd_waitok)) == NULL) {
 		error = ENOMEM;
 		goto out_unwire;
 	}
-	sva = va;
 
-	TAILQ_INIT(&pgl);
-	error = uvm_pglistalloc(npages * PAGE_SIZE, dma_constraint.ucr_low,
-	    dma_constraint.ucr_high, 0, 0, &pgl, npages, UVM_PLA_WAITOK);
-	if (error)
-		goto out_unmap;
-
-	while ((pg = TAILQ_FIRST(&pgl)) != NULL) {
-		TAILQ_REMOVE(&pgl, pg, pageq);
-		pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg),
-		    VM_PROT_READ|VM_PROT_WRITE);
-		va += PAGE_SIZE;
-	}
-	pmap_update(pmap_kernel());
-	KASSERT(va == sva + sz);
-	*retp = (void *)(sva + off);
+	*retp = (void *)(va + off);
 
 	if ((error = copyin(addr, *retp, len)) == 0)
 		return 0;
 
-	uvm_km_pgremove_intrsafe(sva, sva + sz);
-	pmap_kremove(sva, sz);
-	pmap_update(pmap_kernel());
-out_unmap:
-	uvm_km_free(kernel_map, sva, sz);
+	km_free(va, sz, &kv_any, &kp_dma);
 out_unwire:
 	uvm_fault_unwire(&p->p_vmspace->vm_map, start, end);
 	return (error);
@@ -273,7 +252,6 @@ void
 uvm_vsunlock_device(struct proc *p, void *addr, size_t len, void *map)
 {
 	vaddr_t start, end;
-	vaddr_t kva;
 	vsize_t sz;
 
 	start = trunc_page((vaddr_t)addr);
@@ -289,11 +267,7 @@ uvm_vsunlock_device(struct proc *p, void *addr, size_t len, void *map)
 	if (!map)
 		return;
 
-	kva = trunc_page((vaddr_t)map);
-	uvm_km_pgremove_intrsafe(kva, kva + sz);
-	pmap_kremove(kva, sz);
-	pmap_update(pmap_kernel());
-	uvm_km_free(kernel_map, kva, sz);
+	km_free((void *)trunc_page((vaddr_t)map), sz, &kv_any, &kp_dma);
 }
 
 /*
@@ -347,9 +321,11 @@ uvm_fork(struct proc *p1, struct proc *p2, boolean_t shared, void *stack,
 void
 uvm_exit(struct proc *p)
 {
+	extern struct kmem_va_mode kv_fork;
+
 	uvmspace_free(p->p_vmspace);
 	p->p_vmspace = NULL;
-	uvm_km_free(kernel_map, (vaddr_t)p->p_addr, USPACE);
+	km_free(p->p_addr, USPACE, &kv_fork, &kp_dma);
 	p->p_addr = NULL;
 }
 
