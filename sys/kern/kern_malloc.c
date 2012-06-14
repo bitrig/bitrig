@@ -586,8 +586,8 @@ kmeminit(void)
 	    FALSE, &kmem_map_store);
 	kmembase = (char *)base;
 	kmemlimit = (char *)limit;
-	kmemusage = (struct kmemusage *) uvm_km_zalloc(kernel_map,
-		(vsize_t)(nkmempages * sizeof(struct kmemusage)));
+	kmemusage = (struct kmemusage *)km_alloc(round_page(nkmempages *
+	    sizeof(struct kmemusage)), &kv_any, &kp_zero, &kd_waitok);
 #ifdef KMEMSTATS
 	for (indx = 0; indx < MINBUCKET + 16; indx++) {
 		if (1 << indx >= PAGE_SIZE)
