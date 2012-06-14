@@ -135,7 +135,8 @@ uvm_pseg_init(struct uvm_pseg *pseg)
 {
 	KASSERT(pseg->start == 0);
 	KASSERT(pseg->use == 0);
-	pseg->start = uvm_km_valloc_try(kernel_map, MAX_PAGER_SEGS * MAXBSIZE);
+	pseg->start = (vaddr_t)km_alloc(MAX_PAGER_SEGS * MAXBSIZE, &kv_any,
+	    &kp_none, &kd_trylock);
 }
 
 /*
@@ -233,7 +234,8 @@ uvm_pseg_release(vaddr_t segaddr)
 	mtx_leave(&uvm_pseg_lck);
 
 	if (va)
-		uvm_km_free(kernel_map, va, MAX_PAGER_SEGS * MAXBSIZE);
+		km_free((void *)va, MAX_PAGER_SEGS * MAXBSIZE,
+		    &kv_any, &kp_none);
 }
 
 /*
