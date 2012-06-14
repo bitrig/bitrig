@@ -121,7 +121,7 @@ bios_attach(struct device *parent, struct device *self, void *aux)
 
 		pa = trunc_page(hdr->addr);
 		end = round_page(hdr->addr + hdr->size);
-		va = uvm_km_valloc(kernel_map, end-pa);
+		va = (vaddr_t)km_alloc(end - pa, &kv_any, &kp_none, &kd_nowait);
 		if (va == 0)
 			break;
 
