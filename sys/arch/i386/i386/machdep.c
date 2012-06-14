@@ -2868,7 +2868,7 @@ fix_f00f(void)
 	pt_entry_t *pte;
 
 	/* Allocate two new pages */
-	va = uvm_km_zalloc(kernel_map, NBPG*2);
+	va = (vaddr_t)km_alloc(PAGE_SIZE * 2, &kv_any, &kp_dirty, &kd_waitok);
 	p = (void *)(va + NBPG - 7*sizeof(*idt));
 
 	/* Copy over old IDT */
