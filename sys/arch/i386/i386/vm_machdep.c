@@ -203,6 +203,11 @@ kvtop(caddr_t addr)
 	return((int)pa);
 }
 
+struct kmem_va_mode kv_physwait = {
+	.kv_map = &phys_map,
+	.kv_wait = 1,
+};
+
 /*
  * Map an user IO request into kernel virtual address space.
  */
@@ -217,7 +222,9 @@ vmapbuf(struct buf *bp, vsize_t len)
 	faddr = trunc_page((vaddr_t)(bp->b_saveaddr = bp->b_data));
 	off = (vaddr_t)bp->b_data - faddr;
 	len = round_page(off + len);
-	taddr= uvm_km_valloc_wait(phys_map, len);
+
+	taddr = (vaddr_t)km_alloc(len, &kv_physwait,
+	    &kp_none, &kd_waitok);
 	bp->b_data = (caddr_t)(taddr + off);
 	/*
 	 * The region is locked, so we expect that pmap_pte() will return
@@ -258,7 +265,7 @@ vunmapbuf(struct buf *bp, vsize_t len)
 	len = round_page(off + len);
 	pmap_kremove(addr, len);
 	pmap_update(pmap_kernel());
-	uvm_km_free_wakeup(phys_map, addr, len);
+	km_free((void *)addr, len, &kv_physwait, &kp_none);
 	bp->b_data = bp->b_saveaddr;
 	bp->b_saveaddr = 0;
 }
