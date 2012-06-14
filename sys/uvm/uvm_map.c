@@ -1729,7 +1729,7 @@ uvm_unmap_kill_entry(struct vm_map *map, struct vm_map_entry *entry)
 		 * Note: kernel object mappings are currently used in
 		 * two ways:
 		 *  [1] "normal" mappings of pages in the kernel object
-		 *  [2] uvm_km_valloc'd allocations in which we
+		 *  [2] va-only allocations in which we
 		 *      pmap_enter in some non-kernel-object page
 		 *      (e.g. vmapbuf).
 		 *

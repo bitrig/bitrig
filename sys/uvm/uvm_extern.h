@@ -526,12 +526,6 @@ int			uvm_io(vm_map_t, struct uio *, int);
 vaddr_t			uvm_km_alloc1(vm_map_t, vsize_t, vsize_t, boolean_t);
 void			uvm_km_free(vm_map_t, vaddr_t, vsize_t);
 void			uvm_km_free_wakeup(vm_map_t, vaddr_t, vsize_t);
-vaddr_t			uvm_km_valloc(vm_map_t, vsize_t);
-vaddr_t			uvm_km_valloc_try(vm_map_t, vsize_t);
-vaddr_t			uvm_km_valloc_wait(vm_map_t, vsize_t);
-vaddr_t			uvm_km_valloc_align(struct vm_map *, vsize_t, vsize_t, int);
-vaddr_t			uvm_km_valloc_prefer_wait(vm_map_t, vsize_t,
-					voff_t);
 
 struct vm_map		*uvm_km_suballoc(vm_map_t, vaddr_t *,
 				vaddr_t *, vsize_t, int,
