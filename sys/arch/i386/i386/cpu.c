@@ -214,10 +214,10 @@ cpu_attach(struct device *parent, struct device *self, void *aux)
 
 #ifdef MULTIPROCESSOR
 	/*
-	 * Allocate UPAGES contiguous pages for the idle PCB and stack.
+	 * Allocate USPACE pages for the idle PCB and stack.
+	 * XXX should we just sleep here?
 	 */
-
-	kstack = uvm_km_alloc(kernel_map, USPACE);
+	kstack = (vaddr_t)km_alloc(USPACE, &kv_any, &kp_zero, &kd_nowait);
 	if (kstack == 0) {
 		if (cpunum == 0) { /* XXX */
 			panic("cpu_attach: unable to allocate idle stack for"
@@ -228,7 +228,6 @@ cpu_attach(struct device *parent, struct device *self, void *aux)
 		return;
 	}
 	pcb = ci->ci_idle_pcb = (struct pcb *)kstack;
-	memset(pcb, 0, USPACE);
 
 	pcb->pcb_tss.tss_ss0 = GSEL(GDATA_SEL, SEL_KPL);
 	pcb->pcb_tss.tss_esp0 = kstack + USPACE - 16 -
@@ -544,7 +543,8 @@ cpu_set_tss_gates(struct cpu_info *ci)
 {
 	struct segment_descriptor sd;
 
-	ci->ci_doubleflt_stack = (char *)uvm_km_alloc(kernel_map, USPACE);
+	ci->ci_doubleflt_stack = km_alloc(USPACE, &kv_any,
+	    &kp_zero, &kd_waitok);
 	cpu_init_tss(&ci->ci_doubleflt_tss, ci->ci_doubleflt_stack,
 	    IDTVEC(tss_trap08));
 	setsegment(&sd, &ci->ci_doubleflt_tss, sizeof(struct i386tss) - 1,
@@ -561,7 +561,7 @@ cpu_set_tss_gates(struct cpu_info *ci)
 	 * XXX overwriting the gate set in db_machine_init.
 	 * Should rearrange the code so that it's set only once.
 	 */
-	ci->ci_ddbipi_stack = (char *)uvm_km_alloc(kernel_map, USPACE);
+	ci->ci_ddbipi_stack = km_alloc(USPACE, &kv_any, &kp_zero, &kd_nowait);
 	cpu_init_tss(&ci->ci_ddbipi_tss, ci->ci_ddbipi_stack,
 	    Xintrddbipi);
 
