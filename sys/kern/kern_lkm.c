@@ -100,6 +100,11 @@ int lkmexists(struct lkm_table *);
 
 void init_exec(void);
 
+/* XXX does any of this need to be executable */
+const struct kmem_va_mode kv_lkm = {
+	.kv_map = &lkm_map
+};
+
 void
 lkminit(void)
 {
@@ -267,7 +272,8 @@ lkmunreserve(void)
 #endif
 
 	if (curp && curp->syms) {
-		uvm_km_free(lkm_map, (vaddr_t)curp->syms, curp->sym_size);
+		km_free(curp->syms, round_page(curp->sym_size),
+		     &kv_lkm, &kp_zero);
 		curp->syms = NULL;
 	}
 
@@ -275,7 +281,8 @@ lkmunreserve(void)
 	 * Actually unreserve the memory
 	 */
 	if (curp && curp->area) {
-		uvm_km_free(lkm_map, curp->area, curp->size);
+		km_free((void *)curp->area, round_page(curp->size),
+		     &kv_lkm, &kp_zero);
 		curp->area = 0;
 	}
 	lkm_state = LKMS_IDLE;
@@ -347,15 +354,16 @@ lkmioctl(dev_t dev, u_long cmd, caddr_t data, int flags, struct proc *p)
 		 * Get memory for module
 		 */
 		curp->size = resrvp->size;
-		curp->area = uvm_km_zalloc(lkm_map, curp->size);
+		curp->area = (vaddr_t)km_alloc(round_page(curp->size), &kv_lkm,
+		    &kp_zero, &kd_waitok);
 		curp->offset = 0;
 		resrvp->addr = curp->area;
 
 		if (cmd == LMRESERV && resrvp->sym_size) {
 			curp->sym_size = resrvp->sym_size;
 			curp->sym_symsize = resrvp->sym_symsize;
-			curp->syms = (caddr_t)uvm_km_zalloc(lkm_map,
-							    curp->sym_size);
+			curp->syms = km_alloc(round_page(curp->sym_size),
+			    &kv_lkm, &kp_zero, &kd_waitok);
 			curp->sym_offset = 0;
 			resrvp->sym_addr = curp->syms;
 		} else {
