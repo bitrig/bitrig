@@ -132,16 +132,12 @@
  *  - there are three data structures that we must dynamically allocate:
  *
  * [A] new process' page directory page (PDP)
- *	- plan 1: done at pmap_create() we use
- *	  uvm_km_alloc(kernel_map, PAGE_SIZE)  [fka kmem_alloc] to do this
+ *	- plan 1: done at pmap_create() we use pool(9) to do this
  *	  allocation.
  *
  * if we are low in free physical memory then we sleep in
- * uvm_km_alloc -- in this case this is ok since we are creating
+ * pool_get() -- in this case this is ok since we are creating
  * a new pmap and should not be holding any locks.
- *
- * if the kernel is totally out of virtual space
- * (i.e. uvm_km_alloc returns NULL), then we panic.
  *
  * XXX: the fork code currently has no way to return an "out of
  * memory, try again" error code since uvm_fork [fka vm_fork]
@@ -287,6 +283,12 @@ struct pmap_head pmaps;
  */
 
 struct pool pmap_pmap_pool;
+
+/*
+ * pool that PDPs are allocated from
+ */
+
+struct pool pmap_pdp_pool;
 
 /*
  * MULTIPROCESSOR: special VA's/ PTE's are actually allocated inside a
@@ -911,6 +913,12 @@ pmap_bootstrap(vaddr_t kva_start)
 	    &pool_allocator_nointr);
 
 	/*
+	 * initialize the PDE pool.
+	 */
+	pool_init(&pmap_pdp_pool, PAGE_SIZE, 0, 0, 0, "pdppl",
+		  &pool_allocator_nointr);
+
+	/*
 	 * ensure the TLB is sync'd with reality by flushing it...
 	 */
 
@@ -954,7 +962,7 @@ pmap_init(void)
 	 * structures.   we never free this page.
 	 */
 
-	pv_initpage = (struct pv_page *) uvm_km_alloc(kernel_map, PAGE_SIZE);
+	pv_initpage =  km_alloc(PAGE_SIZE, &kv_any, &kp_dirty, &kd_nowait);
 	if (pv_initpage == NULL)
 		panic("pmap_init: pv_initpage");
 	pv_cachedva = 0;   /* a VA we have allocated but not used yet */
@@ -1469,14 +1477,12 @@ pmap_pinit(struct pmap *pmap)
 	    SDT_MEMERA, SEL_UPL, 1, 1);
 
 	/* allocate PDP */
-	pmap->pm_pdir = (pd_entry_t *) uvm_km_alloc(kernel_map, NBPG);
-	if (pmap->pm_pdir == NULL)
-		panic("pmap_pinit: kernel_map out of virtual space!");
+	pmap->pm_pdir = pool_get(&pmap_pdp_pool, PR_WAITOK);
 	(void) pmap_extract(pmap_kernel(), (vaddr_t)pmap->pm_pdir,
 			    (paddr_t *)&pmap->pm_pdirpa);
 
 	/* init PDP */
-	/* zero init area */
+	/* zero init area  XXX PR_ZERO? */
 	bzero(pmap->pm_pdir, PDSLOT_PTE * sizeof(pd_entry_t));
 	/* put in recursive PDE to map the PTEs */
 	pmap->pm_pdir[PDSLOT_PTE] = pmap->pm_pdirpa | PG_V | PG_KW | PG_U |
@@ -1533,7 +1539,7 @@ pmap_destroy(struct pmap *pmap)
 		uvm_pagefree(pg);
 	}
 
-	uvm_km_free(kernel_map, (vaddr_t)pmap->pm_pdir, NBPG);
+	pool_put(&pmap_pdp_pool, pmap->pm_pdir);
 	pmap->pm_pdir = NULL;
 
 #ifdef USER_LDT
