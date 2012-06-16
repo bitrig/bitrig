@@ -201,6 +201,7 @@
 ./etc/systrace/usr_sbin_named
 ./etc/ttys
 ./etc/weekly
+./etc/wsconsctl.conf
 ./etc/ypldap.conf
 ./root/.Xdefaults
 ./root/.cshrc
@@ -241,4 +242,3 @@
 ./var/www/conf/bgplg.head
 ./var/www/htdocs/bgplg/index.html
 ./var/www/htdocs/bgplg/openbgpd.gif
-./etc/wsconsctl.conf
