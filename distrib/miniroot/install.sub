@@ -1299,7 +1299,7 @@ install_url() {
 		_mirror=yes
 	fi
 
-	ask_until "Server directory?" "${resp:-release/$FTPSETDIR}"
+	ask_until "Server directory?" "${resp:-$FTPSETDIR}"
 	_server_dir=$resp
 	eval _${_url_type}_server_dir=$_server_dir
 
@@ -1352,12 +1352,13 @@ install_url() {
 	installedfrom=$_url_type://$_server_ip/$_server_dir
 
 	# Bake a package path if we installed from a mirror
+	# Assume we are installing from a mirror.
 	if [[ -n $_mirror ]]; then
 		package_path=$(print -r -- "$installedfrom" |
 			sed -E "/\/(snapshots|[0-9]\.[0-9])\/($ARCH)\/*$/!d
 				s!!/\1/packages/$(arch -s)/!;q")
 	else
-		package_path=
+		package_path=$(print -r -- "$installedfrom""packages/")
 	fi
 }
 
@@ -1870,6 +1871,9 @@ questions() {
 			esac
 		fi
 	fi
+
+	ask_yn "Install the bitrig toolchain on first boot ?" yes
+	syscomp=$resp
 }
 
 finish_up() {
@@ -1894,6 +1898,12 @@ finish_up() {
 		grep -v '^[ 	]*installpath[ 	]*=' /mnt/etc/pkg.conf 2>&- > /tmp/pkgconf
 		print -r -- "installpath = $package_path" >> /tmp/pkgconf
 		cp /tmp/pkgconf /mnt/etc/pkg.conf
+	fi
+
+	if [[ $syscomp == y ]]; then
+		rm -f /tmp/rcfirsttime
+		print -r -- "pkg_add bitrig-binutils bitrig-gcclibs bitrig-syscomp" > /tmp/rcfirsttime
+		cp /tmp/rcfirsttime /mnt/etc/rc.firsttime
 	fi
 
 	echo -n "Making all device nodes..."
@@ -1948,7 +1958,7 @@ SM_ARGS=
 SM_ARGSX=
 
 SETDIR="$VNAME/$ARCH"
-FTPDIR="release/$VNAME"
+FTPDIR="$VNAME"
 FTPOPTS="-V"
 SERVERLISTALL=/tmp/serverlistall
 SERVERLISTSEC=/tmp/serverlistsec
