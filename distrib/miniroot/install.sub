@@ -1358,7 +1358,7 @@ install_url() {
 			sed -E "/\/(snapshots|[0-9]\.[0-9])\/($ARCH)\/*$/!d
 				s!!/\1/packages/$(arch -s)/!;q")
 	else
-		package_path=$(print -r -- "$installedfrom""packages/")
+		package_path=$(print -r -- "$installedfrom/packages/")
 	fi
 }
 
