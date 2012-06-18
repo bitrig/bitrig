@@ -1902,7 +1902,9 @@ finish_up() {
 
 	if [[ $syscomp == y ]]; then
 		rm -f /tmp/rcfirsttime
-		print -r -- "pkg_add bitrig-binutils bitrig-gcclibs bitrig-syscomp" > /tmp/rcfirsttime
+		print -r -- "pkg_add bitrig-gcclibs" > /tmp/rcfirsttime
+		print -r -- "pkg_add bitrig-binutils" >> /tmp/rcfirsttime
+		print -r -- "pkg_add bitrig-syscomp" >> /tmp/rcfirsttime
 		cp /tmp/rcfirsttime /mnt/etc/rc.firsttime
 	fi
 
