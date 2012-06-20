@@ -52,7 +52,7 @@ RCDAEMONS=	amd apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd \
 		ftpd ftpproxy hostapd hotplugd identd ifstated iked \
 		inetd isakmpd ldapd ldattach ldpd lpd mopd mrouted named nginx \
 		nsd ntpd ospfd ospf6d portmap pflogd rarpd rbootd relayd ripd \
-		route6d rtadvd rtsold rwhod sasyncd sendmail sensorsd smtpd \
+		route6d rtadvd rtsold rwhod sasyncd sensorsd smtpd \
 		snmpd spamd sshd syslogd watchdogd wsmoused xdm ypbind ypldap \
 		yppasswdd ypserv kdc kadmind kpasswdd nfsd mountd lockd statd \
 		spamlogd sndiod popa3d tftpd
@@ -241,15 +241,12 @@ distribution-etc-root-var: distrib-dirs
 	    ${DESTDIR}/var/log/messages
 	${INSTALL} -c -o ${BINOWN} -g wheel -m 600 /dev/null \
 	    ${DESTDIR}/var/log/secure
-	${INSTALL} -c -o ${BINOWN} -g wheel -m 664 /dev/null \
-	    ${DESTDIR}/var/log/sendmail.st
 	${INSTALL} -c -o ${BINOWN} -g wheel -m 644 /dev/null \
 	    ${DESTDIR}/var/log/wtmp
 	${INSTALL} -c -o ${BINOWN} -g wheel -m 640 /dev/null \
 	    ${DESTDIR}/var/log/xferlog
 	${INSTALL} -c -o ${BINOWN} -g utmp -m 664 /dev/null \
 	    ${DESTDIR}/var/run/utmp
-	cd ../gnu/usr.sbin/sendmail/cf/cf && exec ${MAKE} distribution
 	cd ../usr.sbin/ypserv/ypinit && exec ${MAKE} distribution
 	cd ../usr.bin/ssh && exec ${MAKE} distribution
 	cd ../lib/libssl && exec ${MAKE} distribution

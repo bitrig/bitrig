@@ -311,11 +311,6 @@ kadm5			gname=bin uname=root mode=0755
 # ./usr/include/kerberosV
 ..
 
-# ./usr/include/libmilter
-libmilter		gname=bin uname=root mode=0755
-# ./usr/include/libmilter
-..
-
 # ./usr/include/openssl
 openssl		gname=bin uname=root mode=0755
 # ./usr/include/openssl
@@ -393,11 +388,6 @@ sm.bin
 # ./usr/libexec/lpr
 lpr
 # ./usr/libexec/lpr
-..
-
-# ./libexec/sendmail
-sendmail	type=dir uname=root gname=wheel mode=0755
-# ./libexec/sendmail
 ..
 
 # ./libexec/smtpd
@@ -618,12 +608,6 @@ bind
 curses
 
 # ./usr/share/doc/html/curses
-..
-
-# ./usr/share/doc/html/milter
-milter
-
-# ./usr/share/doc/html/milter
 ..
 
 # ./usr/share/doc/html
@@ -1143,57 +1127,6 @@ mk
 # ./usr/share/nls
 nls
 # ./usr/share/nls
-..
-
-# ./usr/share/sendmail
-sendmail
-
-# ./usr/share/sendmail/cf
-cf
-# ./usr/share/sendmail/cf
-..
-
-# ./usr/share/sendmail/domain
-domain
-# ./usr/share/sendmail/domain
-..
-
-# ./usr/share/sendmail/feature
-feature
-# ./usr/share/sendmail/feature
-..
-
-# ./usr/share/sendmail/hack
-hack
-# ./usr/share/sendmail/hack
-..
-
-# ./usr/share/sendmail/m4
-m4
-# ./usr/share/sendmail/m4
-..
-
-# ./usr/share/sendmail/mailer
-mailer
-# ./usr/share/sendmail/mailer
-..
-
-# ./usr/share/sendmail/ostype
-ostype
-# ./usr/share/sendmail/ostype
-..
-
-# ./usr/share/sendmail/sh
-sh
-# ./usr/share/sendmail/sh
-..
-
-# ./usr/share/sendmail/siteconfig
-siteconfig
-# ./usr/share/sendmail/siteconfig
-..
-
-# ./usr/share/sendmail
 ..
 
 # ./usr/share/snmp
