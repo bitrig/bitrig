@@ -81,7 +81,7 @@ struct uvm {
 	struct pglist page_inactive_swp;/* pages inactive (reclaim or free) */
 	struct pglist page_inactive_obj;/* pages inactive (reclaim or free) */
 	/* Lock order: object lock,  pageqlock, then fpageqlock. */
-	simple_lock_data_t pageqlock;	/* lock for active/inactive page q */
+	struct mutex pageqlock;		/* lock for active/inactive page q */
 	struct mutex fpageqlock;	/* lock for free page q  + pdaemon */
 	boolean_t page_init_done;	/* TRUE if uvm_page_init() finished */
 	boolean_t page_idle_zero;	/* TRUE if we should try to zero
