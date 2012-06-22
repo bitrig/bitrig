@@ -48,15 +48,9 @@ extern int domainnamelen;
 
 /* 1.2 */
 extern struct timeval boottime;
-#ifndef __HAVE_TIMECOUNTER
-extern volatile struct timeval mono_time;
-extern volatile struct timeval time;
-#endif
 extern struct timezone tz;			/* XXX */
 
 extern int tick;		/* usec per tick (1000000 / hz) */
-extern int tickfix;		/* periodic tick adj. tick not integral */
-extern int tickfixinterval;	/* interval at which to apply adjustment */
 extern int tickadj;		/* "standard" clock skew, us./tick */
 extern int hz;			/* system clock's frequency */
 extern int stathz;		/* statistics clock's frequency */

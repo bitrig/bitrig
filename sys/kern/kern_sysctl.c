@@ -70,9 +70,7 @@
 #include <sys/socket.h>
 #include <sys/domain.h>
 #include <sys/protosw.h>
-#ifdef __HAVE_TIMECOUNTER
 #include <sys/timetc.h>
-#endif
 #include <sys/evcount.h>
 #include <sys/unpcb.h>
 
@@ -291,9 +289,7 @@ kern_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
 		case KERN_WATCHDOG:
 		case KERN_EMUL:
 		case KERN_EVCOUNT:
-#ifdef __HAVE_TIMECOUNTER
 		case KERN_TIMECOUNTER:
-#endif
 		case KERN_CPTIME2:
 		case KERN_FILE2:
 			break;
@@ -557,11 +553,9 @@ kern_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
 		return (evcount_sysctl(name + 1, namelen - 1, oldp, oldlenp,
 		    newp, newlen));
 #endif
-#ifdef __HAVE_TIMECOUNTER
 	case KERN_TIMECOUNTER:
 		return (sysctl_tc(name + 1, namelen - 1, oldp, oldlenp,
 		    newp, newlen));
-#endif
 	case KERN_MAXLOCKSPERUID:
 		return (sysctl_int(oldp, oldlenp, newp, newlen, &maxlocksperuid));
 	case KERN_CPTIME2:

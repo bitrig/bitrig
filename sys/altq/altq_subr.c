@@ -582,14 +582,12 @@ u_int32_t machclk_per_tick = 0;
 void
 init_machclk(void)
 {
-#if defined(__HAVE_TIMECOUNTER)
 	/*
 	 * If we have timecounters, microtime is good enough and we can
 	 * avoid problems on machines with variable cycle counter
 	 * frequencies.
 	 */
 	machclk_tc = 1;
-#endif
 
 	if (machclk_tc == 1) {
 		/* emulate 256MHz using microtime() */

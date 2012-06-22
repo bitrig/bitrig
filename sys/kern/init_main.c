@@ -494,11 +494,7 @@ main(void *framep)
 	 * from the file system.  Reset p->p_rtime as it may have been
 	 * munched in mi_switch() after the time got set.
 	 */
-#ifdef __HAVE_TIMECOUNTER
 	microtime(&boottime);
-#else
-	boottime = mono_time = time;	
-#endif
 	LIST_FOREACH(p, &allproc, p_list) {
 		p->p_p->ps_start = boottime;
 		microuptime(&p->p_cpu->ci_schedstate.spc_runtime);

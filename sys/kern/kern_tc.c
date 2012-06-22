@@ -20,7 +20,6 @@
 #include <sys/malloc.h>
 #include <dev/rndvar.h>
 
-#ifdef __HAVE_TIMECOUNTER
 /*
  * A large step happens on boot.  This constant detects such steps.
  * It is relatively small so that ntp_update_second gets called enough
@@ -639,4 +638,3 @@ tc_adjfreq(int64_t *old, int64_t *new)
 	}
 	return 0;
 }
-#endif /* __HAVE_TIMECOUNTER */
