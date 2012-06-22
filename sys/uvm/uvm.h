@@ -99,7 +99,7 @@ struct uvm {
 
 	/* static kernel map entry pool */
 	vm_map_entry_t kentry_free;	/* free page pool */
-	simple_lock_data_t kentry_lock;
+	struct mutex kentry_lock;
 
 	/* aio_done is locked by uvm.aiodoned_lock. */
 	TAILQ_HEAD(, buf) aio_done;		/* done async i/o reqs */

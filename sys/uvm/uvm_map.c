@@ -1493,7 +1493,7 @@ struct vm_map_entry *
 uvm_mapent_alloc(struct vm_map *map, int flags)
 {
 	struct vm_map_entry *me, *ne;
-	int s, i;
+	int i;
 	int pool_flags;
 
 	pool_flags = PR_WAITOK;
@@ -1501,8 +1501,7 @@ uvm_mapent_alloc(struct vm_map *map, int flags)
 		pool_flags = PR_NOWAIT;
 
 	if (map->flags & VM_MAP_INTRSAFE || cold) {
-		s = splvm();
-		simple_lock(&uvm.kentry_lock);
+		mtx_enter(&uvm.kentry_lock);
 		me = uvm.kentry_free;
 		if (me == NULL) {
 			ne = km_alloc(PAGE_SIZE, &kv_page, &kp_dirty,
@@ -1523,8 +1522,7 @@ uvm_mapent_alloc(struct vm_map *map, int flags)
 		}
 		uvm.kentry_free = RB_LEFT(me, daddrs.addr_entry);
 		uvmexp.kmapent++;
-		simple_unlock(&uvm.kentry_lock);
-		splx(s);
+		mtx_leave(&uvm.kentry_lock);
 		me->flags = UVM_MAP_STATIC;
 	} else if (map == kernel_map) {
 		splassert(IPL_NONE);
@@ -1558,16 +1556,13 @@ out:
 void
 uvm_mapent_free(struct vm_map_entry *me)
 {
-	int s;
 
 	if (me->flags & UVM_MAP_STATIC) {
-		s = splvm();
-		simple_lock(&uvm.kentry_lock);
+		mtx_enter(&uvm.kentry_lock);
 		RB_LEFT(me, daddrs.addr_entry) = uvm.kentry_free;
 		uvm.kentry_free = me;
 		uvmexp.kmapent--;
-		simple_unlock(&uvm.kentry_lock);
-		splx(s);
+		mtx_leave(&uvm.kentry_lock);
 	} else if (me->flags & UVM_MAP_KMEM) {
 		splassert(IPL_NONE);
 		pool_put(&uvm_map_entry_kmem_pool, me);
@@ -2660,7 +2655,7 @@ uvm_map_init(void)
 	 * now set up static pool of kernel map entries ...
 	 */
 
-	simple_lock_init(&uvm.kentry_lock);
+	mtx_init(&uvm.kentry_lock, IPL_VM);
 	uvm.kentry_free = NULL;
 	for (lcv = 0 ; lcv < MAX_KMAPENT ; lcv++) {
 		RB_LEFT(&kernel_map_entry[lcv], daddrs.addr_entry) =
