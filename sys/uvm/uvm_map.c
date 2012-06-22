@@ -2245,6 +2245,8 @@ uvm_map_setup(struct vm_map *map, vaddr_t min, vaddr_t max, int flags)
 	KASSERT((min & (vaddr_t)PAGE_MASK) == 0);
 	KASSERT((max & (vaddr_t)PAGE_MASK) == 0 ||
 	    (max & (vaddr_t)PAGE_MASK) == (vaddr_t)PAGE_MASK);
+	KASSERT((flags & (VM_MAP_INTRSAFE | VM_MAP_PAGEABLE)) !=
+	    (VM_MAP_INTRSAFE | VM_MAP_PAGEABLE));
 
 	/*
 	 * Update parameters.
