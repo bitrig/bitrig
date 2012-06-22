@@ -396,7 +396,7 @@ uvm_km_page_init(void)
 		if (uvm_map(kernel_map, &addr, (vsize_t)bulk << PAGE_SHIFT,
 		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(UVM_PROT_RW, UVM_PROT_RW, UVM_INH_NONE,
-		    UVM_ADV_RANDOM, UVM_KMF_TRYLOCK)) != 0) {
+		    UVM_ADV_RANDOM, UVM_FLAG_TRYLOCK)) != 0) {
 			bulk /= 2;
 			continue;
 		}
@@ -458,7 +458,7 @@ uvm_km_thread(void *arg)
 				    NULL, UVM_UNKNOWN_OFFSET, 0,
 				    UVM_MAPFLAG(UVM_PROT_RW, UVM_PROT_RW,
 				    UVM_INH_NONE, UVM_ADV_RANDOM,
-				    UVM_KMF_TRYLOCK)) != 0) {
+				    UVM_FLAG_TRYLOCK)) != 0) {
 					pg[i] = 0;
 					break;
 				}
