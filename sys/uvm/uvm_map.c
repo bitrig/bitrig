@@ -321,7 +321,9 @@ vaddr_t uvm_maxkaddr;
 #define UVM_MAP_REQ_WRITE(_map)						\
 	do {								\
 		if (((_map)->flags & VM_MAP_INTRSAFE) == 0)		\
-			rw_assert_wrlock(&(_map)->lock);		\
+			rw_assert_wrlock(&(_map)->vmm_rwlock);		\
+		else							\
+			MUTEX_ASSERT_LOCKED(&(_map)->vmm_mtx);		\
 	} while (0)
 
 /*
@@ -2061,6 +2063,7 @@ uvm_map_pageable(struct vm_map *map, vaddr_t start, vaddr_t end,
 		return EINVAL; /* why? see second XXX below */
 
 	KASSERT(map->flags & VM_MAP_PAGEABLE);
+	KASSERT((map->flags & VM_MAP_INTRSAFE) == 0);
 	if ((lockflags & UVM_LK_ENTER) == 0)
 		vm_map_lock(map);
 
@@ -2177,6 +2180,7 @@ uvm_map_pageable_all(struct vm_map *map, int flags, vsize_t limit)
 	struct vm_map_entry *iter;
 
 	KASSERT(map->flags & VM_MAP_PAGEABLE);
+	KASSERT((map->flags & VM_MAP_INTRSAFE) == 0);
 	vm_map_lock(map);
 
 	if (flags == 0) {
@@ -2269,7 +2273,10 @@ uvm_map_setup(struct vm_map *map, vaddr_t min, vaddr_t max, int flags)
 	map->s_start = map->s_end = 0; /* Empty stack area by default. */
 	map->flags = flags;
 	map->timestamp = 0;
-	rw_init(&map->lock, "vmmaplk");
+	if ((map->flags & VM_MAP_INTRSAFE) != 0)
+		mtx_init(&map->vmm_mtx, IPL_VM);
+	else
+		rw_init(&map->vmm_rwlock, "vmmaplk");
 	simple_lock_init(&map->ref_lock);
 
 	/*
@@ -2286,13 +2293,17 @@ uvm_map_setup(struct vm_map *map, vaddr_t min, vaddr_t max, int flags)
 	 * in insert code).
 	 */
 	if ((map->flags & VM_MAP_INTRSAFE) == 0) {
-		if (rw_enter(&map->lock, RW_NOSLEEP|RW_WRITE) != 0)
+		if (rw_enter(&map->vmm_rwlock, RW_NOSLEEP|RW_WRITE) != 0)
 			panic("uvm_map_setup: rw_enter failed on new map");
+	} else {
+		mtx_enter(&map->vmm_mtx);
 	}
 	uvm_map_setup_entries(map);
 	uvm_tree_sanity(map, __FILE__, __LINE__);
 	if ((map->flags & VM_MAP_INTRSAFE) == 0)
-		rw_exit(&map->lock);
+		rw_exit(&map->vmm_rwlock);
+	else
+		mtx_leave(&map->vmm_mtx);
 }
 
 /*
@@ -2311,8 +2322,12 @@ uvm_map_teardown(struct vm_map *map)
 #endif
 
 	if ((map->flags & VM_MAP_INTRSAFE) == 0) {
-		if (rw_enter(&map->lock, RW_NOSLEEP | RW_WRITE) != 0)
+		if (rw_enter(&map->vmm_rwlock, RW_NOSLEEP | RW_WRITE) != 0)
 			panic("uvm_map_teardown: rw_enter failed on free map");
+	} else {
+		if (mtx_enter_try(&map->vmm_mtx) != 0)
+			panic("uvm_map_teardown: failed to grab mtx on "
+			    "free map");
 	}
 
 	/*
@@ -2358,7 +2373,9 @@ uvm_map_teardown(struct vm_map *map)
 	}
 
 	if ((map->flags & VM_MAP_INTRSAFE) == 0)
-		rw_exit(&map->lock);
+		rw_exit(&map->vmm_rwlock);
+	else
+		mtx_leave(&map->vmm_mtx);
 
 #ifdef VMMAP_DEBUG
 	numt = numq = 0;
@@ -4909,12 +4926,12 @@ vm_map_lock_try_ln(struct vm_map *map, char *file, int line)
 	boolean_t rv;
 
 	if (map->flags & VM_MAP_INTRSAFE) {
-		rv = TRUE;
+		rv = mtx_enter_try(&map->vmm_mtx);
 	} else {
 		if (map->flags & VM_MAP_BUSY) {
 			return (FALSE);
 		}
-		rv = (rw_enter(&map->lock, RW_WRITE|RW_NOSLEEP) == 0);
+		rv = (rw_enter(&map->vmm_rwlock, RW_WRITE|RW_NOSLEEP) == 0);
 	}
 
 	if (rv) {
@@ -4930,15 +4947,19 @@ vm_map_lock_try_ln(struct vm_map *map, char *file, int line)
 void
 vm_map_lock_ln(struct vm_map *map, char *file, int line)
 {
-	if ((map->flags & VM_MAP_INTRSAFE) == 0) {
-		do {
-			while (map->flags & VM_MAP_BUSY) {
-				map->flags |= VM_MAP_WANTLOCK;
-				tsleep(&map->flags, PVM, (char *)vmmapbsy, 0);
-			}
-		} while (rw_enter(&map->lock, RW_WRITE|RW_SLEEPFAIL) != 0);
+	if ((map->flags & VM_MAP_INTRSAFE) != 0) {
+		mtx_enter(&map->vmm_mtx);
+		goto out;
 	}
 
+	do {
+		while (map->flags & VM_MAP_BUSY) {
+			map->flags |= VM_MAP_WANTLOCK;
+			tsleep(&map->flags, PVM, (char *)vmmapbsy, 0);
+		}
+	} while (rw_enter(&map->vmm_rwlock, RW_WRITE | RW_SLEEPFAIL) != 0);
+
+out:
 	map->timestamp++;
 	LPRINTF(("map   lock: %p (at %s %d)\n", map, file, line));
 	uvm_tree_sanity(map, file, line);
@@ -4948,8 +4969,11 @@ vm_map_lock_ln(struct vm_map *map, char *file, int line)
 void
 vm_map_lock_read_ln(struct vm_map *map, char *file, int line)
 {
-	if ((map->flags & VM_MAP_INTRSAFE) == 0)
-		rw_enter_read(&map->lock);
+	if ((map->flags & VM_MAP_INTRSAFE) == 0) {
+		rw_enter_read(&map->vmm_rwlock);
+	} else {
+		mtx_enter(&map->vmm_mtx);
+	}
 	LPRINTF(("map   lock: %p (at %s %d)\n", map, file, line));
 	uvm_tree_sanity(map, file, line);
 	uvm_tree_size_chk(map, file, line);
@@ -4961,8 +4985,11 @@ vm_map_unlock_ln(struct vm_map *map, char *file, int line)
 	uvm_tree_sanity(map, file, line);
 	uvm_tree_size_chk(map, file, line);
 	LPRINTF(("map unlock: %p (at %s %d)\n", map, file, line));
-	if ((map->flags & VM_MAP_INTRSAFE) == 0)
-		rw_exit(&map->lock);
+	if ((map->flags & VM_MAP_INTRSAFE) == 0) {
+		rw_exit(&map->vmm_rwlock);
+	} else {
+		mtx_leave(&map->vmm_mtx);
+	}
 }
 
 void
@@ -4971,8 +4998,11 @@ vm_map_unlock_read_ln(struct vm_map *map, char *file, int line)
 	/* XXX: RO */ uvm_tree_sanity(map, file, line);
 	/* XXX: RO */ uvm_tree_size_chk(map, file, line);
 	LPRINTF(("map unlock: %p (at %s %d)\n", map, file, line));
-	if ((map->flags & VM_MAP_INTRSAFE) == 0)
-		rw_exit_read(&map->lock);
+	if ((map->flags & VM_MAP_INTRSAFE) == 0) {
+		rw_exit_read(&map->vmm_rwlock);
+	} else {
+		mtx_leave(&map->vmm_mtx);
+	}
 }
 
 void
@@ -4982,8 +5012,10 @@ vm_map_downgrade_ln(struct vm_map *map, char *file, int line)
 	uvm_tree_size_chk(map, file, line);
 	LPRINTF(("map unlock: %p (at %s %d)\n", map, file, line));
 	LPRINTF(("map   lock: %p (at %s %d)\n", map, file, line));
-	if ((map->flags & VM_MAP_INTRSAFE) == 0)
-		rw_enter(&map->lock, RW_DOWNGRADE);
+	KASSERT((map->flags & VM_MAP_INTRSAFE) == 0);
+	if ((map->flags & VM_MAP_INTRSAFE) == 0) {
+		rw_enter(&map->vmm_rwlock, RW_DOWNGRADE);
+	}
 }
 
 void
@@ -4992,9 +5024,10 @@ vm_map_upgrade_ln(struct vm_map *map, char *file, int line)
 	/* XXX: RO */ uvm_tree_sanity(map, file, line);
 	/* XXX: RO */ uvm_tree_size_chk(map, file, line);
 	LPRINTF(("map unlock: %p (at %s %d)\n", map, file, line));
+	KASSERT((map->flags & VM_MAP_INTRSAFE) == 0);
 	if ((map->flags & VM_MAP_INTRSAFE) == 0) {
-		rw_exit_read(&map->lock);
-		rw_enter_write(&map->lock);
+		rw_exit_read(&map->vmm_rwlock);
+		rw_enter_write(&map->vmm_rwlock);
 	}
 	LPRINTF(("map   lock: %p (at %s %d)\n", map, file, line));
 	uvm_tree_sanity(map, file, line);
@@ -5003,6 +5036,7 @@ vm_map_upgrade_ln(struct vm_map *map, char *file, int line)
 void
 vm_map_busy_ln(struct vm_map *map, char *file, int line)
 {
+	KASSERT((map->flags & VM_MAP_INTRSAFE) == 0);
 	map->flags |= VM_MAP_BUSY;
 }
 
@@ -5011,6 +5045,7 @@ vm_map_unbusy_ln(struct vm_map *map, char *file, int line)
 {
 	int oflags;
 
+	KASSERT((map->flags & VM_MAP_INTRSAFE) == 0);
 	oflags = map->flags;
 	map->flags &= ~(VM_MAP_BUSY|VM_MAP_WANTLOCK);
 	if (oflags & VM_MAP_WANTLOCK)

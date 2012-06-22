@@ -291,7 +291,12 @@ RB_PROTOTYPE(uvm_map_addr, vm_map_entry, daddrs.addr_entry,
  */
 struct vm_map {
 	struct pmap *		pmap;		/* Physical map */
-	struct rwlock		lock;		/* Lock for map data */
+	union {
+		struct rwlock	rw;		/* !intrsafe maps */
+		struct mutex	mtx;		/* intrsafe maps */
+	}			vmm_lock;
+#define vmm_rwlock		vmm_lock.rw
+#define vmm_mtx			vmm_lock.mtx
 
 	struct uvm_map_addr	addr;		/* Entry tree, by addr */
 
