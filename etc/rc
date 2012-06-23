@@ -180,7 +180,17 @@ make_keys()
 		cp /etc/isakmpd/local.pub /etc/iked/local.pub
 	fi
 
-	ssh-keygen -A
+	if [ ! -f /etc/ssh/ssh_host_rsa_key ]; then
+		echo "ssh-keygen: generating 4096-bit RSA host key... "
+		ssh-keygen -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key -P "" \
+			>/dev/null 2>&1
+	fi
+
+	if [ ! -f /etc/ssh/ssh_host_ecdsa_key ]; then
+		echo "ssh-keygen: generating 521-bit ECDSA host key... "
+		ssh-keygen -t ecdsa -b 521 -f /etc/ssh/ssh_host_ecdsa_key -P "" \
+			>/dev/null 2>&1
+	fi
 }
 
 # create Unix sockets directories for X if needed and make sure they have
