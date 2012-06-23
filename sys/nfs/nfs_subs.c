@@ -1435,7 +1435,6 @@ nfsrv_fhtovp(fhandle_t *fhp, int lockflag, struct vnode **vpp,
     struct ucred *cred, struct nfssvc_sock *slp, struct mbuf *nam,
     int *rdonlyp)
 {
-	struct proc *p = curproc;	/* XXX */
 	struct mount *mp;
 	int i;
 	struct ucred *credanon;
