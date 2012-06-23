@@ -135,7 +135,7 @@ _C_LABEL(Xintr_##name##num):						;\
 	jz	5f			/* no, skip it */		;\
 	addl	$1,IH_COUNT(%ebx)	/* count the intrs */		;\
 	adcl	$0,IH_COUNT+4(%ebx)					;\
-	cmp	$0,_C_LABEL(intr_shared_edge)				;\
+	cmpl	$0,_C_LABEL(intr_shared_edge)				;\
 	jne	5f			 /* if no shared edges ... */	;\
 	orl	%eax,%eax		/* ... 1 means stop trying */	;\
 	jns	8f							;\

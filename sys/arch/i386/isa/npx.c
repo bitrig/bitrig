@@ -688,7 +688,7 @@ npxdna_xmm(struct cpu_info *ci)
 		 * thus leaking other process's execution history.
 		 */
 		fnclex();
-		__asm __volatile("ffree %%st(7)\n\tfld %0" : : "m" (zero));
+		__asm __volatile("ffree %%st(7)\n\tfldl %0" : : "m" (zero));
 		fxrstor(&sfp->sv_xmm);
 	}
 
