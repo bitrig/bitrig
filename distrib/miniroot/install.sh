@@ -53,7 +53,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-#	OpenBSD installation script.
+#	Bitrig installation script.
 #	In a perfect world, this would be a nice C program, with a reasonable
 #	user interface.
 

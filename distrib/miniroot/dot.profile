@@ -35,7 +35,7 @@
 export VNAME=$(sysctl -n kern.osrelease)
 export VERSION="${VNAME%.*}${VNAME#*.}"
 export ARCH=$(sysctl -n hw.machine)
-export OBSD="OpenBSD/$ARCH $VNAME"
+export BR="Bitrig/$ARCH $VNAME"
 
 export PATH=/sbin:/bin:/usr/bin:/usr/sbin:/
 umask 022
@@ -62,7 +62,7 @@ if [ "X${DONEPROFILE}" = "X" ]; then
 	# Installing or upgrading?
 	cat <<__EOT
 
-Welcome to the $OBSD installation program.
+Welcome to the $BR installation program.
 __EOT
 	while :; do
 		read REPLY?'(I)nstall, (U)pgrade or (S)hell? '

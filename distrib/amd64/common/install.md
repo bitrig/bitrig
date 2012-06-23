@@ -42,7 +42,7 @@ md_installboot() {
 	cp /usr/mdec/boot /mnt/boot
 	if ! /usr/mdec/installboot /mnt/boot /usr/mdec/biosboot ${1} ; then
 		echo "\nFailed to install bootblocks."
-		echo "You will not be able to boot OpenBSD from ${1}."
+		echo "You will not be able to boot Bitrig from ${1}."
 		exit
 	fi
 }
@@ -55,8 +55,8 @@ md_prep_fdisk() {
 		if [[ -n $(fdisk $_disk | grep 'Signature: 0xAA55') ]]; then
 			fdisk $_disk
 			if [[ -n $(fdisk $_disk | grep '^..: A6 ') ]]; then
-				_q=", use the (O)penBSD area,"
-				_d=OpenBSD
+				_q=", use the (B)itrig area,"
+				_d=Bitrig
 			fi
 		else
 			echo "MBR has invalid signature; not showing it."
@@ -64,7 +64,7 @@ md_prep_fdisk() {
 		ask "Use (W)hole disk$_q or (E)dit the MBR?" "$_d"
 		case $resp in
 		w*|W*)
-			echo -n "Setting OpenBSD MBR partition to whole $_disk..."
+			echo -n "Setting Bitrig MBR partition to whole $_disk..."
 			fdisk -e ${_disk} <<__EOT >/dev/null
 reinit
 update
@@ -77,7 +77,7 @@ __EOT
 			# Manually configure the MBR.
 			cat <<__EOT
 
-You will now create a single MBR partition to contain your OpenBSD data. This
+You will now create a single MBR partition to contain your Bitrig data. This
 partition must have an id of 'A6'; must *NOT* overlap other partitions; and
 must be marked as the only active partition.  Inside the fdisk command, the
 'manual' command describes all the fdisk commands in detail.
@@ -86,8 +86,8 @@ $(fdisk ${_disk})
 __EOT
 			fdisk -e ${_disk}
 			[[ -n $(fdisk $_disk | grep ' A6 ') ]] && return
-			echo No OpenBSD partition in MBR, try again. ;;
-		o*|O*)	return ;;
+			echo No Bitrig partition in MBR, try again. ;;
+		b*|B*)	return ;;
 		esac
 	done
 }
@@ -117,13 +117,13 @@ md_prep_disklabel() {
 
 	cat <<__EOT
 
-You will now create an OpenBSD disklabel inside the OpenBSD MBR
-partition. The disklabel defines how OpenBSD splits up the MBR partition
-into OpenBSD partitions in which filesystems and swap space are created.
+You will now create a Bitrig disklabel inside the Bitrig MBR
+partition. The disklabel defines how Bitrig splits up the MBR partition
+into Bitrig partitions in which filesystems and swap space are created.
 You must provide each filesystem's mountpoint in this program.
 
 The offsets used in the disklabel are ABSOLUTE, i.e. relative to the
-start of the disk, NOT the start of the OpenBSD MBR partition.
+start of the disk, NOT the start of the Bitrig MBR partition.
 
 __EOT
 

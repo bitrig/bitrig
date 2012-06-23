@@ -52,13 +52,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-# OpenBSD install/upgrade script common subroutines and initialization code
+# Bitrig install/upgrade script common subroutines and initialization code
 
 # Include machine-dependent functions and definitions.
 #
 # The following functions must be provided:
 #	md_installboot()	  - install boot-blocks on disk
-#	md_prep_disklabel()	  - put an OpenBSD disklabel on the disk
+#	md_prep_disklabel()	  - put a Bitrig disklabel on the disk
 #	md_consoleinfo()	  - set CDEV, CTTY, CSPEED, CPROM
 #
 # The following variables can be provided if required:
@@ -1107,7 +1107,7 @@ install_files() {
 		# Show $_src, but delete any ftp password.
 		echo -n "Looked at "
 		echo $_src | sed -e 's/\(^ftp:\/\/[^/]*\)\(:[^/]*\)\(@.*\)/\1\3/'
-		echo "and found no $OBSD sets.  The set names looked for were:"
+		echo "and found no $BR sets.  The set names looked for were:"
 
 		let COLUMNS=_col-8
 		for _n in $THESETS; do echo $_n; done | showcols | sed 's/^/    /'
