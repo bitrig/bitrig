@@ -28,10 +28,11 @@
 #include <ddb/db_output.h>
 
 void
-__mp_lock_init(struct __mp_lock *lock)
+__mp_lock_init(struct __mp_lock *mpl)
 {
-	lock->mpl_cpu = NULL;
-	lock->mpl_count = 0;
+	bzero(mpl->mpl_cpus, sizeof(mpl->mpl_cpus));
+	mpl->mpl_users = 0;
+	mpl->mpl_ticket = 0;
 }
 
 #if defined(MP_LOCKDEBUG)
@@ -44,62 +45,42 @@ extern int __mp_lock_spinout;
 #endif
 
 static __inline void
-__mp_lock_spin(struct __mp_lock *mpl)
+__mp_lock_spin(struct __mp_lock *mpl, u_int me)
 {
-#ifndef MP_LOCKDEBUG
-	while (mpl->mpl_count != 0)
+	while (mpl->mpl_ticket != me)
 		SPINLOCK_SPIN_HOOK;
-#else
-	int ticks = __mp_lock_spinout;
+}
 
-	while (mpl->mpl_count != 0 && ticks-- > 0)
-		SPINLOCK_SPIN_HOOK;
+static inline u_int
+fetch_and_add(u_int *var, u_int value)
+{
+	asm volatile("lock; xaddl %%eax, %2;"
+	    : "=a" (value)
+	    : "a" (value), "m" (*var)
+	    : "memory");
 
-	if (ticks == 0) {
-		db_printf("__mp_lock(0x%x): lock spun out", mpl);
-		Debugger();
-	}
-#endif
+        return (value);
 }
 
 void
 __mp_lock(struct __mp_lock *mpl)
 {
-	/*
-	 * Please notice that mpl_count gets incremented twice for the
-	 * first lock. This is on purpose. The way we release the lock
-	 * in mp_unlock is to decrement the mpl_count and then check if
-	 * the lock should be released. Since mpl_count is what we're
-	 * spinning on, decrementing it in mpl_unlock to 0 means that
-	 * we can't clear mpl_cpu, because we're no longer holding the
-	 * lock. In theory mpl_cpu doesn't need to be cleared, but it's
-	 * safer to clear it and besides, setting mpl_count to 2 on the
-	 * first lock makes most of this code much simpler.
-	 */
+	long rf = read_rflags();
+	struct __mp_lock_cpu *cpu = &mpl->mpl_cpus[cpu_number()];
 
-	while (1) {
-		long rf = read_rflags();
+	disable_intr();
+	if (cpu->mplc_depth++ == 0)
+		cpu->mplc_ticket = fetch_and_add(&mpl->mpl_users, 1);
+	write_rflags(rf);
 
-		disable_intr();
-		if (x86_atomic_cas_ul(&mpl->mpl_count, 0, 1) == 0) {
-			mpl->mpl_cpu = curcpu();
-		}
-
-		if (mpl->mpl_cpu == curcpu()) {
-			mpl->mpl_count++;
-			write_rflags(rf);
-			break;
-		}
-		write_rflags(rf);
-
-		__mp_lock_spin(mpl);
-	}
+	__mp_lock_spin(mpl, cpu->mplc_ticket);
 }
 
 void
 __mp_unlock(struct __mp_lock *mpl)
 {
 	long rf = read_rflags();
+	struct __mp_lock_cpu *cpu = &mpl->mpl_cpus[cpu_number()];
 
 #ifdef MP_LOCKDEBUG
 	if (mpl->mpl_cpu != curcpu()) {
@@ -109,29 +90,21 @@ __mp_unlock(struct __mp_lock *mpl)
 #endif
 
 	disable_intr();	
-	if (--mpl->mpl_count == 1) {
-		mpl->mpl_cpu = NULL;
-		mpl->mpl_count = 0;
-	}
+	if (--cpu->mplc_depth == 0)
+		mpl->mpl_ticket++;
 	write_rflags(rf);
 }
 
 int
 __mp_release_all(struct __mp_lock *mpl)
 {
-	int rv = mpl->mpl_count - 1;
+	struct __mp_lock_cpu *cpu = &mpl->mpl_cpus[cpu_number()];
+	int rv = cpu->mplc_depth;
 	long rf = read_rflags();
 
-#ifdef MP_LOCKDEBUG
-	if (mpl->mpl_cpu != curcpu()) {
-		db_printf("__mp_release_all(%p): not held lock\n", mpl);
-		Debugger();
-	}
-#endif
-
 	disable_intr();
-	mpl->mpl_cpu = NULL;
-	mpl->mpl_count = 0;
+	cpu->mplc_depth = 0;
+	mpl->mpl_ticket++;
 	write_rflags(rf);
 
 	return (rv);
@@ -140,7 +113,8 @@ __mp_release_all(struct __mp_lock *mpl)
 int
 __mp_release_all_but_one(struct __mp_lock *mpl)
 {
-	int rv = mpl->mpl_count - 2;
+	struct __mp_lock_cpu *cpu = &mpl->mpl_cpus[cpu_number()];
+	int rv = cpu->mplc_depth - 1;
 
 #ifdef MP_LOCKDEBUG
 	if (mpl->mpl_cpu != curcpu()) {
@@ -149,7 +123,7 @@ __mp_release_all_but_one(struct __mp_lock *mpl)
 	}
 #endif
 
-	mpl->mpl_count = 2;
+	cpu->mplc_depth = 1;
 
 	return (rv);
 }
@@ -164,6 +138,8 @@ __mp_acquire_count(struct __mp_lock *mpl, int count)
 int
 __mp_lock_held(struct __mp_lock *mpl)
 {
-	return mpl->mpl_cpu == curcpu();
+	struct __mp_lock_cpu *cpu = &mpl->mpl_cpus[cpu_number()];
+
+	return (cpu->mplc_ticket == mpl->mpl_ticket && cpu->mplc_depth > 0);
 }
 
