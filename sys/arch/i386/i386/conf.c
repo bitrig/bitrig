@@ -45,9 +45,6 @@
 
 #include "wd.h"
 bdev_decl(wd);
-#include "fdc.h"
-#include "fd.h"
-bdev_decl(fd);
 #include "sd.h"
 #include "st.h"
 #include "cd.h"
@@ -59,7 +56,7 @@ struct bdevsw	bdevsw[] =
 {
 	bdev_disk_init(NWD,wd),		/* 0: ST506/ESDI/IDE disk */
 	bdev_swap_init(1,sw),		/* 1: swap pseudo-device */
-	bdev_disk_init(NFD,fd),		/* 2: floppy diskette */
+	bdev_notdef(),			/* 2: was floppy diskette */
 	bdev_notdef(),			/* 3 */
 	bdev_disk_init(NSD,sd),		/* 4: SCSI disk */
 	bdev_tape_init(NST,st),		/* 5: SCSI tape */
@@ -117,7 +114,6 @@ cdev_decl(wd);
 #include "pty.h"
 #include "com.h"
 cdev_decl(com);
-cdev_decl(fd);
 #include "lpt.h"
 cdev_decl(lpt);
 #include "ch.h"
@@ -197,7 +193,7 @@ struct cdevsw	cdevsw[] =
 	cdev_ptc_init(NPTY,ptc),	/* 6: pseudo-tty master */
 	cdev_log_init(1,log),		/* 7: /dev/klog */
 	cdev_tty_init(NCOM,com),	/* 8: serial port */
-	cdev_disk_init(NFD,fd),		/* 9: floppy disk */
+	cdev_notdef(),			/* 9: was floppy disk */
 	cdev_notdef(),			/* 10 */
 	cdev_notdef(),			/* 11 */
 	cdev_wsdisplay_init(NWSDISPLAY,	/* 12: frame buffers, etc. */
@@ -345,7 +341,7 @@ int chrtoblktbl[] = {
 	/*  6 */	NODEV,
 	/*  7 */	NODEV,
 	/*  8 */	NODEV,
-	/*  9 */	2,		/* fd */
+	/*  9 */	NODEV,		/* was fd */
 	/* 10 */	3,
 	/* 11 */	NODEV,
 	/* 12 */	NODEV,

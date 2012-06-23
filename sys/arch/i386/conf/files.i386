@@ -210,17 +210,6 @@ file	arch/i386/isa/mms.c		mms needs-flag
 include	"dev/wscons/files.wscons"
 include	"dev/pckbc/files.pckbc"
 
-# Floppy disk controller
-# XXX temporarily conflicts with arc, will soon move to files.isa
-device	fdc {[drive = -1]}
-attach	fdc at isa
-file	dev/isa/fdc.c		fdc needs-flag
-
-device	fd: disk, isa_dma
-attach	fd at fdc
-file	dev/isa/fd.c		fd needs-flag
-major	{fd = 2}
-
 # Adaptec AHA-284x VL SCSI controllers
 # device declaration in sys/conf/files
 attach	ahc at isa with ahc_isa

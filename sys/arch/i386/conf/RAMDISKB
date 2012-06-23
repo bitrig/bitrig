@@ -166,10 +166,6 @@ cd*	at scsibus?		# SCSI CD-ROM drives
 #ch*	at scsibus?		# SCSI autochangers
 #uk*	at scsibus?		# SCSI unknown devices
 
-fdc0	at isa? port 0x3f0 irq 6 drq 2	# standard PC floppy controllers
-#fdc1	at isa? port 0x370
-fd*	at fdc?
-
 # IDE controllers
 pciide* at pci? flags 0x0000
 
