@@ -1666,7 +1666,7 @@ amd64_pa_used(paddr_t addr)
 		return 1;
 
 	/* Low memory used for various bootstrap things */
-	if (addr >= 0 && addr < avail_start)
+	if (addr < avail_start)
 		return 1;
 
 	/*
