@@ -66,7 +66,7 @@ struct inteldrm_ring {
 	bus_space_handle_t	 bsh;
 	bus_size_t		 size;
 	u_int32_t		 head;
-	u_int32_t		 space;
+	int32_t		 	 space;
 	u_int32_t		 tail;
 	u_int32_t		 woffset;
 };
