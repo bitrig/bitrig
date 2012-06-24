@@ -513,7 +513,7 @@ sys_semop(struct proc *p, void *v, register_t *retval)
 	struct sem *semptr = NULL;
 	struct sem_undo *suptr = NULL;
 	struct ucred *cred = p->p_ucred;
-	size_t i, j;
+	ssize_t i, j;
 	int do_wakeup, do_undos, error;
 
 	DPRINTF(("call to semop(%d, %p, %lu)\n", semid, SCARG(uap, sops),
