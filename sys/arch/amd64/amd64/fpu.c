@@ -145,7 +145,7 @@ fputrap(struct trapframe *frame)
 	fxsave(sfp);
 	if (frame->tf_trapno == T_XMM) {
 		mxcsr = sfp->fp_fxsave.fx_mxcsr;
-	  	statbits = mxcsr;
+		statbits = mxcsr;
 		mxcsr &= ~0x3f;
 		ldmxcsr(&mxcsr);
 	} else {
@@ -262,7 +262,7 @@ fpudna(struct cpu_info *ci)
 		 * thus leaking other process's execution history.
 		 */
 		fnclex();
-		__asm __volatile("ffree %%st(7)\n\tfld %0" : : "m" (zero));
+		__asm __volatile("ffree %%st(7)\n\tfldt %0" : : "m" (zero));
 		fxrstor(sfp);
 	}
 }
