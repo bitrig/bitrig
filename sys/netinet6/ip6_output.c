@@ -2381,7 +2381,7 @@ ip6_setmoptions(int optname, struct ip6_moptions **im6op, struct mbuf *m)
 		if (ifindex == 0)
 			ifp = NULL;
 		else {
-			if (ifindex < 0 || if_indexlim <= ifindex ||
+			if (if_indexlim <= ifindex ||
 			    !ifindex2ifnet[ifindex]) {
 				error = ENXIO;	/* XXX EINVAL? */
 				break;
@@ -2485,8 +2485,7 @@ ip6_setmoptions(int optname, struct ip6_moptions **im6op, struct mbuf *m)
 			/*
 			 * If the interface is specified, validate it.
 			 */
-			if (mreq->ipv6mr_interface < 0 ||
-			    if_indexlim <= mreq->ipv6mr_interface ||
+			if (if_indexlim <= mreq->ipv6mr_interface ||
 			    !ifindex2ifnet[mreq->ipv6mr_interface]) {
 				error = ENXIO;	/* XXX EINVAL? */
 				break;
@@ -2559,8 +2558,7 @@ ip6_setmoptions(int optname, struct ip6_moptions **im6op, struct mbuf *m)
 		if (mreq->ipv6mr_interface == 0)
 			ifp = NULL;
 		else {
-			if (mreq->ipv6mr_interface < 0 ||
-			    if_indexlim <= mreq->ipv6mr_interface ||
+			if (if_indexlim <= mreq->ipv6mr_interface ||
 			    !ifindex2ifnet[mreq->ipv6mr_interface]) {
 				error = ENXIO;	/* XXX EINVAL? */
 				break;
@@ -2829,8 +2827,7 @@ ip6_setpktopt(int optname, u_char *buf, int len, struct ip6_pktopts *opt,
 		}
 
 		/* validate the interface index if specified. */
-		if (pktinfo->ipi6_ifindex >= if_indexlim ||
-		    pktinfo->ipi6_ifindex < 0) {
+		if (pktinfo->ipi6_ifindex >= if_indexlim) {
 			 return (ENXIO);
 		}
 		if (pktinfo->ipi6_ifindex) {
@@ -2922,8 +2919,7 @@ ip6_setpktopt(int optname, u_char *buf, int len, struct ip6_pktopts *opt,
 				return (EINVAL);
 			}
 			if (IN6_IS_SCOPE_EMBED(&sa6->sin6_addr)) {
-				if (sa6->sin6_scope_id < 0 ||
-				    if_indexlim <= sa6->sin6_scope_id ||
+				if (if_indexlim <= sa6->sin6_scope_id ||
 				    !ifindex2ifnet[sa6->sin6_scope_id])
 					return (EINVAL);
 				sa6->sin6_addr.s6_addr16[1] =
