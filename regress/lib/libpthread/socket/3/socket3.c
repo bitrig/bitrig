@@ -51,7 +51,7 @@ sock_accept(void *arg)
 	struct sockaddr_in sa;
 	struct sockaddr accept_sa;
 	int accept_fd;
-	int accept_sa_size;
+	socklen_t accept_sa_size;
 	int flags;
 	int listen_fd;
 	int port;

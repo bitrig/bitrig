@@ -46,7 +46,8 @@ waiting_read(void *arg)
 	int fd = *(int *)arg;
 	struct sockaddr remote_addr;
 	char readBuf;
-	int n, remote_addr_len = sizeof(struct sockaddr);
+	int n;
+	socklen_t remote_addr_len = sizeof(struct sockaddr);
 
 	n = recvfrom(fd, &readBuf, 1, 0, &remote_addr, &remote_addr_len);
 

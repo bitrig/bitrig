@@ -116,7 +116,8 @@ sock_accept(void *arg)
 {
 	pthread_t thread;
 	struct sockaddr a_sin;
-	int a_sin_size, a_fd, fd;
+	socklen_t a_sin_size;
+	int a_fd, fd;
 	short port;
 	char buf[1024];
 

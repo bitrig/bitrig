@@ -16,6 +16,8 @@
 
 #define LARGE_SIZE	(1024 * 1024)
 
+void	*identity(void*);
+
 /* thread main for testing a large buffer on the stack */
 void *
 tmain1(void *arg)
@@ -23,7 +25,7 @@ tmain1(void *arg)
 	char buf[LARGE_SIZE];
 
 	memset(buf, 0xd0, sizeof(buf));
-	return (buf + LARGE_SIZE/2);
+	return identity(buf + LARGE_SIZE/2);
 }
 
 /*
@@ -139,4 +141,17 @@ main(void)
 	memset(addr, 0xd0, size);
 
 	return (0);
+}
+
+/*
+ * This function tricks the compiler in not detecting that the pointer
+ * is actually located on the stack.
+ *
+ * Since the pointer is used to figure out if the thread is working
+ * correct, we want to have the stack address here.
+ */
+void*
+identity(void *v)
+{
+	return v;
 }

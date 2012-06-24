@@ -93,7 +93,8 @@ sock_accept(void *arg)
 {
 	pthread_t thread, wthread;
 	struct sockaddr a_sin;
-	int a_sin_size, a_fd, fd;
+	socklen_t a_sin_size;
+	int a_fd, fd;
 	u_int16_t port;
 	char buf[1024];
 	pid_t pid;

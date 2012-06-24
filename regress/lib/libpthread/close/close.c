@@ -72,9 +72,9 @@ discard(int s)
 static void
 server(void)
 {
-	int	sock;
-	int	client;
-	int	client_addr_len;
+	int			sock;
+	int			client;
+	socklen_t		client_addr_len;
 	struct sockaddr_in	serv_addr;
 	struct sockaddr		client_addr;
 

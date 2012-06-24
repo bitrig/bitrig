@@ -90,7 +90,6 @@ main(int argc, char *argv[])
 	long i;
 
 	/* Getopt variables. */
-	extern int optind, opterr;
 	extern char *optarg;
 
 	while ((ch = getopt(argc, argv, "c:?")) != -1)
