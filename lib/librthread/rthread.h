@@ -29,7 +29,6 @@
 #include <semaphore.h>
 #include <machine/spinlock.h>
 #include <machine/tcb.h>		/* for TLS_VARIANT */
-#include <rthread_md.h>
 
 #ifdef __LP64__
 #define RTHREAD_STACK_SIZE_DEF (512 * 1024)

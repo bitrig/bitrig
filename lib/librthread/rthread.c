@@ -20,9 +20,7 @@
  * threads.
  */
 
-#include <sys/param.h>
 #include <sys/types.h>
-#include <sys/sysctl.h>
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -37,10 +35,6 @@
 #include "thread_private.h"	/* in libc/include */
 #include "rthread.h"
 #include "tcb.h"
-
-#ifndef MD_SPINCOUNT_MP
-#define MD_SPINCOUNT_MP	1024	/* # spins on cpu before yielding, for smp. */
-#endif
 
 static int concurrency_level;	/* not used */
 
@@ -71,60 +65,21 @@ struct pthread_attr _rthread_attr_default = {
 #endif
 };
 
-static int
-num_cpus()
-{
-	static int	cpus = 0;
-	int		mib[] = { CTL_HW, HW_NCPU }; /* hw.ncpu */
-	int		sysctl_hw_ncpu;
-	size_t		len;
-
-	/* cpus is initialized once below. */
-	if (__predict_true(cpus != 0))
-		return cpus;
-
-	/*
-	 * Initialization.
-	 * Running multiple times results in the same value being set multiple
-	 * times.
-	 * Note: we assume cpus don't get created/destroyed during operation.
-	 */
-	len = sizeof(sysctl_hw_ncpu);
-	if (sysctl(mib, nitems(mib), &sysctl_hw_ncpu, &len, NULL, 0) == -1)
-		cpus = 1;	/* Failure, assume single proc. */
-	else
-		cpus = sysctl_hw_ncpu;
-	return cpus;
-}
-
 /*
  * internal support functions
  */
 void
 _spinlock(_spinlock_lock_t *lock)
 {
-	extern int	__is_threaded;
-	int		spincount, spincount_max;
 
-	if (__is_threaded && num_cpus() > 1)
-		spincount_max = MD_SPINCOUNT_MP;
-	else
-		spincount_max = 1;
-
-attempt_lock:
-	while (_atomic_lock(lock)) {
-		for (spincount = 0; spincount < spincount_max; spincount++) {
-			if (*lock == _SPINLOCK_UNLOCKED)
-				goto attempt_lock;
-			CPU_SPINWAIT;
-		}
+	while (_atomic_lock(lock))
 		sched_yield();
-	}
 }
 
 void
 _spinunlock(_spinlock_lock_t *lock)
 {
+
 	*lock = _SPINLOCK_UNLOCKED;
 }
 
