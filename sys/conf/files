@@ -588,7 +588,6 @@ file dev/audio.c			audio			needs-flag
 file dev/cons.c
 file dev/diskmap.c
 file dev/firmload.c			firmload
-file dev/flash.c			flash			needs-flag
 file dev/ic/ncr5380sbc.c		ncr5380sbc
 file dev/ic/ncr53c7xx.c			ncr53c7xx
 file dev/ic/pdq.c			pdq
