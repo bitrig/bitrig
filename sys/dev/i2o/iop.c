@@ -2409,8 +2409,7 @@ iop_passthrough(struct iop_softc *sc, struct ioppt *pt)
 	    pt->pt_msglen > (letoh16(sc->sc_status.inboundmframesize) << 2) ||
 	    pt->pt_msglen < sizeof(struct i2o_msg) ||
 	    pt->pt_nbufs > IOP_MAX_MSG_XFERS ||
-	    pt->pt_nbufs < 0 || pt->pt_replylen < 0 ||
-            pt->pt_timo < 1000 || pt->pt_timo > 5*60*1000)
+	    pt->pt_timo < 1000 || pt->pt_timo > 5*60*1000)
 		return (EINVAL);
 
 	for (i = 0; i < pt->pt_nbufs; i++)
