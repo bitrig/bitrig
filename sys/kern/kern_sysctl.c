@@ -1236,12 +1236,14 @@ sysctl_file2(int *name, u_int namelen, char *where, size_t *sizep,
 	buflen = where != NULL ? *sizep : 0;
 	op = name[0];
 	arg = name[1];
+
+	/* Sanity check before we nuke the signedness *sigh* */
+	if (name[2] < 1 || name[3] < 0)
+		return (EINVAL);
+
 	elem_size = name[2];
 	elem_count = name[3];
 	outsize = MIN(sizeof(*kf), elem_size);
-
-	if (elem_size < 1 || elem_count < 0)
-		return (EINVAL);
 
 	kf = malloc(sizeof(*kf), M_TEMP, M_WAITOK);
 
