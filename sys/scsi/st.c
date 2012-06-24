@@ -1987,7 +1987,7 @@ st_interpret_sense(struct scsi_xfer *xs)
 			xs->resid *= st->blksize;
 			datalen /= st->blksize;
 		}
-		if (xs->resid < 0 || xs->resid > xs->datalen)
+		if (xs->resid > xs->datalen)
 			xs->resid = xs->datalen;
 	} else {
 		xs->resid = resid = xs->datalen;
