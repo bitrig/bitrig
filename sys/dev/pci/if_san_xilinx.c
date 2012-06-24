@@ -206,7 +206,7 @@ static int	wan_xilinx_release(sdla_t*, struct ifnet *);
 /* Network device interface */
 static int	wan_xilinx_up(struct ifnet *);
 static int	wan_xilinx_down(struct ifnet *);
-static int	wan_xilinx_ioctl(struct ifnet *, int cmd, struct ifreq *);
+static int	wan_xilinx_ioctl(struct ifnet *, u_long cmd, struct ifreq *);
 static int	wan_xilinx_send(struct mbuf *, struct ifnet *);
 
 static void	handle_front_end_state(void *);
@@ -668,7 +668,7 @@ wan_xilinx_dma_tx_try:
 }
 
 static int
-wan_xilinx_ioctl(struct ifnet *ifp, int cmd, struct ifreq *ifr)
+wan_xilinx_ioctl(struct ifnet *ifp, u_long cmd, struct ifreq *ifr)
 {
 	xilinx_softc_t	*sc = (xilinx_softc_t *)ifp->if_softc;
 	struct mbuf	*m;

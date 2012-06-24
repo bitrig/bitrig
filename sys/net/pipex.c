@@ -207,7 +207,7 @@ pipex_iface_stop(struct pipex_iface_context *pipex_iface)
 
 /* called from tunioctl() with splnet() */
 int
-pipex_ioctl(struct pipex_iface_context *pipex_iface, int cmd, caddr_t data)
+pipex_ioctl(struct pipex_iface_context *pipex_iface, u_long cmd, caddr_t data)
 {
 	int mode, ret;
 

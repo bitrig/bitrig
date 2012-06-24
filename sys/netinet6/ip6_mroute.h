@@ -272,7 +272,7 @@ int	ip6_mrouter_set(int, struct socket *, struct mbuf *);
 int	ip6_mrouter_get(int, struct socket *, struct mbuf **);
 int	ip6_mrouter_done(void);
 void	ip6_mrouter_detach(struct ifnet *);
-int	mrt6_ioctl(int, caddr_t);
+int	mrt6_ioctl(u_long, caddr_t);
 #endif /* _KERNEL */
 
 #endif /* !_NETINET6_IP6_MROUTE_H_ */
