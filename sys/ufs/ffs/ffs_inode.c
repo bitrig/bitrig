@@ -452,8 +452,6 @@ done:
 	 */
 	DIP_ASSIGN(oip, size, length);
 	DIP_ADD(oip, blocks, -blocksreleased);
-	if (DIP(oip, blocks) < 0)	/* Sanity */
-		DIP_ASSIGN(oip, blocks, 0);
 	oip->i_flag |= IN_CHANGE;
 	(void)ufs_quota_free_blocks(oip, blocksreleased, NOCRED);
 	return (allerror);
