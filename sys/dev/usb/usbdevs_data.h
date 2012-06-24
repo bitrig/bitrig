@@ -2955,7 +2955,7 @@ const struct usb_known_product usb_known_products[] = {
 	},
 	{
 	    USB_VENDOR_FTDI, USB_PRODUCT_FTDI_CHAMELEON,
-	    "µChameleon",
+	    "Chameleon",
 	},
 	{
 	    USB_VENDOR_FTDI, USB_PRODUCT_FTDI_OPENPORT_13M,
