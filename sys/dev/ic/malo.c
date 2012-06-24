@@ -2216,7 +2216,7 @@ malo_cmd_set_txpower(struct malo_softc *sc, unsigned int powerlevel)
 
 	bzero(body, sizeof(*body));
 	body->action = htole16(1);
-	if (powerlevel >= 0 && powerlevel < 30)
+	if (powerlevel < 30)
 		body->supportpowerlvl = htole16(5);	/* LOW */
 	else if (powerlevel >= 30 && powerlevel < 60)
 		body->supportpowerlvl = htole16(10);	/* MEDIUM */
