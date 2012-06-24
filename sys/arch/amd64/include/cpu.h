@@ -169,7 +169,7 @@ extern void need_resched(struct cpu_info *);
 #define CPU_START_CLEANUP(_ci)	((_ci)->ci_func->cleanup(_ci))
 
 #define curcpu()	({struct cpu_info *__ci;                  \
-			asm volatile("movq %%gs:8,%0" : "=r" (__ci)); \
+			__asm__ volatile("movq %%gs:8,%0" : "=r" (__ci)); \
 			__ci;})
 #define cpu_number()	(curcpu()->ci_cpuid)
 
