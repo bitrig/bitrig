@@ -1426,7 +1426,7 @@ void
 pmap_drop_ptp(struct pmap *pm, vaddr_t va, struct vm_page *ptp,
     pt_entry_t *ptes)
 {
-	MUTEX_ASSERT_LOCKED(&pmap->pm_obj.vmobjlock);
+	MUTEX_ASSERT_LOCKED(&pm->pm_obj.vmobjlock);
 
 	i386_atomic_testset_ul(&pm->pm_pdir[pdei(va)], 0);
 	pmap_tlb_shootpage(curcpu()->ci_curpmap, ((vaddr_t)ptes) + ptp->offset);
