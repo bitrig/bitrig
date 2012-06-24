@@ -671,7 +671,8 @@ ath_init1(struct ath_softc *sc)
 	 */
 	hchan.channel = ic->ic_ibss_chan->ic_freq;
 	hchan.channelFlags = ath_chan2flags(ic, ic->ic_ibss_chan);
-	if (!ath_hal_reset(ah, ic->ic_opmode, &hchan, AH_TRUE, &status)) {
+	if (!ath_hal_reset(ah, (HAL_OPMODE)ic->ic_opmode, &hchan, AH_TRUE,
+	    &status)) {
 		printf("%s: unable to reset hardware; hal status %u\n",
 			ifp->if_xname, status);
 		error = EIO;
@@ -804,7 +805,7 @@ ath_reset(struct ath_softc *sc, int full)
 	ath_draintxq(sc);		/* stop xmit side */
 	ath_stoprecv(sc);		/* stop recv side */
 	/* NB: indicate channel change so we do a full reset */
-	if (!ath_hal_reset(ah, ic->ic_opmode, &hchan,
+	if (!ath_hal_reset(ah, (HAL_OPMODE)ic->ic_opmode, &hchan,
 	    full ? AH_TRUE : AH_FALSE, &status)) {
 		printf("%s: %s: unable to reset hardware; hal status %u\n",
 			ifp->if_xname, __func__, status);
@@ -2688,8 +2689,8 @@ ath_chan_set(struct ath_softc *sc, struct ieee80211_channel *chan)
 		 */
 		hchan.channel = chan->ic_freq;
 		hchan.channelFlags = ath_chan2flags(ic, chan);
-		if (!ath_hal_reset(ah, ic->ic_opmode, &hchan, AH_TRUE,
-		    &status)) {
+		if (!ath_hal_reset(ah, (HAL_OPMODE)ic->ic_opmode, &hchan,
+		    AH_TRUE, &status)) {
 			printf("%s: ath_chan_set: unable to reset "
 				"channel %u (%u MHz)\n", ifp->if_xname,
 				ieee80211_chan2ieee(ic, chan), chan->ic_freq);
