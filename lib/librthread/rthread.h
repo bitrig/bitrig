@@ -29,6 +29,7 @@
 #include <semaphore.h>
 #include <machine/spinlock.h>
 #include <machine/tcb.h>		/* for TLS_VARIANT */
+#include <rthread_md.h>
 
 #ifdef __LP64__
 #define RTHREAD_STACK_SIZE_DEF (512 * 1024)
@@ -190,7 +191,7 @@ extern struct pthread_attr _rthread_attr_default;
 #define	ROUND_TO_PAGE(size) \
 	(((size) + (_thread_pagesize - 1)) & ~(_thread_pagesize - 1))
 
-void	_spinlock(_spinlock_lock_t *);
+void	_spinlock(volatile _spinlock_lock_t *);
 void	_spinunlock(_spinlock_lock_t *);
 int	_sem_wait(sem_t, int, const struct timespec *, int *);
 int	_sem_post(sem_t);
