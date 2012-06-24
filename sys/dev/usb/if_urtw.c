@@ -3054,7 +3054,8 @@ urtw_8225_rf_set_sens(struct urtw_rf *rf)
 	struct urtw_softc *sc = rf->rf_sc;
 	usbd_status error;
 
-	if (rf->sens < 0 || rf->sens > 6)
+	/* sens is unsigned. */
+	if (rf->sens > 6)
 		return (-1);
 
 	if (rf->sens > 4)
