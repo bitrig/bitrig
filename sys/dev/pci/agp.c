@@ -476,7 +476,7 @@ agp_generic_bind_memory(struct agp_softc *sc, struct agp_memory *mem,
 		return (EINVAL);
 	}
 
-	if (offset < 0 || (offset & (AGP_PAGE_SIZE - 1)) != 0 ||
+	if ((offset & (AGP_PAGE_SIZE - 1)) != 0 ||
 	    offset + mem->am_size > sc->sc_apsize) {
 		printf("AGP: binding memory at bad offset %#lx\n",
 		    (unsigned long) offset);
