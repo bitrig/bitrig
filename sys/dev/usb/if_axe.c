@@ -1045,7 +1045,7 @@ axe_rxeof(usbd_xfer_handle xfer, usbd_private_handle priv, usbd_status status)
 			if ((pktlen % 2) != 0)
 				pktlen++;
 
-			if ((total_len - pktlen) < 0)
+			if (pktlen > total_len)
 				total_len = 0;
 			else
 				total_len -= pktlen;
