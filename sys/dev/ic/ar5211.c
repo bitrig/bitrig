@@ -2563,7 +2563,8 @@ ar5k_ar5211_rfregs(struct ath_hal *hal, HAL_CHANNEL *channel, u_int freq,
 {
 	struct ar5k_eeprom_info *ee = &hal->ah_capabilities.cap_eeprom;
 	struct ar5k_ar5211_ini_rf rf[nitems(ar5211_rf)];
-	u_int32_t ob, db, obdb, xpds, xpdp, x_gain;
+	u_int32_t ob, db, xpds, xpdp, x_gain;
+	int32_t obdb;
 	u_int i;
 
 	bcopy(ar5211_rf, rf, sizeof(rf));
