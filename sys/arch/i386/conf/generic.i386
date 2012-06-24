@@ -464,10 +464,6 @@ safte*	at scsibus?		# SCSI accessed fault-tolerant enclosures
 ses*	at scsibus?		# SCSI enclosure services
 uk*	at scsibus?		# unknown SCSI
 
-fdc0	at isa? port 0x3f0 irq 6 drq 2	# standard PC floppy controllers
-#fdc1	at isa? port 0x370
-fd*	at fdc? flags 0x00
-
 # IDE controllers
 pciide* at pci? flags 0x0000
 
