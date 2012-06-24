@@ -271,7 +271,6 @@ pcmcia_scan_cis(dev, fct, arg)
 					 * distant regions
 					 */
 					if ((addr >= PCMCIA_CIS_SIZE) ||
-					    ((addr + length) < 0) ||
 					    ((addr + length) >=
 					      PCMCIA_CIS_SIZE)) {
 						DPRINTF((" skipped, "
