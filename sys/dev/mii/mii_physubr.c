@@ -94,7 +94,7 @@ mii_phy_setmedia(struct mii_softc *sc)
 	 * Table index is stored in the media entry.
 	 */
 #ifdef DIAGNOSTIC
-	if (ife->ifm_data < 0 || ife->ifm_data >= MII_NMEDIA)
+	if (ife->ifm_data >= MII_NMEDIA)
 		panic("mii_phy_setmedia");
 #endif
 
