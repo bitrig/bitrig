@@ -475,9 +475,6 @@ bktr_mmap(dev_t dev, off_t offset, int nprot)
 
 	bktr = bktr_cd.cd_devs[unit];
 
-	if ((vaddr_t)offset < 0)
-		return(-1);
-
 	if ((vaddr_t)offset >= bktr->alloc_pages * PAGE_SIZE)
 		return(-1);
 
