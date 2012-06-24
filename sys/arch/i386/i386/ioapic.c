@@ -666,7 +666,7 @@ apic_intr_establish(int irq, int type, int level, int (*ih_fun)(void *),
 {
 	unsigned int ioapic = APIC_IRQ_APIC(irq);
 	unsigned int intr = APIC_IRQ_PIN(irq);
-	struct ioapic_softc *sc = ioapic_find(ioapic);
+	struct ioapic_softc *sc;
 	struct ioapic_pin *pin;
 	struct intrhand **p, *q, *ih;
 	extern int cold;
@@ -679,7 +679,7 @@ apic_intr_establish(int irq, int type, int level, int (*ih_fun)(void *),
 
 	KASSERT(level <= IPL_TTY || flags & IPL_MPSAFE);
 
-	if (sc == NULL)
+	if ((sc = ioapic_find(ioapic)) == NULL)
 		panic("apic_intr_establish: unknown ioapic %d", ioapic);
 
 	if ((irq & APIC_INT_VIA_APIC) == 0)
@@ -827,7 +827,8 @@ apic_intr_disestablish(void *arg)
 }
 
 void
-apic_stray(int irqnum) {
+apic_stray(int irqnum)
+{
 	unsigned int apicid;
 	struct ioapic_softc *sc;
 
