@@ -114,7 +114,7 @@ bios_attach(struct device *parent, struct device *self, void *aux)
 		if (p[0] != '_' && p[1] != 'D' && p[2] != 'M' &&
 		    p[3] != 'I' && p[4] != '_')
 			continue;
-		for (chksum = 0, i = 0xf; i--; chksum += p[i]);
+		for (chksum = 0, i = 0xf; i--; chksum += p[i])
 			;
 		if (chksum != 0)
 			continue;
