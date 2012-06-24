@@ -964,8 +964,6 @@
 ./usr/include/dev/isa/elink.h
 ./usr/include/dev/isa/essreg.h
 ./usr/include/dev/isa/essvar.h
-./usr/include/dev/isa/fdlink.h
-./usr/include/dev/isa/fdreg.h
 ./usr/include/dev/isa/gscsioreg.h
 ./usr/include/dev/isa/gusreg.h
 ./usr/include/dev/isa/gusvar.h
@@ -2059,7 +2057,7 @@
 ./usr/lib/libasn1_p.a
 ./usr/lib/libasn1_pic.a
 ./usr/lib/libc.a
-./usr/lib/libc.so.64.2
+./usr/lib/libc.so.65.0
 ./usr/lib/libc_p.a
 ./usr/lib/libc_pic.a
 ./usr/lib/libcom_err.a
@@ -2178,7 +2176,7 @@
 ./usr/lib/libperl.so.12.0
 ./usr/lib/libperl_pic.a
 ./usr/lib/libpthread.a
-./usr/lib/libpthread.so.15.2
+./usr/lib/libpthread.so.16.0
 ./usr/lib/libpthread_p.a
 ./usr/lib/libpthread_pic.a
 ./usr/lib/librpcsvc.a
@@ -2194,7 +2192,7 @@
 ./usr/lib/libsndio_p.a
 ./usr/lib/libsndio_pic.a
 ./usr/lib/libsqlite3.a
-./usr/lib/libsqlite3.so.19.0
+./usr/lib/libsqlite3.so.20.0
 ./usr/lib/libsqlite3_p.a
 ./usr/lib/libsqlite3_pic.a
 ./usr/lib/libssl.a
@@ -11746,6 +11744,7 @@
 ./usr/share/man/man9/incore.9
 ./usr/share/man/man9/inittodr.9
 ./usr/share/man/man9/intro.9
+./usr/share/man/man9/kcopy.9
 ./usr/share/man/man9/kern.9
 ./usr/share/man/man9/km_alloc.9
 ./usr/share/man/man9/km_free.9
