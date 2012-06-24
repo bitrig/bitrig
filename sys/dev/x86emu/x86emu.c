@@ -288,6 +288,7 @@ x86emu_halt_sys(struct x86emu *emu)
 #else
 	longjmp(emu->exec_state, 1);
 #endif
+	panic("%s: longjmp returned", __func__);
 }
 
 /*
