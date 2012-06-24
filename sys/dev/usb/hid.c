@@ -174,7 +174,6 @@ hid_get_item(struct hid_data *s, struct hid_item *h)
 		case 2:
 			dval = *data++;
 			dval |= *data++ << 8;
-			dval = /*(int16_t)*/ dval;
 			break;
 		case 4:
 			dval = *data++;
