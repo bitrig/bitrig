@@ -469,9 +469,7 @@ wdc_atapi_ioctl (sc_link, cmd, addr, flag)
  *         0 if normal command processing
  */
 int
-atapi_to_scsi_sense(xfer, flags)
-	struct scsi_xfer *xfer;
-	u_int8_t flags;
+atapi_to_scsi_sense(struct scsi_xfer *xfer, u_int8_t flags)
 {
 	struct scsi_sense_data *sense = &xfer->sense;
 	int ret = 0;
