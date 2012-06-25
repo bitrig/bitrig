@@ -168,9 +168,14 @@ extern void need_resched(struct cpu_info *);
 #define CPU_STOP(_ci)		((_ci)->ci_func->stop(_ci))
 #define CPU_START_CLEANUP(_ci)	((_ci)->ci_func->cleanup(_ci))
 
-#define curcpu()	({struct cpu_info *__ci;                  \
-			__asm__ volatile("movq %%gs:8,%0" : "=r" (__ci)); \
-			__ci;})
+static inline struct cpu_info *
+curcpu(void)
+{
+	struct cpu_info *__ci;
+	__asm__ volatile("movq %%gs:8,%0" : "=r" (__ci));
+	return (__ci);
+}
+
 #define cpu_number()	(curcpu()->ci_cpuid)
 
 #define CPU_IS_PRIMARY(ci)	((ci)->ci_flags & CPUF_PRIMARY)
