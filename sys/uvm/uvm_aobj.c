@@ -253,8 +253,13 @@ uao_find_swhash_elt(struct uvm_aobj *aobj, int pageidx, boolean_t create)
 
 	/*
 	 * allocate a new entry for the bucket and init/insert it in
+	 * XXX panic here to avoid a pagedaemon deadlock, if we run out of
+	 * memory here then the pdaemon has used up its entire reserve.
+	 * That would be be seriously bad juju!
 	 */
-	elt = pool_get(&uao_swhash_elt_pool, PR_WAITOK | PR_ZERO);
+	if ((elt = pool_get(&uao_swhash_elt_pool,
+	    PR_NOWAIT | PR_ZERO)) == NULL)
+		panic("%s: can't allocate swhash!", __func__);
 	LIST_INSERT_HEAD(swhash, elt, list);
 	elt->tag = page_tag;
 
