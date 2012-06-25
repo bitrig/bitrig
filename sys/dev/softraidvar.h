@@ -459,6 +459,7 @@ struct sr_aoe {
 
 #define SR_CONCAT_NOWU		16
 struct sr_concat {
+	char unused;
 };
 
 struct sr_chunk {
