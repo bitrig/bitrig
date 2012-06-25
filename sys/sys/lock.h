@@ -45,6 +45,7 @@
 #include <sys/rwlock.h>
 
 struct simplelock {
+	char unused;
 };
 
 typedef struct simplelock       simple_lock_data_t;
