@@ -414,8 +414,6 @@ struct inteldrm_softc {
 
 struct inteldrm_file {
 	struct drm_file	file_priv;
-	struct {
-	} mm;
 };
 
 /* chip type flags */
