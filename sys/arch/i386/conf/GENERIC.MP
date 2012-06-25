@@ -3,8 +3,8 @@
 #	GENERIC.MP - sample multiprocessor kernel
 #
 
-include "arch/i386/conf/GENERIC"
+include	"arch/i386/conf/generic.i386"
+config	bsd	swap generic
 
-option		MULTIPROCESSOR	# Multiple processor support
-
+option		MULTIPROCESSOR
 cpu*		at mainbus?
