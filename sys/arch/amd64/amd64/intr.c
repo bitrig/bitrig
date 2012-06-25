@@ -621,18 +621,6 @@ x86_intunlock(struct intrframe iframe)
 	if (iframe.if_ppl < IPL_SCHED)
 		__mp_unlock(&kernel_lock);
 }
-
-void
-x86_softintlock(void)
-{
-	__mp_lock(&kernel_lock);
-}
-
-void
-x86_softintunlock(void)
-{
-	__mp_unlock(&kernel_lock);
-}
 #endif
 
 void
