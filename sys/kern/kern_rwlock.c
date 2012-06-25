@@ -82,6 +82,8 @@ rw_enter_read(struct rwlock *rwl)
 {
 	unsigned long owner = rwl->rwl_owner;
 
+	assertwaitok();
+
 	if (__predict_false((owner & RWLOCK_WRLOCK) ||
 	    rw_cas(&rwl->rwl_owner, owner, owner + RWLOCK_READ_INCR)))
 		rw_enter(rwl, RW_READ);
@@ -91,6 +93,8 @@ void
 rw_enter_write(struct rwlock *rwl)
 {
 	struct proc *p = curproc;
+
+	assertwaitok();
 
 	if (__predict_false(rw_cas(&rwl->rwl_owner, 0,
 	    RW_PROC(p) | RWLOCK_WRLOCK)))
@@ -185,6 +189,9 @@ rw_enter(struct rwlock *rwl, int flags)
 	struct sleep_state sls;
 	unsigned long inc, o;
 	int error;
+
+	if (!(flags & RW_NOSLEEP))
+		assertwaitok();
 
 	op = &rw_ops[(flags & RW_OPMASK) - 1];
 

@@ -183,7 +183,11 @@ void	ttyprintf(struct tty *, const char *, ...)
 void	splassert_fail(int, int, const char *);
 extern	int splassert_ctl;
 
+#ifdef DIAGNOSTIC
 void	assertwaitok(void);
+#else
+#define	assertwaitok()	do { /* nothing */ } while (0)
+#endif
 
 void	tablefull(const char *);
 
