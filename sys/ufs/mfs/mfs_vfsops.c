@@ -52,8 +52,7 @@
 #include <ufs/ffs/fs.h>
 #include <ufs/ffs/ffs_extern.h>
 
-#include <ufs/mfs/mfsnode.h>
-#include <ufs/mfs/mfs_extern.h>
+#include <ufs/mfs/mfs.h>
 
 static	int mfs_minor;	/* used for building internal dev_t */
 
@@ -81,7 +80,6 @@ const struct vfsops mfs_vfsops = {
  *
  * mount system call
  */
-/* ARGSUSED */
 int
 mfs_mount(struct mount *mp, const char *path, void *data,
     struct nameidata *ndp, struct proc *p)
@@ -130,14 +128,15 @@ mfs_mount(struct mount *mp, const char *path, void *data,
 		panic("mfs_mount: dup dev");
 	mfs_minor++;
 	mfsp = malloc(sizeof *mfsp, M_MFSNODE, M_WAITOK);
+	mfsp->mfs_dying = 0;
 	devvp->v_data = mfsp;
 	mfsp->mfs_baseoff = args.base;
 	mfsp->mfs_size = args.size;
 	mfsp->mfs_vnode = devvp;
 	mfsp->mfs_pid = p->p_pid;
-	mfsp->mfs_buflist = (struct buf *)0;
+	bufq_init(&mfsp->mfs_bufq, BUFQ_FIFO);
 	if ((error = ffs_mountfs(devvp, mp, p)) != 0) {
-		mfsp->mfs_buflist = (struct buf *)-1;
+		mfsp->mfs_dying = 1;
 		vrele(devvp);
 		return (error);
 	}
@@ -163,29 +162,24 @@ int	mfs_pri = PWAIT | PCATCH;		/* XXX prob. temp */
  * Copy the requested data into or out of the memory filesystem
  * address space.
  */
-/* ARGSUSED */
 int
 mfs_start(struct mount *mp, int flags, struct proc *p)
 {
 	struct vnode *vp = VFSTOUFS(mp)->um_devvp;
 	struct mfsnode *mfsp = VTOMFS(vp);
 	struct buf *bp;
-	int sleepreturn = 0, s;
+	int sleepreturn = 0;
 
 	while (1) {
 		while (1) {
-			s = splbio();
-			bp = mfsp->mfs_buflist;
-			if (bp == NULL || bp == (struct buf *)-1) {
-				splx(s);
+			bp = bufq_dequeue(&mfsp->mfs_bufq);
+			if (bp == NULL || mfsp->mfs_dying) {
 				break;
 			}
-			mfsp->mfs_buflist = bp->b_actf;
-			splx(s);
 			mfs_doio(mfsp, bp);
 			wakeup((caddr_t)bp);
 		}
-		if (bp == (struct buf *)-1)
+		if (mfsp->mfs_dying)
 			break;
 		/*
 		 * If a non-ignored signal is received, try to unmount.

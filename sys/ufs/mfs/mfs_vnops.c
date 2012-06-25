@@ -44,8 +44,7 @@
 
 #include <machine/vmparam.h>
 
-#include <ufs/mfs/mfsnode.h>
-#include <ufs/mfs/mfs_extern.h>
+#include <ufs/mfs/mfs.h>
 
 /* mfs vnode operations. */
 struct vops mfs_vops = {
@@ -61,7 +60,7 @@ struct vops mfs_vops = {
         .vop_write      = mfs_badop,
         .vop_ioctl      = mfs_ioctl,
         .vop_poll       = mfs_badop,
-        .vop_revoke     = mfs_revoke,
+        .vop_revoke     = vop_generic_revoke,
         .vop_fsync      = spec_fsync,
         .vop_remove     = mfs_badop,
         .vop_link       = mfs_badop,
@@ -129,7 +128,6 @@ mfs_strategy(void *v)
 	struct mfsnode *mfsp;
 	struct vnode *vp;
 	struct proc *p = curproc;
-	int s;
 
 	if (!vfinddev(bp->b_dev, VBLK, &vp) || vp->v_usecount == 0)
 		panic("mfs_strategy: bad dev");
@@ -138,10 +136,7 @@ mfs_strategy(void *v)
 	if (p != NULL && mfsp->mfs_pid == p->p_pid) {
 		mfs_doio(mfsp, bp);
 	} else {
-		s = splbio();
-		bp->b_actf = mfsp->mfs_buflist;
-		mfsp->mfs_buflist = bp;
-		splx(s);
+		bufq_queue(&mfsp->mfs_bufq, bp);
 		wakeup((caddr_t)vp);
 	}
 	return (0);
@@ -179,7 +174,6 @@ mfs_doio(struct mfsnode *mfsp, struct buf *bp)
 /*
  * Memory filesystem close routine
  */
-/* ARGSUSED */
 int
 mfs_close(void *v)
 {
@@ -187,20 +181,16 @@ mfs_close(void *v)
 	struct vnode *vp = ap->a_vp;
 	struct mfsnode *mfsp = VTOMFS(vp);
 	struct buf *bp;
-	int error, s;
+	int error;
 
 	/*
 	 * Finish any pending I/O requests.
 	 */
 	while (1) {
-		s = splbio();
-		bp = mfsp->mfs_buflist;
+		bp = bufq_dequeue(&mfsp->mfs_bufq);
 		if (bp == NULL) {
-			splx(s);
 			break;
 		}
-		mfsp->mfs_buflist = bp->b_actf;
-		splx(s);
 		mfs_doio(mfsp, bp);
 		wakeup((caddr_t)bp);
 	}
@@ -215,13 +205,13 @@ mfs_close(void *v)
 	/*
 	 * There should be no way to have any more buffers on this vnode.
 	 */
-	if (mfsp->mfs_buflist)
+	if (bufq_peek(&mfsp->mfs_bufq))
 		printf("mfs_close: dirty buffers\n");
 #endif
 	/*
 	 * Send a request to the filesystem server to exit.
 	 */
-	mfsp->mfs_buflist = (struct buf *)(-1);
+	mfsp->mfs_dying = 1;
 	wakeup((caddr_t)vp);
 	return (0);
 }
@@ -229,7 +219,6 @@ mfs_close(void *v)
 /*
  * Memory filesystem inactive routine
  */
-/* ARGSUSED */
 int
 mfs_inactive(void *v)
 {
@@ -237,9 +226,8 @@ mfs_inactive(void *v)
 #ifdef DIAGNOSTIC
 	struct mfsnode *mfsp = VTOMFS(ap->a_vp);
 
-	if (mfsp->mfs_buflist && mfsp->mfs_buflist != (struct buf *)(-1))
-		panic("mfs_inactive: not inactive (mfs_buflist %p)",
-			mfsp->mfs_buflist);
+	if (bufq_peek(&mfsp->mfs_bufq) && !mfsp->mfs_dying)
+		panic("mfs_inactive not inactive");
 #endif
 	VOP_UNLOCK(ap->a_vp, 0);
 	return (0);

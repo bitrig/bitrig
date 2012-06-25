@@ -32,21 +32,50 @@
  *	@(#)mfsnode.h	8.2 (Berkeley) 8/11/93
  */
 
-/*
- * This structure defines the control data for the memory based file system.
- */
+struct buf;
+struct bufq;
+struct mount;
+struct nameidata;
+struct proc;
+struct statfs;
+struct ucred;
+struct vnode;
+struct vfsconf;
+struct mbuf;
+struct mfsnode;
 
+extern struct vops	mfs_vops;
+
+/* mfs_vfsops.c */
+int	mfs_mount(struct mount *, const char *, void *, struct nameidata *,
+	    struct proc *);
+int	mfs_start(struct mount *, int, struct proc *);
+int	mfs_statfs(struct mount *, struct statfs *, struct proc *);
+int	mfs_init(struct vfsconf *);
+int	mfs_checkexp(struct mount *, struct mbuf *, int *, struct ucred **);
+
+/* mfs_vnops.c */
+int	mfs_open(void *);
+int	mfs_ioctl(void *);
+int	mfs_strategy(void *);
+int	mfs_close(void *);
+int	mfs_inactive(void *);
+int	mfs_reclaim(void *);
+int	mfs_print(void *);
+int	mfs_badop(void *);
+
+void mfs_doio(struct mfsnode *, struct buf *);
+
+/* This structure defines the control data for the memory based file system. */
 struct mfsnode {
-	struct	vnode *mfs_vnode;	/* vnode associated with this mfsnode */
-	caddr_t	mfs_baseoff;		/* base of file system in memory */
-	long	mfs_size;		/* size of memory file system */
-	pid_t	mfs_pid;		/* supporting process pid */
-	struct	buf *mfs_buflist;	/* list of I/O requests */
-	long	mfs_spare[4];
+	struct vnode	*mfs_vnode;	/* associated vnode */
+	struct bufq	 mfs_bufq;
+	caddr_t		 mfs_baseoff;	/* base of file system in memory */
+	long		 mfs_size;	/* size of memory file system */
+	pid_t		 mfs_pid;	/* supporting process pid */
+	int		 mfs_dying;
 };
 
-/*
- * Convert between mfsnode pointers and vnode pointers
- */
+/* Convert between mfsnode pointers and vnode pointers. */
 #define VTOMFS(vp)	((struct mfsnode *)(vp)->v_data)
 #define MFSTOV(mfsp)	((mfsp)->mfs_vnode)
