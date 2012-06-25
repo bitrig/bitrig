@@ -39,14 +39,15 @@ ${BOOTIMG}: bsd
 	cp -Rp ${.OBJDIR}/${BOOTIMG} ${.OBJDIR}/fs/
 	cd ${SOURCE}; tar cf - * .* | tar xpf - -C ${.OBJDIR}/fs/
 
-#	delete all dev paraphernalia
+#	delete all devel paraphernalia
 	rm -rf ${.OBJDIR}/fs/usr/include
 	rm -rf ${.OBJDIR}/fs/usr/lib/*.a ${.OBJDIR}/fs/usr/lib/*.la
 	rm -rf ${.OBJDIR}/fs/usr/X11R6/include
 	rm -rf ${.OBJDIR}/fs/usr/X11R6/lib/*.a ${.OBJDIR}/fs/usr/X11R6/lib/*.la
 
-#	strip all binaries
+#	strip all binaries and compress executables
 	find ${.OBJDIR}/fs/ -type f -exec strip {} 2> /dev/null \;
+#	XXX drahn fix the gzexe stuff over here
 
 #	patch up release for use
 	echo "/dev/cd0a / cd9660 ro 0 0" > ${.OBJDIR}/fs/etc/fstab
@@ -62,6 +63,7 @@ ${BOOTIMG}: bsd
 	mkdir -p ${.OBJDIR}/fs/sets
 	cp ${SETS}/bsd* ${.OBJDIR}/fs/sets
 	cp ${SETS}/*tgz ${.OBJDIR}/fs/sets
+	ls -la ${.OBJDIR}/fs/sets/ > ${.OBJDIR}/fs/sets/index.txt
 
 #	copy install scripts
 	cp ${.CURDIR}/../miniroot/upgrade.sh ${.OBJDIR}/fs/upgrade
