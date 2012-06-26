@@ -108,7 +108,7 @@ void	uvm_pmr_assertvalid(struct uvm_pmemrange *pmr);
 #define uvm_pmr_assertvalid(pmr)	do {} while (0)
 #endif
 
-int			 uvm_pmr_get1page(psize_t, int, struct pglist *,
+psize_t			 uvm_pmr_get1page(psize_t, int, struct pglist *,
 			    paddr_t, paddr_t);
 
 struct uvm_pmemrange	*uvm_pmr_allocpmr(void);
@@ -1714,7 +1714,7 @@ uvm_pmr_rootupdate(struct uvm_pmemrange *pmr, struct vm_page *init_root,
 /*
  * Allocate any page, the fastest way. Page number constraints only.
  */
-int
+psize_t
 uvm_pmr_get1page(psize_t count, int memtype_init, struct pglist *result,
     paddr_t start, paddr_t end)
 {
