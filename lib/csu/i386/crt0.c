@@ -121,7 +121,7 @@ register char *p, ch;
 }
 
 #ifdef MCRT0
-asm ("  .text");
-asm ("_eprol:");
+__asm ("  .text");
+__asm ("_eprol:");
 #endif
 
