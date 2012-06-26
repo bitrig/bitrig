@@ -438,34 +438,6 @@ struct format_params {
   int vbi_num_lines, vbi_num_samples;
 };
 
-/* Bt848/878 register access
- * The registers can either be access via a memory mapped structure
- * or accessed via bus_space.
- * bus_0pace access allows cross platform support, where as the
- * memory mapped structure method only works on 32 bit processors
- * with the right type of endianness.
- */
-#define INB(sc,o)	(({					\
-	u_int8_t __v;						\
-	__v = bus_space_read_1((sc)->memt, (sc)->memh, (o));	\
-	bus_space_barrier((sc)->memt, (sc)->memh, (o), 1,	\
-	    BUS_SPACE_BARRIER_READ);				\
-	(__v);							\
-}))
-#define INW(sc,o)	(({					\
-	u_int16_t __v;						\
-	__v = bus_space_read_2((sc)->memt, (sc)->memh, (o));	\
-	bus_space_barrier((sc)->memt, (sc)->memh, (o), 4,	\
-	    BUS_SPACE_BARRIER_READ);				\
-	(__v);							\
-}))
-#define INL(sc,o)	(({					\
-	u_int32_t __v;						\
-	__v = bus_space_read_4((sc)->memt, (sc)->memh, (o));	\
-	bus_space_barrier((sc)->memt, (sc)->memh, (o), 4,	\
-	    BUS_SPACE_BARRIER_READ);				\
-	(__v);							\
-}))
 #define OUTB(sc,o,v)	do {					\
 	bus_space_write_1((sc)->memt, (sc)->memh, (o), (v));	\
 	bus_space_barrier((sc)->memt, (sc)->memh, (o), 1,	\
@@ -649,3 +621,43 @@ struct bt848_card_sig {
 /* ioctl_cmd_t int on old versions, u_long on new versions */
 /***********************************************************/
 typedef u_long ioctl_cmd_t;
+
+/* Bt848/878 register access
+ * The registers can either be access via a memory mapped structure
+ * or accessed via bus_space.
+ * bus_0pace access allows cross platform support, where as the
+ * memory mapped structure method only works on 32 bit processors
+ * with the right type of endianness.
+ */
+static inline u_int8_t
+INB(bktr_ptr_t sc, bus_size_t o)
+{
+	u_int8_t __v;
+
+	__v = bus_space_read_1(sc->memt, sc->memh, o);
+	bus_space_barrier(sc->memt, sc->memh, o, 1, BUS_SPACE_BARRIER_READ);
+
+	return (__v);
+}
+
+static inline u_int16_t
+INW(bktr_ptr_t sc, bus_size_t o)
+{ 
+	u_int16_t __v;
+
+	__v = bus_space_read_2(sc->memt, sc->memh, o);
+	bus_space_barrier(sc->memt, sc->memh, o, 4, BUS_SPACE_BARRIER_READ);
+
+	return (__v);
+}
+
+static inline u_int32_t
+INL(bktr_ptr_t sc, bus_size_t o)
+{
+	u_int32_t __v;
+
+	__v = bus_space_read_4(sc->memt, sc->memh, o);
+	bus_space_barrier(sc->memt, sc->memh, o, 4, BUS_SPACE_BARRIER_READ);
+
+	return (__v);
+}
