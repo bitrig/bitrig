@@ -73,9 +73,16 @@ LINKFLAGS=	-Ttext 0xD0200120 -e start -N --warn-common -z noexecstack
 .endif
 
 .if ${MACHINE} == "amd64"
+.if ${CC} == "clang"
+CFLAGS+=	-Wno-error
+CFLAGS+=        -ccc-host-triple i386-unknown-bitrig0.1 -Wa,--32
+AFLAGS+=        -ccc-host-triple i386-unknown-bitrig0.1 -Wa,--32
+LINKFLAGS+= -melf_i386_obsd
+.else
 CFLAGS+=	-m32
 AFLAGS+=	-m32
 LINKFLAGS+= -melf_i386_obsd
+.endif
 .endif
 
 .if ${IDENT:M-DDDB_STRUCT}
