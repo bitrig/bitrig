@@ -37,11 +37,12 @@ fmaxl(long double x, long double y)
 		return (x);
 
 	/* Handle comparisons of signed zeroes. */
-	if (signbit(x) != signbit(y))
+	if (signbit(x) != signbit(y)) {
 		if (signbit(x))
 			return (y);
 		else
 			return (x);
+	}
 
 	return (x > y ? x : y);
 }
