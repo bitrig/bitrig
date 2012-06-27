@@ -63,16 +63,15 @@ LIST_HEAD(workhead, worklist);
 /*
  * Buffer queues
  */
-#define BUFQ_DISKSORT	0
-#define	BUFQ_FIFO	1
-#define BUFQ_DEFAULT	BUFQ_DISKSORT
-#define BUFQ_HOWMANY	2
+#define BUFQ_FIFO	0
+#define BUFQ_DEFAULT	BUFQ_FIFO
+#define BUFQ_HOWMANY	1
 
 struct bufq_impl;
 
 struct bufq {
 	SLIST_ENTRY(bufq)	 bufq_entries;
-	struct mutex	 	 bufq_mtx;
+	struct mutex		 bufq_mtx;
 	void			*bufq_data;
 	u_int			 bufq_outstanding;
 	int			 bufq_stop;
@@ -94,12 +93,6 @@ void		 bufq_done(struct bufq *, struct buf *);
 void		 bufq_quiesce(void);
 void		 bufq_restart(void);
 
-/* disksort */
-struct bufq_disksort {
-	struct buf	 *bqd_actf;
-	struct buf	**bqd_actb;
-};
-
 /* fifo */
 SIMPLEQ_HEAD(bufq_fifo_head, buf);
 struct bufq_fifo {
@@ -115,7 +108,6 @@ struct bufq_swapreg {
 
 /* bufq link in struct buf */
 union bufq_data {
-	struct bufq_disksort	bufq_data_disksort;
 	struct bufq_fifo	bufq_data_fifo;
 	struct bufq_swapreg	bufq_swapreg;
 };
@@ -133,10 +125,6 @@ extern struct bio_ops {
 	void	(*io_movedeps)(struct buf *, struct buf *);
 	int	(*io_countdeps)(struct buf *, int, int);
 } bioops;
-
-/* XXX: disksort(); */
-#define b_actf	b_bufq.bufq_data_disksort.bqd_actf
-#define b_actb	b_bufq.bufq_data_disksort.bqd_actb
 
 /* The buffer header describes an I/O operation in the kernel. */
 struct buf {
@@ -173,18 +161,8 @@ struct buf {
 	int	b_dirtyend;		/* Offset of end of dirty region. */
 	int	b_validoff;		/* Offset in buffer of valid region. */
 	int	b_validend;		/* Offset of end of valid region. */
- 	struct	workhead b_dep;		/* List of filesystem dependencies. */
+	struct	workhead b_dep;		/* List of filesystem dependencies. */
 };
-
-/*
- * For portability with historic industry practice, the cylinder number has
- * to be maintained in the `b_resid' field.
- */
-#define	b_cylinder b_resid		/* Cylinder number for disksort(). */
-
-/* Device driver compatibility definitions. */
-#define	b_active b_bcount		/* Driver queue head: drive active. */
-#define	b_errcnt b_resid		/* Retry count while I/O in progress. */
 
 /*
  * These flags are kept in b_flags.

@@ -481,7 +481,6 @@ iso_disklabelspoof(dev, strat, lp)
 		bp->b_bcount = ISO_DEFAULT_BLOCK_SIZE;
 		CLR(bp->b_flags, B_READ | B_WRITE | B_DONE);
 		SET(bp->b_flags, B_BUSY | B_READ | B_RAW);
-		bp->b_cylinder = bp->b_blkno / lp->d_secpercyl;
 
 		/*printf("d_secsize %d iso_blknum %d b_blkno %d bcount %d\n",
 		    lp->d_secsize, iso_blknum, bp->b_blkno, bp->b_bcount);*/

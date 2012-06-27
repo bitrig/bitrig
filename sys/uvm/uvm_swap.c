@@ -1344,9 +1344,6 @@ sw_reg_strategy(struct swapdev *sdp, struct buf *bp, int bn)
 
 		nbp->vb_xfer = vnx;	/* patch it back in to vnx */
 
-		/* XXX: In case the underlying bufq is disksort: */
-		nbp->vb_buf.b_cylinder = nbp->vb_buf.b_blkno;
-
 		s = splbio();
 		if (vnx->vx_error != 0) {
 			putvndbuf(nbp);

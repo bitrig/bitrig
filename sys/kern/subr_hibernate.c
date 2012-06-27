@@ -1006,7 +1006,6 @@ hibernate_block_io(union hibernate_info *hib_info, daddr_t blkctr,
 	CLR(bp->b_flags, B_READ | B_WRITE | B_DONE);
 	SET(bp->b_flags, B_BUSY | (iswrite ? B_WRITE : B_READ) | B_RAW);
 	bp->b_dev = hib_info->device;
-	bp->b_cylinder = 0;
 	(*bdsw->d_strategy)(bp);
 
 	error = biowait(bp);

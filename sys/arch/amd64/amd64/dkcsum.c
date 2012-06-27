@@ -116,7 +116,6 @@ dkcsumattach(void)
 		bp->b_error = 0; /* B_ERROR and b_error may have stale data. */
 		CLR(bp->b_flags, B_READ | B_WRITE | B_DONE | B_ERROR);
 		SET(bp->b_flags, B_BUSY | B_READ | B_RAW);
-		bp->b_cylinder = 0;
 		(*bdsw->d_strategy)(bp);
 		if ((error = biowait(bp))) {
 			/* XXX What to do here? */
