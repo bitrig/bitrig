@@ -324,7 +324,8 @@ perf_status(struct apm_power_info *pinfo, int ncpu)
 		 * power and have a battery life greater than 15%, or if
 		 * the battery is absent
 		 */
-		if (pinfo->ac_state == APM_AC_ON && pinfo->battery_life > 15 ||
+		if ((pinfo->ac_state == APM_AC_ON &&
+		    pinfo->battery_life > 15) ||
 		    pinfo->battery_state == APM_BATTERY_ABSENT)
 			forcehi = 1;		
 		break;
