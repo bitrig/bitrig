@@ -222,7 +222,7 @@ atomic_inc_64(volatile int64_t *p)
 static inline void
 atomic_dec_64(volatile int64_t *p)
 {
-	atomic_sub_64((volatile uint64_t *)p, 1);
+	atomic_sub_64((volatile int64_t *)p, 1);
 }
 
 /* Increment/decrement int/long - exported interface. */
