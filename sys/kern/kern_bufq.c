@@ -82,6 +82,7 @@ bufq_init(struct bufq *bq, int type)
 
 	mtx_init(&bq->bufq_mtx, IPL_BIO);
 	bq->bufq_type = type;
+	bq->bufq_stop = 0;
 	bq->bufq_impl = &bufq_impls[type];
 	bq->bufq_data = bq->bufq_impl->impl_create();
 	if (bq->bufq_data == NULL) {
