@@ -76,7 +76,7 @@
 # define DST 0
 #endif
 #ifndef HZ
-#define	HZ 100
+#define	HZ 1000
 #endif
 int	hz = HZ;
 int	tick = 1000000 / HZ;
