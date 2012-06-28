@@ -19,6 +19,7 @@ option		PTRACE		# ptrace(2) system call
 #option		KVA_GUARDPAGES	# slow virtual address recycling (+ guarding)
 #option		POOL_DEBUG	# pool corruption detection 
 #option		VFSLCKDEBUG	# VFS locking checks
+option		UVMLOCKDEBUG	# UVM locking checks
 
 option		CRYPTO		# Cryptographic framework
 
