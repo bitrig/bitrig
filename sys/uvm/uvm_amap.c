@@ -458,9 +458,11 @@ amap_share_protect(struct vm_map_entry *entry, vm_prot_t prot)
 		for (lcv = entry->aref.ar_pageoff ; lcv < stop ; lcv++) {
 			if (amap->am_anon[lcv] == NULL)
 				continue;
+			mtx_enter(&amap->am_anon[lcv]->an_lock);
 			if (amap->am_anon[lcv]->an_page != NULL)
 				pmap_page_protect(amap->am_anon[lcv]->an_page,
 						  prot);
+			mtx_leave(&amap->am_anon[lcv]->an_lock);
 		}
 		return;
 	}
@@ -470,8 +472,10 @@ amap_share_protect(struct vm_map_entry *entry, vm_prot_t prot)
 		slot = amap->am_slots[lcv];
 		if (slot < entry->aref.ar_pageoff || slot >= stop)
 			continue;
+		mtx_enter(&amap->am_anon[slot]->an_lock);
 		if (amap->am_anon[slot]->an_page != NULL)
 			pmap_page_protect(amap->am_anon[slot]->an_page, prot);
+		mtx_leave(&amap->am_anon[slot]->an_lock);
 	}
 	return;
 }
@@ -509,15 +513,12 @@ amap_wipeout(struct vm_amap *amap)
 		if (anon == NULL || anon->an_ref == 0)
 			panic("amap_wipeout: corrupt amap");
 
-		simple_lock(&anon->an_lock); /* lock anon */
-
+		mtx_enter(&anon->an_lock); /* lock anon */
 		refs = --anon->an_ref;
-		simple_unlock(&anon->an_lock);
 		if (refs == 0) {
-			/*
-			 * we had the last reference to a vm_anon. free it.
-			 */
 			uvm_anfree(anon);
+		} else {
+			mtx_leave(&anon->an_lock);
 		}
 	}
 
@@ -633,9 +634,9 @@ amap_copy(struct vm_map *map, struct vm_map_entry *entry, int waitf,
 		    srcamap->am_anon[entry->aref.ar_pageoff + lcv];
 		if (amap->am_anon[lcv] == NULL)
 			continue;
-		simple_lock(&amap->am_anon[lcv]->an_lock);
+		mtx_enter(&amap->am_anon[lcv]->an_lock);
 		amap->am_anon[lcv]->an_ref++;
-		simple_unlock(&amap->am_anon[lcv]->an_lock);
+		mtx_leave(&amap->am_anon[lcv]->an_lock);
 		amap->am_bckptr[lcv] = amap->am_nused;
 		amap->am_slots[amap->am_nused] = lcv;
 		amap->am_nused++;
@@ -715,7 +716,7 @@ ReStart:
 
 		slot = amap->am_slots[lcv];
 		anon = amap->am_anon[slot];
-		simple_lock(&anon->an_lock);
+		mtx_enter(&anon->an_lock);
 		pg = anon->an_page;
 
 		/*
@@ -744,7 +745,7 @@ ReStart:
 			 */
 			if (pg->pg_flags & PG_BUSY) {
 				atomic_setbits_int(&pg->pg_flags, PG_WANTED);
-				UVM_UNLOCK_AND_WAIT(pg, &anon->an_lock, FALSE,
+				msleep(pg, &anon->an_lock, PVM | PNORELOCK,
 				    "cownow", 0);
 				goto ReStart;
 			}
@@ -765,10 +766,9 @@ ReStart:
 				 * we can't ...
 				 */
 				if (nanon) {
-					simple_lock(&nanon->an_lock);
 					uvm_anfree(nanon);
 				}
-				simple_unlock(&anon->an_lock);
+				mtx_leave(&anon->an_lock);
 				uvm_wait("cownowpage");
 				goto ReStart;
 			}
@@ -791,9 +791,10 @@ ReStart:
 			uvm_lock_pageq();
 			uvm_pageactivate(npg);
 			uvm_unlock_pageq();
+			mtx_leave(&nanon->an_lock);
 		}
 
-		simple_unlock(&anon->an_lock);
+		mtx_leave(&anon->an_lock);
 		/*
 		 * done with this anon, next ...!
 		 */
@@ -999,15 +1000,12 @@ amap_wiperange(struct vm_amap *amap, int slotoff, int slots)
 		/*
 		 * drop anon reference count
 		 */
-		simple_lock(&anon->an_lock);
+		mtx_enter(&anon->an_lock);
 		refs = --anon->an_ref;
-		simple_unlock(&anon->an_lock);
 		if (refs == 0) {
-			/*
-			 * we just eliminated the last reference to an anon.
-			 * free it.
-			 */
 			uvm_anfree(anon);
+		} else {
+			mtx_leave(&anon->an_lock);
 		}
 	}
 }
@@ -1054,17 +1052,19 @@ amap_swap_off(int startslot, int endslot)
 
 			slot = am->am_slots[i];
 			anon = am->am_anon[slot];
-			simple_lock(&anon->an_lock);
+			mtx_enter(&anon->an_lock);
 
 			swslot = anon->an_swslot;
 			if (swslot < startslot || endslot <= swslot) {
-				simple_unlock(&anon->an_lock);
+				mtx_leave(&anon->an_lock);
 				continue;
 			}
 
 			am->am_flags |= AMAP_SWAPOFF;
 
 			rv = uvm_anon_pagein(anon);
+			/* uvm_anon_pagein() should return with anon unlocked */
+			UVM_ASSERT_ANONUNLOCKED(anon);
 
 			am->am_flags &= ~AMAP_SWAPOFF;
 			if (amap_refs(am) == 0) {
@@ -1152,7 +1152,7 @@ amap_add(struct vm_aref *aref, vaddr_t offset, struct vm_anon *anon,
 	AMAP_B2SLOT(slot, offset);
 	slot += aref->ar_pageoff;
 
-	if (slot >= amap->am_nslot)
+	if (slot < 0 || slot >= amap->am_nslot)
 		panic("amap_add: offset out of range");
 
 	if (replace) {
@@ -1161,6 +1161,7 @@ amap_add(struct vm_aref *aref, vaddr_t offset, struct vm_anon *anon,
 			panic("amap_add: replacing null anon");
 		if (amap->am_anon[slot]->an_page != NULL && 
 		    (amap->am_flags & AMAP_SHARED) != 0) {
+			UVM_ASSERT_ANONLOCKED(amap->am_anon[slot]);
 			pmap_page_protect(amap->am_anon[slot]->an_page,
 			    VM_PROT_NONE);
 			/*

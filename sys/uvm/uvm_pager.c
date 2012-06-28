@@ -604,9 +604,9 @@ ReTry:
 			/* XXX daddr64_t -> int */
 			int nswblk = (result == VM_PAGER_AGAIN) ? swblk : 0;
 			if (pg->pg_flags & PQ_ANON) {
-				simple_lock(&pg->uanon->an_lock);
+				mtx_enter(&pg->uanon->an_lock);
 				pg->uanon->an_swslot = nswblk;
-				simple_unlock(&pg->uanon->an_lock);
+				mtx_leave(&pg->uanon->an_lock);
 			} else {
 				mtx_enter(&pg->uobject->vmobjlock);
 				uao_set_swslot(pg->uobject,
@@ -706,7 +706,7 @@ uvm_pager_dropcluster(struct uvm_object *uobj, struct vm_page *pg,
 		 */
 		if (!uobj) {
 			if (ppsp[lcv]->pg_flags & PQ_ANON) {
-				simple_lock(&ppsp[lcv]->uanon->an_lock);
+				mtx_enter(&ppsp[lcv]->uanon->an_lock);
 				if (flags & PGO_REALLOCSWAP)
 					  /* zap swap block */
 					  ppsp[lcv]->uanon->an_swslot = 0;
@@ -732,7 +732,6 @@ uvm_pager_dropcluster(struct uvm_object *uobj, struct vm_page *pg,
 				    PG_BUSY);
 				UVM_PAGE_OWN(ppsp[lcv], NULL);
 
-				simple_unlock(&ppsp[lcv]->uanon->an_lock);
 				/* kills anon and frees pg */
 				uvm_anfree(ppsp[lcv]->uanon);
 
@@ -760,7 +759,7 @@ uvm_pager_dropcluster(struct uvm_object *uobj, struct vm_page *pg,
 		/* if anonymous cluster, unlock object and move on */
 		if (!uobj) {
 			if (ppsp[lcv]->pg_flags & PQ_ANON)
-				simple_unlock(&ppsp[lcv]->uanon->an_lock);
+				mtx_leave(&ppsp[lcv]->uanon->an_lock);
 			else
 				mtx_leave(&ppsp[lcv]->uobject->vmobjlock);
 		}
@@ -834,7 +833,7 @@ uvm_aio_aiodone(struct buf *bp)
 		KASSERT(swap || pg->uobject == uobj);
 		if (swap) {
 			if (pg->pg_flags & PQ_ANON) {
-				simple_lock(&pg->uanon->an_lock);
+				mtx_enter(&pg->uanon->an_lock);
 			} else {
 				mtx_enter(&pg->uobject->vmobjlock);
 			}
@@ -874,12 +873,11 @@ out:
 			    pg->pg_flags & PG_RELEASED) {
 				atomic_clearbits_int(&pg->pg_flags, PG_BUSY);
 				UVM_PAGE_OWN(pg, NULL);
-				simple_unlock(&pg->uanon->an_lock);
 				uvm_anfree(pg->uanon);
 			} else {
 				uvm_page_unbusy(&pg, 1);
 				if (pg->pg_flags & PQ_ANON) {
-					simple_unlock(&pg->uanon->an_lock);
+					mtx_leave(&pg->uanon->an_lock);
 				} else {
 					mtx_leave(&pg->uobject->vmobjlock);
 				}

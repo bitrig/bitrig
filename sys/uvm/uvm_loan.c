@@ -166,6 +166,13 @@ uvm_loanentry(struct uvm_faultinfo *ufi, void ***output, int flags)
 		} else {
 			rv = -1;		/* null map entry... fail now */
 		}
+#if 0
+		if (rv == 0 && aref->ar_amap != NULL)
+			UVM_ASSERT_AMAPLOCKED(aref->ar_amap);
+#endif
+		if (rv == 0 && uobj != NULL)
+			UVM_ASSERT_OBJLOCKED(uobj);
+		    
 
 		/* total failure */
 		if (rv < 0)
@@ -321,7 +328,7 @@ uvm_loananon(struct uvm_faultinfo *ufi, void ***output, int flags,
 	 * pointer to it.
 	 */
 	if (flags & UVM_LOAN_TOANON) {
-		simple_lock(&anon->an_lock);
+		mtx_enter(&anon->an_lock);
 		pg = anon->an_page;
 		if (pg && (pg->pg_flags & PQ_ANON) != 0 && anon->an_ref == 1)
 			/* read protect it */
@@ -329,7 +336,7 @@ uvm_loananon(struct uvm_faultinfo *ufi, void ***output, int flags,
 		anon->an_ref++;
 		**output = anon;
 		*output = (*output) + 1;
-		simple_unlock(&anon->an_lock);
+		mtx_leave(&anon->an_lock);
 		return(1);
 	}
 
@@ -339,7 +346,7 @@ uvm_loananon(struct uvm_faultinfo *ufi, void ***output, int flags,
 	 * this for us.
 	 */
 
-	simple_lock(&anon->an_lock);
+	mtx_enter(&anon->an_lock);
 	result = uvmfault_anonget(ufi, ufi->entry->aref.ar_amap, anon);
 
 	/*
@@ -348,6 +355,7 @@ uvm_loananon(struct uvm_faultinfo *ufi, void ***output, int flags,
 	 */
 
 	if (result != VM_PAGER_OK) {
+		/* anon may be freed, don't touch it. */
 
 		/* need to refault (i.e. refresh our lookup) ? */
 		if (result == VM_PAGER_REFAULT)
@@ -362,6 +370,9 @@ uvm_loananon(struct uvm_faultinfo *ufi, void ***output, int flags,
 		/* otherwise flag it as an error */
 		return(-1);
 	}
+	UVM_ASSERT_ANONLOCKED(anon);
+	if (pg->uobject)
+		UVM_ASSERT_OBJLOCKED(pg->uobject);
 
 	/*
 	 * we have the page and its owner locked: do the loan now.
@@ -380,7 +391,7 @@ uvm_loananon(struct uvm_faultinfo *ufi, void ***output, int flags,
 	/* unlock anon and return success */
 	if (pg->uobject)
 		mtx_leave(&pg->uobject->vmobjlock);
-	simple_unlock(&anon->an_lock);
+	mtx_leave(&anon->an_lock);
 	return(1);
 }
 
@@ -437,10 +448,10 @@ uvm_loanuobj(struct uvm_faultinfo *ufi, void ***output, int flags, vaddr_t va)
 		uvmfault_unlockall(ufi, amap, NULL, NULL);
 		
 		npages = 1;
-		/* locked: uobj */
+		UVM_ASSERTOBJLOCKED(uobj);
 		result = uobj->pgops->pgo_get(uobj, va - ufi->entry->start,
 		    &pg, &npages, 0, VM_PROT_READ, MADV_NORMAL, 0);
-		/* locked: <nothing> */
+		UVM_ASSERTOBJUNLOCKED(uobj);
 		
 		/*
 		 * check for errors
@@ -459,8 +470,7 @@ uvm_loanuobj(struct uvm_faultinfo *ufi, void ***output, int flags, vaddr_t va)
 		 */
 
 		locked = uvmfault_relock(ufi);
-		if (locked)
-			mtx_enter(&uobj->vmobjlock);
+		mtx_enter(&uobj->vmobjlock);
 
 		/*
 		 * Re-verify that amap slot is still free. if there is a
@@ -480,7 +490,6 @@ uvm_loanuobj(struct uvm_faultinfo *ufi, void ***output, int flags, vaddr_t va)
 		 */
 
 		if (locked == FALSE) {
-
 			if (pg->pg_flags & PG_WANTED)
 				/* still holding object lock */
 				wakeup(pg);
@@ -490,7 +499,7 @@ uvm_loanuobj(struct uvm_faultinfo *ufi, void ***output, int flags, vaddr_t va)
 			uvm_unlock_pageq();
 			atomic_clearbits_int(&pg->pg_flags, PG_BUSY|PG_WANTED);
 			UVM_PAGE_OWN(pg, NULL);
-			mtx_enter(&uobj->vmobjlock);
+			mtx_leave(&uobj->vmobjlock);
 			return (0);
 		}
 	}
@@ -525,9 +534,9 @@ uvm_loanuobj(struct uvm_faultinfo *ufi, void ***output, int flags, vaddr_t va)
 
 	if (pg->uanon) {
 		anon = pg->uanon;
-		simple_lock(&anon->an_lock);
+		mtx_enter(&anon->an_lock);
 		anon->an_ref++;
-		simple_unlock(&anon->an_lock);
+		mtx_leave(&anon->an_lock);
 		**output = anon;
 		*output = (*output) + 1;
 		uvm_lock_pageq();
@@ -544,8 +553,7 @@ uvm_loanuobj(struct uvm_faultinfo *ufi, void ***output, int flags, vaddr_t va)
 	 * need to allocate a new anon
 	 */
 
-	anon = uvm_analloc();
-	if (anon == NULL) {		/* out of VM! */
+	if ((anon = uvm_analloc()) == NULL) {
 		if (pg->pg_flags & PG_WANTED)
 			wakeup(pg);
 		atomic_clearbits_int(&pg->pg_flags, PG_WANTED|PG_BUSY);
@@ -567,7 +575,7 @@ uvm_loanuobj(struct uvm_faultinfo *ufi, void ***output, int flags, vaddr_t va)
 		wakeup(pg);
 	atomic_clearbits_int(&pg->pg_flags, PG_WANTED|PG_BUSY);
 	UVM_PAGE_OWN(pg, NULL);
-	mtx_leave(&uobj->vmobjlock);
+	mtx_leave(&anon->an_lock);
 	return(1);
 }
 
@@ -618,8 +626,9 @@ uvm_loanzero(struct uvm_faultinfo *ufi, void ***output, int flags)
 	/* loaning to an anon */
 	while ((anon = uvm_analloc()) == NULL || 
 	    (pg = uvm_pagealloc(NULL, 0, anon, UVM_PGA_ZERO)) == NULL) {
+		if (anon)
+			UVM_ASSERT_ANON_LOCKED(anon);
 
-		/* unlock everything */
 		uvmfault_unlockall(ufi, ufi->entry->aref.ar_amap,
 		       ufi->entry->object.uvm_obj, NULL);
 
@@ -648,6 +657,7 @@ uvm_loanzero(struct uvm_faultinfo *ufi, void ***output, int flags)
 	uvm_unlock_pageq();
 	**output = anon;
 	*output = (*output) + 1;
+	mtx_leave(&anon->an_lock);
 	return(1);
 }
 
@@ -667,12 +677,13 @@ uvm_unloananon(struct vm_anon **aloans, int nanons)
 		int refs;
 
 		anon = *aloans++;
-		simple_lock(&anon->an_lock);
+		mtx_enter(&anon->an_lock);
 		refs = --anon->an_ref;
-		simple_unlock(&anon->an_lock);
 
 		if (refs == 0) {
 			uvm_anfree(anon);	/* last reference: kill anon */
+		} else {
+			mtx_leave(&anon->an_lock);
 		}
 	}
 }

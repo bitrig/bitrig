@@ -4100,11 +4100,11 @@ uvm_map_clean(struct vm_map *map, vaddr_t start, vaddr_t end, int flags)
 			if (anon == NULL)
 				continue;
 
-			simple_lock(&anon->an_lock); /* XXX */
+			mtx_enter(&anon->an_lock);
 
 			pg = anon->an_page;
 			if (pg == NULL) {
-				simple_unlock(&anon->an_lock);
+				mtx_leave(&anon->an_lock);
 				continue;
 			}
 
@@ -4122,7 +4122,7 @@ deactivate_it:
 				/* skip the page if it's loaned or wired */
 				if (pg->loan_count != 0 ||
 				    pg->wire_count != 0) {
-					simple_unlock(&anon->an_lock);
+					mtx_leave(&anon->an_lock);
 					break;
 				}
 
@@ -4136,7 +4136,7 @@ deactivate_it:
 				if ((pg->pg_flags & PQ_ANON) == 0) {
 					KASSERT(pg->uobject == NULL);
 					uvm_unlock_pageq();
-					simple_unlock(&anon->an_lock);
+					mtx_leave(&anon->an_lock);
 					break;
 				}
 				KASSERT(pg->uanon == anon);
@@ -4144,7 +4144,7 @@ deactivate_it:
 				uvm_pagedeactivate(pg);
 
 				uvm_unlock_pageq();
-				simple_unlock(&anon->an_lock);
+				mtx_leave(&anon->an_lock);
 				break;
 
 			case PGO_FREE:
@@ -4158,15 +4158,17 @@ deactivate_it:
 
 				/* XXX skip the page if it's wired */
 				if (pg->wire_count != 0) {
-					simple_unlock(&anon->an_lock);
+					mtx_leave(&anon->an_lock);
 					break;
 				}
 				amap_unadd(&entry->aref,
 				    cp_start - entry->start);
 				refs = --anon->an_ref;
-				simple_unlock(&anon->an_lock);
-				if (refs == 0)
+				if (refs == 0) {
 					uvm_anfree(anon);
+				} else {
+					mtx_leave(&anon->an_lock);
+				}
 				break;
 
 			default:

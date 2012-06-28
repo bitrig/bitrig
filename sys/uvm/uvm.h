@@ -136,16 +136,6 @@ struct uvm {
 extern struct uvm uvm;
 
 /*
- * UVM_UNLOCK_AND_WAIT: atomic unlock+wait... wrapper around the
- * interlocked tsleep() function.
- */
-
-#define	UVM_UNLOCK_AND_WAIT(event, slock, intr, msg, timo)		\
-do {									\
-	tsleep(event, PVM|PNORELOCK|(intr ? PCATCH : 0), msg, timo);	\
-} while (0)
-
-/*
  * UVM_PAGE_OWN: track page ownership (only if UVM_PAGE_TRKOWN)
  */
 

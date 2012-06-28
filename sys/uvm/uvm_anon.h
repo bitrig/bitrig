@@ -45,16 +45,16 @@
  */
 
 struct vm_anon {
-	struct vm_page *an_page;	/* if in RAM [an_lock] */
-	int an_ref;			/* reference count [an_lock] */
+	struct vm_page	*an_page;	/* if in RAM [an_lock] */
+	int		 an_ref;	/* reference count [an_lock] */
 
 	/*
 	 * Drum swap slot # (if != 0) [an_lock or not, if we hold an_page
 	 * PG_BUSY]
 	 */
-	int an_swslot;
+	int		 an_swslot;
 
-	simple_lock_data_t an_lock;
+	struct mutex	 an_lock;
 };
 
 /*
@@ -94,5 +94,13 @@ struct vm_page	*uvm_anon_lockloanpg(struct vm_anon *);
 void		 uvm_anon_dropswap(struct vm_anon *);
 boolean_t	 uvm_anon_pagein(struct vm_anon *);
 #endif /* _KERNEL */
+
+#ifdef UVMLOCKDEBUG
+#	define UVM_ASSERT_ANONLOCKED(anon) MUTEX_ASSERT_LOCKED(&(anon)->an_lock)
+#	define UVM_ASSERT_ANONUNLOCKED(anon) MUTEX_ASSERT_UNLOCKED(&(anon)->an_lock)
+#else
+#	define UVM_ASSERT_ANONLOCKED(obj)
+#	define UVM_ASSERT_ANONUNLOCKED(obj)
+#endif	/* UVMLOCKDEBUG */
 
 #endif /* _UVM_UVM_ANON_H_ */

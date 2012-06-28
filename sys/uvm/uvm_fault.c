@@ -199,15 +199,16 @@ uvmfault_anonflush(struct vm_anon **anons, int n)
 	for (lcv = 0 ; lcv < n ; lcv++) {
 		if (anons[lcv] == NULL)
 			continue;
-		simple_lock(&anons[lcv]->an_lock);
+		mtx_enter(&anons[lcv]->an_lock);
 		pg = anons[lcv]->an_page;
-		if (pg && (pg->pg_flags & PG_BUSY) == 0 && pg->loan_count == 0) {
+		if (pg && (pg->pg_flags & PG_BUSY) == 0 &&
+		    pg->loan_count == 0) {
 			uvm_lock_pageq();
 			if (pg->wire_count == 0)
 				uvm_pagedeactivate(pg);
 			uvm_unlock_pageq();
 		}
-		simple_unlock(&anons[lcv]->an_lock);
+		mtx_leave(&anons[lcv]->an_lock);
 	}
 }
 
@@ -293,6 +294,8 @@ uvmfault_anonget(struct uvm_faultinfo *ufi, struct vm_amap *amap,
 	struct vm_page *pg;
 	int result;
 
+	UVM_ASSERT_ANONLOCKED(anon);
+
 	result = 0;		/* XXX shut up gcc */
 	uvmexp.fltanget++;
         /* bump rusage counters */
@@ -351,8 +354,8 @@ uvmfault_anonget(struct uvm_faultinfo *ufi, struct vm_amap *amap,
 			} else {
 				/* anon owns page */
 				uvmfault_unlockall(ufi, amap, NULL, NULL);
-				UVM_UNLOCK_AND_WAIT(pg,&anon->an_lock,0,
-				    "anonget2",0);
+				msleep(pg, &anon->an_lock, PVM | PNORELOCK,
+				    "anonget2", 0);
 			}
 			/* ready to relock and try again */
 
@@ -401,7 +404,7 @@ uvmfault_anonget(struct uvm_faultinfo *ufi, struct vm_amap *amap,
 
 		locked = uvmfault_relock(ufi);
 		if (locked || we_own)
-			simple_lock(&anon->an_lock);
+			mtx_enter(&anon->an_lock);
 
 		/*
 		 * if we own the page (i.e. we set PG_BUSY), then we need
@@ -432,7 +435,6 @@ uvmfault_anonget(struct uvm_faultinfo *ufi, struct vm_amap *amap,
 			 */
 			if (pg->pg_flags & PG_RELEASED) {
 				pmap_page_protect(pg, VM_PROT_NONE);
-				simple_unlock(&anon->an_lock);
 				uvm_anfree(anon);	/* frees page for us */
 				if (locked)
 					uvmfault_unlockall(ufi, amap, NULL,
@@ -469,7 +471,7 @@ uvmfault_anonget(struct uvm_faultinfo *ufi, struct vm_amap *amap,
 					uvmfault_unlockall(ufi, amap, NULL,
 					    anon);
 				else
-					simple_unlock(&anon->an_lock);
+					mtx_leave(&anon->an_lock);
 				return (VM_PAGER_ERROR);
 			}
 			
@@ -482,7 +484,7 @@ uvmfault_anonget(struct uvm_faultinfo *ufi, struct vm_amap *amap,
 			uvm_pageactivate(pg);
 			uvm_unlock_pageq();
 			if (!locked)
-				simple_unlock(&anon->an_lock);
+				mtx_leave(&anon->an_lock);
 		}
 
 		/*
@@ -818,7 +820,7 @@ ReFault:
 			continue;
 		}
 		anon = anons[lcv];
-		simple_lock(&anon->an_lock);
+		mtx_enter(&anon->an_lock);
 		/* ignore loaned pages */
 		if (anon->an_page && anon->an_page->loan_count == 0 &&
 		    (anon->an_page->pg_flags & (PG_RELEASED|PG_BUSY)) == 0) {
@@ -840,7 +842,7 @@ ReFault:
 			    PMAP_CANFAIL |
 			     (VM_MAPENT_ISWIRED(ufi.entry) ? PMAP_WIRED : 0));
 		}
-		simple_unlock(&anon->an_lock);
+		mtx_leave(&anon->an_lock);
 		pmap_update(ufi.orig_map->pmap);
 	}
 
@@ -1020,7 +1022,7 @@ ReFault:
 	 */
 
 	anon = anons[centeridx];
-	simple_lock(&anon->an_lock);
+	mtx_enter(&anon->an_lock);
 
 	/* locked: maps(read), amap, anon */
 
@@ -1041,12 +1043,15 @@ ReFault:
 	result = uvmfault_anonget(&ufi, amap, anon);
 	switch (result) {
 	case VM_PAGER_OK:
+		UVM_ASSERT_ANONLOCKED(anon);
 		break; 
 
 	case VM_PAGER_REFAULT:
+		UVM_ASSERT_ANONUNLOCKED(anon);
 		goto ReFault;
 
 	case VM_PAGER_ERROR:
+		UVM_ASSERT_ANONUNLOCKED(anon);
 		/*
 		 * An error occured while trying to bring in the
 		 * page -- this is the only error we return right
@@ -1068,12 +1073,13 @@ ReFault:
 
 	uobj = anon->an_page->uobject;	/* locked by anonget if !NULL */
 
+
+	/* locked: maps(read), amap, anon, uobj(if one) */
 #ifdef UVMLOCKDEBUG
 	if (uobj)
 		UVM_ASSERT_OBJLOCKED(uobj);
 #endif
-
-	/* locked: maps(read), amap, anon, uobj(if one) */
+	UVM_ASSERT_ANONLOCKED(anon);
 
 	/*
 	 * special handling for loaned pages 
@@ -1170,13 +1176,9 @@ ReFault:
 	if ((access_type & VM_PROT_WRITE) != 0 && anon->an_ref > 1) {
 		uvmexp.flt_acow++;
 		oanon = anon;		/* oanon = old, locked anon */
-		anon = uvm_analloc();
-		if (anon) {
-			pg = uvm_pagealloc(NULL, 0, anon, 0);
-		}
-
-		/* check for out of RAM */
-		if (anon == NULL || pg == NULL) {
+		UVM_ASSERT_ANONLOCKED(anon);
+		if ((anon = uvm_analloc()) == NULL ||
+		    (pg = uvm_pagealloc(NULL, 0, anon, 0)) == NULL) {
 			if (anon)
 				uvm_anfree(anon);
 			uvmfault_unlockall(&ufi, amap, uobj, oanon);
@@ -1202,32 +1204,18 @@ ReFault:
 
 		/* deref: can not drop to zero here by defn! */
 		oanon->an_ref--;
-
-		/*
-		 * note: oanon still locked.   anon is _not_ locked, but we
-		 * have the sole references to in from amap which _is_ locked.
-		 * thus, no one can get at it until we are done with it.
-		 */
-
+		/* We don't need to do anything with oanon now, so unlock */
+		mtx_leave(&oanon->an_lock);
 	} else {
 
 		uvmexp.flt_anon++;
-		oanon = anon;		/* old, locked anon is same as anon */
 		pg = anon->an_page;
 		if (anon->an_ref > 1)     /* disallow writes to ref > 1 anons */
 			enter_prot = enter_prot & ~VM_PROT_WRITE;
 
 	}
 
-	/* locked: maps(read), amap, oanon */
-
-	/*
-	 * now map the page in ...
-	 * XXX: old fault unlocks object before pmap_enter.  this seems
-	 * suspect since some other thread could blast the page out from
-	 * under us between the unlock and the pmap_enter.
-	 */
-
+	/* locked: maps(read), amap, anon */
 	if (pmap_enter(ufi.orig_map->pmap, ufi.orig_rvaddr, VM_PAGE_TO_PHYS(pg),
 	    enter_prot, access_type | PMAP_CANFAIL | (wired ? PMAP_WIRED : 0))
 	    != 0) {
@@ -1277,7 +1265,7 @@ ReFault:
 	 * done case 1!  finish up by unlocking everything and returning success
 	 */
 
-	uvmfault_unlockall(&ufi, amap, uobj, oanon);
+	uvmfault_unlockall(&ufi, amap, uobj, anon);
 	pmap_update(ufi.orig_map->pmap);
 	return (0);
 
@@ -1538,22 +1526,16 @@ Case2:
 			panic("uvm_fault: want to promote data, but no anon");
 #endif
 
-		anon = uvm_analloc();
-		if (anon) {
-			/*
-			 * In `Fill in data...' below, if
-			 * uobjpage == PGO_DONTCARE, we want
-			 * a zero'd, dirty page, so have
-			 * uvm_pagealloc() do that for us.
-			 */
-			pg = uvm_pagealloc(NULL, 0, anon,
-			    (uobjpage == PGO_DONTCARE) ? UVM_PGA_ZERO : 0);
-		}
 
 		/*
-		 * out of memory resources?
+		 * In `Fill in data...' below, if
+		 * uobjpage == PGO_DONTCARE, we want
+		 * a zero'd, dirty page, so have
+		 * uvm_pagealloc() do that for us.
 		 */
-		if (anon == NULL || pg == NULL) {
+		if ((anon = uvm_analloc() ) == NULL ||
+		    (pg = uvm_pagealloc(NULL, 0, anon,
+		    (uobjpage == PGO_DONTCARE) ? UVM_PGA_ZERO : 0)) == NULL) {
 
 			/*
 			 * arg!  must unbusy our page and fail or sleep.
@@ -1574,12 +1556,13 @@ Case2:
 			/* unlock and fail ... */
 			uvmfault_unlockall(&ufi, amap, uobj, NULL);
 			KASSERT(uvmexp.swpgonly <= uvmexp.swpages);
+			if (anon)
+				uvm_anfree(anon);
 			if (anon == NULL || uvmexp.swpgonly == uvmexp.swpages) {
 				uvmexp.fltnoanon++;
 				return (ENOMEM);
 			}
 
-			uvm_anfree(anon);
 			uvmexp.fltnoram++;
 			uvm_wait("flt_noram5");
 			goto ReFault;
@@ -1624,6 +1607,8 @@ Case2:
 			 * above.
 			 */
 		}
+		/* done messing with the anon, and we hold the sole ref */
+		mtx_leave(&anon->an_lock);
 
 		amap_add(&ufi.entry->aref, ufi.orig_rvaddr - ufi.entry->start,
 		    anon, 0);
@@ -1632,8 +1617,11 @@ Case2:
 	/*
 	 * locked:
 	 * maps(read), amap(if !null), uobj(if !null), uobjpage(if uobj)
-	 *
+	 * 
 	 * note: pg is either the uobjpage or the new page in the new anon
+	 * anon if present is NOT locked, but the amap is locked and it is
+	 * a fresh anon with us owning the sole reference count, therefore it
+	 * will not be messed with.
 	 */
 #ifdef UVMLOCKDEBUG
 	if (uobj)
@@ -1688,6 +1676,10 @@ Case2:
 			atomic_clearbits_int(&pg->pg_flags, PG_CLEAN);
 			uao_dropswap(uobj, pg->offset >> PAGE_SHIFT);
 		}
+		/*
+		 * else if anon it is a freshly allocated page and thus has no
+		 * swap slot.
+		 */
 	} else {
 		/* activate it */
 		uvm_pageactivate(pg);
@@ -1852,10 +1844,12 @@ uvmfault_unlockall(struct uvm_faultinfo *ufi, struct vm_amap *amap,
 #ifdef UVMLOCKDEBUG
 	if (uobj)
 		UVM_ASSERT_OBJLOCKED(uobj);
+	if (anon)
+		UVM_ASSERT_ANONLOCKED(anon);
 #endif
 
 	if (anon)
-		simple_unlock(&anon->an_lock);
+		mtx_leave(&anon->an_lock);
 	if (uobj)
 		mtx_leave(&uobj->vmobjlock);
 	uvmfault_unlockmaps(ufi, FALSE);

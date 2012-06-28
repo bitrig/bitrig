@@ -767,6 +767,8 @@ uvm_pagealloc_pg(struct vm_page *pg, struct uvm_object *obj, voff_t off,
 
 	if (obj)
 		UVM_ASSERT_OBJLOCKED(obj);
+	if (anon)
+		UVM_ASSERT_ANONLOCKED(anon);
 
 	flags = PG_BUSY | PG_FAKE;
 	pg->offset = off;
@@ -944,6 +946,8 @@ uvm_pagealloc(struct uvm_object *obj, voff_t off, struct vm_anon *anon,
 	KASSERT(off == trunc_page(off));
 	if (obj)
 		UVM_ASSERT_OBJLOCKED(obj);
+	if (anon)
+		UVM_ASSERT_ANONLOCKED(anon);
 
 	/* XXX these functions should share flags */
 	pmr_flags = UVM_PLA_NOWAIT;
@@ -1032,10 +1036,10 @@ uvm_pagefree(struct vm_page *pg)
 	}
 #endif
 
-#ifdef UVMLOCKDEBUG
 	if (pg->uobject)
 		UVM_ASSERT_OBJLOCKED(pg->uobject);
-#endif /* UVMLOCKDEBUG */
+	if (pg->uanon)
+		UVM_ASSERT_ANONLOCKED(pg->uanon);
 
 	KASSERT((pg->pg_flags & PG_DEV) == 0);
 
@@ -1167,6 +1171,8 @@ uvm_page_unbusy(struct vm_page **pgs, int npgs)
 		if (pg == NULL || pg == PGO_DONTCARE) {
 			continue;
 		}
+		if (pg->uanon)
+			UVM_ASSERT_ANONLOCKED(pg->uanon);
 		if (pg->pg_flags & PG_WANTED) {
 			wakeup(pg);
 		}

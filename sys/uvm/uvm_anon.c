@@ -70,11 +70,11 @@ uvm_analloc(void)
 
 	anon = pool_get(&uvm_anon_pool, PR_NOWAIT);
 	if (anon) {
-		simple_lock_init(&anon->an_lock);
+		mtx_init(&anon->an_lock, IPL_NONE);
 		anon->an_ref = 1;
 		anon->an_page = NULL;
 		anon->an_swslot = 0;
-		simple_lock(&anon->an_lock);
+		mtx_enter(&anon->an_lock);
 	}
 	return(anon);
 }
@@ -84,13 +84,16 @@ uvm_analloc(void)
  *
  * => caller must remove anon from its amap before calling (if it was in
  *	an amap).
- * => anon must be unlocked and have a zero reference count.
+ * => anon must be locked and have a zero reference count.
  * => we may lock the pageq's.
  */
 void
 uvm_anfree(struct vm_anon *anon)
 {
 	struct vm_page *pg;
+
+	UVM_ASSERT_ANONLOCKED(anon);
+	KASSERT(anon->an_ref == 0);
 
 	/*
 	 * get page
@@ -168,17 +171,20 @@ uvm_anfree(struct vm_anon *anon)
 	KASSERT(anon->an_page == NULL);
 	KASSERT(anon->an_swslot == 0);
 
+	mtx_leave(&anon->an_lock);
+
 	pool_put(&uvm_anon_pool, anon);
 }
 
 /*
  * uvm_anon_dropswap:  release any swap resources from this anon.
  * 
- * => anon must be locked or have a reference count of 0.
+ * => anon must be locked 
  */
 void
 uvm_anon_dropswap(struct vm_anon *anon)
 {
+	UVM_ASSERT_ANONLOCKED(anon);
 
 	if (anon->an_swslot == 0)
 		return;
@@ -210,6 +216,7 @@ uvm_anon_lockloanpg(struct vm_anon *anon)
 	struct vm_page *pg;
 	boolean_t locked = FALSE;
 
+	UVM_ASSERT_ANONLOCKED(anon);
 	/*
 	 * loop while we have a resident page that has a non-zero loan count.
 	 * if we successfully get our lock, we will "break" the loop.
@@ -247,14 +254,14 @@ uvm_anon_lockloanpg(struct vm_anon *anon)
 			 */
 
 			if (!locked) {
-				simple_unlock(&anon->an_lock);
+				mtx_leave(&anon->an_lock);
 
 				/*
 				 * someone locking the object has a chance to
 				 * lock us right now
 				 */
 
-				simple_lock(&anon->an_lock);
+				mtx_enter(&anon->an_lock);
 				continue;
 			}
 		}
@@ -294,7 +301,7 @@ uvm_anon_pagein(struct vm_anon *anon)
 	struct uvm_object *uobj;
 	int rv;
 
-	/* locked: anon */
+	UVM_ASSERT_ANONLOCKED(anon);
 	rv = uvmfault_anonget(NULL, NULL, anon);
 	/*
 	 * if rv == VM_PAGER_OK, anon is still locked, else anon
@@ -303,10 +310,12 @@ uvm_anon_pagein(struct vm_anon *anon)
 
 	switch (rv) {
 	case VM_PAGER_OK:
+		UVM_ASSERT_ANONLOCKED(anon);
 		break;
 
 	case VM_PAGER_ERROR:
 	case VM_PAGER_REFAULT:
+		UVM_ASSERT_ANONUNLOCKED(anon);
 
 		/*
 		 * nothing more to do on errors.
@@ -347,7 +356,7 @@ uvm_anon_pagein(struct vm_anon *anon)
 	 * unlock the anon and we're done.
 	 */
 
-	simple_unlock(&anon->an_lock);
+	mtx_leave(&anon->an_lock);
 	if (uobj) {
 		mtx_leave(&uobj->vmobjlock);
 	}

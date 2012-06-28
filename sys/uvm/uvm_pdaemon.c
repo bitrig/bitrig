@@ -91,7 +91,6 @@
 
 #define UVMPD_NUMDIRTYREACTS 16
 
-
 /*
  * local prototypes
  */
@@ -465,7 +464,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 			if ((p->pg_flags & PQ_ANON) || p->uobject == NULL) {
 				anon = p->uanon;
 				KASSERT(anon != NULL);
-				if (!simple_lock_try(&anon->an_lock)) {
+				if (!mtx_enter_try(&anon->an_lock)) {
 					/* lock failed, skip this page */
 					continue;
 				}
@@ -483,7 +482,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 					/* anon now owns it */
 				}
 				if (p->pg_flags & PG_BUSY) {
-					simple_unlock(&anon->an_lock);
+					mtx_leave(&anon->an_lock);
 					uvmexp.pdbusy++;
 					/* someone else owns page, skip it */
 					continue;
@@ -535,7 +534,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 
 					/* remove from object */
 					anon->an_page = NULL;
-					simple_unlock(&anon->an_lock);
+					mtx_leave(&anon->an_lock);
 				} else {
 					/* pagefree has already removed the
 					 * page from the object */
@@ -551,7 +550,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 
 			if (free + uvmexp.paging > uvmexp.freetarg << 2) {
 				if (anon) {
-					simple_unlock(&anon->an_lock);
+					mtx_leave(&anon->an_lock);
 				} else {
 					mtx_leave(&uobj->vmobjlock);
 				}
@@ -571,7 +570,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 				dirtyreacts++;
 				uvm_pageactivate(p);
 				if (anon) {
-					simple_unlock(&anon->an_lock);
+					mtx_leave(&anon->an_lock);
 				} else {
 					mtx_leave(&uobj->vmobjlock);
 				}
@@ -651,7 +650,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 						    PG_BUSY);
 						UVM_PAGE_OWN(p, NULL);
 						if (anon)
-							simple_unlock(
+							mtx_leave(
 							    &anon->an_lock);
 						else
 							mtx_leave(
@@ -693,7 +692,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 		if (swap_backed) {
 			if (p) {	/* if we just added a page to cluster */
 				if (anon)
-					simple_unlock(&anon->an_lock);
+					mtx_leave(&anon->an_lock);
 				else
 					mtx_leave(&uobj->vmobjlock);
 
@@ -826,7 +825,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 			/* !swap_backed case: already locked... */
 			if (swap_backed) {
 				if (anon)
-					simple_lock(&anon->an_lock);
+					mtx_enter(&anon->an_lock);
 				else
 					mtx_enter(&uobj->vmobjlock);
 			}
@@ -856,7 +855,6 @@ uvmpd_scan_inactive(struct pglist *pglst)
 				anon->an_page = NULL;
 				p->uanon = NULL;
 
-				simple_unlock(&anon->an_lock);
 				uvm_anfree(anon);	/* kills anon */
 				pmap_page_protect(p, VM_PROT_NONE);
 				anon = NULL;
@@ -892,7 +890,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 			 */
 
 			if (anon)
-				simple_unlock(&anon->an_lock);
+				mtx_leave(&anon->an_lock);
 			else if (uobj)
 				mtx_leave(&uobj->vmobjlock);
 
@@ -1009,7 +1007,7 @@ uvmpd_scan(void)
 		/* is page anon owned or ownerless? */
 		if ((p->pg_flags & PQ_ANON) || p->uobject == NULL) {
 			KASSERT(p->uanon != NULL);
-			if (!simple_lock_try(&p->uanon->an_lock))
+			if (!mtx_enter_try(&p->uanon->an_lock))
 				continue;
 
 			/* take over the page? */
@@ -1029,7 +1027,7 @@ uvmpd_scan(void)
 
 		if ((p->pg_flags & PG_BUSY) != 0) {
 			if (p->pg_flags & PQ_ANON)
-				simple_unlock(&p->uanon->an_lock);
+				mtx_leave(&p->uanon->an_lock);
 			else
 				mtx_leave(&p->uobject->vmobjlock);
 			continue;
@@ -1071,7 +1069,7 @@ uvmpd_scan(void)
 			inactive_shortage--;
 		}
 		if (p->pg_flags & PQ_ANON)
-			simple_unlock(&p->uanon->an_lock);
+			mtx_leave(&p->uanon->an_lock);
 		else
 			mtx_leave(&p->uobject->vmobjlock);
 	}
