@@ -1,6 +1,6 @@
 /*	$OpenBSD: nfs_debug.c,v 1.3 2009/08/14 21:16:13 thib Exp $ */
 /*
- * Copyright (c) 2009 Thordur I. Bjornsson. <thib@openbsd.org>
+ * Copyright (c) 2009 Thordur I. Bjornsson. <thib@secnorth.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above

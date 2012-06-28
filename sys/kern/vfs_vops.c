@@ -1,6 +1,6 @@
 /*	$OpenBSD: vfs_vops.c,v 1.4 2011/07/02 15:52:25 thib Exp $	*/
 /*
- * Copyright (c) 2010 Thordur I. Bjornsson <thib@openbsd.org>
+ * Copyright (c) 2010 Thordur I. Bjornsson <thib@secnorth.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above

@@ -2,7 +2,7 @@
 
 /*
  * Copyright (c) 2002, 2003 Artur Grabowski <art@openbsd.org>
- * Copyright (c) 2011 Thordur Bjornsson <thib@openbsd.org>
+ * Copyright (c) 2011 Thordur I. Bjornsson <thib@secnorth.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
