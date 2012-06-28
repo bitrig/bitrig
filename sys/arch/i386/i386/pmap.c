@@ -900,7 +900,7 @@ pmap_bootstrap(vaddr_t kva_start)
 	 */
 
 	simple_lock_init(&pvalloc_lock);
-	simple_lock_init(&pmaps_lock);
+	mtx_init(&pmaps_lock, IPL_NONE);
 	LIST_INIT(&pmaps);
 	TAILQ_INIT(&pv_freepages);
 	TAILQ_INIT(&pv_unusedpgs);
@@ -1508,7 +1508,7 @@ pmap_pinit(struct pmap *pmap)
 	 * malloc since malloc allocates out of a submap and we should have
 	 * already allocated kernel PTPs to cover the range...
 	 */
-	simple_lock(&pmaps_lock);
+	mtx_enter(&pmaps_lock);
 	/* put in kernel VM PDEs */
 	bcopy(&PDP_BASE[PDSLOT_KERN], &pmap->pm_pdir[PDSLOT_KERN],
 	       nkpde * sizeof(pd_entry_t));
@@ -1516,7 +1516,7 @@ pmap_pinit(struct pmap *pmap)
 	bzero(&pmap->pm_pdir[PDSLOT_KERN + nkpde],
 	       NBPG - ((PDSLOT_KERN + nkpde) * sizeof(pd_entry_t)));
 	LIST_INSERT_HEAD(&pmaps, pmap, pm_list);
-	simple_unlock(&pmaps_lock);
+	mtx_leave(&pmaps_lock);
 }
 
 /*
@@ -1541,9 +1541,9 @@ pmap_destroy(struct pmap *pmap)
 	pmap_tlb_droppmap(pmap);	
 #endif
 
-	simple_lock(&pmaps_lock);
+	mtx_enter(&pmaps_lock);
 	LIST_REMOVE(pmap, pm_list);
-	simple_unlock(&pmaps_lock);
+	mtx_leave(&pmaps_lock);
 
 	/*
 	 * Free any remaining PTPs. pageqlock is unneeded because these
@@ -2667,7 +2667,6 @@ pmap_growkernel(vaddr_t maxkvaddr)
 	 * whoops!   we need to add kernel PTPs
 	 */
 
-	s = splhigh();	/* to be safe */
 	mtx_enter(&kpm->pm_obj.vmobjlock);
 
 	for (/*null*/ ; nkpde < needed_kpde ; nkpde++) {
@@ -2705,16 +2704,15 @@ pmap_growkernel(vaddr_t maxkvaddr)
 		}
 
 		/* distribute new kernel PTP to all active pmaps */
-		simple_lock(&pmaps_lock);
+		mtx_enter(&pmaps_lock);
 		LIST_FOREACH(pm, &pmaps, pm_list) {
 			pm->pm_pdir[PDSLOT_KERN + nkpde] =
 				kpm->pm_pdir[PDSLOT_KERN + nkpde];
 		}
-		simple_unlock(&pmaps_lock);
+		mtx_leave(&pmaps_lock);
 	}
 
 	mtx_leave(&kpm->pm_obj.vmobjlock);
-	splx(s);
 
 out:
 	return (VM_MIN_KERNEL_ADDRESS + (nkpde * NBPD));
