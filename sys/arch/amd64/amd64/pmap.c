@@ -277,6 +277,7 @@ struct pool pmap_pv_pool;
  * linked list of all non-kernel pmaps
  */
 
+struct mutex pmaps_lock;
 struct pmap_head pmaps;
 
 /*
@@ -700,6 +701,7 @@ pmap_bootstrap(paddr_t first_avail, paddr_t max_pa)
 	 * init the global lists.
 	 */
 	LIST_INIT(&pmaps);
+	mtx_init(&pmaps_lock, IPL_NONE);
 
 	/*
 	 * initialize the pmap pool.
@@ -1064,18 +1066,24 @@ pmap_create(void)
 	 * have already allocated kernel PTPs to cover the range...
 	 */
 
+	mtx_enter(&pmaps_lock);
 try_again:
 	gen = pmap_pdp_cache_generation;
+	mtx_leave(&pmaps_lock);
+
 	pmap->pm_pdir = pool_get(&pmap_pdp_pool, PR_WAITOK);
 
+	mtx_enter(&pmaps_lock);
+	/* Make sure we didn't miss the pdp update from a pmap_growkernel */
 	if (gen != pmap_pdp_cache_generation) {
 		pool_put(&pmap_pdp_pool, pmap->pm_pdir);
 		goto try_again;
 	}
-
 	pmap->pm_pdirpa = pmap->pm_pdir[PDIR_SLOT_PTE] & PG_FRAME;
 
 	LIST_INSERT_HEAD(&pmaps, pmap, pm_list);
+	mtx_leave(&pmaps_lock);
+
 	return (pmap);
 }
 
@@ -1115,7 +1123,9 @@ pmap_destroy(struct pmap *pmap)
 	/*
 	 * remove it from global list of pmaps
 	 */
+	mtx_enter(&pmaps_lock);
 	LIST_REMOVE(pmap, pm_list);
+	mtx_leave(&pmaps_lock);
 
 	/*
 	 * free any remaining PTPs
@@ -2217,6 +2227,8 @@ pmap_get_physpage(vaddr_t va, int level, paddr_t *paddrp)
 	struct vm_page *ptp;
 	struct pmap *kpm = pmap_kernel();
 
+	MUTEX_ASSERT_LOCKED(&kpm->pm_lock);
+
 	if (uvm.page_init_done == FALSE) {
 		vaddr_t va;
 
@@ -2262,6 +2274,8 @@ pmap_alloc_level(pd_entry_t **pdes, vaddr_t kva, int lvl, long *needed_ptps)
 	int level;
 	pd_entry_t *pdep;
 
+	MUTEX_ASSERT_LOCKED(&pmap_kernel()->pm_lock);
+
 	for (level = lvl; level > 1; level--) {
 		if (level == PTP_LEVELS)
 			pdep = pmap_kernel()->pm_pdir;
@@ -2300,12 +2314,15 @@ vaddr_t
 pmap_growkernel(vaddr_t maxkvaddr)
 {
 	struct pmap *kpm = pmap_kernel(), *pm;
-	int s, i;
+	int i;
 	unsigned newpdes;
 	long needed_kptp[PTP_LEVELS], target_nptp, old;
 
-	if (maxkvaddr <= pmap_maxkvaddr)
+	mtx_enter(&kpm->pm_lock);
+	if (maxkvaddr <= pmap_maxkvaddr) {
+		mtx_leave(&kpm->pm_lock);
 		return pmap_maxkvaddr;
+	}
 
 	maxkvaddr = x86_round_pdr(maxkvaddr);
 	old = nkptp[PTP_LEVELS - 1];
@@ -2324,17 +2341,20 @@ pmap_growkernel(vaddr_t maxkvaddr)
 		needed_kptp[i] = target_nptp - nkptp[i] + 1;
 	}
 
-	s = splhigh();	/* to be safe */
-	mtx_enter(&kpm->pm_lock);
 	pmap_alloc_level(normal_pdes, pmap_maxkvaddr, PTP_LEVELS,
 	    needed_kptp);
 
 	/*
 	 * If the number of top level entries changed, update all
 	 * pmaps.
+	 * Since we lock the pmap list we do not need to worry about
+	 * locking here, since the only thing to touch this part of the
+	 * pmaps will be us. (no one will be accessing the new ptps
+	 * until we return)
 	 */
 	if (needed_kptp[PTP_LEVELS - 1] != 0) {
 		newpdes = nkptp[PTP_LEVELS - 1] - old;
+		mtx_enter(&pmaps_lock);
 		LIST_FOREACH(pm, &pmaps, pm_list) {
 			memcpy(&pm->pm_pdir[PDIR_SLOT_KERN + old],
 			       &kpm->pm_pdir[PDIR_SLOT_KERN + old],
@@ -2346,10 +2366,10 @@ pmap_growkernel(vaddr_t maxkvaddr)
 		pool_cache_invalidate(&pmap_pdp_cache);
 #endif
 		pmap_pdp_cache_generation++;
+		mtx_leave(&pmaps_lock);
 	}
 	pmap_maxkvaddr = maxkvaddr;
 	mtx_leave(&kpm->pm_lock);
-	splx(s);
 
 	return maxkvaddr;
 }
