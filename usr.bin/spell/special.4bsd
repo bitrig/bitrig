@@ -718,7 +718,6 @@ mkdir
 mkfifo
 mkfs
 mkhosts
-mkhybrid
 mkisofs
 mklost
 mkmf
