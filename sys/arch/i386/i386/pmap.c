@@ -200,7 +200,7 @@
  */
 
 struct simplelock pvalloc_lock;
-struct simplelock pmaps_lock;
+struct mutex pmaps_lock;
 
 #define PMAP_MAP_TO_HEAD_LOCK()		/* null */
 #define PMAP_MAP_TO_HEAD_UNLOCK()	/* null */
@@ -2655,19 +2655,15 @@ pmap_growkernel(vaddr_t maxkvaddr)
 {
 	struct pmap *kpm = pmap_kernel(), *pm;
 	int needed_kpde;   /* needed number of kernel PTPs */
-	int s;
 	paddr_t ptaddr;
 
 	needed_kpde = (int)(maxkvaddr - VM_MIN_KERNEL_ADDRESS + (NBPD-1))
 		/ NBPD;
-	if (needed_kpde <= nkpde)
-		goto out;		/* we are OK */
-
-	/*
-	 * whoops!   we need to add kernel PTPs
-	 */
-
 	mtx_enter(&kpm->pm_obj.vmobjlock);
+	if (needed_kpde <= nkpde) {
+		mtx_leave(&kpm->pm_obj.vmobjlock);
+		goto out;		/* we are OK */
+	}
 
 	for (/*null*/ ; nkpde < needed_kpde ; nkpde++) {
 
