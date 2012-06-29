@@ -1,5 +1,3 @@
-#	$OpenBSD: Makefile,v 1.6 2009/04/17 03:58:54 deraadt Exp $
-
 TOP=	${.CURDIR}/..
 
 .include "${TOP}/Makefile.inc"
@@ -17,12 +15,12 @@ ${CDROM}:
 	cp ${.OBJDIR}/../ramdisk_cd/${BSDRD} ${.OBJDIR}/cd-dir/${OSREV}/amd64
 	cp ${DESTDIR}/usr/mdec/cdbr ${.OBJDIR}/cd-dir/${OSREV}/amd64
 	cp ${DESTDIR}/usr/mdec/cdboot ${.OBJDIR}/cd-dir/${OSREV}/amd64/cdboot
-	mkhybrid -a -R -T -L -l -d -D -N -o ${.OBJDIR}/${CDROM} -v -v \
-	    -A "OpenBSD ${OSREV} amd64 bootonly CD" \
-	    -P "Copyright (c) `date +%Y` Theo de Raadt, The OpenBSD project" \
-	    -p "Theo de Raadt <deraadt@openbsd.org>" \
-	    -V "OpenBSD/amd64   ${OSREV} boot-only CD" \
-	    -b ${OSREV}/amd64/cdbr -c ${OSREV}/amd64/boot.catalog \
+	mkisofs -R -T -allow-leading-dots -l -d -D -N -o ${.OBJDIR}/${CDROM} -v -v \
+	    -A "Bitrig ${OSREV} amd64 bootonly CD" \
+	    -publisher "Copyright (c) `date +%Y`, The Bitrig foundation <bitrig@bitrig.org>" \
+	    -p "The Bitrig foundation <bitrig@bitrig.org>" \
+	    -V "Bitrig/amd64 ${OSREV} boot-only CD" \
+	    -no-emul-boot -b ${OSREV}/amd64/cdbr -c ${OSREV}/amd64/boot.catalog \
 	    ${.OBJDIR}/cd-dir
 
 .ifdef RELEASEDIR
