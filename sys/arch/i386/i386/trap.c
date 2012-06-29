@@ -384,11 +384,7 @@ trap(struct trapframe *frame)
 			goto we_re_toast;
 #ifdef LOCKDEBUG
 		/* If we page-fault while in scheduler, we're doomed. */
-#ifdef notyet
-		if (simple_lock_held(&sched_lock))
-#else
 		if (__mp_lock_held(&sched_lock))
-#endif
 			goto we_re_toast;
 #endif
 
