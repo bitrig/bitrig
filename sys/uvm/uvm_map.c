@@ -975,8 +975,6 @@ uvm_map(struct vm_map *map, vaddr_t *addr, vsize_t sz,
 
 	if ((map->flags & VM_MAP_INTRSAFE) == 0)
 		splassert(IPL_NONE);
-	else
-		splassert(IPL_VM);
 
 	/*
 	 * We use pmap_align and pmap_offset as alignment and offset variables.
