@@ -982,7 +982,9 @@ pmap_init(void)
 		panic("pmap_init: pv_initpage");
 	pv_cachedva = 0;   /* a VA we have allocated but not used yet */
 	pv_nfpvents = 0;
+	mtx_enter(&pvalloc_lock); /* avoid asserts */
 	(void) pmap_add_pvpage(pv_initpage, FALSE);
+	mtx_leave(&pvalloc_lock);
 
 	/*
 	 * done: pmap module is up (and ready for business)
