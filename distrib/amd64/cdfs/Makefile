@@ -12,7 +12,7 @@ ${CDROM}:
 	mkdir -p ${.OBJDIR}/cd-dir/${OSREV}/amd64
 	mkdir -p ${.OBJDIR}/cd-dir/etc
 	echo "set image /${OSREV}/amd64/bsd.rd" > ${.OBJDIR}/cd-dir/etc/boot.conf
-	cp ${.OBJDIR}/../ramdisk_cd/${BSDRD} ${.OBJDIR}/cd-dir/${OSREV}/amd64
+	cp ${.OBJDIR}/../ramdisk/${BSDRD} ${.OBJDIR}/cd-dir/${OSREV}/amd64
 	cp ${DESTDIR}/usr/mdec/cdbr ${.OBJDIR}/cd-dir/${OSREV}/amd64
 	cp ${DESTDIR}/usr/mdec/cdboot ${.OBJDIR}/cd-dir/${OSREV}/amd64/cdboot
 	mkisofs -R -T -allow-leading-dots -l -d -D -N -o ${.OBJDIR}/${CDROM} -v -v \

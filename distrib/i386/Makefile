@@ -3,6 +3,6 @@
 SUBDIR= ramdisk cdfs livecd
 
 unconfig:
-	cd ramdisk_cd; ${MAKE} unconfig
+	cd ramdisk; ${MAKE} unconfig
 
 .include <bsd.subdir.mk>
