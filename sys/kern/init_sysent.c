@@ -1,5 +1,3 @@
-/*	$OpenBSD: init_sysent.c,v 1.136 2012/06/21 00:57:59 guenther Exp $	*/
-
 /*
  * System call switch table.
  *
