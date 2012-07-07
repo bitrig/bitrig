@@ -150,7 +150,7 @@ struct process {
 	 * Ultimately, we shouldn't need that, threads should be able to exit
 	 * at will. Unfortunately until the pid is moved into struct process
 	 * we'll have to remember the main threads and abuse its pid as the
-	 * the pid of the process. This is gross, but considering the horrible
+	 * pid of the process. This is gross, but considering the horrible
 	 * pid semantics we have right now, it's unavoidable.
 	 */
 	struct	proc *ps_mainproc;
