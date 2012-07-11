@@ -1,4 +1,4 @@
-/*	$OpenBSD: filter.c,v 1.1.1.1 2012/07/11 11:43:27 dlg Exp $ */
+/*	$OpenBSD: filter.c,v 1.1 2012/07/11 11:43:27 dlg Exp $ */
 
 /*
  * Copyright (c) 2004, 2005 Camiel Dobbelaar, <cd@sentia.nl>
