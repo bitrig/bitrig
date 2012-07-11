@@ -53,6 +53,18 @@
  * Every operation on a red-black tree is bounded as O(lg n).
  * The maximum height of a red-black tree is 2lg (n+1).
  */
+#ifdef __clang_analyzer__
+
+#ifdef _KERNEL
+#include <lib/libkern/libkern.h>
+#else
+#include <assert.h>
+#endif /* _KERNEL */
+
+#define tell_clang(args) assert(args)
+#else
+#define tell_clang(args) /* nothing */
+#endif /* __clang_analyser */
 
 #define SPLAY_HEAD(name, type)						\
 struct name {								\
@@ -335,6 +347,7 @@ struct {								\
 #define RB_ROTATE_LEFT(head, elm, tmp, field) do {			\
 	(tmp) = RB_RIGHT(elm, field);					\
 	if ((RB_RIGHT(elm, field) = RB_LEFT(tmp, field))) {		\
+		tell_clang(RB_LEFT(tmp, field) != NULL);		\
 		RB_PARENT(RB_LEFT(tmp, field), field) = (elm);		\
 	}								\
 	RB_AUGMENT(elm);						\
@@ -355,6 +368,7 @@ struct {								\
 #define RB_ROTATE_RIGHT(head, elm, tmp, field) do {			\
 	(tmp) = RB_LEFT(elm, field);					\
 	if ((RB_LEFT(elm, field) = RB_RIGHT(tmp, field))) {		\
+		tell_clang(RB_RIGHT(tmp, field) != NULL);		\
 		RB_PARENT(RB_RIGHT(tmp, field), field) = (elm);		\
 	}								\
 	RB_AUGMENT(elm);						\
@@ -404,6 +418,7 @@ name##_RB_INSERT_COLOR(struct name *head, struct type *elm)		\
 	while ((parent = RB_PARENT(elm, field)) &&			\
 	    RB_COLOR(parent, field) == RB_RED) {			\
 		gparent = RB_PARENT(parent, field);			\
+		tell_clang(gparent != NULL); /* root must be black */	\
 		if (parent == RB_LEFT(gparent, field)) {		\
 			tmp = RB_RIGHT(gparent, field);			\
 			if (tmp && RB_COLOR(tmp, field) == RB_RED) {	\
@@ -447,19 +462,24 @@ name##_RB_REMOVE_COLOR(struct name *head, struct type *parent, struct type *elm)
 	struct type *tmp;						\
 	while ((elm == NULL || RB_COLOR(elm, field) == RB_BLACK) &&	\
 	    elm != RB_ROOT(head)) {					\
+		tell_clang(parent != NULL); /* not root, have parent */ \
 		if (RB_LEFT(parent, field) == elm) {			\
 			tmp = RB_RIGHT(parent, field);			\
+			tell_clang(tmp != NULL); /* all leaves are black */\
 			if (RB_COLOR(tmp, field) == RB_RED) {		\
 				RB_SET_BLACKRED(tmp, parent, field);	\
 				RB_ROTATE_LEFT(head, parent, tmp, field);\
 				tmp = RB_RIGHT(parent, field);		\
 			}						\
+			tell_clang(tmp != NULL); /* all leaves are black */\
 			if ((RB_LEFT(tmp, field) == NULL ||		\
 			    RB_COLOR(RB_LEFT(tmp, field), field) == RB_BLACK) &&\
 			    (RB_RIGHT(tmp, field) == NULL ||		\
 			    RB_COLOR(RB_RIGHT(tmp, field), field) == RB_BLACK)) {\
 				RB_COLOR(tmp, field) = RB_RED;		\
 				elm = parent;				\
+				tell_clang(parent != NULL);		\
+				/* we are red, must have parent */	\
 				parent = RB_PARENT(elm, field);		\
 			} else {					\
 				if (RB_RIGHT(tmp, field) == NULL ||	\
@@ -481,11 +501,13 @@ name##_RB_REMOVE_COLOR(struct name *head, struct type *parent, struct type *elm)
 			}						\
 		} else {						\
 			tmp = RB_LEFT(parent, field);			\
+			tell_clang(tmp != NULL); /* all leaves are black */\
 			if (RB_COLOR(tmp, field) == RB_RED) {		\
 				RB_SET_BLACKRED(tmp, parent, field);	\
 				RB_ROTATE_RIGHT(head, parent, tmp, field);\
 				tmp = RB_LEFT(parent, field);		\
 			}						\
+			tell_clang(tmp != NULL); /* all leaves are black */\
 			if ((RB_LEFT(tmp, field) == NULL ||		\
 			    RB_COLOR(RB_LEFT(tmp, field), field) == RB_BLACK) &&\
 			    (RB_RIGHT(tmp, field) == NULL ||		\
@@ -555,6 +577,8 @@ name##_RB_REMOVE(struct name *head, struct type *elm)			\
 			RB_AUGMENT(RB_PARENT(old, field));		\
 		} else							\
 			RB_ROOT(head) = elm;				\
+		/* we checked this above */				\
+		tell_clang(RB_LEFT(old, field) != NULL);		\
 		RB_PARENT(RB_LEFT(old, field), field) = elm;		\
 		if (RB_RIGHT(old, field))				\
 			RB_PARENT(RB_RIGHT(old, field), field) = elm;	\
