@@ -1,4 +1,4 @@
-/*	$OpenBSD: util.c,v 1.55 2011/09/20 17:00:24 shadchin Exp $ */
+/*	$OpenBSD: util.c,v 1.58 2012/07/14 08:25:12 shadchin Exp $ */
 /*	$NetBSD: util.c,v 1.8 2000/03/14 08:11:53 sato Exp $ */
 
 /*-
@@ -45,7 +45,7 @@
 
 extern struct wskbd_map_data kbmap;	/* from keyboard.c */
 extern struct wskbd_map_data newkbmap;	/* from map_parse.y */
-extern struct wsmouse_calibcoords wmcoords; 	/* from mouse.c */
+extern struct wsmouse_calibcoords wmcoords;	/* from mouse.c */
 
 struct nameint {
 	int value;
