@@ -1227,25 +1227,6 @@ ELFNAMEEND(coredump_notes)(struct proc *p, void *iocookie, size_t *sizep)
 	}
 	size += notesize;
 
-#ifdef PT_WCOOKIE
-	notesize = sizeof(nhdr) + elfround(sizeof("OpenBSD")) +
-	    elfround(sizeof(register_t));
-	if (iocookie) {
-		register_t wcookie;
-
-		nhdr.namesz = sizeof("OpenBSD");
-		nhdr.descsz = sizeof(register_t);
-		nhdr.type = NT_OPENBSD_WCOOKIE;
-
-		wcookie = process_get_wcookie(p);
-		error = ELFNAMEEND(coredump_writenote)(p, iocookie, &nhdr,
-		    "OpenBSD", &wcookie);
-		if (error)
-			return (error);
-	}
-	size += notesize;
-#endif
-
 	/*
 	 * Now write the register info for the thread that caused the
 	 * coredump.

@@ -95,9 +95,6 @@ sys_ptrace(struct proc *p, void *v, register_t *retval)
 #if defined (PT_SETXMMREGS) || defined (PT_GETXMMREGS)
 	struct xmmregs *xmmregs;
 #endif
-#ifdef PT_WCOOKIE
-	register_t wcookie;
-#endif
 	int error, write;
 	int temp;
 	int req = SCARG(uap, req);
@@ -254,9 +251,6 @@ sys_ptrace(struct proc *p, void *v, register_t *retval)
 #endif
 #ifdef PT_SETXMMREGS
 	case  PT_SETXMMREGS:
-#endif
-#ifdef PT_WCOOKIE
-	case  PT_WCOOKIE:
 #endif
 		/*
 		 * You can't do what you want to the process if:
@@ -648,12 +642,6 @@ sys_ptrace(struct proc *p, void *v, register_t *retval)
 			    SCARG(uap, addr), sizeof(*xmmregs));
 		free(xmmregs, M_TEMP);
 		return (error);
-#endif
-#ifdef PT_WCOOKIE
-	case  PT_WCOOKIE:
-		wcookie = process_get_wcookie (t);
-		return (copyout(&wcookie, SCARG(uap, addr),
-		    sizeof (register_t)));
 #endif
 	}
 

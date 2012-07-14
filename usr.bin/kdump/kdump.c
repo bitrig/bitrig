@@ -452,11 +452,6 @@ ptracedecode(void)
 		(void)printf("PT_STEP");
 		break;
 #endif
-#ifdef PT_WCOOKIE
-	case PT_WCOOKIE:
-		(void)printf("PT_WCOOKIE");
-		break;
-#endif
 	default:
 		(void)printf("%ld", (long)*ap);
 		break;

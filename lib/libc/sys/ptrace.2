@@ -422,7 +422,6 @@ pointed to by
 .\" syscall and will be passed back to the traced process by the normal
 .\" syscall return mechanism.
 .It Xo Dv PT_STEP
-.No (not available on sparc and sparc64)
 .Xc
 The traced process continues execution, as in request
 .Dv PT_CONTINUE ;
@@ -432,7 +431,6 @@ one instruction
 .\" m88k - vax (no general fp registers)
 .\" mips64 (fp registers in the main reg structure)
 .It Xo Dv PT_GETFPREGS
-.No (not available on aviion, luna88k, sgi and vax)
 .Xc
 This request reads the traced process' floating-point registers into
 the
@@ -442,7 +440,6 @@ the
 pointed to by
 .Fa addr .
 .It Xo Dv PT_SETFPREGS
-.No (not available on aviion, luna88k, sgi and vax)
 .Xc
 This request is the converse of
 .Dv PT_GETFPREGS ;
@@ -468,16 +465,6 @@ it loads the traced process' XMM registers from the
 .In machine/reg.h )
 pointed to by
 .Fa addr .
-.It Dv PT_WCOOKIE Pq sparc and sparc64 only
-This request reads the traced process'
-.Sq window cookie
-into the
-.Li int
-pointed to by
-.Fa addr .
-The window cookie needs to be
-.Sq XOR'ed
-to stack-saved program counters.
 .El
 .Sh ERRORS
 Some requests can cause
@@ -563,24 +550,6 @@ The
 .Fn ptrace
 system call first appeared in
 .At v6 .
-.Sh BUGS
-On several RISC architectures (such as aviion, luna88k, sparc and sparc64),
-the PC is set to the provided PC value for
-.Dv PT_CONTINUE
-and similar calls, and the remainder of the execution pipeline registers
-are set to the following instructions, even if the instruction at PC
-is a branch instruction.
-Using
-.Dv PT_GETREGS
-and
-.Dv PT_SETREGS
-to modify the PC, passing
-.Li (caddr_t)1
-to
-.Eo \&
-.Fn ptrace
-.Ec ,
-should be able to sidestep this.
 .\" .Pp
 .\" When using
 .\" .Dv PT_SYSCALL ,
