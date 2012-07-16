@@ -153,6 +153,7 @@ static	v_post	 posts_nm[] = { post_nm, NULL };
 static	v_post	 posts_notext[] = { ewarn_eq0, NULL };
 static	v_post	 posts_ns[] = { post_ns, NULL };
 static	v_post	 posts_os[] = { post_os, post_prol, NULL };
+static	v_post	 posts_pp[] = { post_par, ewarn_eq0, NULL };
 static	v_post	 posts_rs[] = { post_rs, NULL };
 static	v_post	 posts_sh[] = { post_ignpar,hwarn_ge1,post_sh,post_hyph,NULL };
 static	v_post	 posts_sp[] = { post_par, ewarn_le1, NULL };
@@ -284,7 +285,7 @@ static	const struct valids mdoc_valids[MDOC_MAX] = {
 	{ NULL, NULL },				/* Fr */
 	{ NULL, posts_eoln },			/* Ud */
 	{ NULL, posts_lb },			/* Lb */
-	{ NULL, posts_notext },			/* Lp */ 
+	{ pres_pp, posts_pp },			/* Lp */ 
 	{ NULL, NULL },				/* Lk */ 
 	{ NULL, posts_defaults },		/* Mt */ 
 	{ NULL, NULL },				/* Brq */ 
@@ -295,8 +296,8 @@ static	const struct valids mdoc_valids[MDOC_MAX] = {
 	{ NULL, NULL },				/* En */
 	{ NULL, NULL },				/* Dx */
 	{ NULL, posts_text },			/* %Q */
-	{ NULL, posts_notext },			/* br */
-	{ pres_pp, posts_sp },			/* sp */
+	{ NULL, posts_pp },			/* br */
+	{ NULL, posts_sp },			/* sp */
 	{ NULL, posts_text1 },			/* %U */
 	{ NULL, NULL },				/* Ta */
 };
@@ -2088,7 +2089,9 @@ pre_par(PRE_ARGS)
 	 * block:  `Lp', `Pp', or non-compact `Bd' or `Bl'.
 	 */
 
-	if (MDOC_Pp != mdoc->last->tok && MDOC_Lp != mdoc->last->tok)
+	if (MDOC_Pp != mdoc->last->tok &&
+	    MDOC_Lp != mdoc->last->tok &&
+	    MDOC_br != mdoc->last->tok)
 		return(1);
 	if (MDOC_Bl == n->tok && n->norm->Bl.comp)
 		return(1);
@@ -2096,6 +2099,32 @@ pre_par(PRE_ARGS)
 		return(1);
 	if (MDOC_It == n->tok && n->parent->norm->Bl.comp)
 		return(1);
+
+	mdoc_nmsg(mdoc, mdoc->last, MANDOCERR_IGNPAR);
+	mdoc_node_delete(mdoc, mdoc->last);
+	return(1);
+}
+
+static int
+post_par(POST_ARGS)
+{
+
+	if (MDOC_ELEM != mdoc->last->type &&
+	    MDOC_BLOCK != mdoc->last->type)
+		return(1);
+
+	if (NULL == mdoc->last->prev) {
+		if (MDOC_Sh != mdoc->last->parent->tok &&
+		    MDOC_Ss != mdoc->last->parent->tok)
+			return(1);
+	} else {
+		if (MDOC_Pp != mdoc->last->prev->tok &&
+		    MDOC_Lp != mdoc->last->prev->tok &&
+		    (MDOC_br != mdoc->last->tok ||
+		     (MDOC_sp != mdoc->last->prev->tok &&
+		      MDOC_br != mdoc->last->prev->tok)))
+			return(1);
+	}
 
 	mdoc_nmsg(mdoc, mdoc->last, MANDOCERR_IGNPAR);
 	mdoc_node_delete(mdoc, mdoc->last);
