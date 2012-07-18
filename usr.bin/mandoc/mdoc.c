@@ -1,4 +1,4 @@
-/*	$Id: mdoc.c,v 1.88 2012/07/07 18:27:36 schwarze Exp $ */
+/*	$Id: mdoc.c,v 1.90 2012/07/18 10:36:20 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2010 Ingo Schwarze <schwarze@openbsd.org>
@@ -977,7 +977,7 @@ mdoc_isdelim(const char *p)
 
 	if (0 == strcmp(p + 1, "."))
 		return(DELIM_CLOSE);
-	if (0 == strcmp(p + 1, "*(Ba"))
+	if (0 == strcmp(p + 1, "fR|\\fP"))
 		return(DELIM_MIDDLE);
 
 	return(DELIM_NONE);
