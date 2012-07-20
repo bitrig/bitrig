@@ -42,17 +42,8 @@
 #define	_TIME_H_
 
 #include <sys/cdefs.h>
+#include <sys/_null.h>
 #include <machine/_types.h>
-
-#ifndef	NULL
-#ifdef 	__GNUG__
-#define	NULL	__null
-#elif defined(__cplusplus)
-#define	NULL	0L
-#else
-#define	NULL	((void *)0)
-#endif
-#endif
 
 #ifndef	_CLOCK_T_DEFINED_
 #define	_CLOCK_T_DEFINED_

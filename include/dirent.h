@@ -45,7 +45,7 @@
 #endif
 
 /*
- * The kernel defines the format of directory entries returned by 
+ * The kernel defines the format of directory entries returned by
  * the getdirentries(2) system call.
  */
 #include <sys/dirent.h>
@@ -58,18 +58,10 @@ typedef struct _dirdesc DIR;
 
 #if __BSD_VISIBLE
 
+#include <sys/_null.h>
+
 /* definitions for library routines operating on directories. */
 #define	DIRBLKSIZ	1024
-
-#ifndef NULL
-#ifdef 	__GNUG__
-#define	NULL	__null
-#elif defined(__cplusplus)
-#define	NULL	0L
-#else
-#define	NULL	((void *)0)
-#endif /* __GNUG__ */
-#endif /* !NULL */
 
 #endif /* __BSD_VISIBLE */
 

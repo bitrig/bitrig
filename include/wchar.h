@@ -60,17 +60,8 @@
 #define _WCHAR_H_
 
 #include <sys/cdefs.h>
+#include <sys/_null.h>
 #include <sys/_types.h>
-
-#ifndef	NULL
-#ifdef	__GNUG__
-#define	NULL	__null
-#elif defined(__cplusplus)
-#define	NULL	0L
-#else
-#define	NULL	((void *)0)
-#endif
-#endif
 
 #include <stdio.h> /* for FILE* */
 

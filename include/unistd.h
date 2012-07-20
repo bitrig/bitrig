@@ -36,6 +36,7 @@
 #define	_UNISTD_H_
 
 #include <sys/cdefs.h>
+#include <sys/_null.h>
 #include <sys/types.h>
 #include <sys/unistd.h>
 
@@ -284,16 +285,6 @@
 
 /* configurable system strings */
 #define	_CS_PATH		 1
-
-#ifndef NULL
-#ifdef 	__GNUG__
-#define	NULL	__null
-#elif defined(__cplusplus)
-#define	NULL	0L
-#else
-#define	NULL	((void *)0)
-#endif
-#endif
 
 __BEGIN_DECLS
 __dead void	 _exit(int);

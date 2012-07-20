@@ -37,20 +37,17 @@
  *	@(#)param.h	8.2 (Berkeley) 1/21/94
  */
 
+#ifndef _SYS_PARAM_H_
+#define _SYS_PARAM_H_
+
+#include <sys/_null.h>
+
 #define	BSD	199306		/* System version (year & month). */
 #define BSD4_3	1
 #define BSD4_4	1
 
 #define OpenBSD	201111		/* OpenBSD version (year & month). */
 #define OpenBSD5_0 1		/* OpenBSD 5.0 */
-
-#ifndef NULL
-#ifdef 	__GNUG__
-#define	NULL	__null
-#else
-#define	NULL	((void *)0)
-#endif
-#endif
 
 #ifndef _LOCORE
 #include <sys/types.h>
@@ -239,3 +236,5 @@
  * change over time.
  */
 #define	MAXSLP	20
+
+#endif	/* _SYS_PARAM_H_ */
