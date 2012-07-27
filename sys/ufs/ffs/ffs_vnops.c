@@ -295,7 +295,6 @@ ffs_write(void *v)
 	struct inode *ip;
 	struct fs *fs;
 	struct buf *bp;
-	struct proc *p;
 	daddr64_t lbn;
 	off_t osize;
 	int blkoffset, error, extended, flags, ioflag, resid, size, xfersize;
