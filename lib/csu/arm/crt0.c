@@ -53,6 +53,8 @@ extern void     _mcleanup(void);
 extern unsigned char _etext, _eprol;
 #endif /* MCRT0 */
 
+void		__init(void);
+int		main(int, char **, char **);
 extern	void	_start(void);
 void		___start(int, char *[], char *[], void *,
 				const void *, void (*)(void));
