@@ -325,7 +325,7 @@ update-moduli:
 	bootblocks ${ALL_KERNELS}
 	
 
-SUBDIR+= etc.amd64 etc.i386
+SUBDIR+= etc.amd64 etc.armish etc.i386
 
 .include <bsd.subdir.mk>
 .include <bsd.prog.mk>

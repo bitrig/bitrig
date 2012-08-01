@@ -1,0 +1,114 @@
+#	$OpenBSD: files.arm,v 1.21 2011/11/08 17:07:42 deraadt Exp $
+#	$NetBSD: files.arm,v 1.76 2003/11/05 12:53:15 scw Exp $
+
+# generic networking files
+file	arch/arm/arm/in_cksum_arm.S		inet
+
+# DDB
+file	arch/arm/arm/db_disasm.c		ddb
+file	arch/arm/arm/db_interface.c		(ddb|kgdb)
+file	arch/arm/arm/db_trace.c			ddb
+file	arch/arm/arm/db_machdep.c		ddb
+file	arch/arm/arm/kgdb_machdep.c		kgdb
+
+# FIQ support
+file	arch/arm/arm/fiq.c			fiq
+file	arch/arm/arm/fiq_subr.S			fiq
+
+# mainbus files
+device	mainbus {}
+attach	mainbus at root
+file	arch/arm/mainbus/mainbus.c		mainbus
+
+device	cpu {}
+attach	cpu at mainbus with cpu_mainbus
+file	arch/arm/mainbus/cpu_mainbus.c		cpu_mainbus
+
+# files related to debugging
+file	arch/arm/arm/disassem.c
+
+# bus_space(9)
+define	bus_space_generic
+file	arch/arm/arm/bus_space_asm_generic.S
+file	arch/arm/arm/bus_space_notimpl.S
+
+file	arch/arm/arm/arm_machdep.c
+file	arch/arm/arm/ast.c
+file	arch/arm/arm/bcopyinout.S
+file	arch/arm/arm/copystr.S
+file	arch/arm/arm/cpufunc.c
+file	arch/arm/arm/cpufunc_asm.S
+file	arch/arm/arm/cpufunc_asm_arm8.S		cpu_arm8
+file	arch/arm/arm/cpufunc_asm_arm9.S		cpu_arm9
+file	arch/arm/arm/cpufunc_asm_arm10.S	cpu_arm9e | cpu_arm10
+file	arch/arm/arm/cpufunc_asm_armv4.S	cpu_arm9 | cpu_arm9e |
+							cpu_arm10 |
+							cpu_sa110 |
+							cpu_sa1100 |
+							cpu_sa1110 |
+							cpu_ixp12x0 |
+							cpu_xscale_80200 |
+							cpu_xscale_80321 |
+							cpu_xscale_ixp425 |
+							cpu_xscale_pxa2x0
+file	arch/arm/arm/cpufunc_asm_armv5.S	cpu_arm10
+file	arch/arm/arm/cpufunc_asm_armv5_ec.S	cpu_arm9e | cpu_arm10
+file	arch/arm/arm/cpufunc_asm_armv7.S	cpu_armv7
+file	arch/arm/arm/cpufunc_asm_sa1.S		cpu_sa110 | cpu_sa1100 |
+							cpu_sa1110 |
+							cpu_ixp12x0
+file	arch/arm/arm/cpufunc_asm_sa11x0.S	cpu_sa1100 | cpu_sa1110
+file	arch/arm/arm/cpufunc_asm_xscale.S	cpu_xscale_80200 |
+							cpu_xscale_80321 |
+							cpu_xscale_ixp425 |
+							cpu_xscale_pxa2x0
+file	arch/arm/arm/cpufunc_asm_ixp12x0.S	cpu_ixp12x0
+file	arch/arm/arm/process_machdep.c
+file	arch/arm/arm/sig_machdep.c
+file	arch/arm/arm/sigcode.S
+file	arch/arm/arm/syscall.c
+file	arch/arm/arm/undefined.c
+file	arch/arm/arm/vectors.S
+
+# files common to arm implementations
+file	arch/arm/arm/arm32_machdep.c
+file	arch/arm/arm/bus_dma.c
+file	arch/arm/arm/cpu.c
+file	arch/arm/arm/cpuswitch.S
+file	arch/arm/arm/exception.S
+file	arch/arm/arm/fault.c
+file	arch/arm/arm/mem.c
+file	arch/arm/arm/pmap.c
+file	arch/arm/arm/setstack.S
+file	arch/arm/arm/stubs.c
+file	arch/arm/arm/sys_machdep.c
+file	arch/arm/arm/vm_machdep.c
+
+# arm library functions
+file	arch/arm/arm/bcopy_page.S
+
+# machine-dependent libkern components
+file	lib/libkern/arch/arm/divsi3.S
+file	lib/libkern/arch/arm/memcpy.S
+file	lib/libkern/arch/arm/memmove.S
+
+# quad support is necessary for 32 bit architectures
+file	lib/libkern/adddi3.c
+file	lib/libkern/anddi3.c
+file	lib/libkern/ashldi3.c
+file	lib/libkern/ashrdi3.c
+file	lib/libkern/cmpdi2.c
+file	lib/libkern/divdi3.c
+file	lib/libkern/iordi3.c
+file	lib/libkern/lshldi3.c
+file	lib/libkern/lshrdi3.c
+file	lib/libkern/moddi3.c
+file	lib/libkern/muldi3.c
+file	lib/libkern/negdi2.c
+file	lib/libkern/notdi2.c
+file	lib/libkern/qdivrem.c
+file	lib/libkern/subdi3.c
+file	lib/libkern/ucmpdi2.c
+file	lib/libkern/udivdi3.c
+file	lib/libkern/umoddi3.c
+file	lib/libkern/xordi3.c
