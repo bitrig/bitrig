@@ -1,14 +1,18 @@
 # $OpenBSD: Makefile.cross,v 1.54 2012/08/02 13:38:38 okan Exp $
 
-cross-tools:	cross-includes cross-binutils cross-gcc cross-lib
+cross-tools:	cross-includes cross-buildenv cross-lib
 cross-distrib:	cross-tools cross-bin cross-share cross-sys cross-etc-root-var
 # cross-gnu \
 
+CCCROSSOPTS=
+
 # Have to compute TARGET_ARCH directly in the Makefile, for .if tests involving
 # this variable to work.
-.if	(${TARGET} == "armish" || ${TARGET} == "beagle" || \
-	 ${TARGET} == "gumstix")
+.if	(${TARGET} == "beagle")
 TARGET_ARCH=	arm
+CCCROSSOPTS+="-march=armv7-a -mfloat-abi=soft"
+.else
+TARGET_ARCH=	${TARGET}
 .endif
 TARGET_CPU?=	${TARGET_ARCH}
 
@@ -41,7 +45,7 @@ BINGRP?=bin
 CROSSDIR=	${DESTDIR}/usr/cross/${TARGET}
 CROSSENV=	AR=${CROSSDIR}/usr/${TARGET_CANON}/bin/ar \
 		AS=${CROSSDIR}/usr/${TARGET_CANON}/bin/as \
-		CC=${CROSSDIR}/usr/${TARGET_CANON}/bin/cc \
+		CC="${CROSSDIR}/usr/bin/${TARGET_CANON}-clang" \
 		CPP=${CROSSDIR}/usr/${TARGET_CANON}/bin/cpp \
 		CXX=${CROSSDIR}/usr/${TARGET_CANON}/bin/c++ \
 		LD=${CROSSDIR}/usr/${TARGET_CANON}/bin/ld \
@@ -59,47 +63,17 @@ CROSSPATH=	/usr/bin:/bin:/usr/sbin:/sbin${CROSSADDPATH}
 CROSSLANGS?=	c c++
 
 TARGET_CANON=`cat ${CROSSDIR}/TARGET_CANON`
+CROSSCFLAGS+="-ccc-host-triple ${TARGET_CANON}"
+CROSSCFLAGS+=${CCCROSSOPTS}
 
 CROSSDIRS=	${CROSSDIR}/.dirs_done
 CROSSOBJ=	${CROSSDIR}/.obj_done
+CROSSBUILDENV=	${CROSSDIR}/.buildenv_done
 CROSSINCLUDES=	${CROSSDIR}/.includes_done
-CROSSBINUTILS=	${CROSSDIR}/.binutils_done
-CROSSGCC=	${CROSSDIR}/.gcc_done
 #NO_CROSS=	isakmpd keynote ssh
 
 .include <bsd.own.mk>
 
-OLD_BINUTILS_ARCH=
-
-.for _arch in ${TARGET_ARCH}
-.if !empty(GCC2_ARCH:M${_arch})
-USE_GCC3?=no
-TARGET_USE_GCC3=No
-COMPILER_VERSION?=gcc2
-.elif !empty(GCC4_ARCH:M${_arch})
-TARGET_USE_GCC4=Yes
-COMPILER_VERSION?=gcc4
-.else
-TARGET_USE_GCC3=Yes
-COMPILER_VERSION?=gcc3
-.endif
-
-.if !empty(BINUTILS217_ARCH:M${_arch})
-BINUTILS_VERSION=binutils-2.17
-.else
-BINUTILS_VERSION=binutils
-.endif
-
-.if !empty(OLD_BINUTILS_ARCH:M${_arch})
-NEW_BINUTILS?=	No
-BINUTILS=	ar as ld nm ranlib objcopy objdump strings strip
-.else
-NEW_BINUTILS?=	Yes
-BINUTILS=	ar as gasp ld nm objcopy objdump ranlib readelf size \
-		strings strip
-.endif
-BINUTILS_DIR=gnu/usr.bin/${BINUTILS_VERSION}
-.endfor
 
 # no libcrypto.... these won't build
 #NO_CROSS+=	dc login_krb5 login_krb5-or-pwd passwd ppp tcpdump telnet \
@@ -111,16 +85,15 @@ NO_CROSS+=afs
 NO_CROSS+=bind
 NO_CROSS+=httpd
 NO_CROSS+=microcode
-NO_CROSS+=groff lynx binutils binutils-2.17 perl texinfo gcc cvs
+NO_CROSS+=groff lynx perl texinfo cvs
 NO_CROSS+=nsd
 NO_CROSS+=nginx
 NO_CROSS+=sqlite3
 
 cross-dirs:	${CROSSDIRS}
 cross-obj:	${CROSSOBJ}
+cross-buildenv:	${CROSSBUILDENV}
 cross-includes:	${CROSSINCLUDES}
-cross-binutils:	${CROSSBINUTILS}
-cross-gcc:	${CROSSGCC}
 
 cross-env:
 	@echo ${CROSSENV} MACHINE=${TARGET} \
@@ -142,7 +115,7 @@ ${CROSSDIRS}:
 	@echo ${TARGET_CPU} > ${CROSSDIR}/TARGET_CPU
 	@echo TARGET_CPU is `cat ${CROSSDIR}/TARGET_CPU`
 	@eval `grep '^osr=' sys/conf/newvers.sh`; \
-	   echo ${TARGET_ARCH}-unknown-openbsd$$osr > \
+	   echo ${TARGET_ARCH}-unknown-bitrig$$osr > \
 	   ${CROSSDIR}/TARGET_CANON
 	@-mkdir -p ${CROSSDIR}
 	@-mkdir -p ${CROSSDIR}/usr/${TARGET_CANON}
@@ -182,188 +155,30 @@ ${CROSSINCLUDES}:	${CROSSOBJ}
 	    ${MAKE} DESTDIR=${CROSSDIR} includes)
 	@touch ${CROSSINCLUDES}
 
-${CROSSBINUTILS}:	${CROSSINCLUDES}
-	(cd ${.CURDIR}/${BINUTILS_DIR}; \
-	    MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	    USING_NEW_BINUTILS=${NEW_BINUTILS} \
-	    TARGET_ARCH=${TARGET_ARCH} TARGET_CPU=${TARGET_CPU} \
-	    PATH=${CROSSPATH} \
-	    ${MAKE} -f Makefile.bsd-wrapper depend && \
-	    MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	    USING_NEW_BINUTILS=${NEW_BINUTILS} \
-	    TARGET_ARCH=${TARGET_ARCH} TARGET_CPU=${TARGET_CPU} \
-	    ${MAKE} -f Makefile.bsd-wrapper all && \
-	    DESTDIR=${CROSSDIR} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	    COMPILER_VERSION=${COMPILER_VERSION} \
-	    USING_NEW_BINUTILS=${NEW_BINUTILS} \
-	    MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	    USING_NEW_BINUTILS=${NEW_BINUTILS} \
-	    TARGET_ARCH=${TARGET_ARCH} TARGET_CPU=${TARGET_CPU} \
-	    ${MAKE} -f Makefile.bsd-wrapper install)
-.if ${NEW_BINUTILS:L} != "yes"
-	(cd ${.CURDIR}/gnu/usr.bin/gas; \
-	    TARGET_MACHINE_ARCH=${TARGET_ARCH} \
-	    MAKEOBJDIR=obj.${MACHINE}.${TARGET} ${MAKE} depend all; \
-	    TARGET_MACHINE_ARCH=${TARGET_ARCH} \
-	    DESTDIR=${CROSSDIR} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	    ${MAKE} NOMAN= install)
-	ln -sf ${CROSSDIR}/usr/bin/as \
-	    ${CROSSDIR}/usr/${TARGET_CANON}/bin/as
-	(cd ${.CURDIR}/gnu/usr.bin/ld; \
-	    TARGET_MACHINE_ARCH=${TARGET_ARCH} \
-	    MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	    ${MAKE} NOPIC= NOMAN= depend all; \
-	    TARGET_MACHINE_ARCH=${TARGET_ARCH} \
-	    DESTDIR=${CROSSDIR} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	    ${MAKE} NOPIC= NOMAN= install)
-	ln -sf ${CROSSDIR}/usr/bin/ld \
-	    ${CROSSDIR}/usr/${TARGET_CANON}/bin/ld
-	(cd ${.CURDIR}/usr.bin/ar; \
-	    ELF_TOOLCHAIN=no \
-	    MAKEOBJDIR=obj.${MACHINE}.${TARGET} ${MAKE} NOMAN= depend all; \
-	    ELF_TOOLCHAIN=no \
-	    DESTDIR=${CROSSDIR} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	    ${MAKE} NOMAN= install)
-	ln -sf ${CROSSDIR}/usr/bin/ar \
-	    ${CROSSDIR}/usr/${TARGET_CANON}/bin/ar
-	@(cd ${.CURDIR}/usr.bin/ranlib; \
-	    ELF_TOOLCHAIN=no \
-	    MAKEOBJDIR=obj.${MACHINE}.${TARGET} ${MAKE} NOMAN= depend all; \
-	    ELF_TOOLCHAIN=no \
-	    DESTDIR=${CROSSDIR} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	    ${MAKE} NOMAN= install)
-	ln -sf ${CROSSDIR}/usr/bin/ranlib \
-	    ${CROSSDIR}/usr/${TARGET_CANON}/bin/ranlib
-	(cd ${.CURDIR}/usr.bin/strip; \
-	    MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	    ${MAKE} TARGET_MACHINE_ARCH=${TARGET_ARCH} \
-	    NOMAN= depend all; \
-	    DESTDIR=${CROSSDIR} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	    ${MAKE} TARGET_MACHINE_ARCH=${TARGET_ARCH} \
-	    NOMAN= install)
-	ln -sf ${CROSSDIR}/usr/bin/strip \
-	    ${CROSSDIR}/usr/${TARGET_CANON}/bin/strip
-.endif
-	@for cmd in ${BINUTILS}; do \
-	 if [ -e ${CROSSDIR}/usr/bin/${TARGET_CANON}-$$cmd ] ; then \
-	    cp -f ${CROSSDIR}/usr/bin/${TARGET_CANON}-$$cmd \
-	        ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-$$cmd ; \
-	    ln -sf ${TARGET_CANON}-$$cmd \
-		${CROSSDIR}/usr/${TARGET_CANON}/bin/$$cmd ;\
-	   if [ -e ${CROSSDIR}/usr/bin/$$cmd ] ; then \
-	    rm -f ${CROSSDIR}/usr/bin/$$cmd ;\
-	   fi ;\
-	 elif [ -e ${CROSSDIR}/usr/bin/$$cmd ] ; then \
-	    cp -f ${CROSSDIR}/usr/bin/$$cmd \
-	        ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-$$cmd ; \
-	    ln -sf ${TARGET_CANON}-$$cmd \
-		${CROSSDIR}/usr/${TARGET_CANON}/bin/$$cmd ;\
-	    mv ${CROSSDIR}/usr/bin/$$cmd \
-		${CROSSDIR}/usr/bin/${TARGET_CANON}-$$cmd ;\
-	 fi ;\
-	done
-	@touch ${CROSSBINUTILS}
+${CROSSBUILDENV}:	${CROSSINCLUDES}
+#	 XXX for now assumes the build env is in place 
+	a=${TARGET_CANON} ; \
+	l=$$(echo /usr/local/bin/$${a}-* ) ; \
+	for file in $${l} ; \
+	do \
+		echo file $${file} ; \
+		ln -sf $${file} ${CROSSDIR}/usr/bin/$$(basename $${file}) ;\
+	done ;
+	mkdir -p ${CROSSDIR}/usr/${TARGET_CANON}/bin
+	a=${TARGET_CANON} ; \
+	l=$$(echo /usr/local/$${a}/bin/* ) ; \
+	echo l $${l} ;\
+	for file in $${l} ; \
+	do \
+		echo linking $${file}; \
+		ln -sf $${file} ${CROSSDIR}/usr/$${a}/bin/$$(basename $${file}) ;\
+	done ;\
+	ln -sf /usr/bin/clang ${CROSSDIR}/usr/bin/$${a}-clang; \
+	rm -f ${CROSSDIR}/usr/bin/$${a}-cpp ${CROSSDIR}/usr/$${a}/bin/cpp; \
+	cp /usr/bin/cpp  ${CROSSDIR}/usr/bin/$${a}-cpp; \
+	cp /usr/bin/cpp  ${CROSSDIR}/usr/$${a}/bin/cpp
+	@touch ${CROSSBUILDENV}
 
-
-${CROSSGCC}:		${CROSSBINUTILS}
-.if ${COMPILER_VERSION:L} == "gcc4"
-	(cd ${.CURDIR}/gnu/usr.bin/cc; \
-	    MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	    TARGET_ARCH=${TARGET_ARCH} TARGET_CPU=${TARGET_CPU} \
-	    CROSSDIR=${CROSSDIR} \
-	    MACHINE=${TARGET} \
-	    PATH=${CROSSPATH} ${MAKE} depend  )
-	(cd ${.CURDIR}/gnu/usr.bin/cc; \
-	    MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	    TARGET_ARCH=${TARGET_ARCH} TARGET_CPU=${TARGET_CPU} \
-	    CROSSDIR=${CROSSDIR} \
-	    MACHINE=${TARGET} \
-	    ${MAKE} all )
-	(cd ${.CURDIR}/gnu/usr.bin/cc; \
-	    env CROSSDIR=${CROSSDIR} DESTDIR=${CROSSDIR} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	    TARGET_ARCH=${TARGET_ARCH} TARGET_CPU=${TARGET_CPU} \
-	    MACHINE=${TARGET} \
-	    PATH=${CROSSPATH} ${MAKE} install)
-	cp -f ${CROSSDIR}/usr/bin/g++  ${CROSSDIR}/usr/bin/${TARGET_CANON}-g++ 
-	cp -f ${CROSSDIR}/usr/bin/${TARGET_CANON}-g++ ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-c++
-	cp -f ${CROSSDIR}/usr/libexec/cpp ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-libexeccpp
-	cp -f ${CROSSDIR}/usr/bin/gcc ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-cc
-	ln -sf ${TARGET_CANON}-cc ${CROSSDIR}/usr/${TARGET_CANON}/bin/cc
-
-	cp -f ${CROSSDIR}/usr/bin/gcc ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-cc
-	rm -f ${CROSSDIR}/usr/bin/gcc  ${CROSSDIR}/usr/bin/g++  ${CROSSDIR}/usr/bin/cc ${CROSSDIR}/usr/libexec/cpp 
-	# fix links
-	rm -f ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-cpp 
-	sed -e 's#/usr/libexec/cpp#${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-libexeccpp#' \
-	    -e 's/@GNUC@//' \
-	    -e 's#/usr/include#${CROSSDIR}/usr/include#' \
-	    -e 's/@dollaropt@//' \
-	    ${.CURDIR}/usr.bin/cpp/cpp.sh > ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-cpp 
-	chmod ${BINMODE} ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-cpp 
-	chown ${BINOWN}:${BINGRP} ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-cpp 
-	ln -sf ${TARGET_CANON}-cpp ${CROSSDIR}/usr/${TARGET_CANON}/bin/cpp
-.elif ${COMPILER_VERSION:L} == "gcc3"
-	(cd ${.CURDIR}/gnu/usr.bin/gcc; \
-	    MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	    TARGET_ARCH=${TARGET_ARCH} TARGET_CPU=${TARGET_CPU} \
-	    CROSSDIR=${CROSSDIR} \
-	    PATH=${CROSSPATH} ${MAKE} -f Makefile.bsd-wrapper depend && \
-	    MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	    TARGET_ARCH=${TARGET_ARCH} TARGET_CPU=${TARGET_CPU} \
-	    CROSSDIR=${CROSSDIR} \
-	    ${MAKE} -f Makefile.bsd-wrapper all && \
-	    env CROSSDIR=${CROSSDIR} DESTDIR=${CROSSDIR} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	    PATH=${CROSSPATH} ${MAKE} -f Makefile.bsd-wrapper install)
-	cp -f ${CROSSDIR}/usr/bin/${TARGET_CANON}-g++ ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-c++
-	cp -f ${CROSSDIR}/usr/bin/gcc ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-cc
-	cp -f ${CROSSDIR}/usr/libexec/cpp ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-libexeccpp
-	rm -f ${CROSSDIR}/usr/bin/gcc  ${CROSSDIR}/usr/bin/cc ${CROSSDIR}/usr/libexec/cpp 
-	ln -sf ${TARGET_CANON}-cc ${CROSSDIR}/usr/${TARGET_CANON}/bin/cc
-	ln -sf ${TARGET_CANON}-c++ ${CROSSDIR}/usr/${TARGET_CANON}/bin/c++
-	rm -f ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-cpp 
-	sed -e 's#/usr/libexec/cpp#${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-libexeccpp#' \
-	    -e 's/@GNUC@/-D__GNUC__/' \
-	    -e 's#/usr/include#${CROSSDIR}/usr/include#' \
-	    -e 's/@dollaropt@//' \
-	    ${.CURDIR}/usr.bin/cpp/cpp.sh > ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-cpp 
-	chmod ${BINMODE} ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-cpp 
-	chown ${BINOWN}:${BINGRP} ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-cpp 
-	ln -sf ${TARGET_CANON}-cpp ${CROSSDIR}/usr/${TARGET_CANON}/bin/cpp
-.else
-	(cd ${CROSSDIR}/usr/obj/gnu/egcs/gcc; \
-	    /bin/sh ${.CURDIR}/gnu/egcs/gcc/configure \
-	    --with-gnu-as --with-gnu-ld --prefix ${CROSSDIR}/usr \
-	    --target ${TARGET_CANON} \
-	    --enable-languages="c,c++" --enable-cpp --disable-nls \
-	    --with-gxx-include-dir=${CROSSDIR}/usr/include/g++ && \
-	    PATH=${CROSSPATH} ${MAKE} BISON=yacc LANGUAGES="${CROSSLANGS}" \
-	    CFLAGS="${CFLAGS} -I${.CURDIR}/gnu/lib/libiberty/include" \
-	    LIBIBERTY_INCLUDES=${.CURDIR}/gnu/lib/libiberty/include \
-	    DEMANGLER_PROG= DEMANGLE_H= LDFLAGS="${LDSTATIC}" build_infodir=. \
-	    GCC_FOR_TARGET="./xgcc -B./ -I${CROSSDIR}/usr/include" && \
-	    ${MAKE} BISON=yacc LANGUAGES="${CROSSLANGS}" LDFLAGS="${LDSTATIC}" \
-	    GCC_FOR_TARGET="./xgcc -B./ -I${CROSSDIR}/usr/include" \
-	    CFLAGS="${CFLAGS} -I${.CURDIR}/gnu/lib/libiberty/include" \
-	    LIBIBERTY_INCLUDES=${.CURDIR}/gnu/lib/libiberty/include \
-	    build_infodir=. INSTALL_MAN= INSTALL_HEADERS_DIR= install)
-	mv -f ${CROSSDIR}/usr/bin/cpp ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-libexeccpp
-	rm -f ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-cpp 
-	sed -e 's#/usr/libexec/cpp#${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-libexeccpp#' \
-	    -e 's/@GNUC@/-D__GNUC__/' \
-	    -e 's#/usr/include#${CROSSDIR}/usr/include#' \
-	    -e 's/@dollaropt@/-$$/' ${.CURDIR}/usr.bin/cpp/cpp.sh > \
-	    ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-cpp 
-	chmod ${BINMODE} \
-	    ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-cpp
-	chown ${BINOWN}:${BINGRP}\
-	    ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-cpp 
-	ln -sf ${TARGET_CANON}-cpp ${CROSSDIR}/usr/${TARGET_CANON}/bin/cpp
-	ln -sf gcc ${CROSSDIR}/usr/${TARGET_CANON}/bin/cc
-	ln -sf gcc ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-cc
-	cp -f ${CROSSDIR}/usr/bin/${TARGET_CANON}-g++ ${CROSSDIR}/usr/${TARGET_CANON}/bin/${TARGET_CANON}-c++
-	ln -sf ${TARGET_CANON}-c++ ${CROSSDIR}/usr/${TARGET_CANON}/bin/c++
-.endif
-	@touch ${CROSSGCC}
 
 # XXX MAKEOBJDIR maybe should be obj.${TARGET} here, revisit later
 cross-lib:	${CROSSGCC}
@@ -374,16 +189,16 @@ cross-lib:	${CROSSGCC}
 	    for lib in csu libc; do \
 	    (cd $$lib; \
 	        eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-		    ${MAKE} depend all ;\
+		    ${MAKE} WANTLINT=no depend all ;\
 	        eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} DESTDIR=${CROSSDIR} \
-		    ${MAKE} install); \
+		    ${MAKE} WANTLINT=no install); \
 	    done; \
 	    eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
 	        SKIPDIR=\"${NO_CROSS} libocurses/PSD.doc\" \
-	        ${MAKE} depend all ; \
+	        ${MAKE} WANTLINT=no depend all ; \
 	    eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} DESTDIR=${CROSSDIR} \
 	        SKIPDIR=\"${NO_CROSS} libocurses/PSD.doc\" \
-	        ${MAKE} install)
+	        ${MAKE} WANTLINT=no install)
 
 cross-bin:	${CROSSOBJ}
 	MACHINE=${TARGET} \
