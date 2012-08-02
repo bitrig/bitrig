@@ -39,26 +39,27 @@
 #	specifies -traditional
 #	doesn't search gcc-include
 #
-PATH=/usr/bin:/bin
-DGNUC="@GNUC@"
-STDINC="-I/usr/include"
-DOLLAR="@dollaropt@"
-INCS="-nostdinc"
+STDINC=""
+INCS=""
 FOUNDFILES=false
+progname=$(basename $0)
+progdir=$(dirname $0)
+pprefix=${progname%cpp}
+if [ "${pprefix}" == "" ]
+then
+PATH=/usr/bin:/bin
+fi
 
-CPP=clang
+CPP=${progdir}/${pprefix}clang
+which ${CPP} >> /dev/null
+if [ $? != 0 ]
+then
+	exit 1
+fi
 CLANGOPTS="-x c -E"
 CLANGSTDIN="-"
 OPTS=""
 TRAD=""
-
-if [ ! -x $CPP ]; then
-	CPP=`cc -print-search-dirs | sed -ne '/^install: /s/install: \(.*\)/\1cpp/p'`;
-	if [ ! -x $CPP ]; then
-		echo "$0: installation problem: $CPP not found/executable" >&2
-		exit 1
-	fi
-fi
 
 while [ $# -gt 0 ]
 do
@@ -67,7 +68,7 @@ do
 
 	case $A in
 	-nostdinc)
-		STDINC=
+		STDINC=-nostdinc
 		;;
 	-traditional)
 		# use gcc cpp to preserve whitespace
@@ -82,9 +83,6 @@ do
 	-I*)
 		INCS="$INCS $A"
 		;;
-	-U__GNUC__)
-		DGNUC=
-		;;
 	-imacros|-include|-idirafter|-iprefix|-iwithprefix)
 		INCS="$INCS '$A' '$1'"
 		shift
@@ -94,7 +92,7 @@ do
 		;;
 	*)
 		FOUNDFILES=true
-		eval "$CPP $CLANGOPTS $TRAD $DGNUC $DOLLAR $INCS $STDINC $OPTS $A" || exit $?
+		eval "$CPP $CLANGOPTS $TRAD $INCS $STDINC $OPTS $A" || exit $?
 		;;
 	esac
 done
@@ -102,7 +100,7 @@ done
 if ! $FOUNDFILES
 then
 	# read standard input
-	eval exec "$CPP $CLANGOPTS $TRAD $DGNUC $DOLLAR $INCS $STDINC $OPTS $CLANGSTDIN"
+	eval exec "$CPP $CLANGOPTS $TRAD $INCS $STDINC $OPTS $CLANGSTDIN"
 fi
 
 exit 0
