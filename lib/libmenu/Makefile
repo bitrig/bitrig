@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.14 2011/06/23 22:46:12 schwarze Exp $
+# $OpenBSD: Makefile,v 1.15 2012/08/02 13:38:39 okan Exp $
 
 LIB=	menu
 SRCS=	m_attribs.c m_cursor.c m_driver.c m_format.c \

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.10 2005/11/24 20:49:21 deraadt Exp $
+# $OpenBSD: Makefile,v 1.11 2012/08/02 13:38:39 okan Exp $
 
 LIB=	skey
 SRCS=	skeylogin.c skeysubr.c put.c

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.10 2010/01/04 17:50:38 deraadt Exp $
+#	$OpenBSD: Makefile,v 1.11 2012/08/02 13:38:39 okan Exp $
 
 CFLAGS+=#-DTFILE=\"/dev/ttyp0\"
 CFLAGS+=-D_CURSES_PRIVATE -I${.CURDIR}

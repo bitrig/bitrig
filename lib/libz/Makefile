@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.16 2011/05/26 13:52:55 jasper Exp $
+#	$OpenBSD: Makefile,v 1.17 2012/08/02 13:38:39 okan Exp $
 
 LIB=	z
 HDRS=	zconf.h zlib.h

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2005/11/24 20:49:23 deraadt Exp $
+#	$OpenBSD: Makefile,v 1.7 2012/08/02 13:38:39 okan Exp $
 
 LIB=	wrap
 SRCS=	hosts_access.c options.c shell_cmd.c rfc931.c eval.c \

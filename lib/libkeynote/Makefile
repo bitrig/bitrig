@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.17 2012/07/11 21:30:07 espie Exp $
+#	$OpenBSD: Makefile,v 1.18 2012/08/02 13:38:38 okan Exp $
 
 LIB=	keynote
 MAN=	keynote.3 keynote.4 keynote.5

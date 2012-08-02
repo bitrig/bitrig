@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.10 2006/04/29 12:35:56 biorn Exp $
+# $OpenBSD: Makefile,v 1.11 2012/08/02 13:38:38 okan Exp $
 
 KRB5DIR	= ${.CURDIR}/../../kerberosV
 .include <${.CURDIR}/../libkrb5/Makefile.common.inc>
