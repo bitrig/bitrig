@@ -26,6 +26,7 @@ static int	hstarted;	/* set after hist_init() called */
 static Source	*hist_source;
 static uint32_t	line_co;
 static int	real_fs = 0;
+static uint32_t	ro_fs = 0;
 static int	lockfd = -1;
 static char	*lname;
 
@@ -561,7 +562,7 @@ history_lock(void)
 			close(lockfd);
 			lockfd = -1;
 		}
-		for (tries = 0; tries < 30; tries++) {
+		for (tries = 0; ro_fs == 0 && tries < 30; tries++) {
 			if ((lockfd = open(lname, O_WRONLY | O_CREAT |
 			    O_EXLOCK | O_EXCL, 0600)) != -1)
 				return (0);
@@ -760,9 +761,11 @@ hist_init(Source *s)
 	if (hname == NULL || strlen(hname) == 0)
 		return;
 	hname = str_save(hname, APERM);
-	if (statfs(hname, &sf) == 0)
+	if (statfs(hname, &sf) == 0) {
 		if (!strcmp(sf.f_fstypename, "ffs"))
 			real_fs = 1;
+		ro_fs = sf.f_flags & MNT_RDONLY;
+	}
 	if (real_fs == 0)
 		asprintf(&lname, "%s.lock", hname);
 	histfd = history_open();
