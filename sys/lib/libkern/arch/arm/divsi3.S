@@ -49,7 +49,7 @@ ENTRY(__modsi3)
 L_overflow:
 #if !defined(_KERNEL) && !defined(_STANDALONE)
 	mov	r0, #8			/* SIGFPE */
-	bl	PIC_SYM(_C_LABEL(raise), PLT)	/* raise it */
+	bl	_C_LABEL(raise)		/* raise it */
 	mov	r0, #0
 #else
 	/* XXX should cause a fatal error */
