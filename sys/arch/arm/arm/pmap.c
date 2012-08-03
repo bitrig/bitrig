@@ -4182,7 +4182,12 @@ pmap_postinit(void)
 
 	for (loop = 0; loop < needed; loop++, l1++) {
 		/* Allocate a L1 page table */
-		va = uvm_km_valloc(kernel_map, L1_TABLE_SIZE);
+		/*
+		 * XXX can probably manage the memory allocation in this call
+		 * too
+		 */
+		va = (vaddr_t)km_alloc(L1_TABLE_SIZE, &kv_any, &kp_none,
+		    &kd_nowait);
 		if (va == 0)
 			panic("Cannot allocate L1 KVM");
 

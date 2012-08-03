@@ -199,7 +199,7 @@ printf("i80321_bs_map bpa %x, size %x flag %x\n", bpa, size, flag);
 	startpa = trunc_page(bpa);
 	pagecnt = endpa - startpa;
 
-	va = uvm_km_valloc(kernel_map, endpa - startpa);
+	va = (vaddr_t)km_alloc(endpa - startpa, &kv_any, &kp_none, &kd_nowait);
 	if (va == 0)
 		return(ENOMEM);
 #if 0
@@ -233,11 +233,12 @@ i80321_bs_unmap(void *t, bus_space_handle_t bsh, bus_size_t size)
 		return;
 	}
 
+	va = trunc_page((vaddr_t)bsh);
 	endva = round_page(bsh + size);
-	va = trunc_page(bsh);
 
 	pmap_kremove(va, endva - va);
-	uvm_km_free(kernel_map, va, endva - va);
+	pmap_update(pmap_kernel());
+	km_free((void *)va, endva - va, &kv_any, &kp_none);
 }
 
 
@@ -372,7 +373,7 @@ printf("i80321_bs_map bpa %x, size %x flag %x : %x %x \n", bpa, size, flag,
 	pa = trunc_page((bpa - busbase) + physbase);
 	endpa = round_page(((bpa - busbase) + physbase) + size);
 
-	va = uvm_km_valloc(kernel_map, endpa - pa);
+	va = (vaddr_t)km_alloc(endpa - pa, &kv_any, &kp_none, &kd_nowait);
 	if (va == 0)
 		return (ENOMEM);
 //printf("i80321_mem_bs_map bpa %x pa %x va %x sz %x\n", bpa, pa, va, endpa-pa);
@@ -402,14 +403,12 @@ i80321_mem_bs_unmap(void *t, bus_space_handle_t bsh, bus_size_t size)
 {
 	vaddr_t va, endva;
 
-	va = trunc_page(bsh);
-	endva = round_page(bsh + size);
+	va = trunc_page((vaddr_t)bsh);
+	endva = round_page(va + size);
 
 	pmap_kremove(va, endva - va);
 	pmap_update(pmap_kernel());
-
-	/* Free the kernel virtual mapping. */
-	uvm_km_free(kernel_map, va, endva - va);
+	km_free((void *)va, endva - va, &kv_any, &kp_none);
 }
 
 int

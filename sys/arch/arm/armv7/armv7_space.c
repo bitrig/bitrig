@@ -191,7 +191,7 @@ armv7_bs_map(void *t, bus_addr_t bpa, bus_size_t size,
 
 	/* XXX use extent manager to check duplicate mapping */
 
-	va = uvm_km_valloc(kernel_map, endpa - startpa);
+	va = (vaddr_t)km_alloc(endpa - startpa, &kv_any, &kp_none, &kd_nowait);
 	if (! va)
 		return(ENOMEM);
 
@@ -216,11 +216,17 @@ armv7_bs_map(void *t, bus_addr_t bpa, bus_size_t size,
 void
 armv7_bs_unmap(void *t, bus_space_handle_t bsh, bus_size_t size)
 {
+	vaddr_t	va, endva;
 
 	if (bsh > (u_long)KERNEL_BASE) 
 		return;
 
-	uvm_km_free(kernel_map, bsh, size);
+	va = trunc_page((vaddr_t)bsh);
+	endva = round_page(va + size);
+
+	pmap_kremove(va, endva - va);
+	pmap_update(pmap_kernel());
+	km_free((void *)va, endva - va, &kv_any, &kp_none);
 }
 
 

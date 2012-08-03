@@ -226,6 +226,11 @@ cpu_coredump(struct proc *p, struct vnode *vp, struct ucred *cred,
 	return error;
 }
 
+struct kmem_va_mode kv_physwait = {
+	.kv_map = &phys_map,
+	.kv_wait = 1,
+};
+
 /*
  * Map a user I/O request into kernel virtual address space.
  * Note: the pages are already locked by uvm_vslock(), so we
@@ -252,7 +257,7 @@ vmapbuf(bp, len)
 	faddr = trunc_page((vaddr_t)(bp->b_saveaddr = bp->b_data));
 	off = (vaddr_t)bp->b_data - faddr;
 	len = round_page(off + len);
-	taddr = uvm_km_valloc_wait(phys_map, len);
+	taddr = (vaddr_t)km_alloc(len, &kv_physwait, &kp_none, &kd_waitok);
 	bp->b_data = (caddr_t)(taddr + off);
 
 	/*
@@ -300,7 +305,7 @@ vunmapbuf(bp, len)
 	
 	pmap_remove(pmap_kernel(), addr, addr + len);
 	pmap_update(pmap_kernel());
-	uvm_km_free_wakeup(phys_map, addr, len);
+	km_free((void *)addr, len, &kv_physwait, &kp_none);
 	bp->b_data = bp->b_saveaddr;
 	bp->b_saveaddr = 0;
 }
