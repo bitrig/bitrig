@@ -92,10 +92,7 @@
     MAP_ANON | MAP_PRIVATE, -1, (off_t) 0)
 
 #define MMAPA(a,sz)	mmap((a), (size_t)(sz), PROT_READ | PROT_WRITE, \
-    MAP_ANON | MAP_PRIVATE, -1, (off_t) 0)
-
-#define MQUERY(a, sz)	mquery((a), (size_t)(sz), PROT_READ | PROT_WRITE, \
-    MAP_ANON | MAP_PRIVATE | MAP_FIXED, -1, (off_t)0)
+    MAP_ANON | MAP_PRIVATE | MAP_FIXED | __MAP_NOREPLACE, -1, (off_t) 0)
 
 struct region_info {
 	void *p;		/* page; low bits used to mark chunks */
@@ -1291,11 +1288,7 @@ orealloc(void *p, size_t newsz, void *f)
 
 				STATS_INC(g_pool->cheap_realloc_tries);
 				zapcacheregion(g_pool, hint, needed);
-				q = MQUERY(hint, needed);
-				if (q == hint)
-					q = MMAPA(hint, needed);
-				else
-					q = MAP_FAILED;
+				q = MMAPA(hint, needed);
 				if (q == hint) {
 					malloc_used += needed;
 					if (mopts.malloc_junk)
