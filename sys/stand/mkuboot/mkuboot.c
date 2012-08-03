@@ -203,7 +203,7 @@ main(int argc, char *argv[])
 	ih.ih_arch = mapptr->id;
 	ih.ih_type = typemapptr->id;
 	ih.ih_comp = IH_COMP_NONE;
-	strlcpy(ih.ih_name, imgname, sizeof ih.ih_name);
+	strlcpy((char *)ih.ih_name, imgname, sizeof ih.ih_name);
 
 	ifd = open(iname, O_RDONLY);
 	if (ifd < 0)
@@ -241,7 +241,7 @@ main(int argc, char *argv[])
 			err(1, "%s", iname);
 		if (write(ofd, buf, nbytes) != nbytes)
 			err(1, "%s", oname);
-		crc = crc32(crc, buf, nbytes);
+		crc = crc32(crc, (void *)buf, nbytes);
 		ih.ih_size += nbytes;
 	}
 	ih.ih_dcrc = htobe32(crc);
