@@ -4124,8 +4124,8 @@ pmap_bootstrap_pv_page_alloc(struct pool *pp, int flags, int *slowdown)
 	    (flags & PR_WAITOK) ? 0 : UVM_KMF_NOWAIT);
 #else
 	/* XXX */
-	new_page = (vaddr_t)km_alloc(NBPG, &kv_intrsafe, &kp_none,
-	    &kd_trylock);
+	new_page = (vaddr_t)km_alloc(NBPG, &kp_any, &kp_none,
+	    flags & PR_WAITOK) ?  &kd_waitok : &kd_nowait);
 #endif
 
 

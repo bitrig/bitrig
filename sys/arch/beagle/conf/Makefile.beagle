@@ -24,13 +24,13 @@ _archdir?=	$S/arch/${_arch}
 INCLUDES=	-nostdinc -I. -I$S -I$S/arch
 CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL -D__${_mach}__ -MD -MP
 CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes -Wmissing-prototypes \
-		-Wno-main -Wno-uninitialized -Wno-format \
-		-Wstack-larger-than-2047
+		-Wno-main -Wno-uninitialized -Wno-format -Wno-pointer-sign
+#		-Wstack-larger-than-2047
 
 CMACHFLAGS=	-ffreestanding -msoft-float # -march=armv4 -mtune=strongarm
-CMACHFLAGS+=	-fno-builtin-printf -fno-builtin-snprintf \
-		-fno-builtin-vsnprintf -fno-builtin-log \
-		-fno-builtin-log2 -fno-builtin-malloc
+#CMACHFLAGS+=	-fno-builtin-printf -fno-builtin-snprintf \
+#		-fno-builtin-vsnprintf -fno-builtin-log \
+#		-fno-builtin-log2 -fno-builtin-malloc
 .if ${IDENT:M-DNO_PROPOLICE}
 CMACHFLAGS+=	-fno-stack-protector
 .endif

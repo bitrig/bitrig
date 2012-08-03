@@ -702,7 +702,8 @@ printf("%s: %d %d\n", __func__, domain, ++nl1);
 
 	/* Allocate a L1 page table */
 	for (;;) {
-		va = uvm_km_valloc(kernel_map, L1_TABLE_SIZE);
+		va = (vaddr_t)km_alloc(L1_TABLE_SIZE, &kv_any, &kp_none,
+		    &kd_nowait);
 		if (va != 0)
 			break;
 		uvm_wait("alloc_l1_va");
@@ -798,7 +799,7 @@ KASSERT(pg);
 	uvm_pglistfree(&mlist);
 
 	/* free backing va */
-	uvm_km_free(kernel_map, (vaddr_t)l1->l1_kva, L1_TABLE_SIZE);
+	km_free(l1->l1_kva, L1_TABLE_SIZE, &kv_any, &kp_none);
 
 	free(l1, M_VMPMAP);
 }
@@ -3145,8 +3146,8 @@ pmap_bootstrap_pv_page_alloc(struct pool *pp, int flags, int *slowdown)
 		return (rv);
 	}
 
-	new_page = uvm_km_kmemalloc(kernel_map, NULL, PAGE_SIZE,
-	    (flags & PR_WAITOK) ? 0 : UVM_KMF_NOWAIT);
+	new_page = (vaddr_t)km_alloc(NBPG, &kv_any, &kp_none,
+	    (flags & PR_WAITOK) ?  &kd_waitok : &kd_nowait);
 
 	KASSERT(new_page > last_bootstrap_page);
 	last_bootstrap_page = new_page;
