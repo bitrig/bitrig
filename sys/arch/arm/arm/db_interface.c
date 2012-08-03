@@ -245,7 +245,7 @@ db_write_text(vaddr_t addr, size_t size, char *data)
 			pgva = (vaddr_t)dst & L1_S_FRAME;
 			limit = L1_S_SIZE - ((vaddr_t)dst & L1_S_OFFSET);
 
-			tmppde = oldpde | L1_S_PROT_W;
+			tmppde = oldpde | L1_S_PROT(PTE_KERNEL, VM_PROT_WRITE);
 			*pde = tmppde;
 			PTE_SYNC(pde);
 			break;
@@ -257,7 +257,7 @@ db_write_text(vaddr_t addr, size_t size, char *data)
 			if (pte == NULL)
 				goto no_mapping;
 			oldpte = *pte;
-			tmppte = oldpte | L2_S_PROT_W;
+			tmppte = oldpte | L2_S_PROT(PTE_KERNEL, VM_PROT_WRITE);
 			*pte = tmppte;
 			PTE_SYNC(pte);
 			break;
@@ -347,6 +347,7 @@ Debugger(void)
 
 struct db_command db_machine_command_table[] = {
 	{ "frame",	db_show_frame_cmd,	0, NULL },
+	{ "ttb",	db_show_ttb_cmd,	0, NULL },
 #ifdef ARM32_DB_COMMANDS
 	ARM32_DB_COMMANDS,
 #endif

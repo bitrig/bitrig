@@ -129,11 +129,13 @@ _C_LABEL(curpcb):
 .Lcpu_do_powersave:
 	.word	_C_LABEL(cpu_do_powersave)
 
+#if 0
 .Lpmap_kernel_cstate:
 	.word	(kernel_pmap_store + PMAP_CSTATE)
 
 .Llast_cache_state_ptr:
 	.word	_C_LABEL(pmap_cache_state)
+#endif
 
 /*
  * Idle loop, exercised while waiting for a process to wake up.
@@ -281,22 +283,29 @@ ENTRY(cpu_switchto)
 
 	ldr	r0, [r8, #(PCB_DACR)]		/* r0 = old DACR */
 	ldr	r1, [r9, #(PCB_DACR)]		/* r1 = new DACR */
+#if 0
 	ldr	r8, [r9, #(PCB_CSTATE)]		/* r8 = &new_pmap->pm_cstate */
 	ldr	r5, .Llast_cache_state_ptr	/* Previous proc's cstate */
+#endif
 
 	teq	r10, r11			/* Same L1? */
+#if 0
 	ldr	r5, [r5]
+#endif
 	cmpeq	r0, r1				/* Same DACR? */
 	beq	.Lcs_context_switched		/* yes! */
 
+#if 0
 	mov	r12, #0
 	cmp	r5, #0				/* No last vm? (switch_exit) */
 	beq	.Lcs_cache_purge_skipped	/* No, we can skip cache flsh */
+#endif
 
 	mov	r2, #DOMAIN_CLIENT
 	cmp	r1, r2, lsl #(PMAP_DOMAIN_KERNEL * 2) /* Sw to kernel thread? */
 	beq	.Lcs_cache_purge_skipped	/* Yup. Don't flush cache */
 
+#if 0
 	cmp	r5, r8				/* Same userland VM space? */
 	ldrneb	r12, [r5, #(CS_CACHE_ID)]	/* Last VM space cache state */
 
@@ -323,12 +332,23 @@ ENTRY(cpu_switchto)
 	mov	lr, pc
 	ldr	pc, [r1, #CF_IDCACHE_WBINV_ALL]
 	ldmfd	sp!, {r0-r3}
+#else
+	stmfd	sp!, {r0-r3}
+	ldr	r1, .Lcpufuncs
+	mov	lr, pc
+	ldr	pc, [r1, #CF_ICACHE_SYNC_ALL]
+	ldmfd	sp!, {r0-r3}
+#endif
 
 .Lcs_cache_purge_skipped:
 	/* rem: r1 = new DACR */
+#if 0
 	/* rem: r5 = &old_pmap->pm_cstate (or NULL) */
+#endif
 	/* rem: r6 = new proc */
+#if 0
 	/* rem: r8 = &new_pmap->pm_cstate */
+#endif
 	/* rem: r9 = new PCB */
 	/* rem: r10 = old L1 */
 	/* rem: r11 = new L1 */
@@ -380,12 +400,14 @@ ENTRY(cpu_switchto)
 	mov	lr, pc
 	ldr	pc, [r10, #CF_CONTEXT_SWITCH]
 
+#if 0
 	/*
 	 * Mark the old VM space as NOT being resident in the TLB
 	 */
 	mov	r2, #0x00000000
 	cmp	r5, #0
 	strneh	r2, [r5, #(CS_TLB_ID)]
+#endif
 	b	.Lcs_context_switched
 
 	/*
@@ -400,10 +422,13 @@ ENTRY(cpu_switchto)
 	ldrne	pc, [r10, #CF_TLB_FLUSHID_SE]
 
 .Lcs_context_switched:
+#if 0
 	/* rem: r8 = &new_pmap->pm_cstate */
+#endif
 
 	/* XXXSCW: Safe to re-enable FIQs here */
 
+#if 0
 	/*
 	 * The new VM space is live in the cache and TLB.
 	 * Update its cache/tlb state, and if it's not the kernel
@@ -415,6 +440,7 @@ ENTRY(cpu_switchto)
 	str	r2, [r8, #(CS_ALL)]
 	cmp	r5, r8
 	strne	r8, [r0]
+#endif
 
 	/* rem: r6 = new proc */
 	/* rem: r9 = new PCB */

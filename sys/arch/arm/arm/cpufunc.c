@@ -108,8 +108,10 @@ struct cpu_functions arm8_cpufuncs = {
 	cpufunc_control,		/* control		*/
 	cpufunc_domains,		/* domain		*/
 	arm8_setttb,			/* setttb		*/
-	cpufunc_faultstatus,		/* faultstatus		*/
-	cpufunc_faultaddress,		/* faultaddress		*/
+	cpufunc_dfsr,			/* dfsr			*/
+	cpufunc_dfar,			/* dfar			*/
+	cpufunc_dfsr,			/* ifsr			*/
+	cpufunc_dfar,			/* ifar			*/
 
 	/* TLB functions */
 
@@ -158,8 +160,10 @@ struct cpu_functions arm9_cpufuncs = {
 	cpufunc_control,		/* control		*/
 	cpufunc_domains,		/* Domain		*/
 	arm9_setttb,			/* Setttb		*/
-	cpufunc_faultstatus,		/* Faultstatus		*/
-	cpufunc_faultaddress,		/* Faultaddress		*/
+	cpufunc_dfsr,			/* dfsr			*/
+	cpufunc_dfar,			/* dfar			*/
+	cpufunc_dfsr,			/* ifsr			*/
+	cpufunc_dfar,			/* ifar			*/
 
 	/* TLB functions */
 
@@ -209,8 +213,10 @@ struct cpu_functions armv5_ec_cpufuncs = {
 	cpufunc_control,		/* control		*/
 	cpufunc_domains,		/* Domain		*/
 	armv5_ec_setttb,		/* Setttb		*/
-	cpufunc_faultstatus,		/* Faultstatus		*/
-	cpufunc_faultaddress,		/* Faultaddress		*/
+	cpufunc_dfsr,			/* dfsr			*/
+	cpufunc_dfar,			/* dfar			*/
+	cpufunc_dfsr,			/* ifsr			*/
+	cpufunc_dfar,			/* ifar			*/
 
 	/* TLB functions */
 
@@ -261,8 +267,10 @@ struct cpu_functions arm10_cpufuncs = {
 	cpufunc_control,		/* control		*/
 	cpufunc_domains,		/* Domain		*/
 	armv5_setttb,			/* Setttb		*/
-	cpufunc_faultstatus,		/* Faultstatus		*/
-	cpufunc_faultaddress,		/* Faultaddress		*/
+	cpufunc_dfsr,			/* dfsr			*/
+	cpufunc_dfar,			/* dfar			*/
+	cpufunc_dfsr,			/* ifsr			*/
+	cpufunc_dfar,			/* ifar			*/
 
 	/* TLB functions */
 
@@ -311,8 +319,10 @@ struct cpu_functions arm11_cpufuncs = {
 	cpufunc_control,		/* control			*/
 	cpufunc_domains,		/* Domain			*/
 	arm11_setttb,			/* Setttb			*/
-	cpufunc_faultstatus,		/* Faultstatus			*/
-	cpufunc_faultaddress,		/* Faultaddress			*/
+	cpufunc_dfsr,			/* dfsr			*/
+	cpufunc_dfar,			/* dfar			*/
+	cpufunc_dfsr,			/* ifsr			*/
+	cpufunc_dfar,			/* ifar			*/
 
 	/* TLB functions */
 
@@ -361,8 +371,10 @@ struct cpu_functions armv7_cpufuncs = {
 	cpufunc_control,		/* control		*/
 	cpufunc_domains,		/* Domain		*/
 	armv7_setttb,			/* Setttb		*/
-	cpufunc_faultstatus,		/* Faultstatus		*/
-	cpufunc_faultaddress,		/* Faultaddress		*/
+	cpufunc_dfsr,			/* dfsr			*/
+	cpufunc_dfar,			/* dfar			*/
+	cpufunc_ifsr,			/* ifsr			*/
+	cpufunc_ifar,			/* ifar			*/
 
 	/* TLB functions */
 
@@ -380,7 +392,7 @@ struct cpu_functions armv7_cpufuncs = {
 
 	armv7_dcache_wbinv_all,		/* dcache_wbinv_all	*/
 	armv7_dcache_wbinv_range,	/* dcache_wbinv_range	*/
-/*XXX*/	armv7_dcache_wbinv_range,	/* dcache_inv_range	*/
+	armv7_dcache_inv_range,		/* dcache_inv_range	*/
 	armv7_dcache_wb_range,		/* dcache_wb_range	*/
 
 	armv7_idcache_wbinv_all,	/* idcache_wbinv_all	*/
@@ -412,8 +424,10 @@ struct cpu_functions sa11x0_cpufuncs = {
 	cpufunc_control,		/* control		*/
 	cpufunc_domains,		/* domain		*/
 	sa1_setttb,			/* setttb		*/
-	cpufunc_faultstatus,		/* faultstatus		*/
-	cpufunc_faultaddress,		/* faultaddress		*/
+	cpufunc_dfsr,			/* dfsr			*/
+	cpufunc_dfar,			/* dfar			*/
+	cpufunc_dfsr,			/* ifsr			*/
+	cpufunc_dfar,			/* ifar			*/
 
 	/* TLB functions */
 
@@ -462,8 +476,10 @@ struct cpu_functions ixp12x0_cpufuncs = {
 	cpufunc_control,		/* control		*/
 	cpufunc_domains,		/* domain		*/
 	sa1_setttb,			/* setttb		*/
-	cpufunc_faultstatus,		/* faultstatus		*/
-	cpufunc_faultaddress,		/* faultaddress		*/
+	cpufunc_dfsr,			/* dfsr			*/
+	cpufunc_dfar,			/* dfar			*/
+	cpufunc_dfsr,			/* ifsr			*/
+	cpufunc_dfar,			/* ifar			*/
 
 	/* TLB functions */
 
@@ -513,8 +529,10 @@ struct cpu_functions xscale_cpufuncs = {
 	xscale_control,			/* control		*/
 	cpufunc_domains,		/* domain		*/
 	xscale_setttb,			/* setttb		*/
-	cpufunc_faultstatus,		/* faultstatus		*/
-	cpufunc_faultaddress,		/* faultaddress		*/
+	cpufunc_dfsr,			/* dfsr			*/
+	cpufunc_dfar,			/* dfar			*/
+	cpufunc_dfsr,			/* ifsr			*/
+	cpufunc_dfar,			/* ifar			*/
 
 	/* TLB functions */
 
@@ -745,6 +763,7 @@ arm_get_cachetype_cp15v7(void)
 	sel = 0;
 	__asm __volatile("mcr p15, 2, %0, c0, c0, 0"
 		:: "r" (sel));
+	dsb(); isb();
 	__asm __volatile("mrc p15, 1, %0, c0, c0, 0"
 		: "=r" (cachereg) :);
 	line_size = 1 << ((cachereg & 7)+4);
@@ -773,6 +792,7 @@ arm_get_cachetype_cp15v7(void)
 	sel = 1;
 	__asm __volatile("mcr p15, 2, %0, c0, c0, 0"
 		:: "r" (sel));
+	dsb(); isb();
 	__asm __volatile("mrc p15, 1, %0, c0, c0, 0"
 		: "=r" (cachereg) :);
 	line_size = 1 << ((cachereg & 7)+4);
@@ -791,6 +811,7 @@ arm_get_cachetype_cp15v7(void)
 	sel = 1;
 	__asm __volatile("mcr p15, 2, %0, c0, c0, 0"
 		:: "r" (sel));
+	dsb(); isb();
 	__asm __volatile("mrc p15, 1, %0, c0, c0, 0"
 		: "=r" (cachereg) :);
 	line_size = 1 << ((cachereg & 7)+4);
@@ -847,6 +868,7 @@ armv7_dcache_wbinv_all()
 		}
 		setval += setincr;
 	}
+	dsb(); isb();
 	/* drain the write buffer */
 	__asm __volatile("mcr	p15, 0, %0, c7, c10, 4" : : "r" (0));
 
@@ -877,6 +899,7 @@ armv7_dcache_wbinv_all()
 		}
 		setval += setincr;
 	}
+	dsb(); isb();
 	/* drain the write buffer */
 	__asm __volatile("mcr	p15, 0, %0, c7, c10, 4" : : "r" (0));
 
@@ -1278,12 +1301,15 @@ arm11_setup()
 
 	cpuctrl = CPU_CONTROL_MMU_ENABLE | CPU_CONTROL_SYST_ENABLE
 	    | CPU_CONTROL_IC_ENABLE | CPU_CONTROL_DC_ENABLE
-	    | CPU_CONTROL_AFLT_ENABLE /* | CPU_CONTROL_BPRD_ENABLE */;
+	    | CPU_CONTROL_AFLT_ENABLE | CPU_CONTROL_BPRD_ENABLE;
 	cpuctrlmask = CPU_CONTROL_MMU_ENABLE | CPU_CONTROL_SYST_ENABLE
 	    | CPU_CONTROL_IC_ENABLE | CPU_CONTROL_DC_ENABLE
 	    | CPU_CONTROL_ROM_ENABLE | CPU_CONTROL_BPRD_ENABLE
 	    | CPU_CONTROL_BEND_ENABLE | CPU_CONTROL_AFLT_ENABLE
 	    | CPU_CONTROL_ROUNDROBIN | CPU_CONTROL_CPCLK;
+
+	if (vector_page == ARM_VECTORS_HIGH)
+		cpuctrl |= CPU_CONTROL_VECRELOC;
 
 	/* Clear out the cache */
 	cpu_idcache_wbinv_all();
@@ -1308,13 +1334,20 @@ armv7_setup()
 
 	cpuctrl = CPU_CONTROL_MMU_ENABLE | CPU_CONTROL_SYST_ENABLE
 	    | CPU_CONTROL_IC_ENABLE | CPU_CONTROL_DC_ENABLE
+#if 0
+	    | CPU_CONTROL_WBUF_ENABLE
+#endif
 	    | CPU_CONTROL_BPRD_ENABLE | CPU_CONTROL_AFLT_ENABLE;
 	cpuctrlmask = CPU_CONTROL_MMU_ENABLE | CPU_CONTROL_SYST_ENABLE
 	    | CPU_CONTROL_IC_ENABLE | CPU_CONTROL_DC_ENABLE
+#if 1
+	    | CPU_CONTROL_WBUF_ENABLE
+#endif
 	    | CPU_CONTROL_ROM_ENABLE | CPU_CONTROL_BPRD_ENABLE
 	    | CPU_CONTROL_BEND_ENABLE | CPU_CONTROL_AFLT_ENABLE
 	    | CPU_CONTROL_ROUNDROBIN | CPU_CONTROL_CPCLK
-	    | CPU_CONTROL_VECRELOC | CPU_CONTROL_FI | CPU_CONTROL_VE;
+	    | CPU_CONTROL_VECRELOC | CPU_CONTROL_FI | CPU_CONTROL_VE
+	    | CPU_CONTROL_TRE | CPU_CONTROL_AFE;
 
 	if (vector_page == ARM_VECTORS_HIGH)
 		cpuctrl |= CPU_CONTROL_VECRELOC;
@@ -1330,7 +1363,11 @@ armv7_setup()
 
 	/* Set the control register */
 	curcpu()->ci_ctrl = cpuctrl;
+#if 0
 	cpu_control(0xffffffff, cpuctrl);
+#else
+	cpu_control(cpuctrlmask, cpuctrl);
+#endif
 
 	/* And again. */
 	cpu_idcache_wbinv_all();

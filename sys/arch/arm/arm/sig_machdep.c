@@ -170,8 +170,10 @@ sendsig(sig_t catcher, int sig, int returnmask, u_long code, int type,
 	tf->tf_usr_sp = (int)fp;
 	
 	tf->tf_usr_lr = (int)p->p_sigcode;
+#if 0
 	/* XXX This should not be needed. */
 	cpu_icache_sync_all();
+#endif
 
 	/* Remember that we're now on the signal stack. */
 	if (onstack)

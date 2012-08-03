@@ -69,15 +69,16 @@ static void
 fiq_installhandler(void *func, size_t size)
 {
 #if !defined(__ARM_FIQ_INDIRECT)
-	vector_page_setprot(VM_PROT_READ|VM_PROT_WRITE);
+	vector_page_setprot(VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE);
 #endif
 
 	memcpy(fiqvector, func, size);
 
 #if !defined(__ARM_FIQ_INDIRECT)
-	vector_page_setprot(VM_PROT_READ);
+	vector_page_setprot(VM_PROT_READ|VM_PROT_EXECUTE);
 #endif
 	cpu_icache_sync_range((vaddr_t) fiqvector, size);
+cpu_dcache_wb_range((vaddr_t) fiqvector, size);
 }
 
 /*

@@ -451,6 +451,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	pv_addr_t kernel_l1pt;
 	paddr_t memstart;
 	psize_t memsize;
+	extern void omap4_smc_call(uint32_t, uint32_t);
 
 #if 0
 	int led_data = 0;
@@ -467,6 +468,13 @@ initarm(void *arg0, void *arg1, void *arg2)
 	 */
 	if (set_cpufuncs())
 		panic("cpu not recognized!");
+
+	switch (board_id) {
+	case BOARD_ID_OMAP4_PANDA:
+		/* disable external L2 cache */
+		omap4_smc_call(0x102, 0);
+		break;
+	}
 
 #if 0
 	/* Calibrate the delay loop. */
@@ -504,7 +512,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 #ifdef RAMDISK_HOOKS
         boothowto |= RB_DFLTROOT;
 #endif /* RAMDISK_HOOKS */
-
+boothowto |= RB_ASKNAME;
 
 	/* normally u-boot will set up bootconfig.dramblocks */
 	if (bootconfig.dramblocks == 0) {
@@ -714,7 +722,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 
 		logical += pmap_map_chunk(l1pagetable, KERNEL_BASE + logical,
 		    physical_start + logical, textsize,
-		    VM_PROT_READ|VM_PROT_WRITE, PTE_CACHE);
+		    VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE, PTE_CACHE);
 		logical += pmap_map_chunk(l1pagetable, KERNEL_BASE + logical,
 		    physical_start + logical, totalsize - textsize,
 		    VM_PROT_READ|VM_PROT_WRITE, PTE_CACHE);
@@ -750,10 +758,10 @@ initarm(void *arg0, void *arg1, void *arg2)
 	/* MULTI-ICE requires that page 0 is NC/NB so that it can download the
 	 * cache-clean code there.  */
 	pmap_map_entry(l1pagetable, vector_page, systempage.pv_pa,
-	    VM_PROT_READ|VM_PROT_WRITE, PTE_NOCACHE);
+	    VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE, PTE_NOCACHE);
 #else
 	pmap_map_entry(l1pagetable, vector_page, systempage.pv_pa,
-	    VM_PROT_EXECUTE|VM_PROT_READ|VM_PROT_WRITE, PTE_CACHE);
+	    VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE, PTE_CACHE);
 #endif
 
 	/*

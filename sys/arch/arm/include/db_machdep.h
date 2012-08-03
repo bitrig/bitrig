@@ -99,11 +99,12 @@ int kdb_trap (int, db_regs_t *);
 void db_machine_init (void);
 
 #define branch_taken(ins, pc, fun, regs) \
-				db_branch_taken((ins), (pc), (regs))
+	db_branch_taken((ins), (pc), (regs))
 
 #define DB_ELF_SYMBOLS
 #define DB_ELFSIZE 32
 
-void db_show_frame_cmd	(db_expr_t, int, db_expr_t, char *);
+void db_show_frame_cmd(db_expr_t, int, db_expr_t, char *);
+void db_show_ttb_cmd(db_expr_t, int, db_expr_t, char *);
 
 #endif	/* _ARM_DB_MACHDEP_H_ */

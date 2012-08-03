@@ -18,33 +18,35 @@
 #include <machine/cpu.h>
 #include <machine/asm.h>
 
+#define	DSB	.long	0xf57ff040
+#define	ISB	.long	0xf57ff060
+#define	WFI	.long	0xe320f003
+
 ENTRY(armv7_cpu_sleep)
-#if 0
-	wfi
-#else
-	.long	0xe320f003;
-#endif
+	WFI
 	mov	pc, lr
 
 ENTRY(armv7_drain_writebuf)
+	DSB
+	ISB
 	mcr	p15, 0, r0, c7, c10, 4	/* drain write buffer */
 	mov	pc, lr
 
 /*
  * Functions to set the MMU Translation Table Base register
- *
- * We need to clean and flush the cache as it uses virtual
- * addresses that are about to change.
  */
 ENTRY(armv7_setttb)
-	stmfd	sp!, {r0, lr}
-	bl	_C_LABEL(armv7_idcache_wbinv_all)
-	ldmfd	sp!, {r0, lr}
+	mcr	p15, 0, r0, c7, c5, 0	/* Flush I cache */
+	mcr	p15, 0, r0, c7, c5, 6	/* Flush BP cache */
+	DSB
+	ISB
+	mcr	p15, 0, r0, c7, c10, 4	/* drain write buffer */
 
 	mcr	p15, 0, r0, c2, c0, 0	/* load new TTB */
-
 	mcr	p15, 0, r0, c8, c7, 0	/* invalidate I+D TLBs */
-	mcr	p15, 0, r0, c7, c10, 4	/* drain write buffer */
+	DSB
+	ISB
+
 	mov	pc, lr
 
 /*
@@ -53,11 +55,17 @@ ENTRY(armv7_setttb)
 ENTRY(armv7_tlb_flushID_SE)
 	mcr	p15, 0, r0, c8, c6, 1	/* flush D tlb single entry */
 	mcr	p15, 0, r0, c8, c5, 1	/* flush I tlb single entry */
+	mcr	p15, 0, r0, c7, c5, 7	/* flush va from BP */
+	DSB
+	ISB
 	mcr	p15, 0, r0, c7, c10, 4	/* drain write buffer */
 	mov	pc, lr
 
 ENTRY(armv7_tlb_flushI_SE)
 	mcr	p15, 0, r0, c8, c5, 1	/* flush I tlb single entry */
+	mcr	p15, 0, r0, c7, c5, 7	/* flush va from BP */
+	DSB
+	ISB
 	mcr	p15, 0, r0, c7, c10, 4	/* drain write buffer */
 	mov	pc, lr
 
@@ -66,21 +74,31 @@ ENTRY(armv7_tlb_flushI_SE)
  */
 ENTRY(armv7_tlb_flushID)
 	mcr	p15, 0, r0, c8, c7, 0	/* flush I+D tlb */
+	mcr	p15, 0, r0, c7, c5, 6	/* Flush BP cache */
+	DSB
+	ISB
 	mcr	p15, 0, r0, c7, c10, 4	/* drain write buffer */
 	mov	pc, lr
 
 ENTRY(armv7_tlb_flushI)
 	mcr	p15, 0, r0, c8, c5, 0	/* flush I tlb */
+	mcr	p15, 0, r0, c7, c5, 6	/* Flush BP cache */
+	DSB
+	ISB
 	mcr	p15, 0, r0, c7, c10, 4	/* drain write buffer */
 	mov	pc, lr
 
 ENTRY(armv7_tlb_flushD)
 	mcr	p15, 0, r0, c8, c6, 0	/* flush D tlb */
+	DSB
+	ISB
 	mcr	p15, 0, r0, c7, c10, 4	/* drain write buffer */
 	mov	pc, lr
 
 ENTRY(armv7_tlb_flushD_SE)
 	mcr	p15, 0, r0, c8, c6, 1	/* flush D tlb single entry */
+	DSB
+	ISB
 	mcr	p15, 0, r0, c7, c10, 4	/* drain write buffer */
 	mov	pc, lr
 
@@ -95,8 +113,12 @@ ENTRY(armv7_tlb_flushD_SE)
 	i_inc	.req r3
 ENTRY(armv7_icache_sync_range)
 	ldr	ip, .Larmv7_line_size
-	cmp	r1, #0x4000
+	cmp	r1, #0x8000
+#if 0
 	bcs	.Larmv7_icache_sync_all
+#else
+	movcs	r1, #0x8000	/* XXX needs to match cache size... */
+#endif
 	ldr	ip, [ip]
 	sub	r1, r1, #1		/* Don't overrun */
 	sub	r3, ip, #1
@@ -104,11 +126,14 @@ ENTRY(armv7_icache_sync_range)
 	add	r1, r1, r2
 	bic	r0, r0, r3
 1:
+	mcr	p15, 0, r0, c7, c11, 1	/* Clean D cache SE with VA to PoU */
 	mcr	p15, 0, r0, c7, c5, 1	/* Invalidate I cache SE with VA */
-	mcr	p15, 0, r0, c7, c10, 1	/* Clean D cache SE with VA */
 	add	r0, r0, ip
 	subs	r1, r1, ip
-	bpl	1b
+	bhi	1b
+	mcr	p15, 0, r0, c7, c5, 6	/* Flush BP cache */
+	DSB
+	ISB
 	mcr	p15, 0, r0, c7, c10, 4	/* drain the write buffer */
 	mov	pc, lr
 
@@ -120,6 +145,12 @@ ENTRY(armv7_icache_sync_all)
 	 * into the Dcache cleaning code.
 	 */
 	mcr	p15, 0, r0, c7, c5, 0	/* Flush I cache */
+	mcr	p15, 0, r0, c7, c5, 6	/* Flush BP cache */
+	ISB
+#if 1
+	mov	pc, lr
+#endif
+#if 0
 	/* Fall through to clean Dcache. */
 
 .Larmv7_dcache_wb:
@@ -134,22 +165,24 @@ ENTRY(armv7_icache_sync_all)
 	bne	2b			/* Next index */
 	mcr	p15, 0, ip, c7, c10, 2	/* Clean D cache SE with Set/Index */
 	subs	s_max, s_max, s_inc
-	bpl	1b			/* Next set */
+	bhi	1b			/* Next set */
+	DSB
+	ISB
 	mcr	p15, 0, r0, c7, c10, 4	/* drain the write buffer */
 	mov	pc, lr
+#endif
 
 .Larmv7_line_size:
 	.word	_C_LABEL(arm_pdcache_line_size)
 
 ENTRY(armv7_dcache_wb_range)
-#if 1
-	/* until pmap can invalidate before unmapping */
-	/* XXX this also invalidates */
-	b _C_LABEL(armv7_dcache_wbinv_all)
-#else
 	ldr	ip, .Larmv7_line_size
-	cmp	r1, #0x4000
+	cmp	r1, #0x8000
+#if 0
 	bcs	.Larmv7_dcache_wb
+#else
+	movcs	r1, #0x8000	/* XXX needs to match cache size... */
+#endif
 	ldr	ip, [ip]
 	sub	r1, r1, #1		/* Don't overrun */
 	sub	r3, ip, #1
@@ -160,20 +193,19 @@ ENTRY(armv7_dcache_wb_range)
 	mcr	p15, 0, r0, c7, c10, 1	/* Clean D cache SE with VA */
 	add	r0, r0, ip
 	subs	r1, r1, ip
-	bpl	1b
+	bhi	1b
+	DSB
+	ISB
 	mcr	p15, 0, r0, c7, c10, 4	/* drain the write buffer */
-#endif
 	mov	pc, lr
 
 ENTRY(armv7_idcache_wbinv_range)
 	ldr	ip, .Larmv7_line_size
-	cmp	r1, #0x4000
+	cmp	r1, #0x8000
 #if 0
 	bcs	.Larmv7_idcache_wbinv_all
 #else
-	bcc	1f
-	mov	r1, #0x4000
-1:
+	movcs	r1, #0x8000	/* XXX needs to match cache size... */
 #endif
 	ldr	ip, [ip]
 	sub	r1, r1, #1		/* Don't overrun */
@@ -182,18 +214,26 @@ ENTRY(armv7_idcache_wbinv_range)
 	add	r1, r1, r2
 	bic	r0, r0, r3
 1:
+	mcr	p15, 0, r0, c7, c11, 1	/* Clean D cache SE with VA to PoU */
 	mcr	p15, 0, r0, c7, c5, 1	/* Invalidate I cache SE with VA */
 	mcr	p15, 0, r0, c7, c14, 1	/* Purge D cache SE with VA */
 	add	r0, r0, ip
 	subs	r1, r1, ip
-	bpl	1b
+	bhi	1b
+	mcr	p15, 0, r0, c7, c5, 6	/* Flush BP cache */
+	DSB
+	ISB
 	mcr	p15, 0, r0, c7, c10, 4	/* drain the write buffer */
 	mov	pc, lr
 
 ENTRY(armv7_dcache_wbinv_range)
 	ldr	ip, .Larmv7_line_size
-	cmp	r1, #0x4000
+	cmp	r1, #0x8000
+#if 0
 	bcs _C_LABEL(armv7_dcache_wbinv_all)
+#else
+	movcs	r1, #0x8000	/* XXX needs to match cache size... */
+#endif
 	ldr	ip, [ip]
 	sub	r1, r1, #1		/* Don't overrun */
 	sub	r3, ip, #1
@@ -201,11 +241,40 @@ ENTRY(armv7_dcache_wbinv_range)
 	add	r1, r1, r2
 	bic	r0, r0, r3
 1:
+	mcr	p15, 0, r0, c7, c11, 1	/* Clean D cache SE with VA to PoU */
 	mcr	p15, 0, r0, c7, c5, 1	/* Invalidate I cache SE with VA */
 	mcr	p15, 0, r0, c7, c14, 1	/* Purge D cache SE with VA */
 	add	r0, r0, ip
 	subs	r1, r1, ip
-	bpl	1b
+	bhi	1b
+	DSB
+	ISB
+	mcr	p15, 0, r0, c7, c10, 4	/* drain the write buffer */
+	mov	pc, lr
+
+ENTRY(armv7_dcache_inv_range)
+	ldr	ip, .Larmv7_line_size
+	cmp	r1, #0x8000
+#if 0
+	bcs _C_LABEL(armv7_dcache_inv_all)
+#else
+	movcs	r1, #0x8000	/* XXX needs to match cache size... */
+#endif
+	ldr	ip, [ip]
+	sub	r1, r1, #1		/* Don't overrun */
+	sub	r3, ip, #1
+	and	r2, r0, r3
+	add	r1, r1, r2
+	bic	r0, r0, r3
+1:
+	mcr	p15, 0, r0, c7, c11, 1	/* Clean D cache SE with VA to PoU */
+	mcr	p15, 0, r0, c7, c5, 1	/* Invalidate I cache SE with VA */
+	mcr	p15, 0, r0, c7, c6, 1	/* Invalidate D cache SE with VA */
+	add	r0, r0, ip
+	subs	r1, r1, ip
+	bhi	1b
+	DSB
+	ISB
 	mcr	p15, 0, r0, c7, c10, 4	/* drain the write buffer */
 	mov	pc, lr
 
@@ -224,22 +293,26 @@ ENTRY(armv7_context_switch)
 	 * We can assume that the caches will only contain kernel addresses
 	 * at this point.  So no need to flush them again.
 	 */
+	mcr	p15, 0, r0, c7, c5, 0	/* Flush I cache */
+	mcr	p15, 0, r0, c7, c5, 6	/* Flush BP cache */
+	DSB
+	ISB
 	mcr	p15, 0, r0, c7, c10, 4	/* drain the write buffer */
+
 	mcr	p15, 0, r0, c2, c0, 0	/* set the new TTB */
 	mcr	p15, 0, r0, c8, c7, 0	/* and flush the I+D tlbs */
-
-	/* Paranoia -- make sure the pipeline is empty. */
-	nop
-	nop
-	nop
+	DSB
+	ISB
 	mov	pc, lr
 
 /* XXX The following macros should probably be moved to asm.h */
 #define _DATA_OBJECT(x) .globl x; .type x,_ASM_TYPE_OBJECT; x:
 #define C_OBJECT(x)	_DATA_OBJECT(_C_LABEL(x))
 
+#if 0
 .Larmv7_cache_data:
 	.word	_C_LABEL(armv7_dcache_sets_max)
+#endif
 
 	.align 2
 C_OBJECT(armv7_dcache_sets_max)

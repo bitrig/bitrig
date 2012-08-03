@@ -73,13 +73,22 @@ ENTRY(cpu_read_cache_config)
 	mrc	p15, 0, r0, c0, c0, 1
 	mov	pc, lr
 
-ENTRY(cpufunc_faultstatus)
+ENTRY(cpufunc_dfsr)
 	mrc	p15, 0, r0, c5, c0, 0
 	mov	pc, lr
 
-ENTRY(cpufunc_faultaddress)
+ENTRY(cpufunc_dfar)
 	mrc	p15, 0, r0, c6, c0, 0
 	mov	pc, lr
+
+ENTRY(cpufunc_ifsr)
+	mrc	p15, 0, r0, c5, c0, 1
+	mov	pc, lr
+
+ENTRY(cpufunc_ifar)
+	mrc	p15, 0, r0, c6, c0, 2
+	mov	pc, lr
+
 
 
 /*

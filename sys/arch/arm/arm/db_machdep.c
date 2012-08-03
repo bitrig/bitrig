@@ -41,11 +41,7 @@
 #include <ddb/db_output.h>
 
 void
-db_show_frame_cmd(addr, have_addr, count, modif)
-	db_expr_t       addr;
-	int             have_addr;
-	db_expr_t       count;
-	char            *modif;
+db_show_frame_cmd(db_expr_t addr, int have_addr, db_expr_t count, char *modif)
 {
 	struct trapframe *frame;
 
@@ -67,4 +63,21 @@ db_show_frame_cmd(addr, have_addr, count, modif)
 	db_printf("r12=%08x r13=%08x r14=%08x r15=%08x\n",
 	    frame->tf_r12, frame->tf_usr_sp, frame->tf_usr_lr, frame->tf_pc);
 	db_printf("slr=%08x\n", frame->tf_svc_lr);
+}
+
+void
+db_show_ttb_cmd(db_expr_t addr, int have_addr, db_expr_t count, char *modif)
+{
+	u_int dacr, ttb;
+	struct pmap *pm;
+
+	pm = curproc ? curproc->p_vmspace->vm_map.pmap : pmap_kernel();
+	__asm __volatile("mrc p15, 0, %0, c2, c0, 0" : "=r"(ttb));
+	__asm __volatile("mrc p15, 0, %0, c3, c0, 0" : "=r"(dacr));
+
+	db_printf("ttb = %08x, dacr = %08x\n", ttb, dacr);
+#define L2_BUCKET_LOG2  4
+#define L2_LOG2         ((32 - L1_S_SHIFT) - L2_BUCKET_LOG2)
+#define L2_SIZE         (1 << L2_LOG2)
+	db_printf("curpmap = %p dom %d l1 %p l2 %p %u\n", pm, pm->pm_domain, pm->pm_l1, pm->pm_l2, L2_SIZE);
 }
