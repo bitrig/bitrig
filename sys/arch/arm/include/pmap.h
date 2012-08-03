@@ -601,8 +601,14 @@ L2_L_PROT(int ku, vm_prot_t pr)
 		pte = (pr & VM_PROT_WRITE) ? L2_L_PROT_UW : L2_L_PROT_UR;
 	else
 		pte = (pr & VM_PROT_WRITE) ? L2_L_PROT_KW : L2_L_PROT_KR;
+	/*
+	 * If we set the XN bit, the abort handlers or the vector page
+	 * might be marked as such. Needs Debugging.
+	 */
+	/*
 	if ((pr & VM_PROT_EXECUTE) == 0)
 		pte |= L2_V7_L_XN;
+	*/
 
 	return pte;
 }
@@ -615,8 +621,14 @@ L2_S_PROT(int ku, vm_prot_t pr)
 		pte = (pr & VM_PROT_WRITE) ? L2_S_PROT_UW : L2_S_PROT_UR;
 	else
 		pte =(pr & VM_PROT_WRITE) ? L2_S_PROT_KW : L2_S_PROT_KR;
+	/*
+	 * If we set the XN bit, the abort handlers or the vector page
+	 * might be marked as such. Needs Debugging.
+	 */
+	/*
 	if ((pr & VM_PROT_EXECUTE) == 0)
 		pte |= L2_V7_S_XN;
+	*/
 
 	return pte;
 }

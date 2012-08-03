@@ -1598,8 +1598,15 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	 * Make sure executable pages do not have stale data in I$,
 	 * which is VIPT.
 	 */
+	/*
+	 * Somehow this makes us _write_ to the va.
+	 * If it's write-protected, this will break.
+	 * Massively.
+	 */
+	/*
 	if ((prot & VM_PROT_EXECUTE) != 0 && pmap_is_current(pm))
 		cpu_icache_sync_range(va, PAGE_SIZE);
+	*/
 
 	pmap_release_pmap_lock(pm);
 	PMAP_MAP_TO_HEAD_UNLOCK();
