@@ -126,7 +126,7 @@ void
 arm32_vector_init(vaddr_t va, int which)
 {
 	extern unsigned int page0[], page0_data[];
-	unsigned int *vectors = (int *) va;
+	unsigned int *vectors = (unsigned int *) va;
 	unsigned int *vectors_data = vectors + (page0_data - page0);
 	int vec;
 
