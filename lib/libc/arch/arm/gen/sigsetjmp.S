@@ -48,8 +48,13 @@
 
 ENTRY(sigsetjmp)
 	teq	r1, #0
-	beq	PIC_SYM(_C_LABEL(_setjmp), PLT)
-	b	PIC_SYM(_C_LABEL(setjmp), PLT)
+#if defined(PIC)
+	beq	_C_LABEL(_setjmp)(PLT)
+	b	_C_LABEL(setjmp)(PLT)
+#else
+	beq	_C_LABEL(_setjmp)
+	b	_C_LABEL(setjmp)
+#endif
 
 .L_setjmp_magic:
 	.word	_JB_MAGIC__SETJMP
@@ -58,5 +63,10 @@ ENTRY(siglongjmp)
 	ldr	r2, .L_setjmp_magic
 	ldr	r3, [r0]
 	teq	r2, r3
-	beq	PIC_SYM(_C_LABEL(_longjmp), PLT)
-	b	PIC_SYM(_C_LABEL(longjmp), PLT)
+#if defined(PIC)
+	beq	_C_LABEL(_longjmp)(PLT)
+	b	_C_LABEL(longjmp)(PLT)
+#else
+	beq	_C_LABEL(_longjmp)
+	b	_C_LABEL(longjmp)
+#endif

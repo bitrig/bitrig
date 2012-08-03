@@ -72,7 +72,11 @@ SYSENTRY(_sbrk)
 	mov	r3, r0
 	add	r0, r0, r1
 	SYSTRAP(break)
-	bcs	PIC_SYM(CERROR, PLT)
+#if defined(PIC)
+	bcs	CERROR(PLT)
+#else
+	bcs	CERROR
+#endif
 
 	/* Store new curbrk value */
 	ldr	r0, [r2]
@@ -88,4 +92,8 @@ SYSENTRY(_sbrk)
 	.word	_C_LABEL(_GLOBAL_OFFSET_TABLE_) - (.L1+8)
 #endif
 .Lcurbrk:
-	.word	PIC_SYM(CURBRK, GOT)
+#if defined(PIC)
+	.word	CURBRK(GOT)
+#else
+	.word	CURBRK
+#endif

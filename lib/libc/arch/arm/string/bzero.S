@@ -35,4 +35,8 @@
 ENTRY(bzero)
 	mov	r2, r1
 	mov	r1, #0
-	b	PIC_SYM(_C_LABEL(memset), PLT)
+#if defined(PIC)
+	b	_C_LABEL(memset)(PLT)
+#else
+	b	_C_LABEL(memset)
+#endif

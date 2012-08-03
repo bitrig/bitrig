@@ -47,7 +47,11 @@
 SYSENTRY(vfork)
 	mov	r2, r14
 	SYSTRAP(vfork)
-	bcs	PIC_SYM(CERROR, PLT)
+#if defined(PIC)
+	bcs	CERROR(PLT)
+#else
+	bcs	CERROR
+#endif
 	sub	r1, r1, #1	/* r1 == 0xffffffff if parent, 0 if child */
 	and	r0, r0, r1	/* r0 == 0 if child, else unchanged */
 	mov	r15, r2

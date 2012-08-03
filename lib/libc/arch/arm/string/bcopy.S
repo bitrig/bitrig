@@ -39,4 +39,8 @@ ENTRY(bcopy)
 	eor     r0, r1, r0 
 	eor     r1, r0, r1 
 	eor     r0, r1, r0 
-	b	PIC_SYM(_C_LABEL(_memcpy), PLT)
+#if defined(PIC)
+	b	_C_LABEL(_memcpy)(PLT)
+#else
+	b	_C_LABEL(_memcpy)
+#endif

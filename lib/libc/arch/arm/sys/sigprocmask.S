@@ -40,7 +40,11 @@ SYSENTRY(sigprocmask)
 	moveq	r1, #0x00000000
 	ldrne	r1, [r1]
 	SYSTRAP(sigprocmask)
-	bcs	PIC_SYM(CERROR, PLT)
+#if defined(PIC)
+	bcs	CERROR(PLT)
+#else
+	bcs	CERROR
+#endif
 	teq	r2, #0x00000000
 	strne	r0, [r2]
 	mov	r0, #0x00000000

@@ -51,7 +51,11 @@ ENTRY(setjmp)
 	stmfd	sp!, {r0, r14}
 	mov	r0, #0x00000000
 
-	bl	PIC_SYM(_C_LABEL(sigblock), PLT)
+#if defined(PIC)
+	bl	_C_LABEL(sigblock)(PLT)
+#else
+	bl	_C_LABEL(sigblock)
+#endif
 	mov	r1, r0
 
 	ldmfd	sp!, {r0, r14}
@@ -94,7 +98,11 @@ ENTRY(longjmp)
 	sub	sp, sp, #4	/* align the stack */
 
 	mov	r0, r2
-	bl	PIC_SYM(_C_LABEL(sigsetmask), PLT)
+#if defined(PIC)
+	bl	_C_LABEL(sigsetmask)(PLT)
+#else
+	bl	_C_LABEL(sigsetmask)
+#endif
 
 	add	sp, sp, #4	/* unalign the stack */
 	ldmfd	sp!, {r0, r1, r14} 
@@ -130,6 +138,11 @@ ENTRY(longjmp)
 
 	/* validation failed, die die die. */
 botch:
-	bl	PIC_SYM(_C_LABEL(longjmperror), PLT)
-	bl	PIC_SYM(_C_LABEL(abort), PLT)
+#if defined(PIC)
+	bl	_C_LABEL(longjmperror)(PLT)
+	bl	_C_LABEL(abort)(PLT)
+#else
+	bl	_C_LABEL(longjmperror)
+	bl	_C_LABEL(abort)
+#endif
 	b	. - 8		/* Cannot get here */

@@ -73,7 +73,11 @@ SYSENTRY(_brk)
 	movcc	r0, r1
 	mov	r2, r0
 	SYSTRAP(break)
-	bcs	PIC_SYM(CERROR, PLT)
+#if defined(PIC)
+	bcs	CERROR(PLT)
+#else
+	bcs	CERROR
+#endif
 
 #ifdef PIC
 	ldr	r1, .Lcurbrk
@@ -94,6 +98,12 @@ SYSENTRY(_brk)
 	.word	_C_LABEL(_GLOBAL_OFFSET_TABLE_) - (.L1+8)
 #endif
 .Lminbrk:
-	.word	PIC_SYM(_C_LABEL(__minbrk), GOT)
+#if defined(PIC)
+	.word	_C_LABEL(__minbrk)(GOT)
 .Lcurbrk:
-	.word	PIC_SYM(CURBRK, GOT)
+	.word	CURBRK(GOT)
+#else
+	.word	_C_LABEL(__minbrk)
+.Lcurbrk:
+	.word	CURBRK
+#endif

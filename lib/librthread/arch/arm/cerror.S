@@ -37,7 +37,11 @@
 _ENTRY(CERROR)
 	stmfd	sp!, {r4, lr}
 	mov	r4, r0
-	bl	PIC_SYM(_C_LABEL(__errno), PLT)
+#if defined(PIC)
+	b	__errno(PLT)
+#else
+	b	__errno
+#endif
 	str	r4, [r0]
 	mvn	r0, #0x00000000
 	mvn	r1, #0x00000000

@@ -74,9 +74,15 @@
 	SYSENTRY(x);							\
 	SYSTRAP(y)
 
+#if  defined(PIC)
 #define _SYSCALL(x, y)							\
 	_SYSCALL_NOERROR(x,y);						\
-	bcs PIC_SYM(CERROR, PLT)
+	bcs CERROR(PLT)
+#else
+#define _SYSCALL(x, y)							\
+	_SYSCALL_NOERROR(x,y);						\
+	bcs CERROR
+#endif
 
 #define SYSCALL_NOERROR(x)						\
 	_SYSCALL_NOERROR(x,x)

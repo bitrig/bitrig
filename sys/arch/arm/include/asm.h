@@ -91,16 +91,6 @@
 
 #define	ASMSTR		.asciz
 
-#if defined(__ELF__) && defined(PIC)
-#ifdef __STDC__
-#define	PIC_SYM(x,y)	x ## ( ## y ## )
-#else
-#define	PIC_SYM(x,y)	x/**/(/**/y/**/)
-#endif
-#else
-#define	PIC_SYM(x,y)	x
-#endif
-
 #ifdef __ELF__
 #define RCSID(x)	.section ".ident"; .asciz x
 #else

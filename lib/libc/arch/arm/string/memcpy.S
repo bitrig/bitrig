@@ -34,5 +34,9 @@
 
 ENTRY(memcpy)
 	stmfd	sp!, {r0, lr}
-	bl	PIC_SYM(_C_LABEL(_memcpy), PLT)
+#if defined(PIC)
+	bl	_C_LABEL(_memcpy)(PLT)
+#else
+	bl	_C_LABEL(_memcpy)
+#endif
 	ldmfd	sp!, {r0, pc}

@@ -37,6 +37,10 @@
 SYSENTRY(sigsuspend)
 	ldr	r0, [r0]
 	SYSTRAP(sigsuspend)
-	bcs	PIC_SYM(CERROR, PLT)
+#if defined(PIC)
+	bcs	CERROR(PLT)
+#else
+	bcs	CERROR
+#endif
 	mov	r0, #0x00000000
 	mov	r15, r14
