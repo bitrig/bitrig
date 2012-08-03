@@ -88,7 +88,6 @@
  * Disk/Filesystem pseudo-devices
  */
 #include "rd.h"				/* memory disk driver */
-#include "raid.h"			/* RAIDframe */
 #include "vnd.h"			/* vnode disk driver */
 
 /*
@@ -230,7 +229,7 @@ struct bdevsw bdevsw[] = {
 	bdev_lkm_dummy(),		/* 68: */
 	bdev_lkm_dummy(),		/* 69: */
 	bdev_lkm_dummy(),		/* 70: */
-	bdev_disk_init(NRAID,raid),	/* 71: RAIDframe disk driver */
+ 	bdev_notdef(),			/* 71: was: raid disk driver */
 	bdev_lkm_dummy(),		/* 72: */
 	bdev_lkm_dummy(),		/* 73: */
 	bdev_lkm_dummy(),		/* 74: */
@@ -354,7 +353,7 @@ struct cdevsw cdevsw[] = {
 	cdev_tty_init(NUCOM,ucom),		/* 68: USB tty */
 	cdev_usbdev_init(NUSCANNER,uscanner),	/* 69: USB scanner */
 	cdev_usbdev_init(NUGEN,ugen),		/* 70: USB generic driver */
-	cdev_disk_init(NRAID,raid),    		/* 71: RAIDframe disk driver */
+	cdev_notdef(),                          /* 71: removed device */
 	cdev_lkm_dummy(),			/* 72: reserved */
 	cdev_lkm_dummy(),			/* 73: reserved */
 	cdev_lkm_dummy(),			/* 74: reserved */
@@ -504,7 +503,7 @@ int chrtoblktbl[] = {
     /* 68 */	    NODEV,
     /* 69 */	    NODEV,
     /* 70 */	    NODEV,
-    /* 71 */	    71,		/* raid */
+    /* 71 */	    NODEV,
 };
 int nchrtoblktbl = nitems(chrtoblktbl);
 
