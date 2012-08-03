@@ -1,4 +1,4 @@
-/*	$OpenBSD: pmap.c,v 1.35 2011/11/09 10:15:49 miod Exp $	*/
+/*	$OpenBSD: pmap.c,v 1.37 2012/04/19 14:21:01 deraadt Exp $	*/
 /*	$NetBSD: pmap.c,v 1.147 2004/01/18 13:03:50 scw Exp $	*/
 
 /*
@@ -4118,8 +4118,15 @@ pmap_bootstrap_pv_page_alloc(struct pool *pp, int flags, int *slowdown)
 		return (rv);
 	}
 
+#if 0
 	new_page = uvm_km_kmemalloc(kernel_map, NULL, PAGE_SIZE,
 	    (flags & PR_WAITOK) ? 0 : UVM_KMF_NOWAIT);
+#else
+	/* XXX */
+	new_page = (vaddr_t)km_alloc(NBPG, &kv_intrsafe, &kp_none,
+	    &kd_trylock);
+#endif
+
 
 	KASSERT(new_page > last_bootstrap_page);
 	last_bootstrap_page = new_page;
@@ -4169,8 +4176,7 @@ pmap_postinit(void)
 	pool_setlowat(&pmap_l2dtable_pool,
 	    (PAGE_SIZE / sizeof(struct l2_dtable)) * 2);
 
-	needed = (maxproc / PMAP_DOMAINS) + ((maxproc % PMAP_DOMAINS) ? 1 : 0);
-	needed -= 1;
+	needed = (maxprocess - 1) / PMAP_DOMAINS;
 
 	l1 = malloc(sizeof(*l1) * needed, M_VMPMAP, M_WAITOK);
 
