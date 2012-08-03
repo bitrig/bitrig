@@ -102,7 +102,7 @@ softintr_dispatch(int si)
  *	Register a software interrupt handler.
  */
 void *
-softintr_establish(int ipl, void (*func)(void *), void *arg)
+softintr_establish_flags(int ipl, void (*func)(void *), void *arg, int flags)
 {
 	struct soft_intrhand *sih;
 	int si;

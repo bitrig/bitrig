@@ -72,7 +72,13 @@ struct soft_intrq {
 	struct mutex	siq_mtx;
 };
 
-void	*softintr_establish(int, void (*)(void *), void *);
+#define SOFTINTR_ESTABLISH_MPSAFE       0x01
+#define softintr_establish(i, f, a)                                     \
+        softintr_establish_flags(i, f, a, 0)
+#define softintr_establish_mpsafe(i, f, a)                              \
+	softintr_establish_flags(i, f, a, SOFTINTR_ESTABLISH_MPSAFE)
+
+void	*softintr_establish_flags(int, void (*)(void *), void *, int);
 void	softintr_disestablish(void *);
 void	softintr_init(void);
 void	softintr_dispatch(int);
