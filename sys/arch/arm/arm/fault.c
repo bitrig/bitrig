@@ -216,7 +216,7 @@ data_abort_handler(trapframe_t *tf)
 		ftyp = FAULT_TYPE(fsr);
 	else
 		ftyp = FAULT_TYPE_V7(fsr);
-#if 1
+#if 0
 printf("DFAULT %08x addr %08x\n", fsr, far);
 #endif
 
@@ -653,7 +653,7 @@ prefetch_abort_handler(trapframe_t *tf)
 	if (0)	/* non-v7 */
 		far = tf->tf_pc;
 
-#if 1
+#if 0
 printf("IFAULT %08x addr %08x\n", fsr, far);
 #endif
 	/* Prefetch aborts cannot happen in kernel mode */
