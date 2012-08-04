@@ -194,7 +194,7 @@
 #include <machine/param.h>
 #include <arm/cpufunc.h>
 
-#define PMAP_DEBUG
+//#define PMAP_DEBUG
 #ifdef PMAP_DEBUG
 
 /*
@@ -766,7 +766,7 @@ pmap_free_l1(pmap_t pm)
 	vaddr_t va;
 	uint npg;
 
-#if 1
+#ifdef PMAP_DEBUG
 printf("%s: %d %d\n", __func__, pm->pm_domain, --nl1);
 #endif
 #if 1
