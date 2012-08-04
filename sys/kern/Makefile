@@ -2,7 +2,7 @@
 
 # Makefile for kernel tags files, init_sysent, etc.
 
-ARCH=	amd64 armish i386
+ARCH=	amd64 i386 beagle
 
 all:
 	@echo "Doing nothing.  Did you want make syscalls?"
