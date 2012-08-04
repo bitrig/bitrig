@@ -1638,7 +1638,7 @@ pmap_remove(pmap_t pm, vaddr_t sva, vaddr_t eva)
 	PMAP_MAP_TO_HEAD_LOCK();
 	pmap_acquire_pmap_lock(pm);
 
-KASSERT(sva < eva);
+KASSERT(sva <= eva);
 	while (sva < eva) {
 		/*
 		 * Do one L2 bucket's worth at a time.
@@ -3128,7 +3128,7 @@ pmap_alloc_specials(vaddr_t *availp, int pages, vaddr_t *vap, pt_entry_t **ptep)
 void
 pmap_init(void)
 {
-	pool_setlowat(&pmap_pv_pool, (PAGE_SIZE / sizeof(struct pv_entry)) * 2);
+	//pool_setlowat(&pmap_pv_pool, (PAGE_SIZE / sizeof(struct pv_entry)) * 2);
 
 	pmap_initialized = TRUE;
 }
