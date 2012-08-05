@@ -399,24 +399,28 @@ _dl_boot(const char **argv, char **envp, const long dyn_loff, long *dl_data)
 	 */
 #ifndef  RTLD_NO_WXORX
 	{
-		extern char *__got_start;
-		extern char *__got_end;
+		extern char *__got_start __attribute__((weak));;
+		extern char *__got_end __attribute__((weak));;
 #ifdef RTLD_PROTECT_PLT
-		extern char *__plt_start;
-		extern char *__plt_end;
+		extern char *__plt_start __attribute__((weak));;
+		extern char *__plt_end __attribute__((weak));;
 #endif
 
-		_dl_mprotect((void *)ELF_TRUNC((long)&__got_start, _dl_pagesz),
-		    ELF_ROUND((long)&__got_end,_dl_pagesz) -
-		    ELF_TRUNC((long)&__got_start, _dl_pagesz),
-		    GOT_PERMS);
+		if (&__got_start != 0) {
+			_dl_mprotect((void *)ELF_TRUNC((long)&__got_start, _dl_pagesz),
+			    ELF_ROUND((long)&__got_end,_dl_pagesz) -
+			    ELF_TRUNC((long)&__got_start, _dl_pagesz),
+			    GOT_PERMS);
+		}
 
 #ifdef RTLD_PROTECT_PLT
 		/* only for DATA_PLT or BSS_PLT */
-		_dl_mprotect((void *)ELF_TRUNC((long)&__plt_start, _dl_pagesz),
-		    ELF_ROUND((long)&__plt_end,_dl_pagesz) -
-		    ELF_TRUNC((long)&__plt_start, _dl_pagesz),
-		    PROT_READ|PROT_EXEC);
+		if (&__plt_start != 0) {
+			_dl_mprotect((void *)ELF_TRUNC((long)&__plt_start, _dl_pagesz),
+			    ELF_ROUND((long)&__plt_end,_dl_pagesz) -
+			    ELF_TRUNC((long)&__plt_start, _dl_pagesz),
+			    PROT_READ|PROT_EXEC);
+		}
 #endif
 	}
 #endif
