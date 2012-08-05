@@ -320,11 +320,13 @@ struct proc {
 	u_char	p_usrpri;	/* User-priority based on p_cpu and ps_nice. */
 	char	p_comm[MAXCOMLEN+1];
 
-#ifndef	__HAVE_MD_TCB
+#ifndef __HAVE_MD_TCB
 	void	*p_tcb;		/* user-space thread-control-block address */
+#if defined(_KERNEL)
 # define TCB_SET(p, addr)	((p)->p_tcb = (addr))
 # define TCB_GET(p)		((p)->p_tcb)
-#endif
+#endif /* _KERNEL */
+#endif /* __HAVE_MD_TCB */
 
 	struct	emul *p_emul;		/* Emulation information */
 	struct	sigaltstack p_sigstk;	/* sp & on stack state variable */
