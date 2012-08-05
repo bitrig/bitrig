@@ -1,5 +1,11 @@
 # $OpenBSD: Makefile.cross,v 1.54 2012/08/02 13:38:38 okan Exp $
 
+# preconditions for cross build environment
+# build and install the binutils cross package eg bitrig-newbinutils-2.22-arm
+# this is  bitrig/bitrig-newbinutils-2.22 FLAVOR=arm
+# also either the libgcc.a or libclang_rt.a for the machine must be copied
+# into /usr/src (dont know how to build this object yet)
+
 cross-tools:	cross-includes cross-buildenv cross-lib
 cross-distrib:	cross-tools cross-bin cross-share cross-sys cross-etc-root-var
 # cross-gnu \
@@ -179,7 +185,11 @@ ${CROSSBUILDENV}:	${CROSSINCLUDES}
 	rm -f ${CROSSDIR}/usr/bin/$${a}-cpp ${CROSSDIR}/usr/$${a}/bin/cpp; \
 	cp usr.bin/cpp/cpp_clang.sh ${CROSSDIR}/usr/bin/$${a}-cpp; \
 	chmod +x ${CROSSDIR}/usr/bin/$${a}-cpp; \
-	cp ${CROSSDIR}/usr/bin/$${a}-cpp ${CROSSDIR}/usr/$${a}/bin/cpp
+	cp ${CROSSDIR}/usr/bin/$${a}-cpp ${CROSSDIR}/usr/$${a}/bin/cpp ; \
+	mv ${CROSSDIR}/usr/bin/$${a}-ld ${CROSSDIR}/usr/bin/$${a}-cross-ld ; \
+	echo "#!/bin/sh\n${CROSSDIR}/usr/bin/$${a}-cross-ld \"$$""@\" -L ${CROSSDIR}/usr/lib" > ${CROSSDIR}/usr/bin/$${a}-ld ;\
+	chmod +x ${CROSSDIR}/usr/bin/$${a}-ld 
+	cp libclang_rt.${TARGET_ARCH}.a ${CROSSDIR}/usr/lib
 	@touch ${CROSSBUILDENV}
 
 
