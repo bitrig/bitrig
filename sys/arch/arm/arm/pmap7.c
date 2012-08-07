@@ -1262,38 +1262,40 @@ pmap_page_remove(struct vm_page *pg)
 KASSERT(l2b != NULL);
 
 		ptep = &l2b->l2b_kva[l2pte_index(pv->pv_va)];
+		if (l2pte_valid(*ptep)) {
 KASSERT(l2pte_valid(*ptep));
-		pte = *ptep;
+			pte = *ptep;
 
-		/* inline pmap_is_current(pm) */
-		if (pm == curpm || pm == pmap_kernel()) {
-			if (PV_BEEN_EXECD(pv->pv_flags))
-				cpu_icache_sync_range(pv->pv_va, PAGE_SIZE);
-			if (flush == FALSE)
-				cpu_dcache_wb_range(pv->pv_va, PAGE_SIZE);
-			flush = TRUE;
+			/* inline pmap_is_current(pm) */
+			if (pm == curpm || pm == pmap_kernel()) {
+				if (PV_BEEN_EXECD(pv->pv_flags))
+					cpu_icache_sync_range(pv->pv_va, PAGE_SIZE);
+				if (flush == FALSE)
+					cpu_dcache_wb_range(pv->pv_va, PAGE_SIZE);
+				flush = TRUE;
+			}
+
+			/*
+			 * Update statistics
+			 */
+			--pm->pm_stats.resident_count;
+
+			/* Wired bit */
+			if (pv->pv_flags & PVF_WIRED)
+				--pm->pm_stats.wired_count;
+
+			flags |= pv->pv_flags;
+
+			/*
+			 * Invalidate the PTEs.
+			 */
+			*ptep = L2_TYPE_INV;
+			PTE_SYNC(ptep);
+			if (flush)
+				cpu_tlb_flushID_SE(pv->pv_va);
+
+			pmap_free_l2_bucket(pm, l2b, 1);
 		}
-
-		/*
-		 * Update statistics
-		 */
-		--pm->pm_stats.resident_count;
-
-		/* Wired bit */
-		if (pv->pv_flags & PVF_WIRED)
-			--pm->pm_stats.wired_count;
-
-		flags |= pv->pv_flags;
-
-		/*
-		 * Invalidate the PTEs.
-		 */
-		*ptep = L2_TYPE_INV;
-		PTE_SYNC(ptep);
-		if (flush)
-			cpu_tlb_flushID_SE(pv->pv_va);
-
-		pmap_free_l2_bucket(pm, l2b, 1);
 
 		npv = pv->pv_next;
 		pool_put(&pmap_pv_pool, pv);
