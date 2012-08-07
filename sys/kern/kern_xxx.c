@@ -1,4 +1,4 @@
-/*	$OpenBSD: kern_xxx.c,v 1.22 2012/07/09 15:43:36 deraadt Exp $	*/
+/*	$OpenBSD: kern_xxx.c,v 1.23 2012/08/07 05:16:54 guenther Exp $	*/
 /*	$NetBSD: kern_xxx.c,v 1.32 1996/04/22 01:38:41 christos Exp $	*/
 
 /*
@@ -90,7 +90,7 @@ __stack_chk_fail(void)
 int	scdebug = SCDEBUG_CALLS|SCDEBUG_RETURNS|SCDEBUG_SHOWARGS;
 
 void
-scdebug_call(struct proc *p, register_t code, register_t args[])
+scdebug_call(struct proc *p, register_t code, const register_t args[])
 {
 	struct sysent *sy;
 	struct emul *em;
@@ -123,7 +123,8 @@ scdebug_call(struct proc *p, register_t code, register_t args[])
 }
 
 void
-scdebug_ret(struct proc *p, register_t code, int error, register_t retval[])
+scdebug_ret(struct proc *p, register_t code, int error,
+    const register_t retval[])
 {
 	struct sysent *sy;
 	struct emul *em;
