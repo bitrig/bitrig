@@ -253,7 +253,7 @@ prcm_setclock(int clock, int speed)
 		int shift =  (clock-2);
 		oreg = bus_space_read_4(prcm_iot, prcm_ioh, CM_CLKSEL_PER);
 
-		mask = 1 << (mask);
+		mask = 1 << (shift);
 		reg =  (oreg & ~mask) | ( (speed << shift) & mask);
 		printf(" prcm_setclock old %08x new %08x",  oreg, reg);
 
