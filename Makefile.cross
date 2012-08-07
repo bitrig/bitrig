@@ -94,6 +94,7 @@ NO_CROSS+=groff lynx perl texinfo cvs
 NO_CROSS+=nsd
 NO_CROSS+=nginx
 NO_CROSS+=sqlite3
+NO_CROSS+=bgplg
 
 cross-dirs:	${CROSSDIRS}
 cross-obj:	${CROSSOBJ}
