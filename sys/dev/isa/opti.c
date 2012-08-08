@@ -68,8 +68,7 @@ static __inline u_char opti_inb(u_short);
 static int opti_present(void);
 
 static __inline int
-OPTI_cd_addr(a)
-	int	a;
+OPTI_cd_addr(int a)
 {
 	switch(a) {
 	case 0x320:
@@ -86,8 +85,7 @@ OPTI_cd_addr(a)
 }
 
 static __inline int
-OPTI_cd_irq(i)
-	int	i;
+OPTI_cd_irq(int i)
 {
 	switch(i) {
 	case 5:
@@ -110,8 +108,7 @@ OPTI_cd_irq(i)
 }
 
 static __inline int
-OPTI_cd_drq(d)
-	int	d;
+OPTI_cd_drq(int d)
 {
 	switch(d) {
 	case 3:
@@ -129,8 +126,7 @@ OPTI_cd_drq(d)
 #define	OPTI_snd_valid_ift(i)	((i)==OPTI_WSS||(i)==OPTI_SB)
 
 static __inline int
-OPTI_snd_addr(a)
-	int	a;
+OPTI_snd_addr(int a)
 {
 	switch(a) {
 	case 0x220:
@@ -151,8 +147,7 @@ OPTI_snd_addr(a)
 }
 
 static __inline int
-OPTI_snd_irq(i)
-	int	i;
+OPTI_snd_irq(int i)
 {
 	switch(i) {
 	case 5:
@@ -175,8 +170,7 @@ OPTI_snd_irq(i)
 }
 
 static __inline int
-OPTI_snd_drq(d)
-	int	d;
+OPTI_snd_drq(int d)
 {
 	switch(d) {
 	case 3:
@@ -192,17 +186,14 @@ OPTI_snd_drq(d)
 }
 
 static __inline void
-opti_outb(port, byte)
-	u_short port;
-	u_char byte;
+opti_outb(u_short port, u_char byte)
 {
 	outb( OPTI_PASSWD, opti_type );
 	outb( port, byte );
 }
 
 static __inline u_char
-opti_inb(port)
-	u_short port;
+opti_inb(u_short port)
 {
 	outb( OPTI_PASSWD, opti_type );
 	return inb( port );
@@ -234,8 +225,7 @@ opti_present(void)
 }
 
 int
-opti_cd_setup(ift, addr, irq, drq)
-	int	ift, addr, irq, drq;
+opti_cd_setup(int ift, int addr, int irq, int drq)
 {
 	int	ret = 0;
 
@@ -299,8 +289,7 @@ opti_cd_setup(ift, addr, irq, drq)
 }
 
 int
-opti_snd_setup(ift, addr, irq, drq)
-	int	ift, addr, irq, drq;
+opti_snd_setup(int ift, int addr, int irq, int drq)
 {
 	XDEBUG( 2, ("opti: do SND setup type=%u,addr=%x,irq=%d,drq=%d\n",
 		    ift, addr, irq, drq));
