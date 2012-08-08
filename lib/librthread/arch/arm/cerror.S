@@ -38,9 +38,9 @@ _ENTRY(CERROR)
 	stmfd	sp!, {r4, lr}
 	mov	r4, r0
 #if defined(PIC)
-	b	__errno(PLT)
+	bl	__errno(PLT)
 #else
-	b	__errno
+	bl	__errno
 #endif
 	str	r4, [r0]
 	mvn	r0, #0x00000000
