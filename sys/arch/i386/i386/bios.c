@@ -257,7 +257,7 @@ biosattach(struct device *parent, struct device *self, void *aux)
 			if (va[0] != '_' && va[1] != 'D' && va[2] != 'M' &&
 			    va[3] != 'I' && va[4] != '_')
 				continue;
-			for (chksum = 0, i = 0xf; i--; chksum += va[i]);
+			for (chksum = 0, i = 0xf; i--; chksum += va[i])
 				;
 			if (chksum != 0)
 				continue;
