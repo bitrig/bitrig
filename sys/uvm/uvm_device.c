@@ -372,6 +372,13 @@ udv_fault(struct uvm_faultinfo *ufi, vaddr_t vaddr, vm_page_t *pps, int npages,
 
 	device = udv->u_device;
 	mapfn = cdevsw[major(device)].d_mmap;
+	/*
+	 * The uobj will not be going away since we have at least a read lock
+	 * on the map which has a reference on it. It is assumed here that a
+	 * lock on the udv is NOT necessary for the mmap callback from a device.
+	 * Hence, we unlock here so that mmap functions can sleep.
+	 */
+	mtx_leave(&uobj->vmobjlock);
 
 	/*
 	 * now we must determine the offset in udv to use and the VA to
@@ -417,7 +424,7 @@ udv_fault(struct uvm_faultinfo *ufi, vaddr_t vaddr, vm_page_t *pps, int npages,
 			 * XXX case.
 			 */
 			uvmfault_unlockall(ufi, ufi->entry->aref.ar_amap,
-			    uobj, NULL);
+			    NULL, NULL);
 
 			/* sync what we have so far */
 			pmap_update(ufi->orig_map->pmap);      
@@ -426,7 +433,7 @@ udv_fault(struct uvm_faultinfo *ufi, vaddr_t vaddr, vm_page_t *pps, int npages,
 		}
 	}
 
-	uvmfault_unlockall(ufi, ufi->entry->aref.ar_amap, uobj, NULL);
+	uvmfault_unlockall(ufi, ufi->entry->aref.ar_amap, NULL, NULL);
 	pmap_update(ufi->orig_map->pmap);
 	return (retval);
 }
