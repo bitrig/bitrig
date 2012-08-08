@@ -117,9 +117,7 @@ static struct epcard {
 static int nepcards;
 
 static void
-epaddcard(bus, iobase, irq, model)
-	int bus, iobase, irq;
-	u_short model;
+epaddcard(int bus, int iobase, int irq, u_short model)
 {
 
 	if (nepcards >= MAXEPCARDS)
@@ -140,9 +138,7 @@ epaddcard(bus, iobase, irq, model)
  * calls we look for matching cards.
  */
 int
-ep_isa_probe(parent, match, aux)
-	struct device *parent;
-	void *match, *aux;
+ep_isa_probe(struct device *parent, void *match, void *aux)
 {
 	struct isa_attach_args *ia = aux;
 	bus_space_tag_t iot = ia->ia_iot;
@@ -259,9 +255,7 @@ good:
 }
 
 void
-ep_isa_attach(parent, self, aux)
-	struct device *parent, *self;
-	void *aux;
+ep_isa_attach(struct device *parent, struct device *self, void *aux)
 {
 	struct ep_softc *sc = (void *)self;
 	struct isa_attach_args *ia = aux;
