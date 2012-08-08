@@ -145,8 +145,7 @@ int	sbdebug = 0;
 
 
 int
-sbmatch(sc)
-	struct sbdsp_softc *sc;
+sbmatch(struct sbdsp_softc *sc)
 {
 	static u_char drq_conf[8] = {
 		0x01, 0x02, -1, 0x08, -1, 0x20, 0x40, 0x80
@@ -177,8 +176,8 @@ sbmatch(sc)
 	}
 
         if (0 <= sc->sc_drq16 && sc->sc_drq16 <= 3)
-        	/* 
-                 * XXX Some ViBRA16 cards seem to have two 8 bit DMA 
+        	/*
+                 * XXX Some ViBRA16 cards seem to have two 8 bit DMA
                  * channels.  I've no clue how to use them, so ignore
                  * one of them for now.  -- augustss@netbsd.org
                  */
@@ -194,7 +193,7 @@ sbmatch(sc)
 		}
 	} else
 		sc->sc_drq16 = sc->sc_drq8;
-	
+
 	if (ISSBPROCLASS(sc)) {
 		if (!SBP_IRQ_VALID(sc->sc_irq)) {
 			DPRINTF(("%s: configured irq %d invalid\n",
@@ -254,8 +253,7 @@ sbmatch(sc)
 
 
 void
-sbattach(sc)
-	struct sbdsp_softc *sc;
+sbattach(struct sbdsp_softc *sc)
 {
 	struct audio_attach_args arg;
 #if NMIDI > 0
@@ -292,9 +290,7 @@ sbattach(sc)
  */
 
 int
-sb_getdev(addr, retp)
-	void *addr;
-	struct audio_device *retp;
+sb_getdev(void *addr, struct audio_device *retp)
 {
 	struct sbdsp_softc *sc = addr;
 	static char *names[] = SB_NAMES;
@@ -304,15 +300,15 @@ sb_getdev(addr, retp)
 		strlcpy(retp->name, "MV Jazz16", sizeof retp->name);
 	else
 		strlcpy(retp->name, "SoundBlaster", sizeof retp->name);
-	snprintf(retp->version, sizeof retp->version, "%d.%02d", 
+	snprintf(retp->version, sizeof retp->version, "%d.%02d",
 		 SBVER_MAJOR(sc->sc_version),
 		 SBVER_MINOR(sc->sc_version));
-	if (0 <= sc->sc_model && sc->sc_model < sizeof names / sizeof names[0])
+	if (sc->sc_model < sizeof names / sizeof names[0])
 		config = names[sc->sc_model];
 	else
 		config = "??";
 	strlcpy(retp->config, config, sizeof retp->config);
-		
+
 	return 0;
 }
 
@@ -321,35 +317,26 @@ sb_getdev(addr, retp)
 #define SBMPU(a) (&((struct sbdsp_softc *)addr)->sc_mpu_sc)
 
 int
-sb_mpu401_open(addr, flags, iintr, ointr, arg)
-	void *addr;
-	int flags;
-	void (*iintr)(void *, int);
-	void (*ointr)(void *);
-	void *arg;
+sb_mpu401_open(void *addr, int flags, void (*iintr)(void *, int),
+    void (*ointr)(void *), void *arg)
 {
 	return mpu_open(SBMPU(addr), flags, iintr, ointr, arg);
 }
 
 int
-sb_mpu401_output(addr, d)
-	void *addr;
-	int d;
+sb_mpu401_output(void *addr, int d)
 {
 	return mpu_output(SBMPU(addr), d);
 }
 
 void
-sb_mpu401_close(addr)
-	void *addr;
+sb_mpu401_close(void *addr)
 {
 	mpu_close(SBMPU(addr));
 }
 
 void
-sb_mpu401_getinfo(addr, mi)
-	void *addr;
-	struct midi_info *mi;
+sb_mpu401_getinfo(void *addr, struct midi_info *mi)
 {
 	mi->name = "SB MPU-401 UART";
 	mi->props = 0;
