@@ -4276,7 +4276,7 @@ sr_rebuild(void *arg)
 	struct sr_softc		*sc = sd->sd_sc;
 
 	if (kthread_create(sr_rebuild_thread, sd, &sd->sd_background_proc,
-	    DEVNAME(sc)) != 0)
+	    "%s", DEVNAME(sc)) != 0)
 		printf("%s: unable to start background operation\n",
 		    DEVNAME(sc));
 }

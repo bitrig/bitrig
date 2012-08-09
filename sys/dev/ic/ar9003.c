@@ -2768,6 +2768,8 @@ ar9003_compute_predistortion(struct athn_softc *sc, const uint32_t *lo,
 		beta  += b2[i] * xtilde[i];
 	}
 
+	y4 = y2 * y2; /* XXX not sure if this is right */
+
 	scale = ((y4 / SCALE_LOG) * (L + 1) -
 		 (y2 / SCALE_LOG) * sumy2) * SCALE_LOG;
 

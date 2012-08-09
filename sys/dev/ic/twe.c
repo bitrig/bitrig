@@ -313,7 +313,7 @@ twe_attach(sc)
 	}
 
 	if (retry < 0) {
-		printf(errstr);
+		printf("%s", errstr);
 		twe_dispose(sc);
 		return 1;
 	}

@@ -963,7 +963,7 @@ dk_mountroot(void)
 
 	error = disk_readlabel(&dl, rootdev, errbuf, sizeof(errbuf));
 	if (error)
-		panic(error);
+		panic("%s", error);
 
 	if (DL_GETPSIZE(&dl.d_partitions[part]) == 0)
 		panic("root filesystem has size 0");

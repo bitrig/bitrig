@@ -304,7 +304,7 @@ void db_disprint(void *arg, const char *fmt, ...)
 	vsnprintf(stre, sizeof(stre), fmt, ap);
 	va_end(ap);
 
-	db_printf(stre);
+	db_printf("%s", stre);
 }
 
 void

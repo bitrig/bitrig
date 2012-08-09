@@ -685,7 +685,7 @@ userconf_help(void)
 
 	printf("command   args                description\n");
 	while (*userconf_cmds[j] != '\0') {
-		printf(userconf_cmds[j]);
+		printf("%s", userconf_cmds[j]);
 		k = strlen(userconf_cmds[j]);
 		while (k < 10) {
 			printf(" ");

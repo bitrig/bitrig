@@ -318,7 +318,7 @@ config_found_sm(struct device *parent, void *aux, cfprint_t print,
 	if ((match = config_search(submatch, parent, aux)) != NULL)
 		return (config_attach(parent, match, aux, print));
 	if (print)
-		printf(msgs[(*print)(aux, parent->dv_xname)]);
+		printf("%s", msgs[(*print)(aux, parent->dv_xname)]);
 	return (NULL);
 }
 

@@ -1635,7 +1635,7 @@ ipmi_create_thread(void *arg)
 {
 	struct ipmi_softc	*sc = arg;
 
-	if (kthread_create(ipmi_poll_thread, sc->sc_thread, NULL,
+	if (kthread_create(ipmi_poll_thread, sc->sc_thread, NULL, "%s",
 	    DEVNAME(sc)) != 0) {
 		printf("%s: unable to create run thread, ipmi disabled\n",
 		    DEVNAME(sc));

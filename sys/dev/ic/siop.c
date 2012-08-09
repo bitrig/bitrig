@@ -354,7 +354,7 @@ siop_intr(v)
 	struct siop_lun *siop_lun;
 	struct scsi_xfer *xs;
 	int istat, sist, sstat1, dstat = 0;
-	u_int32_t irqcode;
+	u_int32_t irqcode = 0;
 	int need_reset = 0;
 	int offset, target, lun, tag;
 	bus_addr_t dsa;

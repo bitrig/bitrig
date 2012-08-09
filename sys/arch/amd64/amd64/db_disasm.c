@@ -1000,7 +1000,7 @@ db_disasm_esc(db_addr_t loc, int inst, int short_addr, int size, int rex,
 		 * Normal address modes.
 		 */
 		loc = db_read_address(loc, short_addr, regmodrm, rex, &address);
-		db_printf(fp->f_name);
+		db_printf("%s", fp->f_name);
 		switch (fp->f_size) {
 		case SNGL:
 			db_printf("s");

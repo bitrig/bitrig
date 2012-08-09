@@ -51,9 +51,8 @@ LINKFLAGS=	-Ttext 0xffffffff810001e0 -e start --warn-common
 
 .else
 
-# XXX we need a -Werror sweep in clang
 CWARNFLAGS=	-Wall -Wstrict-prototypes -Wmissing-prototypes \
-		-Wno-main -Wno-uninitialized -Wno-format -Werror
+		-Werror
 # these are to shutup clang vs gcc, should be ultimately fixed
 CWARNFLAGS+=	-Wno-pointer-sign
 CMACHFLAGS=	-mcmodel=kernel -mno-red-zone -mno-sse -mno-sse2 -mno-sse3 \
