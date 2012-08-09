@@ -1176,6 +1176,8 @@
 ./usr/include/dev/pci/noctvar.h
 ./usr/include/dev/pci/nofnreg.h
 ./usr/include/dev/pci/nofnvar.h
+./usr/include/dev/pci/ocereg.h
+./usr/include/dev/pci/ocevar.h
 ./usr/include/dev/pci/pccbbreg.h
 ./usr/include/dev/pci/pccbbvar.h
 ./usr/include/dev/pci/pcidevs.h
@@ -1942,6 +1944,7 @@
 ./usr/include/sys/stdint.h
 ./usr/include/sys/swap.h
 ./usr/include/sys/syscall.h
+./usr/include/sys/syscall_mi.h
 ./usr/include/sys/syscallargs.h
 ./usr/include/sys/sysctl.h
 ./usr/include/sys/syslimits.h
@@ -5050,7 +5053,6 @@
 ./usr/share/man/man1/pgrep.1
 ./usr/share/man/man1/piconv.1
 ./usr/share/man/man1/pkg-config.1
-./usr/share/man/man1/pkg.1
 ./usr/share/man/man1/pkg_add.1
 ./usr/share/man/man1/pkg_create.1
 ./usr/share/man/man1/pkg_delete.1
@@ -10573,6 +10575,7 @@
 ./usr/share/man/man4/null.4
 ./usr/share/man/man4/nviic.4
 ./usr/share/man/man4/nvt.4
+./usr/share/man/man4/oce.4
 ./usr/share/man/man4/ohci.4
 ./usr/share/man/man4/onewire.4
 ./usr/share/man/man4/oosiop.4
