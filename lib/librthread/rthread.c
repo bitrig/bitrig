@@ -71,7 +71,7 @@ struct pthread_attr _rthread_attr_default = {
 };
 
 static int
-num_cpus()
+num_cpus(void)
 {
 	int		mib[] = { CTL_HW, HW_NCPU }; /* hw.ncpu */
 	int		sysctl_hw_ncpu;
