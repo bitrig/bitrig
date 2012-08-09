@@ -2291,6 +2291,7 @@ azalia_mixer_from_device_value(const codec_t *this, nid_t nid, int target,
 	} else {
 		DPRINTF(("%s: unknown target: %d\n", __func__, target));
 		steps = 255;
+		ctloff = 0; /* XXX */
 	}
 	dv -= ctloff;
 	if (dv <= 0 || steps == 0)
@@ -2317,6 +2318,7 @@ azalia_mixer_to_device_value(const codec_t *this, nid_t nid, int target,
 	} else {
 		DPRINTF(("%s: unknown target: %d\n", __func__, target));
 		steps = 255;
+		ctloff = 0; /* XXX */
 	}
 	if (uv <= AUDIO_MIN_GAIN || steps == 0)
 		return(ctloff);

@@ -391,10 +391,10 @@ toshiba_hotkey(struct aml_node *node, int notify, void *arg)
 		ret = toshiba_fn_key_video_output(sc);
 		break;
 	default:
-		break;
+		return (1);
 	}
 
-	if ( ret != HCI_SUCCESS)
+	if (ret != HCI_SUCCESS)
 		return (1);
 
 	return (0);

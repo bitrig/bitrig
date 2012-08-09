@@ -264,6 +264,8 @@ ichiic_i2c_exec(void *cookie, i2c_op_t op, i2c_addr_t addr,
 		ctl = ICH_SMB_HC_CMD_BDATA;
 	else if (len == 2)
 		ctl = ICH_SMB_HC_CMD_WDATA;
+	else
+		return (1); /* shut compiler up */
 
 	if ((flags & I2C_F_POLL) == 0)
 		ctl |= ICH_SMB_HC_INTREN;

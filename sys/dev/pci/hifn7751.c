@@ -1933,7 +1933,7 @@ int
 hifn_process(struct cryptop *crp)
 {
 	struct hifn_command *cmd = NULL;
-	int card, session, err, ivlen;
+	int card, session, err = EINVAL, ivlen;
 	struct hifn_softc *sc;
 	struct cryptodesc *crd1, *crd2, *maccrd, *enccrd;
 

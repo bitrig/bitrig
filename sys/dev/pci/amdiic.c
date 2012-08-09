@@ -320,6 +320,8 @@ amdiic_i2c_exec(void *cookie, i2c_op_t op, i2c_addr_t addr,
 		proto = AMD8111_SMB_PROTO_BDATA;
 	else if (len == 2)
 		proto = AMD8111_SMB_PROTO_WDATA;
+	else
+		return (1); /* shut compiler up */
 
 	/* Set direction */
 	if (I2C_OP_READ_P(op))

@@ -1333,6 +1333,8 @@ pms_proc_alps(struct pms_softc *sc)
 		/* Generate a width value corresponding to one finger */
 		if (z > 0)
 			w = 4;
+		else
+			w = 0; /* XXX */
 
 		wsmouse_input(sc->sc_wsmousedev, buttons, x, y, z, w,
 		    WSMOUSE_INPUT_ABSOLUTE_X | WSMOUSE_INPUT_ABSOLUTE_Y |

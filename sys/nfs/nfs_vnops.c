@@ -2589,7 +2589,7 @@ nfs_lookitup(struct vnode *dvp, char *name, int len, struct ucred *cred,
 	struct vnode *newvp = NULL;
 	struct nfsnode *np, *dnp = VTONFS(dvp);
 	caddr_t cp2;
-	int error = 0, fhlen, attrflag;
+	int error = 0, fhlen, attrflag = 0;
 	nfsfh_t *nfhp;
 
 	info.nmi_v3 = NFS_ISV3(dvp);
