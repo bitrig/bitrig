@@ -226,13 +226,15 @@ ELFNAME(load_psection)(struct exec_vmcmd_set *vcset, struct vnode *vp,
 			*addr = ELF_TRUNC(*addr, ph->p_align);
 			diff = ph->p_vaddr - ELF_TRUNC(ph->p_vaddr, ph->p_align);
 			/* page align vaddr */
-			base = *addr + trunc_page(ph->p_vaddr) 
+			base = *addr + trunc_page(ph->p_vaddr)
 			    - ELF_TRUNC(ph->p_vaddr, ph->p_align);
 
 			bdiff = ph->p_vaddr - trunc_page(ph->p_vaddr);
 
-		} else
+		} else {
 			diff = 0;
+			bdiff = 0;
+		}
 	} else {
 		*addr = uaddr = ph->p_vaddr;
 		if (ph->p_align > 1)
@@ -316,7 +318,7 @@ ELFNAME(load_file)(struct proc *p, char *path, struct exec_package *epp,
 	Elf_Ehdr eh;
 	Elf_Phdr *ph = NULL;
 	u_long phsize;
-	Elf_Addr addr;
+	Elf_Addr addr = 0;
 	struct vnode *vp;
 	Elf_Phdr *base_ph = NULL;
 	struct interp_ld_sec {
@@ -385,7 +387,7 @@ ELFNAME(load_file)(struct proc *p, char *path, struct exec_package *epp,
 	*last = epp->ep_interp_pos = pos;
 	loop = 0;
 	for (i = 0; i < nload;/**/) {
-		vaddr_t	addr;
+		vaddr_t	vaddr;
 		struct	uvm_object *uobj;
 		off_t	uoff;
 		size_t	size;
@@ -402,16 +404,16 @@ ELFNAME(load_file)(struct proc *p, char *path, struct exec_package *epp,
 		}
 #endif
 
-		addr = trunc_page(pos + loadmap[i].vaddr);
-		size =  round_page(addr + loadmap[i].memsz) - addr;
+		vaddr = trunc_page(pos + loadmap[i].vaddr);
+		size =  round_page(vaddr + loadmap[i].memsz) - vaddr;
 
 		/* CRAP - map_findspace does not avoid daddr+BRKSIZ */
-		if ((addr + size > (vaddr_t)p->p_vmspace->vm_daddr) &&
-		    (addr < (vaddr_t)p->p_vmspace->vm_daddr + BRKSIZ))
-			addr = round_page((vaddr_t)p->p_vmspace->vm_daddr +
+		if ((vaddr + size > (vaddr_t)p->p_vmspace->vm_daddr) &&
+		    (vaddr < (vaddr_t)p->p_vmspace->vm_daddr + BRKSIZ))
+			vaddr = round_page((vaddr_t)p->p_vmspace->vm_daddr +
 			    BRKSIZ);
 
-		if (uvm_map_mquery(&p->p_vmspace->vm_map, &addr, size,
+		if (uvm_map_mquery(&p->p_vmspace->vm_map, &vaddr, size,
 		    (i == 0 ? uoff : UVM_UNKNOWN_OFFSET), 0) != 0) {
 			if (loop == 0) {
 				loop = 1;
@@ -422,9 +424,9 @@ ELFNAME(load_file)(struct proc *p, char *path, struct exec_package *epp,
 			error = ENOMEM;
 			goto bad1;
 		}
-		if (addr != pos + loadmap[i].vaddr) {
+		if (vaddr != pos + loadmap[i].vaddr) {
 			/* base changed. */
-			pos = addr - trunc_page(loadmap[i].vaddr);
+			pos = vaddr - trunc_page(loadmap[i].vaddr);
 			pos = ELF_ROUND(pos,file_align);
 			epp->ep_interp_pos = *last = pos;
 			i = 0;

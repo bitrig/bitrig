@@ -795,7 +795,7 @@ pf_postprocess_addr(struct pf_state *cur) {
 
 	/* decrease counter */
 	if (nr != NULL) {
-		int			 slbcount;
+		int			 slbcount = -1;
 		struct pf_pool		 rpool;
 		struct pf_addr		 lookup_addr;
 		struct pf_state_key	*sks;

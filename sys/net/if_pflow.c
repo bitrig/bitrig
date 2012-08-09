@@ -949,7 +949,7 @@ pflow_sendout_ipfix(struct pflow_softc *sc, sa_family_t af)
 	struct pflow_v10_header		*h10;
 	struct pflow_set_header		*set_hdr;
 	struct ifnet			*ifp = &sc->sc_if;
-	int				 set_length;
+	int				 set_length = 0;
 
 	switch (af) {
 	case AF_INET:
