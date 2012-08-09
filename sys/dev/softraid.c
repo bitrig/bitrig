@@ -1813,7 +1813,7 @@ int
 sr_detach(struct device *self, int flags)
 {
 	struct sr_softc		*sc = (void *)self;
-	int			rv;
+	int			rv = 0;
 
 	DNPRINTF(SR_D_MISC, "%s: sr_detach\n", DEVNAME(sc));
 
