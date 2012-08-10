@@ -2,7 +2,7 @@
 
 # preconditions for cross build environment
 # build and install the binutils cross package eg bitrig-newbinutils-2.22-arm
-# this is  bitrig/bitrig-newbinutils-2.22 FLAVOR=arm
+# this is  bitrig/bitrig-binutils-2.22 FLAVOR=armcross
 # also either the libgcc.a or libclang_rt.a for the machine must be copied
 # into /usr/src (dont know how to build this object yet)
 
@@ -53,7 +53,7 @@ CROSSENV=	AR=${CROSSDIR}/usr/bin/${TARGET_CANON}-ar \
 		AS=${CROSSDIR}/usr/bin/${TARGET_CANON}-as \
 		CC="${CROSSDIR}/usr/bin/${TARGET_CANON}-clang" \
 		CPP=${CROSSDIR}/usr/bin/${TARGET_CANON}-cpp \
-		CXX=${CROSSDIR}/usr/bin/${TARGET_CANON}-c++ \
+		CXX=${CROSSDIR}/usr/bin/${TARGET_CANON}-clang++ \
 		LD=${CROSSDIR}/usr/bin/${TARGET_CANON}-ld \
 		OBJCOPY=${CROSSDIR}/usr/bin/${TARGET_CANON}-objcopy \
 		LORDER=/usr/bin/lorder RANLIB=${CROSSDIR}/usr/bin/${TARGET_CANON}-ranlib \
@@ -183,6 +183,7 @@ ${CROSSBUILDENV}:	${CROSSINCLUDES}
 	cp /usr/bin/clang ${CROSSDIR}/usr/bin/$${a}-cross-clang; \
 	echo  "#! /bin/sh\n${CROSSDIR}/usr/bin/$${a}-cross-clang -ccc-host-triple $${a} -isysroot ${CROSSDIR} ${CCCROSSOPTS} \"$$""@\"" > ${CROSSDIR}/usr/bin/$${a}-clang; \
 	chmod +x ${CROSSDIR}/usr/bin/$${a}-clang; \
+	ln -sf $${a}-clang ${CROSSDIR}/usr/bin/$${a}-clang++; \
 	rm -f ${CROSSDIR}/usr/bin/$${a}-cpp ${CROSSDIR}/usr/$${a}/bin/cpp; \
 	cp usr.bin/cpp/cpp_clang.sh ${CROSSDIR}/usr/bin/$${a}-cpp; \
 	chmod +x ${CROSSDIR}/usr/bin/$${a}-cpp; \
