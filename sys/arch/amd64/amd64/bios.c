@@ -1,4 +1,4 @@
-/*	$OpenBSD: bios.c,v 1.21 2011/04/07 15:30:13 miod Exp $	*/
+/*	$OpenBSD: bios.c,v 1.22 2012/08/10 18:50:04 krw Exp $	*/
 /*
  * Copyright (c) 2006 Gordon Willem Klok <gklok@cogeco.ca>
  *

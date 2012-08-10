@@ -1,4 +1,4 @@
-/*	$OpenBSD: bios.c,v 1.95 2012/06/04 15:19:47 jsing Exp $	*/
+/*	$OpenBSD: bios.c,v 1.96 2012/08/10 18:50:04 krw Exp $	*/
 
 /*
  * Copyright (c) 1997-2001 Michael Shalayeff
