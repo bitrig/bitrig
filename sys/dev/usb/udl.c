@@ -1018,7 +1018,7 @@ udl_draw_char(struct udl_softc *sc, uint16_t fg, uint16_t bg, u_int uc,
 	uint16_t *line, lrgb16, fontbits, luc;
 	struct wsdisplay_font *font = sc->sc_ri.ri_font;
 
-	fontchar = (uint8_t *)(font->data + (uc - font->firstchar) *
+	fontchar = (uint8_t *)((char *)font->data + (uc - font->firstchar) *
 	    sc->sc_ri.ri_fontscale);
 
 	ly = y;

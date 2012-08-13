@@ -657,7 +657,7 @@ sr_raid6_rw(struct sr_workunit *wu)
 		/* advance to next block */
 		lbaoffs += length;
 		datalen -= length;
-		data += length;
+		data = (char *)data + length;
 	}
 
 	s = splbio();

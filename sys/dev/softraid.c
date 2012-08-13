@@ -828,7 +828,7 @@ sr_meta_opt_load(struct sr_softc *sc, struct sr_metadata *sm,
 			/* Validate checksum. */
 			sr_checksum(sc, (void *)omh, &checksum,
 			    SR_OLD_META_OPT_SIZE - MD5_DIGEST_LENGTH);
-			if (bcmp(&checksum, (void *)omh + SR_OLD_META_OPT_MD5,
+			if (bcmp(&checksum, (char *)omh + SR_OLD_META_OPT_MD5,
 			    sizeof(checksum)))
 				panic("%s: invalid optional metadata "
 				    "checksum", DEVNAME(sc));
@@ -858,7 +858,7 @@ sr_meta_opt_load(struct sr_softc *sc, struct sr_metadata *sm,
 			omi->omi_som->som_type = omh->som_type;
 			omi->omi_som->som_length = omh->som_length;
 
-			omh = (struct sr_meta_opt_hdr *)((void *)omh +
+			omh = (struct sr_meta_opt_hdr *)((char *)omh +
 			    SR_OLD_META_OPT_SIZE);
 		} else {
 
@@ -881,7 +881,7 @@ sr_meta_opt_load(struct sr_softc *sc, struct sr_metadata *sm,
 				panic("%s: invalid optional metadata checksum",
 				    DEVNAME(sc));
 
-			omh = (struct sr_meta_opt_hdr *)((void *)omh +
+			omh = (struct sr_meta_opt_hdr *)((char *)omh +
 			    omh->som_length);
 		}
 	}

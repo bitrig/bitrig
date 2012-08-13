@@ -227,7 +227,8 @@ mfi_init_ccb(struct mfi_softc *sc)
 
 		/* select i'th frame */
 		ccb->ccb_frame = (union mfi_frame *)
-		    (MFIMEM_KVA(sc->sc_frames) + sc->sc_frames_size * i);
+		    ((char *)MFIMEM_KVA(sc->sc_frames)
+		    + sc->sc_frames_size * i);
 		ccb->ccb_pframe =
 		    MFIMEM_DVA(sc->sc_frames) + sc->sc_frames_size * i;
 		ccb->ccb_pframe_offset = sc->sc_frames_size * i;
@@ -235,7 +236,7 @@ mfi_init_ccb(struct mfi_softc *sc)
 
 		/* select i'th sense */
 		ccb->ccb_sense = (struct mfi_sense *)
-		    (MFIMEM_KVA(sc->sc_sense) + MFI_SENSE_SIZE * i);
+		    ((char *)MFIMEM_KVA(sc->sc_sense) + MFI_SENSE_SIZE * i);
 		ccb->ccb_psense =
 		    (MFIMEM_DVA(sc->sc_sense) + MFI_SENSE_SIZE * i);
 

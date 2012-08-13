@@ -793,7 +793,7 @@ upgt_fw_load(struct upgt_softc *sc)
 	bcopy(UPGT_X2_SIGNATURE, x2->signature, UPGT_X2_SIGNATURE_SIZE);
 	x2->startaddr = htole32(UPGT_MEMADDR_FIRMWARE_START);
 	x2->len = htole32(sc->sc_fw_size);
-	x2->crc = upgt_crc32_le(data_cmd->buf + UPGT_X2_SIGNATURE_SIZE,
+	x2->crc = upgt_crc32_le((char *)data_cmd->buf + UPGT_X2_SIGNATURE_SIZE,
 	    sizeof(struct upgt_fw_x2_header) - UPGT_X2_SIGNATURE_SIZE -
 	    sizeof(uint32_t));
 	if (upgt_bulk_xmit(sc, data_cmd, sc->sc_tx_pipeh, &len, 0) != 0) {
@@ -1581,8 +1581,8 @@ upgt_tx_task(void *arg)
 		}
 #endif
 		/* copy frame below our TX descriptor header */
-		m_copydata(m, 0, m->m_pkthdr.len,
-		    data_tx->buf + (sizeof(*mem) + sizeof(*txdesc)));
+		m_copydata(m, 0, m->m_pkthdr.len, (char *)data_tx->buf
+		    + (sizeof(*mem) + sizeof(*txdesc)));
 
 		/* calculate frame size */
 		len = sizeof(*mem) + sizeof(*txdesc) + m->m_pkthdr.len;
@@ -1693,22 +1693,22 @@ upgt_rx_cb(usbd_xfer_handle xfer, usbd_private_handle priv, usbd_status status)
 	/*
 	 * Check what type of frame came in.
 	 */
-	header = (struct upgt_lmac_header *)(data_rx->buf + 4);
+	header = (struct upgt_lmac_header *)((char *)data_rx->buf + 4);
 
 	h1_type = header->header1.type;
 	h2_type = letoh16(header->header2.type);
 
 	if (h1_type == UPGT_H1_TYPE_CTRL &&
 	    h2_type == UPGT_H2_TYPE_EEPROM) {
-		eeprom = (struct upgt_lmac_eeprom *)(data_rx->buf + 4);
+		eeprom = (struct upgt_lmac_eeprom *)((char *)data_rx->buf + 4);
 		uint16_t eeprom_offset = letoh16(eeprom->offset);
 		uint16_t eeprom_len = letoh16(eeprom->len);
 
 		DPRINTF(2, "%s: received EEPROM block (offset=%d, len=%d)\n",
 			sc->sc_dev.dv_xname, eeprom_offset, eeprom_len);
 
-		bcopy(data_rx->buf + sizeof(struct upgt_lmac_eeprom) + 4,
-			sc->sc_eeprom + eeprom_offset, eeprom_len);
+		bcopy((char *)data_rx->buf + sizeof(struct upgt_lmac_eeprom)
+		    + 4, sc->sc_eeprom + eeprom_offset, eeprom_len);
 
 		/* EEPROM data has arrived in time, wakeup tsleep() */
 		wakeup(sc);
@@ -1718,14 +1718,14 @@ upgt_rx_cb(usbd_xfer_handle xfer, usbd_private_handle priv, usbd_status status)
 		DPRINTF(2, "%s: received 802.11 TX done\n",
 		    sc->sc_dev.dv_xname);
 
-		upgt_tx_done(sc, data_rx->buf + 4);
+		upgt_tx_done(sc, (char *)data_rx->buf + 4);
 	} else
 	if (h1_type == UPGT_H1_TYPE_RX_DATA ||
 	    h1_type == UPGT_H1_TYPE_RX_DATA_MGMT) {
 		DPRINTF(3, "%s: received 802.11 RX data\n",
 		    sc->sc_dev.dv_xname);
 
-		upgt_rx(sc, data_rx->buf + 4, letoh16(header->header1.len));
+		upgt_rx(sc, (char *)data_rx->buf + 4, letoh16(header->header1.len));
 	} else
 	if (h1_type == UPGT_H1_TYPE_CTRL &&
 	    h2_type == UPGT_H2_TYPE_STATS) {

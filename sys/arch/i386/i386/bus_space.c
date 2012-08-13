@@ -151,7 +151,7 @@ bus_space_read_region_1(bus_space_tag_t t, bus_space_handle_t h,
     bus_size_t o, u_int8_t *a, bus_size_t cnt)
 {
 	int _cnt = cnt;
-	void *_addr = a;
+	char *_addr = (void *)a;
 	int _port = h + o;
 
 	if (t == I386_BUS_SPACE_IO) {
@@ -171,7 +171,7 @@ bus_space_read_region_2(bus_space_tag_t t, bus_space_handle_t h,
     bus_size_t o, u_int16_t *a, bus_size_t cnt)
 {
 	int _cnt = cnt;
-	void *_addr = a;
+	char *_addr = (void *)a;
 	int _port = h + o;
 
 	if (t == I386_BUS_SPACE_IO) {
@@ -191,7 +191,7 @@ bus_space_read_region_4(bus_space_tag_t t, bus_space_handle_t h,
     bus_size_t o, u_int32_t *a, bus_size_t cnt)
 {
 	int _cnt = cnt;
-	void *_addr = a;
+	char *_addr = (void *)a;
 	int _port = h + o;
 
 	if (t == I386_BUS_SPACE_IO) {
@@ -297,7 +297,7 @@ bus_space_write_region_1(bus_space_tag_t t, bus_space_handle_t h,
     bus_size_t o, const u_int8_t *a, bus_size_t cnt)
 {
 	int _port = h + o;
-	const void *_addr = a;
+	const char *_addr = (void *)a;
 	int _cnt = cnt;
 
 	if (t == I386_BUS_SPACE_IO) {
@@ -317,7 +317,7 @@ bus_space_write_region_2(bus_space_tag_t t, bus_space_handle_t h,
     bus_size_t o, const u_int16_t *a, bus_size_t cnt)
 {
 	int _port = h + o;
-	const void *_addr = a;
+	const char *_addr = (void *)a;
 	int _cnt = cnt;
 
 	if (t == I386_BUS_SPACE_IO) {
@@ -337,7 +337,7 @@ bus_space_write_region_4(bus_space_tag_t t, bus_space_handle_t h,
     bus_size_t o, const u_int32_t *a, bus_size_t cnt)
 {
 	int _port = h + o;
-	const void *_addr = a;
+	const char *_addr = (void *)a;
 	int _cnt = cnt;
 
 	if (t == I386_BUS_SPACE_IO) {

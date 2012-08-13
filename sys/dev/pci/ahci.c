@@ -3932,7 +3932,7 @@ ahci_hibernate_io(dev_t dev, daddr_t blkno, vaddr_t addr, size_t size,
 		pmap_extract(pmap_kernel(), (vaddr_t)page, &page_phys);
 
 		/* Setup RFIS base address */
-		item_phys = page_phys + ((void *)&my->rfis - page);
+		item_phys = page_phys + ((char *)&my->rfis - (char *)page);
 		ahci_pwrite(my->ap, AHCI_PREG_FBU,
 		    (u_int32_t)(item_phys >> 32));
 		ahci_pwrite(my->ap, AHCI_PREG_FB, (u_int32_t)item_phys);
@@ -3956,7 +3956,7 @@ ahci_hibernate_io(dev_t dev, daddr_t blkno, vaddr_t addr, size_t size,
 		my->ccb->ccb_port = my->ap;
 
 		/* Setup command list base address */
-		item_phys = page_phys + ((void *)&my->cmd_hdr - page);
+		item_phys = page_phys + ((char *)&my->cmd_hdr - (char *)page);
 		ahci_pwrite(my->ap, AHCI_PREG_CLBU,
 		    (u_int32_t)(item_phys >> 32));
 		ahci_pwrite(my->ap, AHCI_PREG_CLB, (u_int32_t)item_phys);

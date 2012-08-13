@@ -237,7 +237,7 @@ uvm_vslock_device(struct proc *p, void *addr, size_t len,
 		goto out_unwire;
 	}
 
-	*retp = (void *)(va + off);
+	*retp = (char *)va + off;
 
 	if ((error = copyin(addr, *retp, len)) == 0)
 		return 0;

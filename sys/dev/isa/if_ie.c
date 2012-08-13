@@ -1899,7 +1899,11 @@ run_tdr(sc, cmd)
 		    sc->sc_dev.dv_xname, result);
 }
 
-#define	_ALLOC(p, n)	(bzero(p, n), p += n, p - n)
+/*
+ * p is always of type void *, so cast it to char * to silence clang
+ * -Wpointer-arith warnings
+ */
+#define	_ALLOC(p, n)	(bzero(p, n), p = (char *)p + n, (char *)p - n)
 #define	ALLOC(p, n)	_ALLOC(p, ALIGN(n))
 
 /*
@@ -1914,7 +1918,8 @@ iememinit(ptr, sc)
 
 	/* First lay them out. */
 	for (i = 0; i < NFRAMES; i++)
-		sc->rframes[i] = ALLOC(ptr, sizeof(*sc->rframes[i]));
+		sc->rframes[i] = (struct ie_recv_frame_desc *)
+		    ALLOC(ptr, sizeof(*sc->rframes[i]));
 
 	/* Now link them together. */
 	for (i = 0; i < NFRAMES; i++)
@@ -1930,7 +1935,8 @@ iememinit(ptr, sc)
 	 * space to hold a single frame in every buffer.
 	 */
 	for (i = 0; i < NRXBUF; i++) {
-		sc->rbuffs[i] = ALLOC(ptr, sizeof(*sc->rbuffs[i]));
+		sc->rbuffs[i] = (struct ie_recv_buf_desc *)
+		    ALLOC(ptr, sizeof(*sc->rbuffs[i]));
 		sc->rbuffs[i]->ie_rbd_length = IE_RBUF_SIZE;
 		sc->rbuffs[i]->ie_rbd_buffer = MK_24(MEM, ptr);
 		sc->cbuffs[i] = ALLOC(ptr, IE_RBUF_SIZE);
@@ -1961,8 +1967,10 @@ iememinit(ptr, sc)
 	 * work.
 	 */
 	for (i = 0; i < NTXBUF; i++) {
-		sc->xmit_cmds[i] = ALLOC(ptr, sizeof(*sc->xmit_cmds[i]));
-		sc->xmit_buffs[i] = ALLOC(ptr, sizeof(*sc->xmit_buffs[i]));
+		sc->xmit_cmds[i] = (struct ie_xmit_cmd *)
+		    ALLOC(ptr, sizeof(*sc->xmit_cmds[i]));
+		sc->xmit_buffs[i] = (struct ie_xmit_buf *)
+		    ALLOC(ptr, sizeof(*sc->xmit_buffs[i]));
 	}
 
 	for (i = 0; i < NTXBUF; i++)

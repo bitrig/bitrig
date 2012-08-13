@@ -302,11 +302,11 @@ intagp_dma_sync(bus_dma_tag_t tag, bus_dmamap_t dmam,
 		spm = dmam->_dm_cookie;
 		switch (spm->spm_buftype) {
 		case BUS_BUFTYPE_LINEAR:
-			addr = spm->spm_origbuf + soff;
+			addr = (char *)spm->spm_origbuf + soff;
 			while (soff < endoff) {
 				pmap_flush_cache((vaddr_t)addr, PAGE_SIZE);
 				soff += PAGE_SIZE;
-				addr += PAGE_SIZE;
+				addr = (char *)addr + PAGE_SIZE;
 			} break;
 		case BUS_BUFTYPE_RAW:
 			segp = (bus_dma_segment_t *)spm->spm_origbuf;

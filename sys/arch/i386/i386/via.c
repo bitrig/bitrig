@@ -383,8 +383,8 @@ viac3_crypto_encdec(struct cryptop *crp, struct cryptodesc *crd,
 				cuio_copyback((struct uio *)crp->crp_buf,
 				    crd->crd_inject, 16, sc->op_iv);
 			else
-				bcopy(sc->op_iv,
-				    crp->crp_buf + crd->crd_inject, 16);
+				bcopy(sc->op_iv, (char *)crp->crp_buf
+				    + crd->crd_inject, 16);
 			if (err)
 				return (err);
 		}
@@ -401,7 +401,7 @@ viac3_crypto_encdec(struct cryptop *crp, struct cryptodesc *crd,
 				cuio_copydata((struct uio *)crp->crp_buf,
 				    crd->crd_inject, 16, sc->op_iv);
 			else
-				bcopy(crp->crp_buf + crd->crd_inject,
+				bcopy((char *)crp->crp_buf + crd->crd_inject,
 				    sc->op_iv, 16);
 		}
 	}
@@ -413,7 +413,8 @@ viac3_crypto_encdec(struct cryptop *crp, struct cryptodesc *crd,
 		cuio_copydata((struct uio *)crp->crp_buf,
 		    crd->crd_skip, crd->crd_len, sc->op_buf);
 	else
-		bcopy(crp->crp_buf + crd->crd_skip, sc->op_buf, crd->crd_len);
+		bcopy((char *)crp->crp_buf + crd->crd_skip, sc->op_buf,
+		    crd->crd_len);
 
 	sc->op_cw[1] = sc->op_cw[2] = sc->op_cw[3] = 0;
 	viac3_cbc(&sc->op_cw, sc->op_buf, sc->op_buf, key,
@@ -426,7 +427,7 @@ viac3_crypto_encdec(struct cryptop *crp, struct cryptodesc *crd,
 		cuio_copyback((struct uio *)crp->crp_buf,
 		    crd->crd_skip, crd->crd_len, sc->op_buf);
 	else
-		bcopy(sc->op_buf, crp->crp_buf + crd->crd_skip,
+		bcopy(sc->op_buf, (char *)crp->crp_buf + crd->crd_skip,
 		    crd->crd_len);
 
 	if (sc->op_buf != NULL) {

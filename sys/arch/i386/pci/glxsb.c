@@ -680,8 +680,8 @@ glxsb_crypto_encdec(struct cryptop *crp, struct cryptodesc *crd,
 				cuio_copyback((struct uio *)crp->crp_buf,
 				    crd->crd_inject, sizeof(op_iv), op_iv);
 			else
-				bcopy(op_iv,
-				    crp->crp_buf + crd->crd_inject, sizeof(op_iv));
+				bcopy(op_iv, (char *)crp->crp_buf
+				    + crd->crd_inject, sizeof(op_iv));
 			if (err)
 				goto out;
 		}
@@ -697,7 +697,7 @@ glxsb_crypto_encdec(struct cryptop *crp, struct cryptodesc *crd,
 				cuio_copydata((struct uio *)crp->crp_buf,
 				    crd->crd_inject, sizeof(op_iv), op_iv);
 			else
-				bcopy(crp->crp_buf + crd->crd_inject,
+				bcopy((char *)crp->crp_buf + crd->crd_inject,
 				    op_iv, sizeof(op_iv));
 		}
 	}
@@ -716,8 +716,8 @@ glxsb_crypto_encdec(struct cryptop *crp, struct cryptodesc *crd,
 			cuio_copydata((struct uio *)crp->crp_buf,
 			    crd->crd_skip + offset, len, op_src);
 		else
-			bcopy(crp->crp_buf + crd->crd_skip + offset, op_src,
-			    len);
+			bcopy((char *)crp->crp_buf + crd->crd_skip + offset,
+			    op_src, len);
 
 		glxsb_dma_pre_op(sc, &sc->sc_dma);
 
@@ -733,8 +733,8 @@ glxsb_crypto_encdec(struct cryptop *crp, struct cryptodesc *crd,
 			cuio_copyback((struct uio *)crp->crp_buf,
 			    crd->crd_skip + offset, len, op_dst);
 		else
-			bcopy(op_dst, crp->crp_buf + crd->crd_skip + offset,
-			    len);
+			bcopy(op_dst, (char *)crp->crp_buf + crd->crd_skip
+			    + offset, len);
 		if (err)
 			break;
 

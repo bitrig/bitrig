@@ -49,7 +49,7 @@ LINKFLAGS=	-Ttext 0xD0200120 -e start -N --warn-common
 .else
 
 CWARNFLAGS=	-Wall -Wstrict-prototypes -Wmissing-prototypes \
-		-Werror
+		-Werror -Wpointer-arith
 # these are to shutup clang vs gcc, should be ultimately fixed
 CWARNFLAGS+=	-Wno-pointer-sign
 CMACHFLAGS=	-mcmodel=kernel -mno-red-zone -mno-sse -mno-sse2 -mno-sse3 \
