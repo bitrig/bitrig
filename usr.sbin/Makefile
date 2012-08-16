@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.159 2011/07/09 01:16:57 halex Exp $
+#	$OpenBSD: Makefile,v 1.162 2012/08/16 04:10:25 dlg Exp $
 
 .include <bsd.own.mk>
 
@@ -14,9 +14,9 @@ SUBDIR=	ac accton acpidump adduser apm apmd arp \
 	rbootd rdate relayctl relayd repquota rip6query ripctl ripd \
 	rmt route6d rpc.bootparamd rpc.lockd rpc.statd rtadvd rtsold rwhod \
 	sa sasyncd sensorsd sliplogin slstats smtpd snmpctl snmpd spamdb \
-	spray syslogc syslogd sysmerge tcpdrop tcpdump tftpd tokenadm \
-	tokeninit traceroute traceroute6 trpt usbdevs user vipw watchdogd \
-	wsconscfg wsfontload wsmoused zdump zic
+	spray syslogc syslogd sysmerge tcpdrop tcpdump tftp-proxy tftpd \
+	tokenadm tokeninit traceroute traceroute6 trpt usbdevs user vipw \
+	watchdogd wsconscfg wsfontload wsmoused zdump zic
 
 .if (${AFS:L} == "yes")
 SUBDIR+=afs
