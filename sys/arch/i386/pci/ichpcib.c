@@ -1,4 +1,4 @@
-/*	$OpenBSD: ichpcib.c,v 1.25 2010/07/08 20:17:54 deraadt Exp $	*/
+/*	$OpenBSD: ichpcib.c,v 1.26 2012/08/16 18:42:04 tedu Exp $	*/
 /*
  * Copyright (c) 2004 Alexander Yurchenko <grange@openbsd.org>
  *

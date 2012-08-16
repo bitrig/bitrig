@@ -1,4 +1,4 @@
-/*	$OpenBSD: geodesc.c,v 1.9 2006/12/11 20:57:40 deraadt Exp $	*/
+/*	$OpenBSD: geodesc.c,v 1.10 2012/08/16 18:42:04 tedu Exp $	*/
 
 /*
  * Copyright (c) 2003 Markus Friedl <markus@openbsd.org>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: viapm.c,v 1.14 2011/04/10 20:27:02 shadchin Exp $	*/
+/*	$OpenBSD: viapm.c,v 1.15 2012/08/16 18:41:17 tedu Exp $	*/
 
 /*
  * Copyright (c) 2005 Mark Kettenis <kettenis@openbsd.org>
