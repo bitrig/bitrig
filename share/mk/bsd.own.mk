@@ -1,4 +1,4 @@
-#	$OpenBSD: bsd.own.mk,v 1.117 2012/08/14 20:11:37 matthew Exp $
+#	$OpenBSD: bsd.own.mk,v 1.119 2012/08/17 17:09:43 haesbaert Exp $
 #	$NetBSD: bsd.own.mk,v 1.24 1996/04/13 02:08:09 thorpej Exp $
 
 # Host-specific overrides
@@ -84,10 +84,10 @@ LIBGRP?=	${BINGRP}
 LIBOWN?=	${BINOWN}
 LIBMODE?=	${NONBINMODE}
 
-DOCDIR?=        /usr/share/doc
+DOCDIR?=	/usr/share/doc
 DOCGRP?=	bin
 DOCOWN?=	root
-DOCMODE?=       ${NONBINMODE}
+DOCMODE?=	${NONBINMODE}
 
 LKMDIR?=	/usr/lkm
 LKMGRP?=	${BINGRP}
@@ -103,6 +103,12 @@ LOCALEDIR?=	/usr/share/locale
 LOCALEGRP?=	wheel
 LOCALEOWN?=	root
 LOCALEMODE?=	${NONBINMODE}
+
+.if !defined(CDIAGFLAGS)
+CDIAGFLAGS=	-Wall -Wpointer-arith -Wuninitialized -Wstrict-prototypes
+CDIAGFLAGS+=	-Wmissing-prototypes -Wunused -Wsign-compare -Wbounded
+CDIAGFLAGS+=	-Wshadow
+.endif
 
 # Shared files for system gnu configure, not used yet
 GNUSYSTEM_AUX_DIR?=${BSDSRCDIR}/share/gnu
