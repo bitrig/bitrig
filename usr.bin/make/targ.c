@@ -1,4 +1,4 @@
-/*	$OpenBSD: targ.c,v 1.63 2012/03/22 13:47:12 espie Exp $ */
+/*	$OpenBSD: targ.c,v 1.64 2012/08/20 09:51:05 jsg Exp $ */
 /*	$NetBSD: targ.c,v 1.11 1997/02/20 16:51:50 christos Exp $	*/
 
 /*
