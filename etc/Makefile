@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.318 2012/04/13 10:47:16 espie Exp $
+#	$OpenBSD: Makefile,v 1.320 2012/08/20 12:37:52 dlg Exp $
 
 TZDIR=		/usr/share/zoneinfo
 LOCALTIME=	Canada/Mountain
@@ -55,7 +55,7 @@ RCDAEMONS=	amd apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd \
 		route6d rtadvd rtsold rwhod sasyncd sensorsd smtpd \
 		snmpd spamd sshd syslogd watchdogd wsmoused xdm ypbind ypldap \
 		yppasswdd ypserv kdc kadmind kpasswdd nfsd mountd lockd statd \
-		spamlogd sndiod popa3d tftpd
+		spamlogd sndiod popa3d tftpd tftpproxy
 
 MISETS=	base${OSrev}.tgz etc${OSrev}.tgz
 
