@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.11 2007/11/25 18:25:30 deraadt Exp $
+#	$OpenBSD: Makefile,v 1.12 2012/08/21 14:46:18 pascal Exp $
 
 .include "${.CURDIR}/../Makefile.inc"
 
@@ -74,3 +74,5 @@ AFLAGS+=-m32 # -Wa,-R
 # AFLAGS+=-Wa,-a
 AFLAGS+=-Wa,--32
 .endif
+CFLAGS+=${NOPIE_FLAGS}
+AFLAGS+=${NOPIE_FLAGS}

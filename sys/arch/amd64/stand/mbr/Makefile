@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2004/10/09 21:15:21 mickey Exp $
+#	$OpenBSD: Makefile,v 1.4 2012/08/21 14:46:18 pascal Exp $
 #
 .include <bsd.own.mk>
 
@@ -9,6 +9,7 @@ SRCS=	mbr.S
 AFLAGS+=-no-integrated-as
 .endif
 AFLAGS+=-m32 -I${.CURDIR} -I${.CURDIR}/../../.. #-Wa,-a
+AFLAGS+=${NOPIE_FLAGS}
 LD=ld
 LDFLAGS=-melf_i386 -nostdlib -Ttext 0 -x -N -s -Bstatic -e start
 LDFLAGS+=-L/usr/libdata

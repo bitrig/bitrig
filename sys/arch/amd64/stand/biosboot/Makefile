@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2004/10/09 21:15:21 mickey Exp $
+#	$OpenBSD: Makefile,v 1.4 2012/08/21 14:46:18 pascal Exp $
 
 .include <bsd.own.mk>
 
@@ -23,7 +23,9 @@ CPPFLAGS+=${DEBUGFLAGS}
 .if ${COMPILER_VERSION:L} != "gcc4"
 AFLAGS+=-no-integrated-as
 .endif
+CPPFLAGS+=${NOPIE_FLAGS}
 AFLAGS+=-m32 # -Wa,-a
+AFLAGS+=${NOPIE_FLAGS}
 .else
 NOPROG=
 .endif

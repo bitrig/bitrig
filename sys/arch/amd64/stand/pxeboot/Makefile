@@ -1,5 +1,4 @@
-#	$OpenBSD: Makefile,v 1.8 2007/11/25 18:25:30 deraadt Exp $
-.include <bsd.own.mk>
+#	$OpenBSD: Makefile,v 1.9 2012/08/21 14:46:18 pascal Exp $
 
 .include "${.CURDIR}/../Makefile.inc"
 
@@ -64,6 +63,7 @@ CPPFLAGS+=-DBOOTMAGIC=$(BOOTMAGIC) ${DEBUGFLAGS} -DLINKADDR=${LINKADDR}
 CPPFLAGS+=-DSLOW -DSMALL -DNOBYFOUR -DNO_GZIP -DDYNAMIC_CRC_TABLE
 CPPFLAGS+=-DHEAP_LIMIT=${HEAP_LIMIT} -I${S}/stand/boot #-DCOMPAT_UFS
 CFLAGS+=-m32 $(SACFLAGS) -D__INTERNAL_LIBSA_CREAD
+<<<<<<< HEAD
 .if ${COMPILER_VERSION:L} != "gcc4"
 #AFLAGS+=-no-integrated-as
 # XXX HACK kill this
@@ -71,6 +71,11 @@ CFLAGS+=-Wno-error
 CC=gcc
 AFLAGS+=-m32 # -Wa,-R
 .else
+=======
+CFLAGS+=${NOPIE_FLAGS}
+AFLAGS+=-m32 # -Wa,-R
+AFLAGS+=${NOPIE_FLAGS}
+>>>>>>> 9361b40... Add NOPIE= bits for sys/arch/*/stand to ensure that bootblocks will always be
 # AFLAGS+=-Wa,-a
 AFLAGS+=-Wa,--32
 .endif
