@@ -298,7 +298,7 @@ export_sa(void **p, struct tdb *tdb)
 	if (tdb->tdb_flags & TDBF_ESN)
 		sadb_sa->sadb_sa_flags |= SADB_X_SAFLAGS_ESN;
 
-	*p = (char *)*p + sizeof(struct sadb_sa);
+	*p = (int8_t *)*p + sizeof(struct sadb_sa);
 }
 
 /*
@@ -450,7 +450,7 @@ export_lifetime(void **p, struct tdb *tdb, int type)
 		break;
 	}
 
-	*p = (char *)*p + sizeof(struct sadb_lifetime);
+	*p = (int8_t *)*p + sizeof(struct sadb_lifetime);
 }
 
 /*
@@ -562,7 +562,7 @@ export_encap(void **p, struct sockaddr_encap *encap, int type)
 	struct sadb_address *saddr = (struct sadb_address *)*p;
 	union sockaddr_union *sunion;
 
-	*p = (char *)*p + sizeof(struct sadb_address);
+	*p = (int8_t *)*p + sizeof(struct sadb_address);
 	sunion = (union sockaddr_union *)*p;
 
 	switch (encap->sen_type) {
@@ -579,7 +579,7 @@ export_encap(void **p, struct sockaddr_encap *encap, int type)
 			sunion->sin.sin_addr = encap->sen_ip_dst;
 			sunion->sin.sin_port = encap->sen_dport;
 		}
-		*p = (char *)*p + PADUP(sizeof(struct sockaddr_in));
+		*p = (int8_t *)*p + PADUP(sizeof(struct sockaddr_in));
 		break;
         case SENT_IP6:
 		saddr->sadb_address_len = (sizeof(struct sadb_address)
@@ -594,7 +594,7 @@ export_encap(void **p, struct sockaddr_encap *encap, int type)
 			sunion->sin6.sin6_addr = encap->sen_ip6_dst;
 			sunion->sin6.sin6_port = encap->sen_ip6_dport;
 		}
-		*p = (char *)*p + PADUP(sizeof(struct sockaddr_in6));
+		*p = (int8_t *)*p + PADUP(sizeof(struct sockaddr_in6));
 		break;
 	}
 }
@@ -649,7 +649,7 @@ export_flow(void **p, u_int8_t ftype, struct sockaddr_encap *flow,
 		break;
 #endif /* INET6 */
 	}
-	*p = (char *)*p + sizeof(struct sadb_protocol);
+	*p = (int8_t *)*p + sizeof(struct sadb_protocol);
 
 	headers[SADB_X_EXT_PROTOCOL] = *p;
 	sab = (struct sadb_protocol *)*p;
@@ -667,7 +667,7 @@ export_flow(void **p, u_int8_t ftype, struct sockaddr_encap *flow,
 		break;
 #endif /* INET6 */
 	}
-	*p = (char *)*p + sizeof(struct sadb_protocol);
+	*p = (int8_t *)*p + sizeof(struct sadb_protocol);
 
 	headers[SADB_X_EXT_SRC_FLOW] = *p;
 	export_encap(p, flow, SADB_X_EXT_SRC_FLOW);
@@ -689,7 +689,7 @@ void
 import_address(struct sockaddr *sa, struct sadb_address *sadb_address)
 {
 	int salen;
-	struct sockaddr *ssa = (struct sockaddr *)((char *) sadb_address +
+	struct sockaddr *ssa = (struct sockaddr *)((int8_t *) sadb_address +
 	    sizeof(struct sadb_address));
 
 	if (!sadb_address)
@@ -730,10 +730,10 @@ export_address(void **p, struct sockaddr *sa)
 	sadb_address->sadb_address_len = (sizeof(struct sadb_address) +
 	    PADUP(SA_LEN(sa))) / sizeof(uint64_t);
 
-	*p = (char *)*p + sizeof(struct sadb_address);
+	*p = (int8_t *)*p + sizeof(struct sadb_address);
 	bcopy(sa, *p, SA_LEN(sa));
 	((struct sockaddr *) *p)->sa_family = sa->sa_family;
-	*p = (char *)*p + PADUP(SA_LEN(sa));
+	*p = (int8_t *)*p + PADUP(SA_LEN(sa));
 }
 
 /*
@@ -770,7 +770,7 @@ import_auth(struct tdb *tdb, struct sadb_x_cred *sadb_auth, int dstauth)
 	}
 	(*ipr)->ref_count = 1;
 	(*ipr)->ref_malloctype = M_CREDENTIALS;
-	bcopy((char *) sadb_auth + sizeof(struct sadb_x_cred),
+	bcopy((int8_t *) sadb_auth + sizeof(struct sadb_x_cred),
 	    (*ipr) + 1, (*ipr)->ref_len);
 }
 
@@ -808,7 +808,7 @@ import_credentials(struct tdb *tdb, struct sadb_x_cred *sadb_cred, int dstcred)
 	}
 	(*ipr)->ref_count = 1;
 	(*ipr)->ref_malloctype = M_CREDENTIALS;
-	bcopy((char *) sadb_cred + sizeof(struct sadb_x_cred),
+	bcopy((int8_t *) sadb_cred + sizeof(struct sadb_x_cred),
 	    (*ipr) + 1, (*ipr)->ref_len);
 }
 
@@ -852,7 +852,7 @@ import_identity(struct tdb *tdb, struct sadb_ident *sadb_ident, int type)
 	}
 	(*ipr)->ref_count = 1;
 	(*ipr)->ref_malloctype = M_CREDENTIALS;
-	bcopy((char *) sadb_ident + sizeof(struct sadb_ident), (*ipr) + 1,
+	bcopy((int8_t *) sadb_ident + sizeof(struct sadb_ident), (*ipr) + 1,
 	    (*ipr)->ref_len);
 }
 
@@ -878,9 +878,9 @@ export_credentials(void **p, struct tdb *tdb, int dstcred)
 		sadb_cred->sadb_x_cred_type = SADB_X_CREDTYPE_X509;
 		break;
 	}
-	*p = (char *)*p + sizeof(struct sadb_x_cred);
+	*p = (int8_t *)*p + sizeof(struct sadb_x_cred);
 	bcopy((*ipr) + 1, *p, (*ipr)->ref_len);
-	*p = (char *)*p + PADUP((*ipr)->ref_len);
+	*p = (int8_t *)*p + PADUP((*ipr)->ref_len);
 }
 
 void
@@ -905,9 +905,9 @@ export_auth(void **p, struct tdb *tdb, int dstauth)
 		sadb_auth->sadb_x_cred_type = SADB_X_AUTHTYPE_RSA;
 		break;
 	}
-	*p = (char *)*p + sizeof(struct sadb_x_cred);
+	*p = (int8_t *)*p + sizeof(struct sadb_x_cred);
 	bcopy((*ipr) + 1, *p, (*ipr)->ref_len);
-	*p = (char *)*p + PADUP((*ipr)->ref_len);
+	*p = (int8_t *)*p + PADUP((*ipr)->ref_len);
 }
 
 void
@@ -938,9 +938,9 @@ export_identity(void **p, struct tdb *tdb, int type)
 		sadb_ident->sadb_ident_type = SADB_X_IDENTTYPE_CONNECTION;
 		break;
 	}
-	*p = (char *)*p + sizeof(struct sadb_ident);
+	*p = (int8_t *)*p + sizeof(struct sadb_ident);
 	bcopy((*ipr) + 1, *p, (*ipr)->ref_len);
-	*p = (char *)*p + PADUP((*ipr)->ref_len);
+	*p = (int8_t *)*p + PADUP((*ipr)->ref_len);
 }
 
 /* ... */
@@ -952,10 +952,10 @@ import_key(struct ipsecinit *ii, struct sadb_key *sadb_key, int type)
 
 	if (type == PFKEYV2_ENCRYPTION_KEY) { /* Encryption key */
 		ii->ii_enckeylen = sadb_key->sadb_key_bits / 8;
-		ii->ii_enckey = (char *)sadb_key + sizeof(struct sadb_key);
+		ii->ii_enckey = (int8_t *)sadb_key + sizeof(struct sadb_key);
 	} else {
 		ii->ii_authkeylen = sadb_key->sadb_key_bits / 8;
-		ii->ii_authkey = (char *)sadb_key + sizeof(struct sadb_key);
+		ii->ii_authkey = (int8_t *)sadb_key + sizeof(struct sadb_key);
 	}
 }
 
@@ -969,17 +969,17 @@ export_key(void **p, struct tdb *tdb, int type)
 		    PADUP(tdb->tdb_emxkeylen)) /
 		    sizeof(uint64_t);
 		sadb_key->sadb_key_bits = tdb->tdb_emxkeylen * 8;
-		*p = (char *)*p + sizeof(struct sadb_key);
+		*p = (int8_t *)*p + sizeof(struct sadb_key);
 		bcopy(tdb->tdb_emxkey, *p, tdb->tdb_emxkeylen);
-		*p = (char *)*p + PADUP(tdb->tdb_emxkeylen);
+		*p = (int8_t *)*p + PADUP(tdb->tdb_emxkeylen);
 	} else {
 		sadb_key->sadb_key_len = (sizeof(struct sadb_key) +
 		    PADUP(tdb->tdb_amxkeylen)) /
 		    sizeof(uint64_t);
 		sadb_key->sadb_key_bits = tdb->tdb_amxkeylen * 8;
-		*p = (char *)*p + sizeof(struct sadb_key);
+		*p = (int8_t *)*p + sizeof(struct sadb_key);
 		bcopy(tdb->tdb_amxkey, *p, tdb->tdb_amxkeylen);
-		*p = (char *)*p + PADUP(tdb->tdb_amxkeylen);
+		*p = (int8_t *)*p + PADUP(tdb->tdb_amxkeylen);
 	}
 }
 
@@ -1000,7 +1000,7 @@ export_udpencap(void **p, struct tdb *tdb)
 	sadb_udpencap->sadb_x_udpencap_reserved = 0;
 	sadb_udpencap->sadb_x_udpencap_len =
 	    sizeof(struct sadb_x_udpencap) / sizeof(uint64_t);
-	*p = (char *)*p + sizeof(struct sadb_x_udpencap);
+	*p = (int8_t *)*p + sizeof(struct sadb_x_udpencap);
 }
 
 #if NPF > 0
@@ -1027,7 +1027,7 @@ export_tag(void **p, struct tdb *tdb)
 	stag->sadb_x_tag_taglen = strlen(s) + 1;
 	stag->sadb_x_tag_len = (sizeof(struct sadb_x_tag) +
 	    PADUP(stag->sadb_x_tag_taglen)) / sizeof(uint64_t);
-	*p = (char *)*p + PADUP(stag->sadb_x_tag_taglen)
+	*p = (int8_t *)*p + PADUP(stag->sadb_x_tag_taglen)
 	    + sizeof(struct sadb_x_tag);
 }
 
@@ -1047,6 +1047,6 @@ export_tap(void **p, struct tdb *tdb)
 
 	stag->sadb_x_tap_unit = tdb->tdb_tap;
 	stag->sadb_x_tap_len = sizeof(struct sadb_x_tap) / sizeof(uint64_t);
-	*p = (char *)*p + sizeof(struct sadb_x_tap);
+	*p = (int8_t *)*p + sizeof(struct sadb_x_tap);
 }
 #endif

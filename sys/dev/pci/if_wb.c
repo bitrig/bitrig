@@ -948,7 +948,7 @@ wb_newbuf(sc, c)
 	struct wb_softc *sc;
 	struct wb_chain_onefrag *c;
 {
-	c->wb_ptr->wb_data = VTOPHYS((char *)c->wb_buf + sizeof(u_int64_t));
+	c->wb_ptr->wb_data = VTOPHYS((int8_t *)c->wb_buf + sizeof(u_int64_t));
 	c->wb_ptr->wb_ctl = WB_RXCTL_RLINK | ETHER_MAX_DIX_LEN;
 	c->wb_ptr->wb_status = WB_RXSTAT;
 }
@@ -1007,7 +1007,7 @@ void wb_rxeof(sc)
 		 */
 		total_len -= ETHER_CRC_LEN;
 
-		m = m_devget((char *)cur_rx->wb_buf + sizeof(u_int64_t),
+		m = m_devget((int8_t *)cur_rx->wb_buf + sizeof(u_int64_t),
 		    total_len, ETHER_ALIGN, ifp, NULL);
 		wb_newbuf(sc, cur_rx);
 		if (m == NULL) {

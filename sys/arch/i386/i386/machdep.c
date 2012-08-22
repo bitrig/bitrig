@@ -3057,7 +3057,7 @@ init386(paddr_t first_avail)
  
 #if defined(MULTIPROCESSOR)
 	/* install the lowmem ptp after boot args for 1:1 mappings */
-	pmap_prealloc_lowmem_ptp(round_page((paddr_t)((char *)bootargv
+	pmap_prealloc_lowmem_ptp(round_page((paddr_t)((int8_t *)bootargv
 	    + bootargc)));
 #endif
 

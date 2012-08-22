@@ -502,7 +502,7 @@ sr_raidp_rw(struct sr_workunit *wu)
 		/* advance to next block */
 		lbaoffs += length;
 		datalen -= length;
-		data = (char *)data + length;
+		data = (int8_t *)data + length;
 	}
 
 	s = splbio();

@@ -256,7 +256,7 @@ ciss_attach(struct ciss_softc *sc)
 
 	maxfer = sc->maxsg * PAGE_SIZE;
 	for (i = 0; total; i++, total -= sc->ccblen) {
-		ccb = (struct ciss_ccb *)((char *)sc->ccbs + i * sc->ccblen);
+		ccb = (struct ciss_ccb *)((int8_t *)sc->ccbs + i * sc->ccblen);
 		cmd = &ccb->ccb_cmd;
 		pa = sc->cmdseg[0].ds_addr + i * sc->ccblen;
 
@@ -590,7 +590,7 @@ ciss_cmd(struct ciss_ccb *ccb, int flags, int wait)
 				}
 
 				CISS_DPRINTF(CISS_D_CMD, ("got=0x%x ", id));
-				ccb1 = (struct ciss_ccb *)((char *)sc->ccbs
+				ccb1 = (struct ciss_ccb *)((int8_t *)sc->ccbs
 				    + (id >> 2) * sc->ccblen);
 				ccb1->ccb_cmd.id = htole32(id);
 				ccb1->ccb_cmd.id_hi = htole32(0);
@@ -910,7 +910,7 @@ ciss_intr(void *v)
 		else if (reg == CISS_OUTQ64_LO)
 			(void)bus_space_read_4(sc->iot, sc->ioh,
 			    CISS_OUTQ64_HI);
-		ccb = (struct ciss_ccb *)((char *)sc->ccbs
+		ccb = (struct ciss_ccb *)((int8_t *)sc->ccbs
 		    + (id >> 2) * sc->ccblen);
 		ccb->ccb_cmd.id = htole32(id);
 		ccb->ccb_cmd.id_hi = htole32(0); /* ignore the upper 32bits */

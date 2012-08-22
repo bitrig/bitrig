@@ -1900,10 +1900,10 @@ run_tdr(sc, cmd)
 }
 
 /*
- * p is always of type void *, so cast it to char * to silence clang
+ * p is always of type void *, so cast it to int8_t * to silence clang
  * -Wpointer-arith warnings
  */
-#define	_ALLOC(p, n)	(bzero(p, n), p = (char *)p + n, (char *)p - n)
+#define	_ALLOC(p, n)	(bzero(p, n), p = (int8_t *)p + n, (int8_t *)p - n)
 #define	ALLOC(p, n)	_ALLOC(p, ALIGN(n))
 
 /*

@@ -631,8 +631,8 @@ _isa_bus_dmamap_sync(bus_dma_tag_t t, bus_dmamap_t map, bus_addr_t offset,
 		 * caller's buffer to the bounce buffer.
 		 */
 		if (cookie->id_flags & ID_IS_BOUNCING)
-			bcopy((char *)cookie->id_origbuf + offset,
-			    (char *)cookie->id_bouncebuf + offset,
+			bcopy((int8_t *)cookie->id_origbuf + offset,
+			    (int8_t *)cookie->id_bouncebuf + offset,
 			    len);
 	} else if (op & BUS_DMASYNC_POSTREAD) {
 		/*
@@ -640,8 +640,8 @@ _isa_bus_dmamap_sync(bus_dma_tag_t t, bus_dmamap_t map, bus_addr_t offset,
 		 * bounce buffer to the caller's buffer.
 		 */
 		if (cookie->id_flags & ID_IS_BOUNCING)
-			bcopy((char *)cookie->id_bouncebuf + offset,
-			    (char *)cookie->id_origbuf + offset,
+			bcopy((int8_t *)cookie->id_bouncebuf + offset,
+			    (int8_t *)cookie->id_origbuf + offset,
 			    len);
 	}
 

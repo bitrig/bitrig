@@ -57,7 +57,7 @@ gdt_alloc_cpu(struct cpu_info *ci)
 	    &kv_any, &kp_zero, &kd_nowait);
 	if (ci->ci_gdt == NULL)
 		panic("gdt_init: can't alloc");
-	ci->ci_tss = (struct x86_64_tss *)((char *)ci->ci_gdt + GDT_SIZE);
+	ci->ci_tss = (struct x86_64_tss *)((int8_t *)ci->ci_gdt + GDT_SIZE);
 
 	bcopy(gdtstore, ci->ci_gdt, GDT_SIZE);
 }

@@ -964,13 +964,13 @@ cmalo_rx(struct malo_softc *sc)
 		return;
 
 	/* remove the LLC / SNAP header */
-	data = (char *)sc->sc_data + rxdesc->pkgoffset;
+	data = (int8_t *)sc->sc_data + rxdesc->pkgoffset;
 	i = (ETHER_ADDR_LEN * 2) + sizeof(struct llc);
 	bcopy(data + i, data + (ETHER_ADDR_LEN * 2), rxdesc->pkglen - i);
 	rxdesc->pkglen -= sizeof(struct llc);
 
 	/* prepare mbuf */
-	m = m_devget((char *)sc->sc_data + rxdesc->pkgoffset,
+	m = m_devget((int8_t *)sc->sc_data + rxdesc->pkgoffset,
 	    rxdesc->pkglen, ETHER_ALIGN, ifp, NULL);
 	if (m == NULL) {
 		DPRINTF(1, "RX m_devget failed\n");
@@ -1047,7 +1047,7 @@ cmalo_tx(struct malo_softc *sc, struct mbuf *m)
 
 	/* copy mbuf data to the buffer */
 	m_copydata(m, 0, m->m_pkthdr.len,
-	    (char *)sc->sc_data + sizeof(*txdesc));
+	    (int8_t *)sc->sc_data + sizeof(*txdesc));
 	m_freem(m);
 
 	/* send TX packet to the device */
@@ -1338,13 +1338,13 @@ cmalo_cmd_set_scan(struct malo_softc *sc)
 	memset(body->bssid, 0xff, ETHER_ADDR_LEN);
 
 	body_ssid = (struct malo_cmd_tlv_ssid *)
-	    ((char *)sc->sc_cmd + psize);
+	    ((int8_t *)sc->sc_cmd + psize);
 	body_ssid->type = htole16(MALO_TLV_TYPE_SSID);
 	body_ssid->size = htole16(0);
 	psize += (sizeof(*body_ssid) - 1);
 
 	body_chanlist = (struct malo_cmd_tlv_chanlist *)
-	    ((char *)sc->sc_cmd + psize);
+	    ((int8_t *)sc->sc_cmd + psize);
 	body_chanlist->type = htole16(MALO_TLV_TYPE_CHANLIST);
 	body_chanlist->size = htole16(sizeof(body_chanlist->data));
 	for (i = 0; i < CHANNELS; i++) {
@@ -1357,7 +1357,7 @@ cmalo_cmd_set_scan(struct malo_softc *sc)
 	psize += sizeof(*body_chanlist);
 
 	body_rates = (struct malo_cmd_tlv_rates *)
-	    ((char *)sc->sc_cmd + psize);
+	    ((int8_t *)sc->sc_cmd + psize);
 	body_rates->type = htole16(MALO_TLV_TYPE_RATES);
 	body_rates->size =
 	    htole16(ic->ic_sup_rates[IEEE80211_MODE_11B].rs_nrates);
@@ -1405,7 +1405,7 @@ cmalo_cmd_rsp_scan(struct malo_softc *sc)
 	/* cycle through found networks */
 	for (i = 0; i < body->numofset; i++) {
 		set = (struct malo_cmd_body_rsp_scan_set *)
-		    ((char *)sc->sc_cmd + psize);
+		    ((int8_t *)sc->sc_cmd + psize);
 
 		set->size = letoh16(set->size);
 		set->beaconintvl = letoh16(set->beaconintvl);
@@ -1441,23 +1441,23 @@ cmalo_parse_elements(struct malo_softc *sc, void *buf, int size, int pos)
 	DPRINTF(2, "element_size=%d, element_pos=%d\n", size, pos);
 
 	for (i = 0; i < size; ) {
-		eid = *(uint8_t *)((char *)buf + i);
+		eid = *(uint8_t *)((int8_t *)buf + i);
 		i++;
-		len = *(uint8_t *)((char *)buf + i);
+		len = *(uint8_t *)((int8_t *)buf + i);
 		i++;
 		DPRINTF(2, "eid=%d, len=%d, ", eid, len);
 
 		switch (eid) {
 		case IEEE80211_ELEMID_SSID:
-			bcopy((char *)buf + i, sc->sc_net[pos].ssid, len);
+			bcopy((int8_t *)buf + i, sc->sc_net[pos].ssid, len);
 			DPRINTF(2, "ssid=%s\n", sc->sc_net[pos].ssid);
 			break;
 		case IEEE80211_ELEMID_RATES:
-			bcopy((char *)buf + i, sc->sc_net[pos].rates, len);
+			bcopy((int8_t *)buf + i, sc->sc_net[pos].rates, len);
 			DPRINTF(2, "rates\n");
 			break;
 		case IEEE80211_ELEMID_DSPARMS:
-			sc->sc_net[pos].channel = *(uint8_t *)((char *)buf + i);
+			sc->sc_net[pos].channel = *(uint8_t *)((int8_t *)buf + i);
 			DPRINTF(2, "chnl=%d\n", sc->sc_net[pos].channel);
 			break;
 		default:
@@ -1826,7 +1826,7 @@ cmalo_cmd_set_assoc(struct malo_softc *sc)
 	body->listenintrv = htole16(10);
 
 	body_ssid = (struct malo_cmd_tlv_ssid *)
-	    ((char *)sc->sc_cmd + psize);
+	    ((int8_t *)sc->sc_cmd + psize);
 	body_ssid->type = htole16(MALO_TLV_TYPE_SSID);
 	body_ssid->size = htole16(strlen(sc->sc_net[sc->sc_net_cur].ssid));
 	bcopy(sc->sc_net[sc->sc_net_cur].ssid, body_ssid->data,
@@ -1834,20 +1834,20 @@ cmalo_cmd_set_assoc(struct malo_softc *sc)
 	psize += (sizeof(*body_ssid) - 1) + letoh16(body_ssid->size);
 
 	body_phy = (struct malo_cmd_tlv_phy *)
-	    ((char *)sc->sc_cmd + psize);
+	    ((int8_t *)sc->sc_cmd + psize);
 	body_phy->type = htole16(MALO_TLV_TYPE_PHY);
 	body_phy->size = htole16(1);
 	bcopy(&sc->sc_net[sc->sc_net_cur].channel, body_phy->data, 1);
 	psize += sizeof(*body_phy);
 
 	body_cf = (struct malo_cmd_tlv_cf *)
-	    ((char *)sc->sc_cmd + psize);
+	    ((int8_t *)sc->sc_cmd + psize);
 	body_cf->type = htole16(MALO_TLV_TYPE_CF);
 	body_cf->size = htole16(0);
 	psize += (sizeof(*body_cf) - 1);
 
 	body_rates = (struct malo_cmd_tlv_rates *)
-	    ((char *)sc->sc_cmd + psize);
+	    ((int8_t *)sc->sc_cmd + psize);
 	body_rates->type = htole16(MALO_TLV_TYPE_RATES);
 	body_rates->size = htole16(strlen(sc->sc_net[sc->sc_net_cur].rates));
 	bcopy(sc->sc_net[sc->sc_net_cur].rates, body_rates->data,
@@ -1856,7 +1856,7 @@ cmalo_cmd_set_assoc(struct malo_softc *sc)
 
 	/* hack to correct FW's wrong generated rates-element-id */
 	body_passeid = (struct malo_cmd_tlv_passeid *)
-	    ((char *)sc->sc_cmd + psize);
+	    ((int8_t *)sc->sc_cmd + psize);
 	body_passeid->type = htole16(MALO_TLV_TYPE_PASSEID);
 	body_passeid->size = body_rates->size;
 	bcopy(body_rates->data, body_passeid->data, letoh16(body_rates->size));
@@ -1918,7 +1918,7 @@ cmalo_cmd_set_80211d(struct malo_softc *sc)
 	body->action = htole16(1);
 
 	body_80211d = (struct malo_cmd_tlv_80211d *)
-	    ((char *)sc->sc_cmd + psize);
+	    ((int8_t *)sc->sc_cmd + psize);
 	body_80211d->type = htole16(MALO_TLV_TYPE_80211D);
 	body_80211d->size = htole16(sizeof(body_80211d->data) +
 	    sizeof(body_80211d->countrycode));

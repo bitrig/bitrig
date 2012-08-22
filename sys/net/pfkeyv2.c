@@ -229,20 +229,20 @@ pfkeyv2_sendmessage(void **headers, int mode, struct socket *socket,
 		goto ret;
 	}
 
-	p = (char *)buffer + sizeof(struct sadb_msg);
+	p = (int8_t *)buffer + sizeof(struct sadb_msg);
 	bcopy(headers[0], p, sizeof(struct sadb_msg));
 	((struct sadb_msg *) p)->sadb_msg_len = j / sizeof(uint64_t);
-	p = (char *)p + sizeof(struct sadb_msg);
+	p = (int8_t *)p + sizeof(struct sadb_msg);
 
 	/* Copy payloads in the packet */
 	for (i = 1; i <= SADB_EXT_MAX; i++)
 		if (headers[i]) {
 			((struct sadb_ext *) headers[i])->sadb_ext_type = i;
 			bcopy(headers[i], p, EXTLEN(headers[i]));
-			p = (char *)p + EXTLEN(headers[i]);
+			p = (int8_t *)p + EXTLEN(headers[i]);
 		}
 
-	if ((rval = pfdatatopacket((char *)buffer + sizeof(struct sadb_msg),
+	if ((rval = pfdatatopacket((int8_t *)buffer + sizeof(struct sadb_msg),
 	    j, &packet)) != 0)
 		goto ret;
 
@@ -905,7 +905,7 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 		    sizeof(uint64_t);
 		smsg->sadb_msg_seq = curproc->p_p->ps_pid;
 
-		bcopy(message, (char *)freeme + sizeof(struct sadb_msg), len);
+		bcopy(message, (int8_t *)freeme + sizeof(struct sadb_msg), len);
 
 		/* Convert to mbuf chain */
 		if ((rval = pfdatatopacket(freeme,
@@ -974,7 +974,7 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 	case SADB_UPDATE:
 		ssa = (struct sadb_sa *) headers[SADB_EXT_SA];
 		sunionp = (union sockaddr_union *)
-		    ((char *)headers[SADB_EXT_ADDRESS_DST] +
+		    ((int8_t *)headers[SADB_EXT_ADDRESS_DST] +
 		    sizeof(struct sadb_address));
 
 		/* Either all or none of the flow must be included */
@@ -1138,7 +1138,7 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 	case SADB_ADD:
 		ssa = (struct sadb_sa *) headers[SADB_EXT_SA];
 		sunionp = (union sockaddr_union *)
-		    ((char *)headers[SADB_EXT_ADDRESS_DST] +
+		    ((int8_t *)headers[SADB_EXT_ADDRESS_DST] +
 		    sizeof(struct sadb_address));
 
 		/* Either all or none of the flow must be included */
@@ -1278,7 +1278,7 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 	case SADB_DELETE:
 		ssa = (struct sadb_sa *)headers[SADB_EXT_SA];
 		sunionp = (union sockaddr_union *)
-		    ((char *)headers[SADB_EXT_ADDRESS_DST] +
+		    ((int8_t *)headers[SADB_EXT_ADDRESS_DST] +
 		    sizeof(struct sadb_address));
 		s = spltdb();
 
@@ -1313,7 +1313,7 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 	case SADB_GET:
 		ssa = (struct sadb_sa *)headers[SADB_EXT_SA];
 		sunionp = (union sockaddr_union *)
-		    ((char *)headers[SADB_EXT_ADDRESS_DST]
+		    ((int8_t *)headers[SADB_EXT_ADDRESS_DST]
 		    + sizeof(struct sadb_address));
 
 		s = spltdb();
@@ -1350,7 +1350,7 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 		ssup->sadb_supported_len = i / sizeof(uint64_t);
 
 		{
-			void *p = (char *)freeme
+			void *p = (int8_t *)freeme
 			    + sizeof(struct sadb_supported);
 
 			bcopy(&ealgs[0], p, sizeof(ealgs));
@@ -1372,7 +1372,7 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 		ssup->sadb_supported_len = i / sizeof(uint64_t);
 
 		{
-			void *p = (char *)freeme
+			void *p = (int8_t *)freeme
 			    + sizeof(struct sadb_supported);
 
 			bcopy(&aalgs[0], p, sizeof(aalgs));
@@ -1391,7 +1391,7 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 		ssup->sadb_supported_len = i / sizeof(uint64_t);
 
 		{
-			void *p = (char *)freeme
+			void *p = (int8_t *)freeme
 			    + sizeof(struct sadb_supported);
 
 			bcopy(&calgs[0], p, sizeof(calgs));
@@ -1472,7 +1472,7 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 		struct sadb_protocol *sa_proto;
 
 		ssa = (struct sadb_sa *) headers[SADB_EXT_SA];
-		sunionp = (union sockaddr_union *) ((char *)
+		sunionp = (union sockaddr_union *) ((int8_t *)
 		    headers[SADB_EXT_ADDRESS_DST] + sizeof(struct sadb_address));
 
 		s = spltdb();
@@ -1485,7 +1485,7 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 		}
 
 		ssa = (struct sadb_sa *) headers[SADB_X_EXT_SA2];
-		sunionp = (union sockaddr_union *) ((char *)
+		sunionp = (union sockaddr_union *) ((int8_t *)
 		    headers[SADB_X_EXT_DST2] + sizeof(struct sadb_address));
 		sa_proto = ((struct sadb_protocol *) headers[SADB_X_EXT_PROTOCOL]);
 
@@ -1544,14 +1544,14 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 
 		if (headers[SADB_EXT_ADDRESS_DST])
 			sunionp = (union sockaddr_union *)
-			    ((char *)headers[SADB_EXT_ADDRESS_DST] +
+			    ((int8_t *)headers[SADB_EXT_ADDRESS_DST] +
 			    sizeof(struct sadb_address));
 		else
 			sunionp = NULL;
 
 		if (headers[SADB_EXT_ADDRESS_SRC])
 			ssrc = (union sockaddr_union *)
-			    ((char *)headers[SADB_EXT_ADDRESS_SRC] +
+			    ((int8_t *)headers[SADB_EXT_ADDRESS_SRC] +
 			    sizeof(struct sadb_address));
 		else
 			ssrc = NULL;
@@ -1939,7 +1939,7 @@ pfkeyv2_acquire(struct ipsec_policy *ipo, union sockaddr_union *gw,
 	buffer = p;
 
 	headers[0] = p;
-	p = (char *)p + sizeof(struct sadb_msg);
+	p = (int8_t *)p + sizeof(struct sadb_msg);
 
 	smsg = (struct sadb_msg *) headers[0];
 	smsg->sadb_msg_version = PF_KEY_V2;
@@ -1956,22 +1956,22 @@ pfkeyv2_acquire(struct ipsec_policy *ipo, union sockaddr_union *gw,
 
 	if (laddr) {
 		headers[SADB_EXT_ADDRESS_SRC] = p;
-		p = (char *)p + sizeof(struct sadb_address)
+		p = (int8_t *)p + sizeof(struct sadb_address)
 		    + PADUP(SA_LEN(&laddr->sa));
 		sadd = (struct sadb_address *) headers[SADB_EXT_ADDRESS_SRC];
 		sadd->sadb_address_len = (sizeof(struct sadb_address) +
 		    SA_LEN(&laddr->sa) + sizeof(uint64_t) - 1) /
 		    sizeof(uint64_t);
-		bcopy(laddr, (char *)headers[SADB_EXT_ADDRESS_SRC] +
+		bcopy(laddr, (int8_t *)headers[SADB_EXT_ADDRESS_SRC] +
 		    sizeof(struct sadb_address), SA_LEN(&laddr->sa));
 	}
 
 	headers[SADB_EXT_ADDRESS_DST] = p;
-	p = (char *)p + sizeof(struct sadb_address) + PADUP(SA_LEN(&gw->sa));
+	p = (int8_t *)p + sizeof(struct sadb_address) + PADUP(SA_LEN(&gw->sa));
 	sadd = (struct sadb_address *) headers[SADB_EXT_ADDRESS_DST];
 	sadd->sadb_address_len = (sizeof(struct sadb_address) +
 	    SA_LEN(&gw->sa) + sizeof(uint64_t) - 1) / sizeof(uint64_t);
-	bcopy(gw, (char *)headers[SADB_EXT_ADDRESS_DST]
+	bcopy(gw, (int8_t *)headers[SADB_EXT_ADDRESS_DST]
 	    + sizeof(struct sadb_address), SA_LEN(&gw->sa));
 
 	if (ipo->ipo_srcid) {
@@ -1983,7 +1983,7 @@ pfkeyv2_acquire(struct ipsec_policy *ipo, union sockaddr_union *gw,
 		    PADUP(ipo->ipo_srcid->ref_len)) / sizeof(u_int64_t);
 		srcid->sadb_ident_type = ipo->ipo_srcid->ref_type;
 		bcopy(ipo->ipo_srcid + 1,
-		    (char *)headers[SADB_EXT_IDENTITY_SRC] +
+		    (int8_t *)headers[SADB_EXT_IDENTITY_SRC] +
 		    sizeof(struct sadb_ident), ipo->ipo_srcid->ref_len);
 	}
 
@@ -1995,7 +1995,7 @@ pfkeyv2_acquire(struct ipsec_policy *ipo, union sockaddr_union *gw,
 		    PADUP(ipo->ipo_dstid->ref_len)) / sizeof(u_int64_t);
 		dstid->sadb_ident_type = ipo->ipo_dstid->ref_type;
 		bcopy(ipo->ipo_dstid + 1,
-		    (char *)headers[SADB_EXT_IDENTITY_DST] +
+		    (int8_t *)headers[SADB_EXT_IDENTITY_DST] +
 		    sizeof(struct sadb_ident), ipo->ipo_dstid->ref_len);
 	}
 
@@ -2014,7 +2014,7 @@ pfkeyv2_acquire(struct ipsec_policy *ipo, union sockaddr_union *gw,
 			break;
 		}
 		bcopy(ipo->ipo_local_cred + 1,
-		    (char *)headers[SADB_X_EXT_LOCAL_CREDENTIALS] +
+		    (int8_t *)headers[SADB_X_EXT_LOCAL_CREDENTIALS] +
 		    sizeof(struct sadb_x_cred), ipo->ipo_local_cred->ref_len);
 	}
 
@@ -2034,12 +2034,12 @@ pfkeyv2_acquire(struct ipsec_policy *ipo, union sockaddr_union *gw,
 		}
 
 		bcopy(ipo->ipo_local_auth + 1,
-		    (char *)headers[SADB_X_EXT_LOCAL_AUTH] +
+		    (int8_t *)headers[SADB_X_EXT_LOCAL_AUTH] +
 		    sizeof(struct sadb_x_cred), ipo->ipo_local_auth->ref_len);
 	}
 
 	headers[SADB_EXT_PROPOSAL] = p;
-	p = (char *)p + sizeof(struct sadb_prop);
+	p = (int8_t *)p + sizeof(struct sadb_prop);
 	sa_prop = (struct sadb_prop *) headers[SADB_EXT_PROPOSAL];
 	sa_prop->sadb_prop_num = 1; /* XXX One proposal only */
 	sa_prop->sadb_prop_len = (sizeof(struct sadb_prop) +
@@ -2208,7 +2208,7 @@ pfkeyv2_expire(struct tdb *sa, u_int16_t type)
 	buffer = p;
 
 	headers[0] = p;
-	p = (char *)p + sizeof(struct sadb_msg);
+	p = (int8_t *)p + sizeof(struct sadb_msg);
 
 	smsg = (struct sadb_msg *) headers[0];
 	smsg->sadb_msg_version = PF_KEY_V2;
@@ -2286,7 +2286,7 @@ pfkeyv2_sysctl_walker(struct tdb *sa, void *arg, int last)
 		msg.sadb_msg_len = (sizeof(msg) + buflen) / sizeof(uint64_t);
 		if ((error = copyout(&msg, w->w_where, sizeof(msg))) != 0)
 			goto done;
-		w->w_where = (char *)w->w_where + sizeof(msg);
+		w->w_where = (int8_t *)w->w_where + sizeof(msg);
 		w->w_len -= sizeof(msg);
 		/* set extension type */
 		for (i = 1; i <= SADB_EXT_MAX; i++)
@@ -2295,7 +2295,7 @@ pfkeyv2_sysctl_walker(struct tdb *sa, void *arg, int last)
 				    headers[i])->sadb_ext_type = i;
 		if ((error = copyout(buffer, w->w_where, buflen)) != 0)
 			goto done;
-		w->w_where = (char *)w->w_where + buflen;
+		w->w_where = (int8_t *)w->w_where + buflen;
 		w->w_len -= buflen;
 	} else {
 		if ((error = pfkeyv2_get(sa, NULL, NULL, &buflen)) != 0)
@@ -2418,26 +2418,26 @@ pfkeyv2_dump_policy(struct ipsec_policy *ipo, void **headers, void **buffer,
 	perm = suser(curproc, 0);
 	if (perm == 0 && ipo->ipo_srcid) {
 		headers[SADB_EXT_IDENTITY_SRC] = p;
-		p = (char *)p + sizeof(struct sadb_ident)
+		p = (int8_t *)p + sizeof(struct sadb_ident)
 		    + PADUP(ipo->ipo_srcid->ref_len);
 		ident = (struct sadb_ident *)headers[SADB_EXT_IDENTITY_SRC];
 		ident->sadb_ident_len = (sizeof(struct sadb_ident) +
 		    PADUP(ipo->ipo_srcid->ref_len)) / sizeof(uint64_t);
 		ident->sadb_ident_type = ipo->ipo_srcid->ref_type;
 		bcopy(ipo->ipo_srcid + 1,
-		    (char *)headers[SADB_EXT_IDENTITY_SRC]
+		    (int8_t *)headers[SADB_EXT_IDENTITY_SRC]
 		    + sizeof(struct sadb_ident), ipo->ipo_srcid->ref_len);
 	}
 	if (perm == 0 && ipo->ipo_dstid) {
 		headers[SADB_EXT_IDENTITY_DST] = p;
-		p = (char *)p + sizeof(struct sadb_ident)
+		p = (int8_t *)p + sizeof(struct sadb_ident)
 		    + PADUP(ipo->ipo_dstid->ref_len);
 		ident = (struct sadb_ident *)headers[SADB_EXT_IDENTITY_DST];
 		ident->sadb_ident_len = (sizeof(struct sadb_ident) +
 		    PADUP(ipo->ipo_dstid->ref_len)) / sizeof(uint64_t);
 		ident->sadb_ident_type = ipo->ipo_dstid->ref_type;
 		bcopy(ipo->ipo_dstid + 1,
-		    (char *)headers[SADB_EXT_IDENTITY_DST]
+		    (int8_t *)headers[SADB_EXT_IDENTITY_DST]
 		    + sizeof(struct sadb_ident), ipo->ipo_dstid->ref_len);
 	}
 
@@ -2502,7 +2502,7 @@ pfkeyv2_sysctl_policydumper(struct ipsec_policy *ipo, void *arg)
 		msg.sadb_msg_len = (sizeof(msg) + buflen) / sizeof(uint64_t);
 		if ((error = copyout(&msg, w->w_where, sizeof(msg))) != 0)
 			goto done;
-		w->w_where = (char *)w->w_where + sizeof(msg);
+		w->w_where = (int8_t *)w->w_where + sizeof(msg);
 		w->w_len -= sizeof(msg);
 		/* set extension type */
 		for (i = 1; i < SADB_EXT_MAX; i++)
@@ -2511,7 +2511,7 @@ pfkeyv2_sysctl_policydumper(struct ipsec_policy *ipo, void *arg)
 				    headers[i])->sadb_ext_type = i;
 		if ((error = copyout(buffer, w->w_where, buflen)) != 0)
 			goto done;
-		w->w_where = (char *)w->w_where + buflen;
+		w->w_where = (int8_t *)w->w_where + buflen;
 		w->w_len -= buflen;
 	} else {
 		if ((error = pfkeyv2_dump_policy(ipo, NULL, NULL,
@@ -2554,7 +2554,7 @@ pfkeyv2_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 		error = tdb_walk(rdomain, pfkeyv2_sysctl_walker, &w);
 		splx(s);
 		if (oldp)
-			*oldlenp = (char *)w.w_where - (char *)oldp;
+			*oldlenp = (int8_t *)w.w_where - (int8_t *)oldp;
 		else
 			*oldlenp = w.w_len;
 		break;
@@ -2565,7 +2565,7 @@ pfkeyv2_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 		    pfkeyv2_sysctl_policydumper, &w);
 		splx(s);
 		if (oldp)
-			*oldlenp = (char *)w.w_where - (char *)oldp;
+			*oldlenp = (int8_t *)w.w_where - (int8_t *)oldp;
 		else
 			*oldlenp = w.w_len;
 		break;

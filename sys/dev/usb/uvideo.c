@@ -1973,7 +1973,7 @@ uvideo_vs_cb(usbd_xfer_handle xfer, usbd_private_handle priv,
 		goto skip;
 
 	for (i = 0; i < sc->sc_nframes; i++) {
-		frame = (char *)ixfer->buf + (i * sc->sc_vs_cur->psize);
+		frame = (int8_t *)ixfer->buf + (i * sc->sc_vs_cur->psize);
 		frame_size = ixfer->size[i];
 
 		if (frame_size == 0)

@@ -1498,7 +1498,7 @@ rum_write_multi(struct rum_softc *sc, uint16_t reg, void *buf, size_t len)
 		USETW(req.wLength, MIN(len - offset, 64));
 
 		error = usbd_do_request(sc->sc_udev, &req,
-		    (char *)buf + offset);
+		    (int8_t *)buf + offset);
 		if (error != 0) {
 			printf("%s: could not multi write MAC register: %s\n",
 			    sc->sc_dev.dv_xname, usbd_errstr(error));

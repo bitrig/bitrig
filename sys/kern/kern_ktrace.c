@@ -337,7 +337,7 @@ ktrstruct(struct proc *p, const char *name, const void *data, size_t datalen)
 	buflen = strlen(name) + 1 + datalen;
 	buf = malloc(buflen, M_TEMP, M_WAITOK);
 	strlcpy(buf, name, buflen);
-	bcopy(data, (char *)buf + strlen(name) + 1, datalen);
+	bcopy(data, (int8_t *)buf + strlen(name) + 1, datalen);
 	kth.ktr_len = buflen;
 
 	ktrwrite(p, &kth, buf);

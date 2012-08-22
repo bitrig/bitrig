@@ -303,7 +303,7 @@ pfkeyv2_parsemessage(void *p, int len, void **headers)
 		return (EINVAL);
 	}
 
-	p = (char *)p + sizeof(struct sadb_msg);
+	p = (int8_t *)p + sizeof(struct sadb_msg);
 	left -= sizeof(struct sadb_msg);
 
 	if (sadb_msg->sadb_msg_reserved) {
@@ -477,7 +477,7 @@ pfkeyv2_parsemessage(void *p, int len, void **headers)
 		{
 			struct sadb_address *sadb_address =
 			    (struct sadb_address *)p;
-			struct sockaddr *sa = (struct sockaddr *)((char *)p +
+			struct sockaddr *sa = (struct sockaddr *)((int8_t *)p +
 			    sizeof(struct sadb_address));
 
 			if (i < sizeof(struct sadb_address) +
@@ -744,10 +744,10 @@ pfkeyv2_parsemessage(void *p, int len, void **headers)
 			}
 
 			if (i > sizeof(struct sadb_ident)) {
-				char *c = (char *)p + sizeof(struct sadb_ident);
+				char *c = (int8_t *)p + sizeof(struct sadb_ident);
 				int j;
 
-				if (*((char *)p + i - 1)) {
+				if (*((int8_t *)p + i - 1)) {
 					DPRINTF(("pfkeyv2_parsemessage: non "
 					    "NUL-terminated identity in "
 					    "IDENTITY extension header %d\n",
@@ -816,7 +816,7 @@ pfkeyv2_parsemessage(void *p, int len, void **headers)
 
 			{
 				struct sadb_comb *sadb_comb =
-				    (struct sadb_comb *)((char *)p +
+				    (struct sadb_comb *)((int8_t *)p +
 					sizeof(struct sadb_prop));
 				int j;
 
@@ -878,7 +878,7 @@ pfkeyv2_parsemessage(void *p, int len, void **headers)
 
 			{
 				struct sadb_alg *sadb_alg =
-				    (struct sadb_alg *)((char *)p +
+				    (struct sadb_alg *)((int8_t *)p +
 					sizeof(struct sadb_supported));
 				int max_alg;
 
@@ -976,7 +976,7 @@ pfkeyv2_parsemessage(void *p, int len, void **headers)
 		}
 
 		headers[sadb_ext->sadb_ext_type] = p;
-		p = (char *)p + i;
+		p = (int8_t *)p + i;
 		left -= i;
 	}
 
