@@ -1976,7 +1976,7 @@ pfkeyv2_acquire(struct ipsec_policy *ipo, union sockaddr_union *gw,
 
 	if (ipo->ipo_srcid) {
 		headers[SADB_EXT_IDENTITY_SRC] = p;
-		p += sizeof(struct sadb_ident)
+		p = (int8_t *)p + sizeof(struct sadb_ident)
 		    + PADUP(ipo->ipo_srcid->ref_len);
 		srcid = (struct sadb_ident *) headers[SADB_EXT_IDENTITY_SRC];
 		srcid->sadb_ident_len = (sizeof(struct sadb_ident) +
@@ -1989,7 +1989,8 @@ pfkeyv2_acquire(struct ipsec_policy *ipo, union sockaddr_union *gw,
 
 	if (ipo->ipo_dstid) {
 		headers[SADB_EXT_IDENTITY_DST] = p;
-		p += sizeof(struct sadb_ident) + PADUP(ipo->ipo_dstid->ref_len);
+		p = (int8_t *)p + sizeof(struct sadb_ident)
+		    + PADUP(ipo->ipo_dstid->ref_len);
 		dstid = (struct sadb_ident *) headers[SADB_EXT_IDENTITY_DST];
 		dstid->sadb_ident_len = (sizeof(struct sadb_ident) +
 		    PADUP(ipo->ipo_dstid->ref_len)) / sizeof(u_int64_t);
@@ -2001,7 +2002,8 @@ pfkeyv2_acquire(struct ipsec_policy *ipo, union sockaddr_union *gw,
 
 	if (ipo->ipo_local_cred) {
 		headers[SADB_X_EXT_LOCAL_CREDENTIALS] = p;
-		p += sizeof(struct sadb_x_cred) + PADUP(ipo->ipo_local_cred->ref_len);
+		p = (int8_t *)p + sizeof(struct sadb_x_cred)
+		    + PADUP(ipo->ipo_local_cred->ref_len);
 		lcred = (struct sadb_x_cred *) headers[SADB_X_EXT_LOCAL_CREDENTIALS];
 		lcred->sadb_x_cred_len = (sizeof(struct sadb_x_cred) +
 		    PADUP(ipo->ipo_local_cred->ref_len)) / sizeof(u_int64_t);
@@ -2020,7 +2022,8 @@ pfkeyv2_acquire(struct ipsec_policy *ipo, union sockaddr_union *gw,
 
 	if (ipo->ipo_local_auth) {
 		headers[SADB_X_EXT_LOCAL_AUTH] = p;
-		p += sizeof(struct sadb_x_cred) + PADUP(ipo->ipo_local_auth->ref_len);
+		p = (int8_t *)p + sizeof(struct sadb_x_cred)
+		    + PADUP(ipo->ipo_local_auth->ref_len);
 		lauth = (struct sadb_x_cred *) headers[SADB_X_EXT_LOCAL_AUTH];
 		lauth->sadb_x_cred_len = (sizeof(struct sadb_x_cred) +
 		    PADUP(ipo->ipo_local_auth->ref_len)) / sizeof(u_int64_t);
