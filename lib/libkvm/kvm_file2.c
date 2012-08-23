@@ -1,4 +1,4 @@
-/*	$OpenBSD: kvm_file2.c,v 1.25 2012/06/02 05:44:27 guenther Exp $	*/
+/*	$OpenBSD: kvm_file2.c,v 1.26 2012/08/23 06:21:21 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2009 Todd C. Miller <Todd.Miller@courtesan.com>
