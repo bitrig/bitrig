@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.320 2012/08/20 12:37:52 dlg Exp $
+#	$OpenBSD: Makefile,v 1.321 2012/08/23 06:17:58 deraadt Exp $
 
 TZDIR=		/usr/share/zoneinfo
 LOCALTIME=	Canada/Mountain
