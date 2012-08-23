@@ -1,4 +1,4 @@
-/*	$OpenBSD: conf.c,v 1.37 2012/04/06 15:10:39 jsing Exp $	*/
+/*	$OpenBSD: conf.c,v 1.38 2012/08/23 06:12:49 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995 Charles M. Hannum.  All rights reserved.
