@@ -241,6 +241,14 @@ struct ViceIoctl {
 	short	out_size;
 };
 
+struct ClearToken {
+	int32_t	AuthHandle;
+	char	HandShakeKey[8];
+	int32_t	ViceId;
+	int32_t	BeginTimestamp;
+	int32_t	EndTimestamp;
+};
+
 #endif
 
 /* XXX: END HORRID GRUESOME HACK FOR AFS / KERBEROS */
