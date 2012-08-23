@@ -41,6 +41,7 @@
 /* sys/ioctl.h must be included manually before kafs.h */
 
 /*
+ * The following parts are from the old nnpfs_pioct.h file
  */
 
 /* XXX: HORRID GRUESOME HACK FOR AFS / KERBEROS */
@@ -238,14 +239,6 @@ struct ViceIoctl {
 	caddr_t	in, out;
 	short	in_size;
 	short	out_size;
-};
-
-struct ClearToken {
-	int32_t	AuthHandle;
-	char	HandShakeKey[8];
-	int32_t	ViceId;
-	int32_t	BeginTimestamp;
-	int32_t	EndTimestamp;
 };
 
 #endif
