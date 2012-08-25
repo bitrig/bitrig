@@ -35,7 +35,7 @@
 
 #define	ARM_KERNEL_BASE		0xc0000000
 
-/* Allow armish to have bigger DSIZ than generic arm, allow user to override */
+/* Allow beagle to have bigger DSIZ than generic arm, allow user to override */
 #ifndef	MAXDSIZ
 #define	MAXDSIZ		(1024*1024*1024)		/* max data size */
 #endif

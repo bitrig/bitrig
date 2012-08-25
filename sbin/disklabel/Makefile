@@ -30,10 +30,6 @@ manual.c:	disklabel.cat8
 CFLAGS+= -DSEEALSO="\"fdisk(8), installboot(8)\""
 .endif
 
-.if (${MACHINE} == "armish")
-CFLAGS+= -DSEEALSO="\"fdisk(8)\""
-.endif
-
 .ifdef NOPIC
 CFLAGS+= -DSTATICLINKING
 .endif

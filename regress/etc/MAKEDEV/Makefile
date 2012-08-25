@@ -1,7 +1,7 @@
 
 # $OpenBSD: Makefile,v 1.26 2011/07/07 19:39:23 deraadt Exp $
 
-MAKEDEVARCHS+=amd64 armish i386
+MAKEDEVARCHS+=amd64 i386
 
 MAKEDEVTARGS?=all ramdisk
 
