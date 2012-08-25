@@ -302,6 +302,8 @@ const struct cpuidtab cpuids[] = {
 	  generic_steppings },
 	{ CPU_ID_OMAP3630,	CPU_CLASS_ARMv7,	"ARM OMAP3630/DM3730",
 	  generic_steppings },
+	{ CPU_ID_OMAP4460,	CPU_CLASS_ARMv7,	"ARM OMAP4460",
+	  generic_steppings },
 
 
 	{ 0, CPU_CLASS_NONE, NULL, NULL }
