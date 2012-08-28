@@ -1,4 +1,4 @@
-/*	$OpenBSD: init_main.c,v 1.180 2011/07/07 18:00:33 guenther Exp $	*/
+/*	$OpenBSD: init_main.c,v 1.184 2012/08/28 16:39:09 matthew Exp $	*/
 /*	$NetBSD: init_main.c,v 1.84.4.1 1996/06/02 09:08:06 mrg Exp $	*/
 
 /*
@@ -133,7 +133,10 @@ int	ncpusfound = 1;			/* number of cpus we find */
 __volatile int start_init_exec;		/* semaphore for start_init() */
 
 #if !defined(NO_PROPOLICE)
-long		__guard[8] = { 0 };
+long	__guard[8] = { 0 };
+#ifdef __ELF__
+long	__guard_local __dso_hidden;
+#endif
 #if !defined(__clang__) || (!(__clang_major__ == 3 && __clang_minor__ < 2))
 extern
 #endif
@@ -413,6 +416,9 @@ main(void *framep)
 
 		arc4random_buf((long *)newguard, sizeof(newguard));
 
+#ifdef __ELF__
+		__guard_local = newguard[0];
+#endif
 		for (i = nitems(__guard) - 1; i; i--)
 			__guard[i] = newguard[i];
 	}
