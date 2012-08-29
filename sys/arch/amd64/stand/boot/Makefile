@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.9 2012/08/21 14:46:18 pascal Exp $
+#	$OpenBSD: Makefile,v 1.10 2012/08/29 17:45:00 pascal Exp $
 
 .include "${.CURDIR}/../Makefile.inc"
 
@@ -14,7 +14,7 @@ SRCS=	srt0.S conf.c
 LD?=	ld
 SIZE?=	size
 LDFLAGS+=-melf_i386 -nostdlib -Bstatic -Ttext $(LINKADDR) -N -x -noinhibit-exec
-LDFLAGS+=-L/usr/libdata
+LDFLAGS+=-nopie -L/usr/libdata 
 
 .PATH:	${SADIR}/libsa
 # i386 stuff (so, it will possibly load in the same 64k)

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2012/08/21 14:46:18 pascal Exp $
+#	$OpenBSD: Makefile,v 1.5 2012/08/29 17:45:00 pascal Exp $
 
 .include <bsd.own.mk>
 
@@ -8,8 +8,8 @@ MAN=	biosboot.8
 PROG=	biosboot
 SRCS=	biosboot.S
 LD=ld
-LDFLAGS=-melf_i386 -nostdlib -Ttext 0 -N -x -Bstatic
-LDFLAGS+=-L/usr/libdata
+LDFLAGS=-melf_i386 -nostdlib -Ttext 0 -N -x -Bstatic -nopie
+LDFLAGS+=-L/usr/libdata 
 INSTALL_STRIP=
 SADIR=	${.CURDIR}/..
 
@@ -23,9 +23,9 @@ CPPFLAGS+=${DEBUGFLAGS}
 .if ${COMPILER_VERSION:L} != "gcc4"
 AFLAGS+=-no-integrated-as
 .endif
-CPPFLAGS+=${NOPIE_FLAGS}
+CFLAGS+=-fno-pie
 AFLAGS+=-m32 # -Wa,-a
-AFLAGS+=${NOPIE_FLAGS}
+AFLAGS+=-fno-pie
 .else
 NOPROG=
 .endif
