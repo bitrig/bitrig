@@ -1,4 +1,4 @@
-/*	$OpenBSD: ar5211.c,v 1.44 2009/06/02 12:39:02 reyk Exp $	*/
+/*	$OpenBSD: ar5211.c,v 1.45 2012/08/30 11:03:57 jsg Exp $	*/
 
 /*
  * Copyright (c) 2004, 2005, 2006, 2007 Reyk Floeter <reyk@openbsd.org>
