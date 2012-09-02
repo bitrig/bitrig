@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-#	$OpenBSD: bsd.own.mk,v 1.124 2012/08/28 16:45:03 pascal Exp $
-=======
-#	$OpenBSD: bsd.own.mk,v 1.126 2012/09/01 03:12:16 deraadt Exp $
->>>>>>> e964de1... avr32 did not happen
+#	$OpenBSD: bsd.own.mk,v 1.129 2012/09/02 18:10:49 kettenis Exp $
 #	$NetBSD: bsd.own.mk,v 1.24 1996/04/13 02:08:09 thorpej Exp $
 
 # Host-specific overrides
@@ -167,7 +163,8 @@ ASPICFLAG=-KPIC
 ASPICFLAG=-k
 .endif
 
-.if ${MACHINE_ARCH} == "alpha" || ${MACHINE_ARCH} == "sparc64"
+.if ${MACHINE_ARCH} == "alpha" || ${MACHINE_ARCH} == "powerpc" || \
+    ${MACHINE_ARCH} == "sparc64"
 # big PIE
 DEFAULT_PIE_DEF=-DPIE_DEFAULT=2
 .else
