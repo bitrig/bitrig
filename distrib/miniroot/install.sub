@@ -1,4 +1,4 @@
-#	$OpenBSD: install.sub,v 1.664 2012/09/03 04:35:30 deraadt Exp $
+#	$OpenBSD: install.sub,v 1.665 2012/09/03 07:34:37 deraadt Exp $
 #	$NetBSD: install.sub,v 1.5.2.8 1996/09/02 23:25:02 pk Exp $
 #
 # Copyright (c) 1997-2009 Todd Miller, Theo de Raadt, Ken Westerback
@@ -1133,10 +1133,10 @@ install_files() {
 		echo -n "Getting $_f ..."
 		rm -f /tmp/h
 		case $_f in
-		*.tgz)	ftp $FTPOPTS -o - -m "$_src/$_f" | \
+		*.tgz)	ftp -Vmo - "$_src/$_f" | \
 				$shacmd | tar zxphf - -C /mnt
 			;;
-		*)	ftp $FTPOPTS -o - -m "$_src/$_f" | \
+		*)	ftp -Vmo - "$_src/$_f" | \
 				$shacmd > "/mnt/$_f"
 			;;
 		esac
@@ -1157,12 +1157,12 @@ install_files() {
 
 		# get sets and save arguments for sysmerge(8)
 		[[ $_f == base$VERSION.tgz ]] && \
-			ftp $FTPOPTS -o /mnt/tmp/etc$VERSION.tgz \
-				-m "$_src/etc$VERSION.tgz" >/dev/null 2>&1 && \
+			ftp -Vmo /mnt/tmp/etc$VERSION.tgz \
+				"$_src/etc$VERSION.tgz" >/dev/null 2>&1 && \
 			SM_ARGS="-s /tmp/etc$VERSION.tgz"
 		[[ $_f == xbase$VERSION.tgz ]] && \
-			ftp $FTPOPTS -o /mnt/tmp/xetc$VERSION.tgz \
-				-m "$_src/xetc$VERSION.tgz" >/dev/null 2>&1  && \
+			ftp -Vmo /mnt/tmp/xetc$VERSION.tgz \
+				"$_src/xetc$VERSION.tgz" >/dev/null 2>&1  && \
 			SM_ARGSX="-x /tmp/xetc$VERSION.tgz"
 	done
 }
@@ -1231,8 +1231,7 @@ ftp_error() {
 # Get several parameters from the user, and xfer
 # files from the server.
 # $1 = url type (ftp or http)
-# Note:	_ftp_server_ip, _ftp_server_dir, _ftp_server_login,
-#	and FTPOPTS must be global.
+# Note:	_ftp_server_ip, _ftp_server_dir, _ftp_server_login must be global.
 install_url() {
 	local _url_type=$1 _file_list _url_base _oifs _prompt _passwd _mirror
 	eval local _server_ip=\$_${_url_type}_server_ip \
@@ -1331,13 +1330,13 @@ install_url() {
 
 	# Get list of files from the server.
 	if [[ $_url_type == ftp && -z $ftp_proxy ]] ; then
-		_file_list=$(ftp $FTPOPTS "$_url_base/")
+		_file_list=$(ftp -V "$_url_base/")
 		ftp_error "Login failed." "$_file_list" && return
 		ftp_error "No such file or directory." "$_file_list" && return
 	else
 		# Assumes index file is "index.txt" for http (or proxy)
 		# We can't use index.html since the format is server-dependent
-		_file_list=$(ftp $FTPOPTS -o - "$_url_base/index.txt" | \
+		_file_list=$(ftp -Vo - "$_url_base/index.txt" | \
 			sed -e 's/^.* //' | sed -e 's///')
 	fi
 
@@ -1957,7 +1956,6 @@ SM_ARGSX=
 
 SETDIR="$VNAME/$ARCH"
 FTPDIR="$VNAME"
-FTPOPTS="-V"
 SERVERLISTALL=/tmp/serverlistall
 SERVERLISTSEC=/tmp/serverlistsec
 SERVERLIST=/tmp/serverlist
