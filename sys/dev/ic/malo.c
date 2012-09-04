@@ -1,4 +1,4 @@
-/*	$OpenBSD: malo.c,v 1.93 2011/07/03 21:35:38 dhill Exp $ */
+/*	$OpenBSD: malo.c,v 1.94 2012/09/04 19:01:33 claudio Exp $ */
 
 /*
  * Copyright (c) 2006 Claudio Jeker <claudio@openbsd.org>
