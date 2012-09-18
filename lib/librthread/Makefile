@@ -12,7 +12,7 @@ CFLAGS+=-Wmissing-prototypes
 .endif
 CFLAGS+=-Wstrict-prototypes
 CFLAGS+=-Wsign-compare
-CFLAGS+=-I${LIBCSRCDIR}/arch/${MACHINE_CPU} -I${LIBCSRCDIR}/include
+CFLAGS+=-I${LIBCSRCDIR}/arch/${MACHINE_CPU} -I${.CURDIR}/arch/${MACHINE_CPU} -I${LIBCSRCDIR}/include
 LDADD = -Wl,-znodelete,-zinitfirst,-znodlopen
 
 .PATH: ${.CURDIR}/arch/${MACHINE_CPU}
