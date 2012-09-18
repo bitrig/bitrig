@@ -12,7 +12,7 @@
 LIB=c
 CLEANFILES+=tags
 #CFLAGS+=-Werror
-LDADD=-nodefaultlibs -lgcc
+LDADD=-nodefaultlibs -lclang_rt.{MACHINE_ARCH}
 
 LIBCSRCDIR=${.CURDIR}
 .include "${LIBCSRCDIR}/Makefile.inc"
