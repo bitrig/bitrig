@@ -1,4 +1,4 @@
-/*	$OpenBSD: pipex.c,v 1.33 2012/09/19 17:50:17 yasuoka Exp $	*/
+/*	$OpenBSD: pipex.c,v 1.34 2012/09/19 22:37:23 jsg Exp $	*/
 
 /*-
  * Copyright (c) 2009 Internet Initiative Japan Inc.

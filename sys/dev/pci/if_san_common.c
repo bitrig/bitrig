@@ -1,4 +1,4 @@
-/*	$OpenBSD: if_san_common.c,v 1.13 2009/02/08 20:07:44 chl Exp $	*/
+/*	$OpenBSD: if_san_common.c,v 1.14 2012/09/19 22:37:23 jsg Exp $	*/
 
 /*-
  * Copyright (c) 2001-2004 Sangoma Technologies (SAN)
