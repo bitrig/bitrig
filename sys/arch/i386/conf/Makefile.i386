@@ -44,7 +44,7 @@ COPTS?=		-O2
 
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS}
-LINKFLAGS=	-Ttext 0xD0200120 -e start -N --warn-common
+LINKFLAGS=	-Ttext 0xD0200120 -e start -N --warn-common -nopie
 
 .else
 
@@ -55,7 +55,7 @@ CWARNFLAGS+=	-Wno-pointer-sign
 CMACHFLAGS=	-mcmodel=kernel -mno-red-zone -mno-sse -mno-sse2 -mno-sse3 \
 		-mno-3dnow -mno-mmx -msoft-float -mno-avx
 CMACHFLAGS+=	-ffreestanding -no-integrated-as -fno-omit-frame-pointer \
-		-fno-asynchronous-unwind-tables
+		-fno-asynchronous-unwind-tables ${NOPIE_FLAGS}
 .if ${IDENT:M-DNO_PROPOLICE}
 CMACHFLAGS+=	-fno-stack-protector
 .endif
@@ -68,7 +68,8 @@ COPTS?=		-O3
 
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS}
-LINKFLAGS=	-Ttext 0xD0200120 -e start -N --warn-common -z noexecstack
+LINKFLAGS=	-Ttext 0xD0200120 -e start -N --warn-common -z noexecstack \
+		-nopie
 .endif
 
 .if ${MACHINE} == "amd64"
