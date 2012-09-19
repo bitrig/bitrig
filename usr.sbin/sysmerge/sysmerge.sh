@@ -34,9 +34,6 @@ PAGER="${PAGER:=/usr/bin/more}"
 
 # clean leftovers created by make in src
 clean_src() {
-	if [ "${SRCDIR}" ]; then
-		cd ${SRCDIR}/gnu/usr.sbin/sendmail/cf/cf && make cleandir >/dev/null
-	fi
 }
 
 # restore files from backups or remove the newly generated sum files if
