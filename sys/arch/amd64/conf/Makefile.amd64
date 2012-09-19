@@ -35,7 +35,6 @@ CMACHFLAGS=	-mcmodel=kernel -mno-red-zone -mno-sse2 -mno-sse -mno-3dnow \
 CMACHFLAGS+=	-fno-builtin-printf -fno-builtin-snprintf \
 		-fno-builtin-vsnprintf -fno-builtin-log \
 		-fno-builtin-log2 -fno-builtin-malloc -fno-builtin-free ${NOPIE_FLAGS}
->>>>>>> ad937d7... Build the kernel with -fno-pie.  Just getting Ms out of my tree; this will be
 .if ${IDENT:M-DNO_PROPOLICE}
 CMACHFLAGS+=	-fno-stack-protector
 .endif
@@ -48,7 +47,7 @@ COPTS?=		-O2
 
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS}
-LINKFLAGS=	-Ttext 0xffffffff810001e0 -e start --warn-common
+LINKFLAGS=	-Ttext 0xffffffff810001e0 -e start --warn-common -nopie
 
 .else
 
@@ -72,7 +71,7 @@ COPTS?=		-O3
 
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS} -no-integrated-as
-LINKFLAGS=	-Ttext 0xffffffff81000300 -e start --warn-common -z noexecstack
+LINKFLAGS=	-Ttext 0xffffffff81000300 -e start --warn-common -z noexecstack -nopie
 .endif
 
 .if ${IDENT:M-DDDB_STRUCT}
