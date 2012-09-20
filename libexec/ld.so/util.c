@@ -39,7 +39,7 @@
  * this would end up dragging too much code from libc here.
  */
 long __guard[8] __attribute__((section(".openbsd.randomdata")));
-#if !defined(__clang__)
+#if !defined(__clang__) || (!(__clang_major__ == 3 && __clang_minor__ < 2))
 extern
 #endif
 long __stack_chk_guard[8] __attribute__((alias("__guard")));

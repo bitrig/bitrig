@@ -40,12 +40,12 @@ extern int __sysctl(int *, u_int, void *, size_t *, void *, size_t);
 long __guard[8] __attribute__((section(".openbsd.randomdata")));
 #else
 long __guard[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+#endif
 /* gcc requires extern here and clang falls over with it */
-#if !defined(__clang__)
+#if !defined(__clang__) || (!(__clang_major__ == 3 && __clang_minor__ < 2))
 extern
 #endif
 long __stack_chk_guard[8] __attribute__((alias("__guard")));
-#endif
 
 static void __guard_setup(void) __attribute__ ((constructor));
 void __stack_smash_handler(char func[], int damaged __attribute__((unused)));
