@@ -133,8 +133,8 @@ int	ncpusfound = 1;			/* number of cpus we find */
 __volatile int start_init_exec;		/* semaphore for start_init() */
 
 #if !defined(NO_PROPOLICE)
-long		__guard[8];
-#if !defined(__clang__)
+long		__guard[8] = { 0 };
+#if !defined(__clang__) || (!(__clang_major__ == 3 && __clang_minor__ < 2))
 extern
 #endif
 long	__stack_chk_guard[8] __attribute__((alias("__guard")));
