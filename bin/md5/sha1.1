@@ -1,4 +1,4 @@
-.\"	$OpenBSD: sha1.1,v 1.29 2010/09/03 09:53:20 jmc Exp $
+.\"	$OpenBSD: sha1.1,v 1.31 2012/09/22 20:09:43 jmc Exp $
 .\"
 .\" Copyright (c) 2003, 2004, 2006 Todd C. Miller <Todd.Miller@courtesan.com>
 .\"
@@ -18,7 +18,7 @@
 .\" Agency (DARPA) and Air Force Research Laboratory, Air Force
 .\" Materiel Command, USAF, under agreement number F39502-99-1-0512.
 .\"
-.Dd $Mdocdate: February 23 2012 $
+.Dd $Mdocdate: September 22 2012 $
 .Dt SHA1 1
 .Os
 .Sh NAME
@@ -109,12 +109,32 @@ sha256, sha384 and sha512.
 .Xr sha384 1 ,
 .Xr sha512 1
 .Rs
-.%A J. Burrows
-.%T The Secure Hash Standard
-.%O FIPS PUB 180-1
+.%A X. Wang
+.%A Y. Yin
+.%A H. Yu
+.%D 2005
+.%J Crypto
+.%T Finding Collisions in the Full SHA-1
 .Re
+.Sh STANDARDS
 .Rs
-.%A D. Eastlake and P. Jones
-.%T US Secure Hash Algorithm 1
-.%O RFC 3174
+.%A J. Burrows
+.%O FIPS PUB 180-1
+.%T The Secure Hash Standard
 .Re
+.Pp
+.Rs
+.%A D. Eastlake
+.%A P. Jones
+.%D September 2001
+.%R RFC 3174
+.%T US Secure Hash Algorithm 1 (SHA1)
+.Re
+.Sh CAVEATS
+Theoretical attacks that significantly reduce the amount of time needed
+to find a collision in
+.Em SHA-1
+have been developed.
+The use of
+.Xr sha256 1
+is recommended instead.
