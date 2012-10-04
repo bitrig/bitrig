@@ -3,7 +3,7 @@
 
 extern int64_t getaavalue(void);
 
-static int64_t progvalue __attribute__((section(".openbsd.randomdata")));
+static volatile int64_t progvalue __attribute__((section(".openbsd.randomdata")));
 
 int
 main()
