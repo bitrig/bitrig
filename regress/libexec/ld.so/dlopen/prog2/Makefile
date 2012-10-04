@@ -22,7 +22,7 @@ AB_OBJDIR!=    if [ -d $(AB_DIR)/${__objdir} ]; then \
 
 
 
-CFLAGS=-I${.CURDIR}/../libab
+CPPFLAGS=-I${.CURDIR}/../libab
 LDADD=
 LDADD+=-laa
 LDADD+=-lab
