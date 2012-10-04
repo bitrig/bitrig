@@ -318,7 +318,7 @@ pctr_fn2str(u_int32_t sel)
 static void
 pctr_printvals(struct pctrst *st)
 {
-	int i, n;
+	int i, n = 0;
 
 	switch (cpu_type) {
 	case CPU_P5:
