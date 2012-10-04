@@ -21,19 +21,7 @@ void prcm_setclock(int clock, int speed);
 
 void prcm_enableclock(int bit);
 
-#define CM_FCLKEN1_CORE		0x0a00
-#define CM_FCLKEN1_CORE_MSK	0x41fffe00
-
-#define CM_FCLKEN2_CORE	0x0a04
-#define CM_FCLKEN2_CORE_MSK	0x00000000
-#define CM_FCLKEN3_CORE	0x0a08
-#define CM_FCLKEN3_CORE_MSK	0x00000007
-
-#define PRCM_REG_CORE_CLK1	0
-#define PRCM_REG_CORE_CLK1_FADDR	CM_FCLKEN1_CORE
-#define PRCM_REG_CORE_CLK1_IADDR	CM_ICLKEN1_CORE
-#define PRCM_REG_CORE_CLK1_FMASK	CM_FCLKEN1_CORE_MSK
-#define PRCM_REG_CORE_CLK1_IMASK	CM_ICLKEN1_CORE_MSK
+/* XXX - verify these definitions do these need a mapping betwen omap* */
 #define PRCM_REG_CORE_CLK1_BASE	(PRCM_REG_CORE_CLK1*32)
 #define		PRCM_CLK_EN_MMC3	(PRCM_REG_CORE_CLK1_BASE + 30)
 #define		PRCM_CLK_EN_ICR		(PRCM_REG_CORE_CLK1_BASE + 29)
@@ -62,35 +50,40 @@ void prcm_enableclock(int bit);
 #define		PRCM_CLK_EN_HSOTGUSB 	(PRCM_REG_CORE_CLK1_BASE + 4)
 #define		PRCM_CLK_EN_SDRC 	(PRCM_REG_CORE_CLK1_BASE + 1)
 
+#define PRCM_REG_CORE_CLK1	0
 #define PRCM_REG_CORE_CLK2	1
-#define PRCM_REG_CORE_CLK2_FADDR	CM_FCLKEN2_CORE
-#define PRCM_REG_CORE_CLK2_IADDR	CM_ICLKEN2_CORE
-#define PRCM_REG_CORE_CLK2_FMASK	CM_FCLKEN2_CORE_MSK
-#define PRCM_REG_CORE_CLK2_IMASK	CM_ICLKEN2_CORE_MSK
-#define PRCM_REG_CORE_CLK2_BASE	(PRCM_REG_CORE_CLK2*32)
-
 #define PRCM_REG_CORE_CLK3	2
-#define PRCM_REG_CORE_CLK3_FADDR	CM_FCLKEN3_CORE
-#define PRCM_REG_CORE_CLK3_IADDR	CM_ICLKEN3_CORE
-#define PRCM_REG_CORE_CLK3_FMASK	CM_FCLKEN3_CORE_MSK
-#define PRCM_REG_CORE_CLK3_IMASK	CM_ICLKEN3_CORE_MSK
-#define PRCM_REG_CORE_CLK3_BASE	(PRCM_REG_CORE_CLK3*32)
-
-#define		CM_CORE_EN_USBTLL	(PRCM_REG_CORE_CLK3_BASE + 2)
-#define		CM_CORE_EN_TS		(PRCM_REG_CORE_CLK3_BASE + 1)
-#define		CM_CORE_EN_CPEFUSE	(PRCM_REG_CORE_CLK3_BASE + 0)
 
 #define PRCM_REG_USBHOST	3
-#define PRCM_REG_USBHOST_FADDR	0x1400
-#define PRCM_REG_USBHOST_IADDR	0x1410
-#define PRCM_REG_USBHOST_FMASK	0x3
-#define PRCM_REG_USBHOST_IMASK	0x1
 #define PRCM_REG_USBHOST_BASE	(PRCM_REG_USBHOST*32)
-
 #define PRCM_CLK_EN_USB		(PRCM_REG_USBHOST_BASE + 0)
 
-#define PRCM_REG_MAX	4
+#define O4_MAX_MODULE_ENABLE_WAIT    1000
 
-#define		CM_CORE_EN_
+#define O4_CLKCTRL_IDLEST_MASK           0x00030000UL
+#define O4_CLKCTRL_IDLEST_ENABLED        0x00000000UL
+
+/*XXX - is this really constant across omap* */
+#define	PRCM_REG_CORE_CLK3_BASE (PRCM_REG_CORE_CLK3*32)
+#define		CM_CORE_EN_USBTLL       (PRCM_REG_CORE_CLK3_BASE + 2)
+#define		CM_CORE_EN_TS           (PRCM_REG_CORE_CLK3_BASE + 1)
+#define		CM_CORE_EN_CPEFUSE      (PRCM_REG_CORE_CLK3_BASE + 0)
 
 /* need interface for CM_AUTOIDLE */
+
+uint32_t prcm_pcnf1_get_value(uint32_t reg);
+void prcm_pcnf1_set_value(uint32_t reg, uint32_t val);
+uint32_t prcm_pcnf2_get_value(uint32_t reg);
+void prcm_pcnf2_set_value(uint32_t reg, uint32_t val);
+
+uint32_t prcm_scrm_get_value(uint32_t reg);
+void prcm_scrm_set_value(uint32_t reg, uint32_t val);
+int prcm_hsusbhost_deactivate(int);
+int prcm_hsusbhost_activate(int);
+
+#define	USBHSHOST_CLK	0
+#define	USBP1_PHY_CLK	1
+#define	USBP2_PHY_CLK	2
+#define EXT_CLK		0
+
+int prcm_hsusbhost_set_source(int, int);

@@ -21,7 +21,7 @@ struct omap_mem {
 	u_int32_t size;			/* size of range in bytes */
 };
 
-#define OMAP_DEV_NMEM 4		       /* number of memory ranges */
+#define OMAP_DEV_NMEM 6		       /* number of memory ranges */
 #define OMAP_DEV_NIRQ 4		       /* number of IRQs per device */
 
 /* Descriptor for all on-chip devices. */

@@ -84,6 +84,7 @@ struct board_dev overo_devs[] = {
 };
 
 struct board_dev pandaboard_devs[] = {
+	{ "prcm",	0 },
 	{ "ampintc",	0 },
 	{ "amptimer",	0 },
 	{ "omdog",	0 },
@@ -95,6 +96,7 @@ struct board_dev pandaboard_devs[] = {
 	{ "omgpio",	5 },
 	{ "ommmc",	0 },		/* HSMMC1 */
 	{ "com",	2 },		/* UART3 */
+	{ "ehci",	0 },
 	{ NULL,		0 }
 };
 

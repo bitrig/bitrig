@@ -65,12 +65,32 @@
 #define HSMMC1_ADDR	0x4809c000
 #define HSMMC1_IRQ	83
 
+#define PRM_ADDR        0x4a306000
+#define PRM_SIZE        0x2000
+#define CM1_ADDR        0x4a004000
+#define CM1_SIZE        0x1000
+#define CM2_ADDR        0x4a008000
+#define CM2_SIZE        0x2000
+#define SCRM_ADDR       0x4a30a000
+#define SCRM_SIZE       0x1000
+#define PCNF1_ADDR      0x4a100000
+#define PCNF1_SIZE      0x1000
+#define PCNF2_ADDR      0x4a31e000
+#define PCNF2_SIZE      0x1000
+
+#define HSUSBHOST_ADDR                          0x4a064000
+#define HSUSBHOST_SIZE                          0x800
+#define USBEHCI_ADDR                            0x4a064c00
+#define USBEHCI_SIZE                            0x400
+#define USBOHCI_ADDR                            0x4a064800
+#define USBOHCI_SIZE                            0x400
+#define USBEHCI_IRQ                                     77
+
 struct omap_dev omap4_devs[] = {
 
 	/*
 	 * Cortex-A9 Interrupt Controller
 	 */
-
 	{ .name = "ampintc",
 	  .unit = 0,
 	  .mem = {
@@ -80,9 +100,23 @@ struct omap_dev omap4_devs[] = {
 	},
 
 	/*
+	 * Power, Reset and Clock Manager
+	 */
+	{ .name = "prcm",
+	  .unit = 0,
+	  .mem = {
+	    { PRM_ADDR, PRM_SIZE },
+	    { CM1_ADDR, CM1_SIZE },
+	    { CM2_ADDR, CM2_SIZE },
+	    { SCRM_ADDR, SCRM_SIZE },
+	    { PCNF1_ADDR, PCNF1_SIZE },
+	    { PCNF2_ADDR, PCNF2_SIZE },
+	  },
+	},
+
+	/*
 	 * Cortex-A9 Global Timer
 	 */
-
 	{ .name = "amptimer",
 	  .unit = 0,
 	  .mem = { { GTIMER_ADDR, GTIMER_SIZE } },
@@ -91,7 +125,6 @@ struct omap_dev omap4_devs[] = {
 	/*
 	 * GPIO
 	 */
-
 	{ .name = "omgpio",
 	  .unit = 0,
 	  .mem = { { GPIO1_ADDR, GPIOx_SIZE } },
@@ -131,7 +164,6 @@ struct omap_dev omap4_devs[] = {
 	/*
 	 * Watchdog Timer
 	 */
-
 	{ .name = "omdog",
 	  .unit = 0,
 	  .mem = { { WD_ADDR, WD_SIZE } }
@@ -140,7 +172,6 @@ struct omap_dev omap4_devs[] = {
 	/*
 	 * UART
 	 */
-
 	{ .name = "com",
 	  .unit = 2,
 	  .mem = { { UART3_ADDR, UARTx_SIZE } },
@@ -150,11 +181,22 @@ struct omap_dev omap4_devs[] = {
 	/*
 	 * MMC
 	 */
-
 	{ .name = "ommmc",
 	  .unit = 0,
 	  .mem = { { HSMMC1_ADDR, HSMMCx_SIZE } },
 	  .irq = { HSMMC1_IRQ }
+	},
+
+	/*
+	 * USB
+	 */
+	{ .name = "ehci",
+	  .unit = 0,
+	  .mem = {
+		  { USBEHCI_ADDR, USBEHCI_SIZE },
+		  { HSUSBHOST_ADDR, HSUSBHOST_SIZE },
+	  },
+	  .irq = { USBEHCI_IRQ }
 	}
 
 };
