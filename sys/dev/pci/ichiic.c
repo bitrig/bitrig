@@ -1,4 +1,4 @@
-/*	$OpenBSD: ichiic.c,v 1.28 2012/06/29 15:17:32 jasper Exp $	*/
+/*	$OpenBSD: ichiic.c,v 1.29 2012/10/05 10:51:28 haesbaert Exp $	*/
 
 /*
  * Copyright (c) 2005, 2006 Alexander Yurchenko <grange@openbsd.org>
@@ -265,7 +265,7 @@ ichiic_i2c_exec(void *cookie, i2c_op_t op, i2c_addr_t addr,
 	else if (len == 2)
 		ctl = ICH_SMB_HC_CMD_WDATA;
 	else
-		return (1); /* shut compiler up */
+		panic("%s: unexpected len %zd", __func__, len);
 
 	if ((flags & I2C_F_POLL) == 0)
 		ctl |= ICH_SMB_HC_INTREN;
