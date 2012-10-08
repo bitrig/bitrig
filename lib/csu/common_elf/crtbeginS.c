@@ -108,8 +108,8 @@ __dtors(void)
 		(**p++)();
 	}
 }
-void _init(void);
-void _fini(void);
+void _init(void) __dso_hidden;
+void _fini(void) __dso_hidden;
 void _do_init(void) __dso_hidden __used;
 void _do_fini(void) __dso_hidden __used;
 
