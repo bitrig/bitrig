@@ -64,6 +64,11 @@ __start:				;\
 	jmp	___start		;\
 ");
 
+struct ps_strings;
+
+void __init();
+int main(int, char **, char **);
+
 void
 ___start(argc, argv, envp, cleanup, obj, ps_strings)
 	int argc;
@@ -102,8 +107,7 @@ ___start(argc, argv, envp, cleanup, obj, ps_strings)
 
 
 static char *
-_strrchr(p, ch)
-register char *p, ch;
+_strrchr(char *p, char ch)
 {
 	register char *save;
 
