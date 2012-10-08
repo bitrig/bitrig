@@ -10,10 +10,8 @@ static init_f __CTOR_LIST__[1]
 static init_f __DTOR_LIST__[1]
     __used __attribute__((section(".dtors"))) = { (void *)0 };	/* XXX */
 
-#if (__GNUC__ > 2)
 static void * __JCR_END__[]
     __used __attribute__((section(".jcr"), aligned(sizeof(void*)))) = { 0 };
-#endif
 
 MD_SECTION_EPILOGUE(".init");
 MD_SECTION_EPILOGUE(".fini");

@@ -63,13 +63,11 @@ static const char __EH_FRAME_BEGIN__[]
  * java class registration hooks
  */
 
-#if (__GNUC__ > 2)
 static void *__JCR_LIST__[] __dso_hidden
     __attribute__((section(".jcr"), aligned(sizeof(void*)))) = { };
 
 extern void _Jv_RegisterClasses (void *)
     __attribute__((weak));
-#endif
 
 /*
  * Include support for the __cxa_atexit/__cxa_finalize C++ abi for
@@ -79,11 +77,9 @@ extern void _Jv_RegisterClasses (void *)
  *     http://www.codesourcery.com/cxx-abi/abi.html#dso-dtor
  */
 
-#if (__GNUC__ > 2)
 void *__dso_handle __dso_hidden = NULL;
 
 long __guard_local __dso_hidden __attribute__((section(".openbsd.randomdata")));
-#endif
 
 const init_f __CTOR_LIST__[1] __dso_hidden
     __attribute__((section(".ctors"))) = { (void *)-1 };	/* XXX */
@@ -146,10 +142,8 @@ __do_init()
 
 		__register_frame_info(__EH_FRAME_BEGIN__, &object);
 
-#if (__GNUC__ > 2)
 		if (__JCR_LIST__[0] && _Jv_RegisterClasses)
 			_Jv_RegisterClasses(__JCR_LIST__);
-#endif
 
 		(__ctors)();
 
