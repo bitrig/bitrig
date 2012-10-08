@@ -64,7 +64,7 @@ static const char __EH_FRAME_BEGIN__[]
  */
 
 #if (__GNUC__ > 2)
-static void *__JCR_LIST__[]
+static void *__JCR_LIST__[] __dso_hidden
     __attribute__((section(".jcr"), aligned(sizeof(void*)))) = { };
 
 extern void _Jv_RegisterClasses (void *)
@@ -80,21 +80,20 @@ extern void _Jv_RegisterClasses (void *)
  */
 
 #if (__GNUC__ > 2)
-void *__dso_handle = NULL;
-__asm(".hidden  __dso_handle");
+void *__dso_handle __dso_hidden = NULL;
 
 long __guard_local __dso_hidden __attribute__((section(".openbsd.randomdata")));
 #endif
 
-static const init_f __CTOR_LIST__[1]
+const init_f __CTOR_LIST__[1] __dso_hidden
     __attribute__((section(".ctors"))) = { (void *)-1 };	/* XXX */
-static const init_f __DTOR_LIST__[1]
+const init_f __DTOR_LIST__[1] __dso_hidden
     __attribute__((section(".dtors"))) = { (void *)-1 };	/* XXX */
 
-static void	__dtors(void) __used;
-static void	__ctors(void) __used;
+void	__dtors(void) __dso_hidden __used;
+void	__ctors(void) __dso_hidden __used;
 
-static void
+void
 __ctors()
 {
 	unsigned long i = (unsigned long) __CTOR_LIST__[0];
@@ -110,7 +109,7 @@ __ctors()
 		(**p--)();
 }
 
-static void
+void
 __dtors()
 {
 	const init_f *p = __DTOR_LIST__ + 1;
@@ -121,8 +120,8 @@ __dtors()
 
 void __init(void);
 void __fini(void);
-static void __do_init(void) __used;
-static void __do_fini(void) __used;
+void __do_init(void) __dso_hidden __used;
+void __do_fini(void) __dso_hidden __used;
 
 MD_SECTION_PROLOGUE(".init", __init);
 

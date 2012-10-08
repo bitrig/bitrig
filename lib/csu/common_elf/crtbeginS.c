@@ -51,7 +51,7 @@
  */
 
 #if (__GNUC__ > 2)
-static void *__JCR_LIST__[]
+static void *__JCR_LIST__[] __dso_hidden 
     __attribute__((section(".jcr"), aligned(sizeof(void*)))) = { };
 
 extern void _Jv_RegisterClasses (void *)
@@ -67,21 +67,20 @@ extern void _Jv_RegisterClasses (void *)
  */
 
 #if (__GNUC__ > 2)
-void *__dso_handle = &__dso_handle;
-__asm(".hidden  __dso_handle");
+void *__dso_handle __dso_hidden = &__dso_handle;
 
 long __guard_local __dso_hidden __attribute__((section(".openbsd.randomdata")));
 
 extern void __cxa_finalize(void *) __attribute__((weak));
 #endif
 
-static init_f __CTOR_LIST__[1]
+init_f __CTOR_LIST__[1] __dso_hidden
     __attribute__((section(".ctors"))) = { (void *)-1 };	/* XXX */
-static init_f __DTOR_LIST__[1]
+init_f __DTOR_LIST__[1] __dso_hidden
     __attribute__((section(".dtors"))) = { (void *)-1 };	/* XXX */
 
-static void	__dtors(void) __used;
-static void	__ctors(void) __used;
+static void	__dtors(void) __dso_hidden __used;
+static void	__ctors(void) __dso_hidden __used;
 
 void
 __ctors(void)
@@ -111,8 +110,8 @@ __dtors(void)
 }
 void _init(void);
 void _fini(void);
-static void _do_init(void) __used;
-static void _do_fini(void) __used;
+void _do_init(void) __dso_hidden __used;
+void _do_fini(void) __dso_hidden __used;
 
 MD_SECTION_PROLOGUE(".init", _init);
 
