@@ -13,24 +13,7 @@ LINK	instbin					sbin/mount_ext2fs
 LINK	instbin					sbin/mount_msdos
 LINK	instbin					sbin/mount_udf
 
-COPY	${DESTDIR}/etc/firmware/kue		etc/firmware/kue
-
-COPY	${DESTDIR}/etc/firmware/bnx-b06		etc/firmware/bnx-b06
-COPY	${DESTDIR}/etc/firmware/bnx-b09		etc/firmware/bnx-b09
-COPY	${DESTDIR}/etc/firmware/bnx-rv2p	etc/firmware/bnx-rv2p
-COPY	${DESTDIR}/etc/firmware/bnx-xi-rv2p	etc/firmware/bnx-xi-rv2p
-COPY	${DESTDIR}/etc/firmware/bnx-xi90-rv2p	etc/firmware/bnx-xi90-rv2p
-
-COPY	${DESTDIR}/etc/firmware/ral-rt2561	etc/firmware/ral-rt2561
-COPY	${DESTDIR}/etc/firmware/ral-rt2561s	etc/firmware/ral-rt2561s
-COPY	${DESTDIR}/etc/firmware/ral-rt2661	etc/firmware/ral-rt2661
-COPY	${DESTDIR}/etc/firmware/ral-rt2860	etc/firmware/ral-rt2860
-COPY	${DESTDIR}/etc/firmware/rum-rt2573	etc/firmware/rum-rt2573
-COPY	${DESTDIR}/etc/firmware/run-rt2870	etc/firmware/run-rt2870
-COPY	${DESTDIR}/etc/firmware/run-rt3071	etc/firmware/run-rt3071
-
-COPY	${DESTDIR}/etc/firmware/zd1211		etc/firmware/zd1211
-COPY	${DESTDIR}/etc/firmware/zd1211b		etc/firmware/zd1211b
+COPY	${DESTDIR}/etc/firmware/*		etc/firmware/
 
 # dhcp things
 SCRIPT	${DESTDIR}/sbin/dhclient-script 	sbin/dhclient-script

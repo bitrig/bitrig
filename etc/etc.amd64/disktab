@@ -23,3 +23,9 @@ rdroot|ramdiskroot|RAM-disk root FS image:\
 	:pa#4480:oa#0:ta=4.2BSD:ba#4480:fa#512:\
 	:pb#0:ob#0:tb=swap:\
 	:pc#4480:oc#0:
+
+rdroot42|ramdiskroot|RAM-disk root FS image:\
+	:ty=ramdisk:se#512:nt#4:ns#130:nc#16:\
+	:pa#8320:oa#0:ta=4.2BSD:ba#4096:fa#512:\
+	:pb#0:ob#0:tb=swap:\
+	:pc#8320:oc#0:

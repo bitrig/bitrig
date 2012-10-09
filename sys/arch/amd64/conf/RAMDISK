@@ -29,7 +29,7 @@ option		BOOT_CONFIG	# boot-time kernel config
 option		CRYPTO		# Cryptographic framework
 
 option		RAMDISK_HOOKS
-option		MINIROOTSIZE=4480
+option		MINIROOTSIZE=8320
 
 config		bsd	root on rd0a swap on rd0b and wd0b and sd0b
 
