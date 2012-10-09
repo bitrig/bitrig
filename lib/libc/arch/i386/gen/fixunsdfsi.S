@@ -66,4 +66,4 @@ ENTRY(__fixunsdfsi)
 	orl	$0x80000000,%eax	/* restore bias */
 	ret
 
-fbiggestsigned:	.double	0r2147483648.0
+fbiggestsigned:	.double	2147483648.0
