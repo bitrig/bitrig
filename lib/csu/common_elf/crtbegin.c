@@ -90,9 +90,9 @@ static void	__dtors(void) __used;
 static void	__ctors(void) __used;
 
 void
-__dtors(void)
+__ctors(void)
 {
-	const init_f *list =__DTOR_LIST__;
+	const init_f *list =__CTOR_LIST__;
 	int i;
 
 	for (i = 0; list[i] != NULL; i++)
@@ -103,9 +103,9 @@ __dtors(void)
 }
 
 void
-__ctors(void)
+__dtors(void)
 {
-	const init_f *p = __CTOR_LIST__;
+	const init_f *p = __DTOR_LIST__;
 
 	while (*p) {
 		(**p++)();
