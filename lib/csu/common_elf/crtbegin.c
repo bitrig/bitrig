@@ -81,37 +81,36 @@ void *__dso_handle __dso_hidden = NULL;
 
 long __guard_local __dso_hidden __attribute__((section(".openbsd.randomdata")));
 
-const init_f __CTOR_LIST__[1] __dso_hidden
-    __attribute__((section(".ctors"))) = { (void *)-1 };	/* XXX */
-const init_f __DTOR_LIST__[1] __dso_hidden
-    __attribute__((section(".dtors"))) = { (void *)-1 };	/* XXX */
+init_f __CTOR_LIST__[] __dso_hidden
+    __attribute__((section(".ctors"), aligned(sizeof(init_f)))) = { };
+init_f __DTOR_LIST__[] __dso_hidden
+    __attribute__((section(".dtors"), aligned(sizeof(init_f)))) = { };
 
-void	__dtors(void) __dso_hidden __used;
-void	__ctors(void) __dso_hidden __used;
+static void	__dtors(void) __used;
+static void	__ctors(void) __used;
 
 void
-__dtors()
+__dtors(void)
 {
-	unsigned long i = (unsigned long) __DTOR_LIST__[0];
-	const init_f *p;
+	init_f *p, *list;
+	int i;
+	list =__DTOR_LIST__;
 
-	if (i == -1)  {
-		for (i = 1; __DTOR_LIST__[i] != NULL; i++)
-			;
-		i--;
-	}
-	p = __DTOR_LIST__ + i;
-	while (i--)
-		(**p--)();
+	for (i = 0; list[i] != NULL; i++)
+		;
+
+	while (i-- > 0)
+		(**list[i])();
 }
 
 void
-__ctors()
+__ctors(void)
 {
-	const init_f *p = __CTOR_LIST__ + 1;
+	init_f *p = __CTOR_LIST__;
 
-	while (*p)
+	while (*p) {
 		(**p++)();
+	}
 }
 
 void __init(void) __dso_hidden;
@@ -120,15 +119,13 @@ void __do_init(void) __dso_hidden __used;
 void __do_fini(void) __dso_hidden __used;
 
 MD_SECTION_PROLOGUE(".init", __init);
-
 MD_SECTION_PROLOGUE(".fini", __fini);
 
 MD_SECT_CALL_FUNC(".init", __do_init);
 MD_SECT_CALL_FUNC(".fini", __do_fini);
 
-
 void
-__do_init()
+__do_init(void)
 {
 	static int initialized = 0;
 	static struct dwarf2_eh_object object;
@@ -145,14 +142,14 @@ __do_init()
 		if (__JCR_LIST__[0] && _Jv_RegisterClasses)
 			_Jv_RegisterClasses(__JCR_LIST__);
 
-		(__ctors)();
+		__ctors();
 
 		atexit(__fini);
 	}
 }
 
 void
-__do_fini()
+__do_fini(void)
 {
 	static int finalized = 0;
 
@@ -161,7 +158,6 @@ __do_fini()
 		/*
 		 * Call global destructors.
 		 */
-		(__dtors)();
+		__dtors();
 	}
 }
-

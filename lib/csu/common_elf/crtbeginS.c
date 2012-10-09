@@ -38,7 +38,6 @@
  * constructors and destructors. The first element contains the
  * number of pointers in each.
  * The tables are also null-terminated.
-
  */
 #include <stdlib.h>
 
@@ -50,7 +49,7 @@
  * java class registration hooks
  */
 
-static void *__JCR_LIST__[] __dso_hidden 
+static void *__JCR_LIST__[] __dso_hidden
     __attribute__((section(".jcr"), aligned(sizeof(void*)))) = { };
 
 extern void _Jv_RegisterClasses (void *)
@@ -70,47 +69,44 @@ long __guard_local __dso_hidden __attribute__((section(".openbsd.randomdata")));
 
 extern void __cxa_finalize(void *) __attribute__((weak));
 
-init_f __CTOR_LIST__[1] __dso_hidden
-    __attribute__((section(".ctors"))) = { (void *)-1 };	/* XXX */
-init_f __DTOR_LIST__[1] __dso_hidden
-    __attribute__((section(".dtors"))) = { (void *)-1 };	/* XXX */
+init_f __CTOR_LIST__[] __dso_hidden
+    __attribute__((section(".ctors"), aligned(sizeof(init_f)))) = { };
+init_f __DTOR_LIST__[] __dso_hidden
+    __attribute__((section(".dtors"), aligned(sizeof(init_f)))) = { };
 
-static void	__dtors(void) __dso_hidden __used;
-static void	__ctors(void) __dso_hidden __used;
+static void	__dtors(void) __used;
+static void	__ctors(void) __used;
 
 void
 __dtors(void)
 {
-	unsigned long i = (unsigned long) __DTOR_LIST__[0];
-	init_f *p;
+	init_f *p, *list;
+	int i;
+	list =__DTOR_LIST__;
 
-	if (i == -1)  {
-		for (i = 1; __DTOR_LIST__[i] != NULL; i++)
-			;
-		i--;
-	}
-	p = __DTOR_LIST__ + i;
-	while (i--) {
-		(**p--)();
-	}
+	for (i = 0; list[i] != NULL; i++)
+		;
+
+	while (i-- > 0)
+		(**list[i])();
 }
 
-static void
+void
 __ctors(void)
 {
-	init_f *p = __CTOR_LIST__ + 1;
+	init_f *p = __CTOR_LIST__;
 
 	while (*p) {
 		(**p++)();
 	}
 }
+
 void _init(void) __dso_hidden;
 void _fini(void) __dso_hidden;
 void _do_init(void) __dso_hidden __used;
 void _do_fini(void) __dso_hidden __used;
 
 MD_SECTION_PROLOGUE(".init", _init);
-
 MD_SECTION_PROLOGUE(".fini", _fini);
 
 MD_SECT_CALL_FUNC(".init", _do_init);
@@ -139,6 +135,7 @@ void
 _do_fini(void)
 {
 	static int finalized = 0;
+
 	if (!finalized) {
 		finalized = 1;
 
@@ -146,7 +143,7 @@ _do_fini(void)
 			__cxa_finalize(__dso_handle);
 
 		/*
-		 * since the _init() function sets up the destructors to 
+		 * since the _init() function sets up the destructors to
 		 * be called by atexit, do not call the destructors here.
 		 */
 		__dtors();
