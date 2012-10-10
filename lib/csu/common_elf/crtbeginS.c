@@ -80,9 +80,8 @@ static void	__ctors(void) __used;
 void
 __dtors(void)
 {
-	init_f *p, *list;
+	const init_f *list =__DTOR_LIST__;
 	int i;
-	list =__DTOR_LIST__;
 
 	for (i = 0; list[i] != NULL; i++)
 		;
@@ -94,7 +93,7 @@ __dtors(void)
 void
 __ctors(void)
 {
-	init_f *p = __CTOR_LIST__;
+	const init_f *p = __CTOR_LIST__;
 
 	while (*p) {
 		(**p++)();
