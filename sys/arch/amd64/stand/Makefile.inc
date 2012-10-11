@@ -4,6 +4,7 @@ CFLAGS=${DEBUG} ${COPTS} -Os -Wall
 CFLAGS+=	-fno-stack-protector
 CFLAGS+=	-Wno-strict-aliasing -Wno-pointer-sign
 CDIAGFLAGS=
+CPPFLAGS+=	-DBOOT_CRYPTO
 CPPFLAGS+=-I${S} -I${SADIR}/libsa -I. -I${.CURDIR}
 SACFLAGS=-D_STANDALONE
 DEBUGLIBS=no

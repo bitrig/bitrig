@@ -37,6 +37,9 @@ SRCS+=	close.c closeall.c dev.c disklabel.c dkcksum.c fstat.c ioctl.c lseek.c \
 SRCS+=	ether.c netif.c rpc.c
 SRCS+=	bootp.c bootparam.c
 SRCS+=	ufs.c nfs.c tftp.c
+.if !empty(CPPFLAGS:M-DBOOT_CRYPTO)
+SRCS+=  aes_xts.c explicit_bzero.c hmac_sha1.c pbkdf2.c rijndael.c sha1.c
+.endif
 
 .PATH:	${S}/lib/libkern/arch/amd64 ${S}/lib/libkern
 SRCS+=	divdi3.c moddi3.c qdivrem.c

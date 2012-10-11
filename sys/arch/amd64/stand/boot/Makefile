@@ -33,7 +33,7 @@ SRCS+=	close.c closeall.c dev.c disklabel.c dkcksum.c fstat.c ioctl.c lseek.c \
 	open.c read.c stat.c write.c cread.c readdir.c cons.c loadfile.c \
 	elf32.c elf64.c
 SRCS+=	ufs.c
-.if defined(BOOT_CRYPTO)
+.if !empty(CPPFLAGS:M-DBOOT_CRYPTO)
 SRCS+=  aes_xts.c explicit_bzero.c hmac_sha1.c pbkdf2.c rijndael.c sha1.c
 .endif
 
@@ -58,9 +58,6 @@ NOPROG=
 
 CC=gcc
 
-.if defined(BOOT_CRYPTO)
-CPPFLAGS+=-DBOOT_CRYPTO
-.endif
 CPPFLAGS+=-DBOOTMAGIC=$(BOOTMAGIC) ${DEBUGFLAGS} -DLINKADDR=${LINKADDR}
 CPPFLAGS+=-DSLOW -DSMALL -DNOBYFOUR -DNO_GZIP -DDYNAMIC_CRC_TABLE
 CPPFLAGS+=-DHEAP_LIMIT=${HEAP_LIMIT} -I${S}/stand/boot #-DCOMPAT_UFS

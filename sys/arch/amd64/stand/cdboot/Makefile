@@ -33,6 +33,9 @@ SRCS+=	close.c closeall.c dev.c disklabel.c dkcksum.c fstat.c lseek.c \
 	open.c read.c stat.c cread.c readdir.c cons.c loadfile.c \
 	elf32.c elf64.c
 SRCS+=	ufs.c cd9660.c
+.if !empty(CPPFLAGS:M-DBOOT_CRYPTO)
+SRCS+=  aes_xts.c explicit_bzero.c hmac_sha1.c pbkdf2.c rijndael.c sha1.c
+.endif
 
 .PATH:	${S}/lib/libkern/arch/i386 ${S}/lib/libkern
 SRCS+=	divdi3.c moddi3.c qdivrem.c
