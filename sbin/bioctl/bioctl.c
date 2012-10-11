@@ -71,7 +71,7 @@ void			bio_setblink(char *, char *, int);
 void			bio_blink(char *, int, int);
 struct sr_aoe_config 	*create_aoe(u_int16_t, char *);
 void			bio_createraid(u_int16_t, char *, char *);
-void			bio_deleteraid(char *);
+void			bio_deleteraid(char *, uint32_t);
 void			bio_changepass(char *);
 u_int32_t		bio_createflags(char *);
 char			*bio_vis(char *);
@@ -103,11 +103,12 @@ main(int argc, char *argv[])
 	int			ss_func = 0;
 	u_int16_t		cr_level = 0;
 	int			biodev = 0;
+	uint32_t		delete_flags = 0;
 
 	if (argc < 2)
 		usage();
 
-	while ((ch = getopt(argc, argv, "a:b:C:c:dH:hik:l:O:Pp:qr:R:svu:")) !=
+	while ((ch = getopt(argc, argv, "a:b:C:c:deH:hik:l:O:Pp:qr:R:svu:")) !=
 	    -1) {
 		switch (ch) {
 		case 'a': /* alarm */
@@ -134,6 +135,11 @@ main(int argc, char *argv[])
 		case 'd':
 			/* delete volume */
 			func |= BIOC_DELETERAID;
+			break;
+		case 'e':
+			/* eject volume */
+			func |= BIOC_DELETERAID;
+			delete_flags = BIOC_SDDISASSEMBLE;
 			break;
 		case 'u': /* unblink */
 			func |= BIOC_BLINK;
@@ -241,7 +247,7 @@ main(int argc, char *argv[])
 	} else if (func == BIOC_SETSTATE) {
 		bio_setstate(al_arg, ss_func, argv[0]);
 	} else if (func == BIOC_DELETERAID && !biodev) {
-		bio_deleteraid(devicename);
+		bio_deleteraid(devicename, delete_flags);
 	} else if (func & BIOC_CREATERAID || func & BIOC_DEVLIST) {
 		if (!(func & BIOC_CREATERAID))
 			errx(1, "need -c parameter");
@@ -267,7 +273,7 @@ usage(void)
 		"[-R device | channel:target[.lun]]\n"
 		"\t[-u channel:target[.lun]] "
 		"device\n"
-		"       %s [-dhiPqsv] "
+		"       %s [-dehiPqsv] "
 		"[-C flag[,flag,...]] [-c raidlevel] [-k keydisk]\n"
 		"\t[-l special[,special,...]] "
 		"[-O device | channel:target[.lun]]\n"
@@ -1053,7 +1059,7 @@ bio_createflags(char *lst)
 }
 
 void
-bio_deleteraid(char *dev)
+bio_deleteraid(char *dev, uint32_t delete_flags)
 {
 	struct bioc_deleteraid	bd;
 	memset(&bd, 0, sizeof(bd));
@@ -1061,6 +1067,7 @@ bio_deleteraid(char *dev)
 	bd.bd_bio.bio_cookie = bio_cookie;
 	/* XXX make this a dev_t instead of a string */
 	strlcpy(bd.bd_dev, dev, sizeof bd.bd_dev);
+	bd.bd_flags = delete_flags;
 	if (ioctl(devh, BIOCDELETERAID, &bd))
 		err(1, "BIOCDELETERAID");
 

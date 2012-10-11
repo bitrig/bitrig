@@ -217,6 +217,7 @@ struct bioc_deleteraid {
 	struct bio	bd_bio;
 	u_int32_t	bd_flags;
 #define BIOC_SDCLEARMETA	0x01	/* clear metadata region */
+#define BIOC_SDDISASSEMBLE	0x02	/* don't alter flags on shutdown */
 	char		bd_dev[16];	/* device */
 };
 

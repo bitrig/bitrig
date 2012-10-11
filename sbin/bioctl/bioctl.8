@@ -43,7 +43,7 @@
 .Pp
 .Nm bioctl
 .Bk -words
-.Op Fl dhiPqsv
+.Op Fl dehiPqsv
 .Op Fl C Ar flag[,flag,...]
 .Op Fl c Ar raidlevel
 .Op Fl k Ar keydisk
@@ -215,6 +215,10 @@ RAID 4 and RAID 5 require at least three devices,
 and the CRYPTO discipline requires exactly one.
 .It Fl d
 Delete volume specified by device.
+.It Fl e
+Eject volume specified by device.
+This prevents any flags to be rewritten during the disassembly process.
+Effectively this results in a non-destructive shutdown of a volume.
 .It Fl k Ar keydisk
 Use special device
 .Ar keydisk

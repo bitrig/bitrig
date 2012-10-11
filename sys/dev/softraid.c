@@ -3384,7 +3384,10 @@ sr_ioctl_deleteraid(struct sr_softc *sc, struct bioc_deleteraid *dr)
 	}
 
 	sd->sd_deleted = 1;
-	sd->sd_meta->ssdi.ssd_vol_flags = BIOC_SCNOAUTOASSEMBLE;
+	if (dr->bd_flags & BIOC_SDDISASSEMBLE)
+		/* do not change flags during shutdown */;
+	else
+		sd->sd_meta->ssdi.ssd_vol_flags = BIOC_SCNOAUTOASSEMBLE;
 	sr_discipline_shutdown(sd, 1);
 
 	rv = 0;
