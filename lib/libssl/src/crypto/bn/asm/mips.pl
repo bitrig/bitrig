@@ -140,10 +140,10 @@ $code.=<<___;
 	.set	reorder
 	li	$minus4,-4
 	and	$ta0,$a2,$minus4
+	$LD	$t0,0($a1)
 	beqz	$ta0,.L_bn_mul_add_words_tail
 
 .L_bn_mul_add_words_loop:
-	$LD	$t0,0($a1)
 	$MULTU	$t0,$a3
 	$LD	$t1,0($a0)
 	$LD	$t2,$BNSZ($a1)
@@ -200,9 +200,10 @@ $code.=<<___;
 	$ADDU	$v0,$ta2
 	sltu	$at,$ta3,$at
 	$ST	$ta3,-$BNSZ($a0)
-	.set	noreorder
-	bgtz	$ta0,.L_bn_mul_add_words_loop
 	$ADDU	$v0,$at
+	.set	noreorder
+	bgtzl	$ta0,.L_bn_mul_add_words_loop
+	$LD	$t0,0($a1)
 
 	beqz	$a2,.L_bn_mul_add_words_return
 	nop
@@ -299,10 +300,10 @@ $code.=<<___;
 	.set	reorder
 	li	$minus4,-4
 	and	$ta0,$a2,$minus4
+	$LD	$t0,0($a1)
 	beqz	$ta0,.L_bn_mul_words_tail
 
 .L_bn_mul_words_loop:
-	$LD	$t0,0($a1)
 	$MULTU	$t0,$a3
 	$LD	$t2,$BNSZ($a1)
 	$LD	$ta0,2*$BNSZ($a1)
@@ -340,9 +341,10 @@ $code.=<<___;
 	$ADDU	$v0,$at
 	sltu	$ta3,$v0,$at
 	$ST	$v0,-$BNSZ($a0)
-	.set	noreorder
-	bgtz	$ta0,.L_bn_mul_words_loop
 	$ADDU	$v0,$ta3,$ta2
+	.set	noreorder
+	bgtzl	$ta0,.L_bn_mul_words_loop
+	$LD	$t0,0($a1)
 
 	beqz	$a2,.L_bn_mul_words_return
 	nop
@@ -427,10 +429,10 @@ $code.=<<___;
 	.set	reorder
 	li	$minus4,-4
 	and	$ta0,$a2,$minus4
+	$LD	$t0,0($a1)
 	beqz	$ta0,.L_bn_sqr_words_tail
 
 .L_bn_sqr_words_loop:
-	$LD	$t0,0($a1)
 	$MULTU	$t0,$t0
 	$LD	$t2,$BNSZ($a1)
 	$LD	$ta0,2*$BNSZ($a1)
@@ -461,10 +463,11 @@ $code.=<<___;
 	mflo	$ta3
 	mfhi	$ta2
 	$ST	$ta3,-2*$BNSZ($a0)
+	$ST	$ta2,-$BNSZ($a0)
 
 	.set	noreorder
-	bgtz	$ta0,.L_bn_sqr_words_loop
-	$ST	$ta2,-$BNSZ($a0)
+	bgtzl	$ta0,.L_bn_sqr_words_loop
+	$LD	$t0,0($a1)
 
 	beqz	$a2,.L_bn_sqr_words_return
 	nop
@@ -544,10 +547,10 @@ $code.=<<___;
 	.set	reorder
 	li	$minus4,-4
 	and	$at,$a3,$minus4
+	$LD	$t0,0($a1)
 	beqz	$at,.L_bn_add_words_tail
 
 .L_bn_add_words_loop:
-	$LD	$t0,0($a1)
 	$LD	$ta0,0($a2)
 	subu	$a3,4
 	$LD	$t1,$BNSZ($a1)
@@ -586,10 +589,11 @@ $code.=<<___;
 	$ADDU	$t3,$ta3,$v0
 	sltu	$v0,$t3,$ta3
 	$ST	$t3,-$BNSZ($a0)
+	$ADDU	$v0,$t9
 	
 	.set	noreorder
-	bgtz	$at,.L_bn_add_words_loop
-	$ADDU	$v0,$t9
+	bgtzl	$at,.L_bn_add_words_loop
+	$LD	$t0,0($a1)
 
 	beqz	$a3,.L_bn_add_words_return
 	nop
@@ -675,10 +679,10 @@ $code.=<<___;
 	.set	reorder
 	li	$minus4,-4
 	and	$at,$a3,$minus4
+	$LD	$t0,0($a1)
 	beqz	$at,.L_bn_sub_words_tail
 
 .L_bn_sub_words_loop:
-	$LD	$t0,0($a1)
 	$LD	$ta0,0($a2)
 	subu	$a3,4
 	$LD	$t1,$BNSZ($a1)
@@ -718,10 +722,11 @@ $code.=<<___;
 	$SUBU	$t3,$ta3,$v0
 	sgtu	$v0,$t3,$ta3
 	$ST	$t3,-$BNSZ($a0)
+	$ADDU	$v0,$t9
 
 	.set	noreorder
-	bgtz	$at,.L_bn_sub_words_loop
-	$ADDU	$v0,$t9
+	bgtzl	$at,.L_bn_sub_words_loop
+	$LD	$t0,0($a1)
 
 	beqz	$a3,.L_bn_sub_words_return
 	nop
@@ -814,7 +819,7 @@ ___
 $code.=<<___;
 	.set	reorder
 	move	$ta3,$ra
-	bal	bn_div_words_internal
+	bal	bn_div_words
 	move	$ra,$ta3
 	$MULTU	$ta2,$v0
 	$LD	$t2,-2*$BNSZ($a3)
@@ -835,9 +840,8 @@ $code.=<<___;
 	sltu	$ta0,$a1,$a2
 	or	$t8,$ta0
 	.set	noreorder
-	beqz	$at,.L_bn_div_3_words_inner_loop
+	beqzl	$at,.L_bn_div_3_words_inner_loop
 	$SUBU	$v0,1
-	$ADDU	$v0,1
 	.set	reorder
 .L_bn_div_3_words_inner_loop_done:
 	.set	noreorder
@@ -898,8 +902,7 @@ $code.=<<___;
 	and	$t2,$a0
 	$SRL	$at,$a1,$t1
 	.set	noreorder
-	beqz	$t2,.+12
-	nop
+	bnezl	$t2,.+8
 	break	6		# signal overflow
 	.set	reorder
 	$SLL	$a0,$t9
@@ -914,8 +917,7 @@ $code.=<<___;
 	$SRL	$DH,$a2,4*$BNSZ	# bits
 	sgeu	$at,$a0,$a2
 	.set	noreorder
-	beqz	$at,.+12
-	nop
+	bnezl	$at,.+8
 	$SUBU	$a0,$a2
 	.set	reorder
 
