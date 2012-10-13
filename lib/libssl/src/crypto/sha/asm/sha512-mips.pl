@@ -351,7 +351,7 @@ $code.=<<___;
 	$ST	$G,6*$SZ($ctx)
 	$ST	$H,7*$SZ($ctx)
 
-	bne	$inp,@X[15],.Loop
+	bnel	$inp,@X[15],.Loop
 	$PTR_SUB $Ktbl,`($rounds-16)*$SZ`	# rewind $Ktbl
 
 	$REG_L	$ra,$FRAMESIZE-1*$SZREG($sp)
