@@ -249,7 +249,7 @@ bufq_done(struct bufq *bq, struct buf *bp)
 	if (bq->bufq_stop && bq->bufq_outstanding == 0)
 		wakeup(&bq->bufq_outstanding);
 	if (bq->bufq_waiting && bq->bufq_outstanding < bq->bufq_low)
-		wakeup_one(&bq->bufq_waiting);
+		wakeup(&bq->bufq_waiting);
 	mtx_leave(&bq->bufq_mtx);
 	bp->b_bq = NULL;
 }
