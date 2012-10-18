@@ -98,4 +98,49 @@ ${CROSS_TARGETS}:
 	build regression-tests includes beforeinstall afterinstall \
 	all depend
 
+.if !defined(SNAPDIR)
+presnap:
+	echo "SNAPDIR must defined"
+snap:
+	echo "SNAPDIR must defined"
+	exit 1
+.else
+ARCH!= uname -m
+SNAPROOTDIR=${SNAPDIR}/${ARCH}/root
+.if defined(SNAPDATE)
+SNAPRELDIR!= echo ${SNAPDIR}/${ARCH}/release.$$(date "+%y%m%d%H%M")
+.else
+SNAPRELDIR!= echo ${SNAPDIR}/${ARCH}/release
+.endif
+SNAPLOGFILE != echo ${SNAPDIR}/buildlog.${ARCH}.$$(date "+%y%m%d%H%M")
+snapinfo:
+	@echo rootdir = ${SNAPROOTDIR}
+	@echo reldir = ${SNAPRELDIR}
+	@echo logfile = ${SNAPLOGFILE}
+
+buildworld:
+	rm -rf /usr/obj/*
+	make obj >/dev/null
+	cd ${.CURDIR} etc && DESTDIR=/ make distrib-dirs
+	date > ${SNAPLOGFILE}
+	make build 2>&1 | tee -a ${SNAPLOGFILE}
+	date > ${SNAPLOGFILE}
+
+snap:  
+	rm -rf /usr/obj/*
+	make obj >/dev/null
+	cd ${.CURDIR} etc && DESTDIR=/ make distrib-dirs
+	date > ${SNAPLOGFILE}
+	make build 2>&1 | tee -a ${SNAPLOGFILE}
+	date > ${SNAPLOGFILE}
+	rm -rf ${SNAPROOTDIR}
+	mkdir -p ${SNAPROOTDIR}
+	mkdir -p ${SNAPRELDIR}
+
+	cd ${.CURDIR} etc && DESTDIR=${SNAPROOTDIR} RELEASEDIR=${SNAPRELDIR} make release 2>&1 | tee ${SNAPLOGFILE}
+	cd ${.CURDIR} distrib/sets && DESTDIR=${SNAPROOTDIR} sh checkflist | tee -a ${SNAPLOGFILE}
+.endif
+
+
+
 .include <bsd.subdir.mk>
