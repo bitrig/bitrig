@@ -601,8 +601,7 @@ xl_iff_90x(struct xl_softc *sc)
 	 */
 	rxfilt |= XL_RXFILTER_BROADCAST | XL_RXFILTER_INDIVIDUAL;
 
-	if (ifp->if_flags & IFF_PROMISC || ac->ac_multirangecnt > 0 ||
-	    ac->ac_multicnt > 0) {
+	if (ifp->if_flags & IFF_PROMISC || ac->ac_multicnt > 0) {
 		ifp->if_flags |= IFF_ALLMULTI;
 		if (ifp->if_flags & IFF_PROMISC)
 			rxfilt |= XL_RXFILTER_ALLFRAMES;
