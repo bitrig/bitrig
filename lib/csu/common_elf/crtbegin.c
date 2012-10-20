@@ -81,9 +81,9 @@ void *__dso_handle __dso_hidden = NULL;
 
 long __guard_local __dso_hidden __attribute__((section(".openbsd.randomdata")));
 
-init_f __CTOR_LIST__[] __dso_hidden
+static init_f __CTOR_LIST__[] __used
     __attribute__((section(".ctors"), aligned(sizeof(init_f)))) = { };
-init_f __DTOR_LIST__[] __dso_hidden
+static init_f __DTOR_LIST__[] __used
     __attribute__((section(".dtors"), aligned(sizeof(init_f)))) = { };
 
 static void	__dtors(void) __used;
@@ -92,7 +92,7 @@ static void	__ctors(void) __used;
 void
 __ctors(void)
 {
-	const init_f *list =__CTOR_LIST__;
+	const init_f *list = __CTOR_LIST__;
 	int i;
 
 	for (i = 0; list[i] != NULL; i++)
