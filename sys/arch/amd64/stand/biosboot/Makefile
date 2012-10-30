@@ -1,7 +1,5 @@
 #	$OpenBSD: Makefile,v 1.6 2012/09/25 09:01:03 pascal Exp $
 
-.include <bsd.own.mk>
-
 MAN=	biosboot.8
 
 .if ${MACHINE} == "amd64"
@@ -20,9 +18,6 @@ ${PROG}: $(OBJS) $(DPADD)
 
 CPPFLAGS+=-DLOADADDR=$(LOADADDR) -DLINKADDR=$(LINKADDR) -DBOOTMAGIC=$(BOOTMAGIC)
 CPPFLAGS+=${DEBUGFLAGS}
-.if ${COMPILER_VERSION:L} != "gcc4"
-AFLAGS+=-no-integrated-as
-.endif
 CFLAGS+=-fno-pie
 AFLAGS+=-m32 # -Wa,-a
 AFLAGS+=-fno-pie

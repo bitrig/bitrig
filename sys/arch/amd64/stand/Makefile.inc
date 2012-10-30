@@ -1,10 +1,9 @@
 #	$OpenBSD: Makefile.inc,v 1.8 2012/09/12 09:19:54 haesbaert Exp $
 
+CC=gcc
 CFLAGS=${DEBUG} ${COPTS} -Os -Wall
 CFLAGS+=	-fno-stack-protector
-CFLAGS+=	-Wno-strict-aliasing -Wno-pointer-sign
 CDIAGFLAGS=
-CPPFLAGS+=	-DBOOT_CRYPTO
 CPPFLAGS+=-I${S} -I${SADIR}/libsa -I. -I${.CURDIR}
 SACFLAGS=-D_STANDALONE
 DEBUGLIBS=no

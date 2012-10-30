@@ -240,7 +240,7 @@ write_bootblocks(int devfd, struct disklabel *dl)
 	if (dl->d_type != DTYPE_FLOPPY) {
 		start = findopenbsd(devfd, dl);
 		if (start == (u_int)-1)
- 			errx(1, "no Bitrig partition");
+			errx(1, "no Bitrig partition");
 	}
 
 	if (verbose)

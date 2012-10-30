@@ -1,12 +1,8 @@
 #	$OpenBSD: Makefile,v 1.6 2012/09/25 09:01:03 pascal Exp $
 #
-.include <bsd.own.mk>
 
 PROG=	mbr
 SRCS=	mbr.S
-.if ${COMPILER_VERSION:L} != "gcc4"
-AFLAGS+=-no-integrated-as
-.endif
 AFLAGS+=-m32
 AFLAGS+=-I${.CURDIR} -I${.CURDIR}/../../.. #-Wa,-a
 AFLAGS+=-fno-pie
