@@ -68,5 +68,5 @@ CPPFLAGS+=-DHEAP_LIMIT=${HEAP_LIMIT} -I${S}/stand/boot #-DCOMPAT_UFS
 CFLAGS+=-m32
 CFLAGS+=$(SACFLAGS) -D__INTERNAL_LIBSA_CREAD -fno-pie
 # AFLAGS+=-Wa,-a
-AFLAGS+=-m32 # -Wa,-R
-AFLAGS+=-fno-pie
+AFLAGS+=-m32 -Wa,--32
+AFLAGS+=-fno-pie -no-integrated-as

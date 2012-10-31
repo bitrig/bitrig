@@ -3,9 +3,9 @@
 
 PROG=	mbr
 SRCS=	mbr.S
-AFLAGS+=-m32
+AFLAGS+=-m32 -Wa,--32
 AFLAGS+=-I${.CURDIR} -I${.CURDIR}/../../.. #-Wa,-a
-AFLAGS+=-fno-pie
+AFLAGS+=-fno-pie -no-integrated-as
 LD=ld
 LDFLAGS=-nostdlib -Ttext 0 -x -N -s -Bstatic -e start -nopie 
 LDFLAGS+=-melf_i386 -L/usr/libdata 

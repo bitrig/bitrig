@@ -14,7 +14,8 @@ SOFTRAID=yes
 .endif
 
 PROG?=	boot
-SRCS=	srt0.S conf.c
+#SRCS=	srt0.S conf.c
+SRCS=	conf.c
 LD?=	ld
 SIZE?=	size
 LDFLAGS+=-nostdlib -Bstatic -Ttext $(LINKADDR) -N -x -nopie
@@ -23,8 +24,11 @@ LDFLAGS+=-melf_i386 -L/usr/libdata
 .PATH:	${SADIR}/libsa
 # i386 stuff (so, it will possibly load in the same 64k)
 SRCS+=	machdep.c dev_i386.c exec_i386.c cmd_i386.c
-SRCS+=	gidt.S alloca.S biosdev.c bioscons.c gateA20.c \
+#SRCS+=	gidt.S alloca.S biosdev.c bioscons.c gateA20.c \
+
+SRCS+=	biosdev.c bioscons.c gateA20.c \
 	memprobe.c diskprobe.c time.c ## biosprobe.c
+SRCS+=	gidt.S alloca.S srt0.S
 .if defined(SOFTRAID)
 SRCS+=	softraid.c
 .endif
@@ -74,6 +78,6 @@ CPPFLAGS+=-DBOOTMAGIC=$(BOOTMAGIC) ${DEBUGFLAGS} -DLINKADDR=${LINKADDR}
 CPPFLAGS+=-DSLOW -DSMALL -DNOBYFOUR -DNO_GZIP -DDYNAMIC_CRC_TABLE
 CPPFLAGS+=-DHEAP_LIMIT=${HEAP_LIMIT} -I${S}/stand/boot #-DCOMPAT_UFS
 CFLAGS+=-m32 $(SACFLAGS) -D__INTERNAL_LIBSA_CREAD -fno-pie
-AFLAGS+=-m32 # -Wa,-R
+AFLAGS+=-m32 -Wa,--32 -no-integrated-as
 # AFLAGS+=-Wa,-a
 AFLAGS+=-fno-pie

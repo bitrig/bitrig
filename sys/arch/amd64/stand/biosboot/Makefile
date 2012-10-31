@@ -19,8 +19,8 @@ ${PROG}: $(OBJS) $(DPADD)
 CPPFLAGS+=-DLOADADDR=$(LOADADDR) -DLINKADDR=$(LINKADDR) -DBOOTMAGIC=$(BOOTMAGIC)
 CPPFLAGS+=${DEBUGFLAGS}
 CFLAGS+=-fno-pie
-AFLAGS+=-m32 # -Wa,-a
-AFLAGS+=-fno-pie
+AFLAGS+=-m32 -Wa,--32
+AFLAGS+=-fno-pie -no-integrated-as
 .else
 NOPROG=
 .endif

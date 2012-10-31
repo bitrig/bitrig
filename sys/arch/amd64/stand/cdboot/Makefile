@@ -70,5 +70,5 @@ CFLAGS+=${SACFLAGS} -D__INTERNAL_LIBSA_CREAD
 CFLAGS+=-DOSREV=\"${OSREV}\" -DMACHINE=\"${MACHINE}\"
 CFLAGS+=-DKERNEL=\"/${OSREV}/${MACHINE}/bsd.rd\"
 CFLAGS+=-fno-pie
-AFLAGS+=-m32
-AFLAGS+=-fno-pie
+AFLAGS+=-m32 -Wa,--32
+AFLAGS+=-fno-pie -no-integrated-as
