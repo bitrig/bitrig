@@ -1957,7 +1957,7 @@ void
 pms_proc_elantech_v1(struct pms_softc *sc)
 {
 	struct elantech_softc *elantech = sc->elantech;
-	u_int buttons;
+	u_int buttons = 0;
 	int x, y, w, z;
 
 	if (elantech->flags & ELANTECH_F_HW_V1_OLD)
