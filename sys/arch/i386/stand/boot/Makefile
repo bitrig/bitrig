@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.44 2012/10/13 14:10:35 jsing Exp $
+#	$OpenBSD: Makefile,v 1.45 2012/10/31 13:57:20 jsing Exp $
 
 .include "${.CURDIR}/../Makefile.inc"
 
@@ -10,7 +10,13 @@ MLINKS=	boot.8 boot.conf.5
 S	=${.CURDIR}/../../../..
 SADIR=	${.CURDIR}/..
 
-PROG=	boot
+.if !empty(CFLAGS:M-DFDBOOT)
+SOFTRAID?=no
+.else
+SOFTRAID?=yes
+.endif
+
+PROG?=	boot
 LD?=	ld
 SIZE?=	size
 LDFLAGS+=-nostdlib -Bstatic -nopie
@@ -32,6 +38,9 @@ SRCS+=	alloca.S debug_i386.S gidt.S
 SRCS+=	apmprobe.c bioscons.c biosdev.c cmd_i386.c debug.c dev_i386.c \
 	diskprobe.c exec_i386.c gateA20.c machdep.c memprobe.c pciprobe.c \
 	ps2probe.c time.c
+.if ${SOFTRAID:L} == "yes"
+SRCS+=	softraid.c
+.endif
 
 .PATH:	${S}/lib/libsa
 SRCS+=	alloc.c cread.c ctime.c exit.c memcmp.c memcpy.c memset.c printf.c \
@@ -41,6 +50,9 @@ SRCS+=	close.c closeall.c cons.c dev.c disklabel.c dkcksum.c fstat.c lseek.c \
 	open.c read.c readdir.c stat.c
 SRCS+=	elf32.c elf64.c loadfile.c
 SRCS+=	ufs.c
+.if ${SOFTRAID:L} == "yes"
+SRCS+=	aes_xts.c explicit_bzero.c hmac_sha1.c pbkdf2.c rijndael.c sha1.c
+.endif
 
 .PATH:	${S}/lib/libkern
 SRCS+=	strlcpy.c
@@ -66,6 +78,9 @@ NOPROG=
 
 .include <bsd.prog.mk>
 
+.if ${SOFTRAID:L} == "yes"
+CPPFLAGS+=-DSOFTRAID
+.endif
 CPPFLAGS+=-DBOOTMAGIC=$(BOOTMAGIC) ${DEBUGFLAGS} -DLINKADDR=${LINKADDR}
 CPPFLAGS+=-DSLOW -DSMALL -DNOBYFOUR -DNO_GZIP -DDYNAMIC_CRC_TABLE
 CPPFLAGS+=-DHEAP_LIMIT=${HEAP_LIMIT} -I${S}/stand/boot #-DCOMPAT_UFS
