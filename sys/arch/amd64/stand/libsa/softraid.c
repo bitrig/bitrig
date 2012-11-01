@@ -383,7 +383,7 @@ sr_getdisklabel(struct sr_boot_volume *bv, struct disklabel *label)
 	buf = alloca(DEV_BSIZE);
 	sr_strategy(bv, F_READ, start, sizeof(struct disklabel), buf, NULL);
 
-#if BIOS_DEBUG
+#ifdef BIOS_DEBUG
 	printf("sr_getdisklabel: magic %lx\n",
 	    ((struct disklabel *)buf)->d_magic);
 	for (i = 0; i < MAXPARTITIONS; i++)
