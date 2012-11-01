@@ -175,7 +175,6 @@
 ./sbin/chown
 ./sbin/clri
 ./sbin/dhclient
-./sbin/dhclient-script
 ./sbin/disklabel
 ./sbin/dmesg
 ./sbin/dump
@@ -1140,6 +1139,8 @@
 ./usr/include/dev/pci/if_nfereg.h
 ./usr/include/dev/pci/if_nfevar.h
 ./usr/include/dev/pci/if_ngereg.h
+./usr/include/dev/pci/if_ocereg.h
+./usr/include/dev/pci/if_ocevar.h
 ./usr/include/dev/pci/if_san_common.h
 ./usr/include/dev/pci/if_san_front_end.h
 ./usr/include/dev/pci/if_san_obsd.h
@@ -1177,8 +1178,6 @@
 ./usr/include/dev/pci/noctvar.h
 ./usr/include/dev/pci/nofnreg.h
 ./usr/include/dev/pci/nofnvar.h
-./usr/include/dev/pci/ocereg.h
-./usr/include/dev/pci/ocevar.h
 ./usr/include/dev/pci/pccbbreg.h
 ./usr/include/dev/pci/pccbbvar.h
 ./usr/include/dev/pci/pcidevs.h
@@ -1667,6 +1666,7 @@
 ./usr/include/openssl/buffer.h
 ./usr/include/openssl/camellia.h
 ./usr/include/openssl/cast.h
+./usr/include/openssl/cmac.h
 ./usr/include/openssl/cms.h
 ./usr/include/openssl/comp.h
 ./usr/include/openssl/conf.h
@@ -1717,6 +1717,8 @@
 ./usr/include/openssl/safestack.h
 ./usr/include/openssl/seed.h
 ./usr/include/openssl/sha.h
+./usr/include/openssl/srp.h
+./usr/include/openssl/srtp.h
 ./usr/include/openssl/ssl.h
 ./usr/include/openssl/ssl2.h
 ./usr/include/openssl/ssl23.h
@@ -2068,7 +2070,7 @@
 ./usr/lib/libcompat.a
 ./usr/lib/libcompat_p.a
 ./usr/lib/libcrypto.a
-./usr/lib/libcrypto.so.20.1
+./usr/lib/libcrypto.so.21.0
 ./usr/lib/libcrypto_p.a
 ./usr/lib/libcurses.a
 ./usr/lib/libcurses.so.12.1
@@ -2163,7 +2165,7 @@
 ./usr/lib/libsqlite3.so.20.0
 ./usr/lib/libsqlite3_p.a
 ./usr/lib/libssl.a
-./usr/lib/libssl.so.18.0
+./usr/lib/libssl.so.19.0
 ./usr/lib/libssl_p.a
 ./usr/lib/libtermcap.a
 ./usr/lib/libtermcap.so.12.1
@@ -11001,7 +11003,6 @@
 ./usr/share/man/man8/cryptoinit.8
 ./usr/share/man/man8/daily.8
 ./usr/share/man/man8/dev_mkdb.8
-./usr/share/man/man8/dhclient-script.8
 ./usr/share/man/man8/dhclient.8
 ./usr/share/man/man8/dhcp.8
 ./usr/share/man/man8/dhcpd.8
