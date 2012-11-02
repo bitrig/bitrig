@@ -360,7 +360,7 @@ disksum(int blk)
 	int st, reprobe = 0;
 	char *buf;
 
-	buf = alloca(DEV_BSIZE);
+	buf = __builtin_alloca(DEV_BSIZE);
 	for (dip = TAILQ_FIRST(&disklist); dip; dip = TAILQ_NEXT(dip, list)) {
 		bios_diskinfo_t *bdi = &dip->bios_info;
 

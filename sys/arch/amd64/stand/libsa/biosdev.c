@@ -272,7 +272,7 @@ biosd_io(int rw, bios_diskinfo_t *bd, u_int off, int nsect, void *buf)
 		 * XXX we believe that all the io is buffered
 		 * by fs routines, so no big reads anyway
 		 */
-		bb = alloca(bbsize);
+		bb = __builtin_alloca(bbsize);
 		if (rw != F_READ)
 			bcopy(buf, bb, bbsize);
 	} else
@@ -437,7 +437,7 @@ bios_getdisklabel(bios_diskinfo_t *bd, struct disklabel *label)
 	start = LABELSECTOR + start;
 
 	/* Load BSD disklabel */
-	buf = alloca(DEV_BSIZE);
+	buf = __builtin_alloca(DEV_BSIZE);
 #ifdef BIOS_DEBUG
 	if (debug)
 		printf("loading disklabel @ %u\n", start);

@@ -380,7 +380,7 @@ sr_getdisklabel(struct sr_boot_volume *bv, struct disklabel *label)
 	start += LABELSECTOR;
 
 	/* Read the disklabel. */
-	buf = alloca(DEV_BSIZE);
+	buf = __builtin_alloca(DEV_BSIZE);
 	sr_strategy(bv, F_READ, start, sizeof(struct disklabel), buf, NULL);
 
 #ifdef BIOS_DEBUG
