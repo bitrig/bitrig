@@ -1,4 +1,4 @@
-/*	$OpenBSD: cpu.c,v 1.47 2012/10/31 03:30:22 jsg Exp $	*/
+/*	$OpenBSD: cpu.c,v 1.48 2012/11/02 15:10:28 jsg Exp $	*/
 /* $NetBSD: cpu.c,v 1.1.2.7 2000/06/26 02:04:05 sommerfeld Exp $ */
 
 /*-
