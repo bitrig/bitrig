@@ -1,4 +1,4 @@
-/* $OpenBSD: pms.c,v 1.33 2012/11/02 12:07:57 stsp Exp $ */
+/* $OpenBSD: pms.c,v 1.34 2012/11/03 13:43:57 stsp Exp $ */
 /* $NetBSD: psm.c,v 1.11 2000/06/05 22:20:57 sommerfeld Exp $ */
 
 /*-
@@ -271,7 +271,7 @@ int	alps_sec_proc(struct pms_softc *);
 int	alps_get_hwinfo(struct pms_softc *);
 
 int	elantech_knock(struct pms_softc *);
-void	elantech_send_input(struct pms_softc *, u_int, int, int, int, int);
+void	elantech_send_input(struct pms_softc *, int, int, int, int);
 int	elantech_get_hwinfo_v1(struct pms_softc *);
 int	elantech_get_hwinfo_v2(struct pms_softc *);
 int	elantech_get_hwinfo_v3(struct pms_softc *);
@@ -1957,7 +1957,6 @@ void
 pms_proc_elantech_v1(struct pms_softc *sc)
 {
 	struct elantech_softc *elantech = sc->elantech;
-	u_int buttons = 0;
 	int x, y, w, z;
 
 	if (elantech->flags & ELANTECH_F_HW_V1_OLD)
@@ -1977,18 +1976,7 @@ pms_proc_elantech_v1(struct pms_softc *sc)
 		z = 0;
 	}
 
-	if (sc->packet[0] & 0x01)
-		buttons |= WSMOUSE_BUTTON(1);
-	if (sc->packet[0] & 0x02)
-		buttons |= WSMOUSE_BUTTON(3);
-	if (elantech->flags & ELANTECH_F_HAS_ROCKER) {
-		if (sc->packet[0] & 0x40) /* up */
-			buttons |= WSMOUSE_BUTTON(4);
-		if (sc->packet[0] & 0x80) /* down */
-			buttons |= WSMOUSE_BUTTON(5);
-	}
-
-	elantech_send_input(sc, buttons, x, y, z, w);
+	elantech_send_input(sc, x, y, z, w);
 }
 
 void
@@ -1996,7 +1984,6 @@ pms_proc_elantech_v2(struct pms_softc *sc)
 {
 	const u_char debounce_pkt[] = { 0x84, 0xff, 0xff, 0x02, 0xff, 0xff };
 	struct elantech_softc *elantech = sc->elantech;
-	u_int buttons;
 	int x, y, w, z;
 
 	/* 
@@ -2025,10 +2012,7 @@ pms_proc_elantech_v2(struct pms_softc *sc)
 		z = 0;
 	}
 
-	buttons = ((sc->packet[0] & 0x01 ? WSMOUSE_BUTTON(1) : 0) |
-	    ((sc->packet[0] & 0x02) ? WSMOUSE_BUTTON(3): 0));
-
-	elantech_send_input(sc, buttons, x, y, z, w);
+	elantech_send_input(sc, x, y, z, w);
 }
 
 void
@@ -2036,7 +2020,6 @@ pms_proc_elantech_v3(struct pms_softc *sc)
 {
 	const u_char debounce_pkt[] = { 0xc4, 0xff, 0xff, 0x02, 0xff, 0xff };
 	struct elantech_softc *elantech = sc->elantech;
-	u_int buttons;
 	int x, y, w, z;
 
 	/* The hardware sends this packet when in debounce state.
@@ -2044,8 +2027,6 @@ pms_proc_elantech_v3(struct pms_softc *sc)
 	if (!memcmp(sc->packet, debounce_pkt, sizeof(debounce_pkt)))
 		return;
 
-	buttons = ((sc->packet[0] & 0x01 ? WSMOUSE_BUTTON(1) : 0) |
-	    ((sc->packet[0] & 0x02) ? WSMOUSE_BUTTON(3): 0));
 	x = ((sc->packet[1] & 0x0f) << 8 | sc->packet[2]);
 	y = ((sc->packet[4] & 0x0f) << 8 | sc->packet[5]);
 	z = 0;
@@ -2076,15 +2057,27 @@ pms_proc_elantech_v3(struct pms_softc *sc)
 	else if (w)
 		z = SYNAPTICS_PRESSURE;
 
-	elantech_send_input(sc, buttons, x, y, z, w);
+	elantech_send_input(sc, x, y, z, w);
 }
 
 void
-elantech_send_input(struct pms_softc *sc, u_int buttons, int x, int y, int z,
-    int w)
+elantech_send_input(struct pms_softc *sc, int x, int y, int z, int w)
  {
 	struct elantech_softc *elantech = sc->elantech;
 	int dx, dy;
+	u_int buttons = 0;
+
+	if (sc->packet[0] & 0x01)
+		buttons |= WSMOUSE_BUTTON(1);
+	if (sc->packet[0] & 0x02)
+		buttons |= WSMOUSE_BUTTON(3);
+
+	if (elantech->flags & ELANTECH_F_HAS_ROCKER) {
+		if (sc->packet[0] & 0x40) /* up */
+			buttons |= WSMOUSE_BUTTON(4);
+		if (sc->packet[0] & 0x80) /* down */
+			buttons |= WSMOUSE_BUTTON(5);
+	}
 
 	if (elantech->wsmode == WSMOUSE_NATIVE) {
 		wsmouse_input(sc->sc_wsmousedev, buttons, x, y, z, w,
