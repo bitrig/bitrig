@@ -41,7 +41,7 @@ pkcs5_pbkdf2(const char *pass, size_t pass_len, const char *salt,
 		return -1;
 	if (salt_len == 0 || salt_len > SIZE_MAX - 1)
 		return -1;
-	if ((asalt = alloca(salt_len + 4)) == NULL)
+	if ((asalt = __builtin_alloca(salt_len + 4)) == NULL)
 		return -1;
 
 	memcpy(asalt, salt, salt_len);
