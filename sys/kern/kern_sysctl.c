@@ -1,4 +1,4 @@
-/*	$OpenBSD: kern_sysctl.c,v 1.226 2012/06/02 05:44:27 guenther Exp $	*/
+/*	$OpenBSD: kern_sysctl.c,v 1.228 2012/11/05 19:39:35 miod Exp $	*/
 /*	$NetBSD: kern_sysctl.c,v 1.17 1996/05/20 17:49:05 mrg Exp $	*/
 
 /*-
