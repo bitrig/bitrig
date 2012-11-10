@@ -1,6 +1,6 @@
 #!/bin/ksh -
 #
-# $OpenBSD: sysmerge.sh,v 1.91 2012/11/10 09:50:05 rpe Exp $
+# $OpenBSD: sysmerge.sh,v 1.92 2012/11/10 16:02:52 rpe Exp $
 #
 # Copyright (c) 2008, 2009, 2010, 2011, 2012 Antoine Jacoutot <ajacoutot@openbsd.org>
 # Copyright (c) 1998-2003 Douglas Barton <DougB@FreeBSD.org>
@@ -82,9 +82,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 if [ -z "${FETCH_CMD}" ]; then
-	if [ -z "${FTP_KEEPALIVE}" ]; then
-		FTP_KEEPALIVE=0
-	fi
+	[ -z "${FTP_KEEPALIVE}" ] && FTP_KEEPALIVE=0
 	FETCH_CMD="/usr/bin/ftp -V -m -k ${FTP_KEEPALIVE}"
 fi
 
@@ -127,9 +125,8 @@ do_populate() {
 					if [ -f ${DESTDIR}/${_r} -a -f ${TEMPROOT}/${_r} ]; then
 						# sanity check: _always_ compare master.passwd(5) and group(5)
 						# we don't want to have missing system user(s) and/or group(s)
-						if [ ${_r} != ./etc/master.passwd -a ${_r} != ./etc/group ]; then
+						[ ${_r} != ./etc/master.passwd -a ${_r} != ./etc/group ] && \
 							rm -f ${TEMPROOT}/${_r}
-						fi
 					fi
 				done
 			fi
@@ -138,13 +135,10 @@ do_populate() {
 			_D=$(diff -u ${WRKDIR}/${i} ${DESTDIR}/${DBDIR}/${i} | grep -E '^\+' | sed '1d' | awk '{print $3}')
 			for _d in ${_D}; do
 				CURSUM=$(cd ${DESTDIR:=/} && cksum ${_d} 2>/dev/null)
-				if [ -n "$(grep "${CURSUM}" ${DESTDIR}/${DBDIR}/${i})" -a -z "$(grep "${CURSUM}" ${WRKDIR}/${i})" ]; then
+				[ -n "$(grep "${CURSUM}" ${DESTDIR}/${DBDIR}/${i})" -a -z "$(grep "${CURSUM}" ${WRKDIR}/${i})" ] && \
 					_array="${_array} ${_d}"
-				fi
 			done
-			if [ -n "${_array}" ]; then
-				set -A AUTO_UPG -- ${_array}
-			fi
+			[ -n "${_array}" ] && set -A AUTO_UPG -- ${_array}
 
 			mv ${DESTDIR}/${DBDIR}/${i} ${DESTDIR}/${DBDIR}/.${i}.bak
 		fi
@@ -164,9 +158,7 @@ do_populate() {
 	CF_FILES="/etc/mail/localhost.cf /etc/mail/sendmail.cf /etc/mail/submit.cf"
 	for cf in ${CF_FILES}; do
 		CF_DIFF=$(diff -q -I "##### " ${TEMPROOT}/${cf} ${DESTDIR}/${cf} 2>/dev/null)
-		if [ -z "${CF_DIFF}" ]; then
-			IGNORE_FILES="${IGNORE_FILES} ${cf}"
-		fi
+		[ -z "${CF_DIFF}" ] && IGNORE_FILES="${IGNORE_FILES} ${cf}"
 	done
 	if [ -r /etc/sysmerge.ignore ]; then
 		while read i; do \
@@ -196,14 +188,13 @@ mm_install() {
 	INSTDIR=${1#.}
 	INSTDIR=${INSTDIR%/*}
 
-	if [ -z "${INSTDIR}" ]; then INSTDIR=/; fi
+	[ -z "${INSTDIR}" ] && INSTDIR=/
 
 	DIR_MODE=$(stat -f "%OMp%OLp" "${TEMPROOT}/${INSTDIR}")
 	eval $(stat -f "FILE_MODE=%OMp%OLp FILE_OWN=%Su FILE_GRP=%Sg" ${1})
 
-	if [ "${DESTDIR}${INSTDIR}" -a ! -d "${DESTDIR}${INSTDIR}" ]; then
+	[ "${DESTDIR}${INSTDIR}" -a ! -d "${DESTDIR}${INSTDIR}" ] && \
 		install -d -o root -g wheel -m "${DIR_MODE}" "${DESTDIR}${INSTDIR}"
-	fi
 
 	do_install_and_rm "${FILE_MODE}" "${FILE_OWN}" "${FILE_GRP}" "${1}" "${DESTDIR}${INSTDIR}" || return
 
@@ -260,9 +251,8 @@ mm_install_link() {
 
 merge_loop() {
 	local INSTALL_MERGED MERGE_AGAIN
-	if [ "$(expr "${MERGE_CMD}" : ^sdiff.*)" -gt 0 ]; then
+	[ "$(expr "${MERGE_CMD}" : ^sdiff.*)" -gt 0 ] && \
 		echo "===> Type h at the sdiff prompt (%) to get usage help\n"
-	fi
 	MERGE_AGAIN=1
 	while [ "${MERGE_AGAIN}" ]; do
 		cp -p "${COMPFILE}" "${COMPFILE}.merged"
@@ -296,9 +286,8 @@ merge_loop() {
 			[iI])
 				mv "${COMPFILE}.merged" "${COMPFILE}"
 				echo -n "\n===> Merging ${COMPFILE#.}"
-				if ! mm_install "${COMPFILE}"; then
+				mm_install "${COMPFILE}" || \
 					warn "problem merging ${COMPFILE#.}"
-				fi
 				unset MERGE_AGAIN
 				;;
 			[nN])
@@ -355,9 +344,7 @@ diff_loop() {
 			if [ -z "${DIFFMODE}" ]; then
 				# automatically install files if current != new and current = old
 				for i in "${AUTO_UPG[@]}"; do
-					if [ "${i}" = "${COMPFILE}" ]; then
-						FORCE_UPG=1
-					fi
+					[ "${i}" = "${COMPFILE}" ] && FORCE_UPG=1
 				done
 				# automatically install files which differ only by CVS Id or that are binaries
 				if [ -z "$(diff -q -I'[$]OpenBSD:.*$' "${DESTDIR}${COMPFILE#.}" "${COMPFILE}")" -o -n "${FORCE_UPG}" -o -n "${IS_BINFILE}" ]; then
@@ -551,9 +538,7 @@ do_compare() {
 		unset IS_BINFILE
 		unset IS_LINK
 		# links need to be treated in a different way
-		if [ -h "${COMPFILE}" ]; then
-			IS_LINK=1
-		fi
+		[ -h "${COMPFILE}" ] && IS_LINK=1
 		if [ ! -e "${DESTDIR}${COMPFILE#.}" ]; then
 			diff_loop
 			continue
@@ -569,7 +554,7 @@ do_compare() {
 		    -a "${COMPFILE}" != "./etc/ttys" -a -z "${IS_LINK}" ]; then
 			CVSID1=$(grep "[$]OpenBSD:" ${DESTDIR}${COMPFILE#.} 2>/dev/null)
 			CVSID2=$(grep "[$]OpenBSD:" ${COMPFILE} 2>/dev/null) || CVSID2=none
-			if [ "${CVSID2}" = "${CVSID1}" ]; then rm "${COMPFILE}"; fi
+			[ "${CVSID2}" = "${CVSID1}" ] && rm "${COMPFILE}"
 		fi
 
 		if [ -f "${COMPFILE}" -a -z "${IS_LINK}" ]; then
@@ -593,9 +578,8 @@ do_post() {
 	local FILES_IN_TEMPROOT FILES_IN_BKPDIR
 	echo "===> Checking directory hierarchy permissions (running mtree(8))"
 	mtree -qdef ${DESTDIR}/etc/mtree/4.4BSD.dist -p ${DESTDIR:=/} -U >/dev/null
-	if [ -n "${XTGZ}" ]; then
+	[ -n "${XTGZ}" ] && \
 		mtree -qdef ${DESTDIR}/etc/mtree/BSD.x11.dist -p ${DESTDIR:=/} -U >/dev/null
-	fi
 
 	if [ "${NEED_NEWALIASES}" ]; then
 		report "===> A new ${DESTDIR}/etc/mail/aliases file was installed."
@@ -619,12 +603,8 @@ do_post() {
 	fi
 	if [ "${NEWUSR}" -o "${NEWGRP}" ]; then
 		report "===> The following user(s)/group(s) have been added"
-		if [ "${NEWUSR}" ]; then
-			report "user(s): ${NEWUSR[@]}"
-		fi
-		if [ "${NEWGRP}" ]; then
-			report "group(s): ${NEWGRP[@]}"
-		fi
+		[ "${NEWUSR}" ] && report "user(s): ${NEWUSR[@]}"
+		[ "${NEWGRP}" ] && report "group(s): ${NEWGRP[@]}"
 		report ""
 	fi
 	if [ "${FILES_IN_TEMPROOT}" ]; then
@@ -639,17 +619,14 @@ do_post() {
 		rm -rf "${WRKDIR}"
 	fi
 
-	if [ "${FILES_IN_TEMPROOT}" ]; then
+	[ "${FILES_IN_TEMPROOT}" ] && \
 		warn "some files are still left for comparison"
-	fi
 
-	if [ "${NEED_NEWALIASES}" ]; then
+	[ "${NEED_NEWALIASES}" ] && \
 		warn "newaliases(8) failed to run properly"
-	fi
 
-	if [ "${NEED_REBOOT}" ]; then
+	[ "${NEED_REBOOT}" ] && \
 		warn "some new/updated file(s) may require a reboot"
-	fi
 
 	unset NEED_NEWALIASES NEED_REBOOT
 
@@ -672,9 +649,8 @@ while getopts bds:x: arg; do
 		    grep -qE '^(file|ftp|http|https)://.*/etc[0-9][0-9]\.tgz$'; then
 			TGZ=${WRKDIR}/etc.tgz
 			TGZURL=${OPTARG}
-			if ! ${FETCH_CMD} -o ${TGZ} ${TGZURL}; then
+			${FETCH_CMD} -o ${TGZ} ${TGZURL} || \
 				error_rm_wrkdir "could not retrieve ${TGZURL}"
-			fi
 		else
 			TGZ=${OPTARG}
 		fi
@@ -684,9 +660,8 @@ while getopts bds:x: arg; do
 		    grep -qE '^(file|ftp|http|https)://.*/xetc[0-9][0-9]\.tgz$'; then
 			XTGZ=${WRKDIR}/xetc.tgz
 			XTGZURL=${OPTARG}
-			if ! ${FETCH_CMD} -o ${XTGZ} ${XTGZURL}; then
+			${FETCH_CMD} -o ${XTGZ} ${XTGZURL} || \
 				error_rm_wrkdir "could not retrieve ${XTGZURL}"
-			fi
 		else
 			XTGZ=${OPTARG}
 		fi
@@ -714,17 +689,14 @@ if [ -z "${SRCDIR}" -a -z "${TGZ}" -a -z "${XTGZ}" ]; then
 	fi
 fi
 
-if [ -n "${SRCDIR}" -a ! -f "${SRCDIR}/etc/Makefile" ]; then
+[ -n "${SRCDIR}" -a ! -f "${SRCDIR}/etc/Makefile" ] && \
 	error_rm_wrkdir "${SRCDIR} is not a valid path to src"
-fi
 
-if [ -n "${TGZ}" ] && ! tar tzf ${TGZ} ./var/db/sysmerge/etcsum >/dev/null 2>&1; then
+[ -n "${TGZ}" ] && ! tar tzf ${TGZ} ./var/db/sysmerge/etcsum >/dev/null 2>&1 && \
 	error_rm_wrkdir "${TGZ} is not a valid etcXX.tgz set"
-fi
 
-if [ -n "${XTGZ}" ] && ! tar tzf ${XTGZ} ./var/db/sysmerge/xetcsum >/dev/null 2>&1; then
+[ -n "${XTGZ}" ] && ! tar tzf ${XTGZ} ./var/db/sysmerge/xetcsum >/dev/null 2>&1 && \
 	error_rm_wrkdir "${XTGZ} is not a valid xetcXX.tgz set"
-fi
 	
 TEMPROOT="${WRKDIR}/temproot"
 BKPDIR="${WRKDIR}/backups"
