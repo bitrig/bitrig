@@ -27,48 +27,6 @@
 #ifndef _MACHINE_MUTEX_H_
 #define _MACHINE_MUTEX_H_
 
-/*
- * XXX - we don't really need the mtx_lock field, we can use mtx_oldipl
- *	 as the lock to save some space.
- */
-struct mutex {
-	__volatile int mtx_lock;
-	int mtx_wantipl;
-	int mtx_oldipl;
-	void *mtx_owner;
-};
-
-/*
- * To prevent lock ordering problems with the kernel lock, we need to
- * make sure we block all interrupts that can grab the kernel lock.
- * The simplest way to achieve this is to make sure mutexes always
- * raise the interrupt priority level to the highest level that has
- * interrupts that grab the kernel lock.
- */
-#ifdef MULTIPROCESSOR
-#define __MUTEX_IPL(ipl) \
-    (((ipl) > IPL_NONE && (ipl) < IPL_TTY) ? IPL_TTY : (ipl))
-#else
-#define __MUTEX_IPL(ipl) (ipl)
-#endif
-
-#define MUTEX_INITIALIZER(ipl) { 0, __MUTEX_IPL((ipl)), 0, NULL }
-
-void __mtx_init(struct mutex *, int);
-#define mtx_init(mtx, ipl) __mtx_init((mtx), __MUTEX_IPL((ipl)))
-
-#define MUTEX_ASSERT_LOCKED(mtx) do {					\
-	if ((mtx)->mtx_lock != 1 ||					\
-	    (mtx)->mtx_owner != curcpu())				\
-		panic("mutex %p not held in %s", (mtx), __func__);	\
-} while (0)
-
-#define MUTEX_ASSERT_UNLOCKED(mtx) do {					\
-	if ((mtx)->mtx_lock == 1 &&					\
-	    (mtx)->mtx_owner == curcpu())				\
-		panic("mutex %p held in %s", (mtx), __func__);		\
-} while (0)
-
-#define MUTEX_OLDIPL(mtx)	(mtx)->mtx_oldipl
+/* Header obsolete. */
 
 #endif

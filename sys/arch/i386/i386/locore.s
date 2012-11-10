@@ -1665,8 +1665,6 @@ _C_LABEL(_ucas_32_clac):
 #include <i386/i386/apicvec.s>
 #endif
 
-#include <i386/i386/mutex.S>
-
 .globl _C_LABEL(_stac)
 _C_LABEL(_stac):
 	stac

@@ -91,7 +91,6 @@ file	arch/arm/arm/vm_machdep.c
 file	arch/arm/armv7/armv7_space.c		cpu_armv7
 file	arch/arm/armv7/armv7_a4x_space.c	cpu_armv7
 file	arch/arm/armv7/armv7_a4x_io.S		cpu_armv7
-file	arch/arm/armv7/armv7_mutex.c		cpu_armv7
 file	arch/arm/armv7/bus_space_asm_armv7.S	cpu_armv7
 file	arch/arm/arm/vfp.c			cpu_armv7
 

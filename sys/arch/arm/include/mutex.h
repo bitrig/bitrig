@@ -28,34 +28,6 @@
 #ifndef _ARM_MUTEX_H_
 #define _ARM_MUTEX_H_
 
-/*
- * Simple non-mp implementation.
- */
-struct mutex {
-	int mtx_lock;
-	int mtx_wantipl;
-	int mtx_oldipl;
-};
-
-void mtx_init(struct mutex *, int);
-
-#define MUTEX_INITIALIZER(ipl) { 0, ipl, 0 }
-
-#ifdef DIAGNOSTIC
-#define MUTEX_ASSERT_LOCKED(mtx) do {					\
-	if ((mtx)->mtx_lock == 0)					\
-		panic("mutex %p not held in %s", (mtx), __func__);	\
-} while (0)
-
-#define MUTEX_ASSERT_UNLOCKED(mtx) do {					\
-	if ((mtx)->mtx_lock != 0)					\
-		panic("mutex %p held in %s", (mtx), __func__);		\
-} while (0)
-#else
-#define MUTEX_ASSERT_LOCKED(mtx) do { } while (0)
-#define MUTEX_ASSERT_UNLOCKED(mtx) do { } while (0)
-#endif
-
-#define MUTEX_OLDIPL(mtx)	(mtx)->mtx_oldipl
+/* Header obsolete. */
 
 #endif

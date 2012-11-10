@@ -25,7 +25,6 @@ file	arch/amd64/amd64/fpu.c
 file	arch/amd64/amd64/softintr.c
 file	arch/amd64/amd64/i8259.c
 file	arch/amd64/amd64/cacheinfo.c
-file	arch/amd64/amd64/mutex.S
 file	arch/amd64/amd64/vector.S
 file	arch/amd64/amd64/copy.S
 file	arch/amd64/amd64/spl.S

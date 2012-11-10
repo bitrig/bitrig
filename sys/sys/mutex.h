@@ -28,6 +28,8 @@
 #ifndef _SYS_MUTEX_H_
 #define _SYS_MUTEX_H_
 
+#include <sys/stdatomic.h>
+
 /*
  * A mutex is:
  *  - owned by a cpu.
@@ -42,16 +44,40 @@
  * "mtx_enter(foo); mtx_enter(bar); mtx_leave(foo); mtx_leave(bar);"
  */
 
-#include <machine/mutex.h>
+struct mutex {
+	void	*mtx_owner;		/* Current CPU owning lock. */
+	int	 mtx_wantipl;		/* IPL while locked. */
+	int	 mtx_oldipl;		/* IPL prior to locking. */
+	atomic_int mtx_ticket;		/* First available ticket. */
+	atomic_int mtx_cur;		/* Active ticket. */
+};
 
-/*
- * Some architectures need to do magic for the ipl, so they need a macro.
- */
-#ifndef mtx_init
 void mtx_init(struct mutex *, int);
-#endif
 void mtx_enter(struct mutex *);
 void mtx_leave(struct mutex *);
 int mtx_enter_try(struct mutex *);
+
+#define MUTEX_INITIALIZER(ipl)						\
+	{								\
+		NULL,							\
+		(ipl),							\
+		IPL_NONE,						\
+	}
+
+#define MUTEX_OLDIPL(mtx)	((mtx)->mtx_oldipl)
+
+#define MUTEX_ASSERT_LOCKED(mtx)					\
+	do {								\
+		if ((mtx)->mtx_owner != curcpu())			\
+			panic("mutex %p not held in %s",		\
+			    (mtx), __func__);				\
+	} while (0)
+
+#define MUTEX_ASSERT_UNLOCKED(mtx)					\
+	do {								\
+		if ((mtx)->mtx_owner == curcpu())			\
+			panic("mutex %p held in %s",			\
+			    (mtx), __func__);				\
+	} while (0)
 
 #endif

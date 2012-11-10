@@ -143,12 +143,6 @@ member	IH_COUNT		ih_count.ec_count
 member	ih_next
 endif
 
-struct mutex
-member	mtx_lock
-member	mtx_wantipl
-member	mtx_oldipl
-member	mtx_owner
-
 define	IP_SRC			offsetof(struct ip, ip_src)
 define	IP_DST			offsetof(struct ip, ip_dst)
 
