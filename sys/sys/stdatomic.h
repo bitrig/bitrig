@@ -329,4 +329,27 @@ typedef atomic_bool			atomic_flag;
 #define	atomic_flag_test_and_set(object)				\
 	atomic_flag_test_and_set_explicit(object, memory_order_seq_cst)
 
+#ifdef _KERNEL
+/*
+ * Spinwait instruction.
+ * On hyperthread archs, we don't want to hog the cpu if we are spinning.
+ */
+#ifndef SPINWAIT
+
+/* Spinwait asm for gnu-compatible compilers on intel-like platforms
+ * (using PAUSE instruction). */
+#if (defined(__GNUC__) || defined(__clang__)) &&			\
+    (defined(__amd64__) || defined(__x86_64__) ||			\
+     defined(__i386__) || defined(__ia64__))
+#define SPINWAIT() do { __asm __volatile("pause":::"memory"); } while (0)
+
+/* No pause instruction on other platforms/compilers. */
+#else
+#define SPINWAIT() do { /* nothing */ } while (0)
+
+#endif /* SPINWAIT platform selector. */
+
+#endif /* SPINWAIT */
+#endif /* _KERNEL */
+
 #endif /* !_SYS_STDATOMIC_H_ */
