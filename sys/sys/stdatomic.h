@@ -42,7 +42,7 @@
 #endif
 
 #if !defined(__CLANG_ATOMICS)
-#define	_Atomic(T)			struct { volatile T __val; }
+#define	_Atomic(T)			struct { T volatile __val; }
 #endif
 
 /*
