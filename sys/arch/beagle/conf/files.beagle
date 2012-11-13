@@ -82,11 +82,6 @@ file	arch/beagle/dev/omehci.c		omehci
 attach	com at soc with com_omap
 file	arch/beagle/dev/omap_com.c		com_omap
 
-device omusbtll
-attach omusbtll at soc
-file arch/beagle/dev/omusbtll.c			omusbtll
-
-
 device omkbd: wskbddev
 attach omkbd at soc
 file	arch/beagle/dev/omkbd.c			omkbd
