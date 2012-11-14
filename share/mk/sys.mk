@@ -10,7 +10,7 @@
 
 unix=		We run Bitrig.
 OSMAJOR=	0
-OSMINOR=	1	
+OSMINOR=	1
 OSREV=		$(OSMAJOR).$(OSMINOR)
 OSrev=		$(OSMAJOR)$(OSMINOR)
 
