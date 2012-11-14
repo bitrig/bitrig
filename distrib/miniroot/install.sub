@@ -1,4 +1,4 @@
-#	$OpenBSD: install.sub,v 1.671 2012/11/06 17:49:39 krw Exp $
+	$OpenBSD: install.sub,v 1.671 2012/11/06 17:49:39 krw Exp $
 #	$NetBSD: install.sub,v 1.5.2.8 1996/09/02 23:25:02 pk Exp $
 #
 # Copyright (c) 1997-2009 Todd Miller, Theo de Raadt, Ken Westerback
@@ -1291,7 +1291,7 @@ install_url() {
 		_mirror=yes
 	fi
 
-	ask_until "Server directory?" "${resp:-$FTPSETDIR}"
+	ask_until "Server directory?" "${resp:-pub/bitrig/$FTPSETDIR}"
 	_server_dir=$resp
 	eval _${_url_type}_server_dir=$_server_dir
 
@@ -1949,7 +1949,7 @@ SM_ARGS=
 SM_ARGSX=
 
 SETDIR="$VNAME/$ARCH"
-FTPDIR="$VNAME"
+FTPDIR="pub/bitrig/$VNAME"
 SERVERLISTALL=/tmp/serverlistall
 SERVERLISTSEC=/tmp/serverlistsec
 SERVERLIST=/tmp/serverlist
@@ -1966,7 +1966,7 @@ dmesg | sed -ne '/^Bitrig /h;/^Bitrig /!H;${g;p;}' >/var/run/dmesg.boot
 
 # Are we in a real release, or a snapshot?  If this is a snapshot
 # install media, default us to a snapshot directory.
-FTPSETDIR=$SETDIR
+FTPSETDIR=release/$SETDIR
 set -- $(scan_dmesg "/^Bitrig $VNAME\([^ ]*\).*$/s//\1/p")
 [[ $1 == -!(stable) ]] && FTPSETDIR=snapshots/$ARCH/current/
 
