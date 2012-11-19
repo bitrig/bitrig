@@ -1370,6 +1370,7 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	pt_entry_t *ptep, npte, opte;
 	u_int nflags;
 	u_int oflags;
+	int mapped = 1;
 
 	NPDEBUG(PDB_ENTER, printf("pmap_enter: pm %p va 0x%lx pa 0x%lx prot %x flag %x\n", pm, va, pa, prot, flags));
 
@@ -1462,6 +1463,7 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 			npte &= ~L2_TYPE_MASK;
 			npte |= L2_TYPE_INV;
 			prot &= ~VM_PROT_WRITE;
+			mapped = 0;
 		}
 
 		npte |= pte_l2_s_cache_mode;
@@ -1605,10 +1607,8 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	 * If it's write-protected, this will break.
 	 * Massively.
 	 */
-	/*
-	if ((prot & VM_PROT_EXECUTE) != 0 && pmap_is_current(pm))
+	if (mapped && (prot & VM_PROT_EXECUTE) != 0 && pmap_is_current(pm))
 		cpu_icache_sync_range(va, PAGE_SIZE);
-	*/
 
 	pmap_release_pmap_lock(pm);
 	PMAP_MAP_TO_HEAD_UNLOCK();

@@ -238,7 +238,7 @@ cpu_startup()
 	cpu_setup();
 
 	/* Lock down zero page */
-	vector_page_setprot(VM_PROT_READ);
+	vector_page_setprot(VM_PROT_READ|VM_PROT_EXECUTE);
 
 	/*
 	 * Give pmap a chance to set up a few more things now the vm
