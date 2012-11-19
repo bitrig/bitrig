@@ -512,7 +512,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 #ifdef RAMDISK_HOOKS
         boothowto |= RB_DFLTROOT;
 #endif /* RAMDISK_HOOKS */
-boothowto |= RB_ASKNAME;
+//boothowto |= RB_ASKNAME;
 
 	/* normally u-boot will set up bootconfig.dramblocks */
 	if (bootconfig.dramblocks == 0) {
