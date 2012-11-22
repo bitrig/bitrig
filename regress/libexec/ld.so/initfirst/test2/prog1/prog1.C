@@ -25,6 +25,7 @@ P::~P()
 
 P p;
 
+int
 main()
 {
 	return 0;
