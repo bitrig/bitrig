@@ -652,13 +652,18 @@ _dl_find_symbol_obj(elf_object_t *object, const char *name, unsigned long hash,
 	    si != STN_UNDEF; si = object->chains[si]) {
 		const Elf_Sym *sym = symt + si;
 
-		if (sym->st_value == 0)
+		if (sym->st_value == 0 &&
+		    ELF_ST_TYPE(sym->st_info) != STT_TLS) {
+			/* IS THIS CORRECT? */
 			continue;
+		}
 
 		if (ELF_ST_TYPE(sym->st_info) != STT_NOTYPE &&
 		    ELF_ST_TYPE(sym->st_info) != STT_OBJECT &&
-		    ELF_ST_TYPE(sym->st_info) != STT_FUNC)
+		    ELF_ST_TYPE(sym->st_info) != STT_TLS &&
+		    ELF_ST_TYPE(sym->st_info) != STT_FUNC) {
 			continue;
+		    }
 
 		symn = strt + sym->st_name;
 		if (sym != *this && _dl_strcmp(symn, name))
@@ -673,8 +678,9 @@ _dl_find_symbol_obj(elf_object_t *object, const char *name, unsigned long hash,
 		 */
 		if (sym->st_shndx == SHN_UNDEF) {
 			if ((flags & SYM_PLT) || sym->st_value == 0 ||
-			    ELF_ST_TYPE(sym->st_info) != STT_FUNC)
+			    ELF_ST_TYPE(sym->st_info) != STT_FUNC) {
 				continue;
+			    }
 		}
 
 		if (ELF_ST_BIND(sym->st_info) == STB_GLOBAL) {

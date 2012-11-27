@@ -20,6 +20,7 @@ SRCS+=	library_mquery.c
 .else
 SRCS+=	library.c
 .endif
+SRCS+= tls.c
 
 
 .include "${.CURDIR}/${MACHINE_CPU}/Makefile.inc"

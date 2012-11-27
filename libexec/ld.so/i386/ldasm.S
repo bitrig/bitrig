@@ -123,6 +123,7 @@ DL_SYSCALL(utrace)
 DL_SYSCALL2(getcwd,__getcwd)
 DL_SYSCALL2(sysctl,__sysctl)
 DL_SYSCALL(getdirentries)
+DL_SYSCALL(sysarch)
 
 .L_cerr:
 	/* error: result = -errno; - handled here. */

@@ -101,6 +101,7 @@ DL_SYSCALL(utrace)
 DL_SYSCALL2(getcwd,__getcwd)
 DL_SYSCALL2(_syscall,__syscall)
 DL_SYSCALL2(sysctl,__sysctl)
+DL_SYSCALL(sysarch)
 
 1:
 	/* error: result = -errno; - handled here. */

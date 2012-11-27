@@ -149,6 +149,15 @@ struct elf_object {
 	dev_t	dev;
 	ino_t inode;
 
+	/* tls info */
+	Elf_Addr tls_fsize;
+	Elf_Addr tls_msize;
+	Elf_Addr tls_index;
+	Elf_Addr tls_align;
+	const void *tls_static_data;
+	int tls_done;
+	int tls_offset;
+
 	/* last symbol lookup on this object, to avoid mutiple searches */
 	int lastlookup_head;
 	int lastlookup;

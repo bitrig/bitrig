@@ -37,6 +37,7 @@
 #include <string.h>
 #include <link.h>
 #include <dlfcn.h>
+#include <signal.h>
 
 #include "syscall.h"
 #include "archdep.h"
@@ -45,6 +46,7 @@
 #include "sod.h"
 #include "stdlib.h"
 #include "dl_prebind.h"
+#include "tls.h"
 
 #include "../../lib/csu/common_elf/os-note-elf.h"
 
@@ -384,6 +386,7 @@ _dl_boot(const char **argv, char **envp, const long dyn_loff, long *dl_data)
 	int failed;
 	struct dep_node *n;
 	Elf_Addr minva, maxva, exe_loff;
+	Elf_Phdr *ptls = NULL;
 	int align;
 
 	_dl_setup_env(envp);
@@ -485,9 +488,7 @@ _dl_boot(const char **argv, char **envp, const long dyn_loff, long *dl_data)
 			}
 			break;
 		case PT_TLS:
-			_dl_printf("%s: unsupported TLS program header\n",
-			    _dl_progname);
-			_dl_exit(1);
+			ptls = phdp;
 			break;
 		}
 		phdp++;
@@ -496,6 +497,27 @@ _dl_boot(const char **argv, char **envp, const long dyn_loff, long *dl_data)
 	exe_obj->obj_flags |= DF_1_GLOBAL;
 	exe_obj->load_size = maxva - minva;
 	_dl_set_sod(exe_obj->load_name, &exe_obj->sod);
+
+	/* TLS bits in the base executable */
+	if (ptls && ptls->p_memsz) {
+		if (ptls->p_filesz > ptls->p_memsz) {
+			_dl_printf("%s: invalid tls data.\n", _dl_progname);
+			_dl_exit(10);
+		}
+		if (ptls->p_vaddr != 0 && ptls->p_filesz != 0) {
+			exe_obj->tls_static_data =
+			    (void *)(ptls->p_vaddr + exe_loff);
+		}
+		_dl_tls_dtv_generation++;
+		exe_obj->tls_index = _dl_tls_max_index++;
+		exe_obj->tls_fsize = ptls->p_filesz;
+		exe_obj->tls_msize = ptls->p_memsz;
+		exe_obj->tls_align = ptls->p_align;
+		DL_DEB(("tls %x %x %x %x %u\n",
+		    exe_obj->tls_static_data, exe_obj->tls_fsize,
+		    exe_obj->tls_msize, exe_obj->tls_align,
+		    exe_obj->tls_index));
+	}
 
 	n = _dl_malloc(sizeof *n);
 	if (n == NULL)
@@ -526,6 +548,21 @@ _dl_boot(const char **argv, char **envp, const long dyn_loff, long *dl_data)
 
 	dyn_obj->status |= STAT_RELOC_DONE;
 	_dl_set_sod(dyn_obj->load_name, &dyn_obj->sod);
+
+	/* setup TLS */
+	{
+		elf_object_t *obj;
+
+		/* first, the executable itself, then libs */
+		_dl_allocate_tls_offset(exe_obj);
+		for (obj = _dl_objects->next;
+		    obj != NULL;
+		    obj = obj->next ) {
+			_dl_allocate_tls_offset(obj);
+		}
+		if (_dl_tls_free_idx > 0)
+			_dl_allocate_first_tls();
+	}
 
 	/*
 	 * Everything should be in place now for doing the relocation

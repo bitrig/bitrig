@@ -33,6 +33,7 @@
 
 #include <sys/utsname.h>
 #include <stdarg.h>
+#include <stddef.h>
 
 void *_dl_malloc(const size_t size);
 void _dl_free(void *);

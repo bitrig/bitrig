@@ -38,6 +38,7 @@
 #include "archdep.h"
 #include "resolve.h"
 #include "sod.h"
+#include "tls.h"
 
 int _dl_errno;
 int _dl_tracelib;
@@ -123,6 +124,8 @@ dlopen(const char *libname, int flags)
 			object = 0;
 			failed = 1;
 		} else {
+			if (_dl_tls_dtv_generation > 1)
+				_dl_allocate_first_tls();
 			_dl_call_init(object);
 		}
 	}

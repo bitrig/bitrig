@@ -67,6 +67,7 @@
 
 #include <sys/types.h>
 #include <sys/mman.h>
+#include <machine/sysarch.h>
 
 #include <nlist.h>
 #include <link.h>
@@ -75,6 +76,7 @@
 #include "syscall.h"
 #include "archdep.h"
 #include "resolve.h"
+#include "tls.h"
 
 /*
  * The following table holds for each relocation type:
@@ -123,6 +125,22 @@ static int reloc_target_flags[] = {
 	_RF_S|_RF_A|_RF_P|	_RF_SZ(16) | _RF_RS(0),		/* PC_16 */
 	_RF_S|_RF_A|		_RF_SZ(8) | _RF_RS(0),		/* RELOC_8 */
 	_RF_S|_RF_A|_RF_P|	_RF_SZ(8) | _RF_RS(0),		/* RELOC_PC8 */
+	0,							/* DUMMY 24 */
+	0,							/* DUMMY 25 */
+	0,							/* DUMMY 26 */
+	0,							/* DUMMY 27 */
+	0,							/* DUMMY 28 */
+	0,							/* DUMMY 29 */
+	0,							/* DUMMY 30 */
+	0,							/* DUMMY 31 */
+	0,							/* DUMMY 32 */
+	0,							/* DUMMY 33 */
+	0,							/* DUMMY 34 */
+	_RF_S,							/* TLS_DTPMOD32 35 */
+	_RF_S,							/* TLS_DTPOFF32 36 */
+	0,							/* DUMMY 37 */
+	0,							/* DUMMY 38 */
+	0,							/* DUMMY 39 */
 };
 
 #define RELOC_RESOLVE_SYMBOL(t)		((reloc_target_flags[t] & _RF_S) != 0)
@@ -159,6 +177,22 @@ static long reloc_target_bitmask[] = {
 	_BM(8),		/* PC_16 */
 	_BM(8),		/* RELOC_8 */
 	_BM(8),		/* RELOC_PC8 */
+	0,		/* DUMMY 24 */
+	0,		/* DUMMY 25 */
+	0,		/* DUMMY 26 */
+	0,		/* DUMMY 27 */
+	0,		/* DUMMY 28 */
+	0,		/* DUMMY 29 */
+	0,		/* DUMMY 30 */
+	0,		/* DUMMY 31 */
+	0,		/* DUMMY 32 */
+	0,		/* DUMMY 33 */
+	0,		/* DUMMY 34 */
+	0,		/* TLS_DTPMOD32 35 */
+	0,		/* TLS_DTPOFF32 36 */
+	0,		/* DUMMY 37 */
+	0,		/* DUMMY 38 */
+	0,		/* DUMMY 39 */
 #undef _BM
 };
 #define RELOC_VALUE_BITMASK(t)	(reloc_target_bitmask[t])
@@ -219,6 +253,7 @@ _dl_md_reloc(elf_object_t *object, int rel, int relsz)
 		Elf_Word type;
 		const Elf_Sym *sym, *this;
 		const char *symn;
+		const elf_object_t *refobj;
 
 		type = ELF_R_TYPE(rels->r_info);
 
@@ -227,6 +262,11 @@ _dl_md_reloc(elf_object_t *object, int rel, int relsz)
 
 		if (type == R_TYPE(JUMP_SLOT) && rel != DT_JMPREL)
 			continue;
+
+		if (type > sizeof(reloc_target_flags) /
+		    sizeof(reloc_target_flags[0])) {
+			_dl_printf("invalid relocation type %d\n", type);
+		}
 
 		where = (Elf_Addr *)(rels->r_offset + loff);
 
@@ -245,8 +285,10 @@ _dl_md_reloc(elf_object_t *object, int rel, int relsz)
 			if (sym->st_shndx != SHN_UNDEF &&
 			    ELF_ST_BIND(sym->st_info) == STB_LOCAL) {
 				value += loff;
+				refobj = object;
 			} else if (sym == prev_sym) {
 				value += prev_value;
+				refobj = object;
 			} else {
 				this = NULL;
 				ooff = _dl_find_symbol_bysym(object,
@@ -254,7 +296,7 @@ _dl_md_reloc(elf_object_t *object, int rel, int relsz)
 				    SYM_SEARCH_ALL|SYM_WARNNOTFOUND|
 				    ((type == R_TYPE(JUMP_SLOT))?
 					SYM_PLT:SYM_NOTPLT),
-				    sym, NULL);
+				    sym, &refobj);
 				if (this == NULL) {
 resolve_failed:
 					if (ELF_ST_BIND(sym->st_info) !=
@@ -296,6 +338,19 @@ resolve_failed:
 			value -= (Elf_Addr)where;
 		if (RELOC_BASE_RELATIVE(type))
 			value += loff;
+
+		if (type == R_TYPE(TLS_DTPMOD32)) {
+			if (value == 0)
+				goto resolve_failed;
+			*where = (Elf_Addr) refobj->tls_index;
+			continue;
+		}
+		if (type == R_TYPE(TLS_DTPOFF32)) {
+			if (value == 0)
+				goto resolve_failed;
+			*where = (Elf_Addr) this->st_value;
+			continue;
+		}
 
 		mask = RELOC_VALUE_BITMASK(type);
 		value >>= RELOC_VALUE_RIGHTSHIFT(type);
@@ -486,3 +541,38 @@ _dl_md_reloc_got(elf_object_t *object, int lazy)
 
 	return (fails);
 }
+
+void
+_dl_allocate_first_tls()
+{
+	void *tls;
+
+	_dl_tls_static_space = _dl_tls_free_idx /* + RTLD_STATIC_TLS_EXTRA */;
+	tls = _dl_allocate_tls(NULL, _dl_objects, 2*sizeof(Elf_Addr),
+	    sizeof(Elf_Addr));
+	_dl_sysarch(I386_SET_GSBASE, &tls);
+}
+
+/* GNU ABI */
+__attribute__((__regparm__(1)))
+void *___tls_get_addr(tls_index *ti)
+{
+	Elf_Addr** segbase;
+
+	__asm __volatile("movl %%gs:0, %0" : "=r" (segbase));
+
+	return _dl_tls_get_addr_common(&segbase[1], ti->ti_module,
+	    ti->ti_offset);
+}
+
+/* Sun ABI */
+void *__tls_get_addr(tls_index *ti)
+{
+	Elf_Addr** segbase;
+
+	__asm __volatile("movl %%gs:0, %0" : "=r" (segbase));
+
+	return _dl_tls_get_addr_common(&segbase[1], ti->ti_module,
+	    ti->ti_offset);
+}
+

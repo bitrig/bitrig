@@ -39,6 +39,7 @@
 #include "archdep.h"
 #include "resolve.h"
 #include "sod.h"
+#include "tls.h"
 
 #define PFLAGS(X) ((((X) & PF_R) ? PROT_READ : 0) | \
 		   (((X) & PF_W) ? PROT_WRITE : 0) | \
@@ -87,6 +88,7 @@ _dl_tryload_shlib(const char *libname, int type, int flags)
 	Elf_Dyn *dynp = 0;
 	Elf_Ehdr *ehdr;
 	Elf_Phdr *phdp;
+	Elf_Phdr *ptls = 0;
 	struct stat sb;
 	void *prebind_data;
 
@@ -147,11 +149,8 @@ _dl_tryload_shlib(const char *libname, int type, int flags)
 			dynp = (Elf_Dyn *)phdp->p_vaddr;
 			break;
 		case PT_TLS:
-			_dl_printf("%s: unsupported TLS program header in %s\n",
-			    _dl_progname, libname);
-			_dl_close(libfile);
-			_dl_errno = DL_CANT_LOAD_OBJ;
-			return(0);
+			ptls = phdp;
+			break;
 		default:
 			break;
 		}
@@ -264,6 +263,26 @@ _dl_tryload_shlib(const char *libname, int type, int flags)
 		object->inode = sb.st_ino;
 		object->obj_flags |= flags;
 		_dl_set_sod(object->load_name, &object->sod);
+		if (ptls && ptls->p_memsz) {
+			if (ptls->p_filesz > ptls->p_memsz) {
+				_dl_printf("%s: invalid tls data in %s.\n",
+				    _dl_progname, libname);
+				_dl_exit(9);
+			}
+			if (ptls->p_vaddr != 0 && ptls->p_filesz != 0) {
+				object->tls_static_data =
+				    (void *)(ptls->p_vaddr + libaddr);
+			}
+			_dl_tls_dtv_generation++;
+			object->tls_index = _dl_tls_max_index++;
+			object->tls_fsize = ptls->p_filesz;
+			object->tls_msize = ptls->p_memsz;
+			object->tls_align = ptls->p_align;
+			DL_DEB(("tls %x %x %x %x %u\n",
+			    object->tls_static_data, object->tls_fsize,
+			    object->tls_msize, object->tls_align,
+			    object->tls_index));
+		}
 	} else {
 		_dl_munmap((void *)libaddr, maxva - minva);
 		_dl_load_list_free(load_list);

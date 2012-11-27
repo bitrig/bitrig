@@ -172,4 +172,8 @@ void	_thread_arc4_unlock(void);
 						_thread_arc4_unlock();\
 				} while (0)
 
+/* stubs for ld.so */
+void	*_rtld_allocate_tls(void *, size_t, size_t) __attribute__((weak));
+void	_rtld_free_tls(void *, size_t, size_t) __attribute__((weak));
+
 #endif /* _THREAD_PRIVATE_H_ */
