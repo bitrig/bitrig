@@ -547,6 +547,9 @@ _dl_allocate_first_tls()
 {
 	void *tls;
 
+	if (_dl_tls_first_done)
+		return;
+	_dl_tls_first_done = 1;
 	_dl_tls_static_space = _dl_tls_free_idx /* + RTLD_STATIC_TLS_EXTRA */;
 	tls = _dl_allocate_tls(NULL, _dl_objects, 2*sizeof(Elf_Addr),
 	    sizeof(Elf_Addr));
