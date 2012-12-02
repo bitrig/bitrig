@@ -319,8 +319,8 @@ bufadjust(int newbufpages)
 	 * Wake up the cleaner if we have lots of dirty pages,
 	 * or if we are getting low on buffer cache kva.
 	 */
-	if (UNCLEAN_PAGES >= hidirtypages ||
-	    bcstats.kvaslots_avail <= 2 * RESERVE_SLOTS)
+	if (!growing && (UNCLEAN_PAGES >= hidirtypages ||
+	    bcstats.kvaslots_avail <= 2 * RESERVE_SLOTS))
 		wakeup(&bd_req);
 
 	splx(s);
