@@ -1,4 +1,4 @@
-/*	$OpenBSD: param.h,v 1.95 2012/04/12 12:33:03 deraadt Exp $	*/
+/*	$OpenBSD: param.h,v 1.97 2012/12/05 23:20:24 deraadt Exp $	*/
 /*	$NetBSD: param.h,v 1.23 1996/03/17 01:02:29 thorpej Exp $	*/
 
 /*-
@@ -75,7 +75,6 @@
 
 /* More types and definitions used throughout the kernel. */
 #ifdef _KERNEL
-#include <sys/cdefs.h>
 #include <sys/errno.h>
 #include <sys/time.h>
 #include <sys/resource.h>
