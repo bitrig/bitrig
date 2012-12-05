@@ -1,4 +1,4 @@
-/*	$OpenBSD: sysarch.h,v 1.10 2011/11/07 15:41:33 guenther Exp $	*/
+/*	$OpenBSD: sysarch.h,v 1.12 2012/12/05 23:20:12 deraadt Exp $	*/
 /*	$NetBSD: sysarch.h,v 1.8 1996/01/08 13:51:44 mycroft Exp $	*/
 
 #ifndef _MACHINE_SYSARCH_H_
@@ -42,7 +42,14 @@ struct i386_set_ioperm_args {
 	u_long *iomap;
 };
 
-#ifndef _KERNEL
+#ifdef _KERNEL
+uint32_t i386_get_threadbase(struct proc *, int);
+int i386_set_threadbase(struct proc *, uint32_t, int);
+#else
+
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
 int i386_get_ldt(int, union descriptor *, int);
 int i386_set_ldt(int, union descriptor *, int);
 int i386_iopl(int);
@@ -53,9 +60,7 @@ int i386_set_fsbase(void *);
 int i386_get_gsbase(void **);
 int i386_set_gsbase(void *);
 int sysarch(int, void *);
-#else
-uint32_t i386_get_threadbase(struct proc *, int);
-int i386_set_threadbase(struct proc *, uint32_t, int);
+__END_DECLS
 #endif
 
 #endif /* !_MACHINE_SYSARCH_H_ */

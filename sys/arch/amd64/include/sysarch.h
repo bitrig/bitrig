@@ -1,4 +1,4 @@
-/*	$OpenBSD: sysarch.h,v 1.10 2011/04/13 02:49:12 guenther Exp $	*/
+/*	$OpenBSD: sysarch.h,v 1.12 2012/12/05 23:20:10 deraadt Exp $	*/
 /*	$NetBSD: sysarch.h,v 1.1 2003/04/26 18:39:48 fvdl Exp $	*/
 
 #ifndef _MACHINE_SYSARCH_H_
@@ -68,6 +68,10 @@ int amd64_iopl(struct proc *, void *, register_t *);
 int amd64_set_fsbase(struct proc *, void *);
 int amd64_get_fsbase(struct proc *, void *);
 #else
+
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
 int amd64_iopl(int);
 int amd64_get_ioperm(u_long *);
 int amd64_set_ioperm(u_long *);
