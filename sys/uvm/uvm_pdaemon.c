@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_pdaemon.c,v 1.59 2011/07/06 19:50:38 beck Exp $	*/
+/*	$OpenBSD: uvm_pdaemon.c,v 1.61 2012/12/10 22:42:54 beck Exp $	*/
 /*	$NetBSD: uvm_pdaemon.c,v 1.23 2000/08/20 10:24:14 bjh21 Exp $	*/
 
 /* 
@@ -208,6 +208,7 @@ uvm_pageout(void *arg)
 	 */
 
 	for (;;) {
+		long size;
 	  	work_done = 0; /* No work done this iteration. */
 
 		uvm_lock_fpageq();
@@ -242,18 +243,24 @@ uvm_pageout(void *arg)
 		}
 
 		/*
-		 * get pages from the buffer cache, or scan if needed
+		 * Reclaim pages from the buffer cache if possible.
+		 */
+		size = 0;
+		if (pma != NULL)
+			size += pma->pm_size >> PAGE_SHIFT;
+		if (uvmexp.free - BUFPAGES_DEFICIT < uvmexp.freetarg)
+			size += uvmexp.freetarg - uvmexp.free -
+			    BUFPAGES_DEFICIT;
+		(void) bufbackoff(&constraint, size * 2);
+
+		/*
+		 * Scan if needed to meet our targets.
 		 */
 		if (pma != NULL ||
 		    ((uvmexp.free - BUFPAGES_DEFICIT) < uvmexp.freetarg) ||
 		    ((uvmexp.inactive + BUFPAGES_INACT) < uvmexp.inactarg)) {
-			if (bufbackoff(&constraint,
-			    (pma ? pma->pm_size : -1)) == 0)
-				work_done = 1;
-			else {
-				uvmpd_scan();
-				work_done = 1; /* we hope... */
-			}
+			uvmpd_scan();
+			work_done = 1; /* XXX we hope... */
 		}
 
 		/*
