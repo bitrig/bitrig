@@ -37,17 +37,18 @@ _atomic_lock(volatile _spinlock_lock_t *lock)
 
 #ifdef ARM_V7PLUS_LOCKS
 	uint32_t scratch = 0;
+	old = 0;
 	__asm__("1: ldrex %0, [%1]      \n"
 		"   strex %2, %3, [%1]  \n"
 		"   cmp %2, #0          \n"
 		"   bne 1b              \n"
-		: "=r" (old), "=r" (lock), "=r" (scratch)
-		: "r" (_SPINLOCK_LOCKED), "0" (old), "1" (lock), "2" (scratch));
+		: "+r" (old), "+r" (lock), "+r" (scratch)
+		: "r" (_SPINLOCK_LOCKED));
 #else
 	__asm__("swp %0, %2, [%1]"
 		: "=r" (old), "=r" (lock)
 		: "r" (_SPINLOCK_LOCKED), "1" (lock) );
 
-	return (old != _SPINLOCK_UNLOCKED);
 #endif
+	return (old != _SPINLOCK_UNLOCKED);
 }
