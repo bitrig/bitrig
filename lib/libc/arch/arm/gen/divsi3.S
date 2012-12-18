@@ -41,7 +41,7 @@ ENTRY(__modsi3)
 .L_overflow:
 #if !defined(_KERNEL) && !defined(_STANDALONE)
 	mov	r0, #8			/* SIGFPE */
-#if defined(PIC)
+#if defined(__PIC__)
 	bl	_C_LABEL(raise)(PLT)	/* raise it */
 #else
 	bl	_C_LABEL(raise)		/* raise it */

@@ -39,7 +39,7 @@ ENTRY(bcopy)
 	eor     r0, r1, r0 
 	eor     r1, r0, r1 
 	eor     r0, r1, r0 
-#if defined(PIC)
+#if defined(__PIC__)
 	b	_C_LABEL(_memcpy)(PLT)
 #else
 	b	_C_LABEL(_memcpy)

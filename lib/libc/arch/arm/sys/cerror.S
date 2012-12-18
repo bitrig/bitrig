@@ -40,7 +40,7 @@ ASENTRY(_CERROR)
 #ifdef _REENTRANT
 	stmfd	sp!, {r4, lr}
 	mov	r4, r0
-#if defined(PIC)
+#if defined(__PIC__)
 	bl	_C_LABEL(__errno)(PLT)
 #else
 	bl	_C_LABEL(__errno)
@@ -74,7 +74,7 @@ ASENTRY(_CERROR)
 	.globl	_C_LABEL(errno)
 
 .Lerrno:
-#if defined(PIC)
+#if defined(__PIC__)
 	.word	_C_LABEL(errno)(GOT)
 #else
 	.word	_C_LABEL(errno)

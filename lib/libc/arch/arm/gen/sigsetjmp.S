@@ -48,7 +48,7 @@
 
 ENTRY(sigsetjmp)
 	teq	r1, #0
-#if defined(PIC)
+#if defined(__PIC__)
 	beq	_C_LABEL(_setjmp)(PLT)
 	b	_C_LABEL(setjmp)(PLT)
 #else
@@ -63,7 +63,7 @@ ENTRY(siglongjmp)
 	ldr	r2, .L_setjmp_magic
 	ldr	r3, [r0]
 	teq	r2, r3
-#if defined(PIC)
+#if defined(__PIC__)
 	beq	_C_LABEL(_longjmp)(PLT)
 	b	_C_LABEL(longjmp)(PLT)
 #else

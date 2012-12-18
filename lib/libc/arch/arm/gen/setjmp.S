@@ -51,7 +51,7 @@ ENTRY(setjmp)
 	stmfd	sp!, {r0, r14}
 	mov	r0, #0x00000000
 
-#if defined(PIC)
+#if defined(__PIC__)
 	bl	_C_LABEL(sigblock)(PLT)
 #else
 	bl	_C_LABEL(sigblock)
@@ -98,7 +98,7 @@ ENTRY(longjmp)
 	sub	sp, sp, #4	/* align the stack */
 
 	mov	r0, r2
-#if defined(PIC)
+#if defined(__PIC__)
 	bl	_C_LABEL(sigsetmask)(PLT)
 #else
 	bl	_C_LABEL(sigsetmask)
@@ -138,7 +138,7 @@ ENTRY(longjmp)
 
 	/* validation failed, die die die. */
 botch:
-#if defined(PIC)
+#if defined(__PIC__)
 	bl	_C_LABEL(longjmperror)(PLT)
 	bl	_C_LABEL(abort)(PLT)
 #else

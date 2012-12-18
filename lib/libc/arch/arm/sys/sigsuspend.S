@@ -37,7 +37,7 @@
 SYSENTRY(sigsuspend)
 	ldr	r0, [r0]
 	SYSTRAP(sigsuspend)
-#if defined(PIC)
+#if defined(__PIC__)
 	bcs	CERROR(PLT)
 #else
 	bcs	CERROR

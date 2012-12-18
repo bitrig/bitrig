@@ -34,7 +34,7 @@
 
 ENTRY(memmove)
 	stmfd	sp!, {r0, lr}
-#if defined(PIC)
+#if defined(__PIC__)
 	bl	_C_LABEL(_memcpy)(PLT)
 #else
 	bl	_C_LABEL(_memcpy)

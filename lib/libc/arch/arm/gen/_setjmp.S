@@ -101,7 +101,7 @@ ENTRY(_longjmp)
 
 	/* validation failed, die die die. */
 botch:
-#if defined(PIC)
+#if defined(__PIC__)
 	bl	_C_LABEL(longjmperror)(PLT)
 	bl	_C_LABEL(abort)(PLT)
 #else

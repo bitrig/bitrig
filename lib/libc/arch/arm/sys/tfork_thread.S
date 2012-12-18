@@ -38,7 +38,7 @@ ENTRY(__tfork_thread)
 	nop
 	SYSTRAP(__threxit)
 1:
-#if defined(PIC)
+#if defined(__PIC__)
 	b	CERROR(PLT)
 #else
 	b	CERROR

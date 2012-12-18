@@ -47,7 +47,7 @@
 SYSENTRY(vfork)
 	mov	r2, r14
 	SYSTRAP(vfork)
-#if defined(PIC)
+#if defined(__PIC__)
 	bcs	CERROR(PLT)
 #else
 	bcs	CERROR

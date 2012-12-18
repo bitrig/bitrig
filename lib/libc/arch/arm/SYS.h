@@ -74,7 +74,7 @@
 	SYSENTRY(x);							\
 	SYSTRAP(y)
 
-#if  defined(PIC)
+#if  defined(__PIC__)
 #define _SYSCALL(x, y)							\
 	_SYSCALL_NOERROR(x,y);						\
 	bcs CERROR(PLT)
