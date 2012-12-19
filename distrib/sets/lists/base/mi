@@ -913,6 +913,8 @@
 ./usr/include/dev/ic/rtl80x9var.h
 ./usr/include/dev/ic/rtl81x9reg.h
 ./usr/include/dev/ic/rtl8225reg.h
+./usr/include/dev/ic/rtsxreg.h
+./usr/include/dev/ic/rtsxvar.h
 ./usr/include/dev/ic/rtwreg.h
 ./usr/include/dev/ic/rtwvar.h
 ./usr/include/dev/ic/s3_617.h
@@ -2061,7 +2063,7 @@
 ./usr/lib/libasn1.so.18.0
 ./usr/lib/libasn1_p.a
 ./usr/lib/libc.a
-./usr/lib/libc.so.66.0
+./usr/lib/libc.so.66.1
 ./usr/lib/libc_p.a
 ./usr/lib/libcom_err.a
 ./usr/lib/libcom_err.so.18.0
@@ -2161,7 +2163,7 @@
 ./usr/lib/libsndio.so.4.0
 ./usr/lib/libsndio_p.a
 ./usr/lib/libsqlite3.a
-./usr/lib/libsqlite3.so.20.0
+./usr/lib/libsqlite3.so.21.0
 ./usr/lib/libsqlite3_p.a
 ./usr/lib/libssl.a
 ./usr/lib/libssl.so.19.0
@@ -7413,6 +7415,7 @@
 ./usr/share/man/man3/globfree.3
 ./usr/share/man/man3/gmtime.3
 ./usr/share/man/man3/gmtime_r.3
+./usr/share/man/man3/grantpt.3
 ./usr/share/man/man3/group_from_gid.3
 ./usr/share/man/man3/gss_accept_sec_context.3
 ./usr/share/man/man3/gss_acquire_cred.3
@@ -8708,6 +8711,7 @@
 ./usr/share/man/man3/pos_menu_cursor.3
 ./usr/share/man/man3/posix2time.3
 ./usr/share/man/man3/posix_memalign.3
+./usr/share/man/man3/posix_openpt.3
 ./usr/share/man/man3/posix_spawn.3
 ./usr/share/man/man3/posix_spawn_file_actions_addclose.3
 ./usr/share/man/man3/posix_spawn_file_actions_adddup2.3
@@ -8831,6 +8835,7 @@
 ./usr/share/man/man3/pthread_testcancel.3
 ./usr/share/man/man3/pthread_yield.3
 ./usr/share/man/man3/pthreads.3
+./usr/share/man/man3/ptsname.3
 ./usr/share/man/man3/put8.3
 ./usr/share/man/man3/putc.3
 ./usr/share/man/man3/putc_unlocked.3
@@ -9373,6 +9378,7 @@
 ./usr/share/man/man3/ungetch.3
 ./usr/share/man/man3/ungetmouse.3
 ./usr/share/man/man3/ungetwc.3
+./usr/share/man/man3/unlockpt.3
 ./usr/share/man/man3/unparse_time.3
 ./usr/share/man/man3/unparse_time_approx.3
 ./usr/share/man/man3/unpost_form.3
@@ -10609,6 +10615,7 @@
 ./usr/share/man/man4/rt.4
 ./usr/share/man/man4/rtfps.4
 ./usr/share/man/man4/rtii.4
+./usr/share/man/man4/rtsx.4
 ./usr/share/man/man4/rtw.4
 ./usr/share/man/man4/rum.4
 ./usr/share/man/man4/run.4
@@ -11458,6 +11465,7 @@
 ./usr/share/man/man9/bus_space_copy_8.9
 ./usr/share/man/man9/bus_space_free.9
 ./usr/share/man/man9/bus_space_map.9
+./usr/share/man/man9/bus_space_mmap.9
 ./usr/share/man/man9/bus_space_read_1.9
 ./usr/share/man/man9/bus_space_read_2.9
 ./usr/share/man/man9/bus_space_read_4.9
