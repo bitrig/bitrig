@@ -156,10 +156,12 @@ raw_usrreq(struct socket *so, int req, struct mbuf *m, struct mbuf *nam,
 	if (req == PRU_CONTROL)
 		return (EOPNOTSUPP);
 	if (control && control->m_len) {
-		return (EOPNOTSUPP);
+		error = EOPNOTSUPP;
+		goto release;
 	}
 	if (rp == 0) {
-		return (EINVAL);
+		error = EINVAL;
+		goto release;
 	}
 	s = splsoftnet();
 	switch (req) {
