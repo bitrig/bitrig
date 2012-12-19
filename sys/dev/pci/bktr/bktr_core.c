@@ -791,7 +791,6 @@ common_bktr_intr( void *arg )
 /*
  *
  */
-extern int bt848_format; /* used to set the default format, PAL or NTSC */
 int
 video_open( bktr_ptr_t bktr )
 {
