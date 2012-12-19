@@ -1,6 +1,6 @@
 #!/bin/ksh -
 #
-# $OpenBSD: sysmerge.sh,v 1.93 2012/11/10 18:48:28 rpe Exp $
+# $OpenBSD: sysmerge.sh,v 1.94 2012/12/19 19:40:30 rpe Exp $
 #
 # Copyright (c) 2008, 2009, 2010, 2011, 2012 Antoine Jacoutot <ajacoutot@openbsd.org>
 # Copyright (c) 1998-2003 Douglas Barton <DougB@FreeBSD.org>
@@ -75,7 +75,7 @@ error_rm_wrkdir() {
 
 trap "restore_bak; clean_src; rm -rf ${WRKDIR}; exit 1" 1 2 3 13 15
 
-if [ "$(id -u)" -ne 0 ]; then
+if (($(id -u) != 0)); then
 	error "need root privileges to run this script"
 	usage
 	error_rm_wrkdir
@@ -368,7 +368,7 @@ diff_loop() {
 								else
 									chpass -la "${l}"
 								fi
-								if [ $? -eq 0 ]; then
+								if (($? == 0)); then
 									set -A NEWUSR -- ${NEWUSR[@]} ${_u}
 								else
 									_merge_pwd=1
@@ -393,7 +393,7 @@ diff_loop() {
 							else
 								groupadd -g "${_gid}" "${_g}"
 							fi
-							if [ $? -eq 0 ]; then
+							if (($? == 0)); then
 								set -A NEWGRP -- ${NEWGRP[@]} ${_g}
 							else
 								_merge_grp=1
@@ -674,7 +674,7 @@ while getopts bds:x: arg; do
 done
 
 shift $(( OPTIND -1 ))
-if [ $# -ne 0 ]; then
+if (($# != 0)); then
 	usage
 	error_rm_wrkdir
 fi
