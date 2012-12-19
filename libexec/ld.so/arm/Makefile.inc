@@ -1,6 +1,6 @@
 #	$OpenBSD: Makefile.inc,v 1.4 2012/09/02 16:32:52 jsg Exp $
 
-CFLAGS += -fpic -msoft-float -fno-stack-protector
+CFLAGS += -fpic -msoft-float -fno-stack-protector -DRTLD_NO_WXORX
 AFLAGS += -D_STANDALONE
 CPPFLAGS += -I${.CURDIR}/../../lib/libc/arch/arm
 SRCS+= divsi3.S
