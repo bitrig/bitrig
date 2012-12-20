@@ -151,7 +151,7 @@ tea5757_set_freq(struct tea5757_t *tea, u_int32_t stereo, u_int32_t lock, u_int3
 u_int32_t
 tea5757_encode_lock(u_int8_t lock)
 {
-	u_int32_t ret;
+	u_int32_t ret = 0;
 
 	if (lock < 8)
 		ret = TEA5757_S005;
