@@ -507,7 +507,7 @@ fmsradio_get_info(void *v, struct radio_info *ri)
 {
 	struct fms_softc *sc = v;
 	struct fmsradio_if *radio = (struct fmsradio_if *)sc->radio;
-	u_int32_t buf;
+	u_int32_t buf = 0;
 
 	ri->mute = radio->mute;
 	ri->volume = radio->vol ? 255 : 0;
