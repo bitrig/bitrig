@@ -129,16 +129,7 @@ struct thread_control_block {
 #define	TCB_SET(tcb)	__set_tcb(tcb)
 #endif
 
-#if 0
 void *_rtld_allocate_tls(void *, size_t, size_t);
 void _rtld_free_tls(void *, size_t, size_t);
-#else
-/*
- * XXX Until we have these in ld.so and support __thread, just use
- * malloc/free.  The main thread's TCB cannot be allocated or freed with these.
- */
-#define	_rtld_allocate_tls(old, size, align)	malloc(size)
-#define	_rtld_free_tls(old, size, align)	free(old)
-#endif
 
 #endif /* _TCB_H_ */
