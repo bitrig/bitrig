@@ -98,7 +98,7 @@ _dl_allocate_tls(char *oldtls, elf_object_t *objhead, size_t tcbsize,
 	dtv = _dl_malloc((_dl_tls_max_index+1) * sizeof(Elf_Addr));
 
 	segbase = (Elf_Addr)(tls + size);
-#if __amd64__ || __i386__
+#if defined(__amd64__) || defined(__i386__)
 	((Elf_Addr*)segbase)[0] = segbase;
 #endif
 	((Elf_Addr*)segbase)[1] = (Elf_Addr) dtv;
