@@ -499,7 +499,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	consinit();
 
 	/* Talk to the user */
-	printf("\nOpenBSD/beagle booting ...\n");
+	printf("\nBitrig/beagle booting ...\n");
 
 	printf("arg0 %p arg1 %p arg2 %p\n", arg0, arg1, arg2);
 	parse_uboot_tags(arg2);
@@ -540,7 +540,6 @@ initarm(void *arg0, void *arg1, void *arg2)
 		/* doesn't deal with multiple segments, hopefully u-boot collaped them into one */
 		memstart = bootconfig.dram[0].address;
 		memsize = bootconfig.dram[0].pages * PAGE_SIZE;
-		memsize =  0x02000000; /* 32MB */ /* WTF? */
 		printf("memory size derived from u-boot\n");
 		for (loop = 0; loop < bootconfig.dramblocks; loop++) {
 			printf("bootconf.mem[%d].address = %08x pages %d/0x%08x\n",
@@ -566,7 +565,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 
 	{
 		extern char _end[];
-		physical_freestart = (((unsigned long)_end - KERNEL_TEXT_BASE +0xfff) & ~0xfff);
+		physical_freestart = (((unsigned long)_end - KERNEL_TEXT_BASE +0xfff) & ~0xfff) + memstart;
 		physical_freeend = memstart+memsize;
 	}
 
@@ -613,10 +612,10 @@ initarm(void *arg0, void *arg1, void *arg2)
 	(var).pv_va = KERNEL_BASE + (var).pv_pa - physical_start;
 
 #define alloc_pages(var, np)				\
-	physical_freeend -= ((np) * PAGE_SIZE);		\
+	(var) = physical_freestart ;			\
+	physical_freestart += ((np) * PAGE_SIZE);	\
 	if (physical_freeend < physical_freestart)	\
 		panic("initarm: out of memory");	\
-	(var) = physical_freeend;			\
 	free_pages -= (np);				\
 	memset((char *)(var), 0, ((np) * PAGE_SIZE));
 
@@ -624,7 +623,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	kernel_l1pt.pv_pa = 0;
 	for (loop = 0; loop <= NUM_KERNEL_PTS; ++loop) {
 		/* Are we 16KB aligned for an L1 ? */
-		if (((physical_freeend - L1_TABLE_SIZE) & (L1_TABLE_SIZE - 1)) == 0
+		if (((physical_freestart) & (L1_TABLE_SIZE - 1)) == 0
 		    && kernel_l1pt.pv_pa == 0) {
 			valloc_pages(kernel_l1pt, L1_TABLE_SIZE / PAGE_SIZE);
 		} else {
@@ -776,21 +775,6 @@ initarm(void *arg0, void *arg1, void *arg2)
 	 * Once this is done we will be running with the REAL kernel page
 	 * tables.
 	 */
-
-	/*
-	 * Update the physical_freestart/physical_freeend/free_pages
-	 * variables.
-	 */
-	{
-		extern char _end[];
-
-		physical_freestart = physical_start +
-		    (((((u_int32_t) _end) + PGOFSET) & ~PGOFSET) -
-		     KERNEL_BASE);
-		physical_freeend = physical_end;
-		free_pages =
-		    (physical_freeend - physical_freestart) / PAGE_SIZE;
-	}
 
 	/* be a client to all domains */
 	cpu_domains(0x55555555);
