@@ -1088,15 +1088,15 @@ void
 buf_daemon(struct proc *p)
 {
 	struct timeval starttime, timediff;
-	struct buf *bp;
-	int s, pushed;
+	struct buf *bp = NULL;
+	int s, pushed = 0;
 
 	cleanerproc = curproc;
 
-	pushed = 16;
 	s = splbio();
 	for (;;) {
-		if (pushed >= 16 && (UNCLEAN_PAGES < hidirtypages &&
+		if (bp == NULL || (pushed >= 16 &&
+		    UNCLEAN_PAGES < hidirtypages &&
 		    bcstats.kvaslots_avail > 2 * RESERVE_SLOTS)){
 			pushed = 0;
 			/*
@@ -1156,8 +1156,6 @@ buf_daemon(struct proc *p)
 				break;
 
 		}
-		if (bp == NULL)
-			pushed = 16; /* No dirty bufs - sleep */
 	}
 }
 
