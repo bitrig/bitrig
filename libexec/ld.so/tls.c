@@ -76,6 +76,8 @@ _dl_allocate_tls_offset(elf_object_t *object)
 	    object->tls_align);
 	object->tls_offset = _dl_tls_free_idx;
 #endif
+	DL_DEB(("allocating object %s to offset %d msize %d\n",
+	    object->load_name, object->tls_offset, object->tls_msize));
 
 	object->tls_done = 1;
 }
@@ -118,6 +120,11 @@ _dl_allocate_tls(char *oldtls, elf_object_t *objhead, size_t tcbsize,
 		 * Copy the static TLS block over whole.
 		 */
 		oldsegbase = (Elf_Addr) oldtls;
+
+		DL_DEB(("allocate_tls copying %p to %p \n",
+			(void *)(oldsegbase - _dl_tls_static_space),
+			    (void *)(segbase - _dl_tls_static_space)));
+
 		_dl_bcopy((void *)(oldsegbase - _dl_tls_static_space),
 		    (void *)(segbase - _dl_tls_static_space),
 		    _dl_tls_static_space);
@@ -168,6 +175,9 @@ _dl_allocate_tls(char *oldtls, elf_object_t *objhead, size_t tcbsize,
 			}
 		}
 	}
+
+	DL_DEB(("returning segbase %p val %p %p %p dtv %p\n", segbase,
+	    ((Elf_Addr*)segbase)[0], &((Elf_Addr*)segbase)[1], ((Elf_Addr*)segbase)[1], dtv));
 	return (void*) segbase;
 }
 
@@ -186,6 +196,8 @@ _dl_free_tls(void *tls, size_t tcbsize, size_t tcbalign)
 	size = ELF_ROUND(_dl_tls_static_space, tcbalign);
 
 	dtv = ((Elf_Addr**)tls)[1];
+	DL_DEB(("free_tls %p seg %p dtv %p\n",
+	    ((Elf_Addr**)tls)[0], &((Elf_Addr**)tls)[1], ((Elf_Addr**)tls)[1]));
 	dtvsize = dtv[1] - 1;
 	tlsend = (Elf_Addr) tls;
 	tlsstart = tlsend - size;

@@ -560,6 +560,7 @@ _dl_boot(const char **argv, char **envp, const long dyn_loff, long *dl_data)
 		    obj = obj->next ) {
 			_dl_allocate_tls_offset(obj);
 		}
+		DL_DEB(("tls_free_idx %d\n", _dl_tls_free_idx ));
 		if (_dl_tls_free_idx > 0)
 			_dl_allocate_first_tls();
 	}
