@@ -120,7 +120,7 @@ static int reloc_target_flags[] = {
 	_RF_S|_RF_A|_RF_P|	_RF_SZ(8) | _RF_RS(0),		/* 15 PC8 */
 	_RF_S,							/* 16 DPTMOD64*/
 	_RF_S,							/* 17 DTPOFF64*/
-	_RF_E,							/* 18 TPOFF64 */
+	_RF_S,							/* 18 TPOFF64 */
 	_RF_E,							/* 19 TLSGD */
 	_RF_E,							/* 20 TLSLD */
 	_RF_E,							/* 21 DTPOFF32*/
@@ -313,16 +313,30 @@ resolve_failed:
 		if (RELOC_BASE_RELATIVE(type))
 			value += loff;
 
+		if (type == R_TYPE(TPOFF64)) {
+			if (value == 0)
+				goto resolve_failed;
+			if (refobj->tls_done == 0) {
+				_dl_printf("shared object not intialized %s\n",
+				  refobj->load_name);
+				_dl_exit(21);
+			}
+			*where = (Elf_Addr) this->st_value -
+			    (Elf_Addr) refobj->tls_offset + 
+			    (Elf_Addr) rels->r_addend;
+			continue;
+		}
 		if (type == R_TYPE(DTPMOD64)) {
 			if (value == 0)
 				goto resolve_failed;
-			*where = (Elf_Addr) refobj->tls_index;
+			*where += (Elf_Addr) refobj->tls_index;
 			continue;
 		}
 		if (type == R_TYPE(DTPOFF64)) {
 			if (value == 0)
 				goto resolve_failed;
-			*where = (Elf_Addr) this->st_value;
+			*where += (Elf_Addr) this->st_value +
+			    rels->r_addend;
 			continue;
 		}
 
@@ -504,7 +518,7 @@ _dl_allocate_first_tls()
 	if (_dl_tls_first_done)
 		return;
 	_dl_tls_first_done = 1;
-	_dl_tls_static_space = _dl_tls_free_idx /* + RTLD_STATIC_TLS_EXTRA */;
+	_dl_tls_static_space = _dl_tls_free_idx + RTLD_STATIC_TLS_EXTRA;
 	tls = _dl_allocate_tls(NULL, _dl_objects, 2*sizeof(Elf_Addr),
 	    sizeof(Elf_Addr));
 	_dl_sysarch(AMD64_SET_FSBASE, &tls);
