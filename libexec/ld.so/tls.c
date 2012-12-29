@@ -97,12 +97,10 @@ _dl_allocate_tls(char *oldtls, elf_object_t *objhead, size_t tcbsize,
 
 	size = ELF_ROUND(_dl_tls_static_space, tcbalign);
 	tls = _dl_malloc(size + tcbsize);
-	dtv = _dl_malloc((_dl_tls_max_index+1) * sizeof(Elf_Addr));
+	dtv = _dl_malloc((_dl_tls_max_index+2) * sizeof(Elf_Addr));
 
 	segbase = (Elf_Addr)(tls + size);
-#if defined(__amd64__) || defined(__i386__)
 	((Elf_Addr*)segbase)[0] = segbase;
-#endif
 	((Elf_Addr*)segbase)[1] = (Elf_Addr) dtv;
 
 	dtv[0] = _dl_tls_dtv_generation;
