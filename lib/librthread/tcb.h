@@ -111,6 +111,7 @@ struct thread_control_block {
 #endif
 #define	TCB_INIT(tcb, thread, errnoptr)			\
 	do {						\
+		(tcb)->__tcb_self = (tcb);		\
 		(tcb)->tcb_thread = (thread);		\
 		(tcb)->__tcb_errno = (errnoptr);	\
 	} while (0)

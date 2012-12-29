@@ -133,11 +133,26 @@ _spinunlock(volatile struct _spinlock *lock)
 void _rthread_initlib(void) __attribute__((constructor));
 void _rthread_initlib(void)
 {
-	struct thread_control_block *tcb = &_initial_thread_tcb;
+	struct thread_control_block *tcb;
+
+	/*
+	 * NOTE: must use 'slow' method, reading thru uninitialized tcb 
+	 * fails miserably
+	 */
+	tcb = __get_tcb();
+
+	/* if static linking, ld.so will not have set up tcb */
+	if (tcb == NULL)
+		tcb = &_initial_thread_tcb;
 
 	/* use libc's errno for the main thread */
 	TCB_INIT(tcb, &_initial_thread, ___errno());
 	TCB_SET(tcb);
+#ifdef TCB_SET
+	TCB_SET(tcb);
+#else
+	__set_tcb(tcb);
+#endif
 }
 
 int *
