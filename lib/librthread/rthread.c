@@ -768,3 +768,38 @@ static void *__libc_overrides[] __used = {
 	&write,
 	&writev,
 };
+
+
+/* Allow library to generate default tls tables for static threaded apps */
+
+void *
+_rtld_allocate_tls(void *old, size_t size, size_t align) __attribute__((weak));
+
+void * 
+_rtld_allocate_tls(void *old, size_t size, size_t align)
+{
+	/* XXX variant 2 */
+	Elf_Addr base;
+	size_t asize;
+	struct thread_control_block *tls;
+
+	asize = (size + (align -1)) & ~(align-1);
+	base = (Elf_Addr) calloc(1,
+	    asize + sizeof (struct thread_control_block));
+	tls = (struct thread_control_block *)(base + size);
+	tls->__tcb_self = tls;
+	tls->tcb_dtv = (void*)base;
+
+	return tls;
+}
+
+void
+_rtld_free_tls(void * old, size_t size, size_t align) __attribute__((weak));
+void
+_rtld_free_tls(void * old, size_t size, size_t align)
+{
+	struct thread_control_block *tls = (struct thread_control_block *)old;
+
+	free(tls->tcb_dtv);
+}
+
