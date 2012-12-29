@@ -85,7 +85,6 @@ struct thread_control_block {
 	__ERRNOPTR(TCB_THREAD())
 #define	TCB_INIT(tcb, thread, errnoptr)			\
 	do {						\
-		(tcb)->tcb_dtv = 0;			\
 		(tcb)->tcb_thread = (thread);		\
 		__ERRNOPTR(thread) = (errnoptr);	\
 	} while (0)
@@ -112,8 +111,6 @@ struct thread_control_block {
 #endif
 #define	TCB_INIT(tcb, thread, errnoptr)			\
 	do {						\
-		(tcb)->__tcb_self = (tcb);		\
-		(tcb)->tcb_dtv = 0;			\
 		(tcb)->tcb_thread = (thread);		\
 		(tcb)->__tcb_errno = (errnoptr);	\
 	} while (0)
