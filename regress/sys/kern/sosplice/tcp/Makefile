@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1.1.1 2013/01/03 17:36:39 bluhm Exp $
+#	$OpenBSD: Makefile,v 1.1 2013/01/03 17:36:39 bluhm Exp $
 
 .include <bsd.regress.mk>
 
