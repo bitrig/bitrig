@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#	$OpenBSD: relay.pl,v 1.1.1.1 2013/01/03 17:36:39 bluhm Exp $
+#	$OpenBSD: relay.pl,v 1.1 2013/01/03 17:36:39 bluhm Exp $
 
 # Copyright (c) 2010-2013 Alexander Bluhm <bluhm@openbsd.org>
 #
