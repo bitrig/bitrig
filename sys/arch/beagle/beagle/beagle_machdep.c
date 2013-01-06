@@ -976,7 +976,7 @@ consinit(void)
 		paddr = 0x48020000; 
 		break;
 	default:
-		printf("board type %x unknown", board_id);
+		panic("board type %x unknown", board_id);
 		/* XXX - HELP */
 	}
 	comcnattach(&armv7_a4x_bs_tag, paddr, comcnspeed, 48000000, comcnmode);
