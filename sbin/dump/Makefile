@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.10 2001/04/10 20:52:10 naddy Exp $
+#	$OpenBSD: Makefile,v 1.11 2013/01/06 21:59:28 martynas Exp $
 
 #	dump.h			header file
 #	itime.c			reads /etc/dumpdates
