@@ -44,6 +44,7 @@
 
 /* XXX - PERIPHCLK */
 #define TIMER_FREQUENCY                 500 * 1000 * 1000 /* XXX - PERIPHCLK? */
+int32_t amptimer_frequency	= TIMER_FREQUENCY;
 
 u_int amptimer_get_timecount(struct timecounter *);
 
@@ -124,8 +125,8 @@ amptimer_attach(struct device *parent, struct device *self, void *args)
 	    oa->oa_dev->mem[0].size, 0, &ioh))
 		panic("amptimer_attach: bus_space_map failed!");
 
-	sc->sc_ticks_per_second = TIMER_FREQUENCY;
-	printf(": tick rate %d KHz\n", sc->sc_ticks_per_second /1024);
+	sc->sc_ticks_per_second = amptimer_frequency;
+	printf(": tick rate %d KHz\n", sc->sc_ticks_per_second /1000);
 
 	sc->sc_ioh = ioh;
 

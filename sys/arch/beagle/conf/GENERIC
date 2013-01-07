@@ -55,6 +55,7 @@ cpu0		at mainbus?
 
 # OMAP3xxx/OMAP4xxx SoC
 omap0		at mainbus?
+omapid*		at soc?
 
 # Cortex-A9 (OMAP4)
 ampintc*	at soc? 

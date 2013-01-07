@@ -24,6 +24,8 @@
 
 #include <beagle/dev/omapvar.h>
 
+#define OMAPID_ADDR	0x4A002000
+#define OMAPID_SIZE	0x1000
 #define ICP_ADDR	0x48240100
 #define ICP_SIZE	0x100
 #define ICD_ADDR	0x48241000
@@ -112,6 +114,14 @@ struct omap_dev omap4_devs[] = {
 	    { PCNF1_ADDR, PCNF1_SIZE },
 	    { PCNF2_ADDR, PCNF2_SIZE },
 	  },
+	},
+
+	/*
+	 * OMAP identification registers/fuses
+	 */
+	{ .name = "omapid",
+	  .unit = 0,
+	  .mem = { { OMAPID_ADDR, OMAPID_SIZE } },
 	},
 
 	/*
@@ -205,4 +215,5 @@ void
 omap4_init(void)
 {
 	omap_set_devs(omap4_devs);
+	/* panda specific */
 }
