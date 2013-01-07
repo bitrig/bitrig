@@ -86,7 +86,7 @@ omapid_attach(struct device *parent, struct device *self, void *args)
 			break;
 		case 0xB94E:
 			board = "omap4460";
-			amptimer_frequency = 333 * 1000 * 1000;
+			amptimer_frequency = 350 * 1000 * 1000;
 			break;
 		}
 		break;
