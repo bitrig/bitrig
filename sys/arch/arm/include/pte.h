@@ -149,7 +149,8 @@ typedef uint32_t	pt_entry_t;	/* L2 table entry */
 #define	L1_S_XSCALE_P	0x00000200	/* ECC enable for this section */
 #define	L1_S_XSCALE_TEX(x) ((x) << 12)	/* Type Extension */
 
-#define	L1_S_V7_TEX(x)	((x) << 12)	/* Type Extension */
+#define	L1_S_V7_TEX(x)	(((x) & 0x7) << 12)	/* Type Extension */
+#define	L1_S_V7_TEX_MASK	(0x7 << 12)	/* Type Extension */
 #define	L1_S_V7_NS	0x00080000	/* Non-secure */
 #define	L1_S_V7_SS	0x00040000	/* Supersection */
 #define	L1_S_V7_nG	0x00020000	/* not Global */
@@ -210,9 +211,11 @@ typedef uint32_t	pt_entry_t;	/* L2 table entry */
 #define	L2_XSCALE_L_TEX(x) ((x) << 12)	/* Type Extension */
 #define	L2_XSCALE_T_TEX(x) ((x) << 6)	/* Type Extension */
 
-#define	L2_V7_L_TEX(x) ((x) << 12)	/* Type Extension */
+#define	L2_V7_L_TEX(x)	(((x) & 0x7) << 12)	/* Type Extension */
+#define	L2_V7_L_TEX_MASK	(0x7 << 12)	/* Type Extension */
 #define	L2_V7_L_XN	0x00008000	/* eXecute Never */
-#define	L2_V7_S_TEX(x) ((x) << 6)	/* Type Extension */
+#define	L2_V7_S_TEX(x)	(((x) & 0x7) << 6)	/* Type Extension */
+#define	L2_V7_S_TEX_MASK	(0x7 << 6)	/* Type Extension */
 #define	L2_V7_S_XN	0x00000001	/* eXecute Never */
 
 #define	L2_V7_AP(x)	((((x) & 0x04) << 7) | (((x) & 0x03) << 4))	/* AP */
@@ -264,5 +267,55 @@ typedef uint32_t	pt_entry_t;	/* L2 table entry */
  * 1 1      Y          Y        Write-back       R/W Allocate
  */
 #define	TEX_XSCALE_X	0x01		/* X modifies C and B */
+
+#ifndef SMP
+#define ARM_L1S_STRONG_ORD      (0)
+#define ARM_L1S_DEVICE_NOSHARE  (L1_S_V7_TEX(2))
+#define ARM_L1S_DEVICE_SHARE    (L1_S_B)
+#define ARM_L1S_NRML_NOCACHE    (L1_S_V7_TEX(1))
+#define ARM_L1S_NRML_IWT_OWT    (L1_S_C)
+#define ARM_L1S_NRML_IWB_OWB    (L1_S_C|L1_S_B)
+#define ARM_L1S_NRML_IWBA_OWBA  (L1_S_V7_TEX(1)|L1_S_C|L1_S_B)
+
+#define ARM_L2L_STRONG_ORD      (0)
+#define ARM_L2L_DEVICE_NOSHARE  (L2_V7_L_TEX(2))
+#define ARM_L2L_DEVICE_SHARE    (L2_B)
+#define ARM_L2L_NRML_NOCACHE    (L2_V7_L_TEX(1))
+#define ARM_L2L_NRML_IWT_OWT    (L2_C)
+#define ARM_L2L_NRML_IWB_OWB    (L2_C|L2_B)
+#define ARM_L2L_NRML_IWBA_OWBA  (L2_V7_L_TEX(1)|L2_C|L2_B)
+
+#define ARM_L2S_STRONG_ORD      (0)
+#define ARM_L2S_DEVICE_NOSHARE  (L2_V7_S_TEX(2))
+#define ARM_L2S_DEVICE_SHARE    (L2_B)
+#define ARM_L2S_NRML_NOCACHE    (L2_V7_S_TEX(1))
+#define ARM_L2S_NRML_IWT_OWT    (L2_C)
+#define ARM_L2S_NRML_IWB_OWB    (L2_C|L2_B)
+#define ARM_L2S_NRML_IWBA_OWBA  (L2_V7_S_TEX(1)|L2_C|L2_B)
+#else
+#define ARM_L1S_STRONG_ORD      (0)
+#define ARM_L1S_DEVICE_NOSHARE  (L1_S_V7_TEX(2))
+#define ARM_L1S_DEVICE_SHARE    (L1_S_B)
+#define ARM_L1S_NRML_NOCACHE    (L1_S_V7_TEX(1)|L1_SHARED)
+#define ARM_L1S_NRML_IWT_OWT    (L1_S_C|L1_SHARED)
+#define ARM_L1S_NRML_IWB_OWB    (L1_S_C|L1_S_B|L1_SHARED)
+#define ARM_L1S_NRML_IWBA_OWBA  (L1_S_V7_TEX(1)|L1_S_C|L1_S_B|L1_SHARED)
+
+#define ARM_L2L_STRONG_ORD      (0)
+#define ARM_L2L_DEVICE_NOSHARE  (L2_V7_L_TEX(2))
+#define ARM_L2L_DEVICE_SHARE    (L2_B)
+#define ARM_L2L_NRML_NOCACHE    (L2_V7_L_TEX(1)|L2_SHARED)
+#define ARM_L2L_NRML_IWT_OWT    (L2_C|L2_SHARED)
+#define ARM_L2L_NRML_IWB_OWB    (L2_C|L2_B|L2_SHARED)
+#define ARM_L2L_NRML_IWBA_OWBA  (L2_V7_L_TEX(1)|L2_C|L2_B|L2_SHARED)
+
+#define ARM_L2S_STRONG_ORD      (0)
+#define ARM_L2S_DEVICE_NOSHARE  (L2_V7_S_TEX(2))
+#define ARM_L2S_DEVICE_SHARE    (L2_B)
+#define ARM_L2S_NRML_NOCACHE    (L2_V7_S_TEX(1)|L2_SHARED)
+#define ARM_L2S_NRML_IWT_OWT    (L2_C|L2_SHARED)
+#define ARM_L2S_NRML_IWB_OWB    (L2_C|L2_B|L2_SHARED)
+#define ARM_L2S_NRML_IWBA_OWBA  (L2_V7_S_TEX(1)|L2_C|L2_B|L2_SHARED)
+#endif /* SMP */
 
 #endif /* _ARM_PTE_H_ */

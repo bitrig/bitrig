@@ -48,6 +48,8 @@
 	.text
 	.align	0
 
+ENTRY(cpufunc_nullop_ranges)
+ENTRY(cpufunc_nullop_range)
 ENTRY(cpufunc_nullop)
 	mov	pc, lr
 

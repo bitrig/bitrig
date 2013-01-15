@@ -149,6 +149,7 @@ struct	cpu_functions
 member	cf_icache_sync_all
 member	cf_idcache_wbinv_all
 member	cf_dcache_wb_range
+member	cf_sdcache_wbinv_all
 member	cf_tlb_flushID_SE
 member	cf_context_switch
 member	cf_sleep

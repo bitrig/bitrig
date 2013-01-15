@@ -144,7 +144,13 @@ struct cpu_functions arm8_cpufuncs = {
 
 	/* Soft functions */
 	arm8_context_switch,		/* context_switch	*/
-	arm8_setup			/* cpu setup		*/
+	arm8_setup,			/* cpu setup		*/
+
+	/* L2 functions */
+	cpufunc_nullop,			/* wbinv_all	*/
+	cpufunc_nullop_ranges,		/* wbinv_range	*/
+	cpufunc_nullop_ranges,		/* inv_range	*/
+	cpufunc_nullop_ranges		/* wb_range	*/
 };
 #endif	/* CPU_ARM8 */
 
@@ -197,7 +203,13 @@ struct cpu_functions arm9_cpufuncs = {
 
 	/* Soft functions */
 	arm9_context_switch,		/* context_switch	*/
-	arm9_setup			/* cpu setup		*/
+	arm9_setup,			/* cpu setup		*/
+
+	/* L2 functions */
+	cpufunc_nullop,			/* wbinv_all	*/
+	cpufunc_nullop_ranges,		/* wbinv_range	*/
+	cpufunc_nullop_ranges,		/* inv_range	*/
+	cpufunc_nullop_ranges		/* wb_range	*/
 };
 #endif /* CPU_ARM9 */
 
@@ -250,7 +262,13 @@ struct cpu_functions armv5_ec_cpufuncs = {
 
 	/* Soft functions */
 	arm10_context_switch,		/* context_switch	*/
-	arm10_setup			/* cpu setup		*/
+	arm10_setup,			/* cpu setup		*/
+
+	/* L2 functions */
+	cpufunc_nullop,			/* wbinv_all	*/
+	cpufunc_nullop_ranges,		/* wbinv_range	*/
+	cpufunc_nullop_ranges,		/* inv_range	*/
+	cpufunc_nullop_ranges		/* wb_range	*/
 };
 #endif /* CPU_ARM9E || CPU_ARM10 */
 
@@ -303,7 +321,13 @@ struct cpu_functions arm10_cpufuncs = {
 
 	/* Soft functions */
 	arm10_context_switch,		/* context_switch	*/
-	arm10_setup			/* cpu setup		*/
+	arm10_setup,			/* cpu setup		*/
+
+	/* L2 functions */
+	cpufunc_nullop,			/* wbinv_all	*/
+	cpufunc_nullop_ranges,		/* wbinv_range	*/
+	cpufunc_nullop_ranges,		/* inv_range	*/
+	cpufunc_nullop_ranges		/* wb_range	*/
 };
 #endif /* CPU_ARM10 */
 
@@ -355,7 +379,13 @@ struct cpu_functions arm11_cpufuncs = {
 
 	/* Soft functions */
 	arm11_context_switch,		/* context_switch	*/
-	arm11_setup			/* cpu setup		*/
+	arm11_setup,			/* cpu setup		*/
+
+	/* L2 functions */
+	cpufunc_nullop,			/* wbinv_all	*/
+	cpufunc_nullop_ranges,		/* wbinv_range	*/
+	cpufunc_nullop_ranges,		/* inv_range	*/
+	cpufunc_nullop_ranges		/* wb_range	*/
 };
 #endif /* CPU_ARM11 */
 
@@ -407,7 +437,13 @@ struct cpu_functions armv7_cpufuncs = {
 
 	/* Soft functions */
 	armv7_context_switch,		/* context_switch	*/
-	armv7_setup			/* cpu setup		*/
+	armv7_setup,			/* cpu setup		*/
+
+	/* L2 functions */
+	cpufunc_nullop,			/* wbinv_all	*/
+	cpufunc_nullop_ranges,		/* wbinv_range	*/
+	cpufunc_nullop_ranges,		/* inv_range	*/
+	cpufunc_nullop_ranges		/* wb_range	*/
 };
 #endif /* CPU_ARMv7 */
 
@@ -460,7 +496,13 @@ struct cpu_functions sa11x0_cpufuncs = {
 
 	/* Soft functions */
 	sa11x0_context_switch,		/* context_switch	*/
-	sa11x0_setup			/* cpu setup		*/
+	sa11x0_setup,			/* cpu setup		*/
+
+	/* L2 functions */
+	cpufunc_nullop,			/* wbinv_all	*/
+	cpufunc_nullop_ranges,		/* wbinv_range	*/
+	cpufunc_nullop_ranges,		/* inv_range	*/
+	cpufunc_nullop_ranges		/* wb_range	*/
 };
 #endif	/* CPU_SA1100 || CPU_SA1110 */
 
@@ -512,7 +554,13 @@ struct cpu_functions ixp12x0_cpufuncs = {
 
 	/* Soft functions */
 	ixp12x0_context_switch,		/* context_switch	*/
-	ixp12x0_setup			/* cpu setup		*/
+	ixp12x0_setup,			/* cpu setup		*/
+
+	/* L2 functions */
+	cpufunc_nullop,			/* wbinv_all	*/
+	cpufunc_nullop_ranges,		/* wbinv_range	*/
+	cpufunc_nullop_ranges,		/* inv_range	*/
+	cpufunc_nullop_ranges		/* wb_range	*/
 };
 #endif	/* CPU_IXP12X0 */
 
@@ -565,7 +613,13 @@ struct cpu_functions xscale_cpufuncs = {
 
 	/* Soft functions */
 	xscale_context_switch,		/* context_switch	*/
-	xscale_setup			/* cpu setup		*/
+	xscale_setup,			/* cpu setup		*/
+
+	/* L2 functions */
+	cpufunc_nullop,			/* wbinv_all	*/
+	cpufunc_nullop_ranges,		/* wbinv_range	*/
+	cpufunc_nullop_ranges,		/* inv_range	*/
+	cpufunc_nullop_ranges		/* wb_range	*/
 };
 #endif
 /* CPU_XSCALE_80200 || CPU_XSCALE_80321 || CPU_XSCALE_PXA2X0 || CPU_XSCALE_IXP425 */
@@ -1338,15 +1392,11 @@ armv7_setup()
 
 	cpuctrl = CPU_CONTROL_MMU_ENABLE | CPU_CONTROL_SYST_ENABLE
 	    | CPU_CONTROL_IC_ENABLE | CPU_CONTROL_DC_ENABLE
-#if 1
-	    | CPU_CONTROL_WBUF_ENABLE
-#endif
+	    | CPU_CONTROL_ROUNDROBIN
 	    | CPU_CONTROL_BPRD_ENABLE | CPU_CONTROL_AFLT_ENABLE;
 	cpuctrlmask = CPU_CONTROL_MMU_ENABLE | CPU_CONTROL_SYST_ENABLE
 	    | CPU_CONTROL_IC_ENABLE | CPU_CONTROL_DC_ENABLE
-#if 1
-	    | CPU_CONTROL_WBUF_ENABLE
-#endif
+	    | CPU_CONTROL_ROUNDROBIN
 	    | CPU_CONTROL_ROM_ENABLE | CPU_CONTROL_BPRD_ENABLE
 	    | CPU_CONTROL_BEND_ENABLE | CPU_CONTROL_AFLT_ENABLE
 	    | CPU_CONTROL_ROUNDROBIN | CPU_CONTROL_CPCLK

@@ -145,6 +145,12 @@ struct cpu_functions {
 	/* Soft functions */
 	void	(*cf_context_switch)	(u_int);
 	void	(*cf_setup)		(void);
+
+	/* L2 cache functions */
+	void	(*cf_sdcache_wbinv_all)		(void);
+	void	(*cf_sdcache_wbinv_range)	(vaddr_t, paddr_t, vsize_t);
+	void	(*cf_sdcache_inv_range)		(vaddr_t, paddr_t, vsize_t);
+	void	(*cf_sdcache_wb_range)		(vaddr_t, paddr_t, vsize_t);
 };
 
 extern struct cpu_functions cpufuncs;
@@ -182,6 +188,11 @@ extern u_int cputype;
 #define	cpu_flush_prefetchbuf()	cpufuncs.cf_flush_prefetchbuf()
 #define	cpu_drain_writebuf()	cpufuncs.cf_drain_writebuf()
 
+#define	cpu_sdcache_wbinv_all()		cpufuncs.cf_sdcache_wbinv_all()
+#define	cpu_sdcache_wb_range(va, pa, s)	cpufuncs.cf_sdcache_wb_range((va), (pa), (s))
+#define	cpu_sdcache_inv_range(va, pa, s)	cpufuncs.cf_sdcache_inv_range((va), (pa), (s))
+#define	cpu_sdcache_wbinv_range(va, pa, s)	cpufuncs.cf_sdcache_wbinv_range((va), (pa), (s))
+
 #define cpu_sleep(m)		cpufuncs.cf_sleep(m)
 
 #define cpu_context_switch(a)		cpufuncs.cf_context_switch(a)
@@ -192,6 +203,8 @@ int	set_cpufuncs		(void);
 #define ARCHITECTURE_NOT_SUPPORTED	2	/* not known */
 
 void	cpufunc_nullop		(void);
+void	cpufunc_nullop_range	(vaddr_t, vsize_t);
+void	cpufunc_nullop_ranges	(vaddr_t, paddr_t, vsize_t);
 int	early_abort_fixup	(void *);
 int	late_abort_fixup	(void *);
 u_int	cpufunc_id		(void);

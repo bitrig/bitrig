@@ -694,9 +694,6 @@ pmap_alloc_l1(pmap_t pm, int domain)
 	vaddr_t va, eva;
 	int error;
 
-#ifdef PMAP_DEBUG
-printf("%s: %d %d\n", __func__, domain, ++nl1);
-#endif
 	/* XXX use a pool? or move to inside struct pmap? */
 	l1 = malloc(sizeof(*l1), M_VMPMAP, M_WAITOK);
 
@@ -766,9 +763,6 @@ pmap_free_l1(pmap_t pm)
 	vaddr_t va;
 	uint npg;
 
-#ifdef PMAP_DEBUG
-printf("%s: %d %d\n", __func__, pm->pm_domain, --nl1);
-#endif
 #if 1
 {
 	u_int cur_ttb;
@@ -995,6 +989,8 @@ KASSERT(l2b);
 KASSERT(l2pte_valid(*ptep));
 	pte = *ptep;
 
+	cpu_idcache_wbinv_range(va, PAGE_SIZE);
+	cpu_sdcache_wbinv_range(va, pte & L2_S_FRAME, PAGE_SIZE);
 	if ((pte & L2_S_CACHE_MASK) != pte_l2_s_cache_mode_pt) {
 		*ptep = (pte & ~L2_S_CACHE_MASK) | pte_l2_s_cache_mode_pt;
 		PTE_SYNC(ptep);
@@ -1197,7 +1193,10 @@ pmap_clean_page(struct vm_page *pg, int isync)
 			 * now while we still have a valid mapping for it.
 			 */
 			if (!wb) {
+				paddr_t pa;
+				(void)pmap_extract(pm, (vaddr_t)pv->pv_va, &pa);
 				cpu_dcache_wb_range(pv->pv_va, PAGE_SIZE);
+				cpu_sdcache_wb_range(pv->pv_va, pa, PAGE_SIZE);
 				wb = TRUE;
 			}
 		}
@@ -1214,7 +1213,10 @@ pmap_clean_page(struct vm_page *pg, int isync)
 		PTE_SYNC(cwb_pte);
 		cpu_tlb_flushD_SE(cwbp);
 		cpu_cpwait();
+		paddr_t pa;
+		(void)pmap_extract(pmap_kernel(), (vaddr_t)cwbp, &pa);
 		cpu_dcache_wb_range(cwbp, PAGE_SIZE);
+		cpu_sdcache_wb_range(cwbp, pa, PAGE_SIZE);
 	}
 }
 
@@ -1270,8 +1272,12 @@ KASSERT(l2pte_valid(*ptep));
 			if (pm == curpm || pm == pmap_kernel()) {
 				if (PV_BEEN_EXECD(pv->pv_flags))
 					cpu_icache_sync_range(pv->pv_va, PAGE_SIZE);
-				if (flush == FALSE)
+				if (flush == FALSE) {
+					paddr_t pa;
+					(void)pmap_extract(pm, (vaddr_t)pv->pv_va, &pa);
 					cpu_dcache_wb_range(pv->pv_va, PAGE_SIZE);
+					cpu_sdcache_wb_range(pv->pv_va, pa, PAGE_SIZE);
+				}
 				flush = TRUE;
 			}
 
@@ -1482,8 +1488,12 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 			 */
 			if ((oflags & PVF_NC) == 0 &&
 			    l2pte_is_writeable(opte, pm) &&
-			    (prot & VM_PROT_WRITE) == 0)
+			    (prot & VM_PROT_WRITE) == 0) {
+				paddr_t pa;
+				(void)pmap_extract(pm, (vaddr_t)va, &pa);
 				cpu_dcache_wb_range(va, PAGE_SIZE);
+				cpu_sdcache_wb_range(va, pa, PAGE_SIZE);
+			}
 		} else {
 			/*
 			 * New mapping, or changing the backing page
@@ -1602,11 +1612,6 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	 * Make sure executable pages do not have stale data in I$,
 	 * which is VIPT.
 	 */
-	/*
-	 * Somehow this makes us _write_ to the va.
-	 * If it's write-protected, this will break.
-	 * Massively.
-	 */
 	if (mapped && (prot & VM_PROT_EXECUTE) != 0 && pmap_is_current(pm))
 		cpu_icache_sync_range(va, PAGE_SIZE);
 
@@ -1720,8 +1725,10 @@ KASSERT(next_bucket > sva);
 		/*
 		 * Deal with any left overs
 		 */
-		if (!pmap_is_current(pm))
+		if (!pmap_is_current(pm)) {
 			cpu_idcache_wbinv_all();
+			cpu_sdcache_wbinv_all();
+		}
 
 		pmap_free_l2_bucket(pm, l2b, mappings);
 	}
@@ -1754,9 +1761,12 @@ KASSERT(l2b != NULL);
 	ptep = &l2b->l2b_kva[l2pte_index(va)];
 	opte = *ptep;
 
-	if (l2pte_valid(opte))
+	if (l2pte_valid(opte)) {
+		paddr_t pa;
+		(void)pmap_extract(pmap_kernel(), (vaddr_t)va, &pa);
 		cpu_dcache_wb_range(va, PAGE_SIZE);
-	else
+		cpu_sdcache_wb_range(va, pa, PAGE_SIZE);
+	} else
 	if (opte == 0)
 		l2b->l2b_occupancy++;
 
@@ -1806,8 +1816,12 @@ KASSERT(l2b != NULL);
 
 		while (va < next_bucket) {
 			opte = *ptep;
-			if (l2pte_valid(opte))
+			if (l2pte_valid(opte)) {
+				paddr_t pa;
+				(void)pmap_extract(pmap_kernel(), (vaddr_t)va, &pa);
 				cpu_dcache_wb_range(va, PAGE_SIZE);
+				cpu_sdcache_wb_range(va, pa, PAGE_SIZE);
+			}
 			if (opte != 0) {	/* !! not l2pte_valid */
 				*ptep = L2_TYPE_INV;
 				PTE_SYNC(ptep);
@@ -1839,8 +1853,6 @@ pmap_extract(pmap_t pm, vaddr_t va, paddr_t *pap)
 	l1idx = L1_IDX(va);
 	pl1pd = &pm->pm_l1->l1_kva[l1idx];
 	l1pd = *pl1pd;
-if (hostid != 0)
-printf("pmap_extract: va %08x l1idx %08x\n", va, l1idx);
 
 	if (l1pte_section_p(l1pd)) {
 		/*
@@ -1857,23 +1869,15 @@ KASSERT(pm == pmap_kernel());
 		 * We have to look it up in the L2 dtable.
 		 */
 		l2 = pm->pm_l2[L2_IDX(l1idx)];
-if (hostid != 0)
-printf("pmap_extract: l2 %p l2idx %08x\n", l2, L2_IDX(l1idx));
 
 		if (l2 == NULL ||
 		    (ptep = l2->l2_bucket[L2_BUCKET(l1idx)].l2b_kva) == NULL) {
-if (hostid != 0)
-printf("pmap_extract: l2 %p ptep %p bucket %08x\n", l2, ptep, L2_BUCKET(l1idx));
 			pmap_release_pmap_lock(pm);
 			return (FALSE);
 		}
 
-if (hostid != 0)
-printf("pmap_extract: l2pte_index %08x ptep %p -> %p\n", l2pte_index(va), ptep, &ptep[l2pte_index(va)]);
 		ptep = &ptep[l2pte_index(va)];
 		pte = *ptep;
-if (hostid != 0)
-printf("pmap_extract: pte %08x\n", pte);
 		pmap_release_pmap_lock(pm);
 
 		if (pte == 0)	/* !!! not l2pte_valid */
@@ -2096,9 +2100,6 @@ pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 	u_int l1idx;
 	int rv = 0;
 
-#ifdef PMAP_DEBUG
-printf("%s: va %08x ftype %x %c\n", __func__, va, ftype, user ? 'u' : 's');
-#endif
 	PMAP_MAP_TO_HEAD_LOCK();
 	pmap_acquire_pmap_lock(pm);
 
@@ -2710,6 +2711,7 @@ pmap_growkernel(vaddr_t maxkvaddr)
 	 * rarely
 	 */
 	cpu_dcache_wbinv_all();
+	cpu_sdcache_wbinv_all();
 	cpu_tlb_flushD();
 	cpu_cpwait();
 
@@ -2858,9 +2860,6 @@ pmap_init_l1(struct l1_ttable *l1, pd_entry_t *l1pt)
 	if (pmap_extract(pmap_kernel(), (vaddr_t)l1pt,
 	    &l1->l1_physaddr) == FALSE)
 		panic("pmap_init_l1: can't get PA of L1 at %p", l1pt);
-#ifdef PMAP_DEBUG
-printf("l1 va %08x pa %08x\n", (vaddr_t)l1pt, l1->l1_physaddr);
-#endif
 
 	TAILQ_INSERT_TAIL(&l1_list, l1, l1_link);
 }
@@ -2991,6 +2990,7 @@ pmap_bootstrap(pd_entry_t *kernel_l1pt, vaddr_t vstart, vaddr_t vend)
 	}
 
 	cpu_idcache_wbinv_all();
+	cpu_sdcache_wbinv_all();
 	cpu_tlb_flushID();
 	cpu_cpwait();
 
@@ -3064,6 +3064,7 @@ pmap_bootstrap(pd_entry_t *kernel_l1pt, vaddr_t vstart, vaddr_t vend)
 	pool_set_ctordtor(&pmap_l2ptp_pool, pmap_l2ptp_ctor, NULL, NULL);
 
 	cpu_dcache_wbinv_all();
+	cpu_sdcache_wbinv_all();
 }
 
 int
@@ -3646,14 +3647,25 @@ pmap_pte_init_generic(void)
 void
 pmap_pte_init_armv7(void)
 {
-	uint32_t cachereg;
-
 	/*
 	 * XXX 
 	 * ARMv7 is compatible with generic, but we want to use proper TEX
 	 * settings eventually
 	 */
 	pmap_pte_init_generic();
+
+	/* write-allocate should be tested */
+	pte_l1_s_cache_mode = ARM_L1S_NRML_IWB_OWB;
+	pte_l2_l_cache_mode = ARM_L1S_NRML_IWB_OWB;
+	pte_l2_s_cache_mode = ARM_L1S_NRML_IWB_OWB;
+
+	pte_l1_s_cache_mode_pt = ARM_L1S_NRML_IWT_OWT;
+	pte_l2_l_cache_mode_pt = ARM_L2L_NRML_IWT_OWT;
+	pte_l2_s_cache_mode_pt = ARM_L2S_NRML_IWT_OWT;
+
+	pte_l1_s_cache_mask = L1_S_CACHE_MASK_v7;
+	pte_l2_l_cache_mask = L2_L_CACHE_MASK_v7;
+	pte_l2_s_cache_mask = L2_S_CACHE_MASK_v7;
 
 	pte_l2_s_prot_ur = L2_S_PROT_UR_v7;
 	pte_l2_s_prot_uw = L2_S_PROT_UW_v7;
@@ -3665,20 +3677,7 @@ pmap_pte_init_armv7(void)
 	pte_l1_c_proto = L1_C_PROTO_v7;
 	pte_l2_s_proto = L2_S_PROTO_v7;
 
-	/* probe L1 dcache */
-	__asm __volatile("mcr p15, 2, %0, c0, c0, 0" :: "r" (0) );
-	__asm __volatile("mrc p15, 1, %0, c0, c0, 0" : "=r" (cachereg) );
-	if ((cachereg & 0x80000000) == 0) {
-		/*
-		 * pmap_pte_init_generic() has defaulted to write-through
-		 * settings for pte pages, but the cache does not support
-		 * write-through.
-		 */
-		pmap_needs_pte_sync = 1;
-		pte_l1_s_cache_mode_pt = L1_S_B|L1_S_C;
-		pte_l2_l_cache_mode_pt = L2_B|L2_C;
-		pte_l2_s_cache_mode_pt = L2_B|L2_C;
-	}
+	pmap_needs_pte_sync = 1;
 }
 
 uint32_t pmap_alias_dist;

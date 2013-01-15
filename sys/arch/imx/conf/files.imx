@@ -45,6 +45,10 @@ device amptimer
 attach amptimer at soc
 file	arch/imx/dev/amptimer.c		amptimer
 
+device imxlii
+attach imxlii at soc
+file	arch/imx/dev/imxlii.c		imxlii
+
 # serial ports
 device imxuart
 attach	imxuart at soc

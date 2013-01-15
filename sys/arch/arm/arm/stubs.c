@@ -140,6 +140,7 @@ dumpsys()
 	savectx(&dumppcb);
 	/* flush everything out of caches */
 	cpu_dcache_wbinv_all();
+	cpu_sdcache_wbinv_all();
 
 	if (dumpdev == NODEV)
 		return;

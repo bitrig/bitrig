@@ -35,6 +35,9 @@
 #define GTIMER_ADDR	0x00a00200
 #define GTIMER_SIZE	0x100
 
+#define L2C_ADDR	0x00a02000
+#define L2C_SIZE	0x1000
+
 #define CCM_ADDR	0x020c4000
 #define CCM_SIZE	0x5000
 
@@ -181,6 +184,14 @@ struct imx_dev imx6_devs[] = {
 	{ .name = "amptimer",
 	  .unit = 0,
 	  .mem = { { GTIMER_ADDR, GTIMER_SIZE } },
+	},
+
+	/*
+	 * PL310 L2 Cache Controller
+	 */
+	{ .name = "imxlii",
+	  .unit = 0,
+	  .mem = { { L2C_ADDR, L2C_SIZE } },
 	},
 
 	/*

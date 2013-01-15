@@ -327,8 +327,12 @@ extern int pmap_needs_pte_sync;
 #define	PTE_SYNC(pte)							\
 do {									\
 	if (PMAP_NEEDS_PTE_SYNC) {					\
+		paddr_t pa;						\
+		(void)pmap_extract(pmap_kernel(), (vaddr_t)(pte), &pa);\
 		cpu_drain_writebuf();					\
 		cpu_dcache_wb_range((vaddr_t)(pte), sizeof(pt_entry_t));\
+		cpu_sdcache_wb_range((vaddr_t)(pte), (paddr_t)(pa),	\
+		    sizeof(pt_entry_t));			\
 		dsb(); isb();						\
 	}								\
 } while (/*CONSTCOND*/0)
@@ -336,8 +340,12 @@ do {									\
 #define	PTE_SYNC_RANGE(pte, cnt)					\
 do {									\
 	if (PMAP_NEEDS_PTE_SYNC) {					\
+		paddr_t pa;						\
+		(void)pmap_extract(pmap_kernel(), (vaddr_t)(pte), &pa);\
 		cpu_drain_writebuf();					\
 		cpu_dcache_wb_range((vaddr_t)(pte),			\
+		    (cnt) << 2); /* * sizeof(pt_entry_t) */		\
+		cpu_sdcache_wb_range((vaddr_t)(pte), (paddr_t)(pa),	\
 		    (cnt) << 2); /* * sizeof(pt_entry_t) */		\
 		dsb(); isb();						\
 	}								\
@@ -461,7 +469,7 @@ extern void (*pmap_zero_page_func)(struct vm_page *);
 
 #define	L1_S_CACHE_MASK_generic	(L1_S_B|L1_S_C)
 #define	L1_S_CACHE_MASK_xscale	(L1_S_B|L1_S_C|L1_S_XSCALE_TEX(TEX_XSCALE_X))
-#define	L1_S_CACHE_MASK_v7	(L1_S_B|L1_S_C|L1_S_V7_TEX(TEX_V7_X))
+#define	L1_S_CACHE_MASK_v7	(L1_S_B|L1_S_C|L1_S_V7_TEX_MASK)
 
 #define	L2_L_PROT_KR		(L2_AP(0))
 #define	L2_L_PROT_UR		(L2_AP(AP_U))
@@ -471,7 +479,7 @@ extern void (*pmap_zero_page_func)(struct vm_page *);
 
 #define	L2_L_CACHE_MASK_generic	(L2_B|L2_C)
 #define	L2_L_CACHE_MASK_xscale	(L2_B|L2_C|L2_XSCALE_L_TEX(TEX_XSCALE_X))
-#define	L2_L_CACHE_MASK_v7	(L2_B|L2_C|L2_V7_L_TEX(TEX_V7_X))
+#define	L2_L_CACHE_MASK_v7	(L2_B|L2_C|L2_V7_L_TEX_MASK)
 
 #define	L2_S_PROT_UR_generic	(L2_AP(AP_U))
 #define	L2_S_PROT_UW_generic	(L2_AP(AP_U|AP_W))
@@ -493,7 +501,7 @@ extern void (*pmap_zero_page_func)(struct vm_page *);
 
 #define	L2_S_CACHE_MASK_generic	(L2_B|L2_C)
 #define	L2_S_CACHE_MASK_xscale	(L2_B|L2_C|L2_XSCALE_T_TEX(TEX_XSCALE_X))
-#define	L2_S_CACHE_MASK_v7	(L2_B|L2_C)
+#define	L2_S_CACHE_MASK_v7	(L2_B|L2_C|L2_V7_S_TEX_MASK)
 
 #define	L1_S_PROTO_generic	(L1_TYPE_S | L1_S_IMP)
 #define	L1_S_PROTO_xscale	(L1_TYPE_S)
