@@ -1,4 +1,4 @@
-/* $OpenBSD: softraid.c,v 1.281 2013/01/15 09:51:22 jsing Exp $ */
+/* $OpenBSD: softraid.c,v 1.282 2013/01/16 06:29:14 jsing Exp $ */
 /*
  * Copyright (c) 2007, 2008, 2009 Marco Peereboom <marco@peereboom.us>
  * Copyright (c) 2008 Chris Kuethe <ckuethe@openbsd.org>
@@ -2075,7 +2075,7 @@ sr_wu_alloc(struct sr_discipline *sd)
 	TAILQ_INIT(&sd->sd_wu_defq);
 	for (i = 0; i < no_wu; i++) {
 		wu = &sd->sd_wu[i];
-		wu->swu_dis = sd;
+		TAILQ_INIT(&wu->swu_ccb);
 		sr_wu_put(sd, wu);
 	}
 
@@ -2130,6 +2130,7 @@ sr_wu_put(void *xsd, void *xwu)
 
 	DNPRINTF(SR_D_WU, "%s: sr_wu_put: %p\n", DEVNAME(sd->sd_sc), wu);
 
+	sr_wu_release_ccbs(wu);
 	sr_wu_init(sd, wu);
 
 	mtx_enter(&sd->sd_wu_mtx);
@@ -2141,16 +2142,11 @@ sr_wu_put(void *xsd, void *xwu)
 void
 sr_wu_init(struct sr_discipline *sd, struct sr_workunit *wu)
 {
-	struct sr_ccb		*ccb;
 	int			s;
 
 	s = splbio();
 	if (wu->swu_cb_active == 1)
 		panic("%s: sr_wu_init got active wu", DEVNAME(sd->sd_sc));
-	while ((ccb = TAILQ_FIRST(&wu->swu_ccb)) != NULL) {
-		TAILQ_REMOVE(&wu->swu_ccb, ccb, ccb_link);
-		sr_ccb_put(ccb);
-	}
 	splx(s);
 
 	bzero(wu, sizeof(*wu));
@@ -2159,19 +2155,31 @@ sr_wu_init(struct sr_discipline *sd, struct sr_workunit *wu)
 }
 
 void
-sr_wu_ccb_enqueue(struct sr_workunit *wu, struct sr_ccb *ccb)
+sr_wu_enqueue_ccb(struct sr_workunit *wu, struct sr_ccb *ccb)
 {
 	struct sr_discipline	*sd = wu->swu_dis;
 	int			s;
 
 	s = splbio();
 	if (wu->swu_cb_active == 1)
-		panic("%s: sr_wu_ccb_enqueue got active wu",
+		panic("%s: sr_wu_enqueue_ccb got active wu",
 		    DEVNAME(sd->sd_sc));
 	ccb->ccb_wu = wu;
 	wu->swu_io_count++;
 	TAILQ_INSERT_TAIL(&wu->swu_ccb, ccb, ccb_link);
 	splx(s);
+}
+
+void
+sr_wu_release_ccbs(struct sr_workunit *wu)
+{
+	struct sr_ccb		*ccb;
+
+	/* Return all ccbs that are associated with this workunit. */
+	while ((ccb = TAILQ_FIRST(&wu->swu_ccb)) != NULL) {
+		TAILQ_REMOVE(&wu->swu_ccb, ccb, ccb_link);
+		sr_ccb_put(ccb);
+	}
 }
 
 void
@@ -2206,6 +2214,7 @@ sr_scsi_cmd(struct scsi_xfer *xs)
 	}
 
 	/* scsi layer *can* re-send wu without calling sr_wu_put(). */
+	sr_wu_release_ccbs(wu);
 	sr_wu_init(sd, wu);
 	wu->swu_state = SR_WU_INPROGRESS;
 	wu->swu_xs = xs;
