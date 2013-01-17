@@ -1,4 +1,4 @@
-/*	$OpenBSD: subr_hibernate.c,v 1.48 2013/01/17 01:28:01 mlarkin Exp $	*/
+/*	$OpenBSD: subr_hibernate.c,v 1.49 2013/01/17 02:36:45 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2011 Ariane van der Steldt <ariane@stack.nl>
@@ -1811,7 +1811,12 @@ hibernate_suspend(void)
 	if (hibernate_write_signature(&hib_info))
 		return (1);
 
+	/* Allow the disk to settle */
 	delay(500000);
+
+	hib_info.io_func(hib_info.device, 0, (vaddr_t)NULL, 0,
+	    HIB_DONE, hib_info.io_page);
+
 	return (0);
 }
 
