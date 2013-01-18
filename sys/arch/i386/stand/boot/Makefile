@@ -1,6 +1,4 @@
-#	$OpenBSD: Makefile,v 1.46 2012/10/31 15:22:42 jsing Exp $
-
-.include "${.CURDIR}/../Makefile.inc"
+#	$OpenBSD: Makefile,v 1.47 2013/01/18 03:45:23 jsing Exp $
 
 CC=	gcc
 MAN=	boot.8
@@ -13,7 +11,7 @@ SOFTRAID?=yes
 .endif
 
 .if ${MACHINE} == "i386"
-S	=${.CURDIR}/../../../..
+S=	${.CURDIR}/../../../..
 SADIR=	${.CURDIR}/..
 
 PROG?=	boot

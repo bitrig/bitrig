@@ -1,21 +1,23 @@
-#	$OpenBSD: Makefile,v 1.23 2012/08/29 22:23:07 pascal Exp $
+#	$OpenBSD: Makefile,v 1.24 2013/01/18 03:45:23 jsing Exp $
 
 CC=gcc
 
 MAN=	biosboot.8
 
 .if ${MACHINE} == "i386"
+S=	${.CURDIR}/../../../..
+SADIR=	${.CURDIR}/..
+
 PROG=	biosboot
 SRCS=	biosboot.S
 CFLAGS= -no-builtin-asm
 LD=ld
 LDFLAGS=-nostdlib -Ttext 0 -N -x -Bstatic -nopie
 INSTALL_STRIP=
-SADIR=	${.CURDIR}/..
 
-${PROG}: $(OBJS) $(DPADD)
+${PROG}: $(OBJS)
 	@rm -f $(PROG)
-	$(LD) $(LDFLAGS) -o $(PROG) $(OBJS) $(LDADD)
+	$(LD) $(LDFLAGS) -o $(PROG) $(OBJS)
 	@size $(PROG)
 
 CPPFLAGS+=-DLOADADDR=$(LOADADDR) -DLINKADDR=$(LINKADDR) -DBOOTMAGIC=$(BOOTMAGIC)
@@ -28,4 +30,3 @@ NOPROG=
 .endif
 
 .include <bsd.prog.mk>
-

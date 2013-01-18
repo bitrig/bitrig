@@ -1,7 +1,11 @@
-#	$OpenBSD: Makefile,v 1.4 2012/08/29 22:23:08 pascal Exp $
+#	$OpenBSD: Makefile,v 1.5 2013/01/18 03:45:23 jsing Exp $
 #
 
 CC=gcc
+
+S=	${.CURDIR}/../../../..
+SADIR=	${.CURDIR}/..
+
 PROG=	cdbr
 SRCS=	cdbr.S
 AFLAGS+=-I${.CURDIR} -I${.CURDIR}/../../.. #-Wa,-a
@@ -16,11 +20,9 @@ NOMAN=
 #MAN+=	cdbr.8
 
 INSTALL_STRIP=
-SADIR=${.CURDIR}/..
-S=	${.CURDIR}/../../../..
 
-${PROG}: $(OBJS) $(DPADD)
-	$(LD) $(LDFLAGS) -o $(PROG) $(OBJS) $(LDADD)
+${PROG}: $(OBJS)
+	$(LD) $(LDFLAGS) -o $(PROG) $(OBJS)
 	@size $(PROG)
 	@if [ -x ${.OBJDIR}/${PROG} ]; then \
 		objcopy -O binary ${PROG} ${.OBJDIR}/.tmp;\
