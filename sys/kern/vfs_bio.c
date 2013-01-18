@@ -1040,7 +1040,7 @@ buf_get(struct vnode *vp, daddr64_t blkno, size_t size)
 	LIST_INIT(&bp->b_dep);
 	bp->b_bcount = size;
 
-	buf_acquire_unmapped(bp);
+	buf_acquire_nomap(bp);
 
 	if (vp != NULL) {
 		/*
