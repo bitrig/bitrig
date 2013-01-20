@@ -1,6 +1,8 @@
 obj
 obj.amd64.beagle
 obj.i386.beagle
+obj.amd64.imx
+obj.i386.imx
 CVS
 sys/arch/*/compile
 

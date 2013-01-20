@@ -14,7 +14,7 @@ CCCROSSOPTS=
 
 # Have to compute TARGET_ARCH directly in the Makefile, for .if tests involving
 # this variable to work.
-.if	(${TARGET} == "beagle")
+.if	(${TARGET} == "beagle" || ${TARGET} == "imx")
 TARGET_ARCH=	arm
 CCCROSSOPTS+="-march=armv7-a -mfloat-abi=soft"
 .else
