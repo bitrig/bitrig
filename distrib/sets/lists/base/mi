@@ -2078,7 +2078,7 @@
 ./usr/lib/libasn1.so.19.0
 ./usr/lib/libasn1_p.a
 ./usr/lib/libc.a
-./usr/lib/libc.so.69.0
+./usr/lib/libc.so.69.1
 ./usr/lib/libc_p.a
 ./usr/lib/libcom_err.a
 ./usr/lib/libcom_err.so.19.0
@@ -2175,7 +2175,7 @@
 ./usr/lib/libperl.a
 ./usr/lib/libperl.so.13.0
 ./usr/lib/libpthread.a
-./usr/lib/libpthread.so.17.4
+./usr/lib/libpthread.so.19.0
 ./usr/lib/libpthread_p.a
 ./usr/lib/libroken.a
 ./usr/lib/libroken.so.0.0
