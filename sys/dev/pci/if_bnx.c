@@ -843,15 +843,15 @@ bnx_attachhook(void *xsc)
 	sc->bnx_rx_ticks_int           = 0;
 	sc->bnx_rx_ticks               = 0;
 #else
-	sc->bnx_tx_quick_cons_trip_int = 20;
-	sc->bnx_tx_quick_cons_trip     = 20;
-	sc->bnx_tx_ticks_int           = 80;
-	sc->bnx_tx_ticks               = 80;
+	sc->bnx_tx_quick_cons_trip_int = 255;
+	sc->bnx_tx_quick_cons_trip     = 255;
+	sc->bnx_tx_ticks_int           = 1022;
+	sc->bnx_tx_ticks               = 1022;
 
-	sc->bnx_rx_quick_cons_trip_int = 6;
-	sc->bnx_rx_quick_cons_trip     = 6;
-	sc->bnx_rx_ticks_int           = 18;
-	sc->bnx_rx_ticks               = 18;
+	sc->bnx_rx_quick_cons_trip_int = 128;
+	sc->bnx_rx_quick_cons_trip     = 0;
+	sc->bnx_rx_ticks_int           = 150;
+	sc->bnx_rx_ticks               = 150;
 #endif
 
 	/* Update statistics once every second. */
