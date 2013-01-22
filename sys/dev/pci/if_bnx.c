@@ -388,8 +388,8 @@ void	bnx_iff(struct bnx_softc *);
 void	bnx_stats_update(struct bnx_softc *);
 void	bnx_tick(void *);
 
-struct rwlock bnx_tx_pool_lk = RWLOCK_INITIALIZER("bnxplinit");
-struct pool *bnx_tx_pool = NULL;
+struct pool bnx_tx_pool;
+int	bnx_tx_pool_init;
 void	bnx_alloc_pkts(void *, void *);
 
 /****************************************************************************/
@@ -653,6 +653,12 @@ bnx_attach(struct device *parent, struct device *self, void *aux)
 	const char 		*intrstr = NULL;
 
 	sc->bnx_pa = *pa;
+
+	if (!bnx_tx_pool_init) {
+		pool_init(&bnx_tx_pool, sizeof(struct bnx_pkt), 0, 0, 0,
+		    "bnxpkts", &pool_allocator_nointr);
+		bnx_tx_pool_init = 1;
+	}
 
 	/*
 	 * Map control/status registers.
@@ -3766,13 +3772,13 @@ bnx_alloc_pkts(void *xsc, void *arg)
 	int s;
 
 	for (i = 0; i < 4; i++) { /* magic! */
-		pkt = pool_get(bnx_tx_pool, PR_WAITOK);
+		pkt = pool_get(&bnx_tx_pool, PR_NOWAIT);
 		if (pkt == NULL)
 			break;
 
 		if (bus_dmamap_create(sc->bnx_dmatag,
 		    MCLBYTES * BNX_MAX_SEGMENTS, USABLE_TX_BD,
-		    MCLBYTES, 0, BUS_DMA_WAITOK | BUS_DMA_ALLOCNOW,
+		    MCLBYTES, 0, BUS_DMA_NOWAIT | BUS_DMA_ALLOCNOW,
 		    &pkt->pkt_dmamap) != 0)
 			goto put;
 
@@ -3799,7 +3805,7 @@ bnx_alloc_pkts(void *xsc, void *arg)
 stopping:
 	bus_dmamap_destroy(sc->bnx_dmatag, pkt->pkt_dmamap);
 put:
-	pool_put(bnx_tx_pool, pkt);
+	pool_put(&bnx_tx_pool, pkt);
 }
 
 /****************************************************************************/
@@ -3945,7 +3951,7 @@ bnx_free_tx_chain(struct bnx_softc *sc)
 		mtx_leave(&sc->tx_pkt_mtx);
 
 		bus_dmamap_destroy(sc->bnx_dmatag, pkt->pkt_dmamap);
-		pool_put(bnx_tx_pool, pkt);
+		pool_put(&bnx_tx_pool, pkt);
 
 		mtx_enter(&sc->tx_pkt_mtx);
 	}
@@ -4743,25 +4749,9 @@ bnx_init(void *xsc)
 	struct bnx_softc	*sc = (struct bnx_softc *)xsc;
 	struct ifnet		*ifp = &sc->arpcom.ac_if;
 	u_int32_t		ether_mtu;
-	int			txpl = 1;
 	int			s;
 
 	DBPRINT(sc, BNX_VERBOSE_RESET, "Entering %s()\n", __FUNCTION__);
-
-	if (rw_enter(&bnx_tx_pool_lk, RW_WRITE | RW_INTR) != 0)
-		return;
-	if (bnx_tx_pool == NULL) {
-		bnx_tx_pool = malloc(sizeof(*bnx_tx_pool), M_DEVBUF, M_WAITOK);
-		if (bnx_tx_pool != NULL) {
-			pool_init(bnx_tx_pool, sizeof(struct bnx_pkt),
-			    0, 0, 0, "bnxpkts", &pool_allocator_nointr);
-		} else
-			txpl = 0;
-	}
-	rw_exit(&bnx_tx_pool_lk);
-
-	if (!txpl)
-		return;
 
 	s = splnet();
 
