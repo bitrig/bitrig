@@ -1068,6 +1068,9 @@ struct l2_fhdr {
  *  pci_config_l definition
  *  offset: 0000
  */
+#define BNX_PCICFG_MSI_CONTROL				0x00000058
+#define BNX_PCICFG_MSI_CONTROL_ENABLE			 (1L<<16)
+
 #define BNX_PCICFG_MISC_CONFIG							0x00000068
 #define BNX_PCICFG_MISC_CONFIG_TARGET_BYTE_SWAP	 		(1L<<2)
 #define BNX_PCICFG_MISC_CONFIG_TARGET_MB_WORD_SWAP	 (1L<<3)
@@ -4877,6 +4880,12 @@ struct bnx_softc {
 	int			bnx_link;
 	struct timeout		bnx_timeout;
 	struct timeout		bnx_rxrefill;
+	struct timeout		bnx_ckmsi;
+
+	int			bnx_msi_maylose;
+	uint16_t		bnx_check_rx_cons;
+	uint16_t		bnx_check_tx_cons;
+	uint16_t		bnx_check_status_idx;
 
 	/* Frame size and mbuf allocation size for RX frames. */
 	u_int32_t		max_frame_size;

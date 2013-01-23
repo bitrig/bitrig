@@ -51,6 +51,8 @@
 
 #include <dev/pci/if_bnxreg.h>
 
+#define BNX_MSI_CKINTVL		((100 * hz) / 1000)	/* 10ms */
+
 struct bnx_firmware {
 	char *filename;
 	struct bnx_firmware_header *fw;
@@ -388,6 +390,7 @@ static void	bnx_intr(struct bnx_softc *);
 static int	bnx_intr_legacy(void *);
 static int	bnx_intr_msi(void *);
 static int	bnx_intr_msi_oneshot(void *);
+static void	bnx_check_msi(void *);
 
 void	bnx_iff(struct bnx_softc *);
 void	bnx_stats_update(struct bnx_softc *);
@@ -958,6 +961,7 @@ bnx_attachhook(void *xsc)
 
 	timeout_set(&sc->bnx_timeout, bnx_tick, sc);
 	timeout_set(&sc->bnx_rxrefill, bnx_rxrefill, sc);
+	timeout_set(&sc->bnx_ckmsi, bnx_check_msi, sc);
 
 	/* Print some important debugging info. */
 	DBRUN(BNX_INFO, bnx_dump_driver_state(sc));
@@ -4328,6 +4332,23 @@ bnx_phy_intr(struct bnx_softc *sc)
 }
 
 /****************************************************************************/
+/* Reads the receive consumer value from the status block (skipping over    */
+/* chain page pointer if necessary).                                        */
+/*                                                                          */
+/* Returns:                                                                 */
+/*   hw_cons                                                                */
+/****************************************************************************/
+static __inline uint16_t
+bnx_get_hw_rx_cons(struct bnx_softc *sc)
+{
+	uint16_t hw_cons = sc->status_block->status_rx_quick_consumer_index0;
+
+	if ((hw_cons & USABLE_RX_BD_PER_PAGE) == USABLE_RX_BD_PER_PAGE)
+		hw_cons++;
+	return (hw_cons);
+}
+
+/****************************************************************************/
 /* Handles received frame interrupt events.                                 */
 /*                                                                          */
 /* Returns:                                                                 */
@@ -4613,6 +4634,23 @@ bnx_rx_int_next_rx:
 }
 
 /****************************************************************************/
+/* Reads the transmit consumer value from the status block (skipping over   */
+/* chain page pointer if necessary).                                        */
+/*                                                                          */
+/* Returns:                                                                 */
+/*   hw_cons                                                                */
+/****************************************************************************/
+static __inline uint16_t
+bnx_get_hw_tx_cons(struct bnx_softc *sc)
+{
+	uint16_t hw_cons = sc->status_block->status_tx_quick_consumer_index0;
+
+	if ((hw_cons & USABLE_TX_BD_PER_PAGE) == USABLE_TX_BD_PER_PAGE)
+		hw_cons++;
+	return (hw_cons);
+}
+
+/****************************************************************************/
 /* Handles transmit completion interrupt events.                            */
 /*                                                                          */
 /* Returns:                                                                 */
@@ -4736,6 +4774,14 @@ bnx_disable_intr(struct bnx_softc *sc)
 {
 	REG_WR(sc, BNX_PCICFG_INT_ACK_CMD, BNX_PCICFG_INT_ACK_CMD_MASK_INT);
 	REG_RD(sc, BNX_PCICFG_INT_ACK_CMD);
+
+	if (sc->bnx_flags & BNX_CHECK_MSI_FLAG) {
+		timeout_del(&sc->bnx_ckmsi);
+		sc->bnx_msi_maylose = 0;
+		sc->bnx_check_rx_cons = 0;
+		sc->bnx_check_tx_cons = 0;
+		sc->bnx_check_status_idx = 0xffff;
+	}
 }
 
 /****************************************************************************/
@@ -4757,6 +4803,15 @@ bnx_enable_intr(struct bnx_softc *sc)
 
 	val = REG_RD(sc, BNX_HC_COMMAND);
 	REG_WR(sc, BNX_HC_COMMAND, val | BNX_HC_COMMAND_COAL_NOW);
+
+	if (sc->bnx_flags & BNX_CHECK_MSI_FLAG) {
+		sc->bnx_msi_maylose = 0;
+		sc->bnx_check_rx_cons = 0;
+		sc->bnx_check_tx_cons = 0;
+		sc->bnx_check_status_idx = 0xffff;
+		
+		timeout_add_msec(&sc->bnx_ckmsi, BNX_MSI_CKINTVL);
+	}
 }
 
 /****************************************************************************/
@@ -5659,6 +5714,59 @@ bnx_stats_update(struct bnx_softc *sc)
 	    stats->stat_CatchupInRuleCheckerP4Hit;
 
 	DBPRINT(sc, BNX_EXCESSIVE, "Exiting %s()\n", __FUNCTION__);
+}
+
+/****************************************************************************/
+/* Periodic function to check whether MSI is lost                           */
+/*                                                                          */
+/* Returns:                                                                 */
+/*   Nothing.                                                               */
+/****************************************************************************/
+static void
+bnx_check_msi(void *xsc)
+{
+	struct bnx_softc *sc = xsc;
+	struct ifnet *ifp = &sc->arpcom.ac_if;
+	struct status_block *sblk = sc->status_block;
+
+	if ((ifp->if_flags & IFF_RUNNING) != IFF_RUNNING)
+		return;
+
+	if (bnx_get_hw_rx_cons(sc) != sc->rx_cons ||
+	    bnx_get_hw_tx_cons(sc) != sc->tx_cons ||
+	    (sblk->status_attn_bits & STATUS_ATTN_BITS_LINK_STATE) !=
+	    (sblk->status_attn_bits_ack & STATUS_ATTN_BITS_LINK_STATE)) {
+		if (sc->bnx_check_rx_cons == sc->rx_cons &&
+		    sc->bnx_check_tx_cons == sc->tx_cons &&
+		    sc->bnx_check_status_idx == sc->last_status_idx) {
+			uint32_t msi_ctrl;
+
+			if (!sc->bnx_msi_maylose) {
+				sc->bnx_msi_maylose = 1;
+				goto done;
+			}
+
+			msi_ctrl = REG_RD(sc, BNX_PCICFG_MSI_CONTROL);
+			if (msi_ctrl & BNX_PCICFG_MSI_CONTROL_ENABLE) {
+				printf("%s: lost MSI\n", ifp->if_xname);
+
+				REG_WR(sc, BNX_PCICFG_MSI_CONTROL,
+				    msi_ctrl & ~BNX_PCICFG_MSI_CONTROL_ENABLE);
+				REG_WR(sc, BNX_PCICFG_MSI_CONTROL, msi_ctrl);
+
+				bnx_intr_msi(sc);
+			} else {
+				printf("%s: MSI may be lost\n", ifp->if_xname);
+			}
+		}
+	}
+	sc->bnx_msi_maylose = 0;
+	sc->bnx_check_rx_cons = sc->rx_cons;
+	sc->bnx_check_tx_cons = sc->tx_cons;
+	sc->bnx_check_status_idx = sc->last_status_idx;
+
+done:
+	timeout_add_msec(&sc->bnx_ckmsi, BNX_MSI_CKINTVL);
 }
 
 void
