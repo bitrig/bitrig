@@ -382,8 +382,13 @@ void	bnx_rx_intr(struct bnx_softc *);
 void	bnx_tx_intr(struct bnx_softc *);
 void	bnx_disable_intr(struct bnx_softc *);
 void	bnx_enable_intr(struct bnx_softc *);
+void	bnx_reenable_intr(struct bnx_softc *);
 
-int	bnx_intr(void *);
+static void	bnx_intr(struct bnx_softc *);
+static int	bnx_intr_legacy(void *);
+static int	bnx_intr_msi(void *);
+static int	bnx_intr_msi_oneshot(void *);
+
 void	bnx_iff(struct bnx_softc *);
 void	bnx_stats_update(struct bnx_softc *);
 void	bnx_tick(void *);
@@ -651,6 +656,7 @@ bnx_attach(struct device *parent, struct device *self, void *aux)
 	u_int32_t		val;
 	pcireg_t		memtype;
 	const char 		*intrstr = NULL;
+	int			msi, (*irq_handle)(void *);
 
 	sc->bnx_pa = *pa;
 
@@ -670,10 +676,23 @@ bnx_attach(struct device *parent, struct device *self, void *aux)
 		return;
 	}
 
-	if (pci_intr_map(pa, &sc->bnx_ih)) {
+	if ((msi = pci_intr_map_msi(pa, &sc->bnx_ih)) != 0 &&
+		   pci_intr_map(pa, &sc->bnx_ih) != 0) {
 		printf(": couldn't map interrupt\n");
 		goto bnx_attach_fail;
 	}
+	sc->msi_enabled = !msi;
+	if (sc->msi_enabled) {
+		if (BNX_CHIP_NUM(sc) == BNX_CHIP_NUM_5709) {
+			irq_handle = bnx_intr_msi_oneshot;
+			sc->bnx_flags |= BNX_ONESHOT_MSI_FLAG;
+		} else {
+			irq_handle = bnx_intr_msi;
+			sc->bnx_flags |= BNX_CHECK_MSI_FLAG;
+		}
+	} else
+		irq_handle = bnx_intr_legacy;
+
 	intrstr = pci_intr_string(pc, sc->bnx_ih);
 
 	/*
@@ -752,7 +771,7 @@ bnx_attach(struct device *parent, struct device *self, void *aux)
 
 	/* Hookup IRQ last. */
 	sc->bnx_intrhand = pci_intr_establish(pc, sc->bnx_ih, IPL_NET,
-	    bnx_intr, sc, sc->bnx_dev.dv_xname);
+	    irq_handle, sc, sc->bnx_dev.dv_xname);
 	if (sc->bnx_intrhand == NULL) {
 		printf(": couldn't establish interrupt");
 		if (intrstr != NULL)
@@ -3584,9 +3603,12 @@ bnx_blockinit(struct bnx_softc *sc)
 	    sc->bnx_cmd_ticks);
 	REG_WR(sc, BNX_HC_STATS_TICKS, (sc->bnx_stats_ticks & 0xffff00));
 	REG_WR(sc, BNX_HC_STAT_COLLECT_TICKS, 0xbb8);  /* 3ms */
-	REG_WR(sc, BNX_HC_CONFIG,
-	    (BNX_HC_CONFIG_RX_TMR_MODE | BNX_HC_CONFIG_TX_TMR_MODE |
-	    BNX_HC_CONFIG_COLLECT_STATS));
+
+	val = BNX_HC_CONFIG_TX_TMR_MODE | BNX_HC_CONFIG_COLLECT_STATS;
+	if (sc->bnx_flags & BNX_ONESHOT_MSI_FLAG)
+		val |= BNX_HC_CONFIG_ONE_SHOT | BNX_HC_CONFIG_USE_INT_PARAM;
+
+	REG_WR(sc, BNX_HC_CONFIG, val);
 
 	/* Clear the internal statistics counters. */
 	REG_WR(sc, BNX_HC_COMMAND, BNX_HC_COMMAND_CLR_STAT_NOW);
@@ -4738,6 +4760,24 @@ bnx_enable_intr(struct bnx_softc *sc)
 }
 
 /****************************************************************************/
+/* Reenables interrupt generation during interrupt handling.                */
+/*                                                                          */
+/* Returns:                                                                 */
+/*   Nothing.                                                               */
+/****************************************************************************/
+void
+bnx_reenable_intr(struct bnx_softc *sc)
+{
+	if (!sc->msi_enabled) {
+		REG_WR(sc, BNX_PCICFG_INT_ACK_CMD,
+		       BNX_PCICFG_INT_ACK_CMD_INDEX_VALID |
+		       BNX_PCICFG_INT_ACK_CMD_MASK_INT | sc->last_status_idx);
+	}
+	REG_WR(sc, BNX_PCICFG_INT_ACK_CMD,
+	       BNX_PCICFG_INT_ACK_CMD_INDEX_VALID | sc->last_status_idx);
+}
+
+/****************************************************************************/
 /* Handles controller initialization.                                       */
 /*                                                                          */
 /* Returns:                                                                 */
@@ -5210,95 +5250,126 @@ bnx_watchdog(struct ifnet *ifp)
 /* Returns:                                                                 */
 /*   0 for success, positive value for failure.                             */
 /****************************************************************************/
-int
-bnx_intr(void *xsc)
+static void
+bnx_intr(struct bnx_softc *sc)
 {
-	struct bnx_softc	*sc = xsc;
 	struct ifnet		*ifp = &sc->arpcom.ac_if;
+	struct status_block	*sblk;
 	u_int32_t		status_attn_bits;
-	u_int16_t		status_idx;
-	int			rv = 0;
 
 	if ((sc->bnx_flags & BNX_ACTIVE_FLAG) == 0)
-		return (0);
+		return;
 
-	DBRUNIF(1, sc->interrupts_generated++);
-
-	bus_dmamap_sync(sc->bnx_dmatag, sc->status_map, 0,
-	    sc->status_map->dm_mapsize, BUS_DMASYNC_POSTREAD);
-
+	sblk = sc->status_block;
+	
 	/*
-	 * If the hardware status block index
-	 * matches the last value read by the
-	 * driver and we haven't asserted our
-	 * interrupt then there's nothing to do.
+	 * Save the status block index value for use during
+	 * the next interrupt.
 	 */
-	status_idx = sc->status_block->status_idx;
-	if (status_idx != sc->last_status_idx || 
-	    !ISSET(REG_RD(sc, BNX_PCICFG_MISC_STATUS),
-	    BNX_PCICFG_MISC_STATUS_INTA_VALUE)) {
-		rv = 1;
+	sc->last_status_idx = sblk->status_idx;
 
-		/* Ack the interrupt */
-		REG_WR(sc, BNX_PCICFG_INT_ACK_CMD,
-		    BNX_PCICFG_INT_ACK_CMD_INDEX_VALID | status_idx);
+	/* Make sure status index is extracted before rx/tx cons */
+	bus_space_barrier(sc->bnx_btag, sc->bnx_bhandle, 0, 0, 0);
 
-		status_attn_bits = sc->status_block->status_attn_bits;
+	status_attn_bits = sblk->status_attn_bits;
 
-		DBRUNIF(DB_RANDOMTRUE(bnx_debug_unexpected_attention),
-		    printf("Simulating unexpected status attention bit set.");
-		    status_attn_bits = status_attn_bits |
-		    STATUS_ATTN_BITS_PARITY_ERROR);
+	/* Was it a link change interrupt? */
+	if ((status_attn_bits & STATUS_ATTN_BITS_LINK_STATE) !=
+	    (sblk->status_attn_bits_ack & STATUS_ATTN_BITS_LINK_STATE))
+		bnx_phy_intr(sc);
 
-		/* Was it a link change interrupt? */
-		if ((status_attn_bits & STATUS_ATTN_BITS_LINK_STATE) !=
-		    (sc->status_block->status_attn_bits_ack &
-		    STATUS_ATTN_BITS_LINK_STATE))
-			bnx_phy_intr(sc);
+	/* If any other attention is asserted then the chip is toast. */
+	if ((status_attn_bits & ~STATUS_ATTN_BITS_LINK_STATE) !=
+	    (sblk->status_attn_bits_ack & ~STATUS_ATTN_BITS_LINK_STATE)) { 
+		DBRUN(1, sc->unexpected_attentions++);
 
-		/* If any other attention is asserted then the chip is toast. */
-		if (((status_attn_bits & ~STATUS_ATTN_BITS_LINK_STATE) !=
-		    (sc->status_block->status_attn_bits_ack & 
-		    ~STATUS_ATTN_BITS_LINK_STATE))) {
-			DBRUN(1, sc->unexpected_attentions++);
+		BNX_PRINTF(sc, "Fatal attention detected: 0x%08X\n",
+		    sc->status_block->status_attn_bits);
 
-			BNX_PRINTF(sc, "Fatal attention detected: 0x%08X\n",
-			    sc->status_block->status_attn_bits);
+		DBRUN(BNX_FATAL,
+		    if (bnx_debug_unexpected_attention == 0)
+			bnx_breakpoint(sc));
 
-			DBRUN(BNX_FATAL,
-			    if (bnx_debug_unexpected_attention == 0)
-				bnx_breakpoint(sc));
-
-			bnx_init(sc);
-			goto out;
-		}
-
-		/* Check for any completed RX frames. */
-		if (sc->status_block->status_rx_quick_consumer_index0 !=
-		    sc->hw_rx_cons)
-			bnx_rx_intr(sc);
-
-		/* Check for any completed TX frames. */
-		if (sc->status_block->status_tx_quick_consumer_index0 !=
-		    sc->hw_tx_cons)
-			bnx_tx_intr(sc);
-
-		/*
-		 * Save the status block index value for use during the
-		 * next interrupt.
-		 */
-		sc->last_status_idx = status_idx;
-
-		/* Start moving packets again */
-		if (ifp->if_flags & IFF_RUNNING && !IFQ_IS_EMPTY(&ifp->if_snd))
-			bnx_start(ifp);
+		bnx_init(sc);
+		return;
 	}
 
-out:
-	bus_dmamap_sync(sc->bnx_dmatag, sc->status_map, 0,
-	    sc->status_map->dm_mapsize, BUS_DMASYNC_PREREAD);
+	/* Check for any completed RX frames. */
+	if (sblk->status_rx_quick_consumer_index0 !=
+	    sc->hw_rx_cons)
+		bnx_rx_intr(sc);
 
-	return (rv);
+	/* Check for any completed TX frames. */
+	if (sblk->status_tx_quick_consumer_index0 !=
+	    sc->hw_tx_cons)
+		bnx_tx_intr(sc);
+
+	/*
+	 * Save the status block index value for use during the
+	 * next interrupt.
+	 */
+	sc->last_status_idx = sblk->status_idx;
+
+	/* Re-enable interrupts. */
+	bnx_reenable_intr(sc);
+
+	/* Start moving packets again */
+	if (ifp->if_flags & IFF_RUNNING && !IFQ_IS_EMPTY(&ifp->if_snd))
+		bnx_start(ifp);
+}
+
+static int
+bnx_intr_legacy(void *xsc)
+{
+	struct bnx_softc	*sc = xsc;
+	struct status_block	*sblk;
+
+	sblk = sc->status_block;
+
+	/*
+	 * If the hardware status block index matches the last value
+	 * read by the driver and we haven't asserted our interrupt
+	 * then there's nothing to do.
+	 */
+	if (sblk->status_idx == sc->last_status_idx &&
+	    (REG_RD(sc, BNX_PCICFG_MISC_STATUS) &
+	     BNX_PCICFG_MISC_STATUS_INTA_VALUE))
+		return (0);
+
+	/* Ack the interrupt and stop others from occuring. */
+	REG_WR(sc, BNX_PCICFG_INT_ACK_CMD,
+	       BNX_PCICFG_INT_ACK_CMD_USE_INT_HC_PARAM |
+	       BNX_PCICFG_INT_ACK_CMD_MASK_INT);
+
+	/*
+	 * Read back to deassert IRQ immediately to avoid too
+	 * many spurious interrupts.
+	 */
+	REG_RD(sc, BNX_PCICFG_INT_ACK_CMD);
+
+	bnx_intr(sc);
+	return (1);
+}
+
+static int
+bnx_intr_msi(void *xsc)
+{
+	struct bnx_softc *sc = xsc;
+
+	REG_WR(sc, BNX_PCICFG_INT_ACK_CMD,
+		BNX_PCICFG_INT_ACK_CMD_USE_INT_HC_PARAM |
+		BNX_PCICFG_INT_ACK_CMD_MASK_INT);
+
+	bnx_intr(sc);
+	return (1);
+}
+
+static int
+bnx_intr_msi_oneshot(void *xsc)
+{
+	bnx_intr(xsc);
+	
+	return (1);
 }
 
 /****************************************************************************/

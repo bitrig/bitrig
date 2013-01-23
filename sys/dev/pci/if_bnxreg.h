@@ -3588,6 +3588,8 @@ struct l2_fhdr {
 #define BNX_HC_CONFIG_CMD_TMR_MODE			 (1L<<4)
 #define BNX_HC_CONFIG_STATISTIC_PRIORITY		 (1L<<5)
 #define BNX_HC_CONFIG_STATUS_PRIORITY			 (1L<<6)
+#define BNX_HC_CONFIG_ONE_SHOT				 (1L<<17)
+#define BNX_HC_CONFIG_USE_INT_PARAM			 (1L<<18)
 #define BNX_HC_CONFIG_STAT_MEM_ADDR			 (0xffL<<8)
 
 #define BNX_HC_ATTN_BITS_ENABLE			0x0000680c
@@ -4791,6 +4793,8 @@ struct bnx_softc {
 #define BNX_MFW_ENABLE_FLAG		0x40
 #define BNX_ACTIVE_FLAG			0x80
 #define BNX_ALLOC_PKTS_FLAG		0x100
+#define BNX_ONESHOT_MSI_FLAG		0x200
+#define BNX_CHECK_MSI_FLAG		0x400
 
 	/* PHY specific flags. */
 	u_int32_t		bnx_phy_flags;
@@ -4855,6 +4859,9 @@ struct bnx_softc {
 
 	/* The address of the integrated PHY on the MII bus. */
 	int			bnx_phy_addr;
+
+	/* MSI enabled? */
+	int			msi_enabled;
 
 	/* The device handle for the MII bus child device. */
 	struct mii_data		bnx_mii;
