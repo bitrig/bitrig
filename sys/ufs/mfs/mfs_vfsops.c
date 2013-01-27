@@ -178,6 +178,8 @@ mfs_start(struct mount *mp, int flags, struct proc *p)
 
 	while (1) {
 		while (1) {
+			if (mfsp->mfs_dying)
+				break;
 			bp = bufq_dequeue(&mfsp->mfs_bufq);
 			if (bp == NULL || mfsp->mfs_dying) {
 				break;
