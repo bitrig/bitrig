@@ -738,6 +738,8 @@
 ./usr/include/dev/ic/advlib.h
 ./usr/include/dev/ic/adw.h
 ./usr/include/dev/ic/adwlib.h
+./usr/include/dev/ic/ahcireg.h
+./usr/include/dev/ic/ahcivar.h
 ./usr/include/dev/ic/aic6360reg.h
 ./usr/include/dev/ic/aic6360var.h
 ./usr/include/dev/ic/aic6915.h
@@ -1076,6 +1078,7 @@
 ./usr/include/dev/pci/drm/drm.h
 ./usr/include/dev/pci/drm/drmP.h
 ./usr/include/dev/pci/drm/drm_atomic.h
+./usr/include/dev/pci/drm/drm_mode.h
 ./usr/include/dev/pci/drm/drm_sarea.h
 ./usr/include/dev/pci/drm/i915_drm.h
 ./usr/include/dev/pci/drm/i915_drv.h
@@ -1656,7 +1659,6 @@
 ./usr/include/ocurses.h
 ./usr/include/ohash.h
 ./usr/include/openssl
-./usr/include/openssl/acss.h
 ./usr/include/openssl/aes.h
 ./usr/include/openssl/asn1.h
 ./usr/include/openssl/asn1_mac.h
@@ -2071,7 +2073,7 @@
 ./usr/lib/libcompat.a
 ./usr/lib/libcompat_p.a
 ./usr/lib/libcrypto.a
-./usr/lib/libcrypto.so.21.0
+./usr/lib/libcrypto.so.22.0
 ./usr/lib/libcrypto_p.a
 ./usr/lib/libcurses.a
 ./usr/lib/libcurses.so.12.1
@@ -6518,8 +6520,6 @@
 ./usr/share/man/man3/acoshf.3
 ./usr/share/man/man3/acoshl.3
 ./usr/share/man/man3/acosl.3
-./usr/share/man/man3/acss.3
-./usr/share/man/man3/acss_setkey.3
 ./usr/share/man/man3/add_wch.3
 ./usr/share/man/man3/add_wchnstr.3
 ./usr/share/man/man3/add_wchstr.3
@@ -10760,6 +10760,7 @@
 ./usr/share/man/man4/video.4
 ./usr/share/man/man4/vio.4
 ./usr/share/man/man4/vioblk.4
+./usr/share/man/man4/viomb.4
 ./usr/share/man/man4/virtio.4
 ./usr/share/man/man4/vlan.4
 ./usr/share/man/man4/vmt.4
