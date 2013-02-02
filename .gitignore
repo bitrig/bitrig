@@ -14,3 +14,5 @@ tags
 *.pyc
 *.orig
 *.rej
+
+lost+found
