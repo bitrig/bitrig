@@ -115,7 +115,8 @@ void	imx_attach(struct device *, struct device *, void *);
 int	imx_submatch(struct device *, void *, void *);
 
 struct cfattach imx_ca = {
-	sizeof(struct imx_softc), imx_match, imx_attach
+	sizeof(struct imx_softc), imx_match, imx_attach, NULL,
+	config_activate_children
 };
 
 struct cfdriver imx_cd = {

@@ -71,6 +71,8 @@
 #define SATA_P0PHYCR_TEST_PDDQ	(1 << 20)
 
 void	imxahci_attach(struct device *, struct device *, void *);
+int	imxahci_detach(struct device *, int);
+int	imxahci_activate(struct device *, int);
 
 extern int ahci_intr(void *);
 
@@ -79,7 +81,11 @@ struct imxahci_softc {
 };
 
 struct cfattach imxahci_ca = {
-	sizeof(struct imxahci_softc), NULL, imxahci_attach
+	sizeof(struct imxahci_softc),
+	NULL,
+	imxahci_attach,
+	imxahci_detach,
+	imxahci_activate
 };
 
 struct cfdriver imxahci_cd = {
@@ -140,4 +146,24 @@ imxahci_attach(struct device *parent, struct device *self, void *args)
 
 unmap:
 	bus_space_unmap(sc->sc_iot, sc->sc_ioh, sc->sc_ios);
+}
+
+int
+imxahci_detach(struct device *self, int flags)
+{
+	struct imxahci_softc *imxsc = (struct imxahci_softc *) self;
+	struct ahci_softc *sc = &imxsc->sc;
+
+	ahci_detach(sc, flags);
+	bus_space_unmap(sc->sc_iot, sc->sc_ioh, sc->sc_ios);
+	return 0;
+}
+
+int
+imxahci_activate(struct device *self, int act)
+{
+	struct imxahci_softc *imxsc = (struct imxahci_softc *) self;
+	struct ahci_softc *sc = &imxsc->sc;
+
+	return ahci_activate((struct device *)sc, act);
 }

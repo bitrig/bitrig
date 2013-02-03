@@ -333,6 +333,7 @@ boot(int howto)
 	
 	/* Run any shutdown hooks */
 	doshutdownhooks();
+	config_suspend(TAILQ_FIRST(&alldevs), DVACT_POWERDOWN);
 
 	/* Make sure IRQ's are disabled */
 	IRQdisable;
