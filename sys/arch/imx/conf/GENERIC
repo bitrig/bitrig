@@ -59,7 +59,7 @@ imx0		at mainbus?
 # Cortex-A9 (iMX6)
 ampintc*	at soc?
 amptimer*	at soc?
-imxlii*		at soc?
+armliicc*	at soc?
 
 # iMX on-chip devices
 imxccm*		at soc?			# clock control module

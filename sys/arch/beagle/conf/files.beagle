@@ -95,6 +95,9 @@ device omdisplay: wsemuldisplaydev, rasops16
 attach omdisplay at soc
 file arch/beagle/dev/omdisplay.c		omdisplay
 
+
+include "arch/arm/cortex/files.cortex"
+
 #
 # Machine-independent SCSI drivers
 #

@@ -144,6 +144,7 @@
 #include <arm/armv7/armv7reg.h>
 #include <arm/armv7/armv7var.h>
 
+#include <arm/cortex/smc.h>
 #include <machine/machine_reg.h>
 #include <beagle/dev/omapvar.h>
 
@@ -997,4 +998,21 @@ board_startup(void)
 		printf("kernel does not support -c; continuing..\n");
 #endif
 	}
+}
+
+void
+platform_smc_write(bus_space_tag_t iot, bus_space_handle_t ioh, bus_size_t off,
+    uint32_t op, uint32_t val)
+{
+	extern void omap4_smc_call(uint32_t, uint32_t);
+
+	switch (op) {
+	case 0x100:	/* PL310 DEBUG */
+	case 0x102:	/* PL310 CTL */
+		break;
+	default:
+		panic("platform_smc_write: invalid operation %d", op);
+	}
+
+	omap4_smc_call(op, val);
 }

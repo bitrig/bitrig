@@ -188,6 +188,7 @@ extern u_int cputype;
 #define	cpu_flush_prefetchbuf()	cpufuncs.cf_flush_prefetchbuf()
 #define	cpu_drain_writebuf()	cpufuncs.cf_drain_writebuf()
 
+#define cpu_sdcache_enabled() (cpufuncs.cf_sdcache_wbinv_all != cpufunc_nullop)
 #define	cpu_sdcache_wbinv_all()		cpufuncs.cf_sdcache_wbinv_all()
 #define	cpu_sdcache_wb_range(va, pa, s)	cpufuncs.cf_sdcache_wb_range((va), (pa), (s))
 #define	cpu_sdcache_inv_range(va, pa, s)	cpufuncs.cf_sdcache_inv_range((va), (pa), (s))

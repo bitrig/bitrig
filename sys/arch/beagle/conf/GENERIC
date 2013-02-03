@@ -64,6 +64,8 @@ amptimer*	at soc?
 # OMAP3 only
 intc*		at soc?			# interrupt controller
 
+armliicc*	at soc?			# L2 cache controller
+
 # OMAP on-chip devices
 prcm*		at soc?			# power/clock controller
 omdog*		at soc?			# watchdog timer

@@ -1,0 +1,6 @@
+#	$OpenBSD$
+
+device armliicc
+attach armliicc at soc
+file    arch/arm/cortex/arml2cc.c           armliicc
+

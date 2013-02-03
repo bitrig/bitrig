@@ -189,7 +189,7 @@ struct imx_dev imx6_devs[] = {
 	/*
 	 * PL310 L2 Cache Controller
 	 */
-	{ .name = "imxlii",
+	{ .name = "armliicc",
 	  .unit = 0,
 	  .mem = { { L2C_ADDR, L2C_SIZE } },
 	},

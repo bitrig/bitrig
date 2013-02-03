@@ -34,6 +34,9 @@
 #define GTIMER_ADDR	0x48240000
 #define GTIMER_SIZE	0x300
 
+#define L2C_ADDR        0x48242000
+#define L2C_SIZE        0x1000
+
 #define WD_ADDR		0x4a314000
 #define WD_SIZE		0x80
 
@@ -130,6 +133,14 @@ struct omap_dev omap4_devs[] = {
 	{ .name = "amptimer",
 	  .unit = 0,
 	  .mem = { { GTIMER_ADDR, GTIMER_SIZE } },
+	},
+
+	/*
+	 * PL310 L2 Cache Controller
+	 */
+	{ .name = "armliicc" ":disabled" /* */,
+	  .unit = 0,
+	  .mem = { { L2C_ADDR, L2C_SIZE } },
 	},
 
 	/*

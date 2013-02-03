@@ -328,11 +328,13 @@ extern int pmap_needs_pte_sync;
 do {									\
 	if (PMAP_NEEDS_PTE_SYNC) {					\
 		paddr_t pa;						\
-		(void)pmap_extract(pmap_kernel(), (vaddr_t)(pte), &pa);\
 		cpu_drain_writebuf();					\
 		cpu_dcache_wb_range((vaddr_t)(pte), sizeof(pt_entry_t));\
+		if (cpu_sdcache_enabled()) { 				\
+		(void)pmap_extract(pmap_kernel(), (vaddr_t)(pte), &pa);	\
 		cpu_sdcache_wb_range((vaddr_t)(pte), (paddr_t)(pa),	\
-		    sizeof(pt_entry_t));			\
+		    sizeof(pt_entry_t));				\
+		};							\
 		dsb(); isb();						\
 	}								\
 } while (/*CONSTCOND*/0)
@@ -341,12 +343,14 @@ do {									\
 do {									\
 	if (PMAP_NEEDS_PTE_SYNC) {					\
 		paddr_t pa;						\
-		(void)pmap_extract(pmap_kernel(), (vaddr_t)(pte), &pa);\
 		cpu_drain_writebuf();					\
 		cpu_dcache_wb_range((vaddr_t)(pte),			\
 		    (cnt) << 2); /* * sizeof(pt_entry_t) */		\
+		if (cpu_sdcache_enabled()) { 				\
+		(void)pmap_extract(pmap_kernel(), (vaddr_t)(pte), &pa);\
 		cpu_sdcache_wb_range((vaddr_t)(pte), (paddr_t)(pa),	\
 		    (cnt) << 2); /* * sizeof(pt_entry_t) */		\
+		};							\
 		dsb(); isb();						\
 	}								\
 } while (/*CONSTCOND*/0)
