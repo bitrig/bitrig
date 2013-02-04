@@ -207,6 +207,11 @@ struct omap_dev omap4_devs[] = {
 		  { HSUSBHOST_ADDR, HSUSBHOST_SIZE },
 	  },
 	  .irq = { USBEHCI_IRQ }
+	},
+
+	/* Terminator */
+	{ .name = NULL,
+	  .unit = 0
 	}
 
 };

@@ -17,6 +17,8 @@
  */
 
 #include <sys/types.h>
+#include <sys/param.h>
+
 #include <machine/bus.h>
 
 #include <beagle/dev/omapvar.h>
@@ -179,6 +181,11 @@ struct omap_dev omap3_devs[] = {
 	{ .name = "omusbtll",
 	  .unit = 0,
 	  .mem = { { USBTLL_ADDR, USBTLL_SIZE } },
+	},
+
+	/* Terminator */
+	{ .name = NULL,
+	  .unit = 0
 	}
 };
 
