@@ -267,7 +267,7 @@ if [[ -n $user ]]; then
 
 	mkdir -p /mnt/home/$user
 	(cd /mnt/etc/skel; cp -pR . /mnt/home/$user)
-	chown -R 1000:1000 /mnt/home/$user /mnt/var/mail/$user
+	chown -R 1000:1000 /mnt/home/$user
 	echo "1,s@wheel:.:0:root\$@wheel:\*:0:root,${user}@
 w
 q" | /mnt/bin/ed /mnt/etc/group 2>/dev/null
