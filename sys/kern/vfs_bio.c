@@ -1,4 +1,4 @@
-/*	$OpenBSD: vfs_bio.c,v 1.141 2012/12/02 19:42:36 beck Exp $	*/
+/*	$OpenBSD: vfs_bio.c,v 1.145 2013/02/09 20:56:35 miod Exp $	*/
 /*	$NetBSD: vfs_bio.c,v 1.44 1996/06/11 11:15:36 pk Exp $	*/
 
 /*
@@ -1201,12 +1201,13 @@ biodone(struct buf *bp)
 }
 
 #ifdef DDB
-void	bcstats_print(int (*)(const char *, ...));
+void	bcstats_print(int (*)(const char *, ...) __attribute__((__format__(__kprintf__,1,2))));
 /*
  * bcstats_print: ddb hook to print interesting buffer cache counters
  */
 void
-bcstats_print(int (*pr)(const char *, ...))
+bcstats_print(
+    int (*pr)(const char *, ...) __attribute__((__format__(__kprintf__,1,2))))
 {
 	(*pr)("Current Buffer Cache status:\n");
 	(*pr)("numbufs %lld busymapped %lld, delwri %lld\n",
