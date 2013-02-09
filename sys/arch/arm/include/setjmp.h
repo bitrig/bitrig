@@ -1,4 +1,4 @@
-/*	$OpenBSD: setjmp.h,v 1.2 2011/09/20 22:02:13 miod Exp $	*/
+/*	$OpenBSD: setjmp.h,v 1.3 2013/02/09 20:52:12 miod Exp $	*/
 /*	$NetBSD: setjmp.h,v 1.2 2001/08/25 14:45:59 bjh21 Exp $	*/
 
 /*
