@@ -460,3 +460,45 @@ _dl_bind(elf_object_t *object, int relidx)
 	}
 	return newval;
 }
+
+void
+_dl_allocate_first_tls()
+{
+	void *tls;
+
+	if (_dl_tls_first_done)
+		return;
+	_dl_tls_first_done = 1;
+	_dl_tls_static_space = _dl_tls_free_idx + RTLD_STATIC_TLS_EXTRA;
+	tls = _dl_allocate_tls(NULL, _dl_objects, 2*sizeof(Elf_Addr),
+	    sizeof(Elf_Addr));
+	_dl_sys___set_tcb(tls);
+}
+
+void *__tls_get_addr(tls_index *ti)
+{
+	return _dl_sys___get_tcb();
+}
+void
+_dl_allocate_first_tls()
+{
+	void *tls;
+
+	if (_dl_tls_first_done)
+		return;
+	_dl_tls_first_done = 1;
+	_dl_tls_static_space = _dl_tls_free_idx + RTLD_STATIC_TLS_EXTRA;
+	tls = _dl_allocate_tls(NULL, _dl_objects, 2*sizeof(Elf_Addr),
+	    sizeof(Elf_Addr));
+	_dl_sysarch(AMD64_SET_FSBASE, &tls);
+}
+
+void *__tls_get_addr(tls_index *ti)
+{
+	Elf_Addr** segbase;
+
+	__asm __volatile("movq %%fs:0, %0" : "=r" (segbase));
+
+	return _dl_tls_get_addr_common(&segbase[1], ti->ti_module,
+	    ti->ti_offset);
+}

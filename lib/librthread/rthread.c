@@ -787,7 +787,9 @@ _rtld_allocate_tls(void *old, size_t size, size_t align)
 	base = (Elf_Addr) calloc(1,
 	    asize + sizeof (struct thread_control_block));
 	tls = (struct thread_control_block *)(base + size);
+#if TLS_VARIANT == 2
 	tls->__tcb_self = tls;
+#endif
 	tls->tcb_dtv = (void*)base;
 
 	return tls;
