@@ -53,5 +53,6 @@ main(int argc, char **argv)
 		pthread_create(&td, NULL, f1, &arg);
 		pthread_join(td, NULL);
 	}
+	printf("\n");
 	return (0);
 }
