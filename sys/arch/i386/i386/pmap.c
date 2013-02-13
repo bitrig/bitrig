@@ -1,4 +1,4 @@
-/*	$OpenBSD: pmap.c,v 1.157 2012/03/09 13:01:28 ariane Exp $	*/
+/*	$OpenBSD: pmap.c,v 1.158 2013/02/13 20:45:41 kurt Exp $	*/
 /*	$NetBSD: pmap.c,v 1.91 2000/06/02 17:46:37 thorpej Exp $	*/
 
 /*
@@ -591,6 +591,8 @@ pmap_exec_account(struct pmap *pm, vaddr_t va,
 	}
 }
 
+#define SEGDESC_LIMIT(sd) (ptoa(((sd).sd_hilimit << 16) | (sd).sd_lolimit))
+
 /*
  * Fixup the code segment to cover all potential executable mappings.
  * Called by kernel SEGV trap handler.
@@ -602,6 +604,7 @@ pmap_exec_fixup(struct vm_map *map, struct trapframe *tf, struct pcb *pcb)
 	struct vm_map_entry *ent;
 	struct pmap *pm = vm_map_pmap(map);
 	vaddr_t va = 0;
+	vaddr_t pm_cs, gdt_cs;
 
 	vm_map_lock(map);
 	RB_FOREACH_REVERSE(ent, uvm_map_addr, &map->addr) {
@@ -616,7 +619,19 @@ pmap_exec_fixup(struct vm_map *map, struct trapframe *tf, struct pcb *pcb)
 		va = trunc_page(ent->end - 1);
 	vm_map_unlock(map);
 
-	if (va <= pm->pm_hiexec) {
+	pm_cs = SEGDESC_LIMIT(pm->pm_codeseg);
+	gdt_cs = SEGDESC_LIMIT(curcpu()->ci_gdt[GUCODE_SEL].sd);
+
+	/*
+	 * Another thread running on another cpu can change
+	 * pm_hiexec and pm_codeseg. If this has happened
+	 * during our timeslice, our gdt code segment will
+	 * be stale. So only allow the fault through if the
+	 * faulting address is less then pm_hiexec and our
+	 * gdt code segment is not stale.
+	 */
+	if (va <= pm->pm_hiexec && pm_cs == pm->pm_hiexec &&
+	    gdt_cs == pm->pm_hiexec) {
 		return (0);
 	}
 
