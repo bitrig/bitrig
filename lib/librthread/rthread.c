@@ -1,4 +1,4 @@
-/*	$OpenBSD: rthread.c,v 1.66 2012/08/22 23:43:32 matthew Exp $ */
+/*	$OpenBSD: rthread.c,v 1.67 2013/02/14 03:38:15 guenther Exp $ */
 /*
  * Copyright (c) 2004,2005 Ted Unangst <tedu@openbsd.org>
  * All Rights Reserved.
@@ -52,6 +52,9 @@
 #ifndef MD_SPINCOUNT_MP
 #define MD_SPINCOUNT_MP	1024	/* # spins on cpu before yielding, for smp. */
 #endif
+
+#pragma weak _dl_allocate_tls
+#pragma weak _dl_free_tls
 
 static int concurrency_level;	/* not used */
 static int spincount_max = 0;	/* # spins prior to yielding. */
@@ -140,11 +143,20 @@ _spinunlock(_spinlock_lock_t *lock)
 void _rthread_initlib(void) __attribute__((constructor));
 void _rthread_initlib(void)
 {
-	struct thread_control_block *tcb = &_initial_thread_tcb;
+	struct thread_control_block *tcb = __get_tcb();
+ 
+	/*
+	 * A newer ld.so may provide a TCB allocation for us.
+	 * If not, use a static allocation
+	 */
+	if (tcb == NULL) {
+		tcb = &_initial_thread_tcb;
+		tcb->tcb_dtv = 0;
+		TCB_SET(tcb);
+	}
 
 	/* use libc's errno for the main thread */
 	TCB_INIT(tcb, &_initial_thread, ___errno());
-	TCB_SET(tcb);
 }
 
 int *
@@ -302,6 +314,30 @@ pthread_self(void)
 	return (TCB_THREAD());
 }
 
+static inline struct thread_control_block *
+allocate_tcb(void)
+{
+	struct thread_control_block *tcb;
+
+	if (&_dl_allocate_tls != 0)
+		tcb = _dl_allocate_tls(NULL);
+	else {
+		tcb = malloc(sizeof(*tcb));
+		tcb->tcb_dtv = 0;
+	}
+	return (tcb);
+}
+
+static inline void
+free_tcb(struct thread_control_block *tcb)
+{
+	if (&_dl_free_tls != 0)
+		_dl_free_tls(tcb);
+	else
+		free(tcb);
+}
+
+
 static void
 _rthread_reaper(void)
 {
@@ -317,8 +353,7 @@ restart:
 		_rthread_debug(3, "rthread reaping %p stack %p\n",
 		    (void *)thread, (void *)thread->stack);
 		_rthread_free_stack(thread->stack);
-		_rtld_free_tls(thread->arg,
-		    sizeof(struct thread_control_block), sizeof(void *));
+		free_tcb(thread->arg);
 		free(thread);
 		goto restart;
 	}
@@ -459,7 +494,7 @@ pthread_create(pthread_t *threadp, const pthread_attr_t *attr,
 		goto fail1;
 	}
 
-	tcb = _rtld_allocate_tls(NULL, sizeof(*tcb), sizeof(void *));
+	tcb = allocate_tcb();
 	if (tcb == NULL) {
 		rc = errno;
 		goto fail2;
@@ -488,7 +523,7 @@ pthread_create(pthread_t *threadp, const pthread_attr_t *attr,
 	_spinlock(&_thread_lock);
 	LIST_REMOVE(thread, threads);
 	_spinunlock(&_thread_lock);
-	_rtld_free_tls(tcb, sizeof(*tcb), sizeof(void *));
+	free_tcb(tcb);
 fail2:
 	_rthread_free_stack(thread->stack);
 fail1:
