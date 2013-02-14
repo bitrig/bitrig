@@ -459,7 +459,6 @@ initarm(void *arg0, void *arg1, void *arg2)
 	pv_addr_t kernel_l1pt;
 	paddr_t memstart;
 	psize_t memsize;
-	extern void omap4_smc_call(uint32_t, uint32_t);
 
 #if 0
 	int led_data = 0;
@@ -476,14 +475,6 @@ initarm(void *arg0, void *arg1, void *arg2)
 	 */
 	if (set_cpufuncs())
 		panic("cpu not recognized!");
-
-	// XXX: What for?
-	switch (board_id) {
-	case BOARD_ID_IMX6_PHYFLEX:
-		/* disable external L2 cache */
-		// omap4_smc_call(0x102, 0);
-		break;
-	}
 
 #if 0
 	/* Calibrate the delay loop. */
