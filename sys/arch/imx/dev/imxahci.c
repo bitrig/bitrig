@@ -141,9 +141,12 @@ imxahci_attach(struct device *parent, struct device *self, void *args)
 
 	if (ahci_attach(sc) != 0) {
 		/* error printed by ahci_attach */
-		goto unmap;
+		goto irq;
 	}
 
+	return;
+irq:
+	arm_intr_disestablish(sc->sc_ih);
 unmap:
 	bus_space_unmap(sc->sc_iot, sc->sc_ioh, sc->sc_ios);
 }
