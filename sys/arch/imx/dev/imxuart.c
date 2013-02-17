@@ -40,6 +40,7 @@
 #include <imx/dev/imxuartreg.h>
 #include <imx/dev/imxuartvar.h>
 #include <imx/dev/imxvar.h>
+#include <imx/dev/imxccmvar.h>
 
 #define DEVUNIT(x)      (minor(x) & 0x7f)
 #define DEVCUA(x)       (minor(x) & 0x80)
@@ -121,7 +122,7 @@ bus_space_tag_t	imxuartconsiot;
 bus_space_handle_t imxuartconsioh;
 bus_addr_t	imxuartconsaddr;
 tcflag_t	imxuartconscflag = TTYDEF_CFLAG;
-int		imxuartdefaultrate = TTYDEF_SPEED;
+int		imxuartdefaultrate = B115200;
 
 int
 imxuartprobe(struct device *parent, void *self, void *aux)
@@ -497,6 +498,20 @@ imxuartopen(dev_t dev, int flag, int mode, struct proc *p)
 		sc->sc_ucr2 = bus_space_read_2(iot, ioh, IMXUART_UCR2);
 		sc->sc_ucr3 = bus_space_read_2(iot, ioh, IMXUART_UCR3);
 		sc->sc_ucr4 = bus_space_read_2(iot, ioh, IMXUART_UCR4);
+
+		/* interrupt after one char on tx/rx */
+		/* reference frequency divider: 1 */
+		bus_space_write_2(iot, ioh, IMXUART_UFCR,
+		    1 << IMXUART_FCR_TXTL_SH |
+		    5 << IMXUART_FCR_RFDIV_SH |
+		    1 << IMXUART_FCR_RXTL_SH);
+
+		bus_space_write_2(iot, ioh, IMXUART_UBIR,
+		    (imxuartdefaultrate / 100) - 1);
+
+		/* formula: clk / (rfdiv * 1600) */
+		bus_space_write_2(iot, ioh, IMXUART_UBMR,
+		    (imxccm_get_uartclk() * 1000) / 1600);
 
 		SET(sc->sc_ucr1, IMXUART_CR1_EN|IMXUART_CR1_RRDYEN);
 		SET(sc->sc_ucr2, IMXUART_CR2_TXEN|IMXUART_CR2_RXEN);

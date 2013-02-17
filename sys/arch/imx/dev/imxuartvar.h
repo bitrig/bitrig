@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 Patrick Wildt <webmaster@patrick-wildt.de>
+ * Copyright (c) 2005 Dale Rahn <drahn@motorola.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
