@@ -53,13 +53,14 @@ config		bsd	root on sd0a swap on sd0b
 mainbus0	at root
 cpu0		at mainbus?
 
+# Cortex-A9 (iMX6)
+cortex0		at mainbus?
+ampintc*	at cortex?
+amptimer*	at cortex?
+armliicc*	at cortex?
+
 # iMX SoC
 imx0		at mainbus?
-
-# Cortex-A9 (iMX6)
-ampintc*	at soc?
-amptimer*	at soc?
-armliicc*	at soc?
 
 # iMX on-chip devices
 imxccm*		at soc?			# clock control module

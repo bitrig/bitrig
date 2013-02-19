@@ -26,21 +26,14 @@
 #include <machine/intr.h>
 #include <machine/bus.h>
 #include <machine/cpufunc.h>
+#include <arm/cortex/cortex.h>
 #include <arm/cortex/smc.h>
-#if defined(__beagle__)
-#include <beagle/dev/omapvar.h>
-#define ATTACH_ARGS omap_attach_args
-/* XXX - kludge */
-#define ia_iot oa_iot
-#define ia_dev oa_dev
-#elif defined(__imx__)
-#include <imx/dev/imxvar.h>
-#define ATTACH_ARGS imx_attach_args
-#else
-#error what platform is this
-#endif
 
 #define PL310_ERRATA_727915
+
+/* offset from periphbase */
+#define L2C_ADDR	0x2000
+#define L2C_SIZE	0x1000
 
 /* registers */
 #define L2C_CACHE_ID			0x000
@@ -109,6 +102,7 @@ struct arml2cc_softc {
 
 struct arml2cc_softc *arml2cc_sc;
 
+int arml2cc_match(struct device *, void *, void *);
 void arml2cc_attach(struct device *parent, struct device *self, void *args);
 void arml2cc_enable(struct arml2cc_softc *);
 void arml2cc_disable(struct arml2cc_softc *);
@@ -122,22 +116,28 @@ void arml2cc_cache_op(struct arml2cc_softc *, bus_size_t, uint32_t);
 void arml2cc_cache_sync(struct arml2cc_softc *);
 
 struct cfattach armliicc_ca = {
-	sizeof (struct arml2cc_softc), NULL, arml2cc_attach
+	sizeof (struct arml2cc_softc), arml2cc_match, arml2cc_attach
 };
 
 struct cfdriver armliicc_cd = {
 	NULL, "armliicc", DV_DULL
 };
 
+int
+arml2cc_match(struct device *parent, void *cfdata, void *aux)
+{
+	return (1);
+}
+
 void
 arml2cc_attach(struct device *parent, struct device *self, void *args)
 {
-	struct ATTACH_ARGS *ia = args;
+	struct cortex_attach_args *ia = args;
 	struct arml2cc_softc *sc = (struct arml2cc_softc *) self;
 
-	sc->sc_iot = ia->ia_iot;
-	if (bus_space_map(sc->sc_iot, ia->ia_dev->mem[0].addr,
-	    ia->ia_dev->mem[0].size, 0, &sc->sc_ioh))
+	sc->sc_iot = ia->ca_iot;
+	if (bus_space_map(sc->sc_iot, ia->ca_periphbase + L2C_ADDR,
+	    L2C_SIZE, 0, &sc->sc_ioh))
 		panic("arml2cc_attach: bus_space_map failed!");
 
 	printf(": rtl %d", bus_space_read_4(sc->sc_iot, sc->sc_ioh,

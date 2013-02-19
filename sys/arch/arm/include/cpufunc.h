@@ -368,6 +368,8 @@ extern unsigned armv5_dcache_index_inc;
 #endif
 
 #ifdef CPU_ARMv7
+u_int	armv7_periphbase	(void);
+
 void	armv7_setttb		(u_int);
 
 void	armv7_tlb_flushID_SE	(u_int);

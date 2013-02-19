@@ -51,9 +51,6 @@ struct board_dev {
 };
 
 struct board_dev phyflex_imx6_devs[] = {
-	{ "ampintc",	0 },
-	{ "amptimer",	0 },
-	{ "armliicc",	0 },
 	{ "imxccm",	0 },
 	{ "imxiomuxc",	0 },
 	{ "imxdog",	0 },
@@ -78,9 +75,6 @@ struct board_dev phyflex_imx6_devs[] = {
 };
 
 struct board_dev sabrelite_devs[] = {
-	{ "ampintc",	0 },
-	{ "amptimer",	0 },
-	{ "armliicc",	0 },
 	{ "imxccm",	0 },
 	{ "imxiomuxc",	0 },
 	{ "imxdog",	0 },

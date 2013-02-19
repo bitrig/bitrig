@@ -168,33 +168,6 @@
 struct imx_dev imx6_devs[] = {
 
 	/*
-	 * Cortex-A9 Interrupt Controller
-	 */
-	{ .name = "ampintc",
-	  .unit = 0,
-	  .mem = {
-	    { ICP_ADDR, ICP_SIZE },
-	    { ICD_ADDR, ICD_SIZE },
-	  },
-	},
-
-	/*
-	 * Cortex-A9 Global Timer
-	 */
-	{ .name = "amptimer",
-	  .unit = 0,
-	  .mem = { { GTIMER_ADDR, GTIMER_SIZE } },
-	},
-
-	/*
-	 * PL310 L2 Cache Controller
-	 */
-	{ .name = "armliicc",
-	  .unit = 0,
-	  .mem = { { L2C_ADDR, L2C_SIZE } },
-	},
-
-	/*
 	 * Clock Control Module
 	 */
 	{ .name = "imxccm",

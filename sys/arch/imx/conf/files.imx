@@ -36,21 +36,6 @@ attach imx at mainbus
 file	arch/imx/dev/imx.c			imx
 file	arch/imx/dev/imx6.c			imx
 
-# cortex based peripherals
-device ampintc
-attach ampintc at soc
-file	arch/imx/dev/ampintc.c		ampintc
-
-device amptimer
-attach amptimer at soc
-file	arch/imx/dev/amptimer.c		amptimer
-
-include "arch/arm/cortex/files.cortex"
-
-#device imxlii
-#attach imxlii at soc
-#file	arch/imx/dev/imxlii.c		imxlii
-
 # serial ports
 device imxuart
 attach	imxuart at soc

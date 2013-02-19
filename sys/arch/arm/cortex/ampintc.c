@@ -29,7 +29,13 @@
 #include <sys/evcount.h>
 #include <arm/cpufunc.h>
 #include <machine/bus.h>
-#include <imx/dev/imxvar.h>
+#include <arm/cortex/cortex.h>
+
+/* offset from periphbase */
+#define ICP_ADDR	0x100
+#define ICP_SIZE	0x100
+#define ICD_ADDR	0x1000
+#define ICD_SIZE	0x1000
 
 /* registers */
 #define	ICD_DCR			0x000
@@ -154,6 +160,7 @@ struct intrq {
 };
 
 
+int		 ampintc_match(struct device *, void *, void *);
 void		 ampintc_attach(struct device *, struct device *, void *);
 int		 ampintc_spllower(int);
 void		 ampintc_splx(int);
@@ -175,18 +182,24 @@ void		 ampintc_intr_disable(int);
 void		 ampintc_route(int, int , int);
 
 struct cfattach	ampintc_ca = {
-	sizeof (struct ampintc_softc), NULL, ampintc_attach
+	sizeof (struct ampintc_softc), ampintc_match, ampintc_attach
 };
 
 struct cfdriver ampintc_cd = {
 	NULL, "ampintc", DV_DULL
 };
 
+int
+ampintc_match(struct device *parent, void *cfdata, void *aux)
+{
+	return (1);
+}
+
 void
 ampintc_attach(struct device *parent, struct device *self, void *args)
 {
 	struct ampintc_softc *sc = (struct ampintc_softc *)self;
-	struct imx_attach_args *ia = args;
+	struct cortex_attach_args *ia = args;
 	int i, nintr;
 	bus_space_tag_t		iot;
 	bus_space_handle_t	d_ioh, p_ioh;
@@ -195,14 +208,14 @@ ampintc_attach(struct device *parent, struct device *self, void *args)
 
 	arm_init_smask();
 
-	iot = ia->ia_iot;
+	iot = ia->ca_iot;
 
-	if (bus_space_map(iot, ia->ia_dev->mem[0].addr,
-	    ia->ia_dev->mem[0].size, 0, &p_ioh))
+	if (bus_space_map(iot, ia->ca_periphbase + ICP_ADDR,
+	    ICP_SIZE, 0, &p_ioh))
 		panic("ampintc_attach: ICP bus_space_map failed!");
 
-	if (bus_space_map(iot, ia->ia_dev->mem[1].addr,
-	    ia->ia_dev->mem[1].size, 0, &d_ioh))
+	if (bus_space_map(iot, ia->ca_periphbase + ICD_ADDR,
+	    ICD_SIZE, 0, &d_ioh))
 		panic("ampintc_attach: ICD bus_space_map failed!");
 
 	sc->sc_iot = iot;
@@ -261,7 +274,7 @@ ampintc_attach(struct device *parent, struct device *self, void *args)
 void
 ampintc_set_priority(int irq, int pri)
 {
-        struct ampintc_softc	*sc = ampintc;
+	struct ampintc_softc	*sc = ampintc;
 	uint32_t		 prival;
 
 	/*
@@ -294,7 +307,7 @@ ampintc_setipl(int new)
 void
 ampintc_intr_enable(int irq)
 {
-        struct ampintc_softc	*sc = ampintc;
+	struct ampintc_softc	*sc = ampintc;
 
 #ifdef DEBUG
 	printf("enable irq %d register %x bitmask %08x\n",
@@ -308,7 +321,7 @@ ampintc_intr_enable(int irq)
 void
 ampintc_intr_disable(int irq)
 {
-        struct ampintc_softc	*sc = ampintc;
+	struct ampintc_softc	*sc = ampintc;
 
 	bus_space_write_4(sc->sc_iot, sc->sc_d_ioh, ICD_ICERn(irq),
 	    1 << IRQ_TO_REG32BIT(irq));
@@ -370,7 +383,7 @@ ampintc_splx(int new)
 {
 	struct cpu_info *ci = curcpu();
 
-        if (ci->ci_ipending & arm_smask[new])
+	if (ci->ci_ipending & arm_smask[new])
 		arm_do_pending_intr(new);
 
 	ampintc_setipl(new);
@@ -403,7 +416,7 @@ ampintc_splraise(int new)
 		new = old;
 
 	ampintc_setipl(new);
-  
+
 	return (old);
 }
 

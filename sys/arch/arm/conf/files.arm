@@ -20,6 +20,8 @@ device	mainbus {}
 attach	mainbus at root
 file	arch/arm/mainbus/mainbus.c		mainbus
 
+include "arch/arm/cortex/files.cortex"
+
 device	cpu {}
 attach	cpu at mainbus with cpu_mainbus
 file	arch/arm/mainbus/cpu_mainbus.c		cpu_mainbus

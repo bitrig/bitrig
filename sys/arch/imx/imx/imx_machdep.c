@@ -269,6 +269,8 @@ bs_protos(bs_notimpl);
 int comcnspeed = CONSPEED;
 int comcnmode = CONMODE;
 
+extern int32_t amptimer_frequency;
+
 /*
  *
  */
@@ -852,9 +854,11 @@ initarm(void *arg0, void *arg1, void *arg2)
 
 	switch (board_id) {
 	case BOARD_ID_IMX6_PHYFLEX:
+		amptimer_frequency = 396 * 1000 * 1000;
 		printf("board type: phyFLEX-i.MX6\n");
 		break;
 	case BOARD_ID_IMX6_SABRELITE:
+		amptimer_frequency = 396 * 1000 * 1000;
 		printf("board type: SABRE Lite\n");
 		break;
 	default:

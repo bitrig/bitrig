@@ -1,6 +1,18 @@
 #	$OpenBSD$
 
-device armliicc
-attach armliicc at soc
-file    arch/arm/cortex/arml2cc.c           armliicc
+# ARM core
+device	cortex {}
+attach	cortex at mainbus
+file	arch/arm/cortex/cortex.c		cortex
 
+device	ampintc
+attach	ampintc at cortex
+file	arch/arm/cortex/ampintc.c		ampintc
+
+device	amptimer
+attach	amptimer at cortex
+file	arch/arm/cortex/amptimer.c		amptimer
+
+device	armliicc
+attach	armliicc at cortex
+file	arch/arm/cortex/arml2cc.c		armliicc

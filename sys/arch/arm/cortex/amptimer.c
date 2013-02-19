@@ -28,8 +28,13 @@
 #include <arm/cpufunc.h>
 #include <machine/bus.h>
 #include <machine/intr.h>
-#include <imx/dev/imxvar.h>
+#include <arm/cortex/cortex.h>
 
+/* offset from periphbase */
+#define GTIMER_ADDR	0x200
+#define GTIMER_SIZE	0x100
+
+/* registers */
 #define GTIMER_CNT_LOW		0x00
 #define GTIMER_CNT_HIGH		0x04
 #define GTIMER_CTRL		0x08
@@ -44,6 +49,7 @@
 #define GTIMER_AUTOINC		0x18
 
 #define TIMER_FREQUENCY		396 * 1000 * 1000 /* ARM core clock */
+int32_t amptimer_frequency = TIMER_FREQUENCY;
 
 u_int amptimer_get_timecount(struct timecounter *);
 
@@ -53,8 +59,8 @@ static struct timecounter amptimer_timecounter = {
 
 struct amptimer_softc {
 	struct device		sc_dev;
-        bus_space_tag_t		sc_iot;
-        bus_space_handle_t	sc_ioh;
+	bus_space_tag_t		sc_iot;
+	bus_space_handle_t	sc_ioh;
 	volatile u_int64_t	sc_nexttickevent;
 	volatile u_int64_t	sc_nextstatevent;
 	u_int32_t		sc_ticks_per_second;
@@ -70,6 +76,7 @@ struct amptimer_softc {
 #endif
 };
 
+int		 amptimer_match(struct device *, void *, void *);
 void		amptimer_attach(struct device *, struct device *, void *);
 uint64_t	amptimer_readcnt64(struct amptimer_softc *sc);
 int		amptimer_intr(void *);
@@ -87,7 +94,7 @@ void	*ampintc_intr_establish(int, int, int (*)(void *), void *, char *);
 
 
 struct cfattach amptimer_ca = {
-	sizeof (struct amptimer_softc), NULL, amptimer_attach
+	sizeof (struct amptimer_softc), amptimer_match, amptimer_attach
 };
 
 struct cfdriver amptimer_cd = {
@@ -98,8 +105,8 @@ uint64_t
 amptimer_readcnt64(struct amptimer_softc *sc)
 {
 	uint32_t high0, high1, low;
-        bus_space_tag_t iot = sc->sc_iot;
-        bus_space_handle_t ioh = sc->sc_ioh;
+	bus_space_tag_t iot = sc->sc_iot;
+	bus_space_handle_t ioh = sc->sc_ioh;
 
 	do {
 		high0 = bus_space_read_4(iot, ioh, GTIMER_CNT_HIGH);
@@ -110,21 +117,26 @@ amptimer_readcnt64(struct amptimer_softc *sc)
 	return ((((uint64_t)high1) << 32) | low);
 }
 
+int
+amptimer_match(struct device *parent, void *cfdata, void *aux)
+{
+	return (1);
+}
 
 void
 amptimer_attach(struct device *parent, struct device *self, void *args)
 {
 	struct amptimer_softc *sc = (struct amptimer_softc *)self;
-	struct imx_attach_args *ia = args;
+	struct cortex_attach_args *ia = args;
 	bus_space_handle_t ioh;
 
-	sc->sc_iot = ia->ia_iot;
+	sc->sc_iot = ia->ca_iot;
 
-	if (bus_space_map(sc->sc_iot, ia->ia_dev->mem[0].addr,
-	    ia->ia_dev->mem[0].size, 0, &ioh))
+	if (bus_space_map(sc->sc_iot, ia->ca_periphbase + GTIMER_ADDR,
+	    GTIMER_SIZE, 0, &ioh))
 		panic("amptimer_attach: bus_space_map failed!");
 
-	sc->sc_ticks_per_second = TIMER_FREQUENCY;
+	sc->sc_ticks_per_second = amptimer_frequency;
 	printf(": tick rate %d KHz\n", sc->sc_ticks_per_second /1024);
 
 	sc->sc_ioh = ioh;
@@ -165,7 +177,7 @@ u_int
 amptimer_get_timecount(struct timecounter *tc)
 {
 	struct amptimer_softc *sc = amptimer_timecounter.tc_priv;
-        return bus_space_read_4(sc->sc_iot, sc->sc_ioh, GTIMER_CNT_LOW);
+	return bus_space_read_4(sc->sc_iot, sc->sc_ioh, GTIMER_CNT_LOW);
 }
 
 
@@ -238,7 +250,7 @@ again:
 	    nextevent >> 32);
 	reg |= GTIMER_CTRL_COMP;
 	bus_space_write_4(sc->sc_iot, sc->sc_ioh, GTIMER_CTRL, reg);
-		
+
 	now = amptimer_readcnt64(sc);
 	if (now >= nextevent) {
 		nextevent = now + skip;
@@ -285,8 +297,8 @@ amptimer_cpu_initclocks()
 	    next >> 32);
 	reg |= GTIMER_CTRL_COMP | GTIMER_CTRL_IRQ;
 	bus_space_write_4(sc->sc_iot, sc->sc_ioh, GTIMER_CTRL, reg);
-	
 }
+
 void
 amptimer_delay(u_int usecs)
 {
@@ -318,7 +330,6 @@ amptimer_delay(u_int usecs)
 		if (delta > delaycnt)
 			break;
 	}
-	
 }
 
 void
@@ -327,7 +338,7 @@ amptimer_setstatclockrate(int newhz)
 	struct amptimer_softc	*sc = amptimer_cd.cd_devs[0];
 	int			 minint, statint;
 	int			 s;
-	
+
 	s = splclock();
 
 	statint = sc->sc_ticks_per_second / newhz;
@@ -338,7 +349,7 @@ amptimer_setstatclockrate(int newhz)
 		sc->sc_statvar >>= 1;
 
 	sc->sc_statmin = statint - (sc->sc_statvar >> 1);
-	
+
 	splx(s);
 
 	/*

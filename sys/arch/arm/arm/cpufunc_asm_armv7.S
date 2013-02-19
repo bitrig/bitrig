@@ -290,6 +290,10 @@ ENTRY(armv7_context_switch)
 	ISB
 	mov	pc, lr
 
+ENTRY(armv7_periphbase)
+	mrc	p15, 4, r0, c15, c0, 0
+	mov	pc, lr
+
 /* XXX The following macros should probably be moved to asm.h */
 #define _DATA_OBJECT(x) .globl x; .type x,_ASM_TYPE_OBJECT; x:
 #define C_OBJECT(x)	_DATA_OBJECT(_C_LABEL(x))
