@@ -1,4 +1,4 @@
-+/*	$OpenBSD: pmap7.c,v 1.1 2013/01/17 20:52:39 bmercer Exp $	*/
+/*	$OpenBSD: pmap7.c,v 1.1 2013/01/17 20:52:39 bmercer Exp $	*/
 /*	$NetBSD: pmap.c,v 1.147 2004/01/18 13:03:50 scw Exp $	*/
 
 /*
