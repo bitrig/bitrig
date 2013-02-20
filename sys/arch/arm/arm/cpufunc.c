@@ -1,4 +1,4 @@
-/*	$OpenBSD: cpufunc.c,v 1.16 2011/11/08 17:06:51 deraadt Exp $	*/
+/*	$OpenBSD: cpufunc.c,v 1.18 2013/01/23 19:57:47 patrick Exp $	*/
 /*	$NetBSD: cpufunc.c,v 1.65 2003/11/05 12:53:15 scw Exp $	*/
 
 /*
@@ -110,8 +110,8 @@ struct cpu_functions arm8_cpufuncs = {
 	arm8_setttb,			/* setttb		*/
 	cpufunc_dfsr,			/* dfsr			*/
 	cpufunc_dfar,			/* dfar			*/
-	cpufunc_dfsr,			/* ifsr			*/
-	cpufunc_dfar,			/* ifar			*/
+	cpufunc_ifsr,			/* ifsr			*/
+	cpufunc_ifar,			/* ifar			*/
 
 	/* TLB functions */
 
@@ -168,8 +168,8 @@ struct cpu_functions arm9_cpufuncs = {
 	arm9_setttb,			/* Setttb		*/
 	cpufunc_dfsr,			/* dfsr			*/
 	cpufunc_dfar,			/* dfar			*/
-	cpufunc_dfsr,			/* ifsr			*/
-	cpufunc_dfar,			/* ifar			*/
+	cpufunc_ifsr,			/* ifsr			*/
+	cpufunc_ifar,			/* ifar			*/
 
 	/* TLB functions */
 
@@ -227,8 +227,8 @@ struct cpu_functions armv5_ec_cpufuncs = {
 	armv5_ec_setttb,		/* Setttb		*/
 	cpufunc_dfsr,			/* dfsr			*/
 	cpufunc_dfar,			/* dfar			*/
-	cpufunc_dfsr,			/* ifsr			*/
-	cpufunc_dfar,			/* ifar			*/
+	cpufunc_ifsr,			/* ifsr			*/
+	cpufunc_ifar,			/* ifar			*/
 
 	/* TLB functions */
 
@@ -287,8 +287,8 @@ struct cpu_functions arm10_cpufuncs = {
 	armv5_setttb,			/* Setttb		*/
 	cpufunc_dfsr,			/* dfsr			*/
 	cpufunc_dfar,			/* dfar			*/
-	cpufunc_dfsr,			/* ifsr			*/
-	cpufunc_dfar,			/* ifar			*/
+	cpufunc_ifsr,			/* ifsr			*/
+	cpufunc_ifar,			/* ifar			*/
 
 	/* TLB functions */
 
@@ -345,8 +345,8 @@ struct cpu_functions arm11_cpufuncs = {
 	arm11_setttb,			/* Setttb			*/
 	cpufunc_dfsr,			/* dfsr			*/
 	cpufunc_dfar,			/* dfar			*/
-	cpufunc_dfsr,			/* ifsr			*/
-	cpufunc_dfar,			/* ifar			*/
+	cpufunc_ifsr,			/* ifsr			*/
+	cpufunc_ifar,			/* ifar			*/
 
 	/* TLB functions */
 
@@ -462,8 +462,8 @@ struct cpu_functions sa11x0_cpufuncs = {
 	sa1_setttb,			/* setttb		*/
 	cpufunc_dfsr,			/* dfsr			*/
 	cpufunc_dfar,			/* dfar			*/
-	cpufunc_dfsr,			/* ifsr			*/
-	cpufunc_dfar,			/* ifar			*/
+	cpufunc_ifsr,			/* ifsr			*/
+	cpufunc_ifar,			/* ifar			*/
 
 	/* TLB functions */
 
@@ -520,8 +520,8 @@ struct cpu_functions ixp12x0_cpufuncs = {
 	sa1_setttb,			/* setttb		*/
 	cpufunc_dfsr,			/* dfsr			*/
 	cpufunc_dfar,			/* dfar			*/
-	cpufunc_dfsr,			/* ifsr			*/
-	cpufunc_dfar,			/* ifar			*/
+	cpufunc_ifsr,			/* ifsr			*/
+	cpufunc_ifar,			/* ifar			*/
 
 	/* TLB functions */
 
@@ -579,8 +579,8 @@ struct cpu_functions xscale_cpufuncs = {
 	xscale_setttb,			/* setttb		*/
 	cpufunc_dfsr,			/* dfsr			*/
 	cpufunc_dfar,			/* dfar			*/
-	cpufunc_dfsr,			/* ifsr			*/
-	cpufunc_dfar,			/* ifar			*/
+	cpufunc_ifsr,			/* ifsr			*/
+	cpufunc_ifar,			/* ifar			*/
 
 	/* TLB functions */
 

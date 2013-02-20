@@ -1,4 +1,4 @@
-/*	$OpenBSD: cpufunc_asm.S,v 1.1 2004/02/01 05:09:48 drahn Exp $	*/
+/*	$OpenBSD: cpufunc_asm.S,v 1.2 2013/01/23 19:57:47 patrick Exp $	*/
 /*	$NetBSD: cpufunc_asm.S,v 1.12 2003/09/06 09:14:52 rearnsha Exp $	*/
 
 /*
@@ -90,7 +90,6 @@ ENTRY(cpufunc_ifsr)
 ENTRY(cpufunc_ifar)
 	mrc	p15, 0, r0, c6, c0, 2
 	mov	pc, lr
-
 
 
 /*

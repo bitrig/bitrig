@@ -1,4 +1,4 @@
-/*	$OpenBSD: _atomic_lock.c,v 1.2 2006/01/05 22:33:23 marc Exp $	*/
+/*	$OpenBSD: _atomic_lock.c,v 1.3 2013/01/23 20:49:55 patrick Exp $	*/
 
 /*
  * Copyright (c) 2004 Dale Rahn. All rights reserved.

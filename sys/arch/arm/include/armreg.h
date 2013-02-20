@@ -1,4 +1,4 @@
-/*	$OpenBSD: armreg.h,v 1.10 2011/09/20 22:02:13 miod Exp $	*/
+/*	$OpenBSD: armreg.h,v 1.11 2013/01/18 00:20:20 patrick Exp $	*/
 /*	$NetBSD: armreg.h,v 1.27 2003/09/06 08:43:02 rearnsha Exp $	*/
 
 /*
@@ -208,7 +208,7 @@
 #define CPU_ID_CORTEX_A8_R2	0x412fc080
 #define CPU_ID_CORTEX_A8_R3	0x413fc080
 #define CPU_ID_CORTEX_A8	0x410fc080
-#define CPU_ID_CORTEX_A8_MASK	0xff0fffe0
+#define CPU_ID_CORTEX_A8_MASK	0xff0ffff0
 #define CPU_ID_CORTEX_A9	0x410fc090
 #define CPU_ID_CORTEX_A9_R1	0x411fc090
 #define CPU_ID_CORTEX_A9_R2	0x412fc090
