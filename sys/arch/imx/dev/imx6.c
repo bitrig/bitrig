@@ -27,17 +27,6 @@
 
 /* IRQs are defined without the 32 cpu IRQs */
 
-#define ICP_ADDR	0x00a00100
-#define ICP_SIZE	0x100
-#define ICD_ADDR	0x00a01000
-#define ICD_SIZE	0x1000
-
-#define GTIMER_ADDR	0x00a00200
-#define GTIMER_SIZE	0x100
-
-#define L2C_ADDR	0x00a02000
-#define L2C_SIZE	0x1000
-
 #define CCM_ADDR	0x020c4000
 #define CCM_SIZE	0x5000
 

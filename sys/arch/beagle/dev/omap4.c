@@ -26,16 +26,6 @@
 
 #define OMAPID_ADDR	0x4A002000
 #define OMAPID_SIZE	0x1000
-#define ICP_ADDR	0x48240100
-#define ICP_SIZE	0x100
-#define ICD_ADDR	0x48241000
-#define ICD_SIZE	0x1000
-
-#define GTIMER_ADDR	0x48240000
-#define GTIMER_SIZE	0x300
-
-#define L2C_ADDR        0x48242000
-#define L2C_SIZE        0x1000
 
 #define WD_ADDR		0x4a314000
 #define WD_SIZE		0x80
