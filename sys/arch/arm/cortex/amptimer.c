@@ -138,7 +138,7 @@ amptimer_attach(struct device *parent, struct device *self, void *args)
 		panic("amptimer_attach: bus_space_map failed!");
 
 	sc->sc_ticks_per_second = amptimer_frequency;
-	printf(": tick rate %d KHz\n", sc->sc_ticks_per_second /1024);
+	printf(": tick rate %d KHz\n", sc->sc_ticks_per_second /1000);
 
 	sc->sc_ioh = ioh;
 
@@ -275,7 +275,7 @@ amptimer_set_clockrate(int32_t new_frequency)
 	sc->sc_ticks_per_second = amptimer_frequency;
 	amptimer_timecounter.tc_frequency = sc->sc_ticks_per_second;
 	printf("amptimer0: adjusting clock: new tick rate %d KHz\n",
-	    sc->sc_ticks_per_second /1024);
+	    sc->sc_ticks_per_second /1000);
 }
 
 void
