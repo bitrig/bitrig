@@ -58,13 +58,15 @@ struct cfdriver omapid_cd = {
 	NULL, "omapid", DV_DULL
 };
 
-extern int32_t amptimer_frequency;
+void amptimer_set_clockrate(int32_t new_frequency); /* XXX */
+
 void
 omapid_attach(struct device *parent, struct device *self, void *args)
 {
 	struct omap_attach_args *oa = args;
 	struct omapid_softc *sc = (struct omapid_softc *) self;
-	u_int32_t rev;
+	uint32_t rev;
+	uint32_t newclockrate = 0;
 	char *board;
 
 	sc->sc_iot = oa->oa_iot;
@@ -82,11 +84,11 @@ omapid_attach(struct device *parent, struct device *self, void *args)
 		case 0xB852:
 		case 0xB95C:
 			board = "omap4430";
-			amptimer_frequency = 400 * 1000 * 1000;
+			newclockrate = 400 * 1000 * 1000;
 			break;
 		case 0xB94E:
 			board = "omap4460";
-			amptimer_frequency = 350 * 1000 * 1000;
+			newclockrate = 350 * 1000 * 1000;
 			break;
 		}
 		break;
@@ -94,4 +96,6 @@ omapid_attach(struct device *parent, struct device *self, void *args)
 		break;
 	}
 	printf(": %s\n", board);
+	if (newclockrate != 0)
+		amptimer_set_clockrate(newclockrate);
 }

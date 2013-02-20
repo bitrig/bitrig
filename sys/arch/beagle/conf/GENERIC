@@ -58,13 +58,13 @@ omap0		at mainbus?
 omapid*		at soc?
 
 # Cortex-A9 (OMAP4)
-ampintc*	at soc? 
-amptimer*	at soc?
+cortex0         at mainbus?
+ampintc*	at cortex? 
+amptimer*	at cortex?
+armliicc*	at cortex?		# L2 cache controller
 
 # OMAP3 only
 intc*		at soc?			# interrupt controller
-
-armliicc*	at soc?			# L2 cache controller
 
 # OMAP on-chip devices
 prcm*		at soc?			# power/clock controller

@@ -83,6 +83,7 @@ int		amptimer_intr(void *);
 void		amptimer_cpu_initclocks(void);
 void		amptimer_delay(u_int);
 void		amptimer_setstatclockrate(int stathz);
+void		amptimer_set_clockrate(int32_t new_frequency);
 
 /* hack - XXXX
  * gptimer connects directly to ampintc, not thru the generic
@@ -262,6 +263,22 @@ again:
 }
 
 void
+amptimer_set_clockrate(int32_t new_frequency)
+{
+	struct amptimer_softc	*sc = amptimer_cd.cd_devs[0];
+
+	amptimer_frequency = new_frequency;
+
+	if (sc == NULL)
+		return;
+
+	sc->sc_ticks_per_second = amptimer_frequency;
+	amptimer_timecounter.tc_frequency = sc->sc_ticks_per_second;
+	printf("amptimer0: adjusting clock: new tick rate %d KHz\n",
+	    sc->sc_ticks_per_second /1024);
+}
+
+void
 amptimer_cpu_initclocks()
 {
 	struct amptimer_softc	*sc = amptimer_cd.cd_devs[0];
@@ -271,7 +288,9 @@ amptimer_cpu_initclocks()
 	stathz = hz;
 	profhz = hz * 10;
 
-	sc->sc_ticks_per_second = TIMER_FREQUENCY;
+	if (sc->sc_ticks_per_second != amptimer_frequency) {
+		amptimer_set_clockrate(amptimer_frequency);
+	}
 
 	amptimer_setstatclockrate(stathz);
 

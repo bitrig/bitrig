@@ -86,9 +86,6 @@ struct board_dev overo_devs[] = {
 struct board_dev pandaboard_devs[] = {
 	{ "omapid",	0 },
 	{ "prcm",	0 },
-	{ "ampintc",	0 },
-	{ "armliicc",	0 },
-	{ "amptimer",	0 },
 	{ "omdog",	0 },
 	{ "omgpio",	0 },
 	{ "omgpio",	1 },

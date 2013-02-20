@@ -94,17 +94,6 @@
 struct omap_dev omap4_devs[] = {
 
 	/*
-	 * Cortex-A9 Interrupt Controller
-	 */
-	{ .name = "ampintc",
-	  .unit = 0,
-	  .mem = {
-	    { ICP_ADDR, ICD_SIZE },
-	    { ICD_ADDR, ICD_SIZE },
-	  },
-	},
-
-	/*
 	 * Power, Reset and Clock Manager
 	 */
 	{ .name = "prcm",
@@ -125,22 +114,6 @@ struct omap_dev omap4_devs[] = {
 	{ .name = "omapid",
 	  .unit = 0,
 	  .mem = { { OMAPID_ADDR, OMAPID_SIZE } },
-	},
-
-	/*
-	 * Cortex-A9 Global Timer
-	 */
-	{ .name = "amptimer",
-	  .unit = 0,
-	  .mem = { { GTIMER_ADDR, GTIMER_SIZE } },
-	},
-
-	/*
-	 * PL310 L2 Cache Controller
-	 */
-	{ .name = "armliicc" ":disabled" /* */,
-	  .unit = 0,
-	  .mem = { { L2C_ADDR, L2C_SIZE } },
 	},
 
 	/*

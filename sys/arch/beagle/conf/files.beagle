@@ -37,15 +37,6 @@ file	arch/beagle/dev/omap.c			omap
 file	arch/beagle/dev/omap3.c			omap
 file	arch/beagle/dev/omap4.c			omap
 
-# cortex based peripherals
-device ampintc
-attach ampintc at soc
-file	arch/beagle/dev/ampintc.c		ampintc
-
-device amptimer
-attach amptimer at soc
-file	arch/beagle/dev/amptimer.c		amptimer
-
 include "dev/sdmmc/files.sdmmc"
 
 device ommmc: sdmmcbus
@@ -94,9 +85,6 @@ file	arch/beagle/dev/omkbd.c			omkbd
 device omdisplay: wsemuldisplaydev, rasops16
 attach omdisplay at soc
 file arch/beagle/dev/omdisplay.c		omdisplay
-
-
-include "arch/arm/cortex/files.cortex"
 
 #
 # Machine-independent SCSI drivers
