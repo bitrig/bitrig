@@ -428,6 +428,7 @@ void
 imxenet_init(struct imxenet_softc *sc)
 {
 	struct ifnet *ifp = &sc->sc_ac.ac_if;
+	int speed = 0;
 
 	/* reset the controller */
 	HSET4(sc, ENET_ECR, ENET_ECR_RESET);
@@ -487,7 +488,14 @@ imxenet_init(struct imxenet_softc *sc)
 	HWRITE4(sc, ENET_TFWR, ENET_TFWR_STRFWD);
 
 	/* enable gigabit-ethernet and set it to support little-endian */
-	HWRITE4(sc, ENET_ECR, ENET_ECR_ETHEREN | ENET_ECR_SPEED | ENET_ECR_DBSWP);
+	switch (IFM_SUBTYPE(sc->sc_mii.mii_media_active)) {
+	case IFM_1000_T:  /* Gigabit */
+		speed |= ENET_ECR_SPEED;
+		break;
+	default:
+		speed &= ~ENET_ECR_SPEED;
+	}
+	HWRITE4(sc, ENET_ECR, ENET_ECR_ETHEREN | speed | ENET_ECR_DBSWP);
 
 #ifdef ENET_ENHANCED_BD
 	HSET4(sc, ENET_ECR, ENET_ECR_EN1588);
@@ -831,6 +839,19 @@ imxenet_miibus_writereg(struct device *dev, int phy, int reg, int val)
 void
 imxenet_miibus_statchg(struct device *dev)
 {
+	struct imxenet_softc *sc = (struct imxenet_softc *)dev;
+	int ecr;
+
+	ecr = HREAD4(sc, ENET_ECR);
+	switch (IFM_SUBTYPE(sc->sc_mii.mii_media_active)) {
+	case IFM_1000_T:  /* Gigabit */
+		ecr |= ENET_ECR_SPEED;
+		break;
+	default:
+		ecr &= ~ENET_ECR_SPEED;
+	}
+	HWRITE4(sc, ENET_ECR, ecr);
+
 	return;
 }
 
