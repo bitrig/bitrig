@@ -885,7 +885,7 @@ _bus_dmamap_load_buffer(bus_dma_tag_t t, bus_dmamap_t map, void *buf,
 			if (__predict_false(pmap_pde_section(pde))) {
 				curaddr = (*pde & L1_S_FRAME) |
 				    (vaddr & L1_S_OFFSET);
-				if (*pde & L1_S_CACHE_MASK) {
+				if ((*pde & L1_S_CACHE_MASK) & ~ARM_L1S_DEVICE_SHARE) {
 					map->_dm_flags &=
 					    ~ARM32_DMAMAP_COHERENT;
 				}
@@ -896,14 +896,14 @@ _bus_dmamap_load_buffer(bus_dma_tag_t t, bus_dmamap_t map, void *buf,
 						    == L2_TYPE_L)) {
 					curaddr = (pte & L2_L_FRAME) |
 					    (vaddr & L2_L_OFFSET);
-					if (pte & L2_L_CACHE_MASK) {
+					if ((pte & L2_L_CACHE_MASK) & ~ARM_L2L_DEVICE_SHARE) {
 						map->_dm_flags &=
 						    ~ARM32_DMAMAP_COHERENT;
 					}
 				} else {
 					curaddr = (pte & L2_S_FRAME) |
 					    (vaddr & L2_S_OFFSET);
-					if (pte & L2_S_CACHE_MASK) {
+					if ((pte & L2_S_CACHE_MASK) & ~ARM_L2S_DEVICE_SHARE) {
 						map->_dm_flags &=
 						    ~ARM32_DMAMAP_COHERENT;
 					}

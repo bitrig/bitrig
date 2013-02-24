@@ -1037,6 +1037,7 @@ pmap_uncache_page(paddr_t va, vaddr_t pa)
 
 	pte = vtopte(va);
 	*pte &= ~L2_S_CACHE_MASK;
+	*pte |= ARM_L1S_DEVICE_SHARE;
 	PTE_SYNC(pte);
 	cpu_tlb_flushD_SE(va);
 	cpu_cpwait();

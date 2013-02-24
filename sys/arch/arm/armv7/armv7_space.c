@@ -197,6 +197,7 @@ armv7_bs_map(void *t, bus_addr_t bpa, bus_size_t size,
 		if ((flag & BUS_SPACE_MAP_CACHEABLE) == 0) {
 			pte = vtopte(va);
 			*pte &= ~L2_S_CACHE_MASK;
+			*pte |= ARM_L2S_DEVICE_SHARE;
 			PTE_SYNC(pte);
 			/* XXX: pmap_kenter_pa() also does PTE_SYNC(). a bit of
 			 *      waste.
