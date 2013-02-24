@@ -19,6 +19,7 @@ file	arch/arm/armv7/armv7_space.c
 file	arch/arm/armv7/armv7_a4x_space.c
 file	arch/arm/armv7/armv7_a4x_io.S
 file	arch/arm/armv7/armv7_mutex.c
+file	arch/arm/armv7/bus_space_asm_armv7.S
 
 #interrupt API layer
 file	arch/beagle/beagle/intr.c
