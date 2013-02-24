@@ -15,11 +15,6 @@ file	arch/arm/arm/conf.c
 
 file	arch/imx/imx/imx_machdep.c
 
-file	arch/arm/armv7/armv7_space.c
-file	arch/arm/armv7/armv7_a4x_space.c
-file	arch/arm/armv7/armv7_a4x_io.S
-file	arch/arm/armv7/armv7_mutex.c
-
 #interrupt API layer
 file	arch/imx/imx/intr.c
 
