@@ -268,7 +268,7 @@ typedef uint32_t	pt_entry_t;	/* L2 table entry */
  */
 #define	TEX_XSCALE_X	0x01		/* X modifies C and B */
 
-#ifndef SMP
+#ifndef MULTIPROCESSOR
 #define ARM_L1S_STRONG_ORD      (0)
 #define ARM_L1S_DEVICE_NOSHARE  (L1_S_V7_TEX(2))
 #define ARM_L1S_DEVICE_SHARE    (L1_S_B)
@@ -296,26 +296,26 @@ typedef uint32_t	pt_entry_t;	/* L2 table entry */
 #define ARM_L1S_STRONG_ORD      (0)
 #define ARM_L1S_DEVICE_NOSHARE  (L1_S_V7_TEX(2))
 #define ARM_L1S_DEVICE_SHARE    (L1_S_B)
-#define ARM_L1S_NRML_NOCACHE    (L1_S_V7_TEX(1)|L1_SHARED)
-#define ARM_L1S_NRML_IWT_OWT    (L1_S_C|L1_SHARED)
-#define ARM_L1S_NRML_IWB_OWB    (L1_S_C|L1_S_B|L1_SHARED)
-#define ARM_L1S_NRML_IWBA_OWBA  (L1_S_V7_TEX(1)|L1_S_C|L1_S_B|L1_SHARED)
+#define ARM_L1S_NRML_NOCACHE    (L1_S_V7_TEX(1)|L1_S_V7_S)
+#define ARM_L1S_NRML_IWT_OWT    (L1_S_C|L1_S_V7_S)
+#define ARM_L1S_NRML_IWB_OWB    (L1_S_C|L1_S_B|L1_S_V7_S)
+#define ARM_L1S_NRML_IWBA_OWBA  (L1_S_V7_TEX(1)|L1_S_C|L1_S_B|L1_S_V7_S)
 
 #define ARM_L2L_STRONG_ORD      (0)
 #define ARM_L2L_DEVICE_NOSHARE  (L2_V7_L_TEX(2))
 #define ARM_L2L_DEVICE_SHARE    (L2_B)
-#define ARM_L2L_NRML_NOCACHE    (L2_V7_L_TEX(1)|L2_SHARED)
-#define ARM_L2L_NRML_IWT_OWT    (L2_C|L2_SHARED)
-#define ARM_L2L_NRML_IWB_OWB    (L2_C|L2_B|L2_SHARED)
-#define ARM_L2L_NRML_IWBA_OWBA  (L2_V7_L_TEX(1)|L2_C|L2_B|L2_SHARED)
+#define ARM_L2L_NRML_NOCACHE    (L2_V7_L_TEX(1)|L2_V7_S)
+#define ARM_L2L_NRML_IWT_OWT    (L2_C|L2_V7_S)
+#define ARM_L2L_NRML_IWB_OWB    (L2_C|L2_B|L2_V7_S)
+#define ARM_L2L_NRML_IWBA_OWBA  (L2_V7_L_TEX(1)|L2_C|L2_B|L2_V7_S)
 
 #define ARM_L2S_STRONG_ORD      (0)
 #define ARM_L2S_DEVICE_NOSHARE  (L2_V7_S_TEX(2))
 #define ARM_L2S_DEVICE_SHARE    (L2_B)
-#define ARM_L2S_NRML_NOCACHE    (L2_V7_S_TEX(1)|L2_SHARED)
-#define ARM_L2S_NRML_IWT_OWT    (L2_C|L2_SHARED)
-#define ARM_L2S_NRML_IWB_OWB    (L2_C|L2_B|L2_SHARED)
-#define ARM_L2S_NRML_IWBA_OWBA  (L2_V7_S_TEX(1)|L2_C|L2_B|L2_SHARED)
+#define ARM_L2S_NRML_NOCACHE    (L2_V7_S_TEX(1)|L2_V7_S)
+#define ARM_L2S_NRML_IWT_OWT    (L2_C|L2_V7_S)
+#define ARM_L2S_NRML_IWB_OWB    (L2_C|L2_B|L2_V7_S)
+#define ARM_L2S_NRML_IWBA_OWBA  (L2_V7_S_TEX(1)|L2_C|L2_B|L2_V7_S)
 #endif /* SMP */
 
 #endif /* _ARM_PTE_H_ */
