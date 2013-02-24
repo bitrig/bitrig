@@ -914,7 +914,6 @@ imxesdhc_wait_intr(struct imxesdhc_softc *sc, int mask, int timo)
 int
 imxesdhc_intr(void *arg)
 {
-	int done = 0;
 	struct imxesdhc_softc *sc = arg;
 
 	u_int32_t status;
@@ -961,5 +960,5 @@ imxesdhc_intr(void *arg)
 		HCLR4(sc, SDHC_INT_STATUS, SDHC_INT_STATUS_CINT);
 		sdmmc_card_intr(sc->sdmmc);
 	}
-	return done;
+	return 1;
 }

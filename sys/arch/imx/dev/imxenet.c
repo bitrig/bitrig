@@ -709,7 +709,7 @@ imxenet_intr(void *arg)
 			imxenet_recv(sc);
 	}
 
-	return 0;
+	return 1;
 }
 
 void
