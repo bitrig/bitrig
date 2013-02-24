@@ -216,7 +216,8 @@ arml2cc_cache_way_op(struct arml2cc_softc *sc, bus_size_t off, uint32_t way_mask
 void
 arml2cc_cache_sync(struct arml2cc_softc *sc)
 {
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, L2C_CACHE_SYNC, 0xffffffff);
+	/* ARM Errata 753970 */
+	bus_space_write_4(sc->sc_iot, sc->sc_ioh, 0x740, 0xffffffff);
 }
 
 void
