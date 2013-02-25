@@ -47,16 +47,19 @@
  */
 
 ENTRY(armv7_bs_r_1)
+	dsb
 	ldrb	r0, [r1, r2]
 	mov	pc, lr
 
 #if (ARM_ARCH_4 + ARM_ARCH_5 + ARM_ARCH_6 + ARM_ARCH_7) > 0
 ENTRY(armv7_bs_r_2)
+	dsb
 	ldrh	r0, [r1, r2]
 	mov	pc, lr
 #endif
 
 ENTRY(armv7_bs_r_4)
+	dsb
 	ldr	r0, [r1, r2]
 	mov	pc, lr
 
