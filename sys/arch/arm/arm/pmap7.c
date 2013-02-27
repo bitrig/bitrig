@@ -1731,7 +1731,7 @@ KASSERT(next_bucket > sva);
 		 */
 		if (!pmap_is_current(pm)) {
 			cpu_idcache_wbinv_all();
-			cpu_sdcache_wbinv_all();
+//			cpu_sdcache_wbinv_all();
 		}
 
 		pmap_free_l2_bucket(pm, l2b, mappings);
