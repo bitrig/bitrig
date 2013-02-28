@@ -10,6 +10,8 @@ cross-tools:	cross-includes cross-buildenv cross-lib
 cross-distrib:	cross-tools cross-bin cross-share cross-sys cross-etc-root-var
 # cross-gnu \
 
+.NOTPARALLEL:
+
 CCCROSSOPTS=
 
 # Have to compute TARGET_ARCH directly in the Makefile, for .if tests involving
