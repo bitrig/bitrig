@@ -25,15 +25,17 @@ CPPFLAGS?=
 CC?=		cc
 CXX?=		c++
 HOSTCC?=	cc
-CFLAGS?=	-O2
-CXXFLAGS?=	-O2
+OPTLVL?=	-O2
+CFLAGS?=	${OPTLVL}
+CXXFLAGS?=	${OPTLVL}
 .else
 # XXX remove -W ones once stand is fixed
 CC?=		clang
 CXX?=		clang++
 HOSTCC?=	clang
-CFLAGS?=	-O3
-CXXFLAGS?=	-O3
+OPTLVL?=	-O3
+CFLAGS?=	${OPTLVL}
+CXXFLAGS?=	${OPTLVL}
 .endif
 
 AR?=		ar
@@ -59,7 +61,7 @@ COMPILE.cc?=	${CXX} ${CXXFLAGS} ${CPPFLAGS} -c
 LINK.cc?=	${CXX} ${CXXFLAGS} ${CPPFLAGS} ${LDFLAGS}
 
 FC?=		f77
-FFLAGS?=	-O2
+FFLAGS?=	${OPTLVL}
 RFLAGS?=
 COMPILE.f?=	${FC} ${FFLAGS} -c
 LINK.f?=	${FC} ${FFLAGS} ${LDFLAGS}

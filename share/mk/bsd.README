@@ -235,6 +235,8 @@ NOPIC		Do not build PIC versions of system libraries, and
 
 NOPIE		Do not build PIE objects or executables.
 
+OPTLVL		Specify the optimization level for the compiler.
+
 DEBUG		Add -g to assembly, C compiler and linking passes.  Also
 		doesn't	set STRIP to -s per default if defined.
 
