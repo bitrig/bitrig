@@ -48,7 +48,6 @@ RDIRS=	../lib/librthread ../lib/libcompat ../lib/libcurses \
 	../lib/libpcap ../lib/libsqlite3 ../lib/libutil ../lib/libusbhid \
 	../lib/libwrap \
 	../lib/libz ../lib/libkeynote ../lib/libevent ../usr.bin/lex \
-	../gnu/lib/libreadline ../gnu/usr.sbin/sendmail/libmilter \
 	../sys/arch/${MACHINE}
 
 # Places using Makefile that needs a prerequisite target met before includes
