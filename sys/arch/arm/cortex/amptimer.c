@@ -105,6 +105,7 @@ void		amptimer_cpu_initclocks(void);
 void		amptimer_delay(u_int);
 void		amptimer_setstatclockrate(int stathz);
 void		amptimer_set_clockrate(int32_t new_frequency);
+void		amptimer_startclock(void);
 
 /* hack - XXXX
  * gptimer connects directly to ampintc, not thru the generic
@@ -445,4 +446,18 @@ amptimer_setstatclockrate(int newhz)
 	 * XXX this allows the next stat timer to occur then it switches
 	 * to the new frequency. Rather than switching instantly.
 	 */
+}
+
+void
+amptimer_startclock(void)
+{
+	struct amptimer_softc	*sc = amptimer_cd.cd_devs[0];
+	struct amptimer_pcpu_softc *pc = &sc->sc_pstat[CPU_INFO_UNIT(curcpu())];
+	uint64_t nextevent;
+
+	nextevent = amptimer_readcnt64(sc) + sc->sc_ticks_per_intr;
+	pc->pc_nexttickevent = pc->pc_nextstatevent = nextevent;
+	
+	bus_space_write_4(sc->sc_iot, sc->sc_pioh, PTIMER_LOAD,
+		sc->sc_ticks_per_intr);
 }
