@@ -138,7 +138,8 @@ void arm_intr_disestablish(void *cookie);
 const char *arm_intr_string(void *cookie);
 
 /* XXX - this is probably the wrong location for this */
-void arm_clock_register(void (*)(void), void (*)(u_int), void (*)(int));
+void arm_clock_register(void (*)(void), void (*)(u_int), void (*)(int),
+    void (*)(void));
 
 #ifdef DIAGNOSTIC
 /*

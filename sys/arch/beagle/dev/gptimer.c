@@ -175,7 +175,7 @@ gptimer_attach(struct device *parent, struct device *self, void *args)
 		    oa->oa_dev->mem[0].addr);
 
 	arm_clock_register(gptimer_cpu_initclocks, gptimer_delay,
-	    gptimer_setstatclockrate);
+	    gptimer_setstatclockrate, NULL);
 }
 
 /* 

@@ -201,7 +201,7 @@ amptimer_attach(struct device *parent, struct device *self, void *args)
 	 */
 
 	arm_clock_register(amptimer_cpu_initclocks, amptimer_delay,
-	    amptimer_setstatclockrate);
+	    amptimer_setstatclockrate, amptimer_startclock);
 
 	amptimer_timecounter.tc_frequency = sc->sc_ticks_per_second;
 	amptimer_timecounter.tc_priv = sc;

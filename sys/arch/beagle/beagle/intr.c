@@ -295,19 +295,22 @@ struct {
 	void (*delay)(u_int);
 	void	(*initclocks)(void);
 	void    (*setstatclockrate)(int);
+	void    (*mpstartclock)(void);
 } arm_clock_func = {
 	arm_dflt_delay,
+	NULL,
 	NULL,
 	NULL
 };
 
 void
 arm_clock_register(void (*initclock)(void), void (*delay)(u_int),
-    void (*statclock)(int))
+    void (*statclock)(int), void(*mpstartclock)(void))
 {
 	arm_clock_func.initclocks = initclock;
 	arm_clock_func.delay = delay;
 	arm_clock_func.setstatclockrate = statclock;
+	arm_clock_func.mpstartclock = mpstartclock;
 }
 
 
