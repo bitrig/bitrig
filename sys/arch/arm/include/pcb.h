@@ -77,13 +77,14 @@ struct pcb_arm32 {
  */
 struct pcb {
 	u_int	pcb_flags;
-#define	PCB_OWNFPU	0x00000001
+#define	PCB_FPU		0x00000001  /* Process had FPU initialized */
 	struct	trapframe *pcb_tf;
 	caddr_t	pcb_onfault;			/* On fault handler */
 	union	{
 		struct	pcb_arm32 un_32;
 	} pcb_un;
-	struct	fpe_sp_state pcb_fpstate;	/* Floating Point state */
+	struct	vfp_sp_state pcb_fpstate;	/* Floating Point state */
+	struct cpu_info *pcb_fpcpu;
 };
 
 /*

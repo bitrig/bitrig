@@ -89,6 +89,7 @@
 #include <machine/frame.h>
 #include <machine/pcb.h>
 #include <arm/swi.h>
+#include <arm/vfp.h>
 
 #define MAXARGS 8
 
@@ -102,6 +103,9 @@ swi_handler(trapframe_t *frame)
 	register_t *ap, *args, copyargs[MAXARGS], rval[2];
 
 	uvmexp.syscalls++;
+
+	/* Before enabling interrupts, save FPU state */
+	vfp_save();
 
 	/* Re-enable interrupts if they were enabled previously */
 	if (__predict_true((frame->tf_spsr & I32_bit) == 0))

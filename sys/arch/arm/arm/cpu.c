@@ -55,6 +55,9 @@
 
 #include <arm/cpuconf.h>
 #include <arm/undefined.h>
+#ifdef CPU_ARMv7
+#include <arm/vfp.h>
+#endif
 
 char cpu_model[256];
 
@@ -78,6 +81,10 @@ cpu_attach(struct device *dv)
 	    curcpu()->ci_arm_cpuid & CPU_ID_REVISION_MASK;
 
 	identify_arm_cpu(dv, curcpu());
+
+#ifdef CPU_ARMv7
+	vfp_init();
+#endif
 
 #ifdef CPU_ARM8
 	if ((curcpu()->ci_arm_cpuid & CPU_ID_CPU_MASK) == CPU_ID_ARM810) {

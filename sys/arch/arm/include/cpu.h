@@ -180,6 +180,7 @@ void	arm32_vector_init(vaddr_t, int);
 #include <sys/sched.h>
 struct cpu_info {
 	struct proc *ci_curproc;
+	struct proc *ci_fpuproc;
 
 	struct schedstate_percpu ci_schedstate; /* scheduler state */
 #ifdef DIAGNOSTIC

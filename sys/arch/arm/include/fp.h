@@ -48,6 +48,17 @@
 #define __ARM32_FP_H
 
 /*
+ * Information about the VPF state that is stored in the pcb
+ *
+ * Should this be hidden from userland?
+ */
+
+struct vfp_sp_state {
+	uint64_t	fp_registers[32];
+	uint32_t	fp_sr;
+};
+
+/*
  * An extended precision floating point number
  */
 
@@ -60,21 +71,10 @@ typedef struct fp_extended_precision {
 typedef struct fp_extended_precision fp_reg_t;
 
 /*
- * Information about the FPE-SP state that is stored in the pcb
- *
- * This needs to move and be hidden from userland.
- */
-
-struct fpe_sp_state {
-	unsigned int fp_flags;
-	unsigned int fp_sr;
-	unsigned int fp_cr;
-	fp_reg_t fp_registers[16];
-};
-
-/*
  * Type for a saved FP context, if we want to translate the context to a
  * user-readable form
+ * 
+ * XXX- this doesn't represent anything useful, should it be killed ?
  */
  
 typedef struct {

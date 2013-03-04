@@ -62,6 +62,7 @@
 #include <machine/cpu.h>
 #include <machine/frame.h>
 #include <arm/undefined.h>
+#include <arm/vfp.h>
 #include <machine/trap.h>
 
 
@@ -152,6 +153,11 @@ undefinedinstruction(trapframe_t *frame)
 	int s;
 #endif
 	union sigval sv;
+
+#ifdef CPU_ARMv7
+	/* Before enabling interrupts, save FPU state */
+	vfp_save();
+#endif
 
 	/* Enable interrupts if they were enabled before the exception. */
 	if (!(frame->tf_spsr & I32_bit))

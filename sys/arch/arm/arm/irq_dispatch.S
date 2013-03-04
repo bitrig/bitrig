@@ -89,12 +89,21 @@
 .Lcurrent_intr_depth:
 	.word	_C_LABEL(current_intr_depth)
 
+#ifdef CPU_ARMv7
+#define STOREVFP							\
+	bl	_C_LABEL(vfp_save)					
+#else
+#define STOREVFP
+#endif
+
 AST_LOCALS
 
 ASENTRY_NP(irq_entry)
 	sub	lr, lr, #0x00000004	/* Adjust the lr */
 
 	PUSHFRAMEINSVC			/* Push an interrupt frame */
+
+	STOREVFP			/* save fpu state before irq handler */
 
 	/*
 	 * Increment the interrupt nesting depth and call the interrupt

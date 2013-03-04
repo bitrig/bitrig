@@ -54,6 +54,17 @@
 	.text	
 	.align	0
 
+#ifdef CPU_ARMv7
+#define RESTOREVFP							\
+	ldr	r0, [sp]		/* Get the SPSR from stack */	;\
+	and	r0, r0, #(PSR_MODE)	/* Returning to USR mode? */	;\
+	bne	1f							;\
+	bl	_C_LABEL(vfp_enable)					;\
+1:
+#else
+#define RESTOREVFP
+#endif
+
 AST_LOCALS
 
 /*
@@ -194,6 +205,7 @@ Laddress_exception_msg:
 
 exception_exit:
 	DO_AST
+	RESTOREVFP
 	PULLFRAMEFROMSVCANDEXIT
 
 /*

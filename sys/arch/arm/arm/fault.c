@@ -107,6 +107,9 @@
 #include <arm/db_machdep.h>
 #include <arch/arm/arm/disassem.h>
 #include <arm/machdep.h>
+#ifdef CPU_ARMv7
+#include <arm/vfp.h>
+#endif
  
 #ifdef DEBUG
 int last_fault_code;	/* For the benefit of pmap_fault_fixup() */
@@ -219,6 +222,11 @@ data_abort_handler(trapframe_t *tf)
 
 	/* Update vmmeter statistics */
 	uvmexp.traps++;
+
+#ifdef CPU_ARMv7
+	/* Before enabling interrupts, save FPU state */
+	vfp_save();
+#endif
 
 	/* Re-enable interrupts if they were enabled previously */
 	if (__predict_true((tf->tf_spsr & I32_bit) == 0))
@@ -658,6 +666,11 @@ prefetch_abort_handler(trapframe_t *tf)
 	/* Prefetch aborts cannot happen in kernel mode */
 	if (__predict_false(!TRAP_USERMODE(tf)))
 		dab_fatal(tf, fsr, far, NULL, NULL);
+
+#ifdef CPU_ARMv7
+	/* Before enabling interrupts, save FPU state */
+	vfp_save();
+#endif
 
 	/*
 	 * Enable IRQ's (disabled by the abort) This always comes
