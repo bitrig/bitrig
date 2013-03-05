@@ -2027,7 +2027,7 @@
 ./usr/lib/libasn1.so.18.0
 ./usr/lib/libasn1_p.a
 ./usr/lib/libc.a
-./usr/lib/libc.so.66.1
+./usr/lib/libc.so.66.2
 ./usr/lib/libc_p.a
 ./usr/lib/libcom_err.a
 ./usr/lib/libcom_err.so.18.0
@@ -6956,6 +6956,7 @@
 ./usr/share/man/man3/dn_comp.3
 ./usr/share/man/man3/dn_expand.3
 ./usr/share/man/man3/doupdate.3
+./usr/share/man/man3/dprintf.3
 ./usr/share/man/man3/drand48.3
 ./usr/share/man/man3/drem.3
 ./usr/share/man/man3/dremf.3
@@ -9350,6 +9351,7 @@
 ./usr/share/man/man3/valloc.3
 ./usr/share/man/man3/varargs.3
 ./usr/share/man/man3/vasprintf.3
+./usr/share/man/man3/vdprintf.3
 ./usr/share/man/man3/verr.3
 ./usr/share/man/man3/verrx.3
 ./usr/share/man/man3/vfprintf.3
@@ -10536,6 +10538,7 @@
 ./usr/share/man/man4/ppb.4
 ./usr/share/man/man4/ppp.4
 ./usr/share/man/man4/pppoe.4
+./usr/share/man/man4/pppx.4
 ./usr/share/man/man4/ptm.4
 ./usr/share/man/man4/pty.4
 ./usr/share/man/man4/puc.4
@@ -11062,7 +11065,6 @@
 ./usr/share/man/man8/mailwrapper.8
 ./usr/share/man/man8/makedbm.8
 ./usr/share/man/man8/makekey.8
-./usr/share/man/man8/makemap.8
 ./usr/share/man/man8/makewhatis.8
 ./usr/share/man/man8/map-mbone.8
 ./usr/share/man/man8/mfs.8
@@ -11096,7 +11098,6 @@
 ./usr/share/man/man8/ndp.8
 ./usr/share/man/man8/netgroup_mkdb.8
 ./usr/share/man/man8/netstart.8
-./usr/share/man/man8/newaliases.8
 ./usr/share/man/man8/newfs.8
 ./usr/share/man/man8/newfs_ext2fs.8
 ./usr/share/man/man8/newfs_msdos.8
@@ -11419,6 +11420,9 @@
 ./usr/share/man/man9/bus_space_read_multi_2.9
 ./usr/share/man/man9/bus_space_read_multi_4.9
 ./usr/share/man/man9/bus_space_read_multi_8.9
+./usr/share/man/man9/bus_space_read_raw_2.9
+./usr/share/man/man9/bus_space_read_raw_4.9
+./usr/share/man/man9/bus_space_read_raw_8.9
 ./usr/share/man/man9/bus_space_read_raw_multi_2.9
 ./usr/share/man/man9/bus_space_read_raw_multi_4.9
 ./usr/share/man/man9/bus_space_read_raw_multi_8.9
@@ -11448,6 +11452,9 @@
 ./usr/share/man/man9/bus_space_write_multi_2.9
 ./usr/share/man/man9/bus_space_write_multi_4.9
 ./usr/share/man/man9/bus_space_write_multi_8.9
+./usr/share/man/man9/bus_space_write_raw_2.9
+./usr/share/man/man9/bus_space_write_raw_4.9
+./usr/share/man/man9/bus_space_write_raw_8.9
 ./usr/share/man/man9/bus_space_write_raw_multi_2.9
 ./usr/share/man/man9/bus_space_write_raw_multi_4.9
 ./usr/share/man/man9/bus_space_write_raw_multi_8.9
@@ -11905,7 +11912,6 @@
 ./usr/share/man/man9/uiomove.9
 ./usr/share/man/man9/ulmax.9
 ./usr/share/man/man9/ulmin.9
-./usr/share/man/man9/untimeout.9
 ./usr/share/man/man9/uprintf.9
 ./usr/share/man/man9/uvm.9
 ./usr/share/man/man9/uvm_chgkprot.9
