@@ -1605,7 +1605,7 @@ vr_watchdog(struct ifnet *ifp)
 	 * some TX descriptors to reclaim, so check for that first.
 	 */
 	vr_txeof(sc);
-	if (sc->vr_cdata.vr_tx_cnt == 0);
+	if (sc->vr_cdata.vr_tx_cnt == 0)
 		return;
 
 	ifp->if_oerrors++;
