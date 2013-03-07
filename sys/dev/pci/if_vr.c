@@ -1,4 +1,4 @@
-/*	$OpenBSD: if_vr.c,v 1.127 2013/02/09 19:17:52 sthen Exp $	*/
+/*	$OpenBSD: if_vr.c,v 1.128 2013/03/07 11:20:26 sthen Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998
