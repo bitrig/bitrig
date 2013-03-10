@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.cross,v 1.56 2012/08/23 06:22:51 deraadt Exp $
+# $OpenBSD: Makefile.cross,v 1.61 2013/03/10 08:50:42 miod Exp $
 
 # preconditions for cross build environment
 # build and install the binutils cross package eg bitrig-newbinutils-2.22-arm
@@ -81,6 +81,14 @@ CROSSINCLUDES=	${CROSSDIR}/.includes_done
 
 .include <bsd.own.mk>
 
+.if !empty(PIE_ARCH:M${_arch})
+NOPIE_FLAGS=-fno-pie
+NOPIE_LDFLAGS=-nopie
+PIE_DEFAULT=${DEFAULT_PIE_DEF}
+.else
+NOPIE_FLAGS=
+PIE_DEFAULT=
+.endif
 
 # no libcrypto.... these won't build
 #NO_CROSS+=	dc login_krb5 login_krb5-or-pwd passwd ppp tcpdump telnet \
