@@ -1,4 +1,4 @@
-/*	$OpenBSD: xl.c,v 1.108 2013/03/07 05:55:30 brad Exp $	*/
+/*	$OpenBSD: xl.c,v 1.109 2013/03/14 01:42:45 brad Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999
@@ -1118,7 +1118,6 @@ xl_fill_rx_ring(struct xl_softc *sc)
 	}
 }
 
-
 /*
  * Initialize an RX descriptor and attach an MBUF cluster.
  */
@@ -1129,7 +1128,6 @@ xl_newbuf(struct xl_softc *sc, struct xl_chain_onefrag *c)
 	bus_dmamap_t	map;
 
 	m_new = MCLGETI(NULL, M_DONTWAIT, &sc->sc_arpcom.ac_if, MCLBYTES);
-	
 	if (!m_new)
 		return (ENOBUFS);
 
@@ -1170,7 +1168,6 @@ xl_newbuf(struct xl_softc *sc, struct xl_chain_onefrag *c)
 
 	return (0);
 }
-
 
 /*
  * A frame has been uploaded: pass the resulting mbuf chain up to
@@ -1270,7 +1267,9 @@ again:
 
 		ether_input_mbuf(ifp, m);
 	}
+
 	xl_fill_rx_ring(sc);
+
 	/*
 	 * Handle the 'end of channel' condition. When the upload
 	 * engine hits the end of the RX ring, it will stall. This
@@ -1291,7 +1290,6 @@ again:
 		xl_fill_rx_ring(sc);
 		goto again;
 	}
-
 }
 
 /*
@@ -1498,7 +1496,6 @@ xl_intr(void *arg)
 
 		if (status & XL_STAT_UP_COMPLETE)
 			xl_rxeof(sc);
-
 
 		if (status & XL_STAT_DOWN_COMPLETE) {
 			if (sc->xl_type == XL_TYPE_905B)
@@ -2519,6 +2516,8 @@ xl_attach(struct xl_softc *sc)
 	IFQ_SET_READY(&ifp->if_snd);
 	bcopy(sc->sc_dev.dv_xname, ifp->if_xname, IFNAMSIZ);
 
+	m_clsetwms(ifp, MCLBYTES, 2, XL_RX_LIST_CNT - 1);
+
 	ifp->if_capabilities = IFCAP_VLAN_MTU;
 
 #ifndef XL905B_TXCSUM_BROKEN
@@ -2672,7 +2671,6 @@ xl_attach(struct xl_softc *sc)
 	 */
 	if_attach(ifp);
 	ether_ifattach(ifp);
-	m_clsetwms(ifp, MCLBYTES, 2, XL_RX_LIST_CNT - 1);
 }
 
 int
