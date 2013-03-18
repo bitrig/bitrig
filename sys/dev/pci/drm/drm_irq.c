@@ -141,7 +141,7 @@ struct timeval
 ns_to_timeval(const int64_t nsec)
 {
 	struct timeval tv;
-	uint32_t rem;
+	int64_t rem;
 
 	if (nsec == 0) {
 		tv.tv_sec = 0;
