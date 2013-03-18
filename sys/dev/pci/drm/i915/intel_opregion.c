@@ -540,25 +540,25 @@ intel_opregion_setup(struct drm_device *dev)
 		goto err_out;
 	}
 	opregion->header = (struct opregion_header *)base;
-	opregion->vbt = base + OPREGION_VBT_OFFSET;
+	opregion->vbt = (uint8_t *)base + OPREGION_VBT_OFFSET;
 
-	opregion->lid_state = (u32 *)(base + ACPI_CLID);
+	opregion->lid_state = (u32 *)((uint8_t *)base + ACPI_CLID);
 
 	mboxes = opregion->header->mboxes;
 	if (mboxes & MBOX_ACPI) {
 		DRM_DEBUG("Public ACPI methods supported\n");
-		opregion->acpi = (struct opregion_acpi *)(base +
+		opregion->acpi = (struct opregion_acpi *)((uint8_t *)base +
 		    OPREGION_ACPI_OFFSET);
 	}
 
 	if (mboxes & MBOX_SWSCI) {
 		DRM_DEBUG("SWSCI supported\n");
-		opregion->swsci = (struct opregion_swsci *)(base +
+		opregion->swsci = (struct opregion_swsci *)((uint8_t *)base +
 		    OPREGION_SWSCI_OFFSET);
 	}
 	if (mboxes & MBOX_ASLE) {
 		DRM_DEBUG("ASLE supported\n");
-		opregion->asle = (struct opregion_asle *)(base +
+		opregion->asle = (struct opregion_asle *)((uint8_t *)base +
 		    OPREGION_ASLE_OFFSET);
 	}
 
