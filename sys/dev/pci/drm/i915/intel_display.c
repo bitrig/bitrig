@@ -2166,8 +2166,8 @@ lpt_enable_pch_transcoder(struct inteldrm_softc *dev_priv,
 	BUG_ON(dev_priv->info->gen < 5);
 
 	/* FDI must be feeding us bits for PCH ports */
-	assert_fdi_tx_enabled(dev_priv, cpu_transcoder);
-	assert_fdi_rx_enabled(dev_priv, TRANSCODER_A);
+	assert_fdi_tx_enabled(dev_priv, (enum pipe)cpu_transcoder);
+	assert_fdi_rx_enabled(dev_priv, (enum pipe)TRANSCODER_A);
 
 	/* Workaround: set timing override bit. */
 	val = I915_READ(_TRANSA_CHICKEN2);
@@ -2282,7 +2282,7 @@ intel_enable_pipe(struct inteldrm_softc *dev_priv, enum pipe pipe,
 	if (IS_HASWELL(dev))
 		pch_transcoder = TRANSCODER_A;
 	else
-		pch_transcoder = pipe;
+		pch_transcoder = (enum transcoder)pipe;
 
 	/*
 	 * A pipe without a PLL won't actually be able to drive bits from
@@ -2294,8 +2294,10 @@ intel_enable_pipe(struct inteldrm_softc *dev_priv, enum pipe pipe,
 	else {
 		if (pch_port) {
 			/* if driving the PCH, we need FDI enabled */
-			assert_fdi_rx_pll_enabled(dev_priv, pch_transcoder);
-			assert_fdi_tx_pll_enabled(dev_priv, cpu_transcoder);
+			assert_fdi_rx_pll_enabled(dev_priv,
+			    (enum pipe)pch_transcoder);
+			assert_fdi_tx_pll_enabled(dev_priv,
+			    (enum pipe)cpu_transcoder);
 		}
 		/* FIXME: assert CPU port conditions for SNB+ */
 	}
@@ -3693,7 +3695,7 @@ lpt_pch_enable(struct drm_crtc *crtc)
 	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
 	enum transcoder cpu_transcoder = intel_crtc->cpu_transcoder;
 
-	assert_transcoder_disabled(dev_priv, TRANSCODER_A);
+	assert_transcoder_disabled(dev_priv, (enum pipe)TRANSCODER_A);
 
 	lpt_program_iclkip(crtc);
 
@@ -4143,7 +4145,7 @@ haswell_crtc_off(struct drm_crtc *crtc)
 
 	/* Stop saying we're using TRANSCODER_EDP because some other CRTC might
 	 * start using it. */
-	intel_crtc->cpu_transcoder = intel_crtc->pipe;
+	intel_crtc->cpu_transcoder = (enum transcoder)intel_crtc->pipe;
 
 	intel_ddi_put_crtc_pll(crtc);
 }
