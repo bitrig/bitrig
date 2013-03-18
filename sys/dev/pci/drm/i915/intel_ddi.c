@@ -921,11 +921,11 @@ intel_ddi_pll_mode_set(struct drm_crtc *crtc, int clock)
 		      WRPLL_DIVIDER_POST(p);
 
 	} else if (type == INTEL_OUTPUT_ANALOG) {
+		reg = SPLL_CTL;
 		if (plls->spll_refcount == 0) {
 			DRM_DEBUG_KMS("Using SPLL on pipe %c\n",
 				      pipe_name(pipe));
 			plls->spll_refcount++;
-			reg = SPLL_CTL;
 			intel_crtc->ddi_pll_sel = PORT_CLK_SEL_SPLL;
 		}
 
@@ -1412,7 +1412,7 @@ intel_ddi_prepare_link_retrain(struct drm_encoder *encoder)
 	struct intel_dp *intel_dp = &intel_dig_port->dp;
 	struct inteldrm_softc *dev_priv = encoder->dev->dev_private;
 	enum port port = intel_dig_port->port;
-	bool wait;
+	bool wait = false;
 	uint32_t val;
 
 	if (I915_READ(DP_TP_CTL(port)) & DP_TP_CTL_ENABLE) {
