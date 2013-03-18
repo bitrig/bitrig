@@ -3651,14 +3651,14 @@ drm_mode_gamma_set_ioctl(struct drm_device *dev,
 		goto out;
 	}
 
-	g_base = r_base + size;
+	g_base = (uint8_t *)r_base + size;
 	if (copyin((void __user *)(unsigned long)crtc_lut->green,
 	    g_base, size) != 0) {
 		ret = EFAULT;
 		goto out;
 	}
 
-	b_base = g_base + size;
+	b_base = (uint8_t *)g_base + size;
 	if (copyin((void __user *)(unsigned long)crtc_lut->blue,
 	    b_base, size) != 0) {
 		ret = EFAULT;
@@ -3709,14 +3709,14 @@ drm_mode_gamma_get_ioctl(struct drm_device *dev,
 		goto out;
 	}
 
-	g_base = r_base + size;
+	g_base = (uint8_t *)r_base + size;
 	if (copyout(g_base,
 	    (void __user *)(unsigned long)crtc_lut->green, size) != 0) {
 		ret = EFAULT;
 		goto out;
 	}
 
-	b_base = g_base + size;
+	b_base = (uint8_t *)g_base + size;
 	if (copyout(b_base,
 	    (void __user *)(unsigned long)crtc_lut->blue, size) != 0) {
 		ret = EFAULT;
