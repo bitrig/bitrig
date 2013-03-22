@@ -986,10 +986,10 @@ i915_gem_object_truncate(struct drm_i915_gem_object *obj)
 {
 	DRM_ASSERT_HELD(&obj->base);
 
-	mtx_enter(&obj->base.uao->vmobjlock);
+	drm_lock_obj(&obj->base);
 	obj->base.uao->pgops->pgo_flush(obj->base.uao, 0, obj->base.size,
 	    PGO_ALLPAGES | PGO_FREE);
-	mtx_leave(&obj->base.uao->vmobjlock);
+	drm_unlock_obj(&obj->base);
 
 	obj->madv = __I915_MADV_PURGED;
 }
@@ -1150,7 +1150,7 @@ i915_gem_object_move_to_inactive_locked(struct drm_i915_gem_object *obj)
 	obj->fenced_gpu_access = false;
 
 	obj->active = 0;
-	drm_gem_object_unreference(&obj->base);
+	drm_unref_locked(&obj->base.uobj);
 
 	inteldrm_verify_inactive(dev_priv, __FILE__, __LINE__);
 }
