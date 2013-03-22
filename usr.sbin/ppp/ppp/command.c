@@ -663,7 +663,7 @@ ShellCommand(struct cmdargs const *arg, int bg)
     dup2(fd, STDERR_FILENO);
 /* fwalk */
     for (i = getdtablesize(); i > STDERR_FILENO; i--)
-      fcntl(i, F_SETFD, 1);
+      fcntl(i, F_SETFD, FD_CLOEXEC);
 
 #ifndef NOSUID
     setuid(ID0realuid());

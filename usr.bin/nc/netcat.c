@@ -518,7 +518,7 @@ unix_connect(char *path)
 		if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
 			return (-1);
 	}
-	(void)fcntl(s, F_SETFD, 1);
+	(void)fcntl(s, F_SETFD, FD_CLOEXEC);
 
 	memset(&sun, 0, sizeof(struct sockaddr_un));
 	sun.sun_family = AF_UNIX;

@@ -248,7 +248,7 @@ outof(struct name *names, FILE *fo, struct header *hp)
 				(void)Fclose(fout);
 				goto cant;
 			}
-			(void)fcntl(image, F_SETFD, 1);
+			(void)fcntl(image, F_SETFD, FD_CLOEXEC);
 			fprintf(fout, "From %s %s", myname, date);
 			puthead(hp, fout, GTO|GSUBJECT|GCC|GNL);
 			while ((c = getc(fo)) != EOF)

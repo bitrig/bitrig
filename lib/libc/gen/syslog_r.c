@@ -279,7 +279,7 @@ connectlog_r(struct syslog_data *data)
 	if (data->log_file == -1) {
 		if ((data->log_file = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1)
 			return;
-		(void)fcntl(data->log_file, F_SETFD, 1);
+		(void)fcntl(data->log_file, F_SETFD, FD_CLOEXEC);
 	}
 	if (data->log_file != -1 && !data->connected) {
 		memset(&SyslogAddr, '\0', sizeof(SyslogAddr));

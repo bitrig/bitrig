@@ -178,7 +178,7 @@ exec_Create(struct physical *p)
           dup2(fids[1], STDOUT_FILENO);
           dup2(fids[1], STDERR_FILENO);
           for (i = getdtablesize(); i > STDERR_FILENO; i--)
-            fcntl(i, F_SETFD, 1);
+            fcntl(i, F_SETFD, FD_CLOEXEC);
 
           execvp(*argv, argv);
           child_status = errno;		/* Only works for vfork() */

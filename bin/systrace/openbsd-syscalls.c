@@ -166,7 +166,7 @@ obsd_open(void)
 		goto out;
 	}
 
-	if (fcntl(cfd, F_SETFD, 1) == -1)
+	if (fcntl(cfd, F_SETFD, FD_CLOEXEC) == -1)
 		warn("fcntl(F_SETFD)");
 
  out:

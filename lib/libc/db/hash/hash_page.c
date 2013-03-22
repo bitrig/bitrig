@@ -858,7 +858,7 @@ open_temp(HTAB *hashp)
 	(void)sigprocmask(SIG_BLOCK, &set, &oset);
 	if ((hashp->fp = mkstemp(path)) != -1) {
 		(void)unlink(path);
-		(void)fcntl(hashp->fp, F_SETFD, 1);
+		(void)fcntl(hashp->fp, F_SETFD, FD_CLOEXEC);
 	}
 	(void)sigprocmask(SIG_SETMASK, &oset, (sigset_t *)NULL);
 	return (hashp->fp != -1 ? 0 : -1);

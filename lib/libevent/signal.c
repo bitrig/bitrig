@@ -85,7 +85,7 @@ evsignal_cb(int fd, short what, void *arg)
 
 #ifdef HAVE_SETFD
 #define FD_CLOSEONEXEC(x) do { \
-        if (fcntl(x, F_SETFD, 1) == -1) \
+        if (fcntl(x, F_SETFD, FD_CLOEXEC) == -1) \
                 event_warn("fcntl(%d, F_SETFD)", x); \
 } while (0)
 #else

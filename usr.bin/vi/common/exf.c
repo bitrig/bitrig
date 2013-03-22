@@ -1457,7 +1457,7 @@ file_lock(sp, name, fdp, fd, iswrite)
 		return (LOCK_SUCCESS);
 	
 	/* Set close-on-exec flag so locks are not inherited by shell cmd. */
-	if (fcntl(fd, F_SETFD, 1) == -1)
+	if (fcntl(fd, F_SETFD, FD_CLOEXEC) == -1)
 		msgq_str(sp, M_SYSERR, name, "%s");
 
 #ifdef HAVE_LOCK_FLOCK			/* Hurrah!  We've got flock(2). */

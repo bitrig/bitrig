@@ -107,7 +107,7 @@ pw_lock(int retries)
 		fd = open(pw_lck, O_WRONLY|O_CREAT|O_EXCL, 0600);
 	}
 	save_errno = errno;
-	if (fd != -1 && fcntl(fd, F_SETFD, 1) == -1) {
+	if (fd != -1 && fcntl(fd, F_SETFD, FD_CLOEXEC) == -1) {
 		close(fd);
 		fd = -1;
 	}

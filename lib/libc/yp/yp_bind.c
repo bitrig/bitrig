@@ -242,7 +242,7 @@ gotdata:
 		ysd->dom_vers = -1;
 		goto again;
 	}
-	if (fcntl(ysd->dom_socket, F_SETFD, 1) == -1)
+	if (fcntl(ysd->dom_socket, F_SETFD, FD_CLOEXEC) == -1)
 		perror("fcntl: F_SETFD");
 
 	if (new) {

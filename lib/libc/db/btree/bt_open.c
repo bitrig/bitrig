@@ -204,7 +204,7 @@ __bt_open(const char *fname, int flags, int mode, const BTREEINFO *openinfo,
 		F_SET(t, B_INMEM);
 	}
 
-	if (fcntl(t->bt_fd, F_SETFD, 1) == -1)
+	if (fcntl(t->bt_fd, F_SETFD, FD_CLOEXEC) == -1)
 		goto err;
 
 	if (fstat(t->bt_fd, &sb))

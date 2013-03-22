@@ -739,7 +739,7 @@ ExecStr(struct physical *physical, char *command, char *out, int olen)
     if (open(_PATH_TTY, O_RDWR) != 3)
       open(_PATH_DEVNULL, O_RDWR);	/* Leave it closed if it fails... */
     for (i = getdtablesize(); i > 3; i--)
-      fcntl(i, F_SETFD, 1);
+      fcntl(i, F_SETFD, FD_CLOEXEC);
 #ifndef NOSUID
     setuid(ID0realuid());
 #endif

@@ -312,7 +312,7 @@ chap_StartChild(struct chap *chap, char *prog, const char *name)
       }
       /* XXX using an fwalk()-like thing would be safer */
       for (fd = getdtablesize(); fd > STDERR_FILENO; fd--)
-        fcntl(fd, F_SETFD, 1);
+        fcntl(fd, F_SETFD, FD_CLOEXEC);
 #ifndef NOSUID
       setuid(ID0realuid());
 #endif

@@ -117,7 +117,7 @@ __hash_open(const char *file, int flags, int mode,
 	if (file) {
 		if ((hashp->fp = open(file, flags, mode)) == -1)
 			RETURN_ERROR(errno, error0);
-		(void)fcntl(hashp->fp, F_SETFD, 1);
+		(void)fcntl(hashp->fp, F_SETFD, FD_CLOEXEC);
 		new_table = fstat(hashp->fp, &statbuf) == 0 &&
 		    statbuf.st_size == 0 && (flags & O_ACCMODE) != O_RDONLY;
 	} else
