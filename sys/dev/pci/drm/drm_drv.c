@@ -1271,23 +1271,25 @@ drm_hold_object_locked(struct drm_obj *obj)
 void
 drm_hold_object(struct drm_obj *obj)
 {
-	mtx_enter(&obj->uobj.vmobjlock);
+	drm_lock_obj(obj);
 	drm_hold_object_locked(obj);
-	mtx_leave(&obj->uobj.vmobjlock);
+	drm_unlock_obj(obj);
 }
 
 int
 drm_try_hold_object(struct drm_obj *obj)
 {
-	mtx_enter(&obj->uobj.vmobjlock);
+	drm_lock_obj(obj);
 	/* if the object is free, grab it */
-	if (obj->do_flags & (DRM_BUSY | DRM_WANTED))
+	if (obj->do_flags & (DRM_BUSY | DRM_WANTED)) {
+		drm_unlock_obj(obj);
 		return (0);
+	}
 	atomic_setbits_int(&obj->do_flags, DRM_BUSY);
 #ifdef DRMLOCKDEBUG
 	obj->holding_proc = curproc;
 #endif
-	mtx_leave(&obj->uobj.vmobjlock);
+	drm_unlock_obj(obj);
 	return (1);
 }
 
@@ -1306,9 +1308,9 @@ drm_unhold_object_locked(struct drm_obj *obj)
 void
 drm_unhold_object(struct drm_obj *obj)
 {
-	mtx_enter(&obj->uobj.vmobjlock);
+	drm_lock_obj(obj);
 	drm_unhold_object_locked(obj);
-	mtx_leave(&obj->uobj.vmobjlock);
+	drm_unlock_obj(obj);
 }
 
 void
