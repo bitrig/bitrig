@@ -173,8 +173,8 @@ pwd_update(const struct passwd *pwd, const struct passwd *opwd)
 			return("can't open passwd temp file");
 	}
 
-	pfd = open(_PATH_MASTERPASSWD, O_RDONLY, 0);
-	if (pfd < 0 || fcntl(pfd, F_SETFD, 1) == -1) {
+	pfd = open(_PATH_MASTERPASSWD, O_RDONLY | O_CLOEXEC, 0);
+	if (pfd < 0) {
 		pw_abort();
 		return(strerror(errno));
 	}
