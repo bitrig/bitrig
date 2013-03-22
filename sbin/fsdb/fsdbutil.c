@@ -193,10 +193,10 @@ printactive(void)
 		printstat("current inode", curinum, curinode);
 		break;
 	case 0:
-		printf("current inode %d: unallocated inode\n", curinum);
+		printf("current inode %u: unallocated inode\n", curinum);
 		break;
 	default:
-		printf("current inode %d: screwy itype 0%o (mode 0%o)?\n",
+		printf("current inode %u: screwy itype 0%o (mode 0%o)?\n",
 		    curinum, DIP(curinode, di_mode) & IFMT,
 		    DIP(curinode, di_mode));
 		break;

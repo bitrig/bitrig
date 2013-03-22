@@ -202,7 +202,7 @@ prompt(EditLine *el)
 {
 	static char pstring[64];
 
-	snprintf(pstring, sizeof(pstring), "fsdb (inum: %d)> ", curinum);
+	snprintf(pstring, sizeof(pstring), "fsdb (inum: %u)> ", curinum);
 	return pstring;
 }
 
@@ -285,7 +285,7 @@ static ino_t ocurrent;
 
 #define GETINUM(ac,inum)    inum = strtoul(argv[ac], &cp, 0); \
 	if (inum < ROOTINO || inum > maxino || cp == argv[ac] || *cp != '\0' ) { \
-		printf("inode %d out of range; range is [%d,%d]\n", \
+		printf("inode %u out of range; range is [%u,%u]\n", \
 		    inum, ROOTINO, maxino); \
 		return 1; \
 	}
@@ -346,7 +346,7 @@ CMDFUNCSTART(uplink)
 	if (!checkactive())
 		return 1;
 	DIP_SET(curinode, di_nlink, DIP(curinode, di_nlink) + 1);
-	printf("inode %d link count now %d\n", curinum, DIP(curinode, di_nlink));
+	printf("inode %u link count now %d\n", curinum, DIP(curinode, di_nlink));
 	inodirty();
 	return 0;
 }
@@ -356,7 +356,7 @@ CMDFUNCSTART(downlink)
 	if (!checkactive())
 		return 1;
 	DIP_SET(curinode, di_nlink, DIP(curinode, di_nlink) - 1);
-	printf("inode %d link count now %d\n", curinum, DIP(curinode, di_nlink));
+	printf("inode %u link count now %d\n", curinum, DIP(curinode, di_nlink));
 	inodirty();
 	return 0;
 }
@@ -386,7 +386,7 @@ scannames(struct inodesc *idesc)
 {
 	struct direct *dirp = idesc->id_dirp;
 
-	printf("slot %d ino %d reclen %d: %s, `%.*s'\n",
+	printf("slot %d ino %u reclen %u: %s, `%.*s'\n",
 	    slot++, dirp->d_ino, dirp->d_reclen, typename[dirp->d_type],
 	    dirp->d_namlen, dirp->d_name);
 	return (KEEPON);
@@ -474,7 +474,7 @@ CMDFUNCSTART(ln)
 		return 1;
 	rval = makeentry(curinum, inum, argv[2]);
 	if (rval)
-		printf("Ino %d entered as `%s'\n", inum, argv[2]);
+		printf("Ino %u entered as `%s'\n", inum, argv[2]);
 	else
 		printf("could not enter name? weird.\n");
 	curinode = ginode(curinum);
