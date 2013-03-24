@@ -1,4 +1,4 @@
-/*	$OpenBSD: buf.h,v 1.82 2012/12/02 19:42:36 beck Exp $	*/
+/*	$OpenBSD: buf.h,v 1.84 2013/03/24 17:42:43 deraadt Exp $	*/
 /*	$NetBSD: buf.h,v 1.25 1997/04/09 21:12:17 mycroft Exp $	*/
 
 /*
@@ -345,5 +345,5 @@ buf_countdeps(struct buf *bp, int i, int islocked)
 void	cluster_write(struct buf *, struct cluster_info *, u_quad_t);
 
 __END_DECLS
-#endif
+#endif /* _KERNEL */
 #endif /* !_SYS_BUF_H_ */
