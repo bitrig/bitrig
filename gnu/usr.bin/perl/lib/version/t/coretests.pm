@@ -505,7 +505,6 @@ EOF
     }
 
     {
-        local $Data::Dumper::Sortkeys= 1;
 	# http://rt.cpan.org/Public/Bug/Display.html?id=30004
 	my $v1 = $CLASS->$method("v0.1_1");
 	(my $alpha1 = Dumper($v1)) =~ s/.+'alpha' => ([^,]+),.+/$1/ms;
@@ -539,10 +538,9 @@ EOF
     {
 	# https://rt.cpan.org/Ticket/Display.html?id=72365
 	# https://rt.perl.org/rt3/Ticket/Display.html?id=102586
-    	# https://rt.cpan.org/Ticket/Display.html?id=78328
 	eval 'my $v = $CLASS->$method("version")';
 	like $@, qr/Invalid version format/,
-	    "The string 'version' is not a version for $method";
+	    'The string "version" is not a version';
 	eval 'my $v = $CLASS->$method("ver510n")';
 	like $@, qr/Invalid version format/,
 	    'All strings starting with "v" are not versions';
@@ -595,14 +593,6 @@ SKIP: {
 	eval { _112478->VERSION(9e99) };
 	unlike $@, qr/panic/, '->VERSION(9e99) does not panic';
     }
-
-    { # https://rt.cpan.org/Ticket/Display.html?id=79259
-	my $v = $CLASS->new("0.52_0");
-	ok $v->is_alpha, 'Just checking';
-	is $v->numify, '0.520', 'Correctly nummified';
-    }
-
 }
 
 1;
-

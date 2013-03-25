@@ -76,7 +76,6 @@ t/aggregator.t
 t/bailout.t
 t/base.t
 t/callbacks.t
-t/compat/env_opts.t
 t/compat/env.t
 t/compat/failure.t
 t/compat/inc-propagation.t
@@ -126,7 +125,6 @@ t/multiplexer.t
 t/nested.t
 t/nofork-mux.t
 t/nofork.t
-t/nowarn.t
 t/object.t
 t/parse.t
 t/parser-config.t
@@ -234,4 +232,3 @@ xt/author/pod.t
 xt/author/stdin.t
 xt/perls/harness_perl.t
 xt/perls/sample-tests/perl_version
-META.json
