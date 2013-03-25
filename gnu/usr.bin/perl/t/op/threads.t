@@ -6,17 +6,10 @@ BEGIN {
      require './test.pl';
      $| = 1;
 
-     require Config;
-     if (!$Config::Config{useithreads}) {
-        print "1..0 # Skip: no ithreads\n";
-        exit 0;
-     }
-     if ($ENV{PERL_CORE_MINITEST}) {
-       print "1..0 # Skip: no dynamic loading on miniperl, no threads\n";
-       exit 0;
-     }
+     skip_all_without_config('useithreads');
+     skip_all_if_miniperl("no dynamic loading on miniperl, no threads");
 
-     plan(18);
+     plan(26);
 }
 
 use strict;
@@ -116,10 +109,6 @@ print do 'op/threads_create.pl' || die $@;
 EOI
 
 
-TODO: {
-    no strict 'vars';   # Accessing $TODO from test.pl
-    local $TODO = 'refcount issues with threads';
-
 # Scalars leaked: 1
 foreach my $BLOCK (qw(CHECK INIT)) {
     fresh_perl_is(<<EOI, 'ok', { }, "threads in $BLOCK block");
@@ -128,8 +117,6 @@ foreach my $BLOCK (qw(CHECK INIT)) {
         print 'ok';
 EOI
 }
-
-} # TODO
 
 # Scalars leaked: 1
 fresh_perl_is(<<'EOI', 'ok', { }, 'Bug #41138');
@@ -148,6 +135,7 @@ EOI
 #
 # run-time usage of newCONSTSUB (as done by the IO boot code) wasn't
 # thread-safe - got occasional coredumps or malloc corruption
+watchdog(600, "process");
 {
     local $SIG{__WARN__} = sub {};   # Ignore any thread creation failure warnings
     my @t;
@@ -172,7 +160,7 @@ curr_test(curr_test() + 2);
 
 
 # the seen_evals field of a regexp was getting zeroed on clone, so
-# within a thread it didn't  know that a regex object contrained a 'safe'
+# within a thread it didn't  know that a regex object contained a 'safe'
 # re_eval expression, so it later died with 'Eval-group not allowed' when
 # you tried to interpolate the object
 
@@ -206,8 +194,8 @@ print "ok";
 EOI
 
 # Another, more reliable test for the same del_backref bug:
-fresh_perl_like(
- <<'   EOJ', qr/ok/, {}, 'No del_backref panic [perl #70748] (2)'
+fresh_perl_is(
+ <<'   EOJ', 'ok', {}, 'No del_backref panic [perl #70748] (2)'
    use threads;
    push @bar, threads->create(sub{sub{}})->join() for 1...10;
    print "ok";
@@ -216,10 +204,10 @@ fresh_perl_like(
 
 # Simple closure-returning test: At least this case works (though it
 # leaks), and we don't want to break it.
-fresh_perl_like(<<'EOJ', qr/^foo\n/, {}, 'returning a closure');
+fresh_perl_is(<<'EOJ', 'foo', {}, 'returning a closure');
 use threads;
 print create threads sub {
- my $x = "foo\n";
+ my $x = 'foo';
  sub{sub{$x}}
 }=>->join->()()
  //"undef"
