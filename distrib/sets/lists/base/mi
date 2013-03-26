@@ -1040,11 +1040,18 @@
 ./usr/include/dev/pci/drm/drm.h
 ./usr/include/dev/pci/drm/drmP.h
 ./usr/include/dev/pci/drm/drm_atomic.h
+./usr/include/dev/pci/drm/drm_crtc.h
+./usr/include/dev/pci/drm/drm_crtc_helper.h
+./usr/include/dev/pci/drm/drm_dp_helper.h
+./usr/include/dev/pci/drm/drm_edid.h
+./usr/include/dev/pci/drm/drm_edid_modes.h
+./usr/include/dev/pci/drm/drm_fb_helper.h
+./usr/include/dev/pci/drm/drm_fourcc.h
+./usr/include/dev/pci/drm/drm_linux_list.h
+./usr/include/dev/pci/drm/drm_mm.h
 ./usr/include/dev/pci/drm/drm_mode.h
 ./usr/include/dev/pci/drm/drm_sarea.h
 ./usr/include/dev/pci/drm/i915_drm.h
-./usr/include/dev/pci/drm/i915_drv.h
-./usr/include/dev/pci/drm/i915_reg.h
 ./usr/include/dev/pci/drm/r300_reg.h
 ./usr/include/dev/pci/drm/r600_blit_shaders.h
 ./usr/include/dev/pci/drm/r600_microcode.h
@@ -1245,7 +1252,6 @@
 ./usr/include/dev/sdmmc/sdmmcdevs.h
 ./usr/include/dev/sdmmc/sdmmcreg.h
 ./usr/include/dev/sdmmc/sdmmcvar.h
-./usr/include/dev/sequencervar.h
 ./usr/include/dev/softraidvar.h
 ./usr/include/dev/spdmemvar.h
 ./usr/include/dev/sun
@@ -1872,7 +1878,6 @@
 ./usr/include/sys/malloc.h
 ./usr/include/sys/mbuf.h
 ./usr/include/sys/memrange.h
-./usr/include/sys/midiio.h
 ./usr/include/sys/mman.h
 ./usr/include/sys/mount.h
 ./usr/include/sys/mplock.h
@@ -2127,7 +2132,7 @@
 ./usr/lib/libsndio.so.4.0
 ./usr/lib/libsndio_p.a
 ./usr/lib/libsqlite3.a
-./usr/lib/libsqlite3.so.21.0
+./usr/lib/libsqlite3.so.22.0
 ./usr/lib/libsqlite3_p.a
 ./usr/lib/libssl.a
 ./usr/lib/libssl.so.19.0
@@ -4169,7 +4174,6 @@
 ./usr/sbin/dvmrpctl
 ./usr/sbin/dvmrpd
 ./usr/sbin/edquota
-./usr/sbin/faithd
 ./usr/sbin/ftp-proxy
 ./usr/sbin/fw_update
 ./usr/sbin/group
@@ -4338,6 +4342,7 @@
 ./usr/share/calendar
 ./usr/share/calendar/calendar.all
 ./usr/share/calendar/calendar.birthday
+./usr/share/calendar/calendar.canada
 ./usr/share/calendar/calendar.christian
 ./usr/share/calendar/calendar.computer
 ./usr/share/calendar/calendar.croatian
@@ -10322,7 +10327,6 @@
 ./usr/share/man/man4/etphy.4
 ./usr/share/man/man4/ex.4
 ./usr/share/man/man4/exphy.4
-./usr/share/man/man4/faith.4
 ./usr/share/man/man4/fd.4
 ./usr/share/man/man4/fdc.4
 ./usr/share/man/man4/fea.4
@@ -10479,7 +10483,6 @@
 ./usr/share/man/man4/mtdphy.4
 ./usr/share/man/man4/mtio.4
 ./usr/share/man/man4/multicast.4
-./usr/share/man/man4/music.4
 ./usr/share/man/man4/musycc.4
 ./usr/share/man/man4/myx.4
 ./usr/share/man/man4/ne.4
@@ -10579,7 +10582,6 @@
 ./usr/share/man/man4/sdmmc.4
 ./usr/share/man/man4/sdtemp.4
 ./usr/share/man/man4/se.4
-./usr/share/man/man4/sequencer.4
 ./usr/share/man/man4/ses.4
 ./usr/share/man/man4/sf.4
 ./usr/share/man/man4/sf2r.4
@@ -10971,7 +10973,6 @@
 ./usr/share/man/man8/dvmrpctl.8
 ./usr/share/man/man8/dvmrpd.8
 ./usr/share/man/man8/edquota.8
-./usr/share/man/man8/faithd.8
 ./usr/share/man/man8/fdisk.8
 ./usr/share/man/man8/fingerd.8
 ./usr/share/man/man8/fsck.8
@@ -12375,6 +12376,7 @@
 ./usr/share/zoneinfo/Asia/Kashgar
 ./usr/share/zoneinfo/Asia/Kathmandu
 ./usr/share/zoneinfo/Asia/Katmandu
+./usr/share/zoneinfo/Asia/Khandyga
 ./usr/share/zoneinfo/Asia/Kolkata
 ./usr/share/zoneinfo/Asia/Krasnoyarsk
 ./usr/share/zoneinfo/Asia/Kuala_Lumpur
@@ -12419,6 +12421,7 @@
 ./usr/share/zoneinfo/Asia/Ulaanbaatar
 ./usr/share/zoneinfo/Asia/Ulan_Bator
 ./usr/share/zoneinfo/Asia/Urumqi
+./usr/share/zoneinfo/Asia/Ust-Nera
 ./usr/share/zoneinfo/Asia/Vientiane
 ./usr/share/zoneinfo/Asia/Vladivostok
 ./usr/share/zoneinfo/Asia/Yakutsk
@@ -12534,6 +12537,7 @@
 ./usr/share/zoneinfo/Europe/Brussels
 ./usr/share/zoneinfo/Europe/Bucharest
 ./usr/share/zoneinfo/Europe/Budapest
+./usr/share/zoneinfo/Europe/Busingen
 ./usr/share/zoneinfo/Europe/Chisinau
 ./usr/share/zoneinfo/Europe/Copenhagen
 ./usr/share/zoneinfo/Europe/Dublin
@@ -12979,6 +12983,7 @@
 ./usr/share/zoneinfo/posix/Asia/Kashgar
 ./usr/share/zoneinfo/posix/Asia/Kathmandu
 ./usr/share/zoneinfo/posix/Asia/Katmandu
+./usr/share/zoneinfo/posix/Asia/Khandyga
 ./usr/share/zoneinfo/posix/Asia/Kolkata
 ./usr/share/zoneinfo/posix/Asia/Krasnoyarsk
 ./usr/share/zoneinfo/posix/Asia/Kuala_Lumpur
@@ -13023,6 +13028,7 @@
 ./usr/share/zoneinfo/posix/Asia/Ulaanbaatar
 ./usr/share/zoneinfo/posix/Asia/Ulan_Bator
 ./usr/share/zoneinfo/posix/Asia/Urumqi
+./usr/share/zoneinfo/posix/Asia/Ust-Nera
 ./usr/share/zoneinfo/posix/Asia/Vientiane
 ./usr/share/zoneinfo/posix/Asia/Vladivostok
 ./usr/share/zoneinfo/posix/Asia/Yakutsk
@@ -13138,6 +13144,7 @@
 ./usr/share/zoneinfo/posix/Europe/Brussels
 ./usr/share/zoneinfo/posix/Europe/Bucharest
 ./usr/share/zoneinfo/posix/Europe/Budapest
+./usr/share/zoneinfo/posix/Europe/Busingen
 ./usr/share/zoneinfo/posix/Europe/Chisinau
 ./usr/share/zoneinfo/posix/Europe/Copenhagen
 ./usr/share/zoneinfo/posix/Europe/Dublin
@@ -13584,6 +13591,7 @@
 ./usr/share/zoneinfo/right/Asia/Kashgar
 ./usr/share/zoneinfo/right/Asia/Kathmandu
 ./usr/share/zoneinfo/right/Asia/Katmandu
+./usr/share/zoneinfo/right/Asia/Khandyga
 ./usr/share/zoneinfo/right/Asia/Kolkata
 ./usr/share/zoneinfo/right/Asia/Krasnoyarsk
 ./usr/share/zoneinfo/right/Asia/Kuala_Lumpur
@@ -13628,6 +13636,7 @@
 ./usr/share/zoneinfo/right/Asia/Ulaanbaatar
 ./usr/share/zoneinfo/right/Asia/Ulan_Bator
 ./usr/share/zoneinfo/right/Asia/Urumqi
+./usr/share/zoneinfo/right/Asia/Ust-Nera
 ./usr/share/zoneinfo/right/Asia/Vientiane
 ./usr/share/zoneinfo/right/Asia/Vladivostok
 ./usr/share/zoneinfo/right/Asia/Yakutsk
@@ -13743,6 +13752,7 @@
 ./usr/share/zoneinfo/right/Europe/Brussels
 ./usr/share/zoneinfo/right/Europe/Bucharest
 ./usr/share/zoneinfo/right/Europe/Budapest
+./usr/share/zoneinfo/right/Europe/Busingen
 ./usr/share/zoneinfo/right/Europe/Chisinau
 ./usr/share/zoneinfo/right/Europe/Copenhagen
 ./usr/share/zoneinfo/right/Europe/Dublin
