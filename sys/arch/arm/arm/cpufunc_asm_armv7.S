@@ -1,4 +1,4 @@
-/* $OpenBSD: cpufunc_asm_armv7.S,v 1.4 2013/01/25 20:23:48 bmercer Exp $ */
+/* $OpenBSD: cpufunc_asm_armv7.S,v 1.5 2013/03/27 00:20:00 patrick Exp $ */
 /*
  * Copyright (c) 2008 Dale Rahn <drahn@openbsd.org>
  *

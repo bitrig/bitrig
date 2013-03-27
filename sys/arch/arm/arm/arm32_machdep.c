@@ -1,4 +1,4 @@
-/*	$OpenBSD: arm32_machdep.c,v 1.39 2011/09/20 22:02:10 miod Exp $	*/
+/*	$OpenBSD: arm32_machdep.c,v 1.40 2013/03/27 00:18:19 patrick Exp $	*/
 /*	$NetBSD: arm32_machdep.c,v 1.42 2003/12/30 12:33:15 pk Exp $	*/
 
 /*
