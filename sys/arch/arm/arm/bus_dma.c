@@ -746,8 +746,6 @@ _bus_dmamem_map(bus_dma_tag_t t, bus_dma_segment_t *segs, int nsegs,
 
 	size = round_page(size);
 	va = (vaddr_t)km_alloc(size, &kv_any, &kp_none, &kd_nowait);
-	if (va == 0)
-		return (ENOMEM);
 
 	if (va == 0)
 		return (ENOMEM);
