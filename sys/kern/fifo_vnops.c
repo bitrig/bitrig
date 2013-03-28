@@ -396,9 +396,6 @@ fifo_pathconf(void *v)
 	case _PC_LINK_MAX:
 		*ap->a_retval = LINK_MAX;
 		break;
-	case _PC_PIPE_BUF:
-		*ap->a_retval = PIPE_BUF;
-		break;
 	case _PC_CHOWN_RESTRICTED:
 		*ap->a_retval = 1;
 		break;
