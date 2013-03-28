@@ -399,6 +399,9 @@ fifo_pathconf(void *v)
 	case _PC_CHOWN_RESTRICTED:
 		*ap->a_retval = 1;
 		break;
+	case _PC_TIMESTAMP_RESOLUTION:
+		*ap->a_retval = 1;
+		break;
 	default:
 		error = EINVAL;
 		break;
