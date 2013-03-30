@@ -1,4 +1,4 @@
-/* $OpenBSD: cpufunc_asm_armv7.S,v 1.5 2013/03/27 00:20:00 patrick Exp $ */
+/* $OpenBSD: cpufunc_asm_armv7.S,v 1.6 2013/03/30 01:30:30 patrick Exp $ */
 /*
  * Copyright (c) 2008 Dale Rahn <drahn@openbsd.org>
  *
@@ -29,6 +29,13 @@ ENTRY(armv7_cpu_sleep)
 ENTRY(armv7_drain_writebuf)
 	DSB
 	ISB
+	mov	pc, lr
+
+/*
+ * Function to read the MPCore base address
+ */
+ENTRY(armv7_periphbase)
+	mrc	p15, 4, r0, c15, c0, 0
 	mov	pc, lr
 
 /*
@@ -288,10 +295,6 @@ ENTRY(armv7_context_switch)
 	mcr	p15, 0, r0, c8, c7, 0	/* and flush the I+D tlbs */
 	DSB
 	ISB
-	mov	pc, lr
-
-ENTRY(armv7_periphbase)
-	mrc	p15, 4, r0, c15, c0, 0
 	mov	pc, lr
 
 /* XXX The following macros should probably be moved to asm.h */
