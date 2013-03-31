@@ -1,8 +1,7 @@
-#	$OpenBSD: Makefile,v 1.4 2010/01/30 20:48:53 miod Exp $
+#	$OpenBSD: Makefile,v 1.6 2013/03/31 16:41:45 deraadt Exp $
 
 .if ${MACHINE} == "amd64" ||  ${MACHINE} == "armish" || \
-    ${MACHINE} == "i386" || ${MACHINE} == "macppc" || \
-    ${MACHINE} == "socppc"
+    ${MACHINE} == "i386"
 
 PROG=	pcidump
 
