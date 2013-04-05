@@ -307,8 +307,8 @@ pcppi0		at isa?
 
 com0	at isa? port 0x3f8 irq 4	# standard PC serial ports
 com1	at isa? port 0x2f8 irq 3
-#com2	at isa? port 0x3e8 irq 5
-#com3	at isa? port 0x2e8 irq 9	# (conflicts with some video cards)
+com2	at isa? port 0x3e8 irq 5
+com3	at isa? disable port 0x2e8 irq 9 # (conflicts with some video cards)
 
 com*	at pcmcia?			# PCMCIA modems/serial ports
 com*	at puc?
