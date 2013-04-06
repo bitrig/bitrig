@@ -1,4 +1,4 @@
-/*	$OpenBSD: systm.h,v 1.97 2013/04/06 03:44:34 tedu Exp $	*/
+/*	$OpenBSD: systm.h,v 1.98 2013/04/06 03:53:25 tedu Exp $	*/
 /*	$NetBSD: systm.h,v 1.50 1996/06/09 04:55:09 briggs Exp $	*/
 
 /*-
@@ -190,9 +190,6 @@ void	assertwaitok(void);
 #else
 #define	assertwaitok()	do { /* nothing */ } while (0)
 #endif
-
-void	poison_mem(void *, size_t);
-int	poison_check(void *, size_t, size_t *, int *);
 
 void	tablefull(const char *);
 
