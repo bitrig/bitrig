@@ -81,6 +81,7 @@ int amd64_pmc_read(struct amd64_pmc_read_args *);
 int amd64_set_fsbase(void *);
 int amd64_get_fsbase(void **);
 int sysarch(int, void *);
+__END_DECLS
 #endif
 
 #endif /* !_MACHINE_SYSARCH_H_ */
