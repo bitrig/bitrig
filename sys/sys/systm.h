@@ -186,9 +186,11 @@ void	splassert_fail(int, int, const char *);
 extern	int splassert_ctl;
 
 #ifdef DIAGNOSTIC
+void	assertonemutex(void);
 void	assertwaitok(void);
 #else
-#define	assertwaitok()	do { /* nothing */ } while (0)
+#define	assertwaitok()		do { /* nothing */ } while (0)
+#define	assertonemutex()	do { /* nothing */ } while (0)
 #endif
 
 void	tablefull(const char *);

@@ -165,4 +165,12 @@ assertwaitok(void)
 		panic("assertwaitok: non-zero mutex count: %d",
 		    curcpu()->ci_mutex_level);
 }
+
+void
+assertonemutex(void)
+{
+	if (curcpu()->ci_mutex_level != 1)
+		panic("assertoneonemutex: mutex count: %d",
+		    curcpu()->ci_mutex_level);
+}
 #endif

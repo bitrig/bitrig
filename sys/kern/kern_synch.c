@@ -147,6 +147,13 @@ msleep(const volatile void *ident, struct mutex *mtx, int priority,
 	struct sleep_state sls;
 	int error, error1, spl;
 
+	/* if anything other than mtx is locked then this is bad */
+	if (mtx)  {
+		assertonemutex();
+	} else {
+		assertwaitok();
+	}
+
 	sleep_setup(&sls, ident, priority, wmesg);
 	sleep_setup_timeout(&sls, timo);
 	sleep_setup_signal(&sls, priority);
