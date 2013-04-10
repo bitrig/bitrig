@@ -1057,10 +1057,10 @@ i915_gem_object_truncate(struct drm_i915_gem_object *obj)
 {
 	DRM_ASSERT_HELD(&obj->base);
 
-	drm_lock_obj(&obj->base);
+	mtx_enter(&obj->base.uao->vmobjlock);
 	obj->base.uao->pgops->pgo_flush(obj->base.uao, 0, obj->base.size,
 	    PGO_ALLPAGES | PGO_FREE);
-	drm_unlock_obj(&obj->base);
+	mtx_leave(&obj->base.uao->vmobjlock);
 
 	obj->madv = __I915_MADV_PURGED;
 }
