@@ -685,7 +685,7 @@ case "$osname" in
 esac
 
 case "$osname" in
-openbsd)
+openbsd|bitrig)
 	$spitshell >>$Makefile <<!GROK!THIS!
 # When building Perl itself, link with the thread library,
 # so that extensions can use thread functions even though Perl
