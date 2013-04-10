@@ -85,7 +85,7 @@ sub host
 	if (!defined $self->{osversion}) {
 		chomp($self->{osversion} = `uname -r`);
 	}
-	return "$self->{gnu_arch}-unknown-openbsd$self->{osversion}";
+	return "$self->{gnu_arch}-unknown-bitrig$self->{osversion}";
 }
 
 # XXX
