@@ -979,10 +979,6 @@ uvm_pagerealloc(struct vm_page *pg, struct uvm_object *newobj, voff_t newoff)
 {
 
 #ifdef UVMLOCKDEBUG
-	if (obj)
-		UVM_ASSERT_OBJLOCKED(obj);
-#endif
-#ifdef UVMLOCKDEBUG
 	if (pg->uobject)
 		UVM_ASSERT_OBJLOCKED(pg->uobject);
 	if (newobj)
