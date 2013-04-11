@@ -545,10 +545,19 @@ init_pipe_control(struct intel_ring_buffer *ring)
 		goto err_unpin;
         }
 
+	if (uvm_map_pageable(kernel_map, (vaddr_t)pc->cpu_page,
+	    (vaddr_t)pc->cpu_page + PAGE_SIZE, FALSE, 0)) {
+		DRM_ERROR("Failed to fault in pipe control page.\n");
+		goto err_unmap;
+	}
+
 	pc->obj = obj;
 	ring->private = pc;
 	return 0;
 
+err_unmap:
+	uvm_unmap(kernel_map, (vaddr_t)pc->cpu_page,
+	    (vaddr_t)pc->cpu_page + PAGE_SIZE);
 err_unpin:
 	i915_gem_object_unpin(obj);
 err_unref:
@@ -1189,6 +1198,13 @@ init_status_page(struct intel_ring_buffer *ring)
 		ret = -ENOMEM;
 		goto err_unpin;
 	}
+
+	if (uvm_map_pageable(kernel_map, (vaddr_t)ring->status_page.page_addr,
+	    (vaddr_t)ring->status_page.page_addr + PAGE_SIZE, FALSE, 0)) {
+		DRM_ERROR("Failed to fault in status page.\n");
+		goto err_unmap;
+	}
+
 	ring->status_page.obj = obj;
 	memset(ring->status_page.page_addr, 0, PAGE_SIZE);
 
@@ -1198,6 +1214,9 @@ init_status_page(struct intel_ring_buffer *ring)
 
 	return 0;
 
+err_unmap:
+	uvm_unmap(kernel_map, (vaddr_t)ring->status_page.page_addr,
+	    (vaddr_t)ring->status_page.page_addr + PAGE_SIZE);
 err_unpin:
 	i915_gem_object_unpin(obj);
 err_unref:
