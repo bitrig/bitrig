@@ -1,4 +1,4 @@
-/* $OpenBSD: pms.c,v 1.39 2013/04/15 09:12:42 mpi Exp $ */
+/* $OpenBSD: pms.c,v 1.40 2013/04/15 09:14:41 mpi Exp $ */
 /* $NetBSD: psm.c,v 1.11 2000/06/05 22:20:57 sommerfeld Exp $ */
 
 /*-
@@ -118,7 +118,6 @@ struct elantech_softc {
 #define ELANTECH_F_2FINGER_PACKET	0x04
 #define ELANTECH_F_HW_V1_OLD		0x08
 
-	int hw_version;
 	int min_x, min_y;
 	int max_x, max_y;
 
@@ -1714,10 +1713,6 @@ pms_enable_elantech_v1(struct pms_softc *sc)
 	struct elantech_softc *elantech = sc->elantech;
 	int i;
 
-	/* Check if a different hardware version has been detected. */
-	if (elantech && elantech->hw_version != 0 && elantech->hw_version != 1)
-		return (0);
-
 	if (elantech_knock(sc))
 		goto err;
 
@@ -1740,8 +1735,6 @@ pms_enable_elantech_v1(struct pms_softc *sc)
 	for (i = 0; i < nitems(sc->elantech->parity); i++)
 		sc->elantech->parity[i] = sc->elantech->parity[i & (i - 1)] ^ 1;
 
-	elantech->hw_version = 1;
-
 	return (1);
 
 err:
@@ -1759,10 +1752,6 @@ int
 pms_enable_elantech_v2(struct pms_softc *sc)
 {
 	struct elantech_softc *elantech = sc->elantech;
-
-	/* Check if a different hardware version has been detected. */
-	if (elantech && elantech->hw_version != 0 && elantech->hw_version != 2)
-		return (0);
 
 	if (elantech_knock(sc))
 		goto err;
@@ -1783,8 +1772,6 @@ pms_enable_elantech_v2(struct pms_softc *sc)
 	} else if (elantech_set_absolute_mode_v2(sc))
 		goto err;
 
-	elantech->hw_version = 2;
-
 	return (1);
 
 err:
@@ -1803,10 +1790,6 @@ pms_enable_elantech_v3(struct pms_softc *sc)
 {
 	struct elantech_softc *elantech = sc->elantech;
 
-	/* Check if a different hardware version has been detected. */
-	if (elantech && elantech->hw_version != 0 && elantech->hw_version != 3)
-		return (0);
-		
 	if (elantech_knock(sc))
 		goto err;
 
@@ -1825,8 +1808,6 @@ pms_enable_elantech_v3(struct pms_softc *sc)
 		printf("%s: Elantech Touchpad, version %d\n", DEVNAME(sc), 3);
 	} else if (elantech_set_absolute_mode_v3(sc))
 		goto err;
-
-	elantech->hw_version = 3;
 
 	return (1);
 
