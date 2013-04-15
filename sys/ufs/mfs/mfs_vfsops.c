@@ -1,4 +1,4 @@
-/*	$OpenBSD: mfs_vfsops.c,v 1.43 2012/09/10 11:11:00 jsing Exp $	*/
+/*	$OpenBSD: mfs_vfsops.c,v 1.46 2013/04/15 15:32:19 jsing Exp $	*/
 /*	$NetBSD: mfs_vfsops.c,v 1.10 1996/02/09 22:31:28 christos Exp $	*/
 
 /*
@@ -92,7 +92,7 @@ mfs_mount(struct mount *mp, const char *path, void *data,
 	char fspec[MNAMELEN];
 	int flags, error;
 
-	error = copyin(data, (caddr_t)&args, sizeof(struct mfs_args));
+	error = copyin(data, &args, sizeof(struct mfs_args));
 	if (error)
 		return (error);
 
@@ -151,6 +151,8 @@ mfs_mount(struct mount *mp, const char *path, void *data,
 	bcopy(fs->fs_fsmnt, mp->mnt_stat.f_mntonname, MNAMELEN);
 	bzero(mp->mnt_stat.f_mntfromname, MNAMELEN);
 	strlcpy(mp->mnt_stat.f_mntfromname, fspec, MNAMELEN);
+	bzero(mp->mnt_stat.f_mntfromspec, MNAMELEN);
+	strlcpy(mp->mnt_stat.f_mntfromspec, fspec, MNAMELEN);
 	bcopy(&args, &mp->mnt_stat.mount_info.mfs_args, sizeof(args));
 
 	return (0);
