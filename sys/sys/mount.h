@@ -212,6 +212,7 @@ union mount_info {
 	struct nfs_args nfs_args;
 	struct iso_args iso_args;
 	struct msdosfs_args msdosfs_args;
+	char __align[160];	/* 64-bit alignment and room to grow */
 };
 
 #define	MFSNAMELEN	16	/* length of fs type name, including nul */
@@ -250,6 +251,18 @@ struct statfs {
 };
 
 #ifdef _KERNEL
+/*
+ * Per-filesystem mount options minus __align which was accidentally removed
+ * in a cleanup.
+ */
+union mount_info53 {
+	struct ufs_args ufs_args;
+	struct mfs_args mfs_args;
+	struct nfs_args nfs_args;
+	struct iso_args iso_args;
+	struct msdosfs_args msdosfs_args;
+};
+
 /* COMPAT_O53 version without f_mntfromspec and smaller f_ctime */
 struct statfs53 {
 	u_int32_t	f_flags;	/* copy of mount flags */
@@ -279,8 +292,9 @@ struct statfs53 {
 	char f_fstypename[MFSNAMELEN];	/* fs type name */
 	char f_mntonname[MNAMELEN];	/* directory on which mounted */
 	char f_mntfromname[MNAMELEN];	/* mounted file system */
-	union mount_info mount_info;	/* per-filesystem mount options */
+	union mount_info53 mount_info;	/* per-filesystem mount options */
 };
+
 #endif /* _KERNEL */
 
 
