@@ -9,7 +9,7 @@ SUBDIR=	ac accton acpidump adduser apm apmd arp \
 	inetd iostat iscsictl iscsid \
 	kgmon kvm_mkdb ldapd ldapctl ldpd ldpctl lpr mailwrapper map-mbone \
 	memconfig mopd mrinfo mrouted mtrace mtree ndp netgroup_mkdb nginx \
-	npppctl nsd ntpd openssl ospfctl ospfd ospf6d ospf6ctl pcidump \
+	npppctl npppd nsd ntpd openssl ospfctl ospfd ospf6d ospf6ctl pcidump \
 	pkg_add popa3d portmap ppp pppd pppoe procmap pstat pwd_mkdb quot \
 	quotaon rarpd rbootd rdate relayctl relayd repquota rip6query ripctl \
 	ripd rmt route6d rpc.bootparamd rpc.lockd rpc.statd rtadvd rtsold \
@@ -17,9 +17,6 @@ SUBDIR=	ac accton acpidump adduser apm apmd arp \
 	spray syslogc syslogd sysmerge tcpdrop tcpdump tftp-proxy tftpd \
 	tokenadm tokeninit traceroute traceroute6 trpt usbdevs user vipw \
 	watchdogd wsconscfg wsfontload wsmoused zdump zic
-
-# tickles a clang bug, to be enabled when fixed.
-# npppd
 
 .if (${YP:L} == "yes")
 SUBDIR+=ypbind ypldap yppoll ypset ypserv
