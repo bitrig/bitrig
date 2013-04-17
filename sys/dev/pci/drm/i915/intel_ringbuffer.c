@@ -1,4 +1,4 @@
-/*	$OpenBSD: intel_ringbuffer.c,v 1.1 2013/03/18 12:36:52 jsg Exp $	*/
+/*	$OpenBSD: intel_ringbuffer.c,v 1.2 2013/04/17 20:04:05 kettenis Exp $	*/
 /*
  * Copyright © 2008-2010 Intel Corporation
  *
@@ -1750,7 +1750,7 @@ int
 intel_init_render_ring_buffer(struct drm_device *dev)
 {
 	drm_i915_private_t *dev_priv = dev->dev_private;
-	struct intel_ring_buffer *ring = &dev_priv->rings[RCS];
+	struct intel_ring_buffer *ring = &dev_priv->ring[RCS];
 
 	ring->name = "render ring";
 	ring->id = RCS;
@@ -1836,7 +1836,7 @@ int
 intel_render_ring_init_dri(struct drm_device *dev, u64 start, u32 size)
 {
 	drm_i915_private_t *dev_priv = dev->dev_private;
-	struct intel_ring_buffer *ring = &dev_priv->rings[RCS];
+	struct intel_ring_buffer *ring = &dev_priv->ring[RCS];
 	int ret;
 
 	ring->name = "render ring";
@@ -1903,7 +1903,7 @@ int
 intel_init_bsd_ring_buffer(struct drm_device *dev)
 {
 	drm_i915_private_t *dev_priv = dev->dev_private;
-	struct intel_ring_buffer *ring = &dev_priv->rings[VCS];
+	struct intel_ring_buffer *ring = &dev_priv->ring[VCS];
 
 	ring->name = "bsd ring";
 	ring->id = VCS;
@@ -1952,7 +1952,7 @@ int
 intel_init_blt_ring_buffer(struct drm_device *dev)
 {
 	drm_i915_private_t *dev_priv = dev->dev_private;
-	struct intel_ring_buffer *ring = &dev_priv->rings[BCS];
+	struct intel_ring_buffer *ring = &dev_priv->ring[BCS];
 
 	ring->name = "blitter ring";
 	ring->id = BCS;
