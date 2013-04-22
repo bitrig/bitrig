@@ -1,4 +1,4 @@
-/*	$OpenBSD: ffs_inode.c,v 1.61 2012/03/23 15:51:26 guenther Exp $	*/
+/*	$OpenBSD: ffs_inode.c,v 1.63 2013/04/22 02:07:46 tedu Exp $	*/
 /*	$NetBSD: ffs_inode.c,v 1.10 1996/05/11 18:27:19 mycroft Exp $	*/
 
 /*
@@ -451,7 +451,10 @@ done:
 	 * Put back the real size.
 	 */
 	DIP_ASSIGN(oip, size, length);
-	DIP_ADD(oip, blocks, -blocksreleased);
+	if (DIP(oip, blocks) >= blocksreleased)
+		DIP_ADD(oip, blocks, -blocksreleased);
+	else	/* sanity */
+		DIP_ASSIGN(oip, blocks, 0);
 	oip->i_flag |= IN_CHANGE;
 	(void)ufs_quota_free_blocks(oip, blocksreleased, NOCRED);
 	return (allerror);
