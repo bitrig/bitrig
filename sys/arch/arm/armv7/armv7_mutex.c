@@ -58,6 +58,7 @@ mtx_enter(struct mutex *mtx)
 
 	MUTEX_ASSERT_UNLOCKED(mtx);
 	mtx->mtx_lock = 1;
+	curcpu()->ci_mutex_level++;
 }
 
 int
@@ -66,8 +67,12 @@ mtx_enter_try(struct mutex *mtx)
 	if (mtx->mtx_wantipl != IPL_NONE)
 		mtx->mtx_oldipl = _splraise(mtx->mtx_wantipl);
 
-	MUTEX_ASSERT_UNLOCKED(mtx);
+	if (mtx->mtx_lock) {
+		splx(mtx->mtx_oldipl);
+		return 0;
+	}
 	mtx->mtx_lock = 1;
+	curcpu()->ci_mutex_level++;
 
 	return 1;
 }
@@ -77,6 +82,7 @@ mtx_leave(struct mutex *mtx)
 {
 	MUTEX_ASSERT_LOCKED(mtx);
 	mtx->mtx_lock = 0;
+	curcpu()->ci_mutex_level--;
 	if (mtx->mtx_wantipl != IPL_NONE)
 		splx(mtx->mtx_oldipl);
 }
