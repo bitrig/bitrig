@@ -70,8 +70,8 @@ void	imxehci_attach(struct device *, struct device *, void *);
 int	imxehci_detach(struct device *, int);
 
 struct imxehci_softc {
-	ehci_softc_t	sc;
-	void		*sc_ih;
+	struct ehci_softc	sc;
+	void			*sc_ih;
 	bus_space_handle_t	uh_ioh;
 	bus_space_handle_t	ph_ioh;
 	bus_space_handle_t	nc_ioh;
