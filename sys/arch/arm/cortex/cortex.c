@@ -96,7 +96,15 @@ struct cfdriver cortex_cd = {
 int
 cortexmatch(struct device *parent, void *cf, void *aux)
 {
-	return (1);
+	int cputype = cpufunc_id();
+
+	if ((cputype & CPU_ID_CORTEX_A9_MASK) == CPU_ID_CORTEX_A9 ||
+	    (cputype & CPU_ID_CORTEX_A15_MASK) == CPU_ID_CORTEX_A15) {
+		if (armv7_periphbase())
+			return (1);
+	}
+
+	return (0);
 }
 
 /*
