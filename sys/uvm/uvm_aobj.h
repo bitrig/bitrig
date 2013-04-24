@@ -53,6 +53,7 @@
 /* flags for uao_create: can only be used one time (at bootup) */
 #define UAO_FLAG_KERNOBJ	0x1	/* create kernel object */
 #define UAO_FLAG_KERNSWAP	0x2	/* enable kernel swap */
+#define UAO_FLAG_CANFAIL	0x4	/* creation can fail */
 
 /* internal flags */
 #define UAO_FLAG_NOSWAP		0x8	/* aobj can't swap (kernel obj only!) */
@@ -67,6 +68,8 @@ void uao_init(void);
 int uao_set_swslot(struct uvm_object *, int, int);
 int uao_dropswap(struct uvm_object *, int);
 int uao_swap_off(int, int);
+int uao_shrink(struct uvm_object *, int);
+int uao_grow(struct uvm_object *, int);
 
 /*
  * globals

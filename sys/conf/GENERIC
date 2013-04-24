@@ -47,6 +47,7 @@ option		CD9660		# ISO 9660 + Rock Ridge file system
 option		UDF		# UDF (DVD) file system
 option		MSDOSFS		# MS-DOS file system
 option		FIFO		# FIFOs; RECOMMENDED
+option		TMPFS		# efficient memory file system
 
 option		SOCKET_SPLICE	# Socket Splicing for TCP
 option		TCP_SACK	# Selective Acknowledgements for TCP

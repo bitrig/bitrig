@@ -68,12 +68,12 @@ enum vtype	{ VNON, VREG, VDIR, VBLK, VCHR, VLNK, VSOCK, VFIFO, VBAD };
  */
 enum vtagtype	{
 	VT_NON, VT_UFS, VT_NFS, VT_MFS, VT_MSDOSFS,
-	VT_ISOFS, VT_EXT2FS, VT_VFS, VT_UDF,
+	VT_ISOFS, VT_EXT2FS, VT_VFS, VT_UDF, VT_TMPFS
 };
 
 #define	VTAG_NAMES				\
     "NON", "UFS", "NFS", "MFS", "MSDOSFS",	\
-    "ISOFS", "EXT2FS", "VFS",  "UDF"
+    "ISOFS", "EXT2FS", "VFS",  "UDF", "TMPFS"
 
 /*
  * Each underlying filesystem allocates its own private area and hangs

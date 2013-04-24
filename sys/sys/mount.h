@@ -88,6 +88,23 @@ struct mfs_args {
 };
 
 /*
+ * Arguments to mount tmpfs file systems
+ */
+#define TMPFS_ARGS_VERSION	1
+struct tmpfs_args {
+	int			ta_version;
+
+	/* Size counters. */
+	ino_t			ta_nodes_max;
+	off_t			ta_size_max;
+
+	/* Root node attributes. */
+	uid_t			ta_root_uid;
+	gid_t			ta_root_gid;
+	mode_t			ta_root_mode;
+};
+
+/*
  * Arguments to mount ISO 9660 filesystems.
  */
 struct iso_args {
@@ -308,6 +325,7 @@ struct statfs53 {
 #define	MOUNT_CD9660	"cd9660"	/* ISO9660 (aka CDROM) Filesystem */
 #define	MOUNT_EXT2FS	"ext2fs"	/* Second Extended Filesystem */
 #define	MOUNT_UDF	"udf"		/* UDF */
+#define	MOUNT_TMPFS	"tmpfs"		/* tmpfs */
 
 /*
  * Structure per mounted file system.  Each mounted file system has an
