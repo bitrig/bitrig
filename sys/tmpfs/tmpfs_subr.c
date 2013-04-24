@@ -1082,7 +1082,7 @@ tmpfs_chtimes(struct vnode *vp, const struct timespec *atime,
 
 	if (cred->cr_uid != node->tn_uid && (error = suser_ucred(cred)) &&
 	    ((vaflags & VA_UTIMES_NULL) == 0 ||
-	    (error = VOP_ACCESS(vp, VWRITE, cred, p))))
+	    (error = VOP_ACCESS(vp, VWRITE, cred))))
 	    	return error;
 
 	if (atime->tv_sec != VNOVAL && atime->tv_nsec != VNOVAL)
@@ -1209,7 +1209,7 @@ tmpfs_uiomove(tmpfs_node_t *node, struct uio *uio, vsize_t len)
 	if (pgoff + len < PAGE_SIZE) {
 		va = tmpfs_uio_lookup(node, pgnum);
 		if (va != (vaddr_t)NULL)
-			return uiomove((void *)va + pgoff, len, uio);
+			return uiomove((void *)(va + pgoff), len, uio);
 	}
 
 	if (len >= TMPFS_UIO_MAXBYTES) {
@@ -1233,7 +1233,7 @@ tmpfs_uiomove(tmpfs_node_t *node, struct uio *uio, vsize_t len)
 		return error;
 	}
 
-	error = uiomove((void *)va + pgoff, sz, uio);
+	error = uiomove((void *)(va + pgoff), sz, uio);
 	if (error == 0 && pgoff + sz < PAGE_SIZE)
 		tmpfs_uio_cache(node, pgnum, va);
 	else

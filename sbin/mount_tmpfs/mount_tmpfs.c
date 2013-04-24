@@ -38,11 +38,13 @@ __RCSID("$NetBSD: mount_tmpfs.c,v 1.24 2008/08/05 20:57:45 pooka Exp $");
 #include <sys/param.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #include <ctype.h>
 #include <err.h>
 #include <errno.h>
 #include <grp.h>
+#include <inttypes.h>
 #include <mntopts.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -52,6 +54,8 @@ __RCSID("$NetBSD: mount_tmpfs.c,v 1.24 2008/08/05 20:57:45 pooka Exp $");
 #include <util.h>
 
 #include "mount_tmpfs.h"
+
+extern int dehumanize_number(const char *, int64_t *);
 
 /* --------------------------------------------------------------------- */
 

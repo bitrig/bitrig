@@ -38,7 +38,7 @@
 #error not supposed to be exposed to userland.
 #endif
 
-#include <miscfs/fifofs/fifo.h>
+#include <sys/fifovnops.h>
 #include <tmpfs/tmpfs_vnops.h>
 
 /*

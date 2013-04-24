@@ -55,7 +55,8 @@ __KERNEL_RCSID(0, "$NetBSD: tmpfs_vnops.c,v 1.100 2012/11/05 17:27:39 dholland E
 
 #include <uvm/uvm.h>
 
-#include <miscfs/fifofs/fifo.h>
+#include <sys/fifovnops.h>
+
 #include <tmpfs/tmpfs_vnops.h>
 #include <tmpfs/tmpfs.h>
 
@@ -134,7 +135,7 @@ tmpfs_lookup(void *v)
 	*vpp = NULL;
 
 	/* Check accessibility of directory. */
-	error = VOP_ACCESS(dvp, VEXEC, cred, curproc);
+	error = VOP_ACCESS(dvp, VEXEC, cred);
 	if (error) {
 		goto out;
 	}
@@ -181,7 +182,7 @@ tmpfs_lookup(void *v)
 		 * and thus prevents parent from disappearing.
 		 */
 		rw_enter_write(&pnode->tn_nlock);
-		VOP_UNLOCK(dvp, 0, curproc);
+		VOP_UNLOCK(dvp, 0);
 
 		/*
 		 * Get a vnode of the '..' entry and re-acquire the lock.
@@ -217,7 +218,7 @@ tmpfs_lookup(void *v)
 		 */
 		if (lastcn && (cnp->cn_nameiop == CREATE ||
 		    cnp->cn_nameiop == RENAME)) {
-			error = VOP_ACCESS(dvp, VWRITE, cred, curproc);
+			error = VOP_ACCESS(dvp, VWRITE, cred);
 			if (error) {
 				goto out;
 			}
@@ -251,7 +252,7 @@ tmpfs_lookup(void *v)
 
 	/* Check the permissions. */
 	if (lastcn && (cnp->cn_nameiop == DELETE || cnp->cn_nameiop == RENAME)) {
-		error = VOP_ACCESS(dvp, VWRITE, cred, curproc);
+		error = VOP_ACCESS(dvp, VWRITE, cred);
 		if (error)
 			goto out;
 
@@ -298,7 +299,7 @@ out:
 	if ((error == 0 || error == EJUSTRETURN) && /* (1) */
 	    *vpp != dvp &&			    /* (2) */
 	    (!lockparent || !lastcn)) {		    /* (3) */
-		VOP_UNLOCK(dvp, 0, curproc);
+		VOP_UNLOCK(dvp, 0);
 		cnp->cn_flags |= PDIRUNLOCK;
 	} else
 		KASSERT(VOP_ISLOCKED(dvp));
@@ -808,7 +809,7 @@ tmpfs_link(void *v)
 	tmpfs_update(vp, NULL, NULL, 0);
 	error = 0;
 out:
-	VOP_UNLOCK(vp, 0, curproc);
+	VOP_UNLOCK(vp, 0);
 	vput(dvp);
 	return error;
 }
@@ -1085,7 +1086,7 @@ tmpfs_inactive(void *v)
 	if (vp->v_type == VREG && tmpfs_uio_cached(node))
 		tmpfs_uio_uncache(node);
 
-	VOP_UNLOCK(vp, 0, curproc);
+	VOP_UNLOCK(vp, 0);
 
 	/*
 	 * If we are done with the node, reclaim it so that it can be reused
@@ -1546,9 +1547,9 @@ tmpfs_rename(void *v)
 	 * the caller does reject rename("x/.", "y").  Go figure.)
 	 */
 
-	VOP_UNLOCK(tdvp, 0, curproc);
+	VOP_UNLOCK(tdvp, 0);
 	if ((tvp != NULL) && (tvp != tdvp))
-		VOP_UNLOCK(tvp, 0, curproc);
+		VOP_UNLOCK(tvp, 0);
 
 	vrele(fvp);
 	if (tvp != NULL)
@@ -1894,7 +1895,7 @@ tmpfs_rename_enter_common(struct mount *mount, struct tmpfs_mount *tmpfs,
 	}
 
 	/* Make sure the caller may read the directory.  */
-	error = VOP_ACCESS(dvp, VEXEC, cred, curproc);
+	error = VOP_ACCESS(dvp, VEXEC, cred);
 	if (error)
 		goto fail1;
 
@@ -1974,7 +1975,7 @@ fail3:	if (tvp != NULL) {
 	}
 
 fail2:	vput(fvp);
-fail1:	VOP_UNLOCK(dvp, 0, curproc);
+fail1:	VOP_UNLOCK(dvp, 0);
 fail0:	return error;
 }
 
@@ -2077,10 +2078,10 @@ tmpfs_rename_exit(struct tmpfs_mount *tmpfs,
 		else
 			vrele(tvp);
 	}
-	VOP_UNLOCK(tdvp, 0, curproc);
+	VOP_UNLOCK(tdvp, 0);
 	vput(fvp);
 	if (fdvp != tdvp)
-		VOP_UNLOCK(fdvp, 0, curproc);
+		VOP_UNLOCK(fdvp, 0);
 
 #if 0				/* XXX */
 	if (fdvp != tdvp)
@@ -2104,7 +2105,7 @@ tmpfs_rename_lock_directory(struct vnode *vp, struct tmpfs_node *node)
 
 	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curproc);
 	if (node->tn_spec.tn_dir.tn_parent == NULL) {
-		VOP_UNLOCK(vp, 0, curproc);
+		VOP_UNLOCK(vp, 0);
 		return ENOENT;
 	}
 
@@ -2174,7 +2175,7 @@ tmpfs_rename_genealogy(struct tmpfs_node *fdnode, struct tmpfs_node *tdnode,
 		node = parent;
 	}
 
-	VOP_UNLOCK(tdnode->tn_vnode, 0, curproc);
+	VOP_UNLOCK(tdnode->tn_vnode, 0);
 	return 0;
 }
 
@@ -2245,7 +2246,7 @@ tmpfs_rename_lock(struct mount *mount, struct ucred *cred, int overlap_error,
 	}
 
 	/* Make sure the caller may read the directory.  */
-	error = VOP_ACCESS(a_dvp, VEXEC, cred, curproc);
+	error = VOP_ACCESS(a_dvp, VEXEC, cred);
 	if (error)
 		goto fail1;
 
@@ -2291,7 +2292,7 @@ tmpfs_rename_lock(struct mount *mount, struct ucred *cred, int overlap_error,
 	}
 
 	/* Make sure the caller may read the directory.  */
-	error = VOP_ACCESS(b_dvp, VEXEC, cred, curproc);
+	error = VOP_ACCESS(b_dvp, VEXEC, cred);
 	if (error)
 		goto fail3;
 
@@ -2362,7 +2363,7 @@ fail4:	if (b_vp != NULL) {
 	}
 
 fail3:	KASSERT(VOP_ISLOCKED(b_dvp) == LK_EXCLUSIVE);
-	VOP_UNLOCK(b_dvp, 0, curproc);
+	VOP_UNLOCK(b_dvp, 0);
 
 fail2:	if (a_vp != NULL) {
 		KASSERT(VOP_ISLOCKED(a_vp) == LK_EXCLUSIVE);
@@ -2370,7 +2371,7 @@ fail2:	if (a_vp != NULL) {
 	}
 
 fail1:	KASSERT(VOP_ISLOCKED(a_dvp) == LK_EXCLUSIVE);
-	VOP_UNLOCK(a_dvp, 0, curproc);
+	VOP_UNLOCK(a_dvp, 0);
 
 fail0:	/* KASSERT(VOP_ISLOCKED(a_dvp) != LK_EXCLUSIVE); */
 	/* KASSERT(VOP_ISLOCKED(b_dvp) != LK_EXCLUSIVE); */
@@ -2580,7 +2581,7 @@ tmpfs_rename_check_permitted(struct ucred *cred,
 	/*
 	 * We need to remove or change an entry in the source directory.
 	 */
-	error = VOP_ACCESS(fdnode->tn_vnode, VWRITE, cred, curproc);
+	error = VOP_ACCESS(fdnode->tn_vnode, VWRITE, cred);
 	if (error)
 		return error;
 
@@ -2591,12 +2592,11 @@ tmpfs_rename_check_permitted(struct ucred *cred,
 	 * entry.
 	 */
 	if (fdnode != tdnode) {
-		error = VOP_ACCESS(tdnode->tn_vnode, VWRITE, cred, curproc);
+		error = VOP_ACCESS(tdnode->tn_vnode, VWRITE, cred);
 		if (error)
 			return error;
 		if (fnode->tn_type == VDIR) {
-			error = VOP_ACCESS(fnode->tn_vnode, VWRITE, cred,
-			    curproc);
+			error = VOP_ACCESS(fnode->tn_vnode, VWRITE, cred);
 			if (error)
 				return error;
 		}
@@ -2667,7 +2667,7 @@ tmpfs_remove_check_permitted(struct ucred *cred,
 	 * Check whether we are permitted to write to the source
 	 * directory in order to delete an entry from it.
 	 */
-	error = VOP_ACCESS(dnode->tn_vnode, VWRITE, cred, curproc);
+	error = VOP_ACCESS(dnode->tn_vnode, VWRITE, cred);
 	if (error)
 		return error;
 
