@@ -16,5 +16,6 @@ tags
 *.pyc
 *.orig
 *.rej
+*.depend
 
 lost+found
