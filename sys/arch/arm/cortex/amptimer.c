@@ -1,7 +1,6 @@
 /* $OpenBSD: amptimer.c,v 1.7 2011/11/16 14:06:32 drahn Exp $ */
 /*
  * Copyright (c) 2011 Dale Rahn <drahn@openbsd.org>
- * Copyright (c) 2012-2013 Patrick Wildt <webmaster@patrick-wildt.de>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above

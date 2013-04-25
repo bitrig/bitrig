@@ -1,7 +1,7 @@
 /*	$OpenBSD: pca9532.c,v 1.3 2008/04/17 16:50:17 deraadt Exp $ */
 /*
  * Copyright (c) 2006 Dale Rahn <drahn@openbsd.org>
- * Copyright (c) 2013 Patrick Wildt <webmaster@patrick-wildt.de>
+ * Copyright (c) 2013 Patrick Wildt <patrick@blueri.se>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above

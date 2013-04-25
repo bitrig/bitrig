@@ -1,6 +1,6 @@
 /* $OpenBSD: omgpiovar.h,v 1.1 2009/05/08 03:13:26 drahn Exp $ */
 /*
- * Copyright (c) 2012-2013 Patrick Wildt <webmaster@patrick-wildt.de>
+ * Copyright (c) 2012-2013 Patrick Wildt <patrick@blueri.se>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above

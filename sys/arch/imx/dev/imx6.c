@@ -1,8 +1,7 @@
 /* $OpenBSD: omap4.c,v 1.5 2011/11/15 23:01:11 drahn Exp $ */
-
 /*
  * Copyright (c) 2011 Uwe Stuehler <uwe@openbsd.org>
- * Copyright (c) 2012 Patrick Wildt <webmaster@patrick-wildt.de>
+ * Copyright (c) 2012 Patrick Wildt <patrick@blueri.se>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above

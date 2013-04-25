@@ -1,7 +1,6 @@
 /* $OpenBSD: ampintc.c,v 1.9 2011/11/15 23:17:01 drahn Exp $ */
 /*
  * Copyright (c) 2007,2009,2011 Dale Rahn <drahn@openbsd.org>
- * Copyright (c) 2012-2013 Patrick Wildt <webmaster@patrick-wildt.de>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
