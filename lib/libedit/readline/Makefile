@@ -6,13 +6,13 @@ NOOBJ=          # defined
 .include <bsd.own.mk>
 
 includes:
-	 ${INSTALL} -d -o ${BINOWN} -g ${BINGRP} -m 755 \
+	${INSTALL} -d -o ${BINOWN} -g ${BINGRP} -m 755 \
 		${DESTDIR}/usr/include/readline
 	-cd ${.CURDIR}; cmp -s readline.h ${DESTDIR}/usr/include/readline/readline.h > \
 		/dev/null 2>&1 || \
 	${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 readline.h \
 		${DESTDIR}/usr/include/readline
 	rm -f ${DESTDIR}/usr/include/readline/history.h
-	cd ${DESTDIR}/usr/include/readline && ln -s readline.h history.h
+	cd ${DESTDIR}/usr/include/readline && ln -f readline.h history.h
 
 .include <bsd.prog.mk>
