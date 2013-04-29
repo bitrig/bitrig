@@ -1,4 +1,4 @@
-/*	$OpenBSD: yp_bind.c,v 1.17 2009/06/05 17:19:00 schwarze Exp $ */
+/*	$OpenBSD: yp_bind.c,v 1.18 2013/04/29 00:28:23 okan Exp $ */
 /*
  * Copyright (c) 1992, 1993, 1996 Theo de Raadt <deraadt@theos.com>
  * All rights reserved.

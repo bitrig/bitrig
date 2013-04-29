@@ -1,4 +1,4 @@
-/*	$OpenBSD: lex.c,v 1.34 2011/04/06 11:36:26 miod Exp $	*/
+/*	$OpenBSD: lex.c,v 1.35 2013/04/29 00:28:23 okan Exp $	*/
 /*	$NetBSD: lex.c,v 1.10 1997/05/17 19:55:13 pk Exp $	*/
 
 /*

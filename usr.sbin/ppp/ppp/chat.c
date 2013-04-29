@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$OpenBSD: chat.c,v 1.21 2005/07/06 13:56:00 brad Exp $
+ *	$OpenBSD: chat.c,v 1.22 2013/04/29 00:28:23 okan Exp $
  */
 
 #include <sys/param.h>

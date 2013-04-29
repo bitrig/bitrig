@@ -1,4 +1,4 @@
-/*	$OpenBSD: syslog_r.c,v 1.3 2011/05/30 18:48:33 martynas Exp $ */
+/*	$OpenBSD: syslog_r.c,v 1.4 2013/04/29 00:28:23 okan Exp $ */
 /*
  * Copyright (c) 1983, 1988, 1993
  *	The Regents of the University of California.  All rights reserved.

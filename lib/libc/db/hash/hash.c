@@ -1,4 +1,4 @@
-/*	$OpenBSD: hash.c,v 1.23 2010/07/02 16:46:28 guenther Exp $	*/
+/*	$OpenBSD: hash.c,v 1.24 2013/04/29 00:28:23 okan Exp $	*/
 
 /*-
  * Copyright (c) 1990, 1993, 1994

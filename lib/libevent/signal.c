@@ -1,4 +1,4 @@
-/*	$OpenBSD: signal.c,v 1.15 2010/07/12 18:03:38 nicm Exp $	*/
+/*	$OpenBSD: signal.c,v 1.16 2013/04/29 00:28:23 okan Exp $	*/
 
 /*
  * Copyright 2000-2002 Niels Provos <provos@citi.umich.edu>

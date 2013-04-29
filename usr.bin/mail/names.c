@@ -1,4 +1,4 @@
-/*	$OpenBSD: names.c,v 1.18 2009/10/27 23:59:40 deraadt Exp $	*/
+/*	$OpenBSD: names.c,v 1.19 2013/04/29 00:28:23 okan Exp $	*/
 /*	$NetBSD: names.c,v 1.5 1996/06/08 19:48:32 christos Exp $	*/
 
 /*

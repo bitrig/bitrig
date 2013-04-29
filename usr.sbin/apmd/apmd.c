@@ -1,4 +1,4 @@
-/*	$OpenBSD: apmd.c,v 1.58 2012/03/26 20:17:45 deraadt Exp $	*/
+/*	$OpenBSD: apmd.c,v 1.59 2013/04/29 00:28:23 okan Exp $	*/
 
 /*
  *  Copyright (c) 1995, 1996 John T. Kohl

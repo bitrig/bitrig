@@ -25,7 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $OpenBSD: chap.c,v 1.41 2005/07/09 01:45:08 brad Exp $
+ * $OpenBSD: chap.c,v 1.42 2013/04/29 00:28:23 okan Exp $
  */
 
 #include <sys/param.h>

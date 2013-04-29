@@ -25,7 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $OpenBSD: command.c,v 1.92 2008/03/02 18:46:32 miod Exp $
+ * $OpenBSD: command.c,v 1.93 2013/04/29 00:28:23 okan Exp $
  */
 
 #include <sys/param.h>

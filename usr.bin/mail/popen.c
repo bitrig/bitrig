@@ -1,4 +1,4 @@
-/*	$OpenBSD: popen.c,v 1.35 2009/10/27 23:59:40 deraadt Exp $	*/
+/*	$OpenBSD: popen.c,v 1.36 2013/04/29 00:28:23 okan Exp $	*/
 /*	$NetBSD: popen.c,v 1.6 1997/05/13 06:48:42 mikel Exp $	*/
 
 /*

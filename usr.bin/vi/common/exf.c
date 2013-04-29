@@ -1,4 +1,4 @@
-/*	$OpenBSD: exf.c,v 1.26 2011/07/10 13:20:25 millert Exp $	*/
+/*	$OpenBSD: exf.c,v 1.27 2013/04/29 00:28:23 okan Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994

@@ -1,4 +1,4 @@
-/*	$OpenBSD: bt_open.c,v 1.14 2007/09/17 07:07:23 moritz Exp $	*/
+/*	$OpenBSD: bt_open.c,v 1.15 2013/04/29 00:28:23 okan Exp $	*/
 
 /*-
  * Copyright (c) 1990, 1993, 1994

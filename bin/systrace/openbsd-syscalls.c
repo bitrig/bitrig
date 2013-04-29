@@ -1,4 +1,4 @@
-/*	$OpenBSD: openbsd-syscalls.c,v 1.42 2013/04/03 03:36:25 guenther Exp $	*/
+/*	$OpenBSD: openbsd-syscalls.c,v 1.43 2013/04/29 00:28:23 okan Exp $	*/
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
