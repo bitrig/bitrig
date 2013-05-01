@@ -867,6 +867,9 @@ tmpfs_reg_resize(struct vnode *vp, off_t newsize)
 	newpages = round_page(newsize) >> PAGE_SHIFT;
 	KASSERT(oldpages == node->tn_spec.tn_reg.tn_aobj_pages);
 
+	if (newpages != oldpages && tmpfs_uio_cached(node))
+		tmpfs_uio_uncache(node);
+
 	if (newpages > oldpages) {
 		if (uao_grow(uobj, newpages) != 0)
 			return ENOSPC;
