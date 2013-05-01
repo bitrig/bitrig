@@ -856,7 +856,7 @@ tmpfs_reg_resize(struct vnode *vp, off_t newsize)
 	tmpfs_mount_t *tmp = VFS_TO_TMPFS(vp->v_mount);
 	tmpfs_node_t *node = VP_TO_TMPFS_NODE(vp);
 	struct uvm_object *uobj = node->tn_spec.tn_reg.tn_aobj;
-	size_t newpages, oldpages;
+	size_t newpages, oldpages, bytes;
 	off_t oldsize;
 
 	KASSERT(vp->v_type == VREG);
@@ -871,11 +871,12 @@ tmpfs_reg_resize(struct vnode *vp, off_t newsize)
 		tmpfs_uio_uncache(node);
 
 	if (newpages > oldpages) {
-		if (uao_grow(uobj, newpages) != 0)
-			return ENOSPC;
-
 		/* Increase the used-memory counter if getting extra pages. */
-		if (!tmpfs_mem_incr(tmp, (newpages - oldpages) << PAGE_SHIFT)) {
+		bytes = (newpages - oldpages) << PAGE_SHIFT;
+		if (tmpfs_mem_incr(tmp, bytes) == 0)
+			return ENOSPC;
+		if (uao_grow(uobj, newpages) != 0) {
+			tmpfs_mem_decr(tmp, bytes);
 			return ENOSPC;
 		}
 	}
