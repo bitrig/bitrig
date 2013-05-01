@@ -488,6 +488,7 @@ void
 uao_shrink_flush(struct uvm_object *uobj, int startpg, int endpg)
 {
 	KASSERT(startpg < endpg);
+	KASSERT(uobj->uo_refs == 1);
 	uao_flush(uobj, startpg << PAGE_SHIFT, endpg << PAGE_SHIFT, PGO_FREE);
 	uao_dropswap_range(uobj, startpg, endpg);
 }
