@@ -60,7 +60,14 @@ lockinit(struct lock *lkp, int prio, char *wmesg, int timo, int flags)
 int
 lockstatus(struct lock *lkp)
 {
-	return (rrw_status(&lkp->lk_lck));
+	int	status;
+
+	status = rrw_status(&lkp->lk_lck);
+	if (status == 1)
+		return LK_EXCLUSIVE;
+	if (status == -1)
+		return LK_SHARED;
+	return 0;
 }
 
 int

@@ -263,8 +263,13 @@ rw_exit(struct rwlock *rwl)
 int
 rw_status(struct rwlock *rwl)
 {
+	if (rwl->rwl_owner & RWLOCK_WRLOCK)
+		return 1;	// Write locked.
 
-	return (rwl->rwl_owner != 0L);
+	if (RWLOCK_OWNER(rwl) && !(rwl->rwl_owner & RWLOCK_WRLOCK))
+		return -1;	// Read locked.
+
+	return 0;	// Unlocked.
 }
 
 #ifdef DIAGNOSTIC
