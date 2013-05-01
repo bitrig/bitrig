@@ -1722,6 +1722,8 @@
 ./usr/include/ranlib.h
 ./usr/include/re_comp.h
 ./usr/include/readline
+./usr/include/readline/history.h
+./usr/include/readline/readline.h
 ./usr/include/readpassphrase.h
 ./usr/include/regex.h
 ./usr/include/regexp.h
@@ -12111,6 +12113,7 @@
 ./usr/share/man/man9/timeout_triggered.9
 ./usr/share/man/man9/timingsafe_bcmp.9
 ./usr/share/man/man9/tsleep.9
+./usr/share/man/man9/tstohz.9
 ./usr/share/man/man9/ttyprintf.9
 ./usr/share/man/man9/tvtohz.9
 ./usr/share/man/man9/uao_create.9
