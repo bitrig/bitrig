@@ -1682,14 +1682,8 @@ nfs_link(void *v)
 
 	info.nmi_v3 = NFS_ISV3(vp);
 
-	if (dvp->v_mount != vp->v_mount) {
-		pool_put(&namei_pool, cnp->cn_pnbuf);
-		if (vp == dvp)
-			vrele(dvp);
-		else
-			vput(dvp);
-		return (EXDEV);
-	}
+	KASSERT(vp->v_type != VDIR);
+	KASSERT(dvp->v_mount == vp->v_mount);
 
 	/*
 	 * Push all writes to the server, so that the attribute cache
