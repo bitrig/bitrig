@@ -246,9 +246,5 @@ pathadj(const char *input, char *adjusted)
 {
 
 	if (realpath(input, adjusted) == NULL)
-		warn("Warning: realpath %s", input);
-	if (strncmp(input, adjusted, MAXPATHLEN)) {
-		warnx("\"%s\" is a non-resolved or relative path.", input);
-		warnx("using \"%s\" instead.", adjusted);
-	}
+		err(1, "realpath %s", input);
 }
