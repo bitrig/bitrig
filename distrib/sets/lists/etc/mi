@@ -45,6 +45,7 @@
 ./etc/mail.rc
 ./etc/mail/Makefile
 ./etc/mail/aliases
+./etc/mail/aliases.db
 ./etc/mail/smtpd.conf
 ./etc/mail/spamd.conf
 ./etc/mailer.conf
