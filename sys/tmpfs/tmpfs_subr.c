@@ -881,11 +881,6 @@ tmpfs_reg_resize(struct vnode *vp, off_t newsize)
 		}
 	}
 
-	node->tn_spec.tn_reg.tn_aobj_pages = newpages;
-	node->tn_size = newsize;
-	uvm_vnp_setsize(vp, newsize);
-	uvm_vnp_uncache(vp);
-
 	if (newpages < oldpages) {
 		if (uao_shrink(uobj, newpages))
 			panic("shrink failed");
@@ -893,6 +888,11 @@ tmpfs_reg_resize(struct vnode *vp, off_t newsize)
 		/* Decrease the used-memory counter. */
 		tmpfs_mem_decr(tmp, (oldpages - newpages) << PAGE_SHIFT);
 	}
+
+	node->tn_spec.tn_reg.tn_aobj_pages = newpages;
+	node->tn_size = newsize;
+	uvm_vnp_setsize(vp, newsize);
+	uvm_vnp_uncache(vp);
 
 	if (newsize > oldsize) {
 		VN_KNOTE(vp, NOTE_EXTEND);
