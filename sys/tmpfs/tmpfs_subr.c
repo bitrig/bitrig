@@ -1197,7 +1197,7 @@ tmpfs_uio_cache(tmpfs_node_t *node, voff_t pgnum, vaddr_t pgptr)
 /*
  * Be gentle to kernel_map, don't allow more than 4MB in a single transaction.
  */
-#define TMPFS_UIO_MAXBYTES	((1 << 22) - PAGE_SIZE)
+#define TMPFS_UIO_MAXBYTES	((1 << 24) - PAGE_SIZE)
 
 int
 tmpfs_uiomove(tmpfs_node_t *node, struct uio *uio, vsize_t len)
