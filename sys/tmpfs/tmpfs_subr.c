@@ -886,9 +886,6 @@ tmpfs_reg_resize(struct vnode *vp, off_t newsize)
 	uvm_vnp_setsize(vp, newsize);
 	uvm_vnp_uncache(vp);
 
-	/*
-	 * Free "backing store".
-	 */
 	if (newpages < oldpages) {
 		if (uao_shrink(uobj, newpages))
 			panic("shrink failed");
@@ -896,9 +893,13 @@ tmpfs_reg_resize(struct vnode *vp, off_t newsize)
 		/* Decrease the used-memory counter. */
 		tmpfs_mem_decr(tmp, (oldpages - newpages) << PAGE_SHIFT);
 	}
+
 	if (newsize > oldsize) {
 		VN_KNOTE(vp, NOTE_EXTEND);
+	} else if (newsize < oldsize) {
+		VN_KNOTE(vp, NOTE_TRUNCATE);
 	}
+
 	return 0;
 }
 
