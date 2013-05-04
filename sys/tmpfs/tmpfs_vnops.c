@@ -622,6 +622,10 @@ tmpfs_write(void *v)
 	if (ioflag & IO_APPEND) {
 		uio->uio_offset = node->tn_size;
 	}
+	if (uio->uio_offset + uio->uio_resid > TMPFS_MAX_FILESIZE) {
+		error = EFBIG;
+		goto out;
+	}
 
 	extended = uio->uio_offset + uio->uio_resid > node->tn_size;
 	if (extended) {

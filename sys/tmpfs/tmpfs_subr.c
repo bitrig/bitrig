@@ -1148,6 +1148,12 @@ tmpfs_truncate(struct vnode *vp, off_t length)
 		error = 0;
 		goto out;
 	}
+
+	if (length > TMPFS_MAX_FILESIZE) {
+		error = EFBIG;
+		goto out;
+	}
+
 	error = tmpfs_reg_resize(vp, length);
 	if (error == 0) {
 		node->tn_status |= TMPFS_NODE_CHANGED | TMPFS_NODE_MODIFIED;
@@ -1193,11 +1199,6 @@ tmpfs_uio_cache(tmpfs_node_t *node, voff_t pgnum, vaddr_t pgptr)
 	node->tn_pgnum = pgnum;
 	node->tn_pgptr = pgptr;
 }
-
-/*
- * Be gentle to kernel_map, don't allow more than 4MB in a single transaction.
- */
-#define TMPFS_UIO_MAXBYTES	((1 << 24) - PAGE_SIZE)
 
 int
 tmpfs_uiomove(tmpfs_node_t *node, struct uio *uio, vsize_t len)
