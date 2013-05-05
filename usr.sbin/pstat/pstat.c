@@ -42,6 +42,7 @@
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
 #include <sys/mount.h>
+#include <tmpfs/tmpfs.h>
 #undef _KERNEL
 #include <nfs/nfsproto.h>
 #include <nfs/rpcv2.h>
@@ -121,6 +122,8 @@ void	ufs_header(void);
 int	ufs_print(struct vnode *);
 void	ext2fs_header(void);
 int	ext2fs_print(struct vnode *);
+void	tmpfs_header(void);
+int	tmpfs_print(struct vnode *);
 void	usage(void);
 void	vnode_header(void);
 void	vnode_print(struct vnode *, struct vnode *);
@@ -362,6 +365,9 @@ vnodemode(void)
 			} else if (!strncmp(mp->mnt_stat.f_fstypename, MOUNT_EXT2FS,
 			    MFSNAMELEN)) {
 				ext2fs_header();
+			} else if (!strncmp(mp->mnt_stat.f_fstypename, MOUNT_TMPFS,
+			    MFSNAMELEN)) {
+				tmpfs_header();
 			}
 			(void)printf("\n");
 		}
@@ -381,6 +387,9 @@ vnodemode(void)
 		} else if (!strncmp(mp->mnt_stat.f_fstypename, MOUNT_EXT2FS,
 		    MFSNAMELEN)) {
 			ext2fs_print(vp);
+		} else if (!strncmp(mp->mnt_stat.f_fstypename, MOUNT_TMPFS,
+		    MFSNAMELEN)) {
+			tmpfs_print(vp);
 		}
 		(void)printf("\n");
 	}
@@ -569,6 +578,37 @@ ext2fs_print(struct vnode *vp)
 	*flags = '\0';
 
 	(void)printf(" %6d %5s %2d", ip->i_number, flagbuf, ip->i_e2fs_size);
+	return (0);
+}
+
+void
+tmpfs_header(void)
+{
+	(void)printf(" FILEID     IFLAG SZ");
+}
+
+int
+tmpfs_print(struct vnode *vp)
+{
+	struct tmpfs_node tn;
+	char flagbuf[16], *flags = flagbuf;
+	int flag;
+
+	KGETRET(VTOI(vp), &tn, sizeof(struct tmpfs_node), "vnode's tmpfs node");
+
+	flag = tn.tn_status;
+
+	if (flag & TMPFS_NODE_ACCESSED)
+		*flags++ = 'A';
+	if (flag & TMPFS_NODE_CHANGED)
+		*flags++ = 'C';
+	if (flag & TMPFS_NODE_MODIFIED)
+		*flags++ = 'M';
+	if (flag == 0)
+		*flags++ = '-';
+	*flags = '\0';
+
+	(void)printf(" %6d %5s %2lld", tn.tn_id, flagbuf, tn.tn_size);
 	return (0);
 }
 

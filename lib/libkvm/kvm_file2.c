@@ -80,6 +80,7 @@
 #define _KERNEL
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
+#include <tmpfs/tmpfs.h>
 #undef _KERNEL
 
 #include <nfs/nfsproto.h>
@@ -840,6 +841,31 @@ spec_filestat(kvm_t *kd, struct kinfo_file2 *kf, struct vnode *vp)
 }
 
 static int
+tmpfs_filestat(kvm_t *kd, struct kinfo_file2 *kf, struct vnode *vp)
+{
+	struct tmpfs_node	tn;
+
+	if (KREAD(kd, (u_long)VTODE(vp), &tn)) {
+		_kvm_err(kd, kd->program, "can't read tmpfs_node at %p", VTODE(vp));
+		return (-1);
+	}
+
+	kf->va_fileid = tn.tn_id;
+	kf->va_mode = tn.tn_mode | _kvm_getftype(vp->v_type);
+	kf->va_size = tn.tn_size;
+	switch (tn.tn_type) {
+	case VBLK:
+	case VCHR:
+		kf->va_rdev = tn.tn_spec.tn_dev.tn_rdev;
+		break;
+	default:
+		kf->va_rdev = 0;
+	}
+
+	return (0);
+}
+
+static int
 filestat(kvm_t *kd, struct kinfo_file2 *kf, struct vnode *vp)
 {
 	int ret = 0;
@@ -864,6 +890,9 @@ filestat(kvm_t *kd, struct kinfo_file2 *kf, struct vnode *vp)
 			break;
 		case VT_UDF:
 			ret = _kvm_stat_udf(kd, kf, vp);
+			break;
+		case VT_TMPFS:
+			ret = tmpfs_filestat(kd, kf, vp);
 			break;
 		case VT_NON:
 			if (vp->v_flag & VCLONE)

@@ -35,7 +35,7 @@ LFILES=	fcntl.h syslog.h termios.h stdarg.h stdint.h varargs.h
 
 DIRS=	arpa protocols rpc rpcsvc
 LDIRS=	altq crypto ddb dev isofs msdosfs net netinet netinet6 \
-	netmpls netnatm net80211 netbt nfs scsi sys ufs uvm
+	netmpls netnatm net80211 netbt nfs scsi sys ufs uvm tmpfs
 
 # Places that need a prerequisite target met before includes
 PRDIRS=
