@@ -1,4 +1,4 @@
-/*	$OpenBSD: i915_gem.c,v 1.17 2013/05/09 15:00:41 kettenis Exp $	*/
+/*	$OpenBSD: i915_gem.c,v 1.18 2013/05/09 16:06:40 kettenis Exp $	*/
 /*
  * Copyright (c) 2008-2009 Owain G. Ainsworth <oga@openbsd.org>
  *
@@ -457,7 +457,7 @@ out:
 }
 
 int
-i915_gem_check_wedge(struct inteldrm_softc *dev_priv,
+i915_gem_check_wedge(struct drm_i915_private *dev_priv,
 		     bool interruptible)
 {
 	if (atomic_read(&dev_priv->mm.wedged)) {
@@ -547,7 +547,7 @@ int
 i915_wait_seqno(struct intel_ring_buffer *ring, uint32_t seqno)
 {
 	struct drm_device *dev = ring->dev;
-	drm_i915_private_t *dev_priv = dev->dev_private;
+	struct drm_i915_private *dev_priv = dev->dev_private;
 	bool interruptible = dev_priv->mm.interruptible;
 	int ret;
 
@@ -1015,17 +1015,28 @@ done:
 	return (ret);
 }
 
+/**
+ * i915_gem_mmap_gtt_ioctl - prepare an object for GTT mmap'ing
+ * @dev: DRM device
+ * @data: GTT mapping ioctl data
+ * @file: GEM object info
+ *
+ * Simply returns the fake offset to userspace so it can mmap it.
+ * The mmap call will end up in drm_gem_mmap(), which will set things
+ * up so we can get faults in the handler above.
+ *
+ * The fault handler will take care of binding the object into the GTT
+ * (since it may have been evicted to make room for something), allocating
+ * a fence register, and mapping the appropriate aperture address into
+ * userspace.
+ */
 int
 i915_gem_mmap_gtt_ioctl(struct drm_device *dev, void *data,
-    struct drm_file *file)
+			struct drm_file *file)
 {
-	struct inteldrm_softc *dev_priv;
-	struct drm_i915_gem_mmap_gtt *args;
+	struct drm_i915_gem_mmap_gtt *args = data;
 
-	dev_priv = dev->dev_private;
-	args = data;
-
-	return (i915_gem_mmap_gtt(file, dev, args->handle, &args->offset));
+	return i915_gem_mmap_gtt(file, dev, args->handle, &args->offset);
 }
 
 /* Immediately discard the backing storage */
@@ -1136,7 +1147,7 @@ i915_gem_object_move_to_active(struct drm_i915_gem_object *obj,
 			       struct intel_ring_buffer *ring)
 {
 	struct drm_device *dev = obj->base.dev;
-	drm_i915_private_t *dev_priv = dev->dev_private;
+	struct drm_i915_private *dev_priv = dev->dev_private;
 	u32 seqno = intel_ring_get_seqno(ring);
 
 	BUG_ON(ring == NULL);
@@ -1172,8 +1183,8 @@ i915_gem_object_move_to_active(struct drm_i915_gem_object *obj,
 void
 i915_gem_object_move_to_inactive_locked(struct drm_i915_gem_object *obj)
 {
-	struct drm_device	*dev = obj->base.dev;
-	struct inteldrm_softc	*dev_priv = dev->dev_private;
+	struct drm_device *dev = obj->base.dev;
+	struct drm_i915_private *dev_priv = dev->dev_private;
 
 	DRM_OBJ_ASSERT_LOCKED(&obj->base);
 	inteldrm_verify_inactive(dev_priv, __FILE__, __LINE__);
@@ -1215,7 +1226,7 @@ i915_gem_object_move_to_inactive(struct drm_i915_gem_object *obj)
 int
 i915_gem_handle_seqno_wrap(struct drm_device *dev)
 {
-	drm_i915_private_t *dev_priv = dev->dev_private;
+	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct intel_ring_buffer *ring;
 	int ret, i, j;
 
@@ -1247,7 +1258,7 @@ i915_gem_handle_seqno_wrap(struct drm_device *dev)
 int
 i915_gem_get_seqno(struct drm_device *dev, u32 *seqno)
 {
-	drm_i915_private_t *dev_priv = dev->dev_private;
+	struct drm_i915_private *dev_priv = dev->dev_private;
 
 	/* reserve 0 for non-seqno */
 	if (dev_priv->next_seqno == 0) {
@@ -1384,7 +1395,7 @@ i915_gem_reset_ring_lists(drm_i915_private_t *dev_priv,
 void
 i915_gem_reset_fences(struct drm_device *dev)
 {
-	drm_i915_private_t *dev_priv = dev->dev_private;
+	struct drm_i915_private *dev_priv = dev->dev_private;
 	int i;
 
 	for (i = 0; i < dev_priv->num_fence_regs; i++) {
@@ -1406,7 +1417,7 @@ i915_gem_reset_fences(struct drm_device *dev)
 void
 i915_gem_reset(struct drm_device *dev)
 {
-	drm_i915_private_t *dev_priv = dev->dev_private;
+	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct drm_i915_gem_object *obj;
 	struct intel_ring_buffer *ring;
 	int i;
@@ -1495,7 +1506,7 @@ i915_gem_retire_requests(struct drm_device *dev)
 void
 i915_gem_retire_work_handler(void *arg1, void *unused)
 {
-	struct inteldrm_softc *dev_priv = arg1;
+	drm_i915_private_t *dev_priv = arg1;
 	struct drm_device *dev;
 	struct intel_ring_buffer *ring;
 	bool idle;
@@ -1521,6 +1532,7 @@ i915_gem_retire_work_handler(void *arg1, void *unused)
 
 		idle &= list_empty(&ring->request_list);
 	}
+
 	if (!dev_priv->mm.suspended && !idle)
 		timeout_add_sec(&dev_priv->mm.retire_timer, 1);
 	if (idle)
@@ -1870,7 +1882,7 @@ i915_gem_object_update_fence(struct drm_i915_gem_object *obj,
 					 struct drm_i915_fence_reg *fence,
 					 bool enable)
 {
-	drm_i915_private_t *dev_priv = obj->base.dev->dev_private;
+	struct drm_i915_private *dev_priv = obj->base.dev->dev_private;
 	int reg = fence_number(dev_priv, fence);
 
 	i915_gem_write_fence(obj->base.dev, reg, enable ? obj : NULL);
@@ -1910,7 +1922,7 @@ i915_gem_object_flush_fence(struct drm_i915_gem_object *obj)
 int
 i915_gem_object_put_fence(struct drm_i915_gem_object *obj)
 {
-	drm_i915_private_t *dev_priv = obj->base.dev->dev_private;
+	struct drm_i915_private *dev_priv = obj->base.dev->dev_private;
 	int ret;
 
 	ret = i915_gem_object_flush_fence(obj);
@@ -1931,7 +1943,7 @@ i915_gem_object_put_fence(struct drm_i915_gem_object *obj)
 struct drm_i915_fence_reg *
 i915_find_fence_reg(struct drm_device *dev)
 {
-	drm_i915_private_t *dev_priv = dev->dev_private;
+	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct drm_i915_fence_reg *reg, *avail;
 	int i;
 
@@ -1978,7 +1990,7 @@ int
 i915_gem_object_get_fence(struct drm_i915_gem_object *obj)
 {
 	struct drm_device *dev = obj->base.dev;
-	drm_i915_private_t *dev_priv = dev->dev_private;
+	struct drm_i915_private *dev_priv = dev->dev_private;
 	bool enable = obj->tiling_mode != I915_TILING_NONE;
 	struct drm_i915_fence_reg *reg;
 	int ret;
