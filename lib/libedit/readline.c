@@ -2242,3 +2242,8 @@ rl_on_new_line(void)
 {
 	return 0;
 }
+
+void
+rl_free_line_state(void)
+{
+}
