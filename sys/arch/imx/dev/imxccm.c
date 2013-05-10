@@ -19,6 +19,7 @@
 #include <sys/systm.h>
 #include <sys/queue.h>
 #include <sys/malloc.h>
+#include <sys/sysctl.h>
 #include <sys/device.h>
 #include <sys/evcount.h>
 #include <sys/socket.h>
@@ -64,6 +65,12 @@
 #define CCM_CMEOR	0x88
 
 /* ANALOG */
+#define CCM_ANALOG_PLL_ARM			0x4000
+#define CCM_ANALOG_PLL_ARM_SET			0x4004
+#define CCM_ANALOG_PLL_ARM_CLR			0x4008
+#define CCM_ANALOG_PLL_USB1			0x4010
+#define CCM_ANALOG_PLL_USB1_SET			0x4014
+#define CCM_ANALOG_PLL_USB1_CLR			0x4018
 #define CCM_ANALOG_PLL_USB2			0x4020
 #define CCM_ANALOG_PLL_USB2_SET			0x4024
 #define CCM_ANALOG_PLL_USB2_CLR			0x4028
@@ -75,9 +82,19 @@
 #define CCM_ANALOG_PLL_ENET			0x40e0
 #define CCM_ANALOG_PLL_ENET_SET			0x40e4
 #define CCM_ANALOG_PLL_ENET_CLR			0x40e8
+#define CCM_ANALOG_PFD_480			0x40f0
+#define CCM_ANALOG_PFD_480_SET			0x40f4
+#define CCM_ANALOG_PFD_480_CLR			0x40f8
+#define CCM_ANALOG_PFD_528			0x4100
+#define CCM_ANALOG_PFD_528_SET			0x4104
+#define CCM_ANALOG_PFD_528_CLR			0x4108
 #define CCM_PMU_MISC1				0x4160
 
 /* bits and bytes */
+#define CCM_CCSR_PLL3_SW_CLK_SEL		(1 << 0)
+#define CCM_CCSR_PLL2_SW_CLK_SEL		(1 << 1)
+#define CCM_CCSR_PLL1_SW_CLK_SEL		(1 << 2)
+#define CCM_CCSR_STEP_SEL			(1 << 8)
 #define CCM_CBCDR_IPG_PODF_SHIFT		8
 #define CCM_CBCDR_IPG_PODF_MASK			0x3
 #define CCM_CBCDR_AHB_PODF_SHIFT		10
@@ -98,6 +115,8 @@
 #define CCM_CCGR5_100M_SATA			(3 << 4)
 #define CCM_CCGR6_USBOH3			(3 << 0)
 #define CCM_CSCMR1_PERCLK_CLK_SEL_MASK		0x1f
+#define CCM_ANALOG_PLL_ARM_DIV_SELECT_MASK	0x7f
+#define CCM_ANALOG_PLL_ARM_BYPASS		(1 << 16)
 #define CCM_ANALOG_PLL_USB2_DIV_SELECT_MASK	0x1
 #define CCM_ANALOG_PLL_USB2_EN_USB_CLKS		(1 << 6)
 #define CCM_ANALOG_PLL_USB2_POWER		(1 << 12)
@@ -115,16 +134,24 @@
 #define CCM_ANALOG_PLL_ENET_125M_PCIE		(1 << 19)
 #define CCM_ANALOG_PLL_ENET_100M_SATA		(1 << 20)
 #define CCM_ANALOG_PLL_ENET_LOCK		(1 << 31)
+#define CCM_ANALOG_PFD_480_PFDx_FRAC(x, y)	(((x) >> ((y) << 3)) & 0x3f)
+#define CCM_ANALOG_PFD_528_PFDx_FRAC(x, y)	(((x) >> ((y) << 3)) & 0x3f)
 #define CCM_PMU_MISC1_LVDSCLK1_CLK_SEL_SATA	(0xB << 0)
 #define CCM_PMU_MISC1_LVDSCLK1_CLK_SEL_MASK	(0x1f << 0)
 #define CCM_PMU_MISC1_LVDSCLK1_OBEN		(1 << 10)
 #define CCM_PMU_MISC1_LVDSCLK1_IBEN		(1 << 12)
 
 #define HCLK_FREQ				24000
-#define PLL2_PFD0_FREQ				352000
-#define PLL2_PFD2_FREQ				396000
-#define PLL2_PFD2_DIV_FREQ			198000
 #define PLL3_80M				80000
+
+#define HREAD4(sc, reg)							\
+	(bus_space_read_4((sc)->sc_iot, (sc)->sc_ioh, (reg)))
+#define HWRITE4(sc, reg, val)						\
+	bus_space_write_4((sc)->sc_iot, (sc)->sc_ioh, (reg), (val))
+#define HSET4(sc, reg, bits)						\
+	HWRITE4((sc), (reg), HREAD4((sc), (reg)) | (bits))
+#define HCLR4(sc, reg, bits)						\
+	HWRITE4((sc), (reg), HREAD4((sc), (reg)) & ~(bits))
 
 struct imxccm_softc {
 	struct device		sc_dev;
@@ -132,21 +159,42 @@ struct imxccm_softc {
 	bus_space_handle_t	sc_ioh;
 };
 
-enum pll_clocks {
+enum clocks {
+	/* OSC */
+	OSC,		/* 24 MHz OSC */
+
+	/* PLLs */
 	ARM_PLL1,	/* ARM core PLL */
-	SYS_PLL2,	/* System PLL*/
-	USB1_PLL3,	/* OTG USB PLL */
-	USB2_PLL,	/* Host USB PLL */
+	SYS_PLL2,	/* System PLL: 528 MHz */
+	USB1_PLL3,	/* OTG USB PLL: 480 MHz */
+	USB2_PLL,	/* Host USB PLL: 480 MHz */
 	AUD_PLL4,	/* Audio PLL */
 	VID_PLL5,	/* Video PLL */
 	ENET_PLL6,	/* ENET PLL */
 	MLB_PLL,	/* MLB PLL */
+
+	/* SYS_PLL2 PFDs */
+	SYS_PLL2_PFD0,	/* 352 MHz */
+	SYS_PLL2_PFD1,	/* 594 MHz */
+	SYS_PLL2_PFD2,	/* 396 MHz */
+
+	/* USB1_PLL3 PFDs */
+	USB1_PLL3_PFD0,	/* 720 MHz */
+	USB1_PLL3_PFD1,	/* 540 MHz */
+	USB1_PLL3_PFD2,	/* 508.2 MHz */
+	USB1_PLL3_PFD3,	/* 454.7 MHz */
 };
 
 struct imxccm_softc *imxccm_sc;
 
 void imxccm_attach(struct device *parent, struct device *self, void *args);
-unsigned int imxccm_decode_pll(enum pll_clocks, unsigned int);
+int imxccm_cpuspeed(int *);
+unsigned int imxccm_decode_pll(enum clocks, unsigned int);
+unsigned int imxccm_get_pll2_pfd(unsigned int);
+unsigned int imxccm_get_pll3_pfd(unsigned int);
+unsigned int imxccm_get_armclk(void);
+void imxccm_armclk_set_parent(enum clocks);
+void imxccm_armclk_set_freq(unsigned int);
 unsigned int imxccm_get_usdhx(int x);
 unsigned int imxccm_get_periphclk(void);
 unsigned int imxccm_get_fecclk(void);
@@ -177,33 +225,49 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 	struct imx_attach_args *ia = args;
 	struct imxccm_softc *sc = (struct imxccm_softc *) self;
 
+	imxccm_sc = sc;
 	sc->sc_iot = ia->ia_iot;
 	if (bus_space_map(sc->sc_iot, ia->ia_dev->mem[0].addr,
 	    ia->ia_dev->mem[0].size, 0, &sc->sc_ioh))
 		panic("imxccm_attach: bus_space_map failed!");
 
-	printf(": imx6 rev 1.%d",
-	    bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_ANALOG_DIGPROG) &
-	    CCM_ANALOG_DIGPROG_MINOR_MASK);
+	printf(": imx6 rev 1.%d CPU freq: %d MHz",
+	    HREAD4(sc, CCM_ANALOG_DIGPROG) & CCM_ANALOG_DIGPROG_MINOR_MASK,
+	    imxccm_get_armclk() / 1000);
 
 	printf("\n");
-	imxccm_sc = sc;
+
+	cpu_cpuspeed = imxccm_cpuspeed;
+}
+
+int
+imxccm_cpuspeed(int *freq)
+{
+	*freq = imxccm_get_armclk() / 1000;
+	return (0);
 }
 
 unsigned int
-imxccm_decode_pll(enum pll_clocks pll, unsigned int freq)
+imxccm_decode_pll(enum clocks pll, unsigned int freq)
 {
 	struct imxccm_softc *sc = imxccm_sc;
 	uint32_t div;
 
 	switch (pll) {
+	case ARM_PLL1:
+		if (HREAD4(sc, CCM_ANALOG_PLL_ARM)
+		    & CCM_ANALOG_PLL_ARM_BYPASS)
+			return freq;
+		div = HREAD4(sc, CCM_ANALOG_PLL_ARM)
+		    & CCM_ANALOG_PLL_ARM_DIV_SELECT_MASK;
+		return (freq * div) / 2;
 	case SYS_PLL2:
-		div = bus_space_read_4(sc->sc_iot, sc->sc_ioh,
-		     CCM_ANALOG_PLL_SYS) & CCM_ANALOG_PLL_SYS_DIV_SELECT_MASK;
+		div = HREAD4(sc, CCM_ANALOG_PLL_SYS)
+		    & CCM_ANALOG_PLL_SYS_DIV_SELECT_MASK;
 		return freq * (20 + (div << 1));
 	case USB1_PLL3:
-		div = bus_space_read_4(sc->sc_iot, sc->sc_ioh,
-		    CCM_ANALOG_PLL_USB2) & CCM_ANALOG_PLL_USB2_DIV_SELECT_MASK;
+		div = HREAD4(sc, CCM_ANALOG_PLL_USB2)
+		    & CCM_ANALOG_PLL_USB2_DIV_SELECT_MASK;
 		return freq * (20 + (div << 1));
 	default:
 		return 0;
@@ -211,24 +275,95 @@ imxccm_decode_pll(enum pll_clocks pll, unsigned int freq)
 }
 
 unsigned int
+imxccm_get_pll2_pfd(unsigned int pfd)
+{
+	struct imxccm_softc *sc = imxccm_sc;
+
+	return imxccm_decode_pll(SYS_PLL2, HCLK_FREQ) * 18
+	    / CCM_ANALOG_PFD_528_PFDx_FRAC(HREAD4(sc, CCM_ANALOG_PFD_528), pfd);
+}
+
+unsigned int
+imxccm_get_pll3_pfd(unsigned int pfd)
+{
+	struct imxccm_softc *sc = imxccm_sc;
+
+	return imxccm_decode_pll(USB1_PLL3, HCLK_FREQ) * 18
+	    / CCM_ANALOG_PFD_480_PFDx_FRAC(HREAD4(sc, CCM_ANALOG_PFD_480), pfd);
+}
+
+unsigned int
+imxccm_get_armclk()
+{
+	struct imxccm_softc *sc = imxccm_sc;
+
+	uint32_t ccsr = HREAD4(sc, CCM_CCSR);
+
+	if (!(ccsr & CCM_CCSR_PLL1_SW_CLK_SEL))
+		return imxccm_decode_pll(ARM_PLL1, HCLK_FREQ);
+	else if (ccsr & CCM_CCSR_STEP_SEL)
+		return imxccm_get_pll2_pfd(2);
+	else
+		return HCLK_FREQ;
+}
+
+void
+imxccm_armclk_set_parent(enum clocks clock)
+{
+	struct imxccm_softc *sc = imxccm_sc;
+
+	switch (clock)
+	{
+	case ARM_PLL1:
+		/* jump onto pll1 */
+		HCLR4(sc, CCM_CCSR, CCM_CCSR_PLL1_SW_CLK_SEL);
+		/* put step clk on OSC, power saving */
+		HCLR4(sc, CCM_CCSR, CCM_CCSR_STEP_SEL);
+		break;
+	case OSC:
+		/* put step clk on OSC */
+		HCLR4(sc, CCM_CCSR, CCM_CCSR_STEP_SEL);
+		/* jump onto step clk */
+		HSET4(sc, CCM_CCSR, CCM_CCSR_PLL1_SW_CLK_SEL);
+		break;
+	case SYS_PLL2_PFD2:
+		/* put step clk on pll2-pfd2 400 MHz */
+		HSET4(sc, CCM_CCSR, CCM_CCSR_STEP_SEL);
+		/* jump onto step clk */
+		HSET4(sc, CCM_CCSR, CCM_CCSR_PLL1_SW_CLK_SEL);
+		break;
+	default:
+		panic("%s: parent not possible for arm clk", __func__);
+	}
+}
+
+void
+imxccm_armclk_set_freq(unsigned int freq)
+{
+	if (freq > 1296000 || freq < 648000)
+		panic("%s: frequency must be between 648MHz and 1296MHz!",
+		    __func__);
+}
+
+unsigned int
 imxccm_get_usdhx(int x)
 {
 	struct imxccm_softc *sc = imxccm_sc;
 
-	uint32_t cscmr1 = bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_CSCMR1);
-	uint32_t cscdr1 = bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_CSCDR1);
+	uint32_t cscmr1 = HREAD4(sc, CCM_CSCMR1);
+	uint32_t cscdr1 = HREAD4(sc, CCM_CSCDR1);
 	uint32_t podf, clkroot;
 
-	// Uneven bitsetting. Damn you.
+	// Odd bitsetting. Damn you.
 	if (x == 1)
 		podf = ((cscdr1 >> 11) & CCM_CSCDR1_USDHCx_PODF_MASK);
 	else
 		podf = ((cscdr1 >> (10 + 3*x)) & CCM_CSCDR1_USDHCx_PODF_MASK);
 
 	if (cscmr1 & (1 << CCM_CSCDR1_USDHCx_CLK_SEL_SHIFT(x)))
-		clkroot = PLL2_PFD0_FREQ;
+		clkroot = imxccm_get_pll2_pfd(0); // 352 MHz
 	else
-		clkroot = PLL2_PFD2_FREQ;
+		clkroot = imxccm_get_pll2_pfd(2); // 396 MHz
 
 	return clkroot / (podf + 1);
 }
@@ -239,8 +374,7 @@ imxccm_get_uartclk()
 	struct imxccm_softc *sc = imxccm_sc;
 
 	uint32_t clkroot = PLL3_80M;
-	uint32_t podf = bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_CSCDR1)
-	    & CCM_CSCDR1_UART_PODF_MASK;
+	uint32_t podf = HREAD4(sc, CCM_CSCDR1) & CCM_CSCDR1_UART_PODF_MASK;
 
 	return clkroot / (podf + 1);
 }
@@ -250,9 +384,9 @@ imxccm_get_periphclk()
 {
 	struct imxccm_softc *sc = imxccm_sc;
 
-	if ((bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_CBCDR)
-	    >> CCM_CBCDR_PERIPH_CLK_SEL_SHIFT) & CCM_CBCDR_PERIPH_CLK_SEL_MASK) {
-		switch((bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_CBCMR)
+	if ((HREAD4(sc, CCM_CBCDR) >> CCM_CBCDR_PERIPH_CLK_SEL_SHIFT)
+		    & CCM_CBCDR_PERIPH_CLK_SEL_MASK) {
+		switch((HREAD4(sc, CCM_CBCMR)
 		    >> CCM_CBCMR_PERIPH_CLK2_SEL_SHIFT) & CCM_CBCMR_PERIPH_CLK2_SEL_MASK) {
 		case 0:
 			return imxccm_decode_pll(USB1_PLL3, HCLK_FREQ);
@@ -264,17 +398,17 @@ imxccm_get_periphclk()
 		}
 	
 	} else {
-		switch((bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_CBCMR)
+		switch((HREAD4(sc, CCM_CBCMR)
 		    >> CCM_CBCMR_PRE_PERIPH_CLK_SEL_SHIFT) & CCM_CBCMR_PRE_PERIPH_CLK_SEL_MASK) {
 		default:
 		case 0:
 			return imxccm_decode_pll(SYS_PLL2, HCLK_FREQ);
 		case 1:
-			return PLL2_PFD2_FREQ;
+			return imxccm_get_pll2_pfd(2); // 396 MHz
 		case 2:
-			return PLL2_PFD0_FREQ;
+			return imxccm_get_pll2_pfd(0); // 352 MHz
 		case 3:
-			return PLL2_PFD2_DIV_FREQ;
+			return imxccm_get_pll2_pfd(2) / 2; // 198 MHz
 		}
 	}
 }
@@ -285,7 +419,7 @@ imxccm_get_fecclk()
 	struct imxccm_softc *sc = imxccm_sc;
 	uint32_t div = 0;
 
-	switch (bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_ANALOG_PLL_ENET) & 0x3)
+	switch (HREAD4(sc, CCM_ANALOG_PLL_ENET) & 0x3)
 	{
 		case 0:
 			div = 20;
@@ -306,8 +440,8 @@ imxccm_get_ahbclk()
 	struct imxccm_softc *sc = imxccm_sc;
 	uint32_t ahb_podf;
 
-	ahb_podf = (bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_CBCDR)
-	    >> CCM_CBCDR_AHB_PODF_SHIFT) & CCM_CBCDR_AHB_PODF_MASK;
+	ahb_podf = (HREAD4(sc, CCM_CBCDR) >> CCM_CBCDR_AHB_PODF_SHIFT)
+	    & CCM_CBCDR_AHB_PODF_MASK;
 	return imxccm_get_periphclk() / (ahb_podf + 1);
 }
 
@@ -317,8 +451,8 @@ imxccm_get_ipgclk()
 	struct imxccm_softc *sc = imxccm_sc;
 	uint32_t ipg_podf;
 
-	ipg_podf = (bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_CBCDR)
-	    >> CCM_CBCDR_IPG_PODF_SHIFT) & CCM_CBCDR_IPG_PODF_MASK;
+	ipg_podf = (HREAD4(sc, CCM_CBCDR) >> CCM_CBCDR_IPG_PODF_SHIFT)
+	    & CCM_CBCDR_IPG_PODF_MASK;
 	return imxccm_get_ahbclk() / (ipg_podf + 1);
 }
 
@@ -328,8 +462,7 @@ imxccm_get_ipg_perclk()
 	struct imxccm_softc *sc = imxccm_sc;
 	uint32_t ipg_podf;
 
-	ipg_podf = bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_CSCMR1)
-	    & CCM_CSCMR1_PERCLK_CLK_SEL_MASK;
+	ipg_podf = HREAD4(sc, CCM_CSCMR1) & CCM_CSCMR1_PERCLK_CLK_SEL_MASK;
 
 	return imxccm_get_ipgclk() / (ipg_podf + 1);
 }
@@ -339,8 +472,7 @@ imxccm_enable_i2c(int x)
 {
 	struct imxccm_softc *sc = imxccm_sc;
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, CCM_CCGR2,
-	    bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_CCGR2) | CCM_CCGR2_I2C(x));
+	HSET4(sc, CCM_CCGR2, CCM_CCGR2_I2C(x));
 }
 
 void
@@ -348,8 +480,7 @@ imxccm_enable_usboh3(void)
 {
 	struct imxccm_softc *sc = imxccm_sc;
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, CCM_CCGR6,
-	    bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_CCGR6) | CCM_CCGR6_USBOH3);
+	HSET4(sc, CCM_CCGR6, CCM_CCGR6_USBOH3);
 }
 
 void
@@ -357,19 +488,16 @@ imxccm_enable_pll_enet(void)
 {
 	struct imxccm_softc *sc = imxccm_sc;
 
-	if (bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_ANALOG_PLL_ENET) & CCM_ANALOG_PLL_ENET_ENABLE)
+	if (HREAD4(sc, CCM_ANALOG_PLL_ENET) & CCM_ANALOG_PLL_ENET_ENABLE)
 		return;
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, CCM_ANALOG_PLL_ENET,
-	    bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_ANALOG_PLL_ENET) & ~CCM_ANALOG_PLL_ENET_POWERDOWN);
+	HCLR4(sc, CCM_ANALOG_PLL_ENET, CCM_ANALOG_PLL_ENET_POWERDOWN);
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, CCM_ANALOG_PLL_ENET,
-	    bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_ANALOG_PLL_ENET) | CCM_ANALOG_PLL_ENET_ENABLE);
+	HSET4(sc, CCM_ANALOG_PLL_ENET, CCM_ANALOG_PLL_ENET_ENABLE);
 
-	while(!(bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_ANALOG_PLL_ENET) & CCM_ANALOG_PLL_ENET_LOCK));
+	while(!(HREAD4(sc, CCM_ANALOG_PLL_ENET) & CCM_ANALOG_PLL_ENET_LOCK));
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, CCM_ANALOG_PLL_ENET,
-	    bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_ANALOG_PLL_ENET) & ~CCM_ANALOG_PLL_ENET_BYPASS);
+	HCLR4(sc, CCM_ANALOG_PLL_ENET, CCM_ANALOG_PLL_ENET_BYPASS);
 }
 
 void
@@ -378,11 +506,9 @@ imxccm_enable_enet(void)
 	struct imxccm_softc *sc = imxccm_sc;
 
 	imxccm_enable_pll_enet();
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, CCM_ANALOG_PLL_ENET_SET,
-	    CCM_ANALOG_PLL_ENET_DIV_125M);
+	HWRITE4(sc, CCM_ANALOG_PLL_ENET_SET, CCM_ANALOG_PLL_ENET_DIV_125M);
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, CCM_CCGR1,
-	    bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_CCGR1) | CCM_CCGR1_ENET);
+	HSET4(sc, CCM_CCGR1, CCM_CCGR1_ENET);
 }
 
 void
@@ -391,11 +517,9 @@ imxccm_enable_sata(void)
 	struct imxccm_softc *sc = imxccm_sc;
 
 	imxccm_enable_pll_enet();
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, CCM_ANALOG_PLL_ENET_SET,
-	    CCM_ANALOG_PLL_ENET_100M_SATA);
+	HWRITE4(sc, CCM_ANALOG_PLL_ENET_SET, CCM_ANALOG_PLL_ENET_100M_SATA);
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, CCM_CCGR5,
-	    bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_CCGR5) | CCM_CCGR5_100M_SATA);
+	HSET4(sc, CCM_CCGR5, CCM_CCGR5_100M_SATA);
 }
 
 void
@@ -403,16 +527,16 @@ imxccm_enable_pcie(void)
 {
 	struct imxccm_softc *sc = imxccm_sc;
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, CCM_PMU_MISC1,
-	    (bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_PMU_MISC1) & ~CCM_PMU_MISC1_LVDSCLK1_CLK_SEL_MASK) |
-		CCM_PMU_MISC1_LVDSCLK1_CLK_SEL_SATA | CCM_PMU_MISC1_LVDSCLK1_OBEN | CCM_PMU_MISC1_LVDSCLK1_IBEN );
+	HWRITE4(sc, CCM_PMU_MISC1,
+	    (HREAD4(sc, CCM_PMU_MISC1) & ~CCM_PMU_MISC1_LVDSCLK1_CLK_SEL_MASK)
+	    | CCM_PMU_MISC1_LVDSCLK1_CLK_SEL_SATA
+	    | CCM_PMU_MISC1_LVDSCLK1_OBEN
+	    | CCM_PMU_MISC1_LVDSCLK1_IBEN);
 
 	imxccm_enable_pll_enet();
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, CCM_ANALOG_PLL_ENET_SET,
-	    CCM_ANALOG_PLL_ENET_125M_PCIE);
+	HWRITE4(sc, CCM_ANALOG_PLL_ENET_SET, CCM_ANALOG_PLL_ENET_125M_PCIE);
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, CCM_CCGR4,
-	    bus_space_read_4(sc->sc_iot, sc->sc_ioh, CCM_CCGR4) | CCM_CCGR4_125M_PCIE);
+	HSET4(sc, CCM_CCGR4, CCM_CCGR4_125M_PCIE);
 }
 
 void
@@ -420,8 +544,9 @@ imxccm_disable_usb2_chrg_detect(void)
 {
 	struct imxccm_softc *sc = imxccm_sc;
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, CCM_ANALOG_USB2_CHRG_DETECT_SET,
-	    CCM_ANALOG_USB2_CHRG_DETECT_CHK_CHRG_B | CCM_ANALOG_USB2_CHRG_DETECT_EN_B);
+	HWRITE4(sc, CCM_ANALOG_USB2_CHRG_DETECT_SET,
+	      CCM_ANALOG_USB2_CHRG_DETECT_CHK_CHRG_B
+	    | CCM_ANALOG_USB2_CHRG_DETECT_EN_B);
 }
 
 void
@@ -429,8 +554,10 @@ imxccm_enable_pll_usb2(void)
 {
 	struct imxccm_softc *sc = imxccm_sc;
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, CCM_ANALOG_PLL_USB2_CLR, CCM_ANALOG_PLL_USB2_BYPASS);
+	HWRITE4(sc, CCM_ANALOG_PLL_USB2_CLR, CCM_ANALOG_PLL_USB2_BYPASS);
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, CCM_ANALOG_PLL_USB2_SET,
-	    CCM_ANALOG_PLL_USB2_ENABLE | CCM_ANALOG_PLL_USB2_POWER | CCM_ANALOG_PLL_USB2_EN_USB_CLKS);
+	HWRITE4(sc, CCM_ANALOG_PLL_USB2_SET,
+	      CCM_ANALOG_PLL_USB2_ENABLE
+	    | CCM_ANALOG_PLL_USB2_POWER
+	    | CCM_ANALOG_PLL_USB2_EN_USB_CLKS);
 }
