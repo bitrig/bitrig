@@ -172,6 +172,7 @@
 ./sbin/mount_mfs
 ./sbin/mount_msdos
 ./sbin/mount_nfs
+./sbin/mount_tmpfs
 ./sbin/mount_udf
 ./sbin/mount_vnd
 ./sbin/mountd
@@ -1963,6 +1964,11 @@
 ./usr/include/termios.h
 ./usr/include/tgmath.h
 ./usr/include/time.h
+./usr/include/tmpfs
+./usr/include/tmpfs/tmpfs.h
+./usr/include/tmpfs/tmpfs_fifoops.h
+./usr/include/tmpfs/tmpfs_specops.h
+./usr/include/tmpfs/tmpfs_vnops.h
 ./usr/include/ttyent.h
 ./usr/include/tzfile.h
 ./usr/include/ufs
@@ -2032,7 +2038,7 @@
 ./usr/lib/libasn1.so.18.0
 ./usr/lib/libasn1_p.a
 ./usr/lib/libc.a
-./usr/lib/libc.so.68.0
+./usr/lib/libc.so.68.1
 ./usr/lib/libc_p.a
 ./usr/lib/libcom_err.a
 ./usr/lib/libcom_err.so.18.0
@@ -2120,7 +2126,7 @@
 ./usr/lib/libperl.a
 ./usr/lib/libperl.so.13.0
 ./usr/lib/libpthread.a
-./usr/lib/libpthread.so.17.0
+./usr/lib/libpthread.so.17.1
 ./usr/lib/libpthread_p.a
 ./usr/lib/librpcsvc.a
 ./usr/lib/librpcsvc.so.1.2
@@ -5286,10 +5292,8 @@
 ./usr/share/man/man2/adjtime.2
 ./usr/share/man/man2/amd64
 ./usr/share/man/man2/amd64/amd64_get_fsbase.2
-./usr/share/man/man2/amd64/amd64_get_ioperm.2
 ./usr/share/man/man2/amd64/amd64_iopl.2
 ./usr/share/man/man2/amd64/amd64_set_fsbase.2
-./usr/share/man/man2/amd64/amd64_set_ioperm.2
 ./usr/share/man/man2/arm_drain_writebuf.2
 ./usr/share/man/man2/arm_sync_icache.2
 ./usr/share/man/man2/bind.2
@@ -5414,9 +5418,11 @@
 ./usr/share/man/man2/pipe.2
 ./usr/share/man/man2/poll.2
 ./usr/share/man/man2/posix_madvise.2
+./usr/share/man/man2/ppoll.2
 ./usr/share/man/man2/pread.2
 ./usr/share/man/man2/preadv.2
 ./usr/share/man/man2/profil.2
+./usr/share/man/man2/pselect.2
 ./usr/share/man/man2/ptrace.2
 ./usr/share/man/man2/pwrite.2
 ./usr/share/man/man2/pwritev.2
@@ -11292,6 +11298,7 @@
 ./usr/share/man/man8/mount_mfs.8
 ./usr/share/man/man8/mount_msdos.8
 ./usr/share/man/man8/mount_nfs.8
+./usr/share/man/man8/mount_tmpfs.8
 ./usr/share/man/man8/mount_udf.8
 ./usr/share/man/man8/mount_vnd.8
 ./usr/share/man/man8/mountd.8
