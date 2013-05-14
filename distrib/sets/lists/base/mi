@@ -2038,7 +2038,7 @@
 ./usr/lib/libasn1.so.18.0
 ./usr/lib/libasn1_p.a
 ./usr/lib/libc.a
-./usr/lib/libc.so.68.1
+./usr/lib/libc.so.68.2
 ./usr/lib/libc_p.a
 ./usr/lib/libcom_err.a
 ./usr/lib/libcom_err.so.18.0
@@ -8487,6 +8487,7 @@
 ./usr/share/man/man3/memchr.3
 ./usr/share/man/man3/memcmp.3
 ./usr/share/man/man3/memcpy.3
+./usr/share/man/man3/memmem.3
 ./usr/share/man/man3/memmove.3
 ./usr/share/man/man3/memrchr.3
 ./usr/share/man/man3/memset.3
