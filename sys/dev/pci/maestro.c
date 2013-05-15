@@ -1,4 +1,4 @@
-/*	$OpenBSD: maestro.c,v 1.33 2012/10/21 16:50:58 deraadt Exp $	*/
+/*	$OpenBSD: maestro.c,v 1.34 2013/05/15 08:29:24 ratchov Exp $	*/
 /* $FreeBSD: /c/ncvs/src/sys/dev/sound/pci/maestro.c,v 1.3 2000/11/21 12:22:11 julian Exp $ */
 /*
  * FreeBSD's ESS Agogo/Maestro driver 
@@ -896,10 +896,15 @@ int
 maestro_set_port(void *self, mixer_ctrl_t *cp)
 {
 	struct ac97_codec_if *c = ((struct maestro_softc *)self)->codec_if;
+	int rc;
 
-	if (c)
-		return (c->vtbl->mixer_set_port(c, cp));
-	else
+	if (c) {
+		/* interrupts use the mixer */
+		mtx_enter(&audio_lock);
+		rc = c->vtbl->mixer_set_port(c, cp);
+		mtx_leave(&audio_lock);
+		return rc;
+	} else
 		return (ENXIO);
 }
 
@@ -907,10 +912,15 @@ int
 maestro_get_port(void *self, mixer_ctrl_t *cp)
 {
 	struct ac97_codec_if *c = ((struct maestro_softc *)self)->codec_if;
+	int rc;
 
-	if (c)
-		return (c->vtbl->mixer_get_port(c, cp));
-	else
+	if (c) {
+		/* interrupts use the mixer */
+		mtx_enter(&audio_lock);
+		rc = c->vtbl->mixer_get_port(c, cp);
+		mtx_leave(&audio_lock);
+		return rc;
+	} else
 		return (ENXIO);
 }
 
@@ -918,10 +928,15 @@ int
 maestro_query_devinfo(void *self, mixer_devinfo_t *cp)
 {
 	struct ac97_codec_if *c = ((struct maestro_softc *)self)->codec_if;
+	int rc;
 
-	if (c)
-		return (c->vtbl->query_devinfo(c, cp));
-	else
+	if (c)  {
+		/* interrupts use the mixer */
+		mtx_enter(&audio_lock);
+		rc = c->vtbl->query_devinfo(c, cp);
+		mtx_leave(&audio_lock);
+		return rc;
+	} else
 		return (ENXIO);
 }
 
@@ -1119,9 +1134,12 @@ int
 maestro_halt_input(void *hdl)
 {
 	struct maestro_softc *sc = (struct maestro_softc *)hdl;
+
+	mtx_enter(&audio_lock);
 	maestro_channel_stop(&sc->record);
 	sc->record.mode &= ~MAESTRO_RUNNING;
 	maestro_update_timer(sc);
+	mtx_leave(&audio_lock);
 	return 0;
 }
 
@@ -1130,9 +1148,11 @@ maestro_halt_output(void *hdl)
 {
 	struct maestro_softc *sc = (struct maestro_softc *)hdl;
 
+	mtx_enter(&audio_lock);
 	maestro_channel_stop(&sc->play);
 	sc->play.mode &= ~MAESTRO_RUNNING;
 	maestro_update_timer(sc);
+	mtx_leave(&audio_lock);
 	return 0;
 }
 
@@ -1142,6 +1162,7 @@ maestro_trigger_input(void *hdl, void *start, void *end, int blksize,
 {
 	struct maestro_softc *sc = (struct maestro_softc *)hdl;
 
+	mtx_enter(&audio_lock);
 	sc->record.mode |= MAESTRO_RUNNING;
 	sc->record.blocksize = blksize;
 
@@ -1149,6 +1170,7 @@ maestro_trigger_input(void *hdl, void *start, void *end, int blksize,
 
 	sc->record.threshold = sc->record.start;
 	maestro_update_timer(sc);
+	mtx_leave(&audio_lock);
 	return 0;
 }
 
@@ -1236,9 +1258,10 @@ maestro_trigger_output(void *hdl, void *start, void *end, int blksize,
     void (*intr)(void *), void *arg, struct audio_params *param)
 {
 	struct maestro_softc *sc = (struct maestro_softc *)hdl;
-
 	u_int offset = ((caddr_t)start - sc->dmabase) >> 1;
 	u_int size = ((char *)end - (char *)start) >> 1;
+
+	mtx_enter(&audio_lock);
 	sc->play.mode |= MAESTRO_RUNNING;
 	sc->play.wpwa = APU_USE_SYSMEM | (offset >> 8);
 	DPRINTF(("maestro_trigger_output: start=%x, end=%x, blksize=%x ",
@@ -1261,7 +1284,7 @@ maestro_trigger_output(void *hdl, void *start, void *end, int blksize,
 
 	sc->play.threshold = sc->play.start;
 	maestro_update_timer(sc);
-
+	mtx_leave(&audio_lock);
 	return 0;
 }
 
@@ -1521,6 +1544,8 @@ maestro_intr(void *arg)
 	if (status == 0)
 		return 0;	/* Not for us? */
 
+	mtx_enter(&audio_lock);
+
 	/* Acknowledge all. */
 	bus_space_write_2(sc->iot, sc->ioh, PORT_INT_STAT, 1);
 	bus_space_write_1(sc->iot, sc->ioh, PORT_HOSTINT_STAT, status);
@@ -1573,6 +1598,7 @@ maestro_intr(void *arg)
 	if (sc->record.mode & MAESTRO_RUNNING)
 		maestro_channel_advance_dma(&sc->record);
 
+	mtx_leave(&audio_lock);
 	return 1;
 }
 

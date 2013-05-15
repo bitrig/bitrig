@@ -1,4 +1,4 @@
-/*	$OpenBSD: fms.c,v 1.22 2010/07/15 03:43:11 jakemsr Exp $ */
+/*	$OpenBSD: fms.c,v 1.23 2013/05/15 08:29:24 ratchov Exp $ */
 /*	$NetBSD: fms.c,v 1.5.4.1 2000/06/30 16:27:50 simonb Exp $	*/
 
 /*-
@@ -375,6 +375,7 @@ fms_intr(void *arg)
 	struct fms_softc *sc = arg;
 	u_int16_t istat;
 	
+	mtx_enter(&audio_lock);
 	istat = bus_space_read_2(sc->sc_iot, sc->sc_ioh, FM_INTSTATUS);
 
 	if (istat & FM_INTSTATUS_PLAY) {
@@ -414,7 +415,7 @@ fms_intr(void *arg)
 
 	bus_space_write_2(sc->sc_iot, sc->sc_ioh, FM_INTSTATUS, 
 			  istat & (FM_INTSTATUS_PLAY | FM_INTSTATUS_REC));
-	
+	mtx_leave(&audio_lock);
 	return 1;
 }
 
@@ -634,12 +635,13 @@ fms_halt_output(void *addr)
 {
 	struct fms_softc *sc = addr;
 	u_int16_t k1;
-	
+
+	mtx_enter(&audio_lock);
 	k1 = bus_space_read_2(sc->sc_iot, sc->sc_ioh, FM_PLAY_CTL);
 	bus_space_write_2(sc->sc_iot, sc->sc_ioh, FM_PLAY_CTL, 
 			  (k1 & ~(FM_PLAY_STOPNOW | FM_PLAY_START)) | 
 			  FM_PLAY_BUF1_LAST | FM_PLAY_BUF2_LAST);
-	
+	mtx_leave(&audio_lock);
 	return 0;
 }
 
@@ -648,12 +650,13 @@ fms_halt_input(void *addr)
 {
 	struct fms_softc *sc = addr;
 	u_int16_t k1;
-	
+
+	mtx_enter(&audio_lock);
 	k1 = bus_space_read_2(sc->sc_iot, sc->sc_ioh, FM_REC_CTL);
 	bus_space_write_2(sc->sc_iot, sc->sc_ioh, FM_REC_CTL, 
 			  (k1 & ~(FM_REC_STOPNOW | FM_REC_START)) |
 			  FM_REC_BUF1_LAST | FM_REC_BUF2_LAST);
-	
+	mtx_leave(&audio_lock);
 	return 0;
 }
 
@@ -814,6 +817,7 @@ fms_trigger_output(void *addr, void *start, void *end, int blksize,
 	sc->sc_play_blksize = blksize;
 	sc->sc_play_nextblk = sc->sc_play_start + sc->sc_play_blksize;	
 	sc->sc_play_flip = 0;
+	mtx_enter(&audio_lock);
 	bus_space_write_2(sc->sc_iot, sc->sc_ioh, FM_PLAY_DMALEN, blksize - 1);
 	bus_space_write_4(sc->sc_iot, sc->sc_ioh, FM_PLAY_DMABUF1, 
 			  sc->sc_play_start);
@@ -821,6 +825,7 @@ fms_trigger_output(void *addr, void *start, void *end, int blksize,
 			  sc->sc_play_nextblk);
 	bus_space_write_2(sc->sc_iot, sc->sc_ioh, FM_PLAY_CTL, 
 			  FM_PLAY_START | FM_PLAY_STOPNOW | sc->sc_play_reg);
+	mtx_leave(&audio_lock);
 	return 0;
 }
 
@@ -847,6 +852,7 @@ fms_trigger_input(void *addr, void *start, void *end, int blksize,
 	sc->sc_rec_blksize = blksize;
 	sc->sc_rec_nextblk = sc->sc_rec_start + sc->sc_rec_blksize;	
 	sc->sc_rec_flip = 0;
+	mtx_enter(&audio_lock);
 	bus_space_write_2(sc->sc_iot, sc->sc_ioh, FM_REC_DMALEN, blksize - 1);
 	bus_space_write_4(sc->sc_iot, sc->sc_ioh, FM_REC_DMABUF1, 
 			  sc->sc_rec_start);
@@ -854,6 +860,7 @@ fms_trigger_input(void *addr, void *start, void *end, int blksize,
 			  sc->sc_rec_nextblk);
 	bus_space_write_2(sc->sc_iot, sc->sc_ioh, FM_REC_CTL, 
 			  FM_REC_START | FM_REC_STOPNOW | sc->sc_rec_reg);
+	mtx_leave(&audio_lock);
 	return 0;
 }
 
