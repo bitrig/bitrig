@@ -879,14 +879,14 @@ tmpfs_reg_resize(struct vnode *vp, off_t newsize)
 		bytes = (newpages - oldpages) << PAGE_SHIFT;
 		if (tmpfs_mem_incr(tmp, bytes) == 0)
 			return ENOSPC;
-		if (uao_grow(uobj, newpages) != 0) {
+		if (uao_setsize(uobj, newpages) != 0) {
 			tmpfs_mem_decr(tmp, bytes);
 			return ENOSPC;
 		}
 	}
 
 	if (newpages < oldpages) {
-		if (uao_shrink(uobj, newpages))
+		if (uao_setsize(uobj, newpages))
 			panic("shrink failed");
 
 		/* Decrease the used-memory counter. */

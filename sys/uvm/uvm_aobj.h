@@ -68,8 +68,7 @@ void uao_init(void);
 int uao_set_swslot(struct uvm_object *, int, int);
 int uao_dropswap(struct uvm_object *, int);
 int uao_swap_off(int, int);
-int uao_shrink(struct uvm_object *, int);
-int uao_grow(struct uvm_object *, int);
+int uao_setsize(struct uvm_object *, int);
 
 /*
  * globals
