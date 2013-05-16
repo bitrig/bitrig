@@ -46,8 +46,8 @@ options		APERTURE
 maxusers	32
 
 # CPU options
-options	CPU_ARMv7	# Support the ARM11
-makeoptions	CPUFLAGS="-mcpu=armv5"
+options	CPU_ARMv7	# Support the ARMv7
+makeoptions	CPUFLAGS="-mcpu=armv5"	# dont have gcc v7 support yet.
 
 #option SYSCALL_DEBUG
 
@@ -62,13 +62,14 @@ config		bsd	root on rd0a swap on rd0b
 mainbus0	at root
 cpu0		at mainbus?
 
+# Cortex-A9 (iMX6)
+cortex0		at mainbus?
+ampintc*	at cortex?
+amptimer*	at cortex?
+armliicc*	at cortex?
+
 # iMX SoC
 imx0		at mainbus?
-
-# Cortex-A9 (iMX6)
-ampintc*	at soc?
-amptimer*	at soc?
-imxlii*		at soc?
 
 # iMX on-chip devices
 imxccm*		at soc?			# clock control module

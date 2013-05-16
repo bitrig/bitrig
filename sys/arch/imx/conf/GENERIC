@@ -76,7 +76,7 @@ imxiic*		at soc?			# i2c
 imxpcibr*	at soc?			# PCIe controller host bridge
 pci*		at imxpcibr?
 
-ahci*		at soc?				# AHCI/SATA
+ahci*		at soc?			# AHCI/SATA
 
 ehci*		at soc?			# EHCI (shim)
 usb*		at ehci?
