@@ -45,10 +45,10 @@ ${IMAGE}: rd_setup do_files rd_teardown
 .endif
 
 bsd:
-	cd ${TOP}/../../sys/arch/beagle/conf && config RAMDISK
-	cd ${TOP}/../../sys/arch/beagle/compile/RAMDISK && \
+	cd ${TOP}/../../sys/arch/imx/conf && config RAMDISK
+	cd ${TOP}/../../sys/arch/imx/compile/RAMDISK && \
 	    ${MAKE} clean && exec ${MAKE}
-	cp ${TOP}/../../sys/arch/beagle/compile/RAMDISK/bsd bsd
+	cp ${TOP}/../../sys/arch/imx/compile/RAMDISK/bsd bsd
 
 rd_setup:
 	dd if=/dev/zero of=${IMAGE} bs=512 count=${NBLKS}
