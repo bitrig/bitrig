@@ -1562,7 +1562,8 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	npte |= L2_S_PROT(pm == pmap_kernel() || va == vector_page ?
 	    PTE_KERNEL : PTE_USER, prot);
 #else
-	npte |= L2_S_PROT(pm == pmap_kernel() ?  PTE_KERNEL : PTE_USER, prot);
+	npte |= L2_S_PROT(pm == pmap_kernel() ?  PTE_KERNEL : PTE_USER,
+	    prot & ~VM_PROT_WRITE);
 #endif
 
 	/*
@@ -2190,7 +2191,7 @@ Debugger();
 		 * We've already set the cacheable bits based on
 		 * the assumption that we can write to this page.
 		 */
-		*ptep = (pte & ~L2_TYPE_MASK) | L2_S_PROTO |
+		*ptep = (pte & ~(L2_TYPE_MASK|L2_S_PROT_MASK)) | L2_S_PROTO |
 		    L2_S_PROT(pm == pmap_kernel() ? PTE_KERNEL : PTE_USER,
 		      pte & L2_V7_S_XN ? VM_PROT_WRITE : VM_PROT_WRITE | VM_PROT_EXECUTE);
 		PTE_SYNC(ptep);
