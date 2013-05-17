@@ -501,7 +501,8 @@ tmpfs_dir_attach(struct vnode *dvp, tmpfs_dirent_t *de, tmpfs_node_t *node)
 	/* Insert the entry to the directory (parent of inode). */
 	TAILQ_INSERT_TAIL(&dnode->tn_spec.tn_dir.tn_dir, de, td_entries);
 	dnode->tn_size += sizeof(tmpfs_dirent_t);
-	dnode->tn_status |= TMPFS_NODE_STATUSALL;
+	dnode->tn_status |= TMPFS_NODE_MODIFIED | TMPFS_NODE_CHANGED;
+	tmpfs_update(dvp, NULL, NULL, 0);
 	uvm_vnp_setsize(dvp, dnode->tn_size);
 
 	if (node != TMPFS_NODE_WHITEOUT && node->tn_type == VDIR) {
@@ -571,7 +572,8 @@ tmpfs_dir_detach(struct vnode *dvp, tmpfs_dirent_t *de)
 	TAILQ_REMOVE(&dnode->tn_spec.tn_dir.tn_dir, de, td_entries);
 
 	dnode->tn_size -= sizeof(tmpfs_dirent_t);
-	dnode->tn_status |= TMPFS_NODE_STATUSALL;
+	dnode->tn_status |= TMPFS_NODE_MODIFIED | TMPFS_NODE_CHANGED;
+	tmpfs_update(dvp, NULL, NULL, 0);
 	uvm_vnp_setsize(dvp, dnode->tn_size);
 	VN_KNOTE(dvp, events);
 }
