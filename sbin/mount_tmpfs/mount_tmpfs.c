@@ -55,8 +55,6 @@ __RCSID("$NetBSD: mount_tmpfs.c,v 1.24 2008/08/05 20:57:45 pooka Exp $");
 
 #include "mount_tmpfs.h"
 
-extern int dehumanize_number(const char *, int64_t *);
-
 /* --------------------------------------------------------------------- */
 
 static const struct mntopt mopts[] = {
