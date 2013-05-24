@@ -1,4 +1,4 @@
-/*      $OpenBSD: sv.c,v 1.28 2013/05/15 08:29:24 ratchov Exp $ */
+/*      $OpenBSD: sv.c,v 1.29 2013/05/24 07:58:47 ratchov Exp $ */
 
 /*
  * Copyright (c) 1998 Constantine Paul Sapuntzakis
@@ -363,8 +363,8 @@ sv_attach(struct device *parent, struct device *self, void *aux)
     return;
   }
   intrstr = pci_intr_string(pc, ih);
-  sc->sc_ih = pci_intr_establish(pc, ih, IPL_AUDIO, sv_intr, sc,
-				 sc->sc_dev.dv_xname);
+  sc->sc_ih = pci_intr_establish(pc, ih, IPL_AUDIO | IPL_MPSAFE,
+      sv_intr, sc, sc->sc_dev.dv_xname);
   if (sc->sc_ih == NULL) {
     printf(": couldn't establish interrupt");
     if (intrstr != NULL)
