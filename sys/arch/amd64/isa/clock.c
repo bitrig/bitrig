@@ -96,6 +96,7 @@ WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <sys/device.h>
 #include <sys/timeout.h>
 #include <sys/timetc.h>
+#include <sys/proc.h>
 
 #include <machine/cpu.h>
 #include <machine/intr.h>
@@ -414,7 +415,7 @@ static int clock_expandyear(int);
 static int
 clock_expandyear(int clockyear)
 {
-	int s, clockcentury, cmoscentury;
+	int clockcentury, cmoscentury;
 
 	clockcentury = (clockyear < 70) ? 20 : 19;
 	clockyear += 100 * clockcentury;
@@ -422,12 +423,12 @@ clock_expandyear(int clockyear)
 	if (rtc_update_century < 0)
 		return (clockyear);
 
-	s = splclock();
+	crit_enter();
 	if (cmoscheck())
 		cmoscentury = mc146818_read(NULL, NVRAM_CENTURY);
 	else
 		cmoscentury = 0;
-	splx(s);
+	crit_leave();
 	if (!cmoscentury) {
 #ifdef DIAGNOSTIC
 		printf("clock: unknown CMOS layout\n");
@@ -447,9 +448,9 @@ clock_expandyear(int clockyear)
 		     (clockyear == 2000))) {
 			printf("WARNING: Setting NVRAM century to %d\n",
 			       clockcentury);
-			s = splclock();
+			crit_enter();
 			mc146818_write(NULL, centb, bintobcd(clockcentury));
-			splx(s);
+			crit_leave();
 		}
 	} else if (cmoscentury == 19 && rtc_update_century == 0)
 		rtc_update_century = 1; /* will update later in resettodr() */
@@ -467,7 +468,6 @@ inittodr(time_t base)
 	struct timespec ts;
 	mc_todregs rtclk;
 	struct clock_ymdhms dt;
-	int s;
 
 	ts.tv_nsec = 0;
 
@@ -490,13 +490,13 @@ inittodr(time_t base)
 		base = 30*SECYR;
 	}
 
-	s = splclock();
+	crit_enter();
 	if (rtcget(&rtclk)) {
-		splx(s);
+		crit_leave();
 		printf("WARNING: invalid time in clock chip\n");
 		goto fstime;
 	}
-	splx(s);
+	crit_leave();
 #ifdef DEBUG_CLOCK
 	printf("readclock: %x/%x/%x %x:%x:%x\n", rtclk[MC_YEAR],
 	    rtclk[MC_MONTH], rtclk[MC_DOM], rtclk[MC_HOUR], rtclk[MC_MIN],
@@ -560,7 +560,7 @@ resettodr(void)
 {
 	mc_todregs rtclk;
 	struct clock_ymdhms dt;
-	int century, diff, s;
+	int century, diff;
 
 	/*
 	 * We might have been called by boot() due to a crash early
@@ -569,10 +569,10 @@ resettodr(void)
 	if (!timeset)
 		return;
 
-	s = splclock();
+	crit_enter();
 	if (rtcget(&rtclk))
 		memset(&rtclk, 0, sizeof(rtclk));
-	splx(s);
+	crit_leave();
 
 	diff = tz.tz_minuteswest * 60;
 	if (tz.tz_dsttime)
@@ -591,13 +591,13 @@ resettodr(void)
 	printf("setclock: %x/%x/%x %x:%x:%x\n", rtclk[MC_YEAR], rtclk[MC_MONTH],
 	   rtclk[MC_DOM], rtclk[MC_HOUR], rtclk[MC_MIN], rtclk[MC_SEC]);
 #endif
-	s = splclock();
+	crit_enter();
 	rtcput(&rtclk);
 	if (rtc_update_century > 0) {
 		century = bintobcd(dt.dt_year / 100);
 		mc146818_write(NULL, centb, century); /* XXX softc */
 	}
-	splx(s);
+	crit_leave();
 }
 
 void

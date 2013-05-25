@@ -508,7 +508,6 @@ pci_probe_device(struct pci_softc *sc, pcitag_t tag,
 	} else {
 		pcireg_t address, csr;
 		int i, reg, reg_start, reg_end;
-		int s;
 
 		pd = malloc(sizeof *pd, M_DEVBUF, M_ZERO | M_WAITOK);
 		pd->pd_tag = tag;
@@ -531,7 +530,7 @@ pci_probe_device(struct pci_softc *sc, pcitag_t tag,
 			return (0);
 		}
 
-		s = splhigh();
+		crit_enter();
 		csr = pci_conf_read(pc, tag, PCI_COMMAND_STATUS_REG);
 		if (csr & (PCI_COMMAND_IO_ENABLE | PCI_COMMAND_MEM_ENABLE))
 			pci_conf_write(pc, tag, PCI_COMMAND_STATUS_REG, csr &
@@ -546,7 +545,7 @@ pci_probe_device(struct pci_softc *sc, pcitag_t tag,
 
 		if (csr & (PCI_COMMAND_IO_ENABLE | PCI_COMMAND_MEM_ENABLE))
 			pci_conf_write(pc, tag, PCI_COMMAND_STATUS_REG, csr);
-		splx(s);
+		crit_leave();
 
 		if ((PCI_CLASS(class) == PCI_CLASS_DISPLAY &&
 		    PCI_SUBCLASS(class) == PCI_SUBCLASS_DISPLAY_VGA) ||
@@ -804,7 +803,6 @@ pci_reserve_resources(struct pci_attach_args *pa)
 	int bus, dev, func;
 	int sec, sub;
 	int flags;
-	int s;
 
 	pci_decompose_tag(pc, tag, &bus, &dev, &func);
 
@@ -888,12 +886,12 @@ pci_reserve_resources(struct pci_attach_args *pa)
 	}
 
 	if (reg_rom != 0) {
-		s = splhigh();
+		crit_enter();
 		addr = pci_conf_read(pc, tag, PCI_ROM_REG);
 		pci_conf_write(pc, tag, PCI_ROM_REG, ~PCI_ROM_ENABLE);
 		mask = pci_conf_read(pc, tag, PCI_ROM_REG);
 		pci_conf_write(pc, tag, PCI_ROM_REG, addr);
-		splx(s);
+		crit_leave();
 
 		base = PCI_ROM_ADDR(addr);
 		size = PCI_ROM_SIZE(mask);
@@ -1276,7 +1274,6 @@ pciioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 		bus_space_handle_t h;
 		bus_size_t len, off;
 		char buf[256];
-		int s;
 
 		rom = (struct pci_rom *)data;
 
@@ -1284,12 +1281,12 @@ pciioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 		if (PCI_HDRTYPE_TYPE(bhlc) != 0)
 			return (ENODEV);
 
-		s = splhigh();
+		crit_enter();
 		addr = pci_conf_read(pc, tag, PCI_ROM_REG);
 		pci_conf_write(pc, tag, PCI_ROM_REG, ~PCI_ROM_ENABLE);
 		mask = pci_conf_read(pc, tag, PCI_ROM_REG);
 		pci_conf_write(pc, tag, PCI_ROM_REG, addr);
-		splx(s);
+		crit_leave();
 
 		/*
 		 * Section 6.2.5.2 `Expansion ROM Base Addres Register',
@@ -1322,13 +1319,13 @@ pciioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 		off = 0;
 		len = PCI_ROM_SIZE(mask);
 		while (len > 0 && error == 0) {
-			s = splhigh();
+			crit_enter();
 			pci_conf_write(pc, tag, PCI_ROM_REG,
 			    addr | PCI_ROM_ENABLE);
 			bus_space_read_region_1(pci->sc_memt, h, off,
 			    buf, sizeof(buf));
 			pci_conf_write(pc, tag, PCI_ROM_REG, addr);
-			splx(s);
+			crit_leave();
 
 			error = copyout(buf, rom->pr_rom + off, sizeof(buf));
 			off += sizeof(buf);

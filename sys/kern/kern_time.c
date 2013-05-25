@@ -488,7 +488,6 @@ sys_getitimer(struct proc *p, void *v, register_t *retval)
 		syscallarg(struct itimerval *) itv;
 	} */ *uap = v;
 	struct itimerval aitv;
-	int s;
 	int which;
 
 	which = SCARG(uap, which);
@@ -496,7 +495,7 @@ sys_getitimer(struct proc *p, void *v, register_t *retval)
 	if (which < ITIMER_REAL || which > ITIMER_PROF)
 		return (EINVAL);
 	memset(&aitv, 0, sizeof(aitv));
-	s = splclock();
+	crit_enter();
 	aitv.it_interval.tv_sec  = p->p_p->ps_timer[which].it_interval.tv_sec;
 	aitv.it_interval.tv_usec = p->p_p->ps_timer[which].it_interval.tv_usec;
 	aitv.it_value.tv_sec     = p->p_p->ps_timer[which].it_value.tv_sec;
@@ -520,7 +519,7 @@ sys_getitimer(struct proc *p, void *v, register_t *retval)
 				    &aitv.it_value);
 		}
 	}
-	splx(s);
+	crit_leave();
 	return (copyout(&aitv, SCARG(uap, itv), sizeof (struct itimerval)));
 }
 
@@ -573,12 +572,10 @@ sys_setitimer(struct proc *p, void *v, register_t *retval)
 		}
 		pr->ps_timer[ITIMER_REAL] = aitv;
 	} else {
-		int s;
-
 		itimerround(&aitv.it_interval);
-		s = splclock();
+		crit_enter();
 		pr->ps_timer[which] = aitv;
-		splx(s);
+		crit_leave();
 	}
 
 	return (0);
@@ -783,4 +780,3 @@ ppsratecheck(struct timeval *lasttime, int *curpps, int maxpps)
 
 	return (rv);
 }
-

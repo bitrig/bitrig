@@ -107,7 +107,7 @@ struct pipex_tag {
 	int			proto;
 };
 void *pipex_softintr = NULL;
-Static void pipex_softintr_handler(void *);
+Static int pipex_softintr_handler(void *);
 
 /* from udp_usrreq.c */
 extern int udpcksum;
@@ -148,8 +148,8 @@ pipex_init(void)
 	/* queue and softintr init */
 	IFQ_SET_MAXLEN(&pipexinq, IFQ_MAXLEN);
 	IFQ_SET_MAXLEN(&pipexoutq, IFQ_MAXLEN);
-	pipex_softintr =
-	    softintr_establish(IPL_SOFTNET, pipex_softintr_handler, NULL);
+        pipex_softintr =
+	    ithread_softregister(IPL_SOFTNET, pipex_softintr_handler, NULL, 0);
 }
 
 void
@@ -706,11 +706,13 @@ pipex_lookup_by_session_id(int protocol, int session_id)
 /***********************************************************************
  * Queue and Software Interrupt Handler
  ***********************************************************************/
-Static void
+Static int
 pipex_softintr_handler(void *dummy)
 {
 	/* called at splsoftnet() */
 	pipex_ppp_dequeue();
+
+	return (1);
 }
 
 Static void
@@ -786,7 +788,7 @@ pipex_ppp_dequeue(void)
 	 */
 	s = splnet();
 	if (!IF_IS_EMPTY(&pipexinq) || !IF_IS_EMPTY(&pipexoutq))
-		softintr_schedule(pipex_softintr);
+		ithread_softsched(pipex_softintr);
 	splx(s);
 }
 
@@ -817,7 +819,7 @@ pipex_ppp_enqueue(struct mbuf *m0, struct pipex_session *session,
 	IF_ENQUEUE(queue, m0);
 	splx(s);
 
-	softintr_schedule(pipex_softintr);
+	ithread_softsched(pipex_softintr);
 	return (0);
 
 fail:

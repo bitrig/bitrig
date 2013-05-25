@@ -610,14 +610,14 @@ sys_execve(struct proc *p, void *v, register_t *retval)
 	}
 
 	if (pr->ps_flags & PS_SUGIDEXEC) {
-		int i, s = splclock();
-
+		int i;
+		crit_enter();
 		timeout_del(&pr->ps_realit_to);
 		for (i = 0; i < nitems(pr->ps_timer); i++) {
 			timerclear(&pr->ps_timer[i].it_interval);
 			timerclear(&pr->ps_timer[i].it_value);
 		}
-		splx(s);
+		crit_leave();
 	}
 
 	/* reset CPU time usage for the thread, but not the process */

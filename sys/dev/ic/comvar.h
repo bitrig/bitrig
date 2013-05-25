@@ -145,7 +145,7 @@ int	comspeed(long, long);
 u_char	com_cflag2lcr(tcflag_t); /* XXX undefined */
 int	comparam(struct tty *, struct termios *);
 void	comstart(struct tty *);
-void	comsoft(void *);
+int	comsoft(void *);
 
 struct consdev;
 int	comcnattach(bus_space_tag_t, bus_addr_t, int, int, tcflag_t);
