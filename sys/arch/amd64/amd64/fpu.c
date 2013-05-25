@@ -198,14 +198,13 @@ fpudna(struct cpu_info *ci)
 {
 	struct savefpu *sfp;
 	struct proc *p;
-	int s;
 
 	if (ci->ci_fpsaving) {
 		printf("recursive fpu trap; cr0=%x\n", rcr0());
 		return;
 	}
 
-	s = splipi();
+	crit_enter();
 
 #ifdef MULTIPROCESSOR
 	p = ci->ci_curproc;
@@ -221,7 +220,7 @@ fpudna(struct cpu_info *ci)
 		fpusave_cpu(ci, ci->ci_fpcurproc != &proc0);
 		uvmexp.fpswtch++;
 	}
-	splx(s);
+	crit_leave();
 
 	if (p == NULL) {
 		clts();
@@ -239,10 +238,10 @@ fpudna(struct cpu_info *ci)
 	p->p_addr->u_pcb.pcb_cr0 &= ~CR0_TS;
 	clts();
 
-	s = splipi();
+	crit_enter();
 	ci->ci_fpcurproc = p;
 	p->p_addr->u_pcb.pcb_fpcpu = ci;
-	splx(s);
+	crit_leave();
 
 	sfp = &p->p_addr->u_pcb.pcb_savefpu;
 
@@ -271,7 +270,6 @@ void
 fpusave_cpu(struct cpu_info *ci, int save)
 {
 	struct proc *p;
-	int s;
 
 	KDASSERT(ci == curcpu());
 
@@ -298,10 +296,10 @@ fpusave_cpu(struct cpu_info *ci, int save)
 	stts();
 	p->p_addr->u_pcb.pcb_cr0 |= CR0_TS;
 
-	s = splipi();
+	crit_enter();
 	p->p_addr->u_pcb.pcb_fpcpu = NULL;
 	ci->ci_fpcurproc = NULL;
-	splx(s);
+	crit_leave();
 }
 
 /*
@@ -321,15 +319,27 @@ fpusave_proc(struct proc *p, int save)
 
 #if defined(MULTIPROCESSOR)
 	if (oci == ci) {
-		int s = splipi();
+		crit_enter();
 		fpusave_cpu(ci, save);
-		splx(s);
+		crit_leave();
 	} else {
 		oci->ci_fpsaveproc = p;
 		x86_send_ipi(oci,
 	    	    save ? X86_IPI_SYNCH_FPU : X86_IPI_FLUSH_FPU);
-		while (p->p_addr->u_pcb.pcb_fpcpu != NULL)
+		while (p->p_addr->u_pcb.pcb_fpcpu != NULL) {
+#ifdef DIAGNOSTIC
+			u_int j = 0, i = 0;
+			if ((++i % 10000000) == 0) {
+				printf("cpu %d -> cpu %d %s:%d\n",
+				    curcpu()->ci_cpuid, oci->ci_cpuid,
+				    __func__, __LINE__);
+				if (++j == 20)
+					Debugger();
+
+			}
+#endif
 			SPINLOCK_SPIN_HOOK;
+		}
 	}
 #else
 	KASSERT(ci->ci_fpcurproc == p);
@@ -342,7 +352,6 @@ fpu_kernel_enter(void)
 {
 	struct cpu_info	*ci = curcpu();
 	uint32_t	 cw;
-	int		 s;
 
 	/*
 	 * Fast path.  If the kernel was using the FPU before, there
@@ -353,7 +362,7 @@ fpu_kernel_enter(void)
 		return;
 	}
 
-	s = splipi();
+	crit_enter();
 
 	if (ci->ci_fpcurproc != NULL) {
 		fpusave_cpu(ci, 1);
@@ -363,7 +372,7 @@ fpu_kernel_enter(void)
 	/* Claim the FPU */
 	ci->ci_fpcurproc = &proc0;
 
-	splx(s);
+	crit_leave();
 
 	/* Disable DNA exceptions */
 	clts();

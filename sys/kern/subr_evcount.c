@@ -59,7 +59,7 @@ int
 evcount_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
     void *newp, size_t newlen)
 {
-	int error = 0, s, nintr, i;
+	int error = 0, nintr, i;
 	struct evcount *ec;
 	u_int64_t count;
 
@@ -88,9 +88,9 @@ evcount_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 	case KERN_INTRCNT_CNT:
 		if (ec == NULL)
 			return (ENOENT);
-		s = splhigh();
+		crit_enter();
 		count = ec->ec_count;
-		splx(s);
+		crit_leave();
 		error = sysctl_rdquad(oldp, oldlenp, NULL, count);
 		break;
 	case KERN_INTRCNT_NAME:

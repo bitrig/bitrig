@@ -522,9 +522,7 @@ viac3_rnd(void *v)
 	struct timeout *tmo = v;
 	unsigned int *p, i, rv, creg0, len = VIAC3_RNG_BUFSIZ;
 	static int buffer[VIAC3_RNG_BUFSIZ + 2];	/* XXX why + 2? */
-#ifdef MULTIPROCESSOR
-	int s = splipi();
-#endif
+	crit_enter();
 
 	creg0 = rcr0();		/* Permit access to SIMD/FPU path */
 	lcr0(creg0 & ~(CR0_EM|CR0_TS));
@@ -540,9 +538,7 @@ viac3_rnd(void *v)
 
 	lcr0(creg0);
 
-#ifdef MULTIPROCESSOR
-	splx(s);
-#endif
+	crit_leave();
 
 	for (i = 0, p = buffer; i < VIAC3_RNG_BUFSIZ; i++, p++)
 		add_true_randomness(*p);

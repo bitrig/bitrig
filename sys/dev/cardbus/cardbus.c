@@ -207,11 +207,10 @@ cardbus_read_tuples(struct cardbus_attach_args *ca, pcireg_t cis_ptr,
 
 		if (cardbus_space == CARDBUS_CIS_ASI_ROM) {
 			pcireg_t exrom;
-			int save;
 			struct cardbus_rom_image_head rom_image;
 			struct cardbus_rom_image *p;
 
-			save = splhigh();
+			crit_enter();
 			/* enable rom address decoder */
 			exrom = pci_conf_read(pc, tag, reg);
 			pci_conf_write(pc, tag, reg, exrom | 1);
@@ -245,7 +244,7 @@ cardbus_read_tuples(struct cardbus_attach_args *ca, pcireg_t cis_ptr,
 			}
 			exrom = pci_conf_read(pc, tag, reg);
 			pci_conf_write(pc, tag, reg, exrom & ~1);
-			splx(save);
+			crit_leave();
 		} else {
 			command = pci_conf_read(pc, tag,
 			    PCI_COMMAND_STATUS_REG);

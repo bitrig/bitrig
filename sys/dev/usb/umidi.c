@@ -114,7 +114,7 @@ static usbd_status start_input_transfer(struct umidi_endpoint *);
 static usbd_status start_output_transfer(struct umidi_endpoint *);
 static int out_jack_output(struct umidi_jack *, int);
 static void out_jack_flush(struct umidi_jack *);
-static void in_intr(struct usbd_xfer *, void *, usbd_status);
+static void umidi_in_intr(struct usbd_xfer *, void *, usbd_status);
 static void out_intr(struct usbd_xfer *, void *, usbd_status);
 static int out_build_packet(int, struct umidi_packet *, uByte, u_char *);
 
@@ -1112,7 +1112,7 @@ start_input_transfer(struct umidi_endpoint *ep)
 	usbd_setup_xfer(ep->xfer, ep->pipe,
 			(void *)ep,
 			ep->buffer, ep->packetsize,
-			USBD_SHORT_XFER_OK | USBD_NO_COPY, USBD_NO_TIMEOUT, in_intr);
+			USBD_SHORT_XFER_OK | USBD_NO_COPY, USBD_NO_TIMEOUT, umidi_in_intr);
 	err = usbd_transfer(ep->xfer);
 	if (err != USBD_NORMAL_COMPLETION && err != USBD_IN_PROGRESS) {
 		DPRINTF(("%s: start_input_transfer: usbd_transfer() failed err=%s\n", 
@@ -1208,7 +1208,7 @@ out_jack_flush(struct umidi_jack *j)
 
 
 static void
-in_intr(struct usbd_xfer *xfer, void *priv, usbd_status status)
+umidi_in_intr(struct usbd_xfer *xfer, void *priv, usbd_status status)
 {
 	int cn, evlen, remain, i;
 	unsigned char *buf;

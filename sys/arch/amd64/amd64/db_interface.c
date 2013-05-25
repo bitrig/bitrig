@@ -110,8 +110,6 @@ kdbprinttrap(int type, int code)
 int
 kdb_trap(int type, int code, db_regs_t *regs)
 {
-	int s;
-
 #if NWSDISPLAY > 0
 	wsdisplay_switchtoconsole();
 #endif
@@ -150,13 +148,13 @@ kdb_trap(int type, int code, db_regs_t *regs)
 	ddb_regs.tf_gs &= 0xffff;
 	ddb_regs.tf_ss &= 0xffff;
 
-	s = splhigh();
+	crit_enter();
 	db_active++;
 	cnpollc(TRUE);
 	db_trap(type, code);
 	cnpollc(FALSE);
 	db_active--;
-	splx(s);
+	crit_leave();
 
 	*regs = ddb_regs;
 

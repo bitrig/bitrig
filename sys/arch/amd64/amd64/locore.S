@@ -1039,8 +1039,9 @@ IDTVEC(syscall)
 	jne	iret_return;
 syscall_return:
 #ifdef DIAGNOSTIC
-	cmpl	$IPL_NONE,CPUVAR(ILEVEL)
-	jne	3f
+	movq	CPUVAR(CURPROC),%rax
+	testl	$-1,P_CRIT(%rax)
+	jnz	3f
 #endif /* DIAGNOSTIC */
 
 	movq	TF_RDI(%rsp),%rdi
@@ -1070,15 +1071,10 @@ syscall_return:
 	movl	TF_RAX(%rsp),%esi
 	movl	TF_RDI(%rsp),%edx
 	movl	%ebx,%ecx
-	movl	CPUVAR(ILEVEL),%r8d
+	movl	P_CRIT(%rax),%r8d
 	xorq	%rax,%rax
-	call	_C_LABEL(printf)
-#ifdef DDB
-	int	$3
-#endif /* DDB */
-	movl	$IPL_NONE,CPUVAR(ILEVEL)
-	jmp	1b
-4:	.asciz	"WARNING: SPL NOT LOWERED ON SYSCALL %d %d EXIT %x %x\n"
+	call	_C_LABEL(panic)
+4:	.asciz	"PANIC: STILL IN CRITICAL SECTION ON SYSCALL %d %d EXIT %x %x\n"
 #endif
 
 
@@ -1086,7 +1082,6 @@ NENTRY(proc_trampoline)
 #ifdef MULTIPROCESSOR
 	call	_C_LABEL(proc_trampoline_mp)
 #endif
-	movl	$IPL_NONE,CPUVAR(ILEVEL)
 	movq	%r13,%rdi
 	call	*%r12
 	INTRFASTEXIT
@@ -1096,7 +1091,6 @@ NENTRY(child_trampoline)
 #ifdef MULTIPROCESSOR
 	call	_C_LABEL(proc_trampoline_mp)
 #endif
-	movl	$IPL_NONE,CPUVAR(ILEVEL)
 	movq	%r13,%rdi
 	call	*%r12
 	jmp	syscall_return
@@ -1108,8 +1102,9 @@ NENTRY(child_trampoline)
 iret_return:
 1:
 #ifdef DIAGNOSTIC
-	cmpl	$IPL_NONE,CPUVAR(ILEVEL)
-	jne	3f
+	movq	CPUVAR(CURPROC),%rax
+	testl	$-1,P_CRIT(%rax)
+	jnz	3f
 #endif /* DIAGNOSTIC */
 	.globl	intr_fast_exit
 intr_fast_exit:
@@ -1144,13 +1139,8 @@ _C_LABEL(doreti_iret):
 3:	sti
 	movabsq	$4f, %rdi
 	xorq	%rax,%rax
-	call	_C_LABEL(printf)
-#ifdef DDB
-	int	$3
-#endif /* DDB */
-	movl	$IPL_NONE,CPUVAR(ILEVEL)
-	jmp	2b
-4:	.asciz	"WARNING: SPL NOT LOWERED ON SYSCALL EXIT\n"
+	call	_C_LABEL(panic)
+4:	.asciz	"PANIC: STILL IN CRITICAL SECTION ON SYSCALL EXIT\n"
 #endif /* DIAGNOSTIC */
 
 

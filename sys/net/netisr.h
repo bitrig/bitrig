@@ -82,11 +82,13 @@ void	pfsyncintr(void);
 
 #include <machine/atomic.h>
 
+#include <sys/ithread.h>
+
 extern void *netisr_intr;
 #define	schednetisr(anisr)						\
 do {									\
 	atomic_setbits_int(&netisr, (1 << (anisr)));			\
-	softintr_schedule(netisr_intr);					\
+	ithread_softsched(netisr_intr);					\
 } while (/* CONSTCOND */0)
 
 void	netisr_init(void);

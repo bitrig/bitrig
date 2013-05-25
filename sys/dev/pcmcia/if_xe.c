@@ -1092,7 +1092,7 @@ xe_start(ifp)
 	bus_space_tag_t bst = sc->sc_bst;
 	bus_space_handle_t bsh = sc->sc_bsh;
 	bus_size_t offset = sc->sc_offset;
-	unsigned int s, len, pad = 0;
+	unsigned int len, pad = 0;
 	struct mbuf *m0, *m;
 	u_int16_t space;
 
@@ -1135,7 +1135,7 @@ xe_start(ifp)
 	 * Do the output at splhigh() so that an interrupt from another device
 	 * won't cause a FIFO underrun.
 	 */
-	s = splhigh();
+	crit_enter();
 
 	bus_space_write_2(bst, bsh, offset + TSO2, (u_int16_t)len + pad + 2);
 	bus_space_write_2(bst, bsh, offset + EDP, (u_int16_t)len + pad);
@@ -1158,7 +1158,7 @@ xe_start(ifp)
 			bus_space_write_1(bst, bsh, offset + EDP, 0);
 	}
 
-	splx(s);
+	crit_leave();
 
 	ifp->if_timer = 5;
 	++ifp->if_opackets;

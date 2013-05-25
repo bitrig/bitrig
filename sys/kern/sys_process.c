@@ -98,7 +98,6 @@ sys_ptrace(struct proc *p, void *v, register_t *retval)
 	int error, write;
 	int temp;
 	int req = SCARG(uap, req);
-	int s;
 
 	/* "A foolish consistency..." XXX */
 	switch (req) {
@@ -498,9 +497,9 @@ sys_ptrace(struct proc *p, void *v, register_t *retval)
 		/* Finally, deliver the requested signal (or none). */
 		if (t->p_stat == SSTOP) {
 			t->p_xstat = SCARG(uap, data);
-			SCHED_LOCK(s);
+			SCHED_LOCK();
 			setrunnable(t);
-			SCHED_UNLOCK(s);
+			SCHED_UNLOCK();
 		} else {
 			if (SCARG(uap, data) != 0)
 				psignal(t, SCARG(uap, data));

@@ -35,6 +35,8 @@
 #define	NIPL		16
 
 #define	IPL_MPSAFE	0x100
+#define	IPL_DIRECT	0x200
+#define IPL_FLAGS	(IPL_MPSAFE | IPL_DIRECT)
 
 /* Interrupt sharing types. */
 #define	IST_NONE	0	/* none */
@@ -48,12 +50,6 @@
  */
 #define LIR_IPI		63
 #define LIR_TIMER	62
-
-/* Soft interrupt masks. */
-#define	SIR_CLOCK	61
-#define	SIR_NET		60
-#define	SIR_TTY		59
-
 
 /*
  * Maximum # of interrupt sources per CPU. 64 to fit in one word.

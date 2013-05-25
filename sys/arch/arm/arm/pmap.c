@@ -2232,7 +2232,6 @@ pmap_activate(struct proc *p)
 {
 	pmap_t pm;
 	struct pcb *pcb;
-	int s;
 
 	pm = p->p_vmspace->vm_map.pmap;
 	pcb = &p->p_addr->u_pcb;
@@ -2255,7 +2254,7 @@ pmap_activate(struct proc *p)
 			return;
 		}
 
-		s = splhigh();
+		crit_enter();
 		pmap_acquire_pmap_lock(pm);
 		disable_interrupts(I32_bit | F32_bit);
 
@@ -2280,7 +2279,7 @@ pmap_activate(struct proc *p)
 		enable_interrupts(I32_bit | F32_bit);
 
 		pmap_release_pmap_lock(pm);
-		splx(s);
+		crit_leave();
 	}
 }
 
@@ -2544,7 +2543,6 @@ pmap_growkernel(vaddr_t maxkvaddr)
 	struct l1_ttable *l1;
 	struct l2_bucket *l2b;
 	pd_entry_t *pl1pd;
-	int s;
 
 	if (maxkvaddr <= pmap_curmaxkvaddr)
 		goto out;		/* we are OK */
@@ -2559,7 +2557,7 @@ pmap_growkernel(vaddr_t maxkvaddr)
 	 * whoops!   we need to add kernel PTPs
 	 */
 
-	s = splhigh();	/* to be safe */
+	crit_enter();	/* to be safe */
 	simple_lock(&kpm->pm_lock);
 
 	/* Map 1MB at a time */
@@ -2587,7 +2585,7 @@ pmap_growkernel(vaddr_t maxkvaddr)
 	cpu_cpwait();
 
 	simple_unlock(&kpm->pm_lock);
-	splx(s);
+	crit_leave();
 
 out:
 	return (pmap_curmaxkvaddr);

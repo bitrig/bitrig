@@ -1636,6 +1636,7 @@ vfs_shutdown(void)
 
 	/* XXX Should suspend scheduling. */
 	(void) spl0();
+	(void)crit_leave_all();	/* this was a spl0() call */
 
 	printf("syncing disks... ");
 

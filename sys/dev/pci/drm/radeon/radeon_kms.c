@@ -463,7 +463,6 @@ radeondrm_attach_kms(struct device *parent, struct device *self, void *aux)
 	uint8_t			 iobar;
 #if !defined(__sparc64__)
 	pcireg_t		 addr, mask;
-	int			 s;
 #endif
 
 #if defined(__sparc64__) || defined(__macppc__)
@@ -532,12 +531,12 @@ radeondrm_attach_kms(struct device *parent, struct device *self, void *aux)
 	 * Make sure we have a base address for the ROM such that we
 	 * can map it later.
 	 */
-	s = splhigh();
+	crit_enter();
 	addr = pci_conf_read(pa->pa_pc, pa->pa_tag, PCI_ROM_REG);
 	pci_conf_write(pa->pa_pc, pa->pa_tag, PCI_ROM_REG, ~PCI_ROM_ENABLE);
 	mask = pci_conf_read(pa->pa_pc, pa->pa_tag, PCI_ROM_REG);
 	pci_conf_write(pa->pa_pc, pa->pa_tag, PCI_ROM_REG, addr);
-	splx(s);
+	crit_leave();
 
 	if (addr == 0 && PCI_ROM_SIZE(mask) != 0 && pa->pa_memex) {
 		bus_size_t size, start, end;

@@ -41,7 +41,6 @@
 #include <sys/systm.h>
 #include <sys/sched.h>
 
-
 #ifdef MP_LOCKDEBUG
 /* CPU-dependent timing, needs this to be settable from ddb. */
 int __mp_lock_spinout = 200000000;

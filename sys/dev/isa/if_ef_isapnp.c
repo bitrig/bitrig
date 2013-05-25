@@ -239,7 +239,7 @@ efstart(ifp)
 	bus_space_tag_t iot = sc->sc_iot;
 	bus_space_handle_t ioh = sc->sc_ioh;
 	struct mbuf *m, *m0;
-	int s, len, pad, i;
+	int len, pad, i;
 	int fillcnt = 0;
 	u_int32_t filler = 0;
 
@@ -285,7 +285,7 @@ startagain:
 	if (m0 == NULL) /* XXX not needed */
 		return;
 
-	s = splhigh();
+	crit_enter();
 
 	bus_space_write_4(iot, ioh, EF_W1_TX_PIO_WR_1, len);
 	for (m = m0; m; ) {
@@ -325,7 +325,7 @@ startagain:
 		filler = 0;
 	}
 
-	splx(s);
+	crit_leave();
 
 	ifp->if_opackets++;
 
@@ -743,7 +743,7 @@ efget(sc, totlen)
 	bus_space_handle_t ioh = sc->sc_ioh;
 	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	struct mbuf *top, **mp, *m;
-	int len, pad, s;
+	int len, pad;
 
 	MGETHDR(m, M_DONTWAIT, MT_DATA);
 	if (m == NULL)
@@ -756,14 +756,14 @@ efget(sc, totlen)
 	top = 0;
 	mp = &top;
 
-	s = splhigh();
+	crit_enter();
 
 	while (totlen > 0) {
 		if (top) {
 			MGET(m, M_DONTWAIT, MT_DATA);
 			if (m == NULL) {
 				m_freem(top);
-				splx(s);
+				crit_leave();
 				return (NULL);
 			}
 			len = MLEN;
@@ -791,7 +791,7 @@ efget(sc, totlen)
 
 	efcompletecmd(sc, EP_COMMAND, RX_DISCARD_TOP_PACK);
 
-	splx(s);
+	crit_leave();
 
 	return (top);
 }

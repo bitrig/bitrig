@@ -285,6 +285,7 @@ struct proc {
 	long 	p_thrslpid;	/* for thrsleep syscall */
 
 	/* scheduling */
+	int	p_crit;		 /* Critical depth */
 	u_int	p_estcpu;	 /* Time averaged value of p_cpticks. */
 	int	p_cpticks;	 /* Ticks of cpu time. */
 	const volatile void *p_wchan;/* Sleep address. */
@@ -307,6 +308,7 @@ struct proc {
 					/* NULL. Malloc type M_EMULDATA */
 	int	 p_siglist;		/* Signals arrived but not delivered. */
 	sigset_t p_sigdivert;		/* Signals to be diverted to thread. */
+	
 
 /* End area that is zeroed on creation. */
 #define	p_endzero	p_startcopy
@@ -498,6 +500,20 @@ int	fork1(struct proc *, int, void *, pid_t *, void (*)(void *),
 int	groupmember(gid_t, struct ucred *);
 void	dorefreshcreds(struct process *, struct proc *);
 void	dosigsuspend(struct proc *, sigset_t);
+void	crit_enter(void);
+void	crit_reenter(int);
+void	crit_leave(void);
+int	crit_leave_all(void);
+#define CRIT_DEPTH	(curproc->p_crit)
+#ifdef DIAGNOSTIC
+#define CRIT_ASSERT() do {						\
+		if (__predict_false(curproc->p_crit <= 0))		\
+			panic("%s:%d not in a critical section\n",	\
+			    __func__, __LINE__);			\
+	} while (0)
+#else
+#define CRIT_ASSERT()
+#endif
 
 static inline void
 refreshcreds(struct proc *p)
@@ -528,7 +544,6 @@ void	process_zap(struct process *);
 void	proc_free(struct proc *);
 
 struct sleep_state {
-	int sls_s;
 	int sls_catch;
 	int sls_do_sleep;
 	int sls_sig;

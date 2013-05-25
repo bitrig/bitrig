@@ -41,9 +41,8 @@ void
 sensordev_install(struct ksensordev *sensdev)
 {
 	struct ksensordev *v, *nv;
-	int s;
 
-	s = splhigh();
+	crit_enter();
 	if (sensordev_count == 0) {
 		sensdev->num = 0;
 		SLIST_INSERT_HEAD(&sensordev_list, sensdev, list);
@@ -56,7 +55,7 @@ sensordev_install(struct ksensordev *sensdev)
 		SLIST_INSERT_AFTER(v, sensdev, list);
 	}
 	sensordev_count++;
-	splx(s);
+	crit_leave();
 
 #if NHOTPLUG > 0
 	hotplug_device_attach(DV_DULL, "sensordev");
@@ -68,9 +67,9 @@ sensor_attach(struct ksensordev *sensdev, struct ksensor *sens)
 {
 	struct ksensor *v, *nv;
 	struct ksensors_head *sh;
-	int s, i;
+	int i;
 
-	s = splhigh();
+	crit_enter();
 	sh = &sensdev->sensors_list;
 	if (sensdev->sensors_count == 0) {
 		for (i = 0; i < SENSOR_MAX_TYPES; i++)
@@ -96,18 +95,16 @@ sensor_attach(struct ksensordev *sensdev, struct ksensor *sens)
 	if (sensdev->maxnumt[sens->type] == sens->numt)
 		sensdev->maxnumt[sens->type]++;
 	sensdev->sensors_count++;
-	splx(s);
+	crit_leave();
 }
 
 void
 sensordev_deinstall(struct ksensordev *sensdev)
 {
-	int s;
-
-	s = splhigh();
+	crit_enter();
 	sensordev_count--;
 	SLIST_REMOVE(&sensordev_list, sensdev, ksensordev, list);
-	splx(s);
+	crit_leave();
 
 #if NHOTPLUG > 0
 	hotplug_device_detach(DV_DULL, "sensordev");
@@ -118,9 +115,8 @@ void
 sensor_detach(struct ksensordev *sensdev, struct ksensor *sens)
 {
 	struct ksensors_head *sh;
-	int s;
 
-	s = splhigh();
+	crit_enter();
 	sh = &sensdev->sensors_list;
 	sensdev->sensors_count--;
 	SLIST_REMOVE(sh, sens, ksensor, list);
@@ -129,7 +125,7 @@ sensor_detach(struct ksensordev *sensdev, struct ksensor *sens)
 	 */
 	if (sens->numt == sensdev->maxnumt[sens->type] - 1)
 		sensdev->maxnumt[sens->type]--;
-	splx(s);
+	crit_leave();
 }
 
 int
