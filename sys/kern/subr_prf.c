@@ -262,15 +262,14 @@ splassert_fail(int wantipl, int haveipl, const char *func)
 void
 log(int level, const char *fmt, ...)
 {
-	int s;
 	va_list ap;
 
-	s = splhigh();
+	crit_enter();
 	logpri(level);		/* log the level first */
 	va_start(ap, fmt);
 	kprintf(fmt, TOLOG, NULL, NULL, ap);
 	va_end(ap);
-	splx(s);
+	crit_leave();
 	if (!log_open) {
 		va_start(ap, fmt);
 		kprintf(fmt, TOCONS, NULL, NULL, ap);
@@ -303,14 +302,13 @@ logpri(int level)
 int
 addlog(const char *fmt, ...)
 {
-	int s;
 	va_list ap;
 
-	s = splhigh();
+	crit_enter();
 	va_start(ap, fmt);
 	kprintf(fmt, TOLOG, NULL, NULL, ap);
 	va_end(ap);
-	splx(s);
+	crit_leave();
 	if (!log_open) {
 		va_start(ap, fmt);
 		kprintf(fmt, TOCONS, NULL, NULL, ap);

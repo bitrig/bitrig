@@ -82,7 +82,7 @@ struct usbf_pipe_methods {
 
 struct usbf_bus_methods {
 	usbf_status	  (*open_pipe)(struct usbf_pipe *);
-	void		  (*soft_intr)(void *);
+	int		  (*soft_intr)(void *);
 	usbf_status	  (*allocm)(struct usbf_bus *, struct usb_dma *,
 			      u_int32_t);
 	void		  (*freem)(struct usbf_bus *, struct usb_dma *);

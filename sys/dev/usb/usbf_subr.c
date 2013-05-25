@@ -1067,10 +1067,8 @@ usbf_softintr_establish(struct usbf_bus *bus)
 {
 	KASSERT(bus->soft == NULL);
 
-	bus->soft = softintr_establish(IPL_SOFTUSB,
-	    bus->methods->soft_intr, bus);
-	if (bus->soft == NULL)
-		return USBF_INVAL;
+	bus->soft = ithread_softregister(IPL_SOFTNET,
+	    bus->methods->soft_intr, bus, 0);
 
 	return USBF_NORMAL_COMPLETION;
 }
@@ -1078,5 +1076,5 @@ usbf_softintr_establish(struct usbf_bus *bus)
 void
 usbf_schedsoftintr(struct usbf_bus *bus)
 {
-	softintr_schedule(bus->soft);
+	ithread_softsched(bus->soft);
 }

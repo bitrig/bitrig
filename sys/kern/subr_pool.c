@@ -965,6 +965,7 @@ pool_reclaim_all(void)
 {
 	struct pool	*pp;
 
+	/* XXX is this right ? */
 	rw_enter_read(&pool_lock);
 	SIMPLEQ_FOREACH(pp, &pool_head, pr_poollist)
 		pool_reclaim(pp);

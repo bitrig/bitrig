@@ -181,7 +181,7 @@ void		uhci_root_intr_done(struct usbd_xfer *);
 
 usbd_status	uhci_open(struct usbd_pipe *);
 void		uhci_poll(struct usbd_bus *);
-void		uhci_softintr(void *);
+int		uhci_softintr(void *);
 
 usbd_status	uhci_device_request(struct usbd_xfer *xfer);
 
@@ -1086,7 +1086,7 @@ uhci_intr1(struct uhci_softc *sc)
 	return (1);
 }
 
-void
+int
 uhci_softintr(void *v)
 {
 	struct uhci_softc *sc = v;
@@ -1096,7 +1096,7 @@ uhci_softintr(void *v)
 		     sc->sc_bus.intr_context));
 
 	if (sc->sc_bus.dying)
-		return;
+		return (0);
 
 	sc->sc_bus.intr_context++;
 
@@ -1122,6 +1122,8 @@ uhci_softintr(void *v)
 	}
 
 	sc->sc_bus.intr_context--;
+
+	return (1);
 }
 
 void
@@ -1197,9 +1199,9 @@ uhci_idone(struct usbd_xfer *xfer)
 	DPRINTFN(12, ("uhci_idone: ux=%p\n", ux));
 #ifdef DIAGNOSTIC
 	{
-		int s = splhigh();
+		crit_enter();
 		if (ux->isdone) {
-			splx(s);
+			crit_leave();
 #ifdef UHCI_DEBUG
 			printf("uhci_idone: ux is done!\n   ");
 			uhci_dump_xfer(ux);
@@ -1209,7 +1211,7 @@ uhci_idone(struct usbd_xfer *xfer)
 			return;
 		}
 		ux->isdone = 1;
-		splx(s);
+		crit_leave();
 	}
 #endif
 

@@ -513,14 +513,13 @@ mbg_read_asic(struct mbg_softc *sc, int cmd, char *buf, size_t len,
 	u_int16_t port;
 	char *p = buf;
 	u_int8_t status;
-	int s;
 
 	/* write the command, optionally taking a timestamp */
 	if (tstamp) {
-		s = splhigh();
+		crit_enter();
 		nanotime(tstamp);
 		bus_space_write_4(sc->sc_iot, sc->sc_ioh, ASIC_DATA, cmd);
-		splx(s);
+		crit_leave();
 	} else
 		bus_space_write_4(sc->sc_iot, sc->sc_ioh, ASIC_DATA, cmd);
 

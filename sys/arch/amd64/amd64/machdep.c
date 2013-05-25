@@ -752,7 +752,7 @@ boot(int howto)
 	delay(4*1000000);	/* XXX */
 
 	uvm_shutdown();
-	splhigh();
+	crit_enter();		/* Disable preemption/interrupts. */
 	cold = 1;
 
 	if ((howto & RB_DUMP) != 0)
@@ -1247,6 +1247,9 @@ init_x86_64(paddr_t first_avail)
 	proc0.p_addr = proc0paddr;
 	cpu_info_primary.ci_curpcb = &proc0.p_addr->u_pcb;
 
+	/* Initiliaze curproc early for critical sections */
+	curproc = &proc0;
+
 	x86_bus_space_init();
 
 	/*
@@ -1581,8 +1584,7 @@ init_x86_64(paddr_t first_avail)
 	intr_default_setup();
 	fpuinit(&cpu_info_primary);
 
-	softintr_init();
-	splraise(IPL_IPI);
+	crit_enter();		/* XXX need to think this through */
 	enable_intr();
 
 #ifdef DDB
@@ -1766,22 +1768,6 @@ idt_vec_free(int vec)
 	idt_allocmap[vec] = 0;
 }
 
-#ifdef DIAGNOSTIC
-void
-splassert_check(int wantipl, const char *func)
-{
-	int cpl = curcpu()->ci_ilevel;
-
-	if (cpl < wantipl) {
-		splassert_fail(wantipl, cpl, func);
-	}
-
-	if (wantipl == IPL_NONE && curcpu()->ci_idepth != 0) {
-		splassert_fail(-1, curcpu()->ci_idepth, func);
-	}
-}
-#endif
-
 void
 getbootinfo(char *bootinfo, int bootinfo_size)
 {
@@ -1931,4 +1917,19 @@ check_context(const struct reg *regs, struct trapframe *tf)
 		return EINVAL;
 
 	return 0;
+}
+
+u_int64_t
+bsrq(u_int64_t mask)
+{
+	u_int64_t result;
+
+	__asm __volatile("bsrq %1,%0" : "=r" (result) : "rm" (mask));
+	return (result);
+}
+
+int
+flsq(u_int64_t mask)
+{
+	return (mask == 0 ? mask : (int)bsrq(mask) + 1);
 }

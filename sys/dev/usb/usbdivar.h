@@ -56,7 +56,7 @@ struct usbd_endpoint {
 struct usbd_bus_methods {
 	usbd_status	      (*open_pipe)(struct usbd_pipe *);
 	int		      (*dev_setaddr)(struct usbd_device *, int);
-	void		      (*soft_intr)(void *);
+	int		      (*soft_intr)(void *);
 	void		      (*do_poll)(struct usbd_bus *);
 	struct usbd_xfer *    (*allocx)(struct usbd_bus *);
 	void		      (*freex)(struct usbd_bus *, struct usbd_xfer *);
