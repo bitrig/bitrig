@@ -234,7 +234,7 @@ void	realitexpire(void *);
 
 struct clockframe;
 void	hardclock(struct clockframe *);
-void	softclock(void *);
+int	softclock(void *);
 void	statclock(struct clockframe *);
 
 void	initclocks(void);
@@ -350,14 +350,28 @@ void	_kernel_lock(void);
 void	_kernel_unlock(void);
 
 #define	KERNEL_LOCK_INIT()		_kernel_lock_init()
+#ifdef DIAGNOSTIC
+#define	KERNEL_LOCK()							\
+	do {								\
+		if (CRIT_DEPTH)						\
+			printf("%s:%d lock with crit depth %d\n",	\
+			    __func__, __LINE__, CRIT_DEPTH);		\
+		_kernel_lock();						\
+	} while (0)
+#else  /* DIAGNOSTIC */
 #define	KERNEL_LOCK()			_kernel_lock()
+#endif
 #define	KERNEL_UNLOCK()			_kernel_unlock()
+#define	KERNEL_ASSERT_LOCKED()		KASSERT(__mp_lock_held(&kernel_lock))
+#define	KERNEL_ASSERT_UNLOCKED()	KASSERT(__mp_lock_held(&kernel_lock) == 0)
 
 #else /* ! MULTIPROCESSOR */
 
 #define	KERNEL_LOCK_INIT()		/* nothing */
 #define	KERNEL_LOCK()			/* nothing */
 #define	KERNEL_UNLOCK()			/* nothing */
+#define	KERNEL_ASSERT_LOCKED()		/* nothing */
+#define	KERNEL_ASSERT_UNLOCKED()	/* nothing */
 
 #endif /* MULTIPROCESSOR */
 

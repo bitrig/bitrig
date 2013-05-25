@@ -1320,7 +1320,7 @@ parsedisk(char *str, int len, int defpart, dev_t *devp)
 void
 setroot(struct device *bootdv, int part, int exitflags)
 {
-	int majdev, unit, len, s, slept = 0;
+	int majdev, unit, len, slept = 0;
 	struct swdevt *swp;
 	struct device *rootdv, *dv;
 	dev_t nrootdev, nswapdev = NODEV, temp = NODEV;
@@ -1385,11 +1385,11 @@ setroot(struct device *bootdv, int part, int exitflags)
 				printf(")");
 			}
 			printf(": ");
-			s = splhigh();
+			crit_enter();
 			cnpollc(TRUE);
 			len = getsn(buf, sizeof(buf));
 			cnpollc(FALSE);
-			splx(s);
+			crit_leave();
 			if (strcmp(buf, "exit") == 0)
 				boot(exitflags);
 			if (len == 0 && bootdv != NULL) {
@@ -1422,11 +1422,11 @@ setroot(struct device *bootdv, int part, int exitflags)
 				printf(" (default %s%s)", rootdv->dv_xname,
 				    rootdv->dv_class == DV_DISK ? "b" : "");
 			printf(": ");
-			s = splhigh();
+			crit_enter();
 			cnpollc(TRUE);
 			len = getsn(buf, sizeof(buf));
 			cnpollc(FALSE);
-			splx(s);
+			crit_leave();
 			if (strcmp(buf, "exit") == 0)
 				boot(exitflags);
 			if (len == 0 && rootdv != NULL) {

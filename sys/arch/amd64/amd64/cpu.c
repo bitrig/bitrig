@@ -144,14 +144,14 @@ void
 replacesmap(void)
 {
 	static int replacedone = 0;
-	int i, s;
+	int i;
 	vaddr_t nva;
 
 	if (replacedone)
 		return;
 	replacedone = 1;
 
-	s = splhigh();
+	crit_enter();
 	/*
 	 * Create writeable aliases of memory we need
 	 * to write to as kernel is mapped read-only
@@ -176,7 +176,7 @@ replacesmap(void)
 
 	km_free((void *)nva, 2 * PAGE_SIZE, &kv_any, &kp_none);
 	
-	splx(s);
+	crit_leave();
 }
 #endif /* !SMALL_KERNEL */
 
@@ -680,14 +680,25 @@ cpu_boot_secondary(struct cpu_info *ci)
  * this processor will enter the idle loop and start looking for work.
  *
  * XXX should share some of this with init386 in machdep.c
+ *
+ * Interrupts are and must be disabled at this point, we may never get an
+ * interrupt before having a process context, since we will need to look at
+ * curproc->p_crit to decide if we take the interrupt or not. Also mutexes will
+ * rely on curproc->p_crit, so in order to do a printf, as we do in
+ * identifycpu(), we need a process context.
+ * The interrupts will be enabled on the first scheduling of idleCPUNUM, since
+ * on that point we have a fullblown process;
  */
 void
 cpu_hatch(void *v)
 {
 	struct cpu_info *ci = (struct cpu_info *)v;
-	int s;
+	struct proc fakeproc;
 
 	cpu_init_msrs(ci);
+
+	bzero(&fakeproc, sizeof(fakeproc));
+	curproc = &fakeproc;
 
 #ifdef DEBUG
 	if (ci->ci_flags & CPUF_PRESENT)
@@ -736,15 +747,14 @@ cpu_hatch(void *v)
 	if (mem_range_softc.mr_op != NULL)
 		mem_range_softc.mr_op->initAP(&mem_range_softc);
 
-	s = splhigh();
+	crit_enter();
 	lcr8(0);
-	enable_intr();
 
 	nanouptime(&ci->ci_schedstate.spc_runtime);
-	splx(s);
+	crit_leave();
 
-	SCHED_LOCK(s);
-	cpu_switchto(NULL, sched_chooseproc());
+	SCHED_LOCK();
+	cpu_switchto(NULL, curcpu()->ci_schedstate.spc_idleproc);
 }
 
 #if defined(DDB)

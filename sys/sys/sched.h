@@ -145,6 +145,7 @@ void sched_idle(void *);
 void sched_exit(struct proc *);
 void mi_switch(void);
 void cpu_switchto(struct proc *, struct proc *);
+void resched_proc(struct proc *, u_char);
 struct proc *sched_chooseproc(void);
 struct cpu_info *sched_choosecpu(struct proc *);
 struct cpu_info *sched_choosecpu_fork(struct proc *parent, int);
@@ -159,6 +160,15 @@ void sched_stop_secondary_cpus(void);
 #endif
 
 #define curcpu_is_idle()	(curcpu()->ci_schedstate.spc_whichqs == 0)
+#define in_intr()		(curcpu()->ci_idepth != 0)
+#define assert_in_intr() do {						\
+		if (__predict_false(curcpu()->ci_idepth == 0))		\
+			panic("%s:%d in interrupt\n", __func__, __LINE__); \
+	} while (0)
+#define assert_not_in_intr() do {					\
+		if (__predict_false(curcpu()->ci_idepth != 0))		\
+			panic("%s:%d in interrupt\n", __func__, __LINE__); \
+	} while (0)
 
 void sched_init_runqueues(void);
 void setrunqueue(struct proc *);
@@ -194,27 +204,27 @@ do {									\
 
 #define	SCHED_LOCK_INIT()	__mp_lock_init(&sched_lock)
 
-#define	SCHED_LOCK(s)							\
+#define	SCHED_LOCK()							\
 do {									\
-	s = splsched();							\
+	crit_enter();							\
 	__mp_lock(&sched_lock);						\
 } while (/* CONSTCOND */ 0)
 
-#define	SCHED_UNLOCK(s)							\
+#define	SCHED_UNLOCK()							\
 do {									\
 	__mp_unlock(&sched_lock);					\
-	splx(s);							\
+	crit_leave();							\
 } while (/* CONSTCOND */ 0)
 
 #else /* ! MULTIPROCESSOR || LOCKDEBUG */
 
-#define	SCHED_ASSERT_LOCKED()		splassert(IPL_SCHED);
+#define	SCHED_ASSERT_LOCKED()		CRIT_ASSERT();
 #define	SCHED_ASSERT_UNLOCKED()		/* nothing */
 
 #define	SCHED_LOCK_INIT()		/* nothing */
 
-#define	SCHED_LOCK(s)			s = splsched()
-#define	SCHED_UNLOCK(s)			splx(s)
+#define	SCHED_LOCK()			crit_enter();
+#define	SCHED_UNLOCK()			crit_leave();
 
 #endif /* MULTIPROCESSOR || LOCKDEBUG */
 

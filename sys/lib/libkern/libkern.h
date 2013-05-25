@@ -150,6 +150,8 @@ void	 explicit_bzero(void *, size_t);
 int	 ffs(int);
 int	 fls(int);
 int	 flsl(long);
+int	 flsq(u_int64_t);
+u_int64_t bsrq(u_int64_t);
 void	*memchr(const void *, int, size_t);
 int	 memcmp(const void *, const void *, size_t);
 u_int32_t random(void);

@@ -37,6 +37,7 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/device.h>
+#include <sys/proc.h>
 
 #include <dev/pci/pcireg.h>
 #include <dev/pci/pcivar.h>
@@ -68,7 +69,6 @@ obsd_pci_io_find(pci_chipset_tag_t pc, pcitag_t tag, int reg, pcireg_t type,
     bus_addr_t *basep, bus_size_t *sizep, int *flagsp)
 {
 	pcireg_t address, mask, csr;
-	int s;
 
 	if (reg < PCI_MAPREG_START ||
 #if 0
@@ -91,7 +91,7 @@ obsd_pci_io_find(pci_chipset_tag_t pc, pcitag_t tag, int reg, pcireg_t type,
 	 * n bits of the address to 0.  As recommended, we write all 1s while
 	 * the device is disabled and see what we get back.
 	 */
-	s = splhigh();
+	crit_enter();
 	csr = pci_conf_read(pc, tag, PCI_COMMAND_STATUS_REG);
 	if (csr & PCI_COMMAND_IO_ENABLE)
 		pci_conf_write(pc, tag, PCI_COMMAND_STATUS_REG,
@@ -102,7 +102,7 @@ obsd_pci_io_find(pci_chipset_tag_t pc, pcitag_t tag, int reg, pcireg_t type,
 	pci_conf_write(pc, tag, reg, address);
 	if (csr & PCI_COMMAND_IO_ENABLE)
 		pci_conf_write(pc, tag, PCI_COMMAND_STATUS_REG, csr);
-	splx(s);
+	crit_leave();
 
 	if (PCI_MAPREG_TYPE(address) != PCI_MAPREG_TYPE_IO) {
 #ifdef DEBUG
@@ -134,7 +134,7 @@ obsd_pci_mem_find(pci_chipset_tag_t pc, pcitag_t tag, int reg, pcireg_t type,
 {
 	pcireg_t address, mask, address1 = 0, mask1 = 0xffffffff, csr;
 	u_int64_t waddress, wmask;
-	int s, is64bit;
+	int is64bit;
 
 	is64bit = (PCI_MAPREG_MEM_TYPE(type) == PCI_MAPREG_MEM_TYPE_64BIT);
 
@@ -162,7 +162,7 @@ obsd_pci_mem_find(pci_chipset_tag_t pc, pcitag_t tag, int reg, pcireg_t type,
 	 * n bits of the address to 0.  As recommended, we write all 1s while
 	 * the device is disabled and see what we get back.
 	 */
-	s = splhigh();
+	crit_enter();
 	csr = pci_conf_read(pc, tag, PCI_COMMAND_STATUS_REG);
 	if (csr & PCI_COMMAND_MEM_ENABLE)
 		pci_conf_write(pc, tag, PCI_COMMAND_STATUS_REG,
@@ -179,7 +179,7 @@ obsd_pci_mem_find(pci_chipset_tag_t pc, pcitag_t tag, int reg, pcireg_t type,
 	}
 	if (csr & PCI_COMMAND_MEM_ENABLE)
 		pci_conf_write(pc, tag, PCI_COMMAND_STATUS_REG, csr);
-	splx(s);
+	crit_leave();
 
 	if (PCI_MAPREG_TYPE(address) != PCI_MAPREG_TYPE_MEM) {
 #ifdef DEBUG
@@ -280,9 +280,8 @@ int
 pci_mapreg_probe(pci_chipset_tag_t pc, pcitag_t tag, int reg, pcireg_t *typep)
 {
 	pcireg_t address, mask, csr;
-	int s;
 	
-	s = splhigh();
+	crit_enter();
 	csr = pci_conf_read(pc, tag, PCI_COMMAND_STATUS_REG);
 	if (csr & (PCI_COMMAND_IO_ENABLE | PCI_COMMAND_MEM_ENABLE))
 		pci_conf_write(pc, tag, PCI_COMMAND_STATUS_REG, csr &
@@ -293,7 +292,7 @@ pci_mapreg_probe(pci_chipset_tag_t pc, pcitag_t tag, int reg, pcireg_t *typep)
 	pci_conf_write(pc, tag, reg, address);
 	if (csr & (PCI_COMMAND_IO_ENABLE | PCI_COMMAND_MEM_ENABLE))
 		pci_conf_write(pc, tag, PCI_COMMAND_STATUS_REG, csr);
-	splx(s);
+	crit_leave();
 
 	if (mask == 0) /* unimplemented mapping register */
 		return (0);

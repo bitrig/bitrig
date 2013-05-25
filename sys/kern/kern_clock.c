@@ -51,6 +51,7 @@
 #include <sys/sysctl.h>
 #include <sys/sched.h>
 #include <sys/timetc.h>
+#include <sys/ithread.h>
 
 
 #ifdef GPROF
@@ -115,10 +116,7 @@ initclocks(void)
 {
 	int i;
 
-	softclock_si = softintr_establish_mpsafe(IPL_SOFTCLOCK,
-	    softclock, NULL);
-	if (softclock_si == NULL)
-		panic("initclocks: unable to register softclock intr");
+	softclock_si = ithread_softregister(IPL_SOFTCLOCK, softclock, NULL, 0);
 
 	/*
 	 * Set divisors to 1 (normal case) and let the machine-specific
@@ -203,7 +201,7 @@ hardclock(struct clockframe *frame)
 	 * relatively high clock interrupt priority any longer than necessary.
 	 */
 	if (timeout_hardclock_update())
-		softintr_schedule(softclock_si);
+		ithread_softsched(softclock_si);
 }
 
 /*
@@ -333,15 +331,13 @@ tstohz(const struct timespec *ts)
 void
 startprofclock(struct process *pr)
 {
-	int s;
-
 	if ((pr->ps_flags & PS_PROFIL) == 0) {
 		atomic_setbits_int(&pr->ps_flags, PS_PROFIL);
 		if (++profprocs == 1 && stathz != 0) {
-			s = splstatclock();
+			crit_enter();
 			psdiv = pscnt = psratio;
 			setstatclockrate(profhz);
-			splx(s);
+			crit_leave();
 		}
 	}
 }
@@ -352,15 +348,13 @@ startprofclock(struct process *pr)
 void
 stopprofclock(struct process *pr)
 {
-	int s;
-
 	if (pr->ps_flags & PS_PROFIL) {
 		atomic_clearbits_int(&pr->ps_flags, PS_PROFIL);
 		if (--profprocs == 0 && stathz != 0) {
-			s = splstatclock();
+			crit_enter();
 			psdiv = pscnt = 1;
 			setstatclockrate(stathz);
-			splx(s);
+			crit_leave();
 		}
 	}
 }

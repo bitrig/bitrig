@@ -232,10 +232,10 @@ tun_clone_destroy(struct ifnet *ifp)
 #endif
 	tun_wakeup(tp);
 
-	s = splhigh();
+	crit_enter();
 	klist_invalidate(&tp->tun_rsel.si_note);
 	klist_invalidate(&tp->tun_wsel.si_note);
-	splx(s);
+	crit_leave();
 
 	s = splnet();
 	LIST_REMOVE(tp, tun_list);
@@ -1009,9 +1009,9 @@ tunkqfilter(dev_t dev, struct knote *kn)
 
 	kn->kn_hook = (caddr_t)tp;
 
-	s = splhigh();
+	crit_enter();
 	SLIST_INSERT_HEAD(klist, kn, kn_selnext);
-	splx(s);
+	crit_leave();
 
 	return (0);
 }
@@ -1019,14 +1019,13 @@ tunkqfilter(dev_t dev, struct knote *kn)
 void
 filt_tunrdetach(struct knote *kn)
 {
-	int			 s;
 	struct tun_softc	*tp;
 
 	tp = (struct tun_softc *)kn->kn_hook;
-	s = splhigh();
+	crit_enter();
 	if (!(kn->kn_status & KN_DETACHED))
 		SLIST_REMOVE(&tp->tun_rsel.si_note, kn, knote, kn_selnext);
-	splx(s);
+	crit_leave();
 }
 
 int
@@ -1063,14 +1062,13 @@ filt_tunread(struct knote *kn, long hint)
 void
 filt_tunwdetach(struct knote *kn)
 {
-	int			 s;
 	struct tun_softc	*tp;
 
 	tp = (struct tun_softc *)kn->kn_hook;
-	s = splhigh();
+	crit_enter();
 	if (!(kn->kn_status & KN_DETACHED))
 		SLIST_REMOVE(&tp->tun_wsel.si_note, kn, knote, kn_selnext);
-	splx(s);
+	crit_leave();
 }
 
 int

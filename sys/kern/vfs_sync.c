@@ -269,12 +269,10 @@ sched_sync(struct proc *p)
 int
 speedup_syncer(void)
 {
-	int s;
-
-	SCHED_LOCK(s);
+	SCHED_LOCK();
 	if (syncerproc && syncerproc->p_wchan == &lbolt)
 		setrunnable(syncerproc);
-	SCHED_UNLOCK(s);
+	SCHED_UNLOCK();
 	if (rushjob < syncdelay / 2) {
 		rushjob += 1;
 		stat_rush_requests += 1;

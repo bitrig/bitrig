@@ -31,6 +31,7 @@
 #include <sys/systm.h>
 #include <sys/device.h>
 #include <sys/queue.h>
+#include <sys/proc.h>
 #include <machine/bus.h>
 
 #include <dev/ic/mc6845reg.h>
@@ -82,12 +83,12 @@ void
 vga_loadchars(struct vga_handle *vh, int fontset, int first, int num, int lpc,
     char *data)
 {
-	int offset, i, j, s;
+	int offset, i, j;
 
 	/* fontset number swizzle done in vga_setfontset() */
 	offset = (fontset << 13) | (first << 5);
 
-	s = splhigh();
+	crit_enter();
 	fontram(vh);
 
 	for (i = 0; i < num; i++)
@@ -97,7 +98,7 @@ vga_loadchars(struct vga_handle *vh, int fontset, int first, int num, int lpc,
 					  data[i * lpc + j]);
 
 	textram(vh);
-	splx(s);
+	crit_leave();
 }
 
 void

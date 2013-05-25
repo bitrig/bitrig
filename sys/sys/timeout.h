@@ -48,7 +48,7 @@
  *      Remove the timeout from the timeout queue. It's legal to remove
  *      a timeout that has already happened.
  *
- * These functions may be called in interrupt context (anything below splhigh).
+ * These functions may be called in any context.
  */
 
 struct circq {

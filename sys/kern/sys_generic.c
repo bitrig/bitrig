@@ -603,7 +603,7 @@ dopselect(struct proc *p, int nd, fd_set *in, fd_set *ou, fd_set *ex,
 	fd_mask bits[6];
 	fd_set *pibits[3], *pobits[3];
 	struct timespec ats, rts, tts;
-	int s, ncoll, error = 0, timo;
+	int ncoll, error = 0, timo;
 	u_int ni;
 
 	if (nd < 0)
@@ -677,14 +677,14 @@ retry:
 		timo = tts.tv_sec > 24 * 60 * 60 ?
 			24 * 60 * 60 * hz : tstohz(&tts);
 	}
-	s = splhigh();
+	crit_enter();
 	if ((p->p_flag & P_SELECT) == 0 || nselcoll != ncoll) {
-		splx(s);
+		crit_leave();
 		goto retry;
 	}
 	atomic_clearbits_int(&p->p_flag, P_SELECT);
 	error = tsleep(&selwait, PSOCK | PCATCH, "select", timo);
-	splx(s);
+	crit_leave();
 	if (error == 0)
 		goto retry;
 done:
@@ -794,7 +794,6 @@ void
 selwakeup(struct selinfo *sip)
 {
 	struct proc *p;
-	int s;
 
 	KNOTE(&sip->si_note, 0);
 	if (sip->si_selpid == 0)
@@ -807,7 +806,7 @@ selwakeup(struct selinfo *sip)
 	p = pfind(sip->si_selpid);
 	sip->si_selpid = 0;
 	if (p != NULL) {
-		SCHED_LOCK(s);
+		SCHED_LOCK();
 		if (p->p_wchan == (caddr_t)&selwait) {
 			if (p->p_stat == SSLEEP)
 				setrunnable(p);
@@ -815,7 +814,7 @@ selwakeup(struct selinfo *sip)
 				unsleep(p);
 		} else if (p->p_flag & P_SELECT)
 			atomic_clearbits_int(&p->p_flag, P_SELECT);
-		SCHED_UNLOCK(s);
+		SCHED_UNLOCK();
 	}
 }
 
@@ -937,7 +936,7 @@ doppoll(struct proc *p, struct pollfd *fds, u_int nfds,
 	size_t sz;
 	struct pollfd pfds[4], *pl = pfds;
 	struct timespec ats, rts, tts;
-	int timo, ncoll, i, s, error;
+	int timo, ncoll, i, error;
 	extern int nselcoll, selwait;
 
 	/* Standards say no more than MAX_OPEN; this is possibly better. */
@@ -985,14 +984,14 @@ retry:
 		timo = tts.tv_sec > 24 * 60 * 60 ?
 			24 * 60 * 60 * hz : tstohz(&tts);
 	}
-	s = splhigh();
+	crit_enter();
 	if ((p->p_flag & P_SELECT) == 0 || nselcoll != ncoll) {
-		splx(s);
+		crit_leave();
 		goto retry;
 	}
 	atomic_clearbits_int(&p->p_flag, P_SELECT);
 	error = tsleep(&selwait, PSOCK | PCATCH, "poll", timo);
-	splx(s);
+	crit_leave();
 	if (error == 0)
 		goto retry;
 

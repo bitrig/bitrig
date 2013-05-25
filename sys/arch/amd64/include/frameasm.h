@@ -54,6 +54,13 @@
 	pushq	%r11			; \
 	pushq	%r13			;
 
+#define INTR_FAKECLKFRAME_ENTER	INTR_RECURSE_HWFRAME
+#define INTR_FAKECLKFRAME_LEAVE	 \
+	popq	%r10	;	 \
+	popq	%r10	;	 \
+	popq	%r10	;	 \
+	popq	%r10	;	 \
+	popq	%r10	;
 /*
  * Restore %ds, %es, %fs, and %gs, dealing with the FS.base MSR for
  * %fs and doing the cli/swapgs for %gs.  Uses %rax, %rcx, and %rdx

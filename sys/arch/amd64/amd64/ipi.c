@@ -96,7 +96,7 @@ x86_broadcast_ipi(int ipimask)
 }
 
 void
-x86_ipi_handler(void)
+x86_ipi_handler(struct intrsource *is_unused)
 {
 	extern struct evcount ipi_count;
 	struct cpu_info *ci = curcpu();

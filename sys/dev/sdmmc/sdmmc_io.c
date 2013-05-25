@@ -637,7 +637,6 @@ sdmmc_intr_establish(struct device *sdmmc, int (*fun)(void *),
 {
 	struct sdmmc_softc *sc = (struct sdmmc_softc *)sdmmc;
 	struct sdmmc_intr_handler *ih;
-	int s;
 
 	if (sc->sct->card_intr_mask == NULL)
 		return NULL;
@@ -651,13 +650,13 @@ sdmmc_intr_establish(struct device *sdmmc, int (*fun)(void *),
 	ih->ih_fun = fun;
 	ih->ih_arg = arg;
 
-	s = splhigh();
+	crit_enter();
 	if (TAILQ_EMPTY(&sc->sc_intrq)) {
 		sdmmc_intr_enable(sc->sc_fn0);
 		sdmmc_chip_card_intr_mask(sc->sct, sc->sch, 1);
 	}
 	TAILQ_INSERT_TAIL(&sc->sc_intrq, ih, entry);
-	splx(s);
+	crit_leave();
 	return ih;
 }
 
@@ -669,18 +668,17 @@ sdmmc_intr_disestablish(void *cookie)
 {
 	struct sdmmc_intr_handler *ih = cookie;
 	struct sdmmc_softc *sc = ih->ih_softc;
-	int s;
 
 	if (sc->sct->card_intr_mask == NULL)
 		return;
 
-	s = splhigh();
+	crit_enter();
 	TAILQ_REMOVE(&sc->sc_intrq, ih, entry);
 	if (TAILQ_EMPTY(&sc->sc_intrq)) {
 		sdmmc_chip_card_intr_mask(sc->sct, sc->sch, 0);
 		sdmmc_intr_disable(sc->sc_fn0);
 	}
-	splx(s);
+	crit_leave();
 
 	free(ih, M_DEVBUF);
 }
@@ -707,17 +705,16 @@ sdmmc_intr_task(void *arg)
 {
 	struct sdmmc_softc *sc = arg;
 	struct sdmmc_intr_handler *ih;
-	int s;
 
-	s = splhigh();
+	crit_enter();
 	TAILQ_FOREACH(ih, &sc->sc_intrq, entry) {
-		splx(s);
+		crit_leave();
 
 		/* XXX examine return value and do evcount stuff*/
 		(void)ih->ih_fun(ih->ih_arg);
 
-		s = splhigh();
+		crit_enter();
 	}
 	sdmmc_chip_card_intr_ack(sc->sct, sc->sch);
-	splx(s);
+	crit_leave();
 }

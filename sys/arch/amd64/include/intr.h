@@ -39,6 +39,7 @@
 #include <machine/cpu.h>
 
 #include <sys/evcount.h>
+#include <sys/proc.h>
 
 /*
  * Struct describing an interrupt source for a CPU. struct cpu_info
@@ -60,22 +61,22 @@
 
 struct intrstub {
 	void *ist_entry;
-	void *ist_recurse;
-	void *ist_resume;
 };
 
 struct intrsource {
 	int is_maxlevel;		/* max. IPL for this source */
 	int is_pin;			/* IRQ for legacy; pin for IO APIC */
+	void (*is_run)(struct intrsource *);	/* Run callback to this source */
 	struct intrhand *is_handlers;	/* handler chain */
 	struct pic *is_pic;		/* originating PIC */
-	void *is_recurse;		/* entry for spllower */
-	void *is_resume;		/* entry for doreti */
 	char is_evname[32];		/* event counter name */
 	int is_flags;			/* see below */
 	int is_type;			/* level, edge */
 	int is_idtvec;
 	int is_minlevel;
+	volatile int is_scheduled;	/* proc is runnable */
+	struct proc *is_proc;		/* ithread proc */
+	TAILQ_ENTRY(intrsource) entry;	/* entry in ithreads list */
 };
 
 #define IS_LEGACY	0x0001		/* legacy ISA irq source */
@@ -105,9 +106,10 @@ struct intrhand {
 #define IUNMASK(ci,level) (ci)->ci_iunmask[(level)]
 
 extern void Xspllower(int);
+extern void Xfakeclock(struct intrsource *);
 
-int splraise(int);
 int spllower(int);
+int splraise(int);
 void softintr(int);
 
 /*
@@ -132,9 +134,6 @@ void softintr(int);
 #define	splnet()	splraise(IPL_NET)
 #define	spltty()	splraise(IPL_TTY)
 #define	splaudio()	splraise(IPL_AUDIO)
-#define	splclock()	splraise(IPL_CLOCK)
-#define	splstatclock()	splclock()
-#define splipi()	splraise(IPL_IPI)
 
 /*
  * Software interrupt masks
@@ -147,10 +146,7 @@ void softintr(int);
  * Miscellaneous
  */
 #define	splvm()		splraise(IPL_VM)
-#define	splhigh()	splraise(IPL_HIGH)
 #define	spl0()		spllower(IPL_NONE)
-#define	splsched()	splraise(IPL_SCHED)
-#define spllock() 	splhigh()
 #define	splx(x)		spllower(x)
 
 /* SPL asserts */
@@ -162,11 +158,13 @@ void softintr(int);
 void splassert_fail(int, int, const char *);
 extern int splassert_ctl;
 void splassert_check(int, const char *);
-#define splassert(__wantipl) do {			\
-	if (splassert_ctl > 0) {			\
-		splassert_check(__wantipl, __func__);	\
-	}						\
-} while (0)
+#define splassert(__wantipl) do {					\
+		if (__wantipl >= IPL_CLOCK) {				\
+			CRIT_ASSERT();					\
+		} else if (splassert_ctl > 0) {				\
+			splassert_check(__wantipl, __func__);		\
+		}							\
+	} while (0)
 #define splsoftassert(wantipl) splassert(wantipl)
 #else
 #define splassert(wantipl)	do { /* nada */ } while (0)
@@ -214,68 +212,12 @@ void intr_printconfig(void);
 int x86_send_ipi(struct cpu_info *, int);
 int x86_fast_ipi(struct cpu_info *, int);
 void x86_broadcast_ipi(int);
-void x86_ipi_handler(void);
+void x86_ipi_handler(struct intrsource *);
 void x86_setperf_ipi(struct cpu_info *);
 
 extern void (*ipifunc[X86_NIPI])(struct cpu_info *);
 #endif
 
 #endif /* !_LOCORE */
-
-/*
- * Generic software interrupt support.
- */
-
-#define	X86_SOFTINTR_SOFTCLOCK		0
-#define	X86_SOFTINTR_SOFTNET		1
-#define	X86_SOFTINTR_SOFTTTY		2
-#define	X86_NSOFTINTR			3
-
-#ifndef _LOCORE
-#include <sys/queue.h>
-
-struct x86_soft_intrhand {
-	TAILQ_ENTRY(x86_soft_intrhand)
-		sih_q;
-	struct x86_soft_intr *sih_intrhead;
-	void	(*sih_fn)(void *);
-	void	(*sih_fnwrap)(void *);
-	void	*sih_arg;
-	void	*sih_argwrap;
-	int	sih_pending;
-};
-
-struct x86_soft_intr {
-	TAILQ_HEAD(, x86_soft_intrhand)
-			softintr_q;
-	int		softintr_ssir;
-	struct mutex	softintr_lock;
-};
-
-#define	SOFTINTR_ESTABLISH_MPSAFE	0x01
-
-void	*softintr_establish_flags(int, void (*)(void *), void *, int);
-#define softintr_establish(i, f, a)					\
-	softintr_establish_flags(i, f, a, 0)
-#define softintr_establish_mpsafe(i, f, a)				\
-	softintr_establish_flags(i, f, a, SOFTINTR_ESTABLISH_MPSAFE)
-void	softintr_disestablish(void *);
-void	softintr_init(void);
-void	softintr_dispatch(int);
-
-#define	softintr_schedule(arg)						\
-do {									\
-	struct x86_soft_intrhand *__sih = (arg);			\
-	struct x86_soft_intr *__si = __sih->sih_intrhead;		\
-									\
-	mtx_enter(&__si->softintr_lock);				\
-	if (__sih->sih_pending == 0) {					\
-		TAILQ_INSERT_TAIL(&__si->softintr_q, __sih, sih_q);	\
-		__sih->sih_pending = 1;					\
-		softintr(__si->softintr_ssir);				\
-	}								\
-	mtx_leave(&__si->softintr_lock);				\
-} while (/*CONSTCOND*/ 0)
-#endif /* _LOCORE */
 
 #endif /* !_MACHINE_INTR_H_ */

@@ -47,7 +47,7 @@ mp_setperf(int level)
 {
 	CPU_INFO_ITERATOR cii;
 	struct cpu_info *ci;
-	int notready, s;
+	int notready;
 
 	if (mp_setperf_state == MP_SETPERF_STEADY) {
 		mtx_enter(&setperf_mp_mutex);
@@ -76,11 +76,11 @@ mp_setperf(int level)
 
 		mp_setperf_state = MP_SETPERF_PROCEED; /* release the hounds */
 
-		s = splipi();
+		crit_enter();
 
 		ul_setperf(mp_perflevel);
 
-		splx(s);
+		crit_leave();
 
 		curcpu()->ci_setperf_state = CI_SETPERF_DONE;
 		/* Loop until all processors report done */

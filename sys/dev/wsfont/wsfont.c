@@ -36,6 +36,7 @@
 #include <sys/time.h>
 #include <sys/malloc.h>
 #include <sys/queue.h>
+#include <sys/proc.h>
 
 #include <dev/wscons/wsdisplayvar.h>
 #include <dev/wscons/wsconsio.h>
@@ -271,15 +272,14 @@ void
 wsfont_enum(int (*cb)(void *, struct wsdisplay_font *), void *cbarg)
 {
 	struct font *ent;
-	int s;
 
-	s = splhigh();
+	crit_enter();
 
 	TAILQ_FOREACH(ent, &list, chain)
 		if (cb(cbarg, ent->font) != 0)
 			break;
 
-	splx(s);
+	crit_leave();
 }
 
 #if NRASOPS_ROTATION > 0
@@ -352,9 +352,9 @@ wsfont_rotate(int cookie)
 	struct wsdisplay_font *font;
 	struct font *origfont;
 
-	s = splhigh();
+	crit_enter();
 	origfont = wsfont_find0(cookie);
-	splx(s);
+	crit_leave();
 
 	font = wsfont_rotate_internal(origfont->font);
 	if (font == NULL)
@@ -389,7 +389,7 @@ wsfont_init(void)
 }
 
 /*
- * Find a font by cookie. Called at splhigh.
+ * Find a font by cookie. Called at critical section.
  */
 static struct font *
 wsfont_find0(int cookie)
@@ -410,9 +410,8 @@ int
 wsfont_find(const char *name, int width, int height, int stride)
 {
 	struct font *ent;
-	int s;
 
-	s = splhigh();
+	crit_enter();
 
 	TAILQ_FOREACH(ent, &list, chain) {
 		if (height != 0 && ent->font->fontheight != height)
@@ -427,11 +426,11 @@ wsfont_find(const char *name, int width, int height, int stride)
 		if (name != NULL && strcmp(ent->font->name, name) != 0)
 			continue;
 
-		splx(s);
+		crit_leave();
 		return (ent->cookie);
 	}
 
-	splx(s);
+	crit_leave();
 	return (-1);
 }
 
@@ -443,14 +442,13 @@ wsfont_add(struct wsdisplay_font *font, int copy)
 {
 	static int cookiegen = 666;
 	struct font *ent;
-	int s;
 
-	s = splhigh();
+	crit_enter();
 
 	/* Don't allow exact duplicates */
 	if (wsfont_find(font->name, font->fontwidth, font->fontheight,
 	    font->stride) >= 0) {
-		splx(s);
+		crit_leave();
 		return (-1);
 	}
 
@@ -476,7 +474,7 @@ wsfont_add(struct wsdisplay_font *font, int copy)
 
 	/* Now link into the list and return */
 	TAILQ_INSERT_TAIL(&list, ent, chain);
-	splx(s);
+	crit_leave();
 	return (0);
 }
 
@@ -490,15 +488,15 @@ wsfont_remove(int cookie)
 	struct font *ent;
 	int s;
 
-	s = splhigh();
+	crit_enter();
 
 	if ((ent = wsfont_find0(cookie)) == NULL) {
-		splx(s);
+		crit_leave();
 		return (-1);
 	}
 
 	if ((ent->flg & WSFONT_BUILTIN) != 0 || ent->lockcount != 0) {
-		splx(s);
+		crit_leave();
 		return (-1);
 	}
 
@@ -511,7 +509,7 @@ wsfont_remove(int cookie)
 	/* Remove from list, free entry */
 	TAILQ_REMOVE(&list, ent, chain);
 	free(ent, M_DEVBUF);
-	splx(s);
+	crit_leave();
 	return (0);
 }
 #endif
@@ -526,21 +524,21 @@ wsfont_lock(int cookie, struct wsdisplay_font **ptr, int bitorder,
     int byteorder)
 {
 	struct font *ent;
-	int s, lc;
+	int lc;
 
-	s = splhigh();
+	crit_enter();
 
 	if ((ent = wsfont_find0(cookie)) != NULL) {
 		if (bitorder && bitorder != ent->font->bitorder) {
 #if !defined(SMALL_KERNEL) || defined(__alpha__)
 			if (ent->lockcount) {
-				splx(s);
+				crit_leave();
 				return (-1);
 			}
 			wsfont_revbit(ent->font);
 			ent->font->bitorder = bitorder;
 #else
-			splx(s);
+			crit_leave();
 			return (-1);
 #endif
 		}
@@ -548,13 +546,13 @@ wsfont_lock(int cookie, struct wsdisplay_font **ptr, int bitorder,
 		if (byteorder && byteorder != ent->font->byteorder) {
 #if !defined(SMALL_KERNEL)
 			if (ent->lockcount) {
-				splx(s);
+				crit_leave();
 				return (-1);
 			}
 			wsfont_revbyte(ent->font);
 			ent->font->byteorder = byteorder;
 #else
-			splx(s);
+			crit_leave();
 			return (-1);
 #endif
 		}
@@ -564,7 +562,7 @@ wsfont_lock(int cookie, struct wsdisplay_font **ptr, int bitorder,
 	} else
 		lc = -1;
 
-	splx(s);
+	crit_leave();
 	return (lc);
 }
 
@@ -575,9 +573,9 @@ int
 wsfont_unlock(int cookie)
 {
 	struct font *ent;
-	int s, lc;
+	int lc;
 
-	s = splhigh();
+	crit_enter();
 
 	if ((ent = wsfont_find0(cookie)) != NULL) {
 		if (ent->lockcount == 0)
@@ -586,7 +584,7 @@ wsfont_unlock(int cookie)
 	} else
 		lc = -1;
 
-	splx(s);
+	crit_leave();
 	return (lc);
 }
 

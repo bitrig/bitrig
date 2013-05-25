@@ -153,24 +153,23 @@ logread(dev_t dev, struct uio *uio, int flag)
 {
 	struct msgbuf *mbp = msgbufp;
 	long l;
-	int s;
 	int error = 0;
 
-	s = splhigh();
+	crit_enter();
 	while (mbp->msg_bufr == mbp->msg_bufx) {
 		if (flag & IO_NDELAY) {
-			splx(s);
+			crit_leave();
 			return (EWOULDBLOCK);
 		}
 		logsoftc.sc_state |= LOG_RDWAIT;
 		error = tsleep(mbp, LOG_RDPRI | PCATCH,
 			       "klog", 0);
 		if (error) {
-			splx(s);
+			crit_leave();
 			return (error);
 		}
 	}
-	splx(s);
+	crit_leave();
 	logsoftc.sc_state &= ~LOG_RDWAIT;
 
 	while (uio->uio_resid > 0) {
@@ -195,7 +194,7 @@ int
 logpoll(dev_t dev, int events, struct proc *p)
 {
 	int revents = 0;
-	int s = splhigh();
+	crit_enter();
 
 	if (events & (POLLIN | POLLRDNORM)) {
 		if (msgbufp->msg_bufr != msgbufp->msg_bufx)
@@ -203,7 +202,7 @@ logpoll(dev_t dev, int events, struct proc *p)
 		else
 			selrecord(p, &logsoftc.sc_selp);
 	}
-	splx(s);
+	crit_leave();
 	return (revents);
 }
 
@@ -211,7 +210,6 @@ int
 logkqfilter(dev_t dev, struct knote *kn)
 {
 	struct klist *klist;
-	int s;
 
 	switch (kn->kn_filter) {
 	case EVFILT_READ:
@@ -224,9 +222,9 @@ logkqfilter(dev_t dev, struct knote *kn)
 
 	kn->kn_hook = (void *)msgbufp;
 
-	s = splhigh();
+	crit_enter();
 	SLIST_INSERT_HEAD(klist, kn, kn_selnext);
-	splx(s);
+	crit_leave();
 
 	return (0);
 }
@@ -234,10 +232,10 @@ logkqfilter(dev_t dev, struct knote *kn)
 void
 filt_logrdetach(struct knote *kn)
 {
-	int s = splhigh();
+	crit_enter();
 
 	SLIST_REMOVE(&logsoftc.sc_selp.si_note, kn, knote, kn_selnext);
-	splx(s);
+	crit_leave();
 }
 
 int
@@ -270,15 +268,14 @@ int
 logioctl(dev_t dev, u_long com, caddr_t data, int flag, struct proc *p)
 {
 	long l;
-	int s;
 
 	switch (com) {
 
 	/* return number of characters immediately available */
 	case FIONREAD:
-		s = splhigh();
+		crit_enter();
 		l = msgbufp->msg_bufx - msgbufp->msg_bufr;
-		splx(s);
+		crit_leave();
 		if (l < 0)
 			l += msgbufp->msg_bufs;
 		*(int *)data = l;

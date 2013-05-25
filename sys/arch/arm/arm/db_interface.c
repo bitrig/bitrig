@@ -128,8 +128,6 @@ db_access_irq_sp(struct db_variable *vp, db_expr_t *valp, int rw)
 int
 kdb_trap(int type, db_regs_t *regs)
 {
-	int s;
-
 	switch (type) {
 	case T_BREAKPOINT:	/* breakpoint */
 	case -1:		/* keyboard interrupt */
@@ -146,13 +144,13 @@ kdb_trap(int type, db_regs_t *regs)
 
 	ddb_regs = *regs;
 
-	s = splhigh();
+	crit_enter();
 	db_active++;
 	cnpollc(TRUE);
 	db_trap(type, 0/*code*/);
 	cnpollc(FALSE);
 	db_active--;
-	splx(s);
+	crit_leave();
 
 	*regs = ddb_regs;
 

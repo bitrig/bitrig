@@ -123,7 +123,6 @@ sched_idle(void *v)
 	struct schedstate_percpu *spc;
 	struct proc *p = curproc;
 	struct cpu_info *ci = v;
-	int s;
 
 	KERNEL_UNLOCK();
 
@@ -133,26 +132,29 @@ sched_idle(void *v)
 	 * First time we enter here, we're not supposed to idle,
 	 * just go away for a while.
 	 */
-	SCHED_LOCK(s);
+	SCHED_LOCK();
 	cpuset_add(&sched_idle_cpus, ci);
 	p->p_stat = SSLEEP;
 	p->p_cpu = ci;
 	atomic_setbits_int(&p->p_flag, P_CPUPEG);
 	mi_switch();
 	cpuset_del(&sched_idle_cpus, ci);
-	SCHED_UNLOCK(s);
+	SCHED_UNLOCK();
 
 	KASSERT(ci == curcpu());
 	KASSERT(curproc == spc->spc_idleproc);
+
+	/* Now we have a full-blown process, we can enable interrupts */
+	enable_intr();
 
 	while (1) {
 		while (!curcpu_is_idle()) {
 			struct proc *dead;
 
-			SCHED_LOCK(s);
+			SCHED_LOCK();
 			p->p_stat = SSLEEP;
 			mi_switch();
-			SCHED_UNLOCK(s);
+			SCHED_UNLOCK();
 
 			while ((dead = LIST_FIRST(&spc->spc_deadproc))) {
 				LIST_REMOVE(dead, p_hash);
@@ -160,7 +162,7 @@ sched_idle(void *v)
 			}
 		}
 
-		splassert(IPL_NONE);
+		assertwaitok();
 
 		cpuset_add(&sched_idle_cpus, ci);
 		cpu_idle_enter();
@@ -168,10 +170,10 @@ sched_idle(void *v)
 			if (spc->spc_schedflags & SPCF_SHOULDHALT &&
 			    (spc->spc_schedflags & SPCF_HALTED) == 0) {
 				cpuset_del(&sched_idle_cpus, ci);
-				SCHED_LOCK(s);
+				SCHED_LOCK();
 				atomic_setbits_int(&spc->spc_schedflags,
 				    spc->spc_whichqs ? 0 : SPCF_HALTED);
-				SCHED_UNLOCK(s);
+				SCHED_UNLOCK();
 				wakeup(spc);
 			}
 			cpu_idle_cycle();
@@ -198,7 +200,6 @@ sched_exit(struct proc *p)
 	struct schedstate_percpu *spc = &curcpu()->ci_schedstate;
 	struct timespec ts;
 	struct proc *idle;
-	int s;
 
 	nanouptime(&ts);
 	timespecsub(&ts, &spc->spc_runtime, &ts);
@@ -211,7 +212,7 @@ sched_exit(struct proc *p)
 	__mp_release_all(&kernel_lock);
 #endif
 
-	SCHED_LOCK(s);
+	SCHED_LOCK();
 	idle = spc->spc_idleproc;
 	idle->p_stat = SRUN;
 	cpu_switchto(NULL, idle);
@@ -288,7 +289,6 @@ sched_chooseproc(void)
 		return (p);
 	}
 
-again:
 	if (spc->spc_whichqs) {
 		queue = ffs(spc->spc_whichqs) - 1;
 		p = TAILQ_FIRST(&spc->spc_qs[queue]);
@@ -297,22 +297,8 @@ again:
 		KASSERT(p->p_stat == SRUN);
 	} else if ((p = sched_steal_proc(curcpu())) == NULL) {
 		p = spc->spc_idleproc;
-		if (p == NULL) {
-                        int s;
-			/*
-			 * We get here if someone decides to switch during
-			 * boot before forking kthreads, bleh.
-			 * This is kind of like a stupid idle loop.
-			 */
-#ifdef MULTIPROCESSOR
-			__mp_unlock(&sched_lock);
-#endif
-			spl0();
-			delay(10);
-			SCHED_LOCK(s);
-			goto again;
-                }
-		KASSERT(p);
+		if (p == NULL)
+			panic("switching before idle threads are forked");
 		p->p_stat = SRUN;
 	} 
 
@@ -570,9 +556,8 @@ void
 sched_peg_curproc(struct cpu_info *ci)
 {
 	struct proc *p = curproc;
-	int s;
 
-	SCHED_LOCK(s);
+	SCHED_LOCK();
 	p->p_priority = p->p_usrpri;
 	p->p_stat = SRUN;
 	p->p_cpu = ci;
@@ -580,7 +565,7 @@ sched_peg_curproc(struct cpu_info *ci)
 	setrunqueue(p);
 	p->p_ru.ru_nvcsw++;
 	mi_switch();
-	SCHED_UNLOCK(s);
+	SCHED_UNLOCK();
 }
 
 #ifdef MULTIPROCESSOR

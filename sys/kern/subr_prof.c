@@ -194,7 +194,6 @@ sys_profil(struct proc *p, void *v, register_t *retval)
 	} */ *uap = v;
 	struct process *pr = p->p_p;
 	struct uprof *upp;
-	int s;
 
 	if (SCARG(uap, scale) > (1 << 16))
 		return (EINVAL);
@@ -205,13 +204,13 @@ sys_profil(struct proc *p, void *v, register_t *retval)
 	upp = &pr->ps_prof;
 
 	/* Block profile interrupts while changing state. */
-	s = splstatclock();
+	crit_enter();
 	upp->pr_off = SCARG(uap, offset);
 	upp->pr_scale = SCARG(uap, scale);
 	upp->pr_base = (caddr_t)SCARG(uap, samples);
 	upp->pr_size = SCARG(uap, size);
 	startprofclock(pr);
-	splx(s);
+	crit_leave();
 
 	return (0);
 }

@@ -420,17 +420,16 @@ pcic_event_thread(arg)
 {
 	struct pcic_handle *h = arg;
 	struct pcic_event *pe;
-	int s;
 	struct pcic_softc *sc = (struct pcic_softc *)(h->ph_parent);
 
 	while (h->shutdown == 0) {
-		s = splhigh();
+		crit_enter();
 		if ((pe = SIMPLEQ_FIRST(&h->events)) == NULL) {
-			splx(s);
+			crit_leave();
 			(void) tsleep(&h->events, PWAIT, "pcicev", 0);
 			continue;
 		} else {
-			splx(s);
+			crit_leave();
 			/* sleep .25s to be enqueued chatterling interrupts */
 			(void) tsleep((caddr_t)pcic_event_thread, PWAIT,
 			    "pcicss", hz/4);
@@ -451,15 +450,13 @@ pcic_event_process(h, pe)
 	struct pcic_handle *h;
 	struct pcic_event *pe;
 {
-	int s;
-
-	s = splhigh();
+	crit_enter();
 	SIMPLEQ_REMOVE_HEAD(&h->events, pe_q);
-	splx(s);
+	crit_leave();
 
 	switch (pe->pe_type) {
 	case PCIC_EVENT_INSERTION:
-		s = splhigh();
+		crit_enter();
 		while (1) {
 			struct pcic_event *pe1, *pe2;
 
@@ -476,14 +473,14 @@ pcic_event_process(h, pe)
 				free(pe2, M_TEMP);
 			}
 		}
-		splx(s);
+		crit_leave();
 				
 		DPRINTF(("%s: insertion event\n", h->ph_parent->dv_xname));
 		pcic_attach_card(h);
 		break;
 
 	case PCIC_EVENT_REMOVAL:
-		s = splhigh();
+		crit_enter();
 		while (1) {
 			struct pcic_event *pe1, *pe2;
 
@@ -500,7 +497,7 @@ pcic_event_process(h, pe)
 				free(pe2, M_TEMP);
 			}
 		}
-		splx(s);
+		crit_leave();
 
 		DPRINTF(("%s: removal event\n", h->ph_parent->dv_xname));
 		pcic_detach_card(h, DETACH_FORCE);
@@ -760,16 +757,15 @@ pcic_queue_event(h, event)
 	int event;
 {
 	struct pcic_event *pe;
-	int s;
 
 	pe = malloc(sizeof(*pe), M_TEMP, M_NOWAIT);
 	if (pe == NULL)
 		panic("pcic_queue_event: can't allocate event");
 
 	pe->pe_type = event;
-	s = splhigh();
+	crit_enter();
 	SIMPLEQ_INSERT_TAIL(&h->events, pe, pe_q);
-	splx(s);
+	crit_leave();
 	wakeup(&h->events);
 }
 

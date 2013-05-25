@@ -474,17 +474,16 @@ tcic_event_thread(arg)
 {
 	struct tcic_handle *h = arg;
 	struct tcic_event *pe;
-	int s;
 
 	while (h->shutdown == 0) {
-		s = splhigh();
+		crit_enter();
 		if ((pe = SIMPLEQ_FIRST(&h->events)) == NULL) {
-			splx(s);
+			crit_leave();
 			(void) tsleep(&h->events, PWAIT, "tcicev", 0);
 			continue;
 		}
 		SIMPLEQ_REMOVE_HEAD(&h->events, pe_q);
-		splx(s);
+		crit_leave();
 
 		switch (pe->pe_type) {
 		case TCIC_EVENT_INSERTION:
@@ -706,16 +705,15 @@ tcic_queue_event(h, event)
 	int event;
 {
 	struct tcic_event *pe;
-	int s;
 
 	pe = malloc(sizeof(*pe), M_TEMP, M_NOWAIT);
 	if (pe == NULL)
 		panic("tcic_queue_event: can't allocate event");
 
 	pe->pe_type = event;
-	s = splhigh();
+	crit_enter();
 	SIMPLEQ_INSERT_TAIL(&h->events, pe, pe_q);
-	splx(s);
+	crit_leave();
 	wakeup(&h->events);
 }
 void

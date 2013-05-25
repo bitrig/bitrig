@@ -112,6 +112,16 @@ struct trapframe {
 	int64_t	tf_ss;
 };
 
+struct clockframe {
+	/* below portion defined in hardware */
+	int64_t	if_rip;
+	int64_t	if_cs;
+	int64_t	if_rflags;
+	/* These are pushed unconditionally on the x86-64 */
+	int64_t	if_rsp;
+	int64_t	if_ss;
+};
+
 /*
  * Interrupt stack frame
  */
@@ -138,6 +148,7 @@ struct intrframe {
 	int64_t	tf_ds;
 	u_int64_t __if_trapno; /* for compat with trap frame - trapno */
 	u_int64_t __if_err;	/* for compat with trap frame - err */
+	struct clockframe tf_clk[0];
 	/* below portion defined in hardware */
 	int64_t	if_rip;
 	int64_t	if_cs;

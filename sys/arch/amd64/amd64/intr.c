@@ -47,6 +47,7 @@
 #include <sys/mutex.h>
 #include <sys/proc.h>
 #include <sys/errno.h>
+#include <sys/ithread.h>
 
 #include <machine/atomic.h>
 #include <machine/i8259.h>
@@ -66,14 +67,24 @@
 #include <machine/i82489var.h>
 #endif
 
+static void
+softintr_hwmask(struct pic *pic, int pin)
+{
+}
+
+static void
+softintr_hwunmask(struct pic *pic, int pin)
+{
+}
+
 struct pic softintr_pic = {
         {0, {NULL}, NULL, 0, "softintr_fakepic", NULL, 0, 0},
         PIC_SOFT,
 #ifdef MULTIPROCESSOR
 	{},
 #endif
-	NULL,
-	NULL,
+	softintr_hwmask,
+	softintr_hwunmask,
 	NULL,
 	NULL,
 	NULL,
@@ -157,11 +168,7 @@ intr_calculatemasks(struct cpu_info *ci)
 		for (irq = 0; irq < MAX_INTR_SOURCES; irq++)
 			if (intrlevel[irq] & (1 << level))
 				irqs |= (1UL << irq);
-		ci->ci_imask[level] = irqs | unusedirqs;
 	}
-
-	for (level = 0; level< (NIPL - 1); level++)
-		ci->ci_imask[level + 1] |= ci->ci_imask[level];
 
 	for (irq = 0; irq < MAX_INTR_SOURCES; irq++) {
 		int maxlevel = IPL_NONE;
@@ -179,9 +186,6 @@ intr_calculatemasks(struct cpu_info *ci)
 		ci->ci_isources[irq]->is_maxlevel = maxlevel;
 		ci->ci_isources[irq]->is_minlevel = minlevel;
 	}
-
-	for (level = 0; level < NIPL; level++)
-		ci->ci_iunmask[level] = ~ci->ci_imask[level];
 }
 
 /* 
@@ -383,8 +387,8 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 		return NULL;
 	}
 
-	flags = level & IPL_MPSAFE;
-	level &= ~IPL_MPSAFE;
+	flags = level & IPL_FLAGS;
+	level &= ~IPL_FLAGS;
 
 	KASSERT(level <= IPL_TTY || level >= IPL_CLOCK || flags & IPL_MPSAFE);
 
@@ -453,7 +457,7 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 	 * This is O(N^2), but we want to preserve the order, and N is
 	 * generally small.
 	 */
-	for (p = &ci->ci_isources[slot]->is_handlers;
+	for (p = &source->is_handlers;
 	     (q = *p) != NULL && q->ih_level > level;
 	     p = &q->ih_next)
 		;
@@ -473,17 +477,15 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 	intr_calculatemasks(ci);
 
 
-	if (ci->ci_isources[slot]->is_resume == NULL ||
-	    source->is_idtvec != idt_vec) {
+	if (source->is_idtvec != idt_vec) {
 		if (source->is_idtvec != 0 && source->is_idtvec != idt_vec)
 			idt_vec_free(source->is_idtvec);
 		source->is_idtvec = idt_vec;
 		stubp = type == IST_LEVEL ?
 		    &pic->pic_level_stubs[slot] : &pic->pic_edge_stubs[slot];
-		ci->ci_isources[slot]->is_resume = stubp->ist_resume;
-		ci->ci_isources[slot]->is_recurse = stubp->ist_recurse;
 		setgate(&idt[idt_vec], stubp->ist_entry, 0, SDT_SYS386IGT,
 		    SEL_KPL, GSEL(GCODE_SEL, SEL_KPL));
+		ithread_register(source);
 	}
 
 	pic->pic_addroute(pic, ci, pin, idt_vec, type);
@@ -512,6 +514,9 @@ intr_disestablish(struct intrhand *ih)
 	struct pic *pic;
 	struct intrsource *source;
 	int idtvec;
+
+	if (!cold)
+		panic("ithreads do not support intr_disestablish if not cold yet");
 
 	ci = ih->ih_cpu;
 
@@ -549,6 +554,7 @@ intr_disestablish(struct intrhand *ih)
 #endif
 
 	if (source->is_handlers == NULL) {
+		ithread_deregister(source);
 		free(source, M_DEVBUF);
 		ci->ci_isources[ih->ih_slot] = NULL;
 		if (pic != &i8259_pic)
@@ -607,66 +613,32 @@ static char *x86_ipi_names[X86_NIPI] = X86_IPI_NAMES;
 void
 cpu_intr_init(struct cpu_info *ci)
 {
-	struct intrsource *isp;
-#if NLAPIC > 0 && defined(MULTIPROCESSOR) && 0
-	int i;
-#endif
-
-	isp = malloc(sizeof (struct intrsource), M_DEVBUF, M_NOWAIT|M_ZERO);
-	if (isp == NULL)
-		panic("can't allocate fixed interrupt source");
-	isp->is_recurse = Xsoftclock;
-	isp->is_resume = Xsoftclock;
-	fake_softclock_intrhand.ih_level = IPL_SOFTCLOCK;
-	isp->is_handlers = &fake_softclock_intrhand;
-	isp->is_pic = &softintr_pic;
-	ci->ci_isources[SIR_CLOCK] = isp;
-	isp = malloc(sizeof (struct intrsource), M_DEVBUF, M_NOWAIT|M_ZERO);
-	if (isp == NULL)
-		panic("can't allocate fixed interrupt source");
-	isp->is_recurse = Xsoftnet;
-	isp->is_resume = Xsoftnet;
-	fake_softnet_intrhand.ih_level = IPL_SOFTNET;
-	isp->is_handlers = &fake_softnet_intrhand;
-	isp->is_pic = &softintr_pic;
-	ci->ci_isources[SIR_NET] = isp;
-	isp = malloc(sizeof (struct intrsource), M_DEVBUF, M_NOWAIT|M_ZERO);
-	if (isp == NULL)
-		panic("can't allocate fixed interrupt source");
-	isp->is_recurse = Xsofttty;
-	isp->is_resume = Xsofttty;
-	fake_softtty_intrhand.ih_level = IPL_SOFTTTY;
-	isp->is_handlers = &fake_softtty_intrhand;
-	isp->is_pic = &softintr_pic;
-	ci->ci_isources[SIR_TTY] = isp;
 #if NLAPIC > 0
-	isp = malloc(sizeof (struct intrsource), M_DEVBUF, M_NOWAIT|M_ZERO);
-	if (isp == NULL)
-		panic("can't allocate fixed interrupt source");
-	isp->is_recurse = Xrecurse_lapic_ltimer;
-	isp->is_resume = Xresume_lapic_ltimer;
-	fake_timer_intrhand.ih_level = IPL_CLOCK;
-	isp->is_handlers = &fake_timer_intrhand;
-	isp->is_pic = &local_pic;
-	ci->ci_isources[LIR_TIMER] = isp;
+	struct intrsource *isp;
 #ifdef MULTIPROCESSOR
+	struct intrsource *isp;
 	isp = malloc(sizeof (struct intrsource), M_DEVBUF, M_NOWAIT|M_ZERO);
 	if (isp == NULL)
 		panic("can't allocate fixed interrupt source");
-	isp->is_recurse = Xrecurse_lapic_ipi;
-	isp->is_resume = Xresume_lapic_ipi;
 	fake_ipi_intrhand.ih_level = IPL_IPI;
 	isp->is_handlers = &fake_ipi_intrhand;
 	isp->is_pic = &local_pic;
+	isp->is_run = x86_ipi_handler;
 	ci->ci_isources[LIR_IPI] = isp;
-
 #endif
+	isp = malloc(sizeof (struct intrsource), M_DEVBUF, M_NOWAIT|M_ZERO);
+	if (isp == NULL)
+		panic("can't allocate fixed interrupt source");
+	fake_timer_intrhand.ih_level = IPL_CLOCK;
+	isp->is_handlers = &fake_timer_intrhand;
+	isp->is_pic = &local_pic;
+	isp->is_run = Xfakeclock;
+	ci->ci_isources[LIR_TIMER] = isp;
 #endif
 
 	mtx_enter(&intr_lock);
 	intr_calculatemasks(ci);
 	mtx_leave(&intr_lock);
-
 }
 
 void
@@ -704,47 +676,6 @@ intr_printconfig(void)
 }
 
 /*
- * Add a mask to cpl, and return the old value of cpl.
- */
-int
-splraise(int nlevel)
-{
-	int olevel;
-	struct cpu_info *ci = curcpu();
-
-	olevel = ci->ci_ilevel;
-	ci->ci_ilevel = MAX(ci->ci_ilevel, nlevel);
-	return (olevel);
-}
-
-/*
- * Restore a value to cpl (unmasking interrupts).  If any unmasked
- * interrupts are pending, call Xspllower() to process them.
- */
-int
-spllower(int nlevel)
-{
-	int olevel;
-	struct cpu_info *ci = curcpu();
-	u_int64_t imask;
-	u_long psl;
-
-	imask = IUNMASK(ci, nlevel);
-	olevel = ci->ci_ilevel;
-
-	psl = read_psl();
-	disable_intr();
-
-	if (ci->ci_ipending & imask) {
-		Xspllower(nlevel);
-	} else {
-		ci->ci_ilevel = nlevel;
-		write_psl(psl);
-	}
-	return (olevel);
-}
-
-/*
  * Software interrupt registration
  *
  * We hand-code this to ensure that it's atomic.
@@ -759,3 +690,22 @@ softintr(int sir)
 	__asm volatile("lock; orq %1, %0" :
 	    "=m"(ci->ci_ipending) : "ir" (1UL << sir));
 }
+
+int
+splraise(int s)
+{
+	return 0;
+}
+
+int
+spllower(int s)
+{
+	return 0;
+}
+
+#ifdef DIAGNOSTIC
+void
+splassert_check(int wantipl, const char *func)
+{
+}
+#endif

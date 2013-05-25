@@ -77,99 +77,38 @@
 
 	.text
 
-#if 0
-#if defined(PROF) || defined(GPROF)
-/*
- * XXXX TODO
- */
-	.globl	_C_LABEL(splhigh), _C_LABEL(splx)
-
-	ALIGN_TEXT
-_C_LABEL(splhigh):
-	movl	$IPL_HIGH,%eax
-	xchgl	%eax,CPUVAR(ILEVEL)
-	ret
-
-	ALIGN_TEXT
-_C_LABEL(splx):
-	movl	4(%esp),%eax
-	movl	%eax,CPUVAR(ILEVEL)
-	testl	%eax,%eax
-	jnz	_C_LABEL(Xspllower)
-	ret
-#endif /* PROF || GPROF */
-#endif
-	
-/*
- * Process pending interrupts.
- *
- * Important registers:
- *   ebx - cpl
- *   r13 - address to resume loop at
- *
- * It is important that the bit scan instruction is bsr, it will get
- * the highest 2 bits (currently the IPI and clock handlers) first,
- * to avoid deadlocks where one CPU sends an IPI, another one is at
- * splipi() and defers it, lands in here via splx(), and handles
- * a lower-prio one first, which needs to take the kernel lock -->
- * the sending CPU will never see the that CPU accept the IPI
- */
-IDTVEC(spllower)
-	_PROF_PROLOGUE
-	pushq	%rbx
-	pushq	%r13
-	pushq	%r12
-	movl	%edi,%ebx
-	leaq	1f(%rip),%r13		# address to resume loop at
-1:	movl	%ebx,%eax		# get cpl
-	movq	CPUVAR(IUNMASK)(,%rax,8),%rax
-	cli
-	andq	CPUVAR(IPENDING),%rax		# any non-masked bits left?
-	jz	2f
-	bsrq	%rax,%rax
-	btrq	%rax,CPUVAR(IPENDING)
-	movq	CPUVAR(ISOURCES)(,%rax,8),%rax
-	jmp	*IS_RECURSE(%rax)
-2:
-	movl	%ebx,CPUVAR(ILEVEL)
-	sti
-	popq	%r12
-	popq	%r13
-	popq	%rbx
+IDTVEC(fakeclock)
+	call	_C_LABEL(crit_enter)
+	INTR_FAKECLKFRAME_ENTER
+	xorq	%rdi,%rdi
+	call	_C_LABEL(lapic_clockintr_clkframe)
+	INTR_FAKECLKFRAME_LEAVE
+	call	_C_LABEL(crit_leave)
 	ret
 
 /*
  * Handle return from interrupt after device handler finishes.
  *
- * Important registers:
- *   ebx - cpl to restore
- *   r13 - address to resume loop at
  */
 IDTVEC(doreti)
-	popq	%rbx			# get previous priority
+	popq    %rbx		      # get previous priority
 	decl	CPUVAR(IDEPTH)
-	leaq	1f(%rip),%r13
-1:	movl	%ebx,%eax
-	movq	CPUVAR(IUNMASK)(,%rax,8),%rax
-	cli
-	andq	CPUVAR(IPENDING),%rax
+1:	cli
+	testq	$-1,CPUVAR(IPENDING)
 	jz	2f
-	bsrq    %rax,%rax               # slow, but not worth optimizing
-	btrq    %rax,CPUVAR(IPENDING)
-	movq	CPUVAR(ISOURCES)(,%rax, 8),%rax
-	jmp	*IS_RESUME(%rax)
-2:	/* Check for ASTs on exit to user mode. */
-	movl	%ebx,CPUVAR(ILEVEL)
-5:	CHECK_ASTPENDING(%r11)
-	je	3f
-	testb   $SEL_RPL,TF_CS(%rsp)
-	jz	3f
-4:	CLEAR_ASTPENDING(%r11)
+	sti
+	call	_C_LABEL(crit_rundeferred)
+	jmp	1b		/* Old code wanted ipending to always be 0 at cli on ret */
+2:	CHECK_ASTPENDING(%r11) /* Check for ASTs on exit to user mode. */
+	je	4f
+	testb	$SEL_RPL,TF_CS(%rsp)
+	jz	4f
+3:	CLEAR_ASTPENDING(%r11)
 	sti
 	movl	$T_ASTFLT,TF_TRAPNO(%rsp)	/* XXX undo later.. */
 	/* Pushed T_ASTFLT into tf_trapno on entry. */
 	movq	%rsp, %rdi
 	call	_C_LABEL(trap)
 	cli
-	jmp	5b
-3: 	INTRFASTEXIT
+	jmp	2b
+4:      INTRFASTEXIT

@@ -76,6 +76,7 @@
 #include <sys/pipe.h>
 #include <sys/workq.h>
 #include <sys/task.h>
+#include <sys/ithread.h>
 
 #include <sys/syscall.h>
 #include <sys/syscallargs.h>
@@ -206,6 +207,7 @@ main(void *framep)
 	curproc = p = &proc0;
 	p->p_cpu = curcpu();
 
+	crit_enter();
 	/*
 	 * Initialize timeouts.
 	 */
@@ -457,6 +459,11 @@ main(void *framep)
 	 * initproc had not yet been created.
 	 */
 	kthread_run_deferred_queue();
+
+	/*
+	 * Creak all ithreads.
+	 */
+	ithread_forkall();
 
 	/*
 	 * Now that device driver threads have been created, wait for

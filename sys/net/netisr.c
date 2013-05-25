@@ -27,12 +27,12 @@
 #include "pppoe.h"
 #include "pfsync.h"
 
-void	 netintr(void *);
+int	 netintr(void *);
 
 int	 netisr;
 void	*netisr_intr;
 
-void
+int
 netintr(void *unused) /* ARGSUSED */
 {
 	int n, t = 0;
@@ -82,12 +82,12 @@ netintr(void *unused) /* ARGSUSED */
 #endif
 	if (t & (1 << NETISR_TX))
 		nettxintr();
+
+	return (1);
 }
 
 void
 netisr_init(void)
 {
-	netisr_intr = softintr_establish(IPL_SOFTNET, netintr, NULL);
-	if (netisr_intr == NULL)
-		panic("can't establish softnet handler");
+	netisr_intr = ithread_softregister(IPL_SOFTNET, netintr, NULL, 0);
 }
