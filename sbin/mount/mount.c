@@ -582,7 +582,18 @@ prmount(struct statfs *sf)
 			(void)printf("%s%s", !f++ ? " (" : ", ", "gens");
 		if (iso_args->flags & ISOFSMNT_EXTATT)
 			(void)printf("%s%s", !f++ ? " (" : ", ", "extatt");
+	} else if (strcmp(sf->f_fstypename, MOUNT_TMPFS) == 0) {
+		struct tmpfs_args *tmpfs_args = &sf->mount_info.tmpfs_args;
+		char tmpfs_size[FMT_SCALED_STRSIZE];
+
+		if (tmpfs_args->ta_nodes_max != 0)
+			(void)printf("%s%u nodes", !f++ ? " (" : ", ",
+			    tmpfs_args->ta_nodes_max);
+		if (tmpfs_args->ta_size_max != 0 &&
+		    fmt_scaled(tmpfs_args->ta_size_max, tmpfs_size) == 0)
+			(void)printf("%s%s", !f++ ? " (" : ", ", tmpfs_size);
 	}
+
 	(void)printf(f ? ")\n" : "\n");
 }
 
