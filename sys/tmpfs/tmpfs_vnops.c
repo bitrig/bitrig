@@ -475,7 +475,7 @@ tmpfs_getattr(void *v)
 	vap->va_nlink = node->tn_links;
 	vap->va_uid = node->tn_uid;
 	vap->va_gid = node->tn_gid;
-	/* vap->va_fsid = vp->v_mount->mnt_stat.f_fsidx.__fsid_val[0]; */
+	vap->va_fsid = vp->v_mount->mnt_stat.f_fsid.val[0];
 	vap->va_fileid = node->tn_id;
 	vap->va_size = node->tn_size;
 	vap->va_blocksize = PAGE_SIZE;
