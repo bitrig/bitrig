@@ -184,6 +184,7 @@ tmpfs_mount(struct mount *mp, const char *path, void *data,
 #endif
 	vfs_getnewfsid(mp);
 
+	bcopy(&args, &mp->mnt_stat.mount_info.tmpfs_args, sizeof(args));
 	copystr(path, mp->mnt_stat.f_mntonname, MNAMELEN - 1, &len);
 	bzero(mp->mnt_stat.f_mntonname + len, MNAMELEN - len);
 	len = strlcpy(mp->mnt_stat.f_mntfromname, "tmpfs", MNAMELEN - 1);
