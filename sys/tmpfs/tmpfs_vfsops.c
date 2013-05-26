@@ -334,7 +334,21 @@ tmpfs_statfs(struct mount *mp, struct statfs *sbp, struct proc *p)
 	sbp->f_favail = freenodes & INT64_MAX; /* f_favail is int64_t */
 	rw_exit_write(&tmp->tm_acc_lock);
 
-	copy_statfs_info(sbp, mp);
+	sbp->f_fsid = mp->mnt_stat.f_fsid;
+	sbp->f_owner = mp->mnt_stat.f_owner;
+	sbp->f_flags = mp->mnt_stat.f_flags;
+	sbp->f_syncwrites = mp->mnt_stat.f_syncwrites;
+	sbp->f_asyncwrites = mp->mnt_stat.f_asyncwrites;
+	sbp->f_syncreads = mp->mnt_stat.f_syncreads;
+	sbp->f_asyncreads = mp->mnt_stat.f_asyncreads;
+	sbp->f_namemax = mp->mnt_stat.f_namemax;
+
+	strncpy(sbp->f_fstypename, mp->mnt_vfc->vfc_name, MFSNAMELEN);
+	bcopy(mp->mnt_stat.f_mntonname, sbp->f_mntonname, MNAMELEN);
+	bcopy(mp->mnt_stat.f_mntfromname, sbp->f_mntfromname, MNAMELEN);
+	bcopy(mp->mnt_stat.f_mntfromspec, sbp->f_mntfromspec, MNAMELEN);
+	bcopy(&mp->mnt_stat.mount_info.tmpfs_args, &sbp->mount_info.tmpfs_args,
+	    sizeof(struct tmpfs_args));
 
 	return 0;
 }
