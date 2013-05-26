@@ -229,6 +229,7 @@ union mount_info {
 	struct nfs_args nfs_args;
 	struct iso_args iso_args;
 	struct msdosfs_args msdosfs_args;
+	struct tmpfs_args tmpfs_args;
 	char __align[160];	/* 64-bit alignment and room to grow */
 };
 
