@@ -11881,6 +11881,7 @@
 ./usr/share/man/man9/m_copym.9
 ./usr/share/man/man9/m_copym2.9
 ./usr/share/man/man9/m_devget.9
+./usr/share/man/man9/m_dup_pkthdr.9
 ./usr/share/man/man9/m_free.9
 ./usr/share/man/man9/m_freem.9
 ./usr/share/man/man9/m_get.9
