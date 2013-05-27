@@ -60,6 +60,9 @@
 
 #define	NIPL		13
 
+/* Interrupt priority "flags". */
+#define	IPL_MPSAFE	0	/* no "mpsafe" interrupts */
+
 /* Interrupt sharing types. */
 #define	IST_NONE	0	/* none */
 #define	IST_PULSE	1	/* pulsed */
