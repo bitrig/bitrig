@@ -1,4 +1,4 @@
-/*	$OpenBSD: via.c,v 1.29 2012/01/13 09:53:24 mikeb Exp $	*/
+/*	$OpenBSD: via.c,v 1.30 2013/05/30 15:37:51 matthew Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
