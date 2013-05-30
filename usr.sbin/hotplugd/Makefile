@@ -1,7 +1,8 @@
-# $OpenBSD: Makefile,v 1.13 2010/07/20 02:05:51 deraadt Exp $
+# $OpenBSD: Makefile,v 1.15 2013/05/30 15:55:53 florian Exp $
 
 .if ${MACHINE} == "amd64" || \
-    ${MACHINE} == "i386"
+    ${MACHINE} == "i386" || \
+    ${MACHINE} == "beagle" || \
 
 PROG=	hotplugd
 SRCS=	hotplugd.c
