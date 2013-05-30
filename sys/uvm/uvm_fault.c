@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_fault.c,v 1.65 2012/04/12 11:55:43 ariane Exp $	*/
+/*	$OpenBSD: uvm_fault.c,v 1.69 2013/05/30 18:02:04 tedu Exp $	*/
 /*	$NetBSD: uvm_fault.c,v 1.51 2000/08/06 00:22:53 thorpej Exp $	*/
 
 /*
@@ -1339,7 +1339,7 @@ Case2:
 			KASSERT(result != VM_PAGER_PEND);
 
 			if (result == VM_PAGER_AGAIN) {
-				tsleep((caddr_t)&lbolt, PVM, "fltagain2", 0);
+				tsleep(&lbolt, PVM, "fltagain2", 0);
 				goto ReFault;
 			}
 
