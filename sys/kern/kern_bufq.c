@@ -80,6 +80,7 @@ bufq_init(struct bufq *bq, int type)
 		low = hi / 2;
 	}
 
+	bzero(bq, sizeof(struct bufq));
 	mtx_init(&bq->bufq_mtx, IPL_BIO);
 	bq->bufq_hi = hi;
 	bq->bufq_low = low;
