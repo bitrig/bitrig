@@ -45,7 +45,7 @@ test_check()
 # Generate a random file/directory name.
 namegen()
 {
-  echo "fstest_`dd if=/dev/urandom bs=1k count=1 2>/dev/null | openssl md5`"
+  echo "fstest_`dd if=/dev/urandom bs=1k count=1 2>/dev/null | openssl md5 | awk '{ print $2 }'`"
 }
 
 for arg in $*; do
