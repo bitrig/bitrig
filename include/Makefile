@@ -21,7 +21,7 @@ FILES=	a.out.h ar.h assert.h bitstring.h blf.h bm.h bsd_auth.h \
 	sgtty.h sha1.h sha2.h signal.h sndio.h spawn.h stab.h \
 	stdbool.h stddef.h stdio.h stdlib.h \
 	string.h strings.h struct.h sysexits.h tar.h tgmath.h \
-	time.h ttyent.h tzfile.h unistd.h utime.h utmp.h vis.h \
+	time.h ttyent.h tzfile.h unistd.h utime.h utmp.h uuid.h vis.h \
 	wchar.h wctype.h
 
 FILES+=	link.h link_aout.h link_elf.h ieeefp.h
