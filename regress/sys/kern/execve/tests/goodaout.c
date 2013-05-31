@@ -36,7 +36,7 @@
 #include <unistd.h>
 
 int
-main(int argc, char *argv)
+main(int argc, char **argv)
 {
 	printf("succeeded\n");
 	exit(0);
