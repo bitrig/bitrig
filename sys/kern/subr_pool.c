@@ -1,4 +1,4 @@
-/*	$OpenBSD: subr_pool.c,v 1.120 2013/05/03 18:26:07 tedu Exp $	*/
+/*	$OpenBSD: subr_pool.c,v 1.121 2013/05/31 20:44:10 tedu Exp $	*/
 /*	$NetBSD: subr_pool.c,v 1.61 2001/09/26 07:14:56 chs Exp $	*/
 
 /*-
@@ -483,8 +483,13 @@ pool_get(struct pool *pp, int flags)
 
 	KASSERT(flags & (PR_WAITOK | PR_NOWAIT));
 
-	if ((flags & PR_WAITOK) != 0)
+#ifdef DIAGNOSTIC
+	if ((flags & PR_WAITOK) != 0) {
 		assertwaitok();
+		if (pool_debug == 2)
+			yield();
+	}
+#endif /* DIAGNOSTIC */
 
 	mtx_enter(&pp->pr_mtx);
 #ifdef POOL_DEBUG
