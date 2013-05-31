@@ -1,6 +1,7 @@
 /*	$OpenBSD: endian.h,v 1.19 2011/06/24 22:44:59 deraadt Exp $	*/
 
-/*-
+/*
+ * Copyright (c) 2004 The DragonFly Project.  All rights reserved.
  * Copyright (c) 1997 Niklas Hallqvist.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -247,5 +248,113 @@ __END_DECLS
 #define	HTONL(x) (x) = htonl((u_int32_t)(x))
 #define	HTONS(x) (x) = htons((u_int16_t)(x))
 #endif
+
+/* Alignment-agnostic encode/decode bytestream to/from little/big endian. */
+
+static __inline __uint16_t
+be16dec(const void *pp)
+{
+	const __uint8_t *p = (const __uint8_t *)pp;
+
+	return ((p[0] << 8) | p[1]);
+}
+
+static __inline __uint32_t
+be32dec(const void *pp)
+{
+	const __uint8_t *p = (const __uint8_t *)pp;
+
+	return ((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]);
+}
+
+static __inline __uint64_t
+be64dec(const void *pp)
+{
+	const __uint8_t *p = (const __uint8_t *)pp;
+
+	return (((__uint64_t)be32dec(p) << 32) | be32dec(p + 4));
+}
+
+static __inline __uint16_t
+le16dec(const void *pp)
+{
+	const __uint8_t *p = (const __uint8_t *)pp;
+
+	return ((p[1] << 8) | p[0]);
+}
+
+static __inline __uint32_t
+le32dec(const void *pp)
+{
+	const __uint8_t *p = (const __uint8_t *)pp;
+
+	return ((p[3] << 24) | (p[2] << 16) | (p[1] << 8) | p[0]);
+}
+
+static __inline __uint64_t
+le64dec(const void *pp)
+{
+	const __uint8_t *p = (const __uint8_t *)pp;
+
+	return (((__uint64_t)le32dec(p + 4) << 32) | le32dec(p));
+}
+
+static __inline void
+be16enc(void *pp, __uint16_t u)
+{
+	__uint8_t *p = (__uint8_t *)pp;
+
+	p[0] = (u >> 8) & 0xff;
+	p[1] = u & 0xff;
+}
+
+static __inline void
+be32enc(void *pp, __uint32_t u)
+{
+	__uint8_t *p = (__uint8_t *)pp;
+
+	p[0] = (u >> 24) & 0xff;
+	p[1] = (u >> 16) & 0xff;
+	p[2] = (u >> 8) & 0xff;
+	p[3] = u & 0xff;
+}
+
+static __inline void
+be64enc(void *pp, __uint64_t u)
+{
+	__uint8_t *p = (__uint8_t *)pp;
+
+	be32enc(p, u >> 32);
+	be32enc(p + 4, u & 0xffffffff);
+}
+
+static __inline void
+le16enc(void *pp, __uint16_t u)
+{
+	__uint8_t *p = (__uint8_t *)pp;
+
+	p[0] = u & 0xff;
+	p[1] = (u >> 8) & 0xff;
+}
+
+static __inline void
+le32enc(void *pp, __uint32_t u)
+{
+	__uint8_t *p = (__uint8_t *)pp;
+
+	p[0] = u & 0xff;
+	p[1] = (u >> 8) & 0xff;
+	p[2] = (u >> 16) & 0xff;
+	p[3] = (u >> 24) & 0xff;
+}
+
+static __inline void
+le64enc(void *pp, __uint64_t u)
+{
+	__uint8_t *p = (__uint8_t *)pp;
+
+	le32enc(p, u & 0xffffffff);
+	le32enc(p + 4, u >> 32);
+}
 
 #endif /* _SYS_ENDIAN_H_ */
