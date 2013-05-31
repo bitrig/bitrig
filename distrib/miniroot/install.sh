@@ -1,5 +1,5 @@
 #!/bin/ksh
-#	$OpenBSD: install.sh,v 1.232 2013/04/15 18:53:50 deraadt Exp $
+#	$OpenBSD: install.sh,v 1.233 2013/05/31 06:27:08 rpe Exp $
 #	$NetBSD: install.sh,v 1.5.2.8 1996/08/27 18:15:05 gwr Exp $
 #
 # Copyright (c) 1997-2009 Todd Miller, Theo de Raadt, Ken Westerback
@@ -105,7 +105,7 @@ while :; do
 	md_prep_disklabel $DISK || { DISK= ; continue ; }
 
 	# Make sure there is a '/' mount point.
-	grep -qs " / ffs " /tmp/fstab.$ROOTDISK || \
+	grep -qs " / ffs " /tmp/fstab.$ROOTDISK ||
 		{ DISK= ; echo "'/' must be configured!" ; continue ; }
 
 	if [[ -f /tmp/fstab.$DISK ]]; then
@@ -117,7 +117,7 @@ while :; do
 				continue
 			fi
 			# Non-swap mountpoints must be in only one file.
-			[[ /tmp/fstab.$DISK == $(grep -l " $_mp " /tmp/fstab.*) ]] || \
+			[[ /tmp/fstab.$DISK == $(grep -l " $_mp " /tmp/fstab.*) ]] ||
 				{ _rest=$DISK ; DISK= ; break ; }
 		done </tmp/fstab.$DISK
 		if [[ -z $DISK ]]; then
