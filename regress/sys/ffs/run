@@ -17,20 +17,20 @@ path1024="${path1023}x"
 # Run a single test, calling fstest to do the job.
 expect()
 {
-  e="${1}"
-  shift
-  echo -n "Running test #${ntest}... "
-#  echo ${FSTEST} $*
-  r=`${FSTEST} $* 2>/dev/null | tail -1`
-  echo "${r}" | egrep '^'${e}'$' >/dev/null 2>&1
-  if [ $? -eq 0 ]; then
-    echo "okay."
-  else
-    nfail=`expr $nfail + 1`
-    echo "failed."
-    [ ${IGNORE_ERRORS} == 0 ] && exit 1
-  fi
-  ntest=`expr $ntest + 1`
+	e="${1}"
+	shift
+	echo -n "Running test #${ntest}... "
+#	echo ${FSTEST} $*
+	r=`${FSTEST} $* 2>/dev/null | tail -1`
+	echo "${r}" | egrep '^'${e}'$' >/dev/null 2>&1
+	if [ $? -eq 0 ]; then
+		echo "okay."
+	else
+		nfail=`expr $nfail + 1`
+		echo "failed."
+		[ ${IGNORE_ERRORS} == 0 ] && exit 1
+	fi
+	ntest=`expr $ntest + 1`
 }
 
 test_check()
