@@ -20,15 +20,14 @@ expect()
 	expected=$1
 	shift
 
-	echo -n "Running test #${ntest}... "
-#	echo ${FSTEST} $*
+	echo -n "#$ntest: $FSTEST $*"
 	actual=`${FSTEST} $* 2>/dev/null | tail -1`
 	echo "${actual}" | egrep '^'${expected}'$' >/dev/null 2>&1
 	if [ $? -eq 0 ]; then
-		echo "okay."
+		echo " OK"
 	else
 		nfail=`expr $nfail + 1`
-		echo "failed."
+		echo " ERROR"
 		[ ${IGNORE_ERRORS} == 0 ] && exit 1
 	fi
 	ntest=`expr $ntest + 1`
