@@ -23,13 +23,10 @@ expect()
 	echo -n "#$ntest: $FSTEST $*"
 	actual=`${FSTEST} $* 2>/dev/null | tail -1`
 	echo "${actual}" | egrep '^'${expected}'$' >/dev/null 2>&1
-	if [ $? -eq 0 ]; then
-		echo " OK"
-	else
-		nfail=`expr $nfail + 1`
-		echo " ERROR"
-		[ ${IGNORE_ERRORS} == 0 ] && exit 1
-	fi
+	[ $? -eq 0 ] && { echo " OK"; return; }
+	nfail=`expr $nfail + 1`
+	echo " ERROR"
+	[ ${IGNORE_ERRORS} == 0 ] && exit 1
 	ntest=`expr $ntest + 1`
 }
 
