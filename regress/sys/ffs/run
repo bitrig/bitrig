@@ -28,6 +28,7 @@ expect() {
 	[ $? -eq 0 ] && { echo " OK"; return; }
 
 	echo " ERROR"
+	echo "#$n: expected $expected, got ${actual:-'no result'}"
 	[ ${IGNORE_ERRORS} == 0 ] && exit 1
 	nfail=$((nfail + 1))
 }
