@@ -33,16 +33,17 @@ expect() {
 	nfail=$((nfail + 1))
 }
 
-test_check()
-{
-  echo -n "Running test #${ntest}... "
-  if [ $* ]; then
-    echo "okay."
-  else
-    nfail=`expr $nfail + 1`
-    echo "failed."
-  fi
-  ntest=`expr $ntest + 1`
+# perform a simple check/assertion
+test_check() {
+	n=$ntest
+	ntest=$((ntest + 1))
+
+	echo -n "#$n: $*"
+	[ $* ] && { echo " OK"; return; }
+
+	echo " ERROR"
+	[ ${IGNORE_ERRORS} == 0 ] && exit 1
+	nfail=$((nfail + 1))
 }
 
 # generate a random file/directory name
