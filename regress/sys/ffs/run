@@ -1,6 +1,5 @@
 #!/bin/sh
 # $OpenBSD: run,v 1.1 2007/03/30 19:02:51 pedro Exp $
-# Heavily inspired on FreeBSD's misc.sh.
 
 IGNORE_ERRORS=1
 
