@@ -14,20 +14,22 @@ path1021="${name255}/${name255}/${name255}/${name253}"
 path1023="${path1021}/x"
 path1024="${path1023}x"
 
-# Run a single test, calling fstest to do the job.
-expect()
-{
+# thin shell around 'fstest' to test and provide descriptive output
+expect() {
+	n=$ntest
+	ntest=$((ntest + 1))
+
 	expected=$1
 	shift
 
-	echo -n "#$ntest: $FSTEST $*"
+	echo -n "#$n: $FSTEST $*"
 	actual=`${FSTEST} $* 2>/dev/null | tail -1`
 	echo "${actual}" | egrep '^'${expected}'$' >/dev/null 2>&1
 	[ $? -eq 0 ] && { echo " OK"; return; }
-	nfail=`expr $nfail + 1`
+
 	echo " ERROR"
 	[ ${IGNORE_ERRORS} == 0 ] && exit 1
-	ntest=`expr $ntest + 1`
+	nfail=$((nfail + 1))
 }
 
 test_check()
