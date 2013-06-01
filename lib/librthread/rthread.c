@@ -1,4 +1,4 @@
-/*	$OpenBSD: rthread.c,v 1.69 2013/04/06 04:25:01 tedu Exp $ */
+/*	$OpenBSD: rthread.c,v 1.70 2013/06/01 20:47:40 tedu Exp $ */
 /*
  * Copyright (c) 2004,2005 Ted Unangst <tedu@openbsd.org>
  * All Rights Reserved.
@@ -56,13 +56,15 @@
 static int concurrency_level;	/* not used */
 static int spincount_max = 0;	/* # spins prior to yielding. */
 
+struct _spinlock _SPINLOCK_UNLOCKED_ASSIGN = _SPINLOCK_UNLOCKED;
+
 int _threads_ready;
 size_t _thread_pagesize;
 struct listhead _thread_list = LIST_HEAD_INITIALIZER(_thread_list);
-_spinlock_lock_t _thread_lock = _SPINLOCK_UNLOCKED;
+struct _spinlock _thread_lock = _SPINLOCK_UNLOCKED;
 static struct pthread_queue _thread_gc_list
     = TAILQ_HEAD_INITIALIZER(_thread_gc_list);
-static _spinlock_lock_t _thread_gc_lock = _SPINLOCK_UNLOCKED;
+static struct _spinlock _thread_gc_lock = _SPINLOCK_UNLOCKED;
 struct pthread _initial_thread;
 struct thread_control_block _initial_thread_tcb;
 
@@ -105,31 +107,45 @@ num_cpus(void)
  * internal support functions
  */
 void
-_spinlock(volatile _spinlock_lock_t *lock)
+_spinlock(volatile struct _spinlock *lock)
 {
-	extern int	__isthreaded;
-	int		spincount, max;
+	uint32_t me;
 
-	if (__isthreaded)
-		max = spincount_max;
-	else
-		max = 0;
-
-attempt_lock:
-	while (_atomic_lock(lock)) {
-		for (spincount = 0; spincount < max; spincount++) {
-			CPU_SPINWAIT;
-			if (*lock == _SPINLOCK_UNLOCKED)
-				goto attempt_lock;
-		}
+	while (_atomic_lock(&lock->atomiclock))
 		sched_yield();
+	me = lock->waiter++;
+	lock->atomiclock = _ATOMIC_LOCK_UNLOCKED;
+	while (me != lock->ready) {
+		if (me < lock->ready) {
+			_rthread_debug(0, "SPINLOCK FAIL: %d %d\n",
+			    me, lock->ready);
+			_exit(1);
+		}
+		if (me > lock->ready + 1)
+			sched_yield();
 	}
 }
 
-void
-_spinunlock(_spinlock_lock_t *lock)
+int
+_spinlocktry(volatile struct _spinlock *lock)
 {
-	*lock = _SPINLOCK_UNLOCKED;
+	int gotit = 0;
+
+	while (_atomic_lock(&lock->atomiclock))
+		sched_yield();
+	if (lock->waiter == lock->ready) {
+		lock->waiter++;
+		gotit = 1;
+	}
+	lock->atomiclock = _ATOMIC_LOCK_UNLOCKED;
+
+	return gotit;
+}
+
+void
+_spinunlock(volatile struct _spinlock *lock)
+{
+	lock->ready++;
 }
 
 /*
@@ -204,9 +220,9 @@ _rthread_init(void)
 	struct sigaction sa;
 
 	thread->tid = getthrid();
-	thread->donesem.lock = _SPINLOCK_UNLOCKED;
+	thread->donesem.lock = _SPINLOCK_UNLOCKED_ASSIGN;
 	thread->flags |= THREAD_CANCEL_ENABLE|THREAD_CANCEL_DEFERRED;
-	thread->flags_lock = _SPINLOCK_UNLOCKED;
+	thread->flags_lock = _SPINLOCK_UNLOCKED_ASSIGN;
 	strlcpy(thread->name, "Main process", sizeof(thread->name));
 	LIST_INSERT_HEAD(&_thread_list, thread, threads);
 	_rthread_debug_init();
@@ -445,8 +461,8 @@ pthread_create(pthread_t *threadp, const pthread_attr_t *attr,
 	thread = calloc(1, sizeof(*thread));
 	if (!thread)
 		return (errno);
-	thread->donesem.lock = _SPINLOCK_UNLOCKED;
-	thread->flags_lock = _SPINLOCK_UNLOCKED;
+	thread->donesem.lock = _SPINLOCK_UNLOCKED_ASSIGN;
+	thread->flags_lock = _SPINLOCK_UNLOCKED_ASSIGN;
 	thread->fn = start_routine;
 	thread->arg = arg;
 	thread->tid = -1;
@@ -645,7 +661,7 @@ _thread_dump_info(void)
 void
 _rthread_dl_lock(int what)
 {
-	static _spinlock_lock_t lock = _SPINLOCK_UNLOCKED;
+	static struct _spinlock lock = _SPINLOCK_UNLOCKED;
 	static pthread_t owner = NULL;
 	static struct pthread_queue lockers = TAILQ_HEAD_INITIALIZER(lockers);
 	static int count = 0;
@@ -661,7 +677,7 @@ _rthread_dl_lock(int what)
 		} else if (owner != self) {
 			TAILQ_INSERT_TAIL(&lockers, self, waiting);
 			while (owner != self) {
-				__thrsleep(self, 0, NULL, &lock, NULL);
+				__thrsleep(self, 0 | 0x8, NULL, &lock.ready, NULL);
 				_spinlock(&lock);
 			}
 		}
@@ -688,7 +704,7 @@ _rthread_dl_lock(int what)
 void
 _rthread_bind_lock(int what)
 {
-	static _spinlock_lock_t lock = _SPINLOCK_UNLOCKED;
+	static struct _spinlock lock = _SPINLOCK_UNLOCKED;
 
 	if (what == 0)
 		_spinlock(&lock);
