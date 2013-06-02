@@ -2128,6 +2128,9 @@
 ./usr/lib/libpthread.a
 ./usr/lib/libpthread.so.17.1
 ./usr/lib/libpthread_p.a
+./usr/lib/libreadline.a
+./usr/lib/libreadline.so.4.1
+./usr/lib/libreadline_p.a
 ./usr/lib/librpcsvc.a
 ./usr/lib/librpcsvc.so.1.2
 ./usr/lib/librpcsvc_p.a
