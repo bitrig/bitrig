@@ -128,10 +128,10 @@ includes:
 #this has to be after bsd.lib.mk so it can detect SHLIB_(MAJOR|MINOR)
 afterinstall:
 .if !defined(NOPIC) && defined(SHLIB_MAJOR) && defined(SHLIB_MINOR)
-	ln -f ${LIBDIR}/libedit.so.${SHLIB_MAJOR}.${SHLIB_MINOR} \
-		${LIBDIR}/libreadline.so.${SHLIB_MAJOR}.${SHLIB_MINOR}
+	ln -f ${DESTDIR}${LIBDIR}/libedit.so.${SHLIB_MAJOR}.${SHLIB_MINOR} \
+		${DESTDIR}${LIBDIR}/libreadline.so.${SHLIB_MAJOR}.${SHLIB_MINOR}
 .endif
-	ln -f ${LIBDIR}/libedit.a ${LIBDIR}/libreadline.a
-	ln -f ${LIBDIR}/libedit_p.a ${LIBDIR}/libreadline_p.a
+	ln -f ${DESTDIR}${LIBDIR}/libedit.a ${DESTDIR}${LIBDIR}/libreadline.a
+	ln -f ${DESTDIR}${LIBDIR}/libedit_p.a ${DESTDIR}${LIBDIR}/libreadline_p.a
 
 .include <bsd.subdir.mk>
