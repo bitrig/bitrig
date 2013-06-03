@@ -17,15 +17,12 @@ path1024=${path1023}x
 expect() {
 	n=$ntest
 	ntest=$((ntest + 1))
-
 	expected=$1
 	shift
-
 	echo -n "#$n: $FSTEST $*"
 	actual=`${FSTEST} $* 2>/dev/null | tail -1`
 	echo "${actual}" | egrep '^'${expected}'$' >/dev/null 2>&1
 	[ $? -eq 0 ] && { echo " OK"; return; }
-
 	echo " ERROR"
 	echo "#$n: expected $expected, got ${actual:-no result}"
 	[ ${IGNORE_ERRORS} == 0 ] && exit 1
@@ -36,10 +33,8 @@ expect() {
 test_check() {
 	n=$ntest
 	ntest=$((ntest + 1))
-
 	echo -n "#$n: $*"
 	[ $* ] && { echo " OK"; return; }
-
 	echo " ERROR"
 	[ ${IGNORE_ERRORS} == 0 ] && exit 1
 	nfail=$((nfail + 1))
@@ -55,8 +50,8 @@ for arg in $*; do
 	nfail=0
 	echo $arg:
 	. $arg
-	totntest=`expr $totntest + $ntest`
-	totnfail=`expr $totnfail + $nfail`
+	totntest=$((totntest + ntest))
+	totnfail=$((totnfail + nfail))
 done
 
 echo "${totntest} tests completed, ${totnfail} failed"
