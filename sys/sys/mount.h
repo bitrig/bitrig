@@ -1,4 +1,4 @@
-/*	$OpenBSD: mount.h,v 1.110 2013/06/03 15:54:48 tedu Exp $	*/
+/*	$OpenBSD: mount.h,v 1.111 2013/06/03 15:56:01 tedu Exp $	*/
 /*	$NetBSD: mount.h,v 1.48 1996/02/18 11:55:47 fvdl Exp $	*/
 
 /*
@@ -341,7 +341,7 @@ struct statfs53 {
 #define	MOUNT_EXT2FS	"ext2fs"	/* Second Extended Filesystem */
 #define	MOUNT_UDF	"udf"		/* UDF */
 #define	MOUNT_TMPFS	"tmpfs"		/* tmpfs */
-#define MOUNT_FUSEFS	"fuse"		/* FUSE */
+#define	MOUNT_FUSEFS	"fuse"		/* FUSE */
 
 /*
  * Structure per mounted file system.  Each mounted file system has an
