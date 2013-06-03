@@ -51,12 +51,12 @@ namegen() {
 }
 
 for arg in $*; do
-  ntest=0
-  nfail=0
-  echo $arg:
-  . $arg
-  totntest=`expr $totntest + $ntest`
-  totnfail=`expr $totnfail + $nfail`
+	ntest=0
+	nfail=0
+	echo $arg:
+	. $arg
+	totntest=`expr $totntest + $ntest`
+	totnfail=`expr $totnfail + $nfail`
 done
 
-echo "${totntest} tests completed, ${totnfail} failed."
+echo "${totntest} tests completed, ${totnfail} failed"
