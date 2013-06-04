@@ -812,6 +812,7 @@ tmpfs_link(void *v)
 	node->tn_status |= TMPFS_NODE_CHANGED;
 	tmpfs_update(vp, NULL, NULL, 0);
 	error = 0;
+	pool_put(&namei_pool, cnp->cn_pnbuf);
 out:
 	VOP_UNLOCK(vp, 0);
 	vput(dvp);
