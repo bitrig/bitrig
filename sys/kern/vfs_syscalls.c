@@ -1573,7 +1573,8 @@ dolinkat(struct proc *p, int fd1, const char *path1, int fd2,
 
 	flags = LOCKPARENT;
 	if (vp->v_type == VDIR) {
-		flags |= STRIPSLASHES;
+		vrele(vp);
+		return EPERM;
 	}
 
 	NDINITAT(&nd, CREATE, flags, UIO_USERSPACE, fd2, path2, p);
@@ -1584,11 +1585,6 @@ dolinkat(struct proc *p, int fd1, const char *path1, int fd2,
 		goto abort;
 	}
 
-	/* Prevent hard links on directories. */
-	if (vp->v_type == VDIR) {
-		error = EPERM;
-		goto abort;
-	}
 	/* Prevent hardlinks across mount points */
 	if (nd.ni_dvp->v_mount != vp->v_mount) {
 		error = EXDEV;
@@ -1596,22 +1592,21 @@ dolinkat(struct proc *p, int fd1, const char *path1, int fd2,
 	}
 
 	error = VOP_LINK(nd.ni_dvp, vp, &nd.ni_cnd);
-	if (!error) {
-		goto out;
-	}
-
-abort:
-	if (nd.ni_vp) {
-		VOP_ABORTOP(nd.ni_dvp, &nd.ni_cnd);
-		if (nd.ni_dvp == nd.ni_vp) {
-			vrele(nd.ni_dvp);
-		} else {
-			vput(nd.ni_dvp);
-		}
-		vrele(nd.ni_vp);
-	}
 out:
 	vrele(vp);
+	return (error);
+
+abort:
+	VOP_ABORTOP(nd.ni_dvp, &nd.ni_cnd);
+	if (nd.ni_dvp == nd.ni_vp) {
+		vrele(nd.ni_dvp);
+	} else {
+		vput(nd.ni_dvp);
+	}
+	if (nd.ni_vp)
+		vrele(nd.ni_vp);
+	vrele(vp);
+
 	return (error);
 }
 
