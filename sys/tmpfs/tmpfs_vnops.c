@@ -1151,23 +1151,17 @@ tmpfs_pathconf(void *v)
 	case _PC_NAME_MAX:
 		*retval = TMPFS_MAXNAMLEN;
 		break;
-	case _PC_PATH_MAX:
-		*retval = PATH_MAX;
-		break;
-	case _PC_PIPE_BUF:
-		*retval = PIPE_BUF;
-		break;
 	case _PC_CHOWN_RESTRICTED:
 		*retval = 1;
 		break;
 	case _PC_NO_TRUNC:
 		*retval = 1;
 		break;
-	case _PC_SYNC_IO:
-		*retval = 1;
-		break;
 	case _PC_FILESIZEBITS:
-		*retval = sizeof(off_t) * CHAR_BIT;
+		*retval = 64;
+		break;
+	case _PC_TIMESTAMP_RESOLUTION:
+		*retval = 1;
 		break;
 	default:
 		error = EINVAL;
