@@ -30,8 +30,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _FS_TMPFS_TMPFS_H_
-#define _FS_TMPFS_TMPFS_H_
+#ifndef _TMPFS_TMPFS_H_
+#define _TMPFS_TMPFS_H_
 
 #if !defined(_KERNEL) && !defined(_KMEMUSER)
 #error "not supposed to be exposed to userland"
@@ -390,4 +390,4 @@ VP_TO_TMPFS_NODE(struct vnode *vp)
 	return node;
 }
 
-#endif /* _FS_TMPFS_TMPFS_H_ */
+#endif /* _TMPFS_TMPFS_H_ */

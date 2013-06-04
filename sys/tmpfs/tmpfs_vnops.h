@@ -30,8 +30,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _FS_TMPFS_TMPFS_VNOPS_H_
-#define _FS_TMPFS_TMPFS_VNOPS_H_
+#ifndef _TMPFS_TMPFS_VNOPS_H_
+#define _TMPFS_TMPFS_VNOPS_H_
 
 #if !defined(_KERNEL)
 #error not supposed to be exposed to userland.
@@ -81,4 +81,4 @@ int	tmpfs_getpages		(void *);
 int	tmpfs_putpages		(void *);
 int	tmpfs_whiteout		(void *);
 
-#endif /* _FS_TMPFS_TMPFS_VNOPS_H_ */
+#endif /* _TMPFS_TMPFS_VNOPS_H_ */
