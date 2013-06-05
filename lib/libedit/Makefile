@@ -121,17 +121,6 @@ includes:
 		/dev/null 2>&1 || \
 	${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 histedit.h \
 		${DESTDIR}/usr/include
-	-cd ${.CURDIR}/readline && exec ${SUDO} ${MAKE} includes
 
 .include <bsd.lib.mk>
-
-#this has to be after bsd.lib.mk so it can detect SHLIB_(MAJOR|MINOR)
-afterinstall:
-.if !defined(NOPIC) && defined(SHLIB_MAJOR) && defined(SHLIB_MINOR)
-	ln -f ${DESTDIR}${LIBDIR}/libedit.so.${SHLIB_MAJOR}.${SHLIB_MINOR} \
-		${DESTDIR}${LIBDIR}/libreadline.so.${SHLIB_MAJOR}.${SHLIB_MINOR}
-.endif
-	ln -f ${DESTDIR}${LIBDIR}/libedit.a ${DESTDIR}${LIBDIR}/libreadline.a
-	ln -f ${DESTDIR}${LIBDIR}/libedit_p.a ${DESTDIR}${LIBDIR}/libreadline_p.a
-
 .include <bsd.subdir.mk>
