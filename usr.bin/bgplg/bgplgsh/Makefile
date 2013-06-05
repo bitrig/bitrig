@@ -9,7 +9,8 @@ CFLAGS+=	-Wstrict-prototypes -Wmissing-prototypes
 CLFAGS+=	-Wmissing-declarations -Wredundant-decls
 CFLAGS+=	-Wshadow -Wpointer-arith -Wcast-qual
 CFLAGS+=	-Wsign-compare
-CFLAGS+= 	-I${.CURDIR}
+# reacharound for libedit readline emulation headers.
+CFLAGS+= 	-I${.CURDIR} -I${.CURDIR}/../../../lib/libedit/
 LDADD=		-ledit -lncurses
 MAN=		bgplgsh.8
 
