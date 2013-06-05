@@ -65,7 +65,7 @@ ASRC=${LIBEDITDIR}/vi.c ${LIBEDITDIR}/emacs.c ${LIBEDITDIR}/common.c
 
 CLEANFILES+=	${AHDR} fcns.h help.h fcns.c help.c
 
-SUBDIR+=	readline
+#SUBDIR+=	readline
 HOST_SH=	sh
 
 vi.h: vi.c makelist
