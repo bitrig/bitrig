@@ -11,8 +11,9 @@ CPPFLAGS +=	-DSQLITE_OMIT_LOAD_EXTENSION=1
 
 CPPFLAGS +=	-DHAVE_READLINE=1
 
-CFLAGS += -pthread
+# include fake readline headers
+CFLAGS += -pthread -I${.CURDIR}/../../lib/libedit/
 LDFLAGS += -pthread
-LDADD += -lsqlite3 -lreadline -lcurses
+LDADD += -lsqlite3 -ledit -lcurses
 
 .include <bsd.prog.mk>
