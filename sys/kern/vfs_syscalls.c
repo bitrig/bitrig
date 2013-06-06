@@ -1726,7 +1726,7 @@ dounlinkat(struct proc *p, int fd, const char *path, int flag,
 		 * No rmdir "." please.
 		 */
 		if (nd.ni_dvp == vp) {
-			error = EBUSY;
+			error = EINVAL;
 			goto out;
 		}
 	}
