@@ -47,17 +47,18 @@ done
 expect 0 chflags ${n1} none
 expect 0 unlink ${n1}
 
-expect 0 symlink ${n2} ${n1}
-expect 0 lchown ${n1} 65534 65534
-for flag in SF_IMMUTABLE SF_APPEND ; do
-	expect 0 lchflags ${n1} ${flag}
-	expect EPERM -u 65533 -g 65533 lchflags ${n1} UF_IMMUTABLE
-	expect ${flag} lstat ${n1} flags
-	expect EPERM -u 65534 -g 65534 lchflags ${n1} UF_IMMUTABLE
-	expect ${flag} lstat ${n1} flags
-done
-expect 0 lchflags ${n1} none
-expect 0 unlink ${n1}
+# XXX no lchflags
+#expect 0 symlink ${n2} ${n1}
+#expect 0 lchown ${n1} 65534 65534
+#for flag in SF_IMMUTABLE SF_APPEND ; do
+#	expect 0 lchflags ${n1} ${flag}
+#	expect EPERM -u 65533 -g 65533 lchflags ${n1} UF_IMMUTABLE
+#	expect ${flag} lstat ${n1} flags
+#	expect EPERM -u 65534 -g 65534 lchflags ${n1} UF_IMMUTABLE
+#	expect ${flag} lstat ${n1} flags
+#done
+#expect 0 lchflags ${n1} none
+#expect 0 unlink ${n1}
 
 cd ${cdir}
 expect 0 rmdir ${n0}

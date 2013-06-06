@@ -33,11 +33,12 @@ done
 expect 0 chflags ${n0} none
 expect 0 unlink ${n0}
 
-expect 0 symlink ${n1} ${n0}
-for flag in SF_IMMUTABLE UF_IMMUTABLE SF_APPEND UF_APPEND; do
-	expect 0 lchflags ${n0} ${flag}
-	expect ${flag} lstat ${n0} flags
-	expect EPERM rename ${n0} ${n1}
-done
-expect 0 lchflags ${n0} none
-expect 0 unlink ${n0}
+# XXX no lchflags
+#expect 0 symlink ${n1} ${n0}
+#for flag in SF_IMMUTABLE UF_IMMUTABLE SF_APPEND UF_APPEND; do
+#	expect 0 lchflags ${n0} ${flag}
+#	expect ${flag} lstat ${n0} flags
+#	expect EPERM rename ${n0} ${n1}
+#done
+#expect 0 lchflags ${n0} none
+#expect 0 unlink ${n0}
