@@ -9,6 +9,6 @@ n1=`namegen`
 expect 0 mkdir ${n0} 0755
 expect 0 mkdir ${n0}/${n1} 0755
 expect EINVAL rmdir ${n0}/${n1}/.
-expect EINVAL rmdir ${n0}/${n1}/..
+expect ENOTEMPTY rmdir ${n0}/${n1}/..
 expect 0 rmdir ${n0}/${n1}
 expect 0 rmdir ${n0}
