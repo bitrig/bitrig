@@ -2645,6 +2645,11 @@ sys_truncate(struct proc *p, void *v, register_t *retval)
 		error = EISDIR;
 	else if ((error = VOP_ACCESS(vp, VWRITE, p->p_ucred)) == 0 &&
 	    (error = vn_writechk(vp)) == 0) {
+	    	/* check this here, before the VNOVAL transformation */
+	    	if (SCARG(uap, length) < 0) {
+	    		vput(vp);
+	    		return (EINVAL);
+		}
 		VATTR_NULL(&vattr);
 		vattr.va_size = SCARG(uap, length);
 		error = VOP_SETATTR(vp, &vattr, p->p_ucred);
