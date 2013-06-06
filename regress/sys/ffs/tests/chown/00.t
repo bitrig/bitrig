@@ -67,7 +67,10 @@ expect 0 -u 65532 -g 65531 chown ${n0} -1 -1
 expect 0 unlink ${n0}
 
 # when super-user calls chown(2), set-uid and set-gid bits are not removed.
+# XXX modified due to suid_clear: bitrig always clears the bits
 # 43
+setuid=`sysctl -n fs.posix.setuid`
+sysctl fs.posix.setuid=0
 expect 0 create ${n0} 0644
 expect 0 chown ${n0} 65534 65533
 expect 0 chmod ${n0} 06555
@@ -91,6 +94,7 @@ expect 06555 lstat ${n0} mode
 expect 0 chown ${n0} 0 0
 expect 06555 lstat ${n0} mode
 expect 0 unlink ${n0}
+sysctl fs.posix.setuid=${setuid}
 
 # when non-super-user calls chown(2) successfully, set-uid and set-gid bits are
 # removed, except when both uid and gid are equal to -1.
