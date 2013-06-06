@@ -15,7 +15,7 @@ mount /dev/vnd1c ${n0}
 expect 0 create ${n0}/${n1} 0644
 i=0
 while :; do
-	link ${n0}/${n1} ${n0}/${i} >/dev/null 2>&1
+	ln ${n0}/${n1} ${n0}/${i} >/dev/null 2>&1
 	if [ $? -ne 0 ]; then
 		break
 	fi
