@@ -9,16 +9,16 @@ expect 0 mkdir ${n0} 0755
 dd if=/dev/zero of=tmpdisk bs=1k count=1024 2>/dev/null
 vnconfig vnd1 tmpdisk
 newfs /dev/rvnd1c >/dev/null
-mount /dev/vnd1c ${n0}
+mountfs /dev/vnd1c ${n0}
 expect 0 create ${n0}/${n1} 0644
 expect 0 chflags ${n0}/${n1} UF_IMMUTABLE
 expect UF_IMMUTABLE stat ${n0}/${n1} flags
 expect 0 chflags ${n0}/${n1} none
 expect none stat ${n0}/${n1} flags
-mount -ur /dev/vnd1c
+mountfs -ur /dev/vnd1c
 expect EROFS chflags ${n0}/${n1} UF_IMMUTABLE
 expect none stat ${n0}/${n1} flags
-mount -uw /dev/vnd1c
+mountfs -uw /dev/vnd1c
 expect 0 chflags ${n0}/${n1} UF_IMMUTABLE
 expect UF_IMMUTABLE stat ${n0}/${n1} flags
 expect 0 chflags ${n0}/${n1} none

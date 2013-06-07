@@ -9,17 +9,17 @@ expect 0 mkdir ${n0} 0755
 dd if=/dev/zero of=tmpdisk bs=1k count=1024 2>/dev/null
 vnconfig vnd1 tmpdisk
 newfs /dev/rvnd1c >/dev/null
-mount /dev/vnd1c ${n0}
+mountfs /dev/vnd1c ${n0}
 expect 0 create ${n0}/${n1} 0644
 expect 0 open ${n0}/${n1} O_WRONLY
 expect 0 open ${n0}/${n1} O_RDWR
 expect 0 open ${n0}/${n1} O_RDWR,O_TRUNC
-mount -ur /dev/vnd1c
+mountfs -ur /dev/vnd1c
 expect EROFS open ${n0}/${n1} O_WRONLY
 expect EROFS open ${n0}/${n1} O_RDWR
 expect EROFS open ${n0}/${n1} O_RDWR,O_TRUNC
 expect EINVAL open ${n0}/${n1} O_RDONLY,O_TRUNC
-mount -uw /dev/vnd1c
+mountfs -uw /dev/vnd1c
 expect 0 unlink ${n0}/${n1}
 umount /dev/vnd1c
 vnconfig -u vnd1

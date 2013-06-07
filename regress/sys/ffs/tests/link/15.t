@@ -10,7 +10,7 @@ expect 0 mkdir ${n0} 0755
 dd if=/dev/zero of=tmpdisk bs=1k count=256 2>/dev/null
 vnconfig vnd1 tmpdisk
 newfs /dev/rvnd1c >/dev/null
-mount /dev/vnd1c ${n0}
+mountfs /dev/vnd1c ${n0}
 expect 0 create ${n0}/${n1} 0644
 i=0
 while :; do

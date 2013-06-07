@@ -10,14 +10,14 @@ expect 0 mkdir ${n0} 0755
 dd if=/dev/zero of=tmpdisk bs=1k count=1024 2>/dev/null
 vnconfig vnd1 tmpdisk
 newfs /dev/rvnd1c >/dev/null
-mount /dev/vnd1c ${n0}
+mountfs /dev/vnd1c ${n0}
 expect 0 create ${n0}/${n1} 0644
 
 expect 0 link ${n0}/${n1} ${n0}/${n2}
 expect 0 unlink ${n0}/${n2}
-mount -ur /dev/vnd1c
+mountfs -ur /dev/vnd1c
 expect EROFS link ${n0}/${n1} ${n0}/${n2}
-mount -uw /dev/vnd1c
+mountfs -uw /dev/vnd1c
 expect 0 link ${n0}/${n1} ${n0}/${n2}
 expect 0 unlink ${n0}/${n2}
 

@@ -2,6 +2,8 @@
 set -eu
 
 IGNORE_ERRORS=1
+SOFTDEP=
+#SOFTDEP="-o softdep"
 
 totntest=0
 totnfail=0
@@ -14,16 +16,21 @@ path1023=${path1021}/x
 path1024=${path1023}x
 
 setup() {
-	dd if=/dev/zero of=fakeobj bs=512 count=4k
+	dd if=/dev/zero of=fakeobj bs=2048 count=4k
 	vnconfig vnd0 fakeobj
 	newfs /dev/rvnd0c
-	mount /dev/vnd0c /mnt
+	mount ${SOFTDEP} /dev/vnd0c /mnt
 }
 
 teardown() {
 	umount /mnt
 	vnconfig -u vnd0
 	rm -f fakeobj
+}
+
+# mount auxiliary fs
+mountfs() {
+	mount ${SOFTDEP} $1 $2
 }
 
 # thin shell around 'fstest' to test and provide descriptive output
