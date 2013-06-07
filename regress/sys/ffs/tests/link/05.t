@@ -15,8 +15,7 @@ mount /dev/vnd1c ${n0}
 expect 0 create ${n0}/${n1} 0644
 i=1
 while :; do
-	ln ${n0}/${n1} ${n0}/${i} 2>/dev/null 1>&2
-	if [ $? -ne 0 ]; then
+	if ! ln ${n0}/${n1} ${n0}/${i} 2>/dev/null 1>&2 ; then
 		break
 	fi
 	i=`expr $i + 1`

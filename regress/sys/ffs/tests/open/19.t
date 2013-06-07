@@ -13,8 +13,7 @@ newfs /dev/rvnd1c >/dev/null
 mount /dev/vnd1c ${n0}
 i=0
 while :; do
-	touch ${n0}/${i} >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! touch ${n0}/${i} >/dev/null 2>&1 ; then
 		break
 	fi
 	i=`expr $i + 1`

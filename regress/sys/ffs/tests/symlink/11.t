@@ -14,8 +14,7 @@ mount /dev/vnd1c ${n0}
 
 i=0
 while :; do
-	ln -s test ${n0}/${i} >/dev/null 2>&1
-	if [ $? -ne 0 ]; then
+	if ! ln -s test ${n0}/${i} >/dev/null 2>&1 ; then
 		break
 	fi
 	i=`expr $i + 1`
