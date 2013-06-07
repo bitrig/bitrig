@@ -1,4 +1,3 @@
-#!/bin/sh
 # $FreeBSD: src/tools/regression/fstest/tests/chflags/09.t,v 1.1 2007/01/17 01:42:08 pjd Exp $
 
 desc="chflags returns EPERM when one of SF_IMMUTABLE or SF_APPEND is set and securelevel is greater than 0"

@@ -1,4 +1,3 @@
-#!/bin/sh
 # $FreeBSD: src/tools/regression/fstest/tests/symlink/08.t,v 1.1 2007/01/17 01:42:11 pjd Exp $
 
 desc="symlink returns EEXIST if the name2 argument already exists"

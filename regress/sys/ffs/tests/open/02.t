@@ -1,4 +1,3 @@
-#!/bin/sh
 # $FreeBSD: src/tools/regression/fstest/tests/open/02.t,v 1.1 2007/01/17 01:42:10 pjd Exp $
 
 desc="open returns ENAMETOOLONG if a component of a pathname exceeded 255 characters"

@@ -1,4 +1,3 @@
-#!/bin/sh
 # $FreeBSD: src/tools/regression/fstest/tests/truncate/12.t,v 1.1 2007/01/17 01:42:12 pjd Exp $
 
 desc="truncate returns EFBIG if the length argument was greater than the maximum file size"

@@ -1,4 +1,3 @@
-#!/bin/sh
 # $FreeBSD: src/tools/regression/fstest/tests/open/01.t,v 1.1 2007/01/17 01:42:10 pjd Exp $
 
 desc="open returns ENOTDIR if a component of the path prefix is not a directory"

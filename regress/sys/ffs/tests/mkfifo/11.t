@@ -1,4 +1,3 @@
-#!/bin/sh
 # $FreeBSD: src/tools/regression/fstest/tests/mkfifo/11.t,v 1.1 2007/01/17 01:42:09 pjd Exp $
 
 desc="mkfifo returns ENOSPC if there are no free inodes on the file system on which the file is being created"

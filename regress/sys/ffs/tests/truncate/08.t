@@ -1,4 +1,3 @@
-#!/bin/sh
 # $FreeBSD: src/tools/regression/fstest/tests/truncate/08.t,v 1.1 2007/01/17 01:42:12 pjd Exp $
 
 desc="truncate returns EPERM if the named file has its immutable or append-only flag set"

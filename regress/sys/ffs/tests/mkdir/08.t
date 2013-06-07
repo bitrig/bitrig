@@ -1,4 +1,3 @@
-#!/bin/sh
 # $FreeBSD: src/tools/regression/fstest/tests/mkdir/08.t,v 1.1 2007/01/17 01:42:09 pjd Exp $
 
 desc="mkdir returns EPERM if the parent directory of the directory to be created has its immutable flag set"

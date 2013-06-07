@@ -1,4 +1,3 @@
-#!/bin/sh
 # $FreeBSD: src/tools/regression/fstest/tests/chown/04.t,v 1.1 2007/01/17 01:42:08 pjd Exp $
 
 desc="chown returns ENOENT if the named file does not exist"

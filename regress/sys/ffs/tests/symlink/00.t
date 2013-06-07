@@ -1,4 +1,3 @@
-#!/bin/sh
 # $FreeBSD: src/tools/regression/fstest/tests/symlink/00.t,v 1.1 2007/01/17 01:42:11 pjd Exp $
 
 desc="symlink creates symbolic links"

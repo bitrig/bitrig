@@ -1,4 +1,3 @@
-#!/bin/sh
 # $FreeBSD: src/tools/regression/fstest/tests/truncate/13.t,v 1.1 2007/01/17 01:42:12 pjd Exp $
 
 desc="truncate returns EINVAL if the length argument was less than 0"

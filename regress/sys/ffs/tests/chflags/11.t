@@ -1,4 +1,3 @@
-#!/bin/sh
 # $FreeBSD: src/tools/regression/fstest/tests/chflags/11.t,v 1.1 2007/01/17 01:42:08 pjd Exp $
 #
 # XXX disabled since we don't have SF_SNAPSHOT
