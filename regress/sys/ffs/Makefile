@@ -3,7 +3,11 @@
 PROG=	fstest
 
 clean:
-	/bin/sh ${.CURDIR}/run teardown
+	-umount /dev/vnd1c
+	-umount /dev/vnd0c
+	-vnconfig -u vnd1
+	-vnconfig -u vnd0
+	-rm -f ${.OBJDIR}/fakedisk
 	-rm -f ${.OBJDIR}/fstest
 	-rm -f ${.OBJDIR}/fstest.o
 

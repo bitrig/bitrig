@@ -22,11 +22,6 @@ setup() {
 	mount ${SOFTDEP} /dev/vnd0c /mnt
 }
 
-teardown() {
-	umount /mnt
-	vnconfig -u vnd0
-	rm -f fakeobj
-}
 
 # mount auxiliary fs
 mountfs() {
@@ -64,8 +59,6 @@ test_check() {
 namegen() {
 	echo `dd if=/dev/urandom bs=1k count=1 2>/dev/null | sha1 | cut -c 32-`
 }
-
-[ $1 == 'teardown' ] && { teardown; exit 0; }
 
 setup
 
