@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_device.c,v 1.40 2011/07/03 18:34:14 oga Exp $	*/
+/*	$OpenBSD: uvm_device.c,v 1.43 2013/06/07 20:46:14 kettenis Exp $	*/
 /*	$NetBSD: uvm_device.c,v 1.30 2000/11/25 06:27:59 chs Exp $	*/
 
 /*
@@ -49,6 +49,8 @@
 
 #include <uvm/uvm.h>
 #include <uvm/uvm_device.h>
+
+#include "drm.h"
 
 /*
  * private global data structure
@@ -105,6 +107,9 @@ udv_attach(void *arg, vm_prot_t accessprot, voff_t off, vsize_t size)
 	dev_t device = *((dev_t *)arg);
 	struct uvm_device *udv, *lcv;
 	paddr_t (*mapfn)(dev_t, off_t, int);
+#if NDRM > 0
+	struct uvm_object *obj;
+#endif
 
 	/*
 	 * before we do anything, ensure this device supports mmap
@@ -122,6 +127,12 @@ udv_attach(void *arg, vm_prot_t accessprot, voff_t off, vsize_t size)
 
 	if (off < 0)
 		return(NULL);
+
+#if NDRM > 0
+	obj = udv_attach_drm(arg, accessprot, off, size);
+	if (obj)
+		return(obj);
+#endif
 
 	/*
 	 * Check that the specified range of the device allows the
