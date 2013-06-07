@@ -13,6 +13,13 @@ path1021=$name255/$name255/$name255/$name253
 path1023=${path1021}/x
 path1024=${path1023}x
 
+mountfs() {
+	dd if=/dev/zero of=fakeobj bs=512 count=4k
+	vnconfig vnd0 fakeobj
+	newfs /dev/rvnd0c
+	mount /dev/vnd0c /mnt
+}
+
 # thin shell around 'fstest' to test and provide descriptive output
 expect() {
 	n=$ntest
@@ -44,6 +51,8 @@ test_check() {
 namegen() {
 	echo `dd if=/dev/urandom bs=1k count=1 2>/dev/null | sha1 | cut -c 32-`
 }
+
+mountfs
 
 for arg in $*; do
 	ntest=0

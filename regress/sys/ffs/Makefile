@@ -2,12 +2,6 @@
 
 PROG=	fstest
 
-mount:
-	dd if=/dev/zero of=${.CURDIR}/fakeobj bs=512 count=4k
-	vnconfig vnd0 ${.CURDIR}/fakeobj
-	newfs /dev/rvnd0c
-	mount /dev/vnd0c /mnt
-
 clean:
 	-umount /mnt
 	-vnconfig -u vnd0
@@ -16,55 +10,55 @@ clean:
 	-rm -f ${.OBJDIR}/fstest
 	-rm -f ${.OBJDIR}/fstest.o
 
-chflags: ${PROG} mount
+chflags: ${PROG}
 	cd /mnt && env FSTEST=${.OBJDIR}/fstest /bin/sh ${.CURDIR}/run\
 		${.CURDIR}/tests/chflags/*.t
 
-chmod: ${PROG} mount
+chmod: ${PROG}
 	cd /mnt && env FSTEST=${.OBJDIR}/fstest /bin/sh ${.CURDIR}/run\
 		${.CURDIR}/tests/chmod/*.t
 
-chown: ${PROG} mount
+chown: ${PROG}
 	cd /mnt && env FSTEST=${.OBJDIR}/fstest /bin/sh ${.CURDIR}/run\
 		${.CURDIR}/tests/chown/*.t
 	
-link: ${PROG} mount
+link: ${PROG}
 	cd /mnt && env FSTEST=${.OBJDIR}/fstest /bin/sh ${.CURDIR}/run\
 		${.CURDIR}/tests/link/*.t
 
-mkdir: ${PROG} mount
+mkdir: ${PROG}
 	cd /mnt && env FSTEST=${.OBJDIR}/fstest /bin/sh ${.CURDIR}/run\
 		${.CURDIR}/tests/mkdir/*.t
 
-mkfifo: ${PROG} mount
+mkfifo: ${PROG}
 	cd /mnt && env FSTEST=${.OBJDIR}/fstest /bin/sh ${.CURDIR}/run\
 		${.CURDIR}/tests/mkfifo/*.t
 
-open: ${PROG} mount
+open: ${PROG}
 	cd /mnt && env FSTEST=${.OBJDIR}/fstest /bin/sh ${.CURDIR}/run\
 		${.CURDIR}/tests/open/*.t
 
-rename: ${PROG} mount
+rename: ${PROG}
 	cd /mnt && env FSTEST=${.OBJDIR}/fstest /bin/sh ${.CURDIR}/run\
 		${.CURDIR}/tests/rename/*.t
 
-rmdir: ${PROG} mount
+rmdir: ${PROG}
 	cd /mnt && env FSTEST=${.OBJDIR}/fstest /bin/sh ${.CURDIR}/run\
 		${.CURDIR}/tests/rmdir/*.t
 
-symlink: ${PROG} mount
+symlink: ${PROG}
 	cd /mnt && env FSTEST=${.OBJDIR}/fstest /bin/sh ${.CURDIR}/run\
 		${.CURDIR}/tests/symlink/*.t
 
-truncate: ${PROG} mount
+truncate: ${PROG}
 	cd /mnt && env FSTEST=${.OBJDIR}/fstest /bin/sh ${.CURDIR}/run\
 		${.CURDIR}/tests/truncate/*.t
 
-unlink: ${PROG} mount
+unlink: ${PROG}
 	cd /mnt && env FSTEST=${.OBJDIR}/fstest /bin/sh ${.CURDIR}/run\
 		${.CURDIR}/tests/unlink/*.t
 
-run-regress-fstest: mount
+run-regress-fstest:
 	cd /mnt && env FSTEST=${.OBJDIR}/fstest /bin/sh ${.CURDIR}/run\
 		${.CURDIR}/tests/*/*.t
 
