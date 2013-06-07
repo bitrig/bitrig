@@ -3,10 +3,7 @@
 PROG=	fstest
 
 clean:
-	-umount /mnt
-	-vnconfig -u vnd0
-	-vnconfig -u vnd1
-	-rm -f ${.CURDIR}/fakeobj
+	/bin/sh ${.CURDIR}/run teardown
 	-rm -f ${.OBJDIR}/fstest
 	-rm -f ${.OBJDIR}/fstest.o
 
