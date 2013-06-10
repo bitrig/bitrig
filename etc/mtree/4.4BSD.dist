@@ -326,11 +326,6 @@ protocols		gname=bin uname=root mode=0755
 # ./usr/include/protocols
 ..
 
-# ./usr/include/readline
-readline	gname=bin uname=root mode=0755
-# ./usr/include/readline
-..
-
 # ./usr/include/rpc
 rpc		gname=bin uname=root mode=0755
 # ./usr/include/rpc
