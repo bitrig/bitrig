@@ -25,7 +25,7 @@
 #include <sys/timeout.h>
 #include <machine/intr.h>
 #include <machine/bus.h>
-#include <machine/cpufunc.h>
+#include <arm/cpufunc.h>
 #include <arm/cortex/cortex.h>
 #include <arm/cortex/smc.h>
 
