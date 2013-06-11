@@ -58,7 +58,8 @@ omapid*		at soc?
 cortex0		at mainbus?
 ampintc*	at cortex?
 amptimer*	at cortex?
-armliicc*	at cortex?		# L2 cache controller
+armliicc*	at cortex?
+ampscu*		at cortex?
 
 # OMAP3 only
 intc*		at soc?			# interrupt controller

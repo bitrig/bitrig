@@ -20,3 +20,7 @@ file	arch/arm/cortex/agtimer.c		agtimer
 device	armliicc
 attach	armliicc at cortex
 file	arch/arm/cortex/arml2cc.c		armliicc
+
+device	ampscu
+attach	ampscu at cortex
+file	arch/arm/cortex/ampscu.c		ampscu

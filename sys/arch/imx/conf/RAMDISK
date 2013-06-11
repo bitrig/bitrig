@@ -67,6 +67,7 @@ cortex0		at mainbus?
 ampintc*	at cortex?
 amptimer*	at cortex?
 armliicc*	at cortex?
+ampscu*		at cortex?
 
 # iMX SoC
 imx0		at mainbus?
