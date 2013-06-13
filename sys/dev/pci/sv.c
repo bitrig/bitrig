@@ -889,14 +889,9 @@ sv_halt_out_dma(void *addr)
 {
 	struct sv_softc *sc = addr;
 	u_int8_t mode;
-<<<<<<< HEAD
-
-        DPRINTF(("eap: sv_halt_out_dma\n"));
-=======
 	
         DPRINTF(("sv: sv_halt_out_dma\n"));
 	mtx_enter(&audio_lock);
->>>>>>> 27dc477... Introduce a global interrupt-aware mutex protecting data
 	mode = sv_read_indirect(sc, SV_PLAY_RECORD_ENABLE);
 	mode &= ~SV_PLAY_ENABLE;
 	sc->sc_enable &= ~SV_PLAY_ENABLE;
@@ -910,14 +905,9 @@ sv_halt_in_dma(void *addr)
 {
 	struct sv_softc *sc = addr;
 	u_int8_t mode;
-<<<<<<< HEAD
-
-        DPRINTF(("eap: sv_halt_in_dma\n"));
-=======
     
         DPRINTF(("sv: sv_halt_in_dma\n"));
 	mtx_enter(&audio_lock);
->>>>>>> 27dc477... Introduce a global interrupt-aware mutex protecting data
 	mode = sv_read_indirect(sc, SV_PLAY_RECORD_ENABLE);
 	mode &= ~SV_RECORD_ENABLE;
 	sc->sc_enable &= ~SV_RECORD_ENABLE;
