@@ -55,7 +55,8 @@ ASM=	__get_tcb.o __getcwd.o __semctl.o __set_tcb.o __syscall.o \
 	shmget.o shutdown.o sigaction.o sigaltstack.o socket.o \
 	socketpair.o stat.o statfs.o swapctl.o symlink.o \
 	symlinkat.o sync.o sysarch.o umask.o unlink.o unlinkat.o \
-	unmount.o utimensat.o utimes.o utrace.o wait4.o write.o writev.o
+	unmount.o utimensat.o utimes.o utrace.o uuidgen.o \
+	wait4.o write.o writev.o
 
 GASM=	${ASM:.o=.go}
 PASM=	${ASM:.o=.po}
