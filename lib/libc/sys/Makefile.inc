@@ -186,7 +186,7 @@ MAN+=	__get_tcb.2 __thrsigdivert.2 __thrsleep.2 _exit.2 accept.2 \
 	sigprocmask.2 sigreturn.2 sigsuspend.2 socket.2 \
 	socketpair.2 stat.2 statfs.2 swapctl.2 symlink.2 \
 	sync.2 sysarch.2 syscall.2 truncate.2 umask.2 unlink.2 \
-	utimes.2 utrace.2 vfork.2 wait.2 write.2
+	utimes.2 utrace.2 uuidgen.2 vfork.2 wait.2 write.2
 
 MLINKS+=__get_tcb.2 __set_tcb.2
 MLINKS+=__thrsleep.2 __thrwakeup.2

@@ -26,8 +26,8 @@ SUBDIR= apply apropos ar arch asa at aucat audioctl awk banner \
 	sudo tail talk tcopy tcpbench tee telnet tftp tic tip time \
 	tmux top touch tput tr true tset tsort tty usbhidaction usbhidctl \
 	ul uname unexpand unifdef uniq units \
-	unvis users uudecode uuencode vacation vi vis vmstat w wall wc \
-	what whatis which who whois write x99token xargs xinstall \
+	unvis users uudecode uuencode uuidgen vacation vi vis vmstat w wall \
+	wc what whatis which who whois write x99token xargs xinstall \
 	xstr yacc yes
 
 .if (${YP:L} == "yes")
