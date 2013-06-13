@@ -1,5 +1,3 @@
-/*	$OpenBSD: syscalls.c,v 1.146 2013/06/09 13:10:27 miod Exp $	*/
-
 /*
  * System call names.
  *
@@ -403,7 +401,7 @@ char *syscallnames[] = {
 	"unlinkat",			/* 325 = unlinkat */
 	"utimensat",			/* 326 = utimensat */
 	"futimens",			/* 327 = futimens */
-	"#328 (unimplemented)",		/* 328 = unimplemented */
+	"uuidgen",			/* 328 = uuidgen */
 	"__set_tcb",			/* 329 = __set_tcb */
 	"__get_tcb",			/* 330 = __get_tcb */
 };

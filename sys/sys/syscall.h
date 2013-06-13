@@ -1,5 +1,3 @@
-/*	$OpenBSD: syscall.h,v 1.145 2013/06/09 13:10:27 miod Exp $	*/
-
 /*
  * System call numbers.
  *
@@ -674,6 +672,9 @@
 
 /* syscall: "futimens" ret: "int" args: "int" "const struct timespec *" */
 #define	SYS_futimens	327
+
+/* syscall: "uuidgen" ret: "int" args: "struct uuid *" "int" */
+#define	SYS_uuidgen	328
 
 /* syscall: "__set_tcb" ret: "void" args: "void *" */
 #define	SYS___set_tcb	329

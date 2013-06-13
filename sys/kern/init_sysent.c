@@ -1,5 +1,3 @@
-/*	$OpenBSD: init_sysent.c,v 1.145 2013/06/09 13:10:27 miod Exp $	*/
-
 /*
  * System call switch table.
  *
@@ -781,8 +779,8 @@ struct sysent sysent[] = {
 	    sys_utimensat },			/* 326 = utimensat */
 	{ 2, s(struct sys_futimens_args), 0,
 	    sys_futimens },			/* 327 = futimens */
-	{ 0, 0, 0,
-	    sys_nosys },			/* 328 = unimplemented */
+	{ 2, s(struct sys_uuidgen_args), 0,
+	    sys_uuidgen },			/* 328 = uuidgen */
 	{ 1, s(struct sys___set_tcb_args), SY_NOLOCK | 0,
 	    sys___set_tcb },			/* 329 = __set_tcb */
 	{ 0, 0, SY_NOLOCK | 0,
