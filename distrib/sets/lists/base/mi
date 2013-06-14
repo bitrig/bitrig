@@ -517,6 +517,7 @@
 ./usr/bin/users
 ./usr/bin/uudecode
 ./usr/bin/uuencode
+./usr/bin/uuidgen
 ./usr/bin/vacation
 ./usr/bin/verify_krb5_conf
 ./usr/bin/vi
@@ -1985,6 +1986,7 @@
 ./usr/include/sys/unpcb.h
 ./usr/include/sys/user.h
 ./usr/include/sys/utsname.h
+./usr/include/sys/uuid.h
 ./usr/include/sys/varargs.h
 ./usr/include/sys/videoio.h
 ./usr/include/sys/vmmeter.h
@@ -2033,6 +2035,7 @@
 ./usr/include/util.h
 ./usr/include/utime.h
 ./usr/include/utmp.h
+./usr/include/uuid.h
 ./usr/include/uvm
 ./usr/include/uvm/uvm.h
 ./usr/include/uvm/uvm_addr.h
@@ -2074,7 +2077,7 @@
 ./usr/lib/libasn1.so.19.0
 ./usr/lib/libasn1_p.a
 ./usr/lib/libc.a
-./usr/lib/libc.so.68.4
+./usr/lib/libc.so.68.5
 ./usr/lib/libc_p.a
 ./usr/lib/libcom_err.a
 ./usr/lib/libcom_err.so.19.0
@@ -2171,7 +2174,7 @@
 ./usr/lib/libperl.a
 ./usr/lib/libperl.so.13.0
 ./usr/lib/libpthread.a
-./usr/lib/libpthread.so.17.3
+./usr/lib/libpthread.so.17.4
 ./usr/lib/libpthread_p.a
 ./usr/lib/libroken.a
 ./usr/lib/libroken.so.0.0
@@ -5120,6 +5123,7 @@
 ./usr/share/man/man1/users.1
 ./usr/share/man/man1/uudecode.1
 ./usr/share/man/man1/uuencode.1
+./usr/share/man/man1/uuidgen.1
 ./usr/share/man/man1/vacation.1
 ./usr/share/man/man1/vi.1
 ./usr/share/man/man1/view.1
@@ -5391,6 +5395,7 @@
 ./usr/share/man/man2/utimensat.2
 ./usr/share/man/man2/utimes.2
 ./usr/share/man/man2/utrace.2
+./usr/share/man/man2/uuidgen.2
 ./usr/share/man/man2/vfork.2
 ./usr/share/man/man2/wait.2
 ./usr/share/man/man2/wait3.2
@@ -9394,6 +9399,19 @@
 ./usr/share/man/man3/uu_lockerr.3
 ./usr/share/man/man3/uu_unlock.3
 ./usr/share/man/man3/uucplock.3
+./usr/share/man/man3/uuid.3
+./usr/share/man/man3/uuid_compare.3
+./usr/share/man/man3/uuid_create.3
+./usr/share/man/man3/uuid_create_nil.3
+./usr/share/man/man3/uuid_dec_be.3
+./usr/share/man/man3/uuid_dec_le.3
+./usr/share/man/man3/uuid_enc_be.3
+./usr/share/man/man3/uuid_enc_le.3
+./usr/share/man/man3/uuid_equal.3
+./usr/share/man/man3/uuid_from_string.3
+./usr/share/man/man3/uuid_hash.3
+./usr/share/man/man3/uuid_is_nil.3
+./usr/share/man/man3/uuid_to_string.3
 ./usr/share/man/man3/va_arg.3
 ./usr/share/man/man3/va_copy.3
 ./usr/share/man/man3/va_end.3
