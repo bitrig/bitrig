@@ -343,6 +343,10 @@ typedef atomic_bool			atomic_flag;
      defined(__i386__) || defined(__ia64__))
 #define SPINWAIT() do { __asm __volatile("pause":::"memory"); } while (0)
 
+/* Spinwait asm for arm platforms, using "wait for interrupt". */
+#elif (defined(__GNUC__) || defined(__clang__)) && defined(__arm__)
+#define SPINWAIT() do { __asm __volatile("wfe"); } while (0)
+
 /* No pause instruction on other platforms/compilers. */
 #else
 #define SPINWAIT() do { /* nothing */ } while (0)
