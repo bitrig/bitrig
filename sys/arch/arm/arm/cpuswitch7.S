@@ -1,4 +1,4 @@
-/*	$OpenBSD: cpuswitch.S,v 1.12 2011/09/20 22:02:10 miod Exp $	*/
+/*	$OpenBSD: cpuswitch7.S,v 1.1 2013/04/30 13:04:25 patrick Exp $	*/
 /*	$NetBSD: cpuswitch.S,v 1.41 2003/11/15 08:44:18 scw Exp $	*/
 
 /*
@@ -128,12 +128,6 @@ _C_LABEL(curpcb):
 
 .Lcpu_do_powersave:
 	.word	_C_LABEL(cpu_do_powersave)
-
-.Lpmap_kernel_cstate:
-	.word	(kernel_pmap_store + PMAP_CSTATE)
-
-.Llast_cache_state_ptr:
-	.word	_C_LABEL(pmap_cache_state)
 
 /*
  * Idle loop, exercised while waiting for a process to wake up.
@@ -281,54 +275,24 @@ ENTRY(cpu_switchto)
 
 	ldr	r0, [r8, #(PCB_DACR)]		/* r0 = old DACR */
 	ldr	r1, [r9, #(PCB_DACR)]		/* r1 = new DACR */
-	ldr	r8, [r9, #(PCB_CSTATE)]		/* r8 = &new_pmap->pm_cstate */
-	ldr	r5, .Llast_cache_state_ptr	/* Previous proc's cstate */
 
 	teq	r10, r11			/* Same L1? */
-	ldr	r5, [r5]
 	cmpeq	r0, r1				/* Same DACR? */
 	beq	.Lcs_context_switched		/* yes! */
-
-	mov	r12, #0
-	cmp	r5, #0				/* No last vm? (switch_exit) */
-	beq	.Lcs_cache_purge_skipped	/* No, we can skip cache flsh */
 
 	mov	r2, #DOMAIN_CLIENT
 	cmp	r1, r2, lsl #(PMAP_DOMAIN_KERNEL * 2) /* Sw to kernel thread? */
 	beq	.Lcs_cache_purge_skipped	/* Yup. Don't flush cache */
 
-	cmp	r5, r8				/* Same userland VM space? */
-	ldrneb	r12, [r5, #(CS_CACHE_ID)]	/* Last VM space cache state */
-
-	/*
-	 * We're definately switching to a new userland VM space,
-	 * and the previous userland VM space has yet to be flushed
-	 * from the cache/tlb.
-	 *
-	 * r12 holds the previous VM space's cs_cache_id state
-	 */
-	tst	r12, #0xff			/* Test cs_cache_id */
-	beq	.Lcs_cache_purge_skipped	/* VM space is not in cache */
-
-	/*
-	 * Definitely need to flush the cache.
-	 * Mark the old VM space as NOT being resident in the cache.
-	 */
-	mov	r2, #0x00000000
-	strb	r2, [r5, #(CS_CACHE_ID)]
-	strb	r2, [r5, #(CS_CACHE_D)]
-
 	stmfd	sp!, {r0-r3}
 	ldr	r1, .Lcpufuncs
 	mov	lr, pc
-	ldr	pc, [r1, #CF_IDCACHE_WBINV_ALL]
+	ldr	pc, [r1, #CF_ICACHE_SYNC_ALL]
 	ldmfd	sp!, {r0-r3}
 
 .Lcs_cache_purge_skipped:
 	/* rem: r1 = new DACR */
-	/* rem: r5 = &old_pmap->pm_cstate (or NULL) */
 	/* rem: r6 = new proc */
-	/* rem: r8 = &new_pmap->pm_cstate */
 	/* rem: r9 = new PCB */
 	/* rem: r10 = old L1 */
 	/* rem: r11 = new L1 */
@@ -380,12 +344,6 @@ ENTRY(cpu_switchto)
 	mov	lr, pc
 	ldr	pc, [r10, #CF_CONTEXT_SWITCH]
 
-	/*
-	 * Mark the old VM space as NOT being resident in the TLB
-	 */
-	mov	r2, #0x00000000
-	cmp	r5, #0
-	strneh	r2, [r5, #(CS_TLB_ID)]
 	b	.Lcs_context_switched
 
 	/*
@@ -400,21 +358,8 @@ ENTRY(cpu_switchto)
 	ldrne	pc, [r10, #CF_TLB_FLUSHID_SE]
 
 .Lcs_context_switched:
-	/* rem: r8 = &new_pmap->pm_cstate */
 
 	/* XXXSCW: Safe to re-enable FIQs here */
-
-	/*
-	 * The new VM space is live in the cache and TLB.
-	 * Update its cache/tlb state, and if it's not the kernel
-	 * pmap, update the 'last cache state' pointer.
-	 */
-	mov	r2, #-1
-	ldr	r5, .Lpmap_kernel_cstate
-	ldr	r0, .Llast_cache_state_ptr
-	str	r2, [r8, #(CS_ALL)]
-	cmp	r5, r8
-	strne	r8, [r0]
 
 	/* rem: r6 = new proc */
 	/* rem: r9 = new PCB */

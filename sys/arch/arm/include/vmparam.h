@@ -109,6 +109,7 @@
 #define	__HAVE_VM_PAGE_MD
 struct vm_page_md {
 	struct pv_entry *pvh_list;		/* pv_entry list */
+	struct simplelock pvh_slock;		/* lock on this head */
 	int pvh_attrs;				/* page attributes */
 	u_int uro_mappings;
 	u_int urw_mappings;
@@ -124,6 +125,7 @@ struct vm_page_md {
 #define	VM_MDPAGE_INIT(pg)						\
 do {									\
 	(pg)->mdpage.pvh_list = NULL;					\
+	simple_lock_init(&(pg)->mdpage.pvh_slock);			\
 	(pg)->mdpage.pvh_attrs = 0;					\
 	(pg)->mdpage.uro_mappings = 0;					\
 	(pg)->mdpage.urw_mappings = 0;					\

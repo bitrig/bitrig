@@ -90,7 +90,7 @@ member	pcb_pagedir
 member	pcb_pl1vec
 member	pcb_l1vec
 member	pcb_dacr
-#member	pcb_cstate
+member	pcb_cstate
 member	pcb_flags
 member	PCB_R8			pcb_un.un_32.pcb32_r8
 member	PCB_R9			pcb_un.un_32.pcb32_r9
@@ -114,17 +114,17 @@ struct	vmspace
 member	vm_map
 member	VM_PMAP			vm_map.pmap
 
-#union	pmap_cache_state
-#member	cs_tlb_id
-#member	cs_tlb_d
-#member	cs_tlb
-#member	cs_cache_id
-#member	cs_cache_d
-#member	cs_cache
-#member	cs_all
+union	pmap_cache_state
+member	cs_tlb_id
+member	cs_tlb_d
+member	cs_tlb
+member	cs_cache_id
+member	cs_cache_d
+member	cs_cache
+member	cs_all
 
-#struct	pmap
-#member	PMAP_CSTATE		pm_cstate
+struct	pmap
+member	PMAP_CSTATE		pm_cstate
 
 struct	uprof
 member	pr_base
