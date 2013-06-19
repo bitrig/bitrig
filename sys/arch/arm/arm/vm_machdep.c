@@ -172,9 +172,6 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 void
 cpu_exit(struct proc *p)
 {
-#if 0
-printf("cpu_exit %p %s\n", p, p->p_comm);
-#endif
 	pmap_deactivate(p);
 	sched_exit(p);
 }
