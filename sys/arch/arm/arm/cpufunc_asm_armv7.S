@@ -113,11 +113,7 @@ ENTRY(armv7_tlb_flushD_SE)
 ENTRY(armv7_icache_sync_range)
 	ldr	ip, .Larmv7_line_size
 	cmp	r1, #0x8000
-#if 0
-	bcs	.Larmv7_icache_sync_all
-#else
 	movcs	r1, #0x8000	/* XXX needs to match cache size... */
-#endif
 	ldr	ip, [ip]
 	sub	r1, r1, #1		/* Don't overrun */
 	sub	r3, ip, #1
@@ -145,29 +141,7 @@ ENTRY(armv7_icache_sync_all)
 	mcr	p15, 0, r0, c7, c5, 0	/* Flush I cache */
 	mcr	p15, 0, r0, c7, c5, 6	/* Flush BP cache */
 	ISB
-#if 1
 	mov	pc, lr
-#endif
-#if 0
-	/* Fall through to clean Dcache. */
-
-.Larmv7_dcache_wb:
-	ldr	ip, .Larmv7_cache_data
-	ldmia	ip, {s_max, i_max, s_inc, i_inc}
-1:
-	orr	ip, s_max, i_max
-2:
-	mcr	p15, 0, ip, c7, c10, 2	/* Clean D cache SE with Set/Index */
-	sub	ip, ip, i_inc
-	tst	ip, i_max		/* Index 0 is last one */
-	bne	2b			/* Next index */
-	mcr	p15, 0, ip, c7, c10, 2	/* Clean D cache SE with Set/Index */
-	subs	s_max, s_max, s_inc
-	bhi	1b			/* Next set */
-	DSB
-	ISB
-	mov	pc, lr
-#endif
 
 .Larmv7_line_size:
 	.word	_C_LABEL(arm_pdcache_line_size)
@@ -175,11 +149,7 @@ ENTRY(armv7_icache_sync_all)
 ENTRY(armv7_dcache_wb_range)
 	ldr	ip, .Larmv7_line_size
 	cmp	r1, #0x8000
-#if 0
-	bcs	.Larmv7_dcache_wb
-#else
 	movcs	r1, #0x8000	/* XXX needs to match cache size... */
-#endif
 	ldr	ip, [ip]
 	sub	r1, r1, #1		/* Don't overrun */
 	sub	r3, ip, #1
@@ -198,11 +168,7 @@ ENTRY(armv7_dcache_wb_range)
 ENTRY(armv7_idcache_wbinv_range)
 	ldr	ip, .Larmv7_line_size
 	cmp	r1, #0x8000
-#if 0
-	bcs	.Larmv7_idcache_wbinv_all
-#else
 	movcs	r1, #0x8000	/* XXX needs to match cache size... */
-#endif
 	ldr	ip, [ip]
 	sub	r1, r1, #1		/* Don't overrun */
 	sub	r3, ip, #1
@@ -224,11 +190,7 @@ ENTRY(armv7_idcache_wbinv_range)
 ENTRY(armv7_dcache_wbinv_range)
 	ldr	ip, .Larmv7_line_size
 	cmp	r1, #0x8000
-#if 0
-	bcs _C_LABEL(armv7_dcache_wbinv_all)
-#else
 	movcs	r1, #0x8000	/* XXX needs to match cache size... */
-#endif
 	ldr	ip, [ip]
 	sub	r1, r1, #1		/* Don't overrun */
 	sub	r3, ip, #1
@@ -249,11 +211,7 @@ ENTRY(armv7_dcache_wbinv_range)
 ENTRY(armv7_dcache_inv_range)
 	ldr	ip, .Larmv7_line_size
 	cmp	r1, #0x8000
-#if 0
-	bcs _C_LABEL(armv7_dcache_inv_all)
-#else
 	movcs	r1, #0x8000	/* XXX needs to match cache size... */
-#endif
 	ldr	ip, [ip]
 	sub	r1, r1, #1		/* Don't overrun */
 	sub	r3, ip, #1
@@ -300,11 +258,6 @@ ENTRY(armv7_context_switch)
 /* XXX The following macros should probably be moved to asm.h */
 #define _DATA_OBJECT(x) .globl x; .type x,_ASM_TYPE_OBJECT; x:
 #define C_OBJECT(x)	_DATA_OBJECT(_C_LABEL(x))
-
-#if 0
-.Larmv7_cache_data:
-	.word	_C_LABEL(armv7_dcache_sets_max)
-#endif
 
 	.align 2
 C_OBJECT(armv7_dcache_sets_max)
