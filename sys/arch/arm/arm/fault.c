@@ -1,4 +1,4 @@
-/*	$OpenBSD: fault.c,v 1.12 2013/01/23 19:57:47 patrick Exp $	*/
+/*	$OpenBSD: fault.c,v 1.13 2013/04/28 13:27:13 patrick Exp $	*/
 /*	$NetBSD: fault.c,v 1.46 2004/01/21 15:39:21 skrll Exp $	*/
 
 /*
@@ -133,58 +133,57 @@ static int dab_buserr(trapframe_t *, u_int, u_int, struct proc *,
     struct sigdata *sd);
 
 static const struct data_abort data_aborts[] = {
-#if 0
+#ifndef CPU_ARMv7
 	{dab_fatal,	"Vector Exception"},
-#else
-	{dab_fatal,	"V7 fault 00000" },
-#endif
 	{dab_align,	"Alignment Fault 1"},
-#if 0
 	{dab_fatal,	"Terminal Exception"},
-#else
-	{dab_fatal,	"Debug Event"},
-#endif
-#if 0
 	{dab_align,	"Alignment Fault 3"},
-#else
-	{dab_fatal,	"Access Flag Fault (S)"},
-#endif
 	{dab_buserr,	"External Linefetch Abort (S)"},
 	{NULL,		"Translation Fault (S)"},
-#if 0
 	{dab_buserr,	"External Linefetch Abort (P)"},
-#else
-	{dab_fatal,	"Access Flag Fault (P)"},
-#endif
 	{NULL,		"Translation Fault (P)"},
 	{dab_buserr,	"External Non-Linefetch Abort (S)"},
 	{NULL,		"Domain Fault (S)"},
-#if 0
 	{dab_buserr,	"External Non-Linefetch Abort (P)"},
+	{NULL,		"Domain Fault (P)"},
+	{dab_buserr,	"External Translation Abort (L1)"},
+	{NULL,		"Permission Fault (S)"},
+	{dab_buserr,	"External Translation Abort (L2)"},
+	{NULL,		"Permission Fault (P)"}
 #else
-	{dab_fatal,	"V7 fault 01010" },
-#endif
+	{dab_fatal,	"V7 fault 00000"},
+	{dab_align,	"Alignment Fault 1"},
+	{dab_fatal,	"Debug Event"},
+	{dab_fatal,	"Access Flag Fault (S)"},
+	{dab_buserr,	"External Linefetch Abort (S)"},
+	{NULL,		"Translation Fault (S)"},
+	{dab_fatal,	"Access Flag Fault (P)"},
+	{NULL,		"Translation Fault (P)"},
+	{dab_buserr,	"External Non-Linefetch Abort (S)"},
+	{NULL,		"Domain Fault (S)"},
+	{dab_fatal,	"V7 fault 01010"},
 	{NULL,		"Domain Fault (P)"},
 	{dab_buserr,	"External Translation Abort (L1)"},
 	{NULL,		"Permission Fault (S)"},
 	{dab_buserr,	"External Translation Abort (L2)"},
 	{NULL,		"Permission Fault (P)"},
-	{dab_fatal,	"V7 fault 10000" },
-	{dab_fatal,	"V7 fault 10001" },
-	{dab_fatal,	"V7 fault 10010" },
-	{dab_fatal,	"V7 fault 10011" },
-	{dab_fatal,	"Lockdown" },
-	{dab_fatal,	"V7 fault 10101" },
-	{dab_fatal,	"Asynchronous External Abort" },
-	{dab_fatal,	"V7 fault 10111" },
-	{dab_fatal,	"Memory Asynchronous Parity Error" },
-	{dab_fatal,	"Memory Synchronous Parity Error" },
-	{dab_fatal,	"Coprocessor Abort" },
-	{dab_fatal,	"V7 fault 11011" },
+	{dab_fatal,	"V7 fault 10000"},
+	{dab_fatal,	"V7 fault 10001"},
+	{dab_fatal,	"V7 fault 10010"},
+	{dab_fatal,	"V7 fault 10011"},
+	{dab_fatal,	"Lockdown"},
+	{dab_fatal,	"V7 fault 10101"},
+	{dab_fatal,	"Asynchronous External Abort"},
+	{dab_fatal,	"V7 fault 10111"},
+	{dab_fatal,	"Memory Asynchronous Parity Error"},
+	{dab_fatal,	"Memory Synchronous Parity Error"},
+	{dab_fatal,	"Coprocessor Abort"},
+	{dab_fatal,	"V7 fault 11011"},
 	{dab_buserr,	"External Translation Abort (L1)"},
-	{dab_fatal,	"V7 fault 11101" },
+	{dab_fatal,	"V7 fault 11101"},
 	{dab_buserr,	"External Translation Abort (L2)"},
-	{ NULL,		"V7 fault 11111" },
+	{NULL,		"V7 fault 11111"},
+#endif
 };
 
 /* Determine if a fault came from user mode */
@@ -212,12 +211,10 @@ data_abort_handler(trapframe_t *tf)
 	/* Grab FAR/FSR before enabling interrupts */
 	far = cpu_dfar();
 	fsr = cpu_dfsr();
-	if (0)
-		ftyp = FAULT_TYPE(fsr);
-	else
-		ftyp = FAULT_TYPE_V7(fsr);
-#if 0
-printf("DFAULT %08x addr %08x\n", fsr, far);
+#ifndef CPU_ARMv7
+	ftyp = FAULT_TYPE(fsr);
+#else
+	ftyp = FAULT_TYPE_V7(fsr);
 #endif
 
 	/* Update vmmeter statistics */
@@ -238,8 +235,7 @@ printf("DFAULT %08x addr %08x\n", fsr, far);
 
 	/* Invoke the appropriate handler, if necessary */
 	if (__predict_false(data_aborts[ftyp].func != NULL)) {
-		if ((data_aborts[ftyp].func)(tf, fsr, far, p,
-		    &sd)) {
+		if ((data_aborts[ftyp].func)(tf, fsr, far, p, &sd)) {
 			goto do_trapsignal;
 		}
 		goto out;
@@ -331,7 +327,7 @@ printf("DFAULT %08x addr %08x\n", fsr, far);
 #endif
 	}
 
-	if (0) {	/* pre-V7 */
+#ifndef CPU_ARMv7
 	/*
 	 * We need to know whether the page should be mapped
 	 * as R or R/W. The MMU does not give us the info as
@@ -359,9 +355,9 @@ printf("DFAULT %08x addr %08x\n", fsr, far);
 		else
 			ftype = VM_PROT_READ; 
 	}
-	} else {
-		ftype = fsr & FAULT_WNR ? VM_PROT_WRITE : VM_PROT_READ;
-	}
+#else
+	ftype = fsr & FAULT_WNR ? VM_PROT_WRITE : VM_PROT_READ;
+#endif
 
 	/*
 	 * See if the fault is as a result of ref/mod emulation,
@@ -462,15 +458,18 @@ dab_fatal(trapframe_t *tf, u_int fsr, u_int far, struct proc *p,
 	mode = TRAP_USERMODE(tf) ? "user" : "kernel";
 
 	if (p != NULL) {
-		if (0)
-			ftyp = FAULT_TYPE(fsr);
-		else
-			ftyp = FAULT_TYPE_V7(fsr);
+#ifndef CPU_ARMv7
+		ftyp = FAULT_TYPE(fsr);
+#else
+		ftyp = FAULT_TYPE_V7(fsr);
+#endif
 		printf("Fatal %s mode data abort: '%s'\n", mode,
 		    data_aborts[ftyp].desc);
 		printf("trapframe: %p\nDFSR=%08x, DFAR=%08x", tf, fsr, far);
-		if (((fsr & FAULT_IMPRECISE) != 0) && 0) /* XXX NOT ON V7 */
+#ifndef CPU_ARMv7
+		if ((fsr & FAULT_IMPRECISE) != 0)
 			printf(" (imprecise)");
+#endif
 		printf(", spsr=%08x\n", tf->tf_spsr);
 	} else {
 		printf("Fatal %s mode prefetch abort at 0x%08x\n",
@@ -648,14 +647,14 @@ prefetch_abort_handler(trapframe_t *tf)
 	uvmexp.traps++;
 
 	/* Grab FAR/FSR before enabling interrupts */
+#ifndef CPU_ARMv7
+	far = tf->tf_pc;
+	fsr = 0;
+#else
 	far = cpu_ifar();
 	fsr = cpu_ifsr();
-	if (0)	/* non-v7 */
-		far = tf->tf_pc;
-
-#if 0
-printf("IFAULT %08x addr %08x\n", fsr, far);
 #endif
+
 	/* Prefetch aborts cannot happen in kernel mode */
 	if (__predict_false(!TRAP_USERMODE(tf)))
 		dab_fatal(tf, fsr, far, NULL, NULL);
