@@ -1,4 +1,4 @@
-/*	$OpenBSD: bus_space_asm_armv7.S,v 1.2 2009/05/08 02:57:31 drahn Exp $	*/
+/*	$OpenBSD: bus_space_asm_armv7.S,v 1.1 2013/05/09 20:41:47 patrick Exp $	*/
 /*	$NetBSD: bus_space_asm_armv7.S,v 1.3 2003/03/27 19:46:14 mycroft Exp $	*/
 
 /*

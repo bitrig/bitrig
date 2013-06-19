@@ -1,4 +1,4 @@
-/*	$OpenBSD: mainbus.h,v 1.2 2011/09/22 17:45:59 miod Exp $	*/
+/*	$OpenBSD: cortex.h,v 1.1 2013/05/01 00:16:26 patrick Exp $	*/
 /* $NetBSD: mainbus.h,v 1.1 2001/02/24 19:38:02 reinoud Exp $ */
 
 /*

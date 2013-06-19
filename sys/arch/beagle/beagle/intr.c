@@ -294,8 +294,8 @@ void arm_dflt_delay(u_int usecs);
 struct {
 	void	(*delay)(u_int);
 	void	(*initclocks)(void);
-	void    (*setstatclockrate)(int);
-	void    (*mpstartclock)(void);
+	void	(*setstatclockrate)(int);
+	void	(*mpstartclock)(void);
 } arm_clock_func = {
 	arm_dflt_delay,
 	NULL,

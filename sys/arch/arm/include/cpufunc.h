@@ -525,9 +525,6 @@ u_int get_stackptr	(u_int mode);
 
 int get_pc_str_offset	(void);
 
-#define dsb()	__asm__ __volatile__ (".long 0xf57ff040")
-#define	isb()	__asm__ __volatile__ (".long 0xf57ff060")
-
 /*
  * CPU functions from locore.S
  */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: fiq.c,v 1.3 2012/12/05 23:20:11 deraadt Exp $	*/
+/*	$OpenBSD: fiq.c,v 1.4 2013/05/10 10:18:46 patrick Exp $	*/
 /*	$NetBSD: fiq.c,v 1.5 2002/04/03 23:33:27 thorpej Exp $	*/
 
 /*
@@ -76,7 +76,6 @@ fiq_installhandler(void *func, size_t size)
 	vector_page_setprot(VM_PROT_READ|VM_PROT_EXECUTE);
 #endif
 	cpu_icache_sync_range((vaddr_t) fiqvector, size);
-cpu_dcache_wb_range((vaddr_t) fiqvector, size);
 }
 
 /*

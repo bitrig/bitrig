@@ -1,4 +1,4 @@
-/*	$OpenBSD: cpufunc.c,v 1.20 2013/03/27 00:06:09 patrick Exp $	*/
+/*	$OpenBSD: cpufunc.c,v 1.23 2013/05/18 17:48:48 patrick Exp $	*/
 /*	$NetBSD: cpufunc.c,v 1.65 2003/11/05 12:53:15 scw Exp $	*/
 
 /*
@@ -808,7 +808,7 @@ arm_get_cachetype_cp15v7(void)
 	sel = 0;
 	__asm __volatile("mcr p15, 2, %0, c0, c0, 0"
 		:: "r" (sel));
-	dsb(); isb();
+	cpu_drain_writebuf();
 	__asm __volatile("mrc p15, 1, %0, c0, c0, 0"
 		: "=r" (cachereg) :);
 	line_size = 1 << ((cachereg & 7)+4);
@@ -837,7 +837,7 @@ arm_get_cachetype_cp15v7(void)
 	sel = 1;
 	__asm __volatile("mcr p15, 2, %0, c0, c0, 0"
 		:: "r" (sel));
-	dsb(); isb();
+	cpu_drain_writebuf();
 	__asm __volatile("mrc p15, 1, %0, c0, c0, 0"
 		: "=r" (cachereg) :);
 	line_size = 1 << ((cachereg & 7)+4);
@@ -856,7 +856,7 @@ arm_get_cachetype_cp15v7(void)
 	sel = 1;
 	__asm __volatile("mcr p15, 2, %0, c0, c0, 0"
 		:: "r" (sel));
-	dsb(); isb();
+	cpu_drain_writebuf();
 	__asm __volatile("mrc p15, 1, %0, c0, c0, 0"
 		: "=r" (cachereg) :);
 	line_size = 1 << ((cachereg & 7)+4);
@@ -913,9 +913,8 @@ armv7_dcache_wbinv_all()
 		}
 		setval += setincr;
 	}
-	dsb(); isb();
 	/* drain the write buffer */
-	__asm __volatile("mcr	p15, 0, %0, c7, c10, 4" : : "r" (0));
+	cpu_drain_writebuf();
 
 	/* L2 */
 	nsets = 1 << arm_dcache_l2_nsets;
@@ -944,9 +943,8 @@ armv7_dcache_wbinv_all()
 		}
 		setval += setincr;
 	}
-	dsb(); isb();
 	/* drain the write buffer */
-	__asm __volatile("mcr	p15, 0, %0, c7, c10, 4" : : "r" (0));
+	cpu_drain_writebuf();
 
 }
 #endif /* CPU_ARMv7 */
@@ -1391,11 +1389,9 @@ armv7_setup()
 
 	cpuctrl = CPU_CONTROL_MMU_ENABLE | CPU_CONTROL_SYST_ENABLE
 	    | CPU_CONTROL_IC_ENABLE | CPU_CONTROL_DC_ENABLE
-	    | CPU_CONTROL_ROUNDROBIN
 	    | CPU_CONTROL_BPRD_ENABLE | CPU_CONTROL_AFLT_ENABLE;
 	cpuctrlmask = CPU_CONTROL_MMU_ENABLE | CPU_CONTROL_SYST_ENABLE
 	    | CPU_CONTROL_IC_ENABLE | CPU_CONTROL_DC_ENABLE
-	    | CPU_CONTROL_ROUNDROBIN
 	    | CPU_CONTROL_ROM_ENABLE | CPU_CONTROL_BPRD_ENABLE
 	    | CPU_CONTROL_BEND_ENABLE | CPU_CONTROL_AFLT_ENABLE
 	    | CPU_CONTROL_ROUNDROBIN | CPU_CONTROL_CPCLK
@@ -1416,11 +1412,7 @@ armv7_setup()
 
 	/* Set the control register */
 	curcpu()->ci_ctrl = cpuctrl;
-#if 0
-	cpu_control(0xffffffff, cpuctrl);
-#else
 	cpu_control(cpuctrlmask, cpuctrl);
-#endif
 
 	/* And again. */
 	cpu_idcache_wbinv_all();

@@ -1,4 +1,4 @@
-#	$OpenBSD$
+#	$OpenBSD: files.cortex,v 1.2 2013/05/02 19:15:53 patrick Exp $
 
 # ARM core
 device	cortex {}

@@ -390,9 +390,9 @@ _bus_dmamap_sync_segment(vaddr_t va, paddr_t pa, vsize_t len, int ops)
 
 	switch (ops) {
 	case BUS_DMASYNC_PREREAD|BUS_DMASYNC_PREWRITE:
-			cpu_dcache_wbinv_range(va, len);
-			cpu_sdcache_wbinv_range(va, pa, len);
-			break;
+		cpu_dcache_wbinv_range(va, len);
+		cpu_sdcache_wbinv_range(va, pa, len);
+		break;
 		/* FALLTHROUGH */
 
 	case BUS_DMASYNC_PREREAD: {

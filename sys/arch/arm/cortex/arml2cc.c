@@ -1,4 +1,4 @@
-/* $OpenBSD: omdog.c,v 1.5 2011/11/15 23:01:11 drahn Exp $ */
+/* $OpenBSD: arml2cc.c,v 1.3 2013/06/14 23:58:30 patrick Exp $ */
 /*
  * Copyright (c) 2013 Patrick Wildt <patrick@blueri.se>
  *
@@ -32,8 +32,8 @@
 #define PL310_ERRATA_727915
 
 /* offset from periphbase */
-#define L2C_ADDR	0x2000
-#define L2C_SIZE	0x1000
+#define L2C_ADDR			0x2000
+#define L2C_SIZE			0x1000
 
 /* registers */
 #define L2C_CACHE_ID			0x000
@@ -162,8 +162,6 @@ arml2cc_attach(struct device *parent, struct device *self, void *args)
 	cpufuncs.cf_sdcache_wbinv_range = arml2cc_sdcache_wbinv_range;
 	cpufuncs.cf_sdcache_inv_range = arml2cc_sdcache_inv_range;
 	cpufuncs.cf_sdcache_wb_range = arml2cc_sdcache_wb_range;
-
-	return;
 }
 
 void
@@ -227,30 +225,7 @@ arml2cc_cache_range_op(paddr_t pa, psize_t len, bus_size_t cache_op)
 	size_t line_size = sc->sc_dcache_line_size;
 	size_t line_mask = line_size - 1;
 	paddr_t endpa;
-#if 0
-	paddr_t segend;
-	int s;
-	size_t off = pa & line_mask;
-	if (off) {
-		len += off;
-		pa -= off;
-	}
-	len = roundup2(len, line_size); //XXX: power of two
-	off = pa & PAGE_MASK;
-	for (endpa = pa + len; pa < endpa; off = 0) {
-		psize_t seglen = min(len, PAGE_SIZE - off);
 
-		s = splhigh();
-		if (!sc->sc_enabled) {
-			splx(s);
-			return;
-		}
-		for (segend = pa + seglen; pa < segend; pa += line_size) {
-			arml2cc_cache_op(sc, cache_op, pa);
-		}
-		splx(s);
-	}
-#else
 	endpa = pa + len;
 	pa = pa & ~line_mask;
 
@@ -259,14 +234,13 @@ arml2cc_cache_range_op(paddr_t pa, psize_t len, bus_size_t cache_op)
 		arml2cc_cache_op(sc, cache_op, pa);
 		pa += line_size;
 	}
-#endif
 }
 
 void
 arml2cc_sdcache_wbinv_all(void)
 {
 	struct arml2cc_softc *sc = arml2cc_sc;
-	if ((sc == NULL) || !sc->sc_enabled)
+	if (sc == NULL || !sc->sc_enabled)
 		return;
 
 #ifdef PL310_ERRATA_727915
@@ -286,7 +260,7 @@ void
 arml2cc_sdcache_wbinv_range(vaddr_t va, paddr_t pa, psize_t len)
 {
 	struct arml2cc_softc *sc = arml2cc_sc;
-	if ((sc == NULL) || !sc->sc_enabled)
+	if (sc == NULL || !sc->sc_enabled)
 		return;
 
 #ifdef PL310_ERRATA_727915
@@ -305,7 +279,7 @@ void
 arml2cc_sdcache_inv_range(vaddr_t va, paddr_t pa, psize_t len)
 {
 	struct arml2cc_softc *sc = arml2cc_sc;
-	if ((sc == NULL) || !sc->sc_enabled)
+	if (sc == NULL || !sc->sc_enabled)
 		return;
 	arml2cc_cache_range_op(pa, len, L2C_INV_PA);
 	arml2cc_cache_sync(sc);
@@ -315,7 +289,7 @@ void
 arml2cc_sdcache_wb_range(vaddr_t va, paddr_t pa, psize_t len)
 {
 	struct arml2cc_softc *sc = arml2cc_sc;
-	if ((sc == NULL) || !sc->sc_enabled)
+	if (sc == NULL || !sc->sc_enabled)
 		return;
 	arml2cc_cache_range_op(pa, len, L2C_CLEAN_PA);
 	arml2cc_cache_sync(sc);

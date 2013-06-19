@@ -1,4 +1,4 @@
-/* $OpenBSD: ampintc.c,v 1.9 2011/11/15 23:17:01 drahn Exp $ */
+/* $OpenBSD: ampintc.c,v 1.1 2013/05/01 00:16:26 patrick Exp $ */
 /*
  * Copyright (c) 2007,2009,2011 Dale Rahn <drahn@openbsd.org>
  *

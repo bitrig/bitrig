@@ -1,4 +1,4 @@
-/*	$OpenBSD: pmap.h,v 1.21 2011/11/05 18:11:26 miod Exp $	*/
+/*	$OpenBSD: pmap.h,v 1.24 2013/05/18 18:06:05 patrick Exp $	*/
 /*	$NetBSD: pmap.h,v 1.76 2003/09/06 09:10:46 rearnsha Exp $	*/
 
 /*
@@ -335,7 +335,7 @@ do {									\
 		cpu_sdcache_wb_range((vaddr_t)(pte), (paddr_t)(pa),	\
 		    sizeof(pt_entry_t));				\
 		};							\
-		dsb(); isb();						\
+		cpu_drain_writebuf();					\
 	}								\
 } while (/*CONSTCOND*/0)
 
@@ -351,7 +351,7 @@ do {									\
 		cpu_sdcache_wb_range((vaddr_t)(pte), (paddr_t)(pa),	\
 		    (cnt) << 2); /* * sizeof(pt_entry_t) */		\
 		};							\
-		dsb(); isb();						\
+		cpu_drain_writebuf();					\
 	}								\
 } while (/*CONSTCOND*/0)
 
@@ -406,9 +406,6 @@ void	pmap_pte_init_sa1(void);
 #endif /* ARM_MMU_SA1 == 1 */
 
 #if ARM_MMU_V7 == 1
-#if 0
-void	pmap_zero_page_v7(struct vm_page *);
-#endif
 void	pmap_pte_init_v7(void);
 #endif /* ARM_MMU_V7 == 1 */
 
@@ -632,7 +629,7 @@ L2_S_PROT(int ku, vm_prot_t pr)
 	if (ku == PTE_USER)
 		pte = (pr & VM_PROT_WRITE) ? L2_S_PROT_UW : L2_S_PROT_UR;
 	else
-		pte =(pr & VM_PROT_WRITE) ? L2_S_PROT_KW : L2_S_PROT_KR;
+		pte = (pr & VM_PROT_WRITE) ? L2_S_PROT_KW : L2_S_PROT_KR;
 	/*
 	 * If we set the XN bit, the abort handlers or the vector page
 	 * might be marked as such. Needs Debugging.

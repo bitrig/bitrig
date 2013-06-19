@@ -85,7 +85,6 @@
 /* Prototypes for all the bus_space structure functions */
 bs_protos(armv7);
 bs_protos(generic);
-bs_protos(armv7);
 bs_protos(bs_notimpl);
 
 struct bus_space armv7_bs_tag = {
@@ -98,7 +97,7 @@ struct bus_space armv7_bs_tag = {
 	armv7_bs_subregion,
 
 	/* allocation/deallocation */
-	armv7_bs_alloc,	/* not implemented */
+	armv7_bs_alloc,		/* not implemented */
 	armv7_bs_free,		/* not implemented */
 
 	/* get kernel virtual address */
@@ -214,7 +213,7 @@ armv7_bs_unmap(void *t, bus_space_handle_t bsh, bus_size_t size)
 {
 	vaddr_t	va, endva;
 
-	if (bsh > (u_long)KERNEL_BASE) 
+	if (bsh > (u_long)KERNEL_BASE)
 		return;
 
 	va = trunc_page((vaddr_t)bsh);
@@ -259,7 +258,7 @@ armv7_bs_alloc(void *t, bus_addr_t rstart, bus_addr_t rend,
 	panic("armv7_io_bs_alloc(): not implemented");
 }
 
-void    
+void
 armv7_bs_free(void *t, bus_space_handle_t bsh, bus_size_t size)
 {
 

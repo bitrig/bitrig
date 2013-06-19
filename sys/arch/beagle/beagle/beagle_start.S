@@ -1,4 +1,4 @@
-/*	$OpenBSD: beagle_start.S,v 1.3 2011/10/21 22:55:01 drahn Exp $	*/
+/*	$OpenBSD: beagle_start.S,v 1.5 2013/05/01 13:49:18 patrick Exp $	*/
 /*	$NetBSD: lubbock_start.S,v 1.1 2003/06/18 10:51:15 bsh Exp $ */
 
 /*
@@ -236,9 +236,6 @@ mmu_init_table2:
  *	RETURNS:
  *	nothing
  */
-#if 0
-	.arch	armv6z
-#endif
 ENTRY(omap4_smc_call)
 	stmfd   sp!, {r2-r12, lr}
 	mov     r12, r0

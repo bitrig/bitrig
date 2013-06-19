@@ -1,4 +1,4 @@
-/* $OpenBSD: amptimer.c,v 1.7 2011/11/16 14:06:32 drahn Exp $ */
+/* $OpenBSD: amptimer.c,v 1.2 2013/05/09 13:35:43 patrick Exp $ */
 /*
  * Copyright (c) 2011 Dale Rahn <drahn@openbsd.org>
  *
@@ -47,17 +47,19 @@
 #define GTIMER_CMP_HIGH		0x14
 #define GTIMER_AUTOINC		0x18
 
+/* offset from periphbase */
+#define PTIMER_ADDR		0x600
+#define PTIMER_SIZE		0x100
+
+/* registers */
 #define PTIMER_LOAD		0x0
 #define PTIMER_CNT		0x4
 #define PTIMER_CTRL		0x8
-#define PTIMER_CTRL_ENABLE		(1<<0)
-#define PTIMER_CTRL_AUTORELOAD		(1<<1)
-#define PTIMER_CTRL_IRQEN		(1<<2)
+#define PTIMER_CTRL_ENABLE	(1<<0)
+#define PTIMER_CTRL_AUTORELOAD	(1<<1)
+#define PTIMER_CTRL_IRQEN	(1<<2)
 #define PTIMER_STATUS		0xC
-#define PTIMER_STATUS_EVENT		(1<<0)
-
-#define PTIMER_ADDR	0x600
-#define PTIMER_SIZE	0x100
+#define PTIMER_STATUS_EVENT	(1<<0)
 
 #define TIMER_FREQUENCY		396 * 1000 * 1000 /* ARM core clock */
 int32_t amptimer_frequency = TIMER_FREQUENCY;
@@ -65,7 +67,7 @@ int32_t amptimer_frequency = TIMER_FREQUENCY;
 u_int amptimer_get_timecount(struct timecounter *);
 
 static struct timecounter amptimer_timecounter = {
-        amptimer_get_timecount, NULL, 0x7fffffff, 0, "amptimer", 0, NULL
+	amptimer_get_timecount, NULL, 0x7fffffff, 0, "amptimer", 0, NULL
 };
 
 #define MAX_ARM_CPUS	8
@@ -96,7 +98,7 @@ struct amptimer_softc {
 #endif
 };
 
-int		 amptimer_match(struct device *, void *, void *);
+int		amptimer_match(struct device *, void *, void *);
 void		amptimer_attach(struct device *, struct device *, void *);
 uint64_t	amptimer_readcnt64(struct amptimer_softc *sc);
 int		amptimer_intr(void *);
@@ -181,7 +183,7 @@ amptimer_attach(struct device *parent, struct device *self, void *args)
 #if defined(USE_GTIMER_CMP)
 
 	/* clear event */
-	bus_space_write_4(sc->sc_iot, sc->sc_pioh, GTIMER_STATUS, 1);
+	bus_space_write_4(sc->sc_iot, sc->sc_ioh, GTIMER_STATUS, 1);
 #else
 	bus_space_write_4(sc->sc_iot, sc->sc_pioh, PTIMER_CTRL, 0);
 	bus_space_write_4(sc->sc_iot, sc->sc_pioh, PTIMER_STATUS,
@@ -233,7 +235,7 @@ amptimer_intr(void *frame)
 	/*
 	 * DSR - I know that the tick timer is 64 bits, but the following
 	 * code deals with rollover, so there is no point in dealing
-	 * with the 64 bit math, just let the 32 bit rollover 
+	 * with the 64 bit math, just let the 32 bit rollover
 	 * do the right thing
 	 */
 
@@ -307,7 +309,7 @@ again:
 		delay = 1;
 
 	reg = bus_space_read_4(sc->sc_iot, sc->sc_pioh, PTIMER_CTRL);
-	if ((reg & (PTIMER_CTRL_ENABLE | PTIMER_CTRL_IRQEN)) != 
+	if ((reg & (PTIMER_CTRL_ENABLE | PTIMER_CTRL_IRQEN)) !=
 	    (PTIMER_CTRL_ENABLE | PTIMER_CTRL_IRQEN))
 		bus_space_write_4(sc->sc_iot, sc->sc_pioh, PTIMER_CTRL,
 		    (PTIMER_CTRL_ENABLE | PTIMER_CTRL_IRQEN));
@@ -355,7 +357,7 @@ amptimer_cpu_initclocks()
 
 	sc->sc_ticks_per_intr = sc->sc_ticks_per_second / hz;
 	sc->sc_ticks_err_cnt = sc->sc_ticks_per_second % hz;
-	pc->pc_ticks_err_sum = 0;; 
+	pc->pc_ticks_err_sum = 0;
 
 	/* establish interrupts */
 	/* XXX - irq */
@@ -383,7 +385,7 @@ amptimer_cpu_initclocks()
 #else
 	bus_space_write_4(sc->sc_iot, sc->sc_pioh, PTIMER_CTRL,
 	    (PTIMER_CTRL_ENABLE | PTIMER_CTRL_IRQEN));
-	bus_space_write_4(sc->sc_iot, sc->sc_pioh, PTIMER_LOAD, 
+	bus_space_write_4(sc->sc_iot, sc->sc_pioh, PTIMER_LOAD,
 	    sc->sc_ticks_per_intr);
 #endif
 }

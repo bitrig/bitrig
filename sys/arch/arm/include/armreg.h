@@ -1,4 +1,4 @@
-/*	$OpenBSD: armreg.h,v 1.11 2013/01/18 00:20:20 patrick Exp $	*/
+/*	$OpenBSD: armreg.h,v 1.12 2013/04/28 13:27:13 patrick Exp $	*/
 /*	$NetBSD: armreg.h,v 1.27 2003/09/06 08:43:02 rearnsha Exp $	*/
 
 /*
@@ -220,7 +220,6 @@
 #define CPU_ID_CORTEX_A15_R2	0x412fc0f0
 #define CPU_ID_CORTEX_A15_R3	0x413fc0f0
 #define CPU_ID_CORTEX_A15_MASK	0xff0ffff0
-
 
 
 /* ARM3-specific coprocessor 15 registers */
