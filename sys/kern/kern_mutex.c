@@ -99,7 +99,8 @@ mtx_enter_try(struct mutex *mtx)
 	}
 
 	/* Lock is unavailable. */
-	splx(s);
+	if (mtx->mtx_wantipl != IPL_NONE)
+		splx(s);
 	return 0;
 }
 
