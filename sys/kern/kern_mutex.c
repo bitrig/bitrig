@@ -76,6 +76,11 @@ mtx_enter(struct mutex *mtx)
 
 	/* Save old ipl. */
 	mtx_store(mtx, s);
+
+#ifdef DIAGNOSTIC
+	/* Increase mutex level. */
+	curcpu()->ci_mutex_level++;
+#endif
 }
 
 int
@@ -95,6 +100,12 @@ mtx_enter_try(struct mutex *mtx)
 	    memory_order_acquire, memory_order_relaxed)) {
 		/* We hold the lock, save old ipl. */
 		mtx_store(mtx, s);
+
+#ifdef DIAGNOSTIC
+		/* Increase mutex level. */
+		curcpu()->ci_mutex_level++;
+#endif
+
 		return 1;
 	}
 
@@ -107,10 +118,19 @@ mtx_enter_try(struct mutex *mtx)
 void
 mtx_leave(struct mutex *mtx)
 {
-	int s = mtx_clear(mtx);
+	int s;
+
+#ifdef DIAGNOSTIC
+	/* Decrease mutex level. */
+	curcpu()->ci_mutex_level--;
+#endif
+
+	/* Clear the mutex. */
+	s = mtx_clear(mtx);
 
 	/* Pass mutex to next-in-line. */
 	atomic_fetch_add_explicit(&mtx->mtx_cur, 1, memory_order_release);
+
 	/* Clear interrupt block. */
 	if (mtx->mtx_wantipl != IPL_NONE)
 		splx(s);
