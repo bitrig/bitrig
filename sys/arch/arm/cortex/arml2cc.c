@@ -88,6 +88,10 @@
 #define L2C_CACHE_TYPE_LINESIZE		0x3
 #define L2C_AUXCTL_ASSOC_SHIFT		16
 #define L2C_AUXCTL_ASSOC_MASK		0x1
+#define L2C_AUXCTL_DATA_PREFETCH	(1 << 28)
+#define L2C_AUXCTL_INSN_PREFETCH	(1 << 29)
+#define L2C_PREFETCH_CTL_DATA		(1 << 28)
+#define L2C_PREFETCH_CTL_INSN		(1 << 29)
 
 #define roundup2(size, unit) (((size) + (unit) - 1) & ~((unit) - 1))
 
@@ -167,11 +171,28 @@ arml2cc_attach(struct device *parent, struct device *self, void *args)
 void
 arml2cc_enable(struct arml2cc_softc *sc)
 {
+	u_int32_t auxctl, prefetch;
 	int s;
 	s = splhigh();
 
 	platform_smc_write(sc->sc_iot, sc->sc_ioh, L2C_CTL, SMC_L2_CTL,
 	    1);
+
+	auxctl = bus_space_read_4(sc->sc_iot, sc->sc_ioh, L2C_AUXCTL);
+	prefetch = bus_space_read_4(sc->sc_iot, sc->sc_ioh, L2C_PREFETCH_CTL);
+
+	/* Disable Instruction prefetch. */
+	auxctl &= ~L2C_AUXCTL_INSN_PREFETCH;
+	prefetch &= ~L2C_PREFETCH_CTL_INSN;
+
+	/* Enable Data prefetch. */
+	auxctl |= L2C_AUXCTL_DATA_PREFETCH;
+	prefetch |= L2C_PREFETCH_CTL_DATA;
+
+	platform_smc_write(sc->sc_iot, sc->sc_ioh, L2C_AUXCTL,
+	    SMC_L2_AUXCTRL, auxctl);
+	platform_smc_write(sc->sc_iot, sc->sc_ioh, L2C_PREFETCH_CTL,
+	    SMC_L2_PREFETCH_CTL, prefetch);
 
 	arml2cc_cache_way_op(sc, L2C_INV_WAY, sc->sc_waymask);
 	arml2cc_cache_sync(sc);
