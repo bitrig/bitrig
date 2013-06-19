@@ -1,4 +1,4 @@
-/*	$OpenBSD: pmap7.c,v 1.1 2013/01/17 20:52:39 bmercer Exp $	*/
+/*	$OpenBSD: pmap7.c,v 1.8 2013/06/09 12:53:42 miod Exp $	*/
 /*	$NetBSD: pmap.c,v 1.147 2004/01/18 13:03:50 scw Exp $	*/
 
 /*
@@ -218,11 +218,7 @@
 #define	PDB_KENTER	0x20000
 #define	PDB_KREMOVE	0x40000
 
-#if 0
-int pmapdebug = PDB_ENTER|PDB_PVDUMP; 
-#else
 #define pmapdebug (cold ? 0 : 0xffffffff)
-#endif
 #define	NPDEBUG(_lev_,_stat_) \
 	if (pmapdebug & (_lev_)) \
         	((_stat_))
@@ -444,9 +440,6 @@ int		pmap_pmap_ctor(void *, void *, int);
 void		pmap_alloc_l1(pmap_t, int);
 void		pmap_free_l1(pmap_t);
 
-#if 0
-static
-#endif
 struct l2_bucket *pmap_get_l2_bucket(pmap_t, vaddr_t);
 struct l2_bucket *pmap_alloc_l2_bucket(pmap_t, vaddr_t);
 void		pmap_free_l2_bucket(pmap_t, struct l2_bucket *, u_int);
@@ -523,9 +516,6 @@ pmap_tlb_flushD(pmap_t pm)
  * Returns a pointer to the L2 bucket associated with the specified pmap
  * and VA, or NULL if no L2 bucket exists for the address.
  */
-#if 0
-static __inline
-#endif
 struct l2_bucket *
 pmap_get_l2_bucket(pmap_t pm, vaddr_t va)
 {
@@ -694,6 +684,9 @@ pmap_alloc_l1(pmap_t pm, int domain)
 	vaddr_t va, eva;
 	int error;
 
+#ifdef PMAP_DEBUG
+printf("%s: %d %d\n", __func__, domain, ++nl1);
+#endif
 	/* XXX use a pool? or move to inside struct pmap? */
 	l1 = malloc(sizeof(*l1), M_VMPMAP, M_WAITOK);
 
@@ -727,9 +720,7 @@ pmap_alloc_l1(pmap_t pm, int domain)
 		 * correctly synced.
 		 */
 		l2b = pmap_get_l2_bucket(pmap_kernel(), va);
-KASSERT(l2b);
 		ptep = &l2b->l2b_kva[l2pte_index(va)];
-KASSERT(l2pte_valid(*ptep));
 		pte = *ptep;
 
 		if ((pte & L2_S_CACHE_MASK) != pte_l2_s_cache_mode_pt) {
@@ -763,16 +754,13 @@ pmap_free_l1(pmap_t pm)
 	vaddr_t va;
 	uint npg;
 
-#if 1
 {
 	u_int cur_ttb;
 
 	__asm __volatile("mrc p15, 0, %0, c2, c0, 0" : "=r"(cur_ttb));
 	cur_ttb &= ~(L1_TABLE_SIZE - 1);
 
-KASSERT(cur_ttb != l1->l1_physaddr);
 }
-#endif
 	pm->pm_l1 = NULL;
 	TAILQ_REMOVE(&l1_list, l1, l1_link);
 
@@ -781,11 +769,8 @@ KASSERT(cur_ttb != l1->l1_physaddr);
 	va = (vaddr_t)l1->l1_kva;
 	for (npg = atop(L1_TABLE_SIZE); npg != 0; npg--) {
 		l2b = pmap_get_l2_bucket(pmap_kernel(), va);
-KASSERT(l2b);
 		ptep = &l2b->l2b_kva[l2pte_index(va)];
-KASSERT(l2pte_valid(*ptep));
 		pg = PHYS_TO_VM_PAGE(l2pte_pa(*ptep));
-KASSERT(pg);
 		TAILQ_INSERT_TAIL(&mlist, pg, pageq);
 		va += PAGE_SIZE;
 	}
@@ -896,7 +881,6 @@ pmap_free_l2_bucket(pmap_t pm, struct l2_bucket *l2b, u_int count)
 	u_short l1idx;
 
 	KDASSERT(count <= l2b->l2b_occupancy);
-KASSERT(count <= l2b->l2b_occupancy);
 
 	/*
 	 * Update the bucket's reference count according to how many
@@ -984,11 +968,10 @@ pmap_l2ptp_ctor(void *arg, void *v, int flags)
 	 */
 	l2b = pmap_get_l2_bucket(pmap_kernel(), va);
 	KDASSERT(l2b != NULL);
-KASSERT(l2b);
 	ptep = &l2b->l2b_kva[l2pte_index(va)];
-KASSERT(l2pte_valid(*ptep));
 	pte = *ptep;
 
+	/* XXX redundant with PTE_SYNC_RANGE() ? */
 	cpu_idcache_wbinv_range(va, PAGE_SIZE);
 	cpu_sdcache_wbinv_range(va, pte & L2_S_FRAME, PAGE_SIZE);
 	if ((pte & L2_S_CACHE_MASK) != pte_l2_s_cache_mode_pt) {
@@ -1094,12 +1077,9 @@ pmap_clearbit(struct vm_page *pg, u_int maskbits)
 
 		l2b = pmap_get_l2_bucket(pm, va);
 		KDASSERT(l2b != NULL);
-KASSERT(l2b);
 
 		ptep = &l2b->l2b_kva[l2pte_index(va)];
-KASSERT(l2pte_valid(*ptep));
 		npte = opte = *ptep;
-
 		NPDEBUG(PDB_BITS,
 		    printf(
 		    "pmap_clearbit: pv %p, pm %p, va 0x%08lx, flag 0x%x\n",
@@ -1263,11 +1243,9 @@ pmap_page_remove(struct vm_page *pg)
 
 		l2b = pmap_get_l2_bucket(pm, pv->pv_va);
 		KDASSERT(l2b != NULL);
-KASSERT(l2b != NULL);
 
 		ptep = &l2b->l2b_kva[l2pte_index(pv->pv_va)];
 		if (l2pte_valid(*ptep)) {
-KASSERT(l2pte_valid(*ptep));
 			pte = *ptep;
 
 			/* inline pmap_is_current(pm) */
@@ -1335,27 +1313,12 @@ pmap_create(void)
 	simple_lock_init(&pm->pm_lock);
 	pm->pm_refs = 1;
 	pm->pm_stats.wired_count = 0;
-#if 0
-	pm->pm_stats.resident_count = 1;	/* vector page */
-#endif
 	pmap_alloc_l1(pm, PMAP_DOMAIN_USER_V7);
 
 	/*
 	 * Note: The pool ctor ensures that the pm_l2[] array is already
 	 * initialised to zero.
 	 */
-
-#if 0
-	if (vector_page < KERNEL_BASE) {
-		/*
-		 * Map the vector page.
-		 */
-		pmap_enter(pm, vector_page, systempage.pv_pa,
-		    VM_PROT_READ | VM_PROT_EXECUTE,
-		    VM_PROT_READ | VM_PROT_EXECUTE | PMAP_WIRED);
-		pmap_update(pm);
-	}
-#endif
 
 	return (pm);
 }
@@ -1535,14 +1498,6 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 		 */
 		npte |= L2_S_PROTO;
 
-#if 0
-		/*
-		 * Make sure the vector table is mapped cacheable
-		 */
-		if (pm != pmap_kernel() && va == vector_page)
-			npte |= pte_l2_s_cache_mode;
-#endif
-
 		if (opg) {
 			/*
 			 * Looks like there's an existing 'managed' mapping
@@ -1558,13 +1513,8 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	/*
 	 * Make sure userland mappings get the right permissions
 	 */
-#if 0
-	npte |= L2_S_PROT(pm == pmap_kernel() || va == vector_page ?
-	    PTE_KERNEL : PTE_USER, prot);
-#else
 	npte |= L2_S_PROT(pm == pmap_kernel() ?  PTE_KERNEL : PTE_USER,
 	    prot & ~VM_PROT_WRITE);
-#endif
 
 	/*
 	 * Keep the stats up to date
@@ -1650,13 +1600,11 @@ pmap_remove(pmap_t pm, vaddr_t sva, vaddr_t eva)
 	PMAP_MAP_TO_HEAD_LOCK();
 	pmap_acquire_pmap_lock(pm);
 
-KASSERT(sva <= eva);
 	while (sva < eva) {
 		/*
 		 * Do one L2 bucket's worth at a time.
 		 */
 		next_bucket = L2_NEXT_BUCKET(sva);
-KASSERT(next_bucket > sva);
 		if (next_bucket > eva)
 			next_bucket = eva;
 
@@ -1759,7 +1707,6 @@ pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot)
 
 	l2b = pmap_get_l2_bucket(pmap_kernel(), va);
 	KDASSERT(l2b != NULL);
-KASSERT(l2b != NULL);
 
 	ptep = &l2b->l2b_kva[l2pte_index(va)];
 	opte = *ptep;
@@ -1804,13 +1751,11 @@ pmap_kremove(vaddr_t va, vsize_t len)
 
 	while (va < eva) {
 		next_bucket = L2_NEXT_BUCKET(va);
-KASSERT(next_bucket > va);
 		if (next_bucket > eva)
 			next_bucket = eva;
 
 		l2b = pmap_get_l2_bucket(pmap_kernel(), va);
 		KDASSERT(l2b != NULL);
-KASSERT(l2b != NULL);
 
 		sptep = ptep = &l2b->l2b_kva[l2pte_index(va)];
 		mappings = 0;
@@ -1833,7 +1778,6 @@ KASSERT(l2b != NULL);
 			ptep++;
 		}
 		KDASSERT(mappings <= l2b->l2b_occupancy);
-KASSERT(mappings <= l2b->l2b_occupancy);
 		l2b->l2b_occupancy -= mappings;
 	}
 	cpu_cpwait();
@@ -1859,7 +1803,6 @@ pmap_extract(pmap_t pm, vaddr_t va, paddr_t *pap)
 		 * These should only happen for pmap_kernel()
 		 */
 		KDASSERT(pm == pmap_kernel());
-KASSERT(pm == pmap_kernel());
 		pmap_release_pmap_lock(pm);
 		pa = (l1pd & L1_S_FRAME) | (va & L1_S_OFFSET);
 	} else {
@@ -1946,10 +1889,8 @@ NPDEBUG(PDB_PROTECT, printf("\n"));
 		flush = -1;
 	flags = 0;
 
-KASSERT(sva < eva);
 	while (sva < eva) {
 		next_bucket = L2_NEXT_BUCKET(sva);
-KASSERT(next_bucket > sva);
 		if (next_bucket > eva)
 			next_bucket = eva;
 
@@ -2131,7 +2072,7 @@ pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 	if (pte == 0)
 		goto out;
 
-#if 1	/* only if vectors are low ?? */
+	/* only if vectors are low ?? */
 	/*
 	 * Catch a userland access to the vector page mapped at 0x0
 	 */
@@ -2141,7 +2082,6 @@ pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 		    (pte & L2_S_PROT_MASK & ~L2_V7_S_XN) != L2_S_PROT(PTE_USER, VM_PROT_WRITE))
 			goto out;
 	}
-#endif
 
 	pa = l2pte_pa(pte);
 
@@ -2410,39 +2350,6 @@ pmap_destroy(pmap_t pm)
 	/*
 	 * reference count is zero, free pmap resources and then free pmap.
 	 */
-
-#if 0
-	if (vector_page < KERNEL_BASE) {
-		struct pcb *pcb = &proc0.p_addr->u_pcb;
-
-		if (pmap_is_current(pm)) {
-			/*
-			 * Frob the L1 entry corresponding to the vector
-			 * page so that it contains the kernel pmap's domain
-			 * number. This will ensure pmap_remove() does not
-			 * pull the current vector page out from under us.
-			 */
-			disable_interrupts(I32_bit | F32_bit);
-			*pcb->pcb_pl1vec = pcb->pcb_l1vec;
-			cpu_domains(pcb->pcb_dacr);
-			cpu_setttb(pcb->pcb_pagedir);
-			enable_interrupts(I32_bit | F32_bit);
-		}
-
-		/* Remove the vector page mapping */
-		pmap_remove(pm, vector_page, vector_page + PAGE_SIZE);
-		pmap_update(pm);
-
-		/*
-		 * Make sure cpu_switchto(), et al, DTRT. This is safe to do
-		 * since this process has no remaining mappings of its own.
-		 */
-		curpcb->pcb_pl1vec = pcb->pcb_pl1vec;
-		curpcb->pcb_l1vec = pcb->pcb_l1vec;
-		curpcb->pcb_dacr = pcb->pcb_dacr;
-		curpcb->pcb_pagedir = pcb->pcb_pagedir;
-	}
-#endif
 
 	pmap_free_l1(pm);
 
@@ -2753,27 +2660,12 @@ vector_page_setprot(int prot)
 void
 pmap_set_pcb_pagedir(pmap_t pm, struct pcb *pcb)
 {
-#if 0
-	struct l2_bucket *l2b;
-#endif
-
 	KDASSERT(pm->pm_l1);
-KASSERT(pm->pm_l1);
-
-KASSERT((pm->pm_l1->l1_physaddr & (L1_TABLE_SIZE - 1)) == 0);
 	pcb->pcb_pagedir = pm->pm_l1->l1_physaddr;
 	pcb->pcb_dacr = (DOMAIN_CLIENT << (PMAP_DOMAIN_KERNEL * 2)) |
 	    (DOMAIN_CLIENT << (pm->pm_domain * 2));
 
-#if 0
-	if (vector_page < KERNEL_BASE) {
-		pcb->pcb_pl1vec = &pm->pm_l1->l1_kva[L1_IDX(vector_page)];
-		l2b = pmap_get_l2_bucket(pm, vector_page);
-		pcb->pcb_l1vec = l2b->l2b_phys | L1_C_PROTO |
-		    L1_C_DOM(pm->pm_domain);
-	} else
-#endif
-		pcb->pcb_pl1vec = NULL;
+	pcb->pcb_pl1vec = NULL;
 }
 
 /*
@@ -2824,22 +2716,6 @@ pmap_get_pde_pte(pmap_t pm, vaddr_t va, pd_entry_t **pdp, pt_entry_t **ptp)
 	*ptp = &ptep[l2pte_index(va)];
 	return (TRUE);
 }
-
-#if 0
-boolean_t
-pmap_get_pde(pmap_t pm, vaddr_t va, pd_entry_t **pdp)
-{
-	u_short l1idx;
-
-	if (pm->pm_l1 == NULL)
-		return (FALSE);
-
-	l1idx = L1_IDX(va);
-	*pdp = &pm->pm_l1->l1_kva[l1idx];
-
-	return (TRUE);
-}
-#endif
 
 /************************ Bootstrapping routines ****************************/
 
@@ -3159,7 +3035,6 @@ pmap_bootstrap_pv_page_alloc(struct pool *pp, int flags, int *slowdown)
 	new_page = (vaddr_t)km_alloc(NBPG, &kv_any, &kp_none,
 	    (flags & PR_WAITOK) ?  &kd_waitok : &kd_nowait);
 
-	KASSERT(new_page > last_bootstrap_page);
 	last_bootstrap_page = new_page;
 	return ((void *)new_page);
 }
@@ -3186,7 +3061,7 @@ pmap_bootstrap_pv_page_free(struct pool *pp, void *v)
  *
  * This routine is called after the vm and kmem subsystems have been
  * initialised. This allows the pmap code to perform any initialisation
- * that can only be done one the memory allocation is in place.
+ * that can only be done once the memory allocation is in place.
  */
 void
 pmap_postinit(void)
@@ -3250,8 +3125,6 @@ pmap_map_section(vaddr_t l1pt, vaddr_t va, paddr_t pa, int prot, int cache)
 	pd_entry_t *pde = (pd_entry_t *) l1pt;
 	pd_entry_t fl;
 
-	KASSERT(((va | pa) & L1_S_OFFSET) == 0);
-
 	switch (cache) {
 	case PTE_NOCACHE:
 	default:
@@ -3283,8 +3156,6 @@ pmap_map_entry(vaddr_t l1pt, vaddr_t va, paddr_t pa, int prot, int cache)
 	pd_entry_t *pde = (pd_entry_t *) l1pt;
 	pt_entry_t fl;
 	pt_entry_t *pte;
-
-	KASSERT(((va | pa) & PGOFSET) == 0);
 
 	switch (cache) {
 	case PTE_NOCACHE:
@@ -3335,11 +3206,6 @@ pmap_link_l2pt(vaddr_t l1pt, vaddr_t va, pv_addr_t *l2pv)
 {
 	pd_entry_t *pde = (pd_entry_t *) l1pt, proto;
 	u_int slot = va >> L1_S_SHIFT;
-
-#ifndef ARM32_NEW_VM_LAYOUT
-	KASSERT((va & ((L1_S_SIZE * 4) - 1)) == 0);
-	KASSERT((l2pv->pv_pa & PGOFSET) == 0);
-#endif
 
 	proto = L1_S_DOM(PMAP_DOMAIN_KERNEL) | L1_C_PROTO;
 
@@ -3589,6 +3455,10 @@ pt_entry_t	pte_l2_s_cache_mode;
 pt_entry_t	pte_l2_s_cache_mode_pt;
 pt_entry_t	pte_l2_s_cache_mask;
 
+pt_entry_t	pte_l1_s_coherent;
+pt_entry_t	pte_l2_l_coherent;
+pt_entry_t	pte_l2_s_coherent;
+
 pt_entry_t	pte_l2_s_prot_ur;
 pt_entry_t	pte_l2_s_prot_uw;
 pt_entry_t	pte_l2_s_prot_kr;
@@ -3630,6 +3500,10 @@ pmap_pte_init_generic(void)
 		pte_l2_s_cache_mode_pt = L2_C;
 	}
 
+	pte_l1_s_coherent = L1_S_COHERENT_generic;
+	pte_l2_l_coherent = L2_L_COHERENT_generic;
+	pte_l2_s_coherent = L2_S_COHERENT_generic;
+
 	pte_l2_s_prot_ur = L2_S_PROT_UR_generic;
 	pte_l2_s_prot_uw = L2_S_PROT_UW_generic;
 	pte_l2_s_prot_kr = L2_S_PROT_KR_generic;
@@ -3666,6 +3540,10 @@ pmap_pte_init_armv7(void)
 	pte_l1_s_cache_mask = L1_S_CACHE_MASK_v7;
 	pte_l2_l_cache_mask = L2_L_CACHE_MASK_v7;
 	pte_l2_s_cache_mask = L2_S_CACHE_MASK_v7;
+
+	pte_l1_s_coherent = L1_S_COHERENT_v7;
+	pte_l2_l_coherent = L2_L_COHERENT_v7;
+	pte_l2_s_coherent = L2_S_COHERENT_v7;
 
 	pte_l2_s_prot_ur = L2_S_PROT_UR_v7;
 	pte_l2_s_prot_uw = L2_S_PROT_UW_v7;

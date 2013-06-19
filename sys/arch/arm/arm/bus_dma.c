@@ -1,4 +1,4 @@
-/*	$OpenBSD: bus_dma.c,v 1.21 2011/06/23 20:44:39 ariane Exp $	*/
+/*	$OpenBSD: bus_dma.c,v 1.24 2013/05/10 20:25:28 patrick Exp $	*/
 /*	$NetBSD: bus_dma.c,v 1.38 2003/10/30 08:44:13 scw Exp $	*/
 
 /*-
@@ -883,7 +883,7 @@ _bus_dmamap_load_buffer(bus_dma_tag_t t, bus_dmamap_t map, void *buf,
 			if (__predict_false(pmap_pde_section(pde))) {
 				curaddr = (*pde & L1_S_FRAME) |
 				    (vaddr & L1_S_OFFSET);
-				if ((*pde & L1_S_CACHE_MASK) & ~ARM_L1S_DEVICE_SHARE) {
+				if (*pde & L1_S_COHERENT) {
 					map->_dm_flags &=
 					    ~ARM32_DMAMAP_COHERENT;
 				}
@@ -894,14 +894,14 @@ _bus_dmamap_load_buffer(bus_dma_tag_t t, bus_dmamap_t map, void *buf,
 						    == L2_TYPE_L)) {
 					curaddr = (pte & L2_L_FRAME) |
 					    (vaddr & L2_L_OFFSET);
-					if ((pte & L2_L_CACHE_MASK) & ~ARM_L2L_DEVICE_SHARE) {
+					if (pte & L2_L_COHERENT) {
 						map->_dm_flags &=
 						    ~ARM32_DMAMAP_COHERENT;
 					}
 				} else {
 					curaddr = (pte & L2_S_FRAME) |
 					    (vaddr & L2_S_OFFSET);
-					if ((pte & L2_S_CACHE_MASK) & ~ARM_L2S_DEVICE_SHARE) {
+					if (pte & L2_S_COHERENT) {
 						map->_dm_flags &=
 						    ~ARM32_DMAMAP_COHERENT;
 					}
