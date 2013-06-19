@@ -1020,7 +1020,7 @@ pmap_uncache_page(paddr_t va, vaddr_t pa)
 
 	pte = vtopte(va);
 	*pte &= ~L2_S_CACHE_MASK;
-	*pte |= ARM_L1S_DEVICE_SHARE;
+	*pte |= ARM_L2S_DEVICE_SHARE;
 	PTE_SYNC(pte);
 	cpu_tlb_flushD_SE(va);
 	cpu_cpwait();
@@ -3530,8 +3530,8 @@ pmap_pte_init_armv7(void)
 
 	/* write-allocate should be tested */
 	pte_l1_s_cache_mode = ARM_L1S_NRML_IWB_OWB;
-	pte_l2_l_cache_mode = ARM_L1S_NRML_IWB_OWB;
-	pte_l2_s_cache_mode = ARM_L1S_NRML_IWB_OWB;
+	pte_l2_l_cache_mode = ARM_L2L_NRML_IWB_OWB;
+	pte_l2_s_cache_mode = ARM_L2S_NRML_IWB_OWB;
 
 	pte_l1_s_cache_mode_pt = ARM_L1S_NRML_IWT_OWT;
 	pte_l2_l_cache_mode_pt = ARM_L2L_NRML_IWT_OWT;
