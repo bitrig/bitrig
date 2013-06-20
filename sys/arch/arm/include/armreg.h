@@ -311,6 +311,11 @@
 #define XSCALE_AUXCTL_MD_WT	0x00000020 /* mini-D$ wt, read-allocate */
 #define XSCALE_AUXCTL_MD_MASK	0x00000030
 
+/* Cortex-A9 Auxillary Control Register (CP15 register 1, ocode2 1) */
+#define CORTEX_A9_AUXCTL_L1_PREFETCH_ENABLE	0x00000002
+#define CORTEX_A9_AUXCTL_L2_PREFETCH_ENABLE	0x00000004
+#define CORTEX_A9_AUXCTL_SMP			0x00000040
+
 /* Cache type register definitions */
 #define CPU_CT_ISIZE(x)		((x) & 0xfff)		/* I$ info */
 #define CPU_CT_DSIZE(x)		(((x) >> 12) & 0xfff)	/* D$ info */

@@ -1385,6 +1385,7 @@ arm11_setup()
 void
 armv7_setup()
 {
+	uint32_t auxctl;
 	int cpuctrl, cpuctrlmask;
 
 	cpuctrl = CPU_CONTROL_MMU_ENABLE | CPU_CONTROL_SYST_ENABLE
@@ -1413,6 +1414,17 @@ armv7_setup()
 	/* Set the control register */
 	curcpu()->ci_ctrl = cpuctrl;
 	cpu_control(cpuctrlmask, cpuctrl);
+
+	if ((cputype & CPU_ID_CORTEX_A9_MASK) == CPU_ID_CORTEX_A9) {
+		/* Make sure write coalescing is turned on */
+		__asm __volatile("mrc p15, 0, %0, c1, c0, 1"
+			: "=r" (auxctl));
+		auxctl |= CORTEX_A9_AUXCTL_L1_PREFETCH_ENABLE;
+		auxctl |= CORTEX_A9_AUXCTL_L2_PREFETCH_ENABLE;
+		auxctl |= CORTEX_A9_AUXCTL_SMP; /* needed for ldrex/strex */
+		__asm __volatile("mcr p15, 0, %0, c1, c0, 1"
+			: : "r" (auxctl));
+	}
 
 	/* And again. */
 	cpu_idcache_wbinv_all();
