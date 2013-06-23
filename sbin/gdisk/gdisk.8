@@ -1,0 +1,297 @@
+.\" Copyright (c) 1997 Tobias Weingartner
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+.\" IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+.\" NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+.\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd $Mdocdate: December 3 2010 $
+.Dt FDISK 8
+.Os
+.Sh NAME
+.Nm gdisk
+.Nd GPT partition maintenance program
+.Sh SYNOPSIS
+.Nm gdisk
+.Op Fl eiuy
+.Op Fl f Ar gptfile
+.Ar disk
+.Sh DESCRIPTION
+On the amd64 and other architectures, the MBR partition table is being
+replaced by the GUID partition table.
+For backwards compatibility, the area for the MBR is not being touched.
+The GUID partition table starts at sector 1, directly after the MBR.
+The MBR partition table should be marked as
+.Dq protected
+by replacing all partitions with one of type 0xEE.
+.Pp
+Upon first access to a disk, the partition information is retrieved,
+typically in
+.Xr disklabel 5
+format.
+The location of the disklabel can vary from architecture to architecture,
+but if one is not found the existence of an GPT partition table will create
+a spoofed prototypical disklabel which can be viewed using
+.Xr disklabel 8 .
+This spoofing mechanism is useful for permitting partition access for
+devices which would not normally have a
+.Xr disklabel 5
+sector.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl e
+Use the
+.Nm
+interactive editor to modify an GPT partition table.
+See
+.Sx COMMAND MODE ,
+below, for more information.
+.It Fl f Ar gptfile
+Specifies an alternate GPT template file.
+The default file is
+.Pa /usr/mdec/gpt .
+.It Fl i
+Requests that the GPT partition data be re-initialized.
+In this mode,
+.Nm
+will completely overwrite the GPT partition table
+using the default GPT template
+.Pa /usr/mdec/gpt
+(or the one optionally specified by the
+.Fl f
+flag).
+In the default template, GPT partition number 0 will be configured as an
+.Ox
+GPT partition spanning the entire disk, except for a zone left at the start
+for booting.
+This mode is designed to initialize the GPT the very first time.
+.It Fl y
+Avoid asking yes/no questions when not desirable.
+.It Ar disk
+Specify the
+.Ar disk
+to operate on.
+It can be specified either by its full pathname or an abbreviated disk form.
+In its abbreviated form, the path to the device, the
+.Sq r
+denoting
+.Qq raw device ,
+and the partition letter, can all be omitted.
+For example, the first IDE disk can be specified as either
+.Pa /dev/rwd0c ,
+.Pa /dev/wd0c ,
+or
+.Ar wd0 .
+.El
+.Sh TYPICAL LAYOUT
+When called with no special flags,
+.Nm
+prints the GPT partition table of the specified disk:
+.Bd -literal -offset 1n
+# gdisk sd0
+Disk: sd0       geometry: [1953525168 Sectors]
+Offset: 0       Disk UUID: 01234567-89ab-cdef-0123-456789abcdef
+                                                      LBA Info:
+ #:                 type name                   [       start:        size ]
+------------------------------------------------------------------------------
+   0: Microsoft basic data disk image           [          63:   419425020 ]
+*  1:    OpenBSD disklabel OpenBSD              [   419425083:  1534094982 ]
+.Ed
+.Pp
+This 1953525168 sector (931GB) disk drive is divided into two GPT
+partitions that span the whole disk.
+The first GPT partition is a 200GB FAT-32 partition,
+the second is a 731GB
+.Ox
+GPT partition using the remainder of the disk.
+The fields of the output are:
+.Bl -tag -width "start/size"
+.It Em "#"
+Number identifying each GPT partition table entry.
+There are a total of four slots.
+.Sq *
+denotes the GPT partition which is declared bootable.
+.It Em "type"
+GPT partition type name.
+.It Em "name"
+GPT partition name.
+.It Em "start/size"
+These fields provide the starting sector and size in sectors of the
+GPT partition in linear block addresses.
+.El
+.Pp
+The
+.Ox
+GPT partition shown above is subdivided further using the
+functionality provided by
+.Xr disklabel 8 ,
+which provides
+.Ox
+partitions.
+.Bd -literal -offset 1n
+# /dev/rsd0c:
+type: SCSI
+disk: SCSI disk
+label: WDC WD10EADS-65L
+duid: 085ef8d68623f5b3
+flags:
+bytes/sector: 512
+sectors/track: 63
+tracks/cylinder: 255
+sectors/cylinder: 16065
+cylinders: 121601
+total sectors: 1953525168
+boundstart: 419425083
+boundend: 1953520065
+drivedata: 0
+
+16 partitions:
+#                size           offset  fstype [fsize bsize  cpg]
+  a:          2097125        419425083  4.2BSD   2048 16384    1
+  b:          4715520        421522208    swap
+  c:       1953525168                0  unused
+  d:          8388608        426237728  4.2BSD   2048 16384    1
+  e:         16771072        434626336  4.2BSD   2048 16384    1
+  f:          4194304        451397408  4.2BSD   2048 16384    1
+  g:          2097152        455591712  4.2BSD   2048 16384    1
+  h:         20971520        457688864  4.2BSD   2048 16384    1
+  i:        419425020               63   MSDOS
+  j:          4194304        478660384  4.2BSD   2048 16384    1
+  k:          4194304        482854688  4.2BSD   2048 16384    1
+  l:        629145536        487049024  4.2BSD   4096 32768    1
+.Ed
+.Pp
+These
+.Ox
+partitions are then mounted as follows using
+.Pa /etc/fstab :
+.Bd -literal -offset indent
+/dev/sd0a / ffs rw,softdep 1 1
+/dev/sd0d /tmp ffs rw,softdep,nodev,nosuid 1 2
+/dev/sd0e /var ffs rw,softdep,nodev,nosuid 1 2
+/dev/sd0f /usr ffs rw,softdep,nodev 1 2
+/dev/sd0g /usr/X11R6 ffs rw,softdep,nodev 1 2
+/dev/sd0h /usr/local ffs rw,softdep,nodev 1 2
+/dev/sd0i /mnt/example msdos rw,nodev,nosuid 1 2
+/dev/sd0j /usr/src ffs rw,softdep,nodev,nosuid 1 2
+/dev/sd0k /usr/obj ffs rw,softdep,nodev,nosuid 1 2
+/dev/sd0l /home ffs rw,softdep,nodev,nosuid 1 2
+.Ed
+.Sh COMMAND MODE
+The
+.Fl e
+flag causes
+.Nm
+to enter an interactive command mode.
+The prompt contains information about the state of the edit
+process.
+.Pp
+.Dl gdisk:*\*(Gt
+.Pp
+.Sq *
+means that the in-memory copy of the boot block has been modified, but
+not yet written to disk.
+.Pp
+The list of commands and their explanations are given below.
+Commands may be abbreviated provided enough characters are given to ensure
+unambiguity.
+.Bl -tag -width Ds
+.It Cm ?\&
+A synonym for
+.Cm help .
+.It Cm help
+Display a list of commands that
+.Nm
+understands in the interactive edit mode.
+.It Cm manual
+Display this manual page.
+.It Cm reinit
+Initialize the currently selected, in-memory copy of the
+boot block.
+.It Cm edit Ar #
+Edit a given table entry in the memory copy of
+the current boot block.
+Sizes may be adjusted mode using sector offsets and sizes.
+A unit
+.Sq b ,
+.Sq k ,
+.Sq m ,
+or
+.Sq g
+may be appended to indicate bytes, kilobytes, megabytes, or gigabytes.
+The special size value
+.Sq *
+will cause the partition to be sized to use the remainder of the disk.
+.It Cm flag Ar # Op Ar value
+Make the given GPT partition table entry bootable
+and mark all others as not bootable
+(only one entry can be marked bootable).
+.\" If you wish to boot from an extended
+.\" GPT partition, you will need to mark the GPT partition table entry for the
+.\" extended GPT partition as bootable.
+If a
+.Ar value
+of 0 is given,
+the GPT partition is marked as not bootable,
+but no other GPT partitions are touched.
+.It Cm setpid Ar #
+Change the GPT partition
+identifier of the given GPT partition table entry.
+This command is particularly useful for reassigning
+an existing GPT partition to
+.Ox .
+.It Cm swap Ar # Ar #
+Swap two GPT entries.
+.It Cm print Op Ar unit
+Print the currently selected in-memory copy of the boot
+block and its GPT table to the terminal.
+A
+.Ar unit
+.Sq b ,
+.Sq k ,
+.Sq m ,
+or
+.Sq g
+may be appended to indicate bytes, kilobytes, megabytes, or gigabytes.
+Otherwise the number of sectors is printed.
+.It Cm write
+Write the in-memory copy of the boot block to disk.
+.It Cm exit
+Exit the program.
+.It Cm quit
+Exit the program.
+Unlike
+.Em exit
+it does write the modified block out.
+.It Cm abort
+Quit program without saving current changes.
+.El
+.Sh FILES
+.Bl -tag -width /usr/mdec/gpt -compact
+.It Pa /usr/mdec/gpt
+default GPT template
+.El
+.Sh SEE ALSO
+.Xr fstab 5 ,
+.Xr boot_amd64 8 ,
+.Xr boot_i386 8 ,
+.Xr disklabel 8
+.Sh CAVEATS
+Hand crafted disk layouts are highly error prone.
