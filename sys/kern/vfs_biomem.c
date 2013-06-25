@@ -369,7 +369,7 @@ buf_realloc_pages(struct buf *bp, struct uvm_constraint_range *where,
 		bcstats.dmapages -= atop(bp->b_bufsize);
 
 	dma = 1;
-	mtx_enter(&bp->b_pobj.vmobjlock);y
+	mtx_enter(&bp->b_pobj->vmobjlock);
 	/* if the original buf was mapped, re-map it */
 	for (i = 0; i < atop(bp->b_bufsize); i++) {
 		struct vm_page *pg = uvm_pagelookup(bp->b_pobj,
@@ -382,7 +382,7 @@ buf_realloc_pages(struct buf *bp, struct uvm_constraint_range *where,
 			    VM_PROT_READ|VM_PROT_WRITE);
 		}
 	}
-	mtx_leave(&bp->b_pobj.vmobjlock);y
+	mtx_leave(&bp->b_pobj->vmobjlock);
 	pmap_update(pmap_kernel());
 	if (dma) {
 		SET(bp->b_flags, B_DMA);
