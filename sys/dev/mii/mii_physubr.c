@@ -1,4 +1,4 @@
-/*	$OpenBSD: mii_physubr.c,v 1.40 2011/07/03 15:47:16 matthew Exp $	*/
+/*	$OpenBSD: mii_physubr.c,v 1.41 2013/06/25 02:27:44 brad Exp $	*/
 /*	$NetBSD: mii_physubr.c,v 1.20 2001/04/13 23:30:09 thorpej Exp $	*/
 
 /*-
