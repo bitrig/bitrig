@@ -1,4 +1,4 @@
-/*	$OpenBSD: gus.c,v 1.37 2013/05/24 07:58:46 ratchov Exp $	*/
+/*	$OpenBSD: gus.c,v 1.38 2013/06/26 09:39:56 kettenis Exp $	*/
 /*	$NetBSD: gus.c,v 1.51 1998/01/25 23:48:06 mycroft Exp $	*/
 
 /*-
@@ -460,7 +460,7 @@ gusmax_dma_output(void *addr, void *buf, int size, void (*intr)(void *),
 }
 
 /*
- * called at splgus() from interrupt handler.
+ * called at splaudio() from interrupt handler.
  */
 void
 stereo_dmaintr(void *arg)
@@ -501,7 +501,7 @@ stereo_dmaintr(void *arg)
 
 /*
  * Start up DMA output to the card.
- * Called at splgus/splaudio already, either from intr handler or from
+ * Called at splaudio(), either from intr handler or from
  * generic audio code.
  */
 int
@@ -601,7 +601,7 @@ gusmax_close(void *addr)
 }
 
 /*
- * Close out device stuff.  Called at splgus() from generic audio layer.
+ * Close out device stuff.  Called at splaudio() from generic audio layer.
  */
 void
 gusclose(void *addr)
@@ -1228,7 +1228,7 @@ gus_continue_playing(struct gus_softc *sc, int voice)
 }
 
 /*
- * Send/receive data into GUS's DRAM using DMA.  Called at splgus()
+ * Send/receive data into GUS's DRAM using DMA.  Called at splaudio()
  */
 
 void
@@ -1298,7 +1298,7 @@ gusdmaout(struct gus_softc *sc, int flags, u_long gusaddr, caddr_t buffaddr, int
 
 /*
  * Start a voice playing on the GUS.  Called from interrupt handler at
- * splgus().
+ * splaudio().
  */
 
 void
@@ -1392,7 +1392,7 @@ gus_start_voice(struct gus_softc *sc, int voice, int intrs)
 }
 
 /*
- * Stop a given voice.  called at splgus()
+ * Stop a given voice.  Called at splaudio().
  */
 
 void
@@ -1432,7 +1432,7 @@ gus_stop_voice(struct gus_softc *sc, int voice, int intrs_too)
 }
 
 /*
- * Set the volume of a given voice.  Called at splgus().
+ * Set the volume of a given voice.  Called at splaudio().
  */
 void
 gus_set_volume(struct gus_softc *sc, int voice, int volume)
@@ -1690,7 +1690,7 @@ gus_set_chan_addrs(struct gus_softc *sc)
 }
 
 /*
- * Set the sample rate of the given voice.  Called at splgus().
+ * Set the sample rate of the given voice.  Called at splaudio().
  */
 
 void
@@ -1727,7 +1727,7 @@ gus_set_samprate(struct gus_softc *sc, int voice, int freq)
 
 /*
  * Set the sample rate of the recording frequency.  Formula is from the GUS
- * SDK.  Called at splgus().
+ * SDK.  Called at splaudio().
  */
 
 void
@@ -1826,7 +1826,7 @@ gus_mic_ctl(void *addr, int newstate)
 }
 
 /*
- * Set the end address of a give voice.  Called at splgus()
+ * Set the end address of a give voice.  Called at splaudio().
  */
 
 void
@@ -1849,7 +1849,7 @@ gus_set_endaddr(struct gus_softc *sc, int voice, u_long addr)
 
 #ifdef GUSPLAYDEBUG
 /*
- * Set current address.  called at splgus()
+ * Set current address.  Called at splaudio().
  */
 void
 gus_set_curaddr(struct gus_softc *sc, int voice, u_long addr)
@@ -1872,7 +1872,7 @@ gus_set_curaddr(struct gus_softc *sc, int voice, u_long addr)
 }
 
 /*
- * Get current GUS playback address.  Called at splgus().
+ * Get current GUS playback address.  Called at splaudio().
  */
 u_long
 gus_get_curaddr(struct gus_softc *sc, int voice)
@@ -2183,7 +2183,7 @@ gusmax_dma_input(void *addr, void *buf, int size, void (*callback)(void *), void
 
 /*
  * Start sampling the input source into the requested DMA buffer.
- * Called at splgus(), either from top-half or from interrupt handler.
+ * Called at splaudio(), either from top-half or from interrupt handler.
  */
 int
 gus_dma_input(void *addr, void *buf, int size, void (*callback)(void *),
@@ -2277,7 +2277,7 @@ gusmax_halt_in_dma(void *addr)
 }
 
 /*
- * Stop any DMA output.  Called at splgus().
+ * Stop any DMA output.  Called at splaudio().
  */
 int
 gus_halt_out_dma(void *addr)
@@ -2313,7 +2313,7 @@ gus_halt_out_dma(void *addr)
 }
 
 /*
- * Stop any DMA output.  Called at splgus().
+ * Stop any DMA output.  Called at splaudio().
  */
 int
 gus_halt_in_dma(void *addr)
@@ -3456,9 +3456,6 @@ gus_subattach(struct gus_softc *sc, struct isa_attach_args *ia)
 	 * Setup a default interrupt handler
 	 */
 
-	/* XXX we shouldn't have to use splgus == splclock, nor should
-	 * we use IPL_CLOCK.
-	 */
 	sc->sc_ih = isa_intr_establish(ia->ia_ic, ia->ia_irq,
 	    IST_EDGE, IPL_AUDIO | IPL_MPSAFE,
 	    gusintr, sc /* sc->sc_gusdsp */, sc->sc_dev.dv_xname);
