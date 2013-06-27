@@ -1179,8 +1179,10 @@ ReFault:
 		UVM_ASSERT_ANONLOCKED(anon);
 		if ((anon = uvm_analloc()) == NULL ||
 		    (pg = uvm_pagealloc(NULL, 0, anon, 0)) == NULL) {
-			if (anon)
+			if (anon) {
+				anon->an_ref--;
 				uvm_anfree(anon);
+			}
 			uvmfault_unlockall(&ufi, amap, uobj, oanon);
 			KASSERT(uvmexp.swpgonly <= uvmexp.swpages);
 			if (anon == NULL || uvmexp.swpgonly == uvmexp.swpages) {
@@ -1556,8 +1558,10 @@ Case2:
 			/* unlock and fail ... */
 			uvmfault_unlockall(&ufi, amap, uobj, NULL);
 			KASSERT(uvmexp.swpgonly <= uvmexp.swpages);
-			if (anon)
+			if (anon) {
+				anon->an_ref--;
 				uvm_anfree(anon);
+			}
 			if (anon == NULL || uvmexp.swpgonly == uvmexp.swpages) {
 				uvmexp.fltnoanon++;
 				return (ENOMEM);

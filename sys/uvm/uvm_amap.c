@@ -766,6 +766,7 @@ ReStart:
 				 * we can't ...
 				 */
 				if (nanon) {
+					nanon->an_ref--;
 					uvm_anfree(nanon);
 				}
 				mtx_leave(&anon->an_lock);
