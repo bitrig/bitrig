@@ -1,4 +1,4 @@
-/*	$OpenBSD: db_machdep.h,v 1.7 2011/09/20 22:02:13 miod Exp $	*/
+/*	$OpenBSD: db_machdep.h,v 1.8 2013/05/10 22:08:15 patrick Exp $	*/
 /*	$NetBSD: db_machdep.h,v 1.5 2001/11/22 18:00:00 thorpej Exp $	*/
 
 /*
@@ -105,6 +105,5 @@ void db_machine_init (void);
 #define DB_ELFSIZE 32
 
 void db_show_frame_cmd(db_expr_t, int, db_expr_t, char *);
-void db_show_ttb_cmd(db_expr_t, int, db_expr_t, char *);
 
 #endif	/* _ARM_DB_MACHDEP_H_ */

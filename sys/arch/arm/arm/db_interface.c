@@ -1,4 +1,4 @@
-/*	$OpenBSD: db_interface.c,v 1.6 2009/05/08 02:57:32 drahn Exp $	*/
+/*	$OpenBSD: db_interface.c,v 1.7 2013/04/30 11:50:47 patrick Exp $	*/
 /*	$NetBSD: db_interface.c,v 1.34 2003/10/26 23:11:15 chris Exp $	*/
 
 /* 
@@ -347,7 +347,6 @@ Debugger(void)
 
 struct db_command db_machine_command_table[] = {
 	{ "frame",	db_show_frame_cmd,	0, NULL },
-	{ "ttb",	db_show_ttb_cmd,	0, NULL },
 #ifdef ARM32_DB_COMMANDS
 	ARM32_DB_COMMANDS,
 #endif
