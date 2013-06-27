@@ -112,6 +112,7 @@ snap:
 	echo "SNAPDIR must defined"
 	exit 1
 .else
+.NOTPARALLEL:
 ARCH!= uname -m
 SNAPROOTDIR=${SNAPDIR}/${ARCH}/root
 .if defined(SNAPDATE)
@@ -129,23 +130,20 @@ buildworld:
 	rm -rf /usr/obj/*
 	make obj >/dev/null
 	cd ${.CURDIR} etc && DESTDIR=/ make distrib-dirs
-	date > ${SNAPLOGFILE}
-	make build 2>&1 | tee -a ${SNAPLOGFILE}
-	date > ${SNAPLOGFILE}
+	make build
 
 snap:  
-	rm -rf /usr/obj/*
-	make obj >/dev/null
-	cd ${.CURDIR} etc && DESTDIR=/ make distrib-dirs
-	date > ${SNAPLOGFILE}
-	make build 2>&1 | tee -a ${SNAPLOGFILE}
-	date > ${SNAPLOGFILE}
+	make do_snap 2>&1 | tee ${SNAPLOGFILE}
+
+do_snap:  buildworld do_snap_rel
+
+do_snap_rel:
+	date
 	rm -rf ${SNAPROOTDIR}
 	mkdir -p ${SNAPROOTDIR}
 	mkdir -p ${SNAPRELDIR}
-
-	cd ${.CURDIR} etc && DESTDIR=${SNAPROOTDIR} RELEASEDIR=${SNAPRELDIR} make release 2>&1 | tee ${SNAPLOGFILE}
-	cd ${.CURDIR} distrib/sets && DESTDIR=${SNAPROOTDIR} sh checkflist | tee -a ${SNAPLOGFILE}
+	cd ${.CURDIR} etc && DESTDIR=${SNAPROOTDIR} RELEASEDIR=${SNAPRELDIR} make release
+	cd ${.CURDIR} distrib/sets && DESTDIR=${SNAPROOTDIR} sh checkflist
 .endif
 
 
