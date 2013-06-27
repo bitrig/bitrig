@@ -1,4 +1,4 @@
-/*	$OpenBSD: conf.c,v 1.34 2013/03/15 09:10:52 ratchov Exp $	*/
+/*	$OpenBSD: conf.c,v 1.35 2013/06/03 17:33:58 tedu Exp $	*/
 /*	$NetBSD: conf.c,v 1.10 2002/04/19 01:04:38 wiz Exp $	*/
 
 /*
@@ -228,7 +228,7 @@ struct bdevsw bdevsw[] = {
 	bdev_lkm_dummy(),		/* 68: */
 	bdev_lkm_dummy(),		/* 69: */
 	bdev_lkm_dummy(),		/* 70: */
- 	bdev_notdef(),			/* 71: was: raid disk driver */
+	bdev_notdef(),			/* 71 was: RAIDframe disk driver */
 	bdev_lkm_dummy(),		/* 72: */
 	bdev_lkm_dummy(),		/* 73: */
 	bdev_lkm_dummy(),		/* 74: */
@@ -267,6 +267,7 @@ struct bdevsw bdevsw[] = {
 #include "hotplug.h"
 #include "vscsi.h"
 #include "pppx.h"
+#include "fuse.h"
 
 #ifdef CONF_HAVE_GPIO
 #include "gpio.h"
@@ -352,13 +353,13 @@ struct cdevsw cdevsw[] = {
 	cdev_tty_init(NUCOM,ucom),		/* 68: USB tty */
 	cdev_usbdev_init(NUSCANNER,uscanner),	/* 69: USB scanner */
 	cdev_usbdev_init(NUGEN,ugen),		/* 70: USB generic driver */
-	cdev_notdef(),                          /* 71: removed device */
+	cdev_notdef(),    			/* 71 was: RAIDframe disk driver */
 	cdev_lkm_dummy(),			/* 72: reserved */
 	cdev_lkm_dummy(),			/* 73: reserved */
 	cdev_lkm_dummy(),			/* 74: reserved */
 	cdev_lkm_dummy(),			/* 75: reserved */
 	cdev_lkm_dummy(),			/* 76: reserved */
-	cdev_notdef(),                          /* 77: removed device */
+	cdev_fuse_init(NFUSE,fuse),		/* 77: fuse */
 	cdev_notdef(),                          /* 78: removed device */
 	cdev_notdef(),                          /* 79: removed device */
 	cdev_notdef(),                          /* 80: removed device */
