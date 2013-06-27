@@ -1,4 +1,4 @@
-/* $OpenBSD: omapvar.h,v 1.1 2011/11/10 19:37:01 uwe Exp $ */
+/* $OpenBSD: omapvar.h,v 1.3 2013/05/22 17:44:47 rapha Exp $ */
 /*
  * Copyright (c) 2005,2008 Dale Rahn <drahn@drahn.com>
  *
@@ -21,7 +21,7 @@ struct omap_mem {
 	u_int32_t size;			/* size of range in bytes */
 };
 
-#define OMAP_DEV_NMEM 6		       /* number of memory ranges */
+#define OMAP_DEV_NMEM 4		       /* number of memory ranges */
 #define OMAP_DEV_NIRQ 4		       /* number of IRQs per device */
 
 /* Descriptor for all on-chip devices. */
@@ -44,12 +44,14 @@ struct omap_dev *omap_find_dev(const char *, int);
 
 void omap3_init(void);
 void omap4_init(void);
+void am335x_init(void);
 
 /* XXX */
 void *avic_intr_establish(int irqno, int level, int (*func)(void *),
     void *arg, char *name);
 
 /* board identification - from uboot */
+#define BOARD_ID_AM335X_BEAGLEBONE 3589
 #define BOARD_ID_OMAP3_BEAGLE 1546
 #define BOARD_ID_OMAP3_OVERO 1798
 #define BOARD_ID_OMAP4_PANDA 2791

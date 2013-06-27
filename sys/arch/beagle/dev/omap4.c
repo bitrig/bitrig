@@ -1,4 +1,4 @@
-/* $OpenBSD: omap4.c,v 1.9 2013/05/10 00:18:42 patrick Exp $ */
+/* $OpenBSD: omap4.c,v 1.10 2013/06/14 23:13:54 patrick Exp $ */
 
 /*
  * Copyright (c) 2011 Uwe Stuehler <uwe@openbsd.org>
@@ -24,7 +24,7 @@
 
 #include <beagle/dev/omapvar.h>
 
-#define OMAPID_ADDR	0x4A002000
+#define OMAPID_ADDR	0x4a002000
 #define OMAPID_SIZE	0x1000
 
 #define WD_ADDR		0x4a314000
@@ -60,41 +60,39 @@
 #define HSMMC1_ADDR	0x4809c000
 #define HSMMC1_IRQ	83
 
-#define PRM_ADDR        0x4a306000
-#define PRM_SIZE        0x2000
-#define CM1_ADDR        0x4a004000
-#define CM1_SIZE        0x1000
-#define CM2_ADDR        0x4a008000
-#define CM2_SIZE        0x2000
-#define SCRM_ADDR       0x4a30a000
-#define SCRM_SIZE       0x1000
-#define PCNF1_ADDR      0x4a100000
-#define PCNF1_SIZE      0x1000
-#define PCNF2_ADDR      0x4a31e000
-#define PCNF2_SIZE      0x1000
+#define PRM_ADDR	0x4a306000
+#define PRM_SIZE	0x2000
+#define CM1_ADDR	0x4a004000
+#define CM1_SIZE	0x1000
+#define CM2_ADDR	0x4a008000
+#define CM2_SIZE	0x2000
+#define SCRM_ADDR	0x4a30a000
+#define SCRM_SIZE	0x1000
+#define PCNF1_ADDR	0x4a100000
+#define PCNF1_SIZE	0x1000
+#define PCNF2_ADDR	0x4a31e000
+#define PCNF2_SIZE	0x1000
 
-#define HSUSBHOST_ADDR                          0x4a064000
-#define HSUSBHOST_SIZE                          0x800
-#define USBEHCI_ADDR                            0x4a064c00
-#define USBEHCI_SIZE                            0x400
-#define USBOHCI_ADDR                            0x4a064800
-#define USBOHCI_SIZE                            0x400
-#define USBEHCI_IRQ                                     77
+#define HSUSBHOST_ADDR	0x4a064000
+#define HSUSBHOST_SIZE	0x800
+#define USBEHCI_ADDR	0x4a064c00
+#define USBEHCI_SIZE	0x400
+#define USBOHCI_ADDR	0x4a064800
+#define USBOHCI_SIZE	0x400
+#define USBEHCI_IRQ	77
 
 struct omap_dev omap4_devs[] = {
 
 	/*
 	 * Power, Reset and Clock Manager
 	 */
+
 	{ .name = "prcm",
 	  .unit = 0,
 	  .mem = {
 	    { PRM_ADDR, PRM_SIZE },
 	    { CM1_ADDR, CM1_SIZE },
 	    { CM2_ADDR, CM2_SIZE },
-	    { SCRM_ADDR, SCRM_SIZE },
-	    { PCNF1_ADDR, PCNF1_SIZE },
-	    { PCNF2_ADDR, PCNF2_SIZE },
 	  },
 	},
 
@@ -110,6 +108,7 @@ struct omap_dev omap4_devs[] = {
 	/*
 	 * GPIO
 	 */
+
 	{ .name = "omgpio",
 	  .unit = 0,
 	  .mem = { { GPIO1_ADDR, GPIOx_SIZE } },
@@ -149,6 +148,7 @@ struct omap_dev omap4_devs[] = {
 	/*
 	 * Watchdog Timer
 	 */
+
 	{ .name = "omdog",
 	  .unit = 0,
 	  .mem = { { WD_ADDR, WD_SIZE } }
@@ -157,6 +157,7 @@ struct omap_dev omap4_devs[] = {
 	/*
 	 * UART
 	 */
+
 	{ .name = "com",
 	  .unit = 2,
 	  .mem = { { UART3_ADDR, UARTx_SIZE } },
@@ -166,6 +167,7 @@ struct omap_dev omap4_devs[] = {
 	/*
 	 * MMC
 	 */
+
 	{ .name = "ommmc",
 	  .unit = 0,
 	  .mem = { { HSMMC1_ADDR, HSMMCx_SIZE } },
@@ -175,6 +177,7 @@ struct omap_dev omap4_devs[] = {
 	/*
 	 * USB
 	 */
+
 	{ .name = "ehci",
 	  .unit = 0,
 	  .mem = {
@@ -186,14 +189,12 @@ struct omap_dev omap4_devs[] = {
 
 	/* Terminator */
 	{ .name = NULL,
-	  .unit = 0
+	  .unit = 0,
 	}
-
 };
 
 void
 omap4_init(void)
 {
 	omap_set_devs(omap4_devs);
-	/* panda specific */
 }

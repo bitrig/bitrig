@@ -1,6 +1,6 @@
-/* $OpenBSD: omdog.c,v 1.5 2011/11/15 23:01:11 drahn Exp $ */
+/* $OpenBSD: omapid.c,v 1.1 2013/05/09 15:16:53 patrick Exp $ */
 /*
- * Copyright (c) 2013 Dale Rahn <drahn@openbsd.org>
+ * Copyright (c) 2013 Dale Rahn <drahn@dalerahn.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above

@@ -1,4 +1,4 @@
-/* $OpenBSD: prcmvar.h,v 1.4 2010/02/13 06:03:37 drahn Exp $ */
+/* $OpenBSD: prcmvar.h,v 1.6 2013/06/14 23:13:54 patrick Exp $ */
 /*
  * Copyright (c) 2007,2009 Dale Rahn <drahn@openbsd.org>
  *
@@ -16,74 +16,27 @@
  */
 
 void prcm_setclock(int clock, int speed);
+void prcm_enablemodule(int mod);
+void prcm_disablemodule(int mod);
+
 #define PRCM_CLK_SPEED_32	0
 #define PRCM_CLK_SPEED_SYS	1
 
-void prcm_enableclock(int bit);
+enum PRCM_MODULES {
+	PRCM_TIMER0,
+	PRCM_TIMER1,
+	PRCM_TIMER2,
+	PRCM_TIMER3,
+	PRCM_MMC,
+	PRCM_USB,
+	PRCM_USBTLL,
+	PRCM_USBP1_PHY,
+	PRCM_USBP1_UTMI,
+	PRCM_USBP1_HSIC,
+	PRCM_USBP2_PHY,
+	PRCM_USBP2_UTMI,
+	PRCM_USBP2_HSIC
+};
 
-/* XXX - verify these definitions do these need a mapping betwen omap* */
-#define PRCM_REG_CORE_CLK1_BASE	(PRCM_REG_CORE_CLK1*32)
-#define		PRCM_CLK_EN_MMC3	(PRCM_REG_CORE_CLK1_BASE + 30)
-#define		PRCM_CLK_EN_ICR		(PRCM_REG_CORE_CLK1_BASE + 29)
-#define		PRCM_CLK_EN_AES2 	(PRCM_REG_CORE_CLK1_BASE + 28)
-#define		PRCM_CLK_EN_SHA12 	(PRCM_REG_CORE_CLK1_BASE + 27)
-#define		PRCM_CLK_EN_DES2 	(PRCM_REG_CORE_CLK1_BASE + 26)
-#define		PRCM_CLK_EN_MMC2	(PRCM_REG_CORE_CLK1_BASE + 25)
-#define		PRCM_CLK_EN_MMC1	(PRCM_REG_CORE_CLK1_BASE + 24)
-#define		PRCM_CLK_EN_MSPRO	(PRCM_REG_CORE_CLK1_BASE + 23)
-#define		PRCM_CLK_EN_HDQ		(PRCM_REG_CORE_CLK1_BASE + 22)
-#define		PRCM_CLK_EN_MCSPI4	(PRCM_REG_CORE_CLK1_BASE + 21)
-#define		PRCM_CLK_EN_MCSPI3	(PRCM_REG_CORE_CLK1_BASE + 20)
-#define		PRCM_CLK_EN_MCSPI2	(PRCM_REG_CORE_CLK1_BASE + 19)
-#define		PRCM_CLK_EN_MCSPI1	(PRCM_REG_CORE_CLK1_BASE + 18)
-#define		PRCM_CLK_EN_I2C3	(PRCM_REG_CORE_CLK1_BASE + 17)
-#define		PRCM_CLK_EN_I2C2	(PRCM_REG_CORE_CLK1_BASE + 16)
-#define		PRCM_CLK_EN_I2C1	(PRCM_REG_CORE_CLK1_BASE + 15)
-#define		PRCM_CLK_EN_UART2	(PRCM_REG_CORE_CLK1_BASE + 14)
-#define		PRCM_CLK_EN_UART1	(PRCM_REG_CORE_CLK1_BASE + 13)
-#define		PRCM_CLK_EN_GPT11	(PRCM_REG_CORE_CLK1_BASE + 12)
-#define		PRCM_CLK_EN_GPT10	(PRCM_REG_CORE_CLK1_BASE + 11)
-#define		PRCM_CLK_EN_MCBSP5	(PRCM_REG_CORE_CLK1_BASE + 10)
-#define		PRCM_CLK_EN_MCBSP1	(PRCM_REG_CORE_CLK1_BASE + 9)
-#define		PRCM_CLK_EN_MAILBOXES 	(PRCM_REG_CORE_CLK1_BASE + 7)
-#define		PRCM_CLK_EN_OMAPCTRL 	(PRCM_REG_CORE_CLK1_BASE + 6)
-#define		PRCM_CLK_EN_HSOTGUSB 	(PRCM_REG_CORE_CLK1_BASE + 4)
-#define		PRCM_CLK_EN_SDRC 	(PRCM_REG_CORE_CLK1_BASE + 1)
-
-#define PRCM_REG_CORE_CLK1	0
-#define PRCM_REG_CORE_CLK2	1
-#define PRCM_REG_CORE_CLK3	2
-
-#define PRCM_REG_USBHOST	3
-#define PRCM_REG_USBHOST_BASE	(PRCM_REG_USBHOST*32)
-#define PRCM_CLK_EN_USB		(PRCM_REG_USBHOST_BASE + 0)
-
-#define O4_MAX_MODULE_ENABLE_WAIT    1000
-
-#define O4_CLKCTRL_IDLEST_MASK           0x00030000UL
-#define O4_CLKCTRL_IDLEST_ENABLED        0x00000000UL
-
-/*XXX - is this really constant across omap* */
-#define	PRCM_REG_CORE_CLK3_BASE (PRCM_REG_CORE_CLK3*32)
-#define		CM_CORE_EN_USBTLL       (PRCM_REG_CORE_CLK3_BASE + 2)
-#define		CM_CORE_EN_TS           (PRCM_REG_CORE_CLK3_BASE + 1)
-#define		CM_CORE_EN_CPEFUSE      (PRCM_REG_CORE_CLK3_BASE + 0)
-
+#define PRCM_REG_MAX	6
 /* need interface for CM_AUTOIDLE */
-
-uint32_t prcm_pcnf1_get_value(uint32_t reg);
-void prcm_pcnf1_set_value(uint32_t reg, uint32_t val);
-uint32_t prcm_pcnf2_get_value(uint32_t reg);
-void prcm_pcnf2_set_value(uint32_t reg, uint32_t val);
-
-uint32_t prcm_scrm_get_value(uint32_t reg);
-void prcm_scrm_set_value(uint32_t reg, uint32_t val);
-int prcm_hsusbhost_deactivate(int);
-int prcm_hsusbhost_activate(int);
-
-#define	USBHSHOST_CLK	0
-#define	USBP1_PHY_CLK	1
-#define	USBP2_PHY_CLK	2
-#define EXT_CLK		0
-
-int prcm_hsusbhost_set_source(int, int);

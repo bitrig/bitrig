@@ -1,6 +1,6 @@
-/* $OpenBSD: prcm.c,v 1.9 2011/11/10 19:37:01 uwe Exp $ */
+/* $OpenBSD: prcm.c,v 1.13 2013/06/14 23:13:54 patrick Exp $ */
 /*
- * Copyright (c) 2007, 2009, 2012 Dale Rahn <drahn@dalerahn.com>
+ * Copyright (c) 2007,2009 Dale Rahn <drahn@openbsd.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -13,6 +13,35 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+/*-
+ * Copyright (c) 2011
+ *	Ben Gray <ben.r.gray@gmail.com>.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the company nor the name of the author may be used to
+ *    endorse or promote products derived from this software without specific
+ *    prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY BEN GRAY ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL BEN GRAY BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /*
@@ -32,14 +61,13 @@
 #include <beagle/dev/omapvar.h>
 #include <beagle/dev/prcmvar.h>
 
+#include <beagle/dev/am335x_prcmreg.h>
 #include <beagle/dev/omap3_prcmreg.h>
 #include <beagle/dev/omap4_prcmreg.h>
-/* XXX - some register defines are duplicated between omap3/omap4 need fixed */
 
-#define LMAX(x, y) (((x) > (y)) ? (x) : (y))
-#define PRCM_REG_MAX LMAX(O3_PRCM_REG_MAX, O4_PRCM_REG_MAX)
-uint32_t prcm_imask_cur[PRCM_REG_MAX];
-uint32_t prcm_fmask_cur[PRCM_REG_MAX];
+#define PRCM_REVISION		0x0800
+#define PRCM_SYSCONFIG		0x0810
+
 uint32_t prcm_imask_mask[PRCM_REG_MAX];
 uint32_t prcm_fmask_mask[PRCM_REG_MAX];
 uint32_t prcm_imask_addr[PRCM_REG_MAX];
@@ -47,24 +75,39 @@ uint32_t prcm_fmask_addr[PRCM_REG_MAX];
 
 #define SYS_CLK		13 /* SYS_CLK speed in MHz */
 
-bus_space_tag_t		prcm_iot;
-bus_space_handle_t	prcm_ioh;
+struct prcm_softc {
+	struct device		sc_dev;
+	bus_space_tag_t		sc_iot;
+	bus_space_handle_t	sc_prcm;
+	bus_space_handle_t	sc_cm1;
+	bus_space_handle_t	sc_cm2;
+	void (*sc_setup)(struct prcm_softc *sc);
+	void (*sc_enablemodule)(struct prcm_softc *sc, int mod);
+	void (*sc_setclock)(struct prcm_softc *sc,
+	    int clock, int speed);
+	uint32_t		cm1_avail;
+	uint32_t		cm2_avail;
+};
 
-bus_space_handle_t      cm1_ioh;
-bus_space_handle_t      cm2_ioh;
-bus_space_handle_t      scrm_ioh;
-bus_space_handle_t      pcnf1_ioh;
-bus_space_handle_t      pcnf2_ioh;
+int	prcm_match(struct device *, void *, void *);
+void	prcm_attach(struct device *, struct device *, void *);
+int	prcm_setup_dpll5(struct prcm_softc *);
+uint32_t prcm_v3_bit(int mod);
+uint32_t prcm_am335x_clkctrl(int mod);
 
-int     prcm_match(struct device *, void *, void *);
-void    prcm_attach(struct device *, struct device *, void *);
+void prcm_am335x_enablemodule(struct prcm_softc *, int);
+void prcm_am335x_setclock(struct prcm_softc *, int, int);
 
-int scrm_avail;
-int pcnf1_avail;
-int pcnf2_avail;
+void prcm_v3_setup(struct prcm_softc *);
+void prcm_v3_enablemodule(struct prcm_softc *, int);
+void prcm_v3_setclock(struct prcm_softc *, int, int);
+
+void prcm_v4_enablemodule(struct prcm_softc *, int);
+int prcm_v4_hsusbhost_activate(int);
+int prcm_v4_hsusbhost_set_source(int, int);
 
 struct cfattach	prcm_ca = {
-	sizeof (struct device), NULL, prcm_attach
+	sizeof (struct prcm_softc), NULL, prcm_attach
 };
 
 struct cfdriver prcm_cd = {
@@ -75,149 +118,205 @@ void
 prcm_attach(struct device *parent, struct device *self, void *args)
 {
 	struct omap_attach_args *oa = args;
+	struct prcm_softc *sc = (struct prcm_softc *) self;
+	u_int32_t reg;
 
-        switch (board_id) {
-        case BOARD_ID_OMAP3_BEAGLE:
-        case BOARD_ID_OMAP3_OVERO:
-	    prcm_fmask_mask[PRCM_REG_CORE_CLK1] = O3_PRCM_REG_CORE_CLK1_FMASK;
-	    prcm_imask_mask[PRCM_REG_CORE_CLK1] = O3_PRCM_REG_CORE_CLK1_IMASK;
-	    prcm_fmask_addr[PRCM_REG_CORE_CLK1] = O3_PRCM_REG_CORE_CLK1_FADDR;
-	    prcm_imask_addr[PRCM_REG_CORE_CLK1] = O3_PRCM_REG_CORE_CLK1_IADDR;
+	sc->sc_iot = oa->oa_iot;
 
-	    prcm_fmask_mask[PRCM_REG_CORE_CLK2] = O3_PRCM_REG_CORE_CLK2_FMASK;
-	    prcm_imask_mask[PRCM_REG_CORE_CLK2] = O3_PRCM_REG_CORE_CLK2_IMASK;
-	    prcm_fmask_addr[PRCM_REG_CORE_CLK2] = O3_PRCM_REG_CORE_CLK2_FADDR;
-	    prcm_imask_addr[PRCM_REG_CORE_CLK2] = O3_PRCM_REG_CORE_CLK2_IADDR;
-
-	    prcm_fmask_mask[PRCM_REG_CORE_CLK3] = O3_PRCM_REG_CORE_CLK3_FMASK;
-	    prcm_imask_mask[PRCM_REG_CORE_CLK3] = O3_PRCM_REG_CORE_CLK3_IMASK;
-	    prcm_fmask_addr[PRCM_REG_CORE_CLK3] = O3_PRCM_REG_CORE_CLK3_FADDR;
-	    prcm_imask_addr[PRCM_REG_CORE_CLK3] = O3_PRCM_REG_CORE_CLK3_IADDR;
-
-	    prcm_fmask_mask[PRCM_REG_USBHOST] = O3_PRCM_REG_USBHOST_FMASK;
-	    prcm_imask_mask[PRCM_REG_USBHOST] = O3_PRCM_REG_USBHOST_IMASK;
-	    prcm_fmask_addr[PRCM_REG_USBHOST] = O3_PRCM_REG_USBHOST_FADDR;
-	    prcm_imask_addr[PRCM_REG_USBHOST] = O3_PRCM_REG_USBHOST_IADDR;
-            break; 
-        case BOARD_ID_OMAP4_PANDA:
-	    prcm_fmask_mask[PRCM_REG_CORE_CLK1] = O4_PRCM_REG_CORE_CLK1_FMASK;
-	    prcm_imask_mask[PRCM_REG_CORE_CLK1] = O4_PRCM_REG_CORE_CLK1_IMASK;
-	    prcm_fmask_addr[PRCM_REG_CORE_CLK1] = O4_PRCM_REG_CORE_CLK1_FADDR;
-	    prcm_imask_addr[PRCM_REG_CORE_CLK1] = O4_PRCM_REG_CORE_CLK1_IADDR;
-
-	    prcm_fmask_mask[PRCM_REG_CORE_CLK2] = O4_PRCM_REG_CORE_CLK2_FMASK;
-	    prcm_imask_mask[PRCM_REG_CORE_CLK2] = O4_PRCM_REG_CORE_CLK2_IMASK;
-	    prcm_fmask_addr[PRCM_REG_CORE_CLK2] = O4_PRCM_REG_CORE_CLK2_FADDR;
-	    prcm_imask_addr[PRCM_REG_CORE_CLK2] = O4_PRCM_REG_CORE_CLK2_IADDR;
-
-	    prcm_fmask_mask[PRCM_REG_CORE_CLK3] = O4_PRCM_REG_CORE_CLK3_FMASK;
-	    prcm_imask_mask[PRCM_REG_CORE_CLK3] = O4_PRCM_REG_CORE_CLK3_IMASK;
-	    prcm_fmask_addr[PRCM_REG_CORE_CLK3] = O4_PRCM_REG_CORE_CLK3_FADDR;
-	    prcm_imask_addr[PRCM_REG_CORE_CLK3] = O4_PRCM_REG_CORE_CLK3_IADDR;
-
-	    prcm_fmask_mask[PRCM_REG_USBHOST] = O4_PRCM_REG_USBHOST_FMASK;
-	    prcm_imask_mask[PRCM_REG_USBHOST] = O4_PRCM_REG_USBHOST_IMASK;
-	    prcm_fmask_addr[PRCM_REG_USBHOST] = O4_PRCM_REG_USBHOST_FADDR;
-	    prcm_imask_addr[PRCM_REG_USBHOST] = O4_PRCM_REG_USBHOST_IADDR;
-	    scrm_avail = 1;
-	    pcnf1_avail = 1;
-	    pcnf2_avail = 1;
+	switch (board_id) {
+	case BOARD_ID_AM335X_BEAGLEBONE:
+		sc->sc_setup = NULL;
+		sc->sc_enablemodule = prcm_am335x_enablemodule;
+		sc->sc_setclock = prcm_am335x_setclock;
+		break;
+	case BOARD_ID_OMAP3_BEAGLE:
+	case BOARD_ID_OMAP3_OVERO:
+		sc->sc_setup = prcm_v3_setup;
+		sc->sc_enablemodule = prcm_v3_enablemodule;
+		sc->sc_setclock = prcm_v3_setclock;
+		break;
+	case BOARD_ID_OMAP4_PANDA:
+		sc->sc_setup = NULL;
+		sc->sc_enablemodule = prcm_v4_enablemodule;
+		sc->sc_setclock = NULL;
+		sc->cm1_avail = 1;
+		sc->cm2_avail = 1;
+		break;
 	}
-	prcm_iot = oa->oa_iot;
 
-	if (bus_space_map(prcm_iot, oa->oa_dev->mem[0].addr,
-	    oa->oa_dev->mem[0].size, 0, &prcm_ioh))
+	if (bus_space_map(sc->sc_iot, oa->oa_dev->mem[0].addr,
+	    oa->oa_dev->mem[0].size, 0, &sc->sc_prcm))
 		panic("prcm_attach: bus_space_map failed!");
 
-	if (bus_space_map(prcm_iot, oa->oa_dev->mem[1].addr,
-	    oa->oa_dev->mem[1].size, 0, &cm1_ioh))
+	if (sc->cm1_avail &&
+	    bus_space_map(sc->sc_iot, oa->oa_dev->mem[1].addr,
+	    oa->oa_dev->mem[1].size, 0, &sc->sc_cm1))
 		panic("prcm_attach: bus_space_map failed!");
 
-	if (bus_space_map(prcm_iot, oa->oa_dev->mem[2].addr,
-	    oa->oa_dev->mem[2].size, 0, &cm2_ioh))
+	if (sc->cm2_avail &&
+	    bus_space_map(sc->sc_iot, oa->oa_dev->mem[2].addr,
+	    oa->oa_dev->mem[2].size, 0, &sc->sc_cm2))
 		panic("prcm_attach: bus_space_map failed!");
 
-	if (scrm_avail) {
-		if (bus_space_map(prcm_iot, oa->oa_dev->mem[3].addr,
-		    oa->oa_dev->mem[3].size, 0, &scrm_ioh))
-			panic("prcm_attach: bus_space_map failed!");
-	}
-	if (pcnf1_avail) {
-		if (bus_space_map(prcm_iot, oa->oa_dev->mem[4].addr,
-		    oa->oa_dev->mem[4].size, 0, &pcnf1_ioh))
-			panic("prcm_attach: bus_space_map failed!");
-	}
-	if (pcnf2_avail) {
-		if (bus_space_map(prcm_iot, oa->oa_dev->mem[5].addr,
-		    oa->oa_dev->mem[5].size, 0, &pcnf2_ioh))
-			panic("prcm_attach: bus_space_map failed!");
-	}
+	reg = bus_space_read_4(sc->sc_iot, sc->sc_prcm, PRCM_REVISION);
+	printf(" rev %d.%d\n", reg >> 4 & 0xf, reg & 0xf);
+
+	if (sc->sc_setup)
+		sc->sc_setup(sc);
 
 	printf("\n");
-	
+}
 
-	/* XXX */
-#if 1
-	printf("CM_FCLKEN1_CORE %x\n", bus_space_read_4(prcm_iot, prcm_ioh, CM_FCLKEN1_CORE));
-	printf("CM_ICLKEN1_CORE %x\n", bus_space_read_4(prcm_iot, prcm_ioh, CM_ICLKEN1_CORE));
-	printf("CM_AUTOIDLE1_CORE %x\n", bus_space_read_4(prcm_iot, prcm_ioh, CM_AUTOIDLE1_CORE));
+void
+prcm_v3_setup(struct prcm_softc *sc)
+{
+	/* Setup the 120MHZ DPLL5 clock, to be used by USB. */
+	prcm_setup_dpll5(sc);
 
-	printf("CM_FCLKEN_WKUP %x\n", bus_space_read_4(prcm_iot, prcm_ioh, CM_FCLKEN_WKUP));
-	printf(" CM_IDLEST_WKUP %x\n", bus_space_read_4(prcm_iot, prcm_ioh,  CM_IDLEST_WKUP));
-//	bus_space_write_4(prcm_iot, prcm_ioh, 
-#endif
+	prcm_fmask_mask[PRCM_REG_CORE_CLK1] = PRCM_REG_CORE_CLK1_FMASK;
+	prcm_imask_mask[PRCM_REG_CORE_CLK1] = PRCM_REG_CORE_CLK1_IMASK;
+	prcm_fmask_addr[PRCM_REG_CORE_CLK1] = PRCM_REG_CORE_CLK1_FADDR;
+	prcm_imask_addr[PRCM_REG_CORE_CLK1] = PRCM_REG_CORE_CLK1_IADDR;
 
-#if 0
-	reg = bus_space_read_4(prcm_iot, prcm_ioh, CM_FCLKEN1_CORE);
-	reg |= CM_FCLKEN1_CORE_GP3|CM_FCLKEN1_CORE_GP2;
-	bus_space_write_4(prcm_iot, prcm_ioh, CM_FCLKEN1_CORE, reg);
-	reg = bus_space_read_4(prcm_iot, prcm_ioh, CM_ICLKEN1_CORE);
-	reg |= CM_ICLKEN1_CORE_GP3|CM_ICLKEN1_CORE_GP2;
-	bus_space_write_4(prcm_iot, prcm_ioh, CM_ICLKEN1_CORE, reg);
+	prcm_fmask_mask[PRCM_REG_CORE_CLK2] = PRCM_REG_CORE_CLK2_FMASK;
+	prcm_imask_mask[PRCM_REG_CORE_CLK2] = PRCM_REG_CORE_CLK2_IMASK;
+	prcm_fmask_addr[PRCM_REG_CORE_CLK2] = PRCM_REG_CORE_CLK2_FADDR;
+	prcm_imask_addr[PRCM_REG_CORE_CLK2] = PRCM_REG_CORE_CLK2_IADDR;
 
-	reg = bus_space_read_4(prcm_iot, prcm_ioh, CM_FCLKEN_WKUP);
-	reg |= CM_FCLKEN_WKUP_MPU_WDT | CM_FCLKEN_WKUP_GPT1;
-	bus_space_write_4(prcm_iot, prcm_ioh, CM_FCLKEN_WKUP, reg);
+	prcm_fmask_mask[PRCM_REG_CORE_CLK3] = PRCM_REG_CORE_CLK3_FMASK;
+	prcm_imask_mask[PRCM_REG_CORE_CLK3] = PRCM_REG_CORE_CLK3_IMASK;
+	prcm_fmask_addr[PRCM_REG_CORE_CLK3] = PRCM_REG_CORE_CLK3_FADDR;
+	prcm_imask_addr[PRCM_REG_CORE_CLK3] = PRCM_REG_CORE_CLK3_IADDR;
 
-	reg = bus_space_read_4(prcm_iot, prcm_ioh, CM_ICLKEN_WKUP);
-	reg |= CM_ICLKEN_WKUP_MPU_WDT | CM_ICLKEN_WKUP_GPT1;
-	bus_space_write_4(prcm_iot, prcm_ioh, CM_ICLKEN_WKUP, reg);
-#endif
-
+	prcm_fmask_mask[PRCM_REG_USBHOST] = PRCM_REG_USBHOST_FMASK;
+	prcm_imask_mask[PRCM_REG_USBHOST] = PRCM_REG_USBHOST_IMASK;
+	prcm_fmask_addr[PRCM_REG_USBHOST] = PRCM_REG_USBHOST_FADDR;
+	prcm_imask_addr[PRCM_REG_USBHOST] = PRCM_REG_USBHOST_IADDR;
 }
 
 void
 prcm_setclock(int clock, int speed)
 {
-#if 1
-	u_int32_t oreg, reg, mask;
-	if (clock == 1) {
-		oreg = bus_space_read_4(prcm_iot, prcm_ioh, CM_CLKSEL_WKUP);
-		mask = 1;
-		reg = (oreg &~mask) | (speed & mask);
-		printf(" prcm_setclock old %08x new %08x",  oreg, reg );
-		bus_space_write_4(prcm_iot, prcm_ioh, CM_CLKSEL_WKUP, reg);
-	} else if (clock >= 2 && clock <= 9) {
-		int shift =  (clock-2);
-		oreg = bus_space_read_4(prcm_iot, prcm_ioh, CM_CLKSEL_PER);
+	struct prcm_softc *sc = prcm_cd.cd_devs[0];
 
-		mask = 1 << (shift);
-		reg =  (oreg & ~mask) | ( (speed << shift) & mask);
-		printf(" prcm_setclock old %08x new %08x",  oreg, reg);
+	if (!sc->sc_setclock)
+		panic("%s: not initialised!", __func__);
 
-		bus_space_write_4(prcm_iot, prcm_ioh, CM_CLKSEL_PER, reg);
-	} else
-		panic("prcm_setclock invalid clock %d", clock);
-#endif
+	sc->sc_setclock(sc, clock, speed);
 }
 
 void
-prcm_enableclock(int bit)
+prcm_am335x_setclock(struct prcm_softc *sc, int clock, int speed)
 {
-	u_int32_t fclk, iclk, fmask, imask, mbit;
-	int freg, ireg, reg;
-	printf("prcm_enableclock %d:", bit);
+	u_int32_t oreg, reg, mask;
 
+	/* set CLKSEL register */
+	if (clock == 1) {
+		oreg = bus_space_read_4(sc->sc_iot, sc->sc_prcm,
+		    PRCM_AM335X_CLKSEL_TIMER2_CLK);
+		mask = 3;
+		reg = oreg & ~mask;
+		reg |=0x02;
+		bus_space_write_4(sc->sc_iot, sc->sc_prcm,
+		    PRCM_AM335X_CLKSEL_TIMER2_CLK, reg);
+	} else if (clock == 2) {
+		oreg = bus_space_read_4(sc->sc_iot, sc->sc_prcm,
+		    PRCM_AM335X_CLKSEL_TIMER3_CLK);
+		mask = 3;
+		reg = oreg & ~mask;
+		reg |=0x02;
+		bus_space_write_4(sc->sc_iot, sc->sc_prcm,
+		    PRCM_AM335X_CLKSEL_TIMER3_CLK, reg);
+	}
+}
+
+void
+prcm_v3_setclock(struct prcm_softc *sc, int clock, int speed)
+{
+	u_int32_t oreg, reg, mask;
+
+	if (clock == 1) {
+		oreg = bus_space_read_4(sc->sc_iot, sc->sc_prcm, CM_CLKSEL_WKUP);
+		mask = 1;
+		reg = (oreg &~mask) | (speed & mask);
+		bus_space_write_4(sc->sc_iot, sc->sc_prcm, CM_CLKSEL_WKUP, reg);
+	} else if (clock >= 2 && clock <= 9) {
+		int shift =  (clock-2);
+		oreg = bus_space_read_4(sc->sc_iot, sc->sc_prcm, CM_CLKSEL_PER);
+		mask = 1 << (shift);
+		reg =  (oreg & ~mask) | ( (speed << shift) & mask);
+		bus_space_write_4(sc->sc_iot, sc->sc_prcm, CM_CLKSEL_PER, reg);
+	} else
+		panic("%s: invalid clock %d", __func__, clock);
+}
+
+uint32_t
+prcm_v3_bit(int mod)
+{
+	switch(mod) {
+	case PRCM_MMC:
+		return PRCM_CLK_EN_MMC1;
+	case PRCM_USB:
+		return PRCM_CLK_EN_USB;
+	default:
+		panic("%s: module not found\n", __func__);
+	}
+}
+
+uint32_t
+prcm_am335x_clkctrl(int mod)
+{
+	switch(mod) {
+	case PRCM_TIMER2:
+		return PRCM_AM335X_TIMER2_CLKCTRL;
+	case PRCM_TIMER3:
+		return PRCM_AM335X_TIMER3_CLKCTRL;
+	case PRCM_MMC:
+		return PRCM_AM335X_MMC0_CLKCTRL;
+	case PRCM_USB:
+		return PRCM_AM335X_USB0_CLKCTRL;
+	default:
+		panic("%s: module not found\n", __func__);
+	}
+}
+
+void
+prcm_enablemodule(int mod)
+{
+	struct prcm_softc *sc = prcm_cd.cd_devs[0];
+
+	if (!sc->sc_enablemodule)
+		panic("%s: not initialised!", __func__);
+
+	sc->sc_enablemodule(sc, mod);
+}
+
+void
+prcm_am335x_enablemodule(struct prcm_softc *sc, int mod)
+{
+	uint32_t clkctrl;
+	int reg;
+
+	/*set enable bits in CLKCTRL register */
+	reg = prcm_am335x_clkctrl(mod);
+	clkctrl = bus_space_read_4(sc->sc_iot, sc->sc_prcm, reg);
+	clkctrl &=~AM335X_CLKCTRL_MODULEMODE_MASK;
+	clkctrl |= AM335X_CLKCTRL_MODULEMODE_ENABLE;
+	bus_space_write_4(sc->sc_iot, sc->sc_prcm, reg, clkctrl);
+
+	/* wait until module is enabled */
+	while (bus_space_read_4(sc->sc_iot, sc->sc_prcm, reg) & 0x30000)
+		;
+}
+
+void
+prcm_v3_enablemodule(struct prcm_softc *sc, int mod)
+{
+	uint32_t bit;
+	uint32_t fclk, iclk, fmask, imask, mbit;
+	int freg, ireg, reg;
+
+	bit = prcm_v3_bit(mod);
 	reg = bit >> 5;
 
 	freg = prcm_fmask_addr[reg];
@@ -225,241 +324,73 @@ prcm_enableclock(int bit)
 	fmask = prcm_fmask_mask[reg];
 	imask = prcm_imask_mask[reg];
 
-	mbit =  1 << (bit & 0x1f);
-#if 0
-	printf("reg %d faddr 0x%08x iaddr 0x%08x, fmask 0x%08x "
-	    "imask 0x%08x mbit %x", reg, freg, ireg, fmask, imask, mbit);
-#endif
+	mbit = 1 << (bit & 0x1f);
 	if (fmask & mbit) { /* dont access the register if bit isn't present */
-		fclk = bus_space_read_4(prcm_iot, prcm_ioh, freg);
-		prcm_fmask_cur[reg] = fclk | mbit;
-		bus_space_write_4(prcm_iot, prcm_ioh, freg, fclk | mbit);
-		printf(" fclk %08x %08x",  fclk, fclk | mbit);
+		fclk = bus_space_read_4(sc->sc_iot, sc->sc_prcm, freg);
+		bus_space_write_4(sc->sc_iot, sc->sc_prcm, freg, fclk | mbit);
 	}
-
 	if (imask & mbit) { /* dont access the register if bit isn't present */
-		iclk = bus_space_read_4(prcm_iot, prcm_ioh, ireg);
-		prcm_imask_cur[reg] = iclk | mbit;
-		bus_space_write_4(prcm_iot, prcm_ioh, ireg, iclk | mbit);
-		printf(" iclk %08x %08x",  iclk, iclk | mbit);
+		iclk = bus_space_read_4(sc->sc_iot, sc->sc_prcm, ireg);
+		bus_space_write_4(sc->sc_iot, sc->sc_prcm, ireg, iclk | mbit);
 	}
-	printf ("\n");
-}
-
-uint32_t
-prcm_scrm_get_value(uint32_t reg)
-{
-	uint32_t val;
-	// fix
-        val = bus_space_read_4(prcm_iot, scrm_ioh, reg);
-        return val;
+	printf("\n");
 }
 
 void
-prcm_scrm_set_value(uint32_t reg, uint32_t val)
+prcm_v4_enablemodule(struct prcm_softc *sc, int mod)
 {
-	bus_space_write_4(prcm_iot, scrm_ioh, reg, val);
-}
-
-int prcm_hsusbhost_activate(int type);
-int
-prcm_hsusbhost_activate(int type)
-{
-	return prcm_hsusbhost_activate_omap4(type);
-}
-int
-prcm_hsusbhost_deactivate(int type)
-{
-	return prcm_hsusbhost_deactivate_omap4(type);
-}
-
-int
-prcm_hsusbhost_deactivate_omap4(int type)
-{
-	uint32_t clksel_reg_off;
-	uint32_t clksel;
-	bus_space_tag_t		*iot;
-	bus_space_handle_t	*ioh;
-
-	switch (type) {
-#if 0
-	/* XXX - unused ? */
-		case USBTLL_CLK:
-			/* We need the CM_L3INIT_HSUSBTLL_CLKCTRL register in CM2 register set */
-			iot = &prcm_iot;
-			ioh = &cm2_ioh;
-			clksel_reg_off = L3INIT_CM2_OFFSET + 0x68;
-
-			clksel = bus_space_read_4(*iot, *ioh, clksel_reg_off);
-			clksel &= ~CLKCTRL_MODULEMODE_MASK;
-			clksel |=  CLKCTRL_MODULEMODE_DISABLE;
-			break;
-
-#endif
-		case USBHSHOST_CLK:
-		case USBP1_PHY_CLK:
-		case USBP2_PHY_CLK:
-#if 0
-		case USBP1_UTMI_CLK:
-		case USBP2_UTMI_CLK:
-		case USBP3_UTMI_CLK:
-		case USBP1_HSIC_CLK:
-		case USBP2_HSIC_CLK:
-#endif
-			/* For the USB HS HOST module we need to enable the following clocks:
-			 *  - INIT_L4_ICLK     (will be enabled by bootloader)
-			 *  - INIT_L3_ICLK     (will be enabled by bootloader)
-			 *  - INIT_48MC_FCLK
-			 *  - UTMI_ROOT_GFCLK  (UTMI only, create a new clock for that ?)
-			 *  - UTMI_P1_FCLK     (UTMI only, create a new clock for that ?)
-			 *  - UTMI_P2_FCLK     (UTMI only, create a new clock for that ?)
-			 *  - UTMI_P3_FCLK     (UTMI only, create a new clock for that ?)
-			 *  - HSIC_P1_60       (HSIC only, create a new clock for that ?)
-			 *  - HSIC_P1_480      (HSIC only, create a new clock for that ?)
-			 *  - HSIC_P2_60       (HSIC only, create a new clock for that ?)
-			 *  - HSIC_P2_480      (HSIC only, create a new clock for that ?)
-			 */
-
-			/* We need the CM_L3INIT_HSUSBHOST_CLKCTRL register in CM2 register set */
-			iot = &prcm_iot;
-			ioh = &cm2_ioh;
-			clksel_reg_off = O4_L3INIT_CM2_OFFSET + 0x58;
-			clksel = bus_space_read_4(*iot, *ioh, clksel_reg_off);
-
-			/* Enable the module and also enable the optional func clocks */
-			if (type == USBHSHOST_CLK) {
-				clksel &= ~O4_CLKCTRL_MODULEMODE_MASK;
-				clksel |=  O4_CLKCTRL_MODULEMODE_DISABLE;
-
-				clksel &= ~(0x1 << 15); /* USB-HOST clock control: FUNC48MCLK */
-			}
-
-#if 0
-			else if (type == USBP1_UTMI_CLK)
-				clksel &= ~(0x1 << 8);  /* UTMI_P1_CLK */
-			else if (type == USBP2_UTMI_CLK)
-				clksel &= ~(0x1 << 9);  /* UTMI_P2_CLK */
-			else if (type == USBP3_UTMI_CLK)
-				clksel &= ~(0x1 << 10);  /* UTMI_P3_CLK */
-
-			else if (type == USBP1_HSIC_CLK)
-				clksel &= ~(0x5 << 11);  /* HSIC60M_P1_CLK + HSIC480M_P1_CLK */
-			else if (type == USBP2_HSIC_CLK)
-				clksel &= ~(0x5 << 12);  /* HSIC60M_P2_CLK + HSIC480M_P2_CLK */
-#endif
-			else {
-				panic("%s:missing type %d\n", type);
-			}
-
-			break;
-
-		default:
-			panic("%s: invalid type %d", type);
-			return (EINVAL);
+	switch (mod) {
+		case PRCM_USBP1_PHY:
+		case PRCM_USBP2_PHY:
+			prcm_v4_hsusbhost_set_source(mod, 0);
+		case PRCM_USB:
+		case PRCM_USBTLL:
+		case PRCM_USBP1_UTMI:
+		case PRCM_USBP1_HSIC:
+		case PRCM_USBP2_UTMI:
+		case PRCM_USBP2_HSIC:
+			prcm_v4_hsusbhost_activate(mod);
+			return;
+	default:
+		panic("%s: module not found\n", __func__);
 	}
-
-	bus_space_write_4(*iot, *ioh, clksel_reg_off, clksel);
-
-	return (0);
 }
 
 int
-prcm_hsusbhost_activate_omap4(int type)
+prcm_v4_hsusbhost_activate(int type)
 {
+	struct prcm_softc *sc = prcm_cd.cd_devs[0];
 	uint32_t i;
 	uint32_t clksel_reg_off;
 	uint32_t clksel, oclksel;
-	bus_space_tag_t		*iot;
-	bus_space_handle_t	*ioh;
+
 	switch (type) {
-#if 0
-		case USBTLL_CLK:
-			/* For the USBTLL module we need to enable the following clocks:
-			 *  - INIT_L4_ICLK  (will be enabled by bootloader)
-			 *  - TLL_CH0_FCLK
-			 *  - TLL_CH1_FCLK
-			 */
-
-			/* We need the CM_L3INIT_HSUSBTLL_CLKCTRL register in CM2 register set */
-			iot = &prcm_iot;
-			ioh = &cm2_ioh;
-			clksel_reg_off = L3INIT_CM2_OFFSET + 0x68;
-
-			/* Enable the module and also enable the optional func clocks for
-			 * channels 0 & 1 (is this needed ?)
-			 */
-			clksel = bus_space_read_4(*iot, *ioh, clksel_reg_off);
-			oclksel = clksel;
-			clksel &= ~CLKCTRL_MODULEMODE_MASK;
-			clksel |=  CLKCTRL_MODULEMODE_ENABLE;
-
-			clksel |= (0x1 << 8); /* USB-HOST optional clock: USB_CH0_CLK */
-			clksel |= (0x1 << 9); /* USB-HOST optional clock: USB_CH1_CLK */
-			break;
-#endif
-		case USBHSHOST_CLK:
-		case USBP1_PHY_CLK:
-		case USBP2_PHY_CLK:
-#if 0
-		case USBP1_UTMI_CLK:
-		case USBP2_UTMI_CLK:
-		case USBP3_UTMI_CLK:
-		case USBP1_HSIC_CLK:
-		case USBP2_HSIC_CLK:
-#endif
-			/* For the USB HS HOST module we need to enable the following clocks:
-			 *  - INIT_L4_ICLK     (will be enabled by bootloader)
-			 *  - INIT_L3_ICLK     (will be enabled by bootloader)
-			 *  - INIT_48MC_FCLK
-			 *  - UTMI_ROOT_GFCLK  (UTMI only, create a new clock for that ?)
-			 *  - UTMI_P1_FCLK     (UTMI only, create a new clock for that ?)
-			 *  - UTMI_P2_FCLK     (UTMI only, create a new clock for that ?)
-			 *  - UTMI_P3_FCLK     (UTMI only, create a new clock for that ?)
-			 *  - HSIC_P1_60       (HSIC only, create a new clock for that ?)
-			 *  - HSIC_P1_480      (HSIC only, create a new clock for that ?)
-			 *  - HSIC_P2_60       (HSIC only, create a new clock for that ?)
-			 *  - HSIC_P2_480      (HSIC only, create a new clock for that ?)
-			 */
-
+		case PRCM_USB:
+		case PRCM_USBP1_PHY:
+		case PRCM_USBP2_PHY:
 			/* We need the CM_L3INIT_HSUSBHOST_CLKCTRL register in CM2 register set */
-			iot = &prcm_iot;
-			ioh = &cm2_ioh;
 			clksel_reg_off = O4_L3INIT_CM2_OFFSET + 0x58;
-			clksel = bus_space_read_4(*iot, *ioh, clksel_reg_off);
+			clksel = bus_space_read_4(sc->sc_iot, sc->sc_cm2, clksel_reg_off);
 			oclksel = clksel;
 			/* Enable the module and also enable the optional func clocks */
-			if (type == USBHSHOST_CLK) {
+			if (type == PRCM_USB) {
 				clksel &= ~O4_CLKCTRL_MODULEMODE_MASK;
 				clksel |=  /*O4_CLKCTRL_MODULEMODE_ENABLE*/2;
 
 				clksel |= (0x1 << 15); /* USB-HOST clock control: FUNC48MCLK */
 			}
 
-#if 0
-			else if (type == USBP1_UTMI_CLK)
-				clksel |= (0x1 << 8);  /* UTMI_P1_CLK */
-			else if (type == USBP2_UTMI_CLK)
-				clksel |= (0x1 << 9);  /* UTMI_P2_CLK */
-			else if (type == USBP3_UTMI_CLK)
-				clksel |= (0x1 << 10);  /* UTMI_P3_CLK */
-
-			else if (type == USBP1_HSIC_CLK)
-				clksel |= (0x5 << 11);  /* HSIC60M_P1_CLK + HSIC480M_P1_CLK */
-			else if (type == USBP2_HSIC_CLK)
-				clksel |= (0x5 << 12);  /* HSIC60M_P2_CLK + HSIC480M_P2_CLK */
-#endif
-
 			break;
 
 		default:
 			panic("%s: invalid type %d", type);
 			return (EINVAL);
 	}
-	bus_space_write_4(*iot, *ioh, clksel_reg_off, clksel);
+	bus_space_write_4(sc->sc_iot, sc->sc_cm2, clksel_reg_off, clksel);
 
 	/* Try MAX_MODULE_ENABLE_WAIT number of times to check if enabled */
 	for (i = 0; i < O4_MAX_MODULE_ENABLE_WAIT; i++) {
-		clksel = bus_space_read_4(*iot, *ioh, clksel_reg_off);
+		clksel = bus_space_read_4(sc->sc_iot, sc->sc_cm2, clksel_reg_off);
 		if ((clksel & O4_CLKCTRL_IDLEST_MASK) == O4_CLKCTRL_IDLEST_ENABLED)
 			break;
 	}
@@ -475,57 +406,77 @@ prcm_hsusbhost_activate_omap4(int type)
 }
 
 int
-prcm_hsusbhost_set_source(int clk, int clksrc)
+prcm_v4_hsusbhost_set_source(int clk, int clksrc)
 {
-//XXX omap4 version !?!?!?!
+	struct prcm_softc *sc = prcm_cd.cd_devs[0];
 	uint32_t clksel_reg_off;
 	uint32_t clksel;
 	unsigned int bit;
 
-	if (clk == USBP1_PHY_CLK)
+	if (clk == PRCM_USBP1_PHY)
 		bit = 24;
-	else if (clk != USBP2_PHY_CLK)
+	else if (clk != PRCM_USBP2_PHY)
 		bit = 25;
 	else
 		return (-EINVAL);
 
 	/* We need the CM_L3INIT_HSUSBHOST_CLKCTRL register in CM2 register set */
 	clksel_reg_off = O4_L3INIT_CM2_OFFSET + 0x58;
-	clksel = bus_space_read_4(prcm_iot, cm2_ioh, clksel_reg_off);
+	clksel = bus_space_read_4(sc->sc_iot, sc->sc_cm2, clksel_reg_off);
 
-	/* Set the clock source to either external or internal */
-	if (clksrc == EXT_CLK)
+	/* XXX: Set the clock source to either external or internal */
+	if (clksrc == 0)
 		clksel |= (0x1 << bit);
 	else
 		clksel &= ~(0x1 << bit);
 
-	bus_space_write_4(prcm_iot, cm2_ioh, clksel_reg_off, clksel);
+	bus_space_write_4(sc->sc_iot, sc->sc_cm2, clksel_reg_off, clksel);
 
 	return (0);
 }
 
-uint32_t
-prcm_pcnf1_get_value(uint32_t reg)
+/*
+ * OMAP35xx Power, Reset, and Clock Management Reference Guide
+ * (sprufa5.pdf) and AM/DM37x Multimedia Device Technical Reference
+ * Manual (sprugn4h.pdf) note that DPLL5 provides a 120MHz clock for
+ * peripheral domain modules (page 107 and page 302).
+ * The reference clock for DPLL5 is DPLL5_ALWON_FCLK which is
+ * SYS_CLK, running at 13MHz.
+ */
+int
+prcm_setup_dpll5(struct prcm_softc *sc)
 {
 	uint32_t val;
-        val =  bus_space_read_4(prcm_iot, scrm_ioh, reg);
-        return val;
-}
-void
-prcm_pcnf1_set_value(uint32_t reg, uint32_t val)
-{
-	bus_space_write_2(prcm_iot, pcnf1_ioh, reg, val);
-}
 
-uint32_t
-prcm_pcnf2_get_value(uint32_t reg)
-{
-	uint32_t val;
-	val = bus_space_read_4(prcm_iot, pcnf2_ioh, reg);
-	return val;
-}
-void
-prcm_pcnf2_set_value(uint32_t reg, uint32_t val)
-{
-	bus_space_write_4(prcm_iot, pcnf2_ioh, reg, val);
+	/*
+	 * We need to set the multiplier and divider values for PLL.
+	 * To end up with 120MHz we take SYS_CLK, divide by it and multiply
+	 * with 120 (sprugn4h.pdf, 13.4.11.4.1 SSC Configuration)
+	 */
+	val = ((120 & 0x7ff) << 8) | ((SYS_CLK - 1) & 0x7f);
+	bus_space_write_4(sc->sc_iot, sc->sc_prcm, CM_CLKSEL4_PLL, val);
+
+	/* Clock divider from the PLL to the 120MHz clock. */
+	bus_space_write_4(sc->sc_iot, sc->sc_prcm, CM_CLKSEL5_PLL, val);
+
+	/*
+	 * spruf98o.pdf, page 2319:
+	 * PERIPH2_DPLL_FREQSEL is 0x7 1.75MHz to 2.1MHz
+	 * EN_PERIPH2_DPLL is 0x7
+	 */
+	val = (7 << 4) | (7 << 0);
+	bus_space_write_4(sc->sc_iot, sc->sc_prcm, CM_CLKEN2_PLL, val);
+
+	/* Disable the interconnect clock auto-idle. */
+	bus_space_write_4(sc->sc_iot, sc->sc_prcm, CM_AUTOIDLE2_PLL, 0x0);
+
+	/* Wait until DPLL5 is locked and there's clock activity. */
+	while ((val = bus_space_read_4(sc->sc_iot, sc->sc_prcm,
+	    CM_IDLEST_CKGEN) & 0x01) == 0x00) {
+#ifdef DIAGNOSTIC
+		printf("CM_IDLEST_PLL = 0x%08x\n", val);
+#endif
+	}
+
+	return 0;
 }

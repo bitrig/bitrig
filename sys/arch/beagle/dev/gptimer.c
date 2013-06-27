@@ -1,4 +1,4 @@
-/* $OpenBSD: gptimer.c,v 1.12 2011/11/10 19:37:01 uwe Exp $ */
+/* $OpenBSD: gptimer.c,v 1.13 2013/05/09 13:40:38 patrick Exp $ */
 /*
  * Copyright (c) 2007,2009 Dale Rahn <drahn@openbsd.org>
  *

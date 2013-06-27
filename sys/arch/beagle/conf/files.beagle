@@ -1,4 +1,4 @@
-#	$OpenBSD: files.beagle,v 1.11 2011/11/10 19:37:01 uwe Exp $
+#	$OpenBSD: files.beagle,v 1.19 2013/06/11 19:19:43 rapha Exp $
 #
 # First try for arm-specific configuration info
 #
@@ -31,6 +31,7 @@ attach omap at mainbus
 file	arch/beagle/dev/omap.c			omap
 file	arch/beagle/dev/omap3.c			omap
 file	arch/beagle/dev/omap4.c			omap
+file	arch/beagle/dev/am335x.c		omap
 
 include "dev/sdmmc/files.sdmmc"
 
@@ -38,13 +39,25 @@ device ommmc: sdmmcbus
 attach ommmc at soc
 file	arch/beagle/dev/ommmc.c			ommmc
 
+# Media Independent Interface (mii)
+include "dev/mii/files.mii"
+
+device cpsw: ether, ifnet, mii, ifmedia
+attach cpsw at soc
+file	arch/beagle/dev/if_cpsw.c		cpsw
+
 device prcm
 attach prcm at soc
 file	arch/beagle/dev/prcm.c			prcm
 
+device sitaracm
+attach sitaracm at soc
+file	arch/beagle/dev/am335x_cm_padconf.c	sitaracm
+file	arch/beagle/dev/sitara_cm.c		sitaracm
+
 device omgpio
 attach omgpio at soc
-file	arch/beagle/dev/omgpio.c		omgpio
+file   arch/beagle/dev/omgpio.c			omgpio
 
 device intc
 attach intc at soc
@@ -53,6 +66,10 @@ file	arch/beagle/dev/intc.c			intc
 device gptimer
 attach gptimer at soc
 file	arch/beagle/dev/gptimer.c		gptimer
+
+device dmtimer
+attach dmtimer at soc
+file	arch/beagle/dev/dmtimer.c		dmtimer
 
 device omapid
 attach omapid at soc
@@ -132,5 +149,7 @@ include "dev/usb/files.usb"
 # Bluetooth
 include "dev/bluetooth/files.bluetooth"
 
-# Media Independent Interface (mii)
-include "dev/mii/files.mii"
+#
+# Machine-independent GPIO drivers
+#
+include "dev/gpio/files.gpio"

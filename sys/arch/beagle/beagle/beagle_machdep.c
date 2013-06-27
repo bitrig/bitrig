@@ -1,4 +1,4 @@
-/*	$OpenBSD: beagle_machdep.c,v 1.15 2012/08/30 15:51:13 deraadt Exp $ */
+/*	$OpenBSD: beagle_machdep.c,v 1.19 2013/05/22 17:44:46 rapha Exp $ */
 /*	$NetBSD: lubbock_machdep.c,v 1.2 2003/07/15 00:25:06 lukem Exp $ */
 
 /*
@@ -513,7 +513,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 #ifdef RAMDISK_HOOKS
         boothowto |= RB_DFLTROOT;
 #endif /* RAMDISK_HOOKS */
-//boothowto |= RB_ASKNAME;
+
 
 	/* normally u-boot will set up bootconfig.dramblocks */
 	if (bootconfig.dramblocks == 0) {
@@ -613,7 +613,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	(var).pv_va = KERNEL_BASE + (var).pv_pa - physical_start;
 
 #define alloc_pages(var, np)				\
-	(var) = physical_freestart ;			\
+	(var) = physical_freestart;			\
 	physical_freestart += ((np) * PAGE_SIZE);	\
 	if (physical_freeend < physical_freestart)	\
 		panic("initarm: out of memory");	\
@@ -624,7 +624,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	kernel_l1pt.pv_pa = 0;
 	for (loop = 0; loop <= NUM_KERNEL_PTS; ++loop) {
 		/* Are we 16KB aligned for an L1 ? */
-		if (((physical_freestart) & (L1_TABLE_SIZE - 1)) == 0
+		if ((physical_freestart & (L1_TABLE_SIZE - 1)) == 0
 		    && kernel_l1pt.pv_pa == 0) {
 			valloc_pages(kernel_l1pt, L1_TABLE_SIZE / PAGE_SIZE);
 		} else {
@@ -875,6 +875,9 @@ initarm(void *arg0, void *arg1, void *arg2)
 	case BOARD_ID_OMAP3_BEAGLE:
 		printf("board type: beagle\n");
 		break;
+	case BOARD_ID_AM335X_BEAGLEBONE:
+		printf("board type: beaglebone\n");
+		break;
 	case BOARD_ID_OMAP3_OVERO:
 		printf("board type: overo\n");
 		break;
@@ -972,6 +975,9 @@ consinit(void)
 	case BOARD_ID_OMAP3_BEAGLE:
 	case BOARD_ID_OMAP3_OVERO:
 		paddr = 0x49020000; 
+		break;
+	case BOARD_ID_AM335X_BEAGLEBONE:
+		paddr = 0x44E09000; /* UART0 */
 		break;
 	case BOARD_ID_OMAP4_PANDA:
 		paddr = 0x48020000; 

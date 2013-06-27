@@ -1,3 +1,10 @@
+/* $OpenBSD: omehcivar.h,v 1.2 2013/06/14 23:15:59 patrick Exp $ */
+
+/*
+ * Misc
+ */
+#define OMAP_HS_USB_PORTS                           3
+
 /*
  * USB TTL Module
  */
@@ -56,11 +63,11 @@
  */
 
 /* UHH */
-#define	OMAP_UHH_REVISION                   0x0000
-#define	OMAP_UHH_SYSCONFIG                  0x0010
-#define	OMAP_UHH_SYSSTATUS                  0x0014
-#define	OMAP_UHH_HOSTCONFIG                 0x0040
-#define	OMAP_UHH_DEBUG_CSR                  0x0044
+#define	OMAP_USBHOST_UHH_REVISION                   0x0000
+#define	OMAP_USBHOST_UHH_SYSCONFIG                  0x0010
+#define	OMAP_USBHOST_UHH_SYSSTATUS                  0x0014
+#define	OMAP_USBHOST_UHH_HOSTCONFIG                 0x0040
+#define	OMAP_USBHOST_UHH_DEBUG_CSR                  0x0044
 
 /* EHCI */
 #define	OMAP_USBHOST_HCCAPBASE                      0x0000
@@ -149,9 +156,8 @@
 #define UHH_SYSCONFIG_SIDLEMODE_NOIDLE          (1UL << 3)
 #define UHH_SYSCONFIG_SIDLEMODE_FORCEIDLE       (0UL << 3)
 #define UHH_SYSCONFIG_ENAWAKEUP                 (1UL << 2)
-#define UHH_SYSCONFIG_SOFTRESET                 (1UL << 0)
-
-#define UHH_SYSSTATUS_EHCI_RESETDONE		(1 << 2)
+#define UHH_SYSCONFIG_SOFTRESET                 (1UL << 1)
+#define UHH_SYSCONFIG_AUTOIDLE                  (1UL << 0)
 
 #define UHH_HOSTCONFIG_APP_START_CLK            (1UL << 31)
 #define UHH_HOSTCONFIG_P3_CONNECT_STATUS        (1UL << 10)
@@ -178,11 +184,6 @@
 #define UHH_HOSTCONFIG_P2_MODE_ULPI_PHY         (0UL << 18)
 #define UHH_HOSTCONFIG_P2_MODE_UTMI_PHY         (1UL << 18)
 #define UHH_HOSTCONFIG_P2_MODE_HSIC             (3UL << 18)
-#define UHH_HOSTCONFIG_P3_MODE_ULPI_PHY         (0UL << 20)
-#define UHH_HOSTCONFIG_P3_MODE_UTMI_PHY         (1UL << 20)
-#define UHH_HOSTCONFIG_P3_MODE_HSIC             (3UL << 20)
-
-
 
 #define ULPI_FUNC_CTRL_RESET                    (1 << 5)
 
@@ -214,27 +215,18 @@
 #define ULPI_DEBUG                              0x15
 #define ULPI_SCRATCH                            0x16
 
-
-
-
-
-
-/* Values of UHH_REVISION - Note: these are not given in the TRM but taken
+/* 
+ * Values of UHH_REVISION - Note: these are not given in the TRM but taken
  * from the linux OMAP EHCI driver (thanks guys).  It has been verified on
  * a Panda and Beagle board.
  */
 #define OMAP_EHCI_REV1  0x00000010      /* OMAP3 */
 #define OMAP_EHCI_REV2  0x50700100      /* OMAP4 */
 
-
-
 #define EHCI_VENDORID_OMAP3     0x42fa05
-#define OMAP3_EHCI_HC_DEVSTR    "TI OMAP USB 2.0 controller"
+#define OMAP_EHCI_HC_DEVSTR    "TI OMAP USB 2.0 controller"
 
 #define EHCI_HCD_OMAP_MODE_UNKNOWN  0
 #define EHCI_HCD_OMAP_MODE_PHY      1
 #define EHCI_HCD_OMAP_MODE_TLL      2
 #define EHCI_HCD_OMAP_MODE_HSIC     3
-
-#define OMAP_EHCI_PHY1_RESET_GPIO 1
-#define OMAP_EHCI_PHY2_RESET_GPIO 62

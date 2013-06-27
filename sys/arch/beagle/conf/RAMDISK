@@ -1,4 +1,4 @@
-# $OpenBSD: RAMDISK,v 1.16 2012/09/27 14:01:35 jsg Exp $
+# $OpenBSD: RAMDISK,v 1.23 2013/06/16 22:06:42 florian Exp $
 #
 # GENERIC machine description file
 #
@@ -29,7 +29,7 @@ options	INET		# IP + ICMP + TCP + UDP
 options	INET6		# IPv6 (needs INET)
 options	DDB		# kernel debugger
 options	DIAGNOSTIC
-option DDB_SAFE_CONSOLE
+option	DDB_SAFE_CONSOLE
 options	FIFO		# FIFOs; RECOMMENDED
 #options	NFSCLIENT	# NFS 
 
@@ -46,8 +46,7 @@ options		APERTURE
 maxusers	32
 
 # CPU options
-options	CPU_ARMv7	# Support the ARM11
-makeoptions	CPUFLAGS="-mcpu=armv5"
+options	CPU_ARMv7	# Support the ARMv7
 
 #option WSDISPLAY_COMPAT_USL		# VT handling
 #option WSDISPLAY_COMPAT_RAWKBD		# can get raw scancodes
@@ -65,8 +64,8 @@ omap0		at mainbus?
 omapid*		at soc?
 
 # Cortex-A9 (OMAP4)
-cortex0         at mainbus?
-ampintc*	at cortex? 
+cortex0		at mainbus?
+ampintc*	at cortex?
 amptimer*	at cortex?
 armliicc*	at cortex?		# L2 cache controller
 
@@ -75,10 +74,13 @@ intc*		at soc?			# interrupt controller
 
 # OMAP on-chip devices
 prcm*		at soc?			# power/clock controller
+sitaracm*	at soc?			# sitara control module
 omdog*		at soc?			# watchdog timer
 omgpio*		at soc?			# user-visible GPIO pins?
 gptimer*	at soc?			# general purpose timers
+dmtimer*	at soc?			# am335x dual mode timers
 ommmc*		at soc?			# SD/MMC card controller
+cpsw*		at soc?
 
 #omkbd0		at soc?
 #wskbd*		at omkbd? mux 1
@@ -179,6 +181,7 @@ sdmmc*	at ommmc?		# SD/MMC bus
 pseudo-device	loop		1	# network loopback
 pseudo-device   bpfilter        1       # packet filter
 pseudo-device   rd              1       # ram disk
+pseudo-device	hotplug		1	# devices hot plugging
 
 # RAMDISK stuff
 options	MINIROOTSIZE=5120

@@ -34,13 +34,13 @@
 #define	GPIO3_REVISION		0x00
 #define	GPIO3_SYSCONFIG		0x10
 #define	GPIO3_SYSSTATUS		0x14
-#define	GPIO3_IRQSTATUS1		0x18
-#define	GPIO3_IRQENABLE1		0x1C
+#define	GPIO3_IRQSTATUS1	0x18
+#define	GPIO3_IRQENABLE1	0x1C
 #define	GPIO3_WAKEUPENABLE	0x20
-#define	GPIO3_IRQSTATUS2		0x28
-#define	GPIO3_IRQENABLE2		0x2C
+#define	GPIO3_IRQSTATUS2	0x28
+#define	GPIO3_IRQENABLE2	0x2C
 #define	GPIO3_CTRL		0x30
-#define	GPIO3_OE			0x34
+#define	GPIO3_OE		0x34
 #define	GPIO3_DATAIN		0x38
 #define	GPIO3_DATAOUT		0x3C
 #define	GPIO3_LEVELDETECT0	0x40
@@ -56,46 +56,46 @@
 #define	GPIO3_CLEARWKUENA	0x80
 #define	GPIO3_SETWKUENA		0x84
 #define	GPIO3_CLEARDATAOUT	0x90
-#define	GPIO3_SETDATAOUT		0x94
+#define	GPIO3_SETDATAOUT	0x94
 #define	GPIO3_SIZE		0x100
 
 /* OMAP4 registers */
-#define GPIO4_REVISION           0x00
-#define GPIO4_SYSCONFIG          0x10
-#define GPIO4_IRQSTATUS_RAW_0    0x24
-#define GPIO4_IRQSTATUS_RAW_1    0x28
-#define GPIO4_IRQSTATUS_0        0x2C
-#define GPIO4_IRQSTATUS_1        0x30
-#define GPIO4_IRQSTATUS_SET_0    0x34
-#define GPIO4_IRQSTATUS_SET_1    0x38
-#define GPIO4_IRQSTATUS_CLR_0    0x3C
-#define GPIO4_IRQSTATUS_CLR_1    0x40
-#define GPIO4_IRQWAKEN_0         0x44
-#define GPIO4_IRQWAKEN_1         0x48
-#define GPIO4_SYSSTATUS          0x114
-#define GPIO4_IRQSTATUS1         0x118
-#define GPIO4_IRQENABLE1         0x11C
-#define GPIO4_WAKEUPENABLE       0x120
-#define GPIO4_IRQSTATUS2         0x128
-#define GPIO4_IRQENABLE2         0x12C
-#define GPIO4_CTRL               0x130
-#define GPIO4_OE                 0x134
-#define GPIO4_DATAIN             0x138
-#define GPIO4_DATAOUT            0x13C
-#define GPIO4_LEVELDETECT0       0x140
-#define GPIO4_LEVELDETECT1       0x144
-#define GPIO4_RISINGDETECT       0x148
-#define GPIO4_FALLINGDETECT      0x14C
-#define GPIO4_DEBOUNCENABLE      0x150
-#define GPIO4_DEBOUNCINGTIME     0x154
-#define GPIO4_CLEARIRQENABLE1    0x160
-#define GPIO4_SETIRQENABLE1      0x164
-#define GPIO4_CLEARIRQENABLE2    0x170
-#define GPIO4_SETIRQENABLE2      0x174
-#define GPIO4_CLEARWKUPENA       0x180
-#define GPIO4_SETWKUENA          0x184
-#define GPIO4_CLEARDATAOUT       0x190
-#define GPIO4_SETDATAOUT         0x194
+#define GPIO4_REVISION		0x00
+#define GPIO4_SYSCONFIG		0x10
+#define GPIO4_IRQSTATUS_RAW_0	0x24
+#define GPIO4_IRQSTATUS_RAW_1	0x28
+#define GPIO4_IRQSTATUS_0	0x2C
+#define GPIO4_IRQSTATUS_1	0x30
+#define GPIO4_IRQSTATUS_SET_0	0x34
+#define GPIO4_IRQSTATUS_SET_1	0x38
+#define GPIO4_IRQSTATUS_CLR_0	0x3C
+#define GPIO4_IRQSTATUS_CLR_1	0x40
+#define GPIO4_IRQWAKEN_0	0x44
+#define GPIO4_IRQWAKEN_1	0x48
+#define GPIO4_SYSSTATUS		0x114
+#define GPIO4_IRQSTATUS1	0x118
+#define GPIO4_IRQENABLE1	0x11C
+#define GPIO4_WAKEUPENABLE	0x120
+#define GPIO4_IRQSTATUS2	0x128
+#define GPIO4_IRQENABLE2	0x12C
+#define GPIO4_CTRL		0x130
+#define GPIO4_OE		0x134
+#define GPIO4_DATAIN		0x138
+#define GPIO4_DATAOUT		0x13C
+#define GPIO4_LEVELDETECT0	0x140
+#define GPIO4_LEVELDETECT1	0x144
+#define GPIO4_RISINGDETECT 	0x148
+#define GPIO4_FALLINGDETECT	0x14C
+#define GPIO4_DEBOUNCENABLE	0x150
+#define GPIO4_DEBOUNCINGTIME	0x154
+#define GPIO4_CLEARIRQENABLE1	0x160
+#define GPIO4_SETIRQENABLE1	0x164
+#define GPIO4_CLEARIRQENABLE2	0x170
+#define GPIO4_SETIRQENABLE2	0x174
+#define GPIO4_CLEARWKUPENA	0x180
+#define GPIO4_SETWKUENA		0x184
+#define GPIO4_CLEARDATAOUT	0x190
+#define GPIO4_SETDATAOUT	0x194
 
 #define GPIO_NUM_PINS		32
 
@@ -364,17 +364,19 @@ unsigned int
 omgpio_v4_get_dir(struct omgpio_softc *sc, unsigned int gpio)
 {
 	int s;
-	u_int32_t reg;
+	u_int32_t dir, reg;
 
 	s = splhigh();
 
 	reg = bus_space_read_4(sc->sc_iot, sc->sc_ioh, GPIO4_OE);
 	if (reg & (1 << GPIO_PIN_TO_OFFSET(gpio)))
-		return OMGPIO_DIR_IN;
+		dir = OMGPIO_DIR_IN;
 	else
-		return OMGPIO_DIR_OUT;
+		dir = OMGPIO_DIR_OUT;
 
 	splx(s);
+
+	return dir;
 }
 
 #if 0
