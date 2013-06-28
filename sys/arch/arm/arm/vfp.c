@@ -71,14 +71,10 @@ vfp_store(struct vfp_sp_state *vfpsave)
 
 	if (get_vfp_fpexc() & VFPEXC_EN) {
 		__asm __volatile(
-		    "stc   p11, c0, [%1], #128\n" /* d0-d31 */
-#ifndef VFPv2
-		    "stcl   p11, c0, [%1], #128\n"
-#else
-		    "add    %1, %1, #128\n"
-#endif
-		    "mrc    p10, 7, %0, cr1, c0, 0\n"
-		    "str    %0, [%1]\n"
+		    "stc	p11, c0, [%1], #128\n"		/* d0-d15 */
+		    "stcl	p11, c0, [%1], #128\n"		/* d16-d31 */
+		    "mrc	p10, 7, %0, cr1, c0, 0\n"
+		    "str	%0, [%1]\n"			/* save vfpscr */
 		: "=&r" (scratch) : "r" (vfpsave));
 	}
 
@@ -158,14 +154,10 @@ vfp_load(struct proc *p)
 	set_vfp_fpexc(VFPEXC_EN);
 
 	__asm __volatile(
-	    "ldc   p10, c0, [%1], #128\n"	/* d0-d31 */
-#ifndef VFPv2
-	    "ldcl   p11, c0, [%1], #128\n"	/* d16-d31 */
-#else
-	    "add    %1, %1, #128\n"		/* slip missing regs */
-#endif
-	    "ldr    %0, [%1]\n"			/* set old vfpscr */
-	    "mcr    p10, 7, %0, cr1, c0, 0\n"
+	    "ldc	p11, c0, [%1], #128\n"		/* d0-d15 */
+	    "ldcl	p11, c0, [%1], #128\n"		/* d16-d31 */
+	    "ldr	%0, [%1]\n"			/* set old vfpscr */
+	    "mcr	p10, 7, %0, cr1, c0, 0\n"
 	    : "=&r" (scratch) : "r" (&pcb->pcb_fpstate));
 
 	ci->ci_fpuproc = p;
