@@ -8,7 +8,7 @@ SUBDIR=	ac accton acpidump adduser apm apmd arp \
 	ftp-proxy fw_update gpioctl hostapd hotplugd ifstated ikectl \
 	inetd iostat iscsictl iscsid \
 	kgmon kvm_mkdb ldapd ldapctl ldpd ldpctl lpr mailwrapper map-mbone \
-	memconfig mkuboot mopd mrinfo mrouted mtrace mtree ndp netgroup_mkdb \
+	memconfig mkuboot mrinfo mrouted mtrace mtree ndp netgroup_mkdb \
 	nginx npppctl npppd nsd ntpd openssl ospfctl ospfd ospf6d ospf6ctl \
 	pcidump pkg_add popa3d portmap ppp pppd pppoe procmap pstat pwd_mkdb \
 	quot quotaon rarpd rbootd rdate relayctl relayd repquota rip6query \

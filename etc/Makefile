@@ -50,7 +50,7 @@ BIN2=	motd
 # -r-xr-xr-x
 RCDAEMONS=	amd apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd \
 		ftpd ftpproxy hostapd hotplugd identd ifstated iked \
-		inetd isakmpd ldapd npppd ldattach ldpd lpd mopd mrouted \
+		inetd isakmpd ldapd npppd ldattach ldpd lpd mrouted \
 		named nginx nsd ntpd ospfd ospf6d portmap pflogd rarpd rbootd \
 		relayd ripd route6d rtadvd rtsold rwhod sasyncd \
 		sensorsd slowcgi smtpd snmpd spamd sshd syslogd watchdogd \

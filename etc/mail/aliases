@@ -36,7 +36,6 @@ _kadmin: /dev/null
 _kdc: /dev/null
 _ldapd: /dev/null
 _ldpd: /dev/null
-_mopd: /dev/null
 _nsd: /dev/null
 _ntp: /dev/null
 _ospfd: /dev/null

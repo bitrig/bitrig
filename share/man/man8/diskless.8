@@ -255,12 +255,6 @@ Architectures using the HP remote boot server
 should ensure that the general purpose
 boot program is installed in the directory
 .Pa /usr/mdec/rbootd .
-.Pp
-Architectures using MOP
-(older Alpha and Vax)
-should follow the instructions in
-.Xr mopd 8
-for setting up a TFTP boot.
 .It
 Add myclient to the bootparams database
 .Pa /etc/bootparams :
@@ -379,9 +373,6 @@ For newer alpha, amd64, hppa, hppa64, i386, and sgi clients:
 .Pp
 For hp300, older hppa, mvme68k, mvme88k, sparc, sparc64, and vax clients:
 .Xr rpc.bootparamd 8
-.Pp
-For older alpha and vax clients:
-.Xr mopd 8
 .It
 Net boot the client.
 .El
@@ -420,7 +411,6 @@ Location of boot programs loaded by the HP Boot ROM.
 .Xr hosts 5 ,
 .Xr myname 5 ,
 .Xr dhcpd 8 ,
-.Xr mopd 8 ,
 .Xr mountd 8 ,
 .Xr nfsd 8 ,
 .Xr portmap 8 ,

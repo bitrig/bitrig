@@ -510,7 +510,7 @@ if ifconfig lo0 inet6 >/dev/null 2>&1; then
 fi
 
 start_daemon hostapd rwhod lpd smtpd slowcgi nginx ftpd ftpproxy
-start_daemon tftpd tftpproxy identd inetd rarpd bootparamd rbootd mopd
+start_daemon tftpd tftpproxy identd inetd rarpd bootparamd rbootd
 start_daemon popa3d spamd spamlogd kdc kadmind kpasswdd sndiod
 echo '.'
 

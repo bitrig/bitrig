@@ -29,7 +29,6 @@ _pflogd
 _bgpd
 _tcpdump
 _dhcp
-_mopd
 _tftpd
 _rbootd
 _ppp
