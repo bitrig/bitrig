@@ -114,7 +114,6 @@
 ./etc/rc.d/ldpd
 ./etc/rc.d/lockd
 ./etc/rc.d/lpd
-./etc/rc.d/mopd
 ./etc/rc.d/mountd
 ./etc/rc.d/mrouted
 ./etc/rc.d/named

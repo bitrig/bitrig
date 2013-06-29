@@ -4392,11 +4392,6 @@
 ./usr/sbin/map-mbone
 ./usr/sbin/mkalias
 ./usr/sbin/mknetid
-./usr/sbin/mopa.out
-./usr/sbin/mopchk
-./usr/sbin/mopd
-./usr/sbin/mopprobe
-./usr/sbin/moptrace
 ./usr/sbin/mrinfo
 ./usr/sbin/mrouted
 ./usr/sbin/mtrace
@@ -4840,10 +4835,6 @@
 ./usr/share/man/man1/mklocale.1
 ./usr/share/man/man1/mkstr.1
 ./usr/share/man/man1/mktemp.1
-./usr/share/man/man1/mopa.out.1
-./usr/share/man/man1/mopchk.1
-./usr/share/man/man1/mopprobe.1
-./usr/share/man/man1/moptrace.1
 ./usr/share/man/man1/more.1
 ./usr/share/man/man1/mt.1
 ./usr/share/man/man1/mv.1
@@ -11210,7 +11201,6 @@
 ./usr/share/man/man8/modstat.8
 ./usr/share/man/man8/modunload.8
 ./usr/share/man/man8/monthly.8
-./usr/share/man/man8/mopd.8
 ./usr/share/man/man8/mount.8
 ./usr/share/man/man8/mount_cd9660.8
 ./usr/share/man/man8/mount_ext2fs.8
