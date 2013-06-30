@@ -177,26 +177,3 @@ struct exec {
 /* String table offset. */
 #define	N_STROFF(ex) \
 	(N_SYMOFF(ex) + (ex).a_syms)
-
-
-#ifdef _KERNEL
-
-/* the "a.out" format's entry in the exec switch */
-int	exec_aout_makecmds(struct proc *, struct exec_package *);
-
-/* functions which prepare various a.out executable types */
-/*
- * MI portion
- */
-int	exec_aout_prep_zmagic(struct proc *, struct exec_package *);
-int	exec_aout_prep_nmagic(struct proc *, struct exec_package *);
-int	exec_aout_prep_omagic(struct proc *, struct exec_package *);
-
-/*
- * MD portion
- */
-#if !defined(cpu_exec_aout_makecmds)
-int cpu_exec_aout_makecmds(struct proc *, struct exec_package *);
-#endif
-
-#endif /* _KERNEL */

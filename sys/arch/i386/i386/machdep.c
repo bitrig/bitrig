@@ -3343,19 +3343,6 @@ init386(paddr_t first_avail)
 }
 
 /*
- * cpu_exec_aout_makecmds():
- *	cpu-dependent a.out format hook for execve().
- *
- * Determine of the given exec package refers to something which we
- * understand and, if so, set up the vmcmds for it.
- */
-int
-cpu_exec_aout_makecmds(struct proc *p, struct exec_package *epp)
-{
-	return ENOEXEC;
-}
-
-/*
  * consinit:
  * initialize the system console.
  */
