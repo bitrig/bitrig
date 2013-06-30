@@ -65,9 +65,6 @@ const db_symformat_t *db_symformats[] = {
 #ifdef DB_ELF_SYMBOLS
 	&db_symformat_elf,
 #endif
-#ifdef DB_AOUT_SYMBOLS
-	&db_symformat_aout,
-#endif
 	NULL,
 };
 

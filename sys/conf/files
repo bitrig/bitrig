@@ -581,7 +581,6 @@ file altq/altq_rmclass.c		altq
 file altq/altq_hfsc.c			altq
 file altq/altq_priq.c			altq
 file ddb/db_access.c			ddb | kgdb
-file ddb/db_aout.c			ddb
 file ddb/db_break.c			ddb
 file ddb/db_command.c			ddb
 file ddb/db_elf.c			ddb
@@ -633,7 +632,6 @@ file isofs/udf/udf_vfsops.c		udf
 file isofs/udf/udf_vnops.c		udf
 file kern/clock_subr.c
 file kern/dead_vnops.c
-file kern/exec_aout.c
 file kern/exec_conf.c
 file kern/exec_ecoff.c
 file kern/exec_elf32.c
