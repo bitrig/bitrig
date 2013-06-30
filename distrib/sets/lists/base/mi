@@ -612,7 +612,6 @@
 ./usr/include/dbm.h
 ./usr/include/ddb
 ./usr/include/ddb/db_access.h
-./usr/include/ddb/db_aout.h
 ./usr/include/ddb/db_break.h
 ./usr/include/ddb/db_command.h
 ./usr/include/ddb/db_extern.h
