@@ -275,7 +275,7 @@ int ahd_createdmamem(struct ahd_softc *, size_t, struct map_node *,
 void ahd_freedmamem(struct ahd_softc *, struct map_node *);
 
 /******************************** Private Inlines *****************************/
-__inline void	ahd_assert_atn(struct ahd_softc *ahd);
+static __inline void	ahd_assert_atn(struct ahd_softc *ahd);
 int	ahd_currently_packetized(struct ahd_softc *ahd);
 int	ahd_set_active_fifo(struct ahd_softc *ahd);
 
