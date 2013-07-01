@@ -105,12 +105,13 @@ ${CROSS_TARGETS}:
 	build regression-tests includes beforeinstall afterinstall \
 	all depend
 
+.if exists(/usr/snap)
+SNAPDIR?=/usr/snap
+.endif
 .if !defined(SNAPDIR)
-presnap:
-	echo "SNAPDIR must defined"
-snap:
-	echo "SNAPDIR must defined"
-	exit 1
+snapinfo buildworld snap do_snap do_snap_rel:
+	@echo "SNAPDIR must be defined or create the directory /usr/snap"
+	@exit 1
 .else
 .NOTPARALLEL:
 ARCH!= uname -m
@@ -120,7 +121,7 @@ SNAPRELDIR!= echo ${SNAPDIR}/${ARCH}/release.$$(date "+%y%m%d%H%M")
 .else
 SNAPRELDIR!= echo ${SNAPDIR}/${ARCH}/release
 .endif
-SNAPLOGFILE != echo ${SNAPDIR}/buildlog.${ARCH}.$$(date "+%y%m%d%H%M")
+SNAPLOGFILE != echo ${SNAPDIR}/${ARCH}/buildlog.$$(date "+%y%m%d%H%M")
 snapinfo:
 	@echo rootdir = ${SNAPROOTDIR}
 	@echo reldir = ${SNAPRELDIR}
