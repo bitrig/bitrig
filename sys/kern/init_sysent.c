@@ -781,8 +781,8 @@ struct sysent sysent[] = {
 	    sys_utimensat },			/* 326 = utimensat */
 	{ 2, s(struct sys_futimens_args), 0,
 	    sys_futimens },			/* 327 = futimens */
-	{ 1, s(struct compat_o51_sys___tfork_args), 0,
-	    compat_o51(sys___tfork) },		/* 328 = compat_o51 __tfork */
+	{ 0, 0, 0,
+	    sys_nosys },			/* 328 = unimplemented */
 	{ 1, s(struct sys___set_tcb_args), SY_NOLOCK | 0,
 	    sys___set_tcb },			/* 329 = __set_tcb */
 	{ 0, 0, SY_NOLOCK | 0,

@@ -140,31 +140,6 @@ sys___tfork(struct proc *p, void *v, register_t *retval)
 	    tfork_child_return, param.tf_tcb, retval, NULL));
 }
 
-#ifdef COMPAT_O51
-int
-compat_o51_sys___tfork(struct proc *p, void *v, register_t *retval)
-{
-	struct compat_o51_sys___tfork_args /* {
-		syscallarg(struct __tfork51) *param;
-	} */ *uap = v;
-	struct __tfork51 param;
-	int flags;
-	int error;
-
-	if ((error = copyin(SCARG(uap, param), &param, sizeof(param))))
-		return (error);
-
-	if (param.tf_flags != 0)
-		return (EINVAL);
-
-	flags = FORK_TFORK | FORK_THREAD | FORK_SIGHAND | FORK_SHAREVM
-	    | FORK_NOZOMBIE | FORK_SHAREFILES;
-
-	return (fork1(p, 0, flags, NULL, param.tf_tid, tfork_child_return,
-	    param.tf_tcb, retval, NULL));
-}
-#endif
-
 void
 tfork_child_return(void *arg)
 {

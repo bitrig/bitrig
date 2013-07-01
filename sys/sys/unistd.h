@@ -68,13 +68,6 @@ struct __tfork {
 	pid_t	*tf_tid;
 	void	*tf_stack;
 };
-
-/* COMPAT_O51 */
-struct __tfork51 {
-	void	*tf_tcb;
-	pid_t	*tf_tid;
-	int	tf_flags;
-};
 #endif
 
 /* the pathconf(2) variable values are part of the ABI */

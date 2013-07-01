@@ -572,6 +572,6 @@
 			    const struct timespec *times, int flag); }
 327	STD		{ int sys_futimens(int fd, \
 			    const struct timespec *times); }
-328	COMPAT_O51	{ int sys___tfork(struct __tfork51 *param); }
+328	UNIMPL
 329	STD NOLOCK	{ void sys___set_tcb(void *tcb); }
 330	STD NOLOCK	{ void *sys___get_tcb(void); }

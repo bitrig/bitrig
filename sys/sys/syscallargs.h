@@ -1053,10 +1053,6 @@ struct sys_futimens_args {
 	syscallarg(const struct timespec *) times;
 };
 
-struct compat_o51_sys___tfork_args {
-	syscallarg(struct __tfork51 *) param;
-};
-
 struct sys___set_tcb_args {
 	syscallarg(void *) tcb;
 };
@@ -1314,6 +1310,5 @@ int	sys_symlinkat(struct proc *, void *, register_t *);
 int	sys_unlinkat(struct proc *, void *, register_t *);
 int	sys_utimensat(struct proc *, void *, register_t *);
 int	sys_futimens(struct proc *, void *, register_t *);
-int	compat_o51_sys___tfork(struct proc *, void *, register_t *);
 int	sys___set_tcb(struct proc *, void *, register_t *);
 int	sys___get_tcb(struct proc *, void *, register_t *);

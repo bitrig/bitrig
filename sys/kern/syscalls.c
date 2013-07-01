@@ -403,7 +403,7 @@ char *syscallnames[] = {
 	"unlinkat",			/* 325 = unlinkat */
 	"utimensat",			/* 326 = utimensat */
 	"futimens",			/* 327 = futimens */
-	"compat_o51___tfork",	/* 328 = compat_o51 __tfork */
+	"#328 (unimplemented)",		/* 328 = unimplemented */
 	"__set_tcb",			/* 329 = __set_tcb */
 	"__get_tcb",			/* 330 = __get_tcb */
 };

@@ -675,8 +675,6 @@
 /* syscall: "futimens" ret: "int" args: "int" "const struct timespec *" */
 #define	SYS_futimens	327
 
-				/* 328 is compat_o51 __tfork */
-
 /* syscall: "__set_tcb" ret: "void" args: "void *" */
 #define	SYS___set_tcb	329
 
