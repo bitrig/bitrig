@@ -56,7 +56,10 @@ ASENTRY_NP(start)
 	mov	r5, r1
 	mov	r6, r2
 	adr	r1, .Lstart
-	ldmia	r1, {r1, r2, sp}	/* Set initial stack and */
+	ldmia	r1, {r1, r2, r8, sp}	/* Set initial stack and */
+
+	mcr	p15, 0, r8, c13, c0, 4	/* put curcpu into the TPIDRPRW */
+
 	sub	r2, r2, r1		/* get zero init data */
 	mov	r3, #0
 
@@ -87,6 +90,7 @@ ASENTRY_NP(start)
 .Lstart:
 	.word	_edata
 	.word	_end
+	.word	_C_LABEL(cpu_info_store)
 	.word	svcstk + INIT_ARM_STACK_SIZE
 
 .Lmainreturned:

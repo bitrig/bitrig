@@ -211,6 +211,14 @@ extern struct cpu_info cpu_info_store;
 #define CPU_INFO_UNIT(ci)	0
 #define MAXCPUS	1
 #define cpu_unidle(ci)
+#else
+static inline struct cpu_info *
+curcpu(void)
+{
+	struct cpu_info *__ci;
+	__asm __volatile("mrc	p15, 0, %0, c13, c0, 4" : "=r" (__ci));
+	return (__ci);
+}
 #endif
 
 /*
