@@ -27,8 +27,8 @@
  * $FreeBSD: src/include/stdatomic.h,v 1.10.2.2 2012/05/30 19:21:54 theraven Exp $
  */
 
-#ifndef _STDATOMIC_H_
-#define	_STDATOMIC_H_
+#ifndef _SYS_STDATOMIC_H_
+#define	_SYS_STDATOMIC_H_
 
 #include <sys/cdefs.h>
 #include <sys/_types.h>
@@ -329,4 +329,4 @@ typedef atomic_bool			atomic_flag;
 #define	atomic_flag_test_and_set(object)				\
 	atomic_flag_test_and_set_explicit(object, memory_order_seq_cst)
 
-#endif /* !_STDATOMIC_H_ */
+#endif /* !_SYS_STDATOMIC_H_ */
