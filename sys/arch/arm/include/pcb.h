@@ -85,6 +85,8 @@ struct pcb {
 	} pcb_un;
 	struct	vfp_sp_state pcb_fpstate;	/* Floating Point state */
 	struct cpu_info *pcb_fpcpu;
+
+	uint32_t pcb_tcb;
 };
 
 /*

@@ -344,6 +344,10 @@ ENTRY(cpu_switchto)
 	/* rem: r6 = new proc */
 	/* rem: r9 = new PCB */
 
+	/* stick tcb into user visable register (V7 only) */
+	ldr	r3, [r9, #(PCB_TCB)]
+	mcr p15, 0, r3, c13, c0, 3
+
 	/*
 	 * This can be optimised... We know we want to go from SVC32
 	 * mode to UND32 mode

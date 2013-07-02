@@ -103,6 +103,7 @@ member	PCB_LR			pcb_un.un_32.pcb32_lr
 member	PCB_PC			pcb_un.un_32.pcb32_pc
 member	PCB_UND_SP		pcb_un.un_32.pcb32_und_sp
 member	pcb_onfault
+member	pcb_tcb
 # XXX use USER_SIZEOF in new code whenever possible
 define	USER_SIZE		sizeof(struct user)
 

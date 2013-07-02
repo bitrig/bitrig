@@ -47,4 +47,6 @@ struct mdproc {
 	void	*pmc_state;		/* port-specific pmc state */
 };
 
+#define __HAVE_MD_TCB
+
 #endif /* _ARM_PROC_H_ */

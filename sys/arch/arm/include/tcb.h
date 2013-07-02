@@ -21,12 +21,38 @@
 
 #ifdef _KERNEL
 
-#error "not yet"
+#include <machine/pcb.h>
+
+static inline void
+__arm_set_tcb(uint32_t tcb) {
+	__asm volatile(" MCR p15, 0, %0, c13, c0, 3;": :"r" (tcb));
+	return ;
+}
+#define TCB_GET(p)              \
+	((void *)((struct pcb *)(p)->p_addr)->pcb_tcb)
+#define TCB_SET(p, addr)        \
+	do {								\
+	(((struct pcb *)(p)->p_addr)->pcb_tcb = (uint32_t)(addr));	\
+	__arm_set_tcb((uint32_t)addr);						\
+	} while (0)
 
 #else /* _KERNEL */
 
 /* ELF TLS ABI calls for small TCB, with static TLS data after it */
 #define TLS_VARIANT	1
+
+static inline uint32_t
+__arm_read_tcb() {
+        uint32_t tcb;
+	__asm volatile(" MRC p15, 0, %0, c13, c0, 3;": "=r" (tcb));
+	return tcb;
+}
+
+#define TCB_GET(p)              \
+	((void *)__arm_read_tcb())
+
+#define TCB_GET_MEMBER(member)	\
+	(((struct thread_control_block *)__arm_read_tcb())->member)
 
 #endif /* _KERNEL */
 
