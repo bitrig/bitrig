@@ -105,10 +105,10 @@
 
 	.text
 
-.Lcpu_info_store:
-	.word	_C_LABEL(cpu_info_store)
+.Lcpu_info_primary:
+	.word	_C_LABEL(cpu_info_primary)
 .Lcurproc:
-	.word	_C_LABEL(cpu_info_store) + CI_CURPROC
+	.word	_C_LABEL(cpu_info_primary) + CI_CURPROC
 
 .Lcpufuncs:	
 	.word	_C_LABEL(cpufuncs)
@@ -123,7 +123,7 @@ _C_LABEL(curpcb):
 	.text
 #else
 .Lcurpcb:
-	.word	_C_LABEL(cpu_info_store) + CI_CURPCB
+	.word	_C_LABEL(cpu_info_primary) + CI_CURPCB
 #endif
 
 .Lcpu_do_powersave:
@@ -185,7 +185,7 @@ ENTRY(cpu_switchto)
 
 #ifdef MULTIPROCESSOR
 	/* XXX use curcpu() */
-	ldr	r2, .Lcpu_info_store
+	ldr	r2, .Lcpu_info_primary
 	str	r2, [r1, #(P_CPU)]
 #else
 	/* p->p_cpu initialized in fork1() for single-processor */

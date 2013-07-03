@@ -90,7 +90,7 @@ ASENTRY_NP(start)
 .Lstart:
 	.word	_edata
 	.word	_end
-	.word	_C_LABEL(cpu_info_store)
+	.word	_C_LABEL(cpu_info_primary)
 	.word	svcstk + INIT_ARM_STACK_SIZE
 
 .Lmainreturned:

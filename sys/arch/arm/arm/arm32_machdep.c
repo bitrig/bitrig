@@ -84,8 +84,17 @@ pv_addr_t kernelstack;
 /* the following is used externally (sysctl_hw) */
 char	machine[] = MACHINE;		/* from <machine/param.h> */
 
-/* Our exported CPU info; we can have only one. */
-struct cpu_info cpu_info_store;
+/* Statically defined CPU info. */
+struct cpu_info cpu_info_primary;
+struct cpu_info *cpu_info_list = &cpu_info_primary;
+
+#ifdef MULTIPROCESSOR
+/*
+ * Array of CPU info structures.  Must be statically-allocated because
+ * curproc, etc. are used early.
+ */
+struct cpu_info *cpu_info[MAXCPUS] = { &cpu_info_primary };
+#endif
 
 caddr_t	msgbufaddr;
 extern paddr_t msgbufphys;
