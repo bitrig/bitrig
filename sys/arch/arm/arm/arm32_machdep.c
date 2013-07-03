@@ -310,7 +310,7 @@ cpu_startup()
 	    USPACE_SVC_STACK_TOP;
 	pmap_set_pcb_pagedir(pmap_kernel(), curpcb);
 
-        curpcb->pcb_tf = (struct trapframe *)curpcb->pcb_un.un_32.pcb32_sp - 1;
+	curpcb->pcb_tf = (struct trapframe *)curpcb->pcb_un.un_32.pcb32_sp - 1;
 }
 
 /*

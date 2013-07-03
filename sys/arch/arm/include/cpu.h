@@ -188,6 +188,8 @@ struct cpu_info {
 	u_int ci_cpuid;
 	u_int32_t ci_randseed;
 
+	struct pcb *ci_curpcb;
+
 	u_int32_t ci_arm_cpuid;		/* aggregate CPU id */
 	u_int32_t ci_arm_cputype;	/* CPU type */
 	u_int32_t ci_arm_cpurev;	/* CPU revision */
@@ -237,6 +239,8 @@ extern struct cpu_info *cpu_info_list;
 
 extern struct cpu_info *cpu_info[MAXCPUS];
 #endif
+
+#define curpcb		curcpu()->ci_curpcb
 
 /*
  * Scheduling glue

@@ -47,14 +47,6 @@
 	.text
 	.align	0
 
-#ifdef MULTIPROCESSOR
-.Lcpu_info:
-	.word	_C_LABEL(cpu_info)
-#else
-.Lcurpcb:
-	.word _C_LABEL(curpcb)
-#endif
-
 #define SAVE_REGS	stmfd	sp!, {r4-r11}
 #define RESTORE_REGS	ldmfd	sp!, {r4-r11}
 		
@@ -82,18 +74,10 @@ ENTRY(copyin)
 	moveq	pc, lr
 
 	SAVE_REGS
-#ifdef MULTIPROCESSOR
-	/* XXX Probably not appropriate for non-Hydra SMPs */
-	stmfd	sp!, {r0-r2, r14}
-	bl	_C_LABEL(cpu_number)
-	ldr	r4, .Lcpu_info
-	ldr	r4, [r4, r0, lsl #2]
+
+	/* Get curcpu from TPIDRPRW. */
+	mrc	p15, 0, r4, c13, c0, 4
 	ldr	r4, [r4, #CI_CURPCB]
-	ldmfd	sp!, {r0-r2, r14}
-#else
-	ldr	r4, .Lcurpcb
-	ldr	r4, [r4]
-#endif
 
 	ldr	r5, [r4, #PCB_ONFAULT]
 	adr	r3, .Lcopyfault
@@ -305,18 +289,10 @@ ENTRY(copyout)
 	moveq	pc, lr
 
 	SAVE_REGS
-#ifdef MULTIPROCESSOR
-	/* XXX Probably not appropriate for non-Hydra SMPs */
-	stmfd	sp!, {r0-r2, r14}
-	bl	_C_LABEL(cpu_number)
-	ldr	r4, .Lcpu_info
-	ldr	r4, [r4, r0, lsl #2]
+
+	/* Get curcpu from TPIDRPRW. */
+	mrc	p15, 0, r4, c13, c0, 4
 	ldr	r4, [r4, #CI_CURPCB]
-	ldmfd	sp!, {r0-r2, r14}
-#else
-	ldr	r4, .Lcurpcb
-	ldr	r4, [r4]
-#endif
 
 	ldr	r5, [r4, #PCB_ONFAULT]
 	adr	r3, .Lcopyfault
@@ -518,18 +494,10 @@ ENTRY(kcopy)
 	moveq	pc, lr
 
 	SAVE_REGS
-#ifdef MULTIPROCESSOR
-	/* XXX Probably not appropriate for non-Hydra SMPs */
-	stmfd	sp!, {r0-r2, r14}
-	bl	_C_LABEL(cpu_number)
-	ldr	r4, .Lcpu_info
-	ldr	r4, [r4, r0, lsl #2]
+
+	/* Get curcpu from TPIDRPRW. */
+	mrc	p15, 0, r4, c13, c0, 4
 	ldr	r4, [r4, #CI_CURPCB]
-	ldmfd	sp!, {r0-r2, r14}
-#else
-	ldr	r4, .Lcurpcb
-	ldr	r4, [r4]
-#endif
 
 	ldr	r5, [r4, #PCB_ONFAULT]
 	adr	r3, .Lcopyfault
@@ -711,18 +679,9 @@ ENTRY(kcopy)
  * else EFAULT if a page fault occurred.
  */
 ENTRY(badaddr_read_1)
-#ifdef MULTIPROCESSOR
-	/* XXX Probably not appropriate for non-Hydra SMPs */
-	stmfd	sp!, {r0-r1, r14}
-	bl	_C_LABEL(cpu_number)
-	ldr	r2, .Lcpu_info
-	ldr	r2, [r2, r0, lsl #2]
+	/* Get curcpu from TPIDRPRW. */
+	mrc	p15, 0, r2, c13, c0, 4
 	ldr	r2, [r2, #CI_CURPCB]
-	ldmfd	sp!, {r0-r1, r14}
-#else
-	ldr	r2, .Lcurpcb
-	ldr	r2, [r2]
-#endif
 	ldr	ip, [r2, #PCB_ONFAULT]
 	adr	r3, 1f
 	str	r3, [r2, #PCB_ONFAULT]
@@ -745,18 +704,9 @@ ENTRY(badaddr_read_1)
  * else EFAULT if a page fault occurred.
  */
 ENTRY(badaddr_read_2)
-#ifdef MULTIPROCESSOR
-	/* XXX Probably not appropriate for non-Hydra SMPs */
-	stmfd	sp!, {r0-r1, r14}
-	bl	_C_LABEL(cpu_number)
-	ldr	r2, .Lcpu_info
-	ldr	r2, [r2, r0, lsl #2]
+	/* Get curcpu from TPIDRPRW. */
+	mrc	p15, 0, r2, c13, c0, 4
 	ldr	r2, [r2, #CI_CURPCB]
-	ldmfd	sp!, {r0-r1, r14}
-#else
-	ldr	r2, .Lcurpcb
-	ldr	r2, [r2]
-#endif
 	ldr	ip, [r2, #PCB_ONFAULT]
 	adr	r3, 1f
 	str	r3, [r2, #PCB_ONFAULT]
@@ -779,18 +729,9 @@ ENTRY(badaddr_read_2)
  * else EFAULT if a page fault occurred.
  */
 ENTRY(badaddr_read_4)
-#ifdef MULTIPROCESSOR
-	/* XXX Probably not appropriate for non-Hydra SMPs */
-	stmfd	sp!, {r0-r1, r14}
-	bl	_C_LABEL(cpu_number)
-	ldr	r2, .Lcpu_info
-	ldr	r2, [r2, r0, lsl #2]
+	/* Get curcpu from TPIDRPRW. */
+	mrc	p15, 0, r2, c13, c0, 4
 	ldr	r2, [r2, #CI_CURPCB]
-	ldmfd	sp!, {r0-r1, r14}
-#else
-	ldr	r2, .Lcurpcb
-	ldr	r2, [r2]
-#endif
 	ldr	ip, [r2, #PCB_ONFAULT]
 	adr	r3, 1f
 	str	r3, [r2, #PCB_ONFAULT]

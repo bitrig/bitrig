@@ -94,12 +94,4 @@ struct md_coredump {
 	int	md_empty;
 };
 
-#ifdef _KERNEL
-#ifdef MULTIPROCESSOR
-#define curpcb	(curcpu()->ci_curpcb)
-#else
-extern struct pcb *curpcb;
-#endif
-#endif	/* _KERNEL */
-
 #endif	/* _ARM_PCB_H_ */

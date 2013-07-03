@@ -105,27 +105,8 @@
 
 	.text
 
-/* XXX: fix for SMP */
-.Lcpu_info_primary:
-	.word	_C_LABEL(cpu_info_primary)
-.Lcurproc:
-	.word	_C_LABEL(cpu_info_primary) + CI_CURPROC
-
-.Lcpufuncs:	
+.Lcpufuncs:
 	.word	_C_LABEL(cpufuncs)
-	
-#ifndef MULTIPROCESSOR
-.Lcurpcb:
-	.word   _C_LABEL(curpcb)
-	.data
-	.global	_C_LABEL(curpcb)
-_C_LABEL(curpcb):
-	.word	0x00000000
-	.text
-#else
-.Lcurpcb:
-	.word	_C_LABEL(cpu_info_primary) + CI_CURPCB
-#endif
 
 .Lcpu_do_powersave:
 	.word	_C_LABEL(cpu_do_powersave)
@@ -178,10 +159,10 @@ ENTRY(cpu_idle_leave)
 ENTRY(cpu_switchto)
 	stmfd	sp!, {r4-r7, lr}
 
+	/* Get curcpu from TPIDRPRW. */
+	mrc	p15, 0, r3, c13, c0, 4
 #ifdef MULTIPROCESSOR
-	/* XXX use curcpu() */
-	ldr	r2, .Lcpu_info_primary
-	str	r2, [r1, #(P_CPU)]
+	str	r3, [r1, #(P_CPU)]
 #else
 	/* p->p_cpu initialized in fork1() for single-processor */
 #endif
@@ -191,14 +172,12 @@ ENTRY(cpu_switchto)
 	strb	r2, [r1, #(P_STAT)]
 
 	/* We have a new curproc now so make a note it */
-	ldr	r7, .Lcurproc
-	str	r1, [r7]
+	str	r1, [r3, #(CI_CURPROC)]
 
 	/* Hook in a new pcb */
-	ldr	r7, .Lcurpcb
-	ldr	r6, [r7]			/* Remember the old PCB */
+	ldr	r6, [r3, #(CI_CURPCB)]		/* Remember the old PCB */
 	ldr	r2, [r1, #(P_ADDR)]
-	str	r2, [r7]
+	str	r2, [r3, #(CI_CURPCB)]
 
 	/*
 	 * If the old proc on entry to cpu_switch was zero then the
