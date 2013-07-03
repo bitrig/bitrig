@@ -35,8 +35,8 @@
 #include "assym.h"
 #include <sys/syscall.h>
 #include <sys/errno.h>
+#include <arm/armreg.h>
 #include <machine/asm.h>
-#include <machine/cpu.h>
 #include <machine/frame.h>
 
 /* What size should this really be ? It is only used by init_arm() */
