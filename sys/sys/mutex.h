@@ -57,10 +57,24 @@ void mtx_enter(struct mutex *);
 void mtx_leave(struct mutex *);
 int mtx_enter_try(struct mutex *);
 
+/*
+ * To prevent lock ordering problems with the kernel lock, we need to
+ * make sure we block all interrupts that can grab the kernel lock.
+ * The simplest way to achieve this is to make sure mutexes always
+ * raise the interrupt ptiority level to the highest level that has
+ * interrupts that grab the kernel lock.
+ */
+#ifdef MULTIPROCESSOR
+#define __MUTEX_IPL(ipl) \
+    (((ipl) > IPL_NONE && (ipl) < IPL_TTY) ? IPL_TTY : (ipl))
+#else
+#define __MUTEX_IPL(ipl) (ipl)
+#endif
+
 #define MUTEX_INITIALIZER(ipl)						\
 	{								\
 		NULL,							\
-		(ipl),							\
+		__MUTEX_IPL((ipl)),					\
 		IPL_NONE,						\
 	}
 

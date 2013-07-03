@@ -23,7 +23,7 @@
 void
 mtx_init(struct mutex *mtx, int ipl)
 {
-	mtx->mtx_wantipl = ipl;
+	mtx->mtx_wantipl = __MUTEX_IPL(ipl);
 	mtx->mtx_oldipl = IPL_NONE;
 	mtx->mtx_owner = NULL;
 	atomic_init(&mtx->mtx_ticket, 0);
