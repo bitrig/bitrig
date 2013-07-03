@@ -1846,6 +1846,7 @@
 ./usr/include/ssl
 ./usr/include/stab.h
 ./usr/include/stdarg.h
+./usr/include/stdatomic.h
 ./usr/include/stdbool.h
 ./usr/include/stddef.h
 ./usr/include/stdint.h
@@ -1956,6 +1957,7 @@
 ./usr/include/sys/stat.h
 ./usr/include/sys/statvfs.h
 ./usr/include/sys/stdarg.h
+./usr/include/sys/stdatomic.h
 ./usr/include/sys/stdint.h
 ./usr/include/sys/swap.h
 ./usr/include/sys/syscall.h
