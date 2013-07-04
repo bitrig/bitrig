@@ -203,6 +203,7 @@ struct frame {
  */
 
 #define PUSHFRAME							   \
+	clrex;								   \
 	str	lr, [sp, #-4]!;		/* Push the return address */	   \
 	sub	sp, sp, #(4*17);	/* Adjust the stack pointer */	   \
 	stmia	sp, {r0-r14}^;		/* Push the user mode registers */ \
@@ -216,6 +217,7 @@ struct frame {
  */
 
 #define PULLFRAME							   \
+	clrex;								   \
         ldr     r0, [sp], #0x0004;      /* Get the SPSR from stack */	   \
         msr     spsr_all, r0;						   \
         ldmia   sp, {r0-r14}^;		/* Restore registers (usr mode) */ \
@@ -232,6 +234,7 @@ struct frame {
  */
 
 #define PUSHFRAMEINSVC							   \
+	clrex;								   \
 	stmdb	sp, {r0-r3};		/* Save 4 registers */		   \
 	mov	r0, lr;			/* Save xxx32 r14 */		   \
 	mov	r1, sp;			/* Save xxx32 sp */		   \
@@ -260,6 +263,7 @@ struct frame {
  */
 
 #define PULLFRAMEFROMSVCANDEXIT						   \
+	clrex;								   \
         ldr     r0, [sp], #0x0004;	/* Get the SPSR from stack */	   \
         msr     spsr_all, r0;		/* restore SPSR */		   \
         ldmia   sp, {r0-r14}^;		/* Restore registers (usr mode) */ \
