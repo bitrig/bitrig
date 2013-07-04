@@ -7,7 +7,7 @@
 
 option		DDB		# in-kernel debugger
 #option		DDB_SAFE_CONSOLE # allow break into ddb during boot
-#makeoptions	DEBUG="-g"	# compile full symbol table
+makeoptions	DEBUG="-g"	# compile full symbol table
 #makeoptions	PROF="-pg"	# build profiled kernel
 #option		GPROF		# kernel profiling, kgmon(8)
 option		DIAGNOSTIC	# internal consistency checks
