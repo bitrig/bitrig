@@ -142,8 +142,7 @@ extern int cpu_do_powersave;
  * CLKF_INTR: True if we took the interrupt from inside another
  * interrupt handler.
  */
-extern int current_intr_depth;
-#define CLKF_INTR(frame)	(current_intr_depth > 1) 
+#define CLKF_INTR(frame)	(curcpu()->ci_idepth > 1) 
 
 /*
  * CLKF_PC: Extract the program counter from a clockframe
@@ -197,6 +196,7 @@ struct cpu_info {
 
 	uint32_t ci_cpl;
 	uint32_t ci_ipending;
+	uint32_t ci_idepth;
 #ifdef DIAGNOSTIC
 	int	ci_mutex_level;
 #endif

@@ -86,8 +86,6 @@
  */
 	.text
 	.align	0
-.Lcurrent_intr_depth:
-	.word	_C_LABEL(current_intr_depth)
 
 #ifdef CPU_ARMv7
 #define STOREVFP							\
@@ -111,14 +109,14 @@ ASENTRY_NP(irq_entry)
 	 * callee-saved regs here.  We use the following registers, which
 	 * we expect to persist:
 	 *
-	 *	r5	address of `current_intr_depth' variable
-	 *	r6	old value of `current_intr_depth'
+	 *	r5	address of the curcpu struct
+	 *	r6	old value of curcpu()->ci_idepth
 	 */
-	ldr	r5, .Lcurrent_intr_depth
+	mrc	p15, 0, r5, c13, c0, 4	/* Get curcpu from TPIDRPRW. */
 	mov	r0, sp			/* arg for dispatcher */
-	ldr	r6, [r5]
+	ldr	r6, [r5, #CI_IDEPTH]
 	add	r1, r6, #1
-	str	r1, [r5]
+	str	r1, [r5, #CI_IDEPTH]
 
 	bl	ARM_IRQ_HANDLER
 
@@ -126,7 +124,7 @@ ASENTRY_NP(irq_entry)
 	 * Restore the old interrupt depth value (which should be the
 	 * same as decrementing it at this point).
 	 */
-	str	r6, [r5]
+	str	r6, [r5, #CI_IDEPTH]
 
 	DO_AST
 	PULLFRAMEFROMSVCANDEXIT
@@ -137,8 +135,4 @@ ASENTRY_NP(irq_entry)
 
 	.global _C_LABEL(astpending)
 _C_LABEL(astpending):
-	.word	0
-
-	.global _C_LABEL(current_intr_depth)
-_C_LABEL(current_intr_depth):
 	.word	0

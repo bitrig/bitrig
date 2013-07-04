@@ -382,7 +382,7 @@ data_abort_handler(trapframe_t *tf)
 		goto out;
 	}
 
-	if (__predict_false(current_intr_depth > 0)) {
+	if (__predict_false(curcpu()->ci_idepth > 0)) {
 		if (pcb->pcb_onfault) {
 			tf->tf_r0 = EINVAL;
 			tf->tf_pc = (register_t) pcb->pcb_onfault;
@@ -705,7 +705,7 @@ prefetch_abort_handler(trapframe_t *tf)
 		goto out;
 
 #ifdef DIAGNOSTIC
-	if (__predict_false(current_intr_depth > 0)) {
+	if (__predict_false(curcpu()->ci_idepth > 0)) {
 		printf("\nNon-emulated prefetch abort with intr_depth > 0\n");
 		dab_fatal(tf, fsr, far, NULL, NULL);
 	}

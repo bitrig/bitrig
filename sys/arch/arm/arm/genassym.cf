@@ -159,6 +159,7 @@ struct	cpu_info
 #member	CI_CURPRIORITY		ci_schedstate.spc_curpriority
 member	ci_curproc
 member	ci_curpcb
+member	ci_idepth
 
 # Constants required for in_cksum() and friends.
 define	M_LEN			offsetof(struct mbuf, m_len)

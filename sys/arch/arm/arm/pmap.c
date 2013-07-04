@@ -925,7 +925,7 @@ pmap_use_l1(pmap_t pm)
 	 * Access to an L1 by the kernel pmap must not affect
 	 * the LRU list.
 	 */
-	if (current_intr_depth || pm == pmap_kernel())
+	if (curcpu()->ci_idepth || pm == pmap_kernel())
 		return;
 
 	l1 = pm->pm_l1;
