@@ -1013,8 +1013,12 @@ platform_smc_write(bus_space_tag_t iot, bus_space_handle_t ioh, bus_size_t off,
 	extern void omap4_smc_call(uint32_t, uint32_t);
 
 	switch (op) {
-	case 0x100:	/* PL310 DEBUG */
-	case 0x102:	/* PL310 CTL */
+	case SMC_L2_DBG:	/* PL310 DEBUG */
+	case SMC_L2_CTL:	/* PL310 CTL */
+		break;
+	case SMC_L2_AUXCTRL:
+	case SMC_L2_PREFETCH_CTL:
+		bus_space_write_4(iot, ioh, off, val);
 		break;
 	default:
 		panic("platform_smc_write: invalid operation %d", op);
