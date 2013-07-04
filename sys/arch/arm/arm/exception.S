@@ -46,8 +46,8 @@
  * Based on kate/display/abort.s
  */
 
+#include <arm/armreg.h>
 #include <machine/asm.h>
-#include <machine/cpu.h>
 #include <machine/frame.h>
 #include "assym.h"
 

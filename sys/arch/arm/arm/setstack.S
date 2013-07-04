@@ -48,7 +48,7 @@
  * Based of kate/display/setstack.s
  */
 
-#include <machine/cpu.h>
+#include <arm/armreg.h>
 #include <machine/asm.h>
 
 /* To set the stack pointer for a particular mode we must switch

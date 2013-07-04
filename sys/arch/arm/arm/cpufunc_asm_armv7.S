@@ -15,7 +15,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <machine/cpu.h>
+#include <arm/armreg.h>
 #include <machine/asm.h>
 
 #define	DSB	.long	0xf57ff040

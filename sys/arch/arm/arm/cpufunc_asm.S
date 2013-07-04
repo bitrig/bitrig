@@ -42,7 +42,7 @@
  * Created      : 30/01/97
  */
  
-#include <machine/cpu.h>
+#include <arm/armreg.h>
 #include <machine/asm.h>
 
 	.text

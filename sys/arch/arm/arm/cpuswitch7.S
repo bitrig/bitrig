@@ -79,7 +79,7 @@
  */
 
 #include "assym.h"
-#include <machine/cpu.h>
+#include <arm/armreg.h>
 #include <machine/frame.h>
 #include <machine/intr.h>
 #include <machine/asm.h>

@@ -70,8 +70,8 @@
 
 #include "assym.h"
 
+#include <arm/armreg.h>
 #include <machine/asm.h>
-#include <machine/cpu.h>
 #include <machine/frame.h>
 #include <machine/intr.h>
 
