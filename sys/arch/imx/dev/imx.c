@@ -68,9 +68,6 @@ struct board_dev phyflex_imx6_devs[] = {
 	{ "ehci",	0 },
 	{ "imxenet",	0 },
 	{ "ahci",	0 },
-	{ "imxiic",	0 },
-	{ "imxiic",	1 },
-	{ "imxiic",	2 },
 	{ NULL,		0 }
 };
 
@@ -92,9 +89,6 @@ struct board_dev sabrelite_devs[] = {
 	{ "ehci",	0 },
 	{ "imxenet",	0 },
 	{ "ahci",	0 },
-	{ "imxiic",	0 },
-	{ "imxiic",	1 },
-	{ "imxiic",	2 },
 	{ NULL,		0 }
 };
 
