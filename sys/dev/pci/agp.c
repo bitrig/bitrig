@@ -1,4 +1,4 @@
-/* $OpenBSD: agp.c,v 1.36 2012/12/06 15:05:21 mpi Exp $ */
+/* $OpenBSD: agp.c,v 1.37 2013/07/06 23:35:44 brad Exp $ */
 /*-
  * Copyright (c) 2000 Doug Rabson
  * All rights reserved.
