@@ -500,7 +500,6 @@ extern long buflowpages, bufhighpages, bufbackpages;
 #define BUFPAGES_INACT (((bcstats.numcleanpages - buflowpages) < 0) ? 0 \
     : bcstats.numcleanpages - buflowpages)
 extern int bufcachepercent;
-extern int bufhigh(int);
 extern void bufadjust(int);
 struct uvm_constraint_range;
 extern int bufbackoff(struct uvm_constraint_range*, long);
