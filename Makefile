@@ -128,13 +128,13 @@ snapinfo:
 	@echo logfile = ${SNAPLOGFILE}
 
 buildworld:
-	rm -rf /usr/obj/*
-	make obj >/dev/null
-	cd ${.CURDIR} etc && DESTDIR=/ make distrib-dirs
-	make build
+	${SUDO} rm -rf /usr/obj/*
+	${MAKE} obj >/dev/null
+	cd ${.CURDIR}/etc && ${SUDO} DESTDIR=/ ${MAKE} distrib-dirs
+	${MAKE} build
 
 snap:  
-	make do_snap 2>&1 | tee ${SNAPLOGFILE}
+	${MAKE} do_snap 2>&1 | tee ${SNAPLOGFILE}
 
 do_snap:  buildworld do_snap_rel
 
@@ -143,10 +143,8 @@ do_snap_rel:
 	rm -rf ${SNAPROOTDIR}
 	mkdir -p ${SNAPROOTDIR}
 	mkdir -p ${SNAPRELDIR}
-	cd ${.CURDIR} etc && DESTDIR=${SNAPROOTDIR} RELEASEDIR=${SNAPRELDIR} make release
+	cd ${.CURDIR} etc && DESTDIR=${SNAPROOTDIR} RELEASEDIR=${SNAPRELDIR} ${MAKE} release
 	cd ${.CURDIR} distrib/sets && DESTDIR=${SNAPROOTDIR} sh checkflist
 .endif
-
-
 
 .include <bsd.subdir.mk>
