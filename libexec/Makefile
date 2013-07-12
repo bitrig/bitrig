@@ -3,7 +3,7 @@
 
 .include <bsd.own.mk>
 
-SUBDIR=	comsat fingerd ftpd getty ld.so lockspool \
+SUBDIR=	comsat fingerd ftpd getty ld.so lockspool mcpp \
 	mail.local makewhatis rpc.rquotad rpc.rstatd rpc.rusersd \
 	rpc.rwalld rpc.sprayd security spamd spamlogd spamd-setup rshd \
 	talkd tcpd uucpd
