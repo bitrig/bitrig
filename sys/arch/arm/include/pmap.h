@@ -474,7 +474,7 @@ extern void (*pmap_zero_page_func)(struct vm_page *);
 
 #define	L1_S_CACHE_MASK_generic	(L1_S_B|L1_S_C)
 #define	L1_S_CACHE_MASK_xscale	(L1_S_B|L1_S_C|L1_S_XSCALE_TEX(TEX_XSCALE_X))
-#define	L1_S_CACHE_MASK_v7	(L1_S_B|L1_S_C|L1_S_V7_TEX_MASK)
+#define	L1_S_CACHE_MASK_v7	(L1_S_B|L1_S_C|L1_S_V7_TEX_MASK|L1_S_V7_S)
 
 #define	L1_S_COHERENT_generic	(L1_S_B|L1_S_C)
 #define	L1_S_COHERENT_xscale	(L1_S_B|L1_S_C|L1_S_XSCALE_TEX(TEX_XSCALE_X))
@@ -488,7 +488,7 @@ extern void (*pmap_zero_page_func)(struct vm_page *);
 
 #define	L2_L_CACHE_MASK_generic	(L2_B|L2_C)
 #define	L2_L_CACHE_MASK_xscale	(L2_B|L2_C|L2_XSCALE_L_TEX(TEX_XSCALE_X))
-#define	L2_L_CACHE_MASK_v7	(L2_B|L2_C|L2_V7_L_TEX_MASK)
+#define	L2_L_CACHE_MASK_v7	(L2_B|L2_C|L2_V7_L_TEX_MASK|L2_V7_S)
 
 #define	L2_L_COHERENT_generic	(L2_B|L2_C)
 #define	L2_L_COHERENT_xscale	(L2_B|L2_C|L2_XSCALE_L_TEX(TEX_XSCALE_X))
@@ -514,7 +514,7 @@ extern void (*pmap_zero_page_func)(struct vm_page *);
 
 #define	L2_S_CACHE_MASK_generic	(L2_B|L2_C)
 #define	L2_S_CACHE_MASK_xscale	(L2_B|L2_C|L2_XSCALE_T_TEX(TEX_XSCALE_X))
-#define	L2_S_CACHE_MASK_v7	(L2_B|L2_C|L2_V7_S_TEX_MASK)
+#define	L2_S_CACHE_MASK_v7	(L2_B|L2_C|L2_V7_S_TEX_MASK|L2_V7_S)
 
 #define	L2_S_COHERENT_generic	(L2_B|L2_C)
 #define	L2_S_COHERENT_xscale	(L2_B|L2_C|L2_XSCALE_T_TEX(TEX_XSCALE_X))
