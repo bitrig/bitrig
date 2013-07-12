@@ -2,7 +2,8 @@
 
 .if ${MACHINE} == "amd64" || \
     ${MACHINE} == "i386" || \
-    ${MACHINE} == "beagle"
+    ${MACHINE} == "beagle" || \
+    ${MACHINE} == "imx"
 
 PROG=	hotplugd
 SRCS=	hotplugd.c
