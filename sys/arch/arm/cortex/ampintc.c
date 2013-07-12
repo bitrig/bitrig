@@ -210,11 +210,14 @@ ampintc_attach(struct device *parent, struct device *self, void *args)
 
 	iot = ia->ca_iot;
 
-	if (bus_space_map(iot, ia->ca_periphbase + ICP_ADDR,
+	uint32_t icp = ia->ca_gic_icp ? ia->ca_gic_icp : ia->ca_periphbase + ICP_ADDR;
+	uint32_t icd = ia->ca_gic_icd ? ia->ca_gic_icd : ia->ca_periphbase + ICD_ADDR;
+
+	if (bus_space_map(iot, icp,
 	    ICP_SIZE, 0, &p_ioh))
 		panic("ampintc_attach: ICP bus_space_map failed!");
 
-	if (bus_space_map(iot, ia->ca_periphbase + ICD_ADDR,
+	if (bus_space_map(iot, icd,
 	    ICD_SIZE, 0, &d_ioh))
 		panic("ampintc_attach: ICD bus_space_map failed!");
 
