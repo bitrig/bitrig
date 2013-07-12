@@ -13,6 +13,10 @@ device	amptimer
 attach	amptimer at cortex
 file	arch/arm/cortex/amptimer.c		amptimer
 
+device	agtimer
+attach	agtimer at cortex
+file	arch/arm/cortex/agtimer.c		agtimer
+
 device	armliicc
 attach	armliicc at cortex
 file	arch/arm/cortex/arml2cc.c		armliicc
