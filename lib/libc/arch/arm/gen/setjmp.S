@@ -70,9 +70,10 @@ ENTRY(setjmp)
 	add	r0, r0, #52
 #else
 	/* Store fp registers */
-	sfm	f4, 4, [r0], #48
-	/* Store fpsr */
-	rfs	r1
+	vstm	r0!, {d8-d15}
+	add	r0, r0, #16 /* vfp3 fpu context is smaller */
+	/* Store fpscr */
+	vmrs	r1, FPSCR
 	str	r1, [r0], #0x0004
 #endif	/*SOFTFLOAT*/
 	/* Store integer registers */
@@ -112,10 +113,11 @@ ENTRY(longjmp)
 	add	r0, r0, #52
 #else
 	/* Restore fp registers */
-	lfm	f4, 4, [r0], #48
-	/* Restore FPSR */
+	vldm	r0!, {d8-d15}
+	add	r0, r0, #16 /* vfp3 fpu context is smaller */
+	/* Restore fpscr */
 	ldr	r4, [r0], #0x0004
-	wfs	r4
+	vmsr	FPSCR, r4
 #endif	/* SOFTFLOAT */
 	/* Restore integer registers */
         ldmia	r0, {r4-r14}
