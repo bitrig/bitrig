@@ -1,4 +1,4 @@
-/* $OpenBSD: pms.c,v 1.44 2013/06/28 18:32:01 jcs Exp $ */
+/* $OpenBSD: pms.c,v 1.45 2013/07/16 08:11:39 mpi Exp $ */
 /* $NetBSD: psm.c,v 1.11 2000/06/05 22:20:57 sommerfeld Exp $ */
 
 /*-
@@ -1441,7 +1441,7 @@ pms_proc_alps(struct pms_softc *sc)
 		if (z > 0)
 			w = 4;
 		else
-			w = 0; /* XXX */
+			w = 0;
 
 		wsmouse_input(sc->sc_wsmousedev, buttons, x, y, z, w,
 		    WSMOUSE_INPUT_ABSOLUTE_X | WSMOUSE_INPUT_ABSOLUTE_Y |
