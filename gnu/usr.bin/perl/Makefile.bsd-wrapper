@@ -20,7 +20,7 @@ MYCC=-Dcc='gcc'
 MYCC=-Dcc='clang'
 .endif
 
-CONFIGURE_ARGS= -dsE -Dopenbsd_distribution=defined -Dccflags='-DNO_LOCALE_NUMERIC -DNO_LOCALE_COLLATE'
+CONFIGURE_ARGS= -dsE -Dopenbsd_distribution=defined -Dccflags='-DNO_LOCALE_NUMERIC -DNO_LOCALE_COLLATE' ${MYCC}
 
 .if !exists(${.OBJDIR}/config.over)
 CONFIGURE_ARGS+= -Dmksymlinks
