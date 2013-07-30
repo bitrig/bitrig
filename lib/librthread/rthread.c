@@ -1,4 +1,4 @@
-/*	$OpenBSD: rthread.c,v 1.71 2013/06/01 23:06:26 tedu Exp $ */
+/*	$OpenBSD: rthread.c,v 1.73 2013/07/30 15:31:01 guenther Exp $ */
 /*
  * Copyright (c) 2004,2005 Ted Unangst <tedu@openbsd.org>
  * All Rights Reserved.
@@ -248,18 +248,12 @@ _rthread_init(void)
 static void
 _rthread_free(pthread_t thread)
 {
-	/* catch wrongdoers for the moment */
 	/* initial_thread.tid must remain valid */
 	if (thread != &_initial_thread) {
-		struct stack *stack = thread->stack;
-		pid_t tid = thread->tid;
-		void *arg = thread->arg;
-
-		/* catch wrongdoers for the moment */
-		memset(thread, 0xd0, sizeof(*thread));
-		thread->stack = stack;
-		thread->tid = tid;
-		thread->arg = arg;
+		/*
+		 * thread->tid is written to by __threxit in the thread
+		 * itself, so it's not safe to touch it here
+		 */
 		_spinlock(&_thread_gc_lock);
 		TAILQ_INSERT_TAIL(&_thread_gc_list, thread, waiting);
 		_spinunlock(&_thread_gc_lock);
