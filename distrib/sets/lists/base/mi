@@ -100,7 +100,6 @@
 ./etc/isakmpd/pubkeys/ipv6
 ./etc/isakmpd/pubkeys/ufqdn
 ./etc/kerberosV
-./etc/kerberosV/README
 ./etc/kerberosV/krb5.conf.example
 ./etc/ldap
 ./etc/ldap/certs
@@ -2079,7 +2078,7 @@
 ./usr/lib/libasn1.so.19.0
 ./usr/lib/libasn1_p.a
 ./usr/lib/libc.a
-./usr/lib/libc.so.68.5
+./usr/lib/libc.so.69.0
 ./usr/lib/libc_p.a
 ./usr/lib/libcom_err.a
 ./usr/lib/libcom_err.so.19.0
@@ -4289,6 +4288,9 @@
 ./usr/libexec/sm.bin
 ./usr/libexec/smtpd
 ./usr/libexec/smtpd/makemap
+./usr/libexec/smtpd/table-ldap
+./usr/libexec/smtpd/table-passwd
+./usr/libexec/smtpd/table-sqlite
 ./usr/libexec/spamd
 ./usr/libexec/spamd-setup
 ./usr/libexec/spamlogd
@@ -4608,6 +4610,7 @@
 ./usr/share/games/quiz.db
 ./usr/share/info
 ./usr/share/info/dir
+./usr/share/info/heimdal.info
 ./usr/share/info/info-stnd.info
 ./usr/share/info/info.info
 ./usr/share/info/texinfo
@@ -4632,6 +4635,8 @@
 ./usr/share/locale/ISO8859-5/LC_CTYPE
 ./usr/share/locale/ISO8859-7
 ./usr/share/locale/ISO8859-7/LC_CTYPE
+./usr/share/locale/ISO8859-9
+./usr/share/locale/ISO8859-9/LC_CTYPE
 ./usr/share/locale/KOI8-R
 ./usr/share/locale/KOI8-R/LC_CTYPE
 ./usr/share/locale/KOI8-U
@@ -10943,7 +10948,6 @@
 ./usr/share/man/man5/lastlog.5
 ./usr/share/man/man5/ldapd.conf.5
 ./usr/share/man/man5/ldpd.conf.5
-./usr/share/man/man5/link.5
 ./usr/share/man/man5/login.conf.5
 ./usr/share/man/man5/magic.5
 ./usr/share/man/man5/mailer.conf.5
@@ -11684,6 +11688,8 @@
 ./usr/share/man/man9/fdrelease.9
 ./usr/share/man/man9/ffs.9
 ./usr/share/man/man9/file.9
+./usr/share/man/man9/fls.9
+./usr/share/man/man9/flsl.9
 ./usr/share/man/man9/fork1.9
 ./usr/share/man/man9/free.9
 ./usr/share/man/man9/fusebuf.9
@@ -14110,6 +14116,7 @@
 ./var/games/hackdir/save
 ./var/games/phantasia
 ./var/games/save
+./var/kerberosV
 ./var/log
 ./var/log/rdist
 ./var/mail
