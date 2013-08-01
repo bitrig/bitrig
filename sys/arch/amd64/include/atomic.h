@@ -184,7 +184,7 @@ atomic_add_64(volatile int64_t *p, int64_t v)
 static inline void
 atomic_sub_64(volatile int64_t *p, int64_t v)
 {
-	atomic_sub_u64((volatile int64_t *)p, v);
+	atomic_sub_u64((volatile uint64_t *)p, v);
 }
 
 /* Increment/decrement operations - MD. */
@@ -203,13 +203,13 @@ atomic_dec_u32(volatile uint32_t *up)
 static inline void
 atomic_inc_32(volatile int32_t *p)
 {
-	atomic_add_32((volatile uint32_t *)p, 1);
+	atomic_add_32((volatile int32_t *)p, 1);
 }
 
 static inline void
 atomic_dec_32(volatile int32_t *p)
 {
-	atomic_sub_32((volatile uint32_t *)p, 1);
+	atomic_sub_32((volatile int32_t *)p, 1);
 }
 
 static inline void
@@ -227,7 +227,7 @@ atomic_dec_u64(volatile uint64_t *up)
 static inline void
 atomic_inc_64(volatile int64_t *p)
 {
-	atomic_add_64((volatile uint64_t *)p, 1);
+	atomic_add_64((volatile int64_t *)p, 1);
 }
 
 static inline void
