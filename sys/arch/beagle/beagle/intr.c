@@ -275,8 +275,7 @@ splx(int ipl)
 void
 arm_splassert_check(int wantipl, const char *func)
 {
-	struct cpu_info *ci = curcpu();
-	int oldipl = ci->ci_cpl;
+	int oldipl = curcpu()->ci_cpl;
 
 	if (oldipl < wantipl) {
 		splassert_fail(wantipl, oldipl, func);
@@ -285,6 +284,10 @@ arm_splassert_check(int wantipl, const char *func)
 		 * in a feeble attempt to reduce damage.
 		 */
 		arm_intr_func.setipl(wantipl);
+	}
+
+	if (wantipl == IPL_NONE && curcpu()->ci_idepth != 0) {
+		splassert_fail(-1, curcpu()->ci_idepth, func);
 	}
 }
 #endif
