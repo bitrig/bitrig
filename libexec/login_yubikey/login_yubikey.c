@@ -167,10 +167,17 @@ main(int argc, char *argv[])
 static int
 clean_string(const char *s)
 {
+	size_t n = 1;
+
 	while (*s) {
-		if (!isalnum(*s) && *s != '-' && *s != '_')
+		if (n == 1 && !isalnum(*s) && *s != '_')
+			return (0);
+		else if (n == strlen(s) && !isalnum(*s) && *s != '_' && *s != '-')
+			return (0);
+		else if (!isalnum(*s) && *s != '_' && *s != '-' && *s != '.')
 			return (0);
 		++s;
+		++n;
 	}
 	return (1);
 }
