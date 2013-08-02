@@ -43,6 +43,7 @@ _atomic_lock(volatile _atomic_lock_t *lock)
 		"   strex %2, %3, [%1]  \n"
 		"   cmp %2, #0          \n"
 		"   bne 1b              \n"
+		"   .long 0xf57ff05f    \n" /* XXX: use dmb */
 		: "+r" (old), "+r" (lock), "+r" (scratch)
 		: "r" (_ATOMIC_LOCK_LOCKED));
 #else
