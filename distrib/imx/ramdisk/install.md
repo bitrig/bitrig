@@ -1,4 +1,4 @@
-#	$OpenBSD: install.md,v 1.2 2011/04/17 20:57:11 krw Exp $
+#	$OpenBSD: install.md,v 1.8 2013/07/30 02:49:54 bmercer Exp $
 #
 #
 # Copyright (c) 1996 The NetBSD Foundation, Inc.
@@ -33,42 +33,58 @@
 #
 
 md_installboot() {
+	local _disk=$1
+	mount /dev/${_disk}i /mnt/mnt
+	/mnt/usr/sbin/chroot /mnt /usr/sbin/mkuboot -a arm -o linux \
+		-e 0x10800000 -l 0x10800000 /bsd /mnt/bsd.umg
 }
 
 md_prep_fdisk() {
 	local _disk=$1 _q _d
 
+	mount /dev/sd0i /mnt2
 	while :; do
 		_d=whole
 		if [[ -n $(fdisk $_disk | grep 'Signature: 0xAA55') ]]; then
 			fdisk $_disk
-			if [[ -n $(fdisk $_disk | grep '^..: A6 ') ]]; then
-				_q=", use the (O)penBSD area,"
-				_d=OpenBSD
-			fi
 		else
 			echo "MBR has invalid signature; not showing it."
 		fi
 		ask "Use (W)hole disk$_q or (E)dit the MBR?" "$_d"
 		case $resp in
 		w*|W*)
-			echo -n "Setting OpenBSD MBR partition to whole $_disk..."
+			echo -n "Creating a FAT partition and an OpenBSD partition for rest of $_disk..."
 			fdisk -e ${_disk} <<__EOT >/dev/null
 reinit
-update
+e 0
+C
+n
+64
+32768
+f 0
+e 3
+A6
+n
+32832
+
 write
 quit
 __EOT
 			echo "done."
+			disklabel $_disk 2>/dev/null | grep -q "^  i:" || disklabel -w -d $_disk
+			newfs -t msdos ${_disk}i
 			return ;;
 		e*|E*)
 			# Manually configure the MBR.
 			cat <<__EOT
 
-You will now create a single MBR partition to contain your OpenBSD data. This
-partition must have an id of 'A6'; must *NOT* overlap other partitions; and
-must be marked as the only active partition.  Inside the fdisk command, the
-'manual' command describes all the fdisk commands in detail.
+You will now create one MBR partition to contain your OpenBSD data
+and one MBR partition on which kernels are located which are loaded
+by U-Boot. Neither partition will overlap any other partition.
+
+The OpenBSD MBR partition will have an id of 'A6' and the boot MBR
+partition will have an id of 'C' (MSDOS). The boot partition will be
+at least 16MB and be the first 'MSDOS' partition on the disk.
 
 $(fdisk ${_disk})
 __EOT
@@ -85,7 +101,6 @@ md_prep_disklabel() {
 
 	md_prep_fdisk $_disk
 
-	disklabel -W $_disk >/dev/null 2>&1
 	_f=/tmp/fstab.$_disk
 	if [[ $_disk == $ROOTDISK ]]; then
 		while :; do
