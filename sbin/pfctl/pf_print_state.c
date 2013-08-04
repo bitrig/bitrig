@@ -359,6 +359,11 @@ print_state(struct pfsync_state *s, int opts)
 		bcopy(&s->id, &id, sizeof(u_int64_t));
 		printf("   id: %016llx creatorid: %08x",
 		    betoh64(id), ntohl(s->creatorid));
+		if (!PF_AZERO(&s->rt_addr, s->af)) {
+			printf(" rt_addr: ");
+			print_host(&s->rt_addr, 0, s->af,
+			    s->key[PF_SK_WIRE].rdomain, pn, opts);
+		}
 		printf("\n");
 	}
 }
