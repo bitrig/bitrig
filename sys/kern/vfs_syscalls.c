@@ -1225,8 +1225,9 @@ domknodat(struct proc *p, int fd, const char *path, mode_t mode, dev_t dev)
 
 	if ((error = suser(p, 0)) != 0)
 		return (error);
-	if (p->p_fd->fd_rdir)
-		return (EINVAL);
+	if (chroot_mknod != 1)
+		if (p->p_fd->fd_rdir) /* disallow mknod if in chroot */
+			return (EINVAL);
 	NDINITAT(&nd, CREATE, LOCKPARENT, UIO_USERSPACE, fd, path, p);
 	if ((error = namei(&nd)) != 0)
 		return (error);

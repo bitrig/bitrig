@@ -180,7 +180,8 @@ struct ctlname {
 #define	KERN_POOL_DEBUG		77	/* int: enable pool_debug */
 #define	KERN_PROC_CWD		78      /* node: proc cwd */
 #define	KERN_PROC_NOBROADCASTKILL 79	/* node: proc no broadcast kill */
-#define	KERN_MAXID		80	/* number of valid kern ids */
+#define	KERN_CHROOTMKNOD	80	/* allow mknod in chroot */
+#define	KERN_MAXID		81	/* number of valid kern ids */
 
 #define	CTL_KERN_NAMES { \
 	{ 0, 0 }, \
@@ -263,6 +264,7 @@ struct ctlname {
 	{ "pool_debug", CTLTYPE_INT }, \
 	{ "proc_cwd", CTLTYPE_NODE }, \
 	{ "proc_nobroadcastkill", CTLTYPE_NODE }, \
+	{ "chroot_mknod", CTLTYPE_INT }, \
 }
 
 /*
