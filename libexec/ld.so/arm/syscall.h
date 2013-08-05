@@ -57,8 +57,8 @@ int	_dl_readlink(const char *, char *, size_t);
 int	_dl_lstat(const char *, struct stat *);
 int	_dl_getcwd(char *, size_t);
 int	_dl_utrace(const char *, const void *, size_t);
-int	_dl_sys___set_tcb(void *tcb);
-void	*_dl_sys___get_tcb();
+int	_dl___set_tcb(void *tcb);
+void	*_dl___get_tcb();
 
 static inline off_t
 _dl_lseek(int fildes, off_t offset, int whence)
