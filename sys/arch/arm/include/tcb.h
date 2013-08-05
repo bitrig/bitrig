@@ -42,7 +42,7 @@ __arm_set_tcb(uint32_t tcb) {
 #define TLS_VARIANT	1
 
 static inline uint32_t
-__arm_read_tcb() {
+__arm_read_tcb(void) {
         uint32_t tcb;
 	__asm volatile(" MRC p15, 0, %0, c13, c0, 3;": "=r" (tcb));
 	return tcb;
