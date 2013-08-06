@@ -1,4 +1,4 @@
-/*	$OpenBSD: cortex.c,v 1.1 2013/05/01 00:16:26 patrick Exp $	*/
+/*	$OpenBSD: cortex.c,v 1.2 2013/08/06 14:21:13 patrick Exp $	*/
 /* $NetBSD: mainbus.c,v 1.3 2001/06/13 17:52:43 nathanw Exp $ */
 
 /*
