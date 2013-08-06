@@ -155,8 +155,8 @@ agtimer_set_tval(uint32_t val)
 int
 agtimer_match(struct device *parent, void *cfdata, void *aux)
 {
-	if ((cpu_id() & CPU_ID_CORTEX_A15_MASK)
-	    == CPU_ID_CORTEX_A15)
+	if ((cpu_id() & CPU_ID_CORTEX_A7_MASK) == CPU_ID_CORTEX_A7 ||
+	    (cpu_id() & CPU_ID_CORTEX_A15_MASK) == CPU_ID_CORTEX_A15)
 		return (1);
 
 	return 0;
