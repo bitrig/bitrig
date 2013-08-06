@@ -144,7 +144,7 @@ amptimer_readcnt64(struct amptimer_softc *sc)
 int
 amptimer_match(struct device *parent, void *cfdata, void *aux)
 {
-	if ((cpu_id() & CPU_ID_CORTEX_A9_MASK) == CPU_ID_CORTEX_A9)
+	if ((cpufunc_id() & CPU_ID_CORTEX_A9_MASK) == CPU_ID_CORTEX_A9)
 		return (1);
 
 	return 0;
