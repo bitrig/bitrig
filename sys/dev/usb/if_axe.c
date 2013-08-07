@@ -1,4 +1,4 @@
-/*	$OpenBSD: if_axe.c,v 1.120 2013/06/03 22:36:15 yuo Exp $	*/
+/*	$OpenBSD: if_axe.c,v 1.122 2013/08/07 01:06:41 bluhm Exp $	*/
 
 /*
  * Copyright (c) 2005, 2006, 2007 Jonathan Gray <jsg@openbsd.org>
@@ -112,7 +112,6 @@
 #ifdef INET
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
-#include <netinet/in_var.h>
 #include <netinet/ip.h>
 #include <netinet/if_ether.h>
 #endif
