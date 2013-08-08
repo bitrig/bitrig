@@ -1,4 +1,4 @@
-/* $OpenBSD: amptimer.c,v 1.3 2013/08/06 14:20:15 patrick Exp $ */
+/* $OpenBSD: amptimer.c,v 1.4 2013/08/08 10:07:22 rapha Exp $ */
 /*
  * Copyright (c) 2011 Dale Rahn <drahn@openbsd.org>
  *
