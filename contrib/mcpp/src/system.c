@@ -4752,14 +4752,23 @@ static void dump_path( void)
     const char *    dir = "./";
     int             i;
 
+#if COMPILER == GNUC
+    mcpp_fputs( "#include \"...\" search starts here:\n", DBG);
+    mcpp_fputs( "#include <...> search starts here:\n", DBG);
+#else
     mcpp_fputs( "Include paths are as follows --\n", DBG);
+#endif
     for (incptr = incdir; incptr < incend; incptr++) {
         inc_dir = *incptr;
         if (*inc_dir == '\0')
             inc_dir = dir;
         mcpp_fprintf( DBG, "    %s\n", inc_dir);
     }
+#if COMPILER == GNUC
+    mcpp_fputs( "End of search list.\n", DBG);
+#else
     mcpp_fputs( "End of include path list.\n", DBG);
+#endif
 #if SYSTEM == SYS_MAC
     mcpp_fputs( "Framework paths are as follows --\n", DBG);
     for (i = 0; i < num_framework; i++ )
