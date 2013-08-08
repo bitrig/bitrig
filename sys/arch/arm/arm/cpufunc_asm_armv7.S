@@ -18,8 +18,8 @@
 #include <arm/armreg.h>
 #include <machine/asm.h>
 
-#define	DSB	.long	0xf57ff040
-#define	ISB	.long	0xf57ff060
+#define	DSB	.long	0xf57ff04f
+#define	ISB	.long	0xf57ff06f
 #define	WFI	.long	0xe320f003
 
 ENTRY(armv7_cpu_sleep)
