@@ -81,8 +81,10 @@
 
 /*
  * The ARM has two sets of FP data formats.  The FPA supports 32-bit, 64-bit
- * and 96-bit IEEE formats, with the words in big-endian order.  VFP supports
- * 32-bin and 64-bit IEEE formats with the words in the CPU's native byte
+ * and 96-bit IEEE formats, with the words in big-endian order.
+ * These FPA modes are not supported.
+ * VFP supports * 32-bin and 64-bit IEEE formats with the words in the
+ * CPU's native byte
  * order.
  *
  * The FPA also has two packed decimal formats, but we ignore them here.
@@ -96,19 +98,6 @@
 #define	DBL_FRACLBITS	32
 #define	DBL_FRACBITS	52
 
-#ifndef __VFP_FP__
-#define	E80_EXPBITS	15
-#define	E80_FRACHBITS	31
-#define	E80_FRACLBITS	32
-#define	E80_FRACBITS	64
-
-#define	EXT_EXPBITS	15
-#define	EXT_FRACHBITS	16
-#define	EXT_FRACHMBITS	32
-#define	EXT_FRACLMBITS	32
-#define	EXT_FRACLBITS	32
-#define	EXT_FRACBITS	112
-#endif
 
 struct ieee_single {
 	u_int	sng_frac:23;
@@ -116,45 +105,12 @@ struct ieee_single {
 	u_int	sng_sign:1;
 };
 
-#ifdef __VFP_FP__
 struct ieee_double {
 	u_int	dbl_fracl;
 	u_int	dbl_frach:20;
 	u_int	dbl_exp:11;
 	u_int	dbl_sign:1;
 };
-#else /* !__VFP_FP__ */
-struct ieee_double {
-	u_int	dbl_frach:20;
-	u_int	dbl_exp:11;
-	u_int	dbl_sign:1;
-	u_int	dbl_fracl;
-};
-
-union ieee_double_u {
-	double                  dblu_d;
-	struct ieee_double      dblu_dbl;
-};
-
-
-struct ieee_e80 {
-	u_int	e80_exp:15;
-	u_int	e80_zero:16;
-	u_int	e80_sign:1;
-	u_int	e80_frach:31;
-	u_int	e80_j:1;
-	u_int	e80_fracl;
-};
-
-struct ieee_ext {
-	u_int	ext_frach:16;
-	u_int	ext_exp:15;
-	u_int	ext_sign:1;
-	u_int	ext_frachm;
-	u_int	ext_fraclm;
-	u_int	ext_fracl;
-};
-#endif /* !__VFP_FP__ */
 
 /*
  * Floats whose exponent is in [1..INFNAN) (of whatever type) are
@@ -167,18 +123,10 @@ struct ieee_ext {
  */
 #define	SNG_EXP_INFNAN	255
 #define	DBL_EXP_INFNAN	2047
-#ifndef __VFP_FP__
-#define	E80_EXP_INFNAN	32767
-#define	EXT_EXP_INFNAN	32767
-#endif /* !__VFP_FP__ */
 
 #if 0
 #define	SNG_QUIETNAN	(1 << 22)
 #define	DBL_QUIETNAN	(1 << 19)
-#ifndef __VFP_FP__
-#define	E80_QUIETNAN	(1 << 15)
-#define	EXT_QUIETNAN	(1 << 15)
-#endif /* !__VFP_FP__ */
 #endif
 
 /*
@@ -186,7 +134,3 @@ struct ieee_ext {
  */
 #define	SNG_EXP_BIAS	127
 #define	DBL_EXP_BIAS	1023
-#ifndef __VFP_FP__
-#define	E80_EXP_BIAS	16383
-#define	EXT_EXP_BIAS	16383
-#endif /* !__VFP_FP__ */

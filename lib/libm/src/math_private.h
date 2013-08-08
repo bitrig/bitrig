@@ -226,7 +226,7 @@ do {								\
  * big endian.
  */
 
-#if (BYTE_ORDER == BIG_ENDIAN) || (defined(__arm__) && !defined(__VFP_FP__))
+#if (BYTE_ORDER == BIG_ENDIAN)
 
 typedef union
 {
@@ -240,7 +240,7 @@ typedef union
 
 #endif
 
-#if (BYTE_ORDER == LITTLE_ENDIAN) && !(defined(__arm__) && !defined(__VFP_FP__))
+#if (BYTE_ORDER == LITTLE_ENDIAN)
 
 typedef union
 {
