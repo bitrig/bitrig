@@ -50,6 +50,7 @@
 ./usr/include/arm/tcb.h
 ./usr/include/arm/trap.h
 ./usr/include/arm/undefined.h
+./usr/include/arm/vfp.h
 ./usr/include/arm/vmparam.h
 ./usr/include/imx
 ./usr/include/imx/_float.h
@@ -62,7 +63,6 @@
 ./usr/include/imx/cdefs.h
 ./usr/include/imx/conf.h
 ./usr/include/imx/cpu.h
-./usr/include/imx/cpufunc.h
 ./usr/include/imx/db_machdep.h
 ./usr/include/imx/disklabel.h
 ./usr/include/imx/elf_abi.h
@@ -104,6 +104,7 @@
 ./usr/include/imx/vmparam.h
 ./usr/lib/libarm.a
 ./usr/lib/libarm_p.a
+./usr/libdata/perl5/arm-bitrig
 ./usr/libdata/perl5/arm-bitrig/5.16.3
 ./usr/libdata/perl5/arm-bitrig/5.16.3/.packlist
 ./usr/libdata/perl5/arm-bitrig/5.16.3/B
@@ -559,7 +560,6 @@
 ./usr/libdata/perl5/arm-bitrig/5.16.3/threads
 ./usr/libdata/perl5/arm-bitrig/5.16.3/threads.pm
 ./usr/libdata/perl5/arm-bitrig/5.16.3/threads/shared.pm
-./usr/libdata/perl5/arm-bitrig
 ./usr/libdata/perl5/site_perl/arm-bitrig
 ./usr/libdata/perl5/site_perl/arm-bitrig/_h2ph_pre.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys
@@ -567,3 +567,4 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/syscall.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/ttycom.ph
 ./usr/local/libdata/perl5/site_perl/arm-bitrig
+./usr/sbin/mkuboot

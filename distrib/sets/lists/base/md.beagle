@@ -1,3 +1,4 @@
+./usr/sbin/mkuboot
 ./usr/include/arm
 ./usr/include/arm/_float.h
 ./usr/include/arm/_types.h
@@ -50,6 +51,7 @@
 ./usr/include/arm/tcb.h
 ./usr/include/arm/trap.h
 ./usr/include/arm/undefined.h
+./usr/include/arm/vfp.h
 ./usr/include/arm/vmparam.h
 ./usr/include/beagle
 ./usr/include/beagle/_float.h
@@ -63,7 +65,6 @@
 ./usr/include/beagle/cdefs.h
 ./usr/include/beagle/conf.h
 ./usr/include/beagle/cpu.h
-./usr/include/beagle/cpufunc.h
 ./usr/include/beagle/db_machdep.h
 ./usr/include/beagle/disklabel.h
 ./usr/include/beagle/elf_abi.h
@@ -105,6 +106,7 @@
 ./usr/include/beagle/vmparam.h
 ./usr/lib/libarm.a
 ./usr/lib/libarm_p.a
+./usr/libdata/perl5/arm-bitrig
 ./usr/libdata/perl5/arm-bitrig/5.16.3
 ./usr/libdata/perl5/arm-bitrig/5.16.3/.packlist
 ./usr/libdata/perl5/arm-bitrig/5.16.3/B
@@ -560,7 +562,6 @@
 ./usr/libdata/perl5/arm-bitrig/5.16.3/threads
 ./usr/libdata/perl5/arm-bitrig/5.16.3/threads.pm
 ./usr/libdata/perl5/arm-bitrig/5.16.3/threads/shared.pm
-./usr/libdata/perl5/arm-bitrig
 ./usr/libdata/perl5/site_perl/arm-bitrig
 ./usr/libdata/perl5/site_perl/arm-bitrig/_h2ph_pre.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys
