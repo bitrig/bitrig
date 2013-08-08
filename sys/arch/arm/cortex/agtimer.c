@@ -232,14 +232,9 @@ agtimer_intr(void *frame)
 	while (pc->pc_nexttickevent <= now) {
 		pc->pc_nexttickevent += sc->sc_ticks_per_intr;
 		pc->pc_ticks_err_sum += sc->sc_ticks_err_cnt;
-		/* looping a few times is faster than divide */
-		while (pc->pc_ticks_err_sum > hz) {
-			pc->pc_nexttickevent += 1;
-			pc->pc_ticks_err_sum -= hz;
-		}
 
 		/* looping a few times is faster than divide */
-		while (pc->pc_ticks_err_sum  > hz) {
+		while (pc->pc_ticks_err_sum > hz) {
 			pc->pc_nexttickevent += 1;
 			pc->pc_ticks_err_sum -= hz;
 		}
