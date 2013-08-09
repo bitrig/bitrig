@@ -69,7 +69,7 @@ MAN=	aac.4 ac97.4 acphy.4 \
 	viapm.4 viasio.4 vic.4 video.4 vio.4 vioblk.4 viomb.4 virtio.4 vlan.4 \
 	vmt.4 vmx.4 vnd.4 vr.4 \
 	vscsi.4 vte.4 \
-	watchdog.4 wb.4 wbenv.4 wbng.4 wbsd.4 wbsio.4 wd.4 wdc.4 we.4 \
+	wapbl.4 watchdog.4 wb.4 wbenv.4 wbng.4 wbsd.4 wbsio.4 wd.4 wdc.4 we.4 \
 	wi.4 wpi.4 wscons.4 wsdisplay.4 wskbd.4 wsmouse.4 wsmux.4 \
 	xe.4 xf86.4 xge.4 xl.4 xmphy.4 yds.4 ym.4 zero.4 zyd.4
 

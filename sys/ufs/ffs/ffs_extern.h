@@ -160,6 +160,17 @@ int ffs_fsync(void *);
 int ffs_reclaim(void *);
 int ffsfifo_reclaim(void *);
 
+/* ffs_wapbl.c -- write ahead physical block logging */
+void ffs_wapbl_verify_inodes(struct mount *, const char *);
+void ffs_wapbl_replay_finish(struct mount *);
+int ffs_wapbl_start(struct mount *);
+int ffs_wapbl_stop(struct mount *, int);
+int ffs_wapbl_replay_start(struct mount *, struct fs *, struct vnode *);
+void ffs_wapbl_blkalloc(struct fs *, struct vnode *, daddr_t, int);
+
+void ffs_wapbl_sync_metadata(struct mount *, daddr_t *, int *, int);
+void ffs_wapbl_abort_sync_metadata(struct mount *, daddr_t *, int *, int);
+
 /*
  * Soft dependency function prototypes.
  */

@@ -725,6 +725,7 @@ file kern/vfs_syscalls.c
 file kern/vfs_vops.c
 file kern/vfs_vnops.c
 file kern/vfs_getcwd.c
+file kern/vfs_wapbl.c			wapbl
 file kern/spec_vnops.c
 file msdosfs/msdosfs_conv.c		msdosfs
 file msdosfs/msdosfs_denode.c		msdosfs
@@ -889,6 +890,7 @@ file ufs/ffs/ffs_tables.c		ffs | mfs
 file ufs/ffs/ffs_vfsops.c		ffs | mfs
 file ufs/ffs/ffs_vnops.c		ffs | mfs
 file ufs/ffs/ffs_softdep.c		ffs_softupdates
+file ufs/ffs/ffs_wapbl.c		ffs & wapbl
 file ufs/mfs/mfs_vfsops.c		mfs
 file ufs/mfs/mfs_vnops.c		mfs
 file ufs/ufs/ufs_bmap.c			ffs | mfs | ext2fs
@@ -900,6 +902,7 @@ file ufs/ufs/ufs_quota.c		quota & ( ffs | mfs | ext2fs )
 file ufs/ufs/ufs_quota_stub.c		ffs | mfs
 file ufs/ufs/ufs_vfsops.c		ffs | mfs | ext2fs
 file ufs/ufs/ufs_vnops.c		ffs | mfs | ext2fs
+file ufs/ufs/ufs_wapbl.c		ffs & wapbl
 file ufs/ext2fs/ext2fs_alloc.c		ext2fs
 file ufs/ext2fs/ext2fs_balloc.c		ext2fs
 file ufs/ext2fs/ext2fs_bmap.c		ext2fs
