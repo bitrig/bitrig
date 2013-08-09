@@ -95,8 +95,8 @@ _C_LABEL(bootstrap_start):
 	/* if we were running out of virtual mapped space, disable mmu */
 	mov	r2, #0
 	mov     r1, #(CPU_CONTROL_32BP_ENABLE | CPU_CONTROL_32BD_ENABLE)
-	mcr     15, 0, r1, c1, c0, 0
-	mcrne   15, 0, r2, c8, c7, 0    /* nail I+D TLB on ARMv4 and greater */
+	mcr	p15, 0, r1, c1, c0, 0
+	mcrne	p15, 0, r2, c8, c7, 0	/* nail I+D TLB on ARMv4 and greater */
 	
 1:
 	add pc, r4, r0

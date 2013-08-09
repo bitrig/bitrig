@@ -180,8 +180,8 @@ abortdatamsg:
  *	it like a Data Abort.
  */
 ASENTRY_NP(address_exception_entry)
-	mrs	r1, cpsr_all
-	mrs	r2, spsr_all
+	mrs	r1, cpsr
+	mrs	r2, spsr
 	mov	r3, lr
 	adr	r0, Laddress_exception_msg
 	bl	_C_LABEL(printf)	/* XXX CLOBBERS LR!! */
@@ -233,8 +233,8 @@ ASENTRY_NP(undefined_entry)
 /*
  * Get previous psr.
  */
-	mrs	r7, cpsr_all
-	mrs	r0, spsr_all
+	mrs	r7, cpsr
+	mrs	r0, spsr
 	str	r0, [sp, #(16*4)]
 /*
  * Test for user mode.
@@ -249,23 +249,23 @@ ASENTRY_NP(undefined_entry)
  */
 .Lprenotuser_push:
 	orr	r0, r0, #(I32_bit) /* disable interrupts */
-	msr	cpsr_all, r0
+	msr	cpsr, r0
 	mov	r1, r8
 	mov	r2, r9
 	mov	r3, r10
 	mov	r4, r11
 	mov	r5, r12
 	mov	r6, r13
-	msr	cpsr_all, r7		/* back to undefined mode */
+	msr	cpsr, r7		/* back to undefined mode */
 	add	r8, sp, #(8*4)
 	stmia	r8, {r1-r6}		/* r8-r13 */
 /*
  * Now back to previous mode to get r14 and spsr.
  */
-	msr	cpsr_all, r0
+	msr	cpsr, r0
 	mov	r1, r14
 	mrs	r2, spsr
-	msr	cpsr_all, r7		/* back to undefined mode */
+	msr	cpsr, r7		/* back to undefined mode */
 	str	r1, [sp, #(14*4)]	/* r14 */
 	str	r2, [sp, #(17*4)]	/* spsr */
 /*
@@ -284,7 +284,7 @@ ASENTRY_NP(undefined_entry)
  */
 	ldr	r0, [sp, #(16*4)]	/* spsr */
 	ldr	r1, [sp, #(15*4)]	/* r15 */
-	msr	spsr_all, r0
+	msr	spsr, r0
 	mov	r14, r1
 /*
  * Test for user mode.
@@ -301,23 +301,23 @@ ASENTRY_NP(undefined_entry)
 	ldr	r1, [sp, #(17*4)]		/* spsr */
 	ldr	r2, [sp, #(14*4)]		/* r14 */
 	orr	r0, r0, #(I32_bit)
-	msr	cpsr_all, r0			/* switch to previous mode */
-	msr	spsr_all, r1
+	msr	cpsr, r0			/* switch to previous mode */
+	msr	spsr, r1
 	mov	r14, r2
-	msr	cpsr_all, r7			/* back to undefined mode */
+	msr	cpsr, r7			/* back to undefined mode */
 /*
  * Now r8-r13.
  */
 	add	r8, sp, #(8*4)
 	ldmia	r8, {r1-r6}		/* r8-r13 */
-	msr	cpsr_all, r0
+	msr	cpsr, r0
 	mov	r8, r1
 	mov	r9, r2
 	mov	r10, r3
 	mov	r11, r4
 	mov	r12, r5
 	mov	r13, r6
-	msr	cpsr_all, r7
+	msr	cpsr, r7
 .Lpull_r0r7:
 /*
  * Now the rest of the registers.

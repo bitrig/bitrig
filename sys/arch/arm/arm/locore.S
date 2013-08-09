@@ -115,7 +115,7 @@ ENTRY_NP(cpu_reset)
 	bic	r2, r2, #(PSR_MODE)
 	orr     r2, r2, #(PSR_SVC32_MODE)
 	orr	r2, r2, #(I32_bit | F32_bit)
-	msr     cpsr_all, r2
+	msr     cpsr, r2
 
 	ldr	r4, .Lcpu_reset_address
 	ldr	r4, [r4]
@@ -139,8 +139,8 @@ ENTRY_NP(cpu_reset)
 	 * Hurl ourselves into the ROM
 	 */
 	mov	r0, #(CPU_CONTROL_32BP_ENABLE | CPU_CONTROL_32BD_ENABLE)
-	mcr     15, 0, r0, c1, c0, 0
-	mcrne   15, 0, r2, c8, c7, 0 	/* nail I+D TLB on ARMv4 and greater */
+	mcr	p15, 0, r0, c1, c0, 0
+	mcrne	p15, 0, r2, c8, c7, 0	/* nail I+D TLB on ARMv4 and greater */
 	mov     pc, r4
 
 	/*
@@ -184,12 +184,12 @@ ENTRY_NP(Execute)
 	ldmia	r2, {r0-r3}
 	mov	r6, sp
 	mov	sp, ip
-	msr	cpsr_all, r5
+	msr	cpsr, r5
 	mov	pc, r6
 .LExec:
 	mrs	r5, cpsr
 /* XXX Cannot switch thus easily back from user mode */
-	msr	cpsr_all, r4
+	msr	cpsr, r4
 	add	sp, r6, #8
 	ldmfd	sp!, {r6}
 	stmia	r6, {r0-r3}

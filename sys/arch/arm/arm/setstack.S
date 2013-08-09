@@ -63,11 +63,11 @@ ENTRY(set_stackptr)
         mrs	r3, cpsr		/* Switch to the appropriate mode */
 	bic	r2, r3, #(PSR_MODE)
 	orr	r2, r2, r0
-        msr	cpsr_all, r2
+        msr	cpsr, r2
 
 	mov	sp, r1			/* Set the stack pointer */
 
-        msr	cpsr_all, r3		/* Restore the old mode */
+        msr	cpsr, r3		/* Restore the old mode */
 
 	mov	pc, lr			/* Exit */
 
@@ -82,11 +82,11 @@ ENTRY(get_stackptr)
         mrs	r3, cpsr		/* Switch to the appropriate mode */
 	bic	r2, r3, #(PSR_MODE)
 	orr	r2, r2, r0
-        msr	cpsr_all, r2
+        msr	cpsr, r2
 
 	mov	r0, sp			/* Set the stack pointer */
 
-        msr	cpsr_all, r3		/* Restore the old mode */
+        msr	cpsr, r3		/* Restore the old mode */
 
 	mov	pc, lr			/* Exit */
 
