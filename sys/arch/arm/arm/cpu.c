@@ -521,25 +521,46 @@ identify_arm_cpu(struct device *dv, struct cpu_info *ci)
 			       
 }
 #ifdef MULTIPROCESSOR
+void
+cpu_boot_secondary_processors(void)
+{
+	struct cpu_info *ci;
+	u_long i;
+
+	for (i=0; i < MAXCPUS; i++) {
+		ci = cpu_info[i];
+		if (ci == NULL)
+			continue;
+		if (ci->ci_idle_pcb == NULL)
+			continue;
+		if ((ci->ci_flags & CPUF_PRESENT) == 0)
+			continue;
+		if (ci->ci_flags & (CPUF_BSP|CPUF_SP|CPUF_PRIMARY))
+			continue;
+		ci->ci_randseed = random();
+		/* XXX: Not yet, my dear. */
+		//cpu_boot_secondary(ci);
+	}
+}
+
 int
-cpu_alloc_idlepcb(struct cpu_info *ci)
+cpu_alloc_idle_pcb(struct cpu_info *ci)
 {
 	vaddr_t uaddr;
 	struct pcb *pcb;
 	struct trapframe *tf;
-	int error;
 
 	/*
 	 * Generate a kernel stack and PCB (in essence, a u-area) for the
 	 * new CPU.
 	 */
-	if (uvm_uarea_alloc(&uaddr)) {
-		error = uvm_fault_wire(kernel_map, uaddr, uaddr + USPACE,
-		    VM_FAULT_WIRE, VM_PROT_READ | VM_PROT_WRITE);
-		if (error)
-			return error;
+	uaddr = (vaddr_t)km_alloc(USPACE, &kv_any, &kp_zero, &kd_nowait);
+	if (uaddr == 0) {
+		printf("%s: unable to allocate idle stack\n",
+		    __func__);
+		return 1;
 	}
-	ci->ci_idlepcb = pcb = (struct pcb *)uaddr;
+	ci->ci_idle_pcb = pcb = (struct pcb *)uaddr;
 
 	/*
 	 * This code is largely derived from cpu_fork(), with which it

@@ -184,10 +184,12 @@ struct cpu_info {
 
 	struct proc *ci_curproc;
 	struct proc *ci_fpuproc;
-	u_int ci_cpuid;
+	u_int32_t ci_cpuid;
 	u_int32_t ci_randseed;
+	volatile u_int32_t ci_flags;
 
 	struct pcb *ci_curpcb;
+	struct pcb *ci_idle_pcb;
 
 	u_int32_t ci_arm_cpuid;		/* aggregate CPU id */
 	u_int32_t ci_arm_cputype;	/* CPU type */
@@ -205,6 +207,14 @@ struct cpu_info {
 	struct gmonparam *ci_gmon;
 #endif
 };
+
+#define CPUF_BSP	0x0001		/* CPU is the original BSP */
+#define CPUF_AP		0x0002		/* CPU is an AP */
+#define CPUF_SP		0x0004		/* CPU is only processor */
+#define CPUF_PRIMARY	0x0008		/* CPU is active primary processor */
+
+#define CPUF_PRESENT	0x1000		/* CPU is present */
+#define CPUF_RUNNING	0x2000		/* CPU is running */
 
 static inline struct cpu_info *
 curcpu(void)
@@ -238,7 +248,9 @@ extern struct cpu_info *cpu_info_list;
 #define cpu_unidle(ci)
 
 extern struct cpu_info *cpu_info[MAXCPUS];
-#endif
+
+void cpu_boot_secondary_processors(void);
+#endif /* !MULTIPROCESSOR */
 
 #define curpcb		curcpu()->ci_curpcb
 
@@ -277,7 +289,7 @@ extern int want_resched;	/* resched() was called */
 
 struct device;
 void	cpu_attach	(struct device *);
-int	cpu_alloc_idlepcb	(struct cpu_info *);
+int	cpu_alloc_idle_pcb	(struct cpu_info *);
 
 /*
  * Random cruft
