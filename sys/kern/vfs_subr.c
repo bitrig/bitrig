@@ -61,7 +61,7 @@
 #include <sys/syscallargs.h>
 #include <sys/pool.h>
 #include <sys/tree.h>
-#include <sys/specdev.h>
+#include <sys/wapbl.h>
 
 #include <uvm/uvm_extern.h>
 #include <sys/sysctl.h>
@@ -889,6 +889,7 @@ void
 vclean(struct vnode *vp, int flags, struct proc *p)
 {
 	int active;
+	int error;
 
 	/*
 	 * Check to see if the vnode is in use.
@@ -922,8 +923,15 @@ vclean(struct vnode *vp, int flags, struct proc *p)
 	/*
 	 * Clean out any buffers associated with the vnode.
 	 */
-	if (flags & DOCLOSE)
-		vinvalbuf(vp, V_SAVE, NOCRED, p, 0, 0);
+	if (flags & DOCLOSE) {
+		error = vinvalbuf(vp, V_SAVE, NOCRED, p, 0, 0);
+		if (error != 0) {
+			if (wapbl_vphaswapbl(vp))
+				WAPBL_DISCARD(wapbl_vptomp(vp));
+			error = vinvalbuf(vp, 0, NOCRED, p, 0, 0);
+		}
+		KASSERT(error == 0);
+	}
 	/*
 	 * If purging an active vnode, it must be closed and
 	 * deactivated before being reclaimed. Note that the

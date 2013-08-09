@@ -1,6 +1,35 @@
 /*	$OpenBSD: vfs_bio.c,v 1.152 2013/08/08 23:25:06 syl Exp $	*/
 /*	$NetBSD: vfs_bio.c,v 1.44 1996/06/11 11:15:36 pk Exp $	*/
 
+/*-
+ * Copyright (c) 2007, 2008, 2009 The NetBSD Foundation, Inc.
+ * All rights reserved.
+ *
+ * This code is derived from software contributed to The NetBSD Foundation
+ * by Andrew Doran, and by Wasabi Systems, Inc.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /*
  * Copyright (c) 1994 Christopher G. Demetriou
  * Copyright (c) 1982, 1986, 1989, 1993
@@ -56,7 +85,7 @@
 #include <sys/resourcevar.h>
 #include <sys/conf.h>
 #include <sys/kernel.h>
-#include <sys/specdev.h>
+#include <sys/wapbl.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -79,7 +108,6 @@ struct bio_ops bioops;
  */
 struct pool bufpool;
 struct bufhead bufhead = LIST_HEAD_INITIALIZER(bufhead);
-void buf_put(struct buf *);
 
 /*
  * Insq/Remq for the buffer free lists.
@@ -90,6 +118,7 @@ void buf_put(struct buf *);
 struct buf *bio_doread(struct vnode *, daddr_t, int, int);
 struct buf *buf_get(struct vnode *, daddr_t, size_t);
 void bread_cluster_callback(struct buf *);
+static inline int injournal(struct buf *);
 
 struct bcachestats bcstats;  /* counters */
 long lodirtypages;      /* dirty page count low water mark */
@@ -586,6 +615,13 @@ bwrite(struct buf *bp)
 	else
 		mp = NULL;
 
+	if (mp && mp->mnt_wapbl && injournal(bp)) {
+		if (bp->b_iodone != mp->mnt_wapbl_op->wo_wapbl_biodone) {
+			bdwrite(bp);
+			return (0);
+		}
+	}
+
 	/*
 	 * Remember buffer type, to switch on it later.  If the write was
 	 * synchronous, but the file system was mounted with MNT_ASYNC,
@@ -658,6 +694,20 @@ bwrite(struct buf *bp)
 	return (rv);
 }
 
+/*
+ * Consider a buffer for an entry in the (WAPBL) journal. We do not want to log
+ * regular data blocks.
+ */
+static inline int
+injournal(struct buf *bp)
+{
+	struct vnode *vp = bp->b_vp;
+
+	if (wapbl_vphaswapbl(vp) && (vp->v_type != VREG || bp->b_lblkno < 0))
+		return (1);
+
+	return (0);
+}
 
 /*
  * Delayed write.
@@ -677,6 +727,19 @@ bdwrite(struct buf *bp)
 {
 	int s;
 
+	/* If this is a tape block, write the block now. */
+	if (major(bp->b_dev) < nblkdev &&
+	    bdevsw[major(bp->b_dev)].d_type == D_TAPE) {
+		bawrite(bp);
+		return;
+	}
+
+	if (injournal(bp)) {
+		struct mount *mp = wapbl_vptomp(bp->b_vp);
+		if (bp->b_iodone != mp->mnt_wapbl_op->wo_wapbl_biodone)
+			WAPBL_ADD_BUF(mp, bp);
+	}
+
 	/*
 	 * If the block hasn't been seen before:
 	 *	(1) Mark it as having been seen,
@@ -690,13 +753,6 @@ bdwrite(struct buf *bp)
 		reassignbuf(bp);
 		splx(s);
 		curproc->p_ru.ru_oublock++;		/* XXX */
-	}
-
-	/* If this is a tape block, write the block now. */
-	if (major(bp->b_dev) < nblkdev &&
-	    bdevsw[major(bp->b_dev)].d_type == D_TAPE) {
-		bawrite(bp);
-		return;
 	}
 
 	/* Otherwise, the "write" is done, so mark and release the buffer. */
@@ -781,6 +837,15 @@ brelse(struct buf *bp)
 		SET(bp->b_flags, B_INVAL);
 
 	if (ISSET(bp->b_flags, B_INVAL)) {
+		if (ISSET(bp->b_flags, B_LOCKED)) {
+			if (wapbl_vphaswapbl(bp->b_vp)) {
+				KASSERT(injournal(bp));
+				struct mount *mp = wapbl_vptomp(bp->b_vp);
+				KASSERT(bp->b_iodone !=
+				    mp->mnt_wapbl_op->wo_wapbl_biodone);
+				WAPBL_REMOVE_BUF(mp, bp);
+			}
+		}
 		/*
 		 * If the buffer is invalid, place it in the clean queue, so it
 		 * can be reused.
@@ -1109,11 +1174,17 @@ buf_daemon(struct proc *p)
 	struct timeval starttime, timediff;
 	struct buf *bp = NULL;
 	int s, pushed = 0;
+#ifdef WAPBL_DEBUG
+	int did_wapbl = 0; /* XXX pedro: remove me */
+#endif
 
 	cleanerproc = curproc;
 
 	s = splbio();
 	for (;;) {
+#ifdef WAPBL_DEBUG
+		did_wapbl = 0;
+#endif
 		if (bp == NULL || (pushed >= 16 &&
 		    UNCLEAN_PAGES < hidirtypages &&
 		    bcstats.kvaslots_avail > 2 * RESERVE_SLOTS)){
@@ -1152,6 +1223,27 @@ buf_daemon(struct proc *p)
 			if (!ISSET(bp->b_flags, B_DELWRI))
 				panic("Clean buffer on BQ_DIRTY");
 #endif
+
+#ifdef WAPBL
+			if (ISSET(bp->b_flags, B_LOCKED) &&
+			    wapbl_vphaswapbl(bp->b_vp)) {
+				brelse(bp);
+				struct mount *mp = wapbl_vptomp(bp->b_vp);
+				int error = wapbl_flush(mp->mnt_wapbl, 1);
+#ifdef WAPBL_DEBUG
+				if (did_wapbl++)
+					printf("synced wapbl %d times\n",
+					    did_wapbl);
+				if (error)
+					printf("buf_daemon: sync of mp %p "
+					    "failed with error %d\n", mp,
+					    error);
+#endif
+				s = splbio();
+				continue;
+			}
+#endif /* WAPBL */
+
 			if (LIST_FIRST(&bp->b_dep) != NULL &&
 			    !ISSET(bp->b_flags, B_DEFERRED) &&
 			    buf_countdeps(bp, 0, 0)) {

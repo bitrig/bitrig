@@ -144,6 +144,7 @@ struct buf {
 	LIST_ENTRY(buf) b_list;		/* All allocated buffers. */
 	LIST_ENTRY(buf) b_vnbufs;	/* Buffer's associated vnode. */
 	TAILQ_ENTRY(buf) b_freelist;	/* Free list position if not active. */
+	LIST_ENTRY(buf) b_wapbllist;	/* transaction buffer list */
 	time_t	b_synctime;		/* Time this buffer should be flushed */
 	struct  proc *b_proc;		/* Associated proc; NULL if kernel. */
 	volatile long	b_flags;	/* B_* flags. */
@@ -154,6 +155,7 @@ struct buf {
 	dev_t	b_dev;			/* Device associated with buffer. */
 	caddr_t	b_data;			/* associated data */
 	void	*b_saveaddr;		/* Original b_data for physio. */
+	void	*b_private;		/* private data for owner */
 
 	TAILQ_ENTRY(buf) b_valist;	/* LRU of va to reuse. */
 
@@ -274,7 +276,8 @@ void	brelse(struct buf *);
 void	bremfree(struct buf *);
 void	bufinit(void);
 void	buf_dirty(struct buf *);
-void    buf_undirty(struct buf *);
+void	buf_undirty(struct buf *);
+void	buf_put(struct buf *);
 int	bwrite(struct buf *);
 struct buf *getblk(struct vnode *, daddr_t, int, int, int);
 struct buf *geteblk(int);

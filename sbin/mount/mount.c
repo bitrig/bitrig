@@ -93,6 +93,7 @@ static struct opt {
 	{ MNT_ROOTFS,		1,	"root file system",	"" },
 	{ MNT_SYNCHRONOUS,	0,	"synchronous",		"sync" },
 	{ MNT_SOFTDEP,		0,	"softdep", 		"softdep" },
+	{ MNT_LOG,		0,	"log",	 		"log" },
 	{ 0,			0,	"",			"" }
 };
 

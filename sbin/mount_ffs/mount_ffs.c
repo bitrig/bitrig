@@ -52,6 +52,7 @@ static const struct mntopt mopts[] = {
 	MOPT_RELOAD,
 	MOPT_FORCE,
 	MOPT_SOFTDEP,
+	MOPT_LOG,
 	{ NULL }
 };
 

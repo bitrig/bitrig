@@ -65,6 +65,7 @@ union mntval {
 #define MOPT_GROUPQUOTA	{ "groupquota",	0, MFLAG_SET | MFLAG_STRVAL \
 					    | MFLAG_OPT }
 #define MOPT_SOFTDEP	{ "softdep",	MNT_SOFTDEP, MFLAG_SET }
+#define MOPT_LOG	{ "log",	MNT_LOG, MFLAG_SET }
 
 /* Control flags. */
 #define MOPT_FORCE	{ "force",	MNT_FORCE, MFLAG_SET }

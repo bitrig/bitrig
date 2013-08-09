@@ -314,6 +314,11 @@ struct mount {
 	int		mnt_maxsymlinklen;	/* max size of short symlink */
 	struct statfs	mnt_stat;		/* cache of filesystem stats */
 	void		*mnt_data;		/* private data */
+	struct wapbl	*mnt_wapbl;		/* log info */
+	struct wapbl_replay
+			*mnt_wapbl_replay;	/* replay support */
+	struct wapbl_ops
+			*mnt_wapbl_op;		/* logging ops */
 };
 
 /*
@@ -352,7 +357,7 @@ struct mount {
 /*
  * Mask of flags that are visible to statfs()
  */
-#define	MNT_VISFLAGMASK	0x0400ffff
+#define	MNT_VISFLAGMASK	0x1400ffff
 
 #define	MNT_BITS \
     "\010\001RDONLY\002SYNCHRONOUS\003NOEXEC\004NOSUID\005NODEV" \
@@ -369,6 +374,7 @@ struct mount {
 #define MNT_WANTRDWR	0x02000000	/* want upgrade to read/write */
 #define MNT_SOFTDEP     0x04000000      /* soft dependencies being done */
 #define MNT_DOOMED	0x08000000	/* device behind filesystem is gone */
+#define MNT_LOG		0x10000000	/* use logging */
 
 /*
  * Flags for various system call interfaces.
