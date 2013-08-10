@@ -203,12 +203,13 @@ struct buf {
 #define	B_SCANNED	0x00100000	/* Block already pushed during sync */
 #define	B_PDAEMON	0x00200000	/* I/O started by pagedaemon */
 #define	B_RELEASED	0x00400000	/* free this buffer after its kvm */
+#define	B_LOCKED	0x00800000	/* locked in core (not reusable) */
 
 #define	B_BITS	"\20\001AGE\002NEEDCOMMIT\003ASYNC\004BAD\005BUSY" \
     "\006CACHE\007CALL\010DELWRI\011DONE\012EINTR\013ERROR" \
     "\014INVAL\015NOCACHE\016PHYS\017RAW\020READ" \
     "\021WANTED\022WRITEINPROG\023XXX(FORMAT)\024DEFERRED" \
-    "\025SCANNED\026DAEMON\027RELEASED"
+    "\025SCANNED\026DAEMON\027RELEASED\030LOCKED"
 
 /*
  * This structure describes a clustered I/O.  It is stored in the b_saveaddr

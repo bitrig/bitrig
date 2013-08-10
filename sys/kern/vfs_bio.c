@@ -63,10 +63,11 @@
 /*
  * Definitions for the buffer free lists.
  */
-#define	BQUEUES		2		/* number of free buffer queues */
+#define	BQUEUES		3		/* number of free buffer queues */
 
 #define	BQ_DIRTY	0		/* LRU queue with dirty buffers */
 #define	BQ_CLEAN	1		/* LRU queue with clean buffers */
+#define	BQ_LOCKED	2		/* in-core locked metadata */
 
 TAILQ_HEAD(bqueues, buf) bufqueues[BQUEUES];
 int nobuffers;
@@ -138,12 +139,16 @@ bremfree(struct buf *bp)
 		if (dp == &bufqueues[BQUEUES])
 			panic("bremfree: lost tail");
 	}
-	if (!ISSET(bp->b_flags, B_DELWRI)) {
-		bcstats.numcleanpages -= atop(bp->b_bufsize);
-	} else {
-		bcstats.numdirtypages -= atop(bp->b_bufsize);
-		bcstats.delwribufs--;
+
+	if (!ISSET(bp->b_flags, B_LOCKED)) {
+		if (!ISSET(bp->b_flags, B_DELWRI)) {
+			bcstats.numcleanpages -= atop(bp->b_bufsize);
+		} else {
+			bcstats.numdirtypages -= atop(bp->b_bufsize);
+			bcstats.delwribufs--;
+		}
 	}
+
 	TAILQ_REMOVE(dp, bp, b_freelist);
 }
 
@@ -767,6 +772,10 @@ brelse(struct buf *bp)
 	 * Determine which queue the buffer should be on, then put it there.
 	 */
 
+	/* If it's locked, don't report an error; try again later. */
+	if (ISSET(bp->b_flags, (B_LOCKED|B_ERROR)) == (B_LOCKED|B_ERROR))
+		CLR(bp->b_flags, B_ERROR);
+
 	/* If it's not cacheable, or an error, mark it invalid. */
 	if (ISSET(bp->b_flags, (B_NOCACHE|B_ERROR)))
 		SET(bp->b_flags, B_INVAL);
@@ -821,14 +830,17 @@ brelse(struct buf *bp)
 		 * It has valid data.  Put it on the end of the appropriate
 		 * queue, so that it'll stick around for as long as possible.
 		 */
-
-		if (!ISSET(bp->b_flags, B_DELWRI)) {
-			bcstats.numcleanpages += atop(bp->b_bufsize);
-			bufq = &bufqueues[BQ_CLEAN];
-		} else {
-			bcstats.numdirtypages += atop(bp->b_bufsize);
-			bcstats.delwribufs++;
-			bufq = &bufqueues[BQ_DIRTY];
+		if (ISSET(bp->b_flags, B_LOCKED)) /* locked in core */
+			bufq = &bufqueues[BQ_LOCKED];
+		else {
+			if (!ISSET(bp->b_flags, B_DELWRI)) {
+				bcstats.numcleanpages += atop(bp->b_bufsize);
+				bufq = &bufqueues[BQ_CLEAN];
+			} else {
+				bcstats.numdirtypages += atop(bp->b_bufsize);
+				bcstats.delwribufs++;
+				bufq = &bufqueues[BQ_DIRTY];
+			}
 		}
 		if (ISSET(bp->b_flags, B_AGE)) {
 			binsheadfree(bp, bufq);
