@@ -14,7 +14,7 @@ OSMINOR=	1
 OSREV=		$(OSMAJOR).$(OSMINOR)
 OSrev=		$(OSMAJOR)$(OSMINOR)
 
-.SUFFIXES: .out .a .o .c .cc .C .cxx .F .f .r .y .l .s .S .cl .p .h .sh .m4
+.SUFFIXES: .out .a .o .c .cc .C .cpp .cxx .F .f .r .y .l .s .S .cl .p .h .sh .m4
 
 .if !exists(COMPILER_VERSION)
 COMPILER_VERSION?="clang"
@@ -119,6 +119,15 @@ CTAGS?=		/usr/bin/ctags
 .C.o:
 	${COMPILE.cc} ${.IMPSRC}
 .C.a:
+	${COMPILE.cc} ${.IMPSRC}
+	${AR} ${ARFLAGS} $@ $*.o
+	rm -f $*.o
+
+.cpp:
+	${LINK.cc} -o ${.TARGET} ${.IMPSRC} ${LDLIBS}
+.cpp.o:
+	${COMPILE.cc} ${.IMPSRC}
+.cpp.a:
 	${COMPILE.cc} ${.IMPSRC}
 	${AR} ${ARFLAGS} $@ $*.o
 	rm -f $*.o
