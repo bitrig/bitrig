@@ -45,15 +45,18 @@
 #include <sys/kernel.h>
 #include <sys/malloc.h>
 #include <sys/namei.h>
+#include <sys/wapbl.h>
 
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
 #include <ufs/ufs/ufsmount.h>
 #include <ufs/ufs/ufs_extern.h>
+#include <ufs/ufs/ufs_wapbl.h>
 #ifdef UFS_DIRHASH
 #include <ufs/ufs/dir.h>
 #include <ufs/ufs/dirhash.h>
 #endif
+#include <ufs/ffs/fs.h>
 
 /*
  * Last reference to an inode.  If necessary, write or delete it.
@@ -64,15 +67,18 @@ ufs_inactive(void *v)
 	struct vop_inactive_args *ap = v;
 	struct vnode *vp = ap->a_vp;
 	struct inode *ip = VTOI(vp);
+	struct fs *fs = ip->i_fs;
 	struct proc *p = curproc;
 	mode_t mode;
-	int error = 0;
+	int error = 0, logged = 0;
 #ifdef DIAGNOSTIC
 	extern int prtactive;
 
 	if (prtactive && vp->v_usecount != 0)
 		vprint("ufs_inactive: pushing active", vp);
 #endif
+
+	UFS_WAPBL_JUNLOCK_ASSERT(vp->v_mount);
 
 	/*
 	 * Ignore inodes related to stale file handles.
@@ -81,10 +87,39 @@ ufs_inactive(void *v)
 		goto out;
 
 	if (DIP(ip, nlink) <= 0 && (vp->v_mount->mnt_flag & MNT_RDONLY) == 0) {
+		error = UFS_WAPBL_BEGIN(vp->v_mount);
+		if (error)
+			goto out;
+		logged = 1;
 		if (getinoquota(ip) == 0)
 			(void)ufs_quota_free_inode(ip, NOCRED);
+		if (DIP(ip, size) != 0 && vp->v_mount->mnt_wapbl) {
+			/*
+			 * When journaling, only truncate one indirect block at
+			 * a time.
+			 */
+			uint64_t incr = MNINDIR(ip->i_ump) << fs->fs_bshift;
+			uint64_t base = NDADDR << fs->fs_bshift;
+			while (!error && DIP(ip, size) > base + incr) {
+				/*
+				 * round down to next full indirect block
+				 * boundary.
+				 */
+				uint64_t nsize = base +
+				    ((DIP(ip, size) - base - 1) &
+				    ~(incr - 1));
+				error = UFS_TRUNCATE(ip, nsize, 0, NOCRED);
+				if (error)
+					break;
+				UFS_WAPBL_END(vp->v_mount);
+				error = UFS_WAPBL_BEGIN(vp->v_mount);
+				if (error)
+					goto out;
+			}
+		}
 
-		error = UFS_TRUNCATE(ip, (off_t)0, 0, NOCRED);
+		if (error == 0)
+			error = UFS_TRUNCATE(ip, (off_t)0, 0, NOCRED);
 
 		DIP_ASSIGN(ip, rdev, 0);
 		mode = DIP(ip, mode);
@@ -106,12 +141,26 @@ ufs_inactive(void *v)
 		if (DOINGSOFTDEP(vp))
 			softdep_change_linkcnt(ip, 1);
 
+		UFS_WAPBL_END(vp->v_mount);
+		error = UFS_WAPBL_BEGIN(vp->v_mount);
+		if (error)
+			goto out;
 		UFS_INODE_FREE(ip, ip->i_number, mode);
 	}
 
 	if (ip->i_flag & (IN_ACCESS | IN_CHANGE | IN_MODIFIED | IN_UPDATE)) {
+		if (!logged++) {
+			int err;
+			err = UFS_WAPBL_BEGIN(vp->v_mount);
+			if (err) {
+				error = err;
+				goto out;
+			}
+		}
 		UFS_UPDATE(ip, 0);
 	}
+	if (logged)
+		UFS_WAPBL_END(vp->v_mount);
 out:
 	VOP_UNLOCK(vp, 0);
 
@@ -119,7 +168,7 @@ out:
 	 * If we are done with the inode, reclaim it
 	 * so that it can be reused immediately.
 	 */
-	if (ip->i_din1 == NULL || DIP(ip, mode) == 0)
+	if (error == 0 && (ip->i_din1 == NULL || DIP(ip, mode) == 0))
 		vrecycle(vp, p);
 
 	return (error);

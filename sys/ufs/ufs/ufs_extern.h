@@ -133,7 +133,7 @@ int ufs_check_export(struct mount *, struct mbuf *, int *,
 int ufs_vinit(struct mount *, struct vops *, struct vops *, struct vnode **);
 int ufs_makeinode(int, struct vnode *, struct vnode **,
 		  struct componentname *);
-
+int ufs_gop_alloc(struct vnode *, off_t, off_t, int, struct ucred *);
  
 /*
  * Soft dependency function prototypes.

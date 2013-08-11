@@ -268,8 +268,13 @@ struct fs {
 	int32_t	 fs_cpc;		/* cyl per cycle in postbl */
 /* this area is only allocated if fs_ffs1_flags & FS_FLAGS_UPDATED */
 	int32_t	 fs_maxbsize;           /* maximum blocking factor permitted */
-	int64_t	 fs_spareconf64[17];    /* old rotation block list head */
-	int64_t	 fs_sblockloc;          /* offset of standard super block */
+	uint8_t	 fs_journal_version;	/* journal format version */
+	uint8_t	 fs_journal_location;	/* journal location type */
+	uint8_t	 fs_journal_reserved[2];/* reserved for future use */
+	uint32_t fs_journal_flags;	/* journal flags */
+	uint64_t fs_journallocs[4];	/* location info for journal */
+	int64_t	 fs_sparecon64[12];	/* reserved for future use */
+	int64_t	 fs_sblockloc;		/* byte offset of standard superblock */
 	struct	csum_total fs_cstotal;  /* cylinder summary information */
 	int64_t	 fs_time;               /* time last written */
 	int64_t	 fs_size;               /* number of blocks in fs */
@@ -327,6 +332,7 @@ struct fs {
  */
 #define FS_UNCLEAN	0x01	/* filesystem not clean at mount */
 #define FS_DOSOFTDEP	0x02	/* filesystem using soft dependencies */
+#define FS_DOWAPBL	0x04	/* write-ahead physical block logging */
 /*
  * The following flag is used to detect a FFS1 file system that had its flags
  * moved to the new (FFS2) location for compatibility.
@@ -515,6 +521,8 @@ struct ocg {
 	((loc) & (fs)->fs_qbmask)
 #define fragoff(fs, loc)	/* calculates (loc % fs->fs_fsize) */ \
 	((loc) & (fs)->fs_qfmask)
+#define	lfragtosize(fs, frag)	/* calculates ((off_t)frag * fs->fs_fsize) */ \
+	(((off_t)(frag)) << (fs)->fs_fshift)
 #define lblktosize(fs, blk)	/* calculates ((off_t)blk * fs->fs_bsize) */ \
 	((off_t)(blk) << (fs)->fs_bshift)
 #define lblkno(fs, loc)		/* calculates (loc / fs->fs_bsize) */ \

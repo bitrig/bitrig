@@ -72,7 +72,7 @@ ffs_bufatoff(struct inode *ip, off_t offset, char **res, struct buf **bpp)
 		brelse(bp);
 		return (error);
 	}
-	bp->b_bcount = bsize;
+	buf_adjcnt(bp, bsize);
 	if (res)
 		*res = (char *)bp->b_data + blkoff(fs, offset);
 	*bpp = bp;

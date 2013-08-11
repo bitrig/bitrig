@@ -1889,6 +1889,64 @@ loop:
 	return (0);
 }
 
+/*
+ * Destroy any in core blocks past the truncation length.
+ * Called with the underlying vnode locked, which should prevent new dirty
+ * buffers from being queued.
+ */
+int
+vtruncbuf(struct vnode *vp, daddr_t lbn, int slpflag, int slptimeo)
+{
+	struct buf *bp, *nbp;
+	int s, error;
+
+	s = splbio();
+restart:
+	for (bp = LIST_FIRST(&vp->v_cleanblkhd); bp; bp = nbp) {
+		nbp = LIST_NEXT(bp, b_vnbufs);
+		if (bp->b_lblkno < lbn)
+			continue;
+		if (bp->b_flags & B_BUSY) {
+			bp->b_flags |= B_WANTED;
+			error = tsleep(bp, slpflag | (PRIBIO + 1),
+			    "vtruncbuf", slptimeo);
+			if (error) {
+				splx(s);
+				return (error);
+			}
+			goto restart;
+		}
+		bremfree(bp);
+		buf_acquire_nomap(bp);
+		bp->b_flags |= B_INVAL;
+		brelse(bp);
+	}
+
+	for (bp = LIST_FIRST(&vp->v_dirtyblkhd); bp; bp = nbp) {
+		nbp = LIST_NEXT(bp, b_vnbufs);
+		if (bp->b_lblkno < lbn)
+			continue;
+		if (bp->b_flags & B_BUSY) {
+			bp->b_flags |= B_WANTED;
+			error = tsleep(bp, slpflag | (PRIBIO + 1),
+			    "vtruncbuf", slptimeo);
+			if (error) {
+				splx(s);
+				return (error);
+			}
+			goto restart;
+		}
+		bremfree(bp);
+		buf_acquire_nomap(bp);
+		bp->b_flags |= B_INVAL;
+		brelse(bp);
+	}
+
+	splx(s);
+
+	return (0);
+}
+
 void
 vflushbuf(struct vnode *vp, int sync)
 {

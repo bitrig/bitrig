@@ -106,8 +106,9 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 		osize = blksize(fs, ip, nb);
 		if (osize < fs->fs_bsize && osize > 0) {
 			error = ffs_realloccg(ip, nb,
-			    ffs1_blkpref(ip, nb, (int)nb, &ip->i_ffs1_db[0]),
-			    osize, (int)fs->fs_bsize, cred, bpp, &newb);
+			    ffs1_blkpref(ip, nb, (int)nb, flags,
+			    &ip->i_ffs1_db[0]), osize, (int)fs->fs_bsize,
+			    flags, cred, bpp, &newb);
 			if (error)
 				return (error);
 			if (DOINGSOFTDEP(vp))
@@ -168,7 +169,7 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 						brelse(*bpp);
 						return (error);
 					}
-					(*bpp)->b_bcount = osize;
+					buf_adjcnt((*bpp), osize);
 				}
 				return (0);
 			} else {
@@ -177,9 +178,9 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 				 * want, grow it.
 				 */
 				error = ffs_realloccg(ip, lbn,
-				    ffs1_blkpref(ip, lbn, (int)lbn,
+				    ffs1_blkpref(ip, lbn, (int)lbn, flags,
 					&ip->i_ffs1_db[0]),
-				    osize, nsize, cred, bpp, &newb);
+				    osize, nsize, flags, cred, bpp, &newb);
 				if (error)
 					return (error);
 				if (DOINGSOFTDEP(vp))
@@ -198,14 +199,17 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 			else
 				nsize = fs->fs_bsize;
 			error = ffs_alloc(ip, lbn,
-			    ffs1_blkpref(ip, lbn, (int)lbn, &ip->i_ffs1_db[0]),
-			    nsize, cred, &newb);
+			    ffs1_blkpref(ip, lbn, (int)lbn, flags,
+			    &ip->i_ffs1_db[0]), nsize, flags, cred, &newb);
 			if (error)
 				return (error);
 			if (bpp != NULL) {
 				*bpp = getblk(vp, lbn, fs->fs_bsize, 0, 0);
-				if (nsize < fs->fs_bsize)
+				if (nsize < fs->fs_bsize) {
+					/* XXX pedro: remove me */
+					KASSERT(!((*bpp)->b_flags & B_LOCKED));
 					(*bpp)->b_bcount = nsize;
+				}
 				(*bpp)->b_blkno = fsbtodb(fs, newb);
 				if (flags & B_CLRBUF)
 					clrbuf(*bpp);
@@ -238,9 +242,10 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 	allocib = NULL;
 	allocblk = allociblk;
 	if (nb == 0) {
-		pref = ffs1_blkpref(ip, lbn, -indirs[0].in_off - 1, NULL);
+		pref = ffs1_blkpref(ip, lbn, -indirs[0].in_off - 1,
+		    flags | B_METAONLY, NULL);
 	        error = ffs_alloc(ip, lbn, pref, (int)fs->fs_bsize,
-				  cred, &newb);
+		    flags | B_METAONLY, cred, &newb);
 		if (error)
 			goto fail;
 		nb = newb;
@@ -286,9 +291,10 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 			continue;
 		}
 		if (pref == 0)
-			pref = ffs1_blkpref(ip, lbn, i - num - 1, NULL);
-		error = ffs_alloc(ip, lbn, pref, (int)fs->fs_bsize, cred,
-				  &newb);
+			pref = ffs1_blkpref(ip, lbn, i - num - 1,
+			    flags | B_METAONLY, NULL);
+		error = ffs_alloc(ip, lbn, pref, (int)fs->fs_bsize,
+		    flags | B_METAONLY, cred, &newb);
 		if (error) {
 			brelse(bp);
 			goto fail;
@@ -326,13 +332,20 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 			bdwrite(bp);
 		}
 	}
+
+	if (flags & B_METAONLY) {
+		KASSERT(bpp != NULL);
+		*bpp = bp;
+		return (0);
+	}
+
 	/*
 	 * Get the data block, allocating if necessary.
 	 */
 	if (nb == 0) {
-		pref = ffs1_blkpref(ip, lbn, indirs[i].in_off, &bap[0]);
-		error = ffs_alloc(ip, lbn, pref, (int)fs->fs_bsize, cred,
-				  &newb);
+		pref = ffs1_blkpref(ip, lbn, indirs[i].in_off, flags, &bap[0]);
+		error = ffs_alloc(ip, lbn, pref, (int)fs->fs_bsize, flags,
+		    cred, &newb);
 		if (error) {
 			brelse(bp);
 			goto fail;
@@ -471,8 +484,8 @@ ffs2_balloc(struct inode *ip, off_t off, int size, struct ucred *cred,
 		osize = blksize(fs, ip, nb);
 		if (osize < fs->fs_bsize && osize > 0) {
 			error = ffs_realloccg(ip, nb, ffs2_blkpref(ip,
-			    lastlbn, nb, &ip->i_ffs2_db[0]), osize,
-			    (int) fs->fs_bsize, cred, bpp, &newb);
+			    lastlbn, nb, flags, &ip->i_ffs2_db[0]), osize,
+			    (int) fs->fs_bsize, flags, cred, bpp, &newb);
 			if (error)
 				return (error);
 
@@ -539,6 +552,8 @@ ffs2_balloc(struct inode *ip, off_t off, int size, struct ucred *cred,
 						return (error);
 					}
 					(*bpp)->b_bcount = osize;
+					/* XXX pedro: remove me */
+					KASSERT(!((*bpp)->b_flags & B_LOCKED));
 				}
 
 				return (0);
@@ -548,9 +563,9 @@ ffs2_balloc(struct inode *ip, off_t off, int size, struct ucred *cred,
 				 * grow it.
 				 */
 				error = ffs_realloccg(ip, lbn,
-				    ffs2_blkpref(ip, lbn, (int) lbn,
-				    &ip->i_ffs2_db[0]), osize, nsize, cred,
-				    bpp, &newb);
+				    ffs2_blkpref(ip, lbn, (int) lbn, flags,
+				    &ip->i_ffs2_db[0]), osize, nsize, flags,
+				    cred, bpp, &newb);
 				if (error)
 					return (error);
 
@@ -570,14 +585,18 @@ ffs2_balloc(struct inode *ip, off_t off, int size, struct ucred *cred,
 				nsize = fs->fs_bsize;
 
 			error = ffs_alloc(ip, lbn, ffs2_blkpref(ip, lbn,
-			    (int) lbn, &ip->i_ffs2_db[0]), nsize, cred, &newb);
+			    (int) lbn, flags, &ip->i_ffs2_db[0]), nsize, flags,
+			    cred, &newb);
 			if (error)
 				return (error);
 
 			if (bpp != NULL) {
 				bp = getblk(vp, lbn, fs->fs_bsize, 0, 0);
-				if (nsize < fs->fs_bsize)
+				if (nsize < fs->fs_bsize) {
+					/* XXX pedro: remove me */
+					KASSERT(!(bp->b_flags & B_LOCKED));
 					bp->b_bcount = nsize;
+				}
 				bp->b_blkno = fsbtodb(fs, newb);
 				if (flags & B_CLRBUF)
 					clrbuf(bp);
@@ -617,9 +636,10 @@ ffs2_balloc(struct inode *ip, off_t off, int size, struct ucred *cred,
 	allocblk = allociblk;
 
 	if (nb == 0) {
-		pref = ffs2_blkpref(ip, lbn, -indirs[0].in_off - 1, NULL);
-		error = ffs_alloc(ip, lbn, pref, (int) fs->fs_bsize, cred,
-		    &newb);
+		pref = ffs2_blkpref(ip, lbn, -indirs[0].in_off - 1,
+		    flags | B_METAONLY, NULL);
+		error = ffs_alloc(ip, lbn, pref, (int) fs->fs_bsize,
+		    flags | B_METAONLY, cred, &newb);
 		if (error)
 			goto fail;
 
@@ -673,10 +693,11 @@ ffs2_balloc(struct inode *ip, off_t off, int size, struct ucred *cred,
 		}
 
 		if (pref == 0)
-			pref = ffs2_blkpref(ip, lbn, i - num - 1, NULL);
+			pref = ffs2_blkpref(ip, lbn, i - num - 1,
+			    flags | B_METAONLY, NULL);
 
-		error = ffs_alloc(ip, lbn, pref, (int) fs->fs_bsize, cred,
-		    &newb);
+		error = ffs_alloc(ip, lbn, pref, (int) fs->fs_bsize,
+		    flags | B_METAONLY, cred, &newb);
 		if (error) {
 			brelse(bp);
 			goto fail;
@@ -719,14 +740,21 @@ ffs2_balloc(struct inode *ip, off_t off, int size, struct ucred *cred,
 			bdwrite(bp);
 	}
 
+	if (flags & B_METAONLY) {
+		KASSERT(bpp != NULL);
+		*bpp = bp;
+		return (0);
+	}
+
 	/*
 	 * Get the data block, allocating if necessary.
 	 */
 	if (nb == 0) {
-		pref = ffs2_blkpref(ip, lbn, indirs[num].in_off, &bap[0]);
+		pref = ffs2_blkpref(ip, lbn, indirs[num].in_off, flags,
+		    &bap[0]);
 
-		error = ffs_alloc(ip, lbn, pref, (int)fs->fs_bsize, cred,
-		    &newb);
+		error = ffs_alloc(ip, lbn, pref, (int)fs->fs_bsize, flags,
+		    cred, &newb);
 		if (error) {
 			brelse(bp);
 			goto fail;

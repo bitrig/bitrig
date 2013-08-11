@@ -135,9 +135,9 @@ ufs_wapbl_end2(struct mount *mp, struct vnode *vp1, struct vnode *vp2)
 #define	UFS_WAPBL_END(mp)	ufs_wapbl_end2(mp, NULL, NULL)
 #define	UFS_WAPBL_END1(mp, v1)	ufs_wapbl_end2(mp, v1, NULL)
 
-#define	UFS_WAPBL_UPDATE(vp, access, modify, flags)			\
-	if ((vp)->v_mount->mnt_wapbl) {					\
-		UFS_UPDATE(vp, access, modify, flags);			\
+#define	UFS_WAPBL_UPDATE(ip, flags)					\
+	if (ITOV((ip))->v_mount->mnt_wapbl) {				\
+		UFS_UPDATE((ip), (flags));				\
 	}
 
 #ifdef UFS_WAPBL_DEBUG_JLOCK
@@ -163,7 +163,7 @@ ufs_wapbl_end2(struct mount *mp, struct vnode *vp1, struct vnode *vp2)
 #define	UFS_WAPBL_BEGIN1(mp, v1) (0 && (mp) && (v1))
 #define	UFS_WAPBL_END(mp)	do { } while (0)
 #define	UFS_WAPBL_END1(mp, v1)
-#define	UFS_WAPBL_UPDATE(vp, access, modify, flags)	do { } while (0)
+#define	UFS_WAPBL_UPDATE(ip, flags)	do { } while (0)
 #define	UFS_WAPBL_JLOCK_ASSERT(mp)
 #define	UFS_WAPBL_JUNLOCK_ASSERT(mp)
 #define	UFS_WAPBL_REGISTER_INODE(mp, ino, mode)		do { } while (0)

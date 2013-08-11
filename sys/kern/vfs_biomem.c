@@ -245,6 +245,7 @@ buf_fix_mapping(struct buf *bp, vsize_t newsize)
 		 * buffers read in by bread_cluster
 		 */
 		bp->b_bufsize = newsize;
+		KASSERT(!(bp->b_flags & B_LOCKED));
 	}
 }
 

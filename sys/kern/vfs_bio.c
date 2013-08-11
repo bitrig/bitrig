@@ -497,6 +497,7 @@ bread_cluster_callback(struct buf *bp)
 		 * Shrink this buffer's mapping to only cover its part of
 		 * the total I/O.
 		 */
+		KASSERT(!(bp->b_flags & B_LOCKED)); /* XXX pedro: remove me */
 		buf_fix_mapping(bp, newsize);
 		bp->b_bcount = newsize;
 	}
@@ -574,6 +575,8 @@ bread_cluster(struct vnode *vp, daddr_t blkno, int size, struct buf **rbpp)
 		bcstats.pendingreads++;
 		bcstats.numreads++;
 		SET(xbpp[i]->b_flags, B_READ | B_ASYNC);
+		/* XXX pedro: remove me */
+		KASSERT(!(xbpp[i]->b_flags & B_LOCKED));
 		xbpp[i]->b_blkno = sblkno + (i * inc);
 		xbpp[i]->b_bufsize = xbpp[i]->b_bcount = size;
 		xbpp[i]->b_data = NULL;
@@ -1376,3 +1379,14 @@ bcstats_print(
 	    bcstats.pendingreads, bcstats.pendingwrites);
 }
 #endif
+
+void
+buf_adjcnt(struct buf *bp, long ncount)
+{
+	KASSERT(ncount <= bp->b_bufsize);
+	long ocount = bp->b_bcount;
+	bp->b_bcount = ncount;
+	if (injournal(bp))
+		WAPBL_RESIZE_BUF(wapbl_vptomp(bp->b_vp), bp, bp->b_bufsize,
+		    ocount);
+}

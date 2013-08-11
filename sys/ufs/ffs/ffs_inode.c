@@ -42,6 +42,7 @@
 #include <sys/kernel.h>
 #include <sys/malloc.h>
 #include <sys/resourcevar.h>
+#include <sys/wapbl.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -49,6 +50,7 @@
 #include <ufs/ufs/inode.h>
 #include <ufs/ufs/ufsmount.h>
 #include <ufs/ufs/ufs_extern.h>
+#include <ufs/ufs/ufs_wapbl.h>
 
 #include <ufs/ffs/fs.h>
 #include <ufs/ffs/ffs_extern.h>
@@ -123,6 +125,16 @@ ffs_update(struct inode *ip, struct timespec *atime,
 		return (error);
 	}
 
+	if (DIP(ip, mode)) {
+		if (DIP(ip, nlink) > 0) {
+			UFS_WAPBL_UNREGISTER_INODE(ip->i_ump->um_mountp,
+			    ip->i_number, DIP(ip, mode));
+		} else {
+			UFS_WAPBL_REGISTER_INODE(ip->i_ump->um_mountp,
+			    ip->i_number, DIP(ip, mode));
+		}
+	}
+
 	if (DOINGSOFTDEP(vp))
 		softdep_update_inodeblock(ip, bp, waitfor);
 	else if (ip->i_effnlink != DIP(ip, nlink))
@@ -163,7 +175,7 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 	struct fs *fs;
 	struct buf *bp;
 	int offset, size, level;
-	long count, nblocks, vflags, blocksreleased = 0;
+	long count, nblocks, blocksreleased = 0;
 	int i, aflags, error, allerror;
 	off_t osize;
 
@@ -290,7 +302,7 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 		if (ovp->v_type != VDIR)
 			bzero((char *)bp->b_data + offset,
 			      (u_int)(size - offset));
-		bp->b_bcount = size;
+		buf_adjcnt(bp, size);
 		if (aflags & B_SYNC)
 			bwrite(bp);
 		else
@@ -349,8 +361,7 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 	}
 
 	DIP_ASSIGN(oip, size, osize);
-	vflags = ((length > 0) ? V_SAVE : 0) | V_SAVEMETA;
-	allerror = vinvalbuf(ovp, vflags, cred, curproc, 0, 0);
+	allerror = vtruncbuf(ovp, lastblock + 1, 0, 0);
 
 	/*
 	 * Indirect blocks first.
@@ -368,7 +379,12 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 			blocksreleased += count;
 			if (lastiblock[level] < 0) {
 				DIP_ASSIGN(oip, ib[level], 0);
-				ffs_blkfree(oip, bn, fs->fs_bsize);
+				if (oip->i_ump->um_mountp->mnt_wapbl) {
+					UFS_WAPBL_REGISTER_DEALLOCATION(
+					    oip->i_ump->um_mountp,
+					    fsbtodb(fs, bn), fs->fs_bsize);
+				} else
+					ffs_blkfree(oip, bn, fs->fs_bsize);
 				blocksreleased += nblocks;
 			}
 		}
@@ -388,7 +404,11 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 
 		DIP_ASSIGN(oip, db[i], 0);
 		bsize = blksize(fs, oip, i);
-		ffs_blkfree(oip, bn, bsize);
+		if (oip->i_ump->um_mountp->mnt_wapbl && ovp->v_type != VREG) {
+			UFS_WAPBL_REGISTER_DEALLOCATION(oip->i_ump->um_mountp,
+			    fsbtodb(fs, bn), bsize);
+		} else
+			ffs_blkfree(oip, bn, bsize);
 		blocksreleased += btodb(bsize);
 	}
 	if (lastblock < 0)
@@ -418,7 +438,13 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 			 * required for the storage we're keeping.
 			 */
 			bn += numfrags(fs, newspace);
-			ffs_blkfree(oip, bn, oldspace - newspace);
+			if (oip->i_ump->um_mountp->mnt_wapbl &&
+			    ovp->v_type != VREG) {
+			    	UFS_WAPBL_REGISTER_DEALLOCATION(
+				    oip->i_ump->um_mountp, fsbtodb(fs, bn),
+				    oldspace - newspace);
+			} else
+				ffs_blkfree(oip, bn, oldspace - newspace);
 			blocksreleased += btodb(oldspace - newspace);
 		}
 	}
@@ -440,6 +466,7 @@ done:
 	else	/* sanity */
 		DIP_ASSIGN(oip, blocks, 0);
 	oip->i_flag |= IN_CHANGE;
+	UFS_WAPBL_UPDATE(oip, 0);
 	(void)ufs_quota_free_blocks(oip, blocksreleased, NOCRED);
 	return (allerror);
 }
@@ -570,7 +597,12 @@ ffs_indirtrunc(struct inode *ip, daddr_t lbn, daddr_t dbn,
 				allerror = error;
 			blocksreleased += blkcount;
 		}
-		ffs_blkfree(ip, nb, fs->fs_bsize);
+		if (ip->i_ump->um_mountp->mnt_wapbl &&
+		    ((level > SINGLE) || ITOV(ip)->v_type != VREG)) {
+		    	UFS_WAPBL_REGISTER_DEALLOCATION(ip->i_ump->um_mountp,
+			    fsbtodb(fs, nb), fs->fs_bsize);
+		} else
+			ffs_blkfree(ip, nb, fs->fs_bsize);
 		blocksreleased += nblocks;
 	}
 

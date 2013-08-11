@@ -99,19 +99,21 @@ extern struct vops	ffs_specvops;
 extern struct vops	ffs_fifovops;
 
 /* ffs_alloc.c */
-int ffs_alloc(struct inode *, daddr_t, daddr_t , int, struct ucred *,
+int ffs_alloc(struct inode *, daddr_t, daddr_t , int, int, struct ucred *,
 		   daddr_t *);
-int ffs_realloccg(struct inode *, daddr_t, daddr_t, int, int ,
+int ffs_realloccg(struct inode *, daddr_t, daddr_t, int, int, int,
 		       struct ucred *, struct buf **, daddr_t *);
 int ffs_reallocblks(void *);
 int ffs_inode_alloc(struct inode *, mode_t, struct ucred *, struct vnode **);
 int ffs_inode_free(struct inode *, ufsino_t, mode_t);
 int ffs_freefile(struct inode *, ufsino_t, mode_t);
 
-int32_t ffs1_blkpref(struct inode *, daddr_t, int, int32_t *);
+int32_t ffs1_blkpref(struct inode *, daddr_t, int, int, int32_t *);
 #ifdef FFS2
-int64_t ffs2_blkpref(struct inode *, daddr_t, int, int64_t *);
+int64_t ffs2_blkpref(struct inode *, daddr_t, int, int, int64_t *);
 #endif
+int ffs_blkalloc_ump(struct ufsmount *, daddr_t, long);
+void ffs_wapbl_blkfree(struct fs *, struct vnode *, daddr_t, long);
 void ffs_blkfree(struct inode *, daddr_t, long);
 void ffs_clusteracct(struct fs *, struct cg *, daddr_t, int);
 

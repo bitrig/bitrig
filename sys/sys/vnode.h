@@ -182,12 +182,13 @@ struct vattr {
 /*
  * Flags for ioflag.
  */
-#define	IO_UNIT		0x01		/* do I/O as atomic unit */
-#define	IO_APPEND	0x02		/* append write to end */
-#define	IO_SYNC		0x04		/* do I/O synchronously */
-#define	IO_NODELOCKED	0x08		/* underlying node already locked */
-#define	IO_NDELAY	0x10		/* FNDELAY flag set in file table */
-#define	IO_NOLIMIT	0x20		/* don't enforce limits on i/o */
+#define	IO_UNIT			0x01	/* do I/O as atomic unit */
+#define	IO_APPEND		0x02	/* append write to end */
+#define	IO_SYNC			0x04	/* do I/O synchronously */
+#define	IO_NODELOCKED		0x08	/* underlying node already locked */
+#define	IO_NDELAY		0x10	/* FNDELAY flag set in file table */
+#define	IO_NOLIMIT		0x20	/* don't enforce limits on i/o */
+#define	IO_JOURNALLOCKED	0x40	/* journal is already locked */
 
 /*
  *  Modes.  Some values same as Ixxx entries from inode.h for now.
@@ -588,6 +589,7 @@ int	vflush(struct mount *, struct vnode *, int);
 int	vget(struct vnode *, int, struct proc *);
 void	vgone(struct vnode *);
 void	vgonel(struct vnode *, struct proc *);
+int	vtruncbuf(struct vnode *, daddr_t, int, int);
 int	vinvalbuf(struct vnode *, int, struct ucred *, struct proc *,
 	    int, int);
 void	vntblinit(void);
