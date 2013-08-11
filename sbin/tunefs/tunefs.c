@@ -37,6 +37,7 @@
 
 #include <ufs/ufs/dinode.h>
 #include <ufs/ffs/fs.h>
+#include <ufs/ufs/ufs_wapbl.h>
 #include <ufs/ffs/ffs_extern.h>
 
 #include <err.h>
@@ -69,24 +70,28 @@ static off_t sblock_try[] = SBLOCKSEARCH;
 
 static	void	bwrite(daddr_t, char *, int, const char *);
 static	void	bread(daddr_t, char *, int, const char *);
+static	void	change_log_info(long long);
 static	int	getnum(const char *, const char *, int, int);
 static	void	getsb(struct fs *, const char *);
 static	int	openpartition(char *, int, char **);
+static	void	show_log_info(void);
 static	void	usage(void);
 
 int
 main(int argc, char *argv[])
 {
-#define	OPTSTRING	"AFNe:g:h:m:o:"
+#define	OPTSTRING	"AFNe:g:h:l:m:o:"
 	int		i, ch, Aflag, Fflag, Nflag, openflags;
 	char		*special;
 	const char	*chg[2];
 	int		maxbpg, minfree, optim;
 	int		avgfilesize, avgfpdir;
+	long long	logfilesize;
 
 	Aflag = Fflag = Nflag = 0;
 	maxbpg = minfree = optim = -1;
 	avgfilesize = avgfpdir = -1;
+	logfilesize = -1;
 	chg[FS_OPTSPACE] = "space";
 	chg[FS_OPTTIME] = "time";
 
@@ -120,6 +125,13 @@ main(int argc, char *argv[])
 			avgfpdir = getnum(optarg,
 			    "expected number of files per directory",
 			    1, INT_MAX);
+			break;
+
+		case 'l':
+			if (scan_scaled(optarg, &logfilesize) == -1 ||
+			    logfilesize < 0)
+				errx(1, "invalid number `%s' for journal log "
+				    "file size", optarg);
 			break;
 
 		case 'm':
@@ -205,6 +217,9 @@ main(int argc, char *argv[])
 	CHANGEVAL(sblock.fs_avgfpdir, avgfpdir,
 	    "expected number of files per directory", "");
 
+	if (logfilesize >= 0)
+		change_log_info(logfilesize);
+
 	if (Nflag) {
 		fprintf(stdout, "tunefs: current settings of %s\n", special);
 		fprintf(stdout, "\tmaximum contiguous block count %d\n",
@@ -221,6 +236,7 @@ main(int argc, char *argv[])
 		fprintf(stdout,
 		    "\texpected number of files per directory: %d\n",
 		    sblock.fs_avgfpdir);
+		show_log_info();
 		fprintf(stdout, "tunefs: no changes made\n");
 		exit(0);
 	}
@@ -233,6 +249,137 @@ main(int argc, char *argv[])
 			    buf, SBLOCKSIZE, special);
 	close(fi);
 	exit(0);
+}
+
+static void
+show_log_info(void)
+{
+	const char *loc;
+	uint64_t size, blksize, logsize;
+	int print;
+
+	switch (sblock.fs_journal_location) {
+	case UFS_WAPBL_JOURNALLOC_NONE:
+		print = blksize = 0;
+		/* nothing */
+		break;
+	case UFS_WAPBL_JOURNALLOC_END_PARTITION:
+		loc = "end of partition";
+		size = sblock.fs_journallocs[UFS_WAPBL_EPART_COUNT];
+		blksize = sblock.fs_journallocs[UFS_WAPBL_EPART_BLKSZ];
+		print = 1;
+		break;
+	case UFS_WAPBL_JOURNALLOC_IN_FILESYSTEM:
+		loc = "in filesystem";
+		size = sblock.fs_journallocs[UFS_WAPBL_INFS_COUNT];
+		blksize = sblock.fs_journallocs[UFS_WAPBL_INFS_BLKSZ];
+		print = 1;
+		break;
+	default:
+		loc = "unknown";
+		size = blksize = 0;
+		print = 1;
+		break;
+	}
+
+	if (print) {
+		logsize = size * blksize;
+
+		printf("\tjournal log file location: %s\n", loc);
+		printf("\tjournal log file size: ");
+		if (logsize == 0)
+			printf("0");
+		else {
+			char sizebuf[FMT_SCALED_STRSIZE+1];
+			if (fmt_scaled(logsize, sizebuf) == 0) {
+				sizebuf[FMT_SCALED_STRSIZE] = '\0';
+				printf("%s (%lld bytes)", sizebuf, logsize);
+			} else
+				printf("%lld bytes", logsize);
+		}
+		printf("\n");
+		printf("\tjournal log flags:");
+		if (sblock.fs_journal_flags & UFS_WAPBL_FLAGS_CREATE_LOG)
+			printf(" create-log");
+		if (sblock.fs_journal_flags & UFS_WAPBL_FLAGS_CLEAR_LOG)
+			printf(" clear-log");
+		printf("\n");
+	}
+}
+
+static void
+change_log_info(long long logfilesize)
+{
+	/*
+	 * NOTES:
+	 *  - only operate on in-filesystem log sizes
+	 *  - can't change size of existing log
+	 *  - if current is same, no action
+	 *  - if current is zero and new is non-zero, set flag to create log
+	 *    on next mount
+	 *  - if current is non-zero and new is zero, set flag to clear log
+	 *    on next mount
+	 */
+	int in_fs_log;
+	uint64_t old_size;
+
+	old_size = 0;
+	switch (sblock.fs_journal_location) {
+	case UFS_WAPBL_JOURNALLOC_END_PARTITION:
+		in_fs_log = 0;
+		old_size = sblock.fs_journallocs[UFS_WAPBL_EPART_COUNT] *
+		    sblock.fs_journallocs[UFS_WAPBL_EPART_BLKSZ];
+		break;
+
+	case UFS_WAPBL_JOURNALLOC_IN_FILESYSTEM:
+		in_fs_log = 1;
+		old_size = sblock.fs_journallocs[UFS_WAPBL_INFS_COUNT] *
+		    sblock.fs_journallocs[UFS_WAPBL_INFS_BLKSZ];
+		break;
+
+	case UFS_WAPBL_JOURNALLOC_NONE:
+	default:
+		in_fs_log = 0;
+		old_size = 0;
+		break;
+	}
+
+	if (logfilesize == 0) {
+		/*
+		 * Don't clear out the locators - the kernel might need
+		 * these to find the log!  Just set the "clear the log"
+		 * flag and let the kernel do the rest.
+		 */
+		sblock.fs_journal_flags |= UFS_WAPBL_FLAGS_CLEAR_LOG;
+		sblock.fs_journal_flags &= ~UFS_WAPBL_FLAGS_CREATE_LOG;
+		warnx("log file size cleared from %llu", old_size);
+		return;
+	}
+
+	if (!in_fs_log && logfilesize > 0 && old_size > 0)
+		errx(1, "can't change size of non-in-filesystem log");
+
+	if (old_size == (uint64_t)logfilesize && logfilesize > 0) {
+		/* no action */
+		warnx("log file size remains unchanged at %lld", logfilesize);
+		return;
+	}
+
+	if (old_size == 0) {
+		/* create new log of desired size next mount */
+		sblock.fs_journal_location = UFS_WAPBL_JOURNALLOC_IN_FILESYSTEM;
+		sblock.fs_journallocs[UFS_WAPBL_INFS_ADDR] = 0;
+		sblock.fs_journallocs[UFS_WAPBL_INFS_COUNT] = logfilesize;
+		sblock.fs_journallocs[UFS_WAPBL_INFS_BLKSZ] = 0;
+		sblock.fs_journallocs[UFS_WAPBL_INFS_INO] = 0;
+		sblock.fs_journal_flags |= UFS_WAPBL_FLAGS_CREATE_LOG;
+		sblock.fs_journal_flags &= ~UFS_WAPBL_FLAGS_CLEAR_LOG;
+		warnx("log file size set to %lld", logfilesize);
+	} else {
+		errx(1,
+		    "can't change existing log size from %llu to %lld",
+		     old_size, logfilesize);
+	} 
 }
 
 static int

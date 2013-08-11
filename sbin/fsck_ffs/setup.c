@@ -169,6 +169,38 @@ found:
 		doskipclean = 0;
 		pwarn("USING ALTERNATE SUPERBLOCK AT %d\n", bflag);
 	}
+
+	/* ffs_superblock_layout() == 2 */
+	if (sblock.fs_magic != FS_UFS1_MAGIC ||
+	    (sblock.fs_ffs1_flags & FS_FLAGS_UPDATED) != 0) {
+		/* can have WAPBL */
+		if (check_wapbl() != 0) {
+			doskipclean = 0;
+		}
+		if (sblock.fs_flags & FS_DOWAPBL) {
+			if (preen && doskipclean) {
+				if (/* !quiet */ 1)
+					pwarn("file system is journaled; "
+					    "not checking\n");
+				return (-1);
+			}
+			if (/* !quiet */ 1)
+				pwarn("** File system is journaled; "
+				    "replaying journal\n");
+			replay_wapbl();
+			doskipclean = 0;
+			sblock.fs_flags &= ~FS_DOWAPBL;
+			sbdirty();
+			/* Although we may have updated the superblock from
+			 * the journal, we are still going to do a full check,
+			 * so we don't bother to re-read the superblock from
+			 * the journal.
+			 * XXX, instead we could re-read the superblock and
+			 * then not force doskipclean = 0 
+			 */
+		}
+	}
+
 	if (debug)
 		printf("clean = %d\n", sblock.fs_clean);
 	if (sblock.fs_clean & FS_ISCLEAN) {

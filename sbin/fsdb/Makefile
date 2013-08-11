@@ -4,10 +4,13 @@ PROG=	fsdb
 MAN=	fsdb.8
 SRCS=	fsdb.c fsdbutil.c fsutil.c \
 	dir.c inode.c pass1.c pass1b.c pass2.c pass3.c pass4.c \
-	pass5.c preen.c setup.c utilities.c ffs_subr.c ffs_tables.c
+	pass5.c preen.c setup.c utilities.c ffs_subr.c ffs_tables.c \
+	vfs_wapbl.c wapbl.c
+CPPFLAGS+=-DWAPBL_DEBUG_PRINT=0
 CFLAGS+= -I${.CURDIR}/../../sbin/fsck -I${.CURDIR}/../../sbin/fsck_ffs
 LDADD+= -ledit -lcurses -lutil
 DPADD+=	${LIBEDIT} ${LIBCURSES} ${LIBUTIL}
-.PATH:	${.CURDIR}/../../sbin/fsck ${.CURDIR}/../../sbin/fsck_ffs ${.CURDIR}/../../sys/ufs/ffs
+.PATH:	${.CURDIR}/../../sbin/fsck ${.CURDIR}/../../sbin/fsck_ffs \
+	${.CURDIR}/../../sys/ufs/ffs ${.CURDIR}/../../sys/kern
 
 .include <bsd.prog.mk>

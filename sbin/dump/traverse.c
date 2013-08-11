@@ -119,6 +119,11 @@ mapfileino(ino_t ino, off_t *tapesize, int *dirskipped)
 	dp = getino(ino, &mode);
 	if (mode == 0)
 		return;
+	/*
+	 * Skip WAPBL log file inodes.
+	 */
+	if (DIP(dp, di_flags) & SF_LOG)
+		return;
 	SETINO(ino, usedinomap);
 	if (mode == IFDIR)
 		SETINO(ino, dumpdirmap);

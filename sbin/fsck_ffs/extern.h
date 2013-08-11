@@ -75,3 +75,9 @@ void	catch(int);
 void	catchquit(int);
 void	voidquit(int);
 void	catchinfo(int);
+
+int	check_wapbl(void);
+void	replay_wapbl(void);
+void	cleanup_wapbl(void);
+int	read_wapbl(char *, long, daddr_t);
+int	is_journal_inode(ino_t);

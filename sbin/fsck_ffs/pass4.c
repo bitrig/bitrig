@@ -77,7 +77,14 @@ pass4(void)
 			case DFOUND:
 				n = ILNCOUNT(inumber);
 				if (n) {
-					adjust(&idesc, (short)n);
+					if (is_journal_inode(inumber)) {
+						if (/* debug */ 1)
+							printf(
+    "skipping unreferenced journal inode %llu\n", (unsigned long long)inumber);
+						break;
+					} else { 
+						adjust(&idesc, (short)n);
+					}
 					break;
 				}
 				for (zlnp = zlnhead; zlnp; zlnp = zlnp->next)

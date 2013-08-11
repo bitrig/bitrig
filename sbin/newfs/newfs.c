@@ -268,7 +268,7 @@ main(int argc, char *argv[])
 			break;
 		case 's':
 			if (scan_scaled(optarg, &fssize_input) == -1 ||
-			    fssize_input <= 0)
+			    fssize_input == 0)
 				fatal("file system size invalid: %s", optarg);
 			fssize_usebytes = 0;    /* in case of multiple -s */
 			for (s1 = optarg; *s1 != '\0'; s1++)
@@ -427,14 +427,29 @@ havelabel:
 			fatal("%s: no default sector size", argv[0]);
 	}
 
-	if (fssize_usebytes) {
-		fssize = (daddr_t)fssize_input / (daddr_t)sectorsize;
-		if ((daddr_t)fssize_input % (daddr_t)sectorsize != 0)
-			fssize++;
-	} else if (fssize_input == 0)
-		fssize = DL_GETPSIZE(pp);
-	else
-		fssize = (daddr_t)fssize_input;
+	if (fssize_input < 0) {
+		long long gap; /* leave gap at the end of partition */
+		fssize_input = -fssize_input;
+		if (fssize_usebytes) {
+			gap = (daddr_t)fssize_input / (daddr_t)sectorsize;
+			if ((daddr_t)fssize_input % (daddr_t)sectorsize != 0)
+				gap++;
+		} else
+			gap = fssize_input;
+		if (gap >= DL_GETPSIZE(pp))
+			fatal("%s: requested gap of %lld sectors on partition "
+			    "'%c' is too big", argv[0], gap, *cp);
+		fssize = DL_GETPSIZE(pp) - gap;
+	} else {
+		if (fssize_usebytes) {
+			fssize = (daddr_t)fssize_input / (daddr_t)sectorsize;
+			if ((daddr_t)fssize_input % (daddr_t)sectorsize != 0)
+				fssize++;
+		} else if (fssize_input == 0)
+			fssize = DL_GETPSIZE(pp);
+		else
+			fssize = (daddr_t)fssize_input;
+	}
 
 	if (fssize > DL_GETPSIZE(pp) && !mfs)
 	       fatal("%s: maximum file system size on the `%c' partition is "

@@ -258,6 +258,11 @@ in
 and ultimately depends on the per-arch
 .Dv MAXDSIZ
 limit.
+If
+.Ar size
+is negative the specified size is subtracted from the default size
+specified for the partition in the disk label, thus reserving space
+at the end of the partition.
 .It Fl T Ar disktype
 Uses information for the specified disk from
 .Xr disktab 5

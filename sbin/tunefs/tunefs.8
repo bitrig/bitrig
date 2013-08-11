@@ -43,6 +43,7 @@
 .Op Fl e Ar maxbpg
 .Op Fl g Ar avgfilesize
 .Op Fl h Ar avgfpdir
+.Op Fl l Ar logsize
 .Op Fl m Ar minfree
 .\" .Op Fl n Ar soft_dependency_enabling
 .Op Fl o Ar optimize_preference
@@ -93,6 +94,18 @@ will be accessed
 This specifies the expected average file size.
 .It Fl h Ar avgfpdir
 This specifies the expected number of files per directory.
+.It Fl l Ar logsize
+This value specifies the size of the in-filesystem journaling log file.
+The default journaling log file size is described in
+.Xr wapbl 4 .
+Specifying a size of zero will cause the in-filesystem journaling log file
+to be removed the next time the filesystem is mounted.
+The size of an existing in-filesystem journaling log file cannot be changed
+directly.
+You need to first set the log file size to zero, then mount the
+filesystem without logging enabled (which will remove the log without
+creating a new one), unmount, set the size to the new value and finally
+re-mount with logging enabled.
 .It Fl m Ar minfree
 This value specifies the percentage of space held back
 from normal users; the minimum free space threshold.
@@ -130,6 +143,7 @@ or
 .Li time .
 .El
 .Sh SEE ALSO
+.Xr wapbl 4 ,
 .Xr fs 5 ,
 .Xr dumpfs 8 ,
 .Xr fsck_ffs 8 ,

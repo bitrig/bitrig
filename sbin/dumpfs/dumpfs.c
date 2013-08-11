@@ -41,7 +41,11 @@
 #include <sys/param.h>
 #include <sys/time.h>
 
+#include <sys/wapbl.h>
+#include <sys/wapbl_replay.h>
+
 #include <ufs/ufs/dinode.h>
+#include <ufs/ufs/ufs_wapbl.h>
 #include <ufs/ffs/fs.h>
 
 #include <err.h>
@@ -66,14 +70,30 @@ union {
 } cgun;
 #define acg	cgun.cg
 
+union {
+	struct wapbl_wc_header wh;
+	struct wapbl_wc_null wn;
+	char pad[MAXBSIZE];
+} jbuf;
+#define awh	jbuf.wh
+#define awn	jbuf.wn
+
+#define offsetof(s, e)	((size_t)&((s *)0)->e)
+
 long	dev_bsize;
 
-int	dumpfs(int, const char *);
-int	dumpcg(const char *, int, int);
-int	marshal(const char *);
-int	open_disk(const char *);
-void	pbits(void *, int);
-__dead void	usage(void);
+int			dumpfs(int, const char *);
+int			dumpcg(const char *, int, int);
+int			marshal(const char *);
+int			open_disk(const char *);
+void			pbits(void *, int);
+int			print_journal(const char *, int);
+const char *		wapbl_type_string(unsigned);
+void			print_journal_header(const char *);
+off_t			print_journal_entries(const char *, size_t);
+__dead static void	usage(void);
+
+int dojournal = 0;
 
 int
 main(int argc, char *argv[])
@@ -84,8 +104,11 @@ main(int argc, char *argv[])
 
 	domarshal = eval = 0;
 
-	while ((ch = getopt(argc, argv, "m")) != -1) {
+	while ((ch = getopt(argc, argv, "jm")) != -1) {
 		switch (ch) {
+		case 'j':	/* journal */
+			dojournal = 1;
+			break;
 		case 'm':
 			domarshal = 1;
 			break;
@@ -259,6 +282,15 @@ dumpfs(int fd, const char *name)
 	    afs.fs_cgrotor, afs.fs_fmod, afs.fs_ronly, afs.fs_clean);
 	printf("avgfpdir %d\tavgfilesize %d\n",
 	    afs.fs_avgfpdir, afs.fs_avgfilesize);
+	if (dojournal) {
+		printf("wapbl version 0x%x\tlocation %u\tflags 0x%x\n",
+		    afs.fs_journal_version, afs.fs_journal_location,
+		    afs.fs_journal_flags);
+		printf("wapbl loc0 %llu\tloc1 %llu",
+		    afs.fs_journallocs[0], afs.fs_journallocs[1]);
+		printf("\tloc2 %llu\tloc3 %llu\n",
+		    afs.fs_journallocs[2], afs.fs_journallocs[3]);
+	}
 	printf("flags\t");
 	if (afs.fs_magic == FS_UFS2_MAGIC ||
 	    afs.fs_ffs1_flags & FS_FLAGS_UPDATED)
@@ -273,6 +305,8 @@ dumpfs(int fd, const char *name)
 		printf("soft-updates ");
 	if (fsflags & FS_FLAGS_UPDATED)
 		printf("updated ");
+	if (fsflags & FS_DOWAPBL)
+		printf("wapbl ");
 #if 0
 	fsflags &= ~(FS_UNCLEAN | FS_DOSOFTDEP | FS_FLAGS_UPDATED);
 	if (fsflags != 0)
@@ -282,6 +316,10 @@ dumpfs(int fd, const char *name)
 	printf("fsmnt\t%s\n", afs.fs_fsmnt);
 	printf("volname\t%s\tswuid\t%ju\n",
 		afs.fs_volname, (uintmax_t)afs.fs_swuid);
+	if (dojournal) {
+		printf("\n");
+		print_journal(name, fd);
+	}
 	printf("\ncs[].cs_(nbfree,ndir,nifree,nffree):\n\t");
 	afs.fs_csp = calloc(1, afs.fs_cssize);
 	for (i = 0, j = 0; i < afs.fs_cssize; i += afs.fs_bsize, j++) {
@@ -458,9 +496,182 @@ pbits(void *vp, int max)
 	printf("\n");
 }
 
+int
+print_journal(const char *name, int fd)
+{
+	daddr_t off;
+	size_t count, blklen, bno, skip;
+	off_t boff, head, tail, len;
+	uint32_t generation;
+
+	if (afs.fs_journal_version != UFS_WAPBL_VERSION)
+		return 0;
+
+	generation = 0;
+	head = tail = 0;
+
+	switch (afs.fs_journal_location) {
+	case UFS_WAPBL_JOURNALLOC_END_PARTITION:
+	case UFS_WAPBL_JOURNALLOC_IN_FILESYSTEM:
+
+		off    = afs.fs_journallocs[0];
+		count  = afs.fs_journallocs[1];
+		blklen = afs.fs_journallocs[2];
+
+		for (bno=0; bno<count; bno += skip / blklen) {
+
+			skip = blklen;
+
+			boff = bno * blklen;
+			if (bno * blklen >= 2 * blklen &&
+			  ((head >= tail && (boff < tail || boff >= head)) ||
+			  (head < tail && (boff >= head && boff < tail))))
+				continue;
+
+			printf("journal block %lu offset %lld\n",
+				(unsigned long)bno, (long long) boff);
+
+			if (lseek(fd, (off_t)(off*blklen) + boff, SEEK_SET)
+			    == (off_t)-1)
+				return (1);
+			if (read(fd, &jbuf, blklen) != (ssize_t)blklen) {
+				warnx("%s: error reading journal", name);
+				return 1;
+			}
+
+			switch (awh.wc_type) {
+			case 0:
+				break;
+			case WAPBL_WC_HEADER:
+				print_journal_header(name);
+				if (awh.wc_generation > generation) {
+					head = awh.wc_head;
+					tail = awh.wc_tail;
+				}
+				generation = awh.wc_generation;
+				skip = awh.wc_len;
+				break;
+			default:
+				len = print_journal_entries(name, blklen);
+				skip = awh.wc_len;
+				if (len != (off_t)skip)
+					printf("  CORRUPTED RECORD\n");
+				break;
+			}
+
+			if (blklen == 0)
+				break;
+
+			skip = (skip + blklen - 1) / blklen * blklen;
+			if (skip == 0)
+				break;
+
+		}
+		break;
+	}
+
+	return 0;
+}
+
+const char *
+wapbl_type_string(unsigned t)
+{
+	static char buf[12];
+
+	switch (t) {
+	case WAPBL_WC_BLOCKS:
+		return "blocks";
+	case WAPBL_WC_REVOCATIONS:
+		return "revocations";
+	case WAPBL_WC_INODES:
+		return "inodes";
+	case WAPBL_WC_HEADER:
+		return "header";
+	}
+
+	snprintf(buf,sizeof(buf),"%08x",t);
+	return buf;
+}
+
+void
+print_journal_header(const char *name)
+{
+	printf("  type %s len %d  version %u\n",
+		wapbl_type_string(awh.wc_type), awh.wc_len,
+		awh.wc_version);
+	printf("  checksum      %08x  generation %9u\n",
+		awh.wc_checksum, awh.wc_generation);
+	printf("  fsid %08x.%08x  time %llu nsec %u\n",
+		awh.wc_fsid[0], awh.wc_fsid[1],
+		(unsigned long long)awh.wc_time, awh.wc_timensec);
+	printf("  log_bshift  %10u  fs_bshift %10u\n",
+		awh.wc_log_dev_bshift, awh.wc_fs_dev_bshift);
+	printf("  head        %10lld  tail      %10lld\n",
+		(long long)awh.wc_head, (long long)awh.wc_tail);
+	printf("  circ_off    %10lld  circ_size %10lld\n",
+		(long long)awh.wc_circ_off, (long long)awh.wc_circ_size);
+}
+
+off_t
+print_journal_entries(const char *name, size_t blklen)
+{
+	int i, n;
+	struct wapbl_wc_blocklist *wcb;
+	struct wapbl_wc_inodelist *wci;
+	off_t len = 0;
+	int ph;
+
+	printf("  type %s len %d",
+		wapbl_type_string(awn.wc_type), awn.wc_len);
+
+	switch (awn.wc_type) {
+	case WAPBL_WC_BLOCKS:
+	case WAPBL_WC_REVOCATIONS:
+		wcb = (struct wapbl_wc_blocklist *)&awn;
+		printf("  blkcount %u\n", wcb->wc_blkcount);
+		ph = (blklen - offsetof(struct wapbl_wc_blocklist, wc_blocks))
+			/ sizeof(wcb->wc_blocks[0]);
+		n = MIN(wcb->wc_blkcount, ph);
+		for (i=0; i<n; i++) {
+			if (/* verbose */ 1) {
+				printf("  %3d: daddr %14llu  dlen %d\n", i,
+				 (unsigned long long)wcb->wc_blocks[i].wc_daddr,
+				 wcb->wc_blocks[i].wc_dlen);
+			}
+			len += wcb->wc_blocks[i].wc_dlen;
+		}
+		if (awn.wc_type == WAPBL_WC_BLOCKS) {
+			if (len % blklen)
+				len += blklen - len % blklen;
+		} else
+			len = 0;
+		break;
+	case WAPBL_WC_INODES:
+		wci = (struct wapbl_wc_inodelist *)&awn;
+		printf("  count %u clear %u\n",
+			wci->wc_inocnt, wci->wc_clear);
+		ph = (blklen - offsetof(struct wapbl_wc_inodelist, wc_inodes))
+			/ sizeof(wci->wc_inodes[0]);
+		n = MIN(wci->wc_inocnt, ph);
+		for (i=0; i<n; ++i) {
+			if (/* verbose */ 1) {
+				printf("  %3d: inumber %10u  imode %08x\n", i,
+					wci->wc_inodes[i].wc_inumber,
+					wci->wc_inodes[i].wc_imode);
+			}
+		}
+		break;
+	default:
+		printf("\n");
+		break;
+	}
+
+	return len + blklen;
+}
+
 __dead void
 usage(void)
 {
-	(void)fprintf(stderr, "usage: dumpfs [-m] filesys | device\n");
+	(void)fprintf(stderr, "usage: dumpfs [-jm] filesys | device\n");
 	exit(1);
 }
