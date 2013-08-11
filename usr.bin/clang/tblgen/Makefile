@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-PROG_CXX=tblgen
+PROG=tblgen
 
 SRCDIR=	utils/TableGen
 SRCS=	AsmMatcherEmitter.cpp \
