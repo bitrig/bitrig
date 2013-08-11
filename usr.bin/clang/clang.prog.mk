@@ -11,4 +11,6 @@ LDADD+=	${.OBJDIR}/../../../lib/clang/lib${lib}/lib${lib}.a
 
 BINDIR?= /usr/bin
 
+CXXFLAGS+=${CFLAGS}
+
 .include <bsd.prog.mk>
