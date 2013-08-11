@@ -158,6 +158,11 @@ public:
     ObjCObjArg,  // '@'
     ObjCBeg = ObjCObjArg, ObjCEnd = ObjCObjArg,
 
+    // FreeBSD specific specifiers
+    FreeBSDbArg,
+    FreeBSDDArg,
+    FreeBSDrArg,
+
     // GlibC specific specifiers.
     PrintErrno,   // 'm'
 

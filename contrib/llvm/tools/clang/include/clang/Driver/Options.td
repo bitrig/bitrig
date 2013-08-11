@@ -530,6 +530,8 @@ def fno_rewrite_includes : Flag<["-"], "fno-rewrite-includes">, Group<f_Group>;
 
 def ffreestanding : Flag<["-"], "ffreestanding">, Group<f_Group>, Flags<[CC1Option]>,
   HelpText<"Assert that the compilation takes place in a freestanding environment">;
+def fformat_extensions: Flag<["-"], "fformat-extensions">, Group<f_Group>, Flags<[CC1Option]>,
+  HelpText<"Enable FreeBSD kernel specific format string extensions">;
 def fgnu_keywords : Flag<["-"], "fgnu-keywords">, Group<f_Group>, Flags<[CC1Option]>,
   HelpText<"Allow GNU-extension keywords regardless of language standard">;
 def fgnu89_inline : Flag<["-"], "fgnu89-inline">, Group<f_Group>, Flags<[CC1Option]>,

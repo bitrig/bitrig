@@ -198,10 +198,25 @@ static PrintfSpecifierResult ParsePrintfSpecifier(FormatStringHandler &H,
     case '@': k = ConversionSpecifier::ObjCObjArg; break;
     // Glibc specific.
     case 'm': k = ConversionSpecifier::PrintErrno; break;
+    // FreeBSD format extensions
+    case 'b':
+      if (LO.FormatExtensions)
+        k = ConversionSpecifier::FreeBSDbArg; // int followed by char *
+      break;
+    case 'r':
+      if (LO.FormatExtensions)
+        k = ConversionSpecifier::FreeBSDrArg;
+      break;
+    case 'y':
+      if (LO.FormatExtensions)
+        k = ConversionSpecifier::iArg;
+      break;
     // Apple-specific
     case 'D':
       if (Target.getTriple().isOSDarwin())
         k = ConversionSpecifier::DArg;
+      else if (LO.FormatExtensions)
+        k = ConversionSpecifier::FreeBSDDArg; // u_char * followed by char *
       break;
     case 'O':
       if (Target.getTriple().isOSDarwin())
@@ -216,6 +231,10 @@ static PrintfSpecifierResult ParsePrintfSpecifier(FormatStringHandler &H,
   FS.setConversionSpecifier(CS);
   if (CS.consumesDataArgument() && !FS.usesPositionalArg())
     FS.setArgIndex(argIndex++);
+  // FreeBSD extension
+  if (k == ConversionSpecifier::FreeBSDbArg ||
+      k == ConversionSpecifier::FreeBSDDArg)
+    argIndex++;
 
   if (k == ConversionSpecifier::InvalidSpecifier) {
     // Assume the conversion takes one argument.
@@ -618,6 +637,7 @@ bool PrintfSpecifier::hasValidPlusPrefix() const {
   case ConversionSpecifier::GArg:
   case ConversionSpecifier::aArg:
   case ConversionSpecifier::AArg:
+  case ConversionSpecifier::FreeBSDrArg:
     return true;
 
   default:
@@ -643,6 +663,7 @@ bool PrintfSpecifier::hasValidAlternativeForm() const {
   case ConversionSpecifier::FArg:
   case ConversionSpecifier::gArg:
   case ConversionSpecifier::GArg:
+  case ConversionSpecifier::FreeBSDrArg:
     return true;
 
   default:

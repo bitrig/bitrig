@@ -14,6 +14,7 @@
 #include "clang/Frontend/Utils.h"
 #include "clang/Basic/FileManager.h"
 #include "clang/Basic/LangOptions.h"
+#include "clang/Basic/Version.h"
 #include "clang/Config/config.h" // C_INCLUDE_DIRS
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/HeaderSearchOptions.h"
@@ -333,6 +334,9 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
 #endif
     }
     break;
+  case llvm::Triple::FreeBSD:
+    AddPath("/usr/include/clang/" CLANG_VERSION_STRING, System, false);
+    break;
       
   default:
     break;
@@ -426,7 +430,10 @@ AddDefaultCPlusPlusIncludePaths(const llvm::Triple &triple, const HeaderSearchOp
   case llvm::Triple::FreeBSD:
     // FreeBSD 8.0
     // FreeBSD 7.3
-    AddGnuCPlusPlusIncludePaths("/usr/include/c++/4.2", "", "", "", triple);
+    AddGnuCPlusPlusIncludePaths("/usr/include/c++/4.2",
+                                "", "", "", triple);
+    AddGnuCPlusPlusIncludePaths("/usr/include/c++/4.2/backward",
+                                "", "", "", triple);
     break;
   case llvm::Triple::OpenBSD: {
     std::string t = triple.getTriple();

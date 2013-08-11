@@ -2991,6 +2991,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
 
   // Forward -f (flag) options which we can pass directly.
   Args.AddLastArg(CmdArgs, options::OPT_femit_all_decls);
+  Args.AddLastArg(CmdArgs, options::OPT_fformat_extensions);
   Args.AddLastArg(CmdArgs, options::OPT_fheinous_gnu_extensions);
   Args.AddLastArg(CmdArgs, options::OPT_flimit_debug_info);
   Args.AddLastArg(CmdArgs, options::OPT_fno_limit_debug_info);

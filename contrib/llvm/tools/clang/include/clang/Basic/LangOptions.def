@@ -84,6 +84,7 @@ LANGOPT(TraditionalCPP    , 1, 0, "traditional CPP emulation")
 LANGOPT(RTTI              , 1, 1, "run-time type information")
 LANGOPT(MSBitfields       , 1, 0, "Microsoft-compatible structure layout")
 LANGOPT(Freestanding, 1, 0, "freestanding implementation")
+LANGOPT(FormatExtensions  , 1, 0, "FreeBSD format extensions")
 LANGOPT(NoBuiltin         , 1, 0, "disable builtin functions")
 LANGOPT(NoMathBuiltin     , 1, 0, "disable math builtin functions")
 

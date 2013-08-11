@@ -2980,6 +2980,40 @@ CheckPrintfHandler::HandlePrintfSpecifier(const analyze_printf::PrintfSpecifier
     CoveredArgs.set(argIndex);
   }
 
+  // FreeBSD extensions
+  if (CS.getKind() == ConversionSpecifier::FreeBSDbArg ||
+      CS.getKind() == ConversionSpecifier::FreeBSDDArg) { 
+    // claim the second argument
+    CoveredArgs.set(argIndex + 1);
+
+    // Now type check the data expression that matches the
+    // format specifier.
+    const Expr *Ex = getDataArg(argIndex);
+    const analyze_printf::ArgType &AT = 
+      (CS.getKind() == ConversionSpecifier::FreeBSDbArg) ?
+        ArgType(S.Context.IntTy) : ArgType::CStrTy;
+    if (AT.isValid() && !AT.matchesType(S.Context, Ex->getType()))
+      S.Diag(getLocationOfByte(CS.getStart()),
+             diag::warn_printf_conversion_argument_type_mismatch)
+        << AT.getRepresentativeType(S.Context) << Ex->getType()
+        << getSpecifierRange(startSpecifier, specifierLen)
+        << Ex->getSourceRange();
+
+    // Now type check the data expression that matches the
+    // format specifier.
+    Ex = getDataArg(argIndex + 1);
+    const analyze_printf::ArgType &AT2 = ArgType::CStrTy;
+    if (AT2.isValid() && !AT2.matchesType(S.Context, Ex->getType()))
+      S.Diag(getLocationOfByte(CS.getStart()),
+             diag::warn_printf_conversion_argument_type_mismatch)
+        << AT2.getRepresentativeType(S.Context) << Ex->getType()
+        << getSpecifierRange(startSpecifier, specifierLen)
+        << Ex->getSourceRange();
+
+     return true;
+  }
+  // END OF FREEBSD EXTENSIONS
+
   // Check for using an Objective-C specific conversion specifier
   // in a non-ObjC literal.
   if (!ObjCContext && CS.isObjCArg()) {
