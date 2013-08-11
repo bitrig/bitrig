@@ -8671,7 +8671,8 @@ Decl *Sema::ActOnStartOfFunctionDef(Scope *FnBodyScope, Decl *D) {
 
   // Builtin functions cannot be defined.
   if (unsigned BuiltinID = FD->getBuiltinID()) {
-    if (!Context.BuiltinInfo.isPredefinedLibFunction(BuiltinID)) {
+    if (!Context.BuiltinInfo.isPredefinedLibFunction(BuiltinID) &&
+        !Context.BuiltinInfo.isPredefinedRuntimeFunction(BuiltinID)) {
       Diag(FD->getLocation(), diag::err_builtin_definition) << FD;
       FD->setInvalidDecl();
     }
@@ -10295,7 +10296,8 @@ void Sema::ActOnTagFinishDefinition(Scope *S, Decl *TagD,
     Tag->setTopLevelDeclInObjCContainer();
 
   // Notify the consumer that we've defined a tag.
-  Consumer.HandleTagDeclDefinition(Tag);
+  if (!Tag->isInvalidDecl())
+    Consumer.HandleTagDeclDefinition(Tag);
 }
 
 void Sema::ActOnObjCContainerFinishDefinition() {

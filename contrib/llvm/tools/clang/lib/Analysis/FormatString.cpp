@@ -521,6 +521,11 @@ const char *ConversionSpecifier::toString() const {
   // Objective-C specific specifiers.
   case ObjCObjArg: return "@";
 
+  // FreeBSD specific specifiers.
+  case FreeBSDbArg: return "b";
+  case FreeBSDDArg: return "D";
+  case FreeBSDrArg: return "r";
+
   // GlibC specific specifiers.
   case PrintErrno: return "m";
   }
@@ -599,6 +604,7 @@ bool FormatSpecifier::hasValidLengthModifier(const TargetInfo &Target) const {
         case ConversionSpecifier::xArg:
         case ConversionSpecifier::XArg:
         case ConversionSpecifier::nArg:
+        case ConversionSpecifier::FreeBSDrArg:
           return true;
         default:
           return false;
@@ -627,6 +633,7 @@ bool FormatSpecifier::hasValidLengthModifier(const TargetInfo &Target) const {
         case ConversionSpecifier::nArg:
         case ConversionSpecifier::cArg:
         case ConversionSpecifier::sArg:
+        case ConversionSpecifier::FreeBSDrArg:
         case ConversionSpecifier::ScanListArg:
           return true;
         default:
@@ -730,6 +737,9 @@ bool FormatSpecifier::hasStandardConversionSpecifier(const LangOptions &LangOpt)
     case ConversionSpecifier::SArg:
       return LangOpt.ObjC1 || LangOpt.ObjC2;
     case ConversionSpecifier::InvalidSpecifier:
+    case ConversionSpecifier::FreeBSDbArg:
+    case ConversionSpecifier::FreeBSDDArg:
+    case ConversionSpecifier::FreeBSDrArg:
     case ConversionSpecifier::PrintErrno:
     case ConversionSpecifier::DArg:
     case ConversionSpecifier::OArg:
