@@ -38,7 +38,7 @@ SRCS=	ADCE.cpp \
 	Sink.cpp \
 	TailRecursionElimination.cpp
 
-.if ${MK_CLANG_EXTRAS} != "no"
+.if ${MK_CLANG_EXTRAS:L} != "no"
 SRCS+=	LoopInstSimplify.cpp \
 	LowerAtomic.cpp \
 	Reg2Mem.cpp \

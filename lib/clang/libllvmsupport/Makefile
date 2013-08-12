@@ -84,7 +84,7 @@ SRCS=	APFloat.cpp \
 	regstrlcpy.c \
 	system_error.cpp
 
-.if ${MK_CLANG_EXTRAS} != "no"
+.if ${MK_CLANG_EXTRAS:L} != "no"
 SRCS+=	Compression.cpp \
 	DataExtractor.cpp \
 	DataStream.cpp \

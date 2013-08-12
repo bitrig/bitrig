@@ -36,7 +36,7 @@ TGHDRS=	CC1AsOptions \
 	DiagnosticSemaKinds \
 	Options
 
-.if !defined(EARLY_BUILD) && defined(MK_CLANG_FULL) && ${MK_CLANG_FULL} != "no"
+.if !defined(EARLY_BUILD) && defined(MK_CLANG_FULL) && ${MK_CLANG_FULL:L} != "no"
 _clangstaticanalyzer= \
 	clangstaticanalyzerfrontend \
 	clangstaticanalyzercheckers \

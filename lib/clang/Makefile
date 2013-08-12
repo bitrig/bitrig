@@ -3,7 +3,7 @@
 .include <bsd.own.mk>
 
 .if !make(install)
-.if !defined(EARLY_BUILD) && defined(MK_CLANG_FULL) && ${MK_CLANG_FULL} != "no"
+.if !defined(EARLY_BUILD) && defined(MK_CLANG_FULL) && ${MK_CLANG_FULL:L} != "no"
 _libclangstaticanalyzer= \
 	libclangstaticanalyzercheckers \
 	libclangstaticanalyzercore \
@@ -81,7 +81,7 @@ SUBDIR=	libclanganalysis \
 	libllvmx86instprinter \
 	libllvmx86utils
 
-.if ${MK_CLANG_EXTRAS} != "no"
+.if ${MK_CLANG_EXTRAS:L} != "no"
 SUBDIR+=libllvmdebuginfo \
 	libllvmexecutionengine \
 	libllvminterpreter \

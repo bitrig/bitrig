@@ -64,7 +64,7 @@ SRCS=	AliasAnalysis.cpp \
 	TypeBasedAliasAnalysis.cpp \
 	ValueTracking.cpp
 
-.if ${MK_CLANG_EXTRAS} != "no"
+.if ${MK_CLANG_EXTRAS:L} != "no"
 SRCS+=	BlockFrequencyInfo.cpp
 .endif
 
