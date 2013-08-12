@@ -406,6 +406,7 @@ protected:
     // Bitrig defines; list based off of gcc output
 
     Builder.defineMacro("__Bitrig__");
+    Builder.defineMacro("__OpenBSD__");
     DefineStd(Builder, "unix", Opts);
     Builder.defineMacro("__ELF__");
     if (Opts.POSIXThreads)
@@ -415,7 +416,7 @@ public:
   BitrigTargetInfo(const std::string &triple)
     : OSTargetInfo<Target>(triple) {
       this->UserLabelPrefix = "";
-      this->TLSSupported = false;
+      this->TLSSupported = true;
       this->MCountName = "__mcount";
   }
 };
@@ -3533,7 +3534,7 @@ class ARMTargetInfo : public TargetInfo {
     // the kernel which on armv6 and newer uses ldrex and strex. The net result
     // is that if we assume the kernel is at least as recent as the hardware,
     // it is safe to use atomic instructions on armv6 and newer.
-    if (T.getOS() != llvm::Triple::Linux && T.getOS() != llvm::Triple::FreeBSD)
+    if (T.getOS() != llvm::Triple::Linux && T.getOS() != llvm::Triple::Bitrig && T.getOS() != llvm::Triple::FreeBSD)
       return false;
     StringRef ArchName = T.getArchName();
     if (T.getArch() == llvm::Triple::arm) {
