@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-PROG_CXX=bugpoint
+PROG=bugpoint
 
 SRCDIR=	tools/bugpoint
 SRCS=	BugDriver.cpp \

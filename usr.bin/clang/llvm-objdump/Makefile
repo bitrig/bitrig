@@ -1,9 +1,9 @@
 # $FreeBSD$
 
-NO_MAN=
+NOMAN=
 .include <bsd.own.mk>
 
-PROG_CXX=llvm-objdump
+PROG=llvm-objdump
 DPADD=	${LIBZ}
 LDADD=	-lz
 

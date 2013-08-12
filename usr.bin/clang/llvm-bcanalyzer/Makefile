@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-PROG_CXX=llvm-bcanalyzer
+PROG=llvm-bcanalyzer
 
 SRCDIR=	tools/llvm-bcanalyzer
 SRCS=	llvm-bcanalyzer.cpp

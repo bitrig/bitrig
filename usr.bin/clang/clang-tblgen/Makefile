@@ -1,9 +1,9 @@
 # $FreeBSD$
 
-NO_MAN=
+NOMAN=
 .include <bsd.own.mk>
 
-PROG_CXX=clang-tblgen
+PROG=clang-tblgen
 
 SRCDIR=	tools/clang/utils/TableGen
 SRCS=	ClangASTNodesEmitter.cpp \

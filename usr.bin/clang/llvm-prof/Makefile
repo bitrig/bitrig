@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-PROG_CXX=llvm-prof
+PROG=llvm-prof
 
 SRCDIR=	tools/llvm-prof
 SRCS=	llvm-prof.cpp

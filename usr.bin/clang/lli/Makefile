@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-PROG_CXX=lli
+PROG=lli
 
 SRCDIR=	tools/lli
 SRCS=	lli.cpp \

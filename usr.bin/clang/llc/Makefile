@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-PROG_CXX=llc
+PROG=llc
 
 SRCDIR=	tools/llc
 SRCS=	llc.cpp

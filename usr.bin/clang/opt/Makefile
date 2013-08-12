@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-PROG_CXX=opt
+PROG=opt
 
 SRCDIR=	tools/opt
 SRCS=	AnalysisWrappers.cpp \

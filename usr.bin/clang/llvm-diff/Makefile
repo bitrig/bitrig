@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-PROG_CXX=llvm-diff
+PROG=llvm-diff
 
 SRCDIR=	tools/llvm-diff
 SRCS=	llvm-diff.cpp \

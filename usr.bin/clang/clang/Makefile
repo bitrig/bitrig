@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-PROG_CXX=clang
+PROG=clang
 
 SRCDIR=	tools/clang/tools/driver
 SRCS=	cc1_main.cpp \

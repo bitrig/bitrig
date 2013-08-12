@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-PROG_CXX=llvm-extract
+PROG=llvm-extract
 
 SRCDIR=	tools/llvm-extract
 SRCS=	llvm-extract.cpp

@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-PROG_CXX=llvm-ranlib
+PROG=llvm-ranlib
 
 SRCDIR=	tools/llvm-ranlib
 SRCS=	llvm-ranlib.cpp
