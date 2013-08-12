@@ -27,6 +27,11 @@ TARGET_ABI=	gnueabi
 TARGET_ABI=	unknown
 .endif
 
+# NOTE: profile is disabled for clang pieces because it is expected
+# that the profiled libraries will be extremely rarely used compared
+# to the number of times clang is build, ie save some global wattage.
+NOPROFILE= 
+
 TARGET_TRIPLE?=	${TARGET_ARCH:C/amd64/x86_64/}-${TARGET_ABI}-bitrig1.0
 BUILD_TRIPLE?=	${BUILD_ARCH:C/amd64/x86_64/}-unknown-bitrig1.0
 CFLAGS+=	-DLLVM_DEFAULT_TARGET_TRIPLE=\"${TARGET_TRIPLE}\" \
