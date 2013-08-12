@@ -63,6 +63,7 @@ def : DiagGroup<"ctor-dtor-privacy">;
 def GNUDesignator : DiagGroup<"gnu-designator">;
 def GNUStringLiteralOperatorTemplate :
   DiagGroup<"gnu-string-literal-operator-template">;
+def : DiagGroup<"bounded">;
 
 def DeleteNonVirtualDtor : DiagGroup<"delete-non-virtual-dtor">;
 def AbstractFinalClass : DiagGroup<"abstract-final-class">;
@@ -498,6 +499,7 @@ def Most : DiagGroup<"most", [
     StringPlusInt,
     Trigraphs,
     Uninitialized,
+    UninitializedSometimes,
     UnknownPragmas,
     Unused,
     VolatileRegisterVar,

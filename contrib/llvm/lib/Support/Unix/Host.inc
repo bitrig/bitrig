@@ -26,11 +26,11 @@
 
 using namespace llvm;
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__Bitrig__)
 std::string sys::getDefaultTargetTriple() {
   return LLVM_DEFAULT_TARGET_TRIPLE;
 }
-#else // __FreeBSD__
+#else // __FreeBSD__ ||  __Bitrig__
 static std::string getOSVersion() {
   struct utsname info;
 

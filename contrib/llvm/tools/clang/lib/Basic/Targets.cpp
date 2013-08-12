@@ -430,6 +430,7 @@ protected:
     // Bitrig defines; list based off of gcc output
 
     Builder.defineMacro("__Bitrig__");
+    Builder.defineMacro("__OpenBSD__");
     DefineStd(Builder, "unix", Opts);
     Builder.defineMacro("__ELF__");
     if (Opts.POSIXThreads)
@@ -438,7 +439,7 @@ protected:
 public:
   BitrigTargetInfo(const llvm::Triple &Triple) : OSTargetInfo<Target>(Triple) {
     this->UserLabelPrefix = "";
-    this->TLSSupported = false;
+    this->TLSSupported = true;
     this->MCountName = "__mcount";
   }
 };
