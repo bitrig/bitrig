@@ -346,26 +346,18 @@ cpu_alloc_idle_pcb(struct cpu_info *ci)
 #endif /* MULTIPROCESSOR */
 
 /*
- * eventually it would be interesting to have these functions
- * support the V6/V7+ atomic instructions ldrex/strex if available
- * on the CPU.
+ * Use stdatomic instructions instead of encoding ASM.
  */
 void
 atomic_setbits_int(__volatile unsigned int *uip, unsigned int v)
 {
-	int oldirqstate;
-	oldirqstate = disable_interrupts(I32_bit|F32_bit);
-	*uip |= v;
-	restore_interrupts(oldirqstate);
+	atomic_fetch_or((atomic_uint *)uip, v);
 }
 
 void
 atomic_clearbits_int(__volatile unsigned int *uip, unsigned int v)
 {
-	int oldirqstate;
-	oldirqstate = disable_interrupts(I32_bit|F32_bit);
-	*uip &= ~v;
-	restore_interrupts(oldirqstate);
+	atomic_fetch_and((atomic_uint *)uip, ~v);
 }
 
 /* End of cpu.c */
