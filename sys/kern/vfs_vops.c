@@ -1,4 +1,4 @@
-/*	$OpenBSD: vfs_vops.c,v 1.6 2013/06/11 16:42:16 deraadt Exp $	*/
+/*	$OpenBSD: vfs_vops.c,v 1.9 2013/08/13 05:52:24 guenther Exp $	*/
 /*
  * Copyright (c) 2010 Thordur I. Bjornsson <thib@secnorth.net>
  *
@@ -414,15 +414,13 @@ VOP_SYMLINK(struct vnode *dvp, struct vnode **vpp,
 
 int
 VOP_READDIR(struct vnode *vp, struct uio *uio, struct ucred *cred,
-    int *eofflag, int *ncookies, u_long **cookies)
+    int *eofflag)
 {
 	struct vop_readdir_args a;
 	a.a_vp = vp;
 	a.a_uio = uio;
 	a.a_cred = cred;
 	a.a_eofflag = eofflag;
-	a.a_ncookies = ncookies;
-	a.a_cookies = cookies;
 
 	ASSERT_VP_ISLOCKED(vp);
 

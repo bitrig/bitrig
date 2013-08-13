@@ -1,4 +1,4 @@
-/*	$OpenBSD: ldasm.S,v 1.10 2013/06/01 09:57:58 miod Exp $ */
+/*	$OpenBSD: ldasm.S,v 1.11 2013/08/13 05:52:18 guenther Exp $ */
 
 /*
  * Copyright (c) 2004 Dale Rahn
@@ -122,7 +122,7 @@ DL_SYSCALL(__set_tcb)
 DL_SYSCALL(__get_tcb)
 DL_SYSCALL2(sysctl,__sysctl)
 
-DL_SYSCALL(getdirentries)
+DL_SYSCALL(getdents)
 
 	.global		_dl_sigprocmask
 	.type		_dl_sigprocmask%function
