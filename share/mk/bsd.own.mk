@@ -183,3 +183,7 @@ BSD_OWN_MK=Done
 	depend beforedepend afterdepend cleandepend subdirdepend \
 	all cleanman nlsinstall cleannls includes \
 	beforeinstall realinstall maninstall afterinstall install
+
+# Define MK_INSTALLLIB for libraries which build using bsd.lib.mk but should
+# not be installed, they link directly out of ${.OBJDIR}
+MK_INSTALLLIB?=yes

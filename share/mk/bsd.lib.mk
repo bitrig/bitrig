@@ -217,6 +217,7 @@ beforeinstall:
 .endif
 
 realinstall:
+.if ${MK_INSTALLLIB:L} == "yes"
 #	ranlib lib${LIB}.a
 	${INSTALL} ${INSTALL_COPY} -S -o ${LIBOWN} -g ${LIBGRP} -m 600 lib${LIB}.a \
 	    ${DESTDIR}${LIBDIR}/lib${LIB}.a
@@ -254,6 +255,7 @@ realinstall:
 	 rm -f $$t; ln $$l $$t
 .  endfor
 .endif
+.endif  # MK_INSTALLLIB == yes
 
 install: maninstall _SUBDIRUSE
 maninstall: afterinstall
