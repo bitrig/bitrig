@@ -1,4 +1,4 @@
-/*	$OpenBSD: unistd.h,v 1.28 2013/03/28 03:29:44 guenther Exp $	*/
+/*	$OpenBSD: unistd.h,v 1.29 2013/08/14 05:26:14 guenther Exp $	*/
 /*	$NetBSD: unistd.h,v 1.10 1994/06/29 06:46:06 cgd Exp $	*/
 
 /*
