@@ -6,9 +6,13 @@ n0=`namegen`
 n1=`namegen`
 
 expect 0 mkdir ${n0} 0755
-dd if=/dev/zero of=tmpdisk bs=1k count=256 2>/dev/null
+COUNT=256
+NEWFSARGS=
+# Leave space for the log.
+[ "${WAPBL}" ] && { COUNT=2048; NEWFSARGS="-s -1792k"; }
+dd if=/dev/zero of=tmpdisk bs=1k count=${COUNT} 2>/dev/null
 vnconfig vnd1 tmpdisk
-newfs /dev/rvnd1c >/dev/null
+newfs ${NEWFSARGS} /dev/rvnd1c >/dev/null
 mountfs /dev/vnd1c ${n0}
 i=0
 while :; do
