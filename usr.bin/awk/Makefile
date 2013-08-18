@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.12 2012/12/21 08:50:27 espie Exp $
+#	$OpenBSD: Makefile,v 1.14 2013/08/18 22:06:44 miod Exp $
 
 PROG=	awk
 SRCS=	ytab.c lex.c b.c main.c parse.c proctab.c tran.c lib.c run.c
