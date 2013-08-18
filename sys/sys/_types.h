@@ -64,6 +64,7 @@ typedef	__int32_t	__timer_t;	/* POSIX timer identifiers */
 typedef	__uint32_t	__uid_t;	/* user id */
 typedef	__uint32_t	__useconds_t;	/* microseconds */
 
+
 /*
  * mbstate_t is an opaque object to keep conversion state, during multibyte
  * stream conversions. The content must not be referenced by user programs.
@@ -72,5 +73,20 @@ typedef union {
 	char __mbstate8[128];
 	__int64_t __mbstateL;			/* for alignment */
 } __mbstate_t;
+
+typedef	int		__ct_rune_t;	/* arg type for ctype funcs */
+typedef	__ct_rune_t	__rune_t;	/* rune_t (see above) */
+typedef	__ct_rune_t	__wint_t;	/* wint_t (see above) */
+
+/* Clang already provides these types as built-ins, but only in C++ mode. */
+#if !defined(__clang__) || !defined(__cplusplus)
+typedef __uint_least16_t __char16_t;
+typedef __uint_least32_t __char32_t;
+#endif
+/* In C++11, char16_t and char32_t are built-in types. */
+#if defined(__cplusplus) && __cplusplus >= 201103L
+#define _CHAR16_T_DECLARED
+#define _CHAR32_T_DECLARED
+#endif
 
 #endif /* !_SYS__TYPES_H_ */

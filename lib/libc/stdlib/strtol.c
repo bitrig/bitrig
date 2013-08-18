@@ -1,7 +1,12 @@
 /*	$OpenBSD: strtol.c,v 1.9 2013/04/17 17:40:35 tedu Exp $ */
 /*-
- * Copyright (c) 1990 The Regents of the University of California.
+ * Copyright (c) 1990, 1993
+ *	The Regents of the University of California.  All rights reserved.
+ *
+ * Copyright (c) 2011 The FreeBSD Foundation
  * All rights reserved.
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,21 +37,25 @@
 #include <errno.h>
 #include <limits.h>
 #include <stdlib.h>
+#include "locale/xlocale_private.h"
 
 
 /*
  * Convert a string to a long integer.
  *
- * Ignores `locale' stuff.  Assumes that the upper and lower case
+ * Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
  */
 long
-strtol(const char *nptr, char **endptr, int base)
+strtol_l(const char * __restrict nptr, char ** __restrict endptr, int base,
+		locale_t locale)
 {
 	const char *s;
-	long acc, cutoff;
-	int c;
+	unsigned long acc;
+	char c;
+	unsigned long cutoff;
 	int neg, any, cutlim;
+	FIX_LOCALE(locale);
 
 	/*
 	 * Ensure that base is between 2 and 36 inclusive, or the special
@@ -66,8 +75,8 @@ strtol(const char *nptr, char **endptr, int base)
 	 */
 	s = nptr;
 	do {
-		c = (unsigned char) *s++;
-	} while (isspace(c));
+		c = *s++;
+	} while (isspace_l((unsigned char)c, locale));
 	if (c == '-') {
 		neg = 1;
 		c = *s++;
@@ -77,13 +86,19 @@ strtol(const char *nptr, char **endptr, int base)
 			c = *s++;
 	}
 	if ((base == 0 || base == 16) &&
-	    c == '0' && (*s == 'x' || *s == 'X')) {
+	    c == '0' && (*s == 'x' || *s == 'X') &&
+	    ((s[1] >= '0' && s[1] <= '9') ||
+	    (s[1] >= 'A' && s[1] <= 'F') ||
+	    (s[1] >= 'a' && s[1] <= 'f'))) {
 		c = s[1];
 		s += 2;
 		base = 16;
 	}
 	if (base == 0)
 		base = c == '0' ? 8 : 10;
+	acc = any = 0;
+	if (base < 2 || base > 36)
+		goto noconv;
 
 	/*
 	 * Compute the cutoff value between legal numbers and illegal
@@ -99,53 +114,46 @@ strtol(const char *nptr, char **endptr, int base)
 	 * a value > 214748364, or equal but the next digit is > 7 (or 8),
 	 * the number is too big, and we will return a range error.
 	 *
-	 * Set any if any `digits' consumed; make it negative to indicate
+	 * Set 'any' if any `digits' consumed; make it negative to indicate
 	 * overflow.
 	 */
-	cutoff = neg ? LONG_MIN : LONG_MAX;
+	cutoff = neg ? (unsigned long)-(LONG_MIN + LONG_MAX) + LONG_MAX
+	    : LONG_MAX;
 	cutlim = cutoff % base;
 	cutoff /= base;
-	if (neg) {
-		if (cutlim > 0) {
-			cutlim -= base;
-			cutoff += 1;
-		}
-		cutlim = -cutlim;
-	}
-	for (acc = 0, any = 0;; c = (unsigned char) *s++) {
-		if (isdigit(c))
+	for ( ; ; c = *s++) {
+		if (c >= '0' && c <= '9')
 			c -= '0';
-		else if (isalpha(c))
-			c -= isupper(c) ? 'A' - 10 : 'a' - 10;
+		else if (c >= 'A' && c <= 'Z')
+			c -= 'A' - 10;
+		else if (c >= 'a' && c <= 'z')
+			c -= 'a' - 10;
 		else
 			break;
 		if (c >= base)
 			break;
-		if (any < 0)
-			continue;
-		if (neg) {
-			if (acc < cutoff || (acc == cutoff && c > cutlim)) {
-				any = -1;
-				acc = LONG_MIN;
-				errno = ERANGE;
-			} else {
-				any = 1;
-				acc *= base;
-				acc -= c;
-			}
-		} else {
-			if (acc > cutoff || (acc == cutoff && c > cutlim)) {
-				any = -1;
-				acc = LONG_MAX;
-				errno = ERANGE;
-			} else {
-				any = 1;
-				acc *= base;
-				acc += c;
-			}
+		if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim))
+			any = -1;
+		else {
+			any = 1;
+			acc *= base;
+			acc += c;
 		}
 	}
-	if (endptr != 0)
-		*endptr = (char *) (any ? s - 1 : nptr);
+	if (any < 0) {
+		acc = neg ? LONG_MIN : LONG_MAX;
+		errno = ERANGE;
+	} else if (!any) {
+noconv:
+		errno = EINVAL;
+	} else if (neg)
+		acc = -acc;
+	if (endptr != NULL)
+		*endptr = (char *)(any ? s - 1 : nptr);
 	return (acc);
+}
+long
+strtol(const char * __restrict nptr, char ** __restrict endptr, int base)
+{
+	return strtol_l(nptr, endptr, base, __get_locale());
 }

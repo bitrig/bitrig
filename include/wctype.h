@@ -35,6 +35,8 @@
 #include <sys/cdefs.h>
 #include <machine/_types.h>
 
+#include <_ctype.h>
+
 #ifndef	_WINT_T_DEFINED_
 #define	_WINT_T_DEFINED_
 typedef	__wint_t    wint_t;
@@ -42,12 +44,12 @@ typedef	__wint_t    wint_t;
 
 #ifndef	_WCTRANS_T_DEFINED_
 #define	_WCTRANS_T_DEFINED_
-typedef	__wctrans_t	wctrans_t;
+typedef	int	wctrans_t;
 #endif
 
-#ifndef	_WCTYPE_T_DEFINED_
-#define	_WCTYPE_T_DEFINED_
-typedef	__wctype_t	wctype_t;
+#ifndef	_WCTYPE_T
+#define	_WCTYPE_T
+typedef	unsigned long	wctype_t;
 #endif
 
 #ifndef WEOF
@@ -73,6 +75,11 @@ wint_t	towlower(wint_t);
 wint_t	towupper(wint_t);
 wctrans_t wctrans(const char *);
 wctype_t wctype(const char *);
+
+#if __POSIX_VISIBLE >= 200809
+#define _XLOCALE_WCTYPES 1
+#include <xlocale/_ctype.h>
+#endif /* __POSIX_VISIBLE >= 200809 */
 __END_DECLS
 
 #endif		/* _WCTYPE_H_ */

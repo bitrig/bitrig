@@ -1,10 +1,12 @@
-/*	$OpenBSD: strxfrm.c,v 1.6 2005/08/08 08:05:37 espie Exp $ */
 /*-
- * Copyright (c) 1990 The Regents of the University of California.
- * All rights reserved.
+ * Copyright (c) 1995 Alex Tatmanjants <alex@elvisti.kiev.ua>
+ *		at Electronni Visti IA, Kiev, Ukraine.
+ *			All rights reserved.
  *
- * This code is derived from software contributed to Berkeley by
- * Chris Torek.
+ * Copyright (c) 2011 The FreeBSD Foundation
+ * All rights reserved.
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -14,14 +16,11 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE
  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -31,21 +30,57 @@
  * SUCH DAMAGE.
  */
 
+#include <stdlib.h>
 #include <string.h>
+#include "locale/collate.h"
 
-/*
- * Transform src, storing the result in dst, such that
- * strcmp() on transformed strings returns what strcoll()
- * on the original untransformed strings would return.
- */
 size_t
-strxfrm(char *dst, const char *src, size_t n)
+strxfrm_l(char * __restrict dest, const char * __restrict src, size_t len, locale_t loc);
+size_t
+strxfrm(char * __restrict dest, const char * __restrict src, size_t len)
 {
+	return strxfrm_l(dest, src, len, __get_locale());
+}
 
-	/*
-	 * Since locales are unimplemented, this is just a copy.
-	 */
-	if (n == 0)
-		return (strlen(src));
-	return (strlcpy(dst, src, n));
+size_t
+strxfrm_l(char * __restrict dest, const char * __restrict src, size_t len, locale_t locale)
+{
+	int prim, sec, l;
+	size_t slen;
+	char *s, *ss;
+	FIX_LOCALE(locale);
+	struct xlocale_collate *table =
+		(struct xlocale_collate*)locale->components[XLC_COLLATE];
+
+	if (!*src) {
+		if (len > 0)
+			*dest = '\0';
+		return 0;
+	}
+
+	if (table->__collate_load_error)
+		return strlcpy(dest, src, len);
+
+	slen = 0;
+	prim = sec = 0;
+	ss = s = __collate_substitute(table, src);
+	while (*s) {
+		while (*s && !prim) {
+			__collate_lookup(table, s, &l, &prim, &sec);
+			s += l;
+		}
+		if (prim) {
+			if (len > 1) {
+				*dest++ = (char)prim;
+				len--;
+			}
+			slen++;
+			prim = 0;
+		}
+	}
+	free(ss);
+	if (len > 0)
+		*dest = '\0';
+
+	return slen;
 }

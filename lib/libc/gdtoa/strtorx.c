@@ -30,6 +30,7 @@ THIS SOFTWARE.
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
 #include "gdtoaimp.h"
+#include <xlocale.h>
 
 #undef _0
 #undef _1
@@ -118,6 +119,30 @@ strtorx(CONST char *s, char **sp, int rounding, void *L)
 		fpi = &fpi1;
 		}
 	k = strtodg(s, sp, fpi, &exp, bits);
+	ULtox((UShort*)L, bits, exp, k);
+	return k;
+	}
+
+ int
+#ifdef KR_headers
+strtorx_l(s, sp, rounding, L, loc) CONST char *s; char **sp; int rounding; void *L; locale_t loc;
+#else
+strtorx_l(CONST char *s, char **sp, int rounding, void *L, locale_t loc)
+#endif
+{
+	static FPI fpi0 = { 64, 1-16383-64+1, 32766 - 16383 - 64 + 1, 1, SI };
+	FPI *fpi, fpi1;
+	ULong bits[2];
+	Long exp;
+	int k;
+
+	fpi = &fpi0;
+	if (rounding != FPI_Round_near) {
+		fpi1 = fpi0;
+		fpi1.rounding = rounding;
+		fpi = &fpi1;
+		}
+	k = strtodg_l(s, sp, fpi, &exp, bits, loc);
 	ULtox((UShort*)L, bits, exp, k);
 	return k;
 	}

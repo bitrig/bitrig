@@ -59,7 +59,7 @@ CPPFLAGS += 	$(FEATURE_FLAGS) -DSQLITE_THREADSAFE=1 \
 		-DHAVE_UINT32_T=1 -DHAVE_UINT16_T=1 -DHAVE_INT16_T=1 \
 		-DHAVE_UINT8_T=1 -DHAVE_INT8_T=1
 
-FILES = sqlite3.h sqlite3ext.h
+HFILES = sqlite3.h sqlite3ext.h
 
 opcodes.c: opcodes.h ${.CURDIR}/mkopcodec.awk
 	sort -n -b -k 3 opcodes.h | awk -f ${.CURDIR}/mkopcodec.awk >opcodes.c
@@ -101,7 +101,7 @@ beforeinstall:
 	    -m ${SHAREMODE} ${.CURDIR}/sqlite3.pc ${DESTDIR}/usr/lib/pkgconfig/
 
 includes:
-	@for i in ${FILES}; do \
+	@for i in ${HFILES}; do \
 	    cmp -s ${.CURDIR}/src/$$i ${DESTDIR}/usr/include/$$i || \
 		${INSTALL} ${INSTALL_COPY} -m 444 ${.CURDIR}/src/$$i ${DESTDIR}/usr/include/$$i; \
 	done

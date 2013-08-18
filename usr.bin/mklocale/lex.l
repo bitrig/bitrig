@@ -1,6 +1,3 @@
-/*	$OpenBSD: lex.l,v 1.3 2012/12/05 23:20:25 deraadt Exp $	*/
-/*	$NetBSD: lex.l,v 1.13 2003/10/27 00:12:43 lukem Exp $	*/
-
 %{
 /*-
  * Copyright (c) 1993
@@ -34,14 +31,23 @@
  * SUCH DAMAGE.
  */
 
+#ifndef lint
+#if 0
+static char sccsid[] = "@(#)lex.l	8.1 (Berkeley) 6/6/93";
+#endif
+#endif /* not lint */
+
+#include <sys/cdefs.h>
+/* __FBSDID("$FreeBSD$"); */
+
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "locale/runetype.h"
 #include "ldef.h"
 #include "yacc.h"
 
-int yylex(void);
+#define	YY_DECL	int yylex(void)
 %}
 
 ODIGIT	[0-7]
@@ -68,11 +74,11 @@ W	[\t\n\r ]
 '\\v'				{ yylval.rune = '\v';
 				  return(RUNE); }
 
-0x{XDIGIT}+			{ yylval.rune = strtoul(yytext, 0, 16);
+0x{XDIGIT}+			{ yylval.rune = strtol(yytext, 0, 16);
 				  return(RUNE); }
-0{ODIGIT}+			{ yylval.rune = strtoul(yytext, 0, 8);
+0{ODIGIT}+			{ yylval.rune = strtol(yytext, 0, 8);
 				  return(RUNE); }
-{DIGIT}+			{ yylval.rune = strtoul(yytext, 0, 10);
+{DIGIT}+			{ yylval.rune = strtol(yytext, 0, 10);
 				  return(RUNE); }
 
 
@@ -81,38 +87,38 @@ MAPUPPER			{ return(MAPUPPER); }
 TODIGIT				{ return(DIGITMAP); }
 INVALID				{ return(INVALID); }
 
-ALPHA				{ yylval.i = _RUNETYPE_A|_RUNETYPE_R|_RUNETYPE_G;
+ALPHA				{ yylval.i = _CTYPE_A|_CTYPE_R|_CTYPE_G;
 				  return(LIST); }
-CONTROL				{ yylval.i = _RUNETYPE_C;
+CONTROL				{ yylval.i = _CTYPE_C;
 				  return(LIST); }
-DIGIT				{ yylval.i = _RUNETYPE_D|_RUNETYPE_R|_RUNETYPE_G;
+DIGIT				{ yylval.i = _CTYPE_D|_CTYPE_R|_CTYPE_G;
 				  return(LIST); }
-GRAPH				{ yylval.i = _RUNETYPE_G|_RUNETYPE_R;
+GRAPH				{ yylval.i = _CTYPE_G|_CTYPE_R;
 				  return(LIST); }
-LOWER				{ yylval.i = _RUNETYPE_L|_RUNETYPE_R|_RUNETYPE_G;
+LOWER				{ yylval.i = _CTYPE_L|_CTYPE_R|_CTYPE_G;
 				  return(LIST); }
-PUNCT				{ yylval.i = _RUNETYPE_P|_RUNETYPE_R|_RUNETYPE_G;
+PUNCT				{ yylval.i = _CTYPE_P|_CTYPE_R|_CTYPE_G;
 				  return(LIST); }
-SPACE				{ yylval.i = _RUNETYPE_S;
+SPACE				{ yylval.i = _CTYPE_S;
 				  return(LIST); }
-UPPER				{ yylval.i = _RUNETYPE_U|_RUNETYPE_R|_RUNETYPE_G;
+UPPER				{ yylval.i = _CTYPE_U|_CTYPE_R|_CTYPE_G;
 				  return(LIST); }
-XDIGIT				{ yylval.i = _RUNETYPE_X|_RUNETYPE_R|_RUNETYPE_G;
+XDIGIT				{ yylval.i = _CTYPE_X|_CTYPE_R|_CTYPE_G;
 				  return(LIST); }
-BLANK				{ yylval.i = _RUNETYPE_B;
+BLANK				{ yylval.i = _CTYPE_B;
 				  return(LIST); }
-PRINT				{ yylval.i = _RUNETYPE_R;
+PRINT				{ yylval.i = _CTYPE_R;
 				  return(LIST); }
-IDEOGRAM			{ yylval.i = _RUNETYPE_I|_RUNETYPE_R|_RUNETYPE_G;
+IDEOGRAM			{ yylval.i = _CTYPE_I|_CTYPE_R|_CTYPE_G;
 				  return(LIST); }
-SPECIAL				{ yylval.i = _RUNETYPE_T|_RUNETYPE_R|_RUNETYPE_G;
+SPECIAL				{ yylval.i = _CTYPE_T|_CTYPE_R|_CTYPE_G;
 				  return(LIST); }
-PHONOGRAM			{ yylval.i = _RUNETYPE_Q|_RUNETYPE_R|_RUNETYPE_G;
+PHONOGRAM			{ yylval.i = _CTYPE_Q|_CTYPE_R|_CTYPE_G;
 				  return(LIST); }
-SWIDTH0				{ yylval.i = _RUNETYPE_SW0; return(LIST); }
-SWIDTH1				{ yylval.i = _RUNETYPE_SW1; return(LIST); }
-SWIDTH2				{ yylval.i = _RUNETYPE_SW2; return(LIST); }
-SWIDTH3				{ yylval.i = _RUNETYPE_SW3; return(LIST); }
+SWIDTH0				{ yylval.i = _CTYPE_SW0; return(LIST); }
+SWIDTH1				{ yylval.i = _CTYPE_SW1; return(LIST); }
+SWIDTH2				{ yylval.i = _CTYPE_SW2; return(LIST); }
+SWIDTH3				{ yylval.i = _CTYPE_SW3; return(LIST); }
 
 VARIABLE[\t ]			{ static char vbuf[1024];
 				  char *v = vbuf;
@@ -125,8 +131,6 @@ VARIABLE[\t ]			{ static char vbuf[1024];
 				  yylval.str = vbuf;
 				  return(VARIABLE);
 				}
-
-CHARSET				{ return(CHARSET); }
 
 ENCODING			{ return(ENCODING); }
 
@@ -163,7 +167,7 @@ ENCODING			{ return(ENCODING); }
 
 #if	!defined(yywrap)
 int
-yywrap()
+yywrap(void)
 {
 	return(1);
 }

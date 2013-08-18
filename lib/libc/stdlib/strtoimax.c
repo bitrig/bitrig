@@ -1,8 +1,13 @@
 /*	$OpenBSD: strtoimax.c,v 1.1 2006/01/13 17:58:09 millert Exp $	*/
 
 /*-
- * Copyright (c) 1992 The Regents of the University of California.
+ * Copyright (c) 1992, 1993
+ *	The Regents of the University of California.  All rights reserved.
+ *
+ * Copyright (c) 2011 The FreeBSD Foundation
  * All rights reserved.
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,21 +36,26 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <stdlib.h>
 #include <inttypes.h>
+#include "locale/xlocale_private.h"
 
 /*
  * Convert a string to an intmax_t
  *
- * Ignores `locale' stuff.  Assumes that the upper and lower case
+ * Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
  */
 intmax_t
-strtoimax(const char *nptr, char **endptr, int base)
+strtoimax_l(const char * __restrict nptr, char ** __restrict endptr, int base,
+    locale_t locale)
 {
 	const char *s;
-	intmax_t acc, cutoff;
-	int c;
+	uintmax_t acc;
+	char c;
+	uintmax_t cutoff;
 	int neg, any, cutlim;
+	FIX_LOCALE(locale);
 
 	/*
 	 * Skip white space and pick up leading +/- sign if any.
@@ -54,8 +64,8 @@ strtoimax(const char *nptr, char **endptr, int base)
 	 */
 	s = nptr;
 	do {
-		c = (unsigned char) *s++;
-	} while (isspace(c));
+		c = *s++;
+	} while (isspace_l((unsigned char)c, locale));
 	if (c == '-') {
 		neg = 1;
 		c = *s++;
@@ -65,13 +75,19 @@ strtoimax(const char *nptr, char **endptr, int base)
 			c = *s++;
 	}
 	if ((base == 0 || base == 16) &&
-	    c == '0' && (*s == 'x' || *s == 'X')) {
+	    c == '0' && (*s == 'x' || *s == 'X') &&
+	    ((s[1] >= '0' && s[1] <= '9') ||
+	    (s[1] >= 'A' && s[1] <= 'F') ||
+	    (s[1] >= 'a' && s[1] <= 'f'))) {
 		c = s[1];
 		s += 2;
 		base = 16;
 	}
 	if (base == 0)
 		base = c == '0' ? 8 : 10;
+	acc = any = 0;
+	if (base < 2 || base > 36)
+		goto noconv;
 
 	/*
 	 * Compute the cutoff value between legal numbers and illegal
@@ -88,53 +104,46 @@ strtoimax(const char *nptr, char **endptr, int base)
 	 * next digit is > 7 (or 8), the number is too big, and we will
 	 * return a range error.
 	 *
-	 * Set any if any `digits' consumed; make it negative to indicate
+	 * Set 'any' if any `digits' consumed; make it negative to indicate
 	 * overflow.
 	 */
-	cutoff = neg ? INTMAX_MIN : INTMAX_MAX;
+	cutoff = neg ? (uintmax_t)-(INTMAX_MIN + INTMAX_MAX) + INTMAX_MAX
+	    : INTMAX_MAX;
 	cutlim = cutoff % base;
 	cutoff /= base;
-	if (neg) {
-		if (cutlim > 0) {
-			cutlim -= base;
-			cutoff += 1;
-		}
-		cutlim = -cutlim;
-	}
-	for (acc = 0, any = 0;; c = (unsigned char) *s++) {
-		if (isdigit(c))
+	for ( ; ; c = *s++) {
+		if (c >= '0' && c <= '9')
 			c -= '0';
-		else if (isalpha(c))
-			c -= isupper(c) ? 'A' - 10 : 'a' - 10;
+		else if (c >= 'A' && c <= 'Z')
+			c -= 'A' - 10;
+		else if (c >= 'a' && c <= 'z')
+			c -= 'a' - 10;
 		else
 			break;
 		if (c >= base)
 			break;
-		if (any < 0)
-			continue;
-		if (neg) {
-			if (acc < cutoff || (acc == cutoff && c > cutlim)) {
-				any = -1;
-				acc = INTMAX_MIN;
-				errno = ERANGE;
-			} else {
-				any = 1;
-				acc *= base;
-				acc -= c;
-			}
-		} else {
-			if (acc > cutoff || (acc == cutoff && c > cutlim)) {
-				any = -1;
-				acc = INTMAX_MAX;
-				errno = ERANGE;
-			} else {
-				any = 1;
-				acc *= base;
-				acc += c;
-			}
+		if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim))
+			any = -1;
+		else {
+			any = 1;
+			acc *= base;
+			acc += c;
 		}
 	}
-	if (endptr != 0)
-		*endptr = (char *) (any ? s - 1 : nptr);
+	if (any < 0) {
+		acc = neg ? INTMAX_MIN : INTMAX_MAX;
+		errno = ERANGE;
+	} else if (!any) {
+noconv:
+		errno = EINVAL;
+	} else if (neg)
+		acc = -acc;
+	if (endptr != NULL)
+		*endptr = (char *)(any ? s - 1 : nptr);
 	return (acc);
+}
+intmax_t
+strtoimax(const char * __restrict nptr, char ** __restrict endptr, int base)
+{
+	return strtoimax_l(nptr, endptr, base, __get_locale());
 }

@@ -41,6 +41,7 @@
 #define _CTYPE_H_
 
 #include <sys/cdefs.h>
+#include <_ctype.h>
 
 #define	_U	0x01
 #define	_L	0x02
@@ -60,104 +61,21 @@ extern const short	*_toupper_tab_;
 
 #ifndef _ANSI_LIBRARY
 
-__only_inline int isalnum(int c)
-{
-	return (c == -1 ? 0 : ((_ctype_ + 1)[(unsigned char)c] & (_U|_L|_N)));
-}
-
-__only_inline int isalpha(int c)
-{
-	return (c == -1 ? 0 : ((_ctype_ + 1)[(unsigned char)c] & (_U|_L)));
-}
-
-__only_inline int iscntrl(int c)
-{
-	return (c == -1 ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _C));
-}
-
-__only_inline int isdigit(int c)
-{
-	return (c == -1 ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _N));
-}
-
-__only_inline int isgraph(int c)
-{
-	return (c == -1 ? 0 : ((_ctype_ + 1)[(unsigned char)c] & (_P|_U|_L|_N)));
-}
-
-__only_inline int islower(int c)
-{
-	return (c == -1 ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _L));
-}
-
-__only_inline int isprint(int c)
-{
-	return (c == -1 ? 0 : ((_ctype_ + 1)[(unsigned char)c] & (_P|_U|_L|_N|_B)));
-}
-
-__only_inline int ispunct(int c)
-{
-	return (c == -1 ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _P));
-}
-
-__only_inline int isspace(int c)
-{
-	return (c == -1 ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _S));
-}
-
-__only_inline int isupper(int c)
-{
-	return (c == -1 ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _U));
-}
-
-__only_inline int isxdigit(int c)
-{
-	return (c == -1 ? 0 : ((_ctype_ + 1)[(unsigned char)c] & (_N|_X)));
-}
-
-__only_inline int tolower(int c)
-{
-	if ((unsigned int)c > 255)
-		return (c);
-	return ((_tolower_tab_ + 1)[c]);
-}
-
-__only_inline int toupper(int c)
-{
-	if ((unsigned int)c > 255)
-		return (c);
-	return ((_toupper_tab_ + 1)[c]);
-}
-
-#if __BSD_VISIBLE || __ISO_C_VISIBLE >= 1999 || __POSIX_VISIBLE > 200112 \
-    || __XPG_VISIBLE > 600
-__only_inline int isblank(int c)
-{
-	return (c == ' ' || c == '\t');
-}
-#endif
-
-#if __BSD_VISIBLE || __XPG_VISIBLE
-__only_inline int isascii(int c)
-{
-	return ((unsigned int)c <= 0177);
-}
-
-__only_inline int toascii(int c)
-{
-	return (c & 0177);
-}
-
-__only_inline int _tolower(int c)
-{
-	return (c - 'A' + 'a');
-}
-
-__only_inline int _toupper(int c)
-{
-	return (c - 'a' + 'A');
-}
-#endif /* __BSD_VISIBLE || __XPG_VISIBLE */
+#ifndef __cplusplus
+#define	isalnum(c)	__sbistype((c), _CTYPE_A|_CTYPE_D)
+#define	isalpha(c)	__sbistype((c), _CTYPE_A)
+#define	iscntrl(c)	__sbistype((c), _CTYPE_C)
+#define	isdigit(c)	__isctype((c), _CTYPE_D) /* ANSI -- locale independent */
+#define	isgraph(c)	__sbistype((c), _CTYPE_G)
+#define	islower(c)	__sbistype((c), _CTYPE_L)
+#define	isprint(c)	__sbistype((c), _CTYPE_R)
+#define	ispunct(c)	__sbistype((c), _CTYPE_P)
+#define	isspace(c)	__sbistype((c), _CTYPE_S)
+#define	isupper(c)	__sbistype((c), _CTYPE_U)
+#define	isxdigit(c)	__isctype((c), _CTYPE_X) /* ANSI -- locale independent */
+#define	tolower(c)	__sbtolower(c)
+#define	toupper(c)	__sbtoupper(c)
+#endif /* !__cplusplus */
 
 #endif /* !_ANSI_LIBRARY */
 

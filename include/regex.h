@@ -33,16 +33,22 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)regex.h	8.1 (Berkeley) 6/2/93
+ *	@(#)regex.h	8.2 (Berkeley) 1/3/94
  */
 
 #ifndef _REGEX_H_
 #define	_REGEX_H_
 
-#include <sys/types.h>
+#include <sys/cdefs.h>
+#include <sys/_types.h>
 
 /* types */
-typedef off_t regoff_t;
+typedef	__off_t		regoff_t;
+
+#ifndef _SIZE_T_DECLARED
+typedef	__size_t	size_t;
+#define	_SIZE_T_DECLARED
+#endif
 
 typedef struct {
 	int re_magic;
@@ -67,6 +73,7 @@ typedef struct {
 #define	REG_DUMP	0200
 
 /* regerror() flags */
+#define	REG_ENOSYS	(-1)
 #define	REG_NOMATCH	 1
 #define	REG_BADPAT	 2
 #define	REG_ECOLLATE	 3
@@ -83,6 +90,7 @@ typedef struct {
 #define	REG_EMPTY	14
 #define	REG_ASSERT	15
 #define	REG_INVARG	16
+#define	REG_ILLSEQ	17
 #define	REG_ATOI	255	/* convert name to number (!) */
 #define	REG_ITOA	0400	/* convert number to name (!) */
 

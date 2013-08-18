@@ -35,8 +35,7 @@
 #include <string.h>
 #include <time.h>
 #include <tzfile.h>
-
-#define	_ctloc(x)		(_CurrentTimeLocale->x)
+#include <time/timelocal.h>
 
 /*
  * We do not implement alternate representations. However, we always
@@ -74,7 +73,7 @@ static const int mon_lengths[2][MONSPERYEAR] = {
 
 static	int _conv_num(const unsigned char **, int *, int, int);
 static	int leaps_thru_end_of(const int y);
-static	char *_strptime(const char *, const char *, struct tm *, int);
+static	char *_strptime(const char *, const char *, struct tm *, int, locale_t);
 static	const u_char *_find_string(const u_char *, int *, const char * const *,
 	    const char * const *, int);
 
@@ -82,11 +81,12 @@ static	const u_char *_find_string(const u_char *, int *, const char * const *,
 char *
 strptime(const char *buf, const char *fmt, struct tm *tm)
 {
-	return(_strptime(buf, fmt, tm, 1));
+	return(_strptime(buf, fmt, tm, 1, __get_locale()));
 }
 
 static char *
-_strptime(const char *buf, const char *fmt, struct tm *tm, int initialize)
+_strptime(const char *buf, const char *fmt, struct tm *tm, int initialize,
+	locale_t locale)
 {
 	unsigned char c;
 	const unsigned char *bp, *ep;
@@ -100,6 +100,8 @@ _strptime(const char *buf, const char *fmt, struct tm *tm, int initialize)
 		relyear = -1;
 		fields = 0;
 	}
+
+	struct lc_time_T *tptr = __get_current_time_locale(locale);
 
 	bp = (unsigned char *)buf;
 	while ((c = *fmt) != '\0') {
@@ -146,49 +148,49 @@ literal:
 		 */
 		case 'c':	/* Date and time, using the locale's format. */
 			_LEGAL_ALT(_ALT_E);
-			if (!(bp = _strptime(bp, _ctloc(d_t_fmt), tm, 0)))
+			if (!(bp = _strptime(bp, tptr->c_fmt, tm, 0, locale)))
 				return (NULL);
 			break;
 
 		case 'D':	/* The date as "%m/%d/%y". */
 			_LEGAL_ALT(0);
-			if (!(bp = _strptime(bp, "%m/%d/%y", tm, 0)))
+			if (!(bp = _strptime(bp, "%m/%d/%y", tm, 0, locale)))
 				return (NULL);
 			break;
 
 		case 'F':	/* The date as "%Y-%m-%d". */
 			_LEGAL_ALT(0);
-			if (!(bp = _strptime(bp, "%Y-%m-%d", tm, 0)))
+			if (!(bp = _strptime(bp, "%Y-%m-%d", tm, 0, locale)))
 				return (NULL);
 			continue;
 
 		case 'R':	/* The time as "%H:%M". */
 			_LEGAL_ALT(0);
-			if (!(bp = _strptime(bp, "%H:%M", tm, 0)))
+			if (!(bp = _strptime(bp, "%H:%M", tm, 0, locale)))
 				return (NULL);
 			break;
 
 		case 'r':	/* The time as "%I:%M:%S %p". */
 			_LEGAL_ALT(0);
-			if (!(bp = _strptime(bp, "%I:%M:%S %p", tm, 0)))
+			if (!(bp = _strptime(bp, tptr->ampm_fmt, tm, 0, locale)))
 				return (NULL);
 			break;
 
 		case 'T':	/* The time as "%H:%M:%S". */
 			_LEGAL_ALT(0);
-			if (!(bp = _strptime(bp, "%H:%M:%S", tm, 0)))
+			if (!(bp = _strptime(bp, "%H:%M:%S", tm, 0, locale)))
 				return (NULL);
 			break;
 
 		case 'X':	/* The time, using the locale's format. */
 			_LEGAL_ALT(_ALT_E);
-			if (!(bp = _strptime(bp, _ctloc(t_fmt), tm, 0)))
+			if (!(bp = _strptime(bp, tptr->X_fmt, tm, 0, locale)))
 				return (NULL);
 			break;
 
 		case 'x':	/* The date, using the locale's format. */
 			_LEGAL_ALT(_ALT_E);
-			if (!(bp = _strptime(bp, _ctloc(d_fmt), tm, 0)))
+			if (!(bp = _strptime(bp, tptr->x_fmt, tm, 0, locale)))
 				return (NULL);
 			break;
 
@@ -200,13 +202,13 @@ literal:
 			_LEGAL_ALT(0);
 			for (i = 0; i < 7; i++) {
 				/* Full name. */
-				len = strlen(_ctloc(day[i]));
-				if (strncasecmp(_ctloc(day[i]), bp, len) == 0)
+				len = strlen(tptr->weekday[i]);
+				if (strncasecmp(tptr->weekday[i], bp, len) == 0)
 					break;
 
 				/* Abbreviated name. */
-				len = strlen(_ctloc(abday[i]));
-				if (strncasecmp(_ctloc(abday[i]), bp, len) == 0)
+				len = strlen(tptr->wday[i]);
+				if (strncasecmp(tptr->wday[i], bp, len) == 0)
 					break;
 			}
 
@@ -225,13 +227,13 @@ literal:
 			_LEGAL_ALT(0);
 			for (i = 0; i < 12; i++) {
 				/* Full name. */
-				len = strlen(_ctloc(mon[i]));
-				if (strncasecmp(_ctloc(mon[i]), bp, len) == 0)
+				len = strlen(tptr->month[i]);
+				if (strncasecmp_l(tptr->month[i], bp, len, locale) == 0)
 					break;
 
 				/* Abbreviated name. */
-				len = strlen(_ctloc(abmon[i]));
-				if (strncasecmp(_ctloc(abmon[i]), bp, len) == 0)
+				len = strlen(tptr->mon[i]);
+				if (strncasecmp_l(tptr->mon[i], bp, len, locale) == 0)
 					break;
 			}
 
@@ -303,8 +305,8 @@ literal:
 		case 'p':	/* The locale's equivalent of AM/PM. */
 			_LEGAL_ALT(0);
 			/* AM? */
-			len = strlen(_ctloc(am_pm[0]));
-			if (strncasecmp(_ctloc(am_pm[0]), bp, len) == 0) {
+			len = strlen(tptr->am);
+			if (strncasecmp(tptr->am, bp, len) == 0) {
 				if (tm->tm_hour > 12)	/* i.e., 13:00 AM ?! */
 					return (NULL);
 				else if (tm->tm_hour == 12)
@@ -314,8 +316,8 @@ literal:
 				break;
 			}
 			/* PM? */
-			len = strlen(_ctloc(am_pm[1]));
-			if (strncasecmp(_ctloc(am_pm[1]), bp, len) == 0) {
+			len = strlen(tptr->pm);
+			if (strncasecmp(tptr->pm, bp, len) == 0) {
 				if (tm->tm_hour > 12)	/* i.e., 13:00 PM ?! */
 					return (NULL);
 				else if (tm->tm_hour < 12)

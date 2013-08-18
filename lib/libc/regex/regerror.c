@@ -67,6 +67,7 @@ static struct rerr {
 	{ REG_EMPTY,	"REG_EMPTY",	"empty (sub)expression" },
 	{ REG_ASSERT,	"REG_ASSERT",	"\"can't happen\" -- you found a bug" },
 	{ REG_INVARG,	"REG_INVARG",	"invalid argument to regex routine" },
+	{ REG_ILLSEQ,	"REG_ILLSEQ",	"illegal byte sequence"},
 	{ 0,		"",		"*** unknown regexp error code ***" }
 };
 
@@ -76,7 +77,10 @@ static struct rerr {
  */
 /* ARGSUSED */
 size_t
-regerror(int errcode, const regex_t *preg, char *errbuf, size_t errbuf_size)
+regerror(int errcode,
+	 const regex_t * __restrict preg,
+	 char * __restrict errbuf,
+	 size_t errbuf_size)
 {
 	struct rerr *r;
 	size_t len;
@@ -90,7 +94,7 @@ regerror(int errcode, const regex_t *preg, char *errbuf, size_t errbuf_size)
 		for (r = rerrs; r->code != 0; r++)
 			if (r->code == target)
 				break;
-	
+
 		if (errcode&REG_ITOA) {
 			if (r->code != 0) {
 				assert(strlen(r->name) < sizeof(convbuf));

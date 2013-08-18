@@ -1,8 +1,11 @@
-/*	$OpenBSD: btowc.c,v 1.2 2012/12/05 23:20:00 deraadt Exp $ */
-
 /*-
  * Copyright (c) 2002, 2003 Tim J. Robbins.
  * All rights reserved.
+ *
+ * Copyright (c) 2011 The FreeBSD Foundation
+ * All rights reserved.
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,16 +29,21 @@
  * SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
+/* __FBSDID("$FreeBSD$"); */
+
 #include <stdio.h>
-#include <string.h>
 #include <wchar.h>
+#include "mblocal.h"
 
 wint_t
-btowc(int c)
+btowc_l(int c, locale_t l)
 {
-	mbstate_t mbs;
+	static const mbstate_t initial;
+	mbstate_t mbs = initial;
 	char cc;
 	wchar_t wc;
+	FIX_LOCALE(l);
 
 	if (c == EOF)
 		return (WEOF);
@@ -44,9 +52,13 @@ btowc(int c)
 	 * which detects error return values as well as "impossible" byte
 	 * counts.
 	 */
-	memset(&mbs, 0, sizeof(mbs));
 	cc = (char)c;
-	if (mbrtowc(&wc, &cc, 1, &mbs) > 1)
+	if (XLOCALE_CTYPE(l)->__mbrtowc(&wc, &cc, 1, &mbs) > 1)
 		return (WEOF);
 	return (wc);
+}
+wint_t
+btowc(int c)
+{
+	return btowc_l(c, __get_locale());
 }

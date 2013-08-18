@@ -1,8 +1,11 @@
-/*	$OpenBSD: mbstowcs.c,v 1.2 2012/12/05 23:20:00 deraadt Exp $ */
-
 /*-
  * Copyright (c) 2002-2004 Tim J. Robbins.
  * All rights reserved.
+ *
+ * Copyright (c) 2011 The FreeBSD Foundation
+ * All rights reserved.
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,19 +29,28 @@
  * SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
+/* __FBSDID("$FreeBSD$"); */
 
 #include <limits.h>
 #include <stdlib.h>
-#include <string.h>
 #include <wchar.h>
+#include "mblocal.h"
 
+size_t
+mbstowcs_l(wchar_t * __restrict pwcs, const char * __restrict s, size_t n, locale_t locale)
+{
+	static const mbstate_t initial;
+	mbstate_t mbs;
+	const char *sp;
+	FIX_LOCALE(locale);
+
+	mbs = initial;
+	sp = s;
+	return (XLOCALE_CTYPE(locale)->__mbsnrtowcs(pwcs, &sp, SIZE_T_MAX, n, &mbs));
+}
 size_t
 mbstowcs(wchar_t * __restrict pwcs, const char * __restrict s, size_t n)
 {
-	mbstate_t mbs;
-	const char *sp;
-
-	memset(&mbs, 0, sizeof(mbs));
-	sp = s;
-	return (mbsrtowcs(pwcs, &sp, n, &mbs));
+	return mbstowcs_l(pwcs, s, n, __get_locale());
 }

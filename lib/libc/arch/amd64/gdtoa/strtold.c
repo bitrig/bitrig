@@ -43,3 +43,12 @@ strtold(const char * __restrict s, char ** __restrict sp)
 	strtorx(s, sp, FLT_ROUNDS, &result);
 	return result;
 }
+
+long double
+strtold_l(const char * __restrict s, char ** __restrict sp)
+{
+	long double result;
+
+	strtorx_l(s, sp, FLT_ROUNDS, &result);
+	return result;
+}

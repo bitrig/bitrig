@@ -27,7 +27,7 @@
 
 #include <wchar.h>
 #include <wctype.h>
-#include "locale/runetype.h"
+#include "runetype.h"
 
 int
 wcscasecmp(const wchar_t *s1, const wchar_t *s2)
@@ -39,7 +39,7 @@ wcscasecmp(const wchar_t *s1, const wchar_t *s2)
 			return (0);
 	}
 	/* XXX assumes wchar_t = int */
-	return ((rune_t)l1 - (rune_t)l2);
+	return ((__rune_t)l1 - (__rune_t)l2);
 }
 
 int
@@ -52,7 +52,7 @@ wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n)
 	do {
 		if (((l1 = towlower(*s1++))) != (l2 = towlower(*s2++))) {
 			/* XXX assumes wchar_t = int */
-			return ((rune_t)l1 - (rune_t)l2);
+			return ((__rune_t)l1 - (__rune_t)l2);
 		}
 		if (l1 == 0)
 			break;

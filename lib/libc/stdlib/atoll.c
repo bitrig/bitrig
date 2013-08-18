@@ -1,7 +1,12 @@
 /*	$OpenBSD: atoll.c,v 1.3 2005/08/08 08:05:36 espie Exp $ */
 /*
- * Copyright (c) 1988 Regents of the University of California.
+ * Copyright (c) 1988, 1993
+ *	The Regents of the University of California.  All rights reserved.
+ *
+ * Copyright (c) 2011 The FreeBSD Foundation
  * All rights reserved.
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,10 +34,16 @@
  */
 
 #include <stdlib.h>
+#include <xlocale.h>
 
 long long
-atoll(str)
-	const char *str;
+atoll(const char *str)
 {
-	return(strtoll(str, (char **)NULL, 10));
+	return strtoll(str, (char **)NULL, 10);
+}
+
+long long
+atoll_l(const char *str, locale_t locale)
+{
+	return strtoll_l(str, (char **)NULL, 10, locale);
 }

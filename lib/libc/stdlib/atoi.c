@@ -1,7 +1,12 @@
 /*	$OpenBSD: atoi.c,v 1.5 2005/08/08 08:05:36 espie Exp $ */
 /*
- * Copyright (c) 1988 Regents of the University of California.
+ * Copyright (c) 1988, 1993
+ *	The Regents of the University of California.  All rights reserved.
+ *
+ * Copyright (c) 2011 The FreeBSD Foundation
  * All rights reserved.
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,9 +34,16 @@
  */
 
 #include <stdlib.h>
+#include <xlocale.h>
 
 int
 atoi(const char *str)
 {
-	return((int)strtol(str, (char **)NULL, 10));
+	return (int)strtol(str, (char **)NULL, 10);
+}
+
+int
+atoi_l(const char *str,	locale_t locale)
+{
+	return (int)strtol_l(str, (char **)NULL, 10, locale);
 }

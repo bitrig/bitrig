@@ -70,6 +70,16 @@ typedef struct {
 } lldiv_t;
 #endif
 
+/*
+ * If we're in a mode greater than C99, expose C11 functions.
+ */
+#if __ISO_C_VISIBLE >= 2011 || __cplusplus >= 201103L
+void *	aligned_alloc(size_t, size_t) __malloc_like;
+int	at_quick_exit(void (*)(void));
+_Noreturn void
+	quick_exit(int);
+#endif /* __ISO_C_VISIBLE >= 2011 */
+
 #if __BSD_VISIBLE
 typedef struct {
 	quad_t quot;		/* quotient */
@@ -97,6 +107,9 @@ extern size_t	__mb_cur_max;
 #endif
 
 __BEGIN_DECLS
+#ifdef _XLOCALE_H_
+#include <xlocale/_stdlib.h>
+#endif
 __dead void	 abort(void);
 int	 abs(int);
 int	 atexit(void (*)(void));

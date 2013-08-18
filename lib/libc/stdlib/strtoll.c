@@ -1,7 +1,12 @@
 /* $OpenBSD: strtoll.c,v 1.7 2013/03/28 18:09:38 martynas Exp $ */
 /*-
- * Copyright (c) 1992 The Regents of the University of California.
+ * Copyright (c) 1992, 1993
+ *	The Regents of the University of California.  All rights reserved.
+ *
+ * Copyright (c) 2011 The FreeBSD Foundation
  * All rights reserved.
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,24 +35,28 @@
 
 #include <sys/types.h>
 
-#include <ctype.h>
-#include <errno.h>
 #include <limits.h>
+#include <errno.h>
+#include <ctype.h>
 #include <stdlib.h>
+#include "locale/xlocale_private.h"
 
 /*
- * Convert a string to a long long.
+ * Convert a string to a long long integer.
  *
- * Ignores `locale' stuff.  Assumes that the upper and lower case
+ * Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
  */
 long long
-strtoll(const char *nptr, char **endptr, int base)
+strtoll_l(const char * __restrict nptr, char ** __restrict endptr, int base,
+		locale_t locale)
 {
 	const char *s;
-	long long acc, cutoff;
-	int c;
+	unsigned long long acc;
+	char c;
+	unsigned long long cutoff;
 	int neg, any, cutlim;
+	FIX_LOCALE(locale);
 
 	/*
 	 * Skip white space and pick up leading +/- sign if any.
@@ -56,8 +65,8 @@ strtoll(const char *nptr, char **endptr, int base)
 	 */
 	s = nptr;
 	do {
-		c = (unsigned char) *s++;
-	} while (isspace(c));
+		c = *s++;
+	} while (isspace_l((unsigned char)c, locale));
 	if (c == '-') {
 		neg = 1;
 		c = *s++;
@@ -67,13 +76,19 @@ strtoll(const char *nptr, char **endptr, int base)
 			c = *s++;
 	}
 	if ((base == 0 || base == 16) &&
-	    c == '0' && (*s == 'x' || *s == 'X')) {
+	    c == '0' && (*s == 'x' || *s == 'X') &&
+	    ((s[1] >= '0' && s[1] <= '9') ||
+	    (s[1] >= 'A' && s[1] <= 'F') ||
+	    (s[1] >= 'a' && s[1] <= 'f'))) {
 		c = s[1];
 		s += 2;
 		base = 16;
 	}
 	if (base == 0)
 		base = c == '0' ? 8 : 10;
+	acc = any = 0;
+	if (base < 2 || base > 36)
+		goto noconv;
 
 	/*
 	 * Compute the cutoff value between legal numbers and illegal
@@ -90,55 +105,49 @@ strtoll(const char *nptr, char **endptr, int base)
 	 * next digit is > 7 (or 8), the number is too big, and we will
 	 * return a range error.
 	 *
-	 * Set any if any `digits' consumed; make it negative to indicate
+	 * Set 'any' if any `digits' consumed; make it negative to indicate
 	 * overflow.
 	 */
-	cutoff = neg ? LLONG_MIN : LLONG_MAX;
+	cutoff = neg ? (unsigned long long)-(LLONG_MIN + LLONG_MAX) + LLONG_MAX
+	    : LLONG_MAX;
 	cutlim = cutoff % base;
 	cutoff /= base;
-	if (neg) {
-		if (cutlim > 0) {
-			cutlim -= base;
-			cutoff += 1;
-		}
-		cutlim = -cutlim;
-	}
-	for (acc = 0, any = 0;; c = (unsigned char) *s++) {
-		if (isdigit(c))
+	for ( ; ; c = *s++) {
+		if (c >= '0' && c <= '9')
 			c -= '0';
-		else if (isalpha(c))
-			c -= isupper(c) ? 'A' - 10 : 'a' - 10;
+		else if (c >= 'A' && c <= 'Z')
+			c -= 'A' - 10;
+		else if (c >= 'a' && c <= 'z')
+			c -= 'a' - 10;
 		else
 			break;
 		if (c >= base)
 			break;
-		if (any < 0)
-			continue;
-		if (neg) {
-			if (acc < cutoff || (acc == cutoff && c > cutlim)) {
-				any = -1;
-				acc = LLONG_MIN;
-				errno = ERANGE;
-			} else {
-				any = 1;
-				acc *= base;
-				acc -= c;
-			}
-		} else {
-			if (acc > cutoff || (acc == cutoff && c > cutlim)) {
-				any = -1;
-				acc = LLONG_MAX;
-				errno = ERANGE;
-			} else {
-				any = 1;
-				acc *= base;
-				acc += c;
-			}
+		if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim))
+			any = -1;
+		else {
+			any = 1;
+			acc *= base;
+			acc += c;
 		}
 	}
-	if (endptr != 0)
-		*endptr = (char *) (any ? s - 1 : nptr);
+	if (any < 0) {
+		acc = neg ? LLONG_MIN : LLONG_MAX;
+		errno = ERANGE;
+	} else if (!any) {
+noconv:
+		errno = EINVAL;
+	} else if (neg)
+		acc = -acc;
+	if (endptr != NULL)
+		*endptr = (char *)(any ? s - 1 : nptr);
 	return (acc);
+}
+
+long long
+strtoll(const char * __restrict nptr, char ** __restrict endptr, int base)
+{
+	return strtoll_l(nptr, endptr, base, __get_locale());
 }
 
 __strong_alias(strtoq, strtoll);

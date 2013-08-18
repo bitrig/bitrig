@@ -3,5 +3,5 @@
 
 SRCS+=	byte_swap_2.S byte_swap_4.S divsi3.S fabs.c flt_rounds.c infinity.c
 SRCS+=	ldexp.c modf.c nan.c
-SRCS+=	setjmp.S _setjmp.S sigsetjmp.S
+SRCS+=	setjmp.S _setjmp.S sigsetjmp.S __aeabi_read_tp.S
 SRCS+=	clz_tab.c

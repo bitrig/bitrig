@@ -107,6 +107,12 @@
 #define __pure		__attribute__((__const__))
 #endif
 
+#if __GNUC_PREREQ__(3, 0)
+#define __malloc_like   __attribute__((__malloc__))
+#else
+#define __malloc_like   
+#endif
+
 #if __GNUC_PREREQ__(2, 7)
 #define	__unused	__attribute__((__unused__))
 #else
@@ -211,6 +217,12 @@
 #define	__pure
 #endif
 
+#if defined(__cplusplus) && __cplusplus >= 201103L
+#define _Noreturn               [[noreturn]]
+#else
+#define _Noreturn               __dead
+#endif
+
 /*
  * The __packed macro indicates that a variable or structure members
  * should have the smallest possible alignment, despite any host CPU
@@ -242,6 +254,30 @@
 #define	__malloc	__attribute__((__malloc__))
 #else
 #define	__malloc
+#endif
+
+/*
+ * Compiler-dependent macros to declare that functions take printf-like
+ * or scanf-like arguments.  They are null except for versions of gcc
+ * that are known to support the features properly (old versions of gcc-2
+ * didn't permit keeping the keywords out of the application namespace).
+ */
+#if !__GNUC_PREREQ__(2, 7) && !defined(__INTEL_COMPILER)
+#define __printflike(fmtarg, firstvararg)
+#define __scanflike(fmtarg, firstvararg)
+#define __format_arg(fmtarg)
+#define __strfmonlike(fmtarg, firstvararg)
+#define __strftimelike(fmtarg, firstvararg)
+#else
+#define __printflike(fmtarg, firstvararg) \
+    __attribute__((__format__ (__printf__, fmtarg, firstvararg)))
+#define __scanflike(fmtarg, firstvararg) \
+    __attribute__((__format__ (__scanf__, fmtarg, firstvararg)))
+#define __format_arg(fmtarg)    __attribute__((__format_arg__ (fmtarg)))
+#define __strfmonlike(fmtarg, firstvararg) \
+    __attribute__((__format__ (__strfmon__, fmtarg, firstvararg)))
+#define __strftimelike(fmtarg, firstvararg) \
+    __attribute__((__format__ (__strftime__, fmtarg, firstvararg)))
 #endif
 
 #if defined(__cplusplus)

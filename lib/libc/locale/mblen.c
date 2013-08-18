@@ -1,8 +1,11 @@
-/*	$OpenBSD: mblen.c,v 1.2 2012/12/05 23:20:00 deraadt Exp $ */
-
 /*-
  * Copyright (c) 2002-2004 Tim J. Robbins.
  * All rights reserved.
+ *
+ * Copyright (c) 2011 The FreeBSD Foundation
+ * All rights reserved.
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,23 +29,33 @@
  * SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
+/* __FBSDID("$FreeBSD$"); */
+
 #include <stdlib.h>
-#include <string.h>
 #include <wchar.h>
+#include "mblocal.h"
+
+int
+mblen_l(const char *s, size_t n, locale_t locale)
+{
+	static const mbstate_t initial;
+	size_t rval;
+	FIX_LOCALE(locale);
+
+	if (s == NULL) {
+		/* No support for state dependent encodings. */
+		locale->mblen = initial;
+		return (0);
+	}
+	rval = XLOCALE_CTYPE(locale)->__mbrtowc(NULL, s, n, &locale->mblen);
+	if (rval == (size_t)-1 || rval == (size_t)-2)
+		return (-1);
+	return ((int)rval);
+}
 
 int
 mblen(const char *s, size_t n)
 {
-	static mbstate_t mbs;
-	size_t rval;
-
-	if (s == NULL) {
-		/* No support for state dependent encodings. */
-		memset(&mbs, 0, sizeof(mbs));
-		return (0);
-	}
-	rval = mbrtowc(NULL, s, n, &mbs);
-	if (rval == (size_t)-1 || rval == (size_t)-2)
-		return (-1);
-	return ((int)rval);
+	return mblen_l(s, n, __get_locale());
 }

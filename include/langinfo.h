@@ -70,6 +70,31 @@
 
 #define CODESET		51	/* Codeset name */
 
+#define ERA             52      /* era description segments */
+#define ERA_D_FMT       53      /* era date format string */
+#define ERA_D_T_FMT     54      /* era date and time format string */
+#define ERA_T_FMT       55      /* era time format string */
+#define ALT_DIGITS      56      /* alternative symbols for digits */
+
+#if __BSD_VISIBLE
+#define D_MD_ORDER      57      /* month/day order (local extension) */
+#endif
+
+/* standalone months forms for %OB */
+#define ALTMON_1        58
+#define ALTMON_2        59
+#define ALTMON_3        60
+#define ALTMON_4        61
+#define ALTMON_5        62
+#define ALTMON_6        63
+#define ALTMON_7        64
+#define ALTMON_8        65
+#define ALTMON_9        66
+#define ALTMON_10       67
+#define ALTMON_11       68
+#define ALTMON_12       69
+
+
 __BEGIN_DECLS
 char *nl_langinfo(nl_item);
 __END_DECLS

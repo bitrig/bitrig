@@ -3,7 +3,7 @@
 
 CAT=	dutch english french german polish ru_RU.KOI8-R spanish \
 	swedish uk_UA.KOI8-U
-FILES=	../cl/*.c ../common/*.c ../ex/*.c ../tk/*.c ../vi/*.c
+SFILES=	../cl/*.c ../common/*.c ../ex/*.c ../tk/*.c ../vi/*.c
 
 all: dump ${CAT}
 
@@ -72,8 +72,8 @@ ${CHK}: ${CAT}
 	awk '$$1 != 1 { print $$0 }' | sort -n;				\
 	echo =========================) > $@
 
-english.base: dump ${FILES} #Makefile
-	./dump ${FILES} |\
+english.base: dump ${SFILES} #Makefile
+	./dump ${SFILES} |\
 	sed -e '/|/!d' \
 	    -e 's/|/ "/' \
 	    -e 's/^"//' \

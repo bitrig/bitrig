@@ -34,6 +34,8 @@ THIS SOFTWARE.
 #ifdef USE_LOCALE
 #include "locale.h"
 #endif
+#include <xlocale.h>
+#include "locale/xlocale_private.h"
 
  static CONST int
 fivesbits[] = {	 0,  3,  5,  7, 10, 12, 14, 17, 19, 21,
@@ -334,12 +336,12 @@ mantbits(U *d)
 	}
 
  int
-strtodg
+strtodg_l
 #ifdef KR_headers
-	(s00, se, fpi, exp, bits)
-	CONST char *s00; char **se; FPI *fpi; Long *exp; ULong *bits;
+	(s00, se, fpi, exp, bits, loc)
+	CONST char *s00; char **se; FPI *fpi; Long *exp; ULong *bits; locale_t loc;
 #else
-	(CONST char *s00, char **se, FPI *fpi, Long *exp, ULong *bits)
+	(CONST char *s00, char **se, FPI *fpi, Long *exp, ULong *bits, locale_t loc)
 #endif
 {
 	int abe, abits, asub;
@@ -1152,3 +1154,15 @@ strtodg
 		}
 	return irv;
 	}
+ int
+strtodg
+#ifdef KR_headers
+	(s00, se, fpi, exp, bits)
+	CONST char *s00; char **se; FPI *fpi; Long *exp; ULong *bits;
+#else
+	(CONST char *s00, char **se, FPI *fpi, Long *exp, ULong *bits)
+#endif
+{
+	return strtodg_l(s00, se, fpi, exp, bits, __get_locale());
+
+}

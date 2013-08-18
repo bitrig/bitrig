@@ -1,8 +1,11 @@
-/*	$OpenBSD: wctomb.c,v 1.2 2012/12/05 23:20:00 deraadt Exp $ */
-
 /*-
  * Copyright (c) 2002-2004 Tim J. Robbins.
  * All rights reserved.
+ *
+ * Copyright (c) 2011 The FreeBSD Foundation
+ * All rights reserved.
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,22 +29,31 @@
  * SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
+/* __FBSDID("$FreeBSD$"); */
+
 #include <stdlib.h>
-#include <string.h>
 #include <wchar.h>
+#include "mblocal.h"
 
 int
-wctomb(char *s, wchar_t wchar)
+wctomb_l(char *s, wchar_t wchar, locale_t locale)
 {
-	static mbstate_t mbs;
+	static const mbstate_t initial;
 	size_t rval;
+	FIX_LOCALE(locale);
 
 	if (s == NULL) {
 		/* No support for state dependent encodings. */
-		memset(&mbs, 0, sizeof(mbs));
+		locale->wctomb = initial;
 		return (0);
 	}
-	if ((rval = wcrtomb(s, wchar, &mbs)) == (size_t)-1)
+	if ((rval = XLOCALE_CTYPE(locale)->__wcrtomb(s, wchar, &locale->wctomb)) == (size_t)-1)
 		return (-1);
 	return ((int)rval);
+}
+int
+wctomb(char *s, wchar_t wchar)
+{
+	return wctomb_l(s, wchar, __get_locale());
 }

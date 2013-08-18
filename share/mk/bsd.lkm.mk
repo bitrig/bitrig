@@ -80,15 +80,6 @@ realinstall:
 	    ${.CURDIR}/${POSTINSTALL} ${DESTDIR}${LKMDIR}
 .endif
 .endif
-.if defined(LINKS) && !empty(LINKS)
-.  for lnk file in ${LINKS}
-	@l=${DESTDIR}${LKMDIR}${lnk}; \
-	 t=${DESTDIR}${LKMDIR}${file}; \
-	 echo $$t -\> $$l; \
-	 rm -f $$t; ln $$l $$t
-.  endfor
-.endif
-.endif
 
 
 load:	${COMBINED}
@@ -119,6 +110,8 @@ realinstall: beforeinstall
 
 .include <bsd.obj.mk>
 .include <bsd.dep.mk>
+.include <bsd.files.mk>
+.include <bsd.links.mk>
 .include <bsd.subdir.mk>
 .include <bsd.sys.mk>
 

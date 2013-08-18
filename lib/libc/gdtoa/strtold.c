@@ -32,9 +32,17 @@
  */
 
 #include "gdtoaimp.h"
+#include "locale/xlocale_private.h"
 
 long double
 strtold(const char * __restrict s, char ** __restrict sp)
 {
 	return strtod(s, sp);
+	return strtod_l(s, sp, __get_locale());
+}
+
+long double
+strtold_l(const char * __restrict s, char ** __restrict sp, locale_t loc)
+{
+	return strtod_l(s, sp, loc);
 }

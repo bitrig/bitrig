@@ -575,6 +575,7 @@
 ./usr/libdata/perl5/amd64-bitrig/5.18.2/threads.pm
 ./usr/libdata/perl5/amd64-bitrig/5.18.2/threads/shared.pm
 ./usr/libdata/perl5/site_perl/amd64-bitrig
+./usr/libdata/perl5/site_perl/amd64-bitrig/_ctype.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/_h2ph_pre.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/a.out.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/altq
@@ -1525,6 +1526,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/miscfs/fuse
 ./usr/libdata/perl5/site_perl/amd64-bitrig/miscfs/fuse/fusefs.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/miscfs/fuse/fusefs_node.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/monetary.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/mpool.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/msdosfs
 ./usr/libdata/perl5/site_perl/amd64-bitrig/msdosfs/bootsect.ph
@@ -1800,6 +1802,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/rpcsvc/yp_prot.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/rpcsvc/ypclnt.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/rpcsvc/yppasswd.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/runetype.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sched.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/scsi
 ./usr/libdata/perl5/site_perl/amd64-bitrig/scsi/cd.ph
@@ -1991,6 +1994,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/tmpfs/tmpfs_vnops.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ttyent.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/tzfile.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/uchar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ufs
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ufs/ext2fs
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ufs/ext2fs/ext2fs.ph
@@ -2046,6 +2050,19 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/vis.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/wchar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/wctype.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/xlocale
+./usr/libdata/perl5/site_perl/amd64-bitrig/xlocale.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/xlocale/_ctype.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/xlocale/_inttypes.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/xlocale/_langinfo.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/xlocale/_locale.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/xlocale/_monetary.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/xlocale/_stdio.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/xlocale/_stdlib.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/xlocale/_string.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/xlocale/_time.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/xlocale/_uchar.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/xlocale/_wchar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/zconf.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/zlib.ph
 ./usr/local/libdata/perl5/site_perl/amd64-bitrig

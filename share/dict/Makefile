@@ -3,14 +3,14 @@
 
 # Missing: connectives, words
 
-FILES=	README propernames web2 web2a
+IFILES=	README propernames web2 web2a
 NOOBJ=	noobj
 LINKS=	${BINDIR}/dict/web2 ${BINDIR}/dict/words
 
 all clean cleandir depend lint tags:
 
 realinstall:
-	install -c -o ${BINOWN} -g ${BINGRP} -m 444 ${FILES} \
+	install -c -o ${BINOWN} -g ${BINGRP} -m 444 ${IFILES} \
 	    ${DESTDIR}${BINDIR}/dict
 
 .include <bsd.prog.mk>
