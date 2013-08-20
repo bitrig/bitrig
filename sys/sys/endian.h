@@ -1,4 +1,4 @@
-/*	$OpenBSD: endian.h,v 1.19 2011/06/24 22:44:59 deraadt Exp $	*/
+/*	$OpenBSD: endian.h,v 1.20 2013/08/20 12:55:02 kettenis Exp $	*/
 
 /*
  * Copyright (c) 2004 The DragonFly Project.  All rights reserved.
@@ -38,6 +38,7 @@
 #define _SYS_ENDIAN_H_
 
 #include <sys/cdefs.h>
+#include <sys/_types.h>
 
 #define _LITTLE_ENDIAN	1234
 #define _BIG_ENDIAN	4321
