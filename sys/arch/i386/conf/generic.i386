@@ -337,8 +337,8 @@ vga0		at isa?
 option		X86EMU		# to POST video cards
 vga*		at pci?
 pcdisplay0	at isa?		# CGA, MDA, EGA, HGA
-wsdisplay*	at vga?
-wsdisplay*	at pcdisplay?
+wsdisplay0	at vga? console 1
+wsdisplay0	at pcdisplay? console 1
 wskbd*		at pckbd? mux 1
 wsmouse*	at pms? mux 0
 
@@ -363,6 +363,7 @@ inteldrm*	at vga?		# Intel i915, i945 DRM driver
 drm*		at inteldrm?
 radeondrm*	at pci? 	# ATI Radeon DRM driver
 drm*		at radeondrm?
+wsdisplay0	at radeondrm? console 1
 wsdisplay*	at radeondrm?
 
 #option		VESABIOSVERBOSE
@@ -765,7 +766,6 @@ owctr*	at onewire?		# Counter device
 pseudo-device	pctr		1
 pseudo-device	mtrr		1	# Memory range attributes control
 pseudo-device	nvram		1
-#pseudo-device	raid		4	# RAIDframe disk driver
 pseudo-device	hotplug		1	# devices hot plugging
 
 # mouse & keyboard multiplexor pseudo-devices

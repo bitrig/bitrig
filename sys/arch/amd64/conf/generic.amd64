@@ -284,7 +284,7 @@ pms*		at pckbc?		# PS/2 mouse for wsmouse
 vga0		at isa?
 option		X86EMU			# to POST video cards
 vga*		at pci?
-wsdisplay*	at vga?
+wsdisplay0	at vga? console 1
 wskbd*		at pckbd? mux 1
 wsmouse*	at pms? mux 0
 
@@ -299,6 +299,7 @@ inteldrm*	at vga? 	# Intel i915, i945 DRM driver
 drm*		at inteldrm?
 radeondrm*	at pci? 	# ATI Radeon DRM driver
 drm*		at radeondrm?
+wsdisplay0	at radeondrm? console 1
 wsdisplay*	at radeondrm?
 
 pcppi0		at isa?
