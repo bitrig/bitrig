@@ -280,14 +280,6 @@ extern caddr_t msgbufaddr;
 boolean_t pmap_initialized;
 
 /*
- * Flag to indicate whether the data cache is virtually indexed and
- * virtually tagged. A value of zero implies physically indexed and
- * physically tagged data cache; there is no support for VIPT data
- * cache yet.
- */
-boolean_t pmap_cachevivt = FALSE;
-
-/*
  * Misc. locking data structures
  */
 
