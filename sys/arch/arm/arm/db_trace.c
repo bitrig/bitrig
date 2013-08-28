@@ -47,6 +47,7 @@ db_regs_t ddb_regs;
 
 #define INKERNEL(va)	(((vaddr_t)(va)) >= VM_MIN_KERNEL_ADDRESS)
 
+#ifndef __clang__
 /*
  * APCS stack frames are awkward beasts, so I don't think even trying to use
  * a structure to represent them is a good idea.
@@ -79,6 +80,17 @@ db_regs_t ddb_regs;
 #define FR_RLV	(-1)
 #define FR_RSP	(-2)
 #define FR_RFP	(-3)
+#else
+/*
+ * Clang uses a different stack frame, which looks like the following.
+ *
+ *          return link value       [fp, #+4]
+ *          return fp value         [fp]        <- fp points to here
+ *
+ */
+#define FR_RFP	(0)
+#define FR_RLV	(+1)
+#endif /* !__clang__ */
 
 void
 db_stack_trace_print(addr, have_addr, count, modif, pr)
@@ -92,6 +104,7 @@ db_stack_trace_print(addr, have_addr, count, modif, pr)
 	char c, *cp = modif;
 	boolean_t	kernel_only = TRUE;
 	boolean_t	trace_thread = FALSE;
+	db_addr_t	scp;
 	int	scp_offset;
 
 	while ((c = *cp++) != 0) {
@@ -101,9 +114,10 @@ db_stack_trace_print(addr, have_addr, count, modif, pr)
 			trace_thread = TRUE;
 	}
 
-	if (!have_addr)
+	if (!have_addr) {
 		frame = (u_int32_t *)(DDB_REGS->tf_r11);
-	else {
+		scp = DDB_REGS->tf_pc;
+	} else {
 		if (trace_thread) {
 			struct proc *p;
 			struct user *u;
@@ -116,6 +130,7 @@ db_stack_trace_print(addr, have_addr, count, modif, pr)
 			u = p->p_addr;
 			frame = (u_int32_t *)(u->u_pcb.pcb_un.un_32.pcb32_r11);
 			(*pr)("at %p\n", frame);
+			scp = u->u_pcb.pcb_un.un_32.pcb32_pc;
 		} else
 			frame = (u_int32_t *)(addr);
 	}
@@ -123,7 +138,7 @@ db_stack_trace_print(addr, have_addr, count, modif, pr)
 	scp_offset = -(get_pc_str_offset() >> 2);
 
 	while (count-- && frame != NULL) {
-		db_addr_t	scp;
+#ifndef __clang__
 		u_int32_t	savecode;
 		int		r, n;
 		u_int32_t	*rp;
@@ -153,6 +168,12 @@ db_stack_trace_print(addr, have_addr, count, modif, pr)
 				}
 			}
 		}
+#else
+		db_printsym(scp, DB_STGY_PROC, pr);
+		(*pr)("\n\trlv=0x%08x rfp=0x%08x", frame[FR_RLV], frame[FR_RFP]);
+		scp = frame[FR_RLV];
+
+#endif /* !__clang__ */
 
 		(*pr)("\n");
 
