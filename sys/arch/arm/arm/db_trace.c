@@ -76,10 +76,10 @@ db_regs_t ddb_regs;
  * fields are actually present.
  */
 
-#define FR_SCP	(0)
-#define FR_RLV	(-1)
-#define FR_RSP	(-2)
-#define FR_RFP	(-3)
+#define FR_SCP	(0x0)
+#define FR_RLV	(-0x4)
+#define FR_RSP	(-0x8)
+#define FR_RFP	(-0xC)
 #else
 /*
  * Clang uses a different stack frame, which looks like the following.
@@ -88,8 +88,8 @@ db_regs_t ddb_regs;
  *          return fp value         [fp]        <- fp points to here
  *
  */
-#define FR_RFP	(0)
-#define FR_RLV	(+1)
+#define FR_RFP	(0x0)
+#define FR_RLV	(+0x4)
 #endif /* !__clang__ */
 
 void
@@ -100,11 +100,11 @@ db_stack_trace_print(addr, have_addr, count, modif, pr)
 	char            *modif;
 	int		(*pr) (const char *, ...);
 {
-	u_int32_t	*frame, *lastframe;
+	u_int32_t	frame, lastframe;
 	char c, *cp = modif;
 	boolean_t	kernel_only = TRUE;
 	boolean_t	trace_thread = FALSE;
-	db_addr_t	scp;
+	db_addr_t	scp = 0;
 	int	scp_offset;
 
 	while ((c = *cp++) != 0) {
@@ -115,7 +115,7 @@ db_stack_trace_print(addr, have_addr, count, modif, pr)
 	}
 
 	if (!have_addr) {
-		frame = (u_int32_t *)(DDB_REGS->tf_r11);
+		frame = DDB_REGS->tf_r11;
 		scp = DDB_REGS->tf_pc;
 	} else {
 		if (trace_thread) {
@@ -128,50 +128,57 @@ db_stack_trace_print(addr, have_addr, count, modif, pr)
 				return;
 			}	
 			u = p->p_addr;
-			frame = (u_int32_t *)(u->u_pcb.pcb_un.un_32.pcb32_r11);
-			(*pr)("at %p\n", frame);
+			frame = u->u_pcb.pcb_un.un_32.pcb32_r11;
+			(*pr)("at 0x%08x\n", frame);
 			scp = u->u_pcb.pcb_un.un_32.pcb32_pc;
 		} else
-			frame = (u_int32_t *)(addr);
+			frame = addr;
 	}
-	lastframe = NULL;
-	scp_offset = -(get_pc_str_offset() >> 2);
+	lastframe = 0;
+	scp_offset = -get_pc_str_offset();
 
-	while (count-- && frame != NULL) {
+	while (count-- && frame != 0) {
 #ifndef __clang__
 		u_int32_t	savecode;
 		int		r, n;
-		u_int32_t	*rp;
+		u_int32_t	rp;
 		const char	*sep;
 
 		/*
 		 * In theory, the SCP isn't guaranteed to be in the function
 		 * that generated the stack frame.  We hope for the best.
 		 */
-		scp = frame[FR_SCP];
+		scp = db_get_value(frame+FR_SCP, 4, 0);
 
 		db_printsym(scp, DB_STGY_PROC, pr);
-		(*pr)("\n\tscp=0x%08x rlv=0x%08x (", scp, frame[FR_RLV]);
-		db_printsym(frame[FR_RLV], DB_STGY_PROC, pr);
+		(*pr)("\n\tscp=0x%08x rlv=0x%08x (", scp,
+		    db_get_value(frame+FR_RLV, 4, 0));
+		db_printsym(db_get_value(frame+FR_RLV, 4, 0),
+		    DB_STGY_PROC, pr);
 		(*pr)(")\n\trsp=0x%08x rfp=0x%08x",
-		    frame[FR_RSP], frame[FR_RFP]);
+		    db_get_value(frame+FR_RSP, 4, 0),
+		    db_get_value(frame+FR_RFP, 4, 0));
 
-		savecode = ((u_int32_t *)scp)[scp_offset];
+		savecode = db_get_value(scp+scp_offset, 4, 0);
 		if ((savecode & 0x0e100000) == 0x08000000) {
 			/* Looks like an STM */
-			rp = frame - 4;
+			rp = frame - 4 * sizeof(uint32_t);
 			n = 0;
 			for (r = 10; r >= 0; r--) {
 				if (savecode & (1 << r)) {
 					sep = n++ % 4 == 0 ? "\n\t" : " ";
-					(*pr)("%sr%d=0x%08x", sep, r, *rp--);
+					(*pr)("%sr%d=0x%08x", sep, r,
+					    db_get_value(rp, 4, 0));
+					rp -= sizeof(uint32_t);
 				}
 			}
 		}
 #else
 		db_printsym(scp, DB_STGY_PROC, pr);
-		(*pr)("\n\trlv=0x%08x rfp=0x%08x", frame[FR_RLV], frame[FR_RFP]);
-		scp = frame[FR_RLV];
+		(*pr)("\n\trlv=0x%08x rfp=0x%08x",
+		    db_get_value(frame+FR_RLV, 4, 0),
+		    db_get_value(frame+FR_RFP, 4, 0));
+		scp = db_get_value(frame+FR_RLV, 4, 0);
 
 #endif /* !__clang__ */
 
@@ -180,19 +187,19 @@ db_stack_trace_print(addr, have_addr, count, modif, pr)
 		/*
 		 * Switch to next frame up
 		 */
-		if (frame[FR_RFP] == 0)
+		if (db_get_value(frame+FR_RFP, 4, 0) == 0)
 			break; /* Top of stack */
 
 		lastframe = frame;
-		frame = (u_int32_t *)(frame[FR_RFP]);
+		frame = db_get_value(frame+FR_RFP, 4, 0);
 
-		if (INKERNEL((int)frame)) {
+		if (INKERNEL(frame)) {
 			/* staying in kernel */
 			if (frame <= lastframe) {
 				(*pr)("Bad frame pointer: %p\n", frame);
 				break;
 			}
-		} else if (INKERNEL((int)lastframe)) {
+		} else if (INKERNEL(lastframe)) {
 			/* switch from user to kernel */
 			if (kernel_only)
 				break;	/* kernel stack only */
