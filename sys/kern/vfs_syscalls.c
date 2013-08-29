@@ -3428,7 +3428,7 @@ t32_sys_getdirentries(struct proc *p, void *v, register_t *retval)
 	off = auio.uio_offset = fp->f_offset;
 	error = VOP_READDIR(vp, &auio, fp->f_cred, &eofflag);
 	fp->f_offset = auio.uio_offset;
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 	if (error)
 		goto bad;
 	*retval = count - auio.uio_resid;
