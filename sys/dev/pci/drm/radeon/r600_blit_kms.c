@@ -471,7 +471,7 @@ int r600_blit_init(struct radeon_device *rdev)
 {
 	u32 obj_size;
 	int i, r, dwords;
-	void *ptr;
+	uint8_t *ptr;
 	u32 packet2s[16];
 	int num_packet2s = 0;
 
@@ -549,7 +549,7 @@ int r600_blit_init(struct radeon_device *rdev)
 	r = radeon_bo_reserve(rdev->r600_blit.shader_obj, false);
 	if (unlikely(r != 0))
 		return r;
-	r = radeon_bo_kmap(rdev->r600_blit.shader_obj, &ptr);
+	r = radeon_bo_kmap(rdev->r600_blit.shader_obj, (void **)&ptr);
 	if (r) {
 		DRM_ERROR("failed to map blit object %d\n", r);
 		return r;

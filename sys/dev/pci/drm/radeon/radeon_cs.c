@@ -575,8 +575,8 @@ int radeon_cs_finish_pages(struct radeon_cs_parser *p)
 		}
 		
 		if (DRM_COPY_FROM_USER(p->ib.ptr + (i * (PAGE_SIZE/4)),
-				       ibc->user_ptr + (i * PAGE_SIZE),
-				       size))
+				       (uint8_t *)ibc->user_ptr +
+				       (i * PAGE_SIZE), size))
 			return -EFAULT;
 	}
 	return 0;
@@ -593,8 +593,8 @@ static int radeon_cs_update_pages(struct radeon_cs_parser *p, int pg_idx)
 
 	for (i = ibc->last_copied_page + 1; i < pg_idx; i++) {
 		if (DRM_COPY_FROM_USER(p->ib.ptr + (i * (PAGE_SIZE/4)),
-				       ibc->user_ptr + (i * PAGE_SIZE),
-				       PAGE_SIZE)) {
+				       (uint8_t *)ibc->user_ptr +
+				       (i * PAGE_SIZE), PAGE_SIZE)) {
 			p->parser_error = -EFAULT;
 			return 0;
 		}
@@ -611,7 +611,7 @@ static int radeon_cs_update_pages(struct radeon_cs_parser *p, int pg_idx)
 		ibc->kpage[new_page] = p->ib.ptr + (pg_idx * (PAGE_SIZE / 4));
 
 	if (DRM_COPY_FROM_USER(ibc->kpage[new_page],
-			       ibc->user_ptr + (pg_idx * PAGE_SIZE),
+			       (uint8_t *)ibc->user_ptr + (pg_idx * PAGE_SIZE),
 			       size)) {
 		p->parser_error = -EFAULT;
 		return 0;

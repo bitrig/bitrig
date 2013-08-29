@@ -90,8 +90,8 @@ static void radeon_do_test_moves(struct radeon_device *rdev, int flag)
 	}
 	for (i = 0; i < n; i++) {
 		void *gtt_map, *vram_map;
-		void **gtt_start, **gtt_end;
-		void **vram_start, **vram_end;
+		void  **gtt_start, **gtt_end;
+		void  **vram_start, **vram_end;
 
 		r = radeon_bo_create(rdev, size, PAGE_SIZE, true,
 				     RADEON_GEM_DOMAIN_GTT, NULL, gtt_obj + i);
@@ -109,13 +109,13 @@ static void radeon_do_test_moves(struct radeon_device *rdev, int flag)
 			goto out_cleanup;
 		}
 
-		r = radeon_bo_kmap(gtt_obj[i], &gtt_map);
+		r = radeon_bo_kmap(gtt_obj[i], (void **)&gtt_map);
 		if (r) {
 			DRM_ERROR("Failed to map GTT object %d\n", i);
 			goto out_cleanup;
 		}
 
-		for (gtt_start = gtt_map, gtt_end = gtt_map + size;
+		for (gtt_start = gtt_map, gtt_end = (void **)(uint8_t **)gtt_map + size;
 		     gtt_start < gtt_end;
 		     gtt_start++)
 			*gtt_start = gtt_start;
@@ -145,8 +145,10 @@ static void radeon_do_test_moves(struct radeon_device *rdev, int flag)
 			goto out_cleanup;
 		}
 
-		for (gtt_start = gtt_map, gtt_end = gtt_map + size,
-		     vram_start = vram_map, vram_end = vram_map + size;
+		for (gtt_start = gtt_map,
+		    gtt_end = (void **)(uint8_t **)gtt_map + size,
+		     vram_start = vram_map,
+		     vram_end = (void **)(uint8_t **)vram_map + size;
 		     vram_start < vram_end;
 		     gtt_start++, vram_start++) {
 			if (*vram_start != gtt_start) {
@@ -156,10 +158,10 @@ static void radeon_do_test_moves(struct radeon_device *rdev, int flag)
 					  i, *vram_start, gtt_start,
 					  (unsigned long long)
 					  (gtt_addr - rdev->mc.gtt_start +
-					   (void*)gtt_start - gtt_map),
+					   (uint8_t *)gtt_start - (uint8_t *)gtt_map),
 					  (unsigned long long)
 					  (vram_addr - rdev->mc.vram_start +
-					   (void*)gtt_start - gtt_map));
+					   (uint8_t *)gtt_start - (uint8_t *)gtt_map));
 				radeon_bo_kunmap(vram_obj);
 				goto out_cleanup;
 			}
@@ -191,8 +193,10 @@ static void radeon_do_test_moves(struct radeon_device *rdev, int flag)
 			goto out_cleanup;
 		}
 
-		for (gtt_start = gtt_map, gtt_end = gtt_map + size,
-		     vram_start = vram_map, vram_end = vram_map + size;
+		for (gtt_start = gtt_map,
+		     gtt_end = (void **)(uint8_t **)gtt_map + size,
+		     vram_start = vram_map,
+		     vram_end = (void **)(uint8_t **)vram_map + size;
 		     gtt_start < gtt_end;
 		     gtt_start++, vram_start++) {
 			if (*gtt_start != vram_start) {
@@ -202,10 +206,10 @@ static void radeon_do_test_moves(struct radeon_device *rdev, int flag)
 					  i, *gtt_start, vram_start,
 					  (unsigned long long)
 					  (vram_addr - rdev->mc.vram_start +
-					   (void*)vram_start - vram_map),
+					   (uint8_t *)vram_start - (uint8_t *)vram_map),
 					  (unsigned long long)
 					  (gtt_addr - rdev->mc.gtt_start +
-					   (void*)vram_start - vram_map));
+					   (uint8_t *)vram_start - (uint8_t *)vram_map));
 				radeon_bo_kunmap(gtt_obj[i]);
 				goto out_cleanup;
 			}

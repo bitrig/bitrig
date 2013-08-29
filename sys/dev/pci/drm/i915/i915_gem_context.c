@@ -426,7 +426,7 @@ static int do_switch(struct i915_hw_context *to)
 
 	if (!to->is_initialized || is_default_context(to))
 		hw_flags |= MI_RESTORE_INHIBIT;
-	else if (/*WARN_ON_ONCE*/(from_obj == to->obj)) /* not yet expected */
+	else if (/*WARN_ON_ONCE*/from_obj == to->obj) /* not yet expected */
 		hw_flags |= MI_FORCE_RESTORE;
 
 	ret = mi_set_context(ring, to, hw_flags);
