@@ -395,8 +395,9 @@ des3_decrypt(caddr_t key, u_int8_t *blk)
 int
 des3_setkey(void *sched, u_int8_t *key, int len)
 {
-	if (des_set_key(key, sched) < 0 || des_set_key(key + 8, sched + 128)
-	    < 0 || des_set_key(key + 16, sched + 256) < 0)
+	if (des_set_key(key, sched) < 0 ||
+	    des_set_key(key + 8, (uint8_t *)sched + 128) < 0 ||
+	    des_set_key(key + 16, (uint8_t *)sched + 256) < 0)
 		return -1;
 
 	return 0;
