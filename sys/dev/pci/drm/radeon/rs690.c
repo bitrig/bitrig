@@ -305,7 +305,18 @@ static void rs690_crtc_bandwidth_compute(struct radeon_device *rdev,
 		if (rdev->pm.max_bandwidth.full > rdev->pm.sideport_bandwidth.full &&
 			rdev->pm.sideport_bandwidth.full)
 			rdev->pm.max_bandwidth = rdev->pm.sideport_bandwidth;
+/*
+ * The below causes the following clang warning:
+ * error: signed shift result (0x11A49A00000) requires 42 bits to represent,
+ * but 'int' only has 32 bits [-Werror,-Wshift-overflow]
+ * Freebsd fixed this by replacing it with UINT_MAX which is obviously wrong but
+ * at least it compiles. We have done the same here.
+ */
+#ifdef doubleewteeeff
 		read_delay_latency.full = dfixed_const(370 * 800 * 1000);
+#else
+		read_delay_latency.full = UINT_MAX;
+#endif
 		read_delay_latency.full = dfixed_div(read_delay_latency,
 			rdev->pm.igp_sideport_mclk);
 	} else {
