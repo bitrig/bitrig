@@ -163,12 +163,10 @@ ELFNAME(copyargs)(struct exec_package *pack, struct ps_strings *arginfo,
 
 	/*
 	 * Push space for extra arguments on the stack needed by
-	 * dynamically linked binaries.
+	 * dynamically linked (or TLS) binaries.
 	 */
-	if (pack->ep_interp != NULL) {
-		pack->ep_emul_argp = stack;
-		stack = (char *)stack + ELF_AUX_ENTRIES * sizeof (AuxInfo);
-	}
+	pack->ep_emul_argp = stack;
+	stack = (char *)stack + ELF_AUX_ENTRIES * sizeof (AuxInfo);
 	return (stack);
 }
 
@@ -508,6 +506,7 @@ ELFNAME2(exec,makecmds)(struct proc *p, struct exec_package *epp)
 	Elf_Ehdr *eh = epp->ep_hdr;
 	Elf_Phdr *ph, *pp, *base_ph = NULL;
 	Elf_Addr phdr = 0, exe_base = 0;
+	struct elf_args *ap;
 	int error, i;
 	char *interp = NULL;
 	u_long pos = 0, phsize;
@@ -729,20 +728,20 @@ ELFNAME2(exec,makecmds)(struct proc *p, struct exec_package *epp)
 	epp->ep_entry = eh->e_entry + exe_base;
 
 	/*
-	 * Check if we found a dynamically linked binary and arrange to load
-	 * its interpreter when the exec file is released.
+	 * Aux vector is always loaded, so prepare the additional parameters.
+	 * If the binary is dynamically linked set the interp appropriately.
 	 */
+
+	ap = malloc(sizeof(struct elf_args), M_TEMP, M_WAITOK);
+
+	ap->arg_phaddr = phdr;
+	ap->arg_phentsize = eh->e_phentsize;
+	ap->arg_phnum = eh->e_phnum;
+	ap->arg_entry = eh->e_entry + exe_base;
+
+	epp->ep_emul_arg = ap;
+
 	if (interp) {
-		struct elf_args *ap;
-
-		ap = malloc(sizeof(struct elf_args), M_TEMP, M_WAITOK);
-
-		ap->arg_phaddr = phdr;
-		ap->arg_phentsize = eh->e_phentsize;
-		ap->arg_phnum = eh->e_phnum;
-		ap->arg_entry = eh->e_entry + exe_base;
-
-		epp->ep_emul_arg = ap;
 		epp->ep_interp_pos = pos;
 	}
 
@@ -771,23 +770,27 @@ ELFNAME2(exec,fixup)(struct proc *p, struct exec_package *epp)
 	AuxInfo ai[ELF_AUX_ENTRIES], *a;
 	Elf_Addr	pos = epp->ep_interp_pos;
 
-	if (epp->ep_interp == NULL) {
-		return (0);
-	}
+
+	/* Aux vectors are always pushed for static TLS binaries */
 
 	interp = epp->ep_interp;
 	ap = epp->ep_emul_arg;
 
-	if ((error = ELFNAME(load_file)(p, interp, epp, ap, &pos)) != 0) {
-		free(ap, M_TEMP);
-		pool_put(&namei_pool, interp);
-		kill_vmcmds(&epp->ep_vmcmds);
-		return (error);
+	if (interp != NULL) {
+		if ((error = ELFNAME(load_file)(p, interp, epp, ap, &pos)) != 0) {
+			free(ap, M_TEMP);
+			pool_put(&namei_pool, interp);
+			kill_vmcmds(&epp->ep_vmcmds);
+			return (error);
+		}
+
+		/*
+		 * We have to do this ourselves...
+		 */
+		error = exec_process_vmcmds(p, epp);
+	} else {
+		error = 0;
 	}
-	/*
-	 * We have to do this ourselves...
-	 */
-	error = exec_process_vmcmds(p, epp);
 
 	/*
 	 * Push extra arguments on the stack needed by dynamically
@@ -812,9 +815,11 @@ ELFNAME2(exec,fixup)(struct proc *p, struct exec_package *epp)
 		a->au_v = PAGE_SIZE;
 		a++;
 
-		a->au_id = AUX_base;
-		a->au_v = ap->arg_interp;
-		a++;
+		if (interp != NULL) {
+			a->au_id = AUX_base;
+			a->au_v = ap->arg_interp;
+			a++;
+		}
 
 		a->au_id = AUX_flags;
 		a->au_v = 0;
@@ -831,7 +836,9 @@ ELFNAME2(exec,fixup)(struct proc *p, struct exec_package *epp)
 		error = copyout(ai, epp->ep_emul_argp, sizeof ai);
 	}
 	free(ap, M_TEMP);
-	pool_put(&namei_pool, interp);
+	if (interp != NULL) {
+		pool_put(&namei_pool, interp);
+	}
 	return (error);
 }
 
