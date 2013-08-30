@@ -670,6 +670,18 @@ ELFNAME2(exec,makecmds)(struct proc *p, struct exec_package *epp)
 						    epp->ep_taddr;
 				}
 			}
+
+			/*
+			 * If this segment contains the program headers,
+			 * remember their virtual address for the AT_PHDR
+			 * aux entry. Static binaries don't usually include
+			 * a PT_PHDR entry.
+			 */
+			if (phdr == 0 && pp->p_offset == 0 && 
+				eh->e_phoff + eh->e_phnum * eh->e_phentsize
+					<= pp->p_filesz)
+				phdr = pp->p_vaddr + eh->e_phoff;
+
 			break;
 
 		case PT_SHLIB:
