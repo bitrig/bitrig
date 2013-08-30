@@ -4,4 +4,4 @@
 
 .include <bsd.own.mk>
 
-SRCS+=		dlfcn_stubs.c tls_stubs.c
+SRCS+=		dlfcn_stubs.c tls_stubs.c tls2_stubs.c

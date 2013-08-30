@@ -71,7 +71,9 @@ struct ps_strings;
 void __init();
 int main(int, char **, char **);
 
-
+//void __init_tcb(void *) __attribute__((weak));
+void __init_tcb(void *);
+extern int _DYNAMIC __attribute__((weak));
 
 void
 MD_START(MD_START_ARGS)
@@ -99,6 +101,8 @@ MD_START(MD_START_ARGS)
 	if (cleanup != NULL)
 		atexit(cleanup);
 #endif
+
+	__init_tcb(envp);
 
 #ifdef MCRT0
 	atexit(_mcleanup);
