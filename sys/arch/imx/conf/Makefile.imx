@@ -178,17 +178,11 @@ install-kernel-${MACHINE_NAME}:
 
 
 # until we get native booting working, put this in the tree.
-bsdrd.img: bsd.rd
-	${OBJCOPY} -O binary bsd.rd bsdrd.img
+bsdrd.umg: bsd.rd
+	mkuboot -a arm -o linux -e ${KERNEL_BASE_PHYS} -l ${KERNEL_BASE_PHYS} bsd.rd bsdrd.umg
 
-bsd.img: bsd
-	${OBJCOPY} -O binary bsd bsd.img
-
-bsdrd.umg: bsdrd.img
-	mkuboot -a arm -o linux -e ${KERNEL_BASE_PHYS} -l ${KERNEL_BASE_PHYS} bsdrd.img bsdrd.umg
-
-bsd.umg: bsd.img
-	mkuboot -a arm -o linux -e ${KERNEL_BASE_PHYS} -l ${KERNEL_BASE_PHYS} bsd.img bsd.umg
+bsd.umg: bsd
+	mkuboot -a arm -o linux -e ${KERNEL_BASE_PHYS} -l ${KERNEL_BASE_PHYS} bsd bsd.umg
 
 bsd.rd: bsd
 	cp bsd bsd.rd

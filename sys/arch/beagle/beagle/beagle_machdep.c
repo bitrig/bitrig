@@ -453,6 +453,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	paddr_t memstart;
 	psize_t memsize;
 	extern void omap4_smc_call(uint32_t, uint32_t);
+	extern u_int32_t esym;  /* &_end if no symbols are loaded */
 
 #if 0
 	int led_data = 0;
@@ -566,7 +567,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 
 	{
 		extern char _end[];
-		physical_freestart = (((unsigned long)_end - KERNEL_TEXT_BASE +0xfff) & ~0xfff) + memstart;
+		physical_freestart = (((unsigned long)esym - KERNEL_TEXT_BASE +0xfff) & ~0xfff) + memstart;
 		physical_freeend = memstart+memsize;
 	}
 
@@ -712,12 +713,18 @@ initarm(void *arg0, void *arg1, void *arg2)
 	{
 		extern char etext[], _end[];
 		size_t textsize = (u_int32_t) etext - KERNEL_TEXT_BASE;
-		size_t totalsize = (u_int32_t) _end - KERNEL_TEXT_BASE;
+		size_t totalsize = (u_int32_t) esym - KERNEL_TEXT_BASE;
 		u_int logical;
 
 		textsize = (textsize + PGOFSET) & ~PGOFSET;
 		totalsize = (totalsize + PGOFSET) & ~PGOFSET;
+
+#ifdef VERBOSE_INIT_ARM
+		printf("kernelsize text %x total %x end %xesym %x\n",
+		    textsize, totalsize, _end, esym);
+#endif
 		
+		/* XXX DSR - doubt this is correct */
 		logical = 0x00000000;	/* offset of kernel in RAM */
 
 		logical += pmap_map_chunk(l1pagetable, KERNEL_BASE + logical,
@@ -726,6 +733,13 @@ initarm(void *arg0, void *arg1, void *arg2)
 		logical += pmap_map_chunk(l1pagetable, KERNEL_BASE + logical,
 		    physical_start + logical, totalsize - textsize,
 		    VM_PROT_READ|VM_PROT_WRITE, PTE_CACHE);
+
+		/* Update dump information */
+#if 0
+		cpu_kcore_hdr.kernelbase = KERNEL_BASE;
+		cpu_kcore_hdr.kerneloffs = logical;
+		cpu_kcore_hdr.staticsize = totalsize;
+#endif
 	}
 
 #ifdef VERBOSE_INIT_ARM

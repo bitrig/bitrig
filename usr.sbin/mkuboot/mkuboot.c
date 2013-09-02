@@ -79,6 +79,9 @@ u_long	copy_data(int, const char *, int, const char *, u_long,
 	    struct image_header *, Elf_Word);
 u_long	(*copy_elf)(int, const char *, int, const char *, u_long,
 	    struct image_header *);
+
+u_long	copy_mem(void *, int, const char *, u_long, struct image_header *,
+	    Elf_Word);
 u_long	copy_raw(int, const char *, int, const char *, u_long,
 	    struct image_header *);
 u_long	fill_zeroes(int, const char *, u_long, struct image_header *, Elf_Word);
@@ -314,6 +317,26 @@ copy_data(int ifd, const char *iname, int ofd, const char *oname, u_long crc,
 		if (write(ofd, buf, nbytes) != nbytes)
 			err(1, "%s", oname);
 		crc = crc32(crc, (Bytef *)buf, nbytes);
+		ih->ih_size += nbytes;
+		size -= nbytes;
+	}
+
+	return crc;
+}
+
+u_long
+copy_mem(void *mem, int ofd, const char *oname, u_long crc,
+    struct image_header *ih, Elf_Word size)
+{
+	ssize_t nbytes;
+	char *memp = (char *)mem;
+
+	while (size != 0) {
+		nbytes = size > BUFSIZ ? BUFSIZ : size;
+		if (write(ofd, memp, nbytes) != nbytes)
+			err(1, "%s", oname);
+		crc = crc32(crc, (Bytef *)memp, nbytes);
+		memp += nbytes;
 		ih->ih_size += nbytes;
 		size -= nbytes;
 	}
