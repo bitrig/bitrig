@@ -43,7 +43,7 @@
 #define BSD4_3	1
 #define BSD4_4	1
 
-#define OpenBSD	201111		/* OpenBSD version (year & month). */
+#define OpenBSD	201311		/* OpenBSD version (year & month). */
 #define OpenBSD5_0 1		/* OpenBSD 5.0 */
 
 #ifndef _LOCORE
