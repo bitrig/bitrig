@@ -54,7 +54,7 @@ CWARNFLAGS=	-Wall -Wstrict-prototypes -Wmissing-prototypes \
 CWARNFLAGS+=	-Wno-pointer-sign
 CMACHFLAGS=	-mcmodel=kernel -mno-red-zone -mno-sse -mno-sse2 -mno-sse3 \
 		-mno-3dnow -mno-mmx -msoft-float -mno-avx
-CMACHFLAGS+=	-ffreestanding -no-integrated-as -fno-omit-frame-pointer \
+CMACHFLAGS+=	-ffreestanding -fno-omit-frame-pointer \
 		-fno-asynchronous-unwind-tables ${NOPIE_FLAGS}
 .if ${IDENT:M-DNO_PROPOLICE}
 CMACHFLAGS+=	-fno-stack-protector
@@ -67,7 +67,7 @@ COPTS?=		-O3
 .endif
 
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
-AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS}
+AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS} -no-integrated-as
 LINKFLAGS=	-Ttext 0xD0200120 -e start -N --warn-common -z noexecstack \
 		-nopie
 .endif
