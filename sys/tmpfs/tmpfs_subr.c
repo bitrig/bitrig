@@ -843,7 +843,7 @@ tmpfs_dir_getdents(tmpfs_node_t *node, struct uio *uio, off_t *cntp)
 	/* Update the offset and cache. */
 	node->tn_spec.tn_dir.tn_readdir_lastn = uio->uio_offset = cookie;
 	node->tn_spec.tn_dir.tn_readdir_lastp = de;
-	tmpfs_update(node, TMPFS_NODE_ACCESSED);
+	node->tn_status |= TMPFS_NODE_ACCESSED;
 	/* kmem_free(dentp, sizeof(struct dirent)); */
 	free(dentp, M_TEMP);
 	return error;
