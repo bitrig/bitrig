@@ -1,0 +1,63 @@
+#	$OpenBSD: files.armv7,v 1.1 2013/09/04 14:38:25 patrick Exp $
+#
+# First try for arm-specific configuration info
+#
+
+maxpartitions	16
+maxusers	2 8 64
+
+major	{wd = 16}
+major	{sd = 24}
+major	{cd = 26}
+major	{rd = 18}
+
+file	arch/arm/arm/conf.c
+
+#interrupt API layer
+file	arch/armv7/armv7/intr.c
+
+# u-boot argument support
+file	arch/armv7/armv7/uboot_tags.c
+
+# CPU support and integrated peripherals
+file	arch/arm/arm/irq_dispatch.S
+file	arch/arm/arm/softintr.c
+
+# Generic MD files
+file	arch/armv7/armv7/autoconf.c
+file	arch/arm/arm/disksubr.c			disk
+
+include "dev/sdmmc/files.sdmmc"
+
+# Media Independent Interface (mii)
+include "dev/mii/files.mii"
+
+# Machine-independent I2C drivers
+include "dev/i2c/files.i2c"
+
+# Machine-independent SCSI drivers
+include "scsi/files.scsi"
+include "dev/atapiscsi/files.atapiscsi"
+
+# Machine-independent ATA drivers
+include "dev/ata/files.ata"
+
+# Machine-independent I2O drivers.
+include "dev/i2o/files.i2o"
+
+# Include WSCONS stuff
+include "dev/wscons/files.wscons"
+include "dev/rasops/files.rasops"
+include "dev/wsfont/files.wsfont"
+
+# Include USB stuff
+include "dev/usb/files.usb"
+
+# Bluetooth
+include "dev/bluetooth/files.bluetooth"
+
+# Machine-independent GPIO drivers
+include "dev/gpio/files.gpio"
+
+# SoC includes
+include "arch/armv7/omap/files.omap"

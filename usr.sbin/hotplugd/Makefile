@@ -2,7 +2,7 @@
 
 .if ${MACHINE} == "amd64" || \
     ${MACHINE} == "i386" || \
-    ${MACHINE} == "beagle" || \
+    ${MACHINE} == "armv7" || \
     ${MACHINE} == "imx"
 
 PROG=	hotplugd
