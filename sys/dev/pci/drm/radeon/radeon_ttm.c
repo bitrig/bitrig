@@ -894,6 +894,8 @@ radeon_ttm_fault(struct uvm_faultinfo *ufi, vaddr_t vaddr, vm_page_t *pps,
 
 	bo = (struct ttm_buffer_object *)ufi->entry->object.uvm_obj;
 	rdev = radeon_get_rdev(bo->bdev);
+	/* XXX probably not safe, but now we are done with obj */
+	mtx_leave(&ufi->entry->object.uvm_obj->vmobjlock);
 	rw_enter_read(&rdev->pm.mclk_lock);
 	r = ttm_vm_ops->pgo_fault(ufi, vaddr, pps, npages, centeridx,
 				  fault_type, access_type, flags);
