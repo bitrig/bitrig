@@ -2,8 +2,7 @@
 
 .if ${MACHINE} == "amd64" || \
     ${MACHINE} == "i386" || \
-    ${MACHINE} == "armv7" || \
-    ${MACHINE} == "imx"
+    ${MACHINE} == "armv7"
 
 PROG=	hotplugd
 SRCS=	hotplugd.c

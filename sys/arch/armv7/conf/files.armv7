@@ -60,4 +60,5 @@ include "dev/bluetooth/files.bluetooth"
 include "dev/gpio/files.gpio"
 
 # SoC includes
+include "arch/armv7/imx/files.imx"
 include "arch/armv7/omap/files.omap"

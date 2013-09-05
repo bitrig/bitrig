@@ -1,0 +1,67 @@
+#	$OpenBSD: files.beagle,v 1.11 2011/11/10 19:37:01 uwe Exp $
+
+define imx {}
+device imx: imx
+attach imx at mainbus
+file	arch/armv7/imx/imx_machdep.c		imx
+file	arch/armv7/imx/imx.c			imx
+file	arch/armv7/imx/imx6.c			imx
+
+# serial ports
+device imxuart
+attach	imxuart at imx
+file	arch/armv7/imx/imxuart.c		imxuart
+
+device imxccm
+attach imxccm at imx
+file	arch/armv7/imx/imxccm.c		imxccm
+
+device imxiomuxc
+attach imxiomuxc at imx
+file	arch/armv7/imx/imxiomuxc.c	imxiomuxc
+
+device imxdog
+attach imxdog at imx
+file	arch/armv7/imx/imxdog.c		imxdog
+
+device imxocotp
+attach imxocotp at imx
+file	arch/armv7/imx/imxocotp.c		imxocotp
+
+device imxgpio
+attach imxgpio at imx
+file	arch/armv7/imx/imxgpio.c		imxgpio
+
+device	imxiic: i2cbus
+attach	imxiic at imx
+file	arch/armv7/imx/imxiic.c		imxiic
+
+device imxenet: ether, ifnet, mii, ifmedia
+attach imxenet at imx
+file	arch/armv7/imx/imxenet.c		imxenet
+
+attach ehci at imx with imxehci
+file	arch/armv7/imx/imxehci.c		imxehci
+
+device imxesdhc: sdmmcbus
+attach imxesdhc at imx
+file	arch/armv7/imx/imxesdhc.c		imxesdhc
+
+device imxpchb
+attach imxpchb at imx
+file	arch/armv7/imx/imxpchb.c		imxpchb
+
+# Maxim MAX7301 GPIO extender
+device	maxgpio: gpiobus
+attach	maxgpio at i2c
+file	arch/armv7/imx/maxim7301.c		maxgpio
+
+# PCI
+#include "dev/pci/files.pci"
+
+#device	imxpcibr {} : pcibus
+#attach	imxpcibr at imx
+#file	arch/armv7/imx/imxpcibr.c		imxpcibr
+
+attach ahci at imx with imxahci
+file	arch/armv7/imx/imxahci.c		imxahci
