@@ -464,55 +464,251 @@ ffs_write(void *v)
 }
 
 #ifdef WAPBL
-int ffs_wapbl_sync_device(struct vnode *, int);
-int ffs_wapbl_sync_vnode(struct vnode *, int);
+int ffs_wapbl_fsync_full(void *);
+int ffs_wapbl_fsync(void *);
+int ffs_wapbl_fsync_vfs(struct vnode *, int);
+int ffs_wapbl_fsync_device(void *);
 
 int
-ffs_wapbl_sync_device(struct vnode *vp, int waitfor)
+ffs_wapbl_fsync_full(void *v)
 {
-	int error = 0;
+	struct vop_fsync_args *ap = v;
+	struct vnode *vp = ap->a_vp;
+	struct inode *ip = VTOI(vp);
+	struct mount *mp = vp->v_mount;
+	int waitfor = ap->a_waitfor;
+	int error = 0, s;
 
-	if ((VTOI(vp)->i_flag & (IN_ACCESS | IN_CHANGE | IN_MODIFIED |
-	    IN_UPDATE)) != 0) {
-	    	error = WAPBL_BEGIN(vp->v_mount);
-	    	if (error)
-	    		return error;
-	    	error = UFS_UPDATE(VTOI(vp), waitfor == MNT_WAIT);
-	    	UFS_WAPBL_END(vp->v_mount);
+	KASSERT(vp->v_type != VREG);
+	KASSERT(mp->mnt_wapbl != NULL);
+
+	/*
+	 * Don't bother writing out metadata if the syncer is making the
+	 * request. We will let the sync vnode write it out in a single burst
+	 * through a call to VFS_SYNC().
+	 */
+	if (waitfor == MNT_LAZY)
+		return (0);
+
+	if ((ip->i_flag &
+	    (IN_ACCESS | IN_CHANGE | IN_UPDATE | IN_MODIFIED)) != 0) {
+		error = UFS_WAPBL_BEGIN(mp);
+		if (error)
+			return (error);
+		error = UFS_UPDATE(ip, waitfor == MNT_WAIT);
+		UFS_WAPBL_END(mp);
+		if (error)
+			return (error);
 	}
 
-	return error;
+	/*
+	 * Don't flush the log if the vnode being flushed contains no dirty
+	 * buffers that could be in the log.
+	 */
+	s = splbio();
+	if (!LIST_EMPTY(&vp->v_dirtyblkhd)) {
+		splx(s);
+		error = wapbl_flush(mp->mnt_wapbl, 0);
+		if (error)
+			return (error);
+		s = splbio();
+	}
+
+	if (waitfor == MNT_WAIT)
+		error = vwaitforio(vp, 0, "wapblffsy", 0);
+
+	splx(s);
+
+	return (error);
 }
 
 int
-ffs_wapbl_sync_vnode(struct vnode *vp, int waitfor)
+ffs_wapbl_fsync(void *v)
 {
-	int error = 0, s;
+	struct vop_fsync_args *ap = v;
+	struct vnode *vp = ap->a_vp;
+	struct inode *ip = VTOI(vp);
+	struct mount *mp = vp->v_mount;
+	struct buf *bp, *nbp;
+	int waitfor = ap->a_waitfor;
+	int s, error;
 
-	if ((VTOI(vp)->i_flag & (IN_ACCESS | IN_CHANGE | IN_MODIFIED |
-	    IN_UPDATE)) != 0) {
-	    	error = WAPBL_BEGIN(vp->v_mount);
-	    	if (error)
-	    		return error;
-	    	error = UFS_UPDATE(VTOI(vp), waitfor == MNT_WAIT);
-	    	UFS_WAPBL_END(vp->v_mount);
-	}
+	KASSERT(vp->v_type == VREG);
+	KASSERT(mp->mnt_wapbl != NULL);
 
-	if (!LIST_EMPTY(&vp->v_dirtyblkhd)) {
-		error = wapbl_flush(vp->v_mount->mnt_wapbl, 0);
-		if (error)
-			return error;
+	/*
+	 * Flush all data blocks.
+	 */
+loop:
+	s = splbio();
+	for (bp = LIST_FIRST(&vp->v_dirtyblkhd);
+	    bp != LIST_END(&vp->v_dirtyblkhd); bp = nbp) {
+		nbp = LIST_NEXT(bp, b_vnbufs);
+		if ((bp->b_flags & B_BUSY) || bp->b_lblkno < 0)
+			continue;
+#ifdef DIAGNOSTIC
+		if ((bp->b_flags & B_DELWRI) == 0)
+			panic("ffs_wapbl_fsync: not dirty");
+#endif
+		bremfree(bp);
+		buf_acquire(bp);
+		splx(s);
+		bawrite(bp);
+		goto loop;
 	}
 
 	if (waitfor == MNT_WAIT) {
-		s = splbio();
-		vwaitforio(vp, 0, "ffs_wapbl", 0);
-		splx(s);
+		error = vwaitforio(vp, 0, "wapblfsy", 0);
+		if (error) {
+			splx(s);
+			return (error);
+		}
 	}
 
-	KASSERT(LIST_EMPTY(&vp->v_dirtyblkhd));
+	splx(s);
 
-	return error;
+	/*
+	 * Don't bother writing out metadata if the syncer is making the
+	 * request. We will let the sync vnode write it out in a single burst
+	 * through a call to VFS_SYNC().
+	 */
+	if (waitfor == MNT_LAZY)
+		return (0);
+
+	if ((ip->i_flag &
+	    (IN_ACCESS | IN_CHANGE | IN_UPDATE | IN_MODIFIED)) != 0) {
+		error = UFS_WAPBL_BEGIN(mp);
+		if (error)
+			return (error);
+		error = UFS_UPDATE(ip, waitfor == MNT_WAIT);
+		UFS_WAPBL_END(mp);
+		if (error)
+			return (error);
+	}
+
+	return (wapbl_flush(mp->mnt_wapbl, 0));
+}
+
+/*
+ * Synch vnode for a mounted file system.
+ */
+int
+ffs_wapbl_fsync_vfs(struct vnode *vp, int waitfor)
+{
+	int error = 0, s;
+	struct buf *bp, *nbp;
+
+	KASSERT(vp->v_type == VBLK);
+	KASSERT(vp->v_specmountpoint != NULL);
+	KASSERT(vp->v_specmountpoint->mnt_wapbl != NULL);
+
+	/*
+	 * Flush all non-WAPBL data blocks.
+	 */
+loop:
+	s = splbio();
+	for (bp = LIST_FIRST(&vp->v_dirtyblkhd);
+	    bp != LIST_END(&vp->v_dirtyblkhd); bp = nbp) {
+		nbp = LIST_NEXT(bp, b_vnbufs);
+		if ((bp->b_flags & (B_BUSY | B_LOCKED)) || bp->b_lblkno < 0)
+			continue;
+#ifdef DIAGNOSTIC
+		if ((bp->b_flags & B_DELWRI) == 0)
+			panic("ffs_wapbl_fsync_vfs: not dirty");
+#endif
+		bremfree(bp);
+		buf_acquire(bp);
+		splx(s);
+		printf("synced %p?\n", bp);
+		bawrite(bp);
+		goto loop;
+	}
+
+	if (waitfor == MNT_WAIT) {
+		error = vwaitforio(vp, 0, "wapblvfs1", 0);
+		if (error) {
+			splx(s);
+			return (error);
+		}
+	}
+
+	splx(s);
+
+	/*
+	 * Don't bother writing out metadata if the syncer is making the
+	 * request. We will let the sync vnode write it out in a single burst
+	 * through a call to VFS_SYNC().
+	 */
+	if (waitfor == MNT_LAZY)
+		return (0);
+
+	/*
+	 * Don't flush the log if the vnode being flushed contains no dirty
+	 * buffers that could be in the log.
+	 */
+	s = splbio();
+	if (!LIST_EMPTY(&vp->v_dirtyblkhd)) {
+		struct mount *mp = vp->v_specmountpoint;
+		splx(s);
+		error = wapbl_flush(mp->mnt_wapbl, 0);
+		if (error)
+			return (error);
+		s = splbio();
+	}
+
+	if (waitfor == MNT_WAIT)
+		error = vwaitforio(vp, 0, "wapblvfs2", 0);
+
+	splx(s);
+
+	return (error);
+}
+
+int
+ffs_wapbl_fsync_device(void *v)
+{
+	struct vop_fsync_args *ap = v;
+	struct vnode *vp = ap->a_vp;
+	struct inode *ip = VTOI(vp);
+	struct mount *mp;
+	int error, waitfor = ap->a_waitfor;
+
+	if (vp->v_type == VCHR)
+		return (0);
+
+	/* Are we mounted somewhere? */
+	mp = vp->v_specmountpoint;
+	if (mp && mp->mnt_wapbl) {
+		error = ffs_wapbl_fsync_vfs(vp, waitfor);
+		if (error)
+			return (error);
+	}
+
+	mp = vp->v_mount;
+	if (mp && mp->mnt_wapbl) {
+		/*
+		 * Don't bother writing out metadata if the syncer is making
+		 * the request. We will let the sync vnode write it out in a
+		 * single burst through a call to VFS_SYNC().
+		 */
+		if (waitfor == MNT_LAZY)
+			return (0);
+
+		if ((ip->i_flag &
+		    (IN_ACCESS | IN_CHANGE | IN_UPDATE | IN_MODIFIED)) != 0) {
+			error = UFS_WAPBL_BEGIN(mp);
+			if (error)
+				return (error);
+			error = UFS_UPDATE(ip, waitfor == MNT_WAIT);
+			UFS_WAPBL_END(mp);
+			if (error)
+				return (error);
+		}
+
+		return (0);
+	}
+
+	return (UFS_UPDATE(ip, waitfor == MNT_WAIT));
 }
 #endif /* WAPBL */
 
@@ -526,6 +722,16 @@ ffs_fsync(void *v)
 	struct vnode *vp = ap->a_vp;
 	struct buf *bp, *nbp;
 	int s, error, passes, skipmeta;
+
+#if WAPBL
+	if (wapbl_vphaswapbl(vp)) {
+		if (vn_isdisk(vp, NULL))
+			return (ffs_wapbl_fsync_device(ap));
+		if (vp->v_type != VREG)
+			return (ffs_wapbl_fsync_full(ap));
+		return (ffs_wapbl_fsync(ap));
+	}
+#endif
 
 	if (vp->v_type == VBLK &&
 	    vp->v_specmountpoint != NULL &&
@@ -617,27 +823,12 @@ loop:
 				goto loop;
 			}
 #ifdef DIAGNOSTIC
-			/*
-			 * if wapbl we will flush the log in
-			 * ffs_wapbl_sync_vnode() and check again
-			 */
-			if (vp->v_type != VBLK &&
-			    vp->v_mount->mnt_wapbl == NULL)
+			if (vp->v_type != VBLK)
 				vprint("ffs_fsync: dirty", vp);
 #endif
 		}
 	}
 	splx(s);
-
-#ifdef WAPBL
-	if (ap->a_waitfor != MNT_LAZY) {
-		if (vp->v_type == VBLK && vp->v_specmountpoint != NULL &&
-		    vp->v_specmountpoint->mnt_wapbl != NULL)
-		    	return ffs_wapbl_sync_device(vp, ap->a_waitfor);
-		else if (vp->v_mount->mnt_wapbl != NULL)
-			return ffs_wapbl_sync_vnode(vp, ap->a_waitfor);
-	}
-#endif /* WAPBL */
 
 	return (UFS_UPDATE(VTOI(vp), ap->a_waitfor == MNT_WAIT));
 }
