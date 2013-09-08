@@ -331,6 +331,7 @@ vge*	at pci?				# VIA VT612x
 nfe*	at pci?				# NVIDIA nForce Ethernet
 xge*	at pci?				# Neterion Xframe-I/II 10Gb ethernet
 vic*	at pci?				# VMware VMXnet virtual interface
+vmx*	at pci?				# VMware VMXNET3 virtual interface
 #et*	at pci?				# Agere/LSI ET1310
 #age*	at pci?				# Attansic L1 Ethernet
 #alc*	at pci?				# Attansic L1C/L1D/L2C Ethernet
