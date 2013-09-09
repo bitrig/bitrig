@@ -1379,7 +1379,7 @@ armv7_setup()
 #ifdef MULTIPROCESSOR
 		auxctl |= CORTEX_A9_AUXCTL_FW; /* Cache and TLB maintenance broadcast */
 #endif
-#ifndef __beagle__
+#ifndef __OMAP__
 		auxctl |= CORTEX_A9_AUXCTL_L1_PREFETCH_ENABLE;
 		auxctl |= CORTEX_A9_AUXCTL_L2_PREFETCH_ENABLE;
 #endif

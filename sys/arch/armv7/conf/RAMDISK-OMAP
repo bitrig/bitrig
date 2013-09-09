@@ -19,6 +19,7 @@
 # device.
 
 machine	armv7	arm
+options __OMAP__
 
 options	TIMEZONE=0	# time zone to adjust RTC time by
 options	DST=0		# daylight saving time used by RTC
