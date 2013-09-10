@@ -133,10 +133,6 @@ cortexsearch(struct device *parent, void *vcf, void *aux)
 	ca.ca_dmat = &cortex_bus_dma_tag;
 	ca.ca_periphbase = armv7_periphbase();
 
-	/* XXX: Assholes. */
-	ca.ca_gic_icd = 0x10481000;
-	ca.ca_gic_icp = 0x10482000;
-
 	/* allow for devices to be disabled in UKC */
 	if ((*cf->cf_attach->ca_match)(parent, cf, &ca) == 0)
 		return 0;

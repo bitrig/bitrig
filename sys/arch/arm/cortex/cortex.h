@@ -51,6 +51,4 @@ struct cortex_attach_args {
 	bus_space_tag_t ca_iot;
 	bus_dma_tag_t ca_dmat;
 	uint32_t ca_periphbase;
-	uint32_t ca_gic_icd;
-	uint32_t ca_gic_icp;
 };
