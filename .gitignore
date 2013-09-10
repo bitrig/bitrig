@@ -1,8 +1,6 @@
 obj
-obj.amd64.beagle
-obj.i386.beagle
-obj.amd64.imx
-obj.i386.imx
+obj.amd64.armv7
+obj.i386.armv7
 CVS
 sys/arch/*/compile
 
