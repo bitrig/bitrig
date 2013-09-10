@@ -782,10 +782,6 @@ wapbl_stop(struct wapbl *wl, int force)
 	return 0;
 }
 
-/*
- * XXX pedro: make wapbl_alloc() allocate from DMA reachable memory in the
- * future, to avoid the memcpy() calls in this function.
- */
 int
 wapbl_doio(void *data, size_t len, struct vnode *devvp, daddr_t pbn, int flags)
 {
@@ -804,11 +800,11 @@ wapbl_doio(void *data, size_t len, struct vnode *devvp, daddr_t pbn, int flags)
 		curproc->p_ru.ru_inblock++;
 	}
 
-	bp = geteblk(len);
+	bp = geteblk(0);
 	bp->b_flags = flags | B_BUSY; /* silly & dubious */
 	bp->b_dev = devvp->v_rdev;
-	if (!(bp->b_flags & B_READ))
-		memcpy(bp->b_data, data, len);
+	bp->b_data = data;
+	bp->b_bufsize = bp->b_resid = bp->b_bcount = len;
 	/*
 	 * XXX pedro: this is a blatant interface violation, and is likely to
 	 * cause problems
@@ -824,6 +820,8 @@ wapbl_doio(void *data, size_t len, struct vnode *devvp, daddr_t pbn, int flags)
 
 	VOP_STRATEGY(bp);
 	error = biowait(bp);
+	bp->b_data = NULL;
+	bp->b_bufsize = bp->b_resid = bp->b_bcount = 0;
 
 	if (error) {
 		WAPBL_PRINTF(WAPBL_PRINT_ERROR,
@@ -832,8 +830,7 @@ wapbl_doio(void *data, size_t len, struct vnode *devvp, daddr_t pbn, int flags)
 		    (((flags & (B_WRITE | B_READ)) == B_WRITE) ?
 		     "write" : "read"),
 		    len, pbn, devvp->v_rdev, error));
-	} else if (bp->b_flags & B_READ)
-		memcpy(data, bp->b_data, len);
+	}
 
 	s = splbio();
 	bp->b_vp = NULL;
