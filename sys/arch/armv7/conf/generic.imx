@@ -42,7 +42,6 @@ maxusers	32
 
 # CPU options
 options	CPU_ARMv7	# Support the ARMv7
-makeoptions	CPUFLAGS="-mcpu=armv5"	# dont have gcc v7 support yet.
 
 #option WSDISPLAY_COMPAT_USL		# VT handling
 #option WSDISPLAY_COMPAT_RAWKBD		# can get raw scancodes
