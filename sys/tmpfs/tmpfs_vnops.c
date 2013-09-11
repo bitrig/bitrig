@@ -637,7 +637,7 @@ tmpfs_write(void *v)
 	error = 0;
 	while (error == 0 && uio->uio_resid > 0) {
 		vsize_t len;
-
+		uvm_vnp_uncache(vp);
 		len = MIN(node->tn_size - uio->uio_offset, uio->uio_resid);
 		if (len == 0) {
 			break;
