@@ -1944,12 +1944,12 @@ gotit:
 		fs->fs_cs(fs, cg).cs_ndir++;
 	}
 
-	bdwrite(bp);
-
 #ifdef FFS2
 	if (ibp != NULL)
 		bawrite(ibp);
 #endif
+
+	bdwrite(bp);
 
 	/* Return the allocated inode number */
 	return (cg * fs->fs_ipg + ipref);
