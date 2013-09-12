@@ -1061,7 +1061,11 @@ sbagain:
 			fs->fs_flags |= FS_DOSOFTDEP;
 		else
 			fs->fs_flags &= ~FS_DOSOFTDEP;
+		error = UFS_WAPBL_BEGIN(mp);
+		if (error)
+			goto out;
 		error = ffs_sbupdate(ump, MNT_WAIT);
+		UFS_WAPBL_END(mp);
 		if (error == EROFS)
 			goto out;
 	}
