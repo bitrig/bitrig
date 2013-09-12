@@ -1772,17 +1772,13 @@ wapbl_flush(struct wapbl *wl, int waitfor)
 void
 wapbl_jlock_assert(struct wapbl *wl)
 {
-#if 0	/* XXX pedro: fix later */
-	KASSERT(rw_lock_held(&wl->wl_rwlock));
-#endif
+	KASSERT(rw_status(&wl->wl_rwlock) != 0);
 }
 
 void
 wapbl_junlock_assert(struct wapbl *wl)
 {
-#if 0	/* XXX pedro: fix later */
-	KASSERT(!rw_write_held(&wl->wl_rwlock));
-#endif
+	rw_assert_unlocked(&wl->wl_rwlock);
 }
 
 /****************************************************************/
