@@ -1856,6 +1856,7 @@
 ./usr/include/sys/agpio.h
 ./usr/include/sys/ataio.h
 ./usr/include/sys/audioio.h
+./usr/include/sys/bitops.h
 ./usr/include/sys/buf.h
 ./usr/include/sys/cdefs.h
 ./usr/include/sys/cdio.h
@@ -1987,6 +1988,8 @@
 ./usr/include/sys/vmmeter.h
 ./usr/include/sys/vnode.h
 ./usr/include/sys/wait.h
+./usr/include/sys/wapbl.h
+./usr/include/sys/wapbl_replay.h
 ./usr/include/sys/workq.h
 ./usr/include/sysexits.h
 ./usr/include/syslog.h
@@ -2023,6 +2026,7 @@
 ./usr/include/ufs/ufs/inode.h
 ./usr/include/ufs/ufs/quota.h
 ./usr/include/ufs/ufs/ufs_extern.h
+./usr/include/ufs/ufs/ufs_wapbl.h
 ./usr/include/ufs/ufs/ufsmount.h
 ./usr/include/unctrl.h
 ./usr/include/unistd.h
@@ -4392,6 +4396,7 @@
 ./usr/sbin/map-mbone
 ./usr/sbin/mkalias
 ./usr/sbin/mknetid
+./usr/sbin/mkuboot
 ./usr/sbin/mrinfo
 ./usr/sbin/mrouted
 ./usr/sbin/mtrace
@@ -10848,6 +10853,7 @@
 ./usr/share/man/man4/vr.4
 ./usr/share/man/man4/vscsi.4
 ./usr/share/man/man4/vte.4
+./usr/share/man/man4/wapbl.4
 ./usr/share/man/man4/watchdog.4
 ./usr/share/man/man4/wb.4
 ./usr/share/man/man4/wbenv.4
@@ -11068,6 +11074,8 @@
 ./usr/share/man/man8/amd64/pxeboot.8
 ./usr/share/man/man8/amd64/wsmoused.8
 ./usr/share/man/man8/amd64/zzz.8
+./usr/share/man/man8/armv7
+./usr/share/man/man8/armv7/MAKEDEV.8
 ./usr/share/man/man8/arp.8
 ./usr/share/man/man8/atactl.8
 ./usr/share/man/man8/authpf-noip.8
