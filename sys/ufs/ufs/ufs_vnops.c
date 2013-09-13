@@ -102,6 +102,11 @@
 #endif
 #include <ufs/ext2fs/ext2fs_extern.h>
 
+#ifdef WAPBL
+int ufs_rename_wrap(void *v);
+#endif
+int ufs_do_rename(void *v);
+
 int ufs_chmod(struct vnode *, int, struct ucred *, struct proc *);
 int ufs_chown(struct vnode *, uid_t, gid_t, struct ucred *, struct proc *);
 int filt_ufsread(struct knote *, long);
@@ -760,7 +765,7 @@ out2:
  *    directory.
  */
 int
-ufs_rename(void *v)
+ufs_do_rename(void *v)
 {
 	struct vop_rename_args *ap = v;
 	struct vnode *tvp = ap->a_tvp;
@@ -1185,6 +1190,51 @@ out:
 		vrele(fvp);
 	UFS_WAPBL_END(mp);
 	return (error);
+}
+
+#ifdef WAPBL
+/*
+ * For WAPBL we need to grab an extra reference to every vnode involved. This
+ * is to prevent the vput() and vrele() calls in the actual rename code from
+ * triggering ufs_inactive(), which in turn might lead to a flush of the WAPBL
+ * log halfway through the rename operation, causing a deadlock.
+ */
+int
+ufs_rename_wrap(void *v)
+{
+	struct vop_rename_args *ap = v;
+	struct vnode *fdvp = ap->a_fdvp;
+	struct vnode *tdvp = ap->a_tdvp;
+	struct vnode *fvp = ap->a_fvp;
+	struct vnode *tvp = ap->a_tvp;
+	int error;
+
+	vref(fdvp);
+	vref(tdvp);
+	vref(fvp);
+	if (tvp != NULL)
+		vref(tvp);
+
+	error = ufs_do_rename(v);
+
+	vrele(fdvp);
+	vrele(tdvp);
+	vrele(fvp);
+	if (tvp != NULL)
+		vrele(tvp);
+
+	return (error);
+}
+#endif /* WAPBL */
+
+int
+ufs_rename(void *v)
+{
+#ifdef WAPBL
+	return (ufs_rename_wrap(v));
+#else
+	return (ufs_do_rename(v));
+#endif
 }
 
 /*
