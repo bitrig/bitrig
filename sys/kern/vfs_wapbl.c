@@ -55,6 +55,7 @@
 #include <sys/malloc.h>
 #include <sys/mutex.h>
 #include <sys/rwlock.h>
+#include <sys/stdatomic.h>
 #include <sys/wapbl.h>
 #include <sys/wapbl_replay.h>
 
@@ -70,6 +71,7 @@ static int wapbl_verbose_commit = 0;
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -217,7 +219,7 @@ static inline size_t wapbl_space_used(size_t avail, off_t head,
 static struct pool wapbl_entry_pool;
 
 #define	WAPBL_INODETRK_SIZE 83
-static int wapbl_ino_pool_refcount;
+static atomic_int wapbl_ino_pool_refcount;
 static struct pool wapbl_ino_pool;
 struct wapbl_ino {
 	LIST_ENTRY(wapbl_ino) wi_hash;
@@ -1927,11 +1929,7 @@ wapbl_inodetrk_init(struct wapbl *wl, u_int size)
 {
 
 	wl->wl_inohash = hashinit(size, M_TEMP, M_WAITOK, &wl->wl_inohashmask);
-#if 0	/* XXX pedro: use appropriate c11 diatribe */
-	if (atomic_inc_uint_nv(&wapbl_ino_pool_refcount) == 1) {
-#else
-	if (++wapbl_ino_pool_refcount == 1) {
-#endif
+	if (atomic_fetch_add(&wapbl_ino_pool_refcount, 1) == 0) {
 		pool_init(&wapbl_ino_pool, sizeof(struct wapbl_ino), 0, 0, 0,
 		    "wapblinopl", &pool_allocator_nointr);
 	}
@@ -1944,11 +1942,7 @@ wapbl_inodetrk_free(struct wapbl *wl)
 	/* XXX this KASSERT needs locking/mutex analysis */
 	KASSERT(wl->wl_inohashcnt == 0);
 	free(wl->wl_inohash, M_TEMP);
-#if 0	/* XXX pedro: use appropriate c11 diatribe */
-	if (atomic_dec_uint_nv(&wapbl_ino_pool_refcount) == 0) {
-#else
-	if (--wapbl_ino_pool_refcount == 0) {
-#endif
+	if (atomic_fetch_sub(&wapbl_ino_pool_refcount, 1) == 1) {
 		pool_destroy(&wapbl_ino_pool);
 	}
 }
