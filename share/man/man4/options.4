@@ -335,6 +335,13 @@ permits them to be accessed over
 .It Cd option UFS_DIRHASH
 This option enables using an in memory hash table to speed lookups
 in large directories.
+.It Cd option WAPBL
+Enable
+.Dq Write Ahead Physical Block Logging file system journaling .
+This provides rapid file system consistency checking after a system outage.
+It also provides better general use performance over regular FFS.
+See also
+.Xr wapbl 4 .
 .El
 .Sh MISCELLANEOUS OPTIONS
 .Bl -ohang
