@@ -1,4 +1,3 @@
-./usr/sbin/mkuboot
 ./usr/include/arm
 ./usr/include/arm/_float.h
 ./usr/include/arm/_types.h
