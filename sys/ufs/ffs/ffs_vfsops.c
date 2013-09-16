@@ -235,6 +235,16 @@ ffs_mount(struct mount *mp, const char *path, void *data,
 	    (MNT_SOFTDEP | MNT_ASYNC)) {
 		return (EINVAL);
 	}
+
+#ifdef WAPBL
+	/*
+	 * Likewise, WAPBL is incompatible with MNT_ASYNC and MNT_SOFTDEP.
+	 */
+	if (mp->mnt_flag & MNT_LOG)
+		if (mp->mnt_flag & (MNT_ASYNC|MNT_SOFTDEP))
+			return (EINVAL);
+#endif
+
 	/*
 	 * If updating, check whether changing from read-only to
 	 * read/write; if there is no device name, that's all we do.
