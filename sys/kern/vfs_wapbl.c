@@ -63,7 +63,6 @@
 #define	wapbl_free(a, s) free((a), M_TEMP)
 #define	wapbl_calloc(n, s) malloc((n)*(s), M_TEMP, M_WAITOK | M_ZERO)
 
-/* static struct sysctllog *wapbl_sysctl; */
 static int wapbl_flush_disk_cache = 1;
 static int wapbl_verbose_commit = 0;
 
@@ -284,61 +283,12 @@ struct wapbl_ops wapbl_ops = {
 	.wo_wapbl_biodone	= wapbl_biodone,
 };
 
-#if 0	/* XXX pedro: fix later */
-static int
-wapbl_sysctl_init(void)
-{
-	int rv;
-	const struct sysctlnode *rnode, *cnode;
-
-	wapbl_sysctl = NULL;
-
-	rv = sysctl_createv(&wapbl_sysctl, 0, NULL, &rnode,
-		       CTLFLAG_PERMANENT,
-		       CTLTYPE_NODE, "vfs", NULL,
-		       NULL, 0, NULL, 0,
-		       CTL_VFS, CTL_EOL);
-	if (rv)
-		return rv;
-
-	rv = sysctl_createv(&wapbl_sysctl, 0, &rnode, &rnode,
-		       CTLFLAG_PERMANENT,
-		       CTLTYPE_NODE, "wapbl",
-		       SYSCTL_DESCR("WAPBL journaling options"),
-		       NULL, 0, NULL, 0,
-		       CTL_CREATE, CTL_EOL);
-	if (rv)
-		return rv;
-
-	rv = sysctl_createv(&wapbl_sysctl, 0, &rnode, &cnode,
-		       CTLFLAG_PERMANENT|CTLFLAG_READWRITE,
-		       CTLTYPE_INT, "flush_disk_cache",
-		       SYSCTL_DESCR("flush disk cache"),
-		       NULL, 0, &wapbl_flush_disk_cache, 0,
-		       CTL_CREATE, CTL_EOL);
-	if (rv)
-		return rv;
-
-	rv = sysctl_createv(&wapbl_sysctl, 0, &rnode, &cnode,
-		       CTLFLAG_PERMANENT|CTLFLAG_READWRITE,
-		       CTLTYPE_INT, "verbose_commit",
-		       SYSCTL_DESCR("show time and size of wapbl log commits"),
-		       NULL, 0, &wapbl_verbose_commit, 0,
-		       CTL_CREATE, CTL_EOL);
-	return rv;
-}
-#endif
-
 void
 wapbl_init(void)
 {
 
 	pool_init(&wapbl_entry_pool, sizeof(struct wapbl_entry), 0, 0, 0,
 	    "wapblpl", NULL);
-
-#if 0	/* XXX pedro: fix later */
-	wapbl_sysctl_init();
-#endif
 }
 
 #ifdef notyet
