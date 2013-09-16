@@ -40,7 +40,7 @@ ALLBSD=
 ALLBSDRD=
 .for SOC in ${ALLSOC}
 ALLBSD+=	bsd.${SOC}
-ALLBSDRD+=	${BSD_RD}.${SOC}
+ALLBSDRD+=	${BSD_RD}.${SOC} ${BSD_RD}.${SOC}.umg
 all:	${ALLBSDRD}
 .endfor
 
