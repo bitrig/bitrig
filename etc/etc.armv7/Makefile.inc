@@ -5,12 +5,11 @@ KERNELS=
 MDEXT=
 
 .for SOC in ${ALLSOC}
-KERNELS+=	GENERIC-${SOC}
+KERNELS+=	GENERIC-${SOC} bsd.${SOC}
 MDEXT+=		bsd.${SOC}.umg
 MDEXT+=		bsd.rd.${SOC}
 MDEXT+=		bsd.rd.${SOC}.umg
 .endfor
-
 
 LOADADDR_OMAP=0x82800000
 LOADADDR_IMX=0x10800000
@@ -20,7 +19,7 @@ LOADADDR_IMX=0x10800000
 bootblocks:
 .for SOC in ${ALLSOC}
 	mkuboot -a arm -o linux -e ${LOADADDR_${SOC}} -l ${LOADADDR_${SOC}} \
-	    ${RELEASEDIR}/GENERIC-${SOC} ${RELEASEDIR}/GENERIC-${SOC}.umg
+	    ${RELEASEDIR}/bsd.${SOC} ${RELEASEDIR}/bsd.${SOC}.umg
 .endfor
 
 MDEXT+=	miniroot-am335x-${OSrev}.fs miniroot-beagle-${OSrev}.fs \
