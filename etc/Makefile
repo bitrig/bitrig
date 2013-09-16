@@ -26,6 +26,9 @@ kernels: bootblocks ${ALL_KERNELS}
 .for CONF K in ${KERNELS}
 	cp ../sys/arch/${MACHINE}/compile/${CONF}/bsd ${RELEASEDIR}/$K
 .endfor
+
+# target for MD to override for post-kernel procssing.
+post-kernels:
 	
 # -rw-r--r--
 BINOWN= root
@@ -298,7 +301,7 @@ sha:
 
 release: sha
 sha: distrib
-distrib: release-sets kernels
+distrib: release-sets kernels post-kernels
 release-sets: distribution kernels
 
 .endif
@@ -333,7 +336,7 @@ moduli.8192:
 	ssh-keygen -b 8192 -G /dev/stdout | ssh-keygen -T moduli.8192
 
 .PHONY: distribution-etc-root-var distribution distrib-dirs \
-	release allarchs kernels release-sets m4 install-mtree \
+	release allarchs kernels post-kernels release-sets m4 install-mtree \
 	bootblocks ${ALL_KERNELS}
 	
 
