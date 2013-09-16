@@ -17,6 +17,9 @@ PID!=		echo $$$$
 
 NBLKS=		36864
 
+cleandir: clean
+clean:
+	rm -f ${IMAGE}
 
 .ifndef DESTDIR
 all ${IMAGE}:
@@ -30,13 +33,14 @@ ${IMAGE}: rd_setup do_files rd_teardown
 .endif
 
 do_files:
-	echo 'bootcmd=mmc rescan ; setenv loadaddr 0x82800000 ; setenv bootargs sd0i:/bsd.umg ; fatload mmc 0 $${loadaddr} bsd.umg ; bootm $${loadaddr} ;\nuenvcmd=boot' > ${MOUNT_POINT}/uenv.txt
+	echo "bootcmd=mmc rescan ; setenv loadaddr ${LOADADDR} ; setenv bootargs sd0i:/bsd.umg ; fatload mmc 0 $$\$${loadaddr} bsd.umg ; bootm $$\$${loadaddr} ;\nuenvcmd=boot" > ${MOUNT_POINT}/uenv.txt
+.if ${PLATFORM} == "OMAP"
 	cp /usr/mdec/${BOARD}/mlo ${MOUNT_POINT}/mlo
 	cp /usr/mdec/${BOARD}/u-boot.* ${MOUNT_POINT}/
 	mkdir ${MOUNT_POINT}/u-boots
 	cp -r /usr/mdec/{am335x,beagle,panda} ${MOUNT_POINT}/u-boots
-	mkuboot -a arm -o linux -e 0x80300000 -l 0x80300000 \
-		${.OBJDIR}/../../ramdisk/bsd.rd.OMAP ${MOUNT_POINT}/bsd.umg
+.endif
+	cp ${.OBJDIR}/../../ramdisk/bsd.rd.${PLATFORM}.umg ${MOUNT_POINT}/bsd.umg
 
 rd_setup:
 	dd if=/dev/zero of=${IMAGE} bs=512 count=${NBLKS}

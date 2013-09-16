@@ -21,6 +21,8 @@ VND_RDEV=	/dev/r${VND}a
 VND_CRDEV=	/dev/r${VND}c
 PID!=		echo $$$$
 
+LOADADDR_OMAP=0x82800000
+LOADADDR_IMX=0x10800000
 
 DISKTYPE=       rdroot2.5M
 NBLKS=		5120
@@ -52,6 +54,8 @@ bsd.${SOC}:
 ${BSD_RD}.${SOC}: ${CBIN} ${IMAGE} bsd.${SOC} rdsetroot
 	cp bsd.${SOC} ${BSD_RD}.${SOC}
 	${.OBJDIR}/rdsetroot ${BSD_RD}.${SOC} ${IMAGE}
+	mkuboot -a arm -o linux -e ${LOADADDR_${SOC}} -l ${LOADADDR_${SOC}} \
+	    ${BSD_RD}.${SOC} ${BSD_RD}.${SOC}.umg
 .endfor
 
 ${IMAGE}: rd_setup do_files rd_teardown
