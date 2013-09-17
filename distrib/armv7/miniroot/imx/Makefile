@@ -1,5 +1,5 @@
 BOARD=	imx
 PLATFORM=IMX
-LOADADDR=0x10800000
+LOADADDR=0x18800000
 
 .include "${.CURDIR}/../Makefile.inc"

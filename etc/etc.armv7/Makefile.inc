@@ -11,12 +11,12 @@ MDEXT+=		bsd.rd.${SOC}
 MDEXT+=		bsd.rd.${SOC}.umg
 .endfor
 
-LOADADDR_OMAP=0x82800000
-LOADADDR_IMX=0x10800000
+KERNADDR_OMAP=0x80300000
+KERNADDR_IMX=0x10800000
 
 post-kernels:
 .for SOC in ${ALLSOC}
-	mkuboot -a arm -o linux -e ${LOADADDR_${SOC}} -l ${LOADADDR_${SOC}} \
+	mkuboot -a arm -o linux -e ${KERNADDR_${SOC}} -l ${KERNADDR_${SOC}} \
 	    ${RELEASEDIR}/bsd.${SOC} ${RELEASEDIR}/bsd.${SOC}.umg
 .endfor
 
