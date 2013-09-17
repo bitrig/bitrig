@@ -51,7 +51,7 @@ set_vn(struct fuse *f, struct fuse_vnode *v)
 	struct fuse_vn_head *vn_head;
 	struct fuse_vnode *vn;
 
-	DPRINTF("%s: create or update vnode %i%i = %s\n", __func__, v->ino,
+	DPRINTF("%s: create or update vnode %llu%llu = %s\n", __func__, v->ino,
 	    v->parent, v->path);
 
 	if (tree_set(&f->vnode_tree, v->ino, v) == NULL)
