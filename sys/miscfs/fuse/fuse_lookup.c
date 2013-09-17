@@ -56,7 +56,7 @@ fusefs_lookup(void *v)
 	lockparent = flags & LOCKPARENT;
 	wantparent = flags & (LOCKPARENT | WANTPARENT);
 
-	if ((error = VOP_ACCESS(vdp, VEXEC, cred, cnp->cn_proc)) != 0)
+	if ((error = VOP_ACCESS(vdp, VEXEC, cred)) != 0)
 		return (error);
 
 	if ((flags & ISLASTCN) && (vdp->v_mount->mnt_flag & MNT_RDONLY) &&
@@ -96,7 +96,7 @@ fusefs_lookup(void *v)
 				cnp->cn_flags |= SAVENAME;
 
 				if (!lockparent) {
-					VOP_UNLOCK(vdp, 0, p);
+					VOP_UNLOCK(vdp, 0);
 					cnp->cn_flags |= PDIRUNLOCK;
 				}
 
@@ -115,7 +115,7 @@ fusefs_lookup(void *v)
 		/*
 		 * Write access to directory required to delete files.
 		 */
-		error = VOP_ACCESS(vdp, VWRITE, cred, cnp->cn_proc);
+		error = VOP_ACCESS(vdp, VWRITE, cred);
 		if (error != 0) {
 			if (fbuf)
 				pool_put(&fusefs_fbuf_pool, fbuf);
@@ -129,7 +129,7 @@ fusefs_lookup(void *v)
 		/*
 		 * Write access to directory required to delete files.
 		 */
-		if ((error = VOP_ACCESS(vdp, VWRITE, cred, cnp->cn_proc)) != 0)
+		if ((error = VOP_ACCESS(vdp, VWRITE, cred)) != 0)
 			return (error);
 
 		if (nid == VTOI(vdp)->ufs_ino.i_number) {
@@ -150,7 +150,7 @@ fusefs_lookup(void *v)
 	}
 
 	if (flags & ISDOTDOT) {
-		VOP_UNLOCK(vdp, 0, p);	/* race to get the inode */
+		VOP_UNLOCK(vdp, 0);	/* race to get the inode */
 		cnp->cn_flags |= PDIRUNLOCK;
 
 		error = VFS_VGET(fmp->mp, nid, &tdp);
@@ -197,7 +197,7 @@ fusefs_lookup(void *v)
 			VTOI(tdp)->parent = dp->ufs_ino.i_number;
 
 		if (!lockparent || !(flags & ISLASTCN)) {
-			VOP_UNLOCK(vdp, 0, p);
+			VOP_UNLOCK(vdp, 0);
 			cnp->cn_flags |= PDIRUNLOCK;
 		}
 

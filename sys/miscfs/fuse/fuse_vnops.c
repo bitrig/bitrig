@@ -145,7 +145,7 @@ fusefs_open(void *v)
 	if (ip->fufh[fufh_type].fh_type != FUFH_INVALID)
 		return (0);
 
-	error = fusefs_file_open(fmp, ip, fufh_type, flags, isdir, ap->a_p);
+	error = fusefs_file_open(fmp, ip, fufh_type, flags, isdir, curproc);
 	if (error)
 		return (error);
 
@@ -173,7 +173,7 @@ fusefs_close(void *v)
 
 		if (ip->fufh[fufh_type].fh_type != FUFH_INVALID)
 			return (fusefs_file_close(fmp, ip, fufh_type, O_RDONLY,
-			    isdir, ap->a_p));
+			    isdir, curproc));
 	} else {
 		if (ap->a_fflag & IO_NDELAY)
 			return (0);
@@ -210,7 +210,7 @@ fusefs_access(void *v)
 	int error = 0;
 
 	ap = v;
-	p = ap->a_p;
+	p = curproc;
 	ip = VTOI(ap->a_vp);
 	fmp = (struct fusefs_mnt *)ip->ufs_ino.i_ump;
 
@@ -267,7 +267,7 @@ fusefs_getattr(void *v)
 	struct vnode *vp = ap->a_vp;
 	struct fusefs_mnt *fmp;
 	struct vattr *vap = ap->a_vap;
-	struct proc *p = ap->a_p;
+	struct proc *p = curproc;
 	struct fusefs_node *ip;
 	struct fusebuf *fbuf;
 	int error = 0;
@@ -310,7 +310,7 @@ fusefs_setattr(void *v)
 	struct vattr *vap = ap->a_vap;
 	struct vnode *vp = ap->a_vp;
 	struct fusefs_node *ip = VTOI(vp);
-	struct proc *p = ap->a_p;
+	struct proc *p = curproc;
 	struct fusefs_mnt *fmp;
 	struct fusebuf *fbuf;
 	struct fb_io *io;
@@ -487,7 +487,7 @@ fusefs_link(void *v)
 
 out1:
 	if (dvp != vp)
-		VOP_UNLOCK(vp, 0, p);
+		VOP_UNLOCK(vp, 0);
 out2:
 	vput(dvp);
 	return (error);
@@ -619,7 +619,7 @@ fusefs_inactive(void *v)
 {
 	struct vop_inactive_args *ap = v;
 	struct vnode *vp = ap->a_vp;
-	struct proc *p = ap->a_p;
+	struct proc *p = curproc;
 	struct fusefs_node *ip = VTOI(vp);
 	struct fusefs_filehandle *fufh = NULL;
 	struct fusefs_mnt *fmp;
@@ -632,10 +632,10 @@ fusefs_inactive(void *v)
 		fufh = &(ip->fufh[type]);
 		if (fufh->fh_type != FUFH_INVALID)
 			fusefs_file_close(fmp, ip, fufh->fh_type, type,
-			    (ip->vtype == VDIR), ap->a_p);
+			    (ip->vtype == VDIR), p);
 	}
 
-	VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
 
 	/* not sure if it is ok to do like that ...*/
 	if (ip->cached_attrs.va_mode == 0)
@@ -702,7 +702,7 @@ fusefs_reclaim(void *v)
 		if (fufh->fh_type != FUFH_INVALID) {
 			printf("FUSE: vnode being reclaimed is valid\n");
 			fusefs_file_close(fmp, ip, fufh->fh_type, type,
-			    (ip->vtype == VDIR), ap->a_p);
+			    (ip->vtype == VDIR), curproc);
 		}
 	}
 	/*
@@ -897,12 +897,12 @@ fusefs_write(void *v)
 		if (error)
 			break;
 
-		diff = len - fbuf->fb_io_len;
-		if (diff < 0) {
+		if (fbuf->fb_io_len > len) {
 			error = EINVAL;
 			break;
 		}
 
+		diff = len - fbuf->fb_io_len;
 		uio->uio_resid += diff;
 		uio->uio_offset -= diff;
 
@@ -995,7 +995,7 @@ abortit:
 		    dp == ip ||
 		    (fcnp->cn_flags & ISDOTDOT) ||
 		    (tcnp->cn_flags & ISDOTDOT)) {
-			VOP_UNLOCK(fvp, 0, p);
+			VOP_UNLOCK(fvp, 0);
 			error = EINVAL;
 			goto abortit;
 		}
@@ -1004,7 +1004,7 @@ abortit:
 
 	if (!fmp->sess_init || (fmp->undef_op & UNDEF_RENAME)) {
 		error = ENOSYS;
-		VOP_UNLOCK(fvp, 0, p);
+		VOP_UNLOCK(fvp, 0);
 		goto abortit;
 	}
 
@@ -1026,13 +1026,13 @@ abortit:
 		}
 
 		pool_put(&fusefs_fbuf_pool, fbuf);
-		VOP_UNLOCK(fvp, 0, p);
+		VOP_UNLOCK(fvp, 0);
 		goto abortit;
 	}
 
 	VN_KNOTE(fvp, NOTE_RENAME);
 
-	VOP_UNLOCK(fvp, 0, p);
+	VOP_UNLOCK(fvp, 0);
 	if (tdvp == tvp)
 		vrele(tdvp);
 	else
