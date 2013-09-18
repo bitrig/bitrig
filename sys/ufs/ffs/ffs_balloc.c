@@ -551,9 +551,7 @@ ffs2_balloc(struct inode *ip, off_t off, int size, struct ucred *cred,
 						brelse(*bpp);
 						return (error);
 					}
-					(*bpp)->b_bcount = osize;
-					/* XXX pedro: remove me */
-					KASSERT(!((*bpp)->b_flags & B_LOCKED));
+					buf_adjcnt((*bpp), osize);
 				}
 
 				return (0);
