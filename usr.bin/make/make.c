@@ -161,7 +161,9 @@ has_unmade_predecessor(GNode *gn)
 	for (ln = Lst_First(&gn->preds); ln != NULL; ln = Lst_Adv(ln)) {
 		GNode	*pgn = (GNode *)Lst_Datum(ln);
 
-		if (pgn->must_make && pgn->built_status == UNKNOWN) {
+		if (pgn->must_make && !(pgn->built_status == MADE ||
+		    pgn->built_status == UPTODATE ||
+		    pgn->built_status == ERROR)) {
 			if (DEBUG(MAKE))
 				printf("predecessor %s not made yet.\n", 
 				    pgn->name);
