@@ -287,7 +287,7 @@ tmpfs_dirent_t *tmpfs_dir_cached(tmpfs_node_t *);
 int		tmpfs_dir_getdotdent(tmpfs_node_t *, struct uio *);
 int		tmpfs_dir_getdotdotdent(tmpfs_node_t *, struct uio *);
 tmpfs_dirent_t *tmpfs_dir_lookupbycookie(tmpfs_node_t *, off_t);
-int		tmpfs_dir_getdents(tmpfs_node_t *, struct uio *, off_t *);
+int		tmpfs_dir_getdents(tmpfs_node_t *, struct uio *);
 
 int		tmpfs_reg_resize(struct vnode *, off_t);
 int		tmpfs_truncate(struct vnode *, off_t);
