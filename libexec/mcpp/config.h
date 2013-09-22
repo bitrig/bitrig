@@ -29,19 +29,19 @@
 /* #undef COMPILER_SP_STD_VAL */
 
 /* Define compiler-specific C++ include directory 1. */
-#define CPLUS_INCLUDE_DIR1 "/usr/lib/gcc/x86_64-unknown-bitrig0.1/4.6.2/../../../../include/c++/4.6.2"
+#define CPLUS_INCLUDE_DIR1 "/usr/include/c++/4.6.2"
 
 /* Define compiler-specific C++ include directory 2. */
-#define CPLUS_INCLUDE_DIR2 "/usr/lib/gcc/x86_64-unknown-bitrig0.1/4.6.2/../../../../include/c++/4.6.2/x86_64-unknown-bitrig0.1"
+#define CPLUS_INCLUDE_DIR2 "/usr/include/c++/4.6.2/x86_64-unknown-bitrig0.1"
 
 /* Define compiler-specific C++ include directory 3. */
-#define CPLUS_INCLUDE_DIR3 "/usr/lib/gcc/x86_64-unknown-bitrig0.1/4.6.2/../../../../include/c++/4.6.2/backward"
+#define CPLUS_INCLUDE_DIR3 "/usr/include/c++/4.6.2/backward"
 
 /* Define compiler-specific C++ include directory 4. */
 #define CPLUS_INCLUDE_DIR4 "/usr/lib/gcc/x86_64-unknown-bitrig0.1/4.6.2/include"
 
 /* Define the cpu-specific-macro. */
-#define CPU ".amd64"
+/* #define CPU ".amd64" */
 
 /* Define the name of CPU-specific OLD-style predefined macro. */
 /* #undef CPU_SP_OLD */
@@ -59,7 +59,7 @@
 /* #undef CYGWIN_ROOT_DIRECTORY */
 
 /* Define compiler-specific C include directory 1. */
-#define C_INCLUDE_DIR1 "/usr/bin/../lib/clang/3.3/include"
+#define C_INCLUDE_DIR1 "/usr/include"
 
 /* Define compiler-specific C include directory 2. */
 /* #undef C_INCLUDE_DIR2 */
@@ -146,7 +146,7 @@
 #define HOST_SYSTEM SYS_UNIX
 
 /* Define include directory to install mcpp_g*.h header files. */
-#define INC_DIR "/usr/bin/../lib/clang/3.3/include"
+#define INC_DIR "/usr/include"
 
 /* Define if '0x5c' in ISO2022-JP multi-byte character is safe. */
 #define ISO2022_JP_IS_ESCAPE_FREE 0
