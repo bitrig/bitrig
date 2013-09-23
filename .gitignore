@@ -1,6 +1,7 @@
 obj
-obj.amd64.armv7
-obj.i386.armv7
+obj.amd64.*
+obj.i386.*
+obj.armv7.*
 CVS
 sys/arch/*/compile
 
