@@ -117,12 +117,6 @@ cross-env:
 	    BSDSRCDIR=${.CURDIR} MAKEOBJDIR=obj.${MACHINE}.${TARGET}
 
 ${CROSSDIRS}:
-.if ${TARGET_ARCH} == "arm" &&  ${MACHINE_IS_LP64} == "yes"
-	# this config is allowed
-.elif ${TARGET_IS_LP64} != ${MACHINE_IS_LP64}
-	@echo "host and target have different size longs"
-	@echo "cross compiler generates bad code; aborting"; exit 1
-.endif
 	@-mkdir -p ${CROSSDIR}
 	@echo ${TARGET_ARCH} > ${CROSSDIR}/TARGET_ARCH
 	@echo TARGET_ARCH is `cat ${CROSSDIR}/TARGET_ARCH`
