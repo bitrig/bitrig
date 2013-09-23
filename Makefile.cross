@@ -214,13 +214,15 @@ cross-lib:	${CROSSGCC}
 	    (cd $$lib; \
 	        eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
 		    ${MAKE} WANTLINT=no depend all ;\
-	        eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} DESTDIR=${CROSSDIR} \
+	        eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
+		    DESTDIR=${CROSSDIR} \
 		    ${MAKE} WANTLINT=no install); \
 	    done; \
 	    eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
 	        SKIPDIR=\"${NO_CROSS} libocurses/PSD.doc\" \
 	        ${MAKE} WANTLINT=no depend all ; \
-	    eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} DESTDIR=${CROSSDIR} \
+	    eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
+		DESTDIR=${CROSSDIR} \
 	        SKIPDIR=\"${NO_CROSS} libocurses/PSD.doc\" \
 	        ${MAKE} WANTLINT=no install)
 
@@ -233,7 +235,8 @@ cross-bin:	${CROSSOBJ}
 	    eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
 	        SKIPDIR=\"${BINUTILS} ${NO_CROSS}\" \
 	        ${MAKE} depend all ; \
-	    eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} DESTDIR=${CROSSDIR} \
+	    eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
+		DESTDIR=${CROSSDIR} \
 	        SKIPDIR=\"${BINUTILS} ${NO_CROSS}\" \
 	        ${MAKE} install); \
 	done
@@ -247,7 +250,8 @@ cross-gnu:	${CROSSOBJ}
 	    eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
 	        SKIPDIR=\"${NO_CROSS}\" \
 	        ${MAKE} depend all ; \
-	    eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} DESTDIR=${CROSSDIR} \
+	    eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
+		DESTDIR=${CROSSDIR} \
 	        SKIPDIR=\"${NO_CROSS}\" \
 	        ${MAKE} install); \
 	done
@@ -260,7 +264,12 @@ cross-share:   ${CROSSOBJ}
 	    (cd ${.CURDIR}/$$i; \
 	        eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
 		SKIPDIR=\"${NO_CROSS}\" \
-		${MAKE} depend all install); \
+		${MAKE} depend all); \
+	    (cd ${.CURDIR}/$$i; \
+	        eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
+		DESTDIR=${CROSSDIR} \
+		SKIPDIR=\"${NO_CROSS}\" \
+		${MAKE}  install); \
 	done
 
 cross-sys:   ${CROSSOBJ}
@@ -271,7 +280,11 @@ cross-sys:   ${CROSSOBJ}
 	    (cd ${.CURDIR}/$$i; \
 	        eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
 		SKIPDIR=\"${NO_CROSS}\" \
-		${MAKE} depend all install); \
+		${MAKE} depend all; \
+	        eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
+	        DESTDIR=${CROSSDIR} \
+		SKIPDIR=\"${NO_CROSS}\" \
+		${MAKE}  install); \
 	done
 
 cross-etc-root-var:	${CROSSOBJ}
