@@ -424,8 +424,12 @@ logok:
 			    &args.export_info);
 			if (error)
 				goto error_1;
-			else
+			else {
+				error = UFS_WAPBL_BEGIN(mp);
+				if (error)
+					goto error_1;
 				goto success;
+			}
 		}
 	}
 
@@ -518,6 +522,10 @@ logok:
 	if (error)
 		goto error_2;
 
+	error = UFS_WAPBL_BEGIN(mp);
+	if (error)
+		goto error_2;
+
 	/*
 	 * Initialize FS stat information in mount struct; uses both
 	 * mp->mnt_stat.f_mntonname and mp->mnt_stat.f_mntfromname
@@ -550,6 +558,7 @@ success:
 		}
 		ffs_sbupdate(ump, MNT_WAIT);
 	}
+	UFS_WAPBL_END(mp);
 	return (0);
 
 error_2:	/* error with devvp held */
