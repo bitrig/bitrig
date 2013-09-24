@@ -619,44 +619,24 @@ loop:
 int
 ffs_wapbl_fsync_vfs(struct vnode *vp, int waitfor)
 {
-	int error = 0, s;
-	struct buf *bp, *nbp;
+	int error = 0;
 
 	KASSERT(vp->v_type == VBLK);
 	KASSERT(vp->v_specmountpoint != NULL);
 	KASSERT(vp->v_specmountpoint->mnt_wapbl != NULL);
 
-	/*
-	 * Flush all non-WAPBL data blocks.
-	 */
-loop:
-	s = splbio();
+#ifdef DIAGNOSTIC
+	int s = splbio();
+	struct buf *bp, *nbp;
 	for (bp = LIST_FIRST(&vp->v_dirtyblkhd);
 	    bp != LIST_END(&vp->v_dirtyblkhd); bp = nbp) {
 		nbp = LIST_NEXT(bp, b_vnbufs);
-		if ((bp->b_flags & (B_BUSY | B_LOCKED)) || bp->b_lblkno < 0)
-			continue;
-#ifdef DIAGNOSTIC
-		if ((bp->b_flags & B_DELWRI) == 0)
-			panic("ffs_wapbl_fsync_vfs: not dirty");
-#endif
-		bremfree(bp);
-		buf_acquire(bp);
-		splx(s);
-		printf("synced %p?\n", bp);
-		bawrite(bp);
-		goto loop;
+		if ((bp->b_flags & B_LOCKED) == 0)
+			panic("ffs_wapbl_fsync_vfs: non-WAPBL buffer %p "
+			    "on vnode %p", bp, vp);
 	}
-
-	if (waitfor == MNT_WAIT) {
-		error = vwaitforio(vp, 0, "wapblvfs1", 0);
-		if (error) {
-			splx(s);
-			return (error);
-		}
-	}
-
 	splx(s);
+#endif
 
 	/*
 	 * Don't bother writing out metadata if the syncer is making the
