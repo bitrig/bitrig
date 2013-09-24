@@ -387,6 +387,7 @@
 ./usr/bin/newsyslog
 ./usr/bin/nfsstat
 ./usr/bin/nice
+./usr/bin/nl
 ./usr/bin/nm
 ./usr/bin/nohup
 ./usr/bin/od
@@ -1056,6 +1057,7 @@
 ./usr/include/dev/pci/drm/drm_mem_util.h
 ./usr/include/dev/pci/drm/drm_mm.h
 ./usr/include/dev/pci/drm/drm_mode.h
+./usr/include/dev/pci/drm/drm_pciids.h
 ./usr/include/dev/pci/drm/drm_sarea.h
 ./usr/include/dev/pci/drm/i915_drm.h
 ./usr/include/dev/pci/drm/radeon_drm.h
@@ -2188,7 +2190,7 @@
 ./usr/lib/libsndio.so.5.0
 ./usr/lib/libsndio_p.a
 ./usr/lib/libsqlite3.a
-./usr/lib/libsqlite3.so.24.0
+./usr/lib/libsqlite3.so.26.0
 ./usr/lib/libsqlite3_p.a
 ./usr/lib/libssl.a
 ./usr/lib/libssl.so.20.0
@@ -4850,6 +4852,7 @@
 ./usr/share/man/man1/netstat.1
 ./usr/share/man/man1/nfsstat.1
 ./usr/share/man/man1/nice.1
+./usr/share/man/man1/nl.1
 ./usr/share/man/man1/nm.1
 ./usr/share/man/man1/nohup.1
 ./usr/share/man/man1/nslookup.1
@@ -10787,6 +10790,7 @@
 ./usr/share/man/man4/udsbr.4
 ./usr/share/man/man4/uftdi.4
 ./usr/share/man/man4/ugen.4
+./usr/share/man/man4/ugold.4
 ./usr/share/man/man4/uguru.4
 ./usr/share/man/man4/uhci.4
 ./usr/share/man/man4/uhid.4
@@ -12066,6 +12070,8 @@
 ./usr/share/man/man9/ulmax.9
 ./usr/share/man/man9/ulmin.9
 ./usr/share/man/man9/uprintf.9
+./usr/share/man/man9/usbd_setup_xfer.9
+./usr/share/man/man9/usbd_transfer.9
 ./usr/share/man/man9/uvm.9
 ./usr/share/man/man9/uvm_chgkprot.9
 ./usr/share/man/man9/uvm_coredump.9
