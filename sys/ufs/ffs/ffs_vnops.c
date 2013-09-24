@@ -539,7 +539,7 @@ ffs_wapbl_fsync_full(void *v)
 	}
 
 	if (waitfor == MNT_WAIT)
-		error = vwaitforio(vp, 0, "wapblffsy", 0);
+		error = vwaitforio(vp, 0, "wapblfsy", 0);
 
 	splx(s);
 
@@ -582,7 +582,7 @@ loop:
 	}
 
 	if (waitfor == MNT_WAIT) {
-		error = vwaitforio(vp, 0, "wapblfsy", 0);
+		error = vwaitforio(vp, 0, "wapblsy", 0);
 		if (error) {
 			splx(s);
 			return (error);
@@ -661,7 +661,7 @@ ffs_wapbl_fsync_vfs(struct vnode *vp, int waitfor)
 	}
 
 	if (waitfor == MNT_WAIT)
-		error = vwaitforio(vp, 0, "wapblvfs2", 0);
+		error = vwaitforio(vp, 0, "wapblvfs", 0);
 
 	splx(s);
 
