@@ -488,10 +488,23 @@ ffs_wapbl_fsync_full(void *v)
 	struct inode *ip = VTOI(vp);
 	struct mount *mp = vp->v_mount;
 	int waitfor = ap->a_waitfor;
-	int error = 0, s;
+	int error = 0;
 
 	KASSERT(vp->v_type != VREG);
 	KASSERT(mp->mnt_wapbl != NULL);
+
+#ifdef DIAGNOSTIC
+	int s = splbio();
+	struct buf *bp, *nbp;
+	for (bp = LIST_FIRST(&vp->v_dirtyblkhd);
+	    bp != LIST_END(&vp->v_dirtyblkhd); bp = nbp) {
+		nbp = LIST_NEXT(bp, b_vnbufs);
+		if ((bp->b_flags & B_LOCKED) == 0)
+			panic("ffs_wapbl_fsync_full: non-WAPBL buffer %p "
+			    "on vnode %p", bp, vp);
+	}
+	splx(s);
+#endif
 
 	/*
 	 * Don't bother writing out metadata if the syncer is making the
