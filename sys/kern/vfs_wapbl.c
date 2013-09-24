@@ -63,8 +63,8 @@
 #define	wapbl_free(a, s) free((a), M_TEMP)
 #define	wapbl_calloc(n, s) malloc((n)*(s), M_TEMP, M_WAITOK | M_ZERO)
 
-static int wapbl_flush_disk_cache = 1;
-static int wapbl_verbose_commit = 0;
+int wapbl_flush_disk_cache = 1;
+int wapbl_verbose_commit = 0;
 
 #else /* !_KERNEL */
 #include <assert.h>
