@@ -256,6 +256,12 @@ ffs_mount(struct mount *mp, const char *path, void *data,
 		error = 0;
 		ronly = fs->fs_ronly;
 
+#ifdef WAPBL
+		/* XXX pedro */
+		if (mp->mnt_wapbl != NULL && (mp->mnt_flag & MNT_LOG) == 0)
+			return (EPERM);
+#endif
+
 		if (ronly == 0 && (mp->mnt_flag & MNT_RDONLY)) {
 			/* Flush any dirty data */
 			mp->mnt_flag &= ~MNT_RDONLY;
