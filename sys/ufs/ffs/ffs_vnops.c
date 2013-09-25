@@ -673,46 +673,16 @@ ffs_wapbl_fsync_device(void *v)
 {
 	struct vop_fsync_args *ap = v;
 	struct vnode *vp = ap->a_vp;
-	struct inode *ip = VTOI(vp);
-	struct mount *mp;
-	int error, waitfor = ap->a_waitfor;
 
 	if (vp->v_type == VCHR)
 		return (0);
 
-	/* Are we mounted somewhere? */
-	mp = vp->v_specmountpoint;
-	if (mp && mp->mnt_wapbl) {
-		error = ffs_wapbl_fsync_vfs(vp, waitfor);
-		if (error)
-			return (error);
-	}
+	/* Are we mounted somewhere with WAPBL? */
+	if (vp->v_specmountpoint != NULL &&
+	    vp->v_specmountpoint->mnt_wapbl != NULL)
+		return (ffs_wapbl_fsync_vfs(vp, ap->a_waitfor));
 
-	mp = vp->v_mount;
-	if (mp && mp->mnt_wapbl) {
-		/*
-		 * Don't bother writing out metadata if the syncer is making
-		 * the request. We will let the sync vnode write it out in a
-		 * single burst through a call to VFS_SYNC().
-		 */
-		if (waitfor == MNT_LAZY)
-			return (0);
-
-		if ((ip->i_flag &
-		    (IN_ACCESS | IN_CHANGE | IN_UPDATE | IN_MODIFIED)) != 0) {
-			error = UFS_WAPBL_BEGIN(mp);
-			if (error)
-				return (error);
-			error = UFS_UPDATE(ip, waitfor == MNT_WAIT);
-			UFS_WAPBL_END(mp);
-			if (error)
-				return (error);
-		}
-
-		return (0);
-	}
-
-	return (UFS_UPDATE(ip, waitfor == MNT_WAIT));
+	return (0);
 }
 #endif /* WAPBL */
 
