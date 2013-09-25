@@ -674,6 +674,8 @@ ffs_wapbl_fsync_device(void *v)
 	struct vop_fsync_args *ap = v;
 	struct vnode *vp = ap->a_vp;
 
+	KASSERT(vp->v_mount != NULL && vp->v_mount->mnt_wapbl != NULL);
+
 	if (vp->v_type == VCHR)
 		return (0);
 
@@ -681,6 +683,8 @@ ffs_wapbl_fsync_device(void *v)
 	if (vp->v_specmountpoint != NULL &&
 	    vp->v_specmountpoint->mnt_wapbl != NULL)
 		return (ffs_wapbl_fsync_vfs(vp, ap->a_waitfor));
+
+	vflushbuf(vp, ap->a_waitfor == MNT_WAIT);
 
 	return (0);
 }
