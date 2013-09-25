@@ -728,13 +728,18 @@ ffs_fsync(void *v)
 	int s, error, passes, skipmeta;
 
 #if WAPBL
-	if (wapbl_vphaswapbl(vp)) {
+	if (vp->v_mount && vp->v_mount->mnt_wapbl) {
 		if (vn_isdisk(vp, NULL))
 			return (ffs_wapbl_fsync_device(ap));
 		if (vp->v_type != VREG)
 			return (ffs_wapbl_fsync_full(ap));
 		return (ffs_wapbl_fsync(ap));
 	}
+
+	if (vp->v_type == VBLK &&
+	    vp->v_specmountpoint != NULL &&
+	    vp->v_specmountpoint->mnt_wapbl != NULL)
+		return (ffs_wapbl_fsync_vfs(vp, ap->a_waitfor));
 #endif
 
 	if (vp->v_type == VBLK &&
