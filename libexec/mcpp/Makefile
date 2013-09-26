@@ -22,8 +22,6 @@ ARCHPREFIX=mcpp-gcc-
 
 includes:
 .for arch in ${ARCHS}
-	${INSTALL} -d -o ${BINOWN} -g ${BINGRP} -m 755 \
-		${DESTDIR}/usr/include/${ARCHPREFIX}${arch}
 	${INSTALL} ${INSTALL_COPY} -m 444 ${.CURDIR}/defs.old.${arch} \
 		${DESTDIR}/usr/include/${ARCHPREFIX}${arch}/${DOTH_FILE}
 	${INSTALL} ${INSTALL_COPY} -m 444 ${.CURDIR}/defs.std.${arch} \

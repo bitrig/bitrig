@@ -326,6 +326,21 @@ krb5			gname=bin uname=root mode=0755
 # ./usr/include/kerberosV
 ..
 
+# ./usr/include/mcpp-gcc-amd64
+mcpp-gcc-amd64
+# ./usr/include/mcpp-gcc-amd64
+..
+
+# ./usr/include/mcpp-gcc-arm
+mcpp-gcc-arm
+# ./usr/include/mcpp-gcc-arm
+..
+
+# ./usr/include/mcpp-gcc-i386
+mcpp-gcc-i386
+# ./usr/include/mcpp-gcc-i386
+..
+
 # ./usr/include/openssl
 openssl		gname=bin uname=root mode=0755
 # ./usr/include/openssl
