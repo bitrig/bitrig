@@ -1,0 +1,15 @@
+/* n_1.t:   Conversion of trigraph sequences.   */
+
+/* 1.1: The following 9 sequences are valid trigraph sequences. */
+/*  [ ] \ ^ { } | ~ #;  */
+    ??( ??) ??/ ??' ??< ??> ??! ??- ??=;
+
+/* 1.2: In directive line.  */
+/*  ab | cd;    */
+??= define  OR( a, b)   a ??! b
+    OR( ab, cd);
+
+/* 1.3: Any sequence other than above 9 is not a trigraph sequence. */
+/*  ?? ??? ??% ??^ ?#;  */
+    ?? ??? ??% ??^ ???=;
+

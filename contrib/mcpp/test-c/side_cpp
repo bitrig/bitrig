@@ -1,0 +1,46 @@
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+
+n_1:    Trigraph sequences.             
+n_2:    Line splicing by <backslash>.   
+n_3:    Handling of comment.            
+n_4:    Tokens spelled by digraphs.     
+n_5:    Spaces or tabs in pp-directive. 
+n_6:    #include directive.             
+n_7:    #line directive.                
+n_9:    #pragma directive.              
+n_10:   #if, #elif pp-directive.        
+n_11:   Operator "defined" in #if.      
+n_12:   Pp-number and type of #if expr. 
+n_13:   Valid operators in #if expr.    
+n_13.5: Usual arithmetic conversion.    
+n_13.7: Short-circuit evaluation of #if.
+n_13.8: Grouping of #if sub-expressions.
+n_13.13:    #if expression with macros. 
+n_15:   #ifdef, #ifndef directives.     
+n_18:   #define directive.              
+n_19:   Valid re-definitions of macros. 
+n_20:   Macro name identical to keyword.
+n_21:   Tokenization (no token merging).
+n_22:   Tokenization of pp-number.      
+n_23:   ## operator in macro definition.
+n_24:   # operator in macro definition. 
+n_25:   Pre-expansion of macro args.    
+n_26:   No recursive replacement.       
+n_27:   Rescanning of a macro.          
+n_28:   Standard pre-defined macros.    
+n_29:   #undef directive.               
+n_30:   Macro call crossing lines.      
+n_32:   Escape sequence in char-const.  
+n_37:   Translation limits.             
+i_32.3: Character constant in #if.      
+i_35:   Multi-character character const.
+i_35.3: Multi-character wide character. 
+
+Total number of tests unpassed.         
