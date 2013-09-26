@@ -1,3 +1,4 @@
+#define _LP64 1
 #define __ATOMIC_ACQUIRE 2
 #define __ATOMIC_ACQ_REL 4
 #define __ATOMIC_CONSUME 1
@@ -101,7 +102,7 @@
 #define __PRAGMA_REDEFINE_EXTNAME 1
 #define __PTRDIFF_TYPE__ long int
 #define __PTRDIFF_WIDTH__ 64
-#define __REGISTER_PREFIX__ 
+#define __REGISTER_PREFIX__
 #define __SCHAR_MAX__ 127
 #define __SHRT_MAX__ 32767
 #define __SIG_ATOMIC_WIDTH__ 32
@@ -128,7 +129,7 @@
 #define __SSP__ 1
 #define __STDC_HOSTED__ 1
 #define __UINTMAX_TYPE__ long long unsigned int
-#define __USER_LABEL_PREFIX__ 
+#define __USER_LABEL_PREFIX__
 #define __VERSION__ "4.2.1 Compatible Clang 3.3 (tags/RELEASE_33/final)"
 #define __WCHAR_MAX__ 2147483647
 #define __WCHAR_TYPE__ int
