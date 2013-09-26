@@ -189,8 +189,10 @@ arml2cc_enable(struct arml2cc_softc *sc)
 	auxctl |= L2C_AUXCTL_DATA_PREFETCH;
 	prefetch |= L2C_PREFETCH_CTL_DATA;
 
+	/*
 	platform_smc_write(sc->sc_iot, sc->sc_ioh, L2C_AUXCTL,
 	    SMC_L2_AUXCTRL, auxctl);
+	*/
 	platform_smc_write(sc->sc_iot, sc->sc_ioh, L2C_PREFETCH_CTL,
 	    SMC_L2_PREFETCH_CTL, prefetch);
 
