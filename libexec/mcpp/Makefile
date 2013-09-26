@@ -7,6 +7,8 @@ PROG=mcpp
 SRCS= directive.c main.c system.c eval.c mbchar.c
 SRCS+= expand.c support.c
 
+MLINKS+= cpp.1 mcpp.1
+
 # generate #define file mcpp expects during runtime
 DOTH_MAJOR!=${CC} -E -dM - </dev/null | grep __GNUC__ | awk '{ print $$3 }'
 DOTH_MINOR!=${CC} -E -dM - </dev/null | grep __GNUC_MINOR__ | awk '{ print $$3 }'
