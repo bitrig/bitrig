@@ -1510,6 +1510,15 @@
 ./usr/include/machine
 ./usr/include/malloc.h
 ./usr/include/math.h
+./usr/include/mcpp-gcc-amd64
+./usr/include/mcpp-gcc-amd64/gcc42_predef_old.h
+./usr/include/mcpp-gcc-amd64/gcc42_predef_std.h
+./usr/include/mcpp-gcc-amd64/gxx42_predef_std.h
+./usr/include/mcpp-gcc-arm
+./usr/include/mcpp-gcc-arm/gcc42_predef_old.h
+./usr/include/mcpp-gcc-arm/gcc42_predef_std.h
+./usr/include/mcpp-gcc-arm/gxx42_predef_std.h
+./usr/include/mcpp-gcc-i386
 ./usr/include/md4.h
 ./usr/include/md5.h
 ./usr/include/memory.h
@@ -4275,6 +4284,7 @@
 ./usr/libexec/mail.local
 ./usr/libexec/makekey
 ./usr/libexec/makewhatis
+./usr/libexec/mcpp
 ./usr/libexec/ntalkd
 ./usr/libexec/rpc.rquotad
 ./usr/libexec/rpc.rstatd
@@ -4701,6 +4711,7 @@
 ./usr/share/man/man1/cpan2dist.1
 ./usr/share/man/man1/cpanp.1
 ./usr/share/man/man1/cpio.1
+./usr/share/man/man1/cpp.1
 ./usr/share/man/man1/crontab.1
 ./usr/share/man/man1/csh.1
 ./usr/share/man/man1/csplit.1
@@ -4833,6 +4844,7 @@
 ./usr/share/man/man1/makeinfo.1
 ./usr/share/man/man1/man.1
 ./usr/share/man/man1/mandoc.1
+./usr/share/man/man1/mcpp.1
 ./usr/share/man/man1/md5.1
 ./usr/share/man/man1/merge.1
 ./usr/share/man/man1/mesg.1
@@ -10373,6 +10385,8 @@
 ./usr/share/man/man4/aps.4
 ./usr/share/man/man4/arandom.4
 ./usr/share/man/man4/arc.4
+./usr/share/man/man4/armv7
+./usr/share/man/man4/armv7/cpsw.4
 ./usr/share/man/man4/arp.4
 ./usr/share/man/man4/art.4
 ./usr/share/man/man4/asbtm.4
@@ -10395,8 +10409,6 @@
 ./usr/share/man/man4/az.4
 ./usr/share/man/man4/azalia.4
 ./usr/share/man/man4/bce.4
-./usr/share/man/man4/armv7
-./usr/share/man/man4/armv7/cpsw.4
 ./usr/share/man/man4/berkwdt.4
 ./usr/share/man/man4/bge.4
 ./usr/share/man/man4/bha.4
