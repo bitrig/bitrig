@@ -10,7 +10,7 @@ SRCS+= expand.c support.c
 ARCHS=amd64 arm
 # need to add i386 files.
 
-MLINKS+= cpp.1 mcpp.1
+MLINKS+= mcpp.1 cpp.1
 
 # generate #define file mcpp expects during runtime
 DOTH_MAJOR!=${CC} -E -dM - </dev/null | grep __GNUC__ | awk '{ print $$3 }'
