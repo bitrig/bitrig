@@ -46,7 +46,7 @@ INCS="-I-"
 FOUNDFILES=false
 
 CPP=/usr/libexec/mcpp
-OPTS=""
+OPTS="-lang-asm"
 TRAD="-@old -k"
 
 if [ ! -x $CPP ]; then
