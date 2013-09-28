@@ -25,4 +25,24 @@ SUBDIR+=bugpoint \
 	opt
 .endif
 
+bootstrap:
+	(cd ../../lib/clang && ${MAKE} obj)
+	(cd ../../usr.bin/clang && ${MAKE} obj)
+	(cd ../../lib/clang/libllvmtablegen && ${MAKE} depend )
+	(cd ../../lib/clang/libllvmtablegen && ${MAKE} all)
+	(cd ../../lib/clang/libllvmsupport && ${MAKE} depend)
+	(cd ../../lib/clang/libllvmsupport && ${MAKE} all)
+	(cd ../../usr.bin/clang/clang-tblgen && ${MAKE} depend)
+	(cd ../../usr.bin/clang/clang-tblgen && ${MAKE} all)
+	(cd ../../usr.bin/clang/clang-tblgen && ${MAKE}  install)
+	(cd ../../usr.bin/clang/tblgen && ${MAKE} depend)
+	(cd ../../usr.bin/clang/tblgen && ${MAKE} all)
+	(cd ../../usr.bin/clang/tblgen && ${MAKE} install)
+	(cd ../../lib/clang && ${MAKE} depend)
+	(cd ../../lib/clang && ${MAKE} all)
+	(cd ../../lib/clang && ${MAKE} depend)
+	(cd ../../lib/clang && ${MAKE} all)
+	(cd ../../usr.bin/clang && ${MAKE} depend)
+	(cd ../../usr.bin/clang && ${MAKE} all)
+
 .include <bsd.subdir.mk>
