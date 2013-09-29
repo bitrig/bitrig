@@ -548,17 +548,20 @@ plus:
             } else if (memcmp( mcpp_optarg, "uxbase", 6) == 0) {
                 mcpp_optind++;
                 break;  /* Ignore '-auxbase some' or such nonsence  */
-#if SYSTEM == SYS_MAC
+#if SYSTEM == SYS_MAC || defined(__Bitrig__)
             } else if (str_eq( mcpp_optarg, "rch")) {   /* -arch    */
                 strcpy( arch, argv[ mcpp_optind++]);
                 if (str_eq( arch, "ppc") || str_eq( arch, "ppc7400")
                         || str_eq( arch, "ppc64")
                         || str_eq( arch, "i386") || str_eq( arch, "i686")
-                        || str_eq( arch, "x86_64") || str_eq( arch, "amd64")) {
+                        || str_eq( arch, "x86_64") || str_eq( arch, "amd64")
+                        || str_eq( arch, "arm")) {
                     if (str_eq( arch, "i686"))
                         strcpy( arch, "i386");
                     else if (str_eq( arch, "amd64"))
                         strcpy( arch, "x86_64");
+                    else if (str_eq( arch, "arm"))
+                        strcpy( arch, "arm");
                     else if (str_eq( arch, "ppc7400"))
                         strcpy( arch, "ppc");
                     break;
