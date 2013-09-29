@@ -558,8 +558,13 @@ plus:
                         || str_eq( arch, "arm")) {
                     if (str_eq( arch, "i686"))
                         strcpy( arch, "i386");
+#if defined(__Bitrig__)
+                    else if (str_eq( arch, "amd64"))
+                        strcpy( arch, "amd64");
+#else
                     else if (str_eq( arch, "amd64"))
                         strcpy( arch, "x86_64");
+#endif
                     else if (str_eq( arch, "arm"))
                         strcpy( arch, "arm");
                     else if (str_eq( arch, "ppc7400"))
