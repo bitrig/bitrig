@@ -45,6 +45,8 @@ STDINC="-I/usr/include"
 INCS="-I-"
 FOUNDFILES=false
 
+ARCH=""
+
 CPP=/usr/libexec/mcpp
 OPTS="-lang-asm"
 TRAD="-traditional -k"
@@ -91,7 +93,7 @@ done
 if ! $FOUNDFILES
 then
 	# read standard input
-	eval exec $CPP $TRAD $DGNUC $INCS $STDINC $OPTS
+	eval exec $CPP $ARCH $TRAD $DGNUC $INCS $STDINC $OPTS
 fi
 
 exit 0
