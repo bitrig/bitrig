@@ -82,6 +82,7 @@ struct vops tmpfs_fifovops = {
 	.vop_bmap	= tmpfs_fifo_bmap,
 	.vop_strategy	= tmpfs_fifo_strategy,
 	.vop_print	= tmpfs_fifo_print,
+	.vop_islocked	= tmpfs_fifo_islocked,
 	.vop_pathconf	= tmpfs_fifo_pathconf,
 	.vop_advlock	= tmpfs_fifo_advlock,
 	.vop_bwrite	= tmpfs_fifo_bwrite,
