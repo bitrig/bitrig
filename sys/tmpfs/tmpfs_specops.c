@@ -82,6 +82,7 @@ struct vops tmpfs_specvops = {
 	.vop_bmap	= tmpfs_spec_bmap,
 	.vop_strategy	= tmpfs_spec_strategy,
 	.vop_print	= tmpfs_spec_print,
+	.vop_islocked	= tmpfs_spec_islocked,
 	.vop_pathconf	= tmpfs_spec_pathconf,
 	.vop_advlock	= tmpfs_spec_advlock,
 	.vop_bwrite	= tmpfs_spec_bwrite,
