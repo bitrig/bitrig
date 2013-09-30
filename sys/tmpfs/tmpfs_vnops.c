@@ -1437,6 +1437,7 @@ int tmpfs_check_sticky(struct ucred *,
     struct tmpfs_node *, struct tmpfs_node *);
 void tmpfs_rename_cache_purge(struct vnode *, struct vnode *, struct vnode *,
     struct vnode *);
+void tmpfs_rename_abort(void *);
 
 int
 tmpfs_rename(void *v)
@@ -1482,17 +1483,18 @@ tmpfs_rename(void *v)
 	 */
 	if (fvp->v_mount != tdvp->v_mount ||
 	    (tvp != NULL && (fvp->v_mount != tvp->v_mount))) {
-	    	VOP_ABORTOP(tdvp, tcnp);
-	    	if (tdvp == tvp)
-	    		vrele(tdvp);
-		else
-			vput(tdvp);
-		if (tvp != NULL)
-			vput(tvp);
-		VOP_ABORTOP(fdvp, fcnp);
-		vrele(fdvp);
-		vrele(fvp);
+	    	tmpfs_rename_abort(v);
 		return EXDEV;
+	}
+
+	/*
+	 * Reject renaming '.' and '..'.
+	 */
+	if ((fcnp->cn_namelen == 1 && fcnp->cn_nameptr[0] == '.') ||
+	    (fcnp->cn_namelen == 2 && fcnp->cn_nameptr[0] == '.' &&
+	     fcnp->cn_nameptr[1] == '.')) {
+	     	tmpfs_rename_abort(v);
+	     	return EINVAL;
 	}
 
 	/*
@@ -2696,4 +2698,27 @@ tmpfs_rename_cache_purge(struct vnode *fdvp, struct vnode *fvp,
 
 	if ((tvp != NULL) && (tvp->v_type == VDIR))
 		cache_purge(tvp);
+}
+
+void
+tmpfs_rename_abort(void *v)
+{
+	struct vop_rename_args *ap = v;
+	struct vnode *fdvp = ap->a_fdvp;
+	struct vnode *fvp = ap->a_fvp;
+	struct componentname *fcnp = ap->a_fcnp;
+	struct vnode *tdvp = ap->a_tdvp;
+	struct vnode *tvp = ap->a_tvp;
+	struct componentname *tcnp = ap->a_tcnp;
+
+	VOP_ABORTOP(tdvp, tcnp);
+	if (tdvp == tvp)
+		vrele(tdvp);
+	else
+		vput(tdvp);
+	if (tvp != NULL)
+		vput(tvp);
+	VOP_ABORTOP(fdvp, fcnp);
+	vrele(fdvp);
+	vrele(fvp);
 }
