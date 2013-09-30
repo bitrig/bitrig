@@ -353,15 +353,7 @@ tmpfs_mknod(void *v)
 	if (error)
 		return error;
 
-	/*
-	 * As in ufs_mknod(), remove inode so that it will be reloaded by
-	 * VFS_VGET and checked to see if it is an alias of an existing entry
-	 * in the vnode cache.
-	 */
 	vput(*vpp);
-	(*vpp)->v_type = VNON;
-	vgone(*vpp);
-	*vpp = NULL;
 
 	return 0;
 }
