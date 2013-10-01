@@ -187,3 +187,11 @@ BSD_OWN_MK=Done
 # Define MK_INSTALLLIB for libraries which build using bsd.lib.mk but should
 # not be installed, they link directly out of ${.OBJDIR}
 MK_INSTALLLIB?=yes
+
+# Control clang specific features
+# MK_CLANG_EXTRAS controls if additional clang binaries besides the
+# base compiler should be built
+MK_CLANG_EXTRAS?=No
+
+# MK_CLANG_IS_CC controls if clang should be installed as /usr/bin/cc
+MK_CLANG_IS_CC?=Yes
