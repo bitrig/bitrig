@@ -166,9 +166,15 @@ tmpfs_lookup(void *v)
 		/*
 		 * Lookup of ".." case.
 		 */
-		if (lastcn && cnp->cn_nameiop == RENAME) {
-			error = EINVAL;
-			goto out;
+		if (lastcn) {
+			if (cnp->cn_nameiop == RENAME) {
+				error = EINVAL;
+				goto out;
+			}
+			if (cnp->cn_nameiop == DELETE) {
+				/* Keep the name for tmpfs_rmdir(). */
+				cnp->cn_flags |= SAVENAME;
+			}
 		}
 		KASSERT(dnode->tn_type == VDIR);
 		pnode = dnode->tn_spec.tn_dir.tn_parent;
@@ -859,8 +865,15 @@ tmpfs_rmdir(void *v)
 
 	KASSERT(VOP_ISLOCKED(dvp));
 	KASSERT(VOP_ISLOCKED(vp));
-	KASSERT(node->tn_spec.tn_dir.tn_parent == dnode);
 	KASSERT(cnp->cn_flags & HASBUF);
+
+	if (cnp->cn_namelen == 2 && cnp->cn_nameptr[0] == '.' &&
+	    cnp->cn_nameptr[1] == '.') {
+		error = ENOTEMPTY;
+		goto out;
+	}
+
+	KASSERT(node->tn_spec.tn_dir.tn_parent == dnode);
 
 	/*
 	 * Directories with more than two non-whiteout
