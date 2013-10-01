@@ -747,6 +747,11 @@ tmpfs_remove(void *v)
 		tmpfs_dir_attach(dvp, de, TMPFS_NODE_WHITEOUT);
 	else
 		tmpfs_free_dirent(VFS_TO_TMPFS(vp->v_mount), de);
+	if (node->tn_links > 0)  {
+		/* We removed a hard link. */
+		node->tn_status |= TMPFS_NODE_CHANGED;
+		tmpfs_update(vp, NULL, NULL, 0);
+	}
 	error = 0;
 out:
 	pool_put(&namei_pool, cnp->cn_pnbuf);
