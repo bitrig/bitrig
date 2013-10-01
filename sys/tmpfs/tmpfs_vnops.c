@@ -940,7 +940,7 @@ tmpfs_symlink(void *v)
 	if (error == 0)
 		vput(*vpp);
 
-	return 0;
+	return error;
 }
 
 int
