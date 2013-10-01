@@ -690,7 +690,7 @@ tmpfs_remove(void *v)
 	} */ *ap = v;
 	struct vnode *dvp = ap->a_dvp, *vp = ap->a_vp;
 	struct componentname *cnp = ap->a_cnp;
-	tmpfs_node_t *node;
+	tmpfs_node_t *dnode, *node;
 	tmpfs_dirent_t *de;
 	int error;
 
@@ -702,10 +702,21 @@ tmpfs_remove(void *v)
 		error = EPERM;
 		goto out;
 	}
+
+	dnode = VP_TO_TMPFS_NODE(dvp);
 	node = VP_TO_TMPFS_NODE(vp);
 
 	/* Files marked as immutable or append-only cannot be deleted. */
 	if (node->tn_flags & (IMMUTABLE | APPEND)) {
+		error = EPERM;
+		goto out;
+	}
+
+	/*
+	 * Likewise, files residing on directories marked as append-only cannot
+	 * be deleted.
+	 */
+	if (dnode->tn_flags & APPEND) {
 		error = EPERM;
 		goto out;
 	}
