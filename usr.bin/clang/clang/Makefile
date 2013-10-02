@@ -10,7 +10,7 @@ SRCS=	cc1_main.cpp \
 	driver.cpp
 
 .if ${MK_SHARED_TOOLCHAIN:L} == "no"
-NO_SHARED?= yes
+LDSTATIC=-static 
 .endif
 
 LINKS=	${BINDIR}/clang ${BINDIR}/clang++ \

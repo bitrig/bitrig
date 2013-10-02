@@ -195,3 +195,6 @@ MK_CLANG_EXTRAS?=No
 
 # MK_CLANG_IS_CC controls if clang should be installed as /usr/bin/cc
 MK_CLANG_IS_CC?=Yes
+
+# MK_SHARED_TOOLCHAIN forces compiler toolchain to build static (if set to no).
+MK_SHARED_TOOLCHAIN?=Yes
