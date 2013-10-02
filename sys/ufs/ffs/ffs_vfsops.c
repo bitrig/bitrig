@@ -1024,24 +1024,6 @@ sbagain:
 		    M_UFSMNT, M_WAITOK|M_ZERO);
 	}
 
-#ifdef WAPBL
-	if (!ronly) {
-		KASSERT(fs->fs_ronly == 0);
-		/*
-		 * ffs_wapbl_start() needs mp->mnt_stat initialised if it
-		 * needs to create a new log file in-filesystem.
-		 */
-		ffs_statfs(mp, &mp->mnt_stat, curproc);
-
-		error = ffs_wapbl_start(mp);
-		if (error) {
-			free(fs->fs_csp, M_UFSMNT);
-			free(fs->fs_contigdirs, M_UFSMNT);
-			goto out;
-		}
-	}
-#endif /* WAPBL */
-
 	/*
 	 * Set FS local "last mounted on" information (NULL pad)
 	 */
@@ -1074,6 +1056,21 @@ sbagain:
 	if (fs->fs_maxfilesize > maxfilesize)			/* XXX */
 		fs->fs_maxfilesize = maxfilesize;		/* XXX */
 	if (ronly == 0) {
+#ifdef WAPBL
+		KASSERT(fs->fs_ronly == 0);
+		/*
+		 * ffs_wapbl_start() needs mp->mnt_stat initialised if it
+		 * needs to create a new log file in-filesystem.
+		 */
+		ffs_statfs(mp, &mp->mnt_stat, curproc);
+
+		error = ffs_wapbl_start(mp);
+		if (error) {
+			free(fs->fs_csp, M_UFSMNT);
+			free(fs->fs_contigdirs, M_UFSMNT);
+			goto out;
+		}
+#endif /* WAPBL */
 		if ((fs->fs_flags & FS_DOSOFTDEP) &&
 		    (error = softdep_mount(devvp, mp, fs, cred)) != 0) {
 			free(fs->fs_csp, M_UFSMNT);
