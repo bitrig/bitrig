@@ -357,6 +357,11 @@ ffs_mount(struct mount *mp, const char *path, void *data,
 			     M_UFSMNT, M_WAITOK|M_ZERO);
 
 #ifdef WAPBL
+			if (mp->mnt_flag & MNT_LOG) {
+				fs->fs_ronly = 0;
+				fs->fs_fmod = 1;
+			}
+
 			if (fs->fs_flags & FS_DOWAPBL) {
 				printf("%s: replaying log to disk\n",
 				    mp->mnt_stat.f_mntonname);
