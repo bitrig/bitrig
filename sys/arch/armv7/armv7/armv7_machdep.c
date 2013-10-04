@@ -277,7 +277,7 @@ boot(int howto)
 	if_downall();
 
 	uvm_shutdown();
-	splhigh();
+	crit_enter();
 	cold = 1;
 
 	if ((howto & (RB_DUMP | RB_HALT)) == RB_DUMP)

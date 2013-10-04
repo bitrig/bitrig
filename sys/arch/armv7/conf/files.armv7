@@ -19,7 +19,6 @@ file	arch/armv7/armv7/uboot_tags.c
 
 # CPU support and integrated peripherals
 file	arch/arm/arm/irq_dispatch.S
-file	arch/arm/arm/softintr.c
 
 # clock infrastructure
 file	arch/armv7/armv7/clock.c

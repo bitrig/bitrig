@@ -24,6 +24,7 @@
 #include <sys/kernel.h>
 #include <sys/timetc.h>
 #include <sys/evcount.h>
+#include <sys/proc.h>
 
 #include <arm/cpufunc.h>
 #include <machine/bus.h>
@@ -370,9 +371,8 @@ agtimer_setstatclockrate(int newhz)
 {
 	struct agtimer_softc	*sc = agtimer_cd.cd_devs[0];
 	int			 minint, statint;
-	int			 s;
 
-	s = splclock();
+	crit_enter();
 
 	statint = sc->sc_ticks_per_second / newhz;
 	/* calculate largest 2^n which is smaller that just over half statint */
@@ -383,7 +383,7 @@ agtimer_setstatclockrate(int newhz)
 
 	sc->sc_statmin = statint - (sc->sc_statvar >> 1);
 
-	splx(s);
+	crit_leave();
 
 	/*
 	 * XXX this allows the next stat timer to occur then it switches

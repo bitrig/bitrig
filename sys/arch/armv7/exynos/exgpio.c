@@ -22,6 +22,7 @@
 #include <sys/device.h>
 #include <sys/malloc.h>
 #include <sys/evcount.h>
+#include <sys/proc.h>
 
 #include <arm/cpufunc.h>
 
@@ -243,11 +244,10 @@ exgpio_v5_clear_bit(struct exgpio_softc *sc, unsigned int gpio)
 void
 exgpio_v5_set_dir(struct exgpio_softc *sc, unsigned int gpio, unsigned int dir)
 {
-	int s;
 	u_int32_t val;
 
 	gpio = exgpio_pin_to_offset(gpio);
-	s = splhigh();
+	crit_enter();
 
 	val = bus_space_read_4(sc->sc_iot, sc->sc_ioh, GPIO_CON(gpio));
 	val &= ~GPIO_CON_OUTPUT(gpio);
@@ -255,17 +255,16 @@ exgpio_v5_set_dir(struct exgpio_softc *sc, unsigned int gpio, unsigned int dir)
 		val |= GPIO_CON_OUTPUT(gpio);
 	bus_space_write_4(sc->sc_iot, sc->sc_ioh, GPIO_CON(gpio), val);
 
-	splx(s);
+	crit_leave();
 }
 
 unsigned int
 exgpio_v5_get_dir(struct exgpio_softc *sc, unsigned int gpio)
 {
-	int s;
 	u_int32_t val;
 
 	gpio = exgpio_pin_to_offset(gpio);
-	s = splhigh();
+	crit_enter();
 
 	val = bus_space_read_4(sc->sc_iot, sc->sc_ioh, GPIO_CON(gpio));
 	if (val & GPIO_CON_OUTPUT(gpio))
@@ -273,6 +272,6 @@ exgpio_v5_get_dir(struct exgpio_softc *sc, unsigned int gpio)
 	else
 		val = EXGPIO_DIR_IN;
 
-	splx(s);
+	crit_leave();
 	return val;
 }

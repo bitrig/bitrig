@@ -2557,7 +2557,7 @@ pmap_growkernel(vaddr_t maxkvaddr)
 	 * whoops!   we need to add kernel PTPs
 	 */
 
-	crit_enter();	/* to be safe */
+	crit_enter();
 	simple_lock(&kpm->pm_lock);
 
 	/* Map 1MB at a time */

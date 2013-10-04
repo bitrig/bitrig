@@ -43,16 +43,6 @@
 
 #define GPIO_NUM_PINS		32
 
-struct intrhand {
-	int (*ih_func)(void *);		/* handler */
-	void *ih_arg;			/* arg for handler */
-	int ih_ipl;			/* IPL_* */
-	int ih_irq;			/* IRQ number */
-	int ih_gpio;			/* gpio pin */
-	struct evcount	ih_count;
-	char *ih_name;
-};
-
 struct imxgpio_softc {
 	struct device		sc_dev;
 	bus_space_tag_t		sc_iot;

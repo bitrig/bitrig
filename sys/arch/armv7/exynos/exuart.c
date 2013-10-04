@@ -28,6 +28,7 @@
 #include <sys/fcntl.h>
 #include <sys/select.h>
 #include <sys/kernel.h>
+#include <sys/proc.h>
 
 #include <dev/cons.h>
 
@@ -49,7 +50,7 @@ struct exuart_softc {
 	struct device	sc_dev;
 	bus_space_tag_t sc_iot;
 	bus_space_handle_t sc_ioh;
-	struct soft_intrhand *sc_si;
+	struct intrsource *sc_si;
 	void *sc_irq;
 	struct tty	*sc_tty;
 	struct timeout	sc_diag_tmo;
@@ -153,7 +154,7 @@ exuartattach(struct device *parent, struct device *self, void *args)
 
 	timeout_set(&sc->sc_diag_tmo, exuart_diag, sc);
 	timeout_set(&sc->sc_dtr_tmo, exuart_raisedtr, sc);
-	sc->sc_si = softintr_establish(IPL_TTY, exuart_softint, sc);
+	sc->sc_si = ithread_softregister(IPL_TTY, exuart_softint, sc, 0);
 
 	if(sc->sc_si == NULL)
 		panic("%s: can't establish soft interrupt.",
@@ -820,30 +821,28 @@ int
 exuartcngetc(dev_t dev)
 {
 	int c;
-	int s;
-	s = splhigh();
+	crit_enter();
 	while((bus_space_read_4(exuartconsiot, exuartconsioh, EXUART_UTRSTAT) &
 	    EXUART_UTRSTAT_RXBREADY) == 0 &&
 	      (bus_space_read_4(exuartconsiot, exuartconsioh, EXUART_UFSTAT) &
 	    (EXUART_UFSTAT_RX_FIFO_CNT_MASK|EXUART_UFSTAT_RX_FIFO_FULL)) == 0)
 		;
 	c = bus_space_read_1(exuartconsiot, exuartconsioh, EXUART_URXH);
-	splx(s);
+	crit_leave();
 	return c;
 }
 
 void
 exuartcnputc(dev_t dev, int c)
 {
-	int s;
-	s = splhigh();
+	crit_enter();
 	bus_space_write_1(exuartconsiot, exuartconsioh, EXUART_UTXH, (uint8_t)c);
 	while((bus_space_read_2(exuartconsiot, exuartconsioh, EXUART_UTRSTAT) &
 	    EXUART_UTRSTAT_TXBEMPTY) != 0 &&
 	      (bus_space_read_2(exuartconsiot, exuartconsioh, EXUART_UFSTAT) &
 	    (EXUART_UFSTAT_TX_FIFO_CNT_MASK|EXUART_UFSTAT_TX_FIFO_FULL)) != 0)
 		;
-	splx(s);
+	crit_leave();
 }
 
 void

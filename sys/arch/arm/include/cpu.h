@@ -92,7 +92,7 @@
 
 #include <arm/cpuconf.h>
 
-#include <machine/intr.h>
+#include <machine/intrdefs.h>
 #ifndef _LOCORE
 #if 0
 #include <sys/user.h>
@@ -199,9 +199,11 @@ struct cpu_info {
 	u_int32_t ci_arm_cpurev;	/* CPU revision */
 	u_int32_t ci_ctrl;		/* The CPU control register */
 
-	uint32_t ci_cpl;
+	struct intrsource *ci_isources[MAX_INTR_SOURCES];
+	uint32_t ci_ilevel;
 	uint32_t ci_ipending;
 	uint32_t ci_idepth;
+	uint32_t ci_spending;
 #ifdef DIAGNOSTIC
 	int	ci_mutex_level;
 #endif
@@ -319,6 +321,7 @@ void board_startup(void);
 
 #endif	/* !_LOCORE */
 
+#include <machine/intr.h>
 #endif /* _KERNEL */
 
 #ifdef MULTIPROCESSOR

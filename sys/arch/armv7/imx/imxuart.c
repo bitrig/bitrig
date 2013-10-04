@@ -28,6 +28,7 @@
 #include <sys/fcntl.h>
 #include <sys/select.h>
 #include <sys/kernel.h>
+#include <sys/softintr.h>
 
 #include <dev/cons.h>
 
@@ -50,7 +51,7 @@ struct imxuart_softc {
 	struct device	sc_dev;
 	bus_space_tag_t sc_iot;
 	bus_space_handle_t sc_ioh;
-	struct soft_intrhand *sc_si;
+	struct intrsource *sc_si;
 	void *sc_irq;
 	struct tty	*sc_tty;
 	struct timeout	sc_diag_tmo;
@@ -103,7 +104,7 @@ void imxuart_start(struct tty *);
 void imxuart_pwroff(struct imxuart_softc *sc);
 void imxuart_diag(void *arg);
 void imxuart_raisedtr(void *arg);
-void imxuart_softint(void *arg);
+int imxuart_softint(void *arg);
 struct imxuart_softc *imxuart_sc(dev_t dev);
 
 int imxuart_intr(void *);
@@ -384,7 +385,7 @@ imxuart_raisedtr(void *arg)
 	bus_space_write_2(sc->sc_iot, sc->sc_ioh, IMXUART_UCR3, sc->sc_ucr3);
 }
 
-void
+int
 imxuart_softint(void *arg)
 {
 	struct imxuart_softc *sc = arg;
@@ -395,8 +396,9 @@ imxuart_softint(void *arg)
 	int err;
 	int s;
 
-	if (sc == NULL || sc->sc_ibufp == sc->sc_ibuf)
-		return;
+	if (sc == NULL || sc->sc_ibufp == sc->sc_ibuf) {
+		return 0;
+	}
 
 	tp = sc->sc_tty;
 	s = spltty();
@@ -406,7 +408,7 @@ imxuart_softint(void *arg)
 
 	if (ibufp == ibufend || tp == NULL || !ISSET(tp->t_state, TS_ISOPEN)) {
 		splx(s);
-		return;
+		return 0;
 	}
 
 	sc->sc_ibufp = sc->sc_ibuf = (ibufp == sc->sc_ibufs[0]) ?
@@ -441,6 +443,8 @@ imxuart_softint(void *arg)
 		c = (c & 0xff) | err;
 		(*linesw[tp->t_line].l_rint)(c, tp);
 	}
+
+	return 1;
 }
 
 int
