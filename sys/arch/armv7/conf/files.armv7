@@ -18,7 +18,6 @@ file	arch/armv7/armv7/uboot_tags.c
 
 # CPU support and integrated peripherals
 file	arch/arm/arm/irq_dispatch.S
-file	arch/arm/arm/softintr.c
 
 # Generic MD files
 file	arch/armv7/armv7/armv7.c

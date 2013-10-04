@@ -401,10 +401,8 @@ ENTRY(proc_trampoline)
 #ifdef MULTIPROCESSOR
 	bl	_C_LABEL(proc_trampoline_mp)
 #else
-	mov	r0, #(IPL_NONE)
-	bl	_C_LABEL(_spllower)
+	bl	_C_LABEL(crit_leave)
 #endif
-
 	mov	r0, r5
 	mov	r1, sp
 	mov	lr, pc

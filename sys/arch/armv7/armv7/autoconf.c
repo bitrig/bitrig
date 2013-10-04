@@ -52,6 +52,7 @@
 
 #include <machine/bootconfig.h>
 #include <machine/intr.h>
+#include <machine/cpufunc.h>
 
 struct device *bootdv = NULL;
 
@@ -71,8 +72,6 @@ device_register(struct device *dev, void *aux)
 void
 cpu_configure(void)
 {
-	softintr_init();
-
 	/*
 	 * Since various PCI interrupts could be routed via the ICU
 	 * (for PCI devices in the bridge) we need to set up the ICU
@@ -89,8 +88,7 @@ cpu_configure(void)
 	cold = 0;
 
 	/* Time to start taking interrupts so lets open the flood gates .... */
-	(void)spl0();
-
+	enable_interrupts(I32_bit);
 }
 
 /*

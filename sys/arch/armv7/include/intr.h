@@ -39,52 +39,22 @@
 #ifndef	_MACHINE_INTR_H_
 #define	_MACHINE_INTR_H_
 
+#include <machine/intrdefs.h>
+
 #ifdef _KERNEL
-
-/* Interrupt priority "levels". */
-#define	IPL_NONE	0	/* nothing */
-#define	IPL_SOFT	1	/* generic software interrupts */
-#define	IPL_SOFTCLOCK	2	/* software clock interrupt */
-#define	IPL_SOFTNET	3	/* software network interrupt */
-#define	IPL_SOFTTTY	4	/* software serial interrupt */
-#define	IPL_BIO		5	/* block I/O */
-#define	IPL_NET		6	/* network */
-#define	IPL_TTY		7	/* terminals */
-#define	IPL_VM		8	/* memory allocation */
-#define	IPL_AUDIO	9	/* audio device */
-#define	IPL_CLOCK	10	/* clock interrupt */
-#define	IPL_STATCLOCK	11	/* statistics clock interrupt */
-#define	IPL_SCHED	12	/* everything */
-#define	IPL_HIGH	12	/* everything */
-
-#define	NIPL		13
-
-/* Interrupt priority "flags". */
-#define	IPL_MPSAFE	0	/* no "mpsafe" interrupts */
-
-/* Interrupt sharing types. */
-#define	IST_NONE	0	/* none */
-#define	IST_PULSE	1	/* pulsed */
-#define	IST_EDGE	2	/* edge-triggered */
-#define	IST_LEVEL	3	/* level-triggered */
-
-#define IST_LEVEL_LOW	 IST_LEVEL
-#define IST_LEVEL_HIGH   4
-#define IST_EDGE_FALLING IST_EDGE
-#define IST_EDGE_RISING  5
-#define IST_EDGE_BOTH    6
 
 #ifndef _LOCORE
 #include <sys/device.h>
 #include <sys/queue.h>
+#include <sys/evcount.h>
+#include <sys/proc.h>
 
 int     splraise(int);
 int     spllower(int);
 void    splx(int);
 
 void	arm_do_pending_intr(int);
-void	arm_set_intr_handler(int (*raise)(int), int (*lower)(int),
-	void (*x)(int), void (*setipl)(int),
+void	arm_set_intr_handler(
 	void *(*intr_establish)(int irqno, int level, int (*func)(void *),
 	    void *cookie, char *name),
 	void (*intr_disestablish)(void *cookie),
@@ -92,10 +62,6 @@ void	arm_set_intr_handler(int (*raise)(int), int (*lower)(int),
 	void (*intr_handle)(void *));
 
 struct arm_intr_func {
-	int (*raise)(int);
-	int (*lower)(int);
-	void (*x)(int);
-	void (*setipl)(int);
 	void *(*intr_establish)(int irqno, int level, int (*func)(void *),
 	    void *cookie, char *name);
 	void (*intr_disestablish)(void *cookie);
@@ -103,11 +69,6 @@ struct arm_intr_func {
 };
 
 extern struct arm_intr_func arm_intr_func;
-
-#define splraise(cpl)		(arm_intr_func.raise(cpl))
-#define _splraise(cpl)		(arm_intr_func.raise(cpl))
-#define spllower(cpl)		(arm_intr_func.lower(cpl))
-#define splx(cpl)		(arm_intr_func.x(cpl))
 
 #define	splhigh()	splraise(IPL_HIGH)
 #define	splsoft()	splraise(IPL_SOFT)
@@ -126,14 +87,6 @@ extern struct arm_intr_func arm_intr_func;
 #define	splsched()	splhigh()
 #define	spllock()	splhigh()
 
-void arm_init_smask(void); /* XXX */
-extern uint32_t arm_smask[NIPL];
-void arm_setsoftintr(int si);
-
-#define _setsoftintr arm_setsoftintr
-
-#include <arm/softintr.h>
-    
 void *arm_intr_establish(int irqno, int level, int (*func)(void *),
     void *cookie, char *name);
 void arm_intr_disestablish(void *cookie);
@@ -161,6 +114,35 @@ void arm_splassert_check(int, const char *);
 #define splassert(wantipl)      do { /* nothing */ } while (0)
 #define splsoftassert(wantipl)  do { /* nothing */ } while (0)
 #endif
+
+struct intrsource {
+	int is_maxlevel;		/* max. IPL for this source */
+	int is_minlevel;		/* min. IPL for this source */
+	int is_pin;			/* IRQ for legacy; pin for IO APIC */
+	void (*is_run)(struct intrsource *);	/* Run callback to this source */
+	struct intrhand *is_handlers;	/* handler chain */
+	int is_flags;
+	int is_idtvec;
+	int is_scheduled;		/* proc is runnable */
+	struct proc *is_proc;		/* ithread proc */
+	struct pic *is_pic;		/* XXX PIC for ithread */
+	TAILQ_ENTRY(intrsource) entry;	/* entry in ithreads list */
+};
+
+struct intrhand {
+	int (*ih_fun)(void *);		/* handler */
+	void *ih_arg;			/* arg for handler */
+	int ih_level;			/* IPL_* */
+	int ih_flags;
+	int ih_irq;			/* IRQ number */
+	struct evcount ih_count;
+	char *ih_name;
+	struct intrhand *ih_next;
+};
+
+struct pic {
+	void (*pic_hwunmask)(struct pic *, int);
+};
 
 #endif /* ! _LOCORE */
 
