@@ -81,10 +81,11 @@ set_vn(struct fuse *f, struct fuse_vnode *v)
 }
 
 struct fuse_vnode *
-get_vn_by_name_and_parent(struct fuse *f, const char *path, ino_t parent)
+get_vn_by_name_and_parent(struct fuse *f, uint8_t *xpath, ino_t parent)
 {
 	struct fuse_vn_head *vn_head;
 	struct fuse_vnode *v = NULL;
+	const char *path = (const char *)xpath;
 
 	vn_head = dict_get(&f->name_tree, path);
 
