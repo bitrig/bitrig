@@ -54,6 +54,7 @@ _spamd: /dev/null
 _syslogd: /dev/null
 _tcpdump: /dev/null
 _tftpd: /dev/null
+_unbound: /dev/null
 _x11:   /dev/null
 _ypldap: /dev/null
 bin:	/dev/null
