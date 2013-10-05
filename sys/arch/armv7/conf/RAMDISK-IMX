@@ -142,6 +142,7 @@ radio*		at udsbr?		# USB radio
 #ubt*		at uhub? disable	# USB Bluetooth
 ugen*		at uhub?		# USB Generic driver
 
+atphy*		at mii?			# Attansic F1 PHYs
 ukphy*		at mii?			# "unknown" PHYs
 
 scsibus*	at scsi?

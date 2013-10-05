@@ -52,4 +52,5 @@ void *avic_intr_establish(int irqno, int level, int (*func)(void *),
 /* board identification - from uboot */
 #define BOARD_ID_IMX6_PHYFLEX 3529
 #define BOARD_ID_IMX6_SABRELITE 3769
+#define BOARD_ID_IMX6_WANDBOARD 4412
 extern uint32_t board_id;

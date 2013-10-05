@@ -92,6 +92,27 @@ struct board_dev sabrelite_devs[] = {
 	{ NULL,		0 }
 };
 
+struct board_dev wandboard_devs[] = {
+	{ "imxccm",	0 },
+	{ "imxiomuxc",	0 },
+	{ "imxdog",	0 },
+	{ "imxocotp",	0 },
+	{ "imxuart",	0 },
+	{ "imxgpio",	0 },
+	{ "imxgpio",	1 },
+	{ "imxgpio",	2 },
+	{ "imxgpio",	3 },
+	{ "imxgpio",	4 },
+	{ "imxgpio",	5 },
+	{ "imxgpio",	6 },
+	{ "imxenet",	0 },
+	{ "imxesdhc",	2 },
+	{ "imxesdhc",	0 },
+	{ "ehci",	0 },
+	{ "ahci",	0 },	/* only on quad, afaik. */
+	{ NULL,		0 }
+};
+
 struct board_dev *board_devs;
 
 struct imx_dev *imx_devs = NULL;
@@ -134,6 +155,11 @@ imx_attach(struct device *parent, struct device *self, void *aux)
 		printf(": i.MX6 SABRE Lite\n");
 		imx6_init();
 		board_devs = sabrelite_devs;
+		break;
+	case BOARD_ID_IMX6_WANDBOARD:
+		printf(": i.MX6 Wandboard\n");
+		imx6_init();
+		board_devs = wandboard_devs;
 		break;
 	default:
 		printf("\n");
