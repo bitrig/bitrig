@@ -1169,6 +1169,34 @@ vi.recover	 mode=01777
 # ./var/tmp
 ..
 
+# ./var/unbound
+unbound
+
+# ./var/unbound/dev
+dev
+
+# ./var/unbound/dev
+..
+
+# ./var/unbound/etc
+etc
+# ./var/unbound/etc
+..
+
+# ./var/unbound/var
+var
+
+# ./var/unbound/var/run
+run uname=root gname=_unbound mode=0775
+# ./var/unbound/var/run
+..
+
+# ./var/unbound/var
+..
+
+# ./var/unbound
+..
+
 # ./www
 www type=dir uname=root gname=daemon mode=755
 
