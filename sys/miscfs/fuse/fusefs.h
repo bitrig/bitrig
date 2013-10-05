@@ -33,6 +33,16 @@
 	{ "fusefs_pool_pages", CTLTYPE_INT }, \
 }
 
+struct fb_ioctl_xch {
+	uint64_t	fbxch_uuid;
+	size_t		fbxch_len;
+	uint8_t		*fbxch_data;
+};
+
+/* FUSE Device ioctls */
+#define FIOCGETFBDAT	_IOW('F', 0, struct fb_ioctl_xch)
+#define FIOCSETFBDAT	_IOW('F', 1, struct fb_ioctl_xch)
+
 #ifdef _KERNEL
 
 struct fuse_msg;
