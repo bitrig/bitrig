@@ -116,6 +116,9 @@ install: maninstall
 		${file} ${DESTDIR}${BINDIR}
 .endfor
 
+	${INSTALL} -C -o root -g wheel -m 0644 \
+		${.CURDIR}/doc/example.conf ${CHROOTDIR}/etc/unbound.conf
+
 BEFOREMAN= ${.OBJDIR}/config.status
 CLEANFILES+= ${MAN} doc/example.conf doc/libunbound.3
 
