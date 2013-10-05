@@ -136,6 +136,7 @@ struct fusebuf {
 /* fusebuf(9) prototypes */
 struct	fusebuf *fb_setup(size_t, ino_t, int, struct proc *);
 int	fb_queue(dev_t, struct fusebuf *);
+void	fb_delete(struct fusebuf *);
 
 #endif /* _KERNEL */
 #endif /* _SYS_FUSEBUF_H_ */

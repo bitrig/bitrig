@@ -17,6 +17,7 @@
 
 #include <sys/param.h>
 #include <sys/kernel.h>
+#include <sys/malloc.h>
 #include <sys/mount.h>
 #include <sys/pool.h>
 #include <sys/proc.h>
@@ -63,4 +64,13 @@ fb_queue(dev_t dev, struct fusebuf *fbuf)
 	}
 
 	return (fbuf->fb_err);
+}
+
+void
+fb_delete(struct fusebuf *fbuf)
+{
+	if (fbuf != NULL) {
+		free(fbuf->fb_dat, M_FUSEFS);
+		pool_put(&fusefs_fbuf_pool, fbuf);
+	}
 }

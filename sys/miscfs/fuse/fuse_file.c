@@ -16,7 +16,6 @@
  */
 
 #include <sys/param.h>
-#include <sys/pool.h>
 #include <sys/statvfs.h>
 #include <sys/vnode.h>
 #include <sys/fusebuf.h>
@@ -37,14 +36,14 @@ fusefs_file_open(struct fusefs_mnt *fmp, struct fusefs_node *ip,
 
 	error = fb_queue(fmp->dev, fbuf);
 	if (error) {
-		pool_put(&fusefs_fbuf_pool, fbuf);
+		fb_delete(fbuf);
 		return (error);
 	}
 
 	ip->fufh[fufh_type].fh_id = fbuf->fb_io_fd;
 	ip->fufh[fufh_type].fh_type = fufh_type;
 
-	pool_put(&fusefs_fbuf_pool, fbuf);
+	fb_delete(fbuf);
 	return (0);
 }
 
@@ -67,7 +66,7 @@ fusefs_file_close(struct fusefs_mnt *fmp, struct fusefs_node * ip,
 	ip->fufh[fufh_type].fh_id = (uint64_t)-1;
 	ip->fufh[fufh_type].fh_type = FUFH_INVALID;
 
-	pool_put(&fusefs_fbuf_pool, fbuf);
+	fb_delete(fbuf);
 	return (error);
 }
 
