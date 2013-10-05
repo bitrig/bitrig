@@ -38,7 +38,7 @@ fb_setup(size_t len, ino_t ino, int op, struct proc *p)
 	fbuf = pool_get(&fusefs_fbuf_pool, PR_WAITOK | PR_ZERO);
 	fbuf->fb_len = len;
 	fbuf->fb_err = 0;
-	fbuf->fb_uuid = arc4random();
+	fbuf->fb_uuid = ((uint64_t)arc4random() << 32 | arc4random());
 	fbuf->fb_type = op;
 	fbuf->fb_ino = ino;
 	if (len == 0)
