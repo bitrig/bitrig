@@ -41,6 +41,11 @@ fb_setup(size_t len, ino_t ino, int op, struct proc *p)
 	fbuf->fb_uuid = arc4random();
 	fbuf->fb_type = op;
 	fbuf->fb_ino = ino;
+	if (len == 0)
+		fbuf->fb_dat = NULL;
+	else
+		fbuf->fb_dat = (uint8_t *)malloc(len, M_FUSEFS,
+		    M_WAITOK | M_ZERO);
 
 	return (fbuf);
 }
