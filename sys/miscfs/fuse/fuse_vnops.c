@@ -770,7 +770,7 @@ fusefs_reclaim(void *v)
 	for (type = 0; type < FUFH_MAXTYPE; type++) {
 		fufh = &(ip->fufh[type]);
 		if (fufh->fh_type != FUFH_INVALID) {
-			printf("FUSE: vnode being reclaimed is valid\n");
+			printf("fusefs: vnode being reclaimed is valid\n");
 			fusefs_file_close(fmp, ip, fufh->fh_type, type,
 			    (ip->vtype == VDIR), curproc);
 		}

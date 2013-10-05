@@ -141,7 +141,7 @@ fusefs_unmount(struct mount *mp, int mntflags, struct proc *p)
 		error = fb_queue(fmp->dev, fbuf);
 
 		if (error)
-			printf("error from fuse\n");
+			printf("fusefs: error from fuse\n");
 
 		fb_delete(fbuf);
 	}
@@ -252,7 +252,7 @@ retry:
 	 * if not create it
 	 */
 	if ((error = getnewvnode(VT_FUSEFS, mp, &fusefs_vops, &nvp)) != 0) {
-		printf("fuse: getnewvnode error\n");
+		printf("fusefs: getnewvnode error\n");
 		*vpp = NULLVP;
 		return (error);
 	}

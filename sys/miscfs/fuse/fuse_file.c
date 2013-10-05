@@ -61,7 +61,7 @@ fusefs_file_close(struct fusefs_mnt *fmp, struct fusefs_node * ip,
 
 	error = fb_queue(fmp->dev, fbuf);
 	if (error)
-		printf("fuse file error %d\n", error);
+		printf("fusefs: file error %d\n", error);
 
 	ip->fufh[fufh_type].fh_id = (uint64_t)-1;
 	ip->fufh[fufh_type].fh_type = FUFH_INVALID;
