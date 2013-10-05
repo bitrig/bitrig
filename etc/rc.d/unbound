@@ -1,0 +1,23 @@
+#!/bin/sh
+#
+daemon="/usr/sbin/unbound-control"
+daemon_flags="-c /var/unbound/etc/unbound.conf"
+
+. /etc/rc.d/rc.subr
+
+pexp="unbound${daemon_flags:+ ${daemon_flags}}"
+rc_reload=NO
+
+rc_start() {
+	${rcexec} "${daemon} ${daemon_flags} start"
+}
+
+rc_check() {
+	${daemon} ${daemon_flags} status
+}
+
+rc_stop() {
+	${daemon} ${daemon_flags} stop
+}
+
+rc_cmd $1
