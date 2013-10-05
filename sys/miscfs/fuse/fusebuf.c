@@ -41,7 +41,6 @@ fb_setup(size_t len, ino_t ino, int op, struct proc *p)
 	fbuf->fb_uuid = arc4random();
 	fbuf->fb_type = op;
 	fbuf->fb_ino = ino;
-	fbuf->fb_resid = -1;
 
 	return (fbuf);
 }
