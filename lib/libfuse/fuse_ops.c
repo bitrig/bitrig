@@ -93,12 +93,10 @@ static int
 ifuse_ops_getattr(struct fuse *f, struct fusebuf *fbuf)
 {
 	struct fuse_vnode *vn;
-	struct stat st;
 	char *realname;
 
 	DPRINTF("Opcode:\tgetattr\n");
 	DPRINTF("Inode:\t%llu\n", fbuf->fb_ino);
-	bzero(&st, sizeof(st));
 
 	bzero(&fbuf->fb_vattr, sizeof(fbuf->fb_vattr));
 
