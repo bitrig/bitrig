@@ -177,6 +177,7 @@
 /var/named/standard/localhost
 /var/named/standard/loopback
 /var/named/standard/loopback6.arpa
+/var/unbound/etc/unbound.conf
 /var/www/conf/access.conf
 /var/www/conf/httpd.conf
 /var/www/conf/mime.types
