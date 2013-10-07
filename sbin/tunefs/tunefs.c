@@ -401,8 +401,8 @@ usage(void)
 
 	fprintf(stderr,
 	    "usage: %s [-AFN] [-e maxbpg] [-g avgfilesize] "
-	    "[-h avgfpdir] [-m minfree]\n"
-	    "\t[-o optimize_preference] special | filesys\n",
+	    "[-h avgfpdir] [-l logfilesize]\n\t[-m minfree]"
+	    " [-o optimize_preference] special | filesys\n",
 	    __progname);
 
 	exit(2);
