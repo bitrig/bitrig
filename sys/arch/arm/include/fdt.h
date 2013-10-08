@@ -47,6 +47,7 @@ struct fdt {
 
 #define FDT_CODE_VERSION 0x11
 
+u_int32_t fdt_get_size(void *);
 int	 fdt_init(void *);
 void	*fdt_next_node(void *);
 void	*fdt_child_node(void *);
@@ -56,6 +57,7 @@ int	 fdt_node_property(void *, char *, char **);
 void	*fdt_parent_node(void *);
 #ifdef DEBUG
 void	*fdt_print_property(void *, int);
-void 	 fdt_print_node(void *, int);
+void	 fdt_print_node(void *, int);
+void	 fdt_print_node_recurse(void *, int);
 void	 fdt_print_tree(void);
 #endif
