@@ -59,8 +59,17 @@ id=`basename "${d}"`
 ost="Bitrig"
 osr="0.1"
 
-branch=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
-commit=`git log -1 --format="%H"`
+git_tag=
+git_branch=
+git_commit=
+
+if type git 1>/dev/null 2>&1 ; then
+	git_branch=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3`
+	git_commit=`git log -1 --format="%H"`
+	if [ x${git_branch} != x"" -a x${git_commit} != x"" ]; then
+		git_tag="    ${git_branch}:${git_commit}\n"
+	fi
+fi
 
 cat >vers.c <<eof
 #define STATUS "-current"		/* just after a release */
@@ -76,9 +85,9 @@ const char sccs[] =
     "    @(#)${ost} ${osr}" STATUS " (${id}) #${v}: ${t}\n";
 const char version[] =
     "${ost} ${osr}" STATUS " (${id}) #${v}: ${t}\n    ${u}@${h}:${d}\n"
-    "    ${branch}:${commit}\n";
-const char osbranch[] = "${branch}";
-const char oscommit[] = "${commit}";
+    "${git_tag}";
+const char osbranch[] = "${git_branch}";
+const char oscommit[] = "${git_commit}";
 eof
 
 expr ${v} + 1 > version
