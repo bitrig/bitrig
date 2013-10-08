@@ -32,26 +32,68 @@
 # machine dependent section of installation/upgrade script.
 #
 
+# This code runs when the script is initally sourced to set up 
+# MDSETS, SANESETS and DEFAULTSETS 
+
+dmesg | grep "^omap0 at mainbus0:" >/dev/null
+if [[ $? == 0 ]]; then
+        MDPLAT=OMAP
+	LOADADDR=0x82800000
+fi
+dmesg | grep "^imx0 at mainbus0:" >/dev/null
+if [[ $? == 0 ]]; then
+        MDPLAT=IMX
+	LOADADDR=0x18800000
+fi
+
+MDSETS="bsd.${MDPLAT} bsd.rd.${MDPLAT} bsd.${MDPLAT}.umg bsd.rd.${MDPLAT}.umg"
+SANESETS="bsd.${MDPLAT}"
+DEFAULTSETS=${MDSETS}
+
 md_installboot() {
 	local _disk=$1
 	mount /dev/${_disk}i /mnt/mnt
-	/mnt/usr/sbin/chroot /mnt /usr/sbin/mkuboot -a arm -o linux \
-		-e 0x80300000 -l 0x80300000 /bsd /mnt/bsd.umg
-	cp -r /tmp/u-boots/* /mnt/usr/mdec/
+
 	BEAGLE=$(scan_dmesg '/^omap0 at mainbus0: \(BeagleBoard\).*/s//\1/p')
 	BEAGLEBONE=$(scan_dmesg '/^omap0 at mainbus0: \(BeagleBone\).*/s//\1/p')
 	PANDA=$(scan_dmesg '/^omap0 at mainbus0: \(PandaBoard\)/s//\1/p')
-	if [[ -n $BEAGLE ]]; then
-		cp /mnt/usr/mdec/beagle/{mlo,u-boot.bin} /mnt/mnt/
-	elif [[ -n $BEAGLEBONE ]]; then
-		cp /mnt/usr/mdec/am335x/{mlo,u-boot.img} /mnt/mnt/
-	elif [[ -n $PANDA ]]; then
-		cp /mnt/usr/mdec/panda/{mlo,u-boot.bin} /mnt/mnt/
-	fi
-	cat > /mnt/mnt/uenv.txt<<__EOT
-bootcmd=mmc rescan ; setenv loadaddr 0x82800000 ; setenv bootargs sd0i:/bsd.umg ; fatload mmc 0 \${loadaddr} bsd.umg ; bootm \${loadaddr} ;
+	IMX=$(scan_dmesg '/^imx0 at mainbus0: \(i.MX6.*\)/s//IMX/p')
+
+        if [[ -f /mnt/bsd.${MDPLAT} ]]; then
+                mv /mnt/bsd.${MDPLAT} /mnt/bsd
+        fi
+        if [[ -f /mnt/bsd.${MDPLAT}.umg ]]; then
+                mv /mnt/bsd.${MDPLAT}.umg /mnt/mnt/bsd.umg
+        fi
+        if [[ -f /mnt/bsd.mp.${MDPLAT} ]]; then
+                mv /mnt/bsd.mp.${MDPLAT} /mnt/bsd.mp
+        fi
+        if [[ -f /mnt/bsd.rd.${MDPLAT} ]]; then
+                mv /mnt/bsd.rd.${MDPLAT} /mnt/bsd.rd
+        fi
+        if [[ -f /mnt/bsd.rd.${MDPLAT}.umg ]]; then
+                mv /mnt/bsd.rd.${MDPLAT}.umg /mnt/mnt/bsdrd.umg
+        fi
+
+	if [[ ${MDPLAT} == "OMAP" ]]; then
+		cp -r /tmp/u-boots/* /mnt/usr/mdec/
+		if [[ -n $BEAGLE ]]; then
+			cp /mnt/usr/mdec/beagle/{mlo,u-boot.bin} /mnt/mnt/
+		elif [[ -n $BEAGLEBONE ]]; then
+			cp /mnt/usr/mdec/am335x/{mlo,u-boot.img} /mnt/mnt/
+		elif [[ -n $PANDA ]]; then
+			cp /mnt/usr/mdec/panda/{mlo,u-boot.bin} /mnt/mnt/
+		fi
+		cat > /mnt/mnt/uenv.txt<<__EOT
+bootcmd=mmc rescan ; setenv loadaddr ${LOADADDR}; setenv bootargs sd0i:/bsd.umg ; fatload mmc 0 \${loadaddr} bsd.umg ; bootm \${loadaddr} ;
 uenvcmd=boot
 __EOT
+	else 
+		cat > /mnt/tmp/6x_bootscript.scr<<__EOT
+; setenv loadaddr ${LOADADDR} ; setenv bootargs sd0i:/bsd.umg ; for dtype in mmc sata ; do for disk in 0 1 ; do \${dtype} dev \${disk} ; for fsin msdos ext2 ; do \${fs}load \${dtype} \${disk}:1 \${loadaddr} bsd.umg ; bootm \${loadaddr} ; done; done; done; echo; echo failed to load bsd.umg 
+__EOT
+		/mnt/usr/sbin/chroot /mnt /usr/sbin/mkuboot -t script -a arm -o linux /mnt/tmp/6x_bootscript.cmd /mnt/6x_bootscript.scr
+	fi
 }
 
 md_prep_fdisk() {
