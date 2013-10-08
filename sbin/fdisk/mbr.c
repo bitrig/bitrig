@@ -1,4 +1,4 @@
-/*	$OpenBSD: mbr.c,v 1.30 2013/06/11 16:42:04 deraadt Exp $	*/
+/*	$OpenBSD: mbr.c,v 1.31 2013/10/08 15:45:43 krw Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -65,7 +65,7 @@ void
 MBR_init(disk_t *disk, mbr_t *mbr)
 {
 	daddr_t i;
-	int adj;
+	u_int64_t adj;
 	extern int g_flag;
 
 	if (g_flag) {
@@ -123,8 +123,7 @@ MBR_init(disk_t *disk, mbr_t *mbr)
 	i = 1;
 	while (i < DL_SECTOBLK(&dl, mbr->part[3].bs))
 		i *= 2;
-	i = DL_BLKTOSEC(&dl, i);
-	adj = i - mbr->part[3].bs;
+	adj = DL_BLKTOSEC(&dl, i) - mbr->part[3].bs;
 	mbr->part[3].bs += adj;
 	mbr->part[3].ns -= adj; 
 	PRT_fix_CHS(disk, &mbr->part[3]);
