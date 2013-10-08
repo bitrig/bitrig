@@ -148,6 +148,7 @@
 #include <machine/machine_reg.h>
 #include <armv7/exynos/exvar.h>
 #include <armv7/exynos/exdisplayvar.h>
+#include <machine/fdt.h>
 
 #include "wsdisplay.h"
 
@@ -471,6 +472,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	int loop1;
 	u_int l1pagetable;
 	pv_addr_t kernel_l1pt;
+	pv_addr_t fdt;
 	paddr_t memstart;
 	psize_t memsize;
 	extern u_int32_t esym;  /* &_end if no symbols are loaded */
@@ -520,45 +522,67 @@ initarm(void *arg0, void *arg1, void *arg2)
 	printf("\nBitrig/exynos booting ...\n");
 
 	printf("arg0 %p arg1 %p arg2 %p\n", arg0, arg1, arg2);
-	parse_uboot_tags(arg2);
 
-	/*
-	 * Examine the boot args string for options we need to know about
-	 * now.
-	 */
-	process_kernel_args(bootconfig.bootstring);
-#ifdef RAMDISK_HOOKS
-        boothowto |= RB_DFLTROOT;
-#endif /* RAMDISK_HOOKS */
-
-	/* normally u-boot will set up bootconfig.dramblocks */
-	if (bootconfig.dramblocks == 0) {
-		memstart = SDRAM_START;
-		memsize = 0x10000000; /* 256 MB */
-		/* Fake bootconfig structure for the benefit of pmap.c */
-		/* XXX must make the memory description h/w independant */
-		bootconfig.dram[0].address = memstart;
-		bootconfig.dram[0].pages = memsize / PAGE_SIZE;
-		bootconfig.dramblocks = 1;
+	if (fdt_init(arg2)) {
+		void *node;
+		node = fdt_find_node("/chosen");
+		if (node != NULL) {
+			char *bootargs;
+			if (fdt_node_property(node, "bootargs", &bootargs))
+				process_kernel_args(bootargs);
+		}
+		node = fdt_find_node("/memory");
+		if (node != NULL) {
+			uint32_t *mem;
+			if (fdt_node_property(node, "reg", (char **)&mem) >= 2*sizeof(uint32_t)) {
+				memstart = betoh32(*mem++);
+				memsize = betoh32(*mem);
+				physical_start = memstart;
+				physical_end = physical_start + memsize;
+			}
+		}
 	} else {
-		memstart = bootconfig.dram[0].address;
-		memsize = bootconfig.dram[0].pages * PAGE_SIZE;
+		parse_uboot_tags(arg2);
+
+		/*
+		 * Examine the boot args string for options we need to know about
+		 * now.
+		 */
+		process_kernel_args(bootconfig.bootstring);
+
+		/* normally u-boot will set up bootconfig.dramblocks */
+		if (bootconfig.dramblocks == 0) {
+			memstart = SDRAM_START;
+			memsize = 0x10000000; /* 256 MB */
+			/* Fake bootconfig structure for the benefit of pmap.c */
+			/* XXX must make the memory description h/w independant */
+			bootconfig.dram[0].address = memstart;
+			bootconfig.dram[0].pages = memsize / PAGE_SIZE;
+			bootconfig.dramblocks = 1;
+		} else {
+			memstart = bootconfig.dram[0].address;
+			memsize = bootconfig.dram[0].pages * PAGE_SIZE;
+		}
+
+		/*
+		 * Set up the variables that define the availablilty of
+		 * physical memory.  For now, we're going to set
+		 * physical_freestart to 0xa0200000 (where the kernel
+		 * was loaded), and allocate the memory we need downwards.
+		 * If we get too close to the page tables that RedBoot
+		 * set up, we will panic.  We will update physical_freestart
+		 * and physical_freeend later to reflect what pmap_bootstrap()
+		 * wants to see.
+		 *
+		 * XXX pmap_bootstrap() needs an enema.
+		 */
+		physical_start = bootconfig.dram[0].address;
+		physical_end = physical_start + (bootconfig.dram[0].pages * PAGE_SIZE);
 	}
 
-	/*
-	 * Set up the variables that define the availablilty of
-	 * physical memory.  For now, we're going to set
-	 * physical_freestart to 0xa0200000 (where the kernel
-	 * was loaded), and allocate the memory we need downwards.
-	 * If we get too close to the page tables that RedBoot
-	 * set up, we will panic.  We will update physical_freestart
-	 * and physical_freeend later to reflect what pmap_bootstrap()
-	 * wants to see.
-	 *
-	 * XXX pmap_bootstrap() needs an enema.
-	 */
-	physical_start = bootconfig.dram[0].address;
-	physical_end = physical_start + (bootconfig.dram[0].pages * PAGE_SIZE);
+#ifdef RAMDISK_HOOKS
+	boothowto |= RB_DFLTROOT;
+#endif /* RAMDISK_HOOKS */
 
 	{
 		physical_freestart = (((unsigned long)esym - KERNEL_TEXT_BASE +0xfff) & ~0xfff) + memstart;
@@ -662,6 +686,15 @@ initarm(void *arg0, void *arg1, void *arg2)
 #endif
 
 	/*
+	 * Allocate pages for an FDT copy.
+	 */
+	if (fdt_get_size(arg2)) {
+		uint32_t size = fdt_get_size(arg2);
+		valloc_pages(fdt, round_page(size) / PAGE_SIZE);
+		memcpy((void *)fdt.pv_pa, arg2, size);
+	}
+
+	/*
 	 * XXX Defer this to later so that we can reclaim the memory
 	 * XXX used by the RedBoot page tables.
 	 */
@@ -759,6 +792,12 @@ initarm(void *arg0, void *arg1, void *arg2)
 	    VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE, PTE_CACHE);
 #endif
 
+	/* Map the FDT. */
+	if (fdt.pv_va && fdt.pv_pa)
+		pmap_map_chunk(l1pagetable, fdt.pv_va, fdt.pv_pa,
+		    round_page(fdt_get_size((void *)fdt.pv_pa)),
+		    VM_PROT_READ | VM_PROT_WRITE, PTE_CACHE);
+
 	/*
 	 * map integrated peripherals at same address in l1pagetable
 	 * so that we can continue to use console.
@@ -819,6 +858,10 @@ initarm(void *arg0, void *arg1, void *arg2)
 	data_abort_handler_address = (u_int)data_abort_handler;
 	prefetch_abort_handler_address = (u_int)prefetch_abort_handler;
 	undefined_handler_address = (u_int)undefinedinstruction_bounce;
+
+	/* Now we can reinit the FDT, using the virtual address. */
+	if (fdt.pv_va && fdt.pv_pa)
+		fdt_init((void *)fdt.pv_va);
 
 	/* Initialise the undefined instruction handlers */
 #ifdef VERBOSE_INIT_ARM

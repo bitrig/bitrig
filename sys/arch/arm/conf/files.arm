@@ -103,6 +103,9 @@ file	lib/libkern/arch/arm/divsi3.S
 file	lib/libkern/arch/arm/memcpy.S
 file	lib/libkern/arch/arm/memmove.S
 
+# fdt
+file	arch/arm/arm/fdt.c
+
 # quad support is necessary for 32 bit architectures
 file	lib/libkern/adddi3.c
 file	lib/libkern/anddi3.c

@@ -29,6 +29,7 @@
 #include <arm/cpufunc.h>
 #include <machine/bus.h>
 #include <arm/cortex/cortex.h>
+#include <machine/fdt.h>
 
 /* offset from periphbase */
 #define ICP_ADDR	0x100
@@ -203,19 +204,34 @@ ampintc_attach(struct device *parent, struct device *self, void *args)
 	int i, nintr;
 	bus_space_tag_t		iot;
 	bus_space_handle_t	d_ioh, p_ioh;
+	void *node = NULL;
+	uint32_t icp, icpsize, icd, icdsize;
 
 	ampintc = sc;
 
 	arm_init_smask();
 
 	iot = ia->ca_iot;
+	icp = ia->ca_periphbase + ICP_ADDR;
+	icpsize = ICP_SIZE;
+	icd = ia->ca_periphbase + ICD_ADDR;
+	icdsize = ICD_SIZE;
 
-	if (bus_space_map(iot, ia->ca_periphbase + ICP_ADDR,
-	    ICP_SIZE, 0, &p_ioh))
+	node = fdt_find_node("/interrupt-controller");
+	if (node != NULL) {
+		uint32_t *reg;
+		if (fdt_node_property(node, "reg", (char **)&reg) == 4*sizeof(uint32_t)) {
+			icd = betoh32(*reg++);
+			icdsize = betoh32(*reg++);
+			icp = betoh32(*reg++);
+			icpsize = betoh32(*reg++);
+		}
+	}
+
+	if (bus_space_map(iot, icp, icpsize, 0, &p_ioh))
 		panic("ampintc_attach: ICP bus_space_map failed!");
 
-	if (bus_space_map(iot, ia->ca_periphbase + ICD_ADDR,
-	    ICD_SIZE, 0, &d_ioh))
+	if (bus_space_map(iot, icd, icdsize, 0, &d_ioh))
 		panic("ampintc_attach: ICD bus_space_map failed!");
 
 	sc->sc_iot = iot;
