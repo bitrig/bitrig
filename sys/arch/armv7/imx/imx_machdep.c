@@ -853,6 +853,10 @@ initarm(void *arg0, void *arg1, void *arg2)
 #endif
 
 	switch (board_id) {
+	case BOARD_ID_IMX6_C1:
+		amptimer_frequency = 396 * 1000 * 1000;
+		printf("board type: C1\n");
+		break;
 	case BOARD_ID_IMX6_PHYFLEX:
 		amptimer_frequency = 396 * 1000 * 1000;
 		printf("board type: phyFLEX-i.MX6\n");
@@ -949,6 +953,9 @@ consinit(void)
 	consinit_called = 1;
 
 	switch (board_id) {
+	case BOARD_ID_IMX6_C1:
+		paddr = 0x02020000;
+		break;
 	case BOARD_ID_IMX6_PHYFLEX:
 		paddr = 0x021f0000;
 		break;

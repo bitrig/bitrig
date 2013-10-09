@@ -50,6 +50,25 @@ struct board_dev {
 	int unit;
 };
 
+struct board_dev c1_devs[] = {
+	{ "imxccm",	0 },
+	{ "imxiomuxc",	0 },
+	{ "imxdog",	0 },
+	{ "imxocotp",	0 },
+	{ "imxuart",	1 },
+	{ "imxgpio",	0 },
+	{ "imxgpio",	1 },
+	{ "imxgpio",	2 },
+	{ "imxgpio",	3 },
+	{ "imxgpio",	4 },
+	{ "imxgpio",	5 },
+	{ "imxgpio",	6 },
+	{ "imxesdhc",	1 },
+	{ "ehci",	0 },
+	{ "imxenet",	0 },
+	{ NULL,		0 }
+};
+
 struct board_dev phyflex_imx6_devs[] = {
 	{ "imxccm",	0 },
 	{ "imxiomuxc",	0 },
@@ -146,6 +165,11 @@ imx_attach(struct device *parent, struct device *self, void *aux)
 	struct board_dev *bd;
 
 	switch (board_id) {
+	case BOARD_ID_IMX6_C1:
+		printf(": SolidRun C1\n");
+		imx6_init();
+		board_devs = c1_devs;
+		break;
 	case BOARD_ID_IMX6_PHYFLEX:
 		printf(": PhyFLEX-i.MX6\n");
 		imx6_init();

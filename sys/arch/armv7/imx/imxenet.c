@@ -137,9 +137,11 @@
 #define ENET_MII_CLK		2500
 #define ENET_ALIGNMENT		16
 
+#define ENET_C1_PHY		0
+#define ENET_C1_PHY_RST		(3*32+15)
 #define ENET_SABRELITE_PHY	6
 #define ENET_PHYFLEX_PHY	3
-#define ENET_PHYFLEX_PHY_RST	87
+#define ENET_PHYFLEX_PHY_RST	(2*32+23)
 #define ENET_WANDBOARD_PHY	1
 
 #define HREAD4(sc, reg)							\
@@ -226,6 +228,12 @@ imxenet_attach(struct device *parent, struct device *self, void *args)
 
 	switch (board_id)
 	{
+	case BOARD_ID_IMX6_C1:
+		imxgpio_set_dir(ENET_C1_PHY_RST, IMXGPIO_DIR_OUT);
+		delay(10);
+		imxgpio_set_bit(ENET_C1_PHY_RST);
+		delay(10);
+		break;
 	case BOARD_ID_IMX6_PHYFLEX:
 	case BOARD_ID_IMX6_SABRELITE:
 		/* phyFLEX i.MX6 and SABRE Lite PHY reset */
@@ -358,11 +366,14 @@ imxenet_chip_init(struct imxenet_softc *sc)
 
 	switch (board_id)
 	{
-	case BOARD_ID_IMX6_SABRELITE:
-		phy = ENET_SABRELITE_PHY;
+	case BOARD_ID_IMX6_C1:
+		phy = ENET_C1_PHY;
 		break;
 	case BOARD_ID_IMX6_PHYFLEX:
 		phy = ENET_PHYFLEX_PHY;
+		break;
+	case BOARD_ID_IMX6_SABRELITE:
+		phy = ENET_SABRELITE_PHY;
 		break;
 	case BOARD_ID_IMX6_WANDBOARD:
 		phy = ENET_WANDBOARD_PHY;
@@ -372,7 +383,7 @@ imxenet_chip_init(struct imxenet_softc *sc)
 	switch (board_id)
 	{
 	case BOARD_ID_IMX6_PHYFLEX:
-	case BOARD_ID_IMX6_SABRELITE:
+	case BOARD_ID_IMX6_SABRELITE:	/* Micrel KSZ9021 */
 		/* prefer master mode */
 		imxenet_miibus_writereg(dev, phy, 0x9, 0x1f00);
 
@@ -392,7 +403,8 @@ imxenet_chip_init(struct imxenet_softc *sc)
 		/* enable all interrupts */
 		imxenet_miibus_writereg(dev, phy, 0x1b, 0xff00);
 		break;
-	case BOARD_ID_IMX6_WANDBOARD:
+	case BOARD_ID_IMX6_C1:		/* AR8035 */
+	case BOARD_ID_IMX6_WANDBOARD:	/* AR8031 */
 		/* disable SmartEEE */
 		imxenet_miibus_writereg(dev, phy, 0x0d, 0x0003);
 		imxenet_miibus_writereg(dev, phy, 0x0e, 0x805d);
@@ -400,7 +412,7 @@ imxenet_chip_init(struct imxenet_softc *sc)
 		reg = imxenet_miibus_readreg(dev, phy, 0x0e);
 		imxenet_miibus_writereg(dev, phy, 0x0e, reg & ~0x0100);
 
-		/* enable 125MHz clk output for AR8031 */
+		/* enable 125MHz clk output */
 		imxenet_miibus_writereg(dev, phy, 0x0d, 0x0007);
 		imxenet_miibus_writereg(dev, phy, 0x0e, 0x8016);
 		imxenet_miibus_writereg(dev, phy, 0x0d, 0x4007);
