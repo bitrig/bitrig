@@ -251,6 +251,14 @@ The changeable column shows whether a process with appropriate
 privileges may change the value.
 .Bl -column "Second level name" "integer" "Changeable" -offset indent
 .It Sy "Second level name" Ta Sy "Type" Ta Sy "Changeable"
+.It Dv FS_POSIX Ta "node" Ta "not applicable"
+.El
+.Bl -tag -width "123456"
+.It Dv FS_POSIX
+Variables affecting POSIX compliance of file system operations.
+Currently only one variable is implemented.
+.Bl -column "FS_POSIX_SETUID" "integer" "Changeable" -offset indent
+.It Sy "Third level name" Ta Sy "Type" Ta Sy Changeable
 .It Dv FS_POSIX_SETUID Ta "integer" Ta "yes"
 .El
 .Bl -tag -width "123456"
@@ -264,6 +272,7 @@ bits to be cleared.
 As detailed in
 .Xr securelevel 7 ,
 this variable may not be changed if the securelevel is \*(Gt 0.
+.El
 .El
 .Ss CTL_HW
 The string and integer information available for the
