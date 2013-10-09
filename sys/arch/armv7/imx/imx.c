@@ -65,6 +65,7 @@ struct board_dev c1_devs[] = {
 	{ "imxgpio",	6 },
 	{ "imxesdhc",	1 },
 	{ "ehci",	0 },
+	{ "ehci",	1 },
 	{ "imxenet",	0 },
 	{ NULL,		0 }
 };

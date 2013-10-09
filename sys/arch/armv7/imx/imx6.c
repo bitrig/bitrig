@@ -319,6 +319,17 @@ struct imx_dev imx6_devs[] = {
 	  .irq = { USBH1_IRQ }
 	},
 
+	{ .name = "ehci",
+	  .unit = 1,
+	  .mem = {
+		  { USBOTG_EHCI_ADDR, USBx_SIZE },
+		  { USBOTG_ADDR, USBx_SIZE },
+		  { USBPHY1_ADDR, USBPHYx_SIZE },
+		  { USBNC_ADDR, USBx_SIZE },
+	  },
+	  .irq = { USBOTG_IRQ }
+	},
+
 	/*
 	 * Ethernet
 	 */

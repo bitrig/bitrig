@@ -50,18 +50,29 @@
 #define USBPHY_CTRL_SFTRST		(1 << 31)
 
 /* ehci */
-#define EHCI_USBMODE			0x68
+#define EHCI_USBMODE			0xa8
 
 #define EHCI_USBMODE_HOST		(3 << 0)
 #define EHCI_PS_PTS_UTMI_MASK	((1 << 25) | (3 << 30))
 
 /* usb non-core */
+#define USBNC_USB_OTG_CTRL		0x00
 #define USBNC_USB_UH1_CTRL		0x04
 
+#define USBNC_USB_OTG_CTRL_OVER_CUR_POL	(1 << 8)
+#define USBNC_USB_OTG_CTRL_OVER_CUR_DIS	(1 << 7)
 #define USBNC_USB_UH1_CTRL_OVER_CUR_POL	(1 << 8)
 #define USBNC_USB_UH1_CTRL_OVER_CUR_DIS	(1 << 7)
 
+/* port specific addresses */
+#define USBOTG_EHCI_ADDR	0x02184100
+#define USBUH1_EHCI_ADDR	0x02184300
+#define USBUH2_EHCI_ADDR	0x02184500
+#define USBUH3_EHCI_ADDR	0x02184700
+
 /* board specific */
+#define EHCI_C1_USB_H1_PWR		0
+#define EHCI_C1_USB_OTG_PWR		(2*32+22)
 #define EHCI_PHYFLEX_USB_H1_PWR		0
 #define EHCI_PHYFLEX_USB_OTG_PWR	111
 
@@ -120,28 +131,58 @@ imxehci_attach(struct device *parent, struct device *self, void *aux)
 
 	printf("\n");
 
-	/* enable usb port power */
-	switch (board_id)
-	{
-	case BOARD_ID_IMX6_PHYFLEX:
-		imxgpio_set_dir(EHCI_PHYFLEX_USB_H1_PWR, IMXGPIO_DIR_OUT);
-		delay(10);
-		imxgpio_set_bit(EHCI_PHYFLEX_USB_H1_PWR);
-		delay(10);
-		break;
-	}
-
 	imxccm_enable_usboh3();
 	delay(1000);
-	/* disable the carger detection, else signal on DP will be poor */
-	imxccm_disable_usb2_chrg_detect();
-	/* power host 1 */
-	imxccm_enable_pll_usb2();
 
-	/* over current and polarity setting */
-	bus_space_write_4(sc->sc.iot, sc->nc_ioh, USBNC_USB_UH1_CTRL,
-	    bus_space_read_4(sc->sc.iot, sc->nc_ioh, USBNC_USB_UH1_CTRL) |
-	    (USBNC_USB_UH1_CTRL_OVER_CUR_POL | USBNC_USB_UH1_CTRL_OVER_CUR_DIS));
+	if (ia->ia_dev->mem[0].addr == USBUH1_EHCI_ADDR) {
+		/* enable usb port power */
+		switch (board_id)
+		{
+		case BOARD_ID_IMX6_C1:
+			imxgpio_set_dir(EHCI_C1_USB_H1_PWR, IMXGPIO_DIR_OUT);
+			delay(10);
+			imxgpio_set_bit(EHCI_C1_USB_H1_PWR);
+			delay(10);
+			break;
+		case BOARD_ID_IMX6_PHYFLEX:
+			imxgpio_set_dir(EHCI_PHYFLEX_USB_H1_PWR, IMXGPIO_DIR_OUT);
+			delay(10);
+			imxgpio_set_bit(EHCI_PHYFLEX_USB_H1_PWR);
+			delay(10);
+			break;
+		}
+
+		/* disable the carger detection, else signal on DP will be poor */
+		imxccm_disable_usb2_chrg_detect();
+		/* power host 1 */
+		imxccm_enable_pll_usb2();
+
+		/* over current and polarity setting */
+		bus_space_write_4(sc->sc.iot, sc->nc_ioh, USBNC_USB_UH1_CTRL,
+		    bus_space_read_4(sc->sc.iot, sc->nc_ioh, USBNC_USB_UH1_CTRL) |
+		    (USBNC_USB_UH1_CTRL_OVER_CUR_POL | USBNC_USB_UH1_CTRL_OVER_CUR_DIS));
+	} else if (ia->ia_dev->mem[0].addr == USBOTG_EHCI_ADDR) {
+		/* enable usb port power */
+		switch (board_id)
+		{
+		case BOARD_ID_IMX6_C1:
+			imxgpio_set_dir(EHCI_C1_USB_OTG_PWR, IMXGPIO_DIR_OUT);
+			delay(10);
+			imxgpio_set_bit(EHCI_C1_USB_OTG_PWR);
+			delay(10);
+			break;
+		}
+
+		/* disable the carger detection, else signal on DP will be poor */
+		imxccm_disable_usb1_chrg_detect();
+		/* power host 0 */
+		imxccm_enable_pll_usb1();
+
+		/* over current and polarity setting */
+		bus_space_write_4(sc->sc.iot, sc->nc_ioh, USBNC_USB_OTG_CTRL,
+		    bus_space_read_4(sc->sc.iot, sc->nc_ioh, USBNC_USB_OTG_CTRL) |
+		    (USBNC_USB_OTG_CTRL_OVER_CUR_POL | USBNC_USB_OTG_CTRL_OVER_CUR_DIS));
+	}
 
 	bus_space_write_4(sc->sc.iot, sc->ph_ioh, USBPHY_CTRL_CLR,
 	    USBPHY_CTRL_CLKGATE);

@@ -25,6 +25,8 @@ unsigned int imxccm_get_ipg_perclk(void);
 unsigned int imxccm_get_ahbclk(void);
 void imxccm_enable_i2c(int x);
 void imxccm_enable_usboh3(void);
+void imxccm_disable_usb1_chrg_detect(void);
+void imxccm_enable_pll_usb1(void);
 void imxccm_disable_usb2_chrg_detect(void);
 void imxccm_enable_pll_usb2(void);
 void imxccm_enable_enet(void);
