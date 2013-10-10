@@ -1,4 +1,4 @@
-#	$OpenBSD: files.armv7,v 1.1 2013/09/04 14:38:25 patrick Exp $
+#	$OpenBSD: files.omap,v 1.2 2013/10/10 19:40:02 syl Exp $
 
 # note that the order of the devices in _this_ file
 # affects the order that the devices will configure.
@@ -32,7 +32,11 @@ file	arch/armv7/omap/sitara_cm.c		sitaracm
 
 device omgpio
 attach omgpio at omap
-file   arch/armv7/omap/omgpio.c			omgpio
+file	arch/armv7/omap/omgpio.c		omgpio
+
+device edma
+attach edma at omap
+file	arch/armv7/omap/edma.c			edma
 
 device intc
 attach intc at omap
