@@ -146,6 +146,19 @@ start_daemon()
 
 make_keys()
 {
+	if [ X"${unbound_flags}" != X"NO" ]; then
+		if ! [[ -f /var/unbound/etc/unbound_server.pem ||
+		    -f /var/unbound/etc/unbound_control.key ||
+		    -f /var/unbound/etc/unbound_control.pem ]]; then
+			echo -n "unbound-control-setup: generating keys... "
+			if unbound-control-setup >/dev/null 2>&1; then
+				echo done.
+			else
+				echo failed.
+			fi
+		fi
+	fi
+
 	if [ X"${named_flags}" != X"NO" ]; then
 		if ! cmp -s /etc/rndc.key /var/named/etc/rndc.key ; then
 			echo -n "rndc-confgen: generating shared secret... "
@@ -402,7 +415,7 @@ dmesg >/var/run/dmesg.boot
 make_keys
 
 echo -n 'starting early daemons:'
-start_daemon syslogd ldattach pflogd named nsd ntpd isakmpd iked sasyncd
+start_daemon syslogd ldattach pflogd unbound named nsd ntpd isakmpd iked sasyncd
 start_daemon ldapd npppd
 echo '.'
 

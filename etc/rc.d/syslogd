@@ -15,6 +15,8 @@ rc_pre() {
 		daemon_flags="${daemon_flags} -a /var/named/dev/log"
 	[ X"${nsd_flags}" != X"NO" ] && rm -f /var/nsd/dev/log && \
 		daemon_flags="${daemon_flags} -a /var/nsd/dev/log"
+	[ X"${unbound_flags}" != X"NO" ] && rm -f /var/unbound/dev/log && \
+		daemon_flags="${daemon_flags} -a /var/unbound/dev/log"
 	[ -d /var/empty ] && rm -f /var/empty/dev/log && \
 		mkdir -p -m 0555 /var/empty/dev && \
 		daemon_flags="${daemon_flags} -a /var/empty/dev/log"

@@ -56,8 +56,8 @@ RCDAEMONS=	amd apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd \
 		inetd isakmpd ldapd npppd ldattach ldpd lpd mrouted \
 		named nginx nsd ntpd ospfd ospf6d portmap pflogd rarpd rbootd \
 		relayd ripd route6d rtadvd rtsold rwhod sasyncd \
-		sensorsd slowcgi smtpd snmpd spamd sshd syslogd watchdogd \
-		wsmoused xdm ypbind ypldap yppasswdd ypserv kdc kadmind \
+		sensorsd slowcgi smtpd snmpd spamd sshd syslogd unbound \
+		watchdogd wsmoused xdm ypbind ypldap yppasswdd ypserv kdc kadmind \
 		kpasswdd nfsd mountd lockd statd spamlogd sndiod popa3d \
 		tftpd tftpproxy ipropd_master ipropd_slave
 
@@ -257,6 +257,7 @@ distribution-etc-root-var: distrib-dirs
 	cd ../usr.sbin/ldapd && exec ${MAKE} distribution
 	cd ../usr.sbin/nginx && exec ${MAKE} -f Makefile.bsd-wrapper distribution
 	cd ../usr.sbin/npppd && exec ${MAKE} distribution
+	cd ../usr.sbin/unbound && exec ${MAKE} -f Makefile.bsd-wrapper distribution
 	cd mail && exec ${MAKE} distribution
 	${INSTALL} -c -o root -g wheel -m 440 ../usr.bin/sudo/sudoers \
 	    ${DESTDIR}/etc/sudoers

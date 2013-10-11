@@ -4368,6 +4368,7 @@
 ./usr/sbin/dig
 ./usr/sbin/dnssec-keygen
 ./usr/sbin/dnssec-signzone
+./usr/sbin/drill
 ./usr/sbin/dvmrpctl
 ./usr/sbin/dvmrpd
 ./usr/sbin/edquota
@@ -4518,6 +4519,12 @@
 ./usr/sbin/userdel
 ./usr/sbin/userinfo
 ./usr/sbin/usermod
+./usr/sbin/unbound
+./usr/sbin/unbound-anchor
+./usr/sbin/unbound-checkconf
+./usr/sbin/unbound-control
+./usr/sbin/unbound-host
+./usr/sbin/unbound-control-setup
 ./usr/sbin/vipw
 ./usr/sbin/visudo
 ./usr/sbin/watchdogd
@@ -4729,6 +4736,7 @@
 ./usr/share/man/man1/dig.1
 ./usr/share/man/man1/dirname.1
 ./usr/share/man/man1/domainname.1
+./usr/share/man/man1/drill.1
 ./usr/share/man/man1/du.1
 ./usr/share/man/man1/echo.1
 ./usr/share/man/man1/ed.1
@@ -5132,6 +5140,7 @@
 ./usr/share/man/man1/tty.1
 ./usr/share/man/man1/ul.1
 ./usr/share/man/man1/uname.1
+./usr/share/man/man1/unbound-host.1
 ./usr/share/man/man1/uncompress.1
 ./usr/share/man/man1/unexpand.1
 ./usr/share/man/man1/unifdef.1
@@ -11025,6 +11034,7 @@
 ./usr/share/man/man5/texinfo.5
 ./usr/share/man/man5/ttys.5
 ./usr/share/man/man5/tzfile.5
+./usr/share/man/man5/unbound.conf.5
 ./usr/share/man/man5/usermgmt.conf.5
 ./usr/share/man/man5/utmp.5
 ./usr/share/man/man5/uuencode.5
@@ -11414,6 +11424,10 @@
 ./usr/share/man/man8/ttyflags.8
 ./usr/share/man/man8/tunefs.8
 ./usr/share/man/man8/umount.8
+./usr/share/man/man8/unbound.8
+./usr/share/man/man8/unbound-anchor.8
+./usr/share/man/man8/unbound-checkconf.8
+./usr/share/man/man8/unbound-control.8
 ./usr/share/man/man8/updatedb.8
 ./usr/share/man/man8/usbdevs.8
 ./usr/share/man/man8/user.8

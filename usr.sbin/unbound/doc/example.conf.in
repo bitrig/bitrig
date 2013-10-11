@@ -197,7 +197,7 @@ server:
 	# chroot: "@UNBOUND_CHROOT_DIR@"
 
 	# if given, user privileges are dropped (after binding port),
-	# and the given username is assumed. Default is user "unbound".
+	# and the given username is assumed. Default is user "@UNBOUND_USERNAME@".
 	# If you give "" no privileges are dropped.
 	# username: "@UNBOUND_USERNAME@"
 
@@ -530,7 +530,7 @@ python:
 remote-control:
 	# Enable remote control with unbound-control(8) here.
 	# set up the keys and certificates with unbound-control-setup.
-	# control-enable: no
+	 control-enable: yes
 
 	# what interfaces are listened to for remote control.
 	# give 0.0.0.0 and ::0 to listen to all interfaces.

@@ -226,6 +226,7 @@
 ./var/named/standard/loopback
 ./var/named/standard/loopback6.arpa
 ./var/run/utmp
+./var/unbound/etc/unbound.conf
 ./var/www/conf/bgplg.css
 ./var/www/conf/bgplg.foot
 ./var/www/conf/bgplg.head
