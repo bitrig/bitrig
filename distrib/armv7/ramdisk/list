@@ -83,6 +83,7 @@ SCRIPT	${CURDIR}/../../miniroot/upgrade.sh	upgrade
 SCRIPT	${CURDIR}/../../miniroot/install.sh	install
 SCRIPT	${CURDIR}/../../miniroot/install.sub	install.sub
 SPECIAL	chmod 755 install upgrade
+SPECIAL	tar cvf usr/mdec/u-boots.tgz /usr/mdec/
 
 HASH	var/hash
 TZ

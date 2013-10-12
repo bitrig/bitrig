@@ -75,8 +75,11 @@ md_installboot() {
                 mv /mnt/bsd.rd.${MDPLAT}.umg /mnt/mnt/bsdrd.umg
         fi
 
+	# extracted on all machines, so make snap works.
+	tar -C /mnt/ -xf /usr/mdec/u-boots.tgz 
+
 	if [[ ${MDPLAT} == "OMAP" ]]; then
-		cp -r /tmp/u-boots/* /mnt/usr/mdec/
+
 		if [[ -n $BEAGLE ]]; then
 			cp /mnt/usr/mdec/beagle/{mlo,u-boot.bin} /mnt/mnt/
 		elif [[ -n $BEAGLEBONE ]]; then
@@ -166,14 +169,6 @@ md_prep_disklabel() {
 	local _disk=$1 _f _op
 
 	md_prep_fdisk $_disk
-
-	if [[ ${MDPLAT} == "OMAP" ]]; then
-		# for OMAP we copy the bootloaders from sd0 (SD card)
-		mount /dev/sd0i /mnt2
-		cp -r /mnt2/u-boots/ /tmp/
-		umount /mnt2
-	fi
-
 
 	_f=/tmp/fstab.$_disk
 	if [[ $_disk == $ROOTDISK ]]; then
