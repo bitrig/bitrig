@@ -48,7 +48,7 @@ do_files:
 	cp -r /usr/mdec/{am335x,beagle,panda} ${MOUNT_POINT}/u-boots
 .endif
 .if ${PLATFORM} == "IMX"
-	echo "; setenv loadaddr ${LOADADDR} ; setenv bootargs sd0i:/bsd.umg ; for dtype in mmc sata ; do for disk in 0 1 ; do \$${dtype} dev \$${disk} ; for fs in msdos ext2 ; do \$${fs}load \$${dtype} \$${disk}:1 \$${loadaddr} bsd.umg ; bootm \$${loadaddr} ; done; done; done; echo; echo failed to load bsd.umg" > 6x_bootscript.cmd
+	echo "; setenv loadaddr ${LOADADDR} ; setenv bootargs sd0i:/bsd.umg ; for dtype in sata mmc ; do for disk in 0 1 ; do \$${dtype} dev \$${disk} ; for fs in fat ext2 ; do if \$${fs}load \$${dtype} \$${disk}:1 \$${loadaddr} bsd.umg ; then  bootm \$${loadaddr} ; fi ; done; done; done; echo; echo failed to load bsd.umg" > 6x_bootscript.cmd
 	${MKUBOOT} -t script -a arm -o linux 6x_bootscript.cmd 6x_bootscript.scr
 	cp 6x_bootscript.scr ${MOUNT_POINT}/6x_bootscript
 

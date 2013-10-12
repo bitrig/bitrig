@@ -50,6 +50,9 @@ MDSETS="bsd.${MDPLAT} bsd.rd.${MDPLAT} bsd.${MDPLAT}.umg bsd.rd.${MDPLAT}.umg"
 SANESETS="bsd.${MDPLAT}"
 DEFAULTSETS=${MDSETS}
 
+NEWFSARGS_msdos="-F 16 -L boot"
+NEWFSARGS_ext2fs="-v boot"
+
 md_installboot() {
 	local _disk=$1
 	mount /dev/${_disk}i /mnt/mnt
@@ -93,7 +96,7 @@ uenvcmd=boot
 __EOT
 	else 
 		cat > /tmp/6x_bootscript.scr<<__EOT
-; setenv loadaddr ${LOADADDR} ; setenv bootargs sd0i:/bsd.umg ; for dtype in mmc sata ; do for disk in 0 1 ; do \${dtype} dev \${disk} ; for fsin msdos ext2 ; do \${fs}load \${dtype} \${disk}:1 \${loadaddr} bsd.umg ; bootm \${loadaddr} ; done; done; done; echo; echo failed to load bsd.umg 
+; setenv loadaddr ${LOADADDR} ; setenv bootargs sd0i:/bsd.umg ; for dtype in sata mmc ; do for disk in 0 1 ; do \${dtype} dev \${disk} ; for fs in fat ext2 ; do if \${fs}load \${dtype} \${disk}:1 \${loadaddr} bsd.umg ; then bootm \${loadaddr} ; fi ; done; done; done; echo; echo failed to load bsd.umg 
 __EOT
 		mkuboot -t script -a arm -o linux /tmp/6x_bootscript.scr /mnt/mnt/6x_bootscript
 	fi
@@ -104,12 +107,14 @@ md_prep_fdisk() {
 
 	local bootparttype="C"
 	local bootfstype="msdos"
+	local newfs_args=${NEWFSARGS_msdos}
 
 	# imx needs an ext2fs filesystem
 	IMX=$(scan_dmesg '/^imx0 at mainbus0: \(i.MX6.*\)/s//IMX/p')
 	if [[ -n $IMX ]]; then
 		bootparttype="83"
 		bootfstype="ext2fs"
+		newfs_args=${NEWFSARGS_ext2fs}
 	fi
 
 	while :; do
@@ -141,7 +146,7 @@ quit
 __EOT
 			echo "done."
 			disklabel $_disk 2>/dev/null | grep -q "^  i:" || disklabel -w -d $_disk
-			newfs -t ${bootfstype} ${_disk}i
+			newfs -t ${bootfstype} ${newfs_args} ${_disk}i
 			return ;;
 		e*|E*)
 			# Manually configure the MBR.
