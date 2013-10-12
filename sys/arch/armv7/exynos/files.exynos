@@ -54,3 +54,7 @@ file	arch/armv7/exynos/exehci.c		exehci
 device exesdhc: sdmmcbus
 attach exesdhc at exynos
 file	arch/armv7/exynos/exesdhc.c		exesdhc
+
+device	crosec
+attach	crosec at i2c
+file	arch/armv7/exynos/crosec.c		crosec
