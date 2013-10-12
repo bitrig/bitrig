@@ -99,9 +99,16 @@ __EOT
 md_prep_fdisk() {
 	local _disk=$1 _q _d
 
-	mount /dev/sd0i /mnt2
-	cp -r /mnt2/u-boots/ /tmp/
-	umount /mnt2
+	local bootparttype="C"
+	local bootfstype="msdos"
+
+	# imx needs an ext2fs filesystem
+	IMX=$(scan_dmesg '/^imx0 at mainbus0: \(i.MX6.*\)/s//IMX/p')
+	if [[ -n $IMX ]]; then
+		bootparttype="83"
+		bootfstype="ext2fs"
+	fi
+
 	while :; do
 		_d=whole
 		if [[ -n $(fdisk $_disk | grep 'Signature: 0xAA55') ]]; then
@@ -112,11 +119,11 @@ md_prep_fdisk() {
 		ask "Use (W)hole disk$_q or (E)dit the MBR?" "$_d"
 		case $resp in
 		w*|W*)
-			echo -n "Creating a FAT partition and an OpenBSD partition for rest of $_disk..."
+			echo -n "Creating a ${bootfstype} partition and an OpenBSD partition for rest of $_disk..."
 			fdisk -e ${_disk} <<__EOT >/dev/null
 reinit
 e 0
-C
+${bootparttype}
 n
 64
 32768
@@ -131,7 +138,7 @@ quit
 __EOT
 			echo "done."
 			disklabel $_disk 2>/dev/null | grep -q "^  i:" || disklabel -w -d $_disk
-			newfs -t msdos ${_disk}i
+			newfs -t ${bootfstype} ${_disk}i
 			return ;;
 		e*|E*)
 			# Manually configure the MBR.
@@ -142,7 +149,7 @@ and one MBR partition on which kernels are located which are loaded
 by U-Boot. Neither partition will overlap any other partition.
 
 The OpenBSD MBR partition will have an id of 'A6' and the boot MBR
-partition will have an id of 'C' (MSDOS). The boot partition will be
+partition will have an id of '${bootparttype}' (${bootfstype}). The boot partition will be
 at least 16MB and be the first 'MSDOS' partition on the disk.
 
 $(fdisk ${_disk})
@@ -159,6 +166,14 @@ md_prep_disklabel() {
 	local _disk=$1 _f _op
 
 	md_prep_fdisk $_disk
+
+	if [[ ${MDPLAT} == "OMAP" ]]; then
+		# for OMAP we copy the bootloaders from sd0 (SD card)
+		mount /dev/sd0i /mnt2
+		cp -r /mnt2/u-boots/ /tmp/
+		umount /mnt2
+	fi
+
 
 	_f=/tmp/fstab.$_disk
 	if [[ $_disk == $ROOTDISK ]]; then
