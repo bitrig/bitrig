@@ -58,8 +58,12 @@ LINK	instbin					usr/bin/grep usr/bin/fgrep usr/bin/egrep
 LINK	instbin					usr/bin/gzip usr/bin/gunzip usr/bin/gzcat
 LINK	instbin					usr/bin/less usr/bin/more
 LINK	instbin					usr/bin/sed
+LINK	instbin					usr/sbin/mkuboot
 LINK	instbin					sbin/sysctl
 LINK	instbin					sbin/bioctl
+
+# this is the list from distrib/miniroot/makeconf.awk with -lz added.
+LIBS	-lstubs -lutil -lotermcap -lm -lz
 
 # copy the MAKEDEV script and make some devices
 SCRIPT	${DESTDIR}/dev/MAKEDEV			dev/MAKEDEV

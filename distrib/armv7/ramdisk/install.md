@@ -92,10 +92,10 @@ bootcmd=mmc rescan ; setenv loadaddr ${LOADADDR}; setenv bootargs sd0i:/bsd.umg 
 uenvcmd=boot
 __EOT
 	else 
-		cat > /mnt/tmp/6x_bootscript.scr<<__EOT
+		cat > /tmp/6x_bootscript.scr<<__EOT
 ; setenv loadaddr ${LOADADDR} ; setenv bootargs sd0i:/bsd.umg ; for dtype in mmc sata ; do for disk in 0 1 ; do \${dtype} dev \${disk} ; for fsin msdos ext2 ; do \${fs}load \${dtype} \${disk}:1 \${loadaddr} bsd.umg ; bootm \${loadaddr} ; done; done; done; echo; echo failed to load bsd.umg 
 __EOT
-		/mnt/usr/sbin/chroot /mnt /usr/sbin/mkuboot -t script -a arm -o linux /mnt/tmp/6x_bootscript.cmd /mnt/6x_bootscript.scr
+		mkuboot -t script -a arm -o linux /tmp/6x_bootscript.scr /mnt/mnt/6x_bootscript
 	fi
 }
 
