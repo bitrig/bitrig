@@ -473,6 +473,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	pv_addr_t kernel_l1pt;
 	paddr_t memstart;
 	psize_t memsize;
+	extern u_int32_t esym;  /* &_end if no symbols are loaded */
 
 #if 0
 	int led_data = 0;
@@ -560,8 +561,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	physical_end = physical_start + (bootconfig.dram[0].pages * PAGE_SIZE);
 
 	{
-		extern char _end[];
-		physical_freestart = (((unsigned long)_end - KERNEL_TEXT_BASE +0xfff) & ~0xfff) + memstart;
+		physical_freestart = (((unsigned long)esym - KERNEL_TEXT_BASE +0xfff) & ~0xfff) + memstart;
 		physical_freeend = memstart+memsize;
 	}
 
@@ -705,9 +705,9 @@ initarm(void *arg0, void *arg1, void *arg2)
 
 	/* Now we fill in the L2 pagetable for the kernel static code/data */
 	{
-		extern char etext[], _end[];
+		extern char etext[];
 		size_t textsize = (u_int32_t) etext - KERNEL_TEXT_BASE;
-		size_t totalsize = (u_int32_t) _end - KERNEL_TEXT_BASE;
+		size_t totalsize = (u_int32_t) esym - KERNEL_TEXT_BASE;
 		u_int logical;
 
 		textsize = (textsize + PGOFSET) & ~PGOFSET;
