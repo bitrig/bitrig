@@ -46,6 +46,7 @@ LINK	instbin					sbin/mount_msdos
 LINK	instbin					sbin/mount_nfs
 LINK	instbin					sbin/newfs
 LINK	instbin					sbin/newfs_msdos
+LINK	instbin					sbin/newfs_ext2fs
 LINK	instbin					sbin/ping
 LINK	instbin					sbin/ping6
 LINK	instbin					sbin/reboot sbin/halt
