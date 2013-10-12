@@ -41,6 +41,8 @@
 #define CLOCK_VPLL_CON2				0x0148
 #define CLOCK_CLK_DIV_CPU0			0x0500
 #define CLOCK_CLK_DIV_CPU1			0x0504
+#define CLOCK_CLK_DIV_TOP0			0x0510
+#define CLOCK_CLK_DIV_TOP1			0x0514
 #define CLOCK_PLL_DIV2_SEL			0x0A24
 #define CLOCK_MPLL_CON0				0x4100
 #define CLOCK_MPLL_CON1				0x4104
@@ -260,6 +262,15 @@ exclock_get_armclk()
 unsigned int
 exclock_get_i2cclk()
 {
-	//struct exclock_softc *sc = exclock_sc;
-	return 0;
+	struct exclock_softc *sc = exclock_sc;
+	uint32_t aclk_66, aclk_66_pre, div, ratio;
+
+	div = HREAD4(sc, CLOCK_CLK_DIV_TOP1);
+	ratio = (div >> 24) & 0x7;
+	aclk_66_pre = exclock_get_pll_clk(MPLL) / (ratio + 1);
+	div = HREAD4(sc, CLOCK_CLK_DIV_TOP0);
+	ratio = (div >> 0) & 0x7;
+	aclk_66 = aclk_66_pre / (ratio + 1);
+
+	return aclk_66;
 }

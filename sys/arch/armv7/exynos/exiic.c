@@ -25,6 +25,7 @@
 #include <armv7/exynos/exvar.h>
 #include <armv7/exynos/exgpiovar.h>
 #include <armv7/exynos/exiicvar.h>
+#include <armv7/exynos/exclockvar.h>
 
 /* registers */
 #define I2C_CON				0x00	/* control register */
@@ -53,6 +54,10 @@
 #define I2C_ADD_SLAVE_ADDR(x)		(((x) & 0x7f) << 1)
 #define I2C_DS_DATA_SHIFT(x)		(((x) & 0xff) << 0)
 
+#define I2C_ACK				0
+#define I2C_NACK			1
+#define I2C_TIMEOUT			2
+
 struct exiic_softc {
 	struct device		sc_dev;
 	bus_space_tag_t		sc_iot;
@@ -66,32 +71,32 @@ struct exiic_softc {
 
 	uint16_t		frequency;
 	uint16_t		intr_status;
-	uint16_t		stopped;
 };
 
 void exiic_attach(struct device *, struct device *, void *);
 int exiic_detach(struct device *, int);
-void exiic_setspeed(struct exiic_softc *, u_int);
+void exiic_bus_scan(struct device *, struct i2cbus_attach_args *, void *);
+void exiic_setspeed(struct exiic_softc *, int);
 int exiic_intr(void *);
 int exiic_wait_intr(struct exiic_softc *, int, int);
-int exiic_wait_state(struct exiic_softc *, uint32_t, uint32_t);
+int exiic_wait_state(struct exiic_softc *, uint32_t, uint32_t, uint32_t);
 int exiic_start(struct exiic_softc *, int, int, void *, int);
-int exiic_read(struct exiic_softc *, int, int, void *, int);
-int exiic_write(struct exiic_softc *, int, int, const void *, int);
 
+void exiic_xfer_start(struct exiic_softc *);
+int exiic_xfer_wait(struct exiic_softc *);
 int exiic_i2c_acquire_bus(void *, int);
 void exiic_i2c_release_bus(void *, int);
 int exiic_i2c_exec(void *, i2c_op_t, i2c_addr_t, const void *, size_t,
     void *, size_t, int);
 
-#define HREAD2(sc, reg)							\
-	(bus_space_read_2((sc)->sc_iot, (sc)->sc_ioh, (reg)))
-#define HWRITE2(sc, reg, val)						\
-	bus_space_write_2((sc)->sc_iot, (sc)->sc_ioh, (reg), (val))
-#define HSET2(sc, reg, bits)						\
-	HWRITE2((sc), (reg), HREAD2((sc), (reg)) | (bits))
-#define HCLR2(sc, reg, bits)						\
-	HWRITE2((sc), (reg), HREAD2((sc), (reg)) & ~(bits))
+#define HREAD4(sc, reg)							\
+	(bus_space_read_4((sc)->sc_iot, (sc)->sc_ioh, (reg)))
+#define HWRITE4(sc, reg, val)						\
+	bus_space_write_4((sc)->sc_iot, (sc)->sc_ioh, (reg), (val))
+#define HSET4(sc, reg, bits)						\
+	HWRITE4((sc), (reg), HREAD4((sc), (reg)) | (bits))
+#define HCLR4(sc, reg, bits)						\
+	HWRITE4((sc), (reg), HREAD4((sc), (reg)) & ~(bits))
 
 
 struct cfattach exiic_ca = {
@@ -122,18 +127,6 @@ exiic_attach(struct device *parent, struct device *self, void *args)
 
 	printf("\n");
 
-	/* XXX: set gpio pins */
-
-#if 0
-	/* set speed to 100kHz */
-	exiic_setspeed(sc, 100);
-
-	/* reset */
-	HWRITE2(sc, I2C_I2CR, 0);
-	HWRITE2(sc, I2C_I2SR, 0);
-#endif
-
-	sc->stopped = 1;
 	rw_init(&sc->sc_buslock, sc->sc_dev.dv_xname);
 
 	struct i2cbus_attach_args iba;
@@ -146,33 +139,50 @@ exiic_attach(struct device *parent, struct device *self, void *args)
 	bzero(&iba, sizeof iba);
 	iba.iba_name = "iic";
 	iba.iba_tag = &sc->i2c_tag;
+	iba.iba_bus_scan = exiic_bus_scan;
+	iba.iba_bus_scan_arg = sc;
 	config_found(&sc->sc_dev, &iba, NULL);
 }
 
-#if 0
 void
-exiic_setspeed(struct exiic_softc *sc, u_int speed)
+exiic_bus_scan(struct device *self, struct i2cbus_attach_args *iba, void *arg)
+{
+	//struct exiic_softc *sc = (struct exiic_softc *)arg;
+	struct i2c_attach_args ia;
+
+	/* XXX: We currently only attach cros-ec on I2C4.  We'll use FDT later. */
+	char *name = "crosec";
+	int addr = 0x1e;
+
+	memset(&ia, 0, sizeof(ia));
+	ia.ia_tag = iba->iba_tag;
+	ia.ia_addr = addr;
+	ia.ia_size = 1;
+	ia.ia_name = name;
+	config_found(self, &ia, iicbus_print);
+}
+
+void
+exiic_setspeed(struct exiic_softc *sc, int speed)
 {
 	if (!sc->frequency) {
-		uint32_t i2c_clk_rate;
-		uint32_t div;
-		int i;
+		uint32_t freq, div = 0, pres = 16;
+		freq = exclock_get_i2cclk();
 
-		i2c_clk_rate = 0; /* XXX */
-		div = (i2c_clk_rate + speed - 1) / speed;
-		if (div < exiic_clk_div[0][0])
-			i = 0;
-		else if (div > exiic_clk_div[49][0])
-			i = 49;
-		else
-			for (i = 0; exiic_clk_div[i][0] < div; i++);
+		/* calculate prescaler and divisor values */
+		if ((freq / pres / (16 + 1)) > speed)
+			/* set prescaler to 512 */
+			pres = 512;
 
-		sc->frequency = exiic_clk_div[i][1];
+		while ((freq / pres / (div + 1)) > speed)
+			div++;
+
+		/* set prescaler, divisor according to freq, also set ACKGEN, IRQ */
+		sc->frequency = (div & 0x0F) | 0xA0 | ((pres == 512) ? 0x40 : 0);
 	}
 
-	HWRITE2(sc, I2C_IFDR, sc->frequency);
+	HWRITE4(sc, I2C_CON, sc->frequency);
 }
-#endif
 
 #if 0
 int
@@ -180,19 +190,19 @@ exiic_intr(void *arg)
 {
 	struct exiic_softc *sc = arg;
 	u_int16_t status;
+	int rc = 0;
 
-	status = HREAD2(sc, I2C_I2SR);
+	status = HREAD4(sc, I2C_CON);
 
-	if (ISSET(status, I2C_I2SR_IIF)) {
-		/* acknowledge the interrupts */
-		HWRITE2(sc, I2C_I2SR,
-		    HREAD2(sc, I2C_I2SR) & ~I2C_I2SR_IIF);
+	if (ISSET(status, I2C_CON_INTPENDING)) {
+		/* we do not acknowledge the interrupt here */
+		rc = 1;
 
 		sc->intr_status |= status;
 		wakeup(&sc->intr_status);
 	}
 
-	return (0);
+	return (rc);
 }
 
 int
@@ -219,86 +229,38 @@ exiic_wait_intr(struct exiic_softc *sc, int mask, int timo)
 }
 #endif
 
-#if 0
 int
-exiic_wait_state(struct exiic_softc *sc, uint32_t mask, uint32_t value)
+exiic_wait_state(struct exiic_softc *sc, uint32_t reg, uint32_t mask, uint32_t value)
 {
 	uint32_t state;
 	int timeout;
-	state = HREAD2(sc, I2C_I2SR);
+	state = HREAD4(sc, reg);
 	for (timeout = 1000; timeout > 0; timeout--) {
-		if (((state = HREAD2(sc, I2C_I2SR)) & mask) == value)
+		if (((state = HREAD4(sc, reg)) & mask) == value)
 			return 0;
-		delay(10);
+		delay(1000);
 	}
 	return ETIMEDOUT;
 }
 
 int
-exiic_read(struct exiic_softc *sc, int addr, int subaddr, void *data, int len)
-{
-	int i;
-
-	HWRITE2(sc, I2C_I2DR, addr | 1);
-
-	if (exiic_wait_state(sc, I2C_I2SR_IIF, I2C_I2SR_IIF))
-		return (EIO);
-	while(!(HREAD2(sc, I2C_I2SR) & I2C_I2SR_IIF));
-	if (HREAD2(sc, I2C_I2SR) & I2C_I2SR_RXAK)
-		return (EIO);
-
-	HCLR2(sc, I2C_I2CR, I2C_I2CR_MTX);
-	if (len)
-		HCLR2(sc, I2C_I2CR, I2C_I2CR_TXAK);
-
-	/* dummy read */
-	HREAD2(sc, I2C_I2DR);
-
-	for (i = 0; i < len; i++) {
-		if (exiic_wait_state(sc, I2C_I2SR_IIF, I2C_I2SR_IIF))
-			return (EIO);
-		if (i == (len - 1)) {
-			HCLR2(sc, I2C_I2CR, I2C_I2CR_MSTA | I2C_I2CR_MTX);
-			exiic_wait_state(sc, I2C_I2SR_IBB, 0);
-			sc->stopped = 1;
-		} else if (i == (len - 2)) {
-			HSET2(sc, I2C_I2CR, I2C_I2CR_TXAK);
-		}
-		((uint8_t*)data)[i] = HREAD2(sc, I2C_I2DR);
-	}
-
-	return 0;
-}
-
-int
-exiic_write(struct exiic_softc *sc, int addr, int subaddr, const void *data, int len)
-{
-	int i;
-
-	HWRITE2(sc, I2C_I2DR, addr);
-
-	if (exiic_wait_state(sc, I2C_I2SR_IIF, I2C_I2SR_IIF))
-		return (EIO);
-	if (HREAD2(sc, I2C_I2SR) & I2C_I2SR_RXAK)
-		return (EIO);
-
-	for (i = 0; i < len; i++) {
-		HWRITE2(sc, I2C_I2DR, ((uint8_t*)data)[i]);
-		if (exiic_wait_state(sc, I2C_I2SR_IIF, I2C_I2SR_IIF))
-			return (EIO);
-		if (HREAD2(sc, I2C_I2SR) & I2C_I2SR_RXAK)
-			return (EIO);
-	}
-	return 0;
-}
-#endif
-
-int
 exiic_i2c_acquire_bus(void *cookie, int flags)
 {
 	struct exiic_softc *sc = cookie;
+	int ret = rw_enter(&sc->sc_buslock, RW_WRITE);
 
-	return (rw_enter(&sc->sc_buslock, RW_WRITE));
+	if (!ret) {
+		/* set speed to 100 Kbps */
+		exiic_setspeed(sc, 100);
+
+		/* STOP */
+		HWRITE4(sc, I2C_STAT, 0);
+		HWRITE4(sc, I2C_ADD, 0);
+		HWRITE4(sc, I2C_STAT, I2C_STAT_MODE_SEL_MASTER_TX
+				    | I2C_STAT_SERIAL_OUTPUT);
+	}
+
+	return ret;
 }
 
 void
@@ -310,67 +272,112 @@ exiic_i2c_release_bus(void *cookie, int flags)
 }
 
 int
-exiic_i2c_exec(void *cookie, i2c_op_t op, i2c_addr_t addr,
-    const void *cmdbuf, size_t cmdlen, void *buf, size_t len, int flags)
+exiic_i2c_exec(void *cookie, i2c_op_t op, i2c_addr_t _addr,
+    const void *cmdbuf, size_t cmdlen, void *databuf, size_t datalen, int flags)
 {
-#if 0
 	struct exiic_softc *sc = cookie;
 	uint32_t ret = 0;
-	u_int8_t cmd = 0;
+	u_int8_t addr = 0;
+	int i = 0;
 
-	if (!I2C_OP_STOP_P(op) || cmdlen > 1)
-		return (EINVAL);
-
-	if (cmdlen > 0)
-		cmd = *(u_int8_t *)cmdbuf;
-
-	addr &= 0x7f;
+	addr = (_addr & 0x7f) << 1;
 
 	/* clock gating */
 	//exccm_enable_i2c(sc->unit);
 
-	/* set speed to 100kHz */
-	exiic_setspeed(sc, 100);
-
-	/* enable the controller */
-	HWRITE2(sc, I2C_I2SR, 0);
-	HWRITE2(sc, I2C_I2CR, I2C_I2CR_IEN);
-
-	/* wait for it to be stable */
-	delay(50);
-
-	/* start transaction */
-	HSET2(sc, I2C_I2CR, I2C_I2CR_MSTA);
-
-	if (exiic_wait_state(sc, I2C_I2SR_IBB, I2C_I2SR_IBB)) {
-		ret = (EIO);
-		goto fail;
+	if (exiic_wait_state(sc, I2C_STAT, I2C_STAT_BUSY_SIGNAL, 0)) {
+		printf("%s: busy\n", __func__);
+		return (EIO);
 	}
 
-	sc->stopped = 0;
+	/* acknowledge generation */
+	HSET4(sc, I2C_CON, I2C_CON_ACK);
 
-	HSET2(sc, I2C_I2CR, I2C_I2CR_IIEN | I2C_I2CR_MTX | I2C_I2CR_TXAK);
+	/* Send the slave-address */
+	HWRITE4(sc, I2C_DS, addr);
+	if (!I2C_OP_READ_P(op) || (cmdbuf && cmdlen))
+		HWRITE4(sc, I2C_STAT, I2C_STAT_MODE_SEL_MASTER_TX
+				    | I2C_STAT_SERIAL_OUTPUT
+				    | I2C_STAT_BUSY_SIGNAL);
+	else
+		HWRITE4(sc, I2C_STAT, I2C_STAT_MODE_SEL_MASTER_RX
+				    | I2C_STAT_SERIAL_OUTPUT
+				    | I2C_STAT_BUSY_SIGNAL);
+
+	ret = exiic_xfer_wait(sc);
+	if (ret != I2C_ACK)
+		goto fail;
+
+	/* transmit commands */
+	if (cmdbuf && cmdlen) {
+		for (i = 0; i < cmdlen; i++) {
+			HWRITE4(sc, I2C_DS, ((uint8_t *)cmdbuf)[i]);
+			exiic_xfer_start(sc);
+			ret = exiic_xfer_wait(sc);
+			if (ret != I2C_ACK)
+				goto fail;
+		}
+	}
 
 	if (I2C_OP_READ_P(op)) {
-		if (exiic_read(sc, (addr << 1), cmd, buf, len) != 0)
-			ret = (EIO);
+		if (cmdbuf && cmdlen) {
+			/* write slave chip address again for actual read */
+			HWRITE4(sc, I2C_DS, addr);
+
+			/* restart */
+			HWRITE4(sc, I2C_STAT, I2C_STAT_MODE_SEL_MASTER_RX
+					    | I2C_STAT_SERIAL_OUTPUT
+					    | I2C_STAT_BUSY_SIGNAL);
+			exiic_xfer_start(sc);
+			ret = exiic_xfer_wait(sc);
+			if (ret != I2C_ACK)
+				goto fail;
+		}
+
+		for (i = 0; i < datalen && ret == I2C_ACK; i++) {
+			/* disable ACK for final read */
+			if (i == datalen - 1)
+				HCLR4(sc, I2C_CON, I2C_CON_ACK);
+			exiic_xfer_start(sc);
+			ret = exiic_xfer_wait(sc);
+			((uint8_t *)databuf)[i] = HREAD4(sc, I2C_DS);
+		}
+		if (ret == I2C_NACK)
+			ret = I2C_ACK; /* Normal terminated read. */
 	} else {
-		if (exiic_write(sc, (addr << 1), cmd, buf, len) != 0)
-			ret = (EIO);
+		for (i = 0; i < datalen && ret == I2C_ACK; i++) {
+			HWRITE4(sc, I2C_DS, ((uint8_t *)databuf)[i]);
+			exiic_xfer_start(sc);
+			ret = exiic_xfer_wait(sc);
+		}
 	}
 
 fail:
-	if (!sc->stopped) {
-		HCLR2(sc, I2C_I2CR, I2C_I2CR_MSTA | I2C_I2CR_MTX);
-		exiic_wait_state(sc, I2C_I2SR_IBB, 0);
-		sc->stopped = 1;
+	/* send STOP */
+	if (op & I2C_OP_READ_WITH_STOP) {
+		HWRITE4(sc, I2C_STAT, I2C_STAT_MODE_SEL_MASTER_RX
+				    | I2C_STAT_SERIAL_OUTPUT);
+		exiic_xfer_start(sc);
 	}
 
-	HWRITE2(sc, I2C_I2CR, 0);
-
 	return ret;
-#endif
-	return 0;
+}
+
+void
+exiic_xfer_start(struct exiic_softc *sc)
+{
+	HCLR4(sc, I2C_CON, I2C_CON_INTPENDING);
+}
+
+int
+exiic_xfer_wait(struct exiic_softc *sc)
+{
+	if (!exiic_wait_state(sc, I2C_CON, I2C_CON_INTPENDING,
+					   I2C_CON_INTPENDING))
+		return (HREAD4(sc, I2C_STAT) & I2C_STAT_LAST_RVCD_BIT) ?
+			I2C_NACK : I2C_ACK;
+	else
+		return I2C_TIMEOUT;
 }
 
 int
