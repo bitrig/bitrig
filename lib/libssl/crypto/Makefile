@@ -7,10 +7,8 @@ SSL_SRC=	${.CURDIR}/../${SSLEAYDIST}
 LCRYPTO_SRC=	${SSL_SRC}/crypto
 
 # arm and sh default to little endian, mips defaults to big endian
-.if ${MACHINE_ARCH} == "alpha" || ${MACHINE_ARCH} == "amd64" || \
-    ${MACHINE_ARCH} == "arm" || ${MACHINE_ARCH} == "i386" || \
-    ${MACHINE_ARCH} == "mips64el" || ${MACHINE_ARCH} == "sh" || \
-    ${MACHINE_ARCH} == "vax"
+.if ${MACHINE_ARCH} == "amd64" || ${MACHINE_ARCH} == "arm" || \
+    ${MACHINE_ARCH} == "i386"
 CFLAGS+= -DL_ENDIAN
 .else
 CFLAGS+= -DB_ENDIAN
@@ -19,10 +17,6 @@ CFLAGS+= -DB_ENDIAN
 .include <bsd.own.mk>		# for 'NOPIC' definition
 .if !defined(NOPIC)
 CFLAGS+= -DDSO_DLFCN -DHAVE_DLFCN_H
-.endif
-
-.if ${MACHINE_ARCH} == "sparc"
-PICFLAG=-fPIC
 .endif
 
 CFLAGS+= -DTERMIOS -DANSI_SOURCE -DNO_ERR -DNO_WINDOWS_BRAINDEATH
