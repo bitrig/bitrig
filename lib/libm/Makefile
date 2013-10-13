@@ -15,10 +15,7 @@
 # SUBDIR is only used to install the infnan(3/VAX) manual page.
 # SUBDIR = man
 
-.if (${MACHINE_ARCH} == "alpha")
-.PATH:	${.CURDIR}/arch/alpha
-ARCH_SRCS = s_copysign.S s_copysignf.S
-.elif (${MACHINE_ARCH} == "i386")
+.if (${MACHINE_ARCH} == "i386")
 .PATH:	${.CURDIR}/arch/i387
 ARCH_SRCS = e_acos.S e_asin.S e_atan2.S e_exp.S e_fmod.S e_log.S e_log10.S \
 	    e_remainder.S e_remainderf.S e_scalb.S e_sqrt.S e_sqrtf.S \
@@ -43,46 +40,8 @@ ARCH_SRCS = e_acos.S e_asin.S e_atan2.S e_exp.S e_fmod.S e_log.S e_log10.S \
 	    s_llrint.S s_llrintf.S s_lrint.S s_lrintf.S \
 	    s_rint.S s_rintf.S s_scalbnf.S s_significand.S \
 	    s_significandf.S s_sin.S s_sinf.S s_tan.S s_tanf.S
-.elif (${MACHINE_ARCH} == "m68k")
-.PATH:	${.CURDIR}/arch/mc68881
-ARCH_SRCS = e_acos.S e_acosf.S e_acosl.S e_asin.S e_asinf.S e_asinl.S \
-	    e_atanh.S e_atanhf.S e_cosh.S e_coshf.S e_exp.S e_expf.S e_log.S \
-	    e_logf.S e_log10.S e_log10f.S e_remainder.S e_remainderf.S \
-	    e_scalb.S e_scalbf.S e_sinh.S e_sinhf.S e_sqrt.S e_sqrtf.S \
-	    e_sqrtl.S s_atan.S s_atanf.S s_atanl.S s_ceil.S s_ceilf.S \
-	    s_copysign.S s_copysignf.S s_copysignl.S s_cos.S s_cosf.S s_cosl.S \
-	    s_expm1.S s_expm1f.S s_floor.S s_floorf.S s_log1p.S s_log1pf.S \
-	    s_logb.S s_logbf.S s_logbl.S s_rint.S s_rintf.S s_rintl.S \
-	    s_scalbnf.S s_scalbnl.S s_sin.S s_sinf.S s_sinl.S \
-	    s_tan.S s_tanf.S s_tanl.S s_tanh.S s_tanhf.S
-.elif (${MACHINE_ARCH} == "hppa")
-.PATH:	${.CURDIR}/arch/hppa
-ARCH_SRCS = e_sqrt.c e_sqrtf.c e_remainder.c e_remainderf.c \
-	    s_ceil.c s_ceilf.c s_floor.c s_floorf.c s_rint.c s_rintf.c \
-	    s_round.c s_roundf.c s_trunc.c s_truncf.c
-.elif (${MACHINE_ARCH} == "sh")
-.PATH:	${.CURDIR}/arch/sh
-ARCH_SRCS = e_sqrt.c e_sqrtf.c s_fabsf.c
 .elif (${MACHINE_ARCH} == "arm")
 .PATH:	${.CURDIR}/arch/arm
-.elif (${MACHINE_ARCH} == "hppa64")
-.PATH:	${.CURDIR}/arch/hppa64
-.elif (${MACHINE_ARCH} == "m88k")
-.PATH:	${.CURDIR}/arch/m88k
-.elif (${MACHINE_ARCH} == "mips64")
-.PATH:	${.CURDIR}/arch/mips64
-.elif (${MACHINE_ARCH} == "mips64el")
-.PATH:	${.CURDIR}/arch/mips64
-.elif (${MACHINE_ARCH} == "powerpc")
-.PATH:	${.CURDIR}/arch/powerpc
-.elif (${MACHINE_ARCH} == "sparc")
-.PATH:	${.CURDIR}/arch/sparc
-.elif (${MACHINE_ARCH} == "sparc64")
-.PATH:	${.CURDIR}/arch/sparc64
-.elif (${MACHINE_ARCH} == "vax")
-.PATH:	${.CURDIR}/arch/vax
-NOIEEE_ARCH = n_argred.S n_infnan.S n_sqrt.S
-ARCH_SRCS = n_atan2.S n_cbrt.S n_hypot.S n_sincos.S n_support.S n_tan.S
 .endif
 
 .PATH:	${.CURDIR}/man
@@ -162,33 +121,17 @@ PURE_SRCS = s_cabs.c s_cacos.c s_cacosh.c s_carg.c s_casin.c \
 	s_ctanh.c s_fdim.c s_fmax.c s_fmaxf.c s_fmin.c s_fminf.c \
 	s_cproj.c s_cprojf.c s_round.c s_roundf.c s_scalbln.c 
 
-.if (${MACHINE_ARCH} == "vax")
-SRCS=	${NOIEEE_SRCS} ${NOIEEE_ARCH} ${PURE_SRCS}
-.else
 SRCS=	${COMMON_SRCS} ${PURE_SRCS}
-.if (${MACHINE_ARCH} == "amd64") || (${MACHINE_ARCH} == "i386") || \
-	(${MACHINE_ARCH} == "m68k") || (${MACHINE_ARCH} == "m88k")
+.if (${MACHINE_ARCH} == "amd64") || (${MACHINE_ARCH} == "i386")
 .PATH:		${.CURDIR}/src/ld80
 CPPFLAGS+=	-I${.CURDIR}/src -I${.CURDIR}/src/ld80
 SRCS+=		${LONG_SRCS}
-.endif
-.if (${MACHINE_CPU} == "mips64") || (${MACHINE_ARCH} == "sparc64")
-.PATH:		${.CURDIR}/src/ld128
-CPPFLAGS+=	-I${.CURDIR}/src -I${.CURDIR}/src/ld128
-SRCS+=		${LONG_SRCS}
-.endif
 .endif
 
 # Substitute common sources with any arch specific sources 
 .for i in ${ARCH_SRCS}
     SRCS:=${SRCS:S/${i:S/.S/.c/}/$i/}
 .endfor
-
-.if (${MACHINE_ARCH} == "vax")
-.for i in ${NOIEEE_ARCH}
-    SRCS:=${SRCS:S/${i:S/.S/.c/}/$i/}
-.endfor
-.endif
 
 MAN+=	acos.3 acosh.3 asin.3 asinh.3 atan.3 atan2.3 atanh.3 ceil.3 \
 	copysign.3 cos.3 cosh.3 erf.3 exp.3 \
