@@ -19,42 +19,18 @@
 #include <sys/systm.h>
 #include <sys/device.h>
 #include <sys/sensors.h>
+#include <sys/malloc.h>
 
-#include <dev/i2c/i2cvar.h>
+#include <armv7/exynos/crosecvar.h>
 
-#include "ec_commands.h"
-
-/* message sizes */
-#define MSG_HEADER		0xec
-#define MSG_HEADER_BYTES	3
-#define MSG_TRAILER_BYTES	2
-#define MSG_PROTO_BYTES		(MSG_HEADER_BYTES + MSG_TRAILER_BYTES)
-#define MSG_BYTES		(EC_HOST_PARAM_SIZE + MSG_PROTO_BYTES)
-#define MSG_BYTES_ALIGNED	((MSG_BYTES+8) & ~8)
-
-#define min(a,b)	(((a)<(b))?(a):(b))
-
-struct cros_ec_softc {
-	struct device sc_dev;
-	i2c_tag_t sc_tag;
-	i2c_addr_t sc_addr;
-
-	int cmd_version_is_supported;
-	struct {
-		int rows;
-		int cols;
-		int switches;
-	} keyboard;
-	uint8_t in[MSG_BYTES_ALIGNED];
-	uint8_t out[MSG_BYTES_ALIGNED];
-};
+#ifdef DEBUG
+#define DPRINTF(x) printf x
+#else
+#define DPRINTF(x)
+#endif
 
 int	cros_ec_match(struct device *, void *, void *);
 void	cros_ec_attach(struct device *, struct device *, void *);
-
-int	cros_ec_check_version(struct cros_ec_softc *);
-int	cros_ec_scan_keyboard(struct cros_ec_softc *, uint8_t *, int);
-int	cros_ec_info(struct cros_ec_softc *, struct ec_response_cros_ec_info *);
 
 int	cros_ec_send_command(struct cros_ec_softc *, uint8_t,
 		int, const void *, int, uint8_t **, int);
@@ -89,23 +65,21 @@ cros_ec_attach(struct device *parent, struct device *self, void *aux)
 {
 	struct cros_ec_softc *sc = (struct cros_ec_softc *)self;
 	struct i2c_attach_args *ia = aux;
-	struct ec_response_cros_ec_info info;
 
 	sc->sc_tag = ia->ia_tag;
 	sc->sc_addr = ia->ia_addr;
 
+	printf("\n");
+
 	if (cros_ec_check_version(sc)) {
+		printf("%s: could not initialize ChromeOS EC\n");
 		return;
 	}
 
-	if (cros_ec_info(sc, &info)) {
-		printf("could not read KBC info\n");
+	if (cros_ec_init_keyboard(sc)) {
+		printf("%s: could not initialize keyboard\n", __func__);
+		return;
 	}
-	sc->keyboard.rows = info.rows;
-	sc->keyboard.cols = info.cols;
-	sc->keyboard.switches = info.switches;
-
-	printf("\n");
 }
 
 int
@@ -120,7 +94,7 @@ cros_ec_check_version(struct cros_ec_softc *sc)
 		/* new version supported */
 		sc->cmd_version_is_supported = 1;
 	} else {
-		printf("old EC interface not supported\n");
+		printf("%s: old EC interface not supported\n, __func__");
 		return (-1);
 	}
 
@@ -162,7 +136,7 @@ cros_ec_i2c_command(struct cros_ec_softc *sc, uint8_t cmd, int cmd_version,
 	ret = iic_exec(sc->sc_tag, I2C_OP_WRITE_WITH_STOP,
 	    sc->sc_addr, NULL, 0, &sc->out, out_bytes, 0);
 	if (ret) {
-		printf("%s: I2C write failed\n", __func__);
+		DPRINTF(("%s: I2C write failed\n", __func__));
 		iic_release_bus(sc->sc_tag, 0);
 		return -1;
 	}
@@ -170,7 +144,7 @@ cros_ec_i2c_command(struct cros_ec_softc *sc, uint8_t cmd, int cmd_version,
 	ret = iic_exec(sc->sc_tag, I2C_OP_READ_WITH_STOP,
 	    sc->sc_addr, NULL, 0, inptr, in_bytes, 0);
 	if (ret) {
-		printf("%s: I2C read failed\n", __func__);
+		DPRINTF(("%s: I2C read failed\n", __func__));
 		iic_release_bus(sc->sc_tag, 0);
 		return -1;
 	}
@@ -178,7 +152,7 @@ cros_ec_i2c_command(struct cros_ec_softc *sc, uint8_t cmd, int cmd_version,
 	iic_release_bus(sc->sc_tag, 0);
 
 	if (*inptr != EC_RES_SUCCESS) {
-		printf("%s: bad result\n", __func__);
+		DPRINTF(("%s: bad result\n", __func__));
 		return -(int)*inptr;
 	}
 
@@ -187,12 +161,12 @@ cros_ec_i2c_command(struct cros_ec_softc *sc, uint8_t cmd, int cmd_version,
 
 		len = inptr[1];
 		if (len > sizeof(sc->in)) {
-			printf("%s: Received length too large\n", __func__);
+			DPRINTF(("%s: Received length too large\n", __func__));
 			return -1;
 		}
 		csum = cros_ec_calc_checksum(inptr, 2 + len);
 		if (csum != inptr[2 + len]) {
-			printf("%s: Invalid checksum\n", __func__);
+			DPRINTF(("%s: Invalid checksum\n", __func__));
 			return -1;
 		}
 		in_len = min(in_len, len);
