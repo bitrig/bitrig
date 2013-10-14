@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.20 2012/10/15 06:31:14 deraadt Exp $
+#	$OpenBSD: Makefile.inc,v 1.22 2013/10/14 00:00:07 guenther Exp $
 
 TOP=		${.CURDIR}/..
 
@@ -118,7 +118,7 @@ ${CBIN}.mk ${CBIN}.cache ${CBIN}.c: ${CRUNCHCONF}
 	-c ${CBIN}.c -e ${CBIN} -m ${CBIN}.mk ${CRUNCHCONF}
 
 ${CBIN}: ${CBIN}.mk ${CBIN}.cache ${CBIN}.c
-	${MAKE} -f ${CBIN}.mk all
+	${MAKE} -f ${CBIN}.mk SRCLIBDIR=${.CURDIR}/../../../lib all
 	strip -R .comment ${CBIN}
 
 ${CRUNCHCONF}: ${LISTS}
@@ -134,6 +134,7 @@ do_files:
 clean cleandir:
 	/bin/rm -f core ${IMAGE} ${CBIN} ${CBIN}.mk ${CBIN}*.cache \
 	    *.o *.lo *.c bsd bsd.rd bsd.gz bsd.strip floppy*.fs \
+	    lib*.a lib*.olist ${CBIN}.map \
 	    rdsetroot boot ${CRUNCHCONF} ${FS}
 
 .include <bsd.obj.mk>
