@@ -15,6 +15,7 @@ option		DST=0		# daylight saving time used by RTC
 
 option		FFS		# UFS
 option		FFS2		# UFS2
+option		WAPBL		# File system journaling support
 option		EXT2FS		# Linux ext2fs
 
 option		NFSCLIENT	# Network File System client
