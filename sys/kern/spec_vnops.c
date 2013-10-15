@@ -404,6 +404,10 @@ spec_kqfilter(void *v)
 	return (EOPNOTSUPP);
 }
 
+#ifdef WAPBL
+extern int ffs_wapbl_fsync_vfs(struct vnode *, int);
+#endif
+
 /*
  * Synch buffers associated with a block device
  */
@@ -418,6 +422,17 @@ spec_fsync(void *v)
 
 	if (vp->v_type == VCHR)
 		return (0);
+
+#ifdef WAPBL
+	if (vp->v_type == VBLK &&
+	    vp->v_specmountpoint != NULL &&
+	    vp->v_specmountpoint->mnt_wapbl != NULL) {
+		int error = ffs_wapbl_fsync_vfs(vp, ap->a_waitfor);
+		if (error)
+			return (error);
+	}
+#endif
+
 	/*
 	 * Flush all dirty buffers associated with a block device.
 	 */
