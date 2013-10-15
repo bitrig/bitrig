@@ -488,13 +488,13 @@ ffs_wapbl_fsync_full(void *v)
 	struct inode *ip = VTOI(vp);
 	struct mount *mp = vp->v_mount;
 	int waitfor = ap->a_waitfor;
-	int error = 0;
+	int s, error = 0;
 
 	KASSERT(vp->v_type != VREG);
 	KASSERT(mp->mnt_wapbl != NULL);
 
 #ifdef DIAGNOSTIC
-	int s = splbio();
+	s = splbio();
 	struct buf *bp, *nbp;
 	for (bp = LIST_FIRST(&vp->v_dirtyblkhd);
 	    bp != LIST_END(&vp->v_dirtyblkhd); bp = nbp) {
@@ -619,14 +619,14 @@ loop:
 int
 ffs_wapbl_fsync_vfs(struct vnode *vp, int waitfor)
 {
-	int error = 0;
+	int s, error = 0;
 
 	KASSERT(vp->v_type == VBLK);
 	KASSERT(vp->v_specmountpoint != NULL);
 	KASSERT(vp->v_specmountpoint->mnt_wapbl != NULL);
 
 #ifdef DIAGNOSTIC
-	int s = splbio();
+	s = splbio();
 	struct buf *bp, *nbp;
 	for (bp = LIST_FIRST(&vp->v_dirtyblkhd);
 	    bp != LIST_END(&vp->v_dirtyblkhd); bp = nbp) {
