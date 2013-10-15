@@ -1232,8 +1232,8 @@ buf_daemon(struct proc *p)
 			    wapbl_vphaswapbl(bp->b_vp)) {
 				brelse(bp);
 				struct mount *mp = wapbl_vptomp(bp->b_vp);
-				int error = wapbl_flush(mp->mnt_wapbl, 1);
 #ifdef WAPBL_DEBUG
+				int error = wapbl_flush(mp->mnt_wapbl, 1);
 				if (did_wapbl++)
 					printf("synced wapbl %d times\n",
 					    did_wapbl);
@@ -1241,6 +1241,8 @@ buf_daemon(struct proc *p)
 					printf("buf_daemon: sync of mp %p "
 					    "failed with error %d\n", mp,
 					    error);
+#else
+				wapbl_flush(mp->mnt_wapbl, 1);
 #endif
 				s = splbio();
 				continue;
