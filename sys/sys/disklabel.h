@@ -32,6 +32,8 @@
  *	@(#)disklabel.h	8.2 (Berkeley) 7/10/94
  */
 
+#include <sys/uuid.h>
+
 /*
  * Disk description table, see disktab(5)
  */
@@ -380,6 +382,43 @@ struct partinfo {
 	struct partition *part;
 };
 
+/* GUID partition table -- located at sector 1 of some disks. */
+#define	GPTSECTOR	1		/* DOS boot block relative sector # */
+#define	GPTSIGNATURE	0x5452415020494645
+#define	GPTREVISION	0x10000
+#define	NGPTPARTITIONS	128
+#define	NGPTPARTITIONSPERSEC	4
+#define	GPTDOSACTIVE	0x2
+
+struct __attribute__((packed)) gpt_header {
+	u_int64_t gh_sig;			/* "EFI PART" */
+	u_int32_t gh_rev;			/* GPT Version 1.0: 0x00000100 */
+	u_int32_t gh_size;			/* Little-Endian */
+	u_int32_t gh_csum;			/* CRC32: with this field as 0 */
+	u_int32_t gh_rsvd;			/* always zero */
+	u_int64_t gh_cur_lba;			/* location of this header */
+	u_int64_t gh_bu_lba;			/* location of backup header */
+	u_int64_t gh_start_lba;			/* first usable LBA (after this header) */
+	u_int64_t gh_end_lba;			/* last usable LBA (before backup header) */
+	struct uuid gh_guid;			/* disk GUID / UUID */
+	u_int64_t gh_part_lba;			/* location of partition entries */
+	u_int32_t gh_part_num;			/* # of reserved entry space, usually 128 */
+	u_int32_t gh_part_size;			/* size per entry */
+	u_int32_t gh_part_csum;			/* checksum of all entries */
+};
+
+struct __attribute__((packed)) gpt_partition {
+	struct uuid gp_type;			/* partition type GUID */
+	struct uuid gp_guid;			/* unique partition GUID */
+	u_int64_t gp_start;			/* start of partition, little-endian */
+	u_int64_t gp_end;			/* end of partition, inclusive, usually odd */
+	u_int64_t gp_attrs;			/* attribute flags */
+	u_int16_t gp_name[36];			/* partition name, utf-16le */
+};
+
+#define	GPTPTYP_MSDOS	{ 0xeb, 0xd0, 0xa0, 0xa2, 0xb9, 0xe5, 0x44, 0x33, 0x87, 0xc0, 0x68, 0xb6, 0xb7, 0x26, 0x99, 0xc7 }
+#define	GPTPTYP_OPENBSD	{ 0x82, 0x4c, 0xc7, 0xa0, 0x36, 0xa8, 0x11, 0xe3, 0x89, 0x0a, 0x95, 0x25, 0x19, 0xad, 0x3f, 0x61 }
+
 /* DOS partition table -- located at start of some disks. */
 #define	DOS_LABELSECTOR 1
 #define	DOSBBSECTOR	0		/* DOS boot block relative sector # */
@@ -427,6 +466,7 @@ struct dos_partition {
 #define	DOSPTYP_FREEBSD	0xa5		/* FreeBSD partition type */
 #define	DOSPTYP_OPENBSD	0xa6		/* OpenBSD partition type */
 #define	DOSPTYP_NETBSD	0xa9		/* NetBSD partition type */
+#define	DOSPTYP_EFI	0xee		/* EFI Protective Partition */
 
 struct dos_mbr {
 	u_int8_t		dmbr_boot[DOSPARTOFF];
@@ -445,6 +485,8 @@ int	 readdisklabel(dev_t, void (*)(struct buf *), struct disklabel *, int);
 int	 writedisklabel(dev_t, void (*)(struct buf *), struct disklabel *);
 int	 bounds_check_with_label(struct buf *, struct disklabel *);
 int	 readdoslabel(struct buf *, void (*)(struct buf *),
+	    struct disklabel *, int *, int);
+int	 readgptlabel(struct buf *, void (*)(struct buf *),
 	    struct disklabel *, int *, int);
 #ifdef CD9660
 int iso_disklabelspoof(dev_t dev, void (*strat)(struct buf *),

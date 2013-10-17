@@ -345,6 +345,9 @@ readdoslabel(struct buf *bp, void (*strat)(struct buf *),
 				goto notmbr;
 		}
 
+		if(dp[0].dp_typ == DOSPTYP_EFI)
+			return (EINVAL);
+
 		if (ourpart == -1) {
 			/* Search for our MBR partition */
 			for (dp2=dp, i=0; i < NDOSPART && ourpart == -1;
@@ -522,6 +525,200 @@ notfat:
 
 	/* sub-MBR disklabels are always at a LABELOFFSET of 0 */
 	return checkdisklabel(bp->b_data + offset, lp, dospartoff, dospartend);
+}
+
+/*
+ * If gpt partition table requested, attempt to load it and
+ * find disklabel inside a GPT partition. Return buffer
+ * for use in signalling errors if requested.
+ *
+ * XXX: We would like to check if GPT checksums are correct.
+ */
+int
+readgptlabel(struct buf *bp, void (*strat)(struct buf *),
+    struct disklabel *lp, int *partoffp, int spoofonly)
+{
+	u_int64_t gptpartoff = 0, gptpartend = DL_GETBEND(lp);
+	int i, ourpart = -1, offset, n = 0;
+	struct gpt_header gh;
+	struct gpt_partition *gp, *gp2;
+	daddr_t part_blkno = GPTSECTOR;
+	int error;
+
+	if (lp->d_secpercyl == 0)
+		return (EINVAL);	/* invalid label */
+	if (lp->d_secsize == 0)
+		return (ENOSPC);	/* disk too small */
+
+	/*
+	 * Read GUID partition table.
+	 * Map the partitions to disklabel entries i-p
+	 */
+
+	/* read header record */
+	bp->b_blkno = DL_BLKTOSEC(lp, part_blkno) * DL_BLKSPERSEC(lp);
+	offset = DL_BLKOFFSET(lp, part_blkno);
+	bp->b_bcount = lp->d_secsize;
+	bp->b_error = 0; /* B_ERROR and b_error may have stale data. */
+	CLR(bp->b_flags, B_READ | B_WRITE | B_DONE | B_ERROR);
+	SET(bp->b_flags, B_BUSY | B_READ | B_RAW);
+	(*strat)(bp);
+	error = biowait(bp);
+	if (error) {
+/*wrong*/	if (partoffp)
+/*wrong*/		*partoffp = -1;
+		return (error);
+	}
+
+	bcopy(bp->b_data + offset, &gh, sizeof(gh));
+
+	if (letoh64(gh.gh_sig) != GPTSIGNATURE)
+		return (EINVAL);
+
+	if (letoh64(gh.gh_start_lba) > DL_GETDSIZE(lp) ||
+	    letoh64(gh.gh_end_lba) > DL_GETDSIZE(lp) ||
+	    letoh64(gh.gh_part_lba) > DL_GETDSIZE(lp))
+		return (EINVAL);
+
+	gp = malloc(letoh32(gh.gh_part_num) * sizeof(struct gpt_partition),
+	    M_DEVBUF, M_NOWAIT|M_ZERO);
+	if (gp == NULL)
+		return (ENOMEM);
+
+	for (i = 0; i < letoh32(gh.gh_part_num) / NGPTPARTITIONSPERSEC; i++) {
+		part_blkno = letoh64(gh.gh_part_lba) + i;
+		/* read partition record */
+		bp->b_blkno = DL_BLKTOSEC(lp, part_blkno) * DL_BLKSPERSEC(lp);
+		offset = DL_BLKOFFSET(lp, part_blkno);
+		bp->b_bcount = lp->d_secsize;
+		bp->b_error = 0; /* B_ERROR and b_error may have stale data. */
+		CLR(bp->b_flags, B_READ | B_WRITE | B_DONE | B_ERROR);
+		SET(bp->b_flags, B_BUSY | B_READ | B_RAW);
+		(*strat)(bp);
+		error = biowait(bp);
+		if (error) {
+/*wrong*/		if (partoffp)
+/*wrong*/			*partoffp = -1;
+			free(gp, M_DEVBUF);
+			return (error);
+		}
+
+		bcopy(bp->b_data + offset, gp + i * NGPTPARTITIONSPERSEC,
+		    NGPTPARTITIONSPERSEC*sizeof(struct gpt_partition));
+	}
+
+	for (gp2 = gp, i = 0; i < letoh32(gh.gh_part_num) && ourpart == -1;
+	    gp2++, i++) {
+		if (!letoh64(gp2->gp_start) || !letoh64(gp2->gp_end))
+			continue;
+		struct uuid tmp1;
+		struct uuid tmp2;
+		uint8_t obsd[] = GPTPTYP_OPENBSD;
+		uuid_dec_be(obsd, &tmp1);
+		uuid_dec_le(&gp2->gp_type, &tmp2);
+		if (!memcmp(&tmp1, &tmp2, sizeof(struct uuid))) {
+			ourpart = i;
+			break;
+		}
+	}
+
+	if (ourpart != -1) {
+		/*
+		 * This is our GPT partition.
+		 */
+		gp2 = &gp[ourpart];
+		gptpartoff = letoh64(gp2->gp_start);
+		gptpartend = letoh64(gp2->gp_end);
+
+		/* found our OpenBSD partition, finish up */
+		if (partoffp)
+			goto done;
+	} else
+		spoofonly = 1;	/* No disklabel to read from disk. */
+
+	/*
+	 * In case the disklabel read below fails, we want to
+	 * provide a fake label in i-p.
+	 */
+	for (gp2 = gp, i = 0; i < letoh32(gh.gh_part_num); gp2++, i++) {
+		struct partition *pp;
+		u_int8_t fstype;
+		struct uuid tmp1;
+		struct uuid tmp2;
+		uint8_t obsd[] = GPTPTYP_OPENBSD;
+		uint8_t msdos[] = GPTPTYP_MSDOS;
+
+		uuid_dec_be(obsd, &tmp1);
+		uuid_dec_le(&gp2->gp_type, &tmp2);
+		if (!memcmp(&tmp1, &tmp2, sizeof(struct uuid)))
+			continue;
+		if (i == ourpart)
+			continue;
+		if (letoh64(gp2->gp_end) > letoh64(gh.gh_end_lba))
+			continue;
+		if (letoh64(gp2->gp_start) > letoh64(gh.gh_end_lba))
+			continue;
+		if (letoh64(gp2->gp_start) >= letoh64(gp2->gp_end))
+			continue;
+
+		uuid_dec_be(msdos, &tmp1);
+		uuid_dec_le(&gp2->gp_type, &tmp2);
+		if (!memcmp(&tmp1, &tmp2, sizeof(struct uuid))) {
+			fstype = FS_MSDOS;
+		} else {
+			fstype = FS_OTHER;
+		}
+
+		/*
+		 * Don't set fstype/offset/size when just looking for
+		 * the offset of the OpenBSD partition. It would
+		 * invalidate the disklabel checksum!
+		 *
+		 * Don't try to spoof more than 8 partitions, i.e.
+		 * 'i' -'p'.
+		 */
+		if (partoffp || n >= 8)
+			continue;
+
+		pp = &lp->d_partitions[8+n];
+		n++;
+		pp->p_fstype = fstype;
+		DL_SETPOFFSET(pp, letoh64(gp2->gp_start));
+		DL_SETPSIZE(pp, letoh64(gp2->gp_end) - letoh64(gp2->gp_start));
+	}
+
+	if (partoffp == NULL)
+		/* Must not modify *lp when partoffp is set. */
+		lp->d_npartitions = MAXPARTITIONS;
+
+done:
+	free(gp, M_DEVBUF);
+
+	/* record the OpenBSD partition's placement for the caller */
+	if (partoffp)
+		*partoffp = gptpartoff;
+	else {
+		DL_SETBSTART(lp, gptpartoff);
+		DL_SETBEND(lp, (gptpartend < DL_GETDSIZE(lp)) ? gptpartend :
+		    DL_GETDSIZE(lp));
+	}
+
+	/* don't read the on-disk label if we are in spoofed-only mode */
+	if (spoofonly)
+		return (0);
+
+	bp->b_blkno = DL_BLKTOSEC(lp, gptpartoff + DOS_LABELSECTOR) *
+	    DL_BLKSPERSEC(lp);
+	offset = DL_BLKOFFSET(lp, gptpartoff + DOS_LABELSECTOR);
+	bp->b_bcount = lp->d_secsize;
+	CLR(bp->b_flags, B_READ | B_WRITE | B_DONE);
+	SET(bp->b_flags, B_BUSY | B_READ | B_RAW);
+	(*strat)(bp);
+	if (biowait(bp))
+		return (bp->b_error);
+
+	/* sub-GPT disklabels are always at a LABELOFFSET of 0 */
+	return checkdisklabel(bp->b_data + offset, lp, gptpartoff, gptpartend);
 }
 
 /*
