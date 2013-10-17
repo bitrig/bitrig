@@ -93,7 +93,6 @@ tmpfs_mount(struct mount *mp, const char *path, void *data,
 	tmpfs_mount_t *tmp;
 	tmpfs_node_t *root;
 	uint64_t memlimit;
-	size_t len;
 	uint64_t nodes;
 	int error;
 
@@ -184,11 +183,18 @@ tmpfs_mount(struct mount *mp, const char *path, void *data,
 #endif
 	vfs_getnewfsid(mp);
 
-	bcopy(&args, &mp->mnt_stat.mount_info.tmpfs_args, sizeof(args));
-	copystr(path, mp->mnt_stat.f_mntonname, MNAMELEN - 1, &len);
-	bzero(mp->mnt_stat.f_mntonname + len, MNAMELEN - len);
-	len = strlcpy(mp->mnt_stat.f_mntfromname, "tmpfs", MNAMELEN - 1);
-	bzero(mp->mnt_stat.f_mntfromname + len, MNAMELEN - len);
+	mp->mnt_stat.mount_info.tmpfs_args = args;
+
+	bzero(&mp->mnt_stat.f_mntonname, sizeof(mp->mnt_stat.f_mntonname));
+	bzero(&mp->mnt_stat.f_mntfromname, sizeof(mp->mnt_stat.f_mntfromname));
+	bzero(&mp->mnt_stat.f_mntfromspec, sizeof(mp->mnt_stat.f_mntfromspec));
+
+	strlcpy(mp->mnt_stat.f_mntonname, path,
+	    sizeof(mp->mnt_stat.f_mntonname) - 1);
+	strlcpy(mp->mnt_stat.f_mntfromname, "tmpfs",
+	    sizeof(mp->mnt_stat.f_mntfromname) - 1);
+	strlcpy(mp->mnt_stat.f_mntfromspec, "tmpfs",
+	    sizeof(mp->mnt_stat.f_mntfromspec) - 1);
 
 	return error;
 }
