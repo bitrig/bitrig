@@ -1,4 +1,4 @@
-/*	$OpenBSD: db_sym.c,v 1.32 2006/03/13 06:23:20 jsg Exp $	*/
+/*	$OpenBSD: db_sym.c,v 1.33 2013/10/17 08:02:19 deraadt Exp $	*/
 /*	$NetBSD: db_sym.c,v 1.24 2000/08/11 22:50:47 tv Exp $	*/
 
 /* 
