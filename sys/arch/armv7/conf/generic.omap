@@ -65,6 +65,7 @@ ampscu*		at cortex?
 
 # OMAP3 only
 intc*		at omap?		# interrupt controller
+edma*           at omap?                # dma controller
 
 # OMAP on-chip devices
 prcm*		at omap?		# power/clock controller
