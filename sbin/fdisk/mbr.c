@@ -43,12 +43,35 @@
 #include "mbr.h"
 #include "part.h"
 
+void 
+MBR_init_GPT(disk_t *disk, mbr_t *mbr)
+{
+	/* initialize a protective MBR for GPT */
+	bzero (&mbr->part[0], sizeof(mbr->part[0]));
+	bzero (&mbr->part[1], sizeof(mbr->part[1]));
+	bzero (&mbr->part[2], sizeof(mbr->part[2]));
+	bzero (&mbr->part[3], sizeof(mbr->part[3]));
+
+	/* Use whole disk, starting after MBR. */
+	mbr->part[0].id = DOSPTYP_EFI;
+	mbr->part[0].bs = 1;
+	mbr->part[0].ns =  disk->real->size - 1;
+
+	/* Fix up start/length fields */
+	PRT_fix_CHS(disk, &mbr->part[0]);
+}
 
 void
 MBR_init(disk_t *disk, mbr_t *mbr)
 {
 	daddr_t i;
 	int adj;
+	extern int g_flag;
+
+	if (g_flag) {
+		MBR_init_GPT(disk, mbr);
+		return;
+	}
 
 	/* Fix up given mbr for this disk */
 	mbr->part[0].flag = 0;

@@ -43,6 +43,7 @@ static unsigned char builtin_mbr[] = {
 };
 
 int	y_flag;
+int	g_flag;
 
 static void
 usage(void)
@@ -50,13 +51,14 @@ usage(void)
 	extern char * __progname;
 
 	fprintf(stderr, "usage: %s "
-	    "[-eiuy] [-c cylinders -h heads -s sectors] [-f mbrfile] disk\n"
+	    "[-egiuy] [-c cylinders -h heads -s sectors] [-f mbrfile] disk\n"
 	    "\t-i: initialize disk with virgin MBR\n"
 	    "\t-u: update MBR code, preserve partition table\n"
 	    "\t-e: edit MBRs on disk interactively\n"
 	    "\t-f: specify non-standard MBR template\n"
 	    "\t-chs: specify disk geometry\n"
 	    "\t-y: do not ask questions\n"
+	    "\t-g: intialize disk with EFI/GPT partition, requires -i\n"
 	    "`disk' may be of the forms: sd0 or /dev/rsd0c.\n",
 	    __progname);
 	exit(1);
@@ -79,7 +81,7 @@ main(int argc, char *argv[])
 	mbr_t mbr;
 	char mbr_buf[DEV_BSIZE];
 
-	while ((ch = getopt(argc, argv, "ieuf:c:h:s:y")) != -1) {
+	while ((ch = getopt(argc, argv, "ieguf:c:h:s:y")) != -1) {
 		const char *errstr;
 
 		switch(ch) {
@@ -111,6 +113,9 @@ main(int argc, char *argv[])
 			if (errstr)
 				errx(1, "Sector argument %s [1..63].", errstr);
 			break;
+		case 'g':
+			g_flag = 1;
+			break;
 		case 'y':
 			y_flag = 1;
 			break;
@@ -126,6 +131,11 @@ main(int argc, char *argv[])
 		usage();
 	else
 		disk.name = argv[0];
+
+	if (g_flag != 0 && i_flag == 0) {
+		warnx("-g specified without -i");
+		usage();
+	}
 
 	/* Put in supplied geometry if there */
 	if (c_arg | h_arg | s_arg) {

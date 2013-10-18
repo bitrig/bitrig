@@ -104,6 +104,11 @@ below, for more information.
 Specifies an alternate MBR template file.
 The default file is
 .Pa /usr/mdec/mbr .
+.It Fl g
+A protective MBR for GPT will be written to disk instead of an OpenBSD
+MBR diskabel.
+Only valid with
+.Fl i .
 .It Fl i
 Requests that the MBR partition data be re-initialized.
 In this mode,
@@ -119,6 +124,9 @@ In the default template, MBR partition number 3 will be configured as an
 MBR partition spanning the entire disk, except for a zone left at the start
 for booting.
 This mode is designed to initialize the MBR the very first time.
+If 
+.Fl g
+flag is specified it will create a protective MBR for GPT.
 .It Fl u
 Update MBR bootcode, preserving existing MBR partition table.
 The MBR bootcode extends from offset 0x000 to the start of the MBR partition table
