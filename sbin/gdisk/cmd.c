@@ -137,8 +137,15 @@ Xedit(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
 	pp->start_lba = getuint(disk, "Partition offset", pp->start_lba,
 	    gpt->header->end_lba);
 	pp->end_lba = getuint(disk, "Partition size",
-	    pp->end_lba - pp->start_lba,
-	    gpt->header->end_lba - pp->start_lba) + pp->start_lba;
+	    pp->end_lba - pp->start_lba + 1,
+	    gpt->header->end_lba - pp->start_lba + 1) + pp->start_lba - 1;
+
+	/* Catch zero size partition. */
+	if (pp->start_lba > pp->end_lba) {
+		memset(pp, 0, sizeof(*pp));
+		printf("Partition %d is disabled.\n", pn);
+		return (ret);
+	}
 
 	if (uuid_is_nil(&pp->guid, NULL))
 		uuidgen(&pp->guid, 1);

@@ -575,9 +575,9 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 	if (letoh64(gh.gh_sig) != GPTSIGNATURE)
 		return (EINVAL);
 
-	if (letoh64(gh.gh_start_lba) > DL_GETDSIZE(lp) ||
-	    letoh64(gh.gh_end_lba) > DL_GETDSIZE(lp) ||
-	    letoh64(gh.gh_part_lba) > DL_GETDSIZE(lp))
+	if (letoh64(gh.gh_start_lba) >= DL_GETDSIZE(lp) ||
+	    letoh64(gh.gh_end_lba) >= DL_GETDSIZE(lp) ||
+	    letoh64(gh.gh_part_lba) >= DL_GETDSIZE(lp))
 		return (EINVAL);
 
 	gp = malloc(letoh32(gh.gh_part_num) * sizeof(struct gpt_partition),
@@ -628,7 +628,7 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 		 */
 		gp2 = &gp[ourpart];
 		gptpartoff = letoh64(gp2->gp_start);
-		gptpartend = letoh64(gp2->gp_end);
+		gptpartend = letoh64(gp2->gp_end) + 1; /* == start + size */
 
 		/* found our OpenBSD partition, finish up */
 		if (partoffp)
@@ -658,7 +658,7 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 			continue;
 		if (letoh64(gp2->gp_start) > letoh64(gh.gh_end_lba))
 			continue;
-		if (letoh64(gp2->gp_start) >= letoh64(gp2->gp_end))
+		if (letoh64(gp2->gp_start) > letoh64(gp2->gp_end))
 			continue;
 
 		uuid_dec_be(msdos, &tmp1);
@@ -684,7 +684,7 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 		n++;
 		pp->p_fstype = fstype;
 		DL_SETPOFFSET(pp, letoh64(gp2->gp_start));
-		DL_SETPSIZE(pp, letoh64(gp2->gp_end) - letoh64(gp2->gp_start));
+		DL_SETPSIZE(pp, letoh64(gp2->gp_end) - letoh64(gp2->gp_start) + 1);
 	}
 
 	if (partoffp == NULL)

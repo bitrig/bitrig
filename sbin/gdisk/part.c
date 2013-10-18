@@ -282,7 +282,7 @@ PRT_print(int num, gpt_partition_t *partn, char *units)
 		printf("   #:                 type name                 [       start:        size ]\n");
 		printf("-------------------------------------------------------------------------------\n");
 	} else {
-		size = partn->end_lba - partn->start_lba;
+		size = partn->end_lba - partn->start_lba + 1;
 		size = ((double)size * unit_types[SECTORS].conversion) /
 		    unit_types[i].conversion;
 		printf("%c%3d: %20s %-20s [%12lld:%12.0f%s]\n",
