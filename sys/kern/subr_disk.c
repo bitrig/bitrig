@@ -613,7 +613,7 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 			continue;
 		struct uuid tmp1;
 		struct uuid tmp2;
-		uint8_t obsd[] = GPTPTYP_OPENBSD;
+		uint8_t obsd[] = GPT_UUID_OPENBSD;
 		uuid_dec_be(obsd, &tmp1);
 		uuid_dec_le(&gp2->gp_type, &tmp2);
 		if (!memcmp(&tmp1, &tmp2, sizeof(struct uuid))) {
@@ -645,8 +645,8 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 		u_int8_t fstype;
 		struct uuid tmp1;
 		struct uuid tmp2;
-		uint8_t obsd[] = GPTPTYP_OPENBSD;
-		uint8_t msdos[] = GPTPTYP_MSDOS;
+		uint8_t obsd[] = GPT_UUID_OPENBSD;
+		uint8_t msdos[] = GPT_UUID_MSDOS;
 
 		uuid_dec_be(obsd, &tmp1);
 		uuid_dec_le(&gp2->gp_type, &tmp2);
