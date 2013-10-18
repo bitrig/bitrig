@@ -29,8 +29,7 @@
 .Nd GPT partition maintenance program
 .Sh SYNOPSIS
 .Nm gdisk
-.Op Fl eiuy
-.Op Fl f Ar gptfile
+.Op Fl eiy
 .Ar disk
 .Sh DESCRIPTION
 On the amd64 and other architectures, the MBR partition table is being
@@ -63,21 +62,12 @@ interactive editor to modify an GPT partition table.
 See
 .Sx COMMAND MODE ,
 below, for more information.
-.It Fl f Ar gptfile
-Specifies an alternate GPT template file.
-The default file is
-.Pa /usr/mdec/gpt .
 .It Fl i
 Requests that the GPT partition data be re-initialized.
 In this mode,
 .Nm
-will completely overwrite the GPT partition table
-using the default GPT template
-.Pa /usr/mdec/gpt
-(or the one optionally specified by the
-.Fl f
-flag).
-In the default template, GPT partition number 0 will be configured as an
+will completely overwrite the GPT partition table.
+As default, GPT partition number 0 will be configured as an
 .Ox
 GPT partition spanning the entire disk, except for a zone left at the start
 for booting.
