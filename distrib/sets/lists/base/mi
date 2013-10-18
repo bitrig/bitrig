@@ -149,6 +149,7 @@
 ./sbin/fsck_msdos
 ./sbin/fsdb
 ./sbin/fsirand
+./sbin/gdisk
 ./sbin/growfs
 ./sbin/halt
 ./sbin/ifconfig
@@ -11141,6 +11142,7 @@
 ./usr/share/man/man8/fsirand.8
 ./usr/share/man/man8/ftp-proxy.8
 ./usr/share/man/man8/ftpd.8
+./usr/share/man/man8/gdisk.8
 ./usr/share/man/man8/genassym.sh.8
 ./usr/share/man/man8/getty.8
 ./usr/share/man/man8/group.8
