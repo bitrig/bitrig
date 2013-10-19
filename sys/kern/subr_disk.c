@@ -609,8 +609,10 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 
 	for (gp2 = gp, i = 0; i < letoh32(gh.gh_part_num) && ourpart == -1;
 	    gp2++, i++) {
+		/* XXX: uuid_is_nil on gp2->gp_type ? */
 		if (!letoh64(gp2->gp_start) || !letoh64(gp2->gp_end))
 			continue;
+
 		struct uuid tmp1;
 		struct uuid tmp2;
 		uint8_t obsd[] = GPT_UUID_OPENBSD;
@@ -648,17 +650,18 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 		uint8_t obsd[] = GPT_UUID_OPENBSD;
 		uint8_t msdos[] = GPT_UUID_MSDOS;
 
+		/* XXX: uuid_is_nil on gp2->gp_type ? */
 		uuid_dec_be(obsd, &tmp1);
 		uuid_dec_le(&gp2->gp_type, &tmp2);
 		if (!memcmp(&tmp1, &tmp2, sizeof(struct uuid)))
 			continue;
 		if (i == ourpart)
 			continue;
-		if (letoh64(gp2->gp_end) > letoh64(gh.gh_end_lba))
-			continue;
-		if (letoh64(gp2->gp_start) > letoh64(gh.gh_end_lba))
-			continue;
 		if (letoh64(gp2->gp_start) > letoh64(gp2->gp_end))
+			continue;
+		if (letoh64(gp2->gp_start) < letoh64(gh.gh_start_lba))
+			continue;
+		if (letoh64(gp2->gp_end) > letoh64(gh.gh_end_lba))
 			continue;
 
 		uuid_dec_be(msdos, &tmp1);
