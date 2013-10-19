@@ -71,11 +71,11 @@ static const struct part_type {
 
 	/* ChromeOS-specific partition types */
 	{ 0x7f00, "fe3a2a5d-4f32-41a7-b725-accc3285a309", "ChromeOS kernel" },
-	{ 0x7f01, "3cb8e202-3b7e-47dd-8a3C-7ff2a13cfcec", "ChromeOS root" },
+	{ 0x7f01, "3cb8e202-3b7e-47dd-8a3c-7ff2a13cfcec", "ChromeOS root" },
 	{ 0x7f02, "2e0a753d-9e48-43b0-8337-b15192cb1b5e", "ChromeOS reserved" },
 
 	/* Linux-specific partition types */
-	{ 0x8200, "0657fd6d-a4ab-43C4-84e5-0933c84b4f4f", "Linux swap" }, /* Linux swap (or Solaris on MBR) */
+	{ 0x8200, "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f", "Linux swap" }, /* Linux swap (or Solaris on MBR) */
 	{ 0x8300, "0fc63daf-8483-4772-8e79-3d69d8477de4", "Linux filesystem" }, /* Linux native */
 	{ 0x8301, "8da63339-0007-60c0-c436-083ac8230908", "Linux reserved" },
 	{ 0x8e00, "e6d6d379-f507-44c2-a23c-238f2a3df928", "Linux LVM" },
