@@ -1,4 +1,4 @@
-/*	$OpenBSD: subr_disk.c,v 1.154 2013/10/14 23:35:53 krw Exp $	*/
+/*	$OpenBSD: subr_disk.c,v 1.155 2013/10/19 09:32:15 krw Exp $	*/
 /*	$NetBSD: subr_disk.c,v 1.17 1996/03/16 23:17:08 christos Exp $	*/
 
 /*
@@ -292,7 +292,7 @@ checkdisklabel(void *rlp, struct disklabel *lp, u_int64_t boundstart,
  */
 int
 readdoslabel(struct buf *bp, void (*strat)(struct buf *),
-    struct disklabel *lp, int *partoffp, int spoofonly)
+    struct disklabel *lp, daddr_t *partoffp, int spoofonly)
 {
 	u_int64_t dospartoff = 0, dospartend = DL_GETBEND(lp);
 	int i, ourpart = -1, wander = 1, n = 0, loop = 0, offset;
@@ -536,7 +536,7 @@ notfat:
  */
 int
 readgptlabel(struct buf *bp, void (*strat)(struct buf *),
-    struct disklabel *lp, int *partoffp, int spoofonly)
+    struct disklabel *lp, daddr_t *partoffp, int spoofonly)
 {
 	u_int64_t gptpartoff = 0, gptpartend = DL_GETBEND(lp);
 	int i, ourpart = -1, offset, n = 0;
