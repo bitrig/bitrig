@@ -67,7 +67,7 @@ int Xexit(cmd_t *, disk_t *, gpt_t *, gpt_t *, int);
 int Xquit(cmd_t *, disk_t *, gpt_t *, gpt_t *, int);
 int Xabort(cmd_t *, disk_t *, gpt_t *, gpt_t *, int);
 int Xhelp(cmd_t *, disk_t *, gpt_t *, gpt_t *, int);
-int Xflag(cmd_t *, disk_t *, gpt_t *, gpt_t *, int);
+int Xflags(cmd_t *, disk_t *, gpt_t *, gpt_t *, int);
 
 #endif /* _CMD_H */
 

@@ -266,42 +266,44 @@ Xhelp(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
 
 /* ARGSUSED */
 int
-Xflag(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
+Xflags(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
 {
 	const char *errstr;
-	int i, pn = -1, val = -1;
+	int i, pn = -1;
+	long val = -1;
 	char *part, *flag;
 
-	flag = cmd->args;
-	part = strsep(&flag, " \t");
-
-	pn = (int)strtonum(part, 0, 127, &errstr);
+	pn = (int)strtonum(cmd->args, 0, 127, &errstr);
 	if (errstr) {
 		printf("partition number is %s: %s.\n", errstr, part);
 		return (CMD_CONT);
 	}
 
-	if (flag != NULL) {
-		val = (int)strtonum(flag, 0, 0xff, &errstr);
-		if (errstr) {
-			printf("flag value is %s: %s.\n", errstr, flag);
-			return (CMD_CONT);
-		}
-	}
-
-	if (val == -1) {
+	if (ask_yn("Mark partition as DOS active?\n")) {
 		/* Set active flag */
-		for (i = 0; i < 4; i++) {
+		for (i = 0; i < gpt->header->partitions_num; i++) {
 			if (i == pn)
-				gpt->part[i].attribute = GPT_DOSACTIVE;
+				gpt->part[i].attribute |= GPT_DOSACTIVE;
 			else
-				gpt->part[i].attribute = 0x00;
+				gpt->part[i].attribute &= ~GPT_DOSACTIVE;
 		}
 		printf("Partition %d marked active.\n", pn);
-	} else {
-		gpt->part[pn].attribute = val;
-		printf("Partition %d flag value set to 0x%x.\n", pn, val);
 	}
+	val = (gpt->part[i].attribute >> GPT_PRIORITY_SHIFT)
+	    & GPT_PRIORITY_MASK;
+	val = getuint(disk, "Priority", val, GPT_PRIORITY_MAX);
+	gpt->part[i].attribute |= (val & GPT_PRIORITY_SHIFT)
+	    << GPT_PRIORITY_SHIFT;
+	val = (gpt->part[i].attribute >> GPT_TRIES_SHIFT)
+	    & GPT_TRIES_MASK;
+	val = getuint(disk, "Tries", val, GPT_TRIES_MAX);
+	gpt->part[i].attribute |= (val & GPT_TRIES_SHIFT)
+	    << GPT_TRIES_SHIFT;
+	val = (gpt->part[i].attribute >> GPT_SUCCESS_SHIFT)
+	    & GPT_SUCCESS_MASK;
+	val = getuint(disk, "Success", val, GPT_SUCCESS_MAX);
+	gpt->part[i].attribute |= (val & GPT_SUCCESS_SHIFT)
+	    << GPT_SUCCESS_SHIFT;
 	return (CMD_DIRTY);
 }
 

@@ -32,8 +32,18 @@
 #define GPT_SIGNATURE	0x5452415020494645
 #define GPT_REVISION	0x10000
 #define GPT_PARTITIONS	128
-#define GPT_DOSACTIVE	0x2
 #define GPTPTYP_OPENBSD	0xa600
+
+#define GPT_DOSACTIVE		0x2
+#define GPT_PRIORITY_SHIFT	48
+#define GPT_PRIORITY_MASK	0xf
+#define GPT_PRIORITY_MAX	(GPT_PRIORITY_MASK)
+#define GPT_TRIES_SHIFT		52
+#define GPT_TRIES_MASK		0xf
+#define GPT_TRIES_MAX		(GPT_TRIES_MASK)
+#define GPT_SUCCESS_SHIFT	56
+#define GPT_SUCCESS_MASK	0x1
+#define GPT_SUCCESS_MAX		(GPT_SUCCESS_MASK)
 
 /* GPT header */
 typedef struct __attribute__((packed)) _gpt_header_t {

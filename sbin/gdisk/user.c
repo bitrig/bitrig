@@ -47,7 +47,7 @@ static cmd_table_t cmd_table[] = {
 	{"reinit", Xreinit,	"Re-initialize loaded GPT (to defaults)"},
 	{"setpid", Xsetpid,	"Set the identifier of a given table entry"},
 	{"edit",   Xedit,	"Edit given table entry"},
-	{"flag",   Xflag,	"Flag given table entry as bootable"},
+	{"flags",  Xflags,	"Edit given table entry flags"},
 	{"swap",   Xswap,	"Swap two partition entries"},
 	{"print",  Xprint,	"Print loaded GPT partition table"},
 	{"write",  Xwrite,	"Write loaded GPT to disk"},
