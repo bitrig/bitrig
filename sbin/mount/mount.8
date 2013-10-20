@@ -174,7 +174,8 @@ The most common use of this flag is to speed up
 where it can give a factor of two speed increase.
 .Pp
 The options
-.Ic async
+.Ic async ,
+.Ic log
 and
 .Ic softdep
 are mutually exclusive.
@@ -223,7 +224,23 @@ This option is ignored when using the
 flag and a file system is already mounted read/write.
 .Pp
 The options
-.Ic async
+.Ic async ,
+.Ic log
+and
+.Ic softdep
+are mutually exclusive.
+.It log
+(FFS only.)
+Mount the file system with
+.Xr wapbl 4
+meta-data journaling, also known simply as logging.
+.Ic log
+provides rapid metadata updates and eliminates the need to check
+file system consistency after a system outage.
+.Pp
+The options
+.Ic async ,
+.Ic log
 and
 .Ic softdep
 are mutually exclusive.
@@ -379,6 +396,7 @@ with option
 .Dl # mount -u -o dev /var
 .Sh SEE ALSO
 .Xr mount 2 ,
+.Xr wapbl 4 ,
 .Xr fstab 5 ,
 .Xr disklabel 8 ,
 .Xr mount_cd9660 8 ,
