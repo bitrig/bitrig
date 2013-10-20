@@ -609,16 +609,21 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 
 	for (gp2 = gp, i = 0; i < letoh32(gh.gh_part_num) && ourpart == -1;
 	    gp2++, i++) {
+		struct uuid uuid_part;
+		struct uuid uuid_openbsd;
+		uint8_t obsd[] = GPT_UUID_OPENBSD;
+
 		/* XXX: uuid_is_nil on gp2->gp_type ? */
-		if (!letoh64(gp2->gp_start) || !letoh64(gp2->gp_end))
+		if (letoh64(gp2->gp_start) > letoh64(gp2->gp_end))
+			continue;
+		if (letoh64(gp2->gp_start) < letoh64(gh.gh_start_lba))
+			continue;
+		if (letoh64(gp2->gp_end) > letoh64(gh.gh_end_lba))
 			continue;
 
-		struct uuid tmp1;
-		struct uuid tmp2;
-		uint8_t obsd[] = GPT_UUID_OPENBSD;
-		uuid_dec_be(obsd, &tmp1);
-		uuid_dec_le(&gp2->gp_type, &tmp2);
-		if (!memcmp(&tmp1, &tmp2, sizeof(struct uuid))) {
+		uuid_dec_le(&gp2->gp_type, &uuid_part);
+		uuid_dec_be(obsd, &uuid_openbsd);
+		if (!memcmp(&uuid_part, &uuid_openbsd, sizeof(struct uuid))) {
 			ourpart = i;
 			break;
 		}
@@ -645,16 +650,17 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 	for (gp2 = gp, i = 0; i < letoh32(gh.gh_part_num); gp2++, i++) {
 		struct partition *pp;
 		u_int8_t fstype;
-		struct uuid tmp1;
-		struct uuid tmp2;
+		struct uuid uuid_part;
+		struct uuid uuid_openbsd;
+		struct uuid uuid_msdos;
+		struct uuid uuid_chromefs;
+		struct uuid uuid_linux;
 		uint8_t obsd[] = GPT_UUID_OPENBSD;
 		uint8_t msdos[] = GPT_UUID_MSDOS;
+		uint8_t chromefs[] = GPT_UUID_CROMEROOTFS;
+		uint8_t linux[] = GPT_UUID_LINUX;
 
 		/* XXX: uuid_is_nil on gp2->gp_type ? */
-		uuid_dec_be(obsd, &tmp1);
-		uuid_dec_le(&gp2->gp_type, &tmp2);
-		if (!memcmp(&tmp1, &tmp2, sizeof(struct uuid)))
-			continue;
 		if (i == ourpart)
 			continue;
 		if (letoh64(gp2->gp_start) > letoh64(gp2->gp_end))
@@ -664,10 +670,23 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 		if (letoh64(gp2->gp_end) > letoh64(gh.gh_end_lba))
 			continue;
 
-		uuid_dec_be(msdos, &tmp1);
-		uuid_dec_le(&gp2->gp_type, &tmp2);
-		if (!memcmp(&tmp1, &tmp2, sizeof(struct uuid))) {
+		uuid_dec_le(&gp2->gp_type, &uuid_part);
+
+		uuid_dec_be(obsd, &uuid_openbsd);
+		if (!memcmp(&uuid_part, &uuid_openbsd, sizeof(struct uuid)))
+			continue;
+
+		uuid_dec_be(msdos, &uuid_msdos);
+		uuid_dec_be(linux, &uuid_linux);
+		uuid_dec_be(chromefs, &uuid_chromefs);
+		if (!memcmp(&uuid_msdos, &uuid_part, sizeof(struct uuid))) {
 			fstype = FS_MSDOS;
+		} else if (!memcmp(&uuid_chromefs, &uuid_part,
+		    sizeof(struct uuid))) {
+			fstype = FS_EXT2FS;
+		} else if (!memcmp(&uuid_linux, &uuid_part,
+		    sizeof(struct uuid))) {
+			fstype = FS_EXT2FS;
 		} else {
 			fstype = FS_OTHER;
 		}
