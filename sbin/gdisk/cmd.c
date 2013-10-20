@@ -269,41 +269,97 @@ int
 Xflags(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
 {
 	const char *errstr;
-	int i, pn = -1;
+	int i, part = -1, active = 0, priority = 0, tries = 0, success = 0;
 	long val = -1;
-	char *part, *flag;
+	char *partp, *activep, *priorityp, *triesp, *successp;
 
-	pn = (int)strtonum(cmd->args, 0, 127, &errstr);
+	activep = cmd->args;
+	partp = strsep(&activep, " \t");
+	priorityp = activep;
+	activep = strsep(&priorityp, " \t");
+	triesp = priorityp;
+	priorityp = strsep(&triesp, " \t");
+	successp = triesp;
+	triesp = strsep(&successp, " \t");
+
+	part = (int)strtonum(partp, 0, 127, &errstr);
 	if (errstr) {
-		printf("partition number is %s: %s.\n", errstr, part);
+		printf("partition number is %s: %s.\n", errstr, partp);
 		return (CMD_CONT);
 	}
 
-	if (ask_yn("Mark partition as DOS active?\n")) {
+	if (activep == NULL && priorityp == NULL && triesp == NULL &&
+	    successp == NULL) {
+		if (ask_yn("Mark partition as DOS active?"))
+			active = 1;
+
+		priority = (gpt->part[i].attribute >> GPT_PRIORITY_SHIFT)
+		    & GPT_PRIORITY_MASK;
+		priority = getuint(disk, "Priority", priority,
+		    GPT_PRIORITY_MAX);
+
+		tries = (gpt->part[i].attribute >> GPT_TRIES_SHIFT)
+		    & GPT_TRIES_MASK;
+		tries = getuint(disk, "Tries", tries, GPT_TRIES_MAX);
+
+		success = (gpt->part[i].attribute >> GPT_SUCCESS_SHIFT)
+		    & GPT_SUCCESS_MASK;
+		success = getuint(disk, "Success", success, GPT_SUCCESS_MAX);
+	} else if (activep != NULL && priorityp != NULL && triesp != NULL &&
+	    successp != NULL) {
+		active = (int)strtonum(activep, 0, 1, &errstr);
+		if (errstr) {
+			printf("active is %s: %s.\n", errstr, activep);
+			return (CMD_CONT);
+		}
+
+		priority = (int)strtonum(priorityp, 0, GPT_PRIORITY_MAX,
+		    &errstr);
+		if (errstr) {
+			printf("priority is %s: %s.\n", errstr, priorityp);
+			return (CMD_CONT);
+		}
+
+		tries = (int)strtonum(triesp, 0, GPT_TRIES_MAX, &errstr);
+		if (errstr) {
+			printf("tries is %s: %s.\n", errstr, triesp);
+			return (CMD_CONT);
+		}
+
+		success = (int)strtonum(successp, 0, GPT_SUCCESS_MAX, &errstr);
+		if (errstr) {
+			printf("success is %s: %s.\n", errstr, successp);
+			return (CMD_CONT);
+		}
+	} else {
+		return (CMD_CONT);
+	}
+
+	if (active) {
 		/* Set active flag */
 		for (i = 0; i < gpt->header->partitions_num; i++) {
-			if (i == pn)
+			if (i == part)
 				gpt->part[i].attribute |= GPT_DOSACTIVE;
 			else
 				gpt->part[i].attribute &= ~GPT_DOSACTIVE;
 		}
-		printf("Partition %d marked active.\n", pn);
 	}
-	val = (gpt->part[i].attribute >> GPT_PRIORITY_SHIFT)
-	    & GPT_PRIORITY_MASK;
-	val = getuint(disk, "Priority", val, GPT_PRIORITY_MAX);
-	gpt->part[i].attribute |= (val & GPT_PRIORITY_SHIFT)
+
+	gpt->part[i].attribute &= ~(GPT_PRIORITY_MASK
+	    << GPT_PRIORITY_SHIFT);
+	gpt->part[i].attribute |= (priority & GPT_PRIORITY_MASK)
 	    << GPT_PRIORITY_SHIFT;
-	val = (gpt->part[i].attribute >> GPT_TRIES_SHIFT)
-	    & GPT_TRIES_MASK;
-	val = getuint(disk, "Tries", val, GPT_TRIES_MAX);
-	gpt->part[i].attribute |= (val & GPT_TRIES_SHIFT)
+
+	gpt->part[i].attribute &= ~(GPT_TRIES_MASK
+	    << GPT_TRIES_SHIFT);
+	gpt->part[i].attribute |= (tries & GPT_TRIES_MASK)
 	    << GPT_TRIES_SHIFT;
-	val = (gpt->part[i].attribute >> GPT_SUCCESS_SHIFT)
-	    & GPT_SUCCESS_MASK;
-	val = getuint(disk, "Success", val, GPT_SUCCESS_MAX);
-	gpt->part[i].attribute |= (val & GPT_SUCCESS_SHIFT)
+
+	gpt->part[i].attribute &= ~(GPT_SUCCESS_MASK
+	    << GPT_SUCCESS_SHIFT);
+	gpt->part[i].attribute |= (success & GPT_SUCCESS_MASK)
 	    << GPT_SUCCESS_SHIFT;
+
 	return (CMD_DIRTY);
 }
 

@@ -229,18 +229,18 @@ may be appended to indicate bytes, kilobytes, megabytes, or gigabytes.
 The special size value
 .Sq *
 will cause the partition to be sized to use the remainder of the disk.
-.It Cm flag Ar # Op Ar value
-Make the given GPT partition table entry bootable
-and mark all others as not bootable
+.It Cm flags Ar # Op Ar active Ar priority Ar tries Ar success
+.Ar active
+marks the given GPT partition table entry
+bootable by legacy BIOSes and marks all others as not bootable
 (only one entry can be marked bootable).
-.\" If you wish to boot from an extended
-.\" GPT partition, you will need to mark the GPT partition table entry for the
-.\" extended GPT partition as bootable.
-If a
-.Ar value
-of 0 is given,
-the GPT partition is marked as not bootable,
-but no other GPT partitions are touched.
+.Ar priority
+sets the boot priority for a given entry.
+.Ar tries
+sets the amount of times this partition is ought to be tried to be booted.
+The
+.Ar success
+field overrides the tries field and marks a partition as always working.
 .It Cm setpid Ar #
 Change the GPT partition
 identifier of the given GPT partition table entry.
