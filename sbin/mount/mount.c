@@ -43,6 +43,7 @@
 #include <errno.h>
 #include <fstab.h>
 #include <netdb.h>
+#include <pwd.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -595,7 +596,18 @@ prmount(struct statfs *sf)
 			(void)printf("%s%s", !f++ ? " (" : ", ", tmpfs_size);
 	}
 
-	(void)printf(f ? ")\n" : "\n");
+	if (verbose) {
+		struct passwd *pw = getpwuid(sf->f_owner);
+		if (pw == NULL)
+			warnx("getpwuid %u failed", sf->f_owner);
+		else
+			printf("%sowner=%s", !f++ ? " (" : ", ", pw->pw_name);
+		printf("%sfsid=0x%x/0x%x", !f++ ? " (" : ", ",
+		    sf->f_fsid.val[0], sf->f_fsid.val[1]);
+		printf("%sbsize=%u, iosize=%u)\n", !f++ ? " (" : ", ",
+		    sf->f_bsize, sf->f_iosize);
+	} else
+		printf("%s", f ? ")\n" : "\n");
 }
 
 struct statfs *
