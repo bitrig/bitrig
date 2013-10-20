@@ -589,7 +589,7 @@ prmount(struct statfs *sf)
 		char tmpfs_size[FMT_SCALED_STRSIZE];
 
 		if (tmpfs_args->ta_nodes_max != 0)
-			(void)printf("%s%u nodes", !f++ ? " (" : ", ",
+			(void)printf("%s%llu nodes", !f++ ? " (" : ", ",
 			    tmpfs_args->ta_nodes_max);
 		if (tmpfs_args->ta_size_max != 0 &&
 		    fmt_scaled(tmpfs_args->ta_size_max, tmpfs_size) == 0)
