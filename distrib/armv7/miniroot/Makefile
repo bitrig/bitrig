@@ -1,3 +1,3 @@
-SUBDIR= am335x beagle panda imx
+SUBDIR= am335x beagle panda imx exynos
 
 .include <bsd.subdir.mk>

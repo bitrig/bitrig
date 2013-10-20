@@ -11,9 +11,13 @@ VND?=		vnd0
 VND_DEV=	/dev/${VND}a
 VND_CDEV=	/dev/${VND}c
 VND_IDEV=	/dev/${VND}i
+VND_JDEV=	/dev/${VND}j
 VND_RDEV=	/dev/r${VND}a
 VND_CRDEV=	/dev/r${VND}c
 VND_RIDEV=	/dev/r${VND}i
+VND_RJDEV=	/dev/r${VND}j
+VND_FSDEV?=	${VND_IDEV}
+VND_RFSDEV?=	${VND_RIDEV}
 PID!=		echo $$$$
 
 NBLKS=		36864
@@ -54,14 +58,25 @@ do_files:
 
 .endif
 	cp ${.OBJDIR}/../../ramdisk/bsd.rd.${PLATFORM}.umg ${MOUNT_POINT}/bsd.umg
+.if ${PLATFORM} == "EXYNOS"
+	ln ${MOUNT_POINT}/bsd.umg ${MOUNT_POINT}/uImage
+	cp /usr/mdec/${BOARD}/*dtb ${MOUNT_POINT}
+	dd if=/usr/mdec/${BOARD}/nv_uboot-snow-simplefb.kpart of=${VND_RIDEV} conv=osync
+.endif
 
 rd_setup:
 	dd if=/dev/zero of=${IMAGE} bs=512 count=${NBLKS}
 	vnconfig -c ${VND} ${IMAGE}
+.if ${PLATFORM} == "EXYNOS"
+	fdisk -c 2 -h 255 -s 63 -yig ${VND} >/dev/null
+	gdisk -yi ${VND} >/dev/null
+	echo 'e 0\n7f00\nKERN_A\n64\n16320\ne 2\n7f01\n\n16384\n\nf 0\nn\n8\n3\n1\nw\nq'| gdisk -e ${VND} >/dev/null
+.else
 	fdisk -c 2 -h 255 -s 63 -yi ${VND} >/dev/null
 	echo "u\ne 0\n${PART_ID}\ny\n0\n1\n1\n1\n254\n63\nf 0\nw\nq\n" | fdisk -c 2 -h 255 -s 63 -e ${VND} >/dev/null
-	newfs_${FS} ${NEWFS_ARGS_${FS}} ${VND_RIDEV} >/dev/null
-	mount ${VND_IDEV} ${MOUNT_POINT}
+.endif
+	newfs_${FS} ${NEWFS_ARGS_${FS}} ${VND_RFSDEV} >/dev/null
+	mount ${VND_FSDEV} ${MOUNT_POINT}
 
 rd_teardown:
 	@df -i ${MOUNT_POINT}
