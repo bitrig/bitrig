@@ -1,6 +1,6 @@
 #	$OpenBSD: Makefile.inc,v 1.2 2013/09/07 23:04:44 patrick Exp $
 
-ALLSOC=IMX OMAP
+ALLSOC=IMX OMAP EXYNOS
 KERNELS=
 MDEXT=
 
