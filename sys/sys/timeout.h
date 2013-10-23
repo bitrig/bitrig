@@ -1,4 +1,4 @@
-/*	$OpenBSD: timeout.h,v 1.22 2012/05/24 07:17:42 guenther Exp $	*/
+/*	$OpenBSD: timeout.h,v 1.23 2013/10/23 20:12:05 deraadt Exp $	*/
 /*
  * Copyright (c) 2000-2001 Artur Grabowski <art@openbsd.org>
  * All rights reserved. 
@@ -83,6 +83,7 @@ struct timeout {
 #define timeout_initialized(to) ((to)->to_flags & TIMEOUT_INITIALIZED)
 #define timeout_triggered(to) ((to)->to_flags & TIMEOUT_TRIGGERED)
 
+struct bintime;
 #define TIMEOUT_SET_MPSAFE	0x01
 
 void timeout_set_flags(struct timeout *, void (*)(void *), void *, int);
