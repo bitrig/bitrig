@@ -127,7 +127,7 @@ SRCF=	absvdi2 \
 	umodti3
 
 # These are already shipped by libc.a on arm and mips
-.if ${MACHINE_CPUARCH} != "arm" && ${MACHINE_CPUARCH} != "mips"
+.if ${MACHINE_CPU} != "arm" && ${MACHINE_CPU} != "mips"
 SRCF+=	adddf3 \
 	addsf3 \
 	divdf3 \
@@ -144,8 +144,8 @@ SRCF+=	adddf3 \
 	truncdfsf2
 .endif
 
-.if ${MACHINE_CPUARCH} != "mips" && \
-    (${MACHINE_CPUARCH} != "arm" || ${MK_ARM_EABI} != "no")
+.if ${MACHINE_CPU} != "mips" && \
+    (${MACHINE_CPU} != "arm" || ${MK_ARM_EABI} != "no")
 SRCF+=	divsi3 \
 	modsi3 \
 	udivsi3 \
@@ -153,25 +153,25 @@ SRCF+=	divsi3 \
 .endif
 
 # FreeBSD-specific atomic intrinsics.
-.if ${MACHINE_CPUARCH} == "arm"
+.if ${MACHINE_CPU} == "arm"
 .PATH: ${.CURDIR}/../../sys/arm/arm
 
 SRCF+=	stdatomic
-.elif ${MACHINE_CPUARCH} == "mips"
+.elif ${MACHINE_CPU} == "mips"
 .PATH: ${.CURDIR}/../../sys/mips/mips
 
 SRCF+=	stdatomic
 .endif
 
 .for file in ${SRCF}
-. if ${MACHINE_CPUARCH} != "arm" && exists(${CRTSRC}/${CRTARCH}/${file}.S)
+. if ${MACHINE_CPU} != "arm" && exists(${CRTSRC}/${CRTARCH}/${file}.S)
 SRCS+=	${file}.S
 . else
 SRCS+=	${file}.c
 . endif
 .endfor
 
-.if ${MACHINE_CPUARCH} == "arm" && ${MK_ARM_EABI} != "no"
+.if ${MACHINE_CPU} == "arm" && ${MK_ARM_EABI} != "no"
 SRCS+=	aeabi_idivmod.S \
 	aeabi_ldivmod.S \
 	aeabi_memcmp.S \
@@ -186,12 +186,12 @@ LINKS+=${LIBDIR}/libcompiler_rt.a ${LIBDIR}/libclang_rt.${MACHINE_CPU}.a
 .if ${MK_INSTALLLIB:L} != "no"
 SYMLINKS+=libcompiler_rt.a ${LIBDIR}/libgcc.a
 .endif
-.if ${MK_PROFILE:L} != "no"
+.if !defined(NOPROFILE)
 SYMLINKS+=libcompiler_rt_p.a ${LIBDIR}/libgcc_p.a
 .endif
 
-.if ${MACHINE_CPUARCH} == "amd64" || ${MACHINE_CPUARCH} == "i386" || \
-    ${MACHINE_CPUARCH} == "powerpc"
+.if ${MACHINE_CPU} == "amd64" || ${MACHINE_CPU} == "i386" || \
+    ${MACHINE_CPU} == "powerpc"
 ## not supporte by Bitrig clang (!?!?!)
 #AFLAGS+=--noexecstack
 ACFLAGS+=-Wa,--noexecstack
