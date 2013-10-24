@@ -32,8 +32,9 @@ TARGET_ABI=	unknown
 # to the number of times clang is build, ie save some global wattage.
 NOPROFILE= 
 
-TARGET_TRIPLE?=	${TARGET_ARCH:C/amd64/x86_64/}-${TARGET_ABI}-bitrig1.0
-BUILD_TRIPLE?=	${BUILD_ARCH:C/amd64/x86_64/}-unknown-bitrig1.0
+OSVERS!=uname -r
+TARGET_TRIPLE?=	${TARGET_ARCH:C/amd64/x86_64/}-${TARGET_ABI}-bitrig${OSVERS}
+BUILD_TRIPLE?=	${BUILD_ARCH:C/amd64/x86_64/}-unknown-bitrig${OSVERS}
 CFLAGS+=	-DLLVM_DEFAULT_TARGET_TRIPLE=\"${TARGET_TRIPLE}\" \
 		-DLLVM_HOST_TRIPLE=\"${BUILD_TRIPLE}\" \
 		-DDEFAULT_SYSROOT=\"${TOOLS_PREFIX}\"
