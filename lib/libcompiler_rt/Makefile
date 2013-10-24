@@ -182,6 +182,7 @@ SRCS+=	aeabi_idivmod.S \
 	aeabi_uldivmod.S
 .endif
 
+LINKS+=${LIBDIR}/libcompiler_rt.a ${LIBDIR}/libclang_rt.${MACHINE_CPU}.a
 .if ${MK_INSTALLLIB:L} != "no"
 SYMLINKS+=libcompiler_rt.a ${LIBDIR}/libgcc.a
 .endif
