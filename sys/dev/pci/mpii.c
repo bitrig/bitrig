@@ -747,7 +747,7 @@ mpii_load_xs(struct mpii_ccb *ccb)
 		return (1);
 	}
 
-	/* safe default staring flags */
+	/* safe default starting flags */
 	flags = MPII_SGE_FL_TYPE_SIMPLE | MPII_SGE_FL_SIZE_64;
 	/* if data out */
 	if (xs->flags & SCSI_DATA_OUT)
@@ -759,8 +759,8 @@ mpii_load_xs(struct mpii_ccb *ccb)
 			sge->sg_hdr |= htole32(MPII_SGE_FL_LAST);
 			/* offset to the chain sge from the beginning */
 			io->chain_offset = ((caddr_t)csge - (caddr_t)io) / 4;
-			/* lenght of the chain buffer */
-			len = (dmap->dm_nsegs - i - 1) * sizeof(*sge);
+			/* length of the chain buffer */
+			len = (dmap->dm_nsegs - i) * sizeof(*sge);
 			csge->sg_hdr = htole32(MPII_SGE_FL_TYPE_CHAIN |
 			    MPII_SGE_FL_SIZE_64 | len);
 			/* address of the next sge */
