@@ -594,6 +594,11 @@ prmount(struct statfs *sf)
 		if (tmpfs_args->ta_size_max != 0 &&
 		    fmt_scaled(tmpfs_args->ta_size_max, tmpfs_size) == 0)
 			(void)printf("%s%s", !f++ ? " (" : ", ", tmpfs_size);
+	} else if (strcmp(sf->f_fstypename, MOUNT_FFS) == 0) {
+		struct ufs_args *ufs_args = &sf->mount_info.ufs_args;
+
+		if (ufs_args->flags & UFSMNT_FFS2)
+			(void)printf("%s%s", !f++ ? " (" : ", ", "ffs2");
 	}
 
 	if (verbose) {

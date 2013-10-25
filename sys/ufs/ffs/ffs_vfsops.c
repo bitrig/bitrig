@@ -1323,13 +1323,18 @@ ffs_statfs(struct mount *mp, struct statfs *sbp, struct proc *p)
 	ump = VFSTOUFS(mp);
 	fs = ump->um_fs;
 
+	switch (fs->fs_magic) {
+	case FS_UFS1_MAGIC:
+		mp->mnt_stat.mount_info.ufs_args.flags = 0;
+		break;
 #ifdef FFS2
-	if (fs->fs_magic != FS_MAGIC && fs->fs_magic != FS_UFS2_MAGIC)
-		panic("ffs_statfs");
-#else
-	if (fs->fs_magic != FS_MAGIC)
-		panic("ffs_statfs");
-#endif /* FFS2 */
+	case FS_UFS2_MAGIC:
+		mp->mnt_stat.mount_info.ufs_args.flags = UFSMNT_FFS2;
+		break;
+#endif
+	default:
+		panic("ffs_statfs: unknown magic 0x%x", fs->fs_magic);
+	}
 
 	sbp->f_bsize = fs->fs_fsize;
 	sbp->f_iosize = fs->fs_bsize;

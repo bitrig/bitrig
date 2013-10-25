@@ -75,7 +75,10 @@ struct export_args {
 struct ufs_args {
 	char	*fspec;			/* block special device to mount */
 	struct	export_args export_info;/* network export information */
+	int	flags;			/* ffs specific mount flags */
 };
+
+#define	UFSMNT_FFS2		0x01	/* ffs2 in use (set by the kernel) */
 
 /*
  * Arguments to mount MFS
