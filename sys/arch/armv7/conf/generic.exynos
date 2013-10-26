@@ -146,6 +146,7 @@ sdmmc*		at exesdhc?		# SD/MMC bus
 iic*		at exiic?
 crosec*		at iic?
 wskbd*		at crosec?
+tpspmic*	at iic?
 
 # Pseudo-Devices
 pseudo-device hotplug         1       # devices hot plugging

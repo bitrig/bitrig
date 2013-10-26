@@ -59,3 +59,7 @@ device	crosec: wskbddev
 attach	crosec at i2c
 file	arch/armv7/exynos/crosec.c		crosec
 file	arch/armv7/exynos/crosec_kbd.c		crosec
+
+device	tpspmic
+attach	tpspmic at i2c
+file	arch/armv7/exynos/tps65090.c		tpspmic

@@ -160,6 +160,16 @@ exiic_bus_scan(struct device *self, struct i2cbus_attach_args *iba, void *arg)
 	ia.ia_size = 1;
 	ia.ia_name = name;
 	config_found(self, &ia, iicbus_print);
+
+	name = "tps65090";
+	addr = 0x48;
+
+	memset(&ia, 0, sizeof(ia));
+	ia.ia_tag = iba->iba_tag;
+	ia.ia_addr = addr;
+	ia.ia_size = 1;
+	ia.ia_name = name;
+	config_found(self, &ia, iicbus_print);
 }
 
 void
