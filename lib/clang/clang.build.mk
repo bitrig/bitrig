@@ -14,6 +14,9 @@ CFLAGS+=	-DCLANG_ENABLE_ARCMT \
 		-DCLANG_ENABLE_STATIC_ANALYZER
 .endif # !EARLY_BUILD && MK_CLANG_FULL
 
+# Unless someone is wanting to build a debug version of clang disable -g
+DEBUG=
+
 # LLVM is not strict aliasing safe as of 12/31/2011
 CFLAGS+=	-fno-strict-aliasing
 
@@ -29,12 +32,12 @@ TARGET_ABI=	unknown
 
 # NOTE: profile is disabled for clang pieces because it is expected
 # that the profiled libraries will be extremely rarely used compared
-# to the number of times clang is build, ie save some global wattage.
+# to the number of times clang is built, ie save some global wattage.
 NOPROFILE= 
 
 OSVERS!=uname -r
-TARGET_TRIPLE?=	${TARGET_ARCH:C/amd64/x86_64/}-${TARGET_ABI}-bitrig${OSVERS}
-BUILD_TRIPLE?=	${BUILD_ARCH:C/amd64/x86_64/}-unknown-bitrig${OSVERS}
+TARGET_TRIPLE?=	${TARGET_ARCH}-${TARGET_ABI}-bitrig${OSVERS}
+BUILD_TRIPLE?=	${BUILD_ARCH}-unknown-bitrig${OSVERS}
 CFLAGS+=	-DLLVM_DEFAULT_TARGET_TRIPLE=\"${TARGET_TRIPLE}\" \
 		-DLLVM_HOST_TRIPLE=\"${BUILD_TRIPLE}\" \
 		-DDEFAULT_SYSROOT=\"${TOOLS_PREFIX}\"
