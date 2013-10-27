@@ -28,7 +28,6 @@ SRCF=	absvdi2 \
 	ashlti3 \
 	ashrdi3 \
 	ashrti3 \
-	clear_cache \
 	clzdi2 \
 	clzsi2 \
 	clzti2 \
@@ -126,6 +125,10 @@ SRCF=	absvdi2 \
 	umoddi3 \
 	umodti3
 
+.if ${MACHINE_CPU} != "arm"
+SRCF+=	clear_cache
+.endif
+
 # These are already shipped by libc.a on arm and mips
 .if ${MACHINE_CPU} != "arm" && ${MACHINE_CPU} != "mips"
 SRCF+=	adddf3 \
@@ -156,7 +159,7 @@ SRCF+=	divsi3 \
 .if ${MACHINE_CPU} == "arm"
 .PATH: ${.CURDIR}/../../sys/arm/arm
 
-SRCF+=	stdatomic
+#SRCF+=	stdatomic
 .elif ${MACHINE_CPU} == "mips"
 .PATH: ${.CURDIR}/../../sys/mips/mips
 
