@@ -14,4 +14,4 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-void imxocotp_get_ethernet_address(u_int8_t* mac);
+void imxocotp_get_ethernet_address(u_int8_t *);

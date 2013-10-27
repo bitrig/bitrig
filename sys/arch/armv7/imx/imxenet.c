@@ -141,6 +141,7 @@
 #define ENET_SABRELITE_PHY	6
 #define ENET_PHYFLEX_PHY	3
 #define ENET_PHYFLEX_PHY_RST	(2*32+23)
+#define ENET_UTILITE_PHY	0
 #define ENET_WANDBOARD_PHY	1
 
 #define HREAD4(sc, reg)							\
@@ -244,7 +245,7 @@ imxenet_attach(struct device *parent, struct device *self, void *args)
 	}
 
 	/* reset the controller */
-	HSET4(sc, ENET_ECR, ENET_ECR_RESET);
+	HWRITE4(sc, ENET_ECR, ENET_ECR_RESET);
 	while(HREAD4(sc, ENET_ECR) & ENET_ECR_RESET);
 
 	HWRITE4(sc, ENET_EIMR, 0);
@@ -374,6 +375,9 @@ imxenet_chip_init(struct imxenet_softc *sc)
 	case BOARD_ID_IMX6_SABRELITE:
 		phy = ENET_SABRELITE_PHY;
 		break;
+	case BOARD_ID_IMX6_UTILITE:
+		phy = ENET_UTILITE_PHY;
+		break;
 	case BOARD_ID_IMX6_WANDBOARD:
 		phy = ENET_WANDBOARD_PHY;
 		break;
@@ -403,6 +407,7 @@ imxenet_chip_init(struct imxenet_softc *sc)
 		imxenet_miibus_writereg(dev, phy, 0x1b, 0xff00);
 		break;
 	case BOARD_ID_IMX6_C1:		/* AR8035 */
+	case BOARD_ID_IMX6_UTILITE:
 	case BOARD_ID_IMX6_WANDBOARD:	/* AR8031 */
 		/* disable SmartEEE */
 		imxenet_miibus_writereg(dev, phy, 0x0d, 0x0003);
@@ -473,7 +478,7 @@ imxenet_init(struct imxenet_softc *sc)
 	int speed = 0;
 
 	/* reset the controller */
-	HSET4(sc, ENET_ECR, ENET_ECR_RESET);
+	HWRITE4(sc, ENET_ECR, ENET_ECR_RESET);
 	while(HREAD4(sc, ENET_ECR) & ENET_ECR_RESET);
 
 	/* set hw address */
@@ -496,13 +501,13 @@ imxenet_init(struct imxenet_softc *sc)
 	/* set max receive buffer size, 3-0 bits always zero for alignment */
 	HWRITE4(sc, ENET_MRBR, ENET_MAX_PKT_SIZE);
 
-	/* set descriptor */
-	HWRITE4(sc, ENET_TDSR, sc->txdma.dma_paddr);
-	HWRITE4(sc, ENET_RDSR, sc->rxdma.dma_paddr);
-
 	/* init descriptor */
 	imxenet_init_txd(sc);
 	imxenet_init_rxd(sc);
+
+	/* set descriptor */
+	HWRITE4(sc, ENET_TDSR, sc->txdma.dma_paddr);
+	HWRITE4(sc, ENET_RDSR, sc->rxdma.dma_paddr);
 
 	/* set it to full-duplex */
 	HWRITE4(sc, ENET_TCR, ENET_TCR_FDEN);
