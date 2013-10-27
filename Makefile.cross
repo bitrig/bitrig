@@ -199,7 +199,6 @@ ${CROSSBUILDENV}:	${CROSSINCLUDES}
 	mv ${CROSSDIR}/usr/bin/$${a}-ld ${CROSSDIR}/usr/bin/$${a}-cross-ld ; \
 	echo "#!/bin/sh\n${CROSSDIR}/usr/bin/$${a}-cross-ld \"$$""@\" -L ${CROSSDIR}/usr/lib" > ${CROSSDIR}/usr/bin/$${a}-ld ;\
 	chmod +x ${CROSSDIR}/usr/bin/$${a}-ld 
-	cp libclang_rt.${TARGET_ARCH}.a ${CROSSDIR}/usr/lib
 	@touch ${CROSSBUILDENV}
 
 
@@ -209,7 +208,7 @@ cross-lib:	${CROSSGCC}
 	    MACHINE_ARCH=${TARGET_ARCH} MACHINE_CPU=${TARGET_CPU}; \
 	export MACHINE MACHINE_ARCH MACHINE_CPU; \
 	(cd ${.CURDIR}/lib; \
-	    for lib in csu libc; do \
+	    for lib in libcompiler_rt csu libc; do \
 	    (cd $$lib; \
 	        eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
 		    ${MAKE} WANTLINT=no depend all ;\
