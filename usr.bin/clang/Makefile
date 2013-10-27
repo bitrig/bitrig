@@ -25,6 +25,7 @@ SUBDIR+=bugpoint \
 	opt
 .endif
 
+HOSTARCH!=uname -p
 bootstrap:
 	(cd ../../lib/clang && ${MAKE} obj)
 	(cd ../../usr.bin/clang && ${MAKE} obj)
@@ -34,10 +35,14 @@ bootstrap:
 	(cd ../../lib/clang/libllvmsupport && ${MAKE} all)
 	(cd ../../usr.bin/clang/clang-tblgen && ${MAKE} depend)
 	(cd ../../usr.bin/clang/clang-tblgen && ${MAKE} all)
+.if ${MACHINE_ARCH} == ${HOSTARCH}
 	(cd ../../usr.bin/clang/clang-tblgen && ${SUDO} ${MAKE}  install)
+.endif
 	(cd ../../usr.bin/clang/tblgen && ${MAKE} depend)
 	(cd ../../usr.bin/clang/tblgen && ${MAKE} all)
+.if ${MACHINE_ARCH} == ${HOSTARCH}
 	(cd ../../usr.bin/clang/tblgen && ${SUDO} ${MAKE} install)
+.endif
 	(cd ../../lib/clang && ${MAKE} depend)
 	(cd ../../lib/clang && ${MAKE} all)
 	(cd ../../lib/clang && ${MAKE} depend)
