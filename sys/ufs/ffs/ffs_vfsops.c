@@ -1089,12 +1089,18 @@ sbagain:
 		else
 			fs->fs_flags &= ~FS_DOSOFTDEP;
 		error = UFS_WAPBL_BEGIN(mp);
-		if (error)
+		if (error) {
+			free(fs->fs_csp, M_UFSMNT);
+			free(fs->fs_contigdirs, M_UFSMNT);
 			goto out;
+		}
 		error = ffs_sbupdate(ump, MNT_WAIT);
 		UFS_WAPBL_END(mp);
-		if (error == EROFS)
+		if (error == EROFS) {
+			free(fs->fs_csp, M_UFSMNT);
+			free(fs->fs_contigdirs, M_UFSMNT);
 			goto out;
+		}
 	}
 	return (0);
 out:
