@@ -1064,6 +1064,22 @@ sbagain:
 #ifdef WAPBL
 		KASSERT(fs->fs_ronly == 0);
 		/*
+		 * verify that we can access the last block in the fs if we're
+		 * mounting read/write.
+		 */
+		error = bread(devvp, fsbtodb(fs, fs->fs_size - 1),
+		    fs->fs_fsize, &bp);
+		if (bp->b_bcount != fs->fs_fsize)
+			error = EINVAL;
+		bp->b_flags |= B_INVAL;
+		if (error) {
+			free(fs->fs_csp, M_UFSMNT);
+			free(fs->fs_contigdirs, M_UFSMNT);
+			goto out;
+		}
+		brelse(bp);
+		bp = NULL;
+		/*
 		 * ffs_wapbl_start() needs mp->mnt_stat initialised if it
 		 * needs to create a new log file in-filesystem.
 		 */
