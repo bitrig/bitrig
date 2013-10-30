@@ -109,9 +109,10 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 		if (letoh32(shp[i].sh_type) == SHT_SYMTAB ||
 		    letoh32(shp[i].sh_type) == SHT_STRTAB) {
 #ifdef DEBUG
-		fprintf(stderr, "shdr %d %d/%d off %lx\n", i,
-		    letoh32(shp[i].sh_type), roundup(elfoff2h(shp[i].sh_size),
-		    sizeof(Elf_Addr)), off);
+		fprintf(stderr, "shdr %d %d/%lld off %llx\n", i,
+		    letoh32(shp[i].sh_type),
+		    (uint64_t)roundup(elfoff2h(shp[i].sh_size),
+		    sizeof(Elf_Addr)), (uint64_t)off);
 #endif
 			/* data is at shp[i].sh_offset of len shp[i].sh_size */
 			wshp[i].sh_offset = h2elfoff(off);
@@ -123,7 +124,8 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 	}
 	esymval = vaddr;
 #ifdef DEBUG
-	fprintf(stderr, "esymval %lx size %ld\n", esymval, esymval - ssym);
+	fprintf(stderr, "esymval 0x%llx size %lld\n", (uint64_t)esymval,
+	    (uint64_t)(esymval - ssym));
 #endif
 
 	for (i = 0; i < letoh16(ehdr.e_phnum); i++) {
@@ -137,16 +139,19 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 			err(1, "%s", iname);
 
 #ifdef DEBUG
-		fprintf(stderr, "vaddr %p offset %p filesz %p memsz %p\n",
-		    elfoff2h(phdr.p_vaddr), elfoff2h(phdr.p_offset),
-		    elfoff2h(phdr.p_filesz), elfoff2h(phdr.p_memsz));
+		fprintf(stderr, "vaddr 0x%llx offset 0x%llx filesz 0x%llx "
+		    "memsz 0x%llx\n",
+		    (uint64_t)elfoff2h(phdr.p_vaddr),
+		    (uint64_t)elfoff2h(phdr.p_offset),
+		    (uint64_t)elfoff2h(phdr.p_filesz),
+		    (uint64_t)elfoff2h(phdr.p_memsz));
 #endif
 		if (i == 0)
 			vaddr = elfoff2h(phdr.p_vaddr);
 		else if (vaddr != elfoff2h(phdr.p_vaddr)) {
 #ifdef DEBUG
-			fprintf(stderr, "gap %p->%p\n", vaddr,
-			    elfoff2h(phdr.p_vaddr));
+			fprintf(stderr, "gap 0x%llx->0x%llx\n", (uint64_t)vaddr,
+			    (uint64_t)elfoff2h(phdr.p_vaddr));
 #endif
 			/* fill the gap between the previous phdr if any */
 			crc = fill_zeroes(ofd, oname, crc, ih,
@@ -156,8 +161,11 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 
 		if (elfoff2h(phdr.p_filesz) != 0) {
 #ifdef DEBUG
-			fprintf(stderr, "copying %p from infile %p\n",
-			   elfoff2h(hphdr.p_filesz), elfoff2h(phdr.p_offset));
+			fprintf(stderr, "copying 0x%llx from infile 0x%llx,"
+			    " esym 0x%llx esymval 0x%llx\n",
+			    (uint64_t)elfoff2h(phdr.p_filesz),
+			    (uint64_t)elfoff2h(phdr.p_offset),
+			    (uint64_t)esym, (uint64_t)esymval);
 #endif
 			/* esym will be in the data portion of a region */
 			if (esym >= elfoff2h(phdr.p_vaddr) &&
@@ -196,9 +204,9 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 			if (elfoff2h(phdr.p_memsz) - elfoff2h(phdr.p_filesz)
 			    != 0) {
 #ifdef DEBUG
-				fprintf(stderr, "zeroing %p\n",
-				    elfoff2h(phdr.p_memsz) -
-				    elfoff2h(phdr.p_filesz));
+				fprintf(stderr, "zeroing 0x%llx\n",
+				    (uint64_t)(elfoff2h(phdr.p_memsz) -
+				    elfoff2h(phdr.p_filesz)));
 #endif
 				crc = fill_zeroes(ofd, oname, crc, ih,
 				    elfoff2h(phdr.p_memsz) -
@@ -219,7 +227,8 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 	vaddr = roundup(vaddr, sizeof(Elf_Addr));
 	if (vaddr != ovaddr) {
 #ifdef DEBUG
-		fprintf(stderr, "gap %p->%p\n", vaddr, elfoff2h(phdr.p_vaddr));
+		fprintf(stderr, "gap 0x%llx->0x%llx\n", (uint64_t)ovaddr,
+		    (uint64_t)vaddr);
 #endif
 		/* fill the gap between the previous phdr if not aligned */
 		crc = fill_zeroes(ofd, oname, crc, ih, vaddr - ovaddr);
@@ -242,6 +251,10 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 	vaddr += sizeof(elf) + sz;
 
 	off = roundup((sizeof(Elf_Ehdr) + sz), sizeof(Elf_Addr));
+#ifdef DEBUG
+	fprintf(stderr, "adjust %llx %llx\n", (uint64_t)sizeof(elf) + sz,
+	    (uint64_t)off);
+#endif
 	for (i = 0; i < letoh16(elf.e_shnum); i++) {
 		if (letoh32(shp[i].sh_type) == SHT_SYMTAB ||
 		    letoh32(shp[i].sh_type) == SHT_STRTAB) {
@@ -252,12 +265,22 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 				err(1, "%s", iname);
 
 			off += elfoff2h(shp[i].sh_size);
+#ifdef DEBUG
+			fprintf(stderr, "symbol data %llx->%llx\n",
+			    (uint64_t)vaddr,
+			    (uint64_t)vaddr+elfoff2h(shp[i].sh_size));
+#endif
 			vaddr += elfoff2h(shp[i].sh_size);
 			crc = copy_data(ifd, iname, ofd, oname, crc, ih,
 			    elfoff2h(shp[i].sh_size));
 			align = roundup(elfoff2h(shp[i].sh_size),
 			    sizeof(Elf_Addr)) - elfoff2h(shp[i].sh_size);
 			if (align != 0) {
+#ifdef DEBUG
+				fprintf(stderr, "pad %llx->%llx %llx\n",
+				    (uint64_t)vaddr, (uint64_t)vaddr+align,
+				    (uint64_t)align);
+#endif
 				vaddr += align;
 				crc = fill_zeroes(ofd, oname, crc, ih, align);
 			}
@@ -265,7 +288,8 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 	}
 
 	if (vaddr != esymval)
-		warnx("esymval and vaddr mismatch %lx %lx\n", esymval, vaddr);
+		warnx("esymval and vaddr mismatch %llx %llx\n",
+		    (uint64_t)esymval, (uint64_t)vaddr);
 
 	return crc;
 }
