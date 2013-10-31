@@ -39,7 +39,7 @@ SRCS+=	alloc.c ctime.c exit.c getfile.c gets.c globals.c memcmp.c memcpy.c \
 SRCS+=	close.c closeall.c cons.c cread.c dev.c disklabel.c dkcksum.c fstat.c \
 	ioctl.c lseek.c open.c read.c readdir.c stat.c write.c
 SRCS+=	elf32.c elf64.c loadfile.c
-SRCS+=	ufs.c
+SRCS+=	ufs.c ufs2.c
 .if ${SOFTRAID:L} == "yes"
 SRCS+=	aes_xts.c explicit_bzero.c hmac_sha1.c pbkdf2.c rijndael.c sha1.c
 .endif
