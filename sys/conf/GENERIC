@@ -37,7 +37,6 @@ option		FFS		# UFS
 option		FFS2		# UFS2
 option		FFS_SOFTUPDATES	# Soft updates
 option		WAPBL		# File system journaling support
-option		WAPBL_DEBUG	# File system journaling debug support
 option		UFS_DIRHASH	# hash large directories
 option		QUOTA		# UFS quotas
 option		EXT2FS		# Second Extended Filesystem
