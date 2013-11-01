@@ -1,4 +1,4 @@
-/* $OpenBSD: fuse_private.h,v 1.4 2013/06/14 20:49:06 syl Exp $ */
+/* $OpenBSD: fuse_private.h,v 1.6 2013/11/01 18:16:22 syl Exp $ */
 /*
  * Copyright (c) 2013 Sylvestre Gallon <ccna.syl@gmail.com>
  *
@@ -111,7 +111,7 @@ void			*dict_set(struct dict *, const char *, void *);
 void			*dict_get(struct dict *, const char *);;
 void			*dict_pop(struct dict *, const char *);
 
-#define FUSE_VERSION_PKG_INFO "2.6.9"
+#define FUSE_VERSION_PKG_INFO "2.8.0"
 #define unused __attribute__ ((unused))
 
 #endif /* _FUSE_SUBR_ */
