@@ -31,6 +31,7 @@
 #include <netinet/in.h>
 #include <libsa.h>
 #include <lib/libsa/ufs.h>
+#include <lib/libsa/ufs2.h>
 #ifdef notdef
 #include <lib/libsa/cd9660.h>
 #include <lib/libsa/fat.h>
@@ -68,6 +69,8 @@ int nibprobes = nitems(probe_list);
 struct fs_ops file_system[] = {
 	{ ufs_open,    ufs_close,    ufs_read,    ufs_write,    ufs_seek,
 	  ufs_stat,    ufs_readdir    },
+	{ ufs2_open,   ufs2_close,   ufs2_read,   ufs2_write,   ufs2_seek,
+	  ufs2_stat,   ufs2_readdir   },
 #ifdef notdef
 	{ fat_open,    fat_close,    fat_read,    fat_write,    fat_seek,
 	  fat_stat,    fat_readdir    },

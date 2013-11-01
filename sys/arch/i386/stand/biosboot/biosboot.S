@@ -108,6 +108,9 @@
  *			While this can be calculated as
  *			howmany(di_size, fs_bsize) it takes us too
  *			many code bytes to do it.
+ * blkskew	uint8t	the skew used to parse di_db[]. this is set to four by
+ *			installboot for ffs2 (due to 64-bit blocks) and should
+ *			be zero for ffs1.
  *
  * All of these are patched directly into the code where they are used
  * (once only, each), to save space.
@@ -121,7 +124,7 @@
  */
 
 	.globl	inodeblk, inodedbl, fs_bsize_p, fsbtodb, p_offset, nblocks
-	.globl	fs_bsize_s, force_chs
+	.globl	fs_bsize_s, force_chs, blkskew
 	.type	inodeblk, @function
 	.type	inodedbl, @function
 	.type	fs_bsize_p, @function
@@ -130,6 +133,7 @@
 	.type	p_offset, @function
 	.type	nblocks, @function
 	.type	force_chs, @function
+	.type	blkskew, @function
 
 
 /* Clobbers %ax, maybe more */
@@ -460,6 +464,8 @@ load_blocks:
 
 	/* Get the next filesystem block number into %eax */
 	lodsl			/* %eax = *(%si++), make sure 0x66 0xad */
+blkskew = .+2
+	addw	$0x90, %si	/* adjust %si if needed (for ffs2) */
 
 	pushal				/* Save all 32-bit registers */
 
