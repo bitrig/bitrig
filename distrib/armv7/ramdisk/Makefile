@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2013/10/15 22:46:49 deraadt Exp $
+#	$OpenBSD: Makefile,v 1.7 2013/11/01 20:35:52 jasper Exp $
 
 REV=	${OSrev}
 
@@ -24,9 +24,10 @@ PID!=		echo $$$$
 KERNADDR_OMAP=0x80300000
 KERNADDR_IMX=0x10800000
 KERNADDR_EXYNOS=0x40800000
+KERNADDR_SUNXI=0x40800000
 
-DISKTYPE=       rdroot2.5M
-NBLKS=		5120
+DISKTYPE=       rdroot
+NBLKS=		10240
 # minfree, opt, b/i  trks, sects, cpg
 NEWFSARGS= -m 0 -o space -i 4096
 
@@ -36,7 +37,7 @@ all ${IMAGE}:
 	@false
 .else
 
-ALLSOC=		IMX OMAP EXYNOS
+ALLSOC=		IMX OMAP EXYNOS SUNXI
 ALLBSD=
 ALLBSDRD=
 .for SOC in ${ALLSOC}

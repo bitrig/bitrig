@@ -1,6 +1,6 @@
-#	$OpenBSD: Makefile.inc,v 1.2 2013/09/07 23:04:44 patrick Exp $
+#	$OpenBSD: Makefile.inc,v 1.4 2013/11/01 20:35:52 jasper Exp $
 
-ALLSOC=IMX OMAP EXYNOS
+ALLSOC=IMX OMAP EXYNOS SUNXI
 KERNELS=
 MDEXT=
 
@@ -13,6 +13,7 @@ MDEXT+=		bsd.rd.${SOC}.umg
 
 KERNADDR_OMAP=0x80300000
 KERNADDR_IMX=0x10800000
+KERNADDR_SUNXI=0x40800000
 
 post-kernels:
 .for SOC in ${ALLSOC}

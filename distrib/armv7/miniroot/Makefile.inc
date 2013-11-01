@@ -57,6 +57,11 @@ do_files:
 	cp 6x_bootscript.scr ${MOUNT_POINT}/6x_bootscript
 
 .endif
+.if ${PLATFORM} == "SUNXI"
+	echo 'bootargs=sd0a:/bsd' > ${MOUNT_POINT}/uEnv.tx
+	echo 'mmcboot=mmc rescan ; fatload mmc 0 ${LOADADDR} bsd.umg && bootm ${LOADADDR};' >> ${MOUNT_POINT}/uEnv.txt
+	echo 'uenvcmd=run mmcboot;' >> ${MOUNT_POINT}/uEnv.txt
+.endif
 	cp ${.OBJDIR}/../../ramdisk/bsd.rd.${PLATFORM}.umg ${MOUNT_POINT}/bsd.umg
 .if ${PLATFORM} == "EXYNOS"
 	ln ${MOUNT_POINT}/bsd.umg ${MOUNT_POINT}/uImage
@@ -73,7 +78,11 @@ rd_setup:
 	echo 'e 0\n7f00\nKERN_A\n64\n16320\ne 2\n7f01\n\n16384\n\nf 0\nn\n8\n3\n1\nw\nq'| gdisk -e ${VND} >/dev/null
 .else
 	fdisk -c 2 -h 255 -s 63 -yi ${VND} >/dev/null
+.if ${PLATFORM} == "SUNXI"
+	echo "u\ne 0\n${PART_ID}\ny\n0\n99\n1\n1\n254\n63\nf 0\nw\nq\n" | fdisk -c 2 -h 255 -s 63 -e ${VND} >/dev/null
+.else
 	echo "u\ne 0\n${PART_ID}\ny\n0\n1\n1\n1\n254\n63\nf 0\nw\nq\n" | fdisk -c 2 -h 255 -s 63 -e ${VND} >/dev/null
+.endif
 .endif
 	newfs_${FS} ${NEWFS_ARGS_${FS}} ${VND_RFSDEV} >/dev/null
 	mount ${VND_FSDEV} ${MOUNT_POINT}
@@ -81,6 +90,10 @@ rd_setup:
 rd_teardown:
 	@df -i ${MOUNT_POINT}
 	-umount ${MOUNT_POINT}
+.if ${PLATFORM} == "SUNXI"
+	dd if=/usr/mdec/sunxi/sunxi-spl.bin of=${VND_CDEV} bs=1024 seek=8
+	dd if=/usr/mdec/sunxi/u-boot.bin of=${VND_CDEV} bs=1024 seek=32
+.endif
 	-vnconfig -u ${VND}
 
 
