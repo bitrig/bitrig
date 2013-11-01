@@ -1,4 +1,4 @@
-#	$OpenBSD: GENERIC,v 1.204 2013/10/21 12:07:47 reyk Exp $
+#	$OpenBSD: GENERIC,v 1.205 2013/11/01 13:54:45 syl Exp $
 #
 #	Machine-independent option; used by all architectures for their
 #	GENERIC kernel
@@ -48,6 +48,7 @@ option		UDF		# UDF (DVD) file system
 option		MSDOSFS		# MS-DOS file system
 option		FIFO		# FIFOs; RECOMMENDED
 option		TMPFS		# efficient memory file system
+option		FUSE		# FUSE
 
 option		SOCKET_SPLICE	# Socket Splicing for TCP and UDP
 option		TCP_SACK	# Selective Acknowledgements for TCP
@@ -114,5 +115,7 @@ pseudo-device	vxlan		# Virtual extensible LAN
 pseudo-device	vlan		# IEEE 802.1Q VLAN
 
 pseudo-device	bio	1	# ioctl multiplexing device
+
+pseudo-device	fuse		# fuse device
 
 option		BOOT_CONFIG	# add support for boot -c
