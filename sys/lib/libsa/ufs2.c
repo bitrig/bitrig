@@ -96,9 +96,6 @@ static int	block_map(struct open_file *, daddr_t, daddr_t *);
 static int	buf_read_file(struct open_file *, char **, size_t *);
 static int	search_directory(char *, struct open_file *, ufsino_t *);
 static int	ufs2_close_internal(struct file *);
-#ifdef COMPAT_UFS
-static void	ffs_oldfscompat(struct fs *);
-#endif
 
 /*
  * Read a new inode into a file structure.
@@ -382,9 +379,6 @@ ufs2_open(char *path, struct open_file *f)
 		rc = EINVAL;
 		goto out;
 	}
-#ifdef COMPAT_UFS
-	ffs_oldfscompat(fs);
-#endif
 
 	/*
 	 * Calculate indirect block levels.
@@ -679,34 +673,5 @@ ufs2_readdir(struct open_file *f, char *name)
 	}
 
 	return 0;
-}
-#endif
-
-#ifdef COMPAT_UFS
-/*
- * Sanity checks for old file systems.
- *
- * XXX - goes away some day.
- */
-static void
-ffs_oldfscompat(struct fs *fs)
-{
-	int i;
-
-	fs->fs_npsect = max(fs->fs_npsect, fs->fs_nsect);	/* XXX */
-	fs->fs_interleave = max(fs->fs_interleave, 1);		/* XXX */
-	if (fs->fs_postblformat == FS_42POSTBLFMT)		/* XXX */
-		fs->fs_nrpos = 8;				/* XXX */
-	if (fs->fs_inodefmt < FS_44INODEFMT) {			/* XXX */
-		quad_t sizepb = fs->fs_bsize;			/* XXX */
-								/* XXX */
-		fs->fs_maxfilesize = fs->fs_bsize * NDADDR - 1;	/* XXX */
-		for (i = 0; i < NIADDR; i++) {			/* XXX */
-			sizepb *= NINDIR(fs);			/* XXX */
-			fs->fs_maxfilesize += sizepb;		/* XXX */
-		}						/* XXX */
-		fs->fs_qbmask = ~fs->fs_bmask;			/* XXX */
-		fs->fs_qfmask = ~fs->fs_fmask;			/* XXX */
-	}							/* XXX */
 }
 #endif
