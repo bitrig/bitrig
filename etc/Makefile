@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.336 2013/10/10 00:59:18 dtucker Exp $
+#	$OpenBSD: Makefile,v 1.337 2013/11/03 18:28:34 deraadt Exp $
 
 TZDIR=		/usr/share/zoneinfo
 LOCALTIME=	Canada/Mountain
@@ -315,7 +315,6 @@ distrib:
 .PHONY: distribution-etc-root-var distribution distrib-dirs \
 	release allarchs kernels post-kernels release-sets m4 install-mtree \
 	bootblocks ${ALL_KERNELS}
-	
 
 SUBDIR+= etc.amd64 etc.i386 etc.armv7
 
