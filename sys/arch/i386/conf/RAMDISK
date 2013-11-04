@@ -233,11 +233,6 @@ trm*	at pci?			# Tekram DC-3x5U SCSI Controllers
 vmwpvs*	at pci?			# VMware ParaVirtual SCSI
 softraid0	at root		# Software RAID
 
-# I2O
-#iop*	at pci?			# I2O processor
-#ioprbs*	at iop?			# I2O arrays
-#iopsp*	at iop?			# I2O SCSI pass-through
-
 scsibus* at scsi?
 sd*	at scsibus?		# SCSI disk drives
 st*	at scsibus?		# SCSI tape drives
