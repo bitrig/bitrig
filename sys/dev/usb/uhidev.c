@@ -126,7 +126,7 @@ uhidev_attach(struct device *parent, struct device *self, void *aux)
 	usb_endpoint_descriptor_t *ed;
 	struct uhidev_attach_arg uha;
 	struct uhidev *dev;
-	int size, nrepid, repid, repsz;
+	int size = 0, nrepid, repid, repsz;
 	int repsizes[256];
 	int i;
 	void *desc;
