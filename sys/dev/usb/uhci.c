@@ -1418,7 +1418,7 @@ void
 uhci_waitintr(struct uhci_softc *sc, struct usbd_xfer *xfer)
 {
 	int timo = xfer->timeout;
-	struct uhci_xfer *ex;
+	struct uhci_xfer *ex = (struct uhci_xfer *)xfer;
 
 	DPRINTFN(10,("uhci_waitintr: timeout = %dms\n", timo));
 
