@@ -1095,23 +1095,28 @@ int
 wd_flushcache(struct wd_softc *wd, int flags)
 {
 	struct wdc_command wdc_c;
+	int error;
 
-	if (wd->drvp->ata_vers < 4) /* WDCC_FLUSHCACHE is here since ATA-4 */
-		return EIO;
 	bzero(&wdc_c, sizeof(struct wdc_command));
-	wdc_c.r_command = (wd->sc_flags & WDF_LBA48 ? WDCC_FLUSHCACHE_EXT :
-	    WDCC_FLUSHCACHE);
+
+	if ((wd->sc_flags & WDF_FC) != 0)
+		wdc_c.r_command = WDCC_FLUSHCACHE;
+	else if ((wd->sc_flags & WDF_LBA48) != 0 &&
+		 (wd->sc_flags & WDF_FCE) != 0) {
+		wdc_c.r_command = WDCC_FLUSHCACHE_EXT;
+		wd->sc_wdc_bio.flags |= ATA_LBA48;
+	} else
+		return ENODEV;
+
 	wdc_c.r_st_bmask = WDCS_DRDY;
 	wdc_c.r_st_pmask = WDCS_DRDY;
-	if (flags != 0) {
-		wdc_c.flags = AT_POLL;
-	} else {
-		wdc_c.flags = AT_WAIT;
-	}
-	wdc_c.timeout = 30000; /* 30s timeout */
-	if (wdc_exec_command(wd->drvp, &wdc_c) != WDC_COMPLETE) {
-		printf("%s: flush cache command didn't complete\n",
-		    wd->sc_dev.dv_xname);
+	wdc_c.flags = flags | AT_READREG;
+	wdc_c.timeout = 300000; /* 5m timeout */
+
+	error = wdc_exec_command(wd->drvp, &wdc_c);
+	if (error != WDC_COMPLETE) {
+		printf("%s: flush cache command didn't complete (%d)\n",
+		    wd->sc_dev.dv_xname, error);
 		return EIO;
 	}
 	if (wdc_c.flags & AT_ERROR) {
