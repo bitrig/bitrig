@@ -3976,8 +3976,17 @@ bnx_init_rx_context(struct bnx_softc *sc)
 	if (BNX_CHIP_NUM(sc) == BNX_CHIP_NUM_5709) {
 		u_int32_t lo_water, hi_water;
 
-		lo_water = BNX_L2CTX_RX_LO_WATER_MARK_DEFAULT;
+		if (sc->bnx_flowflags & IFM_ETH_TXPAUSE)
+			lo_water = BNX_L2CTX_RX_LO_WATER_MARK_DEFAULT;
+		else
+			lo_water = 0;
+		
+		if (lo_water >= USABLE_RX_BD)
+			lo_water = 0;
+		
 		hi_water = USABLE_RX_BD / 4;
+		if (hi_water <= lo_water)
+			lo_water = 0;
 
 		lo_water /= BNX_L2CTX_RX_LO_WATER_MARK_SCALE;
 		hi_water /= BNX_L2CTX_RX_HI_WATER_MARK_SCALE;
