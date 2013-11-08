@@ -1,4 +1,4 @@
-#	$OpenBSD: install.sub,v 1.656 2012/03/12 22:45:39 halex Exp $
+#	$OpenBSD: install.sub,v 1.688 2013/11/08 21:34:35 rpe Exp $
 #	$NetBSD: install.sub,v 1.5.2.8 1996/09/02 23:25:02 pk Exp $
 #
 # Copyright (c) 1997-2009 Todd Miller, Theo de Raadt, Ken Westerback
@@ -2060,7 +2060,7 @@ get_responsefile() {
 	[ -x /sbin/dhclient ] || return
 
 	# Did we do a netboot?
-	BOOTDEV=$(ifconfig netboot 2>/dev/null | sed "/^	/d;s/:.*//")
+	BOOTDEV=$(get_ifdevs netboot)
 	[[ -n $BOOTDEV ]] || return
 
 	# Try to get a DHCP lease.  This whole process is done in the
