@@ -861,14 +861,9 @@ wdioctl(dev_t dev, u_long xfer, caddr_t addr, int flag, struct proc *p)
 		}
 #endif
 
-	/* XXX pedro: should set AT_WAIT according to force flag */
 	case DIOCCACHESYNC:
-#if 0
-		return wd_flushcache(wd, AT_WAIT);
-#else
-		error = 0;
+		error = wd_flushcache(wd, AT_WAIT);
 		goto exit;
-#endif
 
 	default:
 		error = wdc_ioctl(wd->drvp, xfer, addr, flag, p);
