@@ -2113,7 +2113,7 @@
 ./usr/lib/libformw.so.6.0
 ./usr/lib/libformw_p.a
 ./usr/lib/libfuse.a
-./usr/lib/libfuse.so.1.0
+./usr/lib/libfuse.so.1.1
 ./usr/lib/libfuse_p.a
 ./usr/lib/libgssapi.a
 ./usr/lib/libgssapi.so.7.0
@@ -10884,6 +10884,7 @@
 ./usr/share/man/man5/sudoers.5
 ./usr/share/man/man5/sysctl.conf.5
 ./usr/share/man/man5/syslog.conf.5
+./usr/share/man/man5/table.5
 ./usr/share/man/man5/term.5
 ./usr/share/man/man5/termcap.5
 ./usr/share/man/man5/terminfo.5
