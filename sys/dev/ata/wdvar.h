@@ -76,10 +76,12 @@ struct wd_softc {
  * XXX Nothing resets this yet, but disk change sensing will when ATA-4 is
  * more fully implemented.
  */
-#define WDF_LOADED	0x10 /* parameters loaded */
-#define WDF_WAIT	0x20 /* waiting for resources */
-#define WDF_LBA		0x40 /* using LBA mode */
-#define WDF_LBA48	0x80 /* using 48-bit LBA mode */
+#define WDF_LOADED	0x010 /* parameters loaded */
+#define WDF_WAIT	0x020 /* waiting for resources */
+#define WDF_LBA		0x040 /* using LBA mode */
+#define WDF_LBA48	0x080 /* using 48-bit LBA mode */
+#define WDF_FC		0x100 /* supports flush cache */
+#define WDF_FCE		0x200 /* supports extended flush cache */
 
 	u_int64_t sc_capacity;
 	int cyl; /* actual drive parameters */

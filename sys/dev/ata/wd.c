@@ -229,6 +229,19 @@ wdattach(struct device *parent, struct device *self, void *aux)
 
 	printf("%s: %d-sector PIO,", wd->sc_dev.dv_xname, wd->sc_multi);
 
+	/*
+	 * WDCC_FLUSHCACHE is here since ATA-4, but some drives report
+	 * only ATA-2 and still support it.
+	 */
+	if (wd->drvp->ata_vers >= 4 ||
+	  ((wd->sc_params.atap_cmd2_en & ATAPI_CMD2_FC) != 0 &&
+	    wd->sc_params.atap_cmd2_en != 0xffff)) {
+		if ((wd->sc_params.atap_cmd2_en & ATAPI_CMD2_FCE) != 0)
+			wd->sc_flags |= WDF_FCE;
+		else
+			wd->sc_flags |= WDF_FC;
+	}
+
 	/* use 48-bit LBA if enabled */
 	/* XXX: shall we use it if drive capacity < 137Gb? */
 	if ((wd->sc_params.atap_cmd2_en & ATAPI_CMD2_48AD) != 0)
