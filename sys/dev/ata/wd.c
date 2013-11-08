@@ -711,10 +711,8 @@ wdclose(dev_t dev, int flag, int fmt, struct proc *p)
 
 	disk_closepart(&wd->sc_dk, part, fmt);
 
-	if (wd->sc_dk.dk_openmask == 0) {
-		wd_flushcache(wd, 0);
-		/* XXXX Must wait for I/O to complete! */
-	}
+	if (wd->sc_dk.dk_openmask == 0)
+		wd_flushcache(wd, AT_WAIT);
 
 	disk_unlock(&wd->sc_dk);
 
