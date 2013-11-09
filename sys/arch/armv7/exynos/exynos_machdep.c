@@ -512,17 +512,6 @@ initarm(void *arg0, void *arg1, void *arg2)
 #endif
 	tmp_bs_tag.bs_map = bootstrap_bs_map;
 
-	/* setup a serial console for very early boot */
-	//consinit();
-
-	/* hijack the framebuffer */
-	displayinit();
-
-	/* Talk to the user */
-	printf("\nBitrig/exynos booting ...\n");
-
-	printf("arg0 %p arg1 %p arg2 %p\n", arg0, arg1, arg2);
-
 	if (fdt_init(arg2)) {
 		void *node;
 		node = fdt_find_node("/chosen");
@@ -579,6 +568,17 @@ initarm(void *arg0, void *arg1, void *arg2)
 		physical_start = bootconfig.dram[0].address;
 		physical_end = physical_start + (bootconfig.dram[0].pages * PAGE_SIZE);
 	}
+
+	/* setup a serial console for very early boot */
+	//consinit();
+
+	/* hijack the framebuffer */
+	displayinit();
+
+	/* Talk to the user */
+	printf("\nBitrig/exynos booting ...\n");
+
+	printf("arg0 %p arg1 %p arg2 %p\n", arg0, arg1, arg2);
 
 #ifdef RAMDISK_HOOKS
 	boothowto |= RB_DFLTROOT;
@@ -1017,6 +1017,7 @@ displayinit(void)
 	static int displayinit_called = 0;
 	paddr_t paddr;
 	size_t size;
+	void *node;
 
 	if (displayinit_called != 0)
 		return;
@@ -1025,8 +1026,14 @@ displayinit(void)
 
 	switch (board_id) {
 	case BOARD_ID_EXYNOS5_CHROMEBOOK:
-		paddr = 0xbfc00000;
-		size = 0x202000;
+		node = fdt_find_node("/framebuffer");
+		if (node != NULL) {
+			uint32_t *mem;
+			if (fdt_node_property(node, "reg", (char **)&mem) >= 2*sizeof(uint32_t)) {
+				paddr = betoh32(*mem++);
+				size = betoh32(*mem);
+			}
+		}
 		break;
 	default:
 		printf("board_type %x unknown", board_id);
