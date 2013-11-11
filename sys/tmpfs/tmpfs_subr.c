@@ -98,6 +98,8 @@ __KERNEL_RCSID(0, "$NetBSD: tmpfs_subr.c,v 1.79 2012/03/13 18:40:50 elad Exp $")
 #include <tmpfs/tmpfs_specops.h>
 #include <tmpfs/tmpfs_vnops.h>
 
+#include <dev/rndvar.h>	/* for arc4random() */
+
 /*
  * tmpfs_alloc_node: allocate a new inode of a specified type and
  * insert it into the list of specified mount point.
@@ -125,7 +127,7 @@ tmpfs_alloc_node(tmpfs_mount_t *tmp, enum vtype type, uid_t uid, gid_t gid,
 	 * for applications that do not understand 64-bit ino_t.
 	 */
 	nnode->tn_id = (ino_t)((uintptr_t)nnode / sizeof(*nnode));
-	nnode->tn_gen = TMPFS_NODE_GEN_MASK & random();
+	nnode->tn_gen = TMPFS_NODE_GEN_MASK & arc4random();
 
 	/* Generic initialization. */
 	nnode->tn_type = type;
