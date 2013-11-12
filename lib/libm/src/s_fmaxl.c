@@ -1,4 +1,4 @@
-/*	$OpenBSD: s_fmaxl.c,v 1.1 2008/12/09 20:00:35 martynas Exp $	*/
+/*	$OpenBSD: s_fmaxl.c,v 1.2 2013/11/12 18:28:02 martynas Exp $	*/
 /*-
  * Copyright (c) 2004 David Schultz <das@FreeBSD.ORG>
  * All rights reserved.

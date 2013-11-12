@@ -188,7 +188,7 @@ expm1(double x)
 	    e  = (x*(e-c)-c);
 	    e -= hxs;
 	    if(k== -1) return 0.5*(x-e)-0.5;
-	    if(k==1) { 
+	    if(k==1) {
 	       	if(x < -0.25) return -2.0*(e-(x+0.5));
 	       	else 	      return  one+2.0*(x-e);
 	    }
