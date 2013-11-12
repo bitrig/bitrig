@@ -1515,6 +1515,9 @@
 ./usr/include/mcpp-gcc-arm/gcc42_predef_std.h
 ./usr/include/mcpp-gcc-arm/gxx42_predef_std.h
 ./usr/include/mcpp-gcc-i386
+./usr/include/mcpp-gcc-i386/gcc42_predef_old.h
+./usr/include/mcpp-gcc-i386/gcc42_predef_std.h
+./usr/include/mcpp-gcc-i386/gxx42_predef_std.h
 ./usr/include/md4.h
 ./usr/include/md5.h
 ./usr/include/memory.h
