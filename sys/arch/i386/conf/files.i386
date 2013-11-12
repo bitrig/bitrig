@@ -252,13 +252,6 @@ file	arch/i386/i386/vm86.c			vm86
 file	arch/i386/i386/kvm86.c			kvm86
 file	arch/i386/i386/kvm86call.S		kvm86
 
-# Linux binary compatibility (COMPAT_LINUX)
-include "compat/linux/files.linux"
-file	arch/i386/i386/linux_machdep.c		compat_linux
-
-# OSS audio driver compatibility
-include "compat/ossaudio/files.ossaudio"
-
 device	bios {}
 attach	bios at mainbus
 file	arch/i386/i386/bios.c		bios needs-count

@@ -243,10 +243,7 @@ extern struct intercept_translate ic_pidname;
 extern struct intercept_translate ic_signame;
 extern struct intercept_translate ic_fcntlcmd;
 extern struct intercept_translate ic_memprot;
-extern struct intercept_translate ic_linux_memprot;
 extern struct intercept_translate ic_fileflags;
-
-extern struct intercept_translate ic_linux_oflags;
 
 int requestor_start(char *, int);
 

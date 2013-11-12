@@ -9,7 +9,7 @@ DPADD+=	${LIBEVENT}
 LDADD+=	-levent
 
 SRCS=	cradle.c filter.c intercept-translate.c intercept.c \
-	linux-translate.c openbsd-syscalls.c util.c \
+	openbsd-syscalls.c util.c \
 	policy.c systrace-errno.h systrace-error.c \
 	systrace-translate.c systrace.c alias.c register.c \
 	parse.y lex.l

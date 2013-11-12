@@ -70,15 +70,6 @@ SIOC[GS]IF{ADDR,DSTADDR,BRDADDR,NETMASK} interface ioctls, including
 binary compatibility for code written before the introduction of the
 .Li sa_len
 field in sockaddrs.
-.It Cd option COMPAT_LINUX
-On those architectures that support it, this enables binary
-compatibility with
-.Em Linux
-ELF and a.out
-applications built for the same architecture.
-This option is supported on the i386 architecture.
-See
-.Xr compat_linux 8 .
 .El
 .Sh DEBUGGING OPTIONS
 .Bl -ohang

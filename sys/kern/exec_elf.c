@@ -90,18 +90,11 @@
 #include <machine/reg.h>
 #include <machine/exec.h>
 
-#ifdef COMPAT_LINUX
-#include <compat/linux/linux_exec.h>
-#endif
-
 struct ELFNAME(probe_entry) {
 	int (*func)(struct proc *, struct exec_package *, char *,
 	    u_long *);
 } ELFNAME(probes)[] = {
 	/* XXX - bogus, shouldn't be size independent.. */
-#ifdef COMPAT_LINUX
-	{ linux_elf_probe },
-#endif
 	{ NULL }
 };
 

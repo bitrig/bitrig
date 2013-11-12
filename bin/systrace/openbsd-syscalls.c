@@ -33,8 +33,6 @@
 
 #include <sys/syscall.h>
 
-#include <compat/linux/linux_syscall.h>
-
 #define KTRACE
 #define PTRACE
 #define NFSCLIENT
@@ -44,7 +42,6 @@
 #define SYSVSHM
 #include <kern/syscalls.c>
 
-#include <compat/linux/linux_syscalls.c>
 #undef KTRACE
 #undef PTRACE
 #undef NFSCLIENT
@@ -75,7 +72,6 @@ struct emulation {
 
 static struct emulation emulations[] = {
 	{ "native",	syscallnames,		SYS_MAXSYSCALL },
-	{ "linux",	linux_syscallnames,	LINUX_SYS_MAXSYSCALL },
 	{ NULL,		NULL,			0 }
 };
 

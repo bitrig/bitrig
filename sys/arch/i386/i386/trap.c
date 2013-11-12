@@ -67,10 +67,6 @@
 #endif
 
 #include <sys/exec.h>
-#ifdef COMPAT_LINUX
-#include <compat/linux/linux_syscall.h>
-extern struct emul emul_linux_elf;
-#endif
 #ifdef KVM86
 #include <machine/kvm86.h>
 #define KVM86MODE (kvm86_incall)
@@ -578,11 +574,6 @@ syscall(struct trapframe *frame)
 
 	switch (code) {
 	case SYS_syscall:
-#ifdef COMPAT_LINUX
-		/* Linux has a special system setup call as number 0 */
-		if (p->p_emul == &emul_linux_elf)
-			break;
-#endif
 		/*
 		 * Code is first argument, followed by actual args.
 		 */
@@ -607,36 +598,6 @@ syscall(struct trapframe *frame)
 	else
 		callp += code;
 	argsize = callp->sy_argsize;
-#ifdef COMPAT_LINUX
-	/* XXX extra if() for every emul type.. */
-	if (p->p_emul == &emul_linux_elf) {
-		/*
-		 * Linux passes the args in ebx, ecx, edx, esi, edi, ebp, in
-		 * increasing order.
-		 */
-		switch (argsize) {
-		case 24:
-			args[5] = frame->tf_ebp;
-		case 20:
-			args[4] = frame->tf_edi;
-		case 16:
-			args[3] = frame->tf_esi;
-		case 12:
-			args[2] = frame->tf_edx;
-		case 8:
-			args[1] = frame->tf_ecx;
-		case 4:
-			args[0] = frame->tf_ebx;
-		case 0:
-			break;
-		default:
-			panic("linux syscall with weird argument size %d",
-			    argsize);
-			break;
-		}
-	}
-	else
-#endif
 	if (argsize && (error = copyin(params, args, argsize)))
 		goto bad;
 

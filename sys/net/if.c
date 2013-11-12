@@ -1592,7 +1592,7 @@ ifioctl(struct socket *so, u_long cmd, caddr_t data, struct proc *p)
 	default:
 		if (so->so_proto == 0)
 			return (EOPNOTSUPP);
-#if !defined(COMPAT_43) && !defined(COMPAT_LINUX)
+#if !defined(COMPAT_43)
 		error = ((*so->so_proto->pr_usrreq)(so, PRU_CONTROL,
 			(struct mbuf *) cmd, (struct mbuf *) data,
 			(struct mbuf *) ifp, p));
@@ -1697,7 +1697,7 @@ ifconf(u_long cmd, caddr_t data)
 				TAILQ_FOREACH(ifa,
 				    &ifp->if_addrlist, ifa_list) {
 					sa = ifa->ifa_addr;
-#if defined(COMPAT_43) || defined(COMPAT_LINUX)
+#if defined(COMPAT_43)
 					if (cmd != OSIOCGIFCONF)
 #endif
 					if (sa->sa_len > sizeof(*sa))
@@ -1728,7 +1728,7 @@ ifconf(u_long cmd, caddr_t data)
 
 				if (space < sizeof(ifr))
 					break;
-#if defined(COMPAT_43) || defined(COMPAT_LINUX)
+#if defined(COMPAT_43)
 				if (cmd == OSIOCGIFCONF) {
 					struct osockaddr *osa =
 					    (struct osockaddr *)&ifr.ifr_addr;

@@ -977,7 +977,6 @@ file net/pfkeyv2_convert.c		key | ipsec | tcp_signature
 
 # COMPAT_* support code (base and other shared code)
 file compat/common/compat_util.c	!small_kernel
-file compat/common/compat_dir.c		!small_kernel & compat_linux
 file compat/common/tty_43.c		compat_43
 
 # libx86emu

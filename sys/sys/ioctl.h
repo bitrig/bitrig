@@ -78,6 +78,6 @@ __END_DECLS
  * Source level -> #define USE_OLD_TTY
  * Kernel level -> options COMPAT_43 or ...
  */
-#if defined(USE_OLD_TTY) || defined(COMPAT_43) || defined(COMPAT_LINUX)
+#if defined(USE_OLD_TTY) || defined(COMPAT_43)
 #include <sys/ioctl_compat.h>
 #endif

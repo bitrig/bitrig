@@ -39,10 +39,6 @@
 #include <sys/exec_elf.h>
 #endif
 
-#ifdef COMPAT_LINUX
-#include <compat/linux/linux_exec.h>
-#endif
-
 extern struct emul emul_native, emul_elf32, emul_elf64, emul_linux_elf;
 
 struct execsw execsw[] = {
@@ -53,9 +49,6 @@ struct execsw execsw[] = {
 #ifdef _KERN_DO_ELF64
 	{ sizeof(Elf64_Ehdr), exec_elf64_makecmds, &emul_native },	/* elf binaries */
 #endif /* ELF64 */
-#ifdef COMPAT_LINUX
-	{ sizeof(Elf32_Ehdr), exec_linux_elf32_makecmds, &emul_linux_elf },
-#endif
 #ifdef LKM
 	{ 0, NULL, NULL },				/* entries for LKMs */
 	{ 0, NULL, NULL },
