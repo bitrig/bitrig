@@ -118,18 +118,19 @@ snapinfo buildworld snap do_snap do_snap_rel:
 .else
 .NOTPARALLEL:
 ARCH!= uname -m
+SNAPARCHDIR=${SNAPDIR}/${ARCH}
 .if defined(SNAPDIRSUFFIX)
-SNAPROOTDIR=${SNAPDIR}/${ARCH}/root.${SNAPDIRSUFFIX}
-SNAPRELDIR=${SNAPDIR}/${ARCH}/${SNAPDIRSUFFIX}
-SNAPLOGFILE= echo ${SNAPDIR}/${ARCH}/buildlog.${SNAPDIRSUFFIX}
+SNAPROOTDIR=${SNAPARCHDIR}/root.${SNAPDIRSUFFIX}
+SNAPRELDIR=${SNAPARCHDIR}/release.${SNAPDIRSUFFIX}
+SNAPLOGFILE= echo ${SNAPARCHDIR}/buildlog.${SNAPDIRSUFFIX}
 .else
-SNAPROOTDIR=${SNAPDIR}/${ARCH}/root
+SNAPROOTDIR=${SNAPARCHDIR}/root
 .if defined(SNAPDATE)
-SNAPRELDIR!= echo ${SNAPDIR}/${ARCH}/release.$$(date "+%y%m%d%H%M")
+SNAPRELDIR!= echo ${SNAPARCHDIR}/release.$$(date "+%y%m%d%H%M")
 .else
-SNAPRELDIR!= echo ${SNAPDIR}/${ARCH}/release
+SNAPRELDIR!= echo ${SNAPARCHDIR}/release
 .endif
-SNAPLOGFILE != echo ${SNAPDIR}/${ARCH}/buildlog.$$(date "+%y%m%d%H%M")
+SNAPLOGFILE != echo ${SNAPARCHDIR}/buildlog.$$(date "+%y%m%d%H%M")
 .endif
 snapinfo:
 	@echo rootdir = ${SNAPROOTDIR}
@@ -143,6 +144,7 @@ buildworld:
 	${MAKE} build
 
 snap:  
+	mkdir -p ${SNAPARCHDIR}
 	${MAKE} do_snap 2>&1 | tee ${SNAPLOGFILE}
 
 do_snap:  buildworld do_snap_rel
