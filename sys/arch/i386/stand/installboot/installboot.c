@@ -1,4 +1,4 @@
-/*	$OpenBSD: installboot.c,v 1.69 2013/06/11 16:42:08 deraadt Exp $	*/
+/*	$OpenBSD: installboot.c,v 1.70 2013/11/13 04:11:34 krw Exp $	*/
 /*	$NetBSD: installboot.c,v 1.5 1995/11/17 23:23:50 gwr Exp $ */
 
 /*
@@ -560,7 +560,7 @@ getbootparams(char *boot, int devfd, struct disklabel *dl)
 	pp = &dl->d_partitions[DISKPART(statbuf.st_dev)];
 	close(fd);
 
-	sbread(devfd, DL_SECTOBLK(dl, pp->p_offset), &fs);
+	sbread(devfd, DL_SECTOBLK(dl, DL_GETPOFFSET(pp)), &fs);
 
 	/* Read inode. */
 	if ((buf = malloc(fs->fs_bsize)) == NULL)
@@ -610,6 +610,8 @@ getbootparams(char *boot, int devfd, struct disklabel *dl)
 	sym_set_value(pbr_symbols, "_fsbtodb",
 	    ffs(fs->fs_fsize / dl->d_secsize) - 1);
 
+	if (pp->p_offseth != 0)
+		errx(1, "partition offset too high");
 	sym_set_value(pbr_symbols, "_p_offset", pp->p_offset);
 	sym_set_value(pbr_symbols, "_inodeblk",
 	    ino_to_fsba(fs, statbuf.st_ino));
@@ -621,11 +623,10 @@ getbootparams(char *boot, int devfd, struct disklabel *dl)
 	if (verbose) {
 		fprintf(stderr, "%s is %d blocks x %d bytes\n",
 		    boot, ndb, fs->fs_bsize);
-		fprintf(stderr, "fs block shift %u; part offset %u; "
+		fprintf(stderr, "fs block shift %u; part offset %llu; "
 		    "inode block %lld, offset %u\n",
 		    ffs(fs->fs_fsize / dl->d_secsize) - 1,
-		    pp->p_offset,
-		    ino_to_fsba(fs, statbuf.st_ino),
+		    DL_GETPOFFSET(pp), ino_to_fsba(fs, statbuf.st_ino),
 		    (unsigned int)((((char *)ap) - buf) + INODEOFF));
 		fprintf(stderr, "expecting %d-bit fs blocks (skew %d)\n",
 		    skew ? 64 : 32, skew);
