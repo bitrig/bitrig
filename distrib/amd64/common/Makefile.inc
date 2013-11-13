@@ -53,8 +53,8 @@ ${FS}:	bsd.gz
 	cp ${REALIMAGE} ${FS}
 	rm ${REALIMAGE}
 
-DISKTYPE?=       rdroot42
-NBLKS?=          8320
+DISKTYPE?=       rdroot51
+NBLKS?=          10240
 # minfree, opt, b/i  trks, sects, cpg
 NEWFSARGS= -m 0 -o space -i 4096
 
