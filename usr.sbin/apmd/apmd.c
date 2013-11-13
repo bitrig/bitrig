@@ -1,4 +1,4 @@
-/*	$OpenBSD: apmd.c,v 1.62 2013/08/22 04:43:41 guenther Exp $	*/
+/*	$OpenBSD: apmd.c,v 1.63 2013/11/13 04:50:21 deraadt Exp $	*/
 
 /*
  *  Copyright (c) 1995, 1996 John T. Kohl
@@ -84,6 +84,8 @@ void setperf(int new_perf);
 void sigexit(int signo);
 void do_etc_file(const char *file);
 void sockunlink(void);
+void error(const char *fmt, const char *arg);
+void set_driver_messages(int fd, int mode);
 
 /* ARGSUSED */
 void
