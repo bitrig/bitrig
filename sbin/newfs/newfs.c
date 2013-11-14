@@ -429,6 +429,9 @@ havelabel:
 	}
 
 	if (fssize_input < 0) {
+#if 1
+		fatal("-s < 0 not yet implemented");
+#else
 		long long gap; /* leave gap at the end of partition */
 		fssize_input = -fssize_input;
 		if (fssize_usebytes) {
@@ -441,6 +444,7 @@ havelabel:
 			fatal("%s: requested gap of %lld sectors on partition "
 			    "'%c' is too big", argv[0], gap, *cp);
 		nsecs = DL_GETPSIZE(pp) - gap;
+#endif
 	} else {
 		if (fssize_usebytes) {
 			nsecs = fssize_input / sectorsize;
