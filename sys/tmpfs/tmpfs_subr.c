@@ -121,13 +121,15 @@ tmpfs_alloc_node(tmpfs_mount_t *tmp, enum vtype type, uid_t uid, gid_t gid,
 	nnode->tn_vnode = NULL;
 	nnode->tn_dirent_hint = NULL;
 
-	/*
-	 * XXX Where the pool is backed by a map larger than (4GB *
-	 * sizeof(*nnode)), this may produce duplicate inode numbers
-	 * for applications that do not understand 64-bit ino_t.
-	 */
-	nnode->tn_id = (ino_t)((uintptr_t)nnode / sizeof(*nnode));
-	nnode->tn_gen = TMPFS_NODE_GEN_MASK & arc4random();
+	rw_enter_write(&tmp->tm_acc_lock);
+	nnode->tn_id = ++tmp->tm_highest_inode;
+	if (nnode->tn_id == 0) {
+		--tmp->tm_highest_inode;
+		rw_exit_write(&tmp->tm_acc_lock);
+		tmpfs_node_put(tmp, nnode);
+		return ENOSPC;
+	}
+	rw_exit_write(&tmp->tm_acc_lock);
 
 	/* Generic initialization. */
 	nnode->tn_type = type;
@@ -135,6 +137,7 @@ tmpfs_alloc_node(tmpfs_mount_t *tmp, enum vtype type, uid_t uid, gid_t gid,
 	nnode->tn_status = 0;
 	nnode->tn_flags = 0;
 	nnode->tn_lockf = NULL;
+	nnode->tn_gen = TMPFS_NODE_GEN_MASK & arc4random();
 
 	nanotime(&nnode->tn_atime);
 	nnode->tn_birthtime = nnode->tn_atime;
@@ -257,6 +260,11 @@ tmpfs_free_node(tmpfs_mount_t *tmp, tmpfs_node_t *node)
 	default:
 		break;
 	}
+
+	rw_enter_write(&tmp->tm_acc_lock);
+	if (node->tn_id == tmp->tm_highest_inode)
+		--tmp->tm_highest_inode;
+	rw_exit_write(&tmp->tm_acc_lock);
 
 	/* mutex_destroy(&node->tn_nlock); */
 	tmpfs_node_put(tmp, node);

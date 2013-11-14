@@ -153,6 +153,7 @@ tmpfs_mount(struct mount *mp, const char *path, void *data,
 
 	tmp->tm_nodes_max = (ino_t)nodes;
 	tmp->tm_nodes_cnt = 0;
+	tmp->tm_highest_inode = 1;
 	LIST_INIT(&tmp->tm_nodes);
 
 	rw_init(&tmp->tm_lock, "tmplk");

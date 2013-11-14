@@ -235,6 +235,8 @@ typedef struct tmpfs_mount {
 	/* Limit and number of bytes in use by the file system. */
 	uint64_t		tm_mem_limit;
 	uint64_t		tm_bytes_used;
+	/* Highest allocated inode number. */
+	uint64_t		tm_highest_inode;
 	struct rwlock		tm_acc_lock;
 
 	/* Pointer to the root inode. */
