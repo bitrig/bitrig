@@ -1,6 +1,6 @@
-/* $OpenBSD: omap.c,v 1.4 2013/11/06 19:03:07 syl Exp $ */
+/*	$OpenBSD: armv7_machdep.h,v 1.1 2013/10/30 20:20:23 syl Exp $	*/
 /*
- * Copyright (c) 2005,2008 Dale Rahn <drahn@openbsd.com>
+ * Copyright (c) 2013 Sylvestre Gallon <ccna.syl@gmail.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,17 +15,15 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <sys/param.h>
-#include <sys/systm.h>
+#ifndef __PLATFORMVAR_H__
+#define __PLATFORMVAR_H__
 
-#include <machine/bus.h>
+void platform_powerdown(void);
+void platform_watchdog_reset(void);
+void platform_init_cons(void);
+void platform_print_board_type(void);
+void platform_bootconfig_dram(BootConfig *, psize_t *, psize_t *);
+void platform_disable_l2_if_needed(void);
+extern const char *platform_boot_name;
 
-#include <armv7/armv7/armv7var.h>
-
-struct cfattach omap_ca = {
-	sizeof(struct armv7_softc), armv7_match, armv7_attach
-};
-
-struct cfdriver omap_cd = {
-	NULL, "omap", DV_DULL
-};
+#endif /* __PLATFORMVAR_H__ */

@@ -39,7 +39,7 @@
 #include <machine/bus.h>
 #include <armv7/exynos/exuartreg.h>
 #include <armv7/exynos/exuartvar.h>
-#include <armv7/exynos/exvar.h>
+#include <armv7/armv7/armv7var.h>
 #include <armv7/exynos/exclockvar.h>
 
 #define DEVUNIT(x)      (minor(x) & 0x7f)
@@ -137,18 +137,18 @@ struct cdevsw exuartdev =
 void
 exuartattach(struct device *parent, struct device *self, void *args)
 {
-	struct ex_attach_args *ea = args;
+	struct armv7_attach_args *aa = args;
 	struct exuart_softc *sc = (struct exuart_softc *) self;
 
-	sc->sc_irq = arm_intr_establish(ea->ea_dev->irq[0], IPL_TTY,
+	sc->sc_irq = arm_intr_establish(aa->aa_dev->irq[0], IPL_TTY,
 	    exuart_intr, sc, sc->sc_dev.dv_xname);
 
-	sc->sc_iot = ea->ea_iot;
-	if (bus_space_map(sc->sc_iot, ea->ea_dev->mem[0].addr,
-	    ea->ea_dev->mem[0].size, 0, &sc->sc_ioh))
+	sc->sc_iot = aa->aa_iot;
+	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
+	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
 		panic("exuartattach: bus_space_map failed!");
 
-	if (ea->ea_dev->mem[0].addr == exuartconsaddr)
+	if (aa->aa_dev->mem[0].addr == exuartconsaddr)
 		printf(" console");
 
 	timeout_set(&sc->sc_diag_tmo, exuart_diag, sc);

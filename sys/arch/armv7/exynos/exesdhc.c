@@ -31,7 +31,7 @@
 #include <dev/sdmmc/sdmmcchip.h>
 #include <dev/sdmmc/sdmmcvar.h>
 
-#include <armv7/exynos/exvar.h>
+#include <armv7/armv7/armv7var.h>
 #include <armv7/exynos/exclockvar.h>
 #include <armv7/exynos/exgpiovar.h>
 
@@ -244,22 +244,22 @@ void
 exesdhc_attach(struct device *parent, struct device *self, void *args)
 {
 	struct exesdhc_softc		*sc = (struct exesdhc_softc *) self;
-	struct ex_attach_args		*ea = args;
+	struct armv7_attach_args	*aa = args;
 	struct sdmmcbus_attach_args	 saa;
 	int				 error = 1;
 	uint32_t			 caps;
 
-	sc->unit = ea->ea_dev->unit;
-	sc->sc_iot = ea->ea_iot;
-	if (bus_space_map(sc->sc_iot, ea->ea_dev->mem[0].addr,
-	    ea->ea_dev->mem[0].size, 0, &sc->sc_ioh))
+	sc->unit = aa->aa_dev->unit;
+	sc->sc_iot = aa->aa_iot;
+	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
+	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
 		panic("exesdhc_attach: bus_space_map failed!");
 
 	printf("\n");
 
 	/* XXX DMA channels? */
 
-	sc->sc_ih = arm_intr_establish(ea->ea_dev->irq[0], IPL_SDMMC,
+	sc->sc_ih = arm_intr_establish(aa->aa_dev->irq[0], IPL_SDMMC,
 	   exesdhc_intr, sc, sc->sc_dev.dv_xname);
 
 	/*
@@ -274,7 +274,7 @@ exesdhc_attach(struct device *parent, struct device *self, void *args)
 	/*
 	 * Determine the base clock frequency. (2.2.24)
 	 */
-	//sc->clkbase = exccm_get_usdhx(ea->ea_dev->unit + 1);
+	//sc->clkbase = exccm_get_usdhx(aa->aa_dev->unit + 1);
 	sc->clkbase = 0;
 
 	/*

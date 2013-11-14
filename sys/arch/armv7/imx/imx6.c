@@ -22,7 +22,7 @@
 #include <machine/bus.h>
 #include <arch/arm/armv7/armv7var.h>
 
-#include <armv7/imx/imxvar.h>
+#include <armv7/armv7/armv7var.h>
 
 /* IRQs are defined without the 32 cpu IRQs */
 
@@ -153,7 +153,7 @@
 #define PCIE_IRQ2	122
 #define PCIE_IRQ3	123
 
-struct imx_dev imx6_devs[] = {
+struct armv7_dev imx6_devs[] = {
 
 	/*
 	 * Clock Control Module
@@ -364,5 +364,5 @@ struct imx_dev imx6_devs[] = {
 void
 imx6_init(void)
 {
-	imx_set_devs(imx6_devs);
+	armv7_set_devs(imx6_devs);
 }

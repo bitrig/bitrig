@@ -136,14 +136,14 @@ struct cfdriver imxpcibr_cd = {
 void
 imxpcibr_attach(struct device *parent, struct device *self, void *args)
 {
-	struct imx_attach_args *ia = args;
+	struct armv7_attach_args *aa = args;
 	struct imxpcibr_softc *sc = (struct imxpcibr_softc *) self;
 	struct pcibus_attach_args pba;
 
-	sc->sc_iot = ia->ia_iot;
-	sc->sc_dma_tag = ia->ia_dmat;
-	if (bus_space_map(sc->sc_iot, ia->ia_dev->mem[0].addr,
-	    ia->ia_dev->mem[0].size, 0, &sc->sc_ioh))
+	sc->sc_iot = aa->aa_iot;
+	sc->sc_dma_tag = aa->aa_dmat;
+	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
+	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
 		panic("imxpcibr_attach: bus_space_map failed!");
 
 	printf("\n");

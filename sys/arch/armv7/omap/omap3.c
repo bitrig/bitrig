@@ -21,7 +21,7 @@
 
 #include <machine/bus.h>
 
-#include <armv7/omap/omapvar.h>
+#include <armv7/armv7/armv7var.h>
 
 #define PRCM_ADDR	0x48004000
 #define PRCM_SIZE	0x2000
@@ -69,7 +69,7 @@
 #define USBTLL_ADDR	0x48062000
 #define USBTLL_SIZE	0x1000
 
-struct omap_dev omap3_devs[] = {
+struct armv7_dev omap3_devs[] = {
 
 	/*
 	 * Power, Reset and Clock Manager
@@ -183,5 +183,5 @@ struct omap_dev omap3_devs[] = {
 void
 omap3_init(void)
 {
-	omap_set_devs(omap3_devs);
+	armv7_set_devs(omap3_devs);
 }

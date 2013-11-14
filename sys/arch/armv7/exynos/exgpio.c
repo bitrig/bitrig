@@ -28,7 +28,7 @@
 #include <machine/bus.h>
 #include <machine/intr.h>
 
-#include <armv7/exynos/exvar.h>
+#include <armv7/armv7/armv7var.h>
 #include <armv7/exynos/exgpiovar.h>
 
 /* Exynos5 registers */
@@ -111,16 +111,16 @@ exgpio_match(struct device *parent, void *v, void *aux)
 void
 exgpio_attach(struct device *parent, struct device *self, void *args)
 {
-	struct ex_attach_args *ea = args;
+	struct armv7_attach_args *aa = args;
 	struct exgpio_softc *sc = (struct exgpio_softc *) self;
 
-	sc->sc_iot = ea->ea_iot;
-	if (bus_space_map(sc->sc_iot, ea->ea_dev->mem[0].addr,
-	    ea->ea_dev->mem[0].size, 0, &sc->sc_ioh))
+	sc->sc_iot = aa->aa_iot;
+	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
+	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
 		panic("exgpio_attach: bus_space_map failed!");
 
 
-	sc->sc_ngpio = (ea->ea_dev->mem[0].size / GPIO_BANK_SIZE)
+	sc->sc_ngpio = (aa->aa_dev->mem[0].size / GPIO_BANK_SIZE)
 	    * GPIO_PINS_PER_BANK;
 
 	switch (board_id) {

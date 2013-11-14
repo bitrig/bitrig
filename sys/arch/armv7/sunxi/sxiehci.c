@@ -58,7 +58,7 @@
 #include <dev/usb/usbdivar.h>
 #include <dev/usb/usb_mem.h>
 
-#include <armv7/sunxi/sunxivar.h>
+#include <armv7/armv7/armv7var.h>
 #include <armv7/sunxi/sxiccmuvar.h>
 #include <armv7/sunxi/sxipiovar.h>
 
@@ -102,16 +102,16 @@ void
 sxiehci_attach(struct device *parent, struct device *self, void *aux)
 {
 	struct sxiehci_softc	*sc = (struct sxiehci_softc *)self;
-	struct sxi_attach_args	*sxi = aux;
+	struct armv7_attach_args *aa = aux;
 	usbd_status		 r;
 	char			*devname = sc->sc.sc_bus.bdev.dv_xname;
 
-	sc->sc.iot = sxi->sxi_iot;
-	sc->sc.sc_bus.dmatag = sxi->sxi_dmat;
-	sc->sc.sc_size = sxi->sxi_dev->mem[0].size;
+	sc->sc.iot = aa->aa_iot;
+	sc->sc.sc_bus.dmatag = aa->aa_dmat;
+	sc->sc.sc_size = aa->aa_dev->mem[0].size;
 
-	if (bus_space_map(sc->sc.iot, sxi->sxi_dev->mem[0].addr,
-		sxi->sxi_dev->mem[0].size, 0, &sc->sc.ioh)) {
+	if (bus_space_map(sc->sc.iot, aa->aa_dev->mem[0].addr,
+		aa->aa_dev->mem[0].size, 0, &sc->sc.ioh)) {
 		printf(": cannot map mem space\n");
 		goto out;
 	}
@@ -125,7 +125,7 @@ sxiehci_attach(struct device *parent, struct device *self, void *aux)
 	sc->sc.sc_offs = EREAD1(&sc->sc, EHCI_CAPLENGTH);
 	EOWRITE2(&sc->sc, EHCI_USBINTR, 0);
 
-	sc->sc_ih = arm_intr_establish(sxi->sxi_dev->irq[0], IPL_USB,
+	sc->sc_ih = arm_intr_establish(aa->aa_dev->irq[0], IPL_USB,
 	    ehci_intr, &sc->sc, devname);
 	if (sc->sc_ih == NULL) {
 		printf(": unable to establish interrupt\n");

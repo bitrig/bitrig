@@ -30,7 +30,7 @@
 #include <dev/usb/usbdivar.h>
 #include <dev/usb/usb_mem.h>
 
-#include <armv7/exynos/exvar.h>
+#include <armv7/armv7/armv7var.h>
 #include <armv7/exynos/exsysregvar.h>
 #include <armv7/exynos/expowervar.h>
 #include <armv7/exynos/exgpiovar.h>
@@ -90,30 +90,30 @@ void
 exehci_attach(struct device *parent, struct device *self, void *aux)
 {
 	struct exehci_softc	*sc = (struct exehci_softc *)self;
-	struct ex_attach_args	*ea = aux;
+	struct armv7_attach_args	*aa = aux;
 	usbd_status		r;
 	char *devname = sc->sc.sc_bus.bdev.dv_xname;
 
-	sc->sc.iot = ea->ea_iot;
-	sc->sc.sc_bus.dmatag = ea->ea_dmat;
-	sc->sc.sc_size = ea->ea_dev->mem[0].size;
+	sc->sc.iot = aa->aa_iot;
+	sc->sc.sc_bus.dmatag = aa->aa_dmat;
+	sc->sc.sc_size = aa->aa_dev->mem[0].size;
 
 	/* Map I/O space */
-	if (bus_space_map(sc->sc.iot, ea->ea_dev->mem[0].addr,
-		ea->ea_dev->mem[0].size, 0, &sc->sc.ioh)) {
+	if (bus_space_map(sc->sc.iot, aa->aa_dev->mem[0].addr,
+		aa->aa_dev->mem[0].size, 0, &sc->sc.ioh)) {
 		printf(": cannot map mem space\n");
 		goto out;
 	}
 
-	if (bus_space_map(sc->sc.iot, ea->ea_dev->mem[1].addr,
-		ea->ea_dev->mem[1].size, 0, &sc->ph_ioh)) {
+	if (bus_space_map(sc->sc.iot, aa->aa_dev->mem[1].addr,
+		aa->aa_dev->mem[1].size, 0, &sc->ph_ioh)) {
 		printf(": cannot map mem space\n");
 		goto mem0;
 	}
 
 	printf("\n");
 
-	sc->sc_ih = arm_intr_establish(ea->ea_dev->irq[0], IPL_USB,
+	sc->sc_ih = arm_intr_establish(aa->aa_dev->irq[0], IPL_USB,
 	    ehci_intr, &sc->sc, devname);
 	if (sc->sc_ih == NULL) {
 		printf(": unable to establish interrupt\n");
@@ -138,7 +138,7 @@ intr:
 	arm_intr_disestablish(sc->sc_ih);
 	sc->sc_ih = NULL;
 mem1:
-	bus_space_unmap(sc->sc.iot, sc->ph_ioh, ea->ea_dev->mem[1].addr);
+	bus_space_unmap(sc->sc.iot, sc->ph_ioh, aa->aa_dev->mem[1].addr);
 mem0:
 	bus_space_unmap(sc->sc.iot, sc->sc.ioh, sc->sc.sc_size);
 	sc->sc.sc_size = 0;

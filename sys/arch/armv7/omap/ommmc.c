@@ -31,7 +31,7 @@
 #include <dev/sdmmc/sdmmcchip.h>
 #include <dev/sdmmc/sdmmcvar.h>
 
-#include <armv7/omap/omapvar.h>
+#include <armv7/armv7/armv7var.h>
 #include <armv7/omap/prcmvar.h>
 
 /*
@@ -279,21 +279,21 @@ void
 ommmc_attach(struct device *parent, struct device *self, void *args)
 {
 	struct ommmc_softc		*sc = (struct ommmc_softc *) self;
-	struct omap_attach_args		*oa = args;
+	struct armv7_attach_args	*aa = args;
 	struct sdmmcbus_attach_args	 saa;
 	uint32_t			 caps;
 
-	sc->sc_iot = oa->oa_iot;
-	if (bus_space_map(sc->sc_iot, oa->oa_dev->mem[0].addr,
-	    oa->oa_dev->mem[0].size, 0, &sc->sc_ioh))
+	sc->sc_iot = aa->aa_iot;
+	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
+	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
 		panic("%s: bus_space_map failed!", __func__);
 
 	printf("\n");
 
 	/* Enable ICLKEN, FCLKEN? */
-	prcm_enablemodule(PRCM_MMC0 + oa->oa_dev->unit);
+	prcm_enablemodule(PRCM_MMC0 + aa->aa_dev->unit);
 
-	sc->sc_ih = arm_intr_establish(oa->oa_dev->irq[0], IPL_SDMMC,
+	sc->sc_ih = arm_intr_establish(aa->aa_dev->irq[0], IPL_SDMMC,
 	    ommmc_intr, sc, DEVNAME(sc));
 	if (sc->sc_ih == NULL) {
 		printf("%s: cannot map interrupt\n", DEVNAME(sc));
@@ -403,7 +403,7 @@ ommmc_attach(struct device *parent, struct device *self, void *args)
 err:
 	if (sc->sc_ih != NULL)
 		arm_intr_disestablish(sc->sc_ih);
-	bus_space_unmap(sc->sc_iot, sc->sc_ioh, oa->oa_dev->mem[0].size);
+	bus_space_unmap(sc->sc_iot, sc->sc_ioh, aa->aa_dev->mem[0].size);
 }
 
 

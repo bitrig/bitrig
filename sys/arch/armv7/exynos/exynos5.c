@@ -22,7 +22,7 @@
 #include <machine/bus.h>
 #include <arch/arm/armv7/armv7var.h>
 
-#include <armv7/exynos/exvar.h>
+#include <armv7/armv7/armv7var.h>
 
 /* XXX ??? */
 /* IRQs are defined without the 32 cpu IRQs */
@@ -110,7 +110,7 @@
 #define PCIE_IRQ2	122
 #define PCIE_IRQ3	123
 
-struct ex_dev exynos5_devs[] = {
+struct armv7_dev exynos5_devs[] = {
 
 	/*
 	 * Multi-Core Timer
@@ -313,5 +313,5 @@ struct ex_dev exynos5_devs[] = {
 void
 exynos5_init(void)
 {
-	ex_set_devs(exynos5_devs);
+	armv7_set_devs(exynos5_devs);
 }

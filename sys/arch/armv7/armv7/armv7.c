@@ -47,6 +47,46 @@ struct armv7_dev *armv7_devs = NULL;
 
 #define DEVNAME(sc)	(sc)->sc_dv.dv_xname
 
+struct board_dev chromebook_devs[] = {
+	{ "exmct",	0 },
+	{ "exdog",	0 },
+	{ "exclock",	0 },
+	{ "expower",	0 },
+	{ "exsysreg",	0 },
+//	{ "exiomuxc",	0 },
+//	{ "exuart",	1 },
+	{ "exgpio",	0 },
+	{ "exgpio",	1 },
+	{ "exgpio",	2 },
+	{ "exgpio",	3 },
+	{ "exgpio",	4 },
+	{ "ehci",	0 },
+	{ "exiic",	4 },
+//	{ "exesdhc",	2 },
+//	{ "exesdhc",	3 },
+	{ NULL,		0 }
+};
+
+struct board_dev c1_devs[] = {
+	{ "imxccm",	0 },
+	{ "imxiomuxc",	0 },
+	{ "imxdog",	0 },
+	{ "imxocotp",	0 },
+	{ "imxuart",	1 },
+	{ "imxgpio",	0 },
+	{ "imxgpio",	1 },
+	{ "imxgpio",	2 },
+	{ "imxgpio",	3 },
+	{ "imxgpio",	4 },
+	{ "imxgpio",	5 },
+	{ "imxgpio",	6 },
+	{ "imxesdhc",	1 },
+	{ "ehci",	0 },
+	{ "ehci",	1 },
+	{ "imxenet",	0 },
+	{ NULL,		0 }
+};
+
 struct board_dev phyflex_imx6_devs[] = {
 	{ "imxccm",	0 },
 	{ "imxiomuxc",	0 },
@@ -109,6 +149,7 @@ struct board_dev wandboard_devs[] = {
 	{ "ahci",	0 },	/* only on quad, afaik. */
 	{ NULL,		0 }
 };
+
 struct board_dev beagleboard_devs[] = {
 	{ "prcm",	0 },
 	{ "intc",	0 },
@@ -284,6 +325,16 @@ armv7_attach(struct device *parent, struct device *self, void *aux)
 	bus_space_handle_t ioh;
 
 	switch (board_id) {
+	case BOARD_ID_EXYNOS5_CHROMEBOOK:
+		printf(": Exynos 5 Chromebook\n");
+		exynos5_init();
+		sc->sc_board_devs = chromebook_devs;
+		break;
+	case BOARD_ID_IMX6_C1:
+		printf(": SolidRun C1\n");
+		imx6_init();
+		sc->sc_board_devs = c1_devs;
+		break;
 	case BOARD_ID_IMX6_PHYFLEX:
 		printf(": PhyFLEX-i.MX6\n");
 		imx6_init();

@@ -57,7 +57,7 @@
 #include <sys/proc.h>
 #include <machine/bus.h>
 
-#include <armv7/omap/omapvar.h>
+#include <armv7/armv7/armv7var.h>
 #include <armv7/omap/sitara_cm.h>
 #include <armv7/omap/sitara_cmreg.h>
 
@@ -373,16 +373,16 @@ void
 sitara_cm_attach(struct device *parent, struct device *self, void *aux)
 {
 	struct sitara_cm_softc *sc = (struct sitara_cm_softc *)self;
-	struct omap_attach_args *oa = aux;
+	struct armv7_attach_args *aa = aux;
 	uint32_t rev;
 
 	if (sitara_cm_sc)
 		panic("sitara_cm_attach: already attached");
 
-	sc->sc_iot = oa->oa_iot;
+	sc->sc_iot = aa->aa_iot;
 
-	if (bus_space_map(oa->oa_iot, oa->oa_dev->mem[0].addr,
-	    oa->oa_dev->mem[0].size, 0, &sc->sc_ioh) != 0)
+	if (bus_space_map(aa->aa_iot, aa->aa_dev->mem[0].addr,
+	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh) != 0)
 		panic("%s: bus_space_map failed!\n", __func__);
 
 	sitara_cm_sc = sc;

@@ -24,7 +24,7 @@
 #include <sys/timeout.h>
 #include <machine/intr.h>
 #include <machine/bus.h>
-#include <armv7/imx/imxvar.h>
+#include <armv7/armv7/armv7var.h>
 
 /* registers */
 #define IOMUXC_GPR1			0x004
@@ -144,12 +144,12 @@ struct cfdriver imxiomuxc_cd = {
 void
 imxiomuxc_attach(struct device *parent, struct device *self, void *args)
 {
-	struct imx_attach_args *ia = args;
+	struct armv7_attach_args *aa = args;
 	struct imxiomuxc_softc *sc = (struct imxiomuxc_softc *) self;
 
-	sc->sc_iot = ia->ia_iot;
-	if (bus_space_map(sc->sc_iot, ia->ia_dev->mem[0].addr,
-	    ia->ia_dev->mem[0].size, 0, &sc->sc_ioh))
+	sc->sc_iot = aa->aa_iot;
+	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
+	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
 		panic("imxiomuxc_attach: bus_space_map failed!");
 
 	printf("\n");

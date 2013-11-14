@@ -73,14 +73,17 @@ int	armv7_submatch(struct device *, void *, void *);
 #define BOARD_ID_OMAP4_PANDA 2791
 #define BOARD_ID_IMX6_PHYFLEX 3529
 #define BOARD_ID_AM335X_BEAGLEBONE 3589
-#define BOARD_ID_SUN4I_A10 4104
 #define BOARD_ID_IMX6_SABRELITE 3769
+#define BOARD_ID_EXYNOS5_CHROMEBOOK 3774
+#define BOARD_ID_SUN4I_A10 4104
 #define BOARD_ID_SUN7I_A20 4283
 #define BOARD_ID_IMX6_WANDBOARD 4412
+#define BOARD_ID_IMX6_C1 4773
 extern uint32_t board_id;
 
 /* different arch init */
 void am335x_init(void);
+void exynos5_init(void);
 void imx6_init(void);
 void omap3_init(void);
 void omap4_init(void);

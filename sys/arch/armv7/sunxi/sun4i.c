@@ -20,10 +20,10 @@
 
 #include <machine/bus.h>
 
-#include <armv7/sunxi/sunxivar.h>
+#include <armv7/armv7/armv7var.h>
 #include <armv7/sunxi/sunxireg.h>
 
-struct sxi_dev sxia1x_devs[] = {
+struct armv7_dev sxia1x_devs[] = {
 
 	/* 'Port IO' */
 	{ .name = "sxipio",
@@ -165,5 +165,5 @@ void sxia1x_init(void);
 void
 sxia1x_init(void)
 {
-	sxi_set_devs(sxia1x_devs);
+	armv7_set_devs(sxia1x_devs);
 }

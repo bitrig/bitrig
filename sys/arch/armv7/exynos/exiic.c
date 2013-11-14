@@ -22,7 +22,7 @@
 #include <sys/systm.h>
 #include <machine/bus.h>
 
-#include <armv7/exynos/exvar.h>
+#include <armv7/armv7/armv7var.h>
 #include <armv7/exynos/exgpiovar.h>
 #include <armv7/exynos/exiicvar.h>
 #include <armv7/exynos/exclockvar.h>
@@ -111,17 +111,17 @@ void
 exiic_attach(struct device *parent, struct device *self, void *args)
 {
 	struct exiic_softc *sc = (struct exiic_softc *)self;
-	struct ex_attach_args *ea = args;
+	struct armv7_attach_args *aa = args;
 
-	sc->sc_iot = ea->ea_iot;
-	sc->sc_ios = ea->ea_dev->mem[0].size;
-	sc->unit = ea->ea_dev->unit;
-	if (bus_space_map(sc->sc_iot, ea->ea_dev->mem[0].addr,
-	    ea->ea_dev->mem[0].size, 0, &sc->sc_ioh))
+	sc->sc_iot = aa->aa_iot;
+	sc->sc_ios = aa->aa_dev->mem[0].size;
+	sc->unit = aa->aa_dev->unit;
+	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
+	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
 		panic("exiic_attach: bus_space_map failed!");
 
 #if 0
-	sc->sc_ih = arm_intr_establish(ea->ea_dev->irq[0], IPL_BIO,
+	sc->sc_ih = arm_intr_establish(aa->aa_dev->irq[0], IPL_BIO,
 	    exiic_intr, sc, sc->sc_dev.dv_xname);
 #endif
 

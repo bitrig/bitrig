@@ -33,7 +33,7 @@
 
 #include <machine/intr.h>
 #include <machine/bus.h>
-#include <armv7/exynos/exvar.h>
+#include <armv7/armv7/armv7var.h>
 
 /* registers */
 
@@ -66,12 +66,12 @@ struct rasops_info	ri;
 void
 exdisplay_attach(struct device *parent, struct device *self, void *args)
 {
-	struct ex_attach_args *ea = args;
+	struct armv7_attach_args *aa = args;
 	struct exdisplay_softc *sc = (struct exdisplay_softc *) self;
 
-	sc->sc_iot = ea->ea_iot;
-	if (bus_space_map(sc->sc_iot, ea->ea_dev->mem[0].addr,
-	    ea->ea_dev->mem[0].size, 0, &sc->sc_ioh))
+	sc->sc_iot = aa->aa_iot;
+	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
+	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
 		panic("exdisplay_attach: bus_space_map failed!");
 
 	printf("\n");
