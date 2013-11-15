@@ -153,13 +153,12 @@ for _mp in $(bsort $_fsent); do
 	_mp=${_mp%!*}
 	echo -n "$_pp $_mp ffs rw"
 
+	# Enable WAPBL on all mounted filesystems
+	echo -n ",log"
+
 	# Only '/' is neither nodev nor nosuid. i.e. it can obviously
 	# *always* contain devices or setuid programs.
 	[[ $_mp == / ]] && { echo " 1 1" ; continue ; }
-
-	# Enable WAPBL on all mounted filesystem systems except for /
-	# by default.
-	echo -n ",log"
 
 	# Every other mounted filesystem is nodev. If the user chooses
 	# to mount /dev as a separate filesystem, then on the user's
