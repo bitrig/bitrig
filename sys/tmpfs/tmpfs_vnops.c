@@ -730,7 +730,6 @@ tmpfs_remove(void *v)
 	/* Lookup the directory entry (check the cached hint first). */
 	de = tmpfs_dir_cached(node);
 	if (de == NULL) {
-		tmpfs_node_t *dnode = VP_TO_TMPFS_DIR(dvp);
 		de = tmpfs_dir_lookup(dnode, cnp);
 	}
 
@@ -742,9 +741,9 @@ tmpfs_remove(void *v)
 	 * Note: the inode referred by it will not be destroyed
 	 * until the vnode is reclaimed/recycled.
 	 */
-	tmpfs_dir_detach(dvp, de);
+	tmpfs_dir_detach(dnode, de);
 	if (0 /* ap->a_cnp->cn_flags & DOWHITEOUT */)
-		tmpfs_dir_attach(dvp, de, TMPFS_NODE_WHITEOUT);
+		tmpfs_dir_attach(dnode, de, TMPFS_NODE_WHITEOUT);
 	else
 		tmpfs_free_dirent(VFS_TO_TMPFS(vp->v_mount), de);
 	if (node->tn_links > 0)  {
@@ -806,6 +805,11 @@ tmpfs_link(void *v)
 		goto out;
 	}
 
+	if (TMPFS_DIRSEQ_FULL(dnode)) {
+		error = ENOSPC;
+		goto out;
+	}
+
 	/* Allocate a new directory entry to represent the inode. */
 	error = tmpfs_alloc_dirent(VFS_TO_TMPFS(vp->v_mount),
 	    cnp->cn_nameptr, cnp->cn_namelen, &de);
@@ -813,11 +817,11 @@ tmpfs_link(void *v)
 		goto out;
 	}
 
-	/* 
+	/*
 	 * Insert the entry into the directory.
 	 * It will increase the inode link count.
 	 */
-	tmpfs_dir_attach(dvp, de, node);
+	tmpfs_dir_attach(dnode, de, node);
 
 	/* Update the timestamps and trigger the event. */
 	if (node->tn_vnode) {
@@ -914,7 +918,7 @@ tmpfs_rmdir(void *v)
 	node->tn_status |= TMPFS_NODE_STATUSALL;
 
 	/* Detach the directory entry from the directory. */
-	tmpfs_dir_detach(dvp, de);
+	tmpfs_dir_detach(dnode, de);
 
 	/* Purge the cache for parent. */
 	cache_purge(dvp);
@@ -925,14 +929,14 @@ tmpfs_rmdir(void *v)
 	 * until the vnode is reclaimed.
 	 */
 	if (0 /* ap->a_cnp->cn_flags & DOWHITEOUT */)
-		tmpfs_dir_attach(dvp, de, TMPFS_NODE_WHITEOUT);
+		tmpfs_dir_attach(dnode, de, TMPFS_NODE_WHITEOUT);
 	else
 		tmpfs_free_dirent(tmp, de);
 
 	/* Destroy the whiteout entries from the node. */
 	while ((de = TAILQ_FIRST(&node->tn_spec.tn_dir.tn_dir)) != NULL) {
 		KASSERT(de->td_node == TMPFS_NODE_WHITEOUT);
-		tmpfs_dir_detach(vp, de);
+		tmpfs_dir_detach(node, de);
 		tmpfs_free_dirent(tmp, de);
 	}
 
@@ -994,35 +998,17 @@ tmpfs_readdir(void *v)
 		return ENOTDIR;
 	}
 	node = VP_TO_TMPFS_DIR(vp);
-	if (node->tn_links == 0) {
+	/*
+	 * Retrieve the directory entries, unless it is being destroyed.
+	 */
+	if (node->tn_links) {
+		error = tmpfs_dir_getdents(node, uio);
+	} else {
 		error = 0;
-		goto out;
 	}
 
-	if (uio->uio_offset == TMPFS_DIRCOOKIE_DOT) {
-		error = tmpfs_dir_getdotdent(node, uio);
-		if (error != 0) {
-			if (error == -1)
-				error = 0;
-			goto out;
-		}
-	}
-	if (uio->uio_offset == TMPFS_DIRCOOKIE_DOTDOT) {
-		error = tmpfs_dir_getdotdotdent(node, uio);
-		if (error != 0) {
-			if (error == -1)
-				error = 0;
-			goto out;
-		}
-	}
-	error = tmpfs_dir_getdents(node, uio);
-	if (error == -1) {
-		error = 0;
-	}
-	KASSERT(error >= 0);
-out:
 	if (eofflag != NULL) {
-		*eofflag = (!error && uio->uio_offset == TMPFS_DIRCOOKIE_EOF);
+		*eofflag = !error && uio->uio_offset == TMPFS_DIRSEQ_EOF;
 	}
 	return error;
 }
@@ -1293,6 +1279,7 @@ tmpfs_whiteout(void *v)
 	struct componentname *cnp = ap->a_cnp;
 	const int flags = ap->a_flags;
 	tmpfs_mount_t *tmp = VFS_TO_TMPFS(dvp->v_mount);
+	tmpfs_node_t *dnode = VP_TO_TMPFS_DIR(dvp);
 	tmpfs_dirent_t *de;
 	int error;
 
@@ -1304,14 +1291,14 @@ tmpfs_whiteout(void *v)
 		    cnp->cn_namelen, &de);
 		if (error)
 			return error;
-		tmpfs_dir_attach(dvp, de, TMPFS_NODE_WHITEOUT);
+		tmpfs_dir_attach(dnode, de, TMPFS_NODE_WHITEOUT);
 		break;
 	case DELETE:
 		cnp->cn_flags &= ~DOWHITEOUT; /* when in doubt, cargo cult */
-		de = tmpfs_dir_lookup(VP_TO_TMPFS_DIR(dvp), cnp);
+		de = tmpfs_dir_lookup(dnode, cnp);
 		if (de == NULL)
 			return ENOENT;
-		tmpfs_dir_detach(dvp, de);
+		tmpfs_dir_detach(dnode, de);
 		tmpfs_free_dirent(tmp, de);
 		break;
 	}
@@ -2395,8 +2382,10 @@ tmpfs_rename_attachdetach(struct tmpfs_mount *tmpfs,
 	if (fdvp != tdvp) {
 		/* tmpfs_dir_detach clobbers fde->td_node, so save it.  */
 		struct tmpfs_node *fnode = fde->td_node;
-		tmpfs_dir_detach(fdvp, fde);
-		tmpfs_dir_attach(tdvp, fde, fnode);
+		tmpfs_node_t *fdnode = VP_TO_TMPFS_DIR(fdvp);
+		tmpfs_node_t *tdnode = VP_TO_TMPFS_DIR(tdvp);
+		tmpfs_dir_detach(fdnode, fde);
+		tmpfs_dir_attach(tdnode, fde, fnode);
 	} else if (tvp == NULL) {
 		/*
 		 * We are changing the directory.  tmpfs_dir_attach and
@@ -2411,6 +2400,7 @@ tmpfs_rename_attachdetach(struct tmpfs_mount *tmpfs,
 	 * If we are replacing an existing target entry, delete it.
 	 */
 	if (tde != NULL) {
+		tmpfs_node_t *tdnode = VP_TO_TMPFS_DIR(tdvp);
 		KASSERT(tvp != NULL);
 		KASSERT(tde->td_node != NULL);
 		KASSERT((fvp->v_type == VDIR) == (tvp->v_type == VDIR));
@@ -2421,7 +2411,7 @@ tmpfs_rename_attachdetach(struct tmpfs_mount *tmpfs,
 			 * the vnode will be recycled when released.  */
 			tde->td_node->tn_links--;
 		}
-		tmpfs_dir_detach(tdvp, tde);
+		tmpfs_dir_detach(tdnode, tde);
 		tmpfs_free_dirent(tmpfs, tde);
 	}
 }
@@ -2466,7 +2456,7 @@ tmpfs_do_remove(struct tmpfs_mount *tmpfs, struct vnode *dvp,
 		    cred->cr_uid != de->td_node->tn_uid)
 			return EPERM;
 
-	tmpfs_dir_detach(dvp, de);
+	tmpfs_dir_detach(dnode, de);
 	tmpfs_free_dirent(tmpfs, de);
 
 	return 0;
@@ -2579,6 +2569,8 @@ tmpfs_rename_check_permitted(struct ucred *cred,
 			if (error)
 				return error;
 		}
+		if (TMPFS_DIRSEQ_FULL(tdnode))
+			return (ENOSPC);
 	}
 
 	error = tmpfs_check_sticky(cred, fdnode, fnode);
