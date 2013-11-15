@@ -157,6 +157,10 @@ for _mp in $(bsort $_fsent); do
 	# *always* contain devices or setuid programs.
 	[[ $_mp == / ]] && { echo " 1 1" ; continue ; }
 
+	# Enable WAPBL on all mounted filesystem systems except for /
+	# by default.
+	echo -n ",log"
+
 	# Every other mounted filesystem is nodev. If the user chooses
 	# to mount /dev as a separate filesystem, then on the user's
 	# head be it.
@@ -191,7 +195,7 @@ for _mp in $(bsort $_fsent); do
 done >>/tmp/fstab
 
 munge_fstab
-mount_fs "-o async"
+mount_fs ""
 
 install_sets
 
