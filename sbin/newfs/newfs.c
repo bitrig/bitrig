@@ -112,7 +112,7 @@ u_short	dkcksum(struct disklabel *);
 
 int	mfs;			/* run as the memory based filesystem */
 int	Nflag;			/* run without writing file system */
-int	Oflag = 1;		/* 0 = 4.3BSD ffs, 1 = 4.4BSD ffs, 2 = ffs2 */
+int	Oflag = 2;		/* 0 = 4.3BSD ffs, 1 = 4.4BSD ffs, 2 = ffs2 */
 daddr_t	fssize;			/* file system size in 512-byte blocks */
 long long	sectorsize;		/* bytes/sector */
 int	fsize = 0;		/* fragment size */
@@ -152,7 +152,7 @@ main(int argc, char *argv[])
 	struct stat st;
 	struct statfs *mp;
 	struct rlimit rl;
-	int fsi = -1, oflagset = 0, fso, len, n, maxpartitions;
+	int fsi = -1, fso, len, n, maxpartitions;
 	char *cp = NULL, *s1, *s2, *special, *opstring, *realdev;
 #ifdef MFS
 	char mountfromname[BUFSIZ];
@@ -192,7 +192,6 @@ main(int argc, char *argv[])
 			Oflag = strtonum(optarg, 0, 2, &errstr);
 			if (errstr)
 				fatal("%s: invalid ffs version", optarg);
-			oflagset = 1;
 			break;
 		case 'S':
 			if (scan_scaled(optarg, &sectorsize) == -1 ||
@@ -462,8 +461,6 @@ havelabel:
 
 	/* Can't use DL_SECTOBLK() because sectorsize may not be from label! */
 	fssize = nsecs * (sectorsize / DEV_BSIZE);
-	if (oflagset == 0 && fssize >= INT_MAX)
-		Oflag = 2;	/* FFS2 */
 	if (fsize == 0) {
 		fsize = DISKLABELV1_FFS_FSIZE(pp->p_fragblock);
 		if (fsize <= 0)
