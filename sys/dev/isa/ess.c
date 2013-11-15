@@ -1,4 +1,4 @@
-/*	$OpenBSD: ess.c,v 1.18 2013/05/24 07:58:46 ratchov Exp $	*/
+/*	$OpenBSD: ess.c,v 1.19 2013/11/15 16:46:27 brad Exp $	*/
 /*	$NetBSD: ess.c,v 1.44.4.1 1999/06/21 01:18:00 thorpej Exp $	*/
 
 /*
@@ -597,7 +597,6 @@ ess_config_drq(struct ess_softc *sc)
 void
 ess_setup(struct ess_softc *sc)
 {
-
 	ess_config_irq(sc);
 	ess_config_drq(sc);
 
@@ -1174,8 +1173,8 @@ ess_query_encoding(void *addr, struct audio_encoding *fp)
 }
 
 int
-ess_set_params(void *addr, int setmode, int usemode, struct audio_params *play,
-    struct audio_params *rec)
+ess_set_params(void *addr, int setmode, int usemode,
+    struct audio_params *play, struct audio_params *rec)
 {
 	struct ess_softc *sc = addr;
 	struct audio_params *p;
@@ -2206,14 +2205,12 @@ ess_mappage(void *addr, void *mem, off_t off, int prot)
 int
 ess_1788_get_props(void *addr)
 {
-
 	return (AUDIO_PROP_MMAP | AUDIO_PROP_INDEPENDENT);
 }
 
 int
 ess_1888_get_props(void *addr)
 {
-
 	return (AUDIO_PROP_MMAP | AUDIO_PROP_INDEPENDENT | AUDIO_PROP_FULLDUPLEX);
 }
 

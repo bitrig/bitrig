@@ -1,4 +1,4 @@
-/*	$OpenBSD: gus.c,v 1.38 2013/06/26 09:39:56 kettenis Exp $	*/
+/*	$OpenBSD: gus.c,v 1.39 2013/11/15 16:46:27 brad Exp $	*/
 /*	$NetBSD: gus.c,v 1.51 1998/01/25 23:48:06 mycroft Exp $	*/
 
 /*-
@@ -505,8 +505,7 @@ stereo_dmaintr(void *arg)
  * generic audio code.
  */
 int
-gus_dma_output(void *addr, void *buf, int size, void (*intr)(void *),
-    void *arg)
+gus_dma_output(void *addr, void *buf, int size, void (*intr)(void *), void *arg)
 {
 	struct gus_softc *sc = addr;
 	u_char *buffer = buf;
@@ -609,7 +608,6 @@ gusclose(void *addr)
 	struct gus_softc *sc = addr;
 
         DPRINTF(("gus_close: sc=%p\n", sc));
-
 
 /*	if (sc->sc_flags & GUS_DMAOUT_ACTIVE) */ {
 		gus_halt_out_dma(sc);
@@ -1232,7 +1230,8 @@ gus_continue_playing(struct gus_softc *sc, int voice)
  */
 
 void
-gusdmaout(struct gus_softc *sc, int flags, u_long gusaddr, caddr_t buffaddr, int length)
+gusdmaout(struct gus_softc *sc, int flags, u_long gusaddr, caddr_t buffaddr,
+    int length)
 {
 	unsigned char c = (unsigned char) flags;
 	bus_space_tag_t iot = sc->sc_iot;
@@ -1465,8 +1464,8 @@ gus_set_volume(struct gus_softc *sc, int voice, int volume)
  */
 
 int
-gusmax_set_params(void *addr, int setmode, int usemode,
-    struct audio_params *p, struct audio_params *r)
+gusmax_set_params(void *addr, int setmode, int usemode, struct audio_params *p,
+    struct audio_params *r)
 {
 	struct ad1848_softc *ac = addr;
 	struct gus_softc *sc = ac->parent;
@@ -1600,7 +1599,8 @@ gus_get_out_gain(caddr_t addr)
 	return sc->sc_ogain / 2;
 }
 
-inline void gus_set_voices(struct gus_softc *sc, int voices)
+inline void
+gus_set_voices(struct gus_softc *sc, int voices)
 {
 	bus_space_tag_t iot = sc->sc_iot;
 	bus_space_handle_t ioh2 = sc->sc_ioh2;
@@ -2161,7 +2161,7 @@ gus_getdev(void *addr, struct audio_device *dev)
  */
 
 int
-gus_set_in_gain(caddr_t addr, u_int gain, u_char balance)
+gus_set_in_gain(caddr_t addr, u_int gain,  u_char balance)
 {
 	DPRINTF(("gus_set_in_gain called\n"));
 	return 0;
@@ -2175,7 +2175,8 @@ gus_get_in_gain(caddr_t addr)
 }
 
 int
-gusmax_dma_input(void *addr, void *buf, int size, void (*callback)(void *), void *arg)
+gusmax_dma_input(void *addr, void *buf, int size, void (*callback)(void *),
+    void *arg)
 {
 	struct ad1848_softc *sc = addr;
 	return gus_dma_input(sc->parent, buf, size, callback, arg);
@@ -3503,7 +3504,7 @@ gus_subattach(struct gus_softc *sc, struct isa_attach_args *ia)
  */
 
 int
-gus_test_iobase(bus_space_tag_t iot, int iobase)
+gus_test_iobase (bus_space_tag_t iot, int iobase)
 {
 	bus_space_handle_t ioh1, ioh2, ioh3, ioh4;
 	u_char s1, s2;

@@ -1,4 +1,4 @@
-/*      $OpenBSD: sv.c,v 1.29 2013/05/24 07:58:47 ratchov Exp $ */
+/*      $OpenBSD: sv.c,v 1.30 2013/11/15 16:46:27 brad Exp $ */
 
 /*
  * Copyright (c) 1998 Constantine Paul Sapuntzakis
@@ -203,13 +203,13 @@ sv_write (struct sv_softc *sc, u_int8_t reg, u_int8_t val)
 }
 
 static __inline__ u_int8_t
-sv_read(struct sv_softc *sc, u_int8_t reg)
+sv_read (struct sv_softc *sc, u_int8_t reg)
 {
   return (bus_space_read_1(sc->sc_iot, sc->sc_ioh, reg));
 }
 
 static __inline__ u_int8_t
-sv_read_indirect(struct sv_softc *sc, u_int8_t reg)
+sv_read_indirect (struct sv_softc *sc, u_int8_t reg)
 {
     u_int8_t iaddr = 0;
 
@@ -223,7 +223,7 @@ sv_read_indirect(struct sv_softc *sc, u_int8_t reg)
 }
 
 static __inline__ void
-sv_write_indirect(struct sv_softc *sc, u_int8_t reg, u_int8_t val)
+sv_write_indirect (struct sv_softc *sc, u_int8_t reg, u_int8_t val)
 {
     u_int8_t iaddr = 0;
 #ifdef DIAGNOSTIC
@@ -258,7 +258,6 @@ sv_match(struct device *parent, void *match, void *aux)
 
 static void
 sv_attach(struct device *parent, struct device *self, void *aux)
-
 {
   struct sv_softc *sc = (struct sv_softc *)self;
   struct pci_attach_args *pa = aux;
@@ -984,7 +983,7 @@ static const struct {
 #define SV_RECORD_GAIN (SV_LAST_MIXER + 3)
 #define SV_SRS_MODE (SV_LAST_MIXER + 4)
 
-int
+int 
 sv_query_devinfo(void *addr, mixer_devinfo_t *dip)
 {
 

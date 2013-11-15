@@ -1,4 +1,4 @@
-/*	$OpenBSD: if_ep_isa.c,v 1.26 2013/08/07 01:06:32 bluhm Exp $	*/
+/*	$OpenBSD: if_ep_isa.c,v 1.27 2013/11/15 16:46:27 brad Exp $	*/
 /*	$NetBSD: if_ep_isa.c,v 1.5 1996/05/12 23:52:36 mycroft Exp $	*/
 
 /*
@@ -118,7 +118,6 @@ static int nepcards;
 static void
 epaddcard(int bus, int iobase, int irq, u_short model)
 {
-
 	if (nepcards >= MAXEPCARDS)
 		return;
 	epcards[nepcards].bus = bus;

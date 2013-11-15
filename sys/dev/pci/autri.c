@@ -1,4 +1,4 @@
-/*	$OpenBSD: autri.c,v 1.33 2013/05/24 07:58:46 ratchov Exp $	*/
+/*	$OpenBSD: autri.c,v 1.34 2013/11/15 16:46:27 brad Exp $	*/
 
 /*
  * Copyright (c) 2001 SOMEYA Yoshihiko and KUROSAWA Takahiro.
@@ -967,8 +967,8 @@ autri_query_encoding(void *addr, struct audio_encoding *fp)
 }
 
 int
-autri_set_params(void *addr, int setmode, int usemode,
-    struct audio_params *play, struct audio_params *rec)
+autri_set_params(void *addr, int setmode, int usemode, struct audio_params *play,
+    struct audio_params *rec)
 {
 	struct audio_params *p;
 	int mode;
@@ -1115,8 +1115,8 @@ autri_query_devinfo(void *addr, mixer_devinfo_t *dip)
 }
 
 int
-autri_get_portnum_by_name(struct autri_softc *sc, char *class,
-    char *device, char *qualifier)
+autri_get_portnum_by_name(struct autri_softc *sc, char *class, char *device,
+    char *qualifier)
 {
 	return (sc->sc_codec.codec_if->vtbl->get_portnum_by_name(
 	    sc->sc_codec.codec_if, class, device, qualifier));
@@ -1199,8 +1199,7 @@ autri_get_props(void *addr)
 }
 
 void
-autri_setup_channel(struct autri_softc *sc, int mode,
-    struct audio_params *param)
+autri_setup_channel(struct autri_softc *sc, int mode, struct audio_params *param)
 {
 	int i, ch, channel;
 	u_int32_t reg, cr[5];
@@ -1372,8 +1371,7 @@ autri_trigger_output(void *addr, void *start, void *end, int blksize,
 }
 
 int
-autri_trigger_input(void *addr, void *start, void *end, int blksize,
-    void (*intr)(void *), void *arg, struct audio_params *param)
+autri_trigger_input(void *addr, void *start, void *end, int blksize, void (*intr)(void *), void *arg, struct audio_params *param)
 {
 	struct autri_softc *sc = addr;
 	struct autri_dma *p;
@@ -1483,10 +1481,8 @@ autri_stopch(struct autri_softc *sc, int ch, int ch_intr)
 
 #if NMIDI > 0
 int
-autri_midi_open(void *addr, int flags,
-	void (*iintr)(void *, int),
-	void (*ointr)(void *),
-	void *arg)
+autri_midi_open(void *addr, int flags, void (*iintr)(void *, int),
+    void (*ointr)(void *), void *arg)
 {
 	struct autri_softc *sc = addr;
 

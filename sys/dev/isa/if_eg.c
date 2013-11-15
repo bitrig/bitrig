@@ -1,4 +1,4 @@
-/*	$OpenBSD: if_eg.c,v 1.33 2013/08/07 01:06:32 bluhm Exp $	*/
+/*	$OpenBSD: if_eg.c,v 1.34 2013/11/15 16:46:27 brad Exp $	*/
 /*	$NetBSD: if_eg.c,v 1.26 1996/05/12 23:52:27 mycroft Exp $	*/
 
 /*
@@ -488,7 +488,6 @@ eginit(register struct eg_softc *sc)
 void
 egrecv(struct eg_softc *sc)
 {
-
 	while (sc->eg_incount < EG_INLEN) {
 		sc->eg_pcb[0] = EG_CMD_RECVPACKET;
 		sc->eg_pcb[1] = 0x08;

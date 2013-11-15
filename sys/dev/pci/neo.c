@@ -1,4 +1,4 @@
-/*      $OpenBSD: neo.c,v 1.28 2013/05/24 07:58:46 ratchov Exp $       */
+/*      $OpenBSD: neo.c,v 1.29 2013/11/15 16:46:27 brad Exp $       */
 
 /*
  * Copyright (c) 1999 Cameron Grant <gandalf@vilnya.demon.co.uk>
@@ -1059,6 +1059,5 @@ neo_round_buffersize(void *addr, int direction, size_t size)
 int
 neo_get_props(void *addr)
 {
-
 	return (AUDIO_PROP_INDEPENDENT | AUDIO_PROP_FULLDUPLEX);
 }

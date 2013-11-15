@@ -1,4 +1,4 @@
-/*	$OpenBSD: isapnpres.c,v 1.7 2010/06/24 21:17:59 jasper Exp $	*/
+/*	$OpenBSD: isapnpres.c,v 1.8 2013/11/15 16:46:27 brad Exp $	*/
 /*	$NetBSD: isapnpres.c,v 1.7.4.1 1997/11/20 07:46:13 mellon Exp $	*/
 
 /*

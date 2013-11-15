@@ -1,4 +1,4 @@
-/*	$OpenBSD: fms.c,v 1.24 2013/05/24 07:58:46 ratchov Exp $ */
+/*	$OpenBSD: fms.c,v 1.25 2013/11/15 16:46:27 brad Exp $ */
 /*	$NetBSD: fms.c,v 1.5.4.1 2000/06/30 16:27:50 simonb Exp $	*/
 
 /*-
@@ -423,7 +423,7 @@ int
 fms_open(void *addr, int flags)
 {
 	/* UNUSED struct fms_softc *sc = addr;*/
-	
+
 	return 0;
 }
 
@@ -525,8 +525,8 @@ struct {
 };
 
 int
-fms_set_params(void *addr, int setmode, int usemode,
-    struct audio_params *play, struct audio_params *rec)
+fms_set_params(void *addr, int setmode, int usemode, struct audio_params *play,
+    struct audio_params *rec)
 {
 	struct fms_softc *sc = addr;
 	int i;
@@ -863,5 +863,3 @@ fms_trigger_input(void *addr, void *start, void *end, int blksize,
 	mtx_leave(&audio_lock);
 	return 0;
 }
-
-

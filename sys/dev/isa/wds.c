@@ -1,4 +1,4 @@
-/*	$OpenBSD: wds.c,v 1.39 2011/06/29 12:17:40 tedu Exp $	*/
+/*	$OpenBSD: wds.c,v 1.40 2013/11/15 16:46:27 brad Exp $	*/
 /*	$NetBSD: wds.c,v 1.13 1996/11/03 16:20:31 mycroft Exp $	*/
 
 #undef	WDSDIAG
@@ -202,7 +202,7 @@ wds_wait(bus_space_tag_t iot, bus_space_handle_t ioh, int port, int mask,
  * Write a command to the board's I/O ports.
  */
 int
-wds_cmd(struct wds_softc *sc, u_int8_t *ibuf, int icnt)
+wds_cmd(struct wds_softc *sc,  u_int8_t *ibuf, int icnt)
 {
 	bus_space_tag_t iot = sc->sc_iot;
 	bus_space_handle_t ioh = sc->sc_ioh;
@@ -251,7 +251,6 @@ wdsprobe(struct device *parent, void *match, void *aux)
 int
 wdsprint(void *aux, const char *name)
 {
-
 	if (name != NULL)
 		printf("%s: scsibus ", name);
 	return UNCONF;
@@ -410,7 +409,6 @@ wdsintr(void *arg)
 integrate void
 wds_reset_scb(struct wds_softc *sc, struct wds_scb *scb)
 {
-
 	scb->flags = 0;
 }
 
@@ -540,7 +538,6 @@ wds_scb_phys_kv(struct wds_softc *sc, u_long scb_phys)
 void
 wds_queue_scb(struct wds_softc *sc, struct wds_scb *scb)
 {
-
 	TAILQ_INSERT_TAIL(&sc->sc_waiting_scb, scb, chain);
 	wds_start_scbs(sc);
 }
@@ -1105,7 +1102,7 @@ wds_sense(struct wds_softc *sc, struct wds_scb *scb)
  * Poll a particular unit, looking for a particular scb
  */
 int
-wds_poll(struct wds_softc *sc, struct scsi_xfer *xs, int count)
+wds_poll(struct wds_softc *sc, struct scsi_xfer *xs,  int count)
 {
 	bus_space_tag_t iot = sc->sc_iot;
 	bus_space_handle_t ioh = sc->sc_ioh;
