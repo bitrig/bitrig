@@ -1,4 +1,4 @@
-/*	$OpenBSD: kvm_file2.c,v 1.30 2013/11/12 14:49:41 guenther Exp $	*/
+/*	$OpenBSD: kvm_file2.c,v 1.31 2013/11/16 00:37:11 guenther Exp $	*/
 
 /*
  * Copyright (c) 2009 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -115,6 +115,7 @@
 #include <unistd.h>
 
 #include "kvm_private.h"
+#include "kvm_file.h"
 
 static struct kinfo_file *kvm_deadfile_byfile(kvm_t *, int, int,
     size_t, int *);
@@ -123,8 +124,6 @@ static struct kinfo_file *kvm_deadfile_byid(kvm_t *, int, int,
 static int fill_file(kvm_t *, struct kinfo_file *, struct file *, u_long,
     struct vnode *, struct proc *, int, pid_t);
 static int filestat(kvm_t *, struct kinfo_file *, struct vnode *);
-
-mode_t	_kvm_getftype(enum vtype v_type);
 
 LIST_HEAD(proclist, proc);
 

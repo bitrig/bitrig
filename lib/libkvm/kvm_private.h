@@ -1,4 +1,4 @@
-/*	$OpenBSD: kvm_private.h,v 1.19 2013/11/12 14:49:41 guenther Exp $ */
+/*	$OpenBSD: kvm_private.h,v 1.20 2013/11/16 00:37:11 guenther Exp $ */
 /*	$NetBSD: kvm_private.h,v 1.7 1996/05/05 04:32:15 gwr Exp $	*/
 
 /*-
