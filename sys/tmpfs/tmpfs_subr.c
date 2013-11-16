@@ -648,7 +648,7 @@ tmpfs_dir_getdotdent(tmpfs_node_t *node, struct uio *uio)
 	KASSERT(uio->uio_offset == TMPFS_DIRCOOKIE_DOT);
 
 	/* dentp = kmem_alloc(sizeof(struct dirent), KM_SLEEP); */
-	dentp = malloc(sizeof(struct dirent), M_TEMP, M_WAITOK);
+	dentp = malloc(sizeof(struct dirent), M_TEMP, M_WAITOK|M_ZERO);
 	dentp->d_fileno = node->tn_id;
 	dentp->d_off = TMPFS_DIRCOOKIE_DOTDOT;
 	dentp->d_type = DT_DIR;
@@ -692,7 +692,7 @@ tmpfs_dir_getdotdotdent(tmpfs_node_t *node, struct uio *uio)
 		next = tmpfs_dircookie(de);
 
 	/* dentp = kmem_alloc(sizeof(struct dirent), KM_SLEEP); */
-	dentp = malloc(sizeof(struct dirent), M_TEMP, M_WAITOK);
+	dentp = malloc(sizeof(struct dirent), M_TEMP, M_WAITOK|M_ZERO);
 	dentp->d_fileno = node->tn_spec.tn_dir.tn_parent->tn_id;
 	dentp->d_off = next;
 	dentp->d_type = DT_DIR;
@@ -776,7 +776,7 @@ tmpfs_dir_getdents(tmpfs_node_t *node, struct uio *uio)
 	 * of the directory or we exhaust uio space.
 	 */
 	/* dentp = kmem_alloc(sizeof(struct dirent), KM_SLEEP); */
-	dentp = malloc(sizeof(struct dirent), M_TEMP, M_WAITOK);
+	dentp = malloc(sizeof(struct dirent), M_TEMP, M_WAITOK|M_ZERO);
 	do {
 		/*
 		 * Create a dirent structure representing the current
