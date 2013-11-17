@@ -129,15 +129,10 @@ is set to point to the next block of entries.
 The pointer may not advance by the number of bytes returned by
 .Fn getdents .
 .Pp
-.Fn getdents
-writes the position of the block read into the location pointed to by
-.Fa basep .
-Alternatively, the current position pointer may be set and retrieved by
+The current position pointer may be set and retrieved by
 .Xr lseek 2 .
 The current position pointer should only be set to a value returned by
 .Xr lseek 2 ,
-a value returned in the location pointed to by
-.Fa basep ,
 or zero.
 .Sh RETURN VALUES
 If successful, the number of bytes actually transferred is returned.
@@ -154,10 +149,7 @@ will fail if:
 .Fa fd
 is not a valid file descriptor open for reading.
 .It Bq Er EFAULT
-Either
 .Fa buf
-or
-.Fa basep
 points outside the allocated address space.
 .It Bq Er EINVAL
 The file referenced by
