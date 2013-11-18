@@ -1,4 +1,4 @@
-/*	$OpenBSD: twe.c,v 1.42 2013/11/18 20:21:51 deraadt Exp $	*/
+/*	$OpenBSD: twe.c,v 1.43 2013/11/18 23:32:23 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2000-2002 Michael Shalayeff.  All rights reserved.
