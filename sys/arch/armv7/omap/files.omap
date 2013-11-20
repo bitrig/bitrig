@@ -1,4 +1,4 @@
-#	$OpenBSD: files.omap,v 1.3 2013/11/04 20:14:16 syl Exp $
+#	$OpenBSD: files.omap,v 1.5 2013/11/20 13:32:40 rapha Exp $
 
 # note that the order of the devices in _this_ file
 # affects the order that the devices will configure.
@@ -30,7 +30,7 @@ attach sitaracm at omap
 file	arch/armv7/omap/am335x_cm_padconf.c	sitaracm
 file	arch/armv7/omap/sitara_cm.c		sitaracm
 
-device omgpio
+device omgpio: gpiobus
 attach omgpio at omap
 file	arch/armv7/omap/omgpio.c		omgpio
 
