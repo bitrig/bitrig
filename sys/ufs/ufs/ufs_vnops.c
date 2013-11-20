@@ -1598,7 +1598,7 @@ ufs_readdir(void *v)
 	auio.uio_resid = readcnt;
 	auio.uio_segflg = UIO_SYSSPACE;
 	aiov.iov_len = readcnt;
-	diskbuf = malloc(readcnt, M_TEMP, M_WAITOK);
+	diskbuf = malloc(readcnt, M_TEMP, M_WAITOK|M_ZERO);
 	aiov.iov_base = diskbuf;
 	error = VOP_READ(ap->a_vp, &auio, 0, ap->a_cred);
 	readcnt -= auio.uio_resid;
