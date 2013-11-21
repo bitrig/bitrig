@@ -1,4 +1,4 @@
-/*	$OpenBSD: subr_hibernate.c,v 1.80 2013/11/09 06:54:00 mlarkin Exp $	*/
+/*	$OpenBSD: subr_hibernate.c,v 1.81 2013/11/21 00:13:33 dlg Exp $	*/
 
 /*
  * Copyright (c) 2011 Ariane van der Steldt <ariane@stack.nl>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_swap.c,v 1.122 2013/11/20 23:57:07 miod Exp $	*/
+/*	$OpenBSD: uvm_swap.c,v 1.123 2013/11/21 00:13:33 dlg Exp $	*/
 /*	$NetBSD: uvm_swap.c,v 1.40 2000/11/17 11:39:39 mrg Exp $	*/
 
 /*

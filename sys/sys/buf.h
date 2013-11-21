@@ -1,4 +1,4 @@
-/*	$OpenBSD: buf.h,v 1.90 2013/11/06 07:46:31 dlg Exp $	*/
+/*	$OpenBSD: buf.h,v 1.92 2013/11/21 00:13:33 dlg Exp $	*/
 /*	$NetBSD: buf.h,v 1.25 1997/04/09 21:12:17 mycroft Exp $	*/
 
 /*
