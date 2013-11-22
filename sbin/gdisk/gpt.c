@@ -45,7 +45,7 @@
 int
 GPT_init(disk_t *disk, gpt_t *gpt)
 {
-	int i;
+	uint64_t i;
 
 	/* free existing metadata, redo them */
 	if (gpt->header)
