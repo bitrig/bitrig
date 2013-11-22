@@ -27,7 +27,7 @@ PROG=	gdisk
 SRCS=	gdisk.c user.c misc.c disk.c gpt.c part.c cmd.c manual.c
 DPADD=	${LIBUTIL}
 LDADD=	-lutil -lz
-CLEANFILES+=manual.c
+CLEANFILES += gdisk.cat8 manual.c
 
 .include <bsd.own.mk>
 
