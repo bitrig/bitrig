@@ -757,10 +757,6 @@ wapbl_doio(void *data, size_t len, struct vnode *devvp, daddr_t pbn, int flags)
 	bp->b_dev = devvp->v_rdev;
 	bp->b_data = data;
 	bp->b_bufsize = bp->b_resid = bp->b_bcount = len;
-	/*
-	 * XXX pedro: this is a blatant interface violation, and is likely to
-	 * cause problems
-	 */
 	bp->b_vp = devvp;
 	bp->b_blkno = pbn;
 	/* BIO_SETPRIO(bp, BPRIO_TIMECRITICAL); */
