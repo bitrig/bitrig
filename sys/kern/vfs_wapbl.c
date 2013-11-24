@@ -748,8 +748,12 @@ wapbl_doio(void *data, size_t len, struct vnode *devvp, daddr_t pbn, int flags)
 		devvp->v_numoutput++;
 		splx(s);
 		curproc->p_ru.ru_oublock++;
+		bcstats.pendingwrites++;
+		bcstats.numwrites++;
 	} else {
 		curproc->p_ru.ru_inblock++;
+		bcstats.pendingreads++;
+		bcstats.numreads++;
 	}
 
 	bp = geteblk(0);
