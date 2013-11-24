@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_swap.c,v 1.123 2013/11/21 00:13:33 dlg Exp $	*/
+/*	$OpenBSD: uvm_swap.c,v 1.124 2013/11/24 15:44:26 jsing Exp $	*/
 /*	$NetBSD: uvm_swap.c,v 1.40 2000/11/17 11:39:39 mrg Exp $	*/
 
 /*
@@ -87,7 +87,7 @@
  * partitions/files.   there is a sorted LIST of "swappri" structures
  * which describe "swapdev"'s at that priority.   this LIST is headed
  * by the "swap_priority" global var.    each "swappri" contains a 
- * CIRCLEQ of "swapdev" structures at that priority.
+ * TAILQ of "swapdev" structures at that priority.
  *
  * locking:
  *  - swap_syscall_lock (sleep lock): this lock serializes the swapctl
@@ -145,7 +145,7 @@ struct swapdev {
 	struct extent		*swd_ex;	/* extent for this swapdev */
 	char			swd_exname[12];	/* name of extent above */
 	struct vnode		*swd_vp;	/* backing vnode */
-	CIRCLEQ_ENTRY(swapdev)	swd_next;	/* priority circleq */
+	TAILQ_ENTRY(swapdev)	swd_next;	/* priority tailq */
 
 	int			swd_bsize;	/* blocksize (bytes) */
 	int			swd_maxactive;	/* max active i/o reqs */
@@ -173,8 +173,8 @@ struct swapdev {
  */
 struct swappri {
 	int			spi_priority;     /* priority */
-	CIRCLEQ_HEAD(spi_swapdev, swapdev)	spi_swapdev;
-	/* circleq of swapdevs at this priority */
+	TAILQ_HEAD(spi_swapdev, swapdev)	spi_swapdev;
+	/* tailq of swapdevs at this priority */
 	LIST_ENTRY(swappri)	spi_swappri;      /* global list of pri's */
 };
 
@@ -334,12 +334,13 @@ uvm_swap_initcrypt_all(void)
 	simple_lock(&uvm.swap_data_lock);
 
 	LIST_FOREACH(spp, &swap_priority, spi_swappri) {
-		CIRCLEQ_FOREACH(sdp, &spp->spi_swapdev, swd_next)
+		TAILQ_FOREACH(sdp, &spp->spi_swapdev, swd_next) {
 			if (sdp->swd_decrypt == NULL) {
 				npages = dbtob((uint64_t)sdp->swd_nblks) >>
 				    PAGE_SHIFT;
 				uvm_swap_initcrypt(sdp, npages);
 			}
+		}
 	}
 	simple_unlock(&uvm.swap_data_lock);
 }
@@ -459,7 +460,7 @@ uvm_swap_finicrypt_all(void)
 	simple_lock(&uvm.swap_data_lock);
 
 	LIST_FOREACH(spp, &swap_priority, spi_swappri) {
-		CIRCLEQ_FOREACH(sdp, &spp->spi_swapdev, swd_next) {
+		TAILQ_FOREACH(sdp, &spp->spi_swapdev, swd_next) {
 			if (sdp->swd_decrypt == NULL)
 				continue;
 
@@ -510,7 +511,7 @@ swaplist_insert(struct swapdev *sdp, struct swappri *newspp, int priority)
 		spp = newspp;  /* use newspp! */
 
 		spp->spi_priority = priority;
-		CIRCLEQ_INIT(&spp->spi_swapdev);
+		TAILQ_INIT(&spp->spi_swapdev);
 
 		if (pspp)
 			LIST_INSERT_AFTER(pspp, spp, spi_swappri);
@@ -523,10 +524,10 @@ swaplist_insert(struct swapdev *sdp, struct swappri *newspp, int priority)
 
 	/*
 	 * priority found (or created).   now insert on the priority's
-	 * circleq list and bump the total number of swapdevs.
+	 * tailq list and bump the total number of swapdevs.
 	 */
 	sdp->swd_priority = priority;
-	CIRCLEQ_INSERT_TAIL(&spp->spi_swapdev, sdp, swd_next);
+	TAILQ_INSERT_TAIL(&spp->spi_swapdev, sdp, swd_next);
 	uvmexp.nswapdev++;
 }
 
@@ -546,19 +547,16 @@ swaplist_find(struct vnode *vp, boolean_t remove)
 	/*
 	 * search the lists for the requested vp
 	 */
-	for (spp = LIST_FIRST(&swap_priority); spp != NULL;
-	     spp = LIST_NEXT(spp, spi_swappri)) {
-		for (sdp = CIRCLEQ_FIRST(&spp->spi_swapdev);
-		     sdp != (void *)&spp->spi_swapdev;
-		     sdp = CIRCLEQ_NEXT(sdp, swd_next))
-			if (sdp->swd_vp == vp) {
-				if (remove) {
-					CIRCLEQ_REMOVE(&spp->spi_swapdev,
-					    sdp, swd_next);
-					uvmexp.nswapdev--;
-				}
-				return(sdp);
+	LIST_FOREACH(spp, &swap_priority, spi_swappri) {
+		TAILQ_FOREACH(sdp, &spp->spi_swapdev, swd_next) {
+			if (sdp->swd_vp != vp)
+				continue;
+			if (remove) {
+				TAILQ_REMOVE(&spp->spi_swapdev, sdp, swd_next);
+				uvmexp.nswapdev--;
 			}
+			return (sdp);
+		}
 	}
 	return (NULL);
 }
@@ -575,10 +573,8 @@ swaplist_trim(void)
 {
 	struct swappri *spp, *nextspp;
 
-	for (spp = LIST_FIRST(&swap_priority); spp != NULL; spp = nextspp) {
-		nextspp = LIST_NEXT(spp, spi_swappri);
-		if (CIRCLEQ_FIRST(&spp->spi_swapdev) !=
-		    (void *)&spp->spi_swapdev)
+	LIST_FOREACH_SAFE(spp, &swap_priority, spi_swappri, nextspp) {
+		if (!TAILQ_EMPTY(&spp->spi_swapdev))
 			continue;
 		LIST_REMOVE(spp, spi_swappri);
 		free(spp, M_VMSWAP);
@@ -617,15 +613,14 @@ swapdrum_getsdp(int pgno)
 	struct swapdev *sdp;
 	struct swappri *spp;
 
-	for (spp = LIST_FIRST(&swap_priority); spp != NULL;
-	     spp = LIST_NEXT(spp, spi_swappri))
-		for (sdp = CIRCLEQ_FIRST(&spp->spi_swapdev);
-		     sdp != (void *)&spp->spi_swapdev;
-		     sdp = CIRCLEQ_NEXT(sdp, swd_next))
+	LIST_FOREACH(spp, &swap_priority, spi_swappri) {
+		TAILQ_FOREACH(sdp, &spp->spi_swapdev, swd_next) {
 			if (pgno >= sdp->swd_drumoffset &&
 			    pgno < (sdp->swd_drumoffset + sdp->swd_drumsize)) {
 				return sdp;
 			}
+		}
+	}
 	return NULL;
 }
 
@@ -683,25 +678,25 @@ sys_swapctl(struct proc *p, void *v, register_t *retval)
 		sep = (struct swapent *)SCARG(uap, arg);
 		count = 0;
 
-		for (spp = LIST_FIRST(&swap_priority); spp != NULL;
-		    spp = LIST_NEXT(spp, spi_swappri)) {
-			for (sdp = CIRCLEQ_FIRST(&spp->spi_swapdev);
-			     sdp != (void *)&spp->spi_swapdev && misc-- > 0;
-			     sdp = CIRCLEQ_NEXT(sdp, swd_next)) {
+		LIST_FOREACH(spp, &swap_priority, spi_swappri) {
+			TAILQ_FOREACH(sdp, &spp->spi_swapdev, swd_next) {
+				if (count >= misc)
+					continue;
+
 				sdp->swd_inuse = 
 				    btodb((u_int64_t)sdp->swd_npginuse <<
 				    PAGE_SHIFT);
 				error = copyout(&sdp->swd_se, sep,
 				    sizeof(struct swapent));
-
-				/* now copy out the path if necessary */
-				if (error == 0)
-					error = copyoutstr(sdp->swd_path,
-					    sep->se_path, sizeof(sep->se_path),
-					    NULL);
-
 				if (error)
 					goto out;
+
+				/* now copy out the path if necessary */
+				error = copyoutstr(sdp->swd_path,
+				    sep->se_path, sizeof(sep->se_path), NULL);
+				if (error)
+					goto out;
+
 				count++;
 				sep++;
 			}
@@ -1467,7 +1462,7 @@ sw_reg_iodone_internal(void *xvbp, void *xvnx)
  * uvm_swap_alloc: allocate space on swap
  *
  * => allocation is done "round robin" down the priority list, as we
- *	allocate in a priority we "rotate" the circle queue.
+ *	allocate in a priority we "rotate" the tail queue.
  * => space can be freed with uvm_swap_free
  * => we return the page slot number in /dev/drum (0 == invalid slot)
  * => we lock uvm.swap_data_lock
@@ -1492,11 +1487,8 @@ uvm_swap_alloc(int *nslots, boolean_t lessok)
 	simple_lock(&uvm.swap_data_lock);
 
 ReTry:	/* XXXMRG */
-	for (spp = LIST_FIRST(&swap_priority); spp != NULL;
-	     spp = LIST_NEXT(spp, spi_swappri)) {
-		for (sdp = CIRCLEQ_FIRST(&spp->spi_swapdev);
-		     sdp != (void *)&spp->spi_swapdev;
-		     sdp = CIRCLEQ_NEXT(sdp,swd_next)) {
+	LIST_FOREACH(spp, &swap_priority, spi_swappri) {
+		TAILQ_FOREACH(sdp, &spp->spi_swapdev, swd_next) {
 			/* if it's not enabled, then we can't swap from it */
 			if ((sdp->swd_flags & SWF_ENABLE) == 0)
 				continue;
@@ -1509,10 +1501,10 @@ ReTry:	/* XXXMRG */
 			}
 
 			/*
-			 * successful allocation!  now rotate the circleq.
+			 * successful allocation!  now rotate the tailq.
 			 */
-			CIRCLEQ_REMOVE(&spp->spi_swapdev, sdp, swd_next);
-			CIRCLEQ_INSERT_TAIL(&spp->spi_swapdev, sdp, swd_next);
+			TAILQ_REMOVE(&spp->spi_swapdev, sdp, swd_next);
+			TAILQ_INSERT_TAIL(&spp->spi_swapdev, sdp, swd_next);
 			sdp->swd_npginuse += *nslots;
 			uvmexp.swpginuse += *nslots;
 			simple_unlock(&uvm.swap_data_lock);
@@ -2072,14 +2064,12 @@ uvm_hibswap(dev_t dev, u_long *sp, u_long *ep)
 	if (uvmexp.nswapdev < 1 || dev != swdevt[0].sw_dev)
 		return (1);
 
-	for (spp = LIST_FIRST(&swap_priority); spp != NULL;
-	     spp = LIST_NEXT(spp, spi_swappri))
-		for (sdp = CIRCLEQ_FIRST(&spp->spi_swapdev);
-		     sdp != (void *)&spp->spi_swapdev;
-		     sdp = CIRCLEQ_NEXT(sdp,swd_next)) {
+	LIST_FOREACH(spp, &swap_priority, spi_swappri) {
+		TAILQ_FOREACH(sdp, &spp->spi_swapdev, swd_next) {
 			if (sdp->swd_dev == dev)
 				swd = sdp;
 		}
+	}
 
 	if (swd == NULL || (swd->swd_flags & SWF_ENABLE) == 0)
 		return (1);
