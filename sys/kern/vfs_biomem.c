@@ -148,7 +148,8 @@ buf_map(struct buf *bp)
 		if (!(bp->b_flags & B_LOCKED)) {
 			TAILQ_REMOVE(&buf_valist, bp, b_valist);
 			bcstats.kvaslots_avail--;
-		}
+		} else
+			return;
 	}
 
 	bcstats.busymapped++;
@@ -199,6 +200,7 @@ buf_dealloc_mem(struct buf *bp)
 	bp->b_data = NULL;
 
 	if (data) {
+		KASSERT(!(bp->b_flags & B_LOCKED));
 		if (bp->b_flags & B_BUSY)
 			bcstats.busymapped--;
 		pmap_kremove((vaddr_t)data, bp->b_bufsize);
