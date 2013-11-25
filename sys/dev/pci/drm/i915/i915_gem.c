@@ -2086,7 +2086,6 @@ i915_gem_object_move_to_inactive_locked(struct drm_i915_gem_object *obj)
 	struct drm_i915_private *dev_priv = dev->dev_private;
 
 	DRM_OBJ_ASSERT_LOCKED(&obj->base);
-	inteldrm_verify_inactive(dev_priv, __FILE__, __LINE__);
 	BUG_ON(obj->base.write_domain & ~I915_GEM_GPU_DOMAINS);
 	BUG_ON(!obj->active);
 
@@ -2104,8 +2103,6 @@ i915_gem_object_move_to_inactive_locked(struct drm_i915_gem_object *obj)
 
 	obj->active = 0;
 	drm_unref_locked(&obj->base.uobj);
-
-	inteldrm_verify_inactive(dev_priv, __FILE__, __LINE__);
 }
 
 /* If you call this on an object that you have held, you must have your own
