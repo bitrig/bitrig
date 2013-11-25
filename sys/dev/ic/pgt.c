@@ -615,7 +615,7 @@ pgt_attach(void *xsc)
 	if (error)
 		return;
 
-	if (kthread_create(pgt_per_device_kthread, sc, NULL, "%s",
+	if (kthread_create(pgt_per_device_kthread, sc, NULL,
 	    sc->sc_dev.dv_xname) != 0)
 		return;
 

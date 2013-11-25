@@ -1865,7 +1865,7 @@ uvideo_vs_start_bulk(struct uvideo_softc *sc)
 
 	sc->sc_vs_cur->bulk_running = 1;
 
-	error = kthread_create(uvideo_vs_start_bulk_thread, sc, NULL, "%s", 
+	error = kthread_create(uvideo_vs_start_bulk_thread, sc, NULL,
 	    DEVNAME(sc));
 	if (error) {
 		printf("%s: can't create kernel thread!", DEVNAME(sc));

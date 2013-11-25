@@ -1667,8 +1667,7 @@ void
 wi_usb_start_thread(void *arg)
 {
 	struct wi_usb_softc	*sc = arg;
-	kthread_create(wi_usb_thread, arg, NULL, "%s",
-	    sc->wi_usb_dev.dv_xname);
+	kthread_create(wi_usb_thread, arg, NULL, sc->wi_usb_dev.dv_xname);
 }
 
 void

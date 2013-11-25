@@ -2299,8 +2299,7 @@ acpi_create_thread(void *arg)
 {
 	struct acpi_softc *sc = arg;
 
-	if (kthread_create(acpi_thread, sc->sc_thread, NULL, "%s", DEVNAME(sc))
-	    != 0)
+	if (kthread_create(acpi_thread, sc->sc_thread, NULL, DEVNAME(sc)) != 0)
 		printf("%s: unable to create isr thread, GPEs disabled\n",
 		    DEVNAME(sc));
 }
