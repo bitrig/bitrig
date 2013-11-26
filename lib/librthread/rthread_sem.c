@@ -310,7 +310,7 @@ makesempath(const char *origpath, char *sempath, size_t len)
 {
 	char buf[SHA256_DIGEST_STRING_LENGTH];
 
-	SHA256Data(origpath, strlen(origpath), buf);
+	SHA256Data((const u_int8_t *)origpath, strlen(origpath), buf);
 	snprintf(sempath, len, "/tmp/%s.sem", buf);
 }
 
