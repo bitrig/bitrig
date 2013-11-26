@@ -1643,6 +1643,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/if_trunk.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/if_tun.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/if_types.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/net/if_var.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/if_vlan_var.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/if_vxlan.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/netisr.ph

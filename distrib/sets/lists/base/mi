@@ -1514,10 +1514,6 @@
 ./usr/include/mcpp-gcc-arm/gcc42_predef_old.h
 ./usr/include/mcpp-gcc-arm/gcc42_predef_std.h
 ./usr/include/mcpp-gcc-arm/gxx42_predef_std.h
-./usr/libdata/perl5/site_perl/amd64-bitrig/mcpp-gcc-i386
-./usr/libdata/perl5/site_perl/amd64-bitrig/mcpp-gcc-i386/gcc42_predef_old.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/mcpp-gcc-i386/gcc42_predef_std.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/mcpp-gcc-i386/gxx42_predef_std.ph
 ./usr/include/mcpp-gcc-i386
 ./usr/include/mcpp-gcc-i386/gcc42_predef_old.h
 ./usr/include/mcpp-gcc-i386/gcc42_predef_std.h
@@ -1566,6 +1562,7 @@
 ./usr/include/net/if_trunk.h
 ./usr/include/net/if_tun.h
 ./usr/include/net/if_types.h
+./usr/include/net/if_var.h
 ./usr/include/net/if_vlan_var.h
 ./usr/include/net/if_vxlan.h
 ./usr/include/net/netisr.h
@@ -2149,7 +2146,7 @@
 ./usr/lib/libkrb5.so.20.0
 ./usr/lib/libkrb5_p.a
 ./usr/lib/libkvm.a
-./usr/lib/libkvm.so.15.0
+./usr/lib/libkvm.so.16.0
 ./usr/lib/libkvm_p.a
 ./usr/lib/libl.a
 ./usr/lib/libl_p.a
@@ -3286,6 +3283,10 @@
 ./usr/libdata/perl5/pod/perlxstypemap.pod
 ./usr/libdata/perl5/sigtrap.pm
 ./usr/libdata/perl5/site_perl
+./usr/libdata/perl5/site_perl/amd64-bitrig/mcpp-gcc-i386
+./usr/libdata/perl5/site_perl/amd64-bitrig/mcpp-gcc-i386/gcc42_predef_old.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/mcpp-gcc-i386/gcc42_predef_std.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/mcpp-gcc-i386/gxx42_predef_std.ph
 ./usr/libdata/perl5/sort.pm
 ./usr/libdata/perl5/strict.pm
 ./usr/libdata/perl5/subs.pm
@@ -10263,6 +10264,7 @@
 ./usr/share/man/man4/arc.4
 ./usr/share/man/man4/armv7
 ./usr/share/man/man4/armv7/cpsw.4
+./usr/share/man/man4/armv7/omgpio.4
 ./usr/share/man/man4/armv7/ommmc.4
 ./usr/share/man/man4/arp.4
 ./usr/share/man/man4/art.4
@@ -10673,6 +10675,7 @@
 ./usr/share/man/man4/udsbr.4
 ./usr/share/man/man4/uftdi.4
 ./usr/share/man/man4/ugen.4
+./usr/share/man/man4/ugl.4
 ./usr/share/man/man4/ugold.4
 ./usr/share/man/man4/uguru.4
 ./usr/share/man/man4/uhci.4
