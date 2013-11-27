@@ -1,4 +1,4 @@
-/* $OpenBSD: login_yubikey.c,v 1.7 2013/11/02 15:34:13 benno Exp $ */
+/* $OpenBSD: login_yubikey.c,v 1.8 2013/11/27 21:25:25 deraadt Exp $ */
 
 /*
  * Copyright (c) 2010 Daniel Hartmeier <daniel@benzedrine.cx>
@@ -170,11 +170,13 @@ clean_string(const char *s)
 	size_t n = 1;
 
 	while (*s) {
-		if (n == 1 && !isalnum(*s) && *s != '_')
+		if (n == 1 && !isalnum((unsigned char)*s) && *s != '_')
 			return (0);
-		else if (n == strlen(s) && !isalnum(*s) && *s != '_' && *s != '-')
+		else if (n == strlen(s) && !isalnum((unsigned char)*s) &&
+		    *s != '_' && *s != '-')
 			return (0);
-		else if (!isalnum(*s) && *s != '_' && *s != '-' && *s != '.')
+		else if (!isalnum((unsigned char)*s) && *s != '_' &&
+		    *s != '-' && *s != '.')
 			return (0);
 		++s;
 		++n;
