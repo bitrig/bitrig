@@ -56,8 +56,8 @@ cros_ec_match(struct device *parent, void *match, void *aux)
 	struct i2c_attach_args *ia = aux;
 
 	if (strcmp(ia->ia_name, "crosec") == 0)
-		return (1);
-	return (0);
+		return 1;
+	return 0;
 }
 
 void
@@ -94,11 +94,11 @@ cros_ec_check_version(struct cros_ec_softc *sc)
 		/* new version supported */
 		sc->cmd_version_is_supported = 1;
 	} else {
-		printf("%s: old EC interface not supported\n, __func__");
-		return (-1);
+		printf("%s: old EC interface not supported\n", __func__);
+		return -1;
 	}
 
-	return (0);
+	return 0;
 }
 
 int
@@ -258,9 +258,9 @@ cros_ec_scan_keyboard(struct cros_ec_softc *sc, uint8_t *scan, int len)
 {
 	if (cros_ec_command(sc, EC_CMD_CROS_EC_STATE, 0, NULL, 0, scan,
 			len) < len)
-		return (-1);
+		return -1;
 
-	return (0);
+	return 0;
 }
 
 int
@@ -268,7 +268,7 @@ cros_ec_info(struct cros_ec_softc *sc, struct ec_response_cros_ec_info *info)
 {
 	if (cros_ec_command(sc, EC_CMD_CROS_EC_INFO, 0, NULL, 0, info,
 				sizeof(*info)) < sizeof(*info))
-		return (-1);
+		return -1;
 
-	return (0);
+	return 0;
 }
