@@ -196,7 +196,7 @@ PRT_ascii_id(int id)
 }
 
 const char *
-PRT_ascii_name(u_int16_t *utf)
+PRT_ascii_name(uint16_t *utf)
 {
 	static char name[36];
 	int i;

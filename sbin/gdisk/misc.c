@@ -205,7 +205,7 @@ ask_yn(const char *str)
 	return (first == 'y' || first == 'Y');
 }
 
-u_int16_t
+uint16_t
 getshort(void *p)
 {
 	unsigned char *cp = p;
@@ -214,7 +214,7 @@ getshort(void *p)
 }
 
 void
-putshort(void *p, u_int16_t l)
+putshort(void *p, uint16_t l)
 {
 	unsigned char *cp = p;
 
@@ -222,7 +222,7 @@ putshort(void *p, u_int16_t l)
 	*cp++ = l >> 8;
 }
 
-u_int32_t
+uint32_t
 getlong(void *p)
 {
 	unsigned char *cp = p;
@@ -231,7 +231,7 @@ getlong(void *p)
 }
 
 void
-putlong(void *p, u_int32_t l)
+putlong(void *p, uint32_t l)
 {
 	unsigned char *cp = p;
 
@@ -244,8 +244,8 @@ putlong(void *p, u_int32_t l)
 /*
  * adapted from sbin/disklabel/editor.c
  */
-u_int64_t
-getuint(disk_t *disk, char *prompt, u_int64_t oval, u_int64_t maxval)
+uint64_t
+getuint(disk_t *disk, char *prompt, uint64_t oval, uint64_t maxval)
 {
 	char buf[BUFSIZ], *endptr, *p, operator = '\0';
 	size_t n;
@@ -347,5 +347,5 @@ getuint(disk_t *disk, char *prompt, u_int64_t oval, u_int64_t maxval)
 		}
 	} while (1);
 
-	return ((u_int64_t)d);
+	return ((uint64_t)d);
 }

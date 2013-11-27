@@ -199,7 +199,7 @@ GPT_load(int fd, disk_t *disk, gpt_t *gpt, int alt)
 	int i;
 	int offset = 1;
 	char buf[DEV_BSIZE];
-	u_int32_t crc;
+	uint32_t crc;
 
 	gpt->header = malloc(sizeof(gpt_header_t));
 	if (gpt->header == NULL)

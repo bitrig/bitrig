@@ -28,7 +28,7 @@
 
 /* Data types */
 typedef struct _DISK_metrics {
-	u_int64_t size;
+	uint64_t size;
 } DISK_metrics;
 
 typedef struct _disk_t {

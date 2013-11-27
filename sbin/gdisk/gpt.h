@@ -47,20 +47,20 @@
 
 /* GPT header */
 typedef struct __attribute__((packed)) _gpt_header_t {
-	u_int64_t signature;			/* "EFI PART" */
-	u_int32_t revision;			/* GPT Version 1.0: 0x00000100 */
-	u_int32_t header_size;			/* Little-Endian */
-	u_int32_t header_checksum;		/* CRC32: with this field as 0 */
-	u_int32_t reserved;			/* always zero */
-	u_int64_t current_lba;			/* location of this header */
-	u_int64_t backup_lba;			/* location of backup header */
-	u_int64_t start_lba;			/* first usable LBA (after this header) */
-	u_int64_t end_lba;			/* last usable LBA (before backup header) */
-	uuid_t    guid;				/* disk GUID / UUID */
-	u_int64_t partitions_lba;		/* location of partition entries */
-	u_int32_t partitions_num;		/* # of reserved entry space, usually 128 */
-	u_int32_t partitions_size;		/* size per entry */
-	u_int32_t partitions_checksum;		/* checksum of all entries */
+	uint64_t signature;			/* "EFI PART" */
+	uint32_t revision;			/* GPT Version 1.0: 0x00000100 */
+	uint32_t header_size;			/* Little-Endian */
+	uint32_t header_checksum;		/* CRC32: with this field as 0 */
+	uint32_t reserved;			/* always zero */
+	uint64_t current_lba;			/* location of this header */
+	uint64_t backup_lba;			/* location of backup header */
+	uint64_t start_lba;			/* first usable LBA (after this header) */
+	uint64_t end_lba;			/* last usable LBA (before backup header) */
+	uuid_t   guid;				/* disk GUID / UUID */
+	uint64_t partitions_lba;		/* location of partition entries */
+	uint32_t partitions_num;		/* # of reserved entry space, usually 128 */
+	uint32_t partitions_size;		/* size per entry */
+	uint32_t partitions_checksum;		/* checksum of all entries */
 } gpt_header_t;
 
 /* GPT data struct */

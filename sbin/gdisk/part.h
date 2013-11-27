@@ -30,12 +30,12 @@
 
 /* Partition type */
 typedef struct __attribute__((packed)) _gpt_partition_t {
-	uuid_t    type;				/* partition type GUID */
-	uuid_t    guid;				/* unique partition GUID */
-	u_int64_t start_lba;			/* start of partition, little-endian */
-	u_int64_t end_lba;			/* end of partition, inclusive, usually odd */
-	u_int64_t attribute;			/* attribute flags */
-	u_int16_t name[36];			/* partition name, utf-16le */
+	uuid_t   type;				/* partition type GUID */
+	uuid_t   guid;				/* unique partition GUID */
+	uint64_t start_lba;			/* start of partition, little-endian */
+	uint64_t end_lba;			/* end of partition, inclusive, usually odd */
+	uint64_t attribute;			/* attribute flags */
+	uint16_t name[36];			/* partition name, utf-16le */
 } gpt_partition_t;
 
 /* Prototypes */

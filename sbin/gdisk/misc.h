@@ -50,11 +50,11 @@ int ask_num(const char *, int, int, int);
 void ask_string(const char *, char *, int);
 int ask_pid(int);
 int ask_yn(const char *);
-u_int16_t getshort(void *);
-u_int32_t getlong(void *);
-void putshort(void *, u_int16_t);
-void putlong(void *, u_int32_t);
-u_int64_t getuint(disk_t *, char *, u_int64_t, u_int64_t);
+uint16_t getshort(void *);
+uint32_t getlong(void *);
+void putshort(void *, uint16_t);
+void putlong(void *, uint32_t);
+uint64_t getuint(disk_t *, char *, uint64_t, uint64_t);
 
 #endif /* _MISC_H */
 
