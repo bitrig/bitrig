@@ -1,4 +1,4 @@
-/*	$OpenBSD: pcibios.c,v 1.42 2013/10/01 20:22:12 sf Exp $	*/
+/*	$OpenBSD: pcibios.c,v 1.43 2013/11/28 19:30:46 brad Exp $	*/
 /*	$NetBSD: pcibios.c,v 1.5 2000/08/01 05:23:59 uch Exp $	*/
 
 /*
