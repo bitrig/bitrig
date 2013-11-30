@@ -456,15 +456,9 @@ statclock(struct clockframe *frame)
 
 	if (p != NULL) {
 		p->p_cpticks++;
-		/*
-		 * If no schedclock is provided, call it here at ~~12-25 Hz;
-		 * ~~16 Hz is best
-		 */
-		if (schedhz == 0) {
-			if ((++curcpu()->ci_schedstate.spc_schedticks & 3) ==
-			    0)
-				schedclock(p);
-		}
+		/* If no schedclock is provided, call it here at ~~25hz. */
+		if (schedhz == 0 && (++spc->spc_schedticks % (hz / 25)) == 0)
+			schedclock(p);
 	}
 }
 
