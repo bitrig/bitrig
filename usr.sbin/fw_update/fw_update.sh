@@ -31,13 +31,7 @@ verbose() {
 }
 
 setpath() {
-	set -- $(sysctl -n kern.version |
-	    sed 's/^OpenBSD \([0-9]\.[0-9]\)\([^ ]*\).*/\1 \2/;q')
-
-	local version=$1 tag=$2
-
-	[[ $tag == -!(stable) ]] && version=snapshots
-	export PKG_PATH=http://firmware.openbsd.org/firmware/$version/
+	export PKG_PATH=http://firmware.bitrig.org/firmware/$(uname -r)/
 }
 
 perform() {
