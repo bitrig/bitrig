@@ -3,8 +3,6 @@
 # preconditions for cross build environment
 # build and install the binutils cross package eg bitrig-newbinutils-2.22-arm
 # this is  bitrig/bitrig-binutils-2.22 FLAVOR=armcross
-# also either the libgcc.a or libclang_rt.a for the machine must be copied
-# into /usr/src (dont know how to build this object yet)
 
 cross-tools:	cross-includes cross-buildenv cross-lib
 cross-distrib:	cross-tools cross-bin cross-share cross-sys cross-etc-root-var
