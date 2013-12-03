@@ -1,4 +1,4 @@
-/* $OpenBSD: fuse_lookup.c,v 1.4 2013/08/10 00:12:45 syl Exp $ */
+/* $OpenBSD: fuse_lookup.c,v 1.7 2013/12/03 09:32:23 syl Exp $ */
 /*
  * Copyright (c) 2012-2013 Sylvestre Gallon <ccna.syl@gmail.com>
  *
@@ -73,6 +73,9 @@ fusefs_lookup(void *v)
 	} else if (cnp->cn_namelen == 1 && *(cnp->cn_nameptr) == '.') {
 		nid = dp->ufs_ino.i_number;
 	} else {
+		if (!fmp->sess_init)
+			return (ENOENT);
+
 		/* got a real entry */
 		fbuf = fb_setup(cnp->cn_namelen + 1, dp->ufs_ino.i_number,
 		    FBT_LOOKUP, p);
