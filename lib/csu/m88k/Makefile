@@ -1,5 +1,5 @@
-#	$OpenBSD: Makefile,v 1.3 2011/11/08 10:37:09 guenther Exp $
-#	from: @(#)Makefile	5.5 (Berkeley) 5/21/91
+#	$OpenBSD: Makefile,v 1.6 2013/12/03 06:21:41 guenther Exp $
+#	from: @(#)Makefile	8.1 (Berkeley) 6/1/93
 
 CFLAGS+=	-I${.CURDIR}/..
 OBJS=		crt0.o gcrt0.o scrt0.o
@@ -11,10 +11,28 @@ DYNAMIC =	-DDYNAMIC
 
 all: ${OBJS}
 
-crt0.o: ${SRCS}
-	@echo "${COMPILE.c} -DCRT0 ${DYNAMIC} ${.CURDIR}/${SRCS} -o ${.TARGET}"
-	@${COMPILE.c} -DCRT0  ${.CURDIR}/${SRCS} -o ${.TARGET}.o
-	@${LD} -x -r ${.TARGET}.o -o ${.TARGET}
+crt0.o: crt0.c
+	@echo ${COMPILE.c} -DCRT0 ${ELFDIR}/crt0.c -o ${.TARGET}
+	@${COMPILE.c} -DCRT0 ${ELFDIR}/crt0.c -o ${.TARGET}.o
+	@${LD} -x -r -o ${.TARGET} ${.TARGET}.o
+	@rm -f ${.TARGET}.o
+
+gcrt0.o: crt0.c
+	@echo ${COMPILE.c} -DMCRT0 ${ELFDIR}/crt0.c -o ${.TARGET}
+	@${COMPILE.c} -DMCRT0 ${ELFDIR}/crt0.c -o ${.TARGET}.o
+	@${LD} -x -r -o ${.TARGET} ${.TARGET}.o
+	@rm -f ${.TARGET}.o
+
+crtbegin.o: crtbegin.c
+	@echo ${COMPILE.c} ${ELFDIR}/crtbegin.c -o ${.TARGET}
+	@${COMPILE.c} ${ELFDIR}/crtbegin.c -o ${.TARGET}.o
+	@${LD} -x -r -o ${.TARGET} ${.TARGET}.o
+	@rm -f ${.TARGET}.o
+
+crtbeginS.o: crtbeginS.c
+	@echo ${COMPILE.c} ${PICFLAG} ${ELFDIR}/crtbeginS.c -o ${.TARGET}
+	@${COMPILE.c} ${PICFLAG} ${ELFDIR}/crtbeginS.c -o ${.TARGET}.o
+	@${LD} -x -r -o ${.TARGET} ${.TARGET}.o
 	@rm -f ${.TARGET}.o
 
 gcrt0.o: ${SRCS}
