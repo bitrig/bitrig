@@ -1,4 +1,4 @@
-/*	$OpenBSD: unistd.h,v 1.81 2013/11/22 21:32:49 millert Exp $ */
+/*	$OpenBSD: unistd.h,v 1.82 2013/12/04 22:58:24 deraadt Exp $ */
 /*	$NetBSD: unistd.h,v 1.26.4.1 1996/05/28 02:31:51 mrg Exp $	*/
 
 /*-
@@ -495,8 +495,6 @@ int	 rcmd_af(char **, int, const char *,
 	    const char *, const char *, int *, int);
 int	 rcmdsh(char **, int, const char *,
 	    const char *, const char *, char *);
-char	*re_comp(const char *);
-int	 re_exec(const char *);
 int	 reboot(int);
 int	 revoke(const char *);
 int	 rresvport(int *);
@@ -515,8 +513,6 @@ int	 setlogin(const char *);
 void	*setmode(const char *);
 int	 setresgid(gid_t, gid_t, gid_t);
 int	 setresuid(uid_t, uid_t, uid_t);
-int	 setrgid(gid_t);
-int	 setruid(uid_t);
 void	 setusershell(void);
 int	 strtofflags(char **, u_int32_t *, u_int32_t *);
 int	 swapctl(int cmd, const void *arg, int misc);
