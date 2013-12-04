@@ -1704,7 +1704,7 @@ ip_setmoptions(int optname, struct ip_moptions **imop, struct mbuf *m,
 	struct in_addr addr;
 	struct in_ifaddr *ia;
 	struct ip_mreq *mreq;
-	struct ifnet *ifp;
+	struct ifnet *ifp = NULL;
 	struct ip_moptions *imo = *imop;
 	struct in_multi **immp;
 	struct route ro;
