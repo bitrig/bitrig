@@ -548,17 +548,20 @@ sm_compare() {
 			continue
 		fi
 
+		# XXX We do not use CVS $Ids, therefore we need to find another
+		# XXX solution to check for changed files.  Until then, show
+		# XXX us all changes, even though files might not have changed.
 		# compare CVS $Id's first so if the file hasn't been modified,
 		# it will be deleted from temproot and ignored from comparison.
 		# several files are generated from scripts so CVS ID is not a
 		# reliable way of detecting changes; leave for a full diff.
-		if [[ -z ${DIFFMODE} && \
-			${COMPFILE} != ./etc/@(fbtab|login.conf|sysctl.conf|ttys) && \
-			-z ${IS_LINK} ]]; then
-			CVSID1=$(grep "[$]OpenBSD:" ${DESTDIR}${COMPFILE#.} 2>/dev/null)
-			CVSID2=$(grep "[$]OpenBSD:" ${COMPFILE} 2>/dev/null) || CVSID2=none
-			[ "${CVSID2}" = "${CVSID1}" ] && rm "${COMPFILE}"
-		fi
+		#if [[ -z ${DIFFMODE} && \
+		#	${COMPFILE} != ./etc/@(fbtab|login.conf|sysctl.conf|ttys) && \
+		#	-z ${IS_LINK} ]]; then
+		#	CVSID1=$(grep "[$]OpenBSD:" ${DESTDIR}${COMPFILE#.} 2>/dev/null)
+		#	CVSID2=$(grep "[$]OpenBSD:" ${COMPFILE} 2>/dev/null) || CVSID2=none
+		#	[ "${CVSID2}" = "${CVSID1}" ] && rm "${COMPFILE}"
+		#fi
 
 		if [ -f "${COMPFILE}" -a -z "${IS_LINK}" ]; then
 			# make sure files are different; if not, delete the one in temproot
