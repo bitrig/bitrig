@@ -26,7 +26,7 @@ CC?=		cc
 CXX?=		c++
 HOSTCC?=	cc
 CFLAGS?=	-O2
-CXXLAGS?=	-O2
+CXXFLAGS?=	-O2
 .else
 # XXX remove -W ones once stand is fixed
 CC?=		clang
