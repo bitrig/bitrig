@@ -735,7 +735,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/ata/wdvar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/auconv.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/audio_if.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/dev/audiovar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/biovar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/bluetooth
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/bluetooth/btdev.ph

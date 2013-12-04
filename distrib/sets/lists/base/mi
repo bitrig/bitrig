@@ -650,7 +650,6 @@
 ./usr/include/dev/ata/wdvar.h
 ./usr/include/dev/auconv.h
 ./usr/include/dev/audio_if.h
-./usr/include/dev/audiovar.h
 ./usr/include/dev/biovar.h
 ./usr/include/dev/bluetooth
 ./usr/include/dev/bluetooth/btdev.h
@@ -4430,11 +4429,8 @@
 ./usr/sbin/npppd
 ./usr/sbin/nsd
 ./usr/sbin/nsd-checkconf
-./usr/sbin/nsd-notify
-./usr/sbin/nsd-patch
-./usr/sbin/nsd-xfer
-./usr/sbin/nsd-zonec
-./usr/sbin/nsdc
+./usr/sbin/nsd-control
+./usr/sbin/nsd-control-setup
 ./usr/sbin/nslookup
 ./usr/sbin/nsupdate
 ./usr/sbin/ntpctl
@@ -11147,12 +11143,8 @@
 ./usr/share/man/man8/npppctl.8
 ./usr/share/man/man8/npppd.8
 ./usr/share/man/man8/nsd-checkconf.8
-./usr/share/man/man8/nsd-notify.8
-./usr/share/man/man8/nsd-patch.8
-./usr/share/man/man8/nsd-xfer.8
-./usr/share/man/man8/nsd-zonec.8
+./usr/share/man/man8/nsd-control.8
 ./usr/share/man/man8/nsd.8
-./usr/share/man/man8/nsdc.8
 ./usr/share/man/man8/nsupdate.8
 ./usr/share/man/man8/ntalkd.8
 ./usr/share/man/man8/ntpctl.8
@@ -11575,6 +11567,7 @@
 ./usr/share/man/man9/extent_free.9
 ./usr/share/man/man9/extent_print.9
 ./usr/share/man/man9/falloc.9
+./usr/share/man/man9/fb_delete.9
 ./usr/share/man/man9/fb_queue.9
 ./usr/share/man/man9/fb_setup.9
 ./usr/share/man/man9/fd_getfile.9
@@ -14064,7 +14057,9 @@
 ./var/nsd
 ./var/nsd/db
 ./var/nsd/dev
+./var/nsd/etc
 ./var/nsd/run
+./var/nsd/run/xfr
 ./var/nsd/zones
 ./var/quotas
 ./var/run
