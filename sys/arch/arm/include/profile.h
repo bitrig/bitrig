@@ -66,9 +66,9 @@
 	 * find the return address for mcount,				\
 	 * and the return address for mcount's caller.			\
 	 *								\
-	 * frompcindex = pc pushed by call into self.			\
+	 * frompcindex = pulled from the frame pointer.			\
 	 */								\
-	__asm__("mov	r0, ip");					\
+	__asm__("ldr	r0, [fp, #4]");					\
 	/*								\
 	 * selfpc = pc pushed by mcount call				\
 	 */								\
@@ -76,7 +76,7 @@
 	/*								\
 	 * Call the real mcount code					\
 	 */								\
-	__asm__("bl	" __STRING(_mcount) PLTSYM);		\
+	__asm__("bl	" __STRING(_mcount) PLTSYM);			\
 	/*								\
 	 * Restore registers that were trashed during mcount		\
 	 */								\
