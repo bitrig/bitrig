@@ -444,7 +444,7 @@ product.  The product is broken into four 32-bit pieces which are stored at
 the locations pointed to by `z0Ptr', `z1Ptr', `z2Ptr', and `z3Ptr'.
 -------------------------------------------------------------------------------
 */
-__inline void
+static __inline void
  mul64To128(
      bits32 a0,
      bits32 a1,
