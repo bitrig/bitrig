@@ -20,8 +20,15 @@ DEBUG=
 # LLVM is not strict aliasing safe as of 12/31/2011
 CFLAGS+=	-fno-strict-aliasing
 
+#Bitrig only support arm platforms v7 and later.
+#allow clang to target modern architectures not ancient.
+.if ${MACHINE_ARCH} == "arm"
+TARGET_ARCH?=	armv7
+BUILD_ARCH?=	armv7
+.else
 TARGET_ARCH?=	${MACHINE_ARCH}
 BUILD_ARCH?=	${MACHINE_ARCH}
+.endif
 
 .if (${TARGET_ARCH} == "arm" || ${TARGET_ARCH} == "armv6") && \
     ${MK_ARM_EABI:L} != "no"
