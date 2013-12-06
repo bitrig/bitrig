@@ -52,6 +52,7 @@ platform_smc_write(bus_space_tag_t iot, bus_space_handle_t ioh, bus_size_t off,
 	case SMC_L2_AUXCTRL:
 	case SMC_L2_PREFETCH_CTL:
 		bus_space_write_4(iot, ioh, off, val);
+		break;
 	default:
 		panic("platform_smc_write: invalid operation %d", op);
 	}
