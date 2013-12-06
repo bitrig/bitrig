@@ -95,7 +95,7 @@ build:
 
 CROSS_TARGETS=cross-env cross-dirs cross-obj cross-includes cross-binutils \
 	cross-gcc cross-tools cross-lib cross-bin cross-etc-root-var \
-	cross-depend cross-clean cross-cleandir
+	cross-distrib cross-depend cross-clean cross-cleandir
 
 .if !defined(TARGET)
 ${CROSS_TARGETS}:
