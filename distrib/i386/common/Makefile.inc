@@ -48,7 +48,7 @@ ${FS}:	bsd.gz
 	rm ${REALIMAGE}
 
 DISKTYPE?=       rdroot
-NBLKS?=          3872
+NBLKS?=          7744
 # minfree, opt, b/i, blks/cyl
 NEWFSARGS= -m 0 -o space -i 4096
 
