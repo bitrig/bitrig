@@ -75,7 +75,7 @@
  * max number of non-contig chunks of physical RAM you can have
  */
 
-#define	VM_PHYSSEG_MAX		1
+#define	VM_PHYSSEG_MAX		2
 #define	VM_PHYSSEG_STRAT	VM_PSTRAT_RANDOM
 
 /*

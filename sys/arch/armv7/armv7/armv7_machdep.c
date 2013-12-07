@@ -788,6 +788,14 @@ initarm(void *arg0, void *arg1, void *arg2)
 	uvm_page_physload(atop(physical_freestart), atop(physical_freeend),
 	    atop(physical_freestart), atop(physical_freeend), 0);
 
+	for (int i = 1; i < bootconfig.dramblocks; i++) {
+		vaddr_t dramstart = bootconfig.dram[i].address;
+		vaddr_t dramend = dramstart + bootconfig.dram[i].pages * PAGE_SIZE;
+		physmem += bootconfig.dram[i].pages;
+		uvm_page_physload(atop(dramstart), atop(dramend),
+		    atop(dramstart), atop(dramend), 0);
+	}
+
 	/* Boot strap pmap telling it where the kernel page table is */
 #ifdef VERBOSE_INIT_ARM
 	printf("pmap ");
