@@ -76,6 +76,7 @@ int	armv7_submatch(struct device *, void *, void *);
 #define BOARD_ID_IMX6_SABRELITE 3769
 #define BOARD_ID_EXYNOS5_CHROMEBOOK 3774
 #define BOARD_ID_SUN4I_A10 4104
+#define BOARD_ID_IMX6_UTILITE 4273
 #define BOARD_ID_SUN7I_A20 4283
 #define BOARD_ID_IMX6_WANDBOARD 4412
 #define BOARD_ID_IMX6_C1 4773

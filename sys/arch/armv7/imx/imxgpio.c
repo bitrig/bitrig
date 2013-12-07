@@ -104,6 +104,7 @@ imxgpio_match(struct device *parent, void *v, void *aux)
 	case BOARD_ID_IMX6_C1:
 	case BOARD_ID_IMX6_PHYFLEX:
 	case BOARD_ID_IMX6_SABRELITE:
+	case BOARD_ID_IMX6_UTILITE:
 	case BOARD_ID_IMX6_WANDBOARD:
 		break; /* continue trying */
 	default:
@@ -128,6 +129,7 @@ imxgpio_attach(struct device *parent, struct device *self, void *args)
 		case BOARD_ID_IMX6_C1:
 		case BOARD_ID_IMX6_PHYFLEX:
 		case BOARD_ID_IMX6_SABRELITE:
+		case BOARD_ID_IMX6_UTILITE:
 		case BOARD_ID_IMX6_WANDBOARD:
 			sc->sc_get_bit  = imxgpio_v6_get_bit;
 			sc->sc_set_bit = imxgpio_v6_set_bit;
