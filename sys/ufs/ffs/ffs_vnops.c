@@ -234,12 +234,10 @@ ffs_read(void *v)
 	daddr_t lbn, nextlbn;
 	off_t bytesinfile;
 	long size, xfersize, blkoffset;
-	mode_t mode;
 	int error;
 
 	vp = ap->a_vp;
 	ip = VTOI(vp);
-	mode = DIP(ip, mode);
 	uio = ap->a_uio;
 
 #ifdef DIAGNOSTIC
