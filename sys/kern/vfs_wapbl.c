@@ -687,7 +687,6 @@ wapbl_discard(struct wapbl *wl)
 int
 wapbl_stop(struct wapbl *wl, int force)
 {
-	struct vnode *vp;
 	int error;
 
 	WAPBL_PRINTF(WAPBL_PRINT_OPEN, ("wapbl_stop called\n"));
@@ -715,8 +714,6 @@ wapbl_stop(struct wapbl *wl, int force)
 	KASSERT(wl->wl_dealloccnt == 0);
 	KASSERT(SIMPLEQ_EMPTY(&wl->wl_entries));
 	KASSERT(wl->wl_inohashcnt == 0);
-
-	vp = wl->wl_logvp;
 
 	wapbl_free(wl->wl_wc_scratch, wl->wl_wc_header->wc_len);
 	dma_free(wl->wl_wc_header, wl->wl_wc_header->wc_len);
