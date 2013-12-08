@@ -297,8 +297,20 @@ update:
 		TAILQ_INSERT_TAIL(&mountlist, mp, mnt_list);
 		checkdirs(vp);
 		VOP_UNLOCK(vp, 0);
- 		if ((mp->mnt_flag & MNT_RDONLY) == 0)
- 			error = vfs_allocate_syncvnode(mp);
+		if ((mp->mnt_flag & MNT_RDONLY) == 0) {
+			error = vfs_allocate_syncvnode(mp);
+			if (error) {
+				vfsp->vfc_refcount--;
+				TAILQ_REMOVE(&mountlist, mp, mnt_list);
+				vp->v_mountedhere = NULL;
+				if (VFS_UNMOUNT(mp, MNT_FORCE, p))
+					panic("sys_mount: unmount failed");
+				vfs_unbusy(mp);
+				free(mp, M_MOUNT);
+				vrele(vp);
+				return (error);
+			}
+		}
 		vfs_unbusy(mp);
 		(void) VFS_STATFS(mp, &mp->mnt_stat, p);
 		if ((error = VFS_START(mp, 0, p)) != 0)
