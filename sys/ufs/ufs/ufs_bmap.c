@@ -95,7 +95,6 @@ ufs_bmaparray(struct vnode *vp, daddr_t bn, daddr_t *bnp, struct indir *ap,
 	struct buf *bp;
 	struct ufsmount *ump;
 	struct mount *mp;
-	struct vnode *devvp;
 	struct indir a[NIADDR+1], *xap;
 	daddr_t daddr, metalbn;
 	int error, maxrun = 0, num;
@@ -142,7 +141,6 @@ ufs_bmaparray(struct vnode *vp, daddr_t bn, daddr_t *bnp, struct indir *ap,
 	/* Get disk address out of indirect block array */
 	daddr = DIP(ip, ib[xap->in_off]);
 
-	devvp = VFSTOUFS(vp->v_mount)->um_devvp;
 	for (bp = NULL, ++xap; --num; ++xap) {
 		/* 
 		 * Exit the loop if there is no disk address assigned yet and
