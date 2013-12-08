@@ -134,6 +134,7 @@ udsbr*		at uhub?		# D-Link DSB-R100 radio
 radio*		at udsbr?		# USB radio
 #ubt*		at uhub? disable	# USB Bluetooth
 ugen*		at uhub?		# USB Generic driver
+rum*		at uhub?		# Ralink RT2501USB/RT2601USB
 
 atphy*		at mii?			# Attansic F1 PHYs
 ukphy*		at mii?			# "unknown" PHYs
