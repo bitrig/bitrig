@@ -437,7 +437,7 @@ dounmount(struct mount *mp, int flags, struct proc *p, struct vnode *olddp)
 	int error;
 	int hadsyncer = 0;
 
- 	mp->mnt_flag &=~ MNT_ASYNC;
+ 	mp->mnt_flag &=~ MNT_ASYNC; /* XXX pedro: MNT_ASYNC gets lost here */
  	cache_purgevfs(mp);	/* remove cache entries for this file sys */
  	if (mp->mnt_syncer != NULL) {
 		hadsyncer = 1;
