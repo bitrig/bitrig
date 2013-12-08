@@ -70,7 +70,7 @@ ufs_inactive(void *v)
 	struct fs *fs = ip->i_fs;
 	struct proc *p = curproc;
 	mode_t mode;
-	int error = 0, logged = 0;
+	int error = 0, logged = 0, truncate_error = 0;
 #ifdef DIAGNOSTIC
 	extern int prtactive;
 
@@ -118,8 +118,12 @@ ufs_inactive(void *v)
 			}
 		}
 
-		if (error == 0)
-			error = UFS_TRUNCATE(ip, (off_t)0, 0, NOCRED);
+		if (error == 0) {
+			truncate_error = UFS_TRUNCATE(ip, (off_t)0, 0, NOCRED);
+			/* XXX pedro: remove me */
+			if (truncate_error)
+				printf("UFS_TRUNCATE()=%d\n", truncate_error);
+		}
 
 		DIP_ASSIGN(ip, rdev, 0);
 		mode = DIP(ip, mode);
@@ -141,10 +145,6 @@ ufs_inactive(void *v)
 		if (DOINGSOFTDEP(vp))
 			softdep_change_linkcnt(ip, 1);
 
-		UFS_WAPBL_END(vp->v_mount);
-		error = UFS_WAPBL_BEGIN(vp->v_mount);
-		if (error)
-			goto out;
 		UFS_INODE_FREE(ip, ip->i_number, mode);
 	}
 
@@ -168,10 +168,11 @@ out:
 	 * If we are done with the inode, reclaim it
 	 * so that it can be reused immediately.
 	 */
-	if (error == 0 && (ip->i_din1 == NULL || DIP(ip, mode) == 0))
+	if (error == 0 && truncate_error == 0 &&
+	    (ip->i_din1 == NULL || DIP(ip, mode) == 0))
 		vrecycle(vp, p);
 
-	return (error);
+	return (truncate_error ? truncate_error : error);
 }
 
 /*
