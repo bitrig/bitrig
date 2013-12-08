@@ -293,16 +293,16 @@ Xflags(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
 		if (ask_yn("Mark partition as DOS active?"))
 			active = 1;
 
-		priority = (gpt->part[i].attribute >> GPT_PRIORITY_SHIFT)
+		priority = (gpt->part[part].attribute >> GPT_PRIORITY_SHIFT)
 		    & GPT_PRIORITY_MASK;
 		priority = getuint(disk, "Priority", priority,
 		    GPT_PRIORITY_MAX);
 
-		tries = (gpt->part[i].attribute >> GPT_TRIES_SHIFT)
+		tries = (gpt->part[part].attribute >> GPT_TRIES_SHIFT)
 		    & GPT_TRIES_MASK;
 		tries = getuint(disk, "Tries", tries, GPT_TRIES_MAX);
 
-		success = (gpt->part[i].attribute >> GPT_SUCCESS_SHIFT)
+		success = (gpt->part[part].attribute >> GPT_SUCCESS_SHIFT)
 		    & GPT_SUCCESS_MASK;
 		success = getuint(disk, "Success", success, GPT_SUCCESS_MAX);
 	} else if (activep != NULL && priorityp != NULL && triesp != NULL &&
@@ -345,19 +345,19 @@ Xflags(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
 		}
 	}
 
-	gpt->part[i].attribute &= ~(GPT_PRIORITY_MASK
+	gpt->part[part].attribute &= ~(GPT_PRIORITY_MASK
 	    << GPT_PRIORITY_SHIFT);
-	gpt->part[i].attribute |= (priority & GPT_PRIORITY_MASK)
+	gpt->part[part].attribute |= (priority & GPT_PRIORITY_MASK)
 	    << GPT_PRIORITY_SHIFT;
 
-	gpt->part[i].attribute &= ~(GPT_TRIES_MASK
+	gpt->part[part].attribute &= ~(GPT_TRIES_MASK
 	    << GPT_TRIES_SHIFT);
-	gpt->part[i].attribute |= (tries & GPT_TRIES_MASK)
+	gpt->part[part].attribute |= (tries & GPT_TRIES_MASK)
 	    << GPT_TRIES_SHIFT;
 
-	gpt->part[i].attribute &= ~(GPT_SUCCESS_MASK
+	gpt->part[part].attribute &= ~(GPT_SUCCESS_MASK
 	    << GPT_SUCCESS_SHIFT);
-	gpt->part[i].attribute |= (success & GPT_SUCCESS_MASK)
+	gpt->part[part].attribute |= (success & GPT_SUCCESS_MASK)
 	    << GPT_SUCCESS_SHIFT;
 
 	return (CMD_DIRTY);
