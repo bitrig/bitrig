@@ -1,4 +1,4 @@
-/*	$OpenBSD: vfs_bio.c,v 1.152 2013/08/08 23:25:06 syl Exp $	*/
+/*	$OpenBSD: vfs_bio.c,v 1.153 2013/12/09 17:16:35 beck Exp $	*/
 /*	$NetBSD: vfs_bio.c,v 1.44 1996/06/11 11:15:36 pk Exp $	*/
 
 /*-
@@ -850,8 +850,8 @@ brelse(struct buf *bp)
 			}
 		}
 		/*
-		 * If the buffer is invalid, place it in the clean queue, so it
-		 * can be reused.
+		 * If the buffer is invalid, free it now rather than leaving
+		 * it in a queue and wasting memory.
 		 */
 		if (LIST_FIRST(&bp->b_dep) != NULL)
 			buf_deallocate(bp);
@@ -868,31 +868,17 @@ brelse(struct buf *bp)
 		bp->b_vp = NULL;
 
 		/*
-		 * If the buffer has no associated data, place it back in the
-		 * pool.
+		 * Wake up any processes waiting for _this_ buffer to
+		 * become free. They are not allowed to grab it
+		 * since it will be freed. But the only sleeper is
+		 * getblk and it will restart the operation after
+		 * sleep.
 		 */
-		if (bp->b_data == NULL && bp->b_pobj == NULL) {
-			/*
-			 * Wake up any processes waiting for _this_ buffer to
-			 * become free. They are not allowed to grab it
-			 * since it will be freed. But the only sleeper is
-			 * getblk and it's restarting the operation after
-			 * sleep.
-			 */
-			if (ISSET(bp->b_flags, B_WANTED)) {
-				CLR(bp->b_flags, B_WANTED);
-				wakeup(bp);
-			}
-			if (bp->b_vp != NULL)
-				RB_REMOVE(buf_rb_bufs,
-				    &bp->b_vp->v_bufs_tree, bp);
-			buf_put(bp);
-			splx(s);
-			return;
+		if (ISSET(bp->b_flags, B_WANTED)) {
+			CLR(bp->b_flags, B_WANTED);
+			wakeup(bp);
 		}
-
-		bcstats.numcleanpages += atop(bp->b_bufsize);
-		binsheadfree(bp, &bufqueues[BQ_CLEAN]);
+		buf_put(bp);
 	} else {
 		/*
 		 * It has valid data.  Put it on the end of the appropriate
@@ -917,11 +903,17 @@ brelse(struct buf *bp)
 			binstailfree(bp, bufq);
 			bp->b_synctime = time_uptime + 300;
 		}
-	}
+		/* Unlock the buffer. */
+		CLR(bp->b_flags, (B_AGE | B_ASYNC | B_NOCACHE | B_DEFERRED));
+		buf_release(bp);
 
-	/* Unlock the buffer. */
-	CLR(bp->b_flags, (B_AGE | B_ASYNC | B_NOCACHE | B_DEFERRED));
-	buf_release(bp);
+		/* Wake up any processes waiting for _this_ buffer to
+		 * become free. */
+		if (ISSET(bp->b_flags, B_WANTED)) {
+			CLR(bp->b_flags, B_WANTED);
+			wakeup(bp);
+		}
+	}
 
 	/* Wake up syncer and cleaner processes waiting for buffers. */
 	if (nobuffers) {
@@ -934,12 +926,6 @@ brelse(struct buf *bp)
 	    bcstats.kvaslots_avail > RESERVE_SLOTS) {
 		needbuffer = 0;
 		wakeup(&needbuffer);
-	}
-
-	/* Wake up any processes waiting for _this_ buffer to become free. */
-	if (ISSET(bp->b_flags, B_WANTED)) {
-		CLR(bp->b_flags, B_WANTED);
-		wakeup(bp);
 	}
 
 	splx(s);
