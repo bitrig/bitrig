@@ -9606,6 +9606,10 @@ const struct usb_known_product usb_known_products[] = {
 	    "Hub",
 	},
 	{
+	    USB_VENDOR_SMC2, USB_PRODUCT_SMC2_USB3503,
+	    "USB3503",
+	},
+	{
 	    USB_VENDOR_SMC2, USB_PRODUCT_SMC2_SMSC9500,
 	    "SMSC9500",
 	},
