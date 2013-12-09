@@ -509,6 +509,9 @@ fdt_print_node_recurse(void *node, int level)
 void
 fdt_print_tree(void)
 {
+	if (!tree_inited)
+		return;
+
 	fdt_print_node_recurse(fdt_next_node(0), 0);
 }
 #endif
