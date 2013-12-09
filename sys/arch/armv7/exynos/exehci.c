@@ -174,6 +174,11 @@ exehci_setup(struct exehci_softc *sc)
 {
 	uint32_t val;
 
+	/* VBUS, GPIO_X11, only on SMDK5250 and Chromebooks */
+	exgpio_set_dir(0xa9, EXGPIO_DIR_OUT);
+	exgpio_set_bit(0xa9);
+	delay(3000);
+
 	exsysreg_usbhost_mode(1);
 	expower_usbhost_phy_ctrl(1);
 
@@ -211,10 +216,10 @@ exehci_setup(struct exehci_softc *sc)
 
 	/* HSIC USB Hub initialization. */
 	if (1) {
-		exgpio_set_dir(0xd0, EXGPIO_DIR_OUT);
-		exgpio_clear_bit(0xd0);
+		exgpio_set_dir(0xc8, EXGPIO_DIR_OUT);
+		exgpio_clear_bit(0xc8);
 		delay(1000);
-		exgpio_set_bit(0xd0);
+		exgpio_set_bit(0xc8);
 		delay(5000);
 
 		val = bus_space_read_4(sc->sc.iot, sc->ph_ioh, HSICPHY_CTRL1);
