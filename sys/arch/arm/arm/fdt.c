@@ -33,6 +33,7 @@ void	*skip_property(u_int32_t *);
 void	*skip_props(u_int32_t *);
 void	*skip_node_name(u_int32_t *);
 void	*fdt_parent_node_recurse(void *, void *);
+void	*fdt_find_node_by_prop(void *, char *, char *, int);
 #ifdef DEBUG
 void 	 fdt_print_node_recurse(void *, int);
 #endif
@@ -207,6 +208,35 @@ fdt_node_property(void *node, char *name, char **out)
 }
 
 /*
+ * Retrieves node property as integers and puts them in the given
+ * integer array.
+ */
+int
+fdt_node_property_ints(void *node, char *name, int *out, int outlen)
+{
+	int *data;
+	int i, inlen;
+
+	inlen = fdt_node_property(node, name, (char **)&data) / sizeof(int);
+	if (inlen <= 0)
+		return -1;
+
+	for (i = 0; i < inlen && i < outlen; i++)
+		out[i] = betoh32(data[i]);
+
+	return i;
+}
+
+/*
+ * Retrieves node property as an integer.
+ */
+int
+fdt_node_property_int(void *node, char *name, int *out)
+{
+	return fdt_node_property_ints(node, name, out, 1);
+}
+
+/*
  * Retrieves next node, skipping all the children nodes of the pointed node
  * if passed 0 wil return first node of the tree (root)
  */
@@ -344,6 +374,51 @@ fdt_parent_node(void *node)
 		return NULL;
 
 	return fdt_parent_node_recurse(pnode, node);
+}
+
+/*
+ * Find the first node which is compatible.
+ */
+void *
+fdt_find_compatible(char *compatible)
+{
+	return fdt_find_node_by_prop(NULL, "compatible",
+	    compatible, strlen(compatible));
+}
+
+/*
+ * Find the first node, where the value of a given property matches.
+ */
+void *
+fdt_find_node_by_prop(void *node, char *propname, char *propval,
+    int proplen)
+{
+	void *child;
+	char *data;
+	int len;
+
+	if (node == NULL)
+		node = fdt_next_node(0);
+
+	while (node != NULL) {
+		len = fdt_node_property(node, propname, &data);
+		if (len) /* Property exists and has at least '\0'. */
+			if (len == (proplen + 1)) /* Add '\0'. */
+				if (!strncmp(data, propval, proplen))
+					return node;
+
+		child = fdt_child_node(node);
+		if (child != NULL) {
+			child = fdt_find_node_by_prop(fdt_child_node(node),
+			    propname, propval, proplen);
+			if (child != NULL)
+				return child;
+		}
+
+		node = fdt_next_node(node);
+	}
+
+	return NULL;
 }
 
 #ifdef DEBUG

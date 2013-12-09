@@ -217,14 +217,14 @@ ampintc_attach(struct device *parent, struct device *self, void *args)
 	icd = ia->ca_periphbase + ICD_ADDR;
 	icdsize = ICD_SIZE;
 
-	node = fdt_find_node("/interrupt-controller");
+	node = fdt_find_compatible("arm,gic");
 	if (node != NULL) {
-		uint32_t *reg;
-		if (fdt_node_property(node, "reg", (char **)&reg) == 4*sizeof(uint32_t)) {
-			icd = betoh32(*reg++);
-			icdsize = betoh32(*reg++);
-			icp = betoh32(*reg++);
-			icpsize = betoh32(*reg++);
+		uint32_t reg[4];
+		if (fdt_node_property_ints(node, "reg", reg, 4) == 4) {
+			icd = reg[0];
+			icdsize = reg[1];
+			icp = reg[2];
+			icpsize = reg[3];
 		}
 	}
 

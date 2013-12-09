@@ -455,10 +455,10 @@ initarm(void *arg0, void *arg1, void *arg2)
 		}
 		node = fdt_find_node("/memory");
 		if (node != NULL) {
-			uint32_t *mem;
-			if (fdt_node_property(node, "reg", (char **)&mem) >= 2*sizeof(uint32_t)) {
-				memstart = betoh32(*mem++);
-				memsize = betoh32(*mem);
+			uint32_t mem[2];
+			if (fdt_node_property_ints(node, "reg", mem, 2) == 2) {
+				memstart = mem[0];
+				memsize = mem[1];
 				physical_start = memstart;
 				physical_end = physical_start + memsize;
 			}
