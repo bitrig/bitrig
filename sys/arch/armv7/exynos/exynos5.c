@@ -66,9 +66,11 @@
 #define GPIO3_ADDR	0x13400000
 #define GPIO3_SIZE	0x120
 #define GPIO4_ADDR	0x10D10000
-#define GPIO4_SIZE	0xA0
-#define GPIO5_ADDR	0x03860000
+#define GPIO4_SIZE	0x80
+#define GPIO5_ADDR	0x10D100C0
 #define GPIO5_SIZE	0x20
+#define GPIO6_ADDR	0x03860000
+#define GPIO6_SIZE	0x20
 
 #define I2Cx_SIZE	0x100
 #define I2C1_ADDR	0x12c60000
@@ -212,6 +214,11 @@ struct armv7_dev exynos5_devs[] = {
 	{ .name = "exgpio",
 	  .unit = 4,
 	  .mem = { { GPIO5_ADDR, GPIO5_SIZE } },
+	},
+
+	{ .name = "exgpio",
+	  .unit = 5,
+	  .mem = { { GPIO6_ADDR, GPIO6_SIZE } },
 	},
 
 	/*

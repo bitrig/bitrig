@@ -60,6 +60,7 @@ struct board_dev chromebook_devs[] = {
 	{ "exgpio",	2 },
 	{ "exgpio",	3 },
 	{ "exgpio",	4 },
+	{ "exgpio",	5 },
 	{ "ehci",	0 },
 	{ "exiic",	4 },
 //	{ "exesdhc",	2 },
