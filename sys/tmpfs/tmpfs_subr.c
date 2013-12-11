@@ -424,24 +424,8 @@ tmpfs_alloc_file(struct vnode *dvp, struct vnode **vpp, struct vattr *vap,
 		goto out;
 	}
 
-#if 0 /* ISWHITEOUT doesn't exist in OpenBSD */
-	/* Remove whiteout before adding the new entry. */
-	if (cnp->cn_flags & ISWHITEOUT) {
-		wde = tmpfs_dir_lookup(dnode, cnp);
-		KASSERT(wde != NULL && wde->td_node == TMPFS_NODE_WHITEOUT);
-		tmpfs_dir_detach(dnode, wde);
-		tmpfs_free_dirent(tmp, wde);
-	}
-#endif
-
 	/* Associate inode and attach the entry into the directory. */
 	tmpfs_dir_attach(dnode, de, node);
-
-#if 0 /* ISWHITEOUT doesn't exist in OpenBSD */
-	/* Make node opaque if requested. */
-	if (cnp->cn_flags & ISWHITEOUT)
-		node->tn_flags |= UF_OPAQUE;
-#endif
 
 out:
 	if (error == 0 && (cnp->cn_flags & SAVESTART) == 0)
@@ -513,13 +497,11 @@ tmpfs_dir_attach(tmpfs_node_t *dnode, tmpfs_dirent_t *de, tmpfs_node_t *node)
 
 	/* Associate directory entry and the inode. */
 	de->td_node = node;
-	if (node != TMPFS_NODE_WHITEOUT) {
-		KASSERT(node->tn_links < LINK_MAX);
-		node->tn_links++;
+	KASSERT(node->tn_links < LINK_MAX);
+	node->tn_links++;
 
-		/* Save the hint (might overwrite). */
-		node->tn_dirent_hint = de;
-	}
+	/* Save the hint (might overwrite). */
+	node->tn_dirent_hint = de;
 
 	/* Insert the entry to the directory (parent of inode). */
 	TAILQ_INSERT_TAIL(&dnode->tn_spec.tn_dir.tn_dir, de, td_entries);
@@ -528,7 +510,7 @@ tmpfs_dir_attach(tmpfs_node_t *dnode, tmpfs_dirent_t *de, tmpfs_node_t *node)
 	tmpfs_update(dvp, NULL, NULL, 0);
 	uvm_vnp_setsize(dvp, dnode->tn_size);
 
-	if (node != TMPFS_NODE_WHITEOUT && node->tn_type == VDIR) {
+	if (node->tn_type == VDIR) {
 		/* Set parent. */
 		KASSERT(node->tn_spec.tn_dir.tn_parent == NULL);
 		node->tn_spec.tn_dir.tn_parent = dnode;
@@ -562,27 +544,25 @@ tmpfs_dir_detach(tmpfs_node_t *dnode, tmpfs_dirent_t *de)
 
 	KASSERT(dvp == NULL || VOP_ISLOCKED(dvp));
 
-	if (__predict_true(node != TMPFS_NODE_WHITEOUT)) {
-		/* Deassociate the inode and entry. */
-		de->td_node = NULL;
-		node->tn_dirent_hint = NULL;
+	/* Deassociate the inode and entry. */
+	de->td_node = NULL;
+	node->tn_dirent_hint = NULL;
 
-		KASSERT(node->tn_links > 0);
-		node->tn_links--;
-		if ((vp = node->tn_vnode) != NULL) {
-			KASSERT(VOP_ISLOCKED(vp));
-			VN_KNOTE(vp, node->tn_links ?  NOTE_LINK : NOTE_DELETE);
-		}
+	KASSERT(node->tn_links > 0);
+	node->tn_links--;
+	if ((vp = node->tn_vnode) != NULL) {
+		KASSERT(VOP_ISLOCKED(vp));
+		VN_KNOTE(vp, node->tn_links ?  NOTE_LINK : NOTE_DELETE);
+	}
 
-		/* If directory - decrease the link count of parent. */
-		if (node->tn_type == VDIR) {
-			KASSERT(node->tn_spec.tn_dir.tn_parent == dnode);
-			node->tn_spec.tn_dir.tn_parent = NULL;
+	/* If directory - decrease the link count of parent. */
+	if (node->tn_type == VDIR) {
+		KASSERT(node->tn_spec.tn_dir.tn_parent == dnode);
+		node->tn_spec.tn_dir.tn_parent = NULL;
 
-			KASSERT(dnode->tn_links > 0);
-			dnode->tn_links--;
-			events |= NOTE_LINK;
-		}
+		KASSERT(dnode->tn_links > 0);
+		dnode->tn_links--;
+		events |= NOTE_LINK;
 	}
 
 	/* Remove the entry from the directory. */

@@ -216,9 +216,6 @@ LIST_HEAD(tmpfs_node_list, tmpfs_node);
 #define	TMPFS_NODE_GEN(node) \
     ((node)->tn_gen & TMPFS_NODE_GEN_MASK)
 
-/* White-out inode indicator. */
-#define	TMPFS_NODE_WHITEOUT	((tmpfs_node_t *)-1)
-
 /*
  * Internal representation of a tmpfs mount point.
  */

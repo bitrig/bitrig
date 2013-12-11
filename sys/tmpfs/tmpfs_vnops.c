@@ -216,7 +216,7 @@ tmpfs_lookup(void *v)
 	 * Other lookup cases: perform directory scan.
 	 */
 	de = tmpfs_dir_lookup(dnode, cnp);
-	if (de == NULL || de->td_node == TMPFS_NODE_WHITEOUT) {
+	if (de == NULL) {
 		/*
 		 * The entry was not found in the directory.  This is valid
 		 * if we are creating or renaming an entry and are working
@@ -236,10 +236,6 @@ tmpfs_lookup(void *v)
 			error = EJUSTRETURN;
 		} else {
 			error = ENOENT;
-		}
-		if (de) {
-			KASSERT(de->td_node == TMPFS_NODE_WHITEOUT);
-			/* cnp->cn_flags |= ISWHITEOUT; */
 		}
 		goto done;
 	}
@@ -737,15 +733,12 @@ tmpfs_remove(void *v)
 
 	/*
 	 * Remove the entry from the directory (drops the link count) and
-	 * destroy it or replace it with a whiteout.
+	 * destroy it.
 	 * Note: the inode referred by it will not be destroyed
 	 * until the vnode is reclaimed/recycled.
 	 */
 	tmpfs_dir_detach(dnode, de);
-	if (0 /* ap->a_cnp->cn_flags & DOWHITEOUT */)
-		tmpfs_dir_attach(dnode, de, TMPFS_NODE_WHITEOUT);
-	else
-		tmpfs_free_dirent(VFS_TO_TMPFS(vp->v_mount), de);
+	tmpfs_free_dirent(VFS_TO_TMPFS(vp->v_mount), de);
 	if (node->tn_links > 0)  {
 		/* We removed a hard link. */
 		node->tn_status |= TMPFS_NODE_CHANGED;
@@ -885,16 +878,14 @@ tmpfs_rmdir(void *v)
 	KASSERT(node->tn_spec.tn_dir.tn_parent == dnode);
 
 	/*
-	 * Directories with more than two non-whiteout
-	 * entries ('.' and '..') cannot be removed.
+	 * Directories with more than two entries ('.' and '..') cannot be
+	 * removed.
 	 */
 	if (node->tn_size > 0) {
 		KASSERT(error == 0);
 		TAILQ_FOREACH(de, &node->tn_spec.tn_dir.tn_dir, td_entries) {
-			if (de->td_node != TMPFS_NODE_WHITEOUT) {
-				error = ENOTEMPTY;
-				break;
-			}
+			error = ENOTEMPTY;
+			break;
 		}
 		if (error)
 			goto out;
@@ -924,22 +915,12 @@ tmpfs_rmdir(void *v)
 	cache_purge(dvp);
 
 	/*
-	 * Destroy the directory entry or replace it with a whiteout.
+	 * Destroy the directory entry.
 	 * Note: the inode referred by it will not be destroyed
 	 * until the vnode is reclaimed.
 	 */
-	if (0 /* ap->a_cnp->cn_flags & DOWHITEOUT */)
-		tmpfs_dir_attach(dnode, de, TMPFS_NODE_WHITEOUT);
-	else
-		tmpfs_free_dirent(tmp, de);
-
-	/* Destroy the whiteout entries from the node. */
-	while ((de = TAILQ_FIRST(&node->tn_spec.tn_dir.tn_dir)) != NULL) {
-		KASSERT(de->td_node == TMPFS_NODE_WHITEOUT);
-		tmpfs_dir_detach(node, de);
-		tmpfs_free_dirent(tmp, de);
-	}
-
+	tmpfs_free_dirent(tmp, de);
+	KASSERT(TAILQ_FIRST(&node->tn_spec.tn_dir.tn_dir) == NULL);
 	KASSERT(node->tn_links == 0);
 out:
 	pool_put(&namei_pool, cnp->cn_pnbuf);
@@ -1265,44 +1246,6 @@ tmpfs_putpages(void *v)
 	/* XXX mtime */
 
 	return error;
-}
-
-int
-tmpfs_whiteout(void *v)
-{
-	struct vop_whiteout_args /* {
-		struct vnode		*a_dvp;
-		struct componentname	*a_cnp;
-		int			a_flags;
-	} */ *ap = v;
-	struct vnode *dvp = ap->a_dvp;
-	struct componentname *cnp = ap->a_cnp;
-	const int flags = ap->a_flags;
-	tmpfs_mount_t *tmp = VFS_TO_TMPFS(dvp->v_mount);
-	tmpfs_node_t *dnode = VP_TO_TMPFS_DIR(dvp);
-	tmpfs_dirent_t *de;
-	int error;
-
-	switch (flags) {
-	case LOOKUP:
-		break;
-	case CREATE:
-		error = tmpfs_alloc_dirent(tmp, cnp->cn_nameptr,
-		    cnp->cn_namelen, &de);
-		if (error)
-			return error;
-		tmpfs_dir_attach(dnode, de, TMPFS_NODE_WHITEOUT);
-		break;
-	case DELETE:
-		cnp->cn_flags &= ~DOWHITEOUT; /* when in doubt, cargo cult */
-		de = tmpfs_dir_lookup(dnode, cnp);
-		if (de == NULL)
-			return ENOENT;
-		tmpfs_dir_detach(dnode, de);
-		tmpfs_free_dirent(tmp, de);
-		break;
-	}
-	return 0;
 }
 #endif
 
