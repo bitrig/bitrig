@@ -77,7 +77,5 @@ int	tmpfs_print		(void *);
 int	tmpfs_pathconf		(void *);
 int	tmpfs_advlock		(void *);
 int	tmpfs_bwrite		(void *);
-int	tmpfs_getpages		(void *);
-int	tmpfs_putpages		(void *);
 
 #endif /* _TMPFS_TMPFS_VNOPS_H_ */
