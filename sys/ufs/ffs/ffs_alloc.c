@@ -1,4 +1,4 @@
-/*	$OpenBSD: ffs_alloc.c,v 1.97 2013/11/01 17:36:19 krw Exp $	*/
+/*	$OpenBSD: ffs_alloc.c,v 1.98 2013/12/12 19:00:09 tedu Exp $	*/
 /*	$NetBSD: ffs_alloc.c,v 1.11 1996/05/11 18:27:09 mycroft Exp $	*/
 
 /*-
@@ -286,7 +286,7 @@ ffs_realloccg(struct inode *ip, daddr_t lbprev, daddr_t bpref, int osize,
 #endif
 			buf_adjcnt(bp, nsize);
 			bp->b_flags |= B_DONE;
-			bzero(bp->b_data + osize, (u_int)nsize - osize);
+			memset(bp->b_data + osize, 0, nsize - osize);
 			*bpp = bp;
 		}
 		if (blknop != NULL) {
@@ -375,7 +375,7 @@ ffs_realloccg(struct inode *ip, daddr_t lbprev, daddr_t bpref, int osize,
 #endif
 		buf_adjcnt(bp, nsize);
 		bp->b_flags |= B_DONE;
-		bzero(bp->b_data + osize, (u_int)nsize - osize);
+		memset(bp->b_data + osize, 0, nsize - osize);
 		*bpp = bp;
 	}
 	if (blknop != NULL) {
@@ -1912,7 +1912,7 @@ gotit:
                     ino_to_fsba(fs, cg * fs->fs_ipg + cgp->cg_initediblk)),
                     (int)fs->fs_bsize, 0, 0);
 
-                bzero(ibp->b_data, (int)fs->fs_bsize);
+                memset(ibp->b_data, 0, fs->fs_bsize);
                 dp2 = (struct ufs2_dinode *)(ibp->b_data);
 
 		/* Give each inode a positive generation number */
