@@ -149,6 +149,7 @@ mbinit(void)
 	pool_init(&mbpool, MSIZE, 0, 0, 0, "mbpl", NULL);
 	pool_set_constraints(&mbpool, &kp_dma_contig);
 	pool_setlowat(&mbpool, mblowat);
+	pool_setipl(&mbpool, IPL_NET);
 
 	pool_init(&mtagpool, PACKET_TAG_MAXSIZE + sizeof(struct m_tag),
 	    0, 0, 0, "mtagpl", NULL);
@@ -161,6 +162,7 @@ mbinit(void)
 		    mclnames[i], NULL);
 		pool_set_constraints(&mclpools[i], &kp_dma_contig);
 		pool_setlowat(&mclpools[i], mcllowat);
+		pool_setipl(&mclpools[i], IPL_NET);
 	}
 
 	nmbclust_update();
