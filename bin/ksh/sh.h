@@ -68,7 +68,6 @@ typedef INT32 Tflag;
 
 #define	LINE	2048		/* input line size */
 #define	PATH	1024		/* pathname size (todo: PATH_MAX/pathconf()) */
-#define ARRAYMAX (10*1024-1)	/* max array index */
 
 EXTERN	const char *kshname;	/* $0 */
 EXTERN	pid_t	kshpid;		/* $$, shell pid */
