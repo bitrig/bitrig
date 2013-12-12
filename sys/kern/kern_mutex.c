@@ -131,8 +131,10 @@ mtx_leave(struct mutex *mtx)
 	/* Pass mutex to next-in-line. */
 	atomic_fetch_add_explicit(&mtx->mtx_cur, 1, memory_order_release);
 
+	/* Wake up the waiters. */
+	SPINWAKE();
+
 	/* Clear interrupt block. */
 	if (mtx->mtx_wantipl != IPL_NONE)
 		splx(s);
-	SPINWAKE();
 }
