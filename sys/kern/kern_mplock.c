@@ -1,4 +1,4 @@
-/*	$OpenBSD: lock_machdep.c,v 1.3 2008/12/04 15:48:19 weingart Exp $	*/
+/*	$OpenBSD: lock_machdep.c,v 1.6 2014/07/10 12:14:48 mlarkin Exp $	*/
 
 /*
  * Copyright (c) 2007 Artur Grabowski <art@openbsd.org>
@@ -20,11 +20,7 @@
 #include <sys/param.h>
 #include <sys/lock.h>
 #include <sys/systm.h>
-
-#include <arm/cpufunc.h>
-
-#include <machine/atomic.h>
-#include <machine/lock.h>
+#include <sys/mplock.h>
 
 #include <ddb/db_output.h>
 
@@ -32,8 +28,8 @@ void
 __mp_lock_init(struct __mp_lock *mpl)
 {
 	bzero(mpl->mpl_cpus, sizeof(mpl->mpl_cpus));
+	mpl->mpl_ticket = 0;
 	atomic_init(&mpl->mpl_users, 0);
-	atomic_init(&mpl->mpl_ticket, 0);
 }
 
 #if defined(MP_LOCKDEBUG)
@@ -48,16 +44,27 @@ extern int __mp_lock_spinout;
 static __inline void
 __mp_lock_spin(struct __mp_lock *mpl, u_int me)
 {
-	while (atomic_load_explicit(&mpl->mpl_ticket,
-	    memory_order_acquire) != me)
+#ifndef MP_LOCKDEBUG
+	while (mpl->mpl_ticket != me)
 		SPINWAIT();
+#else
+	int ticks = __mp_lock_spinout;
+
+	while (mpl->mpl_ticket != me && --ticks > 0)
+		SPINWAIT();
+
+	if (ticks == 0) {
+		db_printf("__mp_lock(%p): lock spun out\n", mpl);
+		Debugger();
+	}
+#endif
 }
 
 void
 __mp_lock(struct __mp_lock *mpl)
 {
-	struct __mp_lock_cpu *cpu = &mpl->mpl_cpus[cpu_number()];
 	intr_state_t its;
+	struct __mp_lock_cpu *cpu = &mpl->mpl_cpus[cpu_number()];
 
 	its = intr_disable();
 	if (cpu->mplc_depth++ == 0)
@@ -71,20 +78,19 @@ __mp_lock(struct __mp_lock *mpl)
 void
 __mp_unlock(struct __mp_lock *mpl)
 {
+	intr_state_t its;
 	struct __mp_lock_cpu *cpu = &mpl->mpl_cpus[cpu_number()];
-	uint32_t irq;
 
 #ifdef MP_LOCKDEBUG
-	if (mpl->mpl_cpu != curcpu()) {
+	if (!__mp_lock_held(mpl)) {
 		db_printf("__mp_unlock(%p): not held lock\n", mpl);
 		Debugger();
 	}
 #endif
 
-	irq = intr_disable();
+	its = intr_disable();
 	if (--cpu->mplc_depth == 0) {
-		atomic_fetch_add_explicit(&mpl->mpl_ticket, 1,
-		    memory_order_release);
+		mpl->mpl_ticket++;
 		SPINWAKE();
 	}
 	intr_restore(its);
@@ -99,7 +105,7 @@ __mp_release_all(struct __mp_lock *mpl)
 
 	its = intr_disable();
 	cpu->mplc_depth = 0;
-	atomic_fetch_add_explicit(&mpl->mpl_ticket, 1, memory_order_release);
+	mpl->mpl_ticket++;
 	SPINWAKE();
 	intr_restore(its);
 
@@ -113,7 +119,7 @@ __mp_release_all_but_one(struct __mp_lock *mpl)
 	int rv = cpu->mplc_depth - 1;
 
 #ifdef MP_LOCKDEBUG
-	if (mpl->mpl_cpu != curcpu()) {
+	if (!__mp_lock_held(mpl)) {
 		db_printf("__mp_release_all_but_one(%p): not held lock\n", mpl);
 		Debugger();
 	}
@@ -138,4 +144,3 @@ __mp_lock_held(struct __mp_lock *mpl)
 
 	return (cpu->mplc_ticket == mpl->mpl_ticket && cpu->mplc_depth > 0);
 }
-

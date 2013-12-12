@@ -40,6 +40,7 @@
 #include <sys/device.h>
 #include <sys/memrange.h>
 #include <sys/systm.h>
+#include <sys/mplock.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -50,7 +51,6 @@
 #include <machine/i82489reg.h>
 #include <machine/i82489var.h>
 #include <machine/fpu.h>
-#include <machine/mplock.h>
 
 #include <ddb/db_output.h>
 #include <machine/db_machdep.h>

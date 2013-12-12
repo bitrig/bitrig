@@ -27,22 +27,25 @@
 #ifndef _MPLOCK_H_
 #define _MPLOCK_H_
 
-#ifdef notyet
-/*
- * Enable the prototypes once the architectures stop playing around
- * with inlines.
- */
-void __mp_lock_init(struct __mp_lock *);
-void __mp_lock(struct __mp_lock *);
-void __mp_unlock(struct __mp_lock *);
-int __mp_release_all(struct __mp_lock *);
-int __mp_release_all_but_one(struct __mp_lock *);
-void __mp_acquire_count(struct __mp_lock *, int);
-int __mp_lock_held(struct __mp_lock *);
-#endif
+struct __mp_lock_cpu {
+	u_int			mplc_ticket;
+	u_int			mplc_depth;
+};
 
-#include <machine/mplock.h>
+struct __mp_lock {
+	struct __mp_lock_cpu	mpl_cpus[MAXCPUS];
+	u_int			mpl_ticket;
+	atomic_uint		mpl_users;
+};
 
-extern struct __mp_lock kernel_lock;
+void	__mp_lock_init(struct __mp_lock *);
+void	__mp_lock(struct __mp_lock *);
+void	__mp_unlock(struct __mp_lock *);
+int	__mp_release_all(struct __mp_lock *);
+int	__mp_release_all_but_one(struct __mp_lock *);
+void	__mp_acquire_count(struct __mp_lock *, int);
+int	__mp_lock_held(struct __mp_lock *);
+
+extern struct __mp_lock kernel_lock; /* XXX */
 
 #endif /* !_MPLOCK_H */
