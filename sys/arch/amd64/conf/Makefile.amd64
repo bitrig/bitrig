@@ -61,7 +61,7 @@ CWARNFLAGS+=	-Wno-pointer-sign
 CMACHFLAGS=	-mcmodel=kernel -mno-red-zone -mno-mmx -mno-sse -msoft-float \
 		-mno-aes -mno-avx
 CMACHFLAGS+=	-ffreestanding -fno-omit-frame-pointer \
-		-fno-asynchronous-unwind-tables -fno-strict-overflow
+		-fno-asynchronous-unwind-tables
 .if ${IDENT:M-DNO_PROPOLICE}
 CMACHFLAGS+=	-fno-stack-protector
 .endif
