@@ -1,4 +1,4 @@
-/*	$OpenBSD: ioctl.h,v 1.13 2011/07/04 22:53:53 tedu Exp $	*/
+/*	$OpenBSD: ioctl.h,v 1.14 2013/12/13 19:55:12 naddy Exp $	*/
 /*	$NetBSD: ioctl.h,v 1.20 1996/01/30 18:21:47 thorpej Exp $	*/
 
 /*-
@@ -70,14 +70,3 @@ int	ioctl(int, unsigned long, ...);
 __END_DECLS
 #endif /* !_KERNEL */
 #endif /* !_SYS_IOCTL_H_ */
-
-/*
- * Keep outside _SYS_IOCTL_H_
- * Compatibility with old terminal driver
- *
- * Source level -> #define USE_OLD_TTY
- * Kernel level -> options COMPAT_43 or ...
- */
-#if defined(USE_OLD_TTY) || defined(COMPAT_43)
-#include <sys/ioctl_compat.h>
-#endif
