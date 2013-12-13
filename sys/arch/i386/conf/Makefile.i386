@@ -52,10 +52,11 @@ CWARNFLAGS=	-Wall -Wstrict-prototypes -Wmissing-prototypes \
 		-Werror -Wpointer-arith -Wno-conditional-uninitialized
 # these are to shutup clang vs gcc, should be ultimately fixed
 CWARNFLAGS+=	-Wno-pointer-sign
-CMACHFLAGS=	-mcmodel=kernel -mno-red-zone -mno-sse -mno-sse2 -mno-sse3 \
-		-mno-3dnow -mno-mmx -msoft-float -mno-avx
+CMACHFLAGS=	-mcmodel=kernel -mno-mmx -mno-sse -msoft-float \
+		-mno-aes -mno-avx
 CMACHFLAGS+=	-ffreestanding -fno-omit-frame-pointer \
-		-fno-asynchronous-unwind-tables ${NOPIE_FLAGS}
+		-fno-asynchronous-unwind-tables -fno-strict-overflow \
+		${NOPIE_FLAGS}
 .if ${IDENT:M-DNO_PROPOLICE}
 CMACHFLAGS+=	-fno-stack-protector
 .endif
