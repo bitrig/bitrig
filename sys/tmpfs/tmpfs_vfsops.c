@@ -236,7 +236,8 @@ tmpfs_unmount(struct mount *mp, int mntflags, struct proc *p)
 		}
 		while ((de = TAILQ_FIRST(&node->tn_spec.tn_dir.tn_dir)) != NULL) {
 			cnode = de->td_node;
-			cnode->tn_vnode = NULL;
+			if (cnode)
+				cnode->tn_vnode = NULL;
 			tmpfs_dir_detach(node, de);
 			tmpfs_free_dirent(tmp, de);
 		}
