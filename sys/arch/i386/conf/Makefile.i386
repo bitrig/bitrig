@@ -68,9 +68,13 @@ COPTS?=		-O3
 .endif
 
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
-AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CMACHFLAGS} -no-integrated-as
+AFLAGS=		-D_LOCORE -x assembler-with-cpp ${AFLAGS_$*} ${CMACHFLAGS}
 LINKFLAGS=	-Ttext 0xD0200120 -e start -N --warn-common -z noexecstack \
 		-nopie
+
+AFLAGS_acpi_wakecode	= -no-integrated-as
+AFLAGS_mptramp		= -no-integrated-as
+
 .endif
 
 .if ${MACHINE} == "amd64"
