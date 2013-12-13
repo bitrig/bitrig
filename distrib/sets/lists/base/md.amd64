@@ -1850,10 +1850,8 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/pthread_np.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/pwd.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ranlib.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/re_comp.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/readpassphrase.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/regex.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/regexp.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/resolv.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/rmd160.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/rpc
@@ -1907,7 +1905,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/search.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/semaphore.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/setjmp.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/sgtty.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sha1.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sha2.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/signal.ph
@@ -2042,7 +2039,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/task.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/termios.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/time.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/sys/timeb.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/timeout.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/times.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/timetc.ph

@@ -1875,10 +1875,8 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/pthread_np.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/pwd.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/ranlib.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/re_comp.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/readpassphrase.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/regex.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/regexp.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/resolv.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/rmd160.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/rpc
@@ -1932,7 +1930,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/search.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/semaphore.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/setjmp.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/sgtty.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sha1.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sha2.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/signal.ph
@@ -2067,7 +2064,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/task.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/termios.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/time.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/sys/timeb.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/timeout.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/times.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/timetc.ph
