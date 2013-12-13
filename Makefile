@@ -84,8 +84,10 @@ build:
 	${SUDO} ${MAKE} cleandir
 	cd ${.CURDIR}/lib/csu && ${MAKE} depend && ${MAKE} && \
 	    NOMAN=1 exec ${SUDO} ${MAKE} install
-	cd ${.CURDIR}/libexec/ld.so && ${MAKE} depend && ${MAKE} && \
-	    NOMAN=1 exec ${SUDO} ${MAKE} install
+	cd ${.CURDIR}/libexec/ld.so && \
+	    SKIPDIR="ldd ldconfig" ${MAKE} depend && \
+	    SKIPDIR="ldd ldconfig" ${MAKE} && \
+	    ${SUDO} SKIPDIR="ldd ldconfig" NOMAN=1 ${MAKE} install
 	cd ${.CURDIR}/lib/libc && ${MAKE} depend && ${MAKE} && \
 	    NOMAN=1 exec ${SUDO} ${MAKE} install
 	cd ${.CURDIR}/lib && ${MAKE} depend && ${MAKE} && \
