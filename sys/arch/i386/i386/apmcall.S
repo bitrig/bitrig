@@ -105,5 +105,3 @@ ENTRY(apmcall)
 	popl	%ebx
 	popl	%ebp
 	ret
-
-	.end
