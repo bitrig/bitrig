@@ -32,7 +32,9 @@
 
 #include <sys/cdefs.h>
 #include <sys/_types.h>
+#ifndef _KERNEL
 #include <stdbool.h>
+#endif
 
 #if __has_extension(c_atomic) || __has_extension(cxx_atomic)
 #define	__CLANG_ATOMICS
