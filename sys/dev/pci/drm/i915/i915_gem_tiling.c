@@ -485,7 +485,7 @@ i915_gem_swizzle_page(struct vm_page *pg)
 #if defined (__HAVE_PMAP_DIRECT)
 	va = pmap_map_direct(pg);
 #else
-	va = (vaddr_t)km_alloc(PAGE_SIZE, &kv_wait, &kp_none, &kd_waitok);
+	va = (vaddr_t)km_alloc(PAGE_SIZE, &kv_any, &kp_none, &kd_waitok);
 	if (va == 0) {
 		printf("%s: page swizzle failed: out of space in map",
 		    __func__);
@@ -507,7 +507,7 @@ i915_gem_swizzle_page(struct vm_page *pg)
 #else
 	pmap_kremove(va, PAGE_SIZE);
 	pmap_update(pmap_kernel());
-	km_free((void *)va, PAGE_SIZE, &kv_wait, &kp_none);
+	km_free((void *)va, PAGE_SIZE, &kv_any, &kp_none);
 #endif
 }
 
