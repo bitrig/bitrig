@@ -144,6 +144,14 @@ ${CROSSOBJ}:	${CROSSDIRS}
 	    MACHINE_ARCH=${TARGET_ARCH} MACHINE_CPU=${TARGET_CPU} \
 	    BSDSRCDIR=${.CURDIR} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
 	    ${MAKE} obj)
+	## until libcompiler_rt is standard, run an explict make objs there
+	@(cd ${.CURDIR}/lib/libcompiler_rt && \
+	    BSDOBJDIR=${CROSSDIR}/usr/obj \
+	    COMPILER_VERSION=${COMPILER_VERSION} \
+	    MACHINE=${TARGET} \
+	    MACHINE_ARCH=${TARGET_ARCH} MACHINE_CPU=${TARGET_CPU} \
+	    BSDSRCDIR=${.CURDIR} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
+	    ${MAKE} obj)
 	@touch ${CROSSOBJ}
 
 ${CROSSINCLUDES}:	${CROSSOBJ}
