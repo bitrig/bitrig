@@ -1,4 +1,4 @@
-#	$OpenBSD: install.sub,v 1.719 2013/12/11 23:28:01 halex Exp $
+#	$OpenBSD: install.sub,v 1.720 2013/12/16 08:15:21 halex Exp $
 #	$NetBSD: install.sub,v 1.5.2.8 1996/09/02 23:25:02 pk Exp $
 #
 # Copyright (c) 1997-2009 Todd Miller, Theo de Raadt, Ken Westerback
@@ -2141,20 +2141,16 @@ elif [[ -z $RESPONSEFILE ]]; then
 	RESPONSEFILE=/$action.conf /$action auto 2>&1 </dev/null |
 		sed 'w/ai.log'
 	if [[ -f /ai.done ]]; then
-		_sf=/mnt/var/mail/root
-		(_root="root@$(hostname)"
-		cat <<__EOT
-From $_root $(date -u '+%a %b %d %T %Y')
-Date: $(date '+%a, %d %b %Y %T %z (%Z)')
-From: root <$_root>
-To: $_root
-Subject: $action log
-
+		# Generate unique filename and let rc.firsttime feed it to
+		# whatever mail system we have at hand by then.
+		while _lf=/mnt/var/tmp/ai.log.$RANDOM && test -e $_lf; do done
+		sed 's/^.*//' /ai.log >> $_lf
+		chmod 600 $_lf
+		_lf=${_lf#/mnt}
+		cat <<__EOT >>/mnt/etc/rc.firsttime
+( /usr/bin/mail -s '$(hostname) $action log' root < $_lf &&
+	rm $_lf ) >/dev/null 2>&1 &
 __EOT
-		sed 's/^.*//;s/^\(>*From \)/>\1/' /ai.log
-		echo) >>$_sf
-		chmod 600 $_sf
-		echo "done."
 		exec reboot
 	else
 		echo "failed; check /ai.log"
