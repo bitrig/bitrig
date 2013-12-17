@@ -641,10 +641,6 @@ wapbl_discard(struct wapbl *wl)
 			 * removed from the transaction in brelse
 			 */
 			mtx_leave(&wl->wl_mtx);
-			/* XXX pedro: remove me when the time comes */
-			KASSERT((bp->b_flags & B_NOCACHE) ||
-			    (bp->b_flags & B_ERROR) ||
-			    (bp->b_flags & B_INVAL));
 			brelse(bp);
 			mtx_enter(&wl->wl_mtx);
 		}
