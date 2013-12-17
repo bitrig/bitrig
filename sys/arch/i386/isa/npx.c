@@ -172,7 +172,7 @@ void   npxexit(void);
  * latch stuff in probintr() can be moved to npxprobe().
  */
 void probeintr(void);
-asm (".text\n\t"
+__asm(".text\n\t"
 "probeintr:\n\t"
 	"ss\n\t"
 	"incl	npx_intrs_while_probing\n\t"
@@ -186,7 +186,7 @@ asm (".text\n\t"
 	"iret\n\t");
 
 void probetrap(void);
-asm (".text\n\t"
+__asm(".text\n\t"
 "probetrap:\n\t"
 	"ss\n\t"
 	"incl	npx_traps_while_probing\n\t"
@@ -333,7 +333,7 @@ npxprobe(struct device *parent, void *match, void *aux)
 }
 
 int npx586bug1(int, int);
-asm (".text\n\t"
+__asm(".text\n\t"
 "npx586bug1:\n\t"
 	"fildl	4(%esp)		# x\n\t"
 	"fildl	8(%esp)		# y\n\t"

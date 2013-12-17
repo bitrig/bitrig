@@ -106,7 +106,7 @@ i386_ipi_halt(struct cpu_info *ci)
 	wbinvd();
 
 	for(;;) {
-		asm volatile("hlt");
+		__asm __volatile("hlt");
 	}
 }
 

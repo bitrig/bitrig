@@ -83,7 +83,7 @@ __mp_lock_spin(struct __mp_lock *mpl, u_int me)
 static inline u_int
 fetch_and_add(u_int *var, u_int value)
 {
-	asm volatile("lock; xaddl %%eax, %2;"
+	__asm __volatile("lock; xaddl %%eax, %2;"
 	    : "=a" (value)
 	    : "a" (value), "m" (*var)
 	    : "memory");
