@@ -449,7 +449,7 @@ dounmount(struct mount *mp, int flags, struct proc *p, struct vnode *olddp)
  	    (flags & MNT_FORCE))
  		error = VFS_UNMOUNT(mp, flags, p);
 
- 	if (error && error != EIO && !(flags & MNT_DOOMED)) {
+ 	if (error && !(flags & MNT_DOOMED)) {
  		if ((mp->mnt_flag & MNT_RDONLY) == 0 && hadsyncer)
  			(void) vfs_allocate_syncvnode(mp);
 		vfs_unbusy(mp);
