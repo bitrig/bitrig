@@ -59,7 +59,7 @@ CWARNFLAGS=	-Wall -Wstrict-prototypes -Wmissing-prototypes \
 # these are to shutup clang vs gcc, should be ultimately fixed
 CWARNFLAGS+=	-Wno-pointer-sign
 CMACHFLAGS=	-mcmodel=kernel -mno-red-zone -mno-mmx -mno-sse -msoft-float \
-		-mno-aes -mno-avx
+		-mno-aes -mno-avx -mno-omit-leaf-frame-pointer
 CMACHFLAGS+=	-ffreestanding -fno-omit-frame-pointer \
 		-fno-asynchronous-unwind-tables
 .if ${IDENT:M-DNO_PROPOLICE}
