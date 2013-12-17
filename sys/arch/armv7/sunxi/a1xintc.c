@@ -27,7 +27,6 @@
 
 #include <armv7/armv7/armv7var.h>
 #include <armv7/sunxi/sunxireg.h>
-#include <armv7/sunxi/sxipiovar.h>
 #include <armv7/sunxi/a1xintc.h>
 
 #ifdef DEBUG_INTC
@@ -317,10 +316,6 @@ intc_irq_handler(void *frame)
 	irq = bus_space_read_4(intc_iot, intc_ioh, INTC_VECTOR_REG) >> 2;
 	if (irq == 0)
 		return;
-	if (irq == 1)
-		sxipio_togglepin(SXIPIO_LED_BLUE);
-
-	sxipio_setpin(SXIPIO_LED_GREEN);
 
 	prio = intc_handler[irq].iq_irq;
 	s = intc_splraise(prio);
@@ -355,8 +350,6 @@ intc_irq_handler(void *frame)
 			ih->ih_count.ec_count++;
 	}
 	intc_splx(s);
-
-	sxipio_clrpin(SXIPIO_LED_GREEN);
 }
 
 void *
