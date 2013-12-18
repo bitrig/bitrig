@@ -32,7 +32,7 @@
 
 #include <sys/cdefs.h>
 #include <sys/_types.h>
-#ifndef _KERNEL
+#if defined(__cplusplus)
 #include <stdbool.h>
 #endif
 
