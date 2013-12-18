@@ -185,8 +185,11 @@ thinkpad_sensor_refresh(void *arg)
 	/* Refresh sensor readings */
 	for (i=0; i<THINKPAD_NTEMPSENSORS; i++) {
 		snprintf(sname, sizeof(sname), "TMP%d", i);
-		aml_evalinteger(sc->sc_acpi, sc->sc_ec->sc_devnode,
-		    sname, 0, 0, &tmp);
+		if (aml_evalinteger(sc->sc_acpi, sc->sc_ec->sc_devnode,
+		    sname, 0, 0, &tmp)) {
+			sc->sc_sens[i].flags = SENSOR_FINVALID;
+			continue;
+		}
 		sc->sc_sens[i].value = (tmp * 1000000) + 273150000;
 		sc->sc_sens[i].flags = 0;
 		if (tmp > 127 || tmp < -127)
