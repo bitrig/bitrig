@@ -1,4 +1,4 @@
-/*	$OpenBSD: var.c,v 1.36 2013/12/17 16:37:06 deraadt Exp $	*/
+/*	$OpenBSD: var.c,v 1.37 2013/12/18 13:53:12 millert Exp $	*/
 
 #include "sh.h"
 #include <time.h>
