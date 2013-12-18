@@ -188,8 +188,9 @@ thinkpad_sensor_refresh(void *arg)
 		aml_evalinteger(sc->sc_acpi, sc->sc_ec->sc_devnode,
 		    sname, 0, 0, &tmp);
 		sc->sc_sens[i].value = (tmp * 1000000) + 273150000;
+		sc->sc_sens[i].flags = 0;
 		if (tmp > 127 || tmp < -127)
-			sc->sc_sens[i].flags = SENSOR_FINVALID;
+			sc->sc_sens[i].flags |= SENSOR_FINVALID;
 	}
 
 	/* Read fan RPM */
