@@ -1,4 +1,4 @@
-/*	$OpenBSD: cpu.c,v 1.57 2013/10/05 16:58:30 guenther Exp $	*/
+/*	$OpenBSD: cpu.c,v 1.58 2013/12/19 21:30:02 deraadt Exp $	*/
 /* $NetBSD: cpu.c,v 1.1 2003/04/26 18:39:26 fvdl Exp $ */
 
 /*-
@@ -475,6 +475,9 @@ cpu_attach(struct device *parent, struct device *self, void *aux)
 		ci->ci_flags |= CPUF_PRESENT | CPUF_SP | CPUF_PRIMARY;
 		cpu_intr_init(ci);
 		identifycpu(ci);
+#ifdef MTRR
+		mem_range_attach();
+#endif /* MTRR */
 		cpu_init(ci);
 		break;
 
@@ -483,6 +486,9 @@ cpu_attach(struct device *parent, struct device *self, void *aux)
 		ci->ci_flags |= CPUF_PRESENT | CPUF_BSP | CPUF_PRIMARY;
 		cpu_intr_init(ci);
 		identifycpu(ci);
+#ifdef MTRR
+		mem_range_attach();
+#endif /* MTRR */
 		cpu_init(ci);
 
 #if NLAPIC > 0
@@ -726,11 +732,11 @@ cpu_hatch(void *v)
 
 	lldt(0);
 
+	cpu_init(ci);
+
 	/* Re-initialise memory range handling on AP */
 	if (mem_range_softc.mr_op != NULL)
 		mem_range_softc.mr_op->initAP(&mem_range_softc);
-
-	cpu_init(ci);
 
 	s = splhigh();
 	lcr8(0);
