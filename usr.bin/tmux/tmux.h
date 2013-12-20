@@ -2188,6 +2188,7 @@ char		*utf8_trimcstr(const char *, u_int);
 
 /* procname.c */
 char   *get_proc_name(int, char *);
+char   *get_proc_cwd(int);
 
 /* log.c */
 void		 log_open(const char *);
