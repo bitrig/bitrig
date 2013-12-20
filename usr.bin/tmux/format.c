@@ -530,7 +530,7 @@ format_window_pane(struct format_tree *ft, struct window_pane *wp)
 	struct grid_line	*gl;
 	unsigned long long	 size;
 	u_int			 i, idx;
-	char			*cmd;
+	char			*cmd, *cwd;
 
 	size = 0;
 	for (i = 0; i < gd->hsize; i++) {
@@ -562,6 +562,8 @@ format_window_pane(struct format_tree *ft, struct window_pane *wp)
 	format_add(ft, "pane_pid", "%ld", (long) wp->pid);
 	if (wp->cmd != NULL)
 		format_add(ft, "pane_start_command", "%s", wp->cmd);
+	if ((cwd = get_proc_cwd(wp->fd)) != NULL)
+		format_add(ft, "pane_current_path", "%s", cwd);
 	if ((cmd = format_get_command(wp)) != NULL) {
 		format_add(ft, "pane_current_command", "%s", cmd);
 		free(cmd);

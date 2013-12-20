@@ -131,3 +131,17 @@ error:
 	free(buf);
 	return (NULL);
 }
+
+char *
+get_proc_cwd(int fd)
+{
+	int		name[] = { CTL_KERN, KERN_PROC_CWD, 0 };
+	static char	path[MAXPATHLEN];
+	size_t		pathlen = sizeof path;
+
+	if ((name[2] = tcgetpgrp(fd)) == -1)
+		return (NULL);
+	if (sysctl(name, 3, path, &pathlen, NULL, 0) != 0)
+		return (NULL);
+	return (path);
+}
