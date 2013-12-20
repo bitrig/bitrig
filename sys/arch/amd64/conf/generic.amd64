@@ -592,4 +592,5 @@ pseudo-device	crypto		1
 virtio*		at pci?		# Virtio PCI device
 vioblk*		at virtio?	# Virtio block device
 vio*		at virtio?	# Virtio network device
+vioscsi*	at virtio?	# Virtio SCSI device
 viomb*		at virtio?	# Virtio memory ballooning device

@@ -340,3 +340,4 @@ pseudo-device	bio	1	# ioctl multiplexing device
 virtio*	at pci?			# Virtio PCI device
 vioblk*	at virtio?		# Virtio block device
 vio*	at virtio?		# Virtio network device
+vioscsi*	at virtio?	# Virtio SCSI device
