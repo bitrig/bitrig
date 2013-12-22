@@ -73,7 +73,7 @@ struct board_dev c1_devs[] = {
 	{ "imxiomuxc",	0 },
 	{ "imxdog",	0 },
 	{ "imxocotp",	0 },
-	{ "imxuart",	1 },
+	{ "imxuart",	0 },
 	{ "imxgpio",	0 },
 	{ "imxgpio",	1 },
 	{ "imxgpio",	2 },
