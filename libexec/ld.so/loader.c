@@ -1,4 +1,4 @@
-/*	$OpenBSD: loader.c,v 1.136 2013/12/23 14:13:03 kettenis Exp $ */
+/*	$OpenBSD: loader.c,v 1.140 2013/12/23 22:13:03 kettenis Exp $ */
 
 /*
  * Copyright (c) 1998 Per Fogelstrom, Opsycon AB
