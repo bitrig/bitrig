@@ -1,4 +1,4 @@
-/*	$OpenBSD: loader.c,v 1.134 2013/12/23 10:39:10 kettenis Exp $ */
+/*	$OpenBSD: loader.c,v 1.136 2013/12/23 14:13:03 kettenis Exp $ */
 
 /*
  * Copyright (c) 1998 Per Fogelstrom, Opsycon AB
@@ -663,18 +663,14 @@ _dl_boot(const char **argv, char **envp, const long dyn_loff, long *dl_data)
 		Elf_Addr ooff;
 
 		sym = NULL;
-		ooff = _dl_find_symbol("atexit", &sym,
+		ooff = _dl_find_symbol("__cxa_atexit", &sym,
 		    SYM_SEARCH_ALL|SYM_NOWARNNOTFOUND|SYM_PLT,
 		    NULL, dyn_obj, &sobj);
 		if (sym == NULL)
-			_dl_printf("cannot find atexit, destructors will not be run!\n");
+			_dl_printf("cannot find __cxa_atexit, destructors will not be run!\n");
 		else
-#ifdef MD_ATEXIT
-			MD_ATEXIT(sobj, sym, (Elf_Addr)&_dl_dtors);
-#else
-			(*(void (*)(Elf_Addr))(sym->st_value + ooff))
-			    ((Elf_Addr)_dl_dtors);
-#endif
+			(*(void (*)(void (*)(void), void *, void *))
+			    (sym->st_value + ooff))(_dl_dtors, NULL, NULL);
 	}
 #endif
 
