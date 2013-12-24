@@ -432,14 +432,22 @@ void	bus_space_copy_4(bus_space_tag_t, bus_space_handle_t, bus_size_t,
  * Note: the i386 does not currently require barriers, but we must
  * provide the flags to MI code.
  */
-#define	bus_space_barrier(t, h, o, l, f)	\
-	((void)((void)(t), (void)(h), (void)(o), (void)(l), (void)(f)))
 #define	BUS_SPACE_BARRIER_READ	0x01		/* force read barrier */
 #define	BUS_SPACE_BARRIER_WRITE	0x02		/* force write barrier */
 
 #define	BUS_SPACE_MAP_CACHEABLE		0x0001
 #define	BUS_SPACE_MAP_LINEAR		0x0002
 #define	BUS_SPACE_MAP_PREFETCHABLE	0x0008
+
+static __inline void
+bus_space_barrier(bus_space_tag_t space, bus_space_handle_t handle,
+    bus_size_t offset, bus_size_t length, int flags)
+{
+	if (flags & BUS_SPACE_BARRIER_READ)
+		__asm __volatile("lock; addl $0,0(%%esp)" : : : "memory");
+	else
+		__asm __volatile("" : : : "memory");
+}
 
 /*
  *	void *bus_space_vaddr(bus_space_tag_t, bus_space_handle_t);
