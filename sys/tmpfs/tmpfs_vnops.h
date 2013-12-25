@@ -53,12 +53,9 @@ int	tmpfs_getattr		(void *);
 int	tmpfs_setattr		(void *);
 int	tmpfs_read		(void *);
 int	tmpfs_write		(void *);
-#define	tmpfs_fcntl		genfs_fcntl
 int	tmpfs_ioctl		(void *);
 int	tmpfs_poll		(void *);
-#define	tmpfs_mmap		genfs_mmap
 int	tmpfs_fsync		(void *);
-#define	tmpfs_seek		genfs_seek
 int	tmpfs_remove		(void *);
 int	tmpfs_link		(void *);
 int	tmpfs_rename		(void *);
