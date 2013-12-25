@@ -224,3 +224,7 @@
 #define AHCI_PREG_FBS_SDE	(1<<2)	/* Single Device Error */
 #define AHCI_PREG_FBS_DEC	(1<<1)	/* Device Error Clear */
 #define AHCI_PREG_FBS_EN	(1<<0)	/* Enable */
+
+#define AHCI_PREG_SUNXI_DMA	0x70 /* Vendor Spec Port DMA for armv7/sunxi */
+#define  AHCI_PREG_SUNXI_DMA_MASK	(0xff<<8)
+#define  AHCI_PREG_SUNXI_DMA_INIT	(0x44<<8)

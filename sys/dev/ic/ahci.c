@@ -832,6 +832,14 @@ ahci_port_start(struct ahci_port *ap, int fre_only)
 {
 	u_int32_t			r;
 
+	if (ap->ap_sc->sc_flags & AHCI_F_SUNXI_QUIRK) {
+		/* Setup DMA */
+		r = ahci_pread(ap, AHCI_PREG_SUNXI_DMA);
+		r &= ~AHCI_PREG_SUNXI_DMA_MASK;
+		r |= AHCI_PREG_SUNXI_DMA_INIT; /* XXX if fre_only? */
+		ahci_pwrite(ap, AHCI_PREG_SUNXI_DMA, r);
+	}
+
 	/* XXX FBS: possibly turn FBS on here */
 
 	/* Turn on FRE (and ST) */
