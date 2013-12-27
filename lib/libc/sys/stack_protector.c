@@ -1,4 +1,4 @@
-/*	$OpenBSD: stack_protector.c,v 1.13 2013/12/27 03:22:27 deraadt Exp $	*/
+/*	$OpenBSD: stack_protector.c,v 1.14 2013/12/27 18:32:19 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2002 Hiroaki Etoh, Federico G. Schwindt, and Miodrag Vallat.
@@ -28,13 +28,10 @@
  */
 
 #include <sys/param.h>
-#include <sys/sysctl.h>
 #include <signal.h>
 #include <string.h>
 #include <syslog.h>
 #include <unistd.h>
-
-extern int __sysctl(int *, u_int, void *, size_t *, void *, size_t);
 
 long __guard[8] __attribute__((section(".openbsd.randomdata")));
 /* gcc requires extern here and clang falls over with it */
@@ -43,33 +40,8 @@ extern
 #endif
 long __stack_chk_guard[8] __attribute__((alias("__guard")));
 
-static void __guard_setup(void) __attribute__ ((constructor));
 void __stack_smash_handler(char func[], int damaged __attribute__((unused)));
 void __attribute__((noreturn)) __stack_chk_fail(void);
-
-static void
-__guard_setup(void)
-{
-	int mib[2];
-	size_t i, len;
-
-	for (i = 0; i < sizeof(__guard) / sizeof(__guard[0]); i++)
-		if (__guard[i] != 0)
-			return;
-
-	mib[0] = CTL_KERN;
-	mib[1] = KERN_ARND;
-
-	len = sizeof(__guard);
-	if (__sysctl(mib, 2, __guard, &len, NULL, 0) == -1 ||
-	    len != sizeof(__guard)) {
-		/* If sysctl was unsuccessful, use the "terminator canary". */
-		((unsigned char *)__guard)[0] = 0;
-		((unsigned char *)__guard)[1] = 0;
-		((unsigned char *)__guard)[2] = '\n';
-		((unsigned char *)__guard)[3] = 255;
-	}
-}
 
 /*ARGSUSED*/
 void
