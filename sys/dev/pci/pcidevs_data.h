@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.1699 2013/12/20 22:15:50 matthew Exp 
+ *	OpenBSD: pcidevs,v 1.1701 2013/12/29 00:55:06 miod Exp 
  */
 
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $	*/
@@ -5600,6 +5600,10 @@ static const struct pci_known_product pci_known_products[] = {
 	    "AR9462",
 	},
 	{
+	    PCI_VENDOR_ATHEROS, PCI_PRODUCT_ATHEROS_AR9565,
+	    "AR9565",
+	},
+	{
 	    PCI_VENDOR_ATHEROS, PCI_PRODUCT_ATHEROS_AR5210_AP,
 	    "AR5210",
 	},
@@ -10426,6 +10430,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_HM70_LPC,
 	    "HM70 LPC",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_NM70_LPC,
+	    "NM70 LPC",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_I354_BP_1GBPS,
