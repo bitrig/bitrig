@@ -48,6 +48,7 @@ int	x_getc(void);
 void	x_flush(void);
 void	x_putc(int);
 void	x_puts(const char *);
+int	x_avail(void);
 bool	x_mode(bool);
 int	promptlen(const char *, const char **);
 int	x_do_comment(char *, int, int *);

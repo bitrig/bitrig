@@ -17,6 +17,7 @@
 #include <ctype.h>
 #include <libgen.h>
 #include <sys/stat.h>
+#include <poll.h>
 
 
 static void x_sigwinch(int);
@@ -145,6 +146,16 @@ x_puts(const char *s)
 {
 	while (*s != 0)
 		shf_putc(*s++, shl_out);
+}
+
+int
+x_avail(void)
+{
+	struct pollfd pfd[1];
+
+	pfd[0].fd = STDIN_FILENO;
+	pfd[0].events = POLLIN;
+	return poll(pfd, 1, 0) == 1;
 }
 
 bool

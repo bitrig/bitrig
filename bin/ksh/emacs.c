@@ -882,9 +882,12 @@ x_search_hist(int c)
 		if ((c = x_e_getc()) < 0)
 			return KSTD;
 		f = kb_find_hist_func(c);
-		if (c == CTRL('['))
+		if (c == CTRL('[')) {
+			/* might be part of an escape sequence */
+			if (x_avail())
+				x_e_ungetc(c);
 			break;
-		else if (f == x_search_hist)
+		} else if (f == x_search_hist)
 			offset = x_search(pat, 0, offset);
 		else if (f == x_del_back) {
 			if (p == pat) {
