@@ -348,6 +348,8 @@ void	user_config(void);
 void	_kernel_lock_init(void);
 void	_kernel_lock(void);
 void	_kernel_unlock(void);
+int	_kernel_unlock_all(void);
+void	_kernel_relock_all(int);
 
 #define	KERNEL_LOCK_INIT()		_kernel_lock_init()
 #ifdef DIAGNOSTIC
@@ -362,6 +364,9 @@ void	_kernel_unlock(void);
 #define	KERNEL_LOCK()			_kernel_lock()
 #endif
 #define	KERNEL_UNLOCK()			_kernel_unlock()
+#define	KERNEL_UNLOCK_ALL()		_kernel_unlock_all()
+/* NOTE: RELOCK_ALL will leave/reenter critical sections  */
+#define	KERNEL_RELOCK_ALL(x)		_kernel_relock_all(x)
 #define	KERNEL_ASSERT_LOCKED()		KASSERT(__mp_lock_held(&kernel_lock))
 #define	KERNEL_ASSERT_UNLOCKED()	KASSERT(__mp_lock_held(&kernel_lock) == 0)
 
@@ -370,6 +375,8 @@ void	_kernel_unlock(void);
 #define	KERNEL_LOCK_INIT()		/* nothing */
 #define	KERNEL_LOCK()			/* nothing */
 #define	KERNEL_UNLOCK()			/* nothing */
+#define	KERNEL_UNLOCK_ALL()		/* nothing */
+#define	KERNEL_RELOCK_ALL(x)		/* nothing */
 #define	KERNEL_ASSERT_LOCKED()		/* nothing */
 #define	KERNEL_ASSERT_UNLOCKED()	/* nothing */
 

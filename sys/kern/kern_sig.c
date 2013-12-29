@@ -1239,6 +1239,7 @@ proc_stop(struct proc *p, int sw)
 {
 	struct process *pr = p->p_p;
 	extern void *softclock_si;
+	int klocks;
 
 #ifdef MULTIPROCESSOR
 	SCHED_ASSERT_LOCKED();
@@ -1257,8 +1258,14 @@ proc_stop(struct proc *p, int sw)
 		/* XXX causes recursion on SCHED_LOCK */
 		ithread_softsched(softclock_si);
 	}
-	if (sw)
+	if (sw) {
+		klocks = KERNEL_UNLOCK_ALL();
 		mi_switch();
+		/* fix lock ordering, ok to lose atomicity, mi_switching() !! */
+		SCHED_UNLOCK();
+		KERNEL_RELOCK_ALL(klocks);
+		SCHED_LOCK();
+	}
 }
 
 /*
@@ -1832,6 +1839,7 @@ int
 single_thread_check(struct proc *p, int deep)
 {
 	struct process *pr = p->p_p;
+	int klocks;
 
 	if (pr->ps_single != NULL && pr->ps_single != p) {
 		do {
@@ -1850,9 +1858,11 @@ single_thread_check(struct proc *p, int deep)
 
 			/* not exiting and don't need to unwind, so suspend */
 			SCHED_LOCK();
+			klocks = KERNEL_UNLOCK_ALL();
 			p->p_stat = SSTOP;
 			mi_switch();
 			SCHED_UNLOCK();
+			KERNEL_RELOCK_ALL(klocks);
 		} while (pr->ps_single != NULL);
 	}
 

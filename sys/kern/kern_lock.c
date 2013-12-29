@@ -133,4 +133,24 @@ _kernel_unlock(void)
 {
 	__mp_unlock(&kernel_lock);
 }
+
+int
+_kernel_unlock_all(void)
+{
+	if (!__mp_lock_held(&kernel_lock))
+		return (0);
+	return (__mp_release_all(&kernel_lock));
+}
+
+void
+_kernel_relock_all(int count)
+{
+	int crit_count;
+
+	/* XXX remove once we fix fpu. */
+	crit_count = crit_leave_all();
+	__mp_acquire_count(&kernel_lock, count);
+	crit_reenter(crit_count);
+}
+
 #endif /* MULTIPROCESSOR */

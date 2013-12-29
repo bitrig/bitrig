@@ -209,6 +209,7 @@ sleep_setup(struct sleep_state *sls, const volatile void *ident, int prio,
 	sls->sls_sig = 1;
 
 	SCHED_LOCK();
+	sls->sls_klocks = KERNEL_UNLOCK_ALL();
 
 	p->p_wchan = ident;
 	p->p_wmesg = wmesg;
@@ -225,11 +226,9 @@ sleep_finish(struct sleep_state *sls, int do_sleep)
 	if (sls->sls_do_sleep && do_sleep) {
 		p->p_stat = SSLEEP;
 		p->p_ru.ru_nvcsw++;
-		SCHED_ASSERT_LOCKED();
 		mi_switch();
-	} else if (!do_sleep) {
+	} else if (!do_sleep)
 		unsleep(p);
-	}
 
 #ifdef DIAGNOSTIC
 	if (p->p_stat != SONPROC)
@@ -238,6 +237,7 @@ sleep_finish(struct sleep_state *sls, int do_sleep)
 
 	p->p_cpu->ci_schedstate.spc_curpriority = p->p_usrpri;
 	SCHED_UNLOCK();
+	KERNEL_RELOCK_ALL(sls->sls_klocks);
 
 	/*
 	 * Even though this belongs to the signal handling part of sleep,

@@ -543,6 +543,7 @@ struct sleep_state {
 	int sls_catch;
 	int sls_do_sleep;
 	int sls_sig;
+	int sls_klocks;
 };
 
 #if defined(MULTIPROCESSOR)
