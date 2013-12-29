@@ -269,6 +269,7 @@ ithread_sleep(struct intrsource *is)
 
 	KASSERT(curproc == p);
 	KASSERT(p->p_stat == SONPROC);
+	KERNEL_ASSERT_UNLOCKED();
 
 	SCHED_LOCK();
 	if (!is->is_scheduled) {
