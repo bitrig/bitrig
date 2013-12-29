@@ -558,7 +558,9 @@ void
 sched_peg_curproc(struct cpu_info *ci)
 {
 	struct proc *p = curproc;
+	int klocks;
 
+	klocks = KERNEL_UNLOCK_ALL();
 	SCHED_LOCK();
 	p->p_priority = p->p_usrpri;
 	p->p_stat = SRUN;
@@ -568,6 +570,7 @@ sched_peg_curproc(struct cpu_info *ci)
 	p->p_ru.ru_nvcsw++;
 	mi_switch();
 	SCHED_UNLOCK();
+	KERNEL_RELOCK_ALL(klocks);
 }
 
 #ifdef MULTIPROCESSOR

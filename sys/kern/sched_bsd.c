@@ -296,14 +296,17 @@ void
 yield(void)
 {
 	struct proc *p = curproc;
+	int klocks;
 
 	SCHED_LOCK();
+	klocks = KERNEL_UNLOCK_ALL();
 	p->p_priority = p->p_usrpri;
 	p->p_stat = SRUN;
 	setrunqueue(p);
 	p->p_ru.ru_nvcsw++;
 	mi_switch();
 	SCHED_UNLOCK();
+	KERNEL_RELOCK_ALL(klocks);
 }
 
 /*
@@ -316,6 +319,7 @@ void
 preempt(struct proc *newp)
 {
 	struct proc *p = curproc;
+	int klocks;
 
 	/*
 	 * XXX Switching to a specific process is not supported yet.
@@ -324,6 +328,7 @@ preempt(struct proc *newp)
 		panic("preempt: cpu_preempt not yet implemented");
 
 	SCHED_LOCK();
+	klocks = KERNEL_UNLOCK_ALL();
 	p->p_priority = p->p_usrpri;
 	p->p_stat = SRUN;
 	p->p_cpu = sched_choosecpu(p);
@@ -331,6 +336,7 @@ preempt(struct proc *newp)
 	p->p_ru.ru_nivcsw++;
 	mi_switch();
 	SCHED_UNLOCK();
+	KERNEL_RELOCK_ALL(klocks);
 }
 
 void
@@ -344,7 +350,6 @@ mi_switch(void)
 	rlim_t secs;
 	struct timespec ts;
 #ifdef MULTIPROCESSOR
-	int hold_count;
 	int sched_count;
 #endif
 	int crit_count;
@@ -352,6 +357,7 @@ mi_switch(void)
 	assertwaitok();
 	KASSERT(p->p_stat != SONPROC);
 
+	KERNEL_ASSERT_UNLOCKED();
 	SCHED_ASSERT_LOCKED();
 
 #ifdef MULTIPROCESSOR
@@ -359,10 +365,6 @@ mi_switch(void)
 	 * Release the kernel_lock, as we are about to yield the CPU.
 	 */
 	sched_count = __mp_release_all_but_one(&sched_lock);
-	if (__mp_lock_held(&kernel_lock))
-		hold_count = __mp_release_all(&kernel_lock);
-	else
-		hold_count = 0;
 #endif
 
 	/*
@@ -442,17 +444,13 @@ mi_switch(void)
 
 	nanouptime(&p->p_cpu->ci_schedstate.spc_runtime);
 
-#ifdef MULTIPROCESSOR
 	/*
-	 * Reacquire the kernel_lock now.  We do this after we've
-	 * released the scheduler lock to avoid deadlock, and before
-	 * we reacquire the interlock and the scheduler lock.
+	 * Give a chance for all the delayed processing to kick now that we're
+	 * context switching.
 	 */
-	if (hold_count) {
-		crit_count = crit_leave_all();
-		__mp_acquire_count(&kernel_lock, hold_count);
-		crit_reenter(crit_count);
-	}
+	crit_count = crit_leave_all();
+	crit_reenter(crit_count);
+#ifdef MULTIPROCESSOR
 	__mp_acquire_count(&sched_lock, sched_count + 1);
 #endif
 }
