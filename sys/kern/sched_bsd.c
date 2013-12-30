@@ -306,7 +306,6 @@ yield(void)
 	setrunqueue(p);
 	p->p_ru.ru_nvcsw++;
 	mi_switch();
-	SCHED_UNLOCK();
 	KERNEL_RELOCK_ALL(klocks);
 }
 
@@ -336,10 +335,12 @@ preempt(struct proc *newp)
 	setrunqueue(p);
 	p->p_ru.ru_nivcsw++;
 	mi_switch();
-	SCHED_UNLOCK();
 	KERNEL_RELOCK_ALL(klocks);
 }
 
+/*
+ * Must be called with sched_lock held, will return with sched_lock unlocked.
+ */
 void
 mi_switch(void)
 {
@@ -350,9 +351,6 @@ mi_switch(void)
 	struct rlimit *rlim;
 	rlim_t secs;
 	struct timespec ts;
-#ifdef MULTIPROCESSOR
-	int sched_count;
-#endif
 	int crit_count;
 
 	assertwaitok();
@@ -360,13 +358,8 @@ mi_switch(void)
 
 	KERNEL_ASSERT_UNLOCKED();
 	SCHED_ASSERT_LOCKED();
-
-#ifdef MULTIPROCESSOR
-	/*
-	 * Release the kernel_lock, as we are about to yield the CPU.
-	 */
-	sched_count = __mp_release_all_but_one(&sched_lock);
-#endif
+	/* No recursion on sched_lock while switching. */
+	KASSERT(__mp_lock_held(&sched_lock) == 1);
 
 	/*
 	 * Compute the amount of time during which the current
@@ -424,15 +417,7 @@ mi_switch(void)
 
 	SCHED_ASSERT_LOCKED();
 
-	/*
-	 * To preserve lock ordering, we need to release the sched lock
-	 * and grab it after we grab the big lock.
-	 * In the future, when the sched lock isn't recursive, we'll
-	 * just release it here.
-	 */
-#ifdef MULTIPROCESSOR
-	__mp_unlock(&sched_lock);
-#endif
+	SCHED_UNLOCK();
 
 	SCHED_ASSERT_UNLOCKED();
 
@@ -451,9 +436,6 @@ mi_switch(void)
 	 */
 	crit_count = crit_leave_all();
 	crit_reenter(crit_count);
-#ifdef MULTIPROCESSOR
-	__mp_acquire_count(&sched_lock, sched_count + 1);
-#endif
 }
 
 void
