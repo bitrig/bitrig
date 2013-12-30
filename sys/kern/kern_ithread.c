@@ -271,6 +271,9 @@ ithread_sleep(struct intrsource *is)
 	KASSERT(p->p_stat == SONPROC);
 	KERNEL_ASSERT_UNLOCKED();
 
+	/*
+	 * The check for is_scheduled and actually sleeping must be atomic.
+	 */
 	SCHED_LOCK();
 	if (!is->is_scheduled) {
 		p->p_wchan = p;
@@ -280,6 +283,6 @@ ithread_sleep(struct intrsource *is)
 		TAILQ_INSERT_TAIL(&slpque[LOOKUP(p)], p, p_runq);
 		p->p_stat = SSLEEP;
 		mi_switch();
-	}
-	SCHED_UNLOCK();
+	} else
+		SCHED_UNLOCK();
 }

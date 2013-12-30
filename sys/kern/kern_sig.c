@@ -1262,7 +1262,6 @@ proc_stop(struct proc *p, int sw)
 		klocks = KERNEL_UNLOCK_ALL();
 		mi_switch();
 		/* fix lock ordering, ok to lose atomicity, mi_switching() !! */
-		SCHED_UNLOCK();
 		KERNEL_RELOCK_ALL(klocks);
 		SCHED_LOCK();
 	}
@@ -1861,7 +1860,6 @@ single_thread_check(struct proc *p, int deep)
 			klocks = KERNEL_UNLOCK_ALL();
 			p->p_stat = SSTOP;
 			mi_switch();
-			SCHED_UNLOCK();
 			KERNEL_RELOCK_ALL(klocks);
 		} while (pr->ps_single != NULL);
 	}

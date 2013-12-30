@@ -227,8 +227,11 @@ sleep_finish(struct sleep_state *sls, int do_sleep)
 		p->p_stat = SSLEEP;
 		p->p_ru.ru_nvcsw++;
 		mi_switch();
-	} else if (!do_sleep)
+	} else if (!do_sleep) {
 		unsleep(p);
+		SCHED_UNLOCK();
+	} else
+		SCHED_UNLOCK();
 
 #ifdef DIAGNOSTIC
 	if (p->p_stat != SONPROC)
@@ -236,7 +239,6 @@ sleep_finish(struct sleep_state *sls, int do_sleep)
 #endif
 
 	p->p_cpu->ci_schedstate.spc_curpriority = p->p_usrpri;
-	SCHED_UNLOCK();
 	KERNEL_RELOCK_ALL(sls->sls_klocks);
 
 	/*
