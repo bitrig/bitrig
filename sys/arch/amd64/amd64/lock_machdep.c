@@ -152,6 +152,8 @@ __mp_lock_held(struct __mp_lock *mpl)
 {
 	struct __mp_lock_cpu *cpu = &mpl->mpl_cpus[cpu_number()];
 
-	return (cpu->mplc_ticket == mpl->mpl_ticket && cpu->mplc_depth > 0);
-}
+	if (cpu->mplc_ticket == mpl->mpl_ticket)
+		return (cpu->mplc_depth);
 
+	return (0);
+}
