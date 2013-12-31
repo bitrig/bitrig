@@ -17220,6 +17220,10 @@ static const struct pci_known_product pci_known_products[] = {
 	    "MCP61 ISA",
 	},
 	{
+	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_MCP61_MEM1,
+	    "MCP61 Memory",
+	},
+	{
 	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_MCP61_HDA_1,
 	    "MCP61 HD Audio",
 	},
@@ -17244,7 +17248,7 @@ static const struct pci_known_product pci_known_products[] = {
 	    "MCP61 PCIE",
 	},
 	{
-	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_MCP61_MEM1,
+	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_MCP61_MEM2,
 	    "MCP61 Memory",
 	},
 	{
@@ -17284,7 +17288,7 @@ static const struct pci_known_product pci_known_products[] = {
 	    "MCP61 SMU",
 	},
 	{
-	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_MCP61_MEM2,
+	    PCI_VENDOR_NVIDIA, PCI_PRODUCT_NVIDIA_MCP61_MEM3,
 	    "MCP61 Memory",
 	},
 	{
