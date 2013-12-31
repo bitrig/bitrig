@@ -1,4 +1,4 @@
-/*	$OpenBSD: cerror.S,v 1.5 2012/08/22 17:19:34 pascal Exp $	*/
+/*	$OpenBSD: cerror.S,v 1.6 2013/12/31 23:31:13 kettenis Exp $	*/
 /*	$NetBSD: cerror.S,v 1.5 2003/08/07 16:42:04 agc Exp $	*/
 
 /*-
@@ -37,19 +37,6 @@
 WEAK_ALIAS(CERROR, _CERROR)
 
 ASENTRY(_CERROR)
-#ifdef _REENTRANT
-	stmfd	sp!, {r4, lr}
-	mov	r4, r0
-#if defined(__PIC__)
-	bl	_C_LABEL(__errno)(PLT)
-#else
-	bl	_C_LABEL(__errno)
-#endif
-	str	r4, [r0]
-	mvn	r0, #0x00000000
-	mvn	r1, #0x00000000
-	ldmfd	sp!, {r4, pc}
-#else
 #ifdef __PIC__
 	/* Setup the GOT */
 	ldr	r3, .Lgot
@@ -74,9 +61,4 @@ ASENTRY(_CERROR)
 	.globl	_C_LABEL(errno)
 
 .Lerrno:
-#if defined(__PIC__)
-	.word	_C_LABEL(errno)(GOT)
-#else
-	.word	_C_LABEL(errno)
-#endif
-#endif /* _REENTRANT */
+	.word	PIC_SYM(_C_LABEL(errno), GOT)
