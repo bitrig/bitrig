@@ -63,7 +63,7 @@ typedef enum {
 /* keybindings */
 struct kb_entry {
 	TAILQ_ENTRY(kb_entry)	entry;
-	unsigned char		*seq;
+	char			*seq;
 	int			len;
 	struct x_ftab		*ftab;
 	void			*args;
@@ -252,13 +252,9 @@ static const struct x_ftab x_ftab[] = {
 	{ x_fold_upper,		"upcase-word",			XF_ARG },
 	{ x_set_arg,		"set-arg",			XF_NOBIND },
 	{ x_comment,		"comment",			0 },
-	{ 0, 0, 0 },
 #ifdef DEBUG
 	{ x_debug_info,		"debug-info",			0 },
-#else
-	{ 0, 0, 0 },
 #endif
-	{ 0, 0, 0 },
 };
 
 int
@@ -464,11 +460,7 @@ x_ins(char *s)
 static int
 x_emacs_putbuf(const char *s, size_t len)
 {
-	int rval;
-
-	if ((rval = x_do_ins(s, len)) != 0)
-		return (rval);
-	return (rval);
+	return x_do_ins(s, len);
 }
 
 static int
@@ -1336,7 +1328,7 @@ kb_add_string(void *func, void *args, char *str)
 	count = strlen(str);
 
 	k = alloc(sizeof *k + count + 1, AEDIT);
-	k->seq = (unsigned char *)(k + 1);
+	k->seq = (char *)(k + 1);
 	k->len = count;
 	k->ftab = xf;
 	k->args = args ? strdup(args) : NULL;
@@ -1352,19 +1344,18 @@ static struct kb_entry *
 kb_add(void *func, void *args, ...)
 {
 	va_list			ap;
-	int			i, count;
 	char			l[LINE + 1];
+	int			i;
 
 	va_start(ap, args);
-	count = 0;
-	while (va_arg(ap, unsigned int) != 0)
-		count++;
+	for (i = 0; i < sizeof(l) - 1; i++) {
+		l[i] = (char)va_arg(ap, unsigned int);
+		if (l[i] == '\0')
+			break;
+	}
 	va_end(ap);
 
-	va_start(ap, args);
-	for (i = 0; i <= count /* <= is correct */; i++)
-		l[i] = (unsigned char)va_arg(ap, unsigned int);
-	va_end(ap);
+	l[i] = '\0';
 
 	return (kb_add_string(func, args, l));
 }
@@ -1398,8 +1389,6 @@ x_bind(const char *a1, const char *a2,
 	if (list) {
 		/* show all function names */
 		for (i = 0; i < NELEM(x_ftab); i++) {
-			if (x_ftab[i].xf_name == NULL)
-				continue;
 			if (x_ftab[i].xf_name &&
 			    !(x_ftab[i].xf_flags & XF_NOBIND))
 				shprintf("%s\n", x_ftab[i].xf_name);
@@ -1450,8 +1439,6 @@ x_bind(const char *a1, const char *a2,
 
 	/* set non macro binding */
 	for (i = 0; i < NELEM(x_ftab); i++) {
-		if (x_ftab[i].xf_name == NULL)
-			continue;
 		if (!strcmp(x_ftab[i].xf_name, a2)) {
 			/* delete old mapping */
 			TAILQ_FOREACH_SAFE(k, &kblist, entry, kb)
@@ -2161,4 +2148,4 @@ x_lastcp(void)
 	return (xlp);
 }
 
-#endif /* EDIT */
+#endif /* EMACS */
