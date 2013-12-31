@@ -375,7 +375,7 @@ void	_kernel_relock_all(int);
 #define	KERNEL_LOCK_INIT()		/* nothing */
 #define	KERNEL_LOCK()			/* nothing */
 #define	KERNEL_UNLOCK()			/* nothing */
-#define	KERNEL_UNLOCK_ALL()		/* nothing */
+#define	KERNEL_UNLOCK_ALL()		0
 #define	KERNEL_RELOCK_ALL(x)		/* nothing */
 #define	KERNEL_ASSERT_LOCKED()		/* nothing */
 #define	KERNEL_ASSERT_UNLOCKED()	/* nothing */

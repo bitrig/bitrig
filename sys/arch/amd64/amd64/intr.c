@@ -616,7 +616,6 @@ cpu_intr_init(struct cpu_info *ci)
 #if NLAPIC > 0
 	struct intrsource *isp;
 #ifdef MULTIPROCESSOR
-	struct intrsource *isp;
 	isp = malloc(sizeof (struct intrsource), M_DEVBUF, M_NOWAIT|M_ZERO);
 	if (isp == NULL)
 		panic("can't allocate fixed interrupt source");
