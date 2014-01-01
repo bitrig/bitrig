@@ -214,8 +214,6 @@ showkey(void)
 void
 parsefmt(char *p)
 {
-	static struct varent *vtail;
-
 #define	FMTSEP	" \t,\n"
 	while (p && *p) {
 		char *cp;
@@ -232,16 +230,10 @@ parsefmt(char *p)
 		if ((vent = malloc(sizeof(struct varent))) == NULL)
 			err(1, NULL);
 		vent->var = v;
-		vent->next = NULL;
-		if (vhead == NULL)
-			vhead = vtail = vent;
-		else {
-			vtail->next = vent;
-			vtail = vent;
-		}
+		SIMPLEQ_INSERT_TAIL(&vhead, vent, entries);
 		needheader |= v->header[0] != '\0';
 	}
-	if (!vhead)
+	if (SIMPLEQ_EMPTY(&vhead))
 		errx(1, "no valid keywords");
 }
 

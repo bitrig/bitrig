@@ -70,20 +70,21 @@ void
 printheader(void)
 {
 	VAR *v;
-	struct varent *vent;
+	struct varent *vent, *next;
 
 	if (!needheader)
 		return;
-	for (vent = vhead; vent; vent = vent->next) {
+	SIMPLEQ_FOREACH(vent, &vhead, entries) {
 		v = vent->var;
+		next = SIMPLEQ_NEXT(vent, entries);
 		if (v->flag & LJUST) {
-			if (vent->next == NULL)	/* last one */
+			if (next == SIMPLEQ_END(&vhead))	/* last one */
 				(void)printf("%s", v->header);
 			else
 				(void)printf("%-*s", v->width, v->header);
 		} else
 			(void)printf("%*s", v->width, v->header);
-		if (vent->next != NULL)
+		if (next != SIMPLEQ_END(&vhead))
 			(void)putchar(' ');
 	}
 	(void)putchar('\n');
@@ -95,10 +96,11 @@ command(const struct kinfo_proc *kp, VARENT *ve)
 	VAR *v;
 	int left, wantspace = 0;
 	char **argv, **p;
+	struct varent *next = SIMPLEQ_NEXT(ve, entries);
 
 	v = ve->var;
-	if (ve->next != NULL || termwidth != UNLIMITED) {
-		if (ve->next == NULL) {
+	if (next != SIMPLEQ_END(&vhead) || termwidth != UNLIMITED) {
+		if (next == SIMPLEQ_END(&vhead)) {
 			left = termwidth - (totwidth - v->width);
 			if (left < 1) /* already wrapped, just use std width */
 				left = v->width;
@@ -157,7 +159,7 @@ command(const struct kinfo_proc *kp, VARENT *ve)
 			fmt_puts(kp->p_comm, &left);
 		}
 	}
-	if (ve->next && left > 0) {
+	if (next != SIMPLEQ_END(&vhead) && left > 0) {
 		if (wantspace) {
 			fmt_putc(' ', &left);
 			wantspace = 0;

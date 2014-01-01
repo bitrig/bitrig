@@ -35,13 +35,14 @@
 struct nlist;
 struct var;
 struct varent;
+struct varent_list;
 
 extern fixpt_t ccpu;
 extern int eval, fscale, nlistread, rawcpu, maxslp;
 extern u_int mempages;
 extern int sumrusage, termwidth, totwidth, kvm_sysctl_only, needheader;
 extern VAR var[];
-extern VARENT *vhead;
+extern struct varent_list vhead;
 
 __BEGIN_DECLS
 void	 command(const struct kinfo_proc *, VARENT *);

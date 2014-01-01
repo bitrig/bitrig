@@ -32,6 +32,8 @@
  *	@(#)ps.h	8.1 (Berkeley) 5/31/93
  */
 
+#include <sys/queue.h>
+
 #define	UNLIMITED	0	/* unlimited terminal width */
 enum type {
 	INT8, UINT8, INT16, UINT16, INT32, UINT32, INT64, UINT64
@@ -47,9 +49,11 @@ struct usave {
 
 /* Variables. */
 typedef struct varent {
-	struct varent *next;
+	SIMPLEQ_ENTRY(varent) entries;
 	struct var *var;
 } VARENT;
+
+SIMPLEQ_HEAD(varent_list, varent);
 
 struct kinfo_proc;
 typedef struct var {

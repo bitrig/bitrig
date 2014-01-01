@@ -57,7 +57,7 @@
 
 extern char *__progname;
 
-struct varent *vhead;
+struct varent_list vhead = SIMPLEQ_HEAD_INITIALIZER(vhead);
 
 int	eval;			/* exit value */
 int	rawcpu;			/* -C */
@@ -348,9 +348,9 @@ main(int argc, char *argv[])
 			continue;
 		if (showthreads && kinfo[i]->p_tid == -1)
 			continue;
-		for (vent = vhead; vent; vent = vent->next) {
+		SIMPLEQ_FOREACH(vent, &vhead, entries) {
 			(vent->var->oproc)(kinfo[i], vent);
-			if (vent->next != NULL)
+			if (SIMPLEQ_NEXT(vent, entries) != SIMPLEQ_END(&vhead))
 				(void)putchar(' ');
 		}
 		(void)putchar('\n');
@@ -370,7 +370,7 @@ scanvars(void)
 	VAR *v;
 	int i;
 
-	for (vent = vhead; vent; vent = vent->next) {
+	SIMPLEQ_FOREACH(vent, &vhead, entries) {
 		v = vent->var;
 		i = strlen(v->header);
 		if (v->width < i)
