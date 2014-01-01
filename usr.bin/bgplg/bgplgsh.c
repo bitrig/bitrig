@@ -220,7 +220,7 @@ main(void)
 	u_int i;
 
 	rl_readline_name = NAME;
-	rl_completion_entry_function = lg_completion;
+	rl_completion_entry_function = (Function *)lg_completion;
 
 	/* Ignore the whitespace character */
 	rl_basic_word_break_characters = "\t\n\"\\'`@$><=;|&{(";
