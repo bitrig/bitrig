@@ -62,8 +62,6 @@ wmemstream_write(void *v, const char *b, int l)
 
 	nmc = (st->size - st->pos) * sizeof(wchar_t);
 	len = mbsnrtowcs(st->string + st->pos, &b, nmc, l, &st->mbs);
-	if (len < 0)
-		return (len);
 	st->pos += len;
 
 	if (st->pos > st->len) {
