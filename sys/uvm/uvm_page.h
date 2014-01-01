@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_page.h,v 1.48 2011/05/30 22:25:24 oga Exp $	*/
+/*	$OpenBSD: uvm_page.h,v 1.51 2014/01/01 22:15:18 miod Exp $	*/
 /*	$NetBSD: uvm_page.h,v 1.19 2000/12/28 08:24:55 chs Exp $	*/
 
 /* 
@@ -204,9 +204,6 @@ struct vm_physseg {
 	paddr_t	avail_end;		/* (PF# of last free page in segment) +1  */
 	struct	vm_page *pgs;		/* vm_page structures (from start) */
 	struct	vm_page *lastpg;	/* vm_page structure for end */
-#ifdef __HAVE_PMAP_PHYSSEG
-	struct	pmap_physseg pmseg;	/* pmap specific (MD) data */
-#endif
 };
 
 #ifdef _KERNEL
