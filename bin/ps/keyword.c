@@ -242,7 +242,6 @@ findvar(char *p)
 {
 	VAR *v, key;
 	char *hp;
-	int vcmp(const void *, const void *);
 
 	key.name = p;
 
