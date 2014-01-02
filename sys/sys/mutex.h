@@ -83,15 +83,15 @@ int mtx_enter_try(struct mutex *);
 #define MUTEX_ASSERT_LOCKED(mtx)					\
 	do {								\
 		if ((mtx)->mtx_owner != curcpu())			\
-			panic("mutex %p not held in %s",		\
-			    (mtx), __func__);				\
+			panic("mutex %p not held in %s:%d",		\
+			    (mtx), __func__, __LINE__);			\
 	} while (0)
 
 #define MUTEX_ASSERT_UNLOCKED(mtx)					\
 	do {								\
 		if ((mtx)->mtx_owner == curcpu())			\
-			panic("mutex %p held in %s",			\
-			    (mtx), __func__);				\
+			panic("mutex %p held in %s:%d",			\
+			    (mtx), __func__, __LINE__);			\
 	} while (0)
 
 #endif
