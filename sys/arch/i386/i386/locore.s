@@ -843,9 +843,9 @@ _C_LABEL(_copyin_stac):
 	movl	24+FPADD(%esp),%eax
 
 	/*
-	 * We check that the end of the destination buffer is not past the end
-	 * of the user's address space.  If it's not, then we only need to
-	 * check that each page is readable, and the CPU will do that for us.
+	 * We check that the end of the source buffer is not past the end of
+	 * the user's address space.  If it's not, then we only need to check
+	 * that each page is readable, and the CPU will do that for us.
 	 */
 	movl	%esi,%edx
 	addl	%eax,%edx
