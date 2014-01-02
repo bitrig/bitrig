@@ -372,9 +372,7 @@ static __inline tmpfs_node_t *
 VP_TO_TMPFS_NODE(struct vnode *vp)
 {
 	tmpfs_node_t *node = vp->v_data;
-#ifdef KASSERT
 	KASSERT(node != NULL);
-#endif
 	return node;
 }
 
