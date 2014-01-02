@@ -67,6 +67,9 @@ mtx_enter(struct mutex *mtx)
 	if (mtx->mtx_wantipl != IPL_NONE)
 		s = splraise(mtx->mtx_wantipl);
 
+	/* Ensure we're not holding the mutex already. */
+	KASSERT(mtx->mtx_owner != curcpu());
+
 	/* Acquire ticket. */
 	t = atomic_fetch_add_explicit(&mtx->mtx_ticket,
 	    1, memory_order_acquire);
@@ -92,6 +95,9 @@ mtx_enter_try(struct mutex *mtx)
 	/* Block interrupts. */
 	if (mtx->mtx_wantipl != IPL_NONE)
 		s = splraise(mtx->mtx_wantipl);
+
+	/* Ensure we're not holding the mutex already. */
+	KASSERT(mtx->mtx_owner != curcpu());
 
 	/* Figure out which ticket is active. */
 	t = atomic_load_explicit(&mtx->mtx_cur, memory_order_relaxed);
