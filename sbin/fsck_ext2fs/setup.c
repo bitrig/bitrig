@@ -159,8 +159,7 @@ setup(char *dev)
 	/*
 	 * Check and potentially fix certain fields in the super block.
 	 */
-	if ((sblock.e2fs.e2fs_rbcount < 0) ||
-			(sblock.e2fs.e2fs_rbcount > sblock.e2fs.e2fs_bcount)) {
+	if (sblock.e2fs.e2fs_rbcount > sblock.e2fs.e2fs_bcount) {
 		pfatal("IMPOSSIBLE RESERVED BLOCK COUNT=%d IN SUPERBLOCK",
 			sblock.e2fs.e2fs_rbcount);
 		if (reply("SET TO DEFAULT") == 1) {

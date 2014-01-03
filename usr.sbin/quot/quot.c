@@ -470,7 +470,7 @@ donames(int fd, struct fs *super, char *name)
 	ungetc(c, stdin);
 	inode1 = -1;
 	while (scanf("%llu", &inode) == 1) {
-		if (inode < 0 || inode > maxino) {
+		if (inode > maxino) {
 #ifndef	COMPAT
 			fprintf(stderr, "invalid inode %llu\n",
 			    (unsigned long long)inode);

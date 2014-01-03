@@ -243,7 +243,7 @@ AliasHandleSkinny(struct ip *pip, struct alias_link *link)
     msgId = (sd->msgId);
     t = len;
 
-    if (t < 0 || t > orig_len || t > dlen) {
+    if (t > orig_len || t > dlen) {
 #ifdef DEBUG
       fprintf(stderr,
               "PacketAlias/Skinny: Not a skinny packet, invalid length \n");

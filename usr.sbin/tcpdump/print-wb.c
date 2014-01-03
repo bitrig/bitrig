@@ -179,9 +179,9 @@ wb_id(const struct pkt_id *id, u_int len)
 	int nid;
 
 	printf(" wb-id:");
-	len -= sizeof(*id);
-	if (len < 0 || (u_char *)(id + 1) > snapend)
+	if (len < sizeof(*id) || (u_char *)(id + 1) > snapend)
 		return (-1);
+	len -= sizeof(*id);
 
 	printf(" %u/%s:%u (max %u/%s:%u) ",
 	       (u_int32_t)ntohl(id->pi_ps.slot),
@@ -335,9 +335,9 @@ wb_rrep(const struct pkt_rrep *rrep, u_int len)
 	const struct pkt_dop *dop = &rrep->pr_dop;
 
 	printf(" wb-rrep:");
-	len -= sizeof(*rrep);
-	if (len < 0 || (u_char *)(rrep + 1) > snapend)
+	if (len < sizeof(*rrep) || (u_char *)(rrep + 1) > snapend)
 		return (-1);
+	len -= sizeof(*rrep);
 
 	printf(" for %s %s:%u<%u:%u>",
 	    ipaddr_string(&rrep->pr_id),
@@ -356,9 +356,9 @@ static int
 wb_drawop(const struct pkt_dop *dop, u_int len)
 {
 	printf(" wb-dop:");
-	len -= sizeof(*dop);
-	if (len < 0 || (u_char *)(dop + 1) > snapend)
+	if (len < sizeof(*dop) || (u_char *)(dop + 1) > snapend)
 		return (-1);
+	len -= sizeof(*dop);
 
 	printf(" %s:%u<%u:%u>",
 	    ipaddr_string(&dop->pd_page.p_sid),
@@ -382,7 +382,7 @@ wb_print(register const void *hdr, register u_int len)
 
 	ph = (const struct pkt_hdr *)hdr;
 	len -= sizeof(*ph);
-	if (len < 0 || (u_char *)(ph + 1) <= snapend) {
+	if ((u_char *)(ph + 1) <= snapend) {
 		if (ph->ph_flags)
 			printf("*");
 		switch (ph->ph_type) {
