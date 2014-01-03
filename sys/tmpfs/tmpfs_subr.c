@@ -325,6 +325,7 @@ again:
 
 	lockinit(&node->tn_vlock, PINOD, "tnode", 0, 0);
 	vp->v_type = node->tn_type;
+	vp->v_data = node;
 
 	/* Type-specific initialization. */
 	switch (node->tn_type) {
@@ -359,7 +360,6 @@ again:
 	}
 
 	uvm_vnp_setsize(vp, node->tn_size);
-	vp->v_data = node;
 	node->tn_vnode = vp;
 	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curproc);
 	rw_exit_write(&node->tn_nlock);
