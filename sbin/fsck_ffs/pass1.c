@@ -62,7 +62,8 @@ pass1_info(char *buf, size_t buflen)
 void
 pass1(void)
 {
-	ino_t inumber, inosused, ninosused;
+	ino_t inumber, ninosused;
+	int32_t inosused;
 	size_t inospace;
 	struct inostat *info;
 	int c;
