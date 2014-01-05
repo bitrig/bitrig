@@ -647,6 +647,9 @@ ReTry:
 			/* XXX daddr_t -> int */
 			uvm_swap_markbad(swblk, *npages);
 		}
+
+		if (uobj)
+			mtx_leave(&uobj->vmobjlock);
 	}
 
 	/*
