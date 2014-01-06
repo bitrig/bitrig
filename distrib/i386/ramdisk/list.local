@@ -6,8 +6,6 @@ LINK	instbin					sbin/mount_ext2fs
 LINK	instbin					sbin/mount_msdos
 LINK	instbin					sbin/ping6
 LINK	instbin					sbin/rtsol
-LINK	instbin					sbin/apm sbin/zzz
-LINK	instbin					sbin/apmd
 LINK	instbin					sbin/mount_udf
 LINK	instbin					sbin/bioctl
 
