@@ -315,6 +315,10 @@ void board_startup(void);
 
 #endif /* _KERNEL */
 
+#ifdef MULTIPROCESSOR
+#include <sys/mplock.h>
+#endif /* MULTIPROCESSOR */
+
 #endif /* !_ARM_CPU_H_ */
 
 /* End of cpu.h */
