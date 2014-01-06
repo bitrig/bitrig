@@ -48,6 +48,7 @@
 #include <sys/systm.h>
 #include <sys/malloc.h>
 #include <sys/device.h>
+#include <sys/user.h>
 #include <sys/proc.h>
 #include <sys/conf.h>
 #include <uvm/uvm_extern.h>
