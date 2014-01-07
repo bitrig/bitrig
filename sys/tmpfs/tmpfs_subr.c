@@ -89,7 +89,6 @@ __KERNEL_RCSID(0, "$NetBSD: tmpfs_subr.c,v 1.83 2013/11/08 15:44:23 rmind Exp $"
 #include <sys/stat.h>
 #include <sys/systm.h>
 #include <sys/vnode.h>
-#include <sys/malloc.h>
 
 #include <uvm/uvm.h>
 
@@ -762,26 +761,21 @@ int
 tmpfs_dir_getdents(tmpfs_node_t *node, struct uio *uio)
 {
 	tmpfs_dirent_t *de, *next_de;
-	struct dirent *dentp;
+	struct dirent dent;
 	int error = 0;
 
 	KASSERT(VOP_ISLOCKED(node->tn_vnode));
 	TMPFS_VALIDATE_DIR(node);
 
-	/*
-	 * Allocate struct dirent and first check for the "." and "..".
-	 * Note: tmpfs_dir_getdotents() will "seek" for us.
-	 */
-	/* dentp = kmem_alloc(sizeof(struct dirent), KM_SLEEP); */
-	dentp = malloc(sizeof(struct dirent), M_TEMP, M_WAITOK|M_ZERO);
+	memset(&dent, 0, sizeof(dent));
 
 	if (uio->uio_offset == TMPFS_DIRSEQ_DOT) {
-		if ((error = tmpfs_dir_getdotents(node, dentp, uio)) != 0) {
+		if ((error = tmpfs_dir_getdotents(node, &dent, uio)) != 0) {
 			goto done;
 		}
 	}
 	if (uio->uio_offset == TMPFS_DIRSEQ_DOTDOT) {
-		if ((error = tmpfs_dir_getdotents(node, dentp, uio)) != 0) {
+		if ((error = tmpfs_dir_getdotents(node, &dent, uio)) != 0) {
 			goto done;
 		}
 	}
@@ -803,52 +797,52 @@ tmpfs_dir_getdents(tmpfs_node_t *node, struct uio *uio)
 	 * of the directory or we exhaust UIO space.
 	 */
 	do {
-		dentp->d_fileno = de->td_node->tn_id;
+		dent.d_fileno = de->td_node->tn_id;
 		switch (de->td_node->tn_type) {
 		case VBLK:
-			dentp->d_type = DT_BLK;
+			dent.d_type = DT_BLK;
 			break;
 		case VCHR:
-			dentp->d_type = DT_CHR;
+			dent.d_type = DT_CHR;
 			break;
 		case VDIR:
-			dentp->d_type = DT_DIR;
+			dent.d_type = DT_DIR;
 			break;
 		case VFIFO:
-			dentp->d_type = DT_FIFO;
+			dent.d_type = DT_FIFO;
 			break;
 		case VLNK:
-			dentp->d_type = DT_LNK;
+			dent.d_type = DT_LNK;
 			break;
 		case VREG:
-			dentp->d_type = DT_REG;
+			dent.d_type = DT_REG;
 			break;
 		case VSOCK:
-			dentp->d_type = DT_SOCK;
+			dent.d_type = DT_SOCK;
 			break;
 		default:
 			KASSERT(0);
 		}
-		dentp->d_namlen = de->td_namelen;
-		KASSERT(de->td_namelen < sizeof(dentp->d_name));
-		memcpy(dentp->d_name, de->td_name, de->td_namelen);
-		dentp->d_name[de->td_namelen] = '\0';
-		dentp->d_reclen = DIRENT_SIZE(dentp);
+		dent.d_namlen = de->td_namelen;
+		KASSERT(de->td_namelen < sizeof(dent.d_name));
+		memcpy(dent.d_name, de->td_name, de->td_namelen);
+		dent.d_name[de->td_namelen] = '\0';
+		dent.d_reclen = DIRENT_SIZE(&dent);
 
 		next_de = TAILQ_NEXT(de, td_entries);
 		if (next_de == NULL)
-			dentp->d_off = TMPFS_DIRSEQ_EOF;
+			dent.d_off = TMPFS_DIRSEQ_EOF;
 		else
-			dentp->d_off = tmpfs_dir_getseq(node, next_de);
+			dent.d_off = tmpfs_dir_getseq(node, next_de);
 
-		if (dentp->d_reclen > uio->uio_resid) {
+		if (dent.d_reclen > uio->uio_resid) {
 			/* Exhausted UIO space. */
 			error = EJUSTRETURN;
 			break;
 		}
 
 		/* Copy out the directory entry and continue. */
-		error = uiomove(dentp, dentp->d_reclen, uio);
+		error = uiomove(&dent, dent.d_reclen, uio);
 		if (error) {
 			break;
 		}
@@ -861,8 +855,6 @@ tmpfs_dir_getdents(tmpfs_node_t *node, struct uio *uio)
 	node->tn_spec.tn_dir.tn_readdir_lastp = de;
 done:
 	node->tn_status |= TMPFS_NODE_ACCESSED;
-	/* kmem_free(dentp, sizeof(struct dirent)); */
-	free(dentp, M_TEMP);
 
 	if (error == EJUSTRETURN) {
 		/* Exhausted UIO space - just return. */

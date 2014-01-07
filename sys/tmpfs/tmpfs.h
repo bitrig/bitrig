@@ -1,3 +1,4 @@
+/*	$OpenBSD: tmpfs.h,v 1.5 2013/12/14 18:01:52 espie Exp $	*/
 /*	$NetBSD: tmpfs.h,v 1.46 2013/11/08 15:44:23 rmind Exp $	*/
 
 /*
@@ -186,10 +187,10 @@ LIST_HEAD(tmpfs_node_list, tmpfs_node);
 #define	TMPFS_DIRSEQ_EOF	2
 
 #define	TMPFS_DIRSEQ_START	3		/* inclusive */
-#define	TMPFS_DIRSEQ_END	(~0U)		/* exclusive */
+#define	TMPFS_DIRSEQ_END	UINT64_MAX	/* exclusive */
 
 /* Mark to indicate that the number is not set. */
-#define	TMPFS_DIRSEQ_NONE	(~0U)
+#define  TMPFS_DIRSEQ_NONE  UINT64_MAX
 
 /* Can we still append entries to a directory? */
 #define	TMPFS_DIRSEQ_FULL(dnode)	\
