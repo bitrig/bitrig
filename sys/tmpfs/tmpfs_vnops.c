@@ -1308,8 +1308,6 @@ tmpfs_rename(void *v)
 	KASSERT(fcnp->cn_nameptr != NULL);
 	/* KASSERT(VOP_ISLOCKED(fdvp) != LK_EXCLUSIVE); */
 	/* KASSERT(VOP_ISLOCKED(fvp) != LK_EXCLUSIVE); */
-	KASSERT(VOP_ISLOCKED(tdvp) == LK_EXCLUSIVE);
-	KASSERT((tvp == NULL) || (VOP_ISLOCKED(tvp) == LK_EXCLUSIVE));
 	KASSERT(fdvp->v_type == VDIR);
 	KASSERT(tdvp->v_type == VDIR);
 	KASSERT(fcnp->cn_flags & HASBUF);
@@ -1326,6 +1324,13 @@ tmpfs_rename(void *v)
 	    	tmpfs_rename_abort(v);
 		return EXDEV;
 	}
+
+	/*
+	 * Can't check the locks on these until we know they're on
+	 * the same FS, as not all FS do locking the same way.
+	 */
+	KASSERT(VOP_ISLOCKED(tdvp) == LK_EXCLUSIVE);
+	KASSERT((tvp == NULL) || (VOP_ISLOCKED(tvp) == LK_EXCLUSIVE));
 
 	/*
 	 * Reject renaming '.' and '..'.
