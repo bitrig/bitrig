@@ -465,7 +465,7 @@ nbp_print(register const struct atNBP *np, u_int length, register u_short snet,
 static const char *
 print_cstring(register const char *cp, register const u_char *ep)
 {
-	register u_int length;
+	int length;
 
 	if (cp >= (const char *)ep) {
 		fputs(tstr, stdout);
@@ -478,7 +478,7 @@ print_cstring(register const char *cp, register const u_char *ep)
 		(void)printf("[len=%d]", length);
 		return (0);
 	}
-	while ((int)--length >= 0) {
+	while (--length >= 0) {
 		if (cp >= (char *)ep) {
 			fputs(tstr, stdout);
 			return (0);
