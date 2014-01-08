@@ -427,7 +427,6 @@ void    do_options(
     DEFBUF *    defp;
     VAL_SIGN *  valp;
     int         sflag;                      /* -S option or similar */
-    int         trad;                       /* -traditional         */
     int         old_mode;                   /* backup of 'mcpp_mode'*/
     int         gval, sse;
     char *      cp;
@@ -520,9 +519,9 @@ plus:
                     || str_eq( mcpp_optarg, "poststd"))
                 mcpp_mode = POST_STD;   /* 'post-Standard' mode     */
             else if (str_eq( mcpp_optarg, "old")
-                    || str_eq( mcpp_optarg, "oldprep"))
+                    || str_eq( mcpp_optarg, "oldprep")) {
                 mcpp_mode = OLD_PREP;   /* 'old-Preprocessor' mode  */
-            else if (str_eq( mcpp_optarg, "kr"))
+            } else if (str_eq( mcpp_optarg, "kr"))
                 mcpp_mode = KR;         /* 'K&R 1st' mode           */
             else if (str_eq( mcpp_optarg, "std"))
                 mcpp_mode = STD;        /* 'Standard' mode (default)*/
@@ -1491,7 +1490,7 @@ static void usage(
 "-RTC*       Define the macro __MSVC_RUNTIME_CHECKS as 1.\n",
 #endif
 #if COMPILER == GNUC
-"-traditional, -traditional-cpp      Same as -@oldprep.\n",
+"-traditional, -traditional-cpp  Similar to -@oldprep, but with defined().\n",
 #endif
 "-U <macro>  Undefine <macro>.\n",
 

@@ -347,6 +347,7 @@ extern long     cplus_val;          /* Value of __cplusplus for C++ */
 extern int      stdc2;      /* cplus_val or (stdc_ver >= 199901L)   */
 extern int      stdc3;      /* (stdc_ver or cplus_val) >= 199901L   */
 extern int      standard;           /* mcpp_mode is STD or POST_STD */
+extern int      trad;	           /* mcpp_mode is traditional      */
 extern int      std_line_prefix;    /* #line in C source style      */
 extern int      warn_level;         /* Level of warning             */
 extern int      errors;             /* Error counter                */

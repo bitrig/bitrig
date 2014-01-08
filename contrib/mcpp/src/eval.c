@@ -516,7 +516,7 @@ static int  eval_lex( void)
 
     switch (token_type) {
     case NAM:
-        if (standard && str_eq( identifier, "defined")) {   /* defined name */
+        if ((trad || standard) && str_eq( identifier, "defined")) {   /* defined name */
             c1 = c = skip_ws();
             if (c == '(')                   /* Allow defined (name) */
                 c = skip_ws();

@@ -79,6 +79,7 @@
         (cplus_val >= 199901L) specifies compatible mode to C99 (extended
         feature of this preprocessor)   */
     int     standard = TRUE;    /* TRUE, if mcpp_mode is STD or POST_STD    */
+    int     trad  = FALSE;    /* TRUE, if mcpp_mode is -traditional or -@old */
     int     std_line_prefix = STD_LINE_PREFIX;
             /* Output line and file information in C source style   */
 
