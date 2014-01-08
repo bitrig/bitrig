@@ -1207,6 +1207,7 @@
 ./usr/libdata/perl5/site_perl/i386-bitrig/dev/pci/ubsecvar.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/dev/pci/vga_pcivar.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/dev/pci/vioblkreg.ph
+./usr/libdata/perl5/site_perl/i386-bitrig/dev/pci/vioscsireg.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/dev/pci/virtioreg.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/dev/pci/virtiovar.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/dev/pci/ydsreg.ph
@@ -2053,10 +2054,8 @@
 ./usr/libdata/perl5/site_perl/i386-bitrig/sys/tprintf.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/sys/tree.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/sys/tty.ph
-./usr/libdata/perl5/site_perl/i386-bitrig/sys/ttychars.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/sys/ttycom.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/sys/ttydefaults.ph
-./usr/libdata/perl5/site_perl/i386-bitrig/sys/ttydev.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/sys/types.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/sys/ucred.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/sys/uio.ph

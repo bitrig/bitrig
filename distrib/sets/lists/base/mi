@@ -207,7 +207,6 @@
 ./sbin/umount
 ./sbin/vnconfig
 ./sbin/wsconsctl
-./stand
 ./sys
 ./tmp
 ./usr
@@ -457,6 +456,7 @@
 ./usr/bin/sftp
 ./usr/bin/shar
 ./usr/bin/showmount
+./usr/bin/signify
 ./usr/bin/size
 ./usr/bin/skey
 ./usr/bin/skeyaudit
@@ -1191,6 +1191,7 @@
 ./usr/include/dev/pci/ubsecvar.h
 ./usr/include/dev/pci/vga_pcivar.h
 ./usr/include/dev/pci/vioblkreg.h
+./usr/include/dev/pci/vioscsireg.h
 ./usr/include/dev/pci/virtioreg.h
 ./usr/include/dev/pci/virtiovar.h
 ./usr/include/dev/pci/ydsreg.h
@@ -1975,10 +1976,8 @@
 ./usr/include/sys/tprintf.h
 ./usr/include/sys/tree.h
 ./usr/include/sys/tty.h
-./usr/include/sys/ttychars.h
 ./usr/include/sys/ttycom.h
 ./usr/include/sys/ttydefaults.h
-./usr/include/sys/ttydev.h
 ./usr/include/sys/types.h
 ./usr/include/sys/ucred.h
 ./usr/include/sys/uio.h
@@ -2081,7 +2080,7 @@
 ./usr/lib/libasn1.so.20.0
 ./usr/lib/libasn1_p.a
 ./usr/lib/libc.a
-./usr/lib/libc.so.71.0
+./usr/lib/libc.so.73.0
 ./usr/lib/libc_p.a
 ./usr/lib/libcom_err.a
 ./usr/lib/libcom_err.so.20.0
@@ -2773,6 +2772,7 @@
 ./usr/libdata/perl5/OpenBSD/Ustar.pm
 ./usr/libdata/perl5/OpenBSD/Vstat.pm
 ./usr/libdata/perl5/OpenBSD/md5.pm
+./usr/libdata/perl5/OpenBSD/signify.pm
 ./usr/libdata/perl5/OpenBSD/x509.pm
 ./usr/libdata/perl5/Package
 ./usr/libdata/perl5/Package/Constants.pm
@@ -4381,6 +4381,7 @@
 ./usr/sbin/ifstated
 ./usr/sbin/ikectl
 ./usr/sbin/inetd
+./usr/sbin/installboot
 ./usr/sbin/iostat
 ./usr/sbin/iprop-log
 ./usr/sbin/iscsictl
@@ -4437,7 +4438,6 @@
 ./usr/sbin/pkg_delete
 ./usr/sbin/pkg_info
 ./usr/sbin/pkg_mklocatedb
-./usr/sbin/popa3d
 ./usr/sbin/portmap
 ./usr/sbin/ppp
 ./usr/sbin/pppctl
@@ -5077,6 +5077,7 @@
 ./usr/share/man/man1/sha384.1
 ./usr/share/man/man1/sha512.1
 ./usr/share/man/man1/shar.1
+./usr/share/man/man1/signify.1
 ./usr/share/man/man1/size.1
 ./usr/share/man/man1/skey.1
 ./usr/share/man/man1/skeyaudit.1
@@ -5844,7 +5845,13 @@
 ./usr/share/man/man3/EVP_DecryptUpdate.3
 ./usr/share/man/man3/EVP_DigestFinal.3
 ./usr/share/man/man3/EVP_DigestInit.3
+./usr/share/man/man3/EVP_DigestSignFinal.3
+./usr/share/man/man3/EVP_DigestSignInit.3
+./usr/share/man/man3/EVP_DigestSignUpdate.3
 ./usr/share/man/man3/EVP_DigestUpdate.3
+./usr/share/man/man3/EVP_DigestVerifyFinal.3
+./usr/share/man/man3/EVP_DigestVerifyInit.3
+./usr/share/man/man3/EVP_DigestVerifyUpdate.3
 ./usr/share/man/man3/EVP_EncryptFinal.3
 ./usr/share/man/man3/EVP_EncryptInit.3
 ./usr/share/man/man3/EVP_EncryptUpdate.3
@@ -6311,6 +6318,8 @@
 ./usr/share/man/man3/SSL_CTX_set_msg_callback.3
 ./usr/share/man/man3/SSL_CTX_set_msg_callback_arg.3
 ./usr/share/man/man3/SSL_CTX_set_options.3
+./usr/share/man/man3/SSL_CTX_set_psk_client_callback.3
+./usr/share/man/man3/SSL_CTX_set_psk_server_callback.3
 ./usr/share/man/man3/SSL_CTX_set_quiet_shutdown.3
 ./usr/share/man/man3/SSL_CTX_set_session_cache_mode.3
 ./usr/share/man/man3/SSL_CTX_set_session_id_context.3
@@ -6332,6 +6341,7 @@
 ./usr/share/man/man3/SSL_CTX_use_certificate_ASN1.3
 ./usr/share/man/man3/SSL_CTX_use_certificate_chain_file.3
 ./usr/share/man/man3/SSL_CTX_use_certificate_file.3
+./usr/share/man/man3/SSL_CTX_use_psk_identity_hint.3
 ./usr/share/man/man3/SSL_SESSION_free.3
 ./usr/share/man/man3/SSL_SESSION_get_ex_data.3
 ./usr/share/man/man3/SSL_SESSION_get_ex_new_index.3
@@ -6377,6 +6387,8 @@
 ./usr/share/man/man3/SSL_get_options.3
 ./usr/share/man/man3/SSL_get_peer_cert_chain.3
 ./usr/share/man/man3/SSL_get_peer_certificate.3
+./usr/share/man/man3/SSL_get_psk_identity.3
+./usr/share/man/man3/SSL_get_psk_identity_hint.3
 ./usr/share/man/man3/SSL_get_quiet_shutdown.3
 ./usr/share/man/man3/SSL_get_rbio.3
 ./usr/share/man/man3/SSL_get_rfd.3
@@ -6415,6 +6427,8 @@
 ./usr/share/man/man3/SSL_set_msg_callback.3
 ./usr/share/man/man3/SSL_set_msg_callback_arg.3
 ./usr/share/man/man3/SSL_set_options.3
+./usr/share/man/man3/SSL_set_psk_client_callback.3
+./usr/share/man/man3/SSL_set_psk_server_callback.3
 ./usr/share/man/man3/SSL_set_quiet_shutdown.3
 ./usr/share/man/man3/SSL_set_rfd.3
 ./usr/share/man/man3/SSL_set_session.3
@@ -6443,6 +6457,7 @@
 ./usr/share/man/man3/SSL_use_certificate.3
 ./usr/share/man/man3/SSL_use_certificate_ASN1.3
 ./usr/share/man/man3/SSL_use_certificate_file.3
+./usr/share/man/man3/SSL_use_psk_identity_hint.3
 ./usr/share/man/man3/SSL_want.3
 ./usr/share/man/man3/SSL_want_nothing.3
 ./usr/share/man/man3/SSL_want_read.3
@@ -6510,8 +6525,42 @@
 ./usr/share/man/man3/X509_NAME_delete_entry.3
 ./usr/share/man/man3/X509_NAME_get_index_by_NID.3
 ./usr/share/man/man3/X509_NAME_print_ex.3
+./usr/share/man/man3/X509_STORE_CTX_cleanup.3
+./usr/share/man/man3/X509_STORE_CTX_free.3
+./usr/share/man/man3/X509_STORE_CTX_get0_param.3
+./usr/share/man/man3/X509_STORE_CTX_get1_chain.3
+./usr/share/man/man3/X509_STORE_CTX_get_current_cert.3
+./usr/share/man/man3/X509_STORE_CTX_get_error.3
+./usr/share/man/man3/X509_STORE_CTX_get_error_depth.3
+./usr/share/man/man3/X509_STORE_CTX_get_ex_data.3
+./usr/share/man/man3/X509_STORE_CTX_get_ex_new_index.3
+./usr/share/man/man3/X509_STORE_CTX_init.3
+./usr/share/man/man3/X509_STORE_CTX_new.3
+./usr/share/man/man3/X509_STORE_CTX_set0_crls.3
+./usr/share/man/man3/X509_STORE_CTX_set0_param.3
+./usr/share/man/man3/X509_STORE_CTX_set_cert.3
+./usr/share/man/man3/X509_STORE_CTX_set_chain.3
+./usr/share/man/man3/X509_STORE_CTX_set_default.3
+./usr/share/man/man3/X509_STORE_CTX_set_error.3
+./usr/share/man/man3/X509_STORE_CTX_set_ex_data.3
+./usr/share/man/man3/X509_STORE_CTX_set_verify_cb.3
+./usr/share/man/man3/X509_STORE_CTX_trusted_stack.3
+./usr/share/man/man3/X509_STORE_set_verify_cb.3
+./usr/share/man/man3/X509_STORE_set_verify_cb_func.3
+./usr/share/man/man3/X509_VERIFY_PARAM_add0_policy.3
+./usr/share/man/man3/X509_VERIFY_PARAM_clear_flags.3
+./usr/share/man/man3/X509_VERIFY_PARAM_get_depth.3
+./usr/share/man/man3/X509_VERIFY_PARAM_get_flags.3
+./usr/share/man/man3/X509_VERIFY_PARAM_set1_policies.3
+./usr/share/man/man3/X509_VERIFY_PARAM_set_depth.3
+./usr/share/man/man3/X509_VERIFY_PARAM_set_flags.3
+./usr/share/man/man3/X509_VERIFY_PARAM_set_purpose.3
+./usr/share/man/man3/X509_VERIFY_PARAM_set_time.3
+./usr/share/man/man3/X509_VERIFY_PARAM_set_trust.3
 ./usr/share/man/man3/X509_free.3
 ./usr/share/man/man3/X509_new.3
+./usr/share/man/man3/X509_verify_cert.3
+./usr/share/man/man3/X509_verify_cert_error_string.3
 ./usr/share/man/man3/__tfork_thread.3
 ./usr/share/man/man3/_longjmp.3
 ./usr/share/man/man3/_setjmp.3
@@ -9170,6 +9219,7 @@
 ./usr/share/man/man3/tcflush.3
 ./usr/share/man/man3/tcgetattr.3
 ./usr/share/man/man3/tcgetpgrp.3
+./usr/share/man/man3/tcgetsid.3
 ./usr/share/man/man3/tcsendbreak.3
 ./usr/share/man/man3/tcsetattr.3
 ./usr/share/man/man3/tcsetpgrp.3
@@ -10711,6 +10761,7 @@
 ./usr/share/man/man4/vio.4
 ./usr/share/man/man4/vioblk.4
 ./usr/share/man/man4/viomb.4
+./usr/share/man/man4/vioscsi.4
 ./usr/share/man/man4/virtio.4
 ./usr/share/man/man4/vlan.4
 ./usr/share/man/man4/vmt.4
@@ -10949,6 +11000,7 @@
 ./usr/share/man/man8/atactl.8
 ./usr/share/man/man8/authpf-noip.8
 ./usr/share/man/man8/authpf.8
+./usr/share/man/man8/autoinstall.8
 ./usr/share/man/man8/badsect.8
 ./usr/share/man/man8/bgpctl.8
 ./usr/share/man/man8/bgpd.8
@@ -11030,6 +11082,7 @@
 ./usr/share/man/man8/iked.8
 ./usr/share/man/man8/inetd.8
 ./usr/share/man/man8/init.8
+./usr/share/man/man8/installboot.8
 ./usr/share/man/man8/intro.8
 ./usr/share/man/man8/iostat.8
 ./usr/share/man/man8/iprop-log.8
@@ -11140,7 +11193,6 @@
 ./usr/share/man/man8/ping.8
 ./usr/share/man/man8/ping6.8
 ./usr/share/man/man8/pkg_check.8
-./usr/share/man/man8/popa3d.8
 ./usr/share/man/man8/portmap.8
 ./usr/share/man/man8/ppp.8
 ./usr/share/man/man8/pppctl.8
@@ -11326,6 +11378,7 @@
 ./usr/share/man/man9/NDINIT.9
 ./usr/share/man/man9/NDINITAT.9
 ./usr/share/man/man9/RWLOCK_INITIALIZER.9
+./usr/share/man/man9/TASK_INITIALIZER.9
 ./usr/share/man/man9/UVM_MAPFLAG.9
 ./usr/share/man/man9/VOP_ABORTOP.9
 ./usr/share/man/man9/VOP_ACCESS.9
@@ -11522,6 +11575,7 @@
 ./usr/share/man/man9/crypto_unregister.9
 ./usr/share/man/man9/ctlname.9
 ./usr/share/man/man9/db_printf.9
+./usr/share/man/man9/db_vprintf.9
 ./usr/share/man/man9/delay.9
 ./usr/share/man/man9/disk.9
 ./usr/share/man/man9/disk_attach.9

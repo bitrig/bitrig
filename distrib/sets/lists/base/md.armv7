@@ -1301,6 +1301,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/ubsecvar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/vga_pcivar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/vioblkreg.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/vioscsireg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/virtioreg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/virtiovar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/ydsreg.ph
@@ -2070,10 +2071,8 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/tprintf.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/tree.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/tty.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/sys/ttychars.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/ttycom.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/ttydefaults.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/sys/ttydev.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/types.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/ucred.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/uio.ph
