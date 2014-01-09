@@ -310,7 +310,7 @@ kmap(struct vm_page *pg)
 #if defined (__HAVE_PMAP_DIRECT)
 	va = pmap_map_direct(pg);
 #else
-	va = (vaddr_t)km_alloc(PAGE_SIZE, &kv_kv_drm_kmap, &kp_none,
+	va = (vaddr_t)km_alloc(PAGE_SIZE, &kv_drm_kmap, &kp_none,
 	    &kd_waitok);
 	pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg), VM_PROT_READ|VM_PROT_WRITE);
 	pmap_update(pmap_kernel());
