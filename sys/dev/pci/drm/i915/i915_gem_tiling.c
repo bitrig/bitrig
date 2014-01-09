@@ -492,7 +492,7 @@ i915_gem_swizzle_page(struct vm_page *pg)
 	va = pmap_map_direct(pg);
 #else
 	/* will not fail since kv_wait is set */
-	va = (vaddr_t)km_alloc(PAGE_SIZE, &kv_swizzpage, &kp_none, &kd_waitok);
+	va = (vaddr_t)km_alloc(PAGE_SIZE, &kv_drm_kmap, &kp_none, &kd_waitok);
 	pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg), VM_PROT_READ|VM_PROT_WRITE);
 	pmap_update(pmap_kernel());
 #endif
@@ -509,7 +509,7 @@ i915_gem_swizzle_page(struct vm_page *pg)
 #else
 	pmap_kremove(va, PAGE_SIZE);
 	pmap_update(pmap_kernel());
-	km_free((void *)va, PAGE_SIZE, &kv_swizzpage, &kp_none);
+	km_free((void *)va, PAGE_SIZE, &kv_drm_kmap, &kp_none);
 #endif
 }
 

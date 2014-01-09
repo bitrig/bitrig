@@ -297,6 +297,11 @@ static int i915_gem_object_needs_bit17_swizzle(struct drm_i915_gem_object *obj)
 
 #define offset_in_page(off) ((off) & PAGE_MASK)
 
+const struct kmem_va_mode kv_drm_kmap = {
+        .kv_map = &phys_map,
+	.kv_wait = 1,
+};
+
 static void *
 kmap(struct vm_page *pg)
 {
@@ -305,7 +310,8 @@ kmap(struct vm_page *pg)
 #if defined (__HAVE_PMAP_DIRECT)
 	va = pmap_map_direct(pg);
 #else
-	va = uvm_km_valloc_wait(phys_map, PAGE_SIZE);
+	va = (vaddr_t)km_alloc(PAGE_SIZE, &kv_kv_drm_kmap, &kp_none,
+	    &kd_waitok);
 	pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg), VM_PROT_READ|VM_PROT_WRITE);
 	pmap_update(pmap_kernel());
 #endif
@@ -322,7 +328,7 @@ kunmap(void *addr)
 #else
 	pmap_kremove(va, PAGE_SIZE);
 	pmap_update(pmap_kernel());
-	uvm_km_free_wakeup(phys_map, va, PAGE_SIZE);
+	km_free((void *)va, PAGE_SIZE, &kv_drm_kmap, &kp_none);
 #endif
 }
 
