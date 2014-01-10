@@ -510,6 +510,7 @@ uao_shrink_hash(struct uvm_object *uobj, int pages)
 {
 	struct uvm_aobj *aobj = (struct uvm_aobj *)uobj;
 	struct uao_swhash *new_swhash;
+	struct uao_swhash_elt *elt;
 	unsigned long new_hashmask;
 	int i, old_pages;
 
@@ -549,8 +550,14 @@ uao_shrink_hash(struct uvm_object *uobj, int pages)
 	 * we are interested in copying should not change.
 	 */
 
-	for (i = 0; i < UAO_SWHASH_BUCKETS(pages); i++)
-		LIST_FIRST(&new_swhash[i]) = LIST_FIRST(&aobj->u_swhash[i]);
+	for (i = 0; i < UAO_SWHASH_BUCKETS(pages); i++) {
+		/* XXX pedro: shouldn't copying the list pointers be enough? */
+		while (LIST_EMPTY(&aobj->u_swhash[i]) == 0) {
+			elt = LIST_FIRST(&aobj->u_swhash[i]);
+			LIST_REMOVE(elt, list);
+			LIST_INSERT_HEAD(&new_swhash[i], elt, list);
+		}
+	}
 
 	free(aobj->u_swhash, M_UVMAOBJ);
 
@@ -735,6 +742,7 @@ uao_grow_hash(struct uvm_object *uobj, int pages)
 {
 	struct uvm_aobj *aobj = (struct uvm_aobj *)uobj;
 	struct uao_swhash *new_swhash;
+	struct uao_swhash_elt *elt;
 	unsigned long new_hashmask;
 	int i, old_pages;
 
@@ -768,8 +776,14 @@ uao_grow_hash(struct uvm_object *uobj, int pages)
 		return EAGAIN;
 	}
 
-	for (i = 0; i < UAO_SWHASH_BUCKETS(aobj->u_pages); i++)
-		LIST_FIRST(&new_swhash[i]) = LIST_FIRST(&aobj->u_swhash[i]);
+	for (i = 0; i < UAO_SWHASH_BUCKETS(aobj->u_pages); i++) {
+		/* XXX pedro: shouldn't copying the list pointers be enough? */
+		while (LIST_EMPTY(&aobj->u_swhash[i]) == 0) {
+			elt = LIST_FIRST(&aobj->u_swhash[i]);
+			LIST_REMOVE(elt, list);
+			LIST_INSERT_HEAD(&new_swhash[i], elt, list);
+		}
+	}
 
 	free(aobj->u_swhash, M_UVMAOBJ);
 
