@@ -63,9 +63,7 @@
 #include <machine/reg.h>
 #include <machine/vmparam.h>
 
-#ifdef CPU_ARMv7
 #include <arm/include/vfp.h>
-#endif
 
 extern pv_addr_t systempage;
 
@@ -176,9 +174,7 @@ cpu_fork(p1, p2, stack, stacksize, func, arg)
 void
 cpu_exit(struct proc *p)
 {
-#ifdef CPU_ARMv7
 	vfp_discard();
-#endif
 	pmap_deactivate(p);
 	sched_exit(p);
 }

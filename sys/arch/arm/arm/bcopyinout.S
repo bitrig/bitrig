@@ -40,22 +40,13 @@
 
 #include <machine/asm.h>
 
-#ifdef __XSCALE__
-#include "bcopyinout_xscale.S"
-#else
-
 	.text
 	.align	0
 
 #define SAVE_REGS	stmfd	sp!, {r4-r11}
 #define RESTORE_REGS	ldmfd	sp!, {r4-r11}
 		
-#if defined(__XSCALE__)
-#define HELLOCPP #
-#define PREFETCH(rx,o)	pld	[ rx , HELLOCPP (o) ]
-#else
 #define PREFETCH(rx,o)
-#endif
 
 /*
  * r0 = user space address
@@ -670,7 +661,6 @@ ENTRY(kcopy)
 	RESTORE_REGS
 
 	mov	pc, lr
-#endif	/* !__XSCALE__ */
 
 /*
  * int badaddr_read_1(const uint8_t *src, uint8_t *dest)

@@ -107,9 +107,7 @@
 #include <arm/db_machdep.h>
 #include <arch/arm/arm/disassem.h>
 #include <arm/machdep.h>
-#ifdef CPU_ARMv7
 #include <arm/vfp.h>
-#endif
  
 #ifdef DEBUG
 int last_fault_code;	/* For the benefit of pmap_fault_fixup() */
@@ -136,24 +134,6 @@ static int dab_buserr(trapframe_t *, u_int, u_int, struct proc *,
     struct sigdata *sd);
 
 static const struct data_abort data_aborts[] = {
-#ifndef CPU_ARMv7
-	{dab_fatal,	"Vector Exception"},
-	{dab_align,	"Alignment Fault 1"},
-	{dab_fatal,	"Terminal Exception"},
-	{dab_align,	"Alignment Fault 3"},
-	{dab_buserr,	"External Linefetch Abort (S)"},
-	{NULL,		"Translation Fault (S)"},
-	{dab_buserr,	"External Linefetch Abort (P)"},
-	{NULL,		"Translation Fault (P)"},
-	{dab_buserr,	"External Non-Linefetch Abort (S)"},
-	{NULL,		"Domain Fault (S)"},
-	{dab_buserr,	"External Non-Linefetch Abort (P)"},
-	{NULL,		"Domain Fault (P)"},
-	{dab_buserr,	"External Translation Abort (L1)"},
-	{NULL,		"Permission Fault (S)"},
-	{dab_buserr,	"External Translation Abort (L2)"},
-	{NULL,		"Permission Fault (P)"}
-#else
 	{dab_fatal,	"V7 fault 00000"},
 	{dab_align,	"Alignment Fault 1"},
 	{dab_fatal,	"Debug Event"},
@@ -186,7 +166,6 @@ static const struct data_abort data_aborts[] = {
 	{dab_fatal,	"V7 fault 11101"},
 	{dab_buserr,	"External Translation Abort (L2)"},
 	{NULL,		"V7 fault 11111"},
-#endif
 };
 
 /* Determine if a fault came from user mode */
@@ -214,19 +193,13 @@ data_abort_handler(trapframe_t *tf)
 	/* Grab FAR/FSR before enabling interrupts */
 	far = cpu_dfar();
 	fsr = cpu_dfsr();
-#ifndef CPU_ARMv7
 	ftyp = FAULT_TYPE(fsr);
-#else
-	ftyp = FAULT_TYPE_V7(fsr);
-#endif
 
 	/* Update vmmeter statistics */
 	uvmexp.traps++;
 
-#ifdef CPU_ARMv7
 	/* Before enabling interrupts, save FPU state */
 	vfp_save();
-#endif
 
 	/* Re-enable interrupts if they were enabled previously */
 	if (__predict_true((tf->tf_spsr & I32_bit) == 0))
@@ -335,37 +308,7 @@ data_abort_handler(trapframe_t *tf)
 #endif
 	}
 
-#ifndef CPU_ARMv7
-	/*
-	 * We need to know whether the page should be mapped
-	 * as R or R/W. The MMU does not give us the info as
-	 * to whether the fault was caused by a read or a write.
-	 *
-	 * However, we know that a permission fault can only be
-	 * the result of a write to a read-only location, so
-	 * we can deal with those quickly.
-	 *
-	 * Otherwise we need to disassemble the instruction
-	 * responsible to determine if it was a write.
-	 */
-	if (IS_PERMISSION_FAULT(fsr))
-		ftype = VM_PROT_WRITE; 
-	else {
-		u_int insn = *(u_int *)tf->tf_pc;
-
-		if (((insn & 0x0c100000) == 0x04000000) ||	/* STR/STRB */
-		    ((insn & 0x0e1000b0) == 0x000000b0) ||	/* STRH/STRD */
-		    ((insn & 0x0a100000) == 0x08000000))	/* STM/CDT */
-			ftype = VM_PROT_WRITE; 
-		else
-		if ((insn & 0x0fb00ff0) == 0x01000090)		/* SWP */
-			ftype = VM_PROT_READ | VM_PROT_WRITE; 
-		else
-			ftype = VM_PROT_READ; 
-	}
-#else
 	ftype = fsr & FAULT_WNR ? VM_PROT_WRITE : VM_PROT_READ;
-#endif
 
 	/*
 	 * See if the fault is as a result of ref/mod emulation,
@@ -466,18 +409,10 @@ dab_fatal(trapframe_t *tf, u_int fsr, u_int far, struct proc *p,
 	mode = TRAP_USERMODE(tf) ? "user" : "kernel";
 
 	if (p != NULL) {
-#ifndef CPU_ARMv7
 		ftyp = FAULT_TYPE(fsr);
-#else
-		ftyp = FAULT_TYPE_V7(fsr);
-#endif
 		printf("Fatal %s mode data abort: '%s'\n", mode,
 		    data_aborts[ftyp].desc);
 		printf("trapframe: %p\nDFSR=%08x, DFAR=%08x", tf, fsr, far);
-#ifndef CPU_ARMv7
-		if ((fsr & FAULT_IMPRECISE) != 0)
-			printf(" (imprecise)");
-#endif
 		printf(", spsr=%08x\n", tf->tf_spsr);
 	} else {
 		printf("Fatal %s mode prefetch abort at 0x%08x\n",
@@ -568,52 +503,6 @@ dab_buserr(trapframe_t *tf, u_int fsr, u_int far, struct proc *p,
 {
 	struct pcb *pcb = &p->p_addr->u_pcb;
 
-#ifdef __XSCALE__
-	if ((fsr & FAULT_IMPRECISE) != 0 &&
-	    (tf->tf_spsr & PSR_MODE) == PSR_ABT32_MODE) {
-		/*
-		 * Oops, an imprecise, double abort fault. We've lost the
-		 * r14_abt/spsr_abt values corresponding to the original
-		 * abort, and the spsr saved in the trapframe indicates
-		 * ABT mode.
-		 */
-		tf->tf_spsr &= ~PSR_MODE;
-
-		/*
-		 * We use a simple heuristic to determine if the double abort
-		 * happened as a result of a kernel or user mode access.
-		 * If the current trapframe is at the top of the kernel stack,
-		 * the fault _must_ have come from user mode.
-		 */
-		if (tf != ((trapframe_t *)pcb->pcb_un.un_32.pcb32_sp) - 1) {
-			/*
-			 * Kernel mode. We're either about to die a
-			 * spectacular death, or pcb_onfault will come
-			 * to our rescue. Either way, the current value
-			 * of tf->tf_pc is irrelevant.
-			 */
-			tf->tf_spsr |= PSR_SVC32_MODE;
-			if (pcb->pcb_onfault == NULL)
-				printf("\nKernel mode double abort!\n");
-		} else {
-			/*
-			 * User mode. We've lost the program counter at the
-			 * time of the fault (not that it was accurate anyway;
-			 * it's not called an imprecise fault for nothing).
-			 * About all we can do is copy r14_usr to tf_pc and
-			 * hope for the best. The process is about to get a
-			 * SIGBUS, so it's probably history anyway.
-			 */
-			tf->tf_spsr |= PSR_USR32_MODE;
-			tf->tf_pc = tf->tf_usr_lr;
-		}
-	}
-
-	/* FAR is invalid for imprecise exceptions */
-	if ((fsr & FAULT_IMPRECISE) != 0)
-		far = 0;
-#endif /* __XSCALE__ */
-
 	if (pcb->pcb_onfault) {
 		KDASSERT(TRAP_USERMODE(tf) == 0);
 		tf->tf_r0 = EFAULT;
@@ -655,22 +544,15 @@ prefetch_abort_handler(trapframe_t *tf)
 	uvmexp.traps++;
 
 	/* Grab FAR/FSR before enabling interrupts */
-#ifndef CPU_ARMv7
-	far = tf->tf_pc;
-	fsr = 0;
-#else
 	far = cpu_ifar();
 	fsr = cpu_ifsr();
-#endif
 
 	/* Prefetch aborts cannot happen in kernel mode */
 	if (__predict_false(!TRAP_USERMODE(tf)))
 		dab_fatal(tf, fsr, far, NULL, NULL);
 
-#ifdef CPU_ARMv7
 	/* Before enabling interrupts, save FPU state */
 	vfp_save();
-#endif
 
 	/*
 	 * Enable IRQ's (disabled by the abort) This always comes

@@ -141,65 +141,7 @@
 /* Individual CPUs are probably best IDed by everything but the revision. */
 #define CPU_ID_CPU_MASK		0xfffffff0
 
-/* Fake CPU IDs for ARMs without CP15 */
-#define CPU_ID_ARM2		0x41560200
-#define CPU_ID_ARM250		0x41560250
-
-/* Pre-ARM7 CPUs -- [15:12] == 0 */
-#define CPU_ID_ARM3		0x41560300
-#define CPU_ID_ARM600		0x41560600
-#define CPU_ID_ARM610		0x41560610
-#define CPU_ID_ARM620		0x41560620
-
-/* ARM7 CPUs -- [15:12] == 7 */
-#define CPU_ID_ARM700		0x41007000 /* XXX This is a guess. */
-#define CPU_ID_ARM710		0x41007100
-#define CPU_ID_ARM7500		0x41027100 /* XXX This is a guess. */
-#define CPU_ID_ARM710A		0x41047100 /* inc ARM7100 */
-#define CPU_ID_ARM7500FE	0x41077100
-#define CPU_ID_ARM710T		0x41807100
-#define CPU_ID_ARM720T		0x41807200
-#define CPU_ID_ARM740T8K	0x41807400 /* XXX no MMU, 8KB cache */
-#define CPU_ID_ARM740T4K	0x41817400 /* XXX no MMU, 4KB cache */
-
 /* Post-ARM7 CPUs */
-#define CPU_ID_ARM810		0x41018100
-#define CPU_ID_ARM920T		0x41129200
-#define CPU_ID_ARM922T		0x41029220
-#define CPU_ID_ARM926EJS	0x41069260
-#define CPU_ID_ARM940T		0x41029400 /* XXX no MMU */
-#define CPU_ID_ARM946ES		0x41049460 /* XXX no MMU */
-#define CPU_ID_ARM966ES		0x41049660 /* XXX no MMU */
-#define CPU_ID_ARM966ESR1	0x41059660 /* XXX no MMU */
-#define CPU_ID_ARM1020E		0x4115a200 /* (AKA arm10 rev 1) */
-#define CPU_ID_ARM1022ES	0x4105a220
-#define CPU_ID_ARM1026EJS	0x4106a260
-#define CPU_ID_ARM1136JS	0x4107b360
-#define CPU_ID_ARM1136JSR1	0x4117b360
-#define CPU_ID_SA110		0x4401a100
-#define CPU_ID_SA1100		0x4401a110
-#define CPU_ID_TI925T		0x54029250
-#define CPU_ID_SA1110		0x6901b110
-#define CPU_ID_IXP1200		0x6901c120
-#define CPU_ID_80200		0x69052000
-#define CPU_ID_PXA250		0x69052100 /* sans core revision */
-#define CPU_ID_PXA210		0x69052120
-#define CPU_ID_PXA250A		0x69052100 /* 1st version Core */
-#define CPU_ID_PXA210A		0x69052120 /* 1st version Core */
-#define CPU_ID_PXA250B		0x69052900 /* 3rd version Core */
-#define CPU_ID_PXA210B		0x69052920 /* 3rd version Core */
-#define CPU_ID_PXA250C		0x69052d00 /* 4th version Core */
-#define CPU_ID_PXA210C		0x69052d20 /* 4th version Core */
-#define CPU_ID_80219_400        0x69052e20
-#define CPU_ID_80219_600        0x69052e30
-#define CPU_ID_PXA27X		0x69054110
-#define CPU_ID_80321_400	0x69052420
-#define CPU_ID_80321_600	0x69052430
-#define CPU_ID_80321_400_B0	0x69052c20
-#define CPU_ID_80321_600_B0	0x69052c30
-#define CPU_ID_IXP425_533	0x690541c0
-#define CPU_ID_IXP425_400	0x690541d0
-#define CPU_ID_IXP425_266	0x690541f0
 #define CPU_ID_CORTEX_A5	0x410fc050
 #define CPU_ID_CORTEX_A5_MASK	0xff0ffff0
 #define CPU_ID_CORTEX_A7	0x410fc070
@@ -361,8 +303,7 @@
 #define	FAULT_EXT	0x00001000	/* external abort */
 #define	FAULT_WNR	0x00000800	/* write fault */
 
-#define	FAULT_TYPE(fsr)		((fsr) & 0x0f)
-#define	FAULT_TYPE_V7(fsr)	(((fsr) & 0x0f) | (((fsr) & 0x00000400) >> 6))
+#define	FAULT_TYPE(fsr)		(((fsr) & 0x0f) | (((fsr) & 0x00000400) >> 6))
 
 /*
  * Address of the vector page, low and high versions.

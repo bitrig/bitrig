@@ -379,47 +379,19 @@ do {									\
 
 /************************* ARM MMU configuration *****************************/
 
-#if (ARM_MMU_GENERIC + ARM_MMU_SA1 + ARM_MMU_V7) != 0
+#if (ARM_MMU_GENERIC + ARM_MMU_V7) != 0
 void	pmap_copy_page_generic(struct vm_page *, struct vm_page *);
 void	pmap_zero_page_generic(struct vm_page *);
 
 void	pmap_pte_init_generic(void);
-#if defined(CPU_ARM8)
-void	pmap_pte_init_arm8(void);
-#endif
-#if defined(CPU_ARM9)
-void	pmap_pte_init_arm9(void);
-#endif /* CPU_ARM9 */
-#if defined(CPU_ARM10)
-void	pmap_pte_init_arm10(void);
-#endif /* CPU_ARM10 */
-#if defined(CPU_ARM11)
-void	pmap_pte_init_arm11(void);
-#endif /* CPU_ARM11 */
 #if defined(CPU_ARMv7)
 void	pmap_pte_init_armv7(void);
 #endif /* CPU_ARMv7 */
-#endif /* (ARM_MMU_GENERIC + ARM_MMU_SA1 + ARM_MMU_V7) != 0 */
-
-#if ARM_MMU_SA1 == 1
-void	pmap_pte_init_sa1(void);
-#endif /* ARM_MMU_SA1 == 1 */
+#endif /* (ARM_MMU_GENERIC + ARM_MMU_V7) != 0 */
 
 #if ARM_MMU_V7 == 1
 void	pmap_pte_init_v7(void);
 #endif /* ARM_MMU_V7 == 1 */
-
-#if ARM_MMU_XSCALE == 1
-void	pmap_copy_page_xscale(struct vm_page *, struct vm_page *);
-void	pmap_zero_page_xscale(struct vm_page *);
-
-void	pmap_pte_init_xscale(void);
-
-void	xscale_setup_minidata(vaddr_t, vaddr_t, paddr_t);
-
-#define	PMAP_UAREA(va)		pmap_uarea(va)
-void	pmap_uarea(vaddr_t);
-#endif /* ARM_MMU_XSCALE == 1 */
 
 extern pt_entry_t		pte_l1_s_cache_mode;
 extern pt_entry_t		pte_l1_s_cache_mask;
@@ -473,11 +445,9 @@ extern void (*pmap_zero_page_func)(struct vm_page *);
 #define	L1_S_PROT_MASK		(L1_S_PROT_U|L1_S_PROT_W)
 
 #define	L1_S_CACHE_MASK_generic	(L1_S_B|L1_S_C)
-#define	L1_S_CACHE_MASK_xscale	(L1_S_B|L1_S_C|L1_S_XSCALE_TEX(TEX_XSCALE_X))
 #define	L1_S_CACHE_MASK_v7	(L1_S_B|L1_S_C|L1_S_V7_TEX_MASK|L1_S_V7_S)
 
 #define	L1_S_COHERENT_generic	(L1_S_B|L1_S_C)
-#define	L1_S_COHERENT_xscale	(L1_S_B|L1_S_C|L1_S_XSCALE_TEX(TEX_XSCALE_X))
 #define	L1_S_COHERENT_v7	(L1_S_C|L1_S_V7_TEX_MASK)
 
 #define	L2_L_PROT_KR		(L2_AP(0))
@@ -487,11 +457,9 @@ extern void (*pmap_zero_page_func)(struct vm_page *);
 #define	L2_L_PROT_MASK		(L2_AP(AP_U|AP_W))
 
 #define	L2_L_CACHE_MASK_generic	(L2_B|L2_C)
-#define	L2_L_CACHE_MASK_xscale	(L2_B|L2_C|L2_XSCALE_L_TEX(TEX_XSCALE_X))
 #define	L2_L_CACHE_MASK_v7	(L2_B|L2_C|L2_V7_L_TEX_MASK|L2_V7_S)
 
 #define	L2_L_COHERENT_generic	(L2_B|L2_C)
-#define	L2_L_COHERENT_xscale	(L2_B|L2_C|L2_XSCALE_L_TEX(TEX_XSCALE_X))
 #define	L2_L_COHERENT_v7	(L2_C|L2_V7_L_TEX_MASK)
 
 #define	L2_S_PROT_UR_generic	(L2_AP(AP_U))
@@ -500,11 +468,6 @@ extern void (*pmap_zero_page_func)(struct vm_page *);
 #define	L2_S_PROT_KW_generic	(L2_AP(AP_W))
 #define	L2_S_PROT_MASK_generic	(L2_AP(AP_U|AP_W))
 
-#define	L2_S_PROT_UR_xscale	(L2_AP0(AP_U))
-#define	L2_S_PROT_UW_xscale	(L2_AP0(AP_U|AP_W))
-#define	L2_S_PROT_KR_xscale	(L2_AP0(0))
-#define	L2_S_PROT_KW_xscale	(L2_AP0(AP_W))
-#define	L2_S_PROT_MASK_xscale	(L2_AP0(AP_U|AP_W))
 
 #define	L2_S_PROT_UR_v7		(L2_V7_AP(AP_KRWUR))
 #define	L2_S_PROT_UW_v7		(L2_V7_AP(AP_KRWURW))
@@ -513,25 +476,20 @@ extern void (*pmap_zero_page_func)(struct vm_page *);
 #define	L2_S_PROT_MASK_v7	(L2_V7_AP(0x07) | L2_V7_S_XN)
 
 #define	L2_S_CACHE_MASK_generic	(L2_B|L2_C)
-#define	L2_S_CACHE_MASK_xscale	(L2_B|L2_C|L2_XSCALE_T_TEX(TEX_XSCALE_X))
 #define	L2_S_CACHE_MASK_v7	(L2_B|L2_C|L2_V7_S_TEX_MASK|L2_V7_S)
 
 #define	L2_S_COHERENT_generic	(L2_B|L2_C)
-#define	L2_S_COHERENT_xscale	(L2_B|L2_C|L2_XSCALE_T_TEX(TEX_XSCALE_X))
 #define	L2_S_COHERENT_v7	(L2_C|L2_V7_S_TEX_MASK)
 
 #define	L1_S_PROTO_generic	(L1_TYPE_S | L1_S_IMP)
-#define	L1_S_PROTO_xscale	(L1_TYPE_S)
 #define	L1_S_PROTO_v7		(L1_TYPE_S)
 
 #define	L1_C_PROTO_generic	(L1_TYPE_C | L1_C_IMP2)
-#define	L1_C_PROTO_xscale	(L1_TYPE_C)
 #define	L1_C_PROTO_v7		(L1_TYPE_C)
 
 #define	L2_L_PROTO		(L2_TYPE_L)
 
 #define	L2_S_PROTO_generic	(L2_TYPE_S)
-#define	L2_S_PROTO_xscale	(L2_TYPE_XSCALE_XS)
 #define	L2_S_PROTO_v7		(L2_TYPE_S)
 
 /*
@@ -560,7 +518,7 @@ extern void (*pmap_zero_page_func)(struct vm_page *);
 
 #define	pmap_copy_page(s, d)	(*pmap_copy_page_func)((s), (d))
 #define	pmap_zero_page(d)	(*pmap_zero_page_func)((d))
-#elif (ARM_MMU_GENERIC + ARM_MMU_SA1) != 0
+#elif (ARM_MMU_GENERIC) != 0
 #define	L2_S_PROT_UR		L2_S_PROT_UR_generic
 #define	L2_S_PROT_UW		L2_S_PROT_UW_generic
 #define	L2_S_PROT_KR		L2_S_PROT_KR_generic
@@ -581,27 +539,6 @@ extern void (*pmap_zero_page_func)(struct vm_page *);
 
 #define	pmap_copy_page(s, d)	pmap_copy_page_generic((s), (d))
 #define	pmap_zero_page(d)	pmap_zero_page_generic((d))
-#elif ARM_MMU_XSCALE == 1
-#define	L2_S_PROT_UR		L2_S_PROT_UR_xscale
-#define	L2_S_PROT_UW		L2_S_PROT_UW_xscale
-#define	L2_S_PROT_KR		L2_S_PROT_KR_xscale
-#define	L2_S_PROT_KW		L2_S_PROT_KW_xscale
-#define	L2_S_PROT_MASK		L2_S_PROT_MASK_xscale
-
-#define	L1_S_CACHE_MASK		L1_S_CACHE_MASK_xscale
-#define	L2_L_CACHE_MASK		L2_L_CACHE_MASK_xscale
-#define	L2_S_CACHE_MASK		L2_S_CACHE_MASK_xscale
-
-#define	L1_S_COHERENT		L1_S_COHERENT_xscale
-#define	L2_L_COHERENT		L2_L_COHERENT_xscale
-#define	L2_S_COHERENT		L2_S_COHERENT_xscale
-
-#define	L1_S_PROTO		L1_S_PROTO_xscale
-#define	L1_C_PROTO		L1_C_PROTO_xscale
-#define	L2_S_PROTO		L2_S_PROTO_xscale
-
-#define	pmap_copy_page(s, d)	pmap_copy_page_xscale((s), (d))
-#define	pmap_zero_page(d)	pmap_zero_page_xscale((d))
 #elif ARM_MMU_V7 == 1
 #define	L2_S_PROT_UR		L2_S_PROT_UR_v7
 #define	L2_S_PROT_UW		L2_S_PROT_UW_v7

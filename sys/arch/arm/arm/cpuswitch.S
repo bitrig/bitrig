@@ -1,4 +1,4 @@
-/*	$OpenBSD: cpuswitch.S,v 1.12 2011/09/20 22:02:10 miod Exp $	*/
+/*	$OpenBSD: cpuswitch7.S,v 1.1 2013/04/30 13:04:25 patrick Exp $	*/
 /*	$NetBSD: cpuswitch.S,v 1.41 2003/11/15 08:44:18 scw Exp $	*/
 
 /*
@@ -105,35 +105,11 @@
 
 	.text
 
-.Lcpu_info_primary:
-	.word	_C_LABEL(cpu_info_primary)
-.Lcurproc:
-	.word	_C_LABEL(cpu_info_primary) + CI_CURPROC
-
-.Lcpufuncs:	
+.Lcpufuncs:
 	.word	_C_LABEL(cpufuncs)
-	
-#ifndef MULTIPROCESSOR
-.Lcurpcb:
-	.word   _C_LABEL(curpcb)
-	.data
-	.global	_C_LABEL(curpcb)
-_C_LABEL(curpcb):
-	.word	0x00000000
-	.text
-#else
-.Lcurpcb:
-	.word	_C_LABEL(cpu_info_primary) + CI_CURPCB
-#endif
 
 .Lcpu_do_powersave:
 	.word	_C_LABEL(cpu_do_powersave)
-
-.Lpmap_kernel_cstate:
-	.word	(kernel_pmap_store + PMAP_CSTATE)
-
-.Llast_cache_state_ptr:
-	.word	_C_LABEL(pmap_cache_state)
 
 /*
  * Idle loop, exercised while waiting for a process to wake up.
@@ -183,10 +159,10 @@ ENTRY(cpu_idle_leave)
 ENTRY(cpu_switchto)
 	stmfd	sp!, {r4-r7, lr}
 
+	/* Get curcpu from TPIDRPRW. */
+	mrc	p15, 0, r3, c13, c0, 4
 #ifdef MULTIPROCESSOR
-	/* XXX use curcpu() */
-	ldr	r2, .Lcpu_info_primary
-	str	r2, [r1, #(P_CPU)]
+	str	r3, [r1, #(P_CPU)]
 #else
 	/* p->p_cpu initialized in fork1() for single-processor */
 #endif
@@ -196,14 +172,12 @@ ENTRY(cpu_switchto)
 	strb	r2, [r1, #(P_STAT)]
 
 	/* We have a new curproc now so make a note it */
-	ldr	r7, .Lcurproc
-	str	r1, [r7]
+	str	r1, [r3, #(CI_CURPROC)]
 
 	/* Hook in a new pcb */
-	ldr	r7, .Lcurpcb
-	ldr	r6, [r7]			/* Remember the old PCB */
+	ldr	r6, [r3, #(CI_CURPCB)]		/* Remember the old PCB */
 	ldr	r2, [r1, #(P_ADDR)]
-	str	r2, [r7]
+	str	r2, [r3, #(CI_CURPCB)]
 
 	/*
 	 * If the old proc on entry to cpu_switch was zero then the
@@ -217,14 +191,8 @@ ENTRY(cpu_switchto)
 	/* Stage two: Save old context */
 
 	/* Save all the registers in the old proc's pcb */
-#ifndef __XSCALE__
 	add	r7, r6, #(PCB_R8)
 	stmia	r7, {r8-r13}
-#else
-	strd	r8, [r6, #(PCB_R8)]
-	strd	r10, [r6, #(PCB_R10)]
-	strd	r12, [r6, #(PCB_R12)]
-#endif
 
 .Lswitch_exited:
 	/*
@@ -281,54 +249,24 @@ ENTRY(cpu_switchto)
 
 	ldr	r0, [r8, #(PCB_DACR)]		/* r0 = old DACR */
 	ldr	r1, [r9, #(PCB_DACR)]		/* r1 = new DACR */
-	ldr	r8, [r9, #(PCB_CSTATE)]		/* r8 = &new_pmap->pm_cstate */
-	ldr	r5, .Llast_cache_state_ptr	/* Previous proc's cstate */
 
 	teq	r10, r11			/* Same L1? */
-	ldr	r5, [r5]
 	cmpeq	r0, r1				/* Same DACR? */
 	beq	.Lcs_context_switched		/* yes! */
-
-	mov	r12, #0
-	cmp	r5, #0				/* No last vm? (switch_exit) */
-	beq	.Lcs_cache_purge_skipped	/* No, we can skip cache flsh */
 
 	mov	r2, #DOMAIN_CLIENT
 	cmp	r1, r2, lsl #(PMAP_DOMAIN_KERNEL * 2) /* Sw to kernel thread? */
 	beq	.Lcs_cache_purge_skipped	/* Yup. Don't flush cache */
 
-	cmp	r5, r8				/* Same userland VM space? */
-	ldrneb	r12, [r5, #(CS_CACHE_ID)]	/* Last VM space cache state */
-
-	/*
-	 * We're definately switching to a new userland VM space,
-	 * and the previous userland VM space has yet to be flushed
-	 * from the cache/tlb.
-	 *
-	 * r12 holds the previous VM space's cs_cache_id state
-	 */
-	tst	r12, #0xff			/* Test cs_cache_id */
-	beq	.Lcs_cache_purge_skipped	/* VM space is not in cache */
-
-	/*
-	 * Definitely need to flush the cache.
-	 * Mark the old VM space as NOT being resident in the cache.
-	 */
-	mov	r2, #0x00000000
-	strb	r2, [r5, #(CS_CACHE_ID)]
-	strb	r2, [r5, #(CS_CACHE_D)]
-
 	stmfd	sp!, {r0-r3}
 	ldr	r1, .Lcpufuncs
 	mov	lr, pc
-	ldr	pc, [r1, #CF_IDCACHE_WBINV_ALL]
+	ldr	pc, [r1, #CF_ICACHE_SYNC_ALL]
 	ldmfd	sp!, {r0-r3}
 
 .Lcs_cache_purge_skipped:
 	/* rem: r1 = new DACR */
-	/* rem: r5 = &old_pmap->pm_cstate (or NULL) */
 	/* rem: r6 = new proc */
-	/* rem: r8 = &new_pmap->pm_cstate */
 	/* rem: r9 = new PCB */
 	/* rem: r10 = old L1 */
 	/* rem: r11 = new L1 */
@@ -380,12 +318,6 @@ ENTRY(cpu_switchto)
 	mov	lr, pc
 	ldr	pc, [r10, #CF_CONTEXT_SWITCH]
 
-	/*
-	 * Mark the old VM space as NOT being resident in the TLB
-	 */
-	mov	r2, #0x00000000
-	cmp	r5, #0
-	strneh	r2, [r5, #(CS_TLB_ID)]
 	b	.Lcs_context_switched
 
 	/*
@@ -400,24 +332,15 @@ ENTRY(cpu_switchto)
 	ldrne	pc, [r10, #CF_TLB_FLUSHID_SE]
 
 .Lcs_context_switched:
-	/* rem: r8 = &new_pmap->pm_cstate */
 
 	/* XXXSCW: Safe to re-enable FIQs here */
 
-	/*
-	 * The new VM space is live in the cache and TLB.
-	 * Update its cache/tlb state, and if it's not the kernel
-	 * pmap, update the 'last cache state' pointer.
-	 */
-	mov	r2, #-1
-	ldr	r5, .Lpmap_kernel_cstate
-	ldr	r0, .Llast_cache_state_ptr
-	str	r2, [r8, #(CS_ALL)]
-	cmp	r5, r8
-	strne	r8, [r0]
-
 	/* rem: r6 = new proc */
 	/* rem: r9 = new PCB */
+
+	/* stick tcb into user visable register (V7 only) */
+	ldr	r3, [r9, #(PCB_TCB)]
+	mcr p15, 0, r3, c13, c0, 3
 
 	/*
 	 * This can be optimised... We know we want to go from SVC32
@@ -433,20 +356,10 @@ ENTRY(cpu_switchto)
         msr	cpsr_c, r3		/* Restore the old mode */
 
 	/* Restore all the save registers */
-#ifndef __XSCALE__
 	add	r7, r9, #PCB_R8
 	ldmia	r7, {r8-r13}
 
 	sub	r7, r7, #PCB_R8		/* restore PCB pointer */
-#else
-	mov	r7, r9
-	ldr	r8, [r7, #(PCB_R8)]
-	ldr	r9, [r7, #(PCB_R9)]
-	ldr	r10, [r7, #(PCB_R10)]
-	ldr	r11, [r7, #(PCB_R11)]
-	ldr	r12, [r7, #(PCB_R12)]
-	ldr	r13, [r7, #(PCB_SP)]
-#endif
 
 	/* rem: r6 = new proc */
 	/* rem: r7 = new pcb */
@@ -474,14 +387,8 @@ ENTRY(savectx)
 	stmfd	sp!, {r4-r7, lr}
 
 	/* Store all the registers in the process's pcb */
-#ifndef __XSCALE__
 	add	r2, r0, #(PCB_R8)
 	stmia	r2, {r8-r13}
-#else
-	strd	r8, [r0, #(PCB_R8)]
-	strd	r10, [r0, #(PCB_R10)]
-	strd	r12, [r0, #(PCB_R12)]
-#endif
 
 	/* Pull the regs of the stack */
 	ldmfd	sp!, {r4-r7, pc}

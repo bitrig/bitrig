@@ -56,9 +56,7 @@
 
 #include <arm/cpuconf.h>
 #include <arm/undefined.h>
-#ifdef CPU_ARMv7
 #include <arm/vfp.h>
-#endif
 
 char cpu_model[256];
 
@@ -83,135 +81,16 @@ cpu_attach(struct device *dv)
 
 	identify_arm_cpu(dv, curcpu());
 
-#ifdef CPU_ARMv7
 	vfp_init();
-#endif
-
-#ifdef CPU_ARM8
-	if ((curcpu()->ci_arm_cpuid & CPU_ID_CPU_MASK) == CPU_ID_ARM810) {
-		int clock = arm8_clock_config(0, 0);
-		char *fclk;
-		aprint_normal("%s: ARM810 cp15=%02x", dv->dv_xname, clock);
-		aprint_normal(" clock:%s", (clock & 1) ? " dynamic" : "");
-		aprint_normal("%s", (clock & 2) ? " sync" : "");
-		switch ((clock >> 2) & 3) {
-		case 0:
-			fclk = "bus clock";
-			break;
-		case 1:
-			fclk = "ref clock";
-			break;
-		case 3:
-			fclk = "pll";
-			break;
-		default:
-			fclk = "illegal";
-			break;
-		}
-		aprint_normal(" fclk source=%s\n", fclk);
- 	}
-#endif
 }
 
 enum cpu_class {
 	CPU_CLASS_NONE,
-	CPU_CLASS_ARM8,
-	CPU_CLASS_ARM9TDMI,
-	CPU_CLASS_ARM9ES,
-	CPU_CLASS_ARM9EJS,
-	CPU_CLASS_ARM10E,
-	CPU_CLASS_SA1,
-	CPU_CLASS_XSCALE,
-	CPU_CLASS_ARM11J,
 	CPU_CLASS_ARMv7
 };
 
 static const char * const generic_steppings[16] = {
 	"rev 0",	"rev 1",	"rev 2",	"rev 3",
-	"rev 4",	"rev 5",	"rev 6",	"rev 7",
-	"rev 8",	"rev 9",	"rev 10",	"rev 11",
-	"rev 12",	"rev 13",	"rev 14",	"rev 15"
-};
-
-static const char * const sa110_steppings[16] = {
-	"rev 0",	"step J",	"step K",	"step S",
-	"step T",	"rev 5",	"rev 6",	"rev 7",
-	"rev 8",	"rev 9",	"rev 10",	"rev 11",
-	"rev 12",	"rev 13",	"rev 14",	"rev 15"
-};
-
-static const char * const sa1100_steppings[16] = {
-	"rev 0",	"step B",	"step C",	"rev 3",
-	"rev 4",	"rev 5",	"rev 6",	"rev 7",
-	"step D",	"step E",	"rev 10"	"step G",
-	"rev 12",	"rev 13",	"rev 14",	"rev 15"
-};
-
-static const char * const sa1110_steppings[16] = {
-	"step A-0",	"rev 1",	"rev 2",	"rev 3",
-	"step B-0",	"step B-1",	"step B-2",	"step B-3",
-	"step B-4",	"step B-5",	"rev 10",	"rev 11",
-	"rev 12",	"rev 13",	"rev 14",	"rev 15"
-};
-
-static const char * const ixp12x0_steppings[16] = {
-	"(IXP1200 step A)",		"(IXP1200 step B)",
-	"rev 2",			"(IXP1200 step C)",
-	"(IXP1200 step D)",		"(IXP1240/1250 step A)",
-	"(IXP1240 step B)",		"(IXP1250 step B)",
-	"rev 8",	"rev 9",	"rev 10",	"rev 11",
-	"rev 12",	"rev 13",	"rev 14",	"rev 15"
-};
-
-static const char * const xscale_steppings[16] = {
-	"step A-0",	"step A-1",	"step B-0",	"step C-0",
-	"step D-0",	"rev 5",	"rev 6",	"rev 7",
-	"rev 8",	"rev 9",	"rev 10",	"rev 11",
-	"rev 12",	"rev 13",	"rev 14",	"rev 15"
-};
-
-static const char * const i80321_steppings[16] = {
-	"step A-0",	"step B-0",	"rev 2",	"rev 3",
-	"rev 4",	"rev 5",	"rev 6",	"rev 7",
-	"rev 8",	"rev 9",	"rev 10",	"rev 11",
-	"rev 12",	"rev 13",	"rev 14",	"rev 15"
-};
-
-static const char * const i80219_steppings[16] = {
-	"step A-0",	"rev 1",	"rev 2",	"rev 3",
-	"rev 4",	"rev 5",	"rev 6",	"rev 7",
-	"rev 8",	"rev 9",	"rev 10",	"rev 11",
-	"rev 12",	"rev 13",	"rev 14",	"rev 15",
-};
-
-/* Steppings for PXA2[15]0 */
-static const char * const pxa2x0_steppings[16] = {
-	"step A-0",	"step A-1",	"step B-0",	"step B-1",
-	"step B-2",	"step C-0",	"rev 6",	"rev 7",
-	"rev 8",	"rev 9",	"rev 10",	"rev 11",
-	"rev 12",	"rev 13",	"rev 14",	"rev 15"
-};
-
-/* Steppings for PXA255/26x.
- * rev 5: PXA26x B0, rev 6: PXA255 A0
- */
-static const char * const pxa255_steppings[16] = {
-	"rev 0",	"rev 1",	"rev 2",	"step A-0",
-	"rev 4",	"step B-0",	"step A-0",	"rev 7",
-	"rev 8",	"rev 9",	"rev 10",	"rev 11",
-	"rev 12",	"rev 13",	"rev 14",	"rev 15"
-};
-
-/* Steppings for PXA270 */
-static const char * const pxa27x_steppings[16] = {
-	"step A-0",	"step A-1",	"step B-0",	"step B-1",
-	"step C-0",	"step ?",	"step ?",	"step C-5",
-	"rev 8",	"rev 9",	"rev 10",	"rev 11",
-	"rev 12",	"rev 13",	"rev 14",	"rev 15"
-};
-
-static const char * const ixp425_steppings[16] = {
-	"step 0",	"rev 1",	"rev 2",	"rev 3",
 	"rev 4",	"rev 5",	"rev 6",	"rev 7",
 	"rev 8",	"rev 9",	"rev 10",	"rev 11",
 	"rev 12",	"rev 13",	"rev 14",	"rev 15"
@@ -225,85 +104,6 @@ struct cpuidtab {
 };
 
 const struct cpuidtab cpuids[] = {
-	{ CPU_ID_ARM810,	CPU_CLASS_ARM8,		"ARM810",
-	  generic_steppings },
-
-	{ CPU_ID_ARM920T,	CPU_CLASS_ARM9TDMI,	"ARM920T",
-	  generic_steppings },
-	{ CPU_ID_ARM922T,	CPU_CLASS_ARM9TDMI,	"ARM922T",
-	  generic_steppings },
-	{ CPU_ID_ARM926EJS,	CPU_CLASS_ARM9EJS,	"ARM926EJ-S",
-	  generic_steppings },
-	{ CPU_ID_ARM940T,	CPU_CLASS_ARM9TDMI,	"ARM940T",
-	  generic_steppings },
-	{ CPU_ID_ARM946ES,	CPU_CLASS_ARM9ES,	"ARM946E-S",
-	  generic_steppings },
-	{ CPU_ID_ARM966ES,	CPU_CLASS_ARM9ES,	"ARM966E-S",
-	  generic_steppings },
-	{ CPU_ID_ARM966ESR1,	CPU_CLASS_ARM9ES,	"ARM966E-S",
-	  generic_steppings },
-	{ CPU_ID_TI925T,	CPU_CLASS_ARM9TDMI,	"TI ARM925T",
-	  generic_steppings },
-
-	{ CPU_ID_ARM1020E,	CPU_CLASS_ARM10E,	"ARM1020E",
-	  generic_steppings },
-	{ CPU_ID_ARM1022ES,	CPU_CLASS_ARM10E,	"ARM1022E-S",
-	  generic_steppings },
-
-	{ CPU_ID_SA110,		CPU_CLASS_SA1,		"SA-110",
-	  sa110_steppings },
-	{ CPU_ID_SA1100,	CPU_CLASS_SA1,		"SA-1100",
-	  sa1100_steppings },
-	{ CPU_ID_SA1110,	CPU_CLASS_SA1,		"SA-1110",
-	  sa1110_steppings },
-
-	{ CPU_ID_IXP1200,	CPU_CLASS_SA1,		"IXP1200",
-	  ixp12x0_steppings },
-
-	{ CPU_ID_80200,		CPU_CLASS_XSCALE,	"i80200",
-	  xscale_steppings },
-
-	{ CPU_ID_80321_400,	CPU_CLASS_XSCALE,	"i80321 400MHz",
-	  i80321_steppings },
-	{ CPU_ID_80321_600,	CPU_CLASS_XSCALE,	"i80321 600MHz",
-	  i80321_steppings },
-	{ CPU_ID_80321_400_B0,	CPU_CLASS_XSCALE,	"i80321 400MHz",
-	  i80321_steppings },
-	{ CPU_ID_80321_600_B0,	CPU_CLASS_XSCALE,	"i80321 600MHz",
-	  i80321_steppings },
-
-	{ CPU_ID_80219_400,	CPU_CLASS_XSCALE,	"i80219 400MHz",
-	  i80219_steppings },
-	{ CPU_ID_80219_600,	CPU_CLASS_XSCALE,	"i80219 600MHz",
-	  i80219_steppings },
-
-	{ CPU_ID_PXA250A,	CPU_CLASS_XSCALE,	"PXA250",
-	  pxa2x0_steppings },
-	{ CPU_ID_PXA210A,	CPU_CLASS_XSCALE,	"PXA210",
-	  pxa2x0_steppings },
-	{ CPU_ID_PXA250B,	CPU_CLASS_XSCALE,	"PXA250",
-	  pxa2x0_steppings },
-	{ CPU_ID_PXA210B,	CPU_CLASS_XSCALE,	"PXA210",
-	  pxa2x0_steppings },
-	{ CPU_ID_PXA250C, 	CPU_CLASS_XSCALE,	"PXA250",
-	  pxa2x0_steppings },
-	{ CPU_ID_PXA27X,	CPU_CLASS_XSCALE,	"PXA27x",
-	  pxa27x_steppings },
-	{ CPU_ID_PXA210C, 	CPU_CLASS_XSCALE,	"PXA210",
-	  pxa2x0_steppings },
-
-	{ CPU_ID_IXP425_533,	CPU_CLASS_XSCALE,	"IXP425 533MHz",
-	  ixp425_steppings },
-	{ CPU_ID_IXP425_400,	CPU_CLASS_XSCALE,	"IXP425 400MHz",
-	  ixp425_steppings },
-	{ CPU_ID_IXP425_266,	CPU_CLASS_XSCALE,	"IXP425 266MHz",
-	  ixp425_steppings },
-
-	{ CPU_ID_ARM1136JS,	CPU_CLASS_ARM11J,	"ARM1136J-S",
-	  generic_steppings },
-	{ CPU_ID_ARM1136JSR1,	CPU_CLASS_ARM11J,	"ARM1136J-S R1",
-	  generic_steppings },
-
 	{ CPU_ID_CORTEX_A5,	CPU_CLASS_ARMv7,	"ARM Cortex A5",
 	  generic_steppings },
 	{ CPU_ID_CORTEX_A7,	CPU_CLASS_ARMv7,	"ARM Cortex A7",
@@ -337,7 +137,6 @@ const struct cpuidtab cpuids[] = {
 	{ CPU_ID_CORTEX_A15_R4,	CPU_CLASS_ARMv7,	"ARM Cortex A15 R4",
 	  generic_steppings },
 
-
 	{ 0, CPU_CLASS_NONE, NULL, NULL }
 };
 
@@ -348,14 +147,6 @@ struct cpu_classtab {
 
 const struct cpu_classtab cpu_classes[] = {
 	{ "unknown",	NULL },			/* CPU_CLASS_NONE */
-	{ "ARM8",	"CPU_ARM8" },		/* CPU_CLASS_ARM8 */
-	{ "ARM9TDMI",	NULL },			/* CPU_CLASS_ARM9TDMI */
-	{ "ARM9E-S",	"CPU_ARM9E" },		/* CPU_CLASS_ARM9ES */
-	{ "ARM9EJ-S",	"CPU_ARM9E" },		/* CPU_CLASS_ARM9EJS */
-	{ "ARM10E",	"CPU_ARM10" },		/* CPU_CLASS_ARM10E */
-	{ "SA-1",	"CPU_SA1100" },		/* CPU_CLASS_SA1 */
-	{ "XScale",	"CPU_XSCALE_..." },	/* CPU_CLASS_XSCALE */
-	{ "ARM11J",	"CPU_ARM11" },		/* CPU_CLASS_ARM11J */
 	{ "ARMv7",	"CPU_ARMv7" }		/* CPU_CLASS_ARMv7 */
 
 };
@@ -419,19 +210,6 @@ identify_arm_cpu(struct device *dv, struct cpu_info *ci)
 	printf("%s:", dv->dv_xname);
 
 	switch (cpu_class) {
-	case CPU_CLASS_ARM8:
-		if ((ci->ci_ctrl & CPU_CONTROL_IDC_ENABLE) == 0)
-			printf(" IDC disabled");
-		else
-			printf(" IDC enabled");
-		break;
-	case CPU_CLASS_ARM9TDMI:
-	case CPU_CLASS_ARM9ES:
-	case CPU_CLASS_ARM9EJS:
-	case CPU_CLASS_ARM10E:
-	case CPU_CLASS_SA1:
-	case CPU_CLASS_XSCALE:
-	case CPU_CLASS_ARM11J:
 	case CPU_CLASS_ARMv7:
 		if ((ci->ci_ctrl & CPU_CONTROL_DC_ENABLE) == 0)
 			printf(" DC disabled");
@@ -480,33 +258,7 @@ identify_arm_cpu(struct device *dv, struct cpu_info *ci)
  skip_pcache:
 
 	switch (cpu_class) {
-#ifdef CPU_ARM8
-	case CPU_CLASS_ARM8:
-#endif
-#ifdef CPU_ARM9
-	case CPU_CLASS_ARM9TDMI:
-#endif
-#ifdef CPU_ARM9E
-	case CPU_CLASS_ARM9ES:
-	case CPU_CLASS_ARM9EJS:
-#endif
-#ifdef CPU_ARM10
-	case CPU_CLASS_ARM10E:
-#endif
-#ifdef CPU_ARM11
-	case CPU_CLASS_ARM11J:
-#endif
-#ifdef CPU_ARMv7
 	case CPU_CLASS_ARMv7:
-#endif
-
-#if defined(CPU_SA1100) || defined(CPU_SA1110) || defined(CPU_IXP12X0)
-	case CPU_CLASS_SA1:
-#endif
-#if defined(CPU_XSCALE_80200) || defined(CPU_XSCALE_80321) || \
-    defined(CPU_XSCALE_PXA2X0) || defined(CPU_XSCALE_IXP425)
-	case CPU_CLASS_XSCALE:
-#endif
 		break;
 	default:
 		if (cpu_classes[cpu_class].class_option != NULL)

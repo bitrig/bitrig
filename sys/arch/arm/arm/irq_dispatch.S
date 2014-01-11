@@ -87,12 +87,8 @@
 	.text
 	.align	0
 
-#ifdef CPU_ARMv7
 #define STOREVFP							\
 	bl	_C_LABEL(vfp_save)					
-#else
-#define STOREVFP
-#endif
 
 AST_LOCALS
 

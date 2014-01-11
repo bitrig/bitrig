@@ -54,16 +54,12 @@
 	.text	
 	.align	0
 
-#ifdef CPU_ARMv7
 #define RESTOREVFP							\
 	ldr	r0, [sp]		/* Get the SPSR from stack */	;\
 	and	r0, r0, #(PSR_MODE)	/* Returning to USR mode? */	;\
 	bne	1f							;\
 	bl	_C_LABEL(vfp_enable)					;\
 1:
-#else
-#define RESTOREVFP
-#endif
 
 AST_LOCALS
 
@@ -102,10 +98,6 @@ ASENTRY_NP(swi_entry)
  *	Handler for the Prefetch Abort exception.
  */
 ASENTRY_NP(prefetch_abort_entry)
-#ifdef __XSCALE__
-	nop				/* Make absolutely sure any pending */
-	nop				/* imprecise aborts have occurred. */
-#endif
         sub     lr, lr, #0x00000004     /* Adjust the lr */
 
 	PUSHFRAMEINSVC
@@ -139,10 +131,6 @@ abortprefetchmsg:
  *	Handler for the Data Abort exception.
  */
 ASENTRY_NP(data_abort_entry)
-#ifdef __XSCALE__
-	nop				/* Make absolutely sure any pending */
-	nop				/* imprecise aborts have occurred. */
-#endif
         sub     lr, lr, #0x00000008     /* Adjust the lr */
 
 	PUSHFRAMEINSVC			/* Push trap frame and switch */

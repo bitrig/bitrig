@@ -154,10 +154,8 @@ undefinedinstruction(trapframe_t *frame)
 #endif
 	union sigval sv;
 
-#ifdef CPU_ARMv7
 	/* Before enabling interrupts, save FPU state */
 	vfp_save();
-#endif
 
 	/* Enable interrupts if they were enabled before the exception. */
 	if (!(frame->tf_spsr & I32_bit))

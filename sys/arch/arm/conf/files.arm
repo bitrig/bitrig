@@ -40,31 +40,7 @@ file	arch/arm/arm/bcopyinout.S
 file	arch/arm/arm/copystr.S
 file	arch/arm/arm/cpufunc.c
 file	arch/arm/arm/cpufunc_asm.S
-file	arch/arm/arm/cpufunc_asm_arm8.S		cpu_arm8
-file	arch/arm/arm/cpufunc_asm_arm9.S		cpu_arm9
-file	arch/arm/arm/cpufunc_asm_arm10.S	cpu_arm9e | cpu_arm10
-file	arch/arm/arm/cpufunc_asm_armv4.S	cpu_arm9 | cpu_arm9e |
-							cpu_arm10 |
-							cpu_sa110 |
-							cpu_sa1100 |
-							cpu_sa1110 |
-							cpu_ixp12x0 |
-							cpu_xscale_80200 |
-							cpu_xscale_80321 |
-							cpu_xscale_ixp425 |
-							cpu_xscale_pxa2x0
-file	arch/arm/arm/cpufunc_asm_armv5.S	cpu_arm10
-file	arch/arm/arm/cpufunc_asm_armv5_ec.S	cpu_arm9e | cpu_arm10
 file	arch/arm/arm/cpufunc_asm_armv7.S	cpu_armv7
-file	arch/arm/arm/cpufunc_asm_sa1.S		cpu_sa110 | cpu_sa1100 |
-							cpu_sa1110 |
-							cpu_ixp12x0
-file	arch/arm/arm/cpufunc_asm_sa11x0.S	cpu_sa1100 | cpu_sa1110
-file	arch/arm/arm/cpufunc_asm_xscale.S	cpu_xscale_80200 |
-							cpu_xscale_80321 |
-							cpu_xscale_ixp425 |
-							cpu_xscale_pxa2x0
-file	arch/arm/arm/cpufunc_asm_ixp12x0.S	cpu_ixp12x0
 file	arch/arm/arm/process_machdep.c
 file	arch/arm/arm/sig_machdep.c
 file	arch/arm/arm/sigcode.S
@@ -76,13 +52,11 @@ file	arch/arm/arm/vectors.S
 file	arch/arm/arm/arm32_machdep.c
 file	arch/arm/arm/bus_dma.c
 file	arch/arm/arm/cpu.c
-file	arch/arm/arm/cpuswitch.S		!cpu_armv7
-file	arch/arm/arm/cpuswitch7.S		cpu_armv7
+file	arch/arm/arm/cpuswitch.S
 file	arch/arm/arm/exception.S
 file	arch/arm/arm/fault.c
 file	arch/arm/arm/mem.c
-file	arch/arm/arm/pmap.c			!cpu_armv7
-file	arch/arm/arm/pmap7.c			cpu_armv7
+file	arch/arm/arm/pmap.c
 file	arch/arm/arm/setstack.S
 file	arch/arm/arm/stubs.c
 file	arch/arm/arm/sys_machdep.c
