@@ -1,4 +1,4 @@
-/*	$OpenBSD: print-bgp.c,v 1.15 2012/02/19 17:24:05 claudio Exp $	*/
+/*	$OpenBSD: print-bgp.c,v 1.16 2014/01/12 11:26:48 deraadt Exp $	*/
 
 /*
  * Copyright (C) 1999 WIDE Project.
