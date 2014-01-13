@@ -455,7 +455,17 @@ initarm(void *arg0, void *arg1, void *arg2)
 				physical_end = physical_start + memsize;
 			}
 		}
-	} else {
+	}
+
+	/* setup a serial console for very early boot */
+	consinit();
+
+	/* Talk to the user */
+	printf("\n%s booting ...\n", platform_boot_name);
+
+	printf("arg0 %p arg1 %p arg2 %p\n", arg0, arg1, arg2);
+
+	if (fdt_get_size(arg2) == 0) {
 		parse_uboot_tags(arg2);
 
 		/*
@@ -482,14 +492,6 @@ initarm(void *arg0, void *arg1, void *arg2)
 		physical_start = bootconfig.dram[0].address;
 		physical_end = physical_start + (bootconfig.dram[0].pages * PAGE_SIZE);
 	}
-
-	/* setup a serial console for very early boot */
-	consinit();
-
-	/* Talk to the user */
-	printf("\n%s booting ...\n", platform_boot_name);
-
-	printf("arg0 %p arg1 %p arg2 %p\n", arg0, arg1, arg2);
 
 #ifdef RAMDISK_HOOKS
 	boothowto |= RB_DFLTROOT;
