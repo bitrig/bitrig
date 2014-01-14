@@ -1,4 +1,4 @@
-# LIVECD is basically GENERIC.MP
+# LIVECD is basically GENERIC
 
 include		"arch/amd64/conf/generic.amd64"
 

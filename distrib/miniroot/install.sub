@@ -86,7 +86,6 @@ shift $((OPTIND-1))
 #	MDCDDEVS    - '/^cd[0-9][0-9]* /s/ .*//p'    assumed if not provided
 #	MDMTDEVS    - '/^[cms]t[0-9][0-9]* /s/ .*//p'
 #	MDXAPERTURE - set machdep.allowaperture=value in sysctl.conf
-#	NCPU	    - the number of cpus for mp capable arches
 . /install.md
 
 set_term() {
@@ -1989,12 +1988,6 @@ finish_up() {
 	makedev $(bioctl $ROOTDISK 2>/dev/null | sed -n 's/.*<\(.*\)>$/\1/p')
 	md_installboot $ROOTDISK
 
-	if [[ -f /mnt/bsd.mp ]] && ((NCPU > 1)); then
-		echo "Multiprocessor machine; using bsd.mp instead of bsd."
-		mv /mnt/bsd /mnt/bsd.sp 2>/dev/null
-		mv /mnt/bsd.mp /mnt/bsd
-	fi
-
 	update_firmware
 
 	# XXX To be removed after 5.6 is released.
@@ -2068,7 +2061,7 @@ md_consoleinfo
 # Selected sets will be installed in the order they are listed in $THESETS.
 # Ensure that siteXX.tgz is the *last* set listed so its contents overwrite
 # the contents of the other sets, not the other way around.
-THESETS="bsd bsd.rd bsd.mp $MDSETS"
+THESETS="bsd bsd.rd bsd.sp $MDSETS"
 : ${DEFAULTSETS:="bsd bsd.rd"}
 for _set in base etc xbase xetc xshare xfont xserv site ; do
 	[[ $MODE == upgrade && ( $_set == etc || $_set == xetc ) ]] && continue

@@ -1,4 +1,4 @@
-# LIVECD kernel is basically GENERIC.MP
+# LIVECD kernel is basically GENERIC
 
 include		"arch/i386/conf/generic.i386"
 

@@ -12,7 +12,7 @@ rel=$3
 
 #echo makehash args $dir $rev $rel
 
-for i in bsd bsd.mp; do
+for i in bsd bsd.sp; do
 	if [ -f $rel/$i ]; then
 		cat $rel/$i | sum -a sha256 > $dir/$i
 		#ls -alF $rel/$i

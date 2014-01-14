@@ -1,6 +1,6 @@
 #	$OpenBSD: Makefile.inc,v 1.20 2011/07/22 09:30:54 espie Exp $
 
-KERNELS += GENERIC.MP bsd.mp
+KERNELS += GENERIC.SP bsd.sp
 
 bootblocks:
 	cp ${DESTDIR}/usr/mdec/pxeboot ${RELEASEDIR}

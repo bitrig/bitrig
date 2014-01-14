@@ -34,9 +34,8 @@
 
 MDXAPERTURE=2
 MDXDM=y
-NCPU=$(sysctl -n hw.ncpufound)
-
-((NCPU > 1)) && { DEFAULTSETS="bsd bsd.rd bsd.mp" ; SANESETS="bsd bsd.mp" ; }
+DEFAULTSETS="bsd bsd.rd bsd.sp"
+SANESETS="bsd bsd.sp"
 
 md_installboot() {
 	# Use cat to avoid holes created by cp(1)

@@ -2,8 +2,8 @@
 
 S=	${.CURDIR}/../..
 KFILE=	GENERIC
-.if exists(conf/GENERIC.MP)
-KFILE=	GENERIC.MP
+.if exists(conf/GENERIC.SP)
+KFILE=	GENERIC.SP
 .endif
 TDIRS=	${_arch} include
 TAGS=	${.CURDIR}/tags
