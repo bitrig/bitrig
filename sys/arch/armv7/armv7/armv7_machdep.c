@@ -155,14 +155,14 @@
  * on where the ROM appears when you turn the MMU off.
  */
 
-/* Define various stack sizes in pages */
-#define IRQ_STACK_SIZE	1
-#define ABT_STACK_SIZE	1
-#ifdef IPKDB
-#define UND_STACK_SIZE	2
-#else
-#define UND_STACK_SIZE	1
-#endif
+/* Various stack defines */
+#define ARM_STACK_PAGES		1
+#define IRQ_STACK_OFFSET	0x000
+#define IRQ_STACK_SIZE		0x100
+#define ABT_STACK_OFFSET	0x100
+#define ABT_STACK_SIZE		0x100
+#define UND_STACK_OFFSET	0x200
+#define UND_STACK_SIZE		0x100
 
 BootConfig bootconfig;		/* Boot config storage */
 char *boot_args = NULL;
@@ -183,6 +183,7 @@ int max_processes = 64;			/* Default number */
 
 /* Physical and virtual addresses for some global pages */
 pv_addr_t systempage;
+pv_addr_t armstack;
 pv_addr_t irqstack;
 pv_addr_t undstack;
 pv_addr_t abtstack;
@@ -586,9 +587,13 @@ initarm(void *arg0, void *arg1, void *arg2)
 	systempage.pv_va = vector_page;
 
 	/* Allocate stacks for all modes */
-	valloc_pages(irqstack, IRQ_STACK_SIZE);
-	valloc_pages(abtstack, ABT_STACK_SIZE);
-	valloc_pages(undstack, UND_STACK_SIZE);
+	valloc_pages(armstack, ARM_STACK_PAGES);
+	irqstack.pv_pa = armstack.pv_pa + IRQ_STACK_OFFSET;
+	irqstack.pv_va = armstack.pv_va + IRQ_STACK_OFFSET;
+	abtstack.pv_pa = armstack.pv_pa + ABT_STACK_OFFSET;
+	abtstack.pv_va = armstack.pv_va + ABT_STACK_OFFSET;
+	undstack.pv_pa = armstack.pv_pa + UND_STACK_OFFSET;
+	undstack.pv_va = armstack.pv_va + UND_STACK_OFFSET;
 	valloc_pages(kernelstack, UPAGES);
 
 	/* Allocate enough pages for cleaning the Mini-Data cache. */
@@ -680,12 +685,8 @@ initarm(void *arg0, void *arg1, void *arg2)
 #endif
 
 	/* Map the stack pages */
-	pmap_map_chunk(l1pagetable, irqstack.pv_va, irqstack.pv_pa,
-	    IRQ_STACK_SIZE * PAGE_SIZE, VM_PROT_READ|VM_PROT_WRITE, PTE_CACHE);
-	pmap_map_chunk(l1pagetable, abtstack.pv_va, abtstack.pv_pa,
-	    ABT_STACK_SIZE * PAGE_SIZE, VM_PROT_READ|VM_PROT_WRITE, PTE_CACHE);
-	pmap_map_chunk(l1pagetable, undstack.pv_va, undstack.pv_pa,
-	    UND_STACK_SIZE * PAGE_SIZE, VM_PROT_READ|VM_PROT_WRITE, PTE_CACHE);
+	pmap_map_chunk(l1pagetable, armstack.pv_va, armstack.pv_pa,
+	    ARM_STACK_PAGES * PAGE_SIZE, VM_PROT_READ|VM_PROT_WRITE, PTE_CACHE);
 	pmap_map_chunk(l1pagetable, kernelstack.pv_va, kernelstack.pv_pa,
 	    UPAGES * PAGE_SIZE, VM_PROT_READ | VM_PROT_WRITE, PTE_CACHE);
 
@@ -749,12 +750,9 @@ initarm(void *arg0, void *arg1, void *arg2)
 	 * of the stack memory.
 	 */
 
-	set_stackptr(PSR_IRQ32_MODE,
-	    irqstack.pv_va + IRQ_STACK_SIZE * PAGE_SIZE);
-	set_stackptr(PSR_ABT32_MODE,
-	    abtstack.pv_va + ABT_STACK_SIZE * PAGE_SIZE);
-	set_stackptr(PSR_UND32_MODE,
-	    undstack.pv_va + UND_STACK_SIZE * PAGE_SIZE);
+	set_stackptr(PSR_IRQ32_MODE, irqstack.pv_va + IRQ_STACK_SIZE);
+	set_stackptr(PSR_ABT32_MODE, abtstack.pv_va + ABT_STACK_SIZE);
+	set_stackptr(PSR_UND32_MODE, undstack.pv_va + UND_STACK_SIZE);
 
 	/*
 	 * Well we should set a data abort handler.
@@ -803,12 +801,6 @@ initarm(void *arg0, void *arg1, void *arg2)
 	pmap_bootstrap((pd_entry_t *)kernel_l1pt.pv_va, KERNEL_VM_BASE,
 	    KERNEL_VM_BASE + KERNEL_VM_SIZE);
 
-#ifdef IPKDB
-	/* Initialise ipkdb */
-	ipkdb_init();
-	if (boothowto & RB_KDB)
-		ipkdb_connect(0);
-#endif
 	/*
 	 * Restore proper bus_space operation, now that pmap is initialized.
 	 */
