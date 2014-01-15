@@ -74,10 +74,6 @@ ampscu_attach(struct device *parent, struct device *self, void *args)
 {
 	struct ampscu_softc *sc = (struct ampscu_softc *)self;
 	struct cortex_attach_args *ca = args;
-#ifdef notyet
-	struct device *mainbus = self->dv_parent->dv_parent;
-	int i;
-#endif
 
 	sc->sc_iot = ca->ca_iot;
 
@@ -103,14 +99,6 @@ ampscu_attach(struct device *parent, struct device *self, void *args)
 	cpu_idcache_wbinv_all();
 	cpu_sdcache_wbinv_all();
 	cpu_drain_writebuf();
-#endif
-
-#ifdef notyet
-	struct mainbus_attach_args ma;
-	ma.ma_name = "cpu";
-
-	for (i = 1; i < ncpusfound; i++)
-		config_found(mainbus, &ma, NULL);
 #endif
 }
 
