@@ -394,12 +394,13 @@ ENTRY(savectx)
 	ldmfd	sp!, {r4-r7, pc}
 
 ENTRY(proc_trampoline)
-	mov	r0, #(IPL_NONE)
-	bl	_C_LABEL(_spllower)
-
 #ifdef MULTIPROCESSOR
 	bl	_C_LABEL(proc_trampoline_mp)
+#else
+	mov	r0, #(IPL_NONE)
+	bl	_C_LABEL(_spllower)
 #endif
+
 	mov	r0, r5
 	mov	r1, sp
 	mov	lr, pc
