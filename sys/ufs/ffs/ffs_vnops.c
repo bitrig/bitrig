@@ -421,18 +421,7 @@ ffs_write(void *v)
 
 		if (ioflag & IO_SYNC)
 			(void)bwrite(bp);
-		else if (wapbl_vphaswapbl(vp) && extended) {
-			/*
-			 * XXX pedro: it would be nice to combine wapbl with
-			 * the cluster_write() logic below, but doing so
-			 * requires data blocks to be flushed to disk before
-			 * every call to wapbl_flush(), which is not possible
-			 * at the moment because of the cleaner. we kick off
-			 * the i/o on the data block now so that it makes it
-			 * to disk before the metadata pointers.
-			 */
-			(void)bawrite(bp);
-		} else if (xfersize + blkoffset == fs->fs_bsize) {
+		else if (xfersize + blkoffset == fs->fs_bsize) {
 			if (doclusterwrite)
 				cluster_write(bp, &ip->i_ci, DIP(ip, size));
 			else
