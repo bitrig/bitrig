@@ -155,15 +155,6 @@
  * on where the ROM appears when you turn the MMU off.
  */
 
-/* Various stack defines */
-#define ARM_STACK_PAGES		1
-#define IRQ_STACK_OFFSET	0x000
-#define IRQ_STACK_SIZE		0x100
-#define ABT_STACK_OFFSET	0x100
-#define ABT_STACK_SIZE		0x100
-#define UND_STACK_OFFSET	0x200
-#define UND_STACK_SIZE		0x100
-
 BootConfig bootconfig;		/* Boot config storage */
 char *boot_args = NULL;
 char *boot_file = "";
@@ -184,9 +175,6 @@ int max_processes = 64;			/* Default number */
 /* Physical and virtual addresses for some global pages */
 pv_addr_t systempage;
 pv_addr_t armstack;
-pv_addr_t irqstack;
-pv_addr_t undstack;
-pv_addr_t abtstack;
 extern pv_addr_t kernelstack;
 
 vaddr_t msgbufphys;
@@ -588,25 +576,25 @@ initarm(void *arg0, void *arg1, void *arg2)
 
 	/* Allocate stacks for all modes */
 	valloc_pages(armstack, ARM_STACK_PAGES);
-	irqstack.pv_pa = armstack.pv_pa + IRQ_STACK_OFFSET;
-	irqstack.pv_va = armstack.pv_va + IRQ_STACK_OFFSET;
-	abtstack.pv_pa = armstack.pv_pa + ABT_STACK_OFFSET;
-	abtstack.pv_va = armstack.pv_va + ABT_STACK_OFFSET;
-	undstack.pv_pa = armstack.pv_pa + UND_STACK_OFFSET;
-	undstack.pv_va = armstack.pv_va + UND_STACK_OFFSET;
 	valloc_pages(kernelstack, UPAGES);
 
-	/* Allocate enough pages for cleaning the Mini-Data cache. */
+	/* Store irq and abt stack in curcpu. */
+	curcpu()->ci_irqstack = armstack.pv_va + IRQ_STACK_TOP;
+	curcpu()->ci_abtstack = armstack.pv_va + ABT_STACK_TOP;
 
 #ifdef VERBOSE_INIT_ARM
-	printf("IRQ stack: p0x%08lx v0x%08lx\n", irqstack.pv_pa,
-	    irqstack.pv_va);
-	printf("ABT stack: p0x%08lx v0x%08lx\n", abtstack.pv_pa,
-	    abtstack.pv_va);
-	printf("UND stack: p0x%08lx v0x%08lx\n", undstack.pv_pa,
-	    undstack.pv_va);
-	printf("SVC stack: p0x%08lx v0x%08lx\n", kernelstack.pv_pa,
-	    kernelstack.pv_va);
+	printf("IRQ stack: p0x%08lx v0x%08lx\n",
+	    armstack.pv_pa + IRQ_STACK_TOP,
+	    armstack.pv_va + IRQ_STACK_TOP);
+	printf("ABT stack: p0x%08lx v0x%08lx\n",
+	    armstack.pv_pa + ABT_STACK_TOP,
+	    armstack.pv_va + ABT_STACK_TOP);
+	printf("UND stack: p0x%08lx v0x%08lx\n",
+	    kernelstack.pv_pa + USPACE_UNDEF_STACK_TOP,
+	    kernelstack.pv_va + USPACE_UNDEF_STACK_TOP);
+	printf("SVC stack: p0x%08lx v0x%08lx\n",
+	    kernelstack.pv_pa + USPACE_SVC_STACK_TOP,
+	    kernelstack.pv_va + USPACE_SVC_STACK_TOP);
 #endif
 
 	/*
@@ -750,9 +738,10 @@ initarm(void *arg0, void *arg1, void *arg2)
 	 * of the stack memory.
 	 */
 
-	set_stackptr(PSR_IRQ32_MODE, irqstack.pv_va + IRQ_STACK_SIZE);
-	set_stackptr(PSR_ABT32_MODE, abtstack.pv_va + ABT_STACK_SIZE);
-	set_stackptr(PSR_UND32_MODE, undstack.pv_va + UND_STACK_SIZE);
+	set_stackptr(PSR_IRQ32_MODE, curcpu()->ci_irqstack);
+	set_stackptr(PSR_ABT32_MODE, curcpu()->ci_abtstack);
+	set_stackptr(PSR_UND32_MODE,
+	    kernelstack.pv_va + USPACE_UNDEF_STACK_TOP);
 
 	/*
 	 * Well we should set a data abort handler.

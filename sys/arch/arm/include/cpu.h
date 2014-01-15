@@ -191,6 +191,9 @@ struct cpu_info {
 	struct pcb *ci_curpcb;
 	struct pcb *ci_idle_pcb;
 
+	u_int32_t ci_irqstack;
+	u_int32_t ci_abtstack;
+
 	u_int32_t ci_arm_cpuid;		/* aggregate CPU id */
 	u_int32_t ci_arm_cputype;	/* CPU type */
 	u_int32_t ci_arm_cpurev;	/* CPU revision */
@@ -290,6 +293,7 @@ extern int want_resched;	/* resched() was called */
 struct device;
 void	cpu_attach	(struct device *);
 int	cpu_alloc_idle_pcb	(struct cpu_info *);
+int	cpu_alloc_arm_stack	(struct cpu_info *);
 
 /*
  * Random cruft

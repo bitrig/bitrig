@@ -288,6 +288,10 @@ cpu_boot_secondary_processors(void)
 			continue;
 		if (ci->ci_idle_pcb == NULL)
 			continue;
+		if (!ci->ci_irqstack)
+			continue;
+		if (!ci->ci_abtstack)
+			continue;
 		if ((ci->ci_flags & CPUF_PRESENT) == 0)
 			continue;
 		if (ci->ci_flags & (CPUF_BSP|CPUF_SP|CPUF_PRIMARY))
@@ -341,6 +345,26 @@ cpu_alloc_idle_pcb(struct cpu_info *ci)
 	pcb->pcb_tf = tf =
 	    (struct trapframe *)pcb->pcb_un.un_32.pcb32_sp - 1;
 	*tf = *proc0.p_addr->u_pcb.pcb_tf;
+	return 0;
+}
+
+int
+cpu_alloc_arm_stack(struct cpu_info *ci)
+{
+	vaddr_t uaddr;
+
+	/*
+	 * Generate an irq and abort stack for the new CPU.
+	 */
+	uaddr = (vaddr_t)km_alloc(ARM_STACK_SIZE, &kv_any, &kp_zero, &kd_nowait);
+	if (uaddr == 0) {
+		printf("%s: unable to allocate arm stack\n",
+		    __func__);
+		return 1;
+	}
+	ci->ci_irqstack = uaddr + IRQ_STACK_TOP;
+	ci->ci_abtstack = uaddr + ABT_STACK_TOP;
+
 	return 0;
 }
 #endif /* MULTIPROCESSOR */

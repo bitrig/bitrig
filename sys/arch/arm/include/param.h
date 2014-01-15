@@ -71,20 +71,14 @@
 /*
  * The USPACE area contains :
  * 1. the user structure for the process
- * 2. the fp context for FP emulation
- * 3. the kernel (svc) stack
- * 4. the undefined instruction stack
+ * 2. the kernel (svc) stack
+ * 3. the undefined instruction stack
  *
  * The layout of the area looks like this
  *
- * | user area | FP context | undefined stack | kernel stack |
+ * | user area | undefined stack | kernel stack |
  *
  * The size of the user area is known.
- * The size of the FP context is variable depending of the FP emulator
- * in use and whether there is hardware FP support. However we can put
- * an upper limit on it.
- * The undefined stack needs to be at least 512 bytes. This is a requirement
- * of the FP emulators
  * The kernel stack should be at least 4K in size.
  *
  * The stack top addresses are used to set the stack pointers. The stack bottom
@@ -92,11 +86,16 @@
  * overflows.
  */
 
-#define	FPCONTEXTSIZE			(0x100)
 #define	USPACE_SVC_STACK_TOP		(USPACE)
 #define	USPACE_SVC_STACK_BOTTOM		(USPACE_SVC_STACK_TOP - 0x1000)
 #define	USPACE_UNDEF_STACK_TOP		(USPACE_SVC_STACK_BOTTOM - 0x10)
-#define	USPACE_UNDEF_STACK_BOTTOM	(sizeof(struct user) + FPCONTEXTSIZE + 10)
+#define	USPACE_UNDEF_STACK_BOTTOM	(sizeof(struct user) + 10))
+
+/* Constants used to divide the ARM stack area */
+#define	ARM_STACK_PAGES			1
+#define	ARM_STACK_SIZE			(ARM_STACK_PAGES * PAGE_SIZE)
+#define	ABT_STACK_TOP			(ARM_STACK_SIZE - 0x000)
+#define	IRQ_STACK_TOP			(ARM_STACK_SIZE - 0x100)
 
 #ifndef _LOCORE
 void	delay (unsigned);
