@@ -218,6 +218,8 @@ struct iwn_softc {
 	uint32_t		fw_data_maxsz;
 	uint32_t		fwsz;
 	bus_size_t		sched_txfact_addr;
+	uint32_t                reset_noise_gain;
+	uint32_t                noise_gain;
 
 	/* TX scheduler rings. */
 	struct iwn_dma_info	sched_dma;
@@ -274,6 +276,7 @@ struct iwn_softc {
 	char			eeprom_domain[4];
 	uint32_t		eeprom_crystal;
 	int16_t			eeprom_temp;
+	int16_t			eeprom_temp_high;
 	int16_t			eeprom_voltage;
 	int8_t			maxpwr2GHz;
 	int8_t			maxpwr5GHz;

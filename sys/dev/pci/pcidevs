@@ -2816,8 +2816,8 @@ product INTEL WL_6235_1		0x088e	Centrino Advanced-N 6235
 product INTEL WL_6235_2		0x088f	Centrino Advanced-N 6235
 product INTEL WL_6150_1		0x0885	Centrino Wireless-N 6150
 product INTEL WL_6150_2		0x0886	Centrino Wireless-N 6150
-product INTEL WL_2030_1		0x0887	Centrino Wireless-N 2030
-product INTEL WL_2030_2		0x0888	Centrino Wireless-N 2030
+product INTEL WL_2x30_1		0x0887	Centrino Wireless-N 2x30
+product INTEL WL_2x30_2		0x0888	Centrino Wireless-N 2x30
 product INTEL WL_2000_1		0x0890	Centrino Wireless-N 2000
 product INTEL WL_2000_2		0x0891	Centrino Wireless-N 2000
 product INTEL WL_135_1		0x0892	Centrino Wireless-N 135

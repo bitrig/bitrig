@@ -8848,11 +8848,11 @@ static const struct pci_known_product pci_known_products[] = {
 	    "Centrino Wireless-N 6150",
 	},
 	{
-	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_WL_2030_1,
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_WL_2x30_1,
 	    "Centrino Wireless-N 2030",
 	},
 	{
-	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_WL_2030_2,
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_WL_2x30_2,
 	    "Centrino Wireless-N 2030",
 	},
 	{

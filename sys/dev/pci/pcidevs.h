@@ -2821,8 +2821,8 @@
 #define	PCI_PRODUCT_INTEL_WL_6235_2	0x088f		/* Centrino Advanced-N 6235 */
 #define	PCI_PRODUCT_INTEL_WL_6150_1	0x0885		/* Centrino Wireless-N 6150 */
 #define	PCI_PRODUCT_INTEL_WL_6150_2	0x0886		/* Centrino Wireless-N 6150 */
-#define	PCI_PRODUCT_INTEL_WL_2030_1	0x0887		/* Centrino Wireless-N 2030 */
-#define	PCI_PRODUCT_INTEL_WL_2030_2	0x0888		/* Centrino Wireless-N 2030 */
+#define	PCI_PRODUCT_INTEL_WL_2x30_1	0x0887		/* Centrino Wireless-N 2x30 */
+#define	PCI_PRODUCT_INTEL_WL_2x30_2	0x0888		/* Centrino Wireless-N 2x30 */
 #define	PCI_PRODUCT_INTEL_WL_2000_1	0x0890		/* Centrino Wireless-N 2000 */
 #define	PCI_PRODUCT_INTEL_WL_2000_2	0x0891		/* Centrino Wireless-N 2000 */
 #define	PCI_PRODUCT_INTEL_WL_135_1	0x0892		/* Centrino Wireless-N 135 */

@@ -205,6 +205,7 @@
 #define IWN_HW_REV_TYPE_6000	7
 #define IWN_HW_REV_TYPE_6050	8
 #define IWN_HW_REV_TYPE_6005	11
+#define IWN_HW_REV_TYPE_2030	12
 
 /* Possible flags for register IWN_GIO_CHICKEN. */
 #define IWN_GIO_CHICKEN_L1A_NO_L0S_RX	(1 << 23)
@@ -219,6 +220,7 @@
 #define IWN_GP_DRIVER_RADIO_2X2_IPA	(2 << 0)
 #define IWN_GP_DRIVER_CALIB_VER6	(1 << 2)
 #define IWN_GP_DRIVER_6050_1X2		(1 << 3)
+#define IWN_GP_DRIVER_REG_BIT_RADIO_IQ_INVERT  (0x00000080)
 
 /* Possible flags for register IWN_UCODE_GP1_CLR. */
 #define IWN_UCODE_GP1_RFKILL		(1 << 1)
@@ -878,6 +880,28 @@ struct iwn6000_btcoex_config {
 	uint16_t	rx_prio_boost;
 } __packed;
 
+/* Structure for enhanced command IWN_CMD_BLUETOOTH for 2000 Series. */
+struct iwn2000_btcoex_config {
+       uint8_t         flags; /* Cf Flags in iwn6000_btcoex_config */
+       uint8_t         lead_time;
+       uint8_t         max_kill;
+       uint8_t         bt3_t7_timer;
+       uint32_t        kill_ack;
+       uint32_t        kill_cts;
+       uint8_t         sample_time;
+       uint8_t         bt3_t2_timer;
+       uint16_t        bt4_reaction;
+       uint32_t        lookup_table[12];
+       uint16_t        bt4_decision;
+       uint16_t        valid;
+
+       uint32_t        prio_boost; /* size change prior to iwn6000_btcoex_config */
+       uint8_t         reserved; /* added prior to iwn6000_btcoex_config */
+
+       uint8_t         tx_prio_boost;
+       uint16_t        rx_prio_boost;
+} __packed;
+
 /* Structure for command IWN_CMD_BT_COEX_PRIOTABLE */
 struct iwn_btcoex_priotable {
 	uint8_t		calib_init1;
@@ -996,6 +1020,17 @@ struct iwn5000_phy_calib_temp_offset {
 #define IWN_DEFAULT_TEMP_OFFSET	2700
 
 	uint16_t	reserved;
+} __packed;
+
+struct iwn5000_phy_calib_temp_offsetv2 {
+       uint8_t         code;
+       uint8_t         group;
+       uint8_t         ngroups;
+       uint8_t         isvalid;
+       int16_t         offset_high;
+       int16_t         offset_low;
+       int16_t         burnt_voltage_ref;
+       int16_t         reserved;
 } __packed;
 
 struct iwn_phy_calib_gain {
@@ -1366,6 +1401,8 @@ struct iwn_fw_tlv {
 #define IWN_FW_TLV_INIT_DATA		4
 #define IWN_FW_TLV_BOOT_TEXT		5
 #define IWN_FW_TLV_PBREQ_MAXLEN		6
+#define IWN_FW_TLV_ENH_SENS            14
+#define IWN_FW_TLV_PHY_CALIB           15
 
 	uint16_t	alt;
 	uint32_t	len;
@@ -1717,6 +1754,19 @@ static const struct iwn_sensitivity_limits iwn6000_sensitivity_limits = {
 	 97,
 	 97,
 	100
+};
+
+/* Get value from linux kernel 3.2.+ in Drivers/net/wireless/iwlwifi/iwl-2000.c */
+static const struct iwn_sensitivity_limits iwn2030_sensitivity_limits = {
+       105, 110,
+       128, 232,
+        80, 145,
+       128, 232,
+       125, 175,
+       160, 310,
+        97,
+        97,
+       110
 };
 
 /* Map TID to TX scheduler's FIFO. */
