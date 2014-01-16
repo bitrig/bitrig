@@ -1142,9 +1142,10 @@ end:
  * allocated.
  */
 int32_t
-ffs1_blkpref(struct inode *ip, daddr_t lbn, int indx, int flags, int32_t *bap)
+ffs1_blkpref(const struct inode *ip, daddr_t lbn, int indx, int flags,
+    const int32_t *bap)
 {
-	struct fs *fs;
+	const struct fs *fs;
 	int cg, inocg, avgbfree, startcg;
 	uint32_t pref;
 
@@ -1240,15 +1241,11 @@ ffs1_blkpref(struct inode *ip, daddr_t lbn, int indx, int flags, int32_t *bap)
 		startcg %= fs->fs_ncg;
 		avgbfree = fs->fs_cstotal.cs_nbfree / fs->fs_ncg;
 		for (cg = startcg; cg < fs->fs_ncg; cg++)
-			if (fs->fs_cs(fs, cg).cs_nbfree >= avgbfree) {
-				fs->fs_cgrotor = cg;
+			if (fs->fs_cs(fs, cg).cs_nbfree >= avgbfree)
 				return (cgdata(fs, cg));
-			}
 		for (cg = 0; cg <= startcg; cg++)
-			if (fs->fs_cs(fs, cg).cs_nbfree >= avgbfree) {
-				fs->fs_cgrotor = cg;
+			if (fs->fs_cs(fs, cg).cs_nbfree >= avgbfree)
 				return (cgdata(fs, cg));
-			}
 		return (0);
 	}
 	/*
@@ -1262,9 +1259,10 @@ ffs1_blkpref(struct inode *ip, daddr_t lbn, int indx, int flags, int32_t *bap)
  */
 #ifdef FFS2
 int64_t
-ffs2_blkpref(struct inode *ip, daddr_t lbn, int indx, int flags, int64_t *bap)
+ffs2_blkpref(const struct inode *ip, daddr_t lbn, int indx, int flags,
+    const int64_t *bap)
 {
-	struct fs *fs;
+	const struct fs *fs;
 	int cg, inocg, avgbfree, startcg;
 	uint64_t pref;
 
