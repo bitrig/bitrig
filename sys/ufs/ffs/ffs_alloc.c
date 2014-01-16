@@ -117,7 +117,7 @@ int ffs2_reallocblks(void *);
 #endif
 
 #ifdef DIAGNOSTIC
-int      ffs_checkblk(struct inode *, daddr_t, long);
+int      ffs_checkblk(const struct inode *, daddr_t, long);
 #endif
 
 static const struct timeval	fserr_interval = { 2, 0 };
@@ -2323,10 +2323,10 @@ ffs_freefile(struct inode *pip, ufsino_t ino, mode_t mode)
  * fragment is allocated, false if it is free.
  */
 int
-ffs_checkblk(struct inode *ip, daddr_t bno, long size)
+ffs_checkblk(const struct inode *ip, daddr_t bno, long size)
 {
-	struct fs *fs;
-	struct cg *cgp;
+	const struct fs *fs;
+	const struct cg *cgp;
 	struct buf *bp;
 	int i, frags, free;
 

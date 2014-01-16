@@ -81,10 +81,10 @@ ffs_bufatoff(struct inode *ip, off_t offset, char **res, struct buf **bpp)
 #else
 /* Prototypes for userland */
 void	ffs_fragacct(struct fs *, int, int32_t[], int);
-int	ffs_isfreeblock(struct fs *, u_char *, daddr_t);
-int	ffs_isblock(struct fs *, u_char *, daddr_t);
-void	ffs_clrblock(struct fs *, u_char *, daddr_t);
-void	ffs_setblock(struct fs *, u_char *, daddr_t);
+int	ffs_isfreeblock(const struct fs *, const u_char *, daddr_t);
+int	ffs_isblock(const struct fs *, const u_char *, daddr_t);
+void	ffs_clrblock(const struct fs *, u_char *, daddr_t);
+void	ffs_setblock(const struct fs *, u_char *, daddr_t);
 __dead void panic(const char *, ...);
 #endif
 
@@ -157,7 +157,7 @@ ffs_checkoverlap(struct buf *bp, struct inode *ip)
  * check if a block is available
  */
 int
-ffs_isblock(struct fs *fs, u_char *cp, daddr_t h)
+ffs_isblock(const struct fs *fs, const u_char *cp, daddr_t h)
 {
 	u_char mask;
 
@@ -181,7 +181,7 @@ ffs_isblock(struct fs *fs, u_char *cp, daddr_t h)
  * take a block out of the map
  */
 void
-ffs_clrblock(struct fs *fs, u_char *cp, daddr_t h)
+ffs_clrblock(const struct fs *fs, u_char *cp, daddr_t h)
 {
 
 	switch (fs->fs_frag) {
@@ -205,7 +205,7 @@ ffs_clrblock(struct fs *fs, u_char *cp, daddr_t h)
  * put a block into the map
  */
 void
-ffs_setblock(struct fs *fs, u_char *cp, daddr_t h)
+ffs_setblock(const struct fs *fs, u_char *cp, daddr_t h)
 {
 
 	switch (fs->fs_frag) {
@@ -229,7 +229,7 @@ ffs_setblock(struct fs *fs, u_char *cp, daddr_t h)
  * check if a block is free
  */
 int
-ffs_isfreeblock(struct fs *fs, u_char *cp, daddr_t h)
+ffs_isfreeblock(const struct fs *fs, const u_char *cp, daddr_t h)
 {
 
 	switch (fs->fs_frag) {

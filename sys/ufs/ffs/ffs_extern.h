@@ -131,10 +131,10 @@ void ffs_fragacct(struct fs *, int, int32_t[], int);
 #ifdef DIAGNOSTIC
 void	ffs_checkoverlap(struct buf *, struct inode *);
 #endif
-int  ffs_isfreeblock(struct fs *, u_char *, daddr_t);
-int  ffs_isblock(struct fs *, u_char *, daddr_t);
-void ffs_clrblock(struct fs *, u_char *, daddr_t);
-void ffs_setblock(struct fs *, u_char *, daddr_t);
+int  ffs_isfreeblock(const struct fs *, const u_char *, daddr_t);
+int  ffs_isblock(const struct fs *, const u_char *, daddr_t);
+void ffs_clrblock(const struct fs *, u_char *, daddr_t);
+void ffs_setblock(const struct fs *, u_char *, daddr_t);
 
 /* ffs_vfsops.c */
 int ffs_mountroot(void);
