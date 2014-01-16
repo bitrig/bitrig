@@ -2262,7 +2262,7 @@ ffs_blkfree(struct inode *ip, daddr_t bno, long size)
 }
 
 int
-ffs_inode_free(struct inode *pip, ufsino_t ino, mode_t mode)
+ffs_inode_free(const struct inode *pip, ufsino_t ino, mode_t mode)
 {
 	struct vnode *pvp = ITOV(pip);
 
@@ -2279,7 +2279,7 @@ ffs_inode_free(struct inode *pip, ufsino_t ino, mode_t mode)
  * The specified inode is placed back in the free map.
  */
 int
-ffs_freefile(struct inode *pip, ufsino_t ino, mode_t mode)
+ffs_freefile(const struct inode *pip, ufsino_t ino, mode_t mode)
 {
 	struct fs *fs;
 	struct cg *cgp;

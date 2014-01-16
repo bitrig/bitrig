@@ -142,7 +142,7 @@ struct inode_vtbl {
 	    int waitfor);
 	int (* iv_inode_alloc)(struct inode *, mode_t mode, 
 	    struct ucred *, struct vnode **);
-	int (* iv_inode_free)(struct inode *, ufsino_t ino, mode_t mode);
+	int (* iv_inode_free)(const struct inode *, ufsino_t ino, mode_t mode);
 	int (* iv_buf_alloc)(struct inode *, off_t, int, struct ucred *,
 	    int, struct buf **);
 	int (* iv_bufatoff)(struct inode *, off_t offset, char **res,

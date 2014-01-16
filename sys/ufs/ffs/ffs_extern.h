@@ -105,8 +105,8 @@ int ffs_realloccg(struct inode *, daddr_t, daddr_t, int, int, int,
 		       struct ucred *, struct buf **, daddr_t *);
 int ffs_reallocblks(void *);
 int ffs_inode_alloc(struct inode *, mode_t, struct ucred *, struct vnode **);
-int ffs_inode_free(struct inode *, ufsino_t, mode_t);
-int ffs_freefile(struct inode *, ufsino_t, mode_t);
+int ffs_inode_free(const struct inode *, ufsino_t, mode_t);
+int ffs_freefile(const struct inode *, ufsino_t, mode_t);
 
 int32_t ffs1_blkpref(const struct inode *, daddr_t, int, int, const int32_t *);
 #ifdef FFS2
