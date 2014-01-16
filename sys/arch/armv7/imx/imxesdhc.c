@@ -465,6 +465,16 @@ imxesdhc_card_detect(sdmmc_chipset_handle_t sch)
 		}
 		imxgpio_set_dir(gpio, IMXGPIO_DIR_IN);
 		return imxgpio_get_bit(gpio) ? 0 : 1;
+	case BOARD_ID_IMX6_UTILITE:
+		switch (sc->unit) {
+			case 2:
+				gpio = 6*32 + 1;
+				break;
+			default:
+				return 0;
+		}
+		imxgpio_set_dir(gpio, IMXGPIO_DIR_IN);
+		return imxgpio_get_bit(gpio) ? 0 : 1;
 	case BOARD_ID_IMX6_WANDBOARD:
 		switch (sc->unit) {
 			case 0:
@@ -476,6 +486,7 @@ imxesdhc_card_detect(sdmmc_chipset_handle_t sch)
 			default:
 				return 0;
 		}
+		imxgpio_set_dir(gpio, IMXGPIO_DIR_IN);
 		return imxgpio_get_bit(gpio) ? 0 : 1;
 	default:
 		printf("%s: unhandled board\n", __func__);
