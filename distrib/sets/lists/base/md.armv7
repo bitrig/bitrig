@@ -29,6 +29,7 @@
 ./usr/include/arm/limits.h
 ./usr/include/arm/lock.h
 ./usr/include/arm/machdep.h
+./usr/include/arm/mplock.h
 ./usr/include/arm/mutex.h
 ./usr/include/arm/param.h
 ./usr/include/arm/pcb.h
@@ -84,6 +85,7 @@
 ./usr/include/armv7/lock.h
 ./usr/include/armv7/machine_reg.h
 ./usr/include/armv7/math.h
+./usr/include/armv7/mplock.h
 ./usr/include/armv7/mutex.h
 ./usr/include/armv7/param.h
 ./usr/include/armv7/pcb.h
@@ -607,6 +609,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/arm/limits.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/arm/lock.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/arm/machdep.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/arm/mplock.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/arm/mutex.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/arm/param.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/arm/pcb.ph
@@ -662,6 +665,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/lock.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/machine_reg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/math.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/armv7/mplock.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/mutex.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/param.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/pcb.ph
