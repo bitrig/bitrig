@@ -74,10 +74,10 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
     int flags, struct buf **bpp)
 {
 	daddr_t lbn, nb, newb, pref;
-	struct fs *fs;
+	const struct fs *fs;
 	struct buf *bp, *nbp;
 	struct vnode *vp;
-	struct proc *p;
+	const struct proc *p;
 	struct indir indirs[NIADDR + 2];
 	int32_t *bap;
 	int deallocated, osize, nsize, num, i, error;
@@ -452,9 +452,9 @@ ffs2_balloc(struct inode *ip, off_t off, int size, struct ucred *cred,
 	int deallocated, osize, nsize, num, i, error, unwindidx, r;
 	struct buf *bp, *nbp;
 	struct indir indirs[NIADDR + 2];
-	struct fs *fs;
+	const struct fs *fs;
 	struct vnode *vp;
-	struct proc *p;
+	const struct proc *p;
 	
 	vp = ITOV(ip);
 	fs = ip->i_fs;

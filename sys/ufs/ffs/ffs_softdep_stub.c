@@ -68,7 +68,7 @@ softdep_initialize(void)
 #ifndef __OPTIMIZE__
 
 void
-softdep_setup_inomapdep(struct buf *bp, struct inode *ip, ufsino_t newinum)
+softdep_setup_inomapdep(struct buf *bp, const struct inode *ip, ufsino_t newinum)
 {
 	panic("softdep_setup_inomapdep called");
 }

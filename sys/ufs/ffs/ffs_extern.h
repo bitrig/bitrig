@@ -115,7 +115,7 @@ int64_t ffs2_blkpref(const struct inode *, daddr_t, int, int, const int64_t *);
 int ffs_blkalloc_ump(struct ufsmount *, daddr_t, long);
 void ffs_wapbl_blkfree(struct fs *, struct vnode *, daddr_t, long);
 void ffs_blkfree(struct inode *, daddr_t, long);
-void ffs_clusteracct(struct fs *, struct cg *, daddr_t, int);
+void ffs_clusteracct(struct fs *, const struct cg *, daddr_t, int);
 
 /* ffs_balloc.c */
 int ffs_balloc(struct inode *, off_t, int, struct ucred *, int, struct buf **);
@@ -190,7 +190,7 @@ void  softdep_update_inodeblock(struct inode *, struct buf *, int);
 void  softdep_load_inodeblock(struct inode *);
 void  softdep_freefile(struct vnode *, ufsino_t, mode_t);
 void  softdep_setup_freeblocks(struct inode *, off_t);
-void  softdep_setup_inomapdep(struct buf *, struct inode *, ufsino_t);
+void  softdep_setup_inomapdep(struct buf *, const struct inode *, ufsino_t);
 void  softdep_setup_blkmapdep(struct buf *, struct fs *, daddr_t);
 void  softdep_setup_allocdirect(struct inode *, daddr_t, daddr_t,
             daddr_t, long, long, struct buf *);

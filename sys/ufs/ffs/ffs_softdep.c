@@ -1276,7 +1276,7 @@ softdep_mount(struct vnode *devvp, struct mount *mp, struct fs *fs,
 /* inode related to allocation */
 /* new inode number being allocated */
 void
-softdep_setup_inomapdep(struct buf *bp, struct inode *ip, ufsino_t newinum)
+softdep_setup_inomapdep(struct buf *bp, const struct inode *ip, ufsino_t newinum)
 {
 	struct inodedep *inodedep;
 	struct bmsafemap *bmsafemap;
