@@ -142,14 +142,6 @@ void
 ufs_ihashrem(struct inode *ip)
 {
 	/* XXXLOCKING lock hash list */
-
-	if (ip->i_hash.le_prev == NULL)
-		return;
-
 	LIST_REMOVE(ip, i_hash);
-#ifdef DIAGNOSTIC
-	ip->i_hash.le_next = NULL;
-	ip->i_hash.le_prev = NULL;
-#endif
 	/* XXXLOCKING unlock hash list? */
 }
