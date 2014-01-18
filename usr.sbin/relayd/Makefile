@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.23 2012/09/20 12:30:20 reyk Exp $
+#	$OpenBSD: Makefile,v 1.24 2014/01/18 05:54:51 martynas Exp $
 
 PROG=		relayd
 SRCS=		parse.y log.c control.c ssl.c ssl_privsep.c \

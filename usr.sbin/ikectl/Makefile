@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2013/01/08 10:38:19 reyk Exp $
+# $OpenBSD: Makefile,v 1.3 2014/01/18 05:54:51 martynas Exp $
 
 .PATH:		${.CURDIR}/../../sbin/iked
 

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.12 2012/09/06 19:41:59 tedu Exp $
+#	$OpenBSD: Makefile,v 1.13 2014/01/18 05:54:51 martynas Exp $
 
 PROG=	bioctl
 SRCS=	bioctl.c
