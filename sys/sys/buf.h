@@ -136,7 +136,6 @@ struct buf {
 	LIST_ENTRY(buf) b_vnbufs;	/* Buffer's associated vnode. */
 	TAILQ_ENTRY(buf) b_freelist;	/* Free list position if not active. */
 	LIST_ENTRY(buf) b_wapbllist;	/* transaction buffer list */
-	time_t	b_synctime;		/* Time this buffer should be flushed */
 	struct  proc *b_proc;		/* Associated proc; NULL if kernel. */
 	volatile long	b_flags;	/* B_* flags. */
 	int	b_error;		/* Errno value. */
