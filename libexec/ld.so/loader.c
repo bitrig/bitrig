@@ -1,5 +1,4 @@
-/*	$OpenBSD: loader.c,v 1.143 2013/12/25 15:01:39 miod Exp $ */
-
+/*	$OpenBSD: loader.c,v 1.145 2014/01/18 09:08:42 kettenis Exp $ */
 /*
  * Copyright (c) 1998 Per Fogelstrom, Opsycon AB
  *
