@@ -487,7 +487,7 @@ breadn(struct vnode *vp, daddr_t blkno, int size, daddr_t rablks[],
 void
 bread_cluster_callback(struct buf *bp)
 {
-	struct buf **xbpp = bp->b_saveaddr;
+	struct buf **xbpp = bp->b_private;
 	int i;
 
 	if (xbpp[1] != NULL) {
@@ -590,7 +590,7 @@ bread_cluster(struct vnode *vp, daddr_t blkno, int size, struct buf **rbpp)
 	bp->b_blkno = sblkno;
 	SET(bp->b_flags, B_READ | B_ASYNC | B_CALL);
 
-	bp->b_saveaddr = (void *)xbpp;
+	bp->b_private = (void *)xbpp;
 	bp->b_iodone = bread_cluster_callback;
 
 	bcstats.pendingreads++;
