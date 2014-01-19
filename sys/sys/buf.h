@@ -144,8 +144,14 @@ struct buf {
 	size_t	b_resid;		/* Remaining I/O. */
 	dev_t	b_dev;			/* Device associated with buffer. */
 	caddr_t	b_data;			/* associated data */
-	void	*b_saveaddr;		/* Original b_data for physio. */
-	void	*b_private;		/* private data for owner */
+
+	union {
+		void	*bu_saveaddr;	/* Original b_data for physio. */
+		void	*bu_private;	/* private data for owner */
+	} b_bu;
+
+#define b_saveaddr	b_bu.bu_saveaddr
+#define b_private	b_bu.bu_private
 
 	TAILQ_ENTRY(buf) b_valist;	/* LRU of va to reuse. */
 
