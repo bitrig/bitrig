@@ -14,5 +14,4 @@ LINK	instbin					sbin/mount_udf
 
 COPY	${DESTDIR}/etc/firmware/*		etc/firmware/
 
-HASH	var/hash
 TZ

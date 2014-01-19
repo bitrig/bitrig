@@ -48,5 +48,4 @@ COPY	${DESTDIR}/etc/firmware/rum-rt2573	etc/firmware/rum-rt2573
 #COPY	${DESTDIR}/etc/firmware/atu-rfmd2958smc-ext etc/firmware/atu-rfmd2958smc-ext
 #COPY	${DESTDIR}/etc/firmware/atu-rfmd2958smc-int etc/firmware/atu-rfmd2958smc-int
 
-HASH	var/hash
 TZ
