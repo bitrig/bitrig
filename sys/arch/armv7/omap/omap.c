@@ -29,3 +29,72 @@ struct cfattach omap_ca = {
 struct cfdriver omap_cd = {
 	NULL, "omap", DV_DULL
 };
+
+struct board_dev beagleboard_devs[] = {
+	{ "prcm",	0 },
+	{ "intc",	0 },
+	{ "gptimer",	0 },
+	{ "gptimer",	1 },
+	{ "omdog",	0 },
+	{ "omgpio",	0 },
+	{ "omgpio",	1 },
+	{ "omgpio",	2 },
+	{ "omgpio",	3 },
+	{ "omgpio",	4 },
+	{ "omgpio",	5 },
+	{ "ommmc",	0 },		/* HSMMC1 */
+	{ "com",	2 },		/* UART3 */
+	{ NULL,		0 }
+};
+
+struct board_dev beaglebone_devs[] = {
+	{ "prcm",	0 },
+	{ "sitaracm",	0 },
+	{ "intc",	0 },
+	{ "edma",	0 },
+	{ "dmtimer",	0 },
+	{ "dmtimer",	1 },
+	{ "omdog",	0 },
+	{ "omgpio",	0 },
+	{ "omgpio",	1 },
+	{ "omgpio",	2 },
+	{ "omgpio",	3 },
+	{ "ommmc",	0 },		/* HSMMC0 */
+	{ "ommmc",	1 },		/* HSMMC1 */
+	{ "com",	0 },		/* UART0 */
+	{ "cpsw",	0 },
+	{ NULL,		0 }
+};
+
+struct board_dev overo_devs[] = {
+	{ "prcm",	0 },
+	{ "intc",	0 },
+	{ "gptimer",	0 },
+	{ "gptimer",	1 },
+	{ "omdog",	0 },
+	{ "omgpio",	0 },
+	{ "omgpio",	1 },
+	{ "omgpio",	2 },
+	{ "omgpio",	3 },
+	{ "omgpio",	4 },
+	{ "omgpio",	5 },
+	{ "ommmc",	0 },		/* HSMMC1 */
+	{ "com",	2 },		/* UART3 */
+	{ NULL,		0 }
+};
+
+struct board_dev pandaboard_devs[] = {
+	{ "omapid",	0 },
+	{ "prcm",	0 },
+	{ "omdog",	0 },
+	{ "omgpio",	0 },
+	{ "omgpio",	1 },
+	{ "omgpio",	2 },
+	{ "omgpio",	3 },
+	{ "omgpio",	4 },
+	{ "omgpio",	5 },
+	{ "ommmc",	0 },		/* HSMMC1 */
+	{ "com",	2 },		/* UART3 */
+	{ "ehci",	0 },
+	{ NULL,		0 }
+};

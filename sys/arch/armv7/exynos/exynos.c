@@ -31,3 +31,24 @@ struct cfattach exynos_ca = {
 struct cfdriver exynos_cd = {
 	NULL, "exynos", DV_DULL
 };
+
+struct board_dev chromebook_devs[] = {
+	{ "exmct",	0 },
+	{ "exdog",	0 },
+	{ "exclock",	0 },
+	{ "expower",	0 },
+	{ "exsysreg",	0 },
+//	{ "exiomuxc",	0 },
+//	{ "exuart",	1 },
+	{ "exgpio",	0 },
+	{ "exgpio",	1 },
+	{ "exgpio",	2 },
+	{ "exgpio",	3 },
+	{ "exgpio",	4 },
+	{ "exgpio",	5 },
+	{ "ehci",	0 },
+	{ "exiic",	4 },
+//	{ "exesdhc",	2 },
+//	{ "exesdhc",	3 },
+	{ NULL,		0 }
+};

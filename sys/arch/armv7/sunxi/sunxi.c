@@ -29,3 +29,58 @@ struct cfattach sunxi_ca = {
 struct cfdriver sunxi_cd = {
 	NULL, "sunxi", DV_DULL
 };
+
+struct board_dev sun4i_devs[] = {
+	{ "sxipio",	0 },
+	{ "sxiccmu",	0 },
+	{ "a1xintc",	0 },
+	{ "sxitimer",	0 },
+	{ "sxitimer",	1 },
+	{ "sxitimer",	2 },
+	{ "sxidog",	0 },
+	{ "sxirtc",	0 },
+	{ "sxiuart",	0 },
+	{ "sxiuart",	1 },
+	{ "sxiuart",	2 },
+	{ "sxiuart",	3 },
+	{ "sxiuart",	4 },
+	{ "sxiuart",	5 },
+	{ "sxiuart",	6 },
+	{ "sxiuart",	7 },
+	{ "sxie",	0 },
+	{ "ahci",	0 },
+	{ "ehci",	0 },
+	{ "ehci",	1 },
+#if 0
+	{ "ohci",	0 },
+	{ "ohci",	1 },
+#endif
+	{ NULL,		0 }
+};
+
+struct board_dev sun7i_devs[] = {
+	{ "sxipio",	0 },
+	{ "sxiccmu",	0 },
+	{ "sxitimer",	0 },
+	{ "sxitimer",	1 },
+	{ "sxitimer",	2 },
+	{ "sxidog",	0 },
+	{ "sxirtc",	0 },
+	{ "sxiuart",	0 },
+	{ "sxiuart",	1 },
+	{ "sxiuart",	2 },
+	{ "sxiuart",	3 },
+	{ "sxiuart",	4 },
+	{ "sxiuart",	5 },
+	{ "sxiuart",	6 },
+	{ "sxiuart",	7 },
+	{ "sxie",	0 },
+	{ "ahci",	0 },
+	{ "ehci",	0 },
+	{ "ehci",	1 },
+#if 0
+	{ "ohci",	0 },
+	{ "ohci",	1 },
+#endif
+	{ NULL,		0 }
+};

@@ -31,3 +31,84 @@ struct cfattach imx_ca = {
 struct cfdriver imx_cd = {
 	NULL, "imx", DV_DULL
 };
+
+struct board_dev hummingboard_devs[] = {
+	{ "imxccm",	0 },
+	{ "imxiomuxc",	0 },
+	{ "imxdog",	0 },
+	{ "imxocotp",	0 },
+	{ "imxuart",	0 },
+	{ "imxgpio",	0 },
+	{ "imxgpio",	1 },
+	{ "imxgpio",	2 },
+	{ "imxgpio",	3 },
+	{ "imxgpio",	4 },
+	{ "imxgpio",	5 },
+	{ "imxgpio",	6 },
+	{ "imxesdhc",	1 },
+	{ "ehci",	0 },
+	{ "ehci",	1 },
+	{ "imxenet",	0 },
+	{ NULL,		0 }
+};
+
+struct board_dev sabrelite_devs[] = {
+	{ "imxccm",	0 },
+	{ "imxiomuxc",	0 },
+	{ "imxdog",	0 },
+	{ "imxocotp",	0 },
+	{ "imxuart",	1 },
+	{ "imxgpio",	0 },
+	{ "imxgpio",	1 },
+	{ "imxgpio",	2 },
+	{ "imxgpio",	3 },
+	{ "imxgpio",	4 },
+	{ "imxgpio",	5 },
+	{ "imxgpio",	6 },
+	{ "imxesdhc",	2 },
+	{ "imxesdhc",	3 },
+	{ "ehci",	0 },
+	{ "imxenet",	0 },
+	{ "ahci",	0 },
+	{ NULL,		0 }
+};
+
+struct board_dev utilite_devs[] = {
+	{ "imxccm",	0 },
+	{ "imxiomuxc",	0 },
+	{ "imxdog",	0 },
+	{ "imxocotp",	0 },
+	{ "imxuart",	3 },
+	{ "imxgpio",	0 },
+	{ "imxgpio",	1 },
+	{ "imxgpio",	2 },
+	{ "imxgpio",	3 },
+	{ "imxgpio",	4 },
+	{ "imxgpio",	5 },
+	{ "imxgpio",	6 },
+	{ "imxesdhc",	2 },
+	{ "imxenet",	0 },
+	{ "ahci",	0 },
+	{ NULL,		0 }
+};
+
+struct board_dev wandboard_devs[] = {
+	{ "imxccm",	0 },
+	{ "imxiomuxc",	0 },
+	{ "imxdog",	0 },
+	{ "imxocotp",	0 },
+	{ "imxuart",	0 },
+	{ "imxgpio",	0 },
+	{ "imxgpio",	1 },
+	{ "imxgpio",	2 },
+	{ "imxgpio",	3 },
+	{ "imxgpio",	4 },
+	{ "imxgpio",	5 },
+	{ "imxgpio",	6 },
+	{ "imxenet",	0 },
+	{ "imxesdhc",	2 },
+	{ "imxesdhc",	0 },
+	{ "ehci",	0 },
+	{ "ahci",	0 },	/* only on quad, afaik. */
+	{ NULL,		0 }
+};
