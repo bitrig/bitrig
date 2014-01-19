@@ -191,11 +191,11 @@ buf_put(struct buf *bp)
 		KASSERT(bp->b_bufsize > 0);
 	if (ISSET(bp->b_flags, B_DELWRI))
 		panic("buf_put: releasing dirty buffer");
-	if (bp->b_freelist.tqe_next != NOLIST &&
-	    bp->b_freelist.tqe_next != (void *)-1)
+	if (TAILQ_NEXT(bp, b_freelist) != NOLIST &&
+	    TAILQ_NEXT(bp, b_freelist) != (void *)-1)
 		panic("buf_put: still on the free list");
-	if (bp->b_vnbufs.le_next != NOLIST &&
-	    bp->b_vnbufs.le_next != (void *)-1)
+	if (LIST_NEXT(bp, b_vnbufs) != NOLIST &&
+	    LIST_NEXT(bp, b_vnbufs) != (void *)-1)
 		panic("buf_put: still on the vnode list");
 	if (!LIST_EMPTY(&bp->b_dep))
 		panic("buf_put: b_dep is not empty");
@@ -1106,7 +1106,7 @@ buf_get(struct vnode *vp, daddr_t blkno, size_t size)
 		return (NULL);
 	}
 
-	bp->b_freelist.tqe_next = NOLIST;
+	TAILQ_NEXT(bp, b_freelist) = NOLIST;
 	bp->b_dev = NODEV;
 	LIST_INIT(&bp->b_dep);
 	bp->b_bcount = size;
@@ -1133,7 +1133,7 @@ buf_get(struct vnode *vp, daddr_t blkno, size_t size)
 		if (RB_INSERT(buf_rb_bufs, &vp->v_bufs_tree, bp))
 			panic("buf_get: dup lblk vp %p bp %p", vp, bp);
 	} else {
-		bp->b_vnbufs.le_next = NOLIST;
+		LIST_NEXT(bp, b_vnbufs) = NOLIST;
 		SET(bp->b_flags, B_INVAL);
 		bp->b_vp = NULL;
 	}
