@@ -125,9 +125,7 @@ SRCF=	absvdi2 \
 	umoddi3 \
 	umodti3
 
-.if ${MACHINE_CPU} != "arm"
 SRCF+=	clear_cache
-.endif
 
 # These are already shipped by libc.a on arm and mips
 .if ${MACHINE_CPU} != "arm" && ${MACHINE_CPU} != "mips"
