@@ -57,7 +57,7 @@ __mp_lock_spin(struct __mp_lock *mpl, u_int me)
 		SPINLOCK_SPIN_HOOK;
 
 	if (ticks == 0) {
-		db_printf("__mp_lock(0x%x): lock spun out\n", mpl);
+		db_printf("__mp_lock(%p): lock spun out\n", mpl);
 		Debugger();
 	}
 #endif
