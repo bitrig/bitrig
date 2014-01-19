@@ -24,6 +24,11 @@
 #include <armv7/armv7/armv7var.h>
 #include <armv7/sunxi/sunxireg.h>
 
+#include "exynos.h"
+#include "imx.h"
+#include "omap.h"
+#include "sunxi.h"
+
 struct arm32_bus_dma_tag armv7_bus_dma_tag = {
 	0,
 	0,
@@ -328,11 +333,14 @@ armv7_attach(struct device *parent, struct device *self, void *aux)
 	bus_space_handle_t ioh;
 
 	switch (board_id) {
+#if NEXYNOS > 0
 	case BOARD_ID_EXYNOS5_CHROMEBOOK:
 		printf(": Exynos 5 Chromebook\n");
 		exynos5_init();
 		sc->sc_board_devs = chromebook_devs;
 		break;
+#endif
+#if NIMX > 0
 	case BOARD_ID_IMX6_HUMMINGBOARD:
 		printf(": SolidRun HummingBoard\n");
 		imx6_init();
@@ -353,6 +361,8 @@ armv7_attach(struct device *parent, struct device *self, void *aux)
 		imx6_init();
 		sc->sc_board_devs = wandboard_devs;
 		break;
+#endif
+#if NOMAP > 0
 	case BOARD_ID_OMAP3_BEAGLE:
 		printf(": BeagleBoard\n");
 		omap3_init();
@@ -373,6 +383,8 @@ armv7_attach(struct device *parent, struct device *self, void *aux)
 		omap4_init();
 		sc->sc_board_devs = pandaboard_devs;
 		break;
+#endif
+#if NSUNXI > 0
 	case BOARD_ID_SUN4I_A10:
 		printf(": A1X\n");
 		sxia1x_init();
@@ -385,6 +397,7 @@ armv7_attach(struct device *parent, struct device *self, void *aux)
 		sc->sc_board_devs = sun7i_devs;
 		issunxi = 1;
 		break;
+#endif
 	default:
 		printf("\n");
 		panic("%s: board type 0x%x unknown", __func__, board_id);

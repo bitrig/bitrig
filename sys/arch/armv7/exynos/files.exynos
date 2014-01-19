@@ -3,9 +3,9 @@
 define exynos {}
 device exynos: exynos
 attach exynos at mainbus
-file	arch/armv7/exynos/exynos_machdep.c	exynos
+file	arch/armv7/exynos/exynos_machdep.c	exynos	needs-flag
 file	arch/armv7/exynos/exynos.c		exynos
-file	arch/armv7/exynos/exynos5.c
+file	arch/armv7/exynos/exynos5.c		exynos
 
 # serial ports
 device exuart

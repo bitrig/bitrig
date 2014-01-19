@@ -7,11 +7,11 @@
 define omap {}
 device omap: omap
 attach omap at mainbus
-file	arch/armv7/omap/omap_machdep.c		omap
+file	arch/armv7/omap/omap_machdep.c		omap	needs-flag
 file	arch/armv7/omap/omap.c			omap
-file	arch/armv7/omap/omap3.c
-file	arch/armv7/omap/omap4.c
-file	arch/armv7/omap/am335x.c
+file	arch/armv7/omap/omap3.c			omap
+file	arch/armv7/omap/omap4.c			omap
+file	arch/armv7/omap/am335x.c		omap
 
 device ommmc: sdmmcbus
 attach ommmc at omap
