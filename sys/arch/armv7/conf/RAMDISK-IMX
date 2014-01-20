@@ -37,8 +37,8 @@ options	FIFO		# FIFOs; RECOMMENDED
 option	EXT2FS          # Second Extended Filesystem
 #option	NFSCLIENT	# NFS 
 
-makeoptions	KERNEL_BASE_PHYS="0x10800000"
-makeoptions	KERNEL_BASE_VIRT="0xc0800000"
+makeoptions	KERNEL_BASE_PHYS="0x10300000"
+makeoptions	KERNEL_BASE_VIRT="0xc0300000"
 options	BUILD_STARTUP_PAGETABLE
 options	STARTUP_PAGETABLE_ADDR=0x10200000
 options	SDRAM_START="0x10000000"
