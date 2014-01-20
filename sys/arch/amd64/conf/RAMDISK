@@ -207,6 +207,11 @@ wdc*	at pcmcia?
 wd*	at wdc? flags 0x0000
 wd*	at pciide? flags 0x0000
 
+sdhc*   at pci?                 # SD Host Controller
+sdmmc*  at sdhc?                # SD/MMC bus
+rtsx*   at pci?                 # Realtek SD Card Reader
+sdmmc*  at rtsx?                # SD/MMC bus
+
 # ATAPI<->SCSI
 atapiscsi* at wdc?
 atapiscsi* at pciide?
