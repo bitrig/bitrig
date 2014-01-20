@@ -1,4 +1,4 @@
-#	$OpenBSD: install.md,v 1.56 2013/11/16 18:37:27 rpe Exp $
+#	$OpenBSD: install.md,v 1.57 2014/01/20 05:14:05 jsing Exp $
 #
 #
 # Copyright (c) 1996 The NetBSD Foundation, Inc.
@@ -38,10 +38,7 @@ DEFAULTSETS="bsd bsd.rd bsd.sp"
 SANESETS="bsd bsd.sp"
 
 md_installboot() {
-	# LBA biosboot uses /boot's i-node number. Using 'cat' preserves that
-	# number, so multiboot setups (NTLDR) can work across upgrades.
-	cat /mnt/usr/mdec/boot >/mnt/boot
-	if ! /mnt/usr/mdec/installboot /mnt/boot /mnt/usr/mdec/biosboot ${1} ; then
+	if ! installboot -r /mnt ${1} ; then
 		echo "\nFailed to install bootblocks."
 		echo "You will not be able to boot Bitrig from ${1}."
 		exit
