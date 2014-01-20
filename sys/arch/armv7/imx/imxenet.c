@@ -136,13 +136,13 @@
 #define ENET_MII_CLK		2500
 #define ENET_ALIGNMENT		16
 
-#define ENET_C1_PHY		0
-#define ENET_C1_PHY_RST		(3*32+15)
-#define ENET_SABRELITE_PHY	6
-#define ENET_PHYFLEX_PHY	3
-#define ENET_PHYFLEX_PHY_RST	(2*32+23)
-#define ENET_UTILITE_PHY	0
-#define ENET_WANDBOARD_PHY	1
+#define ENET_HUMMINGBOARD_PHY			0
+#define ENET_HUMMINGBOARD_PHY_RST		(3*32+15)
+#define ENET_SABRELITE_PHY			6
+#define ENET_PHYFLEX_PHY			3
+#define ENET_PHYFLEX_PHY_RST			(2*32+23)
+#define ENET_UTILITE_PHY		0
+#define ENET_WANDBOARD_PHY			1
 
 #define HREAD4(sc, reg)							\
 	(bus_space_read_4((sc)->sc_iot, (sc)->sc_ioh, (reg)))
@@ -228,10 +228,10 @@ imxenet_attach(struct device *parent, struct device *self, void *args)
 
 	switch (board_id)
 	{
-	case BOARD_ID_IMX6_C1:
-		imxgpio_set_dir(ENET_C1_PHY_RST, IMXGPIO_DIR_OUT);
+	case BOARD_ID_IMX6_HUMMINGBOARD:
+		imxgpio_set_dir(ENET_HUMMINGBOARD_PHY_RST, IMXGPIO_DIR_OUT);
 		delay(10);
-		imxgpio_set_bit(ENET_C1_PHY_RST);
+		imxgpio_set_bit(ENET_HUMMINGBOARD_PHY_RST);
 		delay(10);
 		break;
 	case BOARD_ID_IMX6_PHYFLEX:
@@ -366,8 +366,8 @@ imxenet_chip_init(struct imxenet_softc *sc)
 
 	switch (board_id)
 	{
-	case BOARD_ID_IMX6_C1:
-		phy = ENET_C1_PHY;
+	case BOARD_ID_IMX6_HUMMINGBOARD:
+		phy = ENET_HUMMINGBOARD_PHY;
 		break;
 	case BOARD_ID_IMX6_PHYFLEX:
 		phy = ENET_PHYFLEX_PHY;
@@ -406,9 +406,9 @@ imxenet_chip_init(struct imxenet_softc *sc)
 		/* enable all interrupts */
 		imxenet_miibus_writereg(dev, phy, 0x1b, 0xff00);
 		break;
-	case BOARD_ID_IMX6_C1:		/* AR8035 */
+	case BOARD_ID_IMX6_HUMMINGBOARD:	/* AR8035 */
 	case BOARD_ID_IMX6_UTILITE:
-	case BOARD_ID_IMX6_WANDBOARD:	/* AR8031 */
+	case BOARD_ID_IMX6_WANDBOARD:		/* AR8031 */
 		/* disable SmartEEE */
 		imxenet_miibus_writereg(dev, phy, 0x0d, 0x0003);
 		imxenet_miibus_writereg(dev, phy, 0x0e, 0x805d);

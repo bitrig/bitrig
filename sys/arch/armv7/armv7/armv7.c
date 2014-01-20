@@ -68,7 +68,7 @@ struct board_dev chromebook_devs[] = {
 	{ NULL,		0 }
 };
 
-struct board_dev c1_devs[] = {
+struct board_dev hummingboard_devs[] = {
 	{ "imxccm",	0 },
 	{ "imxiomuxc",	0 },
 	{ "imxdog",	0 },
@@ -354,10 +354,10 @@ armv7_attach(struct device *parent, struct device *self, void *aux)
 		exynos5_init();
 		sc->sc_board_devs = chromebook_devs;
 		break;
-	case BOARD_ID_IMX6_C1:
-		printf(": SolidRun C1\n");
+	case BOARD_ID_IMX6_HUMMINGBOARD:
+		printf(": SolidRun HummingBoard\n");
 		imx6_init();
-		sc->sc_board_devs = c1_devs;
+		sc->sc_board_devs = hummingboard_devs;
 		break;
 	case BOARD_ID_IMX6_PHYFLEX:
 		printf(": PhyFLEX-i.MX6\n");

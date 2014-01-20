@@ -101,7 +101,7 @@ int
 imxgpio_match(struct device *parent, void *v, void *aux)
 {
 	switch (board_id) {
-	case BOARD_ID_IMX6_C1:
+	case BOARD_ID_IMX6_HUMMINGBOARD:
 	case BOARD_ID_IMX6_PHYFLEX:
 	case BOARD_ID_IMX6_SABRELITE:
 	case BOARD_ID_IMX6_UTILITE:
@@ -126,7 +126,7 @@ imxgpio_attach(struct device *parent, struct device *self, void *args)
 
 
 	switch (board_id) {
-		case BOARD_ID_IMX6_C1:
+		case BOARD_ID_IMX6_HUMMINGBOARD:
 		case BOARD_ID_IMX6_PHYFLEX:
 		case BOARD_ID_IMX6_SABRELITE:
 		case BOARD_ID_IMX6_UTILITE:

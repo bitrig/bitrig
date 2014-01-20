@@ -71,10 +71,10 @@
 #define USBUH3_EHCI_ADDR	0x02184700
 
 /* board specific */
-#define EHCI_C1_USB_H1_PWR		0
-#define EHCI_C1_USB_OTG_PWR		(2*32+22)
-#define EHCI_PHYFLEX_USB_H1_PWR		0
-#define EHCI_PHYFLEX_USB_OTG_PWR	111
+#define EHCI_HUMMINGBOARD_USB_H1_PWR		0
+#define EHCI_HUMMINGBOARD_USB_OTG_PWR		(2*32+22)
+#define EHCI_PHYFLEX_USB_H1_PWR			0
+#define EHCI_PHYFLEX_USB_OTG_PWR		111
 
 void	imxehci_attach(struct device *, struct device *, void *);
 int	imxehci_detach(struct device *, int);
@@ -138,10 +138,10 @@ imxehci_attach(struct device *parent, struct device *self, void *aux)
 		/* enable usb port power */
 		switch (board_id)
 		{
-		case BOARD_ID_IMX6_C1:
-			imxgpio_set_dir(EHCI_C1_USB_H1_PWR, IMXGPIO_DIR_OUT);
+		case BOARD_ID_IMX6_HUMMINGBOARD:
+			imxgpio_set_dir(EHCI_HUMMINGBOARD_USB_H1_PWR, IMXGPIO_DIR_OUT);
 			delay(10);
-			imxgpio_set_bit(EHCI_C1_USB_H1_PWR);
+			imxgpio_set_bit(EHCI_HUMMINGBOARD_USB_H1_PWR);
 			delay(10);
 			break;
 		case BOARD_ID_IMX6_PHYFLEX:
@@ -165,10 +165,10 @@ imxehci_attach(struct device *parent, struct device *self, void *aux)
 		/* enable usb port power */
 		switch (board_id)
 		{
-		case BOARD_ID_IMX6_C1:
-			imxgpio_set_dir(EHCI_C1_USB_OTG_PWR, IMXGPIO_DIR_OUT);
+		case BOARD_ID_IMX6_HUMMINGBOARD:
+			imxgpio_set_dir(EHCI_HUMMINGBOARD_USB_OTG_PWR, IMXGPIO_DIR_OUT);
 			delay(10);
-			imxgpio_set_bit(EHCI_C1_USB_OTG_PWR);
+			imxgpio_set_bit(EHCI_HUMMINGBOARD_USB_OTG_PWR);
 			delay(10);
 			break;
 		}

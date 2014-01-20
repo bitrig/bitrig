@@ -79,7 +79,8 @@ int	armv7_submatch(struct device *, void *, void *);
 #define BOARD_ID_IMX6_UTILITE 4273
 #define BOARD_ID_SUN7I_A20 4283
 #define BOARD_ID_IMX6_WANDBOARD 4412
-#define BOARD_ID_IMX6_C1 4773
+#define BOARD_ID_IMX6_HUMMINGBOARD 4773
+#define BOARD_ID_IMX6_CUBOXI 4821
 extern uint32_t board_id;
 
 /* different arch init */

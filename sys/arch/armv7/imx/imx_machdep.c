@@ -52,7 +52,7 @@ platform_init_cons(void)
 	paddr_t paddr;
 
 	switch (board_id) {
-	case BOARD_ID_IMX6_C1:
+	case BOARD_ID_IMX6_HUMMINGBOARD:
 		paddr = 0x02020000;
 		break;
 	case BOARD_ID_IMX6_PHYFLEX:
@@ -91,9 +91,9 @@ void
 platform_print_board_type(void)
 {
 	switch (board_id) {
-	case BOARD_ID_IMX6_C1:
+	case BOARD_ID_IMX6_HUMMINGBOARD:
 		amptimer_frequency = 396 * 1000 * 1000;
-		printf("board type: C1\n");
+		printf("board type: HummingBoard\n");
 		break;
 	case BOARD_ID_IMX6_PHYFLEX:
 		amptimer_frequency = 396 * 1000 * 1000;
