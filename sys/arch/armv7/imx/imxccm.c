@@ -24,6 +24,7 @@
 #include <sys/evcount.h>
 #include <sys/socket.h>
 #include <sys/timeout.h>
+#include <sys/sensors.h>
 #include <machine/intr.h>
 #include <machine/bus.h>
 #include <armv7/armv7/armv7var.h>
@@ -75,13 +76,6 @@
 #define CCM_ANALOG_PLL_USB2_SET			0x4024
 #define CCM_ANALOG_PLL_USB2_CLR			0x4028
 #define CCM_ANALOG_PLL_SYS			0x4030
-#define CCM_ANALOG_USB1_CHRG_DETECT		0x41b0
-#define CCM_ANALOG_USB1_CHRG_DETECT_SET		0x41b4
-#define CCM_ANALOG_USB1_CHRG_DETECT_CLR		0x41b8
-#define CCM_ANALOG_USB2_CHRG_DETECT		0x4210
-#define CCM_ANALOG_USB2_CHRG_DETECT_SET		0x4214
-#define CCM_ANALOG_USB2_CHRG_DETECT_CLR		0x4218
-#define CCM_ANALOG_DIGPROG			0x4260
 #define CCM_ANALOG_PLL_ENET			0x40e0
 #define CCM_ANALOG_PLL_ENET_SET			0x40e4
 #define CCM_ANALOG_PLL_ENET_CLR			0x40e8
@@ -92,6 +86,13 @@
 #define CCM_ANALOG_PFD_528_SET			0x4104
 #define CCM_ANALOG_PFD_528_CLR			0x4108
 #define CCM_PMU_MISC1				0x4160
+#define CCM_ANALOG_USB1_CHRG_DETECT		0x41b0
+#define CCM_ANALOG_USB1_CHRG_DETECT_SET		0x41b4
+#define CCM_ANALOG_USB1_CHRG_DETECT_CLR		0x41b8
+#define CCM_ANALOG_USB2_CHRG_DETECT		0x4210
+#define CCM_ANALOG_USB2_CHRG_DETECT_SET		0x4214
+#define CCM_ANALOG_USB2_CHRG_DETECT_CLR		0x4218
+#define CCM_ANALOG_DIGPROG			0x4260
 
 /* bits and bytes */
 #define CCM_CCSR_PLL3_SW_CLK_SEL		(1 << 0)
@@ -133,6 +134,7 @@
 #define CCM_ANALOG_PLL_USB2_BYPASS		(1 << 16)
 #define CCM_ANALOG_PLL_USB2_LOCK		(1U << 31)
 #define CCM_ANALOG_PLL_SYS_DIV_SELECT_MASK	0x1
+#define CCM_ANALOG_PLL_ENET_DIV_SELECT_MASK	0x3
 #define CCM_ANALOG_USB1_CHRG_DETECT_CHK_CHRG_B	(1 << 19)
 #define CCM_ANALOG_USB1_CHRG_DETECT_EN_B	(1 << 20)
 #define CCM_ANALOG_USB2_CHRG_DETECT_CHK_CHRG_B	(1 << 19)
@@ -155,6 +157,8 @@
 #define HCLK_FREQ				24000
 #define PLL3_80M				80000
 
+#define CCM_SENSORS				13
+
 #define HREAD4(sc, reg)							\
 	(bus_space_read_4((sc)->sc_iot, (sc)->sc_ioh, (reg)))
 #define HWRITE4(sc, reg, val)						\
@@ -168,6 +172,9 @@ struct imxccm_softc {
 	struct device		sc_dev;
 	bus_space_tag_t		sc_iot;
 	bus_space_handle_t	sc_ioh;
+
+	struct ksensor sc_freq_sensor[CCM_SENSORS];
+	struct ksensordev sc_sensordev;
 };
 
 enum clocks {
@@ -223,6 +230,7 @@ void imxccm_enable_pll_enet(void);
 void imxccm_enable_enet(void);
 void imxccm_enable_sata(void);
 void imxccm_enable_pcie(void);
+void imxccm_refresh_sensors(void *);
 
 struct cfattach	imxccm_ca = {
 	sizeof (struct imxccm_softc), NULL, imxccm_attach
@@ -237,6 +245,7 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 {
 	struct armv7_attach_args *aa = args;
 	struct imxccm_softc *sc = (struct imxccm_softc *) self;
+	int i;
 
 	imxccm_sc = sc;
 	sc->sc_iot = aa->aa_iot;
@@ -251,6 +260,15 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 	printf("\n");
 
 	cpu_cpuspeed = imxccm_cpuspeed;
+
+	strlcpy(sc->sc_sensordev.xname, sc->sc_dev.dv_xname,
+	    sizeof(sc->sc_sensordev.xname));
+	for (i = 0; i < CCM_SENSORS; i++) {
+		sc->sc_freq_sensor[i].type = SENSOR_FREQ;
+		sensor_attach(&sc->sc_sensordev, &sc->sc_freq_sensor[i]);
+	}
+	sensordev_install(&sc->sc_sensordev);
+	sensor_task_register(sc, imxccm_refresh_sensors, 60);
 }
 
 int
@@ -279,9 +297,17 @@ imxccm_decode_pll(enum clocks pll, unsigned int freq)
 		    & CCM_ANALOG_PLL_SYS_DIV_SELECT_MASK;
 		return freq * (20 + (div << 1));
 	case USB1_PLL3:
+		div = HREAD4(sc, CCM_ANALOG_PLL_USB1)
+		    & CCM_ANALOG_PLL_USB1_DIV_SELECT_MASK;
+		return freq * (20 + (div << 1));
+	case USB2_PLL:
 		div = HREAD4(sc, CCM_ANALOG_PLL_USB2)
 		    & CCM_ANALOG_PLL_USB2_DIV_SELECT_MASK;
 		return freq * (20 + (div << 1));
+	case ENET_PLL6:
+		div = HREAD4(sc, CCM_ANALOG_PLL_ENET)
+		    & CCM_ANALOG_PLL_ENET_DIV_SELECT_MASK;
+		return (div == 3 ? 125 : 25 * (1 << div)) * 1000;
 	default:
 		return 0;
 	}
@@ -596,4 +622,76 @@ imxccm_enable_pll_usb2(void)
 	      CCM_ANALOG_PLL_USB2_ENABLE
 	    | CCM_ANALOG_PLL_USB2_POWER
 	    | CCM_ANALOG_PLL_USB2_EN_USB_CLKS);
+}
+
+void
+imxccm_refresh_sensors(void *arg)
+{
+	struct imxccm_softc *sc = (struct imxccm_softc *)arg;
+	int i = 0;
+
+	strlcpy(sc->sc_freq_sensor[i].desc, "pll arm",
+	    sizeof(sc->sc_freq_sensor[i].desc));
+	sc->sc_freq_sensor[i++].value =
+	    imxccm_decode_pll(ARM_PLL1, HCLK_FREQ) * 1000 * 1000LL;
+
+	strlcpy(sc->sc_freq_sensor[i].desc, "pll sys",
+	    sizeof(sc->sc_freq_sensor[i].desc));
+	sc->sc_freq_sensor[i++].value =
+	    imxccm_decode_pll(SYS_PLL2, HCLK_FREQ) * 1000 * 1000LL;
+
+	strlcpy(sc->sc_freq_sensor[i].desc, "pll otg",
+	    sizeof(sc->sc_freq_sensor[i].desc));
+	sc->sc_freq_sensor[i++].value =
+	    imxccm_decode_pll(USB1_PLL3, HCLK_FREQ) * 1000 * 1000LL;
+
+	strlcpy(sc->sc_freq_sensor[i].desc, "pll usb",
+	    sizeof(sc->sc_freq_sensor[i].desc));
+	sc->sc_freq_sensor[i++].value =
+	    imxccm_decode_pll(USB2_PLL, HCLK_FREQ) * 1000 * 1000LL;
+
+	strlcpy(sc->sc_freq_sensor[i].desc, "pll enet",
+	    sizeof(sc->sc_freq_sensor[i].desc));
+	sc->sc_freq_sensor[i++].value =
+	    imxccm_decode_pll(ENET_PLL6, HCLK_FREQ) * 1000LL * 1000LL;
+
+	strlcpy(sc->sc_freq_sensor[i].desc, "per",
+	    sizeof(sc->sc_freq_sensor[i].desc));
+	sc->sc_freq_sensor[i++].value =
+	    imxccm_get_periphclk() * 1000LL * 1000LL;
+
+	strlcpy(sc->sc_freq_sensor[i].desc, "ipg",
+	    sizeof(sc->sc_freq_sensor[i].desc));
+	sc->sc_freq_sensor[i++].value =
+	    imxccm_get_ipgclk() * 1000LL * 1000LL;
+
+	strlcpy(sc->sc_freq_sensor[i].desc, "ipg per",
+	    sizeof(sc->sc_freq_sensor[i].desc));
+	sc->sc_freq_sensor[i++].value =
+	    imxccm_get_ipg_perclk() * 1000LL * 1000LL;
+
+	strlcpy(sc->sc_freq_sensor[i].desc, "uart",
+	    sizeof(sc->sc_freq_sensor[i].desc));
+	sc->sc_freq_sensor[i++].value =
+	    imxccm_get_uartclk() * 1000LL * 1000LL;
+
+	strlcpy(sc->sc_freq_sensor[i].desc, "usdhc1",
+	    sizeof(sc->sc_freq_sensor[i].desc));
+	sc->sc_freq_sensor[i++].value =
+	    imxccm_get_usdhx(1) * 1000LL * 1000LL;
+
+	strlcpy(sc->sc_freq_sensor[i].desc, "usdhc2",
+	    sizeof(sc->sc_freq_sensor[i].desc));
+	sc->sc_freq_sensor[i++].value =
+	    imxccm_get_usdhx(2) * 1000LL * 1000LL;
+
+	strlcpy(sc->sc_freq_sensor[i].desc, "usdhc3",
+	    sizeof(sc->sc_freq_sensor[i].desc));
+	sc->sc_freq_sensor[i++].value =
+	    imxccm_get_usdhx(3) * 1000LL * 1000LL;
+
+	strlcpy(sc->sc_freq_sensor[i].desc, "usdhc4",
+	    sizeof(sc->sc_freq_sensor[i].desc));
+	sc->sc_freq_sensor[i++].value =
+	    imxccm_get_usdhx(4) * 1000LL * 1000LL;
 }
