@@ -88,27 +88,6 @@ struct board_dev hummingboard_devs[] = {
 	{ NULL,		0 }
 };
 
-struct board_dev phyflex_imx6_devs[] = {
-	{ "imxccm",	0 },
-	{ "imxiomuxc",	0 },
-	{ "imxdog",	0 },
-	{ "imxocotp",	0 },
-	{ "imxuart",	3 },
-	{ "imxgpio",	0 },
-	{ "imxgpio",	1 },
-	{ "imxgpio",	2 },
-	{ "imxgpio",	3 },
-	{ "imxgpio",	4 },
-	{ "imxgpio",	5 },
-	{ "imxgpio",	6 },
-	{ "imxesdhc",	1 },
-	{ "imxesdhc",	2 },
-	{ "ehci",	0 },
-	{ "imxenet",	0 },
-	{ "ahci",	0 },
-	{ NULL,		0 }
-};
-
 struct board_dev sabrelite_devs[] = {
 	{ "imxccm",	0 },
 	{ "imxiomuxc",	0 },
@@ -358,11 +337,6 @@ armv7_attach(struct device *parent, struct device *self, void *aux)
 		printf(": SolidRun HummingBoard\n");
 		imx6_init();
 		sc->sc_board_devs = hummingboard_devs;
-		break;
-	case BOARD_ID_IMX6_PHYFLEX:
-		printf(": PhyFLEX-i.MX6\n");
-		imx6_init();
-		sc->sc_board_devs = phyflex_imx6_devs;
 		break;
 	case BOARD_ID_IMX6_SABRELITE:
 		printf(": i.MX6 SABRE Lite\n");

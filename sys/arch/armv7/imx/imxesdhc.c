@@ -439,19 +439,6 @@ imxesdhc_card_detect(sdmmc_chipset_handle_t sch)
 		gpio = 0*32 + 4;
 		imxgpio_set_dir(gpio, IMXGPIO_DIR_IN);
 		return imxgpio_get_bit(gpio) ? 0 : 1;
-	case BOARD_ID_IMX6_PHYFLEX:
-		switch (sc->unit) {
-			case 1:
-				gpio = 0*32 + 2;
-				break;
-			case 2:
-				gpio = 4*32 + 22;
-				break;
-			default:
-				return 0;
-		}
-		imxgpio_set_dir(gpio, IMXGPIO_DIR_IN);
-		return imxgpio_get_bit(gpio) ? 0 : 1;
 	case BOARD_ID_IMX6_SABRELITE:
 		switch (sc->unit) {
 			case 2:

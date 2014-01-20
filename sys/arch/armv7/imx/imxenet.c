@@ -139,9 +139,8 @@
 #define ENET_HUMMINGBOARD_PHY			0
 #define ENET_HUMMINGBOARD_PHY_RST		(3*32+15)
 #define ENET_SABRELITE_PHY			6
-#define ENET_PHYFLEX_PHY			3
-#define ENET_PHYFLEX_PHY_RST			(2*32+23)
-#define ENET_UTILITE_PHY		0
+#define ENET_SABRELITE_PHY_RST			(2*32+23)
+#define ENET_UTILITE_PHY			0
 #define ENET_WANDBOARD_PHY			1
 
 #define HREAD4(sc, reg)							\
@@ -234,12 +233,11 @@ imxenet_attach(struct device *parent, struct device *self, void *args)
 		imxgpio_set_bit(ENET_HUMMINGBOARD_PHY_RST);
 		delay(10);
 		break;
-	case BOARD_ID_IMX6_PHYFLEX:
 	case BOARD_ID_IMX6_SABRELITE:
-		/* phyFLEX i.MX6 and SABRE Lite PHY reset */
-		imxgpio_set_dir(ENET_PHYFLEX_PHY_RST, IMXGPIO_DIR_OUT);
+		/* SABRE Lite PHY reset */
+		imxgpio_set_dir(ENET_SABRELITE_PHY_RST, IMXGPIO_DIR_OUT);
 		delay(10);
-		imxgpio_set_bit(ENET_PHYFLEX_PHY_RST);
+		imxgpio_set_bit(ENET_SABRELITE_PHY_RST);
 		delay(10);
 		break;
 	}
@@ -369,9 +367,6 @@ imxenet_chip_init(struct imxenet_softc *sc)
 	case BOARD_ID_IMX6_HUMMINGBOARD:
 		phy = ENET_HUMMINGBOARD_PHY;
 		break;
-	case BOARD_ID_IMX6_PHYFLEX:
-		phy = ENET_PHYFLEX_PHY;
-		break;
 	case BOARD_ID_IMX6_SABRELITE:
 		phy = ENET_SABRELITE_PHY;
 		break;
@@ -385,7 +380,6 @@ imxenet_chip_init(struct imxenet_softc *sc)
 
 	switch (board_id)
 	{
-	case BOARD_ID_IMX6_PHYFLEX:
 	case BOARD_ID_IMX6_SABRELITE:	/* Micrel KSZ9021 */
 		/* prefer master mode */
 		imxenet_miibus_writereg(dev, phy, 0x9, 0x1f00);

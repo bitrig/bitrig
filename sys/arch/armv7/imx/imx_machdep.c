@@ -55,9 +55,6 @@ platform_init_cons(void)
 	case BOARD_ID_IMX6_HUMMINGBOARD:
 		paddr = 0x02020000;
 		break;
-	case BOARD_ID_IMX6_PHYFLEX:
-		paddr = 0x021f0000;
-		break;
 	case BOARD_ID_IMX6_SABRELITE:
 		paddr = 0x021e8000;
 		break;
@@ -94,10 +91,6 @@ platform_print_board_type(void)
 	case BOARD_ID_IMX6_HUMMINGBOARD:
 		amptimer_frequency = 396 * 1000 * 1000;
 		printf("board type: HummingBoard\n");
-		break;
-	case BOARD_ID_IMX6_PHYFLEX:
-		amptimer_frequency = 396 * 1000 * 1000;
-		printf("board type: phyFLEX-i.MX6\n");
 		break;
 	case BOARD_ID_IMX6_SABRELITE:
 		amptimer_frequency = 396 * 1000 * 1000;
