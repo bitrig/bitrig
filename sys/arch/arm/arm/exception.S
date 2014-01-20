@@ -57,6 +57,7 @@
 #define RESTOREVFP							\
 	ldr	r0, [sp]		/* Get the SPSR from stack */	;\
 	and	r0, r0, #(PSR_MODE)	/* Returning to USR mode? */	;\
+	cmp	r0, #(PSR_USR32_MODE)					;\
 	bne	1f							;\
 	bl	_C_LABEL(vfp_enable)					;\
 1:
