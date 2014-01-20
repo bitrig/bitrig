@@ -293,7 +293,7 @@ ffs_mount(struct mount *mp, const char *path, void *data,
 		}
 
 #ifdef WAPBL
-		if ((mp->mnt_flag & MNT_LOG) == 0) {
+		if (error == 0 && (mp->mnt_flag & MNT_LOG) == 0) {
 			error = ffs_wapbl_stop(mp, mp->mnt_flag & MNT_FORCE);
 			if (error)
 				return (error);
