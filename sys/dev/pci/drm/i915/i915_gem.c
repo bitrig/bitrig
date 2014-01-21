@@ -1,4 +1,4 @@
-/*	$OpenBSD: i915_gem.c,v 1.63 2014/01/21 04:47:38 kettenis Exp $	*/
+/*	$OpenBSD: i915_gem.c,v 1.64 2014/01/21 08:25:33 kettenis Exp $	*/
 /*
  * Copyright (c) 2008-2009 Owain G. Ainsworth <oga@openbsd.org>
  *
@@ -1810,7 +1810,7 @@ static void
 i915_gem_object_put_pages_gtt(struct drm_i915_gem_object *obj)
 {
 	int page_count = obj->base.size / PAGE_SIZE;
-#if 0
+#ifdef __linux__
 	struct scatterlist *sg;
 #endif
 	int ret, i;
@@ -1833,7 +1833,7 @@ i915_gem_object_put_pages_gtt(struct drm_i915_gem_object *obj)
 	if (obj->madv == I915_MADV_DONTNEED)
 		obj->dirty = 0;
 
-#if 0
+#ifdef __linux__
 	for_each_sg(obj->pages->sgl, sg, page_count, i) {
 		struct page *page = sg_page(sg);
 
@@ -1856,7 +1856,7 @@ i915_gem_object_put_pages_gtt(struct drm_i915_gem_object *obj)
 #endif
 	obj->dirty = 0;
 
-#if 0
+#ifdef __linux__
 	sg_free_table(obj->pages);
 	kfree(obj->pages);
 #else
@@ -1946,7 +1946,7 @@ i915_gem_shrink_all(struct drm_i915_private *dev_priv)
 static int
 i915_gem_object_get_pages_gtt(struct drm_i915_gem_object *obj)
 {
-#if 0
+#ifdef __linux__
 	struct drm_i915_private *dev_priv = obj->base.dev->dev_private;
 	int page_count, i;
 	struct address_space *mapping;
@@ -1968,7 +1968,7 @@ i915_gem_object_get_pages_gtt(struct drm_i915_gem_object *obj)
 	BUG_ON(obj->base.read_domains & I915_GEM_GPU_DOMAINS);
 	BUG_ON(obj->base.write_domain & I915_GEM_GPU_DOMAINS);
 
-#if 0
+#ifdef __linux__
 	st = kmalloc(sizeof(*st), GFP_KERNEL);
 	if (st == NULL)
 		return -ENOMEM;
@@ -3344,7 +3344,9 @@ int i915_gem_object_set_cache_level(struct drm_i915_gem_object *obj,
 				    enum i915_cache_level cache_level)
 {
 	struct drm_device *dev = obj->base.dev;
-//	drm_i915_private_t *dev_priv = dev->dev_private;
+#ifdef notyet
+	drm_i915_private_t *dev_priv = dev->dev_private;
+#endif
 	int ret;
 
 	if (obj->cache_level == cache_level)
@@ -4198,7 +4200,7 @@ int i915_gem_init(struct drm_device *dev)
 	mappable_size = dev->agp->info.ai_aperture_size;
 
 	DRM_LOCK();
-#if 0
+#ifdef notyet
 	if (intel_enable_ppgtt(dev) && HAS_ALIASING_PPGTT(dev)) {
 		/* PPGTT pdes are stolen from global gtt ptes, so shrink the
 		 * aperture accordingly when using aliasing ppgtt. */
@@ -4225,7 +4227,7 @@ int i915_gem_init(struct drm_device *dev)
 		 */
 		i915_gem_init_global_gtt(dev, 0, mappable_size,
 					 gtt_size);
-#if 0
+#ifdef notyet
 	}
 #endif
 
@@ -4236,6 +4238,11 @@ int i915_gem_init(struct drm_device *dev)
 		return ret;
 	}
 
+#ifdef __linux__
+	/* Allow hardware batchbuffers unless told otherwise, but not for KMS. */
+	if (!drm_core_check_feature(dev, DRIVER_MODESET))
+		dev_priv->dri1.allow_batchbuffer = 1;
+#endif
 	return 0;
 }
 
