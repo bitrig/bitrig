@@ -1,4 +1,4 @@
-/*	$OpenBSD: kern_lock.c,v 1.39 2013/03/28 16:55:25 deraadt Exp $	*/
+/*	$OpenBSD: kern_lock.c,v 1.43 2014/01/21 01:48:44 tedu Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -53,7 +53,7 @@ lockinit(struct lock *lkp, int prio, char *wmesg, int timo, int flags)
 
 	KASSERT(flags == 0);
 
-	bzero(lkp, sizeof(struct lock));
+	memset(lkp, 0, sizeof(struct lock));
 	rrw_init(&lkp->lk_lck, wmesg);
 }
 

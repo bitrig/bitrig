@@ -1,4 +1,4 @@
-/*	$OpenBSD: kern_rwlock.c,v 1.17 2011/07/05 03:58:22 weingart Exp $	*/
+/*	$OpenBSD: kern_rwlock.c,v 1.21 2014/01/21 01:48:44 tedu Exp $	*/
 
 /*
  * Copyright (c) 2002, 2003 Artur Grabowski <art@openbsd.org>
@@ -302,7 +302,7 @@ rw_assert_unlocked(struct rwlock *rwl)
 void
 rrw_init(struct rrwlock *rrwl, char *name)
 {
-	bzero(rrwl, sizeof(struct rrwlock));
+	memset(rrwl, 0, sizeof(struct rrwlock));
 	rw_init(&rrwl->rrwl_lock, name);
 }
 

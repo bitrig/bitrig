@@ -1,4 +1,4 @@
-/*	$OpenBSD: subr_disk.c,v 1.158 2013/11/18 17:45:01 deraadt Exp $	*/
+/*	$OpenBSD: subr_disk.c,v 1.160 2014/01/21 01:48:44 tedu Exp $	*/
 /*	$NetBSD: subr_disk.c,v 1.17 1996/03/16 23:17:08 christos Exp $	*/
 
 /*
@@ -790,15 +790,15 @@ setdisklabel(struct disklabel *olp, struct disklabel *nlp, u_int openmask)
 
 	/* Generate a UID if the disklabel does not already have one. */
 	uid = 0;
-	if (bcmp(nlp->d_uid, &uid, sizeof(nlp->d_uid)) == 0) {
+	if (memcmp(nlp->d_uid, &uid, sizeof(nlp->d_uid)) == 0) {
 		do {
 			arc4random_buf(nlp->d_uid, sizeof(nlp->d_uid));
 			TAILQ_FOREACH(dk, &disklist, dk_link)
-				if (dk->dk_label && bcmp(dk->dk_label->d_uid,
+				if (dk->dk_label && memcmp(dk->dk_label->d_uid,
 				    nlp->d_uid, sizeof(nlp->d_uid)) == 0)
 					break;
 		} while (dk != NULL &&
-		    bcmp(nlp->d_uid, &uid, sizeof(nlp->d_uid)) == 0);
+		    memcmp(nlp->d_uid, &uid, sizeof(nlp->d_uid)) == 0);
 	}
 
 	nlp->d_checksum = 0;
@@ -1321,8 +1321,8 @@ setroot(struct device *bootdv, int part, int exitflags)
 	}
 
 	/* Locate DUID for boot disk if not already provided. */
-	bzero(duid, sizeof(duid));
-	if (bcmp(bootduid, duid, sizeof(bootduid)) == 0) {
+	memset(duid, 0, sizeof(duid));
+	if (memcmp(bootduid, duid, sizeof(bootduid)) == 0) {
 		TAILQ_FOREACH(dk, &disklist, dk_link)
 			if (dk->dk_device == bootdv)
 				break;
@@ -1438,11 +1438,11 @@ gotswap:
 		rootdv = bootdv;
 
 		if (bootdv->dv_class == DV_DISK) {
-			bzero(&duid, sizeof(duid));
-			if (bcmp(rootduid, &duid, sizeof(rootduid)) != 0) {
+			memset(&duid, 0, sizeof(duid));
+			if (memcmp(rootduid, &duid, sizeof(rootduid)) != 0) {
 				TAILQ_FOREACH(dk, &disklist, dk_link)
 					if ((dk->dk_flags & DKF_LABELVALID) &&
-					    dk->dk_label && bcmp(dk->dk_label->d_uid,
+					    dk->dk_label && memcmp(dk->dk_label->d_uid,
 					    &rootduid, sizeof(rootduid)) == 0)
 						break;
 				if (dk == NULL)
@@ -1658,7 +1658,7 @@ disk_map(char *path, char *mappath, int size, int flags)
 		return -1;
 
 	/* Derive label UID. */
-	bzero(uid, sizeof(uid));
+	memset(uid, 0, sizeof(uid));
 	for (i = 0; i < 16; i++) {
 		c = path[i];
 		if (c >= '0' && c <= '9')
@@ -1675,7 +1675,7 @@ disk_map(char *path, char *mappath, int size, int flags)
 	mdk = NULL;
 	TAILQ_FOREACH(dk, &disklist, dk_link) {
 		if ((dk->dk_flags & DKF_LABELVALID) && dk->dk_label &&
-		    bcmp(dk->dk_label->d_uid, uid,
+		    memcmp(dk->dk_label->d_uid, uid,
 		    sizeof(dk->dk_label->d_uid)) == 0) {
 			/* Fail if there are duplicate UIDs! */
 			if (mdk != NULL)
