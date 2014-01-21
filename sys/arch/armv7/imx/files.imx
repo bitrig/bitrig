@@ -16,6 +16,10 @@ device imxccm
 attach imxccm at imx
 file	arch/armv7/imx/imxccm.c		imxccm
 
+device imxtemp
+attach imxtemp at imx
+file	arch/armv7/imx/imxtemp.c	imxtemp
+
 device imxiomuxc
 attach imxiomuxc at imx
 file	arch/armv7/imx/imxiomuxc.c	imxiomuxc

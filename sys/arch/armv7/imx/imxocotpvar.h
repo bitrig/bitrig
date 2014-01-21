@@ -15,3 +15,4 @@
  */
 
 void imxocotp_get_ethernet_address(u_int8_t *);
+uint32_t imxocotp_get_temperature_calibration(void);

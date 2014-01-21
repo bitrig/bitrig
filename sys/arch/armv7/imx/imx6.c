@@ -153,6 +153,8 @@
 #define PCIE_IRQ2	122
 #define PCIE_IRQ3	123
 
+#define TEMPMON_IRQ	49
+
 struct armv7_dev imx6_devs[] = {
 
 	/*
@@ -346,6 +348,15 @@ struct armv7_dev imx6_devs[] = {
 	  .unit = 0,
 	  .mem = { { SATA_ADDR, SATA_SIZE } },
 	  .irq = { SATA_IRQ }
+	},
+
+	/*
+	 * Temperature monitor
+	 */
+	{ .name = "imxtemp",
+	  .unit = 0,
+	  .mem = { { ANALOG_ADDR, ANALOG_SIZE } },
+	  .irq = { TEMPMON_IRQ },
 	},
 
 	/*

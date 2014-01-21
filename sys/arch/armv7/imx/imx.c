@@ -33,10 +33,11 @@ struct cfdriver imx_cd = {
 };
 
 struct board_dev hummingboard_devs[] = {
+	{ "imxocotp",	0 },
 	{ "imxccm",	0 },
+	{ "imxtemp",	0 },
 	{ "imxiomuxc",	0 },
 	{ "imxdog",	0 },
-	{ "imxocotp",	0 },
 	{ "imxuart",	0 },
 	{ "imxgpio",	0 },
 	{ "imxgpio",	1 },
@@ -53,10 +54,11 @@ struct board_dev hummingboard_devs[] = {
 };
 
 struct board_dev sabrelite_devs[] = {
+	{ "imxocotp",	0 },
 	{ "imxccm",	0 },
+	{ "imxtemp",	0 },
 	{ "imxiomuxc",	0 },
 	{ "imxdog",	0 },
-	{ "imxocotp",	0 },
 	{ "imxuart",	1 },
 	{ "imxgpio",	0 },
 	{ "imxgpio",	1 },
@@ -74,10 +76,11 @@ struct board_dev sabrelite_devs[] = {
 };
 
 struct board_dev utilite_devs[] = {
+	{ "imxocotp",	0 },
 	{ "imxccm",	0 },
+	{ "imxtemp",	0 },
 	{ "imxiomuxc",	0 },
 	{ "imxdog",	0 },
-	{ "imxocotp",	0 },
 	{ "imxuart",	3 },
 	{ "imxgpio",	0 },
 	{ "imxgpio",	1 },
@@ -93,10 +96,11 @@ struct board_dev utilite_devs[] = {
 };
 
 struct board_dev wandboard_devs[] = {
+	{ "imxocotp",	0 },
 	{ "imxccm",	0 },
+	{ "imxtemp",	0 },
 	{ "imxiomuxc",	0 },
 	{ "imxdog",	0 },
-	{ "imxocotp",	0 },
 	{ "imxuart",	0 },
 	{ "imxgpio",	0 },
 	{ "imxgpio",	1 },

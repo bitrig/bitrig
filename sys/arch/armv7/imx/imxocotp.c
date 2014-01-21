@@ -32,6 +32,9 @@
 /* registers */
 #define OCOTP_MAC0	0x620
 #define OCOTP_MAC1	0x630
+#define OCOTP_ANA0	0x4d0
+#define OCOTP_ANA1	0x4e0
+#define OCOTP_ANA2	0x4f0
 
 struct imxocotp_softc {
 	struct device		sc_dev;
@@ -83,4 +86,10 @@ imxocotp_get_ethernet_address(u_int8_t *mac)
 	value = bus_space_read_4(imxocotp_sc->sc_iot, imxocotp_sc->sc_ioh, OCOTP_MAC1);
 	mac[1] = value & 0xff;
 	mac[0] = (value >> 8) & 0xff;
+}
+
+uint32_t
+imxocotp_get_temperature_calibration(void)
+{
+	return bus_space_read_4(imxocotp_sc->sc_iot, imxocotp_sc->sc_ioh, OCOTP_ANA1);
 }
