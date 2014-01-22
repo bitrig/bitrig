@@ -196,7 +196,7 @@ umidi*	at uhub?		# USB MIDI
 midi*	at umidi?
 ulpt*	at uhub?		# USB Printers
 umass*	at uhub?		# USB Mass Storage devices
-ubcmtp*	at uhub?		# Broadcom USB touchpad
+ubcmtp*	at uhub?		# Broadcom USB trackpad
 wsmouse* at ubcmtp? mux 0
 uhidev*	at uhub?		# Human Interface Devices
 ums*	at uhidev?		# USB mouse
