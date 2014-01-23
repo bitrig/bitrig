@@ -156,8 +156,8 @@ do_snap_rel:
 	rm -rf ${SNAPROOTDIR}
 	mkdir -p ${SNAPROOTDIR}
 	mkdir -p ${SNAPRELDIR}
-	cd ${.CURDIR} etc && DESTDIR=${SNAPROOTDIR} RELEASEDIR=${SNAPRELDIR} ${MAKE} release
-	cd ${.CURDIR} distrib/sets && DESTDIR=${SNAPROOTDIR} sh checkflist
+	cd ${.CURDIR}/etc && DESTDIR=${SNAPROOTDIR} RELEASEDIR=${SNAPRELDIR} ${MAKE} release
+	cd ${.CURDIR}/distrib/sets && DESTDIR=${SNAPROOTDIR} sh checkflist
 .endif
 
 .include <bsd.subdir.mk>
