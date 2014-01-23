@@ -125,22 +125,13 @@ ENTRY_NP(cpu_reset)
 	ldr	pc, [r0, #CF_IDCACHE_WBINV_ALL]
 
 	/*
-	 * Load the cpu_reset_needs_v4_MMU_disable flag to determine if it's
-	 * necessary.
-	 */
-
-	ldr	r1, .Lcpu_reset_needs_v4_MMU_disable
-	ldr	r1, [r1]
-	cmp	r1, #0
-	mov	r2, #0
-
-	/*
- 	 * MMU & IDC off, 32 bit program & data space
+	 * MMU & IDC off, 32 bit program & data space
 	 * Hurl ourselves into the ROM
 	 */
 	mov	r0, #(CPU_CONTROL_32BP_ENABLE | CPU_CONTROL_32BD_ENABLE)
+	mov	r1, #0
 	mcr	p15, 0, r0, c1, c0, 0
-	mcrne	p15, 0, r2, c8, c7, 0	/* nail I+D TLB on ARMv4 and greater */
+	mcr	p15, 0, r1, c8, c7, 0	/* nail I+D TLB */
 	mov     pc, r4
 
 	/*
@@ -150,15 +141,6 @@ ENTRY_NP(cpu_reset)
 	 */
 .Lcpu_reset_address:
 	.word	_C_LABEL(cpu_reset_address)
-
-	/*
-	 * cpu_reset_needs_v4_MMU_disable contains a flag that signals if the
-	 * v4 MMU disable instruction needs executing... it is an illegal instruction
-	 * on f.e. ARM6/7 that locks up the computer in an endless illegal
-	 * instruction / data-abort / reset loop.
-	 */
-.Lcpu_reset_needs_v4_MMU_disable:
-	.word	_C_LABEL(cpu_reset_needs_v4_MMU_disable)
 
 #endif	/* OFW */
 

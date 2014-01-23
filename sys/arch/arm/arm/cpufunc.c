@@ -140,7 +140,6 @@ struct cpu_functions armv7_cpufuncs = {
 
 struct cpu_functions cpufuncs;
 u_int cputype;
-u_int cpu_reset_needs_v4_MMU_disable;	/* flag used in locore.s */
 
 #ifdef CPU_ARMv7
 void arm_get_cachetype_cp15v7 (void);
@@ -313,7 +312,6 @@ set_cpufuncs()
 	    (cputype & CPU_ID_CORTEX_A9_MASK) == CPU_ID_CORTEX_A9 ||
 	    (cputype & CPU_ID_CORTEX_A15_MASK) == CPU_ID_CORTEX_A15) {
 		cpufuncs = armv7_cpufuncs;
-		cpu_reset_needs_v4_MMU_disable = 1;	/* V4 or higher */
 		arm_get_cachetype_cp15v7();
 		armv7_dcache_sets_inc = 1U << arm_dcache_l2_linesize;
 		armv7_dcache_sets_max =
