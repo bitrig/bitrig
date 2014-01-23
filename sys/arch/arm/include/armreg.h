@@ -130,11 +130,6 @@
 /* Next three nybbles are part number */
 #define CPU_ID_PARTNO_MASK	0x0000fff0
 
-/* Intel XScale has sub fields in part number */
-#define CPU_ID_XSCALE_COREGEN_MASK	0x0000e000 /* core generation */
-#define CPU_ID_XSCALE_COREREV_MASK	0x00001c00 /* core revision */
-#define CPU_ID_XSCALE_PRODUCT_MASK	0x000003f0 /* product number */
-
 /* And finally, the revision number. */
 #define CPU_ID_REVISION_MASK	0x0000000f
 
@@ -246,14 +241,6 @@
 
 #define CPU_CONTROL_IDC_ENABLE	CPU_CONTROL_DC_ENABLE
 
-/* XScale Auxillary Control Register (CP15 register 1, opcode2 1) */
-#define XSCALE_AUXCTL_K		0x00000001 /* dis. write buffer coalescing */
-#define XSCALE_AUXCTL_P		0x00000002 /* ECC protect page table access */
-#define XSCALE_AUXCTL_MD_WB_RA	0x00000000 /* mini-D$ wb, read-allocate */
-#define XSCALE_AUXCTL_MD_WB_RWA	0x00000010 /* mini-D$ wb, read/write-allocate */
-#define XSCALE_AUXCTL_MD_WT	0x00000020 /* mini-D$ wt, read-allocate */
-#define XSCALE_AUXCTL_MD_MASK	0x00000030
-
 /* Cortex-A9 Auxillary Control Register (CP15 register 1, ocode2 1) */
 #define CORTEX_A9_AUXCTL_FW			0x00000001
 #define CORTEX_A9_AUXCTL_L1_PREFETCH_ENABLE	0x00000002
@@ -297,8 +284,6 @@
 #define FAULT_DOMAIN_P  0x0b /* Domain -- Page */
 #define FAULT_PERM_S    0x0d /* Permission -- Section */
 #define FAULT_PERM_P    0x0f /* Permission -- Page */
-
-#define FAULT_IMPRECISE	0x400	/* Imprecise exception (XSCALE) */
 
 #define	FAULT_EXT	0x00001000	/* external abort */
 #define	FAULT_WNR	0x00000800	/* write fault */

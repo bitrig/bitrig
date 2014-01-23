@@ -363,9 +363,6 @@ do {									\
 #define l2pte_index(v)		(((v) & L2_ADDR_BITS) >> L2_S_SHIFT)
 #define	l2pte_valid(pte)	(((pte) & L2_TYPE_MASK) != L2_TYPE_INV)
 #define	l2pte_pa(pte)		((pte) & L2_S_FRAME)
-#define l2pte_minidata(pte)	(((pte) & \
-				 (L2_B | L2_C | L2_XSCALE_T_TEX(TEX_XSCALE_X)))\
-				 == (L2_C | L2_XSCALE_T_TEX(TEX_XSCALE_X)))
 
 /* L1 and L2 page table macros */
 #define pmap_pde_v(pde)		l1pte_valid(*(pde))

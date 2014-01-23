@@ -50,11 +50,6 @@ struct pcb_arm32 {
 	pd_entry_t pcb32_l1vec;			/* Value to stuff on ctx sw */
 	u_int	pcb32_dacr;			/* Domain Access Control Reg */
 	void	*pcb32_cstate;			/* &pmap->pm_cstate */
-	/*
-	 * WARNING!
-	 * cpuswitch.S relies on pcb32_r8 being quad-aligned in struct pcb
-	 * (due to the use of "strd" when compiled for XSCALE)
-	 */
 	u_int	pcb32_r8;			/* used */
 	u_int	pcb32_r9;			/* used */
 	u_int	pcb32_r10;			/* used */
