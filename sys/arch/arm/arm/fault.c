@@ -280,23 +280,6 @@ data_abort_handler(trapframe_t *tf)
 	    __predict_true((pcb->pcb_onfault == NULL ||
 	     ((*(u_int *)tf->tf_pc) & 0x05200000) != 0x04200000))) {
 		map = kernel_map;
-
-		/* Was the fault due to the FPE/IPKDB ? */
-		if (__predict_false((tf->tf_spsr & PSR_MODE)==PSR_UND32_MODE)) {
-			sd.signo = SIGSEGV;
-			sd.code = SEGV_ACCERR;
-			sd.addr = far;
-			sd.trap = fsr;
-
-			/*
-			 * Force exit via userret()
-			 * This is necessary as the FPE is an extension to
-			 * userland that actually runs in a priveledged mode
-			 * but uses USR mode permissions for its accesses.
-			 */
-			user = 1;
-			goto do_trapsignal;
-		}
 	} else {
 		map = &p->p_vmspace->vm_map;
 #if 0
