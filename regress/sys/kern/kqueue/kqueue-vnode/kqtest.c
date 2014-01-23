@@ -68,6 +68,16 @@ open_file(const char *path)
 	return fd;
 }
 
+int
+open_directory(const char *path)
+{
+	mkdir(path, S_IRUSR | S_IWUSR | S_IXUSR);
+	int fd = open(path, O_RDONLY | O_DIRECTORY);
+	if (fd < 0)
+		err(1, "open");
+	return fd;
+}
+
 void
 spawn_proc(char **argv)
 {
@@ -124,7 +134,12 @@ main(int argc, char **argv)
 	if (argc < 4)
 		usage();
 
-	fd = open_file(argv[1]);
+	if (!strcmp(argv[1], "-d")) {
+		fd = open_directory(argv[2]);
+		argv++;
+	} else 
+		fd = open_file(argv[1]);
+
 	fflags = construct_fflags(argv[2], 0);
 	arc4random_buf(&cookie, sizeof(cookie));
 
