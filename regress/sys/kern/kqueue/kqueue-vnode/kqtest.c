@@ -4,6 +4,7 @@
 #include <sys/event.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 
 #include <err.h>
 #include <fcntl.h>
@@ -70,6 +71,8 @@ open_file(const char *path)
 void
 spawn_proc(char **argv)
 {
+	int status;
+
 	pid_t pid = fork();
 	if (pid < 0)
 		err(1, "fork");
@@ -77,11 +80,15 @@ spawn_proc(char **argv)
 		execvp(argv[3], &argv[3]);
 		err(1, "execvp");
 	}
+
+	if (wait(&status) < 0)
+		err(1, "wait");
+	if (status)
+		errx(1, "child failed");
 }
 
 void
-prepare_event(struct kevent *kv, struct timespec *ts, int fd,
-    unsigned int fflags, void *cookie)
+prepare_event(struct kevent *kv, int fd, unsigned int fflags, void *cookie)
 {
 	/* avoid EV_SET() for clarity */
 	kv->ident = fd;
@@ -90,9 +97,6 @@ prepare_event(struct kevent *kv, struct timespec *ts, int fd,
 	kv->fflags = fflags;
 	kv->data = 0;
 	kv->udata = cookie;
-
-	ts->tv_sec = 15;
-	ts->tv_nsec = 0;
 }
 
 void
@@ -128,7 +132,7 @@ main(int argc, char **argv)
 	if (kq < 0)
 		err(1, "kqueue");
 
-	prepare_event(&kv, &ts, fd, fflags, cookie);
+	prepare_event(&kv, fd, fflags, cookie);
 
 	nevents = kevent(kq, &kv, 1, NULL, 0, NULL);
 	if (nevents < 0)
@@ -137,6 +141,7 @@ main(int argc, char **argv)
 	spawn_proc(argv);
 
 	bzero(&kv, sizeof(kv));
+	bzero(&ts, sizeof(ts));
 	nevents = kevent(kq, NULL, 0, &kv, 1, &ts);
 	if (nevents < 0)
 		err(1, "kevent");
