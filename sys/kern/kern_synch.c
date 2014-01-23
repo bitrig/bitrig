@@ -1,4 +1,4 @@
-/*	$OpenBSD: kern_synch.c,v 1.113 2014/01/23 00:33:36 guenther Exp $	*/
+/*	$OpenBSD: kern_synch.c,v 1.114 2014/01/23 01:48:44 guenther Exp $	*/
 /*	$NetBSD: kern_synch.c,v 1.37 1996/04/22 01:38:37 christos Exp $	*/
 
 /*
@@ -156,6 +156,7 @@ msleep(const volatile void *ident, struct mutex *mtx, int priority,
 	int error, error1, spl;
 
 	KASSERT((priority & ~(PRIMASK | PCATCH | PNORELOCK)) == 0);
+	KASSERT(mtx != NULL);
 
 	/* if anything other than mtx is locked then this is bad */
 	if (mtx)  {
@@ -168,27 +169,24 @@ msleep(const volatile void *ident, struct mutex *mtx, int priority,
 	sleep_setup_timeout(&sls, timo);
 	sleep_setup_signal(&sls, priority);
 
-	if (mtx) {
-		/* XXX - We need to make sure that the mutex doesn't
-		 * unblock splsched. This can be made a bit more 
-		 * correct when the sched_lock is a mutex.
-		 */
-		spl = MUTEX_OLDIPL(mtx);
-		MUTEX_OLDIPL(mtx) = splsched();
-		mtx_leave(mtx);
-	}
+	/* XXX - We need to make sure that the mutex doesn't
+	 * unblock splsched. This can be made a bit more 
+	 * correct when the sched_lock is a mutex.
+	 */
+	spl = MUTEX_OLDIPL(mtx);
+	MUTEX_OLDIPL(mtx) = splsched();
+	mtx_leave(mtx);
 
 	sleep_finish(&sls, 1);
 	error1 = sleep_finish_timeout(&sls);
 	error = sleep_finish_signal(&sls);
 
-	if (mtx) {
-		if ((priority & PNORELOCK) == 0) {
-			mtx_enter(mtx);
-			MUTEX_OLDIPL(mtx) = spl; /* put the ipl back */
-		} else
-			splx(spl);
-	}
+	if ((priority & PNORELOCK) == 0) {
+		mtx_enter(mtx);
+		MUTEX_OLDIPL(mtx) = spl; /* put the ipl back */
+	} else
+		splx(spl);
+
 	/* Signal errors are higher priority than timeouts. */
 	if (error == 0 && error1 != 0)
 		error = error1;
