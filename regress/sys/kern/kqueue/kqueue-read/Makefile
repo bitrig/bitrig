@@ -1,15 +1,16 @@
-revoke: revoke.c
 truncate: truncate.c
-kqtest-vnode: kqtest-vnode.c
+kqtest-read: kqtest-read.c
 
-run:	kqtest-vnode revoke truncate
+run:	kqtest-read truncate
 	sh ${.CURDIR}/run.sh
 
 REGRESS_TARGETS= run
-CLEANFILES+= kqtest-vnode revoke truncate
+CLEANFILES+= kqtest-read truncate
 
 clean:
 	rm -f ${CLEANFILES}
 	rm -rf x xx y
+
+.PATH:	${.CURDIR}/../kqueue-vnode
 
 .include <bsd.regress.mk>

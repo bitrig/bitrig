@@ -36,6 +36,6 @@ REGRESS_TARGETS=kq-pipe kq-fork kq-process kq-random kq-tun kq-pty kq-signal \
 REGRESS_ROOT_TARGETS=${REGRESS_TARGETS}
 .PHONY: ${REGRESS_TARGETS}
 
-SUBDIR= kqueue-vnode
+SUBDIR= kqueue-vnode kqueue-read
 
 .include <bsd.regress.mk>

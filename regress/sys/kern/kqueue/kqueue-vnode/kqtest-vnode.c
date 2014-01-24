@@ -35,7 +35,8 @@ void
 usage(void)
 {
 	extern char *__progname;
-	fprintf(stderr, "usage: %s <file> <ev1,ev2,...> <cmd>\n", __progname);
+	fprintf(stderr, "usage: %s [-d] <file> <ev1,ev2,...> <cmd>\n",
+	    __progname);
 	exit(2);
 }
 
