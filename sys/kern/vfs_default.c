@@ -39,6 +39,7 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/proc.h>
+#include <sys/file.h>
 #include <sys/mount.h>
 #include <sys/vnode.h>
 #include <sys/namei.h>
@@ -47,11 +48,11 @@
 #include <sys/event.h>
 #include <sys/specdev.h>
 
-int filt_generic_readwrite(struct knote *, long);
-void filt_generic_detach(struct knote *);
-
+int filt_read_event(struct knote *, long);
+int filt_write_event(struct knote *, long);
 int filt_vnode_event(struct knote *, long);
-void filt_vnode_detach(struct knote *);
+
+void filt_detach(struct knote *);
 
 /*
  * Eliminate all activity associated with the requested vnode
@@ -188,10 +189,9 @@ vop_generic_islocked(void *v)
 	return (0);
 }
 
-struct filterops generic_filtops = 
-	{ 1, NULL, filt_generic_detach, filt_generic_readwrite };
-struct filterops vnode_filtops =
-	{ 1, NULL, filt_vnode_detach, filt_vnode_event };
+struct filterops read_filtops	= { 1, NULL, filt_detach, filt_read_event };
+struct filterops write_filtops	= { 1, NULL, filt_detach, filt_write_event };
+struct filterops vnode_filtops	= { 1, NULL, filt_detach, filt_vnode_event };
 
 int
 vop_generic_kqfilter(void *v)
@@ -202,17 +202,20 @@ vop_generic_kqfilter(void *v)
 
 	switch (kn->kn_filter) {
 	case EVFILT_READ:
+		kn->kn_fop = &read_filtops;
+		break;
 	case EVFILT_WRITE:
-		kn->kn_fop = &generic_filtops;
+		kn->kn_fop = &write_filtops;
 		break;
 	case EVFILT_VNODE:
 		kn->kn_fop = &vnode_filtops;
-		kn->kn_hook = (caddr_t)vp;
-		SLIST_INSERT_HEAD(&vp->v_selectinfo.si_note, kn, kn_selnext);
 		break;
 	default:
 		return (EINVAL);
 	}
+
+	kn->kn_hook = (caddr_t)vp;
+	SLIST_INSERT_HEAD(&vp->v_selectinfo.si_note, kn, kn_selnext);
 
 	return (0);
 }
@@ -228,29 +231,7 @@ vop_generic_lookup(void *v)
 }
 
 void
-filt_generic_detach(struct knote *kn)
-{
-}
-
-int
-filt_generic_readwrite(struct knote *kn, long hint)
-{
-	/*
-	 * filesystem is gone, so set the EOF flag and schedule 
-	 * the knote for deletion.
-	 */
-	if (hint == NOTE_REVOKE) {
-		kn->kn_flags |= (EV_EOF | EV_ONESHOT);
-		return (1);
-	}
-
-        kn->kn_data = 0;
-
-        return (1);
-}
-
-void
-filt_vnode_detach(struct knote *kn)
+filt_detach(struct knote *kn)
 {
 	struct vnode *vp = (struct vnode *)kn->kn_hook;
 	SLIST_REMOVE(&vp->v_selectinfo.si_note, kn, knote, kn_selnext);
@@ -266,4 +247,44 @@ filt_vnode_event(struct knote *kn, long hint)
 		return (1);
 	}
 	return (kn->kn_fflags != 0);
+}
+
+int
+filt_read_event(struct knote *kn, long hint)
+{
+	struct vnode *vp = (struct vnode *)kn->kn_hook;
+
+	/*
+	 * filesystem is gone, so set the EOF flag and schedule the knote for
+	 * deletion.
+	 */
+	if (hint == NOTE_REVOKE) {
+		kn->kn_flags |= (EV_EOF | EV_ONESHOT);
+		return (1);
+	}
+
+        kn->kn_data = vp->v_uvm.u_size - kn->kn_fp->f_offset;
+	if (kn->kn_data == 0 && kn->kn_sfflags & NOTE_EOF) {
+		kn->kn_fflags |= NOTE_EOF;
+		return (1);
+	}
+
+        return (kn->kn_data != 0);
+}
+
+int
+filt_write_event(struct knote *kn, long hint)
+{
+	/*
+	 * filesystem is gone, so set the EOF flag and schedule the knote for
+	 * deletion.
+	 */
+	if (hint == NOTE_REVOKE) {
+		kn->kn_flags |= (EV_EOF | EV_ONESHOT);
+		return (1);
+	}
+
+        kn->kn_data = 0;
+
+        return (1);
 }
