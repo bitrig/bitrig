@@ -3,7 +3,7 @@ truncate: truncate.c
 kqtest-vnode: kqtest-vnode.c
 
 run:	kqtest-vnode revoke truncate
-	sh ${.CURDIR}/run.sh
+	PATH=$${PATH}:${.OBJDIR} sh ${.CURDIR}/run.sh
 
 REGRESS_TARGETS= run
 CLEANFILES+= kqtest-vnode revoke truncate
