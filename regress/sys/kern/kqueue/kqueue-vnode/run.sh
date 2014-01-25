@@ -35,12 +35,12 @@ notok	x NOTE_WRITE			sh -c 'echo y > x'
 ok	x NOTE_WRITE			sh write x z 0 # y -> z
 notok	x NOTE_WRITE,NOTE_EXTEND	sh write x z 0 # y -> z
 
-# setattr triggers NOTE_ATTRIB (even if it fails) for everything except chflags.
+# setattr triggers NOTE_ATTRIB for everything.
 # truncation to shorter length triggers NOTE_TRUNCATE.
 
 ok	x NOTE_ATTRIB			chmod 0 x; rm -f x
-ok	x NOTE_ATTRIB			chgrp wheel x; rm -f x
-notok	x NOTE_ATTRIB			chflags uchg x; chflags nouchg x
+ok	x NOTE_ATTRIB			chgrp nobody x; rm -f x
+ok	x NOTE_ATTRIB			chflags uchg x; chflags nouchg x
 ok	x NOTE_ATTRIB			/bin/sh -c 'sleep 3; touch x'
 ok	x NOTE_ATTRIB			truncate x 100
 ok	x NOTE_ATTRIB			truncate x 100
