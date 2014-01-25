@@ -12,10 +12,6 @@ notok() {
 	echo "(expected)"
 }
 
-zero() {
-	dd if=/dev/zero of=$1 bs=1 seek=$2 count=$3 conv=notrunc
-}
-
 # kqtest-vnode [-d] <file> <ev1,ev2,...> <cmd>
 
 # EVFILT_VNODE tests on files
@@ -23,8 +19,8 @@ ok	x NOTE_LINK			ln x y
 notok	x NOTE_LINK			rm y
 ok	x NOTE_RENAME			mv x y; rm -f y
 ok	x NOTE_ATTRIB			chmod 0 x; rm -f x
-ok	x NOTE_WRITE,NOTE_EXTEND	/bin/sh -c 'echo y > x'
-#ok	x NOTE_WRITE			write x 0 0
+ok	x NOTE_WRITE,NOTE_EXTEND	sh -c 'echo y > x'
+ok	x NOTE_WRITE			sh write.sh x z 0 # y -> z
 ok	x NOTE_ATTRIB,NOTE_TRUNCATE	truncate x 0
 ok	x NOTE_ATTRIB			truncate x 100
 ok	x NOTE_ATTRIB			truncate x 100
