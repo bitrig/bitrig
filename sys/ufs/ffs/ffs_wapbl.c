@@ -654,7 +654,7 @@ wapbl_create_infs_log(struct mount *mp, struct fs *fs, struct vnode *devvp,
 	DIP_ASSIGN(ip, flags, SF_LOG);
 	ip->i_effnlink = 1;
 	DIP_ASSIGN(ip, nlink, 1);
-	ffs_update(ip, NULL, NULL, MNT_WAIT);
+	ffs_update(ip, MNT_WAIT);
 
 	if ((error = wapbl_allocate_log_file(mp, vp,
 	                 startp, countp, extradatap)) != 0) {
