@@ -18,7 +18,7 @@ main(int argc, char **argv)
 		usage();
 
 	if (truncate(argv[1], atoi(argv[2])) < 0)
-		err(EXIT_FAILURE, "ftruncate");
+		err(EXIT_FAILURE, "truncate");
 
 	exit(0);
 }
