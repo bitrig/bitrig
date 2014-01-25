@@ -27,7 +27,7 @@ void
 usage(void)
 {
 	extern char *__progname;
-	fprintf(stderr, "usage: %s [-d] [-s seek] [file] <ev1,ev2,...> "
+	fprintf(stderr, "usage: %s [-d] [-s seek] [file] <fflag1,fflag2,...> "
 	    "<cmd>\n", __progname);
 	exit(2);
 }
