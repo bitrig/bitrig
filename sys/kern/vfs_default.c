@@ -50,6 +50,9 @@
 int filt_generic_readwrite(struct knote *, long);
 void filt_generic_detach(struct knote *);
 
+int filt_vnode_event(struct knote *, long);
+void filt_vnode_detach(struct knote *);
+
 /*
  * Eliminate all activity associated with the requested vnode
  * and with all vnodes aliased to the requested vnode.
@@ -187,17 +190,25 @@ vop_generic_islocked(void *v)
 
 struct filterops generic_filtops = 
 	{ 1, NULL, filt_generic_detach, filt_generic_readwrite };
+struct filterops vnode_filtops =
+	{ 1, NULL, filt_vnode_detach, filt_vnode_event };
 
 int
 vop_generic_kqfilter(void *v)
 {
 	struct vop_kqfilter_args *ap = v;
+	struct vnode *vp = ap->a_vp;
 	struct knote *kn = ap->a_kn;
 
 	switch (kn->kn_filter) {
 	case EVFILT_READ:
 	case EVFILT_WRITE:
 		kn->kn_fop = &generic_filtops;
+		break;
+	case EVFILT_VNODE:
+		kn->kn_fop = &vnode_filtops;
+		kn->kn_hook = (caddr_t)vp;
+		SLIST_INSERT_HEAD(&vp->v_selectinfo.si_note, kn, kn_selnext);
 		break;
 	default:
 		return (EINVAL);
@@ -236,4 +247,23 @@ filt_generic_readwrite(struct knote *kn, long hint)
         kn->kn_data = 0;
 
         return (1);
+}
+
+void
+filt_vnode_detach(struct knote *kn)
+{
+	struct vnode *vp = (struct vnode *)kn->kn_hook;
+	SLIST_REMOVE(&vp->v_selectinfo.si_note, kn, knote, kn_selnext);
+}
+
+int
+filt_vnode_event(struct knote *kn, long hint)
+{
+	if (kn->kn_sfflags & hint)
+		kn->kn_fflags |= hint;
+	if (hint == NOTE_REVOKE) {
+		kn->kn_flags |= EV_EOF;
+		return (1);
+	}
+	return (kn->kn_fflags != 0);
 }
