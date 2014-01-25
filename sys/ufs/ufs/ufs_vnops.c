@@ -109,10 +109,6 @@ int ufs_do_rename(void *v);
 
 int ufs_chmod(struct vnode *, int, struct ucred *, struct proc *);
 int ufs_chown(struct vnode *, uid_t, gid_t, struct ucred *, struct proc *);
-int filt_ufsread(struct knote *, long);
-int filt_ufswrite(struct knote *, long);
-int filt_ufsvnode(struct knote *, long);
-void filt_ufsdetach(struct knote *);
 
 union _qcvt {
 	int64_t	qcvt;
@@ -2199,99 +2195,4 @@ ufs_gop_alloc(struct vnode *vp, off_t off, off_t len, int flags,
 out:
 	UFS_WAPBL_UPDATE(ip, 0);
 	return error;
-}
-
-struct filterops ufsread_filtops = 
-	{ 1, NULL, filt_ufsdetach, filt_ufsread };
-struct filterops ufswrite_filtops = 
-	{ 1, NULL, filt_ufsdetach, filt_ufswrite };
-struct filterops ufsvnode_filtops = 
-	{ 1, NULL, filt_ufsdetach, filt_ufsvnode };
-
-int
-ufs_kqfilter(void *v)
-{
-	struct vop_kqfilter_args *ap = v;
-	struct vnode *vp = ap->a_vp;
-	struct knote *kn = ap->a_kn;
-
-	switch (kn->kn_filter) {
-	case EVFILT_READ:
-		kn->kn_fop = &ufsread_filtops;
-		break;
-	case EVFILT_WRITE:
-		kn->kn_fop = &ufswrite_filtops;
-		break;
-	case EVFILT_VNODE:
-		kn->kn_fop = &ufsvnode_filtops;
-		break;
-	default:
-		return (EINVAL);
-	}
-
-	kn->kn_hook = (caddr_t)vp;
-
-	SLIST_INSERT_HEAD(&vp->v_selectinfo.si_note, kn, kn_selnext);
-
-	return (0);
-}
-
-void
-filt_ufsdetach(struct knote *kn)
-{
-	struct vnode *vp = (struct vnode *)kn->kn_hook;
-
-	SLIST_REMOVE(&vp->v_selectinfo.si_note, kn, knote, kn_selnext);
-}
-
-int
-filt_ufsread(struct knote *kn, long hint)
-{
-	struct vnode *vp = (struct vnode *)kn->kn_hook;
-	struct inode *ip = VTOI(vp);
-
-	/*
-	 * filesystem is gone, so set the EOF flag and schedule 
-	 * the knote for deletion.
-	 */
-	if (hint == NOTE_REVOKE) {
-		kn->kn_flags |= (EV_EOF | EV_ONESHOT);
-		return (1);
-	}
-
-        kn->kn_data = DIP(ip, size) - kn->kn_fp->f_offset;
-	if (kn->kn_data == 0 && kn->kn_sfflags & NOTE_EOF) {
-		kn->kn_fflags |= NOTE_EOF;
-		return (1);
-	}
-
-        return (kn->kn_data != 0);
-}
-
-int
-filt_ufswrite(struct knote *kn, long hint)
-{
-	/*
-	 * filesystem is gone, so set the EOF flag and schedule 
-	 * the knote for deletion.
-	 */
-	if (hint == NOTE_REVOKE) {
-		kn->kn_flags |= (EV_EOF | EV_ONESHOT);
-		return (1);
-	}
-
-        kn->kn_data = 0;
-        return (1);
-}
-
-int
-filt_ufsvnode(struct knote *kn, long hint)
-{
-	if (kn->kn_sfflags & hint)
-		kn->kn_fflags |= hint;
-	if (hint == NOTE_REVOKE) {
-		kn->kn_flags |= EV_EOF;
-		return (1);
-	}
-	return (kn->kn_fflags != 0);
 }

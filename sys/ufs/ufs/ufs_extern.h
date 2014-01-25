@@ -77,7 +77,6 @@ int	 ufs_remove(void *);
 int	 ufs_rename(void *);
 int	 ufs_rmdir(void *);
 int	 ufs_poll(void *);
-int	 ufs_kqfilter(void *);
 int	 ufs_setattr(void *);
 int	 ufs_strategy(void *);
 int	 ufs_symlink(void *);
