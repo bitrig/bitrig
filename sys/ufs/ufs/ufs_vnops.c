@@ -391,8 +391,10 @@ ufs_setattr(void *v)
 		ip->i_flag |= IN_CHANGE;
 		UFS_WAPBL_UPDATE(ip, 0);
 		UFS_WAPBL_END(vp->v_mount);
-		if (vap->va_flags & (IMMUTABLE | APPEND))
+		if (vap->va_flags & (IMMUTABLE | APPEND)) {
+			VN_KNOTE(vp, NOTE_ATTRIB);
 			return (0);
+		}
 	}
 	if (DIP(ip, flags) & (IMMUTABLE | APPEND))
 		return (EPERM);
