@@ -22,6 +22,7 @@ ok	x NOTE_ATTRIB			chmod 0 x; rm -f x
 ok	x NOTE_WRITE,NOTE_EXTEND	/bin/sh -c 'echo y > x'
 ok	x NOTE_ATTRIB,NOTE_TRUNCATE	./truncate x 0
 ok	x NOTE_ATTRIB			./truncate x 100
+ok	x NOTE_ATTRIB			./truncate x 100
 ok	x NOTE_REVOKE			./revoke x
 ok	x NOTE_DELETE			rm x
 
@@ -36,5 +37,6 @@ ok	-d x NOTE_WRITE,NOTE_LINK	rm -rf x/x2
 ok	-d x NOTE_WRITE			rm -rf x/x3
 ok	-d x NOTE_REVOKE		./revoke x
 ok	-d x NOTE_RENAME		mv x y
+ok	-d y NOTE_ATTRIB		chmod 0 y
 ok	-d y NOTE_ATTRIB		chmod 0 y
 ok	-d y NOTE_DELETE		rm -rf y
