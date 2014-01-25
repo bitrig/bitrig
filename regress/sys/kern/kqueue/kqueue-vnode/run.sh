@@ -20,7 +20,7 @@ notok	x NOTE_LINK			rm y
 ok	x NOTE_RENAME			mv x y; rm -f y
 ok	x NOTE_ATTRIB			chmod 0 x; rm -f x
 ok	x NOTE_WRITE,NOTE_EXTEND	sh -c 'echo y > x'
-ok	x NOTE_WRITE			sh write.sh x z 0 # y -> z
+ok	x NOTE_WRITE			sh write x z 0 # y -> z
 ok	x NOTE_ATTRIB,NOTE_TRUNCATE	truncate x 0
 ok	x NOTE_ATTRIB			truncate x 100
 ok	x NOTE_ATTRIB			truncate x 100

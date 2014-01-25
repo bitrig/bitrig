@@ -3,13 +3,13 @@ truncate: truncate.c
 kqtest-vnode: kqtest-vnode.c
 
 write: write.sh
-	cp ${.CURDIR}/write.sh ${.OBJDIR}
+	cp ${.CURDIR}/write.sh ${.OBJDIR}/write
 
 run:	kqtest-vnode revoke truncate write
 	PATH=$${PATH}:${.OBJDIR} sh ${.CURDIR}/run.sh
 
 REGRESS_TARGETS= run
-CLEANFILES+= kqtest-vnode revoke truncate write.sh
+CLEANFILES+= kqtest-vnode revoke truncate write
 
 clean:
 	rm -f ${CLEANFILES}
