@@ -1555,8 +1555,8 @@ uvm_vnp_setsize(struct vnode *vp, voff_t newsize)
 			    uvn->u_size, PGO_FREE);
 			UVM_ASSERT_OBJLOCKED(&uvn->u_obj);
 		}
-		uvn->u_size = newsize;
 	}
+	uvn->u_size = newsize;
 	mtx_leave(&uvn->u_obj.vmobjlock);
 
 	/*
