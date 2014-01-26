@@ -23,9 +23,10 @@ notok() {
 # however, the removal of a hardlink does not trigger NOTE_LINK.
 # a rename triggers NOTE_RENAME on the file.
 
-ok	x NOTE_LINK			ln x y
+ok	x NOTE_LINK			sh -c 'ln x y; ln x yy'
 notok	x NOTE_LINK			rm y
-ok	x NOTE_RENAME			mv x y; rm -f y
+notok	x NOTE_LINK			sh -c 'touch xx; mv xx yy'
+ok	x NOTE_RENAME			mv x y; rm -f y yy
 
 # a write extending the file triggers NOTE_EXTEND.
 # a write not extending the file does not trigger NOTE_EXTEND.
@@ -41,7 +42,7 @@ notok	x NOTE_WRITE,NOTE_EXTEND	sh write x z 0 # y -> z
 ok	x NOTE_ATTRIB			chmod 0 x; rm -f x
 ok	x NOTE_ATTRIB			chgrp nobody x; rm -f x
 ok	x NOTE_ATTRIB			chflags uchg x; chflags nouchg x
-ok	x NOTE_ATTRIB			/bin/sh -c 'sleep 3; touch x'
+ok	x NOTE_ATTRIB			sh -c 'sleep 3; touch x'
 ok	x NOTE_ATTRIB			truncate x 100
 ok	x NOTE_ATTRIB			truncate x 100
 ok	x NOTE_ATTRIB,NOTE_TRUNCATE	truncate x 0
@@ -50,7 +51,7 @@ ok	x NOTE_REVOKE			revoke x
 
 # the deletion of a file through unlink() or rename() triggers NOTE_DELETE.
 
-ok	x NOTE_DELETE			/bin/sh -c 'touch y; mv y x'
+ok	x NOTE_DELETE			sh -c 'touch y; mv y x'
 ok	x NOTE_DELETE			rm x
 
 ###############################################################################
@@ -62,7 +63,7 @@ ok	x NOTE_DELETE			rm x
 
 ok	-d x NOTE_WRITE			touch x/x1
 ok	-d x NOTE_WRITE			mknod x/x2 b 0 0
-ok	-d x NOTE_WRITE			/bin/sh -c 'touch xx; ln xx x/x3'
+ok	-d x NOTE_WRITE			sh -c 'touch xx; ln xx x/x3'
 ok	-d x NOTE_WRITE,NOTE_LINK	mkdir x/x4
 
 # a rename from a directory triggers NOTE_WRITE on the directory.
