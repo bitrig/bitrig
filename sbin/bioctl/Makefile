@@ -13,7 +13,6 @@ CDIAGFLAGS+=    -Wstrict-prototypes
 CDIAGFLAGS+=    -Wmissing-prototypes
 CDIAGFLAGS+=    -Wunused
 CDIAGFLAGS+=    -Wsign-compare
-CDIAGFLAGS+=    -Wbounded
 CDIAGFLAGS+=    -Wshadow
 
 MAN=	bioctl.8

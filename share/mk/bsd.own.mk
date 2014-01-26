@@ -112,7 +112,8 @@ LOCALEMODE?=	${NONBINMODE}
 
 .if !defined(CDIAGFLAGS)
 CDIAGFLAGS=	-Wall -Wpointer-arith -Wuninitialized -Wstrict-prototypes
-CDIAGFLAGS+=	-Wmissing-prototypes -Wunused -Wsign-compare -Wbounded
+CDIAGFLAGS+=	-Wmissing-prototypes -Wunused -Wsign-compare
+#CDIGGFLAGS+=	-Wbounded
 CDIAGFLAGS+=	-Wshadow
 .  if ${COMPILER_VERSION} == "gcc4"
 CDIAGFLAGS+=	-Wdeclaration-after-statement

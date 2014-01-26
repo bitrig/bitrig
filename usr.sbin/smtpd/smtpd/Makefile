@@ -44,7 +44,6 @@ CFLAGS+=	-Wall -Wstrict-prototypes -Wmissing-prototypes
 CFLAGS+=	-Wmissing-declarations
 CFLAGS+=	-Wshadow -Wpointer-arith -Wcast-qual
 CFLAGS+=	-Wsign-compare
-#-Wbounded
 #CFLAGS+=	-Werror # during development phase (breaks some archs)
 CFLAGS+=	-DIO_SSL
 CFLAGS+=	-DQUEUE_PROFILING

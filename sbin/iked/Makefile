@@ -16,7 +16,6 @@ CFLAGS+=	-Wstrict-prototypes -Wmissing-prototypes
 CFLAGS+=	-Wmissing-declarations
 CFLAGS+=	-Wshadow -Wpointer-arith -Wcast-qual
 CFLAGS+=	-Wsign-compare
-#-Wbounded
 CLEANFILES+=	y.tab.h ikev2_map.c eap_map.c
 GENERATED=	ikev2_map.c eap_map.c
 

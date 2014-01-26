@@ -21,7 +21,7 @@ CFLAGS+=	-g3 -ggdb -I${.CURDIR}/..
 CFLAGS+=	-Wall -Wstrict-prototypes -Wmissing-prototypes
 CFLAGS+=	-Wmissing-declarations
 CFLAGS+=	-Wshadow -Wpointer-arith -Wcast-qual
-CFLAGS+=	-Wsign-compare -Wbounded
+CFLAGS+=	-Wsign-compare
 CFLAGS+=	-DNO_IO
 #CFLAGS+=	-Werror # during development phase (breaks some archs) 
 
