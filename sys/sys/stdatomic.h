@@ -132,15 +132,15 @@ enum memory_order {
 
 /* rather than fight c++ inclusion of stdatomic.h, play nice */
 #if defined(__cplusplus)
-#define std_atomic_bool bool
+#define __std_atomic_bool bool
 #else
-#define std_atomic_bool _Bool
+#define __std_atomic_bool _Bool
 #endif
 /*
  * 7.17.6 Atomic integer types.
  */
 
-typedef _Atomic(std_atomic_bool)	atomic_bool;
+typedef _Atomic(__std_atomic_bool)	atomic_bool;
 typedef _Atomic(char)			atomic_char;
 typedef _Atomic(signed char)		atomic_schar;
 typedef _Atomic(unsigned char)		atomic_uchar;
@@ -242,7 +242,7 @@ typedef _Atomic(__uintmax_t)		atomic_uintmax_t;
 #define	atomic_compare_exchange_strong_explicit(object, expected,	\
     desired, success, failure) ({					\
 	__typeof__((object)->__val) __v;				\
-	std_atomic_bool __r;							\
+	__std_atomic_bool __r;						\
 	__v = __sync_val_compare_and_swap(&(object)->__val,		\
 	    *(expected), desired);					\
 	__r = *(expected) == __v;					\
@@ -364,8 +364,5 @@ typedef atomic_bool			atomic_flag;
 
 #endif /* SPINWAIT */
 #endif /* _KERNEL */
-
-/* cleanup from the C/C++ atomic definition above */
-#undef std_atomic_bool
 
 #endif /* !_SYS_STDATOMIC_H_ */
