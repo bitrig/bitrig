@@ -263,7 +263,7 @@ filt_read_event(struct knote *kn, long hint)
 		return (1);
 	}
 
-        kn->kn_data = vp->v_uvm.u_size - kn->kn_fp->f_offset;
+	kn->kn_data = vp->v_uvm.u_size - kn->kn_fp->f_offset;
 	if (kn->kn_data == 0 && kn->kn_sfflags & NOTE_EOF) {
 		kn->kn_fflags |= NOTE_EOF;
 		return (1);
