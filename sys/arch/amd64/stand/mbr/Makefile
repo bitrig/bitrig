@@ -8,7 +8,10 @@ PROG=	mbr
 SRCS=	mbr.S
 AFLAGS+=-m32 -Wa,--32
 AFLAGS+=-I${.CURDIR} -I${.CURDIR}/../../.. #-Wa,-a
-AFLAGS+=-fno-pie -no-integrated-as
+AFLAGS+=-fno-pie
+.if ${COMPILER_VERSION:L} == "clang"
+AFLAGS+=-no-integrated-as
+.endif
 LD=ld
 LDFLAGS=-nostdlib -Ttext 0 -x -N -s -Bstatic -e start -nopie 
 LDFLAGS+=-melf_i386 -L/usr/libdata 

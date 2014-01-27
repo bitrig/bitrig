@@ -24,7 +24,10 @@ CPPFLAGS+=-DLOADADDR=$(LOADADDR) -DLINKADDR=$(LINKADDR) -DBOOTMAGIC=$(BOOTMAGIC)
 CPPFLAGS+=${DEBUGFLAGS}
 CFLAGS+=-fno-pie
 AFLAGS+=-m32 -Wa,--32
-AFLAGS+=-fno-pie -no-integrated-as
+AFLAGS+=-fno-pie
+.if ${COMPILER_VERSION:L} == "clang"
+AFLAGS+=-no-integrated-as
+.endif
 .else
 NOPROG=
 .endif

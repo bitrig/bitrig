@@ -76,9 +76,11 @@ CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${AFLAGS_$*} ${CMACHFLAGS}
 LINKFLAGS=	-Ttext 0xffffffff81000300 -e start --warn-common -z noexecstack -nopie
 
+.if ${COMPILER_VERSION:L} == "clang"
 AFLAGS_acpi_wakecode	= -no-integrated-as
 AFLAGS_aes_intel	= -no-integrated-as
 AFLAGS_mptramp		= -no-integrated-as
+.endif
 
 .endif
 

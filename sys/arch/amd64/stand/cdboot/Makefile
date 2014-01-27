@@ -67,4 +67,7 @@ CFLAGS+=-DOSREV=\"${OSREV}\" -DMACHINE=\"${MACHINE}\"
 CFLAGS+=-DKERNEL=\"/${OSREV}/${MACHINE}/bsd.rd\"
 CFLAGS+=-fno-pie
 AFLAGS+=-m32 -Wa,--32
-AFLAGS+=-fno-pie -no-integrated-as
+AFLAGS+=-fno-pie
+.if ${COMPILER_VERSION:L} == "clang"
+AFLAGS+=-no-integrated-as
+.endif

@@ -69,4 +69,7 @@ CFLAGS+=-m32
 CFLAGS+=$(SACFLAGS) -D__INTERNAL_LIBSA_CREAD -fno-pie
 # AFLAGS+=-Wa,-a
 AFLAGS+=-m32 -Wa,--32
-AFLAGS+=-fno-pie -no-integrated-as
+AFLAGS+=-fno-pie
+.if ${COMPILER_VERSION:L} == "clang"
+AFLAGS+=-no-integrated-as
+.endif
