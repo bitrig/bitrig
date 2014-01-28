@@ -38,12 +38,6 @@ PIE_ARCH=
 #PIE_ARCH=alpha amd64 hppa mips64 mips64el sh sparc64
 
 .for _arch in ${MACHINE_ARCH}
-.if !empty(GCC3_ARCH:M${_arch})
-COMPILER_VERSION?=gcc3
-.else
-COMPILER_VERSION?=gcc4
-.endif
-
 .if !empty(BINUTILS217_ARCH:M${_arch})
 BINUTILS_VERSION=binutils-2.17
 .else

@@ -16,9 +16,7 @@ OSrev=		$(OSMAJOR)$(OSMINOR)
 
 .SUFFIXES: .out .a .o .c .cc .C .cpp .cxx .F .f .r .y .l .s .S .cl .p .h .sh .m4
 
-.if !exists(COMPILER_VERSION)
-COMPILER_VERSION?="clang"
-.endif
+COMPILER_VERSION?=clang
 
 CPP?=		cpp
 CPPFLAGS?=
