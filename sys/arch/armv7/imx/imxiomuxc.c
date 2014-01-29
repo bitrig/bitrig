@@ -140,6 +140,15 @@ struct imx_pin_group {
 	uint32_t		conf_val;
 };
 
+#define HREAD4(sc, reg)							\
+	(bus_space_read_4((sc)->sc_iot, (sc)->sc_ioh, (reg)))
+#define HWRITE4(sc, reg, val)						\
+	bus_space_write_4((sc)->sc_iot, (sc)->sc_ioh, (reg), (val))
+#define HSET4(sc, reg, bits)						\
+	HWRITE4((sc), (reg), HREAD4((sc), (reg)) | (bits))
+#define HCLR4(sc, reg, bits)						\
+	HWRITE4((sc), (reg), HREAD4((sc), (reg)) & ~(bits))
+
 struct imxiomuxc_softc {
 	struct device		sc_dev;
 	bus_space_tag_t		sc_iot;
@@ -156,6 +165,7 @@ void imxiomuxc_enable_i2c(int);
 void imxiomuxc_enable_pcie(void);
 void imxiomuxc_pcie_refclk(int);
 void imxiomuxc_pcie_test_powerdown(int);
+void imxiomuxc_pcie_ltssm(int);
 
 struct cfattach imxiomuxc_ca = {
 	sizeof (struct imxiomuxc_softc), NULL, imxiomuxc_attach
@@ -239,15 +249,19 @@ imxiomuxc_enable_sata(void)
 {
 	struct imxiomuxc_softc *sc = imxiomuxc_sc;
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR13,
-	    (bus_space_read_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR13) & ~IOMUXC_GPR13_SATA_MASK) |
-		IOMUXC_GPR13_SATA_PHY_1_FAST_EDGE_RATE | IOMUXC_GPR13_SATA_PHY_2_1104V |
-		IOMUXC_GPR13_SATA_PHY_3_333DB | IOMUXC_GPR13_SATA_PHY_4_9_16 |
-		IOMUXC_GPR13_SATA_SPEED_3G | IOMUXC_GPR13_SATA_PHY_6 |
-		IOMUXC_GPR13_SATA_PHY_7_SATA2M | IOMUXC_GPR13_SATA_PHY_8_30DB);
+	HWRITE4(sc, IOMUXC_GPR13,
+	    (HREAD4(sc, IOMUXC_GPR13) & ~IOMUXC_GPR13_SATA_MASK) |
+		IOMUXC_GPR13_SATA_PHY_1_FAST_EDGE_RATE |
+		IOMUXC_GPR13_SATA_PHY_2_1104V |
+		IOMUXC_GPR13_SATA_PHY_3_333DB |
+		IOMUXC_GPR13_SATA_PHY_4_9_16 |
+		IOMUXC_GPR13_SATA_SPEED_3G |
+		IOMUXC_GPR13_SATA_PHY_6 |
+		IOMUXC_GPR13_SATA_PHY_7_SATA2M |
+		IOMUXC_GPR13_SATA_PHY_8_30DB);
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR13,
-	    (bus_space_read_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR13) & ~IOMUXC_GPR13_SATA_PHY_1_SLOW_EDGE_RATE) |
+	HWRITE4(sc, IOMUXC_GPR13,
+	    (HREAD4(sc, IOMUXC_GPR13) & ~IOMUXC_GPR13_SATA_PHY_1_SLOW_EDGE_RATE) |
 		IOMUXC_GPR13_SATA_PHY_1_SLOW_EDGE_RATE);
 }
 
@@ -256,19 +270,20 @@ imxiomuxc_enable_pcie(void)
 {
 	struct imxiomuxc_softc *sc = imxiomuxc_sc;
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR12,
-	    bus_space_read_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR12) & ~IOMUXC_GPR12_APPS_LTSSM_ENABLE);
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR12,
-	    (bus_space_read_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR12) & ~IOMUXC_GPR12_DEVICE_TYPE_MASK) |
+	imxiomuxc_pcie_ltssm(0);
+
+	HWRITE4(sc, IOMUXC_GPR12,
+	    (HREAD4(sc, IOMUXC_GPR12) & ~IOMUXC_GPR12_DEVICE_TYPE_MASK) |
 		IOMUXC_GPR12_DEVICE_TYPE_RC);
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR12,
-	    (bus_space_read_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR12) & ~IOMUXC_GPR12_LOS_LEVEL_MASK) |
+	HWRITE4(sc, IOMUXC_GPR12,
+	    (HREAD4(sc, IOMUXC_GPR12) & ~IOMUXC_GPR12_LOS_LEVEL_MASK) |
 		IOMUXC_GPR12_LOS_LEVEL_9);
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR8,
-	    bus_space_read_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR8) |
-		IOMUXC_GPR8_PCS_TX_DEEMPH_GEN1 | IOMUXC_GPR8_PCS_TX_DEEMPH_GEN2_3P5DB |
-		IOMUXC_GPR8_PCS_TX_DEEMPH_GEN2_6DB | IOMUXC_GPR8_PCS_TX_SWING_FULL |
+	HWRITE4(sc, IOMUXC_GPR8,
+		IOMUXC_GPR8_PCS_TX_DEEMPH_GEN1 |
+		IOMUXC_GPR8_PCS_TX_DEEMPH_GEN2_3P5DB |
+		IOMUXC_GPR8_PCS_TX_DEEMPH_GEN2_6DB |
+		IOMUXC_GPR8_PCS_TX_SWING_FULL |
 		IOMUXC_GPR8_PCS_TX_SWING_LOW);
 }
 
@@ -277,12 +292,10 @@ imxiomuxc_pcie_refclk(int enable)
 {
 	struct imxiomuxc_softc *sc = imxiomuxc_sc;
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR1,
-	    bus_space_read_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR1) & ~IOMUXC_GPR1_REF_SSP_EN);
-
 	if (enable)
-		bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR1,
-		    bus_space_read_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR1) | IOMUXC_GPR1_REF_SSP_EN);
+		HSET4(sc, IOMUXC_GPR1, IOMUXC_GPR1_REF_SSP_EN);
+	else
+		HCLR4(sc, IOMUXC_GPR1, IOMUXC_GPR1_REF_SSP_EN);
 }
 
 void
@@ -290,12 +303,21 @@ imxiomuxc_pcie_test_powerdown(int enable)
 {
 	struct imxiomuxc_softc *sc = imxiomuxc_sc;
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR1,
-	    bus_space_read_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR1) & ~IOMUXC_GPR1_TEST_POWERDOWN);
+	if (enable)
+		HSET4(sc, IOMUXC_GPR1, IOMUXC_GPR1_TEST_POWERDOWN);
+	else
+		HCLR4(sc, IOMUXC_GPR1, IOMUXC_GPR1_TEST_POWERDOWN);
+}
+
+void
+imxiomuxc_pcie_ltssm(int enable)
+{
+	struct imxiomuxc_softc *sc = imxiomuxc_sc;
 
 	if (enable)
-		bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR1,
-		    bus_space_read_4(sc->sc_iot, sc->sc_ioh, IOMUXC_GPR1) | IOMUXC_GPR1_TEST_POWERDOWN);
+		HSET4(sc, IOMUXC_GPR12, IOMUXC_GPR12_APPS_LTSSM_ENABLE);
+	else
+		HCLR4(sc, IOMUXC_GPR12, IOMUXC_GPR12_APPS_LTSSM_ENABLE);
 }
 
 void
@@ -307,33 +329,33 @@ imxiomuxc_enable_i2c(int x)
 	switch (x) {
 		case 0:
 			/* scl in select */
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_MUX_CTL_PAD_EIM_DATA21, IOMUX_CONFIG_SION | 6);
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_I2C1_SCL_IN_SELECT_INPUT, 0);
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_PAD_CTL_PAD_EIM_DATA21, IOMUXC_IMX6Q_I2C_PAD_CTRL);
+			HWRITE4(sc, IOMUXC_MUX_CTL_PAD_EIM_DATA21, IOMUX_CONFIG_SION | 6);
+			HWRITE4(sc, IOMUXC_I2C1_SCL_IN_SELECT_INPUT, 0);
+			HWRITE4(sc, IOMUXC_PAD_CTL_PAD_EIM_DATA21, IOMUXC_IMX6Q_I2C_PAD_CTRL);
 			/* sda in select */
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_MUX_CTL_PAD_EIM_DATA28, IOMUX_CONFIG_SION | 1);
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_I2C1_SDA_IN_SELECT_INPUT, 0);
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_PAD_CTL_PAD_EIM_DATA28, IOMUXC_IMX6Q_I2C_PAD_CTRL);
+			HWRITE4(sc, IOMUXC_MUX_CTL_PAD_EIM_DATA28, IOMUX_CONFIG_SION | 1);
+			HWRITE4(sc, IOMUXC_I2C1_SDA_IN_SELECT_INPUT, 0);
+			HWRITE4(sc, IOMUXC_PAD_CTL_PAD_EIM_DATA28, IOMUXC_IMX6Q_I2C_PAD_CTRL);
 			break;
 		case 1:
 			/* scl in select */
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_MUX_CTL_PAD_EIM_EB2, IOMUX_CONFIG_SION | 6);
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_I2C2_SCL_IN_SELECT_INPUT, 0);
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_PAD_CTL_PAD_EIM_EB2, IOMUXC_IMX6Q_I2C_PAD_CTRL);
+			HWRITE4(sc, IOMUXC_MUX_CTL_PAD_EIM_EB2, IOMUX_CONFIG_SION | 6);
+			HWRITE4(sc, IOMUXC_I2C2_SCL_IN_SELECT_INPUT, 0);
+			HWRITE4(sc, IOMUXC_PAD_CTL_PAD_EIM_EB2, IOMUXC_IMX6Q_I2C_PAD_CTRL);
 			/* sda in select */
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_MUX_CTL_PAD_EIM_DATA16, IOMUX_CONFIG_SION | 6);
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_I2C2_SDA_IN_SELECT_INPUT, 0);
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_PAD_CTL_PAD_EIM_DATA16, IOMUXC_IMX6Q_I2C_PAD_CTRL);
+			HWRITE4(sc, IOMUXC_MUX_CTL_PAD_EIM_DATA16, IOMUX_CONFIG_SION | 6);
+			HWRITE4(sc, IOMUXC_I2C2_SDA_IN_SELECT_INPUT, 0);
+			HWRITE4(sc, IOMUXC_PAD_CTL_PAD_EIM_DATA16, IOMUXC_IMX6Q_I2C_PAD_CTRL);
 			break;
 		case 2:
 			/* scl in select */
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_MUX_CTL_PAD_EIM_DATA17, IOMUX_CONFIG_SION | 6);
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_I2C3_SCL_IN_SELECT_INPUT, 0);
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_PAD_CTL_PAD_EIM_DATA17, IOMUXC_IMX6Q_I2C_PAD_CTRL);
+			HWRITE4(sc, IOMUXC_MUX_CTL_PAD_EIM_DATA17, IOMUX_CONFIG_SION | 6);
+			HWRITE4(sc, IOMUXC_I2C3_SCL_IN_SELECT_INPUT, 0);
+			HWRITE4(sc, IOMUXC_PAD_CTL_PAD_EIM_DATA17, IOMUXC_IMX6Q_I2C_PAD_CTRL);
 			/* sda in select */
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_MUX_CTL_PAD_EIM_DATA18, IOMUX_CONFIG_SION | 6);
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_I2C3_SDA_IN_SELECT_INPUT, 0);
-			bus_space_write_4(sc->sc_iot, sc->sc_ioh, IOMUXC_PAD_CTL_PAD_EIM_DATA18, IOMUXC_IMX6Q_I2C_PAD_CTRL);
+			HWRITE4(sc, IOMUXC_MUX_CTL_PAD_EIM_DATA18, IOMUX_CONFIG_SION | 6);
+			HWRITE4(sc, IOMUXC_I2C3_SDA_IN_SELECT_INPUT, 0);
+			HWRITE4(sc, IOMUXC_PAD_CTL_PAD_EIM_DATA18, IOMUXC_IMX6Q_I2C_PAD_CTRL);
 			break;
 	}
 }

@@ -22,5 +22,6 @@ void imxiomuxc_enable_i2c(int);
 void imxiomuxc_enable_pcie(void);
 void imxiomuxc_pcie_refclk(int);
 void imxiomuxc_pcie_test_powerdown(int);
+void imxiomuxc_pcie_ltssm(int);
 
 #endif /* IMXIOMUXCVAR_H */
