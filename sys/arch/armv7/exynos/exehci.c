@@ -53,7 +53,7 @@
 /* bits and bytes */
 #define CLK_24MHZ			5
 
-#define HOST_CTRL0_PHYSWRSTALL		(1 << 31)
+#define HOST_CTRL0_PHYSWRSTALL		(1U << 31)
 #define HOST_CTRL0_COMMONON_N		(1 << 9)
 #define HOST_CTRL0_SIDDQ		(1 << 6)
 #define HOST_CTRL0_FORCESLEEP		(1 << 5)
