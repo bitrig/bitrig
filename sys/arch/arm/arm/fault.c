@@ -132,8 +132,10 @@ static int dab_align(trapframe_t *, u_int, u_int, struct proc *,
     struct sigdata *sd);
 static int dab_buserr(trapframe_t *, u_int, u_int, struct proc *,
     struct sigdata *sd);
+void data_fault_hook(int code, int (*func)(trapframe_t *, u_int, u_int,
+    struct proc *, struct sigdata *));
 
-static const struct data_abort data_aborts[] = {
+static struct data_abort data_aborts[] = {
 	{dab_fatal,	"V7 fault 00000"},
 	{dab_align,	"Alignment Fault 1"},
 	{dab_fatal,	"Debug Event"},
@@ -368,6 +370,15 @@ out:
 	/* If returning to user mode, make sure to invoke userret() */
 	if (user)
 		userret(p);
+}
+
+void
+data_fault_hook(int code, int (*func)(trapframe_t *, u_int, u_int,
+    struct proc *, struct sigdata *))
+{
+	if (code >= nitems(data_aborts))
+		return;
+	data_aborts[code].func = func;
 }
 
 /*

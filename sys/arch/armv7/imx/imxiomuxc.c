@@ -26,6 +26,7 @@
 #include <machine/bus.h>
 #include <machine/fdt.h>
 #include <armv7/armv7/armv7var.h>
+#include <armv7/imx/imxiomuxcvar.h>
 
 /* registers */
 #define IOMUXC_GPR1			0x004
@@ -69,8 +70,8 @@
 #define IOMUXC_GPR12_APPS_PM_XMT_PME				(1 << 9)
 #define IOMUXC_GPR12_APPS_LTSSM_ENABLE				(1 << 10)
 #define IOMUXC_GPR12_APPS_INIT_RST				(1 << 11)
-#define IOMUXC_GPR12_DEVICE_TYPE_RC				(2 << 12)
-#define IOMUXC_GPR12_DEVICE_TYPE_MASK				(3 << 12)
+#define IOMUXC_GPR12_DEVICE_TYPE_RC				(4 << 12)
+#define IOMUXC_GPR12_DEVICE_TYPE_MASK				(0xf << 12)
 #define IOMUXC_GPR12_APPS_PM_XMT_TURNOFF			(1 << 16)
 
 #define IOMUXC_GPR13_SATA_PHY_1_FAST_EDGE_RATE			(0x00 << 0)
@@ -161,12 +162,6 @@ int imxiomuxc_match(struct device *parent, void *v, void *aux);
 void imxiomuxc_attach(struct device *parent, struct device *self, void *args);
 void imxiomuxc_fdt(struct imxiomuxc_softc *);
 void imxiomuxc_configure_group(struct imxiomuxc_softc *, struct imx_pin_group *);
-void imxiomuxc_enable_sata(void);
-void imxiomuxc_enable_i2c(int);
-void imxiomuxc_enable_pcie(void);
-void imxiomuxc_pcie_refclk(int);
-void imxiomuxc_pcie_test_powerdown(int);
-void imxiomuxc_pcie_ltssm(int);
 
 struct cfattach imxiomuxc_ca = {
 	sizeof (struct imxiomuxc_softc), NULL, imxiomuxc_attach
@@ -323,6 +318,14 @@ imxiomuxc_pcie_refclk(int enable)
 		HCLR4(sc, IOMUXC_GPR1, IOMUXC_GPR1_REF_SSP_EN);
 }
 
+int
+imxiomuxc_pcie_get_refclk(void)
+{
+	struct imxiomuxc_softc *sc = imxiomuxc_sc;
+
+	return !((HREAD4(sc, IOMUXC_GPR1) & IOMUXC_GPR1_REF_SSP_EN) == 0);
+}
+
 void
 imxiomuxc_pcie_test_powerdown(int enable)
 {
@@ -332,6 +335,14 @@ imxiomuxc_pcie_test_powerdown(int enable)
 		HSET4(sc, IOMUXC_GPR1, IOMUXC_GPR1_TEST_POWERDOWN);
 	else
 		HCLR4(sc, IOMUXC_GPR1, IOMUXC_GPR1_TEST_POWERDOWN);
+}
+
+int
+imxiomuxc_pcie_get_test_powerdown(void)
+{
+	struct imxiomuxc_softc *sc = imxiomuxc_sc;
+
+	return !((HREAD4(sc, IOMUXC_GPR1) & IOMUXC_GPR1_TEST_POWERDOWN) == 0);
 }
 
 void
@@ -344,6 +355,15 @@ imxiomuxc_pcie_ltssm(int enable)
 	else
 		HCLR4(sc, IOMUXC_GPR12, IOMUXC_GPR12_APPS_LTSSM_ENABLE);
 }
+
+int
+imxiomuxc_pcie_get_ltssm(void)
+{
+	struct imxiomuxc_softc *sc = imxiomuxc_sc;
+
+	return !((HREAD4(sc, IOMUXC_GPR12) & IOMUXC_GPR12_APPS_LTSSM_ENABLE) == 0);
+}
+
 
 void
 imxiomuxc_enable_i2c(int x)

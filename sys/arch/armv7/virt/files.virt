@@ -6,24 +6,5 @@ attach	pl011uart at fdt
 file	arch/armv7/virt/pl011.c		pl011uart
 
 # VirtIO
-device	virtio {}
-file	dev/pci/virtio.c		virtio
-
 attach	virtio at fdt with virtio_mmio
 file	arch/armv7/virt/virtio_mmio.c	virtio_mmio
-
-device	vio
-attach	vio at virtio
-file	dev/pci/if_vio.c		vio
-
-device	vioblk: scsi
-attach	vioblk at virtio
-file	dev/pci/vioblk.c		vioblk
-
-device	viomb
-attach	viomb at virtio
-file	dev/pci/viomb.c			viomb
-
-device	viornd
-attach	viornd at virtio
-file	dev/pci/viornd.c		viornd

@@ -22,8 +22,12 @@ imxuart*	at fdt?			# onboard uarts
 imxiic*		at imx?			# i2c
 imxiic*		at fdt?			# i2c
 
-#imxpcibr*	at imx?			# PCIe controller host bridge
-#pci*		at imxpcibr?
+imxpcibr*	at imx?			# PCIe controller host bridge
+pci*		at imxpcibr?
+ppb*		at pci?			# PCI-PCI bridges
+pci*		at ppb?
+em*		at pci?
+iwn*		at pci?
 
 imxahci*	at imx?			# AHCI/SATA
 ahci*		at imxahci?		# AHCI/SATA

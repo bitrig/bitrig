@@ -21,7 +21,10 @@ void imxiomuxc_enable_sata(void);
 void imxiomuxc_enable_i2c(int);
 void imxiomuxc_enable_pcie(void);
 void imxiomuxc_pcie_refclk(int);
+int imxiomuxc_pcie_get_refclk(void);
 void imxiomuxc_pcie_test_powerdown(int);
+int imxiomuxc_pcie_get_test_powerdown(void);
 void imxiomuxc_pcie_ltssm(int);
+int imxiomuxc_pcie_get_ltssm(void);
 
 #endif /* IMXIOMUXCVAR_H */

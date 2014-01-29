@@ -158,9 +158,8 @@ enum clocks {
 };
 
 static const char *axi_sels[]		= { "periph", "pll2_pfd2_396m", "periph", "pll3_pfd1_540m", };
-static const char *lvds_sels[]		= { "dummy", "dummy", "dummy", "dummy", "dummy", "dummy",
-					    "pll4_audio", "pll5_video", "pll8_mlb", "enet_ref",
-					    "pcie_ref", "sata_ref", };
+static const char *lvds_sels[]		= { "arm", "pll1_sys", "dummy", "dummy", "dummy", "dummy", "dummy",
+					    "dummy", "dummy", "dummy", "pcie_ref", "sata_ref", "usbphy1", "usbphy2", };
 static const char *periph_pre_sels[]	= { "pll2_bus", "pll2_pfd2_396m", "pll2_pfd0_352m", "pll2_198m", };
 static const char *periph_clk2_sels[]	= { "pll3_usb_otg", "osc", "osc", "dummy", };
 static const char *periph2_clk2_sels[]	= { "pll3_usb_otg", "pll2_bus", };
@@ -346,6 +345,8 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 
 	/* usb */
 	imxccm_gate2("usboh3", "ipg", CCM_CCGR6, 0);
+	imxccm_gate("usbphy1", "pll3_usb_otg", CCM_ANALOG_PLL_USB1, 20);
+	imxccm_gate("usbphy2", "pll7_usb_host", CCM_ANALOG_PLL_USB2, 20);
 	imxccm_gate("usbphy1_gate", "dummy", CCM_ANALOG_PLL_USB1, 6);
 	imxccm_gate("usbphy2_gate", "dummy", CCM_ANALOG_PLL_USB2, 6);
 
@@ -359,12 +360,13 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 	imxccm_gate2("pcie_axi", "pcie_axi_sel", CCM_CCGR4, 0);
 	clk_fixed_factor("pcie_ref", "pll6_enet", 1, 4);
 	imxccm_gate("pcie_ref_125m", "pcie_ref", CCM_ANALOG_PLL_ENET, 19);
+	clk_set_parent(clk_get("pcie_axi_sel"), clk_get("axi"));
 
 	/* lvds */
 	imxccm_mux("lvds1_sel", CCM_PMU_MISC1, 0, 5, lvds_sels, nitems(lvds_sels));
 	imxccm_mux("lvds2_sel", CCM_PMU_MISC1, 5, 5, lvds_sels, nitems(lvds_sels));
-	imxccm_gate("lvds1_gate", "dummy", CCM_PMU_MISC1, 10);
-	imxccm_gate("lvds2_gate", "dummy", CCM_PMU_MISC1, 11);
+	imxccm_gate("lvds1_out", "lvds1_sel", CCM_PMU_MISC1, 10);
+	imxccm_gate("lvds2_out", "lvds1_sel", CCM_PMU_MISC1, 11);
 	clk_set_parent(clk_get("lvds1_sel"), clk_get("sata_ref")); /* PCIe */
 
 	cpu_type = HREAD4(sc, CCM_ANALOG_DIGPROG_MX6SL);

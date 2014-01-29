@@ -143,6 +143,10 @@
 #define PCIE_REG_SIZE	0x4000
 #define PCIE_MAP_ADDR	0x01000000
 #define PCIE_MAP_SIZE	0xffc000
+#define PCIE_IO_ADDR	0x01f80000
+#define PCIE_IO_SIZE	0x00010000
+#define PCIE_MEM_ADDR	0x01000000
+#define PCIE_MEM_SIZE	0x00f00000
 
 #define PCIE_IRQ0	120
 #define PCIE_IRQ1	121
@@ -360,7 +364,8 @@ struct armv7_dev imx6_devs[] = {
 	  .unit = 0,
 	  .mem = {
 		  { PCIE_REG_ADDR, PCIE_REG_SIZE },
-		  { PCIE_MAP_ADDR, PCIE_MAP_SIZE },
+		  { PCIE_IO_ADDR, PCIE_IO_SIZE },
+		  { PCIE_MEM_ADDR, PCIE_MEM_SIZE },
 	  },
 	  .irq = { PCIE_IRQ0, PCIE_IRQ1, PCIE_IRQ1, PCIE_IRQ2 }
 	},
