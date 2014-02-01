@@ -40,6 +40,7 @@
 #include <sys/lock.h>
 #include <sys/systm.h>
 #include <sys/sched.h>
+#include <sys/rwlock.h>
 
 #ifdef MP_LOCKDEBUG
 /* CPU-dependent timing, needs this to be settable from ddb. */
@@ -111,12 +112,12 @@ lockmgr(struct lock *lkp, u_int flags, void *notused)
  * so that they show up in profiles.
  */
 
-struct __mp_lock kernel_lock;
+struct rrwlock kernel_lock;
 
 void
 _kernel_lock_init(void)
 {
-	__mp_lock_init(&kernel_lock);
+	rrw_init(&kernel_lock, "kernellock");
 }
 
 /*
@@ -128,27 +129,27 @@ void
 _kernel_lock(void)
 {
 	SCHED_ASSERT_UNLOCKED();
-	__mp_lock(&kernel_lock);
+	rrw_enter(&kernel_lock, RW_WRITE);
 }
 
 void
 _kernel_unlock(void)
 {
-	__mp_unlock(&kernel_lock);
+	rrw_exit(&kernel_lock);
 }
 
 int
 _kernel_lock_held(void)
 {
-	return (__mp_lock_held(&kernel_lock));
+	return (rrw_held(&kernel_lock));
 }
 
 int
 _kernel_unlock_all(void)
 {
-	if (!__mp_lock_held(&kernel_lock))
+	if (!rrw_held(&kernel_lock))
 		return (0);
-	return (__mp_release_all(&kernel_lock));
+	return (rrw_exit_all(&kernel_lock));
 }
 
 void
@@ -158,7 +159,8 @@ _kernel_relock_all(int count)
 
 	/* XXX remove once we fix fpu. */
 	crit_count = crit_leave_all();
-	__mp_acquire_count(&kernel_lock, count);
+	if (count)
+		rrw_enter_cnt(&kernel_lock, RW_WRITE, count);
 	crit_reenter(crit_count);
 }
 

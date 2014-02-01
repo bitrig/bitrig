@@ -124,7 +124,7 @@ sched_idle(void *v)
 	struct proc *p = curproc;
 	struct cpu_info *ci = v;
 
-	KERNEL_UNLOCK();
+	KERNEL_ASSERT_UNLOCKED();
 
 	spc = &ci->ci_schedstate;
 
@@ -205,10 +205,8 @@ sched_exit(struct proc *p)
 
 	LIST_INSERT_HEAD(&spc->spc_deadproc, p, p_hash);
 
-#ifdef MULTIPROCESSOR
 	/* This process no longer needs to hold the kernel lock. */
-	__mp_release_all(&kernel_lock);
-#endif
+	KERNEL_UNLOCK_ALL();
 
 	SCHED_LOCK();
 	idle = spc->spc_idleproc;
