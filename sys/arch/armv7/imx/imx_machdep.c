@@ -58,6 +58,9 @@ platform_init_cons(void)
 	case BOARD_ID_IMX6_SABRELITE:
 		paddr = 0x021e8000;
 		break;
+	case BOARD_ID_IMX6_UDOO:
+		paddr = 0x021e8000;
+		break;
 	case BOARD_ID_IMX6_UTILITE:
 		paddr = 0x021f0000;
 		break;
@@ -95,6 +98,10 @@ platform_print_board_type(void)
 	case BOARD_ID_IMX6_SABRELITE:
 		amptimer_frequency = 396 * 1000 * 1000;
 		printf("board type: SABRE Lite\n");
+		break;
+	case BOARD_ID_IMX6_UDOO:
+		amptimer_frequency = 396 * 1000 * 1000;
+		printf("board type: UDOO\n");
 		break;
 	case BOARD_ID_IMX6_UTILITE:
 		amptimer_frequency = 396 * 1000 * 1000;

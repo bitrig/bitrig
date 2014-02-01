@@ -475,6 +475,23 @@ imxesdhc_card_detect(sdmmc_chipset_handle_t sch)
 		}
 		imxgpio_set_dir(gpio, IMXGPIO_DIR_IN);
 		return imxgpio_get_bit(gpio) ? 0 : 1;
+	case BOARD_ID_IMX6_UDOO:
+		switch (sc->unit) {
+			// One of these is the SD card, another the wifi
+			// the third is not connected (?)
+			case 0:
+			case 1:
+			case 2:
+			case 3:
+				gpio = 3*32 + 9;
+				break;
+				return 1;
+			default:
+				return 0;
+		}
+		//imxgpio_set_dir(gpio, IMXGPIO_DIR_IN);
+		//return imxgpio_get_bit(gpio) ? 0 : 1;
+		return 1;
 	default:
 		printf("%s: unhandled board\n", __func__);
 		return 1;
