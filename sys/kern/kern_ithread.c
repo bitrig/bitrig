@@ -128,6 +128,9 @@ ithread_run(struct intrsource *is)
 	case SONPROC:
 		break;
 	case SSLEEP:
+		/* XXX ithread may be blocked on a lock */
+		if (p->p_wchan != p)
+			goto unlock;
 		unsleep(p);
 		p->p_stat = SRUN;
 		p->p_slptime = 0;
@@ -145,7 +148,7 @@ ithread_run(struct intrsource *is)
 		SCHED_UNLOCK();
 		panic("ithread_handler: unexpected thread state %d\n", p->p_stat);
 	}
-
+unlock:
 	SCHED_UNLOCK();
 }
 

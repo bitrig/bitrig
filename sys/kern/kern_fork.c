@@ -617,6 +617,8 @@ proc_trampoline_mp(void)
 	SCHED_ASSERT_UNLOCKED();
 	KERNEL_ASSERT_UNLOCKED();
 
-	KERNEL_LOCK();
+	/* XXX We can't sleep on idle ! */
+	if (__predict_true(p != curcpu()->ci_schedstate.spc_idleproc))
+		KERNEL_LOCK();
 }
 #endif
