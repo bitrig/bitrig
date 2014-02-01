@@ -183,6 +183,12 @@ rw_init(struct rwlock *rwl, const char *name)
 }
 
 int
+rw_held(struct rwlock *rwl)
+{
+	return (RWLOCK_OWNER(rwl) == (struct proc *)RW_PROC(curproc));
+}
+
+int
 rw_enter(struct rwlock *rwl, int flags)
 {
 	const struct rwlock_op *op;
@@ -293,7 +299,7 @@ rw_assert_rdlock(struct rwlock *rwl)
 void
 rw_assert_unlocked(struct rwlock *rwl)
 {
-	if (rwl->rwl_owner != 0L)
+	if (__predict_false(RWLOCK_OWNER(rwl) == (struct proc *)RW_PROC(curproc)))
 		panic("%s: lock held", rwl->rwl_name);
 }
 #endif
@@ -307,7 +313,7 @@ rrw_init(struct rrwlock *rrwl, char *name)
 }
 
 int
-rrw_enter(struct rrwlock *rrwl, int flags)
+rrw_enter_cnt(struct rrwlock *rrwl, int flags, int cnt)
 {
 	int	rv;
 
@@ -316,14 +322,14 @@ rrw_enter(struct rrwlock *rrwl, int flags)
 		if (flags & RW_RECURSEFAIL)
 			return (EDEADLK);
 		else {
-			rrwl->rrwl_wcnt++;
+			rrwl->rrwl_wcnt += cnt;
 			return (0);
 		}
 	}
 
 	rv = rw_enter(&rrwl->rrwl_lock, flags);
 	if (rv == 0)
-		rrwl->rrwl_wcnt = 1;
+		rrwl->rrwl_wcnt += cnt;
 
 	return (rv);
 }
@@ -344,8 +350,23 @@ rrw_exit(struct rrwlock *rrwl)
 }
 
 int
+rrw_exit_all(struct rrwlock *rrwl)
+{
+	int cnt = rrwl->rrwl_wcnt;
+
+	if (RWLOCK_OWNER(&rrwl->rrwl_lock) ==
+	    (struct proc *)RW_PROC(curproc)) {
+		KASSERT(rrwl->rrwl_wcnt > 0);
+		rrwl->rrwl_wcnt = 0;
+	}
+
+	rw_exit(&rrwl->rrwl_lock);
+
+	return (cnt);
+}
+
+int
 rrw_status(struct rrwlock *rrwl)
 {
-
 	return (rw_status(&rrwl->rrwl_lock));
 }

@@ -1885,9 +1885,7 @@ single_thread_set(struct proc *p, enum single_thread_mode mode, int deep)
 	struct proc *q;
 	int error;
 
-#ifdef MULTIPROCESSOR
-	KASSERT(__mp_lock_held(&kernel_lock));
-#endif
+	KERNEL_ASSERT_LOCKED();
 
 	if ((error = single_thread_check(p, deep)))
 		return error;
@@ -1983,9 +1981,7 @@ single_thread_clear(struct proc *p, int flag)
 	struct proc *q;
 
 	KASSERT(pr->ps_single == p);
-#ifdef MULTIPROCESSOR
-	KASSERT(__mp_lock_held(&kernel_lock));
-#endif
+	KERNEL_ASSERT_LOCKED();
 
 	pr->ps_single = NULL;
 	atomic_clearbits_int(&pr->ps_flags, PS_SINGLEUNWIND | PS_SINGLEEXIT);

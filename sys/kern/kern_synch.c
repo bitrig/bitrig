@@ -109,9 +109,8 @@ tsleep(const volatile void *ident, int priority, const char *wmesg, int timo)
 
 	KASSERT((priority & ~(PRIMASK | PCATCH)) == 0);
 
-#ifdef MULTIPROCESSOR
-	KASSERT(timo || __mp_lock_held(&kernel_lock));
-#endif
+	if (timo == 0)
+		KERNEL_ASSERT_LOCKED();
 
 	if (cold || panicstr) {
 		int c = curproc->p_crit;

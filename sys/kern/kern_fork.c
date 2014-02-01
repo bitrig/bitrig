@@ -605,8 +605,10 @@ proc_trampoline_mp(void)
 	KASSERT(CRIT_DEPTH == 0);
 	crit_leave_all();	/* for the side effects */
 	SCHED_ASSERT_UNLOCKED();
-	KASSERT(__mp_lock_held(&kernel_lock) == 0);
+	KERNEL_ASSERT_UNLOCKED();
 
-	KERNEL_LOCK();
+	/* XXX We can't sleep on idle ! */
+	if (__predict_true(p != curcpu()->ci_schedstate.spc_idleproc))
+		KERNEL_LOCK();
 }
 #endif

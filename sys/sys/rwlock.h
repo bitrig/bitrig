@@ -80,6 +80,7 @@ struct rwlock {
 
 void rw_init(struct rwlock *, const char *);
 
+int  rw_held(struct rwlock *);
 void rw_enter_read(struct rwlock *);
 void rw_enter_write(struct rwlock *);
 void rw_exit_read(struct rwlock *);
@@ -119,9 +120,20 @@ struct rrwlock {
 	uint32_t	rrwl_wcnt;	/* # writers. */
 };
 
+#ifdef DIAGNOSTIC
+#define	rrw_assert_wrlock(rrwl)		rw_assert_wrlock(&(rrwl)->rrwl_lock)
+#define	rrw_assert_unlocked(rrwl)	rw_assert_unlocked(&(rrwl)->rrwl_lock)
+#else
+#define	rrw_assert_wrlock(rrwl)		((void)0)
+#define	rrw_assert_unlocked(rrwl)	((void)0)
+#endif
+
 void	rrw_init(struct rrwlock *, char *);
-int	rrw_enter(struct rrwlock *, int);
+#define	rrw_held(rrwl) rw_held(&(rrwl)->rrwl_lock)
+#define	rrw_enter(rrwl, f) rrw_enter_cnt(rrwl, f, 1)
+int	rrw_enter_cnt(struct rrwlock *, int, int);
 void	rrw_exit(struct rrwlock *);
+int	rrw_exit_all(struct rrwlock *);
 int	rrw_status(struct rrwlock *);
 
 #endif

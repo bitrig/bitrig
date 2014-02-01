@@ -41,7 +41,8 @@ int __mp_lock_held(struct __mp_lock *);
 #endif
 
 #include <machine/mplock.h>
+#include <sys/rwlock.h>
 
-extern struct __mp_lock kernel_lock;
+extern struct rrwlock kernel_lock;
 
 #endif /* !_MPLOCK_H */

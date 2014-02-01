@@ -367,8 +367,8 @@ void	_kernel_relock_all(int);
 #define	KERNEL_UNLOCK_ALL()		_kernel_unlock_all()
 /* NOTE: RELOCK_ALL will leave/reenter critical sections  */
 #define	KERNEL_RELOCK_ALL(x)		_kernel_relock_all(x)
-#define	KERNEL_ASSERT_LOCKED()		KASSERT(__mp_lock_held(&kernel_lock))
-#define	KERNEL_ASSERT_UNLOCKED()	KASSERT(__mp_lock_held(&kernel_lock) == 0)
+#define	KERNEL_ASSERT_LOCKED()		rrw_assert_wrlock(&kernel_lock)
+#define	KERNEL_ASSERT_UNLOCKED()	rrw_assert_unlocked(&kernel_lock)
 
 #else /* ! MULTIPROCESSOR */
 

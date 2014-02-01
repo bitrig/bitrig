@@ -333,9 +333,8 @@ ktrstruct(struct proc *p, const char *name, const void *data, size_t datalen)
 	void *buf;
 	size_t buflen;
 
-#ifdef MULTIPROCESSOR
-	KASSERT(__mp_lock_held(&kernel_lock) > 0);
-#endif
+	KERNEL_ASSERT_LOCKED();
+
 	atomic_setbits_int(&p->p_flag, P_INKTR);
 	ktrinitheader(&kth, p, KTR_STRUCT);
 	

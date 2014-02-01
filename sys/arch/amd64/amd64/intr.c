@@ -580,12 +580,12 @@ intr_handler(struct intrframe *frame, struct intrhand *ih)
 		need_lock = frame->if_ppl < IPL_SCHED;
 
 	if (need_lock)
-		__mp_lock(&kernel_lock);
+		KERNEL_LOCK();
 #endif
 	rc = (*ih->ih_fun)(ih->ih_arg ? ih->ih_arg : frame);
 #ifdef MULTIPROCESSOR
 	if (need_lock)
-		__mp_unlock(&kernel_lock);
+		KERNEL_UNLOCK();
 #endif
 	return rc;
 }
