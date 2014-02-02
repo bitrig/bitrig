@@ -177,6 +177,7 @@ skip_node_name(u_int32_t *ptr)
 /*
  * Retrieves node property, the returned pointer is inside the fdt tree,
  * so we should not modify content pointed by it directly.
+ * A NULL out parameter will cause this function to only return the size.
  */
 int
 fdt_node_property(void *node, char *name, char **out)
@@ -199,7 +200,8 @@ fdt_node_property(void *node, char *name, char **out)
 		nameid = betoh32(*(ptr + 2)); /* id of name in strings table */
 		tmp = fdt_get_str(nameid);
 		if (!strcmp(name, tmp)) {
-			*out = (char *)(ptr + 3); /* begining of the value */
+			if (out != NULL)
+				*out = (char *)(ptr + 3); /* begining of the value */
 			return betoh32(*(ptr + 1)); /* size of value */
 		}
 		ptr = skip_property(ptr);
