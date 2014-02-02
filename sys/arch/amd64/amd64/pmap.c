@@ -320,7 +320,9 @@ struct vm_page *pmap_find_ptp(struct pmap *, vaddr_t, paddr_t, int);
 void pmap_free_ptp(struct pmap *, struct vm_page *,
     vaddr_t, pt_entry_t *, pd_entry_t **, struct pg_to_free *);
 void pmap_freepage(struct pmap *, struct vm_page *, int, struct pg_to_free *);
+#ifdef MULTIPROCESSOR
 static boolean_t pmap_is_active(struct pmap *, int);
+#endif
 void pmap_map_ptes(struct pmap *, pt_entry_t **, pd_entry_t ***);
 struct pv_entry *pmap_remove_pv(struct vm_page *, struct pmap *, vaddr_t);
 void pmap_do_remove(struct pmap *, vaddr_t, vaddr_t, int);
@@ -359,12 +361,14 @@ pmap_is_curpmap(struct pmap *pmap)
  * pmap_is_active: is this pmap loaded into the specified processor's %cr3?
  */
 
+#ifdef MULTIPROCESSOR
 static __inline boolean_t
 pmap_is_active(struct pmap *pmap, int cpu_id)
 {
 	return (pmap == pmap_kernel() ||
 	    (pmap->pm_cpus & (1ULL << cpu_id)) != 0);
 }
+#endif
 
 static __inline u_int
 pmap_pte2flags(u_long pte)

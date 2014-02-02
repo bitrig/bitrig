@@ -90,6 +90,7 @@ struct uaddr_pivot_state {
 	struct uaddr_pivot		 up_pivots[NUM_PIVOTS];
 };
 
+#ifndef SMALL_KERNEL
 /*
  * Free space comparison.
  * Compares smaller free-space before larger free-space.
@@ -101,6 +102,7 @@ uvm_mapent_fspace_cmp(struct vm_map_entry *e1, struct vm_map_entry *e2)
 		return (e1->fspace < e2->fspace ? -1 : 1);
 	return (e1->start < e2->start ? -1 : e1->start > e2->start);
 }
+#endif
 
 /* Forward declaration (see below). */
 extern const struct uvm_addr_functions uaddr_kernel_functions;

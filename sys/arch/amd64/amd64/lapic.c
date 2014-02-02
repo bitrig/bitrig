@@ -454,6 +454,7 @@ lapic_delay(int usec)
  * XXX the following belong mostly or partly elsewhere..
  */
 
+#ifdef MULTIPROCESSOR
 static __inline void i82489_icr_wait(void);
 
 static __inline void
@@ -473,7 +474,6 @@ i82489_icr_wait(void)
 	}
 }
 
-#ifdef MULTIPROCESSOR
 int
 x86_ipi_init(int target)
 {

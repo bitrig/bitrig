@@ -278,6 +278,7 @@ static const struct intel_device_info intel_ivybridge_m_info = {
 	.has_force_wake = 1,
 };
 
+#ifdef notyet
 static const struct intel_device_info intel_valleyview_m_info = {
 	.gen = 7, .is_mobile = 1,
 	.need_gfx_hws = 1, .has_hotplug = 1,
@@ -295,6 +296,7 @@ static const struct intel_device_info intel_valleyview_d_info = {
 	.has_blt_ring = 1,
 	.is_valleyview = 1,
 };
+#endif
 
 static const struct intel_device_info intel_haswell_d_info = {
 	.is_haswell = 1, .gen = 7,

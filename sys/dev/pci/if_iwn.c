@@ -838,6 +838,7 @@ iwn_mem_write(struct iwn_softc *sc, uint32_t addr, uint32_t data)
 	IWN_WRITE(sc, IWN_MEM_WDATA, data);
 }
 
+#ifndef IEEE80211_NO_HT
 static __inline void
 iwn_mem_write_2(struct iwn_softc *sc, uint32_t addr, uint16_t data)
 {
@@ -850,6 +851,7 @@ iwn_mem_write_2(struct iwn_softc *sc, uint32_t addr, uint16_t data)
 		tmp = (tmp & 0xffff0000) | data;
 	iwn_mem_write(sc, addr & ~3, tmp);
 }
+#endif
 
 static __inline void
 iwn_mem_read_region_4(struct iwn_softc *sc, uint32_t addr, uint32_t *data,

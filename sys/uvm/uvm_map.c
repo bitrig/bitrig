@@ -168,8 +168,10 @@ static __inline void	 uvm_mapent_copy(struct vm_map_entry*,
 			    struct vm_map_entry*);
 static int		 uvm_mapentry_addrcmp(struct vm_map_entry*,
 			    struct vm_map_entry*);
+#ifdef notyet
 static int		 uvm_mapentry_freecmp(struct vm_map_entry*,
 			    struct vm_map_entry*);
+#endif
 void			 uvm_mapent_free_insert(struct vm_map*,
 			    struct uvm_addr_state*, struct vm_map_entry*);
 void			 uvm_mapent_free_remove(struct vm_map*,
@@ -351,12 +353,14 @@ uvm_mapentry_addrcmp(struct vm_map_entry *e1, struct vm_map_entry *e2)
  * tree will be considered during 'any address' allocations.
  */
 
+#ifdef notyet
 static __inline int
 uvm_mapentry_freecmp(struct vm_map_entry *e1, struct vm_map_entry *e2)
 {
 	int cmp = e1->fspace < e2->fspace ? -1 : e1->fspace > e2->fspace;
 	return cmp ? cmp : uvm_mapentry_addrcmp(e1, e2);
 }
+#endif
 
 /*
  * Copy mapentry.

@@ -481,6 +481,7 @@ static int intel_lvds_get_modes(struct drm_connector *connector)
 	return 1;
 }
 
+#ifdef notyet
 static int intel_no_modeset_on_lid_dmi_callback(const struct dmi_system_id *id)
 {
 	printf("Skipping forced modeset for %s\n", id->ident);
@@ -501,7 +502,6 @@ static const struct dmi_system_id intel_no_modeset_on_lid[] = {
 	{ }	/* terminating entry */
 };
 
-#ifdef notyet
 /*
  * Lid events. Note the use of 'modeset_on_lid':
  *  - we set it on lid close, and reset it on open

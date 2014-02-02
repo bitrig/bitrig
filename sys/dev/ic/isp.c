@@ -92,6 +92,7 @@ static const char ourwwn[] =
     "HBA WWNN 0x%08x%08x HBA WWPN 0x%08x%08x";
 static const char finmsg[] =
     "%d.%d.%d: FIN dl%d resid %d STS 0x%x SKEY %c XS_ERR=0x%x";
+#ifndef SMALL_KERNEL
 static const char sc0[] =
     "%s CHAN %d FTHRSH %d IID %d RESETD %d RETRYC %d RETRYD %d ASD 0x%x";
 static const char sc1[] =
@@ -99,6 +100,7 @@ static const char sc1[] =
 static const char sc2[] = "%s CHAN %d TGT %d FLAGS 0x%x 0x%x/0x%x";
 static const char sc3[] = "Generated";
 static const char sc4[] = "NVRAM";
+#endif
 static const char bun[] =
     "bad underrun for %d.%d (count %d, resid %d, status %s)";
 
