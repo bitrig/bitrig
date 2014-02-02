@@ -86,13 +86,6 @@
 #include <machine/vmparam.h>
 #include <machine/bus.h>
 
-static __inline struct trapframe *
-process_frame(struct proc *p)
-{
-
-	return (p->p_addr->u_pcb.pcb_tf);
-}
-
 /*
  * The ARM architecture places the vector page at address 0.
  * Later ARM architecture versions, however, allow it to be
