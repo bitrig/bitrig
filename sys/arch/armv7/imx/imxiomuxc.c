@@ -24,6 +24,7 @@
 #include <sys/timeout.h>
 #include <machine/intr.h>
 #include <machine/bus.h>
+#include <machine/fdt.h>
 #include <armv7/armv7/armv7var.h>
 
 /* registers */
@@ -117,6 +118,27 @@
 		IOMUXC_PAD_CTL_PUS_100K_OHM_PU | IOMUXC_PAD_CTL_HYS_ENABLED | IOMUXC_PAD_CTL_SPEED_MED)
 
 #define IOMUX_CONFIG_SION		(1 << 4)
+#define IOMUX_NO_PAD_CTL		(1U << 31)
+#define IOMUX_PAD_SION			(1 << 30)
+
+#define HDEVNAME(sc)			((sc)->sc_dev.dv_xname)
+#define HREAD4(sc, reg)							\
+	(bus_space_read_4((sc)->sc_iot, (sc)->sc_ioh, (reg)))
+#define HWRITE4(sc, reg, val)						\
+	bus_space_write_4((sc)->sc_iot, (sc)->sc_ioh, (reg), (val))
+#define HSET4(sc, reg, bits)						\
+	HWRITE4((sc), (reg), HREAD4((sc), (reg)) | (bits))
+#define HCLR4(sc, reg, bits)						\
+	HWRITE4((sc), (reg), HREAD4((sc), (reg)) & ~(bits))
+
+struct imx_pin_group {
+	uint32_t		mux_reg;
+	uint32_t		conf_reg;
+	uint32_t		input_reg;
+	uint32_t		mux_val;
+	uint32_t		input_val;
+	uint32_t		conf_val;
+};
 
 struct imxiomuxc_softc {
 	struct device		sc_dev;
@@ -127,6 +149,8 @@ struct imxiomuxc_softc {
 struct imxiomuxc_softc *imxiomuxc_sc;
 
 void imxiomuxc_attach(struct device *parent, struct device *self, void *args);
+void imxiomuxc_fdt(struct imxiomuxc_softc *);
+void imxiomuxc_configure_group(struct imxiomuxc_softc *, struct imx_pin_group *);
 void imxiomuxc_enable_sata(void);
 void imxiomuxc_enable_i2c(int);
 void imxiomuxc_enable_pcie(void);
@@ -154,6 +178,60 @@ imxiomuxc_attach(struct device *parent, struct device *self, void *args)
 
 	printf("\n");
 	imxiomuxc_sc = sc;
+
+	imxiomuxc_fdt(sc);
+
+}
+
+void
+imxiomuxc_fdt(struct imxiomuxc_softc *sc)
+{
+	int				 i, ngroup;
+	void				*node;
+	struct imx_pin_group		*groups, *group;
+
+	node = fdt_find_compatible("fsl,iomuxc");
+	if (node == NULL)
+		return;
+
+	for (node = fdt_child_node(node);
+	     node != NULL;
+	     node = fdt_next_node(node)) {
+		ngroup = fdt_node_property(node, "fsl,pins", NULL)
+		    / sizeof(struct imx_pin_group);
+		if (ngroup <= 0)
+			continue;
+
+		group = groups = (struct imx_pin_group *)malloc(ngroup *
+		    sizeof(struct imx_pin_group), M_DEVBUF, M_WAITOK);
+		if (groups == NULL)
+			return;
+
+		fdt_node_property_ints(node, "fsl,pins", (uint32_t *)groups,
+		    (ngroup * sizeof(struct imx_pin_group)) / sizeof(uint32_t));
+
+		for (i = 0; i < ngroup; i++) {
+			if (group->conf_val & IOMUX_PAD_SION)
+				group->mux_val |= IOMUX_CONFIG_SION;
+			if (group->conf_val & IOMUX_NO_PAD_CTL)
+				group->conf_reg = 0;
+			imxiomuxc_configure_group(sc, group);
+			group++;
+		}
+
+		free(groups, M_DEVBUF);
+	}
+}
+
+void
+imxiomuxc_configure_group(struct imxiomuxc_softc *sc, struct imx_pin_group *g)
+{
+	if (g->mux_reg)
+		HWRITE4(sc, g->mux_reg, g->mux_val);
+	if (g->conf_reg)
+		HWRITE4(sc, g->conf_reg, g->conf_val);
+	if (g->input_reg)
+		HWRITE4(sc, g->input_reg, g->input_val);
 }
 
 void
