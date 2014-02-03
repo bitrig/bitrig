@@ -131,6 +131,7 @@ agtimer_set_ctrl(uint32_t val)
 	return (0);
 }
 
+#ifdef unused
 static inline int
 agtimer_get_tval(void)
 {
@@ -140,6 +141,7 @@ agtimer_get_tval(void)
 
 	return (val);
 }
+#endif /* unused */
 
 static inline int
 agtimer_set_tval(uint32_t val)
