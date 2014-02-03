@@ -77,6 +77,7 @@ imx0		at mainbus?
 
 # iMX on-chip devices
 imxccm*		at imx?			# clock control module
+imxtemp*	at imx?			# temperature sensor
 imxiomuxc*	at imx?			# iomux controller
 imxdog*		at imx?			# watchdog timer
 imxocotp*	at imx?			# on-chip otp controller
