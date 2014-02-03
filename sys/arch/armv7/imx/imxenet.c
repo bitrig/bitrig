@@ -535,6 +535,7 @@ imxenet_init(struct imxenet_softc *sc)
 		break;
 	default:
 		speed &= ~ENET_ECR_SPEED;
+		break;
 	}
 	HWRITE4(sc, ENET_ECR, ENET_ECR_ETHEREN | speed | ENET_ECR_DBSWP);
 
@@ -559,6 +560,12 @@ imxenet_init(struct imxenet_softc *sc)
 void
 imxenet_stop(struct imxenet_softc *sc)
 {
+	struct ifnet *ifp = &sc->sc_ac.ac_if;
+
+	/* Tell the stack that the interface is no longer active */
+	ifp->if_flags &= ~(IFF_RUNNING | IFF_OACTIVE);
+	ifp->if_timer = 0;
+
 	/* reset the controller */
 	HSET4(sc, ENET_ECR, ENET_ECR_RESET);
 	while(HREAD4(sc, ENET_ECR) & ENET_ECR_RESET);
@@ -582,9 +589,10 @@ imxenet_ioctl(struct ifnet *ifp, u_long cmd, caddr_t data)
 
 	switch (cmd) {
 	case SIOCSIFADDR:
-		ifp->if_flags |= IFF_UP;
-		if (!(ifp->if_flags & IFF_RUNNING))
+		if (!(ifp->if_flags & IFF_UP)) {
+			ifp->if_flags |= IFF_UP;
 			imxenet_init(sc);
+		}
 #ifdef INET
 		if (ifa->ifa_addr->sa_family == AF_INET)
 			arp_ifinit(&sc->sc_ac, ifa);
@@ -896,6 +904,7 @@ imxenet_miibus_statchg(struct device *dev)
 		break;
 	default:
 		ecr &= ~ENET_ECR_SPEED;
+		break;
 	}
 	HWRITE4(sc, ENET_ECR, ecr);
 
