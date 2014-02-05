@@ -12,7 +12,7 @@ REGRESS_TARGETS=	do-extent
 
 do-extent: ${PROG}
 	./${PROG} >extest.out
-	tail +5 ${.CURDIR}/extest.exp | diff - extest.out
+	tail +5 ${.CURDIR}/extest.exp | diff -u - extest.out
 
 extest.c: extest.awk tests
 	awk -f ${.CURDIR}/extest.awk <${.CURDIR}/tests >extest.c
