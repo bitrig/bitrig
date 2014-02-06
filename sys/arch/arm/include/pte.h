@@ -143,7 +143,7 @@ typedef uint32_t	pt_entry_t;	/* L2 table entry */
 #define	L1_S_IMP	0x00000010	/* implementation defined */
 #define	L1_S_DOM(x)	((x) << 5)	/* domain */
 #define	L1_S_DOM_MASK	L1_S_DOM(0xf)
-#define	L1_S_AP(x)	((x) << 10)	/* access permissions */
+#define	L1_S_AP(x)	((((x) & 0x4) << 13) | (((x) & 3) << 10))	/* access permissions */
 #define	L1_S_ADDR_MASK	0xfff00000	/* phys address of section */
 
 #define	L1_S_V7_TEX(x)	(((x) & 0x7) << 12)	/* Type Extension */
@@ -152,7 +152,6 @@ typedef uint32_t	pt_entry_t;	/* L2 table entry */
 #define	L1_S_V7_SS	0x00040000	/* Supersection */
 #define	L1_S_V7_nG	0x00020000	/* not Global */
 #define	L1_S_V7_S	0x00010000	/* Shareable */
-#define	L1_S_V7_AP(x)	((((x) & 0x4) << 13) | (((x) & 3) << 10))	/* AP */
 #define	L1_S_V7_IMP	0x00000200	/* implementation defined */
 #define	L1_S_V7_XN	0x00000010	/* eXecute Never */
 
@@ -187,11 +186,7 @@ typedef uint32_t	pt_entry_t;	/* L2 table entry */
 
 #define	L2_B		0x00000004	/* Bufferable page */
 #define	L2_C		0x00000008	/* Cacheable page */
-#define	L2_AP0(x)	((x) << 4)	/* access permissions (sp 0) */
-#define	L2_AP1(x)	((x) << 6)	/* access permissions (sp 1) */
-#define	L2_AP2(x)	((x) << 8)	/* access permissions (sp 2) */
-#define	L2_AP3(x)	((x) << 10)	/* access permissions (sp 3) */
-#define	L2_AP(x)	(L2_AP0(x) | L2_AP1(x) | L2_AP2(x) | L2_AP3(x))
+#define	L2_AP(x)	((((x) & 0x04) << 7) | (((x) & 0x03) << 4))	/* access permissions */
 
 #define	L2_V7_L_TEX(x)	(((x) & 0x7) << 12)	/* Type Extension */
 #define	L2_V7_L_TEX_MASK	(0x7 << 12)	/* Type Extension */
@@ -200,24 +195,17 @@ typedef uint32_t	pt_entry_t;	/* L2 table entry */
 #define	L2_V7_S_TEX_MASK	(0x7 << 6)	/* Type Extension */
 #define	L2_V7_S_XN	0x00000001	/* eXecute Never */
 
-#define	L2_V7_AP(x)	((((x) & 0x04) << 7) | (((x) & 0x03) << 4))	/* AP */
 #define	L2_V7_S		0x00000400	/* Shared */
 #define	L2_V7_nG	0x00000200	/* not Global */
 
 /*
- * Access Permissions for L1 and L2 Descriptors. (except for V7)
- */
-#define	AP_W		0x01		/* writable */
-#define	AP_U		0x02		/* user */
-
-/*
- * Short-hand for common AP_* constants.
+ * Access Permissions for L1 and L2 Descriptors.
  *
  * Note: These values assume the S (System) bit is set and
  * the R (ROM) bit is clear in CP15 register 1.
  */
-#define	AP_KR		0x00		/* kernel read */
-#define	AP_V7_KR	0x05
+#define	AP_PF		0x00		/* all accesses generate permission faults */
+#define	AP_KR		0x05		/* kernel read */
 #define	AP_KRW		0x01		/* kernel read/write */
 #define	AP_KRWUR	0x02		/* kernel read/write usr read */
 #define	AP_KRWURW	0x03		/* kernel read/write usr read/write */

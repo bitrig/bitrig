@@ -176,13 +176,13 @@ Lstart:
 Lstartup_pagetable:	.word	STARTUP_PAGETABLE_ADDR
 mmu_init_table:	
 	/* fill all table VA==PA */
-	MMU_INIT(0x00000000, 0x00000000, 1<<(32-L1_S_SHIFT), L1_TYPE_S|L1_S_V7_AP(AP_KRW))
+	MMU_INIT(0x00000000, 0x00000000, 1<<(32-L1_S_SHIFT), L1_TYPE_S|L1_S_AP(AP_KRW))
 	/* map SDRAM VA==PA, WT cacheable */
-	MMU_INIT(SDRAM_START, SDRAM_START, 64, L1_TYPE_S|L1_S_C|L1_S_V7_AP(AP_KRW))
+	MMU_INIT(SDRAM_START, SDRAM_START, 64, L1_TYPE_S|L1_S_C|L1_S_AP(AP_KRW))
 #endif
 mmu_init_table2:	
 	/* map VA 0xc0000000..0xc3ffffff to PA 0xa0000000..0xa3ffffff */
-	MMU_INIT(0xc0000000, SDRAM_START, 64, L1_TYPE_S|L1_S_C|L1_S_V7_AP(AP_KRW))
+	MMU_INIT(0xc0000000, SDRAM_START, 64, L1_TYPE_S|L1_S_C|L1_S_AP(AP_KRW))
 
 	.word 0	/* end of table */
 

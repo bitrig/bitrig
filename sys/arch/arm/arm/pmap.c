@@ -3419,12 +3419,6 @@ pt_entry_t	pte_l1_s_coherent;
 pt_entry_t	pte_l2_l_coherent;
 pt_entry_t	pte_l2_s_coherent;
 
-pt_entry_t	pte_l2_s_prot_ur;
-pt_entry_t	pte_l2_s_prot_uw;
-pt_entry_t	pte_l2_s_prot_kr;
-pt_entry_t	pte_l2_s_prot_kw;
-pt_entry_t	pte_l2_s_prot_mask;
-
 pt_entry_t	pte_l1_s_proto;
 pt_entry_t	pte_l1_c_proto;
 pt_entry_t	pte_l2_s_proto;
@@ -3464,12 +3458,6 @@ pmap_pte_init_generic(void)
 	pte_l2_l_coherent = L2_L_COHERENT_generic;
 	pte_l2_s_coherent = L2_S_COHERENT_generic;
 
-	pte_l2_s_prot_ur = L2_S_PROT_UR_generic;
-	pte_l2_s_prot_uw = L2_S_PROT_UW_generic;
-	pte_l2_s_prot_kr = L2_S_PROT_KR_generic;
-	pte_l2_s_prot_kw = L2_S_PROT_KW_generic;
-	pte_l2_s_prot_mask = L2_S_PROT_MASK_generic;
-
 	pte_l1_s_proto = L1_S_PROTO_generic;
 	pte_l1_c_proto = L1_C_PROTO_generic;
 	pte_l2_s_proto = L2_S_PROTO_generic;
@@ -3506,12 +3494,6 @@ pmap_pte_init_armv7(void)
 	pte_l1_s_coherent = L1_S_COHERENT_v7;
 	pte_l2_l_coherent = L2_L_COHERENT_v7;
 	pte_l2_s_coherent = L2_S_COHERENT_v7;
-
-	pte_l2_s_prot_ur = L2_S_PROT_UR_v7;
-	pte_l2_s_prot_uw = L2_S_PROT_UW_v7;
-	pte_l2_s_prot_kr = L2_S_PROT_KR_v7;
-	pte_l2_s_prot_kw = L2_S_PROT_KW_v7;
-	pte_l2_s_prot_mask = L2_S_PROT_MASK_v7;
 
 	pte_l1_s_proto = L1_S_PROTO_v7;
 	pte_l1_c_proto = L1_C_PROTO_v7;
