@@ -170,8 +170,8 @@ armv7_bs_map(void *t, bus_addr_t bpa, bus_size_t size,
 {
 	u_long startpa, endpa, pa;
 	vaddr_t va;
-	pt_entry_t *pte;
 
+#if 0
 	if ((u_long)bpa > (u_long)KERNEL_BASE) {
 		/* Some IO registers (ex. UART ports for console)
 		   are mapped to fixed address by board specific
@@ -179,6 +179,7 @@ armv7_bs_map(void *t, bus_addr_t bpa, bus_size_t size,
 		*bshp = bpa;
 		return(0);
 	}
+#endif
 
 	startpa = trunc_page(bpa);
 	endpa = round_page(bpa + size);
@@ -192,16 +193,8 @@ armv7_bs_map(void *t, bus_addr_t bpa, bus_size_t size,
 	*bshp = (bus_space_handle_t)(va + (bpa - startpa));
 
 	for (pa = startpa; pa < endpa; pa += PAGE_SIZE, va += PAGE_SIZE) {
-		pmap_kenter_pa(va, pa, VM_PROT_READ | VM_PROT_WRITE);
-		if ((flag & BUS_SPACE_MAP_CACHEABLE) == 0) {
-			pte = vtopte(va);
-			*pte &= ~L2_S_CACHE_MASK;
-			*pte |= ARM_L2S_DEVICE_SHARE;
-			PTE_SYNC(pte);
-			/* XXX: pmap_kenter_pa() also does PTE_SYNC(). a bit of
-			 *      waste.
-			 */
-		}
+		pmap_kenter_cache(va, pa, VM_PROT_READ | VM_PROT_WRITE,
+		    PMAP_CACHE_CI);
 	}
 	pmap_update(pmap_kernel());
 
@@ -213,8 +206,10 @@ armv7_bs_unmap(void *t, bus_space_handle_t bsh, bus_size_t size)
 {
 	vaddr_t	va, endva;
 
+#if 0
 	if (bsh > (u_long)KERNEL_BASE)
 		return;
+#endif
 
 	va = trunc_page((vaddr_t)bsh);
 	endva = round_page((vaddr_t)bsh + size);

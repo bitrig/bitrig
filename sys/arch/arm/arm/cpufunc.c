@@ -320,7 +320,7 @@ set_cpufuncs()
 		    armv7_dcache_sets_inc;
 		armv7_dcache_index_inc = 1U << (32 - arm_dcache_l2_assoc);
 		armv7_dcache_index_max = 0U - armv7_dcache_index_inc;
-		pmap_pte_init_armv7();
+		//pmap_pte_init_armv7();
 
 		/* Use powersave on this CPU. */
 		cpu_do_powersave = 1;

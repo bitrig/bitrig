@@ -87,33 +87,37 @@
 #define	DEADBEEF0	0xefffeecc	/* malloc's filler */
 #define	DEADBEEF1	0xefffaabb	/* pool's filler */
 
+#define KERNBASE	(0xc0000000)
 
 /* user/kernel map constants */
 #define VM_MIN_ADDRESS		((vaddr_t)PAGE_SIZE)
-#define VM_MAXUSER_ADDRESS	((vaddr_t)((PDSLOT_PTE<<PDSHIFT) - (2 * PAGE_SIZE)))
-#define VM_MAX_ADDRESS		((vaddr_t)((PDSLOT_PTE<<PDSHIFT) + \
-				    (PDSLOT_PTE<<PAGE_SHIFT)))
+#define VM_MAXUSER_ADDRESS	((vaddr_t)KERNBASE)
+#define VM_MAX_ADDRESS		((vaddr_t)0xffffffff)
+				  
 #define VM_MIN_KERNEL_ADDRESS	((vaddr_t)KERNBASE)
 #define VM_MAX_KERNEL_ADDRESS	(0xffffffff)
 
 /* virtual sizes (bytes) for various kernel submaps */
-#define VM_PHYS_SIZE		(USRIOSIZE*PAGE_SIZE)
+#define USRIOSIZE       300
+#define VM_PHYS_SIZE            (USRIOSIZE*PAGE_SIZE)
 
 #define	VM_PHYSSEG_MAX	4	/* actually we could have this many segments */
 #define	VM_PHYSSEG_STRAT	VM_PSTRAT_BSEARCH
 #define	VM_PHYSSEG_NOADD	/* can't add RAM after vm_mem_init */
 
+#ifndef _LOCORE
+
 #define __HAVE_VM_PAGE_MD
-struct pv_entry;
 struct vm_page_md {
 	LIST_HEAD(,pte_desc) pv_list;
 	int pvh_attrs;				/* page attributes */
 };
 
-#define VM_MDPAGE_INIT(pg) do {				\
-	LIST_HEAD_INITIALIZER((pg)->mdpage.pv_list);	\
-	(pg)->mdpage.pvh_attrs = 0;			\
-
+#define VM_MDPAGE_INIT(pg) do {			\
+        LIST_INIT(&((pg)->mdpage.pv_list));     \
+	(pg)->mdpage.pvh_attrs = 0;		\
 } while (0)
+
+#endif /* _LOCORE */
 
 #endif /* _MACHINE_VMPARAM_H_ */

@@ -221,15 +221,19 @@ db_read_bytes(addr, size, data)
 static void
 db_write_text(vaddr_t addr, size_t size, char *data)
 {        
+#ifdef DALEFIXTHIS
 	struct pmap *pmap = pmap_kernel();
 	pd_entry_t *pde, oldpde, tmppde;
 	pt_entry_t *pte, oldpte, tmppte;
+#endif /* DALEFIXTHIS */
 	vaddr_t pgva;
 	size_t limit, savesize;
 	char *dst;
 
+#ifdef DALEFIXTHIS
 	/* XXX: gcc */
 	oldpte = 0;
+#endif /* DALEFIXTHIS */
 
 	if ((savesize = size) == 0)
 		return;
@@ -237,6 +241,7 @@ db_write_text(vaddr_t addr, size_t size, char *data)
 	dst = (char *) addr;
 
 	do {
+#ifdef DALEFIXTHIS
 		/* Get the PDE of the current VA. */
 		if (pmap_get_pde_pte(pmap, (vaddr_t) dst, &pde, &pte) == FALSE)
 			goto no_mapping;
@@ -270,6 +275,7 @@ db_write_text(vaddr_t addr, size_t size, char *data)
 		}
 		cpu_tlb_flushD_SE(pgva);
 		cpu_cpwait();
+#endif /* DALEFIXTHIS */
 
 		if (limit > size)
 			limit = size;
@@ -282,6 +288,7 @@ db_write_text(vaddr_t addr, size_t size, char *data)
 		for (; limit > 0; limit--)
 			*dst++ = *data++;
 
+#ifdef DALEFIXTHIS
 		/*
 		 * Restore old mapping permissions.
 		 */
@@ -296,6 +303,7 @@ db_write_text(vaddr_t addr, size_t size, char *data)
 			PTE_SYNC(pte);
 			break;
 		}
+#endif /* DALEFIXTHIS */
 		cpu_tlb_flushD_SE(pgva);
 		cpu_cpwait();
 
