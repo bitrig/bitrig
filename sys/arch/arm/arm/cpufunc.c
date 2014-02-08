@@ -275,7 +275,6 @@ set_cpufuncs()
 	    (cputype & CPU_ID_CORTEX_A17_MASK) == CPU_ID_CORTEX_A17) {
 		cpufuncs = armv7_cpufuncs;
 		arm_get_cachetype_cp15v7();
-		pmap_pte_init_armv7();
 
 		/* Use powersave on this CPU. */
 		cpu_do_powersave = 1;

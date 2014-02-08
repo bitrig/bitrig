@@ -962,15 +962,17 @@ _bus_dmamap_load_buffer(bus_dma_tag_t t, bus_dmamap_t map, void *buf,
     bus_size_t buflen, struct proc *p, int flags, paddr_t *lastaddrp,
     int *segp, int first)
 {
-	struct arm32_dma_range *dr;
 	bus_size_t sgsize;
 	bus_addr_t curaddr, lastaddr, baddr, bmask;
 	vaddr_t vaddr = (vaddr_t)buf;
+#ifdef WTF 
+	struct arm32_dma_range *dr;
 	pd_entry_t *pde;
 	pt_entry_t pte;
+	pt_entry_t *ptep;
+#endif
 	int seg;
 	pmap_t pmap;
-	pt_entry_t *ptep;
 
 #ifdef DEBUG_DMA
 	printf("_bus_dmamem_load_buffer(buf=%p, len=%lx, flags=%d, 1st=%d)\n",
@@ -992,6 +994,7 @@ _bus_dmamap_load_buffer(bus_dma_tag_t t, bus_dmamap_t map, void *buf,
 		 * XXX Don't support checking for coherent mappings
 		 * XXX in user address space.
 		 */
+#ifdef WTF 
 		if (__predict_true(pmap == pmap_kernel())) {
 			(void) pmap_get_pde_pte(pmap, vaddr, &pde, &ptep);
 			if (__predict_false(pmap_pde_section(pde))) {
@@ -1042,6 +1045,7 @@ _bus_dmamap_load_buffer(bus_dma_tag_t t, bus_dmamap_t map, void *buf,
 			 */
 			curaddr = (curaddr - dr->dr_sysbase) + dr->dr_busbase;
 		}
+#endif /* WTF? */
 
 		/*
 		 * Compute the segment size, and adjust counts.
