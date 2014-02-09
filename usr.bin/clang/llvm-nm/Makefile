@@ -8,9 +8,13 @@ SRCDIR=	tools/llvm-nm
 SRCS=	llvm-nm.cpp
 
 LIBDEPS=llvmobject \
-	llvmarchive \
 	llvmbitreader \
 	llvmcore \
+	llvmobject \
 	llvmsupport
+
+DPADD=  ${LIBCURSES}
+LDADD=  -lcurses
+
 
 .include "../clang.prog.mk"

@@ -4,6 +4,9 @@ NOMAN=
 .include <bsd.own.mk>
 
 PROG=clang-tblgen
+CFLAGS+= -pthread
+LDADD+=-lpthread
+LDADD+=-ltermlib
 
 SRCDIR=	tools/clang/utils/TableGen
 SRCS=	ClangASTNodesEmitter.cpp \
@@ -14,7 +17,6 @@ SRCS=	ClangASTNodesEmitter.cpp \
 	ClangDiagnosticsEmitter.cpp \
 	ClangSACheckersEmitter.cpp \
 	NeonEmitter.cpp \
-	OptParserEmitter.cpp \
 	TableGen.cpp
 
 LIBDEPS=llvmtablegen \

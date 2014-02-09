@@ -11,4 +11,7 @@ SRCS=	macho-dump.cpp
 LIBDEPS=llvmobject \
 	llvmsupport
 
+DPADD=  ${LIBCURSES}
+LDADD=  -lcurses
+
 .include "../clang.prog.mk"

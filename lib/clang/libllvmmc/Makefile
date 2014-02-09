@@ -10,17 +10,21 @@ SRCS=	ELFObjectWriter.cpp \
 	MCAsmInfo.cpp \
 	MCAsmInfoCOFF.cpp \
 	MCAsmInfoDarwin.cpp \
+	MCAsmInfoELF.cpp \
 	MCAsmStreamer.cpp \
 	MCAssembler.cpp \
 	MCAtom.cpp \
 	MCCodeEmitter.cpp \
 	MCCodeGenInfo.cpp \
 	MCContext.cpp \
+	MCDisassembler.cpp \
 	MCDwarf.cpp \
 	MCELF.cpp \
 	MCELFObjectTargetWriter.cpp \
 	MCELFStreamer.cpp \
 	MCExpr.cpp \
+	MCExternalSymbolizer.cpp \
+	MCFunction.cpp \
 	MCInst.cpp \
 	MCInstPrinter.cpp \
 	MCInstrAnalysis.cpp \
@@ -28,12 +32,16 @@ SRCS=	ELFObjectWriter.cpp \
 	MCMachOStreamer.cpp \
 	MCMachObjectTargetWriter.cpp \
 	MCModule.cpp \
+	MCModuleYAML.cpp \
 	MCNullStreamer.cpp \
+	MCObjectDisassembler.cpp \
 	MCObjectFileInfo.cpp \
 	MCObjectStreamer.cpp \
+	MCObjectSymbolizer.cpp \
 	MCObjectWriter.cpp \
 	MCPureStreamer.cpp \
 	MCRegisterInfo.cpp \
+	MCRelocationInfo.cpp \
 	MCSection.cpp \
 	MCSectionCOFF.cpp \
 	MCSectionELF.cpp \
@@ -41,6 +49,7 @@ SRCS=	ELFObjectWriter.cpp \
 	MCStreamer.cpp \
 	MCSubtargetInfo.cpp \
 	MCSymbol.cpp \
+	MCSymbolizer.cpp \
 	MCValue.cpp \
 	MCWin64EH.cpp \
 	MachObjectWriter.cpp \

@@ -25,4 +25,7 @@ LIBDEPS=llvmirreader \
 	llvmcore \
 	llvmsupport
 
+DPADD=  ${LIBCURSES}
+LDADD=  -lcurses
+
 .include "../clang.prog.mk"

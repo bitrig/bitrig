@@ -11,8 +11,7 @@ SRCDIR=	tools/llvm-objdump
 SRCS=	llvm-objdump.cpp \
 	COFFDump.cpp \
 	ELFDump.cpp \
-	MachODump.cpp \
-	MCFunction.cpp
+	MachODump.cpp
 
 LIBDEPS=llvmmcdisassembler \
 	llvmdebuginfo \
@@ -54,5 +53,8 @@ LIBDEPS=llvmmcdisassembler \
 	llvmx86utils \
 	llvmcore \
 	llvmsupport
+
+DPADD=  ${LIBCURSES} ${LIBZ}
+LDADD=  -lcurses -lz
 
 .include "../clang.prog.mk"

@@ -49,11 +49,13 @@ SRCS=	AnalysisBasedWarnings.cpp \
 	SemaTemplateInstantiateDecl.cpp \
 	SemaTemplateVariadic.cpp \
 	SemaType.cpp \
-	TargetAttributesSema.cpp
+	TargetAttributesSema.cpp \
+	TypeLocBuilder.cpp
 
 TGHDRS=	AttrList \
 	AttrParsedAttrKinds \
 	AttrParsedAttrList \
+	AttrParsedAttrImpl \
 	AttrSpellingListIndex \
 	AttrTemplateInstantiate \
 	Attrs \

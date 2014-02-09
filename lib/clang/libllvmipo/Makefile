@@ -18,6 +18,7 @@ SRCS=	ArgumentPromotion.cpp \
 	InlineSimple.cpp \
 	Inliner.cpp \
 	Internalize.cpp \
+	IPO.cpp \
 	LoopExtractor.cpp \
 	MergeFunctions.cpp \
 	PartialInlining.cpp \

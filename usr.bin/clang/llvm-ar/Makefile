@@ -7,9 +7,12 @@ PROG=llvm-ar
 SRCDIR=	tools/llvm-ar
 SRCS=	llvm-ar.cpp
 
-LIBDEPS=llvmarchive \
-	llvmbitreader \
+LIBDEPS=llvmbitreader \
 	llvmcore \
+	llvmobject \
 	llvmsupport
+
+DPADD=  ${LIBCURSES}
+LDADD=  -lcurses
 
 .include "../clang.prog.mk"

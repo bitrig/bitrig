@@ -26,9 +26,8 @@ TGHDRS=	AttrList \
 	CommentNodes \
 	DeclNodes \
 	DiagnosticCommonKinds \
-	DiagnosticFrontendKinds \
-	DiagnosticSemaKinds \
 	DiagnosticSerializationKinds \
+	DiagnosticSemaKinds \
 	StmtNodes
 
 .include "../clang.lib.mk"

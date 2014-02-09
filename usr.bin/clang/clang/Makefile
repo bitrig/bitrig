@@ -9,6 +9,10 @@ SRCS=	cc1_main.cpp \
 	cc1as_main.cpp \
 	driver.cpp
 
+CFLAGS+= -pthread
+LDADD+=-lpthread
+LDADD+=-ltermlib
+
 .if ${MK_SHARED_TOOLCHAIN:L} == "no"
 LDSTATIC=-static 
 .endif
@@ -94,6 +98,7 @@ LIBDEPS=clangfrontendtool \
 	llvmmcparser \
 	llvmcodegen \
 	llvmobjcarcopts \
+	llvmoption \
 	llvmscalaropts \
 	llvminstcombine \
 	llvmtransformutils \

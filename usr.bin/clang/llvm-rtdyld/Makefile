@@ -53,4 +53,7 @@ LIBDEPS=llvmdebuginfo \
 	llvmcore \
 	llvmsupport
 
+DPADD=  ${LIBCURSES} ${LIBZ}
+LDADD=  -lcurses -lz
+
 .include "../clang.prog.mk"

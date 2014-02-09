@@ -10,7 +10,8 @@ SRCS=	CallGraph.cpp \
 	CallPrinter.cpp \
 	FindUsedTypes.cpp \
 	GlobalsModRef.cpp \
-	InlineCost.cpp
+	InlineCost.cpp \
+	IPA.cpp
 
 .if ${MK_CLANG_EXTRAS:L} != "no"
 SRCS+=	IPA.cpp

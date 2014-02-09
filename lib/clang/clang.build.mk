@@ -25,9 +25,27 @@ CFLAGS+=	-fno-strict-aliasing
 .if ${MACHINE_ARCH} == "arm"
 TARGET_ARCH?=	armv7
 BUILD_ARCH?=	armv7
+LLVM_NATIVE_ARCH=ARM
 .else
 TARGET_ARCH?=	${MACHINE_ARCH}
 BUILD_ARCH?=	${MACHINE_ARCH}
+.if ${MACHINE_ARCH} == "i386" || ${MACHINE_ARCH} == "amd64"
+LLVM_NATIVE_ARCH=X86
+.elif  ${MACHINE_ARCH} == "aarch64"
+LLVM_NATIVE_ARCH=AArch64
+.else
+unsupported arch
+# other architectures
+# LLVM_NATIVE_ARCH Sparc
+# LLVM_NATIVE_ARCH PowerPC
+# LLVM_NATIVE_ARCH AArch64
+# LLVM_NATIVE_ARCH ARM
+# LLVM_NATIVE_ARCH Mips
+# LLVM_NATIVE_ARCH XCore
+# LLVM_NATIVE_ARCH MSP430
+# LLVM_NATIVE_ARCH Hexagon
+# LLVM_NATIVE_ARCH SystemZ
+.endif
 .endif
 
 .if (${TARGET_ARCH} == "arm" || ${TARGET_ARCH} == "armv6") && \
@@ -47,6 +65,7 @@ TARGET_TRIPLE?=	${TARGET_ARCH}-${TARGET_ABI}-bitrig${OSVERS}
 BUILD_TRIPLE?=	${BUILD_ARCH}-unknown-bitrig${OSVERS}
 CFLAGS+=	-DLLVM_DEFAULT_TARGET_TRIPLE=\"${TARGET_TRIPLE}\" \
 		-DLLVM_HOST_TRIPLE=\"${BUILD_TRIPLE}\" \
+		-DLLVM_NATIVE_ARCH=${LLVM_NATIVE_ARCH} \
 		-DDEFAULT_SYSROOT=\"${TOOLS_PREFIX}\"
 CXXFLAGS+=	-fno-exceptions -fno-rtti
 
@@ -68,7 +87,7 @@ Intrinsics.inc.h: ${LLVM_SRCS}/include/llvm/IR/Intrinsics.td \
 	    -gen-intrinsic -o ${.TARGET} \
 	    ${LLVM_SRCS}/include/llvm/IR/Intrinsics.td
 .for arch in \
-	ARM/ARM Mips/Mips PowerPC/PPC X86/X86
+	ARM/ARM Mips/Mips PowerPC/PPC X86/X86 AArch64/AArch64
 . for hdr in \
 	AsmMatcher/-gen-asm-matcher \
 	AsmWriter1/-gen-asm-writer,-asmwriternum=1 \
@@ -105,6 +124,11 @@ AttrExprArgs.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 AttrImpl.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
 	    -gen-clang-attr-impl -o ${.TARGET} ${.ALLSRC}
+
+AttrIdentifierArg.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
+	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
+	    -gen-clang-attr-identifier-arg-list -o ${.TARGET} ${.ALLSRC}
+
 AttrLateParsed.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
 	    -gen-clang-attr-late-parsed-list -o ${.TARGET} ${.ALLSRC}
@@ -120,6 +144,10 @@ AttrParsedAttrKinds.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 AttrParsedAttrList.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
 	    -gen-clang-attr-parsed-attr-list -o ${.TARGET} ${.ALLSRC}
+
+AttrParsedAttrImpl.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
+	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
+	    -gen-clang-attr-parsed-attr-impl -o ${.TARGET} ${.ALLSRC}
 
 AttrPCHRead.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
@@ -140,6 +168,10 @@ AttrSpellingListIndex.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 AttrTemplateInstantiate.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
 	    -gen-clang-attr-template-instantiate -o ${.TARGET} ${.ALLSRC}
+
+AttrTypeArg.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
+	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
+	    -gen-clang-attr-type-arg-list -o ${.TARGET} ${.ALLSRC}
 
 CommentCommandInfo.inc.h: ${CLANG_SRCS}/include/clang/AST/CommentCommands.td
 	${CLANG_TBLGEN} \
@@ -196,12 +228,14 @@ Diagnostic${hdr}Kinds.inc.h: ${CLANG_SRCS}/include/clang/Basic/Diagnostic.td
 .endfor
 
 Options.inc.h: ${CLANG_SRCS}/include/clang/Driver/Options.td
-	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include/clang/Driver \
-	    -gen-opt-parser-defs -o ${.TARGET} ${.ALLSRC}
+	${TBLGEN} -I ${CLANG_SRCS}/include/clang/Driver \
+	    -gen-opt-parser-defs -I ${LLVM_SRCS}/include \
+	    -o ${.TARGET} ${.ALLSRC}
 
 CC1AsOptions.inc.h: ${CLANG_SRCS}/include/clang/Driver/CC1AsOptions.td
-	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include/clang/Driver \
-	    -gen-opt-parser-defs -o ${.TARGET} ${.ALLSRC}
+	${TBLGEN} -I ${CLANG_SRCS}/include/clang/Driver \
+	    -gen-opt-parser-defs -I ${LLVM_SRCS}/include \
+	    -o ${.TARGET} ${.ALLSRC}
 
 Checkers.inc.h: ${CLANG_SRCS}/lib/StaticAnalyzer/Checkers/Checkers.td \
 	    ${CLANG_SRCS}/include/clang/StaticAnalyzer/Checkers/CheckerBase.td
@@ -212,3 +246,19 @@ Checkers.inc.h: ${CLANG_SRCS}/lib/StaticAnalyzer/Checkers/Checkers.td \
 SRCS+=		${TGHDRS:C/$/.inc.h/}
 DPADD+=		${TGHDRS:C/$/.inc.h/}
 CLEANFILES+=	${TGHDRS:C/$/.inc.h/}
+
+checkfiles:
+	@for file in $$(echo ${LLVM_SRCS}/${SRCDIR}/*cpp ); \
+	do \
+		f=$$(basename $${file}); \
+		listed=0; \
+		for src in ${SRCS:M*cpp} ; \
+		do \
+			if [ $${f} == $${src} ] ; then \
+			listed=1; \
+			fi; \
+		done ; \
+		if [ $${listed} == 0 ]; then \
+		echo "\t$${f} \\" ; \
+		fi; \
+	done

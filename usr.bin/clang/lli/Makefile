@@ -6,7 +6,8 @@ PROG=lli
 
 SRCDIR=	tools/lli
 SRCS=	lli.cpp \
-	RecordingMemoryManager.cpp \
+	RemoteMemoryManager.cpp \
+	RemoteTargetExternal.cpp \
 	RemoteTarget.cpp
 
 LIBDEPS=llvmx86disassembler \
@@ -22,6 +23,7 @@ LIBDEPS=llvmx86disassembler \
 	llvmselectiondag \
 	llvmasmprinter \
 	llvmmcparser \
+	llvminstrumentation \
 	llvminterpreter \
 	llvmmcjit \
 	llvmjit \
@@ -39,5 +41,8 @@ LIBDEPS=llvmx86disassembler \
 	llvmobject \
 	llvmcore \
 	llvmsupport
+
+DPADD=  ${LIBCURSES}
+LDADD=  -lcurses
 
 .include "../clang.prog.mk"

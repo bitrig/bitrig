@@ -1,5 +1,6 @@
-.\" $FreeBSD$
-.TH "LLVM-NM" "1" "2013-04-11" "3.3" "LLVM"
+.\" Man page generated from reStructuredText.
+.
+.TH "LLVM-NM" "1" "2014-05-10" "3.4" "LLVM"
 .SH NAME
 llvm-nm \- list LLVM bitcode and object file's symbol table
 .
@@ -29,8 +30,33 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.\" Man page generated from reStructuredText.
 .
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
 .SH SYNOPSIS
 .sp
 \fBllvm\-nm\fP [\fIoptions\fP] [\fIfilenames...\fP]
@@ -38,14 +64,14 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .sp
 The \fBllvm\-nm\fP utility lists the names of symbols from the LLVM bitcode
 files, object files, or \fBar\fP archives containing them, named on the
-command line. Each symbol is listed along with some simple information about its
-provenance. If no file name is specified, or \fI\-\fP is used as a file name,
+command line.  Each symbol is listed along with some simple information about
+its provenance.  If no file name is specified, or \fI\-\fP is used as a file name,
 \fBllvm\-nm\fP will process a file on its standard input stream.
 .sp
 \fBllvm\-nm\fP\(aqs default output format is the traditional BSD \fBnm\fP
-output format. Each such output record consists of an (optional) 8\-digit
+output format.  Each such output record consists of an (optional) 8\-digit
 hexadecimal address, followed by a type code character, followed by a name, for
-each symbol. One record is printed per line; fields are separated by spaces.
+each symbol.  One record is printed per line; fields are separated by spaces.
 When the address is omitted, it is replaced by 8 spaces.
 .sp
 Type code characters currently supported, and their meanings, are as follows:
@@ -109,18 +135,18 @@ Something unrecognizable
 Because LLVM bitcode files typically contain objects that are not considered to
 have addresses until they are linked into an executable image or dynamically
 compiled "just\-in\-time", \fBllvm\-nm\fP does not print an address for any
-symbol in a LLVM bitcode file, even symbols which are defined in the bitcode
+symbol in an LLVM bitcode file, even symbols which are defined in the bitcode
 file.
 .SH OPTIONS
 .INDENT 0.0
 .TP
 .B \-B    (default)
-Use BSD output format. Alias for \fI\-\-format=bsd\fP.
+Use BSD output format.  Alias for \fI\-\-format=bsd\fP\&.
 .UNINDENT
 .INDENT 0.0
 .TP
 .B \-P
-Use POSIX.2 output format. Alias for \fI\-\-format=posix\fP.
+Use POSIX.2 output format.  Alias for \fI\-\-format=posix\fP\&.
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -148,8 +174,8 @@ from other files.
 .INDENT 0.0
 .TP
 .B \-\-format=format, \-f format
-Select an output format; \fIformat\fP may be \fIsysv\fP, \fIposix\fP, or \fIbsd\fP. The default
-is \fIbsd\fP.
+Select an output format; \fIformat\fP may be \fIsysv\fP, \fIposix\fP, or \fIbsd\fP\&.  The default
+is \fIbsd\fP\&.
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -204,7 +230,7 @@ can.
 \fBllvm\-nm\fP exits with an exit code of zero.
 .SH SEE ALSO
 .sp
-llvm\-dis|llvm\-dis, ar(1), nm(1)
+llvm\-dis, ar(1), nm(1)
 .SH AUTHOR
 Maintained by The LLVM Team (http://llvm.org/).
 .SH COPYRIGHT

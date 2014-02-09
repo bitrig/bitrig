@@ -3,6 +3,9 @@
 .include <bsd.own.mk>
 
 PROG=tblgen
+CFLAGS+= -pthread
+LDADD+=-lpthread
+LDADD+=-ltermlib
 
 SRCDIR=	utils/TableGen
 SRCS=	AsmMatcherEmitter.cpp \

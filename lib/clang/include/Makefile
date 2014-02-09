@@ -2,7 +2,7 @@
 
 .PATH: ${.CURDIR}/../../../contrib/llvm/tools/clang/lib/Headers
 
-INCSDIR=${INCLUDEDIR}/clang/3.3
+INCSDIR=${INCLUDEDIR}/clang/3.4
 
 INCS=	__wmmintrin_aes.h \
 	__wmmintrin_pclmul.h \

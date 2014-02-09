@@ -1,5 +1,6 @@
-.\" $FreeBSD$
-.TH "TBLGEN" "1" "2013-04-11" "3.3" "LLVM"
+.\" Man page generated from reStructuredText.
+.
+.TH "TBLGEN" "1" "2014-05-10" "3.4" "LLVM"
 .SH NAME
 tblgen \- Target Description To C++ Code Generator
 .
@@ -29,22 +30,47 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.\" Man page generated from reStructuredText.
 .
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
 .SH SYNOPSIS
 .sp
 \fBtblgen\fP [\fIoptions\fP] [\fIfilename\fP]
 .SH DESCRIPTION
 .sp
-\fBtblgen\fP translates from target description (\fB.td\fP) files into C++
+\fBtblgen\fP translates from target description (\fB\&.td\fP) files into C++
 code that can be included in the definition of an LLVM target library.  Most
 users of LLVM will not need to use this program.  It is only for assisting with
 writing an LLVM target backend.
 .sp
 The input and output of \fBtblgen\fP is beyond the scope of this short
-introduction.  Please see \fB../TableGenFundamentals\fP.
+introduction.  Please see \fB\&../TableGenFundamentals\fP\&.
 .sp
-The \fIfilename\fP argument specifies the name of a Target Description (\fB.td\fP)
+The \fIfilename\fP argument specifies the name of a Target Description (\fB\&.td\fP)
 file to read as input.
 .SH OPTIONS
 .INDENT 0.0
@@ -68,12 +94,12 @@ contains target description files.
 .INDENT 0.0
 .TP
 .B \-asmparsernum N
-Make \-gen\-asm\-parser emit assembly writer number \fBN\fP.
+Make \-gen\-asm\-parser emit assembly writer number \fBN\fP\&.
 .UNINDENT
 .INDENT 0.0
 .TP
 .B \-asmwriternum N
-Make \-gen\-asm\-writer emit assembly writer number \fBN\fP.
+Make \-gen\-asm\-writer emit assembly writer number \fBN\fP\&.
 .UNINDENT
 .INDENT 0.0
 .TP

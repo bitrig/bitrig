@@ -13,18 +13,23 @@ SRCS=	APFloat.cpp \
 	BlockFrequency.cpp \
 	BranchProbability.cpp \
 	CommandLine.cpp \
+	Compression.cpp \
 	ConstantRange.cpp \
 	ConvertUTF.c \
 	ConvertUTFWrapper.cpp \
 	CrashRecoveryContext.cpp \
 	DAGDeltaAlgorithm.cpp \
+	DataExtractor.cpp \
+	DataStream.cpp \
 	Debug.cpp \
 	DeltaAlgorithm.cpp \
+	Disassembler.cpp \
 	Dwarf.cpp \
 	DynamicLibrary.cpp \
 	Errno.cpp \
 	ErrorHandling.cpp \
 	FileOutputBuffer.cpp \
+	FileUtilities.cpp \
 	FoldingSet.cpp \
 	FormattedStream.cpp \
 	GraphWriter.cpp \
@@ -38,13 +43,13 @@ SRCS=	APFloat.cpp \
 	IsNAN.cpp \
 	Locale.cpp \
 	LockFileManager.cpp \
+	MD5.cpp \
 	ManagedStatic.cpp \
 	Memory.cpp \
 	MemoryBuffer.cpp \
 	MemoryObject.cpp \
 	Mutex.cpp \
 	Path.cpp \
-	PathV2.cpp \
 	PluginLoader.cpp \
 	PrettyStackTrace.cpp \
 	Process.cpp \
@@ -62,6 +67,8 @@ SRCS=	APFloat.cpp \
 	StringMap.cpp \
 	StringPool.cpp \
 	StringRef.cpp \
+	StringRefMemoryObject.cpp \
+	SystemUtils.cpp \
 	TargetRegistry.cpp \
 	ThreadLocal.cpp \
 	Threading.cpp \
@@ -70,6 +77,7 @@ SRCS=	APFloat.cpp \
 	ToolOutputFile.cpp \
 	Triple.cpp \
 	Twine.cpp \
+	Unicode.cpp \
 	Valgrind.cpp \
 	Watchdog.cpp \
 	YAMLParser.cpp \

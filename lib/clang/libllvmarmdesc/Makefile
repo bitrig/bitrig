@@ -9,6 +9,7 @@ SRCS=	ARMAsmBackend.cpp \
 	ARMELFObjectWriter.cpp \
 	ARMELFStreamer.cpp \
 	ARMMachObjectWriter.cpp \
+	ARMMachORelocationInfo.cpp \
 	ARMMCAsmInfo.cpp \
 	ARMMCCodeEmitter.cpp \
 	ARMMCExpr.cpp \

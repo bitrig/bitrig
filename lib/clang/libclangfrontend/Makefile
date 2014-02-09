@@ -36,6 +36,7 @@ SRCS=	ASTConsumers.cpp \
 	Warnings.cpp
 
 TGHDRS=	AttrList \
+	AttrIdentifierArg \
 	AttrParsedAttrList \
 	Attrs \
 	CommentCommandList \
