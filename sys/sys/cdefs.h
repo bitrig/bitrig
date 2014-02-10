@@ -152,13 +152,22 @@
  * external references instead of generating a local copy.  The
  * matching library should include a simple extern definition for
  * the function to handle those references.  c.f. ctype.h
+ *
+ * XXX: gcc emits code for c99 inline when the function is a builtin.
+ * Let's work around that bug by using gnu89 inline semantics for gcc.
  */
-#ifdef __GNUC__
-#  if __GNUC_PREREQ__(4, 2)
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#  if defined(__GNUC__) && (!defined(__clang__) || defined(__GNUC_GNU_INLINE__))
+#    if __GNUC_PREREQ__(4, 2)
 #define __only_inline	extern __inline __attribute__((__gnu_inline__))
-#  else
+#    else
 #define __only_inline	extern __inline
+#    endif
+#  else
+#define __only_inline	__inline
 #  endif
+#elif defined(__GNUC__)
+#define __only_inline	extern __inline
 #else
 #define __only_inline	static __inline
 #endif
