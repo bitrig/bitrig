@@ -57,36 +57,8 @@ extern const char	*_ctype_;
 extern const short	*_tolower_tab_;
 extern const short	*_toupper_tab_;
 
-#if defined(__GNUC__) || defined(_ANSI_LIBRARY) || defined(lint)
-int	isalnum(int);
-int	isalpha(int);
-int	iscntrl(int);
-int	isdigit(int);
-int	isgraph(int);
-int	islower(int);
-int	isprint(int);
-int	ispunct(int);
-int	isspace(int);
-int	isupper(int);
-int	isxdigit(int);
-int	tolower(int);
-int	toupper(int);
 
-#if __BSD_VISIBLE || __ISO_C_VISIBLE >= 1999 || __POSIX_VISIBLE > 200112 \
-    || __XPG_VISIBLE > 600
-int	isblank(int);
-#endif
-
-#if __BSD_VISIBLE || __XPG_VISIBLE
-int	isascii(int);
-int	toascii(int);
-int	_tolower(int);
-int	_toupper(int);
-#endif /* __BSD_VISIBLE || __XPG_VISIBLE */
-
-#endif /* __GNUC__ || _ANSI_LIBRARY || lint */
-
-#if !defined(_ANSI_LIBRARY) && !defined(lint)
+#ifndef _ANSI_LIBRARY
 
 __only_inline int isalnum(int c)
 {
@@ -187,7 +159,7 @@ __only_inline int _toupper(int c)
 }
 #endif /* __BSD_VISIBLE || __XPG_VISIBLE */
 
-#endif /* !_ANSI_LIBRARY && !lint */
+#endif /* !_ANSI_LIBRARY */
 
 __END_DECLS
 
