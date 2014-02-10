@@ -37,112 +37,96 @@
 #include <ctype.h>
 #include <stdio.h>
 
-#undef isalnum
 int
 isalnum(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & (_U|_L|_N)));
 }
 
-#undef isalpha
 int
 isalpha(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & (_U|_L)));
 }
 
-#undef isblank
 int
 isblank(int c)
 {
 	return (c == ' ' || c == '\t');
 }
 
-#undef iscntrl
 int
 iscntrl(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _C));
 }
 
-#undef isdigit
 int
 isdigit(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _N));
 }
 
-#undef isgraph
 int
 isgraph(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & (_P|_U|_L|_N)));
 }
 
-#undef islower
 int
 islower(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _L));
 }
 
-#undef isprint
 int
 isprint(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & (_P|_U|_L|_N|_B)));
 }
 
-#undef ispunct
 int
 ispunct(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _P));
 }
 
-#undef isspace
 int
 isspace(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _S));
 }
 
-#undef isupper
 int
 isupper(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _U));
 }
 
-#undef isxdigit
 int
 isxdigit(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & (_N|_X)));
 }
 
-#undef isascii
 int
 isascii(int c)
 {
 	return ((unsigned int)c <= 0177);
 }
 
-#undef toascii
 int
 toascii(int c)
 {
 	return (c & 0177);
 }
 
-#undef _toupper
 int
 _toupper(int c)
 {
 	return (c - 'a' + 'A');
 }
 
-#undef _tolower
 int
 _tolower(int c)
 {
