@@ -319,9 +319,3 @@ targets_hash()
 {
 	return &targets;
 }
-
-GNode *
-Targ_FindNodeh(const char *name, size_t n, uint32_t hv, int flags)
-{
-	return Targ_FindNodeih(name, name + n - 1, hv, flags);
-}
