@@ -1,4 +1,4 @@
-/*	$OpenBSD: if_iwnreg.h,v 1.45 2013/11/26 20:33:17 deraadt Exp $	*/
+/*	$OpenBSD: if_iwnreg.h,v 1.47 2014/02/11 19:30:10 kettenis Exp $	*/
 
 /*-
  * Copyright (c) 2007, 2008
@@ -195,7 +195,7 @@
 
 /* Possible flags for register IWN_HW_REV. */
 #define IWN_HW_REV_TYPE_SHIFT	4
-#define IWN_HW_REV_TYPE_MASK	0x000000f0
+#define IWN_HW_REV_TYPE_MASK	0x000001f0
 #define IWN_HW_REV_TYPE_4965	0
 #define IWN_HW_REV_TYPE_5300	2
 #define IWN_HW_REV_TYPE_5350	3
@@ -206,6 +206,10 @@
 #define IWN_HW_REV_TYPE_6050	8
 #define IWN_HW_REV_TYPE_6005	11
 #define IWN_HW_REV_TYPE_2030	12
+#define IWN_HW_REV_TYPE_2000	16
+#define IWN_HW_REV_TYPE_105	17
+#define IWN_HW_REV_TYPE_135	18
+
 
 /* Possible flags for register IWN_GIO_CHICKEN. */
 #define IWN_GIO_CHICKEN_L1A_NO_L0S_RX	(1 << 23)
