@@ -1,4 +1,4 @@
-.\" $OpenBSD: mutex.9,v 1.19 2014/01/19 10:01:35 dlg Exp $
+.\" $OpenBSD: mutex.9,v 1.20 2014/02/13 13:12:32 dlg Exp $
 .\"
 .\" Copyright (c) 2005, 2013 Pedro Martelletto <pedro@ambientworks.net>
 .\" All rights reserved.
@@ -15,7 +15,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: January 19 2014 $
+.Dd $Mdocdate: February 13 2014 $
 .Dt MUTEX 9
 .Os
 .Sh NAME
@@ -106,6 +106,19 @@ When acquired, the mutex will cause the processor interrupt level to be raised
 to
 .Fa wantipl
 if necessary.
+.Sh CONTEXT
+.Fn mtx_init
+can be called during autoconf, from process context, or from interrupt
+context.
+.Pp
+.Fn mtx_enter ,
+.Fn mtx_enter_try ,
+and
+.Fn mtx_leave
+can be called during autoconf, from process context, or from any
+interrupt context at or below the interrupt level
+.Fa mtxp
+was initialised with.
 .Sh SEE ALSO
 .Xr lockmgr 9 ,
 .Xr msleep 9 ,
