@@ -20,6 +20,9 @@ file	arch/armv7/armv7/uboot_tags.c
 file	arch/arm/arm/irq_dispatch.S
 file	arch/arm/arm/softintr.c
 
+# clock infrastructure
+file	arch/armv7/armv7/clock.c
+
 # Generic MD files
 file	arch/armv7/armv7/armv7.c
 file	arch/armv7/armv7/armv7_machdep.c
