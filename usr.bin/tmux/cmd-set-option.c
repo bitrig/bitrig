@@ -1,4 +1,4 @@
-/* $OpenBSD: cmd-set-option.c,v 1.64 2014/01/28 23:07:09 nicm Exp $ */
+/* $OpenBSD: cmd-set-option.c,v 1.65 2014/02/14 13:59:01 nicm Exp $ */
 
 /*
  * Copyright (c) 2007 Nicholas Marriott <nicm@users.sourceforge.net>
@@ -168,6 +168,18 @@ cmd_set_option_exec(struct cmd *self, struct cmd_q *cmdq)
 		}
 		if (cmd_set_option_set(self, cmdq, oe, oo, valstr) != 0)
 			return (CMD_RETURN_ERROR);
+	}
+
+	/* Start or stop timers when automatic-rename changed. */
+	if (strcmp(oe->name, "automatic-rename") == 0) {
+		for (i = 0; i < ARRAY_LENGTH(&windows); i++) {
+			if ((w = ARRAY_ITEM(&windows, i)) == NULL)
+				continue;
+			if (options_get_number(&w->options, "automatic-rename"))
+				queue_window_name(w);
+			else if (event_initialized(&w->name_timer))
+				evtimer_del(&w->name_timer);
+		}
 	}
 
 	/* Update sizes and redraw. May not need it but meh. */
