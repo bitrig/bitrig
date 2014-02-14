@@ -790,6 +790,7 @@ struct arm32_bus_dmamap {
 #define	ARM32_BUFTYPE_LINEAR		1
 #define	ARM32_BUFTYPE_MBUF		2
 #define	ARM32_BUFTYPE_UIO		3
+#define	ARM32_BUFTYPE_RAW		4
 
 int	arm32_dma_range_intersect(struct arm32_dma_range *, int,
 	    paddr_t pa, psize_t size, paddr_t *pap, psize_t *sizep);
