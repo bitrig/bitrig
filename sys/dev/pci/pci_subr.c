@@ -41,10 +41,8 @@
 
 #include <dev/pci/pcireg.h>
 #include <dev/pci/pcivar.h>
-#ifdef PCIVERBOSE
 #include <dev/pci/pcidevs.h>
 #include <dev/pci/pcidevs_data.h>
-#endif
 
 /*
  * Descriptions of known PCI classes and subclasses.
@@ -279,7 +277,6 @@ const struct pci_class pci_class[] = {
 const char *
 pci_findvendor(pcireg_t id_reg)
 {
-#ifdef PCIVERBOSE
 	pci_vendor_id_t vendor = PCI_VENDOR(id_reg);
 	const struct pci_known_vendor *kdp;
 
@@ -290,15 +287,11 @@ pci_findvendor(pcireg_t id_reg)
 		kdp++;
 	}
         return (kdp->vendorname);
-#else
-	return (NULL);
-#endif
 }
 
 const char *
 pci_findproduct(pcireg_t id_reg)
 {
-#ifdef PCIVERBOSE
 	pci_vendor_id_t vendor = PCI_VENDOR(id_reg);
 	pci_product_id_t product = PCI_PRODUCT(id_reg);
 	const struct pci_known_product *pkp;
@@ -310,9 +303,6 @@ pci_findproduct(pcireg_t id_reg)
 		pkp++;
 	}
 	return (pkp->productname);
-#else
-	return NULL;
-#endif
 }
 
 void
@@ -328,11 +318,7 @@ pci_devinfo(pcireg_t id_reg, pcireg_t class_reg, int showclass, char *cp,
 	const char *vendor_namep = NULL, *product_namep = NULL;
 	const struct pci_class *classp, *subclassp;
 	size_t cp_len = 0;
-#ifdef PCIVERBOSE
 	const char *unmatched = "unknown ";
-#else
-	const char *unmatched = "";
-#endif
 
 	vendor = PCI_VENDOR(id_reg);
 	product = PCI_PRODUCT(id_reg);
@@ -342,11 +328,9 @@ pci_devinfo(pcireg_t id_reg, pcireg_t class_reg, int showclass, char *cp,
 	interface = PCI_INTERFACE(class_reg);
 	revision = PCI_REVISION(class_reg);
 
-#ifdef PCIVERBOSE
 	vendor_namep = pci_findvendor(id_reg);
 	if (vendor_namep != NULL)
 		product_namep = pci_findproduct(id_reg);
-#endif /* PCIVERBOSE */
 
 	classp = pci_class;
 	while (classp->name != NULL) {

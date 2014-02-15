@@ -74,9 +74,7 @@ usbd_status	usbd_probe_and_attach(struct device *,
 int		usbd_printBCD(char *cp, size_t len, int bcd);
 void		usb_free_device(struct usbd_device *, struct usbd_port *);
 
-#ifdef USBVERBOSE
 #include <dev/usb/usbdevs_data.h>
-#endif /* USBVERBOSE */
 
 const char * const usbd_error_strs[] = {
 	"NORMAL_COMPLETION",
@@ -218,10 +216,8 @@ usbd_devinfo_vp(struct usbd_device *dev, char *v, size_t vl,
 {
 	usb_device_descriptor_t *udd = &dev->ddesc;
 	char *vendor = NULL, *product = NULL;
-#ifdef USBVERBOSE
 	const struct usb_known_vendor *ukv;
 	const struct usb_known_product *ukp;
-#endif
 
 	if (dev == NULL) {
 		v[0] = p[0] = '\0';
@@ -234,7 +230,6 @@ usbd_devinfo_vp(struct usbd_device *dev, char *v, size_t vl,
 		product = usbd_get_string(dev, udd->iProduct, p, pl);
 		usbd_trim_spaces(product);
 	}
-#ifdef USBVERBOSE
 	if (vendor == NULL || product == NULL) {
 		for (ukv = usb_known_vendors;
 		    ukv->vendorname != NULL;
@@ -256,7 +251,6 @@ usbd_devinfo_vp(struct usbd_device *dev, char *v, size_t vl,
 			}
 		}
 	}
-#endif
 
 	if (v == vendor)
 		;

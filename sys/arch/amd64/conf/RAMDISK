@@ -55,8 +55,6 @@ isa0	at mainbus0
 #isa0	at pcib?
 pci*	at mainbus0
 
-option		PCIVERBOSE
-
 pchb*	at pci?			# PCI-Host bridges
 aapic*	at pci?			# AMD 8131 IO apic
 ppb*	at pci?			# PCI-PCI bridges

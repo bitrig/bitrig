@@ -60,9 +60,7 @@ acpivout*	at acpivideo?
 acpipwrres*	at acpi?
 aibs*		at acpi?
 
-option		PCIVERBOSE
 option		EISAVERBOSE
-option		USBVERBOSE
 
 isa0	at mainbus0
 isa0	at pcib?
