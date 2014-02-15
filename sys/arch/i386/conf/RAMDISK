@@ -65,8 +65,6 @@ isa0	at pcib?
 #eisa0	at mainbus0
 pci*	at mainbus0
 
-#option		EISAVERBOSE
-
 pchb*	at pci?			# PCI-Host bridges
 ppb*	at pci?			# PCI-PCI bridges
 pci*	at ppb?

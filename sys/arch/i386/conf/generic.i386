@@ -60,8 +60,6 @@ acpivout*	at acpivideo?
 acpipwrres*	at acpi?
 aibs*		at acpi?
 
-option		EISAVERBOSE
-
 isa0	at mainbus0
 isa0	at pcib?
 isa0	at amdpcib?

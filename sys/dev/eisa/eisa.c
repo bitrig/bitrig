@@ -216,7 +216,6 @@ eisaattach(parent, self, aux)
 	}
 }
 
-#ifdef EISAVERBOSE
 /*
  * Descriptions of known vendors and devices ("products").
  */
@@ -228,25 +227,19 @@ struct eisa_knowndev {
 #define EISA_KNOWNDEV_NOPROD	0x01		/* match on vendor only */
 
 #include <dev/eisa/eisadevs_data.h>
-#endif /* EISAVERBOSE */
 
 void
 eisa_devinfo(const char *id, char *cp, size_t cp_len)
 {
 	const char *name;
 	int onlyvendor;
-#ifdef EISAVERBOSE
 	const struct eisa_knowndev *edp;
 	int match;
 	const char *unmatched = "unknown ";
-#else
-	const char *unmatched = "";
-#endif
 
 	onlyvendor = 0;
 	name = NULL;
 
-#ifdef EISAVERBOSE
 	/* find the device in the table, if possible. */
 	edp = eisa_knowndevs;
 	while (edp->name != NULL) {
@@ -262,11 +255,10 @@ eisa_devinfo(const char *id, char *cp, size_t cp_len)
 		}
 		edp++;
 	}
-#endif
 
 	if (name == NULL)
 		snprintf(cp, cp_len, "%sdevice %s", unmatched, id);
-	else if (onlyvendor)			/* never if not EISAVERBOSE */
+	else if (onlyvendor)
 		snprintf(cp, cp_len, "unknown %s device %s", name, id);
 	else
 		snprintf(cp, cp_len, "%s", name);
