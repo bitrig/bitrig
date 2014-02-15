@@ -73,6 +73,7 @@
 /* board specific */
 #define EHCI_HUMMINGBOARD_USB_H1_PWR		0
 #define EHCI_HUMMINGBOARD_USB_OTG_PWR		(2*32+22)
+#define EHCI_UTILITE_USB_HUB_RST		(6*32+8)
 
 void	imxehci_attach(struct device *, struct device *, void *);
 int	imxehci_detach(struct device *, int);
@@ -140,6 +141,12 @@ imxehci_attach(struct device *parent, struct device *self, void *aux)
 			imxgpio_set_dir(EHCI_HUMMINGBOARD_USB_H1_PWR, IMXGPIO_DIR_OUT);
 			delay(10);
 			imxgpio_set_bit(EHCI_HUMMINGBOARD_USB_H1_PWR);
+			delay(10);
+			break;
+		case BOARD_ID_IMX6_UTILITE:
+			imxgpio_set_dir(EHCI_UTILITE_USB_HUB_RST, IMXGPIO_DIR_OUT);
+			delay(10);
+			imxgpio_set_bit(EHCI_UTILITE_USB_HUB_RST);
 			delay(10);
 			break;
 		}
