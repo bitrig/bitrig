@@ -221,7 +221,7 @@ isp*	at pci?			# Qlogic ISP [12]0x0 SCSI/FibreChannel
 #adw*	at pci?			# AdvanSys ULTRA WIDE SCSI
 pcscp*	at pci?			# AMD 53c974 PCscsi-PCI SCSI
 #sea0	at isa? disable iomem 0xc8000 irq 5	# Seagate ST0[12] SCSI controllers
-trm*	at pci?			# Tekram DC-3x5U SCSI Controllers
+#trm*	at pci?			# Tekram DC-3x5U SCSI Controllers
 #uha0	at isa? port 0x330	# UltraStor [13]4f SCSI controllers
 #uha1	at isa? disable port 0x334 # UltraStor [13]4f SCSI controllers
 #uha*	at eisa?		# UltraStor 24f SCSI controllers
