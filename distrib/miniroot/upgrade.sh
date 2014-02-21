@@ -1,5 +1,6 @@
 #!/bin/ksh
-#	$OpenBSD: upgrade.sh,v 1.74 2014/02/21 16:29:08 deraadt Exp $
+#	$OpenBSD: upgrade.sh,v 1.75 2014/02/21 16:30:14 deraadt Exp $
+#	$NetBSD: upgrade.sh,v 1.2.4.5 1996/08/27 18:15:08 gwr Exp $
 #
 # Copyright (c) 1997-2009 Todd Miller, Theo de Raadt, Ken Westerback
 # All rights reserved.
