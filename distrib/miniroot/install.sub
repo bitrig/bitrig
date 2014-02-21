@@ -1,5 +1,4 @@
-#	$OpenBSD: install.sub,v 1.747 2014/02/21 16:30:14 deraadt Exp $
-#	$NetBSD: install.sub,v 1.5.2.8 1996/09/02 23:25:02 pk Exp $
+#	$OpenBSD: install.sub,v 1.748 2014/02/21 19:47:31 deraadt Exp $
 #
 # Copyright (c) 1997-2009 Todd Miller, Theo de Raadt, Ken Westerback
 # All rights reserved.
@@ -837,7 +836,7 @@ ieee80211_scan() {
 	# N.B. Skipping quoted nwid's for now
 	[[ -f $WLANLIST ]] ||
 		ifconfig $1 scan |
-		sed -n 's/^		nwid \([^"]\)/\1/p' > $WLANLIST
+		sed -n 's/^		nwid \([^"]\)/\1/p' >$WLANLIST
 	cat $WLANLIST
 }
 
@@ -1046,7 +1045,7 @@ enable_network() {
 		if=${hn#/mnt/etc/hostname.}
 
 		# Check for ifconfig'able interface.
-		(ifconfig $if||ifconfig $if create)> /dev/null 2>&1 || continue
+		(ifconfig $if||ifconfig $if create) >/dev/null 2>&1 || continue
 
 		# Now parse the hostname.* file
 		while :; do
@@ -1230,7 +1229,7 @@ install_files() {
 		# space of the selected sets to prevent overflow during the
 		# extraction.
 		_tmpfs=$( (
-		        for fs in /mnt/{{,var/}tmp,home,usr{/local,}}; do
+			for fs in /mnt/{{,var/}tmp,home,usr{/local,}}; do
 				df -k $fs 2>/dev/null | grep " $fs\$"
 			done
 			df -k
@@ -1247,7 +1246,7 @@ install_files() {
 			! _tmpsrc=$(tmpdir "$_tmpfs/sets") &&
 			_issue="Cannot create prefetch area" && break
 		else
-			_issue="Cannot determine prefetch area" && break	
+			_issue="Cannot determine prefetch area" && break
 		fi
 
 		_cfile=$_tmpsrc/SHA256
@@ -1442,7 +1441,7 @@ install_url() {
 	if [[ -s $SERVERLISTALL ]]; then
 		_prompt="Server? (hostname, list#, 'done' or '?')"
 		sed -n "s,^${_url_type}://"'\([[A-Za-z0-9\:_][]A-Za-z0-9:._-]*\),\1,p' \
-			$SERVERLISTALL > $SERVERLIST
+			$SERVERLISTALL >$SERVERLIST
 		set -- $(sed q $SERVERLIST)
 		_server_ip=${1%%/*}
 	else
@@ -1764,7 +1763,7 @@ install_sets() {
 }
 
 update_firmware() {
-        echo "/usr/sbin/fw_update -v" >> /mnt/etc/rc.firsttime
+        echo "/usr/sbin/fw_update -v" >>/mnt/etc/rc.firsttime
 }
 
 # Create a skeletal but useful /etc/fstab from /tmp/fstab by stripping all
@@ -1971,7 +1970,7 @@ apply()
 	fi
 	if [[ $sshd_disableroot == y ]]; then
 		sed "/^#\(PermitRootLogin\) yes/s//\1 no/" \
-			< /mnt/etc/ssh/sshd_config > /tmp/sshd_config
+			< /mnt/etc/ssh/sshd_config >/tmp/sshd_config
 		cp /tmp/sshd_config /mnt/etc/ssh/sshd_config
 	fi
 	if [[ $ntpd == y ]]; then
@@ -2101,8 +2100,8 @@ finish_up() {
 
 	# Create or update pkg.conf with the new package path, if any
 	if [[ -n $PACKAGE_PATH ]]; then
-		grep -v '^[ 	]*installpath[ 	]*=' /mnt/etc/pkg.conf 2>/dev/null > /tmp/pkgconf
-		print -r -- "installpath = $PACKAGE_PATH" >> /tmp/pkgconf
+		grep -v '^[ 	]*installpath[ 	]*=' /mnt/etc/pkg.conf 2>/dev/null >/tmp/pkgconf
+		print -r -- "installpath = $PACKAGE_PATH" >>/tmp/pkgconf
 		cp /tmp/pkgconf /mnt/etc/pkg.conf
 	fi
 
@@ -2317,7 +2316,7 @@ elif [[ -z $respfile ]]; then
 		# Generate unique filename and let rc.firsttime feed it to
 		# whatever mail system we have at hand by then.
 		while _lf=/mnt/var/tmp/ai.log.$RANDOM && test -e $_lf; do done
-		sed 's/^.*//' /ai.log >> $_lf
+		sed 's/^.*//' /ai.log >>$_lf
 		chmod 600 $_lf
 		_lf=${_lf#/mnt}
 		cat <<__EOT >>/mnt/etc/rc.firsttime
