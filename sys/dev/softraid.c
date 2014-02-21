@@ -2330,7 +2330,7 @@ sr_scsi_wu_put(struct sr_discipline *sd, struct sr_workunit *wu)
 {
 	scsi_io_put(&sd->sd_iopool, wu);
 
-	if (sd->sd_sync && sd->sd_wu_pending == 0)
+	if (sd->sd_sync)
 		wakeup(sd);
 }
 
@@ -2344,7 +2344,7 @@ sr_scsi_done(struct sr_discipline *sd, struct scsi_xfer *xs)
 
 	scsi_done(xs);
 
-	if (sd->sd_sync && sd->sd_wu_pending == 0)
+	if (sd->sd_sync)
 		wakeup(sd);
 }
 
