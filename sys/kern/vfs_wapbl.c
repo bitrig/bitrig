@@ -461,7 +461,6 @@ wapbl_start(struct wapbl ** wlp, struct mount *mp, struct vnode *vp,
 
 	/* XXX maybe use filesystem fragment size instead of 1024 */
 	/* XXX fix actual number of buffers reserved per filesystem. */
-	/* XXX pedro: this is a very rough estimate */
 	wl->wl_bufcount_max = (((bufpages << PAGE_SHIFT) >> 14) / 2) * 1024;
 
 	/* XXX tie this into resource estimation */
