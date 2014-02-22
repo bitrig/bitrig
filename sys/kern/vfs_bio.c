@@ -1157,17 +1157,11 @@ buf_daemon(struct proc *p)
 	struct timeval starttime, timediff;
 	struct buf *bp = NULL;
 	int s, pushed = 0;
-#ifdef WAPBL_DEBUG
-	int did_wapbl = 0; /* XXX pedro: remove me */
-#endif
 
 	cleanerproc = curproc;
 
 	s = splbio();
 	for (;;) {
-#ifdef WAPBL_DEBUG
-		did_wapbl = 0;
-#endif
 		if (bp == NULL || (pushed >= 16 &&
 		    UNCLEAN_PAGES < hidirtypages &&
 		    bcstats.kvaslots_avail > 2 * RESERVE_SLOTS)){
@@ -1212,18 +1206,7 @@ buf_daemon(struct proc *p)
 			    wapbl_vphaswapbl(bp->b_vp)) {
 				brelse(bp);
 				struct mount *mp = wapbl_vptomp(bp->b_vp);
-#ifdef WAPBL_DEBUG
-				int error = wapbl_flush(mp->mnt_wapbl, 1);
-				if (did_wapbl++)
-					printf("synced wapbl %d times\n",
-					    did_wapbl);
-				if (error)
-					printf("buf_daemon: sync of mp %p "
-					    "failed with error %d\n", mp,
-					    error);
-#else
 				wapbl_flush(mp->mnt_wapbl, 1);
-#endif
 				s = splbio();
 				continue;
 			}
