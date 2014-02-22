@@ -497,7 +497,6 @@ bread_cluster_callback(struct buf *bp)
 		 * Shrink this buffer's mapping to only cover its part of
 		 * the total I/O.
 		 */
-		KASSERT(!(bp->b_flags & B_LOCKED)); /* XXX pedro: remove me */
 		buf_fix_mapping(bp, newsize);
 		bp->b_bcount = newsize;
 	}
