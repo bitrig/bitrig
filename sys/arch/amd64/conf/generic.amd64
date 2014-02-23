@@ -297,8 +297,10 @@ agp*		at intagp?
 
 #option		DRM_DEBUG
 inteldrm*	at vga? 	# Intel i915, i945 DRM driver
+drm0		at inteldrm? console 1
 drm*		at inteldrm?
 radeondrm*	at pci? 	# ATI Radeon DRM driver
+drm0		at radeondrm? console 1
 drm*		at radeondrm?
 wsdisplay0	at radeondrm? console 1
 wsdisplay*	at radeondrm?
