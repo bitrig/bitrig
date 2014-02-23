@@ -1254,6 +1254,9 @@ init_x86_64(paddr_t first_avail)
 	proc0.p_addr = proc0paddr;
 	cpu_info_primary.ci_curpcb = &proc0.p_addr->u_pcb;
 
+	/* Initiliaze curproc early for critical sections */
+	curproc = &proc0;
+
 	x86_bus_space_init();
 
 	/*
