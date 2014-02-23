@@ -28,17 +28,9 @@ void	crit_rundeferred(void);
 uint64_t defclock, defother;
 #endif
 
-/* XXX we need to make sure we have a process context soon, for now just keep
- * this counter so that we can hunt it. */
-u_int crit_escaped;
-
 void
 crit_enter(void)
 {
-	if (curproc == NULL) {
-		crit_escaped++;
-		return;
-	}
 	curproc->p_crit++;
 }
 
@@ -54,10 +46,6 @@ crit_reenter(int c)
 void
 crit_leave(void)
 {
-	if (curproc == NULL) {
-		crit_escaped++;
-		return;
-	}
 	if (--curproc->p_crit == 0)
 		crit_rundeferred();
 
