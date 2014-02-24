@@ -50,6 +50,7 @@
 #define L2_S_nG		(1<<11)	/* notGlobal */
 #define L2_S_AP(ap)	((((ap) & 0x4) << 9) | (((ap) & 3) << 4))
 #define L2_S_TEX(x)	(((x)&0x7)<<6)
+#define L2_TABLE_SIZE	(4*1024)
 
 
 #define L2_MODE_DEV		(L2_S_TEX(0)|0|0)
@@ -147,8 +148,6 @@ union pmap_cache_state {
 #define L2_S_OFFSET     (L2_S_SIZE - 1)
 #define L2_S_FRAME      (~L2_S_OFFSET)
 #define L2_S_SHIFT      12
-
-#define L2_TABLE_SIZE (4 *1024)
 
 ///
 

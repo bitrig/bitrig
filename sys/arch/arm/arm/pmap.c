@@ -109,11 +109,13 @@ VP_IDX3(vaddr_t va)
 }
 
 
-#if VP_IDX2_SIZE != VP_IDX3_SIZE
-#error pmap allocation code expects IDX2 and IDX3 size to be same
-#endif
-struct pmapvp {
-        void *vp[VP_IDX1_SIZE];
+struct pmapvp2 {
+	vaddr_t l2[VP_IDX2_CNT];
+	void *vp[VP_IDX2_CNT];
+};
+
+struct pmapvp3 {
+        void *vp[VP_IDX3_CNT];
 };
 
 /*
@@ -126,21 +128,21 @@ struct pmapvp {
 struct pte_desc *
 pmap_vp_lookup(pmap_t pm, vaddr_t va)
 {
-	struct pmapvp *vp1;
-	struct pmapvp *vp2;  
+	struct pmapvp2 *vp2;
+	struct pmapvp3 *vp3;  
 	struct pte_desc *pted;
 
-	vp1 = pm->pm_vp[VP_IDX1(va)];
-	if (vp1 == NULL) {
-		return NULL;
-	}
-	    
-	vp2 = vp1->vp[VP_IDX2(va)];
+	vp2 = pm->pm_vp[VP_IDX1(va)];
 	if (vp2 == NULL) {
 		return NULL;
 	}
 	    
-	pted = vp2->vp[VP_IDX3(va)];
+	vp3 = vp2->vp[VP_IDX2(va)];
+	if (vp3 == NULL) {
+		return NULL;
+	}
+	    
+	pted = vp3->vp[VP_IDX3(va)];
 
 	return pted;
 }
@@ -151,22 +153,22 @@ pmap_vp_lookup(pmap_t pm, vaddr_t va)
 struct pte_desc *
 pmap_vp_remove(pmap_t pm, vaddr_t va)
 {
-	struct pmapvp *vp1;
-	struct pmapvp *vp2;
+	struct pmapvp2 *vp2;
+	struct pmapvp3 *vp3;
 	struct pte_desc *pted;
 
-	vp1 = pm->pm_vp[VP_IDX1(va)];
-	if (vp1 == NULL) {
-		return NULL;
-	}
-	    
-	vp2 = vp1->vp[VP_IDX2(va)];
+	vp2 = pm->pm_vp[VP_IDX1(va)];
 	if (vp2 == NULL) {
 		return NULL;
 	}
 	    
-	pted = vp2->vp[VP_IDX3(va)];
-	vp2->vp[VP_IDX3(va)] = NULL;
+	vp3 = vp2->vp[VP_IDX2(va)];
+	if (vp3 == NULL) {
+		return NULL;
+	}
+	    
+	pted = vp3->vp[VP_IDX3(va)];
+	vp3->vp[VP_IDX3(va)] = NULL;
 
 	return pted;
 }
@@ -180,27 +182,27 @@ pmap_vp_remove(pmap_t pm, vaddr_t va)
 void
 pmap_vp_enter(pmap_t pm, vaddr_t va, struct pte_desc *pted)
 {
-	struct pmapvp *vp1;
-	struct pmapvp *vp2;
+	struct pmapvp2 *vp2;
+	struct pmapvp3 *vp3;
 	int s;
 
-	vp1 = pm->pm_vp[VP_IDX1(va)];
-	if (vp1 == NULL) {
-		s = splvm();
-		vp1 = pool_get(&pmap_vp_pool, PR_NOWAIT | PR_ZERO);
-		splx(s);
-		pm->pm_vp[VP_IDX1(va)] = vp1;
-	}
-
-	vp2 = vp1->vp[VP_IDX2(va)];
+	vp2 = pm->pm_vp[VP_IDX1(va)];
 	if (vp2 == NULL) {
 		s = splvm();
 		vp2 = pool_get(&pmap_vp_pool, PR_NOWAIT | PR_ZERO);
 		splx(s);
-		vp1->vp[VP_IDX2(va)] = vp2;
+		pm->pm_vp[VP_IDX1(va)] = vp2;
 	}
 
-	vp2->vp[VP_IDX3(va)] = pted;
+	vp3 = vp2->vp[VP_IDX2(va)];
+	if (vp3 == NULL) {
+		s = splvm();
+		vp3 = pool_get(&pmap_vp_pool, PR_NOWAIT | PR_ZERO);
+		splx(s);
+		vp2->vp[VP_IDX2(va)] = vp3;
+	}
+
+	vp3->vp[VP_IDX3(va)] = pted;
 }
 
 
@@ -355,8 +357,8 @@ pmap_remove(pmap_t pm, vaddr_t va, vaddr_t endva)
 	int i_vp1, s_vp1, e_vp1;
 	int i_vp2, s_vp2, e_vp2;
 	int i_vp3, s_vp3, e_vp3;
-	struct pmapvp *vp2;
-	struct pmapvp *vp3;
+	struct pmapvp2 *vp2;
+	struct pmapvp3 *vp3;
 	
 	/* I suspect that if this loop were unrolled better
 	 * it would have better performance, testing i_vp1 and i_vp2
@@ -378,7 +380,7 @@ pmap_remove(pmap_t pm, vaddr_t va, vaddr_t endva)
 		if (i_vp1 == e_vp1)
 			e_vp2 = VP_IDX2(endva);
 		else
-			e_vp2 = VP_IDX2_SIZE-1;
+			e_vp2 = VP_IDX2_CNT-1;
 	 
 		for (i_vp2 = s_vp2; i_vp2 <= e_vp2; i_vp2++) {
 			vp3 = vp2->vp[i_vp2];
@@ -393,7 +395,7 @@ pmap_remove(pmap_t pm, vaddr_t va, vaddr_t endva)
 			if ((i_vp1 == e_vp1) && (i_vp2 == e_vp2))
 				e_vp3 = VP_IDX3(endva);
 			else
-				e_vp3 = VP_IDX3_SIZE;
+				e_vp3 = VP_IDX3_CNT;
  
 			for (i_vp3 = s_vp3; i_vp3 < e_vp3; i_vp3++) {
 				if (vp3->vp[i_vp3] != NULL) {
@@ -733,26 +735,26 @@ pmap_vp_destroy(pmap_t pm)
 {
 	int i, j;
 	int s;
-	struct pmapvp *vp1;
-	struct pmapvp *vp2;
+	struct pmapvp2 *vp2;
+	struct pmapvp3 *vp3;
 
-	for (i = 0; i < VP_IDX1_SIZE; i++) {
-		vp1 = pm->pm_vp[i];
-		if (vp1 == NULL)
+	for (i = 0; i < VP_IDX1_CNT; i++) {
+		vp2 = pm->pm_vp[i];
+		if (vp2 == NULL)
 			continue;
 
-		for (j = 0; j < VP_IDX2_SIZE; j++) {
-			vp2 = vp1->vp[j];
-			if (vp2 == NULL)
+		for (j = 0; j < VP_IDX2_CNT; j++) {
+			vp3 = vp2->vp[j];
+			if (vp3 == NULL)
 				continue;
 
 			s = splvm();
-			pool_put(&pmap_vp_pool, vp2);
+			pool_put(&pmap_vp_pool, vp3);
 			splx(s);
 		}
 		pm->pm_vp[i] = NULL;
 		s = splvm();
-		pool_put(&pmap_vp_pool, vp1);
+		pool_put(&pmap_vp_pool, vp2);
 		splx(s);
 	}
 }
@@ -835,11 +837,27 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
     uint32_t ram_end)
 {
 	vaddr_t kvo;
+	struct pmapvp2 *vp2;
+	int i;
 
 	kvo = KERNEL_BASE_VIRT - KERNEL_BASE_PHYS;
 
 	pmap_setup_avail(ram_start, ram_end);
 	pmap_remove_avail(kernelstart-kvo, kernelend-kvo);
+
+
+	/* allocate kernel l1 page table */
+	pmap_kernel()->l1_va = pmap_steal_avail(L1_TABLE_SIZE, L1_TABLE_SIZE);
+
+	/* allocate v->p mappings for pmap_kernel() */
+	for (i = 0; i < VP_IDX1_CNT; i++) {
+		pmap_kernel()->pm_vp[i] = NULL;
+	}
+
+	vp2 = pmap_steal_avail(sizeof (struct pmapvp2), 4);
+	bzero (vp2, sizeof(struct pmapvp2));
+	//pmap_premap(kernelstart, kernelend, kvo);
+	pmap_kernel()->pm_vp[VP_IDX1(KERNEL_BASE_VIRT)] = vp2;
 
 
 	/* XXX */
@@ -1013,7 +1031,7 @@ pmap_init()
 {
 	pool_init(&pmap_pmap_pool, sizeof(struct pmap), 0, 0, 0, "pmap", NULL);
 	pool_setlowat(&pmap_pmap_pool, 2);
-	pool_init(&pmap_vp_pool, sizeof(struct pmapvp), 0, 0, 0, "vp", NULL);
+	pool_init(&pmap_vp_pool, sizeof(struct pmapvp2), 0, 0, 0, "vp", NULL);
 	pool_setlowat(&pmap_vp_pool, 10);
 	pool_init(&pmap_pted_pool, sizeof(struct pte_desc), 0, 0, 0, "pted",
 	    NULL);
@@ -1325,3 +1343,42 @@ pmap_steal_avail(size_t size, int align)
 	panic ("unable to allocate region with size %x align %x",
 	    size, align);
 }
+
+#if 0
+/*
+ * Create a V -> P mapping for the given pmap and virtual address
+ * with reference to the pte descriptor that is used to map the page.
+ * This code should track allocations of vp table allocations
+ * so they can be freed efficiently.
+ */
+void
+pmap_premap(vaddr_t startaddr, struct pte_desc *pted)
+pmap_premap(vaddr_t va, struct pte_desc *pted)
+{
+	struct pmapvp2 *vp2;
+	struct pmapvp3 *vp3;
+	int s;
+
+	vp2 = pm->pm_vp[VP_IDX1(va)];
+	if (vp2 == NULL) {
+		s = splvm();
+		vp2 = pmap_steal_avail(sizeof(struct pmapvp2), 4)
+		vp2->l1_va = pmap_steal_avail(L2_
+		bzero (vp2, 
+		vp2->
+		pmap_set_l1(pm, va, vp2->l1_va)
+		splx(s);
+		pm->pm_vp[VP_IDX1(va)] = vp2;
+	}
+
+	vp3 = vp2->vp[VP_IDX2(va)];
+	if (vp3 == NULL) {
+		s = splvm();
+		vp3 = pool_get(&pmap_vp_pool, PR_NOWAIT | PR_ZERO);
+		splx(s);
+		vp2->vp[VP_IDX2(va)] = vp3;
+	}
+
+	vp3->vp[VP_IDX3(va)] = pted;
+}
+#endif

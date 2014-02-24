@@ -24,14 +24,14 @@
 typedef struct pmap *pmap_t;
 
 /* V->P mapping data */
-#define VP_IDX1_SIZE	16
-#define VP_IDX1_MASK	(VP_IDX1_SIZE-1)
+#define VP_IDX1_CNT	32
+#define VP_IDX1_MASK	(VP_IDX1_CNT-1)
 #define VP_IDX1_POS	28
-#define VP_IDX2_SIZE	256
-#define VP_IDX2_MASK	(VP_IDX2_SIZE-1)
+#define VP_IDX2_CNT	256
+#define VP_IDX2_MASK	(VP_IDX2_CNT-1)
 #define VP_IDX2_POS	20
-#define VP_IDX3_SIZE	256
-#define VP_IDX3_MASK	(VP_IDX3_SIZE-1)
+#define VP_IDX3_CNT	256
+#define VP_IDX3_MASK	(VP_IDX3_CNT-1)
 #define VP_IDX3_POS	12
 
 void pmap_kenter_cache(vaddr_t va, paddr_t pa, vm_prot_t prot, int cacheable);
@@ -53,7 +53,8 @@ extern paddr_t copy_dst_page;
  * Pmap stuff
  */
 struct pmap {
-	struct pmapvp *pm_vp[VP_IDX1_SIZE];	/* virtual to physical table */
+	struct pmapvp2 *pm_vp[VP_IDX1_CNT];	/* virtual to physical table */
+	uint32_t *l1_va;
 	int pm_refs;				/* ref count */
 	struct pmap_statistics  pm_stats;	/* pmap statistics */
 	/* delete this */ union pmap_cache_state	pm_cstate;
