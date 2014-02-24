@@ -155,8 +155,13 @@ _C_LABEL(bootstrap_start):
 	mcr	p15, 0, r0, c3, c0, 0
 
 	/* Enable MMU */
+	ldr	r0, =Ldefault_nmrr
+	mcr	p15, 0, r0, c10, c2, 1
+	ldr	r0, =Ldefault_prrr
+	mcr	p15, 0, r0, c10, c2, 0
+	mcr	p15, 0, r0, c10, c2, 0
 	mrc	p15, 0, r0, c1, c0, 0
-	orr	r0, r0, #CPU_CONTROL_MMU_ENABLE
+	orr	r0, r0, #CPU_CONTROL_MMU_ENABLE|CPU_CONTROL_TRE
 	mcr	p15, 0, r0, c1, c0, 0
 	CPWAIT(r0)
 
@@ -171,6 +176,10 @@ _C_LABEL(bootstrap_start):
 
 Lstart:
 	.word	start
+Ldefault_nmrr:
+	.word	NMRR_DEFAULT
+Ldefault_prrr:
+	.word	PRRR_DEFAULT
 
 #define MMU_INIT(va,pa,n_sec,attr) \
 	.word	n_sec					    ; \
@@ -179,11 +188,11 @@ Lstart:
 
 mmu_init_table:
 	/* map SDRAM VA==PA, WT cacheable */
-	MMU_INIT(0x00000000, 0x00000000, 64, L1_TYPE_S|L1_S_C|L1_S_AP(AP_KRW))
+	MMU_INIT(0x00000000, 0x00000000, 64, L1_TYPE_S|L1_S_S|L1_MODE_MEMORY|L1_S_AP(AP_KRW))
 mmu_init_table2:	
 	/* map VA 0xc0000000..0xc3ffffff to PA 0xa0000000..0xa3ffffff */
-	MMU_INIT(0xc0000000, 0x00000000, 64, L1_TYPE_S|L1_S_C|L1_S_AP(AP_KRW))
-	MMU_INIT(0x00000000, 0x00000000, 1, L1_TYPE_S|L1_S_C|L1_S_AP(AP_KRW))
+	MMU_INIT(0xc0000000, 0x00000000, 64, L1_TYPE_S|L1_S_S|L1_MODE_MEMORY|L1_S_AP(AP_KRW))
+	MMU_INIT(0x00000000, 0x00000000, 1, L1_TYPE_S|L1_S_S|L1_MODE_MEMORY|L1_S_AP(AP_KRW))
 
 	.word 0	/* end of table */
 

@@ -68,7 +68,8 @@ extern struct pmap kernel_pmap_;
 #define	pmap_resident_count(pmap)	((pmap)->pm_stats.resident_count)
 #define	pmap_wired_count(pmap)		((pmap)->pm_stats.wired_count)
 
-void pmap_bootstrap(pd_entry_t *, u_int kernelstart, u_int kernelend);
+void pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
+    uint32_t ram_end);
 void pmap_page_ro(pmap_t pm, vaddr_t va, vm_prot_t prot);
 
 struct pv_entry;

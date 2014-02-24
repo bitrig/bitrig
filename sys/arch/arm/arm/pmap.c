@@ -73,6 +73,8 @@ void pmap_pinit(pmap_t pm);
 void pmap_release(pmap_t pm);
 vaddr_t pmap_steal_memory(vsize_t size, vaddr_t *start, vaddr_t *end);
 paddr_t arm_kvm_stolen;
+void * pmap_steal_avail(size_t size, int align);
+void pmap_remove_avail(paddr_t base, paddr_t end);
 
 
 /* pte invalidation */
@@ -86,7 +88,6 @@ struct pool pmap_pted_pool;
 /* list of L1 tables */
 
 int pmap_initialized = 0;
-int physmaxaddr;
 
 /* virtual to physical helpers */
 static inline int
@@ -822,14 +823,25 @@ pmap_steal_memory(vsize_t size, vaddr_t *start, vaddr_t *end)
 	return (va);
 }
 
+
+void pmap_setup_avail( uint32_t ram_start, uint32_t ram_end);
 /*
  * Initialize pmap setup.
  * ALL of the code which deals with avail needs rewritten as an actual
  * memory allocation.
  */
 void
-pmap_bootstrap(pd_entry_t *pd, u_int kernelstart, u_int kernelend)
+pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
+    uint32_t ram_end)
 {
+	vaddr_t kvo;
+
+	kvo = KERNEL_BASE_VIRT - KERNEL_BASE_PHYS;
+
+	pmap_setup_avail(ram_start, ram_end);
+	pmap_remove_avail(kernelstart-kvo, kernelend-kvo);
+
+
 	/* XXX */
 
 	zero_page = VM_MIN_KERNEL_ADDRESS + arm_kvm_stolen;
@@ -1082,7 +1094,8 @@ return 0;
 void pmap_postinit(void) {}
 void    pmap_map_section(vaddr_t v0, vaddr_t v1, paddr_t p0, int i0, int i1) {}
 void    pmap_map_entry(vaddr_t v0, vaddr_t v1, paddr_t p0, int i0, int i1) {}
-vsize_t pmap_map_chunk(vaddr_t v0, vaddr_t v1, paddr_t p0, vsize_t s0, int i0, int i1)
+
+vsize_t pmap_map_chunk(vaddr_t v0, vaddr_t v1, paddr_t p0, vsize_t s0, int prot, int cache)
 {
 	return 0;
 }
@@ -1155,3 +1168,160 @@ void    pmap_set_pcb_pagedir(pmap_t pm, struct pcb *pcb)
 {
 }
 
+struct mem_region {
+	vaddr_t start;
+	vsize_t size;
+};
+
+void pmap_avail_fixup(void);
+
+struct mem_region pmap_avail_regions[10];
+struct mem_region pmap_allocated_regions[10];
+struct mem_region *pmap_avail = &pmap_avail_regions[0];
+struct mem_region *pmap_allocated = &pmap_allocated_regions[0];
+int pmap_cnt_avail, pmap_cnt_allocated;
+
+void
+pmap_setup_avail( uint32_t ram_start, uint32_t ram_end)
+{
+	pmap_avail[0].start = ram_start;
+	pmap_avail[0].size = ram_end-ram_start;
+	physmem = atop(pmap_avail[0].size);
+
+	pmap_cnt_avail = 1;
+
+	physmem = 0;
+
+	pmap_avail_fixup();
+}
+
+void
+pmap_avail_fixup(void)
+{
+	struct mem_region *mp;
+	u_int32_t align;
+	u_int32_t end;
+
+	mp = pmap_avail;
+	while(mp->size !=0) {
+		align = round_page(mp->start);
+		if (mp->start != align) {
+			pmap_remove_avail(mp->start, align);
+			mp = pmap_avail;
+			continue;
+		}
+		end = mp->start+mp->size;
+		align = trunc_page(end);
+		if (end != align) {
+			pmap_remove_avail(align, end);
+			mp = pmap_avail;
+			continue;
+		}
+		mp++;
+	}
+}
+
+/* remove a given region from avail memory */
+void
+pmap_remove_avail(paddr_t base, paddr_t end)
+{
+	struct mem_region *mp;
+	int i;
+	int mpend;
+
+	/* remove given region from available */
+	for (mp = pmap_avail; mp->size; mp++) {
+		/*
+		 * Check if this region holds all of the region
+		 */
+		mpend = mp->start + mp->size;
+		if (base > mpend) {
+			continue;
+		}
+		if (base <= mp->start) {
+			if (end <= mp->start)
+				break; /* region not present -??? */
+
+			if (end >= mpend) {
+				/* covers whole region */
+				/* shorten */
+				for (i = mp - pmap_avail;
+				    i < pmap_cnt_avail;
+				    i++) {
+					pmap_avail[i] = pmap_avail[i+1];
+				}
+				pmap_cnt_avail--;
+				pmap_avail[pmap_cnt_avail].size = 0;
+			} else {
+				mp->start = end;
+				mp->size = mpend - end;
+			}
+		} else {
+			/* start after the beginning */
+			if (end >= mpend) {
+				/* just truncate */
+				mp->size = base - mp->start;
+			} else {
+				/* split */
+				for (i = pmap_cnt_avail;
+				    i > (mp - pmap_avail);
+				    i--) {
+					pmap_avail[i] = pmap_avail[i - 1];
+				}
+				pmap_cnt_avail++;
+				mp->size = base - mp->start;
+				mp++;
+				mp->start = end;
+				mp->size = mpend - end;
+			}
+		}
+	}
+	for (mp = pmap_allocated; mp->size != 0; mp++) {
+		if (base < mp->start) {
+			if (end == mp->start) {
+				mp->start = base;
+				mp->size += end - base;
+				break;
+			}
+			/* lengthen */
+			for (i = pmap_cnt_allocated; i > (mp - pmap_allocated);
+			    i--) {
+				pmap_allocated[i] = pmap_allocated[i - 1];
+			}
+			pmap_cnt_allocated++;
+			mp->start = base;
+			mp->size = end - base;
+			return;
+		}
+		if (base == (mp->start + mp->size)) {
+			mp->size += end - base;
+			return;
+		}
+	}
+	if (mp->size == 0) {
+		mp->start = base;
+		mp->size  = end - base;
+		pmap_cnt_allocated++;
+	}
+}
+
+void *
+pmap_steal_avail(size_t size, int align)
+{
+	struct mem_region *mp;
+	int start;
+	int remsize;
+
+	for (mp = pmap_avail; mp->size; mp++) {
+		if (mp->size > size) {
+			start = (mp->start + (align -1)) & ~(align -1);
+			remsize = mp->size - (start - mp->start); 
+			if (remsize >= 0) {
+				pmap_remove_avail(start, start+size);
+				return (void *)start;
+			}
+		}
+	}
+	panic ("unable to allocate region with size %x align %x",
+	    size, align);
+}

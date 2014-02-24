@@ -374,7 +374,7 @@ copy_io_area_map(pd_entry_t *new_pd)
 u_int
 initarm(void *arg0, void *arg1, void *arg2)
 {
-	int loop, loop1, i, physsegs;
+	int loop, i, physsegs;
 	u_int l1pagetable;
 	pv_addr_t kernel_l1pt;
 	pv_addr_t fdt;
@@ -511,11 +511,16 @@ initarm(void *arg0, void *arg1, void *arg2)
 
 	physmem = (physical_end - physical_start) / PAGE_SIZE;
 
-#ifdef DEBUG
+#ifdef VERBOSE_INIT_ARM
 	/* Tell the user about the memory */
 	printf("physmemory: %d pages at 0x%08lx -> 0x%08lx\n", physmem,
 	    physical_start, physical_end - 1);
 #endif
+	pmap_bootstrap(KERNEL_VM_BASE, esym, physical_start, physical_end);
+
+	printf("success thus far\n");
+	while(1)
+		;
 
 	/*
 	 * Okay, the kernel starts 2MB in from the bottom of physical
@@ -539,39 +544,6 @@ initarm(void *arg0, void *arg1, void *arg2)
 	printf("Allocating page tables\n");
 #endif
 
-	free_pages = (physical_freeend - physical_freestart) / PAGE_SIZE;
-
-#ifdef VERBOSE_INIT_ARM
-	printf("freestart = 0x%08lx, free_pages = %d (0x%08x)\n",
-	       physical_freestart, free_pages, free_pages);
-#endif
-
-	/* Define a macro to simplify memory allocation */
-#define	valloc_pages(var, np)				\
-	alloc_pages((var).pv_pa, (np));			\
-	(var).pv_va = KERNEL_BASE + (var).pv_pa - physical_start;
-
-#define alloc_pages(var, np)				\
-	(var) = physical_freestart;			\
-	physical_freestart += ((np) * PAGE_SIZE);	\
-	if (physical_freeend < physical_freestart)	\
-		panic("initarm: out of memory");	\
-	free_pages -= (np);				\
-	memset((char *)(var), 0, ((np) * PAGE_SIZE));
-
-	loop1 = 0;
-	kernel_l1pt.pv_pa = 0;
-	for (loop = 0; loop <= NUM_KERNEL_PTS; ++loop) {
-		/* Are we 16KB aligned for an L1 ? */
-		if (((physical_freestart) & (L1_TABLE_SIZE - 1)) == 0
-		    && kernel_l1pt.pv_pa == 0) {
-			valloc_pages(kernel_l1pt, L1_TABLE_SIZE / PAGE_SIZE);
-		} else {
-			valloc_pages(kernel_pt_table[loop1],
-			    L2_TABLE_SIZE / PAGE_SIZE);
-			++loop1;
-		}
-	}
 
 	/* This should never be able to happen but better confirm that. */
 	if (!kernel_l1pt.pv_pa || (kernel_l1pt.pv_pa & (L1_TABLE_SIZE-1)) != 0)
@@ -583,12 +555,12 @@ initarm(void *arg0, void *arg1, void *arg2)
 	 * shared by all processes.
 	 */
 	vector_page = ARM_VECTORS_HIGH;
-	alloc_pages(systempage.pv_pa, 1);
+	//alloc_pages(systempage.pv_pa, 1);
 	systempage.pv_va = vector_page;
 
 	/* Allocate stacks for all modes */
-	valloc_pages(armstack, ARM_STACK_PAGES);
-	valloc_pages(kernelstack, UPAGES);
+	//valloc_pages(armstack, ARM_STACK_PAGES);
+	//valloc_pages(kernelstack, UPAGES);
 
 	/* Store irq and abt stack in curcpu. */
 	curcpu()->ci_irqstack = armstack.pv_va + IRQ_STACK_TOP;
@@ -614,7 +586,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	 */
 	if (fdt_get_size(config) != 0) {
 		uint32_t size = fdt_get_size(config);
-		valloc_pages(fdt, round_page(size) / PAGE_SIZE);
+		//valloc_pages(fdt, round_page(size) / PAGE_SIZE);
 		memcpy((void *)fdt.pv_pa, config, size);
 	}
 
@@ -622,7 +594,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	 * XXX Defer this to later so that we can reclaim the memory
 	 * XXX used by the RedBoot page tables.
 	 */
-	alloc_pages(msgbufphys, round_page(MSGBUFSIZE) / PAGE_SIZE);
+	//alloc_pages(msgbufphys, round_page(MSGBUFSIZE) / PAGE_SIZE);
 
 	/*
 	 * Ok we have allocated physical pages for the primary kernel
@@ -805,8 +777,10 @@ initarm(void *arg0, void *arg1, void *arg2)
 #ifdef VERBOSE_INIT_ARM
 	printf("pmap ");
 #endif
+/*
 	pmap_bootstrap((pd_entry_t *)kernel_l1pt.pv_va, KERNEL_VM_BASE,
 	    KERNEL_VM_BASE + KERNEL_VM_SIZE);
+*/
 
 	/*
 	 * Restore proper bus_space operation, now that pmap is initialized.
