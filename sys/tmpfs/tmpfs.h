@@ -339,7 +339,7 @@ int		tmpfs_strname_neqlen(struct componentname *, struct componentname *);
 #define	TMPFS_PAGES_RESERVED	(4 * 1024 * 1024 / PAGE_SIZE)
 
 /* Maximum file size. This should be configurable and fixed. */
-#define TMPFS_MAX_FILESIZE      4294967296ULL
+#define TMPFS_MAX_FILESIZE	68719476736ULL
 
 /* Be gentle to kernel_map. */
 #define TMPFS_UIO_MAXBYTES	((1 << 24) - PAGE_SIZE)

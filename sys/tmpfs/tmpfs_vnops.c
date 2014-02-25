@@ -596,7 +596,7 @@ tmpfs_write(void *v)
 	struct uio *uio = ap->a_uio;
 	const int ioflag = ap->a_ioflag;
 	tmpfs_node_t *node;
-	off_t oldsize;
+	off_t oldsize, newsize;
 	int extended;
 	int error;
 
@@ -616,14 +616,21 @@ tmpfs_write(void *v)
 	if (ioflag & IO_APPEND) {
 		uio->uio_offset = node->tn_size;
 	}
-	if (uio->uio_offset + uio->uio_resid > TMPFS_MAX_FILESIZE) {
+	if (uio->uio_offset < 0 ||
+	    INT64_MAX - uio->uio_offset < uio->uio_resid) {
+		error = EINVAL;
+		goto out;
+	}
+
+	newsize = uio->uio_offset + uio->uio_resid;
+	if (newsize > SIZE_MAX || newsize > TMPFS_MAX_FILESIZE) {
 		error = EFBIG;
 		goto out;
 	}
 
-	extended = uio->uio_offset + uio->uio_resid > node->tn_size;
+	extended = newsize > node->tn_size;
 	if (extended) {
-		error = tmpfs_reg_resize(vp, uio->uio_offset + uio->uio_resid);
+		error = tmpfs_reg_resize(vp, newsize);
 		if (error)
 			goto out;
 	}

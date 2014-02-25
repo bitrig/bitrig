@@ -1183,7 +1183,7 @@ tmpfs_truncate(struct vnode *vp, off_t length)
 		goto out;
 	}
 
-	if (length > TMPFS_MAX_FILESIZE) {
+	if (length > SIZE_MAX || length > TMPFS_MAX_FILESIZE) {
 		error = EFBIG;
 		goto out;
 	}
