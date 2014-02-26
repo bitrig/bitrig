@@ -270,6 +270,7 @@ struct proc {
 	char	p_stat;			/* S* process status. */
 	char	p_pad1[1];
 	u_char	p_descfd;		/* if not 255, fdesc permits this fd */
+	int	p_crit;			/* Critical depth */
 
 	pid_t	p_pid;			/* Process identifier. */
 	LIST_ENTRY(proc) p_hash;	/* Hash chain. */
@@ -282,7 +283,6 @@ struct proc {
 	long 	p_thrslpid;	/* for thrsleep syscall */
 
 	/* scheduling */
-	int	p_crit;		 /* Critical depth */
 	u_int	p_estcpu;	 /* Time averaged value of p_cpticks. */
 	int	p_cpticks;	 /* Ticks of cpu time. */
 	const volatile void *p_wchan;/* Sleep address. */

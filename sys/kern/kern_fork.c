@@ -317,6 +317,13 @@ fork1(struct proc *curp, int flags, void *stack, pid_t *tidptr,
 
 	p->p_stat = SIDL;			/* protect against others */
 	p->p_flag = 0;
+	p->p_xstat = 0;
+	/*
+	 * Newly formed process must be in a critical section so that we don't
+	 * recurse into schedlock. The trampoline code will release the
+	 * inherited schedlock, and then safely releasing the critical section.
+	 */
+	p->p_crit = 1;
 
 	/*
 	 * Make a proc table entry for the new process.
@@ -600,10 +607,10 @@ proc_trampoline_mp(void)
 	p = curproc;
 
 	SCHED_ASSERT_LOCKED();
-	__mp_unlock(&sched_lock);
+	KASSERT(CRIT_DEPTH == 1);
+	/* SCHED_UNLOCK will release our critical section */
+	SCHED_UNLOCK();
 	spl0();
-	KASSERT(CRIT_DEPTH == 0);
-	crit_leave_all();	/* for the side effects */
 	SCHED_ASSERT_UNLOCKED();
 	KERNEL_ASSERT_UNLOCKED();
 
