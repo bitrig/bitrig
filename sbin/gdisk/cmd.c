@@ -204,6 +204,9 @@ Xwrite(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
 {
 	int fd;
 
+	if (GPT_verify(gpt))
+		return (CMD_CONT);
+
 	fd = DISK_open(disk->name, O_RDWR);
 
 	printf("Writing GPT.\n");

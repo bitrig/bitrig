@@ -295,3 +295,9 @@ PRT_print(int num, gpt_partition_t *partn, char *units)
 		    );
 	}
 }
+
+int
+PRT_overlap(gpt_partition_t *p1, gpt_partition_t *p2)
+{
+	return (p1->end_lba >= p2->start_lba && p2->end_lba >= p1->start_lba);
+}

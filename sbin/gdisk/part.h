@@ -44,6 +44,7 @@ const char *PRT_ascii_id(int);
 void PRT_print(int, gpt_partition_t *, char *);
 int PRT_pid_for_type(uuid_t *);
 void PRT_set_type_by_pid(gpt_partition_t *, int);
+int PRT_overlap(gpt_partition_t *, gpt_partition_t *);
 
 #endif /* _PART_H */
 

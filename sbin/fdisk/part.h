@@ -43,6 +43,7 @@ void PRT_parse(struct disk *, struct dos_partition *, off_t, off_t,
     struct prt *);
 void PRT_make(struct prt *, off_t, off_t, struct dos_partition *);
 void PRT_print(int, struct prt *, char *);
+int PRT_overlap(struct prt *, struct prt *);
 
 /* This does CHS -> bs/ns */
 void PRT_fix_BN(struct disk *, struct prt *, int);

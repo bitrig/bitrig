@@ -418,3 +418,40 @@ error:
 	printf("Couldn't write GPT\n");
 	return -1;
 }
+
+int
+GPT_verify(gpt_t *gpt)
+{
+	uint32_t i, j, n;
+	gpt_partition_t *p1, *p2;
+
+	for (i = 0, n = 0; i < gpt->header->partitions_num; i++) {
+		p1 = &gpt->part[i];
+
+		if (uuid_is_nil(&p1->type, NULL))
+			continue;
+
+		if (PRT_pid_for_type(&p1->type) == GPTPTYP_OPENBSD)
+			n++;
+
+		for (j = i + 1; j < gpt->header->partitions_num; j++) {
+			p2 = &gpt->part[j];
+			if (!uuid_is_nil(&p2->type, NULL) &&
+			    PRT_overlap(p1, p2)) {
+				warnx("Partitions %u and %u are overlapping!", i, j);
+				if (!ask_yn("Write GPT anyway?"))
+					return (-1);
+			}
+
+		}
+
+	}
+	if (n >= 2) {
+		warnx("GPT contains more than one OpenBSD partition!");
+		if (!ask_yn("Write GPT anyway?"))
+			return (-1);
+
+	}
+
+	return (0);
+}

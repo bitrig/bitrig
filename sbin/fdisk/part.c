@@ -286,6 +286,12 @@ PRT_print(int num, struct prt *partn, char *units)
 	}
 }
 
+int
+PRT_overlap(struct prt *p1, struct prt *p2)
+{
+	return (p1->bs + p1->ns > p2->bs && p2->bs + p2->ns > p1->bs);
+}
+
 void
 PRT_fix_BN(struct disk *disk, struct prt *part, int pn)
 {
