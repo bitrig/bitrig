@@ -451,7 +451,7 @@ uvm_pause(void)
 		KERNEL_LOCK();
 	}
 	if (curcpu()->ci_schedstate.spc_schedflags & SPCF_SHOULDYIELD)
-		preempt(NULL);
+		yield();
 }
 
 #ifndef SMALL_KERNEL

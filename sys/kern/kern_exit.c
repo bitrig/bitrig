@@ -262,8 +262,9 @@ exit1(struct proc *p, int rv, int flags)
 	 * the process on the zombprocess list below.
 	 */
 	/*
-	 * NOTE: WE ARE NO LONGER ALLOWED TO SLEEP!
+	 * NOTE: WE ARE NO LONGER ALLOWED TO SLEEP or PREMPT
 	 */
+	crit_enter();		/* XXX this is a long crit section, fix it */
 	p->p_stat = SDEAD;
 
 	LIST_REMOVE(p, p_hash);
