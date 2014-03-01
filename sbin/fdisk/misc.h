@@ -40,7 +40,7 @@ extern struct unit_type unit_types[];
 int unit_lookup(char *);
 int ask_cmd(char **, char **);
 int ask_num(const char *, int, int, int);
-int ask_pid(int);
+int ask_pid(unsigned char);
 int ask_yn(const char *);
 u_int16_t getshort(void *);
 u_int32_t getlong(void *);
