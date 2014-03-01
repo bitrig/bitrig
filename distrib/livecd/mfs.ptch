@@ -1,0 +1,20 @@
+--- /dest/etc/rc	Thu Mar 15 22:00:25 2012
++++ obj/fs/etc/rc	Fri Mar 16 16:35:06 2012
+@@ -319,6 +319,17 @@ mount -a -t nonfs,vnd
+ mount -uw /		# root on nfs requires this, others aren't hurt
+ rm -f /fastboot		# XXX (root now writeable)
+ 
++echo 'mounting mfs'
++mount_mfs -s 262144 swap /var
++mount_mfs -s 262144 swap /etc
++mount_mfs -s 16384 swap /dev
++mount_mfs -s 131072 swap /tmp
++mount_mfs -s 65536 swap /home
++mount_mfs -s 65536 swap /root
++sleep 2
++tar zxpf /ro/mfs.tgz -C /
++cd /dev && sh MAKEDEV all
++
+ # set flags on ttys.  (do early, in case they use tty for SLIP in netstart)
+ echo 'setting tty flags'
+ ttyflags -a
