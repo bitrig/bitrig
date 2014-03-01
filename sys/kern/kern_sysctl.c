@@ -283,6 +283,7 @@ kern_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
 		case KERN_MALLOCSTATS:
 		case KERN_TTY:
 		case KERN_POOL:
+		case KERN_PREEMPTION:
 		case KERN_PROC_ARGS:
 		case KERN_PROC_CWD:
 		case KERN_SYSVIPC_INFO:
@@ -496,6 +497,14 @@ kern_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
 		return (sysctl_rdint(oldp, oldlenp, newp, nprocesses));
 	case KERN_POOL:
 		return (sysctl_dopool(name + 1, namelen - 1, oldp, oldlenp));
+	case KERN_PREEMPTION:
+		error = sysctl_int(oldp, oldlenp, newp, newlen,
+		    &kernel_preemption);
+		if (error)
+			return (error);
+		/* Normalize, 0 or 1 */
+		kernel_preemption = !!kernel_preemption;
+		return (0);
 	case KERN_STACKGAPRANDOM:
 		stackgap = stackgap_random;
 		error = sysctl_int(oldp, oldlenp, newp, newlen, &stackgap);

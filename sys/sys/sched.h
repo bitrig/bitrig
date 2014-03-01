@@ -131,6 +131,7 @@ struct schedstate_percpu {
 
 extern int schedhz;			/* ideally: 16 */
 extern int rrticks_init;		/* ticks per roundrobin() */
+extern int kernel_preemption;		/* enabled or disabled */
 
 struct proc;
 void schedclock(struct proc *);
@@ -153,6 +154,9 @@ void cpu_idle_enter(void);
 void cpu_idle_cycle(void);
 void cpu_idle_leave(void);
 void sched_peg_curproc(struct cpu_info *ci);
+#define sched_pin(p)	atomic_setbits_int(&(p)->p_flag, P_CPUPEG)
+#define sched_unpin(p)	atomic_clearbits_int(&(p)->p_flag, P_CPUPEG)
+#define sched_pinned(p)	(p->p_flag & P_CPUPEG)
 
 #ifdef MULTIPROCESSOR
 void sched_start_secondary_cpus(void);
@@ -161,14 +165,20 @@ void sched_stop_secondary_cpus(void);
 
 #define curcpu_is_idle()	(curcpu()->ci_schedstate.spc_whichqs == 0)
 #define in_intr()		(curcpu()->ci_idepth != 0)
-#define assert_in_intr() do {						\
+#define assert_in_intr()
+#if 0
+do {									\
 		if (__predict_false(curcpu()->ci_idepth == 0))		\
 			panic("%s:%d in interrupt\n", __func__, __LINE__); \
 	} while (0)
-#define assert_not_in_intr() do {					\
+#endif
+#define assert_not_in_intr()
+#if 0
+do {									\
 		if (__predict_false(curcpu()->ci_idepth != 0))		\
 			panic("%s:%d in interrupt\n", __func__, __LINE__); \
 	} while (0)
+#endif
 
 void sched_init_runqueues(void);
 void setrunqueue(struct proc *);

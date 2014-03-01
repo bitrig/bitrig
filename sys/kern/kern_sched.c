@@ -54,6 +54,8 @@ uint64_t sched_stolen;		/* Times we stole proc from other cpus */
 uint64_t sched_choose;		/* Times we chose a cpu */
 uint64_t sched_wasidle;		/* Times we came out of idle */
 
+int	kernel_preemption;	/* enable or disable kernel preemption */
+
 /*
  * A few notes about cpu_switchto that is implemented in MD code.
  *
@@ -136,7 +138,7 @@ sched_idle(void *v)
 	cpuset_add(&sched_idle_cpus, ci);
 	p->p_stat = SSLEEP;
 	p->p_cpu = ci;
-	atomic_setbits_int(&p->p_flag, P_CPUPEG);
+	sched_pin(p);
 	mi_switch();
 	cpuset_del(&sched_idle_cpus, ci);
 
@@ -370,7 +372,7 @@ sched_choosecpu(struct proc *p)
 	/*
 	 * If pegged to a cpu, don't allow it to move.
 	 */
-	if (p->p_flag & P_CPUPEG)
+	if (sched_pinned(p))
 		return (p->p_cpu);
 
 	sched_choose++;
@@ -449,7 +451,7 @@ sched_steal_proc(struct cpu_info *self)
 
 		queue = ffs(spc->spc_whichqs) - 1;
 		TAILQ_FOREACH(p, &spc->spc_qs[queue], p_runq) {
-			if (p->p_flag & P_CPUPEG)
+			if (sched_pinned(p))
 				continue;
 
 			cost = sched_proc_to_cpu_cost(self, p);
@@ -559,7 +561,7 @@ sched_peg_curproc(struct cpu_info *ci)
 	p->p_priority = p->p_usrpri;
 	p->p_stat = SRUN;
 	p->p_cpu = ci;
-	atomic_setbits_int(&p->p_flag, P_CPUPEG);
+	sched_pin(p);
 	setrunqueue(p);
 	p->p_ru.ru_nvcsw++;
 	mi_switch();

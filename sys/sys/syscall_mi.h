@@ -155,7 +155,7 @@ mi_ast(struct proc *p, int resched)
 		KERNEL_UNLOCK();
 	}
 	if (resched)
-		preempt(NULL);
+		yield();
 
 	/*
 	 * XXX could move call to userret() here, but

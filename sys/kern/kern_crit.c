@@ -46,10 +46,15 @@ crit_reenter(int c)
 void
 crit_leave(void)
 {
-	if (--curproc->p_crit == 0)
+	struct proc *p = curproc;
+
+	if (p->p_crit == 1 && p->p_preempt)
+		preempt(NULL);
+
+	if (--p->p_crit == 0)
 		crit_rundeferred();
 
-	KASSERT(curproc->p_crit >= 0);
+	KASSERT(p->p_crit >= 0);
 }
 
 /*

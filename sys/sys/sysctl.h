@@ -179,7 +179,8 @@ struct ctlname {
 #define	KERN_NETLIVELOCKS	76	/* int: number of network livelocks */
 #define	KERN_POOL_DEBUG		77	/* int: enable pool_debug */
 #define	KERN_PROC_CWD		78      /* node: proc cwd */
-#define	KERN_MAXID		79	/* number of valid kern ids */
+#define	KERN_PREEMPTION		79	/* int: enable kernel_preemption */
+#define	KERN_MAXID		80	/* number of valid kern ids */
 
 #define	CTL_KERN_NAMES { \
 	{ 0, 0 }, \
@@ -261,6 +262,7 @@ struct ctlname {
 	{ "netlivelocks", CTLTYPE_INT }, \
 	{ "pool_debug", CTLTYPE_INT }, \
 	{ "proc_cwd", CTLTYPE_NODE }, \
+	{ "preemption", CTLTYPE_INT }, \
 }
 
 /*

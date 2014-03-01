@@ -288,6 +288,7 @@ struct proc {
 	const volatile void *p_wchan;/* Sleep address. */
 	struct	timeout p_sleep_to;/* timeout for tsleep() */
 	const char *p_wmesg;	 /* Reason for sleep. */
+	int	p_preempt;	 /* Should we preempt barney ? */
 	fixpt_t	p_pctcpu;	 /* %cpu for this thread */
 	u_int	p_slptime;	 /* Time since last blocked. */
 	u_int	p_uticks;		/* Statclock hits in user mode. */

@@ -264,7 +264,7 @@ ktrgenio(struct proc *p, int fd, enum uio_rw rw, struct iovec *iov,
 		 * huge I/O.
 		 */
 		if (curcpu()->ci_schedstate.spc_schedflags & SPCF_SHOULDYIELD)
-			preempt(NULL);
+			yield();
 
 		count = lmin(iov->iov_len, buflen);
 		if (count > len)
