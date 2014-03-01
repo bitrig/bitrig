@@ -156,7 +156,7 @@ int
 Xsetpid(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
 {
 	const char *errstr;
-	int pn, num, ret;
+	int pn, dflt, num, ret;
 	gpt_partition_t *pp;
 
 	ret = CMD_CONT;
@@ -173,7 +173,11 @@ Xsetpid(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
 	PRT_print(pn, pp, NULL);
 
 	/* Ask for partition type */
-	num = ask_pid(PRT_pid_for_type(&pp->type));
+	if (uuid_is_nil(&pp->type, NULL))
+		dflt = GPTPTYP_OPENBSD;
+	else
+		dflt = PRT_pid_for_type(&pp->type);
+	num = ask_pid(dflt);
 	if (num != PRT_pid_for_type(&pp->type)) {
 		PRT_set_type_by_pid(pp, num);
 		ret = CMD_DIRTY;
