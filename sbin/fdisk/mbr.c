@@ -50,10 +50,7 @@ void
 MBR_init_GPT(struct disk *disk, struct mbr *mbr)
 {
 	/* initialize a protective MBR for GPT */
-	bzero (&mbr->part[0], sizeof(mbr->part[0]));
-	bzero (&mbr->part[1], sizeof(mbr->part[1]));
-	bzero (&mbr->part[2], sizeof(mbr->part[2]));
-	bzero (&mbr->part[3], sizeof(mbr->part[3]));
+	bzero(&mbr->part, sizeof(mbr->part));
 
 	/* Use whole disk, starting after MBR. */
 	mbr->part[0].id = DOSPTYP_EFI;
