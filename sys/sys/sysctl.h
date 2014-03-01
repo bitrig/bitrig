@@ -183,6 +183,7 @@ struct ctlname {
 #define	KERN_PROC_VMMAP		80      /* node: proc vmmap */
 #define	KERN_GLOBAL_PTRACE	81	/* allow ptrace globally */
 /* gap for Bitrig */
+#define	KERN_PREEMPTION		99	/* int: enable kernel_preemption */
 #define	KERN_CHROOTMKNOD	100	/* allow mknod in chroot */
 #define	KERN_MAXID		101	/* number of valid kern ids */
 
@@ -288,6 +289,7 @@ struct ctlname {
 	{ "gap", 0 }, \
 	{ "gap", 0 }, \
 	{ "chroot_mknod", CTLTYPE_INT }, \
+	{ "preemption", CTLTYPE_INT }, \
 }
 
 /*

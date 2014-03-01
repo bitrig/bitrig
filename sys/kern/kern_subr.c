@@ -77,7 +77,7 @@ uiomove(void *cp, int n, struct uio *uio)
 		case UIO_USERSPACE:
 			if (curcpu()->ci_schedstate.spc_schedflags &
 			    SPCF_SHOULDYIELD)
-				preempt(NULL);
+				yield();
 			if (uio->uio_rw == UIO_READ)
 				error = copyout(cp, iov->iov_base, cnt);
 			else
