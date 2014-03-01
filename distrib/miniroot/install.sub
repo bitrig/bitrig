@@ -1275,6 +1275,42 @@ ftp_error() {
 	return 1
 }
 
+startftplist() {
+	# If no networks are configured, we do not need the ftplist file
+	((nifs < 1)) && return
+
+	# Make sure the ftp subshell gets its own process group
+	set -m
+	(
+		ftp -Vao - "https://www.bitrig.org/ftplist" \
+			2>/tmp/ftplisterr >$SERVERLISTALL
+
+		# Remember finish time for adjusting the received timestamp
+		echo -n $SECONDS >$SERVERLISTSEC
+		feed_random
+	) & ftppid=$!
+	set +m
+
+	# If the ftp process takes more than 12 seconds, kill it
+	# XXX We are relying on the pid space not randomly biting us --
+	# XXX ftp could terminate early, and the pid could be reused
+	(sleep 12; kill -INT -$ftppid >/dev/null 2>&1) &
+}
+
+# Wait for the ftp process to finish, or be killed after the timeout
+waitftplist() {
+	wait "$ftppid" 2>/dev/null
+}
+
+# If possible, print the timestamp received from the ftplist.cgi output,
+# adjusted with the time elapsed since it was received
+ftp_time() {
+	local _ftplist_sec=$(cat $SERVERLISTSEC 2>/dev/null)
+	local _time=$(sed '/^TIME=\([0-9]*\)$/!d;s//\1/;q' $SERVERLISTALL 2>/dev/null)
+	[[ -n $_ftplist_sec && -n $_time ]] &&
+		echo $((_time + SECONDS - _ftplist_sec))
+}
+
 # Get several parameters from the user, and xfer
 # files from the server.
 # $1 = url type (ftp or http)
@@ -1296,6 +1332,7 @@ install_url() {
 		set -- $(sed q $SERVERLIST)
 		_server_ip=${1%%/*}
 	else
+		echo "(Was not able to get ftplist from www.bitrig.org, but that is OK)"
 		_prompt="Server? (hostname or 'done')"
 	fi
 
@@ -1581,7 +1618,8 @@ install_sets() {
 		_d=$(sed -ne '/^method=/s/method=//p' $SERVERLISTALL)
 
 	ifconfig netboot >/dev/null 2>&1 && : ${_d:=http}
-	[[ -n $(get_cddevs) ]] && { _locs="cd $_locs" ; : ${_d:=cd} ; }
+	# Default cd to http since we don't provide sets in cds.
+	[[ -n $(get_cddevs) ]] && { _locs="cd $_locs" ; : ${_d:=http} ; }
 	[[ -x /sbin/mount_nfs ]] && _locs="$_locs nfs"
 	[[ -n $MTDEVS && -x /bin/mt ]] && _locs="$_locs tape"
 	: ${_d:=http}
@@ -2196,6 +2234,8 @@ if [[ $MODE == install ]]; then
 
 	echo
 	donetconfig
+
+	((nifs != 0)) && startftplist
 
 	echo
 	while :; do

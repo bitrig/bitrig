@@ -65,6 +65,7 @@ COPY	${CURDIR}/../../miniroot/master.passwd	etc/master.passwd
 SPECIAL	pwd_mkdb -p -d etc master.passwd; rm etc/master.passwd
 COPY	${CURDIR}/../../miniroot/protocols	etc/protocols
 COPY	${CURDIR}/../../miniroot/services	etc/services
+COPY	${CURDIR}/../../miniroot/cert.pem	etc/ssl/cert.pem
 TERMCAP	vt100,vt220,dumb			usr/share/misc/termcap
 
 SYMLINK	/tmp/fstab.shadow			etc/fstab

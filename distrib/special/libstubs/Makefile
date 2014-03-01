@@ -4,7 +4,8 @@
 LIB=    stubs
 SRCS=	db.c setlocale.c sha1.c sha2.c getgrent.c getpwent.c \
 	ethers.c \
-	mbrtowc_sb.c sscanf.c vfprintf.c vfscanf.c
+	sscanf.c vfprintf.c vfscanf.c
+#	mbrtowc_sb.c sscanf.c vfprintf.c vfscanf.c
 SRCS+=	asr.c			\
 	asr_utils.c		\
 	getaddrinfo.c		\
