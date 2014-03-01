@@ -318,7 +318,9 @@ void
 preempt(struct proc *newp)
 {
 	struct proc *p = curproc;
-	int klocks;
+	int oldprio, wepinned = 0;
+
+	KASSERT(p->p_cpu == curcpu());
 
 	/*
 	 * XXX Switching to a specific process is not supported yet.
@@ -326,15 +328,25 @@ preempt(struct proc *newp)
 	if (newp != NULL)
 		panic("preempt: cpu_preempt not yet implemented");
 
+	/*
+	 * We cannot be stolen by another cpu while we're preempting, so pin us
+	 * to this cpu, taking care to only unpin, in case we did the pin.
+	 */
+	if (!sched_pinned(p)) {
+		sched_pin(p);	/* Make sure we're not stolen */
+		wepinned = 1;	/* So that we know we should unpin later */
+	}
 	SCHED_LOCK();
-	klocks = KERNEL_UNLOCK_ALL();
-	p->p_priority = p->p_usrpri;
-	p->p_stat = SRUN;
-	p->p_cpu = sched_choosecpu(p);
-	setrunqueue(p);
-	p->p_ru.ru_nivcsw++;
-	mi_switch();
-	KERNEL_RELOCK_ALL(klocks);
+	oldprio = p->p_priority;/* Save the priority we were running */
+	p->p_priority = PSWP;	/* Bump priority so we are the next ones to run */
+	p->p_stat = SRUN;	/* We're going to a runqueue, so SRUN */
+	setrunqueue(p);		/* Go to the runqueue */
+	p->p_ru.ru_nivcsw++;	/* Stupid counter */
+	mi_switch();		/* Switch away */
+	p->p_priority = oldprio;/* Restore old prio, since we bumped before switching */
+	/* If we were the responsibles for our pin, unpin now */
+	if (wepinned)
+		sched_unpin(p);
 }
 
 /*
@@ -355,7 +367,9 @@ mi_switch(void)
 	assertwaitok();
 	KASSERT(p->p_stat != SONPROC);
 
-	KERNEL_ASSERT_UNLOCKED();
+	if (!p->p_preempt)
+		KERNEL_ASSERT_UNLOCKED();
+
 	SCHED_ASSERT_LOCKED();
 #ifdef MULTIPROCESSOR	
 	/* No recursion on sched_lock while switching. */
@@ -404,6 +418,9 @@ mi_switch(void)
 	 * scheduling flags.
 	 */
 	atomic_clearbits_int(&spc->spc_schedflags, SPCF_SWITCHCLEAR);
+
+	/* Clear preemption flag */
+	p->p_preempt = 0;
 
 	nextproc = sched_chooseproc();
 

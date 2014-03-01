@@ -181,7 +181,8 @@ struct ctlname {
 #define	KERN_PROC_CWD		78      /* node: proc cwd */
 #define	KERN_PROC_NOBROADCASTKILL 79	/* node: proc no broadcast kill */
 #define	KERN_CHROOTMKNOD	80	/* allow mknod in chroot */
-#define	KERN_MAXID		81	/* number of valid kern ids */
+#define	KERN_PREEMPTION		81	/* int: enable kernel_preemption */
+#define	KERN_MAXID		82	/* number of valid kern ids */
 
 #define	CTL_KERN_NAMES { \
 	{ 0, 0 }, \
@@ -265,6 +266,7 @@ struct ctlname {
 	{ "proc_cwd", CTLTYPE_NODE }, \
 	{ "proc_nobroadcastkill", CTLTYPE_NODE }, \
 	{ "chroot_mknod", CTLTYPE_INT }, \
+	{ "preemption", CTLTYPE_INT }, \
 }
 
 /*
