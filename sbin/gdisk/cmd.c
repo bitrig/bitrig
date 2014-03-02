@@ -104,7 +104,7 @@ int
 Xedit(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
 {
 	const char *errstr;
-	int i, pn, ret;
+	int i, pn, ret, new;
 	gpt_partition_t *pp;
 	char buf[36];
 
@@ -115,6 +115,8 @@ Xedit(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
 	}
 	pp = &gpt->part[pn];
 
+	new = uuid_is_nil(&pp->type, NULL);
+
 	/* Edit partition type */
 	ret = Xsetpid(cmd, disk, gpt, tt, offset);
 
@@ -124,6 +126,10 @@ Xedit(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
 		printf("Partition %d is disabled.\n", pn);
 		return (ret);
 	}
+
+	/* Use remaining free space for new partitions */
+	if (new)
+		GPT_fillremaining(gpt, pn);
 
 	memset(buf, 0, sizeof(buf));
 	ask_string("Partition name", buf, sizeof(buf));

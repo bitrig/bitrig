@@ -45,8 +45,6 @@
 int
 GPT_init(disk_t *disk, gpt_t *gpt)
 {
-	uint64_t i;
-
 	/* free existing metadata, redo them */
 	if (gpt->header)
 		free(gpt->header);
@@ -73,16 +71,8 @@ GPT_init(disk_t *disk, gpt_t *gpt)
 	    ((gpt->header->partitions_num + 3) / 4 + 2);
 	uuidgen(&gpt->header->guid, 1);
 
-	/* Start OpenBSD GPT partition on a power of 2 block number. */
-	i = 1;
-	while (i < DL_SECTOBLK(&dl, gpt->header->start_lba))
-		i *= 2;
-
-	gpt->part[0].start_lba = i;
-	gpt->part[0].end_lba = gpt->header->end_lba;
-
+	GPT_fillremaining(gpt, 0);
 	PRT_set_type_by_pid(&gpt->part[0], GPTPTYP_OPENBSD);
-
 	return 0;
 }
 
@@ -454,4 +444,33 @@ GPT_verify(gpt_t *gpt)
 	}
 
 	return (0);
+}
+
+void
+GPT_fillremaining(gpt_t *gpt, int pn)
+{
+	gpt_partition_t *part, *p;
+	uint64_t i;
+
+	part = &gpt->part[pn];
+
+	/* Start OpenBSD GPT partition on a power of 2 block number. */
+	i = 1;
+	while (i < DL_SECTOBLK(&dl, gpt->header->start_lba))
+		i *= 2;
+
+	part->start_lba = i;
+	part->end_lba = gpt->header->end_lba;
+
+	/* Shrink to remaining free space */
+	for (i = 0; i < gpt->header->partitions_num; i++) {
+		p = &gpt->part[i];
+		if (i != pn && PRT_overlap(part, p)) {
+			if (p->start_lba > part->start_lba) {
+				part->end_lba = p->start_lba - 1;
+			} else {
+				part->start_lba = p->end_lba + 1;
+			}
+		}
+	}
 }

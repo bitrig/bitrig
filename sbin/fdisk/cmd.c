@@ -145,7 +145,7 @@ Xedit(char *args, struct disk *disk, struct mbr *mbr, struct mbr *tt,
     int offset)
 {
 	const char *errstr;
-	int pn, num, ret;
+	int pn, num, ret, new;
 	struct prt *pp;
 
 	pn = strtonum(args, 0, 3, &errstr);
@@ -154,6 +154,8 @@ Xedit(char *args, struct disk *disk, struct mbr *mbr, struct mbr *tt,
 		return (CMD_CONT);
 	}
 	pp = &mbr->part[pn];
+
+	new = (pp->id == DOSPTYP_UNUSED);
 
 	/* Edit partition type */
 	ret = Xsetpid(args, disk, mbr, tt, offset);
@@ -169,6 +171,10 @@ Xedit(char *args, struct disk *disk, struct mbr *mbr, struct mbr *tt,
 		printf("Partition %d is disabled.\n", pn);
 		return (ret);
 	}
+
+	/* Use remaining free space for new partitions */
+	if (new)
+		MBR_fillremaining(mbr, disk, pn);
 
 	/* Change table entry */
 	if (ask_yn("Do you wish to edit in CHS mode?")) {

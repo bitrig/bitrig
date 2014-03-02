@@ -64,8 +64,6 @@ MBR_init_GPT(struct disk *disk, struct mbr *mbr)
 void
 MBR_init(struct disk *disk, struct mbr *mbr)
 {
-	daddr_t i;
-	u_int64_t adj;
 	extern int g_flag;
 
 	if (g_flag) {
@@ -77,56 +75,17 @@ MBR_init(struct disk *disk, struct mbr *mbr)
 	mbr->part[0].flag = 0;
 	mbr->part[1].flag = 0;
 	mbr->part[2].flag = 0;
-
 	mbr->part[3].flag = DOSACTIVE;
-	mbr->signature = DOSMBR_SIGNATURE;
-
-	/* Use whole disk. Reserve first track, or first cyl, if possible. */
 	mbr->part[3].id = DOSPTYP_OPENBSD;
-	if (disk->heads > 1)
-		mbr->part[3].shead = 1;
-	else
-		mbr->part[3].shead = 0;
-	if (disk->heads < 2 && disk->cylinders > 1)
-		mbr->part[3].scyl = 1;
-	else
-		mbr->part[3].scyl = 0;
-	mbr->part[3].ssect = 1;
-
-	/* Go right to the end */
-	mbr->part[3].ecyl = disk->cylinders - 1;
-	mbr->part[3].ehead = disk->heads - 1;
-	mbr->part[3].esect = disk->sectors;
-
-	/* Fix up start/length fields */
-	PRT_fix_BN(disk, &mbr->part[3], 3);
+	mbr->signature = DOSMBR_SIGNATURE;
 
 #if defined(__powerpc__) || defined(__mips__)
 	/* Now fix up for the MS-DOS boot partition on PowerPC. */
 	mbr->part[0].flag = DOSACTIVE;	/* Boot from dos part */
 	mbr->part[3].flag = 0;
-	mbr->part[3].ns += mbr->part[3].bs;
-	mbr->part[3].bs = mbr->part[0].bs + mbr->part[0].ns;
-	mbr->part[3].ns -= mbr->part[3].bs;
-	PRT_fix_CHS(disk, &mbr->part[3]);
-	if ((mbr->part[3].shead != 1) || (mbr->part[3].ssect != 1)) {
-		/* align the partition on a cylinder boundary */
-		mbr->part[3].shead = 0;
-		mbr->part[3].ssect = 1;
-		mbr->part[3].scyl += 1;
-	}
-	/* Fix up start/length fields */
-	PRT_fix_BN(disk, &mbr->part[3], 3);
 #endif
 
-	/* Start OpenBSD MBR partition on a power of 2 block number. */
-	i = 1;
-	while (i < DL_SECTOBLK(&dl, mbr->part[3].bs))
-		i *= 2;
-	adj = DL_BLKTOSEC(&dl, i) - mbr->part[3].bs;
-	mbr->part[3].bs += adj;
-	mbr->part[3].ns -= adj; 
-	PRT_fix_CHS(disk, &mbr->part[3]);
+	MBR_fillremaining(mbr, disk, 3);
 }
 
 void
@@ -302,4 +261,68 @@ MBR_verify(struct mbr *mbr)
 	}
 
 	return (0);
+}
+
+void
+MBR_fillremaining(struct mbr *mbr, struct disk *disk, int pn)
+{
+	struct prt *part, *p;
+	u_int64_t adj;
+	daddr_t i;
+
+	part = &mbr->part[pn];
+
+	/* Use whole disk. Reserve first track, or first cyl, if possible. */
+	if (disk->heads > 1)
+		part->shead = 1;
+	else
+		part->shead = 0;
+	if (disk->heads < 2 && disk->cylinders > 1)
+		part->scyl = 1;
+	else
+		part->scyl = 0;
+	part->ssect = 1;
+
+	/* Go right to the end */
+	part->ecyl = disk->cylinders - 1;
+	part->ehead = disk->heads - 1;
+	part->esect = disk->sectors;
+
+	/* Fix up start/length fields */
+	PRT_fix_BN(disk, part, pn);
+
+#if defined(__powerpc__) || defined(__mips__)
+	if ((part->shead != 1) || (part->ssect != 1)) {
+		/* align the partition on a cylinder boundary */
+		part->shead = 0;
+		part->ssect = 1;
+		part->scyl += 1;
+	}
+	/* Fix up start/length fields */
+	PRT_fix_BN(disk, part, pn);
+#endif
+
+	/* Start OpenBSD MBR partition on a power of 2 block number. */
+	i = 1;
+	while (i < DL_SECTOBLK(&dl, part->bs))
+		i *= 2;
+	adj = DL_BLKTOSEC(&dl, i) - part->bs;
+	part->bs += adj;
+	part->ns -= adj;
+	PRT_fix_CHS(disk, part);
+
+	/* Shrink to remaining free space */
+	for (i = 0; i < NDOSPART; i++) {
+		p = &mbr->part[i];
+		if (i != pn && PRT_overlap(part, p)) {
+			if (p->bs > part->bs) {
+				part->ns = p->bs - part->bs;
+			} else {
+				part->ns += part->bs;
+				part->bs = p->bs + p->ns;
+				part->ns -= part->bs;
+			}
+		}
+	}
+	PRT_fix_CHS(disk, part);
 }
