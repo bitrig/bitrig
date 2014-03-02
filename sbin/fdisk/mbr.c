@@ -253,6 +253,12 @@ MBR_verify(struct mbr *mbr)
 					return (-1);
 			}
 		}
+
+		if (!p1->ns) {
+			warnx("Partition %d has size zero!", i);
+			if (!ask_yn("Write MBR anyway?"))
+				return (-1);
+		}
 	}
 	if (n >= 2) {
 		warnx("MBR contains more than one OpenBSD partition!");
