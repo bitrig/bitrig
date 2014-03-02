@@ -4,6 +4,8 @@
 SUBDIR+= check_isw
 .endif
 
+SUBDUR+= xlocale
+
 install:
 
 .include <bsd.subdir.mk>

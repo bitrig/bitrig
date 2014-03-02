@@ -5,7 +5,7 @@ SUBDIR+= fmemopen fnmatch fpclassify getcap getopt_long glob
 SUBDIR+= hsearch longjmp locale malloc mkstemp netdb open_memstream 
 SUBDIR+= orientation popen printf
 SUBDIR+= regex setjmp setjmp-signal sigreturn sigsetjmp sprintf
-SUBDIR+= stdio_threading stpncpy strerror strtod strtol strtonum
+SUBDIR+= stdio_threading stpncpy strerror string strtod strtol strtonum
 SUBDIR+= telldir time vis
 
 .if defined(REGRESS_FULL)
