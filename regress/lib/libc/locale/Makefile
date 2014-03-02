@@ -4,7 +4,7 @@
 SUBDIR+= check_isw
 .endif
 
-SUBDUR+= xlocale
+SUBDIR+= xlocale
 
 install:
 

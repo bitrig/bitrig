@@ -5,6 +5,8 @@ LDFLAGS+=	-L/usr/local/lib
 
 TESTS=	test-wcscasecmp
 
+REGRESS_TARGETS=tests
+
 .PHONY: tests
 tests: ${TESTS}
 	for p in ${TESTS}; do ${.OBJDIR}/$$p; done
@@ -12,3 +14,5 @@ tests: ${TESTS}
 .PHONY: clean
 clean:
 	-rm -f ${TESTS}
+
+.include <bsd.regress.mk>

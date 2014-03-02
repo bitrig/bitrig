@@ -103,7 +103,6 @@ main(int argc, char *argv[])
 	assert(mbrtoc16(&c16, "\xa4", 1, &s) == 1);
 	assert(c16 == 0xa4);
 
-#if 0
 	/*
 	 * ISO-8859-15.
 	 */
@@ -115,7 +114,6 @@ main(int argc, char *argv[])
 	memset(&s, 0, sizeof(s));
 	assert(mbrtoc16(&c16, "\xa4", 1, &s) == 1);
 	assert(c16 == 0x20ac);
-#endif
 
 	/*
 	 * UTF-8.
