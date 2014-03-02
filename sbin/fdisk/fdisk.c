@@ -1,4 +1,4 @@
-/*	$OpenBSD: fdisk.c,v 1.54 2013/03/21 18:45:58 deraadt Exp $	*/
+/*	$OpenBSD: fdisk.c,v 1.55 2014/03/02 15:41:28 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -34,6 +34,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <paths.h>
+#include <stdint.h>
 #include "disk.h"
 #include "user.h"
 
@@ -51,12 +52,13 @@ usage(void)
 	extern char * __progname;
 
 	fprintf(stderr, "usage: %s "
-	    "[-egiuy] [-c cylinders -h heads -s sectors] [-f mbrfile] disk\n"
+	    "[-egiuy] [-l blocks] [-c cylinders -h heads -s sectors] [-f mbrfile] disk\n"
 	    "\t-i: initialize disk with virgin MBR\n"
 	    "\t-u: update MBR code, preserve partition table\n"
 	    "\t-e: edit MBRs on disk interactively\n"
 	    "\t-f: specify non-standard MBR template\n"
 	    "\t-chs: specify disk geometry\n"
+	    "\t-l: specify LBA block count\n"
 	    "\t-y: do not ask questions\n"
 	    "\t-g: intialize disk with EFI/GPT partition, requires -i\n"
 	    "`disk' may be of the forms: sd0 or /dev/rsd0c.\n",
@@ -72,6 +74,7 @@ main(int argc, char *argv[])
 	int i_flag = 0, m_flag = 0, u_flag = 0;
 	int c_arg = 0, h_arg = 0, s_arg = 0;
 	disk_t disk;
+	u_int32_t l_arg = 0;
 	DISK_metrics *usermetrics;
 #ifdef HAS_MBR
 	char *mbrfile = _PATH_MBR;
@@ -81,7 +84,7 @@ main(int argc, char *argv[])
 	mbr_t mbr;
 	char mbr_buf[DEV_BSIZE];
 
-	while ((ch = getopt(argc, argv, "ieguf:c:h:s:y")) != -1) {
+	while ((ch = getopt(argc, argv, "ieguf:c:h:s:l:y")) != -1) {
 		const char *errstr;
 
 		switch(ch) {
@@ -116,6 +119,12 @@ main(int argc, char *argv[])
 		case 'g':
 			g_flag = 1;
 			break;
+		case 'l':
+			l_arg = strtonum(optarg, 1, UINT32_MAX, &errstr);
+			if (errstr)
+				errx(1, "Block argument %s [1..%u].", errstr,
+				    UINT32_MAX);
+			break;
 		case 'y':
 			y_flag = 1;
 			break;
@@ -148,6 +157,15 @@ main(int argc, char *argv[])
 				usermetrics->size = c_arg * h_arg * s_arg;
 			} else
 				errx(1, "Please specify a full geometry with [-chs].");
+		}
+	} else if (l_arg) {
+		/* Force into LBA mode */
+		usermetrics = malloc(sizeof(DISK_metrics));
+		if (usermetrics != NULL) {
+			usermetrics->cylinders = l_arg / 64;
+			usermetrics->heads = 1;
+			usermetrics->sectors = 64;
+			usermetrics->size = l_arg;
 		}
 	} else
 		usermetrics = NULL;
