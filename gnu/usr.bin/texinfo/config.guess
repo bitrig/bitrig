@@ -198,7 +198,7 @@ case "${UNAME_MACHINE}:${UNAME_SYSTEM}:${UNAME_RELEASE}:${UNAME_VERSION}" in
 	echo "${machine}-${os}${release}"
 	exit 0 ;;
     *:Bitrig:*:*)
-	UNAME_MACHINE_ARCH=`arch | sed 's/OpenBSD.//'`
+	UNAME_MACHINE_ARCH=`arch | sed 's/Bitrig.//'`
 	echo ${UNAME_MACHINE_ARCH}-unknown-openbsd${UNAME_RELEASE}
 	exit 0 ;;
     *:OpenBSD:*:*)
