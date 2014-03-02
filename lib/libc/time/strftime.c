@@ -33,11 +33,7 @@ static const char	elsieid[] = "@(#)strftime.3	8.3";
 #include "namespace.h"
 #include "private.h"
 
-#if defined(LIBC_SCCS) && !defined(lint)
-static const char	sccsid[] = "@(#)strftime.c	5.4 (Berkeley) 3/14/89";
-#endif /* LIBC_SCCS and not lint */
 #include <sys/cdefs.h>
-/* __FBSDID("$FreeBSD$"); */
 
 #include "tzfile.h"
 #include <fcntl.h>

@@ -1,5 +1,4 @@
 #include <sys/cdefs.h>
-/* __FBSDID("$FreeBSD$"); */
 
 /*
  * Tell <ctype.h> to generate extern versions of all its inline

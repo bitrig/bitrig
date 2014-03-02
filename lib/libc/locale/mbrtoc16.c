@@ -25,7 +25,6 @@
  */
 
 #include <sys/cdefs.h>
-/* __FBSDID("$FreeBSD$"); */
 
 #include <uchar.h>
 #include "xlocale_private.h"
