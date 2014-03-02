@@ -39,7 +39,7 @@ LIST_HEAD(pted_pv_head, pte_desc);
 
 struct pte_desc {
         LIST_ENTRY(pte_desc) pted_pv_list;
-	uint32_t pte;
+	uint32_t pted_pte;
 	pmap_t pted_pmap;
 	vaddr_t pted_va;
 };
@@ -59,6 +59,7 @@ void _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags,
 
 void pmap_remove_pg(pmap_t pm, vaddr_t va);
 void pmap_kremove_pg(vaddr_t va);
+void pmap_set_l2(struct pmap *pm, uint32_t pa, vaddr_t va, uint32_t l2_pa);
 
 
 /* XXX */
@@ -71,10 +72,13 @@ void pmap_kenter_cache(vaddr_t va, paddr_t pa, vm_prot_t prot, int cacheable);
 void pmap_table_insert(struct pte_desc *pted);
 void pmap_pinit(pmap_t pm);
 void pmap_release(pmap_t pm);
-vaddr_t pmap_steal_memory(vsize_t size, vaddr_t *start, vaddr_t *end);
+//vaddr_t pmap_steal_memory(vsize_t size, vaddr_t *start, vaddr_t *end);
 paddr_t arm_kvm_stolen;
-void * pmap_steal_avail(size_t size, int align);
+void * pmap_steal_avail(size_t size, int align, void **kva);
 void pmap_remove_avail(paddr_t base, paddr_t end);
+void pmap_avail_fixup(void);
+void pmap_map_stolen(void);
+void pmap_physload_avail(void);
 
 
 /* pte invalidation */
@@ -108,14 +112,13 @@ VP_IDX3(vaddr_t va)
 	return (va >> VP_IDX3_POS) & VP_IDX3_MASK;
 }
 
-
 struct pmapvp2 {
-	vaddr_t l2[VP_IDX2_CNT];
-	void *vp[VP_IDX2_CNT];
+	uint32_t *l2[VP_IDX2_CNT];
+	struct pmapvp3 *vp[VP_IDX2_CNT];
 };
 
 struct pmapvp3 {
-        void *vp[VP_IDX3_CNT];
+        struct pte_desc *vp[VP_IDX3_CNT];
 };
 
 /*
@@ -225,7 +228,7 @@ PTED_WIRED(struct pte_desc *pted)
 u_int32_t
 PTED_VALID(struct pte_desc *pted)
 {
-	return (pted->pte != 0);
+	return (pted->pted_pte != 0);
 }
 
 /*
@@ -440,7 +443,7 @@ pmap_remove_pg(pmap_t pm, vaddr_t va)
 		pted->pted_va &= ~PTED_VA_EXEC_M;
 	}
 
-	pted->pte = 0;
+	pted->pted_pte = 0;
 
 	if (PTED_MANAGED(pted))
 		pmap_remove_pv(pted);
@@ -556,7 +559,7 @@ pmap_kremove_pg(vaddr_t va)
 		pmap_remove_pv(pted);
 
 	/* invalidate pted; */
-	pted->pte = 0;
+	pted->pted_pte = 0;
 
 	splx(s);
 
@@ -759,6 +762,7 @@ pmap_vp_destroy(pmap_t pm)
 	}
 }
 
+#if 0
 /*
  * Similar to pmap_steal_avail, but operating on vm_physmem since
  * uvm_page_physload() has been called.
@@ -824,9 +828,10 @@ pmap_steal_memory(vsize_t size, vaddr_t *start, vaddr_t *end)
 
 	return (va);
 }
+#endif
 
 
-void pmap_setup_avail( uint32_t ram_start, uint32_t ram_end);
+void pmap_setup_avail( uint32_t ram_start, uint32_t ram_end, uint32_t kvo);
 /*
  * Initialize pmap setup.
  * ALL of the code which deals with avail needs rewritten as an actual
@@ -837,44 +842,199 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
     uint32_t ram_end)
 {
 	vaddr_t kvo;
+	void *pa, *va;
 	struct pmapvp2 *vp2;
-	int i;
+	struct pmapvp3 *vp3;
+	struct pte_desc *pted;
+	int i, j, k;
 
 	kvo = KERNEL_BASE_VIRT - KERNEL_BASE_PHYS;
 
-	pmap_setup_avail(ram_start, ram_end);
-	pmap_remove_avail(kernelstart-kvo, kernelend-kvo);
+	pmap_setup_avail(ram_start, ram_end, kvo);
+
+	/* in theory we could start with just the memory in the kernel,
+	 * however this could 'allocate' the bootloader and bootstrap
+	 * vm table, which we may need to preserve until later.
+	 *   pmap_remove_avail(kernelstart-kvo, kernelend-kvo);
+	 */
+	pmap_remove_avail(VM_MIN_KERNEL_ADDRESS-kvo, kernelend-kvo);
 
 
 	/* allocate kernel l1 page table */
-	pmap_kernel()->l1_va = pmap_steal_avail(L1_TABLE_SIZE, L1_TABLE_SIZE);
+	pa = pmap_steal_avail(L1_TABLE_SIZE, L1_TABLE_SIZE, &va);
+	pmap_kernel()->l1_va = va;
+	pmap_kernel()->l1_pa = (uint32_t)pa;
 
 	/* allocate v->p mappings for pmap_kernel() */
 	for (i = 0; i < VP_IDX1_CNT; i++) {
 		pmap_kernel()->pm_vp[i] = NULL;
 	}
 
-	vp2 = pmap_steal_avail(sizeof (struct pmapvp2), 4);
-	bzero (vp2, sizeof(struct pmapvp2));
-	//pmap_premap(kernelstart, kernelend, kvo);
-	pmap_kernel()->pm_vp[VP_IDX1(KERNEL_BASE_VIRT)] = vp2;
+	int lb_idx2, ub_idx2;
+	int lb_idx3, ub_idx3;
 
+	/* this loop is done twice, once for large allocations and
+	 * once for small
+	 */
+	for (i = VP_IDX1(VM_MIN_KERNEL_ADDRESS);
+	    i <= VP_IDX1(VM_MAX_KERNEL_ADDRESS);
+	    i++) {
+		pa = pmap_steal_avail(sizeof (struct pmapvp2), 4, &va);
+		vp2 = va;
+		pmap_kernel()->pm_vp[i] = vp2;
+
+		if (i == VP_IDX1(VM_MIN_KERNEL_ADDRESS)) {
+			lb_idx2 = VP_IDX2(VM_MIN_KERNEL_ADDRESS);
+		} else {
+			lb_idx2 = 0;
+		}
+		if (i == VP_IDX1(VM_MIN_KERNEL_ADDRESS)) {
+			ub_idx2 = VP_IDX2(VM_MAX_KERNEL_ADDRESS);
+		} else {
+			ub_idx2 = VP_IDX2_CNT-1;
+		}
+		for (j = lb_idx2; j <= ub_idx2; j++) {
+			pa = pmap_steal_avail(sizeof (struct pmapvp3), 4, &va);
+			vp3 = va;
+			vp2->vp[j] = vp3;
+			pa = pmap_steal_avail(L2_TABLE_SIZE, L2_TABLE_SIZE, &va);
+			pmap_set_l2(pmap_kernel(),
+			    (i << VP_IDX1_POS) | (j << VP_IDX2_POS),
+			    (vaddr_t)va, (uint32_t)pa);
+		}
+		
+	}
+	/* allocate pted */
+	for (i = VP_IDX1(VM_MIN_KERNEL_ADDRESS);
+	    i <= VP_IDX1(VM_MAX_KERNEL_ADDRESS);
+	    i++) {
+		vp2 = pmap_kernel()->pm_vp[i];
+
+		if (i == VP_IDX1(VM_MIN_KERNEL_ADDRESS)) {
+			lb_idx2 = VP_IDX2(VM_MIN_KERNEL_ADDRESS);
+		} else {
+			lb_idx2 = 0;
+		}
+		if (i == VP_IDX1(VM_MIN_KERNEL_ADDRESS)) {
+			ub_idx2 = VP_IDX2(VM_MAX_KERNEL_ADDRESS);
+		} else {
+			ub_idx2 = VP_IDX2_CNT-1;
+		}
+		for (j = lb_idx2; j <= ub_idx2; j++) {
+			vp3 = vp2->vp[j];
+
+			if ((i == VP_IDX1(VM_MIN_KERNEL_ADDRESS))
+			    && (j == VP_IDX2(VM_MIN_KERNEL_ADDRESS))) {
+				lb_idx3 = VP_IDX2(VM_MIN_KERNEL_ADDRESS);
+			} else {
+				lb_idx3 = 0;
+			}
+			if ((i == VP_IDX1(VM_MAX_KERNEL_ADDRESS))
+			    && (j == VP_IDX2(VM_MAX_KERNEL_ADDRESS))) {
+				ub_idx3 = VP_IDX2(VM_MAX_KERNEL_ADDRESS);
+			} else {
+				ub_idx3 = VP_IDX3_CNT-1;
+			}
+			for (k = lb_idx3; k <= ub_idx3; k++) {
+				pa = pmap_steal_avail(sizeof(struct pte_desc),
+				    4, &va);
+				pted = va;
+				vp3->vp[k] = pted;
+			}
+		}
+	}
+
+	/* now that we have mapping space for everything, lets map it */
 
 	/* XXX */
 
+#if 0
 	zero_page = VM_MIN_KERNEL_ADDRESS + arm_kvm_stolen;
 	arm_kvm_stolen += PAGE_SIZE;
 	copy_src_page = VM_MIN_KERNEL_ADDRESS + arm_kvm_stolen;
 	arm_kvm_stolen += PAGE_SIZE;
 	copy_dst_page = VM_MIN_KERNEL_ADDRESS + arm_kvm_stolen;
 	arm_kvm_stolen += PAGE_SIZE;
-#if 0
 	arm_kvm_stolen += reserve_dumppages( (caddr_t)(VM_MIN_KERNEL_ADDRESS +
 	    arm_kvm_stolen));
 #endif
 
-
 	/* XXX */
+	printf("stolen 0x%x memory\n", arm_kvm_stolen);
+	pmap_avail_fixup();
+	pmap_map_stolen();
+
+	for (i = 0; i < 4096; i++) {
+		int idx1, idx2, idx3;
+		uint32_t pa = i << VP_IDX2_POS;
+		idx1 = pa >> VP_IDX1_POS;
+		idx2 = (pa >> VP_IDX2_POS) & VP_IDX2_MASK;
+		struct pmapvp3 *vp3;
+		uint32_t *l2p;
+
+		if  (pmap_kernel()->l1_va[i] != 0) {
+			printf("%04x: %08x\n", i, pmap_kernel()->l1_va[i]);
+			if (pmap_kernel()->pm_vp[idx1] == 0) {
+				printf("no tx for idx %d\n", idx1);
+				continue;
+			}
+			l2p = pmap_kernel()->pm_vp[idx1]->l2[idx2];
+			vp3 = pmap_kernel()->pm_vp[idx1]->vp[idx2];
+			for (idx3 = 0; idx3 < VP_IDX3_CNT; idx3++) {
+				if (l2p == 0) {
+					printf("no mapping at %d:%d\n", idx1, idx2);
+					continue;
+				}
+				
+				if (l2p[idx3] != 0) {
+					printf("%04x %02x: %08x\n", i, idx3,
+					    l2p[idx3]);
+				}
+				if (vp3->vp[idx3] != NULL) {
+					if (vp3->vp[idx3]->pted_pte != 0) {
+						printf("%04x %02x:"
+						    " vp %08x %p va %08x\n", i,
+						    idx3,
+						    vp3->vp[idx3]->pted_pte,
+						    vp3->vp[idx3]->pted_pmap,
+						    vp3->vp[idx3]->pted_va
+						    );
+					}
+				}
+			}
+		}
+	}
+
+	uvmexp.pagesize = PAGE_SIZE;
+	uvm_setpagesize();
+
+	pmap_physload_avail();
+
+}
+
+void
+pmap_set_l2(struct pmap *pm, uint32_t pa, vaddr_t va, uint32_t l2_pa)
+{
+	uint32_t pg_entry;
+	struct pmapvp2 *vp2;
+	int idx1, idx2;
+
+	if (l2_pa & (L2_TABLE_SIZE-1)) {
+		panic("misaligned L2 table\n");
+	}
+
+	pg_entry = l2_pa;
+	// pg_entry |= pm->domain << L1_S_DOM_POS;
+	/* XXX at the current time NS and PXN are never set on L1 */
+
+	pg_entry |= L1_TYPE_PT;
+
+	idx1 = pa >> VP_IDX1_POS;
+	idx2 = (pa >> VP_IDX2_POS) & VP_IDX2_MASK;
+	vp2 = pmap_kernel()->pm_vp[idx1];
+	vp2->l2[idx2] = (uint32_t *)va;
+
+	pmap_kernel()->l1_va[pa>>VP_IDX2_POS] = pg_entry;
 }
 
 /*
@@ -893,7 +1053,6 @@ pmap_activate(struct proc *p)
 void
 pmap_deactivate(struct proc *p)
 {
-	/* LRU */
 }
 
 /*
@@ -909,10 +1068,10 @@ pmap_extract(pmap_t pm, vaddr_t va, paddr_t *pa)
 	if (pted == NULL)
 		return FALSE;
 	
-	if (pted->pte == 0)
+	if (pted->pted_pte == 0)
 		return FALSE;
 
-	*pa = (pted->pte& PTE_RPGN) | (va & ~PTE_RPGN);
+	*pa = (pted->pted_pte & PTE_RPGN) | (va & ~PTE_RPGN);
 
 	return TRUE;
 }
@@ -1198,12 +1357,30 @@ struct mem_region pmap_allocated_regions[10];
 struct mem_region *pmap_avail = &pmap_avail_regions[0];
 struct mem_region *pmap_allocated = &pmap_allocated_regions[0];
 int pmap_cnt_avail, pmap_cnt_allocated;
+uint32_t pmap_avail_kvo;
 
 void
-pmap_setup_avail( uint32_t ram_start, uint32_t ram_end)
+pmap_setup_avail( uint32_t ram_start, uint32_t ram_end, uint32_t kvo)
 {
+	/* This makes several assumptions
+	 * 1) kernel will be located 'low' in memory
+	 * 2) memory will not start at VM_MIN_KERNEL_ADDRESS
+	 * 3) several MB of memory starting just after the kernel will
+	 *    be premapped at the kernel address in the bootstrap mappings
+	 * 4) kvo will be the 32 bit number to add to the ram address to
+	 *    obtain the kernel virtual mapping of the ram. eg if ram is at
+	 *    0x80000000, and VM_MIN_KERNEL_ADDRESS is 0xc0000000, the kvo
+	 *    will be 0x40000000
+	 * 5) it is generally assumed that these translations will occur with
+	 *    large granularity, at minimum the translation will be page
+	 *    aligned, if not 'section' or greater.
+	 */
+
+	pmap_avail_kvo = kvo;
 	pmap_avail[0].start = ram_start;
 	pmap_avail[0].size = ram_end-ram_start;
+
+	/* XXX - multiple sections */
 	physmem = atop(pmap_avail[0].size);
 
 	pmap_cnt_avail = 1;
@@ -1323,12 +1500,14 @@ pmap_remove_avail(paddr_t base, paddr_t end)
 	}
 }
 
+/* XXX - this zeros pages via their physical address */
 void *
-pmap_steal_avail(size_t size, int align)
+pmap_steal_avail(size_t size, int align, void **kva)
 {
 	struct mem_region *mp;
 	int start;
 	int remsize;
+	arm_kvm_stolen += size; // debug only
 
 	for (mp = pmap_avail; mp->size; mp++) {
 		if (mp->size > size) {
@@ -1336,6 +1515,10 @@ pmap_steal_avail(size_t size, int align)
 			remsize = mp->size - (start - mp->start); 
 			if (remsize >= 0) {
 				pmap_remove_avail(start, start+size);
+				if (kva != NULL){
+					*kva = (void *)(start + pmap_avail_kvo);
+				}
+				bzero((void*)(start+pmap_avail_kvo), size);
 				return (void *)start;
 			}
 		}
@@ -1344,41 +1527,56 @@ pmap_steal_avail(size_t size, int align)
 	    size, align);
 }
 
-#if 0
-/*
- * Create a V -> P mapping for the given pmap and virtual address
- * with reference to the pte descriptor that is used to map the page.
- * This code should track allocations of vp table allocations
- * so they can be freed efficiently.
- */
 void
-pmap_premap(vaddr_t startaddr, struct pte_desc *pted)
-pmap_premap(vaddr_t va, struct pte_desc *pted)
+pmap_map_stolen()
 {
-	struct pmapvp2 *vp2;
-	struct pmapvp3 *vp3;
-	int s;
+	int prot;
+	struct mem_region *mp;
+	uint32_t pa, va, e;
+	extern char *etext;
 
-	vp2 = pm->pm_vp[VP_IDX1(va)];
-	if (vp2 == NULL) {
-		s = splvm();
-		vp2 = pmap_steal_avail(sizeof(struct pmapvp2), 4)
-		vp2->l1_va = pmap_steal_avail(L2_
-		bzero (vp2, 
-		vp2->
-		pmap_set_l1(pm, va, vp2->l1_va)
-		splx(s);
-		pm->pm_vp[VP_IDX1(va)] = vp2;
+	printf("mapping self\n");
+	for (mp = pmap_allocated; mp->size; mp++) {
+		printf("start %08x end %08x\n", mp->start, mp->start + mp->size);
+		for (e = 0; e < mp->size; e += PAGE_SIZE) {
+			/* XXX - is this a kernel text mapping? */
+			/* XXX - Do we care about KDB ? */
+			pa = mp->start + e;
+			va = pmap_avail_kvo + pa;
+			if (va >= KERNEL_BASE_VIRT && va < (uint32_t)etext) {
+				prot = VM_PROT_READ|VM_PROT_WRITE|
+				    VM_PROT_EXECUTE;
+			} else {
+				prot = VM_PROT_READ|VM_PROT_WRITE;
+			}
+			pmap_kenter_pa(va, pa, prot);
+		}
 	}
-
-	vp3 = vp2->vp[VP_IDX2(va)];
-	if (vp3 == NULL) {
-		s = splvm();
-		vp3 = pool_get(&pmap_vp_pool, PR_NOWAIT | PR_ZERO);
-		splx(s);
-		vp2->vp[VP_IDX2(va)] = vp3;
-	}
-
-	vp3->vp[VP_IDX3(va)] = pted;
 }
-#endif
+
+void
+pmap_physload_avail(void)
+{
+	struct mem_region *mp;
+	uint32_t start, end;
+
+	for (mp = pmap_avail; mp->size; mp++) {
+		printf("start %08x size %08x", mp->start, mp->size);
+		if (mp->size < PAGE_SIZE) {
+			printf(" skipped - too small\n");
+			continue;
+		}
+		start = mp->start;
+		if (start & PAGE_MASK) {
+			start = PAGE_SIZE + (start & ~PAGE_MASK);
+		}
+		end = mp->start + mp->size;
+		if (end & PAGE_MASK) {
+			end = (end & ~PAGE_MASK);
+		}
+		uvm_page_physload(atop(start), atop(end),
+		    atop(start), atop(end), 0);
+
+		printf(" loaded %08x %08x\n", start, end);
+	}
+}

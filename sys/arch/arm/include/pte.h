@@ -21,6 +21,10 @@
 /* first level descriptor */
 #define	L1_TYPE_MASK	(0x00000003)	/* mask of type bits */
 #define L1_TYPE_S 	(0x00000002)
+#define L1_TYPE_PT 	(0x00000001)
+#define L1_PT_DOM_POS	5
+#define L1_PT_NS	(1<<3)
+#define L1_PT_PXN	(1<<2)
 
 /* Short-decriptor translation table First level descriptor format */
 #define L1_S_XN		(1<<0)	/* eXecute Never */
@@ -50,7 +54,7 @@
 #define L2_S_nG		(1<<11)	/* notGlobal */
 #define L2_S_AP(ap)	((((ap) & 0x4) << 9) | (((ap) & 3) << 4))
 #define L2_S_TEX(x)	(((x)&0x7)<<6)
-#define L2_TABLE_SIZE	(4*1024)
+#define L2_TABLE_SIZE	(1024)
 
 
 #define L2_MODE_DEV		(L2_S_TEX(0)|0|0)

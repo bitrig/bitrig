@@ -55,6 +55,7 @@ extern paddr_t copy_dst_page;
 struct pmap {
 	struct pmapvp2 *pm_vp[VP_IDX1_CNT];	/* virtual to physical table */
 	uint32_t *l1_va;
+	uint32_t l1_pa;
 	int pm_refs;				/* ref count */
 	struct pmap_statistics  pm_stats;	/* pmap statistics */
 	/* delete this */ union pmap_cache_state	pm_cstate;
