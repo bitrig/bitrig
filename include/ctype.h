@@ -61,6 +61,43 @@ extern const short	*_toupper_tab_;
 
 #ifndef _ANSI_LIBRARY
 
+int     isalnum(int);
+int     isalpha(int);
+int     iscntrl(int);
+int     isdigit(int);
+int     isgraph(int);
+int     islower(int);
+int     isprint(int);
+int     ispunct(int);
+int     isspace(int);
+int     isupper(int);
+int     isxdigit(int);
+int     tolower(int);
+int     toupper(int);
+
+#if __XSI_VISIBLE
+int     isascii(int);
+int     toascii(int);
+#endif
+
+#if __ISO_C_VISIBLE >= 1999
+int     isblank(int);
+#endif
+
+#if __BSD_VISIBLE
+int     digittoint(int);
+int     ishexnumber(int);
+int     isideogram(int);
+int     isnumber(int);
+int     isphonogram(int);
+int     isrune(int);
+int     isspecial(int);
+#endif
+
+#if __POSIX_VISIBLE >= 200809 || defined(_XLOCALE_H_)
+#include <xlocale/_ctype.h>
+#endif
+
 #ifndef __cplusplus
 #define	isalnum(c)	__sbistype((c), _CTYPE_A|_CTYPE_D)
 #define	isalpha(c)	__sbistype((c), _CTYPE_A)
