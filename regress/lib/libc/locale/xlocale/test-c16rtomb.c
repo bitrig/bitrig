@@ -104,11 +104,14 @@ main(int argc, char *argv[])
 	assert(strcmp(setlocale(LC_CTYPE, "en_US.ISO8859-15"),
 	    "en_US.ISO8859-15") == 0);
 
+	/* We currently do not support this. */
+#ifdef notyet
 	/* Unicode character 'Euro sign'. */
 	memset(&s, 0, sizeof(s));
 	memset(buf, 0xcc, sizeof(buf));
 	assert(c16rtomb(buf, 0x20ac, &s) == 1);
 	assert((unsigned char)buf[0] == 0xa4 && (unsigned char)buf[1] == 0xcc);
+#endif
 
 	/*
 	 * UTF-8.
