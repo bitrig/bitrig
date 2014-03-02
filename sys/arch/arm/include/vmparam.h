@@ -95,7 +95,7 @@
 #define VM_MAX_ADDRESS		((vaddr_t)0xffffffff)
 				  
 #define VM_MIN_KERNEL_ADDRESS	((vaddr_t)KERNBASE)
-#define VM_MAX_KERNEL_ADDRESS	(0xffffffff)
+#define VM_MAX_KERNEL_ADDRESS	(0xdfffffff)
 
 /* virtual sizes (bytes) for various kernel submaps */
 #define USRIOSIZE       300
