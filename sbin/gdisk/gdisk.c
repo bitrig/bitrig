@@ -56,16 +56,13 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
-	int ch, fd, error;
+	int ch;
 	int i_flag = 0, m_flag = 0;
 	disk_t disk;
 	DISK_metrics *usermetrics;
 	gpt_t gpt;
-	char gpt_buf[DEV_BSIZE];
 
 	while ((ch = getopt(argc, argv, "ief:y")) != -1) {
-		const char *errstr;
-
 		switch(ch) {
 		case 'i':
 			i_flag = 1;

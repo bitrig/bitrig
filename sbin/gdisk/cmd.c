@@ -44,8 +44,6 @@
 int
 Xreinit(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
 {
-	char buf[DEV_BSIZE];
-
 	GPT_init(disk, gpt);
 
 	/* Tell em we did something */
@@ -106,7 +104,7 @@ int
 Xedit(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
 {
 	const char *errstr;
-	int i, pn, num, ret;
+	int i, pn, ret;
 	gpt_partition_t *pp;
 	char buf[36];
 
@@ -200,7 +198,7 @@ Xprint(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
 int
 Xwrite(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
 {
-	int fd, n;
+	int fd;
 
 	fd = DISK_open(disk->name, O_RDWR);
 
@@ -270,7 +268,6 @@ Xflags(cmd_t *cmd, disk_t *disk, gpt_t *gpt, gpt_t *tt, int offset)
 {
 	const char *errstr;
 	int i, part = -1, active = 0, priority = 0, tries = 0, success = 0;
-	long val = -1;
 	char *partp, *activep, *priorityp, *triesp, *successp;
 
 	activep = cmd->args;

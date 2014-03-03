@@ -61,8 +61,6 @@ static cmd_table_t cmd_table[] = {
 int
 USER_init(disk_t *disk, gpt_t *tt)
 {
-	char *query;
-
 	if (GPT_init(disk, tt) == -ENOMEM)
 		return (-ENOMEM);
 
@@ -77,7 +75,6 @@ int modified;
 int
 USER_modify(disk_t *disk, gpt_t *tt, off_t offset, off_t reloff)
 {
-	char gpt_buf[DEV_BSIZE];
 	gpt_t gpt;
 	cmd_t cmd;
 	int i, st, fd, error;
@@ -158,8 +155,7 @@ int
 USER_print_disk(disk_t *disk)
 {
 	off_t offset, firstoff;
-	int fd, i, error;
-	char gpt_buf[DEV_BSIZE];
+	int fd, error;
 	gpt_t gpt;
 
 	fd = DISK_open(disk->name, O_RDONLY);

@@ -70,14 +70,12 @@ typedef struct _gpt_t {
 } gpt_t;
 
 /* Prototypes */
-void GPT_print_disk(char *);
 void GPT_print(gpt_t *, char *);
 int GPT_init(disk_t *, gpt_t *);
 int GPT_load(int, disk_t *, gpt_t *, int);
 int GPT_store(int, disk_t *, gpt_t *);
 int GPT_read(int, off_t, char *);
 int GPT_write(int, off_t, char *);
-void GPT_pcopy(disk_t *, gpt_t *);
 void GPT_free(gpt_t *);
 
 /* Sanity check */
