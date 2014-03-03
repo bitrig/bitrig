@@ -276,7 +276,7 @@ PRT_print(int num, struct prt *partn, char *units)
 		size = ((double)partn->ns * unit_types[SECTORS].conversion) /
 		    unit_types[i].conversion;
 		printf("%c%1d: %.2X %6u %3u %3u - %6u %3u %3u [%12u:%12.0f%s] %s\n",
-		    (partn->flag == 0x80)?'*':' ',
+		    (partn->flag == DOSACTIVE)?'*':' ',
 		    num, partn->id,
 		    partn->scyl, partn->shead, partn->ssect,
 		    partn->ecyl, partn->ehead, partn->esect,
