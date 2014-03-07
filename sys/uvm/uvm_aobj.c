@@ -2,6 +2,8 @@
 /*	$NetBSD: uvm_aobj.c,v 1.39 2001/02/18 21:19:08 chs Exp $	*/
 
 /*
+ * Copyright (c) 2013, 2014 Owain G. Ainsworth <oga@nicotinebsd.org>
+ * Copyright (c) 2013, 2014 Pedro Martelletto <pedro@ambientworks.net>
  * Copyright (c) 1998 Chuck Silvers, Charles D. Cranor and
  *                    Washington University.
  * All rights reserved.
@@ -510,7 +512,6 @@ uao_shrink_hash(struct uvm_object *uobj, int pages)
 {
 	struct uvm_aobj *aobj = (struct uvm_aobj *)uobj;
 	struct uao_swhash *new_swhash;
-	struct uao_swhash_elt *elt;
 	unsigned long new_hashmask;
 	int i, old_pages;
 
@@ -540,7 +541,6 @@ uao_shrink_hash(struct uvm_object *uobj, int pages)
 		goto again;
 	}
 
-
 	if (uao_shrink_flush(uobj, pages, aobj->u_pages) == EAGAIN) {
 		goto again;
 	}
@@ -550,14 +550,9 @@ uao_shrink_hash(struct uvm_object *uobj, int pages)
 	 * we are interested in copying should not change.
 	 */
 
-	for (i = 0; i < UAO_SWHASH_BUCKETS(pages); i++) {
-		/* XXX pedro: shouldn't copying the list pointers be enough? */
-		while (LIST_EMPTY(&aobj->u_swhash[i]) == 0) {
-			elt = LIST_FIRST(&aobj->u_swhash[i]);
-			LIST_REMOVE(elt, list);
-			LIST_INSERT_HEAD(&new_swhash[i], elt, list);
-		}
-	}
+	for (i = 0; i < UAO_SWHASH_BUCKETS(pages); i++)
+		LIST_SWAP(&new_swhash[i], &aobj->u_swhash[i], uao_swhash_elt,
+		    list);
 
 	free(aobj->u_swhash, M_UVMAOBJ);
 
@@ -742,7 +737,6 @@ uao_grow_hash(struct uvm_object *uobj, int pages)
 {
 	struct uvm_aobj *aobj = (struct uvm_aobj *)uobj;
 	struct uao_swhash *new_swhash;
-	struct uao_swhash_elt *elt;
 	unsigned long new_hashmask;
 	int i, old_pages;
 
@@ -776,14 +770,9 @@ uao_grow_hash(struct uvm_object *uobj, int pages)
 		return EAGAIN;
 	}
 
-	for (i = 0; i < UAO_SWHASH_BUCKETS(aobj->u_pages); i++) {
-		/* XXX pedro: shouldn't copying the list pointers be enough? */
-		while (LIST_EMPTY(&aobj->u_swhash[i]) == 0) {
-			elt = LIST_FIRST(&aobj->u_swhash[i]);
-			LIST_REMOVE(elt, list);
-			LIST_INSERT_HEAD(&new_swhash[i], elt, list);
-		}
-	}
+	for (i = 0; i < UAO_SWHASH_BUCKETS(aobj->u_pages); i++)
+		LIST_SWAP(&new_swhash[i], &aobj->u_swhash[i], uao_swhash_elt,
+		    list);
 
 	free(aobj->u_swhash, M_UVMAOBJ);
 
