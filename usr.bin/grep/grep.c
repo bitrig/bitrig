@@ -489,14 +489,16 @@ main(int argc, char *argv[])
 	if ((argc == 0 || argc == 1) && !Rflag && !Hflag)
 		hflag = 1;
 
-	if (argc == 0)
-		exit(!procfile(NULL));
 
 	if (Rflag)
-		c = grep_tree(argv);
-	else
-		for (c = 0; argc--; ++argv)
-			c += procfile(*argv);
+		c = grep_tree(argc ? argv : (char *[]){".", NULL});
+	else {
+		if (argc) {
+			for (c = 0; argc--; ++argv)
+				c += procfile(*argv);
+		} else
+			c = procfile(NULL);
+	}
 
 	exit(c ? (file_err ? (qflag ? 0 : 2) : 0) : (file_err ? 2 : 1));
 }

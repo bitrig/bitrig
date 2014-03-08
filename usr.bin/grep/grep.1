@@ -61,7 +61,9 @@ without its trailing newline.
 An empty expression matches every line.
 Each input line that matches at least one of the patterns is written
 to the standard output.
-If no file arguments are specified, the standard input is used.
+If no file arguments are specified, the standard input or the current
+working directory is used for non-recursive or recursive searches
+respectively.
 .Pp
 .Nm grep
 is used for simple patterns and
