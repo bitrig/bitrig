@@ -96,7 +96,7 @@ procfile(char *fn)
 	file_t *f;
 	int c, t, z, nottext;
 
-	if (fn == NULL) {
+	if (fn == NULL || !strcmp(fn, "-")) {
 		fn = "(standard input)";
 		f = grep_fdopen(STDIN_FILENO, "r");
 	} else {
