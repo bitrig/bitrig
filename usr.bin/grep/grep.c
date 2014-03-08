@@ -500,5 +500,12 @@ main(int argc, char *argv[])
 			c = procfile(NULL);
 	}
 
-	exit(c ? (file_err ? (qflag ? 0 : 2) : 0) : (file_err ? 2 : 1));
+	if (file_err) {
+		/* Just indicate success when -q has found a match, even when
+		 * there are file errors. */
+		if (c && qflag)
+			exit(0);
+		exit(2);
+	}
+	exit(!c);
 }
