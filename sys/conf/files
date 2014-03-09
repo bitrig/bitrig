@@ -306,7 +306,6 @@ file	dev/ic/ax88190.c		ax88190
 
 # Intel i82596/i82586 Ethernet Controller
 device	ie: ether, ifnet, ifmedia
-file	dev/ic/i82596.c			ie & (ie_pci | ie_eisa | ie_gsc)
 
 # Sun GEM Ethernet controllers
 device	gem: ether, ifnet, ifmedia, mii
