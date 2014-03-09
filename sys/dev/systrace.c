@@ -35,6 +35,7 @@
 #include <sys/syscall.h>
 #include <sys/vnode.h>
 #include <sys/errno.h>
+#include <sys/exec.h>
 #include <sys/conf.h>
 #include <sys/device.h>
 #include <sys/proc.h>
@@ -48,8 +49,6 @@
 #include <sys/namei.h>
 #include <sys/poll.h>
 #include <sys/ptrace.h>
-
-#include <compat/common/compat_util.h>
 
 #include <dev/systrace.h>
 
@@ -68,6 +67,9 @@ int	systracef_poll(struct file *, int, struct proc *);
 int	systracef_kqfilter(struct file *, struct knote *);
 int	systracef_stat(struct file *, struct stat *, struct proc *);
 int	systracef_close(struct file *, struct proc *);
+
+caddr_t	 stackgap_init(struct emul *); 
+void	*stackgap_alloc(caddr_t *, size_t);
 
 struct str_policy {
 	TAILQ_ENTRY(str_policy) next;
@@ -1820,4 +1822,38 @@ systrace_msg_policyfree(struct fsystrace *fst, struct str_policy *strpol)
 	systrace_wakeup(fst);
 
 	return (0);
+}
+
+/*
+ * The following two functions are:
+ *
+ * Copyright (c) 1994 Christos Zoulas
+ * Copyright (c) 1995 Frank van der Linden
+ *
+ * and can be distributed under the same licence as the rest of this file.
+ */
+
+caddr_t  
+stackgap_init(struct emul *e) 
+{
+        return STACKGAPBASE;
+}
+ 
+void *          
+stackgap_alloc(caddr_t *sgp, size_t sz)
+{
+	void *n = (void *) *sgp;
+	caddr_t nsgp;
+	
+	sz = ALIGN(sz);
+	nsgp = *sgp + sz;
+#ifdef MACHINE_STACK_GROWS_UP
+	if (nsgp > ((caddr_t)PS_STRINGS) + STACKGAPLEN)
+		return NULL;
+#else
+	if (nsgp > ((caddr_t)PS_STRINGS))
+		return NULL;
+#endif
+	*sgp = nsgp;
+	return n;
 }

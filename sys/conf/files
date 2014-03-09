@@ -977,9 +977,6 @@ file net/pfkeyv2.c			key | ipsec | tcp_signature
 file net/pfkeyv2_parsemessage.c		key | ipsec | tcp_signature
 file net/pfkeyv2_convert.c		key | ipsec | tcp_signature
 
-# COMPAT_* support code (base and other shared code)
-file compat/common/compat_util.c	!small_kernel
-
 # libx86emu
 file dev/x86emu/x86emu.c		x86emu
 file dev/x86emu/x86emu_util.c		x86emu
