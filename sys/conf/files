@@ -494,7 +494,6 @@ file	dev/softraid_raid0.c		softraid
 file	dev/softraid_raid1.c		softraid
 file	dev/softraid_raidp.c		softraid
 file	dev/softraid_crypto.c		softraid & crypto
-file	dev/softraid_aoe.c		softraid & ether & aoe
 file	dev/softraid_raid6.c		softraid
 file	dev/softraid_concat.c		softraid
 
@@ -773,7 +772,6 @@ file net/trunklacp.c			trunk
 file net/if_mpe.c			mpe			needs-count
 file net/if_vether.c			vether			needs-count
 file net/if_pppx.c			pppx			needs-count
-file net/if_aoe.c			ether & aoe
 file net/if_vxlan.c			vxlan			needs-count
 file net80211/ieee80211.c		wlan
 file net80211/ieee80211_amrr.c		wlan
