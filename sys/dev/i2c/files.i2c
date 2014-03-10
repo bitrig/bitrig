@@ -128,16 +128,6 @@ device	ricohrtc
 attach	ricohrtc at i2c
 file	dev/i2c/rs5c372.c			ricohrtc
 
-# Fintek F75375
-device	fintek
-attach	fintek at i2c
-file	dev/i2c/fintek.c			fintek
-
-# Philips Semiconductor PCA9532
-device	pcaled: gpiobus
-attach	pcaled at i2c
-file	dev/i2c/pca9532.c			pcaled
-
 # Andigilog aSC7621
 device	adl
 attach	adl at i2c
