@@ -346,7 +346,7 @@ ciss*	at pci?				# Compaq Smart ARRAY [56]* RAID controllers
 iha*	at pci?				# Initio Ultra/UltraWide SCSI controllers
 ips*	at pci?				# IBM ServeRAID controllers
 qlw*	at pci?				# QLogic ISP SCSI
-#qla*	at pci?				# QLogic ISP 2[123]xx FibreChannel
+qla*	at pci?				# QLogic ISP 2[123]xx FibreChannel
 qle*	at pci?				# QLogic ISP 2[45]xx FibreChannel
 aic*	at pcmcia?			# PCMCIA Adaptec 152[02] SCSI
 #esp*	at pcmcia?			# PCMCIA based NCR 53C9X SCSI
