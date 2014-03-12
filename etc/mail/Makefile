@@ -1,5 +1,3 @@
-MAKEMAP = /usr/libexec/smtpd/makemap
-
 distribution: aliases.db
 	${INSTALL} -c -o root -g wheel -m 644 Makefile \
 	    ${DESTDIR}/etc/mail/Makefile
@@ -13,7 +11,7 @@ distribution: aliases.db
 	    ${DESTDIR}/etc/mail/smtpd.conf
 
 aliases.db: aliases
-	${MAKEMAP} ${.ALLSRC}
+	newaliases
 
 .PHONY: all
 .include <bsd.own.mk>
