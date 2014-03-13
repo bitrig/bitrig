@@ -117,7 +117,7 @@ process_read_regs(struct proc *p, struct reg *regs)
         regs->r_ss  = tf->tf_ss;
         regs->r_ds  = tf->tf_ds;
         regs->r_es  = tf->tf_es;
-        regs->r_fs  = tf->tf_fs;
+        regs->r_fs  = p->p_addr->u_pcb.pcb_fsbase;
         regs->r_gs  = tf->tf_gs;
 
 	return (0);
