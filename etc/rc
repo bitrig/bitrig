@@ -1,4 +1,4 @@
-#	$OpenBSD: rc,v 1.421 2014/02/19 21:47:15 schwarze Exp $
+#	$OpenBSD: rc,v 1.422 2014/03/13 10:11:01 florian Exp $
 
 # System startup script run by init on autoboot
 # or after single-user.

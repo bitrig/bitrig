@@ -1,4 +1,4 @@
-#	$OpenBSD: 4.4BSD.dist,v 1.241 2014/01/08 21:52:22 deraadt Exp $
+#	$OpenBSD: 4.4BSD.dist,v 1.242 2014/03/13 10:11:01 florian Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 # .
@@ -1191,17 +1191,6 @@ dev type=dir uname=root gname=daemon mode=755
 # ./www
 ..
 
-# ./www/icons
-icons  type=dir uname=root gname=daemon mode=755
-
-# ./www/icons/small
-small  type=dir uname=root gname=daemon mode=755
-# ./www/icons/small
-..
-
-# ./www/icons
-..
-
 #./www/cgi-bin
 cgi-bin  type=dir uname=root gname=daemon mode=755
 #./www/cgi-bin
@@ -1220,24 +1209,8 @@ logs  type=dir uname=root gname=daemon mode=755
 
 #./www/conf
 conf  type=dir uname=root gname=daemon mode=755
-#./www/conf
-
-#./www/conf/modules
-modules  type=dir uname=root gname=daemon mode=755
-#./www/conf/modules
-..
-
-#./www/conf/modules.sample
-modules.sample  type=dir uname=root gname=daemon mode=755
-#./www/conf/modules.sample
-..
 
 #./www/conf
-..
-
-#./www/users
-users  type=dir uname=root gname=daemon mode=755
-#./www/users
 ..
 
 #./www/bin
