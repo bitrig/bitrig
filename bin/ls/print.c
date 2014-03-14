@@ -56,7 +56,7 @@ static int	printaname(FTSENT *, u_long, u_long);
 static void	printlink(FTSENT *);
 static void	printsize(size_t, off_t);
 static void	printtime(time_t);
-static int	printtype(u_int);
+static int	printtype(FTSENT *);
 static int	compute_columns(DISPLAY *, int *);
 
 #define	IS_NOPRINT(p)	((p)->fts_number == NO_PRINT)
@@ -119,7 +119,7 @@ printlong(DISPLAY *dp)
 			printtime(sp->st_mtime);
 		(void)putname(p->fts_name);
 		if (f_type || (f_typedir && S_ISDIR(sp->st_mode)))
-			(void)printtype(sp->st_mode);
+			(void)printtype(p);
 		if (S_ISLNK(sp->st_mode))
 			printlink(p);
 		(void)putchar('\n');
@@ -228,7 +228,7 @@ printaname(FTSENT *p, u_long inodefield, u_long sizefield)
 		    (int)sizefield, howmany(sp->st_blocks, blocksize));
 	chcnt += putname(p->fts_name);
 	if (f_type || (f_typedir && S_ISDIR(sp->st_mode)))
-		chcnt += printtype(sp->st_mode);
+		chcnt += printtype(p);
 	return (chcnt);
 }
 
@@ -324,10 +324,16 @@ printstream(DISPLAY *dp)
 }
 
 static int
-printtype(u_int mode)
+printtype(FTSENT *p)
 {
-	switch (mode & S_IFMT) {
+	struct stat *sp;
+
+	sp = p->fts_statp;
+
+	switch (sp->st_mode & S_IFMT) {
 	case S_IFDIR:
+		if (p->fts_name[p->fts_namelen-1] == '/')
+			return (0);
 		(void)putchar('/');
 		return (1);
 	case S_IFIFO:
@@ -340,7 +346,7 @@ printtype(u_int mode)
 		(void)putchar('=');
 		return (1);
 	}
-	if (mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
+	if (sp->st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
 		(void)putchar('*');
 		return (1);
 	}

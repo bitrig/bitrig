@@ -710,6 +710,8 @@ format1(const struct stat *st,
 				(void)strlcat(sdata, "|", sizeof(smode));
 				break;
 			case S_IFDIR:
+				if (file[strlen(file) - 1] == '/')
+					break;
 				(void)strlcat(sdata, "/", sizeof(smode));
 				break;
 			case S_IFREG:
