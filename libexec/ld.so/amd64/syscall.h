@@ -58,6 +58,7 @@ int	_dl_lstat(const char *, struct stat *);
 int	_dl_getcwd(char *, size_t);
 int	_dl_utrace(const char *, const void *, size_t);
 int	_dl_sysarch(int, void *);
+int	_dl__set_tcb(void *);
 
 static inline off_t
 _dl_lseek(int fildes, off_t offset, int whence)

@@ -521,7 +521,7 @@ _dl_allocate_first_tls()
 	_dl_tls_static_space = _dl_tls_free_idx + RTLD_STATIC_TLS_EXTRA;
 	tls = _dl_allocate_tls(NULL, _dl_objects, 2*sizeof(Elf_Addr),
 	    sizeof(Elf_Addr));
-	_dl_sysarch(AMD64_SET_FSBASE, &tls);
+	_dl__set_tcb(tls);
 }
 
 void *__tls_get_addr(tls_index *ti)

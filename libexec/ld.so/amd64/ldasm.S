@@ -100,6 +100,7 @@ DL_SYSCALL2(getcwd,__getcwd)
 DL_SYSCALL2(_syscall,__syscall)
 DL_SYSCALL2(sysctl,__sysctl)
 DL_SYSCALL(sysarch)
+DL_SYSCALL2(_set_tcb,__set_tcb)
 
 1:
 	/* error: result = -errno; - handled here. */
