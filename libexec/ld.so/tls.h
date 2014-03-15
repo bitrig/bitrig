@@ -1,3 +1,5 @@
+#include <machine/tcb.h>
+
 void _dl_allocate_tls_offset(elf_object_t *object);
 void *_dl_allocate_tls(char *oldtls, elf_object_t *objhead, size_t tcbsize, size_t tcbalign);
 void _dl_allocate_first_tls(void);
@@ -20,3 +22,17 @@ typedef struct {
 	unsigned long int ti_offset;
 } tls_index;
 
+/* copied from librthread/tcb.h */
+#if TLS_VARIANT == 1
+struct thread_control_block {
+	void	*tcb_dtv;               /* internal to the runtime linker */
+	struct	pthread *tcb_thread;
+};
+#elif TLS_VARIANT == 2
+struct thread_control_block {
+        struct	thread_control_block *__tcb_self;
+        void	*tcb_dtv;               /* internal to the runtime linker */
+        struct	pthread *tcb_thread;
+        int	*__tcb_errno;
+};
+#endif

@@ -551,8 +551,8 @@ _dl_allocate_first_tls()
 		return;
 	_dl_tls_first_done = 1;
 	_dl_tls_static_space = _dl_tls_free_idx /* + RTLD_STATIC_TLS_EXTRA */;
-	tls = _dl_allocate_tls(NULL, _dl_objects, 2*sizeof(Elf_Addr),
-	    sizeof(Elf_Addr));
+	tls = _dl_allocate_tls(NULL, _dl_objects,
+	    sizeof(struct thread_control_block), sizeof(Elf_Addr));
 	_dl_sysarch(I386_SET_GSBASE, &tls);
 }
 
