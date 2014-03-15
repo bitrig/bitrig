@@ -267,15 +267,4 @@ typedef enum {
 
 #endif /* _KERNEL */
 
-/* Clang already provides these types as built-ins, but only in C++ mode. */
-#if !defined(__clang__) || !defined(__cplusplus)
-typedef __uint_least16_t __char16_t;
-typedef __uint_least32_t __char32_t;
-#endif
-/* In C++11, char16_t and char32_t are built-in types. */
-#if defined(__cplusplus) && __cplusplus >= 201103L
-#define _CHAR16_T_DECLARED
-#define _CHAR32_T_DECLARED
-#endif
-
 #endif /* !_SYS_TYPES_H_ */

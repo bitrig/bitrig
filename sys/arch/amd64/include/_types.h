@@ -135,8 +135,6 @@ typedef	int			__wchar_t;
 #else
 typedef wchar_t			__wchar_t;
 #endif
-typedef int			__wint_t;
-typedef	int			__rune_t;
 typedef	void *			__wctrans_t;
 typedef	void *			__wctype_t;
 
