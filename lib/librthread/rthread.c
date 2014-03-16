@@ -144,11 +144,6 @@ void _rthread_initlib(void)
 	/* use libc's errno for the main thread */
 	TCB_INIT(tcb, &_initial_thread, ___errno());
 	TCB_SET(tcb);
-#ifdef TCB_SET
-	TCB_SET(tcb);
-#else
-	__set_tcb(tcb);
-#endif
 }
 
 int *
