@@ -35,9 +35,9 @@ INLINE uint16_t
 sldns_read_uint16(const void *src)
 {
 #ifdef ALLOW_UNALIGNED_ACCESSES
-        return ntohs(*(const uint16_t *) src);
+        return ntohs(*(uint16_t *) src);
 #else
-        const uint8_t *p = (const uint8_t *) src;
+        uint8_t *p = (uint8_t *) src;
         return ((uint16_t) p[0] << 8) | (uint16_t) p[1];
 #endif
 }
@@ -46,9 +46,9 @@ INLINE uint32_t
 sldns_read_uint32(const void *src)
 {
 #ifdef ALLOW_UNALIGNED_ACCESSES
-        return ntohl(*(const uint32_t *) src);
+        return ntohl(*(uint32_t *) src);
 #else
-        const uint8_t *p = (const uint8_t *) src;
+        uint8_t *p = (uint8_t *) src;
         return (  ((uint32_t) p[0] << 24)
                 | ((uint32_t) p[1] << 16)
                 | ((uint32_t) p[2] << 8)
