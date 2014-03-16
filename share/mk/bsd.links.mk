@@ -1,7 +1,7 @@
 # $FreeBSD$
 
-afterinstall: _installlinks
-.ORDER: realinstall _installlinks
+completeinstall: _installlinks
+.ORDER: afterinstall _installlinks
 _installlinks:
 .if defined(LINKS) && !empty(LINKS)
 .  for dest lnk in ${LINKS}

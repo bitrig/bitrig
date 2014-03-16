@@ -93,8 +93,9 @@ load:	${COMBINED}
 unload:
 	modunload -n ${LKM}
 
-install: maninstall _SUBDIRUSE
+install: completeinstall _SUBDIRUSE
 
+completeinstall: maninstall
 maninstall: afterinstall
 afterinstall: realinstall
 realinstall: beforeinstall

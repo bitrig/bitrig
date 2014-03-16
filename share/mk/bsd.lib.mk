@@ -288,7 +288,9 @@ realinstall:
 .endif
 .endif  # MK_INSTALLLIB == yes
 
-install: maninstall _SUBDIRUSE
+install: completeinstall _SUBDIRUSE
+
+completeinstall: maninstall
 maninstall: afterinstall
 afterinstall: realinstall
 realinstall: beforeinstall

@@ -69,7 +69,8 @@ beforeinstall:
 .  if !target(afterinstall)
 afterinstall:
 .  endif
-install: maninstall
+install: completeinstall
+completeinstall: maninstall
 maninstall: afterinstall
 afterinstall: realinstall
 realinstall: beforeinstall _SUBDIRUSE
