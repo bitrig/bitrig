@@ -13,8 +13,6 @@ SUBDIR=	pcvtfonts
 
 all clean cleandir depend lint obj tags: _SUBDIRUSE
 
-realinstall:
-	cd ${.CURDIR}; install -c -o ${BINOWN} -g ${BINGRP} -m 444 ${FILES} \
-	    ${DESTDIR}${BINDIR}/misc
+FILESDIR = ${BINDIR}/misc
 
 .include <bsd.prog.mk>
