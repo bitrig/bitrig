@@ -1479,11 +1479,18 @@ i915_gem_fault(struct drm_gem_object *gem_obj, struct uvm_faultinfo *ufi,
 		uvmfault_unlockall(ufi, NULL, &obj->base.uobj, NULL);
 		DRM_LOCK();
 		locked = uvmfault_relock(ufi);
+		if (locked)
+			mtx_enter(&obj->base.uobj.vmobjlock);
 	}
 	if (!locked) {
 		dev_priv->entries--;
 		return (VM_PAGER_REFAULT);
 	}
+	/*
+	 * We have the drm lock now and don't need to use the obj lock as
+	 * an interlock.
+	 */
+	mtx_leave(&obj->base.uobj.vmobjlock);
 
 	/* Now bind it into the GTT if needed */
 	ret = i915_gem_object_pin(obj, 0, true, false);
@@ -2107,14 +2114,12 @@ i915_gem_object_move_to_active(struct drm_i915_gem_object *obj,
 	}
 }
 
-/* called locked */
 static void
-i915_gem_object_move_to_inactive_locked(struct drm_i915_gem_object *obj)
+i915_gem_object_move_to_inactive(struct drm_i915_gem_object *obj)
 {
 	struct drm_device *dev = obj->base.dev;
 	struct drm_i915_private *dev_priv = dev->dev_private;
 
-	DRM_OBJ_ASSERT_LOCKED(&obj->base);
 	BUG_ON(obj->base.write_domain & ~I915_GEM_GPU_DOMAINS);
 	BUG_ON(!obj->active);
 
@@ -2131,18 +2136,9 @@ i915_gem_object_move_to_inactive_locked(struct drm_i915_gem_object *obj)
 	obj->fenced_gpu_access = false;
 
 	obj->active = 0;
-	drm_unref_locked(&obj->base.uobj);
-}
+	drm_gem_object_unreference(&obj->base);
 
-/* If you call this on an object that you have held, you must have your own
- * reference, not just the reference from the active list.
- */
-static void
-i915_gem_object_move_to_inactive(struct drm_i915_gem_object *obj)
-{
-	drm_lock_obj(&obj->base);
-	/* unlocks object lock */
-	i915_gem_object_move_to_inactive_locked(obj);
+	WARN_ON(i915_verify_lists(dev));
 }
 
 static int
