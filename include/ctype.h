@@ -1,4 +1,4 @@
-/*	$OpenBSD: ctype.h,v 1.22 2010/10/01 20:10:24 guenther Exp $	*/
+/*	$OpenBSD: ctype.h,v 1.23 2014/03/16 18:38:30 guenther Exp $	*/
 /*	$NetBSD: ctype.h,v 1.14 1994/10/26 00:55:47 cgd Exp $	*/
 
 /*
