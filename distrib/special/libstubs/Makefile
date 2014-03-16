@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 LIB=    stubs
-SRCS=	db.c setlocale.c sha1.c sha2.c getgrent.c getpwent.c \
+SRCS=	db.c sha1.c sha2.c getgrent.c getpwent.c \
 	ethers.c \
 	sscanf.c vfprintf.c vfscanf.c
 #	mbrtowc_sb.c sscanf.c vfprintf.c vfscanf.c

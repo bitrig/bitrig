@@ -75,7 +75,7 @@ int     isxdigit(int);
 int     tolower(int);
 int     toupper(int);
 
-#if __XSI_VISIBLE
+#if __BSD_VISIBLE || __XPG_VISIBLE
 int     isascii(int);
 int     toascii(int);
 #endif
