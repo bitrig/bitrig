@@ -877,6 +877,8 @@
 ./usr/libdata/perl5/site_perl/i386-bitrig/dev/ic/pgtreg.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/dev/ic/pgtvar.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/dev/ic/pt2254a.ph
+./usr/libdata/perl5/site_perl/i386-bitrig/dev/ic/qlareg.ph
+./usr/libdata/perl5/site_perl/i386-bitrig/dev/ic/qlavar.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/dev/ic/ramdac.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/dev/ic/revar.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/dev/ic/rf3000reg.ph
@@ -1941,6 +1943,7 @@
 ./usr/libdata/perl5/site_perl/i386-bitrig/sys/acct.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/sys/agpio.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/sys/ataio.ph
+./usr/libdata/perl5/site_perl/i386-bitrig/sys/atomic.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/sys/audioio.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/sys/bitops.ph
 ./usr/libdata/perl5/site_perl/i386-bitrig/sys/buf.ph
@@ -2151,7 +2154,6 @@
 ./usr/mdec/boot
 ./usr/mdec/cdboot
 ./usr/mdec/cdbr
-./usr/mdec/installboot
 ./usr/mdec/mbr
 ./usr/mdec/pxeboot
 ./usr/sbin/ZZZ
@@ -2166,7 +2168,6 @@
 ./usr/sbin/wsfontload
 ./usr/sbin/wsmoused
 ./usr/sbin/zzz
-./usr/share/man/man8/installboot.8
 ./usr/share/misc/pcvtfonts
 ./usr/share/misc/pcvtfonts/iso8859-1-euro.816
 ./usr/share/misc/pcvtfonts/iso8859-13.808

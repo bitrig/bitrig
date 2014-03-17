@@ -820,6 +820,8 @@
 ./usr/include/dev/ic/pgtreg.h
 ./usr/include/dev/ic/pgtvar.h
 ./usr/include/dev/ic/pt2254a.h
+./usr/include/dev/ic/qlareg.h
+./usr/include/dev/ic/qlavar.h
 ./usr/include/dev/ic/revar.h
 ./usr/include/dev/ic/rf3000reg.h
 ./usr/include/dev/ic/rt2560reg.h
@@ -1774,6 +1776,7 @@
 ./usr/include/sys/acct.h
 ./usr/include/sys/agpio.h
 ./usr/include/sys/ataio.h
+./usr/include/sys/atomic.h
 ./usr/include/sys/audioio.h
 ./usr/include/sys/bitops.h
 ./usr/include/sys/buf.h
@@ -1990,7 +1993,7 @@
 ./usr/lib/libasn1.so.20.0
 ./usr/lib/libasn1_p.a
 ./usr/lib/libc.a
-./usr/lib/libc.so.73.0
+./usr/lib/libc.so.73.1
 ./usr/lib/libc_p.a
 ./usr/lib/libcom_err.a
 ./usr/lib/libcom_err.so.20.0
@@ -2663,6 +2666,7 @@
 ./usr/libdata/perl5/OpenBSD/PkgCreate.pm
 ./usr/libdata/perl5/OpenBSD/PkgDelete.pm
 ./usr/libdata/perl5/OpenBSD/PkgInfo.pm
+./usr/libdata/perl5/OpenBSD/PkgSign.pm
 ./usr/libdata/perl5/OpenBSD/PkgSpec.pm
 ./usr/libdata/perl5/OpenBSD/ProgressMeter
 ./usr/libdata/perl5/OpenBSD/ProgressMeter.pm
@@ -2673,6 +2677,7 @@
 ./usr/libdata/perl5/OpenBSD/SharedItems.pm
 ./usr/libdata/perl5/OpenBSD/SharedLibs.pm
 ./usr/libdata/perl5/OpenBSD/Signature.pm
+./usr/libdata/perl5/OpenBSD/Signer.pm
 ./usr/libdata/perl5/OpenBSD/State.pm
 ./usr/libdata/perl5/OpenBSD/Subst.pm
 ./usr/libdata/perl5/OpenBSD/Temp.pm
@@ -4347,6 +4352,7 @@
 ./usr/sbin/pkg_delete
 ./usr/sbin/pkg_info
 ./usr/sbin/pkg_mklocatedb
+./usr/sbin/pkg_sign
 ./usr/sbin/portmap
 ./usr/sbin/ppp
 ./usr/sbin/pppctl
@@ -4931,6 +4937,7 @@
 ./usr/share/man/man1/pkg_delete.1
 ./usr/share/man/man1/pkg_info.1
 ./usr/share/man/man1/pkg_mklocatedb.1
+./usr/share/man/man1/pkg_sign.1
 ./usr/share/man/man1/pkill.1
 ./usr/share/man/man1/pl2pm.1
 ./usr/share/man/man1/pod2html.1
@@ -7100,6 +7107,7 @@
 ./usr/share/man/man3/exp2l.3
 ./usr/share/man/man3/expf.3
 ./usr/share/man/man3/expl.3
+./usr/share/man/man3/explicit_bzero.3
 ./usr/share/man/man3/expm1.3
 ./usr/share/man/man3/expm1f.3
 ./usr/share/man/man3/expm1l.3
@@ -10134,6 +10142,7 @@
 ./usr/share/man/man4/acpiec.4
 ./usr/share/man/man4/acpihpet.4
 ./usr/share/man/man4/acpimadt.4
+./usr/share/man/man4/acpimcfg.4
 ./usr/share/man/man4/acpiprt.4
 ./usr/share/man/man4/acpipwrres.4
 ./usr/share/man/man4/acpisony.4
@@ -10593,6 +10602,7 @@
 ./usr/share/man/man4/uark.4
 ./usr/share/man/man4/uath.4
 ./usr/share/man/man4/uaudio.4
+./usr/share/man/man4/ubcmtp.4
 ./usr/share/man/man4/uberry.4
 ./usr/share/man/man4/ubsa.4
 ./usr/share/man/man4/ubsec.4
@@ -10668,6 +10678,7 @@
 ./usr/share/man/man4/vio.4
 ./usr/share/man/man4/vioblk.4
 ./usr/share/man/man4/viomb.4
+./usr/share/man/man4/viornd.4
 ./usr/share/man/man4/vioscsi.4
 ./usr/share/man/man4/virtio.4
 ./usr/share/man/man4/vlan.4
@@ -10829,6 +10840,7 @@
 ./usr/share/man/man5/sysctl.conf.5
 ./usr/share/man/man5/syslog.conf.5
 ./usr/share/man/man5/table.5
+./usr/share/man/man5/table_passwd.5
 ./usr/share/man/man5/term.5
 ./usr/share/man/man5/termcap.5
 ./usr/share/man/man5/terminfo.5
@@ -10894,7 +10906,6 @@
 ./usr/share/man/man8/amd64/boot_amd64.8
 ./usr/share/man/man8/amd64/cdboot.8
 ./usr/share/man/man8/amd64/gpioctl.8
-./usr/share/man/man8/amd64/installboot.8
 ./usr/share/man/man8/amd64/kbd.8
 ./usr/share/man/man8/amd64/memconfig.8
 ./usr/share/man/man8/amd64/pxeboot.8
@@ -10976,7 +10987,6 @@
 ./usr/share/man/man8/i386/boot_i386.8
 ./usr/share/man/man8/i386/cdboot.8
 ./usr/share/man/man8/i386/gpioctl.8
-./usr/share/man/man8/i386/installboot.8
 ./usr/share/man/man8/i386/kbd.8
 ./usr/share/man/man8/i386/memconfig.8
 ./usr/share/man/man8/i386/pxeboot.8
@@ -10989,6 +10999,7 @@
 ./usr/share/man/man8/iked.8
 ./usr/share/man/man8/inetd.8
 ./usr/share/man/man8/init.8
+./usr/share/man/man8/installboot.8
 ./usr/share/man/man8/intro.8
 ./usr/share/man/man8/iostat.8
 ./usr/share/man/man8/iprop-log.8
@@ -11342,9 +11353,30 @@
 ./usr/share/man/man9/arc4random_buf.9
 ./usr/share/man/man9/arc4random_uniform.9
 ./usr/share/man/man9/assert.9
-./usr/share/man/man9/atomic.9
+./usr/share/man/man9/atomic_add_int.9
+./usr/share/man/man9/atomic_add_int_nv.9
+./usr/share/man/man9/atomic_add_long.9
+./usr/share/man/man9/atomic_add_long_nv.9
+./usr/share/man/man9/atomic_cas_ptr.9
+./usr/share/man/man9/atomic_cas_uint.9
+./usr/share/man/man9/atomic_cas_ulong.9
 ./usr/share/man/man9/atomic_clearbits_int.9
+./usr/share/man/man9/atomic_dec_int.9
+./usr/share/man/man9/atomic_dec_int_nv.9
+./usr/share/man/man9/atomic_dec_long.9
+./usr/share/man/man9/atomic_dec_long_nv.9
+./usr/share/man/man9/atomic_inc_int.9
+./usr/share/man/man9/atomic_inc_int_nv.9
+./usr/share/man/man9/atomic_inc_long.9
+./usr/share/man/man9/atomic_inc_long_nv.9
 ./usr/share/man/man9/atomic_setbits_int.9
+./usr/share/man/man9/atomic_sub_int.9
+./usr/share/man/man9/atomic_sub_int_nv.9
+./usr/share/man/man9/atomic_sub_long.9
+./usr/share/man/man9/atomic_sub_long_nv.9
+./usr/share/man/man9/atomic_swap_ptr.9
+./usr/share/man/man9/atomic_swap_uint.9
+./usr/share/man/man9/atomic_swap_ulong.9
 ./usr/share/man/man9/audio.9
 ./usr/share/man/man9/autoconf.9
 ./usr/share/man/man9/bawrite.9
@@ -11504,6 +11536,7 @@
 ./usr/share/man/man9/extent_alloc.9
 ./usr/share/man/man9/extent_alloc_region.9
 ./usr/share/man/man9/extent_alloc_subregion.9
+./usr/share/man/man9/extent_alloc_subregion_with_descr.9
 ./usr/share/man/man9/extent_create.9
 ./usr/share/man/man9/extent_destroy.9
 ./usr/share/man/man9/extent_free.9
@@ -11673,6 +11706,11 @@
 ./usr/share/man/man9/mbuf.9
 ./usr/share/man/man9/mbuf_tags.9
 ./usr/share/man/man9/md5.9
+./usr/share/man/man9/membar_consumer.9
+./usr/share/man/man9/membar_enter.9
+./usr/share/man/man9/membar_exit.9
+./usr/share/man/man9/membar_producer.9
+./usr/share/man/man9/membar_sync.9
 ./usr/share/man/man9/memchr.9
 ./usr/share/man/man9/memcmp.9
 ./usr/share/man/man9/mi_switch.9
@@ -11993,6 +12031,8 @@
 ./usr/share/man/man9/vwaitforio.9
 ./usr/share/man/man9/vwakeup.9
 ./usr/share/man/man9/wakeup.9
+./usr/share/man/man9/wakeup_n.9
+./usr/share/man/man9/wakeup_one.9
 ./usr/share/man/man9/wdog_register.9
 ./usr/share/man/man9/workq_add_task.9
 ./usr/share/man/man9/workq_create.9

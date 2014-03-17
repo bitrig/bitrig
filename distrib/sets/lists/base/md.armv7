@@ -975,6 +975,8 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/ic/pgtreg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/ic/pgtvar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/ic/pt2254a.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/dev/ic/qlareg.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/dev/ic/qlavar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/ic/ramdac.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/ic/revar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/ic/rf3000reg.ph
@@ -1962,6 +1964,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/acct.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/agpio.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/ataio.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/sys/atomic.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/audioio.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/bitops.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/buf.ph
