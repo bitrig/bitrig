@@ -90,6 +90,10 @@ extern const _RuneLocale *_CurrentRuneLocale;
 #if defined(__NO_TLS) || defined(__RUNETYPE_INTERNAL)
 extern const _RuneLocale *__getCurrentRuneLocale(void);
 #else
+#if !defined(__clang__)
+	/* if building with gcc define _Thread_local  */
+# define _Thread_local __thread
+#endif
 extern _Thread_local const _RuneLocale *_ThreadRuneLocale;
 static __inline const _RuneLocale *__getCurrentRuneLocale(void)
 {
