@@ -37,7 +37,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <sys/types.h>
-#include <machine/atomic.h>
+#include <stdatomic.h>
 #include "setlocale.h"
 
 enum {
@@ -64,7 +64,7 @@ enum {
  */
 struct xlocale_refcounted {
 	/** Number of references to this component.  */
-	long retain_count;
+	_Atomic long retain_count;
 	/** Function used to destroy this component, if one is required*/
 	void(*destructor)(void*);
 };
@@ -144,12 +144,7 @@ __attribute__((unused)) static void*
 xlocale_retain(void *val)
 {
 	struct xlocale_refcounted *obj = val;
-#ifdef HAVE_ATOMICS
-	atomic_add_long(&(obj->retain_count), 1);
-#else
-	// XXX XXX XXX HACK HACK HACK SPEEDBUMP
-	obj->retain_count++;
-#endif
+	atomic_fetch_add(&(obj->retain_count), 1);
 	return (val);
 }
 /**
@@ -160,13 +155,7 @@ __attribute__((unused)) static void
 xlocale_release(void *val)
 {
 	struct xlocale_refcounted *obj = val;
-#ifdef HAVE_ATOMICS
-	long count = atomic_fetchadd_long(&(obj->retain_count), -1) - 1;
-#else
-	// XXX XXX XXX HACK HACK HACK SPEEDBUMP
-	obj->retain_count--;
-	long count = obj->retain_count;
-#endif
+	long count = atomic_fetch_add(&(obj->retain_count), -1) - 1;
 	if (count < 0) {
 		if (0 != obj->destructor) {
 			obj->destructor(obj);
