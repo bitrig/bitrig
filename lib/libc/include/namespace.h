@@ -16,3 +16,9 @@
 #define vwarnx		_vwarnx
 #define warn		_warn
 #define warnx		_warnx
+
+#define pthread_getspecific	_pthread_getspecific
+#define pthread_setspecific	_pthread_setspecific
+#define pthread_key_create	_pthread_key_create
+#define pthread_once		_pthread_once
+

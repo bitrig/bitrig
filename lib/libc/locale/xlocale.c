@@ -29,6 +29,7 @@
  * $FreeBSD$
  */
 
+#include <namespace.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
@@ -52,6 +53,12 @@ extern struct xlocale_component __xlocale_global_messages;
  */
 extern struct xlocale_component __xlocale_C_collate;
 extern struct xlocale_component __xlocale_C_ctype;
+
+/*
+ * Provides pthread_once()-like functionality for both single-threaded
+ * and multi-threaded applications.
+ */
+int _once(pthread_once_t *, void (*)(void));
 
 #ifndef __NO_TLS
 /*

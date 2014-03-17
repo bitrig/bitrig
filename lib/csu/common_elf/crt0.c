@@ -114,6 +114,14 @@ MD_START(MD_START_ARGS)
 	exit(main(argc, argv, envp));
 }
 
+/*
+void
+__init_tcb(__unused void *envp)
+{
+
+}
+*/
+
 static char *
 _strrchr(char *p, char ch)
 {
