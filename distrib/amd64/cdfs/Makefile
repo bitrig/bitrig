@@ -7,7 +7,7 @@ CDROM=	cd${REV}.iso
 
 all: ${CDROM}
 
-${CDROM}:
+${CDROM}: ${.OBJDIR}/../ramdisk/${BSDRD} ${DESTDIR}/usr/mdec/cdbr ${DESTDIR}/usr/mdec/cdboot
 	-rm -rf ${.OBJDIR}/cd-dir
 	mkdir -p ${.OBJDIR}/cd-dir/${OSREV}/amd64
 	mkdir -p ${.OBJDIR}/cd-dir/etc
