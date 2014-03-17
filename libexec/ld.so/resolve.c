@@ -455,7 +455,15 @@ _dl_find_symbol_bysym(elf_object_t *req_obj, unsigned int symidx,
 	sym += symidx;
 	symn = req_obj->dyn.strtab + sym->st_name;
 
-	ret = _dl_find_symbol(symn, this, flags, ref_sym, req_obj, &sobj);
+	if (ELF_ST_BIND(ref_sym->st_info) != STB_LOCAL) {
+		ret = _dl_find_symbol(symn, this, flags, ref_sym, req_obj,
+			&sobj);
+	} else {
+		sobj = req_obj;
+
+		*this = sym;
+		ret = 1;
+	}
 
 	if (pobj)
 		*pobj = sobj;
