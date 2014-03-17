@@ -42,7 +42,6 @@ _tcpdump:*:76:
 _dhcp:*:77:
 _tftpd:*:79:
 _rbootd:*:80:
-_ppp:*:82:
 _ntp:*:83:
 _ftp:*:84:
 _ospfd:*:85:
