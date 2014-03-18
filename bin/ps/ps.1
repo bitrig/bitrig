@@ -39,7 +39,7 @@
 .Sh SYNOPSIS
 .Nm ps
 .Sm off
-.Op Fl AaCceHhjkLlmrSTuvwx
+.Op Fl AaCcdeHhjkLlmrSTuvwx
 .Sm on
 .Op Fl M Ar core
 .Op Fl N Ar system
@@ -90,6 +90,12 @@ This may be somewhat confusing; for example, all
 .Xr sh 1
 scripts will show as
 .Dq sh .
+.It Fl d
+Draw ASCII art describing parent/child hierarchy. When used in conjuction with
+.Op Fl mr ,
+hierarchical sorting takes precedence, but
+.Op Fl mr
+sorting still takes place at each hierarchy level.
 .It Fl e
 Display the environment as well.
 .It Fl H
@@ -567,7 +573,7 @@ utility is compliant with the
 specification.
 .Pp
 The flags
-.Op Fl CcHhjkLMmNOrST
+.Op Fl CcdHhjkLMmNOrST
 are extensions to that specification.
 .Pp
 Behaviour for the

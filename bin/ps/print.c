@@ -108,6 +108,8 @@ command(const struct kinfo_proc *kp, VARENT *ve)
 			left = v->width;
 	} else
 		left = -1;
+	if (needhier)
+		fmt_puts(hier_prefix(kp->p_pid), &left);
 	if (needenv && kd != NULL) {
 		argv = kvm_getenvv(kd, kp, termwidth);
 		if ((p = argv) != NULL) {
@@ -584,8 +586,7 @@ pagein(const struct kinfo_proc *kp, VARENT *ve)
 	VAR *v;
 
 	v = ve->var;
-	(void)printf("%*llu", v->width,
-	    kp->p_uvalid ? kp->p_uru_majflt : 0);
+	(void)printf("%*llu", v->width, kp->p_uvalid ? kp->p_uru_majflt : 0);
 }
 
 void

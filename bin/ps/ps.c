@@ -65,7 +65,7 @@ int	sumrusage;		/* -S */
 int	termwidth;		/* width of screen (0 == infinity) */
 int	totwidth;		/* calculated width of requested variables */
 
-int	needcomm, needenv, neednlist, commandonly;
+int	needcomm, needenv, needhier, neednlist, commandonly;
 
 enum sort { DEFAULT, SORTMEM, SORTCPU } sortby = DEFAULT;
 
@@ -96,7 +96,7 @@ main(int argc, char *argv[])
 	dev_t ttydev;
 	pid_t pid;
 	uid_t uid;
-	int all, ch, flag, i, fmt, lineno, nentries;
+	int all, ch, flag, i, j, fmt, lineno, nentries;
 	int prtheader, showthreads, wflag, kflag, what, Uflag, xflg;
 	char *nlistf, *memf, *swapf, errbuf[_POSIX2_LINE_MAX];
 
@@ -111,13 +111,14 @@ main(int argc, char *argv[])
 	if (argc > 1)
 		argv[1] = kludge_oldps_options(argv[1]);
 
-	all = fmt = prtheader = showthreads = wflag = kflag = Uflag = xflg = 0;
+	all = fmt = prtheader = showthreads = 0;
+	wflag = kflag = Uflag = xflg = 0;
 	pid = -1;
 	uid = 0;
 	ttydev = NODEV;
 	memf = nlistf = swapf = NULL;
 	while ((ch = getopt(argc, argv,
-	    "AaCcegHhjkLlM:mN:O:o:p:rSTt:U:uvW:wx")) != -1)
+	    "AaCcdegHhjkLlM:mN:O:o:p:rSTt:U:uvW:wx")) != -1)
 		switch (ch) {
 		case 'A':
 			all = 1;
@@ -131,6 +132,9 @@ main(int argc, char *argv[])
 			break;
 		case 'c':
 			commandonly = 1;
+			break;
+		case 'd':
+			needhier = 1;
 			break;
 		case 'e':			/* XXX set ufmt */
 			needenv = 1;
@@ -328,26 +332,30 @@ main(int argc, char *argv[])
 	printheader();
 	if (nentries == 0)
 		exit(1);
-	/*
-	 * sort proc list, we convert from an array of structs to an array
-	 * of pointers to make the sort cheaper.
-	 */
-	if ((kinfo = calloc(sizeof(*kinfo), nentries)) == NULL)
-		err(1, "failed to allocate memory for proc pointers");
-	for (i = 0; i < nentries; i++)
-		kinfo[i] = &kp[i];
+
+	if ((kinfo = calloc(nentries, sizeof(*kinfo))) == NULL)
+		err(1, NULL);
+
+	for (i = j = 0; i < nentries; i++) {
+		if (showthreads == 0 && (kp[i].p_flag & P_THREAD) != 0)
+			continue;
+		if (xflg == 0 && ((int)kp[i].p_tdev == NODEV ||
+		    (kp[i].p_psflags & PS_CONTROLT) == 0))
+			continue;
+		if (showthreads && kp[i].p_tid == -1)
+			continue;
+		kinfo[j++] = &kp[i];
+	}
+	nentries = j;
+
 	qsort(kinfo, nentries, sizeof(*kinfo), pscomp);
+	if (needhier)
+		hier_sort(kinfo, nentries);
+
 	/*
 	 * for each proc, call each variable output function.
 	 */
 	for (i = lineno = 0; i < nentries; i++) {
-		if (showthreads == 0 && (kinfo[i]->p_flag & P_THREAD) != 0)
-			continue;
-		if (xflg == 0 && ((int)kinfo[i]->p_tdev == NODEV ||
-		    (kinfo[i]->p_psflags & PS_CONTROLT ) == 0))
-			continue;
-		if (showthreads && kinfo[i]->p_tid == -1)
-			continue;
 		SIMPLEQ_FOREACH(vent, &vhead, entries) {
 			(vent->var->oproc)(kinfo[i], vent);
 			if (SIMPLEQ_NEXT(vent, entries) != SIMPLEQ_END(&vhead))
@@ -468,9 +476,8 @@ static void
 usage(void)
 {
 	(void)fprintf(stderr,
-	    "usage: %s [-AaCceHhjkLlmrSTuvwx] [-M core] [-N system] [-O fmt] [-o fmt] [-p pid]\n",
-	    __progname);	
-	(void)fprintf(stderr,
-	    "%-*s[-t tty] [-U username] [-W swap]\n", (int)strlen(__progname) + 8, "");
+	    "usage: %s [-AaCcdeHhjkLlmrSTuvwx] [-M core] [-N system] [-O fmt] [-o fmt]\n"
+	    "%-*s[-p pid] [-t tty] [-U username] [-W swap]\n",
+	    __progname,  (int)strlen(__progname) + 8, "");
 	exit(1);
 }

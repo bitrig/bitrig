@@ -33,6 +33,9 @@
  */
 
 #include <sys/queue.h>
+#include <sys/resource.h>
+#include <sys/sysctl.h>
+
 
 #define	UNLIMITED	0	/* unlimited terminal width */
 enum type {
@@ -55,7 +58,6 @@ typedef struct varent {
 
 SIMPLEQ_HEAD(varent_list, varent);
 
-struct kinfo_proc;
 typedef struct var {
 	char	*name;		/* name(s) of variable */
 	char	*header;	/* default header */
@@ -67,7 +69,7 @@ typedef struct var {
 #define	NLIST	0x10		/* needs nlist info from kernel */
 	u_int	flag;
 				/* output routine */
-	void	(*oproc)(const struct kinfo_proc *, struct varent *);
+	void	(*oproc)(const struct kinfo_proc *, VARENT *);
 	short	width;		/* printing width */
 	char	parsed;		/* have we been parsed yet? (avoid dupes) */
 	/*

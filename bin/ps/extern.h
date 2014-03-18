@@ -40,7 +40,8 @@ struct varent_list;
 extern fixpt_t ccpu;
 extern int eval, fscale, nlistread, rawcpu, maxslp;
 extern u_int mempages;
-extern int sumrusage, termwidth, totwidth, kvm_sysctl_only, needheader;
+extern int sumrusage, termwidth, totwidth, kvm_sysctl_only;
+extern int needheader, needhier;
 extern VAR var[];
 extern struct varent_list vhead;
 
@@ -54,6 +55,8 @@ void	 fmt_putc(int, int *);
 double	 getpcpu(const struct kinfo_proc *);
 double	 getpmem(const struct kinfo_proc *);
 void	 gname(const struct kinfo_proc *, VARENT *);
+char	*hier_prefix(int);
+void	 hier_sort(struct kinfo_proc **, int);
 void	 logname(const struct kinfo_proc *, VARENT *);
 void	 longtname(const struct kinfo_proc *, VARENT *);
 void	 lstarted(const struct kinfo_proc *, VARENT *);
