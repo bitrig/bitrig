@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.34 2010/01/30 20:48:50 miod Exp $
+#	$OpenBSD: Makefile,v 1.37 2014/03/18 22:36:30 miod Exp $
 
 PROG=	wsconsctl
 SRCS=	display.c keyboard.c keysym.c map_parse.y map_scan.l \

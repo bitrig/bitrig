@@ -1,4 +1,5 @@
-#	$OpenBSD: Makefile,v 1.31 2010/01/30 20:48:53 miod Exp $
+#	$OpenBSD: Makefile,v 1.34 2014/03/18 22:36:37 miod Exp $
+
 
 PROG=	wsconscfg
 SRCS=	wsconscfg.c

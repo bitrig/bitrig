@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.54 2013/10/31 22:37:17 schwarze Exp $
+#	$OpenBSD: Makefile,v 1.55 2014/03/18 22:36:30 miod Exp $
 
 PROG=	disklabel
 SRCS=	disklabel.c dkcksum.c editor.c manual.c

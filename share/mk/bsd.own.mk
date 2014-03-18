@@ -1,4 +1,4 @@
-#	$OpenBSD: bsd.own.mk,v 1.143 2014/01/18 05:54:51 martynas Exp $
+#	$OpenBSD: bsd.own.mk,v 1.145 2014/03/18 22:36:31 miod Exp $
 #	$NetBSD: bsd.own.mk,v 1.24 1996/04/13 02:08:09 thorpej Exp $
 
 # Host-specific overrides
@@ -29,13 +29,11 @@ ELF_TOOLCHAIN?=	no
 ELF_TOOLCHAIN?=	yes
 .endif
 
-GCC3_ARCH=m68k m88k vax
+GCC3_ARCH=m88k vax
 BINUTILS217_ARCH=hppa64 ia64
-# i386 PIE works; but there are RAMDISK fitting problems.
-# powerpc has problems on some "embedded" powerpc.
 # arm needs binutils-2.17, which still lacks W^X support
 PIE_ARCH=
-#PIE_ARCH=alpha amd64 hppa mips64 mips64el sh sparc64
+#PIE_ARCH=alpha amd64 hppa i386 mips64 mips64el sh sparc64
 
 .for _arch in ${MACHINE_ARCH}
 .if !empty(BINUTILS217_ARCH:M${_arch})

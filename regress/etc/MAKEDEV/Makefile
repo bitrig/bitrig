@@ -1,5 +1,5 @@
 
-# $OpenBSD: Makefile,v 1.26 2011/07/07 19:39:23 deraadt Exp $
+# $OpenBSD: Makefile,v 1.28 2014/03/18 22:36:30 miod Exp $
 
 MAKEDEVARCHS+=amd64 i386
 

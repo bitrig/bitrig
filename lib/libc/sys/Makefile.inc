@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.116 2013/10/13 23:30:12 guenther Exp $
+#	$OpenBSD: Makefile.inc,v 1.117 2014/03/18 22:36:30 miod Exp $
 #	$NetBSD: Makefile.inc,v 1.35 1995/10/16 23:49:07 jtc Exp $
 #	@(#)Makefile.inc	8.1 (Berkeley) 6/17/93
 

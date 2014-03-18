@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.39 2011/07/07 19:16:43 deraadt Exp $
+#	$OpenBSD: Makefile,v 1.45 2014/03/18 22:36:27 miod Exp $
 
 SUBDIR=	special
 
