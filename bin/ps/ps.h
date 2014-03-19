@@ -84,10 +84,4 @@ typedef struct var {
 	 */
 } VAR;
 
-#ifdef __LP64__
-#define	PTRWIDTH	16
-#else
-#define	PTRWIDTH	8
-#endif
-
 #include "extern.h"
