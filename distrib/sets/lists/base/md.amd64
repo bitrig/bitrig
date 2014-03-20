@@ -2060,7 +2060,6 @@
 ./usr/sbin/apmd
 ./usr/sbin/fdformat
 ./usr/sbin/gpioctl
-./usr/sbin/installboot
 ./usr/sbin/memconfig
 ./usr/sbin/pcidump
 ./usr/sbin/wsfontload
