@@ -40,7 +40,6 @@ option		WAPBL		# File system journaling support
 option		UFS_DIRHASH	# hash large directories
 option		QUOTA		# UFS quotas
 option		EXT2FS		# Second Extended Filesystem
-option		MFS		# memory file system
 option		NFSCLIENT	# Network File System client
 option		NFSSERVER	# Network File System server
 option		CD9660		# ISO 9660 + Rock Ridge file system
