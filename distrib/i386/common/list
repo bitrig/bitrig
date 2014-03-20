@@ -2,6 +2,7 @@
 
 SRCDIRS distrib/special
 SRCDIRS bin sbin usr.bin usr.sbin
+LIBS -lstubs -lutil -locurses -lssl -lcrypto -ledit -lm -lc
 
 # copy the crunched binary, link to it, and kill it
 COPY	${OBJDIR}/instbin			instbin
