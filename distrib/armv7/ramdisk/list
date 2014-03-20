@@ -63,7 +63,7 @@ LINK	instbin					sbin/sysctl
 LINK	instbin					sbin/bioctl
 
 # this is the list from distrib/miniroot/makeconf.awk with -lz added.
-LIBS	-lstubs -lutil -lotermcap -lm -lz
+LIBS -lstubs -lutil -locurses -lssl -lcrypto -ledit -lz -lm -lc
 
 # copy the MAKEDEV script and make some devices
 SCRIPT	${DESTDIR}/dev/MAKEDEV			dev/MAKEDEV
@@ -75,6 +75,7 @@ COPY	${CURDIR}/../../miniroot/master.passwd	etc/master.passwd
 SPECIAL	pwd_mkdb -p -d etc master.passwd; rm etc/master.passwd
 COPY	${CURDIR}/../../miniroot/protocols	etc/protocols
 COPY	${CURDIR}/../../miniroot/services	etc/services
+COPY    ${CURDIR}/../../miniroot/cert.pem       etc/ssl/cert.pem
 SYMLINK	/tmp/fstab.shadow			etc/fstab
 SYMLINK	/tmp/resolv.conf.shadow			etc/resolv.conf
 SYMLINK	/tmp/hosts				etc/hosts
