@@ -66,7 +66,7 @@ void pmap_set_l2(struct pmap *pm, uint32_t pa, vaddr_t va, uint32_t l2_pa);
 void
 pmap_fill_pte(pmap_t pm, vaddr_t va, paddr_t pa, struct pte_desc *pted,
     vm_prot_t prot, int flags, int cache);
-void pte_insert(struct pte_desc *pted);
+void pte_insert(pmap_t pm, struct pte_desc *pted);
 void pmap_table_remove(struct pte_desc *pted);
 void pmap_kenter_cache(vaddr_t va, paddr_t pa, vm_prot_t prot, int cacheable);
 void pmap_table_insert(struct pte_desc *pted);
@@ -322,7 +322,7 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	/*
 	 * Insert into table.
 	 */
-	pte_insert(pted);
+	pte_insert(pm, pted);
 
 	if (prot & VM_PROT_EXECUTE) {
 		if (pg != NULL) {
@@ -503,7 +503,7 @@ _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags, int cache)
 	 * We were told to map the page, probably called from vm_fault,
 	 * so map the page!
 	 */
-	pte_insert(pted);
+	pte_insert(pm, pted);
 
 	pted->pted_va |= PTED_VA_WIRED_M;
 
@@ -1043,7 +1043,6 @@ pmap_set_l2(struct pmap *pm, uint32_t pa, vaddr_t va, uint32_t l2_pa)
 void
 pmap_activate(struct proc *p)
 {
-	/* steal an L1 table if necessary */
 }
 
 /*
@@ -1250,14 +1249,14 @@ pte_spill_v(pmap_t pm, u_int32_t va, u_int32_t dsisr, int exec_fault)
                 return 0;
         }
 
-	pte_insert(pted);
+	pte_insert(pm, pted);
 
         return 1;
 }
-	#endif
+#endif
 
 void
-pte_insert(struct pte_desc *pted)
+pte_insert(pmap_t pm, struct pte_desc *pted)
 {
 	/* put entry into table */
 	/* need to deal with ref/change here */
@@ -1269,7 +1268,23 @@ int     pmap_fault_fixup(pmap_t pm0, vaddr_t v0, vm_prot_t p0, int i0)
 return 0;
 }
 void pmap_postinit(void) {}
-void    pmap_map_section(vaddr_t v0, vaddr_t v1, paddr_t p0, int i0, int i1) {}
+void    pmap_map_section(vaddr_t l1_addr, vaddr_t va, paddr_t pa, int flags, int cache) {
+	uint32_t *l1 = (uint32_t *)l1_addr;
+	int idx1;
+	int ap_flag;
+
+	switch (flags) {
+	case VM_PROT_READ:
+		ap_flag = AP_KR;
+		break;
+	case VM_PROT_READ | VM_PROT_WRITE:
+		ap_flag = AP_KRW;
+		break;
+	}
+	
+	idx1 = VP_IDX1(va);
+	l1[idx1] = (pa & L1_S_RPGN) | L1_S_AP(ap_flag);
+}
 void    pmap_map_entry(vaddr_t v0, vaddr_t v1, paddr_t p0, int i0, int i1) {}
 
 vsize_t pmap_map_chunk(vaddr_t v0, vaddr_t v1, paddr_t p0, vsize_t s0, int prot, int cache)
