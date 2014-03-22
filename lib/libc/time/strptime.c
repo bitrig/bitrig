@@ -71,17 +71,24 @@ static const int mon_lengths[2][MONSPERYEAR] = {
         { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
 };
 
-static	int _conv_num(const unsigned char **, int *, int, int);
+static	int _conv_num(const unsigned char **, int *, int, int, locale_t);
 static	int leaps_thru_end_of(const int y);
 static	char *_strptime(const char *, const char *, struct tm *, int, locale_t);
 static	const u_char *_find_string(const u_char *, int *, const char * const *,
-	    const char * const *, int);
+	    const char * const *, int, locale_t);
 
 
 char *
 strptime(const char *buf, const char *fmt, struct tm *tm)
 {
 	return(_strptime(buf, fmt, tm, 1, __get_locale()));
+}
+
+char *
+strptime_l(const char *buf, const char *fmt, struct tm *tm, locale_t loc)
+{
+	FIX_LOCALE(loc);
+	return (_strptime(buf, fmt, tm, 1, loc));
 }
 
 static char *
@@ -109,8 +116,8 @@ _strptime(const char *buf, const char *fmt, struct tm *tm, int initialize,
 		alt_format = 0;
 
 		/* Eat up white-space. */
-		if (isspace(c)) {
-			while (isspace(*bp))
+		if (isspace_l(c, locale)) {
+			while (isspace_l(*bp, locale))
 				bp++;
 
 			fmt++;
@@ -146,54 +153,67 @@ literal:
 		/*
 		 * "Complex" conversion rules, implemented through recursion.
 		 */
+
+#define _REC(_bp, _fmt, _tm, _l) \
+	(u_char *)_strptime((char *)(_bp), (_fmt), (_tm), 0, (_l))
+
 		case 'c':	/* Date and time, using the locale's format. */
 			_LEGAL_ALT(_ALT_E);
-			if (!(bp = _strptime(bp, tptr->c_fmt, tm, 0, locale)))
+			bp = _REC(bp, tptr->c_fmt, tm, locale);
+			if (bp == NULL)
 				return (NULL);
 			break;
 
 		case 'D':	/* The date as "%m/%d/%y". */
 			_LEGAL_ALT(0);
-			if (!(bp = _strptime(bp, "%m/%d/%y", tm, 0, locale)))
+			bp = _REC(bp, "%m/%d/%y", tm, locale);
+			if (bp == NULL)
 				return (NULL);
 			break;
 
 		case 'F':	/* The date as "%Y-%m-%d". */
 			_LEGAL_ALT(0);
-			if (!(bp = _strptime(bp, "%Y-%m-%d", tm, 0, locale)))
+			bp = _REC(bp, "%Y-%m-%d", tm, locale);
+			if (bp == NULL)
 				return (NULL);
 			continue;
 
 		case 'R':	/* The time as "%H:%M". */
 			_LEGAL_ALT(0);
-			if (!(bp = _strptime(bp, "%H:%M", tm, 0, locale)))
+			bp = _REC(bp, "%H:%M", tm, locale);
+			if (bp == NULL)
 				return (NULL);
 			break;
 
 		case 'r':	/* The time as "%I:%M:%S %p". */
 			_LEGAL_ALT(0);
-			if (!(bp = _strptime(bp, tptr->ampm_fmt, tm, 0, locale)))
+			bp = _REC(bp, tptr->ampm_fmt, tm, locale);
+			if (bp == NULL)
 				return (NULL);
 			break;
 
 		case 'T':	/* The time as "%H:%M:%S". */
 			_LEGAL_ALT(0);
-			if (!(bp = _strptime(bp, "%H:%M:%S", tm, 0, locale)))
+			bp = _REC(bp, "%H:%M:%S", tm, locale);
+			if (bp == NULL)
 				return (NULL);
 			break;
 
 		case 'X':	/* The time, using the locale's format. */
 			_LEGAL_ALT(_ALT_E);
-			if (!(bp = _strptime(bp, tptr->X_fmt, tm, 0, locale)))
+			bp = _REC(bp, tptr->X_fmt, tm, locale);
+			if (bp == NULL)
 				return (NULL);
 			break;
 
 		case 'x':	/* The date, using the locale's format. */
 			_LEGAL_ALT(_ALT_E);
-			if (!(bp = _strptime(bp, tptr->x_fmt, tm, 0, locale)))
+			bp = _REC(bp, tptr->x_fmt, tm, locale);
+			if (bp == NULL)
 				return (NULL);
 			break;
 
+#undef _REC
 		/*
 		 * "Elementary" conversion rules.
 		 */
@@ -203,12 +223,14 @@ literal:
 			for (i = 0; i < 7; i++) {
 				/* Full name. */
 				len = strlen(tptr->weekday[i]);
-				if (strncasecmp(tptr->weekday[i], bp, len) == 0)
+				if (strncasecmp_l(tptr->weekday[i], (char *)bp,
+				    len, locale) == 0)
 					break;
 
 				/* Abbreviated name. */
 				len = strlen(tptr->wday[i]);
-				if (strncasecmp(tptr->wday[i], bp, len) == 0)
+				if (strncasecmp_l(tptr->wday[i], (char *)bp,
+				    len, locale) == 0)
 					break;
 			}
 
@@ -228,12 +250,14 @@ literal:
 			for (i = 0; i < 12; i++) {
 				/* Full name. */
 				len = strlen(tptr->month[i]);
-				if (strncasecmp_l(tptr->month[i], bp, len, locale) == 0)
+				if (strncasecmp_l(tptr->month[i], (char *)bp,
+				    len, locale) == 0)
 					break;
 
 				/* Abbreviated name. */
 				len = strlen(tptr->mon[i]);
-				if (strncasecmp_l(tptr->mon[i], bp, len, locale) == 0)
+				if (strncasecmp_l(tptr->mon[i], (char *)bp,
+				    len, locale) == 0)
 					break;
 			}
 
@@ -248,7 +272,7 @@ literal:
 
 		case 'C':	/* The century number. */
 			_LEGAL_ALT(_ALT_E);
-			if (!(_conv_num(&bp, &i, 0, 99)))
+			if (!(_conv_num(&bp, &i, 0, 99, locale)))
 				return (NULL);
 
 			century = i * 100;
@@ -257,7 +281,7 @@ literal:
 		case 'd':	/* The day of month. */
 		case 'e':
 			_LEGAL_ALT(_ALT_O);
-			if (!(_conv_num(&bp, &tm->tm_mday, 1, 31)))
+			if (!(_conv_num(&bp, &tm->tm_mday, 1, 31, locale)))
 				return (NULL);
 			fields |= FIELD_TM_MDAY;
 			break;
@@ -267,7 +291,7 @@ literal:
 			/* FALLTHROUGH */
 		case 'H':
 			_LEGAL_ALT(_ALT_O);
-			if (!(_conv_num(&bp, &tm->tm_hour, 0, 23)))
+			if (!(_conv_num(&bp, &tm->tm_hour, 0, 23, locale)))
 				return (NULL);
 			break;
 
@@ -276,13 +300,13 @@ literal:
 			/* FALLTHROUGH */
 		case 'I':
 			_LEGAL_ALT(_ALT_O);
-			if (!(_conv_num(&bp, &tm->tm_hour, 1, 12)))
+			if (!(_conv_num(&bp, &tm->tm_hour, 1, 12, locale)))
 				return (NULL);
 			break;
 
 		case 'j':	/* The day of year. */
 			_LEGAL_ALT(0);
-			if (!(_conv_num(&bp, &tm->tm_yday, 1, 366)))
+			if (!(_conv_num(&bp, &tm->tm_yday, 1, 366, locale)))
 				return (NULL);
 			tm->tm_yday--;
 			fields |= FIELD_TM_YDAY;
@@ -290,13 +314,13 @@ literal:
 
 		case 'M':	/* The minute. */
 			_LEGAL_ALT(_ALT_O);
-			if (!(_conv_num(&bp, &tm->tm_min, 0, 59)))
+			if (!(_conv_num(&bp, &tm->tm_min, 0, 59, locale)))
 				return (NULL);
 			break;
 
 		case 'm':	/* The month. */
 			_LEGAL_ALT(_ALT_O);
-			if (!(_conv_num(&bp, &tm->tm_mon, 1, 12)))
+			if (!(_conv_num(&bp, &tm->tm_mon, 1, 12, locale)))
 				return (NULL);
 			tm->tm_mon--;
 			fields |= FIELD_TM_MON;
@@ -306,7 +330,8 @@ literal:
 			_LEGAL_ALT(0);
 			/* AM? */
 			len = strlen(tptr->am);
-			if (strncasecmp(tptr->am, bp, len) == 0) {
+			if (strncasecmp_l(tptr->am, (char *)bp, len,
+			    locale) == 0) {
 				if (tm->tm_hour > 12)	/* i.e., 13:00 AM ?! */
 					return (NULL);
 				else if (tm->tm_hour == 12)
@@ -317,7 +342,8 @@ literal:
 			}
 			/* PM? */
 			len = strlen(tptr->pm);
-			if (strncasecmp(tptr->pm, bp, len) == 0) {
+			if (strncasecmp_l(tptr->pm, (char *)bp, len,
+			    locale) == 0) {
 				if (tm->tm_hour > 12)	/* i.e., 13:00 PM ?! */
 					return (NULL);
 				else if (tm->tm_hour < 12)
@@ -332,7 +358,7 @@ literal:
 
 		case 'S':	/* The seconds. */
 			_LEGAL_ALT(_ALT_O);
-			if (!(_conv_num(&bp, &tm->tm_sec, 0, 61)))
+			if (!(_conv_num(&bp, &tm->tm_sec, 0, 61, locale)))
 				return (NULL);
 			break;
 
@@ -345,20 +371,20 @@ literal:
 			 * point to calculate a real value, so just check the
 			 * range for now.
 			 */
-			 if (!(_conv_num(&bp, &i, 0, 53)))
+			 if (!(_conv_num(&bp, &i, 0, 53, locale)))
 				return (NULL);
 			 break;
 
 		case 'w':	/* The day of week, beginning on sunday. */
 			_LEGAL_ALT(_ALT_O);
-			if (!(_conv_num(&bp, &tm->tm_wday, 0, 6)))
+			if (!(_conv_num(&bp, &tm->tm_wday, 0, 6, locale)))
 				return (NULL);
 			fields |= FIELD_TM_WDAY;
 			break;
 
 		case 'u':	/* The day of week, monday = 1. */
 			_LEGAL_ALT(_ALT_O);
-			if (!(_conv_num(&bp, &i, 1, 7)))
+			if (!(_conv_num(&bp, &i, 1, 7, locale)))
 				return (NULL);
 			tm->tm_wday = i % 7;
 			fields |= FIELD_TM_WDAY;
@@ -367,7 +393,7 @@ literal:
 		case 'g':	/* The year corresponding to the ISO week
 				 * number but without the century.
 				 */
-			if (!(_conv_num(&bp, &i, 0, 99)))
+			if (!(_conv_num(&bp, &i, 0, 99, locale)))
 				return (NULL);				
 			continue;
 
@@ -376,17 +402,17 @@ literal:
 				 */
 			do
 				bp++;
-			while (isdigit(*bp));
+			while (isdigit_l(*bp, locale));
 			continue;
 
 		case 'V':	/* The ISO 8601:1988 week number as decimal */
-			if (!(_conv_num(&bp, &i, 0, 53)))
+			if (!(_conv_num(&bp, &i, 0, 53, locale)))
 				return (NULL);
 			continue;
 
 		case 'Y':	/* The year. */
 			_LEGAL_ALT(_ALT_E);
-			if (!(_conv_num(&bp, &i, 0, 9999)))
+			if (!(_conv_num(&bp, &i, 0, 9999, locale)))
 				return (NULL);
 
 			relyear = -1;
@@ -396,7 +422,7 @@ literal:
 
 		case 'y':	/* The year within the century (2 digits). */
 			_LEGAL_ALT(_ALT_E | _ALT_O);
-			if (!(_conv_num(&bp, &relyear, 0, 99)))
+			if (!(_conv_num(&bp, &relyear, 0, 99, locale)))
 				return (NULL);
 			break;
 
@@ -413,8 +439,8 @@ literal:
 				bp += 3;
 			} else {
 				ep = _find_string(bp, &i,
-					       	 (const char * const *)tzname,
-					       	  NULL, 2);
+				    (const char * const *)tzname, NULL, 2,
+				    locale);
 				if (ep != NULL) {
 					tm->tm_isdst = i;
 #ifdef TM_GMTOFF
@@ -446,7 +472,7 @@ literal:
 			 * [A-IL-M] = -1 ... -9 (J not used)
 			 * [N-Y]  = +1 ... +12
 			 */
-			while (isspace(*bp))
+			while (isspace_l(*bp, locale))
 				bp++;
 
 			switch (*bp++) {
@@ -475,7 +501,8 @@ literal:
 				break;
 			default:
 				--bp;
-				ep = _find_string(bp, &i, nast, NULL, 4);
+				ep = _find_string(bp, &i, nast, NULL, 4,
+				    locale);
 				if (ep != NULL) {
 #ifdef TM_GMTOFF
 					tm->TM_GMTOFF = -5 - i;
@@ -486,7 +513,8 @@ literal:
 					bp = ep;
 					continue;
 				}
-				ep = _find_string(bp, &i, nadt, NULL, 4);
+				ep = _find_string(bp, &i, nadt, NULL, 4,
+				    locale);
 				if (ep != NULL) {
 					tm->tm_isdst = 1;
 #ifdef TM_GMTOFF
@@ -521,7 +549,7 @@ literal:
 			}
 			offs = 0;
 			for (i = 0; i < 4; ) {
-				if (isdigit(*bp)) {
+				if (isdigit_l(*bp, locale)) {
 					offs = offs * 10 + (*bp++ - '0');
 					i++;
 					continue;
@@ -563,7 +591,7 @@ literal:
 		case 'n':	/* Any kind of white-space. */
 		case 't':
 			_LEGAL_ALT(0);
-			while (isspace(*bp))
+			while (isspace_l(*bp, locale))
 				bp++;
 			break;
 
@@ -617,7 +645,8 @@ literal:
 			}
 			if (!(fields & FIELD_TM_MON)) {
 				tm->tm_mon = 0;
-				while (tm->tm_mon < MONSPERYEAR && days >= mon_lens[tm->tm_mon])
+				while (tm->tm_mon < MONSPERYEAR &&
+				    days >= mon_lens[tm->tm_mon])
 					days -= mon_lens[tm->tm_mon++];
 			}
 			if (!(fields & FIELD_TM_MDAY))
@@ -630,12 +659,13 @@ literal:
 
 
 static int
-_conv_num(const unsigned char **buf, int *dest, int llim, int ulim)
+_conv_num(const unsigned char **buf, int *dest, int llim, int ulim,
+    locale_t locale)
 {
 	int result = 0;
 	int rulim = ulim;
 
-	if (**buf < '0' || **buf > '9')
+	if (!isdigit_l(**buf, locale))
 		return (0);
 
 	/* we use rulim to break out of the loop when we run out of digits */
@@ -643,7 +673,7 @@ _conv_num(const unsigned char **buf, int *dest, int llim, int ulim)
 		result *= 10;
 		result += *(*buf)++ - '0';
 		rulim /= 10;
-	} while ((result * 10 <= ulim) && rulim && **buf >= '0' && **buf <= '9');
+	} while ((result * 10 <= ulim) && rulim && isdigit_l(**buf, locale));
 
 	if (result < llim || result > ulim)
 		return (0);
@@ -654,7 +684,7 @@ _conv_num(const unsigned char **buf, int *dest, int llim, int ulim)
 
 static const u_char *
 _find_string(const u_char *bp, int *tgt, const char * const *n1,
-		const char * const *n2, int c)
+    const char * const *n2, int c, locale_t locale)
 {
 	int i;
 	unsigned int len;
@@ -663,7 +693,8 @@ _find_string(const u_char *bp, int *tgt, const char * const *n1,
 	for (; n1 != NULL; n1 = n2, n2 = NULL) {
 		for (i = 0; i < c; i++, n1++) {
 			len = strlen(*n1);
-			if (strncasecmp(*n1, (const char *)bp, len) == 0) {
+			if (strncasecmp_l(*n1, (const char *)bp, len,
+			    locale) == 0) {
 				*tgt = i;
 				return bp + len;
 			}
