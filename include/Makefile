@@ -16,8 +16,8 @@ HFILES=	a.out.h ar.h asr.h assert.h bitstring.h blf.h bsd_auth.h \
 	elf_abi.h err.h errno.h fenv.h float.h fnmatch.h fstab.h fts.h \
 	ftw.h getopt.h glob.h grp.h ifaddrs.h inttypes.h iso646.h kvm.h \
 	langinfo.h libgen.h limits.h locale.h login_cap.h \
-	malloc.h math.h \
-	md5.h memory.h mpool.h ndbm.h netdb.h netgroup.h nlist.h nl_types.h \
+	malloc.h math.h md5.h memory.h monetary.h mpool.h \
+	ndbm.h netdb.h netgroup.h nlist.h nl_types.h \
 	ohash.h paths.h poll.h pwd.h ranlib.h readpassphrase.h regex.h \
 	resolv.h rmd160.h runetype.h search.h setjmp.h sha1.h sha2.h signal.h \
 	sndio.h spawn.h stdbool.h stddef.h stdio.h stdlib.h string.h strings.h \
