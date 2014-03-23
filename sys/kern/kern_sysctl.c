@@ -1409,6 +1409,16 @@ again:
 				continue;
 			break;
 
+		case KERN_PROC_GID:
+			if (p->p_ucred->cr_gid != (gid_t)arg)
+				continue;
+			break;
+
+		case KERN_PROC_RGID:
+			if (p->p_cred->p_rgid != (gid_t)arg)
+				continue;
+			break;
+
 		case KERN_PROC_UID:
 			if (pr->ps_ucred->cr_uid != (uid_t)arg)
 				continue;

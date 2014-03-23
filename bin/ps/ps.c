@@ -306,7 +306,10 @@ main(int argc, char *argv[])
 	what = kflag ? KERN_PROC_KTHREAD : KERN_PROC_ALL;
 	flag = 0;
 	if (!kflag && nuids + nttys + npids == 1) {
-		if (pids) {
+		if (gids) {
+			what = KERN_PROC_RGID;
+			flag = gids[0];
+		} else if (pids) {
 			what = KERN_PROC_PID;
 			flag = pids[0];
 		} else if (ttys) {

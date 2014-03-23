@@ -283,6 +283,8 @@ struct ctlname {
 #define	KERN_PROC_UID		5	/* by effective uid */
 #define	KERN_PROC_RUID		6	/* by real uid */
 #define	KERN_PROC_KTHREAD	7	/* also return kernel threads */
+#define	KERN_PROC_GID		8	/* by effective gid */
+#define	KERN_PROC_RGID		9	/* by real group id */
 #define	KERN_PROC_SHOW_THREADS	0x40000000/* also return normal threads */
 
 /*
