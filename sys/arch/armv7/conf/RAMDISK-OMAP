@@ -189,5 +189,5 @@ pseudo-device   rd              1       # ram disk
 pseudo-device	hotplug		1	# devices hot plugging
 
 # RAMDISK stuff
-options	MINIROOTSIZE=10240
+options	MINIROOTSIZE=16640
 options	RAMDISK_HOOKS

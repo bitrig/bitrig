@@ -164,5 +164,5 @@ pseudo-device	bpfilter	1	# packet filter
 pseudo-device	rd		1	# ram disk
 
 # RAMDISK stuff
-options	MINIROOTSIZE=10240
+options	MINIROOTSIZE=16640
 options	RAMDISK_HOOKS
