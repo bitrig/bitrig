@@ -27,6 +27,7 @@
 #include <sys/mbuf.h>
 #include <machine/intr.h>
 #include <machine/bus.h>
+#include <machine/clock.h>
 
 #include "bpfilter.h"
 
@@ -225,7 +226,8 @@ imxenet_attach(struct device *parent, struct device *self, void *args)
 	sc->sc_dma_tag = aa->aa_dmat;
 
 	/* power it up */
-	imxccm_enable_enet();
+	clk_enable(clk_get("enet_ref"));
+	clk_enable(clk_get("enet"));
 
 	switch (board_id)
 	{
@@ -367,9 +369,10 @@ imxenet_chip_init(struct imxenet_softc *sc)
 	struct device *dev = (struct device *) sc;
 	int phy = 0;
 	uint32_t reg;
+	uint32_t rate = clk_get_rate(clk_get("enet_ref"));
 
 	bus_space_write_4(sc->sc_iot, sc->sc_ioh, ENET_MSCR,
-	    (((imxccm_get_fecclk() + (ENET_MII_CLK << 2) - 1) / (ENET_MII_CLK << 2)) << 1) | 0x100);
+	    (((rate + (ENET_MII_CLK << 2) - 1) / (ENET_MII_CLK << 2)) << 1) | 0x100);
 
 	switch (board_id)
 	{
@@ -483,6 +486,7 @@ imxenet_init(struct imxenet_softc *sc)
 {
 	struct ifnet *ifp = &sc->sc_ac.ac_if;
 	int speed = 0;
+	uint32_t rate = clk_get_rate(clk_get("enet_ref"));
 
 	/* reset the controller */
 	HWRITE4(sc, ENET_ECR, ENET_ECR_RESET);
@@ -529,7 +533,7 @@ imxenet_init(struct imxenet_softc *sc)
 	    ENET_RCR_FCE);
 
 	bus_space_write_4(sc->sc_iot, sc->sc_ioh, ENET_MSCR,
-	    (((imxccm_get_fecclk() + (ENET_MII_CLK << 2) - 1) / (ENET_MII_CLK << 2)) << 1) | 0x100);
+	    (((rate + (ENET_MII_CLK << 2) - 1) / (ENET_MII_CLK << 2)) << 1) | 0x100);
 
 	/* RX FIFO treshold and pause */
 	HWRITE4(sc, ENET_RSEM, 0x84);

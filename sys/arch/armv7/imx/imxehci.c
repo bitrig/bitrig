@@ -24,6 +24,7 @@
 
 #include <machine/intr.h>
 #include <machine/bus.h>
+#include <machine/clock.h>
 
 #include <dev/usb/usb.h>
 #include <dev/usb/usbdi.h>
@@ -130,7 +131,7 @@ imxehci_attach(struct device *parent, struct device *self, void *aux)
 
 	printf("\n");
 
-	imxccm_enable_usboh3();
+	clk_enable(clk_get("usboh3"));
 	delay(1000);
 
 	if (aa->aa_dev->mem[0].addr == USBUH1_EHCI_ADDR) {
@@ -154,7 +155,8 @@ imxehci_attach(struct device *parent, struct device *self, void *aux)
 		/* disable the carger detection, else signal on DP will be poor */
 		imxccm_disable_usb2_chrg_detect();
 		/* power host 1 */
-		imxccm_enable_pll_usb2();
+		clk_enable(clk_get("pll7_usb_host"));
+		clk_enable(clk_get("usbphy2_gate"));
 
 		/* over current and polarity setting */
 		bus_space_write_4(sc->sc.iot, sc->nc_ioh, USBNC_USB_UH1_CTRL,
@@ -175,7 +177,8 @@ imxehci_attach(struct device *parent, struct device *self, void *aux)
 		/* disable the carger detection, else signal on DP will be poor */
 		imxccm_disable_usb1_chrg_detect();
 		/* power host 0 */
-		imxccm_enable_pll_usb1();
+		clk_enable(clk_get("pll3_usb_otg"));
+		clk_enable(clk_get("usbphy1_gate"));
 
 		/* over current and polarity setting */
 		bus_space_write_4(sc->sc.iot, sc->nc_ioh, USBNC_USB_OTG_CTRL,

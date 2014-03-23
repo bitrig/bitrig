@@ -18,19 +18,7 @@
 #ifndef IMXCCMVAR_H
 #define IMXCCMVAR_H
 
-unsigned int imxccm_get_usdhx(int x);
-unsigned int imxccm_get_fecclk(void);
-unsigned int imxccm_get_uartclk(void);
-unsigned int imxccm_get_ipg_perclk(void);
-unsigned int imxccm_get_ahbclk(void);
-void imxccm_enable_i2c(int x);
-void imxccm_enable_usboh3(void);
 void imxccm_disable_usb1_chrg_detect(void);
-void imxccm_enable_pll_usb1(void);
 void imxccm_disable_usb2_chrg_detect(void);
-void imxccm_enable_pll_usb2(void);
-void imxccm_enable_enet(void);
-void imxccm_enable_sata(void);
-void imxccm_enable_pcie(void);
 
 #endif /* IMXCCMVAR_H */

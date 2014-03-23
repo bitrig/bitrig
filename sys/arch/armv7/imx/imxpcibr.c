@@ -25,6 +25,7 @@
 #include <sys/timeout.h>
 #include <machine/intr.h>
 #include <machine/bus.h>
+#include <machine/clock.h>
 #include <dev/pci/pcivar.h>
 #include <armv7/imx/imxvar.h>
 #include <armv7/imx/imxccmvar.h>
@@ -152,7 +153,8 @@ imxpcibr_attach(struct device *parent, struct device *self, void *args)
 
 	imxiomuxc_enable_pcie();
 	imxiomuxc_pcie_test_powerdown(0);
-	imxccm_enable_pcie();
+	clk_enable(clk_get("pcie_axi"));
+	clk_enable(clk_get("pcie_ref_125m"));
 	imxiomuxc_pcie_test_powerdown(1);
 
 	HSET4(sc, PCIE_RC_COMMAND, PCIE_RC_COMMAND_IO_SPACE |

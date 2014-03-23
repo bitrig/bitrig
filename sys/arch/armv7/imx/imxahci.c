@@ -23,6 +23,7 @@
 #include <sys/queue.h>
 
 #include <machine/bus.h>
+#include <machine/clock.h>
 
 #include <dev/ic/ahcivar.h>
 
@@ -78,6 +79,7 @@ extern int ahci_intr(void *);
 
 struct imxahci_softc {
 	struct ahci_softc	sc;
+	struct clk		*sc_clk;
 };
 
 struct cfattach imxahci_ca = {
@@ -115,8 +117,16 @@ imxahci_attach(struct device *parent, struct device *self, void *args)
 		goto unmap;
 	}
 
+	imxsc->sc_clk = clk_get("ahb");
+	if (imxsc->sc_clk == NULL) {
+		printf(": can't get clock\n");
+		goto unmap;
+	}
+	clk_enable(imxsc->sc_clk);
+
 	/* power it up */
-	imxccm_enable_sata();
+	clk_enable(clk_get("sata_ref_100m"));
+	clk_enable(clk_get("sata"));
 	delay(100);
 
 	/* power phy up */
@@ -135,7 +145,7 @@ imxahci_attach(struct device *parent, struct device *self, void *args)
 
 	bus_space_write_4(sc->sc_iot, sc->sc_ioh, SATA_PI, 1);
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, SATA_TIMER1MS, imxccm_get_ahbclk());
+	bus_space_write_4(sc->sc_iot, sc->sc_ioh, SATA_TIMER1MS, clk_get_rate(imxsc->sc_clk));
 
 	while (!(bus_space_read_4(sc->sc_iot, sc->sc_ioh, SATA_P0SSTS) & 0xF) && timeout--);
 

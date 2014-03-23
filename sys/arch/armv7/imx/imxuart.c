@@ -37,6 +37,7 @@
 #endif
 
 #include <machine/bus.h>
+#include <machine/clock.h>
 #include <armv7/imx/imxuartreg.h>
 #include <armv7/imx/imxuartvar.h>
 #include <armv7/armv7/armv7var.h>
@@ -81,6 +82,8 @@ struct imxuart_softc {
 #define IMXUART_IBUFSIZE 128
 #define IMXUART_IHIGHWATER 100
 	u_int16_t		sc_ibufs[2][IMXUART_IBUFSIZE];
+
+	struct clk	*sc_clk;
 };
 
 
@@ -157,6 +160,12 @@ imxuartattach(struct device *parent, struct device *self, void *args)
 	if(sc->sc_si == NULL)
 		panic("%s: can't establish soft interrupt.",
 		    sc->sc_dev.dv_xname);
+
+	sc->sc_clk = clk_get("uart_serial");
+	if (sc->sc_clk == NULL)
+		panic("%s: can't get serial clock",
+		    sc->sc_dev.dv_xname);
+	clk_enable(sc->sc_clk);
 
 	printf("\n");
 }
@@ -511,7 +520,7 @@ imxuartopen(dev_t dev, int flag, int mode, struct proc *p)
 
 		/* formula: clk / (rfdiv * 1600) */
 		bus_space_write_2(iot, ioh, IMXUART_UBMR,
-		    (imxccm_get_uartclk() * 1000) / 1600);
+		    (clk_get_rate(sc->sc_clk) * 1000) / 1600);
 
 		SET(sc->sc_ucr1, IMXUART_CR1_EN|IMXUART_CR1_RRDYEN);
 		SET(sc->sc_ucr2, IMXUART_CR2_TXEN|IMXUART_CR2_RXEN);

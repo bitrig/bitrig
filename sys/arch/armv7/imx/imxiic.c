@@ -21,6 +21,7 @@
 #include <sys/malloc.h>
 #include <sys/systm.h>
 #include <machine/bus.h>
+#include <machine/clock.h>
 
 #include <armv7/armv7/armv7var.h>
 #include <armv7/imx/imxiomuxcvar.h>
@@ -58,6 +59,8 @@ struct imxiic_softc {
 	uint16_t		frequency;
 	uint16_t		intr_status;
 	uint16_t		stopped;
+
+	struct clk 		*sc_clk;
 };
 
 void imxiic_attach(struct device *, struct device *, void *);
@@ -98,6 +101,7 @@ imxiic_attach(struct device *parent, struct device *self, void *args)
 {
 	struct imxiic_softc *sc = (struct imxiic_softc *)self;
 	struct armv7_attach_args *aa = args;
+	char i2c[5];
 
 	sc->sc_iot = aa->aa_iot;
 	sc->sc_ios = aa->aa_dev->mem[0].size;
@@ -110,6 +114,12 @@ imxiic_attach(struct device *parent, struct device *self, void *args)
 	sc->sc_ih = arm_intr_establish(aa->aa_dev->irq[0], IPL_BIO,
 	    imxiic_intr, sc, sc->sc_dev.dv_xname);
 #endif
+
+	snprintf(i2c, sizeof(i2c), "i2c%d", aa->aa_dev->unit + 1);
+	sc->sc_clk = clk_get(i2c);
+	if (sc->sc_clk == NULL)
+		panic("imxiic_attach: clock not available");
+	clk_enable(sc->sc_clk);
 
 	printf("\n");
 
@@ -147,7 +157,7 @@ imxiic_setspeed(struct imxiic_softc *sc, u_int speed)
 		uint32_t div;
 		int i;
 
-		i2c_clk_rate = imxccm_get_ipg_perclk();
+		i2c_clk_rate = clk_get_rate(sc->sc_clk);
 		div = (i2c_clk_rate + speed - 1) / speed;
 		if (div < imxiic_clk_div[0][0])
 			i = 0;
@@ -310,9 +320,6 @@ imxiic_i2c_exec(void *cookie, i2c_op_t op, i2c_addr_t addr,
 		cmd = *(u_int8_t *)cmdbuf;
 
 	addr &= 0x7f;
-
-	/* clock gating */
-	imxccm_enable_i2c(sc->unit);
 
 	/* set speed to 100kHz */
 	imxiic_setspeed(sc, 100);

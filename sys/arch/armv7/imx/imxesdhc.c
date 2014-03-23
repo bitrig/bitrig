@@ -31,6 +31,7 @@
 #include <dev/sdmmc/sdmmcchip.h>
 #include <dev/sdmmc/sdmmcvar.h>
 
+#include <machine/clock.h>
 #include <armv7/armv7/armv7var.h>
 #include <armv7/imx/imxccmvar.h>
 #include <armv7/imx/imxgpiovar.h>
@@ -148,6 +149,7 @@ struct imxesdhc_softc {
 	bus_space_handle_t	sc_ioh;
 	void			*sc_ih; /* Interrupt handler */
 	u_int sc_flags;
+	struct clk		*sc_clk;
 
 	int unit;			/* unit id */
 	struct device *sdmmc;		/* generic SD/MMC device */
@@ -248,6 +250,7 @@ imxesdhc_attach(struct device *parent, struct device *self, void *args)
 	struct sdmmcbus_attach_args	 saa;
 	int				 error = 1;
 	uint32_t			 caps;
+	char				 usdhc[7];
 
 	sc->unit = aa->aa_dev->unit;
 	sc->sc_iot = aa->aa_iot;
@@ -262,6 +265,15 @@ imxesdhc_attach(struct device *parent, struct device *self, void *args)
 	sc->sc_ih = arm_intr_establish(aa->aa_dev->irq[0], IPL_SDMMC,
 	   imxesdhc_intr, sc, sc->sc_dev.dv_xname);
 
+	/* Get and enable clock. */
+	snprintf(usdhc, sizeof(usdhc), "usdhc%d", aa->aa_dev->unit + 1);
+	sc->sc_clk = clk_get(usdhc);
+
+	if (sc->sc_clk == NULL)
+		panic("%s: clock not available", HDEVNAME(sc));
+
+	clk_enable(sc->sc_clk);
+
 	/*
 	 * Reset the host controller and enable interrupts.
 	 */
@@ -274,7 +286,7 @@ imxesdhc_attach(struct device *parent, struct device *self, void *args)
 	/*
 	 * Determine the base clock frequency. (2.2.24)
 	 */
-	sc->clkbase = imxccm_get_usdhx(aa->aa_dev->unit + 1);
+	sc->clkbase = clk_get_rate(sc->sc_clk);
 
 	/*
 	 * Determine SD bus voltage levels supported by the controller.
