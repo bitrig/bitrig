@@ -63,7 +63,7 @@
  * worries about ungetc buffers and so forth.
  */
 static int
-__sbprintf(FILE *fp, const wchar_t *fmt, va_list ap)
+__sbprintf(FILE *fp, locale_t locale, const wchar_t *fmt, va_list ap)
 {
 	int ret;
 	FILE fake;
@@ -76,6 +76,10 @@ __sbprintf(FILE *fp, const wchar_t *fmt, va_list ap)
 	fake._file = fp->_file;
 	fake._cookie = fp->_cookie;
 	fake._write = fp->_write;
+#ifdef notyet
+	fake._orientation = fp->_orientation;
+	fake._mbstate = fp->_mbstate;
+#endif
 
 	/* set up the buffer */
 	fake._bf._base = fake._p = buf;
@@ -83,9 +87,9 @@ __sbprintf(FILE *fp, const wchar_t *fmt, va_list ap)
 	fake._lbfsize = 0;	/* not actually used, but Just In Case */
 
 	/* do the work, then copy any error status */
-	ret = __vfwprintf(&fake, __get_locale(), fmt, ap);
+	ret = __vfwprintf(&fake, locale, fmt, ap);
 	if (ret >= 0 && __sflush(&fake))
-		ret = EOF;
+		ret = WEOF;
 	if (fake._flags & __SERR)
 		fp->_flags |= __SERR;
 	return (ret);
@@ -195,6 +199,31 @@ __mbsconv(char *mbsarg, int prec)
 	*wcp = '\0';
 
 	return (convbuf);
+}
+
+/*
+ * MT-safe version
+ */
+int
+vfwprintf_l(FILE *fp, locale_t locale, const wchar_t *fmt0, va_list ap)
+{
+	int ret;
+	FIX_LOCALE(locale);
+	FLOCKFILE(fp);
+	/* optimise fprintf(stderr) (and other unbuffered Unix files) */
+	if ((fp->_flags & (__SNBF|__SWR|__SRW)) == (__SNBF|__SWR) &&
+	    fp->_file >= 0)
+		ret = __sbprintf(fp, locale, fmt0, ap);
+	else
+		ret = __vfwprintf(fp, locale, fmt0, ap);
+	FUNLOCKFILE(fp);
+	return (ret);
+}
+
+int
+vfwprintf(FILE *fp, const wchar_t *fmt0, va_list ap)
+{
+	return vfwprintf_l(fp, __get_locale(), fmt0, ap);
 }
 
 /*
@@ -381,11 +410,6 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 		errno = EBADF;
 		return (EOF);
 	}
-
-	/* optimise fwprintf(stderr) (and other unbuffered Unix files) */
-	if ((fp->_flags & (__SNBF|__SWR|__SRW)) == (__SNBF|__SWR) &&
-	    fp->_file >= 0)
-		return (__sbprintf(fp, fmt0, ap));
 
 	fmt = (wchar_t *)fmt0;
 	argtable = NULL;
@@ -996,16 +1020,4 @@ finish:
 	if (argtable != NULL && argtable != statargtable)
 		free(argtable);
 	return (ret);
-}
-
-int
-vfwprintf(FILE * __restrict fp, const wchar_t * __restrict fmt0, __va_list ap)
-{
-	int r;
-
-	FLOCKFILE(fp);
-	r = __vfwprintf(fp, __get_locale(), fmt0, ap);
-	FUNLOCKFILE(fp);
-
-	return (r);
 }

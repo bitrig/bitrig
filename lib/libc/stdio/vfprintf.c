@@ -83,7 +83,7 @@ __sprint(FILE *fp, struct __suio *uio)
  * worries about ungetc buffers and so forth.
  */
 static int
-__sbprintf(FILE *fp, const char *fmt, va_list ap)
+__sbprintf(FILE *fp, locale_t locale, const char *fmt, va_list ap)
 {
 	int ret;
 	FILE fake;
@@ -96,6 +96,10 @@ __sbprintf(FILE *fp, const char *fmt, va_list ap)
 	fake._file = fp->_file;
 	fake._cookie = fp->_cookie;
 	fake._write = fp->_write;
+#ifdef notyet
+	fake._orientation = fp->_orientation;
+	fake._mbstate = fp->_mbstate;
+#endif
 
 	/* set up the buffer */
 	fake._bf._base = fake._p = buf;
@@ -103,7 +107,7 @@ __sbprintf(FILE *fp, const char *fmt, va_list ap)
 	fake._lbfsize = 0;	/* not actually used, but Just In Case */
 
 	/* do the work, then copy any error status */
-	ret = __vfprintf(&fake, __get_locale(), fmt, ap);
+	ret = __vfprintf(&fake, locale, fmt, ap);
 	if (ret >= 0 && __sflush(&fake))
 		ret = EOF;
 	if (fake._flags & __SERR)
@@ -179,6 +183,32 @@ __wcsconv(wchar_t *wcsarg, int prec)
 #endif
 
 /*
+ * MT-safe version
+ */
+int
+vfprintf_l(FILE *fp, locale_t locale, const char *fmt0, __va_list ap)
+{
+	int ret;
+	FIX_LOCALE(locale);
+
+	FLOCKFILE(fp);
+	/* optimise fprintf(stderr) (and other unbuffered Unix files) */
+	if ((fp->_flags & (__SNBF|__SWR|__SRW)) == (__SNBF|__SWR) &&
+	    fp->_file >= 0)
+		ret = __sbprintf(fp, locale, fmt0, ap);
+	else
+		ret = __vfprintf(fp, locale, fmt0, ap);
+	FUNLOCKFILE(fp);
+	return (ret);
+}
+
+int
+vfprintf(FILE *fp, const char *fmt0, __va_list ap)
+{
+	return vfprintf_l(fp, __get_locale(), fmt0, ap);
+}
+
+/*
  * The size of the buffer we use as scratch space for integer
  * conversions, among other things.  We need enough space to
  * write a uintmax_t in octal (plus one byte).
@@ -189,17 +219,9 @@ __wcsconv(wchar_t *wcsarg, int prec)
 #error "BUF must be large enough to format a uintmax_t"
 #endif
 
-int
-vfprintf(FILE *fp, const char *fmt0, __va_list ap)
-{
-	int ret;
-
-	FLOCKFILE(fp);
-	ret = __vfprintf(fp, __get_locale(), fmt0, ap);
-	FUNLOCKFILE(fp);
-	return (ret);
-}
-
+/*
+ * Non-MT-safe version
+ */
 int
 __vfprintf(FILE *fp, locale_t locale, const char *fmt0, __va_list ap)
 {
@@ -384,11 +406,6 @@ __vfprintf(FILE *fp, locale_t locale, const char *fmt0, __va_list ap)
 		errno = EBADF;
 		return (EOF);
 	}
-
-	/* optimise fprintf(stderr) (and other unbuffered Unix files) */
-	if ((fp->_flags & (__SNBF|__SWR|__SRW)) == (__SNBF|__SWR) &&
-	    fp->_file >= 0)
-		return (__sbprintf(fp, fmt0, ap));
 
 	fmt = (char *)fmt0;
 	argtable = NULL;
