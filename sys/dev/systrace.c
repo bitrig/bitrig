@@ -1,4 +1,4 @@
-/*	$OpenBSD: systrace.c,v 1.63 2012/04/22 05:43:14 guenther Exp $	*/
+/*	$OpenBSD: systrace.c,v 1.64 2014/03/26 05:23:42 guenther Exp $	*/
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -68,7 +68,7 @@ int	systracef_kqfilter(struct file *, struct knote *);
 int	systracef_stat(struct file *, struct stat *, struct proc *);
 int	systracef_close(struct file *, struct proc *);
 
-caddr_t	 stackgap_init(struct emul *); 
+caddr_t	 stackgap_init(struct proc *); 
 void	*stackgap_alloc(caddr_t *, size_t);
 
 struct str_policy {
@@ -662,6 +662,7 @@ systrace_fork(struct proc *oldproc, struct proc *p, struct str_process *newstrp)
 int
 systrace_redirect(int code, struct proc *p, void *v, register_t *retval)
 {
+	struct process *pr = p->p_p;
 	struct sysent *callp;
 	struct str_process *strp;
 	struct str_policy *strpolicy;
@@ -679,7 +680,7 @@ systrace_redirect(int code, struct proc *p, void *v, register_t *retval)
 		return (EINVAL);
 	}
 
-	if (code < 0 || code >= p->p_emul->e_nsysent) {
+	if (code < 0 || code >= pr->ps_emul->e_nsysent) {
 		systrace_unlock();
 		return (EINVAL);
 	}
@@ -701,7 +702,7 @@ systrace_redirect(int code, struct proc *p, void *v, register_t *retval)
 	if (fst->issuser) {
 		maycontrol = 1;
 		issuser = 1;
-	} else if (!ISSET(p->p_p->ps_flags, PS_SUGID | PS_SUGIDEXEC)) {
+	} else if (!ISSET(pr->ps_flags, PS_SUGID | PS_SUGIDEXEC)) {
 		maycontrol = fst->p_ruid == p->p_cred->p_ruid &&
 		    fst->p_rgid == p->p_cred->p_rgid;
 	}
@@ -720,7 +721,7 @@ systrace_redirect(int code, struct proc *p, void *v, register_t *retval)
 		}
 	}
 
-	callp = p->p_emul->e_sysent + code;
+	callp = pr->ps_emul->e_sysent + code;
 
 	/* Fast-path */
 	if (policy != SYSTR_POLICY_ASK) {
@@ -736,7 +737,7 @@ systrace_redirect(int code, struct proc *p, void *v, register_t *retval)
 		if (policy == SYSTR_POLICY_KILL) {
 			error = EPERM;
 			DPRINTF(("systrace: pid %u killed on syscall %d\n",
-			    p->p_pid, code));
+			    pr->ps_pid, code));
 			psignal(p, SIGKILL);
 		} else if (policy == SYSTR_POLICY_PERMIT)
 			error = (*callp->sy_call)(p, v, retval);
@@ -749,7 +750,7 @@ systrace_redirect(int code, struct proc *p, void *v, register_t *retval)
 	 * base; i.e. that stackgap_init() is idempotent.
 	 */
 	systrace_inject(strp, 0 /* Just reset internal state */);
-	strp->sg = stackgap_init(p->p_emul);
+	strp->sg = stackgap_init(p);
 
 	/* Puts the current process to sleep, return unlocked */
 	error = systrace_msg_ask(fst, strp, code, callp->sy_argsize, v);
@@ -787,7 +788,7 @@ systrace_redirect(int code, struct proc *p, void *v, register_t *retval)
 	if (error)
 		goto out_unlock;
 
-	oldemul = p->p_emul;
+	oldemul = pr->ps_emul;
 	pc = p->p_cred;
 	olduid = pc->p_ruid;
 	oldgid = pc->p_rgid;
@@ -827,7 +828,7 @@ systrace_redirect(int code, struct proc *p, void *v, register_t *retval)
 
 	systrace_replacefree(strp);
 
-	if (ISSET(p->p_p->ps_flags, PS_SUGID | PS_SUGIDEXEC)) {
+	if (ISSET(pr->ps_flags, PS_SUGID | PS_SUGIDEXEC)) {
 		if ((fst = strp->parent) == NULL || !fst->issuser) {
 			systrace_unlock();
 			return (error);
@@ -847,7 +848,7 @@ systrace_redirect(int code, struct proc *p, void *v, register_t *retval)
 	rw_enter_write(&fst->lock);
 	systrace_unlock();
 
-	if (p->p_emul != oldemul) {
+	if (pr->ps_emul != oldemul) {
 		/* Old policy is without meaning now */
 		if (strp->policy) {
 			systrace_closepolicy(fst, strp->policy);
@@ -1061,7 +1062,7 @@ systrace_policy(struct fsystrace *fst, struct systrace_policy *pol)
 			return (EINVAL);
 
 		/* Check that emulation matches */
-		if (strpol->emul && strpol->emul != strp->proc->p_emul)
+		if (strpol->emul && strpol->emul != strp->proc->p_p->ps_emul)
 			return (EINVAL);
 
 		if (strp->policy)
@@ -1075,7 +1076,7 @@ systrace_policy(struct fsystrace *fst, struct systrace_policy *pol)
 
 		/* Record emulation for this policy */
 		if (strpol->emul == NULL)
-			strpol->emul = strp->proc->p_emul;
+			strpol->emul = strp->proc->p_p->ps_emul;
 
 		break;
 	case SYSTR_POLICY_MODIFY:
@@ -1705,7 +1706,7 @@ systrace_msg_emul(struct fsystrace *fst, struct str_process *strp)
 	struct str_msg_emul *msg_emul = &strp->msg.msg_data.msg_emul;
 	struct proc *p = strp->proc;
 
-	memcpy(msg_emul->emul, p->p_emul->e_name, SYSTR_EMULEN);
+	memcpy(msg_emul->emul, p->p_p->ps_emul->e_name, SYSTR_EMULEN);
 
 	return (systrace_make_msg(strp, SYSTR_MSG_EMUL));
 }
@@ -1834,7 +1835,7 @@ systrace_msg_policyfree(struct fsystrace *fst, struct str_policy *strpol)
  */
 
 caddr_t  
-stackgap_init(struct emul *e) 
+stackgap_init(struct proc *p) 
 {
         return STACKGAPBASE;
 }

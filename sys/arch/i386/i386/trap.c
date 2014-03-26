@@ -1,4 +1,4 @@
-/*	$OpenBSD: trap.c,v 1.112 2014/03/07 07:47:14 gerhard Exp $	*/
+/*	$OpenBSD: trap.c,v 1.113 2014/03/26 05:23:42 guenther Exp $	*/
 /*	$NetBSD: trap.c,v 1.95 1996/05/05 06:50:02 mycroft Exp $	*/
 
 /*-
@@ -554,8 +554,8 @@ syscall(struct trapframe *frame)
 	opc = frame->tf_eip;
 	code = frame->tf_eax;
 
-	nsys = p->p_emul->e_nsysent;
-	callp = p->p_emul->e_sysent;
+	nsys = p->p_p->ps_emul->e_nsysent;
+	callp = p->p_p->ps_emul->e_sysent;
 
 	params = (caddr_t)frame->tf_esp + sizeof(int);
 
@@ -592,7 +592,7 @@ syscall(struct trapframe *frame)
 		break;
 	}
 	if (code < 0 || code >= nsys)
-		callp += p->p_emul->e_nosys;		/* illegal */
+		callp += p->p_p->ps_emul->e_nosys;		/* illegal */
 	else
 		callp += code;
 	argsize = callp->sy_argsize;
@@ -623,8 +623,8 @@ syscall(struct trapframe *frame)
 		break;
 	default:
 	bad:
-		if (p->p_emul->e_errno && error >= 0 && error <= ELAST)
-			frame->tf_eax = p->p_emul->e_errno[error];
+		if (p->p_p->ps_emul->e_errno && error >= 0 && error <= ELAST)
+			frame->tf_eax = p->p_p->ps_emul->e_errno[error];
 		else
 			frame->tf_eax = error;
 		frame->tf_eflags |= PSL_C;	/* carry bit */
