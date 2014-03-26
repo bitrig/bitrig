@@ -1,6 +1,6 @@
 #!/bin/ksh -
 #
-# $OpenBSD: sysmerge.sh,v 1.131 2014/03/24 15:20:32 ajacoutot Exp $
+# $OpenBSD: sysmerge.sh,v 1.132 2014/03/26 23:03:59 ajacoutot Exp $
 #
 # Copyright (c) 2008-2014 Antoine Jacoutot <ajacoutot@openbsd.org>
 # Copyright (c) 1998-2003 Douglas Barton <DougB@FreeBSD.org>
@@ -605,13 +605,13 @@ sm_compare() {
 		# it will be deleted from temproot and ignored from comparison.
 		# several files are generated from scripts so CVS ID is not a
 		# reliable way of detecting changes; leave for a full diff.
-		#if [[ -z ${DIFFMODE} && \
-		#	${COMPFILE} != ./etc/@(fbtab|login.conf|sysctl.conf|ttys) && \
-		#	-z ${IS_LINK} ]]; then
-		#	CVSID1=$(grep "[$]OpenBSD:" ${DESTDIR}${COMPFILE#.} 2>/dev/null)
-		#	CVSID2=$(grep "[$]OpenBSD:" ${COMPFILE} 2>/dev/null) || CVSID2=none
-		#	[[ ${CVSID2} == ${CVSID1} ]] && rm "${COMPFILE}"
-		#fi
+#		if [[ -z ${DIFFMODE} && \
+#			${COMPFILE} != ./etc/@(fbtab|sysctl.conf|ttys) && \
+#			-z ${IS_LINK} ]]; then
+#			CVSID1=$(grep "[$]OpenBSD:" ${DESTDIR}${COMPFILE#.} 2>/dev/null)
+#			CVSID2=$(grep "[$]OpenBSD:" ${COMPFILE} 2>/dev/null) || CVSID2=none
+#			[[ ${CVSID2} == ${CVSID1} ]] && rm "${COMPFILE}"
+#		fi
 
 		if [ -f "${COMPFILE}" -a -z "${IS_LINK}" ]; then
 			# make sure files are different; if not, delete the one in temproot
