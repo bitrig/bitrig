@@ -196,6 +196,7 @@ cbb*		at pci?
 cardslot*	at cbb?
 
 # USB Controllers
+#xhci*	at pci?				# eXtensible Host Controller
 ehci*	at pci?				# Enhanced Host Controller
 ehci*	at cardbus?			# Enhanced Host Controller
 uhci*	at pci?				# Universal Host Controller (Intel)
@@ -204,6 +205,7 @@ ohci*	at pci?				# Open Host Controller
 ohci*	at cardbus?			# Open Host Controller
 
 # USB bus support
+#usb*	at xhci?
 usb*	at ehci?
 usb*	at uhci?
 usb*	at ohci?
