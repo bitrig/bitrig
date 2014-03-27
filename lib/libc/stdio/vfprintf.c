@@ -627,6 +627,9 @@ reswitch:	switch (ch) {
 		case 'z':
 			flags |= SIZET;
 			goto rflag;
+		case 'C':
+			flags |= LONGINT;
+			/*FALLTHROUGH*/
 		case 'c':
 #ifdef PRINTF_WIDE_CHAR
 			if (flags & LONGINT) {
@@ -855,6 +858,9 @@ fp_common:
 			flags = flags | INTMAXT;
 			ox[1] = 'x';
 			goto nosign;
+		case 'S':
+			flags |= LONGINT;
+			/*FALLTHROUGH*/
 		case 's':
 #ifdef PRINTF_WIDE_CHAR
 			if (flags & LONGINT) {

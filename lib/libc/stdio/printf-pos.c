@@ -327,11 +327,9 @@ reswitch:	switch (ch) {
 		case 'z':
 			flags |= SIZET;
 			goto rflag;
-#if 0 /* XXX pedro */
 		case 'C':
 			flags |= LONGINT;
 			/*FALLTHROUGH*/
-#endif
 		case 'c':
 			error = addtype(&types,
 					(flags & LONGINT) ? T_WINT : T_INT);
@@ -391,11 +389,9 @@ reswitch:	switch (ch) {
 			if ((error = addtype(&types, TP_VOID)))
 				goto error;
 			break;
-#if 0 /* XXX pedro */
 		case 'S':
 			flags |= LONGINT;
 			/*FALLTHROUGH*/
-#endif
 		case 's':
 			error = addtype(&types,
 					(flags & LONGINT) ? TP_WCHAR : TP_CHAR);
@@ -519,11 +515,9 @@ reswitch:	switch (ch) {
 		case 'z':
 			flags |= SIZET;
 			goto rflag;
-#if 0 /* XXX pedro */
 		case 'C':
 			flags |= LONGINT;
 			/*FALLTHROUGH*/
-#endif
 		case 'c':
 			error = addtype(&types,
 					(flags & LONGINT) ? T_WINT : T_INT);
@@ -583,11 +577,9 @@ reswitch:	switch (ch) {
 			if ((error = addtype(&types, TP_VOID)))
 				goto error;
 			break;
-#if 0 /* XXX pedro */
 		case 'S':
 			flags |= LONGINT;
 			/*FALLTHROUGH*/
-#endif
 		case 's':
 			error = addtype(&types,
 			    (flags & LONGINT) ? TP_WCHAR : TP_CHAR);
