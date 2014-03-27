@@ -939,22 +939,7 @@ fp_common:
 				} else
 					cp = convbuf;
 			}
-			if (prec >= 0) {
-				/*
-				 * can't use wcslen; can only look for the
-				 * NUL in the first `prec' characters, and
-				 * wcslen() will go further.
-				 */
-				wchar_t *p = wmemchr(cp, 0, prec);
-
-				size = p ? (p - cp) : prec;
-			} else {
-				size_t len;
-
-				if ((len = wcslen(cp)) > INT_MAX)
-					goto overflow;
-				size = (int)len;
-			}
+			size = (prec >= 0) ? wcsnlen(cp, prec) : wcslen(cp);
 			sign = '\0';
 			break;
 		case 'U':

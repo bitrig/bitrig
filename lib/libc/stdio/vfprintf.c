@@ -876,22 +876,7 @@ fp_common:
 #endif /* PRINTF_WIDE_CHAR */
 			if ((cp = GETARG(char *)) == NULL)
 				cp = "(null)";
-			if (prec >= 0) {
-				/*
-				 * can't use strlen; can only look for the
-				 * NUL in the first `prec' characters, and
-				 * strlen() will go further.
-				 */
-				char *p = memchr(cp, 0, prec);
-
-				size = p ? (p - cp) : prec;
-			} else {
-				size_t len;
-
-				if ((len = strlen(cp)) > INT_MAX)
-					goto overflow;
-				size = (int)len;
-			}
+			size = (prec >= 0) ? strnlen(cp, prec) : strlen(cp);
 			sign = '\0';
 			break;
 		case 'U':
