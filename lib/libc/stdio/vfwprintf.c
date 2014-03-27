@@ -544,7 +544,7 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 	 */
 	for (;;) {
 		for (cp = fmt; (ch = *fmt) != '\0' && ch != '%'; fmt++)
-			continue;
+			/* void */;
 		if (fmt != cp) {
 			ptrdiff_t m = fmt - cp;
 			if (m < 0 || m > INT_MAX - ret)

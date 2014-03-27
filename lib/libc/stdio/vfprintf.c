@@ -306,8 +306,7 @@ __vfprintf(FILE *fp, locale_t locale, const char *fmt0, __va_list ap)
 	int prec;		/* precision from format; <0 for N/A */
 	char sign;		/* sign prefix (' ', '+', '-', or \0) */
 	struct grouping_state gs; /* thousands' grouping info */
-	wchar_t wc;
-	mbstate_t ps;
+
 #ifdef FLOATING_POINT
 	/*
 	 * We can decompose the printed representation of floating
@@ -471,19 +470,12 @@ __vfprintf(FILE *fp, locale_t locale, const char *fmt0, __va_list ap)
 	convbuf = NULL;
 #endif
 
-	memset(&ps, 0, sizeof(ps));
 	/*
 	 * Scan the format for conversions (`%' character).
 	 */
 	for (;;) {
-		cp = fmt;
-		while ((n = mbrtowc(&wc, fmt, MB_CUR_MAX, &ps)) > 0) {
-			fmt += n;
-			if (wc == '%') {
-				fmt--;
-				break;
-			}
-		}
+		for (cp = fmt; (ch = *fmt) != '\0' && ch != '%'; fmt++)
+			/* void */;
 		if (fmt != cp) {
 			ptrdiff_t m = fmt - cp;
 			if (m < 0 || m > INT_MAX - ret)
@@ -491,7 +483,7 @@ __vfprintf(FILE *fp, locale_t locale, const char *fmt0, __va_list ap)
 			PRINT(cp, m);
 			ret += m;
 		}
-		if (n <= 0)
+		if (ch == '\0')
 			goto done;
 		fmt++;		/* skip over '%' */
 
