@@ -889,7 +889,8 @@ qle_handle_resp(struct qle_softc *sc, u_int32_t id)
 	u_int8_t *data;
 
 	ccb = NULL;
-	entry = QLE_DMA_KVA(sc->sc_responses) + (id * QLE_QUEUE_ENTRY_SIZE);
+	entry = (uint8_t *)QLE_DMA_KVA(sc->sc_responses) +
+	    (id * QLE_QUEUE_ENTRY_SIZE);
 	
 	bus_dmamap_sync(sc->sc_dmat,
 	    QLE_DMA_MAP(sc->sc_responses), id * QLE_QUEUE_ENTRY_SIZE,
@@ -1207,7 +1208,7 @@ qle_scsi_cmd(struct scsi_xfer *xs)
 		DPRINTF(QLE_D_IO, "%s: writing marker at request %d\n",
 		    DEVNAME(sc), req);
 		offset = (req * QLE_QUEUE_ENTRY_SIZE);
-		iocb = QLE_DMA_KVA(sc->sc_requests) + offset;
+		iocb = (uint8_t *)QLE_DMA_KVA(sc->sc_requests) + offset;
 		bus_dmamap_sync(sc->sc_dmat, QLE_DMA_MAP(sc->sc_requests),
 		    offset, QLE_QUEUE_ENTRY_SIZE, BUS_DMASYNC_POSTWRITE);
 		qle_put_marker(sc, iocb);
@@ -1220,7 +1221,7 @@ qle_scsi_cmd(struct scsi_xfer *xs)
 		sc->sc_next_req_id = 0;
 
 	offset = (req * QLE_QUEUE_ENTRY_SIZE);
-	iocb = QLE_DMA_KVA(sc->sc_requests) + offset;
+	iocb = (uint8_t *)QLE_DMA_KVA(sc->sc_requests) + offset;
 	bus_dmamap_sync(sc->sc_dmat, QLE_DMA_MAP(sc->sc_requests), offset,
 	    QLE_QUEUE_ENTRY_SIZE, BUS_DMASYNC_POSTWRITE);
 	    
@@ -1711,7 +1712,8 @@ qle_ct_pass_through(struct qle_softc *sc, u_int32_t port_handle,
 		sc->sc_next_req_id = 0;
 
 	offset = (req * QLE_QUEUE_ENTRY_SIZE);
-	iocb = QLE_DMA_KVA(sc->sc_requests) + offset;
+	iocb = (struct qle_iocb_ct_passthrough *)((uint8_t *)
+	    QLE_DMA_KVA(sc->sc_requests) + offset);
 	bus_dmamap_sync(sc->sc_dmat, QLE_DMA_MAP(sc->sc_requests), offset,
 	    QLE_QUEUE_ENTRY_SIZE, BUS_DMASYNC_POSTWRITE);
 	    
@@ -1851,7 +1853,8 @@ qle_fabric_plogi(struct qle_softc *sc, struct qle_fc_port *port)
 		sc->sc_next_req_id = 0;
 
 	offset = (req * QLE_QUEUE_ENTRY_SIZE);
-	iocb = QLE_DMA_KVA(sc->sc_requests) + offset;
+	iocb = (struct qle_iocb_plogx *)((uint8_t *)
+	    QLE_DMA_KVA(sc->sc_requests) + offset);
 	bus_dmamap_sync(sc->sc_dmat, QLE_DMA_MAP(sc->sc_requests), offset,
 	    QLE_QUEUE_ENTRY_SIZE, BUS_DMASYNC_POSTWRITE);
 	    
@@ -2664,8 +2667,8 @@ qle_alloc_ccbs(struct qle_softc *sc)
 
 		ccb->ccb_seg_offset = i * QLE_MAX_SEGS *
 		    sizeof(struct qle_iocb_seg);
-		ccb->ccb_segs = QLE_DMA_KVA(sc->sc_segments) +
-		    ccb->ccb_seg_offset;
+		ccb->ccb_segs = (struct qle_iocb_seg *)((uint8_t *)
+		    QLE_DMA_KVA(sc->sc_segments) + ccb->ccb_seg_offset);
 
 		qle_put_ccb(sc, ccb);
 	}
