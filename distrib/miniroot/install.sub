@@ -1260,7 +1260,7 @@ install_files() {
 			_issue="Cannot fetch SHA256.sig" && break
 
 		# Verify signature file with public keys
-		! signify -Vep /etc/signify/openbsd-${VERSION}-base.pub \
+		! signify -Vep /etc/signify/bitrig-${VERSION}-base.pub \
 			-x "$_cfile.sig" -m "$_cfile" &&
 			_issue="Signature check of SHA256.sig failed" && break
 
