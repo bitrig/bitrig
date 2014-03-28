@@ -53,7 +53,7 @@ __KERNEL_RCSID(0, "$NetBSD: tmpfs_vnops.c,v 1.100 2012/11/05 17:27:39 dholland E
 #include <sys/lockf.h>
 #include <sys/poll.h>
 
-#include <uvm/uvm.h>
+#include <uvm/uvm_extern.h>
 
 #include <sys/fifovnops.h>
 

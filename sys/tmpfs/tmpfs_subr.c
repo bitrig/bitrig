@@ -90,7 +90,7 @@ __KERNEL_RCSID(0, "$NetBSD: tmpfs_subr.c,v 1.83 2013/11/08 15:44:23 rmind Exp $"
 #include <sys/systm.h>
 #include <sys/vnode.h>
 
-#include <uvm/uvm.h>
+#include <uvm/uvm_aobj.h>
 
 #include <tmpfs/tmpfs.h>
 #include <tmpfs/tmpfs_fifoops.h>
