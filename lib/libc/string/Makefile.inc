@@ -11,7 +11,7 @@ SRCS+=	explicit_bzero.c memccpy.c memmem.c memrchr.c stpcpy.c stpncpy.c \
 	wcslcpy.c wcslen.c wcsncat.c wcsncmp.c wcsncpy.c wcspbrk.c wcsrchr.c \
 	wcsspn.c wcsstr.c wcstok.c wcswcs.c wcswidth.c wcsxfrm.c wmemchr.c \
 	wmemcmp.c wmemcpy.c wmemmove.c wmemset.c wcsdup.c \
-	timingsafe_bcmp.c wcscasecmp.c wcsncasecmp.c
+	timingsafe_bcmp.c wcscasecmp.c wcsncasecmp.c wcsnlen.c
 
 # machine-dependent net sources
 # m-d Makefile.inc must include sources for:
