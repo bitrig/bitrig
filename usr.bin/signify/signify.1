@@ -135,13 +135,13 @@ Verify a release directory containing
 .Pa SHA256.sig
 and a full set of release files:
 .Bd -literal -offset indent -compact
-$ signify -V -e -p /etc/signify/openbsd-55-base.pub -x SHA256.sig -m - | \e
+$ signify -V -e -p /etc/signify/bitrig-01-base.pub -x SHA256.sig -m - | \e
 	sha256 -c -
 .Ed
 .Pp
 Verify a bsd.rd before an upgrade:
 .Bd -literal -offset indent -compact
-$ signify -V -e -p /etc/signify/openbsd-55-base.pub -x SHA256.sig -m - | \e
+$ signify -V -e -p /etc/signify/bitrig-01-base.pub -x SHA256.sig -m - | \e
 	sha256 -C - bsd.rd
 .Ed
 .Sh SEE ALSO
