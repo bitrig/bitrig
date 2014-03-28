@@ -145,7 +145,7 @@ get_set() {
 # takes the signature file and set as arguments
 check_sig() {
 	local _sigfile=${1##*/} _tgz=${2##*/}
-	local _key="/etc/signify/openbsd-${RELINT}-base.pub"
+	local _key="/etc/signify/bitrig-${RELINT}-base.pub"
 	echo "===> Verifying ${_tgz} signature and checksum"
 	(cd ${WRKDIR} && \
 		signify -V -e -p ${_key} -x "${_sigfile}.sig" -m ${_sigfile} >/dev/null) || \
