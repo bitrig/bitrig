@@ -612,7 +612,8 @@ qla_handle_resp(struct qla_softc *sc, u_int16_t id)
 	u_int8_t *entry;
 
 	ccb = NULL;
-	entry = QLA_DMA_KVA(sc->sc_responses) + (id * QLA_QUEUE_ENTRY_SIZE);
+	entry = (uint8_t *)QLA_DMA_KVA(sc->sc_responses) +
+	    (id * QLA_QUEUE_ENTRY_SIZE);
 
 	bus_dmamap_sync(sc->sc_dmat,
 	    QLA_DMA_MAP(sc->sc_responses), id * QLA_QUEUE_ENTRY_SIZE,
@@ -900,7 +901,8 @@ qla_scsi_cmd(struct scsi_xfer *xs)
 		DPRINTF(QLA_D_IO, "%s: writing marker at request %d\n",
 		    DEVNAME(sc), req);
 		offset = (req * QLA_QUEUE_ENTRY_SIZE);
-		iocb = QLA_DMA_KVA(sc->sc_requests) + offset;
+		iocb = (struct qla_iocb_req34 *)((uint8_t *)
+		    QLA_DMA_KVA(sc->sc_requests) + offset);
 		bus_dmamap_sync(sc->sc_dmat, QLA_DMA_MAP(sc->sc_requests),
 		    offset, QLA_QUEUE_ENTRY_SIZE, BUS_DMASYNC_POSTWRITE);
 		qla_put_marker(sc, iocb);
@@ -913,7 +915,8 @@ qla_scsi_cmd(struct scsi_xfer *xs)
 		sc->sc_next_req_id = 0;
 
 	offset = (req * QLA_QUEUE_ENTRY_SIZE);
-	iocb = QLA_DMA_KVA(sc->sc_requests) + offset;
+	iocb = (struct qla_iocb_req34 *)((uint8_t *)
+		    QLA_DMA_KVA(sc->sc_requests) + offset);
 	bus_dmamap_sync(sc->sc_dmat, QLA_DMA_MAP(sc->sc_requests), offset,
 	    QLA_QUEUE_ENTRY_SIZE, BUS_DMASYNC_POSTWRITE);
 
@@ -2065,8 +2068,8 @@ qla_alloc_ccbs(struct qla_softc *sc)
 
 		ccb->ccb_seg_offset = i * QLA_MAX_SEGS *
 		    sizeof(struct qla_iocb_seg);
-		ccb->ccb_t4segs = QLA_DMA_KVA(sc->sc_segments) +
-		    ccb->ccb_seg_offset;
+		ccb->ccb_t4segs = (struct qla_iocb_seg *)((uint8_t *)
+		    QLA_DMA_KVA(sc->sc_segments) + ccb->ccb_seg_offset);
 
 		qla_put_ccb(sc, ccb);
 	}
