@@ -91,6 +91,7 @@ cmd_set_option_exec(struct cmd *self, struct cmd_q *cmdq)
 	struct winlink				*wl;
 	struct client				*c;
 	struct options				*oo;
+	struct window				*w;
 	const char				*optstr, *valstr;
 	u_int					 i;
 
