@@ -491,7 +491,7 @@ qlw_handle_resp(struct qlw_softc *sc, u_int16_t id)
 	u_int8_t *entry;
 
 	ccb = NULL;
-	entry = QLW_DMA_KVA(sc->sc_responses) + (id * QLW_QUEUE_ENTRY_SIZE);
+	entry = (uint8_t *)QLW_DMA_KVA(sc->sc_responses) + (id * QLW_QUEUE_ENTRY_SIZE);
 
 	bus_dmamap_sync(sc->sc_dmat,
 	    QLW_DMA_MAP(sc->sc_responses), id * QLW_QUEUE_ENTRY_SIZE,
@@ -757,7 +757,8 @@ qlw_scsi_cmd(struct scsi_xfer *xs)
 		DPRINTF(QLW_D_IO, "%s: writing marker at request %d\n",
 		    DEVNAME(sc), req);
 		offset = (req * QLW_QUEUE_ENTRY_SIZE);
-		iocb = QLW_DMA_KVA(sc->sc_requests) + offset;
+		iocb = (struct qlw_iocb_req0 *)((uint8_t *)QLW_DMA_KVA(
+			sc->sc_requests) + offset);
 		bus_dmamap_sync(sc->sc_dmat, QLW_DMA_MAP(sc->sc_requests),
 		    offset, QLW_QUEUE_ENTRY_SIZE, BUS_DMASYNC_POSTWRITE);
 		qlw_put_marker(sc, bus, iocb);
@@ -772,7 +773,8 @@ qlw_scsi_cmd(struct scsi_xfer *xs)
 		sc->sc_next_req_id = 0;
 
 	offset = (req * QLW_QUEUE_ENTRY_SIZE);
-	iocb = QLW_DMA_KVA(sc->sc_requests) + offset;
+	iocb = (struct qlw_iocb_req0 *)((uint8_t *)QLW_DMA_KVA(sc->sc_requests)
+		+ offset);
 	bus_dmamap_sync(sc->sc_dmat, QLW_DMA_MAP(sc->sc_requests), offset,
 	    QLW_QUEUE_ENTRY_SIZE, BUS_DMASYNC_POSTWRITE);
 
@@ -791,7 +793,8 @@ qlw_scsi_cmd(struct scsi_xfer *xs)
 			sc->sc_next_req_id = 0;
 
 		offset = (req * QLW_QUEUE_ENTRY_SIZE);
-		iocb = QLW_DMA_KVA(sc->sc_requests) + offset;
+		iocb = (struct qlw_iocb_req0 *)((uint8_t *)
+			QLW_DMA_KVA(sc->sc_requests) + offset);
 		bus_dmamap_sync(sc->sc_dmat, QLW_DMA_MAP(sc->sc_requests), offset,
 		    QLW_QUEUE_ENTRY_SIZE, BUS_DMASYNC_POSTWRITE);
 
