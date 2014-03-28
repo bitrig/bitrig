@@ -474,6 +474,12 @@ safte*	at scsibus?		# SCSI accessed fault-tolerant enclosures
 ses*	at scsibus?		# SCSI enclosure services
 uk*	at scsibus?		# unknown SCSI
 
+mpath0	at root
+#emc*	at scsibus?
+#hds*	at scsibus?
+rdac*	at scsibus?
+sym*	at scsibus?
+
 # IDE controllers
 pciide* at pci? flags 0x0000
 
