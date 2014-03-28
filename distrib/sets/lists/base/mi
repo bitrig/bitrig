@@ -119,9 +119,9 @@
 ./etc/ppp/ppp.secret.sample
 ./etc/rc.d
 ./etc/signify
-./etc/signify/01base.pub
-./etc/signify/01fw.pub
-./etc/signify/01pkg.pub
+./etc/signify/bitrig-01-base.pub
+./etc/signify/bitrig-01-fw.pub
+./etc/signify/bitrig-01-pkg.pub
 ./etc/skel
 ./etc/skel/.ssh
 ./etc/sliphome
