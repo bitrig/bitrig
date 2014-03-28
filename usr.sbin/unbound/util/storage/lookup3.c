@@ -59,7 +59,7 @@ on 1 byte), but shoehorning those bytes into integers efficiently is messy.
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
 #include <sys/endian.h> /* attempt to define endianness */
 #endif
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__) || defined(__Bitrig__)
 #include <machine/endian.h> /* attempt to define endianness */
 #endif
 
