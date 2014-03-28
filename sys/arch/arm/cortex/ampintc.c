@@ -37,6 +37,11 @@
 #define ICD_ADDR	0x1000
 #define ICD_SIZE	0x1000
 
+#define	ICD_A7_A15_ADDR	0x1000
+#define	ICD_A7_A15_SIZE	0x1000
+#define	ICP_A7_A15_ADDR	0x2000
+#define	ICP_A7_A15_SIZE	0x1000
+
 /* registers */
 #define	ICD_DCR			0x000
 #define		ICD_DCR_ES		0x00000001
@@ -190,6 +195,14 @@ struct cfdriver ampintc_cd = {
 	NULL, "ampintc", DV_DULL
 };
 
+static const char *ampintc_compatibles[] = {
+	"arm,gic",
+	"arm,cortex-a7-gic",
+	"arm,cortex-a9-gic",
+	"arm,cortex-a15-gic",
+	NULL
+};
+
 int
 ampintc_match(struct device *parent, void *cfdata, void *aux)
 {
@@ -217,7 +230,16 @@ ampintc_attach(struct device *parent, struct device *self, void *args)
 	icd = ia->ca_periphbase + ICD_ADDR;
 	icdsize = ICD_SIZE;
 
-	node = fdt_find_compatible("arm,gic");
+	if ((cputype & CPU_ID_CORTEX_A7_MASK) == CPU_ID_CORTEX_A7 ||
+	    (cputype & CPU_ID_CORTEX_A15_MASK) == CPU_ID_CORTEX_A15) {
+		icp = ia->ca_periphbase + ICP_A7_A15_ADDR;
+		icpsize = ICP_A7_A15_SIZE;
+		icd = ia->ca_periphbase + ICD_A7_A15_ADDR;
+		icdsize = ICD_A7_A15_SIZE;
+	}
+
+	for (i = 0; node == NULL && ampintc_compatibles[i] != NULL; i++)
+		node = fdt_find_compatible(ampintc_compatibles[i]);
 	if (node != NULL) {
 		uint32_t reg[4];
 		if (fdt_node_property_ints(node, "reg", reg, 4) == 4) {
