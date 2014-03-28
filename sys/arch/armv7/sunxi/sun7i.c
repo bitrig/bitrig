@@ -1,5 +1,4 @@
 /* $OpenBSD: sun7i.c,v 1.2 2013/10/23 18:01:52 jasper Exp $ */
-
 /*
  * Copyright (c) 2011 Uwe Stuehler <uwe@openbsd.org>
  *
@@ -39,17 +38,11 @@ struct armv7_dev sxia20_devs[] = {
 	  .mem = { { CCMU_ADDR, CCMU_SIZE } },
 	},
 
-	/* Timers/Counters, resources mapped on first unit */
+	/* Timers/Counter */
 	{ .name = "sxitimer",
 	  .unit = 0,
 	  .mem = {	{ TIMER_ADDR, TIMERx_SIZE },
 			{ CPUCNTRS_ADDR, CPUCNTRS_ADDR } }
-	},
-	{ .name = "sxitimer",
-	  .unit = 1,
-	},
-	{ .name = "sxitimer",
-	  .unit = 2,
 	},
 
 	/* Watchdog Timer */

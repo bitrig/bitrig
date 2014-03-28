@@ -1,4 +1,4 @@
-# $OpenBSD: RAMDISK-SUNXI,v 1.7 2014/04/07 08:27:23 brad Exp $
+# $OpenBSD: GENERIC,v 1.14 2012/09/27 14:01:35 jsg Exp $
 #
 # GENERIC machine description file
 #
@@ -19,21 +19,11 @@
 # device.
 
 machine	armv7	arm
+include "../../../conf/GENERIC"
 options __SUNXI__
 
 options	TIMEZONE=0	# time zone to adjust RTC time by
 options	DST=0		# daylight saving time used by RTC
-option	FFS		# UFS
-option	FFS2		# UFS2
-option	WAPBL		# File system journaling support
-#options	CD9660		# ISO 9660 + Rock Ridge file system
-options	MSDOSFS		# MS-DOS file system
-options	INET		# IP + ICMP + TCP + UDP
-options	INET6		# IPv6 (needs INET)
-options	DDB		# kernel debugger
-options	DIAGNOSTIC
-option	DDB_SAFE_CONSOLE
-options	FIFO		# FIFOs; RECOMMENDED
 #options	NFSCLIENT	# NFS
 
 makeoptions	KERNEL_BASE_PHYS="0x40800000"
@@ -42,7 +32,9 @@ options	BUILD_STARTUP_PAGETABLE
 options	STARTUP_PAGETABLE_ADDR=0x40200000
 options	SDRAM_START="0x40000000"
 
-options		APERTURE
+option CONF_HAVE_GPIO
+
+#options		APERTURE
 
 # estimated number of users
 maxusers	32
@@ -54,8 +46,6 @@ options	CPU_ARMv7	# Support the ARMv7
 #option WSDISPLAY_COMPAT_RAWKBD		# can get raw scancodes
 option WSDISPLAY_DEFAULTSCREENS=1
 #option WSDISPLAY_COMPAT_PCVT		# emulate some ioctls
-
-config		bsd	root on rd0a swap on rd0b
 
 # The main bus device
 mainbus0	at root
@@ -70,6 +60,7 @@ a1xintc*	at sunxi?		# interrupt controller
 # A20 only
 cortex0		at mainbus?
 ampintc*	at cortex?
+#agtimer*	at cortex?
 
 # Sunxi on-chip devices
 sxipio*		at sunxi?		# GPIO pins for leds & PHYs
@@ -77,63 +68,65 @@ sxiccmu*	at sunxi?		# Clock Control Module/Unit
 sxitimer*	at sunxi?
 sxidog*		at sunxi?		# watchdog timer
 sxirtc*		at sunxi?		# Real Time Clock
-sxiuart*	at sunxi?		# onboard uarts
+sxiuart*	at sunxi?		# onboard UARTs
 sxie*		at sunxi?
 ahci*		at sunxi?		# AHCI/SATA (shim)
 ehci*		at sunxi?		# EHCI (shim)
 #ohci*		at sunxi?		# OHCI (shim)
 
+gpio*		at sxipio?
+
 # USB bus support
 usb*		at ehci?	#flags 0x1
-#usb*		at ohci?
+uhub*		at usb?
+uhub*		at uhub?
 
 uhub*		at usb?			# USB Hubs
 uhub*		at uhub?		# USB Hubs
-# umodem*		at uhub?		# USB Modems/Serial
-# ucom*		at umodem?
-# uvisor*		at uhub?		# Handspring Visor
-# ucom*		at uvisor?
-# uvscom*		at uhub?		# SUNTAC Slipper U VS-10U serial
-# ucom*		at uvscom?
-# ubsa*		at uhub?		# Belkin serial adapter
-# ucom*		at ubsa?
-# uftdi*		at uhub?		# FTDI FT8U100AX serial adapter
-# ucom*		at uftdi?
-# uplcom* 	at uhub?		# I/O DATA USB-RSAQ2 serial adapter
-# ucom*		at uplcom?
-# umct*		at uhub?		# MCT USB-RS232 serial adapter
-# ucom*		at umct?
-# uaudio* 	at uhub?		# USB Audio
-# audio*		at uaudio?
-# umidi*		at uhub?		# USB MIDI
-# midi*		at umidi?
-# ulpt*		at uhub?		# USB Printers
+umodem*		at uhub?		# USB Modems/Serial
+ucom*		at umodem?
+uvisor*		at uhub?		# Handspring Visor
+ucom*		at uvisor?
+uvscom*		at uhub?		# SUNTAC Slipper U VS-10U serial
+ucom*		at uvscom?
+ubsa*		at uhub?		# Belkin serial adapter
+ucom*		at ubsa?
+uftdi*		at uhub?		# FTDI FT8U100AX serial adapter
+ucom*		at uftdi?
+uplcom* 	at uhub?		# I/O DATA USB-RSAQ2 serial adapter
+ucom*		at uplcom?
+umct*		at uhub?		# MCT USB-RS232 serial adapter
+ucom*		at umct?
+uaudio* 	at uhub?		# USB Audio
+audio*		at uaudio?
+umidi*		at uhub?		# USB MIDI
+midi*		at umidi?
+ulpt*		at uhub?		# USB Printers
 umass*		at uhub?		# USB Mass Storage devices
-scsibus*	at umass?
 uhidev*		at uhub?		# Human Interface Devices
 ums*		at uhidev?		# USB mouse
 wsmouse*	at ums? mux 0
 ukbd*		at uhidev?		# USB keyboard
 wskbd*		at ukbd? mux 1
 uhid*		at uhidev?		# USB generic HID support
-# aue*		at uhub?		# ADMtek AN986 Pegasus Ethernet
-# atu*		at uhub?		# Atmel AT76c50x based 802.11b
-# axe*		at uhub?		# ASIX Electronics AX88172 USB Ethernet
-# axen*		at uhub?		# ASIX Electronics AX88179 USB Ethernet
-# cue*		at uhub?		# CATC USB-EL1201A based Ethernet
-# kue*		at uhub?		# Kawasaki KL5KUSB101B based Ethernet
-# smsc*		at uhub?		# SMSC LAN95xx Ethernet
-# cdce*		at uhub?		# CDC Ethernet
-# upl*		at uhub?		# Prolific PL2301/PL2302 host-to-host `network'
-# ugl*		at uhub?		# Genesys Logic GL620USB-A host-to-host `network'
-# udav*		at uhub?		# Davicom DM9601 based Ethernet
-# url*		at uhub?		# Realtek RTL8150L based adapters
-# wi*		at uhub?		# WaveLAN IEEE 802.11DS
-# urio*		at uhub?		# Diamond Multimedia Rio 500
-# #uyap*		at uhub?		# Y@P firmware loader
-# udsbr*		at uhub?		# D-Link DSB-R100 radio
-# radio*		at udsbr?		# USB radio
-# #ubt*		at uhub? disable	# USB Bluetooth
+aue*		at uhub?		# ADMtek AN986 Pegasus Ethernet
+atu*		at uhub?		# Atmel AT76c50x based 802.11b
+axe*		at uhub?		# ASIX Electronics AX88172 USB Ethernet
+axen*		at uhub?		# ASIX Electronics AX88179 USB Ethernet
+cue*		at uhub?		# CATC USB-EL1201A based Ethernet
+kue*		at uhub?		# Kawasaki KL5KUSB101B based Ethernet
+smsc*		at uhub?		# SMSC LAN95xx Ethernet
+cdce*		at uhub?		# CDC Ethernet
+upl*		at uhub?		# Prolific PL2301/PL2302 host-to-host `network'
+ugl*		at uhub?		# Genesys Logic GL620USB-A host-to-host `network'
+udav*		at uhub?		# Davicom DM9601 based Ethernet
+url*		at uhub?		# Realtek RTL8150L based adapters
+wi*		at uhub?		# WaveLAN IEEE 802.11DS
+urio*		at uhub?		# Diamond Multimedia Rio 500
+#uyap*		at uhub?		# Y@P firmware loader
+udsbr*		at uhub?		# D-Link DSB-R100 radio
+radio*		at udsbr?		# USB radio
+#ubt*		at uhub? disable	# USB Bluetooth
 ugen*		at uhub?		# USB Generic driver
 rum*		at uhub?		# Ralink RT2501USB/RT2601USB
 # XXX missing usable drivers, like run(4).
@@ -148,14 +141,18 @@ cd*		at scsibus?
 ch*		at scsibus?
 uk*		at scsibus?
 
-# Pseudo-Devices
-#pseudo-device	wsmux		2	# mouse & keyboard multiplexor
-#pseudo-device	crypto		1
-pseudo-device	loop		1	# network loopback
-pseudo-device   bpfilter        1       # packet filter
-pseudo-device   rd              1       # ram disk
-pseudo-device	hotplug		1	# devices hot plugging
+# GPIO "pin bus" drivers
+gpioiic*	at gpio?		# I2C bus bit-banging
+iic*		at gpioiic?
+gpioow*		at gpio?		# 1-Wire bus bit-banging
+onewire*	at gpioow?
 
-# RAMDISK stuff
-options	MINIROOTSIZE=16640
-options	RAMDISK_HOOKS
+# 1-Wire devices
+option	ONEWIREVERBOSE
+owid*		at onewire?		# ID
+owsbm*		at onewire?		# Smart Battery Monitor
+owtemp*		at onewire?		# Temperature
+owctr*		at onewire?		# Counter device
+
+# Pseudo-Devices
+pseudo-device hotplug         1       # devices hot plugging
