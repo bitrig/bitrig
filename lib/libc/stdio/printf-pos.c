@@ -30,7 +30,6 @@
  * SUCH DAMAGE.
  */
 
-#if 0 /* XXX pedro { */
 /*
  * This is the code responsible for handling positional arguments
  * (%m$ and %m$.n$) for vfprintf() and vfwprintf().
@@ -752,4 +751,3 @@ build_arg_table(struct typetable *types, va_list ap, union arg **argtable)
 		}
 	}
 }
-#endif /* XXX pedro } */

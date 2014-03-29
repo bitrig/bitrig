@@ -38,7 +38,6 @@
  */
 
 #include <sys/types.h>
-#include <sys/mman.h>
 
 #include <errno.h>
 #include <langinfo.h>
@@ -49,7 +48,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #include "locale/xlocale_private.h"
 #include "local.h"
@@ -58,10 +56,6 @@
 
 #define	CHAR	wchar_t
 #include "printfcommon.h"
-
-static int __find_arguments(const wchar_t *fmt0, va_list ap, union arg **argtable,
-    size_t *argtablesiz);
-static int __grow_type_table(unsigned char **typetable, int *tablesize);
 
 /*
  * Helper function for `fprintf to unbuffered unix file': creates a
@@ -212,32 +206,6 @@ __mbsconv(char *mbsarg, int prec)
  */
 #define BUF	100
 
-#define STATIC_ARG_TBL_SIZE 8	/* Size of static argument table. */
-
-
-/*
- * Macros for converting digits to letters and vice versa
- */
-#define	to_digit(c)	((c) - '0')
-#define is_digit(c)	((unsigned)to_digit(c) <= 9)
-#define	to_char(n)	((wchar_t)((n) + '0'))
-
-/*
- * Flags used during conversion.
- */
-#define	ALT		0x0001		/* alternate form */
-#define	LADJUST		0x0004		/* left adjustment */
-#define	LONGDBL		0x0008		/* long double */
-#define	LONGINT		0x0010		/* long integer */
-#define	LLONGINT	0x0020		/* long long integer */
-#define	SHORTINT	0x0040		/* short integer */
-#define	ZEROPAD		0x0080		/* zero (as opposed to blank) pad */
-#define FPT		0x0100		/* Floating point number */
-#define PTRDIFFT	0x0200		/* (unsigned) ptrdiff_t */
-#define SIZET		0x0400		/* (signed) size_t */
-#define CHARINT		0x0800		/* 8 bit integer */
-#define INTMAXT		0x1000		/* largest integer size (intmax_t) */
-
 int
 __vfwprintf(FILE * __restrict fp, locale_t locale,
     const wchar_t * __restrict fmt0, __va_list ap)
@@ -295,7 +263,6 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 	wchar_t ox[2];		/* space for 0x; ox[1] is either x, X, or \0 */
 	union arg *argtable;	/* args, built due to positional arg */
 	union arg statargtable[STATIC_ARG_TBL_SIZE];
-	size_t argtablesiz;
 	int nextarg;		/* 1-based argument index */
 	va_list orgap;		/* original argument pointer */
 	wchar_t *convbuf;	/* buffer for multibyte to wide conversion */
@@ -381,7 +348,7 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 		int hold = nextarg; \
 		if (argtable == NULL) { \
 			argtable = statargtable; \
-			__find_arguments(fmt0, orgap, &argtable, &argtablesiz); \
+			__find_warguments(fmt0, orgap, &argtable); \
 		} \
 		nextarg = n2; \
 		val = GETARG(int); \
@@ -498,8 +465,8 @@ reswitch:	switch (ch) {
 				nextarg = n;
 				if (argtable == NULL) {
 					argtable = statargtable;
-					__find_arguments(fmt0, orgap,
-					    &argtable, &argtablesiz);
+					__find_warguments(fmt0, orgap,
+					    &argtable);
 				}
 				goto rflag;
 			}
@@ -524,8 +491,8 @@ reswitch:	switch (ch) {
 				nextarg = n;
 				if (argtable == NULL) {
 					argtable = statargtable;
-					__find_arguments(fmt0, orgap,
-					    &argtable, &argtablesiz);
+					__find_warguments(fmt0, orgap,
+					    &argtable);
 				}
 				goto rflag;
 			}
@@ -1012,10 +979,8 @@ finish:
 	if (dtoaresult)
 		__freedtoa(dtoaresult);
 #endif
-	if (argtable != NULL && argtable != statargtable) {
-		munmap(argtable, argtablesiz);
-		argtable = NULL;
-	}
+	if (argtable != NULL && argtable != statargtable)
+		free(argtable);
 	return (ret);
 }
 
@@ -1029,410 +994,4 @@ vfwprintf(FILE * __restrict fp, const wchar_t * __restrict fmt0, __va_list ap)
 	FUNLOCKFILE(fp);
 
 	return (r);
-}
-
-/*
- * Type ids for argument type table.
- */
-#define T_UNUSED	0
-#define T_SHORT		1
-#define T_U_SHORT	2
-#define TP_SHORT	3
-#define T_INT		4
-#define T_U_INT		5
-#define TP_INT		6
-#define T_LONG		7
-#define T_U_LONG	8
-#define TP_LONG		9
-#define T_LLONG		10
-#define T_U_LLONG	11
-#define TP_LLONG	12
-#define T_DOUBLE	13
-#define T_LONG_DOUBLE	14
-#define TP_CHAR		15
-#define TP_VOID		16
-#define T_PTRDIFFT	17
-#define TP_PTRDIFFT	18
-#define T_SIZET	19
-#define T_SSIZET	20
-#define TP_SSIZET	21
-#define T_INTMAXT	22
-#define T_MAXUINT	23
-#define TP_INTMAXT	24
-#define T_CHAR		25
-#define T_U_CHAR	26
-#define T_WINT		27
-#define TP_WCHAR	28
-
-/*
- * Find all arguments when a positional parameter is encountered.  Returns a
- * table, indexed by argument number, of pointers to each arguments.  The
- * initial argument table should be an array of STATIC_ARG_TBL_SIZE entries.
- * It will be replaced with a mmap-ed one if it overflows (malloc cannot be
- * used since we are attempting to make snprintf thread safe, and alloca is
- * problematic since we have nested functions..)
- */
-static int
-__find_arguments(const wchar_t *fmt0, va_list ap, union arg **argtable,
-    size_t *argtablesiz)
-{
-	wchar_t *fmt;		/* format string */
-	int ch;			/* character from fmt */
-	int n, n2;		/* handy integer (short term usage) */
-	wchar_t *cp;		/* handy char pointer (short term usage) */
-	int flags;		/* flags as above */
-	unsigned char *typetable; /* table of types */
-	unsigned char stattypetable[STATIC_ARG_TBL_SIZE];
-	int tablesize;		/* current size of type table */
-	int tablemax;		/* largest used index in table */
-	int nextarg;		/* 1-based argument index */
-	int ret = 0;		/* return value */
-
-	/*
-	 * Add an argument type to the table, expanding if necessary.
-	 */
-#define ADDTYPE(type) \
-	((nextarg >= tablesize) ? \
-		__grow_type_table(&typetable, &tablesize) : 0, \
-	(nextarg > tablemax) ? tablemax = nextarg : 0, \
-	typetable[nextarg++] = type)
-
-#define	ADDSARG() \
-        ((flags&INTMAXT) ? ADDTYPE(T_INTMAXT) : \
-	    ((flags&PTRDIFFT) ? ADDTYPE(T_PTRDIFFT) : \
-	    ((flags&SIZET) ? ADDTYPE(T_SSIZET) : \
-	    ((flags&LLONGINT) ? ADDTYPE(T_LLONG) : \
-	    ((flags&LONGINT) ? ADDTYPE(T_LONG) : \
-	    ((flags&SHORTINT) ? ADDTYPE(T_SHORT) : \
-	    ((flags&CHARINT) ? ADDTYPE(T_CHAR) : ADDTYPE(T_INT))))))))
-
-#define	ADDUARG() \
-        ((flags&INTMAXT) ? ADDTYPE(T_MAXUINT) : \
-	    ((flags&PTRDIFFT) ? ADDTYPE(T_PTRDIFFT) : \
-	    ((flags&SIZET) ? ADDTYPE(T_SIZET) : \
-	    ((flags&LLONGINT) ? ADDTYPE(T_U_LLONG) : \
-	    ((flags&LONGINT) ? ADDTYPE(T_U_LONG) : \
-	    ((flags&SHORTINT) ? ADDTYPE(T_U_SHORT) : \
-	    ((flags&CHARINT) ? ADDTYPE(T_U_CHAR) : ADDTYPE(T_U_INT))))))))
-
-	/*
-	 * Add * arguments to the type array.
-	 */
-#define ADDASTER() \
-	n2 = 0; \
-	cp = fmt; \
-	while (is_digit(*cp)) { \
-		APPEND_DIGIT(n2, *cp); \
-		cp++; \
-	} \
-	if (*cp == '$') { \
-		int hold = nextarg; \
-		nextarg = n2; \
-		ADDTYPE(T_INT); \
-		nextarg = hold; \
-		fmt = ++cp; \
-	} else { \
-		ADDTYPE(T_INT); \
-	}
-	fmt = (wchar_t *)fmt0;
-	typetable = stattypetable;
-	tablesize = STATIC_ARG_TBL_SIZE;
-	tablemax = 0;
-	nextarg = 1;
-	memset(typetable, T_UNUSED, STATIC_ARG_TBL_SIZE);
-
-	/*
-	 * Scan the format for conversions (`%' character).
-	 */
-	for (;;) {
-		for (cp = fmt; (ch = *fmt) != '\0' && ch != '%'; fmt++)
-			continue;
-		if (ch == '\0')
-			goto done;
-		fmt++;		/* skip over '%' */
-
-		flags = 0;
-
-rflag:		ch = *fmt++;
-reswitch:	switch (ch) {
-		case ' ':
-		case '#':
-		case '\'':
-			goto rflag;
-		case '*':
-			ADDASTER();
-			goto rflag;
-		case '-':
-		case '+':
-			goto rflag;
-		case '.':
-			if ((ch = *fmt++) == '*') {
-				ADDASTER();
-				goto rflag;
-			}
-			while (is_digit(ch)) {
-				ch = *fmt++;
-			}
-			goto reswitch;
-		case '0':
-			goto rflag;
-		case '1': case '2': case '3': case '4':
-		case '5': case '6': case '7': case '8': case '9':
-			n = 0;
-			do {
-				APPEND_DIGIT(n ,ch);
-				ch = *fmt++;
-			} while (is_digit(ch));
-			if (ch == '$') {
-				nextarg = n;
-				goto rflag;
-			}
-			goto reswitch;
-#ifdef FLOATING_POINT
-		case 'L':
-			flags |= LONGDBL;
-			goto rflag;
-#endif
-		case 'h':
-			if (*fmt == 'h') {
-				fmt++;
-				flags |= CHARINT;
-			} else {
-				flags |= SHORTINT;
-			}
-			goto rflag;
-		case 'l':
-			if (*fmt == 'l') {
-				fmt++;
-				flags |= LLONGINT;
-			} else {
-				flags |= LONGINT;
-			}
-			goto rflag;
-		case 'q':
-			flags |= LLONGINT;
-			goto rflag;
-		case 't':
-			flags |= PTRDIFFT;
-			goto rflag;
-		case 'z':
-			flags |= SIZET;
-			goto rflag;
-		case 'C':
-			flags |= LONGINT;
-			/*FALLTHROUGH*/
-		case 'c':
-			if (flags & LONGINT)
-				ADDTYPE(T_WINT);
-			else
-				ADDTYPE(T_INT);
-			break;
-		case 'D':
-			flags |= LONGINT;
-			/*FALLTHROUGH*/
-		case 'd':
-		case 'i':
-			ADDSARG();
-			break;
-#ifdef FLOATING_POINT
-		case 'a':
-		case 'A':
-		case 'e':
-		case 'E':
-		case 'f':
-		case 'F':
-		case 'g':
-		case 'G':
-			if (flags & LONGDBL)
-				ADDTYPE(T_LONG_DOUBLE);
-			else
-				ADDTYPE(T_DOUBLE);
-			break;
-#endif /* FLOATING_POINT */
-		case 'n':
-			if (flags & LLONGINT)
-				ADDTYPE(TP_LLONG);
-			else if (flags & LONGINT)
-				ADDTYPE(TP_LONG);
-			else if (flags & SHORTINT)
-				ADDTYPE(TP_SHORT);
-			else if (flags & PTRDIFFT)
-				ADDTYPE(TP_PTRDIFFT);
-			else if (flags & SIZET)
-				ADDTYPE(TP_SSIZET);
-			else if (flags & INTMAXT)
-				ADDTYPE(TP_INTMAXT);
-			else
-				ADDTYPE(TP_INT);
-			continue;	/* no output */
-		case 'O':
-			flags |= LONGINT;
-			/*FALLTHROUGH*/
-		case 'o':
-			ADDUARG();
-			break;
-		case 'p':
-			ADDTYPE(TP_VOID);
-			break;
-		case 'S':
-			flags |= LONGINT;
-			/*FALLTHROUGH*/
-		case 's':
-			if (flags & LONGINT)
-				ADDTYPE(TP_CHAR);
-			else
-				ADDTYPE(TP_WCHAR);
-			break;
-		case 'U':
-			flags |= LONGINT;
-			/*FALLTHROUGH*/
-		case 'u':
-		case 'X':
-		case 'x':
-			ADDUARG();
-			break;
-		default:	/* "%?" prints ?, unless ? is NUL */
-			if (ch == '\0')
-				goto done;
-			break;
-		}
-	}
-done:
-	/*
-	 * Build the argument table.
-	 */
-	if (tablemax >= STATIC_ARG_TBL_SIZE) {
-		*argtablesiz = sizeof(union arg) * (tablemax + 1);
-		*argtable = mmap(NULL, *argtablesiz,
-		    PROT_WRITE|PROT_READ, MAP_ANON|MAP_PRIVATE, -1, 0);
-		if (*argtable == MAP_FAILED)
-			return (-1);
-	}
-
-#if 0
-	/* XXX is this required? */
-	(*argtable)[0].intarg = 0;
-#endif
-	for (n = 1; n <= tablemax; n++) {
-		switch (typetable[n]) {
-		case T_UNUSED:
-		case T_CHAR:
-		case T_U_CHAR:
-		case T_SHORT:
-		case T_U_SHORT:
-		case T_INT:
-			(*argtable)[n].intarg = va_arg(ap, int);
-			break;
-		case TP_SHORT:
-			(*argtable)[n].pshortarg = va_arg(ap, short *);
-			break;
-		case T_U_INT:
-			(*argtable)[n].uintarg = va_arg(ap, unsigned int);
-			break;
-		case TP_INT:
-			(*argtable)[n].pintarg = va_arg(ap, int *);
-			break;
-		case T_LONG:
-			(*argtable)[n].longarg = va_arg(ap, long);
-			break;
-		case T_U_LONG:
-			(*argtable)[n].ulongarg = va_arg(ap, unsigned long);
-			break;
-		case TP_LONG:
-			(*argtable)[n].plongarg = va_arg(ap, long *);
-			break;
-		case T_LLONG:
-			(*argtable)[n].longlongarg = va_arg(ap, long long);
-			break;
-		case T_U_LLONG:
-			(*argtable)[n].ulonglongarg = va_arg(ap, unsigned long long);
-			break;
-		case TP_LLONG:
-			(*argtable)[n].plonglongarg = va_arg(ap, long long *);
-			break;
-#ifdef FLOATING_POINT
-		case T_DOUBLE:
-			(*argtable)[n].doublearg = va_arg(ap, double);
-			break;
-		case T_LONG_DOUBLE:
-			(*argtable)[n].longdoublearg = va_arg(ap, long double);
-			break;
-#endif
-		case TP_CHAR:
-			(*argtable)[n].pchararg = va_arg(ap, char *);
-			break;
-		case TP_VOID:
-			(*argtable)[n].pvoidarg = va_arg(ap, void *);
-			break;
-		case T_PTRDIFFT:
-			(*argtable)[n].ptrdiffarg = va_arg(ap, ptrdiff_t);
-			break;
-		case TP_PTRDIFFT:
-			(*argtable)[n].pptrdiffarg = va_arg(ap, ptrdiff_t *);
-			break;
-		case T_SIZET:
-			(*argtable)[n].sizearg = va_arg(ap, size_t);
-			break;
-		case T_SSIZET:
-			(*argtable)[n].sizearg = va_arg(ap, ssize_t);
-			break;
-		case TP_SSIZET:
-			(*argtable)[n].pssizearg = va_arg(ap, ssize_t *);
-			break;
-		case TP_INTMAXT:
-			(*argtable)[n].intmaxarg = va_arg(ap, intmax_t);
-			break;
-		case T_WINT:
-			(*argtable)[n].wintarg = va_arg(ap, wint_t);
-			break;
-		case TP_WCHAR:
-			(*argtable)[n].pwchararg = va_arg(ap, wchar_t *);
-			break;
-		}
-	}
-	goto finish;
-
-overflow:
-	errno = ENOMEM;
-	ret = -1;
-
-finish:
-	if (typetable != NULL && typetable != stattypetable) {
-		munmap(typetable, *argtablesiz);
-		typetable = NULL;
-	}
-	return (ret);
-}
-
-/*
- * Increase the size of the type table.
- */
-static int
-__grow_type_table(unsigned char **typetable, int *tablesize)
-{
-	unsigned char *oldtable = *typetable;
-	int newsize = *tablesize * 2;
-
-	if (newsize < getpagesize())
-		newsize = getpagesize();
-
-	if (*tablesize == STATIC_ARG_TBL_SIZE) {
-		*typetable = mmap(NULL, newsize, PROT_WRITE|PROT_READ,
-		    MAP_ANON|MAP_PRIVATE, -1, 0);
-		if (*typetable == MAP_FAILED)
-			return (-1);
-		bcopy(oldtable, *typetable, *tablesize);
-	} else {
-		unsigned char *new = mmap(NULL, newsize, PROT_WRITE|PROT_READ,
-		    MAP_ANON|MAP_PRIVATE, -1, 0);
-		if (new == MAP_FAILED)
-			return (-1);
-		memmove(new, *typetable, *tablesize);
-		munmap(*typetable, *tablesize);
-		*typetable = new;
-	}
-	memset(*typetable + *tablesize, T_UNUSED, (newsize - *tablesize));
-
-	*tablesize = newsize;
-	return (0);
 }
