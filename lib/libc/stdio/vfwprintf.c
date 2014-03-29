@@ -54,6 +54,10 @@
 #include "locale/xlocale_private.h"
 #include "local.h"
 #include "fvwrite.h"
+#include "printflocal.h"
+
+#define	CHAR	wchar_t
+#include "printfcommon.h"
 
 union arg {
 	int			intarg;

@@ -10,11 +10,11 @@ SRCS+=	asprintf.c clrerr.c fclose.c fdopen.c feof.c ferror.c fflush.c fgetc.c \
 	fopen.c fprintf.c fpurge.c fputc.c fputs.c fread.c freopen.c fscanf.c \
 	fseek.c fsetpos.c ftell.c funopen.c fvwrite.c fwalk.c fwrite.c \
 	getc.c getchar.c getw.c makebuf.c mktemp.c open_memstream.c \
-	open_wmemstream.c perror.c printf.c putc.c putchar.c puts.c putw.c \
-	refill.c remove.c rewind.c rget.c scanf.c setbuf.c setbuffer.c \
-	setvbuf.c snprintf.c sprintf.c sscanf.c stdio.c tempnam.c tmpfile.c \
-	tmpnam.c ungetc.c vasprintf.c vfprintf.c vfscanf.c vprintf.c vscanf.c \
-	vsnprintf.c vsprintf.c vsscanf.c wbuf.c wsetup.c flockfile.c \
+	open_wmemstream.c perror.c printf.c printf-pos.c putc.c putchar.c \
+	puts.c putw.c refill.c remove.c rewind.c rget.c scanf.c setbuf.c \
+	setbuffer.c setvbuf.c snprintf.c sprintf.c sscanf.c stdio.c tempnam.c \
+	tmpfile.c tmpnam.c ungetc.c vasprintf.c vfprintf.c vfscanf.c vprintf.c \
+	vscanf.c vsnprintf.c vsprintf.c vsscanf.c wbuf.c wsetup.c flockfile.c \
 	fgetwc.c fgetws.c fputwc.c fputws.c fwide.c getwc.c getwchar.c \
 	putwc.c putwchar.c ungetwc.c \
 	fwprintf.c swprintf.c vfwprintf.c vswprintf.c vwprintf.c wprintf.c \
