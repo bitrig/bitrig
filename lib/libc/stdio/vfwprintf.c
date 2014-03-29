@@ -54,8 +54,39 @@
 #include "fvwrite.h"
 #include "printflocal.h"
 
+static int	__sprint(FILE *, struct __suio *, locale_t);
+static wint_t	__xfputwc(wchar_t, FILE *, locale_t);
+
 #define	CHAR	wchar_t
 #include "printfcommon.h"
+
+/*
+ * Flush out all the vectors defined by the given uio,
+ * then reset it so that it can be reused.
+ *
+ * XXX The fact that we do this a character at a time and convert to a
+ * multibyte character sequence even if the destination is a wide
+ * string eclipses the benefits of buffering.
+ */
+static int
+__sprint(FILE *fp, struct __suio *uio, locale_t locale)
+{
+	struct __siov *iov;
+	wchar_t *p;
+	int i, len;
+
+	iov = uio->uio_iov;
+	for (; uio->uio_resid != 0; uio->uio_resid -= len, iov++) {
+		p = (wchar_t *)iov->iov_base;
+		len = iov->iov_len;
+		for (i = 0; i < len; i++) {
+			if (__xfputwc(p[i], fp, locale) == WEOF)
+				return (-1);
+		}
+	}
+	uio->uio_iovcnt = 0;
+	return (0);
+}
 
 /*
  * Helper function for `fprintf to unbuffered unix file': creates a
@@ -100,7 +131,7 @@ __sbprintf(FILE *fp, locale_t locale, const wchar_t *fmt, va_list ap)
  * File must already be locked.
  */
 static wint_t
-__xfputwc(wchar_t wc, FILE *fp)
+__xfputwc(wchar_t wc, FILE *fp, locale_t locale)
 {
 	mbstate_t mbs;
 	char buf[MB_LEN_MAX];
@@ -109,7 +140,7 @@ __xfputwc(wchar_t wc, FILE *fp)
 	size_t len;
 
 	if ((fp->_flags & __SSTR) == 0)
-		return (__fputwc_unlock(wc, fp));
+		return (__fputwc_unlock(wc, fp, locale));
 
 	memset(&mbs, 0, sizeof(mbs));
 	len = wcrtomb(buf, wc, &mbs);
@@ -246,7 +277,7 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 {
 	wchar_t *fmt;		/* format string */
 	wchar_t ch;		/* character from fmt */
-	int n, n2, n3;		/* handy integers (short term usage) */
+	int n, n2;		/* handy integers (short term usage) */
 	wchar_t *cp;		/* handy char pointer (short term usage) */
 	int flags;		/* flags as above */
 	int ret;		/* return value accumulator */
@@ -290,9 +321,7 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 	int realsz;		/* field size expanded by dprec */
 	int size;		/* size of converted field or string */
 	const char *xdigs;	/* digits for %[xX] conversion */
-#define NIOV 8
-	struct __suio uio;	/* output information: summary */
-	struct __siov iov[NIOV];/* ... and individual io vectors */
+	struct io_state io;	/* I/O buffering state */
 	wchar_t buf[BUF];	/* buffer with space for digits of uintmax_t */
 	wchar_t ox[2];		/* space for 0x; ox[1] is either x, X, or \0 */
 	union arg *argtable;	/* args, built due to positional arg */
@@ -304,33 +333,23 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 	static const char xdigs_lower[16] = "0123456789abcdef";
 	static const char xdigs_upper[16] = "0123456789ABCDEF";
 
-	/*
-	 * BEWARE, these `goto error' on error, PRINT uses 'n3',
-	 * PAD uses `n' and 'n3', and PRINTANDPAD uses 'n', 'n2', and 'n3'.
-	 */
-#define	PRINT(ptr, len)	do {	\
-	for (n3 = 0; n3 < (len); n3++) {	\
-		if ((__xfputwc((ptr)[n3], fp)) == WEOF)	\
-			goto error; \
-	} \
-} while (0)
-#define	PAD(howmany, with) do { \
-	if ((n = (howmany)) > 0) { \
-		while (n > PADSIZE) { \
-			PRINT(with, PADSIZE); \
-			n -= PADSIZE; \
-		} \
-		PRINT(with, n); \
-	} \
-} while (0)
-#define	PRINTANDPAD(p, ep, len, with) do {	\
-	n2 = (ep) - (p);       			\
-	if (n2 > (len))				\
-		n2 = (len);			\
-	if (n2 > 0)				\
-		PRINT((p), n2);			\
-	PAD((len) - (n2 > 0 ? n2 : 0), (with));	\
-} while(0)
+	/* BEWARE, these `goto error' on error. */
+#define	PRINT(ptr, len) { \
+	if (io_print(&io, (ptr), (len), locale))	\
+		goto error; \
+}
+#define	PAD(howmany, with) { \
+	if (io_pad(&io, (howmany), (with), locale)) \
+		goto error; \
+}
+#define	PRINTANDPAD(p, ep, len, with) {	\
+	if (io_printandpad(&io, (p), (ep), (len), (with), locale)) \
+		goto error; \
+}
+#define	FLUSH() { \
+	if (io_flush(&io, locale)) \
+		goto error; \
+}
 
 	/*
 	 * Get the argument indexed by nextarg.   If the argument table is
@@ -415,9 +434,7 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 	argtable = NULL;
 	nextarg = 1;
 	va_copy(orgap, ap);
-	uio.uio_iov = iov;
-	uio.uio_resid = 0;
-	uio.uio_iovcnt = 0;
+	io_init(&io, fp);
 	ret = 0;
 	convbuf = NULL;
 
@@ -998,8 +1015,11 @@ number:			if ((dprec = prec) >= 0)
 		if (width > INT_MAX - ret)
 			goto overflow;
 		ret += width;
+
+		FLUSH();	/* copy out the I/O vectors */
 	}
 done:
+	FLUSH();
 error:
 	va_end(orgap);
 	if (__sferror(fp))

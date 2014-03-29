@@ -61,6 +61,7 @@ static int exponent(CHAR *, int, CHAR);
 #if 0 /* XXX pedro { */
 static CHAR	*__ujtoa(uintmax_t, CHAR *, int, int, const char *);
 static CHAR	*__ultoa(u_long, CHAR *, int, int, const char *);
+#endif /* XXX pedro } */
 
 #define NIOV 8
 struct io_state {
@@ -95,7 +96,6 @@ io_print(struct io_state *iop, const CHAR * __restrict ptr, int len, locale_t lo
 	else
 		return (0);
 }
-#endif /* XXX pedro } */
 
 /*
  * Choose PADSIZE to trade efficiency vs. size.  If larger printf
@@ -108,7 +108,6 @@ static const CHAR blanks[PADSIZE] =
 static const CHAR zeroes[PADSIZE] =
 {'0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0'};
 
-#if 0 /* XXX pedro { */
 /*
  * Pad with blanks or zeroes. 'with' should point to either the blanks array
  * or the zeroes array.
@@ -157,6 +156,7 @@ io_flush(struct io_state *iop, locale_t locale)
 	return (__sprint(iop->fp, &iop->uio, locale));
 }
 
+#if 0 /* XXX pedro { */
 /*
  * Convert an unsigned long to ASCII for printf purposes, returning
  * a pointer to the first character of the string representation.

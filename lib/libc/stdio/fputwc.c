@@ -29,15 +29,17 @@
  * $Citrus$
  */
 
+#include <ctype.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
 #include <wchar.h>
 #include "local.h"
 #include "fvwrite.h"
+#include "locale/mblocal.h"
 
 wint_t
-__fputwc_unlock(wchar_t wc, FILE *fp)
+__fputwc_unlock(wchar_t wc, FILE *fp, locale_t locale)
 {
 	struct wchar_io_data *wcio;
 	mbstate_t *st;
@@ -45,6 +47,7 @@ __fputwc_unlock(wchar_t wc, FILE *fp)
 	char buf[MB_LEN_MAX];
 	struct __suio uio;
 	struct __siov iov;
+	struct xlocale_ctype *l = XLOCALE_CTYPE(locale);
 
 	/* LINTED we don't play with buf */
 	iov.iov_base = (void *)buf;
@@ -61,7 +64,7 @@ __fputwc_unlock(wchar_t wc, FILE *fp)
 	wcio->wcio_ungetwc_inbuf = 0;
 	st = &wcio->wcio_mbstate_out;
 
-	size = wcrtomb(buf, wc, st);
+	size = l->__wcrtomb(buf, wc, st);
 	if (size == (size_t)-1) {
 		errno = EILSEQ;
 		return WEOF;
@@ -81,7 +84,7 @@ fputwc(wchar_t wc, FILE *fp)
 	wint_t r;
 
 	FLOCKFILE(fp);
-	r = __fputwc_unlock(wc, fp);
+	r = __fputwc_unlock(wc, fp, __get_locale());
 	FUNLOCKFILE(fp);
 
 	return (r);

@@ -55,6 +55,8 @@
 #include "fvwrite.h"
 #include "printflocal.h"
 
+static int	__sprint(FILE *, struct __suio *, locale_t);
+
 #define	CHAR	char
 #include "printfcommon.h"
 
@@ -63,7 +65,7 @@
  * then reset it so that it can be reused.
  */
 static int
-__sprint(FILE *fp, struct __suio *uio)
+__sprint(FILE *fp, struct __suio *uio, locale_t locale)
 {
 	int err;
 
@@ -229,7 +231,6 @@ __vfprintf(FILE *fp, locale_t locale, const char *fmt0, __va_list ap)
 	int ch;			/* character from fmt */
 	int n, n2;		/* handy integers (short term usage) */
 	char *cp;		/* handy char pointer (short term usage) */
-	struct __siov *iovp;	/* for PRINT macro */
 	int flags;		/* flags as above */
 	int ret;		/* return value accumulator */
 	int width;		/* width from format (%8d), or 0 */
@@ -274,9 +275,7 @@ __vfprintf(FILE *fp, locale_t locale, const char *fmt0, __va_list ap)
 	int realsz;		/* field size expanded by dprec */
 	int size;		/* size of converted field or string */
 	const char *xdigs;	/* digits for %[xX] conversion */
-#define NIOV 8
-	struct __suio uio;	/* output information: summary */
-	struct __siov iov[NIOV];/* ... and individual io vectors */
+	struct io_state io;	/* I/O buffering state */
 	char buf[BUF];		/* buffer with space for digits of uintmax_t */
 	char ox[2];		/* space for 0x; ox[1] is either x, X, or \0 */
 	union arg *argtable;	/* args, built due to positional arg */
@@ -290,44 +289,23 @@ __vfprintf(FILE *fp, locale_t locale, const char *fmt0, __va_list ap)
 	static const char xdigs_lower[16] = "0123456789abcdef";
 	static const char xdigs_upper[16] = "0123456789ABCDEF";
 
-	/*
-	 * BEWARE, these `goto error' on error, and PAD uses `n'.
-	 */
-#define	PRINT(ptr, len) do { \
-	iovp->iov_base = (ptr); \
-	iovp->iov_len = (len); \
-	uio.uio_resid += (len); \
-	iovp++; \
-	if (++uio.uio_iovcnt >= NIOV) { \
-		if (__sprint(fp, &uio)) \
-			goto error; \
-		iovp = iov; \
-	} \
-} while (0)
-#define	PAD(howmany, with) do { \
-	if ((n = (howmany)) > 0) { \
-		while (n > PADSIZE) { \
-			PRINT(with, PADSIZE); \
-			n -= PADSIZE; \
-		} \
-		PRINT(with, n); \
-	} \
-} while (0)
-#define	PRINTANDPAD(p, ep, len, with) do {	\
-	n2 = (ep) - (p);       			\
-	if (n2 > (len))				\
-		n2 = (len);			\
-	if (n2 > 0)				\
-		PRINT((p), n2);			\
-	PAD((len) - (n2 > 0 ? n2 : 0), (with));	\
-} while(0)
-#define	FLUSH() do { \
-	if (uio.uio_resid && __sprint(fp, &uio)) \
+	/* BEWARE, these `goto error' on error. */
+#define	PRINT(ptr, len) { \
+	if (io_print(&io, (ptr), (len), locale))	\
 		goto error; \
-	uio.uio_iovcnt = 0; \
-	iovp = iov; \
-} while (0)
-
+}
+#define	PAD(howmany, with) { \
+	if (io_pad(&io, (howmany), (with), locale)) \
+		goto error; \
+}
+#define	PRINTANDPAD(p, ep, len, with) {	\
+	if (io_printandpad(&io, (p), (ep), (len), (with), locale)) \
+		goto error; \
+}
+#define	FLUSH() { \
+	if (io_flush(&io, locale)) \
+		goto error; \
+}
 	/*
 	 * Get the argument indexed by nextarg.   If the argument table is
 	 * built, use it to get the argument.  If its not, get the next
@@ -411,9 +389,7 @@ __vfprintf(FILE *fp, locale_t locale, const char *fmt0, __va_list ap)
 	argtable = NULL;
 	nextarg = 1;
 	va_copy(orgap, ap);
-	uio.uio_iov = iovp = iov;
-	uio.uio_resid = 0;
-	uio.uio_iovcnt = 0;
+	io_init(&io, fp);
 	ret = 0;
 #ifdef PRINTF_WIDE_CHAR
 	convbuf = NULL;

@@ -35,6 +35,7 @@
 #include <wchar.h>
 #include "local.h"
 #include "fvwrite.h"
+#include "locale/mblocal.h"
 
 int
 fputws(ws, fp)
@@ -45,7 +46,8 @@ fputws(ws, fp)
 	_SET_ORIENTATION(fp, 1);
 
 	while (*ws != '\0') {
-		if (__fputwc_unlock(*ws++, fp) == WEOF) {
+		/* XXX pedro: fix me */
+		if (__fputwc_unlock(*ws++, fp, __get_locale()) == WEOF) {
 			FUNLOCKFILE(fp);
 			return (-1);
 		}

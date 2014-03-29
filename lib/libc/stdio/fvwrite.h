@@ -46,4 +46,4 @@ struct __suio {
 };
 
 extern int __sfvwrite(FILE *, struct __suio *);
-wint_t __fputwc_unlock(wchar_t wc, FILE *fp);
+wint_t __fputwc_unlock(wchar_t, FILE *, locale_t);
