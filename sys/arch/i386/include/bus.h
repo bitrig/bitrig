@@ -1,4 +1,4 @@
-/*	$OpenBSD: bus.h,v 1.59 2013/12/12 21:04:50 kettenis Exp $	*/
+/*	$OpenBSD: bus.h,v 1.61 2014/03/29 18:09:29 guenther Exp $	*/
 /*	$NetBSD: bus.h,v 1.6 1996/11/10 03:19:25 thorpej Exp $	*/
 
 /*-
@@ -403,7 +403,7 @@ void	bus_space_copy_4(bus_space_tag_t, bus_space_handle_t, bus_size_t,
 #endif
 
 #define	i386_space_copy1(a1, a2, cnt, movs, df)		\
-	__asm __volatile(df "\n\trep\n\t" movs :	\
+	__asm volatile(df "\n\trep\n\t" movs :		\
 	    "+S" (a1), "+D" (a2), "+c" (cnt)	:: "memory", "cc");
 
 #define	i386_space_copy(a1, a2, sz, cnt) do {				\
@@ -444,9 +444,9 @@ bus_space_barrier(bus_space_tag_t space, bus_space_handle_t handle,
     bus_size_t offset, bus_size_t length, int flags)
 {
 	if (flags & BUS_SPACE_BARRIER_READ)
-		__asm __volatile("lock; addl $0,0(%%esp)" : : : "memory");
+		__asm volatile("lock; addl $0,0(%%esp)" : : : "memory");
 	else
-		__asm __volatile("" : : : "memory");
+		__asm volatile("" : : : "memory");
 }
 
 /*
