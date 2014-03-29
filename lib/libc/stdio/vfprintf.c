@@ -60,38 +60,6 @@
 #define	CHAR	char
 #include "printfcommon.h"
 
-union arg {
-	int			intarg;
-	unsigned int		uintarg;
-	long			longarg;
-	unsigned long		ulongarg;
-	long long		longlongarg;
-	unsigned long long	ulonglongarg;
-	ptrdiff_t		ptrdiffarg;
-	size_t			sizearg;
-	ssize_t			ssizearg;
-	intmax_t		intmaxarg;
-	uintmax_t		uintmaxarg;
-	void			*pvoidarg;
-	char			*pchararg;
-	signed char		*pschararg;
-	short			*pshortarg;
-	int			*pintarg;
-	long			*plongarg;
-	long long		*plonglongarg;
-	ptrdiff_t		*pptrdiffarg;
-	ssize_t			*pssizearg;
-	intmax_t		*pintmaxarg;
-#ifdef FLOATING_POINT
-	double			doublearg;
-	long double		longdoublearg;
-#endif
-#ifdef PRINTF_WIDE_CHAR
-	wint_t			wintarg;
-	wchar_t			*pwchararg;
-#endif
-};
-
 static int __find_arguments(const char *fmt0, va_list ap, union arg **argtable,
     size_t *argtablesiz);
 static int __grow_type_table(unsigned char **typetable, int *tablesize);
@@ -216,18 +184,6 @@ __wcsconv(wchar_t *wcsarg, int prec)
 }
 #endif
 
-#ifdef FLOATING_POINT
-#include <float.h>
-#include <locale.h>
-#include <math.h>
-#include "floatio.h"
-#include "gdtoa.h"
-
-#define	DEFPREC		6
-
-static int exponent(char *, int, int);
-#endif /* FLOATING_POINT */
-
 /*
  * The size of the buffer we use as scratch space for integer
  * conversions, among other things.  Technically, we would need the
@@ -339,17 +295,6 @@ __vfprintf(FILE *fp, locale_t locale, const char *fmt0, __va_list ap)
 #ifdef PRINTF_WIDE_CHAR
 	char *convbuf;		/* buffer for wide to multi-byte conversion */
 #endif
-
-	/*
-	 * Choose PADSIZE to trade efficiency vs. size.  If larger printf
-	 * fields occur frequently, increase PADSIZE and make the initialisers
-	 * below longer.
-	 */
-#define	PADSIZE	16		/* pad chunk size */
-	static char blanks[PADSIZE] =
-	 {' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '};
-	static char zeroes[PADSIZE] =
-	 {'0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0'};
 
 	static const char xdigs_lower[16] = "0123456789abcdef";
 	static const char xdigs_upper[16] = "0123456789ABCDEF";
@@ -1446,7 +1391,7 @@ done:
 			(*argtable)[n].sizearg = va_arg(ap, size_t);
 			break;
 		case T_SSIZET:
-			(*argtable)[n].ssizearg = va_arg(ap, ssize_t);
+			(*argtable)[n].sizearg = va_arg(ap, ssize_t);
 			break;
 		case TP_SSIZET:
 			(*argtable)[n].pssizearg = va_arg(ap, ssize_t *);
@@ -1516,41 +1461,3 @@ __grow_type_table(unsigned char **typetable, int *tablesize)
 	*tablesize = newsize;
 	return (0);
 }
-
- 
-#ifdef FLOATING_POINT
-static int
-exponent(char *p0, int exp, int fmtch)
-{
-	char *p, *t;
-	char expbuf[MAXEXPDIG];
-
-	p = p0;
-	*p++ = fmtch;
-	if (exp < 0) {
-		exp = -exp;
-		*p++ = '-';
-	} else
-		*p++ = '+';
-	t = expbuf + MAXEXPDIG;
-	if (exp > 9) {
-		do {
-			*--t = to_char(exp % 10);
-		} while ((exp /= 10) > 9);
-		*--t = to_char(exp);
-		for (; t < expbuf + MAXEXPDIG; *p++ = *t++)
-			/* nothing */;
-	} else {
-		/*
-		 * Exponents for decimal floating point conversions
-		 * (%[eEgG]) must be at least two characters long,
-		 * whereas exponents for hexadecimal conversions can
-		 * be only one character long.
-		 */
-		if (fmtch == 'e' || fmtch == 'E')
-			*p++ = '0';
-		*p++ = to_char(exp);
-	}
-	return (p - p0);
-}
-#endif /* FLOATING_POINT */

@@ -36,7 +36,6 @@
  *
  */
 
-#if 0 /* XXX pedro { */
 /*
  * This file defines common routines used by both printf and wprintf.
  * You must define CHAR to either char or wchar_t prior to including this.
@@ -59,6 +58,7 @@ static int exponent(CHAR *, int, CHAR);
 
 #endif /* FLOATING_POINT */
 
+#if 0 /* XXX pedro { */
 static CHAR	*__ujtoa(uintmax_t, CHAR *, int, int, const char *);
 static CHAR	*__ultoa(u_long, CHAR *, int, int, const char *);
 
@@ -95,6 +95,7 @@ io_print(struct io_state *iop, const CHAR * __restrict ptr, int len, locale_t lo
 	else
 		return (0);
 }
+#endif /* XXX pedro } */
 
 /*
  * Choose PADSIZE to trade efficiency vs. size.  If larger printf
@@ -107,6 +108,7 @@ static const CHAR blanks[PADSIZE] =
 static const CHAR zeroes[PADSIZE] =
 {'0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0'};
 
+#if 0 /* XXX pedro { */
 /*
  * Pad with blanks or zeroes. 'with' should point to either the blanks array
  * or the zeroes array.
@@ -265,6 +267,7 @@ __ujtoa(uintmax_t val, CHAR *endp, int base, int octzero, const char *xdigs)
 	}
 	return (cp);
 }
+#endif /* XXX pedro } */
 
 #ifdef FLOATING_POINT
 static int
@@ -302,4 +305,3 @@ exponent(CHAR *p0, int exp, CHAR fmtch)
 	return (p - p0);
 }
 #endif /* FLOATING_POINT */
-#endif /* XXX pedro } */

@@ -60,6 +60,7 @@
 
 /* Size of the static argument table. */
 #define STATIC_ARG_TBL_SIZE 8
+#endif /* XXX pedro } */
 
 union arg {
 	int	intarg;
@@ -90,6 +91,7 @@ union arg {
 	wchar_t	*pwchararg;
 };
 
+#if 0 /* XXX pedro { */
 /* Handle positional parameters. */
 int	__find_arguments(const char *, va_list, union arg **);
 int	__find_warguments(const wchar_t *, va_list, union arg **);
