@@ -1322,23 +1322,26 @@ startserverlist() {
 	set -m
 	(
 		ftp -Vao - "https://www.bitrig.org/ftplist" \
-			2>/tmp/ftplisterr >$SERVERLISTALL
+			2>$HTTP_LISTERR >$HTTP_LISTALL
 
-		# Remember finish time for adjusting the received timestamp
-		echo -n $SECONDS >$HTTP_SEC
 		feed_random
-	) & CGIPID=$!
+	) & FTPPID=$!
 	set +m
 
 	# If the ftp process takes more than 12 seconds, kill it
 	# XXX We are relying on the pid space not randomly biting us --
 	# XXX ftp could terminate early, and the pid could be reused
-	(sleep 12; kill -INT -$CGIPID >/dev/null 2>&1) &
+	(sleep 12; kill -INT -$FTPPID >/dev/null 2>&1) &
 }
 
 # Wait for the http process to finish, or be killed after the timeout
 waitserverlist() {
-       wait "$ftppid" 2>/dev/null
+	wait "$FTPPID" 2>/dev/null
+	[[ -s $HTTP_LISTALL ]] || return
+
+	sed -n "s,^http://"'\([[A-Za-z0-9\:_][]A-Za-z0-9:._-]*\),\1,p' \
+		$HTTP_LISTALL >$HTTP_LIST 2>/dev/null
+	: ${HTTP_SERVER:=${1%%/*}}
 }
 
 # Get several parameters from the user, and xfer files from the http server.
@@ -1398,7 +1401,7 @@ install_http() {
 		_mirror=yes
 	fi
 
-	: ${HTTP_DIR:=pub/OpenBSD/$HTTP_SETDIR}
+	: ${HTTP_DIR:=pub/bitrig/$HTTP_SETDIR}
 	ask_until "Server directory?" "${resp:-$HTTP_DIR}"
 	HTTP_DIR=$resp
 	_url_base="http://$HTTP_SERVER/$HTTP_DIR"
@@ -1420,8 +1423,6 @@ install_http() {
 		PACKAGE_PATH=$(print -r -- "$_url_base" |
 			sed -E "/\/(snapshots|[0-9]\.[0-9])\/($ARCH)\/*$/!d
 				s!!/\1/packages/$(arch -s)/!;q")
-	else
-		PACKAGE_PATH=$(print -r -- "$installedfrom/packages/")
 	fi
 }
 
@@ -1543,11 +1544,6 @@ set_timezone() {
 		TZ=${TZ#*${_zoneroot#/mnt}/}
 	fi
 
-	if [[ -s $SERVERLISTALL ]]; then
-		_tz=$(sed -n '/^TZ=/s/TZ=//p' <$SERVERLISTALL)
-		[[ -n $_tz ]] && isin "$_tz" `cat $_zonefile` && TZ=$_tz
-	fi
-
 	# If neither the base or HTTP_LIST gave a hint, and this is the
 	# early question, give up, and ask after the sets are installed
 	[[ $_zonefile = /var/tzlist && -z $TZ ]] && return
@@ -1604,7 +1600,7 @@ install_sets() {
 
 	echo
 
-	_d=$CGI_METHOD
+	_d=http
 
 	ifconfig netboot >/dev/null 2>&1 && : ${_d:=http}
 	[[ -n $(get_cddevs) ]] && { _locs="cd $_locs"; : ${_d:=cd}; }
@@ -1641,7 +1637,7 @@ install_sets() {
 }
 
 update_firmware() {
-        echo "/usr/sbin/fw_update -v" >>/mnt/etc/rc.firsttime
+	echo "/usr/sbin/fw_update -v" >>/mnt/etc/rc.firsttime
 }
 
 # Create a skeletal but useful /etc/fstab from /tmp/fstab by stripping all
@@ -1945,7 +1941,7 @@ upgrade_to64time_t() {
 # Feed the random pool some entropy before we read from it
 feed_random() {
 	{
-	    (dmesg; cat $CGI_INFO /*.conf; sysctl; route -n show; df;
+	    (dmesg; cat $HTTP_LISTALL /*.conf; sysctl; route -n show; df;
 	    ifconfig -A; hostname) >/dev/random 2>&1
 	    dd if=/mnt/var/db/host.random of=/dev/random bs=65536 count=1
 	} >/dev/null 2>&1
@@ -2051,9 +2047,9 @@ SM_ARGSX=
 
 SETDIR="$VNAME/$ARCH"
 FTPDIR="pub/bitrig/$VNAME"
-SERVERLISTALL=/tmp/serverlistall
-SERVERLISTSEC=/tmp/serverlistsec
-SERVERLIST=/tmp/serverlist
+HTTP_LISTALL=/tmp/httplistall
+HTTP_LISTERR=/tmp/httplisterr
+HTTP_LIST=/tmp/httplist
 WLANLIST=/tmp/wlanlist
 FSTABFLAG=-f
 
