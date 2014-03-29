@@ -148,6 +148,7 @@
 ./etc/rc.d/syslogd
 ./etc/rc.d/tftpd
 ./etc/rc.d/tftpproxy
+./etc/rc.d/unbound
 ./etc/rc.d/watchdogd
 ./etc/rc.d/wsmoused
 ./etc/rc.d/xdm
