@@ -37,7 +37,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-
+#include "locale/xlocale_private.h"
 #include "local.h"
 
 static int
@@ -66,7 +66,7 @@ vdprintf(int fd, const char * __restrict fmt, va_list ap)
 	f._cookie = &fd;
 	f._write = __dwrite;
 
-	if ((ret = __vfprintf(&f, fmt, ap)) < 0)
+	if ((ret = __vfprintf(&f, __get_locale(), fmt, ap)) < 0)
 		return ret;
 
 	return fflush(&f) ? EOF : ret;

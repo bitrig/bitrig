@@ -1,10 +1,14 @@
 /*	$OpenBSD: vsprintf.c,v 1.16 2009/11/09 00:18:28 kurt Exp $ */
 /*-
+ * Copyright (c) 2011 The FreeBSD Foundation
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Chris Torek.
+ *
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,26 +38,36 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include "locale/xlocale_private.h"
 #include "local.h"
 
 #if defined(APIWARN)
 __warn_references(vsprintf,
     "warning: vsprintf() is often misused, please use vsnprintf()");
+__warn_references(vsprintf_l,
+    "warning: vsprintf_l() is often misused, please use vsnprintf_l()");
 #endif
 
 int
-vsprintf(char *str, const char *fmt, __va_list ap)
+vsprintf_l(char *str, locale_t locale, const char *fmt, __va_list ap)
 {
 	int ret;
 	FILE f;
 	struct __sfileext fext;
+	FIX_LOCALE(locale);
 
 	_FILEEXT_SETUP(&f, &fext);
 	f._file = -1;
 	f._flags = __SWR | __SSTR;
 	f._bf._base = f._p = (unsigned char *)str;
 	f._bf._size = f._w = INT_MAX;
-	ret = __vfprintf(&f, fmt, ap);
+	ret = __vfprintf(&f, locale, fmt, ap);
 	*f._p = '\0';
 	return (ret);
+}
+
+int
+vsprintf(char *str, const char *fmt, __va_list ap)
+{
+	return (vsprintf_l(str, __get_locale(), fmt, ap));
 }

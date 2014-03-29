@@ -1,7 +1,12 @@
 /*	$OpenBSD: vasprintf.c,v 1.16 2009/11/09 00:18:27 kurt Exp $	*/
 
 /*
+ * Copyright (c) 2011 The FreeBSD Foundation
  * Copyright (c) 1997 Todd C. Miller <Todd.Miller@courtesan.com>
+ * All rights reserved.
+ *
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -20,15 +25,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include "locale/xlocale_private.h"
 #include "local.h"
 
 int
-vasprintf(char **str, const char *fmt, __va_list ap)
+vasprintf_l(char **str, locale_t locale, const char *fmt, __va_list ap)
 {
 	int ret;
 	FILE f;
 	struct __sfileext fext;
 	unsigned char *_base;
+	FIX_LOCALE(locale);
 
 	_FILEEXT_SETUP(&f, &fext);
 	f._file = -1;
@@ -37,7 +44,7 @@ vasprintf(char **str, const char *fmt, __va_list ap)
 	if (f._bf._base == NULL)
 		goto err;
 	f._bf._size = f._w = 127;		/* Leave room for the NUL */
-	ret = __vfprintf(&f, fmt, ap);
+	ret = __vfprintf(&f, locale, fmt, ap);
 	if (ret == -1)
 		goto err;
 	*f._p = '\0';
@@ -55,4 +62,10 @@ err:
 	*str = NULL;
 	errno = ENOMEM;
 	return (-1);
+}
+
+int
+vasprintf(char **str, const char *fmt, __va_list ap)
+{
+	return (vasprintf_l(str, __get_locale(), fmt, ap));
 }

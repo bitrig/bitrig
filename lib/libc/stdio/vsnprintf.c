@@ -1,10 +1,14 @@
 /*	$OpenBSD: vsnprintf.c,v 1.15 2009/11/09 00:18:28 kurt Exp $ */
 /*-
+ * Copyright (c) 2011 The FreeBSD Foundation
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Chris Torek.
+ *
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,15 +38,17 @@
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
+#include "locale/xlocale_private.h"
 #include "local.h"
 
 int
-vsnprintf(char *str, size_t n, const char *fmt, __va_list ap)
+vsnprintf_l(char *str, size_t n, locale_t locale, const char *fmt, __va_list ap)
 {
 	int ret;
 	char dummy;
 	FILE f;
 	struct __sfileext fext;
+	FIX_LOCALE(locale);
 
 	_FILEEXT_SETUP(&f, &fext);
 
@@ -58,7 +64,13 @@ vsnprintf(char *str, size_t n, const char *fmt, __va_list ap)
 	f._flags = __SWR | __SSTR;
 	f._bf._base = f._p = (unsigned char *)str;
 	f._bf._size = f._w = n - 1;
-	ret = __vfprintf(&f, fmt, ap);
+	ret = __vfprintf(&f, locale, fmt, ap);
 	*f._p = '\0';
 	return (ret);
+}
+
+int
+vsnprintf(char *str, size_t n, const char *fmt, __va_list ap)
+{
+	return (vsnprintf_l(str, n, __get_locale(), fmt, ap));
 }

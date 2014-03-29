@@ -52,6 +52,7 @@
 #include <unistd.h>
 #include <wchar.h>
 
+#include "locale/xlocale_private.h"
 #include "local.h"
 #include "fvwrite.h"
 
@@ -136,7 +137,7 @@ __sbprintf(FILE *fp, const char *fmt, va_list ap)
 	fake._lbfsize = 0;	/* not actually used, but Just In Case */
 
 	/* do the work, then copy any error status */
-	ret = __vfprintf(&fake, fmt, ap);
+	ret = __vfprintf(&fake, __get_locale(), fmt, ap);
 	if (ret >= 0 && __sflush(&fake))
 		ret = EOF;
 	if (fake._flags & __SERR)
@@ -253,10 +254,10 @@ static int exponent(char *, int, int);
 #define	SHORTINT	0x0040		/* short integer */
 #define	ZEROPAD		0x0080		/* zero (as opposed to blank) pad */
 #define FPT		0x0100		/* Floating point number */
-#define PTRINT		0x0200		/* (unsigned) ptrdiff_t */
-#define SIZEINT		0x0400		/* (signed) size_t */
+#define PTRDIFFT	0x0200		/* (unsigned) ptrdiff_t */
+#define SIZET		0x0400		/* (signed) size_t */
 #define CHARINT		0x0800		/* 8 bit integer */
-#define MAXINT		0x1000		/* largest integer size (intmax_t) */
+#define INTMAXT		0x1000		/* largest integer size (intmax_t) */
 
 int
 vfprintf(FILE *fp, const char *fmt0, __va_list ap)
@@ -264,13 +265,13 @@ vfprintf(FILE *fp, const char *fmt0, __va_list ap)
 	int ret;
 
 	FLOCKFILE(fp);
-	ret = __vfprintf(fp, fmt0, ap);
+	ret = __vfprintf(fp, __get_locale(), fmt0, ap);
 	FUNLOCKFILE(fp);
 	return (ret);
 }
 
 int
-__vfprintf(FILE *fp, const char *fmt0, __va_list ap)
+__vfprintf(FILE *fp, locale_t locale, const char *fmt0, __va_list ap)
 {
 	char *fmt;		/* format string */
 	int ch;			/* character from fmt */
@@ -392,20 +393,20 @@ __vfprintf(FILE *fp, const char *fmt0, __va_list ap)
 	 * argument extraction methods.
 	 */
 #define	SARG() \
-	((intmax_t)(flags&MAXINT ? GETARG(intmax_t) : \
+	((intmax_t)(flags&INTMAXT ? GETARG(intmax_t) : \
 	    flags&LLONGINT ? GETARG(long long) : \
 	    flags&LONGINT ? GETARG(long) : \
-	    flags&PTRINT ? GETARG(ptrdiff_t) : \
-	    flags&SIZEINT ? GETARG(ssize_t) : \
+	    flags&PTRDIFFT ? GETARG(ptrdiff_t) : \
+	    flags&SIZET ? GETARG(ssize_t) : \
 	    flags&SHORTINT ? (short)GETARG(int) : \
 	    flags&CHARINT ? (signed char)GETARG(int) : \
 	    GETARG(int)))
 #define	UARG() \
-	((uintmax_t)(flags&MAXINT ? GETARG(uintmax_t) : \
+	((uintmax_t)(flags&INTMAXT ? GETARG(uintmax_t) : \
 	    flags&LLONGINT ? GETARG(unsigned long long) : \
 	    flags&LONGINT ? GETARG(unsigned long) : \
-	    flags&PTRINT ? (uintptr_t)GETARG(ptrdiff_t) : /* XXX */ \
-	    flags&SIZEINT ? GETARG(size_t) : \
+	    flags&PTRDIFFT ? (uintptr_t)GETARG(ptrdiff_t) : /* XXX */ \
+	    flags&SIZET ? GETARG(size_t) : \
 	    flags&SHORTINT ? (unsigned short)GETARG(int) : \
 	    flags&CHARINT ? (unsigned char)GETARG(int) : \
 	    GETARG(unsigned int)))
@@ -610,7 +611,7 @@ reswitch:	switch (ch) {
 			}
 			goto rflag;
 		case 'j':
-			flags |= MAXINT;
+			flags |= INTMAXT;
 			goto rflag;
 		case 'l':
 			if (*fmt == 'l') {
@@ -624,10 +625,10 @@ reswitch:	switch (ch) {
 			flags |= LLONGINT;
 			goto rflag;
 		case 't':
-			flags |= PTRINT;
+			flags |= PTRDIFFT;
 			goto rflag;
 		case 'z':
-			flags |= SIZEINT;
+			flags |= SIZET;
 			goto rflag;
 		case 'c':
 #ifdef PRINTF_WIDE_CHAR
@@ -810,11 +811,11 @@ fp_common:
 				*GETARG(short *) = ret;
 			else if (flags & CHARINT)
 				*GETARG(signed char *) = ret;
-			else if (flags & PTRINT)
+			else if (flags & PTRDIFFT)
 				*GETARG(ptrdiff_t *) = ret;
-			else if (flags & SIZEINT)
+			else if (flags & SIZET)
 				*GETARG(ssize_t *) = ret;
-			else if (flags & MAXINT)
+			else if (flags & INTMAXT)
 				*GETARG(intmax_t *) = ret;
 			else
 				*GETARG(int *) = ret;
@@ -1108,14 +1109,14 @@ finish:
 #define T_LONG_DOUBLE	14
 #define TP_CHAR		15
 #define TP_VOID		16
-#define T_PTRINT	17
-#define TP_PTRINT	18
-#define T_SIZEINT	19
-#define T_SSIZEINT	20
-#define TP_SSIZEINT	21
-#define T_MAXINT	22
+#define T_PTRDIFFT	17
+#define TP_PTRDIFFT	18
+#define T_SIZET	19
+#define T_SSIZET	20
+#define TP_SSIZET	21
+#define T_INTMAXT	22
 #define T_MAXUINT	23
-#define TP_MAXINT	24
+#define TP_INTMAXT	24
 #define T_CHAR		25
 #define T_U_CHAR	26
 #define T_WINT		27
@@ -1157,18 +1158,18 @@ __find_arguments(const char *fmt0, va_list ap, union arg **argtable,
 	typetable[nextarg++] = type)
 
 #define	ADDSARG() \
-        ((flags&MAXINT) ? ADDTYPE(T_MAXINT) : \
-	    ((flags&PTRINT) ? ADDTYPE(T_PTRINT) : \
-	    ((flags&SIZEINT) ? ADDTYPE(T_SSIZEINT) : \
+        ((flags&INTMAXT) ? ADDTYPE(T_INTMAXT) : \
+	    ((flags&PTRDIFFT) ? ADDTYPE(T_PTRDIFFT) : \
+	    ((flags&SIZET) ? ADDTYPE(T_SSIZET) : \
 	    ((flags&LLONGINT) ? ADDTYPE(T_LLONG) : \
 	    ((flags&LONGINT) ? ADDTYPE(T_LONG) : \
 	    ((flags&SHORTINT) ? ADDTYPE(T_SHORT) : \
 	    ((flags&CHARINT) ? ADDTYPE(T_CHAR) : ADDTYPE(T_INT))))))))
 
 #define	ADDUARG() \
-        ((flags&MAXINT) ? ADDTYPE(T_MAXUINT) : \
-	    ((flags&PTRINT) ? ADDTYPE(T_PTRINT) : \
-	    ((flags&SIZEINT) ? ADDTYPE(T_SIZEINT) : \
+        ((flags&INTMAXT) ? ADDTYPE(T_MAXUINT) : \
+	    ((flags&PTRDIFFT) ? ADDTYPE(T_PTRDIFFT) : \
+	    ((flags&SIZET) ? ADDTYPE(T_SIZET) : \
 	    ((flags&LLONGINT) ? ADDTYPE(T_U_LLONG) : \
 	    ((flags&LONGINT) ? ADDTYPE(T_U_LONG) : \
 	    ((flags&SHORTINT) ? ADDTYPE(T_U_SHORT) : \
@@ -1268,7 +1269,7 @@ reswitch:	switch (ch) {
 			}
 			goto rflag;
 		case 'j':
-			flags |= MAXINT;
+			flags |= INTMAXT;
 			goto rflag;
 		case 'l':
 			if (*fmt == 'l') {
@@ -1282,10 +1283,10 @@ reswitch:	switch (ch) {
 			flags |= LLONGINT;
 			goto rflag;
 		case 't':
-			flags |= PTRINT;
+			flags |= PTRDIFFT;
 			goto rflag;
 		case 'z':
-			flags |= SIZEINT;
+			flags |= SIZET;
 			goto rflag;
 		case 'c':
 #ifdef PRINTF_WIDE_CHAR
@@ -1324,12 +1325,12 @@ reswitch:	switch (ch) {
 				ADDTYPE(TP_LONG);
 			else if (flags & SHORTINT)
 				ADDTYPE(TP_SHORT);
-			else if (flags & PTRINT)
-				ADDTYPE(TP_PTRINT);
-			else if (flags & SIZEINT)
-				ADDTYPE(TP_SSIZEINT);
-			else if (flags & MAXINT)
-				ADDTYPE(TP_MAXINT);
+			else if (flags & PTRDIFFT)
+				ADDTYPE(TP_PTRDIFFT);
+			else if (flags & SIZET)
+				ADDTYPE(TP_SSIZET);
+			else if (flags & INTMAXT)
+				ADDTYPE(TP_INTMAXT);
 			else
 				ADDTYPE(TP_INT);
 			continue;	/* no output */
@@ -1431,28 +1432,28 @@ done:
 		case TP_VOID:
 			(*argtable)[n].pvoidarg = va_arg(ap, void *);
 			break;
-		case T_PTRINT:
+		case T_PTRDIFFT:
 			(*argtable)[n].ptrdiffarg = va_arg(ap, ptrdiff_t);
 			break;
-		case TP_PTRINT:
+		case TP_PTRDIFFT:
 			(*argtable)[n].pptrdiffarg = va_arg(ap, ptrdiff_t *);
 			break;
-		case T_SIZEINT:
+		case T_SIZET:
 			(*argtable)[n].sizearg = va_arg(ap, size_t);
 			break;
-		case T_SSIZEINT:
+		case T_SSIZET:
 			(*argtable)[n].ssizearg = va_arg(ap, ssize_t);
 			break;
-		case TP_SSIZEINT:
+		case TP_SSIZET:
 			(*argtable)[n].pssizearg = va_arg(ap, ssize_t *);
 			break;
-		case T_MAXINT:
+		case T_INTMAXT:
 			(*argtable)[n].intmaxarg = va_arg(ap, intmax_t);
 			break;
 		case T_MAXUINT:
 			(*argtable)[n].uintmaxarg = va_arg(ap, uintmax_t);
 			break;
-		case TP_MAXINT:
+		case TP_INTMAXT:
 			(*argtable)[n].pintmaxarg = va_arg(ap, intmax_t *);
 			break;
 #ifdef PRINTF_WIDE_CHAR

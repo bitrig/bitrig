@@ -1,10 +1,15 @@
 /*	$OpenBSD: sprintf.c,v 1.17 2011/05/30 18:48:33 martynas Exp $ */
+
 /*-
+ * Copyright (c) 2011 The FreeBSD Foundation
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Chris Torek.
+ *
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,11 +40,14 @@
 #include <string.h>
 #include <stdarg.h>
 #include <limits.h>
+#include "locale/xlocale_private.h"
 #include "local.h"
 
 #if defined(APIWARN)
 __warn_references(sprintf,
     "warning: sprintf() is often misused, please use snprintf()");
+__warn_references(sprintf_l,
+    "warning: sprintf_l() is often misused, please use snprintf_l()");
 #endif
 
 /* PRINTFLIKE2 */
@@ -48,17 +56,22 @@ sprintf(char *str, const char *fmt, ...)
 {
 	int ret;
 	va_list ap;
-	FILE f;
-	struct __sfileext fext;
 
-	_FILEEXT_SETUP(&f, &fext);
-	f._file = -1;
-	f._flags = __SWR | __SSTR;
-	f._bf._base = f._p = (unsigned char *)str;
-	f._bf._size = f._w = INT_MAX;
 	va_start(ap, fmt);
-	ret = __vfprintf(&f, fmt, ap);
+	ret = vsprintf(str, fmt, ap);
 	va_end(ap);
-	*f._p = '\0';
+	return (ret);
+}
+
+int
+sprintf_l(char *str, locale_t locale, const char *fmt, ...)
+{
+	int ret;
+	va_list ap;
+	FIX_LOCALE(locale);
+
+	va_start(ap, fmt);
+	ret = vsprintf_l(str, locale, fmt, ap);
+	va_end(ap);
 	return (ret);
 }

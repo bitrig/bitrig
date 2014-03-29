@@ -34,11 +34,12 @@
 #include <string.h>
 #include <wchar.h>
 #include <stdarg.h>
+#include "locale/xlocale_private.h"
 #include "local.h"
 
 int
-vswprintf(wchar_t * __restrict s, size_t n, const wchar_t * __restrict fmt,
-    __va_list ap)
+vswprintf_l(wchar_t * __restrict s, size_t n, locale_t locale,
+    const wchar_t * __restrict fmt, __va_list ap)
 {
 	mbstate_t mbs;
 	FILE f;
@@ -46,6 +47,7 @@ vswprintf(wchar_t * __restrict s, size_t n, const wchar_t * __restrict fmt,
 	int ret, sverrno;
 	size_t nwc;
 	struct __sfileext fext;
+	FIX_LOCALE(locale);
 
 	if (n == 0) {
 		errno = EINVAL;
@@ -61,7 +63,7 @@ vswprintf(wchar_t * __restrict s, size_t n, const wchar_t * __restrict fmt,
 		return (-1);
 	}
 	f._bf._size = f._w = 127;		/* Leave room for the NUL */
-	ret = __vfwprintf(&f, fmt, ap);
+	ret = __vfwprintf(&f, locale, fmt, ap);
 	if (ret < 0) {
 		sverrno = errno;
 		free(f._bf._base);
@@ -93,4 +95,10 @@ vswprintf(wchar_t * __restrict s, size_t n, const wchar_t * __restrict fmt,
 	}
 
 	return (ret);
+}
+
+int
+vswprintf(wchar_t *s, size_t n, const wchar_t *fmt, __va_list ap)
+{
+	return (vswprintf_l(s, n, __get_locale(), fmt, ap));
 }
