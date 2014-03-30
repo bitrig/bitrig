@@ -37,9 +37,11 @@ typedef struct pmap *pmap_t;
 void pmap_kenter_cache(vaddr_t va, paddr_t pa, vm_prot_t prot, int cacheable);
 /* cache flags */
 #define PMAP_CACHE_DEFAULT	0	/* WB cache managed mem, devices not */
-#define PMAP_CACHE_CI		1	/* cache inhibit */
-#define PMAP_CACHE_WT		2	/* writethru */
-#define PMAP_CACHE_WB		3	/* writeback */
+#define PMAP_CACHE_CI		(PMAP_MD0)		/* cache inhibit */
+#define PMAP_CACHE_WT		(PMAP_MD1)	 	/* writethru */
+#define PMAP_CACHE_WB		(PMAP_MD1|PMAP_MD0)	/* writeback */
+#define PMAP_CACHE_PTE		(PMAP_MD2)	/* PTE mapping */
+#define PMAP_CACHE_BITS		(PMAP_MD0|PMAP_MD1|PMAP_MD2)	
 
 #define PG_PMAP_MOD     PG_PMAP0
 #define PG_PMAP_REF     PG_PMAP1

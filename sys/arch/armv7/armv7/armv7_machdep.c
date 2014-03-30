@@ -519,8 +519,8 @@ initarm(void *arg0, void *arg1, void *arg2)
 	pmap_bootstrap(KERNEL_VM_BASE, esym, physical_start, physical_end);
 
 	printf("success thus far\n");
-	while(1)
-		;
+//	while(1)
+//		;
 
 	/*
 	 * Okay, the kernel starts 2MB in from the bottom of physical

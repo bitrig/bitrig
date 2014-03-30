@@ -53,6 +53,9 @@
 #define L2_S_S		(1<<10)	/* shareable Section */
 #define L2_S_nG		(1<<11)	/* notGlobal */
 #define L2_S_AP(ap)	((((ap) & 0x4) << 9) | (((ap) & 3) << 4))
+#define L2_S_AP0	(1<<4)
+#define L2_S_AP1	(1<<5)
+#define L2_S_AP2	(1<<9)
 #define L2_S_TEX(x)	(((x)&0x7)<<6)
 #define L2_TABLE_SIZE	(1024)
 
