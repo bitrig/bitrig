@@ -320,9 +320,12 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	}
 
 	/*
-	 * Insert into table.
+	 * Insert into table, if this mapping said it needed to be mapped
+	 * now.
 	 */
-	pte_insert(pm, pted);
+	if (flags & (VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED)) {
+		pte_insert(pm, pted);
+	}
 
 	if (prot & VM_PROT_EXECUTE) {
 		if (pg != NULL) {
@@ -495,6 +498,7 @@ _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags, int cache)
 			cache = PMAP_CACHE_CI;
 	}
 	
+	flags |= PMAP_WIRED; /* kernel mappings are always wired. */
 	/* Calculate PTE */
 	pmap_fill_pte(pm, va, pa, pted, prot, flags, cache);
 	   
@@ -504,9 +508,6 @@ _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags, int cache)
 	 * so map the page!
 	 */
 	pte_insert(pm, pted);
-
-	pted->pted_va |= PTED_VA_WIRED_M;
-
 
 	splx(s);
 }
@@ -598,6 +599,29 @@ void
 pmap_fill_pte(pmap_t pm, vaddr_t va, paddr_t pa, struct pte_desc *pted,
     vm_prot_t prot, int flags, int cache)
 {
+	pted->pted_va = va;
+
+	/* NOTE: uses TEX remap */
+	switch (cache) {
+	case PMAP_CACHE_WB:
+		break;
+	case PMAP_CACHE_WT:
+		break;
+	case PMAP_CACHE_CI:
+		break;
+	case PMAP_CACHE_PTE:
+		break;
+	default:
+		panic("pmap_fill_pte:invalid cache mode");
+	}
+	pted->pted_va |= cache;
+	
+	pted->pted_pte = pa & PTE_RPGN;
+
+	pted->pted_va |= prot & (VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE);
+
+	if (flags & PMAP_WIRED)
+		pted->pted_va |= PTED_VA_WIRED_M;
 }
 
 
@@ -1255,12 +1279,73 @@ pte_spill_v(pmap_t pm, u_int32_t va, u_int32_t dsisr, int exec_fault)
 }
 #endif
 
+static uint32_t ap_bits_user [16] = {
+	[VM_PROT_NONE]				= 0, 
+	[VM_PROT_READ]				= L2_S_AP1|L2_S_AP1|L2_S_XN, 
+	[VM_PROT_WRITE]				= L2_S_AP1|L2_S_XN, 
+	[VM_PROT_WRITE|VM_PROT_READ]		= L2_S_AP1|L2_S_XN, 
+	[VM_PROT_EXECUTE]			= 0, 
+	[VM_PROT_EXECUTE|VM_PROT_READ]			= L2_S_AP1, 
+	[VM_PROT_EXECUTE|VM_PROT_WRITE]			= L2_S_AP2|L2_S_AP1, 
+	[VM_PROT_EXECUTE|VM_PROT_WRITE|VM_PROT_READ]	= L2_S_AP2|L2_S_AP1, 
+};
+
+static uint32_t ap_bits_kern [16] = {
+	[VM_PROT_NONE]				= 0, 
+	[VM_PROT_READ]				= L2_S_AP2|L2_S_XN, 
+	[VM_PROT_WRITE]				= L2_S_XN, 
+	[VM_PROT_WRITE|VM_PROT_READ]		= L2_S_XN, 
+	[VM_PROT_EXECUTE]			= 0, 
+	[VM_PROT_EXECUTE|VM_PROT_READ]			= L2_S_AP2, 
+	[VM_PROT_EXECUTE|VM_PROT_WRITE]			= 0,
+	[VM_PROT_EXECUTE|VM_PROT_WRITE|VM_PROT_READ]	= 0
+};
+
 void
 pte_insert(pmap_t pm, struct pte_desc *pted)
 {
 	/* put entry into table */
 	/* need to deal with ref/change here */
+	uint32_t pte, cache_bits, access_bits;
+	struct pmapvp2 *vp2;
+	uint32_t *l2;
 
+	/* NOTE: uses TEX remap */
+	switch (pted->pted_va & PMAP_CACHE_BITS) {
+	case PMAP_CACHE_WB:
+		cache_bits = L2_MODE_MEMORY;
+		break;
+	case PMAP_CACHE_WT: /* for the momemnt treating this as uncached */
+		cache_bits = L2_MODE_DISPLAY;
+		break;
+	case PMAP_CACHE_CI:
+		cache_bits = L2_MODE_DEV;
+		break;
+	case PMAP_CACHE_PTE:
+		cache_bits = L2_MODE_PTE;
+		break;
+	default:
+		panic("pte_insert:invalid cache mode");
+	}
+
+	if (pm == pmap_kernel()) {
+		access_bits = ap_bits_kern[pted->pted_va & VM_PROT_ALL];
+		access_bits |= L2_S_AP0;
+	} else {
+		access_bits = ap_bits_user[pted->pted_va & VM_PROT_ALL];
+		access_bits |= L2_S_AP0;
+	}
+
+	pte =  pted->pted_pte | cache_bits | access_bits;
+
+	vp2 = pmap_kernel()->pm_vp[VP_IDX1(pted->pted_va)];
+	if (vp2->l2[VP_IDX2(pted->pted_va)] == NULL) {
+		panic("have a pted, but missing the l2 for %x va pmap %x",
+		    pted->pted_va, pm);
+	}
+	l2 = vp2->l2[VP_IDX2(pted->pted_va)];
+	l2[VP_IDX3(pted->pted_va)] = pte;
+	/* tlbie (pted->pted_va &PTE_RPN); */
 }
 
 int     pmap_fault_fixup(pmap_t pm0, vaddr_t v0, vm_prot_t p0, int i0)
@@ -1285,8 +1370,8 @@ void    pmap_map_section(vaddr_t l1_addr, vaddr_t va, paddr_t pa, int flags, int
 	idx1 = VP_IDX1(va);
 	l1[idx1] = (pa & L1_S_RPGN) | L1_S_AP(ap_flag);
 }
-void    pmap_map_entry(vaddr_t v0, vaddr_t v1, paddr_t p0, int i0, int i1) {}
 
+void    pmap_map_entry(vaddr_t v0, vaddr_t v1, paddr_t p0, int i0, int i1) {}
 vsize_t pmap_map_chunk(vaddr_t v0, vaddr_t v1, paddr_t p0, vsize_t s0, int prot, int cache)
 {
 	return 0;
