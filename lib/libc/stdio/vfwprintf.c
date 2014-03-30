@@ -34,7 +34,8 @@
 /*
  * Actual wprintf innards.
  *
- * This code is large and complicated...
+ * Avoid making gratuitous changes to this source file; it should be kept
+ * as close as possible to vfprintf.c for ease of maintenance.
  */
 
 #include <sys/types.h>
@@ -406,7 +407,7 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 	int expsize;		/* character count for expstr */
 	int ndig;		/* actual number of digits returned by dtoa */
 	wchar_t expstr[MAXEXPDIG+2];	/* buffer for exponent string: e+ZZZ */
-	char *dtoaresult = NULL;
+	char *dtoaresult = NULL;	/* buffer allocated by dtoa */
 #endif
 
 	uintmax_t _umax;	/* integer arguments %[diouxX] */
@@ -419,10 +420,10 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 	wchar_t buf[BUF];	/* buffer with space for digits of uintmax_t */
 	wchar_t ox[2];		/* space for 0x; ox[1] is either x, X, or \0 */
 	union arg *argtable;	/* args, built due to positional arg */
-	union arg statargtable[STATIC_ARG_TBL_SIZE];
+	union arg statargtable [STATIC_ARG_TBL_SIZE];
 	int nextarg;		/* 1-based argument index */
 	va_list orgap;		/* original argument pointer */
-	wchar_t *convbuf;	/* buffer for multibyte to wide conversion */
+	wchar_t *convbuf;	/* wide to multibyte conversion result */
 
 	static const char xdigs_lower[16] = "0123456789abcdef";
 	static const char xdigs_upper[16] = "0123456789ABCDEF";
@@ -489,10 +490,10 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 	(val) += to_digit((dig)); \
 } while (0)
 
-	 /*
-	  * Get * arguments, including the form *nn$.  Preserve the nextarg
-	  * that the argument can be gotten once the type is determined.
-	  */
+	/*
+	 * Get * arguments, including the form *nn$.  Preserve the nextarg
+	 * that the argument can be gotten once the type is determined.
+	 */
 #define GETASTER(val) \
 	n2 = 0; \
 	cp = fmt; \
@@ -721,7 +722,7 @@ reswitch:	switch (ch) {
 			}
 			if (prec >= 0)
 				prec++;
-			if (dtoaresult)
+			if (dtoaresult != NULL)
 				__freedtoa(dtoaresult);
 			if (flags & LONGDBL) {
 				fparg.ldbl = GETARG(long double);
@@ -746,7 +747,7 @@ reswitch:	switch (ch) {
 				prec = dtoaend - dtoaresult;
 			if (expt == INT_MAX)
 				ox[1] = '\0';
-			if (convbuf) {
+			if (convbuf != NULL) {
 				free(convbuf);
 				convbuf = NULL;
 			}
@@ -770,12 +771,12 @@ reswitch:	switch (ch) {
 		case 'g':
 		case 'G':
 			expchar = ch - ('g' - 'e');
- 			if (prec == 0)
- 				prec = 1;
+			if (prec == 0)
+				prec = 1;
 fp_begin:
 			if (prec < 0)
 				prec = DEFPREC;
-			if (dtoaresult)
+			if (dtoaresult != NULL)
 				__freedtoa(dtoaresult);
 			if (flags & LONGDBL) {
 				fparg.ldbl = GETARG(long double);
@@ -797,8 +798,8 @@ fp_begin:
 				}
 				if (expt == 9999)
 					expt = INT_MAX;
- 			}
-			if (convbuf) {
+			}
+			if (convbuf != NULL) {
 				free(convbuf);
 				convbuf = NULL;
 			}
@@ -815,12 +816,12 @@ fp_common:
 					sign = '\0';
 				} else
 					cp = (ch >= 'a') ? L"inf" : L"INF";
- 				size = 3;
+				size = 3;
 				flags &= ~ZEROPAD;
- 				break;
- 			}
+				break;
+			}
 			flags |= FPT;
- 			if (ch == 'g' || ch == 'G') {
+			if (ch == 'g' || ch == 'G') {
 				if (expt > -4 && expt <= prec) {
 					/* Make %[gG] smell like %[fF] */
 					expchar = '\0';
@@ -838,12 +839,12 @@ fp_common:
 					if (!(flags & ALT))
 						prec = ndig;
 				}
- 			}
+			}
 			if (expchar) {
 				expsize = exponent(expstr, expt - 1, expchar);
 				size = expsize + prec;
 				if (prec > 1 || flags & ALT)
- 					++size;
+					++size;
 			} else {
 				/* space for digits before decimal point */
 				if (expt > 0)
@@ -859,6 +860,11 @@ fp_common:
 			break;
 #endif /* FLOATING_POINT */
 		case 'n':
+			/*
+			 * Assignment-like behavior is specified if the
+			 * value overflows or is otherwise unrepresentable.
+			 * C99 says to use `signed char' for %hhn conversions.
+			 */
 			if (flags & LLONGINT)
 				*GETARG(long long *) = ret;
 			else if (flags & LONGINT)
@@ -908,7 +914,7 @@ fp_common:
 				char *mbsarg;
 				if ((mbsarg = GETARG(char *)) == NULL)
 					mbsarg = "(null)";
-				if (convbuf) {
+				if (convbuf != NULL) {
 					free(convbuf);
 					convbuf = NULL;
 				}
@@ -1047,7 +1053,7 @@ number:			if ((dprec = prec) >= 0)
 		if (sign)
 			realsz++;
 		if (ox[1])
-			realsz+= 2;
+			realsz += 2;
 
 		/* right-adjusting blank padding */
 		if ((flags & (LADJUST|ZEROPAD)) == 0)
@@ -1145,10 +1151,10 @@ overflow:
 	ret = -1;
 
 finish:
-	if (convbuf)
+	if (convbuf != NULL)
 		free(convbuf);
 #ifdef FLOATING_POINT
-	if (dtoaresult)
+	if (dtoaresult != NULL)
 		__freedtoa(dtoaresult);
 #endif
 	if (argtable != NULL && argtable != statargtable)
