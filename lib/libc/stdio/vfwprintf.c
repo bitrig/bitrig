@@ -40,7 +40,6 @@
 #include <sys/types.h>
 
 #include <errno.h>
-#include <langinfo.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -59,6 +58,100 @@ static wint_t	__xfputwc(wchar_t, FILE *, locale_t);
 
 #define	CHAR	wchar_t
 #include "printfcommon.h"
+
+struct grouping_state {
+	wchar_t thousands_sep;	/* locale-specific thousands separator */
+	const char *grouping;	/* locale-specific numeric grouping rules */
+	int lead;		/* sig figs before decimal or group sep */
+	int nseps;		/* number of group separators with ' */
+	int nrepeats;		/* number of repeats of the last group */
+};
+
+static inline wchar_t
+get_decpt(locale_t locale)
+{
+	mbstate_t mbs;
+	wchar_t decpt;
+	int nconv;
+
+	memset(&mbs, 0, sizeof(mbs));
+	nconv = mbrtowc(&decpt, localeconv_l(locale)->decimal_point, MB_CUR_MAX, &mbs);
+	if (nconv == (size_t)-1 || nconv == (size_t)-2)
+		decpt = '.';    /* failsafe */
+	return (decpt);
+}
+
+static inline wchar_t
+get_thousep(locale_t locale)
+{
+	mbstate_t mbs;
+	wchar_t thousep;
+	int nconv;
+
+	memset(&mbs, 0, sizeof(mbs));
+	nconv = mbrtowc(&thousep, localeconv_l(locale)->thousands_sep,
+	    MB_CUR_MAX, &mbs);
+	if (nconv == (size_t)-1 || nconv == (size_t)-2)
+		thousep = '\0';    /* failsafe */
+	return (thousep);
+}
+
+/*
+ * Initialize the thousands' grouping state in preparation to print a
+ * number with ndigits digits. This routine returns the total number
+ * of wide characters that will be printed.
+ */
+static int
+grouping_init(struct grouping_state *gs, int ndigits, locale_t locale)
+{
+
+	gs->grouping = localeconv_l(locale)->grouping;
+	gs->thousands_sep = get_thousep(locale);
+
+	gs->nseps = gs->nrepeats = 0;
+	gs->lead = ndigits;
+	while (*gs->grouping != CHAR_MAX) {
+		if (gs->lead <= *gs->grouping)
+			break;
+		gs->lead -= *gs->grouping;
+		if (*(gs->grouping+1)) {
+			gs->nseps++;
+			gs->grouping++;
+		} else
+			gs->nrepeats++;
+	}
+	return (gs->nseps + gs->nrepeats);
+}
+
+/*
+ * Print a number with thousands' separators.
+ */
+static int
+grouping_print(struct grouping_state *gs, struct io_state *iop,
+	       const CHAR *cp, const CHAR *ep, locale_t locale)
+{
+	const CHAR *cp0 = cp;
+
+	if (io_printandpad(iop, cp, ep, gs->lead, zeroes, locale))
+		return (-1);
+	cp += gs->lead;
+	while (gs->nseps > 0 || gs->nrepeats > 0) {
+		if (gs->nrepeats > 0)
+			gs->nrepeats--;
+		else {
+			gs->grouping--;
+			gs->nseps--;
+		}
+		if (io_print(iop, &gs->thousands_sep, 1, locale))
+			return (-1);
+		if (io_printandpad(iop, cp, ep, *gs->grouping, zeroes, locale))
+			return (-1);
+		cp += *gs->grouping;
+	}
+	if (cp > ep)
+		cp = ep;
+	return (cp - cp0);
+}
 
 /*
  * Flush out all the vectors defined by the given uio,
@@ -284,6 +377,8 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 	int width;		/* width from format (%8d), or 0 */
 	int prec;		/* precision from format; <0 for N/A */
 	wchar_t sign;		/* sign prefix (' ', '+', '-', or \0) */
+	struct grouping_state gs; /* thousands' grouping info */
+
 #ifdef FLOATING_POINT
 	/*
 	 * We can decompose the printed representation of floating
@@ -299,7 +394,7 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 	 * D:	expchar holds this character; '\0' if no exponent, e.g. %f
 	 * F:	at least two digits for decimal, at least one digit for hex
 	 */
-	char *decimal_point = NULL;
+	wchar_t decimal_point;	/* locale specific decimal point */
 	int signflag;		/* true if float is negative */
 	union {			/* floating point arguments %[aAeEfFgG] */
 		double dbl;
@@ -309,7 +404,6 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 	char expchar;		/* exponent character: [eEpP\0] */
 	char *dtoaend;		/* pointer to end of converted digits */
 	int expsize;		/* character count for expstr */
-	int lead;		/* sig figs before decimal or group sep */
 	int ndig;		/* actual number of digits returned by dtoa */
 	wchar_t expstr[MAXEXPDIG+2];	/* buffer for exponent string: e+ZZZ */
 	char *dtoaresult = NULL;
@@ -436,6 +530,9 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 	va_copy(orgap, ap);
 	io_init(&io, fp);
 	ret = 0;
+#ifdef FLOATING_POINT
+	decimal_point = get_decpt(locale);
+#endif
 	convbuf = NULL;
 
 	/*
@@ -459,6 +556,7 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 		dprec = 0;
 		width = 0;
 		prec = -1;
+		gs.grouping = NULL;
 		sign = '\0';
 		ox[1] = '\0';
 
@@ -475,9 +573,6 @@ reswitch:	switch (ch) {
 			goto rflag;
 		case '#':
 			flags |= ALT;
-			goto rflag;
-		case '\'':
-			/* grouping not implemented */
 			goto rflag;
 		case '*':
 			/*
@@ -498,6 +593,9 @@ reswitch:	switch (ch) {
 			goto rflag;
 		case '+':
 			sign = '+';
+			goto rflag;
+		case '\'':
+			flags |= GROUPING;
 			goto rflag;
 		case '.':
 			if ((ch = *fmt++) == '*') {
@@ -755,7 +853,8 @@ fp_common:
 				/* space for decimal pt and following digits */
 				if (prec || flags & ALT)
 					size += prec + 1;
-				lead = expt;
+				if ((flags & GROUPING) && expt > 0)
+					size += grouping_init(&gs, expt, locale);
 			}
 			break;
 #endif /* FLOATING_POINT */
@@ -856,6 +955,7 @@ hex:			_umax = UARG();
 			if (flags & ALT && _umax != 0)
 				ox[1] = ch;
 
+			flags &= ~GROUPING;
 			/* unsigned conversions */
 nosign:			sign = '\0';
 			/*
@@ -915,6 +1015,8 @@ number:			if ((dprec = prec) >= 0)
 			if (size > BUF)	/* should never happen */
 				abort();
 		skipsize:
+			if ((flags & GROUPING) && size != 0)
+				size += grouping_init(&gs, size, locale);
 			break;
 		default:	/* "%?" prints ?, unless ? is NUL */
 			if (ch == '\0')
@@ -963,36 +1065,48 @@ number:			if ((dprec = prec) >= 0)
 		if ((flags & (LADJUST|ZEROPAD)) == ZEROPAD)
 			PAD(width - realsz, zeroes);
 
-		/* leading zeroes from decimal precision */
-		PAD(dprec - size, zeroes);
-
 		/* the string or number proper */
 #ifdef FLOATING_POINT
 		if ((flags & FPT) == 0) {
-			PRINT(cp, size);
+#endif
+			/* leading zeroes from decimal precision */
+			PAD(dprec - size, zeroes);
+			if (gs.grouping) {
+				if (grouping_print(&gs, &io, cp, buf+BUF, locale) < 0)
+					goto error;
+			} else {
+				PRINT(cp, size);
+			}
+#ifdef FLOATING_POINT
 		} else {	/* glue together f_p fragments */
-			if (decimal_point == NULL)
-				decimal_point = nl_langinfo(RADIXCHAR);
 			if (!expchar) {	/* %[fF] or sufficiently short %[gG] */
 				if (expt <= 0) {
 					PRINT(zeroes, 1);
 					if (prec || flags & ALT)
-						PRINT(decimal_point, 1);
+						PRINT(&decimal_point, 1);
 					PAD(-expt, zeroes);
 					/* already handled initial 0's */
 					prec += expt;
- 				} else {
-					PRINTANDPAD(cp, convbuf + ndig,
-					    lead, zeroes);
-					cp += lead;
+				} else {
+					if (gs.grouping) {
+						n = grouping_print(&gs, &io,
+						    cp, convbuf + ndig, locale);
+						if (n < 0)
+							goto error;
+						cp += n;
+					} else {
+						PRINTANDPAD(cp, convbuf + ndig,
+						    expt, zeroes);
+						cp += expt;
+					}
 					if (prec || flags & ALT)
-						PRINT(decimal_point, 1);
+						PRINT(&decimal_point, 1);
 				}
 				PRINTANDPAD(cp, convbuf + ndig, prec, zeroes);
 			} else {	/* %[eE] or sufficiently long %[gG] */
 				if (prec > 1 || flags & ALT) {
 					buf[0] = *cp++;
-					buf[1] = *decimal_point;
+					buf[1] = decimal_point;
 					PRINT(buf, 2);
 					PRINT(cp, ndig-1);
 					PAD(prec - ndig, zeroes);
