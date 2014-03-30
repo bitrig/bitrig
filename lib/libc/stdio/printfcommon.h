@@ -58,10 +58,8 @@ static int exponent(CHAR *, int, CHAR);
 
 #endif /* FLOATING_POINT */
 
-#if 0 /* XXX pedro { */
 static CHAR	*__ujtoa(uintmax_t, CHAR *, int, int, const char *);
 static CHAR	*__ultoa(u_long, CHAR *, int, int, const char *);
-#endif /* XXX pedro } */
 
 #define NIOV 8
 struct io_state {
@@ -156,7 +154,6 @@ io_flush(struct io_state *iop, locale_t locale)
 	return (__sprint(iop->fp, &iop->uio, locale));
 }
 
-#if 0 /* XXX pedro { */
 /*
  * Convert an unsigned long to ASCII for printf purposes, returning
  * a pointer to the first character of the string representation.
@@ -267,7 +264,6 @@ __ujtoa(uintmax_t val, CHAR *endp, int base, int octzero, const char *xdigs)
 	}
 	return (cp);
 }
-#endif /* XXX pedro } */
 
 #ifdef FLOATING_POINT
 static int

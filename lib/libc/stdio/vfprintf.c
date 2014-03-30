@@ -338,11 +338,11 @@ __vfprintf(FILE *fp, locale_t locale, const char *fmt0, __va_list ap)
 	char expstr[MAXEXPDIG+2];	/* buffer for exponent string: e+ZZZ */
 	char *dtoaresult = NULL;	/* buffer allocated by dtoa */
 #endif
-
-	uintmax_t _umax;	/* integer arguments %[diouxX] */
-	enum { OCT, DEC, HEX } base;	/* base for %[diouxX] conversion */
-	int dprec;		/* a copy of prec if %[diouxX], 0 otherwise */
-	int realsz;		/* field size expanded by dprec */
+	u_long	ulval;		/* integer arguments %[diouxX] */
+	uintmax_t ujval;	/* %j, %ll, %q, %t, %z integers */
+	int base;		/* base for [diouxX] conversion */
+	int dprec;		/* a copy of prec if [diouxX], 0 otherwise */
+	int realsz;		/* field size expanded by dprec, sign, etc */
 	int size;		/* size of converted field or string */
 	const char *xdigs;     	/* digits for %[xX] conversion */
 	struct io_state io;	/* I/O buffering state */
@@ -388,23 +388,26 @@ __vfprintf(FILE *fp, locale_t locale, const char *fmt0, __va_list ap)
 	 * argument extraction methods.
 	 */
 #define	SARG() \
-	((intmax_t)(flags&INTMAXT ? GETARG(intmax_t) : \
-	    flags&LLONGINT ? GETARG(long long) : \
-	    flags&LONGINT ? GETARG(long) : \
-	    flags&PTRDIFFT ? GETARG(ptrdiff_t) : \
-	    flags&SIZET ? GETARG(ssize_t) : \
-	    flags&SHORTINT ? (short)GETARG(int) : \
-	    flags&CHARINT ? (signed char)GETARG(int) : \
-	    GETARG(int)))
+	(flags&LONGINT ? GETARG(long) : \
+	    flags&SHORTINT ? (long)(short)GETARG(int) : \
+	    flags&CHARINT ? (long)(signed char)GETARG(int) : \
+	    (long)GETARG(int))
 #define	UARG() \
-	((uintmax_t)(flags&INTMAXT ? GETARG(uintmax_t) : \
-	    flags&LLONGINT ? GETARG(unsigned long long) : \
-	    flags&LONGINT ? GETARG(unsigned long) : \
-	    flags&PTRDIFFT ? (uintptr_t)GETARG(ptrdiff_t) : /* XXX */ \
-	    flags&SIZET ? GETARG(size_t) : \
-	    flags&SHORTINT ? (unsigned short)GETARG(int) : \
-	    flags&CHARINT ? (unsigned char)GETARG(int) : \
-	    GETARG(unsigned int)))
+	(flags&LONGINT ? GETARG(u_long) : \
+	    flags&SHORTINT ? (u_long)(u_short)GETARG(int) : \
+	    flags&CHARINT ? (u_long)(u_char)GETARG(int) : \
+	    (u_long)GETARG(u_int))
+#define	INTMAX_SIZE	(INTMAXT|SIZET|PTRDIFFT|LLONGINT)
+#define SJARG() \
+	(flags&INTMAXT ? GETARG(intmax_t) : \
+	    flags&SIZET ? (intmax_t)GETARG(ssize_t) : \
+	    flags&PTRDIFFT ? (intmax_t)GETARG(ptrdiff_t) : \
+	    (intmax_t)GETARG(long long))
+#define	UJARG() \
+	(flags&INTMAXT ? GETARG(uintmax_t) : \
+	    flags&SIZET ? (uintmax_t)GETARG(size_t) : \
+	    flags&PTRDIFFT ? (uintmax_t)GETARG(ptrdiff_t) : \
+	    (uintmax_t)GETARG(unsigned long long))
 
 	/*
 	 * Append a digit to a value and check for overflow.
@@ -597,8 +600,8 @@ reswitch:	switch (ch) {
 			goto rflag;
 #endif
 		case 'h':
-			if (*fmt == 'h') {
-				fmt++;
+			if (flags & SHORTINT) {
+				flags &= ~SHORTINT;
 				flags |= CHARINT;
 			} else {
 				flags |= SHORTINT;
@@ -608,8 +611,8 @@ reswitch:	switch (ch) {
 			flags |= INTMAXT;
 			goto rflag;
 		case 'l':
-			if (*fmt == 'l') {
-				fmt++;
+			if (flags & LONGINT) {
+				flags &= ~LONGINT;
 				flags |= LLONGINT;
 			} else {
 				flags |= LONGINT;
@@ -654,12 +657,20 @@ reswitch:	switch (ch) {
 			/*FALLTHROUGH*/
 		case 'd':
 		case 'i':
-			_umax = SARG();
-			if ((intmax_t)_umax < 0) {
-				_umax = -_umax;
-				sign = '-';
+			if (flags & INTMAX_SIZE) {
+				ujval = SJARG();
+				if ((intmax_t)ujval < 0) {
+					ujval = -ujval;
+					sign = '-';
+				}
+			} else {
+				ulval = SARG();
+				if ((long)ulval < 0) {
+					ulval = -ulval;
+					sign = '-';
+				}
 			}
-			base = DEC;
+			base = 10;
 			goto number;
 #ifdef FLOATING_POINT
 		case 'a':
@@ -824,8 +835,11 @@ fp_common:
 			flags |= LONGINT;
 			/*FALLTHROUGH*/
 		case 'o':
-			_umax = UARG();
-			base = OCT;
+			if (flags & INTMAX_SIZE)
+				ujval = UJARG();
+			else
+				ulval = UARG();
+			base = 8;
 			goto nosign;
 		case 'p':
 			/*
@@ -835,10 +849,10 @@ fp_common:
 			 * defined manner.''
 			 *	-- ANSI X3J11
 			 */
-			/* NOSTRICT */
-			_umax = (u_long)GETARG(void *);
-			base = HEX;
+			ujval = (uintmax_t)(uintptr_t)GETARG(void *);
+			base = 16;
 			xdigs = xdigs_lower;
+			flags = flags | INTMAXT;
 			ox[1] = 'x';
 			goto nosign;
 		case 's':
@@ -886,18 +900,26 @@ fp_common:
 			flags |= LONGINT;
 			/*FALLTHROUGH*/
 		case 'u':
-			_umax = UARG();
-			base = DEC;
+			if (flags & INTMAX_SIZE)
+				ujval = UJARG();
+			else
+				ulval = UARG();
+			base = 10;
 			goto nosign;
 		case 'X':
 			xdigs = xdigs_upper;
 			goto hex;
 		case 'x':
 			xdigs = xdigs_lower;
-hex:			_umax = UARG();
-			base = HEX;
+hex:
+			if (flags & INTMAX_SIZE)
+				ujval = UJARG();
+			else
+				ulval = UARG();
+			base = 16;
 			/* leading 0x/X only if non-zero */
-			if (flags & ALT && _umax != 0)
+			if (flags & ALT &&
+			    (flags & INTMAX_SIZE ? ujval != 0 : ulval != 0))
 				ox[1] = ch;
 
 			flags &= ~GROUPING;
@@ -915,53 +937,28 @@ number:			if ((dprec = prec) >= 0)
 			 * ``The result of converting a zero value with an
 			 * explicit precision of zero is no characters.''
 			 *	-- ANSI X3J11
+			 *
+			 * ``The C Standard is clear enough as is.  The call
+			 * printf("%#.0o", 0) should print 0.''
+			 *	-- Defect Report #151
 			 */
 			cp = buf + BUF;
-			if (_umax != 0 || prec != 0) {
-				/*
-				 * Unsigned mod is hard, and unsigned mod
-				 * by a constant is easier than that by
-				 * a variable; hence this switch.
-				 */
-				switch (base) {
-				case OCT:
-					do {
-						*--cp = to_char(_umax & 7);
-						_umax >>= 3;
-					} while (_umax);
-					/* handle octal leading 0 */
-					if (flags & ALT && *cp != '0')
-						*--cp = '0';
-					break;
-
-				case DEC:
-					/* many numbers are 1 digit */
-					while (_umax >= 10) {
-						*--cp = to_char(_umax % 10);
-						_umax /= 10;
-					}
-					*--cp = to_char(_umax);
-					break;
-
-				case HEX:
-					do {
-						*--cp = xdigs[_umax & 15];
-						_umax >>= 4;
-					} while (_umax);
-					break;
-
-				default:
-					cp = "bug in vfprintf: bad base";
-					size = strlen(cp);
-					goto skipsize;
-				}
+			if (flags & INTMAX_SIZE) {
+				if (ujval != 0 || prec != 0 ||
+				    (flags & ALT && base == 8))
+					cp = __ujtoa(ujval, cp, base,
+					    flags & ALT, xdigs);
+			} else {
+				if (ulval != 0 || prec != 0 ||
+				    (flags & ALT && base == 8))
+					cp = __ultoa(ulval, cp, base,
+					    flags & ALT, xdigs);
 			}
 			size = buf + BUF - cp;
 			if (size > BUF)	/* should never happen */
 				abort();
 			if ((flags & GROUPING) && size != 0)
 				size += grouping_init(&gs, size, locale);
-		skipsize:
 			break;
 		default:	/* "%?" prints ?, unless ? is NUL */
 			if (ch == '\0')
