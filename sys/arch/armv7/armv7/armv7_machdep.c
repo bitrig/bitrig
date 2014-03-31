@@ -481,7 +481,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	}
 
 	/* setup a serial console for very early boot */
-	consinit();
+	//consinit();
 
 	/* Talk to the user */
 	printf("\n%s booting ...\n", platform_boot_name());
