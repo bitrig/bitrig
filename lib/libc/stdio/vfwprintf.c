@@ -925,19 +925,22 @@ fp_common:
 				if ((cp = GETARG(wchar_t *)) == NULL)
 					cp = L"(null)";
 			} else {
-				char *mbsarg;
-				if ((mbsarg = GETARG(char *)) == NULL)
-					mbsarg = "(null)";
+				char *mbp;
+
 				if (convbuf != NULL) {
 					free(convbuf);
 					convbuf = NULL;
 				}
-				convbuf = __mbsconv(mbsarg, prec);
-				if (convbuf == NULL) {
-					fp->_flags |= __SERR;
-					goto error;
-				} else
+				if ((mbp = GETARG(char *)) == NULL)
+					cp = L"(null)";
+				else {
+					convbuf = __mbsconv(mbp, prec);
+					if (convbuf == NULL) {
+						fp->_flags |= __SERR;
+						goto error;
+					}
 					cp = convbuf;
+				}
 			}
 			size = (prec >= 0) ? wcsnlen(cp, prec) : wcslen(cp);
 			sign = '\0';
