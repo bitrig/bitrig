@@ -1,4 +1,4 @@
-/*	$OpenBSD: unistd.h,v 1.83 2013/12/28 01:51:53 martynas Exp $ */
+/*	$OpenBSD: unistd.h,v 1.84 2014/04/01 05:04:50 matthew Exp $ */
 /*	$NetBSD: unistd.h,v 1.26.4.1 1996/05/28 02:31:51 mrg Exp $	*/
 
 /*-
@@ -35,6 +35,7 @@
 #ifndef _UNISTD_H_
 #define	_UNISTD_H_
 
+#include <sys/_null.h>
 #include <sys/types.h>
 #include <sys/unistd.h>
 
@@ -314,6 +315,10 @@
 #define	_CS_POSIX_V7_WIDTH_RESTRICTED_ENVS	30
 #define	_CS_V7_ENV				31
 
+#ifndef	_INTPTR_T_DEFINED_
+#define	_INTPTR_T_DEFINED_
+typedef	__intptr_t		intptr_t;
+#endif
 
 __BEGIN_DECLS
 __dead void	 _exit(int);
