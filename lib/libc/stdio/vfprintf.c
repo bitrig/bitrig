@@ -180,12 +180,14 @@ __wcsconv(wchar_t *wcsarg, int prec)
 
 /*
  * The size of the buffer we use as scratch space for integer
- * conversions, among other things.  Technically, we would need the
- * most space for base 10 conversions with thousands' grouping
- * characters between each pair of digits.  100 bytes is a
- * conservative overestimate even for a 128-bit uintmax_t.
+ * conversions, among other things.  We need enough space to
+ * write a uintmax_t in octal (plus one byte).
  */
-#define BUF	100
+#if UINTMAX_MAX <= UINT64_MAX
+#define	BUF	32
+#else
+#error "BUF must be large enough to format a uintmax_t"
+#endif
 
 int
 vfprintf(FILE *fp, const char *fmt0, __va_list ap)
@@ -305,6 +307,15 @@ __vfprintf(FILE *fp, locale_t locale, const char *fmt0, __va_list ap)
 } while (0)
 
 	/*
+	 * Get the argument indexed by nextarg.   If the argument table is
+	 * built, use it to get the argument.  If its not, get the next
+	 * argument (and arguments must be gotten sequentially).
+	 */
+#define GETARG(type) \
+	((argtable != NULL) ? *((type*)(&argtable[nextarg++])) : \
+	    (nextarg++, va_arg(ap, type)))
+
+	/*
 	 * To extend shorts properly, we need both signed and unsigned
 	 * argument extraction methods.
 	 */
@@ -366,15 +377,6 @@ __vfprintf(FILE *fp, locale_t locale, const char *fmt0, __va_list ap)
 	} else { \
 		val = GETARG(int); \
 	}
-
-/*
-* Get the argument indexed by nextarg.   If the argument table is
-* built, use it to get the argument.  If its not, get the next
-* argument (and arguments must be gotten sequentially).
-*/
-#define GETARG(type) \
-	((argtable != NULL) ? *((type*)(&argtable[nextarg++])) : \
-		(nextarg++, va_arg(ap, type)))
 
 	_SET_ORIENTATION(fp, -1);
 	/* sorry, fprintf(read_only_file, "") returns EOF, not 0 */
@@ -780,7 +782,7 @@ fp_common:
 				} else {
 					convbuf = __wcsconv(wcp, prec);
 					if (convbuf == NULL) {
-						fp->_flags = __SERR;
+						fp->_flags |= __SERR;
 						goto error;
 					}
 					cp = convbuf;

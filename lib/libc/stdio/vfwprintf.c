@@ -107,7 +107,7 @@ __xfputwc(wchar_t wc, FILE *fp)
 	if ((fp->_flags & __SSTR) == 0)
 		return (__fputwc_unlock(wc, fp));
 
-	bzero(&mbs, sizeof(mbs));
+	memset(&mbs, 0, sizeof(mbs));
 	len = wcrtomb(buf, wc, &mbs);
 	if (len == (size_t)-1) {
 		fp->_flags |= __SERR;
@@ -153,7 +153,7 @@ __mbsconv(char *mbsarg, int prec)
 		 */
 		p = mbsarg;
 		insize = nchars = nconv = 0;
-		bzero(&mbs, sizeof(mbs));
+		memset(&mbs, 0, sizeof(mbs));
 		while (nchars != (size_t)prec) {
 			nconv = mbrlen(p, MB_CUR_MAX, &mbs);
 			if (nconv == (size_t)0 || nconv == (size_t)-1 ||
@@ -178,7 +178,7 @@ __mbsconv(char *mbsarg, int prec)
 		return (NULL);
 	wcp = convbuf;
 	p = mbsarg;
-	bzero(&mbs, sizeof(mbs));
+	memset(&mbs, 0, sizeof(mbs));
 	nconv = 0;
 	while (insize != 0) {
 		nconv = mbrtowc(wcp, p, insize, &mbs);
@@ -199,13 +199,18 @@ __mbsconv(char *mbsarg, int prec)
 
 /*
  * The size of the buffer we use as scratch space for integer
- * conversions, among other things.  Technically, we would need the
- * most space for base 10 conversions with thousands' grouping
- * characters between each pair of digits.  100 bytes is a
- * conservative overestimate even for a 128-bit uintmax_t.
+ * conversions, among other things.  We need enough space to
+ * write a uintmax_t in octal (plus one byte).
  */
-#define BUF	100
+#if UINTMAX_MAX <= UINT64_MAX
+#define	BUF	32
+#else
+#error "BUF must be large enough to format a uintmax_t"
+#endif
 
+/*
+ * Non-MT-safe version
+ */
 int
 __vfwprintf(FILE * __restrict fp, locale_t locale,
     const wchar_t * __restrict fmt0, __va_list ap)
@@ -299,6 +304,15 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 } while(0)
 
 	/*
+	 * Get the argument indexed by nextarg.   If the argument table is
+	 * built, use it to get the argument.  If its not, get the next
+	 * argument (and arguments must be gotten sequentially).
+	 */
+#define GETARG(type) \
+	((argtable != NULL) ? *((type*)(&argtable[nextarg++])) : \
+	    (nextarg++, va_arg(ap, type)))
+
+	/*
 	 * To extend shorts properly, we need both signed and unsigned
 	 * argument extraction methods.
 	 */
@@ -360,15 +374,6 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 	} else { \
 		val = GETARG(int); \
 	}
-
-/*
-* Get the argument indexed by nextarg.   If the argument table is
-* built, use it to get the argument.  If its not, get the next
-* argument (and arguments must be gotten sequentially).
-*/
-#define GETARG(type) \
-	((argtable != NULL) ? *((type*)(&argtable[nextarg++])) : \
-		(nextarg++, va_arg(ap, type)))
 
 	_SET_ORIENTATION(fp, 1);
 	/* sorry, fwprintf(read_only_file, "") returns EOF, not 0 */
