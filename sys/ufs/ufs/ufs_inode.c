@@ -195,8 +195,12 @@ ufs_reclaim(struct vnode *vp, struct proc *p)
 	 * Stop deferring timestamp writes
 	 */
 	if (ip->i_flag & IN_LAZYMOD) {
+		int err = UFS_WAPBL_BEGIN(vp->v_mount);
+		if (err)
+			return (err);
 		ip->i_flag |= IN_MODIFIED;
 		UFS_UPDATE(ip, 0);
+		UFS_WAPBL_END(vp->v_mount);
 	}
 
 	/*
