@@ -192,7 +192,7 @@ main(int argc, char *argv[])
 	/* input from stdin */
 	TEST_NARROW_STD(stdin, getchar());
 	TEST_NARROW_STD(stdin, getchar_unlocked());
-	TEST_NARROW_STD(stdin, gets(buffer));
+	TEST_NARROW_STD(stdin, fgets(buffer, BUFSIZ, stdin));
 	TEST_NARROW_STD(stdin, scanf("%s\n", buffer));
 
 	/* output to stdout */
