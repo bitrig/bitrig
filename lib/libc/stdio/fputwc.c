@@ -79,13 +79,20 @@ __fputwc_unlock(wchar_t wc, FILE *fp, locale_t locale)
 }
 
 wint_t
-fputwc(wchar_t wc, FILE *fp)
+fputwc_l(wchar_t wc, FILE *fp, locale_t locale)
 {
 	wint_t r;
 
+	FIX_LOCALE(locale);
 	FLOCKFILE(fp);
-	r = __fputwc_unlock(wc, fp, __get_locale());
+	r = __fputwc_unlock(wc, fp, locale);
 	FUNLOCKFILE(fp);
 
 	return (r);
+}
+
+wint_t
+fputwc(wchar_t wc, FILE *fp)
+{
+	return (fputwc_l(wc, fp, __get_locale()));
 }

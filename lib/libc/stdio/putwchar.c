@@ -31,6 +31,7 @@
 
 #include <stdio.h>
 #include <wchar.h>
+#include "locale/mblocal.h"
 
 /*
  * A subroutine version of the macro putwchar.
@@ -38,8 +39,14 @@
 #undef putwchar
 
 wint_t
+putwchar_l(wchar_t wc, locale_t locale)
+{
+	FIX_LOCALE(locale);
+	return (fputwc_l(wc, stdout, locale));
+}
+
+wint_t
 putwchar(wchar_t wc)
 {
-
-	return fputwc(wc, stdout);
+	return (putwchar_l(wc, __get_locale()));
 }

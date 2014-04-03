@@ -38,16 +38,14 @@
 #include "locale/mblocal.h"
 
 int
-fputws(ws, fp)
-	const wchar_t * __restrict ws;
-	FILE * __restrict fp;
+fputws_l(const wchar_t * __restrict ws, FILE * __restrict fp, locale_t locale)
 {
+	FIX_LOCALE(locale);
 	FLOCKFILE(fp);
 	_SET_ORIENTATION(fp, 1);
 
 	while (*ws != '\0') {
-		/* XXX pedro: fix me */
-		if (__fputwc_unlock(*ws++, fp, __get_locale()) == WEOF) {
+		if (__fputwc_unlock(*ws++, fp, locale) == WEOF) {
 			FUNLOCKFILE(fp);
 			return (-1);
 		}
@@ -56,4 +54,10 @@ fputws(ws, fp)
 	FUNLOCKFILE(fp);
 
 	return (0);
+}
+
+int
+fputws(const wchar_t * __restrict ws, FILE * __restrict fp)
+{
+	return (fputws_l(ws, fp, __get_locale()));
 }
