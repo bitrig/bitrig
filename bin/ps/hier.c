@@ -37,66 +37,25 @@ struct element {
 	bool		 visible;
 };
 
-static void		 link(struct element *, struct element *);
-static void		 orphan(struct element *);
-static void		 mark(pid_t, pid_t);
-static void		 enumerate(struct element *);
-static struct element	*new(pid_t);
-static struct element	*lookup(struct element *, pid_t);
-static pid_t		 compare(const void *, const void *);
-
 static struct element root = { NULL, NULL, NULL, NULL, NULL, -1, -1, false };
 
-/*
- * Return the ASCII art prefix for a PID. The returned value points to a
- * static buffer internal to the function, which will change on the next
- * invocation.
- */
-char *
-hier_prefix(pid_t key)
+/* Unlink an element from its parent. */
+static void
+orphan(struct element *element)
 {
-	static char prefix[_POSIX2_LINE_MAX];
-	struct element *element;
-	char *p;
+	struct element *prev;
 
-	element = lookup(&root, key);
-
-
-	/*
-	 * Construct the prefix string in reverse order at the end of the buffer,
-	 * so the resulting string's length doesn't have to be known beforehand.
-	 */
-
-	p = &prefix[sizeof(prefix) - 1];
-	*--p = '\0';
-
-#define ISROOT(e)	((e)->visible && !(e)->parent->visible)
-
-	if (!element->parent || ISROOT(element))
-		return (p);
-	memcpy((p -= 3), element->sibling ? "|- " : "`- ", 3);
-	while (element->parent && !ISROOT(element->parent)) {
-		p -= 3;
-		if (p < prefix)
-			errx(1, "process hierarchy too deep");
-		element = element->parent;
-		memcpy(p, element->sibling ? "|  " : "   ", 3);
+	if (element->parent->child == element)
+		element->parent->child = NULL;
+	else {
+		prev = element->parent->child;
+		while (prev->sibling != element)
+			prev = prev->sibling;
+		prev->sibling = element->sibling;
 	}
 
-	return (p);
-}
-
-/* Initialize PID tree and perform stable hierarchical sorting. */
-void
-hier_sort(struct kinfo_proc **kinfo, int nentries)
-{
-	int i;
-
-	for (i = 0; i < nentries; i++)
-		mark(kinfo[i]->p_pid, kinfo[i]->p_ppid);
-
-	enumerate(&root);
-	qsort(kinfo, nentries, sizeof(*kinfo), compare);
+	element->parent = NULL;
+	element->sibling = NULL;
 }
 
 /* Establish a parent/child link between two elements in the PID tree. */
@@ -116,25 +75,6 @@ link(struct element *child, struct element *parent)
 			element = element->sibling;
 		element->sibling = child;
 	}
-}
-
-/* Unlink an element from its parent. */
-static void
-orphan(struct element *element)
-{
-	struct element *prev;
-
-	if (element->parent->child == element)
-		element->parent->child = NULL;
-	else {
-		prev = element->parent->child;
-		while (prev->sibling != element)
-			prev = prev->sibling;
-		prev->sibling = element->sibling;
-	}
-
-	element->parent = NULL;
-	element->sibling = NULL;
 }
 
 static struct element *
@@ -222,4 +162,55 @@ compare(const void *v1, const void *v2)
 
 	return (lookup(&root, kp1->p_pid)->index -
 	   lookup(&root, kp2->p_pid)->index);
+}
+
+/*
+ * Return the ASCII art prefix for a PID. The returned value points to a
+ * static buffer internal to the function, which will change on the next
+ * invocation.
+ */
+char *
+hier_prefix(pid_t key)
+{
+	static char prefix[_POSIX2_LINE_MAX];
+	struct element *element;
+	char *p;
+
+	element = lookup(&root, key);
+
+	/*
+	 * Construct the prefix string in reverse order at the end of the buffer,
+	 * so the resulting string's length doesn't have to be known beforehand.
+	 */
+
+	p = &prefix[sizeof(prefix) - 1];
+	*--p = '\0';
+
+#define ISROOT(e)	((e)->visible && !(e)->parent->visible)
+
+	if (!element->parent || ISROOT(element))
+		return (p);
+	memcpy((p -= 3), element->sibling ? "|- " : "`- ", 3);
+	while (element->parent && !ISROOT(element->parent)) {
+		p -= 3;
+		if (p < prefix)
+			errx(1, "process hierarchy too deep");
+		element = element->parent;
+		memcpy(p, element->sibling ? "|  " : "   ", 3);
+	}
+
+	return (p);
+}
+
+/* Initialize PID tree and perform stable hierarchical sorting. */
+void
+hier_sort(struct kinfo_proc **kinfo, int nentries)
+{
+	int i;
+
+	for (i = 0; i < nentries; i++)
+		mark(kinfo[i]->p_pid, kinfo[i]->p_ppid);
+
+	enumerate(&root);
+	qsort(kinfo, nentries, sizeof(*kinfo), compare);
 }
