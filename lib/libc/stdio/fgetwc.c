@@ -33,14 +33,16 @@
 #include <stdio.h>
 #include <wchar.h>
 #include "local.h"
+#include "locale/mblocal.h"
 
 wint_t
-__fgetwc_unlock(FILE *fp)
+__fgetwc_unlock(FILE *fp, locale_t locale)
 {
 	struct wchar_io_data *wcio;
 	mbstate_t *st;
 	wchar_t wc;
 	size_t size;
+	struct xlocale_ctype *l = XLOCALE_CTYPE(locale);
 
 	_SET_ORIENTATION(fp, 1);
 	wcio = WCIO_GET(fp);
@@ -67,7 +69,7 @@ __fgetwc_unlock(FILE *fp)
 		}
 
 		c = ch;
-		size = mbrtowc(&wc, &c, 1, st);
+		size = l->__mbrtowc(&wc, &c, 1, st);
 		if (size == (size_t)-1) {
 			errno = EILSEQ;
 			return WEOF;
@@ -78,13 +80,20 @@ __fgetwc_unlock(FILE *fp)
 }
 
 wint_t
-fgetwc(FILE *fp)
+fgetwc_l(FILE *fp, locale_t locale)
 {
 	wint_t r;
 
+	FIX_LOCALE(locale);
 	FLOCKFILE(fp);
-	r = __fgetwc_unlock(fp);
+	r = __fgetwc_unlock(fp, locale);
 	FUNLOCKFILE(fp);
 
 	return (r);
+}
+
+wint_t
+fgetwc(FILE *fp)
+{
+	return (fgetwc_l(fp, __get_locale()));
 }

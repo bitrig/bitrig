@@ -39,6 +39,7 @@
 #include <string.h>
 #include <wchar.h>
 #include "local.h"
+#include "locale/mblocal.h"
 
 static int	eofread(void *, char *, int);
 
@@ -49,27 +50,32 @@ eofread(void *cookie, char *buf, int len)
 }
 
 int
-vswscanf(const wchar_t * __restrict str, const wchar_t * __restrict fmt,
-    __va_list ap)
+vswscanf_l(const wchar_t * __restrict str, locale_t locale,
+    const wchar_t * __restrict fmt, __va_list ap)
 {
 	mbstate_t mbs;
 	FILE f;
 	struct __sfileext fext;
 	char *mbstr;
-	size_t len, mlen;
+	size_t nwc, len, mlen;
 	int r;
 	const wchar_t *strp;
+	struct xlocale_ctype *l;
+
+	FIX_LOCALE(locale);
+	l = XLOCALE_CTYPE(locale);
 
 	/*
 	 * XXX Convert the wide character string to multibyte, which
 	 * __vfwscanf() will convert back to wide characters.
 	 */
-	len = wcslen(str) * MB_CUR_MAX;
+	nwc = wcslen(str);
+	len = nwc * MB_CUR_MAX;
 	if ((mbstr = malloc(len + 1)) == NULL)
 		return (EOF);
 	bzero(&mbs, sizeof(mbs));
 	strp = str;
-	if ((mlen = wcsrtombs(mbstr, &strp, len, &mbs)) == (size_t)-1) {
+	if ((mlen = l->__wcsnrtombs(mbstr, &strp, nwc, len, &mbs)) == (size_t)-1) {
 		free(mbstr);
 		return (EOF);
 	}
@@ -81,8 +87,15 @@ vswscanf(const wchar_t * __restrict str, const wchar_t * __restrict fmt,
 	f._bf._size = f._r = mlen;
 	f._read = eofread;
 	f._lb._base = NULL;
-	r = __vfwscanf(&f, fmt, ap);
+	r = __vfwscanf(&f, locale, fmt, ap);
 	free(mbstr);
 
 	return (r);
+}
+
+int
+vswscanf(const wchar_t * __restrict str, const wchar_t * __restrict fmt,
+    __va_list ap)
+{
+	return (vswscanf_l(str, __get_locale(), fmt, ap));
 }

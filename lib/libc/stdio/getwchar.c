@@ -31,6 +31,7 @@
 
 #include <stdio.h>
 #include <wchar.h>
+#include "locale/mblocal.h"
 
 /*
  * A subroutine version of the macro getwchar.
@@ -38,8 +39,14 @@
 #undef getwchar
 
 wint_t
+getwchar_l(locale_t locale)
+{
+	FIX_LOCALE(locale);
+	return fgetwc_l(stdin, locale);
+}
+
+wint_t
 getwchar()
 {
-
-	return fgetwc(stdin);
+	return (getwchar_l(__get_locale()));
 }

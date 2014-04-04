@@ -41,6 +41,7 @@
 #include <string.h>
 #include <wctype.h>
 #include "local.h"
+#include "locale/mblocal.h"
 
 #ifdef FLOATING_POINT
 #include "floatio.h"
@@ -96,7 +97,8 @@
  * vfwscanf
  */
 int
-__vfwscanf(FILE * __restrict fp, const wchar_t * __restrict fmt, __va_list ap)
+__vfwscanf(FILE * __restrict fp, locale_t locale, const wchar_t * __restrict fmt,
+    __va_list ap)
 {
 	wint_t c;	/* character from format, or conversion */
 	size_t width;	/* field width, or 0 */
@@ -120,6 +122,7 @@ __vfwscanf(FILE * __restrict fp, const wchar_t * __restrict fmt, __va_list ap)
 #ifdef FLOATING_POINT
 	wchar_t decimal_point = 0;
 #endif
+	struct xlocale_ctype *l = XLOCALE_CTYPE(locale);
 
 	/* `basefix' is used to avoid `if' tests in the integer scanner */
 	static short basefix[17] =
@@ -137,12 +140,12 @@ __vfwscanf(FILE * __restrict fp, const wchar_t * __restrict fmt, __va_list ap)
 		if (c == 0) {
 			return (nassigned);
 		}
-		if (iswspace(c)) {
-			while ((c = __fgetwc_unlock(fp)) != WEOF &&
-			    iswspace(c))
+		if (iswspace_l(c, locale)) {
+			while ((c = __fgetwc_unlock(fp, locale)) != WEOF &&
+			    iswspace_l(c, locale))
 				;
 			if (c != WEOF)
-				__ungetwc(c, fp);
+				__ungetwc(c, fp, locale);
 			continue;
 		}
 		if (c != '%')
@@ -157,10 +160,10 @@ again:		c = *fmt++;
 		switch (c) {
 		case '%':
 literal:
-			if ((wi = __fgetwc_unlock(fp)) == WEOF)
+			if ((wi = __fgetwc_unlock(fp, locale)) == WEOF)
 				goto input_failure;
 			if (wi != c) {
-				__ungetwc(wi, fp);
+				__ungetwc(wi, fp, locale);
 				goto input_failure;
 			}
 			nread++;
@@ -320,7 +323,7 @@ literal:
 			return (EOF);
 
 		default:	/* compat */
-			if (iswupper(c))
+			if (iswupper_l(c, locale))
 				flags |= LONG;
 			c = CT_INT;
 			base = 10;
@@ -332,12 +335,12 @@ literal:
 		 * that suppress this.
 		 */
 		if ((flags & NOSKIP) == 0) {
-			while ((wi = __fgetwc_unlock(fp)) != WEOF &&
-			    iswspace(wi))
+			while ((wi = __fgetwc_unlock(fp, locale)) != WEOF &&
+			    iswspace_l(wi, locale))
 				nread++;
 			if (wi == WEOF)
 				goto input_failure;
-			__ungetwc(wi, fp);
+			__ungetwc(wi, fp, locale);
 		}
 
 		/*
@@ -354,7 +357,7 @@ literal:
 					p = va_arg(ap, wchar_t *);
 				n = 0;
 				while (width-- != 0 &&
-				    (wi = __fgetwc_unlock(fp)) != WEOF) {
+				    (wi = __fgetwc_unlock(fp, locale)) != WEOF) {
 					if (!(flags & SUPPRESS))
 						*p++ = (wchar_t)wi;
 					n++;
@@ -370,19 +373,20 @@ literal:
 				n = 0;
 				bzero(&mbs, sizeof(mbs));
 				while (width != 0 &&
-				    (wi = __fgetwc_unlock(fp)) != WEOF) {
-					if (width >= MB_CUR_MAX &&
+				    (wi = __fgetwc_unlock(fp, locale)) != WEOF) {
+					if (width >= MB_CUR_MAX_L(locale) &&
 					    !(flags & SUPPRESS)) {
-						nconv = wcrtomb(mbp, wi, &mbs);
+						nconv = l->__wcrtomb(mbp, wi,
+						    &mbs);
 						if (nconv == (size_t)-1)
 							goto input_failure;
 					} else {
-						nconv = wcrtomb(mbbuf, wi,
+						nconv = l->__wcrtomb(mbbuf, wi,
 						    &mbs);
 						if (nconv == (size_t)-1)
 							goto input_failure;
 						if (nconv > width) {
-							__ungetwc(wi, fp);
+							__ungetwc(wi, fp, locale);
  							break;
  						}
 						if (!(flags & SUPPRESS))
@@ -410,20 +414,20 @@ literal:
 			/* take only those things in the class */
 			if ((flags & SUPPRESS) && (flags & LONG)) {
 				n = 0;
-				while ((wi = __fgetwc_unlock(fp)) != WEOF &&
+				while ((wi = __fgetwc_unlock(fp, locale)) != WEOF &&
 				    width-- != 0 && INCCL(wi))
 					n++;
 				if (wi != WEOF)
-					__ungetwc(wi, fp);
+					__ungetwc(wi, fp, locale);
 				if (n == 0)
 					goto match_failure;
 			} else if (flags & LONG) {
 				p0 = p = va_arg(ap, wchar_t *);
-				while ((wi = __fgetwc_unlock(fp)) != WEOF &&
+				while ((wi = __fgetwc_unlock(fp, locale)) != WEOF &&
 				    width-- != 0 && INCCL(wi))
 					*p++ = (wchar_t)wi;
 				if (wi != WEOF)
-					__ungetwc(wi, fp);
+					__ungetwc(wi, fp, locale);
 				n = p - p0;
 				if (n == 0)
 					goto match_failure;
@@ -434,15 +438,16 @@ literal:
 					mbp = va_arg(ap, char *);
 				n = 0;
 				bzero(&mbs, sizeof(mbs));
-				while ((wi = __fgetwc_unlock(fp)) != WEOF &&
+				while ((wi = __fgetwc_unlock(fp, locale)) != WEOF &&
 				    width != 0 && INCCL(wi)) {
-					if (width >= MB_CUR_MAX &&
+					if (width >= MB_CUR_MAX_L(locale) &&
 					   !(flags & SUPPRESS)) {
-						nconv = wcrtomb(mbp, wi, &mbs);
+						nconv = l->__wcrtomb(mbp, wi,
+						    &mbs);
 						if (nconv == (size_t)-1)
 							goto input_failure;
 					} else {
-						nconv = wcrtomb(mbbuf, wi,
+						nconv = l->__wcrtomb(mbbuf, wi,
 						    &mbs);
 						if (nconv == (size_t)-1)
 							goto input_failure;
@@ -458,7 +463,7 @@ literal:
 					n++;
 				}
 				if (wi != WEOF)
-					__ungetwc(wi, fp);
+					__ungetwc(wi, fp, locale);
 				if (!(flags & SUPPRESS)) {
 					*mbp = 0;
 					nassigned++;
@@ -473,38 +478,38 @@ literal:
 			if (width == 0)
 				width = (size_t)~0;
 			if ((flags & SUPPRESS) && (flags & LONG)) {
-				while ((wi = __fgetwc_unlock(fp)) != WEOF &&
+				while ((wi = __fgetwc_unlock(fp, locale)) != WEOF &&
 				    width-- != 0 &&
-				    !iswspace(wi))
+				    !iswspace_l(wi, locale))
 					nread++;
 				if (wi != WEOF)
-					__ungetwc(wi, fp);
+					__ungetwc(wi, fp, locale);
 			} else if (flags & LONG) {
 				p0 = p = va_arg(ap, wchar_t *);
-				while ((wi = __fgetwc_unlock(fp)) != WEOF &&
+				while ((wi = __fgetwc_unlock(fp, locale)) != WEOF &&
 				    width-- != 0 &&
-				    !iswspace(wi)) {
+				    !iswspace_l(wi, locale)) {
 					*p++ = (wchar_t)wi;
 					nread++;
 				}
 				if (wi != WEOF)
-					__ungetwc(wi, fp);
+					__ungetwc(wi, fp, locale);
 				*p = 0;
 				nassigned++;
 			} else {
 				if (!(flags & SUPPRESS))
 					mbp = va_arg(ap, char *);
 				bzero(&mbs, sizeof(mbs));
-				while ((wi = __fgetwc_unlock(fp)) != WEOF &&
+				while ((wi = __fgetwc_unlock(fp, locale)) != WEOF &&
 				    width != 0 &&
-				    !iswspace(wi)) {
-					if (width >= MB_CUR_MAX &&
+				    !iswspace_l(wi, locale)) {
+					if (width >= MB_CUR_MAX_L(locale) &&
 					    !(flags & SUPPRESS)) {
-						nconv = wcrtomb(mbp, wi, &mbs);
+						nconv = l->__wcrtomb(mbp, wi, &mbs);
 						if (nconv == (size_t)-1)
 							goto input_failure;
 					} else {
-						nconv = wcrtomb(mbbuf, wi,
+						nconv = l->__wcrtomb(mbbuf, wi,
 						    &mbs);
 						if (nconv == (size_t)-1)
 							goto input_failure;
@@ -520,7 +525,7 @@ literal:
 					nread++;
 				}
 				if (wi != WEOF)
-					__ungetwc(wi, fp);
+					__ungetwc(wi, fp, locale);
 				if (!(flags & SUPPRESS)) {
 					*mbp = 0;
  					nassigned++;
@@ -536,7 +541,7 @@ literal:
 				width = sizeof(buf) / sizeof(*buf) - 1;
 			flags |= SIGNOK | NDIGITS | NZDIGITS;
 			for (p = buf; width; width--) {
-				c = __fgetwc_unlock(fp);
+				c = __fgetwc_unlock(fp, locale);
 				/*
 				 * Switch on the character; `goto ok'
 				 * if we accept it as a part of number.
@@ -620,7 +625,7 @@ literal:
 				 * for a number.  Stop accumulating digits.
 				 */
 				if (c != WEOF)
-					__ungetwc(c, fp);
+					__ungetwc(c, fp, locale);
 				break;
 		ok:
 				/*
@@ -636,22 +641,22 @@ literal:
 			 */
 			if (flags & NDIGITS) {
 				if (p > buf)
-					__ungetwc(*--p, fp);
+					__ungetwc(*--p, fp, locale);
 				goto match_failure;
 			}
 			c = p[-1];
 			if (c == 'x' || c == 'X') {
 				--p;
-				__ungetwc(c, fp);
+				__ungetwc(c, fp, locale);
 			}
 			if ((flags & SUPPRESS) == 0) {
 				uintmax_t res;
 
 				*p = '\0';
 				if (flags & UNSIGNED)
-					res = wcstoimax(buf, NULL, base);
+					res = wcstoimax_l(buf, NULL, base, locale);
 				else
-					res = wcstoumax(buf, NULL, base);
+					res = wcstoumax_l(buf, NULL, base, locale);
 				if (flags & POINTER)
 					*va_arg(ap, void **) =
 					    (void *)(uintptr_t)res;
@@ -685,7 +690,7 @@ literal:
 				width = sizeof(buf) / sizeof(*buf) - 1;
 			flags |= SIGNOK | NDIGITS | DPTOK | EXPOK;
 			for (p = buf; width; width--) {
-				c = __fgetwc_unlock(fp);
+				c = __fgetwc_unlock(fp, locale);
 				/*
 				 * This code mimicks the integer conversion
 				 * code, but is much simpler.
@@ -716,9 +721,9 @@ literal:
 				default:
 					if (decimal_point == 0) {
 						bzero(&mbs, sizeof(mbs));
-						nconv = mbrtowc(&decimal_point,
+						nconv = l->__mbrtowc(&decimal_point,
 						    localeconv()->decimal_point,
-					    	    MB_CUR_MAX, &mbs);
+						    MB_CUR_MAX_L(locale), &mbs);
 						if (nconv == 0 ||
 						    nconv == (size_t)-1 ||
 						    nconv == (size_t)-2)
@@ -732,7 +737,7 @@ literal:
 					break;
 				}
 				if (c != WEOF)
-					__ungetwc(c, fp);
+					__ungetwc(c, fp, locale);
 				break;
 		fok:
 				*p++ = c;
@@ -746,27 +751,28 @@ literal:
 				if (flags & EXPOK) {
 					/* no digits at all */
 					while (p > buf)
-						__ungetwc(*--p, fp);
+						__ungetwc(*--p, fp, locale);
 					goto match_failure;
 				}
 				/* just a bad exponent (e and maybe sign) */
 				c = *--p;
 				if (c != 'e' && c != 'E') {
-					__ungetwc(c, fp);/* sign */
+					__ungetwc(c, fp, locale);/* sign */
 					c = *--p;
 				}
-				__ungetwc(c, fp);
+				__ungetwc(c, fp, locale);
 			}
 			if ((flags & SUPPRESS) == 0) {
 				*p = 0;
 				if (flags & LONGDBL) {
-					long double res = wcstold(buf, NULL);
+					long double res = wcstold_l(buf, NULL,
+					    locale);
 					*va_arg(ap, long double *) = res;
 				} else if (flags & LONG) {
-					double res = wcstod(buf, NULL);
+					double res = wcstod_l(buf, NULL, locale);
 					*va_arg(ap, double *) = res;
 				} else {
-					float res = wcstof(buf, NULL);
+					float res = wcstof_l(buf, NULL, locale);
 					*va_arg(ap, float *) = res;
 				}
 				nassigned++;
@@ -784,12 +790,20 @@ match_failure:
 }
 
 int
-vfwscanf(FILE * __restrict fp, const wchar_t * __restrict fmt, __va_list ap)
+vfwscanf_l(FILE * __restrict fp, locale_t locale,
+    const wchar_t * __restrict fmt, __va_list ap)
 {
 	int r;
 
+	FIX_LOCALE(locale);
 	FLOCKFILE(fp);
-	r = __vfwscanf(fp, fmt, ap);
+	r = __vfwscanf(fp, locale, fmt, ap);
 	FUNLOCKFILE(fp);
 	return (r);
+}
+
+int
+vfwscanf(FILE * __restrict fp, const wchar_t * __restrict fmt, __va_list ap)
+{
+	return (vfwscanf_l(fp, __get_locale(), fmt, ap));
 }

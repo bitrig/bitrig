@@ -57,13 +57,14 @@ int	__swhatbuf(FILE *, size_t *, int *);
 int	_fwalk(int (*)(FILE *));
 int	__swsetup(FILE *);
 int	__sflags(const char *, int *);
-wint_t __fgetwc_unlock(FILE *);
-wint_t	__ungetwc(wint_t, FILE *);
+wint_t __fgetwc_unlock(FILE *, locale_t local);
+wint_t	__ungetwc(wint_t, FILE *, locale_t local);
 int	__vfprintf(FILE *, locale_t, const char *, __va_list);
 int	__svfscanf(FILE * __restrict, const char * __restrict, __va_list);
 int	__vfwprintf(FILE * __restrict, locale_t, const wchar_t * __restrict,
 	    __va_list);
-int	__vfwscanf(FILE * __restrict, const wchar_t * __restrict, __va_list);
+int	__vfwscanf(FILE * __restrict, locale_t locale,
+	    const wchar_t * __restrict, __va_list);
 
 extern void __atexit_register_cleanup(void (*)(void));
 extern int __sdidinit;

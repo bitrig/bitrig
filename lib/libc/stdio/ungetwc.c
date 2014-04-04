@@ -33,9 +33,10 @@
 #include <stdio.h>
 #include <wchar.h>
 #include "local.h"
+#include "locale/mblocal.h"
 
 wint_t
-__ungetwc(wint_t wc, FILE *fp)
+__ungetwc(wint_t wc, FILE *fp, locale_t locale)
 {
 	struct wchar_io_data *wcio;
 
@@ -66,12 +67,19 @@ __ungetwc(wint_t wc, FILE *fp)
 }
 
 wint_t
-ungetwc(wint_t wc, FILE *fp)
+ungetwc_l(wint_t wc, FILE *fp, locale_t locale)
 {
 	wint_t r;
 
+	FIX_LOCALE(locale);
 	FLOCKFILE(fp);
-	r = __ungetwc(wc, fp);
+	r = __ungetwc(wc, fp, locale);
 	FUNLOCKFILE(fp);
 	return (r);
+}
+
+wint_t
+ungetwc(wint_t wc, FILE *fp)
+{
+	return (ungetwc_l(wc, fp, __get_locale()));
 }

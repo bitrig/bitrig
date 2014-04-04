@@ -35,13 +35,15 @@
 #include <stdio.h>
 #include <wchar.h>
 #include "local.h"
+#include "locale/mblocal.h"
 
 wchar_t *
-fgetws(wchar_t * __restrict ws, int n, FILE * __restrict fp)
+fgetws_l(wchar_t * __restrict ws, int n, FILE * __restrict fp, locale_t locale)
 {
 	wchar_t *wsp;
 	wint_t wc;
 
+	FIX_LOCALE(locale);
 	FLOCKFILE(fp);
 	_SET_ORIENTATION(fp, 1);
 
@@ -52,7 +54,8 @@ fgetws(wchar_t * __restrict ws, int n, FILE * __restrict fp)
 
 	wsp = ws;
 	while (n-- > 1) {
-		if ((wc = __fgetwc_unlock(fp)) == WEOF && errno == EILSEQ) {
+		if ((wc = __fgetwc_unlock(fp, locale)) == WEOF &&
+		    errno == EILSEQ) {
 			goto error;
 		}
 		if (wc == WEOF) {
@@ -76,4 +79,10 @@ fgetws(wchar_t * __restrict ws, int n, FILE * __restrict fp)
 error:
 	FUNLOCKFILE(fp);
 	return (NULL);
+}
+
+wchar_t *
+fgetws(wchar_t * __restrict ws, int n, FILE * __restrict fp)
+{
+	return (fgetws_l(ws, n, fp, __get_locale()));
 }
