@@ -1,6 +1,5 @@
 ./.cshrc
 ./.profile
-./etc/amd/master.sample
 ./etc/authpf
 ./etc/bgpd.conf
 ./etc/changelist
@@ -87,7 +86,6 @@
 ./etc/rbootd.conf
 ./etc/rc
 ./etc/rc.conf
-./etc/rc.d/amd
 ./etc/rc.d/apmd
 ./etc/rc.d/bgpd
 ./etc/rc.d/bootparamd

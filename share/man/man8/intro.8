@@ -104,26 +104,6 @@ Below is a list of some of the daemons available.
 For further information, see
 .Xr rc 8
 and the individual pages for the utilities.
-.Ss Automounter daemon (amd)
-If using the
-.Xr amd 8
-package,
-go into the
-.Pa /etc/amd
-directory and set it up by
-renaming
-.Pa master.sample
-to
-.Pa master
-and editing it and creating other maps as needed.
-Alternatively, you can get your maps with YP.
-.Pp
-Relevant
-.Xr rc.conf 8
-variables:
-.Va amd_flags
-and
-.Va amd_master .
 .Ss BIND name server (DNS)
 If you are using the BIND name server, check the
 .Pa /etc/resolv.conf

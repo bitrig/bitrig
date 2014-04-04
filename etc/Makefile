@@ -50,7 +50,7 @@ BIN1+=	wsconsctl.conf
 BIN2=	motd
 
 # -r-xr-xr-x
-RCDAEMONS=	amd apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd \
+RCDAEMONS=	apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd \
 		ftpd ftpproxy hostapd hotplugd identd ifstated iked \
 		inetd isakmpd ldapd npppd ldattach ldpd lpd mrouted \
 		named nginx nsd ntpd ospfd ospf6d portmap pflogd rarpd rbootd \
@@ -167,9 +167,6 @@ distribution-etc-root-var: distrib-dirs
 	cd kerberosV; \
 		${INSTALL} -c -o root -g wheel -m 644 krb5.conf.example \
 		    ${DESTDIR}/etc/kerberosV
-	cd amd; \
-		${INSTALL} -c -o root -g wheel -m 644 master.sample \
-		    ${DESTDIR}/etc/amd
 	cd ppp; \
 		${INSTALL} -c -o root -g wheel -m 600 chap-secrets \
 		    ${DESTDIR}/etc/ppp; \
