@@ -88,9 +88,6 @@
 #define	CT_INT		3	/* integer, i.e., strtoimax or strtoumax */
 #define	CT_FLOAT	4	/* floating, i.e., strtod */
 
-#define u_char unsigned char
-#define u_long unsigned long
-
 #define	INCCL(_c)	\
 	(cclcompl ? (wmemchr(ccls, (_c), ccle - ccls) == NULL) : \
 	(wmemchr(ccls, (_c), ccle - ccls) != NULL))
