@@ -29,6 +29,22 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <wchar.h>
+#include "locale/mblocal.h"
+
+int
+fwscanf_l(FILE * __restrict fp, locale_t locale,
+    const wchar_t * __restrict fmt, ...)
+{
+	va_list ap;
+	int r;
+
+	FIX_LOCALE(locale);
+	va_start(ap, fmt);
+	r = vfwscanf_l(fp, locale, fmt, ap);
+	va_end(ap);
+
+	return (r);
+}
 
 int
 fwscanf(FILE * __restrict fp, const wchar_t * __restrict fmt, ...)
@@ -37,7 +53,7 @@ fwscanf(FILE * __restrict fp, const wchar_t * __restrict fmt, ...)
 	int r;
 
 	va_start(ap, fmt);
-	r = vfwscanf(fp, fmt, ap);
+	r = vfwscanf_l(fp, __get_locale(), fmt, ap);
 	va_end(ap);
 
 	return (r);

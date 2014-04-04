@@ -29,10 +29,17 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <wchar.h>
+#include "locale/mblocal.h"
+
+int
+vwscanf_l(locale_t locale, const wchar_t * __restrict fmt, __va_list ap)
+{
+	FIX_LOCALE(locale);
+	return (vfwscanf_l(stdin, locale, fmt, ap));
+}
 
 int
 vwscanf(const wchar_t * __restrict fmt, __va_list ap)
 {
-
-	return (vfwscanf(stdin, fmt, ap));
+	return (vwscanf_l(__get_locale(), fmt, ap));
 }
