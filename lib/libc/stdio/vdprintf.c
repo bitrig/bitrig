@@ -48,13 +48,14 @@ __dwrite(void *cookie, const char *buf, int n)
 }
 
 int
-vdprintf(int fd, const char * __restrict fmt, va_list ap)
+vdprintf_l(int fd, locale_t locale, const char * __restrict fmt, va_list ap)
 {
 	FILE f;
 	struct __sfileext fext;
 	unsigned char buf[BUFSIZ];
 	int ret;
 
+	FIX_LOCALE(locale);
 	_FILEEXT_SETUP(&f, &fext);
 
 	f._p = buf;
@@ -66,8 +67,14 @@ vdprintf(int fd, const char * __restrict fmt, va_list ap)
 	f._cookie = &fd;
 	f._write = __dwrite;
 
-	if ((ret = __vfprintf(&f, __get_locale(), fmt, ap)) < 0)
+	if ((ret = __vfprintf(&f, locale, fmt, ap)) < 0)
 		return ret;
 
 	return fflush(&f) ? EOF : ret;
+}
+
+int
+vdprintf(int fd, const char * __restrict fmt, va_list ap)
+{
+	return (vdprintf_l(fd, __get_locale(), fmt, ap));
 }

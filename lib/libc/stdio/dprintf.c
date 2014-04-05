@@ -34,6 +34,21 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include "local.h"
+#include "locale/mblocal.h"
+
+int
+dprintf_l(int fd, locale_t locale, const char * __restrict fmt, ...)
+{
+	va_list ap;
+	int ret;
+
+	FIX_LOCALE(locale);
+	va_start(ap, fmt);
+	ret = vdprintf_l(fd, locale, fmt, ap);
+	va_end(ap);
+	return ret;
+}
 
 int
 dprintf(int fd, const char * __restrict fmt, ...)
