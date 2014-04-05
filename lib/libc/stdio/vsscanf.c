@@ -1,7 +1,13 @@
 /*	$OpenBSD: vsscanf.c,v 1.12 2011/11/08 18:30:42 guenther Exp $ */
+
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
+ *
+ * Copyright (c) 2011 The FreeBSD Foundation
+ * All rights reserved.
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * This code is derived from software contributed to Berkeley by
  * Donn Seeley at UUNET Technologies, Inc.
@@ -34,6 +40,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "local.h"
+#include "locale/xlocale_private.h"
 
 /* ARGSUSED */
 static int
@@ -44,10 +51,11 @@ eofread(void *cookie, char *buf, int len)
 }
 
 int
-vsscanf(const char *str, const char *fmt, __va_list ap)
+vsscanf_l(const char *str, locale_t locale, const char *fmt, __va_list ap)
 {
 	FILE f;
 	struct __sfileext fext;
+	FIX_LOCALE(locale);
 
 	_FILEEXT_SETUP(&f, &fext);
 	f._flags = __SRD;
@@ -55,5 +63,12 @@ vsscanf(const char *str, const char *fmt, __va_list ap)
 	f._bf._size = f._r = strlen(str);
 	f._read = eofread;
 	f._lb._base = NULL;
-	return (__svfscanf(&f, fmt, ap));
+	return (__svfscanf(&f, locale, fmt, ap));
+}
+
+int
+vsscanf(const char * __restrict str, const char * __restrict fmt,
+	__va_list ap)
+{
+	return vsscanf_l(str, __get_locale(), fmt, ap);
 }

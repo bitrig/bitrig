@@ -1,7 +1,13 @@
 /*	$OpenBSD: vfscanf.c,v 1.31 2014/03/19 05:17:01 guenther Exp $ */
+
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
+ *
+ * Copyright (c) 2011 The FreeBSD Foundation
+ * All rights reserved.
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * This code is derived from software contributed to Berkeley by
  * Chris Torek.
@@ -40,6 +46,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "local.h"
+#include "locale/xlocale_private.h"
+#include "locale/mblocal.h"
 
 #ifdef FLOATING_POINT
 #include "floatio.h"
@@ -91,12 +99,15 @@
 #define u_long unsigned long
 
 static u_char *__sccl(char *, u_char *);
+#ifdef FLOATING_POINT
+static int parsefloat(FILE *, char *, char *, locale_t);
+#endif
 
 /*
  * Internal, unlocked version of vfscanf
  */
 int
-__svfscanf(FILE *fp, const char *fmt0, __va_list ap)
+__svfscanf(FILE *fp, locale_t locale, const char *fmt0, __va_list ap)
 {
 	u_char *fmt = (u_char *)fmt0;
 	int c;		/* character from format, or conversion */
@@ -106,6 +117,7 @@ __svfscanf(FILE *fp, const char *fmt0, __va_list ap)
 	int flags;	/* flags as defined above */
 	char *p0;	/* saves original value of p when necessary */
 	int nassigned;		/* number of fields assigned */
+	int nr;			/* characters read by the current conversion */
 	int nread;		/* number of characters consumed from fp */
 	int base;		/* base argument to strtoimax/strtouimax */
 	char ccltab[256];	/* character class table for %[...] */
@@ -115,6 +127,7 @@ __svfscanf(FILE *fp, const char *fmt0, __va_list ap)
 	size_t nconv;		/* length of multibyte sequence converted */
 	mbstate_t mbs;
 #endif
+	struct xlocale_ctype *l = XLOCALE_CTYPE(locale);
 
 	/* `basefix' is used to avoid `if' tests in the integer scanner */
 	static short basefix[17] =
@@ -354,7 +367,7 @@ literal:
 					fp->_p++;
 					fp->_r--;
 					bzero(&mbs, sizeof(mbs));
-					nconv = mbrtowc(wcp, buf, n, &mbs);
+					nconv = l->__mbrtowc(wcp, buf, n, &mbs);
 					if (nconv == (size_t)-1) {
 						fp->_flags |= __SERR;
 						goto input_failure;
@@ -436,7 +449,7 @@ literal:
 					fp->_p++;
 					fp->_r--;
 					bzero(&mbs, sizeof(mbs));
-					nconv = mbrtowc(wcp, buf, n, &mbs);
+					nconv = l->__mbrtowc(wcp, buf, n, &mbs);
 					if (nconv == (size_t)-1) {
 						fp->_flags |= __SERR;
 						goto input_failure;
@@ -448,8 +461,7 @@ literal:
 						    !ccltab[wctob(*wcp)]) {
 							while (n != 0) {
 								n--;
-								ungetc(buf[n],
-								    fp);
+								__ungetwc(buf[n], fp, __get_locale());
 							}
 							break;
 						}
@@ -540,7 +552,7 @@ literal:
 					fp->_p++;
 					fp->_r--;
 					bzero(&mbs, sizeof(mbs));
-					nconv = mbrtowc(wcp, buf, n, &mbs);
+					nconv = l->__mbrtowc(wcp, buf, n, &mbs);
 					if (nconv == (size_t)-1) {
 						fp->_flags |= __SERR;
 						goto input_failure;
@@ -551,8 +563,7 @@ literal:
 						if (iswspace(*wcp)) {
 							while (n != 0) {
 								n--;
-								ungetc(buf[n],
-								    fp);
+								__ungetwc(buf[n], fp, __get_locale());
 							}
 							break;
 						}
@@ -730,9 +741,11 @@ literal:
 
 				*p = '\0';
 				if (flags & UNSIGNED)
-					res = strtoumax(buf, NULL, base);
+					res = strtoumax_l(buf, NULL, base,
+					    locale);
 				else
-					res = strtoimax(buf, NULL, base);
+					res = strtoimax_l(buf, NULL, base,
+					    locale);
 				if (flags & POINTER)
 					*va_arg(ap, void **) =
 					    (void *)(uintptr_t)res;
@@ -760,91 +773,22 @@ literal:
 #ifdef FLOATING_POINT
 		case CT_FLOAT:
 			/* scan a floating point number as if by strtod */
-#ifdef hardway
 			if (width == 0 || width > sizeof(buf) - 1)
 				width = sizeof(buf) - 1;
-#else
-			/* size_t is unsigned, hence this optimisation */
-			if (--width > sizeof(buf) - 2)
-				width = sizeof(buf) - 2;
-			width++;
-#endif
-			flags |= SIGNOK | NDIGITS | DPTOK | EXPOK;
-			for (p = buf; width; width--) {
-				c = *fp->_p;
-				/*
-				 * This code mimicks the integer conversion
-				 * code, but is much simpler.
-				 */
-				switch (c) {
-
-				case '0': case '1': case '2': case '3':
-				case '4': case '5': case '6': case '7':
-				case '8': case '9':
-					flags &= ~(SIGNOK | NDIGITS);
-					goto fok;
-
-				case '+': case '-':
-					if (flags & SIGNOK) {
-						flags &= ~SIGNOK;
-						goto fok;
-					}
-					break;
-				case '.':
-					if (flags & DPTOK) {
-						flags &= ~(SIGNOK | DPTOK);
-						goto fok;
-					}
-					break;
-				case 'e': case 'E':
-					/* no exponent without some digits */
-					if ((flags&(NDIGITS|EXPOK)) == EXPOK) {
-						flags =
-						    (flags & ~(EXPOK|DPTOK)) |
-						    SIGNOK | NDIGITS;
-						goto fok;
-					}
-					break;
-				}
-				break;
-		fok:
-				*p++ = c;
-				if (--fp->_r > 0)
-					fp->_p++;
-				else if (__srefill(fp))
-					break;	/* EOF */
-			}
-			/*
-			 * If no digits, might be missing exponent digits
-			 * (just give back the exponent) or might be missing
-			 * regular digits, but had sign and/or decimal point.
-			 */
-			if (flags & NDIGITS) {
-				if (flags & EXPOK) {
-					/* no digits at all */
-					while (p > buf)
-						ungetc(*(u_char *)--p, fp);
-					goto match_failure;
-				}
-				/* just a bad exponent (e and maybe sign) */
-				c = *(u_char *)--p;
-				if (c != 'e' && c != 'E') {
-					(void) ungetc(c, fp);/* sign */
-					c = *(u_char *)--p;
-				}
-				(void) ungetc(c, fp);
-			}
+			nr = parsefloat(fp, buf, buf + width, locale);
+			if (nr == 0)
+				goto match_failure;
 			if ((flags & SUPPRESS) == 0) {
-				*p = '\0';
 				if (flags & LONGDBL) {
-					long double res = strtold(buf,
-					    (char **)NULL);
+					long double res = strtold_l(buf, NULL,
+					    locale);
 					*va_arg(ap, long double *) = res;
 				} else if (flags & LONG) {
-					double res = strtod(buf, (char **)NULL);
+					double res = strtod_l(buf, NULL,
+					    locale);
 					*va_arg(ap, double *) = res;
 				} else {
-					float res = strtof(buf, (char **)NULL);
+					float res = strtof_l(buf, NULL, locale);
 					*va_arg(ap, float *) = res;
 				}
 				nassigned++;
@@ -963,7 +907,190 @@ vfscanf(FILE *fp, const char *fmt0, __va_list ap)
 	int r;
 
 	FLOCKFILE(fp);
-	r = __svfscanf(fp, fmt0, ap);
+	r = __svfscanf(fp, __get_locale(), fmt0, ap);
 	FUNLOCKFILE(fp);
 	return (r);
 }
+
+int
+vfscanf_l(FILE *fp, locale_t locale, char const *fmt0, va_list ap)
+{
+	int ret;
+	FIX_LOCALE(locale);
+
+	FLOCKFILE(fp);
+	ret = __svfscanf(fp, locale, fmt0, ap);
+	FUNLOCKFILE(fp);
+	return (ret);
+}
+
+#ifdef FLOATING_POINT
+static int
+parsefloat(FILE *fp, char *buf, char *end, locale_t locale)
+{
+	char *commit, *p;
+	int infnanpos = 0, decptpos = 0;
+	enum {
+		S_START, S_GOTSIGN, S_INF, S_NAN, S_DONE, S_MAYBEHEX,
+		S_DIGITS, S_DECPT, S_FRAC, S_EXP, S_EXPDIGITS
+	} state = S_START;
+	unsigned char c;
+	const char *decpt = localeconv_l(locale)->decimal_point;
+	_Bool gotmantdig = 0, ishex = 0;
+
+	/*
+	 * We set commit = p whenever the string we have read so far
+	 * constitutes a valid representation of a floating point
+	 * number by itself.  At some point, the parse will complete
+	 * or fail, and we will ungetc() back to the last commit point.
+	 * To ensure that the file offset gets updated properly, it is
+	 * always necessary to read at least one character that doesn't
+	 * match; thus, we can't short-circuit "infinity" or "nan(...)".
+	 */
+	commit = buf - 1;
+	for (p = buf; p < end; ) {
+		c = *fp->_p;
+reswitch:
+		switch (state) {
+		case S_START:
+			state = S_GOTSIGN;
+			if (c == '-' || c == '+')
+				break;
+			else
+				goto reswitch;
+		case S_GOTSIGN:
+			switch (c) {
+			case '0':
+				state = S_MAYBEHEX;
+				commit = p;
+				break;
+			case 'I':
+			case 'i':
+				state = S_INF;
+				break;
+			case 'N':
+			case 'n':
+				state = S_NAN;
+				break;
+			default:
+				state = S_DIGITS;
+				goto reswitch;
+			}
+			break;
+		case S_INF:
+			if (infnanpos > 6 ||
+			    (c != "nfinity"[infnanpos] &&
+			     c != "NFINITY"[infnanpos]))
+				goto parsedone;
+			if (infnanpos == 1 || infnanpos == 6)
+				commit = p;	/* inf or infinity */
+			infnanpos++;
+			break;
+		case S_NAN:
+			switch (infnanpos) {
+			case 0:
+				if (c != 'A' && c != 'a')
+					goto parsedone;
+				break;
+			case 1:
+				if (c != 'N' && c != 'n')
+					goto parsedone;
+				else
+					commit = p;
+				break;
+			case 2:
+				if (c != '(')
+					goto parsedone;
+				break;
+			default:
+				if (c == ')') {
+					commit = p;
+					state = S_DONE;
+				} else if (!isalnum(c) && c != '_')
+					goto parsedone;
+				break;
+			}
+			infnanpos++;
+			break;
+		case S_DONE:
+			goto parsedone;
+		case S_MAYBEHEX:
+			state = S_DIGITS;
+			if (c == 'X' || c == 'x') {
+				ishex = 1;
+				break;
+			} else {	/* we saw a '0', but no 'x' */
+				gotmantdig = 1;
+				goto reswitch;
+			}
+		case S_DIGITS:
+			if ((ishex && isxdigit(c)) || isdigit(c)) {
+				gotmantdig = 1;
+				commit = p;
+				break;
+			} else {
+				state = S_DECPT;
+				goto reswitch;
+			}
+		case S_DECPT:
+			if (c == decpt[decptpos]) {
+				if (decpt[++decptpos] == '\0') {
+					/* We read the complete decpt seq. */
+					state = S_FRAC;
+					if (gotmantdig)
+						commit = p;
+				}
+				break;
+			} else if (!decptpos) {
+				/* We didn't read any decpt characters. */
+				state = S_FRAC;
+				goto reswitch;
+			} else {
+				/*
+				 * We read part of a multibyte decimal point,
+				 * but the rest is invalid, so bail.
+				 */
+				goto parsedone;
+			}
+		case S_FRAC:
+			if (((c == 'E' || c == 'e') && !ishex) ||
+			    ((c == 'P' || c == 'p') && ishex)) {
+				if (!gotmantdig)
+					goto parsedone;
+				else
+					state = S_EXP;
+			} else if ((ishex && isxdigit(c)) || isdigit(c)) {
+				commit = p;
+				gotmantdig = 1;
+			} else
+				goto parsedone;
+			break;
+		case S_EXP:
+			state = S_EXPDIGITS;
+			if (c == '-' || c == '+')
+				break;
+			else
+				goto reswitch;
+		case S_EXPDIGITS:
+			if (isdigit(c))
+				commit = p;
+			else
+				goto parsedone;
+			break;
+		default:
+			abort();
+		}
+		*p++ = c;
+		if (--fp->_r > 0)
+			fp->_p++;
+		else if (__srefill(fp))
+			break;	/* EOF */
+	}
+
+parsedone:
+	while (commit < --p)
+		ungetc(*(u_char *)p, fp);
+	*++commit = '\0';
+	return (commit - buf);
+}
+#endif /* FLOATING_POINT */

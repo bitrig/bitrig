@@ -1,10 +1,14 @@
-/*	$OpenBSD: sscanf.c,v 1.14 2011/11/08 18:30:42 guenther Exp $ */
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Chris Torek.
+ *
+ * Copyright (c) 2011 The FreeBSD Foundation
+ * All rights reserved.
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,33 +38,30 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include "xlocale.h"
 #include "local.h"
 
-/* ARGSUSED */
-static int
-eofread(void *cookie, char *buf, int len)
-{
-
-	return (0);
-}
-
-/* SCANFLIKE2 */
 int
-sscanf(const char *str, const char *fmt, ...)
+sscanf(const char * __restrict str, char const * __restrict fmt, ...)
 {
 	int ret;
 	va_list ap;
-	FILE f;
-	struct __sfileext fext;
 
-	_FILEEXT_SETUP(&f, &fext);
-	f._flags = __SRD;
-	f._bf._base = f._p = (unsigned char *)str;
-	f._bf._size = f._r = strlen(str);
-	f._read = eofread;
-	f._lb._base = NULL;
 	va_start(ap, fmt);
-	ret = __svfscanf(&f, fmt, ap);
+	ret = vsscanf(str, fmt, ap);
+	va_end(ap);
+	return (ret);
+}
+
+int
+sscanf_l(const char * __restrict str, locale_t locale,
+		char const * __restrict fmt, ...)
+{
+	int ret;
+	va_list ap;
+
+	va_start(ap, fmt);
+	ret = vsscanf_l(str, locale, fmt, ap);
 	va_end(ap);
 	return (ret);
 }

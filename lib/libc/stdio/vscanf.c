@@ -1,10 +1,14 @@
-/*	$OpenBSD: vscanf.c,v 1.8 2006/01/06 18:53:04 millert Exp $ */
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
  * This code is derived from software contributed to Berkeley by
  * Donn Seeley at UUNET Technologies, Inc.
+ *
+ * Copyright (c) 2011 The FreeBSD Foundation
+ * All rights reserved.
+ * Portions of this software were developed by David Chisnall
+ * under sponsorship from the FreeBSD Foundation.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,10 +36,23 @@
  */
 
 #include <stdio.h>
+#include "local.h"
+#include "locale/xlocale_private.h"
 
 int
-vscanf(const char *fmt, __va_list ap)
+vscanf_l(locale_t locale, const char * __restrict fmt, __va_list ap)
 {
+	int retval;
+	FIX_LOCALE(locale);
 
-	return (vfscanf(stdin, fmt, ap));
+	FLOCKFILE(stdin);
+	retval = __svfscanf(stdin, locale, fmt, ap);
+	FUNLOCKFILE(stdin);
+	return (retval);
+}
+
+int
+vscanf(const char * __restrict fmt, __va_list ap)
+{
+	return vscanf_l(__get_locale(), fmt, ap);
 }
