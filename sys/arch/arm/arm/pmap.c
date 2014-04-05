@@ -491,16 +491,17 @@ _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags, int cache)
 	s = splvm();
 	
 	pted = pmap_vp_lookup(pm, va);
-	if (pted && PTED_VALID(pted))
-		pmap_kremove_pg(va); /* pted is reused */ 
-					    
-	pm->pm_stats.resident_count++;
 					    
 	/* Do not have pted for this, get one and put it in VP */
 	if (pted == NULL) {
 		panic("pted not preallocated in pmap_kernel() va %lx pa %lx\n",
 		    va, pa);
 	}
+
+	if (pted && PTED_VALID(pted))
+		pmap_kremove_pg(va); /* pted is reused */ 
+					    
+	pm->pm_stats.resident_count++;
   
 	if (cache == PMAP_CACHE_DEFAULT) {
 		if (PHYS_TO_VM_PAGE(pa) != NULL) {
@@ -990,7 +991,7 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 			prot = VM_PROT_READ|VM_PROT_WRITE;
 			if (va >= KERNEL_BASE_VIRT && va < (vaddr_t)etext)
 				prot |= VM_PROT_EXECUTE;
-			pmap_kenter_pa(va, pa, prot);
+			pmap_kenter_cache(va, pa, prot, PMAP_CACHE_WB);
 		}
 	}
 
@@ -1064,7 +1065,7 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 }
 
 void
-pmap_set_l2(struct pmap *pm, uint32_t pa, vaddr_t va, uint32_t l2_pa)
+pmap_set_l2(struct pmap *pm, uint32_t va, vaddr_t l2_va, uint32_t l2_pa)
 {
 	uint32_t pg_entry;
 	struct pmapvp2 *vp2;
@@ -1080,12 +1081,12 @@ pmap_set_l2(struct pmap *pm, uint32_t pa, vaddr_t va, uint32_t l2_pa)
 
 	pg_entry |= L1_TYPE_PT;
 
-	idx1 = pa >> VP_IDX1_POS;
-	idx2 = (pa >> VP_IDX2_POS) & VP_IDX2_MASK;
+	idx1 = va >> VP_IDX1_POS;
+	idx2 = (va >> VP_IDX2_POS) & VP_IDX2_MASK;
 	vp2 = pmap_kernel()->pm_vp[idx1];
-	vp2->l2[idx2] = (uint32_t *)va;
+	vp2->l2[idx2] = (uint32_t *)l2_va;
 
-	pmap_kernel()->l1_va[pa>>VP_IDX2_POS] = pg_entry;
+	pmap_kernel()->l1_va[va>>VP_IDX2_POS] = pg_entry;
 }
 
 /*
@@ -1358,13 +1359,12 @@ pte_insert(struct pte_desc *pted)
 
 	if (pm == pmap_kernel()) {
 		access_bits = ap_bits_kern[pted->pted_va & VM_PROT_ALL];
-		access_bits |= L2_S_AP0;
 	} else {
 		access_bits = ap_bits_user[pted->pted_va & VM_PROT_ALL];
-		access_bits |= L2_S_AP0;
 	}
+	access_bits |= L2_P_AP0;
 
-	pte =  pted->pted_pte | cache_bits | access_bits;
+	pte =  pted->pted_pte | cache_bits | access_bits | L2_P;
 
 	vp2 = pmap_kernel()->pm_vp[VP_IDX1(pted->pted_va)];
 	if (vp2->l2[VP_IDX2(pted->pted_va)] == NULL) {
