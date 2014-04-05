@@ -30,15 +30,17 @@
  */
 
 #include <wchar.h>
+#include "locale/mblocal.h"
 
 int
-wcswidth(const wchar_t *s, size_t n)
+wcswidth_l(const wchar_t *s, size_t n, locale_t locale)
 {
 	int w, q;
 
+	FIX_LOCALE(locale);
 	w = 0;
 	while (n && *s) {
-		q = wcwidth(*s);
+		q = wcwidth_l(*s, locale);
 		if (q == -1)
 			return (-1);
 		w += q;
@@ -47,4 +49,10 @@ wcswidth(const wchar_t *s, size_t n)
 	}
 
 	return w;
+}
+
+int
+wcswidth(const wchar_t *s, size_t n)
+{
+	return (wcswidth_l(s, n, __get_locale()));
 }
