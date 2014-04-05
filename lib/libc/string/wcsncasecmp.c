@@ -28,21 +28,29 @@
 
 #include <wchar.h>
 #include <wctype.h>
+#include "locale/mblocal.h"
 
 int
-wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n)
+wcsncasecmp_l(const wchar_t *s1, const wchar_t *s2, size_t n, locale_t locale)
 {
 	wchar_t c1, c2;
 
 	if (n == 0)
 		return (0);
+	FIX_LOCALE(locale);
 	for (; *s1; s1++, s2++) {
-		c1 = towlower(*s1);
-		c2 = towlower(*s2);
+		c1 = towlower_l(*s1, locale);
+		c2 = towlower_l(*s2, locale);
 		if (c1 != c2)
 			return ((int)c1 - c2);
 		if (--n == 0)
 			return (0);
 	}
 	return (-*s2);
+}
+
+int
+wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n)
+{
+	return (wcsncasecmp_l(s1, s2, n, __get_locale()));
 }
