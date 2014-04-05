@@ -1341,6 +1341,7 @@ waitserverlist() {
 
 	sed -n "s,^http://"'\([[A-Za-z0-9\:_][]A-Za-z0-9:._-]*\),\1,p' \
 		$HTTP_LISTALL >$HTTP_LIST 2>/dev/null
+	set -- $(sed q $HTTP_LIST)
 	: ${HTTP_SERVER:=${1%%/*}}
 }
 
