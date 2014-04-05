@@ -371,7 +371,7 @@ uk*	at scsibus?			# unknown SCSI
 
 mpath0	at root
 #emc*	at scsibus?
-#hds*	at scsibus?
+hds*	at scsibus?
 rdac*	at scsibus?
 sym*	at scsibus?
 
