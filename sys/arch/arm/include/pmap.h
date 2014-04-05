@@ -43,6 +43,10 @@ void pmap_kenter_cache(vaddr_t va, paddr_t pa, vm_prot_t prot, int cacheable);
 #define PMAP_CACHE_PTE		(PMAP_MD2)	/* PTE mapping */
 #define PMAP_CACHE_BITS		(PMAP_MD0|PMAP_MD1|PMAP_MD2)	
 
+#define PTED_VA_MANAGED_M       (PMAP_MD3)
+#define PTED_VA_WIRED_M         (PMAP_MD3 << 1)
+#define PTED_VA_EXEC_M          (PMAP_MD3 << 2)
+
 #define PG_PMAP_MOD     PG_PMAP0
 #define PG_PMAP_REF     PG_PMAP1
 #define PG_PMAP_EXE     PG_PMAP2
@@ -63,9 +67,6 @@ struct pmap {
 	/* delete this */ union pmap_cache_state	pm_cstate;
 };
 
-#define PTED_VA_MANAGED_M       0x01
-#define PTED_VA_WIRED_M         0x02
-#define PTED_VA_EXEC_M          0x04
 
 extern struct pmap kernel_pmap_;
 #define pmap_kernel()   		(&kernel_pmap_)

@@ -341,6 +341,8 @@ bootstrap_bs_map(void *t, bus_addr_t bpa, bus_size_t size,
 	return 0;
 }
 
+/*
+dead code aint much fun.
 static void
 copy_io_area_map(pd_entry_t *new_pd)
 {
@@ -353,10 +355,10 @@ copy_io_area_map(pd_entry_t *new_pd)
 
 		new_pd[va>>L1_S_SHIFT] = cur_pd[va>>L1_S_SHIFT];
 		if (va == (ARM_VECTORS_HIGH & ~(0x00400000 - 1)))
-			break; /* STUPID */
-
+			break;
 	}
 }
+*/
 
 /*
  * u_int initarm(...)
@@ -374,22 +376,14 @@ copy_io_area_map(pd_entry_t *new_pd)
 u_int
 initarm(void *arg0, void *arg1, void *arg2)
 {
-	int loop, i, physsegs;
-	u_int l1pagetable;
-	pv_addr_t kernel_l1pt;
+	int i, physsegs;
 	pv_addr_t fdt;
 	paddr_t memstart;
 	psize_t memsize;
-	void *config;
 	extern uint32_t esym; /* &_end if no symbols are loaded */
 	extern uint32_t eramdisk; /* zero if no ramdisk is loaded */
 	uint32_t kernel_end = eramdisk ? eramdisk : esym;
 	uint32_t initrd = 0, initrdsize = 0; /* initrd information from fdt */
-
-	/* early bus_space_map support */
-	struct bus_space tmp_bs_tag;
-	int	(*map_func_save)(void *, bus_addr_t, bus_size_t, int,
-	    bus_space_handle_t *);
 
 	board_id = (uint32_t)arg1;
 
@@ -399,42 +393,9 @@ initarm(void *arg0, void *arg1, void *arg2)
 	if (set_cpufuncs())
 		panic("cpu not recognized!");
 
-	/*
-	 * Temporarily replace bus_space_map() functions so that
-	 * console devices can get mapped.
-	 *
-	 * Note that this relies upon the fact that both regular
-	 * and a4x bus_space tags use the same map function.
-	 */
-	tmp_bs_tag = armv7_bs_tag;
-	map_func_save = armv7_bs_tag.bs_map;
-	armv7_bs_tag.bs_map = bootstrap_bs_map;
-	armv7_a4x_bs_tag.bs_map = bootstrap_bs_map;
-	tmp_bs_tag.bs_map = bootstrap_bs_map;
+	platform_disable_l2_if_needed();
 
-	/*
-	 * Now, map the bootconfig/FDT area.
-	 *
-	 * As we don't know the size of a possible FDT, map the size of a
-	 * typical bootstrap bs map.  The FDT is probably not aligned,
-	 * so this will take up to two L1_S_SIZEd mappings.  In the unlikely
-	 * case that the FDT is bigger than L1_S_SIZE (0x00100000), we need to
-	 * remap it.
-	 *
-	 * XXX: There's (currently) no way to unmap a bootstrap mapping, so we
-	 * might lose a bit of the bootstrap address space.
-	 */
-	bootstrap_bs_map(NULL, (bus_addr_t)arg2, L1_S_SIZE, 0,
-	    (bus_space_handle_t *)&config);
-	if (fdt_init(config) && fdt_get_size(config) != 0) {
-		uint32_t size = fdt_get_size(config);
-		if (size > L1_S_SIZE)
-			bootstrap_bs_map(NULL, (bus_addr_t)arg2, size, 0,
-			    (bus_space_handle_t *)&config);
-	}
-
-	if (fdt_init(config) && fdt_get_size(config) != 0) {
-		struct fdt_memory mem;
+	if (fdt_init(arg2)) {
 		void *node;
 
 		node = fdt_find_node("/memory");
@@ -482,8 +443,8 @@ initarm(void *arg0, void *arg1, void *arg2)
 
 	printf("arg0 %p arg1 %p arg2 %p\n", arg0, arg1, arg2);
 
-	if (fdt_get_size(config) == 0) {
-		parse_uboot_tags(config);
+	if (fdt_get_size(arg2) == 0) {
+		parse_uboot_tags(arg2);
 
 		/*
 		 * Examine the boot args string for options we need to know about
@@ -508,189 +469,62 @@ initarm(void *arg0, void *arg1, void *arg2)
 	physical_freestart = (((unsigned long)kernel_end - KERNEL_TEXT_BASE +0xfff) & ~0xfff) + memstart;
 	physical_freeend = MIN((uint64_t)memstart+memsize,
 	    (paddr_t)-PAGE_SIZE);
+	// reserve some memory which will get mapped as part of the kernel
+	/* Define a macro to simplify memory allocation */
+#define valloc_pages(var, np)                           \
+	alloc_pages((var).pv_pa, (np));                 \
+	(var).pv_va = KERNEL_BASE + (var).pv_pa - physical_start;
+
+#define alloc_pages(var, np)                            \
+	(var) = physical_freestart;                     \
+	physical_freestart += ((np) * PAGE_SIZE);       \
+	if (physical_freeend < physical_freestart)      \
+		panic("initarm: out of memory");        \
+	free_pages -= (np);                             \
+	memset((char *)(var), 0, ((np) * PAGE_SIZE));
 
 	physmem = (physical_end - physical_start) / PAGE_SIZE;
 
-#ifdef VERBOSE_INIT_ARM
-	/* Tell the user about the memory */
-	printf("physmemory: %d pages at 0x%08lx -> 0x%08lx\n", physmem,
-	    physical_start, physical_end - 1);
-#endif
-	pmap_bootstrap(KERNEL_VM_BASE, esym, physical_start, physical_end);
-
-	printf("success thus far\n");
-//	while(1)
-//		;
-
-	/*
-	 * Okay, the kernel starts 2MB in from the bottom of physical
-	 * memory.  We are going to allocate our bootstrap pages downwards
-	 * from there.
-	 *
-	 * We need to allocate some fixed page tables to get the kernel
-	 * going.  We allocate one page directory and a number of page
-	 * tables and store the physical addresses in the kernel_pt_table
-	 * array.
-	 *
-	 * The kernel page directory must be on a 16K boundary.  The page
-	 * tables must be on 4K bounaries.  What we do is allocate the
-	 * page directory on the first 16K boundary that we encounter, and
-	 * the page tables on 4K boundaries otherwise.  Since we allocate
-	 * at least 3 L2 page tables, we are guaranteed to encounter at
-	 * least one 16K aligned region.
-	 */
-
-#ifdef VERBOSE_INIT_ARM
-	printf("Allocating page tables\n");
-#endif
-
-
-	/* This should never be able to happen but better confirm that. */
-	if (!kernel_l1pt.pv_pa || (kernel_l1pt.pv_pa & (L1_TABLE_SIZE-1)) != 0)
-		panic("initarm: Failed to align the kernel page directory");
-
-	/*
-	 * Allocate a page for the system page mapped to V0x00000000
-	 * This page will just contain the system vectors and can be
-	 * shared by all processes.
-	 */
-	vector_page = ARM_VECTORS_HIGH;
-	//alloc_pages(systempage.pv_pa, 1);
+	alloc_pages(systempage.pv_pa, 1);
 	systempage.pv_va = vector_page;
 
 	/* Allocate stacks for all modes */
-	//valloc_pages(armstack, ARM_STACK_PAGES);
-	//valloc_pages(kernelstack, UPAGES);
+	valloc_pages(armstack, ARM_STACK_PAGES);
+	valloc_pages(kernelstack, UPAGES);
 
 	/* Store irq and abt stack in curcpu. */
 	curcpu()->ci_irqstack = armstack.pv_va + IRQ_STACK_TOP;
 	curcpu()->ci_abtstack = armstack.pv_va + ABT_STACK_TOP;
 
-#ifdef VERBOSE_INIT_ARM
-	printf("IRQ stack: p0x%08lx v0x%08lx\n",
-	    armstack.pv_pa + IRQ_STACK_TOP,
-	    armstack.pv_va + IRQ_STACK_TOP);
-	printf("ABT stack: p0x%08lx v0x%08lx\n",
-	    armstack.pv_pa + ABT_STACK_TOP,
-	    armstack.pv_va + ABT_STACK_TOP);
-	printf("UND stack: p0x%08lx v0x%08lx\n",
-	    kernelstack.pv_pa + USPACE_UNDEF_STACK_TOP,
-	    kernelstack.pv_va + USPACE_UNDEF_STACK_TOP);
-	printf("SVC stack: p0x%08lx v0x%08lx\n",
-	    kernelstack.pv_pa + USPACE_SVC_STACK_TOP,
-	    kernelstack.pv_va + USPACE_SVC_STACK_TOP);
-#endif
+	alloc_pages(msgbufphys, round_page(MSGBUFSIZE) / PAGE_SIZE);
 
 	/*
 	 * Allocate pages for an FDT copy.
 	 */
-	if (fdt_get_size(config) != 0) {
-		uint32_t size = fdt_get_size(config);
-		//valloc_pages(fdt, round_page(size) / PAGE_SIZE);
-		memcpy((void *)fdt.pv_pa, config, size);
+	if (fdt_get_size(arg2) != 0) {
+		uint32_t size = fdt_get_size(arg2);
+		valloc_pages(fdt, round_page(size) / PAGE_SIZE);
+		memcpy((void *)fdt.pv_pa, arg2, size);
 	}
 
-	/*
-	 * XXX Defer this to later so that we can reclaim the memory
-	 * XXX used by the RedBoot page tables.
-	 */
-	//alloc_pages(msgbufphys, round_page(MSGBUFSIZE) / PAGE_SIZE);
+	pmap_bootstrap(KERNEL_VM_BASE, esym, physical_start, physical_end);
+	uvm_setpagesize();        /* initialize PAGE_SIZE-dependent variables */
 
-	/*
-	 * Ok we have allocated physical pages for the primary kernel
-	 * page tables
-	 */
-
-#ifdef VERBOSE_INIT_ARM
-	printf("Creating L1 page table at 0x%08lx\n", kernel_l1pt.pv_pa);
-#endif
-
-	/*
-	 * Now we start construction of the L1 page table
-	 * We start by mapping the L2 page tables into the L1.
-	 * This means that we can replace L1 mappings later on if necessary
-	 */
-	l1pagetable = kernel_l1pt.pv_pa;
-
-	/* Map the L2 pages tables in the L1 page table */
-	pmap_link_l2pt(l1pagetable, vector_page & ~(0x00400000 - 1),
-	    &kernel_pt_table[KERNEL_PT_SYS]);
-
-	for (loop = 0; loop < KERNEL_PT_KERNEL_NUM; loop++)
-		pmap_link_l2pt(l1pagetable, KERNEL_BASE + loop * 0x00400000,
-		    &kernel_pt_table[KERNEL_PT_KERNEL + loop]);
-
-	for (loop = 0; loop < KERNEL_PT_VMDATA_NUM; loop++)
-		pmap_link_l2pt(l1pagetable, KERNEL_VM_BASE + loop * 0x00400000,
-		    &kernel_pt_table[KERNEL_PT_VMDATA + loop]);
-
-	/* update the top of the kernel VM */
-	pmap_curmaxkvaddr =
-	    KERNEL_VM_BASE + (KERNEL_PT_VMDATA_NUM * 0x00400000);
-
-#ifdef VERBOSE_INIT_ARM
-	printf("Mapping kernel\n");
-#endif
-
-	/*
-	 * Now we fill in the L2 pagetable for the kernel static code/data.
-	 * Ramdisk will be mapped separately, so that it can be unmapped.
-	 */
-	{
-		extern char etext[];
-		size_t textsize = (u_int32_t) etext - KERNEL_TEXT_BASE;
-		size_t totalsize = (u_int32_t) esym - KERNEL_TEXT_BASE;
-		u_int logical;
-
-		textsize = (textsize + PGOFSET) & ~PGOFSET;
-		totalsize = (totalsize + PGOFSET) & ~PGOFSET;
-
-		logical = 0x00000000;	/* offset of kernel in RAM */
-
-		logical += pmap_map_chunk(l1pagetable, KERNEL_BASE + logical,
-		    physical_start + logical, textsize,
-		    PROT_READ | PROT_WRITE | PROT_EXEC, PTE_CACHE);
-		logical += pmap_map_chunk(l1pagetable, KERNEL_BASE + logical,
-		    physical_start + logical, totalsize - textsize,
-		    PROT_READ | PROT_WRITE, PTE_CACHE);
-	}
+	printf("success thus far\n");
+//	while(1)
+//		;
 
 #ifdef VERBOSE_INIT_ARM
 	printf("Constructing L2 page tables\n");
 #endif
 
-	/* Map the stack pages */
-	pmap_map_chunk(l1pagetable, armstack.pv_va, armstack.pv_pa,
-	    ARM_STACK_PAGES * PAGE_SIZE, PROT_READ|PROT_WRITE, PTE_CACHE);
-	pmap_map_chunk(l1pagetable, kernelstack.pv_va, kernelstack.pv_pa,
-	    UPAGES * PAGE_SIZE, PROT_READ | PROT_WRITE, PTE_CACHE);
-
-	pmap_map_chunk(l1pagetable, kernel_l1pt.pv_va, kernel_l1pt.pv_pa,
-	    L1_TABLE_SIZE, PROT_READ | PROT_WRITE, PTE_PAGETABLE);
-
-	for (loop = 0; loop < NUM_KERNEL_PTS; ++loop) {
-		pmap_map_chunk(l1pagetable, kernel_pt_table[loop].pv_va,
-		    kernel_pt_table[loop].pv_pa, L2_TABLE_SIZE,
-		    PROT_READ | PROT_WRITE, PTE_PAGETABLE);
-	}
-
-	/* Map the Mini-Data cache clean area. */
-
-	/* Map the vector page. */
-	pmap_map_entry(l1pagetable, vector_page, systempage.pv_pa,
-	    PROT_READ | PROT_WRITE | PROT_EXEC, PTE_CACHE);
-
 	/* Map the FDT. */
+/*
 	if (fdt.pv_va && fdt.pv_pa)
 		pmap_map_chunk(l1pagetable, fdt.pv_va, fdt.pv_pa,
 		    round_page(fdt_get_size((void *)fdt.pv_pa)),
 		    PROT_READ | PROT_WRITE, PTE_CACHE);
-
-	/*
-	 * map integrated peripherals at same address in l1pagetable
-	 * so that we can continue to use console.
-	 */
-	copy_io_area_map((pd_entry_t *)l1pagetable);
+*/
 
 	/*
 	 * Now we have the real page tables in place so we can switch to them.
@@ -702,8 +536,8 @@ initarm(void *arg0, void *arg1, void *arg2)
 	cpu_domains(0x55555555);
 	/* Switch tables */
 
-	cpu_domains((DOMAIN_CLIENT << (PMAP_DOMAIN_KERNEL*2)) | DOMAIN_CLIENT);
-	setttb(kernel_l1pt.pv_pa);
+	//cpu_domains((DOMAIN_CLIENT << (PMAP_DOMAIN_KERNEL*2)) | DOMAIN_CLIENT);
+	setttb(pmap_kernel()->l1_pa);
 	cpu_tlb_flushID();
 	cpu_domains(DOMAIN_CLIENT << (PMAP_DOMAIN_KERNEL*2));
 
@@ -758,9 +592,10 @@ initarm(void *arg0, void *arg1, void *arg2)
 #ifdef VERBOSE_INIT_ARM
 	printf("page ");
 #endif
-	uvm_setpagesize();        /* initialize PAGE_SIZE-dependent variables */
-	uvm_page_physload(atop(physical_freestart), atop(physical_freeend),
-	    atop(physical_freestart), atop(physical_freeend), 0);
+	//uvm_page_physload(atop(physical_freestart), atop(physical_freeend),
+	//    atop(physical_freestart), atop(physical_freeend), 0);
+
+	// only first block was originally given to the UVM(?) provide the rest
 
 	physsegs = MIN(bootconfig.dramblocks, VM_PHYSSEG_MAX);
 
@@ -773,20 +608,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 		    atop(dramstart), atop(dramend), 0);
 	}
 
-	/* Boot strap pmap telling it where the kernel page table is */
-#ifdef VERBOSE_INIT_ARM
-	printf("pmap ");
-#endif
-/*
-	pmap_bootstrap((pd_entry_t *)kernel_l1pt.pv_va, KERNEL_VM_BASE,
-	    KERNEL_VM_BASE + KERNEL_VM_SIZE);
-*/
-
-	/*
-	 * Restore proper bus_space operation, now that pmap is initialized.
-	 */
-	armv7_bs_tag.bs_map = map_func_save;
-	armv7_a4x_bs_tag.bs_map = map_func_save;
+	consinit();
 
 	/*
 	 * Make sure ramdisk is mapped, if there is any.

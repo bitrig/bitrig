@@ -66,10 +66,9 @@ void pmap_set_l2(struct pmap *pm, uint32_t pa, vaddr_t va, uint32_t l2_pa);
 void
 pmap_fill_pte(pmap_t pm, vaddr_t va, paddr_t pa, struct pte_desc *pted,
     vm_prot_t prot, int flags, int cache);
-void pte_insert(pmap_t pm, struct pte_desc *pted);
-void pmap_table_remove(struct pte_desc *pted);
+void pte_insert(struct pte_desc *pted);
+void pte_remove(struct pte_desc *pted);
 void pmap_kenter_cache(vaddr_t va, paddr_t pa, vm_prot_t prot, int cacheable);
-void pmap_table_insert(struct pte_desc *pted);
 void pmap_pinit(pmap_t pm);
 void pmap_release(pmap_t pm);
 //vaddr_t pmap_steal_memory(vsize_t size, vaddr_t *start, vaddr_t *end);
@@ -92,6 +91,19 @@ struct pool pmap_pted_pool;
 /* list of L1 tables */
 
 int pmap_initialized = 0;
+
+struct mem_region {
+	vaddr_t start;
+	vsize_t size;
+};
+
+struct mem_region pmap_avail_regions[10];
+struct mem_region pmap_allocated_regions[10];
+struct mem_region *pmap_avail = &pmap_avail_regions[0];
+struct mem_region *pmap_allocated = &pmap_allocated_regions[0];
+int pmap_cnt_avail, pmap_cnt_allocated;
+uint32_t pmap_avail_kvo;
+
 
 /* virtual to physical helpers */
 static inline int
@@ -324,7 +336,7 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	 * now.
 	 */
 	if (flags & (VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED)) {
-		pte_insert(pm, pted);
+		pte_insert(pted);
 	}
 
 	if (prot & VM_PROT_EXECUTE) {
@@ -440,7 +452,7 @@ pmap_remove_pg(pmap_t pm, vaddr_t va)
 	}
 	pm->pm_stats.resident_count--;
 
-	pmap_table_remove(pted);
+	pte_remove(pted);
 
 	if (pted->pted_va & PTED_VA_EXEC_M) {
 		pted->pted_va &= ~PTED_VA_EXEC_M;
@@ -507,7 +519,7 @@ _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags, int cache)
 	 * We were told to map the page, probably called from vm_fault,
 	 * so map the page!
 	 */
-	pte_insert(pm, pted);
+	pte_insert(pted);
 
 	splx(s);
 }
@@ -551,7 +563,7 @@ pmap_kremove_pg(vaddr_t va)
 	 * so that we know the mapping information is either valid,
 	 * or that the mapping is not present in the hash table.
 	 */
-	pmap_table_remove(pted);
+	pte_remove(pted);
 
 	if (pted->pted_va & PTED_VA_EXEC_M)
 		pted->pted_va &= ~PTED_VA_EXEC_M;
@@ -561,6 +573,7 @@ pmap_kremove_pg(vaddr_t va)
 
 	/* invalidate pted; */
 	pted->pted_pte = 0;
+	pted->pted_va = 0;
 
 	splx(s);
 
@@ -583,23 +596,13 @@ pte_invalidate(void *ptp, struct pte_desc *pted)
 }
 
 
-void
-pmap_table_insert(struct pte_desc *pted)
-{
-	panic("implement pmap_table_insert");
-}
-
-void
-pmap_table_remove(struct pte_desc *pted)
-{
-	panic("implement pmap_table_insert");
-}
 
 void
 pmap_fill_pte(pmap_t pm, vaddr_t va, paddr_t pa, struct pte_desc *pted,
     vm_prot_t prot, int flags, int cache)
 {
 	pted->pted_va = va;
+	pted->pted_pmap = pm;
 
 	/* NOTE: uses TEX remap */
 	switch (cache) {
@@ -871,8 +874,9 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 	struct pmapvp3 *vp3;
 	struct pte_desc *pted;
 	int i, j, k;
+	int dump = 0;
 
-	kvo = KERNEL_BASE_VIRT - KERNEL_BASE_PHYS;
+	kvo = KERNEL_BASE_VIRT - (ram_start +(KERNEL_BASE_VIRT&0x0fffffff));
 
 	pmap_setup_avail(ram_start, ram_end, kvo);
 
@@ -897,7 +901,8 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 	int lb_idx2, ub_idx2;
 	int lb_idx3, ub_idx3;
 
-	/* this loop is done twice, once for large allocations and
+	/*
+	 * this loop is done twice, once for large allocations and
 	 * once for small
 	 */
 	for (i = VP_IDX1(VM_MIN_KERNEL_ADDRESS);
@@ -914,8 +919,7 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 		}
 		if (i == VP_IDX1(VM_MIN_KERNEL_ADDRESS)) {
 			ub_idx2 = VP_IDX2(VM_MAX_KERNEL_ADDRESS);
-		} else {
-			ub_idx2 = VP_IDX2_CNT-1;
+		} else { ub_idx2 = VP_IDX2_CNT-1;
 		}
 		for (j = lb_idx2; j <= ub_idx2; j++) {
 			pa = pmap_steal_avail(sizeof (struct pmapvp3), 4, &va);
@@ -926,8 +930,9 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 			    (i << VP_IDX1_POS) | (j << VP_IDX2_POS),
 			    (vaddr_t)va, (uint32_t)pa);
 		}
-		
 	}
+	pmap_curmaxkvaddr = VM_MAX_KERNEL_ADDRESS;
+
 	/* allocate pted */
 	for (i = VP_IDX1(VM_MIN_KERNEL_ADDRESS);
 	    i <= VP_IDX1(VM_MAX_KERNEL_ADDRESS);
@@ -969,6 +974,26 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 	}
 
 	/* now that we have mapping space for everything, lets map it */
+	/* all of these mappings are ram -> kernel va */
+
+	struct mem_region *mp;
+	vm_prot_t prot;
+
+	for (mp = pmap_allocated; mp->size != 0; mp++) {
+		vaddr_t va;
+		paddr_t pa;
+		vsize_t size;
+		extern char *etext;
+		for (pa = mp->start, va = pa + kvo, size = mp->size & ~0xfff;
+		    size > 0; va += PAGE_SIZE, pa+= PAGE_SIZE, size -= PAGE_SIZE) {
+			pa = va - kvo;
+			prot = VM_PROT_READ|VM_PROT_WRITE;
+			if (va >= KERNEL_BASE_VIRT && va < (vaddr_t)etext)
+				prot |= VM_PROT_EXECUTE;
+			pmap_kenter_pa(va, pa, prot);
+		}
+	}
+
 
 	/* XXX */
 
@@ -988,6 +1013,7 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 	pmap_avail_fixup();
 	pmap_map_stolen();
 
+	if (dump) {
 	for (i = 0; i < 4096; i++) {
 		int idx1, idx2, idx3;
 		uint32_t pa = i << VP_IDX2_POS;
@@ -1027,6 +1053,7 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 				}
 			}
 		}
+	}
 	}
 
 	uvmexp.pagesize = PAGE_SIZE;
@@ -1273,7 +1300,7 @@ pte_spill_v(pmap_t pm, u_int32_t va, u_int32_t dsisr, int exec_fault)
                 return 0;
         }
 
-	pte_insert(pm, pted);
+	pte_insert(pted);
 
         return 1;
 }
@@ -1302,13 +1329,14 @@ static uint32_t ap_bits_kern [16] = {
 };
 
 void
-pte_insert(pmap_t pm, struct pte_desc *pted)
+pte_insert(struct pte_desc *pted)
 {
 	/* put entry into table */
 	/* need to deal with ref/change here */
 	uint32_t pte, cache_bits, access_bits;
 	struct pmapvp2 *vp2;
 	uint32_t *l2;
+	pmap_t pm = pted->pted_pmap;
 
 	/* NOTE: uses TEX remap */
 	switch (pted->pted_va & PMAP_CACHE_BITS) {
@@ -1348,6 +1376,25 @@ pte_insert(pmap_t pm, struct pte_desc *pted)
 	/* tlbie (pted->pted_va &PTE_RPN); */
 }
 
+void
+pte_remove(struct pte_desc *pted)
+{
+	/* put entry into table */
+	/* need to deal with ref/change here */
+	struct pmapvp2 *vp2;
+	uint32_t *l2;
+	pmap_t pm = pted->pted_pmap;
+
+	vp2 = pmap_kernel()->pm_vp[VP_IDX1(pted->pted_va)];
+	if (vp2->l2[VP_IDX2(pted->pted_va)] == NULL) {
+		panic("have a pted, but missing the l2 for %x va pmap %x",
+		    pted->pted_va, pm);
+	}
+	l2 = vp2->l2[VP_IDX2(pted->pted_va)];
+	l2[VP_IDX3(pted->pted_va)] = 0;
+	/* tlbie (pted->pted_va &PTE_RPN); */
+}
+
 int     pmap_fault_fixup(pmap_t pm0, vaddr_t v0, vm_prot_t p0, int i0)
 {
 return 0;
@@ -1371,9 +1418,12 @@ void    pmap_map_section(vaddr_t l1_addr, vaddr_t va, paddr_t pa, int flags, int
 	l1[idx1] = (pa & L1_S_RPGN) | L1_S_AP(ap_flag);
 }
 
-void    pmap_map_entry(vaddr_t v0, vaddr_t v1, paddr_t p0, int i0, int i1) {}
-vsize_t pmap_map_chunk(vaddr_t v0, vaddr_t v1, paddr_t p0, vsize_t s0, int prot, int cache)
+void    pmap_map_entry(vaddr_t l1, vaddr_t va, paddr_t pa, int i0, int i1) {}
+vsize_t pmap_map_chunk(vaddr_t l1, vaddr_t va, paddr_t pa, vsize_t sz, int prot, int cache)
 {
+	for (; sz > 0; sz -= PAGE_SIZE, va += PAGE_SIZE, pa += PAGE_SIZE) {
+		pmap_kenter_cache(va, pa, prot, cache);
+	}
 	return 0;
 }
 
@@ -1445,19 +1495,7 @@ void    pmap_set_pcb_pagedir(pmap_t pm, struct pcb *pcb)
 {
 }
 
-struct mem_region {
-	vaddr_t start;
-	vsize_t size;
-};
-
 void pmap_avail_fixup(void);
-
-struct mem_region pmap_avail_regions[10];
-struct mem_region pmap_allocated_regions[10];
-struct mem_region *pmap_avail = &pmap_avail_regions[0];
-struct mem_region *pmap_allocated = &pmap_allocated_regions[0];
-int pmap_cnt_avail, pmap_cnt_allocated;
-uint32_t pmap_avail_kvo;
 
 void
 pmap_setup_avail( uint32_t ram_start, uint32_t ram_end, uint32_t kvo)
