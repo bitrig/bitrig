@@ -111,8 +111,6 @@ _C_LABEL(bootstrap_start):
 	 * specific ram configuration of this board.
 	 */
 	b	3f
-	
-
 
 2:
 	str	r3, [r0, r2]
