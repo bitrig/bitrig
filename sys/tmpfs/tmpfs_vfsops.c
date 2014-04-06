@@ -365,7 +365,7 @@ tmpfs_statfs(struct mount *mp, struct statfs *sbp, struct proc *p)
 
 	sbp->f_iosize = sbp->f_bsize = PAGE_SIZE;
 
-	rw_enter_write(&tmp->tm_acc_lock);
+	mtx_enter(&tmp->tm_acc_lock);
 	avail =  tmpfs_pages_avail(tmp);
 	sbp->f_blocks = (tmpfs_bytes_max(tmp) >> PAGE_SHIFT);
 	sbp->f_bfree = avail;
@@ -377,7 +377,7 @@ tmpfs_statfs(struct mount *mp, struct statfs *sbp, struct proc *p)
 	sbp->f_files = tmp->tm_nodes_cnt + freenodes;
 	sbp->f_ffree = freenodes;
 	sbp->f_favail = freenodes & INT64_MAX; /* f_favail is int64_t */
-	rw_exit_write(&tmp->tm_acc_lock);
+	mtx_leave(&tmp->tm_acc_lock);
 
 	sbp->f_fsid = mp->mnt_stat.f_fsid;
 	sbp->f_owner = mp->mnt_stat.f_owner;

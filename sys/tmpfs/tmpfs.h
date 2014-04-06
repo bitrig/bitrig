@@ -44,6 +44,7 @@
 #include <sys/queue.h>
 #include <sys/stdint.h>
 #include <sys/rwlock.h>
+#include <sys/mutex.h>
 
 /*
  * Internal representation of a tmpfs directory entry.
@@ -226,7 +227,7 @@ typedef struct tmpfs_mount {
 	uint64_t		tm_bytes_used;
 	/* Highest allocated inode number. */
 	uint64_t		tm_highest_inode;
-	struct rwlock		tm_acc_lock;
+	struct mutex		tm_acc_lock;
 
 	/* Pointer to the root inode. */
 	tmpfs_node_t *		tm_root;

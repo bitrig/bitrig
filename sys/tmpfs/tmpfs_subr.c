@@ -124,15 +124,15 @@ tmpfs_alloc_node(tmpfs_mount_t *tmp, enum vtype type, uid_t uid, gid_t gid,
 	nnode->tn_vnode = NULL;
 	nnode->tn_dirent_hint = NULL;
 
-	rw_enter_write(&tmp->tm_acc_lock);
+	mtx_enter(&tmp->tm_acc_lock);
 	nnode->tn_id = ++tmp->tm_highest_inode;
 	if (nnode->tn_id == 0) {
 		--tmp->tm_highest_inode;
-		rw_exit_write(&tmp->tm_acc_lock);
+		mtx_leave(&tmp->tm_acc_lock);
 		tmpfs_node_put(tmp, nnode);
 		return ENOSPC;
 	}
-	rw_exit_write(&tmp->tm_acc_lock);
+	mtx_leave(&tmp->tm_acc_lock);
 
 	/* Generic initialization. */
 	nnode->tn_type = type;
@@ -262,10 +262,10 @@ tmpfs_free_node(tmpfs_mount_t *tmp, tmpfs_node_t *node)
 		break;
 	}
 
-	rw_enter_write(&tmp->tm_acc_lock);
+	mtx_enter(&tmp->tm_acc_lock);
 	if (node->tn_id == tmp->tm_highest_inode)
 		--tmp->tm_highest_inode;
-	rw_exit_write(&tmp->tm_acc_lock);
+	mtx_leave(&tmp->tm_acc_lock);
 
 	/* mutex_destroy(&node->tn_nlock); */
 	tmpfs_node_put(tmp, node);

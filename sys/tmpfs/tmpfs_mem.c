@@ -54,7 +54,7 @@ void
 tmpfs_mntmem_init(struct tmpfs_mount *mp, uint64_t memlimit)
 {
 
-	rw_init(&mp->tm_acc_lock, "tacclk");
+	mtx_init(&mp->tm_acc_lock, IPL_NONE);
 	mp->tm_mem_limit = memlimit;
 	mp->tm_bytes_used = 0;
 }
@@ -127,14 +127,14 @@ tmpfs_mem_incr(struct tmpfs_mount *mp, size_t sz)
 {
 	uint64_t lim;
 
-	rw_enter_write(&mp->tm_acc_lock);
+	mtx_enter(&mp->tm_acc_lock);
 	lim = tmpfs_bytes_max(mp);
 	if (mp->tm_bytes_used + sz >= lim) {
-		rw_exit_write(&mp->tm_acc_lock);
+		mtx_leave(&mp->tm_acc_lock);
 		return 0;
 	}
 	mp->tm_bytes_used += sz;
-	rw_exit_write(&mp->tm_acc_lock);
+	mtx_leave(&mp->tm_acc_lock);
 	return 1;
 }
 
@@ -142,10 +142,10 @@ void
 tmpfs_mem_decr(struct tmpfs_mount *mp, size_t sz)
 {
 
-	rw_enter_write(&mp->tm_acc_lock);
+	mtx_enter(&mp->tm_acc_lock);
 	KASSERT(mp->tm_bytes_used >= sz);
 	mp->tm_bytes_used -= sz;
-	rw_exit_write(&mp->tm_acc_lock);
+	mtx_leave(&mp->tm_acc_lock);
 }
 
 struct tmpfs_dirent *
