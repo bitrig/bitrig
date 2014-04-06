@@ -51,13 +51,6 @@ __fgetwc_unlock(FILE *fp, locale_t locale)
 		return WEOF;
 	}
 
-	/* if there're ungetwc'ed wchars, use them */
-	if (wcio->wcio_ungetwc_inbuf) {
-		wc = wcio->wcio_ungetwc_buf[--wcio->wcio_ungetwc_inbuf];
-
-		return wc;
-	}
-
 	st = &wcio->wcio_mbstate_in;
 
 	do {

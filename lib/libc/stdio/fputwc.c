@@ -61,7 +61,6 @@ __fputwc_unlock(wchar_t wc, FILE *fp, locale_t locale)
 		return WEOF;
 	}
 
-	wcio->wcio_ungetwc_inbuf = 0;
 	st = &wcio->wcio_mbstate_out;
 
 	size = l->__wcrtomb(buf, wc, st);

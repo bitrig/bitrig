@@ -29,6 +29,7 @@
  * $Citrus$
  */
 
+#include <limits.h>
 #include <errno.h>
 #include <stdio.h>
 #include <wchar.h>
@@ -39,30 +40,29 @@ wint_t
 __ungetwc(wint_t wc, FILE *fp, locale_t locale)
 {
 	struct wchar_io_data *wcio;
+	char buf[MB_LEN_MAX];
+	size_t len;
+	struct xlocale_ctype *l = XLOCALE_CTYPE(locale);
 
 	if (wc == WEOF)
-		return WEOF;
+		return (WEOF);
 
 	_SET_ORIENTATION(fp, 1);
-	/*
-	 * XXX since we have no way to transform a wchar string to
-	 * a char string in reverse order, we can't use ungetc.
-	 */
-	/* XXX should we flush ungetc buffer? */
 
 	wcio = WCIO_GET(fp);
 	if (wcio == 0) {
 		errno = ENOMEM; /* XXX */
-		return WEOF;
+		return (WEOF);
 	}
 
-	if (wcio->wcio_ungetwc_inbuf >= WCIO_UNGETWC_BUFSIZE) {
-		return WEOF;
+	len = l->__wcrtomb(buf, wc, &wcio->wcio_mbstate_in);
+	if (len == (size_t)-1)
+		return (WEOF);
+	while (len--) {
+		if (__ungetc(buf[len], fp) == EOF)
+			return (WEOF);
 	}
-
-	wcio->wcio_ungetwc_buf[wcio->wcio_ungetwc_inbuf++] = wc;
 	__sclearerr(fp);
-
 	return wc;
 }
 
