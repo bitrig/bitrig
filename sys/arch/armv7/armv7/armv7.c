@@ -18,6 +18,7 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
+#include <dev/cons.h>
 #define _ARM32_BUS_DMA_PRIVATE
 #include <machine/bus.h>
 #include <arm/armv7/armv7var.h>
@@ -244,3 +245,46 @@ armv7_attach(struct device *parent, struct device *self, void *aux)
 	}
 }
 
+
+
+dev_type_cngetc(exuartcngetc);
+dev_type_cnputc(exuartcnputc);
+dev_type_cnpollc(exuartcnpollc);
+
+int
+bootstrap_bs_map(void *t, bus_addr_t bpa, bus_size_t size,
+    int flags, bus_space_handle_t *bshp);
+
+extern struct bus_space armv7_bs_tag;
+
+/* hack up a serial attachement */
+void	protoconsole(uint32_t, void *);
+void
+protoconsole(uint32_t board_id, void *bootarg) {
+	extern bus_space_handle_t exuartconsioh;
+	extern bus_space_tag_t exuartconsiot;
+
+
+	/* bootarg may be fdt or old style boot args */
+	static struct consdev protocons = {
+		NULL, NULL, NULL, NULL, NULL, NULL,
+		NODEV, 0
+	};
+
+	switch (board_id) {
+	case 0xd33: /* NURI (qemu target) */
+		// hack up a exuart console attachment for 0x13800000
+
+
+		if (bootstrap_bs_map(NULL, 0x13800000, 4096, 0,
+		    &exuartconsioh)) {
+			panic("cannot attach console, ew");
+		}
+		exuartconsiot = &armv7_bs_tag;
+
+		protocons.cn_getc =  exuartcngetc;
+		protocons.cn_putc =  exuartcnputc;
+		protocons.cn_pollc =  exuartcnpollc;
+		cn_tab = &protocons;
+	}
+}

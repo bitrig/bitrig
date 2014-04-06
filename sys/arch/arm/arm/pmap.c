@@ -1402,7 +1402,6 @@ return 0;
 void pmap_postinit(void) {}
 void    pmap_map_section(vaddr_t l1_addr, vaddr_t va, paddr_t pa, int flags, int cache) {
 	uint32_t *l1 = (uint32_t *)l1_addr;
-	int idx1;
 	int ap_flag;
 
 	switch (flags) {
@@ -1414,8 +1413,7 @@ void    pmap_map_section(vaddr_t l1_addr, vaddr_t va, paddr_t pa, int flags, int
 		break;
 	}
 	
-	idx1 = VP_IDX1(va);
-	l1[idx1] = (pa & L1_S_RPGN) | L1_S_AP(ap_flag);
+	l1[va>>VP_IDX2_POS] = (pa & L1_S_RPGN) | L1_S_AP(ap_flag) | L1_TYPE_S;
 }
 
 void    pmap_map_entry(vaddr_t l1, vaddr_t va, paddr_t pa, int i0, int i1) {}

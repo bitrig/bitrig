@@ -176,6 +176,7 @@ extern u_int undefined_handler_address;
 
 uint32_t	board_id;
 
+#if 0
 #define KERNEL_PT_SYS		0	/* Page table for mapping proc0 zero page */
 #define KERNEL_PT_KERNEL	1	/* Page table for mapping kernel */
 #define	KERNEL_PT_KERNEL_NUM	32
@@ -185,6 +186,7 @@ uint32_t	board_id;
 #define NUM_KERNEL_PTS		(KERNEL_PT_VMDATA + KERNEL_PT_VMDATA_NUM)
 
 pv_addr_t kernel_pt_table[NUM_KERNEL_PTS];
+#endif
 
 extern struct user *proc0paddr;
 
@@ -202,6 +204,7 @@ int	bootstrap_bs_map(void *, bus_addr_t, bus_size_t, int,
 void	process_kernel_args(char *);
 void	parse_uboot_tags(void *);
 void	consinit(void);
+void	protoconsole(uint32_t, void *);
 void	platform_bootconfig_dram(BootConfig *, psize_t *, psize_t *);
 
 bs_protos(bs_notimpl);
@@ -513,6 +516,8 @@ initarm(void *arg0, void *arg1, void *arg2)
 	printf("success thus far\n");
 //	while(1)
 //		;
+
+	protoconsole(board_id, arg2);
 
 #ifdef VERBOSE_INIT_ARM
 	printf("Constructing L2 page tables\n");
