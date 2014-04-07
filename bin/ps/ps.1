@@ -47,7 +47,7 @@
 .Op Fl o Ar fmt
 .Op Fl p Ar pids
 .Op Fl t Ar ttys
-.Op Fl U Ar username
+.Op Fl U Ar users
 .Op Fl W Ar swap
 .Sh DESCRIPTION
 The
@@ -154,9 +154,10 @@ with the standard input.
 .It Fl t Ar ttys
 Display information about processes attached to any of the space or comma
 separated list of terminal devices specified.
-.It Fl U Ar username
-Display the processes belonging to the specified
-.Ar username .
+.It Fl U Ar users
+Display the processes belonging to a real user ID specified in
+.Ar users ,
+which is a space or comma separated list of user names and user IDs.
 .It Fl u
 Display information associated with the following keywords:
 user, pid, %cpu, %mem, vsz, rss, tt, state, start, time, and command.

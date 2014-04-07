@@ -74,6 +74,7 @@ static void	 parse_list(char *, void **, size_t *, size_t,
 		    void (*)(char *, void *));
 static void	 parse_pid(char *, void *);
 static void	 parse_tty(char *, void *);
+static void	 parse_uid(char *, void *);
 static int	 pscomp(const void *, const void *);
 static void	 scanvars(void);
 static void	 usage(void);
@@ -96,13 +97,12 @@ main(int argc, char *argv[])
 	struct kinfo_proc *kp, **kinfo;
 	struct varent *vent;
 	struct winsize ws;
-	struct passwd *pwd;
 	pid_t *pids;
 	dev_t *ttys;
-	uid_t uid;
-	size_t npids, nttys;
+	uid_t *uids;
+	size_t npids, nttys, nuids;
 	int all, ch, flag, i, j, k, fmt, lineno, nentries;
-	int prtheader, showthreads, wflag, kflag, what, Uflag, xflg;
+	int prtheader, showthreads, wflag, kflag, what, xflg;
 	char *nlistf, *memf, *swapf, errbuf[_POSIX2_LINE_MAX];
 
 	if ((ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 &&
@@ -117,11 +117,11 @@ main(int argc, char *argv[])
 		argv[1] = kludge_oldps_options(argv[1]);
 
 	all = fmt = prtheader = showthreads = 0;
-	wflag = kflag = Uflag = xflg = 0;
+	wflag = kflag = xflg = 0;
 	pids = NULL;
-	uid = 0;
 	ttys = NULL;
-	npids = nttys = 0;
+	uids = NULL;
+	npids = nttys = nuids = 0;
 	memf = nlistf = swapf = NULL;
 	while ((ch = getopt(argc, argv,
 	    "AaCcdegHhjkLlM:mN:O:o:p:rSTt:U:uvW:wx")) != -1)
@@ -209,12 +209,10 @@ main(int argc, char *argv[])
 			    (void **)&ttys, &nttys, sizeof(*ttys), parse_tty);
 			break;
 		case 'U':
-			pwd = getpwnam(optarg);
-			if (pwd == NULL)
-				errx(1, "%s: no such user", optarg);
-			uid = pwd->pw_uid;
+			parse_list(optarg,
+			    (void **)&uids, &nuids, sizeof(*uids), parse_uid);
+			xflg = 1;
 			endpwent();
-			Uflag = xflg = 1;
 			break;
 		case 'u':
 			parsefmt(ufmt);
@@ -276,9 +274,11 @@ main(int argc, char *argv[])
 	}
 
 	/* XXX - should be cleaner */
-	if (!all && !npids && !nttys && !Uflag) {
-		uid = getuid();
-		Uflag = 1;
+	if (!all && !npids && !nttys && !nuids) {
+		if ((uids = calloc(1, sizeof(*uids))) == NULL)
+			err(1, NULL);
+		uids[0] = getuid();
+		nuids = 1;
 	}
 
 	/*
@@ -295,16 +295,16 @@ main(int argc, char *argv[])
 	 */
 	what = kflag ? KERN_PROC_KTHREAD : KERN_PROC_ALL;
 	flag = 0;
-	if (!kflag && Uflag + nttys + npids == 1) {
+	if (!kflag && nuids + nttys + npids == 1) {
 		if (pids) {
 			what = KERN_PROC_PID;
 			flag = pids[0];
 		} else if (ttys) {
 			what = KERN_PROC_TTY;
 			flag = ttys[0];
-		} else if (Uflag) {
-			what = KERN_PROC_UID;
-			flag = uid;
+		} else if (uids) {
+			what = KERN_PROC_RUID;
+			flag = uids[0];
 		}
 	}
 	if (showthreads)
@@ -329,7 +329,7 @@ main(int argc, char *argv[])
 		if (showthreads && kp[i].p_tid == -1)
 			continue;
 
-		if (all || (!npids && !nttys && !Uflag))
+		if (all || (!npids && !nttys && !nuids))
 			goto take;
 		for (k = 0; k < npids; k++) {
 			if (pids[k] == kp[i].p_pid)
@@ -339,8 +339,10 @@ main(int argc, char *argv[])
 			if (ttys[k] == kp[i].p_tdev)
 				goto take;
 		}
-		if (uid != 0 && kp[i].p_uid == uid)
-			goto take;
+		for (k = 0; k < nuids; k++) {
+			if (uids[k] == kp[i].p_ruid)
+				goto take;
+		}
 		continue;
 
 take:
@@ -352,6 +354,7 @@ take:
 
 	free(pids);
 	free(ttys);
+	free(uids);
 
 	qsort(kinfo, nentries, sizeof(*kinfo), pscomp);
 	if (needhier)
@@ -535,11 +538,27 @@ parse_tty(char *token, void *target)
 }
 
 static void
+parse_uid(char *token, void *target)
+{
+	uid_t *uid = (uid_t *)target;
+	struct passwd *pwd;
+	const char *errstr;
+
+	*uid = strtonum(token, 0, UID_MAX, &errstr);
+	if (errstr) {
+		pwd = getpwnam(token);
+		if (pwd == NULL)
+			errx(1, "%s: no such user", token);
+		*uid = pwd->pw_uid;
+	}
+}
+
+static void
 usage(void)
 {
 	(void)fprintf(stderr,
 	    "usage: %s [-AaCcdeHhjkLlmrSTuvwx] [-M core] [-N system] [-O fmt] [-o fmt]\n"
-	    "%-*s[-p pids] [-t ttys] [-U username] [-W swap]\n",
+	    "%-*s[-p pids] [-t ttys] [-U users] [-W swap]\n",
 	    __progname,  (int)strlen(__progname) + 8, "");
 	exit(1);
 }
