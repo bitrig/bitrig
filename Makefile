@@ -82,12 +82,12 @@ build:
 	cd ${.CURDIR}/share/mk && exec ${SUDO} ${MAKE} install
 	cd ${.CURDIR}/include && ${MAKE} prereq && exec ${SUDO} ${MAKE} includes
 	${SUDO} ${MAKE} cleandir
-	cd ${.CURDIR}/lib/csu && ${MAKE} depend && ${MAKE} && \
-	    NOMAN=1 exec ${SUDO} ${MAKE} install
 	cd ${.CURDIR}/libexec/ld.so && \
 	    SKIPDIR="ldd ldconfig" ${MAKE} depend && \
 	    SKIPDIR="ldd ldconfig" ${MAKE} && \
 	    ${SUDO} SKIPDIR="ldd ldconfig" NOMAN=1 ${MAKE} install
+	cd ${.CURDIR}/lib/csu && ${MAKE} depend && ${MAKE} && \
+	    NOMAN=1 exec ${SUDO} ${MAKE} install
 	cd ${.CURDIR}/lib/libc && ${MAKE} depend && ${MAKE} && \
 	    NOMAN=1 exec ${SUDO} ${MAKE} install
 	cd ${.CURDIR}/lib && ${MAKE} depend && ${MAKE} && \
