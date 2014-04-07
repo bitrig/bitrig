@@ -46,6 +46,7 @@
 #include <kvm.h>
 #include <nlist.h>
 #include <paths.h>
+#include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,6 +73,7 @@ enum sort { DEFAULT, SORTMEM, SORTCPU } sortby = DEFAULT;
 static char	*kludge_oldps_options(char *);
 static void	 parse_list(char *, void **, size_t *, size_t,
 		    void (*)(char *, void *));
+static void	 parse_gid(char *, void *);
 static void	 parse_pid(char *, void *);
 static void	 parse_tty(char *, void *);
 static void	 parse_uid(char *, void *);
@@ -97,10 +99,11 @@ main(int argc, char *argv[])
 	struct kinfo_proc *kp, **kinfo;
 	struct varent *vent;
 	struct winsize ws;
+	gid_t *gids;
 	pid_t *pids;
 	dev_t *ttys;
 	uid_t *uids;
-	size_t npids, nttys, nuids;
+	size_t ngids, npids, nttys, nuids;
 	int all, ch, flag, i, j, k, fmt, lineno, nentries;
 	int prtheader, showthreads, wflag, kflag, what, xflg;
 	char *nlistf, *memf, *swapf, errbuf[_POSIX2_LINE_MAX];
@@ -118,13 +121,14 @@ main(int argc, char *argv[])
 
 	all = fmt = prtheader = showthreads = 0;
 	wflag = kflag = xflg = 0;
+	gids = NULL;
 	pids = NULL;
 	ttys = NULL;
 	uids = NULL;
-	npids = nttys = nuids = 0;
+	ngids = npids = nttys = nuids = 0;
 	memf = nlistf = swapf = NULL;
 	while ((ch = getopt(argc, argv,
-	    "AaCcdegHhjkLlM:mN:O:o:p:rSTt:U:uvW:wx")) != -1)
+	    "AaCcdeG:gHhjkLlM:mN:O:o:p:rSTt:U:uvW:wx")) != -1)
 		switch (ch) {
 		case 'A':
 			all = 1;
@@ -144,6 +148,12 @@ main(int argc, char *argv[])
 			break;
 		case 'e':			/* XXX set ufmt */
 			needenv = 1;
+			break;
+		case 'G':
+			parse_list(optarg,
+			    (void **)&gids, &ngids, sizeof(*gids), parse_gid);
+			xflg = 1;
+			endgrent();
 			break;
 		case 'g':
 			break;			/* no-op */
@@ -274,7 +284,7 @@ main(int argc, char *argv[])
 	}
 
 	/* XXX - should be cleaner */
-	if (!all && !npids && !nttys && !nuids) {
+	if (!all && !ngids && !npids && !nttys && !nuids) {
 		if ((uids = calloc(1, sizeof(*uids))) == NULL)
 			err(1, NULL);
 		uids[0] = getuid();
@@ -329,8 +339,12 @@ main(int argc, char *argv[])
 		if (showthreads && kp[i].p_tid == -1)
 			continue;
 
-		if (all || (!npids && !nttys && !nuids))
+		if (all || (!ngids && !npids && !nttys && !nuids))
 			goto take;
+		for (k = 0; k < ngids; k++) {
+			if (gids[k] == kp[i].p_rgid)
+				goto take;
+		}
 		for (k = 0; k < npids; k++) {
 			if (pids[k] == kp[i].p_pid)
 				goto take;
@@ -352,6 +366,7 @@ take:
 	}
 	nentries = j;
 
+	free(gids);
 	free(pids);
 	free(ttys);
 	free(uids);
@@ -504,6 +519,22 @@ parse_list(char *arg, void **a, size_t *nmemb, size_t size,
 }
 
 static void
+parse_gid(char *token, void *target)
+{
+	gid_t *gid = (gid_t *)target;
+	struct group *grp;
+	const char *errstr;
+
+	*gid = strtonum(token, 0, GID_MAX, &errstr);
+	if (errstr) {
+		grp = getgrnam(token);
+		if (grp == NULL)
+			errx(1, "%s: no such group", token);
+		*gid = grp->gr_gid;
+	}
+}
+
+static void
 parse_pid(char *token, void *target)
 {
 	pid_t *pid = (pid_t *)target;
@@ -557,8 +588,8 @@ static void
 usage(void)
 {
 	(void)fprintf(stderr,
-	    "usage: %s [-AaCcdeHhjkLlmrSTuvwx] [-M core] [-N system] [-O fmt] [-o fmt]\n"
-	    "%-*s[-p pids] [-t ttys] [-U users] [-W swap]\n",
+	    "usage: %s [-AaCcdeHhjkLlmrSTuvwx] [-G groups] [-M core] [-N system]\n"
+	    "%-*s[-O fmt] [-o fmt] [-p pids] [-t ttys] [-U users] [-W swap]\n",
 	    __progname,  (int)strlen(__progname) + 8, "");
 	exit(1);
 }

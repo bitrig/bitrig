@@ -41,6 +41,7 @@
 .Sm off
 .Op Fl AaCcdeHhjkLlmrSTuvwx
 .Sm on
+.Op Fl G Ar groups
 .Op Fl M Ar core
 .Op Fl N Ar system
 .Op Fl O Ar fmt
@@ -98,6 +99,10 @@ hierarchical sorting takes precedence, but
 sorting still takes place at each hierarchy level.
 .It Fl e
 Display the environment as well.
+.It Fl G Ar groups
+Display the processes belonging to a real group ID specified in
+.Ar groups ,
+which is a space or comma separated list of group names and group IDs.
 .It Fl H
 Also display information about kernel visible threads.
 .It Fl h
