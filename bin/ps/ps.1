@@ -57,7 +57,11 @@ utility displays information about active processes.
 When given no options,
 .Nm
 prints information about processes of the current user that have a
-controlling terminal.
+controlling terminal. When one or more of the flags
+.Op Fl AaGptU
+are specified,
+.Nm
+prints the union of all selected processes.
 .Pp
 The information displayed is selected based on a set of keywords (and for
 even more control, see the
@@ -578,14 +582,14 @@ The
 utility is compliant with the
 .St -p1003.1-2008
 specification.
+Behaviour for the flags
+.Op Fl delu
+differ between this implementation and the X/Open System Interfaces Extension
+due to historical reasons.
 .Pp
 The flags
-.Op Fl CcdHhjkLMmNOrST
-are extensions to that specification.
-.Pp
-Behaviour for the
-.Fl e
-flag differs between this implementation and
+.Op Fl CcdeHhjkLMmNOrSTvWwx
+are extensions to
 .St -p1003.1-2008 .
 .Sh HISTORY
 A
