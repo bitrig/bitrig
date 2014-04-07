@@ -127,6 +127,7 @@ umass*	at uhub?		# USB Mass Storage devices
 aue*	at uhub?		# ADMtek AN986 Pegasus Ethernet
 #atu*	at uhub?		# Atmel AT76c50x based 802.11b
 axe*	at uhub?		# ASIX Electronics AX88172 USB Ethernet
+axen*	at uhub?		# ASIX Electronics AX88179 USB Ethernet
 cue*	at uhub?		# CATC USB-EL1201A based Ethernet
 kue*	at uhub?		# Kawasaki KL5KUSB101B based Ethernet
 upl*	at uhub?		# Prolific PL2301/PL2302 host-to-host `network'
