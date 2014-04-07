@@ -70,6 +70,9 @@ int	needcomm, needenv, needhier, neednlist, commandonly;
 enum sort { DEFAULT, SORTMEM, SORTCPU } sortby = DEFAULT;
 
 static char	*kludge_oldps_options(char *);
+static void	 parse_list(char *, void **, size_t *, size_t,
+		    void (*)(char *, void *));
+static void	 parse_pid(char *, void *);
 static int	 pscomp(const void *, const void *);
 static void	 scanvars(void);
 static void	 usage(void);
@@ -94,9 +97,10 @@ main(int argc, char *argv[])
 	struct winsize ws;
 	struct passwd *pwd;
 	dev_t ttydev;
-	pid_t pid;
+	pid_t *pids;
 	uid_t uid;
-	int all, ch, flag, i, j, fmt, lineno, nentries;
+	size_t npids;
+	int all, ch, flag, i, j, k, fmt, lineno, nentries;
 	int prtheader, showthreads, wflag, kflag, what, Uflag, xflg;
 	char *nlistf, *memf, *swapf, errbuf[_POSIX2_LINE_MAX];
 
@@ -113,9 +117,10 @@ main(int argc, char *argv[])
 
 	all = fmt = prtheader = showthreads = 0;
 	wflag = kflag = Uflag = xflg = 0;
-	pid = -1;
+	pids = NULL;
 	uid = 0;
 	ttydev = NODEV;
+	npids = 0;
 	memf = nlistf = swapf = NULL;
 	while ((ch = getopt(argc, argv,
 	    "AaCcdegHhjkLlM:mN:O:o:p:rSTt:U:uvW:wx")) != -1)
@@ -184,7 +189,8 @@ main(int argc, char *argv[])
 			fmt = 1;
 			break;
 		case 'p':
-			pid = atol(optarg);
+			parse_list(optarg,
+			    (void **)&pids, &npids, sizeof(*pids), parse_pid);
 			xflg = 1;
 			break;
 		case 'r':
@@ -283,7 +289,7 @@ main(int argc, char *argv[])
 	}
 
 	/* XXX - should be cleaner */
-	if (!all && ttydev == NODEV && pid == -1 && !Uflag) {
+	if (!all && !npids && ttydev == NODEV && !Uflag) {
 		uid = getuid();
 		Uflag = 1;
 	}
@@ -300,21 +306,19 @@ main(int argc, char *argv[])
 	/*
 	 * get proc list
 	 */
-	if (Uflag) {
-		what = KERN_PROC_UID;
-		flag = uid;
-	} else if (ttydev != NODEV) {
-		what = KERN_PROC_TTY;
-		flag = ttydev;
-	} else if (pid != -1) {
-		what = KERN_PROC_PID;
-		flag = pid;
-	} else if (kflag) {
-		what = KERN_PROC_KTHREAD;
-		flag = 0;
-	} else {
-		what = KERN_PROC_ALL;
-		flag = 0;
+	what = kflag ? KERN_PROC_KTHREAD : KERN_PROC_ALL;
+	flag = 0;
+	if (!kflag && Uflag + (ttydev != NODEV) + npids == 1) {
+		if (pids) {
+			what = KERN_PROC_PID;
+			flag = pids[0];
+		} else if (ttydev != NODEV) {
+			what = KERN_PROC_TTY;
+			flag = ttydev;
+		} else if (Uflag) {
+			what = KERN_PROC_UID;
+			flag = uid;
+		}
 	}
 	if (showthreads)
 		what |= KERN_PROC_SHOW_THREADS;
@@ -325,13 +329,6 @@ main(int argc, char *argv[])
 	kp = kvm_getprocs(kd, what, flag, sizeof(*kp), &nentries);
 	if (kp == NULL)
 		errx(1, "%s", kvm_geterr(kd));
-
-	/*
-	 * print header
-	 */
-	printheader();
-	if (nentries == 0)
-		exit(1);
 
 	if ((kinfo = calloc(nentries, sizeof(*kinfo))) == NULL)
 		err(1, NULL);
@@ -344,13 +341,38 @@ main(int argc, char *argv[])
 			continue;
 		if (showthreads && kp[i].p_tid == -1)
 			continue;
+
+		if (all || (!npids && ttydev == NODEV && !Uflag))
+			goto take;
+		for (k = 0; k < npids; k++) {
+			if (pids[k] == kp[i].p_pid)
+				goto take;
+		}
+		if (ttydev != NODEV && kp[i].p_tdev == ttydev)
+			goto take;
+		if (uid != 0 && kp[i].p_uid == uid)
+			goto take;
+		continue;
+
+take:
+		if ((kinfo[j] = calloc(1, sizeof(*kinfo))) == NULL)
+			err(1, NULL);
 		kinfo[j++] = &kp[i];
 	}
 	nentries = j;
 
+	free(pids);
+
 	qsort(kinfo, nentries, sizeof(*kinfo), pscomp);
 	if (needhier)
 		hier_sort(kinfo, nentries);
+
+	/*
+	 * print header
+	 */
+	printheader();
+	if (nentries == 0)
+		exit(1);
 
 	/*
 	 * for each proc, call each variable output function.
@@ -473,11 +495,40 @@ kludge_oldps_options(char *s)
 }
 
 static void
+parse_list(char *arg, void **a, size_t *nmemb, size_t size,
+    void (*parse)(char *, void *))
+{
+	char *elem;
+
+	while ((elem = strsep(&arg, " ,")) != NULL) {
+		if (SIZE_MAX / ++(*nmemb) < size)
+			errx(1, "too many elements in list");
+		*a = realloc(*a, *nmemb * size);
+		if (*a == NULL)
+			err(1, NULL);
+		parse(elem, (char *)*a + (*nmemb - 1) * size);
+	}
+}
+
+static void
+parse_pid(char *token, void *target)
+{
+	pid_t *pid = (pid_t *)target;
+	const char *errstr;
+
+#define PID_MIN	(1 << (sizeof(pid_t) * 8 - 1))
+#define PID_MAX	(PID_MIN - 1)
+	*pid = strtonum(token, PID_MIN, PID_MAX, &errstr);
+	if (errstr)
+		errx(1, "pid is %s: %s", errstr, token);
+}
+
+static void
 usage(void)
 {
 	(void)fprintf(stderr,
 	    "usage: %s [-AaCcdeHhjkLlmrSTuvwx] [-M core] [-N system] [-O fmt] [-o fmt]\n"
-	    "%-*s[-p pid] [-t tty] [-U username] [-W swap]\n",
+	    "%-*s[-p pids] [-t tty] [-U username] [-W swap]\n",
 	    __progname,  (int)strlen(__progname) + 8, "");
 	exit(1);
 }

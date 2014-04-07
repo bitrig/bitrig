@@ -45,7 +45,7 @@
 .Op Fl N Ar system
 .Op Fl O Ar fmt
 .Op Fl o Ar fmt
-.Op Fl p Ar pid
+.Op Fl p Ar pids
 .Op Fl t Ar tty
 .Op Fl U Ar username
 .Op Fl W Ar swap
@@ -140,8 +140,9 @@ Keywords may be appended with an equals sign
 and a string.
 This causes the printed header to use the specified string instead of
 the standard header.
-.It Fl p Ar pid
-Display information associated with the specified process ID.
+.It Fl p Ar pids
+Display information associated with any of the space or comma separated list of
+process IDs specified.
 .It Fl r
 Sort by current CPU usage, instead of by start time ID.
 .It Fl S
