@@ -331,8 +331,6 @@ main(int argc, char *argv[])
 		err(1, NULL);
 
 	for (i = j = 0; i < nentries; i++) {
-		if (showthreads == 0 && (kp[i].p_flag & P_THREAD) != 0)
-			continue;
 		if (xflg == 0 && ((int)kp[i].p_tdev == NODEV ||
 		    (kp[i].p_psflags & PS_CONTROLT) == 0))
 			continue;
