@@ -73,6 +73,7 @@ static char	*kludge_oldps_options(char *);
 static void	 parse_list(char *, void **, size_t *, size_t,
 		    void (*)(char *, void *));
 static void	 parse_pid(char *, void *);
+static void	 parse_tty(char *, void *);
 static int	 pscomp(const void *, const void *);
 static void	 scanvars(void);
 static void	 usage(void);
@@ -96,10 +97,10 @@ main(int argc, char *argv[])
 	struct varent *vent;
 	struct winsize ws;
 	struct passwd *pwd;
-	dev_t ttydev;
 	pid_t *pids;
+	dev_t *ttys;
 	uid_t uid;
-	size_t npids;
+	size_t npids, nttys;
 	int all, ch, flag, i, j, k, fmt, lineno, nentries;
 	int prtheader, showthreads, wflag, kflag, what, Uflag, xflg;
 	char *nlistf, *memf, *swapf, errbuf[_POSIX2_LINE_MAX];
@@ -119,8 +120,8 @@ main(int argc, char *argv[])
 	wflag = kflag = Uflag = xflg = 0;
 	pids = NULL;
 	uid = 0;
-	ttydev = NODEV;
-	npids = 0;
+	ttys = NULL;
+	npids = nttys = 0;
 	memf = nlistf = swapf = NULL;
 	while ((ch = getopt(argc, argv,
 	    "AaCcdegHhjkLlM:mN:O:o:p:rSTt:U:uvW:wx")) != -1)
@@ -203,24 +204,10 @@ main(int argc, char *argv[])
 			if ((optarg = ttyname(STDIN_FILENO)) == NULL)
 				errx(1, "stdin: not a terminal");
 			/* FALLTHROUGH */
-		case 't': {
-			struct stat sb;
-			char *ttypath, pathbuf[MAXPATHLEN];
-
-			if (strcmp(optarg, "co") == 0)
-				ttypath = _PATH_CONSOLE;
-			else if (*optarg != '/')
-				(void)snprintf(ttypath = pathbuf,
-				    sizeof(pathbuf), "%s%s", _PATH_TTY, optarg);
-			else
-				ttypath = optarg;
-			if (stat(ttypath, &sb) == -1)
-				err(1, "%s", ttypath);
-			if (!S_ISCHR(sb.st_mode))
-				errx(1, "%s: not a terminal", ttypath);
-			ttydev = sb.st_rdev;
+		case 't':
+			parse_list(optarg,
+			    (void **)&ttys, &nttys, sizeof(*ttys), parse_tty);
 			break;
-		}
 		case 'U':
 			pwd = getpwnam(optarg);
 			if (pwd == NULL)
@@ -289,7 +276,7 @@ main(int argc, char *argv[])
 	}
 
 	/* XXX - should be cleaner */
-	if (!all && !npids && ttydev == NODEV && !Uflag) {
+	if (!all && !npids && !nttys && !Uflag) {
 		uid = getuid();
 		Uflag = 1;
 	}
@@ -308,13 +295,13 @@ main(int argc, char *argv[])
 	 */
 	what = kflag ? KERN_PROC_KTHREAD : KERN_PROC_ALL;
 	flag = 0;
-	if (!kflag && Uflag + (ttydev != NODEV) + npids == 1) {
+	if (!kflag && Uflag + nttys + npids == 1) {
 		if (pids) {
 			what = KERN_PROC_PID;
 			flag = pids[0];
-		} else if (ttydev != NODEV) {
+		} else if (ttys) {
 			what = KERN_PROC_TTY;
-			flag = ttydev;
+			flag = ttys[0];
 		} else if (Uflag) {
 			what = KERN_PROC_UID;
 			flag = uid;
@@ -342,14 +329,16 @@ main(int argc, char *argv[])
 		if (showthreads && kp[i].p_tid == -1)
 			continue;
 
-		if (all || (!npids && ttydev == NODEV && !Uflag))
+		if (all || (!npids && !nttys && !Uflag))
 			goto take;
 		for (k = 0; k < npids; k++) {
 			if (pids[k] == kp[i].p_pid)
 				goto take;
 		}
-		if (ttydev != NODEV && kp[i].p_tdev == ttydev)
-			goto take;
+		for (k = 0; k < nttys; k++) {
+			if (ttys[k] == kp[i].p_tdev)
+				goto take;
+		}
 		if (uid != 0 && kp[i].p_uid == uid)
 			goto take;
 		continue;
@@ -362,6 +351,7 @@ take:
 	nentries = j;
 
 	free(pids);
+	free(ttys);
 
 	qsort(kinfo, nentries, sizeof(*kinfo), pscomp);
 	if (needhier)
@@ -524,11 +514,32 @@ parse_pid(char *token, void *target)
 }
 
 static void
+parse_tty(char *token, void *target)
+{
+	dev_t *tty = (dev_t *)target;
+	struct stat sb;
+	char *ttypath, pathbuf[MAXPATHLEN];
+
+	if (strcmp(token, "co") == 0)
+		ttypath = _PATH_CONSOLE;
+	else if (*token != '/')
+		(void)snprintf(ttypath = pathbuf,
+		    sizeof(pathbuf), "%s%s", _PATH_TTY, token);
+	else
+		ttypath = token;
+	if (stat(ttypath, &sb) == -1)
+		err(1, "%s", ttypath);
+	if (!S_ISCHR(sb.st_mode))
+		errx(1, "%s: not a terminal", ttypath);
+	*tty = sb.st_rdev;
+}
+
+static void
 usage(void)
 {
 	(void)fprintf(stderr,
 	    "usage: %s [-AaCcdeHhjkLlmrSTuvwx] [-M core] [-N system] [-O fmt] [-o fmt]\n"
-	    "%-*s[-p pids] [-t tty] [-U username] [-W swap]\n",
+	    "%-*s[-p pids] [-t ttys] [-U username] [-W swap]\n",
 	    __progname,  (int)strlen(__progname) + 8, "");
 	exit(1);
 }
