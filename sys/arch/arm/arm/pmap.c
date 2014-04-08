@@ -977,6 +977,7 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 	/* now that we have mapping space for everything, lets map it */
 	/* all of these mappings are ram -> kernel va */
 
+#if 0
 	struct mem_region *mp;
 	vm_prot_t prot;
 
@@ -985,6 +986,7 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 		paddr_t pa;
 		vsize_t size;
 		extern char *etext;
+		printf("mapping %08x sz %08x\n", mp->start, mp->size);
 		for (pa = mp->start, va = pa + kvo, size = mp->size & ~0xfff;
 		    size > 0; va += PAGE_SIZE, pa+= PAGE_SIZE, size -= PAGE_SIZE) {
 			pa = va - kvo;
@@ -994,6 +996,9 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 			pmap_kenter_cache(va, pa, prot, PMAP_CACHE_WB);
 		}
 	}
+#endif
+
+	printf("all mapped\n");
 
 
 	/* XXX */
@@ -1309,22 +1314,22 @@ pte_spill_v(pmap_t pm, u_int32_t va, u_int32_t dsisr, int exec_fault)
 
 static uint32_t ap_bits_user [16] = {
 	[VM_PROT_NONE]				= 0, 
-	[VM_PROT_READ]				= L2_S_AP1|L2_S_AP1|L2_S_XN, 
-	[VM_PROT_WRITE]				= L2_S_AP1|L2_S_XN, 
-	[VM_PROT_WRITE|VM_PROT_READ]		= L2_S_AP1|L2_S_XN, 
+	[VM_PROT_READ]				= L2_P_AP1|L2_P_AP1|L2_S_XN, 
+	[VM_PROT_WRITE]				= L2_P_AP1|L2_P_XN, 
+	[VM_PROT_WRITE|VM_PROT_READ]		= L2_P_AP1|L2_P_XN, 
 	[VM_PROT_EXECUTE]			= 0, 
-	[VM_PROT_EXECUTE|VM_PROT_READ]			= L2_S_AP1, 
-	[VM_PROT_EXECUTE|VM_PROT_WRITE]			= L2_S_AP2|L2_S_AP1, 
-	[VM_PROT_EXECUTE|VM_PROT_WRITE|VM_PROT_READ]	= L2_S_AP2|L2_S_AP1, 
+	[VM_PROT_EXECUTE|VM_PROT_READ]			= L2_P_AP1, 
+	[VM_PROT_EXECUTE|VM_PROT_WRITE]			= L2_P_AP2|L2_P_AP1, 
+	[VM_PROT_EXECUTE|VM_PROT_WRITE|VM_PROT_READ]	= L2_P_AP2|L2_P_AP1, 
 };
 
 static uint32_t ap_bits_kern [16] = {
 	[VM_PROT_NONE]				= 0, 
-	[VM_PROT_READ]				= L2_S_AP2|L2_S_XN, 
-	[VM_PROT_WRITE]				= L2_S_XN, 
-	[VM_PROT_WRITE|VM_PROT_READ]		= L2_S_XN, 
+	[VM_PROT_READ]				= L2_P_AP2|L2_S_XN, 
+	[VM_PROT_WRITE]				= L2_P_XN, 
+	[VM_PROT_WRITE|VM_PROT_READ]		= L2_P_XN, 
 	[VM_PROT_EXECUTE]			= 0, 
-	[VM_PROT_EXECUTE|VM_PROT_READ]			= L2_S_AP2, 
+	[VM_PROT_EXECUTE|VM_PROT_READ]			= L2_P_AP2, 
 	[VM_PROT_EXECUTE|VM_PROT_WRITE]			= 0,
 	[VM_PROT_EXECUTE|VM_PROT_WRITE|VM_PROT_READ]	= 0
 };
@@ -1671,23 +1676,33 @@ pmap_map_stolen()
 	uint32_t pa, va, e;
 	extern char *etext;
 
+
+	int oldprot = 0;
 	printf("mapping self\n");
 	for (mp = pmap_allocated; mp->size; mp++) {
 		printf("start %08x end %08x\n", mp->start, mp->start + mp->size);
+		printf("exe range %08x, %08x\n", KERNEL_BASE_VIRT,
+		    (uint32_t)etext);
 		for (e = 0; e < mp->size; e += PAGE_SIZE) {
 			/* XXX - is this a kernel text mapping? */
 			/* XXX - Do we care about KDB ? */
 			pa = mp->start + e;
 			va = pmap_avail_kvo + pa;
-			if (va >= KERNEL_BASE_VIRT && va < (uint32_t)etext) {
+			if (va >= KERNEL_BASE_VIRT && va < (uint32_t)&etext) {
 				prot = VM_PROT_READ|VM_PROT_WRITE|
 				    VM_PROT_EXECUTE;
 			} else {
 				prot = VM_PROT_READ|VM_PROT_WRITE;
 			}
+			if (prot != oldprot) {
+				printf("mapping  v %08x p %08x prot %x\n", va,
+				    pa, prot);
+				oldprot = prot;
+			}
 			pmap_kenter_pa(va, pa, prot);
 		}
 	}
+	printf("last mapping  v %08x p %08x\n", va, pa);
 }
 
 void
