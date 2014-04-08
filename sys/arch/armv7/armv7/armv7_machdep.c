@@ -545,10 +545,8 @@ initarm(void *arg0, void *arg1, void *arg2)
 	/* Switch tables */
 
 	printf("About to go virtual on kernel map\n");
-	//cpu_domains((DOMAIN_CLIENT << (PMAP_DOMAIN_KERNEL*2)) | DOMAIN_CLIENT);
 	setttb(pmap_kernel()->l1_pa);
 	cpu_tlb_flushID();
-	cpu_domains(DOMAIN_CLIENT << (PMAP_DOMAIN_KERNEL*2));
 
 	/*
 	 * Moved from cpu_startup() as data_abort_handler() references

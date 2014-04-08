@@ -1699,7 +1699,7 @@ pmap_map_stolen()
 				    pa, prot);
 				oldprot = prot;
 			}
-			pmap_kenter_pa(va, pa, prot);
+			pmap_kenter_cache(va, pa, prot, PMAP_CACHE_WB);
 		}
 	}
 	printf("last mapping  v %08x p %08x\n", va, pa);
