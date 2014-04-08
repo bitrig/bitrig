@@ -185,7 +185,6 @@ extern u_int undefined_handler_address;
 
 uint32_t	board_id;
 
-#if 0
 #define KERNEL_PT_SYS		0	/* Page table for mapping proc0 zero page */
 #define KERNEL_PT_KERNEL	1	/* Page table for mapping kernel */
 #define	KERNEL_PT_KERNEL_NUM	32
@@ -195,7 +194,6 @@ uint32_t	board_id;
 #define NUM_KERNEL_PTS		(KERNEL_PT_VMDATA + KERNEL_PT_VMDATA_NUM)
 
 pv_addr_t kernel_pt_table[NUM_KERNEL_PTS];
-#endif
 
 extern struct user *proc0paddr;
 
@@ -469,6 +467,8 @@ initarm(void *arg0, void *arg1, void *arg2)
 		physical_end = physical_start + (bootconfig.dram[0].pages * PAGE_SIZE);
 	}
 
+	protoconsole(board_id, arg2);
+
 	physical_freestart = (((unsigned long)kernel_end - KERNEL_TEXT_BASE +0xfff) & ~0xfff) + memstart;
 	physical_freeend = memstart+memsize;
 
@@ -510,14 +510,16 @@ initarm(void *arg0, void *arg1, void *arg2)
 		memcpy((void *)fdt.pv_pa, config, size);
 	}
 
-	pmap_bootstrap(KERNEL_VM_BASE, esym, physical_start, physical_end);
+
+	pmap_bootstrap(KERNEL_VM_BASE,
+	    physical_freestart-memstart+KERNEL_TEXT_BASE,
+	    physical_start, physical_end);
 	uvm_setpagesize();        /* initialize PAGE_SIZE-dependent variables */
 
 	printf("success thus far\n");
 //	while(1)
 //		;
 
-	protoconsole(board_id, arg2);
 
 
 #ifdef VERBOSE_INIT_ARM
@@ -545,6 +547,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	cpu_domains(0x55555555);
 	/* Switch tables */
 
+	printf("About to go virtual on kernel map\n");
 	//cpu_domains((DOMAIN_CLIENT << (PMAP_DOMAIN_KERNEL*2)) | DOMAIN_CLIENT);
 	setttb(pmap_kernel()->l1_pa);
 	cpu_tlb_flushID();
