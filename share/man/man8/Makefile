@@ -13,6 +13,6 @@ MLINKS+=daily.8 weekly.8 daily.8 monthly.8
 MLINKS+=rc.8 rc.firsttime.8 rc.8 rc.local.8 rc.8 rc.securelevel.8
 MLINKS+=rc.conf.8 rc.conf.local.8
 
-SUBDIR=	man8.amd64 man8.i386 man8.armv7
+SUBDIR=	man8.amd64 man8.armv7
 
 .include <bsd.prog.mk>

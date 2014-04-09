@@ -393,10 +393,10 @@ func()
 The extent manager itself is implemented within the file
 .Pa sys/kern/subr_extent.c .
 .Pp
-The i386 bus management code uses the extent manager for managing I/O
+The amd64 bus management code uses the extent manager for managing I/O
 ports and I/O memory.
 See
-.Pa sys/arch/i386/i386/machdep.c .
+.Pa sys/arch/amd64/amd64/machdep.c .
 .Sh SEE ALSO
 .Xr ddb 4 ,
 .Xr malloc 9

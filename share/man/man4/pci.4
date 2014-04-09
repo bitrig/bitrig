@@ -46,7 +46,7 @@
 .Cd "pci* at tsp?"
 .Cd "pci* at mcpcia?"
 .Pp
-.Cd "# amd64, i386"
+.Cd "# amd64"
 .Cd "pci* at mainbus0"
 .Pp
 .Cd "# hppa"
@@ -83,13 +83,6 @@ bus subsystem and
 several machine-independent
 .Tn PCI
 device drivers.
-.Pp
-Note that interrupt mappings on the i386 may require that you configure
-your BIOS to reserve sufficient interrupts as "PCI/ISAPnP" so that there
-are sufficient interrupts remaining to configure the discovered PCI
-devices.
-For more information, see
-.Xr pcibios 4 .
 .Pp
 .Ox
 provides support for the following devices.

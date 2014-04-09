@@ -142,7 +142,7 @@ notes that come with each distribution
 also give details on the specifics of net/diskless booting
 for each architecture.
 .Pp
-The procedures for AMD64 and i386 clients vary somewhat
+The procedures for amd64 clients vary somewhat
 to the stages detailed above.
 See
 .Xr pxeboot 8
@@ -172,7 +172,7 @@ Assign an IP address for myclient in
 192.197.96.12           myclient
 .Ed
 .It
-If booting an alpha, amd64, hppa, hppa64, i386, sgi,
+If booting an alpha, amd64, hppa, hppa64, sgi,
 sparc, sparc64, or vax client,
 ensure that
 .Xr tftpd 8
@@ -191,7 +191,7 @@ See the
 .Xr rbootd 8
 manual page for more information.
 .It
-If booting a newer alpha, amd64, hppa, hppa64, i386, sgi,
+If booting a newer alpha, amd64, hppa, hppa64, sgi,
 sparc, or sparc64 client,
 install a copy of the appropriate diskless boot loader (such as
 .Pa boot.net
@@ -228,7 +228,7 @@ If the client's PROM fails to fetch the expected file,
 can be used to discover which filename the client is trying to read.
 .Pp
 Architectures using DHCP
-(newer alpha, amd64, hppa, hppa64, i386, or sgi)
+(newer alpha, amd64, hppa, hppa64, or sgi)
 should ensure that
 .Xr dhcpd 8
 is configured on the server to serve BOOTP protocol requests.
@@ -245,7 +245,7 @@ subnet 10.0.0.0 netmask 255.0.0.0 {
 }
 .Ed
 .Pp
-Note that procedures for AMD64 and i386 clients vary somewhat.
+Note that procedures for amd64 clients vary somewhat.
 See
 .Xr pxeboot 8
 for more detailed information.
@@ -362,13 +362,13 @@ For all clients:
 and
 .Xr rpc.bootparamd 8 .
 .Pp
-For alpha, amd64, hppa, hppa64, i386, sgi, sparc, sparc64, and vax clients:
+For alpha, amd64, hppa, hppa64, sgi, sparc, sparc64, and vax clients:
 .Xr tftpd 8
 .Pp
 For HP 300 and older HPPA clients:
 .Xr rbootd 8
 .Pp
-For newer alpha, amd64, hppa, hppa64, i386, and sgi clients:
+For newer alpha, amd64, hppa, hppa64, and sgi clients:
 .Xr dhcpd 8
 .Pp
 .It

@@ -1,7 +1,0 @@
-#	$OpenBSD: GENERIC.MP,v 1.8 2008/12/26 17:10:45 deraadt Exp $
-
-include	"arch/i386/conf/generic.i386"
-config	bsd	swap generic
-
-option		MULTIPROCESSOR
-cpu*		at mainbus?

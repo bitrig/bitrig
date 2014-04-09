@@ -195,7 +195,7 @@ values greater than 65535.
 Also, the filesystem will not function correctly on architectures with
 differing byte-orders.
 That is, a big-endian machine will not be able to read an
-ext2fs filesystem created on an i386 or other little-endian machine.
+ext2fs filesystem created on an amd64 or other little-endian machine.
 See
 .Xr mount_ext2fs 8
 for details.
@@ -336,7 +336,6 @@ and PCI configuration registers by user-processes
 This option is supported on the
 .Va alpha ,
 .Va amd64 ,
-.Va i386 ,
 .Va macppc ,
 and
 .Va sparc64
@@ -389,17 +388,6 @@ This option is not yet available on all architectures.
 On those architectures that have it, this enables multiprocessor support.
 .It Cd option PCMCIAVERBOSE
 Makes the boot process more verbose for PCMCIA peripherals.
-.It Cd option USER_LDT
-Enable userland manipulation of per-process
-Local Descriptor Table (LDT) entries;
-see
-.Xr i386_set_ldt 2
-and the
-.Va machdep.userldt
-.Xr sysctl 8 .
-This option is supported on the
-.Va i386
-architecture.
 .It Cd option USER_PCICONF
 Enables the user level access to the PCI bus configuration space
 through ioctls on the

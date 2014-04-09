@@ -1523,10 +1523,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/mcpp-gcc-arm/gcc42_predef_old.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/mcpp-gcc-arm/gcc42_predef_std.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/mcpp-gcc-arm/gxx42_predef_std.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/mcpp-gcc-i386
-./usr/libdata/perl5/site_perl/amd64-bitrig/mcpp-gcc-i386/gcc42_predef_old.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/mcpp-gcc-i386/gcc42_predef_std.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/mcpp-gcc-i386/gxx42_predef_std.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/md5.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/memory.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/menu.ph

@@ -97,7 +97,6 @@
 #if 0
 #include <dev/isa/isadmavar.h>
 #endif
-#include <i386/isa/isa_machdep.h>
 
 #include "isadma.h"
 

@@ -1,9 +1,0 @@
-# LIVECD kernel is basically GENERIC
-
-include		"arch/i386/conf/generic.i386"
-
-option		MULTIPROCESSOR	# Multiple processor support
-
-cpu*		at mainbus?
-
-config		bsd root on cd0a

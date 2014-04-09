@@ -7,7 +7,7 @@ PROG=mcpp
 SRCS= directive.c main.c system.c eval.c mbchar.c
 SRCS+= expand.c support.c
 
-ARCHS=amd64 arm i386
+ARCHS=amd64 arm
 
 MLINKS+= mcpp.1 cpp.1
 

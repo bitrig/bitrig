@@ -18,6 +18,6 @@ NOPROG=	yes
 .endif
 
 MAN=	gpioctl.8
-MANSUBDIR=i386 amd64 armv7
+MANSUBDIR=amd64 armv7
 
 .include <bsd.prog.mk>

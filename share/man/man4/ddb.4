@@ -59,7 +59,7 @@ when using a serial console.
 Writing to the sysctl
 .Va ddb.trigger .
 .It
-For i386 and amd64 architectures,
+For the amd64 architecture,
 using the key sequence
 .Li Ctrl-Alt-Delete
 when the sysctl
@@ -260,8 +260,7 @@ machine:
 .Bl -tag -width powerpc_ -compact
 .It alpha
 Print affected register contents for every instruction.
-.It amd64 ,
-.It i386
+.It amd64
 Do not skip padding to the next long word boundary for unconditional jumps.
 .It m88k
 Decode instructions for the opposite CPU model (e.g. m88110 when running on an
@@ -476,7 +475,7 @@ with an error message.
 .Pp
 .Sy Warning:
 attempts to watch wired kernel memory
-may cause an unrecoverable error on some systems (e.g., i386).
+may cause an unrecoverable error on some systems.
 .\" --------------------
 .It Ic dwatch Ar addr
 Delete the watchpoint at address
@@ -928,7 +927,7 @@ A synonym for
 Perform a platform-specific command.
 .Pp
 The following commands are supported by multiprocessor kernels on
-these platforms: amd64, i386, macppc, and mips64.
+amd64.
 .Pp
 .Bl -tag -width "searchframe [addr]" -compact
 .It Ic cpuinfo
@@ -956,27 +955,6 @@ arm:
 .It Ic frame Ar addr
 Display the trapframe at
 .Ar addr .
-.El
-.Pp
-i386:
-.Bl -tag -width "searchframe [addr]" -compact
-.\" .It Ic acpi disasm Ar ??
-.\" .It Ic acpi showval Ar ??
-.\" .It Ic acpi tree Ar ??
-.\" .It Ic acpi trace Ar ??
-.\" Evil ACPI debugging magic.
-.It Ic sysregs
-Display the contents of the privileged registers:
-.Va IDTR ,
-.Va GDTR ,
-.Va LDTR ,
-.Va TR ,
-.Va CR0 ,
-.Va CR2 ,
-.Va CR3 ,
-and
-.Va CR4 .
-.\" (i386-only)
 .El
 .Pp
 m88k:

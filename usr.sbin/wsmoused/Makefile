@@ -12,7 +12,7 @@ NOPROG=yes
 .endif
 
 MAN=	wsmoused.8 
-MANSUBDIR=	i386 amd64
+MANSUBDIR=	amd64
 
 .include <bsd.prog.mk>
 

@@ -305,7 +305,7 @@ distrib:
 	release allarchs kernels post-kernels release-sets m4 install-mtree \
 	bootblocks ${ALL_KERNELS}
 
-SUBDIR+= etc.amd64 etc.i386 etc.armv7
+SUBDIR+= etc.amd64 etc.armv7
 
 .include <bsd.subdir.mk>
 .include <bsd.prog.mk>

@@ -38,18 +38,12 @@
 .Nm isa , isadma
 .Nd introduction to ISA bus support
 .Sh SYNOPSIS
-.Cd "# amd64 and i386"
+.Cd "# amd64"
 .Cd "isa* at amdpcib?"
 .Cd "isa0 at tcpcib?"
 .Cd "isa0 at mainbus0"
 .Cd "isa0 at pcib?"
 .Cd "isadma0 at isa?"
-.Pp
-.Cd "# i386"
-.Cd "isa0 at ichpcib?"
-.Cd "isa* at glxpcib?"
-.Cd "isa0 at gscpcib?"
-.Cd "isa* at piixpcib?"
 .Pp
 .Cd "# alpha"
 .Cd "isa* at pceb?"
@@ -68,15 +62,6 @@ Drivers able to use DMA attach at
 .Nm isadma ;
 otherwise they attach at
 .Nm isa .
-.Pp
-Note that interrupt mappings on the i386 may require that the BIOS
-be configured to reserve the interrupts for these devices as "Legacy ISA".
-If such configuration is not done, the system may use those interrupts
-for
-.Xr pci 4
-or
-.Xr isapnp 4
-devices instead.
 .Pp
 .Ox
 provides support for the following devices.

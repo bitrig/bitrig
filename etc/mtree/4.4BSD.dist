@@ -337,11 +337,6 @@ mcpp-gcc-arm
 # ./usr/include/mcpp-gcc-arm
 ..
 
-# ./usr/include/mcpp-gcc-i386
-mcpp-gcc-i386
-# ./usr/include/mcpp-gcc-i386
-..
-
 # ./usr/include/openssl
 openssl		gname=bin uname=root mode=0755
 # ./usr/include/openssl
@@ -686,8 +681,6 @@ man1
 
 amd64
 ..
-i386
-..
 
 # ./usr/share/man/man1
 ..
@@ -696,8 +689,6 @@ i386
 man2
 
 amd64
-..
-i386
 ..
 
 # ./usr/share/man/man2
@@ -721,8 +712,6 @@ amd64
 ..
 armv7
 ..
-i386
-..
 
 # ./usr/share/man/man4
 ..
@@ -731,8 +720,6 @@ i386
 man5
 
 amd64
-..
-i386
 ..
 
 # ./usr/share/man/man5
@@ -754,8 +741,6 @@ man8
 amd64
 ..
 armv7
-..
-i386
 ..
 
 # ./usr/share/man/man8

@@ -10,6 +10,6 @@ NOPROG=yes
 
 MAN=fdformat.1
 
-MANSUBDIR=i386 amd64
+MANSUBDIR=amd64
 
 .include <bsd.prog.mk>

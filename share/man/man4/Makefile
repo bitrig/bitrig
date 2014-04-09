@@ -96,7 +96,7 @@ MLINKS+=tty.4 cua.4
 MLINKS+=usb.4 uhub.4
 MLINKS+=vlan.4 svlan.4
 
-SUBDIR=	man4.amd64 man4.armv7 man4.i386 
+SUBDIR=	man4.amd64 man4.armv7
 
 CLEANFILES+= wi.4
 

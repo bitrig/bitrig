@@ -10,6 +10,6 @@ NOPROG=yes
 .endif
 
 MAN=	apmd.8
-MANSUBDIR=amd64 i386
+MANSUBDIR=amd64
 
 .include <bsd.prog.mk>

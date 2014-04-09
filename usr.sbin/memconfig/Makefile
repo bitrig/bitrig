@@ -7,6 +7,6 @@ NOPROG=yes
 .endif
 
 MAN=		memconfig.8
-MANSUBDIR=	i386 amd64
+MANSUBDIR=	amd64
 
 .include <bsd.prog.mk>
