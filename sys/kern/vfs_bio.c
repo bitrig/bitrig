@@ -1,4 +1,4 @@
-/*	$OpenBSD: vfs_bio.c,v 1.154 2014/01/25 04:23:31 beck Exp $	*/
+/*	$OpenBSD: vfs_bio.c,v 1.155 2014/04/10 13:48:24 tedu Exp $	*/
 /*	$NetBSD: vfs_bio.c,v 1.44 1996/06/11 11:15:36 pk Exp $	*/
 
 /*-
@@ -89,16 +89,6 @@
 
 #include <uvm/uvm_extern.h>
 
-/*
- * Definitions for the buffer free lists.
- */
-#define	BQUEUES		3		/* number of free buffer queues */
-
-#define	BQ_DIRTY	0		/* LRU queue with dirty buffers */
-#define	BQ_CLEAN	1		/* LRU queue with clean buffers */
-#define	BQ_LOCKED	2		/* in-core locked metadata */
-
-TAILQ_HEAD(bqueues, buf) bufqueues[BQUEUES];
 int nobuffers;
 int needbuffer;
 struct bio_ops bioops;
@@ -108,12 +98,6 @@ struct bio_ops bioops;
  */
 struct pool bufpool;
 struct bufhead bufhead = LIST_HEAD_INITIALIZER(bufhead);
-
-/*
- * Insq/Remq for the buffer free lists.
- */
-#define	binsheadfree(bp, dp)	TAILQ_INSERT_HEAD(dp, bp, b_freelist)
-#define	binstailfree(bp, dp)	TAILQ_INSERT_TAIL(dp, bp, b_freelist)
 
 struct buf *bio_doread(struct vnode *, daddr_t, int, int);
 struct buf *buf_get(struct vnode *, daddr_t, size_t);
@@ -145,40 +129,6 @@ vsize_t bufkvm;
 
 struct proc *cleanerproc;
 int bd_req;			/* Sleep point for cleaner daemon. */
-
-void
-bremfree(struct buf *bp)
-{
-	struct bqueues *dp = NULL;
-
-	splassert(IPL_BIO);
-
-	/*
-	 * We only calculate the head of the freelist when removing
-	 * the last element of the list as that is the only time that
-	 * it is needed (e.g. to reset the tail pointer).
-	 *
-	 * NB: This makes an assumption about how tailq's are implemented.
-	 */
-	if (TAILQ_NEXT(bp, b_freelist) == NULL) {
-		for (dp = bufqueues; dp < &bufqueues[BQUEUES]; dp++)
-			if (dp->tqh_last == &TAILQ_NEXT(bp, b_freelist))
-				break;
-		if (dp == &bufqueues[BQUEUES])
-			panic("bremfree: lost tail");
-	}
-
-	if (!ISSET(bp->b_flags, B_LOCKED)) {
-		if (!ISSET(bp->b_flags, B_DELWRI)) {
-			bcstats.numcleanpages -= atop(bp->b_bufsize);
-		} else {
-			bcstats.numdirtypages -= atop(bp->b_bufsize);
-			bcstats.delwribufs--;
-		}
-	}
-
-	TAILQ_REMOVE(dp, bp, b_freelist);
-}
 
 void
 buf_put(struct buf *bp)
@@ -215,7 +165,6 @@ void
 bufinit(void)
 {
 	u_int64_t dmapages;
-	struct bqueues *dp;
 
 	dmapages = uvm_pagecount(&dma_constraint);
 	/* take away a guess at how much of this the kernel will consume */
@@ -281,8 +230,7 @@ bufinit(void)
 	pool_init(&bufpool, sizeof(struct buf), 0, 0, 0, "bufpl", NULL);
 	pool_setipl(&bufpool, IPL_BIO);
 
-	for (dp = bufqueues; dp < &bufqueues[BQUEUES]; dp++)
-		TAILQ_INIT(dp);
+	bufcache_init();
 
 	/*
 	 * hmm - bufkvm is an argument because it's static, while
@@ -330,9 +278,9 @@ bufadjust(int newbufpages)
 	 * adjusted bufcachepercent - or the pagedaemon has told us
 	 * to give back memory *now* - so we give it all back.
 	 */
-	while ((bp = TAILQ_FIRST(&bufqueues[BQ_CLEAN])) &&
+	while ((bp = bufcache_getcleanbuf()) &&
 	    (bcstats.numbufpages > targetpages)) {
-		bremfree(bp);
+		bufcache_take(bp);
 		if (bp->b_vp) {
 			RB_REMOVE(buf_rb_bufs,
 			    &bp->b_vp->v_bufs_tree, bp);
@@ -809,7 +757,6 @@ buf_undirty(struct buf *bp)
 void
 brelse(struct buf *bp)
 {
-	struct bqueues *bufq;
 	int s;
 
 	s = splbio();
@@ -874,23 +821,8 @@ brelse(struct buf *bp)
 		 * It has valid data.  Put it on the end of the appropriate
 		 * queue, so that it'll stick around for as long as possible.
 		 */
-		if (ISSET(bp->b_flags, B_LOCKED)) /* locked in core */
-			bufq = &bufqueues[BQ_LOCKED];
-		else {
-			if (!ISSET(bp->b_flags, B_DELWRI)) {
-				bcstats.numcleanpages += atop(bp->b_bufsize);
-				bufq = &bufqueues[BQ_CLEAN];
-			} else {
-				bcstats.numdirtypages += atop(bp->b_bufsize);
-				bcstats.delwribufs++;
-				bufq = &bufqueues[BQ_DIRTY];
-			}
-		}
-		if (ISSET(bp->b_flags, B_AGE)) {
-			binsheadfree(bp, bufq);
-		} else {
-			binstailfree(bp, bufq);
-		}
+		bufcache_release(bp);
+
 		/* Unlock the buffer. */
 		CLR(bp->b_flags, (B_AGE | B_ASYNC | B_NOCACHE | B_DEFERRED));
 		buf_release(bp);
@@ -985,7 +917,7 @@ start:
 		if (!ISSET(bp->b_flags, B_INVAL)) {
 			bcstats.cachehits++;
 			SET(bp->b_flags, B_CACHE);
-			bremfree(bp);
+			bufcache_take(bp);
 			buf_acquire(bp);
 			splx(s);
 			return (bp);
@@ -1050,8 +982,8 @@ buf_get(struct vnode *vp, daddr_t blkno, size_t size)
 		 * to stay at the target with our new allocation.
 		 */
 		while ((bcstats.numbufpages + npages > targetpages) &&
-		    (bp = TAILQ_FIRST(&bufqueues[BQ_CLEAN]))) {
-			bremfree(bp);
+		    (bp = bufcache_getcleanbuf())) {
+			bufcache_take(bp);
 			if (bp->b_vp) {
 				RB_REMOVE(buf_rb_bufs,
 				    &bp->b_vp->v_bufs_tree, bp);
@@ -1166,7 +1098,7 @@ buf_daemon(struct proc *p)
 
 		getmicrouptime(&starttime);
 
-		while ((bp = TAILQ_FIRST(&bufqueues[BQ_DIRTY]))) {
+		while ((bp = bufcache_getdirtybuf())) {
 			struct timeval tv;
 
 			if (UNCLEAN_PAGES < lodirtypages &&
@@ -1174,7 +1106,7 @@ buf_daemon(struct proc *p)
 			    pushed >= 16)
 				break;
 
-			bremfree(bp);
+			bufcache_take(bp);
 			buf_acquire(bp);
 			splx(s);
 
@@ -1185,7 +1117,7 @@ buf_daemon(struct proc *p)
 			}
 #ifdef DIAGNOSTIC
 			if (!ISSET(bp->b_flags, B_DELWRI))
-				panic("Clean buffer on BQ_DIRTY");
+				panic("Clean buffer on dirty queue");
 #endif
 
 #ifdef WAPBL
@@ -1204,9 +1136,7 @@ buf_daemon(struct proc *p)
 			    buf_countdeps(bp, 0, 0)) {
 				SET(bp->b_flags, B_DEFERRED);
 				s = splbio();
-				bcstats.numdirtypages += atop(bp->b_bufsize);
-				bcstats.delwribufs++;
-				binstailfree(bp, &bufqueues[BQ_DIRTY]);
+				bufcache_release(bp);
 				buf_release(bp);
 				continue;
 			}
@@ -1341,4 +1271,73 @@ buf_adjcnt(struct buf *bp, long ncount)
 	if (injournal(bp))
 		WAPBL_RESIZE_BUF(wapbl_vptomp(bp->b_vp), bp, bp->b_bufsize,
 		    ocount);
+}
+
+/* bufcache freelist code below */
+
+/*
+ * simple LRU queues, one clean, one dirty and one for incore locked metadata.
+ */
+TAILQ_HEAD(bufqueue, buf);
+struct bufqueue cleanqueue;
+struct bufqueue dirtyqueue;
+struct bufqueue lockedqueue;
+
+void
+bufcache_init(void)
+{
+
+	TAILQ_INIT(&cleanqueue);
+	TAILQ_INIT(&dirtyqueue);
+	TAILQ_INIT(&lockedqueue);
+}
+
+struct buf *
+bufcache_getcleanbuf(void)
+{
+	return TAILQ_FIRST(&cleanqueue);
+}
+
+struct buf *
+bufcache_getdirtybuf(void)
+{
+	return TAILQ_FIRST(&dirtyqueue);
+}
+
+void
+bufcache_take(struct buf *bp)
+{
+	struct bufqueue *queue;
+
+	splassert(IPL_BIO);
+
+	if (ISSET(bp->b_flags, B_LOCKED)) {
+		queue = &lockedqueue;
+	} else if (!ISSET(bp->b_flags, B_DELWRI)) {
+		queue = &cleanqueue;
+		bcstats.numcleanpages -= atop(bp->b_bufsize);
+	} else {
+		queue = &dirtyqueue;
+		bcstats.numdirtypages -= atop(bp->b_bufsize);
+		bcstats.delwribufs--;
+	}
+	TAILQ_REMOVE(queue, bp, b_freelist);
+}
+
+void
+bufcache_release(struct buf *bp)
+{
+	struct bufqueue *queue;
+	
+	if (ISSET(bp->b_flags, B_LOCKED)) { /* locked in core */
+		queue = &lockedqueue;
+	} else if (!ISSET(bp->b_flags, B_DELWRI)) {
+		queue = &cleanqueue;
+		bcstats.numcleanpages += atop(bp->b_bufsize);
+	} else {
+		queue = &dirtyqueue;
+		bcstats.numdirtypages += atop(bp->b_bufsize);
+		bcstats.delwribufs++;
+	}
+	TAILQ_INSERT_TAIL(queue, bp, b_freelist);
 }
