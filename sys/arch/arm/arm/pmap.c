@@ -76,7 +76,7 @@ paddr_t arm_kvm_stolen;
 void * pmap_steal_avail(size_t size, int align, void **kva);
 void pmap_remove_avail(paddr_t base, paddr_t end);
 void pmap_avail_fixup(void);
-void pmap_map_stolen(void);
+vaddr_t pmap_map_stolen(void);
 void pmap_physload_avail(void);
 
 
@@ -858,6 +858,7 @@ pmap_steal_memory(vsize_t size, vaddr_t *start, vaddr_t *end)
 }
 #endif
 
+vaddr_t virtual_avail, virtual_end;
 
 void pmap_setup_avail( uint32_t ram_start, uint32_t ram_end, uint32_t kvo);
 /*
@@ -874,6 +875,7 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 	struct pmapvp2 *vp2;
 	struct pmapvp3 *vp3;
 	struct pte_desc *pted;
+	vaddr_t vstart, vend;
 	int i, j, k;
 	int dump = 0;
 
@@ -1037,23 +1039,32 @@ printf("allocated pted vp3 %x %x %x %x\n", idx1, idx2, vect, pa);
 	printf("all mapped\n");
 
 
-	/* XXX */
-
-#if 0
-	zero_page = VM_MIN_KERNEL_ADDRESS + arm_kvm_stolen;
-	arm_kvm_stolen += PAGE_SIZE;
-	copy_src_page = VM_MIN_KERNEL_ADDRESS + arm_kvm_stolen;
-	arm_kvm_stolen += PAGE_SIZE;
-	copy_dst_page = VM_MIN_KERNEL_ADDRESS + arm_kvm_stolen;
-	arm_kvm_stolen += PAGE_SIZE;
-	arm_kvm_stolen += reserve_dumppages( (caddr_t)(VM_MIN_KERNEL_ADDRESS +
-	    arm_kvm_stolen));
-#endif
 
 	/* XXX */
 	printf("stolen 0x%x memory\n", arm_kvm_stolen);
 	pmap_avail_fixup();
-	pmap_map_stolen();
+	vstart = pmap_map_stolen();
+	vend = VM_MAX_KERNEL_ADDRESS;
+
+	/* XXX */
+
+	zero_page = vstart;
+	vstart += PAGE_SIZE;
+	copy_src_page = vstart;
+	vstart += PAGE_SIZE;
+	copy_dst_page = vstart;
+	vstart += PAGE_SIZE;
+#if 0
+	vstart += reserve_dumppages( (caddr_t)(VM_MIN_KERNEL_ADDRESS +
+	    arm_kvm_stolen));
+#endif
+	/*
+	 * Managed KVM space is what we have claimed up to end of 
+	 * mapped kernel buffers.
+	 */
+	virtual_avail = vstart;
+	virtual_end = vend;
+
 
 	if (dump) {
 	for (i = 0; i < 4096; i++) {
@@ -1522,15 +1533,13 @@ void pmap_remove_holes(struct vm_map *v0)
 {
 }
 
-void pmap_virtual_space(vaddr_t *va, vaddr_t *va1)
+void pmap_virtual_space(vaddr_t *start, vaddr_t *end)
 {
+        *start = virtual_avail;
+	*end = virtual_end;
 }
 
 vaddr_t  pmap_curmaxkvaddr;
-
-void    vector_page_setprot(int a)
-{
-}
 
 void    pmap_set_pcb_pagedir(pmap_t pm, struct pcb *pcb)
 {
@@ -1706,7 +1715,7 @@ pmap_steal_avail(size_t size, int align, void **kva)
 	    size, align);
 }
 
-void
+vaddr_t
 pmap_map_stolen()
 {
 	int prot;
@@ -1741,6 +1750,7 @@ pmap_map_stolen()
 		}
 	}
 	printf("last mapping  v %08x p %08x\n", va, pa);
+	return va + PAGE_SIZE;
 }
 
 void
