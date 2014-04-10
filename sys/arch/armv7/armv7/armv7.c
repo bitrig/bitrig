@@ -263,17 +263,16 @@ extern struct bus_space armv7_bs_tag;
 /* hack up a serial attachement */
 void	protoconsole(uint32_t, void *);
 void	protoconsole2(uint32_t, void *);
+/* bootarg may be fdt or old style boot args */
+static struct consdev protocons = {
+	NULL, NULL, NULL, NULL, NULL, NULL,
+	NODEV, 0
+};
+
 void
 protoconsole(uint32_t board_id, void *bootarg) {
 	extern bus_space_handle_t exuartconsioh;
 	extern bus_space_tag_t exuartconsiot;
-
-
-	/* bootarg may be fdt or old style boot args */
-	static struct consdev protocons = {
-		NULL, NULL, NULL, NULL, NULL, NULL,
-		NODEV, 0
-	};
 
 	switch (board_id) {
 	case 0xd33: /* NURI (qemu target) */
@@ -296,6 +295,8 @@ protoconsole(uint32_t board_id, void *bootarg) {
 void
 protoconsole2(uint32_t board_id, void *bootarg) {
 	extern bus_space_handle_t exuartconsioh;
+	extern bus_space_tag_t exuartconsiot;
+
 	switch (board_id) {
 	case 0xd33: /* NURI (qemu target) */
 		// hack up a exuart console attachment for 0x13800000
@@ -303,5 +304,13 @@ protoconsole2(uint32_t board_id, void *bootarg) {
 		exuartconsioh = 0xc0000000;
 		pmap_kenter_cache(exuartconsioh, 0x13800000,
 		    VM_PROT_WRITE|VM_PROT_READ,  PMAP_CACHE_CI);
+
+		cn_tab = &protocons;
+		exuartconsiot = &armv7_bs_tag;
+
+		protocons.cn_getc =  exuartcngetc;
+		protocons.cn_putc =  exuartcnputc;
+		protocons.cn_pollc =  exuartcnpollc;
+		cn_tab = &protocons;
 	}
 }
