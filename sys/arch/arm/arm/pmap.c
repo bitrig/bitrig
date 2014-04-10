@@ -920,7 +920,8 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 		}
 		if (i == VP_IDX1(VM_MIN_KERNEL_ADDRESS)) {
 			ub_idx2 = VP_IDX2(VM_MAX_KERNEL_ADDRESS);
-		} else { ub_idx2 = VP_IDX2_CNT-1;
+		} else {
+			ub_idx2 = VP_IDX2_CNT-1;
 		}
 		for (j = lb_idx2; j <= ub_idx2; j++) {
 			pa = pmap_steal_avail(sizeof (struct pmapvp3), 4, &va);
@@ -972,6 +973,41 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 				vp3->vp[k] = pted;
 			}
 		}
+	}
+	/*
+	 * XXX - what about vector table at 0, ever?
+	 * XXX - should this be done after mapping space, but before 
+	 * giving ram to uvm, but the vps have to be mapped, sigh.
+	 */
+	{
+		uint32_t vect = 0xffff0000;
+		uint32_t idx1 = VP_IDX1(vect);
+		uint32_t idx2 = VP_IDX2(vect);
+		uint32_t idx3 = VP_IDX3(vect);
+
+		vp2 = pmap_kernel()->pm_vp[idx1];
+		if (vp2 == NULL) {
+			pa = pmap_steal_avail(sizeof (struct pmapvp2), 4, &va);
+			vp2 = va;
+			pmap_kernel()->pm_vp[idx1] = vp2;
+printf("had to allocate vp2 %x %x %x %x\n", idx1, idx2, vect, pa);
+		}
+		vp3 = vp2->vp[idx2];
+		if (vp3 == NULL) {
+printf("had to allocate vp3 %x %x %x %x\n", idx1, idx2, vect, pa);
+			pa = pmap_steal_avail(sizeof (struct pmapvp3), 4, &va);
+			vp3 = va;
+			vp2->vp[idx2] = vp3;
+		}
+		pa = pmap_steal_avail(sizeof(struct pte_desc),
+		    4, &va);
+		pted = va;
+printf("allocated pted vp3 %x %x %x %x\n", idx1, idx2, vect, pa);
+		vp3->vp[idx3] = pted;
+
+		pa = pmap_steal_avail(L2_TABLE_SIZE, L2_TABLE_SIZE, &va);
+		pmap_set_l2(pmap_kernel(), vect,
+		    (vaddr_t)va, (uint32_t)pa);
 	}
 
 	/* now that we have mapping space for everything, lets map it */
@@ -1086,8 +1122,10 @@ pmap_set_l2(struct pmap *pm, uint32_t va, vaddr_t l2_va, uint32_t l2_pa)
 
 	pg_entry |= L1_TYPE_PT;
 
-	idx1 = va >> VP_IDX1_POS;
-	idx2 = (va >> VP_IDX2_POS) & VP_IDX2_MASK;
+	//idx1 = va >> VP_IDX1_POS;
+	//idx2 = (va >> VP_IDX2_POS) & VP_IDX2_MASK;
+	idx1 = VP_IDX1(va);
+	idx2 = VP_IDX2(va);
 	vp2 = pmap_kernel()->pm_vp[idx1];
 	vp2->l2[idx2] = (uint32_t *)l2_va;
 
