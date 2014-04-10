@@ -21,6 +21,9 @@
 #include <dev/cons.h>
 #define _ARM32_BUS_DMA_PRIVATE
 #include <machine/bus.h>
+#include <sys/types.h>
+#include <uvm/uvm_extern.h>
+#include <machine/pmap.h>
 #include <arm/armv7/armv7var.h>
 #include <armv7/armv7/armv7var.h>
 #include <armv7/sunxi/sunxireg.h>
@@ -259,6 +262,7 @@ extern struct bus_space armv7_bs_tag;
 
 /* hack up a serial attachement */
 void	protoconsole(uint32_t, void *);
+void	protoconsole2(uint32_t, void *);
 void
 protoconsole(uint32_t board_id, void *bootarg) {
 	extern bus_space_handle_t exuartconsioh;
@@ -286,5 +290,18 @@ protoconsole(uint32_t board_id, void *bootarg) {
 		protocons.cn_putc =  exuartcnputc;
 		protocons.cn_pollc =  exuartcnpollc;
 		cn_tab = &protocons;
+	}
+}
+
+void
+protoconsole2(uint32_t board_id, void *bootarg) {
+	extern bus_space_handle_t exuartconsioh;
+	switch (board_id) {
+	case 0xd33: /* NURI (qemu target) */
+		// hack up a exuart console attachment for 0x13800000
+
+		exuartconsioh = 0xc0000000;
+		pmap_kenter_cache(exuartconsioh, 0x13800000,
+		    VM_PROT_WRITE|VM_PROT_READ,  PMAP_CACHE_CI);
 	}
 }

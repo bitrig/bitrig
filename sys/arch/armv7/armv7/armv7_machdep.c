@@ -125,6 +125,7 @@
 
 #include <arm/undefined.h>
 #include <arm/machdep.h>
+#include <arm/pmap.h>
 #include <arm/armv7/armv7var.h>
 #include <armv7/armv7/armv7_machdep.h>
 #include <machine/fdt.h>
@@ -203,6 +204,7 @@ void	process_kernel_args(char *);
 void	parse_uboot_tags(void *);
 void	consinit(void);
 void	protoconsole(uint32_t, void *);
+void	protoconsole2(uint32_t, void *);
 void	platform_bootconfig_dram(BootConfig *, psize_t *, psize_t *);
 
 bs_protos(bs_notimpl);
@@ -489,6 +491,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 
 	physmem = (physical_end - physical_start) / PAGE_SIZE;
 
+	vector_page = ARM_VECTORS_HIGH;
 	alloc_pages(systempage.pv_pa, 1);
 	systempage.pv_va = vector_page;
 
@@ -518,13 +521,10 @@ initarm(void *arg0, void *arg1, void *arg2)
 	uvm_setpagesize();        /* initialize PAGE_SIZE-dependent variables */
 
 	printf("success thus far\n");
-//	while(1)
-//		;
 
-
-#ifdef VERBOSE_INIT_ARM
-	printf("Constructing L2 page tables\n");
-#endif
+        /* Map the vector page. */
+	pmap_kenter_cache(vector_page, systempage.pv_pa,
+		VM_PROT_EXECUTE|VM_PROT_WRITE|VM_PROT_READ,  PMAP_CACHE_WB);
 
 	/* Map the FDT. */
 /*
@@ -545,6 +545,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	/* Switch tables */
 
 	printf("About to go virtual on kernel map\n");
+	/* NO PRINTING FROM HERE UNTIL consinit()!!!! */
 	setttb(pmap_kernel()->l1_pa);
 	cpu_tlb_flushID();
 
@@ -555,8 +556,14 @@ initarm(void *arg0, void *arg1, void *arg2)
 	proc0paddr = (struct user *)kernelstack.pv_va;
 	proc0.p_addr = proc0paddr;
 
+	pmap_kenter_cache(vector_page, systempage.pv_pa,
+		VM_PROT_EXECUTE|VM_PROT_WRITE|VM_PROT_READ,  PMAP_CACHE_WB);
+
 	arm32_vector_init(vector_page, ARM_VEC_ALL);
 
+
+	pmap_protect(pmap_kernel(), systempage.pv_pa,
+	    systempage.pv_pa+PAGE_SIZE, VM_PROT_EXECUTE|VM_PROT_READ);
 	/*
 	 * Pages were allocated during the secondary bootstrap for the
 	 * stacks for different CPU modes.
@@ -570,6 +577,8 @@ initarm(void *arg0, void *arg1, void *arg2)
 	set_stackptr(PSR_ABT32_MODE, curcpu()->ci_abtstack);
 	set_stackptr(PSR_UND32_MODE,
 	    kernelstack.pv_va + USPACE_UNDEF_STACK_TOP);
+
+	protoconsole2(board_id, arg2);
 
 	/*
 	 * Well we should set a data abort handler.
@@ -585,24 +594,27 @@ initarm(void *arg0, void *arg1, void *arg2)
 	prefetch_abort_handler_address = (u_int)prefetch_abort_handler;
 	undefined_handler_address = (u_int)undefinedinstruction_bounce;
 
+	printf("survived that1\n");
 	/* Now we can reinit the FDT, using the virtual address. */
 	if (fdt.pv_va && fdt.pv_pa)
 		fdt_init((void *)fdt.pv_va);
 
+	printf("survived that2\n");
 	/* Initialise the undefined instruction handlers */
 #ifdef VERBOSE_INIT_ARM
 	printf("undefined ");
 #endif
 	undefined_init();
+	printf("survived that3\n");
 
 	/* Load memory into UVM. */
 #ifdef VERBOSE_INIT_ARM
 	printf("page ");
 #endif
-	//uvm_page_physload(atop(physical_freestart), atop(physical_freeend),
-	//    atop(physical_freestart), atop(physical_freeend), 0);
-
-	// only first block was originally given to the UVM(?) provide the rest
+	printf("survived that4\n");
+	// only first block was originally given to pmap_bootstrap
+	// provide the rest here.
+	// XXX - what about ram below the kernel.
 
 	physsegs = MIN(bootconfig.dramblocks, VM_PHYSSEG_MAX);
 
