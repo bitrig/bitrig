@@ -306,6 +306,30 @@ g++            gname=bin uname=root mode=0755
 # ./usr/include/g++
 ..
 
+# ./usr/include/c++
+c++
+
+# ./usr/include/c++/v1
+v1
+
+# ./usr/include/c++/v1/ext
+ext
+
+# ./usr/include/c++/v1/ext
+..
+
+# ./usr/include/c++/v1/mach-o
+mach-o
+
+# ./usr/include/c++/v1/mach-o
+..
+
+# ./usr/include/c++/v1
+..
+
+# ./usr/include/c++
+..
+
 # ./usr/include/kerberosV
 kerberosV		gname=bin uname=root mode=0755
 

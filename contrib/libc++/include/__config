@@ -56,6 +56,17 @@
 # endif  // __LONG_LONG_SUPPORTED
 #endif  // __FreeBSD__
 
+#ifdef __Bitrig__
+# include <machine/endian.h>
+#  if _BYTE_ORDER == _LITTLE_ENDIAN
+#   define _LIBCPP_LITTLE_ENDIAN 1
+#   define _LIBCPP_BIG_ENDIAN    0
+# else  // _BYTE_ORDER == _LITTLE_ENDIAN
+#   define _LIBCPP_LITTLE_ENDIAN 0
+#   define _LIBCPP_BIG_ENDIAN    1
+# endif  // _BYTE_ORDER == _LITTLE_ENDIAN
+#endif  // __Bitrig__
+
 #ifdef __NetBSD__
 # include <sys/endian.h>
 #  if _BYTE_ORDER == _LITTLE_ENDIAN
@@ -314,7 +325,7 @@ typedef __char32_t char32_t;
 #endif
 
 #if __ISO_C_VISIBLE >= 2011 || __cplusplus >= 201103L
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) || defined(__Bitrig__)
 #define _LIBCPP_HAS_QUICK_EXIT
 #define _LIBCPP_HAS_C11_FEATURES
 #elif defined(__linux__)
@@ -585,7 +596,7 @@ template <unsigned> struct __static_assert_check {};
 #define _LIBCPP_NONUNIQUE_RTTI_BIT (1ULL << 63)
 #endif
 
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(_WIN32) || defined(__sun__) || defined(__NetBSD__)
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(_WIN32) || defined(__sun__) || defined(__NetBSD__) || defined(__Bitrig__)
 #define _LIBCPP_LOCALE__L_EXTENSIONS 1
 #endif
 
@@ -593,11 +604,11 @@ template <unsigned> struct __static_assert_check {};
 #define _DECLARE_C99_LDBL_MATH 1
 #endif
 
-#if defined(__APPLE__) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__Bitrig__)
 #define _LIBCPP_HAS_DEFAULTRUNELOCALE
 #endif
 
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun__)
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun__) || defined(__Bitrig__)
 #define _LIBCPP_WCTYPE_IS_MASK
 #endif
 

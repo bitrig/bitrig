@@ -44,6 +44,7 @@ RDIRS=	../lib/librthread ../lib/libcurses ../lib/libform ../lib/libssl \
 	../lib/libfuse ../lib/libpcap ../lib/libsqlite3 ../lib/libutil \
 	../lib/libusbhid ../lib/libz ../lib/libkeynote \
 	../lib/libevent ../usr.bin/lex ../libexec/mcpp \
+	../lib/libc++ ../lib/libc++abi \
 	../sys/arch/${MACHINE}
 
 # Places using Makefile that needs a prerequisite target met before includes
