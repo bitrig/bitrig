@@ -260,6 +260,7 @@ struct inode_vtbl {
 #define IN_SHLOCK       0x0020          /* File has shared lock. */
 #define	IN_EXLOCK	0x0040		/* File has exclusive lock. */
 #define	IN_LAZYMOD	0x0080		/* Modified, but don't write yet. */
+#define	IN_UNHASHED	0x0100		/* Inode not inserted into the chain. */
 
 #define	i_devvp i_ump->um_devvp
 

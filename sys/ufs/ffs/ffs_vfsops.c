@@ -1571,6 +1571,12 @@ retry:
 	
 	if (error) {
 		/*
+		 * Inode has not been inserted into the chain, so make sure
+		 * we don't try to remove it.
+		 */
+		ip->i_flag |= IN_UNHASHED;
+
+		/*
 		 * VOP_INACTIVE will treat this as a stale file
 		 * and recycle it quickly
 		 */
