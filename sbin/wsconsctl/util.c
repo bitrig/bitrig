@@ -90,8 +90,8 @@ static const struct nameint mstype_tab[] = {
 	{ WSMOUSE_TYPE_BLUETOOTH, "bluetooth" },
 	{ WSMOUSE_TYPE_SUN,	"sun" },
 	{ WSMOUSE_TYPE_SYNAPTICS, "synaptics" },
-	{ WSMOUSE_TYPE_ALPS,	"alps" }
-	{ WSMOUSE_TYPE_SGI,	"sgi" }
+	{ WSMOUSE_TYPE_ALPS,	"alps" },
+	{ WSMOUSE_TYPE_SGI,	"sgi" },
 	{ WSMOUSE_TYPE_ELANTECH, "elantech" },
 };
 
@@ -164,7 +164,7 @@ static const struct nameint dpytype_tab[] = {
 	{ WSDISPLAY_TYPE_IMPACT,	"impact" },
 	{ WSDISPLAY_TYPE_GRTWO,		"grtwo" },
 	{ WSDISPLAY_TYPE_NEWPORT,	"newport" },
-	{ WSDISPLAY_TYPE_LIGHT,		"light" }
+	{ WSDISPLAY_TYPE_LIGHT,		"light" },
 	{ WSDISPLAY_TYPE_INTELDRM,	"inteldrm" },
 	{ WSDISPLAY_TYPE_RADEONDRM,	"radeondrm" }
 };
