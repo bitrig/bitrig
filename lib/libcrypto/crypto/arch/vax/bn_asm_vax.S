@@ -1,4 +1,4 @@
-#	$OpenBSD: bn_asm_vax.S,v 1.2 2012/10/13 21:31:56 djm Exp $
+#	$OpenBSD: bn_asm_vax.S,v 1.1 2014/04/11 22:51:53 miod Exp $
 #	$NetBSD: bn_asm_vax.S,v 1.1 2003/11/03 10:22:28 ragge Exp $
 
 #include <machine/asm.h>

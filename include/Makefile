@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.186 2014/03/26 18:13:15 eric Exp $
+#	$OpenBSD: Makefile,v 1.187 2014/04/11 22:51:52 miod Exp $
 #	$NetBSD: Makefile,v 1.59 1996/05/15 21:36:43 jtc Exp $
 
 #	@(#)Makefile	5.45.1.1 (Berkeley) 5/6/91
@@ -38,13 +38,14 @@ LDIRS=	altq crypto ddb dev isofs miscfs msdosfs net netinet netinet6 \
 PRDIRS=
 
 # Directories with an includes target
-RDIRS=	../lib/librthread ../lib/libcurses ../lib/libform ../lib/libssl \
-	../lib/libmenu ../lib/libocurses ../lib/libossaudio ../lib/libpanel \
-	../lib/librpcsvc ../lib/libskey ../lib/libedit ../lib/libexpat \
-	../lib/libfuse ../lib/libpcap ../lib/libsqlite3 ../lib/libutil \
-	../lib/libusbhid ../lib/libz ../lib/libkeynote \
-	../lib/libevent ../usr.bin/lex ../libexec/mcpp \
-	../lib/libc++ ../lib/libc++abi \
+RDIRS=	../lib/libcrypto ../lib/libcurses ../lib/libc++ ../lib/libc++abi \
+	../lib/libedit ../lib/libevent ../lib/libexpat \
+	../lib/libform ../lib/libfuse ../lib/libkeynote \
+	../libexec/mcpp ../lib/libmenu ../lib/libocurses ../lib/libossaudio \
+	../lib/libpanel ../lib/libpcap ../lib/librpcsvc ../lib/librthread \
+	../lib/libskey ../lib/libsqlite3 ../lib/libssl \
+	../lib/libusbhid ../lib/libutil ../lib/libz \
+	../usr.bin/lex \
 	../sys/arch/${MACHINE}
 
 # Places using Makefile that needs a prerequisite target met before includes
