@@ -698,6 +698,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/arpa/nameser.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/arpa/telnet.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/arpa/tftp.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/asr.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/assert.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/bitstring.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/blf.ph
@@ -1121,6 +1122,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/drm/drm_fourcc.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/drm/drm_global.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/drm/drm_hashtab.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/drm/drm_linux.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/drm/drm_linux_list.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/drm/drm_mem_util.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/drm/drm_mm.ph

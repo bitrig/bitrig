@@ -573,6 +573,7 @@
 ./usr/include/arpa/nameser.h
 ./usr/include/arpa/telnet.h
 ./usr/include/arpa/tftp.h
+./usr/include/asr.h
 ./usr/include/assert.h
 ./usr/include/bitstring.h
 ./usr/include/blf.h
@@ -996,6 +997,7 @@
 ./usr/include/dev/pci/drm/drm_fourcc.h
 ./usr/include/dev/pci/drm/drm_global.h
 ./usr/include/dev/pci/drm/drm_hashtab.h
+./usr/include/dev/pci/drm/drm_linux.h
 ./usr/include/dev/pci/drm/drm_linux_list.h
 ./usr/include/dev/pci/drm/drm_mem_util.h
 ./usr/include/dev/pci/drm/drm_mm.h
@@ -2001,7 +2003,7 @@
 ./usr/lib/libedit.so.5.0
 ./usr/lib/libedit_p.a
 ./usr/lib/libevent.a
-./usr/lib/libevent.so.4.0
+./usr/lib/libevent.so.4.1
 ./usr/lib/libevent_p.a
 ./usr/lib/libexpat.a
 ./usr/lib/libexpat.so.11.0
@@ -6502,7 +6504,6 @@
 ./usr/share/man/man3/addchstr.3
 ./usr/share/man/man3/addnstr.3
 ./usr/share/man/man3/addnwstr.3
-./usr/share/man/man3/addr.3
 ./usr/share/man/man3/addstr.3
 ./usr/share/man/man3/addwstr.3
 ./usr/share/man/man3/adler32.3
@@ -6522,6 +6523,9 @@
 ./usr/share/man/man3/asinhl.3
 ./usr/share/man/man3/asinl.3
 ./usr/share/man/man3/asprintf.3
+./usr/share/man/man3/asr_abort.3
+./usr/share/man/man3/asr_run.3
+./usr/share/man/man3/asr_run_sync.3
 ./usr/share/man/man3/assert.3
 ./usr/share/man/man3/assume_default_colors.3
 ./usr/share/man/man3/atan.3
@@ -7067,6 +7071,8 @@
 ./usr/share/man/man3/evbuffer_write.3
 ./usr/share/man/man3/event.3
 ./usr/share/man/man3/event_add.3
+./usr/share/man/man3/event_asr_abort.3
+./usr/share/man/man3/event_asr_run.3
 ./usr/share/man/man3/event_base_dispatch.3
 ./usr/share/man/man3/event_base_free.3
 ./usr/share/man/man3/event_base_loop.3
@@ -7300,6 +7306,7 @@
 ./usr/share/man/man3/get_wch.3
 ./usr/share/man/man3/get_wstr.3
 ./usr/share/man/man3/getaddrinfo.3
+./usr/share/man/man3/getaddrinfo_async.3
 ./usr/share/man/man3/getarg.3
 ./usr/share/man/man3/getbegx.3
 ./usr/share/man/man3/getbegy.3
@@ -7331,8 +7338,11 @@
 ./usr/share/man/man3/getgrnam_r.3
 ./usr/share/man/man3/getgrouplist.3
 ./usr/share/man/man3/gethostbyaddr.3
+./usr/share/man/man3/gethostbyaddr_async.3
 ./usr/share/man/man3/gethostbyname.3
 ./usr/share/man/man3/gethostbyname2.3
+./usr/share/man/man3/gethostbyname2_async.3
+./usr/share/man/man3/gethostbyname_async.3
 ./usr/share/man/man3/gethostent.3
 ./usr/share/man/man3/gethostid.3
 ./usr/share/man/man3/gethostname.3
@@ -7348,8 +7358,11 @@
 ./usr/share/man/man3/getmouse.3
 ./usr/share/man/man3/getn_wstr.3
 ./usr/share/man/man3/getnameinfo.3
+./usr/share/man/man3/getnameinfo_async.3
 ./usr/share/man/man3/getnetbyaddr.3
+./usr/share/man/man3/getnetbyaddr_async.3
 ./usr/share/man/man3/getnetbyname.3
+./usr/share/man/man3/getnetbyname_async.3
 ./usr/share/man/man3/getnetent.3
 ./usr/share/man/man3/getnetgrent.3
 ./usr/share/man/man3/getnstr.3
@@ -7380,6 +7393,7 @@
 ./usr/share/man/man3/getrpcent.3
 ./usr/share/man/man3/getrpcport.3
 ./usr/share/man/man3/getrrsetbyname.3
+./usr/share/man/man3/getrrsetbyname_async.3
 ./usr/share/man/man3/getservbyname.3
 ./usr/share/man/man3/getservbyname_r.3
 ./usr/share/man/man3/getservbyport.3
@@ -8418,7 +8432,6 @@
 ./usr/share/man/man3/nearbyint.3
 ./usr/share/man/man3/nearbyintf.3
 ./usr/share/man/man3/nearbyintl.3
-./usr/share/man/man3/network.3
 ./usr/share/man/man3/new_field.3
 ./usr/share/man/man3/new_fieldtype.3
 ./usr/share/man/man3/new_form.3
@@ -8449,7 +8462,6 @@
 ./usr/share/man/man3/noraw.3
 ./usr/share/man/man3/notimeout.3
 ./usr/share/man/man3/nrand48.3
-./usr/share/man/man3/ntoa.3
 ./usr/share/man/man3/ntohl.3
 ./usr/share/man/man3/ntohs.3
 ./usr/share/man/man3/ocurses.3
@@ -8758,8 +8770,11 @@
 ./usr/share/man/man3/res_init.3
 ./usr/share/man/man3/res_mkquery.3
 ./usr/share/man/man3/res_query.3
+./usr/share/man/man3/res_query_async.3
 ./usr/share/man/man3/res_search.3
+./usr/share/man/man3/res_search_async.3
 ./usr/share/man/man3/res_send.3
+./usr/share/man/man3/res_send_async.3
 ./usr/share/man/man3/reset_prog_mode.3
 ./usr/share/man/man3/reset_shell_mode.3
 ./usr/share/man/man3/resetty.3
@@ -10906,7 +10921,6 @@
 ./usr/share/man/man8/amd64/boot_amd64.8
 ./usr/share/man/man8/amd64/cdboot.8
 ./usr/share/man/man8/amd64/gpioctl.8
-./usr/share/man/man8/amd64/kbd.8
 ./usr/share/man/man8/amd64/memconfig.8
 ./usr/share/man/man8/amd64/pxeboot.8
 ./usr/share/man/man8/amd64/wsmoused.8
@@ -10987,7 +11001,6 @@
 ./usr/share/man/man8/i386/boot_i386.8
 ./usr/share/man/man8/i386/cdboot.8
 ./usr/share/man/man8/i386/gpioctl.8
-./usr/share/man/man8/i386/kbd.8
 ./usr/share/man/man8/i386/memconfig.8
 ./usr/share/man/man8/i386/pxeboot.8
 ./usr/share/man/man8/i386/wsmoused.8
@@ -11012,6 +11025,7 @@
 ./usr/share/man/man8/iscsid.8
 ./usr/share/man/man8/kadmin.8
 ./usr/share/man/man8/kadmind.8
+./usr/share/man/man8/kbd.8
 ./usr/share/man/man8/kdc.8
 ./usr/share/man/man8/kerberos.8
 ./usr/share/man/man8/kfd.8
@@ -11674,7 +11688,6 @@
 ./usr/share/man/man9/lock.9
 ./usr/share/man/man9/lockinit.9
 ./usr/share/man/man9/lockmgr.9
-./usr/share/man/man9/lockmgr_printinfo.9
 ./usr/share/man/man9/lockstatus.9
 ./usr/share/man/man9/log.9
 ./usr/share/man/man9/m_adj.9
@@ -11802,6 +11815,10 @@
 ./usr/share/man/man9/resettodr.9
 ./usr/share/man/man9/route.9
 ./usr/share/man/man9/rssadapt.9
+./usr/share/man/man9/rt_ifa_add.9
+./usr/share/man/man9/rt_ifa_addloop.9
+./usr/share/man/man9/rt_ifa_del.9
+./usr/share/man/man9/rt_ifa_delloop.9
 ./usr/share/man/man9/rt_lookup.9
 ./usr/share/man/man9/rt_setgate.9
 ./usr/share/man/man9/rt_timer_add.9
@@ -11850,10 +11867,6 @@
 ./usr/share/man/man9/setdisklabel.9
 ./usr/share/man/man9/shutdownhook_disestablish.9
 ./usr/share/man/man9/shutdownhook_establish.9
-./usr/share/man/man9/simple_lock.9
-./usr/share/man/man9/simple_lock_init.9
-./usr/share/man/man9/simple_lock_try.9
-./usr/share/man/man9/simple_unlock.9
 ./usr/share/man/man9/skpc.9
 ./usr/share/man/man9/snprintf.9
 ./usr/share/man/man9/sobind.9
