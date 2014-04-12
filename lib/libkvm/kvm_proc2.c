@@ -239,7 +239,7 @@ kvm_proclist(kvm_t *kd, int op, int arg, struct process *pr,
 			break;
 
 		case KERN_PROC_RGID:
-			if (pcred.p_rgid != (gid_t)arg)
+			if (ucred.cr_rgid != (gid_t)arg)
 				continue;
 			break;
 
