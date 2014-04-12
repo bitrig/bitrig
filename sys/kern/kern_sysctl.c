@@ -1415,7 +1415,7 @@ again:
 			break;
 
 		case KERN_PROC_RGID:
-			if (p->p_cred->p_rgid != (gid_t)arg)
+			if (pr->ps_ucred->cr_rgid != (gid_t)arg)
 				continue;
 			break;
 
