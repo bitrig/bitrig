@@ -195,7 +195,7 @@ struct cfdriver ampintc_cd = {
 	NULL, "ampintc", DV_DULL
 };
 
-static const char *ampintc_compatibles[] = {
+static char *ampintc_compatibles[] = {
 	"arm,gic",
 	"arm,cortex-a7-gic",
 	"arm,cortex-a9-gic",
