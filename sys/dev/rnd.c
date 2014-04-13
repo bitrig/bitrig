@@ -230,6 +230,7 @@ u_char	entropy_input_rotate;
 
 void	dequeue_randomness(void *);
 void	add_entropy_words(const u_int32_t *, u_int);
+void	add_entropy_string(const char *buf);
 void	extract_entropy(u_int8_t *, int);
 
 int	filt_randomread(struct knote *, long);
@@ -444,6 +445,22 @@ add_entropy_words(const u_int32_t *buf, u_int n)
 		     entropy_pool[i]; /* + 2^POOLWORDS */
 
 		entropy_pool[i] = (w >> 3) ^ twist_table[w & 7];
+	}
+}
+
+void
+add_entropy_string(const char *buf)
+{
+	int l;
+	uint32_t wbuf;
+	l = strlen(buf);
+	while (l >= 4) {
+		wbuf = (uint32_t)buf[0] << 24;
+		wbuf |= (uint32_t)buf[1] << 16;
+		wbuf |= (uint32_t)buf[2] << 8;
+		wbuf |= (uint32_t)buf[3];
+		add_entropy_words(&wbuf, 1);
+		l -= 4;
 	}
 }
 
@@ -762,8 +779,7 @@ random_start(void)
 	rnd_states[RND_SRC_TRUE].max_entropy = 1;
 
 	/* Provide some data from this kernel */
-	add_entropy_words((u_int32_t *)version,
-	    strlen(version) / sizeof(u_int32_t));
+	add_entropy_string(version);
 
 	/* Provide some data from this kernel */
 	add_entropy_words((u_int32_t *)cfdata,
