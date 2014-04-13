@@ -57,6 +57,11 @@
  *
  */
 
+#include <sys/param.h>
+#include <sys/socket.h>
+
+#include <netinet/in.h>
+
 #include <stdio.h>
 #define USE_SOCKETS
 #include <openssl/objects.h>
@@ -196,6 +201,7 @@ void dtls1_free(SSL *s)
 	pqueue_free(s->d1->buffered_app_data.q);
 
 	OPENSSL_free(s->d1);
+	s->d1 = NULL;
 	}
 
 void dtls1_clear(SSL *s)
