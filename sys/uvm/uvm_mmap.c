@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_mmap.c,v 1.91 2012/07/21 06:46:58 matthew Exp $	*/
+/*	$OpenBSD: uvm_mmap.c,v 1.94 2014/04/13 23:14:15 tedu Exp $	*/
 /*	$NetBSD: uvm_mmap.c,v 1.49 2001/02/18 21:19:08 chs Exp $	*/
 
 /*
@@ -100,7 +100,6 @@
  * fd: fd of the file we want to map
  * off: offset within the file
  */
-
 int
 sys_mquery(struct proc *p, void *v, register_t *retval)
 {
@@ -161,7 +160,6 @@ sys_mquery(struct proc *p, void *v, register_t *retval)
 /*
  * sys_mincore: determine if pages are in core or not.
  */
-
 /* ARGSUSED */
 int
 sys_mincore(struct proc *p, void *v, register_t *retval)
@@ -313,7 +311,6 @@ sys_mincore(struct proc *p, void *v, register_t *retval)
  *    - if address isn't page aligned the mapping starts at trunc_page(addr)
  *      and the return value is adjusted up by the page offset.
  */
-
 int
 sys_mmap(struct proc *p, void *v, register_t *retval)
 {
@@ -339,10 +336,7 @@ sys_mmap(struct proc *p, void *v, register_t *retval)
 	caddr_t handle;
 	int error;
 
-	/*
-	 * first, extract syscall args from the uap.
-	 */
-
+	/* first, extract syscall args from the uap. */
 	addr = (vaddr_t) SCARG(uap, addr);
 	size = (vsize_t) SCARG(uap, len);
 	prot = SCARG(uap, prot);
@@ -367,17 +361,11 @@ sys_mmap(struct proc *p, void *v, register_t *retval)
 	if (size == 0)
 		return (EINVAL);
 
-	/*
-	 * align file position and save offset.  adjust size.
-	 */
+	/* align file position and save offset.  adjust size. */
 	ALIGN_ADDR(pos, size, pageoff);
 
-	/*
-	 * now check (MAP_FIXED) or get (!MAP_FIXED) the "addr" 
-	 */
-
+	/* now check (MAP_FIXED) or get (!MAP_FIXED) the "addr" */
 	if (flags & MAP_FIXED) {
-
 		/* adjust address by the same amount as we did the offset */
 		addr -= pageoff;
 		if (addr & PAGE_MASK)
@@ -393,11 +381,8 @@ sys_mmap(struct proc *p, void *v, register_t *retval)
 
 	}
 
-	/*
-	 * check for file mappings (i.e. not anonymous) and verify file.
-	 */
+	/* check for file mappings (i.e. not anonymous) and verify file. */
 	if ((flags & MAP_ANON) == 0) {
-
 		if ((fp = fd_getfile(fdp, fd)) == NULL)
 			return (EBADF);
 
@@ -456,10 +441,7 @@ sys_mmap(struct proc *p, void *v, register_t *retval)
 			flags = (flags & ~MAP_PRIVATE) | MAP_SHARED;
 		}
 
-		/*
-		 * now check protection
-		 */
-
+		/* now check protection */
 		maxprot = VM_PROT_EXECUTE;
 
 		/* check read access */
@@ -497,12 +479,8 @@ sys_mmap(struct proc *p, void *v, register_t *retval)
 			maxprot |= VM_PROT_WRITE;
 		}
 
-		/*
-		 * set handle to vnode
-		 */
-
+		/* set handle to vnode */
 		handle = (caddr_t)vp;
-
 	} else {		/* MAP_ANON case */
 		/*
 		 * XXX What do we do about (MAP_SHARED|MAP_PRIVATE) == 0?
@@ -512,7 +490,7 @@ sys_mmap(struct proc *p, void *v, register_t *retval)
 			goto out;
 		}
 
- is_anon:		/* label for SunOS style /dev/zero */
+is_anon:		/* label for SunOS style /dev/zero */
 		handle = NULL;
 		maxprot = VM_PROT_ALL;
 		pos = 0;
@@ -527,10 +505,7 @@ sys_mmap(struct proc *p, void *v, register_t *retval)
 		}
 	}
 
-	/*
-	 * now let kernel internal function uvm_mmap do the work.
-	 */
-
+	/* now let kernel internal function uvm_mmap do the work. */
 	error = uvm_mmap(&p->p_vmspace->vm_map, &addr, size, prot, maxprot,
 	    flags, handle, pos, p->p_rlimit[RLIMIT_MEMLOCK].rlim_cur, p);
 
@@ -561,10 +536,7 @@ sys_msync(struct proc *p, void *v, register_t *retval)
 	vm_map_t map;
 	int flags, uvmflags;
 
-	/*
-	 * extract syscall args from the uap
-	 */
-
+	/* extract syscall args from the uap */
 	addr = (vaddr_t)SCARG(uap, addr);
 	size = (vsize_t)SCARG(uap, len);
 	flags = SCARG(uap, flags);
@@ -577,22 +549,15 @@ sys_msync(struct proc *p, void *v, register_t *retval)
 	if ((flags & (MS_ASYNC | MS_SYNC)) == 0)
 		flags |= MS_SYNC;
 
-	/*
-	 * align the address to a page boundary, and adjust the size accordingly
-	 */
+	/* align the address to a page boundary, and adjust the size accordingly */
 	ALIGN_ADDR(addr, size, pageoff);
 	if (addr > SIZE_MAX - size)
 		return (EINVAL);		/* disallow wrap-around. */
 
-	/*
-	 * get map
-	 */
-
+	/* get map */
 	map = &p->p_vmspace->vm_map;
 
-	/*
-	 * translate MS_ flags into PGO_ flags
-	 */
+	/* translate MS_ flags into PGO_ flags */
 	uvmflags = PGO_CLEANIT;
 	if (flags & MS_INVALIDATE)
 		uvmflags |= PGO_FREE;
@@ -607,7 +572,6 @@ sys_msync(struct proc *p, void *v, register_t *retval)
 /*
  * sys_munmap: unmap a users memory
  */
-
 int
 sys_munmap(struct proc *p, void *v, register_t *retval)
 {
@@ -621,16 +585,11 @@ sys_munmap(struct proc *p, void *v, register_t *retval)
 	vaddr_t vm_min_address = VM_MIN_ADDRESS;
 	struct uvm_map_deadq dead_entries;
 
-	/*
-	 * get syscall args...
-	 */
-
+	/* get syscall args... */
 	addr = (vaddr_t) SCARG(uap, addr);
 	size = (vsize_t) SCARG(uap, len);
 	
-	/*
-	 * align the address to a page boundary, and adjust the size accordingly
-	 */
+	/* align address to a page boundary, and adjust size accordingly */
 	ALIGN_ADDR(addr, size, pageoff);
 
 	/*
@@ -652,15 +611,11 @@ sys_munmap(struct proc *p, void *v, register_t *retval)
 	 * interesting system call semantic: make sure entire range is 
 	 * allocated before allowing an unmap.
 	 */
-
 	if (!uvm_map_checkprot(map, addr, addr + size, VM_PROT_NONE)) {
 		vm_map_unlock(map);
 		return (EINVAL);
 	}
 
-	/*
-	 * doit!
-	 */
 	TAILQ_INIT(&dead_entries);
 	uvm_unmap_remove(map, addr, addr + size, &dead_entries, FALSE, TRUE);
 
@@ -674,7 +629,6 @@ sys_munmap(struct proc *p, void *v, register_t *retval)
 /*
  * sys_mprotect: the mprotect system call
  */
-
 int
 sys_mprotect(struct proc *p, void *v, register_t *retval)
 {
@@ -712,7 +666,6 @@ sys_mprotect(struct proc *p, void *v, register_t *retval)
 /*
  * sys_minherit: the minherit system call
  */
-
 int
 sys_minherit(struct proc *p, void *v, register_t *retval)
 {
@@ -743,7 +696,6 @@ sys_minherit(struct proc *p, void *v, register_t *retval)
 /*
  * sys_madvise: give advice about memory usage.
  */
-
 /* ARGSUSED */
 int
 sys_madvise(struct proc *p, void *v, register_t *retval)
@@ -843,15 +795,11 @@ sys_mlock(struct proc *p, void *v, register_t *retval)
 	vsize_t size, pageoff;
 	int error;
 
-	/*
-	 * extract syscall args from uap
-	 */
+	/* extract syscall args from uap */
 	addr = (vaddr_t)SCARG(uap, addr);
 	size = (vsize_t)SCARG(uap, len);
 
-	/*
-	 * align the address to a page boundary and adjust the size accordingly
-	 */
+	/* align address to a page boundary and adjust size accordingly */
 	ALIGN_ADDR(addr, size, pageoff);
 	if (addr > SIZE_MAX - size)
 		return (EINVAL);		/* disallow wrap-around. */
@@ -888,16 +836,11 @@ sys_munlock(struct proc *p, void *v, register_t *retval)
 	vsize_t size, pageoff;
 	int error;
 
-	/*
-	 * extract syscall args from uap
-	 */
-
+	/* extract syscall args from uap */
 	addr = (vaddr_t)SCARG(uap, addr);
 	size = (vsize_t)SCARG(uap, len);
 
-	/*
-	 * align the address to a page boundary, and adjust the size accordingly
-	 */
+	/* align address to a page boundary, and adjust size accordingly */
 	ALIGN_ADDR(addr, size, pageoff);
 	if (addr > SIZE_MAX - size)
 		return (EINVAL);		/* disallow wrap-around. */
@@ -915,7 +858,6 @@ sys_munlock(struct proc *p, void *v, register_t *retval)
 /*
  * sys_mlockall: lock all pages mapped into an address space.
  */
-
 int
 sys_mlockall(struct proc *p, void *v, register_t *retval)
 {
@@ -945,7 +887,6 @@ sys_mlockall(struct proc *p, void *v, register_t *retval)
 /*
  * sys_munlockall: unlock all pages mapped into an address space.
  */
-
 int
 sys_munlockall(struct proc *p, void *v, register_t *retval)
 {
@@ -962,7 +903,6 @@ sys_munlockall(struct proc *p, void *v, register_t *retval)
  *	sysv shm uses "named anonymous memory")
  * - caller must page-align the file offset
  */
-
 int
 uvm_mmap(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
     vm_prot_t maxprot, int flags, caddr_t handle, voff_t foff,
@@ -975,10 +915,7 @@ uvm_mmap(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 	uvm_flag_t uvmflag = 0;
 	vsize_t align = 0;	/* userland page size */
 
-	/*
-	 * check params
-	 */
-
+	/* check params */
 	if (size == 0)
 		return(0);
 	if (foff & PAGE_MASK)
@@ -990,7 +927,6 @@ uvm_mmap(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 	 * for non-fixed mappings, round off the suggested address.
 	 * for fixed mappings, check alignment and zap old mappings.
 	 */
-
 	if ((flags & MAP_FIXED) == 0) {
 		*addr = round_page(*addr);	/* round */
 	} else {
@@ -1006,7 +942,6 @@ uvm_mmap(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 	 * handle anon vs. non-anon mappings.   for non-anon mappings attach
 	 * to underlying vm object.
 	 */
-
 	if (flags & MAP_ANON) {
 		if ((flags & MAP_FIXED) == 0 && size >= __LDPGSZ)
 			align = __LDPGSZ;
@@ -1018,9 +953,7 @@ uvm_mmap(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 		else
 			/* shared: create amap now */
 			uvmflag |= UVM_FLAG_OVERLAY;
-
 	} else {
-
 		vp = (struct vnode *) handle;	/* get vnode */
 		if (vp->v_type != VCHR) {
 			uobj = uvn_attach((void *) vp, (flags & MAP_SHARED) ?
@@ -1085,10 +1018,7 @@ uvm_mmap(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 			uvmflag |= UVM_FLAG_COPYONW;
 	}
 
-	/*
-	 * set up mapping flags
-	 */
-
+	/* set up mapping flags */
 	uvmflag = UVM_MAPFLAG(prot, maxprot, 
 			(flags & MAP_SHARED) ? UVM_INH_SHARE : UVM_INH_COPY,
 			advice, uvmflag);
@@ -1142,10 +1072,7 @@ uvm_mmap(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 		return (0);
 	}
 
-	/*
-	 * errors: first detach from the uobj, if any.
-	 */
-	
+	/* errors: first detach from the uobj, if any.  */
 	if (uobj)
 		uobj->pgops->pgo_detach(uobj);
 

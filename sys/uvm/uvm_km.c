@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_km.c,v 1.111 2013/05/30 18:02:04 tedu Exp $	*/
+/*	$OpenBSD: uvm_km.c,v 1.112 2014/04/13 23:14:15 tedu Exp $	*/
 /*	$NetBSD: uvm_km.c,v 1.42 2001/01/14 02:10:01 thorpej Exp $	*/
 
 /* 
@@ -152,7 +152,6 @@ struct uvm_constraint_range	no_constraint = { 0x0, (paddr_t)-1 };
 /*
  * local data structues
  */
-
 static struct vm_map		kernel_map_store;
 
 /*
@@ -163,15 +162,12 @@ static struct vm_map		kernel_map_store;
  *    we assume that [min -> start] has already been allocated and that
  *    "end" is the end.
  */
-
 void
 uvm_km_init(vaddr_t start, vaddr_t end)
 {
 	vaddr_t base = VM_MIN_KERNEL_ADDRESS;
 
-	/*
-	 * next, init kernel memory objects.
-	 */
+	/* next, init kernel memory objects. */
 
 	/* kernel_object: for pageable anonymous kernel memory */
 	uao_init();
@@ -196,10 +192,6 @@ uvm_km_init(vaddr_t start, vaddr_t end)
 	    UVM_INH_NONE, UVM_ADV_RANDOM,UVM_FLAG_FIXED)) != 0)
 		panic("uvm_km_init: could not reserve space for kernel");
 	
-	/*
-	 * install!
-	 */
-
 	kernel_map = &kernel_map_store;
 }
 
@@ -221,26 +213,17 @@ uvm_km_suballoc(struct vm_map *map, vaddr_t *min, vaddr_t *max, vsize_t size,
 
 	size = round_page(size);	/* round up to pagesize */
 
-	/*
-	 * first allocate a blank spot in the parent map
-	 */
-
+	/* first allocate a blank spot in the parent map */
 	if (uvm_map(map, min, size, NULL, UVM_UNKNOWN_OFFSET, 0,
 	    UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL, UVM_INH_NONE,
 	    UVM_ADV_RANDOM, mapflags)) != 0) {
 	       panic("uvm_km_suballoc: unable to allocate space in parent map");
 	}
 
-	/*
-	 * set VM bounds (min is filled in by uvm_map)
-	 */
-
+	/* set VM bounds (min is filled in by uvm_map) */
 	*max = *min + size;
 
-	/*
-	 * add references to pmap and create or init the submap
-	 */
-
+	/* add references to pmap and create or init the submap */
 	pmap_reference(vm_map_pmap(map));
 	if (submap == NULL) {
 		submap = uvm_map_create(vm_map_pmap(map), *min, *max, flags);
@@ -251,10 +234,7 @@ uvm_km_suballoc(struct vm_map *map, vaddr_t *min, vaddr_t *max, vsize_t size,
 		submap->pmap = vm_map_pmap(map);
 	}
 
-	/*
-	 * now let uvm_map_submap plug in it...
-	 */
-
+	/* now let uvm_map_submap plug in it...  */
 	if (uvm_map_submap(map, *min, *max, submap) != 0)
 		panic("uvm_km_suballoc: submap allocation failed");
 
@@ -313,7 +293,6 @@ uvm_km_pgremove(struct uvm_object *uobj, vaddr_t start, vaddr_t end)
  *    be on the active or inactive queues (because these objects are
  *    never allowed to "page").
  */
-
 void
 uvm_km_pgremove_intrsafe(vaddr_t start, vaddr_t end)
 {

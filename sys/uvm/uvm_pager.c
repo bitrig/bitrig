@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_pager.c,v 1.64 2013/11/02 00:08:17 krw Exp $	*/
+/*	$OpenBSD: uvm_pager.c,v 1.65 2014/04/13 23:14:15 tedu Exp $	*/
 /*	$NetBSD: uvm_pager.c,v 1.36 2000/11/27 18:26:41 chs Exp $	*/
 
 /*
@@ -94,28 +94,19 @@ void		uvm_pseg_release(vaddr_t);
 /*
  * uvm_pager_init: init pagers (at boot time)
  */
-
 void
 uvm_pager_init(void)
 {
 	int lcv;
 
-	/*
-	 * init pager map
-	 */
-
+	/* init pager map */
 	uvm_pseg_init(&psegs[0]);
 	mtx_init(&uvm_pseg_lck, IPL_VM);
 
-	/*
-	 * init ASYNC I/O queue
-	 */
-
+	/* init ASYNC I/O queue */
 	TAILQ_INIT(&uvm.aio_done);
 
-	/*
-	 * call pager init functions
-	 */
+	/* call pager init functions */
 	for (lcv = 0 ; lcv < sizeof(uvmpagerops)/sizeof(struct uvm_pagerops *);
 	    lcv++) {
 		if (uvmpagerops[lcv]->pgo_init)
@@ -334,11 +325,7 @@ uvm_mk_pcluster(struct uvm_object *uobj, struct vm_page **pps, int *npages,
 	 * pages in the middle of an I/O.  (consider an msync()).  let's
 	 * lock it for now (better to delay than corrupt data?).
 	 */
-
-	/*
-	 * get cluster boundaries, check sanity, and apply our limits as well.
-	 */
-
+	/* get cluster boundaries, check sanity, and apply our limits as well.*/
 	uobj->pgops->pgo_cluster(uobj, center->offset, &lo, &hi);
 	if ((flags & PGO_ALLPAGES) == 0) {
 		if (lo < mlo)
@@ -352,11 +339,7 @@ uvm_mk_pcluster(struct uvm_object *uobj, struct vm_page **pps, int *npages,
 		return(pps);
 	}
 
-	/*
-	 * now determine the center and attempt to cluster around the
-	 * edges
-	 */
-
+	/* now determine the center and attempt to cluster around the edges */
 	center_idx = (center->offset - lo) >> PAGE_SHIFT;
 	pps[center_idx] = center;	/* plug in the center page */
 	ppsp = &pps[center_idx];
@@ -371,7 +354,6 @@ uvm_mk_pcluster(struct uvm_object *uobj, struct vm_page **pps, int *npages,
 	 * [i.e. there is no need to query the pmap with pmap_is_modified
 	 * since there are no mappings].
 	 */
-
 	for (forward  = 0 ; forward <= 1 ; forward++) {
 		incr = forward ? PAGE_SIZE : -PAGE_SIZE;
 		curoff = center->offset + incr;
@@ -438,7 +420,6 @@ uvm_mk_pcluster(struct uvm_object *uobj, struct vm_page **pps, int *npages,
 	/*
 	 * done!  return the cluster array to the caller!!!
 	 */
-
 	return(ppsp);
 }
 
@@ -482,7 +463,6 @@ uvm_mk_pcluster(struct uvm_object *uobj, struct vm_page **pps, int *npages,
  *		with all pages busy (caller must un-busy and check
  *		wanted/released flags).
  */
-
 int
 uvm_pager_put(struct uvm_object *uobj, struct vm_page *pg,
     struct vm_page ***ppsp_ptr, int *npages, int flags,
@@ -497,14 +477,11 @@ uvm_pager_put(struct uvm_object *uobj, struct vm_page *pg,
 	 * note that uobj is !null if we are doing normal object pageout.
 	 * note that the page queues must be locked to cluster.
 	 */
-
 	if (uobj) {	/* if !swap-backed */
-
 		/*
 		 * attempt to build a cluster for pageout using its
 		 * make-put-cluster function (if it has one).
 		 */
-
 		if (uobj->pgops->pgo_mk_pcluster) {
 			ppsp = uobj->pgops->pgo_mk_pcluster(uobj, ppsp,
 			    npages, pg, flags, start, stop);
@@ -515,9 +492,7 @@ uvm_pager_put(struct uvm_object *uobj, struct vm_page *pg,
 		}
 
 		swblk = 0;		/* XXX: keep gcc happy */
-
 	} else {
-
 		/*
 		 * for swap-backed pageout, the caller (the pagedaemon) has
 		 * already built the cluster for us.   the starting swap
@@ -537,7 +512,6 @@ uvm_pager_put(struct uvm_object *uobj, struct vm_page *pg,
 	 * now attempt the I/O.   if we have a failure and we are
 	 * clustered, we will drop the cluster and try again.
 	 */
-
 ReTry:
 	if (uobj) {
 		/* object is locked */
@@ -562,16 +536,12 @@ ReTry:
 	 * [in this case the async i/o done function must clean up when
 	 *  i/o is done...]
 	 */
-
 	if (result == VM_PAGER_PEND || result == VM_PAGER_OK) {
 		if (result == VM_PAGER_OK && (flags & PGO_PDFREECLUST)) {
-			/*
-			 * drop cluster and relock object (only if I/O is
-			 * not pending)
-			 */
 			if (uobj)
 				/* required for dropcluster */
 				mtx_enter(&uobj->vmobjlock);
+			/* drop cluster */
 			if (*npages > 1 || pg == NULL)
 				uvm_pager_dropcluster(uobj, pg, ppsp, npages,
 				    PGO_PDFREECLUST);
@@ -586,7 +556,6 @@ ReTry:
 	 * was one).  give up! the caller only has one page ("pg")
 	 * to worry about.
 	 */
-
 	if (*npages > 1 || pg == NULL) {
 		if (uobj) {
 			mtx_enter(&uobj->vmobjlock);
@@ -599,7 +568,6 @@ ReTry:
 		 * "swblk" (for transient errors, so we can retry),
 		 * or 0 (for hard errors).
 		 */
-
 		if (uobj == NULL && pg != NULL) {
 			/* XXX daddr_t -> int */
 			int nswblk = (result == VM_PAGER_AGAIN) ? swblk : 0;
@@ -616,12 +584,10 @@ ReTry:
 			}
 		}
 		if (result == VM_PAGER_AGAIN) {
-
 			/*
 			 * for transient failures, free all the swslots that
 			 * we're not going to retry with.
 			 */
-
 			if (uobj == NULL) {
 				if (pg) {
 					/* XXX daddr_t -> int */
@@ -637,13 +603,11 @@ ReTry:
 				goto ReTry;
 			}
 		} else if (uobj == NULL) {
-
 			/*
 			 * for hard errors on swap-backed pageouts,
 			 * mark the swslots as bad.  note that we do not
 			 * free swslots that we mark bad.
 			 */
-
 			/* XXX daddr_t -> int */
 			uvm_swap_markbad(swblk, *npages);
 		}
@@ -688,12 +652,8 @@ uvm_pager_dropcluster(struct uvm_object *uobj, struct vm_page *pg,
 {
 	int lcv;
 
-	/*
-	 * drop all pages but "pg"
-	 */
-
+	/* drop all pages but "pg" */
 	for (lcv = 0 ; lcv < *npages ; lcv++) {
-
 		/* skip "pg" or empty slot */
 		if (ppsp[lcv] == pg || ppsp[lcv] == NULL)
 			continue;
@@ -794,7 +754,6 @@ uvm_aio_biodone(struct buf *bp)
  * uvm_aio_aiodone: do iodone processing for async i/os.
  * this should be called in thread context, not interrupt context.
  */
-
 void
 uvm_aio_aiodone(struct buf *bp)
 {
@@ -860,7 +819,6 @@ uvm_aio_aiodone(struct buf *bp)
 		 * or this was a successful write,
 		 * mark the page PG_CLEAN and not PG_FAKE.
 		 */
-
 		if ((pgs[i]->pg_flags & PG_FAKE) || (write && error != ENOMEM)) {
 			pmap_clear_reference(pgs[i]);
 			pmap_clear_modify(pgs[i]);

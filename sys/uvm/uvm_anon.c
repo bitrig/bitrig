@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_anon.c,v 1.35 2011/07/03 18:34:14 oga Exp $	*/
+/*	$OpenBSD: uvm_anon.c,v 1.38 2014/04/13 23:14:15 tedu Exp $	*/
 /*	$NetBSD: uvm_anon.c,v 1.10 2000/11/25 06:27:59 chs Exp $	*/
 
 /*
@@ -95,10 +95,7 @@ uvm_anfree(struct vm_anon *anon)
 	UVM_ASSERT_ANONLOCKED(anon);
 	KASSERT(anon->an_ref == 0);
 
-	/*
-	 * get page
-	 */
-
+	/* get page */
 	pg = anon->an_page;
 
 	/*
@@ -106,7 +103,6 @@ uvm_anfree(struct vm_anon *anon)
 	 * own it.   call out to uvm_anon_lockpage() to ensure the real owner
  	 * of the page has been identified and locked.
 	 */
-
 	if (pg && pg->loan_count)
 		pg = uvm_anon_lockloanpg(anon);
 
@@ -114,14 +110,11 @@ uvm_anfree(struct vm_anon *anon)
 	 * if we have a resident page, we must dispose of it before freeing
 	 * the anon.
 	 */
-
 	if (pg) {
-
 		/*
 		 * if the page is owned by a uobject (now locked), then we must 
 		 * kill the loan on the page rather than free it.
 		 */
-
 		if (pg->uobject) {
 			uvm_lock_pageq();
 			KASSERT(pg->loan_count > 0);
@@ -130,7 +123,6 @@ uvm_anfree(struct vm_anon *anon)
 			uvm_unlock_pageq();
 			mtx_leave(&pg->uobject->vmobjlock);
 		} else {
-
 			/*
 			 * page has no uobject, so we must be the owner of it.
 			 *
@@ -139,7 +131,6 @@ uvm_anfree(struct vm_anon *anon)
 			 * wake up).    if the page is not busy then we can
 			 * free it now.
 			 */
-
 			if ((pg->pg_flags & PG_BUSY) != 0) {
 				/* tell them to dump it when done */
 				atomic_setbits_int(&pg->pg_flags, PG_RELEASED);
@@ -159,9 +150,7 @@ uvm_anfree(struct vm_anon *anon)
 		simple_unlock(&uvm.swap_data_lock);
 	}
 
-	/*
-	 * free any swap resources.
-	 */
+	/* free any swap resources. */
 	uvm_anon_dropswap(anon);
 
 	/*
@@ -225,7 +214,6 @@ uvm_anon_lockloanpg(struct vm_anon *anon)
 	 * result may cause us to do more work than we need to, but it will
 	 * not produce an incorrect result.
 	 */
-
 	while (((pg = anon->an_page) != NULL) && pg->loan_count != 0) {
 
 		/*
@@ -236,7 +224,6 @@ uvm_anon_lockloanpg(struct vm_anon *anon)
 		 *
 		 * XXX: quick check -- worth it?   need volatile?
 		 */
-
 		if (pg->uobject) {
 
 			uvm_lock_pageq();
@@ -252,15 +239,13 @@ uvm_anon_lockloanpg(struct vm_anon *anon)
 			 * if we didn't get a lock (try lock failed), then we
 			 * toggle our anon lock and try again
 			 */
-
 			if (!locked) {
 				mtx_leave(&anon->an_lock);
 
 				/*
 				 * someone locking the object has a chance to
-				 * lock us right now
+				 * lock us right now.
 				 */
-
 				mtx_enter(&anon->an_lock);
 				continue;
 			}
@@ -270,18 +255,12 @@ uvm_anon_lockloanpg(struct vm_anon *anon)
 		 * if page is un-owned [i.e. the object dropped its ownership],
 		 * then we can take over as owner!
 		 */
-
 		if (pg->uobject == NULL && (pg->pg_flags & PQ_ANON) == 0) {
 			uvm_lock_pageq();
 			atomic_setbits_int(&pg->pg_flags, PQ_ANON);
 			pg->loan_count--;	/* ... and drop our loan */
 			uvm_unlock_pageq();
 		}
-
-		/*
-		 * we did it!   break the loop
-		 */
-
 		break;
 	}
 	return(pg);
@@ -312,7 +291,6 @@ uvm_anon_pagein(struct vm_anon *anon)
 	case VM_PAGER_OK:
 		UVM_ASSERT_ANONLOCKED(anon);
 		break;
-
 	case VM_PAGER_ERROR:
 	case VM_PAGER_REFAULT:
 		UVM_ASSERT_ANONUNLOCKED(anon);
@@ -322,9 +300,7 @@ uvm_anon_pagein(struct vm_anon *anon)
 		 * VM_PAGER_REFAULT can only mean that the anon was freed,
 		 * so again there's nothing to do.
 		 */
-
 		return FALSE;
-
 	default:
 #ifdef DIAGNOSTIC
 		panic("anon_pagein: uvmfault_anonget -> %d", rv);
@@ -337,17 +313,13 @@ uvm_anon_pagein(struct vm_anon *anon)
 	 * ok, we've got the page now.
 	 * mark it as dirty, clear its swslot and un-busy it.
 	 */
-
 	pg = anon->an_page;
 	uobj = pg->uobject;
 	uvm_swap_free(anon->an_swslot, 1);
 	anon->an_swslot = 0;
 	atomic_clearbits_int(&pg->pg_flags, PG_CLEAN);
 
-	/*
-	 * deactivate the page (to put it on a page queue)
-	 */
-
+	/* deactivate the page (to put it on a page queue) */
 	uvm_lock_pageq();
 	uvm_pagedeactivate(pg);
 	uvm_unlock_pageq();
