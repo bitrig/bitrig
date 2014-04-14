@@ -482,7 +482,7 @@ uao_free(struct uvm_aobj *aobj)
 /*
  * Shrink an aobj to a given number of pages. The procedure is always the same:
  * assess the necessity of data structure conversion (hash to array), secure
- * resources, flush pages and drop swap slots. We alwasy drop slots from the
+ * resources, flush pages and drop swap slots. We always drop slots from the
  * *end* of the object.
  *
  * XXX We need a uao_flush() that returns success only when the
@@ -520,10 +520,13 @@ uao_shrink_hash(struct uvm_object *uobj, int pages)
 
 	/*
 	 * If the size of the hash table doesn't change, all we need to do is
-	 * to adjust the page count.
+	 * to adjust the page count. Do this optimisation to avoid calling
+	 * malloc() in a code path whose purpose is to free memory.
 	 */
 
 	if (UAO_SWHASH_BUCKETS(aobj->u_pages) == UAO_SWHASH_BUCKETS(pages)) {
+		if (uao_shrink_flush(uobj, pages, aobj->u_pages) == EAGAIN)
+			return EAGAIN;
 		aobj->u_pages = pages;
 		return 0;
 	}
@@ -546,8 +549,8 @@ uao_shrink_hash(struct uvm_object *uobj, int pages)
 	}
 
 	/*
-	 * Even though the hash table size is changing, the hash of the buckets
-	 * we are interested in copying should not change.
+	 * Even though the hash table size is changing, the buckets for the
+	 * pages we are interested in copying should not change.
 	 */
 
 	for (i = 0; i < UAO_SWHASH_BUCKETS(pages); i++)
