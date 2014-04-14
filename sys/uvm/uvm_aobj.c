@@ -187,6 +187,9 @@ static int			 uao_get(struct uvm_object *, voff_t,
 static boolean_t		 uao_pagein(struct uvm_aobj *, int, int);
 static boolean_t		 uao_pagein_page(struct uvm_aobj *, int);
 
+#ifdef UVM_AOBJ_DEBUG
+void	uao_check_swhash(struct uvm_aobj *);
+#endif
 void	uao_dropswap_range(struct uvm_object *, voff_t, voff_t);
 int	uao_shrink_flush(struct uvm_object *, int, int);
 int	uao_shrink_hash(struct uvm_object *, int);
@@ -490,6 +493,24 @@ uao_free(struct uvm_aobj *aobj)
  * run after we have changed all of the statistics in the object to ensure
  * that no more pages are allocated above the new size.
  */
+
+#ifdef UVM_AOBJ_DEBUG
+void
+uao_check_swhash(struct uvm_aobj *aobj)
+{
+	struct uao_swhash_elt *elt;
+	int i;
+
+	for (i = 0; i < UAO_SWHASH_BUCKETS(aobj->u_pages); i++) {
+		LIST_FOREACH(elt, &aobj->u_swhash[i], list) {
+			int pageidx = UAO_SWHASH_ELT_PAGEIDX_BASE(elt);
+			KASSERT(pageidx <= aobj->u_pages);
+			if (UAO_SWHASH_HASH(aobj, pageidx) != &aobj->u_swhash[i])
+				panic("%s: %lld != %d", __func__, elt->tag, i);
+		}
+	}
+}
+#endif
 
 int
 uao_shrink_flush(struct uvm_object *uobj, int startpg, int endpg)
@@ -903,6 +924,12 @@ uao_setsize(struct uvm_object *uobj, int pages)
 		 * the size changed and try again.
 		 */
 	} while (ret == EAGAIN);
+
+#ifdef UVM_AOBJ_DEBUG
+	if (UAO_USES_SWHASH(aobj->u_pages))
+		uao_check_swhash(aobj);
+#endif
+
 	mtx_leave(&uobj->vmobjlock);
 
 	return ret;
