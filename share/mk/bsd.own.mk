@@ -20,8 +20,8 @@ DEBUGLIBS?=	no
 GCC3_ARCH=m88k vax
 
 # arm needs binutils-2.17, which still lacks W^X support
-PIE_ARCH=
-#PIE_ARCH=alpha amd64 hppa i386 mips64 mips64el sh sparc64
+PIE_ARCH=amd64
+#PIE_ARCH=alpha hppa i386 mips64 mips64el sh sparc64
 
 .for _arch in ${MACHINE_ARCH}
 .if !empty(PIE_ARCH:M${_arch})
