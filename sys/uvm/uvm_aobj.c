@@ -773,9 +773,30 @@ uao_grow_hash(struct uvm_object *uobj, int pages)
 		return EAGAIN;
 	}
 
-	for (i = 0; i < UAO_SWHASH_BUCKETS(aobj->u_pages); i++)
-		LIST_SWAP(&new_swhash[i], &aobj->u_swhash[i], uao_swhash_elt,
-		    list);
+	if (new_hashmask != aobj->u_swhashmask) {
+		/*
+		 * This case is rather rare, and can be further optimised if
+		 * so needed (s == i for i > 0). Note that the order of the
+		 * elements on the list does not matter.
+		 */
+		for (i = 0; i < UAO_SWHASH_BUCKETS(aobj->u_pages); i++) {
+			struct uao_swhash_elt *elt, *nelt;
+			LIST_FOREACH_SAFE(elt, &aobj->u_swhash[i], list, nelt) {
+				int s = elt->tag & new_hashmask;
+				LIST_REMOVE(elt, list);
+				LIST_INSERT_HEAD(&new_swhash[s], elt, list);
+			}
+		}
+	} else {
+		/*
+		 * This will happen in the vast majority of cases. Even though
+		 * the hash table size is changing, the buckets for the pages we
+		 * are interested in copying should not change.
+		 */
+		for (i = 0; i < UAO_SWHASH_BUCKETS(aobj->u_pages); i++)
+			LIST_SWAP(&new_swhash[i], &aobj->u_swhash[i],
+			    uao_swhash_elt, list);
+	}
 
 	free(aobj->u_swhash, M_UVMAOBJ);
 
