@@ -83,9 +83,10 @@
 
 /*
  * Specific addresses being unmapped and used as fillers for free memory.
+ * currently on arm these are outside the kernel area (no mappings)
  */
-#define	DEADBEEF0	0xefffeecc	/* malloc's filler */
-#define	DEADBEEF1	0xefffaabb	/* pool's filler */
+//#define	DEADBEEF0	0xefffeecc	/* malloc's filler */
+//#define	DEADBEEF1	0xefffaabb	/* pool's filler */
 
 #define KERNBASE	(0xc0000000)
 
