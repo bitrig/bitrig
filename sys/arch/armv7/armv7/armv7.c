@@ -250,9 +250,11 @@ armv7_attach(struct device *parent, struct device *self, void *aux)
 
 
 
+#if NEXYNOS > 0
 dev_type_cngetc(exuartcngetc);
 dev_type_cnputc(exuartcnputc);
 dev_type_cnpollc(exuartcnpollc);
+#endif
 
 int
 bootstrap_bs_map(void *t, bus_addr_t bpa, bus_size_t size,
@@ -264,17 +266,23 @@ extern struct bus_space armv7_bs_tag;
 void	protoconsole(uint32_t, void *);
 void	protoconsole2(uint32_t, void *);
 /* bootarg may be fdt or old style boot args */
+#if NEXYNOS > 0 /* or other recognized protocon */
 static struct consdev protocons = {
 	NULL, NULL, NULL, NULL, NULL, NULL,
 	NODEV, 0
 };
+#endif
+
+#if NEXYNOS > 0
+	extern bus_space_handle_t exuartconsioh;
+	extern bus_space_tag_t exuartconsiot;
+#endif
 
 void
 protoconsole(uint32_t board_id, void *bootarg) {
-	extern bus_space_handle_t exuartconsioh;
-	extern bus_space_tag_t exuartconsiot;
 
 	switch (board_id) {
+#if NEXYNOS > 0
 	case 0xd33: /* NURI (qemu target) */
 		// hack up a exuart console attachment for 0x13800000
 
@@ -289,15 +297,17 @@ protoconsole(uint32_t board_id, void *bootarg) {
 		protocons.cn_putc =  exuartcnputc;
 		protocons.cn_pollc =  exuartcnpollc;
 		cn_tab = &protocons;
+	#endif
+	default:
+		; /* not much sense printing, wont be seen. */
 	}
 }
 
 void
 protoconsole2(uint32_t board_id, void *bootarg) {
-	extern bus_space_handle_t exuartconsioh;
-	extern bus_space_tag_t exuartconsiot;
 
 	switch (board_id) {
+#if NEXYNOS > 0
 	case 0xd33: /* NURI (qemu target) */
 		// hack up a exuart console attachment for 0x13800000
 
@@ -312,5 +322,8 @@ protoconsole2(uint32_t board_id, void *bootarg) {
 		protocons.cn_putc =  exuartcnputc;
 		protocons.cn_pollc =  exuartcnpollc;
 		cn_tab = &protocons;
+#endif
+	default:
+		; /* not much sense printing, wont be seen. */
 	}
 }
