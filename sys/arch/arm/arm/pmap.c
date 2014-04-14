@@ -78,6 +78,7 @@ void pmap_remove_avail(paddr_t base, paddr_t end);
 void pmap_avail_fixup(void);
 vaddr_t pmap_map_stolen(void);
 void pmap_physload_avail(void);
+extern caddr_t msgbufaddr;
 
 
 /* pte invalidation */
@@ -1054,6 +1055,8 @@ printf("allocated pted vp3 %x %x %x %x\n", idx1, idx2, vect, pa);
 	vstart += PAGE_SIZE;
 	copy_dst_page = vstart;
 	vstart += PAGE_SIZE;
+	msgbufaddr = (caddr_t)vstart;
+	vstart += round_page(MSGBUFSIZE);
 #if 0
 	vstart += reserve_dumppages( (caddr_t)(VM_MIN_KERNEL_ADDRESS +
 	    arm_kvm_stolen));
