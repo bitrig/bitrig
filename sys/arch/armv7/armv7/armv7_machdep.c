@@ -489,8 +489,6 @@ initarm(void *arg0, void *arg1, void *arg2)
 	free_pages -= (np);                             \
 	memset((char *)(var), 0, ((np) * PAGE_SIZE));
 
-	physmem = (physical_end - physical_start) / PAGE_SIZE;
-
 	vector_page = ARM_VECTORS_HIGH;
 	alloc_pages(systempage.pv_pa, 1);
 	systempage.pv_va = vector_page;
@@ -514,13 +512,16 @@ initarm(void *arg0, void *arg1, void *arg2)
 		memcpy((void *)fdt.pv_pa, arg2, size);
 	}
 
-
 	pmap_bootstrap(KERNEL_VM_BASE,
 	    physical_freestart-memstart+KERNEL_TEXT_BASE,
 	    physical_start, physical_end);
 	uvm_setpagesize();        /* initialize PAGE_SIZE-dependent variables */
 
-	printf("success thus far\n");
+	physmem = (physical_end - physical_start) / PAGE_SIZE;
+	printf("physical_end %x physical_start %x, physmem %x\n", 
+	    physical_end, physical_start, physmem);
+
+	printf("success thus far physmem %x\n", physmem);
 
         /* Map the vector page. */
 	pmap_kenter_cache(vector_page, systempage.pv_pa,
