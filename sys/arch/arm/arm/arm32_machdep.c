@@ -236,9 +236,6 @@ cpu_startup()
 	/* Set the cpu control register */
 	cpu_setup();
 
-	/* Lock down zero page */
-	vector_page_setprot(PROT_READ | PROT_EXEC);
-
 	/*
 	 * Give pmap a chance to set up a few more things now the vm
 	 * is initialised
