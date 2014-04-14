@@ -25,6 +25,7 @@
 #include <machine/bus.h>
 #include <machine/clock.h>
 
+#include <dev/ic/ahcireg.h>
 #include <dev/ic/ahcivar.h>
 
 #include <armv7/armv7/armv7var.h>
