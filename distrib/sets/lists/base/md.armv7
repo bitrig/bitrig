@@ -63,6 +63,7 @@
 ./usr/include/armv7/bootconfig.h
 ./usr/include/armv7/bus.h
 ./usr/include/armv7/cdefs.h
+./usr/include/armv7/clock.h
 ./usr/include/armv7/conf.h
 ./usr/include/armv7/cpu.h
 ./usr/include/armv7/db_machdep.h
@@ -650,6 +651,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/bootconfig.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/bus.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/cdefs.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/armv7/clock.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/conf.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/cpu.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/db_machdep.ph
@@ -1552,10 +1554,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/mcpp-gcc-arm/gcc42_predef_old.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/mcpp-gcc-arm/gcc42_predef_std.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/mcpp-gcc-arm/gxx42_predef_std.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/mcpp-gcc-i386
-./usr/libdata/perl5/site_perl/arm-bitrig/mcpp-gcc-i386/gcc42_predef_old.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/mcpp-gcc-i386/gcc42_predef_std.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/mcpp-gcc-i386/gxx42_predef_std.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/md5.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/memory.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/menu.ph
