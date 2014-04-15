@@ -143,6 +143,8 @@ md_prep_fdisk() {
 			echo -n "Creating a ${bootfstype} partition and an OpenBSD partition for rest of $_disk..."
 			fdisk -e ${_disk} <<__EOT >/dev/null
 reinit
+e 3
+0
 e 0
 ${bootparttype}
 n
