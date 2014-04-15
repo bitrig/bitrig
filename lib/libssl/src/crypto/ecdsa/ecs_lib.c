@@ -81,14 +81,7 @@ const ECDSA_METHOD *ECDSA_get_default_method(void)
 {
 	if(!default_ECDSA_method) 
 		{
-#ifdef OPENSSL_FIPS
-		if (FIPS_mode())
-			return FIPS_ecdsa_openssl();
-		else
-			return ECDSA_OpenSSL();
-#else
 		default_ECDSA_method = ECDSA_OpenSSL();
-#endif
 		}
 	return default_ECDSA_method;
 }
@@ -200,19 +193,18 @@ ECDSA_DATA *ecdsa_check(EC_KEY *key)
 		ecdsa_data = (ECDSA_DATA *)ecdsa_data_new();
 		if (ecdsa_data == NULL)
 			return NULL;
-		EC_KEY_insert_key_method_data(key, (void *)ecdsa_data,
-			ecdsa_data_dup, ecdsa_data_free, ecdsa_data_free);
+		data = EC_KEY_insert_key_method_data(key, (void *)ecdsa_data,
+			   ecdsa_data_dup, ecdsa_data_free, ecdsa_data_free);
+		if (data != NULL)
+			{
+			/* Another thread raced us to install the key_method
+			 * data and won. */
+			ecdsa_data_free(ecdsa_data);
+			ecdsa_data = (ECDSA_DATA *)data;
+			}
 	}
 	else
 		ecdsa_data = (ECDSA_DATA *)data;
-#ifdef OPENSSL_FIPS
-	if (FIPS_mode() && !(ecdsa_data->flags & ECDSA_FLAG_FIPS_METHOD)
-			&& !(EC_KEY_get_flags(key) & EC_FLAG_NON_FIPS_ALLOW))
-		{
-		ECDSAerr(ECDSA_F_ECDSA_CHECK, ECDSA_R_NON_FIPS_METHOD);
-		return NULL;
-		}
-#endif
 
 	return ecdsa_data;
 }

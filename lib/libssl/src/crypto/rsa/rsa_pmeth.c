@@ -66,9 +66,6 @@
 #ifndef OPENSSL_NO_CMS
 #include <openssl/cms.h>
 #endif
-#ifdef OPENSSL_FIPS
-#include <openssl/fips.h>
-#endif
 #include "evp_locl.h"
 #include "rsa_locl.h"
 
@@ -156,32 +153,6 @@ static void pkey_rsa_cleanup(EVP_PKEY_CTX *ctx)
 		OPENSSL_free(rctx);
 		}
 	}
-#ifdef OPENSSL_FIPS
-/* FIP checker. Return value indicates status of context parameters:
- * 1  : redirect to FIPS.
- * 0  : don't redirect to FIPS.
- * -1 : illegal operation in FIPS mode.
- */
-
-static int pkey_fips_check_ctx(EVP_PKEY_CTX *ctx)
-	{
-	RSA_PKEY_CTX *rctx = ctx->data;
-	RSA *rsa = ctx->pkey->pkey.rsa;
-	int rv = -1;
-	if (!FIPS_mode())
-		return 0;
-	if (rsa->flags & RSA_FLAG_NON_FIPS_ALLOW)
-		rv = 0;
-	if (!(rsa->meth->flags & RSA_FLAG_FIPS_METHOD) && rv)
-		return -1;
-	if (rctx->md && !(rctx->md->flags & EVP_MD_FLAG_FIPS))
-		return rv;
-	if (rctx->mgf1md && !(rctx->mgf1md->flags & EVP_MD_FLAG_FIPS))
-		return rv;
-	return 1;
-	}
-#endif
-
 static int pkey_rsa_sign(EVP_PKEY_CTX *ctx, unsigned char *sig, size_t *siglen,
 					const unsigned char *tbs, size_t tbslen)
 	{
@@ -206,22 +177,6 @@ static int pkey_rsa_sign(EVP_PKEY_CTX *ctx, unsigned char *sig, size_t *siglen,
 					RSA_R_INVALID_DIGEST_LENGTH);
 			return -1;
 			}
-#ifdef OPENSSL_FIPS
-		if (ret > 0)
-			{
-			unsigned int slen;
-			ret = FIPS_rsa_sign_digest(rsa, tbs, tbslen, rctx->md,
-							rctx->pad_mode,
-							rctx->saltlen,
-							rctx->mgf1md,
-							sig, &slen);
-			if (ret > 0)
-				*siglen = slen;
-			else
-				*siglen = 0;
-			return ret;
-			}
-#endif
 
 		if (EVP_MD_type(rctx->md) == NID_mdc2)
 			{
@@ -610,6 +565,8 @@ static int pkey_rsa_ctrl_str(EVP_PKEY_CTX *ctx,
 		else if (!strcmp(value, "none"))
 			pm = RSA_NO_PADDING;
 		else if (!strcmp(value, "oeap"))
+			pm = RSA_PKCS1_OAEP_PADDING;
+		else if (!strcmp(value, "oaep"))
 			pm = RSA_PKCS1_OAEP_PADDING;
 		else if (!strcmp(value, "x931"))
 			pm = RSA_X931_PADDING;
