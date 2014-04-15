@@ -12,7 +12,7 @@ vnconfig vnd1 tmpdisk
 newfs /dev/rvnd1c >/dev/null
 mountfs /dev/vnd1c ${n0}
 expect 0 create ${n0}/${n1} 0644
-mountfs -ur /dev/vnd1c
+mountfs -ur ${n0}
 
 expect EROFS rename ${n0}/${n1} ${n0}/${n2}
 expect EROFS rename ${n0}/${n1} ${n2}
@@ -20,7 +20,7 @@ expect 0 create ${n2} 0644
 expect EROFS rename ${n2} ${n0}/${n2}
 expect 0 unlink ${n2}
 
-umount /dev/vnd1c
+umount ${n0}
 vnconfig -u vnd1
 rm tmpdisk
 expect 0 rmdir ${n0}

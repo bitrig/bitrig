@@ -10,7 +10,7 @@ vnconfig vnd1 tmpdisk
 newfs /dev/rvnd1c >/dev/null
 mountfs /dev/vnd1c ${n0}
 expect EBUSY rmdir ${n0}
-umount /dev/vnd1c
+umount ${n0}
 vnconfig -u vnd1
 rm tmpdisk
 expect 0 rmdir ${n0}

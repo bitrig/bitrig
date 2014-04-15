@@ -15,16 +15,16 @@ expect 0 chflags ${n0}/${n1} UF_IMMUTABLE
 expect UF_IMMUTABLE stat ${n0}/${n1} flags
 expect 0 chflags ${n0}/${n1} none
 expect none stat ${n0}/${n1} flags
-mountfs -ur /dev/vnd1c
+mountfs -ur ${n0}
 expect EROFS chflags ${n0}/${n1} UF_IMMUTABLE
 expect none stat ${n0}/${n1} flags
-mountfs -uw /dev/vnd1c
+mountfs -uw ${n0}
 expect 0 chflags ${n0}/${n1} UF_IMMUTABLE
 expect UF_IMMUTABLE stat ${n0}/${n1} flags
 expect 0 chflags ${n0}/${n1} none
 expect none stat ${n0}/${n1} flags
 expect 0 unlink ${n0}/${n1}
-umount /dev/vnd1c
+umount ${n0}
 vnconfig -u vnd1
 rm tmpdisk
 expect 0 rmdir ${n0}

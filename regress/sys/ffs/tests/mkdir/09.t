@@ -17,7 +17,7 @@ expect EROFS mkdir ${n0}/${n1} 0755
 mountfs -uw /dev/vnd1c
 expect 0 mkdir ${n0}/${n1} 0755
 expect 0 rmdir ${n0}/${n1}
-umount /dev/vnd1c
+umount ${n0}
 vnconfig -u vnd1
 rm tmpdisk
 expect 0 rmdir ${n0}

@@ -22,7 +22,7 @@ while :; do
 	i=`expr $i + 1`
 done
 expect ENOSPC open ${n0}/${i} O_RDONLY,O_CREAT 0644
-umount /dev/vnd1c
+umount ${n0}
 vnconfig -u vnd1
 rm tmpdisk
 expect 0 rmdir ${n0}

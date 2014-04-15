@@ -13,14 +13,14 @@ mountfs /dev/vnd1c ${n0}
 expect 0 create ${n0}/${n1} 0644
 expect 0 chown ${n0}/${n1} 65534 65534
 expect 65534,65534 stat ${n0}/${n1} uid,gid
-mountfs -ur /dev/vnd1c
+mountfs -ur ${n0}
 expect EROFS chown ${n0}/${n1} 65533 65533
 expect 65534,65534 stat ${n0}/${n1} uid,gid
-mountfs -uw /dev/vnd1c
+mountfs -uw ${n0}
 expect 0 chown ${n0}/${n1} 65533 65533
 expect 65533,65533 stat ${n0}/${n1} uid,gid
 expect 0 unlink ${n0}/${n1}
-umount /dev/vnd1c
+umount ${n0}
 vnconfig -u vnd1
 rm tmpdisk
 expect 0 rmdir ${n0}

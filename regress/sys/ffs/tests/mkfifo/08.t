@@ -12,12 +12,12 @@ newfs /dev/rvnd1c >/dev/null
 mountfs /dev/vnd1c ${n0}
 expect 0 mkfifo ${n0}/${n1} 0644
 expect 0 unlink ${n0}/${n1}
-mountfs -ur /dev/vnd1c
+mountfs -ur ${n0}
 expect EROFS mkfifo ${n0}/${n1} 0644
-mountfs -uw /dev/vnd1c
+mountfs -uw ${n0}
 expect 0 mkfifo ${n0}/${n1} 0644
 expect 0 unlink ${n0}/${n1}
-umount /dev/vnd1c
+umount ${n0}
 vnconfig -u vnd1
 rm tmpdisk
 expect 0 rmdir ${n0}

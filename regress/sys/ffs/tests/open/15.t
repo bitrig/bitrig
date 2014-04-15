@@ -15,7 +15,7 @@ expect 0 unlink ${n0}/${n1}
 mountfs -ur /dev/vnd1c
 expect EROFS open ${n0}/${n1} O_RDONLY,O_CREAT 0644
 mountfs -uw /dev/vnd1c
-umount /dev/vnd1c
+umount ${n0}
 vnconfig -u vnd1
 rm tmpdisk
 expect 0 rmdir ${n0}

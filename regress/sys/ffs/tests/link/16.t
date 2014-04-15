@@ -22,7 +22,7 @@ expect 0 link ${n0}/${n1} ${n0}/${n2}
 expect 0 unlink ${n0}/${n2}
 
 expect 0 unlink ${n0}/${n1}
-umount /dev/vnd1c
+umount ${n0}
 vnconfig -u vnd1
 rm tmpdisk
 expect 0 rmdir ${n0}

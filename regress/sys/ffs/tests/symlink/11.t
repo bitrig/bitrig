@@ -23,7 +23,7 @@ while :; do
 	i=`expr $i + 1`
 done
 expect ENOSPC symlink test ${n0}/${n1}
-umount /dev/vnd1c
+umount ${n0}
 vnconfig -u vnd1
 rm tmpdisk
 expect 0 rmdir ${n0}
