@@ -1,6 +1,6 @@
 PROG=	fstest
 
-TARGETS= ffs tmpfs
+TARGETS= ffs ffs-wapbl tmpfs
 
 clean:
 .for T in ${TARGETS}

@@ -1,0 +1,41 @@
+setup()
+{
+	dd if=/dev/zero of=fakeobj bs=2048 count=4k
+	vnconfig vnd0 fakeobj
+	newfs /dev/rvnd0c
+	mount -o log /dev/vnd0c /mnt
+}
+
+cleanup()
+{
+	umount /dev/vnd1c
+	umount /dev/vnd0c
+	vnconfig -u vnd1
+	vnconfig -u vnd0
+	rm -f fakedisk
+	rm -f fstest
+	rm -f fstest.o
+}
+
+mountfs()
+{
+	dd if=/dev/zero of=tmpdisk bs=1M count=1
+	vnconfig vnd1 tmpdisk
+	newfs /dev/rvnd1c >/dev/null
+	mount -o log /dev/vnd1c $1
+}
+
+mountfs_small()
+{
+	dd if=/dev/zero of=tmpdisk bs=512K count=1
+	vnconfig vnd1 tmpdisk
+	newfs /dev/rvnd1c >/dev/null
+	mount -o log /dev/vnd1c $1
+}
+
+umountfs()
+{
+	umount $1
+	vnconfig -u vnd1
+	rm tmpdisk
+}
