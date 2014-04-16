@@ -539,8 +539,6 @@ wapbl_bbusy(struct buf *bp, struct mutex *mtx)
 	if (bp->b_flags & B_BUSY) {
 		bp->b_flags |= B_WANTED;
 		msleep(bp, mtx, PRIBIO + 1, "wapblbuf", 0);
-		if (mtx != NULL)
-			mtx_enter(mtx);
 		return -1;
 	}
 
