@@ -916,20 +916,18 @@ tmpfs_reg_resize(struct vnode *vp, off_t newsize)
 	uvm_vnp_uncache(vp);
 
 	if (newsize > oldsize) {
-		if (tmpfs_uio_cached(node) != 0)
-			tmpfs_uio_uncache(node);
-		pgoff = oldsize & PAGE_MASK;
+		VN_KNOTE(vp, NOTE_EXTEND);
+	} else if (newsize < oldsize) {
+		pgoff = newsize & PAGE_MASK;
 		if (pgoff != 0) {
 			/*
-			 * growing from an offset which is not at a page
+			 * shrinking to an offset which is not at a page
 			 * boundary; zero out unused bytes in current page.
 			 */
-			error = tmpfs_zeropg(node, trunc_page(oldsize), pgoff);
+			error = tmpfs_zeropg(node, trunc_page(newsize), pgoff);
 			if (error)
 				panic("tmpfs_zeropg: error %d", error);
 		}
-		VN_KNOTE(vp, NOTE_EXTEND);
-	} else if (newsize < oldsize) {
 		VN_KNOTE(vp, NOTE_TRUNCATE);
 	}
 
@@ -1287,7 +1285,14 @@ tmpfs_zeropg(tmpfs_node_t *node, voff_t pgnum, vaddr_t pgoff)
 	vaddr_t va;
 	int error;
 
-	KASSERT(tmpfs_uio_cached(node) == 0);
+	va = tmpfs_uio_lookup(node, pgnum);
+	if (va != (vaddr_t)NULL) {
+		bzero((void *)(va + pgoff), PAGE_SIZE - pgoff);
+		return 0;
+	}
+
+	if (tmpfs_uio_cached(node) != 0)
+		tmpfs_uio_uncache(node);
 
 	uao_reference(node->tn_uobj);
 	error = uvm_map(kernel_map, &va, PAGE_SIZE, node->tn_uobj, pgnum, 0,
@@ -1299,7 +1304,7 @@ tmpfs_zeropg(tmpfs_node_t *node, voff_t pgnum, vaddr_t pgoff)
 	}
 
 	bzero((void *)(va + pgoff), PAGE_SIZE - pgoff);
-	uvm_unmap(kernel_map, va, va + PAGE_SIZE);
+	tmpfs_uio_cache(node, pgnum, va);
 
 	return 0;
 }
