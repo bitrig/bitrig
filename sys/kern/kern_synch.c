@@ -158,12 +158,7 @@ msleep(const volatile void *ident, struct mutex *mtx, int priority,
 	KASSERT((priority & ~(PRIMASK | PCATCH | PNORELOCK)) == 0);
 	KASSERT(mtx != NULL);
 
-	/* if anything other than mtx is locked then this is bad */
-	if (mtx)  {
-		assertonemutex();
-	} else {
-		assertwaitok();
-	}
+	assertonemutex();
 
 	sleep_setup(&sls, ident, priority, wmesg);
 	sleep_setup_timeout(&sls, timo);
