@@ -1,0 +1,3 @@
+set -u
+[ -f $1 ] && { . $1; cleanup; }
+exit 0

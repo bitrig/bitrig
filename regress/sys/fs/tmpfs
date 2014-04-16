@@ -1,0 +1,24 @@
+setup()
+{
+	mount -t tmpfs tmpfs /mnt
+}
+
+cleanup()
+{
+	umount /mnt
+}
+
+mountfs()
+{
+	mount -t tmpfs tmpfs $1
+}
+
+mountfs_small()
+{
+	mount -t tmpfs -o -s64K tmpfs $1
+}
+
+umountfs()
+{
+	umount $1
+}
