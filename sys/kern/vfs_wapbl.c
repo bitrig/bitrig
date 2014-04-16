@@ -289,6 +289,7 @@ wapbl_init(void)
 
 	pool_init(&wapbl_entry_pool, sizeof(struct wapbl_entry), 0, 0, 0,
 	    "wapblpl", NULL);
+	pool_setipl(&wapbl_entry_pool, IPL_BIO);
 }
 
 #ifdef notyet
