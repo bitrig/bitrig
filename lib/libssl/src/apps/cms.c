@@ -233,6 +233,8 @@ int MAIN(int argc, char **argv)
 		else if (!strcmp(*args,"-camellia256"))
 				cipher = EVP_camellia_256_cbc();
 #endif
+		else if (!strcmp (*args, "-debug_decrypt")) 
+				flags |= CMS_DEBUG_DECRYPT;
 		else if (!strcmp (*args, "-text")) 
 				flags |= CMS_TEXT;
 		else if (!strcmp (*args, "-nointern")) 
@@ -876,12 +878,6 @@ int MAIN(int argc, char **argv)
 	else
 		{
 		out = BIO_new_fp(stdout, BIO_NOCLOSE);
-#ifdef OPENSSL_SYS_VMS
-		{
-		    BIO *tmpbio = BIO_new(BIO_f_linebuffer());
-		    out = BIO_push(tmpbio, out);
-		}
-#endif
 		}
 
 	if ((operation == SMIME_VERIFY) || (operation == SMIME_VERIFY_RECEIPT))
@@ -1039,6 +1035,8 @@ int MAIN(int argc, char **argv)
 	ret = 4;
 	if (operation == SMIME_DECRYPT)
 		{
+		if (flags & CMS_DEBUG_DECRYPT)
+			CMS_decrypt(cms, NULL, NULL, NULL, NULL, flags);
 
 		if (secret_key)
 			{
