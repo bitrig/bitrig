@@ -1423,9 +1423,7 @@ install_http() {
 	# Bake a package path only if we installed from a mirror.
 	PACKAGE_PATH=
 	if [[ -n $_mirror ]]; then
-		PACKAGE_PATH=$(print -r -- "$_url_base" |
-			sed -E "/\/(snapshots|[0-9]\.[0-9])\/($ARCH)\/*$/!d
-				s!!/\1/packages/$(arch -s)/!;q")
+		PACKAGE_PATH=$(print -r -- "$_url_base")/packages
 	fi
 }
 
