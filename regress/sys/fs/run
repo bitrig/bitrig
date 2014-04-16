@@ -1,9 +1,6 @@
 # $OpenBSD: run,v 1.1 2007/03/30 19:02:51 pedro Exp $
 set -eu
 
-totntest=0
-totnfail=0
-
 name253=`jot -r -c 253 a { | rs -g0 0 253`
 name255=${name253}xx
 name256=${name255}x
@@ -11,11 +8,9 @@ path1021=$name255/$name255/$name255/$name253
 path1023=${path1021}/x
 path1024=${path1023}x
 
-. $1
-shift
-
 # thin shell around 'fstest' to test and provide descriptive output
-expect() {
+expect()
+{
 	n=$ntest
 	ntest=$((ntest + 1))
 	expected=$1
@@ -30,7 +25,8 @@ expect() {
 }
 
 # perform a simple check/assertion
-test_check() {
+test_check()
+{
 	n=$ntest
 	ntest=$((ntest + 1))
 	echo -n "#$n: $*"
@@ -40,19 +36,28 @@ test_check() {
 }
 
 # generate a random file/directory name
-namegen() {
+namegen()
+{
 	echo `dd if=/dev/urandom bs=1k count=1 2>/dev/null | sha1 | cut -c 32-`
 }
 
-setup; cd /mnt
+fs=$1
+log=$1.log
+shift
+. ${fs}
+echo "Running. See ${log} for details."
+setup >${log} 2>&1
 
-for arg in $*; do
+totntest=0
+totnfail=0
+
+cd /mnt; for arg in $*; do
 	ntest=0
 	nfail=0
-	echo $arg:
-	. $arg
+	echo $arg: >>${log} 2>&1
+	. $arg >>${log} 2>&1
 	totntest=$((totntest + ntest))
 	totnfail=$((totnfail + nfail))
 done
 
-echo "${totntest} tests completed, ${totnfail} failed"
+echo "${fs}: ${totntest} tests completed, ${totnfail} failed"
