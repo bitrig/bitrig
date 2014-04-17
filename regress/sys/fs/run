@@ -1,5 +1,5 @@
 # $OpenBSD: run,v 1.1 2007/03/30 19:02:51 pedro Exp $
-set -eu
+set -u
 
 name253=`jot -r -c 253 a { | rs -g0 0 253`
 name255=${name253}xx
