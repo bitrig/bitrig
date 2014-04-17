@@ -46,7 +46,7 @@ orphan(struct element *element)
 	struct element *prev;
 
 	if (element->parent->child == element)
-		element->parent->child = NULL;
+		element->parent->child = element->sibling;
 	else {
 		prev = element->parent->child;
 		while (prev->sibling != element)
