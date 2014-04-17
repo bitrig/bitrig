@@ -87,50 +87,6 @@ OPENSSL_wipe_cpu
 	.PROCEND
 ___
 {
-my $inp="%r26";
-my $len="%r25";
-
-$code.=<<___;
-	.EXPORT	OPENSSL_cleanse,ENTRY,ARGW0=GR,ARGW1=GR
-	.ALIGN	8
-OPENSSL_cleanse
-	.PROC
-	.CALLINFO	NO_CALLS
-	.ENTRY
-	cmpib,*=	0,$len,Ldone
-	nop
-	cmpib,*>>=	15,$len,Little
-	ldi		$SIZE_T-1,%r1
-
-Lalign
-	and,*<>		$inp,%r1,%r28
-	b,n		Laligned
-	stb		%r0,0($inp)
-	ldo		-1($len),$len
-	b		Lalign
-	ldo		1($inp),$inp
-
-Laligned
-	andcm		$len,%r1,%r28
-Lot
-	$ST		%r0,0($inp)
-	addib,*<>	-$SIZE_T,%r28,Lot
-	ldo		$SIZE_T($inp),$inp
-
-	and,*<>		$len,%r1,$len
-	b,n		Ldone
-Little
-	stb		%r0,0($inp)
-	addib,*<>	-1,$len,Little
-	ldo		1($inp),$inp
-Ldone
-	bv		($rp)
-	.EXIT
-	nop
-	.PROCEND
-___
-}
-{
 my ($out,$cnt,$max)=("%r26","%r25","%r24");
 my ($tick,$lasttick)=("%r23","%r22");
 my ($diff,$lastdiff)=("%r21","%r20");
@@ -151,7 +107,7 @@ OPENSSL_instrument_bus
 	ldw		0($out),$tick
 	add		$diff,$tick,$tick
 	stw		$tick,0($out)
-Loop
+L\$oop
 	mfctl		%cr16,$tick
 	sub		$tick,$lasttick,$diff
 	copy		$tick,$lasttick
@@ -161,7 +117,7 @@ Loop
 	add		$diff,$tick,$tick
 	stw		$tick,0($out)
 
-	addib,<>	-1,$cnt,Loop
+	addib,<>	-1,$cnt,L\$oop
 	addi		4,$out,$out
 
 	bv		($rp)
@@ -190,14 +146,14 @@ OPENSSL_instrument_bus2
 	mfctl		%cr16,$tick
 	sub		$tick,$lasttick,$diff
 	copy		$tick,$lasttick
-Loop2
+L\$oop2
 	copy		$diff,$lastdiff
 	fdc		0($out)
 	ldw		0($out),$tick
 	add		$diff,$tick,$tick
 	stw		$tick,0($out)
 
-	addib,=		-1,$max,Ldone2
+	addib,=		-1,$max,L\$done2
 	nop
 
 	mfctl		%cr16,$tick
@@ -208,17 +164,18 @@ Loop2
 
 	ldi		1,%r1
 	xor		%r1,$tick,$tick
-	addb,<>		$tick,$cnt,Loop2
+	addb,<>		$tick,$cnt,L\$oop2
 	shladd,l	$tick,2,$out,$out
-Ldone2
+L\$done2
 	bv		($rp)
 	.EXIT
 	add		$rv,$cnt,$rv
 	.PROCEND
 ___
 }
-$code =~ s/cmpib,\*/comib,/gm if ($SIZE_T==4);
-$code =~ s/,\*/,/gm if ($SIZE_T==4);
+$code =~ s/cmpib,\*/comib,/gm	if ($SIZE_T==4);
+$code =~ s/,\*/,/gm		if ($SIZE_T==4);
+$code =~ s/\bbv\b/bve/gm	if ($SIZE_T==8);
 print $code;
 close STDOUT;
 

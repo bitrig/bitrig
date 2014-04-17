@@ -235,10 +235,10 @@ _sparcv9_rdtick:
 .global	_sparcv9_vis1_probe
 .align	8
 _sparcv9_vis1_probe:
-	.word	0x81b00d80	!fxor	%f0,%f0,%f0
 	add	%sp,BIAS+2,%o1
-	retl
 	.word	0xc19a5a40	!ldda	[%o1]ASI_FP16_P,%f0
+	retl
+	.word	0x81b00d80	!fxor	%f0,%f0,%f0
 .type	_sparcv9_vis1_probe,#function
 .size	_sparcv9_vis1_probe,.-_sparcv9_vis1_probe
 
@@ -291,24 +291,6 @@ _sparcv9_vis1_instrument:
 	.word	0x38680002	!bgu,a	%xcc,.+8
 	mov	%o3,%o0
 
-	retl
-	nop
-.type	_sparcv9_vis1_instrument,#function
-.size	_sparcv9_vis1_instrument,.-_sparcv9_vis1_instrument
-
-.global	_sparcv9_vis2_probe
-.align	8
-_sparcv9_vis2_probe:
-	retl
-	.word	0x81b00980	!bshuffle	%f0,%f0,%f0
-.type	_sparcv9_vis2_probe,#function
-.size	_sparcv9_vis2_probe,.-_sparcv9_vis2_probe
-
-.global	_sparcv9_fmadd_probe
-.align	8
-_sparcv9_fmadd_probe:
-	.word	0x81b00d80	!fxor	%f0,%f0,%f0
-	.word	0x85b08d82	!fxor	%f2,%f2,%f2
 	retl
 	.word	0x81b80440	!fmaddd	%f0,%f0,%f2,%f0
 .type	_sparcv9_fmadd_probe,#function
@@ -396,6 +378,30 @@ OPENSSL_cleanse:
 #endif
 .type	OPENSSL_cleanse,#function
 .size	OPENSSL_cleanse,.-OPENSSL_cleanse
+
+.section	".init",#alloc,#execinstr
+	call	OPENSSL_cpuid_setup
+	nop
+.type	_sparcv9_vis1_instrument,#function
+.size	_sparcv9_vis1_instrument,.-_sparcv9_vis1_instrument
+
+.global	_sparcv9_vis2_probe
+.align	8
+_sparcv9_vis2_probe:
+	retl
+	.word	0x81b00980	!bshuffle	%f0,%f0,%f0
+.type	_sparcv9_vis2_probe,#function
+.size	_sparcv9_vis2_probe,.-_sparcv9_vis2_probe
+
+.global	_sparcv9_fmadd_probe
+.align	8
+_sparcv9_fmadd_probe:
+	.word	0x81b00d80	!fxor	%f0,%f0,%f0
+	.word	0x85b08d82	!fxor	%f2,%f2,%f2
+	retl
+	.word	0x81b80440	!fmaddd	%f0,%f0,%f2,%f0
+.type	_sparcv9_fmadd_probe,#function
+.size	_sparcv9_fmadd_probe,.-_sparcv9_fmadd_probe
 
 .section	".init",#alloc,#execinstr
 	call	OPENSSL_cpuid_setup
