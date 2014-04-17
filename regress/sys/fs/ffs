@@ -1,15 +1,16 @@
 setup()
 {
-	dd if=/dev/zero of=fakeobj bs=2048 count=4k
-	vnconfig vnd0 fakeobj
-	newfs /dev/rvnd0c
-	mount /dev/vnd0c /mnt
+	dd if=/dev/zero of=fakedisk bs=1M count=8
+	vnconfig vnd0 fakedisk
+	disklabel -wA vnd0
+	newfs /dev/rvnd0a
+	mount /dev/vnd0a /mnt
 }
 
 cleanup()
 {
-	umount /dev/vnd1c
-	umount /dev/vnd0c
+	umount /dev/vnd1a
+	umount /dev/vnd0a
 	vnconfig -u vnd1
 	vnconfig -u vnd0
 	rm -f fakedisk
@@ -21,16 +22,19 @@ mountfs()
 {
 	dd if=/dev/zero of=tmpdisk bs=1M count=1
 	vnconfig vnd1 tmpdisk
-	newfs /dev/rvnd1c >/dev/null
-	mount /dev/vnd1c $1
+	disklabel -wA vnd1
+	newfs /dev/rvnd1a
+	mount /dev/vnd1a $1
 }
 
 mountfs_small()
 {
-	dd if=/dev/zero of=tmpdisk bs=256K count=1
+	dd if=/dev/zero of=tmpdisk bs=1M count=1
 	vnconfig vnd1 tmpdisk
-	newfs /dev/rvnd1c >/dev/null
-	mount /dev/vnd1c $1
+	disklabel -wA vnd1
+	newfs /dev/rvnd1a
+	mount /dev/vnd1a $1
+	dd if=/dev/zero of=$1/x bs=700k count=1
 }
 
 umountfs()
