@@ -481,7 +481,11 @@ tmpfs_getattr(void *v)
 	vap->va_flags = node->tn_flags;
 	vap->va_rdev = (vp->v_type == VBLK || vp->v_type == VCHR) ?
 	    node->tn_spec.tn_dev.tn_rdev : VNOVAL;
-	vap->va_bytes = round_page(node->tn_size);
+	if (vp->v_type == VREG && node->tn_uobj != NULL)
+		vap->va_bytes = (u_quad_t)node->tn_uobj->uo_npages <<
+		    PAGE_SHIFT;
+	else
+		vap->va_bytes = round_page(node->tn_size);
 	vap->va_filerev = VNOVAL;
 	vap->va_vaflags = 0;
 	vap->va_spare = VNOVAL; /* XXX */
