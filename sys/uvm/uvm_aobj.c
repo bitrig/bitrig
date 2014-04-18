@@ -516,12 +516,17 @@ int
 uao_shrink_flush(struct uvm_object *uobj, int startpg, int endpg)
 {
 	struct uvm_aobj *aobj = (struct uvm_aobj *)uobj;
+	voff_t start, stop;
 
 	KASSERT(startpg < endpg);
 	KASSERT(uobj->uo_refs == 1);
-	uao_flush(uobj, startpg << PAGE_SHIFT, endpg << PAGE_SHIFT, PGO_FREE);
+
+	start = (voff_t)startpg << PAGE_SHIFT;
+	stop = (voff_t)endpg << PAGE_SHIFT;
+	uao_flush(uobj, start, stop, PGO_FREE);
 	if (aobj->u_pages != endpg)
 		return EAGAIN;
+
 	uao_dropswap_range(uobj, startpg, endpg);
 
 	return 0;
@@ -1209,14 +1214,14 @@ uao_flush(struct uvm_object *uobj, voff_t start, voff_t stop, int flags)
 	UVM_ASSERT_OBJLOCKED(&aobj->u_obj);
 	if (flags & PGO_ALLPAGES) {
 		start = 0;
-		stop = aobj->u_pages << PAGE_SHIFT;
+		stop = (voff_t)aobj->u_pages << PAGE_SHIFT;
 	} else {
 		start = trunc_page(start);
 		stop = round_page(stop);
-		if (stop > (aobj->u_pages << PAGE_SHIFT)) {
+		if (stop > ((voff_t)aobj->u_pages << PAGE_SHIFT)) {
 			printf("uao_flush: strange, got an out of range "
 			    "flush (fixed)\n");
-			stop = aobj->u_pages << PAGE_SHIFT;
+			stop = (voff_t)aobj->u_pages << PAGE_SHIFT;
 		}
 	}
 
@@ -1791,14 +1796,16 @@ uao_pagein_page(struct uvm_aobj *aobj, int pageidx)
 {
 	struct vm_page *pg;
 	int rv, slot, npages;
+	voff_t offset;
 
 	UVM_ASSERT_OBJLOCKED(&aobj->u_obj);
 
 	pg = NULL;
 	npages = 1;
+	offset = (voff_t)pageidx << PAGE_SHIFT;
 	/* locked: aobj */
-	rv = uao_get(&aobj->u_obj, pageidx << PAGE_SHIFT,
-		     &pg, &npages, 0, VM_PROT_READ|VM_PROT_WRITE, 0, 0);
+	rv = uao_get(&aobj->u_obj, offset, &pg, &npages, 0,
+	    VM_PROT_READ|VM_PROT_WRITE, 0, 0);
 	/* unlocked: aobj */
 	UVM_ASSERT_OBJUNLOCKED(&aobj->u_obj);
 
