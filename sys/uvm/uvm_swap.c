@@ -1874,7 +1874,7 @@ uvm_swap_io(struct vm_page **pps, int startslot, int npages, int flags)
 	bp->b_vp = NULL;
 	buf_replacevnode(bp, swapdev_vp);
 	splx(s);
-	bp->b_bufsize = bp->b_bcount = npages << PAGE_SHIFT;
+	bp->b_bufsize = bp->b_bcount = (long)npages << PAGE_SHIFT;
 
 	/*
 	 * for pageouts we must set "dirtyoff" [NFS client code needs it].
@@ -1882,7 +1882,7 @@ uvm_swap_io(struct vm_page **pps, int startslot, int npages, int flags)
 	 */
 	if (write) {
 		bp->b_dirtyoff = 0;
-		bp->b_dirtyend = npages << PAGE_SHIFT;
+		bp->b_dirtyend = (long)npages << PAGE_SHIFT;
 #ifdef UVM_SWAP_ENCRYPT
 		/* mark the pages in the drum for decryption */
 		if (swap_encrypt_initialized)

@@ -1327,7 +1327,7 @@ uvn_io(struct uvm_vnode *uvn, vm_page_t *pps, int npages, int flags, int rw)
 	 */
 
 	iov.iov_base = (caddr_t) kva;
-	wanted = npages << PAGE_SHIFT;
+	wanted = (size_t)npages << PAGE_SHIFT;
 	if (file_offset + wanted > uvn->u_size)
 		wanted = uvn->u_size - file_offset;	/* XXX: needed? */
 	iov.iov_len = wanted;
@@ -1385,7 +1385,7 @@ uvn_io(struct uvm_vnode *uvn, vm_page_t *pps, int npages, int flags, int rw)
 			result = EIO;		/* XXX: error? */
 		} else if (got < PAGE_SIZE * npages && rw == UIO_READ) {
 			memset((void *) (kva + got), 0,
-			       (npages << PAGE_SHIFT) - got);
+			    ((size_t)npages << PAGE_SHIFT) - got);
 		}
 	}
 

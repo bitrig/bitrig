@@ -289,7 +289,7 @@ void
 uvm_pagermapout(vaddr_t kva, int npages)
 {
 
-	pmap_remove(pmap_kernel(), kva, kva + (npages << PAGE_SHIFT));
+	pmap_remove(pmap_kernel(), kva, kva + ((vaddr_t)npages << PAGE_SHIFT));
 	pmap_update(pmap_kernel());
 	uvm_pseg_release(kva);
 
@@ -812,7 +812,8 @@ uvm_aio_aiodone(struct buf *bp)
 
 	uobj = NULL;
 	for (i = 0; i < npages; i++)
-		pgs[i] = uvm_atopg((vaddr_t)bp->b_data + (i << PAGE_SHIFT));
+		pgs[i] = uvm_atopg((vaddr_t)bp->b_data +
+		    ((vaddr_t)i << PAGE_SHIFT));
 	uvm_pagermapout((vaddr_t)bp->b_data, npages);
 #ifdef UVM_SWAP_ENCRYPT
 	/*

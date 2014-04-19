@@ -132,7 +132,7 @@ uvm_objwire(struct uvm_object *uobj, off_t start, off_t end,
 		uvm_page_unbusy(pgs, npages);
 
 		left -= npages;
-		offset += npages << PAGE_SHIFT;
+		offset += (off_t)npages << PAGE_SHIFT;
 	}
 	mtx_leave(&uobj->vmobjlock);
 
