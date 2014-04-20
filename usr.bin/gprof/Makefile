@@ -2,7 +2,6 @@
 
 .include <bsd.own.mk>
 
-TARGET_MACHINE_ARCH?=	${MACHINE_ARCH}
 TARGET_MACHINE_CPU?=	${MACHINE_CPU}
 
 PROG=	gprof
