@@ -67,7 +67,6 @@
 #include <openssl/objects.h>
 #include "ssl_locl.h"
 
-static void get_current_time(struct timeval *t);
 const char dtls1_version_str[]="DTLSv1" OPENSSL_VERSION_PTEXT;
 int dtls1_listen(SSL *s, struct sockaddr *client);
 
@@ -308,7 +307,7 @@ dtls1_start_timer(SSL *s)
 	}
 
 	/* Set timeout to current time */
-	get_current_time(&(s->d1->next_timeout));
+	gettimeofday(&(s->d1->next_timeout), NULL);
 
 	/* Add duration to current time */
 	s->d1->next_timeout.tv_sec += s->d1->timeout_duration;
@@ -325,7 +324,7 @@ dtls1_get_timeout(SSL *s, struct timeval* timeleft) {
 	}
 
 	/* Get current time */
-	get_current_time(&timenow);
+	gettimeofday(&timenow, NULL);
 
 	/* If timer already expired, set remaining time to 0 */
 	if (s->d1->next_timeout.tv_sec < timenow.tv_sec ||
@@ -436,12 +435,6 @@ dtls1_handle_timeout(SSL *s)
 
 	dtls1_start_timer(s);
 	return dtls1_retransmit_buffered_messages(s);
-}
-
-static void
-get_current_time(struct timeval *t)
-{
-	gettimeofday(t, NULL);
 }
 
 int
