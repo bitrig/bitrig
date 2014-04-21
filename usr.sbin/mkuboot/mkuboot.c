@@ -285,12 +285,10 @@ is_elf(int ifd, const char *iname)
 	nbytes = read(ifd, &ehdr, sizeof ehdr);
 	if (nbytes == -1)
 		err(1, "%s", iname);
-	if (nbytes != sizeof ehdr)
-		return 0;
-
 	if (lseek(ifd, 0, SEEK_SET) != 0)
 		err(1, "%s", iname);
-	if (!IS_ELF(ehdr))
+
+	if (nbytes != sizeof ehdr || !IS_ELF(ehdr))
 		return 0;
 
 	if (ehdr.e_ident[EI_CLASS] == ELFCLASS32)
