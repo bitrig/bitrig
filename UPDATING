@@ -1,0 +1,25 @@
+Mon Apr 21 2014 
+
+xlocale support has been merged from FreeBSD, this requires some special
+build steps (or update from a snap)
+
+It is very important to be running a recent kernel.  Make certain the kernel
+is based from source more recent than 6 Apr 2014
+
+Then follow these build steps (as root):
+(it appears that 'make buildworld' twice would also suffice)
+
+
+(cd /usr/src/share/mk && make install)
+(cd /usr/src && make obj)
+(cd /usr/src && make includes )
+(cd /usr/src/libexec/ld.so && SKIPDIR="ldd ldconfig" make depend && \
+    SKIPDIR="ldd ldconfig" make &&\
+    SKIPDIR="ldd ldconfig" NOMAN=1 make install)
+(cd /usr/src/lib/csu && make depend && make && NOMAN=1 make install)
+(cd /usr/src/lib/libc && make depend && make && NOMAN=1 make install)
+
+(cd /usr/src/usr.bin/mklocale && make depend && make && make install)
+(cd /usr/src/share/locale && make depend && make && make install)
+
+(cd /usr/src && make build)
