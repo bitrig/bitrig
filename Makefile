@@ -71,7 +71,7 @@ afterinstall:
 .endif
 
 .ifdef DESTDIR
-build:
+build buildworld:
 	@echo cannot build with DESTDIR set
 	@false
 .else
@@ -93,6 +93,13 @@ build:
 	cd ${.CURDIR}/lib && ${MAKE} depend && ${MAKE} && \
 	    NOMAN=1 exec ${SUDO} ${MAKE} install
 	${MAKE} depend && ${MAKE} && exec ${SUDO} ${MAKE} install
+
+buildworld:
+	${SUDO} rm -rf /usr/obj/*
+	${MAKE} obj >/dev/null
+	cd ${.CURDIR}/etc && ${SUDO} DESTDIR=/ ${MAKE} distrib-dirs
+	${MAKE} build
+
 .endif
 
 CROSS_TARGETS=cross-env cross-dirs cross-obj cross-includes cross-binutils \
@@ -114,7 +121,7 @@ ${CROSS_TARGETS}:
 SNAPDIR?=/usr/snap
 .endif
 .if !defined(SNAPDIR)
-snapinfo buildworld snap do_snap do_snap_rel:
+snapinfo snap do_snap do_snap_rel:
 	@echo "SNAPDIR must be defined or create the directory /usr/snap"
 	@exit 1
 .else
@@ -138,12 +145,6 @@ snapinfo:
 	@echo rootdir = ${SNAPROOTDIR}
 	@echo reldir = ${SNAPRELDIR}
 	@echo logfile = ${SNAPLOGFILE}
-
-buildworld:
-	${SUDO} rm -rf /usr/obj/*
-	${MAKE} obj >/dev/null
-	cd ${.CURDIR}/etc && ${SUDO} DESTDIR=/ ${MAKE} distrib-dirs
-	${MAKE} build
 
 snap:  
 	mkdir -p ${SNAPARCHDIR}
