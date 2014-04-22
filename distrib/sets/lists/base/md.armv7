@@ -705,6 +705,15 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/bitstring.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/blf.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/bsd_auth.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/c++
+./usr/libdata/perl5/site_perl/arm-bitrig/c++/v1
+./usr/libdata/perl5/site_perl/arm-bitrig/c++/v1/complex.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/c++/v1/cxxabi.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/c++/v1/libunwind.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/c++/v1/mach-o
+./usr/libdata/perl5/site_perl/arm-bitrig/c++/v1/mach-o/compact_unwind_encoding.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/c++/v1/tgmath.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/c++/v1/unwind.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/complex.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/cpio.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/crypto
