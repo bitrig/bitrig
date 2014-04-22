@@ -488,7 +488,7 @@ fi
 
 if [ $NGX_CPP_TEST = YES ]; then
     NGX_MISC_SRCS="$NGX_MISC_SRCS $NGX_CPP_TEST_SRCS"
-    CORE_LIBS="$CORE_LIBS -lstdc++"
+    CORE_LIBS="$CORE_LIBS -lc++ -lc++abi -lpthread"
 fi
 
 
