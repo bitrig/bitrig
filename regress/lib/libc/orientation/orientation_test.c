@@ -1,4 +1,4 @@
-/*	$OpenBSD: orientation_test.c,v 1.4 2013/04/03 03:11:53 guenther Exp $ */
+/*	$OpenBSD: orientation_test.c,v 1.5 2014/04/22 02:29:52 lteo Exp $ */
 
 /*
  * Copyright (c) 2009 Philip Guenther
