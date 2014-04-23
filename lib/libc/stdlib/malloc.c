@@ -1,4 +1,4 @@
-/*	$OpenBSD: malloc.c,v 1.157 2014/04/23 10:47:15 espie Exp $	*/
+/*	$OpenBSD: malloc.c,v 1.158 2014/04/23 15:07:27 tedu Exp $	*/
 /*
  * Copyright (c) 2008, 2010, 2011 Otto Moerbeek <otto@drijf.net>
  * Copyright (c) 2012 Matthew Dempsky <matthew@openbsd.org>
@@ -164,7 +164,6 @@ struct malloc_readonly {
 	int	malloc_move;		/* move allocations to end of page? */
 	int	malloc_realloc;		/* always realloc? */
 	int	malloc_xmalloc;		/* xmalloc behaviour? */
-	int	malloc_zero;		/* zero fill? */
 	size_t	malloc_guard;		/* use guard pages after allocations? */
 	u_int	malloc_cache;		/* free pages we cache */
 #ifdef MALLOC_STATS
@@ -411,7 +410,7 @@ map(struct dir_info *d, size_t sz, int zero_fill)
 				d->free_regions_size -= psz;
 				if (zero_fill)
 					memset(p, 0, sz);
-				else if (mopts.malloc_junk &&
+				else if (mopts.malloc_junk == 2 &&
 				    mopts.malloc_freeunmap)
 					memset(p, SOME_FREEJUNK, sz);
 				return p;
@@ -430,7 +429,7 @@ map(struct dir_info *d, size_t sz, int zero_fill)
 		d->free_regions_size -= psz;
 		if (zero_fill)
 			memset(p, 0, sz);
-		else if (mopts.malloc_junk && mopts.malloc_freeunmap)
+		else if (mopts.malloc_junk == 2 && mopts.malloc_freeunmap)
 			memset(p, SOME_FREEJUNK, sz);
 		return p;
 	}
@@ -460,6 +459,7 @@ omalloc_init(struct dir_info **dp)
 	 * Default options
 	 */
 	mopts.malloc_abort = 1;
+	mopts.malloc_junk = 1;
 	mopts.malloc_move = 1;
 	mopts.malloc_cache = MALLOC_DEFAULT_CACHE;
 
@@ -533,7 +533,7 @@ omalloc_init(struct dir_info **dp)
 				mopts.malloc_junk = 0;
 				break;
 			case 'J':
-				mopts.malloc_junk = 1;
+				mopts.malloc_junk = 2;
 				break;
 			case 'n':
 			case 'N':
@@ -556,7 +556,8 @@ omalloc_init(struct dir_info **dp)
 				mopts.malloc_cache = MALLOC_DEFAULT_CACHE;
 				break;
 			case 'S':
-				mopts.malloc_freeunmap = mopts.malloc_junk = 1;
+				mopts.malloc_freeunmap = 1;
+				mopts.malloc_junk = 2;
 				mopts.malloc_guard = MALLOC_PAGESIZE;
 				mopts.malloc_cache = 0;
 				break;
@@ -572,12 +573,6 @@ omalloc_init(struct dir_info **dp)
 			case 'X':
 				mopts.malloc_xmalloc = 1;
 				break;
-			case 'z':
-				mopts.malloc_zero = 0;
-				break;
-			case 'Z':
-				mopts.malloc_zero = 1;
-				break;
 			default: {
 				static const char q[] = "malloc() warning: "
 				    "unknown char in MALLOC_OPTIONS\n";
@@ -587,13 +582,6 @@ omalloc_init(struct dir_info **dp)
 			}
 		}
 	}
-
-	/*
-	 * We want junk in the entire allocation, and zero only in the part
-	 * the user asked for.
-	 */
-	if (mopts.malloc_zero)
-		mopts.malloc_junk = 1;
 
 #ifdef MALLOC_STATS
 	if (mopts.malloc_stats && (atexit(malloc_exit) == -1)) {
@@ -968,7 +956,7 @@ malloc_bytes(struct dir_info *d, size_t size, void *f)
 	k += (lp - bp->bits) * MALLOC_BITS;
 	k <<= bp->shift;
 
-	if (mopts.malloc_junk && bp->size > 0)
+	if (mopts.malloc_junk == 2 && bp->size > 0)
 		memset((char *)bp->page + k, SOME_JUNK, bp->size);
 	return ((char *)bp->page + k);
 }
@@ -1066,16 +1054,16 @@ omalloc(size_t sz, int zero_fill, void *f)
 		    sz - mopts.malloc_guard < MALLOC_PAGESIZE -
 		    MALLOC_LEEWAY) {
 			/* fill whole allocation */
-			if (mopts.malloc_junk)
+			if (mopts.malloc_junk == 2)
 				memset(p, SOME_JUNK, psz - mopts.malloc_guard);
 			/* shift towards the end */
 			p = ((char *)p) + ((MALLOC_PAGESIZE - MALLOC_LEEWAY -
 			    (sz - mopts.malloc_guard)) & ~(MALLOC_MINSIZE-1));
 			/* fill zeros if needed and overwritten above */
-			if (zero_fill && mopts.malloc_junk)
+			if (zero_fill && mopts.malloc_junk == 2)
 				memset(p, 0, sz - mopts.malloc_guard);
 		} else {
-			if (mopts.malloc_junk) {
+			if (mopts.malloc_junk == 2) {
 				if (zero_fill)
 					memset((char *)p + sz - mopts.malloc_guard,
 					    SOME_JUNK, psz - sz);
@@ -1143,7 +1131,7 @@ malloc(size_t size)
 		malloc_recurse();
 		return NULL;
 	}
-	r = omalloc(size, mopts.malloc_zero, CALLER);
+	r = omalloc(size, 0, CALLER);
 	malloc_active--;
 	_MALLOC_UNLOCK();
 	if (r == NULL && mopts.malloc_xmalloc) {
@@ -1195,9 +1183,11 @@ ofree(void *p)
 			}
 			malloc_guarded -= mopts.malloc_guard;
 		}
-		if (mopts.malloc_junk && !mopts.malloc_freeunmap)
-			memset(p, SOME_FREEJUNK,
-			    PAGEROUND(sz) - mopts.malloc_guard);
+		if (mopts.malloc_junk && !mopts.malloc_freeunmap) {
+			size_t amt = mopts.malloc_junk == 1 ? MALLOC_MAXCHUNK :
+			    PAGEROUND(sz) - mopts.malloc_guard;
+			memset(p, SOME_FREEJUNK, amt);
+		}
 		unmap(g_pool, p, PAGEROUND(sz));
 		delete(g_pool, r);
 	} else {
@@ -1297,7 +1287,7 @@ orealloc(void *p, size_t newsz, void *f)
 				q = MMAPA(hint, needed);
 				if (q == hint) {
 					malloc_used += needed;
-					if (mopts.malloc_junk)
+					if (mopts.malloc_junk == 2)
 						memset(q, SOME_JUNK, needed);
 					r->size = newsz;
 					STATS_SETF(r, f);
@@ -1324,7 +1314,7 @@ orealloc(void *p, size_t newsz, void *f)
 			STATS_SETF(r, f);
 			return p;
 		} else {
-			if (newsz > oldsz && mopts.malloc_junk)
+			if (newsz > oldsz && mopts.malloc_junk == 2)
 				memset((char *)p + newsz, SOME_JUNK,
 				    rnewsz - mopts.malloc_guard - newsz);
 			r->size = gnewsz;
@@ -1333,7 +1323,7 @@ orealloc(void *p, size_t newsz, void *f)
 		}
 	}
 	if (newsz <= oldsz && newsz > oldsz / 2 && !mopts.malloc_realloc) {
-		if (mopts.malloc_junk && newsz > 0)
+		if (mopts.malloc_junk == 2 && newsz > 0)
 			memset((char *)p + newsz, SOME_JUNK, oldsz - newsz);
 		STATS_SETF(r, f);
 		return p;
@@ -1518,7 +1508,7 @@ omemalign(size_t alignment, size_t sz, int zero_fill, void *f)
 		malloc_guarded += mopts.malloc_guard;
 	}
 
-	if (mopts.malloc_junk) {
+	if (mopts.malloc_junk == 2) {
 		if (zero_fill)
 			memset((char *)p + sz - mopts.malloc_guard,
 			    SOME_JUNK, psz - sz);
@@ -1549,7 +1539,7 @@ posix_memalign(void **memptr, size_t alignment, size_t size)
 		malloc_recurse();
 		goto err;
 	}
-	r = omemalign(alignment, size, mopts.malloc_zero, CALLER);
+	r = omemalign(alignment, size, 0, CALLER);
 	malloc_active--;
 	_MALLOC_UNLOCK();
 	if (r == NULL) {
