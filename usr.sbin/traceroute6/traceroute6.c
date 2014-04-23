@@ -1,4 +1,4 @@
-/*	$OpenBSD: traceroute6.c,v 1.85 2014/04/23 08:53:49 florian Exp $	*/
+/*	$OpenBSD: traceroute6.c,v 1.86 2014/04/23 08:56:31 florian Exp $	*/
 /*	$KAME: traceroute6.c,v 1.63 2002/10/24 12:53:25 itojun Exp $	*/
 
 /*
@@ -291,7 +291,8 @@ struct udphdr *get_udphdr(struct ip6_hdr *, u_char *);
 int	get_hoplim(struct msghdr *);
 double	deltaT(struct timeval *, struct timeval *);
 char	*pr_type(int);
-int	packet_ok(struct msghdr *, int, int, int);
+int	packet_ok(int, struct msghdr *, int, int, int);
+int	packet_ok6(struct msghdr *, int, int, int);
 void	icmp6_code(int, int *, int *);
 void	print(struct sockaddr *, int, const char *);
 const char *inetname(struct sockaddr *);
@@ -633,7 +634,8 @@ main(int argc, char *argv[])
 			send_probe(++seq, hops, incflag, to);
 			while ((cc = wait_for_reply(rcvsock, &rcvmhdr))) {
 				(void) gettimeofday(&t2, NULL);
-				i = packet_ok(&rcvmhdr, cc, seq, incflag);
+				i = packet_ok(to->sa_family, &rcvmhdr, cc, seq,
+				    incflag);
 				/* Skip short packet */
 				if (i == 0)
 					continue;
@@ -849,7 +851,20 @@ pr_type(int t0)
 }
 
 int
-packet_ok(struct msghdr *mhdr, int cc, int seq, int iflag)
+packet_ok(int af, struct msghdr *mhdr, int cc, int seq, int iflag)
+{
+	switch (af) {
+	case AF_INET6:
+		return packet_ok6(mhdr, cc, seq, iflag);
+		break;
+	default:
+		errx(1, "unsupported AF: %d", af);
+		break;
+	}
+}
+
+int
+packet_ok6(struct msghdr *mhdr, int cc, int seq, int iflag)
 {
 	struct icmp6_hdr *icp;
 	struct sockaddr_in6 *from = (struct sockaddr_in6 *)mhdr->msg_name;
