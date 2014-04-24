@@ -104,51 +104,51 @@ static int reloc_target_flags[] = {
 #define RELOC_USE_ADDEND(t)		((reloc_target_flags[t] & _RF_A) != 0)
 #define RELOC_TARGET_SIZE(t)		((reloc_target_flags[t] >> 8) & 0xff)
 #define RELOC_VALUE_RIGHTSHIFT(t)	(reloc_target_flags[t] & 0xff)
-static int reloc_target_bitmask[] = {
-#define _BM(x)  (x == 32? ~0 : ~(-(1UL << (x))))
-	_BM(0),		/*  0 NONE */
+static Elf_Addr reloc_target_bitmask[] = {
+#define _BM(x)  (~(Elf_Addr)0 >> ((8*sizeof(reloc_target_bitmask[0])) - (x)))
+	0,		/*  0 NONE */
 	_BM(24),	/*  1 PC24 */
 	_BM(32),	/*  2 ABS32 */
 	_BM(32),	/*  3 REL32 */
-	_BM(0),		/*  4 REL13 */
-	_BM(0),		/*  5 ABS16 */
-	_BM(0),		/*  6 ABS12 */
-	_BM(0),		/*  7 T_ABS5 */
-	_BM(0),		/*  8 ABS8 */
+	0,		/*  4 REL13 */
+	0,		/*  5 ABS16 */
+	0,		/*  6 ABS12 */
+	0,		/*  7 T_ABS5 */
+	0,		/*  8 ABS8 */
 	_BM(32),	/*  9 SBREL32 */
-	_BM(0),		/* 10 T_PC22 */
-	_BM(0),		/* 11 T_PC8 */
-	_BM(0),		/* 12 Reserved */
-	_BM(0),		/* 13 SWI24 */
-	_BM(0),		/* 14 T_SWI8 */
-	_BM(0),		/* 15 OBSL */
-	_BM(0),		/* 16 OBSL */
-	_BM(0),		/* 17 TLS_DTPMOD32 */
+	0,		/* 10 T_PC22 */
+	0,		/* 11 T_PC8 */
+	0,		/* 12 Reserved */
+	0,		/* 13 SWI24 */
+	0,		/* 14 T_SWI8 */
+	0,		/* 15 OBSL */
+	0,		/* 16 OBSL */
+	0,		/* 17 TLS_DTPMOD32 */
 	_BM(32),	/* 18 TLS_DTPOFF32 */
-	_BM(0),		/* 19 TLS_TPOFF32 */
+	0,		/* 19 TLS_TPOFF32 */
 	_BM(32),	/* 20 COPY */
 	_BM(32),	/* 21 GLOB_DAT */
 	_BM(32),	/* 22 JUMP_SLOT */
 	_BM(32),	/* 23 RELATIVE */
-	_BM(0),		/* 24 GOTOFF */
-	_BM(0),		/* 25 GOTPC */
-	_BM(0),		/* 26 GOT32 */
-	_BM(0),		/* 27 PLT32 */
-	_BM(0),		/* 28 UNUSED */
-	_BM(0),		/* 29 UNUSED */
-	_BM(0),		/* 30 UNUSED */
-	_BM(0),		/* 31 UNUSED */
-	_BM(0),		/* 32 A_PCR 0 */
-	_BM(0),		/* 33 A_PCR 8 */
-	_BM(0),		/* 34 A_PCR 16 */
-	_BM(0),		/* 35 B_PCR 0 */
-	_BM(0),		/* 36 B_PCR 12 */
-	_BM(0),		/* 37 B_PCR 20 */
-	_BM(0),		/* 38 RELAB32 */
-	_BM(0),		/* 39 ROSGREL32 */
-	_BM(0),		/* 40 V4BX */
-	_BM(0),		/* 41 STKCHK */
-	_BM(0)		/* 42 TSTKCHK */
+	0,		/* 24 GOTOFF */
+	0,		/* 25 GOTPC */
+	0,		/* 26 GOT32 */
+	0,		/* 27 PLT32 */
+	0,		/* 28 UNUSED */
+	0,		/* 29 UNUSED */
+	0,		/* 30 UNUSED */
+	0,		/* 31 UNUSED */
+	0,		/* 32 A_PCR 0 */
+	0,		/* 33 A_PCR 8 */
+	0,		/* 34 A_PCR 16 */
+	0,		/* 35 B_PCR 0 */
+	0,		/* 36 B_PCR 12 */
+	0,		/* 37 B_PCR 20 */
+	0,		/* 38 RELAB32 */
+	0,		/* 39 ROSGREL32 */
+	0,		/* 40 V4BX */
+	0,		/* 41 STKCHK */
+	0		/* 42 TSTKCHK */
 #undef _BM
 };
 #define RELOC_VALUE_BITMASK(t)	(reloc_target_bitmask[t])
