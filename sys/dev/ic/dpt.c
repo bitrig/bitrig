@@ -113,7 +113,7 @@ static char *dpt_cname[] = {
 	"PM2021", "SmartCache III",
 	"SK2012", "SmartCache Plus", 
 	"SK2011", "SmartCache Plus",
-	NULL,     "unknown adapter, please report using sendbug(1)",
+	NULL,     "unknown adapter",
 };
 
 /*

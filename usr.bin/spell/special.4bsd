@@ -1071,7 +1071,6 @@ sed
 seekdir
 select
 send
-sendbug
 sendmail
 sendmsg
 sendto

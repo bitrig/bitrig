@@ -20,7 +20,7 @@ SUBDIR= apply apropos arch asa at aucat audioctl awk banner \
 	pkg-config pkill \
 	pr printenv printf quota radioctl rcs rdist rdistd \
 	readlink renice rev rpcgen rpcinfo rs rsh rup ruptime rusers rwall \
-	rwho sdiff script sed sendbug shar showmount signify skey \
+	rwho sdiff script sed shar showmount signify skey \
 	skeyaudit skeyinfo skeyinit sndiod \
 	sort spell split sqlite3 ssh stat su systat \
 	sudo tail talk tcopy tcpbench tee telnet tftp tic tip time \
