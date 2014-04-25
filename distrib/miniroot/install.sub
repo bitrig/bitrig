@@ -1880,7 +1880,7 @@ questions() {
 		fi
 	fi
 
-	ask_yn "Remove sourceless firmware?"
+	ask_yn "Remove closed-source firmware?"
 	firmware=$resp
 
 	ask_yn "Install the bitrig toolchain on first boot?" yes
