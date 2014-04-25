@@ -195,8 +195,8 @@ typedef uint32_t	pt_entry_t;	/* L2 table entry */
 #define	L2_V7_S_TEX_MASK	(0x7 << 6)	/* Type Extension */
 #define	L2_V7_S_XN	0x00000001	/* eXecute Never */
 
-#define	L2_V7_S		0x00000400	/* Shared */
-#define	L2_V7_nG	0x00000200	/* not Global */
+#define	L2_V7_S		0x00000200	/* Shared */
+#define	L2_V7_nG	0x00000400	/* not Global */
 
 /*
  * Access Permissions for L1 and L2 Descriptors.
