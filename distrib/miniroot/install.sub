@@ -1415,7 +1415,6 @@ install_http() {
 	_file_list=$(ftp -Vo - "$_url_base/index.txt" |
 		sed 's/^.* //' | sed 's///')
 
-
 	install_files "$_url_base" "$_file_list"
 
 	# Remember where we installed from, to tell the cgi server.
