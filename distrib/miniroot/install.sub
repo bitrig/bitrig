@@ -1413,8 +1413,8 @@ install_http() {
 	# Assumes index file is "index.txt" for http (or proxy)
 	# We can't use index.html since the format is server-dependent
 	_file_list=$(ftp -Vo - "$_url_base/index.txt" |
-		sed 's/^.* //' | sed 's/
-//')
+		sed 's/^.* //' | sed 's///')
+
 
 	install_files "$_url_base" "$_file_list"
 
@@ -2151,8 +2151,7 @@ elif [[ -z $respfile ]]; then
 		# Generate unique filename and let rc.firsttime feed it to
 		# whatever mail system we have at hand by then.
 		while _lf=/mnt/var/tmp/ai.log.$RANDOM && test -e $_lf; do done
-		sed 's/^.*
-//' /ai.log >>$_lf
+		sed 's/^.*//' /ai.log >>$_lf
 		chmod 600 $_lf
 		_lf=${_lf#/mnt}
 		cat <<__EOT >>/mnt/etc/rc.firsttime
