@@ -750,6 +750,7 @@ file msdosfs/msdosfs_lookup.c		msdosfs
 file msdosfs/msdosfs_vfsops.c		msdosfs
 file msdosfs/msdosfs_vnops.c		msdosfs
 file tmpfs/tmpfs_mem.c			tmpfs
+file tmpfs/tmpfs_snapshot.c		tmpfs
 file tmpfs/tmpfs_subr.c			tmpfs
 file tmpfs/tmpfs_vfsops.c		tmpfs
 file tmpfs/tmpfs_vnops.c		tmpfs

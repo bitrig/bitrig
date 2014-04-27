@@ -61,6 +61,9 @@ __KERNEL_RCSID(0, "$NetBSD: tmpfs_vfsops.c,v 1.53 2013/11/08 15:44:23 rmind Exp 
 struct pool	tmpfs_dirent_pool;
 struct pool	tmpfs_node_pool;
 
+int	tmpfs_mountfs(struct mount *, const char *, struct vnode *,
+	    struct tmpfs_args *, char *, struct proc *);
+int	tmpfs_mountroot(void);
 int	tmpfs_mount(struct mount *, const char *, void *, struct nameidata *,
 	    struct proc *);
 int	tmpfs_start(struct mount *, int, struct proc *);
@@ -72,7 +75,7 @@ int	tmpfs_vptofh(struct vnode *, struct fid *);
 int	tmpfs_statfs(struct mount *, struct statfs *, struct proc *);
 int	tmpfs_sync(struct mount *, int, struct ucred *, struct proc *);
 int	tmpfs_init(struct vfsconf *);
-int	tmpfs_mount_update(struct mount *);
+int	tmpfs_mount_update(struct mount *, struct tmpfs_args *, struct proc *);
 
 int
 tmpfs_init(struct vfsconf *vfsp)
@@ -87,18 +90,12 @@ tmpfs_init(struct vfsconf *vfsp)
 }
 
 int
-tmpfs_mount_update(struct mount *mp)
+tmpfs_mount_update(struct mount *mp, struct tmpfs_args *args, struct proc *p)
 {
 	tmpfs_mount_t *tmp;
 	struct vnode *rootvp;
-	int error;
-
-	if ((mp->mnt_flag & MNT_RDONLY) == 0)
-		return EOPNOTSUPP;
-
-	/* ro->rw transition: nothing to do? */
-	if (mp->mnt_flag & MNT_WANTRDWR)
-		return 0;
+	char fspec[MAXPATHLEN];
+	int error = 0;
 
 	tmp = mp->mnt_data;
 	rootvp = tmp->tm_root->tn_vnode;
@@ -107,13 +104,32 @@ tmpfs_mount_update(struct mount *mp)
 	error = vn_lock(rootvp, LK_EXCLUSIVE | LK_RETRY, curproc);
 	if (error)
 		return error;
-
+	
 	/* Lock mount point to prevent nodes from being added/removed. */
 	rw_enter_write(&tmp->tm_lock);
 
-	/* Flush files opened for writing; skip rootvp. */
-	error = vflush(mp, rootvp, WRITECLOSE);
+	if (mp->mnt_flag & MNT_SNAPSHOT) {
+		error = copyinstr(args->ta_fspec, fspec, sizeof(fspec), NULL);
+		if (error)
+			goto bail;
 
+		error = tmpfs_snap_dump(mp, fspec, p);
+		if (error)
+			goto bail;
+	}
+
+	/* ro->rw transition: nothing to do? */
+	if (mp->mnt_flag & MNT_WANTRDWR) {
+		error = 0;
+		goto bail;
+	}
+
+	if (mp->mnt_flag & MNT_RDONLY) {
+		/* Flush files opened for writing; skip rootvp. */
+		error = vflush(mp, rootvp, WRITECLOSE);
+	}
+
+bail:
 	rw_exit_write(&tmp->tm_lock);
 	VOP_UNLOCK(rootvp, 0);
 
@@ -121,60 +137,37 @@ tmpfs_mount_update(struct mount *mp)
 }
 
 int
-tmpfs_mount(struct mount *mp, const char *path, void *data,
-    struct nameidata *ndp, struct proc *p)
+tmpfs_mountfs(struct mount *mp, const char *path, struct vnode *vp,
+    struct tmpfs_args *args, char *fspec, struct proc *p)
 {
-	struct tmpfs_args args;
 	tmpfs_mount_t *tmp;
 	tmpfs_node_t *root;
 	uint64_t memlimit;
 	uint64_t nodes;
 	int error;
 
-#if 0
-	/* Handle retrieval of mount point arguments. */
-	if (mp->mnt_flag & MNT_GETARGS) {
-		if (mp->mnt_data == NULL)
-			return EIO;
-		tmp = VFS_TO_TMPFS(mp);
-
-		args->ta_version = TMPFS_ARGS_VERSION;
-		args->ta_nodes_max = tmp->tm_nodes_max;
-		args->ta_size_max = tmp->tm_mem_limit;
-
-		root = tmp->tm_root;
-		args->ta_root_uid = root->tn_uid;
-		args->ta_root_gid = root->tn_gid;
-		args->ta_root_mode = root->tn_mode;
-
-		*data_len = sizeof(*args);
-		return 0;
-	}
-#endif
-
 	if (mp->mnt_flag & MNT_UPDATE)
-		return (tmpfs_mount_update(mp));
+		return (tmpfs_mount_update(mp, args, p));
+
+	if (mp->mnt_flag & MNT_SNAPSHOT)
+		return EINVAL;
 
 	/* Prohibit mounts if there is not enough memory. */
 	if (tmpfs_mem_info(1) < TMPFS_PAGES_RESERVED)
 		return EINVAL;
 
-	error = copyin(data, &args, sizeof(struct tmpfs_args));
-	if (error)
-		return error;
-
 	/* Get the memory usage limit for this file-system. */
-	if (args.ta_size_max < PAGE_SIZE) {
+	if (args->ta_size_max < PAGE_SIZE) {
 		memlimit = UINT64_MAX;
 	} else {
-		memlimit = args.ta_size_max;
+		memlimit = args->ta_size_max;
 	}
 	KASSERT(memlimit > 0);
 
-	if (args.ta_nodes_max <= 3) {
+	if (args->ta_nodes_max <= 3) {
 		nodes = 3 + (memlimit / 1024);
 	} else {
-		nodes = args.ta_nodes_max;
+		nodes = args->ta_nodes_max;
 	}
 	nodes = MIN(nodes, INT_MAX);
 	KASSERT(nodes >= 3);
@@ -187,14 +180,15 @@ tmpfs_mount(struct mount *mp, const char *path, void *data,
 	tmp->tm_nodes_max = (ino_t)nodes;
 	tmp->tm_nodes_cnt = 0;
 	tmp->tm_highest_inode = 1;
+	strlcpy(tmp->tm_fspec, fspec, sizeof(tmp->tm_fspec));
 	LIST_INIT(&tmp->tm_nodes);
 
 	rw_init(&tmp->tm_lock, "tmplk");
 	tmpfs_mntmem_init(tmp, memlimit);
 
 	/* Allocate the root node. */
-	error = tmpfs_alloc_node(tmp, VDIR, args.ta_root_uid,
-	    args.ta_root_gid, args.ta_root_mode & ALLPERMS, NULL,
+	error = tmpfs_alloc_node(tmp, VDIR, args->ta_root_uid,
+	    args->ta_root_gid, args->ta_root_mode & ALLPERMS, NULL,
 	    VNOVAL, &root);
 	KASSERT(error == 0 && root != NULL);
 
@@ -210,14 +204,9 @@ tmpfs_mount(struct mount *mp, const char *path, void *data,
 	mp->mnt_data = tmp;
 	mp->mnt_flag |= MNT_LOCAL;
 	mp->mnt_stat.f_namemax = TMPFS_MAXNAMLEN;
-#if 0
-	mp->mnt_fs_bshift = PAGE_SHIFT;
-	mp->mnt_dev_bshift = DEV_BSHIFT;
-	mp->mnt_iflag |= IMNT_MPSAFE;
-#endif
 	vfs_getnewfsid(mp);
 
-	mp->mnt_stat.mount_info.tmpfs_args = args;
+	mp->mnt_stat.mount_info.tmpfs_args = *args;
 
 	bzero(&mp->mnt_stat.f_mntonname, sizeof(mp->mnt_stat.f_mntonname));
 	bzero(&mp->mnt_stat.f_mntfromname, sizeof(mp->mnt_stat.f_mntfromname));
@@ -225,12 +214,82 @@ tmpfs_mount(struct mount *mp, const char *path, void *data,
 
 	strlcpy(mp->mnt_stat.f_mntonname, path,
 	    sizeof(mp->mnt_stat.f_mntonname) - 1);
-	strlcpy(mp->mnt_stat.f_mntfromname, "tmpfs",
+	strlcpy(mp->mnt_stat.f_mntfromname, tmp->tm_fspec,
 	    sizeof(mp->mnt_stat.f_mntfromname) - 1);
-	strlcpy(mp->mnt_stat.f_mntfromspec, "tmpfs",
+	strlcpy(mp->mnt_stat.f_mntfromspec, tmp->tm_fspec,
 	    sizeof(mp->mnt_stat.f_mntfromspec) - 1);
 
-	return error;
+	if (strcmp("tmpfs", fspec))
+		error = tmpfs_snap_load(mp, fspec, p);
+	else if (vp != NULL)
+		error = tmpfs_snap_load_vnode(mp, vp, p);
+
+	if (error)
+		free(tmp, M_MISCFSMNT);
+
+	return (error);
+}
+
+int
+tmpfs_mountroot(void)
+{
+	struct mount *mp;
+	struct proc *p = curproc;       /* XXX */
+	struct tmpfs_args args;
+	int error;
+
+	/*
+	 * Get vnodes for swapdev and rootdev.
+	 */
+	swapdev_vp = NULL;
+	if ((error = bdevvp(swapdev, &swapdev_vp)) ||
+	    (error = bdevvp(rootdev, &rootvp))) {
+		printf("tmpfs_mountroot: can't setup bdevvp's\n");
+		if (swapdev_vp)
+			vrele(swapdev_vp);
+		return (error);
+	}
+
+	if ((error = vfs_rootmountalloc("tmpfs", "root_device", &mp)) != 0) {
+		vrele(swapdev_vp);
+		vrele(rootvp);
+		return (error);
+	}
+
+	bzero(&args, sizeof(args));
+	error = tmpfs_mountfs(mp, "/", rootvp, &args, "tmpfs", p);
+	if (error) {
+		mp->mnt_vfc->vfc_refcount--;
+		vfs_unbusy(mp);
+		free(mp, M_MOUNT);
+		vrele(swapdev_vp);
+		vrele(rootvp);
+		return (error);
+	}
+
+	TAILQ_INSERT_TAIL(&mountlist, mp, mnt_list);
+	vfs_unbusy(mp);
+
+	return (0);
+}
+
+int
+tmpfs_mount(struct mount *mp, const char *path, void *data,
+    struct nameidata *ndp, struct proc *p)
+{
+	struct tmpfs_args args;
+	char fspec[MAXPATHLEN];
+	int error;
+
+	error = copyin(data, &args, sizeof(struct tmpfs_args));
+	if (error)
+		return (error);
+
+	error = copyinstr(args.ta_fspec, fspec, sizeof(fspec), NULL);
+	if (error)
+		return error;
+
+	return (tmpfs_mountfs(mp, path, NULL, &args, fspec, p));
 }
 
 int

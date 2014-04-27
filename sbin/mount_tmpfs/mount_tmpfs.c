@@ -60,6 +60,7 @@ __RCSID("$NetBSD: mount_tmpfs.c,v 1.24 2008/08/05 20:57:45 pooka Exp $");
 static const struct mntopt mopts[] = {
 	MOPT_STDOPTS,
 	MOPT_UPDATE,
+	MOPT_SNAPSHOT,
 	{ NULL },
 };
 
@@ -146,7 +147,10 @@ mount_tmpfs_parseargs(int argc, char *argv[],
 	if (argc != 2)
 		usage();
 
-	strlcpy(canon_dev, argv[0], MAXPATHLEN);
+	if (!strcmp(argv[0], "tmpfs"))
+		strlcpy(canon_dev, argv[0], MAXPATHLEN);
+	else
+		pathadj(argv[0], canon_dev);
 	pathadj(argv[1], canon_dir);
 
 	if (stat(canon_dir, &sb) == -1)
@@ -155,6 +159,7 @@ mount_tmpfs_parseargs(int argc, char *argv[],
 	args->ta_root_uid = uidset ? uid : sb.st_uid;
 	args->ta_root_gid = gidset ? gid : sb.st_gid;
 	args->ta_root_mode = modeset ? mode : sb.st_mode;
+	args->ta_fspec = canon_dev;
 }
 
 /* --------------------------------------------------------------------- */
@@ -182,7 +187,7 @@ mount_tmpfs(int argc, char *argv[])
 	    canon_dev, canon_dir);
 
 	if (mount(MOUNT_TMPFS, canon_dir, mntflags, &args) == -1)
-		err(EXIT_FAILURE, "tmpfs on %s", canon_dir);
+		err(EXIT_FAILURE, "%s on %s", canon_dev, canon_dir);
 
 	return EXIT_SUCCESS;
 }

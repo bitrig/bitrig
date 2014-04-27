@@ -241,6 +241,9 @@ typedef struct tmpfs_mount {
 	/* List of inodes and the lock protecting it. */
 	struct rwlock		tm_lock;
 	struct tmpfs_node_list	tm_nodes;
+
+	/* Snapshot location or "tmpfs". */
+	char			tm_fspec[MAXPATHLEN];
 } tmpfs_mount_t;
 
 /*
@@ -322,6 +325,14 @@ void		tmpfs_node_put(tmpfs_mount_t *, tmpfs_node_t *);
 char *		tmpfs_strname_alloc(tmpfs_mount_t *, size_t);
 void		tmpfs_strname_free(tmpfs_mount_t *, char *, size_t);
 int		tmpfs_strname_neqlen(struct componentname *, struct componentname *);
+
+/*
+ * Prototypes for tmpfs_snapshot.c.
+ */
+
+int	tmpfs_snap_dump(struct mount *, const char *, struct proc *);
+int	tmpfs_snap_load(struct mount *, const char *, struct proc *);
+int	tmpfs_snap_load_vnode(struct mount *, struct vnode *, struct proc *);
 
 /*
  * Ensures that the node pointed by 'node' is a directory and that its

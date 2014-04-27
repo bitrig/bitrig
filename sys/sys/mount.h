@@ -105,6 +105,9 @@ struct tmpfs_args {
 	uid_t			ta_root_uid;
 	gid_t			ta_root_gid;
 	mode_t			ta_root_mode;
+
+	/* Snapshot location or "tmpfs". */
+	char			*ta_fspec;
 };
 
 /*

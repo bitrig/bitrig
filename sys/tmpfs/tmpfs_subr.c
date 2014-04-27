@@ -545,7 +545,8 @@ tmpfs_dir_detach(tmpfs_node_t *dnode, tmpfs_dirent_t *de)
 
 	/* Deassociate the inode and entry. */
 	de->td_node = NULL;
-	node->tn_dirent_hint = NULL;
+	if (node->tn_dirent_hint == de)
+		node->tn_dirent_hint = NULL;
 
 	KASSERT(node->tn_links > 0);
 	node->tn_links--;
