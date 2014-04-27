@@ -1870,7 +1870,8 @@ wapbl_inodetrk_init(struct wapbl *wl, u_int size)
 {
 
 	wl->wl_inohash = hashinit(size, M_TEMP, M_WAITOK, &wl->wl_inohashmask);
-	if (atomic_fetch_add(&wapbl_ino_pool_refcount, 1) == 0) {
+	if (atomic_fetch_add_explicit(&wapbl_ino_pool_refcount, 1,
+	    memory_order_seq_cst) == 0) {
 		pool_init(&wapbl_ino_pool, sizeof(struct wapbl_ino), 0, 0, 0,
 		    "wapblinopl", &pool_allocator_nointr);
 	}
@@ -1883,7 +1884,8 @@ wapbl_inodetrk_free(struct wapbl *wl)
 	/* XXX this KASSERT needs locking/mutex analysis */
 	KASSERT(wl->wl_inohashcnt == 0);
 	free(wl->wl_inohash, M_TEMP);
-	if (atomic_fetch_sub(&wapbl_ino_pool_refcount, 1) == 1) {
+	if (atomic_fetch_sub_explicit(&wapbl_ino_pool_refcount, 1,
+	    memory_order_seq_cst) == 1) {
 		pool_destroy(&wapbl_ino_pool);
 	}
 }

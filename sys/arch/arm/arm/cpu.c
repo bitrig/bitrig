@@ -375,13 +375,13 @@ cpu_alloc_arm_stack(struct cpu_info *ci)
 void
 atomic_setbits_int(volatile unsigned int *uip, unsigned int v)
 {
-	atomic_fetch_or((atomic_uint *)uip, v);
+	atomic_fetch_or_explicit((atomic_uint *)uip, v, memory_order_seq_cst);
 }
 
 void
 atomic_clearbits_int(volatile unsigned int *uip, unsigned int v)
 {
-	atomic_fetch_and((atomic_uint *)uip, ~v);
+	atomic_fetch_and_explicit((atomic_uint *)uip, ~v, memory_order_seq_cst);
 }
 
 /* End of cpu.c */
