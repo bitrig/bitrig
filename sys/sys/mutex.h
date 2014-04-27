@@ -52,10 +52,12 @@ struct mutex {
 	atomic_int mtx_cur;		/* Active ticket. */
 };
 
+__BEGIN_DECLS
 void mtx_init(struct mutex *, int);
 void mtx_enter(struct mutex *);
 void mtx_leave(struct mutex *);
 int mtx_enter_try(struct mutex *);
+__END_DECLS
 
 /*
  * To prevent lock ordering problems with the kernel lock, we need to
