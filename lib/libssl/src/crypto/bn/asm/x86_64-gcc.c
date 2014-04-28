@@ -65,6 +65,10 @@
 #undef mul_add
 #undef sqr
 
+#undef mul
+#undef mul_add
+#undef sqr
+
 /*
  * "m"(a), "+m"(r)	is the way to favor DirectPath µ-code;
  * "g"(0)		let the compiler to decide where does it
