@@ -190,7 +190,6 @@
 ./etc/ypldap.conf
 ./root/.Xdefaults
 ./root/.cshrc
-./root/.klogin
 ./root/.login
 ./root/.profile
 ./var/crash/minfree
