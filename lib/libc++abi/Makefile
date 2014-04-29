@@ -29,6 +29,7 @@ SRCS+=		abort_message.cpp\
 		UnwindLevel1.c\
 		UnwindRegistersRestore.S\
 		UnwindRegistersSave.S\
+		Unwind_BitrigExtras.cpp\
 		libunwind.cpp
 
 WARNS=		0
