@@ -69,9 +69,9 @@ static int reloc_target_flags[] = {
 	_RF_S|_RF_A|		_RF_E,			/* 14 T_SWI8 */
 	_RF_E,						/* 15 OBSL */
 	_RF_E,						/* 16 OBSL */
-	_RF_E,						/* 17 UNUSED */
-	_RF_E,						/* 18 UNUSED */
-	_RF_E,						/* 19 UNUSED */
+	_RF_S,						/* 17 TLS_DTPMOD32 */
+	_RF_S,						/* 18 TLS_DTPOFF32 */
+	_RF_S,						/* 19 TLS_TPOFF32 */
 	_RF_S|			_RF_SZ(32) | _RF_RS(0),	/* 20 COPY */
 	_RF_S|_RF_A|		_RF_SZ(32) | _RF_RS(0),	/* 21 GLOB_DAT */
 	_RF_S|			_RF_SZ(32) | _RF_RS(0),	/* 22 JUMP_SLOT */
@@ -123,9 +123,9 @@ static int reloc_target_bitmask[] = {
 	_BM(0),		/* 14 T_SWI8 */
 	_BM(0),		/* 15 OBSL */
 	_BM(0),		/* 16 OBSL */
-	_BM(0),		/* 17 UNUSED */
-	_BM(0),		/* 18 UNUSED */
-	_BM(0),		/* 19 UNUSED */
+	_BM(0),		/* 17 TLS_DTPMOD32 */
+	_BM(32),	/* 18 TLS_DTPOFF32 */
+	_BM(0),		/* 19 TLS_TPOFF32 */
 	_BM(32),	/* 20 COPY */
 	_BM(32),	/* 21 GLOB_DAT */
 	_BM(32),	/* 22 JUMP_SLOT */
@@ -214,6 +214,7 @@ _dl_md_reloc(elf_object_t *object, int rel, int relsz)
 		Elf_Word type;
 		const Elf_Sym *sym, *this;
 		const char *symn;
+		const elf_object_t *refobj;
 
 		type = ELF_R_TYPE(rels->r_info);
 
@@ -248,8 +249,10 @@ _dl_md_reloc(elf_object_t *object, int rel, int relsz)
 			if (sym->st_shndx != SHN_UNDEF &&
 			    ELF_ST_BIND(sym->st_info) == STB_LOCAL) {
 				value += loff;
+				refobj = object;
 			} else if (sym == prev_sym) {
 				value += prev_value;
+				refobj = object;
 			} else {
 				this = NULL;
 				ooff = _dl_find_symbol_bysym(object,
@@ -257,7 +260,7 @@ _dl_md_reloc(elf_object_t *object, int rel, int relsz)
 				    SYM_SEARCH_ALL|SYM_WARNNOTFOUND|
 				    ((type == R_TYPE(JUMP_SLOT)) ?
 					SYM_PLT : SYM_NOTPLT),
-				    sym, NULL);
+				    sym, &refobj);
 				if (this == NULL) {
 resolve_failed:
 					if (ELF_ST_BIND(sym->st_info) !=
@@ -293,6 +296,32 @@ resolve_failed:
 
 			srcaddr = (void *)(soff + srcsym->st_value);
 			_dl_bcopy(srcaddr, dstaddr, dstsym->st_size);
+			continue;
+		}
+		if (type == R_TYPE(TLS_DTPMOD32)) {
+			if (value == 0)
+				goto resolve_failed;
+			*where = (Elf_Addr) refobj->tls_index;
+			continue;
+		}
+		if (type == R_TYPE(TLS_DTPOFF32)) {
+			if (value == 0)
+				goto resolve_failed;
+			*where = (Elf_Addr) this->st_value;
+
+			continue;
+		}
+		if (type == R_TYPE(TLS_TPOFF32)) {
+			if (value == 0)
+				goto resolve_failed;
+			if (refobj->tls_done == 0) {
+				_dl_printf("shared object not intialized %s\n",
+				  refobj->load_name);
+				_dl_exit(21);
+			}
+			*where = (Elf_Addr) this->st_value +
+			    (Elf_Addr) refobj->tls_offset +
+			    sizeof(struct thread_control_block);
 			continue;
 		}
 
@@ -478,6 +507,10 @@ _dl_allocate_first_tls()
 
 void *__tls_get_addr(tls_index *ti)
 {
+	struct thread_control_block *tcb;
 	// XXX - fetch from register 
-	return _dl___get_tcb();
+	tcb =  _dl___get_tcb();
+	Elf_Addr *dtv;
+	dtv = tcb->tcb_dtv;
+	return (void *)(dtv[1+ti->ti_module] + ti->ti_offset);
 }

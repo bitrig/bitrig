@@ -62,11 +62,11 @@ _dl_allocate_tls_offset(elf_object_t *object)
 		return;
 	}
 
-#ifdef TLS_TYPE_I
+#if TLS_VARIANT == 1
 	/* round up to the required alignment, then allocate the space */
 	object->tls_offset = ELF_ROUND(_dl_tls_free_idx, object->tls_align);
 	_dl_tls_free_idx += object->tls_msize;
-#else
+#elif TLS_VARIANT == 2
 	/*
 	 * allocate the space, then round up to the alignment
 	 * (these are negative offsets, so rounding up really rounds the
@@ -75,6 +75,8 @@ _dl_allocate_tls_offset(elf_object_t *object)
 	_dl_tls_free_idx = ELF_ROUND(_dl_tls_free_idx + object->tls_msize,
 	    object->tls_align);
 	object->tls_offset = _dl_tls_free_idx;
+#else
+	#error Invalid TLS_VARIANT
 #endif
 	DL_DEB(("allocating object %s to offset %d msize %d\n",
 	    object->load_name, object->tls_offset, object->tls_msize));
@@ -84,24 +86,33 @@ _dl_allocate_tls_offset(elf_object_t *object)
 
 /*
  * allocate TLS for some archs (Variant II)
- * i386, amd64, sparc?, sparc64, arm, mips, more?
+ * i386, amd64, sparc?, sparc64, mips, more?
  */
 void *
 _dl_allocate_tls(char *oldtls, elf_object_t *objhead, size_t tcbsize,
     size_t tcbalign)
 {
 	size_t size;
-	char *tls;
+	char *allocp, *p;
 	Elf_Addr *dtv;
-	Elf_Addr segbase;
+	Elf_Addr segbase; /* same value as tcb but no pointer math */
+	struct thread_control_block *tcb;
 
 	size = ELF_ROUND(_dl_tls_static_space, tcbalign);
-	tls = _dl_malloc(size + tcbsize);
+	p = _dl_malloc(size + tcbsize);
 	dtv = _dl_malloc((_dl_tls_max_index+2) * sizeof(Elf_Addr));
 
-	segbase = (Elf_Addr)(tls + size);
-	((Elf_Addr*)segbase)[0] = segbase;
-	((Elf_Addr*)segbase)[1] = (Elf_Addr) dtv;
+#if TLS_VARIANT == 1
+	tcb = (struct thread_control_block *)p;
+	segbase = (Elf_Addr)p;
+	p += sizeof(struct thread_control_block);
+#elif TLS_VARIANT == 2
+	tcb = (struct thread_control_block *)(p+size);
+	segbase = (Elf_Addr)tcb;
+	tcb->__tcb_self = tcb;
+#endif
+	allocp = p;
+	tcb->tcb_dtv = dtv;
 
 	dtv[0] = _dl_tls_dtv_generation;
 	dtv[1] = _dl_tls_max_index;
@@ -119,13 +130,22 @@ _dl_allocate_tls(char *oldtls, elf_object_t *objhead, size_t tcbsize,
 		 */
 		oldsegbase = (Elf_Addr) oldtls;
 
-		DL_DEB(("allocate_tls copying %p to %p \n",
+#if TLS_VARIANT == 1
+		DL_DEB(("allocate_tls copying %p to %p\n",
+			(void *)(oldsegbase), (void *)(p)));
+
+		_dl_bcopy((void *)(oldsegbase +
+		    sizeof(struct thread_control_block)), (void *)(p),
+		    _dl_tls_static_space);
+#elif TLS_VARIANT == 2
+		DL_DEB(("allocate_tls copying %p to %p\n",
 			(void *)(oldsegbase - _dl_tls_static_space),
 			    (void *)(segbase - _dl_tls_static_space)));
 
 		_dl_bcopy((void *)(oldsegbase - _dl_tls_static_space),
 		    (void *)(segbase - _dl_tls_static_space),
 		    _dl_tls_static_space);
+#endif
 
 		/*
 		 * If any dynamic TLS blocks have been created by
@@ -137,8 +157,16 @@ _dl_allocate_tls(char *oldtls, elf_object_t *objhead, size_t tcbsize,
 		DL_DEB(("\tscanning %u entries from %p\n", olddtvsize, olddtv));
 		for (i = 0; i < olddtvsize; i++) {
 			DL_DEB(("\t%p", olddtv[i+2]));
-			if (olddtv[i+2] < oldsegbase - size ||
-			    olddtv[i+2] >= oldsegbase) {
+			Elf_Addr seg_start, seg_end;
+#if TLS_VARIANT == 1
+			seg_start = oldsegbase;
+			seg_end = oldsegbase + size;
+#elif TLS_VARIANT == 2
+			seg_start = oldsegbase - size;
+			seg_end = oldsegbase;
+#endif
+			if (olddtv[i+2] < seg_start ||
+			    olddtv[i+2] >= seg_end) {
 				dtv[i+2] = olddtv[i+2];
 				olddtv[i+2] = 0;
 			} else {
@@ -157,8 +185,12 @@ _dl_allocate_tls(char *oldtls, elf_object_t *objhead, size_t tcbsize,
 		elf_object_t *obj;
 
 		for (obj = objhead; obj; obj = obj->next) {
-			if (obj->tls_offset) {
+			if (obj->tls_msize) {
+#if TLS_VARIANT == 1
+				Elf_Addr addr = (Elf_Addr)(p + obj->tls_offset);
+#elif TLS_VARIANT == 2
 				Elf_Addr addr = segbase - obj->tls_offset;
+#endif
 
 				_dl_memset((void *)(addr + obj->tls_fsize), 0,
 				    obj->tls_msize - obj->tls_fsize);

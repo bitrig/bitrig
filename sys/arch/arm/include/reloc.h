@@ -20,6 +20,10 @@
 #define R_ARM_THM_XPC22		16
 
 /* 17-31 are reserved for ARM Linux. */
+#define R_ARM_TLS_DTPMOD32	17
+#define R_ARM_TLS_DTPOFF32	18
+#define R_ARM_TLS_TPOFF32	19
+
 #define R_ARM_COPY		20
 #define R_ARM_GLOB_DAT		21
 #define	R_ARM_JUMP_SLOT		22
