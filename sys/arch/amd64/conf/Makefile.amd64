@@ -50,7 +50,7 @@ COPTS?=		-O2
 
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CWARNFLAGS} ${CMACHFLAGS}
-LINKFLAGS=	-Ttext 0xffffffff810001e0 -e start --warn-common -nopie
+LINKFLAGS=	-T ldscript -e start --warn-common -nopie
 
 .else
 
@@ -74,7 +74,7 @@ COPTS?=		-O3
 
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${AFLAGS_$*} ${CMACHFLAGS}
-LINKFLAGS=	-Ttext 0xffffffff81000300 -e start --warn-common -z noexecstack -nopie
+LINKFLAGS=	-T ldscript -e start --warn-common -z noexecstack -nopie
 
 .if ${COMPILER_VERSION:L} == "clang"
 AFLAGS_acpi_wakecode	= -no-integrated-as
@@ -114,6 +114,8 @@ SYSTEM_HEAD=	locore.o param.o ioconf.o
 SYSTEM_OBJ=	${SYSTEM_HEAD} ${OBJS}
 SYSTEM_DEP=	Makefile ${SYSTEM_OBJ}
 SYSTEM_LD_HEAD=	@rm -f $@
+SYSTEM_LD_HEAD+=; \
+		cat ${_archdir}/conf/kern.ldscript > ldscript
 SYSTEM_LD=	@echo ${LD} ${LINKFLAGS} -o $@ '$${SYSTEM_HEAD} vers.o $${OBJS}'; \
 		${LD} ${LINKFLAGS} -o $@ ${SYSTEM_HEAD} vers.o ${OBJS}
 SYSTEM_LD_TAIL=	@${SIZE} $@; chmod 755 $@
