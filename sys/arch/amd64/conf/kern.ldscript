@@ -26,7 +26,7 @@ PHDRS
 	rodata PT_LOAD;
 	data PT_LOAD;
 	bss PT_LOAD;
-	openbsd_randomize 0x65a3dbe6; /* PT_OPENBSD_RANDOMIZE */
+	openbsd_randomize PT_OPENBSD_RANDOMIZE;
 }
 
 /*
