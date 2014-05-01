@@ -30,7 +30,7 @@
 .\"
 .\"     @(#)mount.8	8.7 (Berkeley) 3/27/94
 .\"
-.Dd $Mdocdate: September 23 2013 $
+.Dd $Mdocdate: May 7 2014 $
 .Dt MOUNT 8
 .Os
 .Sh NAME
@@ -244,6 +244,15 @@ The options
 and
 .Ic softdep
 are mutually exclusive.
+.It snapshot
+(tmpfs only.)
+Create a snapshot of the file system pointed to by
+.Ar node
+at the location specified by
+.Ar special .
+Ignored when the
+.Fl u
+flag is not specified.
 .It sync
 Regular data I/O to the file system should be done synchronously.
 By default, only metadata is read/written synchronously.

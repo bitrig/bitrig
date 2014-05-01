@@ -377,6 +377,7 @@ struct mount {
 #define MNT_SOFTDEP     0x04000000      /* soft dependencies being done */
 #define MNT_DOOMED	0x08000000	/* device behind filesystem is gone */
 #define MNT_LOG		0x10000000	/* use logging */
+#define MNT_SNAPSHOT	0x20000000	/* create snapshot */
 
 /*
  * Flags for various system call interfaces.

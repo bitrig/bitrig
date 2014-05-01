@@ -66,6 +66,7 @@ union mntval {
 					    | MFLAG_OPT }
 #define MOPT_SOFTDEP	{ "softdep",	MNT_SOFTDEP, MFLAG_SET }
 #define MOPT_LOG	{ "log",	MNT_LOG, MFLAG_SET }
+#define MOPT_SNAPSHOT	{ "snapshot",	MNT_SNAPSHOT, MFLAG_SET }
 
 /* Control flags. */
 #define MOPT_FORCE	{ "force",	MNT_FORCE, MFLAG_SET }

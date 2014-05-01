@@ -253,10 +253,10 @@ update:
 		mp->mnt_flag |= MNT_WANTRDWR;
 	mp->mnt_flag &=~ (MNT_NOSUID | MNT_NOEXEC | MNT_NODEV |
 	    MNT_SYNCHRONOUS | MNT_ASYNC | MNT_SOFTDEP | MNT_NOATIME |
-	    MNT_FORCE | MNT_LOG);
+	    MNT_FORCE | MNT_LOG | MNT_SNAPSHOT);
 	mp->mnt_flag |= flags & (MNT_NOSUID | MNT_NOEXEC |
 	    MNT_NODEV | MNT_SYNCHRONOUS | MNT_ASYNC | MNT_SOFTDEP |
-	    MNT_NOATIME | MNT_FORCE | MNT_LOG);
+	    MNT_NOATIME | MNT_FORCE | MNT_LOG | MNT_SNAPSHOT);
 	/*
 	 * Mount the filesystem.
 	 */
@@ -268,8 +268,8 @@ update:
 		vput(vp);
 		if (mp->mnt_flag & MNT_WANTRDWR)
 			mp->mnt_flag &= ~MNT_RDONLY;
-		mp->mnt_flag &=~
-		    (MNT_UPDATE | MNT_RELOAD | MNT_FORCE | MNT_WANTRDWR);
+		mp->mnt_flag &=~ (MNT_UPDATE | MNT_RELOAD | MNT_FORCE |
+		    MNT_WANTRDWR | MNT_SNAPSHOT);
 		if (error)
 			mp->mnt_flag = mntflag;
 

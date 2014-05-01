@@ -30,7 +30,7 @@
 .\"
 .\"     @(#)mount.2	8.2 (Berkeley) 12/11/93
 .\"
-.Dd $Mdocdate: January 21 2014 $
+.Dd $Mdocdate: May 7 2014 $
 .Dt MOUNT 2
 .Os
 .Sh NAME
@@ -95,6 +95,8 @@ All I/O to the filesystem should be done asynchronously.
 Use soft dependencies.
 Applies to FFS filesystems only (see 'softdep' in
 .Xr mount 8 ) .
+.It Dv MNT_SNAPSHOT
+Create filesystem snapshot.
 .El
 .Pp
 The flag
