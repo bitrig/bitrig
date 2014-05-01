@@ -1,4 +1,29 @@
-Mon Apr 21 2014 
+Thu May 01 2014
+
+The current C++ standard library, GNU libstdc++, has been replaced
+by a combination of libc++ and libc++abi.  This requires some special
+build steps (or update from a snap)
+
+It is very important to be running a recent system, as this change is
+based on the xlocale support.  If you don't use a snap, you should build
+and install all packages after the following steps, as the upgrade process
+will delete them
+
+Then follow these steps (as root):
+
+
+(cd /usr/src && make buildworld)
+(cd /usr/ports/bitrig/bitrig-llvm && make install)
+(cd /usr/ports/bitrig/bitrig-gcc && make install)
+(cd /usr/src && make buildworld)
+(cd /usr/xenocara && make buildworld)
+pkg_delete -IX bitrig-syscomp
+rm -rf /usr/ports/packages/*
+(cd /usr/ports/meta/bitrig-syscomp && CLEANDEPENDS=yes make clean && \
+  FORCE_UPDATE=hard make package)
+
+
+Mon Apr 21 2014
 
 xlocale support has been merged from FreeBSD, this requires some special
 build steps (or update from a snap)
@@ -12,7 +37,7 @@ Then follow these build steps (as root):
 
 (cd /usr/src/share/mk && make install)
 (cd /usr/src && make obj)
-(cd /usr/src && make includes )
+(cd /usr/src && make includes)
 (cd /usr/src/libexec/ld.so && SKIPDIR="ldd ldconfig" make depend && \
     SKIPDIR="ldd ldconfig" make &&\
     SKIPDIR="ldd ldconfig" NOMAN=1 make install)
