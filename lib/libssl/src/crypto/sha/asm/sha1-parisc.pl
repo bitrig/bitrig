@@ -146,8 +146,12 @@ ___
 
 $code=<<___;
 	.LEVEL	$LEVEL
+#if 0
 	.SPACE	\$TEXT\$
 	.SUBSPA	\$CODE\$,QUAD=0,ALIGN=8,ACCESS=0x2C,CODE_ONLY
+#else
+	.text
+#endif
 
 	.EXPORT	sha1_block_data_order,ENTRY,ARGW0=GR,ARGW1=GR,ARGW2=GR
 sha1_block_data_order
@@ -250,10 +254,13 @@ $code.=<<___;
 	.EXIT
 	$POPMB	-$FRAME(%sp),%r3
 	.PROCEND
+
+	.data
 	.STRINGZ "SHA1 block transform for PA-RISC, CRYPTOGAMS by <appro\@openssl.org>"
 ___
 
 $code =~ s/\`([^\`]*)\`/eval $1/gem;
-$code =~ s/,\*/,/gm if ($SIZE_T==4);
+$code =~ s/,\*/,/gm		if ($SIZE_T==4);
+$code =~ s/\bbv\b/bve/gm	if ($SIZE_T==8);
 print $code;
 close STDOUT;
