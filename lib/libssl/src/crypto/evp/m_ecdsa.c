@@ -148,4 +148,3 @@ const EVP_MD *EVP_ecdsa(void)
 	return(&ecdsa_md);
 	}
 #endif
-#endif
