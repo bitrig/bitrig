@@ -1900,7 +1900,7 @@ mpfree(char **mp)
 	if (mp == NULL)
 		return;
 	
-	for (part == 0; part < MAXPARTITIONS; part++)
+	for (part = 0; part < MAXPARTITIONS; part++)
 		free(mp[part]);
 	
 	free(mp);
