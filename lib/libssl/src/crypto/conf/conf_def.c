@@ -334,6 +334,7 @@ again:
 			}
 			continue;
 		} else {
+			size_t namelen;
 			pname = s;
 			psection = NULL;
 			end = eat_alpha_numeric(conf, s);
@@ -368,14 +369,15 @@ again:
 			}
 			if (psection == NULL)
 				psection = section;
-			v->name = (char *)malloc(strlen(pname) + 1);
+			namelen = strlen(pname) + 1;
+			v->name = (char *)malloc(namelen);
 			v->value = NULL;
 			if (v->name == NULL) {
 				CONFerr(CONF_F_DEF_LOAD_BIO,
 				    ERR_R_MALLOC_FAILURE);
 				goto err;
 			}
-			strlcpy(v->name, pname, strlen(pname) + 1);
+			strlcpy(v->name, pname, namelen);
 			if (!str_copy(conf, psection, &(v->value), start))
 				goto err;
 
