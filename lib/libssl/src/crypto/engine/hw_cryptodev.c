@@ -457,7 +457,7 @@ cryptodev_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
 	if ((state->d_fd = get_dev_crypto()) < 0)
 		return (0);
 
-	sess->key = (unsigned char *)key;
+	sess->key = (caddr_t)key;
 	sess->keylen = ctx->key_len;
 	sess->cipher = cipher->c_id;
 
@@ -877,7 +877,7 @@ bn2crparam(const BIGNUM *a, struct crparam *crp)
 	if (b == NULL)
 		return (1);
 
-	crp->crp_p = b;
+	crp->crp_p = (caddr_t)b;
 	crp->crp_nbits = bits;
 
 	for (i = 0, j = 0; i < a->top; i++) {
@@ -1207,7 +1207,7 @@ cryptodev_dh_compute_key(unsigned char *key, const BIGNUM *pub_key, DH *dh)
 		goto err;
 	kop.crk_iparams = 3;
 
-	kop.crk_param[3].crp_p = key;
+	kop.crk_param[3].crp_p = (caddr_t)key;
 	kop.crk_param[3].crp_nbits = keylen * 8;
 	kop.crk_oparams = 1;
 

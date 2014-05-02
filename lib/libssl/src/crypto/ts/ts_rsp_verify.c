@@ -564,7 +564,7 @@ TS_get_status_text(STACK_OF(ASN1_UTF8STRING) *text)
 		ASN1_UTF8STRING *current = sk_ASN1_UTF8STRING_value(text, i);
 		if (i > 0)
 			strlcat(result, "/", length);
-		strlcat(result, ASN1_STRING_data(current), length);
+		strlcat(result,(const char *)ASN1_STRING_data(current), length);
 	}
 	return result;
 }
