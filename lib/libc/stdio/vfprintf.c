@@ -1,5 +1,4 @@
-/*	$OpenBSD: vfprintf.c,v 1.65 2014/03/19 05:17:01 guenther Exp $	*/
-
+/*	$OpenBSD: vfprintf.c,v 1.66 2014/05/03 12:36:45 deraadt Exp $	*/
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -809,6 +808,7 @@ fp_common:
 			}
 			break;
 #endif /* FLOATING_POINT */
+#ifndef NO_PRINTF_PERCENT_N
 		case 'n':
 			/*
 			 * Assignment-like behavior is specified if the
@@ -832,6 +832,7 @@ fp_common:
 			else
 				*GETARG(int *) = ret;
 			continue;	/* no output */
+#endif /* NO_PRINTF_PERCENT_N */
 		case 'O':
 			flags |= LONGINT;
 			/*FALLTHROUGH*/
