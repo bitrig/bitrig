@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_glue.c,v 1.62 2014/04/13 23:14:15 tedu Exp $	*/
+/*	$OpenBSD: uvm_glue.c,v 1.63 2014/05/03 22:44:36 guenther Exp $	*/
 /*	$NetBSD: uvm_glue.c,v 1.44 2001/02/06 19:54:44 eeh Exp $	*/
 
 /* 
@@ -267,12 +267,34 @@ uvm_vsunlock_device(struct proc *p, void *addr, size_t len, void *map)
 	km_free((void *)trunc_page((vaddr_t)map), sz, &kv_any, &kp_dma);
 }
 
+const struct kmem_va_mode kv_fork = {
+	.kv_map = &kernel_map,
+	.kv_align = USPACE_ALIGN
+};
+
+/*
+ * uvm_uarea_alloc: allocate the u-area for a new thread
+ */
+struct user *
+uvm_uarea_alloc(void)
+{
+	vaddr_t uaddr;
+
+	uaddr = (vaddr_t)km_alloc(USPACE, &kv_fork, &kp_zero, &kd_waitok);
+ 
+#ifdef PMAP_UAREA
+	/* Tell the pmap this is a u-area mapping */
+	if (uaddr != 0)
+		PMAP_UAREA(uaddr);
+#endif
+
+       return ((struct user *)uaddr);
+}
+
 /*
  * uvm_fork: fork a virtual address space
  *
  * - the address space is copied as per parent map's inherit values
- * - a new "user" structure is allocated for the child process
- *	[filled in by MD layer...]
  * - if specified, the child gets a new user stack described by
  *	stack and stacksize
  * - NOTE: the kernel stack may be at a different location in the child
@@ -291,11 +313,6 @@ uvm_fork(struct proc *p1, struct proc *p2, boolean_t shared, void *stack,
 		uvmspace_share(p1, p2);			/* share vmspace */
 	} else
 		p2->p_vmspace = uvmspace_fork(p1->p_vmspace); /* fork vmspace */
-
-#ifdef PMAP_UAREA
-	/* Tell the pmap this is a u-area mapping */
-	PMAP_UAREA((vaddr_t)p2->p_addr);
-#endif
 
 	/*
 	 * cpu_fork() copy and update the pcb, and make the child ready
@@ -318,7 +335,6 @@ uvm_fork(struct proc *p1, struct proc *p2, boolean_t shared, void *stack,
 void
 uvm_exit(struct proc *p)
 {
-	extern struct kmem_va_mode kv_fork;
 
 	uvmspace_free(p->p_vmspace);
 	p->p_vmspace = NULL;

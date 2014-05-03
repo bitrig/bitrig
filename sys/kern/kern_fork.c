@@ -1,4 +1,4 @@
-/*	$OpenBSD: kern_fork.c,v 1.163 2014/04/18 11:51:17 guenther Exp $	*/
+/*	$OpenBSD: kern_fork.c,v 1.164 2014/05/03 22:44:36 guenther Exp $	*/
 /*	$NetBSD: kern_fork.c,v 1.29 1996/02/09 18:59:34 christos Exp $	*/
 
 /*
@@ -216,11 +216,6 @@ process_new(struct proc *p, struct process *parent, int flags)
 /* print the 'table full' message once per 10 seconds */
 struct timeval fork_tfmrate = { 10, 0 };
 
-struct kmem_va_mode kv_fork = {
-	.kv_map = &kernel_map,
-	.kv_align = USPACE_ALIGN
-};
-
 int
 fork1(struct proc *curp, int flags, void *stack, pid_t *tidptr,
     void (*func)(void *), void *arg, register_t *retval,
@@ -292,8 +287,8 @@ fork1(struct proc *curp, int flags, void *stack, pid_t *tidptr,
 		}
 	}
 
-	uaddr = km_alloc(USPACE, &kv_fork, &kp_zero, &kd_waitok);
-	if (uaddr == 0) {
+	uaddr = uvm_uarea_alloc();
+	if (uaddr == NULL) {
 		if ((flags & FORK_THREAD) == 0) {
 			(void)chgproccnt(uid, -1);
 			nprocesses--;
