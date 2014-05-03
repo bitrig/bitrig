@@ -131,7 +131,11 @@ typedef	char *			__va_list;
 
 /* Wide character support types */
 #ifndef __cplusplus
+#ifdef __WCHAR_UNSIGNED__
+typedef	unsigned int		__wchar_t;
+#else
 typedef	int			__wchar_t;
+#endif
 #else
 typedef wchar_t			__wchar_t;
 #endif
