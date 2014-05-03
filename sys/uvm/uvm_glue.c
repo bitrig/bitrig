@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_glue.c,v 1.63 2014/05/03 22:44:36 guenther Exp $	*/
+/*	$OpenBSD: uvm_glue.c,v 1.64 2014/05/03 22:49:43 guenther Exp $	*/
 /*	$NetBSD: uvm_glue.c,v 1.44 2001/02/06 19:54:44 eeh Exp $	*/
 
 /* 
@@ -281,14 +281,14 @@ uvm_uarea_alloc(void)
 	vaddr_t uaddr;
 
 	uaddr = (vaddr_t)km_alloc(USPACE, &kv_fork, &kp_zero, &kd_waitok);
- 
+
 #ifdef PMAP_UAREA
 	/* Tell the pmap this is a u-area mapping */
 	if (uaddr != 0)
 		PMAP_UAREA(uaddr);
 #endif
 
-       return ((struct user *)uaddr);
+	return ((struct user *)uaddr);
 }
 
 /*
