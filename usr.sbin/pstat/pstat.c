@@ -611,7 +611,8 @@ tmpfs_print(struct vnode *vp)
 		*flags++ = '-';
 	*flags = '\0';
 
-	(void)printf(" %6d %5s %2lld", tn.tn_id, flagbuf, tn.tn_size);
+	(void)printf(" %6llu %5s %2lld", (unsigned long long)tn.tn_id, flagbuf,
+	    tn.tn_size);
 	return (0);
 }
 
