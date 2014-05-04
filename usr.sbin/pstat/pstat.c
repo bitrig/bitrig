@@ -811,6 +811,16 @@ mount_print(struct mount *mp)
 			flags &= ~MNT_SOFTDEP;
 			comma = ",";
 		}
+		if (flags & MNT_LOG) {
+			(void)printf("%slog", comma);
+			flags &= ~MNT_LOG;
+			comma = ",";
+		}
+		if (!strncmp(mp->mnt_stat.f_fstypename, MOUNT_FFS, MFSNAMELEN)
+		    && (mp->mnt_stat.mount_info.ufs_args.flags & UFSMNT_FFS2)) {
+			(void)printf("%sffs2", comma);
+			comma = ",";
+		}
 		if (flags)
 			(void)printf("%sunknown_flags:%x", comma, flags);
 		(void)printf(")");
