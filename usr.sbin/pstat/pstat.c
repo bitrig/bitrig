@@ -120,7 +120,7 @@ void	ttymode(void);
 void	ttyprt(struct itty *);
 void	tty2itty(struct tty *tp, struct itty *itp);
 void	ufs_header(void);
-int	ufs_print(struct vnode *);
+int	ufs_print(struct mount *, struct vnode *);
 void	ext2fs_header(void);
 int	ext2fs_print(struct vnode *);
 void	tmpfs_header(void);
@@ -382,7 +382,7 @@ vnodemode(void)
 
 		if (!strncmp(mp->mnt_stat.f_fstypename, MOUNT_FFS, MFSNAMELEN) ||
 		    !strncmp(mp->mnt_stat.f_fstypename, MOUNT_MFS, MFSNAMELEN)) {
-			ufs_print(vp);
+			ufs_print(mp, vp);
 		} else if (!strncmp(mp->mnt_stat.f_fstypename, MOUNT_NFS, MFSNAMELEN)) {
 			nfs_print(vp);
 		} else if (!strncmp(mp->mnt_stat.f_fstypename, MOUNT_EXT2FS,
@@ -472,24 +472,42 @@ vnode_print(struct vnode *avnode, struct vnode *vp)
 void
 ufs_header(void)
 {
-	(void)printf(" FILEID IFLAG RDEV|SZ");
+	(void)printf("   FILEID IFLAG RDEV|SZ");
 }
 
 int
-ufs_print(struct vnode *vp)
+ufs_print(struct mount *mp, struct vnode *vp)
 {
 	int flag;
 	struct inode inode, *ip = &inode;
 	struct ufs1_dinode di1;
+	struct ufs2_dinode di2;
 	char flagbuf[16], *flags = flagbuf;
 	char *name;
 	mode_t type;
+	u_int16_t mode;
+	u_int64_t size;
+	int32_t rdev;
+	int ffs2;
 
 	KGETRET(VTOI(vp), &inode, sizeof(struct inode), "vnode's inode");
-	KGETRET(inode.i_din1, &di1, sizeof(struct ufs1_dinode),
-	    "vnode's dinode");
 
-	inode.i_din1 = &di1;
+	ffs2 = !strncmp(mp->mnt_stat.f_fstypename, MOUNT_FFS, MFSNAMELEN) &&
+	    (mp->mnt_stat.mount_info.ufs_args.flags & UFSMNT_FFS2);
+	if (ffs2) {
+		KGETRET(inode.i_din2, &di2, sizeof(struct ufs2_dinode),
+		    "vnode's dinode2");
+		inode.i_din2 = &di2;
+		mode = ip->i_ffs2_mode & S_IFMT;
+		size = ip->i_ffs2_size;
+	} else {
+		KGETRET(inode.i_din1, &di1, sizeof(struct ufs1_dinode),
+		    "vnode's dinode1");
+		inode.i_din1 = &di1;
+		mode = ip->i_ffs1_mode & S_IFMT;
+		size = ip->i_ffs1_size;
+	}
+
 	flag = ip->i_flag;
 #if 0
 	if (flag & IN_LOCKED)
@@ -519,17 +537,22 @@ ufs_print(struct vnode *vp)
 		*flags++ = '-';
 	*flags = '\0';
 
-	(void)printf(" %6d %5s", ip->i_number, flagbuf);
-	type = ip->i_ffs1_mode & S_IFMT;
-	if (S_ISCHR(ip->i_ffs1_mode) || S_ISBLK(ip->i_ffs1_mode))
-		if (usenumflag ||
-		    ((name = devname(ip->i_ffs1_rdev, type)) == NULL))
-			(void)printf("   %2d,%-2d",
-			    major(ip->i_ffs1_rdev), minor(ip->i_ffs1_rdev));
+	(void)printf(" %8d %5s", ip->i_number, flagbuf);
+	type = mode & S_IFMT;
+	if (S_ISCHR(mode) || S_ISBLK(mode)) {
+		if (ffs2) {
+			/* should never happen */
+			if (ip->i_ffs2_rdev > INT32_MAX)
+				warnx("%s: truncating rdev", __func__);
+			rdev = ip->i_ffs2_rdev;
+		} else
+			rdev = ip->i_ffs1_rdev;
+		if (usenumflag || ((name = devname(rdev, type)) == NULL))
+			(void)printf("   %2d,%-2d", major(rdev), minor(rdev));
 		else
 			(void)printf(" %7s", name);
-	else
-		(void)printf(" %7qd", ip->i_ffs1_size);
+	} else
+		(void)printf(" %7qd", size);
 	return (0);
 }
 
