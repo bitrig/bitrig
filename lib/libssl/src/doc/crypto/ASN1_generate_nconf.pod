@@ -6,6 +6,8 @@ ASN1_generate_nconf, ASN1_generate_v3 - ASN1 generation functions
 
 =head1 SYNOPSIS
 
+ #include <openssl/asn1.h>
+
  ASN1_TYPE *ASN1_generate_nconf(char *str, CONF *nconf);
  ASN1_TYPE *ASN1_generate_v3(char *str, X509V3_CTX *cnf);
 
@@ -50,7 +52,7 @@ only the B<ASCII> format is permissible.
 This encodes a boolean type. The B<value> string is mandatory and
 should be B<TRUE> or B<FALSE>. Additionally B<TRUE>, B<true>, B<Y>,
 B<y>, B<YES>, B<yes>, B<FALSE>, B<false>, B<N>, B<n>, B<NO> and B<no>
-are acceptable. 
+are acceptable.
 
 =item B<NULL>
 
@@ -76,12 +78,12 @@ a short name, a long name or numerical format.
 =item B<UTCTIME>, B<UTC>
 
 Encodes an ASN1 B<UTCTime> structure, the value should be in
-the format B<YYMMDDHHMMSSZ>. 
+the format B<YYMMDDHHMMSSZ>.
 
 =item B<GENERALIZEDTIME>, B<GENTIME>
 
 Encodes an ASN1 B<GeneralizedTime> structure, the value should be in
-the format B<YYYYMMDDHHMMSSZ>. 
+the format B<YYYYMMDDHHMMSSZ>.
 
 =item B<OCTETSTRING>, B<OCT>
 
@@ -101,7 +103,8 @@ bits is set to zero.
 =item B<UNIVERSALSTRING>, B<UNIV>, B<IA5>, B<IA5STRING>, B<UTF8>,
 B<UTF8String>, B<BMP>, B<BMPSTRING>, B<VISIBLESTRING>,
 B<VISIBLE>, B<PRINTABLESTRING>, B<PRINTABLE>, B<T61>,
-B<T61STRING>, B<TELETEXSTRING>, B<GeneralString>
+B<T61STRING>, B<TELETEXSTRING>, B<GeneralString>, B<NUMERICSTRING>,
+B<NUMERIC>
 
 These encode the corresponding string types. B<value> represents the
 contents of this structure. The format can be B<ASCII> or B<UTF8>.
@@ -175,7 +178,7 @@ An IA5String explicitly tagged using APPLICATION tagging:
 
 A BITSTRING with bits 1 and 5 set and all others zero:
 
- FORMAT=BITLIST,BITSTRING:1,5
+ FORMAT:BITLIST,BITSTRING:1,5
 
 A more complex example using a config file to produce a
 SEQUENCE consiting of a BOOL an OID and a UTF8String:

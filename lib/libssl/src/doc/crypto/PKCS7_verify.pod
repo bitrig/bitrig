@@ -6,9 +6,11 @@ PKCS7_verify - verify a PKCS#7 signedData structure
 
 =head1 SYNOPSIS
 
-int PKCS7_verify(PKCS7 *p7, STACK_OF(X509) *certs, X509_STORE *store, BIO *indata, BIO *out, int flags);
+ #include <openssl/pkcs7.h>
 
-int PKCS7_get0_signers(PKCS7 *p7, STACK_OF(X509) *certs, int flags);
+ int PKCS7_verify(PKCS7 *p7, STACK_OF(X509) *certs, X509_STORE *store, BIO *indata, BIO *out, int flags);
+
+ STACK_OF(X509) *PKCS7_get0_signers(PKCS7 *p7, STACK_OF(X509) *certs, int flags);
 
 =head1 DESCRIPTION
 
@@ -52,7 +54,7 @@ Any of the following flags (ored together) can be passed in the B<flags> paramet
 to change the default verify behaviour. Only the flag B<PKCS7_NOINTERN> is
 meaningful to PKCS7_get0_signers().
 
-If B<PKCS7_NOINTERN> is set the certificates in the message itself are not 
+If B<PKCS7_NOINTERN> is set the certificates in the message itself are not
 searched when locating the signer's certificate. This means that all the signers
 certificates must be in the B<certs> parameter.
 
@@ -77,7 +79,7 @@ certificates supplied in B<certs> then the verify will fail because the
 signer cannot be found.
 
 Care should be taken when modifying the default verify behaviour, for example
-setting B<PKCS7_NOVERIFY|PKCS7_NOSIGS> will totally disable all verification 
+setting B<PKCS7_NOVERIFY|PKCS7_NOSIGS> will totally disable all verification
 and any signed message will be considered valid. This combination is however
 useful if one merely wishes to write the content to B<out> and its validity
 is not considered important.
