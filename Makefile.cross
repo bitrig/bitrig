@@ -102,6 +102,7 @@ NO_CROSS+=nsd
 NO_CROSS+=nginx
 NO_CROSS+=sqlite3
 NO_CROSS+=bgplg
+NO_CROSS+=unbound
 
 cross-dirs:	${CROSSDIRS}
 cross-obj:	${CROSSOBJ}
