@@ -1935,9 +1935,7 @@ finish_up() {
 	if [[ $syscomp == y ]]; then
 		rm -f /tmp/rcfirsttime
 		print -r -- "echo \"Installing toolchain...\"" > /tmp/rcfirsttime
-		print -r -- "pkg_add -m bitrig-gcclibs" >> /tmp/rcfirsttime
-		print -r -- "pkg_add -m bitrig-binutils" >> /tmp/rcfirsttime
-		print -r -- "pkg_add -m bitrig-syscomp" >> /tmp/rcfirsttime
+		print -r -- "pkg_add -Im bitrig-syscomp" >> /tmp/rcfirsttime
 		cp /tmp/rcfirsttime /mnt/etc/rc.firsttime
 	fi
 
