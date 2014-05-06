@@ -1,4 +1,4 @@
-/*	$OpenBSD: regcomp.c,v 1.23 2013/11/26 13:16:18 deraadt Exp $ */
+/*	$OpenBSD: regcomp.c,v 1.24 2014/05/06 15:48:38 tedu Exp $ */
 /*-
  * Copyright (c) 1992, 1993, 1994 Henry Spencer.
  * Copyright (c) 1992, 1993, 1994
@@ -194,14 +194,14 @@ regcomp(regex_t *preg, const char *pattern, int cflags)
 		len = strlen((char *)pattern);
 
 	/* do the mallocs early so failure handling is easy */
-	g = (struct re_guts *)malloc(sizeof(struct re_guts));
+	g = malloc(sizeof(struct re_guts));
 	if (g == NULL)
 		return(REG_ESPACE);
 	p->ssize = len/(size_t)2*(size_t)3 + (size_t)1;	/* ugh */
-	p->strip = (sop *)calloc(p->ssize, sizeof(sop));
+	p->strip = reallocarray(NULL, p->ssize, sizeof(sop));
 	p->slen = 0;
 	if (p->strip == NULL) {
-		free((char *)g);
+		free(g);
 		return(REG_ESPACE);
 	}
 
@@ -1082,7 +1082,7 @@ allocset(struct parse *p)
 {
 	cset *cs, *ncs;
 
-	ncs = realloc(p->g->sets, (p->g->ncsets + 1) * sizeof(*ncs));
+	ncs = reallocarray(p->g->sets, (p->g->ncsets + 1), sizeof(*ncs));
 	if (ncs == NULL) {
 		SETERROR(REG_ESPACE);
 		return (NULL);
@@ -1315,7 +1315,7 @@ enlarge(struct parse *p, sopno size)
 	if (p->ssize >= size)
 		return 1;
 
-	sp = (sop *)realloc(p->strip, size*sizeof(sop));
+	sp = reallocarray(p->strip, size, sizeof(sop));
 	if (sp == NULL) {
 		SETERROR(REG_ESPACE);
 		return 0;
@@ -1332,7 +1332,7 @@ static void
 stripsnug(struct parse *p, struct re_guts *g)
 {
 	g->nstates = p->slen;
-	g->strip = (sop *)realloc((char *)p->strip, p->slen * sizeof(sop));
+	g->strip = reallocarray(p->strip, p->slen, sizeof(sop));
 	if (g->strip == NULL) {
 		SETERROR(REG_ESPACE);
 		g->strip = p->strip;
