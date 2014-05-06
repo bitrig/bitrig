@@ -49,10 +49,6 @@ static char *	_yconv(int, int, int, int, char *, const char *);
 
 extern char *	tzname[];
 
-#ifndef YEAR_2000_NAME
-#define YEAR_2000_NAME	"CHECK_STRFTIME_FORMATS_FOR_TWO_DIGIT_YEARS"
-#endif /* !defined YEAR_2000_NAME */
-
 #define IN_NONE	0
 #define IN_SOME	1
 #define IN_THIS	2
@@ -93,24 +89,11 @@ strftime_l(char * __restrict s, size_t maxsize, const char * __restrict format,
 	tzset();
 	warn = IN_NONE;
 	p = _fmt(((format == NULL) ? "%c" : format), t, s, s + maxsize, &warn, loc);
-#ifndef NO_RUN_TIME_WARNINGS_ABOUT_YEAR_2000_PROBLEMS_THANK_YOU
-	if (warn != IN_NONE && getenv(YEAR_2000_NAME) != NULL) {
-		(void) fprintf_l(stderr, loc, "\n");
-		if (format == NULL)
-			(void) fprintf_l(stderr, loc, "NULL strftime format ");
-		else	(void) fprintf_l(stderr, loc, "strftime format \"%s\" ",
-				format);
-		(void) fprintf_l(stderr, loc, "yields only two digits of years in ");
-		if (warn == IN_SOME)
-			(void) fprintf_l(stderr, loc, "some locales");
-		else if (warn == IN_THIS)
-			(void) fprintf_l(stderr, loc, "the current locale");
-		else	(void) fprintf_l(stderr, loc, "all locales");
-		(void) fprintf_l(stderr, loc, "\n");
-	}
-#endif /* !defined NO_RUN_TIME_WARNINGS_ABOUT_YEAR_2000_PROBLEMS_THANK_YOU */
-	if (p == s + maxsize)
+	if (p == s + maxsize) {
+		if (maxsize > 0)
+			s[maxsize - 1] = '\0';
 		return 0;
+	}
 	*p = '\0';
 	return p - s;
 }
