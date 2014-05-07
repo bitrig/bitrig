@@ -1,4 +1,4 @@
-/*	$OpenBSD: ps.c,v 1.59 2013/11/21 15:54:45 deraadt Exp $	*/
+/*	$OpenBSD: ps.c,v 1.60 2014/05/07 01:31:25 tedu Exp $	*/
 /*	$NetBSD: ps.c,v 1.15 1995/05/18 20:33:25 mycroft Exp $	*/
 
 /*-
@@ -330,7 +330,7 @@ main(int argc, char *argv[])
 	if (kp == NULL)
 		errx(1, "%s", kvm_geterr(kd));
 
-	if ((kinfo = calloc(nentries, sizeof(*kinfo))) == NULL)
+	if ((kinfo = reallocarray(NULL, nentries, sizeof(*kinfo))) == NULL)
 		err(1, NULL);
 
 	for (i = j = 0; i < nentries; i++) {
