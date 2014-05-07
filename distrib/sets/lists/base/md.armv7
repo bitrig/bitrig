@@ -572,6 +572,7 @@
 ./usr/libdata/perl5/arm-bitrig/5.18.2/threads.pm
 ./usr/libdata/perl5/arm-bitrig/5.18.2/threads/shared.pm
 ./usr/libdata/perl5/site_perl/arm-bitrig
+./usr/libdata/perl5/site_perl/arm-bitrig/_ctype.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/_h2ph_pre.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/a.out.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/ar.ph
@@ -1496,6 +1497,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/miscfs/fuse
 ./usr/libdata/perl5/site_perl/arm-bitrig/miscfs/fuse/fusefs.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/miscfs/fuse/fusefs_node.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/monetary.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/mpool.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/msdosfs
 ./usr/libdata/perl5/site_perl/arm-bitrig/msdosfs/bootsect.ph
@@ -1765,6 +1767,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/rpcsvc/yp_prot.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/rpcsvc/ypclnt.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/rpcsvc/yppasswd.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/runetype.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sched.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/scsi
 ./usr/libdata/perl5/site_perl/arm-bitrig/scsi/cd.ph
@@ -1956,6 +1959,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/tmpfs/tmpfs_vnops.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/ttyent.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/tzfile.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/uchar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/ufs
 ./usr/libdata/perl5/site_perl/arm-bitrig/ufs/ext2fs
 ./usr/libdata/perl5/site_perl/arm-bitrig/ufs/ext2fs/ext2fs.ph
@@ -2011,6 +2015,19 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/vis.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/wchar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/wctype.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/xlocale
+./usr/libdata/perl5/site_perl/arm-bitrig/xlocale.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/xlocale/_ctype.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/xlocale/_inttypes.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/xlocale/_langinfo.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/xlocale/_locale.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/xlocale/_monetary.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/xlocale/_stdio.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/xlocale/_stdlib.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/xlocale/_string.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/xlocale/_time.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/xlocale/_uchar.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/xlocale/_wchar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/zconf.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/zlib.ph
 ./usr/local/libdata/perl5/site_perl/arm-bitrig
