@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_fault.c,v 1.72 2014/04/13 23:14:15 tedu Exp $	*/
+/*	$OpenBSD: uvm_fault.c,v 1.73 2014/05/08 20:08:50 kettenis Exp $	*/
 /*	$NetBSD: uvm_fault.c,v 1.51 2000/08/06 00:22:53 thorpej Exp $	*/
 
 /*
@@ -645,7 +645,7 @@ ReFault:
 		/* wide fault (!narrow) */
 		nback = min(uvmadvice[ufi.entry->advice].nback,
 			    (ufi.orig_rvaddr - ufi.entry->start) >> PAGE_SHIFT);
-		startva = ufi.orig_rvaddr - (nback << PAGE_SHIFT);
+		startva = ufi.orig_rvaddr - ((vsize_t)nback << PAGE_SHIFT);
 		nforw = min(uvmadvice[ufi.entry->advice].nforw,
 			    ((ufi.entry->end - ufi.orig_rvaddr) >>
 			     PAGE_SHIFT) - 1);
@@ -691,7 +691,7 @@ ReFault:
 			uoff = (startva - ufi.entry->start) + ufi.entry->offset;
 			mtx_enter(&uobj->vmobjlock);
 			(void) uobj->pgops->pgo_flush(uobj, uoff, uoff + 
-				    (nback << PAGE_SHIFT), PGO_DEACTIVATE);
+			    ((vsize_t)nback << PAGE_SHIFT), PGO_DEACTIVATE);
 			UVM_ASSERT_OBJLOCKED(uobj);
 			mtx_leave(&uobj->vmobjlock);
 		}
@@ -699,7 +699,7 @@ ReFault:
 		/* now forget about the backpages */
 		if (amap)
 			anons += nback;
-		startva += (nback << PAGE_SHIFT);
+		startva += ((vsize_t)nback << PAGE_SHIFT);
 		npages -= nback;
 		centeridx = 0;
 	}

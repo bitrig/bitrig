@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_aobj.c,v 1.61 2014/04/13 23:14:15 tedu Exp $	*/
+/*	$OpenBSD: uvm_aobj.c,v 1.64 2014/05/08 20:08:50 kettenis Exp $	*/
 /*	$NetBSD: uvm_aobj.c,v 1.39 2001/02/18 21:19:08 chs Exp $	*/
 
 /*
@@ -1693,10 +1693,8 @@ uao_pagein_page(struct uvm_aobj *aobj, int pageidx)
 	pg = NULL;
 	npages = 1;
 	offset = (voff_t)pageidx << PAGE_SHIFT;
-	/* locked: aobj */
 	rv = uao_get(&aobj->u_obj, offset, &pg, &npages, 0,
 	    VM_PROT_READ|VM_PROT_WRITE, 0, 0);
-	/* unlocked: aobj */
 	UVM_ASSERT_OBJUNLOCKED(&aobj->u_obj);
 
 
@@ -1799,7 +1797,7 @@ uao_dropswap_range(struct uvm_object *uobj, voff_t start, voff_t end)
 					int slot = elt->slots[j];
 
 					KASSERT(uvm_pagelookup(&aobj->u_obj,
-					    (UAO_SWHASH_ELT_PAGEIDX_BASE(elt)
+					    (voff_t)(UAO_SWHASH_ELT_PAGEIDX_BASE(elt)
 					    + j) << PAGE_SHIFT) == NULL);
 
 					if (slot > 0) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_object.c,v 1.6 2010/05/01 13:13:10 oga Exp $	*/
+/*	$OpenBSD: uvm_object.c,v 1.8 2014/05/08 20:08:50 kettenis Exp $	*/
 
 /*
  * Copyright (c) 2006 The NetBSD Foundation, Inc.
@@ -65,12 +65,12 @@ uvm_objinit(struct uvm_object *uobj, struct uvm_pagerops *pgops, int refs)
  */
 
 int
-uvm_objwire(struct uvm_object *uobj, off_t start, off_t end,
+uvm_objwire(struct uvm_object *uobj, voff_t start, voff_t end,
     struct pglist *pageq)
 {
-	int i, npages, error;
+	int i, npages, left, error;
 	struct vm_page *pgs[FETCH_PAGECOUNT];
-	off_t offset = start, left;
+	voff_t offset = start;
 
 	left = (end - start) >> PAGE_SHIFT;
 
@@ -132,7 +132,7 @@ uvm_objwire(struct uvm_object *uobj, off_t start, off_t end,
 		uvm_page_unbusy(pgs, npages);
 
 		left -= npages;
-		offset += (off_t)npages << PAGE_SHIFT;
+		offset += (voff_t)npages << PAGE_SHIFT;
 	}
 	mtx_leave(&uobj->vmobjlock);
 
@@ -152,7 +152,7 @@ error:
  */
 
 void
-uvm_objunwire(struct uvm_object *uobj, off_t start, off_t end)
+uvm_objunwire(struct uvm_object *uobj, voff_t start, voff_t end)
 {
 	struct vm_page *pg;
 	off_t offset;
