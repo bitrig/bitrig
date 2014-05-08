@@ -73,9 +73,6 @@
 #include <openssl/engine.h>
 #endif
 #include <openssl/err.h>
-#ifdef OPENSSL_FIPS
-#include <openssl/fips.h>
-#endif
 
 const char ECDH_version[]="ECDH" OPENSSL_VERSION_PTEXT;
 

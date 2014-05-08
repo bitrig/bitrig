@@ -60,9 +60,6 @@
 #endif
 #include <openssl/err.h>
 #include <openssl/bn.h>
-#ifdef OPENSSL_FIPS
-#include <openssl/fips.h>
-#endif
 
 const char ECDSA_version[]="ECDSA" OPENSSL_VERSION_PTEXT;
 

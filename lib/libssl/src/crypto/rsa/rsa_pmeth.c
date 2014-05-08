@@ -160,15 +160,6 @@ static int pkey_rsa_sign(EVP_PKEY_CTX *ctx, unsigned char *sig, size_t *siglen,
 	RSA_PKEY_CTX *rctx = ctx->data;
 	RSA *rsa = ctx->pkey->pkey.rsa;
 
-#ifdef OPENSSL_FIPS
-	ret = pkey_fips_check_ctx(ctx);
-	if (ret < 0)
-		{
-		RSAerr(RSA_F_PKEY_RSA_SIGN, RSA_R_OPERATION_NOT_ALLOWED_IN_FIPS_MODE);
-		return -1;
-		}
-#endif
-
 	if (rctx->md)
 		{
 		if (tbslen != (size_t)EVP_MD_size(rctx->md))
@@ -298,30 +289,8 @@ static int pkey_rsa_verify(EVP_PKEY_CTX *ctx,
 	RSA_PKEY_CTX *rctx = ctx->data;
 	RSA *rsa = ctx->pkey->pkey.rsa;
 	size_t rslen;
-#ifdef OPENSSL_FIPS
-	int rv;
-	rv = pkey_fips_check_ctx(ctx);
-	if (rv < 0)
-		{
-		RSAerr(RSA_F_PKEY_RSA_VERIFY, RSA_R_OPERATION_NOT_ALLOWED_IN_FIPS_MODE);
-		return -1;
-		}
-#endif
 	if (rctx->md)
 		{
-#ifdef OPENSSL_FIPS
-		if (rv > 0)
-			{
-			return FIPS_rsa_verify_digest(rsa,
-							tbs, tbslen,
-							rctx->md,
-							rctx->pad_mode,
-							rctx->saltlen,
-							rctx->mgf1md,
-							sig, siglen);
-							
-			}
-#endif
 		if (rctx->pad_mode == RSA_PKCS1_PADDING)
 			return RSA_verify(EVP_MD_type(rctx->md), tbs, tbslen,
 					sig, siglen, rsa);

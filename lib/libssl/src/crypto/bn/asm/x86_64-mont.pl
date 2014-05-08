@@ -1499,7 +1499,6 @@ $code.=<<___;
 .asciz	"Montgomery Multiplication for x86_64, CRYPTOGAMS by <appro\@openssl.org>"
 .align	16
 ___
-}
 
 print $code;
 close STDOUT;
