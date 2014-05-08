@@ -1,4 +1,4 @@
-/* $OpenBSD: prcm.c,v 1.6 2013/10/28 11:11:50 rapha Exp $ */
+/* $OpenBSD: prcm.c,v 1.9 2014/05/08 21:17:01 miod Exp $ */
 /*
  * Copyright (c) 2007,2009 Dale Rahn <drahn@openbsd.org>
  *
@@ -437,7 +437,7 @@ prcm_v4_hsusbhost_activate(int type)
 			break;
 
 		default:
-			panic("%s: invalid type %d", type);
+			panic("%s: invalid type %d", __func__, type);
 			return (EINVAL);
 	}
 	bus_space_write_4(sc->sc_iot, sc->sc_cm2, clksel_reg_off, clksel);
