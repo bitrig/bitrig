@@ -231,7 +231,6 @@ distribution-etc-root-var: distrib-dirs
 	    ${DESTDIR}/var/run/utmp
 	cd ../usr.sbin/ypserv/ypinit && exec ${MAKE} distribution
 	cd ../usr.bin/ssh && exec ${MAKE} distribution
-	cd ../lib/libssl && exec ${MAKE} distribution
 	cd ../lib/libcrypto && exec ${MAKE} distribution
 	cd ../usr.bin/bgplg && exec ${MAKE} distribution
 	cd ../usr.bin/mail && exec ${MAKE} distribution
