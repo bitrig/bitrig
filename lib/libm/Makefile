@@ -42,6 +42,7 @@ ARCH_SRCS = e_acos.S e_asin.S e_atan2.S e_exp.S e_fmod.S e_log.S e_log10.S \
 	    s_significandf.S s_sin.S s_sinf.S s_tan.S s_tanf.S
 .elif (${MACHINE_ARCH} == "arm")
 .PATH:	${.CURDIR}/arch/arm
+EXTRA_SRCS = fenv-softfp.c fenv-vfp.c
 .endif
 
 .PATH:	${.CURDIR}/man
@@ -121,7 +122,7 @@ PURE_SRCS = s_cabs.c s_cacos.c s_cacosh.c s_carg.c s_casin.c \
 	s_ctanh.c s_fdim.c s_fmax.c s_fmaxf.c s_fmin.c s_fminf.c \
 	s_cproj.c s_cprojf.c s_round.c s_roundf.c s_scalbln.c 
 
-SRCS=	${COMMON_SRCS} ${PURE_SRCS}
+SRCS=	${COMMON_SRCS} ${PURE_SRCS} ${EXTRA_SRCS}
 .if (${MACHINE_ARCH} == "amd64") || (${MACHINE_ARCH} == "i386")
 .PATH:		${.CURDIR}/src/ld80
 CPPFLAGS+=	-I${.CURDIR}/src -I${.CURDIR}/src/ld80

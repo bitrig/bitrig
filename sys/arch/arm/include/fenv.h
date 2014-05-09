@@ -31,13 +31,19 @@
 #define	FE_OVERFLOW		0x04
 #define	FE_UNDERFLOW		0x08
 #define	FE_INEXACT		0x10
+#define	FE_DENORMAL		0x80
 
 /*
  * The following symbol is simply the bitwise-inclusive OR of all floating-point
  * exception constants defined above.
  */
+#ifdef __ARM_PCS_VFP
+#define	FE_ALL_EXCEPT		(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | \
+				 FE_UNDERFLOW | FE_INEXACT | FE_DENORMAL)
+#else
 #define	FE_ALL_EXCEPT		(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | \
 				 FE_UNDERFLOW | FE_INEXACT)
+#endif
 
 /*
  * Each symbol representing the rounding direction, expands to an integer
@@ -45,10 +51,23 @@
  *
  * We use such values that allow direct bitwise operations on FPU registers.
  */
+
+#define	VFP_FE_TONEAREST	0x00000000
+#define	VFP_FE_UPWARD		0x00400000
+#define	VFP_FE_DOWNWARD		0x00800000
+#define	VFP_FE_TOWARDZERO	0x00c00000
+
+#ifdef __ARM_PCS_VFP
+#define	FE_TONEAREST		VFP_FE_TONEAREST
+#define	FE_UPWARD		VFP_FE_UPWARD
+#define	FE_DOWNWARD		VFP_FE_DOWNWARD
+#define	FE_TOWARDZERO		VFP_FE_TOWARDZERO
+#else
 #define	FE_TONEAREST		0x0
 #define	FE_UPWARD		0x1
 #define	FE_DOWNWARD		0x2
 #define	FE_TOWARDZERO		0x3
+#endif
 
 /*
  * The following symbol is simply the bitwise-inclusive OR of all floating-point
@@ -60,11 +79,15 @@
 /*
  * fenv_t represents the entire floating-point environment.
  */
+#ifdef __ARM_PCS_VFP
+typedef unsigned int fenv_t;
+#else
 typedef	struct {
 	unsigned int __sticky;
 	unsigned int __mask;
 	unsigned int __round;
 } fenv_t;
+#endif
 
 /*
  * The following constant represents the default floating-point environment
