@@ -4,6 +4,10 @@ current version of your system and the current day should be read
 before operation and performed either before or after the update,
 depending on the instructions in the individual steps.
 
+If you are unsure of the date of your current system snapshot, the build
+date and git commit sha of the kernel are included in the copyright
+message printed at the beginning of the kernel dmesg(8).
+
 Mon Apr 21 2014 xlocale
 Thu May 01 2014 libc++
 Wed May 07 2014 kerberos
