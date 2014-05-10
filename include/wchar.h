@@ -164,7 +164,7 @@ int wcscasecmp(const wchar_t *, const wchar_t *);
 int wcsncasecmp(const wchar_t *, const wchar_t *, size_t);
 
 size_t mbsnrtowcs(wchar_t * __restrict, const char ** __restrict, size_t,
-    size_t, mbstate_t * __restrict);
+    size_t, mbstate_t * __restrict)
 		__attribute__ ((__bounded__(__wcstring__,1,4)));
 size_t  wcsnlen(const wchar_t *, size_t);
 size_t wcsnrtombs(char * __restrict, const wchar_t ** __restrict, size_t,
