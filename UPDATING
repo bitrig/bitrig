@@ -1,29 +1,15 @@
-Thu May 01 2014
+This file contains special operations that are required to update
+past flag days in the system. Any pertinent sections between the
+current version of your system and the current day should be read
+before operation and performed either before or after the update,
+depending on the instructions in the individual steps.
 
-The current C++ standard library, GNU libstdc++, has been replaced
-by a combination of libc++ and libc++abi.  This requires some special
-build steps (or update from a snap)
-
-It is very important to be running a recent system, as this change is
-based on the xlocale support.  If you don't use a snap, you should build
-and install all packages after the following steps, as the upgrade process
-will delete them
-
-Then follow these steps (as root):
+Mon Apr 21 2014 xlocale
+Thu May 01 2014 libc++
+Wed May 07 2014 kerberos
 
 
-(cd /usr/src && make buildworld)
-(cd /usr/ports/bitrig/bitrig-llvm && make install)
-(cd /usr/ports/bitrig/bitrig-gcc && make install)
-(cd /usr/src && make buildworld)
-(cd /usr/xenocara && make buildworld)
-pkg_delete -IX bitrig-syscomp
-rm -rf /usr/ports/packages/*
-(cd /usr/ports/meta/bitrig-syscomp && CLEANDEPENDS=yes make clean && \
-  FORCE_UPDATE=hard make package)
-
-
-Mon Apr 21 2014
+Mon Apr 21 2014 xlocale
 
 xlocale support has been merged from FreeBSD, this requires some special
 build steps (or update from a snap)
@@ -48,3 +34,122 @@ Then follow these build steps (as root):
 (cd /usr/src/share/locale && make depend && make && make install)
 
 (cd /usr/src && make build)
+
+
+Thu May 01 2014 libc++
+
+The current C++ standard library, GNU libstdc++, has been replaced
+by a combination of libc++ and libc++abi.  This requires some special
+build steps (or update from a snap)
+
+It is very important to be running a recent system, as this change is
+based on the xlocale support.  If you don't use a snap, you should build
+and install all packages after the following steps, as the upgrade process
+will delete them
+
+Then follow these steps (as root):
+
+
+(cd /usr/src && make buildworld)
+(cd /usr/ports/bitrig/bitrig-llvm && make install)
+(cd /usr/ports/bitrig/bitrig-gcc && make install)
+(cd /usr/src && make buildworld)
+(cd /usr/xenocara && make buildworld)
+pkg_delete -IX bitrig-syscomp
+rm -rf /usr/ports/packages/*
+(cd /usr/ports/meta/bitrig-syscomp && CLEANDEPENDS=yes make clean && \
+  FORCE_UPDATE=hard make package)
+
+
+Wed May 07 2014 kerberos
+
+The OpenBSD sync has removed altq and kerberosIV from the system.
+The loging methods "krb5" and "krb5-or-pwd" should be removed from
+login.conf(5) as they are no longer supported.  For proper operation the
+headers, libraries and support files should be removed from the system.
+Many packages are affected by this change, so packages should be updated
+as well as the base system.
+
+	rm -rf /usr/include/altq
+
+	rm -rf /etc/kerberosV/
+	rm -f /etc/rc.d/{kadmind,kdc,kpasswdd,ipropd_master,ipropd_slave}
+	rm -f /usr/bin/asn1_compile
+	rm -f /usr/bin/compile_et
+	rm -f /usr/bin/kcc
+	rm -f /usr/bin/kdestroy
+	rm -f /usr/bin/kf
+	rm -f /usr/bin/kgetcred
+	rm -f /usr/bin/kinit
+	rm -f /usr/bin/klist
+	rm -f /usr/bin/krb5-config
+	rm -f /usr/bin/slc
+	rm -f /usr/bin/string2key
+	rm -f /usr/bin/verify_krb5_conf
+	rm -rf /usr/include/kerberosV/
+	rm -f /usr/lib/libasn1{,_p}.*
+	rm -f /usr/lib/libcom_err{,_p}.*
+	rm -f /usr/lib/libgssapi{,_p}.*
+	rm -f /usr/lib/libhdb{,_p}.*
+	rm -f /usr/lib/libheimbase{,_p}.*
+	rm -f /usr/lib/libkadm5clnt{,_p}.*
+	rm -f /usr/lib/libkadm5srv{,_p}.*
+	rm -f /usr/lib/libkafs{,_p}.*
+	rm -f /usr/lib/libkdc{,_p}.*
+	rm -f /usr/lib/libkrb5{,_p}.*
+	rm -f /usr/lib/libroken{,_p}.*
+	rm -f /usr/lib/libwind{,_p}.*
+	rm -rf /usr/libdata/perl5/site_perl/*-openbsd/kerberosV/
+	rm -f /usr/libexec/auth/login_krb5{,-or-pwd}
+	rm -f /usr/libexec/hprop{,d}
+	rm -f /usr/libexec/ipropd-{master,slave}
+	rm -f /usr/libexec/kadmind
+	rm -f /usr/libexec/kdc
+	rm -f /usr/libexec/kfd
+	rm -f /usr/libexec/kpasswdd
+	rm -f /usr/sbin/iprop-log
+	rm -f /usr/sbin/kadmin
+	rm -f /usr/sbin/kimpersonate
+	rm -f /usr/sbin/kstash
+	rm -f /usr/sbin/ktutil
+	rm -f /usr/share/info/heimdal.info
+	rm -f /usr/share/man/man1/kdestroy.1
+	rm -f /usr/share/man/man1/kf.1
+	rm -f /usr/share/man/man1/kgetcred.1
+	rm -f /usr/share/man/man1/kinit.1
+	rm -f /usr/share/man/man1/klist.1
+	rm -f /usr/share/man/man1/krb5-config.1
+	rm -f /usr/share/man/man1/kswitch.1
+	rm -f /usr/share/man/man3/ecalloc.3
+	rm -f /usr/share/man/man3/getarg.3
+	rm -f /usr/share/man/man3/{gss,krb5,krb}_*.3
+	rm -f /usr/share/man/man3/gssapi.3
+	rm -f /usr/share/man/man3/gsskrb5_extract_authz_data_from_sec_context.3
+	rm -f /usr/share/man/man3/gsskrb5_register_acceptor_identity.3
+	rm -f /usr/share/man/man3/k_afs_cell_of_file.3
+	rm -f /usr/share/man/man3/k_hasafs.3
+	rm -f /usr/share/man/man3/k_hasafs_recheck.3
+	rm -f /usr/share/man/man3/k_pioctl.3
+	rm -f /usr/share/man/man3/k_setpag.3
+	rm -f /usr/share/man/man3/k_unlog.3
+	rm -f /usr/share/man/man3/kadm5_pwcheck.3
+	rm -f /usr/share/man/man3/kafs*.3
+	rm -f /usr/share/man/man3/krb524_*.3
+	rm -f /usr/share/man/man3/parse_time.3
+	rm -f /usr/share/man/man3/rtbl.3
+	rm -f /usr/share/man/man5/krb5.conf.5
+	rm -f /usr/share/man/man5/mech.5
+	rm -f /usr/share/man/man8/hprop{,d}.8
+	rm -f /usr/share/man/man8/iprop{,-log}.8
+	rm -f /usr/share/man/man8/ipropd-{master,slave}.8
+	rm -f /usr/share/man/man8/kadmin{,d}.8
+	rm -f /usr/share/man/man8/kdc.8
+	rm -f /usr/share/man/man8/kerberos.8
+	rm -f /usr/share/man/man8/kfd.8
+	rm -f /usr/share/man/man8/kimpersonate.8
+	rm -f /usr/share/man/man8/kpasswdd.8
+	rm -f /usr/share/man/man8/kstash.8
+	rm -f /usr/share/man/man8/ktutil.8
+	rm -f /usr/share/man/man8/login_krb5{,-or-pwd}.8
+	rm -f /usr/share/man/man8/string2key.8
+	rm -f /usr/share/man/man8/verify_krb5_conf.8
