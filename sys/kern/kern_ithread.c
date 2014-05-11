@@ -55,14 +55,12 @@ ithread(void *v_is)
 		stray = 1;
 
 		for (ih = is->is_handlers; ih != NULL; ih = ih->ih_next) {
+			is->is_scheduled = 0;
+
 			if ((ih->ih_flags & IPL_MPSAFE) == 0)
 				KERNEL_LOCK();
 
-			is->is_scheduled = 0; /* protected by is->is_maxlevel */
-
-			crit_enter();
 			irc = (*ih->ih_fun)(ih->ih_arg);
-			crit_leave();
 
 			if ((ih->ih_flags & IPL_MPSAFE) == 0)
 				KERNEL_UNLOCK();
