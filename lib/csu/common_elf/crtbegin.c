@@ -93,6 +93,10 @@ static init_f __CTOR_LIST__[] __used
     __attribute__((section(".ctors"), aligned(sizeof(init_f)))) = { };
 static init_f __DTOR_LIST__[] __used
     __attribute__((section(".dtors"), aligned(sizeof(init_f)))) = { };
+static init_f __init_array[] __used
+    __attribute__((section(".init_array"), aligned(sizeof(init_f)))) = { };
+static init_f __fini_array[] __used
+    __attribute__((section(".fini_array"), aligned(sizeof(init_f)))) = { };
 
 static void	__dtors(void) __used;
 static void	__ctors(void) __used;
@@ -124,6 +128,8 @@ void __init(void) __dso_hidden;
 void __fini(void) __dso_hidden;
 void __do_init(void) __dso_hidden __used;
 void __do_fini(void) __dso_hidden __used;
+void __do_init_array(void) __dso_hidden __used;
+void __do_fini_array(void) __dso_hidden __used;
 
 MD_SECTION_PROLOGUE(".init", __init);
 MD_SECTION_PROLOGUE(".fini", __fini);
@@ -168,3 +174,27 @@ __do_fini(void)
 		__dtors();
 	}
 }
+
+void
+__do_init_array(void)
+{
+	const init_f *list = __init_array;
+	int i;
+
+	for (i = 0; list[i] != NULL; i++)
+		;
+
+	while (i-- > 0)
+		(**list[i])();
+}
+
+void
+__do_fini_array(void)
+{
+	const init_f *p = __fini_array;
+
+	while (*p) {
+		(**p++)();
+	}
+}
+
