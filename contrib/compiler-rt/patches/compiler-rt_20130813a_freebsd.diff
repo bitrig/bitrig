@@ -1,0 +1,1247 @@
+commit fc8409b04a5ac02216cafc22fe0005545a0e8c49
+Author: Dale Rahn <drahn@dalerahn.com>
+Date:   Tue Aug 13 20:34:12 2013 -0400
+
+    Import compiler_rt from freebsd. (needed for clang/llvm)
+
+diff --git a/contrib/compiler-rt/lib/arm/aeabi_uldivmod.S b/contrib/compiler-rt/lib/arm/aeabi_uldivmod.S
+index 724049d..82baa30 100644
+--- a/contrib/compiler-rt/lib/arm/aeabi_uldivmod.S
++++ b/contrib/compiler-rt/lib/arm/aeabi_uldivmod.S
+@@ -27,4 +27,4 @@ DEFINE_COMPILERRT_FUNCTION(__aeabi_uldivmod)
+         ldr	r2, [sp, #8]
+         ldr	r3, [sp, #12]
+         add	sp, sp, #16
+-        pop	{r11, pc}
+\ No newline at end of file
++        pop	{r11, pc}
+diff --git a/contrib/compiler-rt/lib/comparedf2.c b/contrib/compiler-rt/lib/comparedf2.c
+index de67784..fe35fd8 100644
+--- a/contrib/compiler-rt/lib/comparedf2.c
++++ b/contrib/compiler-rt/lib/comparedf2.c
+@@ -106,8 +106,6 @@ enum GE_RESULT __gedf2(fp_t a, fp_t b) {
+     }
+ }
+ 
+-ARM_EABI_FNALIAS(dcmpun, unorddf2)
+-
+ int __unorddf2(fp_t a, fp_t b) {
+     const rep_t aAbs = toRep(a) & absMask;
+     const rep_t bAbs = toRep(b) & absMask;
+diff --git a/contrib/compiler-rt/lib/comparesf2.c b/contrib/compiler-rt/lib/comparesf2.c
+index c1c3a47..3f2e358 100644
+--- a/contrib/compiler-rt/lib/comparesf2.c
++++ b/contrib/compiler-rt/lib/comparesf2.c
+@@ -106,8 +106,6 @@ enum GE_RESULT __gesf2(fp_t a, fp_t b) {
+     }
+ }
+ 
+-ARM_EABI_FNALIAS(fcmpun, unordsf2)
+-
+ int __unordsf2(fp_t a, fp_t b) {
+     const rep_t aAbs = toRep(a) & absMask;
+     const rep_t bAbs = toRep(b) & absMask;
+diff --git a/contrib/compiler-rt/lib/int_lib.h b/contrib/compiler-rt/lib/int_lib.h
+index a87426c..594e812 100644
+--- a/contrib/compiler-rt/lib/int_lib.h
++++ b/contrib/compiler-rt/lib/int_lib.h
+@@ -25,7 +25,15 @@
+ #if __ARM_EABI__
+ # define ARM_EABI_FNALIAS(aeabi_name, name)         \
+   void __aeabi_##aeabi_name() __attribute__((alias("__" #name)));
+-# define COMPILER_RT_ABI __attribute__((pcs("aapcs")))
++
++# if !defined(__clang__) && defined(__GNUC__) && \
++     (__GNUC__ < 4 || __GNUC__ == 4 && __GNUC_MINOR__ < 5)
++/* The pcs attribute was introduced in GCC 4.5.0 */
++#  define COMPILER_RT_ABI
++# else
++#  define COMPILER_RT_ABI __attribute__((pcs("aapcs")))
++# endif
++
+ #else
+ # define ARM_EABI_FNALIAS(aeabi_name, name)
+ # define COMPILER_RT_ABI
+@@ -43,4 +51,24 @@
+ /* Include internal utility function declarations. */
+ #include "int_util.h"
+ 
++/*
++ * Workaround for LLVM bug 11663.  Prevent endless recursion in
++ * __c?zdi2(), where calls to __builtin_c?z() are expanded to
++ * __c?zdi2() instead of __c?zsi2().
++ *
++ * Instead of placing this workaround in c?zdi2.c, put it in this
++ * global header to prevent other C files from making the detour
++ * through __c?zdi2() as well.
++ *
++ * This problem has only been observed on FreeBSD for sparc64 and
++ * mips64 with GCC 4.2.1.
++ */
++#if defined(__FreeBSD__) && (defined(__sparc64__) || \
++    defined(__mips_n64) || defined(__mips_o64))
++si_int __clzsi2(si_int);
++si_int __ctzsi2(si_int);
++#define	__builtin_clz	__clzsi2
++#define	__builtin_ctz	__ctzsi2
++#endif
++
+ #endif /* INT_LIB_H */
+diff --git a/contrib/compiler-rt/lib/sparc64/divmod.m4 b/contrib/compiler-rt/lib/sparc64/divmod.m4
+new file mode 100644
+index 0000000..9150a2e
+--- /dev/null
++++ b/contrib/compiler-rt/lib/sparc64/divmod.m4
+@@ -0,0 +1,248 @@
++/*
++ * This m4 code has been taken from The SPARC Architecture Manual Version 8.
++ */
++
++/*
++ * Division/Remainder
++ *
++ * Input is:
++ *   dividend -- the thing being divided
++ *   divisor -- how many ways to divide it
++ * Important parameters:
++ *   N -- how many bits per iteration we try to get
++ *        as our current guess: define(N, 4) define(TWOSUPN, 16)
++ *   WORDSIZE -- how many bits altogether we're talking about:
++ *               obviously: define(WORDSIZE, 32)
++ * A derived constant:
++ *   TOPBITS -- how many bits are in the top "decade" of a number:
++ *        define(TOPBITS, eval( WORDSIZE - N*((WORDSIZE-1)/N) ) )
++ * Important variables are:
++ *   Q -- the partial quotient under development -- initially 0
++ *   R -- the remainder so far -- initially == the dividend
++ *   ITER -- number of iterations of the main division loop which will
++ *           be required. Equal to CEIL( lg2(quotient)/N )
++ *           Note that this is log_base_(2ˆN) of the quotient.
++ *   V -- the current comparand -- initially divisor*2ˆ(ITER*N-1)
++ * Cost:
++ *   current estimate for non-large dividend is
++ *        CEIL( lg2(quotient) / N ) x ( 10 + 7N/2 ) + C
++ *   a large dividend is one greater than 2ˆ(31-TOPBITS) and takes a
++ *   different path, as the upper bits of the quotient must be developed
++ *   one bit at a time.
++ *   This uses the m4 and cpp macro preprocessors.
++ */
++
++define(dividend, `%o0')
++define(divisor,`%o1')
++define(Q, `%o2')
++define(R, `%o3')
++define(ITER, `%o4')
++define(V, `%o5')
++define(SIGN, `%g3')
++define(T, `%g1')
++define(SC,`%g2')
++/*
++ * This is the recursive definition of how we develop quotient digits.
++ * It takes three important parameters:
++ *   $1 -- the current depth, 1<=$1<=N
++ *   $2 -- the current accumulation of quotient bits
++ *   N -- max depth
++ * We add a new bit to $2 and either recurse or insert the bits in the quotient.
++ * Dynamic input:
++ *   R -- current remainder
++ *   Q -- current quotient
++ *   V -- current comparand
++ *   cc -- set on current value of R
++ * Dynamic output:
++ *   R', Q', V', cc'
++ */
++
++#include "../assembly.h"
++
++define(DEVELOP_QUOTIENT_BITS,
++`	!depth $1, accumulated bits $2
++	bl	L.$1.eval(TWOSUPN+$2)
++	srl	V,1,V
++	! remainder is nonnegative
++	subcc	R,V,R
++	ifelse( $1, N,
++	`	b	9f
++		add	Q, ($2*2+1), Q
++	',` DEVELOP_QUOTIENT_BITS( incr($1), `eval(2*$2+1)')
++	')
++L.$1.eval(TWOSUPN+$2):
++	! remainder is negative
++	addcc	R,V,R
++	ifelse( $1, N,
++	`	b	9f
++		add	Q, ($2*2-1), Q
++	',` DEVELOP_QUOTIENT_BITS( incr($1), `eval(2*$2-1)')
++	')
++	ifelse( $1, 1, `9:')
++')
++ifelse( ANSWER, `quotient', `
++.text
++	.align 32
++DEFINE_COMPILERRT_FUNCTION(__udivsi3)
++	b	divide
++	mov	0,SIGN			! result always nonnegative
++.text
++	.align 32
++DEFINE_COMPILERRT_FUNCTION(__divsi3)
++	orcc	divisor,dividend,%g0	! are either dividend or divisor negative
++	bge	divide			! if not, skip this junk
++	xor	divisor,dividend,SIGN	! record sign of result in sign of SIGN
++	tst	divisor
++	bge	2f
++	tst	dividend
++	! divisor < 0
++	bge	divide
++	neg	divisor
++	2:
++	! dividend < 0
++	neg	dividend
++	! FALL THROUGH
++',`
++.text
++	.align 32
++DEFINE_COMPILERRT_FUNCTION(__umodsi3)
++	b	divide
++	mov	0,SIGN			! result always nonnegative
++.text
++	.align 32
++DEFINE_COMPILERRT_FUNCTION(__modsi3)
++	orcc	divisor,dividend,%g0	! are either dividend or divisor negative
++	bge	divide			! if not, skip this junk
++	mov	dividend,SIGN		! record sign of result in sign of SIGN
++	tst	divisor
++	bge	2f
++	tst	dividend
++	! divisor < 0
++	bge	divide
++	neg	divisor
++	2:
++	! dividend < 0
++	neg	dividend
++	! FALL THROUGH
++')
++
++divide:
++	! Compute size of quotient, scale comparand.
++	orcc	divisor,%g0,V		! movcc divisor,V
++	te	2			! if divisor = 0
++	mov	dividend,R
++	mov	0,Q
++	sethi	%hi(1<<(WORDSIZE-TOPBITS-1)),T
++	cmp	R,T
++	blu	not_really_big
++	mov	0,ITER
++	!
++	! Here, the dividend is >= 2ˆ(31-N) or so. We must be careful here,
++	! as our usual N-at-a-shot divide step will cause overflow and havoc.
++	! The total number of bits in the result here is N*ITER+SC, where
++	! SC <= N.
++	! Compute ITER in an unorthodox manner: know we need to Shift V into
++! the top decade: so don't even bother to compare to R.
++1:
++	cmp	V,T
++	bgeu	3f
++	mov	1,SC
++	sll	V,N,V
++	b	1b
++	inc	ITER
++! Now compute SC
++2:	addcc	V,V,V
++	bcc	not_too_big
++	add	SC,1,SC
++		! We're here if the divisor overflowed when Shifting.
++		! This means that R has the high-order bit set.
++		! Restore V and subtract from R.
++		sll	T,TOPBITS,T	! high order bit
++		srl	V,1,V		! rest of V
++		add	V,T,V
++		b	do_single_div
++		dec	SC
++not_too_big:
++3:	cmp	V,R
++	blu	2b
++	nop
++	be	do_single_div
++	nop
++! V > R: went too far: back up 1 step
++!     srl V,1,V
++!      dec SC
++! do single-bit divide steps
++!
++! We have to be careful here. We know that R >= V, so we can do the
++! first divide step without thinking. BUT, the others are conditional,
++! and are only done if R >= 0. Because both R and V may have the high-
++! order bit set in the first step, just falling into the regular
++! division loop will mess up the first time around.
++! So we unroll slightly...
++do_single_div:
++	deccc	SC
++	bl	end_regular_divide
++	nop
++	sub	R,V,R
++	mov	1,Q
++	b,a	end_single_divloop
++	! EMPTY
++single_divloop:
++	sll	Q,1,Q
++	bl	1f
++	srl	V,1,V
++	! R >= 0
++		sub	R,V,R
++		b	2f
++		inc	Q
++	1:	! R < 0
++		add	R,V,R
++		dec	Q
++	2:
++	end_single_divloop:
++		deccc	SC
++		bge	single_divloop
++		tst	R
++		b,a	end_regular_divide
++		! EMPTY
++
++not_really_big:
++1:
++	sll	V,N,V
++	cmp	V,R
++	bleu	1b
++	inccc	ITER
++	be	got_result
++	dec	ITER
++do_regular_divide:
++	! Do the main division iteration
++	tst	R
++	! Fall through into divide loop
++divloop:
++	sll	Q,N,Q
++	DEVELOP_QUOTIENT_BITS( 1, 0 )
++end_regular_divide:
++	deccc	ITER
++	bge	divloop
++	tst	R
++	bl,a	got_result
++	! non-restoring fixup if remainder < 0, otherwise annulled
++ifelse( ANSWER, `quotient',
++`	dec	Q
++',`	add	R,divisor,R
++')
++
++got_result:
++	tst	SIGN
++	bl,a	1f
++	! negate for answer < 0, otherwise annulled
++ifelse( ANSWER, `quotient',
++`	neg	%o2,%o2			! Q <- -Q
++',`	neg	%o3,%o3 		! R <- -R
++')
++1:
++	retl				! leaf-routine return
++ifelse( ANSWER, `quotient',
++`	mov	%o2,%o0			! quotient <- Q
++',`	mov	%o3,%o0			! remainder <- R
++')
+diff --git a/contrib/compiler-rt/lib/sparc64/divsi3.S b/contrib/compiler-rt/lib/sparc64/divsi3.S
+new file mode 100644
+index 0000000..70fc1f4
+--- /dev/null
++++ b/contrib/compiler-rt/lib/sparc64/divsi3.S
+@@ -0,0 +1,330 @@
++/*
++ * This m4 code has been taken from The SPARC Architecture Manual Version 8.
++ */
++/*
++ * Division/Remainder
++ *
++ * Input is:
++ *   dividend -- the thing being divided
++ *   divisor -- how many ways to divide it
++ * Important parameters:
++ *   N -- how many bits per iteration we try to get
++ *        as our current guess:
++ *   WORDSIZE -- how many bits altogether we're talking about:
++ *               obviously:
++ * A derived constant:
++ *   TOPBITS -- how many bits are in the top "decade" of a number:
++ *
++ * Important variables are:
++ *   Q -- the partial quotient under development -- initially 0
++ *   R -- the remainder so far -- initially == the dividend
++ *   ITER -- number of iterations of the main division loop which will
++ *           be required. Equal to CEIL( lg2(quotient)/4 )
++ *           Note that this is log_base_(2ˆ4) of the quotient.
++ *   V -- the current comparand -- initially divisor*2ˆ(ITER*4-1)
++ * Cost:
++ *   current estimate for non-large dividend is
++ *        CEIL( lg2(quotient) / 4 ) x ( 10 + 74/2 ) + C
++ *   a large dividend is one greater than 2ˆ(31-4 ) and takes a
++ *   different path, as the upper bits of the quotient must be developed
++ *   one bit at a time.
++ *   This uses the m4 and cpp macro preprocessors.
++ */
++/*
++ * This is the recursive definition of how we develop quotient digits.
++ * It takes three important parameters:
++ *   $1 -- the current depth, 1<=$1<=4
++ *   $2 -- the current accumulation of quotient bits
++ *   4 -- max depth
++ * We add a new bit to $2 and either recurse or insert the bits in the quotient.
++ * Dynamic input:
++ *   %o3 -- current remainder
++ *   %o2 -- current quotient
++ *   %o5 -- current comparand
++ *   cc -- set on current value of %o3
++ * Dynamic output:
++ *   %o3', %o2', %o5', cc'
++ */
++#include "../assembly.h"
++.text
++	.align 32
++DEFINE_COMPILERRT_FUNCTION(__udivsi3)
++	b	divide
++	mov	0,%g3			! result always nonnegative
++.text
++	.align 32
++DEFINE_COMPILERRT_FUNCTION(__divsi3)
++	orcc	%o1,%o0,%g0	! are either %o0 or %o1 negative
++	bge	divide			! if not, skip this junk
++	xor	%o1,%o0,%g3	! record sign of result in sign of %g3
++	tst	%o1
++	bge	2f
++	tst	%o0
++	! %o1 < 0
++	bge	divide
++	neg	%o1
++	2:
++	! %o0 < 0
++	neg	%o0
++	! FALL THROUGH
++divide:
++	! Compute size of quotient, scale comparand.
++	orcc	%o1,%g0,%o5		! movcc %o1,%o5
++	te	2			! if %o1 = 0
++	mov	%o0,%o3
++	mov	0,%o2
++	sethi	%hi(1<<(32-4 -1)),%g1
++	cmp	%o3,%g1
++	blu	not_really_big
++	mov	0,%o4
++	!
++	! Here, the %o0 is >= 2ˆ(31-4) or so. We must be careful here,
++	! as our usual 4-at-a-shot divide step will cause overflow and havoc.
++	! The total number of bits in the result here is 4*%o4+%g2, where
++	! %g2 <= 4.
++	! Compute %o4 in an unorthodox manner: know we need to Shift %o5 into
++! the top decade: so don't even bother to compare to %o3.
++1:
++	cmp	%o5,%g1
++	bgeu	3f
++	mov	1,%g2
++	sll	%o5,4,%o5
++	b	1b
++	inc	%o4
++! Now compute %g2
++2:	addcc	%o5,%o5,%o5
++	bcc	not_too_big
++	add	%g2,1,%g2
++		! We're here if the %o1 overflowed when Shifting.
++		! This means that %o3 has the high-order bit set.
++		! Restore %o5 and subtract from %o3.
++		sll	%g1,4 ,%g1	! high order bit
++		srl	%o5,1,%o5		! rest of %o5
++		add	%o5,%g1,%o5
++		b	do_single_div
++		dec	%g2
++not_too_big:
++3:	cmp	%o5,%o3
++	blu	2b
++	nop
++	be	do_single_div
++	nop
++! %o5 > %o3: went too far: back up 1 step
++!     srl %o5,1,%o5
++!      dec %g2
++! do single-bit divide steps
++!
++! We have to be careful here. We know that %o3 >= %o5, so we can do the
++! first divide step without thinking. BUT, the others are conditional,
++! and are only done if %o3 >= 0. Because both %o3 and %o5 may have the high-
++! order bit set in the first step, just falling into the regular
++! division loop will mess up the first time around.
++! So we unroll slightly...
++do_single_div:
++	deccc	%g2
++	bl	end_regular_divide
++	nop
++	sub	%o3,%o5,%o3
++	mov	1,%o2
++	b,a	end_single_divloop
++	! EMPTY
++single_divloop:
++	sll	%o2,1,%o2
++	bl	1f
++	srl	%o5,1,%o5
++	! %o3 >= 0
++		sub	%o3,%o5,%o3
++		b	2f
++		inc	%o2
++	1:	! %o3 < 0
++		add	%o3,%o5,%o3
++		dec	%o2
++	2:
++	end_single_divloop:
++		deccc	%g2
++		bge	single_divloop
++		tst	%o3
++		b,a	end_regular_divide
++		! EMPTY
++not_really_big:
++1:
++	sll	%o5,4,%o5
++	cmp	%o5,%o3
++	bleu	1b
++	inccc	%o4
++	be	got_result
++	dec	%o4
++do_regular_divide:
++	! Do the main division iteration
++	tst	%o3
++	! Fall through into divide loop
++divloop:
++	sll	%o2,4,%o2
++		!depth 1, accumulated bits 0
++	bl	L.1.16
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++	 	!depth 2, accumulated bits 1
++	bl	L.2.17
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++	 	!depth 3, accumulated bits 3
++	bl	L.3.19
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++	 	!depth 4, accumulated bits 7
++	bl	L.4.23
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (7*2+1), %o2
++L.4.23:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (7*2-1), %o2
++L.3.19:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++	 	!depth 4, accumulated bits 5
++	bl	L.4.21
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (5*2+1), %o2
++L.4.21:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (5*2-1), %o2
++L.2.17:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++	 	!depth 3, accumulated bits 1
++	bl	L.3.17
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++	 	!depth 4, accumulated bits 3
++	bl	L.4.19
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (3*2+1), %o2
++L.4.19:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (3*2-1), %o2
++L.3.17:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++	 	!depth 4, accumulated bits 1
++	bl	L.4.17
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (1*2+1), %o2
++L.4.17:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (1*2-1), %o2
++L.1.16:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++	 	!depth 2, accumulated bits -1
++	bl	L.2.15
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++	 	!depth 3, accumulated bits -1
++	bl	L.3.15
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++	 	!depth 4, accumulated bits -1
++	bl	L.4.15
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (-1*2+1), %o2
++L.4.15:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (-1*2-1), %o2
++L.3.15:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++	 	!depth 4, accumulated bits -3
++	bl	L.4.13
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (-3*2+1), %o2
++L.4.13:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (-3*2-1), %o2
++L.2.15:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++	 	!depth 3, accumulated bits -3
++	bl	L.3.13
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++	 	!depth 4, accumulated bits -5
++	bl	L.4.11
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (-5*2+1), %o2
++L.4.11:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (-5*2-1), %o2
++L.3.13:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++	 	!depth 4, accumulated bits -7
++	bl	L.4.9
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (-7*2+1), %o2
++L.4.9:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (-7*2-1), %o2
++	9:
++end_regular_divide:
++	deccc	%o4
++	bge	divloop
++	tst	%o3
++	bl,a	got_result
++	! non-restoring fixup if remainder < 0, otherwise annulled
++	dec	%o2
++got_result:
++	tst	%g3
++	bl,a	1f
++	! negate for answer < 0, otherwise annulled
++	neg	%o2,%o2			! %o2 <- -%o2
++1:
++	retl				! leaf-routine return
++	mov	%o2,%o0			! quotient <- %o2
+diff --git a/contrib/compiler-rt/lib/sparc64/generate.sh b/contrib/compiler-rt/lib/sparc64/generate.sh
+new file mode 100644
+index 0000000..17c1106
+--- /dev/null
++++ b/contrib/compiler-rt/lib/sparc64/generate.sh
+@@ -0,0 +1,6 @@
++#!/bin/sh
++
++m4 divmod.m4 | sed -e 's/[[:space:]]*$//' | grep -v '^$' > modsi3.S
++m4 -DANSWER=quotient divmod.m4 | sed -e 's/[[:space:]]*$//' | grep -v '^$' > divsi3.S
++echo '! This file intentionally left blank' > umodsi3.S
++echo '! This file intentionally left blank' > udivsi3.S
+diff --git a/contrib/compiler-rt/lib/sparc64/modsi3.S b/contrib/compiler-rt/lib/sparc64/modsi3.S
+new file mode 100644
+index 0000000..e126e3d
+--- /dev/null
++++ b/contrib/compiler-rt/lib/sparc64/modsi3.S
+@@ -0,0 +1,330 @@
++/*
++ * This m4 code has been taken from The SPARC Architecture Manual Version 8.
++ */
++/*
++ * Division/Remainder
++ *
++ * Input is:
++ *   dividend -- the thing being divided
++ *   divisor -- how many ways to divide it
++ * Important parameters:
++ *   N -- how many bits per iteration we try to get
++ *        as our current guess:
++ *   WORDSIZE -- how many bits altogether we're talking about:
++ *               obviously:
++ * A derived constant:
++ *   TOPBITS -- how many bits are in the top "decade" of a number:
++ *
++ * Important variables are:
++ *   Q -- the partial quotient under development -- initially 0
++ *   R -- the remainder so far -- initially == the dividend
++ *   ITER -- number of iterations of the main division loop which will
++ *           be required. Equal to CEIL( lg2(quotient)/4 )
++ *           Note that this is log_base_(2ˆ4) of the quotient.
++ *   V -- the current comparand -- initially divisor*2ˆ(ITER*4-1)
++ * Cost:
++ *   current estimate for non-large dividend is
++ *        CEIL( lg2(quotient) / 4 ) x ( 10 + 74/2 ) + C
++ *   a large dividend is one greater than 2ˆ(31-4 ) and takes a
++ *   different path, as the upper bits of the quotient must be developed
++ *   one bit at a time.
++ *   This uses the m4 and cpp macro preprocessors.
++ */
++/*
++ * This is the recursive definition of how we develop quotient digits.
++ * It takes three important parameters:
++ *   $1 -- the current depth, 1<=$1<=4
++ *   $2 -- the current accumulation of quotient bits
++ *   4 -- max depth
++ * We add a new bit to $2 and either recurse or insert the bits in the quotient.
++ * Dynamic input:
++ *   %o3 -- current remainder
++ *   %o2 -- current quotient
++ *   %o5 -- current comparand
++ *   cc -- set on current value of %o3
++ * Dynamic output:
++ *   %o3', %o2', %o5', cc'
++ */
++#include "../assembly.h"
++.text
++	.align 32
++DEFINE_COMPILERRT_FUNCTION(__umodsi3)
++	b	divide
++	mov	0,%g3			! result always nonnegative
++.text
++	.align 32
++DEFINE_COMPILERRT_FUNCTION(__modsi3)
++	orcc	%o1,%o0,%g0	! are either %o0 or %o1 negative
++	bge	divide			! if not, skip this junk
++	mov	%o0,%g3		! record sign of result in sign of %g3
++	tst	%o1
++	bge	2f
++	tst	%o0
++	! %o1 < 0
++	bge	divide
++	neg	%o1
++	2:
++	! %o0 < 0
++	neg	%o0
++	! FALL THROUGH
++divide:
++	! Compute size of quotient, scale comparand.
++	orcc	%o1,%g0,%o5		! movcc %o1,%o5
++	te	2			! if %o1 = 0
++	mov	%o0,%o3
++	mov	0,%o2
++	sethi	%hi(1<<(32-4 -1)),%g1
++	cmp	%o3,%g1
++	blu	not_really_big
++	mov	0,%o4
++	!
++	! Here, the %o0 is >= 2ˆ(31-4) or so. We must be careful here,
++	! as our usual 4-at-a-shot divide step will cause overflow and havoc.
++	! The total number of bits in the result here is 4*%o4+%g2, where
++	! %g2 <= 4.
++	! Compute %o4 in an unorthodox manner: know we need to Shift %o5 into
++! the top decade: so don't even bother to compare to %o3.
++1:
++	cmp	%o5,%g1
++	bgeu	3f
++	mov	1,%g2
++	sll	%o5,4,%o5
++	b	1b
++	inc	%o4
++! Now compute %g2
++2:	addcc	%o5,%o5,%o5
++	bcc	not_too_big
++	add	%g2,1,%g2
++		! We're here if the %o1 overflowed when Shifting.
++		! This means that %o3 has the high-order bit set.
++		! Restore %o5 and subtract from %o3.
++		sll	%g1,4 ,%g1	! high order bit
++		srl	%o5,1,%o5		! rest of %o5
++		add	%o5,%g1,%o5
++		b	do_single_div
++		dec	%g2
++not_too_big:
++3:	cmp	%o5,%o3
++	blu	2b
++	nop
++	be	do_single_div
++	nop
++! %o5 > %o3: went too far: back up 1 step
++!     srl %o5,1,%o5
++!      dec %g2
++! do single-bit divide steps
++!
++! We have to be careful here. We know that %o3 >= %o5, so we can do the
++! first divide step without thinking. BUT, the others are conditional,
++! and are only done if %o3 >= 0. Because both %o3 and %o5 may have the high-
++! order bit set in the first step, just falling into the regular
++! division loop will mess up the first time around.
++! So we unroll slightly...
++do_single_div:
++	deccc	%g2
++	bl	end_regular_divide
++	nop
++	sub	%o3,%o5,%o3
++	mov	1,%o2
++	b,a	end_single_divloop
++	! EMPTY
++single_divloop:
++	sll	%o2,1,%o2
++	bl	1f
++	srl	%o5,1,%o5
++	! %o3 >= 0
++		sub	%o3,%o5,%o3
++		b	2f
++		inc	%o2
++	1:	! %o3 < 0
++		add	%o3,%o5,%o3
++		dec	%o2
++	2:
++	end_single_divloop:
++		deccc	%g2
++		bge	single_divloop
++		tst	%o3
++		b,a	end_regular_divide
++		! EMPTY
++not_really_big:
++1:
++	sll	%o5,4,%o5
++	cmp	%o5,%o3
++	bleu	1b
++	inccc	%o4
++	be	got_result
++	dec	%o4
++do_regular_divide:
++	! Do the main division iteration
++	tst	%o3
++	! Fall through into divide loop
++divloop:
++	sll	%o2,4,%o2
++		!depth 1, accumulated bits 0
++	bl	L.1.16
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++	 	!depth 2, accumulated bits 1
++	bl	L.2.17
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++	 	!depth 3, accumulated bits 3
++	bl	L.3.19
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++	 	!depth 4, accumulated bits 7
++	bl	L.4.23
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (7*2+1), %o2
++L.4.23:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (7*2-1), %o2
++L.3.19:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++	 	!depth 4, accumulated bits 5
++	bl	L.4.21
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (5*2+1), %o2
++L.4.21:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (5*2-1), %o2
++L.2.17:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++	 	!depth 3, accumulated bits 1
++	bl	L.3.17
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++	 	!depth 4, accumulated bits 3
++	bl	L.4.19
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (3*2+1), %o2
++L.4.19:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (3*2-1), %o2
++L.3.17:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++	 	!depth 4, accumulated bits 1
++	bl	L.4.17
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (1*2+1), %o2
++L.4.17:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (1*2-1), %o2
++L.1.16:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++	 	!depth 2, accumulated bits -1
++	bl	L.2.15
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++	 	!depth 3, accumulated bits -1
++	bl	L.3.15
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++	 	!depth 4, accumulated bits -1
++	bl	L.4.15
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (-1*2+1), %o2
++L.4.15:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (-1*2-1), %o2
++L.3.15:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++	 	!depth 4, accumulated bits -3
++	bl	L.4.13
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (-3*2+1), %o2
++L.4.13:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (-3*2-1), %o2
++L.2.15:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++	 	!depth 3, accumulated bits -3
++	bl	L.3.13
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++	 	!depth 4, accumulated bits -5
++	bl	L.4.11
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (-5*2+1), %o2
++L.4.11:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (-5*2-1), %o2
++L.3.13:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++	 	!depth 4, accumulated bits -7
++	bl	L.4.9
++	srl	%o5,1,%o5
++	! remainder is nonnegative
++	subcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (-7*2+1), %o2
++L.4.9:
++	! remainder is negative
++	addcc	%o3,%o5,%o3
++		b	9f
++		add	%o2, (-7*2-1), %o2
++	9:
++end_regular_divide:
++	deccc	%o4
++	bge	divloop
++	tst	%o3
++	bl,a	got_result
++	! non-restoring fixup if remainder < 0, otherwise annulled
++	add	%o3,%o1,%o3
++got_result:
++	tst	%g3
++	bl,a	1f
++	! negate for answer < 0, otherwise annulled
++	neg	%o3,%o3 		! %o3 <- -%o3
++1:
++	retl				! leaf-routine return
++	mov	%o3,%o0			! remainder <- %o3
+diff --git a/contrib/compiler-rt/lib/sparc64/udivsi3.S b/contrib/compiler-rt/lib/sparc64/udivsi3.S
+new file mode 100644
+index 0000000..a418852
+--- /dev/null
++++ b/contrib/compiler-rt/lib/sparc64/udivsi3.S
+@@ -0,0 +1 @@
++! This file intentionally left blank
+diff --git a/contrib/compiler-rt/lib/sparc64/umodsi3.S b/contrib/compiler-rt/lib/sparc64/umodsi3.S
+new file mode 100644
+index 0000000..a418852
+--- /dev/null
++++ b/contrib/compiler-rt/lib/sparc64/umodsi3.S
+@@ -0,0 +1 @@
++! This file intentionally left blank
+diff --git a/lib/libcompiler_rt/Makefile b/lib/libcompiler_rt/Makefile
+new file mode 100644
+index 0000000..962a624
+--- /dev/null
++++ b/lib/libcompiler_rt/Makefile
+@@ -0,0 +1,200 @@
++# $FreeBSD$
++
++.include <bsd.own.mk>
++
++LIB=	compiler_rt
++NO_PIC=
++WARNS?=	2
++
++CFLAGS+=${PICFLAG} -fvisibility=hidden -DVISIBILITY_HIDDEN
++
++.if ${MACHINE_CPU} == "amd64"
++CRTARCH=x86_64
++.else
++CRTARCH=${MACHINE_CPU}
++.endif
++
++CRTSRC=${.CURDIR}/../../contrib/compiler-rt/lib
++
++.PATH: ${CRTSRC}/${CRTARCH} ${CRTSRC}
++
++SRCF=	absvdi2 \
++	absvsi2 \
++	absvti2 \
++	addvdi3 \
++	addvsi3 \
++	addvti3 \
++	ashldi3 \
++	ashlti3 \
++	ashrdi3 \
++	ashrti3 \
++	clear_cache \
++	clzdi2 \
++	clzsi2 \
++	clzti2 \
++	cmpdi2 \
++	cmpti2 \
++	comparedf2 \
++	comparesf2 \
++	ctzdi2 \
++	ctzsi2 \
++	ctzti2 \
++	divdc3 \
++	divdi3 \
++	divmoddi4 \
++	divmodsi4 \
++	divsc3 \
++	divti3 \
++	divxc3 \
++	enable_execute_stack \
++	eprintf \
++	ffsdi2 \
++	ffsti2 \
++	fixdfdi \
++	fixdfti \
++	fixsfdi \
++	fixsfti \
++	fixunsdfdi \
++	fixunsdfsi \
++	fixunsdfti \
++	fixunssfdi \
++	fixunssfsi \
++	fixunssfti \
++	fixunsxfdi \
++	fixunsxfsi \
++	fixunsxfti \
++	fixxfdi \
++	fixxfti \
++	floatdidf \
++	floatdisf \
++	floatdixf \
++	floattidf \
++	floattisf \
++	floattixf \
++	floatundidf \
++	floatundisf \
++	floatundixf \
++	floatunsidf \
++	floatunsisf \
++	floatuntidf \
++	floatuntisf \
++	floatuntixf \
++	int_util \
++	lshrdi3 \
++	lshrti3 \
++	moddi3 \
++	modti3 \
++	muldc3 \
++	muldi3 \
++	mulodi4 \
++	mulosi4 \
++	muloti4 \
++	mulsc3 \
++	multi3 \
++	mulvdi3 \
++	mulvsi3 \
++	mulvti3 \
++	mulxc3 \
++	negdf2 \
++	negdi2 \
++	negsf2 \
++	negti2 \
++	negvdi2 \
++	negvsi2 \
++	negvti2 \
++	paritydi2 \
++	paritysi2 \
++	parityti2 \
++	popcountdi2 \
++	popcountsi2 \
++	popcountti2 \
++	powidf2 \
++	powisf2 \
++	powitf2 \
++	powixf2 \
++	subvdi3 \
++	subvsi3 \
++	subvti3 \
++	trampoline_setup \
++	ucmpdi2 \
++	ucmpti2 \
++	udivdi3 \
++	udivmoddi4 \
++	udivmodsi4 \
++	udivmodti4 \
++	udivti3 \
++	umoddi3 \
++	umodti3
++
++# These are already shipped by libc.a on arm and mips
++.if ${MACHINE_CPUARCH} != "arm" && ${MACHINE_CPUARCH} != "mips"
++SRCF+=	adddf3 \
++	addsf3 \
++	divdf3 \
++	divsf3 \
++	extendsfdf2 \
++	fixdfsi \
++	fixsfsi \
++	floatsidf \
++	floatsisf \
++	muldf3 \
++	mulsf3 \
++	subdf3 \
++	subsf3 \
++	truncdfsf2
++.endif
++
++.if ${MACHINE_CPUARCH} != "mips" && \
++    (${MACHINE_CPUARCH} != "arm" || ${MK_ARM_EABI} != "no")
++SRCF+=	divsi3 \
++	modsi3 \
++	udivsi3 \
++	umodsi3
++.endif
++
++# FreeBSD-specific atomic intrinsics.
++.if ${MACHINE_CPUARCH} == "arm"
++.PATH: ${.CURDIR}/../../sys/arm/arm
++
++SRCF+=	stdatomic
++.elif ${MACHINE_CPUARCH} == "mips"
++.PATH: ${.CURDIR}/../../sys/mips/mips
++
++SRCF+=	stdatomic
++.endif
++
++.for file in ${SRCF}
++. if ${MACHINE_CPUARCH} != "arm" && exists(${CRTSRC}/${CRTARCH}/${file}.S)
++SRCS+=	${file}.S
++. else
++SRCS+=	${file}.c
++. endif
++.endfor
++
++.if ${MACHINE_CPUARCH} == "arm" && ${MK_ARM_EABI} != "no"
++SRCS+=	aeabi_idivmod.S \
++	aeabi_ldivmod.S \
++	aeabi_memcmp.S \
++	aeabi_memcpy.S \
++	aeabi_memmove.S \
++	aeabi_memset.S \
++	aeabi_uidivmod.S \
++	aeabi_uldivmod.S
++.endif
++
++.if ${MK_INSTALLLIB:L} != "no"
++SYMLINKS+=libcompiler_rt.a ${LIBDIR}/libgcc.a
++.endif
++.if ${MK_PROFILE:L} != "no"
++SYMLINKS+=libcompiler_rt_p.a ${LIBDIR}/libgcc_p.a
++.endif
++
++.if ${MACHINE_CPUARCH} == "amd64" || ${MACHINE_CPUARCH} == "i386" || \
++    ${MACHINE_CPUARCH} == "powerpc"
++## not supporte by Bitrig clang (!?!?!)
++#AFLAGS+=--noexecstack
++ACFLAGS+=-Wa,--noexecstack
++.endif
++
++
++.include <bsd.lib.mk>
