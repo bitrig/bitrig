@@ -26,11 +26,6 @@
 
 using namespace llvm;
 
-#if defined(__FreeBSD__) || defined(__Bitrig__)
-std::string sys::getDefaultTargetTriple() {
-  return LLVM_DEFAULT_TARGET_TRIPLE;
-}
-#else // __FreeBSD__ ||  __Bitrig__
 static std::string getOSVersion() {
   struct utsname info;
 
@@ -66,4 +61,3 @@ std::string sys::getDefaultTargetTriple() {
 
   return Triple;
 }
-#endif // __FreeBSD__
