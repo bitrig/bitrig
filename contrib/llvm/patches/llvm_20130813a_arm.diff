@@ -1,14 +1,14 @@
-commit c2626b3389619fa9f7da1a389e5c9a3f39c6ddbd
+commit 9bca93c33b453fbc7de76b90e0fb6add558f95a0
 Author: Dale Rahn <drahn@dalerahn.com>
 Date:   Tue Aug 13 20:38:20 2013 -0400
 
     Arm is slightly more happy with this...
 
 diff --git a/contrib/llvm/lib/Support/Unix/Memory.inc b/contrib/llvm/lib/Support/Unix/Memory.inc
-index 2bb9bf1..fed32fa 100644
+index dcfd76e..5a3ee19 100644
 --- a/contrib/llvm/lib/Support/Unix/Memory.inc
 +++ b/contrib/llvm/lib/Support/Unix/Memory.inc
-@@ -325,7 +325,7 @@ void Memory::InvalidateInstructionCache(const void *Addr,
+@@ -332,7 +332,7 @@ void Memory::InvalidateInstructionCache(const void *Addr,
    for (intptr_t Line = StartLine; Line < EndLine; Line += LineSize)
      asm volatile("icbi 0, %0" : : "r"(Line));
    asm volatile("isync");

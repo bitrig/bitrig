@@ -1,14 +1,14 @@
-commit 3640f1b23be3b3a21624ac2c585a61aae59c7bbd
+commit 28a347083904f0fa04d954ee2de86a71aed17b37
 Author: Dale Rahn <drahn@dalerahn.com>
 Date:   Thu Oct 24 22:18:59 2013 -0400
 
     -p alias for -pg got lost.
 
 diff --git a/contrib/llvm/tools/clang/include/clang/Driver/Options.td b/contrib/llvm/tools/clang/include/clang/Driver/Options.td
-index e0ce94d..394507e 100644
+index ccfdf74..2042400 100644
 --- a/contrib/llvm/tools/clang/include/clang/Driver/Options.td
 +++ b/contrib/llvm/tools/clang/include/clang/Driver/Options.td
-@@ -1044,7 +1044,7 @@ def private__bundle : Flag<["-"], "private_bundle">;
+@@ -1211,7 +1211,7 @@ def private__bundle : Flag<["-"], "private_bundle">;
  def pthreads : Flag<["-"], "pthreads">;
  def pthread : Flag<["-"], "pthread">, Flags<[CC1Option]>,
    HelpText<"Support POSIX threads in generated code">;
