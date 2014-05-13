@@ -12,7 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 #include "sanitizer_common/sanitizer_allocator.h"
+#include "sanitizer_common/sanitizer_allocator_internal.h"
 #include "sanitizer_common/sanitizer_common.h"
+#include "sanitizer_common/sanitizer_flags.h"
 
 #include "sanitizer_test_utils.h"
 
@@ -41,8 +43,16 @@ typedef SizeClassAllocator64<
 static const u64 kAddressSpaceSize = 1ULL << 32;
 #endif
 
+static const uptr kRegionSizeLog = FIRST_32_SECOND_64(20, 24);
+static const uptr kFlatByteMapSize = kAddressSpaceSize >> kRegionSizeLog;
+
 typedef SizeClassAllocator32<
-  0, kAddressSpaceSize, 16, CompactSizeClassMap> Allocator32Compact;
+  0, kAddressSpaceSize,
+  /*kMetadataSize*/16,
+  CompactSizeClassMap,
+  kRegionSizeLog,
+  FlatByteMap<kFlatByteMapSize> >
+  Allocator32Compact;
 
 template <class SizeClassMap>
 void TestSizeClassMap() {
@@ -57,6 +67,10 @@ TEST(SanitizerCommon, DefaultSizeClassMap) {
 
 TEST(SanitizerCommon, CompactSizeClassMap) {
   TestSizeClassMap<CompactSizeClassMap>();
+}
+
+TEST(SanitizerCommon, InternalSizeClassMap) {
+  TestSizeClassMap<InternalSizeClassMap>();
 }
 
 template <class Allocator>
@@ -147,24 +161,26 @@ void SizeClassAllocatorMetadataStress() {
   SizeClassAllocatorLocalCache<Allocator> cache;
   memset(&cache, 0, sizeof(cache));
   cache.Init(0);
-  static volatile void *sink;
 
-  const uptr kNumAllocs = 10000;
+  const uptr kNumAllocs = 1 << 13;
   void *allocated[kNumAllocs];
+  void *meta[kNumAllocs];
   for (uptr i = 0; i < kNumAllocs; i++) {
     void *x = cache.Allocate(a, 1 + i % 50);
     allocated[i] = x;
+    meta[i] = a->GetMetaData(x);
   }
   // Get Metadata kNumAllocs^2 times.
   for (uptr i = 0; i < kNumAllocs * kNumAllocs; i++) {
-    sink = a->GetMetaData(allocated[i % kNumAllocs]);
+    uptr idx = i % kNumAllocs;
+    void *m = a->GetMetaData(allocated[idx]);
+    EXPECT_EQ(m, meta[idx]);
   }
   for (uptr i = 0; i < kNumAllocs; i++) {
     cache.Deallocate(a, 1 + i % 50, allocated[i]);
   }
 
   a->TestOnlyUnmap();
-  (void)sink;
   delete a;
 }
 
@@ -176,10 +192,46 @@ TEST(SanitizerCommon, SizeClassAllocator64MetadataStress) {
 TEST(SanitizerCommon, SizeClassAllocator64CompactMetadataStress) {
   SizeClassAllocatorMetadataStress<Allocator64Compact>();
 }
-#endif
+#endif  // SANITIZER_WORDSIZE == 64
 TEST(SanitizerCommon, SizeClassAllocator32CompactMetadataStress) {
   SizeClassAllocatorMetadataStress<Allocator32Compact>();
 }
+
+template <class Allocator>
+void SizeClassAllocatorGetBlockBeginStress() {
+  Allocator *a = new Allocator;
+  a->Init();
+  SizeClassAllocatorLocalCache<Allocator> cache;
+  memset(&cache, 0, sizeof(cache));
+  cache.Init(0);
+
+  uptr max_size_class = Allocator::kNumClasses - 1;
+  uptr size = Allocator::SizeClassMapT::Size(max_size_class);
+  u64 G8 = 1ULL << 33;
+  // Make sure we correctly compute GetBlockBegin() w/o overflow.
+  for (size_t i = 0; i <= G8 / size; i++) {
+    void *x = cache.Allocate(a, max_size_class);
+    void *beg = a->GetBlockBegin(x);
+    // if ((i & (i - 1)) == 0)
+    //   fprintf(stderr, "[%zd] %p %p\n", i, x, beg);
+    EXPECT_EQ(x, beg);
+  }
+
+  a->TestOnlyUnmap();
+  delete a;
+}
+
+#if SANITIZER_WORDSIZE == 64
+TEST(SanitizerCommon, SizeClassAllocator64GetBlockBegin) {
+  SizeClassAllocatorGetBlockBeginStress<Allocator64>();
+}
+TEST(SanitizerCommon, SizeClassAllocator64CompactGetBlockBegin) {
+  SizeClassAllocatorGetBlockBeginStress<Allocator64Compact>();
+}
+TEST(SanitizerCommon, SizeClassAllocator32CompactGetBlockBegin) {
+  SizeClassAllocatorGetBlockBeginStress<Allocator32Compact>();
+}
+#endif  // SANITIZER_WORDSIZE == 64
 
 struct TestMapUnmapCallback {
   static int map_count, unmap_count;
@@ -216,20 +268,25 @@ TEST(SanitizerCommon, SizeClassAllocator32MapUnmapCallback) {
   TestMapUnmapCallback::map_count = 0;
   TestMapUnmapCallback::unmap_count = 0;
   typedef SizeClassAllocator32<
-      0, kAddressSpaceSize, 16, CompactSizeClassMap,
-      TestMapUnmapCallback> Allocator32WithCallBack;
+      0, kAddressSpaceSize,
+      /*kMetadataSize*/16,
+      CompactSizeClassMap,
+      kRegionSizeLog,
+      FlatByteMap<kFlatByteMapSize>,
+      TestMapUnmapCallback>
+    Allocator32WithCallBack;
   Allocator32WithCallBack *a = new Allocator32WithCallBack;
   a->Init();
-  EXPECT_EQ(TestMapUnmapCallback::map_count, 1);  // Allocator state.
+  EXPECT_EQ(TestMapUnmapCallback::map_count, 0);
   SizeClassAllocatorLocalCache<Allocator32WithCallBack>  cache;
   memset(&cache, 0, sizeof(cache));
   cache.Init(0);
   AllocatorStats stats;
   stats.Init();
   a->AllocateBatch(&stats, &cache, 32);
-  EXPECT_EQ(TestMapUnmapCallback::map_count, 2);  // alloc.
+  EXPECT_EQ(TestMapUnmapCallback::map_count, 1);
   a->TestOnlyUnmap();
-  EXPECT_EQ(TestMapUnmapCallback::unmap_count, 2);  // The whole thing + alloc.
+  EXPECT_EQ(TestMapUnmapCallback::unmap_count, 1);
   delete a;
   // fprintf(stderr, "Map: %d Unmap: %d\n",
   //         TestMapUnmapCallback::map_count,
@@ -360,11 +417,19 @@ void TestCombinedAllocator() {
   memset(&cache, 0, sizeof(cache));
   a->InitCache(&cache);
 
+  bool allocator_may_return_null = common_flags()->allocator_may_return_null;
+  common_flags()->allocator_may_return_null = true;
   EXPECT_EQ(a->Allocate(&cache, -1, 1), (void*)0);
   EXPECT_EQ(a->Allocate(&cache, -1, 1024), (void*)0);
   EXPECT_EQ(a->Allocate(&cache, (uptr)-1 - 1024, 1), (void*)0);
   EXPECT_EQ(a->Allocate(&cache, (uptr)-1 - 1024, 1024), (void*)0);
   EXPECT_EQ(a->Allocate(&cache, (uptr)-1 - 1023, 1024), (void*)0);
+
+  common_flags()->allocator_may_return_null = false;
+  EXPECT_DEATH(a->Allocate(&cache, -1, 1),
+               "allocator is terminating the process");
+  // Restore the original value.
+  common_flags()->allocator_may_return_null = allocator_may_return_null;
 
   const uptr kNumAllocs = 100000;
   const uptr kNumIter = 10;
@@ -560,6 +625,11 @@ TEST(Allocator, Stress) {
   }
 }
 
+TEST(Allocator, InternalAllocFailure) {
+  EXPECT_DEATH(Ident(InternalAlloc(10 << 20)),
+               "Unexpected mmap in InternalAllocator!");
+}
+
 TEST(Allocator, ScopedBuffer) {
   const int kSize = 512;
   {
@@ -574,16 +644,9 @@ TEST(Allocator, ScopedBuffer) {
   }
 }
 
-class IterationTestCallback {
- public:
-  explicit IterationTestCallback(std::set<void *> *chunks)
-    : chunks_(chunks) {}
-  void operator()(void *chunk) const {
-    chunks_->insert(chunk);
-  }
- private:
-  std::set<void *> *chunks_;
-};
+void IterationTestCallback(uptr chunk, void *arg) {
+  reinterpret_cast<std::set<uptr> *>(arg)->insert(chunk);
+}
 
 template <class Allocator>
 void TestSizeClassAllocatorIteration() {
@@ -612,15 +675,15 @@ void TestSizeClassAllocatorIteration() {
     }
   }
 
-  std::set<void *> reported_chunks;
-  IterationTestCallback callback(&reported_chunks);
+  std::set<uptr> reported_chunks;
   a->ForceLock();
-  a->ForEachChunk(callback);
+  a->ForEachChunk(IterationTestCallback, &reported_chunks);
   a->ForceUnlock();
 
   for (uptr i = 0; i < allocated.size(); i++) {
     // Don't use EXPECT_NE. Reporting the first mismatch is enough.
-    ASSERT_NE(reported_chunks.find(allocated[i]), reported_chunks.end());
+    ASSERT_NE(reported_chunks.find(reinterpret_cast<uptr>(allocated[i])),
+              reported_chunks.end());
   }
 
   a->TestOnlyUnmap();
@@ -647,20 +710,88 @@ TEST(SanitizerCommon, LargeMmapAllocatorIteration) {
   char *allocated[kNumAllocs];
   static const uptr size = 40;
   // Allocate some.
-  for (uptr i = 0; i < kNumAllocs; i++) {
+  for (uptr i = 0; i < kNumAllocs; i++)
     allocated[i] = (char *)a.Allocate(&stats, size, 1);
-  }
 
-  std::set<void *> reported_chunks;
-  IterationTestCallback callback(&reported_chunks);
+  std::set<uptr> reported_chunks;
   a.ForceLock();
-  a.ForEachChunk(callback);
+  a.ForEachChunk(IterationTestCallback, &reported_chunks);
   a.ForceUnlock();
 
   for (uptr i = 0; i < kNumAllocs; i++) {
     // Don't use EXPECT_NE. Reporting the first mismatch is enough.
-    ASSERT_NE(reported_chunks.find(allocated[i]), reported_chunks.end());
+    ASSERT_NE(reported_chunks.find(reinterpret_cast<uptr>(allocated[i])),
+              reported_chunks.end());
   }
+  for (uptr i = 0; i < kNumAllocs; i++)
+    a.Deallocate(&stats, allocated[i]);
 }
+
+TEST(SanitizerCommon, LargeMmapAllocatorBlockBegin) {
+  LargeMmapAllocator<> a;
+  a.Init();
+  AllocatorStats stats;
+  stats.Init();
+
+  static const uptr kNumAllocs = 1024;
+  static const uptr kNumExpectedFalseLookups = 10000000;
+  char *allocated[kNumAllocs];
+  static const uptr size = 4096;
+  // Allocate some.
+  for (uptr i = 0; i < kNumAllocs; i++) {
+    allocated[i] = (char *)a.Allocate(&stats, size, 1);
+  }
+
+  a.ForceLock();
+  for (uptr i = 0; i < kNumAllocs  * kNumAllocs; i++) {
+    // if ((i & (i - 1)) == 0) fprintf(stderr, "[%zd]\n", i);
+    char *p1 = allocated[i % kNumAllocs];
+    EXPECT_EQ(p1, a.GetBlockBeginFastLocked(p1));
+    EXPECT_EQ(p1, a.GetBlockBeginFastLocked(p1 + size / 2));
+    EXPECT_EQ(p1, a.GetBlockBeginFastLocked(p1 + size - 1));
+    EXPECT_EQ(p1, a.GetBlockBeginFastLocked(p1 - 100));
+  }
+
+  for (uptr i = 0; i < kNumExpectedFalseLookups; i++) {
+    void *p = reinterpret_cast<void *>(i % 1024);
+    EXPECT_EQ((void *)0, a.GetBlockBeginFastLocked(p));
+    p = reinterpret_cast<void *>(~0L - (i % 1024));
+    EXPECT_EQ((void *)0, a.GetBlockBeginFastLocked(p));
+  }
+  a.ForceUnlock();
+
+  for (uptr i = 0; i < kNumAllocs; i++)
+    a.Deallocate(&stats, allocated[i]);
+}
+
+
+#if SANITIZER_WORDSIZE == 64
+// Regression test for out-of-memory condition in PopulateFreeList().
+TEST(SanitizerCommon, SizeClassAllocator64PopulateFreeListOOM) {
+  // In a world where regions are small and chunks are huge...
+  typedef SizeClassMap<63, 128, 16> SpecialSizeClassMap;
+  typedef SizeClassAllocator64<kAllocatorSpace, kAllocatorSize, 0,
+                               SpecialSizeClassMap> SpecialAllocator64;
+  const uptr kRegionSize =
+      kAllocatorSize / SpecialSizeClassMap::kNumClassesRounded;
+  SpecialAllocator64 *a = new SpecialAllocator64;
+  a->Init();
+  SizeClassAllocatorLocalCache<SpecialAllocator64> cache;
+  memset(&cache, 0, sizeof(cache));
+  cache.Init(0);
+
+  // ...one man is on a mission to overflow a region with a series of
+  // successive allocations.
+  const uptr kClassID = 107;
+  const uptr kAllocationSize = DefaultSizeClassMap::Size(kClassID);
+  ASSERT_LT(2 * kAllocationSize, kRegionSize);
+  ASSERT_GT(3 * kAllocationSize, kRegionSize);
+  cache.Allocate(a, kClassID);
+  EXPECT_DEATH(cache.Allocate(a, kClassID) && cache.Allocate(a, kClassID),
+               "The process has exhausted");
+  a->TestOnlyUnmap();
+  delete a;
+}
+#endif
 
 #endif  // #if TSAN_DEBUG==0

@@ -134,17 +134,24 @@ static inline uptr AlternativeAddress(uptr addr) {
 
 void FlushShadowMemory();
 void WriteMemoryProfile(char *buf, uptr buf_size);
+uptr GetRSS();
 
 const char *InitializePlatform();
 void FinalizePlatform();
+
+// The additional page is to catch shadow stack overflow as paging fault.
+const uptr kTotalTraceSize = (kTraceSize * sizeof(Event) + sizeof(Trace) + 4096
+    + 4095) & ~4095;
+
 uptr ALWAYS_INLINE GetThreadTrace(int tid) {
-  uptr p = kTraceMemBegin + (uptr)(tid * 2) * kTraceSize * sizeof(Event);
+  uptr p = kTraceMemBegin + (uptr)tid * kTotalTraceSize;
   DCHECK_LT(p, kTraceMemBegin + kTraceMemSize);
   return p;
 }
 
 uptr ALWAYS_INLINE GetThreadTraceHeader(int tid) {
-  uptr p = kTraceMemBegin + (uptr)(tid * 2 + 1) * kTraceSize * sizeof(Event);
+  uptr p = kTraceMemBegin + (uptr)tid * kTotalTraceSize
+      + kTraceSize * sizeof(Event);
   DCHECK_LT(p, kTraceMemBegin + kTraceMemSize);
   return p;
 }
@@ -154,8 +161,6 @@ void internal_start_thread(void(*func)(void*), void *arg);
 // Says whether the addr relates to a global var.
 // Guesses with high probability, may yield both false positives and negatives.
 bool IsGlobalVar(uptr addr);
-void GetThreadStackAndTls(bool main, uptr *stk_addr, uptr *stk_size,
-                          uptr *tls_addr, uptr *tls_size);
 int ExtractResolvFDs(void *state, int *fds, int nfd);
 
 }  // namespace __tsan

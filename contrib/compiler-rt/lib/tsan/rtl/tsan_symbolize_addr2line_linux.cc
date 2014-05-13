@@ -60,7 +60,6 @@ static void NOINLINE InitModule(ModuleDesc *m) {
   }
   int pid = fork();
   if (pid == 0) {
-    __sanitizer_set_report_fd(STDERR_FILENO);
     internal_close(STDOUT_FILENO);
     internal_close(STDIN_FILENO);
     internal_dup2(outfd[0], STDIN_FILENO);
@@ -87,7 +86,8 @@ static int dl_iterate_phdr_cb(dl_phdr_info *info, size_t size, void *arg) {
   DlIteratePhdrCtx *ctx = (DlIteratePhdrCtx*)arg;
   InternalScopedBuffer<char> tmp(128);
   if (ctx->is_first) {
-    internal_snprintf(tmp.data(), tmp.size(), "/proc/%d/exe", GetPid());
+    internal_snprintf(tmp.data(), tmp.size(), "/proc/%d/exe",
+                      (int)internal_getpid());
     info->dlpi_name = tmp.data();
   }
   ctx->is_first = false;

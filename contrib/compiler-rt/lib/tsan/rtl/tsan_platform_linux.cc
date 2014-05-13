@@ -19,11 +19,11 @@
 #include "sanitizer_common/sanitizer_common.h"
 #include "sanitizer_common/sanitizer_libc.h"
 #include "sanitizer_common/sanitizer_procmaps.h"
+#include "sanitizer_common/sanitizer_stoptheworld.h"
 #include "tsan_platform.h"
 #include "tsan_rtl.h"
 #include "tsan_flags.h"
 
-#include <asm/prctl.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <signal.h>
@@ -46,7 +46,14 @@
 #include <resolv.h>
 #include <malloc.h>
 
-extern "C" int arch_prctl(int code, __sanitizer::uptr *addr);
+#ifdef sa_handler
+# undef sa_handler
+#endif
+
+#ifdef sa_sigaction
+# undef sa_sigaction
+#endif
+
 extern "C" struct mallinfo __libc_mallinfo();
 
 namespace __tsan {
@@ -74,70 +81,33 @@ ScopedInRtl::~ScopedInRtl() {
 }
 #endif
 
-static bool ishex(char c) {
-  return (c >= '0' && c <= '9')
-      || (c >= 'a' && c <= 'f');
-}
-
-static uptr readhex(const char *p) {
-  uptr v = 0;
-  for (; ishex(p[0]); p++) {
-    if (p[0] >= '0' && p[0] <= '9')
-      v = v * 16 + p[0] - '0';
-    else
-      v = v * 16 + p[0] - 'a' + 10;
-  }
-  return v;
-}
-
-static uptr readdec(const char *p) {
-  uptr v = 0;
-  for (; p[0] >= '0' && p[0] <= '9' ; p++)
-    v = v * 10 + p[0] - '0';
-  return v;
+void FillProfileCallback(uptr start, uptr rss, bool file,
+                         uptr *mem, uptr stats_size) {
+  CHECK_EQ(7, stats_size);
+  mem[6] += rss;  // total
+  start >>= 40;
+  if (start < 0x10)  // shadow
+    mem[0] += rss;
+  else if (start >= 0x20 && start < 0x30)  // compat modules
+    mem[file ? 1 : 2] += rss;
+  else if (start >= 0x7e)  // modules
+    mem[file ? 1 : 2] += rss;
+  else if (start >= 0x60 && start < 0x62)  // traces
+    mem[3] += rss;
+  else if (start >= 0x7d && start < 0x7e)  // heap
+    mem[4] += rss;
+  else  // other
+    mem[5] += rss;
 }
 
 void WriteMemoryProfile(char *buf, uptr buf_size) {
-  char *smaps = 0;
-  uptr smaps_cap = 0;
-  uptr smaps_len = ReadFileToBuffer("/proc/self/smaps",
-      &smaps, &smaps_cap, 64<<20);
-  uptr mem[6] = {};
-  uptr total = 0;
-  uptr start = 0;
-  bool file = false;
-  const char *pos = smaps;
-  while (pos < smaps + smaps_len) {
-    if (ishex(pos[0])) {
-      start = readhex(pos);
-      for (; *pos != '/' && *pos > '\n'; pos++) {}
-      file = *pos == '/';
-    } else if (internal_strncmp(pos, "Rss:", 4) == 0) {
-      for (; *pos < '0' || *pos > '9'; pos++) {}
-      uptr rss = readdec(pos) * 1024;
-      total += rss;
-      start >>= 40;
-      if (start < 0x10)  // shadow
-        mem[0] += rss;
-      else if (start >= 0x20 && start < 0x30)  // compat modules
-        mem[file ? 1 : 2] += rss;
-      else if (start >= 0x7e)  // modules
-        mem[file ? 1 : 2] += rss;
-      else if (start >= 0x60 && start < 0x62)  // traces
-        mem[3] += rss;
-      else if (start >= 0x7d && start < 0x7e)  // heap
-        mem[4] += rss;
-      else  // other
-        mem[5] += rss;
-    }
-    while (*pos++ != '\n') {}
-  }
-  UnmapOrDie(smaps, smaps_cap);
+  uptr mem[7] = {};
+  __sanitizer::GetMemoryProfile(FillProfileCallback, mem, 7);
   char *buf_pos = buf;
   char *buf_end = buf + buf_size;
   buf_pos += internal_snprintf(buf_pos, buf_end - buf_pos,
       "RSS %zd MB: shadow:%zd file:%zd mmap:%zd trace:%zd heap:%zd other:%zd\n",
-      total >> 20, mem[0] >> 20, mem[1] >> 20, mem[2] >> 20,
+      mem[6] >> 20, mem[0] >> 20, mem[1] >> 20, mem[2] >> 20,
       mem[3] >> 20, mem[4] >> 20, mem[5] >> 20);
   struct mallinfo mi = __libc_mallinfo();
   buf_pos += internal_snprintf(buf_pos, buf_end - buf_pos,
@@ -145,8 +115,21 @@ void WriteMemoryProfile(char *buf, uptr buf_size) {
       mi.arena >> 20, mi.hblkhd >> 20, mi.fordblks >> 20, mi.keepcost >> 20);
 }
 
-void FlushShadowMemory() {
+uptr GetRSS() {
+  uptr mem[7] = {};
+  __sanitizer::GetMemoryProfile(FillProfileCallback, mem, 7);
+  return mem[6];
+}
+
+
+void FlushShadowMemoryCallback(
+    const SuspendedThreadsList &suspended_threads_list,
+    void *argument) {
   FlushUnneededShadowMemory(kLinuxShadowBeg, kLinuxShadowEnd - kLinuxShadowBeg);
+}
+
+void FlushShadowMemory() {
+  StopTheWorld(FlushShadowMemoryCallback, 0);
 }
 
 #ifndef TSAN_GO
@@ -178,11 +161,12 @@ static void MapRodata() {
   if (tmpdir == 0)
     return;
   char filename[256];
-  internal_snprintf(filename, sizeof(filename), "%s/tsan.rodata.%u",
-                    tmpdir, GetPid());
-  fd_t fd = internal_open(filename, O_RDWR | O_CREAT | O_EXCL, 0600);
-  if (fd == kInvalidFd)
+  internal_snprintf(filename, sizeof(filename), "%s/tsan.rodata.%d",
+                    tmpdir, (int)internal_getpid());
+  uptr openrv = internal_open(filename, O_RDWR | O_CREAT | O_EXCL, 0600);
+  if (internal_iserror(openrv))
     return;
+  fd_t fd = openrv;
   // Fill the file with kShadowRodata.
   const uptr kMarkerSize = 512 * 1024 / sizeof(u64);
   InternalScopedBuffer<u64> marker(kMarkerSize);
@@ -190,9 +174,9 @@ static void MapRodata() {
     *p = kShadowRodata;
   internal_write(fd, marker.data(), marker.size());
   // Map the file into memory.
-  void *page = internal_mmap(0, kPageSize, PROT_READ | PROT_WRITE,
-                             MAP_PRIVATE | MAP_ANONYMOUS, fd, 0);
-  if (page == MAP_FAILED) {
+  uptr page = internal_mmap(0, kPageSize, PROT_READ | PROT_WRITE,
+                            MAP_PRIVATE | MAP_ANONYMOUS, fd, 0);
+  if (internal_iserror(page)) {
     internal_close(fd);
     internal_unlink(filename);
     return;
@@ -356,35 +340,6 @@ const char *InitializePlatform() {
   InitDataSeg();
 #endif
   return GetEnv(kTsanOptionsEnv);
-}
-
-void GetThreadStackAndTls(bool main, uptr *stk_addr, uptr *stk_size,
-                          uptr *tls_addr, uptr *tls_size) {
-#ifndef TSAN_GO
-  arch_prctl(ARCH_GET_FS, tls_addr);
-  *tls_size = GetTlsSize();
-  *tls_addr -= *tls_size;
-
-  uptr stack_top, stack_bottom;
-  GetThreadStackTopAndBottom(main, &stack_top, &stack_bottom);
-  *stk_addr = stack_bottom;
-  *stk_size = stack_top - stack_bottom;
-
-  if (!main) {
-    // If stack and tls intersect, make them non-intersecting.
-    if (*tls_addr > *stk_addr && *tls_addr < *stk_addr + *stk_size) {
-      CHECK_GT(*tls_addr + *tls_size, *stk_addr);
-      CHECK_LE(*tls_addr + *tls_size, *stk_addr + *stk_size);
-      *stk_size -= *tls_size;
-      *tls_addr = *stk_addr + *stk_size;
-    }
-  }
-#else
-  *stk_addr = 0;
-  *stk_size = 0;
-  *tls_addr = 0;
-  *tls_size = 0;
-#endif
 }
 
 bool IsGlobalVar(uptr addr) {

@@ -79,9 +79,10 @@ void MutexDestroy(ThreadState *thr, uptr pc, uptr addr) {
   DestroyAndFree(s);
 }
 
-void MutexLock(ThreadState *thr, uptr pc, uptr addr) {
+void MutexLock(ThreadState *thr, uptr pc, uptr addr, int rec) {
   CHECK_GT(thr->in_rtl, 0);
-  DPrintf("#%d: MutexLock %zx\n", thr->tid, addr);
+  DPrintf("#%d: MutexLock %zx rec=%d\n", thr->tid, addr, rec);
+  CHECK_GT(rec, 0);
   if (IsAppMem(addr))
     MemoryReadAtomic(thr, pc, addr, kSizeLog1);
   SyncVar *s = CTX()->synctab.GetOrCreateAndLock(thr, pc, addr, true);
@@ -94,59 +95,57 @@ void MutexLock(ThreadState *thr, uptr pc, uptr addr) {
   } else if (s->owner_tid == thr->tid) {
     CHECK_GT(s->recursion, 0);
   } else {
-    Printf("ThreadSanitizer WARNING: double lock\n");
+    Printf("ThreadSanitizer WARNING: double lock of mutex %p\n", addr);
     PrintCurrentStack(thr, pc);
   }
   if (s->recursion == 0) {
     StatInc(thr, StatMutexLock);
-    thr->clock.set(thr->tid, thr->fast_state.epoch());
-    thr->clock.acquire(&s->clock);
-    StatInc(thr, StatSyncAcquire);
-    thr->clock.acquire(&s->read_clock);
-    StatInc(thr, StatSyncAcquire);
+    AcquireImpl(thr, pc, &s->clock);
+    AcquireImpl(thr, pc, &s->read_clock);
   } else if (!s->is_recursive) {
     StatInc(thr, StatMutexRecLock);
   }
-  s->recursion++;
+  s->recursion += rec;
   thr->mset.Add(s->GetId(), true, thr->fast_state.epoch());
   s->mtx.Unlock();
 }
 
-void MutexUnlock(ThreadState *thr, uptr pc, uptr addr) {
+int MutexUnlock(ThreadState *thr, uptr pc, uptr addr, bool all) {
   CHECK_GT(thr->in_rtl, 0);
-  DPrintf("#%d: MutexUnlock %zx\n", thr->tid, addr);
+  DPrintf("#%d: MutexUnlock %zx all=%d\n", thr->tid, addr, all);
   if (IsAppMem(addr))
     MemoryReadAtomic(thr, pc, addr, kSizeLog1);
   SyncVar *s = CTX()->synctab.GetOrCreateAndLock(thr, pc, addr, true);
   thr->fast_state.IncrementEpoch();
   TraceAddEvent(thr, thr->fast_state, EventTypeUnlock, s->GetId());
+  int rec = 0;
   if (s->recursion == 0) {
     if (!s->is_broken) {
       s->is_broken = true;
-      Printf("ThreadSanitizer WARNING: unlock of unlocked mutex\n");
+      Printf("ThreadSanitizer WARNING: unlock of unlocked mutex %p\n", addr);
       PrintCurrentStack(thr, pc);
     }
   } else if (s->owner_tid != thr->tid) {
     if (!s->is_broken) {
       s->is_broken = true;
-      Printf("ThreadSanitizer WARNING: mutex unlock by another thread\n");
+      Printf("ThreadSanitizer WARNING: mutex %p is unlocked by wrong thread\n",
+             addr);
       PrintCurrentStack(thr, pc);
     }
   } else {
-    s->recursion--;
+    rec = all ? s->recursion : 1;
+    s->recursion -= rec;
     if (s->recursion == 0) {
       StatInc(thr, StatMutexUnlock);
       s->owner_tid = SyncVar::kInvalidTid;
-      thr->clock.set(thr->tid, thr->fast_state.epoch());
-      thr->fast_synch_epoch = thr->fast_state.epoch();
-      thr->clock.ReleaseStore(&s->clock);
-      StatInc(thr, StatSyncRelease);
+      ReleaseStoreImpl(thr, pc, &s->clock);
     } else {
       StatInc(thr, StatMutexRecUnlock);
     }
   }
   thr->mset.Del(s->GetId(), true);
   s->mtx.Unlock();
+  return rec;
 }
 
 void MutexReadLock(ThreadState *thr, uptr pc, uptr addr) {
@@ -159,13 +158,12 @@ void MutexReadLock(ThreadState *thr, uptr pc, uptr addr) {
   thr->fast_state.IncrementEpoch();
   TraceAddEvent(thr, thr->fast_state, EventTypeRLock, s->GetId());
   if (s->owner_tid != SyncVar::kInvalidTid) {
-    Printf("ThreadSanitizer WARNING: read lock of a write locked mutex\n");
+    Printf("ThreadSanitizer WARNING: read lock of a write locked mutex %p\n",
+           addr);
     PrintCurrentStack(thr, pc);
   }
-  thr->clock.set(thr->tid, thr->fast_state.epoch());
-  thr->clock.acquire(&s->clock);
+  AcquireImpl(thr, pc, &s->clock);
   s->last_lock = thr->fast_state.raw();
-  StatInc(thr, StatSyncAcquire);
   thr->mset.Add(s->GetId(), false, thr->fast_state.epoch());
   s->mtx.ReadUnlock();
 }
@@ -180,14 +178,11 @@ void MutexReadUnlock(ThreadState *thr, uptr pc, uptr addr) {
   thr->fast_state.IncrementEpoch();
   TraceAddEvent(thr, thr->fast_state, EventTypeRUnlock, s->GetId());
   if (s->owner_tid != SyncVar::kInvalidTid) {
-    Printf("ThreadSanitizer WARNING: read unlock of a write "
-               "locked mutex\n");
+    Printf("ThreadSanitizer WARNING: read unlock of a write locked mutex %p\n",
+           addr);
     PrintCurrentStack(thr, pc);
   }
-  thr->clock.set(thr->tid, thr->fast_state.epoch());
-  thr->fast_synch_epoch = thr->fast_state.epoch();
-  thr->clock.release(&s->read_clock);
-  StatInc(thr, StatSyncRelease);
+  ReleaseImpl(thr, pc, &s->read_clock);
   s->mtx.Unlock();
   thr->mset.Del(s->GetId(), false);
 }
@@ -205,10 +200,7 @@ void MutexReadOrWriteUnlock(ThreadState *thr, uptr pc, uptr addr) {
     StatInc(thr, StatMutexReadUnlock);
     thr->fast_state.IncrementEpoch();
     TraceAddEvent(thr, thr->fast_state, EventTypeRUnlock, s->GetId());
-    thr->clock.set(thr->tid, thr->fast_state.epoch());
-    thr->fast_synch_epoch = thr->fast_state.epoch();
-    thr->clock.release(&s->read_clock);
-    StatInc(thr, StatSyncRelease);
+    ReleaseImpl(thr, pc, &s->read_clock);
   } else if (s->owner_tid == thr->tid) {
     // Seems to be write unlock.
     thr->fast_state.IncrementEpoch();
@@ -218,33 +210,37 @@ void MutexReadOrWriteUnlock(ThreadState *thr, uptr pc, uptr addr) {
     if (s->recursion == 0) {
       StatInc(thr, StatMutexUnlock);
       s->owner_tid = SyncVar::kInvalidTid;
-      // FIXME: Refactor me, plz.
-      // The sequence of events is quite tricky and doubled in several places.
-      // First, it's a bug to increment the epoch w/o writing to the trace.
-      // Then, the acquire/release logic can be factored out as well.
-      thr->clock.set(thr->tid, thr->fast_state.epoch());
-      thr->fast_synch_epoch = thr->fast_state.epoch();
-      thr->clock.ReleaseStore(&s->clock);
-      StatInc(thr, StatSyncRelease);
+      ReleaseImpl(thr, pc, &s->clock);
     } else {
       StatInc(thr, StatMutexRecUnlock);
     }
   } else if (!s->is_broken) {
     s->is_broken = true;
-    Printf("ThreadSanitizer WARNING: mutex unlock by another thread\n");
+    Printf("ThreadSanitizer WARNING: mutex %p is unlock by wrong thread\n",
+           addr);
     PrintCurrentStack(thr, pc);
   }
   thr->mset.Del(s->GetId(), write);
   s->mtx.Unlock();
 }
 
+void MutexRepair(ThreadState *thr, uptr pc, uptr addr) {
+  Context *ctx = CTX();
+  CHECK_GT(thr->in_rtl, 0);
+  DPrintf("#%d: MutexRepair %zx\n", thr->tid, addr);
+  SyncVar *s = ctx->synctab.GetOrCreateAndLock(thr, pc, addr, true);
+  s->owner_tid = SyncVar::kInvalidTid;
+  s->recursion = 0;
+  s->mtx.Unlock();
+}
+
 void Acquire(ThreadState *thr, uptr pc, uptr addr) {
   CHECK_GT(thr->in_rtl, 0);
   DPrintf("#%d: Acquire %zx\n", thr->tid, addr);
+  if (thr->ignore_sync)
+    return;
   SyncVar *s = CTX()->synctab.GetOrCreateAndLock(thr, pc, addr, false);
-  thr->clock.set(thr->tid, thr->fast_state.epoch());
-  thr->clock.acquire(&s->clock);
-  StatInc(thr, StatSyncAcquire);
+  AcquireImpl(thr, pc, &s->clock);
   s->mtx.ReadUnlock();
 }
 
@@ -258,6 +254,9 @@ static void UpdateClockCallback(ThreadContextBase *tctx_base, void *arg) {
 }
 
 void AcquireGlobal(ThreadState *thr, uptr pc) {
+  DPrintf("#%d: AcquireGlobal\n", thr->tid);
+  if (thr->ignore_sync)
+    return;
   ThreadRegistryLock l(CTX()->thread_registry);
   CTX()->thread_registry->RunCallbackForEachThreadLocked(
       UpdateClockCallback, thr);
@@ -266,20 +265,26 @@ void AcquireGlobal(ThreadState *thr, uptr pc) {
 void Release(ThreadState *thr, uptr pc, uptr addr) {
   CHECK_GT(thr->in_rtl, 0);
   DPrintf("#%d: Release %zx\n", thr->tid, addr);
+  if (thr->ignore_sync)
+    return;
   SyncVar *s = CTX()->synctab.GetOrCreateAndLock(thr, pc, addr, true);
-  thr->clock.set(thr->tid, thr->fast_state.epoch());
-  thr->clock.release(&s->clock);
-  StatInc(thr, StatSyncRelease);
+  thr->fast_state.IncrementEpoch();
+  // Can't increment epoch w/o writing to the trace as well.
+  TraceAddEvent(thr, thr->fast_state, EventTypeMop, 0);
+  ReleaseImpl(thr, pc, &s->clock);
   s->mtx.Unlock();
 }
 
 void ReleaseStore(ThreadState *thr, uptr pc, uptr addr) {
   CHECK_GT(thr->in_rtl, 0);
   DPrintf("#%d: ReleaseStore %zx\n", thr->tid, addr);
+  if (thr->ignore_sync)
+    return;
   SyncVar *s = CTX()->synctab.GetOrCreateAndLock(thr, pc, addr, true);
-  thr->clock.set(thr->tid, thr->fast_state.epoch());
-  thr->clock.ReleaseStore(&s->clock);
-  StatInc(thr, StatSyncRelease);
+  thr->fast_state.IncrementEpoch();
+  // Can't increment epoch w/o writing to the trace as well.
+  TraceAddEvent(thr, thr->fast_state, EventTypeMop, 0);
+  ReleaseStoreImpl(thr, pc, &s->clock);
   s->mtx.Unlock();
 }
 
@@ -294,11 +299,50 @@ static void UpdateSleepClockCallback(ThreadContextBase *tctx_base, void *arg) {
 }
 
 void AfterSleep(ThreadState *thr, uptr pc) {
+  DPrintf("#%d: AfterSleep %zx\n", thr->tid);
+  if (thr->ignore_sync)
+    return;
   thr->last_sleep_stack_id = CurrentStackId(thr, pc);
   ThreadRegistryLock l(CTX()->thread_registry);
   CTX()->thread_registry->RunCallbackForEachThreadLocked(
       UpdateSleepClockCallback, thr);
 }
 #endif
+
+void AcquireImpl(ThreadState *thr, uptr pc, SyncClock *c) {
+  if (thr->ignore_sync)
+    return;
+  thr->clock.set(thr->tid, thr->fast_state.epoch());
+  thr->clock.acquire(c);
+  StatInc(thr, StatSyncAcquire);
+}
+
+void ReleaseImpl(ThreadState *thr, uptr pc, SyncClock *c) {
+  if (thr->ignore_sync)
+    return;
+  thr->clock.set(thr->tid, thr->fast_state.epoch());
+  thr->fast_synch_epoch = thr->fast_state.epoch();
+  thr->clock.release(c);
+  StatInc(thr, StatSyncRelease);
+}
+
+void ReleaseStoreImpl(ThreadState *thr, uptr pc, SyncClock *c) {
+  if (thr->ignore_sync)
+    return;
+  thr->clock.set(thr->tid, thr->fast_state.epoch());
+  thr->fast_synch_epoch = thr->fast_state.epoch();
+  thr->clock.ReleaseStore(c);
+  StatInc(thr, StatSyncRelease);
+}
+
+void AcquireReleaseImpl(ThreadState *thr, uptr pc, SyncClock *c) {
+  if (thr->ignore_sync)
+    return;
+  thr->clock.set(thr->tid, thr->fast_state.epoch());
+  thr->fast_synch_epoch = thr->fast_state.epoch();
+  thr->clock.acq_rel(c);
+  StatInc(thr, StatSyncAcquire);
+  StatInc(thr, StatSyncRelease);
+}
 
 }  // namespace __tsan

@@ -9,12 +9,12 @@ Configs := Debug Release Profile Static
 UniversalArchs := $(RC_ARCHS)
 
 ifneq (,$(SDKROOT))
-	override CC := $(shell xcrun -sdk $(SDKROOT) -find clang) 
-	AR := $(shell xcrun -sdk $(SDKROOT) -find ar) 
-	RANLIB := $(shell xcrun -sdk $(SDKROOT) -find ranlib) 
-	STRIP := $(shell xcrun -sdk $(SDKROOT) -find strip) 
-	LIPO := $(shell xcrun -sdk $(SDKROOT) -find lipo)
-	DSYMUTIL := $(shell xcrun -sdk $(SDKROOT) -find dsymutil)
+	override CC := $(shell xcrun -sdk $(SDKROOT) -find clang || echo "false") 
+	AR := $(shell xcrun -sdk $(SDKROOT) -find ar || echo "false") 
+	RANLIB := $(shell xcrun -sdk $(SDKROOT) -find ranlib || echo "false") 
+	STRIP := $(shell xcrun -sdk $(SDKROOT) -find strip || echo "false") 
+	LIPO := $(shell xcrun -sdk $(SDKROOT) -find lipo || echo "false")
+	DSYMUTIL := $(shell xcrun -sdk $(SDKROOT) -find dsymutil || echo "false")
 endif
 
 ifneq ($(IPHONEOS_DEPLOYMENT_TARGET),)
@@ -47,7 +47,7 @@ FUNCTIONS := absvdi2 absvsi2 addvdi3 addvsi3 ashldi3 ashrdi3 \
              mulodi4 muloti4 mulsc3 mulvdi3 mulvsi3 negdi2 negvdi2 negvsi2 \
              paritydi2 paritysi2 popcountdi2 popcountsi2 powidf2 \
              powisf2 subvdi3 subvsi3 ucmpdi2 udivdi3 \
-             udivmoddi4 umoddi3 apple_versioning eprintf
+             udivmoddi4 umoddi3 apple_versioning eprintf atomic
 
 FUNCTIONS.i386 := $(FUNCTIONS) \
                 divxc3 fixunsxfdi fixunsxfsi fixxfdi floatdixf \

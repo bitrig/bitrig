@@ -35,7 +35,8 @@ typedef __sanitizer::OFF64_T OFF64_T;
 //      int foo(const char *bar, double baz);
 // You'll need to:
 //      1) define INTERCEPTOR(int, foo, const char *bar, double baz) { ... } in
-//         your source file.
+//         your source file. See the notes below for cases when
+//         INTERCEPTOR_WITH_SUFFIX(...) should be used instead.
 //      2) Call "INTERCEPT_FUNCTION(foo)" prior to the first call of "foo".
 //         INTERCEPT_FUNCTION(foo) evaluates to "true" iff the function was
 //         intercepted successfully.
@@ -58,6 +59,11 @@ typedef __sanitizer::OFF64_T OFF64_T;
 //           but instead you'll have to add
 //           DECLARE_REAL(int, foo, const char *bar, double baz) in your
 //           source file (to define a pointer to overriden function).
+//        3. Some Mac functions have symbol variants discriminated by
+//           additional suffixes, e.g. _$UNIX2003 (see
+//           https://developer.apple.com/library/mac/#releasenotes/Darwin/SymbolVariantsRelNotes/index.html
+//           for more details). To intercept such functions you need to use the
+//           INTERCEPTOR_WITH_SUFFIX(...) macro.
 
 // How it works:
 // To replace system functions on Linux we just need to declare functions
@@ -81,6 +87,7 @@ typedef __sanitizer::OFF64_T OFF64_T;
 // INTERCEPT_FUNCTION() is effectively a no-op on this system.
 
 #if defined(__APPLE__)
+#include <sys/cdefs.h>  // For __DARWIN_ALIAS_C().
 
 // Just a pair of pointers.
 struct interpose_substitution {
@@ -123,7 +130,10 @@ const interpose_substitution substitution_##func_name[] \
 #  define WRAPPER_NAME(x) "wrap_"#x
 #  define INTERCEPTOR_ATTRIBUTE
 # endif
-# define DECLARE_WRAPPER(ret_type, func, ...)
+# define DECLARE_WRAPPER(ret_type, func, ...) \
+    extern "C" ret_type func(__VA_ARGS__);
+# define DECLARE_WRAPPER_WINAPI(ret_type, func, ...) \
+    extern "C" __declspec(dllimport) ret_type __stdcall func(__VA_ARGS__);
 #else
 # define WRAP(x) __interceptor_ ## x
 # define WRAPPER_NAME(x) "__interceptor_" #x
@@ -174,12 +184,24 @@ const interpose_substitution substitution_##func_name[] \
   extern "C" \
   INTERCEPTOR_ATTRIBUTE \
   ret_type WRAP(func)(__VA_ARGS__)
+
+// We don't need INTERCEPTOR_WITH_SUFFIX on non-Darwin for now.
+#define INTERCEPTOR_WITH_SUFFIX(ret_type, func, ...) \
+  INTERCEPTOR(ret_type, func, __VA_ARGS__)
+
 #else  // __APPLE__
-#define INTERCEPTOR(ret_type, func, ...) \
-  extern "C" ret_type func(__VA_ARGS__); \
+
+#define INTERCEPTOR_ZZZ(suffix, ret_type, func, ...) \
+  extern "C" ret_type func(__VA_ARGS__) suffix; \
   extern "C" ret_type WRAP(func)(__VA_ARGS__); \
   INTERPOSER(func); \
   extern "C" INTERCEPTOR_ATTRIBUTE ret_type WRAP(func)(__VA_ARGS__)
+
+#define INTERCEPTOR(ret_type, func, ...) \
+  INTERCEPTOR_ZZZ(/*no symbol variants*/, ret_type, func, __VA_ARGS__)
+
+#define INTERCEPTOR_WITH_SUFFIX(ret_type, func, ...) \
+  INTERCEPTOR_ZZZ(__DARWIN_ALIAS_C(func), ret_type, func, __VA_ARGS__)
 
 // Override |overridee| with |overrider|.
 #define OVERRIDE_FUNCTION(overridee, overrider) \
@@ -192,7 +214,7 @@ const interpose_substitution substitution_##func_name[] \
     namespace __interception { \
       FUNC_TYPE(func) PTR_TO_REAL(func); \
     } \
-    DECLARE_WRAPPER(ret_type, func, __VA_ARGS__) \
+    DECLARE_WRAPPER_WINAPI(ret_type, func, __VA_ARGS__) \
     extern "C" \
     INTERCEPTOR_ATTRIBUTE \
     ret_type __stdcall WRAP(func)(__VA_ARGS__)
@@ -216,12 +238,18 @@ typedef unsigned long uptr;  // NOLINT
 #if defined(__linux__)
 # include "interception_linux.h"
 # define INTERCEPT_FUNCTION(func) INTERCEPT_FUNCTION_LINUX(func)
+# define INTERCEPT_FUNCTION_VER(func, symver) \
+    INTERCEPT_FUNCTION_VER_LINUX(func, symver)
 #elif defined(__APPLE__)
 # include "interception_mac.h"
 # define INTERCEPT_FUNCTION(func) INTERCEPT_FUNCTION_MAC(func)
+# define INTERCEPT_FUNCTION_VER(func, symver) \
+    INTERCEPT_FUNCTION_VER_MAC(func, symver)
 #else  // defined(_WIN32)
 # include "interception_win.h"
 # define INTERCEPT_FUNCTION(func) INTERCEPT_FUNCTION_WIN(func)
+# define INTERCEPT_FUNCTION_VER(func, symver) \
+    INTERCEPT_FUNCTION_VER_WIN(func, symver)
 #endif
 
 #undef INCLUDED_FROM_INTERCEPTION_LIB

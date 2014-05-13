@@ -23,10 +23,13 @@
 
 #include "sanitizer_common.h"
 #include "sanitizer_libc.h"
-#include "sanitizer_placement_new.h"
 #include "sanitizer_mutex.h"
+#include "sanitizer_placement_new.h"
+#include "sanitizer_stacktrace.h"
 
 namespace __sanitizer {
+
+#include "sanitizer_syscall_generic.inc"
 
 // --------------------- sanitizer_common.h
 uptr GetPageSize() {
@@ -37,11 +40,17 @@ uptr GetMmapGranularity() {
   return 1U << 16;  // FIXME: is this configurable?
 }
 
+uptr GetMaxVirtualAddress() {
+  SYSTEM_INFO si;
+  GetSystemInfo(&si);
+  return (uptr)si.lpMaximumApplicationAddress;
+}
+
 bool FileExists(const char *filename) {
   UNIMPLEMENTED();
 }
 
-int GetPid() {
+uptr internal_getpid() {
   return GetProcessId(GetCurrentProcess());
 }
 
@@ -121,7 +130,7 @@ void *MapFileToMemory(const char *file_name, uptr *buff_size) {
 }
 
 static const int kMaxEnvNameLength = 128;
-static const int kMaxEnvValueLength = 32767;
+static const DWORD kMaxEnvValueLength = 32767;
 
 namespace {
 
@@ -187,6 +196,11 @@ void SetStackSizeLimitInBytes(uptr limit) {
   UNIMPLEMENTED();
 }
 
+char *FindPathToBinary(const char *name) {
+  // Nothing here for now.
+  return 0;
+}
+
 void SleepForSeconds(int seconds) {
   Sleep(seconds * 1000);
 }
@@ -195,10 +209,19 @@ void SleepForMillis(int millis) {
   Sleep(millis);
 }
 
+u64 NanoTime() {
+  return 0;
+}
+
 void Abort() {
   abort();
   _exit(-1);  // abort is not NORETURN on Windows.
 }
+
+uptr GetListOfModules(LoadedModule *modules, uptr max_modules,
+                      string_predicate_t filter) {
+  UNIMPLEMENTED();
+};
 
 #ifndef SANITIZER_GO
 int Atexit(void (*function)(void)) {
@@ -207,16 +230,16 @@ int Atexit(void (*function)(void)) {
 #endif
 
 // ------------------ sanitizer_libc.h
-void *internal_mmap(void *addr, uptr length, int prot, int flags,
-                    int fd, u64 offset) {
+uptr internal_mmap(void *addr, uptr length, int prot, int flags,
+                   int fd, u64 offset) {
   UNIMPLEMENTED();
 }
 
-int internal_munmap(void *addr, uptr length) {
+uptr internal_munmap(void *addr, uptr length) {
   UNIMPLEMENTED();
 }
 
-int internal_close(fd_t fd) {
+uptr internal_close(fd_t fd) {
   UNIMPLEMENTED();
 }
 
@@ -224,15 +247,15 @@ int internal_isatty(fd_t fd) {
   return _isatty(fd);
 }
 
-fd_t internal_open(const char *filename, int flags) {
+uptr internal_open(const char *filename, int flags) {
   UNIMPLEMENTED();
 }
 
-fd_t internal_open(const char *filename, int flags, u32 mode) {
+uptr internal_open(const char *filename, int flags, u32 mode) {
   UNIMPLEMENTED();
 }
 
-fd_t OpenFile(const char *filename, bool write) {
+uptr OpenFile(const char *filename, bool write) {
   UNIMPLEMENTED();
 }
 
@@ -252,15 +275,15 @@ uptr internal_write(fd_t fd, const void *buf, uptr count) {
   return ret;
 }
 
-int internal_stat(const char *path, void *buf) {
+uptr internal_stat(const char *path, void *buf) {
   UNIMPLEMENTED();
 }
 
-int internal_lstat(const char *path, void *buf) {
+uptr internal_lstat(const char *path, void *buf) {
   UNIMPLEMENTED();
 }
 
-int internal_fstat(fd_t fd, void *buf) {
+uptr internal_fstat(fd_t fd, void *buf) {
   UNIMPLEMENTED();
 }
 
@@ -268,7 +291,7 @@ uptr internal_filesize(fd_t fd) {
   UNIMPLEMENTED();
 }
 
-int internal_dup2(int oldfd, int newfd) {
+uptr internal_dup2(int oldfd, int newfd) {
   UNIMPLEMENTED();
 }
 
@@ -276,7 +299,7 @@ uptr internal_readlink(const char *path, char *buf, uptr bufsize) {
   UNIMPLEMENTED();
 }
 
-int internal_sched_yield() {
+uptr internal_sched_yield() {
   Sleep(0);
   return 0;
 }
@@ -334,6 +357,52 @@ uptr GetTlsSize() {
 }
 
 void InitTlsSize() {
+}
+
+void GetThreadStackAndTls(bool main, uptr *stk_addr, uptr *stk_size,
+                          uptr *tls_addr, uptr *tls_size) {
+#ifdef SANITIZER_GO
+  *stk_addr = 0;
+  *stk_size = 0;
+  *tls_addr = 0;
+  *tls_size = 0;
+#else
+  uptr stack_top, stack_bottom;
+  GetThreadStackTopAndBottom(main, &stack_top, &stack_bottom);
+  *stk_addr = stack_bottom;
+  *stk_size = stack_top - stack_bottom;
+  *tls_addr = 0;
+  *tls_size = 0;
+#endif
+}
+
+void StackTrace::SlowUnwindStack(uptr pc, uptr max_depth) {
+  // FIXME: CaptureStackBackTrace might be too slow for us.
+  // FIXME: Compare with StackWalk64.
+  // FIXME: Look at LLVMUnhandledExceptionFilter in Signals.inc
+  size = CaptureStackBackTrace(2, Min(max_depth, kStackTraceMax),
+                               (void**)trace, 0);
+  // Skip the RTL frames by searching for the PC in the stacktrace.
+  uptr pc_location = LocatePcInTrace(pc);
+  PopStackFrames(pc_location);
+}
+
+void MaybeOpenReportFile() {
+  // Windows doesn't have native fork, and we don't support Cygwin or other
+  // environments that try to fake it, so the initial report_fd will always be
+  // correct.
+}
+
+void RawWrite(const char *buffer) {
+  static const char *kRawWriteError =
+      "RawWrite can't output requested buffer!\n";
+  uptr length = (uptr)internal_strlen(buffer);
+  if (length != internal_write(report_fd, buffer, length)) {
+    // stderr may be closed, but we may be able to print to the debugger
+    // instead.  This is the case when launching a program from Visual Studio,
+    // and the following routine should write to its console.
+    OutputDebugStringA(buffer);
+  }
 }
 
 }  // namespace __sanitizer

@@ -23,6 +23,16 @@
 .syntax unified
 .align 3
 DEFINE_COMPILERRT_FUNCTION(__umodsi3)
+#if __ARM_ARCH_EXT_IDIV__
+	tst     r1, r1
+	beq     LOCAL_LABEL(divzero)
+	udiv	r2, r0, r1
+	mls     r0, r2, r1, r0
+	bx      lr
+LOCAL_LABEL(divzero):
+	mov     r0, #0
+	bx      lr
+#else
 //  We use a simple digit by digit algorithm; before we get into the actual 
 //  divide loop, we must calculate the left-shift amount necessary to align
 //  the MSB of the divisor with that of the dividend.
@@ -47,12 +57,16 @@ LOCAL_LABEL(mainLoop):
 //  this way, we can merge the two branches which is a substantial win for
 //  such a tight loop on current ARM architectures.
     subs    r,      a,  b, lsl i
+    it hs
     movhs   a,      r
+    it ne
     subsne  i,      i, #1
     bhi     LOCAL_LABEL(mainLoop)
 
 //  Do the final test subtraction and update of remainder (i == 0), as it is
 //  not performed in the main loop.
     subs    r,      a,  b
+    it hs
     movhs   a,      r
     bx      lr
+#endif

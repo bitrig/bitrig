@@ -92,11 +92,13 @@ void UnsetAlternateSignalStack();
 void InstallSignalHandlers();
 void ReadContextStack(void *context, uptr *stack, uptr *ssize);
 void AsanPlatformThreadInit();
+void StopInitOrderChecking();
 
 // Wrapper for TLS/TSD.
 void AsanTSDInit(void (*destructor)(void *tsd));
 void *AsanTSDGet();
 void AsanTSDSet(void *tsd);
+void PlatformTSDDtor(void *tsd);
 
 void AppendToErrorMessageBuffer(const char *buffer);
 
