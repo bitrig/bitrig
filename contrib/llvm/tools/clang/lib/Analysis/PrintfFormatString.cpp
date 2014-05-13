@@ -187,8 +187,8 @@ static PrintfSpecifierResult ParsePrintfSpecifier(FormatStringHandler &H,
     case 'i': k = ConversionSpecifier::iArg; break;
     case 'n': k = ConversionSpecifier::nArg; break;
     case 'o': k = ConversionSpecifier::oArg; break;
-    case 'p': k = ConversionSpecifier::pArg;   break;
-    case 's': k = ConversionSpecifier::sArg;      break;
+    case 'p': k = ConversionSpecifier::pArg; break;
+    case 's': k = ConversionSpecifier::sArg; break;
     case 'u': k = ConversionSpecifier::uArg; break;
     case 'x': k = ConversionSpecifier::xArg; break;
     // POSIX specific.
@@ -198,25 +198,10 @@ static PrintfSpecifierResult ParsePrintfSpecifier(FormatStringHandler &H,
     case '@': k = ConversionSpecifier::ObjCObjArg; break;
     // Glibc specific.
     case 'm': k = ConversionSpecifier::PrintErrno; break;
-    // FreeBSD format extensions
-    case 'b':
-      if (LO.FormatExtensions)
-        k = ConversionSpecifier::FreeBSDbArg; // int followed by char *
-      break;
-    case 'r':
-      if (LO.FormatExtensions)
-        k = ConversionSpecifier::FreeBSDrArg;
-      break;
-    case 'y':
-      if (LO.FormatExtensions)
-        k = ConversionSpecifier::iArg;
-      break;
     // Apple-specific
     case 'D':
       if (Target.getTriple().isOSDarwin())
         k = ConversionSpecifier::DArg;
-      else if (LO.FormatExtensions)
-        k = ConversionSpecifier::FreeBSDDArg; // u_char * followed by char *
       break;
     case 'O':
       if (Target.getTriple().isOSDarwin())
@@ -231,10 +216,6 @@ static PrintfSpecifierResult ParsePrintfSpecifier(FormatStringHandler &H,
   FS.setConversionSpecifier(CS);
   if (CS.consumesDataArgument() && !FS.usesPositionalArg())
     FS.setArgIndex(argIndex++);
-  // FreeBSD extension
-  if (k == ConversionSpecifier::FreeBSDbArg ||
-      k == ConversionSpecifier::FreeBSDDArg)
-    argIndex++;
 
   if (k == ConversionSpecifier::InvalidSpecifier) {
     // Assume the conversion takes one argument.
@@ -297,18 +278,27 @@ ArgType PrintfSpecifier::getArgType(ASTContext &Ctx,
       case LengthModifier::AsLongDouble:
         // GNU extension.
         return Ctx.LongLongTy;
-      case LengthModifier::None: return Ctx.IntTy;
+      case LengthModifier::None:
+        return Ctx.IntTy;
+      case LengthModifier::AsInt32:
+        return ArgType(Ctx.IntTy, "__int32");
       case LengthModifier::AsChar: return ArgType::AnyCharTy;
       case LengthModifier::AsShort: return Ctx.ShortTy;
       case LengthModifier::AsLong: return Ctx.LongTy;
       case LengthModifier::AsLongLong:
       case LengthModifier::AsQuad:
         return Ctx.LongLongTy;
+      case LengthModifier::AsInt64:
+        return ArgType(Ctx.LongLongTy, "__int64");
       case LengthModifier::AsIntMax:
         return ArgType(Ctx.getIntMaxType(), "intmax_t");
       case LengthModifier::AsSizeT:
         // FIXME: How to get the corresponding signed version of size_t?
         return ArgType();
+      case LengthModifier::AsInt3264:
+        return Ctx.getTargetInfo().getTriple().isArch64Bit()
+                   ? ArgType(Ctx.LongLongTy, "__int64")
+                   : ArgType(Ctx.IntTy, "__int32");
       case LengthModifier::AsPtrDiff:
         return ArgType(Ctx.getPointerDiffType(), "ptrdiff_t");
       case LengthModifier::AsAllocate:
@@ -321,17 +311,26 @@ ArgType PrintfSpecifier::getArgType(ASTContext &Ctx,
       case LengthModifier::AsLongDouble:
         // GNU extension.
         return Ctx.UnsignedLongLongTy;
-      case LengthModifier::None: return Ctx.UnsignedIntTy;
+      case LengthModifier::None:
+        return Ctx.UnsignedIntTy;
+      case LengthModifier::AsInt32:
+        return ArgType(Ctx.UnsignedIntTy, "unsigned __int32");
       case LengthModifier::AsChar: return Ctx.UnsignedCharTy;
       case LengthModifier::AsShort: return Ctx.UnsignedShortTy;
       case LengthModifier::AsLong: return Ctx.UnsignedLongTy;
       case LengthModifier::AsLongLong:
       case LengthModifier::AsQuad:
         return Ctx.UnsignedLongLongTy;
+      case LengthModifier::AsInt64:
+        return ArgType(Ctx.UnsignedLongLongTy, "unsigned __int64");
       case LengthModifier::AsIntMax:
         return ArgType(Ctx.getUIntMaxType(), "uintmax_t");
       case LengthModifier::AsSizeT:
         return ArgType(Ctx.getSizeType(), "size_t");
+      case LengthModifier::AsInt3264:
+        return Ctx.getTargetInfo().getTriple().isArch64Bit()
+                   ? ArgType(Ctx.UnsignedLongLongTy, "unsigned __int64")
+                   : ArgType(Ctx.UnsignedIntTy, "unsigned __int32");
       case LengthModifier::AsPtrDiff:
         // FIXME: How to get the corresponding unsigned
         // version of ptrdiff_t?
@@ -370,6 +369,9 @@ ArgType PrintfSpecifier::getArgType(ASTContext &Ctx,
         return ArgType(); // FIXME: Is this a known extension?
       case LengthModifier::AsAllocate:
       case LengthModifier::AsMAllocate:
+      case LengthModifier::AsInt32:
+      case LengthModifier::AsInt3264:
+      case LengthModifier::AsInt64:
         return ArgType::Invalid();
     }
   }
@@ -391,7 +393,7 @@ ArgType PrintfSpecifier::getArgType(ASTContext &Ctx,
     case ConversionSpecifier::CArg:
       if (IsObjCLiteral)
         return ArgType(Ctx.UnsignedShortTy, "unichar");
-      return ArgType(Ctx.WCharTy, "wchar_t");
+      return ArgType(Ctx.WideCharTy, "wchar_t");
     case ConversionSpecifier::pArg:
       return ArgType::CPointerTy;
     case ConversionSpecifier::ObjCObjArg:
@@ -616,7 +618,6 @@ bool PrintfSpecifier::hasValidPlusPrefix() const {
   case ConversionSpecifier::GArg:
   case ConversionSpecifier::aArg:
   case ConversionSpecifier::AArg:
-  case ConversionSpecifier::FreeBSDrArg:
     return true;
 
   default:
@@ -642,7 +643,6 @@ bool PrintfSpecifier::hasValidAlternativeForm() const {
   case ConversionSpecifier::FArg:
   case ConversionSpecifier::gArg:
   case ConversionSpecifier::GArg:
-  case ConversionSpecifier::FreeBSDrArg:
     return true;
 
   default:
