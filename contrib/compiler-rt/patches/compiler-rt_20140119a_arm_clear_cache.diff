@@ -1,4 +1,4 @@
-commit 36c1b6ec0205d8d06022c9f302a4ad898baefa7d
+commit 5c728d8dd10be71896a19f7d444fd816b28d1222
 Author: Dale Rahn <drahn@dalerahn.com>
 Date:   Sun Jan 19 01:13:59 2014 -0500
 
@@ -63,17 +63,3 @@ index b934fd4..b3fd50c 100644
      #else
          compilerrt_abort();
      #endif
-diff --git a/lib/libcompiler_rt/Makefile b/lib/libcompiler_rt/Makefile
-index 4a843d3..2e5af60 100644
---- a/lib/libcompiler_rt/Makefile
-+++ b/lib/libcompiler_rt/Makefile
-@@ -125,9 +125,7 @@ SRCF=	absvdi2 \
- 	umoddi3 \
- 	umodti3
- 
--.if ${MACHINE_CPU} != "arm"
- SRCF+=	clear_cache
--.endif
- 
- # These are already shipped by libc.a on arm and mips
- .if ${MACHINE_CPU} != "arm" && ${MACHINE_CPU} != "mips"
