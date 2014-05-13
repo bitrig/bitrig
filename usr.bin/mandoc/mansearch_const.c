@@ -27,5 +27,6 @@ const char *const mansearch_keynames[40] = {
 	"Ic",	"Pa",	"Cm",	"Li",	"Em",	"Cd",	"Va",	"Ft",
 	"Tn",	"Er",	"Ev",	"Sy",	"Sh",	"In",	"Ss",	"Ox",
 	"An",	"Mt",	"St",	"Bx",	"At",	"Nx",	"Fx",	"Lk",
-	"Ms",	"Bsx",	"Dx",	"Rs",	"Vt",	"Lb",	"Nm",	"Nd"
+	"Ms",	"Bsx",	"Dx",	"Rs",	"Vt",	"Lb",	"Nm",	"Nd",
+	"Br",
 };

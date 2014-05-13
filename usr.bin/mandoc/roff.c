@@ -270,7 +270,7 @@ static	struct roffmac	 roffs[ROFF_MAX] = {
 const	char *const __mdoc_reserved[] = {
 	"Ac", "Ad", "An", "Ao", "Ap", "Aq", "Ar", "At",
 	"Bc", "Bd", "Bf", "Bk", "Bl", "Bo", "Bq",
-	"Brc", "Bro", "Brq", "Bsx", "Bt", "Bx",
+	"Br", "Brc", "Bro", "Brq", "Bsx", "Bt", "Bx",
 	"Cd", "Cm", "Db", "Dc", "Dd", "Dl", "Do", "Dq",
 	"Dt", "Dv", "Dx", "D1",
 	"Ec", "Ed", "Ef", "Ek", "El", "Em",

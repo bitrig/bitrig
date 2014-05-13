@@ -239,6 +239,7 @@ static	const struct manact manacts[MDOC_MAX + 1] = {
 	{ NULL, NULL, post_percent, NULL, NULL }, /* %U */
 	{ NULL, NULL, NULL, NULL, NULL }, /* Ta */
 	{ NULL, pre_ll, post_sp, NULL, NULL }, /* ll */
+	{ NULL, pre_ux, NULL, "Bitrig", NULL }, /* Br */
 	{ NULL, NULL, NULL, NULL, NULL }, /* ROOT */
 };
 

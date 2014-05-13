@@ -242,6 +242,7 @@ static	const struct htmlmdoc mdocs[MDOC_MAX] = {
 	{mdoc__x_pre, mdoc__x_post}, /* %U */
 	{NULL, NULL}, /* Ta */
 	{mdoc_ll_pre, NULL}, /* ll */
+	{mdoc_xx_pre, NULL}, /* Br */
 };
 
 static	const char * const lists[LIST_MAX] = {
@@ -767,6 +768,9 @@ mdoc_xx_pre(MDOC_ARGS)
 	int		 flags;
 
 	switch (n->tok) {
+	case MDOC_Br:
+		pp = "Bitrig";
+		break;
 	case MDOC_Bsx:
 		pp = "BSD/OS";
 		break;

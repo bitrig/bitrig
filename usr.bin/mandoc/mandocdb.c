@@ -311,6 +311,7 @@ static	const struct mdoc_handler mdocs[MDOC_MAX] = {
 	{ NULL, 0 },  /* %U */
 	{ NULL, 0 },  /* Ta */
 	{ NULL, 0 },  /* ll */
+	{ NULL, TYPE_Br},  /* Br */
 };
 
 

@@ -243,6 +243,7 @@ static	const struct termact termacts[MDOC_MAX] = {
 	{ NULL, termp____post }, /* %U */
 	{ NULL, NULL }, /* Ta */
 	{ termp_ll_pre, NULL }, /* ll */
+	{ termp_xx_pre, NULL }, /* Br */
 };
 
 
@@ -1688,6 +1689,9 @@ termp_xx_pre(DECL_ARGS)
 
 	pp = NULL;
 	switch (n->tok) {
+	case MDOC_Br:
+		pp = "Bitrig";
+		break;
 	case MDOC_Bsx:
 		pp = "BSD/OS";
 		break;

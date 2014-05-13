@@ -208,6 +208,7 @@ const	struct mdoc_macro __mdoc_macros[MDOC_MAX] = {
 	{ in_line_eoln, 0 }, /* %U */
 	{ phrase_ta, MDOC_CALLABLE | MDOC_PARSED | MDOC_JOIN }, /* Ta */
 	{ in_line_eoln, 0 }, /* ll */
+	{ in_line_argn, MDOC_CALLABLE | MDOC_PARSED }, /* Br */
 };
 
 const	struct mdoc_macro * const mdoc_macros = __mdoc_macros;

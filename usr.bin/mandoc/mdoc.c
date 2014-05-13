@@ -62,7 +62,7 @@ const	char *const __mdoc_macronames[MDOC_MAX] = {
 	"Lk",		"Mt",		"Brq",		"Bro",
 	"Brc",		"%C",		"Es",		"En",
 	"Dx",		"%Q",		"br",		"sp",
-	"%U",		"Ta",		"ll",
+	"%U",		"Ta",		"ll",		"Br",
 	};
 
 const	char *const __mdoc_argnames[MDOC_ARG_MAX] = {
