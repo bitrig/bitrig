@@ -1,0 +1,87 @@
+commit eb2b547bff4659bbb6f944726e1a97667111c165
+Author: Dale Rahn <drahn@dalerahn.com>
+Date:   Sun Aug 11 22:14:20 2013 -0400
+
+    Important difference between FreeBSD clang and patched bitrig-llvm
+
+diff --git a/contrib/llvm/lib/Support/Unix/Host.inc b/contrib/llvm/lib/Support/Unix/Host.inc
+index 7f79db0..0191335 100644
+--- a/contrib/llvm/lib/Support/Unix/Host.inc
++++ b/contrib/llvm/lib/Support/Unix/Host.inc
+@@ -26,11 +26,11 @@
+ 
+ using namespace llvm;
+ 
+-#ifdef __FreeBSD__
++#if defined(__FreeBSD__) || defined(__Bitrig__)
+ std::string sys::getDefaultTargetTriple() {
+   return LLVM_DEFAULT_TARGET_TRIPLE;
+ }
+-#else // __FreeBSD__
++#else // __FreeBSD__ ||  __Bitrig__
+ static std::string getOSVersion() {
+   struct utsname info;
+ 
+diff --git a/contrib/llvm/tools/clang/include/clang/Basic/DiagnosticGroups.td b/contrib/llvm/tools/clang/include/clang/Basic/DiagnosticGroups.td
+index d5f777d..5b2fe19 100644
+--- a/contrib/llvm/tools/clang/include/clang/Basic/DiagnosticGroups.td
++++ b/contrib/llvm/tools/clang/include/clang/Basic/DiagnosticGroups.td
+@@ -52,6 +52,7 @@ def Comment : DiagGroup<"comment">;
+ def ConfigMacros : DiagGroup<"config-macros">;
+ def : DiagGroup<"ctor-dtor-privacy">;
+ def GNUDesignator : DiagGroup<"gnu-designator">;
++def : DiagGroup<"bounded">;
+ 
+ def DeleteNonVirtualDtor : DiagGroup<"delete-non-virtual-dtor">;
+ def AbstractFinalClass : DiagGroup<"abstract-final-class">;
+@@ -443,6 +444,7 @@ def Most : DiagGroup<"most", [
+     StringPlusInt,
+     Trigraphs,
+     Uninitialized,
++    UninitializedSometimes,
+     UnknownPragmas,
+     Unused,
+     VolatileRegisterVar,
+diff --git a/contrib/llvm/tools/clang/lib/Basic/Targets.cpp b/contrib/llvm/tools/clang/lib/Basic/Targets.cpp
+index fd7cdba..0dcf595 100644
+--- a/contrib/llvm/tools/clang/lib/Basic/Targets.cpp
++++ b/contrib/llvm/tools/clang/lib/Basic/Targets.cpp
+@@ -406,6 +406,7 @@ protected:
+     // Bitrig defines; list based off of gcc output
+ 
+     Builder.defineMacro("__Bitrig__");
++    Builder.defineMacro("__OpenBSD__");
+     DefineStd(Builder, "unix", Opts);
+     Builder.defineMacro("__ELF__");
+     if (Opts.POSIXThreads)
+@@ -415,7 +416,7 @@ public:
+   BitrigTargetInfo(const std::string &triple)
+     : OSTargetInfo<Target>(triple) {
+       this->UserLabelPrefix = "";
+-      this->TLSSupported = false;
++      this->TLSSupported = true;
+       this->MCountName = "__mcount";
+   }
+ };
+@@ -3533,7 +3534,7 @@ class ARMTargetInfo : public TargetInfo {
+     // the kernel which on armv6 and newer uses ldrex and strex. The net result
+     // is that if we assume the kernel is at least as recent as the hardware,
+     // it is safe to use atomic instructions on armv6 and newer.
+-    if (T.getOS() != llvm::Triple::Linux && T.getOS() != llvm::Triple::FreeBSD)
++    if (T.getOS() != llvm::Triple::Linux && T.getOS() != llvm::Triple::Bitrig && T.getOS() != llvm::Triple::FreeBSD)
+       return false;
+     StringRef ArchName = T.getArchName();
+     if (T.getArch() == llvm::Triple::arm) {
+diff --git a/contrib/llvm/tools/clang/lib/Basic/Version.cpp b/contrib/llvm/tools/clang/lib/Basic/Version.cpp
+index 36be059..1c37435 100644
+--- a/contrib/llvm/tools/clang/lib/Basic/Version.cpp
++++ b/contrib/llvm/tools/clang/lib/Basic/Version.cpp
+@@ -36,7 +36,7 @@ std::string getClangRepositoryPath() {
+ 
+   // If the SVN_REPOSITORY is empty, try to use the SVN keyword. This helps us
+   // pick up a tag in an SVN export, for example.
+-  static StringRef SVNRepository("$URL: http://llvm.org/svn/llvm-project/cfe/tags/RELEASE_33/final/lib/Basic/Version.cpp $");
++  static StringRef SVNRepository("$URL: https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_33/final/lib/Basic/Version.cpp $");
+   if (URL.empty()) {
+     URL = SVNRepository.slice(SVNRepository.find(':'),
+                               SVNRepository.find("/lib/Basic"));

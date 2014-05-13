@@ -1,0 +1,42 @@
+commit 44b51c90becabd0c862201feaa9e1bb61a448d2f
+Author: Dale Rahn <drahn@dalerahn.com>
+Date:   Fri Dec 6 16:50:35 2013 -0500
+
+    arm is softfloat and Bitrig only supports v7 and later
+    
+    The latter allows clang to inline atomics
+    
+    ok patrick@
+
+diff --git a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+index 26b69f3..7926675 100644
+--- a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
++++ b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+@@ -660,6 +660,7 @@ static StringRef getARMFloatABI(const Driver &D,
+     }
+ 
+     case llvm::Triple::FreeBSD:
++    case llvm::Triple::Bitrig:
+       // FreeBSD defaults to soft float
+       FloatABI = "soft";
+       break;
+diff --git a/lib/clang/clang.build.mk b/lib/clang/clang.build.mk
+index 260c7cc..07b69ea 100644
+--- a/lib/clang/clang.build.mk
++++ b/lib/clang/clang.build.mk
+@@ -20,8 +20,15 @@ DEBUG=
+ # LLVM is not strict aliasing safe as of 12/31/2011
+ CFLAGS+=	-fno-strict-aliasing
+ 
++#Bitrig only support arm platforms v7 and later.
++#allow clang to target modern architectures not ancient.
++.if ${MACHINE_ARCH} == "arm"
++TARGET_ARCH?=	armv7
++BUILD_ARCH?=	armv7
++.else
+ TARGET_ARCH?=	${MACHINE_ARCH}
+ BUILD_ARCH?=	${MACHINE_ARCH}
++.endif
+ 
+ .if (${TARGET_ARCH} == "arm" || ${TARGET_ARCH} == "armv6") && \
+     ${MK_ARM_EABI:L} != "no"
