@@ -1,0 +1,38 @@
+commit d641ccd4ff4b044ea9e6980daa95c3782b895d6c
+Author: Dale Rahn <drahn@dalerahn.com>
+Date:   Wed May 14 16:16:37 2014 -0400
+
+    Add AArch64 pieces.
+    
+    These where previously slipped in by ports commit:
+    commit 733d0d362613a17513d2befa6c1708d1b01a2dc3
+    Author: Patrick Wildt <patrick@blueri.se>
+    Date:   Wed Feb 5 15:28:24 2014 +0100
+
+diff --git a/contrib/llvm/tools/clang/lib/Basic/Targets.cpp b/contrib/llvm/tools/clang/lib/Basic/Targets.cpp
+index 8a2211f..68df018 100644
+--- a/contrib/llvm/tools/clang/lib/Basic/Targets.cpp
++++ b/contrib/llvm/tools/clang/lib/Basic/Targets.cpp
+@@ -5549,6 +5549,8 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple) {
+     switch (os) {
+     case llvm::Triple::Linux:
+       return new LinuxTargetInfo<AArch64TargetInfo>(Triple);
++    case llvm::Triple::Bitrig:
++      return new BitrigTargetInfo<AArch64TargetInfo>(Triple);
+     default:
+       return new AArch64TargetInfo(Triple);
+     }
+diff --git a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+index de2c293..9a875d2 100644
+--- a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
++++ b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+@@ -5700,6 +5700,9 @@ void bitrig::Link::ConstructJob(Compilation &C, const JobAction &JA,
+ 
+     StringRef MyArch;
+     switch (getToolChain().getTriple().getArch()) {
++    case llvm::Triple::aarch64:
++      MyArch = "aarch64";
++      break;
+     case llvm::Triple::arm:
+       MyArch = "arm";
+       break;
