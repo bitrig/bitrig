@@ -1898,16 +1898,31 @@ Tool *Bitrig::buildLinker() const {
   return new tools::bitrig::Link(*this);
 }
 
+ToolChain::CXXStdlibType
+Bitrig::GetCXXStdlibType(const ArgList &Args) const {
+  if (Arg *A = Args.getLastArg(options::OPT_stdlib_EQ)) {
+    StringRef Value = A->getValue();
+    if (Value == "libc++")
+      return ToolChain::CST_Libcxx;
+    if (Value == "libstdc++")
+      return ToolChain::CST_Libstdcxx;
+    getDriver().Diag(diag::err_drv_invalid_stdlib_name)
+      << A->getAsString(Args);
+  }
+
+  return ToolChain::CST_Libcxx;
+}
+
 void Bitrig::AddClangCXXStdlibIncludeArgs(const ArgList &DriverArgs,
                                           ArgStringList &CC1Args) const {
   if (DriverArgs.hasArg(options::OPT_nostdlibinc) ||
       DriverArgs.hasArg(options::OPT_nostdincxx))
     return;
 
-  switch (GetCXXStdlibType(DriverArgs)) {
+  switch (Bitrig::GetCXXStdlibType(DriverArgs)) {
   case ToolChain::CST_Libcxx:
     addSystemInclude(DriverArgs, CC1Args,
-                     getDriver().SysRoot + "/usr/include/c++/");
+                     getDriver().SysRoot + "/usr/include/c++/v1");
     break;
   case ToolChain::CST_Libstdcxx:
     addSystemInclude(DriverArgs, CC1Args,
@@ -1930,12 +1945,11 @@ void Bitrig::AddClangCXXStdlibIncludeArgs(const ArgList &DriverArgs,
 
 void Bitrig::AddCXXStdlibLibArgs(const ArgList &Args,
                                  ArgStringList &CmdArgs) const {
-  switch (GetCXXStdlibType(Args)) {
+  switch (Bitrig::GetCXXStdlibType(Args)) {
   case ToolChain::CST_Libcxx:
     CmdArgs.push_back("-lc++");
-    CmdArgs.push_back("-lcxxrt");
-    // Include supc++ to provide Unwind until provided by libcxx.
-    CmdArgs.push_back("-lgcc");
+    CmdArgs.push_back("-lc++abi");
+    CmdArgs.push_back("-lpthread");
     break;
   case ToolChain::CST_Libstdcxx:
     CmdArgs.push_back("-lstdc++");

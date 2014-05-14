@@ -485,6 +485,7 @@ public:
   virtual bool IsObjCNonFragileABIDefault() const { return true; }
   virtual bool IsObjCLegacyDispatchDefault() const { return false; }
 
+  virtual CXXStdlibType GetCXXStdlibType(const llvm::opt::ArgList &Args) const;
   virtual void
   AddClangCXXStdlibIncludeArgs(const llvm::opt::ArgList &DriverArgs,
                                llvm::opt::ArgStringList &CC1Args) const;
