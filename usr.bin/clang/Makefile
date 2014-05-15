@@ -20,7 +20,8 @@ SUBDIR+=bugpoint \
 	llvm-objdump \
 	llvm-rtdyld \
 	macho-dump \
-	opt
+	opt \
+	scan-build
 .endif
 
 HOSTARCH!=uname -p
