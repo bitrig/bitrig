@@ -124,7 +124,7 @@ static Elf_Addr reloc_target_bitmask[] = {
 	0,		/* 15 OBSL */
 	0,		/* 16 OBSL */
 	0,		/* 17 TLS_DTPMOD32 */
-	_BM(32),	/* 18 TLS_DTPOFF32 */
+	0,		/* 18 TLS_DTPOFF32 */
 	0,		/* 19 TLS_TPOFF32 */
 	_BM(32),	/* 20 COPY */
 	_BM(32),	/* 21 GLOB_DAT */
@@ -308,7 +308,6 @@ resolve_failed:
 			if (value == 0)
 				goto resolve_failed;
 			*where = (Elf_Addr) this->st_value;
-
 			continue;
 		}
 		if (type == R_TYPE(TLS_TPOFF32)) {
