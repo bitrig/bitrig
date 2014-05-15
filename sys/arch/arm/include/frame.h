@@ -239,10 +239,7 @@ struct frame {
 	mov	r0, lr;			/* Save xxx32 r14 */		   \
 	mov	r1, sp;			/* Save xxx32 sp */		   \
 	mrs	r3, spsr;		/* Save xxx32 spsr */		   \
-	mrs     r2, cpsr; 		/* Get the CPSR */		   \
-	bic     r2, r2, #(PSR_MODE);	/* Fix for SVC mode */		   \
-	orr     r2, r2, #(PSR_SVC32_MODE);				   \
-	msr     cpsr_c, r2;		/* Punch into SVC mode */	   \
+	cps	#(PSR_SVC32_MODE);	/* Punch into SVC mode */	   \
 	mov	r2, sp;			/* Save	SVC sp */		   \
 	str	r0, [sp, #-4]!;		/* Push return address */	   \
 	str	lr, [sp, #-4]!;		/* Push SVC lr */		   \
