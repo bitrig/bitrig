@@ -196,7 +196,7 @@ ${CROSSBUILDENV}:	${CROSSINCLUDES}
 	cp /usr/bin/clang ${CROSSDIR}/usr/bin/$${a}-cross-clang; \
 	echo  "#! /bin/sh\n${CROSSDIR}/usr/bin/$${a}-cross-clang -target $${a} --sysroot ${CROSSDIR} ${CCCROSSOPTS} \"$$""@\"" > ${CROSSDIR}/usr/bin/$${a}-clang; \
 	chmod +x ${CROSSDIR}/usr/bin/$${a}-clang; \
-	echo  "#! /bin/sh\n${CROSSDIR}/usr/bin/$${a}-cross-clang -ccc-cxx -target $${a} --sysroot ${CROSSDIR} ${CCCROSSOPTS} \"$$""@\"" > ${CROSSDIR}/usr/bin/$${a}-clang++; \
+	echo  "#! /bin/sh\n${CROSSDIR}/usr/bin/$${a}-cross-clang --driver-mode=g++ -target $${a} --sysroot ${CROSSDIR} ${CCCROSSOPTS} \"$$""@\"" > ${CROSSDIR}/usr/bin/$${a}-clang++; \
 	chmod +x ${CROSSDIR}/usr/bin/$${a}-clang++; \
 	rm -f ${CROSSDIR}/usr/bin/$${a}-cpp ${CROSSDIR}/usr/$${a}/bin/cpp; \
 	sed -e "s,ARCH=\"\",ARCH=\"-arch ${TARGET_ARCH} -isysroot=${CROSSDIR}\"," < \
