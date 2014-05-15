@@ -14,7 +14,8 @@ MAN=		file.1 magic.5
 CLEANFILES+=	magic post-magic
 all:		file magic
 
-MAG1=		$(.CURDIR)/magdir/Header\
+MAG1=		$(.CURDIR)/magdir/Bitrig\
+		$(.CURDIR)/magdir/Header\
 		$(.CURDIR)/magdir/Localstuff\
 		$(.CURDIR)/magdir/OpenBSD
 MAGFILES=	$(.CURDIR)/magdir/[0-9a-z]*

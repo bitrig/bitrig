@@ -1,0 +1,6 @@
+#------------------------------------------------------------------------------
+# Bitrig:  file(1) magic for Bitrig objects
+
+0	string		tmpfs		Bitrig tmpfs snapshot file
+>5	beshort		0x0a00
+>7	byte		x		(version %d)
