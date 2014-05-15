@@ -27,7 +27,7 @@ SRCS+= tls.c
 .PATH:	${.CURDIR}/${MACHINE_CPU}
 
 DEBUG?=	-g
-CFLAGS += -Wall -fno-builtin
+CFLAGS += -Wall -fno-builtin -Werror
 CFLAGS += -I${.CURDIR} -I${.CURDIR}/${MACHINE_CPU} \
 	-Dstrsep=_dl_strsep -Dstrlcat=_dl_strlcat -Dstrlen=_dl_strlen
 CDIAGFLAGS=
