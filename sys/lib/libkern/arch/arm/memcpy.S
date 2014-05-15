@@ -68,11 +68,7 @@ ENTRY_NP(memmove)
 	/* Determine copy direction */
 	cmp	r1, r0
 
-#ifdef __APCS_26__
-	moveqs	pc, lr
-#else
 	moveq	pc, lr
-#endif
 
 	/* save leaf functions having to store this away */
 	stmdb	sp!, {r0, lr}		/* memcpy() returns dest addr */
@@ -135,11 +131,7 @@ Lmemcpy_fl12:
 Lmemcpy_fl4:
 	/* less than 4 bytes to go */
 	adds	r2, r2, #4
-#ifdef __APCS_26_
-	ldmeqia sp!, {r0, pc}^		/* done */
-#else
 	ldmeqia	sp!, {r0, pc}		/* done */
-#endif
 	/* copy the crud byte at a time */
 	cmp	r2, #2
 	ldrb	r3, [r1], #1
@@ -148,11 +140,7 @@ Lmemcpy_fl4:
 	strgeb	r3, [r0], #1
 	ldrgtb	r3, [r1], #1
 	strgtb	r3, [r0], #1
-#ifdef __APCS_26__
-	ldmia	sp!, {r0, pc}^
-#else
 	ldmia	sp!, {r0, pc}
-#endif
 
 	/* erg - unaligned destination */
 Lmemcpy_fdestul:
@@ -336,11 +324,7 @@ Lmemcpy_bl12:
 Lmemcpy_bl4:
 	/* less than 4 bytes to go */
 	adds	r2, r2, #4
-#ifdef __APCS_26__
-	ldmeqia	sp!, {r0, pc}^
-#else
 	ldmeqia	sp!, {r0, pc}
-#endif
 
 	/* copy the crud byte at a time */
 	cmp	r2, #2
@@ -350,11 +334,7 @@ Lmemcpy_bl4:
 	strgeb	r3, [r0, #-1]!
 	ldrgtb	r3, [r1, #-1]!
 	strgtb	r3, [r0, #-1]!
-#ifdef __APCS_26__
-	ldmia	sp!, {r0, pc}^
-#else
 	ldmia	sp!, {r0, pc}
-#endif
 
 	/* erg - unaligned destination */
 Lmemcpy_bdestul:

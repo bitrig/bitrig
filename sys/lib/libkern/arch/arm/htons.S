@@ -39,8 +39,4 @@ _PROF_PROLOGUE
 	and		r1, r0, #0xff
 	mov		r0, r0, lsr #8
 	orr		r0, r0, r1, lsl #8
-#ifdef __APCS_26__
-	movs		pc, lr
-#else
-	mov		pc, lr  
-#endif
+	mov		pc, lr

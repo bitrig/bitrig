@@ -40,8 +40,4 @@ _PROF_PROLOGUE
 	bic		r1, r1, #0x00FF0000
 	mov		r0, r0, ror #8
 	eor		r0, r0, r1, lsr #8
-#ifdef __APCS_26__
-	movs		pc,lr
-#else
 	mov		pc, lr
-#endif
