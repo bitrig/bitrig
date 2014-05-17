@@ -111,6 +111,7 @@ struct board_dev utilite_devs[] = {
 	{ "imxgpio",	4 },
 	{ "imxgpio",	5 },
 	{ "imxgpio",	6 },
+	{ "imxiic",	2 },
 	{ "imxesdhc",	2 },
 	{ "ehci",	0 },
 	{ "imxenet",	0 },

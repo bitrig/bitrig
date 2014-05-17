@@ -69,14 +69,14 @@ imxocotp_attach(struct device *parent, struct device *self, void *args)
 	imxocotp_sc = sc;
 }
 
-void
+int
 imxocotp_get_ethernet_address(u_int8_t *mac)
 {
 	uint32_t value;
 
 	value = bus_space_read_4(imxocotp_sc->sc_iot, imxocotp_sc->sc_ioh, OCOTP_MAC0);
 	if (!value)
-		return;
+		return 1;
 
 	mac[5] = value & 0xff;
 	mac[4] = (value >> 8) & 0xff;
@@ -86,6 +86,8 @@ imxocotp_get_ethernet_address(u_int8_t *mac)
 	value = bus_space_read_4(imxocotp_sc->sc_iot, imxocotp_sc->sc_ioh, OCOTP_MAC1);
 	mac[1] = value & 0xff;
 	mac[0] = (value >> 8) & 0xff;
+
+	return 0;
 }
 
 uint32_t

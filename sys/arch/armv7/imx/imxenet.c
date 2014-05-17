@@ -53,6 +53,7 @@
 #include <armv7/imx/imxccmvar.h>
 #include <armv7/imx/imxgpiovar.h>
 #include <armv7/imx/imxocotpvar.h>
+#include <armv7/imx/at24var.h>
 
 /* configuration registers */
 #define ENET_EIR		0x004
@@ -319,7 +320,8 @@ imxenet_attach(struct device *parent, struct device *self, void *args)
 	ifp->if_capabilities = IFCAP_VLAN_MTU;
 
 	memset(sc->sc_ac.ac_enaddr, 0xff, ETHER_ADDR_LEN);
-	imxocotp_get_ethernet_address(sc->sc_ac.ac_enaddr);
+	if (imxocotp_get_ethernet_address(sc->sc_ac.ac_enaddr))
+		at24_get_ethernet_address(sc->sc_ac.ac_enaddr);
 
 	printf("%s: address %s\n", sc->sc_dev.dv_xname,
 	    ether_sprintf(sc->sc_ac.ac_enaddr));

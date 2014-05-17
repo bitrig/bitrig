@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 Patrick Wildt <patrick@blueri.se>
+ * Copyright (c) 2014 Patrick Wildt <patrick@blueri.se>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,5 +14,9 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-int imxocotp_get_ethernet_address(u_int8_t *);
-uint32_t imxocotp_get_temperature_calibration(void);
+#ifndef AT24VAR_H
+#define AT24VAR_H
+
+int at24_get_ethernet_address(char *);
+
+#endif /* AT24VAR_H */

@@ -163,6 +163,7 @@ sdmmc*		at imxesdhc?		# SD/MMC bus
 
 # I2C bus support
 iic*		at imxiic?
+atrom*		at iic?
 maxgpio*	at iic?
 gpio*		at maxgpio?
 

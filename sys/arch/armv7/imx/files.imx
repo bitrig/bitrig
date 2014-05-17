@@ -55,6 +55,11 @@ device imxpchb
 attach imxpchb at imx
 file	arch/armv7/imx/imxpchb.c		imxpchb
 
+# AT24 eeprom
+device	atrom
+attach	atrom at i2c
+file	arch/armv7/imx/at24.c			atrom
+
 # Maxim MAX7301 GPIO extender
 device	maxgpio: gpiobus
 attach	maxgpio at i2c
