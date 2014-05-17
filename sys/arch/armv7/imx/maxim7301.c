@@ -68,10 +68,8 @@ max7301_match(struct device *parent, void *v, void *arg)
 	int ok = 0;
 	uint8_t cmd, data;
 
-	printf("testing %d\n", ia->ia_addr);
 	if (ia->ia_addr != MAX7301_ADDR)
 		return (0);
-	printf("testing\n");
 	/* attempt to read input register 0 */
 	iic_acquire_bus(ia->ia_tag, I2C_F_POLL);
 	cmd = 0;
@@ -79,7 +77,6 @@ max7301_match(struct device *parent, void *v, void *arg)
 	    &cmd, sizeof cmd, &data, sizeof data, I2C_F_POLL))
 		goto fail;
 	ok = 1;
-	printf("match\n");
 fail:
 	iic_release_bus(ia->ia_tag, I2C_F_POLL);
 	return (ok);
