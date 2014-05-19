@@ -268,6 +268,8 @@ MLINKS+= curs_inwstr.3 inwstr.3 curs_inwstr.3 innwstr.3 \
 	curs_inwstr.3 mvinwstr.3 curs_inwstr.3 mvinnwstr.3 \
 	curs_inwstr.3 mvwinwstr.3 curs_inwstr.3 mvwinnwstr.3
 
+PC_FILES=ncurses.pc menu.pc form.pc panel.pc
+
 GENERATED= init_keytry.h codes.c comp_captab.c expanded.c fallback.c \
 	keys.list lib_gen.c lib_keyname.c names.c unctrl.c make_hash make_keys
 CLEANFILES+= ${GENERATED} term.5 terminfo.5 curses.3 \
@@ -281,6 +283,12 @@ all: ${GENERATED}
 
 beforedepend: ${GENERATED}
 
+beforeinstall:
+	/bin/sh ${.CURDIR}/generate_pkgconfig.sh -c ${.CURDIR} -o ${.OBJDIR}
+.for p in ${PC_FILES}
+	${INSTALL} ${INSTALL_COPY} -o root -g ${SHAREGRP} \
+	    -m ${SHAREMODE} ${.OBJDIR}/$p ${DESTDIR}/usr/lib/pkgconfig/
+.endfor
 includes:
 	@cmp -s ${DESTDIR}/usr/include/ncurses.h ${.CURDIR}/curses.h || \
 	  ${INSTALL} ${INSTALL_COPY} -m 444 -o $(BINOWN) -g $(BINGRP) \
