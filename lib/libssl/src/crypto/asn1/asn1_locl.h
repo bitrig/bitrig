@@ -102,6 +102,10 @@ struct evp_pkey_asn1_method_st
 	int (*param_cmp)(const EVP_PKEY *a, const EVP_PKEY *b);
 	int (*param_print)(BIO *out, const EVP_PKEY *pkey, int indent,
 							ASN1_PCTX *pctx);
+	int (*sig_print)(BIO *out,
+			 const X509_ALGOR *sigalg, const ASN1_STRING *sig,
+					 int indent, ASN1_PCTX *pctx);
+
 
 	void (*pkey_free)(EVP_PKEY *pkey);
 	int (*pkey_ctrl)(EVP_PKEY *pkey, int op, long arg1, void *arg2);
@@ -111,6 +115,13 @@ struct evp_pkey_asn1_method_st
 	int (*old_priv_decode)(EVP_PKEY *pkey,
 				const unsigned char **pder, int derlen);
 	int (*old_priv_encode)(const EVP_PKEY *pkey, unsigned char **pder);
+	/* Custom ASN1 signature verification */
+	int (*item_verify)(EVP_MD_CTX *ctx, const ASN1_ITEM *it, void *asn,
+				X509_ALGOR *a, ASN1_BIT_STRING *sig,
+				EVP_PKEY *pkey);
+	int (*item_sign)(EVP_MD_CTX *ctx, const ASN1_ITEM *it, void *asn,
+				X509_ALGOR *alg1, X509_ALGOR *alg2, 
+				ASN1_BIT_STRING *sig);
 
 	} /* EVP_PKEY_ASN1_METHOD */;
 
@@ -132,3 +143,14 @@ struct x509_crl_method_st
 				ASN1_INTEGER *ser, X509_NAME *issuer);
 	int (*crl_verify)(X509_CRL *crl, EVP_PKEY *pk);
 	};
+
+/*
+ * Unicode codepoint constants
+ */
+#define	UNICODE_MAX		0x10FFFF
+#define	UNICODE_SURROGATE_MIN	0x00D800
+#define	UNICODE_SURROGATE_MAX	0x00DFFF
+
+#define	UNICODE_IS_SURROGATE(x) \
+	((x) >= UNICODE_SURROGATE_MIN && (x) <= UNICODE_SURROGATE_MAX)
+
