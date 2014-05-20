@@ -54,11 +54,11 @@
 #ifdef __STDC__
 #define SYSTRAP(x) \
 			ldr	r12, =SYS_ ## x;		\
-			swi SWI_OS_NETBSD | SYS_ ## x
+			swi	0
 #else
 #define SYSTRAP(x) \
 			ldr	r12, =SYS_/**/x;		\
-			swi SWI_OS_NETBSD | SYS_/**/x
+			swi	0
 #endif
 
 #define	CERROR		_C_LABEL(__cerror)
