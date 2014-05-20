@@ -2118,10 +2118,14 @@
 ./usr/lib/libz_p.a
 ./usr/lib/pkgconfig
 ./usr/lib/pkgconfig/expat.pc
+./usr/lib/pkgconfig/form.pc
 ./usr/lib/pkgconfig/fuse.pc
 ./usr/lib/pkgconfig/libcrypto.pc
 ./usr/lib/pkgconfig/libssl.pc
+./usr/lib/pkgconfig/menu.pc
+./usr/lib/pkgconfig/ncurses.pc
 ./usr/lib/pkgconfig/openssl.pc
+./usr/lib/pkgconfig/panel.pc
 ./usr/lib/pkgconfig/sqlite3.pc
 ./usr/lib/pkgconfig/zlib.pc
 ./usr/libdata
