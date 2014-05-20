@@ -121,8 +121,13 @@ armv7_attach(struct device *parent, struct device *self, void *aux)
 		break;
 #endif
 #if NIMX > 0
+	case BOARD_ID_IMX6_CUBOXI:
+		printf(": i.MX6 SolidRun CuBox-i\n");
+		imx6_init();
+		sc->sc_board_devs = hummingboard_devs;
+		break;
 	case BOARD_ID_IMX6_HUMMINGBOARD:
-		printf(": SolidRun HummingBoard\n");
+		printf(": i.MX6 SolidRun HummingBoard\n");
 		imx6_init();
 		sc->sc_board_devs = hummingboard_devs;
 		break;

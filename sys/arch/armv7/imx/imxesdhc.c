@@ -447,6 +447,7 @@ imxesdhc_card_detect(sdmmc_chipset_handle_t sch)
 
 	switch (board_id)
 	{
+	case BOARD_ID_IMX6_CUBOXI:
 	case BOARD_ID_IMX6_HUMMINGBOARD:
 		gpio = 0*32 + 4;
 		imxgpio_set_dir(gpio, IMXGPIO_DIR_IN);

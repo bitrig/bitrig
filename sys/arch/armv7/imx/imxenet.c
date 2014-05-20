@@ -232,11 +232,18 @@ imxenet_attach(struct device *parent, struct device *self, void *args)
 
 	switch (board_id)
 	{
+	case BOARD_ID_IMX6_CUBOXI:
 	case BOARD_ID_IMX6_HUMMINGBOARD:
+		/* We need to reset the AR8035 PHY twice. */
+		imxgpio_clear_bit(ENET_HUMMINGBOARD_PHY_RST);
 		imxgpio_set_dir(ENET_HUMMINGBOARD_PHY_RST, IMXGPIO_DIR_OUT);
-		delay(10);
+		delay(2000);
 		imxgpio_set_bit(ENET_HUMMINGBOARD_PHY_RST);
-		delay(10);
+		delay(2000);
+		imxgpio_clear_bit(ENET_HUMMINGBOARD_PHY_RST);
+		delay(2000);
+		imxgpio_set_bit(ENET_HUMMINGBOARD_PHY_RST);
+		delay(2000);
 		break;
 	case BOARD_ID_IMX6_SABRELITE:
 		/* SABRE Lite PHY reset */
@@ -378,6 +385,7 @@ imxenet_chip_init(struct imxenet_softc *sc)
 
 	switch (board_id)
 	{
+	case BOARD_ID_IMX6_CUBOXI:
 	case BOARD_ID_IMX6_HUMMINGBOARD:
 		phy = ENET_HUMMINGBOARD_PHY;
 		break;
@@ -418,6 +426,7 @@ imxenet_chip_init(struct imxenet_softc *sc)
 		/* enable all interrupts */
 		imxenet_miibus_writereg(dev, phy, 0x1b, 0xff00);
 		break;
+	case BOARD_ID_IMX6_CUBOXI:		/* AR8035 */
 	case BOARD_ID_IMX6_HUMMINGBOARD:	/* AR8035 */
 	case BOARD_ID_IMX6_UTILITE:
 	case BOARD_ID_IMX6_WANDBOARD:		/* AR8031 */

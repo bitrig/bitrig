@@ -66,6 +66,7 @@ struct board_dev hummingboard_devs[] = {
 	{ "ehci",	0 },
 	{ "ehci",	1 },
 	{ "imxenet",	0 },
+	{ "ahci",	0 },
 	{ NULL,		0 }
 };
 

@@ -49,6 +49,7 @@ imx_platform_init_cons(void)
 	paddr_t paddr;
 
 	switch (board_id) {
+	case BOARD_ID_IMX6_CUBOXI:
 	case BOARD_ID_IMX6_HUMMINGBOARD:
 		paddr = 0x02020000;
 		break;
@@ -88,6 +89,10 @@ static void
 imx_platform_print_board_type(void)
 {
 	switch (board_id) {
+	case BOARD_ID_IMX6_CUBOXI:
+		amptimer_frequency = 396 * 1000 * 1000;
+		printf("board type: CuBox-i\n");
+		break;
 	case BOARD_ID_IMX6_HUMMINGBOARD:
 		amptimer_frequency = 396 * 1000 * 1000;
 		printf("board type: HummingBoard\n");

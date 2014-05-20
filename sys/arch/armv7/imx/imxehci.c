@@ -138,6 +138,7 @@ imxehci_attach(struct device *parent, struct device *self, void *aux)
 		/* enable usb port power */
 		switch (board_id)
 		{
+		case BOARD_ID_IMX6_CUBOXI:
 		case BOARD_ID_IMX6_HUMMINGBOARD:
 			imxgpio_set_dir(EHCI_HUMMINGBOARD_USB_H1_PWR, IMXGPIO_DIR_OUT);
 			delay(10);
@@ -166,6 +167,7 @@ imxehci_attach(struct device *parent, struct device *self, void *aux)
 		/* enable usb port power */
 		switch (board_id)
 		{
+		case BOARD_ID_IMX6_CUBOXI:
 		case BOARD_ID_IMX6_HUMMINGBOARD:
 			imxgpio_set_dir(EHCI_HUMMINGBOARD_USB_OTG_PWR, IMXGPIO_DIR_OUT);
 			delay(10);

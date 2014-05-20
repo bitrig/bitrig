@@ -48,6 +48,7 @@ platform_init()
 		break;
 #endif
 #if NIMX > 0
+	case BOARD_ID_IMX6_CUBOXI:
 	case BOARD_ID_IMX6_HUMMINGBOARD:
 	case BOARD_ID_IMX6_SABRELITE:
 	case BOARD_ID_IMX6_UDOO:
