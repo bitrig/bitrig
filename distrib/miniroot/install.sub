@@ -1852,6 +1852,9 @@ questions() {
 		fi
 	fi
 
+	ask_yn "Remove closed-source firmware?"
+	firmware=$resp
+
 	ask_yn "Install the bitrig toolchain on first boot?" yes
 	syscomp=$resp
 }
@@ -1938,7 +1941,11 @@ finish_up() {
 	makedev $(bioctl $ROOTDISK 2>/dev/null | sed -n 's/.*<\(.*\)>$/\1/p')
 	md_installboot $ROOTDISK
 
-	update_firmware
+	if [[ $firmware == y ]]; then
+		rm -rf /mnt/etc/firmware/*
+	else
+		update_firmware
+	fi
 
 	# XXX To be removed after 5.6 is released.
 	upgrade_to64time_t
