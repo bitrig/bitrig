@@ -75,6 +75,7 @@ typedef struct trapframe {
 	register_t tf_svc_sp;
 	register_t tf_svc_lr;
 	register_t tf_pc;
+	register_t tf_pad;
 } trapframe_t;
 
 /* Register numbers */
@@ -146,6 +147,7 @@ typedef struct irqframe {
  */
 
 struct switchframe {
+	u_int	sf_pad;
 	u_int	sf_r4;
 	u_int	sf_r5;
 	u_int	sf_r6;
@@ -204,6 +206,7 @@ struct frame {
 
 #define PUSHFRAME							   \
 	clrex;								   \
+	sub	sp, sp, #4;		/* Align the stack */		   \
 	str	lr, [sp, #-4]!;		/* Push the return address */	   \
 	sub	sp, sp, #(4*17);	/* Adjust the stack pointer */	   \
 	stmia	sp, {r0-r14}^;		/* Push the user mode registers */ \
@@ -223,7 +226,8 @@ struct frame {
         ldmia   sp, {r0-r14}^;		/* Restore registers (usr mode) */ \
         mov     r0, r0;                 /* NOP for previous instruction */ \
 	add	sp, sp, #(4*17);	/* Adjust the stack pointer */	   \
- 	ldr	lr, [sp], #0x0004	/* Pull the return address */
+	ldr	lr, [sp], #0x0004;	/* Pull the return address */	   \
+	add	sp, sp, #4		/* Align the stack */
 
 /*
  * PUSHFRAMEINSVC - macro to push a trap frame on the stack in SVC32 mode
@@ -241,6 +245,8 @@ struct frame {
 	mrs	r3, spsr;		/* Save xxx32 spsr */		   \
 	cps	#(PSR_SVC32_MODE);	/* Punch into SVC mode */	   \
 	mov	r2, sp;			/* Save	SVC sp */		   \
+	bic	sp, sp, #7;		/* Align sp to an 8-byte addrress */  \
+	sub	sp, sp, #4;		/* Pad trapframe to keep alignment */ \
 	str	r0, [sp, #-4]!;		/* Push return address */	   \
 	str	lr, [sp, #-4]!;		/* Push SVC lr */		   \
 	str	r2, [sp, #-4]!;		/* Push SVC sp */		   \
