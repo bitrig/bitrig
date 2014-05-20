@@ -29,6 +29,9 @@ SUBDIR= apply arch asa at aucat audioctl awk banner \
 	unvis users uudecode uuencode uuidgen vacation vi vis vmstat w wall \
 	wc what which who whois write x99token xargs xinstall \
 	xstr yacc yes
+.if ${MK_ENABLE_CLANG:L} == "yes"
+SUBDIR+=clang
+.endif
 
 .if (${YP:L} == "yes")
 SUBDIR+=ypcat ypmatch ypwhich

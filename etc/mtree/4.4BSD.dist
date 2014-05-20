@@ -361,6 +361,23 @@ rpcsvc		gname=bin uname=root mode=0755
 # ./usr/lib
 lib
 
+# ./usr/lib/clang
+clang		gname=bin uname=root mode=0755
+
+# ./usr/lib/clang/3.4
+3.4		gname=bin uname=root mode=0755
+
+# ./usr/lib/clang/3.4/include
+include		gname=bin uname=root mode=0755
+# ./usr/lib/clang/3.4/include
+..
+
+# ./usr/lib/clang/3.4
+..
+
+# ./usr/lib/clang
+..
+
 # ./usr/lib/debug
 debug		gname=bin uname=root mode=0755
 # ./usr/lib/debug
@@ -664,6 +681,11 @@ quiz.db
 # ./usr/share/info
 info
 # ./usr/share/info
+..
+
+# ./usr/share/llvm
+llvm
+# ./usr/share/llvm
 ..
 
 # ./usr/share/locale

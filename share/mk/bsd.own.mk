@@ -162,19 +162,27 @@ BSD_OWN_MK=Done
 	all cleanman nlsinstall cleannls includes \
 	beforeinstall realinstall maninstall afterinstall install
 
+
 # Define MK_INSTALLLIB for libraries which build using bsd.lib.mk but should
 # not be installed, they link directly out of ${.OBJDIR}
 MK_INSTALLLIB?=yes
 
+# enable clang for arm
+.if ${MACHINE_ARCH} == "arm"
+MK_ENABLE_CLANG?=yes
+.else
+MK_ENABLE_CLANG?=no
+.endif
+
 # Control clang specific features
 # MK_CLANG_EXTRAS controls if additional clang binaries besides the
 # base compiler should be built
-MK_CLANG_EXTRAS?=No
+MK_CLANG_EXTRAS?=yes
 
 # MK_CLANG_IS_CC controls if clang should be installed as /usr/bin/cc
-MK_CLANG_IS_CC?=No
+MK_CLANG_IS_CC?=yes
 
 # MK_SHARED_TOOLCHAIN forces compiler toolchain to build static (if set to no).
-MK_SHARED_TOOLCHAIN?=Yes
+MK_SHARED_TOOLCHAIN?=yes
 
 MK_ARM_EABI?=yes

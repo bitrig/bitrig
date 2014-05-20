@@ -48,6 +48,10 @@ RDIRS=	../lib/libcrypto ../lib/libcurses ../lib/libc++ ../lib/libc++abi \
 	../usr.bin/lex \
 	../sys/arch/${MACHINE}
 
+.if ${MK_ENABLE_CLANG:L} == "yes"
+RDIRS+=	../lib/clang/include
+.endif
+
 # Places using Makefile that needs a prerequisite target met before includes
 PRDIRS=
 

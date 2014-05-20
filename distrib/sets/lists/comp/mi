@@ -1539,3 +1539,4 @@
 ./usr/lib/liby_p.a
 ./usr/lib/libz.a
 ./usr/lib/libz_p.a
+./usr/share/llvm
