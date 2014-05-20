@@ -36,8 +36,10 @@ INSTALL_STRIP=
 ELF_LDFLAGS+=--shared -Bsymbolic --no-undefined
 
 candidate=	$(PROG).test
+CLEANFILES+=	${candidate}
 .if ${HOSTCC} == ${CC}
 test_prog=	test-$(PROG)
+CLEANFILES+=	test-$(PROG)
 test_cmd= 	'ulimit -c 0; [ "`${.OBJDIR}/$(test_prog) ok`" = ok ]'
 
 $(test_prog):
