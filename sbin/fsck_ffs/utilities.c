@@ -1,4 +1,4 @@
-/*	$OpenBSD: utilities.c,v 1.44 2014/05/20 21:11:16 krw Exp $	*/
+/*	$OpenBSD: utilities.c,v 1.45 2014/05/21 18:53:05 krw Exp $	*/
 /*	$NetBSD: utilities.c,v 1.18 1996/09/27 22:45:20 christos Exp $	*/
 
 /*
@@ -619,4 +619,3 @@ catchinfo(int signo)
 	}
 	errno = save_errno;
 }
-
