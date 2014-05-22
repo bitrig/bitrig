@@ -495,6 +495,8 @@ public:
      return 1;
   }
 
+  virtual bool UseSjLjExceptions() const;
+
 protected:
   virtual Tool *buildAssembler() const;
   virtual Tool *buildLinker() const;

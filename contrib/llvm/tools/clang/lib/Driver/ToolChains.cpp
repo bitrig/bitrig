@@ -1957,6 +1957,12 @@ void Bitrig::AddCXXStdlibLibArgs(const ArgList &Args,
   }
 }
 
+// FIXME: Switch to DWARF once implemented in libc++abi.
+bool Bitrig::UseSjLjExceptions() const {
+  return (getTriple().getArch() == llvm::Triple::arm ||
+          getTriple().getArch() == llvm::Triple::thumb);
+}
+
 /// FreeBSD - FreeBSD tool chain which can call as(1) and ld(1) directly.
 
 FreeBSD::FreeBSD(const Driver &D, const llvm::Triple& Triple, const ArgList &Args)
