@@ -1,0 +1,37 @@
+commit 10f6c118e3475402da114ad5f7e3069461478b16
+Author: Patrick Wildt <patrick@blueri.se>
+Date:   Thu May 22 22:12:09 2014 +0200
+
+    Our size_t's are unsigned long, so make ARM use that on AAPCS, too.
+    
+    ok drahn@
+
+diff --git a/contrib/llvm/tools/clang/lib/Basic/Targets.cpp b/contrib/llvm/tools/clang/lib/Basic/Targets.cpp
+index 68df018..e4e270e 100644
+--- a/contrib/llvm/tools/clang/lib/Basic/Targets.cpp
++++ b/contrib/llvm/tools/clang/lib/Basic/Targets.cpp
+@@ -4231,6 +4231,15 @@ public:
+ };
+ } // end anonymous namespace.
+ 
++namespace {
++class BitrigARMTargetInfo : public BitrigTargetInfo<ARMTargetInfo> {
++public:
++  BitrigARMTargetInfo(const llvm::Triple &Triple)
++      : BitrigTargetInfo<ARMTargetInfo>(Triple) {
++    SizeType = UnsignedLong;
++  }
++};
++} // end anonymous namespace
+ 
+ namespace {
+ // Hexagon abstract base class
+@@ -5570,7 +5579,7 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple) {
+     case llvm::Triple::OpenBSD:
+       return new OpenBSDTargetInfo<ARMTargetInfo>(Triple);
+     case llvm::Triple::Bitrig:
+-      return new BitrigTargetInfo<ARMTargetInfo>(Triple);
++      return new BitrigARMTargetInfo(Triple);
+     case llvm::Triple::RTEMS:
+       return new RTEMSTargetInfo<ARMTargetInfo>(Triple);
+     case llvm::Triple::NaCl:
