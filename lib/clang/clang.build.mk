@@ -38,8 +38,6 @@ unsupported arch
 # other architectures
 # LLVM_NATIVE_ARCH Sparc
 # LLVM_NATIVE_ARCH PowerPC
-# LLVM_NATIVE_ARCH AArch64
-# LLVM_NATIVE_ARCH ARM
 # LLVM_NATIVE_ARCH Mips
 # LLVM_NATIVE_ARCH XCore
 # LLVM_NATIVE_ARCH MSP430
@@ -48,11 +46,14 @@ unsupported arch
 .endif
 .endif
 
-.if (${TARGET_ARCH} == "arm" || ${TARGET_ARCH} == "armv6") && \
-    ${MK_ARM_EABI:L} != "no"
-TARGET_ABI=	gnueabi
-.else
-TARGET_ABI=	unknown
+TARGET_ABI=
+.if ${TARGET_ARCH} == "armv7" && ${MK_ARM_EABI:L} != "no"
+TARGET_ABI=	-gnueabihf
+.endif
+
+BUILD_ABI=
+.if ${BUILD_ARCH} == "armv7" && ${MK_ARM_EABI:L} != "no"
+BUILD_ABI=	-gnueabihf
 .endif
 
 # NOTE: profile is disabled for clang pieces because it is expected
@@ -61,8 +62,8 @@ TARGET_ABI=	unknown
 NOPROFILE= 
 
 OSVERS!=uname -r
-TARGET_TRIPLE?=	${TARGET_ARCH}-${TARGET_ABI}-bitrig${OSVERS}
-BUILD_TRIPLE?=	${BUILD_ARCH}-unknown-bitrig${OSVERS}
+TARGET_TRIPLE?=	${TARGET_ARCH}-unknown-bitrig${OSVERS}${TARGET_ABI}
+BUILD_TRIPLE?=	${BUILD_ARCH}-unknown-bitrig${OSVERS}${BUILD_ABI}
 CFLAGS+=	-DLLVM_DEFAULT_TARGET_TRIPLE=\"${TARGET_TRIPLE}\" \
 		-DLLVM_HOST_TRIPLE=\"${BUILD_TRIPLE}\" \
 		-DLLVM_NATIVE_ARCH=${LLVM_NATIVE_ARCH} \
