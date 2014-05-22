@@ -1,4 +1,4 @@
-/*	$OpenBSD: ffs_vnops.c,v 1.75 2014/05/09 03:48:58 tedu Exp $	*/
+/*	$OpenBSD: ffs_vnops.c,v 1.76 2014/05/22 02:02:39 guenther Exp $	*/
 /*	$NetBSD: ffs_vnops.c,v 1.7 1996/05/11 18:27:24 mycroft Exp $	*/
 
 /*-
@@ -454,7 +454,7 @@ ffs_write(void *v)
 			uio->uio_resid = resid;
 		}
 	} else if (resid > uio->uio_resid && (ioflag & IO_SYNC)) {
-		error = UFS_UPDATE(ip, MNT_WAIT);
+		error = UFS_UPDATE(ip, 1);
 	} else
 		UFS_WAPBL_UPDATE(ip, 0);
 	if ((ioflag & IO_JOURNALLOCKED) == 0)
