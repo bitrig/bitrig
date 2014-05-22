@@ -1,0 +1,38 @@
+commit 43cea3dd3a0a492ae94036358d1f104f3f723589
+Author: Patrick Wildt <patrick@blueri.se>
+Date:   Thu May 22 22:16:09 2014 +0200
+
+    For now, use SJLJ Exceptions on ARM.  This will prolly change soon.
+    
+    ok drahn@
+
+diff --git a/contrib/llvm/tools/clang/lib/Driver/ToolChains.cpp b/contrib/llvm/tools/clang/lib/Driver/ToolChains.cpp
+index 5a09f2d..b682212 100644
+--- a/contrib/llvm/tools/clang/lib/Driver/ToolChains.cpp
++++ b/contrib/llvm/tools/clang/lib/Driver/ToolChains.cpp
+@@ -1957,6 +1957,12 @@ void Bitrig::AddCXXStdlibLibArgs(const ArgList &Args,
+   }
+ }
+ 
++// FIXME: Switch to DWARF once implemented in libc++abi.
++bool Bitrig::UseSjLjExceptions() const {
++  return (getTriple().getArch() == llvm::Triple::arm ||
++          getTriple().getArch() == llvm::Triple::thumb);
++}
++
+ /// FreeBSD - FreeBSD tool chain which can call as(1) and ld(1) directly.
+ 
+ FreeBSD::FreeBSD(const Driver &D, const llvm::Triple& Triple, const ArgList &Args)
+diff --git a/contrib/llvm/tools/clang/lib/Driver/ToolChains.h b/contrib/llvm/tools/clang/lib/Driver/ToolChains.h
+index e3f95fb..014756b 100644
+--- a/contrib/llvm/tools/clang/lib/Driver/ToolChains.h
++++ b/contrib/llvm/tools/clang/lib/Driver/ToolChains.h
+@@ -495,6 +495,8 @@ public:
+      return 1;
+   }
+ 
++  virtual bool UseSjLjExceptions() const;
++
+ protected:
+   virtual Tool *buildAssembler() const;
+   virtual Tool *buildLinker() const;
