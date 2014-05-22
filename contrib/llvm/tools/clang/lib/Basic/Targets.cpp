@@ -4231,6 +4231,15 @@ public:
 };
 } // end anonymous namespace.
 
+namespace {
+class BitrigARMTargetInfo : public BitrigTargetInfo<ARMTargetInfo> {
+public:
+  BitrigARMTargetInfo(const llvm::Triple &Triple)
+      : BitrigTargetInfo<ARMTargetInfo>(Triple) {
+    SizeType = UnsignedLong;
+  }
+};
+} // end anonymous namespace
 
 namespace {
 // Hexagon abstract base class
@@ -5570,7 +5579,7 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple) {
     case llvm::Triple::OpenBSD:
       return new OpenBSDTargetInfo<ARMTargetInfo>(Triple);
     case llvm::Triple::Bitrig:
-      return new BitrigTargetInfo<ARMTargetInfo>(Triple);
+      return new BitrigARMTargetInfo(Triple);
     case llvm::Triple::RTEMS:
       return new RTEMSTargetInfo<ARMTargetInfo>(Triple);
     case llvm::Triple::NaCl:
