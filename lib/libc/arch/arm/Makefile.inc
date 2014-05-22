@@ -9,7 +9,9 @@ KMSRCS=arch/arm/gen/divsi3.S arch/arm/string/memmove.S \
 
 #SRCS+=	__sigaction14_sigtramp.c __sigtramp1.S
 
+.if ${MK_ARM_EABI:L} == "no"
 CPPFLAGS += -DSOFTFLOAT
 
 SOFTFLOAT_BITS=32
 .include <arch/arm/softfloat/Makefile.inc>
+.endif
