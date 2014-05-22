@@ -16,11 +16,16 @@ CCCROSSOPTS=
 # this variable to work.
 .if	${TARGET} == "armv7"
 TARGET_ARCH=	arm
+# Enable/remove this to switch to EABI
 CCCROSSOPTS+="-march=armv7-a -mfloat-abi=soft"
+#TARGET_ARCHCOMP=	armv7
+#CANON_ABI=-gnueabihf
 .else
 TARGET_ARCH=	${TARGET}
 .endif
+CANON_ABI?=
 TARGET_CPU?=	${TARGET_ARCH}
+TARGET_ARCHCOMP?=	${TARGET_ARCH}
 OSR!=grep ^osr sys/conf/newvers.sh | sed -e 's/osr=//' -e 's/"//g'
 
 # List of LP64 archs
@@ -50,15 +55,16 @@ BINOWN?=root
 BINGRP?=bin
 
 CROSSDIR=	${DESTDIR}/usr/cross/${TARGET}
-CROSSENV=	AR=${CROSSDIR}/usr/bin/${TARGET_CANON}-ar \
-		AS=${CROSSDIR}/usr/bin/${TARGET_CANON}-as \
-		CC="${CROSSDIR}/usr/bin/${TARGET_CANON}-clang" \
-		CPP=${CROSSDIR}/usr/bin/${TARGET_CANON}-cpp \
-		CXX=${CROSSDIR}/usr/bin/${TARGET_CANON}-clang++ \
-		LD=${CROSSDIR}/usr/bin/${TARGET_CANON}-ld \
-		OBJCOPY=${CROSSDIR}/usr/bin/${TARGET_CANON}-objcopy \
-		LORDER=/usr/bin/lorder RANLIB=${CROSSDIR}/usr/bin/${TARGET_CANON}-ranlib \
-		STRIP=${CROSSDIR}/usr/bin/${TARGET_CANON}-strip \
+CROSSENV=	AR=${CROSSDIR}/usr/bin/${TARGET_CANONCOMP}-ar \
+		AS=${CROSSDIR}/usr/bin/${TARGET_CANONCOMP}-as \
+		CC=${CROSSDIR}/usr/bin/${TARGET_CANONCOMP}-clang \
+		CPP=${CROSSDIR}/usr/bin/${TARGET_CANONCOMP}-cpp \
+		CXX=${CROSSDIR}/usr/bin/${TARGET_CANONCOMP}-clang++ \
+		LD=${CROSSDIR}/usr/bin/${TARGET_CANONCOMP}-ld \
+		OBJCOPY=${CROSSDIR}/usr/bin/${TARGET_CANONCOMP}-objcopy \
+		LORDER=/usr/bin/lorder \
+		RANLIB=${CROSSDIR}/usr/bin/${TARGET_CANONCOMP}-ranlib \
+		STRIP=${CROSSDIR}/usr/bin/${TARGET_CANONCOMP}-strip \
 		HOSTCC=\"${CC}\" HOSTCXX=\"${CXX}\" NOMAN= \
 		HOSTCFLAGS=\"${CFLAGS}\" HOSTCXXFLAGS=\"${CXXFLAGS}\" \
 		HOSTLDFLAGS=\"${LDFLAGS}\" \
@@ -70,6 +76,7 @@ CROSSPATH=	/usr/bin:/bin:/usr/sbin:/sbin${CROSSADDPATH}
 CROSSLANGS?=	c c++
 
 TARGET_CANON=`cat ${CROSSDIR}/TARGET_CANON`
+TARGET_CANONCOMP=`cat ${CROSSDIR}/TARGET_CANONCOMP`
 TARGET_C=${TARGET_ARCH}-unknown-bitrig${OSR}
 #CROSSCFLAGS+=${CCCROSSOPTS}
 
@@ -112,6 +119,7 @@ cross-includes:	${CROSSINCLUDES}
 cross-env:
 	@echo ${CROSSENV} MACHINE=${TARGET} \
 	    MACHINE_ARCH=`cat ${CROSSDIR}/TARGET_ARCH` \
+	    MACHINE_ARCHCOMP=`cat ${CROSSDIR}/TARGET_ARCHCOMP` \
 	    MACHINE_CPU=`cat ${CROSSDIR}/TARGET_CPU` \
 	    BSDOBJDIR=${CROSSDIR}/usr/obj \
 	    BSDSRCDIR=${.CURDIR} MAKEOBJDIR=obj.${MACHINE}.${TARGET}
@@ -119,12 +127,17 @@ cross-env:
 ${CROSSDIRS}:
 	@-mkdir -p ${CROSSDIR}
 	@echo ${TARGET_ARCH} > ${CROSSDIR}/TARGET_ARCH
+	@echo ${TARGET_ARCHCOMP} > ${CROSSDIR}/TARGET_ARCHCOMP
 	@echo TARGET_ARCH is `cat ${CROSSDIR}/TARGET_ARCH`
+	@echo TARGET_ARCHCOMP is `cat ${CROSSDIR}/TARGET_ARCHCOMP`
 	@echo ${TARGET_CPU} > ${CROSSDIR}/TARGET_CPU
 	@echo TARGET_CPU is `cat ${CROSSDIR}/TARGET_CPU`
 	@eval `grep '^osr=' sys/conf/newvers.sh`; \
 	   echo ${TARGET_ARCH}-unknown-bitrig$$osr > \
 	   ${CROSSDIR}/TARGET_CANON
+	@eval `grep '^osr=' sys/conf/newvers.sh`; \
+	   echo ${TARGET_ARCHCOMP}-unknown-bitrig$$osr${CANON_ABI} > \
+	   ${CROSSDIR}/TARGET_CANONCOMP
 	@-mkdir -p ${CROSSDIR}
 	@-mkdir -p ${CROSSDIR}/usr/${TARGET_CANON}
 	@ln -sf ${CROSSDIR}/usr/include \
@@ -141,6 +154,7 @@ ${CROSSOBJ}:	${CROSSDIRS}
 	    BSDOBJDIR=${CROSSDIR}/usr/obj \
 	    COMPILER_VERSION=${COMPILER_VERSION} \
 	    MACHINE=${TARGET} \
+	    MACHINE_ARCHCOMP=${TARGET_ARCHCOMP} \
 	    MACHINE_ARCH=${TARGET_ARCH} MACHINE_CPU=${TARGET_CPU} \
 	    BSDSRCDIR=${.CURDIR} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
 	    ${MAKE} obj)
@@ -149,6 +163,7 @@ ${CROSSOBJ}:	${CROSSDIRS}
 	    BSDOBJDIR=${CROSSDIR}/usr/obj \
 	    COMPILER_VERSION=${COMPILER_VERSION} \
 	    MACHINE=${TARGET} \
+	    MACHINE_ARCHCOMP=${TARGET_ARCHCOMP} \
 	    MACHINE_ARCH=${TARGET_ARCH} MACHINE_CPU=${TARGET_CPU} \
 	    BSDSRCDIR=${.CURDIR} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
 	    ${MAKE} obj)
@@ -159,12 +174,14 @@ ${CROSSINCLUDES}:	${CROSSOBJ}
 	@(cd ${.CURDIR}/include && \
 	    COMPILER_VERSION=${COMPILER_VERSION} \
 	    MACHINE=${TARGET} \
+	    MACHINE_ARCHCOMP=${TARGET_ARCHCOMP} \
 	    MACHINE_ARCH=${TARGET_ARCH} MACHINE_CPU=${TARGET_CPU} \
 	    MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
 	    TARGET_ARCH=${TARGET_ARCH} TARGET_CPU=${TARGET_CPU} \
 	    ${MAKE} prereq && \
 	    COMPILER_VERSION=${COMPILER_VERSION} \
 	    MACHINE=${TARGET} \
+	    MACHINE_ARCHCOMP=${TARGET_ARCHCOMP} \
 	    MACHINE_ARCH=${TARGET_ARCH} MACHINE_CPU=${TARGET_CPU} \
 	    MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
 	    TARGET_ARCH=${TARGET_ARCH} TARGET_CPU=${TARGET_CPU} \
@@ -173,17 +190,17 @@ ${CROSSINCLUDES}:	${CROSSOBJ}
 
 ${CROSSBUILDENV}:	${CROSSINCLUDES}
 #	 XXX for now assumes the build env is in place 
-	a=${TARGET_CANON} ; \
+	a=${TARGET_CANONCOMP} ; \
 	l=$$(echo /usr/local/bin/$${a}-* ) ; \
 	for file in $${l} ; \
 	do \
 		echo file $${file} ; \
 		ln -sf $${file} ${CROSSDIR}/usr/bin/$$(basename $${file}) ;\
 	done ;
-	a=${TARGET_CANON} ; \
+	a=${TARGET_CANONCOMP} ; \
 	if [ -d /usr/local/$${a}/bin ] ;\
 	then \
-		mkdir -p ${CROSSDIR}/usr/${TARGET_CANON}/bin; \
+		mkdir -p ${CROSSDIR}/usr/${TARGET_CANONCOMP}/bin; \
 		l=$$(echo /usr/local/$${a}/bin/* ) ; \
 		echo l $${l} ;\
 		for file in $${l} ; \
@@ -212,6 +229,7 @@ ${CROSSBUILDENV}:	${CROSSINCLUDES}
 # XXX MAKEOBJDIR maybe should be obj.${TARGET} here, revisit later
 cross-lib:	${CROSSGCC}
 	MACHINE=${TARGET} \
+	    MACHINE_ARCHCOMP=${TARGET_ARCHCOMP} \
 	    MACHINE_ARCH=${TARGET_ARCH} MACHINE_CPU=${TARGET_CPU}; \
 	export MACHINE MACHINE_ARCH MACHINE_CPU; \
 	(cd ${.CURDIR}/lib; \
@@ -233,6 +251,7 @@ cross-lib:	${CROSSGCC}
 
 cross-bin:	${CROSSOBJ}
 	MACHINE=${TARGET} \
+	    MACHINE_ARCHCOMP=${TARGET_ARCHCOMP} \
 	    MACHINE_ARCH=${TARGET_ARCH} MACHINE_CPU=${TARGET_CPU}; \
 	export MACHINE MACHINE_ARCH MACHINE_CPU; \
 	for i in libexec bin sbin usr.bin usr.sbin; do \
@@ -248,6 +267,7 @@ cross-bin:	${CROSSOBJ}
 
 cross-gnu:	${CROSSOBJ}
 	MACHINE=${TARGET} \
+	    MACHINE_ARCHCOMP=${TARGET_ARCHCOMP} \
 	    MACHINE_ARCH=${TARGET_ARCH} MACHINE_CPU=${TARGET_CPU}; \
 	export MACHINE MACHINE_ARCH MACHINE_CPU; \
 	for i in gnu/lib gnu/usr.sbin gnu/usr.bin ; do \
@@ -263,6 +283,7 @@ cross-gnu:	${CROSSOBJ}
 
 cross-share:   ${CROSSOBJ}
 	MACHINE=${TARGET} \
+	    MACHINE_ARCHCOMP=${TARGET_ARCHCOMP} \
 	    MACHINE_ARCH=${TARGET_ARCH} MACHINE_CPU=${TARGET_CPU}; \
 	export MACHINE MACHINE_ARCH MACHINE_CPU; \
 	for i in share; do \
@@ -279,6 +300,7 @@ cross-share:   ${CROSSOBJ}
 
 cross-sys:   ${CROSSOBJ}
 	MACHINE=${TARGET} \
+	    MACHINE_ARCHCOMP=${TARGET_ARCHCOMP} \
 	    MACHINE_ARCH=${TARGET_ARCH} MACHINE_CPU=${TARGET_CPU}; \
 	export MACHINE MACHINE_ARCH MACHINE_CPU; \
 	for i in sys; do \
@@ -295,6 +317,7 @@ cross-sys:   ${CROSSOBJ}
 cross-etc-root-var:	${CROSSOBJ}
 	(cd ${.CURDIR}/etc && \
 	    MACHINE=${TARGET} \
+	    MACHINE_ARCHCOMP=${TARGET_ARCHCOMP} \
 	    MACHINE_ARCH=${TARGET_ARCH} MACHINE_CPU=${TARGET_CPU} \
 	    DESTDIR=${CROSSDIR} \
 	    ${MAKE} distribution-etc-root-var)
