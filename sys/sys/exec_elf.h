@@ -428,6 +428,7 @@ typedef struct {
 #define PT_HIPROC	0x7fffffff	/*  specific segment types */
 
 #define PT_OPENBSD_RANDOMIZE	0x65a3dbe6	/* fill with random data */
+#define PT_BITRIG_TMPFS_RAMDISK	0x627a93eb	/* tmpfs ramdisk */
 
 
 /* Segment flags - p_flags */
