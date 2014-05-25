@@ -74,23 +74,23 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 	Elf_Phdr *phdr;
 	Elf_Off off;
 	int i;
-	size_t sz;
+	size_t phdrsz, shpsz;
 	int first;
 	int havesyms;
 	paddr_t minp = ~0, maxp = 0, pos = 0;
 	paddr_t offset = marks[MARK_START], shpp, elfp;
 
-	sz = elf->e_phnum * sizeof(Elf_Phdr);
-	phdr = ALLOC(sz);
+	phdrsz = elf->e_phnum * sizeof(Elf_Phdr);
+	phdr = ALLOC(phdrsz);
 
 	if (lseek(fd, (off_t)elf->e_phoff, SEEK_SET) == -1)  {
 		WARN(("lseek phdr"));
-		FREE(phdr, sz);
+		FREE(phdr, phdrsz);
 		return 1;
 	}
-	if (read(fd, phdr, sz) != sz) {
+	if (read(fd, phdr, phdrsz) != phdrsz) {
 		WARN(("read program headers"));
-		FREE(phdr, sz);
+		FREE(phdr, phdrsz);
 		return 1;
 	}
 
@@ -117,7 +117,7 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 
 #ifdef CHECK_PHDR
 		if (CHECK_PHDR(ELFSIZE, &phdr[i])) {
-			FREE(phdr, sz);
+			FREE(phdr, phdrsz);
 			return 1;
 		}
 #endif
@@ -137,13 +137,13 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 
 			if (lseek(fd, (off_t)phdr[i].p_offset, SEEK_SET) == -1) {
 				WARN(("lseek text"));
-				FREE(phdr, sz);
+				FREE(phdr, phdrsz);
 				return 1;
 			}
 			if (READ(fd, phdr[i].p_paddr, phdr[i].p_filesz) !=
 			    phdr[i].p_filesz) {
 				WARN(("read text"));
-				FREE(phdr, sz);
+				FREE(phdr, phdrsz);
 				return 1;
 			}
 
@@ -173,7 +173,7 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 				maxp = pos;
 		}
 	}
-	FREE(phdr, sz);
+	FREE(phdr, phdrsz);
 
 	/*
 	 * Copy the ELF and section headers.
@@ -187,24 +187,24 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 			WARN(("lseek section headers"));
 			return 1;
 		}
-		sz = elf->e_shnum * sizeof(Elf_Shdr);
-		shp = ALLOC(sz);
+		shpsz = elf->e_shnum * sizeof(Elf_Shdr);
+		shp = ALLOC(shpsz);
 
-		if (read(fd, shp, sz) != sz) {
+		if (read(fd, shp, shpsz) != shpsz) {
 			WARN(("read section headers"));
-			FREE(shp, sz);
+			FREE(shp, shpsz);
 			return 1;
 		}
 
 		shpp = maxp;
-		maxp += roundup(sz, sizeof(Elf_Addr));
+		maxp += roundup(shpsz, sizeof(Elf_Addr));
 
 		/*
 		 * Now load the symbol sections themselves. Make sure the
 		 * sections are aligned. Don't bother with string tables if
 		 * there are no symbol sections.
 		 */
-		off = roundup((sizeof(Elf_Ehdr) + sz), sizeof(Elf_Addr));
+		off = roundup((sizeof(Elf_Ehdr) + shpsz), sizeof(Elf_Addr));
 
 		for (havesyms = i = 0; i < elf->e_shnum; i++)
 			if (shp[i].sh_type == SHT_SYMTAB)
@@ -219,13 +219,13 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 					if (lseek(fd, (off_t)shp[i].sh_offset,
 					    SEEK_SET) == -1) {
 						WARN(("lseek symbols"));
-						FREE(shp, sz);
+						FREE(shp, shpsz);
 						return 1;
 					}
 					if (READ(fd, maxp, shp[i].sh_size) !=
 					    shp[i].sh_size) {
 						WARN(("read symbols"));
-						FREE(shp, sz);
+						FREE(shp, shpsz);
 						return 1;
 					}
 				}
@@ -237,12 +237,12 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 			}
 		}
 		if (flags & LOAD_SYM) {
-			BCOPY(shp, shpp, sz);
+			BCOPY(shp, shpp, shpsz);
 
 			if (havesyms && first == 0)
 				PROGRESS(("]"));
 		}
-		FREE(shp, sz);
+		FREE(shp, shpsz);
 	}
 
 	/*
