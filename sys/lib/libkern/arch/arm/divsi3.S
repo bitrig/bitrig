@@ -49,6 +49,10 @@ L_overflow:
 #endif
 	mov	pc, lr
 
+#ifdef __ARM_EABI__
+ENTRY_NP(__aeabi_uidiv)
+ENTRY_NP(__aeabi_uidivmod)
+#endif
 ENTRY(__udivsi3)
 L_udivide:				/* r0 = r0 / r1; r1 = r0 % r1 */
 	eor     r0, r1, r0 
@@ -71,6 +75,10 @@ L_divide_l0:				/* r0 == 1 */
 	mov	r1, #0
 	mov	pc, lr
 
+#ifdef __ARM_EABI__
+ENTRY_NP(__aeabi_idiv)
+ENTRY_NP(__aeabi_idivmod)
+#endif
 ENTRY(__divsi3)
 L_divide:				/* r0 = r0 / r1; r1 = r0 % r1 */
 	eor     r0, r1, r0 

@@ -63,6 +63,9 @@
  * Apologies for the state of the comments ;-)
  */
 
+#ifdef __ARM_EABI_
+ENTRY_NP(__aeabi_memcpy)
+#endif
 ENTRY(memcpy)
 ENTRY_NP(memmove)
 	/* Determine copy direction */
