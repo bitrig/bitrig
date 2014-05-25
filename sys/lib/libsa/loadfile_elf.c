@@ -173,7 +173,6 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 				maxp = pos;
 		}
 	}
-	FREE(phdr, phdrsz);
 
 	/*
 	 * Copy the ELF and section headers.
@@ -185,6 +184,7 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 	if (flags & (LOAD_SYM | COUNT_SYM)) {
 		if (lseek(fd, (off_t)elf->e_shoff, SEEK_SET) == -1)  {
 			WARN(("lseek section headers"));
+			FREE(phdr, phdrsz);
 			return 1;
 		}
 		shpsz = elf->e_shnum * sizeof(Elf_Shdr);
@@ -192,6 +192,7 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 
 		if (read(fd, shp, shpsz) != shpsz) {
 			WARN(("read section headers"));
+			FREE(phdr, phdrsz);
 			FREE(shp, shpsz);
 			return 1;
 		}
@@ -219,12 +220,14 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 					if (lseek(fd, (off_t)shp[i].sh_offset,
 					    SEEK_SET) == -1) {
 						WARN(("lseek symbols"));
+						FREE(phdr, phdrsz);
 						FREE(shp, shpsz);
 						return 1;
 					}
 					if (READ(fd, maxp, shp[i].sh_size) !=
 					    shp[i].sh_size) {
 						WARN(("read symbols"));
+						FREE(phdr, phdrsz);
 						FREE(shp, shpsz);
 						return 1;
 					}
@@ -244,6 +247,8 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 		}
 		FREE(shp, shpsz);
 	}
+
+	FREE(phdr, phdrsz);
 
 	/*
 	 * Frob the copied ELF header to give information relative
