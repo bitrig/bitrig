@@ -737,7 +737,6 @@ static StringRef getARMFloatABI(const Driver &D,
     }
 
     case llvm::Triple::FreeBSD:
-    case llvm::Triple::Bitrig:
       // FreeBSD defaults to soft float
       FloatABI = "soft";
       break;
