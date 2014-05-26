@@ -77,6 +77,8 @@ int _dl_trust;
 struct r_debug *_dl_debug_map;
 
 void _dl_dopreload(char *paths);
+void run_init_array(elf_object_t *object);
+void run_fini_array(elf_object_t *object);
 
 /*
  * Run dtors for all objects that are eligible.
@@ -94,6 +96,8 @@ _dl_run_all_dtors(void)
 	fini_complete = 0;
 	skip_initfirst = 1;
 	initfirst_skipped = 0;
+
+	run_fini_array(_dl_objects);
 
 	while (fini_complete == 0) {
 		fini_complete = 1;
@@ -137,6 +141,8 @@ _dl_run_all_dtors(void)
 				fini_complete = 0;
 				node->status |= STAT_FINI_DONE;
 				node->status &= ~STAT_FINI_READY;
+				/* Run FINI_ARRAY before fini */
+				run_fini_array(node);
 				(*node->dyn.fini)();
 			}
 		}
@@ -641,6 +647,13 @@ _dl_boot(const char **argv, char **envp, const long dyn_loff, long *dl_data)
 		_dl_call_init(_dl_objects);
 	}
 
+	/*
+	 * HOWEVER, the binary does not run the preinit/init_array/fini_array
+	 * so this needs to be run here
+	 */
+	run_init_array(_dl_objects);
+
+
 	DL_DEB(("entry point: 0x%lx\n", dl_data[AUX_entry]));
 
 	/*
@@ -706,6 +719,42 @@ _dl_rtld(elf_object_t *object)
 }
 
 void
+_dl_call_preinit(elf_object_t *object)
+{
+	struct dep_node *n;
+
+	object->status |= STAT_PREINIT_VISITED;
+
+	TAILQ_FOREACH(n, &object->child_list, next_sib) {
+		if (n->data->status & STAT_PREINIT_VISITED)
+			continue;
+		_dl_call_preinit(n->data);
+	}
+
+	object->status &= ~STAT_PREINIT_VISITED;
+
+	if (object->status & STAT_PREINIT_ARRAY_DONE)
+		return;
+
+	if (object->preinit_array != NULL) {
+		Elf_Addr **p;
+		void (*init_func)(void) ;
+		int i;
+
+		DL_DEB(("doing preinit_array obj %p @%p: [%s]\n",
+		    object, object->preinit_array, object->load_name));
+		for (p = object->preinit_array, i = 0;
+			i < object->preinit_array_num;
+			i++, p++) {
+				init_func = (void (*)(void))*p;
+				init_func();
+		}
+	}
+
+	object->status |= STAT_PREINIT_ARRAY_DONE;
+}
+
+void
 _dl_call_init(elf_object_t *object)
 {
 	_dl_call_init_recurse(object, 1);
@@ -738,8 +787,45 @@ _dl_call_init_recurse(elf_object_t *object, int initfirst)
 		    object, object->dyn.init, object->load_name));
 		(*object->dyn.init)();
 	}
+	run_init_array(object);
 
 	object->status |= STAT_INIT_DONE;
+}
+
+void
+run_init_array(elf_object_t *object)
+{
+	int i;
+	void (*init_func)(void) ;
+
+	if (object->init_array == NULL) {
+		return;
+	}
+
+	DL_DEB(("doing init_array obj %p @%p: [%s]\n",
+	    object, object->init_array, object->load_name));
+	for (i = 0; i < object->init_array_num; i++) {
+		init_func = (void (*)(void)) object->init_array[i];
+		init_func();
+	}
+}
+
+void
+run_fini_array(elf_object_t *object)
+{
+	int i;
+	void (*fini_func)(void) ;
+
+	if (object->fini_array == NULL) {
+		return;
+	}
+
+	DL_DEB(("doing fini_array obj %p @%p: [%s]\n",
+	    object, object->fini_array, object->load_name));
+	for (i = object->fini_array_num - 1; i >= 0; i--) {
+		fini_func = (void (*)(void)) object->fini_array[i];
+		fini_func();
+	}
 }
 
 char *

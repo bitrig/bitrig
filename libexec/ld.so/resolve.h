@@ -102,14 +102,16 @@ struct elf_object {
 	Elf_Addr	relcount;	/* DT_RELCOUNT */
 
 	int		status;
-#define	STAT_RELOC_DONE	0x01
-#define	STAT_GOT_DONE	0x02
-#define	STAT_INIT_DONE	0x04
-#define	STAT_FINI_DONE	0x08
-#define	STAT_FINI_READY	0x10
-#define	STAT_UNLOADED	0x20
-#define	STAT_NODELETE	0x40
-#define	STAT_VISITED	0x80
+#define	STAT_RELOC_DONE		0x0001
+#define	STAT_GOT_DONE		0x0002
+#define	STAT_INIT_DONE		0x0004
+#define	STAT_FINI_DONE		0x0008
+#define	STAT_FINI_READY		0x0010
+#define	STAT_UNLOADED		0x0020
+#define	STAT_NODELETE		0x0040
+#define	STAT_VISITED		0x0080
+#define	STAT_PREINIT_VISITED	0x0100
+#define	STAT_PREINIT_ARRAY_DONE	0x0200
 
 	Elf_Phdr	*phdrp;
 	int		phdrc;
@@ -166,6 +168,14 @@ struct elf_object {
 
 	/* nonzero if trace enabled for this object */
 	int traced;
+
+	/* preinit/init/fini_array support */
+	Elf_Addr **preinit_array;
+	Elf_Addr **init_array;
+	Elf_Addr **fini_array;
+	size_t preinit_array_num;
+	size_t init_array_num;
+	size_t fini_array_num;
 };
 
 struct dep_node {

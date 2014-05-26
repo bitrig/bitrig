@@ -244,19 +244,22 @@ typedef struct {
 #define SHN_HIRESERVE	0xffff		/* upper bounds of reserved indexes */
 
 /* sh_type */
-#define SHT_NULL	0		/* inactive */
-#define SHT_PROGBITS	1		/* program defined information */
-#define SHT_SYMTAB	2		/* symbol table section */
-#define SHT_STRTAB	3		/* string table section */
-#define SHT_RELA	4		/* relocation section with addends*/
-#define SHT_HASH	5		/* symbol hash table section */
-#define SHT_DYNAMIC	6		/* dynamic section */
-#define SHT_NOTE	7		/* note section */
-#define SHT_NOBITS	8		/* no space section */
-#define SHT_REL		9		/* relation section without addends */
-#define SHT_SHLIB	10		/* reserved - purpose unknown */
-#define SHT_DYNSYM	11		/* dynamic symbol table section */
-#define SHT_NUM		12		/* number of section types */
+#define SHT_NULL		0	/* inactive */
+#define SHT_PROGBITS		1	/* program defined information */
+#define SHT_SYMTAB		2	/* symbol table section */
+#define SHT_STRTAB		3	/* string table section */
+#define SHT_RELA		4	/* relocation section with addends*/
+#define SHT_HASH		5	/* symbol hash table section */
+#define SHT_DYNAMIC		6	/* dynamic section */
+#define SHT_NOTE		7	/* note section */
+#define SHT_NOBITS		8	/* no space section */
+#define SHT_REL			9	/* relation section without addends */
+#define SHT_SHLIB		10	/* reserved - purpose unknown */
+#define SHT_DYNSYM		11	/* dynamic symbol table section */
+#define SHT_INIT_ARRAY  	14	/* init function pointer list */
+#define SHT_FINI_ARRAY  	15	/* fini function pointer list */
+#define SHT_PREINIT_ARRAY	16	/* pre-init function pointer list */
+#define SHT_NUM			17	/* number of section types */
 #define SHT_LOPROC	0x70000000	/* reserved range for processor */
 #define SHT_HIPROC	0x7fffffff	/*  specific section header types */
 #define SHT_LOUSER	0x80000000	/* reserved range for application */
@@ -482,6 +485,18 @@ typedef struct {
 #define DT_TEXTREL	22		/* Allow rel. mod. to unwritable seg */
 #define DT_JMPREL	23		/* add. of PLT's relocation entries */
 #define DT_BIND_NOW	24		/* Bind now regardless of env setting */
+#define DT_INIT_ARRAY	25		/* address of the array of pointers to
+					   initialization functions */
+#define DT_FINI_ARRAY	26		/* address of the array of pointers to
+					   termination functions */
+#define DT_INIT_ARRAYSZ	27		/* size in bytes of the array of
+					   initialization functions. */
+#define DT_FINI_ARRAYSZ	28		/* size in bytes of the array of
+					   termination functions. */
+#define DT_PREINIT_ARRAY	32	/* address of the array of pointers to
+					   pre-initialization functions. */
+#define DT_PREINIT_ARRAYSZ	33	/* size in bytes of the array of
+					   pre-initialization functions. */
 #define DT_LOOS		0x6000000d	/* reserved range for OS */
 #define DT_HIOS		0x6ffff000	/*  specific dynamic array tags */
 #define DT_LOPROC	0x70000000	/* reserved range for processor */

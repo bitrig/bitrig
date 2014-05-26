@@ -268,6 +268,24 @@ _dl_finalize_object(const char *objname, Elf_Dyn *dynp, Elf_Phdr *phdrp,
 			object->relacount = dynp->d_un.d_val;
 		if (dynp->d_tag == DT_RELCOUNT)
 			object->relcount = dynp->d_un.d_val;
+		if (dynp->d_tag == DT_PREINIT_ARRAY)
+			object->preinit_array =
+				(Elf_Addr **)(dynp->d_un.d_val + obase);
+		if (dynp->d_tag == DT_INIT_ARRAY)
+			object->init_array =
+				(Elf_Addr **)(dynp->d_un.d_val + obase);
+		if (dynp->d_tag == DT_FINI_ARRAY)
+			object->fini_array =
+				(Elf_Addr **)(dynp->d_un.d_val + obase);
+		if (dynp->d_tag == DT_PREINIT_ARRAYSZ)
+			object->preinit_array_num =
+				dynp->d_un.d_val/sizeof(Elf_Addr);
+		if (dynp->d_tag == DT_INIT_ARRAYSZ)
+			object->init_array_num =
+				dynp->d_un.d_val/sizeof(Elf_Addr);
+		if (dynp->d_tag == DT_FINI_ARRAYSZ)
+			object->fini_array_num =
+				dynp->d_un.d_val/sizeof(Elf_Addr);
 		dynp++;
 	}
 	DL_DEB((" flags %s = 0x%x\n", objname, object->obj_flags ));
