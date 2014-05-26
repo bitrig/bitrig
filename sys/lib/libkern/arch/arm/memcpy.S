@@ -63,7 +63,7 @@
  * Apologies for the state of the comments ;-)
  */
 
-#ifdef __ARM_EABI_
+#ifdef __ARM_EABI__
 ENTRY_NP(__aeabi_memcpy)
 #endif
 ENTRY(memcpy)
