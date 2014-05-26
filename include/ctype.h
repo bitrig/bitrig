@@ -1,4 +1,4 @@
-/*	$OpenBSD: ctype.h,v 1.23 2014/03/16 18:38:30 guenther Exp $	*/
+/*	$OpenBSD: ctype.h,v 1.24 2014/05/26 01:49:36 guenther Exp $	*/
 /*	$NetBSD: ctype.h,v 1.14 1994/10/26 00:55:47 cgd Exp $	*/
 
 /*
@@ -99,19 +99,19 @@ int     isspecial(int);
 #endif
 
 #ifndef __cplusplus
-#define	isalnum(c)	__sbistype((c), _CTYPE_A|_CTYPE_D)
-#define	isalpha(c)	__sbistype((c), _CTYPE_A)
-#define	iscntrl(c)	__sbistype((c), _CTYPE_C)
-#define	isdigit(c)	__isctype((c), _CTYPE_D) /* ANSI -- locale independent */
-#define	isgraph(c)	__sbistype((c), _CTYPE_G)
-#define	islower(c)	__sbistype((c), _CTYPE_L)
-#define	isprint(c)	__sbistype((c), _CTYPE_R)
-#define	ispunct(c)	__sbistype((c), _CTYPE_P)
-#define	isspace(c)	__sbistype((c), _CTYPE_S)
-#define	isupper(c)	__sbistype((c), _CTYPE_U)
-#define	isxdigit(c)	__isctype((c), _CTYPE_X) /* ANSI -- locale independent */
-#define	tolower(c)	__sbtolower(c)
-#define	toupper(c)	__sbtoupper(c)
+#define	isalnum(_c)	__sbistype((_c), _CTYPE_A|_CTYPE_D)
+#define	isalpha(_c)	__sbistype((_c), _CTYPE_A)
+#define	iscntrl(_c)	__sbistype((_c), _CTYPE_C)
+#define	isdigit(_c)	__isctype((_c), _CTYPE_D) /* ANSI -- locale independent */
+#define	isgraph(_c)	__sbistype((_c), _CTYPE_G)
+#define	islower(_c)	__sbistype((_c), _CTYPE_L)
+#define	isprint(_c)	__sbistype((_c), _CTYPE_R)
+#define	ispunct(_c)	__sbistype((_c), _CTYPE_P)
+#define	isspace(_c)	__sbistype((_c), _CTYPE_S)
+#define	isupper(_c)	__sbistype((_c), _CTYPE_U)
+#define	isxdigit(_c)	__isctype((_c), _CTYPE_X) /* ANSI -- locale independent */
+#define	tolower(_c)	__sbtolower(_c)
+#define	toupper(_c)	__sbtoupper(_c)
 #endif /* !__cplusplus */
 
 #endif /* !_ANSI_LIBRARY */
