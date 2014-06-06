@@ -42,15 +42,10 @@ umask 022
 # emacs-style command line editing
 set -o emacs
 
-# Extract rootdisk from last 'root on ...' line. e.g.
-# 	root on wd0a swap on wd0b dump on wd0b
-set -- $(dmesg | sed -n '/^root on /h;${g;p;}')
-rootdisk=$3
-
 if [ "X${DONEPROFILE}" = "X" ]; then
 	DONEPROFILE=YES
 
-	mount -u /dev/${rootdisk:-rd0a} /
+	mount -u -o rw /
 
 	# Create a fake rc that just returns 1 and throws us back
 	echo ! : > /etc/rc
