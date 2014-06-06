@@ -126,7 +126,7 @@ ithread_run(struct intrsource *is)
 	case SONPROC:
 		break;
 	case SSLEEP:
-		unsleep(p);
+		p->p_wchan = NULL;
 		p->p_stat = SRUN;
 		p->p_slptime = 0;
 		/*
@@ -255,11 +255,6 @@ ithread_softderegister(struct intrsource *is)
 	free(is, M_DEVBUF, 0);
 }
 
-/* XXX kern_synch.c, temporary */
-#define TABLESIZE	128
-#define LOOKUP(x)	(((long)(x) >> 8) & (TABLESIZE - 1))
-extern TAILQ_HEAD(slpque,proc) slpque[TABLESIZE];
-
 void
 ithread_sleep(struct intrsource *is)
 {
@@ -274,7 +269,6 @@ ithread_sleep(struct intrsource *is)
 		p->p_wmesg = "softintr";
 		p->p_slptime = 0;
 		p->p_priority = PVM & PRIMASK;
-		TAILQ_INSERT_TAIL(&slpque[LOOKUP(p)], p, p_runq);
 		p->p_stat = SSLEEP;
 		mi_switch();
 	}
