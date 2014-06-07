@@ -229,7 +229,7 @@ def_load_bio(CONF *conf, BIO *in, long *line)
 		goto err;
 	}
 
-	section = (char *)malloc(10);
+	section = malloc(10);
 	if (section == NULL) {
 		CONFerr(CONF_F_DEF_LOAD_BIO, ERR_R_MALLOC_FAILURE);
 		goto err;
@@ -362,7 +362,7 @@ again:
 			p++;
 			*p = '\0';
 
-			if (!(v = (CONF_VALUE *)malloc(sizeof(CONF_VALUE)))) {
+			if (!(v = malloc(sizeof(CONF_VALUE)))) {
 				CONFerr(CONF_F_DEF_LOAD_BIO,
 				    ERR_R_MALLOC_FAILURE);
 				goto err;
@@ -370,7 +370,7 @@ again:
 			if (psection == NULL)
 				psection = section;
 			namelen = strlen(pname) + 1;
-			v->name = (char *)malloc(namelen);
+			v->name = malloc(namelen);
 			v->value = NULL;
 			if (v->name == NULL) {
 				CONFerr(CONF_F_DEF_LOAD_BIO,
