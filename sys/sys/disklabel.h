@@ -276,6 +276,7 @@ static char *dktypenames[] = {
 #define FS_RAID		19		/* RAIDframe or softraid */
 #define FS_NTFS		20		/* Windows/NT file system */
 #define FS_UDF		21		/* UDF (DVD) filesystem */
+#define FS_TMPFS	22		/* tmpfs ramdisk */
 
 #ifdef DKTYPENAMES
 static char *fstypenames[] = {
@@ -301,6 +302,7 @@ static char *fstypenames[] = {
 	"RAID",
 	"NTFS",
 	"UDF",
+	"tmpfs",
 	NULL
 };
 
@@ -328,6 +330,7 @@ static char *fstypesnames[] = {
 	"",		/* 19 */
 	"ntfs",		/* 20 */
 	"udf",		/* 21 */
+	"tmpfs",	/* 22 */
 	NULL
 };
 
