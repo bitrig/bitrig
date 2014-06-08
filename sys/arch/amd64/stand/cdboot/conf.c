@@ -43,7 +43,7 @@
 #include <biosdev.h>
 #include <dev/cons.h>
 
-const char version[] = "3.23";
+const char version[] = "3.24";
 int	debug = 1;
 
 

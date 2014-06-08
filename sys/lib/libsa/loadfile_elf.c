@@ -77,7 +77,7 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 	size_t phdrsz, shpsz;
 	int first;
 	int havesyms;
-	paddr_t minp = ~0, maxp = 0, pos = 0;
+	paddr_t minp = ~0, maxp = 0, pos = 0, ramdiskp = 0;
 	paddr_t offset = marks[MARK_START], shpp, elfp;
 
 	phdrsz = elf->e_phnum * sizeof(Elf_Phdr);
@@ -239,6 +239,7 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 				first = 0;
 			}
 		}
+
 		if (flags & LOAD_SYM) {
 			BCOPY(shp, shpp, shpsz);
 
@@ -246,6 +247,29 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 				PROGRESS(("]"));
 		}
 		FREE(shp, shpsz);
+
+		for (i = 0; i < elf->e_phnum; i++) {
+			if (phdr[i].p_type == PT_BITRIG_TMPFS_RAMDISK) {
+				ramdiskp = roundup(maxp, PAGE_SIZE);
+				if (lseek(fd, (off_t)phdr[i].p_offset,
+				    SEEK_SET) == -1) {
+				    	WARN(("lseek ramdisk"));
+				    	FREE(phdr, phdrsz);
+				    	return 1;
+				}
+
+				PROGRESS(("+%lu[R]", (u_long)phdr[i].p_filesz));
+
+				if (READ(fd, ramdiskp, phdr[i].p_filesz) !=
+				    phdr[i].p_filesz) {
+				    	WARN(("read ramdisk"));
+				    	FREE(phdr, phdrsz);
+				    	return 1;
+				}
+
+				ramdiskp += roundup(phdr[i].p_filesz, PAGE_SIZE);
+			}
+		}
 	}
 
 	FREE(phdr, phdrsz);
@@ -266,6 +290,7 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 	marks[MARK_ENTRY] = LOADADDR(elf->e_entry);
 	marks[MARK_NSYM] = 1;	/* XXX: Kernel needs >= 0 */
 	marks[MARK_SYM] = LOADADDR(elfp);
+	marks[MARK_RAMDISK] = LOADADDR(ramdiskp);
 	marks[MARK_END] = LOADADDR(maxp);
 
 	return 0;
