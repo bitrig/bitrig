@@ -38,7 +38,8 @@
 #define	MARK_NSYM	2
 #define MARK_SYM	3
 #define	MARK_END	4
-#define	MARK_MAX	5
+#define	MARK_RAMDISK	5
+#define	MARK_MAX	6
 
 /*
  * Bit flags for sections to load
