@@ -32,6 +32,7 @@
 #define	BAPIV_VECTOR	0x00000002	/* MI vector of MD structures passed */
 #define	BAPIV_ENV	0x00000004	/* MI environment vars vector */
 #define	BAPIV_BMEMMAP	0x00000008	/* MI memory map passed is in bytes */
+#define	BAPIV_RAMDISK	0x00000010	/* MI tmpfs ramdisk info passed */
 
 typedef struct _boot_args {
 	int ba_type;
