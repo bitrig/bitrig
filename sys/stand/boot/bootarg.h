@@ -26,7 +26,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define	BOOTARG_APIVER	(BAPIV_VECTOR|BAPIV_ENV|BAPIV_BMEMMAP)
+#define	BOOTARG_APIVER	(BAPIV_VECTOR|BAPIV_ENV|BAPIV_BMEMMAP|BAPIV_RAMDISK)
 #define	BAPIV_ANCIENT	0x00000000	/* MD old i386 bootblocks */
 #define	BAPIV_VARS	0x00000001	/* MD structure w/ add info passed */
 #define	BAPIV_VECTOR	0x00000002	/* MI vector of MD structures passed */

@@ -43,7 +43,7 @@
 #include "softraid.h"
 #endif
 
-typedef void (*startfuncp)(int, int, int, int, int, int, int, int)
+typedef void (*startfuncp)(int, int, int, int, int, int, int, int, int)
     __attribute__ ((noreturn));
 
 char *bootmac = NULL;
@@ -117,6 +117,6 @@ run_loadfile(u_long *marks, int howto)
 
 	/* stack and the gung is ok at this point, so, no need for asm setup */
 	(*(startfuncp)entry)(howto, bootdev, BOOTARG_APIVER, marks[MARK_END],
-	    extmem, cnvmem, ac, (int)av);
+	    extmem, cnvmem, ac, (int)av, marks[MARK_RAMDISK]);
 	/* not reached */
 }
