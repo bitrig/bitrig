@@ -354,8 +354,34 @@ bi_size_ok:
 /*
  * Virtual address space of kernel:
  *
- * text | data | bss | [syms] | page dir | proc0 kstack | L1 ptp | L2 ptp | L3 
- *			      0          1       2      3
+ *   (lower addresses)
+ * | +--------------+ <- KERNBASE
+ * | | text         |
+ * | +--------------+
+ * | | data         |
+ * | +--------------+
+ * | | bss          |
+ * | +--------------+
+ * | | symbols      |	Optional. Remains mapped.
+ * | +--------------+ <- esym
+ * | | ramdisk      |	Optional. Gets unmapped.
+ * | +--------------+ <- eramdisk
+ * | | PML4         |	4th level page table -- the top level table.
+ * | +--------------+
+ * | | kernel stack |
+ * | +--------------+
+ * | | PTP3         |	3rd level page table -- the pagedir pointers directory.
+ * | +--------------+
+ * | | PTP2         |	2nd level page table -- the page directory.
+ * | +--------------+
+ * | | PTP1         |	1st level page table -- holds actual PTEs.
+ * | +--------------+
+ * | | DMP3         |	Direct physical <-> virtual mappings.
+ * | +--------------+
+ * | | DMP2         |	Direct physical <-> virtual mappings.
+ * | +--------------+
+ * V (higher addresses)
+ *
  */
 
 #if L2_SLOT_KERNBASE > 0
