@@ -179,6 +179,7 @@ _C_LABEL(lapic_isr):
 	.globl	_C_LABEL(proc0paddr),_C_LABEL(PTDpaddr)
 	.globl	_C_LABEL(biosbasemem),_C_LABEL(biosextmem)
 	.globl	_C_LABEL(bootapiver)
+	.globl	_C_LABEL(eramdisk)
 _C_LABEL(cpu):		.long	0	# are we 386, 386sx, or 486,
 					#   or Pentium, or..
 _C_LABEL(cpu_id):	.long	0	# saved from `cpuid' instruction
@@ -211,6 +212,7 @@ _C_LABEL(biosextmem):	.long	0	# extended memory reported by BIOS
 #else
 _C_LABEL(biosextmem):	.long	REALEXTMEM
 #endif
+_C_LABEL(eramdisk):	.quad	0	# ptr to end of tmpfs ramdisk
 
 #define	_RELOC(x)	((x) - KERNBASE)
 #define	RELOC(x)	_RELOC(_C_LABEL(x))
@@ -255,7 +257,8 @@ start:	movw	$0x1234,0x472			# warm boot
 
 	/*
 	 * Load parameters from stack
-	 * (howto, bootdev, bootapiver, esym, extmem, cnvmem, ac, av)
+	 * (howto, bootdev, bootapiver, esym, extmem, cnvmem, ac, av, eramdisk)
+	 * (4,     8,       12,         16,   20,     24,     28, 32, 36)
 	 */
 	movl	4(%esp),%eax
 	movl	%eax, RELOC(boothowto)
@@ -277,6 +280,17 @@ start:	movw	$0x1234,0x472			# warm boot
 
 	movl	12(%esp), %eax
 	movl	%eax, RELOC(bootapiver)
+
+	testl	$BAPIV_RAMDISK,RELOC(bootapiver)
+	jz	1f
+	movl	36(%esp), %eax
+	testl	%eax,%eax
+	jz	1f
+	addl    $KERNBASE_LO,%eax
+	movl    $RELOC(eramdisk),%ebp
+	movl    %eax,(%ebp)
+	movl    $KERNBASE_HI,4(%ebp)
+1:
 
 	/*
 	 * Copy the boot arguments to bootinfo[] in machdep.c.
@@ -427,6 +441,13 @@ bi_size_ok:
 	movl	%eax,%edi
 1:
 #endif
+	/* Save the ramdisk (if loaded). */
+	movl	RELOC(eramdisk),%eax
+	testl	%eax,%eax
+	jz	1f
+	subl	$KERNBASE_LO,%eax	/* XXX */
+	movl	%eax,%edi
+1:
 	/* Clear tables */
 	movl	%edi,%esi
 	addl	$PGOFSET,%esi

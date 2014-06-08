@@ -9,6 +9,8 @@ include <sys/user.h>
 
 include <uvm/uvm_extern.h>
 
+include <stand/boot/bootarg.h>
+
 include <machine/trap.h>
 include <machine/pmap.h>
 include <machine/pte.h>
@@ -168,3 +170,4 @@ export	PDIR_SLOT_DIRECT
 
 export	CR4_DEFAULT
 
+export	BAPIV_RAMDISK
