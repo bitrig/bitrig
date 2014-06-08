@@ -1234,6 +1234,14 @@ dk_mountroot(void)
 		}
 		break;
 #endif
+#ifdef TMPFS
+	case FS_TMPFS:
+		{
+		extern int tmpfs_mountroot(void);
+		mountrootfn = tmpfs_mountroot;
+		break;
+		}
+#endif
 	default:
 #ifdef FFS
 		{
