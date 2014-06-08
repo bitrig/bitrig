@@ -526,6 +526,8 @@ file	dev/spdmem.c			spdmem
 pseudo-device vnd: disk
 pseudo-device rd: disk
 file	dev/rd.c			rd needs-flag
+pseudo-device tmpfsrd: disk
+file	dev/tmpfsrd.c			tmpfsrd needs-flag
 
 pseudo-device pty: tty
 pseudo-device nmea: tty

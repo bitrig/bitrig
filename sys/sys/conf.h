@@ -593,6 +593,9 @@ cdev_decl(cd);
 bdev_decl(rd);
 cdev_decl(rd);
 
+bdev_decl(tmpfsrd);
+cdev_decl(tmpfsrd);
+
 bdev_decl(uk);
 cdev_decl(uk);
 

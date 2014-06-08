@@ -50,6 +50,7 @@ bdev_decl(wd);
 #include "uk.h"
 #include "vnd.h"
 #include "rd.h"
+#include "tmpfsrd.h"
 
 struct bdevsw	bdevsw[] =
 {
@@ -72,7 +73,7 @@ struct bdevsw	bdevsw[] =
 	bdev_notdef(),			/* 16: was: concatenated disk driver */
 	bdev_disk_init(NRD,rd),		/* 17: ram disk driver */
 	bdev_lkm_dummy(),		/* 18 */
-	bdev_notdef(),			/* 19 was: RAIDframe disk driver */
+	bdev_disk_init(NTMPFSRD,tmpfsrd),	/* 19: tmpfs RAM disk driver */
 };
 int	nblkdev = nitems(bdevsw);
 
@@ -227,7 +228,7 @@ struct cdevsw	cdevsw[] =
 	cdev_random_init(1,random),	/* 45: random data source */
 	cdev_ocis_init(NPCTR,pctr),	/* 46: performance counters */
 	cdev_disk_init(NRD,rd),		/* 47: ram disk driver */
-	cdev_notdef(),			/* 48 */
+	cdev_disk_init(NTMPFSRD,tmpfsrd),	/* 48: tmpfs RAM disk driver */
 	cdev_bktr_init(NBKTR,bktr),     /* 49: Bt848 video capture device */
 	cdev_ksyms_init(NKSYMS,ksyms),	/* 50: Kernel symbols device */
 	cdev_notdef(),			/* 51 */
@@ -372,7 +373,7 @@ int chrtoblktbl[] = {
 	/* 45 */	NODEV,
 	/* 46 */	NODEV,
 	/* 47 */	17,		/* rd */
-	/* 48 */	NODEV,
+	/* 48 */	19,		/* tmpfsrd */
 	/* 49 */	NODEV,
 	/* 50 */	NODEV,
 	/* 51 */	NODEV,

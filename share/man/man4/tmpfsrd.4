@@ -1,0 +1,35 @@
+.\" Copyright (c) 2014 Martin Natano <natano@natano.net>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd $Mdocdate: June 7 2014 $
+.Dt RD 4
+.Os
+.Sh NAME
+.Nm tmpfsrd
+.Nd tmpfs ramdisk driver
+.Sh SYNOPSIS
+.Cd "pseudo-device tmpfsrd"
+.Sh DESCRIPTION
+The
+.Nm
+drivers provides data contained in a special
+.Xr elf 5
+segment inside the kernel image.
+The
+.Xr rdconfig 8
+utility may be used to configure a kernel for usage by
+.Nm .
+.Sh SEE ALSO
+.Xr elf 5
+.Xr rdconfig 8

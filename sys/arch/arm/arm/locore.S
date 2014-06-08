@@ -160,6 +160,8 @@ ENTRY(longjmp)
 	.data
 	.global _C_LABEL(esym)
 _C_LABEL(esym):	.word	_C_LABEL(end)
+	.global _C_LABEL(eramdisk)
+_C_LABEL(eramdisk):	.word	_C_LABEL(end)
 
 ENTRY_NP(abort)
 	b	_C_LABEL(abort)

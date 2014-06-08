@@ -232,6 +232,6 @@ struct nam2blk nam2blk[] = {
 	{ "cd",		6 },
 	{ "vnd",	14 },
 	{ "rd",		17 },
-	{ "raid",	19 },
+	{ "tmpfsrd",	19 },
 	{ NULL,		-1 }
 };
