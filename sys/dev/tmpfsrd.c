@@ -199,10 +199,14 @@ tmpfsrd_terminate(void *arg1, void *arg2)
 {
 	config_detach((struct device *)arg1, 0);
 	explicit_bzero(tmpfsrd_disk, tmpfsrd_size);
-#ifdef notyet
-	/* XXX pedro: actually free the pages! */
-	pmap_kremove((vaddr_t)tmpfsrd_disk, tmpfsrd_size);
-#endif
+#ifndef VM_PHYSSEG_NOADD
+	{
+		paddr_t start = (paddr_t)tmpfsrd_disk - KERNBASE;
+		paddr_t end = (paddr_t)eramdisk - KERNBASE;
+		uvm_page_physload(atop(start), atop(end), atop(start),
+		    atop(end), 0);
+	}
+#endif /* !VM_PHYSSEG_NOADD */
 }
 
 int
