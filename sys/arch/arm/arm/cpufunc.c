@@ -345,9 +345,10 @@ armv7_setup()
 	uint32_t auxctl, oauxctl;
 	int cpuctrl, cpuctrlmask;
 
+	/* FIXME: Enable alignment faults after clang issue has been found. */
 	cpuctrl = CPU_CONTROL_MMU_ENABLE | CPU_CONTROL_SYST_ENABLE
 	    | CPU_CONTROL_IC_ENABLE | CPU_CONTROL_DC_ENABLE
-	    | CPU_CONTROL_BPRD_ENABLE | CPU_CONTROL_AFLT_ENABLE;
+	    | CPU_CONTROL_BPRD_ENABLE;
 	cpuctrlmask = CPU_CONTROL_MMU_ENABLE | CPU_CONTROL_SYST_ENABLE
 	    | CPU_CONTROL_IC_ENABLE | CPU_CONTROL_DC_ENABLE
 	    | CPU_CONTROL_ROM_ENABLE | CPU_CONTROL_BPRD_ENABLE
