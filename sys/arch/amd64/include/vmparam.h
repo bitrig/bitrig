@@ -108,6 +108,5 @@
 
 #define VM_PHYSSEG_MAX		16	/* actually we could have this many segments */
 #define VM_PHYSSEG_STRAT	VM_PSTRAT_BIGFIRST
-#define VM_PHYSSEG_NOADD		/* can't add RAM after vm_mem_init */
 
 #endif /* _MACHINE_VMPARAM_H_ */
