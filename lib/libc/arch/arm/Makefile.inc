@@ -14,4 +14,6 @@ CPPFLAGS += -DSOFTFLOAT
 
 SOFTFLOAT_BITS=32
 .include <arch/arm/softfloat/Makefile.inc>
+.else
+.include "${LIBCSRCDIR}/arch/arm/aeabi/Makefile.inc"
 .endif
