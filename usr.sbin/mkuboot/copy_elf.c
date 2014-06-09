@@ -55,7 +55,8 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 	Elf_Addr vaddr, ovaddr, svaddr, off, ssym;
 	Elf_Shdr *shp, *wshp;
 	Elf_Addr esym = 0, esymval;
-	int i, sz, havesyms;
+	Elf_Addr eramdiskval = 0, ramdiskalign, ramdisksize = 0;
+	int i, sz, havesyms, haveramdisk;
 
 	nbytes = read(ifd, &ehdr, sizeof ehdr);
 	if (nbytes == -1)
@@ -78,7 +79,8 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 
 	/* first walk the load sections to find the kernel addresses */
 	/* next we walk the sections to find the
-	 * location of esym (first address of data space
+	 * location of esym (first address of data space).
+	 * the location of eramdisk is the second address in there.
 	 */
 	for (i = 0; i < letoh16(ehdr.e_phnum); i++) {
 		if (lseek(ifd, elfoff2h(ehdr.e_phoff) + i *
@@ -90,6 +92,10 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 		if (letoh32(phdr.p_type) == PT_LOAD)
 			vaddr = elfoff2h(phdr.p_vaddr) +
 			    elfoff2h(phdr.p_memsz);
+		if (letoh32(phdr.p_type) == PT_BITRIG_TMPFS_RAMDISK) {
+			ramdisksize = elfoff2h(phdr.p_filesz);
+			ramdiskalign = elfoff2h(phdr.p_align);
+		}
 	}
 
 	/* ok, we need to write the elf header and section header
@@ -123,6 +129,9 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 		}
 	}
 	esymval = vaddr;
+	if (ramdisksize != 0)
+		eramdiskval = roundup(roundup(esymval, ramdiskalign) +
+		    ramdisksize, ramdiskalign);
 #ifdef DEBUG
 	fprintf(stderr, "esymval 0x%llx size %lld\n", (uint64_t)esymval,
 	    (uint64_t)(esymval - ssym));
@@ -153,6 +162,7 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 		case PT_NULL:
 		case PT_NOTE:
 		case PT_OPENBSD_RANDOMIZE:
+		case PT_BITRIG_TMPFS_RAMDISK:
 #ifdef DEBUG
 			fprintf(stderr, "skipping segment type %#x\n",
 			    letoh32(phdr.p_type));
@@ -163,7 +173,7 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 			    letoh32(phdr.p_type));
 		}
 
-		if (i == 0) 
+		if (i == 0)
 			vaddr = elfoff2h(phdr.p_vaddr);
 		else if (vaddr != elfoff2h(phdr.p_vaddr)) {
 #ifdef DEBUG
@@ -179,10 +189,11 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 		if (elfoff2h(phdr.p_filesz) != 0) {
 #ifdef DEBUG
 			fprintf(stderr, "copying 0x%llx from infile 0x%llx,"
-			    " esym 0x%llx esymval 0x%llx\n",
+			    " esym 0x%llx esymval 0x%llx eramdiskval 0x%llx\n",
 			    (uint64_t)elfoff2h(phdr.p_filesz),
 			    (uint64_t)elfoff2h(phdr.p_offset),
-			    (uint64_t)esym, (uint64_t)esymval);
+			    (uint64_t)esym, (uint64_t)esymval,
+			    (uint64_t)eramdiskval);
 #endif
 			/* esym will be in the data portion of a region */
 			if (esym >= elfoff2h(phdr.p_vaddr) &&
@@ -203,13 +214,17 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 				crc = copy_mem(&esymval, ofd, oname, crc, ih,
 				    sizeof(esymval));
 
+				crc = copy_mem(&eramdiskval, ofd, oname, crc,
+				    ih, sizeof(eramdiskval));
+
 				if (lseek(ifd, elfoff2h(phdr.p_offset) +
-				    loadlen + sizeof(esymval), SEEK_SET) ==
+				    loadlen + sizeof(esymval) +
+				    sizeof(eramdiskval), SEEK_SET) ==
 				    (off_t)-1)
 					err(1, "%s", iname);
 				crc = copy_data(ifd, iname, ofd, oname, crc,
 				    ih, elfoff2h(phdr.p_filesz) - loadlen -
-				    sizeof(esymval));
+				    sizeof(esymval) - sizeof(eramdiskval));
 			} else {
 
 				if (lseek(ifd, elfoff2h(phdr.p_offset),
@@ -256,7 +271,7 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 			havesyms = 1;
 
 	if (havesyms == 0)
-		return crc;
+		goto write_ramdisk;
 
 	elf.e_phoff = 0;
 	elf.e_shoff = h2elfoff(sizeof(Elf_Ehdr));
@@ -307,6 +322,57 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 	if (vaddr != esymval)
 		warnx("esymval and vaddr mismatch %llx %llx\n",
 		    (uint64_t)esymval, (uint64_t)vaddr);
+
+write_ramdisk:
+	for (haveramdisk = i = 0; i < letoh16(ehdr.e_phnum); i++) {
+		if (lseek(ifd, elfoff2h(ehdr.e_phoff) + i *
+		    letoh16(ehdr.e_phentsize), SEEK_SET) == (off_t)-1)
+			err(1, "%s", iname);
+		if (read(ifd, &phdr, sizeof phdr) != sizeof(phdr))
+			err(1, "%s", iname);
+
+		if (letoh32(phdr.p_type) == PT_BITRIG_TMPFS_RAMDISK &&
+		    elfoff2h(phdr.p_filesz) != 0) {
+			haveramdisk = 1;
+			break;
+		}
+	}
+
+	if (haveramdisk == 0)
+		return crc;
+
+	ovaddr = vaddr;
+	vaddr = roundup(vaddr, ramdiskalign);
+	if (vaddr != ovaddr) {
+#ifdef DEBUG
+		fprintf(stderr, "gap 0x%llx->0x%llx\n", (uint64_t)ovaddr,
+		    (uint64_t)vaddr);
+#endif
+		/* fill the gap between the symbol table if not aligned */
+		crc = fill_zeroes(ofd, oname, crc, ih, vaddr - ovaddr);
+	}
+
+	if (lseek(ifd, elfoff2h(phdr.p_offset),
+	    SEEK_SET) == (off_t)-1)
+		err(1, "%s", iname);
+	crc = copy_data(ifd, iname, ofd, oname, crc,
+	    ih, elfoff2h(phdr.p_filesz));
+	vaddr += phdr.p_filesz;
+
+	ovaddr = vaddr;
+	vaddr = roundup(vaddr, ramdiskalign);
+	if (vaddr != ovaddr) {
+#ifdef DEBUG
+		fprintf(stderr, "pad %llx->%llx %llx\n", (uint64_t)ovaddr,
+		    (uint64_t)vaddr, (uint64_t)vaddr - ovaddr);
+#endif
+		/* make sure the tmpfs ramdisk area is padded to page size */
+		crc = fill_zeroes(ofd, oname, crc, ih, vaddr - ovaddr);
+	}
+
+	if (vaddr != eramdiskval)
+		warnx("eramdiskval and vaddr mismatch %llx %llx\n",
+		    (uint64_t)eramdiskval, (uint64_t)vaddr);
 
 	return crc;
 }
