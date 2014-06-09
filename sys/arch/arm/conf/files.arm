@@ -78,6 +78,8 @@ file	arch/arm/arm/bcopy_page.S
 file	lib/libkern/arch/arm/divsi3.S
 file	lib/libkern/arch/arm/memcpy.S
 file	lib/libkern/arch/arm/memmove.S
+file	lib/libkern/arch/arm/ldivmod.S
+file	lib/libkern/arch/arm/ldivmod_helper.c
 
 # fdt
 file	arch/arm/arm/fdt.c
