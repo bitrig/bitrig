@@ -408,6 +408,8 @@ initarm(void *arg0, void *arg1, void *arg2)
 	paddr_t memstart;
 	psize_t memsize;
 	extern uint32_t esym; /* &_end if no symbols are loaded */
+	extern uint32_t eramdisk; /* zero if no ramdisk is loaded */
+	uint32_t kernel_end = eramdisk ? eramdisk : esym;
 
 	/* early bus_space_map support */
 	struct bus_space tmp_bs_tag;
@@ -498,7 +500,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 #endif /* RAMDISK_HOOKS */
 
 	{
-		physical_freestart = (((unsigned long)esym - KERNEL_TEXT_BASE +0xfff) & ~0xfff) + memstart;
+		physical_freestart = (((unsigned long)kernel_end - KERNEL_TEXT_BASE +0xfff) & ~0xfff) + memstart;
 		physical_freeend = memstart+memsize;
 	}
 
@@ -657,7 +659,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	{
 		extern char etext[];
 		size_t textsize = (u_int32_t) etext - KERNEL_TEXT_BASE;
-		size_t totalsize = (u_int32_t) esym - KERNEL_TEXT_BASE;
+		size_t totalsize = (u_int32_t) kernel_end - KERNEL_TEXT_BASE;
 		u_int logical;
 
 		textsize = (textsize + PGOFSET) & ~PGOFSET;
