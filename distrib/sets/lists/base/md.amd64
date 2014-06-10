@@ -1643,7 +1643,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/hmac.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/idea.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/krb5_asn.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/kssl.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/lhash.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/md4.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/md5.ph
@@ -1659,7 +1658,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/pem2.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/pkcs12.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/pkcs7.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/pqueue.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/poly1305.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/rand.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/rc2.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/rc4.ph

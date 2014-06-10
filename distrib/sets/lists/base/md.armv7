@@ -1674,7 +1674,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/hmac.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/idea.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/krb5_asn.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/openssl/kssl.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/lhash.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/md4.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/md5.ph
@@ -1690,7 +1689,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/pem2.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/pkcs12.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/pkcs7.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/openssl/pqueue.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/openssl/poly1305.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/rand.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/rc2.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/rc4.ph
