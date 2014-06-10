@@ -165,5 +165,3 @@ EVP_aes_256_cfb(void)
 #endif
 
 #endif
-
-#endif

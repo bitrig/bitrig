@@ -674,9 +674,7 @@ ssl3_client_hello(SSL *s)
 		/* else use the pre-loaded session */
 
 		p = s->s3->client_random;
-
-		if (ssl_fill_hello_random(s, 0, p, SSL3_RANDOM_SIZE) <= 0)
-			goto err;
+		RAND_pseudo_bytes(p, SSL3_RANDOM_SIZE);
 
 		/* Do the message type and length last */
 		d = p = &(buf[4]);
@@ -1674,14 +1672,11 @@ f_err:
 	ssl3_send_alert(s, SSL3_AL_FATAL, al);
 err:
 	EVP_PKEY_free(pkey);
-	if (rsa != NULL)
-		RSA_free(rsa);
-	if (dh != NULL)
-		DH_free(dh);
+	RSA_free(rsa);
+	DH_free(dh);
 	BN_CTX_free(bn_ctx);
 	EC_POINT_free(srvr_ecpoint);
-	if (ecdh != NULL)
-		EC_KEY_free(ecdh);
+	EC_KEY_free(ecdh);
 	EVP_MD_CTX_cleanup(&md_ctx);
 	return (-1);
 }
@@ -2156,6 +2151,14 @@ ssl3_send_client_key_exchange(SSL *s)
 			int ecdh_clnt_cert = 0;
 			int field_size = 0;
 
+			if (s->session->sess_cert == NULL) {
+				ssl3_send_alert(s, SSL3_AL_FATAL,
+				    SSL_AD_UNEXPECTED_MESSAGE);
+				SSLerr(SSL_F_SSL3_SEND_CLIENT_KEY_EXCHANGE,
+				    SSL_R_UNEXPECTED_MESSAGE);
+				goto err;
+			}
+
 			/*
 			 * Did we send out the client's ECDH share for use
 			 * in premaster computation as part of client
@@ -2325,8 +2328,7 @@ ssl3_send_client_key_exchange(SSL *s)
 			/* Free allocated memory */
 			BN_CTX_free(bn_ctx);
 			free(encodedPoint);
-			if (clnt_ecdh != NULL)
-				EC_KEY_free(clnt_ecdh);
+			EC_KEY_free(clnt_ecdh);
 			EVP_PKEY_free(srvr_pub_pkey);
 		} else if (alg_k & SSL_kGOST) {
 			/* GOST key exchange message creation */
@@ -2436,7 +2438,7 @@ ssl3_send_client_key_exchange(SSL *s)
 			s->session->master_key_length =
 			    s->method->ssl3_enc->generate_master_secret(s,
 			    s->session->master_key, premaster_secret, 32);
-			    EVP_PKEY_free(pub_key);
+			EVP_PKEY_free(pub_key);
 
 		}
 #ifndef OPENSSL_NO_PSK
@@ -2535,11 +2537,11 @@ psk_err:
 
 	/* SSL3_ST_CW_KEY_EXCH_B */
 	return (ssl3_do_write(s, SSL3_RT_HANDSHAKE));
+
 err:
 	BN_CTX_free(bn_ctx);
 	free(encodedPoint);
-	if (clnt_ecdh != NULL)
-		EC_KEY_free(clnt_ecdh);
+	EC_KEY_free(clnt_ecdh);
 	EVP_PKEY_free(srvr_pub_pkey);
 	return (-1);
 }
@@ -2718,8 +2720,7 @@ ssl3_send_client_certificate(SSL *s)
 
 		if (x509 != NULL)
 			X509_free(x509);
-		if (pkey != NULL)
-			EVP_PKEY_free(pkey);
+		EVP_PKEY_free(pkey);
 		if (i == 0) {
 			if (s->version == SSL3_VERSION) {
 				s->s3->tmp.cert_req = 0;

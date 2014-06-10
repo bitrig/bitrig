@@ -866,14 +866,10 @@ ssl3_check_client_hello(SSL *s)
 		 * which will now be aborted. (A full SSL_clear would be too
 		 * much.)
 		 */
-		if (s->s3->tmp.dh != NULL) {
-			DH_free(s->s3->tmp.dh);
-			s->s3->tmp.dh = NULL;
-		}
-		if (s->s3->tmp.ecdh != NULL) {
-			EC_KEY_free(s->s3->tmp.ecdh);
-			s->s3->tmp.ecdh = NULL;
-		}
+		DH_free(s->s3->tmp.dh);
+		s->s3->tmp.dh = NULL;
+		EC_KEY_free(s->s3->tmp.ecdh);
+		s->s3->tmp.ecdh = NULL;
 		s->s3->flags |= SSL3_FLAGS_SGC_RESTART_DONE;
 		return (2);
 	}
@@ -1134,10 +1130,7 @@ ssl3_get_client_hello(SSL *s)
 	{
 		unsigned char *pos;
 		pos = s->s3->server_random;
-		if (ssl_fill_hello_random(s, 1, pos, SSL3_RANDOM_SIZE) <= 0) {
-			al = SSL_AD_INTERNAL_ERROR;
-			goto f_err;
-		}
+		RAND_pseudo_bytes(pos, SSL3_RANDOM_SIZE);
 	}
 
 	if (!s->hit && s->version >= TLS1_VERSION && s->tls_session_secret_cb) {
@@ -2465,7 +2458,7 @@ ssl3_get_client_key_exchange(SSL *s)
 			ret = 2;
 		else
 			ret = 1;
-		gerr:
+gerr:
 		EVP_PKEY_free(client_pub_pkey);
 		EVP_PKEY_CTX_free(pkey_ctx);
 		if (ret)
@@ -2485,8 +2478,7 @@ f_err:
 err:
 	EVP_PKEY_free(clnt_pub_pkey);
 	EC_POINT_free(clnt_ecpoint);
-	if (srvr_ecdh != NULL)
-		EC_KEY_free(srvr_ecdh);
+	EC_KEY_free(srvr_ecdh);
 	BN_CTX_free(bn_ctx);
 	return (-1);
 }
