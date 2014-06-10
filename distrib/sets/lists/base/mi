@@ -1920,6 +1920,7 @@
 ./usr/include/tmpfs
 ./usr/include/tmpfs/tmpfs.h
 ./usr/include/tmpfs/tmpfs_fifoops.h
+./usr/include/tmpfs/tmpfs_snapshot.h
 ./usr/include/tmpfs/tmpfs_specops.h
 ./usr/include/tmpfs/tmpfs_vnops.h
 ./usr/include/ttyent.h

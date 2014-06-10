@@ -1954,6 +1954,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/tmpfs
 ./usr/libdata/perl5/site_perl/arm-bitrig/tmpfs/tmpfs.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/tmpfs/tmpfs_fifoops.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/tmpfs/tmpfs_snapshot.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/tmpfs/tmpfs_specops.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/tmpfs/tmpfs_vnops.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/ttyent.ph

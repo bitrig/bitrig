@@ -1923,6 +1923,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/tmpfs
 ./usr/libdata/perl5/site_perl/amd64-bitrig/tmpfs/tmpfs.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/tmpfs/tmpfs_fifoops.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/tmpfs/tmpfs_snapshot.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/tmpfs/tmpfs_specops.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/tmpfs/tmpfs_vnops.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ttyent.ph
