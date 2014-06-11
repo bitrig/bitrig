@@ -104,12 +104,6 @@ armv7_find_dev(const char *name, int unit)
 	return (NULL);
 }
 
-int
-armv7_match(struct device *parent, void *cfdata, void *aux)
-{
-	return (1);
-}
-
 void
 armv7_attach(struct device *parent, struct device *self, void *aux)
 {

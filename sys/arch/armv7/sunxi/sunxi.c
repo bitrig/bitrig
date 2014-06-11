@@ -22,8 +22,21 @@
 
 #include <armv7/armv7/armv7var.h>
 
+static int
+sunxi_match(struct device *parent, void *cfdata, void *aux)
+{
+	switch (board_id)
+	{
+	case BOARD_ID_SUN4I_A10:
+	case BOARD_ID_SUN7I_A20:
+		return (1);
+	}
+
+	return (0);
+}
+
 struct cfattach sunxi_ca = {
-	sizeof(struct armv7_softc), armv7_match, armv7_attach
+	sizeof(struct armv7_softc), sunxi_match, armv7_attach
 };
 
 struct cfdriver sunxi_cd = {

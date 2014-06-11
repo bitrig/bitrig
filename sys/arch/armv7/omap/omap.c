@@ -22,8 +22,23 @@
 
 #include <armv7/armv7/armv7var.h>
 
+static int
+omap_match(struct device *parent, void *cfdata, void *aux)
+{
+	switch (board_id)
+	{
+	case BOARD_ID_OMAP3_BEAGLE:
+	case BOARD_ID_AM335X_BEAGLEBONE:
+	case BOARD_ID_OMAP3_OVERO:
+	case BOARD_ID_OMAP4_PANDA:
+		return (1);
+	}
+
+	return (0);
+}
+
 struct cfattach omap_ca = {
-	sizeof(struct armv7_softc), armv7_match, armv7_attach
+	sizeof(struct armv7_softc), omap_match, armv7_attach
 };
 
 struct cfdriver omap_cd = {

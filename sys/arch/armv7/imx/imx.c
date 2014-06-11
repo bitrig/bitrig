@@ -23,8 +23,24 @@
 
 #include <armv7/armv7/armv7var.h>
 
+static int
+imx_match(struct device *parent, void *cfdata, void *aux)
+{
+	switch (board_id)
+	{
+	case BOARD_ID_IMX6_HUMMINGBOARD:
+	case BOARD_ID_IMX6_SABRELITE:
+	case BOARD_ID_IMX6_UDOO:
+	case BOARD_ID_IMX6_UTILITE:
+	case BOARD_ID_IMX6_WANDBOARD:
+		return (1);
+	}
+
+	return (0);
+}
+
 struct cfattach imx_ca = {
-	sizeof(struct armv7_softc), armv7_match, armv7_attach, NULL,
+	sizeof(struct armv7_softc), imx_match, armv7_attach, NULL,
 	config_activate_children
 };
 

@@ -23,8 +23,20 @@
 
 #include <armv7/armv7/armv7var.h>
 
+static int
+exynos_match(struct device *parent, void *cfdata, void *aux)
+{
+	switch (board_id)
+	{
+	case BOARD_ID_EXYNOS5_CHROMEBOOK:
+		return (1);
+	}
+
+	return (0);
+}
+
 struct cfattach exynos_ca = {
-	sizeof(struct armv7_softc), armv7_match, armv7_attach, NULL,
+	sizeof(struct armv7_softc), exynos_match, armv7_attach, NULL,
 	config_activate_children
 };
 
