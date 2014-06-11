@@ -128,8 +128,7 @@ main(int argc, char *argv[])
 	if (argc > 1)
 		argv[1] = kludge_oldps_options(argv[1]);
 
-	all = fmt = prtheader = showthreads = 0;
-	wflag = kflag = xflg = 0;
+	all = fmt = prtheader = showthreads = wflag = kflag = xflg = 0;
 	gids = NULL;
 	pids = NULL;
 	ttys = NULL;
@@ -600,6 +599,6 @@ usage(void)
 	(void)fprintf(stderr,
 	    "usage: %s [-AaCcdeHhjkLlmrSTuvwx] [-G groups] [-M core] [-N system]\n"
 	    "%-*s[-O fmt] [-o fmt] [-p pids] [-t ttys] [-U users] [-W swap]\n",
-	    __progname,  (int)strlen(__progname) + 8, "");
+	    __progname, (int)strlen(__progname) + 8, "");
 	exit(1);
 }
