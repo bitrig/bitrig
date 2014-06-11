@@ -19,6 +19,8 @@
 #ifndef __ARMV7VAR_H__
 #define __ARMV7VAR_H__
 
+#include <machine/bootconfig.h>
+
 /* Boards device list */
 struct board_dev {
 	char	*name;
@@ -91,6 +93,17 @@ void omap3_init(void);
 void omap4_init(void);
 void sxia1x_init(void);
 void sxia20_init(void);
+
+struct armv7_platform {
+	const char *boot_name;
+	void (*smc_write)(bus_space_tag_t, bus_space_handle_t, bus_size_t, uint32_t, uint32_t);
+	void (*init_cons)(void);
+	void (*watchdog_reset)(void);
+	void (*powerdown)(void);
+	void (*print_board_type)(void);
+	void (*bootconfig_dram)(BootConfig *, psize_t *, psize_t *);
+	void (*disable_l2_if_needed)(void);
+};
 
 #endif /* __ARMV7VAR_H__ */
 

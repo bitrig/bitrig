@@ -18,12 +18,12 @@
 #ifndef __PLATFORMVAR_H__
 #define __PLATFORMVAR_H__
 
+void platform_init(void);
+const char *platform_boot_name(void);
 void platform_powerdown(void);
 void platform_watchdog_reset(void);
 void platform_init_cons(void);
 void platform_print_board_type(void);
-void platform_bootconfig_dram(BootConfig *, psize_t *, psize_t *);
 void platform_disable_l2_if_needed(void);
-extern const char *platform_boot_name;
 
 #endif /* __PLATFORMVAR_H__ */

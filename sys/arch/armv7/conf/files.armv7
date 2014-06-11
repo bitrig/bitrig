@@ -29,6 +29,7 @@ file	arch/armv7/armv7/armv7.c
 file	arch/armv7/armv7/armv7_machdep.c
 file	arch/armv7/armv7/autoconf.c
 file	arch/arm/arm/disksubr.c			disk
+file	arch/armv7/armv7/platform.c
 
 include "dev/sdmmc/files.sdmmc"
 

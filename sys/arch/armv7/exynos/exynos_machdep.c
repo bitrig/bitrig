@@ -21,7 +21,6 @@
 #include <sys/termios.h>
 
 #include <machine/bus.h>
-#include <machine/bootconfig.h>
 #include <machine/fdt.h>
 
 #include <arm/cortex/smc.h>
@@ -35,17 +34,15 @@ extern int32_t agtimer_frequency;
 extern int comcnspeed;
 extern int comcnmode;
 
-const char *platform_boot_name = "Bitrig/exynos";
-
-void
-platform_smc_write(bus_space_tag_t iot, bus_space_handle_t ioh, bus_size_t off,
+static void
+exynos_platform_smc_write(bus_space_tag_t iot, bus_space_handle_t ioh, bus_size_t off,
     uint32_t op, uint32_t val)
 {
 	bus_space_write_4(iot, ioh, off, val);
 }
 
-void
-platform_init_cons(void)
+static void
+exynos_platform_init_cons(void)
 {
 	paddr_t paddr;
 	size_t size;
@@ -70,20 +67,20 @@ platform_init_cons(void)
 	}
 }
 
-void
-platform_watchdog_reset(void)
+static void
+exynos_platform_watchdog_reset(void)
 {
 	exdog_reset();
 }
 
-void
-platform_powerdown(void)
+static void
+exynos_platform_powerdown(void)
 {
 
 }
 
-void
-platform_print_board_type(void)
+static void
+exynos_platform_print_board_type(void)
 {
 	switch (board_id) {
 	case BOARD_ID_EXYNOS5_CHROMEBOOK:
@@ -95,25 +92,18 @@ platform_print_board_type(void)
 	}
 }
 
-void
-platform_bootconfig_dram(BootConfig *bootconfig, psize_t *memstart, psize_t *memsize)
-{
-	if (bootconfig->dramblocks == 0) {
-		*memstart = SDRAM_START;
-		*memsize = 0x10000000; /* 256 MB */
-		/* Fake bootconfig structure for the benefit of pmap.c */
-		/* XXX must make the memory description h/w independant */
-		bootconfig->dram[0].address = *memstart;
-		bootconfig->dram[0].pages = *memsize / PAGE_SIZE;
-		bootconfig->dramblocks = 1;
-	} else {
-		*memstart = bootconfig->dram[0].address;
-		*memsize = bootconfig->dram[0].pages * PAGE_SIZE;
-	}
-}
-
-void
-platform_disable_l2_if_needed(void)
+static void
+exynos_platform_disable_l2_if_needed(void)
 {
 
 }
+
+struct armv7_platform exynos_platform = {
+	.boot_name = "Bitrig/exynos",
+	.smc_write = exynos_platform_smc_write,
+	.init_cons = exynos_platform_init_cons,
+	.watchdog_reset = exynos_platform_watchdog_reset,
+	.powerdown = exynos_platform_powerdown,
+	.print_board_type = exynos_platform_print_board_type,
+	.disable_l2_if_needed = exynos_platform_disable_l2_if_needed,
+};

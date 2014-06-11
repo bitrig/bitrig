@@ -3,14 +3,13 @@
 */
 
 OUTPUT_ARCH(arm)
-ENTRY(KERNEL_BASE_phys)
+ENTRY(KERNEL_BASE_virt)
 SECTIONS
 {
-  KERNEL_BASE_phys = @KERNEL_BASE_PHYS@;
   KERNEL_BASE_virt = @KERNEL_BASE_VIRT@;
 
   /* Kernel start: */
-  .start (KERNEL_BASE_phys) :
+  .start (KERNEL_BASE_virt) :
   {
   *(.start)
   } =0

@@ -211,6 +211,7 @@ int	bootstrap_bs_map(void *, bus_addr_t, bus_size_t, int,
 void	process_kernel_args(char *);
 void	parse_uboot_tags(void *);
 void	consinit(void);
+void	platform_bootconfig_dram(BootConfig *, psize_t *, psize_t *);
 
 bs_protos(bs_notimpl);
 
@@ -424,6 +425,8 @@ initarm(void *arg0, void *arg1, void *arg2)
 	if (set_cpufuncs())
 		panic("cpu not recognized!");
 
+	/* XXX: Use FDT information. */
+	platform_init();
 	platform_disable_l2_if_needed();
 
 	/*
@@ -904,5 +907,23 @@ board_startup(void)
 #else
 		printf("kernel does not support -c; continuing..\n");
 #endif
+	}
+}
+
+void
+platform_bootconfig_dram(BootConfig *bootconfig, psize_t *memstart, psize_t *memsize)
+{
+	int loop;
+
+	if (bootconfig->dramblocks == 0)
+		panic("%s: dramblocks not set up!\n", __func__);
+
+	*memstart = bootconfig->dram[0].address;
+	*memsize = bootconfig->dram[0].pages * PAGE_SIZE;
+	printf("memory size derived from u-boot\n");
+	for (loop = 0; loop < bootconfig->dramblocks; loop++) {
+		printf("bootconf.mem[%d].address = %08x pages %d/0x%08x\n",
+		    loop, bootconfig->dram[loop].address, bootconfig->dram[loop].pages,
+		        bootconfig->dram[loop].pages * PAGE_SIZE);
 	}
 }

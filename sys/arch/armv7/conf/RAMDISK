@@ -1,4 +1,4 @@
-# $OpenBSD: RAMDISK,v 1.16 2012/09/27 14:01:35 jsg Exp $
+# $OpenBSD: RAMDISK-IMX,v 1.9 2014/04/07 08:27:23 brad Exp $
 #
 # GENERIC machine description file
 #
@@ -19,7 +19,6 @@
 # device.
 
 machine	armv7	arm
-options __EXYNOS__
 
 options	TIMEZONE=0	# time zone to adjust RTC time by
 options	DST=0		# daylight saving time used by RTC
@@ -34,13 +33,10 @@ options	DDB		# kernel debugger
 options	DIAGNOSTIC
 option DDB_SAFE_CONSOLE
 options	FIFO		# FIFOs; RECOMMENDED
-#options	NFSCLIENT	# NFS 
+option	EXT2FS		# Second Extended Filesystem
+#option	NFSCLIENT	# NFS
 
-makeoptions	KERNEL_BASE_PHYS="0x40800000"
-makeoptions	KERNEL_BASE_VIRT="0xc0800000"
-options	BUILD_STARTUP_PAGETABLE
-options	STARTUP_PAGETABLE_ADDR=0x40200000
-options	SDRAM_START="0x40000000"
+makeoptions	KERNEL_BASE_VIRT="0xc0300000"
 
 options		APERTURE
 
@@ -50,7 +46,6 @@ maxusers	32
 
 # CPU options
 options	CPU_ARMv7	# Support the ARMv7
-makeoptions	CPUFLAGS="-mcpu=armv5"	# dont have gcc v7 support yet.
 
 #option SYSCALL_DEBUG
 
@@ -65,33 +60,22 @@ config		bsd	root on rd0a swap on rd0b
 mainbus0	at root
 cpu0		at mainbus?
 
-# Cortex-A9 (Exynos5)
+# Cortex-A9
 cortex0		at mainbus?
 ampintc*	at cortex?
+amptimer*	at cortex?
 agtimer*	at cortex?
+armliicc*	at cortex?
+ampscu*		at cortex?
 
-# Exynos SoC
-exynos0		at mainbus?
-
-# Exynos on-chip devices
-exdisplay*	at exynos?		# display driver
-wsdisplay*	at exdisplay? console ?
-exclock*	at exynos?		# clock control module
-expower*	at exynos?		# power controller
-exsysreg*	at exynos?		# sysreg
-exiomuxc*	at exynos?		# iomux controller
-exmct*		at exynos?		# multicore timer
-exdog*		at exynos?		# watchdog timer
-exgpio*		at exynos?		# user-visible GPIO pins?
-exesdhc*	at exynos?		# SDHC controller
-exuart*		at exynos?		# onboard uarts
-exiic*		at exynos?		# i2c
-
-ehci*		at exynos?		# EHCI (shim)
-usb*		at ehci?
+# SoCs
+include "../../../arch/armv7/conf/generic.exynos"
+include "../../../arch/armv7/conf/generic.imx"
+include "../../../arch/armv7/conf/generic.omap"
+include "../../../arch/armv7/conf/generic.sunxi"
 
 # USB bus support
-usb*		at ehci?	flags 0x1
+usb*		at ehci?
 uhub*		at usb?
 uhub*		at uhub?
 
@@ -126,11 +110,13 @@ uhid*		at uhidev?		# USB generic HID support
 aue*		at uhub?		# ADMtek AN986 Pegasus Ethernet
 atu*		at uhub?		# Atmel AT76c50x based 802.11b
 axe*		at uhub?		# ASIX Electronics AX88172 USB Ethernet
+axen*		at uhub?		# ASIX Electronics AX88179 USB Ethernet
 cue*		at uhub?		# CATC USB-EL1201A based Ethernet
 kue*		at uhub?		# Kawasaki KL5KUSB101B based Ethernet
 smsc*		at uhub?		# SMSC LAN95xx Ethernet
 cdce*		at uhub?		# CDC Ethernet
 upl*		at uhub?		# Prolific PL2301/PL2302 host-to-host `network'
+ugl*		at uhub?		# Genesys Logic GL620USB-A host-to-host `network'
 udav*		at uhub?		# Davicom DM9601 based Ethernet
 url*		at uhub?		# Realtek RTL8150L based adapters
 wi*		at uhub?		# WaveLAN IEEE 802.11DS
@@ -140,7 +126,9 @@ udsbr*		at uhub?		# D-Link DSB-R100 radio
 radio*		at udsbr?		# USB radio
 #ubt*		at uhub? disable	# USB Bluetooth
 ugen*		at uhub?		# USB Generic driver
+rum*		at uhub?		# Ralink RT2501USB/RT2601USB
 
+atphy*		at mii?			# Attansic F1 PHYs
 ukphy*		at mii?			# "unknown" PHYs
 
 scsibus*	at scsi?
@@ -149,12 +137,6 @@ st*		at scsibus?
 cd*		at scsibus?
 ch*		at scsibus?
 uk*		at scsibus?
-
-sdmmc*		at exesdhc?		# SD/MMC bus
-
-# I2C bus support
-iic*		at exiic?
-crosec*		at iic?
 
 # Pseudo-Devices
 #pseudo-device	wsmux		2	# mouse & keyboard multiplexor

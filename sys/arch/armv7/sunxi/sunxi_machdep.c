@@ -21,7 +21,6 @@
 #include <sys/termios.h>
 
 #include <machine/bus.h>
-#include <machine/bootconfig.h>
 
 #include <dev/ic/comreg.h>
 #include <dev/ic/comvar.h>
@@ -36,17 +35,15 @@ extern void sxidog_reset(void);
 extern int comcnspeed;
 extern int comcnmode;
 
-const char *platform_boot_name = "Bitrig/sunxi";
-
-void
-platform_smc_write(bus_space_tag_t iot, bus_space_handle_t ioh, bus_size_t off,
+static void
+sunxi_platform_smc_write(bus_space_tag_t iot, bus_space_handle_t ioh, bus_size_t off,
     uint32_t op, uint32_t val)
 {
 
 }
 
-void
-platform_init_cons(void)
+static void
+sunxi_platform_init_cons(void)
 {
 	paddr_t paddr;
 
@@ -65,52 +62,36 @@ platform_init_cons(void)
 	    comcnmode);
 }
 
-void
-platform_watchdog_reset(void)
+static void
+sunxi_platform_watchdog_reset(void)
 {
 	sxidog_reset();
 }
 
-void
-platform_powerdown(void)
+static void
+sunxi_platform_powerdown(void)
 {
 
 }
 
-void
-platform_print_board_type(void)
+static void
+sunxi_platform_print_board_type(void)
 {
 
 }
 
-void
-platform_bootconfig_dram(BootConfig *bootconfig, psize_t *memstart, psize_t *memsize)
-{
-	int loop;
-
-	if (bootconfig->dramblocks == 0) {
-		*memstart = SDRAM_START;
-		*memsize = 0x10000000; /* 256 MB */
-		/* Fake bootconfig structure for the benefit of pmap.c */
-		/* XXX must make the memory description h/w independant */
-		bootconfig->dram[0].address = *memstart;
-		bootconfig->dram[0].pages = *memsize / PAGE_SIZE;
-		bootconfig->dramblocks = 1;
-	} else {
-		*memstart = bootconfig->dram[0].address;
-		*memsize = bootconfig->dram[0].pages * PAGE_SIZE;
-		printf("memory size derived from u-boot\n");
-		for (loop = 0; loop < bootconfig->dramblocks; loop++) {
-			printf("bootconf.mem[%d].address = %08x pages %d/0x%08x\n",
-			    loop, bootconfig->dram[0].address, bootconfig->dram[0].pages,
-			        bootconfig->dram[0].pages * PAGE_SIZE);
-		}
-	}
-}
-
-void
-platform_disable_l2_if_needed(void)
+static void
+sunxi_platform_disable_l2_if_needed(void)
 {
 
 }
 
+struct armv7_platform sunxi_platform = {
+	.boot_name = "Bitrig/sunxi",
+	.smc_write = sunxi_platform_smc_write,
+	.init_cons = sunxi_platform_init_cons,
+	.watchdog_reset = sunxi_platform_watchdog_reset,
+	.powerdown = sunxi_platform_powerdown,
+	.print_board_type = sunxi_platform_print_board_type,
+	.disable_l2_if_needed = sunxi_platform_disable_l2_if_needed,
+};

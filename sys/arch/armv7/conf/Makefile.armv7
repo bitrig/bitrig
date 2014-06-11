@@ -177,14 +177,13 @@ install-kernel-${MACHINE_NAME}:
 
 
 # until we get native booting working, put this in the tree.
-bsdrd.umg: bsd.rd
-	mkuboot -a arm -o linux -e ${KERNEL_BASE_PHYS} -l ${KERNEL_BASE_PHYS} bsd.rd bsdrd.umg
-
-bsd.umg: bsd
-	mkuboot -a arm -o linux -e ${KERNEL_BASE_PHYS} -l ${KERNEL_BASE_PHYS} bsd bsd.umg
-
-bsd.rd: bsd
-	cp bsd bsd.rd
-	$S/../distrib/${_mach}/ramdisk/rdsetroot < $S/../distrib/${_mach}/ramdisk/mr.fs bsd.rd
+bsd.EXYNOS.umg: bsd
+	mkuboot -a arm -o linux -e 0x40300000 -l 0x40300000 bsd bsd.EXYNOS.umg
+bsd.IMX.umg: bsd
+	mkuboot -a arm -o linux -e 0x10300000 -l 0x10300000 bsd bsd.IMX.umg
+bsd.OMAP.umg: bsd
+	mkuboot -a arm -o linux -e 0x80300000 -l 0x80300000 bsd bsd.OMAP.umg
+bsd.SUNXI.umg: bsd
+	mkuboot -a arm -o linux -e 0x40300000 -l 0x40300000 bsd bsd.SUNXI.umg
 
 %RULES
