@@ -1,3 +1,4 @@
+/* $OpenBSD: dsa_locl.h,v 1.2 2014/06/12 15:49:28 deraadt Exp $ */
 /* ====================================================================
  * Copyright (c) 2007 The OpenSSL Project.  All rights reserved.
  *
@@ -56,4 +57,5 @@
 
 int dsa_builtin_paramgen(DSA *ret, size_t bits, size_t qbits,
 	const EVP_MD *evpmd, const unsigned char *seed_in, size_t seed_len,
+	unsigned char *seed_out,
 	int *counter_ret, unsigned long *h_ret, BN_GENCB *cb);

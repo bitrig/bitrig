@@ -1,5 +1,5 @@
-/* rsa_x931.c */
-/* Written by Dr Stephen N Henson (shenson@bigfoot.com) for the OpenSSL
+/* $OpenBSD: rsa_x931.c,v 1.2 2014/06/12 15:49:30 deraadt Exp $ */
+/* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2005.
  */
 /* ====================================================================
@@ -105,7 +105,7 @@ int RSA_padding_add_X931(unsigned char *to, int tlen,
 int RSA_padding_check_X931(unsigned char *to, int tlen,
 	     const unsigned char *from, int flen, int num)
 	{
-	int i,j;
+	int i = 0,j;
 	const unsigned char *p;
 
 	p=from;
