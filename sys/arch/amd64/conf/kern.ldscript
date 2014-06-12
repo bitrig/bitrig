@@ -37,21 +37,16 @@ PHDRS
  *__ALIGN_SIZE = 0x200000;
  */
 __ALIGN_SIZE = 0x1000;
-__kernel_base_virt = 0xffffffff81000000 + SIZEOF_HEADERS;
-__kernel_base_phys = __kernel_base_virt & 0x7fffffff;
+__kernel_base = 0xffffffff81000300;
 
 /* We use physical address to jump to kernel */
-start_phys = LOADADDR(.text) + (start - __kernel_base_virt);
-ENTRY(start_phys)
+start = LOADADDR(.text) + (start - __kernel_base);
+ENTRY(start)
 SECTIONS
 {
-	__kernel_text_virt = __kernel_base_virt;
-	__kernel_text_phys = __kernel_base_phys;
-	.text (__kernel_text_virt) : AT (__kernel_text_phys)
+	. = __kernel_base;
+	.text :
 	{
-		__text_start = ABSOLUTE(.) & 0xfffffffffffff000;
-		__text_size = SIZEOF(.text);
-		__text_load = LOADADDR(.text);
 		locore.o(.text)
 		*(.text .text.*)
 	} :text
@@ -61,13 +56,8 @@ SECTIONS
 
 	/* Move rodata to the next page, so we can nuke X and W bit on them */
 	. = ALIGN(__ALIGN_SIZE);
-	__kernel_rodata_virt = .;
-	__kernel_rodata_phys = . & 0x7fffffff;
-	.rodata (__kernel_rodata_virt) : AT (__kernel_rodata_phys)
+	.rodata :
 	{
-		__rodata_start = ABSOLUTE(.);
-		__rodata_size = SIZEOF(.rodata);
-		__rodata_load = LOADADDR(.rodata);
 		*(.rodata .rodata.*)
 	} :rodata
 	PROVIDE (erodata = .);
@@ -75,13 +65,8 @@ SECTIONS
 
 	/* Move data to the next page, so we can add W bit on them */
 	. = ALIGN(__ALIGN_SIZE);
-	__kernel_data_virt = .;
-	__kernel_data_phys = . & 0x7fffffff;
-	.data (__kernel_data_virt) : AT (__kernel_data_phys)
+	.data :
 	{
-		__data_start = ABSOLUTE(.);
-		__data_size = SIZEOF(.data);
-		__data_load = LOADADDR(.data);
 		*(.data .data.*)
 	} :data
 	. = ALIGN(__ALIGN_SIZE);
@@ -89,13 +74,8 @@ SECTIONS
 	_edata = .;
 
 	/* BSS starts right after padded data */
-	__kernel_bss_virt = .;
-	__kernel_bss_phys = . & 0x7fffffff;
-	.bss (__kernel_bss_virt) : AT (__kernel_bss_phys)
+	.bss :
 	{
-		__bss_start = ABSOLUTE(.);
-		__bss_size = SIZEOF(.bss);
-		__bss_load = LOADADDR(.bss);
 		*(.bss .bss.*)
 		*(COMMON)
 		/* Align here to ensure that the .bss section occupies space
@@ -116,4 +96,3 @@ SECTIONS
 		*(.eh_frame)
 	}
 }
-
