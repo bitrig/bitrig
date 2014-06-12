@@ -62,6 +62,11 @@ SECTIONS
 	PROVIDE (erodata = .);
 	_erodata = .;
 
+	.openbsd.randomdata :
+	{
+		*(.openbsd.randomdata)
+	} :openbsd_randomize :data
+
 	/* Move data to the next page, so we can add W bit on them */
 	. = ALIGN(__ALIGN_SIZE);
 	.data :
