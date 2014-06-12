@@ -47,7 +47,6 @@ SECTIONS
 	. = __kernel_base;
 	.text :
 	{
-		locore.o(.text)
 		*(.text .text.*)
 	} :text
 	PROVIDE (__etext = .);
