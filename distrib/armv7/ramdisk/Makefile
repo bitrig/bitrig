@@ -38,26 +38,27 @@ all ${IMAGE}:
 .else
 
 ALLSOC=		IMX OMAP EXYNOS SUNXI
-ALLBSD=
-ALLBSDRD=
+ALLBSD=		bsd
+ALLBSDRD=	${BSD_RD}
 .for SOC in ${ALLSOC}
-ALLBSD+=	bsd.${SOC}
-ALLBSDRD+=	${BSD_RD}.${SOC} ${BSD_RD}.${SOC}.umg
+ALLBSDRD+=	${BSD_RD}.${SOC}.umg
 all:	${ALLBSDRD}
 .endfor
 
-.for SOC in ${ALLSOC}
-bsd.${SOC}:
-	cd ${TOP}/../../sys/arch/armv7/conf && config RAMDISK-${SOC}
-	cd ${TOP}/../../sys/arch/armv7/compile/RAMDISK-${SOC} && \
+bsd:
+	cd ${TOP}/../../sys/arch/armv7/conf && config RAMDISK
+	cd ${TOP}/../../sys/arch/armv7/compile/RAMDISK && \
 	    ${MAKE} clean && exec ${MAKE}
-	cp ${TOP}/../../sys/arch/armv7/compile/RAMDISK-${SOC}/bsd bsd.${SOC}
+	cp ${TOP}/../../sys/arch/armv7/compile/RAMDISK/bsd bsd
 
-${BSD_RD}.${SOC}: ${CBIN} ${IMAGE} bsd.${SOC} rdsetroot
-	cp bsd.${SOC} ${BSD_RD}.${SOC}
-	${.OBJDIR}/rdsetroot ${BSD_RD}.${SOC} ${IMAGE}
+${BSD_RD}: ${CBIN} ${IMAGE} bsd rdsetroot
+	cp bsd ${BSD_RD}
+	${.OBJDIR}/rdsetroot ${BSD_RD} ${IMAGE}
+
+.for SOC in ${ALLSOC}
+${BSD_RD}.${SOC}.umg:
 	mkuboot -a arm -o linux -e ${KERNADDR_${SOC}} -l ${KERNADDR_${SOC}} \
-	    ${BSD_RD}.${SOC} ${BSD_RD}.${SOC}.umg
+	    ${BSD_RD} ${BSD_RD}.${SOC}.umg
 .endfor
 
 ${IMAGE}: rd_setup do_files rd_teardown

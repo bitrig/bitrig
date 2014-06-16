@@ -51,8 +51,8 @@ if [[ $? == 0 ]]; then
 	LOADADDR=0x40200000
 fi
 
-MDSETS="bsd bsd.rd.${MDPLAT} bsd.${MDPLAT}.umg bsd.rd.${MDPLAT}.umg"
-SANESETS="bsd.${MDPLAT}"
+MDSETS="bsd bsd.rd bsd.${MDPLAT}.umg bsd.rd.${MDPLAT}.umg"
+SANESETS="bsd"
 DEFAULTSETS=${MDSETS}
 
 NEWFSARGS_msdos="-F 16 -L boot"

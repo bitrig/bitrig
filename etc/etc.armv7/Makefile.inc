@@ -2,11 +2,10 @@
 
 ALLSOC=IMX OMAP EXYNOS SUNXI
 KERNELS=GENERIC bsd
-MDEXT=
+MDEXT=bsd.rd
 
 .for SOC in ${ALLSOC}
 MDEXT+=		bsd.${SOC}.umg
-MDEXT+=		bsd.rd.${SOC}
 MDEXT+=		bsd.rd.${SOC}.umg
 .endfor
 
