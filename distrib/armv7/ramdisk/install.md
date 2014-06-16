@@ -51,7 +51,7 @@ if [[ $? == 0 ]]; then
 	LOADADDR=0x40200000
 fi
 
-MDSETS="bsd.${MDPLAT} bsd.rd.${MDPLAT} bsd.${MDPLAT}.umg bsd.rd.${MDPLAT}.umg"
+MDSETS="bsd bsd.rd.${MDPLAT} bsd.${MDPLAT}.umg bsd.rd.${MDPLAT}.umg"
 SANESETS="bsd.${MDPLAT}"
 DEFAULTSETS=${MDSETS}
 
