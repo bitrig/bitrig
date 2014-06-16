@@ -276,7 +276,7 @@ cpu_startup()
 	 * Identify ourselves for the msgbuf (everything printed earlier will
 	 * not be buffered).
 	 */
-	printf(version);
+	printf("%s", version);
 
 	printf("real mem  = %lu (%luMB)\n", ptoa(physmem),
 	    ptoa(physmem)/1024/1024);

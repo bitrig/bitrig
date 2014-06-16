@@ -76,12 +76,12 @@
 #include <sys/errno.h>
 #include <sys/kernel.h>
 #include <sys/reboot.h>
+#include <sys/user.h>
 #include <sys/signalvar.h>
 #include <sys/syscall.h>
 #include <sys/syscall_mi.h>
 #include <sys/systm.h>
 #include <sys/proc.h>
-#include <sys/user.h>
 
 #include <uvm/uvm_extern.h>
 
