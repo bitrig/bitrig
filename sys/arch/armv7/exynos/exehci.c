@@ -129,8 +129,7 @@ exehci_attach(struct device *parent, struct device *self, void *aux)
 		goto intr;
 	}
 
-	sc->sc.sc_child = config_found((void *)sc, &sc->sc.sc_bus,
-	    usbctlprint);
+	config_found((void *)sc, &sc->sc.sc_bus, usbctlprint);
 
 	goto out;
 
@@ -152,7 +151,7 @@ exehci_detach(struct device *self, int flags)
 	struct exehci_softc		*sc = (struct exehci_softc *)self;
 	int				rv;
 
-	rv = ehci_detach(&sc->sc, flags);
+	rv = ehci_detach(self, flags);
 	if (rv)
 		return (rv);
 
