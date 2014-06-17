@@ -84,7 +84,7 @@ SECTIONS
 		__data_load = LOADADDR(.data);
 		*(.data .data.*)
 	} :data
-	. = ALIGN(0x1000);
+	. = ALIGN(__ALIGN_SIZE);
 	PROVIDE (edata = .);
 	_edata = .;
 
