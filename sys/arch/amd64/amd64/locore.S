@@ -364,6 +364,7 @@ bi_size_ok:
 	 * the rest of memory is still not possible.
 	 */
 	movl	$RELOC(tmpstk),%esp
+	movl	%esp,%ebp
 
 /*
  * Virtual address space of kernel:
@@ -580,11 +581,10 @@ bi_size_ok:
 	movl	%eax,(%ebx)
 	movl	$0, 4(%ebx)
 
-
 	/* Save phys. addr of PTD, for libkvm. */
-	movl	$RELOC(PTDpaddr),%ebp
-	movl	%esi,(%ebp)
-	movl	$0,4(%ebp)
+	movl	$RELOC(PTDpaddr),%eax
+	movl	%esi,(%eax)
+	movl	$0,4(%eax)
 
 	/*
 	 * Startup checklist:
