@@ -166,6 +166,8 @@ export	NDML2_ENTRIES
 export	NBPD_L2
 export	NPDPG
 
+export	L2_SHIFT
+
 export	PDIR_SLOT_DIRECT
 
 export	CR4_DEFAULT

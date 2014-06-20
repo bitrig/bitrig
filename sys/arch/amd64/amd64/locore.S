@@ -180,6 +180,7 @@ _C_LABEL(lapic_isr):
 	.globl	_C_LABEL(biosbasemem),_C_LABEL(biosextmem)
 	.globl	_C_LABEL(bootapiver)
 	.globl	_C_LABEL(eramdisk)
+	.globl	_C_LABEL(nkl2)
 _C_LABEL(cpu):		.long	0	# are we 386, 386sx, or 486,
 					#   or Pentium, or..
 _C_LABEL(cpu_id):	.long	0	# saved from `cpuid' instruction
@@ -213,6 +214,7 @@ _C_LABEL(biosextmem):	.long	0	# extended memory reported by BIOS
 _C_LABEL(biosextmem):	.long	REALEXTMEM
 #endif
 _C_LABEL(eramdisk):	.quad	0	# ptr to end of tmpfs ramdisk
+_C_LABEL(nkl2):		.quad	0	# number of kernel L2 entries
 
 #define	_RELOC(x)	((x) - KERNBASE)
 #define	RELOC(x)	_RELOC(_C_LABEL(x))
@@ -399,11 +401,13 @@ bi_size_ok:
  *
  */
 
+#if 0 /* This is now calculated dynamically according to 'nkl2'. */
 #if L2_SLOT_KERNBASE > 0
 #define TABLE_L2_ENTRIES (2 * (NKL2_KIMG_ENTRIES + 1))
 #else
 #define TABLE_L2_ENTRIES (NKL2_KIMG_ENTRIES + 1)
 #endif
+#endif /* 0 */
 
 #if L3_SLOT_KERNBASE > 0
 #define TABLE_L3_ENTRIES (2 * NKL3_KIMG_ENTRIES)
@@ -417,11 +421,13 @@ bi_size_ok:
 #define PROC0_PTP3_OFF	(PROC0_STK_OFF + UPAGES * NBPG)
 #define PROC0_PTP2_OFF	(PROC0_PTP3_OFF + NKL4_KIMG_ENTRIES * NBPG)
 #define PROC0_PTP1_OFF	(PROC0_PTP2_OFF + TABLE_L3_ENTRIES * NBPG)
+#if 0 /* These are now calculated dynamically according to 'nkl2'. */
 #define	PROC0_DMP3_OFF	(PROC0_PTP1_OFF + TABLE_L2_ENTRIES * NBPG)
 #define PROC0_DMP2_OFF	(PROC0_DMP3_OFF + NDML3_ENTRIES * NBPG)
+#endif
 #define TABLESIZE \
-    ((NKL4_KIMG_ENTRIES + TABLE_L3_ENTRIES + TABLE_L2_ENTRIES + 1 + UPAGES + \
-	NDML3_ENTRIES + NDML2_ENTRIES) * NBPG)
+    ((NKL4_KIMG_ENTRIES + TABLE_L3_ENTRIES + /* TABLE_L2_ENTRIES */ + 1 + \
+	UPAGES + NDML3_ENTRIES + NDML2_ENTRIES) * NBPG)
 
 #define fillkpt	\
 1:	movl	%eax,(%ebx)	; 	/* store phys addr */ \
@@ -449,6 +455,21 @@ bi_size_ok:
 	subl	$KERNBASE_LO,%eax	/* XXX */
 	movl	%eax,%edi
 1:
+
+	/* Calculate the number of L2 entries needed by the kernel image. */
+	movl	%edi,%ecx
+	shrl	$L2_SHIFT,%ecx
+	incl	%ecx
+	movl	%ecx, RELOC(nkl2)
+
+	/* Calculate TABLESIZE and put it at -12(%ebp). */
+#if L2_SLOT_KERNBASE > 0
+	shll	%ecx
+#endif
+	shll	$PGSHIFT,%ecx
+	addl	$TABLESIZE,%ecx
+	movl	%ecx, -12(%ebp)
+
 	/* Clear tables */
 	movl	%edi,%esi
 	addl	$PGOFSET,%esi
@@ -457,10 +478,29 @@ bi_size_ok:
 	movl	%esi,%edi
 	xorl	%eax,%eax
 	cld
-	movl	$TABLESIZE,%ecx
+	movl	-12(%ebp),%ecx		/* TABLESIZE */
 	shrl	$2,%ecx
 	rep
 	stosl
+
+	/* Put PROC0_DMP2_OFF at -4(%ebp). */
+	movl	RELOC(nkl2),%ecx
+#if L2_SLOT_KERNBASE > 0
+	shll	%ecx
+#endif
+	addl	$NDML3_ENTRIES,%ecx
+	shll	$PGSHIFT,%ecx
+	leal	(PROC0_PTP1_OFF)(%esi,%ecx),%ecx
+	movl	%ecx, -4(%ebp)
+
+	/* Put PROC0_DMP3_OFF at -8(%ebp). */
+	movl	RELOC(nkl2), %ecx
+#if L2_SLOT_KERNBASE > 0
+	shll	%ecx
+#endif
+	shll	$PGSHIFT,%ecx
+	leal	(PROC0_PTP1_OFF)(%esi,%ecx), %ecx
+	movl	%ecx, -8(%ebp)
 
 	leal	(PROC0_PTP1_OFF)(%esi), %ebx
 
@@ -490,7 +530,7 @@ bi_size_ok:
 
 	/* Map the data, BSS, and bootstrap tables read-write. */
 	leal	(PG_V|PG_KW)(%edx),%eax
-	movl	$TABLESIZE,%ecx
+	movl	-12(%ebp),%ecx		/* TABLESIZE */
 	addl	%esi,%ecx		/* %ecx = &end[TABLESIZE] */
 	subl	%edx,%ecx		/* %ecx = %ecx - etext */
 	shrl	$PGSHIFT,%ecx
@@ -505,7 +545,7 @@ bi_size_ok:
 	leal    (PROC0_PTP2_OFF)(%esi),%ebx
 	leal	(PROC0_PTP1_OFF)(%esi),%eax
 	orl	$(PG_V|PG_KW), %eax
-	movl	$(NKL2_KIMG_ENTRIES+1),%ecx
+	movl	RELOC(nkl2),%ecx
 	fillkpt
 
 #if L2_SLOT_KERNBASE > 0
@@ -513,7 +553,7 @@ bi_size_ok:
 	leal	(PROC0_PTP2_OFF+ L2_SLOT_KERNBASE*8)(%esi),%ebx
 	leal    (PROC0_PTP1_OFF)(%esi),%eax
 	orl     $(PG_V|PG_KW), %eax
-	movl    $(NKL2_KIMG_ENTRIES+1),%ecx
+	movl	RELOC(nkl2),%ecx
 	fillkpt
 #endif
 
@@ -552,24 +592,24 @@ bi_size_ok:
 	 * in pmap_bootstrap. But we always need the first 4GB during
 	 * bootstrap.
 	 */
-	leal	(PROC0_DMP2_OFF)(%esi), %ebx
 	xorl	%eax, %eax
 	orl	$(PG_V|PG_KW|PG_PS|PG_G), %eax
 	movl	$(NDML2_ENTRIES * NPDPG), %ecx
+	movl	-4(%ebp),%ebx	/* PROC0_DMP2_OFF */
 1:	movl	%eax, (%ebx)
 	movl	$0, 4(%ebx)
 	addl	$8, %ebx
 	addl	$NBPD_L2, %eax
 	loop	1b
 
-	leal	(PROC0_DMP3_OFF)(%esi), %ebx
-	leal	(PROC0_DMP2_OFF)(%esi), %eax
+	movl	-8(%ebp),%ebx	/* PROC0_DMP3_OFF */
+	movl	-4(%ebp),%eax	/* PROC0_DMP2_OFF */
 	orl	$(PG_V|PG_KW), %eax
 	movl	$NDML2_ENTRIES, %ecx
 	fillkpt
 
 	leal	(PROC0_PML4_OFF + PDIR_SLOT_DIRECT * 8)(%esi), %ebx
-	leal	(PROC0_DMP3_OFF)(%esi), %eax
+	movl	-8(%ebp),%eax	/* PROC0_DMP3_OFF */
 	orl	$(PG_V|PG_KW), %eax
 	movl	$NDML3_ENTRIES, %ecx
 	fillkpt
@@ -677,9 +717,12 @@ longmode_hi:
 	loop	1b
 
 	/* Relocate atdevbase. */
-	movq	$(TABLESIZE+KERNBASE),%rdx
-	addq	%rsi,%rdx
-	movq	%rdx,_C_LABEL(atdevbase)(%rip)
+	xorq	%rdx,%rdx
+	movl	-12(%rbp),%edx		/* TABLESIZE */
+	movq	%rdx,%rax
+	addq	$KERNBASE,%rax		/* TABLESIZE + KERNBASE */
+	addq	%rsi,%rax
+	movq	%rax,_C_LABEL(atdevbase)(%rip)
 
 	/* Set up bootstrap stack. */
 	leaq	(PROC0_STK_OFF)(%rsi),%rax
@@ -694,7 +737,9 @@ longmode_hi:
 	movw	%ax,%fs
 
 	/* XXX merge these */
-	leaq	TABLESIZE(%rsi),%rdi
+	movq	%rdx,%rdi		/* TABLESIZE */
+	addq	%rsi,%rdi
+
 	call	_C_LABEL(init_x86_64)
 
 	call 	_C_LABEL(main)
