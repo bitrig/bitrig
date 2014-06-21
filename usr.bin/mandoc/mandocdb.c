@@ -1,4 +1,4 @@
-/*	$Id: mandocdb.c,v 1.110 2014/06/20 01:20:55 schwarze Exp $ */
+/*	$Id: mandocdb.c,v 1.111 2014/06/21 16:17:56 schwarze Exp $ */
 /*
  * Copyright (c) 2011, 2012 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2011, 2012, 2013, 2014 Ingo Schwarze <schwarze@openbsd.org>
@@ -349,7 +349,8 @@ mandocdb(int argc, char *argv[])
 	 */
 #define	CHECKOP(_op, _ch) do \
 	if (OP_DEFAULT != (_op)) { \
-		fprintf(stderr, "-%c: Conflicting option\n", (_ch)); \
+		fprintf(stderr, "%s: -%c: Conflicting option\n", \
+		    progname, (_ch)); \
 		goto usage; \
 	} while (/*CONSTCOND*/0)
 
@@ -385,8 +386,9 @@ mandocdb(int argc, char *argv[])
 			break;
 		case 'T':
 			if (strcmp(optarg, "utf8")) {
-				fprintf(stderr, "-T%s: Unsupported "
-				    "output format\n", optarg);
+				fprintf(stderr, "%s: -T%s: "
+				    "Unsupported output format\n",
+				    progname, optarg);
 				goto usage;
 			}
 			write_utf8 = 1;
@@ -413,7 +415,8 @@ mandocdb(int argc, char *argv[])
 	argv += optind;
 
 	if (OP_CONFFILE == op && argc > 0) {
-		fprintf(stderr, "-C: Too many arguments\n");
+		fprintf(stderr, "%s: -C: Too many arguments\n",
+		    progname);
 		goto usage;
 	}
 
