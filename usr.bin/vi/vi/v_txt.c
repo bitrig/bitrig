@@ -496,8 +496,15 @@ next:	if (v_event_get(sp, evp, 0, ec_flags))
 		    sp->rows ? 1 : sp->rows - vip->totalcount;
 		fc.e_tlno = sp->rows;
 		vip->linecount = vip->lcontinue = vip->totalcount = 0;
+
+		/*
+		 * Let's redraw with SC_TINPUT_INFO cleared, as we are restoring
+		 * the previously overlapped area, not the info line.
+		 */
+		F_CLR(sp, SC_TINPUT_INFO);
 		(void)vs_repaint(sp, &fc);
 		(void)vs_refresh(sp, 1);
+		F_SET(sp, SC_TINPUT_INFO);
 	}
 
 	/* Deal with all non-character events. */
