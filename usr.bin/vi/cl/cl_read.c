@@ -15,7 +15,6 @@
 #include <sys/queue.h>
 #include <sys/time.h>
 
-#include <bitstring.h>
 #include <curses.h>
 #include <errno.h>
 #include <fcntl.h>

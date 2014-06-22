@@ -15,7 +15,6 @@
 #include <sys/queue.h>
 #include <sys/time.h>
 
-#include <bitstring.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>

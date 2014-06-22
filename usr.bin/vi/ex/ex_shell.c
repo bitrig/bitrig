@@ -15,7 +15,6 @@
 #include <sys/queue.h>
 #include <sys/wait.h>
 
-#include <bitstring.h>
 #include <errno.h>
 #include <limits.h>
 #include <signal.h>

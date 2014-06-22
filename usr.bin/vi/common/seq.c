@@ -14,7 +14,6 @@
 #include <sys/param.h>
 #include <sys/queue.h>
 
-#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>

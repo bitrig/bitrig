@@ -16,7 +16,6 @@
 #include <sys/types.h>
 #include <sys/queue.h>
 
-#include <bitstring.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>

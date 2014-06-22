@@ -14,7 +14,6 @@
 #include <sys/types.h>
 #include <sys/queue.h>
 
-#include <bitstring.h>
 #include <curses.h>
 #include <errno.h>
 #include <signal.h>

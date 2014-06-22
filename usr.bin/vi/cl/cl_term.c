@@ -16,7 +16,6 @@
 #include <sys/queue.h>
 #include <sys/stat.h>
 
-#include <bitstring.h>
 #include <curses.h>
 #include <errno.h>
 #include <limits.h>

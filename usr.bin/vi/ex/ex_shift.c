@@ -13,7 +13,6 @@
 
 #include <sys/queue.h>
 
-#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>

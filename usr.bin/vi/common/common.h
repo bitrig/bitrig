@@ -24,6 +24,7 @@
  */
 #include <db.h>
 #include <regex.h>
+#include <bitstring.h>
 
 /*
  * Forward structure declarations.  Not pretty, but the include files

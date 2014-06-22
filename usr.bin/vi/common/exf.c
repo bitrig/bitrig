@@ -23,7 +23,6 @@
  */
 #include <sys/file.h>
 
-#include <bitstring.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>

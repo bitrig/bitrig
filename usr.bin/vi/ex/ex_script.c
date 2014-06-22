@@ -21,7 +21,6 @@
 #include <sys/time.h>
 #include <sys/wait.h>
 
-#include <bitstring.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>		/* XXX: OSF/1 bug: include before <grp.h> */
