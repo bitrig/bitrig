@@ -218,6 +218,7 @@ _dl_free_tls(void *tls, size_t tcbsize, size_t tcbalign)
 	Elf_Addr* dtv;
 	int dtvsize, i;
 	Elf_Addr tlsstart, tlsend;
+	struct thread_control_block *tcb = (struct thread_control_block *)tls;
 
 	/*
 	* Figure out the size of the initial TLS block so that we can
@@ -225,12 +226,16 @@ _dl_free_tls(void *tls, size_t tcbsize, size_t tcbalign)
 	*/
 	size = ELF_ROUND(_dl_tls_static_space, tcbalign);
 
-	dtv = ((Elf_Addr**)tls)[1];
-	DL_DEB(("free_tls %p seg %p dtv %p\n",
-	    ((Elf_Addr**)tls)[0], &((Elf_Addr**)tls)[1], ((Elf_Addr**)tls)[1]));
+	dtv = tcb->tcb_dtv;
 	dtvsize = dtv[1] - 1;
+
+#if TLS_VARIANT == 1
+	tlsstart = (Elf_Addr) tls;
+	tlsend = tlsstart + size + tcbsize;
+#elif TLS_VARIANT == 2
 	tlsend = (Elf_Addr) tls;
 	tlsstart = tlsend - size;
+#endif
 	DL_DEB(("free_tls %p dtv %p gen %u max %u size %u tcbsize %u\n",
 	    tls, dtv, dtv[0], dtv[1], size, tcbsize));
 	for (i = 0; i < dtvsize; i++) {
