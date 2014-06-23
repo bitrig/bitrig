@@ -97,6 +97,8 @@ _dl_allocate_tls(char *oldtls, elf_object_t *objhead, size_t tcbsize,
 	Elf_Addr *dtv;
 	Elf_Addr segbase; /* same value as tcb but no pointer math */
 	struct thread_control_block *tcb;
+	struct thread_control_block *oldtcb =
+	    (struct thread_control_block *)oldtls;
 
 	size = ELF_ROUND(_dl_tls_static_space, tcbalign);
 	p = _dl_malloc(size + tcbsize);
@@ -118,7 +120,7 @@ _dl_allocate_tls(char *oldtls, elf_object_t *objhead, size_t tcbsize,
 	dtv[1] = _dl_tls_max_index;
 
 	DL_DEB(("allocate_tls %p -> %p dtv %p -> %p gen %u max %u size %u tcbsize %u\n",
-	    oldtls, segbase, oldtls ? ((Elf_Addr**)oldtls)[1] : NULL, dtv,
+	    oldtls, segbase, oldtcb ? oldtcb->tcb_dtv : NULL, dtv,
 	    _dl_tls_dtv_generation, _dl_tls_max_index, size, tcbsize));
 	if (oldtls != NULL) {
 		Elf_Addr *olddtv;
@@ -152,7 +154,7 @@ _dl_allocate_tls(char *oldtls, elf_object_t *objhead, size_t tcbsize,
 		 * tls_get_addr(), move them over.  Adjust pointers
 		 * into the static TLS block
 		 */
-		olddtv = ((Elf_Addr**)oldsegbase)[1];
+		olddtv = oldtcb->tcb_dtv;
 		olddtvsize = olddtv[1] - 1;
 		DL_DEB(("\tscanning %u entries from %p\n", olddtvsize, olddtv));
 		for (i = 0; i < olddtvsize; i++) {
