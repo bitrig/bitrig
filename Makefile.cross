@@ -18,8 +18,8 @@ CCCROSSOPTS=
 TARGET_ARCH=	arm
 # Enable/remove this to switch to EABI
 CCCROSSOPTS+="-march=armv7-a -mfloat-abi=soft"
-#TARGET_ARCHCOMP=	armv7
-#CANON_ABI=-gnueabihf
+TARGET_ARCHCOMP=	armv7
+CANON_ABI=-gnueabihf
 .else
 TARGET_ARCH=	${TARGET}
 .endif
