@@ -284,7 +284,7 @@ uao_find_swslot(struct uvm_aobj *aobj, int pageidx)
 	if (aobj->u_flags & UAO_FLAG_NOSWAP)
 		return(0);
 
-	/* if hashing, look in hash table.  */
+	/* if hashing, look in hash table. */
 	if (UAO_USES_SWHASH(aobj->u_pages)) {
 		struct uao_swhash_elt *elt =
 		    uao_find_swhash_elt(aobj, pageidx, FALSE);
@@ -324,7 +324,7 @@ uao_set_swslot(struct uvm_object *uobj, int pageidx, int slot)
 		    " on a NOSWAP object");
 	}
 
-	/* are we using a hash table?  if so, add it in the hash.  */
+	/* are we using a hash table?  if so, add it in the hash. */
 	if (UAO_USES_SWHASH(aobj->u_pages)) {
 		/*
 		 * Avoid allocating an entry just to free it again if
@@ -450,7 +450,7 @@ uao_free(struct uvm_aobj *aobj)
  * *end* of the object.
  *
  * XXX We need a uao_flush() that returns success only when the
- * requested pages have been free'd. It may be a good idea to have that 
+ * requested pages have been free'd. It may be a good idea to have that
  * run after we have changed all of the statistics in the object to ensure
  * that no more pages are allocated above the new size.
  */
@@ -814,7 +814,7 @@ uao_grow_convert(struct uvm_object *uobj, int pages)
 
 	/* Set these now, so we can use uao_find_swhash_elt(). */
 	old_swslots = aobj->u_swslots;
-	aobj->u_swhash = new_swhash;		
+	aobj->u_swhash = new_swhash;
 	aobj->u_swhashmask = new_hashmask;
 
 	for (i = 0; i < aobj->u_pages; i++) {
@@ -1664,7 +1664,7 @@ restart:
 				continue;
 			}
 
-			/* process the page.  */
+			/* process the page. */
 			rv = uao_pagein_page(aobj, i);
 			if (rv) {
 				return rv;
