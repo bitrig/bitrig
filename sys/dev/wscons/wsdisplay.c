@@ -1842,6 +1842,9 @@ wsdisplay_switch(struct device *dev, int no, int waitok)
 	int s, res = 0;
 	struct wsscreen *scr;
 
+	if (waitok)
+		assertwaitok();
+
 	if (no != WSDISPLAY_NULLSCREEN) {
 		if (no < 0 || no >= WSDISPLAY_MAXSCREEN)
 			return (EINVAL);
@@ -1851,8 +1854,17 @@ wsdisplay_switch(struct device *dev, int no, int waitok)
 
 	s = spltty();
 
-	while (sc->sc_resumescreen != WSDISPLAY_NULLSCREEN && res == 0)
-		res = tsleep(&sc->sc_resumescreen, PCATCH, "wsrestore", 0);
+	if (sc->sc_resumescreen != WSDISPLAY_NULLSCREEN) {
+		if (waitok) {
+			while (sc->sc_resumescreen != WSDISPLAY_NULLSCREEN &&
+			    res == 0) {
+				res = tsleep(&sc->sc_resumescreen, PCATCH,
+				    "wsrestore", 0);
+			}
+		} else {
+			res = EWOULDBLOCK;
+		}
+	}
 	if (res) {
 		splx(s);
 		return (res);
