@@ -1,0 +1,36 @@
+commit 5bbdb58c58c166908b81f927b276112e8317c87c
+Author: Patrick Wildt <patrick@blueri.se>
+Date:   Thu Jun 26 22:47:19 2014 +0200
+
+    LLVM needs to pass -march, -mcpu and -mfpu to gas.
+    
+    Otherwise GNU as might not get the information to
+    use hard-float/NEON/VFP instructions.
+
+diff --git a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+index fc625ee..acd910a 100644
+--- a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
++++ b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+@@ -5596,6 +5596,22 @@ void bitrig::Assemble::ConstructJob(Compilation &C, const JobAction &JA,
+                                     const char *LinkingOutput) const {
+   ArgStringList CmdArgs;
+ 
++  if (getToolChain().getArch() == llvm::Triple::arm) {
++    StringRef MArch = getToolChain().getArchName();
++    if (MArch == "armv7" || MArch == "armv7a" || MArch == "armv7-a")
++      CmdArgs.push_back("-mfpu=neon");
++    if (MArch == "armv8" || MArch == "armv8a" || MArch == "armv8-a")
++      CmdArgs.push_back("-mfpu=crypto-neon-fp-armv8");
++
++    StringRef ARMFloatABI = getARMFloatABI(getToolChain().getDriver(), Args,
++                                           getToolChain().getTriple());
++    CmdArgs.push_back(Args.MakeArgString("-mfloat-abi=" + ARMFloatABI));
++
++    Args.AddLastArg(CmdArgs, options::OPT_march_EQ);
++    Args.AddLastArg(CmdArgs, options::OPT_mcpu_EQ);
++    Args.AddLastArg(CmdArgs, options::OPT_mfpu_EQ);
++  }
++
+   Args.AddAllArgValues(CmdArgs, options::OPT_Wa_COMMA,
+                        options::OPT_Xassembler);
+ 
