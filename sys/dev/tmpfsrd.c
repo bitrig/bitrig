@@ -199,6 +199,7 @@ tmpfsrd_terminate(void *arg1, void *arg2)
 {
 	config_detach((struct device *)arg1, 0);
 	explicit_bzero(tmpfsrd_disk, tmpfsrd_size);
+	pmap_kremove((vaddr_t)tmpfsrd_disk, tmpfsrd_size);
 #ifndef VM_PHYSSEG_NOADD
 	{
 		paddr_t start = (paddr_t)tmpfsrd_disk - KERNBASE;
