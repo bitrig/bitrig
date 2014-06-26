@@ -177,4 +177,4 @@ MK_CLANG_IS_CC?=No
 # MK_SHARED_TOOLCHAIN forces compiler toolchain to build static (if set to no).
 MK_SHARED_TOOLCHAIN?=Yes
 
-MK_ARM_EABI?=no
+MK_ARM_EABI?=yes
