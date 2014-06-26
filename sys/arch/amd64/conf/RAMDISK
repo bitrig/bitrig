@@ -15,6 +15,7 @@ option		DST=0		# daylight saving time used by RTC
 option		FFS		# UFS
 option		FFS2		# UFS2
 option		WAPBL		# File system journaling support
+option		TMPFS		# efficient memory file system
 #option		EXT2FS		# Linux ext2fs
 
 option		NFSCLIENT	# Network File System client
@@ -32,7 +33,7 @@ option		CRYPTO		# Cryptographic framework
 option		RAMDISK_HOOKS
 option		MINIROOTSIZE=16640
 
-config		bsd	root on rd0a swap on rd0b and wd0b and sd0b
+config		bsd	root on tmpfsrd0a swap on wd0b and sd0b
 
 mainbus0 at root
 bios0	at mainbus?
@@ -340,7 +341,7 @@ pseudo-device	loop	1	# network loopback
 #pseudo-device	ppp	1	# PPP
 pseudo-device	vlan		# IEEE 802.1Q VLAN 
 pseudo-device	bpfilter 1	# packet filter
-pseudo-device	rd	1	# ramdisk
+pseudo-device	tmpfsrd	1	# tmpfs snapshot ramdisk
 pseudo-device	wsmux	2
 pseudo-device	bio	1	# ioctl multiplexing device
 

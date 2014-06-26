@@ -10,6 +10,7 @@ LINK	instbin					sbin/bioctl
 LINK	instbin					sbin/mount_ext2fs
 LINK	instbin					sbin/mount_msdos
 LINK	instbin					sbin/mount_nfs
+LINK	instbin					sbin/mount_tmpfs
 LINK	instbin					sbin/mount_udf
 
 COPY	${DESTDIR}/etc/firmware/*		etc/firmware/

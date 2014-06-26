@@ -24,6 +24,8 @@ BOOT?=		${DESTDIR}/usr/mdec/boot
 FLOPPYSIZE?=	2880
 FLOPPYTYPE?=	floppy3
 
+TMPFS_MAXSIZE=	255M
+
 .if ${COMPILER_VERSION:L} == "gcc4"
 COPTS=	-Os
 .else
@@ -52,21 +54,16 @@ ${FS}:	bsd.gz
 	cp ${REALIMAGE} ${FS}
 	rm ${REALIMAGE}
 
-DISKTYPE?=       rdroot84
-NBLKS?=          16640
-# minfree, opt, b/i  trks, sects, cpg
-NEWFSARGS= -m 0 -o space -i 4096
-
 bsd.gz: bsd.rd
 	cp bsd.rd bsd.strip
 	strip bsd.strip
 	strip -R .comment bsd.strip
 	gzip -c9n bsd.strip > bsd.gz
 
-bsd.rd:	${IMAGE} bsd rdsetroot
+bsd.rd:	${IMAGE} bsd
 	cp bsd bsd.rd
-	${.OBJDIR}/rdsetroot bsd.rd ${IMAGE}
-
+	rdconfig bsd.rd ${IMAGE}
+	rdconfig -I bsd.rd
 
 bsd:
 	cd ${.CURDIR}/../../../sys/arch/amd64/conf && config ${RAMDISK}
@@ -74,27 +71,18 @@ bsd:
 	    ${MAKE} clean && COPTS="${COPTS}" exec ${MAKE}
 	cp ${.CURDIR}/../../../sys/arch/amd64/compile/${RAMDISK}/bsd bsd
 
-${IMAGE}: ${CBIN} rd_setup do_files rd_teardown
+${IMAGE}: ${CBIN} tmpfs_setup do_files tmpfs_snapshot tmpfs_teardown
 
-rd_setup: ${CBIN}
-	dd if=/dev/zero of=${REALIMAGE} bs=512 count=${NBLKS}
-	vnconfig -v -c ${VND} ${REALIMAGE}
-	disklabel -w ${VND} ${DISKTYPE}
-	newfs ${NEWFSARGS} ${VND_RDEV}
-	fsck ${VND_RDEV}
-	mount ${VND_DEV} ${MOUNT_POINT}
+tmpfs_setup: ${CBIN}
+	mount -t tmpfs -o -s${TMPFS_MAXSIZE} tmpfs ${MOUNT_POINT}
 
-rd_teardown:
+tmpfs_snapshot:
+	rm -f ${IMAGE}
+	mount -t tmpfs -u -o snapshot ${IMAGE} ${MOUNT_POINT}
+
+tmpfs_teardown:
 	@df -i ${MOUNT_POINT}
 	-umount ${MOUNT_POINT}
-	-vnconfig -u ${VND}
-	cp ${REALIMAGE} ${IMAGE}
-	rm ${REALIMAGE}
-
-rdsetroot:	${TOP}/../common/elfrdsetroot.c
-	${HOSTCC} ${HOSTCFLAGS} -o rdsetroot \
-	    ${TOP}/../common/elfrdsetroot.c ${TOP}/../common/elf32.c \
-	    ${TOP}/../common/elf64.c
 
 unconfig:
 	-umount -f ${MOUNT_POINT}
@@ -133,8 +121,7 @@ do_files:
 clean cleandir:
 	/bin/rm -f *.core ${IMAGE} ${CBIN} ${CBIN}.mk ${CBIN}*.cache \
 	    *.o *.lo *.c bsd bsd.rd bsd.gz bsd.strip floppy*.fs \
-	    lib*.a lib*.olist ${CBIN}.map \
-	    rdsetroot boot ${CRUNCHCONF} ${FS}
+	    lib*.a lib*.olist ${CBIN}.map boot ${CRUNCHCONF} ${FS}
 
 .include <bsd.obj.mk>
 .include <bsd.subdir.mk>
