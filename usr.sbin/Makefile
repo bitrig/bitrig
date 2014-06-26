@@ -12,9 +12,9 @@ SUBDIR=	ac accton acpidump adduser apm apmd arp \
 	mtrace mtree ndp netgroup_mkdb \
 	nginx npppctl npppd nsd ntpd openssl ospfctl ospfd ospf6d ospf6ctl \
 	pcidump pkg_add portmap pppd procmap pstat pwd_mkdb \
-	quot quotaon rarpd rbootd rdate relayctl relayd repquota rip6query \
-	ripctl ripd rmt route6d rpc.bootparamd rpc.lockd rpc.statd rtadvd \
-	rtsold sa sasyncd sensorsd sliplogin slowcgi slstats smtpd \
+	quot quotaon rarpd rbootd rdate rdconfig relayctl relayd repquota \
+	rip6query ripctl ripd rmt route6d rpc.bootparamd rpc.lockd rpc.statd \
+	rtadvd rtsold sa sasyncd sensorsd sliplogin slowcgi slstats smtpd \
 	snmpctl snmpd spamdb syslogc syslogd sysmerge tcpdrop tcpdump \
 	tftp-proxy tftpd tokenadm tokeninit traceroute trpt \
 	unbound usbdevs user vipw watchdogd wsconscfg wsfontload wsmoused \
