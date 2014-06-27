@@ -49,6 +49,8 @@ __KERNEL_RCSID(0, "$NetBSD: tmpfs_vfsops.c,v 1.53 2013/11/08 15:44:23 rmind Exp 
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/mount.h>
+#include <sys/proc.h>
+#include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/systm.h>
 #include <sys/vnode.h>
@@ -221,9 +223,17 @@ tmpfs_mountfs(struct mount *mp, const char *path, struct vnode *vp,
 
 	if (strcmp("tmpfs", fspec))
 		error = tmpfs_snap_load(mp, fspec, p);
-	else if (vp != NULL)
+	else if (vp != NULL) {
+		error = VOP_OPEN(vp, FREAD, p->p_ucred);
+		if (error)
+			goto bail;
+		vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
 		error = tmpfs_snap_load_vnode(mp, vp, p);
+		VOP_CLOSE(vp, FREAD, p->p_ucred);
+		VOP_UNLOCK(vp, 0);
+	}
 
+bail:
 	if (error)
 		free(tmp, M_MISCFSMNT);
 
