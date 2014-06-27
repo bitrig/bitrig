@@ -40,7 +40,7 @@
 #include <sys/lock.h>
 #include <sys/systm.h>
 #include <sys/sched.h>
-#include <sys/rwlock.h>
+#include <sys/bmtx.h>
 
 #ifdef MP_LOCKDEBUG
 /* CPU-dependent timing, needs this to be settable from ddb. */
@@ -109,12 +109,12 @@ lockmgr(struct lock *lkp, u_int flags, void *notused)
  * so that they show up in profiles.
  */
 
-struct rrwlock kernel_lock;
+struct bmtx bmtx_giant;
 
 void
 _kernel_lock_init(void)
 {
-	rrw_init(&kernel_lock, "kernellock");
+	bmtx_init(&bmtx_giant);
 }
 
 /*
@@ -126,21 +126,22 @@ void
 _kernel_lock(void)
 {
 	SCHED_ASSERT_UNLOCKED();
-	rrw_enter(&kernel_lock, RW_WRITE);
+	bmtx_lock(&bmtx_giant);
 }
 
 void
 _kernel_unlock(void)
 {
-	rrw_exit(&kernel_lock);
+	bmtx_unlock(&bmtx_giant);
 }
 
 int
 _kernel_unlock_all(void)
 {
-	if (!rrw_held(&kernel_lock))
-		return (0);
-	return (rrw_exit_all(&kernel_lock));
+	if (bmtx_held(&bmtx_giant))
+		return (bmtx_unlock_all(&bmtx_giant));
+
+	return (0);
 }
 
 void
@@ -150,8 +151,8 @@ _kernel_relock_all(int count)
 
 	/* XXX remove once we fix fpu. */
 	crit_count = crit_leave_all();
-	if (count)
-		rrw_enter_cnt(&kernel_lock, RW_WRITE, count);
+	while (count--)
+		bmtx_lock(&bmtx_giant);
 	crit_reenter(crit_count);
 }
 
