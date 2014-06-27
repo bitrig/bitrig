@@ -532,28 +532,22 @@ tmpfs_snap_load_vnode(struct mount *mp, struct vnode *vp, struct proc *p)
 
 	error = tmpfs_snap_rdwr(vp, UIO_READ, &hdr, sizeof(hdr), &off);
 	if (error)
-		goto out;
+		return (error);
 
 	if (strcmp(hdr.ts_magic, TMPFS_SNAP_MAGIC) ||
-	    hdr.ts_version != TMPFS_SNAP_VERSION) {
-		error = EFTYPE;
-		goto out;
-	}
+	    hdr.ts_version != TMPFS_SNAP_VERSION)
+		return (EFTYPE);
 
 	TMPFS_SNAP_NTOH(&hdr);
 
 	off = sizeof(hdr);
 	while (off < hdr.ts_snap_sz) {
 		error = tmpfs_snap_load_node(vp, mp, &off);
-		if (error)
+		if (error) {
+			tmpfs_snap_load_cleanup(tmp);
 			break;
+		}
 	}
-
-	if (error)
-		tmpfs_snap_load_cleanup(tmp);
-
-out:
-	VOP_UNLOCK(vp, 0);
 
 	return (error);
 }
@@ -572,6 +566,7 @@ tmpfs_snap_load(struct mount *mp, const char *path, struct proc *p)
 	error = vn_open(&nd, FREAD, 0);
 	if (error == 0) {
 		error = tmpfs_snap_load_vnode(mp, nd.ni_vp, p);
+		VOP_UNLOCK(nd.ni_vp, 0);
 		vn_close(nd.ni_vp, FREAD, p->p_ucred, p);
 	}
 
