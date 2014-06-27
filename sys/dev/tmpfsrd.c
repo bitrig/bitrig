@@ -36,7 +36,10 @@ int	tmpfsrd_detach(struct device *, int);
 struct tmpfsrd_softc {
 	struct device	sc_dev;
 	struct disk	sc_dk;
+	int		sc_flags;
 };
+
+#define TMPFSRD_TERMINATING	0x1
 
 struct cfattach tmpfsrd_ca = {
 	sizeof(struct tmpfsrd_softc),
@@ -226,8 +229,11 @@ tmpfsrdclose(dev_t dev, int flag, int fmt, struct proc *p)
 
 	device_unref(&sc->sc_dev);
 
-	if (tmpfsrd_read == tmpfsrd_size)
+	if (tmpfsrd_read == tmpfsrd_size &&
+	    (sc->sc_flags & TMPFSRD_TERMINATING) == 0) {
+		sc->sc_flags |= TMPFSRD_TERMINATING;
 		return (workq_add_task(NULL, 0, tmpfsrd_terminate, sc, NULL));
+	}
 
 	return (0);
 }
