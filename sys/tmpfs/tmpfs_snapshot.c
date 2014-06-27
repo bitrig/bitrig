@@ -36,8 +36,6 @@ tmpfs_snap_rdwr(struct vnode *vp, enum uio_rw rw, void *ptr, size_t sz,
 	struct proc *p = curproc;
 	int ioflags = IO_UNIT | IO_NODELOCKED;
 
-	KASSERT(VOP_ISLOCKED(vp) == LK_EXCLUSIVE);
-
 	error = vn_rdwr(rw, vp, ptr, sz, *off, UIO_SYSSPACE, ioflags,
 	    p->p_ucred, NULL, p);
 
