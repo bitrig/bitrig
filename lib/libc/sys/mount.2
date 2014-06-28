@@ -77,6 +77,11 @@ suppress default semantics which affect filesystem access.
 .Bl -tag -width MNT_SYNCHRONOUS
 .It Dv MNT_ASYNC
 All I/O to the filesystem should be done asynchronously.
+.It Dv MNT_LOG
+Use
+.Xr wapbl 4 metadata journaling.
+Applies to FFS filesystems only (see 'log' in
+.Xr mount 8 ) .
 .It Dv MNT_NOATIME
 Do not update the access time on files in the filesystem unless
 the modification or status change times are also being updated.
