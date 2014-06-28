@@ -184,6 +184,24 @@ The same as
 .Fl f ;
 forces the revocation of write access when trying to downgrade
 a file system mount status from read-write to read-only.
+.It log
+(FFS only.)
+Mount the file system with
+.Xr wapbl 4
+meta-data journaling, also known simply as logging.
+.Ic log
+provides rapid metadata updates and eliminates the need to check
+file system consistency after a system outage.
+.Pp
+The options
+.Ic async ,
+.Ic log
+and
+.Ic softdep
+are mutually exclusive.
+.It noaccesstime
+Synonym for noatime provided for compatibility with
+other operating systems.
 .It noatime
 Do not update atime on files in the system unless the mtime or ctime
 is being changed as well.
@@ -196,9 +214,6 @@ Do not mount the file system automatically
 or
 .Fl a
 options).
-.It noaccesstime
-Synonym for noatime provided for compatibility with
-other operating systems.
 .It nodev
 Do not interpret character or block special devices on the file system.
 This option is useful for a server that has file systems containing
@@ -213,6 +228,15 @@ Do not allow set-user-identifier or set-group-identifier bits to take effect.
 The same as
 .Fl r ;
 mount the file system read-only (even the superuser may not write it).
+.It snapshot
+(tmpfs only.)
+Create a snapshot of the file system pointed to by
+.Ar node
+at the location specified by
+.Ar special .
+Ignored when the
+.Fl u
+flag is not specified.
 .It softdep
 (FFS only.)
 Mount the file system using soft dependencies.
@@ -229,30 +253,6 @@ The options
 and
 .Ic softdep
 are mutually exclusive.
-.It log
-(FFS only.)
-Mount the file system with
-.Xr wapbl 4
-meta-data journaling, also known simply as logging.
-.Ic log
-provides rapid metadata updates and eliminates the need to check
-file system consistency after a system outage.
-.Pp
-The options
-.Ic async ,
-.Ic log
-and
-.Ic softdep
-are mutually exclusive.
-.It snapshot
-(tmpfs only.)
-Create a snapshot of the file system pointed to by
-.Ar node
-at the location specified by
-.Ar special .
-Ignored when the
-.Fl u
-flag is not specified.
 .It sync
 Regular data I/O to the file system should be done synchronously.
 By default, only metadata is read/written synchronously.

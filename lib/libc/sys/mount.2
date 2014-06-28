@@ -75,28 +75,28 @@ The following
 may be specified to
 suppress default semantics which affect filesystem access.
 .Bl -tag -width MNT_SYNCHRONOUS
-.It Dv MNT_RDONLY
-The filesystem should be treated as read-only:
-even the superuser may not write to it.
+.It Dv MNT_ASYNC
+All I/O to the filesystem should be done asynchronously.
 .It Dv MNT_NOATIME
 Do not update the access time on files in the filesystem unless
 the modification or status change times are also being updated.
+.It Dv MNT_NODEV
+Do not interpret special files on the filesystem.
 .It Dv MNT_NOEXEC
 Do not allow files to be executed from the filesystem.
 .It Dv MNT_NOSUID
 Do not honor setuid or setgid bits on files when executing them.
-.It Dv MNT_NODEV
-Do not interpret special files on the filesystem.
-.It Dv MNT_SYNCHRONOUS
-All I/O to the filesystem should be done synchronously.
-.It Dv MNT_ASYNC
-All I/O to the filesystem should be done asynchronously.
+.It Dv MNT_RDONLY
+The filesystem should be treated as read-only:
+even the superuser may not write to it.
+.It Dv MNT_SNAPSHOT
+Create filesystem snapshot.
 .It Dv MNT_SOFTDEP
 Use soft dependencies.
 Applies to FFS filesystems only (see 'softdep' in
 .Xr mount 8 ) .
-.It Dv MNT_SNAPSHOT
-Create filesystem snapshot.
+.It Dv MNT_SYNCHRONOUS
+All I/O to the filesystem should be done synchronously.
 .El
 .Pp
 The flag
@@ -205,13 +205,6 @@ struct nfs_args {
 };
 .Ed
 .Pp
-.Dv MOUNT_UDF
-.Bd -literal -offset indent -compact
-struct udf_args {
-	char	*fspec;	/* block special device to mount */
-};
-.Ed
-.Pp
 .Dv MOUNT_TMPFS
 .Bd -literal -offset indent -compact
 #define TMPFS_ARGS_VERSION	1
@@ -229,6 +222,13 @@ struct tmpfs_args {
 
 	/* Snapshot location or "tmpfs". */
 	char			*ta_fspec;
+};
+.Ed
+.Pp
+.Dv MOUNT_UDF
+.Bd -literal -offset indent -compact
+struct udf_args {
+	char	*fspec;	/* block special device to mount */
 };
 .Ed
 .Pp
