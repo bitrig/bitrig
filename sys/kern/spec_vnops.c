@@ -426,11 +426,8 @@ spec_fsync(void *v)
 #ifdef WAPBL
 	if (vp->v_type == VBLK &&
 	    vp->v_specmountpoint != NULL &&
-	    vp->v_specmountpoint->mnt_wapbl != NULL) {
-		int error = ffs_wapbl_fsync_vfs(vp, ap->a_waitfor);
-		if (error)
-			return (error);
-	}
+	    vp->v_specmountpoint->mnt_wapbl != NULL)
+		return (ffs_wapbl_fsync_vfs(vp, ap->a_waitfor));
 #endif
 
 	/*
