@@ -11,6 +11,7 @@ message printed at the beginning of the kernel dmesg(8).
 Mon Apr 21 2014 xlocale
 Thu May 01 2014 libc++
 Wed May 07 2014 kerberos
+Sun Jun 29 2014 tmpfsrd
 
 
 Mon Apr 21 2014 xlocale
@@ -157,3 +158,15 @@ as well as the base system.
 	rm -f /usr/share/man/man8/login_krb5{,-or-pwd}.8
 	rm -f /usr/share/man/man8/string2key.8
 	rm -f /usr/share/man/man8/verify_krb5_conf.8
+
+
+Sun Jun 29 2014 tmpfsrd
+
+The RAM disk kernel has been switched from rd(4) to tmpfsrd(4). A new boot
+program is required to load such a kernel. Make sure to install the new
+bootloader via installboot(8) before updating your system (wd0 is assumed
+to be the root disk here, substitute according to your setup).
+
+	installboot wd0
+
+When updating from a cd, no special steps are required.
