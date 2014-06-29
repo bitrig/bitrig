@@ -735,7 +735,6 @@ uao_grow_hash(struct uvm_object *uobj, int pages)
 		return 0;
 	}
 
-	UVM_ASSERT_OBJLOCKED(uobj);
 	KASSERT(UAO_SWHASH_BUCKETS(aobj->u_pages) < UAO_SWHASH_BUCKETS(pages));
 
 	old_pages = aobj->u_pages;
