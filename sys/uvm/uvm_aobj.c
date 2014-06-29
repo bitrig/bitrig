@@ -835,8 +835,8 @@ uao_grow(struct uvm_object *uobj, int pages)
 {
 	struct uvm_aobj *aobj = (struct uvm_aobj *)uobj;
 
-	KASSERT(pages > aobj->u_pages);
 	UVM_ASSERT_OBJLOCKED(uobj);
+	KASSERT(pages > aobj->u_pages);
 
 	/*
 	 * Distinguish between three possible cases:
