@@ -273,7 +273,7 @@ uao_find_swhash_elt(struct uvm_aobj *aobj, int pageidx, boolean_t create)
 /*
  * uao_find_swslot: find the swap slot number for an aobj/pageidx
  *
- * => object must be locked by caller 
+ * => object must be locked by caller
  */
 __inline static int
 uao_find_swslot(struct uvm_aobj *aobj, int pageidx)
@@ -582,7 +582,7 @@ uao_shrink_convert(struct uvm_object *uobj, int pages)
 		goto again;
 	}
 
-	/* Convert swap slots from hash to array.  */
+	/* Convert swap slots from hash to array. */
 	for (i = 0; i < pages; i++) {
 		elt = uao_find_swhash_elt(aobj, i, FALSE);
 		if (elt != NULL) {
@@ -1434,7 +1434,7 @@ uao_get(struct uvm_object *uobj, voff_t offset, struct vm_page **pps,
  		 */
 		swslot = uao_find_swslot(aobj, pageidx);
 
-		/* just zero the page if there's nothing in swap.  */
+		/* just zero the page if there's nothing in swap. */
 		if (swslot == 0) {
 			/* page hasn't existed before, just zero it. */
 			uvm_pagezero(ptmp);
