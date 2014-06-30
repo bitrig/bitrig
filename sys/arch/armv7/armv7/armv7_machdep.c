@@ -466,7 +466,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	consinit();
 
 	/* Talk to the user */
-	printf("\n%s booting ...\n", platform_boot_name);
+	printf("\n%s booting ...\n", platform_boot_name());
 
 	printf("arg0 %p arg1 %p arg2 %p\n", arg0, arg1, arg2);
 
