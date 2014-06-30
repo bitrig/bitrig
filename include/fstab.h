@@ -47,7 +47,6 @@
  * quota file.
  */
 #define	_PATH_FSTAB	"/etc/fstab"
-#define	FSTAB		"/etc/fstab"	/* deprecated */
 
 #define	FSTAB_RW	"rw"		/* read/write device */
 #define	FSTAB_RQ	"rq"		/* read/write with quotas */
