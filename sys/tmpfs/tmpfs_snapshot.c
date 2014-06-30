@@ -51,7 +51,7 @@ tmpfs_snap_file_io(struct vnode *vp, enum uio_rw rw, const tmpfs_node_t *node,
 	vaddr_t va;
 	vsize_t sz;
 	off_t done;
-	int error;
+	int error = 0;
 	uvm_flag_t uvmflags;
 
 	KASSERT(node->tn_type == VREG);
