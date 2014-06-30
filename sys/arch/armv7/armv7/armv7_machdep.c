@@ -408,6 +408,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	pv_addr_t fdt;
 	paddr_t memstart;
 	psize_t memsize;
+	void *config;
 	extern uint32_t esym; /* &_end if no symbols are loaded */
 	extern uint32_t eramdisk; /* zero if no ramdisk is loaded */
 	uint32_t kernel_end = eramdisk ? eramdisk : esym;
@@ -442,7 +443,28 @@ initarm(void *arg0, void *arg1, void *arg2)
 	armv7_a4x_bs_tag.bs_map = bootstrap_bs_map;
 	tmp_bs_tag.bs_map = bootstrap_bs_map;
 
-	if (fdt_init(arg2)) {
+	/*
+	 * Now, map the bootconfig/FDT area.
+	 *
+	 * As we don't know the size of a possible FDT, map the size of a
+	 * typical bootstrap bs map.  The FDT is probably not aligned,
+	 * so this will take up to two L1_S_SIZEd mappings.  In the unlikely
+	 * case that the FDT is bigger than L1_S_SIZE (0x00100000), we need to
+	 * remap it.
+	 *
+	 * XXX: There's (currently) no way to unmap a bootstrap mapping, so we
+	 * might lose a bit of the bootstrap address space.
+	 */
+	bootstrap_bs_map(NULL, (bus_addr_t)arg2, L1_S_SIZE, 0,
+	    (bus_space_handle_t *)&config);
+	if (fdt_init(config) && fdt_get_size(config) != 0) {
+		uint32_t size = fdt_get_size(config);
+		if (size > L1_S_SIZE)
+			bootstrap_bs_map(NULL, (bus_addr_t)arg2, size, 0,
+			    (bus_space_handle_t *)&config);
+	}
+
+	if (fdt_init(config) && fdt_get_size(config) != 0) {
 		void *node;
 		node = fdt_find_node("/chosen");
 		if (node != NULL) {
@@ -470,8 +492,8 @@ initarm(void *arg0, void *arg1, void *arg2)
 
 	printf("arg0 %p arg1 %p arg2 %p\n", arg0, arg1, arg2);
 
-	if (fdt_get_size(arg2) == 0) {
-		parse_uboot_tags(arg2);
+	if (fdt_get_size(config) == 0) {
+		parse_uboot_tags(config);
 
 		/*
 		 * Examine the boot args string for options we need to know about
@@ -484,13 +506,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 
 		/*
 		 * Set up the variables that define the availablilty of
-		 * physical memory.  For now, we're going to set
-		 * physical_freestart to 0xa0200000 (where the kernel
-		 * was loaded), and allocate the memory we need downwards.
-		 * If we get too close to the page tables that RedBoot
-		 * set up, we will panic.  We will update physical_freestart
-		 * and physical_freeend later to reflect what pmap_bootstrap()
-		 * wants to see.
+		 * physical memory.
 		 *
 		 * XXX pmap_bootstrap() needs an enema.
 		 */
@@ -502,10 +518,8 @@ initarm(void *arg0, void *arg1, void *arg2)
 	boothowto |= RB_DFLTROOT;
 #endif /* RAMDISK_HOOKS */
 
-	{
-		physical_freestart = (((unsigned long)kernel_end - KERNEL_TEXT_BASE +0xfff) & ~0xfff) + memstart;
-		physical_freeend = memstart+memsize;
-	}
+	physical_freestart = (((unsigned long)kernel_end - KERNEL_TEXT_BASE +0xfff) & ~0xfff) + memstart;
+	physical_freeend = memstart+memsize;
 
 	physmem = (physical_end - physical_start) / PAGE_SIZE;
 
@@ -610,10 +624,10 @@ initarm(void *arg0, void *arg1, void *arg2)
 	/*
 	 * Allocate pages for an FDT copy.
 	 */
-	if (fdt_get_size(arg2)) {
-		uint32_t size = fdt_get_size(arg2);
+	if (fdt_get_size(config) != 0) {
+		uint32_t size = fdt_get_size(config);
 		valloc_pages(fdt, round_page(size) / PAGE_SIZE);
-		memcpy((void *)fdt.pv_pa, arg2, size);
+		memcpy((void *)fdt.pv_pa, config, size);
 	}
 
 	/*
