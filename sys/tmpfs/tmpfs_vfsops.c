@@ -154,6 +154,30 @@ tmpfs_mount_update(struct mount *mp, struct tmpfs_args *args, struct proc *p)
 			goto bail;
 	}
 
+	if (args->ta_nodes_max != 0 || args->ta_size_max != 0) {
+		struct tmpfs_args *xargs = &mp->mnt_stat.mount_info.tmpfs_args;
+		uint64_t memlimit, nodelimit;
+
+		tmpfs_mountfs_getparams(args, &memlimit, &nodelimit);
+
+		if (args->ta_nodes_max != 0) {
+			if (nodelimit < tmp->tm_nodes_cnt) {
+				error = EINVAL;
+				goto bail;
+			}
+			tmp->tm_nodes_max = nodelimit;
+			xargs->ta_nodes_max = nodelimit;
+		}
+
+		if (args->ta_size_max != 0) {
+			error = tmpfs_mntmem_adjust(tmp, memlimit);
+			if (error)
+				goto bail;
+			xargs->ta_size_max = memlimit;
+		}
+
+	}
+
 bail:
 	rw_exit_write(&tmp->tm_lock);
 	VOP_UNLOCK(rootvp, 0);

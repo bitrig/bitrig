@@ -308,6 +308,7 @@ vaddr_t		tmpfs_uio_lookup(tmpfs_node_t *, voff_t);
  */
 
 void		tmpfs_mntmem_init(tmpfs_mount_t *, uint64_t);
+int		tmpfs_mntmem_adjust(tmpfs_mount_t *, uint64_t);
 void		tmpfs_mntmem_destroy(tmpfs_mount_t *);
 
 size_t		tmpfs_mem_info(int);

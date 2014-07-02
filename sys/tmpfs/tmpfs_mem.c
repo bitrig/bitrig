@@ -59,6 +59,23 @@ tmpfs_mntmem_init(struct tmpfs_mount *mp, uint64_t memlimit)
 	mp->tm_bytes_used = 0;
 }
 
+int
+tmpfs_mntmem_adjust(struct tmpfs_mount *mp, uint64_t memlimit)
+{
+	mtx_enter(&mp->tm_acc_lock);
+
+	if (memlimit < mp->tm_bytes_used) {
+		mtx_leave(&mp->tm_acc_lock);
+		return EINVAL;
+	}
+
+	mp->tm_mem_limit = memlimit;
+
+	mtx_leave(&mp->tm_acc_lock);
+
+	return 0;
+}
+
 void
 tmpfs_mntmem_destroy(struct tmpfs_mount *mp)
 {
