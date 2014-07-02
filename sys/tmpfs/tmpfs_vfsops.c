@@ -78,6 +78,8 @@ int	tmpfs_statfs(struct mount *, struct statfs *, struct proc *);
 int	tmpfs_sync(struct mount *, int, struct ucred *, struct proc *);
 int	tmpfs_init(struct vfsconf *);
 int	tmpfs_mount_update(struct mount *, struct tmpfs_args *, struct proc *);
+void	tmpfs_mountfs_getparams(const struct tmpfs_args *, uint64_t *,
+	    uint64_t *);
 
 int
 tmpfs_init(struct vfsconf *vfsp)
@@ -89,6 +91,27 @@ tmpfs_init(struct vfsconf *vfsp)
 	    "tmpfs_node", &pool_allocator_nointr);
 
 	return 0;
+}
+
+void
+tmpfs_mountfs_getparams(const struct tmpfs_args *args, uint64_t *memlimit,
+    uint64_t *nodes)
+{
+	/* Get the memory usage limit for this file-system. */
+	if (args->ta_size_max < PAGE_SIZE) {
+		*memlimit = UINT64_MAX;
+	} else {
+		*memlimit = args->ta_size_max;
+	}
+	KASSERT(*memlimit > 0);
+
+	if (args->ta_nodes_max <= 3) {
+		*nodes = 3 + (*memlimit / 1024);
+	} else {
+		*nodes = args->ta_nodes_max;
+	}
+	*nodes = MIN(*nodes, INT_MAX);
+	KASSERT(*nodes >= 3);
 }
 
 int
@@ -158,26 +181,12 @@ tmpfs_mountfs(struct mount *mp, const char *path, struct vnode *vp,
 	if (tmpfs_mem_info(1) < TMPFS_PAGES_RESERVED)
 		return EINVAL;
 
-	/* Get the memory usage limit for this file-system. */
-	if (args->ta_size_max < PAGE_SIZE) {
-		memlimit = UINT64_MAX;
-	} else {
-		memlimit = args->ta_size_max;
-	}
-	KASSERT(memlimit > 0);
-
-	if (args->ta_nodes_max <= 3) {
-		nodes = 3 + (memlimit / 1024);
-	} else {
-		nodes = args->ta_nodes_max;
-	}
-	nodes = MIN(nodes, INT_MAX);
-	KASSERT(nodes >= 3);
-
 	/* Allocate the tmpfs mount structure and fill it. */
 	tmp = malloc(sizeof(tmpfs_mount_t), M_MISCFSMNT, M_WAITOK);
 	if (tmp == NULL)
 		return ENOMEM;
+
+	tmpfs_mountfs_getparams(args, &memlimit, &nodes);
 
 	tmp->tm_nodes_max = (ino_t)nodes;
 	tmp->tm_nodes_cnt = 0;
