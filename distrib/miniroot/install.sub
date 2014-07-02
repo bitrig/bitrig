@@ -625,11 +625,6 @@ __EOT
 				[[ $_f = $resp ]] && _selected=$($_action $_f $_selected)
 			done
 		done
-		if isin $_xbase $_selected && ! isin $_comp $_selected &&
-			isin $_comp $_avail; then
-			_selected=$(addel $_comp $_selected)
-			echo "The xbase set requires the comp set, so adding it back in."
-		fi
 	done
 
 	set +o noglob
@@ -2022,7 +2017,7 @@ md_consoleinfo
 # the contents of the other sets, not the other way around.
 THESETS="bsd bsd.rd bsd.sp $MDSETS"
 : ${DEFAULTSETS:="bsd bsd.rd"}
-for _set in base etc xbase xetc xshare xfont xserv site ; do
+for _set in base comp etc xbase xetc xshare xfont xserv site ; do
 	[[ $MODE == upgrade && $_set == @(etc|xetc) ]] && continue
 	THESETS="$THESETS ${_set}${VERSION}.tgz"
 	isin $_set site && continue
