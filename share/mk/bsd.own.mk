@@ -167,12 +167,7 @@ BSD_OWN_MK=Done
 # not be installed, they link directly out of ${.OBJDIR}
 MK_INSTALLLIB?=yes
 
-# enable clang for arm
-.if ${MACHINE_ARCH} == "arm"
 MK_ENABLE_CLANG?=yes
-.else
-MK_ENABLE_CLANG?=no
-.endif
 
 # Control clang specific features
 # MK_CLANG_EXTRAS controls if additional clang binaries besides the
