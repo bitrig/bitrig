@@ -2,6 +2,7 @@
 
 /*
  * Copyright (c) 2005, 2006, 2007 The NetBSD Foundation, Inc.
+ * Copyright (c) 2013, 2014 Pedro Martelletto
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
