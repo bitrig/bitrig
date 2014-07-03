@@ -124,11 +124,11 @@ tmpfs_mount_update(struct mount *mp, struct tmpfs_args *args, struct proc *p)
 	if (mp->mnt_flag & MNT_WANTRDWR) {
 		error = 0;
 		goto bail;
-	}
-
-	if (mp->mnt_flag & MNT_RDONLY) {
+	} else if (mp->mnt_flag & MNT_RDONLY) {
 		/* Flush files opened for writing; skip rootvp. */
 		error = vflush(mp, rootvp, WRITECLOSE);
+		if (error)
+			goto bail;
 	}
 
 bail:
