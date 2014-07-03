@@ -14,7 +14,7 @@ LDADD+=-lpthread
 LDADD+=-ltermlib
 
 .if ${MK_SHARED_TOOLCHAIN:L} == "no"
-LDSTATIC=-static 
+LDSTATIC=-static
 .endif
 
 LINKS=	${BINDIR}/clang ${BINDIR}/clang++ \
@@ -24,11 +24,10 @@ MLINKS=	clang.1 clang++.1 \
 .if ${MK_CLANG_IS_CC:L} != "no"
 LINKS+=	${BINDIR}/clang ${BINDIR}/cc \
 	${BINDIR}/clang ${BINDIR}/c++ \
-	${BINDIR}/clang ${BINDIR}/CC 
+	${BINDIR}/clang ${BINDIR}/CC
 MLINKS+= clang.1 cc.1 \
 	clang.1 c++.1 \
-	clang.1 CC.1 \
-	clang.1 cpp.1
+	clang.1 CC.1
 .endif
 
 TGHDRS=	CC1AsOptions \
