@@ -21,3 +21,7 @@ sdmmc*		at exesdhc?		# SD/MMC bus
 # I2C bus support
 iic*		at exiic?
 crosec*		at iic?
+wskbd*		at crosec? mux 1
+tpspmic*	at iic?
+
+pseudo-device	wsmux		2
