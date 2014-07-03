@@ -74,3 +74,4 @@
 ./usr/include/amd64/vmparam.h
 ./usr/lib/libamd64.a
 ./usr/lib/libamd64_p.a
+./usr/lib/libclang_rt.amd64.a
