@@ -53,13 +53,9 @@ trap 'rm -f $TMP $TMP2; exit 1' 1 15
 
 cd $fsdir
 
-for i in base etc; do
+for i in base comp etc; do
 	echo -n "$i: "
-	if [[ $i == "base" ]]; then
-		sort ${lists}/$i/mi ${lists}/$i/md.${arch} > $TMP
-	else
-		sort ${lists}/$i/mi > $TMP
-	fi
+	sort ${lists}/$i/mi ${lists}/$i/md.${arch} > $TMP
 	cat $TMP | grep '^./usr/lib/lib' > $TMP2
 	cat $TMP | grep -v '^./usr/lib/lib' >> $TMP2
 	cat $TMP2 | pax -w -d | gzip > ${tardir}/$i${RELEASE}.tgz

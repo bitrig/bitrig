@@ -60,7 +60,7 @@ RCDAEMONS=	apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd \
 		wsmoused xdm ypbind ypldap yppasswdd ypserv nfsd mountd lockd \
 		statd spamlogd sndiod tftpd tftpproxy unbound
 
-MISETS=	base${OSrev}.tgz etc${OSrev}.tgz
+MISETS=	base${OSrev}.tgz comp${OSrev}.tgz etc${OSrev}.tgz
 
 # Use NOGZIP on architectures where the gzip'ing would take too much time
 # (pmax or slower :-)).  This way you get only tar'ed snap files and you can
