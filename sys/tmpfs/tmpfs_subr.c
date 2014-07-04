@@ -1192,6 +1192,8 @@ tmpfs_truncate(struct vnode *vp, off_t length)
 		node->tn_status |= TMPFS_NODE_CHANGED | TMPFS_NODE_MODIFIED;
 	}
 out:
+	if (error == 0)
+		VN_KNOTE(vp, NOTE_ATTRIB);
 	tmpfs_update(vp, NULL, NULL, 0);
 	return error;
 }
