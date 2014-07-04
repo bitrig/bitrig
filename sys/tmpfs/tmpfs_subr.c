@@ -552,7 +552,8 @@ tmpfs_dir_detach(tmpfs_node_t *dnode, tmpfs_dirent_t *de)
 	node->tn_links--;
 	if ((vp = node->tn_vnode) != NULL) {
 		KASSERT(VOP_ISLOCKED(vp));
-		VN_KNOTE(vp, node->tn_links ?  NOTE_LINK : NOTE_DELETE);
+		if (node->tn_links == 0)
+			VN_KNOTE(vp, NOTE_DELETE);
 	}
 
 	/* If directory - decrease the link count of parent. */
