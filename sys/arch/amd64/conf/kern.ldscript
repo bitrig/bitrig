@@ -27,6 +27,7 @@ PHDRS
 	data PT_LOAD;
 	bss PT_LOAD;
 	openbsd_randomize PT_OPENBSD_RANDOMIZE;
+	bitrig_ramdisk PT_BITRIG_TMPFS_RAMDISK;	/* filled by rdconfig(8) */
 }
 
 /*
