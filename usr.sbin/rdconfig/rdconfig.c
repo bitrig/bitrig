@@ -355,6 +355,7 @@ replace(Elf_Ehdr *ehdr, Elf_Phdr *phdr)
 
 	phdr[slot].p_offset = off;
 	phdr[slot].p_filesz = drain_fs();
+	phdr[slot].p_memsz = phdr[slot].p_filesz;
 	off += phdr[slot].p_filesz;
 	off = roundup(off, PAGE_SIZE);
 
@@ -399,6 +400,7 @@ insert(Elf_Ehdr *ehdr, Elf_Phdr *phdr)
 	phdr[slot].p_flags = PF_R;
 	phdr[slot].p_offset = off;
 	phdr[slot].p_filesz = drain_fs();
+	phdr[slot].p_memsz = phdr[slot].p_filesz;
 	phdr[slot].p_align = PAGE_SIZE;
 	off += phdr[slot].p_filesz;
 	off = roundup(off, PAGE_SIZE);
