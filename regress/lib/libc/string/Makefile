@@ -3,7 +3,7 @@
 CFLAGS+=	-I/usr/local/include
 LDFLAGS+=	-L/usr/local/lib
 
-TESTS=	test-wcscasecmp
+TESTS=	test-wcscasecmp test-ungetwc
 
 REGRESS_TARGETS=tests
 
