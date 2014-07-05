@@ -16,6 +16,7 @@
 
 #include <sys/param.h>
 #include <sys/exec_elf.h>
+#include <sys/stat.h>
 
 #include <err.h>
 #include <fcntl.h>
@@ -200,12 +201,23 @@ dup_fs(void)
 void
 setup(int argc, char **argv)
 {
+	struct stat kern_st, fs_st;
+
 	open_kern(argv[0]);
 
 	if (argc > 1)
 		open_fs(argv[1]);
 	else
 		dup_fs();
+
+	if (fstat(kern_fd, &kern_st) < 0)
+		error("fstat");
+	if (fstat(fs_fd, &fs_st) < 0)
+		error("fstat");
+
+	if (kern_st.st_dev == fs_st.st_dev &&
+	    kern_st.st_ino == fs_st.st_ino)
+		xerror("kernel and fs are the same file");
 }
 
 #define CHUNKSIZ	(8 * 1024 * 1024)
