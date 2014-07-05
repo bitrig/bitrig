@@ -12,6 +12,7 @@ Mon Apr 21 2014 xlocale
 Thu May 01 2014 libc++
 Wed May 07 2014 kerberos
 Sun Jun 29 2014 tmpfsrd
+Sat Jul 05 2014 games
 
 
 Mon Apr 21 2014 xlocale
@@ -170,3 +171,9 @@ to be the root disk here, substitute according to your setup).
 	installboot wd0
 
 When updating from a cd, no special steps are required.
+
+
+Sat Jul 05 2014 games
+
+The game set has been reintroduced. Add /usr/games to the search path in your
+~/.profile or ~/.cshrc accordingly.
