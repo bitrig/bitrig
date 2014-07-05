@@ -29,7 +29,7 @@ arch=`machine`
 TMP=`mktemp /tmp/_mkr.XXXXXXXXXX` || exit 1
 trap 'rm -f $TMP' 0 1 15
 
-for i in base comp etc; do
+for i in base comp etc game; do
         cat ./lists/$i/mi ./lists/$i/md.${arch} >> $TMP
 done
 
