@@ -379,7 +379,12 @@ insert(Elf_Ehdr *ehdr, Elf_Phdr *phdr)
 	Elf_Off off = 0;
 	int slot;
 
-	scan_phdr(ehdr, phdr, &off);
+	slot = scan_phdr(ehdr, phdr, &off);
+	if (slot == -1)
+		error("missing slot");
+	if (phdr[slot].p_filesz != 0)
+		error("slot already in use");
+
 	read_shdr(ehdr, &shdr);
 	scan_shdr(ehdr, shdr, &off);
 
@@ -389,7 +394,6 @@ insert(Elf_Ehdr *ehdr, Elf_Phdr *phdr)
 
 	xseek(kern_fd, off, SEEK_SET);
 
-	slot = ehdr->e_phnum++;
 	bzero(&phdr[slot], sizeof(phdr[slot]));
 	phdr[slot].p_type = PT_BITRIG_TMPFS_RAMDISK;
 	phdr[slot].p_flags = PF_R;
@@ -460,17 +464,16 @@ main(int argc, char **argv)
 	read_phdr(ehdr, &phdr);
 
 	slot = scan_phdr(ehdr, phdr, NULL);
+	if (slot == -1)
+		xerror("couldn't locate fs in %s", kern_path);
 
 	if (inspecting)
 		inspect(ehdr, phdr);
 
-	if (extracting) {
-		if (slot == -1)
-			xerror("couldn't locate fs in %s", kern_path);
+	if (extracting)
 		extract(phdr, slot);
-	}
 
-	if (slot != -1) {
+	if (phdr[slot].p_filesz != 0) {
 		if (forcing)
 			replace(ehdr, phdr);
 		else
