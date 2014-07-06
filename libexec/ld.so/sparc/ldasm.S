@@ -1,4 +1,4 @@
-/*	$OpenBSD: ldasm.S,v 1.21 2013/08/13 05:52:21 guenther Exp $	*/
+/*	$OpenBSD: ldasm.S,v 1.23 2014/07/06 07:28:36 otto Exp $	*/
 
 /*
  * Copyright (c) 2001 Jason L. Wright (jason@thought.net)
@@ -361,6 +361,18 @@ _dl_getcwd:
 	.type _dl_utrace,@function
 _dl_utrace:
 	mov SYS_utrace | SYSCALL_G2RFLAG, %g1	! calling sys_utrace
+	add %o7, 8, %g2				! just return on success
+	t ST_SYSCALL				! off to wonderland
+	retl
+	 sub %g0, %o0, %o0			! error: result = -errno
+
+
+	.section ".text"
+	.align 4
+	.global _dl_getentropy
+	.type _dl_getentropy,@function
+_dl_getentropy:
+	mov SYS_getentropy | SYSCALL_G2RFLAG, %g1	! calling sys_getentropy
 	add %o7, 8, %g2				! just return on success
 	t ST_SYSCALL				! off to wonderland
 	retl
