@@ -1,14 +1,16 @@
 # $FreeBSD$
 
-.PATH: ${.CURDIR}/../../../contrib/llvm/tools/clang/lib/Headers
+HDRPATH= ${.CURDIR}/../../../contrib/llvm/tools/clang/lib/Headers
+SANPATH= ${.CURDIR}/../../../contrib/compiler-rt/include/sanitizer
+.PATH: ${HDRPATH}
 
 INCSDIR=/usr/lib/clang/3.4/include
 
 INCS=	__wmmintrin_aes.h \
 	__wmmintrin_pclmul.h \
+	Intrin.h \
 	altivec.h \
 	ammintrin.h \
-	arm_neon.h \
 	avx2intrin.h \
 	avxintrin.h \
 	bmi2intrin.h \
@@ -16,9 +18,12 @@ INCS=	__wmmintrin_aes.h \
 	cpuid.h \
 	emmintrin.h \
 	f16cintrin.h \
+	float.h \
 	fma4intrin.h \
 	fmaintrin.h \
 	immintrin.h \
+	iso646.h \
+	limits.h \
 	lzcntintrin.h \
 	mm3dnow.h \
 	mm_malloc.h \
@@ -30,34 +35,61 @@ INCS=	__wmmintrin_aes.h \
 	prfchwintrin.h \
 	rdseedintrin.h \
 	rtmintrin.h \
+	shaintrin.h \
 	smmintrin.h \
+	stdalign.h \
+	stdarg.h \
+	stdbool.h \
+	stddef.h \
+	stdint.h \
+	stdnoreturn.h \
+	tbmintrin.h \
+	tgmath.h \
 	tmmintrin.h \
+	unwind.h \
+	varargs.h \
 	wmmintrin.h \
 	x86intrin.h \
 	xmmintrin.h \
 	xopintrin.h
 
-.for inc in ${INCS}
-CLEANFILES+= ${inc}.copy
-all: ${inc}.copy
-includes: ${inc}.copy
+GENINC= \
+	arm_neon.h \
 
-${inc}.copy: ${inc}
-	cp ${?} ${inc}.copy
-.endfor
+SANINC= \
+	asan_interface.h \
+	common_interface_defs.h \
+	dfsan_interface.h \
+	linux_syscall_hooks.h \
+	lsan_interface.h \
+	msan_interface.h
+
+
+all: ${GENINC}
+includes: ${GENINC}
 
 LLVMDIR=${.CURDIR}/../../../contrib/llvm
 
 CLEANFILES+= arm_neon.h
 
-arm_neon.h: 
+arm_neon.h:
 	clang-tblgen -gen-arm-neon -I ${LLVMDIR}/tools/clang/lib/Headers -I ${LLVMDIR}/lib/Target -I ${LLVMDIR}/include ${LLVMDIR}/tools/clang/include/clang/Basic/arm_neon.td -o arm_neon.h
 
 includes:
 .for inc in ${INCS}
 	cmp -s ${.OBJDIR}/${inc}.copy ${DESTDIR}${INCSDIR}/${inc} || \
 	    ${INSTALL} ${INSTALL_COPY} -m 444 -o $(BINOWN) -g $(BINGRP) \
-	    ${.OBJDIR}/${inc}.copy ${DESTDIR}${INCSDIR}/${inc} 
+	    ${HDRPATH}/${inc} ${DESTDIR}${INCSDIR}/${inc}
+.endfor
+.for inc in ${GENINCS}
+	cmp -s ${.OBJDIR}/${inc}.copy ${DESTDIR}${INCSDIR}/${inc} || \
+	    ${INSTALL} ${INSTALL_COPY} -m 444 -o $(BINOWN) -g $(BINGRP) \
+	    ${.OBJDIR}/${inc} ${DESTDIR}${INCSDIR}/${inc}
+.endfor
+.for inc in ${SANINC}
+	cmp -s ${.OBJDIR}/${inc}.copy ${DESTDIR}${INCSDIR}/${inc} || \
+	    ${INSTALL} ${INSTALL_COPY} -m 444 -o $(BINOWN) -g $(BINGRP) \
+	    ${SANPATH}/${inc} ${DESTDIR}${INCSDIR}/sanitizer/${inc}
 .endfor
 
 .include <bsd.prog.mk>

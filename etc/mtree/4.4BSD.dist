@@ -369,6 +369,11 @@ clang		gname=bin uname=root mode=0755
 
 # ./usr/lib/clang/3.4/include
 include		gname=bin uname=root mode=0755
+# ./usr/lib/clang/3.4/include/sanitizer
+sanitizer		gname=bin uname=root mode=0755
+# ./usr/lib/clang/3.4/include/sanitizer
+..
+
 # ./usr/lib/clang/3.4/include
 ..
 
