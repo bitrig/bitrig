@@ -22,7 +22,7 @@ archs  = ${basefiles:S/^md.//}
 
 mdtomi:
 	@echo "Checking for common md file lines for migration to mi files:"
-	@for xdir in base etc; do \
+	@for xdir in base comp etc; do \
 	dir=$$(mktemp -d /tmp/mdtomi.XXXXXXXXXX); \
 	i1=first; \
 	for a in ${archs}; do \
@@ -51,7 +51,7 @@ mdtomi:
 	done
 
 dupes:
-	@for d in base etc; do \
+	@for d in base comp etc; do \
 	for arch in ${archs}; do \
 		[ -f $$d/md.$$arch ] || continue; \
 		echo "===> $$d/$$arch"; \
@@ -60,7 +60,7 @@ dupes:
 	done
 
 sanity:
-	@for d in base etc; do \
+	@for d in base comp etc; do \
 		echo "==> $$d"; \
 		(cd $$d; cat md* | sort | uniq -c | sort -n ); \
 	done
