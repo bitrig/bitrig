@@ -175,8 +175,8 @@ trap(struct trapframe *frame)
 	if (!KERNELMODE(frame->tf_cs, frame->tf_rflags)) {
 		type |= T_USER;
 		p->p_md.md_regs = frame;
-	} else /* if (type != T_NMI) */
 		refreshcreds(p);
+	}
 
 	switch (type) {
 
