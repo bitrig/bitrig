@@ -1,4 +1,4 @@
-/* $OpenBSD: ssh2.c,v 1.3 2009/07/12 18:04:03 jsg Exp $ */
+/* $OpenBSD: ssh2.c,v 1.4 2014/07/07 17:02:22 bluhm Exp $ */
 /*
  * ssh2.c
  *
@@ -102,7 +102,7 @@ _read_opaque(struct iovec *iov, u_char **buf, int *len)
 	if (_read_int(iov, len) < 0 || *len < 0)
 		return (-1);
 
-	if (iov->iov_len < *len)
+	if (iov->iov_len < (size_t)*len)
 		return (-1);
 	iov->iov_len -= *len;
 
