@@ -43,6 +43,7 @@ __KERNEL_RCSID(0, "$NetBSD: tmpfs_mem.c,v 1.4 2011/05/24 01:09:47 rmind Exp $");
 #include <sys/namei.h>
 #include <sys/pool.h>
 #include <sys/vnode.h>
+#include <sys/sysctl.h>
 #include <sys/malloc.h>
 
 #include <tmpfs/tmpfs.h>

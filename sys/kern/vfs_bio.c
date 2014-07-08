@@ -1,4 +1,4 @@
-/*	$OpenBSD: vfs_bio.c,v 1.155 2014/04/10 13:48:24 tedu Exp $	*/
+/*	$OpenBSD: vfs_bio.c,v 1.156 2014/07/08 17:19:25 deraadt Exp $	*/
 /*	$NetBSD: vfs_bio.c,v 1.44 1996/06/11 11:15:36 pk Exp $	*/
 
 /*-
@@ -86,8 +86,6 @@
 #include <sys/conf.h>
 #include <sys/kernel.h>
 #include <sys/wapbl.h>
-
-#include <uvm/uvm_extern.h>
 
 int nobuffers;
 int needbuffer;

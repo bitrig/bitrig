@@ -1,4 +1,4 @@
-/*	$OpenBSD: ufs_lookup.c,v 1.44 2013/12/12 19:15:32 tedu Exp $	*/
+/*	$OpenBSD: ufs_lookup.c,v 1.45 2014/07/08 17:19:26 deraadt Exp $	*/
 /*	$NetBSD: ufs_lookup.c,v 1.7 1996/02/09 22:36:06 christos Exp $	*/
 
 /*
@@ -48,8 +48,6 @@
 #include <sys/proc.h>
 #include <sys/vnode.h>
 #include <sys/wapbl.h>
-
-#include <uvm/uvm_extern.h>
 
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>

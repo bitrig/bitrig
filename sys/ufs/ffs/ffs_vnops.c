@@ -1,4 +1,4 @@
-/*	$OpenBSD: ffs_vnops.c,v 1.76 2014/05/22 02:02:39 guenther Exp $	*/
+/*	$OpenBSD: ffs_vnops.c,v 1.77 2014/07/08 17:19:26 deraadt Exp $	*/
 /*	$NetBSD: ffs_vnops.c,v 1.7 1996/05/11 18:27:24 mycroft Exp $	*/
 
 /*-
@@ -77,8 +77,6 @@
 #include <sys/pool.h>
 #include <sys/event.h>
 #include <sys/wapbl.h>
-
-#include <uvm/uvm_extern.h>
 
 #include <sys/fifovnops.h>
 
