@@ -53,10 +53,10 @@ INCS=	__wmmintrin_aes.h \
 	xmmintrin.h \
 	xopintrin.h
 
-GENINC= \
-	arm_neon.h \
+GENINCS= \
+	arm_neon.h
 
-SANINC= \
+SANINCS= \
 	asan_interface.h \
 	common_interface_defs.h \
 	dfsan_interface.h \
@@ -64,9 +64,8 @@ SANINC= \
 	lsan_interface.h \
 	msan_interface.h
 
-
-all: ${GENINC}
-includes: ${GENINC}
+all: ${GENINCS}
+includes: ${GENINCS}
 
 LLVMDIR=${.CURDIR}/../../../contrib/llvm
 
@@ -86,7 +85,7 @@ includes:
 	    ${INSTALL} ${INSTALL_COPY} -m 444 -o $(BINOWN) -g $(BINGRP) \
 	    ${.OBJDIR}/${inc} ${DESTDIR}${INCSDIR}/${inc}
 .endfor
-.for inc in ${SANINC}
+.for inc in ${SANINCS}
 	cmp -s ${.OBJDIR}/${inc}.copy ${DESTDIR}${INCSDIR}/${inc} || \
 	    ${INSTALL} ${INSTALL_COPY} -m 444 -o $(BINOWN) -g $(BINGRP) \
 	    ${SANPATH}/${inc} ${DESTDIR}${INCSDIR}/sanitizer/${inc}
