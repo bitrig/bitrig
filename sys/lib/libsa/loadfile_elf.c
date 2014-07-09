@@ -253,18 +253,18 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 				ramdiskp = roundup(maxp, PAGE_SIZE);
 				if (lseek(fd, (off_t)phdr[i].p_offset,
 				    SEEK_SET) == -1) {
-				    	WARN(("lseek ramdisk"));
-				    	FREE(phdr, phdrsz);
-				    	return 1;
+					WARN(("lseek ramdisk"));
+					FREE(phdr, phdrsz);
+					return 1;
 				}
 
 				PROGRESS(("+%lu[R]", (u_long)phdr[i].p_filesz));
 
 				if (READ(fd, ramdiskp, phdr[i].p_filesz) !=
 				    phdr[i].p_filesz) {
-				    	WARN(("read ramdisk"));
-				    	FREE(phdr, phdrsz);
-				    	return 1;
+					WARN(("read ramdisk"));
+					FREE(phdr, phdrsz);
+					return 1;
 				}
 
 				ramdiskp += roundup(phdr[i].p_filesz, PAGE_SIZE);
