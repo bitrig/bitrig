@@ -1,4 +1,4 @@
-/*	$OpenBSD: kern_lock.c,v 1.43 2014/01/21 01:48:44 tedu Exp $	*/
+/*	$OpenBSD: kern_lock.c,v 1.44 2014/07/09 13:32:00 guenther Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -60,14 +60,17 @@ lockinit(struct lock *lkp, int prio, char *wmesg, int timo, int flags)
 int
 lockstatus(struct lock *lkp)
 {
-	int	status;
-
-	status = rrw_status(&lkp->lk_lck);
-	if (status == 1)
-		return LK_EXCLUSIVE;
-	if (status == -1)
-		return LK_SHARED;
-	return 0;
+	switch (rrw_status(&lkp->lk_lck)) {
+	case RW_WRITE:
+		return (LK_EXCLUSIVE);
+	case RW_WRITE_OTHER:
+		return (LK_EXCLOTHER);
+	case RW_READ:
+		return (LK_SHARED);
+	case 0:
+	default:
+		return (0);
+	}
 }
 
 int
