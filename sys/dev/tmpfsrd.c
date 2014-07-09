@@ -118,7 +118,7 @@ void
 tmpfsrd_attach(struct device *parent, struct device *self, void *aux)
 {
 	struct tmpfsrd_softc *sc = (struct tmpfsrd_softc *)self;
-	int mbytes, kbytes;
+	uint64_t mbytes, kbytes;
 
 	tmpfsrd_disk = (uint8_t *)roundup((paddr_t)esym, PAGE_SIZE);
 	tmpfsrd_size = (paddr_t)eramdisk - (paddr_t)tmpfsrd_disk;
@@ -138,11 +138,11 @@ tmpfsrd_attach(struct device *parent, struct device *self, void *aux)
 	mbytes = kbytes / 1024;
 
 	if (mbytes == 0 && kbytes == 0)
-		printf("%lldB ", tmpfsrd_size);
+		printf("%lluB ", tmpfsrd_size);
 	else if (mbytes == 0)
-		printf("%lldkB ", kbytes);
+		printf("%llukB ", kbytes);
 	else
-		printf("%lldMB ", mbytes);
+		printf("%lluMB ", mbytes);
 
 	printf("ramdisk ready\n");
 
