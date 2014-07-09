@@ -337,7 +337,6 @@ extern int (*mountroot)(void);
 #if defined(DDB) || defined(KGDB)
 /* debugger entry points */
 void	Debugger(void);	/* in DDB only */
-int	read_symtab_from_file(struct proc *,struct vnode *,const char *);
 #endif
 
 #ifdef BOOT_CONFIG
