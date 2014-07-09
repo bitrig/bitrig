@@ -1,4 +1,4 @@
-/* $OpenBSD: eng_dyn.c,v 1.9 2014/06/12 15:49:29 deraadt Exp $ */
+/* $OpenBSD: eng_dyn.c,v 1.10 2014/07/09 08:52:00 bcook Exp $ */
 /* Written by Geoff Thorpe (geoff@geoffthorpe.net) for the OpenSSL
  * project 2001.
  */
