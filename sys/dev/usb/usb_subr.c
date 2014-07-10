@@ -1,4 +1,4 @@
-/*	$OpenBSD: usb_subr.c,v 1.102 2014/07/09 18:15:04 mpi Exp $ */
+/*	$OpenBSD: usb_subr.c,v 1.103 2014/07/10 11:47:14 mpi Exp $ */
 /*	$NetBSD: usb_subr.c,v 1.103 2003/01/10 11:19:13 augustss Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/usb_subr.c,v 1.18 1999/11/17 22:33:47 n_hibma Exp $	*/
 
@@ -822,9 +822,6 @@ usbd_set_address(struct usbd_device *dev, int addr)
 	if (usbd_do_request(dev, &req, 0))
 		return (1);
 
-	dev->address = addr;
-	dev->bus->devices[addr] = dev;
-
 	/* Allow device time to set new address */
 	usbd_delay_ms(dev, USB_SET_ADDRESS_SETTLE);
 
@@ -1193,6 +1190,13 @@ usbd_new_device(struct device *parent, struct usbd_bus *bus, int depth,
 		up->device = NULL;
 		return (USBD_SET_ADDR_FAILED);
  	}
+
+	/*
+	 * If this device is attached to an xHCI controller, this
+	 * address does not correspond to the hardware one.
+	 */
+	dev->address = addr;
+	bus->devices[addr] = dev;
 
 	/* Re-establish the default pipe with the new address. */
 	usbd_close_pipe(dev->default_pipe);
