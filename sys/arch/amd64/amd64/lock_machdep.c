@@ -1,4 +1,4 @@
-/*	$OpenBSD: lock_machdep.c,v 1.3 2008/12/04 15:48:19 weingart Exp $	*/
+/*	$OpenBSD: lock_machdep.c,v 1.6 2014/07/10 12:14:48 mlarkin Exp $	*/
 
 /*
  * Copyright (c) 2007 Artur Grabowski <art@openbsd.org>
@@ -154,4 +154,3 @@ __mp_lock_held(struct __mp_lock *mpl)
 
 	return (cpu->mplc_ticket == mpl->mpl_ticket && cpu->mplc_depth > 0);
 }
-
