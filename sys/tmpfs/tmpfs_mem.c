@@ -120,7 +120,7 @@ tmpfs_mem_info(int total)
 uint64_t
 tmpfs_bytes_max(struct tmpfs_mount *mp)
 {
-	size_t freepages = tmpfs_mem_info(0);
+	uint64_t freepages = tmpfs_mem_info(0);
 	uint64_t avail_mem;
 
 	if (freepages < TMPFS_PAGES_RESERVED) {
