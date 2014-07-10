@@ -2962,10 +2962,6 @@
 ./usr/share/doc/mg
 ./usr/share/doc/mg/tutorial
 ./usr/share/games
-./usr/share/games/atc
-./usr/share/games/boggle
-./usr/share/games/fortune
-./usr/share/games/quiz.db
 ./usr/share/info
 ./usr/share/info/dir
 ./usr/share/info/info-stnd.info
@@ -12377,10 +12373,6 @@
 ./var/empty
 ./var/empty/dev
 ./var/games
-./var/games/hackdir
-./var/games/hackdir/save
-./var/games/phantasia
-./var/games/save
 ./var/log
 ./var/log/rdist
 ./var/mail
