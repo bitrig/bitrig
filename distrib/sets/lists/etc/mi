@@ -3,7 +3,6 @@
 ./etc/authpf
 ./etc/bgpd.conf
 ./etc/changelist
-./etc/chio.conf
 ./etc/csh.cshrc
 ./etc/csh.login
 ./etc/csh.logout
@@ -12,18 +11,15 @@
 ./etc/dhcpd.conf
 ./etc/disktab
 ./etc/dumpdates
-./etc/dvmrpd.conf
 ./etc/exports
 ./etc/fbtab
 ./etc/ftpchroot
 ./etc/ftpusers
 ./etc/gettytab
 ./etc/group
-./etc/hostapd.conf
 ./etc/hosts
 ./etc/hosts.lpd
 ./etc/hotplug
-./etc/ifstated.conf
 ./etc/iked.conf
 ./etc/iked/pubkeys/fqdn
 ./etc/iked/pubkeys/ipv4
@@ -36,7 +32,6 @@
 ./etc/ldap/inetorgperson.schema
 ./etc/ldap/nis.schema
 ./etc/ldapd.conf
-./etc/ldpd.conf
 ./etc/localtime
 ./etc/locate.rc
 ./etc/login.conf
@@ -71,8 +66,6 @@
 ./etc/npppd/npppd-users
 ./etc/npppd/npppd.conf
 ./etc/ntpd.conf
-./etc/ospf6d.conf
-./etc/ospfd.conf
 ./etc/passwd
 ./etc/pf.conf
 ./etc/pf.os
