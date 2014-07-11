@@ -1,1964 +1,986 @@
-#	$OpenBSD: 4.4BSD.dist,v 1.248 2014/07/09 19:23:28 espie Exp $
+#	$OpenBSD: 4.4BSD.dist,v 1.249 2014/07/11 10:52:30 schwarze Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 # .
 . nochange
-
-# ./altroot
 altroot
-# ./altroot
 ..
-
-# ./bin
 bin
-# ./bin
 ..
-
-# ./dev
 dev
-
-# ./dev
 ..
 
 # ./etc
 etc
-
-# ./etc/amd
 amd
-# ./etc/amd
 ..
-
-# ./etc/authpf
 authpf		uname=root mode=0755
-# ./etc/authpf
 ..
-
-# ./etc/disklabels
 disklabels
-# ./etc/disklabels
 ..
-
-# ./etc/firmware
 firmware
-# ./etc/firmware
 ..
-
-# ./etc/hotplug
 hotplug
-# ./etc/hotplug
 ..
 
 # ./etc/iked
 iked
-
-# ./etc/iked/ca
 ca
-# ./etc/iked/ca
 ..
-
-# ./etc/iked/certs
 certs
-# ./etc/iked/certs
 ..
-
-# ./etc/iked/crls
 crls
-# ./etc/iked/crls
 ..
-
-# ./etc/iked/private
 private		uname=root mode=0700
-# ./etc/iked/private
 ..
 
 # ./etc/iked/pubkeys
 pubkeys		uname=root mode=0755
-
-# ./etc/iked/pubkeys/fqdn
 fqdn		uname=root mode=0755
-# ./etc/iked/pubkeys/fqdn
 ..
-
-# ./etc/iked/pubkeys/ipv4
 ipv4		uname=root mode=0755
-# ./etc/iked/pubkeys/ipv4
 ..
-
-# ./etc/iked/pubkeys/ipv6
 ipv6		uname=root mode=0755
-# ./etc/iked/pubkeys/ipv6
 ..
-
-# ./etc/iked/pubkeys/ufqdn
 ufqdn		uname=root mode=0755
-# ./etc/iked/pubkeys/ufqdn
 ..
-
-# ./etc/iked/pubkeys
 ..
-
-# ./etc/iked
 ..
 
 # ./etc/isakmpd
 isakmpd
-
-# ./etc/isakmpd/ca
 ca
-# ./etc/isakmpd/ca
 ..
-
-# ./etc/isakmpd/certs
 certs
-# ./etc/isakmpd/certs
 ..
-
-# ./etc/isakmpd/crls
 crls
-# ./etc/isakmpd/crls
 ..
-
-# ./etc/isakmpd/keynote
 keynote
-# ./etc/isakmpd/keynote
 ..
-
-# ./etc/isakmpd/private
 private		uname=root mode=0700
-# ./etc/isakmpd/private
 ..
 
 # ./etc/isakmpd/pubkeys
 pubkeys		uname=root mode=0755
-
-# ./etc/isakmpd/pubkeys/fqdn
 fqdn		uname=root mode=0755
-# ./etc/isakmpd/pubkeys/fqdn
 ..
-
-# ./etc/isakmpd/pubkeys/ipv4
 ipv4		uname=root mode=0755
-# ./etc/isakmpd/pubkeys/ipv4
 ..
-
-# ./etc/isakmpd/pubkeys/ipv6
 ipv6		uname=root mode=0755
-# ./etc/isakmpd/pubkeys/ipv6
 ..
-
-# ./etc/isakmpd/pubkeys/ufqdn
 ufqdn		uname=root mode=0755
-# ./etc/isakmpd/pubkeys/ufqdn
 ..
-
-# ./etc/isakmpd/pubkeys
 ..
-
-# ./etc/isakmpd
 ..
 
 # ./etc/ldap
 ldap
-
-# ./etc/ldap/certs
 certs		mode=0700
-# ./etc/ldap/certs
 ..
-
-# ./etc/ldap
 ..
 
 # ./etc/mail
 mail
-# ./etc/mail
 ..
-
-# ./etc/mtree
 mtree
-# ./etc/mtree
 ..
-
-# ./etc/nginx
 nginx
-# ./etc/nginx
 ..
-
-# ./etc/npppd
 npppd
-# ./etc/npppd
 ..
-
-# ./etc/ppp
 ppp
-# ./etc/ppp
 ..
-
-# ./etc/rc.d
 rc.d
-# ./etc/rc.d
 ..
 
 # ./etc/skel
 skel
-
-# ./etc/skel/.ssh
 .ssh		uname=root mode=0700
-# ./etc/skel/.ssh
 ..
-
-# ./etc/skel
 ..
 
 # ./etc/sliphome
 sliphome
-# ./etc/sliphome
 ..
-
-# ./etc/signify
 signify
-# ./etc/signify
 ..
-
-# ./etc/ssh
 ssh
-# ./etc/ssh
 ..
-
 
 # ./etc/ssl
 ssl
-
-# ./etc/ssl/private
 private		uname=root mode=0700
-# ./etc/ssl/private
 ..
-
-# ./etc/ssl/lib
 lib
-# ./etc/ssl/lib
 ..
-
-# ./etc/ssl
 ..
 
 # ./etc/systrace
 systrace
-# ./etc/systrace
 ..
-
-# ./etc
 ..
 
 # ./home
 home
-# ./home
 ..
-
-# ./mnt
 mnt
-# ./mnt
 ..
-
-# ./root
 root		mode=0700
-# ./root
 ..
-
-# ./sbin
 sbin
-# ./sbin
 ..
-
-# ./tmp
 tmp             mode=01777
-# ./tmp
 ..
 
 # ./usr
 usr
-
-# ./usr/bin
 bin
-# ./usr/bin
 ..
-
-# ./usr/games
 games
-
-# ./usr/games
 ..
 
 # ./usr/include
 include		gname=bin uname=root mode=0755
-
-# ./usr/include/arpa
 arpa		gname=bin uname=root mode=0755
-# ./usr/include/arpa
 ..
 
-# ./usr/include/g++
-g++            gname=bin uname=root mode=0755
-# ./usr/include/g++
+g++		gname=bin uname=root mode=0755
 ..
 
 # ./usr/include/c++
 c++
-
-# ./usr/include/c++/v1
 v1
-
-# ./usr/include/c++/v1/ext
 ext
-
-# ./usr/include/c++/v1/ext
 ..
 
-# ./usr/include/c++/v1/mach-o
 mach-o
-
-# ./usr/include/c++/v1/mach-o
 ..
-
-# ./usr/include/c++/v1
 ..
-
-# ./usr/include/c++
 ..
 
 # ./usr/include/mcpp-gcc-amd64
 mcpp-gcc-amd64
-# ./usr/include/mcpp-gcc-amd64
 ..
 
-# ./usr/include/mcpp-gcc-arm
 mcpp-gcc-arm
-# ./usr/include/mcpp-gcc-arm
 ..
 
-# ./usr/include/openssl
 openssl		gname=bin uname=root mode=0755
-# ./usr/include/openssl
 ..
 
-# ./usr/include/protocols
-protocols		gname=bin uname=root mode=0755
-# ./usr/include/protocols
+protocols	gname=bin uname=root mode=0755
 ..
 
-# ./usr/include/rpc
 rpc		gname=bin uname=root mode=0755
-# ./usr/include/rpc
 ..
-
-# ./usr/include/rpcsvc
 rpcsvc		gname=bin uname=root mode=0755
-# ./usr/include/rpcsvc
 ..
-
-# ./usr/include
 ..
 
 # ./usr/lib
 lib
-
-# ./usr/lib/clang
 clang		gname=bin uname=root mode=0755
-
-# ./usr/lib/clang/3.4
 3.4		gname=bin uname=root mode=0755
-
-# ./usr/lib/clang/3.4/include
 include		gname=bin uname=root mode=0755
-# ./usr/lib/clang/3.4/include/sanitizer
 sanitizer		gname=bin uname=root mode=0755
-# ./usr/lib/clang/3.4/include/sanitizer
 ..
-
-# ./usr/lib/clang/3.4/include
 ..
-
-# ./usr/lib/clang/3.4
 ..
-
-# ./usr/lib/clang
 ..
 
 # ./usr/lib/debug
 debug		gname=bin uname=root mode=0755
-# ./usr/lib/debug
 ..
-
-# ./usr/lib/locate
 locate	gname=bin uname=root mode=0755
-# ./usr/lib/locate
 ..
-
-# ./usr/lib/pkgconfig
 pkgconfig	gname=bin uname=root mode=0755
-# ./usr/lib/pkgconfig
 ..
-
-# ./usr/lib
 ..
 
 # ./usr/libdata
 libdata
-
-# ./usr/libdata/perl5
 perl5
-
-# ./usr/libdata/perl5/site_perl
 site_perl
-# ./usr/libdata/perl5/site_perl
 ..
-
-# ./usr/libdata/perl5
 ..
-
-# ./usr/libdata
 ..
 
 # ./usr/libexec
 libexec
-
-# ./usr/libexec/auth
 auth		type=dir uname=root gname=auth mode=0750
-# ./usr/libexec/auth
 ..
-
-# ./usr/libexec/sm.bin
 sm.bin
-# ./usr/libexec/sm.bin
 ..
-
-# ./usr/libexec/lpr
 lpr
-# ./usr/libexec/lpr
 ..
-
-# ./libexec/smtpd
 smtpd		type=dir uname=root gname=wheel mode=0755
-# ./libexec/smtpd
 ..
-
-# ./usr/libexec
 ..
 
 # ./usr/lkm
 lkm
-# ./usr/lkm
 ..
 
 # ./usr/local
 local
-
-# ./usr/local/bin
 bin
-# ./usr/local/bin
 ..
-
-# ./usr/local/lib
 lib
-# ./usr/local/lib
 ..
 
 # ./usr/local/libdata
 libdata
-
-# ./usr/local/libdata/perl5
 perl5
-
-# ./usr/local/libdata/perl5/site_perl
 site_perl
-# ./usr/local/libdata/perl5/site_perl
 ..
-
-# ./usr/local/libdata/perl5
 ..
-
-# ./usr/local/libdata
 ..
 
 # ./usr/local/libexec
 libexec
-# ./usr/local/libexec
 ..
 
 # ./usr/local/man
 man
-
-# ./usr/local/man/cat1
 cat1
-# ./usr/local/man/cat1
 ..
-
-# ./usr/local/man/cat2
 cat2
-# ./usr/local/man/cat2
 ..
-
-# ./usr/local/man/cat3
 cat3
-# ./usr/local/man/cat3
 ..
-
-# ./usr/local/man/cat4
 cat4
-
-# ./usr/local/man/cat4
 ..
-
-# ./usr/local/man/cat5
 cat5
-# ./usr/local/man/cat5
 ..
-
-# ./usr/local/man/cat6
 cat6
-# ./usr/local/man/cat6
 ..
-
-# ./usr/local/man/cat7
 cat7
-# ./usr/local/man/cat7
 ..
-
-# ./usr/local/man/cat8
 cat8
-# ./usr/local/man/cat8
 ..
-
-# ./usr/local/man/cat9
 cat9
-# ./usr/local/man/cat9
 ..
-
-# ./usr/local/man/man1
 man1
-# ./usr/local/man/man1
 ..
-
-# ./usr/local/man/man2
 man2
-# ./usr/local/man/man2
 ..
-
-# ./usr/local/man/man3
 man3
-# ./usr/local/man/man3
 ..
-
-# ./usr/local/man/man4
 man4
-# ./usr/local/man/man4
 ..
-
-# ./usr/local/man/man5
 man5
-# ./usr/local/man/man5
 ..
-
-# ./usr/local/man/man6
 man6
-# ./usr/local/man/man6
 ..
-
-# ./usr/local/man/man7
 man7
-# ./usr/local/man/man7
 ..
-
-# ./usr/local/man/man8
 man8
-# ./usr/local/man/man8
 ..
-
-# ./usr/local/man/man9
 man9
-# ./usr/local/man/man9
 ..
-
-# ./usr/local/man
 ..
 
 # ./usr/local/sbin
 sbin
-# ./usr/local/sbin
 ..
-
-# ./usr/local/info
 info
-# ./usr/local/info
 ..
-
-# ./usr/local
 ..
 
 # ./usr/mdec
 mdec
-# ./usr/mdec
 ..
-
-# ./usr/obj
 obj		gname=wsrc mode=0775
-# ./usr/obj
 ..
-
-# ./usr/ports
 ports		gname=wsrc mode=0775
-# ./usr/ports
 ..
-
-# ./usr/sbin
 sbin
-# ./usr/sbin
 ..
 
 # ./usr/share
 share
-
-# ./usr/share/calendar
 calendar
-# ./usr/share/calendar
 ..
 
 # ./usr/share/dict
 dict
-
-# ./usr/share/dict/papers
 papers
-# ./usr/share/dict/papers
 ..
-
-# ./usr/share/dict/special
 special
-# ./usr/share/dict/special
 ..
-
-# ./usr/share/dict
 ..
 
 # ./usr/share/doc
 doc
-
-# ./usr/share/doc/html
 html
 
 # ./usr/share/doc/html/bind
 bind
-
-# ./usr/share/doc/html/bind
 ..
-
-# ./usr/share/doc/html/curses
 curses
-
-# ./usr/share/doc/html/curses
 ..
-
-# ./usr/share/doc/html
 ..
-
-# ./usr/share/doc
 ..
 
 # ./usr/share/games
 games
-
-# ./usr/share/games/atc
 atc
-# ./usr/share/games/atc
 ..
-
-# ./usr/share/games/boggle
 boggle
-# ./usr/share/games/boggle
 ..
-
-# ./usr/share/games/fortune
 fortune
-# ./usr/share/games/fortune
 ..
-
-# ./usr/share/games/quiz.db
 quiz.db
-# ./usr/share/games/quiz.db
 ..
-
-# ./usr/share/games
 ..
 
 # ./usr/share/info
 info
-# ./usr/share/info
 ..
 
-# ./usr/share/llvm
 llvm
-# ./usr/share/llvm
 ..
 
 # ./usr/share/locale
 locale
-
-# ./usr/share/locale/UTF-8
 UTF-8
 ..
-
-# ./usr/share/locale/af_ZA.ISO8859-1
 af_ZA.ISO8859-1
 ..
-
-# ./usr/share/locale/af_ZA.ISO8859-15
 af_ZA.ISO8859-15
 ..
-
-# ./usr/share/locale/af_ZA.UTF-8
 af_ZA.UTF-8
 ..
-
-# ./usr/share/locale/am_ET.UTF-8
 am_ET.UTF-8
 ..
-
-# ./usr/share/locale/be_BY.CP1131
 be_BY.CP1131
 ..
-
-# ./usr/share/locale/be_BY.CP1251
 be_BY.CP1251
 ..
-
-# ./usr/share/locale/be_BY.ISO8859-5
 be_BY.ISO8859-5
 ..
-
-# ./usr/share/locale/be_BY.UTF-8
 be_BY.UTF-8
 ..
-
-# ./usr/share/locale/bg_BG.CP1251
 bg_BG.CP1251
 ..
-
-# ./usr/share/locale/bg_BG.UTF-8
 bg_BG.UTF-8
 ..
-
-# ./usr/share/locale/ca_AD.ISO8859-1
 ca_AD.ISO8859-1
 ..
-
-# ./usr/share/locale/ca_AD.ISO8859-15
 ca_AD.ISO8859-15
 ..
-
-# ./usr/share/locale/ca_AD.UTF-8
 ca_AD.UTF-8
 ..
-
-# ./usr/share/locale/ca_ES.ISO8859-1
 ca_ES.ISO8859-1
 ..
-
-# ./usr/share/locale/ca_ES.ISO8859-15
 ca_ES.ISO8859-15
 ..
-
-# ./usr/share/locale/ca_ES.UTF-8
 ca_ES.UTF-8
 ..
-
-# ./usr/share/locale/ca_FR.ISO8859-1
 ca_FR.ISO8859-1
 ..
-
-# ./usr/share/locale/ca_FR.ISO8859-15
 ca_FR.ISO8859-15
 ..
-
-# ./usr/share/locale/ca_FR.UTF-8
 ca_FR.UTF-8
 ..
-
-# ./usr/share/locale/ca_IT.ISO8859-1
 ca_IT.ISO8859-1
 ..
-
-# ./usr/share/locale/ca_IT.ISO8859-15
 ca_IT.ISO8859-15
 ..
-
-# ./usr/share/locale/ca_IT.UTF-8
 ca_IT.UTF-8
 ..
-
-# ./usr/share/locale/cs_CZ.ISO8859-2
 cs_CZ.ISO8859-2
 ..
-
-# ./usr/share/locale/cs_CZ.UTF-8
 cs_CZ.UTF-8
 ..
-
-# ./usr/share/locale/da_DK.ISO8859-1
 da_DK.ISO8859-1
 ..
-
-# ./usr/share/locale/da_DK.ISO8859-15
 da_DK.ISO8859-15
 ..
-
-# ./usr/share/locale/da_DK.UTF-8
 da_DK.UTF-8
 ..
-
-# ./usr/share/locale/de_AT.ISO8859-1
 de_AT.ISO8859-1
 ..
-
-# ./usr/share/locale/de_AT.ISO8859-15
 de_AT.ISO8859-15
 ..
-
-# ./usr/share/locale/de_AT.UTF-8
 de_AT.UTF-8
 ..
-
-# ./usr/share/locale/de_CH.ISO8859-1
 de_CH.ISO8859-1
 ..
-
-# ./usr/share/locale/de_CH.ISO8859-15
 de_CH.ISO8859-15
 ..
-
-# ./usr/share/locale/de_CH.UTF-8
 de_CH.UTF-8
 ..
-
-# ./usr/share/locale/de_DE.ISO8859-1
 de_DE.ISO8859-1
 ..
-
-# ./usr/share/locale/de_DE.ISO8859-15
 de_DE.ISO8859-15
 ..
-
-# ./usr/share/locale/de_DE.UTF-8
 de_DE.UTF-8
 ..
-
-# ./usr/share/locale/el_GR.ISO8859-7
 el_GR.ISO8859-7
 ..
-
-# ./usr/share/locale/el_GR.UTF-8
 el_GR.UTF-8
 ..
-
-# ./usr/share/locale/en_AU.ISO8859-1
 en_AU.ISO8859-1
 ..
-
-# ./usr/share/locale/en_AU.ISO8859-15
 en_AU.ISO8859-15
 ..
-
-# ./usr/share/locale/en_AU.US-ASCII
 en_AU.US-ASCII
 ..
-
-# ./usr/share/locale/en_AU.UTF-8
 en_AU.UTF-8
 ..
-
-# ./usr/share/locale/en_CA.ISO8859-1
 en_CA.ISO8859-1
 ..
-
-# ./usr/share/locale/en_CA.ISO8859-15
 en_CA.ISO8859-15
 ..
-
-# ./usr/share/locale/en_CA.US-ASCII
 en_CA.US-ASCII
 ..
-
-# ./usr/share/locale/en_CA.UTF-8
 en_CA.UTF-8
 ..
-
-# ./usr/share/locale/en_GB.ISO8859-1
 en_GB.ISO8859-1
 ..
-
-# ./usr/share/locale/en_GB.ISO8859-15
 en_GB.ISO8859-15
 ..
-
-# ./usr/share/locale/en_GB.US-ASCII
 en_GB.US-ASCII
 ..
-
-# ./usr/share/locale/en_GB.UTF-8
 en_GB.UTF-8
 ..
-
-# ./usr/share/locale/en_IE.UTF-8
 en_IE.UTF-8
 ..
-
-# ./usr/share/locale/en_NZ.ISO8859-1
 en_NZ.ISO8859-1
 ..
-
-# ./usr/share/locale/en_NZ.ISO8859-15
 en_NZ.ISO8859-15
 ..
-
-# ./usr/share/locale/en_NZ.US-ASCII
 en_NZ.US-ASCII
 ..
-
-# ./usr/share/locale/en_NZ.UTF-8
 en_NZ.UTF-8
 ..
-
-# ./usr/share/locale/en_US.ISO8859-1
 en_US.ISO8859-1
 ..
-
-# ./usr/share/locale/en_US.ISO8859-15
 en_US.ISO8859-15
 ..
-
-# ./usr/share/locale/en_US.US-ASCII
 en_US.US-ASCII
 ..
-
-# ./usr/share/locale/en_US.UTF-8
 en_US.UTF-8
 ..
-
-# ./usr/share/locale/es_ES.ISO8859-1
 es_ES.ISO8859-1
 ..
-
-# ./usr/share/locale/es_ES.ISO8859-15
 es_ES.ISO8859-15
 ..
-
-# ./usr/share/locale/es_ES.UTF-8
 es_ES.UTF-8
 ..
-
-# ./usr/share/locale/et_EE.ISO8859-15
 et_EE.ISO8859-15
 ..
-
-# ./usr/share/locale/et_EE.UTF-8
 et_EE.UTF-8
 ..
-
-# ./usr/share/locale/eu_ES.ISO8859-1
 eu_ES.ISO8859-1
 ..
-
-# ./usr/share/locale/eu_ES.ISO8859-15
 eu_ES.ISO8859-15
 ..
-
-# ./usr/share/locale/eu_ES.UTF-8
 eu_ES.UTF-8
 ..
-
-# ./usr/share/locale/fi_FI.ISO8859-1
 fi_FI.ISO8859-1
 ..
-
-# ./usr/share/locale/fi_FI.ISO8859-15
 fi_FI.ISO8859-15
 ..
-
-# ./usr/share/locale/fi_FI.UTF-8
 fi_FI.UTF-8
 ..
-
-# ./usr/share/locale/fr_BE.ISO8859-1
 fr_BE.ISO8859-1
 ..
-
-# ./usr/share/locale/fr_BE.ISO8859-15
 fr_BE.ISO8859-15
 ..
-
-# ./usr/share/locale/fr_BE.UTF-8
 fr_BE.UTF-8
 ..
-
-# ./usr/share/locale/fr_CA.ISO8859-1
 fr_CA.ISO8859-1
 ..
-
-# ./usr/share/locale/fr_CA.ISO8859-15
 fr_CA.ISO8859-15
 ..
-
-# ./usr/share/locale/fr_CA.UTF-8
 fr_CA.UTF-8
 ..
-
-# ./usr/share/locale/fr_CH.ISO8859-1
 fr_CH.ISO8859-1
 ..
-
-# ./usr/share/locale/fr_CH.ISO8859-15
 fr_CH.ISO8859-15
 ..
-
-# ./usr/share/locale/fr_CH.UTF-8
 fr_CH.UTF-8
 ..
-
-# ./usr/share/locale/fr_FR.ISO8859-1
 fr_FR.ISO8859-1
 ..
-
-# ./usr/share/locale/fr_FR.ISO8859-15
 fr_FR.ISO8859-15
 ..
-
-# ./usr/share/locale/fr_FR.UTF-8
 fr_FR.UTF-8
 ..
-
-# ./usr/share/locale/he_IL.UTF-8
 he_IL.UTF-8
 ..
-
-# ./usr/share/locale/hi_IN.ISCII-DEV
 hi_IN.ISCII-DEV
 ..
-
-# ./usr/share/locale/hr_HR.ISO8859-2
 hr_HR.ISO8859-2
 ..
-
-# ./usr/share/locale/hr_HR.UTF-8
 hr_HR.UTF-8
 ..
-
-# ./usr/share/locale/hu_HU.ISO8859-2
 hu_HU.ISO8859-2
 ..
-
-# ./usr/share/locale/hu_HU.UTF-8
 hu_HU.UTF-8
 ..
-
-# ./usr/share/locale/hy_AM.ARMSCII-8
 hy_AM.ARMSCII-8
 ..
-
-# ./usr/share/locale/hy_AM.UTF-8
 hy_AM.UTF-8
 ..
-
-# ./usr/share/locale/is_IS.ISO8859-1
 is_IS.ISO8859-1
 ..
-
-# ./usr/share/locale/is_IS.ISO8859-15
 is_IS.ISO8859-15
 ..
-
-# ./usr/share/locale/is_IS.UTF-8
 is_IS.UTF-8
 ..
-
-# ./usr/share/locale/it_CH.ISO8859-1
 it_CH.ISO8859-1
 ..
-
-# ./usr/share/locale/it_CH.ISO8859-15
 it_CH.ISO8859-15
 ..
-
-# ./usr/share/locale/it_CH.UTF-8
 it_CH.UTF-8
 ..
-
-# ./usr/share/locale/it_IT.ISO8859-1
 it_IT.ISO8859-1
 ..
-
-# ./usr/share/locale/it_IT.ISO8859-15
 it_IT.ISO8859-15
 ..
-
-# ./usr/share/locale/it_IT.UTF-8
 it_IT.UTF-8
 ..
-
-# ./usr/share/locale/ja_JP.SJIS
 ja_JP.SJIS
 ..
-
-# ./usr/share/locale/ja_JP.UTF-8
 ja_JP.UTF-8
 ..
-
-# ./usr/share/locale/ja_JP.eucJP
 ja_JP.eucJP
 ..
-
-# ./usr/share/locale/kk_KZ.PT154
 kk_KZ.PT154
 ..
-
-# ./usr/share/locale/kk_KZ.UTF-8
 kk_KZ.UTF-8
 ..
-
-# ./usr/share/locale/ko_KR.CP949
 ko_KR.CP949
 ..
-
-# ./usr/share/locale/ko_KR.UTF-8
 ko_KR.UTF-8
 ..
-
-# ./usr/share/locale/ko_KR.eucKR
 ko_KR.eucKR
 ..
-
-# ./usr/share/locale/la_LN.ISO8859-1
 la_LN.ISO8859-1
 ..
-
-# ./usr/share/locale/la_LN.ISO8859-13
 la_LN.ISO8859-13
 ..
-
-# ./usr/share/locale/la_LN.ISO8859-15
 la_LN.ISO8859-15
 ..
-
-# ./usr/share/locale/la_LN.ISO8859-2
 la_LN.ISO8859-2
 ..
-
-# ./usr/share/locale/la_LN.ISO8859-4
 la_LN.ISO8859-4
 ..
-
-# ./usr/share/locale/la_LN.US-ASCII
 la_LN.US-ASCII
 ..
-
-# ./usr/share/locale/lt_LT.ISO8859-13
 lt_LT.ISO8859-13
 ..
-
-# ./usr/share/locale/lt_LT.ISO8859-4
 lt_LT.ISO8859-4
 ..
-
-# ./usr/share/locale/lt_LT.UTF-8
 lt_LT.UTF-8
 ..
-
-# ./usr/share/locale/lv_LV.ISO8859-13
 lv_LV.ISO8859-13
 ..
-
-# ./usr/share/locale/lv_LV.UTF-8
 lv_LV.UTF-8
 ..
-
-# ./usr/share/locale/mn_MN.UTF-8
 mn_MN.UTF-8
 ..
-
-# ./usr/share/locale/nb_NO.ISO8859-1
 nb_NO.ISO8859-1
 ..
-
-# ./usr/share/locale/nb_NO.ISO8859-15
 nb_NO.ISO8859-15
 ..
-
-# ./usr/share/locale/nb_NO.UTF-8
 nb_NO.UTF-8
 ..
-
-# ./usr/share/locale/nl_BE.ISO8859-1
 nl_BE.ISO8859-1
 ..
-
-# ./usr/share/locale/nl_BE.ISO8859-15
 nl_BE.ISO8859-15
 ..
-
-# ./usr/share/locale/nl_BE.UTF-8
 nl_BE.UTF-8
 ..
-
-# ./usr/share/locale/nl_NL.ISO8859-1
 nl_NL.ISO8859-1
 ..
-
-# ./usr/share/locale/nl_NL.ISO8859-15
 nl_NL.ISO8859-15
 ..
-
-# ./usr/share/locale/nl_NL.UTF-8
 nl_NL.UTF-8
 ..
-
-# ./usr/share/locale/nn_NO.ISO8859-1
 nn_NO.ISO8859-1
 ..
-
-# ./usr/share/locale/nn_NO.ISO8859-15
 nn_NO.ISO8859-15
 ..
-
-# ./usr/share/locale/nn_NO.UTF-8
 nn_NO.UTF-8
 ..
-
-# ./usr/share/locale/no_NO.ISO8859-1
 no_NO.ISO8859-1
 ..
-
-# ./usr/share/locale/no_NO.ISO8859-15
 no_NO.ISO8859-15
 ..
-
-# ./usr/share/locale/no_NO.UTF-8
 no_NO.UTF-8
 ..
-
-# ./usr/share/locale/pl_PL.ISO8859-2
 pl_PL.ISO8859-2
 ..
-
-# ./usr/share/locale/pl_PL.UTF-8
 pl_PL.UTF-8
 ..
-
-# ./usr/share/locale/pt_BR.ISO8859-1
 pt_BR.ISO8859-1
 ..
-
-# ./usr/share/locale/pt_BR.UTF-8
 pt_BR.UTF-8
 ..
-
-# ./usr/share/locale/pt_PT.ISO8859-1
 pt_PT.ISO8859-1
 ..
-
-# ./usr/share/locale/pt_PT.ISO8859-15
 pt_PT.ISO8859-15
 ..
-
-# ./usr/share/locale/pt_PT.UTF-8
 pt_PT.UTF-8
 ..
-
-# ./usr/share/locale/ro_RO.ISO8859-2
 ro_RO.ISO8859-2
 ..
-
-# ./usr/share/locale/ro_RO.UTF-8
 ro_RO.UTF-8
 ..
-
-# ./usr/share/locale/ru_RU.CP1251
 ru_RU.CP1251
 ..
-
-# ./usr/share/locale/ru_RU.CP866
 ru_RU.CP866
 ..
-
-# ./usr/share/locale/ru_RU.ISO8859-5
 ru_RU.ISO8859-5
 ..
-
-# ./usr/share/locale/ru_RU.KOI8-R
 ru_RU.KOI8-R
 ..
-
-# ./usr/share/locale/ru_RU.UTF-8
 ru_RU.UTF-8
 ..
-
-# ./usr/share/locale/sk_SK.ISO8859-2
 sk_SK.ISO8859-2
 ..
-
-# ./usr/share/locale/sk_SK.UTF-8
 sk_SK.UTF-8
 ..
-
-# ./usr/share/locale/sl_SI.ISO8859-2
 sl_SI.ISO8859-2
 ..
-
-# ./usr/share/locale/sl_SI.UTF-8
 sl_SI.UTF-8
 ..
-
-# ./usr/share/locale/sr_YU.ISO8859-2
 sr_YU.ISO8859-2
 ..
-
-# ./usr/share/locale/sr_YU.ISO8859-5
 sr_YU.ISO8859-5
 ..
-
-# ./usr/share/locale/sr_YU.UTF-8
 sr_YU.UTF-8
 ..
-
-# ./usr/share/locale/sv_SE.ISO8859-1
 sv_SE.ISO8859-1
 ..
-
-# ./usr/share/locale/sv_SE.ISO8859-15
 sv_SE.ISO8859-15
 ..
-
-# ./usr/share/locale/sv_SE.UTF-8
 sv_SE.UTF-8
 ..
-
-# ./usr/share/locale/tr_TR.ISO8859-9
 tr_TR.ISO8859-9
 ..
-
-# ./usr/share/locale/tr_TR.UTF-8
 tr_TR.UTF-8
 ..
-
-# ./usr/share/locale/uk_UA.CP1251
 uk_UA.CP1251
 ..
-
-# ./usr/share/locale/uk_UA.ISO8859-5
 uk_UA.ISO8859-5
 ..
-
-# ./usr/share/locale/uk_UA.KOI8-U
 uk_UA.KOI8-U
 ..
-
-# ./usr/share/locale/uk_UA.UTF-8
 uk_UA.UTF-8
 ..
-
-# ./usr/share/locale/zh_CN.GB18030
 zh_CN.GB18030
 ..
-
-# ./usr/share/locale/zh_CN.GB2312
 zh_CN.GB2312
 ..
-
-# ./usr/share/locale/zh_CN.GBK
 zh_CN.GBK
 ..
-
-# ./usr/share/locale/zh_CN.UTF-8
 zh_CN.UTF-8
 ..
-
-# ./usr/share/locale/zh_CN.eucCN
 zh_CN.eucCN
 ..
-
-# ./usr/share/locale/zh_HK.Big5HKSCS
 zh_HK.Big5HKSCS
 ..
-
-# ./usr/share/locale/zh_HK.UTF-8
 zh_HK.UTF-8
 ..
-
-# ./usr/share/locale/zh_TW.Big5
 zh_TW.Big5
 ..
-
-# ./usr/share/locale/zh_TW.UTF-8
 zh_TW.UTF-8
 ..
-
-
-# ./usr/share/locale
 ..
 
 # ./usr/share/man
 man
-
-# ./usr/share/man/man1
 man1
-
 amd64
 ..
-
-# ./usr/share/man/man1
 ..
 
 # ./usr/share/man/man2
 man2
-
 amd64
 ..
-
-# ./usr/share/man/man2
 ..
 
 # ./usr/share/man/man3
 man3
-
-# ./usr/share/man/man3
 ..
-
-# ./usr/share/man/man3p
 man3p
-# ./usr/share/man/man3p
 ..
 
 # ./usr/share/man/man4
 man4
-
 amd64
 ..
 armv7
 ..
-
-# ./usr/share/man/man4
 ..
 
 # ./usr/share/man/man5
 man5
-
 amd64
 ..
-
-# ./usr/share/man/man5
 ..
 
 # ./usr/share/man/man6
 man6
-# ./usr/share/man/man6
 ..
-
-# ./usr/share/man/man7
 man7
-# ./usr/share/man/man7
 ..
 
 # ./usr/share/man/man8
 man8
-
 amd64
 ..
 armv7
 ..
-
-# ./usr/share/man/man8
 ..
 
 # ./usr/share/man/man9
 man9
-# ./usr/share/man/man9
 ..
-
-# ./usr/share/man
 ..
 
 # ./usr/share/misc
 misc
-# ./usr/share/misc
 ..
 
-# ./usr/share/mk
 mk
-# ./usr/share/mk
 ..
 
-# ./usr/share/nls
 nls
-# ./usr/share/nls
 ..
 
 # ./usr/share/snmp
 snmp
-
-# ./usr/share/snmp/mibs
 mibs
-# ./usr/share/snmp/mibs
 ..
-
-# ./usr/share/snmp
 ..
 
 # ./usr/share/tabset
 tabset
-# ./usr/share/tabset
 ..
 
 # ./usr/share/vi
 vi
-
-# ./usr/share/vi/catalog
 catalog
-# ./usr/share/vi/catalog
 ..
-
-# ./usr/share/vi
 ..
 
 # ./usr/share/zoneinfo
 zoneinfo         gname=bin uname=root mode=0555
-
-# ./usr/share/zoneinfo/Australia
 Australia        gname=bin uname=root mode=0555
-# ./usr/share/zoneinfo/Australia
 ..
-
-# ./usr/share/zoneinfo/Brazil
 Brazil           gname=bin uname=root mode=0555
-# ./usr/share/zoneinfo/Brazil
 ..
-
-# ./usr/share/zoneinfo/Canada
 Canada           gname=bin uname=root mode=0555
-# ./usr/share/zoneinfo/Canada
 ..
-
-# ./usr/share/zoneinfo/Chile
 Chile            gname=bin uname=root mode=0555
-# ./usr/share/zoneinfo/Chile
 ..
-
-# ./usr/share/zoneinfo/Mexico
 Mexico           gname=bin uname=root mode=0555
-# ./usr/share/zoneinfo/Mexico
 ..
-
-# ./usr/share/zoneinfo/US
 US               gname=bin uname=root mode=0555
-# ./usr/share/zoneinfo/US
 ..
-
-# ./usr/share/zoneinfo
 ..
-
-# ./usr/share
 ..
 
 # ./usr/src
 src		gname=wsrc mode=0775
-# ./usr/src
 ..
 
-# ./usr/xenocara
 xenocara	gname=wsrc mode=0775
-# ./usr/xenocara
 ..
 
-# ./usr/xobj
 xobj		gname=wsrc mode=0775
-# ./usr/xobj
 ..
-
-# ./usr
 ..
 
 # ./var
 var
-
-# ./var/account
 account
-# ./var/account
 ..
-
-# ./var/authpf
 authpf		uname=root gname=authpf mode=0770
-# ./var/authpf
 ..
 
 # ./var/empty
 empty		mode=0755
-
-# ./var/empty/dev
 dev		mode=0555
-# ./var/empty/dev
 ..
-
-# ./var/empty
 ..
 
 # ./var/backups
 backups		mode=0700
-# ./var/backups
 ..
-
-# ./var/yp
 yp		mode=755
-# ./var/yp
 ..
-
-# ./var/crash
 crash		mode=770
-# ./var/crash
 ..
 
 # ./var/cron
 cron		mode=0555
-
-# ./var/cron/atjobs
 atjobs		gname=crontab mode=01770
-
-# ./var/cron/tabs
 ..
-
-# ./var/cron/tabs
 tabs		gname=crontab mode=01730
-
-# ./var/cron/tabs
 ..
-
-# ./var/cron
 ..
 
 # ./var/db
 db
-
-# ./var/db/ldap
 ldap		mode=0700
-# ./var/db/ldap
 ..
-
-# ./var/db/ns
 ns
-# ./var/db/ns
 ..
-
-# ./var/db/pkg
 pkg
-# ./var/db/pkg
 ..
-
-# ./var/db/sysmerge
 sysmerge
-# ./var/db/sysmerge
 ..
-
-# ./var/db/yubikey
-yubikey		gname=auth mode=0770
-# ./var/db/yubikey
+yubikey		uname=root gname=auth mode=0770
 ..
-
-# ./var/db
 ..
 
 # ./var/games
 games            uname=root gname=games mode=0775
-
-# ./var/games/hackdir
 hackdir          uname=root gname=games mode=0775
-
-# ./var/games/hackdir/save
 save		 uname=root gname=games mode=0770
-# ./var/games/hackdir/save
+..
 ..
 
-# ./var/games/hackdir
-..
-
-# ./var/games/hackdir/save		XXX
+# ./var/games/save
 save		uname=root gname=games mode=0775
-# ./var/games/hackdir/save		XXX
 ..
-
-# ./var/games/phantasia
 phantasia        uname=root gname=games mode=0775
-# ./var/games/phantasia
 ..
-
-# ./var/games
 ..
 
 # ./var/log
 log
-
-# ./var/log/rdist
 rdist
-# ./var/log/rdist
 ..
-
-# ./var/log
 ..
 
 # ./var/mail
 mail
-# ./var/mail
 ..
 
 # ./var/named
 named
-
-# ./var/named/dev
 dev
-# ./var/named/dev
 ..
-
-# ./var/named/etc
 etc		uname=root gname=named mode=0750
-# ./var/named/etc
 ..
-
-# ./var/named/master
 master
-# ./var/named/master
 ..
-
-# ./var/named/slave
 slave		uname=root gname=named mode=0775
-# ./var/named/slave
 ..
-
-# ./var/named/standard
 standard
-# ./var/named/standard
 ..
-
-# ./var/named/tmp
 tmp		uname=root gname=named mode=0775
-# ./var/named/tmp
 ..
-
-# ./var/named
 ..
 
 # ./var/nsd
 nsd
-
-# ./var/nsd/db
 db		uname=root gname=_nsd mode=0775
-# ./var/nsd/db
 ..
-
-# ./var/nsd/dev
 dev
-# ./var/nsd/dev
 ..
-
-# ./var/nsd/etc
 etc		uname=root gname=_nsd mode=0750
-# ./var/nsd/etc
 ..
 
 # ./var/nsd/run
 run		uname=root gname=_nsd mode=0775
-
-# ./var/nsd/run/xfr
 xfr		uname=root gname=_nsd mode=0770
-# ./var/nsd/run/xfr
 ..
-
-# ./var/nsd/run
 ..
 
 # ./var/nsd/zones
 zones		uname=root gname=wheel mode=0755
-# ./var/nsd/zones
 ..
-
-# ./var/nsd
 ..
 
 # ./var/quotas
 quotas            gname=operator mode=0750
-# ./var/quotas
 ..
-
-# ./var/run
 run
-# ./var/run
 ..
-
-# ./var/rwho
 rwho
-# ./var/rwho
 ..
 
 # ./var/spool
 spool
-
-# ./var/spool/clientmqueue
 clientmqueue	mode=0770 uname=smmsp gname=smmsp
-# ./var/spool/clientmqueue
 ..
 
 # ./var/spool/ftp
 ftp		mode=0555
-
-# ./var/spool/ftp/bin
 bin		mode=0511
-# ./var/spool/ftp/bin
 ..
-
-# ./var/spool/ftp/etc
 etc		mode=0511
-# ./var/spool/ftp/etc
 ..
-
-# ./var/spool/ftp/hidden
 hidden           mode=0111
-# ./var/spool/ftp/hidden
 ..
-
-# ./var/spool/ftp/pub			XXX
 #pub		mode=0555
-# ./var/spool/ftp/pub			XXX
 #..
-
-# ./var/spool/ftp
 ..
 
 # ./var/spool/lock
 lock		uname=uucp gname=dialer mode=1775
-# ./var/spool/lock
 ..
-
-# ./var/spool/mqueue
 mqueue		mode=0700
-# ./var/spool/mqueue
 ..
-
-# ./var/spool/output
 output		gname=daemon mode=0775
-# ./var/spool/output
 ..
-
-# ./var/spool/smtpd
 smtpd		type=dir uname=root gname=wheel mode=0711
-# ./var/spool/smtpd
 ..
-
-# ./var/spool/sockets
 #sockets	mode=777
-# ./var/spool/sockets
 #..
-
-# ./var/spool/uucp
 uucp		uname=uucp gname=daemon
-# ./var/spool/uucp
 ..
-
-# ./var/spool/uucppublic
 uucppublic	uname=uucp gname=daemon mode=0755
-# ./var/spool/uucppublic
 ..
-
-/set uname=root gname=wheel
-# ./var/spool
 ..
 
 # ./var/tmp
 tmp        mode=01777
-
-# ./var/tmp/vi.recover
 vi.recover	 mode=01777
-# ./var/tmp/vi.recover
 ..
-
-# ./var/tmp
 ..
 
 # ./var/unbound
 unbound
-
-# ./var/unbound/dev
 dev		uname=root gname=wheel mode=0755
-# ./var/unbound/dev
 ..
-
-# ./var/unbound/etc
 etc		uname=root gname=wheel mode=0755
-# ./var/unbound/etc
 ..
-
-# ./var/unbound/db
 db		uname=root gname=_unbound mode=0775
-# ./var/unbound/db
+..
 ..
 
-# ./var/unbound
-..
-
-# ./www
+# ./var/www
 www type=dir uname=root gname=daemon mode=755
-
-# ./www/cache
 cache type=dir uname=www gname=daemon mode=1700
-
-# ./www
 ..
-
-# ./www/dev
 dev type=dir uname=root gname=daemon mode=755
-
-# ./www
 ..
-
-#./www/cgi-bin
 cgi-bin  type=dir uname=root gname=daemon mode=755
-#./www/cgi-bin
 ..
-
-#./www/htdocs
 htdocs  type=dir uname=root gname=daemon mode=755
-
-#./www/htdocs
 ..
-
-#./www/logs
 logs  type=dir uname=root gname=daemon mode=755
-#./www/logs
 ..
-
-#./www/conf
 conf  type=dir uname=root gname=daemon mode=755
-
-#./www/conf
 ..
-
-#./www/bin
 bin  type=dir uname=root gname=daemon mode=755
-#./www/bin
 ..
-
-#./www/run
 run  type=dir uname=root gname=daemon mode=755
-#./www/run
+..
 ..
 
-#./www
-..
-
-#./var/audit
+# ./var/audit
 audit type=dir uname=root gname=wheel mode=2770
-#./var/audit
 ..
-
-# ./var
 ..
