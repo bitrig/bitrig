@@ -263,19 +263,6 @@ sdmmc*	at sdhc?		# SD/MMC bus
 rtsx*   at pci?                 # Realtek SD Card Reader
 sdmmc*  at rtsx?                # SD/MMC bus
 
-# Bluetooth controllers
-#sbt*	at sdmmc? disable	# SDIO Bluetooth
-#bthub*	at sbt?
-#ubt*	at uhub? disable	# USB Bluetooth
-#bthub*	at ubt?
-#bthidev* at bthub?		# Bluetooth HID support
-#btkbd*	at bthidev?
-#btms*	at bthidev?
-#wskbd*	at btkbd? mux 1
-#wsmouse* at btms? mux 0
-#btsco*	at bthub? 		# Bluetooth audio support
-#audio*	at btsco?
-
 isadma0	at isa?
 
 option	WSDISPLAY_COMPAT_USL		# VT handling
