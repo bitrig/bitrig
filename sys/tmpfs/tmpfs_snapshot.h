@@ -19,7 +19,7 @@
 #define _TMPFS_TMPFS_VNOPS_H_
 
 #define TMPFS_SNAP_MAGIC	"tmpfs\n"
-#define TMPFS_SNAP_VERSION	0
+#define TMPFS_SNAP_VERSION	1
 
 typedef struct __attribute__((packed)) {
 	char		ts_magic[7];
@@ -90,7 +90,7 @@ int	tmpfs_snap_file_io(struct vnode *, enum uio_rw, const tmpfs_node_t *,
  * Functions to dump (generate) a snapshot.
  */
 
-void	tmpfs_snap_fill_hdr(tmpfs_snap_node_t *, const tmpfs_dirent_t *);
+void	tmpfs_snap_fill_hdr(tmpfs_snap_node_t *, const tmpfs_node_t *);
 int	tmpfs_snap_dump_hdr(struct vnode *, off_t *, tmpfs_snap_node_t *);
 int	tmpfs_snap_dump_file(struct vnode *, off_t *, tmpfs_snap_node_t *,
 	    const tmpfs_dirent_t *);
@@ -100,6 +100,8 @@ int	tmpfs_snap_dump_dev(struct vnode *, off_t *, tmpfs_snap_node_t *,
 	    const tmpfs_dirent_t *);
 int	tmpfs_snap_dump_dirent(struct vnode *, off_t *, tmpfs_snap_node_t *,
 	    const tmpfs_dirent_t *);
+int	tmpfs_snap_dump_root(struct vnode *, off_t *, const tmpfs_mount_t *,
+	    tmpfs_snap_node_t *);
 
 /*
  * Functions to load a snapshot.

@@ -82,22 +82,18 @@ tmpfs_snap_file_io(struct vnode *vp, enum uio_rw rw, const tmpfs_node_t *node,
 }
 
 void
-tmpfs_snap_fill_hdr(tmpfs_snap_node_t *tnhdr, const tmpfs_dirent_t *td)
+tmpfs_snap_fill_hdr(tmpfs_snap_node_t *tnhdr, const tmpfs_node_t *node)
 {
-	KASSERT(td->td_namelen <= MAXNAMLEN);
-
-	memcpy(tnhdr->tsn_name, td->td_name, td->td_namelen);
-
-	tnhdr->tsn_id = td->td_node->tn_id;
-	tnhdr->tsn_uid = td->td_node->tn_uid;
-	tnhdr->tsn_gid = td->td_node->tn_gid;
-	tnhdr->tsn_mode = td->td_node->tn_mode;
-	tnhdr->tsn_type = tmpfs_snap_type_hdr(td->td_node->tn_type);
-	tnhdr->tsn_flags = tmpfs_snap_flags_hdr(td->td_node->tn_flags);
-	/* tnhdr->tsn_btime = TMPFS_TS_TO_TST(td->td_node->tn_btime); */
-	tnhdr->tsn_atime = TMPFS_TS_TO_TST(td->td_node->tn_atime);
-	tnhdr->tsn_mtime = TMPFS_TS_TO_TST(td->td_node->tn_mtime);
-	tnhdr->tsn_ctime = TMPFS_TS_TO_TST(td->td_node->tn_ctime);
+	tnhdr->tsn_id = node->tn_id;
+	tnhdr->tsn_uid = node->tn_uid;
+	tnhdr->tsn_gid = node->tn_gid;
+	tnhdr->tsn_mode = node->tn_mode;
+	tnhdr->tsn_type = tmpfs_snap_type_hdr(node->tn_type);
+	tnhdr->tsn_flags = tmpfs_snap_flags_hdr(node->tn_flags);
+	/* tnhdr->tsn_btime = TMPFS_TS_TO_TST(node->tn_btime); */
+	tnhdr->tsn_atime = TMPFS_TS_TO_TST(node->tn_atime);
+	tnhdr->tsn_mtime = TMPFS_TS_TO_TST(node->tn_mtime);
+	tnhdr->tsn_ctime = TMPFS_TS_TO_TST(node->tn_ctime);
 }
 
 int
@@ -164,7 +160,10 @@ int
 tmpfs_snap_dump_dirent(struct vnode *vp, off_t *off, tmpfs_snap_node_t *tnhdr,
     const tmpfs_dirent_t *td)
 {
-	tmpfs_snap_fill_hdr(tnhdr, td);
+	KASSERT(td->td_namelen <= MAXNAMLEN);
+	memcpy(tnhdr->tsn_name, td->td_name, td->td_namelen);
+
+	tmpfs_snap_fill_hdr(tnhdr, td->td_node);
 
 	switch (td->td_node->tn_type) {
 	case VREG:
@@ -184,6 +183,20 @@ tmpfs_snap_dump_dirent(struct vnode *vp, off_t *off, tmpfs_snap_node_t *tnhdr,
 	}
 
 	return (EOPNOTSUPP);
+}
+
+int
+tmpfs_snap_dump_root(struct vnode *vp, off_t *off, const tmpfs_mount_t *tmp,
+    tmpfs_snap_node_t *tnhdr)
+{
+	KASSERT(tmp->tm_root != NULL);
+
+	tnhdr->tsn_parent = tmp->tm_root->tn_id;
+	strlcpy(tnhdr->tsn_name, "/", sizeof(tnhdr->tsn_name));
+
+	tmpfs_snap_fill_hdr(tnhdr, tmp->tm_root);
+
+	return (tmpfs_snap_dump_hdr(vp, off, tnhdr));
 }
 
 /*
@@ -271,7 +284,13 @@ tmpfs_snap_dump(struct mount *mp, const char *path, struct proc *p)
 	if (error)
 		goto out;
 
-	/* Dump all nodes, except the file systems root node. */
+	/* Dump root node. */
+	bzero(&tnhdr, sizeof(tnhdr));
+	error = tmpfs_snap_dump_root(vp, &off, tmp, &tnhdr);
+	if (error)
+		goto out;
+
+	/* Dump all other nodes. */
 	while (tmpfs_snap_hierwalk(tmp, &td, &parent) == 0) {
 		bzero(&tnhdr, sizeof(tnhdr));
 		tnhdr.tsn_parent = parent->tn_id;
@@ -352,6 +371,13 @@ tmpfs_snap_alloc_node(tmpfs_mount_t *tmp, const tmpfs_snap_node_t *tnhdr,
 {
 	int error;
 
+	if (tnhdr->tsn_id == tnhdr->tsn_parent) {
+		if (tnhdr->tsn_id != 2)
+			return (EFTYPE);
+		*node = tmp->tm_root;
+		return (0);
+	}
+
 	error = tmpfs_alloc_node(tmp, tmpfs_snap_type_node(tnhdr->tsn_type),
 	    tnhdr->tsn_uid, tnhdr->tsn_gid, tnhdr->tsn_mode, target, rdev,
 	    node);
@@ -372,6 +398,9 @@ tmpfs_snap_attach_node(tmpfs_mount_t *tmp, tmpfs_snap_node_t *tnhdr,
 	tmpfs_node_t *dnode = NULL;
 	tmpfs_dirent_t *de;
 	int error;
+
+	if (node == tmp->tm_root)
+		return (0);	/* No need to attach root. */
 
 	tnhdr->tsn_name[sizeof(tnhdr->tsn_name) - 1] = '\0';
 	error = tmpfs_alloc_dirent(tmp, tnhdr->tsn_name,
@@ -495,7 +524,7 @@ tmpfs_snap_load_node(struct vnode *vp, struct mount *mp, off_t *off)
 		return (error);
 
 	TMPFS_SNAP_NODE_NTOH(&hdr);
-	if (hdr.tsn_id <= 2)
+	if (hdr.tsn_id < 2)
 		return (EFTYPE);
 
 	vtype = tmpfs_snap_type_node(hdr.tsn_type);
