@@ -261,9 +261,7 @@ tmpfsrdstrategy(struct buf *bp)
 		goto bad;
 	}
 
-	len = bp->b_bcount;
-	if (len > tmpfsrd_size - off)
-		len = tmpfsrd_size - off;
+	len = MIN(bp->b_bcount, tmpfsrd_size - off);
 
 	memcpy(bp->b_data, tmpfsrd_disk + off, len);
 
