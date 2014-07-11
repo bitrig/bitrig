@@ -37,8 +37,6 @@ options	FIFO		# FIFOs; RECOMMENDED
 option	EXT2FS		# Second Extended Filesystem
 #option	NFSCLIENT	# NFS
 
-makeoptions	KERNEL_BASE_VIRT="0xc0300000"
-
 options		APERTURE
 
 # estimated number of users

@@ -72,8 +72,7 @@ SYSTEM_OBJ=	${SYSTEM_HEAD} ${OBJS}
 SYSTEM_DEP=	Makefile ${SYSTEM_OBJ}
 SYSTEM_LD_HEAD=	@rm -f $@
 SYSTEM_LD_HEAD+=; \
-		cat ${_archdir}/conf/kern.ldscript | sed -e \
-		    's/@KERNEL_BASE_VIRT@/${KERNEL_BASE_VIRT}/' > ldscript
+		cat ${_archdir}/conf/kern.ldscript > ldscript
 
 SYSTEM_LD=	@echo ${LD} ${LINKFLAGS} -o $@ '$${SYSTEM_HEAD} vers.o $${OBJS}'; \
 		${LD} ${LINKFLAGS} -o $@ ${SYSTEM_HEAD} vers.o ${OBJS}
