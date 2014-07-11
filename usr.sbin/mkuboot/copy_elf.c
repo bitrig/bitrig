@@ -56,6 +56,7 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 	Elf_Shdr *shp, *wshp;
 	Elf_Addr esym = 0, esymval;
 	Elf_Addr eramdiskval = 0, ramdiskalign, ramdisksize = 0;
+	Elf_Addr randomdata = 0;
 	int i, sz, havesyms, haveramdisk;
 
 	nbytes = read(ifd, &ehdr, sizeof ehdr);
@@ -96,6 +97,9 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 			ramdisksize = elfoff2h(phdr.p_filesz);
 			ramdiskalign = elfoff2h(phdr.p_align);
 		}
+		if (letoh32(phdr.p_type) == PT_OPENBSD_RANDOMIZE) {
+			randomdata = elfoff2h(phdr.p_vaddr);
+		}
 	}
 
 	/* ok, we need to write the elf header and section header
@@ -109,7 +113,8 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 	off = roundup((sizeof(Elf_Ehdr) + sz), sizeof(Elf_Addr));
 	for (i = 0; i < letoh16(elf.e_shnum); i++) {
 		if (esym == 0 && elfoff2h(shp[i].sh_flags) & SHF_WRITE &&
-		    elfoff2h(shp[i].sh_flags) & SHF_ALLOC)
+		    elfoff2h(shp[i].sh_flags) & SHF_ALLOC &&
+		    elfoff2h(shp[i].sh_addr) != randomdata)
 			esym = elfoff2h(shp[i].sh_addr);
 
 		if (letoh32(shp[i].sh_type) == SHT_SYMTAB ||
