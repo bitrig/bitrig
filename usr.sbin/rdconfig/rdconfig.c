@@ -39,14 +39,37 @@ int fs_fd;
 #define xerror(...)	errx(EXIT_FAILURE, __VA_ARGS__)
 
 void
+xread(int fd, void *buf, size_t nbytes, off_t offset)
+{
+	ssize_t n = pread(fd, buf, nbytes, offset);
+	if (n < 0 || (size_t)n != nbytes)
+		error("pread");
+}
+
+void
+xwrite(int fd, void *buf, size_t nbytes, off_t offset)
+{
+	ssize_t n = pwrite(fd, buf, nbytes, offset);
+	if (n < 0 || (size_t)n != nbytes)
+		error("pwrite");
+}
+
+void
+xseek(int fd, Elf_Off offset, int whence)
+{
+	off_t n = lseek(fd, offset, whence);
+	if (n < 0 || (Elf_Off)n != offset)
+		error("lseek");
+}
+
+void
 read_ehdr(Elf_Ehdr **ehdr)
 {
 	*ehdr = calloc(1, sizeof(**ehdr));
 	if (*ehdr == NULL)
 		error("calloc ehdr");
 
-	if (pread(kern_fd, *ehdr, sizeof(**ehdr), 0) != sizeof(**ehdr))
-		error("%s: read ehdr", kern_path);
+	xread(kern_fd, *ehdr, sizeof(**ehdr), 0);
 
 	if (IS_ELF(**ehdr) == 0)
 		xerror("%s: not an elf binary", kern_path);
@@ -65,9 +88,7 @@ read_ehdr(Elf_Ehdr **ehdr)
 void
 write_ehdr(Elf_Ehdr *ehdr)
 {
-	if (pwrite(kern_fd, ehdr, sizeof(*ehdr), 0) != sizeof(*ehdr))
-		error("%s: write ehdr", kern_path);
-
+	xwrite(kern_fd, ehdr, sizeof(*ehdr), 0);
 	free(ehdr);
 }
 
@@ -81,8 +102,7 @@ read_phdr(const Elf_Ehdr *ehdr, Elf_Phdr **phdr)
 		error("calloc phdr");
 
 	phdr_size = (size_t)ehdr->e_phnum * ehdr->e_phentsize;
-	if (pread(kern_fd, *phdr, phdr_size, ehdr->e_phoff) != phdr_size)
-		error("%s: read phdr", kern_path);
+	xread(kern_fd, *phdr, phdr_size, ehdr->e_phoff);
 }
 
 void
@@ -94,9 +114,7 @@ write_phdr(const Elf_Ehdr *ehdr, Elf_Phdr *phdr)
 		xerror("%s: too many program header entries", kern_path);
 	phdr_size = (size_t)ehdr->e_phnum * ehdr->e_phentsize;
 
-	if (pwrite(kern_fd, phdr, phdr_size, ehdr->e_phoff) != phdr_size)
-		error("%s: write phdr", kern_path);
-
+	xwrite(kern_fd, phdr, phdr_size, ehdr->e_phoff);
 	free(phdr);
 }
 
@@ -110,8 +128,7 @@ read_shdr(const Elf_Ehdr *ehdr, Elf_Shdr **shdr)
 		error("calloc shdr");
 
 	shdr_size = (size_t)ehdr->e_shnum * ehdr->e_shentsize;
-	if (pread(kern_fd, *shdr, shdr_size, ehdr->e_shoff) != shdr_size)
-		error("%s: read shdr", kern_path);
+	xread(kern_fd, *shdr, shdr_size, ehdr->e_shoff);
 }
 
 void
@@ -123,9 +140,7 @@ write_shdr(const Elf_Ehdr *ehdr, Elf_Shdr *shdr)
 		xerror("%s: too many section header entries", kern_path);
 	shdr_size = (size_t)ehdr->e_shnum * ehdr->e_shentsize;
 
-	if (pwrite(kern_fd, shdr, shdr_size, ehdr->e_shoff) != shdr_size)
-		error("%s: write shdr", kern_path);
-
+	xwrite(kern_fd, shdr, shdr_size, ehdr->e_shoff);
 	free(shdr);
 }
 
@@ -304,8 +319,7 @@ extract(const Elf_Phdr *phdr, int i)
 	if (buf == NULL)
 		error("calloc buf");
 
-	if (lseek(kern_fd, phdr[i].p_offset, SEEK_SET) != phdr[i].p_offset)
-		error("lseek %s", kern_path);
+	xseek(kern_fd, phdr[i].p_offset, SEEK_SET);
 
 	while (n < phdr[i].p_filesz) {
 		ssize_t chunksiz = min(phdr[i].p_filesz - n, CHUNKSIZ);
@@ -337,8 +351,7 @@ replace(Elf_Ehdr *ehdr, Elf_Phdr *phdr)
 		error("truncate %s", kern_path);
 
 	off = roundup(off, PAGE_SIZE);
-	if (lseek(kern_fd, off, SEEK_SET) != off)
-		error("lseek %s", kern_path);
+	xseek(kern_fd, off, SEEK_SET);
 
 	phdr[slot].p_offset = off;
 	phdr[slot].p_filesz = drain_fs();
@@ -374,8 +387,7 @@ insert(Elf_Ehdr *ehdr, Elf_Phdr *phdr)
 	if (phdr == NULL)
 		error("realloc phdr");
 
-	if (lseek(kern_fd, off, SEEK_SET) != off)
-		error("lseek %s", kern_path);
+	xseek(kern_fd, off, SEEK_SET);
 
 	slot = ehdr->e_phnum++;
 	bzero(&phdr[slot], sizeof(phdr[slot]));
