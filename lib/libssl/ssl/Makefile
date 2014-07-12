@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.46 2014/05/29 19:58:48 beck Exp $
+# $OpenBSD: Makefile,v 1.47 2014/07/12 03:27:23 deraadt Exp $
 
 LIB=	ssl
 
@@ -13,7 +13,7 @@ CFLAGS+= -Werror
 CFLAGS+= -Wno-pointer-sign
 CFLAGS+= -DLIBRESSL_INTERNAL
 CFLAGS+= -DTERMIOS -DANSI_SOURCE
-CFLAGS+= -DOPENSSL_NO_RC5 -DOPENSSL_NO_KRB5
+CFLAGS+= -DOPENSSL_NO_RC5
 CFLAGS+= -I${SSL_SRC}
 
 SRCS=\
