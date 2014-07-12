@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.191 2014/07/11 21:50:28 tedu Exp $
+#	$OpenBSD: Makefile,v 1.192 2014/07/12 16:25:08 guenther Exp $
 #	$NetBSD: Makefile,v 1.59 1996/05/15 21:36:43 jtc Exp $
 
 #	@(#)Makefile	5.45.1.1 (Berkeley) 5/6/91
@@ -28,7 +28,8 @@ HFILES=	a.out.h ar.h asr.h assert.h bitstring.h blf.h bsd_auth.h \
 HFILES+=	link.h link_elf.h ieeefp.h
 
 MFILES=	frame.h
-LFILES=	fcntl.h syslog.h termios.h stdarg.h stdatomic.h stdint.h varargs.h
+LFILES=	endian.h fcntl.h syslog.h termios.h stdarg.h stdatomic.h stdint.h \
+	varargs.h
 
 DIRS=	arpa protocols rpc rpcsvc xlocale
 LDIRS=	crypto ddb dev isofs miscfs msdosfs net netinet netinet6 \
