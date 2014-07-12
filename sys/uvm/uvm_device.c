@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_device.c,v 1.47 2014/07/11 16:35:40 jsg Exp $	*/
+/*	$OpenBSD: uvm_device.c,v 1.48 2014/07/12 18:44:01 tedu Exp $	*/
 /*	$NetBSD: uvm_device.c,v 1.30 2000/11/25 06:27:59 chs Exp $	*/
 
 /*
@@ -190,7 +190,7 @@ udv_attach(dev_t device, vm_prot_t accessprot, voff_t off, vsize_t size)
 		 */
 		if (lcv) {
 			mtx_leave(&udv_lock);
-			free(udv, M_TEMP);
+			free(udv, M_TEMP, 0);
 			continue;
 		}
 
@@ -267,7 +267,7 @@ again:
 		wakeup(udv);
 	mtx_leave(&udv_lock);
 	mtx_leave(&uobj->vmobjlock);
-	free(udv, M_TEMP);
+	free(udv, M_TEMP, 0);
 }
 
 

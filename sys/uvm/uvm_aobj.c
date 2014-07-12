@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_aobj.c,v 1.66 2014/07/11 16:35:40 jsg Exp $	*/
+/*	$OpenBSD: uvm_aobj.c,v 1.67 2014/07/12 18:44:01 tedu Exp $	*/
 /*	$NetBSD: uvm_aobj.c,v 1.39 2001/02/18 21:19:08 chs Exp $	*/
 
 /*
@@ -410,7 +410,7 @@ uao_free(struct uvm_aobj *aobj)
 				pool_put(&uao_swhash_elt_pool, elt);
 			}
 		}
-		free(aobj->u_swhash, M_UVMAOBJ);
+		free(aobj->u_swhash, M_UVMAOBJ, 0);
 	} else {
 		int i;
 
@@ -426,7 +426,7 @@ uao_free(struct uvm_aobj *aobj)
 				simple_unlock(&uvm.swap_data_lock);
 			}
 		}
-		free(aobj->u_swslots, M_UVMAOBJ);
+		free(aobj->u_swslots, M_UVMAOBJ, 0);
 	}
 
 	/* finally free the aobj itself */
@@ -536,7 +536,7 @@ uao_shrink_hash(struct uvm_object *uobj, int pages)
 		LIST_SWAP(&new_swhash[i], &aobj->u_swhash[i], uao_swhash_elt,
 		    list);
 
-	free(aobj->u_swhash, M_UVMAOBJ);
+	free(aobj->u_swhash, M_UVMAOBJ, 0);
 
 	aobj->u_swhash = new_swhash;
 	aobj->u_pages = pages;
@@ -590,7 +590,7 @@ uao_shrink_convert(struct uvm_object *uobj, int pages)
 		}
 	}
 
-	free(aobj->u_swhash, M_UVMAOBJ);
+	free(aobj->u_swhash, M_UVMAOBJ, 0);
 
 	aobj->u_swslots = new_swslots;
 	aobj->u_pages = pages;
@@ -631,7 +631,7 @@ uao_shrink_array(struct uvm_object *uobj, int pages)
 	for (i = 0; i < pages; i++)
 		new_swslots[i] = aobj->u_swslots[i];
 
-	free(aobj->u_swslots, M_UVMAOBJ);
+	free(aobj->u_swslots, M_UVMAOBJ, 0);
 
 	aobj->u_swslots = new_swslots;
 	aobj->u_pages = pages;
@@ -700,7 +700,7 @@ uao_grow_array(struct uvm_object *uobj, int pages)
 	for (i = 0; i < aobj->u_pages; i++)
 		new_swslots[i] = aobj->u_swslots[i];
 
-	free(aobj->u_swslots, M_UVMAOBJ);
+	free(aobj->u_swslots, M_UVMAOBJ, 0);
 
 	aobj->u_swslots = new_swslots;
 	aobj->u_pages = pages;
@@ -770,7 +770,7 @@ uao_grow_hash(struct uvm_object *uobj, int pages)
 			    uao_swhash_elt, list);
 	}
 
-	free(aobj->u_swhash, M_UVMAOBJ);
+	free(aobj->u_swhash, M_UVMAOBJ, 0);
 
 	aobj->u_swhash = new_swhash;
 	aobj->u_pages = pages;
@@ -817,7 +817,7 @@ uao_grow_convert(struct uvm_object *uobj, int pages)
 		}
 	}
 
-	free(old_swslots, M_UVMAOBJ);
+	free(old_swslots, M_UVMAOBJ, 0);
 	aobj->u_pages = pages;
 
 	return 0;

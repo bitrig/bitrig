@@ -1,4 +1,4 @@
-/*	$OpenBSD: a1xintc.c,v 1.2 2013/10/23 18:01:52 jasper Exp $	*/
+/*	$OpenBSD: a1xintc.c,v 1.4 2014/07/12 18:44:41 tedu Exp $	*/
 /*
  * Copyright (c) 2007,2009 Dale Rahn <drahn@openbsd.org>
  * Copyright (c) 2013 Artturi Alm
@@ -410,7 +410,7 @@ a1xintc_intr_disestablish(void *cookie)
 	if (ih->ih_name != NULL)
 		evcount_detach(&ih->ih_count);
 
-	free(ih, M_DEVBUF);
+	free(ih, M_DEVBUF, 0);
 
 	er = bus_space_read_4(a1xintc_iot, a1xintc_ioh,
 	    INTC_ENABLE_REG(IRQ2REG32(irq)));

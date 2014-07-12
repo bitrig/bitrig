@@ -1,4 +1,4 @@
-/*	$OpenBSD: vfs_subr.c,v 1.216 2014/07/10 12:21:08 mpi Exp $	*/
+/*	$OpenBSD: vfs_subr.c,v 1.217 2014/07/12 18:43:32 tedu Exp $	*/
 /*	$NetBSD: vfs_subr.c,v 1.53 1996/04/22 01:39:13 christos Exp $	*/
 
 /*
@@ -1068,7 +1068,7 @@ vgonel(struct vnode *vp, struct proc *p)
 				vx->v_flag &= ~VALIASED;
 			vp->v_flag &= ~VALIASED;
 		}
-		free(vp->v_specinfo, M_VNODE);
+		free(vp->v_specinfo, M_VNODE, 0);
 		vp->v_specinfo = NULL;
 	}
 	/*
@@ -1283,7 +1283,7 @@ vfs_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
 		ret = sysctl_rdstruct(oldp, oldlenp, newp, tmpvfsp,
 		    sizeof(struct vfsconf));
 
-		free(tmpvfsp, M_TEMP);
+		free(tmpvfsp, M_TEMP, 0);
 		return (ret);
 	case VFS_BCACHESTAT:	/* buffer cache statistics */
 		ret = sysctl_rdstruct(oldp, oldlenp, newp, &bcstats,
@@ -1451,7 +1451,7 @@ finish:
 	crfromxucred(&np->netc_anon, &argp->ex_anon);
 	return (0);
 out:
-	free(np, M_NETADDR);
+	free(np, M_NETADDR, 0);
 	return (error);
 }
 
@@ -1462,7 +1462,7 @@ vfs_free_netcred(struct radix_node *rn, void *w, u_int id)
 	struct radix_node_head *rnh = (struct radix_node_head *)w;
 
 	(*rnh->rnh_deladdr)(rn->rn_key, rn->rn_mask, rnh, NULL);
-	free(rn, M_NETADDR);
+	free(rn, M_NETADDR, 0);
 	return (0);
 }
 
@@ -1476,7 +1476,7 @@ vfs_free_addrlist(struct netexport *nep)
 
 	if ((rnh = nep->ne_rtable_inet) != NULL) {
 		(*rnh->rnh_walktree)(rnh, vfs_free_netcred, rnh);
-		free(rnh, M_RTABLE);
+		free(rnh, M_RTABLE, 0);
 		nep->ne_rtable_inet = NULL;
 	}
 }

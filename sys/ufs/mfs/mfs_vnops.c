@@ -1,4 +1,4 @@
-/*	$OpenBSD: mfs_vnops.c,v 1.42 2011/07/04 20:35:35 deraadt Exp $	*/
+/*	$OpenBSD: mfs_vnops.c,v 1.45 2014/07/12 18:44:01 tedu Exp $	*/
 /*	$NetBSD: mfs_vnops.c,v 1.8 1996/03/17 02:16:32 christos Exp $	*/
 
 /*
@@ -242,7 +242,7 @@ mfs_reclaim(void *v)
 	struct vop_reclaim_args *ap = v;
 	struct vnode *vp = ap->a_vp;
 
-	free(vp->v_data, M_MFSNODE);
+	free(vp->v_data, M_MFSNODE, 0);
 	vp->v_data = NULL;
 	return (0);
 }
