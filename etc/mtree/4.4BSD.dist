@@ -1,7 +1,7 @@
-#	$OpenBSD: 4.4BSD.dist,v 1.252 2014/07/11 16:44:17 deraadt Exp $
+#	$OpenBSD: 4.4BSD.dist,v 1.253 2014/07/12 01:31:11 schwarze Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
-# .
+
 . nochange
 altroot
 ..
@@ -12,114 +12,114 @@ dev
 
 # ./etc
 etc
-amd
-..
-authpf		uname=root mode=0755
-..
-disklabels
-..
-examples
-..
-firmware
-..
-hotplug
-..
+    amd
+    ..
+    authpf			uname=root mode=0755
+    ..
+    disklabels
+    ..
+    examples
+    ..
+    firmware
+    ..
+    hotplug
+    ..
 
-# ./etc/iked
-iked
-ca
-..
-certs
-..
-crls
-..
-private		uname=root mode=0700
-..
+    # ./etc/iked
+    iked
+        ca
+        ..
+        certs
+        ..
+        crls
+        ..
+        private			uname=root mode=0700
+        ..
 
-# ./etc/iked/pubkeys
-pubkeys		uname=root mode=0755
-fqdn		uname=root mode=0755
-..
-ipv4		uname=root mode=0755
-..
-ipv6		uname=root mode=0755
-..
-ufqdn		uname=root mode=0755
-..
-..
-..
+        # ./etc/iked/pubkeys
+        pubkeys			uname=root mode=0755
+            fqdn		uname=root mode=0755
+            ..
+            ipv4		uname=root mode=0755
+            ..
+            ipv6		uname=root mode=0755
+            ..
+            ufqdn		uname=root mode=0755
+            ..
+        ..
+    ..
 
-# ./etc/isakmpd
-isakmpd
-ca
-..
-certs
-..
-crls
-..
-keynote
-..
-private		uname=root mode=0700
-..
+    # ./etc/isakmpd
+    isakmpd
+        ca
+        ..
+        certs
+        ..
+        crls
+        ..
+        keynote
+        ..
+        private			uname=root mode=0700
+        ..
 
-# ./etc/isakmpd/pubkeys
-pubkeys		uname=root mode=0755
-fqdn		uname=root mode=0755
-..
-ipv4		uname=root mode=0755
-..
-ipv6		uname=root mode=0755
-..
-ufqdn		uname=root mode=0755
-..
-..
-..
+        # ./etc/isakmpd/pubkeys
+        pubkeys			uname=root mode=0755
+            fqdn		uname=root mode=0755
+            ..
+            ipv4		uname=root mode=0755
+            ..
+            ipv6		uname=root mode=0755
+            ..
+            ufqdn		uname=root mode=0755
+            ..
+        ..
+    ..
 
-# ./etc/ldap
-ldap
-certs		mode=0700
-..
-..
+    # ./etc/ldap
+    ldap
+        certs			mode=0700
+        ..
+    ..
 
-# ./etc/mail
-mail
-..
-mtree
-..
-nginx
-..
-npppd
-..
-ppp
-..
-rc.d
-..
+    # ./etc/mail
+    mail
+    ..
+    mtree
+    ..
+    nginx
+    ..
+    npppd
+    ..
+    ppp
+    ..
+    rc.d
+    ..
 
-# ./etc/skel
-skel
-.ssh		uname=root mode=0700
-..
-..
+    # ./etc/skel
+    skel
+        .ssh			uname=root mode=0700
+        ..
+    ..
 
-# ./etc/sliphome
-sliphome
-..
-signify
-..
-ssh
-..
+    # ./etc/sliphome
+    sliphome
+    ..
+    signify
+    ..
+    ssh
+    ..
 
-# ./etc/ssl
-ssl
-private		uname=root mode=0700
-..
-lib
-..
-..
+    # ./etc/ssl
+    ssl
+        private			uname=root mode=0700
+        ..
+        lib
+        ..
+    ..
 
-# ./etc/systrace
-systrace
-..
+    # ./etc/systrace
+    systrace
+    ..
 ..
 
 # ./home
@@ -127,1010 +127,1008 @@ home
 ..
 mnt
 ..
-root		mode=0700
+root				mode=0700
 ..
 sbin
 ..
-tmp             mode=01777
+tmp				mode=01777
 ..
 
 # ./usr
 usr
-bin
-..
-games
-..
+    bin
+    ..
+    games
+    ..
 
-# ./usr/include
-include		gname=bin uname=root mode=0755
-arpa		gname=bin uname=root mode=0755
-..
+    # ./usr/include
+    include		gname=bin uname=root mode=0755
+        arpa		gname=bin uname=root mode=0755
+        ..
 
-g++		gname=bin uname=root mode=0755
-..
+        g++		gname=bin uname=root mode=0755
+        ..
 
-# ./usr/include/c++
-c++
-v1
-ext
-..
+        # ./usr/include/c++
+        c++
+            v1
+                ext
+                ..
 
-mach-o
-..
-..
-..
+                mach-o
+                ..
+            ..
+        ..
 
-# ./usr/include/mcpp-gcc-amd64
-mcpp-gcc-amd64
-..
+        # ./usr/include/mcpp-gcc-amd64
+        mcpp-gcc-amd64
+        ..
 
-mcpp-gcc-arm
-..
+        mcpp-gcc-arm
+        ..
 
-openssl		gname=bin uname=root mode=0755
-..
+        openssl		gname=bin uname=root mode=0755
+        ..
 
-protocols	gname=bin uname=root mode=0755
-..
+        protocols	gname=bin uname=root mode=0755
+        ..
 
-rpc		gname=bin uname=root mode=0755
-..
-rpcsvc		gname=bin uname=root mode=0755
-..
-..
+        rpc		gname=bin uname=root mode=0755
+        ..
+        rpcsvc		gname=bin uname=root mode=0755
+        ..
+    ..
 
-# ./usr/lib
-lib
-clang		gname=bin uname=root mode=0755
-3.4		gname=bin uname=root mode=0755
-include		gname=bin uname=root mode=0755
-sanitizer		gname=bin uname=root mode=0755
-..
-..
-..
-..
+    # ./usr/lib
+    lib
+        clang		gname=bin uname=root mode=0755
+            3.4		gname=bin uname=root mode=0755
+                include		gname=bin uname=root mode=0755
+                	sanitizer		gname=bin uname=root mode=0755
+                	..
+		..
+            ..
+        ..
 
-# ./usr/lib/debug
-debug		gname=bin uname=root mode=0755
-..
-locate	gname=bin uname=root mode=0755
-..
-pkgconfig	gname=bin uname=root mode=0755
-..
-..
+        # ./usr/lib/debug
+        debug		gname=bin uname=root mode=0755
+        ..
+        locate	gname=bin uname=root mode=0755
+        ..
+        pkgconfig	gname=bin uname=root mode=0755
+        ..
+    ..
 
-# ./usr/libdata
-libdata
-perl5
-site_perl
-..
-..
-..
+    # ./usr/libdata
+    libdata
+        perl5
+            site_perl
+            ..
+        ..
+    ..
 
-# ./usr/libexec
-libexec
-auth		type=dir uname=root gname=auth mode=0750
-..
-sm.bin
-..
-lpr
-..
-smtpd		type=dir uname=root gname=wheel mode=0755
-..
-..
+    # ./usr/libexec
+    libexec
+        auth		type=dir uname=root gname=auth mode=0750
+        ..
+        sm.bin
+        ..
+        lpr
+        ..
+        smtpd		type=dir uname=root gname=wheel mode=0755
+        ..
+    ..
 
-# ./usr/lkm
-lkm
-..
+    # ./usr/lkm
+    lkm
+    ..
 
-# ./usr/local
-local
-bin
-..
-lib
-..
-include
-..
-info
-..
-libexec
-..
-man
-cat1
-..
-cat2
-..
-cat3
-..
-cat3f
-..
-cat3p
-..
-cat4
-..
-cat5
-..
-cat6
-..
-cat7
-..
-cat8
-..
-cat9
-..
-catl
-..
-catn
-..
-ja_JP.EUC
-cat1
-..
-cat2
-..
-cat3
-..
-cat3p
-..
-cat4
-..
-cat5
-..
-cat6
-..
-cat7
-..
-cat8
-..
-cat9
-..
-catl
-..
-catn
-..
-man1
-..
-man2
-..
-man3
-..
-man4
-..
-man5
-..
-man6
-..
-man7
-..
-man8
-..
-man9
-..
-manl
-..
-mann
-..
-..
-man1
-..
-man2
-..
-man3
-..
-man3f
-..
-man3p
-..
-man4
-..
-man5
-..
-man6
-..
-man7
-..
-man8
-..
-man9
-..
-manl
-..
-mann
-..
-..
-sbin
-..
-share
-dict
-..
-doc
-pkg-readmes
-..
-..
-examples
-..
-misc
-..
-nls
-C
-..
-da_DK.ISO_8859-1
-..
-de_AT.ISO_8859-1
-..
-de_CH.ISO_8859-1
-..
-de_DE.ISO_8859-1
-..
-el_GR.ISO_8859-7
-..
-en_AU.ISO_8859-1
-..
-en_CA.ISO_8859-1
-..
-en_GB.ISO_8859-1
-..
-en_US.ISO_8859-1
-..
-es_ES.ISO_8859-1
-..
-et_EE.ISO-8859-1
-..
-fi_FI.ISO_8859-1
-..
-fr_BE.ISO_8859-1
-..
-fr_CA.ISO_8859-1
-..
-fr_CH.ISO_8859-1
-..
-fr_FR.ISO_8859-1
-..
-hr_HR.ISO_8859-2
-..
-is_IS.ISO_8859-1
-..
-it_CH.ISO_8859-1
-..
-it_IT.ISO_8859-1
-..
-ja_JP.EUC
-..
-ko_KR.EUC
-..
-lt_LN.ASCII
-..
-lt_LN.ISO_8859-1
-..
-lt_LN.ISO_8859-2
-..
-nl_BE.ISO_8859-1
-..
-nl_NL.ISO_8859-1
-..
-no_NO.ISO_8859-1
-..
-pl_PL.ISO_8859-2
-..
-pt_PT.ISO_8859-1
-..
-ru_RU.CP866
-..
-ru_RU.ISO_8859-5
-..
-ru_RU.KOI8-R
-..
-sv_SE.ISO_8859-1
-..
-uk_UA.KOI8-U
-..
-..
-skel
-..
-..
+    # ./usr/local
+    local
+        bin
+        ..
+        lib
+        ..
+        include
+        ..
+        info
+        ..
+        libexec
+        ..
+        man
+            cat1
+            ..
+            cat2
+            ..
+            cat3
+            ..
+            cat3f
+            ..
+            cat3p
+            ..
+            cat4
+            ..
+            cat5
+            ..
+            cat6
+            ..
+            cat7
+            ..
+            cat8
+            ..
+            cat9
+            ..
+            catl
+            ..
+            catn
+            ..
+            ja_JP.EUC
+                cat1
+                ..
+                cat2
+                ..
+                cat3
+                ..
+                cat3p
+                ..
+                cat4
+                ..
+                cat5
+                ..
+                cat6
+                ..
+                cat7
+                ..
+                cat8
+                ..
+                cat9
+                ..
+                catl
+                ..
+                catn
+                ..
+                man1
+                ..
+                man2
+                ..
+                man3
+                ..
+                man4
+                ..
+                man5
+                ..
+                man6
+                ..
+                man7
+                ..
+                man8
+                ..
+                man9
+                ..
+                manl
+                ..
+                mann
+                ..
+            ..
+            man1
+            ..
+            man2
+            ..
+            man3
+            ..
+            man3f
+            ..
+            man3p
+            ..
+            man4
+            ..
+            man5
+            ..
+            man6
+            ..
+            man7
+            ..
+            man8
+            ..
+            man9
+            ..
+            manl
+            ..
+            mann
+            ..
+        ..
+        sbin
+        ..
+        share
+            dict
+            ..
+            doc
+                pkg-readmes
+                ..
+            ..
+            examples
+            ..
+            misc
+            ..
+            nls
+                C
+                ..
+                da_DK.ISO_8859-1
+                ..
+                de_AT.ISO_8859-1
+                ..
+                de_CH.ISO_8859-1
+                ..
+                de_DE.ISO_8859-1
+                ..
+                el_GR.ISO_8859-7
+                ..
+                en_AU.ISO_8859-1
+                ..
+                en_CA.ISO_8859-1
+                ..
+                en_GB.ISO_8859-1
+                ..
+                en_US.ISO_8859-1
+                ..
+                es_ES.ISO_8859-1
+                ..
+                et_EE.ISO-8859-1
+                ..
+                fi_FI.ISO_8859-1
+                ..
+                fr_BE.ISO_8859-1
+                ..
+                fr_CA.ISO_8859-1
+                ..
+                fr_CH.ISO_8859-1
+                ..
+                fr_FR.ISO_8859-1
+                ..
+                hr_HR.ISO_8859-2
+                ..
+                is_IS.ISO_8859-1
+                ..
+                it_CH.ISO_8859-1
+                ..
+                it_IT.ISO_8859-1
+                ..
+                ja_JP.EUC
+                ..
+                ko_KR.EUC
+                ..
+                lt_LN.ASCII
+                ..
+                lt_LN.ISO_8859-1
+                ..
+                lt_LN.ISO_8859-2
+                ..
+                nl_BE.ISO_8859-1
+                ..
+                nl_NL.ISO_8859-1
+                ..
+                no_NO.ISO_8859-1
+                ..
+                pl_PL.ISO_8859-2
+                ..
+                pt_PT.ISO_8859-1
+                ..
+                ru_RU.CP866
+                ..
+                ru_RU.ISO_8859-5
+                ..
+                ru_RU.KOI8-R
+                ..
+                sv_SE.ISO_8859-1
+                ..
+                uk_UA.KOI8-U
+                ..
+            ..
+            skel
+            ..
+        ..
 
-# ./usr/local/libdata
-libdata
-perl5
-site_perl
-..
-..
-..
-..
+        # ./usr/local/libdata
+        libdata
+            perl5
+                site_perl
+                ..
+            ..
+        ..
+    ..
 
-# ./usr/mdec
-mdec
-..
-obj		gname=wsrc mode=0775
-..
-ports		gname=wsrc mode=0775
-..
-sbin
-..
+    # ./usr/mdec
+    mdec
+    ..
+    obj		gname=wsrc mode=0775
+    ..
+    ports		gname=wsrc mode=0775
+    ..
+    sbin
+    ..
 
-# ./usr/share
-share
-calendar
-..
+    # ./usr/share
+    share
+        calendar
+        ..
 
-# ./usr/share/dict
-dict
-papers
-..
-special
-..
-..
+        # ./usr/share/dict
+        dict
+            papers
+            ..
+            special
+            ..
+        ..
 
-# ./usr/share/doc
-doc
-html
+        # ./usr/share/doc
+        doc
+            html
+                bind
+                ..
+                curses
+                ..
+            ..
+        ..
 
-# ./usr/share/doc/html/bind
-bind
-..
-curses
-..
-..
-..
+        # ./usr/share/games
+        games
+            atc
+            ..
+            boggle
+            ..
+            fortune
+            ..
+            quiz.db
+            ..
+        ..
 
-# ./usr/share/games
-games
-atc
-..
-boggle
-..
-fortune
-..
-quiz.db
-..
-..
+        # ./usr/share/info
+        info
+        ..
 
-# ./usr/share/info
-info
-..
+        llvm
+        ..
 
-llvm
-..
+        # ./usr/share/locale
+        locale
+            UTF-8
+            ..
+            af_ZA.ISO8859-1
+            ..
+            af_ZA.ISO8859-15
+            ..
+            af_ZA.UTF-8
+            ..
+            am_ET.UTF-8
+            ..
+            be_BY.CP1131
+            ..
+            be_BY.CP1251
+            ..
+            be_BY.ISO8859-5
+            ..
+            be_BY.UTF-8
+            ..
+            bg_BG.CP1251
+            ..
+            bg_BG.UTF-8
+            ..
+            ca_AD.ISO8859-1
+            ..
+            ca_AD.ISO8859-15
+            ..
+            ca_AD.UTF-8
+            ..
+            ca_ES.ISO8859-1
+            ..
+            ca_ES.ISO8859-15
+            ..
+            ca_ES.UTF-8
+            ..
+            ca_FR.ISO8859-1
+            ..
+            ca_FR.ISO8859-15
+            ..
+            ca_FR.UTF-8
+            ..
+            ca_IT.ISO8859-1
+            ..
+            ca_IT.ISO8859-15
+            ..
+            ca_IT.UTF-8
+            ..
+            cs_CZ.ISO8859-2
+            ..
+            cs_CZ.UTF-8
+            ..
+            da_DK.ISO8859-1
+            ..
+            da_DK.ISO8859-15
+            ..
+            da_DK.UTF-8
+            ..
+            de_AT.ISO8859-1
+            ..
+            de_AT.ISO8859-15
+            ..
+            de_AT.UTF-8
+            ..
+            de_CH.ISO8859-1
+            ..
+            de_CH.ISO8859-15
+            ..
+            de_CH.UTF-8
+            ..
+            de_DE.ISO8859-1
+            ..
+            de_DE.ISO8859-15
+            ..
+            de_DE.UTF-8
+            ..
+            el_GR.ISO8859-7
+            ..
+            el_GR.UTF-8
+            ..
+            en_AU.ISO8859-1
+            ..
+            en_AU.ISO8859-15
+            ..
+            en_AU.US-ASCII
+            ..
+            en_AU.UTF-8
+            ..
+            en_CA.ISO8859-1
+            ..
+            en_CA.ISO8859-15
+            ..
+            en_CA.US-ASCII
+            ..
+            en_CA.UTF-8
+            ..
+            en_GB.ISO8859-1
+            ..
+            en_GB.ISO8859-15
+            ..
+            en_GB.US-ASCII
+            ..
+            en_GB.UTF-8
+            ..
+            en_IE.UTF-8
+            ..
+            en_NZ.ISO8859-1
+            ..
+            en_NZ.ISO8859-15
+            ..
+            en_NZ.US-ASCII
+            ..
+            en_NZ.UTF-8
+            ..
+            en_US.ISO8859-1
+            ..
+            en_US.ISO8859-15
+            ..
+            en_US.US-ASCII
+            ..
+            en_US.UTF-8
+            ..
+            es_ES.ISO8859-1
+            ..
+            es_ES.ISO8859-15
+            ..
+            es_ES.UTF-8
+            ..
+            et_EE.ISO8859-15
+            ..
+            et_EE.UTF-8
+            ..
+            eu_ES.ISO8859-1
+            ..
+            eu_ES.ISO8859-15
+            ..
+            eu_ES.UTF-8
+            ..
+            fi_FI.ISO8859-1
+            ..
+            fi_FI.ISO8859-15
+            ..
+            fi_FI.UTF-8
+            ..
+            fr_BE.ISO8859-1
+            ..
+            fr_BE.ISO8859-15
+            ..
+            fr_BE.UTF-8
+            ..
+            fr_CA.ISO8859-1
+            ..
+            fr_CA.ISO8859-15
+            ..
+            fr_CA.UTF-8
+            ..
+            fr_CH.ISO8859-1
+            ..
+            fr_CH.ISO8859-15
+            ..
+            fr_CH.UTF-8
+            ..
+            fr_FR.ISO8859-1
+            ..
+            fr_FR.ISO8859-15
+            ..
+            fr_FR.UTF-8
+            ..
+            he_IL.UTF-8
+            ..
+            hi_IN.ISCII-DEV
+            ..
+            hr_HR.ISO8859-2
+            ..
+            hr_HR.UTF-8
+            ..
+            hu_HU.ISO8859-2
+            ..
+            hu_HU.UTF-8
+            ..
+            hy_AM.ARMSCII-8
+            ..
+            hy_AM.UTF-8
+            ..
+            is_IS.ISO8859-1
+            ..
+            is_IS.ISO8859-15
+            ..
+            is_IS.UTF-8
+            ..
+            it_CH.ISO8859-1
+            ..
+            it_CH.ISO8859-15
+            ..
+            it_CH.UTF-8
+            ..
+            it_IT.ISO8859-1
+            ..
+            it_IT.ISO8859-15
+            ..
+            it_IT.UTF-8
+            ..
+            ja_JP.SJIS
+            ..
+            ja_JP.UTF-8
+            ..
+            ja_JP.eucJP
+            ..
+            kk_KZ.PT154
+            ..
+            kk_KZ.UTF-8
+            ..
+            ko_KR.CP949
+            ..
+            ko_KR.UTF-8
+            ..
+            ko_KR.eucKR
+            ..
+            la_LN.ISO8859-1
+            ..
+            la_LN.ISO8859-13
+            ..
+            la_LN.ISO8859-15
+            ..
+            la_LN.ISO8859-2
+            ..
+            la_LN.ISO8859-4
+            ..
+            la_LN.US-ASCII
+            ..
+            lt_LT.ISO8859-13
+            ..
+            lt_LT.ISO8859-4
+            ..
+            lt_LT.UTF-8
+            ..
+            lv_LV.ISO8859-13
+            ..
+            lv_LV.UTF-8
+            ..
+            mn_MN.UTF-8
+            ..
+            nb_NO.ISO8859-1
+            ..
+            nb_NO.ISO8859-15
+            ..
+            nb_NO.UTF-8
+            ..
+            nl_BE.ISO8859-1
+            ..
+            nl_BE.ISO8859-15
+            ..
+            nl_BE.UTF-8
+            ..
+            nl_NL.ISO8859-1
+            ..
+            nl_NL.ISO8859-15
+            ..
+            nl_NL.UTF-8
+            ..
+            nn_NO.ISO8859-1
+            ..
+            nn_NO.ISO8859-15
+            ..
+            nn_NO.UTF-8
+            ..
+            no_NO.ISO8859-1
+            ..
+            no_NO.ISO8859-15
+            ..
+            no_NO.UTF-8
+            ..
+            pl_PL.ISO8859-2
+            ..
+            pl_PL.UTF-8
+            ..
+            pt_BR.ISO8859-1
+            ..
+            pt_BR.UTF-8
+            ..
+            pt_PT.ISO8859-1
+            ..
+            pt_PT.ISO8859-15
+            ..
+            pt_PT.UTF-8
+            ..
+            ro_RO.ISO8859-2
+            ..
+            ro_RO.UTF-8
+            ..
+            ru_RU.CP1251
+            ..
+            ru_RU.CP866
+            ..
+            ru_RU.ISO8859-5
+            ..
+            ru_RU.KOI8-R
+            ..
+            ru_RU.UTF-8
+            ..
+            sk_SK.ISO8859-2
+            ..
+            sk_SK.UTF-8
+            ..
+            sl_SI.ISO8859-2
+            ..
+            sl_SI.UTF-8
+            ..
+            sr_YU.ISO8859-2
+            ..
+            sr_YU.ISO8859-5
+            ..
+            sr_YU.UTF-8
+            ..
+            sv_SE.ISO8859-1
+            ..
+            sv_SE.ISO8859-15
+            ..
+            sv_SE.UTF-8
+            ..
+            tr_TR.ISO8859-9
+            ..
+            tr_TR.UTF-8
+            ..
+            uk_UA.CP1251
+            ..
+            uk_UA.ISO8859-5
+            ..
+            uk_UA.KOI8-U
+            ..
+            uk_UA.UTF-8
+            ..
+            zh_CN.GB18030
+            ..
+            zh_CN.GB2312
+            ..
+            zh_CN.GBK
+            ..
+            zh_CN.UTF-8
+            ..
+            zh_CN.eucCN
+            ..
+            zh_HK.Big5HKSCS
+            ..
+            zh_HK.UTF-8
+            ..
+            zh_TW.Big5
+            ..
+            zh_TW.UTF-8
+            ..
+        ..
 
-# ./usr/share/locale
-locale
-UTF-8
-..
-af_ZA.ISO8859-1
-..
-af_ZA.ISO8859-15
-..
-af_ZA.UTF-8
-..
-am_ET.UTF-8
-..
-be_BY.CP1131
-..
-be_BY.CP1251
-..
-be_BY.ISO8859-5
-..
-be_BY.UTF-8
-..
-bg_BG.CP1251
-..
-bg_BG.UTF-8
-..
-ca_AD.ISO8859-1
-..
-ca_AD.ISO8859-15
-..
-ca_AD.UTF-8
-..
-ca_ES.ISO8859-1
-..
-ca_ES.ISO8859-15
-..
-ca_ES.UTF-8
-..
-ca_FR.ISO8859-1
-..
-ca_FR.ISO8859-15
-..
-ca_FR.UTF-8
-..
-ca_IT.ISO8859-1
-..
-ca_IT.ISO8859-15
-..
-ca_IT.UTF-8
-..
-cs_CZ.ISO8859-2
-..
-cs_CZ.UTF-8
-..
-da_DK.ISO8859-1
-..
-da_DK.ISO8859-15
-..
-da_DK.UTF-8
-..
-de_AT.ISO8859-1
-..
-de_AT.ISO8859-15
-..
-de_AT.UTF-8
-..
-de_CH.ISO8859-1
-..
-de_CH.ISO8859-15
-..
-de_CH.UTF-8
-..
-de_DE.ISO8859-1
-..
-de_DE.ISO8859-15
-..
-de_DE.UTF-8
-..
-el_GR.ISO8859-7
-..
-el_GR.UTF-8
-..
-en_AU.ISO8859-1
-..
-en_AU.ISO8859-15
-..
-en_AU.US-ASCII
-..
-en_AU.UTF-8
-..
-en_CA.ISO8859-1
-..
-en_CA.ISO8859-15
-..
-en_CA.US-ASCII
-..
-en_CA.UTF-8
-..
-en_GB.ISO8859-1
-..
-en_GB.ISO8859-15
-..
-en_GB.US-ASCII
-..
-en_GB.UTF-8
-..
-en_IE.UTF-8
-..
-en_NZ.ISO8859-1
-..
-en_NZ.ISO8859-15
-..
-en_NZ.US-ASCII
-..
-en_NZ.UTF-8
-..
-en_US.ISO8859-1
-..
-en_US.ISO8859-15
-..
-en_US.US-ASCII
-..
-en_US.UTF-8
-..
-es_ES.ISO8859-1
-..
-es_ES.ISO8859-15
-..
-es_ES.UTF-8
-..
-et_EE.ISO8859-15
-..
-et_EE.UTF-8
-..
-eu_ES.ISO8859-1
-..
-eu_ES.ISO8859-15
-..
-eu_ES.UTF-8
-..
-fi_FI.ISO8859-1
-..
-fi_FI.ISO8859-15
-..
-fi_FI.UTF-8
-..
-fr_BE.ISO8859-1
-..
-fr_BE.ISO8859-15
-..
-fr_BE.UTF-8
-..
-fr_CA.ISO8859-1
-..
-fr_CA.ISO8859-15
-..
-fr_CA.UTF-8
-..
-fr_CH.ISO8859-1
-..
-fr_CH.ISO8859-15
-..
-fr_CH.UTF-8
-..
-fr_FR.ISO8859-1
-..
-fr_FR.ISO8859-15
-..
-fr_FR.UTF-8
-..
-he_IL.UTF-8
-..
-hi_IN.ISCII-DEV
-..
-hr_HR.ISO8859-2
-..
-hr_HR.UTF-8
-..
-hu_HU.ISO8859-2
-..
-hu_HU.UTF-8
-..
-hy_AM.ARMSCII-8
-..
-hy_AM.UTF-8
-..
-is_IS.ISO8859-1
-..
-is_IS.ISO8859-15
-..
-is_IS.UTF-8
-..
-it_CH.ISO8859-1
-..
-it_CH.ISO8859-15
-..
-it_CH.UTF-8
-..
-it_IT.ISO8859-1
-..
-it_IT.ISO8859-15
-..
-it_IT.UTF-8
-..
-ja_JP.SJIS
-..
-ja_JP.UTF-8
-..
-ja_JP.eucJP
-..
-kk_KZ.PT154
-..
-kk_KZ.UTF-8
-..
-ko_KR.CP949
-..
-ko_KR.UTF-8
-..
-ko_KR.eucKR
-..
-la_LN.ISO8859-1
-..
-la_LN.ISO8859-13
-..
-la_LN.ISO8859-15
-..
-la_LN.ISO8859-2
-..
-la_LN.ISO8859-4
-..
-la_LN.US-ASCII
-..
-lt_LT.ISO8859-13
-..
-lt_LT.ISO8859-4
-..
-lt_LT.UTF-8
-..
-lv_LV.ISO8859-13
-..
-lv_LV.UTF-8
-..
-mn_MN.UTF-8
-..
-nb_NO.ISO8859-1
-..
-nb_NO.ISO8859-15
-..
-nb_NO.UTF-8
-..
-nl_BE.ISO8859-1
-..
-nl_BE.ISO8859-15
-..
-nl_BE.UTF-8
-..
-nl_NL.ISO8859-1
-..
-nl_NL.ISO8859-15
-..
-nl_NL.UTF-8
-..
-nn_NO.ISO8859-1
-..
-nn_NO.ISO8859-15
-..
-nn_NO.UTF-8
-..
-no_NO.ISO8859-1
-..
-no_NO.ISO8859-15
-..
-no_NO.UTF-8
-..
-pl_PL.ISO8859-2
-..
-pl_PL.UTF-8
-..
-pt_BR.ISO8859-1
-..
-pt_BR.UTF-8
-..
-pt_PT.ISO8859-1
-..
-pt_PT.ISO8859-15
-..
-pt_PT.UTF-8
-..
-ro_RO.ISO8859-2
-..
-ro_RO.UTF-8
-..
-ru_RU.CP1251
-..
-ru_RU.CP866
-..
-ru_RU.ISO8859-5
-..
-ru_RU.KOI8-R
-..
-ru_RU.UTF-8
-..
-sk_SK.ISO8859-2
-..
-sk_SK.UTF-8
-..
-sl_SI.ISO8859-2
-..
-sl_SI.UTF-8
-..
-sr_YU.ISO8859-2
-..
-sr_YU.ISO8859-5
-..
-sr_YU.UTF-8
-..
-sv_SE.ISO8859-1
-..
-sv_SE.ISO8859-15
-..
-sv_SE.UTF-8
-..
-tr_TR.ISO8859-9
-..
-tr_TR.UTF-8
-..
-uk_UA.CP1251
-..
-uk_UA.ISO8859-5
-..
-uk_UA.KOI8-U
-..
-uk_UA.UTF-8
-..
-zh_CN.GB18030
-..
-zh_CN.GB2312
-..
-zh_CN.GBK
-..
-zh_CN.UTF-8
-..
-zh_CN.eucCN
-..
-zh_HK.Big5HKSCS
-..
-zh_HK.UTF-8
-..
-zh_TW.Big5
-..
-zh_TW.UTF-8
-..
-..
+        # ./usr/share/man
+        man
+            man1
+                amd64
+                ..
+            ..
 
-# ./usr/share/man
-man
-man1
-amd64
-..
-..
+            # ./usr/share/man/man2
+            man2
+                amd64
+                ..
+            ..
 
-# ./usr/share/man/man2
-man2
-amd64
-..
-..
+            # ./usr/share/man/man3
+            man3
+            ..
+            man3p
+            ..
 
-# ./usr/share/man/man3
-man3
-..
-man3p
-..
+            # ./usr/share/man/man4
+            man4
+                amd64
+                ..
+                armv7
+                ..
+            ..
 
-# ./usr/share/man/man4
-man4
-amd64
-..
-armv7
-..
-..
+            # ./usr/share/man/man5
+            man5
+                amd64
+                ..
+            ..
 
-# ./usr/share/man/man5
-man5
-amd64
-..
-..
+            # ./usr/share/man/man6
+            man6
+            ..
+            man7
+            ..
 
-# ./usr/share/man/man6
-man6
-..
-man7
-..
+            # ./usr/share/man/man8
+            man8
+                amd64
+                ..
+                armv7
+                ..
+            ..
 
-# ./usr/share/man/man8
-man8
-amd64
-..
-armv7
-..
-..
+            # ./usr/share/man/man9
+            man9
+            ..
+        ..
 
-# ./usr/share/man/man9
-man9
-..
-..
+        # ./usr/share/misc
+        misc
+        ..
 
-# ./usr/share/misc
-misc
-..
+        mk
+        ..
 
-mk
-..
+        nls
+        ..
 
-nls
-..
+        # ./usr/share/snmp
+        snmp
+            mibs
+            ..
+        ..
 
-# ./usr/share/snmp
-snmp
-mibs
-..
-..
+        # ./usr/share/tabset
+        tabset
+        ..
 
-# ./usr/share/tabset
-tabset
-..
+        # ./usr/share/vi
+        vi
+            catalog
+            ..
+        ..
 
-# ./usr/share/vi
-vi
-catalog
-..
-..
+        # ./usr/share/zoneinfo
+        zoneinfo         gname=bin uname=root mode=0555
+            Australia        gname=bin uname=root mode=0555
+            ..
+            Brazil           gname=bin uname=root mode=0555
+            ..
+            Canada           gname=bin uname=root mode=0555
+            ..
+            Chile            gname=bin uname=root mode=0555
+            ..
+            Mexico           gname=bin uname=root mode=0555
+            ..
+            US               gname=bin uname=root mode=0555
+            ..
+        ..
+    ..
 
-# ./usr/share/zoneinfo
-zoneinfo         gname=bin uname=root mode=0555
-Australia        gname=bin uname=root mode=0555
-..
-Brazil           gname=bin uname=root mode=0555
-..
-Canada           gname=bin uname=root mode=0555
-..
-Chile            gname=bin uname=root mode=0555
-..
-Mexico           gname=bin uname=root mode=0555
-..
-US               gname=bin uname=root mode=0555
-..
-..
-..
+    # ./usr/src
+    src		gname=wsrc mode=0775
+    ..
 
-# ./usr/src
-src		gname=wsrc mode=0775
-..
+    xenocara	gname=wsrc mode=0775
+    ..
 
-xenocara	gname=wsrc mode=0775
-..
-
-xobj		gname=wsrc mode=0775
-..
+    xobj		gname=wsrc mode=0775
+    ..
 ..
 
 # ./var
 var
-account
-..
-authpf		uname=root gname=authpf mode=0770
-..
+    account
+    ..
+    authpf		uname=root gname=authpf mode=0770
+    ..
 
-# ./var/empty
-empty		mode=0755
-dev		mode=0555
-..
-..
+    # ./var/empty
+    empty		mode=0755
+        dev		mode=0555
+        ..
+    ..
 
-# ./var/backups
-backups		mode=0700
-..
-yp		mode=755
-..
-crash		mode=770
-..
+    # ./var/backups
+    backups		mode=0700
+    ..
+    yp		mode=755
+    ..
+    crash		mode=770
+    ..
 
-# ./var/cron
-cron		mode=0555
-atjobs		gname=crontab mode=01770
-..
-tabs		gname=crontab mode=01730
-..
-..
+    # ./var/cron
+    cron		mode=0555
+        atjobs		gname=crontab mode=01770
+        ..
+        tabs		gname=crontab mode=01730
+        ..
+    ..
 
-# ./var/db
-db
-ldap		mode=0700
-..
-ns
-..
-pkg
-..
-sysmerge
-..
-yubikey		uname=root gname=auth mode=0770
-..
-..
+    # ./var/db
+    db
+        ldap		mode=0700
+        ..
+        ns
+        ..
+        pkg
+        ..
+        sysmerge
+        ..
+        yubikey		uname=root gname=auth mode=0770
+        ..
+    ..
 
-# ./var/games
-games            uname=root gname=games mode=0775
-hackdir          uname=root gname=games mode=0775
-save		 uname=root gname=games mode=0770
-..
-..
+    # ./var/games
+    games            uname=root gname=games mode=0775
+        hackdir          uname=root gname=games mode=0775
+            save		 uname=root gname=games mode=0770
+            ..
+        ..
 
-# ./var/games/save
-save		uname=root gname=games mode=0775
-..
-phantasia        uname=root gname=games mode=0775
-..
-..
+        # ./var/games/save
+        save		uname=root gname=games mode=0775
+        ..
+        phantasia        uname=root gname=games mode=0775
+        ..
+    ..
 
-# ./var/log
-log
-rdist
-..
-..
+    # ./var/log
+    log
+        rdist
+        ..
+    ..
 
-# ./var/mail
-mail
-..
+    # ./var/mail
+    mail
+    ..
 
-# ./var/named
-named
-dev
-..
-etc		uname=root gname=named mode=0750
-..
-master
-..
-slave		uname=root gname=named mode=0775
-..
-standard
-..
-tmp		uname=root gname=named mode=0775
-..
-..
+    # ./var/named
+    named
+        dev
+        ..
+        etc		uname=root gname=named mode=0750
+        ..
+        master
+        ..
+        slave		uname=root gname=named mode=0775
+        ..
+        standard
+        ..
+        tmp		uname=root gname=named mode=0775
+        ..
+    ..
 
-# ./var/nsd
-nsd
-db		uname=root gname=_nsd mode=0775
-..
-dev
-..
-etc		uname=root gname=_nsd mode=0750
-..
+    # ./var/nsd
+    nsd
+        db		uname=root gname=_nsd mode=0775
+        ..
+        dev
+        ..
+        etc		uname=root gname=_nsd mode=0750
+        ..
 
-# ./var/nsd/run
-run		uname=root gname=_nsd mode=0775
-xfr		uname=root gname=_nsd mode=0770
-..
-..
+        # ./var/nsd/run
+        run		uname=root gname=_nsd mode=0775
+            xfr		uname=root gname=_nsd mode=0770
+            ..
+        ..
 
-# ./var/nsd/zones
-zones		uname=root gname=wheel mode=0755
-..
-..
+        # ./var/nsd/zones
+        zones		uname=root gname=wheel mode=0755
+        ..
+    ..
 
-# ./var/quotas
-quotas            gname=operator mode=0750
-..
-run
-..
-rwho
-..
+    # ./var/quotas
+    quotas            gname=operator mode=0750
+    ..
+    run
+    ..
+    rwho
+    ..
 
-# ./var/spool
-spool
-clientmqueue	mode=0770 uname=smmsp gname=smmsp
-..
+    # ./var/spool
+    spool
+        clientmqueue	mode=0770 uname=smmsp gname=smmsp
+        ..
 
-# ./var/spool/ftp
-ftp		mode=0555
-bin		mode=0511
-..
-etc		mode=0511
-..
-hidden           mode=0111
-..
-#pub		mode=0555
-#..
-..
+        # ./var/spool/ftp
+        ftp		mode=0555
+            bin		mode=0511
+            ..
+            etc		mode=0511
+            ..
+            hidden           mode=0111
+            ..
+            #pub		mode=0555
+            #..
+        ..
 
-# ./var/spool/lock
-lock		uname=uucp gname=dialer mode=1775
-..
-mqueue		mode=0700
-..
-output		gname=daemon mode=0775
-..
-smtpd		type=dir uname=root gname=wheel mode=0711
-..
-#sockets	mode=777
-#..
-uucp		uname=uucp gname=daemon
-..
-uucppublic	uname=uucp gname=daemon mode=0755
-..
-..
+        # ./var/spool/lock
+        lock		uname=uucp gname=dialer mode=1775
+        ..
+        mqueue		mode=0700
+        ..
+        output		gname=daemon mode=0775
+        ..
+        smtpd		type=dir uname=root gname=wheel mode=0711
+        ..
+        #sockets	mode=777
+        #..
+        uucp		uname=uucp gname=daemon
+        ..
+        uucppublic	uname=uucp gname=daemon mode=0755
+        ..
+    ..
 
-# ./var/tmp
-tmp        mode=01777
-vi.recover	 mode=01777
-..
-..
+    # ./var/tmp
+    tmp        mode=01777
+        vi.recover	 mode=01777
+        ..
+    ..
 
-# ./var/unbound
-unbound
-dev		uname=root gname=wheel mode=0755
-..
-etc		uname=root gname=wheel mode=0755
-..
-db		uname=root gname=_unbound mode=0775
-..
-..
+    # ./var/unbound
+    unbound
+        dev		uname=root gname=wheel mode=0755
+        ..
+        etc		uname=root gname=wheel mode=0755
+        ..
+        db		uname=root gname=_unbound mode=0775
+        ..
+    ..
 
-# ./var/www
-www type=dir uname=root gname=daemon mode=755
-cache type=dir uname=www gname=daemon mode=1700
-..
-dev type=dir uname=root gname=daemon mode=755
-..
-cgi-bin  type=dir uname=root gname=daemon mode=755
-..
-htdocs  type=dir uname=root gname=daemon mode=755
-..
-logs  type=dir uname=root gname=daemon mode=755
-..
-conf  type=dir uname=root gname=daemon mode=755
-..
-bin  type=dir uname=root gname=daemon mode=755
-..
-run  type=dir uname=root gname=daemon mode=755
-..
-..
+    # ./var/www
+    www type=dir uname=root gname=daemon mode=755
+        cache type=dir uname=www gname=daemon mode=1700
+        ..
+        dev type=dir uname=root gname=daemon mode=755
+        ..
+        cgi-bin  type=dir uname=root gname=daemon mode=755
+        ..
+        htdocs  type=dir uname=root gname=daemon mode=755
+        ..
+        logs  type=dir uname=root gname=daemon mode=755
+        ..
+        conf  type=dir uname=root gname=daemon mode=755
+        ..
+        bin  type=dir uname=root gname=daemon mode=755
+        ..
+        run  type=dir uname=root gname=daemon mode=755
+        ..
+    ..
 
-# ./var/audit
-audit type=dir uname=root gname=wheel mode=2770
-..
+    # ./var/audit
+    audit type=dir uname=root gname=wheel mode=2770
+    ..
 ..
