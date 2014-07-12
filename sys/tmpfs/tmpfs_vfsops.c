@@ -393,7 +393,7 @@ tmpfs_unmount(struct mount *mp, int mntflags, struct proc *p)
 	tmpfs_mntmem_destroy(tmp);
 	/* mutex_destroy(&tmp->tm_lock); */
 	/* kmem_free(tmp, sizeof(*tmp)); */
-	free(tmp, M_MISCFSMNT);
+	free(tmp, M_MISCFSMNT, 0);
 	mp->mnt_data = NULL;
 
 	return 0;
