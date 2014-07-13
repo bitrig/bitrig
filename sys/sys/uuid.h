@@ -37,7 +37,7 @@
 #define	_UUID_NODE_LEN		6
 
 /* Length of a printed UUID. */
-#define	_UUID_STR_LEN		38
+#define	_UUID_BUF_LEN		38
 
 /*
  * See also:
@@ -58,7 +58,7 @@ struct uuid {
 #ifdef _KERNEL
 
 #define	UUID_NODE_LEN	_UUID_NODE_LEN
-#define	UUID_STR_LEN	_UUID_STR_LEN
+#define	UUID_BUF_LEN	_UUID_BUF_LEN
 
 int	uuid_snprintf(char *, size_t, const struct uuid *);
 int	uuid_printf(const struct uuid *);

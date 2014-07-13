@@ -219,7 +219,7 @@ uuid_snprintf(char *buf, size_t sz, const struct uuid *uuid)
 int
 uuid_printf(const struct uuid *uuid)
 {
-	char buf[UUID_STR_LEN];
+	char buf[UUID_BUF_LEN];
 
 	(void) uuid_snprintf(buf, sizeof(buf), uuid);
 	printf("%s", buf);
@@ -254,7 +254,7 @@ uuid_enc_le(void *buf, const struct uuid *uuid)
 	le16enc(p + 6, uuid->time_hi_and_version);
 	p[8] = uuid->clock_seq_hi_and_reserved;
 	p[9] = uuid->clock_seq_low;
-	for (i = 0; i < _UUID_NODE_LEN; i++)
+	for (i = 0; i < UUID_NODE_LEN; i++)
 		p[10 + i] = uuid->node[i];
 }
 
@@ -269,7 +269,7 @@ uuid_dec_le(void const *buf, struct uuid *uuid)
 	uuid->time_hi_and_version = le16dec(p + 6);
 	uuid->clock_seq_hi_and_reserved = p[8];
 	uuid->clock_seq_low = p[9];
-	for (i = 0; i < _UUID_NODE_LEN; i++)
+	for (i = 0; i < UUID_NODE_LEN; i++)
 		uuid->node[i] = p[10 + i];
 }
 
@@ -284,7 +284,7 @@ uuid_enc_be(void *buf, const struct uuid *uuid)
 	be16enc(p + 6, uuid->time_hi_and_version);
 	p[8] = uuid->clock_seq_hi_and_reserved;
 	p[9] = uuid->clock_seq_low;
-	for (i = 0; i < _UUID_NODE_LEN; i++)
+	for (i = 0; i < UUID_NODE_LEN; i++)
 		p[10 + i] = uuid->node[i];
 }
 
@@ -299,6 +299,6 @@ uuid_dec_be(void const *buf, struct uuid *uuid)
 	uuid->time_hi_and_version = be16dec(p + 6);
 	uuid->clock_seq_hi_and_reserved = p[8];
 	uuid->clock_seq_low = p[9];
-	for (i = 0; i < _UUID_NODE_LEN; i++)
+	for (i = 0; i < UUID_NODE_LEN; i++)
 		uuid->node[i] = p[10 + i];
 }
