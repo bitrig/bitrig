@@ -45,7 +45,7 @@ set -o emacs
 if [ "X${DONEPROFILE}" = "X" ]; then
 	DONEPROFILE=YES
 
-	mount -u -o rw /
+	mount -uw /
 
 	# Create a fake rc that just returns 1 and throws us back
 	echo ! : > /etc/rc
