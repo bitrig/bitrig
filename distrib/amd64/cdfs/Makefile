@@ -17,8 +17,8 @@ ${CDROM}: ${.OBJDIR}/../ramdisk/${BSDRD} ${DESTDIR}/usr/mdec/cdbr ${DESTDIR}/usr
 	cp ${DESTDIR}/usr/mdec/cdboot ${.OBJDIR}/cd-dir/${OSREV}/amd64/cdboot
 	mkisofs -R -T -allow-leading-dots -l -d -D -N -o ${.OBJDIR}/${CDROM} -v -v \
 	    -A "Bitrig ${OSREV} amd64 bootonly CD" \
-	    -publisher "Copyright (c) `date +%Y`, The Bitrig foundation <bitrig@bitrig.org>" \
-	    -p "The Bitrig foundation <bitrig@bitrig.org>" \
+	    -publisher "Copyright (c) `date +%Y`, The Bitrig Project <bitrig@bitrig.org>" \
+	    -p "The Bitrig Project <bitrig@bitrig.org>" \
 	    -V "Bitrig/amd64 ${OSREV} boot-only CD" \
 	    -no-emul-boot -b ${OSREV}/amd64/cdbr -c ${OSREV}/amd64/boot.catalog \
 	    ${.OBJDIR}/cd-dir
