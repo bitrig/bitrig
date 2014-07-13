@@ -2150,7 +2150,7 @@ ttyinfo(struct tty *tp)
 	else if (tp->t_pgrp == NULL)
 		ttyprintf(tp, "no foreground process group\n");
 	else if ((pr = LIST_FIRST(&tp->t_pgrp->pg_members)) == NULL)
-		ttyprintf(tp, "empty foreground process group\n");
+empty:		ttyprintf(tp, "empty foreground process group\n");
 	else {
 		const char *state;
 		fixpt_t pctcpu, pctcpu2;
@@ -2221,6 +2221,8 @@ update_pickpr:
 		 * Otherwise take the newest thread
 		 */
 		pick = p = TAILQ_FIRST(&pickpr->ps_threads);
+		if (p == NULL)
+			goto empty;
 		run = p->p_stat == SRUN || p->p_stat == SONPROC;
 		pctcpu = p->p_pctcpu;
 		while ((p = TAILQ_NEXT(p, p_thr_link)) != NULL) {
