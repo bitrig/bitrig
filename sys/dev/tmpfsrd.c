@@ -25,6 +25,7 @@
 #include <sys/file.h>
 #include <sys/conf.h>
 #include <sys/dkio.h>
+#include <sys/mtio.h>
 #include <sys/workq.h>
 
 void	tmpfsrdattach(int);
@@ -57,7 +58,6 @@ struct cfdriver tmpfsrd_cd = {
 extern char	*esym, *eramdisk;
 uint8_t		*tmpfsrd_disk;
 uint64_t	 tmpfsrd_size;
-uint64_t	 tmpfsrd_read;
 
 int	tmpfsrdgetdisklabel(dev_t, struct tmpfsrd_softc *, struct disklabel *, int);
 
@@ -228,13 +228,6 @@ tmpfsrdclose(dev_t dev, int flag, int fmt, struct proc *p)
 	disk_unlock(&sc->sc_dk);
 
 	device_unref(&sc->sc_dev);
-
-	if (tmpfsrd_read == tmpfsrd_size &&
-	    (sc->sc_flags & TMPFSRD_TERMINATING) == 0) {
-		sc->sc_flags |= TMPFSRD_TERMINATING;
-		return (workq_add_task(NULL, 0, tmpfsrd_terminate, sc, NULL));
-	}
-
 	return (0);
 }
 
@@ -256,7 +249,7 @@ tmpfsrdstrategy(struct buf *bp)
 	}
 
 	off = (u_int64_t)bp->b_blkno * DEV_BSIZE;
-	if (off < tmpfsrd_read || off > tmpfsrd_size) {
+	if (off > tmpfsrd_size) {
 		bp->b_error = ENXIO;
 		goto bad;
 	}
@@ -266,7 +259,6 @@ tmpfsrdstrategy(struct buf *bp)
 	memcpy(bp->b_data, tmpfsrd_disk + off, len);
 
 	bp->b_resid = bp->b_bcount - len;
-	tmpfsrd_read += len;
 
 	/*
 	 * On systems with limited memory, we could pmap_kremove() here when
@@ -305,6 +297,19 @@ tmpfsrdioctl(dev_t dev, u_long cmd, caddr_t data, int fflag, struct proc *p)
 		break;
 	case DIOCGDINFO:
 		*(struct disklabel *)data = *(sc->sc_dk.dk_label);
+		break;
+	case MTIOCTOP:
+		if (((struct mtop *)data)->mt_op != MTOFFL) {
+			error = EIO;
+			break;
+		}
+		/* FALLTHROUGH */
+	case DIOCEJECT:
+		if ((sc->sc_flags & TMPFSRD_TERMINATING) == 0) {
+			sc->sc_flags |= TMPFSRD_TERMINATING;
+			error = workq_add_task(NULL, 0, tmpfsrd_terminate,
+			    sc, NULL);
+		}
 		break;
 	default:
 		error = ENOTTY;
