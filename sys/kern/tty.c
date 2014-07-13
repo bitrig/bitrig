@@ -1,4 +1,4 @@
-/*	$OpenBSD: tty.c,v 1.111 2014/07/12 18:43:32 tedu Exp $	*/
+/*	$OpenBSD: tty.c,v 1.112 2014/07/13 14:56:56 guenther Exp $	*/
 /*	$NetBSD: tty.c,v 1.68.4.2 1996/06/06 16:04:52 thorpej Exp $	*/
 
 /*-
