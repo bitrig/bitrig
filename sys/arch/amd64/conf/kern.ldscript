@@ -53,7 +53,7 @@ SECTIONS
 	PROVIDE (etext = .);
 	_etext = .;
 
-	/* Move rodata to the next page, so we can nuke X and W bit on them */
+	/* Move rodata to the next page, so we can nuke X and W bit on it */
 	. = ALIGN(__ALIGN_SIZE);
 	.rodata :
 	{
@@ -62,13 +62,13 @@ SECTIONS
 	PROVIDE (erodata = .);
 	_erodata = .;
 
+	/* Move .random to the next page, so we can add W bit on it and .data */
+	. = ALIGN(__ALIGN_SIZE);
 	.openbsd.randomdata :
 	{
 		*(.openbsd.randomdata)
 	} :openbsd_randomize :data
 
-	/* Move data to the next page, so we can add W bit on them */
-	. = ALIGN(__ALIGN_SIZE);
 	.data :
 	{
 		*(.data .data.*)
