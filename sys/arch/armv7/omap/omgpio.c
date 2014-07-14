@@ -470,7 +470,8 @@ omgpio_pin_ctl(void *arg, int pin, int flags)
 		omgpio_pin_dir_write(sc, pin, OMGPIO_DIR_OUT);
 
 	if (board_id == BOARD_ID_AM335X_BEAGLEBONE)
-		sitara_cm_padconf_set_gpioflags(pin, flags);
+		sitara_cm_padconf_set_gpioflags(
+		    sc->sc_dev.dv_unit * GPIO_NUM_PINS + pin, flags);
 }
 
 void
