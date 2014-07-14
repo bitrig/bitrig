@@ -1,4 +1,4 @@
-/* $OpenBSD: omgpio.c,v 1.4 2014/07/12 18:44:41 tedu Exp $ */
+/* $OpenBSD: omgpio.c,v 1.5 2014/07/14 08:55:07 rapha Exp $ */
 /*
  * Copyright (c) 2007,2009 Dale Rahn <drahn@openbsd.org>
  *
