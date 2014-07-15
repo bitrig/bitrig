@@ -1,6 +1,6 @@
 #!/bin/sh -
 #
-#	$OpenBSD: newvers.sh,v 1.125 2013/04/09 18:47:14 mlarkin Exp $
+#	$OpenBSD: newvers.sh,v 1.132 2014/07/15 21:59:17 deraadt Exp $
 #	$NetBSD: newvers.sh,v 1.17.2.1 1995/10/12 05:17:11 jtc Exp $
 #
 # Copyright (c) 1984, 1986, 1990, 1993
