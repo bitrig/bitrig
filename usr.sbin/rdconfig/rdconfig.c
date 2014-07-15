@@ -313,7 +313,7 @@ __dead void
 extract(const Elf_Phdr *phdr, int i)
 {
 	char *buf;
-	Elf64_Xword n = 0;
+	Elf_Word n = 0;
 
 	buf = calloc(1, CHUNKSIZ);
 	if (buf == NULL)
