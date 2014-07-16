@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.cross,v 1.70 2014/04/23 18:24:23 ajacoutot Exp $
+# $OpenBSD: Makefile.cross,v 1.72 2014/07/16 01:23:39 deraadt Exp $
 
 # preconditions for cross build environment
 # build and install the binutils cross package eg bitrig-newbinutils-2.22-arm
@@ -102,7 +102,7 @@ PIE_DEFAULT=
 NO_CROSS+=bind
 NO_CROSS+=httpd
 NO_CROSS+=microcode
-NO_CROSS+=groff lynx perl texinfo cvs
+NO_CROSS+=groff perl texinfo cvs
 NO_CROSS+=nsd
 NO_CROSS+=nginx
 NO_CROSS+=sqlite3
