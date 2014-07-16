@@ -67,6 +67,8 @@ struct arm32_pci_chipset {
 	void		*pc_intr_v;
 	int		(*pc_intr_map)(struct pci_attach_args *,
 			    pci_intr_handle_t *);
+	int		(*pc_intr_map_msi)(struct pci_attach_args *,
+			    pci_intr_handle_t *);
 	const char	*(*pc_intr_string)(void *, pci_intr_handle_t);
 	void		*(*pc_intr_establish)(void *, pci_intr_handle_t,
 			    int, int (*)(void *), void *, const char *);
@@ -92,7 +94,8 @@ struct arm32_pci_chipset {
     (*(c)->pc_conf_write)((c)->pc_conf_v, (t), (r), (v))
 #define	pci_intr_map(pa, ihp)						\
     (*(pa)->pa_pc->pc_intr_map)((pa), (ihp))
-#define	pci_intr_map_msi(pa, ihp)	(-1)
+#define	pci_intr_map_msi(pa, ihp)					\
+    (*(pa)->pa_pc->pc_intr_map_msi)((pa), (ihp))
 #define	pci_intr_string(c, ih)						\
     (*(c)->pc_intr_string)((c)->pc_intr_v, (ih))
 #define	pci_intr_establish(c, ih, l, h, a, n)				\
