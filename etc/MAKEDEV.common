@@ -227,9 +227,12 @@ target(ramd, wd, 0, 1, 2, 3, 4)dnl
 target(ramd, st, 0, 1)dnl
 target(ramd, cd, 0, 1)dnl
 target(ramd, rd, 0)dnl
+target(ramd, tmpfsrd, 0)dnl
 dnl
 __devitem(rd, {-rd*-}, quote(rd)pseudo-disks)dnl
 _mkdev(rd, rd*, {-dodisk2 rd $U major_rd_b major_rd_c $U 0{--}ifstep(rd)-})dnl
+__devitem(tmpfsrd, {-tmpfsrd*-}, quote(tmpfsrd)pseudo-disks)dnl
+_mkdev(tmpfsrd, tmpfsrd*, {-dodisk2 tmpfsrd $U major_tmpfsrd_b major_tmpfsrd_c $U 0{--}ifstep(tmpfsrd)-})dnl
 __devitem(xd, xd*, Xylogic 753/7053 disks)dnl
 __devitem(xy, xy*, {-	Xylogic 450/451 disks-})dnl
 __devitem(flo, {-fd*-}, {-Floppy disk drives (3 1/2"{-,-} 5 1/4")-},fd)dnl

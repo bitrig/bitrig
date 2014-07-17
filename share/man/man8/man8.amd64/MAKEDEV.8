@@ -1,4 +1,4 @@
-.\" $OpenBSD: MAKEDEV.8,v 1.68 2014/03/14 23:55:58 kettenis Exp $
+.\" $OpenBSD$
 .\"
 .\" THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
 .\" generated from:
@@ -23,7 +23,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: March 14 2014 $
+.Dd $Mdocdate: March 18 2009 $
 .Dt MAKEDEV 8 amd64
 .Os
 .Sh NAME
@@ -87,6 +87,10 @@ pseudo-disks, see
 .It Ar sd*
 SCSI disks, including flopticals, see
 .Xr sd 4 .
+.It Ar tmpfsrd*
+.Dq tmpfsrd
+pseudo-disks, see
+.Xr tmpfsrd 4 .
 .It Ar vnd*
 .Dq file
 pseudo-disk devices, see
