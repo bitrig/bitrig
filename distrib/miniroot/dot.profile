@@ -45,6 +45,13 @@ set -o emacs
 if [ "X${DONEPROFILE}" = "X" ]; then
 	DONEPROFILE=YES
 
+	rootdisk=$(df / | grep -o '^/[0-9a-z/]*')
+
+	case $rootdisk in
+	/dev/tmpfsrd*)	eject $rootdisk;
+			;;
+	esac
+
 	mount -uw /
 
 	# Create a fake rc that just returns 1 and throws us back
