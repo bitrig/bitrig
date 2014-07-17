@@ -352,7 +352,10 @@ ufs_getattr(void *v)
 	vap->va_nlink = ip->i_effnlink;
 	vap->va_uid = DIP(ip, uid);
 	vap->va_gid = DIP(ip, gid);
-	vap->va_rdev = (dev_t) DIP(ip, rdev);
+	if (vp->v_type == VBLK || vp->v_type == VCHR)
+		vap->va_rdev = (dev_t) DIP(ip, rdev);
+	else
+		vap->va_rdev = (dev_t) VNOVAL;
 	vap->va_size = DIP(ip, size);
 	vap->va_atime.tv_sec = DIP(ip, atime);
 	vap->va_atime.tv_nsec = DIP(ip, atimensec);
