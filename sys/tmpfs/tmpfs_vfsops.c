@@ -278,6 +278,7 @@ int
 tmpfs_mountroot(void)
 {
 	struct mount *mp;
+	struct tmpfs_mount *tmp;
 	struct proc *p = curproc;       /* XXX */
 	struct tmpfs_args args;
 	int error;
@@ -312,7 +313,10 @@ tmpfs_mountroot(void)
 	}
 
 	TAILQ_INSERT_TAIL(&mountlist, mp, mnt_list);
+
+	tmp = VFS_TO_TMPFS(mp);
 	vfs_unbusy(mp);
+	inittodr(tmp->tm_root->tn_ctime.tv_sec);
 
 	return (0);
 }
