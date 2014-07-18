@@ -100,8 +100,8 @@ cd9660_mountroot()
 	if ((error = bdevvp(swapdev, &swapdev_vp)) ||
 	    (error = bdevvp(rootdev, &rootvp))) {
 		printf("cd9660_mountroot: can't setup bdevvp's");
-                return (error);
-        }
+		return (error);
+	}
 
 	if ((error = vfs_rootmountalloc("cd9660", "root_device", &mp)) != 0)
 		return (error);
@@ -109,16 +109,16 @@ cd9660_mountroot()
 	if ((error = iso_mountfs(rootvp, mp, p, &args)) != 0) {
 		mp->mnt_vfc->vfc_refcount--;
 		vfs_unbusy(mp);
-                free(mp, M_MOUNT);
-                return (error);
-        }
+		free(mp, M_MOUNT);
+		return (error);
+	}
 
-        TAILQ_INSERT_TAIL(&mountlist, mp, mnt_list);
-        (void)cd9660_statfs(mp, &mp->mnt_stat, p);
+	TAILQ_INSERT_TAIL(&mountlist, mp, mnt_list);
+	(void)cd9660_statfs(mp, &mp->mnt_stat, p);
 	vfs_unbusy(mp);
 	inittodr(0);
 
-        return (0);
+	return (0);
 }
 
 /*
