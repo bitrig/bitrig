@@ -255,9 +255,7 @@ tmpfs_mountfs(struct mount *mp, const char *path, struct vnode *vp,
 	strlcpy(mp->mnt_stat.f_mntfromspec, tmp->tm_fspec,
 	    sizeof(mp->mnt_stat.f_mntfromspec) - 1);
 
-	if (strcmp("tmpfs", fspec))
-		error = tmpfs_snap_load(mp, fspec, p);
-	else if (vp != NULL) {
+	if (vp != NULL) {
 		error = VOP_OPEN(vp, FREAD, p->p_ucred);
 		if (error)
 			goto bail;
@@ -265,7 +263,8 @@ tmpfs_mountfs(struct mount *mp, const char *path, struct vnode *vp,
 		error = tmpfs_snap_load_vnode(mp, vp, p);
 		VOP_CLOSE(vp, FREAD, p->p_ucred);
 		VOP_UNLOCK(vp, 0);
-	}
+	} else if (strcmp("tmpfs", fspec))
+		error = tmpfs_snap_load(mp, fspec, p);
 
 bail:
 	if (error)
@@ -273,6 +272,8 @@ bail:
 
 	return (error);
 }
+
+#define TMPFSROOT_NAME	"/dev/tmpfsrd0a"
 
 int
 tmpfs_mountroot(void)
@@ -295,14 +296,14 @@ tmpfs_mountroot(void)
 		return (error);
 	}
 
-	if ((error = vfs_rootmountalloc("tmpfs", "root_device", &mp)) != 0) {
+	if ((error = vfs_rootmountalloc("tmpfs", TMPFSROOT_NAME, &mp)) != 0) {
 		vrele(swapdev_vp);
 		vrele(rootvp);
 		return (error);
 	}
 
 	bzero(&args, sizeof(args));
-	error = tmpfs_mountfs(mp, "/", rootvp, &args, "tmpfs", p);
+	error = tmpfs_mountfs(mp, "/", rootvp, &args, TMPFSROOT_NAME, p);
 	if (error) {
 		mp->mnt_vfc->vfc_refcount--;
 		vfs_unbusy(mp);
