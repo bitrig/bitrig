@@ -1,4 +1,4 @@
-#	$OpenBSD: 4.4BSD.dist,v 1.260 2014/07/18 11:35:32 ajacoutot Exp $
+#	$OpenBSD: 4.4BSD.dist,v 1.261 2014/07/18 18:20:42 deraadt Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 
@@ -955,9 +955,7 @@ var
     ..
 
     # ./var/empty
-    empty		mode=0755
-        dev		mode=0555
-        ..
+    empty			mode=0755
     ..
 
     # ./var/backups
@@ -1014,9 +1012,7 @@ var
 
     # ./var/named
     named
-        dev
-        ..
-        etc		uname=root gname=named mode=0750
+        etc			uname=root gname=named mode=0750
         ..
         master
         ..
@@ -1032,9 +1028,7 @@ var
     nsd
         db		uname=root gname=_nsd mode=0775
         ..
-        dev
-        ..
-        etc		uname=root gname=_nsd mode=0750
+        etc			uname=root gname=_nsd mode=0750
         ..
 
         # ./var/nsd/run
@@ -1098,9 +1092,7 @@ var
 
     # ./var/unbound
     unbound
-        dev		uname=root gname=wheel mode=0755
-        ..
-        etc		uname=root gname=wheel mode=0755
+        etc			uname=root gname=wheel mode=0755
         ..
         db		uname=root gname=_unbound mode=0775
         ..
@@ -1110,9 +1102,7 @@ var
     www type=dir uname=root gname=daemon mode=755
         cache type=dir uname=www gname=daemon mode=1700
         ..
-        dev type=dir uname=root gname=daemon mode=755
-        ..
-        cgi-bin  type=dir uname=root gname=daemon mode=755
+        cgi-bin			type=dir uname=root gname=daemon mode=755
         ..
         htdocs  type=dir uname=root gname=daemon mode=755
         ..
