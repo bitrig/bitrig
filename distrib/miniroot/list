@@ -40,7 +40,7 @@ LINK	instbin					sbin/mount_cd9660
 LINK	instbin					sbin/mount_udf
 LINK	instbin					sbin/mount_ffs
 LINK	instbin					sbin/mount_nfs
-LINK	instbin					sbin/newfs sbin/mount_mfs
+LINK	instbin					sbin/newfs
 LINK	instbin					sbin/ping
 LINK	instbin					sbin/ping6
 LINK	instbin					sbin/reboot sbin/halt
