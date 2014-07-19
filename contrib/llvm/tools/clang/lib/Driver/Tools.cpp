@@ -3550,7 +3550,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   // them.
   // Support both clang's -f[no-]color-diagnostics and gcc's
   // -f[no-]diagnostics-colors[=never|always|auto].
-  enum { Colors_On, Colors_Off, Colors_Auto } ShowColors = Colors_Auto;
+  enum { Colors_On, Colors_Off, Colors_Auto } ShowColors = Colors_Off;
   for (ArgList::const_iterator it = Args.begin(), ie = Args.end();
        it != ie; ++it) {
     const Option &O = (*it)->getOption();
