@@ -1,0 +1,24 @@
+commit 35e66e842e21f767da5d9d1c621b28a3d7977888
+Author: pedro martelletto <pedro@ambientworks.net>
+Date:   Sat Jul 19 09:30:34 2014 +0200
+
+    disable colours by default in clang
+    
+    make '-fno-color-diagnostics' the default in clang. to enable colours,
+    use -fcolor-diagnostics.
+    
+    ok natano@ patrick@ jcv@
+
+diff --git contrib/llvm/tools/clang/lib/Driver/Tools.cpp contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+index acd910a..89c907a 100644
+--- contrib/llvm/tools/clang/lib/Driver/Tools.cpp
++++ contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+@@ -3550,7 +3550,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
+   // them.
+   // Support both clang's -f[no-]color-diagnostics and gcc's
+   // -f[no-]diagnostics-colors[=never|always|auto].
+-  enum { Colors_On, Colors_Off, Colors_Auto } ShowColors = Colors_Auto;
++  enum { Colors_On, Colors_Off, Colors_Auto } ShowColors = Colors_Off;
+   for (ArgList::const_iterator it = Args.begin(), ie = Args.end();
+        it != ie; ++it) {
+     const Option &O = (*it)->getOption();
