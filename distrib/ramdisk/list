@@ -48,11 +48,15 @@ LINK	instbin					sbin/reboot sbin/halt
 LINK	instbin					sbin/route
 LINK	instbin					sbin/rtsol
 LINK	instbin					sbin/sysctl
-LINK	instbin					usr/bin/signify
 LINK	instbin					sbin/umount
 LINK	instbin					usr/bin/ftp
 LINK	instbin					usr/bin/gzip usr/bin/gunzip usr/bin/gzcat
 LINK	instbin					usr/bin/sed
+LINK	instbin					usr/bin/signify
+
+# copy the MAKEDEV script and make some devices
+SCRIPT	${DESTDIR}/dev/MAKEDEV			dev/MAKEDEV
+SPECIAL	cd dev; sh MAKEDEV ramdisk
 
 # various files that we need in /etc for the install
 COPY	${DESTDIR}/etc/group			etc/group
