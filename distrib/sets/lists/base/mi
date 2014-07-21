@@ -362,7 +362,6 @@
 ./usr/bin/mixerctl
 ./usr/bin/mkdep
 ./usr/bin/mklocale
-./usr/bin/mkstr
 ./usr/bin/mktemp
 ./usr/bin/modstat
 ./usr/bin/more
@@ -514,7 +513,6 @@
 ./usr/bin/write
 ./usr/bin/x99token
 ./usr/bin/xargs
-./usr/bin/xstr
 ./usr/bin/xsubpp
 ./usr/bin/yacc
 ./usr/bin/yes
@@ -3516,7 +3514,6 @@
 ./usr/share/man/man1/mkdir.1
 ./usr/share/man/man1/mkfifo.1
 ./usr/share/man/man1/mklocale.1
-./usr/share/man/man1/mkstr.1
 ./usr/share/man/man1/mktemp.1
 ./usr/share/man/man1/more.1
 ./usr/share/man/man1/mt.1
@@ -3827,7 +3824,6 @@
 ./usr/share/man/man1/write.1
 ./usr/share/man/man1/x99token.1
 ./usr/share/man/man1/xargs.1
-./usr/share/man/man1/xstr.1
 ./usr/share/man/man1/xsubpp.1
 ./usr/share/man/man1/yacc.1
 ./usr/share/man/man1/yes.1
