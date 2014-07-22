@@ -1,4 +1,4 @@
-/*	$OpenBSD: quotacheck.c,v 1.33 2014/05/20 21:11:16 krw Exp $	*/
+/*	$OpenBSD: quotacheck.c,v 1.34 2014/07/22 18:28:40 jca Exp $	*/
 /*	$NetBSD: quotacheck.c,v 1.12 1996/03/30 22:34:25 mark Exp $	*/
 
 /*
