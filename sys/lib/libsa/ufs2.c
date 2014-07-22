@@ -492,7 +492,7 @@ ufs2_open(char *path, struct open_file *f)
 				if (rc)
 					goto out;
 
-				bcopy((char *)buf, namebuf, (unsigned)link_len);
+				bcopy(buf, namebuf, (unsigned)link_len);
 			}
 
 			/*
