@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.32 2014/02/21 19:01:02 deraadt Exp $
+#	$OpenBSD: Makefile,v 1.33 2014/07/24 19:21:48 miod Exp $
 
 SUBDIR=	libstubs \
 	arch date dd dhclient dmesg ed grep gzip ifconfig init \
