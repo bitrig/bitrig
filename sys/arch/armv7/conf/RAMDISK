@@ -25,6 +25,7 @@ options	DST=0		# daylight saving time used by RTC
 option	FFS		# UFS
 option	FFS2		# UFS2
 option	WAPBL		# File system journaling support
+option	TMPFS		# efficient memory file system
 #options	CD9660		# ISO 9660 + Rock Ridge file system
 options	MSDOSFS		# MS-DOS file system
 options	INET		# IP + ICMP + TCP + UDP
