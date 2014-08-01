@@ -21,15 +21,12 @@ VND_RDEV=	/dev/r${VND}a
 VND_CRDEV=	/dev/r${VND}c
 PID!=		echo $$$$
 
+TMPFS_MAXSIZE=	64M
+
 KERNADDR_OMAP=0x80300000
 KERNADDR_IMX=0x10300000
 KERNADDR_EXYNOS=0x40800000
 KERNADDR_SUNXI=0x40800000
-
-DISKTYPE=       rdroot84
-NBLKS=		16640
-# minfree, opt, b/i  trks, sects, cpg
-NEWFSARGS= -m 0 -o space -i 4096
 
 .ifndef DESTDIR
 all ${IMAGE}:
@@ -51,9 +48,10 @@ bsd:
 	    ${MAKE} clean && exec ${MAKE}
 	cp ${TOP}/../../sys/arch/armv7/compile/RAMDISK/bsd bsd
 
-${BSD_RD}: ${CBIN} ${IMAGE} bsd rdsetroot
+${BSD_RD}: ${CBIN} ${IMAGE} bsd
 	cp bsd ${BSD_RD}
-	${.OBJDIR}/rdsetroot ${BSD_RD} ${IMAGE}
+	rdconfig bsd.rd ${IMAGE}
+	rdconfig -I bsd.rd
 
 .for SOC in ${ALLSOC}
 ${BSD_RD}.${SOC}.umg:
@@ -61,27 +59,20 @@ ${BSD_RD}.${SOC}.umg:
 	    ${BSD_RD} ${BSD_RD}.${SOC}.umg
 .endfor
 
-${IMAGE}: rd_setup do_files rd_teardown
+${IMAGE}: tmpfs_setup do_files tmpfs_snapshot tmpfs_teardown
 
 .endif
 
-rd_setup:
-	dd if=/dev/zero of=${IMAGE} bs=512 count=${NBLKS}
-	vnconfig -v -c ${VND} ${IMAGE}
-	disklabel -w ${VND} ${DISKTYPE}
-	newfs ${NEWFSARGS} ${VND_RDEV}
-	fsck ${VND_RDEV}
-	mount ${VND_DEV} ${MOUNT_POINT}
+tmpfs_setup:
+	mount -t tmpfs -o -s${TMPFS_MAXSIZE} tmpfs ${MOUNT_POINT}
 
-rd_teardown:
+tmpfs_snapshot:
+	rm -f ${IMAGE}
+	mount -t tmpfs -u -o snapshot ${IMAGE} ${MOUNT_POINT}
+
+tmpfs_teardown:
 	@df -i ${MOUNT_POINT}
 	-umount ${MOUNT_POINT}
-	-vnconfig -u ${VND}
-
-rdsetroot:	${TOP}/../common/elfrdsetroot.c
-	${HOSTCC} ${HOSTCFLAGS} -o rdsetroot \
-	    ${TOP}/../common/elfrdsetroot.c ${TOP}/../common/elf32.c \
-	    ${TOP}/../common/elf64.c
 
 unconfig:
 	-umount -f ${MOUNT_POINT}
@@ -108,7 +99,7 @@ do_files:
 clean cleandir:
 	/bin/rm -f *.core ${IMAGE} ${CBIN} ${CBIN}.mk ${CBIN}.cache \
 	    lib*.a lib*.olist ${CBIN}.map \
-	    *.o *.lo *.c ${ALLBSD} ${ALLBSDRD} rdsetroot
+	    *.o *.lo *.c ${ALLBSD} ${ALLBSDRD}
 	rm -f instbin.conf
 	rm -rf cd-dir
 
