@@ -672,11 +672,14 @@ initarm(void *arg0, void *arg1, void *arg2)
 	printf("Mapping kernel\n");
 #endif
 
-	/* Now we fill in the L2 pagetable for the kernel static code/data */
+	/*
+	 * Now we fill in the L2 pagetable for the kernel static code/data.
+	 * Ramdisk will be mapped separately, so that it can be unmapped.
+	 */
 	{
 		extern char etext[];
 		size_t textsize = (u_int32_t) etext - KERNEL_TEXT_BASE;
-		size_t totalsize = (u_int32_t) kernel_end - KERNEL_TEXT_BASE;
+		size_t totalsize = (u_int32_t) esym - KERNEL_TEXT_BASE;
 		u_int logical;
 
 		textsize = (textsize + PGOFSET) & ~PGOFSET;
@@ -819,6 +822,19 @@ initarm(void *arg0, void *arg1, void *arg2)
 	 */
 	armv7_bs_tag.bs_map = map_func_save;
 	armv7_a4x_bs_tag.bs_map = map_func_save;
+
+	/*
+	 * Make sure ramdisk is mapped, if there is any.
+	 */
+	if (eramdisk) {
+		uint32_t ramdisk = roundup(esym, PAGE_SIZE);
+		uint32_t pramdisk = physical_start + (ramdisk - KERNEL_TEXT_BASE);
+		while (ramdisk < eramdisk) {
+			pmap_kenter_pa(ramdisk, pramdisk, VM_PROT_READ|VM_PROT_WRITE);
+			ramdisk += PAGE_SIZE;
+			pramdisk += PAGE_SIZE;
+		}
+	}
 
 #ifdef DDB
 	db_machine_init();
