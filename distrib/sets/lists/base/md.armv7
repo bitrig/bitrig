@@ -1777,7 +1777,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/resource.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/resourcevar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/rwlock.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/sys/scanio.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/sched.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/scsiio.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/select.ph

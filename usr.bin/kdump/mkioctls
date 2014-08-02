@@ -69,7 +69,6 @@ BEGIN {
 	print "#include <sys/mtio.h>"
 	print "#include <sys/pciio.h>"
 	print "#include <sys/radioio.h>"
-	print "#include <sys/scanio.h>"
 	print "#include <sys/scsiio.h>"
 	print "#include <sys/tty.h>"
 	print "#include <sys/videoio.h>"

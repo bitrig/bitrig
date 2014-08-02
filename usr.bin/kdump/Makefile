@@ -37,7 +37,6 @@ ioctl.c: ${.CURDIR}/Makefile ${.CURDIR}/mkioctls
 	    ${SYS_DIR}/sys/mtio.h \
 	    ${SYS_DIR}/sys/pciio.h \
 	    ${SYS_DIR}/sys/radioio.h \
-	    ${SYS_DIR}/sys/scanio.h \
 	    ${SYS_DIR}/sys/scsiio.h \
 	    ${SYS_DIR}/sys/sockio.h \
 	    ${SYS_DIR}/sys/videoio.h \

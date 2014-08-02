@@ -1309,7 +1309,6 @@
 ./usr/include/sys/resource.h
 ./usr/include/sys/resourcevar.h
 ./usr/include/sys/rwlock.h
-./usr/include/sys/scanio.h
 ./usr/include/sys/sched.h
 ./usr/include/sys/scsiio.h
 ./usr/include/sys/select.h

@@ -1780,7 +1780,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/resource.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/resourcevar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/rwlock.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/sys/scanio.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/sched.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/scsiio.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/select.ph

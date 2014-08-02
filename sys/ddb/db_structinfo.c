@@ -106,7 +106,6 @@
 #include <sys/mtio.h>
 #include <sys/pciio.h>
 #include <sys/radioio.h>
-#include <sys/scanio.h>
 #include <sys/scsiio.h>
 #include <sys/sockio.h>
 #include <sys/videoio.h>
