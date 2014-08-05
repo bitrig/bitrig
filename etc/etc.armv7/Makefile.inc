@@ -23,4 +23,5 @@ post-kernels:
 bootblocks:
 
 MDEXT+=	miniroot-am335x-${OSrev}.fs miniroot-beagle-${OSrev}.fs \
-	miniroot-panda-${OSrev}.fs
+	miniroot-exynos-${OSrev}.fs miniroot-imx-${OSrev}.fs \
+	miniroot-panda-${OSrev}.fs miniroot-sunxi-${OSrev}.fs
