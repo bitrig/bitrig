@@ -319,6 +319,12 @@ prcm_am335x_clkctrl(int mod)
 		return PRCM_AM335X_TPTC1_CLKCTRL;
 	case PRCM_TPTC2:
 		return PRCM_AM335X_TPTC2_CLKCTRL;
+	case PRCM_I2C0:
+		return PRCM_AM335X_I2C0_CLKCTRL;
+	case PRCM_I2C1:
+		return PRCM_AM335X_I2C1_CLKCTRL;
+	case PRCM_I2C2:
+		return PRCM_AM335X_I2C2_CLKCTRL;
 	default:
 		panic("%s: module not found\n", __func__);
 	}

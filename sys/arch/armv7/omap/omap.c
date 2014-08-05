@@ -74,6 +74,9 @@ struct board_dev beaglebone_devs[] = {
 	{ "omgpio",	1 },
 	{ "omgpio",	2 },
 	{ "omgpio",	3 },
+	{ "tiiic",	0 },
+	{ "tiiic",	1 },
+	{ "tiiic",	2 },
 	{ "ommmc",	0 },		/* HSMMC0 */
 	{ "ommmc",	1 },		/* HSMMC1 */
 	{ "com",	0 },		/* UART0 */

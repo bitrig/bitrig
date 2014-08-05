@@ -12,6 +12,8 @@ sitaracm*	at omap?		# sitara control module
 omdog*		at omap?		# watchdog timer
 omgpio*		at omap?		# user-visible GPIO pins?
 gpio*		at omgpio?
+#tiiic*		at omap?
+#iic*		at tiiic?
 gptimer*	at omap?		# general purpose timers
 dmtimer*	at omap?		# am335x dual mode timers
 ommmc*		at omap?		# SD/MMC card controller

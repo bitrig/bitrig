@@ -34,6 +34,10 @@ device omgpio: gpiobus
 attach omgpio at omap
 file	arch/armv7/omap/omgpio.c		omgpio
 
+device tiiic: i2cbus
+attach tiiic at omap
+file	arch/armv7/omap/ti_iic.c		tiiic
+
 device edma
 attach edma at omap
 file	arch/armv7/omap/edma.c			edma
