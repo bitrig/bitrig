@@ -558,6 +558,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/mutex.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/param.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/pcb.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/armv7/pci_machdep.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/pio.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/pmap.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/proc.ph
