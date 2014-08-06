@@ -31,8 +31,10 @@ typedef struct __attribute__((packed)) {
 	int64_t	tst_sec;
 	int32_t	tst_nsec;
 } tmpfs_snap_timespec_t;
-#define TMPFS_TS_TO_TST(ts)	((tmpfs_snap_timespec_t){ts.tv_sec, ts.tv_nsec})
-#define TMPFS_TST_TO_TS(tst)	((struct timespec){tst.tst_sec, tst.tst_nsec})
+#define TMPFS_TS_TO_TST(ts)	\
+	((tmpfs_snap_timespec_t){ (ts).tv_sec, (int32_t)(ts).tv_nsec })
+#define TMPFS_TST_TO_TS(tst)	\
+	((struct timespec){ (tst).tst_sec, (tst).tst_nsec })
 
 typedef struct __attribute__((packed)) {
 	char		tsn_name[MAXNAMLEN + 1];
@@ -82,25 +84,26 @@ typedef struct __attribute__((packed)) {
 #define TMPFS_SNAP_NODE_NTOH(x)	tmpfs_snap_node_bswap(x)
 #endif
 
-int	tmpfs_snap_rdwr(struct vnode *, enum uio_rw, void *, size_t, off_t *);
+int	tmpfs_snap_rdwr(struct vnode *, enum uio_rw, void *, size_t,
+	    uint64_t *);
 int	tmpfs_snap_file_io(struct vnode *, enum uio_rw, const tmpfs_node_t *,
-	    off_t *);
+	    uint64_t *);
 
 /*
  * Functions to dump (generate) a snapshot.
  */
 
 void	tmpfs_snap_fill_hdr(tmpfs_snap_node_t *, const tmpfs_node_t *);
-int	tmpfs_snap_dump_hdr(struct vnode *, off_t *, tmpfs_snap_node_t *);
-int	tmpfs_snap_dump_file(struct vnode *, off_t *, tmpfs_snap_node_t *,
+int	tmpfs_snap_dump_hdr(struct vnode *, uint64_t *, tmpfs_snap_node_t *);
+int	tmpfs_snap_dump_file(struct vnode *, uint64_t *, tmpfs_snap_node_t *,
 	    const tmpfs_dirent_t *);
-int	tmpfs_snap_dump_link(struct vnode *, off_t *, tmpfs_snap_node_t *,
+int	tmpfs_snap_dump_link(struct vnode *, uint64_t *, tmpfs_snap_node_t *,
 	    const tmpfs_dirent_t *);
-int	tmpfs_snap_dump_dev(struct vnode *, off_t *, tmpfs_snap_node_t *,
+int	tmpfs_snap_dump_dev(struct vnode *, uint64_t *, tmpfs_snap_node_t *,
 	    const tmpfs_dirent_t *);
-int	tmpfs_snap_dump_dirent(struct vnode *, off_t *, tmpfs_snap_node_t *,
+int	tmpfs_snap_dump_dirent(struct vnode *, uint64_t *, tmpfs_snap_node_t *,
 	    const tmpfs_dirent_t *);
-int	tmpfs_snap_dump_root(struct vnode *, off_t *, const tmpfs_mount_t *,
+int	tmpfs_snap_dump_root(struct vnode *, uint64_t *, const tmpfs_mount_t *,
 	    tmpfs_snap_node_t *);
 
 /*
@@ -113,19 +116,19 @@ int	tmpfs_snap_find_parent(const tmpfs_mount_t *, const tmpfs_snap_node_t *,
 	    tmpfs_node_t **);
 int	tmpfs_snap_load_hdr(tmpfs_mount_t *, tmpfs_node_t *,
 	    tmpfs_snap_node_t *, char *, dev_t);
-int	tmpfs_snap_load_file(struct vnode *, off_t *, tmpfs_mount_t *,
+int	tmpfs_snap_load_file(struct vnode *, uint64_t *, tmpfs_mount_t *,
 	    tmpfs_snap_node_t *);
-int	tmpfs_snap_load_link(struct vnode *, off_t *, tmpfs_mount_t *,
+int	tmpfs_snap_load_link(struct vnode *, uint64_t *, tmpfs_mount_t *,
 	    tmpfs_snap_node_t *);
 int	tmpfs_snap_alloc_node(tmpfs_mount_t *, const tmpfs_snap_node_t *,
 	    char *, dev_t, tmpfs_node_t **);
 int	tmpfs_snap_attach_node(tmpfs_mount_t *, tmpfs_snap_node_t *,
 	    tmpfs_node_t *);
-int	tmpfs_snap_load_node(struct vnode *, struct mount *, off_t *);
+int	tmpfs_snap_load_node(struct vnode *, struct mount *, uint64_t *);
 int	tmpfs_snap_hierwalk(const tmpfs_mount_t *, const tmpfs_dirent_t **,
 	    const tmpfs_node_t **);
 int	tmpfs_snap_dir_attach(tmpfs_node_t *, tmpfs_dirent_t *, tmpfs_node_t *);
-int	tmpfs_snap_node_setsize(tmpfs_mount_t *, tmpfs_node_t *, off_t);
+int	tmpfs_snap_node_setsize(tmpfs_mount_t *, tmpfs_node_t *, uint64_t);
 
 /*
  * Auxiliary functions. For a stable binary format the file flags and the vtype

@@ -30,13 +30,13 @@
 
 int
 tmpfs_snap_rdwr(struct vnode *vp, enum uio_rw rw, void *ptr, size_t sz,
-    off_t *off)
+    uint64_t *off)
 {
 	int error = 0;
 	struct proc *p = curproc;
 	int ioflags = IO_UNIT | IO_NODELOCKED;
 
-	error = vn_rdwr(rw, vp, ptr, sz, *off, UIO_SYSSPACE, ioflags,
+	error = vn_rdwr(rw, vp, ptr, (int)sz, *off, UIO_SYSSPACE, ioflags,
 	    p->p_ucred, NULL, p);
 
 	*off += sz;
@@ -46,7 +46,7 @@ tmpfs_snap_rdwr(struct vnode *vp, enum uio_rw rw, void *ptr, size_t sz,
 
 int
 tmpfs_snap_file_io(struct vnode *vp, enum uio_rw rw, const tmpfs_node_t *node,
-    off_t *off)
+    uint64_t *off)
 {
 	vaddr_t va;
 	vsize_t sz;
@@ -64,7 +64,9 @@ tmpfs_snap_file_io(struct vnode *vp, enum uio_rw rw, const tmpfs_node_t *node,
 		    UVM_ADV_SEQUENTIAL, 0);
 
 	for (done = 0; node->tn_size - done > 0; done += sz) {
-		sz = min(node->tn_size - done, TMPFS_UIO_MAXBYTES);
+		sz = node->tn_size - done;
+		if (sz > TMPFS_UIO_MAXBYTES)
+			sz = TMPFS_UIO_MAXBYTES;
 		uao_reference(node->tn_uobj);
 		error = uvm_map(kernel_map, &va, round_page(sz), node->tn_uobj,
 		    trunc_page(done), 0, uvmflags);
@@ -97,7 +99,7 @@ tmpfs_snap_fill_hdr(tmpfs_snap_node_t *tnhdr, const tmpfs_node_t *node)
 }
 
 int
-tmpfs_snap_dump_hdr(struct vnode *vp, off_t *off, tmpfs_snap_node_t *tnhdr)
+tmpfs_snap_dump_hdr(struct vnode *vp, uint64_t *off, tmpfs_snap_node_t *tnhdr)
 {
 	int error;
 
@@ -109,7 +111,7 @@ tmpfs_snap_dump_hdr(struct vnode *vp, off_t *off, tmpfs_snap_node_t *tnhdr)
 }
 
 int
-tmpfs_snap_dump_file(struct vnode *vp, off_t *off, tmpfs_snap_node_t *tnhdr,
+tmpfs_snap_dump_file(struct vnode *vp, uint64_t *off, tmpfs_snap_node_t *tnhdr,
     const tmpfs_dirent_t *td)
 {
 	int error;
@@ -126,7 +128,7 @@ tmpfs_snap_dump_file(struct vnode *vp, off_t *off, tmpfs_snap_node_t *tnhdr,
 }
 
 int
-tmpfs_snap_dump_link(struct vnode *vp, off_t *off, tmpfs_snap_node_t *tnhdr,
+tmpfs_snap_dump_link(struct vnode *vp, uint64_t *off, tmpfs_snap_node_t *tnhdr,
     const tmpfs_dirent_t *td)
 {
 	int error;
@@ -144,7 +146,7 @@ tmpfs_snap_dump_link(struct vnode *vp, off_t *off, tmpfs_snap_node_t *tnhdr,
 }
 
 int
-tmpfs_snap_dump_dev(struct vnode *vp, off_t *off, tmpfs_snap_node_t *tnhdr,
+tmpfs_snap_dump_dev(struct vnode *vp, uint64_t *off, tmpfs_snap_node_t *tnhdr,
     const tmpfs_dirent_t *td)
 {
 	tnhdr->tsn_spec.tsn_dev = td->td_node->tn_spec.tn_dev.tn_rdev;
@@ -157,8 +159,8 @@ tmpfs_snap_dump_dev(struct vnode *vp, off_t *off, tmpfs_snap_node_t *tnhdr,
  * target file.
  */
 int
-tmpfs_snap_dump_dirent(struct vnode *vp, off_t *off, tmpfs_snap_node_t *tnhdr,
-    const tmpfs_dirent_t *td)
+tmpfs_snap_dump_dirent(struct vnode *vp, uint64_t *off,
+    tmpfs_snap_node_t *tnhdr, const tmpfs_dirent_t *td)
 {
 	KASSERT(td->td_namelen <= MAXNAMLEN);
 	memcpy(tnhdr->tsn_name, td->td_name, td->td_namelen);
@@ -186,7 +188,7 @@ tmpfs_snap_dump_dirent(struct vnode *vp, off_t *off, tmpfs_snap_node_t *tnhdr,
 }
 
 int
-tmpfs_snap_dump_root(struct vnode *vp, off_t *off, const tmpfs_mount_t *tmp,
+tmpfs_snap_dump_root(struct vnode *vp, uint64_t *off, const tmpfs_mount_t *tmp,
     tmpfs_snap_node_t *tnhdr)
 {
 	KASSERT(tmp->tm_root != NULL);
@@ -454,7 +456,7 @@ tmpfs_snap_load_hdr(tmpfs_mount_t *tmp, tmpfs_node_t *node,
 }
 
 int
-tmpfs_snap_load_file(struct vnode *vp, off_t *off, tmpfs_mount_t *tmp,
+tmpfs_snap_load_file(struct vnode *vp, uint64_t *off, tmpfs_mount_t *tmp,
     tmpfs_snap_node_t *tnhdr)
 {
 	tmpfs_node_t *node = NULL;
@@ -489,7 +491,7 @@ out:
 }
 
 int
-tmpfs_snap_load_link(struct vnode *vp, off_t *off, tmpfs_mount_t *tmp,
+tmpfs_snap_load_link(struct vnode *vp, uint64_t *off, tmpfs_mount_t *tmp,
     tmpfs_snap_node_t *tnhdr)
 {
 	char target[MAXPATHLEN + 1];
@@ -512,7 +514,7 @@ tmpfs_snap_load_link(struct vnode *vp, off_t *off, tmpfs_mount_t *tmp,
  * Load one node from the snapshot file and store it in the file system.
  */
 int
-tmpfs_snap_load_node(struct vnode *vp, struct mount *mp, off_t *off)
+tmpfs_snap_load_node(struct vnode *vp, struct mount *mp, uint64_t *off)
 {
 	tmpfs_mount_t *tmp = VFS_TO_TMPFS(mp);
 	tmpfs_snap_node_t hdr;
@@ -554,8 +556,8 @@ tmpfs_snap_load_vnode(struct mount *mp, struct vnode *vp, struct proc *p)
 {
 	tmpfs_mount_t *tmp = VFS_TO_TMPFS(mp);
 	tmpfs_snap_t hdr;
+	uint64_t off = 0;
 	int error;
-	off_t off = 0;
 
 	KASSERT(tmp->tm_highest_inode == 2);
 
@@ -646,31 +648,31 @@ tmpfs_snap_dir_attach(tmpfs_node_t *dnode, tmpfs_dirent_t *de,
  * Set the size of a regular file.
  */
 int
-tmpfs_snap_node_setsize(tmpfs_mount_t *tmp, tmpfs_node_t *node, off_t len)
+tmpfs_snap_node_setsize(tmpfs_mount_t *tmp, tmpfs_node_t *node, uint64_t size)
 {
-	off_t newsize;
-	size_t newpages, bytes;
+	size_t pages, bytes;
 
 	KASSERT(node->tn_type == VREG);
-	KASSERT(len > 0);
 	KASSERT(!tmpfs_uio_cached(node));
+	KASSERT(size != 0);
+	KASSERT(node->tn_size == 0);
+	KASSERT(node->tn_spec.tn_reg.tn_aobj_pages == 0);
 
-	newsize = node->tn_size + len;
-	newpages = round_page(newsize) >> PAGE_SHIFT;
-
-	if (newsize > SIZE_MAX || newsize > TMPFS_MAX_FILESIZE)
+	if (size > TMPFS_MAX_FILESIZE)
 		return (EFTYPE);
 
-	bytes = round_page(newsize - node->tn_size);
+	bytes = round_page(size);
 	if (tmpfs_mem_incr(tmp, bytes) == 0)
 		return (ENOSPC);
-	if (uao_setsize(node->tn_uobj, newpages) != 0) {
+
+	pages = round_page(size) >> PAGE_SHIFT;
+	if (uao_setsize(node->tn_uobj, (int)pages) != 0) {
 		tmpfs_mem_decr(tmp, bytes);
 		return (ENOSPC);
 	}
 
-	node->tn_size = newsize;
-	node->tn_spec.tn_reg.tn_aobj_pages = newpages;
+	node->tn_size = size;
+	node->tn_spec.tn_reg.tn_aobj_pages = pages;
 
 	return (0);
 }
