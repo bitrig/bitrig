@@ -22,6 +22,15 @@ post-kernels:
 
 bootblocks:
 
+# OMAP
 MDEXT+=	miniroot-am335x-${OSrev}.fs miniroot-beagle-${OSrev}.fs \
-	miniroot-exynos-${OSrev}.fs miniroot-imx-${OSrev}.fs \
-	miniroot-panda-${OSrev}.fs miniroot-sunxi-${OSrev}.fs
+	miniroot-panda-${OSrev}.fs
+
+# IMX
+MDEXT+=	miniroot-cubox-${OSrev}.fs miniroot-nitrogen-${OSrev}.fs
+
+# EXYNOS
+MDEXT+=	miniroot-snow-${OSrev}.fs
+
+# SUNXI
+MDEXT+=	miniroot-sunxi-${OSrev}.fs

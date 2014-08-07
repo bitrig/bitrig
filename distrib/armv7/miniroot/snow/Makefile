@@ -1,4 +1,4 @@
-BOARD=	exynos
+BOARD=	snow
 PLATFORM=EXYNOS
 FS=ext2fs
 VND_FSDEV?=	${VND_JDEV}
