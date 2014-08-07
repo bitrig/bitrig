@@ -77,7 +77,7 @@ const struct space_allocation alloc_big[] = {
 	{  MEG(900),         GIG(2),   5, "/usr"	},
 	{  MEG(512),         GIG(1),   3, "/usr/X11R6"	},
 	{    GIG(2),        GIG(10),  10, "/usr/local"	},
-	{    GIG(1),         GIG(2),   2, "/usr/src"	},
+	{    GIG(2),         GIG(5),   2, "/usr/src"	},
 #ifdef STATICLINKING
 	{ MEG(2600),         GIG(3),   4, "/usr/obj"	},
 #else
