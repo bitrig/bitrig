@@ -1,4 +1,4 @@
-/*	$OpenBSD: ieee80211_node.c,v 1.81 2014/07/12 18:44:22 tedu Exp $	*/
+/*	$OpenBSD: ieee80211_node.c,v 1.82 2014/08/08 15:16:39 jasper Exp $	*/
 /*	$NetBSD: ieee80211_node.c,v 1.14 2004/05/09 09:18:47 dyoung Exp $	*/
 
 /*-
