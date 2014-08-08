@@ -513,32 +513,46 @@ tmpfs_setattr(void *v)
 	KASSERT(VOP_ISLOCKED(vp));
 
 	/* Abort if any unsettable attribute is given. */
-	if (vap->va_type != VNON || vap->va_nlink != VNOVAL ||
-	    vap->va_fsid != VNOVAL || vap->va_fileid != VNOVAL ||
+	if (vap->va_type != VNON || vap->va_nlink != (nlink_t)VNOVAL ||
+	    vap->va_fsid != VNOVAL || vap->va_fileid != (u_quad_t)VNOVAL ||
 	    vap->va_blocksize != VNOVAL || GOODTIME(&vap->va_ctime) ||
-	    vap->va_gen != VNOVAL || vap->va_rdev != VNOVAL ||
-	    vap->va_bytes != VNOVAL) {
+	    vap->va_gen != (u_long)VNOVAL || vap->va_rdev != VNOVAL ||
+	    vap->va_bytes != (u_quad_t)VNOVAL) {
 		return EINVAL;
 	}
-	if (error == 0 && (vap->va_flags != VNOVAL))
+
+	if (vap->va_flags != (u_long)VNOVAL) {
 		error = tmpfs_chflags(vp, vap->va_flags, cred, p);
+		if (error)
+			goto bail;
+	}
 
-	if (error == 0 && (vap->va_size != VNOVAL))
+	if (vap->va_size != (u_quad_t)VNOVAL) {
 		error = tmpfs_chsize(vp, vap->va_size, cred, p);
+		if (error)
+			goto bail;
+	}
 
-	if (error == 0 && (vap->va_uid != VNOVAL || vap->va_gid != VNOVAL))
+	if (vap->va_uid != (uid_t)VNOVAL || vap->va_gid != (gid_t)VNOVAL) {
 		error = tmpfs_chown(vp, vap->va_uid, vap->va_gid, cred, p);
+		if (error)
+			goto bail;
+	}
 
-	if (error == 0 && (vap->va_mode != VNOVAL))
+	if (vap->va_mode != (mode_t)VNOVAL) {
 		error = tmpfs_chmod(vp, vap->va_mode, cred, p);
+		if (error)
+			goto bail;
+	}
 
-	if (error == 0 && (GOODTIME(&vap->va_atime)
-	    || GOODTIME(&vap->va_mtime))) {
+	if (GOODTIME(&vap->va_atime) || GOODTIME(&vap->va_mtime)) {
 		error = tmpfs_chtimes(vp, &vap->va_atime, &vap->va_mtime,
 		    vap->va_vaflags, cred, p);
 		if (error == 0)
 			return 0;
 	}
+
+bail:
 	tmpfs_update(vp, NULL, NULL, 0);
 	return error;
 }
@@ -563,7 +577,7 @@ tmpfs_read(void *v)
 	if (vp->v_type != VREG) {
 		return EISDIR;
 	}
-	if (uio->uio_offset < 0) {
+	if (uio->uio_offset < 0 || uio->uio_resid > INT64_MAX) {
 		return EINVAL;
 	}
 
@@ -577,7 +591,9 @@ tmpfs_read(void *v)
 		if (node->tn_size <= uio->uio_offset) {
 			break;
 		}
-		len = MIN(node->tn_size - uio->uio_offset, uio->uio_resid);
+		len = node->tn_size - uio->uio_offset;
+		if (len > uio->uio_resid)
+			len = (off_t)uio->uio_resid;
 		if (len == 0) {
 			break;
 		}
@@ -620,14 +636,16 @@ tmpfs_write(void *v)
 	if (ioflag & IO_APPEND) {
 		uio->uio_offset = node->tn_size;
 	}
-	if (uio->uio_offset < 0 ||
-	    INT64_MAX - uio->uio_offset < uio->uio_resid) {
+	if (uio->uio_offset < 0 || uio->uio_resid > INT64_MAX ||
+	    INT64_MAX - uio->uio_offset < (off_t)uio->uio_resid) {
 		error = EINVAL;
 		goto out;
 	}
 
 	newsize = uio->uio_offset + uio->uio_resid;
-	if (newsize > SIZE_MAX || newsize > TMPFS_MAX_FILESIZE) {
+	KASSERT(newsize > 0);
+	if ((unsigned long long)newsize > SIZE_MAX ||
+	    (unsigned long long)newsize > TMPFS_MAX_FILESIZE) {
 		error = EFBIG;
 		goto out;
 	}
@@ -643,10 +661,12 @@ tmpfs_write(void *v)
 	while (error == 0 && uio->uio_resid > 0) {
 		vsize_t len;
 		uvm_vnp_uncache(vp);
-		len = MIN(node->tn_size - uio->uio_offset, uio->uio_resid);
-		if (len == 0) {
+		KASSERT(uio->uio_offset <= node->tn_size);
+		len = node->tn_size - uio->uio_offset;
+		if (len > uio->uio_resid)
+			len = uio->uio_resid;
+		if (len == 0)
 			break;
-		}
 		error = tmpfs_uiomove(node, uio, len);
 	}
 	if (error) {
@@ -1021,10 +1041,19 @@ tmpfs_readlink(void *v)
 	KASSERT(VOP_ISLOCKED(vp));
 	KASSERT(uio->uio_offset == 0);
 	KASSERT(vp->v_type == VLNK);
-
 	node = VP_TO_TMPFS_NODE(vp);
-	error = uiomove(node->tn_spec.tn_lnk.tn_link,
-	    MIN(node->tn_size, uio->uio_resid), uio);
+
+	if (node->tn_size < 0 || node->tn_size > INT_MAX ||
+	    uio->uio_resid > INT_MAX)
+		return EINVAL;
+
+	if (node->tn_size > (int)uio->uio_resid)
+		error = uiomove(node->tn_spec.tn_lnk.tn_link,
+		    (int)uio->uio_resid, uio);
+	else
+		error = uiomove(node->tn_spec.tn_lnk.tn_link,
+		    (int)node->tn_size, uio);
+
 	node->tn_status |= TMPFS_NODE_ACCESSED;
 
 	return error;
