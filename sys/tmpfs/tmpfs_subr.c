@@ -148,7 +148,9 @@ tmpfs_alloc_node(tmpfs_mount_t *tmp, enum vtype type, uid_t uid, gid_t gid,
 	nnode->tn_mtime = nnode->tn_atime;
 
 	/* XXX pedro: we should check for UID_MAX and GID_MAX instead. */
-	KASSERT(uid != VNOVAL && gid != VNOVAL && mode != VNOVAL);
+	KASSERT(uid != (uid_t)VNOVAL);
+	KASSERT(gid != (gid_t)VNOVAL);
+	KASSERT(mode != (mode_t)VNOVAL);
 
 	nnode->tn_uid = uid;
 	nnode->tn_gid = gid;
@@ -234,7 +236,7 @@ tmpfs_free_node(tmpfs_mount_t *tmp, tmpfs_node_t *node)
 	switch (node->tn_type) {
 	case VLNK:
 		if (node->tn_size > 0) {
-			KASSERT(node->tn_size <= SIZE_MAX);
+			KASSERT((unsigned long long)node->tn_size <= SIZE_MAX);
 			tmpfs_strname_free(tmp, node->tn_spec.tn_lnk.tn_link,
 			    node->tn_size);
 		}
@@ -688,7 +690,7 @@ tmpfs_dir_putseq(tmpfs_node_t *dnode, tmpfs_dirent_t *de)
  * tmpfs_dir_lookupbyseq: lookup a directory entry by the sequence number.
  */
 tmpfs_dirent_t *
-tmpfs_dir_lookupbyseq(tmpfs_node_t *node, off_t seq)
+tmpfs_dir_lookupbyseq(tmpfs_node_t *node, uint64_t seq)
 {
 	tmpfs_dirent_t *de = node->tn_spec.tn_dir.tn_readdir_lastp;
 
@@ -768,6 +770,9 @@ tmpfs_dir_getdents(tmpfs_node_t *node, struct uio *uio)
 
 	KASSERT(VOP_ISLOCKED(node->tn_vnode));
 	TMPFS_VALIDATE_DIR(node);
+
+	if (uio->uio_offset < 0)
+		return (EINVAL);
 
 	memset(&dent, 0, sizeof(dent));
 
@@ -888,6 +893,10 @@ tmpfs_reg_resize(struct vnode *vp, off_t newsize)
 	oldsize = node->tn_size;
 	oldpages = round_page(oldsize) >> PAGE_SHIFT;
 	newpages = round_page(newsize) >> PAGE_SHIFT;
+
+	if (newpages > INT_MAX)
+		return EINVAL;
+
 	KASSERT(oldpages == node->tn_spec.tn_reg.tn_aobj_pages);
 
 	if (newpages != oldpages && tmpfs_uio_cached(node))
@@ -898,14 +907,14 @@ tmpfs_reg_resize(struct vnode *vp, off_t newsize)
 		bytes = (newpages - oldpages) << PAGE_SHIFT;
 		if (tmpfs_mem_incr(tmp, bytes) == 0)
 			return ENOSPC;
-		if (uao_setsize(uobj, newpages) != 0) {
+		if (uao_setsize(uobj, (int)newpages) != 0) {
 			tmpfs_mem_decr(tmp, bytes);
 			return ENOSPC;
 		}
 	}
 
 	if (newpages < oldpages) {
-		if (uao_setsize(uobj, newpages))
+		if (uao_setsize(uobj, (int)newpages))
 			panic("shrink failed");
 
 		/* Decrease the used-memory counter. */
@@ -942,10 +951,11 @@ tmpfs_reg_resize(struct vnode *vp, off_t newsize)
  * => Caller should perform tmpfs_update().
  */
 int
-tmpfs_chflags(struct vnode *vp, int flags, struct ucred *cred, struct proc *p)
+tmpfs_chflags(struct vnode *vp, unsigned long flags, struct ucred *cred,
+    struct proc *p)
 {
 	tmpfs_node_t *node = VP_TO_TMPFS_NODE(vp);
-	int error;
+	int error, iflags;
 
 	KASSERT(VOP_ISLOCKED(vp));
 
@@ -956,17 +966,22 @@ tmpfs_chflags(struct vnode *vp, int flags, struct ucred *cred, struct proc *p)
 	if (cred->cr_uid != node->tn_uid && (error = suser_ucred(cred)))
 		return error;
 
+	if (flags > INT_MAX)
+		return EINVAL;
+
+	iflags = (int)flags;
+
 	if (cred->cr_uid == 0) {
 		if (node->tn_flags & (SF_IMMUTABLE | SF_APPEND) &&
 		    securelevel > 0)
 			return EPERM;
-		node->tn_flags = flags;
+		node->tn_flags = iflags;
 	} else {
 		if (node->tn_flags & (SF_IMMUTABLE | SF_APPEND) ||
-		    (flags & UF_SETTABLE) != flags)
+		    (iflags & UF_SETTABLE) != iflags)
 			return EPERM;
 		node->tn_flags &= SF_SETTABLE;
-		node->tn_flags |= (flags & UF_SETTABLE);
+		node->tn_flags |= (iflags & UF_SETTABLE);
 	}
 
 	node->tn_status |= TMPFS_NODE_CHANGED;
@@ -1028,11 +1043,11 @@ tmpfs_chown(struct vnode *vp, uid_t uid, gid_t gid, struct ucred *cred, struct p
 	KASSERT(VOP_ISLOCKED(vp));
 
 	/* Assign default values if they are unknown. */
-	KASSERT(uid != VNOVAL || gid != VNOVAL);
-	if (uid == VNOVAL) {
+	KASSERT(uid != (uid_t)VNOVAL || gid != (gid_t)VNOVAL);
+	if (uid == (uid_t)VNOVAL) {
 		uid = node->tn_uid;
 	}
-	if (gid == VNOVAL) {
+	if (gid == (gid_t)VNOVAL) {
 		gid = node->tn_gid;
 	}
 
@@ -1183,7 +1198,8 @@ tmpfs_truncate(struct vnode *vp, off_t length)
 		goto out;
 	}
 
-	if (length > SIZE_MAX || length > TMPFS_MAX_FILESIZE) {
+	if ((unsigned long long)length > SIZE_MAX ||
+	    (unsigned long long)length > TMPFS_MAX_FILESIZE) {
 		error = EFBIG;
 		goto out;
 	}
@@ -1250,7 +1266,7 @@ tmpfs_uiomove(tmpfs_node_t *node, struct uio *uio, vsize_t len)
 	if (pgoff + len < PAGE_SIZE) {
 		va = tmpfs_uio_lookup(node, pgnum);
 		if (va != (vaddr_t)NULL)
-			return uiomove((void *)(va + pgoff), len, uio);
+			return uiomove((void *)(va + pgoff), (int)len, uio);
 	}
 
 	if (len >= TMPFS_UIO_MAXBYTES) {
@@ -1274,7 +1290,7 @@ tmpfs_uiomove(tmpfs_node_t *node, struct uio *uio, vsize_t len)
 		return error;
 	}
 
-	error = uiomove((void *)(va + pgoff), sz, uio);
+	error = uiomove((void *)(va + pgoff), (int)sz, uio);
 	if (error == 0 && pgoff + sz < PAGE_SIZE)
 		tmpfs_uio_cache(node, pgnum, va);
 	else

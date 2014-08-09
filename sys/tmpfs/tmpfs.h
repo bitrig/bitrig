@@ -281,16 +281,20 @@ tmpfs_dirent_t *tmpfs_dir_lookup(tmpfs_node_t *, struct componentname *);
 tmpfs_dirent_t *tmpfs_dir_cached(tmpfs_node_t *);
 
 uint64_t	tmpfs_dir_getseq(tmpfs_node_t *, tmpfs_dirent_t *);
-tmpfs_dirent_t *tmpfs_dir_lookupbyseq(tmpfs_node_t *, off_t);
+tmpfs_dirent_t *tmpfs_dir_lookupbyseq(tmpfs_node_t *, uint64_t);
 int		tmpfs_dir_getdents(tmpfs_node_t *, struct uio *);
 
 int		tmpfs_reg_resize(struct vnode *, off_t);
 int		tmpfs_truncate(struct vnode *, off_t);
 
-int		tmpfs_chflags(struct vnode *, int, struct ucred *, struct proc *);
-int		tmpfs_chmod(struct vnode *, mode_t, struct ucred *, struct proc *);
-int		tmpfs_chown(struct vnode *, uid_t, gid_t, struct ucred *, struct proc *);
-int		tmpfs_chsize(struct vnode *, u_quad_t, struct ucred *, struct proc *);
+int		tmpfs_chflags(struct vnode *, unsigned long, struct ucred *,
+		    struct proc *);
+int		tmpfs_chmod(struct vnode *, mode_t, struct ucred *,
+		    struct proc *);
+int		tmpfs_chown(struct vnode *, uid_t, gid_t, struct ucred *,
+		    struct proc *);
+int		tmpfs_chsize(struct vnode *, u_quad_t, struct ucred *,
+		    struct proc *);
 int		tmpfs_chtimes(struct vnode *, const struct timespec *,
 		    const struct timespec *, int, struct ucred *,
 		    struct proc *);
