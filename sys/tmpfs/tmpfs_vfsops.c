@@ -166,7 +166,7 @@ tmpfs_mount_update(struct mount *mp, struct tmpfs_args *args, struct proc *p)
 				error = EINVAL;
 				goto bail;
 			}
-			tmp->tm_nodes_max = nodelimit;
+			tmp->tm_nodes_max = (unsigned int)nodelimit;
 			xargs->ta_nodes_max = nodelimit;
 		}
 
@@ -213,7 +213,7 @@ tmpfs_mountfs(struct mount *mp, const char *path, struct vnode *vp,
 
 	tmpfs_mountfs_getparams(args, &memlimit, &nodes);
 
-	tmp->tm_nodes_max = (ino_t)nodes;
+	tmp->tm_nodes_max = (unsigned int)nodes;
 	tmp->tm_nodes_cnt = 0;
 	tmp->tm_highest_inode = 1;
 	strlcpy(tmp->tm_fspec, fspec, sizeof(tmp->tm_fspec));
@@ -455,7 +455,7 @@ tmpfs_vptofh(struct vnode *vp, struct fid *fhp)
 
 	memset(&tfh, 0, sizeof(tfh));
 	tfh.tf_len = sizeof(tmpfs_fid_t);
-	tfh.tf_gen = TMPFS_NODE_GEN(node);
+	tfh.tf_gen = (uint32_t)TMPFS_NODE_GEN(node);
 	tfh.tf_id = node->tn_id;
 	memcpy(fhp, &tfh, sizeof(tfh));
 
