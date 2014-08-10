@@ -250,6 +250,8 @@ ELFNAME(exec)(int fd, Elf_Ehdr *elf, u_long *marks, int flags)
 
 		for (i = 0; i < elf->e_phnum; i++) {
 			if (phdr[i].p_type == PT_BITRIG_TMPFS_RAMDISK) {
+				if (phdr[i].p_filesz == 0)
+					continue;
 				ramdiskp = roundup(maxp, PAGE_SIZE);
 				if (lseek(fd, (off_t)phdr[i].p_offset,
 				    SEEK_SET) == -1) {

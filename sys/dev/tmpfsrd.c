@@ -69,6 +69,10 @@ tmpfsrdattach(int num)
 
 	if (eramdisk == NULL)
 		return;
+#if 1	/* XXX temporary check for amd64 bootloader 3.29. to be removed. */
+	if ((paddr_t)eramdisk - (paddr_t)esym <= PAGE_SIZE)
+		return;
+#endif
 
 	/* XXX: Fake up more? */
 	cf.cf_attach = &tmpfsrd_ca;
