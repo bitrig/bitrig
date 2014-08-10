@@ -514,10 +514,6 @@ initarm(void *arg0, void *arg1, void *arg2)
 		physical_end = physical_start + (bootconfig.dram[0].pages * PAGE_SIZE);
 	}
 
-#ifdef RAMDISK_HOOKS
-	boothowto |= RB_DFLTROOT;
-#endif /* RAMDISK_HOOKS */
-
 	physical_freestart = (((unsigned long)kernel_end - KERNEL_TEXT_BASE +0xfff) & ~0xfff) + memstart;
 	physical_freeend = memstart+memsize;
 

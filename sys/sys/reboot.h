@@ -43,7 +43,6 @@
 #define	RB_NOSYNC	0x0004	/* dont sync before reboot */
 #define	RB_HALT		0x0008	/* don't reboot, just halt */
 #define	RB_INITNAME	0x0010	/* name given for /etc/init (unused) */
-#define	RB_DFLTROOT	0x0020	/* use compiled-in rootdev */
 #define	RB_KDB		0x0040	/* give control to kernel debugger */
 #define	RB_RDONLY	0x0080	/* mount root fs read-only */
 #define	RB_DUMP		0x0100	/* dump kernel memory before reboot */
