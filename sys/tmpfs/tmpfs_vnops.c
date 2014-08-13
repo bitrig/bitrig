@@ -577,7 +577,8 @@ tmpfs_read(void *v)
 	if (vp->v_type != VREG) {
 		return EISDIR;
 	}
-	if (uio->uio_offset < 0 || uio->uio_resid > INT64_MAX) {
+	if (uio->uio_offset < 0 || (unsigned long long)uio->uio_resid >
+	  (unsigned long long)INT64_MAX) {
 		return EINVAL;
 	}
 
@@ -636,7 +637,8 @@ tmpfs_write(void *v)
 	if (ioflag & IO_APPEND) {
 		uio->uio_offset = node->tn_size;
 	}
-	if (uio->uio_offset < 0 || uio->uio_resid > INT64_MAX ||
+	if (uio->uio_offset < 0 || (unsigned long long)uio->uio_resid >
+	    (unsigned long long)INT64_MAX ||
 	    INT64_MAX - uio->uio_offset < (off_t)uio->uio_resid) {
 		error = EINVAL;
 		goto out;
