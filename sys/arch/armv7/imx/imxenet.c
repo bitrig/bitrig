@@ -146,6 +146,7 @@
 #define ENET_NITROGEN6X_PHY_RST			(0*32+27)
 #define ENET_UDOO_PHY				6
 #define ENET_UDOO_PHY_RST			(2*32+23)
+#define ENET_UDOO_PWR				(1*32+31)
 #define ENET_UTILITE_PHY			0
 #define ENET_WANDBOARD_PHY			1
 
@@ -258,11 +259,13 @@ imxenet_attach(struct device *parent, struct device *self, void *args)
 		delay(100);
 		break;
 	case BOARD_ID_IMX6_UDOO:
+		imxgpio_set_bit(ENET_UDOO_PWR);
+		imxgpio_set_dir(ENET_UDOO_PWR, IMXGPIO_DIR_OUT);
 		imxgpio_clear_bit(ENET_UDOO_PHY_RST);
 		imxgpio_set_dir(ENET_UDOO_PHY_RST, IMXGPIO_DIR_OUT);
-		delay(1000 * 10);
+		delay(1000 * 1);
 		imxgpio_set_bit(ENET_UDOO_PHY_RST);
-		delay(100);
+		delay(1000 * 100);
 		break;
 	}
 
@@ -411,6 +414,33 @@ imxenet_chip_init(struct imxenet_softc *sc)
 	switch (board_id)
 	{
 	case BOARD_ID_IMX6_UDOO:	/* Micrel KSZ9031 */
+		/* prefer master mode */
+		imxenet_miibus_writereg(dev, phy, 0x9, 0x1c00);
+
+		/* control data pad skew */
+		imxenet_miibus_writereg(dev, phy, 0x0d, 0x0002);
+		imxenet_miibus_writereg(dev, phy, 0x0e, 0x0004);
+		imxenet_miibus_writereg(dev, phy, 0x0d, 0x4002);
+		imxenet_miibus_writereg(dev, phy, 0x0e, 0x0000);
+
+		/* rx data pad skew */
+		imxenet_miibus_writereg(dev, phy, 0x0d, 0x0002);
+		imxenet_miibus_writereg(dev, phy, 0x0e, 0x0005);
+		imxenet_miibus_writereg(dev, phy, 0x0d, 0x4002);
+		imxenet_miibus_writereg(dev, phy, 0x0e, 0x0000);
+
+		/* tx data pad skew */
+		imxenet_miibus_writereg(dev, phy, 0x0d, 0x0002);
+		imxenet_miibus_writereg(dev, phy, 0x0e, 0x0006);
+		imxenet_miibus_writereg(dev, phy, 0x0d, 0x4002);
+		imxenet_miibus_writereg(dev, phy, 0x0e, 0x0000);
+
+		/* gtx and rx data pad skew */
+		imxenet_miibus_writereg(dev, phy, 0x0d, 0x0002);
+		imxenet_miibus_writereg(dev, phy, 0x0e, 0x0008);
+		imxenet_miibus_writereg(dev, phy, 0x0d, 0x4002);
+		imxenet_miibus_writereg(dev, phy, 0x0e, 0x03ff);
+		break;
 	case BOARD_ID_IMX6_SABRELITE:	/* Micrel KSZ9021 */
 		/* prefer master mode */
 		imxenet_miibus_writereg(dev, phy, 0x9, 0x1f00);
