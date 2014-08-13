@@ -65,9 +65,10 @@ extern struct board_dev pandaboard_devs[];
 extern struct board_dev sun4i_devs[];
 extern struct board_dev sun7i_devs[];
 /*
- * We do direct configuration of devices on this SoC "bus", so we
- * never call the child device's match function at all (it can be
- * NULL in the struct cfattach).
+ * We do direct configuration of devices on this SoC "bus".  If
+ * the device's match function is set, we call it to make sure the
+ * device actually wants it.  The function can be NULL in the
+ * struct cfattach.
  */
 int
 armv7_submatch(struct device *parent, void *child, void *aux)
@@ -75,11 +76,14 @@ armv7_submatch(struct device *parent, void *child, void *aux)
 	struct cfdata *cf = child;
 	struct armv7_attach_args *aa = aux;
 
-	if (strcmp(cf->cf_driver->cd_name, aa->aa_dev->name) == 0)
-		return (1);
+	if (strcmp(cf->cf_driver->cd_name, aa->aa_dev->name) != 0)
+		return (0);
 
-	/* "These are not the droids you are looking for." */
-	return (0);
+	if (cf->cf_attach->ca_match != NULL)
+		return cf->cf_attach->ca_match(parent, child, aux);
+
+	/* "These are probably the droids you are looking for." */
+	return (1);
 }
 
 void
