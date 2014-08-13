@@ -72,6 +72,7 @@
 #define SATA_GHC_HR		(1 << 0)
 #define SATA_P0PHYCR_TEST_PDDQ	(1 << 20)
 
+int	imxahci_match(struct device *, void *, void *);
 void	imxahci_attach(struct device *, struct device *, void *);
 int	imxahci_detach(struct device *, int);
 int	imxahci_activate(struct device *, int);
@@ -85,7 +86,7 @@ struct imxahci_softc {
 
 struct cfattach imxahci_ca = {
 	sizeof(struct imxahci_softc),
-	NULL,
+	imxahci_match,
 	imxahci_attach,
 	imxahci_detach,
 	imxahci_activate
@@ -94,6 +95,16 @@ struct cfattach imxahci_ca = {
 struct cfdriver imxahci_cd = {
 	NULL, "ahci", DV_DULL
 };
+
+int
+imxahci_match(struct device *parent, void *v, void *aux)
+{
+	/* AHCI is only available on Quad and Dual. */
+	if (imx_is_mx6q())
+		return 1;
+
+	return 0;
+}
 
 void
 imxahci_attach(struct device *parent, struct device *self, void *args)

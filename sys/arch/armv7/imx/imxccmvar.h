@@ -18,7 +18,19 @@
 #ifndef IMXCCMVAR_H
 #define IMXCCMVAR_H
 
+enum imx_cpu
+{
+	MX6SL = 0x60,
+	MX6DL = 0x61,
+	MX6Q = 0x63,
+};
+
+int imxccm_is(enum imx_cpu);
 void imxccm_disable_usb1_chrg_detect(void);
 void imxccm_disable_usb2_chrg_detect(void);
+
+#define	imx_is_mx6q(x)		imxccm_is(MX6Q)
+#define	imx_is_mx6dl(x)		imxccm_is(MX6DL)
+#define	imx_is_mx6sl(x)		imxccm_is(MX6SL)
 
 #endif /* IMXCCMVAR_H */

@@ -29,6 +29,7 @@
 #include <machine/bus.h>
 #include <machine/clock.h>
 #include <armv7/armv7/armv7var.h>
+#include <armv7/imx/imxccmvar.h>
 
 /* registers */
 #define CCM_CCR		0x00
@@ -98,6 +99,7 @@
 #define CCM_ANALOG_USB2_CHRG_DETECT_SET		0x4214
 #define CCM_ANALOG_USB2_CHRG_DETECT_CLR		0x4218
 #define CCM_ANALOG_DIGPROG			0x4260
+#define CCM_ANALOG_DIGPROG_MX6SL		0x4280
 
 /* bits and bytes */
 #define CCM_ANALOG_PLL_NUM			0x10
@@ -132,6 +134,8 @@ struct imxccm_softc {
 
 	struct ksensor sc_freq_sensor[CCM_SENSORS];
 	struct ksensordev sc_sensordev;
+
+	int			cpu_type;
 };
 
 enum clocks {
@@ -226,7 +230,8 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 {
 	struct armv7_attach_args *aa = args;
 	struct imxccm_softc *sc = (struct imxccm_softc *) self;
-	int i;
+	int cpu_type, i;
+	char *board;
 
 	imxccm_sc = sc;
 	sc->sc_iot = aa->aa_iot;
@@ -340,13 +345,35 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 	imxccm_gate("lvds2_gate", "dummy", CCM_PMU_MISC1, 11);
 	clk_set_parent(clk_get("lvds1_sel"), clk_get("sata_ref")); /* PCIe */
 
-	printf(": imx6 rev 1.%d CPU freq: %d MHz",
-	    HREAD4(sc, CCM_ANALOG_DIGPROG) & CCM_ANALOG_DIGPROG_MINOR_MASK,
+	cpu_type = HREAD4(sc, CCM_ANALOG_DIGPROG_MX6SL);
+	if ((cpu_type >> 16) == MX6SL) {
+		board = "i.MX6SoloLite";
+	} else {
+		cpu_type = HREAD4(sc, CCM_ANALOG_DIGPROG);
+		if ((cpu_type >> 16) == MX6DL) {
+			board = "i.MX6DL/SOLO";
+		} else if ((cpu_type >> 16) == MX6Q) {
+			board = "i.MX6Q";
+		} else {
+			cpu_type = 0;
+			board = "unknown";
+		}
+	}
+
+	sc->cpu_type = cpu_type >> 16;
+	printf(": %s rev 1.%d CPU freq: %d MHz", board, cpu_type & 0xff,
 	    clk_get_rate(clk_get("arm")) / 1000);
 
 	printf("\n");
 
 	cpu_cpuspeed = imxccm_cpuspeed;
+}
+
+int
+imxccm_is(enum imx_cpu type)
+{
+	struct imxccm_softc *sc = imxccm_sc;
+	return sc->cpu_type == type;
 }
 
 struct clktable {
