@@ -66,6 +66,8 @@ md_installboot() {
 	BEAGLEBONE=$(scan_dmesg '/^omap0 at mainbus0: \(BeagleBone\).*/s//\1/p')
 	PANDA=$(scan_dmesg '/^omap0 at mainbus0: \(PandaBoard\)/s//\1/p')
 	IMX=$(scan_dmesg '/^imx0 at mainbus0: \(i.MX6.*\)/s//IMX/p')
+	CUBOX=$(scan_dmesg '/^imx0 at mainbus0: \(i.MX6 SolidRun.*\)/s//CUBOX/p')
+	NITROGEN=$(scan_dmesg '/^imx0 at mainbus0: \(i.MX6 SABRE Lite.*\)/s//NITROGEN/p')
 	SUNXI=$(scan_dmesg '/^sunxi0 at mainbus0: \(A.*\)/s//SUNXI/p')
 
 	if [[ -f /mnt/bsd.${MDPLAT} ]]; then
@@ -101,10 +103,19 @@ bootcmd=mmc rescan ; setenv loadaddr ${LOADADDR}; setenv bootargs sd0i:/bsd.umg 
 uenvcmd=boot
 __EOT
 	elif [[ ${MDPLAT} == "IMX" ]]; then
-		cat > /tmp/6x_bootscript.scr<<__EOT
+		if [[ -n $CUBOX ]]; then
+			cat > /tmp/boot.cmd<<__EOT
 ; setenv loadaddr ${LOADADDR} ; setenv bootargs sd0i:/bsd.umg ; for dtype in sata mmc ; do for disk in 0 1 ; do \${dtype} dev \${disk} ; for fs in fat ext2 ; do if \${fs}load \${dtype} \${disk}:1 \${loadaddr} bsd.umg ; then bootm \${loadaddr} ; fi ; done; done; done; echo; echo failed to load bsd.umg
 __EOT
-		mkuboot -t script -a arm -o linux /tmp/6x_bootscript.scr /mnt/mnt/6x_bootscript
+			mkuboot -t script -a arm -o linux /tmp/boot.cmd /mnt/mnt/boot.scr
+			dd if=/mnt/usr/mdec/cubox/SPL of=/dev/${_disk}c bs=1024 seek=1
+			dd if=/mnt/usr/mdec/cubox/u-boot.img of=/dev/${_disk}c bs=1024 seek=42
+		elif [[ -n $NITROGEN ]]; then
+			cat > /tmp/6x_bootscript.scr<<__EOT
+; setenv loadaddr ${LOADADDR} ; setenv bootargs sd0i:/bsd.umg ; for dtype in sata mmc ; do for disk in 0 1 ; do \${dtype} dev \${disk} ; for fs in fat ext2 ; do if \${fs}load \${dtype} \${disk}:1 \${loadaddr} bsd.umg ; then bootm \${loadaddr} ; fi ; done; done; done; echo; echo failed to load bsd.umg
+__EOT
+			mkuboot -t script -a arm -o linux /tmp/6x_bootscript.scr /mnt/mnt/6x_bootscript
+		fi
 	elif [[ ${MDPLAT} == "SUNXI" ]]; then
 		cat > /mnt/mnt/uenv.txt<<__EOT
 bootargs=sd0i:/bsd
@@ -119,15 +130,20 @@ md_prep_fdisk() {
 	local _disk=$1 _q _d
 
 	local bootparttype="C"
+	local bootsectorstart="64"
 	local bootfstype="msdos"
 	local newfs_args=${NEWFSARGS_msdos}
 
 	# imx needs an ext2fs filesystem
 	IMX=$(scan_dmesg '/^imx0 at mainbus0: \(i.MX6.*\)/s//IMX/p')
+	CUBOX=$(scan_dmesg '/^imx0 at mainbus0: \(i.MX6 SolidRun.*\)/s//CUBOX/p')
 	if [[ -n $IMX ]]; then
 		bootparttype="83"
 		bootfstype="ext2fs"
 		newfs_args=${NEWFSARGS_ext2fs}
+	fi
+	if [[ -n $CUBOX ]]; then
+		bootsectorstart="2048"
 	fi
 
 	while :; do
@@ -148,13 +164,13 @@ e 3
 e 0
 ${bootparttype}
 n
-64
+${bootsectorstart}
 32768
 f 0
 e 3
 A6
 n
-32832
+
 
 write
 quit
