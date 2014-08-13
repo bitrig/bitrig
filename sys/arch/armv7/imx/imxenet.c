@@ -145,7 +145,6 @@
 #define ENET_NITROGEN6X_PHY			6
 #define ENET_NITROGEN6X_PHY_RST			(0*32+27)
 #define ENET_UDOO_PHY				6
-#define ENET_UDOO_PHY				6
 #define ENET_UDOO_PHY_RST			(2*32+23)
 #define ENET_UTILITE_PHY			0
 #define ENET_WANDBOARD_PHY			1
