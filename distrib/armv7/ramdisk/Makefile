@@ -54,7 +54,7 @@ ${BSD_RD}: ${CBIN} ${IMAGE} bsd
 	rdconfig -I bsd.rd
 
 .for SOC in ${ALLSOC}
-${BSD_RD}.${SOC}.umg:
+${BSD_RD}.${SOC}.umg: ${BSD_RD}
 	mkuboot -a arm -o linux -e ${KERNADDR_${SOC}} -l ${KERNADDR_${SOC}} \
 	    ${BSD_RD} ${BSD_RD}.${SOC}.umg
 .endfor
