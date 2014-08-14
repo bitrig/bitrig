@@ -88,7 +88,11 @@ void (*softraid_disk_attach)(struct disk *, int);
 
 void sr_map_root(void);
 
+bool tmpfsrd_present(void);
+
 void disk_attach_callback(void *, void *);
+
+struct device *setroot_swapgeneric(struct device *, dev_t *);
 
 /*
  * Compute checksum for disk label.
@@ -1317,6 +1321,44 @@ parsedisk(char *str, int len, int defpart, dev_t *devp)
 	return (dv);
 }
 
+struct device *
+setroot_swapgeneric(struct device *bootdv, dev_t *nrootdev)
+{
+	struct device *rootdv;
+	struct disk *dk;
+	u_char duid[8];
+
+	if (tmpfsrd_present() == true) {
+		/* give tmpfsrd preference if configured. */
+		char *tmpfsdisk = "tmpfsrd0a";
+		rootdv = parsedisk(tmpfsdisk, strlen(tmpfsdisk), 0, nrootdev);
+		if (rootdv == NULL)
+			panic("tmpfsrd configured, but not attached");
+		return (rootdv);
+	} else {
+		/* resort to old behaviour of root on bootdev */
+		if (bootdv->dv_class != DV_DISK)
+			return (bootdv);
+		memset(&duid, 0, sizeof(duid));
+		if (memcmp(rootduid, &duid, sizeof(rootduid)) != 0) {
+			TAILQ_FOREACH(dk, &disklist, dk_link) {
+				if ((dk->dk_flags & DKF_LABELVALID) &&
+				    dk->dk_label && memcmp(dk->dk_label->d_uid,
+				    &rootduid, sizeof(rootduid)) == 0)
+					break;
+			}
+			if (dk == NULL)
+				panic("root device (%02hx%02hx%02hx%02hx%02hx"
+				    "%02hx%02hx%02hx) not found", rootduid[0],
+				    rootduid[1], rootduid[2], rootduid[3],
+				    rootduid[4], rootduid[5], rootduid[6],
+				    rootduid[7]);
+			return (dk->dk_device);
+		}
+		return (bootdv);
+	}
+}
+
 void
 setroot(struct device *bootdv, int part, int exitflags)
 {
@@ -1468,26 +1510,7 @@ gotswap:
 		/*
 		 * `swap generic'
 		 */
-		rootdv = bootdv;
-
-		if (bootdv->dv_class == DV_DISK) {
-			memset(&duid, 0, sizeof(duid));
-			if (memcmp(rootduid, &duid, sizeof(rootduid)) != 0) {
-				TAILQ_FOREACH(dk, &disklist, dk_link)
-					if ((dk->dk_flags & DKF_LABELVALID) &&
-					    dk->dk_label && memcmp(dk->dk_label->d_uid,
-					    &rootduid, sizeof(rootduid)) == 0)
-						break;
-				if (dk == NULL)
-					panic("root device (%02hx%02hx%02hx%02hx"
-					    "%02hx%02hx%02hx%02hx) not found",
-					    rootduid[0], rootduid[1], rootduid[2],
-					    rootduid[3], rootduid[4], rootduid[5],
-					    rootduid[6], rootduid[7]);
-				rootdv = dk->dk_device;
-			}
-		}
-
+		rootdv = setroot_swapgeneric(bootdv, &nrootdev);
 		majdev = findblkmajor(rootdv);
 		if (majdev >= 0) {
 			/*

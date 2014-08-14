@@ -116,4 +116,6 @@ pseudo-device	bio	1	# ioctl multiplexing device
 
 pseudo-device	fuse		# fuse device
 
+pseudo-device	tmpfsrd	1	# tmpfs ramdisk support
+
 option		BOOT_CONFIG	# add support for boot -c

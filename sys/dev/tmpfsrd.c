@@ -33,6 +33,7 @@ void	tmpfsrd_terminate(void *, void *);
 int	tmpfsrd_match(struct device *, void *, void *);
 void	tmpfsrd_attach(struct device *, struct device *, void *);
 int	tmpfsrd_detach(struct device *, int);
+bool	tmpfsrd_present(void);
 
 struct tmpfsrd_softc {
 	struct device	sc_dev;
@@ -58,6 +59,7 @@ struct cfdriver tmpfsrd_cd = {
 extern char	*esym, *eramdisk;
 uint8_t		*tmpfsrd_disk;
 uint64_t	 tmpfsrd_size;
+bool		 tmpfsrd_attached = false;
 
 int	tmpfsrdgetdisklabel(dev_t, struct tmpfsrd_softc *, struct disklabel *, int);
 
@@ -94,8 +96,11 @@ tmpfsrdattach(int num)
 	if (tmpfsrd_cd.cd_devs == NULL)
 		panic("tmpfsrdattach: out of memory");
 
+	KASSERT(tmpfsrd_attached == false);
+
 	tmpfsrd_cd.cd_devs[0] = sc;
 	tmpfsrd_cd.cd_ndevs = 1;
+	tmpfsrd_attached = true;
 
 	tmpfsrd_attach(NULL, &sc->sc_dev, NULL);
 
@@ -385,4 +390,10 @@ daddr_t
 tmpfsrdsize(dev_t dev)
 {
 	return (-1);
+}
+
+bool
+tmpfsrd_present(void)
+{
+	return (tmpfsrd_attached);
 }
