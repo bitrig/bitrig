@@ -32,17 +32,17 @@
 # machine dependent section of installation/upgrade script.
 #
 
-# This code runs when the script is initally sourced to set up 
-# MDSETS, SANESETS and DEFAULTSETS 
+# This code runs when the script is initally sourced to set up
+# MDSETS, SANESETS and DEFAULTSETS
 
 dmesg | grep "^omap0 at mainbus0:" >/dev/null
 if [[ $? == 0 ]]; then
-        MDPLAT=OMAP
+	MDPLAT=OMAP
 	LOADADDR=0x82800000
 fi
 dmesg | grep "^imx0 at mainbus0:" >/dev/null
 if [[ $? == 0 ]]; then
-        MDPLAT=IMX
+	MDPLAT=IMX
 	LOADADDR=0x18800000
 fi
 dmesg | grep "^sunxi0 at mainbus0:" >/dev/null
@@ -68,24 +68,24 @@ md_installboot() {
 	IMX=$(scan_dmesg '/^imx0 at mainbus0: \(i.MX6.*\)/s//IMX/p')
 	SUNXI=$(scan_dmesg '/^sunxi0 at mainbus0: \(A.*\)/s//SUNXI/p')
 
-        if [[ -f /mnt/bsd.${MDPLAT} ]]; then
-                mv /mnt/bsd.${MDPLAT} /mnt/bsd
-        fi
-        if [[ -f /mnt/bsd.${MDPLAT}.umg ]]; then
-                mv /mnt/bsd.${MDPLAT}.umg /mnt/mnt/bsd.umg
-        fi
-        if [[ -f /mnt/bsd.mp.${MDPLAT} ]]; then
-                mv /mnt/bsd.mp.${MDPLAT} /mnt/bsd.mp
-        fi
-        if [[ -f /mnt/bsd.rd.${MDPLAT} ]]; then
-                mv /mnt/bsd.rd.${MDPLAT} /mnt/bsd.rd
-        fi
-        if [[ -f /mnt/bsd.rd.${MDPLAT}.umg ]]; then
-                mv /mnt/bsd.rd.${MDPLAT}.umg /mnt/mnt/bsdrd.umg
-        fi
+	if [[ -f /mnt/bsd.${MDPLAT} ]]; then
+		mv /mnt/bsd.${MDPLAT} /mnt/bsd
+	fi
+	if [[ -f /mnt/bsd.${MDPLAT}.umg ]]; then
+		mv /mnt/bsd.${MDPLAT}.umg /mnt/mnt/bsd.umg
+	fi
+	if [[ -f /mnt/bsd.mp.${MDPLAT} ]]; then
+		mv /mnt/bsd.mp.${MDPLAT} /mnt/bsd.mp
+	fi
+	if [[ -f /mnt/bsd.rd.${MDPLAT} ]]; then
+		mv /mnt/bsd.rd.${MDPLAT} /mnt/bsd.rd
+	fi
+	if [[ -f /mnt/bsd.rd.${MDPLAT}.umg ]]; then
+		mv /mnt/bsd.rd.${MDPLAT}.umg /mnt/mnt/bsdrd.umg
+	fi
 
 	# extracted on all machines, so make snap works.
-	tar -C /mnt/ -xf /usr/mdec/u-boots.tgz 
+	tar -C /mnt/ -xf /usr/mdec/u-boots.tgz
 
 	if [[ ${MDPLAT} == "OMAP" ]]; then
 
@@ -102,7 +102,7 @@ uenvcmd=boot
 __EOT
 	elif [[ ${MDPLAT} == "IMX" ]]; then
 		cat > /tmp/6x_bootscript.scr<<__EOT
-; setenv loadaddr ${LOADADDR} ; setenv bootargs sd0i:/bsd.umg ; for dtype in sata mmc ; do for disk in 0 1 ; do \${dtype} dev \${disk} ; for fs in fat ext2 ; do if \${fs}load \${dtype} \${disk}:1 \${loadaddr} bsd.umg ; then bootm \${loadaddr} ; fi ; done; done; done; echo; echo failed to load bsd.umg 
+; setenv loadaddr ${LOADADDR} ; setenv bootargs sd0i:/bsd.umg ; for dtype in sata mmc ; do for disk in 0 1 ; do \${dtype} dev \${disk} ; for fs in fat ext2 ; do if \${fs}load \${dtype} \${disk}:1 \${loadaddr} bsd.umg ; then bootm \${loadaddr} ; fi ; done; done; done; echo; echo failed to load bsd.umg
 __EOT
 		mkuboot -t script -a arm -o linux /tmp/6x_bootscript.scr /mnt/mnt/6x_bootscript
 	elif [[ ${MDPLAT} == "SUNXI" ]]; then
