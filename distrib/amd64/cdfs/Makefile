@@ -1,9 +1,8 @@
 TOP=	${.CURDIR}/..
-
-.include "${TOP}/Makefile.inc"
-
 BSDRD=	bsd.rd
-CDROM=	cd${REV}.iso
+CDROM=	cd${OSrev}.iso
+
+.NOTPARALLEL:
 
 all: ${CDROM}
 
@@ -32,5 +31,5 @@ clean cleandir:
 	/bin/rm -f ${CDROM}
 	rm -rf cd-dir
 
+.include <bsd.own.mk>
 .include <bsd.obj.mk>
-.include <bsd.subdir.mk>
