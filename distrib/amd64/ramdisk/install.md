@@ -1,4 +1,4 @@
-#	$OpenBSD: install.md,v 1.35 2014/07/20 20:12:41 deraadt Exp $
+#	$OpenBSD: install.md,v 1.36 2014/08/15 09:45:54 rpe Exp $
 #
 #
 # Copyright (c) 1996 The NetBSD Foundation, Inc.
@@ -39,7 +39,7 @@ SANESETS="bsd bsd.sp"
 MDLID=y
 
 md_installboot() {
-	if ! installboot -r /mnt ${1} ; then
+	if ! installboot -r /mnt ${1}; then
 		echo "\nFailed to install bootblocks."
 		echo "You will not be able to boot Bitrig from ${1}."
 		exit
