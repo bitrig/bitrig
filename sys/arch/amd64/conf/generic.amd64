@@ -566,8 +566,6 @@ radio*	at bktr?
 
 # crypto support
 hifn*	at pci?			# Hi/fn 7751 crypto card
-lofn*	at pci?			# Hi/fn 6500 crypto card
-nofn*	at pci?			# Hi/fn 7814/7851/7854 crypto card
 ubsec*	at pci?			# Bluesteel Networks 5xxx crypto card
 safe*	at pci?			# SafeNet SafeXcel 1141/1741
 
