@@ -1,8 +1,4 @@
 RAMDISK=	RAMDISK
-FLOPPYSIZE=	11520
-FLOPPYTYPE=	floppy576
-XNAME=		cdrom
-NOFS=		1
 TOP=		${.CURDIR}/..
 REV=		${OSrev}
 IMAGE=		mr.fs
@@ -13,16 +9,6 @@ UTILS?=		${.CURDIR}/../../miniroot
 
 MOUNT_POINT=	/mnt
 MTREE=		${UTILS}/mtree.conf
-
-FS?=		${XNAME}${REV}.fs
-VND?=		vnd0
-VND_DEV=	/dev/${VND}a
-VND_RDEV=	/dev/r${VND}a
-VND_CRDEV=	/dev/r${VND}c
-PID!=		echo $$$$
-REALIMAGE!=	echo /var/tmp/image.${PID}
-BOOT?=		${DESTDIR}/usr/mdec/boot
-
 TMPFS_MAXSIZE=	255M
 
 .if ${COMPILER_VERSION:L} == "gcc4"
@@ -31,36 +17,9 @@ COPTS=	-Os
 COPTS=	-Oz
 .endif
 
-.PATH: ${.CURDIR}/../ramdisk
 .NOTPARALLEL:
 
-all:	${FS}
-
-${FS}:	bsd.gz
-	dd if=/dev/zero of=${REALIMAGE} bs=512 count=${FLOPPYSIZE}
-	vnconfig -v -c ${VND} ${REALIMAGE}
-	disklabel -w ${VND} ${FLOPPYTYPE}
-	newfs -m 0 -o space -i 524288 -c ${FLOPPYSIZE} ${VND_RDEV}
-	mount ${VND_DEV} ${MOUNT_POINT}
-	cp ${BOOT} ${.OBJDIR}/boot
-	strip ${.OBJDIR}/boot
-	strip -R .comment ${.OBJDIR}/boot
-	installboot -v -r ${MOUNT_POINT} ${VND_CRDEV} \
-	    ${DESTDIR}/usr/mdec/biosboot ${.OBJDIR}/boot
-	dd if=bsd.gz of=${MOUNT_POINT}/bsd bs=512
-	@echo ""
-	@df -i ${MOUNT_POINT}
-	@echo ""
-	umount ${MOUNT_POINT}
-	vnconfig -u ${VND}
-	cp ${REALIMAGE} ${FS}
-	rm ${REALIMAGE}
-
-bsd.gz: bsd.rd
-	cp bsd.rd bsd.strip
-	strip bsd.strip
-	strip -R .comment bsd.strip
-	gzip -c9n bsd.strip > bsd.gz
+all:	bsd.rd
 
 bsd.rd:	${IMAGE} bsd
 	cp bsd bsd.rd
@@ -88,18 +47,12 @@ tmpfs_teardown:
 
 unconfig:
 	-umount -f ${MOUNT_POINT}
-	-vnconfig -u ${VND}
 
 .PRECIOUS:	${IMAGE}
 
 .ifdef RELEASEDIR
 install:
-.ifndef NOBSDRD
 	cp bsd.rd ${RELEASEDIR}/bsd.rd
-.endif
-.ifndef NOFS
-	cp ${FS} ${RELEASEDIR}/${FS}
-.endif
 .endif	# RELEASEDIR
 
 ${CBIN}.mk ${CBIN}.cache ${CBIN}.c: ${CRUNCHCONF}
