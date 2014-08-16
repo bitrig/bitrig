@@ -1,5 +1,5 @@
-RAMDISK=	RAMDISK
 TOP=		${.CURDIR}/..
+ARCH=		${.CURDIR}/../../../sys/arch/amd64
 REV=		${OSrev}
 IMAGE=		mr.fs
 CBIN?=		instbin
@@ -11,12 +11,6 @@ MOUNT_POINT=	/mnt
 MTREE=		${UTILS}/mtree.conf
 TMPFS_MAXSIZE=	255M
 
-.if ${COMPILER_VERSION:L} == "gcc4"
-COPTS=	-Os
-.else
-COPTS=	-Oz
-.endif
-
 .NOTPARALLEL:
 
 all:	bsd.rd
@@ -27,10 +21,11 @@ bsd.rd:	${IMAGE} bsd
 	rdconfig -I bsd.rd
 
 bsd:
-	cd ${.CURDIR}/../../../sys/arch/amd64/conf && config ${RAMDISK}
-	cd ${.CURDIR}/../../../sys/arch/amd64/compile/${RAMDISK} && \
-	    ${MAKE} clean && COPTS="${COPTS}" exec ${MAKE}
-	cp ${.CURDIR}/../../../sys/arch/amd64/compile/${RAMDISK}/bsd bsd
+	stat ${ARCH}/compile/GENERIC/bsd || \
+		{ cd ${ARCH}/conf && config GENERIC && \
+		  cd ${ARCH}/compile/GENERIC && ${MAKE} clean && \
+		  exec ${MAKE}; }
+	cp ${ARCH}/compile/GENERIC/bsd bsd
 
 ${IMAGE}: ${CBIN} tmpfs_setup do_files tmpfs_snapshot tmpfs_teardown
 
