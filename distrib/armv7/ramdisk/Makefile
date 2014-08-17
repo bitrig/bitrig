@@ -28,19 +28,20 @@ KERNADDR_IMX=0x10300000
 KERNADDR_EXYNOS=0x40800000
 KERNADDR_SUNXI=0x40800000
 
+ALLSOC=		IMX OMAP EXYNOS SUNXI
+ALLBSD=		bsd
+ALLBSDRD=	${BSD_RD}
+.for SOC in ${ALLSOC}
+ALLBSDRD+=	${BSD_RD}.${SOC}.umg
+.endfor
+
 .ifndef DESTDIR
 all ${IMAGE}:
 	@echo setenv DESTDIR before making a ramdisk!
 	@false
 .else
 
-ALLSOC=		IMX OMAP EXYNOS SUNXI
-ALLBSD=		bsd
-ALLBSDRD=	${BSD_RD}
-.for SOC in ${ALLSOC}
-ALLBSDRD+=	${BSD_RD}.${SOC}.umg
 all:	${ALLBSDRD}
-.endfor
 
 bsd:
 	cd ${TOP}/../../sys/arch/armv7/conf && config RAMDISK
