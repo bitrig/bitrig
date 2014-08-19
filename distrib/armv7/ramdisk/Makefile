@@ -3,6 +3,7 @@
 REV=	${OSrev}
 
 TOP=		${.CURDIR}/..
+ARCH=		${.CURDIR}/../../../sys/arch/armv7
 
 BSD_RD=		bsd.rd
 IMAGE=		mr.fs
@@ -44,10 +45,11 @@ all ${IMAGE}:
 all:	${ALLBSDRD}
 
 bsd:
-	cd ${TOP}/../../sys/arch/armv7/conf && config RAMDISK
-	cd ${TOP}/../../sys/arch/armv7/compile/RAMDISK && \
-	    ${MAKE} clean && exec ${MAKE}
-	cp ${TOP}/../../sys/arch/armv7/compile/RAMDISK/bsd bsd
+	stat ${ARCH}/compile/GENERIC/bsd || \
+		{ cd ${ARCH}/conf && config GENERIC && \
+		  cd ${ARCH}/compile/GENERIC && ${MAKE} clean && \
+		  exec ${MAKE}; }
+	cp ${ARCH}/compile/GENERIC/bsd bsd
 
 ${BSD_RD}: ${CBIN} ${IMAGE} bsd
 	cp bsd ${BSD_RD}
