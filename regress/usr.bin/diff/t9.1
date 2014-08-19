@@ -166,7 +166,7 @@ sys_mount(p, v, retval)
 	}
 	if (error = copyinstr(SCARG(uap, type), fstypename, MFSNAMELEN,
 	    (size_t *)0)) {
-#if defined(COMPAT_09) || defined(COMPAT_43)
+#if defined(COMPAT_43)
 		/*
 		 * Historically filesystem types were identified by number.
 		 * If we get an integer for the filesystem type instead of a
