@@ -166,23 +166,8 @@ sys_mount(p, v, retval)
 	}
 	if (error = copyinstr(SCARG(uap, type), fstypename, MFSNAMELEN,
 	    (size_t *)0)) {
-#if defined(COMPAT_43)
-		/*
-		 * Historically filesystem types were identified by number.
-		 * If we get an integer for the filesystem type instead of a
-		 * string, we check to see if it matches one of the historic
-		 * filesystem types.
-		 */     
-		fsindex = (u_long)SCARG(uap, type);
-		if (fsindex >= nvfssw || vfssw[fsindex] == NULL) {
-			vput(vp);
-			return (ENODEV);
-		}
-		strncpy(fstypename, vfssw[fsindex]->vfs_name, MFSNAMELEN);
-#else
 		vput(vp);
 		return (error);
-#endif
 	}
 	for (fsindex = 0; fsindex < nvfssw; fsindex++)
 		if (vfssw[fsindex] != NULL &&

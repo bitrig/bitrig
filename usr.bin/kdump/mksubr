@@ -245,7 +245,6 @@ cat <<_EOF_
 #include <sys/wait.h>
 #include <sys/proc.h>
 #define _KERNEL
-#define COMPAT_43
 #include <sys/socket.h>
 #undef _KERNEL
 #include <netinet/in.h>

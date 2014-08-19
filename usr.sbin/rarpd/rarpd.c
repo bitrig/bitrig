@@ -660,10 +660,6 @@ update_arptab(u_char *ep, u_int32_t ipaddr)
 	sin->sin_family = AF_INET;
 	sin->sin_addr.s_addr = ipaddr;
 	request.arp_ha.sa_family = AF_UNSPEC;
-	/* This is needed #if defined(COMPAT_43) && BYTE_ORDER != BIG_ENDIAN,
-	   because AF_UNSPEC is zero and the kernel assumes that a zero
-	   sa_family means that the real sa_family value is in sa_len.  */
-	request.arp_ha.sa_len = 16; /* XXX */
 	memcpy((char *) request.arp_ha.sa_data, (char *) ep, 6);
 
 	s = socket(AF_INET, SOCK_DGRAM, 0);

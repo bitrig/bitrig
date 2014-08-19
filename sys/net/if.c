@@ -1627,61 +1627,9 @@ ifioctl(struct socket *so, u_long cmd, caddr_t data, struct proc *p)
 	default:
 		if (so->so_proto == 0)
 			return (EOPNOTSUPP);
-#if !defined(COMPAT_43)
 		error = ((*so->so_proto->pr_usrreq)(so, PRU_CONTROL,
 			(struct mbuf *) cmd, (struct mbuf *) data,
 			(struct mbuf *) ifp, p));
-#else
-	    {
-		u_long ocmd = cmd;
-
-		switch (cmd) {
-
-		case SIOCSIFADDR:
-		case SIOCSIFDSTADDR:
-		case SIOCSIFBRDADDR:
-		case SIOCSIFNETMASK:
-#if BYTE_ORDER != BIG_ENDIAN
-			if (ifr->ifr_addr.sa_family == 0 &&
-			    ifr->ifr_addr.sa_len < 16) {
-				ifr->ifr_addr.sa_family = ifr->ifr_addr.sa_len;
-				ifr->ifr_addr.sa_len = 16;
-			}
-#else
-			if (ifr->ifr_addr.sa_len == 0)
-				ifr->ifr_addr.sa_len = 16;
-#endif
-			break;
-
-		case OSIOCGIFADDR:
-			cmd = SIOCGIFADDR;
-			break;
-
-		case OSIOCGIFDSTADDR:
-			cmd = SIOCGIFDSTADDR;
-			break;
-
-		case OSIOCGIFBRDADDR:
-			cmd = SIOCGIFBRDADDR;
-			break;
-
-		case OSIOCGIFNETMASK:
-			cmd = SIOCGIFNETMASK;
-		}
-		error = ((*so->so_proto->pr_usrreq)(so, PRU_CONTROL,
-		    (struct mbuf *) cmd, (struct mbuf *) data,
-		    (struct mbuf *) ifp, p));
-		switch (ocmd) {
-
-		case OSIOCGIFADDR:
-		case OSIOCGIFDSTADDR:
-		case OSIOCGIFBRDADDR:
-		case OSIOCGIFNETMASK:
-			*(u_int16_t *)&ifr->ifr_addr = ifr->ifr_addr.sa_family;
-		}
-
-	    }
-#endif
 		break;
 	}
 
@@ -1732,9 +1680,6 @@ ifconf(u_long cmd, caddr_t data)
 				TAILQ_FOREACH(ifa,
 				    &ifp->if_addrlist, ifa_list) {
 					sa = ifa->ifa_addr;
-#if defined(COMPAT_43)
-					if (cmd != OSIOCGIFCONF)
-#endif
 					if (sa->sa_len > sizeof(*sa))
 						space += sa->sa_len -
 						    sizeof(*sa);
@@ -1763,17 +1708,6 @@ ifconf(u_long cmd, caddr_t data)
 
 				if (space < sizeof(ifr))
 					break;
-#if defined(COMPAT_43)
-				if (cmd == OSIOCGIFCONF) {
-					struct osockaddr *osa =
-					    (struct osockaddr *)&ifr.ifr_addr;
-					ifr.ifr_addr = *sa;
-					osa->sa_family = sa->sa_family;
-					error = copyout((caddr_t)&ifr,
-					    (caddr_t)ifrp, sizeof (ifr));
-					ifrp++;
-				} else
-#endif
 				if (sa->sa_len <= sizeof(*sa)) {
 					ifr.ifr_addr = *sa;
 					error = copyout((caddr_t)&ifr,

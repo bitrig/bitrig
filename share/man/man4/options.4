@@ -52,18 +52,6 @@ for information on how to configure and build kernels.
 options are passed to the compile process as
 .Fl D
 flags to the C compiler.
-.Sh COMPATIBILITY OPTIONS
-.Bl -ohang
-.It Cd option COMPAT_43
-This option enables compatibility with
-.Bx 4.3 .
-It provides backwards compatibility with the
-.Dq old
-SIOC[GS]IF{ADDR,DSTADDR,BRDADDR,NETMASK} interface ioctls, including
-binary compatibility for code written before the introduction of the
-.Li sa_len
-field in sockaddrs.
-.El
 .Sh DEBUGGING OPTIONS
 .Bl -ohang
 .It Cd makeoptions DEBUG="-g"
