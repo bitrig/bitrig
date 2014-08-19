@@ -681,7 +681,6 @@ tunioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 	case TIOCGPGRP:
 		*(int *)data = tp->tun_pgid;
 		break;
-	case OSIOCGIFADDR:
 	case SIOCGIFADDR:
 		if (!(tp->tun_flags & TUN_LAYER2)) {
 			splx(s);

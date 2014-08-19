@@ -1254,7 +1254,6 @@ ifioctl(struct socket *so, u_long cmd, caddr_t data, struct proc *p)
 	switch (cmd) {
 
 	case SIOCGIFCONF:
-	case OSIOCGIFCONF:
 		return (ifconf(cmd, data));
 	}
 	ifr = (struct ifreq *)data;
