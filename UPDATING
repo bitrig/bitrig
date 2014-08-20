@@ -8,11 +8,33 @@ If you are unsure of the date of your current system snapshot, the build date
 and git commit SHA of the kernel are included in the copyright message printed
 at the beginning of the kernel dmesg(8).
 
+* 2014-08-21: clang
 * 2014-07-05: games
 * 2014-06-29: tmpfsrd
 * 2014-05-07: kerberos
 * 2014-05-01: libc++
 * 2014-04-21: xlocale
+
+* 2014-08-21: clang
+
+  LLVM/Clang is no longer a package, it is now included in comp01.tgz.
+  It is necessary to build initially using the port of clang but the base
+  install will overwrite part of the port, it is necessary to update ports
+  and comp tarball in a specific order. Note that the updated clang will
+  cause warnings about the port checksums not matching if the build or
+  comp tarball extract occurs before the bitrig-llvm port is removed.
+
+  Upgrading from snapshot:
+  # pkg_add -U bitrig-syscomp
+  # pkg_delete bitrig-llvm bitrig-gcc bitrig-gcclibs
+  # tar -C / -xphf .../comp01.tgz
+
+  Upgrading from source: (Assumes recent source/ports build, and snap setup)
+  # cd /usr/src && make -j <ncpu> snap
+  ; Build updated bitrig-syscomp package
+  # pkg_add -U bitrig-syscomp
+  # pkg_delete bitrig-llvm bitrig-gcc bitrig-gcclibs
+  # tar -C / -xphf /usr/snap/<arch>/release/comp01.tgz
 
 * 2014-07-05: games
 
