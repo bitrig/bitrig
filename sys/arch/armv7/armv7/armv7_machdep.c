@@ -322,15 +322,12 @@ static __inline
 pd_entry_t *
 read_ttb(void)
 {
-  long ttb;
+	long ttb;
 
-  __asm volatile("mrc	p15, 0, %0, c2, c0, 0" : "=r" (ttb));
+	__asm volatile("mrc	p15, 0, %0, c2, c0, 0" : "=r" (ttb));
 
-
-  return (pd_entry_t *)(ttb & ~((1<<14)-1));
+	return (pd_entry_t *)(ttb & ~((1<<14)-1));
 }
-
-#define VERBOSE_INIT_ARM
 
 /*
  * simple memory mapping function used in early bootstrap stage
