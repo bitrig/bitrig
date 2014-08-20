@@ -37,7 +37,7 @@ bootstrap:
 	(cd ../../usr.bin/clang/clang-tblgen && ${MAKE} depend)
 	(cd ../../usr.bin/clang/clang-tblgen && ${MAKE} all)
 .if ${MACHINE_ARCH} == ${HOSTARCH}
-	(cd ../../usr.bin/clang/clang-tblgen && ${SUDO} ${MAKE}  install)
+	(cd ../../usr.bin/clang/clang-tblgen && ${SUDO} ${MAKE} install)
 .endif
 	(cd ../../usr.bin/clang/tblgen && ${MAKE} depend)
 	(cd ../../usr.bin/clang/tblgen && ${MAKE} all)
@@ -59,7 +59,7 @@ snapstrap:
 	(cd ../../lib/clang/libllvmsupport && ${MAKE} all)
 	(cd ../../usr.bin/clang/clang-tblgen && ${MAKE} depend)
 	(cd ../../usr.bin/clang/clang-tblgen && ${MAKE} all)
-	(cd ../../usr.bin/clang/clang-tblgen && ${SUDO} ${MAKE}  install)
+	(cd ../../usr.bin/clang/clang-tblgen && ${SUDO} ${MAKE} install)
 	(cd ../../usr.bin/clang/tblgen && ${MAKE} depend)
 	(cd ../../usr.bin/clang/tblgen && ${MAKE} all)
 	(cd ../../usr.bin/clang/tblgen && ${SUDO} ${MAKE} install)
@@ -70,6 +70,6 @@ snapclean:
 	(cd ../../lib/clang/libllvmtablegen && ${MAKE} cleandir)
 	(cd ../../lib/clang/libllvmsupport && ${MAKE} cleandir)
 	(cd ../../usr.bin/clang/clang-tblgen && ${MAKE} cleandir)
-	(cd ../../usr.bin/clang/tblgen && ${SUDO} ${MAKE} cleandir)
+	(cd ../../usr.bin/clang/tblgen && ${MAKE} cleandir)
 
 .include <bsd.subdir.mk>

@@ -67,13 +67,15 @@ build buildworld:
 	@echo cannot build with DESTDIR set
 	@false
 .else
-build:
+mk_files:
+	cd ${.CURDIR}/share/mk && exec ${SUDO} ${MAKE} install
+
+build: mk_files
 .ifdef GLOBAL_AUTOCONF_CACHE
 	cp /dev/null ${GLOBAL_AUTOCONF_CACHE}
 .endif
-	cd ${.CURDIR}/share/mk && exec ${SUDO} ${MAKE} install
 	cd ${.CURDIR}/usr.bin/clang && ${SUDO} NOMAN=1 ${MAKE} snapstrap && \
-	    ${SUDO} ${MAKE} snapclean
+	    exec ${SUDO} ${MAKE} snapclean
 	cd ${.CURDIR}/include && ${MAKE} prereq && exec ${SUDO} ${MAKE} includes
 	${SUDO} ${MAKE} cleandir
 	cd ${.CURDIR}/libexec/ld.so && \
@@ -88,12 +90,13 @@ build:
 	    NOMAN=1 exec ${SUDO} ${MAKE} install
 	${MAKE} depend && ${MAKE} && exec ${SUDO} ${MAKE} install
 
-buildworld:
+.ORDER: mk_files pre_world build
+buildworld: mk_files pre_world build
+
+pre_world:
 	${SUDO} rm -rf /usr/obj/*
-	cd ${.CURDIR}/share/mk && exec ${SUDO} ${MAKE} install
 	${MAKE} obj >/dev/null
 	cd ${.CURDIR}/etc && ${SUDO} DESTDIR=/ ${MAKE} distrib-dirs
-	${MAKE} build
 
 .endif
 
