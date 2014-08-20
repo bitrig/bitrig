@@ -51,4 +51,25 @@ bootstrap:
 	(cd ../../usr.bin/clang && ${MAKE} depend)
 	(cd ../../usr.bin/clang && ${MAKE} all)
 
+snapstrap:
+	mkdir -p /usr/lib/clang/3.4/include
+	(cd ../../lib/clang/libllvmtablegen && ${MAKE} depend )
+	(cd ../../lib/clang/libllvmtablegen && ${MAKE} all)
+	(cd ../../lib/clang/libllvmsupport && ${MAKE} depend)
+	(cd ../../lib/clang/libllvmsupport && ${MAKE} all)
+	(cd ../../usr.bin/clang/clang-tblgen && ${MAKE} depend)
+	(cd ../../usr.bin/clang/clang-tblgen && ${MAKE} all)
+	(cd ../../usr.bin/clang/clang-tblgen && ${SUDO} ${MAKE}  install)
+	(cd ../../usr.bin/clang/tblgen && ${MAKE} depend)
+	(cd ../../usr.bin/clang/tblgen && ${MAKE} all)
+	(cd ../../usr.bin/clang/tblgen && ${SUDO} ${MAKE} install)
+	(cd ../../lib/clang/include && ${MAKE} includes)
+	
+snapclean:
+	(cd ../../lib/clang/include && ${MAKE} cleandir)
+	(cd ../../lib/clang/libllvmtablegen && ${MAKE} cleandir)
+	(cd ../../lib/clang/libllvmsupport && ${MAKE} cleandir)
+	(cd ../../usr.bin/clang/clang-tblgen && ${MAKE} cleandir)
+	(cd ../../usr.bin/clang/tblgen && ${SUDO} ${MAKE} cleandir)
+
 .include <bsd.subdir.mk>

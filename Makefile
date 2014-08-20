@@ -72,6 +72,8 @@ build:
 	cp /dev/null ${GLOBAL_AUTOCONF_CACHE}
 .endif
 	cd ${.CURDIR}/share/mk && exec ${SUDO} ${MAKE} install
+	cd ${.CURDIR}/usr.bin/clang && ${SUDO} NOMAN=1 ${MAKE} snapstrap && \
+	    ${SUDO} ${MAKE} snapclean
 	cd ${.CURDIR}/include && ${MAKE} prereq && exec ${SUDO} ${MAKE} includes
 	${SUDO} ${MAKE} cleandir
 	cd ${.CURDIR}/libexec/ld.so && \
@@ -88,6 +90,7 @@ build:
 
 buildworld:
 	${SUDO} rm -rf /usr/obj/*
+	cd ${.CURDIR}/share/mk && exec ${SUDO} ${MAKE} install
 	${MAKE} obj >/dev/null
 	cd ${.CURDIR}/etc && ${SUDO} DESTDIR=/ ${MAKE} distrib-dirs
 	${MAKE} build
