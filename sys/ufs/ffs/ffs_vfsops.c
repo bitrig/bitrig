@@ -368,7 +368,7 @@ ffs_mount(struct mount *mp, const char *path, void *data,
 				error = wapbl_replay_write(mp->mnt_wapbl_replay,
 				    devvp);
 				if (error) {
-					free(fs->fs_contigdirs, M_UFSMNT);
+					free(fs->fs_contigdirs, M_UFSMNT, 0);
 					return (error);
 				}
 				wapbl_replay_stop(mp->mnt_wapbl_replay);
@@ -400,7 +400,7 @@ ffs_mount(struct mount *mp, const char *path, void *data,
 "WARNING: R/W mount of %s denied.  Filesystem is not clean - run fsck\n",
 					    fs->fs_fsmnt);
 					error = EROFS;
-					free(fs->fs_contigdirs, M_UFSMNT);
+					free(fs->fs_contigdirs, M_UFSMNT, 0);
 					goto error_1;
 				}
 			}
@@ -409,7 +409,7 @@ ffs_mount(struct mount *mp, const char *path, void *data,
 				error = softdep_mount(devvp, mp, fs,
 						      p->p_ucred);
 				if (error) {
-					free(fs->fs_contigdirs, M_UFSMNT);
+					free(fs->fs_contigdirs, M_UFSMNT, 0);
 					goto error_1;
 				}
 			}
@@ -1068,8 +1068,8 @@ sbagain:
 			error = EINVAL;
 		bp->b_flags |= B_INVAL;
 		if (error) {
-			free(fs->fs_csp, M_UFSMNT);
-			free(fs->fs_contigdirs, M_UFSMNT);
+			free(fs->fs_csp, M_UFSMNT, 0);
+			free(fs->fs_contigdirs, M_UFSMNT, 0);
 			goto out;
 		}
 		brelse(bp);
@@ -1082,8 +1082,8 @@ sbagain:
 
 		error = ffs_wapbl_start(mp);
 		if (error) {
-			free(fs->fs_csp, M_UFSMNT);
-			free(fs->fs_contigdirs, M_UFSMNT);
+			free(fs->fs_csp, M_UFSMNT, 0);
+			free(fs->fs_contigdirs, M_UFSMNT, 0);
 			goto out;
 		}
 #endif /* WAPBL */
@@ -1101,15 +1101,15 @@ sbagain:
 			fs->fs_flags &= ~FS_DOSOFTDEP;
 		error = UFS_WAPBL_BEGIN(mp);
 		if (error) {
-			free(fs->fs_csp, M_UFSMNT);
-			free(fs->fs_contigdirs, M_UFSMNT);
+			free(fs->fs_csp, M_UFSMNT, 0);
+			free(fs->fs_contigdirs, M_UFSMNT, 0);
 			goto out;
 		}
 		error = ffs_sbupdate(ump, MNT_WAIT);
 		UFS_WAPBL_END(mp);
 		if (error == EROFS) {
-			free(fs->fs_csp, M_UFSMNT);
-			free(fs->fs_contigdirs, M_UFSMNT);
+			free(fs->fs_csp, M_UFSMNT, 0);
+			free(fs->fs_contigdirs, M_UFSMNT, 0);
 			goto out;
 		}
 	}

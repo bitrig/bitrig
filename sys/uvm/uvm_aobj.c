@@ -545,7 +545,7 @@ uao_shrink_hash(struct uvm_object *uobj, int pages)
 	return 0;
 
 again:
-	free(new_swhash, M_UVMAOBJ);
+	free(new_swhash, M_UVMAOBJ, 0);
 	return EAGAIN;
 }
 
@@ -598,7 +598,7 @@ uao_shrink_convert(struct uvm_object *uobj, int pages)
 	return 0;
 
 again:
-	free(new_swslots, M_UVMAOBJ);
+	free(new_swslots, M_UVMAOBJ, 0);
 	return EAGAIN;
 }
 
@@ -639,7 +639,7 @@ uao_shrink_array(struct uvm_object *uobj, int pages)
 	return 0;
 
 again:
-	free(new_swslots, M_UVMAOBJ);
+	free(new_swslots, M_UVMAOBJ, 0);
 	return EAGAIN;
 }
 
@@ -693,7 +693,7 @@ uao_grow_array(struct uvm_object *uobj, int pages)
 		return ENOMEM;
 
 	if (aobj->u_pages != old_pages) {
-		free(new_swslots, M_UVMAOBJ);
+		free(new_swslots, M_UVMAOBJ, 0);
 		return EAGAIN;
 	}
 
@@ -741,7 +741,7 @@ uao_grow_hash(struct uvm_object *uobj, int pages)
 		return ENOMEM;
 
 	if (aobj->u_pages != old_pages) {
-		free(new_swhash, M_UVMAOBJ);
+		free(new_swhash, M_UVMAOBJ, 0);
 		return EAGAIN;
 	}
 
@@ -801,7 +801,7 @@ uao_grow_convert(struct uvm_object *uobj, int pages)
 		return ENOMEM;
 
 	if (aobj->u_pages != old_pages) {
-		free(new_swhash, M_UVMAOBJ);
+		free(new_swhash, M_UVMAOBJ, 0);
 		return EAGAIN;
 	}
 

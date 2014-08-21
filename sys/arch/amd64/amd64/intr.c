@@ -397,7 +397,7 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 	    &idt_vec);
 	if (error != 0) {
 		mtx_leave(&intr_lock);
-		free(ih, M_DEVBUF);
+		free(ih, M_DEVBUF, 0);
 		printf("failed to allocate interrupt slot for PIC %s pin %d\n",
 		    pic->pic_dev.dv_xname, pin);
 		return NULL;

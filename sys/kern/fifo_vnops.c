@@ -128,14 +128,14 @@ fifo_open(void *v)
 		fip = malloc(sizeof(*fip), M_VNODE, M_WAITOK);
 		vp->v_fifoinfo = fip;
 		if ((error = socreate(AF_LOCAL, &rso, SOCK_STREAM, 0)) != 0) {
-			free(fip, M_VNODE);
+			free(fip, M_VNODE, 0);
 			vp->v_fifoinfo = NULL;
 			return (error);
 		}
 		fip->fi_readsock = rso;
 		if ((error = socreate(AF_LOCAL, &wso, SOCK_STREAM, 0)) != 0) {
 			(void)soclose(rso);
-			free(fip, M_VNODE);
+			free(fip, M_VNODE, 0);
 			vp->v_fifoinfo = NULL;
 			return (error);
 		}
@@ -143,7 +143,7 @@ fifo_open(void *v)
 		if ((error = unp_connect2(wso, rso)) != 0) {
 			(void)soclose(wso);
 			(void)soclose(rso);
-			free(fip, M_VNODE);
+			free(fip, M_VNODE, 0);
 			vp->v_fifoinfo = NULL;
 			return (error);
 		}
@@ -333,7 +333,7 @@ fifo_close(void *v)
 	if (fip->fi_readers == 0 && fip->fi_writers == 0) {
 		error1 = soclose(fip->fi_readsock);
 		error2 = soclose(fip->fi_writesock);
-		free(fip, M_VNODE);
+		free(fip, M_VNODE, 0);
 		vp->v_fifoinfo = NULL;
 	}
 	return (error1 ? error1 : error2);
@@ -351,7 +351,7 @@ fifo_reclaim(void *v)
 
 	soclose(fip->fi_readsock);
 	soclose(fip->fi_writesock);
-	free(fip, M_VNODE);
+	free(fip, M_VNODE, 0);
 	vp->v_fifoinfo = NULL;
 
 	return (0);

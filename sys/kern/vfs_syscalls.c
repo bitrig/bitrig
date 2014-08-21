@@ -304,7 +304,7 @@ update:
 				if (VFS_UNMOUNT(mp, MNT_FORCE, p))
 					panic("sys_mount: unmount failed");
 				vfs_unbusy(mp);
-				free(mp, M_MOUNT);
+				free(mp, M_MOUNT, 0);
 				vrele(vp);
 				return (error);
 			}

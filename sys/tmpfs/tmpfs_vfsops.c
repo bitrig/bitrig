@@ -268,7 +268,7 @@ tmpfs_mountfs(struct mount *mp, const char *path, struct vnode *vp,
 
 bail:
 	if (error)
-		free(tmp, M_MISCFSMNT);
+		free(tmp, M_MISCFSMNT, 0);
 
 	return (error);
 }
@@ -307,7 +307,7 @@ tmpfs_mountroot(void)
 	if (error) {
 		mp->mnt_vfc->vfc_refcount--;
 		vfs_unbusy(mp);
-		free(mp, M_MOUNT);
+		free(mp, M_MOUNT, 0);
 		vrele(swapdev_vp);
 		vrele(rootvp);
 		return (error);

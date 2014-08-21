@@ -60,7 +60,7 @@
 #include <sys/wapbl_replay.h>
 
 #define	wapbl_alloc(s) malloc((s), M_TEMP, M_WAITOK | M_ZERO)
-#define	wapbl_free(a, s) free((a), M_TEMP)
+#define	wapbl_free(a, s) free((a), M_TEMP, 0)
 #define	wapbl_calloc(n, s) malloc((n)*(s), M_TEMP, M_WAITOK | M_ZERO)
 
 int wapbl_flush_disk_cache = 1;
@@ -1883,7 +1883,7 @@ wapbl_inodetrk_free(struct wapbl *wl)
 
 	/* XXX this KASSERT needs locking/mutex analysis */
 	KASSERT(wl->wl_inohashcnt == 0);
-	free(wl->wl_inohash, M_TEMP);
+	free(wl->wl_inohash, M_TEMP, 0);
 	if (atomic_fetch_sub_explicit(&wapbl_ino_pool_refcount, 1,
 	    memory_order_seq_cst) == 1) {
 		pool_destroy(&wapbl_ino_pool);
@@ -2328,7 +2328,7 @@ wapbl_blkhash_free(struct wapbl_replay *wr)
 {
 	KASSERT(wr->wr_blkhashcnt == 0);
 #ifdef _KERNEL
-	free(wr->wr_blkhash, M_TEMP);
+	free(wr->wr_blkhash, M_TEMP, 0);
 #else /* ! _KERNEL */
 	wapbl_free(wr->wr_blkhash,
 	    (wr->wr_blkhashmask + 1) * sizeof(*wr->wr_blkhash));
