@@ -1277,11 +1277,7 @@ char *yytext;
  * PURPOSE.
  */
 
-<<<<<<< HEAD
-/* $Header: /scm/cvs/src/usr.bin/lex/initscan.c,v 1.13 2007/01/26 14:38:19 tsi Exp $ */
-=======
 /* $Header: /sync/cvs/src/usr.bin/lex/initscan.c,v 1.14 2013/11/04 17:03:32 millert Exp $ */
->>>>>>> 691c672... Use proper ANSI function definitions for functions that take no
 
 #include "flexdef.h"
 #include "parse.h"
