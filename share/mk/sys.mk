@@ -16,27 +16,15 @@ OSrev=		$(OSMAJOR)$(OSMINOR)
 
 .SUFFIXES: .out .a .o .c .cc .C .cpp .cxx .F .f .r .y .l .s .S .cl .p .h .sh .m4
 
-COMPILER_VERSION?=clang
-
 CPP?=		cpp
 CPPFLAGS?=
 
-.if ${COMPILER_VERSION:L} == "gcc4"
 CC?=		cc
 CXX?=		c++
 HOSTCC?=	cc
-OPTLVL?=	-O2
-CFLAGS?=	${OPTLVL}
-CXXFLAGS?=	${OPTLVL}
-.else
-# XXX remove -W ones once stand is fixed
-CC?=		clang
-CXX?=		clang++
-HOSTCC?=	clang
 OPTLVL?=	-O3
 CFLAGS?=	${OPTLVL}
 CXXFLAGS?=	${OPTLVL}
-.endif
 
 AR?=		ar
 ARFLAGS?=	rl

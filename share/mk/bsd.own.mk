@@ -40,10 +40,6 @@ PIE_DEFAULT?=
 .endif
 .endfor
 
-.if ${COMPILER_VERSION} == "gcc4"
-VISIBILITY_HIDDEN?=-fvisibility=hidden
-.endif
-
 # where the system object and source trees are kept; can be configurable
 # by the user in case they want them in ~/foosrc and ~/fooobj, for example
 BSDSRCDIR?=	/usr/src
@@ -94,9 +90,6 @@ LOCALEMODE?=	${NONBINMODE}
 CDIAGFLAGS=	-Wall -Wpointer-arith -Wuninitialized -Wstrict-prototypes
 CDIAGFLAGS+=	-Wmissing-prototypes -Wunused -Wsign-compare
 CDIAGFLAGS+=	-Wshadow
-.  if ${COMPILER_VERSION} == "gcc4"
-CDIAGFLAGS+=	-Wdeclaration-after-statement
-.  endif
 .endif
 
 # Shared files for system gnu configure, not used yet
