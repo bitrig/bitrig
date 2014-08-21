@@ -27,14 +27,14 @@ at the beginning of the kernel dmesg(8).
   Upgrading from snapshot:
   # pkg_add -U bitrig-syscomp
   # pkg_delete bitrig-llvm bitrig-gcc bitrig-gcclibs
-  # tar -C / -xphf .../comp01.tgz
+  # tar -C / -xzphf .../comp01.tgz
 
   Upgrading from source: (Assumes recent source/ports build, and snap setup)
   # cd /usr/src && make -j <ncpu> snap
   ; Build updated bitrig-syscomp package
   # pkg_add -U bitrig-syscomp
   # pkg_delete bitrig-llvm bitrig-gcc bitrig-gcclibs
-  # tar -C / -xphf /usr/snap/<arch>/release/comp01.tgz
+  # tar -C / -xzphf /usr/snap/<arch>/release/comp01.tgz
 
 * 2014-07-05: games
 
