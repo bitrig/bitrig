@@ -69,8 +69,11 @@ ext2fs_buf_alloc(struct inode *ip, u_int32_t bn, int size, struct ucred *cred,
 	daddr_t lbn, pref;
 
 	*bpp = NULL;
+	// XXX: fix this
+#if 0
 	if (bn < 0)
 		return (EFBIG);
+#endif
 	fs = ip->i_e2fs;
 	lbn = bn;
 

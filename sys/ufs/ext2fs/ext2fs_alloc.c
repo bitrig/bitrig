@@ -367,8 +367,11 @@ ext2fs_alloccg(struct inode *ip, int cg, u_int32_t bpref, int size)
 	}
 
 	bno = ext2fs_mapsearch(fs, bbp, bpref);
+	// XXX: fix this
+#if 0
 	if (bno < 0)
 		return (0);
+#endif
  gotit:
 #ifdef DIAGNOSTIC
 	if (isset(bbp, bno)) {
