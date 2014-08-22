@@ -209,6 +209,14 @@ public:
 
   void addLabel(DIEBlock *Die, dwarf::Form Form, const MCSymbol *Label);
 
+  /// addSectionLabel - Add a Dwarf section label attribute data and value.
+  ///
+  void addSectionLabel(DIE *Die, dwarf::Attribute Attribute, const MCSymbol *Label);
+
+  /// addSectionOffset - Add an offset into a section attribute data and value.
+  ///
+  void addSectionOffset(DIE *Die, dwarf::Attribute Attribute, uint64_t Integer);
+
   /// addLabelAddress - Add a dwarf label attribute data and value using
   /// either DW_FORM_addr or DW_FORM_GNU_addr_index.
   ///
@@ -219,10 +227,9 @@ public:
   ///
   void addOpAddress(DIEBlock *Die, const MCSymbol *Label);
 
-  /// addDelta - Add a label delta attribute data and value.
-  ///
-  void addDelta(DIE *Die, dwarf::Attribute Attribute, dwarf::Form Form, const MCSymbol *Hi,
-                const MCSymbol *Lo);
+  /// addSectionDelta - Add a label delta attribute data and value.
+  void addSectionDelta(DIE *Die, dwarf::Attribute Attribute, const MCSymbol *Hi,
+                       const MCSymbol *Lo);
 
   /// addDIEEntry - Add a DIE attribute data and value.
   ///

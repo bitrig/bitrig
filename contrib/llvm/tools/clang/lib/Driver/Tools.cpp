@@ -2627,8 +2627,9 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       CmdArgs.push_back("-gdwarf-4");
     else if (!A->getOption().matches(options::OPT_g0) &&
              !A->getOption().matches(options::OPT_ggdb0)) {
-      // Default is dwarf-2 for darwin.
-      if (getToolChain().getTriple().isOSDarwin())
+      // Default is dwarf-2 for darwin and bitrig.
+      if (getToolChain().getTriple().isOSDarwin() ||
+	  getToolChain().getTriple().getOS() == llvm::Triple::Bitrig)
         CmdArgs.push_back("-gdwarf-2");
       else
         CmdArgs.push_back("-g");
