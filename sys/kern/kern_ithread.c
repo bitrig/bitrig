@@ -186,56 +186,6 @@ ithread_forkall(void)
 	}
 }
 
-/*
- * Generic painfully slow soft interrupts, this is a temporary implementation to
- * allow us to kill the IPL subsystem and remove all "interrupts" from the
- * system. In the future we'll have real message passing for remote scheduling
- * and one softint per cpu when applicable. These soft threads interlock through
- * SCHED_LOCK, which is totally unacceptable in the future.
- */
-struct intrsource *
-ithread_softregister(int level, int (*handler)(void *), void *arg, int flags)
-{
-	struct intrsource *is;
-	struct intrhand *ih;
-
-	is = malloc(sizeof(*is), M_DEVBUF, M_NOWAIT | M_ZERO);
-	if (is == NULL)
-		panic("ithread_softregister");
-
-	is->is_type = IST_LEVEL; /* XXX more like level than EDGE */
-	is->is_pic = &softintr_pic;
-
-	ih = malloc(sizeof(*ih), M_DEVBUF, M_NOWAIT | M_ZERO);
-	if (ih == NULL)
-		panic("ithread_softregister");
-
-	ih->ih_fun = handler;
-	ih->ih_arg = arg;
-	ih->ih_level = level;
-	ih->ih_flags = flags;
-	ih->ih_pin = 0;
-	ih->ih_cpu = &cpu_info_primary;
-
-	/* Just prepend it */
-	ih->ih_next = is->is_handlers;
-	is->is_handlers = ih;
-
-	ithread_register(is);
-
-	return (is);
-}
-
-void
-ithread_softderegister(struct intrsource *is)
-{
-	if (!cold)
-		panic("ithread_softderegister only works on cold case");
-
-	ithread_deregister(is);
-	free(is, M_DEVBUF, 0);
-}
-
 void
 ithread_sleep(struct intrsource *is)
 {
