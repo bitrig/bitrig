@@ -287,35 +287,15 @@ MBR_fillremaining(struct mbr *mbr, struct disk *disk, int pn)
 
 	part = &mbr->part[pn];
 
-	/* Use whole disk. Reserve first track, or first cyl, if possible. */
-	if (disk->heads > 1)
-		part->shead = 1;
-	else
-		part->shead = 0;
-	if (disk->heads < 2 && disk->cylinders > 1)
-		part->scyl = 1;
-	else
-		part->scyl = 0;
-	part->ssect = 1;
-
-	/* Go right to the end */
-	part->ecyl = disk->cylinders - 1;
-	part->ehead = disk->heads - 1;
-	part->esect = disk->sectors;
+	/* Start a sector 2048 and go right to the end */
+	part->bs = 2048;
+	part->ns = disk->size - part->bs;
 
 	/* Fix up start/length fields */
-	PRT_fix_BN(disk, part, pn);
+	PRT_fix_CHS(disk, part);
 
-#if defined(__powerpc__) || defined(__mips__)
-	if ((part->shead != 1) || (part->ssect != 1)) {
-		/* align the partition on a cylinder boundary */
-		part->shead = 0;
-		part->ssect = 1;
-		part->scyl += 1;
-	}
-	/* Fix up start/length fields */
-	PRT_fix_BN(disk, part, pn);
-#endif
+	/* Try to shrink partition so that it matches. */
+	MBR_shrink(mbr, disk, pn);
 
 	/* Start OpenBSD MBR partition on a power of 2 block number. */
 	i = 1;
@@ -324,9 +304,19 @@ MBR_fillremaining(struct mbr *mbr, struct disk *disk, int pn)
 	adj = DL_BLKTOSEC(&dl, i) - part->bs;
 	part->bs += adj;
 	part->ns -= adj;
-	PRT_fix_CHS(disk, part);
+
+	/* Recheck space. */
+	MBR_shrink(mbr, disk, pn);
+}
+
+void
+MBR_shrink(struct mbr *mbr, struct disk *disk, int pn)
+{
+	struct prt *p, *part;
+	daddr_t i;
 
 	/* Shrink to remaining free space */
+	part = &mbr->part[pn];
 	for (i = 0; i < NDOSPART; i++) {
 		p = &mbr->part[i];
 		if (i != pn && PRT_overlap(part, p)) {
