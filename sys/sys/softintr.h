@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Christiano F. Haesbaert <haesbaert@haesbaert.org>
+ * Copyright (c) 2014 Patrick Wildt <patrick@blueri.se>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,15 +14,30 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _SYS_ITHREAD_H_
-#define _SYS_ITHREAD_H_
+#ifndef	_SYS_SOFTINTR_H_
+#define	_SYS_SOFTINTR_H_
 
-struct intrsource;
+#ifdef _KERNEL
 
-void	ithread(void *);
-void	ithread_run(struct intrsource *);
-void	ithread_sleep(struct intrsource *);
-void	ithread_register(struct intrsource *);
-void	ithread_deregister(struct intrsource *);
-void	ithread_forkall(void);
-#endif /* _SYS_ITHREAD_H_ */
+#include <sys/mutex.h>
+#include <sys/ithread.h>
+
+/*
+ * Generic software interrupt support for all platforms.
+ */
+
+#define SOFTINTR_ESTABLISH_MPSAFE	0x01
+#define softintr_establish(i, f, a)					\
+	softintr_establish_flags(i, f, a, 0)
+#define softintr_establish_mpsafe(i, f, a)				\
+	softintr_establish_flags(i, f, a, SOFTINTR_ESTABLISH_MPSAFE)
+
+void	*softintr_establish_flags(int, int (*)(void *), void *, int);
+void	softintr_disestablish(void *);
+void	softintr_init(void);
+void	softintr_dispatch(int);
+#define softintr_schedule(x) ithread_run(x)
+
+#endif /* _KERNEL */
+
+#endif	/* _SYS_SOFTINTR_H_ */

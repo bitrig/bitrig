@@ -681,6 +681,7 @@ file kern/kern_resource.c
 file kern/kern_sched.c
 file kern/kern_sensors.c		!small_kernel
 file kern/kern_sig.c
+file kern/kern_softintr.c
 file kern/kern_subr.c
 file kern/kern_sysctl.c
 file kern/kern_synch.c

@@ -142,7 +142,7 @@ pipex_init(void)
 	IFQ_SET_MAXLEN(&pipexinq, IFQ_MAXLEN);
 	IFQ_SET_MAXLEN(&pipexoutq, IFQ_MAXLEN);
         pipex_softintr =
-	    ithread_softregister(IPL_SOFTNET, pipex_softintr_handler, NULL, 0);
+	    softintr_establish(IPL_SOFTNET, pipex_softintr_handler, NULL);
 }
 
 void
@@ -771,7 +771,7 @@ pipex_ppp_dequeue(void)
 	 */
 	s = splnet();
 	if (!IF_IS_EMPTY(&pipexinq) || !IF_IS_EMPTY(&pipexoutq))
-		ithread_softsched(pipex_softintr);
+		softintr_schedule(pipex_softintr);
 	splx(s);
 }
 
@@ -802,7 +802,7 @@ pipex_ppp_enqueue(struct mbuf *m0, struct pipex_session *session,
 	IF_ENQUEUE(queue, m0);
 	splx(s);
 
-	ithread_softsched(pipex_softintr);
+	softintr_schedule(pipex_softintr);
 	return (0);
 
 fail:

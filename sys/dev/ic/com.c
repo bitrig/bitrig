@@ -223,7 +223,7 @@ com_detach(struct device *self, int flags)
 
 	timeout_del(&sc->sc_dtr_tmo);
 	timeout_del(&sc->sc_diag_tmo);
-	ithread_softderegister(sc->sc_si);
+	softintr_disestablish(sc->sc_si);
 
 	return (0);
 }
@@ -1239,7 +1239,7 @@ comintr(void *arg)
 		if (ISSET(lsr, LSR_RXRDY)) {
 			u_char *p = sc->sc_ibufp;
 
-			ithread_softsched(sc->sc_si);
+			softintr_schedule(sc->sc_si);
 			do {
 				data = bus_space_read_1(iot, ioh, com_data);
 				if (ISSET(lsr, LSR_BI)) {
@@ -1823,7 +1823,7 @@ com_attach_subr(struct com_softc *sc)
 
 	timeout_set(&sc->sc_diag_tmo, comdiag, sc);
 	timeout_set(&sc->sc_dtr_tmo, com_raisedtr, sc);
-	sc->sc_si = ithread_softregister(IPL_TTY, comsoft, sc, 0);
+	sc->sc_si = softintr_establish(IPL_TTY, comsoft, sc);
 	if (sc->sc_si == NULL)
 		panic("%s: can't establish soft interrupt",
 		    sc->sc_dev.dv_xname);

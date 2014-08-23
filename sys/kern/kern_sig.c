@@ -1256,7 +1256,7 @@ proc_stop(struct proc *p, int sw)
 		 * Extra calls to softclock don't hurt.
 		 */
 		/* XXX causes recursion on SCHED_LOCK */
-		ithread_softsched(softclock_si);
+		softintr_schedule(softclock_si);
 	}
 	if (sw) {
 		klocks = KERNEL_UNLOCK_ALL();

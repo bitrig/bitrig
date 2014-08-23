@@ -89,5 +89,5 @@ netintr(void *unused) /* ARGSUSED */
 void
 netisr_init(void)
 {
-	netisr_intr = ithread_softregister(IPL_SOFTNET, netintr, NULL, 0);
+	netisr_intr = softintr_establish(IPL_SOFTNET, netintr, NULL);
 }
