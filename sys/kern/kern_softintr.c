@@ -39,7 +39,7 @@ softintr_establish_flags(int level, int (*handler)(void *), void *arg,
 
 	is = malloc(sizeof(*is), M_DEVBUF, M_NOWAIT | M_ZERO);
 	if (is == NULL)
-		panic("ithread_softregister");
+		panic("softintr_establish_flags");
 
 	is->is_type = IST_LEVEL; /* XXX more like level than EDGE */
 	is->is_pic = &softintr_pic;
@@ -47,7 +47,7 @@ softintr_establish_flags(int level, int (*handler)(void *), void *arg,
 
 	ih = malloc(sizeof(*ih), M_DEVBUF, M_NOWAIT | M_ZERO);
 	if (ih == NULL)
-		panic("ithread_softregister");
+		panic("softintr_establish_flags");
 
 	ih->ih_fun = handler;
 	ih->ih_arg = arg;
@@ -74,7 +74,7 @@ void
 softintr_disestablish(void *is)
 {
 	if (!cold)
-		panic("ithread_softderegister only works on cold case");
+		panic("softintr_disestablish only works on cold case");
 
 	ithread_deregister(is);
 	free(is, M_DEVBUF);
