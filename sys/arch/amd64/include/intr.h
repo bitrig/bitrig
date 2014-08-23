@@ -40,6 +40,7 @@
 
 #include <sys/evcount.h>
 #include <sys/proc.h>
+#include <sys/softintr.h>
 
 /*
  * Struct describing an interrupt source for a CPU. struct cpu_info
