@@ -10,7 +10,7 @@
 
 #ifndef __cplusplus
 
-#if (defined(__GNUC__) && __GNUC__ >= 3) || defined(__PCC__)
+#if __STDC_VERSION__ >= 199901L
 /* Support for _C99: type _Bool is already built-in. */
 #define false	0
 #define true	1
