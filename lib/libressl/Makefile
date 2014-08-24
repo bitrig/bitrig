@@ -1,6 +1,7 @@
 #	$OpenBSD: Makefile,v 1.4 2014/07/13 23:36:24 jsing Exp $
 
 CFLAGS+= -Wall -Werror -Wimplicit
+CFLAGS+= -Wno-pointer-sign
 CFLAGS+= -DLIBRESSL_INTERNAL
 
 LIB=	ressl
