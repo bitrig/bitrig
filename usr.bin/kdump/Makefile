@@ -11,7 +11,6 @@ CLEANFILES+=ioctl.c kdump_subr.c
 ioctl.c: ${.CURDIR}/Makefile ${.CURDIR}/mkioctls
 	CC="${CC}" \
 	/bin/sh ${.CURDIR}/mkioctls ${SYS_DIR}/sys/ioctl.h \
-	    ${SYS_DIR}/sys/ioctl_compat.h \
 	    ${SYS_DIR}/crypto/cryptodev.h \
 	    ${SYS_DIR}/dev/biovar.h \
 	    ${SYS_DIR}/dev/systrace.h \
