@@ -1,4 +1,4 @@
-/*	$OpenBSD: check_expire.c,v 1.8 2004/04/20 23:21:23 millert Exp $	*/
+/*	$OpenBSD: check_expire.c,v 1.10 2014/08/25 07:50:25 doug Exp $	*/
 
 /*
  * Copyright (c) 1997 Berkeley Software Design, Inc. All rights reserved.
@@ -129,7 +129,7 @@ login_check_expire(FILE *back, struct passwd *pwd, char *class, int lastchance)
 				npwd = pw_dup(pwd);
 				npwd->pw_change = 1;
 				p = pwd_update(npwd, pwd);
-				memset(npwd->pw_passwd, 0,
+				explicit_bzero(npwd->pw_passwd,
 				    strlen(npwd->pw_passwd));
 				free(npwd);
 				if (p != NULL) {
