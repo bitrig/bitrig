@@ -182,6 +182,7 @@
 ./usr/include/ddb/db_access.h
 ./usr/include/ddb/db_break.h
 ./usr/include/ddb/db_command.h
+./usr/include/ddb/db_dwarf.h
 ./usr/include/ddb/db_extern.h
 ./usr/include/ddb/db_interface.h
 ./usr/include/ddb/db_lex.h
@@ -210,11 +211,6 @@
 ./usr/include/dev/auconv.h
 ./usr/include/dev/audio_if.h
 ./usr/include/dev/biovar.h
-./usr/include/dev/bluetooth
-./usr/include/dev/bluetooth/btdev.h
-./usr/include/dev/bluetooth/bthid.h
-./usr/include/dev/bluetooth/bthidev.h
-./usr/include/dev/bluetooth/btsco.h
 ./usr/include/dev/cardbus
 ./usr/include/dev/cardbus/cardbus_exrom.h
 ./usr/include/dev/cardbus/cardbusvar.h
@@ -571,6 +567,7 @@
 ./usr/include/dev/pci/drm/drm_pciids.h
 ./usr/include/dev/pci/drm/drm_sarea.h
 ./usr/include/dev/pci/drm/i915_drm.h
+./usr/include/dev/pci/drm/nouveau_drm.h
 ./usr/include/dev/pci/drm/radeon_drm.h
 ./usr/include/dev/pci/drm/refcount.h
 ./usr/include/dev/pci/eapreg.h
@@ -685,6 +682,7 @@
 ./usr/include/dev/pci/pciide_opti_reg.h
 ./usr/include/dev/pci/pciide_pdc202xx_reg.h
 ./usr/include/dev/pci/pciide_piix_reg.h
+./usr/include/dev/pci/pciide_rdc_reg.h
 ./usr/include/dev/pci/pciide_sii3112_reg.h
 ./usr/include/dev/pci/pciide_sis_reg.h
 ./usr/include/dev/pci/pciide_svwsata_reg.h
@@ -699,7 +697,6 @@
 ./usr/include/dev/pci/ppbreg.h
 ./usr/include/dev/pci/pucvar.h
 ./usr/include/dev/pci/qlereg.h
-./usr/include/dev/pci/qlireg.h
 ./usr/include/dev/pci/safereg.h
 ./usr/include/dev/pci/safevar.h
 ./usr/include/dev/pci/siop_pci_common.h
@@ -750,7 +747,6 @@
 ./usr/include/dev/usb
 ./usr/include/dev/usb/ehcireg.h
 ./usr/include/dev/usb/ehcivar.h
-./usr/include/dev/usb/ezload.h
 ./usr/include/dev/usb/hid.h
 ./usr/include/dev/usb/hidkbdsc.h
 ./usr/include/dev/usb/hidkbdvar.h
@@ -872,6 +868,7 @@
 ./usr/include/disktab.h
 ./usr/include/dlfcn.h
 ./usr/include/elf_abi.h
+./usr/include/endian.h
 ./usr/include/err.h
 ./usr/include/errno.h
 ./usr/include/eti.h
@@ -996,13 +993,6 @@
 ./usr/include/net80211/ieee80211_regdomain.h
 ./usr/include/net80211/ieee80211_rssadapt.h
 ./usr/include/net80211/ieee80211_var.h
-./usr/include/netbt
-./usr/include/netbt/bluetooth.h
-./usr/include/netbt/bt_var.h
-./usr/include/netbt/hci.h
-./usr/include/netbt/l2cap.h
-./usr/include/netbt/rfcomm.h
-./usr/include/netbt/sco.h
 ./usr/include/netdb.h
 ./usr/include/netgroup.h
 ./usr/include/netinet
@@ -1118,6 +1108,7 @@
 ./usr/include/openssl/objects.h
 ./usr/include/openssl/ocsp.h
 ./usr/include/openssl/opensslconf.h
+./usr/include/openssl/opensslfeatures.h
 ./usr/include/openssl/opensslv.h
 ./usr/include/openssl/ossl_typ.h
 ./usr/include/openssl/pem.h
@@ -1133,7 +1124,6 @@
 ./usr/include/openssl/rsa.h
 ./usr/include/openssl/safestack.h
 ./usr/include/openssl/sha.h
-./usr/include/openssl/srp.h
 ./usr/include/openssl/srtp.h
 ./usr/include/openssl/ssl.h
 ./usr/include/openssl/ssl2.h
@@ -1167,6 +1157,7 @@
 ./usr/include/ranlib.h
 ./usr/include/readpassphrase.h
 ./usr/include/regex.h
+./usr/include/ressl.h
 ./usr/include/resolv.h
 ./usr/include/rmd160.h
 ./usr/include/rpc
@@ -1256,6 +1247,7 @@
 ./usr/include/strings.h
 ./usr/include/struct.h
 ./usr/include/sys
+./usr/include/sys/_endian.h
 ./usr/include/sys/_null.h
 ./usr/include/sys/_time.h
 ./usr/include/sys/_types.h
@@ -1414,6 +1406,7 @@
 ./usr/include/ufs/ext2fs/ext2fs.h
 ./usr/include/ufs/ext2fs/ext2fs_dinode.h
 ./usr/include/ufs/ext2fs/ext2fs_dir.h
+./usr/include/ufs/ext2fs/ext2fs_extents.h
 ./usr/include/ufs/ext2fs/ext2fs_extern.h
 ./usr/include/ufs/ffs
 ./usr/include/ufs/ffs/ffs_extern.h
@@ -1460,6 +1453,7 @@
 ./usr/include/uvm/uvm_swap.h
 ./usr/include/uvm/uvm_swap_encrypt.h
 ./usr/include/uvm/uvm_vnode.h
+./usr/include/uvm/uvmexp.h
 ./usr/include/varargs.h
 ./usr/include/vis.h
 ./usr/include/wchar.h
@@ -1602,6 +1596,8 @@
 ./usr/lib/libperl.a
 ./usr/lib/libpthread.a
 ./usr/lib/libpthread_p.a
+./usr/lib/libressl.a
+./usr/lib/libressl_p.a
 ./usr/lib/librpcsvc.a
 ./usr/lib/librpcsvc_p.a
 ./usr/lib/libskey.a

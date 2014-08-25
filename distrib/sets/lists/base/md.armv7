@@ -631,6 +631,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/ddb/db_access.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/ddb/db_break.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/ddb/db_command.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/ddb/db_dwarf.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/ddb/db_extern.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/ddb/db_interface.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/ddb/db_lex.ph
@@ -659,11 +660,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/auconv.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/audio_if.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/biovar.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/dev/bluetooth
-./usr/libdata/perl5/site_perl/arm-bitrig/dev/bluetooth/btdev.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/dev/bluetooth/bthid.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/dev/bluetooth/bthidev.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/dev/bluetooth/btsco.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/cardbus
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/cardbus/cardbus_exrom.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/cardbus/cardbusvar.ph
@@ -1020,6 +1016,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/drm/drm_pciids.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/drm/drm_sarea.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/drm/i915_drm.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/drm/nouveau_drm.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/drm/radeon_drm.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/drm/refcount.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/eapreg.ph
@@ -1134,6 +1131,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/pciide_opti_reg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/pciide_pdc202xx_reg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/pciide_piix_reg.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/pciide_rdc_reg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/pciide_sii3112_reg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/pciide_sis_reg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/pciide_svwsata_reg.ph
@@ -1148,7 +1146,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/ppbreg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/pucvar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/qlereg.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/qlireg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/safereg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/safevar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/siop_pci_common.ph
@@ -1199,7 +1196,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/ehcireg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/ehcivar.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/ezload.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/hid.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/hidkbdsc.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/hidkbdvar.ph
@@ -1321,6 +1317,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/disktab.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dlfcn.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/elf_abi.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/endian.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/err.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/errno.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/eti.ph
@@ -1453,13 +1450,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/net80211/ieee80211_regdomain.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/net80211/ieee80211_rssadapt.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/net80211/ieee80211_var.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/netbt
-./usr/libdata/perl5/site_perl/arm-bitrig/netbt/bluetooth.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/netbt/bt_var.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/netbt/hci.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/netbt/l2cap.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/netbt/rfcomm.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/netbt/sco.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/netdb.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/netgroup.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/netinet
@@ -1574,6 +1564,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/objects.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/ocsp.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/opensslconf.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/opensslfeatures.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/opensslv.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/ossl_typ.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/pem.ph
@@ -1589,7 +1580,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/rsa.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/safestack.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/sha.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/openssl/srp.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/srtp.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/ssl.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/ssl2.ph
@@ -1624,6 +1614,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/readpassphrase.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/regex.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/resolv.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/ressl.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/rmd160.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/rpc
 ./usr/libdata/perl5/site_perl/arm-bitrig/rpc/auth.ph
@@ -1697,6 +1688,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/strings.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/struct.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys
+./usr/libdata/perl5/site_perl/arm-bitrig/sys/_endian.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/_null.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/_time.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/_types.ph
@@ -1855,6 +1847,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/ufs/ext2fs/ext2fs.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/ufs/ext2fs/ext2fs_dinode.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/ufs/ext2fs/ext2fs_dir.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/ufs/ext2fs/ext2fs_extents.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/ufs/ext2fs/ext2fs_extern.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/ufs/ffs
 ./usr/libdata/perl5/site_perl/arm-bitrig/ufs/ffs/ffs_extern.ph
@@ -1901,6 +1894,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/uvm/uvm_swap.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/uvm/uvm_swap_encrypt.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/uvm/uvm_vnode.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/uvm/uvmexp.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/varargs.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/vis.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/wchar.ph
