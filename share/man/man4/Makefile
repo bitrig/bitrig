@@ -46,7 +46,7 @@ MAN=	aac.4 ac97.4 acphy.4 \
 	pf.4 pflog.4 pflow.4 pfsync.4 pgt.4 piixpm.4 pim.4 pipex.4 \
 	pms.4 ppb.4 ppp.4 pppoe.4 pppx.4 pty.4 puc.4 pwdog.4 \
 	qla.4 qle.4 qlw.4 qsphy.4 radio.4 \
-	ral.4 random.4 rd.4 rdac.4 re.4 rdcphy.4 rgephy.4 ricohrtc.4 \
+	ral.4 random.4 rdac.4 re.4 rdcphy.4 rgephy.4 ricohrtc.4 \
 	rl.4 rlphy.4 route.4 rsu.4 rt.4 rtsx.4 rum.4 run.4 \
 	rtfps.4 rtii.4 rtw.4 safe.4 safte.4 san.4 sbus.4 schsio.4 \
 	scsi.4 sd.4 \
