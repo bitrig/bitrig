@@ -1301,11 +1301,10 @@ bge_fill_rx_ring_std(struct bge_softc *sc)
 		if (bge_newbuf(sc, i) != 0)
 			break;
 
+		sc->bge_std = i;
 		post = 1;
 	}
 	if_rxr_put(&sc->bge_std_ring, slots);
-
-	sc->bge_std = i;
 
 	if (post)
 		bge_writembx(sc, BGE_MBX_RX_STD_PROD_LO, sc->bge_std);
@@ -1406,11 +1405,10 @@ bge_fill_rx_ring_jumbo(struct bge_softc *sc)
 		if (bge_newbuf_jumbo(sc, i) != 0)
 			break;
 
+		sc->bge_jumbo = i;
 		post = 1;
 	}
 	if_rxr_put(&sc->bge_jumbo_ring, slots);
-
-	sc->bge_jumbo = i;
 
 	if (post)
 		bge_writembx(sc, BGE_MBX_RX_JUMBO_PROD_LO, sc->bge_jumbo);

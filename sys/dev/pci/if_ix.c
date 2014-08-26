@@ -2564,11 +2564,11 @@ ixgbe_rxfill(struct rx_ring *rxr)
 		if (ixgbe_get_buf(rxr, i) != 0)
 			break;
 
+		rxr->last_desc_filled = i;
 		post = 1;
 	}
-	if_rxr_put(&rxr->rx_ring, slots);
 
-	rxr->last_desc_filled = i;
+	if_rxr_put(&rxr->rx_ring, slots);
 
 	return (post);
 }
