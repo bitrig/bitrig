@@ -2872,7 +2872,6 @@
 ./usr/sbin/named-checkzone
 ./usr/sbin/ndp
 ./usr/sbin/netgroup_mkdb
-./usr/sbin/nginx
 ./usr/sbin/npppctl
 ./usr/sbin/npppd
 ./usr/sbin/nsd

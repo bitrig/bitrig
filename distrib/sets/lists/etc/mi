@@ -41,15 +41,6 @@
 ./etc/netstart
 ./etc/networks
 ./etc/newsyslog.conf
-./etc/nginx
-./etc/nginx/fastcgi_params
-./etc/nginx/koi-utf
-./etc/nginx/koi-win
-./etc/nginx/mime.types
-./etc/nginx/nginx.conf
-./etc/nginx/scgi_params
-./etc/nginx/uwsgi_params
-./etc/nginx/win-utf
 ./etc/npppd
 ./etc/npppd/npppd-users
 ./etc/npppd/npppd.conf
