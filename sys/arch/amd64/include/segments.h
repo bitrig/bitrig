@@ -163,7 +163,7 @@ void set_sys_segment(struct sys_segment_descriptor *, void *, size_t,
 			  int, int, int);
 void set_mem_segment(struct mem_segment_descriptor *, void *, size_t,
 			  int, int, int, int, int);
-int idt_vec_alloc(int, int);
+int idt_vec_alloc(void);
 void idt_vec_set(int, void (*)(void));
 void idt_vec_free(int);
 void cpu_init_idt(void);

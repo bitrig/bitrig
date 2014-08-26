@@ -64,7 +64,6 @@ struct intrstub {
 };
 
 struct intrsource {
-	int is_maxlevel;		/* max. IPL for this source */
 	int is_pin;			/* IRQ for legacy; pin for IO APIC */
 	void (*is_run)(struct intrsource *);	/* Run callback to this source */
 	struct intrhand *is_handlers;	/* handler chain */
@@ -73,7 +72,6 @@ struct intrsource {
 	int is_flags;			/* see below */
 	int is_type;			/* level, edge */
 	int is_idtvec;
-	int is_minlevel;
 	volatile int is_scheduled;	/* proc is runnable */
 	struct proc *is_proc;		/* ithread proc */
 	TAILQ_ENTRY(intrsource) entry;	/* entry in ithreads list */
@@ -111,11 +109,6 @@ extern void Xfakeclock(struct intrsource *);
 int spllower(int);
 int splraise(int);
 void softintr(int);
-
-/*
- * Convert spl level to local APIC level
- */
-#define APIC_LEVEL(l)   ((l) << 4)
 
 /*
  * compiler barrier: prevent reordering of instructions.

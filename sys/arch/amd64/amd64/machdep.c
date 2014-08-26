@@ -1733,21 +1733,22 @@ need_resched(struct cpu_info *ci)
 }
 
 /*
- * Allocate an IDT vector slot within the given range.
+ * Allocate an IDT vector suitable for interrupts.
  * - only allocated from interrupt code, which is already locked
  */
 
 int
-idt_vec_alloc(int low, int high)
+idt_vec_alloc(void)
 {
 	int vec;
 
-	for (vec = low; vec <= high; vec++) {
+	for (vec = IDT_INTR_LOW; vec <= IDT_INTR_HIGH; vec++) {
 		if (idt_allocmap[vec] == 0) {
 			idt_allocmap[vec] = 1;
 			return vec;
 		}
 	}
+
 	return 0;
 }
 

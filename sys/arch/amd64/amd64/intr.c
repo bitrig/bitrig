@@ -132,62 +132,6 @@ x86_nmi(void)
 	return(0);
 }
 
-/*
- * Recalculate the interrupt masks from scratch.
- *
- * Must be called with intr_lock held.
- */
-void
-intr_calculatemasks(struct cpu_info *ci)
-{
-	int irq, level;
-	u_int64_t unusedirqs, intrlevel[MAX_INTR_SOURCES];
-	struct intrhand *q;
-
-	MUTEX_ASSERT_LOCKED(&intr_lock);
-
-	/* First, figure out which levels each IRQ uses. */
-	unusedirqs = 0xffffffffffffffffUL;
-	for (irq = 0; irq < MAX_INTR_SOURCES; irq++) {
-		int levels = 0;
-
-		if (ci->ci_isources[irq] == NULL) {
-			intrlevel[irq] = 0;
-			continue;
-		}
-		for (q = ci->ci_isources[irq]->is_handlers; q; q = q->ih_next)
-			levels |= (1 << q->ih_level);
-		intrlevel[irq] = levels;
-		if (levels)
-			unusedirqs &= ~(1UL << irq);
-	}
-
-	/* Then figure out which IRQs use each level. */
-	for (level = 0; level < NIPL; level++) {
-		u_int64_t irqs = 0;
-		for (irq = 0; irq < MAX_INTR_SOURCES; irq++)
-			if (intrlevel[irq] & (1 << level))
-				irqs |= (1UL << irq);
-	}
-
-	for (irq = 0; irq < MAX_INTR_SOURCES; irq++) {
-		int maxlevel = IPL_NONE;
-		int minlevel = IPL_HIGH;
-
-		if (ci->ci_isources[irq] == NULL)
-			continue;
-		for (q = ci->ci_isources[irq]->is_handlers; q;
-		     q = q->ih_next) {
-			if (q->ih_level < minlevel)
-				minlevel = q->ih_level;
-			if (q->ih_level > maxlevel)
-				maxlevel = q->ih_level;
-		}
-		ci->ci_isources[irq]->is_maxlevel = maxlevel;
-		ci->ci_isources[irq]->is_minlevel = minlevel;
-	}
-}
-
 /* 
  * Allocate an interrupt slot on the given cpu.
  * - Called with intr_lock held.
@@ -305,20 +249,10 @@ intr_allocate_slot(struct pic *pic, int legacy_irq, int pin, int level,
 duplicate:
 		if (pic == &i8259_pic)
 			idtvec = ICU_OFFSET + legacy_irq;
-		else {
-#ifdef IOAPIC_HWMASK
-			if (level > isp->is_maxlevel) {
-#else
-			if (isp->is_minlevel == 0 || level < isp->is_minlevel) {
-#endif
-				idtvec = idt_vec_alloc(APIC_LEVEL(level),
-				    IDT_INTR_HIGH);
-				if (idtvec == 0) {
-					return (EBUSY);
-				}
-			} else
-				idtvec = isp->is_idtvec;
-		}
+		else if (isp->is_idtvec == 0)
+			idtvec = idt_vec_alloc();
+		else
+			idtvec = isp->is_idtvec;
 	} else {
 other:
 		/*
@@ -342,7 +276,7 @@ other:
 		}
 		return (EBUSY);
 found:
-		idtvec = idt_vec_alloc(APIC_LEVEL(level), IDT_INTR_HIGH);
+		idtvec = idt_vec_alloc();
 		if (idtvec == 0) {
 			free(ci->ci_isources[slot], M_DEVBUF, 0);
 			ci->ci_isources[slot] = NULL;
@@ -474,9 +408,6 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 
 	*p = ih;
 
-	intr_calculatemasks(ci);
-
-
 	if (source->is_idtvec != idt_vec) {
 		if (source->is_idtvec != 0 && source->is_idtvec != idt_vec)
 			idt_vec_free(source->is_idtvec);
@@ -541,7 +472,6 @@ intr_disestablish(struct intrhand *ih)
 
 	*p = q->ih_next;
 
-	intr_calculatemasks(ci);
 	if (source->is_handlers == NULL)
 		pic->pic_delroute(pic, ci, ih->ih_pin, idtvec, source->is_type);
 	else
@@ -594,7 +524,7 @@ intr_handler(struct intrframe *frame, struct intrhand *ih)
 
 /*
  * Fake interrupt handler structures for the benefit of symmetry with
- * other interrupt sources, and the benefit of intr_calculatemasks()
+ * other interrupt sources.
  */
 struct intrhand fake_softclock_intrhand;
 struct intrhand fake_softnet_intrhand;
@@ -635,9 +565,6 @@ cpu_intr_init(struct cpu_info *ci)
 	ci->ci_isources[LIR_TIMER] = isp;
 #endif
 
-	mtx_enter(&intr_lock);
-	intr_calculatemasks(ci);
-	mtx_leave(&intr_lock);
 }
 
 void
@@ -660,9 +587,9 @@ intr_printconfig(void)
 			isp = ci->ci_isources[i];
 			if (isp == NULL)
 				continue;
-			printf("cpu%u source %d is pin %d from pic %s maxlevel %d\n",
+			printf("cpu%u source %d is pin %d from pic %s\n",
 			    ci->ci_apicid, i, isp->is_pin,
-			    isp->is_pic->pic_name, isp->is_maxlevel);
+			    isp->is_pic->pic_name);
 			for (ih = isp->is_handlers; ih != NULL;
 			     ih = ih->ih_next)
 				printf("\thandler %p level %d\n",
