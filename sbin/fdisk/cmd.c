@@ -156,9 +156,9 @@ Xedit(char *args, struct disk *disk, struct mbr *mbr, struct mbr *tt,
 	/* Edit partition type */
 	ret = Xsetpid(args, disk, mbr, tt, offset);
 
-#define	EDIT(p, v, n, m)					\
+#define	EDIT(p, v, n, m)			\
 	if ((num = ask_num(p, v, n, m)) != v)	\
-		ret = CMD_DIRTY;				\
+		ret = CMD_DIRTY;		\
 	v = num;
 
 	/* Unused, so just zero out */
