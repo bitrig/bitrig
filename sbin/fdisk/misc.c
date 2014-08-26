@@ -30,6 +30,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <err.h>
 #include <errno.h>
@@ -91,13 +92,13 @@ ask_cmd(char **cmd, char **args)
 	return (0);
 }
 
-int
-ask_num(const char *str, int dflt, int low, int high)
+uint32_t
+ask_num(const char *str, uint32_t dflt, uint32_t low, uint32_t high)
 {
 	char lbuf[100];
 	const char *errstr;
 	size_t lbuflen;
-	int num;
+	uint32_t num;
 
 	if (dflt < low)
 		dflt = low;
@@ -118,7 +119,7 @@ ask_num(const char *str, int dflt, int low, int high)
 			num = dflt;
 			errstr = NULL;
 		} else {
-			num = (int)strtonum(lbuf, low, high, &errstr);
+			num = (uint32_t)strtonum(lbuf, low, high, &errstr);
 			if (errstr)
 				printf("%s is %s: %s.\n", str, errstr, lbuf);
 		}

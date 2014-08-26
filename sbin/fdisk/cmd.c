@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <memory.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <signal.h>
 #include <unistd.h>
 
@@ -141,7 +142,8 @@ Xedit(char *args, struct disk *disk, struct mbr *mbr, struct mbr *tt,
     int offset)
 {
 	const char *errstr;
-	int pn, num, ret, new;
+	int pn, ret, new;
+	uint32_t num;
 	struct prt *pp;
 
 	pn = strtonum(args, 0, 3, &errstr);
