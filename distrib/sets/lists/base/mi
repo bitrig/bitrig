@@ -409,6 +409,7 @@
 ./usr/bin/nm
 ./usr/bin/nohup
 ./usr/bin/od
+./usr/bin/openssl
 ./usr/bin/otp-md5
 ./usr/bin/otp-rmd160
 ./usr/bin/otp-sha1
@@ -2882,7 +2883,6 @@
 ./usr/sbin/nsupdate
 ./usr/sbin/ntpctl
 ./usr/sbin/ntpd
-./usr/sbin/openssl
 ./usr/sbin/ospf6ctl
 ./usr/sbin/ospf6d
 ./usr/sbin/ospfctl
