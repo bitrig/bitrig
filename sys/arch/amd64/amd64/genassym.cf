@@ -122,7 +122,6 @@ member	is_pic
 member	is_flags
 member	is_pin
 member	is_type
-member	is_maxlevel
 
 struct	intrhand
 member	ih_fun

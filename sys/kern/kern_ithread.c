@@ -101,9 +101,6 @@ ithread(void *v_is)
 void
 ithread_run(struct intrsource *is)
 {
-#ifdef ITHREAD_DEBUG
-	struct cpu_info *ci = curcpu();
-#endif
 	struct proc *p = is->is_proc;
 
 	if (p == NULL) {
@@ -113,9 +110,7 @@ ithread_run(struct intrsource *is)
 		return;
 	}
 
-	DPRINTF(10, "ithread accepted interrupt pin %d "
-	    "(ilevel = %d, maxlevel = %d)\n",
-	    is->is_pin, ci->ci_ilevel, is->is_maxlevel);
+	DPRINTF(10, "ithread accepted interrupt pin %d\n", is->is_pin);
 
 	SCHED_LOCK();		/* implies crit_enter() ! */
 	
@@ -225,7 +220,6 @@ ithread_softregister(int level, int (*handler)(void *), void *arg, int flags)
 
 	is->is_type = IST_LEVEL; /* XXX more like level than EDGE */
 	is->is_pic = &softintr_pic;
-	is->is_minlevel = IPL_HIGH;
 
 	ih = malloc(sizeof(*ih), M_DEVBUF, M_NOWAIT | M_ZERO);
 	if (ih == NULL)
@@ -241,11 +235,6 @@ ithread_softregister(int level, int (*handler)(void *), void *arg, int flags)
 	/* Just prepend it */
 	ih->ih_next = is->is_handlers;
 	is->is_handlers = ih;
-
-	if (ih->ih_level > is->is_maxlevel)
-		is->is_maxlevel = ih->ih_level;
-	if (ih->ih_level < is->is_minlevel) /* XXX minlevel will be gone */
-		is->is_minlevel = ih->ih_level;
 
 	ithread_register(is);
 
