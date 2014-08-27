@@ -190,6 +190,7 @@ void	setidt(int idx, /*XXX*/caddr_t func, int typ, int dpl);
 
 
 /* XXXX ought to be in psl.h with spl() functions */
+typedef u_long intr_state_t;
 
 static __inline void
 disable_intr(void)
@@ -217,6 +218,9 @@ write_rflags(u_long ef)
 {
 	__asm volatile("pushq %0; popfq" : : "r" (ef));
 }
+
+#define state_intr read_rflags
+#define restore_intr write_rflags
 
 static __inline u_int64_t
 rdmsr(u_int msr)
