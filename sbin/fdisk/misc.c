@@ -307,3 +307,18 @@ getuint(struct disk *disk, char *prompt, u_int32_t oval, u_int32_t maxval)
 
 	return ((u_int32_t)d);
 }
+
+void
+BN_to_CHS(struct disk *disk, uint32_t lba,
+    uint32_t *cyl, uint32_t *head, uint32_t *sect)
+{
+	*cyl = lba / (disk->sectors * disk->heads);
+	*head = (lba / disk->sectors) % disk->heads;
+	*sect = (lba % disk->sectors) + 1;
+}
+
+uint32_t
+CHS_to_BN(struct disk *disk, uint32_t cyl, uint32_t head, uint32_t sect)
+{
+	return ((cyl * disk->heads + head) * disk->sectors + sect - 1);
+}

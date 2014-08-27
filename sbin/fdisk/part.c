@@ -29,6 +29,7 @@
 #include <sys/disklabel.h>
 #include <err.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "disk.h"
@@ -312,9 +313,7 @@ PRT_overlap(struct prt *p1, struct prt *p2)
 void
 PRT_fix_BN(struct disk *disk, struct prt *part, int pn)
 {
-	u_int32_t spt, tpc, spc;
-	u_int32_t start = 0;
-	u_int32_t end = 0;
+	u_int32_t start, end;
 
 	/* Zero out entry if not used */
 	if (part->id == DOSPTYP_UNUSED) {
@@ -322,18 +321,8 @@ PRT_fix_BN(struct disk *disk, struct prt *part, int pn)
 		return;
 	}
 
-	/* Disk geometry. */
-	spt = disk->sectors;
-	tpc = disk->heads;
-	spc = spt * tpc;
-
-	start += part->scyl * spc;
-	start += part->shead * spt;
-	start += part->ssect - 1;
-
-	end += part->ecyl * spc;
-	end += part->ehead * spt;
-	end += part->esect - 1;
+	start = CHS_to_BN(disk, part->scyl, part->shead, part->ssect);
+	end = CHS_to_BN(disk, part->ecyl, part->ehead, part->esect);
 
 	/* XXX - Should handle this... */
 	if (start > end)
@@ -346,9 +335,7 @@ PRT_fix_BN(struct disk *disk, struct prt *part, int pn)
 void
 PRT_fix_CHS(struct disk *disk, struct prt *part)
 {
-	u_int32_t spt, tpc, spc;
 	u_int32_t start, end, size;
-	u_int32_t cyl, head, sect;
 
 	/* Zero out entry if not used */
 	if (part->id == DOSPTYP_UNUSED) {
@@ -356,30 +343,10 @@ PRT_fix_CHS(struct disk *disk, struct prt *part)
 		return;
 	}
 
-	/* Disk geometry. */
-	spt = disk->sectors;
-	tpc = disk->heads;
-	spc = spt * tpc;
-
 	start = part->bs;
 	size = part->ns;
 	end = (start + size) - 1;
 
-	/* Figure out starting CHS values */
-	cyl = (start / spc); start -= (cyl * spc);
-	head = (start / spt); start -= (head * spt);
-	sect = (start + 1);
-
-	part->scyl = cyl;
-	part->shead = head;
-	part->ssect = sect;
-
-	/* Figure out ending CHS values */
-	cyl = (end / spc); end -= (cyl * spc);
-	head = (end / spt); end -= (head * spt);
-	sect = (end + 1);
-
-	part->ecyl = cyl;
-	part->ehead = head;
-	part->esect = sect;
+	BN_to_CHS(disk, start, &part->scyl, &part->shead, &part->ssect);
+	BN_to_CHS(disk, end, &part->ecyl, &part->ehead, &part->esect);
 }

@@ -43,5 +43,7 @@ uint32_t ask_num(const char *, uint32_t, uint32_t, uint32_t);
 int ask_pid(unsigned char);
 int ask_yn(const char *);
 u_int32_t getuint(struct disk *, char *, u_int32_t, u_int32_t);
+void BN_to_CHS(struct disk *, uint32_t, uint32_t *, uint32_t *, uint32_t *);
+uint32_t CHS_to_BN(struct disk *, uint32_t, uint32_t, uint32_t);
 
 #endif /* _MISC_H */
