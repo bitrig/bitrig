@@ -65,11 +65,13 @@ ithread(void *v_is)
 			if ((ih->ih_flags & IPL_MPSAFE) == 0)
 				KERNEL_UNLOCK();
 
-			if (intr_shared_edge == 0 && irc > 0) {
-				ih->ih_count.ec_count++;
-				stray = 0;
+			if (!irc)
+				continue;
+			ih->ih_count.ec_count++;
+			stray = 0;
+
+			if (!intr_shared_edge)
 				break;
-			}
 		}
 
 		KASSERT(CRIT_DEPTH == 0);
