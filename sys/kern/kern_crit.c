@@ -87,11 +87,11 @@ crit_rundeferred(void)
 {
 	struct cpu_info *ci = curcpu();
 	int i;
-	long rf;
+	intr_state_t ist;
 
 	KASSERT(CRIT_DEPTH == 0);
 
-	rf = read_rflags(); /* XXX or psl ? */
+	ist = state_intr();
 	disable_intr();
 
 	ci->ci_idepth++;
@@ -104,5 +104,5 @@ crit_rundeferred(void)
 		disable_intr();
 	}
 	ci->ci_idepth--;
-	write_rflags(rf);
+	restore_intr(ist);
 }
