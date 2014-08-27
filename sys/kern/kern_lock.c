@@ -117,7 +117,7 @@ struct bmtx bmtx_giant;
 void
 _kernel_lock_init(void)
 {
-	bmtx_init(&bmtx_giant);
+	bmtx_init(&bmtx_giant, "giant");
 }
 
 /*
