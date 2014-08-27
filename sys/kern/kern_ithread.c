@@ -40,7 +40,6 @@ void
 ithread(void *v_is)
 {
 	struct intrsource *is = v_is;
-	struct pic *pic = is->is_pic;
 	struct intrhand *ih;
 	int irc, stray;
 
@@ -79,7 +78,7 @@ ithread(void *v_is)
 		if (stray)
 			DPRINTF(1, "stray interrupt pin %d ?\n", is->is_pin);
 
-		pic->pic_hwunmask(pic, is->is_pin);
+		intrsource_unmask(is);
 
 		/*
 		 * is->is_scheduled might have been set again (we got another

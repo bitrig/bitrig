@@ -77,6 +77,11 @@ struct intrsource {
 	TAILQ_ENTRY(intrsource) entry;	/* entry in ithreads list */
 };
 
+#define intrsource_mask(is)					\
+	((is)->is_pic->pic_hwmask((is)->is_pic, (is)->is_pin))
+#define intrsource_unmask(is)					\
+	((is)->is_pic->pic_hwunmask((is)->is_pic, (is)->is_pin))
+
 #define IS_LEGACY	0x0001		/* legacy ISA irq source */
 #define IS_IPI		0x0002
 #define IS_LOG		0x0004
@@ -189,7 +194,6 @@ extern char idt_allocmap[];
 
 void intr_default_setup(void);
 int x86_nmi(void);
-void intr_calculatemasks(struct cpu_info *);
 int intr_allocate_slot_cpu(struct cpu_info *, struct pic *, int, int *);
 int intr_allocate_slot(struct pic *, int, int, int, struct cpu_info **, int *,
 	    int *);
