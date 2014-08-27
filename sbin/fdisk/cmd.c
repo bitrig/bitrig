@@ -163,6 +163,11 @@ Xedit(char *args, struct disk *disk, struct mbr *mbr, struct mbr *tt,
 		ret = CMD_DIRTY;		\
 	v = num;
 
+#define EDIT_BN(p, v, n)				\
+	if ((num = getuint(disk, p, v, n)) != v)	\
+		ret = CMD_DIRTY;			\
+	v = num;
+
 	/* Unused, so just zero out */
 	if (pp->id == DOSPTYP_UNUSED) {
 		memset(pp, 0, sizeof(*pp));
@@ -195,14 +200,13 @@ Xedit(char *args, struct disk *disk, struct mbr *mbr, struct mbr *tt,
 		/* Fix up CHS values for LBA */
 		PRT_fix_CHS(disk, pp);
 	} else {
-		pp->bs = getuint(disk, "Partition offset", pp->bs,
-		    disk->size);
-		pp->ns = getuint(disk, "Partition size", pp->ns,
-		    disk->size - pp->bs);
+		EDIT_BN("Partition offset", pp->bs, disk->size);
+		EDIT_BN("Partition size", pp->ns, disk->size - pp->bs);
 		/* Fix up CHS values */
 		PRT_fix_CHS(disk, pp);
 	}
 #undef EDIT
+#undef EDIT_BN
 	return (ret);
 }
 
