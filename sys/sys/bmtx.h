@@ -20,6 +20,7 @@
 struct bmtx {
 	atomic_uintptr_t	bmtx_lock;
 	int			bmtx_recurse;
+	const char *		bmtx_name;
 	TAILQ_HEAD(,proc)	bmtx_waiters;
 };
 
@@ -28,11 +29,12 @@ struct bmtx {
 #define BMTX_RECURSED	0x2
 #define BMTX_FLAGS	(BMTX_WAITERS|BMTX_RECURSED)
 
-void	bmtx_init(struct bmtx *);
+void	bmtx_init(struct bmtx *, const char *);
 int	bmtx_held(struct bmtx *);
 void	bmtx_lock(struct bmtx *);
 void	bmtx_unlock(struct bmtx *);
 int	bmtx_unlock_all(struct bmtx *);
+void	bmtx_dump(struct bmtx *);
 void	bmtx_test(void);
 
 #endif /* _SYS_BMTX_H_ */

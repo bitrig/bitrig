@@ -104,7 +104,7 @@ bmtx_lock_block(struct bmtx *bmtx, u_long lock)
 	p = curproc;
 	TAILQ_INSERT_TAIL(&bmtx->bmtx_waiters, p, p_runq);
 	p->p_wchan = bmtx;
-	p->p_wmesg = "bmtx";
+	p->p_wmesg = bmtx->bmtx_name;
 	p->p_slptime = 0;
 	p->p_priority = PVM & PRIMASK;
 	p->p_stat = SSLEEP;
@@ -115,10 +115,11 @@ bmtx_lock_block(struct bmtx *bmtx, u_long lock)
 /* Public API */
 
 void
-bmtx_init(struct bmtx *bmtx)
+bmtx_init(struct bmtx *bmtx, const char *name)
 {
 	bmtx->bmtx_recurse = 0;
 	bmtx->bmtx_lock = 0;
+	bmtx->bmtx_name = name;
 	TAILQ_INIT(&bmtx->bmtx_waiters);
 }
 
@@ -247,6 +248,33 @@ bmtx_unlock_all(struct bmtx *bmtx)
 	return (count + 1);
 }
 
+void
+bmtx_dump(struct bmtx *bmtx)
+{
+	atomic_uintptr_t lock = bmtx->bmtx_lock;
+	struct proc *p = bmtx_owner(lock);
+	int recurse = bmtx->bmtx_recurse;
+
+	printf("bmtx %s (%p): ", bmtx->bmtx_name, bmtx);
+	if (p)
+		printf("locked by\n  %s, proc=%p, pid=%llu.\n",
+		    p->p_comm, p, p->p_pid);
+	else
+		printf("unlocked\n.");
+	printf("  flags=0x%x(%s%s), recurse=%d.\n", lock & BMTX_FLAGS,
+	    lock & BMTX_WAITERS ? "BMTX_WAITERS" : "",
+	    lock & BMTX_RECURSED ? ",BMTX_RECURSED" : "",
+	    recurse);
+	if (lock & BMTX_WAITERS) {
+		printf("  waiters:\n");
+		TAILQ_FOREACH(p, &bmtx->bmtx_waiters, p_runq) {
+			printf("    %s, proc=%p, pid=%llu.\n",
+			    p->p_comm, p, p->p_pid);
+		}
+		printf("\n");
+	}
+}
+
 #include <machine/cpufunc.h>
 /* int bmtx_test_n = 100000; */
 int bmtx_test_n = 0;
@@ -260,7 +288,7 @@ bmtx_test(void)
 	if (bmtx_test_n == 0)
 		return;
 
-	bmtx_init(&test);
+	bmtx_init(&test, "test bmtx");
 	x = rdtsc();
 	while (n--) {
 		bmtx_lock(&test);
