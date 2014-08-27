@@ -46,5 +46,6 @@ int MBR_write(int, off_t, struct dos_mbr *);
 void MBR_pcopy(struct disk *, struct mbr *);
 int MBR_verify(struct mbr *);
 void MBR_fillremaining(struct mbr *, struct disk *, int);
+void MBR_grow_part(struct mbr *, struct disk *, int);
 
 #endif /* _MBR_H */

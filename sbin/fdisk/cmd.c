@@ -192,16 +192,28 @@ Xedit(char *args, struct disk *disk, struct mbr *mbr, struct mbr *tt,
 		EDIT("BIOS Starting cylinder", pp->scyl,  0, maxcyl);
 		EDIT("BIOS Starting head",     pp->shead, 0, maxhead);
 		EDIT("BIOS Starting sector",   pp->ssect, 1, maxsect);
+
+		if (ret == CMD_DIRTY) {
+			pp->bs = CHS_to_BN(disk, pp->scyl, pp->shead, pp->ssect);
+			MBR_grow_part(mbr, disk, pn);
+		}
+
 		EDIT("BIOS Ending cylinder",   pp->ecyl,  0, maxcyl);
 		EDIT("BIOS Ending head",       pp->ehead, 0, maxhead);
 		EDIT("BIOS Ending sector",     pp->esect, 1, maxsect);
+
 		/* Fix up off/size values */
 		PRT_fix_BN(disk, pp, pn);
 		/* Fix up CHS values for LBA */
 		PRT_fix_CHS(disk, pp);
 	} else {
 		EDIT_BN("Partition offset", pp->bs, disk->size);
+
+		if (ret == CMD_DIRTY)
+			MBR_grow_part(mbr, disk, pn);
+
 		EDIT_BN("Partition size", pp->ns, disk->size - pp->bs);
+
 		/* Fix up CHS values */
 		PRT_fix_CHS(disk, pp);
 	}

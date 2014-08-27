@@ -341,3 +341,26 @@ MBR_fillremaining(struct mbr *mbr, struct disk *disk, int pn)
 	}
 	PRT_fix_CHS(disk, part);
 }
+
+void
+MBR_grow_part(struct mbr *mbr, struct disk *disk, int pn)
+{
+	struct prt *part, *p;
+	int i;
+
+	part = &mbr->part[pn];
+	part->ns = disk->size - part->bs;
+
+	for (i = 0; i < NDOSPART; i++) {
+		p = &mbr->part[i];
+		if (i != pn && PRT_overlap(part, p)) {
+			if (p->bs > part->bs)
+				part->ns = p->bs - part->bs;
+			else {
+				warnx("No free space at sector %d!", part->bs);
+				part->ns = 0;
+			}
+		}
+	}
+	PRT_fix_CHS(disk, part);
+}
