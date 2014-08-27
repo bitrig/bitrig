@@ -113,7 +113,7 @@ ithread_run(struct intrsource *is)
 	DPRINTF(10, "ithread accepted interrupt pin %d\n", is->is_pin);
 
 	SCHED_LOCK();		/* implies crit_enter() ! */
-	
+
 	is->is_scheduled = 1;
 
 	switch (p->p_stat) {
@@ -266,7 +266,7 @@ ithread_sleep(struct intrsource *is)
 	SCHED_LOCK();
 	if (!is->is_scheduled) {
 		p->p_wchan = p;
-		p->p_wmesg = "softintr";
+		p->p_wmesg = "interrupt";
 		p->p_slptime = 0;
 		p->p_priority = PVM & PRIMASK;
 		p->p_stat = SSLEEP;
