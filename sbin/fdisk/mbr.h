@@ -33,7 +33,7 @@ struct mbr {
 	off_t offset;
 	unsigned char code[DOSPARTOFF];
 	struct prt part[NDOSPART];
-	u_int16_t signature;
+	uint16_t signature;
 };
 
 void MBR_print_disk(char *);

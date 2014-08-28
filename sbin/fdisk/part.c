@@ -30,6 +30,7 @@
 #include <err.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "disk.h"
@@ -180,7 +181,7 @@ PRT_parse(struct disk *disk, struct dos_partition *prt, off_t offset,
     off_t reloff, struct prt *partn)
 {
 	off_t off;
-	u_int32_t t;
+	uint32_t t;
 
 	partn->flag = prt->dp_flag;
 	partn->shead = prt->dp_shd;
@@ -202,9 +203,9 @@ PRT_parse(struct disk *disk, struct dos_partition *prt, off_t offset,
 	partn->bs = letoh32(prt->dp_start) + off;
 	partn->ns = letoh32(prt->dp_size);
 #else
-	memcpy(&t, &prt->dp_start, sizeof(u_int32_t));
+	memcpy(&t, &prt->dp_start, sizeof(uint32_t));
 	partn->bs = letoh32(t) + off;
-	memcpy(&t, &prt->dp_size, sizeof(u_int32_t));
+	memcpy(&t, &prt->dp_size, sizeof(uint32_t));
 	partn->ns = letoh32(t);
 #endif
 
@@ -231,8 +232,8 @@ PRT_make(struct prt *partn, off_t offset, off_t reloff,
     struct dos_partition *prt)
 {
 	off_t off;
-	u_int32_t ecsave, scsave;
-	u_int32_t t;
+	uint32_t ecsave, scsave;
+	uint32_t t;
 
 	/* Save (and restore below) cylinder info we may fiddle with. */
 	scsave = partn->scyl;
@@ -270,9 +271,9 @@ PRT_make(struct prt *partn, off_t offset, off_t reloff,
 	prt->dp_size = htole32(partn->ns);
 #else
 	t = htole32(partn->bs - off);
-	memcpy(&prt->dp_start, &t, sizeof(u_int32_t));
+	memcpy(&prt->dp_start, &t, sizeof(uint32_t));
 	t = htole32(partn->ns);
-	memcpy(&prt->dp_size, &t, sizeof(u_int32_t));
+	memcpy(&prt->dp_size, &t, sizeof(uint32_t));
 #endif
 
 	partn->scyl = scsave;
@@ -313,7 +314,7 @@ PRT_overlap(struct prt *p1, struct prt *p2)
 void
 PRT_fix_BN(struct disk *disk, struct prt *part, int pn)
 {
-	u_int32_t start, end;
+	uint32_t start, end;
 
 	/* Zero out entry if not used */
 	if (part->id == DOSPTYP_UNUSED) {
@@ -335,7 +336,7 @@ PRT_fix_BN(struct disk *disk, struct prt *part, int pn)
 void
 PRT_fix_CHS(struct disk *disk, struct prt *part)
 {
-	u_int32_t start, end, size;
+	uint32_t start, end, size;
 
 	/* Zero out entry if not used */
 	if (part->id == DOSPTYP_UNUSED) {

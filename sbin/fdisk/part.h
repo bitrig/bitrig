@@ -29,10 +29,10 @@
 #define _PART_H
 
 struct prt {
-	u_int32_t shead, scyl, ssect;
-	u_int32_t ehead, ecyl, esect;
-	u_int32_t bs;
-	u_int32_t ns;
+	uint32_t shead, scyl, ssect;
+	uint32_t ehead, ecyl, esect;
+	uint32_t bs;
+	uint32_t ns;
 	unsigned char flag;
 	unsigned char id;
 };

@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <memory.h>
 
 #include "disk.h"
@@ -282,7 +283,7 @@ void
 MBR_fillremaining(struct mbr *mbr, struct disk *disk, int pn)
 {
 	struct prt *part, *p;
-	u_int64_t adj;
+	uint64_t adj;
 	daddr_t i;
 
 	part = &mbr->part[pn];

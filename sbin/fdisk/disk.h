@@ -30,10 +30,10 @@
 
 struct disk {
 	char *name;
-	u_int32_t cylinders;
-	u_int32_t heads;
-	u_int32_t sectors;
-	u_int32_t size;
+	uint32_t cylinders;
+	uint32_t heads;
+	uint32_t sectors;
+	uint32_t size;
 };
 
 int  DISK_open(char *, int);

@@ -36,6 +36,7 @@
 #include <util.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 
 #include "disk.h"
@@ -62,7 +63,7 @@ DISK_open(char *disk, int mode)
 void
 DISK_getlabelgeometry(struct disk *disk)
 {
-	u_int64_t sz, spc;
+	uint64_t sz, spc;
 	int fd;
 
 	/* Get label geometry. */
@@ -74,7 +75,7 @@ DISK_getlabelgeometry(struct disk *disk)
 			disk->heads = dl.d_ntracks;
 			disk->sectors = dl.d_nsectors;
 			/* MBR handles only first UINT32_MAX sectors. */
-			spc = (u_int64_t)disk->heads * disk->sectors;
+			spc = (uint64_t)disk->heads * disk->sectors;
 			sz = DL_GETDSIZE(&dl);
 			if (sz > UINT32_MAX) {
 				disk->cylinders = UINT32_MAX / spc;

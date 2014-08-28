@@ -78,7 +78,7 @@ main(int argc, char *argv[])
 	int i_flag = 0, m_flag = 0, u_flag = 0;
 	int c_arg = 0, h_arg = 0, s_arg = 0;
 	struct disk disk;
-	u_int32_t l_arg = 0;
+	uint32_t l_arg = 0;
 #ifdef HAS_MBR
 	char *mbrfile = _PATH_MBR;
 #else

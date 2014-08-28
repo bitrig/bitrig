@@ -195,8 +195,8 @@ ask_yn(const char *str)
 /*
  * adapted from sbin/disklabel/editor.c
  */
-u_int32_t
-getuint(struct disk *disk, char *prompt, u_int32_t oval, u_int32_t maxval)
+uint32_t
+getuint(struct disk *disk, char *prompt, uint32_t oval, uint32_t maxval)
 {
 	char buf[BUFSIZ], *endptr, *p, operator = '\0';
 	size_t n;
@@ -305,7 +305,7 @@ getuint(struct disk *disk, char *prompt, u_int32_t oval, u_int32_t maxval)
 		}
 	} while (1);
 
-	return ((u_int32_t)d);
+	return ((uint32_t)d);
 }
 
 void
