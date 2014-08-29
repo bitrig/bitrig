@@ -421,10 +421,10 @@ IDTVEC(intr_##name##num)						;\
 	mask(num)			/* mask it in hardware */	;\
 	early_ack(num)			/* and allow other intrs */	;\
 	testq	%r14,%r14						;\
-	jz	9f			/* stray */			;\
+	jz	3f			/* stray */			;\
 	movq	CPUVAR(CURPROC),%rax					;\
 	testl	$-1,P_CRIT(%rax)					;\
-	jnz	10f							;\
+	jnz	2f							;\
 	incl	_C_LABEL(uvmexp)+V_INTR	/* statistical info */		;\
 1:									\
 	pushq	%r13							;\
@@ -436,7 +436,7 @@ IDTVEC(intr_##name##num)						;\
 	call	_C_LABEL(ithread_run)					;\
 	late_ack(num)							;\
 	jmp	_C_LABEL(Xdoreti)	/* lower spl and do ASTs */	;\
-10:									\
+2:									\
 	cli								;\
 	movq	$(1 << num),%rax					;\
 	orq	%rax,CPUVAR(IPENDING)					;\
@@ -444,7 +444,7 @@ IDTVEC(intr_##name##num)						;\
 	late_ack(num)							;\
 	sti								;\
 	INTRFASTEXIT							;\
-9:									\
+3:									\
 	unmask(num)							;\
 	late_ack(num)							;\
 	sti								;\
