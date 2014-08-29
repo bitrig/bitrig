@@ -131,6 +131,8 @@ md_prep_fdisk() {
 
 	local bootparttype="C"
 	local bootsectorstart="64"
+	local bootsectorsize="32768"
+	local bootsectorend
 	local bootfstype="msdos"
 	local newfs_args=${NEWFSARGS_msdos}
 
@@ -145,6 +147,7 @@ md_prep_fdisk() {
 	if [[ -n $CUBOX ]]; then
 		bootsectorstart="2048"
 	fi
+	bootsectorend=`expr $bootsectorstart + $bootsectorsize`
 
 	while :; do
 		_d=whole
@@ -165,12 +168,12 @@ e 0
 ${bootparttype}
 n
 ${bootsectorstart}
-32768
+${bootsectorsize}
 f 0
 e 3
 A6
 n
-
+${bootsectorend}
 
 write
 quit
