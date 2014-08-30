@@ -47,6 +47,7 @@
 ./dev/MAKEDEV
 ./etc
 ./etc/amd
+./etc/amd/master.sample
 ./etc/examples
 ./etc/examples/bgpd.conf
 ./etc/examples/chio.conf
