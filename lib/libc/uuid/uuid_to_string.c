@@ -47,23 +47,24 @@
 void
 uuid_to_string(const uuid_t *u, char **s, uint32_t *status)
 {
+	int c;
 	static const uuid_t nil = { .time_low = 0 };
 
 	if (status != NULL)
 		*status = uuid_s_ok;
 
 	/* Why allow a NULL-pointer here? */
-	if (s == 0)
+	if (s == NULL)
 		return;
 
 	if (u == NULL)
 		u = &nil;
 
-	asprintf(s, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+	c = asprintf(s, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
 	    u->time_low, u->time_mid, u->time_hi_and_version,
 	    u->clock_seq_hi_and_reserved, u->clock_seq_low, u->node[0],
 	    u->node[1], u->node[2], u->node[3], u->node[4], u->node[5]);
 
-	if (*s == NULL && status != NULL)
+	if (c == -1 && status != NULL)
 		*status = uuid_s_no_memory;
 }

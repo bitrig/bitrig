@@ -42,7 +42,6 @@
 int32_t
 uuid_equal(const uuid_t *a, const uuid_t *b, uint32_t *status)
 {
-
 	if (status != NULL)
 		*status = uuid_s_ok;
 

@@ -42,7 +42,6 @@
 void
 uuid_create_nil(uuid_t *u, uint32_t *status)
 {
-
 	memset(u, 0, sizeof(*u));
 
 	if (status)

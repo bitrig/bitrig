@@ -60,7 +60,7 @@ uuid_from_string(const char *s, uuid_t *u, uint32_t *status)
 		*status = uuid_s_invalid_string_uuid;
 
 	/* The UUID string representation has a fixed length. */
-	if (strlen(s) != 36)
+	if (strlen(s) != UUID_STR_LEN)
 		return;
 
 	/*

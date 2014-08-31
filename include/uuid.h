@@ -41,6 +41,14 @@
 #define	uuid_s_invalid_string_uuid	2
 #define	uuid_s_no_memory		3
 
+/* Length of a printed UUID. */
+#define UUID_BUF_LEN		_UUID_BUF_LEN
+
+/* Length of a UUID. */
+#define	UUID_STR_LEN		36
+
+#include <sys/cdefs.h>
+
 __BEGIN_DECLS
 int32_t	uuid_compare(const uuid_t *, const uuid_t *, uint32_t *);
 void	uuid_create(uuid_t *, uint32_t *);

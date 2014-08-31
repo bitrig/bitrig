@@ -41,7 +41,6 @@
 uint16_t
 uuid_hash(const uuid_t *u, uint32_t *status)
 {
-
 	if (status)
 		*status = uuid_s_ok;
 

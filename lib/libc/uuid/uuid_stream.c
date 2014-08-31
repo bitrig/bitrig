@@ -53,7 +53,7 @@
  */
 
 void
-uuid_enc_le(void *buf, const uuid_t *uuid)
+uuid_enc_le(void *buf, const struct uuid *uuid)
 {
 	uint8_t *p = buf;
 	int i;
@@ -68,7 +68,7 @@ uuid_enc_le(void *buf, const uuid_t *uuid)
 }
 
 void
-uuid_dec_le(const void *buf, uuid_t *uuid)
+uuid_dec_le(const void *buf, struct uuid *uuid)
 {
 	const uint8_t *p = buf;
 	int i;
@@ -83,7 +83,7 @@ uuid_dec_le(const void *buf, uuid_t *uuid)
 }
 
 void
-uuid_enc_be(void *buf, const uuid_t *uuid)
+uuid_enc_be(void *buf, const struct uuid *uuid)
 {
 	uint8_t *p = buf;
 	int i;
@@ -98,7 +98,7 @@ uuid_enc_be(void *buf, const uuid_t *uuid)
 }
 
 void
-uuid_dec_be(const void *buf, uuid_t *uuid)
+uuid_dec_be(void const *buf, struct uuid *uuid)
 {
 	const uint8_t *p = buf;
 	int i;
