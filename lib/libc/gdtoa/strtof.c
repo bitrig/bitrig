@@ -30,6 +30,7 @@ THIS SOFTWARE.
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
 #include "gdtoaimp.h"
+#include <stdlib.h>
 #include <xlocale.h>
 #include "locale/xlocale_private.h"
 
