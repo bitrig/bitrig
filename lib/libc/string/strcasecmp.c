@@ -30,6 +30,7 @@
  */
 
 #include <string.h>
+#include <ctype.h>
 #include "locale/xlocale_private.h"
 
 typedef unsigned char u_char;
