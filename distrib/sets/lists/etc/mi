@@ -11,7 +11,6 @@
 ./etc/ftpusers
 ./etc/gettytab
 ./etc/group
-./etc/hosts
 ./etc/hotplug
 ./etc/iked/pubkeys/fqdn
 ./etc/iked/pubkeys/ipv4
@@ -36,7 +35,6 @@
 ./etc/moduli
 ./etc/monthly
 ./etc/motd
-./etc/myname
 ./etc/netstart
 ./etc/networks
 ./etc/newsyslog.conf
