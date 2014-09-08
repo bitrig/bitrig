@@ -1,4 +1,4 @@
-/*	$OpenBSD: sys_process.c,v 1.64 2014/07/13 15:00:40 tedu Exp $	*/
+/*	$OpenBSD: sys_process.c,v 1.65 2014/09/08 01:47:06 guenther Exp $	*/
 /*	$NetBSD: sys_process.c,v 1.55 1996/05/15 06:17:47 tls Exp $	*/
 
 /*-

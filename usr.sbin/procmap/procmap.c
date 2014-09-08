@@ -1,4 +1,4 @@
-/*	$OpenBSD: procmap.c,v 1.55 2014/07/08 17:19:26 deraadt Exp $ */
+/*	$OpenBSD: procmap.c,v 1.56 2014/09/08 01:47:06 guenther Exp $ */
 /*	$NetBSD: pmap.c,v 1.1 2002/09/01 20:32:44 atatat Exp $ */
 
 /*

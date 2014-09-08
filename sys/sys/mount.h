@@ -1,4 +1,4 @@
-/*	$OpenBSD: mount.h,v 1.120 2014/06/04 07:58:14 claudio Exp $	*/
+/*	$OpenBSD: mount.h,v 1.121 2014/09/08 01:47:06 guenther Exp $	*/
 /*	$NetBSD: mount.h,v 1.48 1996/02/18 11:55:47 fvdl Exp $	*/
 
 /*
