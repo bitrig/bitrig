@@ -1,4 +1,4 @@
-/*       $OpenBSD: vfs_sync.c,v 1.51 2013/07/02 01:04:23 guenther Exp $  */
+/*       $OpenBSD: vfs_sync.c,v 1.52 2014/09/09 07:07:39 blambert Exp $  */
 
 /*-
  * Copyright (c) 2009 The NetBSD Foundation, Inc.
@@ -223,6 +223,8 @@ sched_sync(struct proc *p)
 				 */
 				vn_syncer_add_to_worklist(vp, syncdelay);
 			}
+
+			sched_pause();
 		}
 
 		splx(s);
