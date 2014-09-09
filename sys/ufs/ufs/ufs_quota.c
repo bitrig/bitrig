@@ -1022,8 +1022,7 @@ ufs_quotactl(struct mount *mp, int cmds, uid_t uid, caddr_t arg,
 		return (EINVAL);
 
 	if (vfs_busy(mp, VB_READ|VB_NOWAIT))
-		return (0);
- 
+		return (EBUSY);
 
 	switch (cmd) {
 
