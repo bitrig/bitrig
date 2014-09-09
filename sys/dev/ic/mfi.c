@@ -1,4 +1,4 @@
-/* $OpenBSD: mfi.c,v 1.155 2014/08/15 02:27:02 yasuoka Exp $ */
+/* $OpenBSD: mfi.c,v 1.156 2014/09/09 03:08:30 dlg Exp $ */
 /*
  * Copyright (c) 2006 Marco Peereboom <marco@peereboom.us>
  *
@@ -197,6 +197,8 @@ mfi_get_ccb(void *cookie)
 	struct mfi_softc	*sc = cookie;
 	struct mfi_ccb		*ccb;
 
+	KERNEL_UNLOCK();
+
 	mtx_enter(&sc->sc_ccb_mtx);
 	ccb = SLIST_FIRST(&sc->sc_ccb_freeq);
 	if (ccb != NULL) {
@@ -206,6 +208,7 @@ mfi_get_ccb(void *cookie)
 	mtx_leave(&sc->sc_ccb_mtx);
 
 	DNPRINTF(MFI_D_CCB, "%s: mfi_get_ccb: %p\n", DEVNAME(sc), ccb);
+	KERNEL_LOCK();
 
 	return (ccb);
 }
@@ -218,9 +221,11 @@ mfi_put_ccb(void *cookie, void *io)
 
 	DNPRINTF(MFI_D_CCB, "%s: mfi_put_ccb: %p\n", DEVNAME(sc), ccb);
 
+	KERNEL_UNLOCK();
 	mtx_enter(&sc->sc_ccb_mtx);
 	SLIST_INSERT_HEAD(&sc->sc_ccb_freeq, ccb, ccb_link);
 	mtx_leave(&sc->sc_ccb_mtx);
+	KERNEL_LOCK();
 }
 
 void
@@ -1105,7 +1110,9 @@ mfi_scsi_xs_done(struct mfi_softc *sc, struct mfi_ccb *ccb)
 		break;
 	}
 
+	KERNEL_LOCK();
 	scsi_done(xs);
+	KERNEL_UNLOCK();
 }
 
 int
@@ -1171,6 +1178,8 @@ mfi_scsi_cmd(struct scsi_xfer *xs)
 	DNPRINTF(MFI_D_CMD, "%s: mfi_scsi_cmd opcode: %#x\n",
 	    DEVNAME(sc), xs->cmd->opcode);
 
+	KERNEL_UNLOCK();
+
 	if (!sc->sc_ld[target].ld_present) {
 		DNPRINTF(MFI_D_CMD, "%s: invalid target %d\n",
 		    DEVNAME(sc), target);
@@ -1233,11 +1242,13 @@ mfi_scsi_cmd(struct scsi_xfer *xs)
 	else 
 		mfi_start(sc, ccb);
 
+	KERNEL_LOCK();
 	return;
 
 stuffup:
 	xs->error = XS_DRIVER_STUFFUP;
 complete:
+	KERNEL_LOCK();
 	scsi_done(xs);
 }
 
@@ -2487,6 +2498,8 @@ mfi_pd_scsi_cmd(struct scsi_xfer *xs)
 	struct mfi_pass_frame *pf = &ccb->ccb_frame->mfr_pass;
 	struct mfi_pd_link *pl = sc->sc_pd->pd_links[link->target];
 
+	KERNEL_UNLOCK();
+
 	mfi_scrub_ccb(ccb);
 	xs->error = XS_NOERROR;
 
@@ -2527,9 +2540,11 @@ mfi_pd_scsi_cmd(struct scsi_xfer *xs)
 	else
 		mfi_start(sc, ccb);
 
+	KERNEL_LOCK();
 	return;
 
 stuffup:
 	xs->error = XS_DRIVER_STUFFUP;
+	KERNEL_LOCK();
 	scsi_done(xs);
 }
