@@ -55,10 +55,6 @@ struct vnode *rootvnode;
 extern	const struct vfsops ffs_vfsops;
 #endif
 
-#ifdef MFS
-extern	const struct vfsops mfs_vfsops;
-#endif
-
 #ifdef MSDOSFS
 extern	const struct vfsops msdosfs_vfsops;
 #endif
@@ -91,10 +87,6 @@ extern const struct vfsops fusefs_vfsops;
 static struct vfsconf vfsconflist[] = {
 #ifdef FFS
         { &ffs_vfsops, MOUNT_FFS, 1, 0, MNT_LOCAL, NULL },
-#endif
-
-#ifdef MFS
-        { &mfs_vfsops, MOUNT_MFS, 3, 0, MNT_LOCAL, NULL },
 #endif
 
 #ifdef EXT2FS

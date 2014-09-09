@@ -81,16 +81,6 @@ struct ufs_args {
 #define	UFSMNT_FFS2		0x01	/* ffs2 in use (set by the kernel) */
 
 /*
- * Arguments to mount MFS
- */
-struct mfs_args {
-	char	*fspec;			/* name to export for statfs */
-	struct	export_args export_info;/* if exported MFSes are supported */
-	caddr_t	base;			/* base of file system in memory */
-	u_long	size;			/* size of file system */
-};
-
-/*
  * Arguments to mount tmpfs file systems
  */
 #define TMPFS_ARGS_VERSION	1
@@ -244,7 +234,6 @@ struct fusefs_args {
 /* per-filesystem mount options */
 union mount_info {
 	struct ufs_args ufs_args;
-	struct mfs_args mfs_args;
 	struct nfs_args nfs_args;
 	struct iso_args iso_args;
 	struct msdosfs_args msdosfs_args;
@@ -292,7 +281,6 @@ struct statfs {
  */
 #define	MOUNT_FFS	"ffs"		/* UNIX "Fast" Filesystem */
 #define	MOUNT_NFS	"nfs"		/* Network Filesystem */
-#define	MOUNT_MFS	"mfs"		/* Memory Filesystem */
 #define	MOUNT_MSDOS	"msdos"		/* MSDOS Filesystem */
 #define	MOUNT_CD9660	"cd9660"	/* ISO9660 (aka CDROM) Filesystem */
 #define	MOUNT_EXT2FS	"ext2fs"	/* Second Extended Filesystem */

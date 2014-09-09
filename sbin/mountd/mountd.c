@@ -692,7 +692,6 @@ get_exportlist(void)
 	union {
 		struct ufs_args ua;
 		struct iso_args ia;
-		struct mfs_args ma;
 		struct msdosfs_args da;
 	} targs;
 	struct fsarray {
@@ -737,8 +736,7 @@ get_exportlist(void)
 
 	for (i = 0; i < num; i++) {
 
-		if (!strncmp(fsp->f_fstypename, MOUNT_MFS, MFSNAMELEN) ||
-		    !strncmp(fsp->f_fstypename, MOUNT_FFS, MFSNAMELEN) ||
+		if (!strncmp(fsp->f_fstypename, MOUNT_FFS, MFSNAMELEN) ||
 		    !strncmp(fsp->f_fstypename, MOUNT_EXT2FS, MFSNAMELEN) ||
 		    !strncmp(fsp->f_fstypename, MOUNT_MSDOS, MFSNAMELEN) ||
 		    !strncmp(fsp->f_fstypename, MOUNT_CD9660, MFSNAMELEN)) {
@@ -1563,7 +1561,6 @@ do_mount(struct exportlist *ep, struct grouplist *grp, int exflags,
 	union {
 		struct ufs_args ua;
 		struct iso_args ia;
-		struct mfs_args ma;
 		struct msdosfs_args da;
 	} args;
 	char savedc = '\0';

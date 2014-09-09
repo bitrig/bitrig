@@ -357,8 +357,8 @@ vnodemode(void)
 			maddr = vp->v_mount;
 			mount_print(mp);
 			vnode_header();
-			if (!strncmp(mp->mnt_stat.f_fstypename, MOUNT_FFS, MFSNAMELEN) ||
-			    !strncmp(mp->mnt_stat.f_fstypename, MOUNT_MFS, MFSNAMELEN)) {
+			if (!strncmp(mp->mnt_stat.f_fstypename, MOUNT_FFS,
+			    MFSNAMELEN)) {
 				ufs_header();
 			} else if (!strncmp(mp->mnt_stat.f_fstypename, MOUNT_NFS,
 			    MFSNAMELEN)) {
@@ -380,8 +380,8 @@ vnodemode(void)
 			continue;
 		}
 
-		if (!strncmp(mp->mnt_stat.f_fstypename, MOUNT_FFS, MFSNAMELEN) ||
-		    !strncmp(mp->mnt_stat.f_fstypename, MOUNT_MFS, MFSNAMELEN)) {
+		if (!strncmp(mp->mnt_stat.f_fstypename, MOUNT_FFS,
+		    MFSNAMELEN)) {
 			ufs_print(mp, vp);
 		} else if (!strncmp(mp->mnt_stat.f_fstypename, MOUNT_NFS, MFSNAMELEN)) {
 			nfs_print(vp);

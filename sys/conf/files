@@ -880,27 +880,25 @@ file nfs/nfs_subs.c			nfsserver | nfsclient
 file nfs/nfs_syscalls.c			nfsserver | nfsclient
 file nfs/nfs_vfsops.c			nfsclient
 file nfs/nfs_vnops.c			nfsclient
-file ufs/ffs/ffs_alloc.c		ffs | mfs
-file ufs/ffs/ffs_balloc.c		ffs | mfs
-file ufs/ffs/ffs_inode.c		ffs | mfs
-file ufs/ffs/ffs_subr.c			ffs | mfs
-file ufs/ffs/ffs_softdep_stub.c		ffs | mfs
-file ufs/ffs/ffs_tables.c		ffs | mfs
-file ufs/ffs/ffs_vfsops.c		ffs | mfs
-file ufs/ffs/ffs_vnops.c		ffs | mfs
+file ufs/ffs/ffs_alloc.c		ffs
+file ufs/ffs/ffs_balloc.c		ffs
+file ufs/ffs/ffs_inode.c		ffs
+file ufs/ffs/ffs_subr.c			ffs
+file ufs/ffs/ffs_softdep_stub.c		ffs
+file ufs/ffs/ffs_tables.c		ffs
+file ufs/ffs/ffs_vfsops.c		ffs
+file ufs/ffs/ffs_vnops.c		ffs
 file ufs/ffs/ffs_softdep.c		ffs_softupdates
 file ufs/ffs/ffs_wapbl.c		ffs & wapbl
-file ufs/mfs/mfs_vfsops.c		mfs
-file ufs/mfs/mfs_vnops.c		mfs
-file ufs/ufs/ufs_bmap.c			ffs | mfs | ext2fs
-file ufs/ufs/ufs_dirhash.c		ufs_dirhash & (ffs | mfs)
-file ufs/ufs/ufs_ihash.c		ffs | mfs | ext2fs
-file ufs/ufs/ufs_inode.c		ffs | mfs | ext2fs
-file ufs/ufs/ufs_lookup.c		ffs | mfs | ext2fs
-file ufs/ufs/ufs_quota.c		quota & ( ffs | mfs | ext2fs )
-file ufs/ufs/ufs_quota_stub.c		ffs | mfs
-file ufs/ufs/ufs_vfsops.c		ffs | mfs | ext2fs
-file ufs/ufs/ufs_vnops.c		ffs | mfs | ext2fs
+file ufs/ufs/ufs_bmap.c			ffs | ext2fs
+file ufs/ufs/ufs_dirhash.c		ufs_dirhash & ffs
+file ufs/ufs/ufs_ihash.c		ffs | ext2fs
+file ufs/ufs/ufs_inode.c		ffs | ext2fs
+file ufs/ufs/ufs_lookup.c		ffs | ext2fs
+file ufs/ufs/ufs_quota.c		quota & ( ffs | ext2fs )
+file ufs/ufs/ufs_quota_stub.c		ffs
+file ufs/ufs/ufs_vfsops.c		ffs | ext2fs
+file ufs/ufs/ufs_vnops.c		ffs | ext2fs
 file ufs/ufs/ufs_wapbl.c		ffs & wapbl
 file ufs/ext2fs/ext2fs_alloc.c		ext2fs
 file ufs/ext2fs/ext2fs_balloc.c		ext2fs

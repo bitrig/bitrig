@@ -452,8 +452,7 @@ getprivs(long id, int quotatype)
 			if (getnfsquota(&fst[i], NULL, qup, id, quotatype) == 0)
 				continue;
 		} else if (!strncmp(fst[i].f_fstypename, "ffs", MFSNAMELEN) ||
-		    !strncmp(fst[i].f_fstypename, "ufs", MFSNAMELEN) ||
-		    !strncmp(fst[i].f_fstypename, "mfs", MFSNAMELEN)) {
+		    !strncmp(fst[i].f_fstypename, "ufs", MFSNAMELEN)) {
 			/*
 			 * XXX
 			 * UFS filesystems must be in /etc/fstab, and must

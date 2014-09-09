@@ -1412,8 +1412,6 @@
 ./usr/include/ufs/ffs/ffs_extern.h
 ./usr/include/ufs/ffs/fs.h
 ./usr/include/ufs/ffs/softdep.h
-./usr/include/ufs/mfs
-./usr/include/ufs/mfs/mfs.h
 ./usr/include/ufs/ufs
 ./usr/include/ufs/ufs/dinode.h
 ./usr/include/ufs/ufs/dir.h

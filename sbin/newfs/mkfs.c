@@ -83,7 +83,6 @@
 /*
  * variables set up by front end.
  */
-extern int	mfs;		/* run as the memory based filesystem */
 extern int	Nflag;		/* run mkfs without writing file system */
 extern int	Oflag;		/* format as an 4.3BSD file system */
 extern daddr_t fssize;		/* file system size in 512-byte blocks. */
@@ -129,7 +128,7 @@ static int	charsperline(void);
 static int	ilog2(int);
 void		initcg(int, time_t);
 void		wtfs(daddr_t, int, void *);
-int		fsinit1(time_t, mode_t, uid_t, gid_t);
+int		fsinit1(time_t);
 int		fsinit2(time_t);
 int		makedir(struct direct *, int);
 void		iput(union dinode *, ino_t);
@@ -137,8 +136,7 @@ void		setblock(struct fs *, unsigned char *, int);
 void		clrblock(struct fs *, unsigned char *, int);
 int		isblock(struct fs *, unsigned char *, int);
 void		rdfs(daddr_t, int, void *);
-void		mkfs(struct partition *, char *, int, int,
-		    mode_t, uid_t, gid_t);
+void		mkfs(struct partition *, char *, int, int);
 static		void checksz(void);
 
 #ifndef STANDALONE
@@ -160,8 +158,7 @@ siginfo(int sig)
 #endif
 
 void
-mkfs(struct partition *pp, char *fsys, int fi, int fo, mode_t mfsmode,
-    uid_t mfsuid, gid_t mfsgid)
+mkfs(struct partition *pp, char *fsys, int fi, int fo)
 {
 	time_t utime;
 	quad_t sizepb;
@@ -177,18 +174,6 @@ mkfs(struct partition *pp, char *fsys, int fi, int fo, mode_t mfsmode,
 #ifndef STANDALONE
 	time(&utime);
 #endif
-	if (mfs) {
-		quad_t sz = (quad_t)fssize * DEV_BSIZE;
-		if (sz > SIZE_T_MAX) {
-			errno = ENOMEM;
-			err(12, "mmap");
-		}
-		membase = mmap(NULL, sz, PROT_READ|PROT_WRITE,
-		    MAP_ANON|MAP_PRIVATE, -1, (off_t)0);
-		if (membase == MAP_FAILED)
-			err(12, "mmap");
-		madvise(membase, sz, MADV_RANDOM);
-	}
 	fsi = fi;
 	fso = fo;
 	/*
@@ -488,19 +473,17 @@ mkfs(struct partition *pp, char *fsys, int fi, int fo, mode_t mfsmode,
 	/*
 	 * Dump out summary information about file system.
 	 */
-	if (!mfs) {
 #define B2MBFACTOR (1 / (1024.0 * 1024.0))
-		printf("%s: %.1fMB in %jd sectors of %lld bytes\n", fsys,
-		    (float)sblock.fs_size * sblock.fs_fsize * B2MBFACTOR,
-		    (intmax_t)fsbtodb(&sblock, sblock.fs_size) /
-		    (sectorsize / DEV_BSIZE), sectorsize);
-		printf("%d cylinder groups of %.2fMB, %d blocks, %d"
-		    " inodes each\n", sblock.fs_ncg,
-		    (float)sblock.fs_fpg * sblock.fs_fsize * B2MBFACTOR,
-		    sblock.fs_fpg / sblock.fs_frag, sblock.fs_ipg);
+	printf("%s: %.1fMB in %jd sectors of %lld bytes\n", fsys,
+	    (float)sblock.fs_size * sblock.fs_fsize * B2MBFACTOR,
+	    (intmax_t)fsbtodb(&sblock, sblock.fs_size) /
+	    (sectorsize / DEV_BSIZE), sectorsize);
+	printf("%d cylinder groups of %.2fMB, %d blocks, %d"
+	    " inodes each\n", sblock.fs_ncg,
+	    (float)sblock.fs_fpg * sblock.fs_fsize * B2MBFACTOR,
+	    sblock.fs_fpg / sblock.fs_frag, sblock.fs_ipg);
 #undef B2MBFACTOR
-		checksz();
-	}
+	checksz();
 
 	/*
 	 * Wipe out old FFS1 superblock if necessary.
@@ -531,7 +514,7 @@ mkfs(struct partition *pp, char *fsys, int fi, int fo, mode_t mfsmode,
 	if (!quiet)
 		printf("super-block backups (for fsck -b #) at:\n");
 #ifndef STANDALONE
-	else if (!mfs && isatty(STDIN_FILENO)) {
+	else if (isatty(STDIN_FILENO)) {
 		signal(SIGINFO, siginfo);
 		cur_fsys = fsys;
 	}
@@ -573,13 +556,13 @@ mkfs(struct partition *pp, char *fsys, int fi, int fo, mode_t mfsmode,
 	}
 	if (!quiet)
 		printf("\n");
-	if (Nflag && !mfs)
+	if (Nflag)
 		exit(0);
 	/*
 	 * Now construct the initial file system, then write out the superblock.
 	 */
 	if (Oflag <= 1) {
-		if (fsinit1(utime, mfsmode, mfsuid, mfsgid))
+		if (fsinit1(utime))
 			errx(32, "fsinit1 failed");
 		sblock.fs_ffs1_cstotal.cs_ndir = sblock.fs_cstotal.cs_ndir;
 		sblock.fs_ffs1_cstotal.cs_nbfree = sblock.fs_cstotal.cs_nbfree;
@@ -773,7 +756,7 @@ struct odirect {
 };
 
 int
-fsinit1(time_t utime, mode_t mfsmode, uid_t mfsuid, gid_t mfsgid)
+fsinit1(time_t utime)
 {
 	union dinode node;
 
@@ -788,15 +771,9 @@ fsinit1(time_t utime, mode_t mfsmode, uid_t mfsuid, gid_t mfsgid)
 	/*
 	 * Create the root directory.
 	 */
-	if (mfs) {
-		node.dp1.di_mode = IFDIR | mfsmode;
-		node.dp1.di_uid = mfsuid;
-		node.dp1.di_gid = mfsgid;
-	} else {
-		node.dp1.di_mode = IFDIR | UMASK;
-		node.dp1.di_uid = geteuid();
-		node.dp1.di_gid = getegid();
-	}
+	node.dp1.di_mode = IFDIR | UMASK;
+	node.dp1.di_uid = geteuid();
+	node.dp1.di_gid = getegid();
 	node.dp1.di_nlink = PREDEFDIR;
 	if (Oflag == 0)
 		node.dp1.di_size = makedir((struct direct *)oroot_dir,
@@ -1011,10 +988,6 @@ rdfs(daddr_t bno, int size, void *bf)
 {
 	int n;
 
-	if (mfs) {
-		memcpy(bf, membase + bno * DEV_BSIZE, size);
-		return;
-	}
 	n = pread(fsi, bf, size, (off_t)bno * DEV_BSIZE);
 	if (n != size) {
 		err(34, "rdfs: read error on block %lld", (long long)bno);
@@ -1029,10 +1002,6 @@ wtfs(daddr_t bno, int size, void *bf)
 {
 	int n;
 
-	if (mfs) {
-		memcpy(membase + bno * DEV_BSIZE, bf, size);
-		return;
-	}
 	if (Nflag)
 		return;
 	n = pwrite(fso, bf, size, (off_t)bno * DEV_BSIZE);

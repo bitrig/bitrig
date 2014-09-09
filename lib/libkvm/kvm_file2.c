@@ -891,7 +891,6 @@ filestat(kvm_t *kd, struct kinfo_file *kf, struct vnode *vp)
 	if (vp->v_type != VNON && vp->v_type != VBAD) {
 		switch (vp->v_tag) {
 		case VT_UFS:
-		case VT_MFS:
 			ret = ufs_filestat(kd, kf, vp);
 			break;
 		case VT_NFS:

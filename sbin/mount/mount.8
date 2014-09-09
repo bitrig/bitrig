@@ -278,21 +278,21 @@ distinguished by a leading
 Options that take a value are specified using the syntax -option=value.
 For example:
 .Bd -literal -offset 3n
-# mount -t mfs -o rw,nodev,nosuid,-s=153600 /dev/sd0b /tmp
+# mount -t tmpfs -o rw,nodev,nosuid,-s=128M tmpfs /tmp
 .Ed
 .Pp
 That causes
 .Nm
 to execute the equivalent of:
 .Bd -literal -offset 3n
-# /sbin/mount_mfs -o rw,nodev,nosuid -s 153600 /dev/sd0b /tmp
+# /sbin/mount_tmpfs -o rw,nodev,nosuid -s 128M tmpfs /tmp
 .Ed
 .Pp
 The equivalent example in
 .Xr fstab 5
 would be:
 .Bd -literal -offset 3n
-swap /tmp mfs rw,nodev,nosuid,-s=153600 0 0
+tmpfs /tmp tmpfs rw,nodev,nosuid,-s=128M 0 0
 .Ed
 .It Fl r
 The file system is to be mounted read-only.
@@ -330,10 +330,10 @@ For example, the
 .Nm
 command:
 .Bd -literal -offset indent
-# mount -a -t nonfs,mfs
+# mount -a -t nonfs,tmpfs
 .Ed
 .Pp
-mounts all file systems except those of type NFS and MFS .
+mounts all file systems except those of type NFS and TMPFS.
 .Pp
 .Nm
 will attempt to execute a program in
@@ -418,7 +418,6 @@ with option
 .Xr mount_cd9660 8 ,
 .Xr mount_ext2fs 8 ,
 .Xr mount_ffs 8 ,
-.Xr mount_mfs 8 ,
 .Xr mount_msdos 8 ,
 .Xr mount_nfs 8 ,
 .Xr mount_ntfs 8 ,

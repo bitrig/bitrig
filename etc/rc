@@ -464,7 +464,7 @@ fi
 echo clearing /tmp
 
 # prune quickly with one rm, then use find to clean up /tmp/[lq]*
-# (not needed with mfs /tmp, but doesn't hurt there...)
+# (not needed with tmpfs /tmp, but doesn't hurt there...)
 (cd /tmp && rm -rf [a-km-pr-zA-Z]*)
 (cd /tmp &&
     find . ! -name . ! -name lost+found ! -name quota.user \

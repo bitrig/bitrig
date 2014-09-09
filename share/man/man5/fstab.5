@@ -73,12 +73,8 @@ A block special device may be specified by pathname
 or by
 .Xr disklabel 8
 UID (DUID).
-For filesystems of type MFS
-the special file name is typically that of the primary swap area;
-if the keyword
-.Dq swap
-is used instead of a special file name,
-default configuration parameters are used.
+For filesystems of type TMPFS
+the special file name (typically "tmpfs") is ignored.
 If a program needs the character special file name,
 the program must create it by appending an
 .Sq r
@@ -105,10 +101,6 @@ A local Linux compatible ext2fs
 filesystem.
 .It ffs
 A local
-.Ux
-filesystem.
-.It mfs
-A local memory-based
 .Ux
 filesystem.
 .It msdos
@@ -291,7 +283,7 @@ file:
 /dev/sd0a / ffs rw 1 1
 /dev/sd0e /var ffs rw,nodev,nosuid 1 2
 #/dev/sd0f /tmp ffs rw,nodev,nosuid 1 2
-swap /tmp mfs rw,nodev,nosuid,-s=153600 0 0
+tmpfs /tmp tmpfs rw,nodev,nosuid,-s=128M 0 0
 /dev/sd0g /usr ffs rw,nodev 1 2
 /dev/sd0h /usr/local ffs rw,nodev 1 2
 /dev/sd0i /home ffs rw,nodev,nosuid 1 2

@@ -34,7 +34,7 @@
 .Dt NEWFS 8
 .Os
 .Sh NAME
-.Nm newfs , mount_mfs
+.Nm newfs
 .Nd construct a new file system
 .Sh SYNOPSIS
 .Nm newfs
@@ -56,25 +56,9 @@
 .Op Fl t Ar fstype
 .Ar special
 .Ek
-.Pp
-.Nm mount_mfs
-.Bk -words
-.Op Fl b Ar block-size
-.Op Fl c Ar fragments-per-cylinder-group
-.Op Fl e Ar maxbpg
-.Op Fl f Ar frag-size
-.Op Fl i Ar bytes
-.Op Fl m Ar free-space
-.Op Fl o Ar options
-.Op Fl P Ar file
-.Op Fl s Ar size
-.Ar special node
-.Ek
 .Sh DESCRIPTION
 Before running
-.Nm
-or
-.Nm mount_mfs ,
+.Nm ,
 the disk must be labeled using
 .Xr disklabel 8 .
 .Nm
@@ -96,41 +80,8 @@ if a relative path like
 is specified,
 the corresponding raw device is used.
 .Pp
-.Nm mount_mfs
-is used to build a file system in virtual memory and then mount it
-on a specified node.
-.Nm mount_mfs
-exits and the contents of the file system are lost
-when the file system is unmounted.
-If
-.Nm mount_mfs
-is sent a signal while running,
-for example during system shutdown,
-it will attempt to unmount its
-corresponding file system.
-The parameters to
-.Nm mount_mfs
-are the same as those to
-.Nm newfs .
-The special file is only used to read the disk label which provides
-a set of configuration parameters for the memory based file system.
-The special file is typically that of the primary swap area,
-since that is where the file system will be backed up when
-free memory gets low and the memory supporting
-the file system has to be paged.
-If the keyword
-.Dq swap
-is used instead of a special file name, default configuration parameters
-will be used.
-(This option is useful when trying to use
-.Nm mount_mfs
-on a machine without any disks.)
-.Pp
-Both
 .Nm
-and
-.Nm mount_mfs
-now have the functionality of
+now has the functionality of
 .Xr fsirand 8
 built in, so it is not necessary to run
 .Xr fsirand 8
@@ -248,20 +199,6 @@ is rounded up to the next sector boundary.
 The maximum size of an FFS file system is 2,147,483,647 (2^31 \- 1) of
 512\-byte blocks, slightly less than 1 TB.
 FFS2 file systems can be as large as 64 PB.
-Note however that for
-.Nm mount_mfs
-the practical limit is based on
-.Va datasize
-in
-.Xr login.conf 5 ,
-and ultimately depends on the per-arch
-.Dv MAXDSIZ
-limit.
-If
-.Ar size
-is negative the specified size is subtracted from the default size
-specified for the partition in the disk label, thus reserving space
-at the end of the partition.
 .It Fl T Ar disktype
 Uses information for the specified disk from
 .Xr disktab 5
@@ -271,49 +208,6 @@ instead of trying to get the information from the
 Set the file system type of which file system you wish to create.
 .Nm
 will be smart enough to run the alternate newfs_XXX program instead.
-.El
-.Pp
-The options to
-.Nm mount_mfs
-are as described for
-.Nm ,
-except for the
-.Fl o
-and
-.Fl P
-options.
-.Pp
-Those options are as follows:
-.Bl -tag -width indent
-.It Fl o Ar options
-Options are specified with a
-.Fl o
-flag followed by a comma separated string of options.
-See the
-.Xr mount 8
-man page for possible options and their meanings.
-.It Fl P Ar file
-If
-.Ar file
-is a directory, populate the created mfs file system with the
-contents of the directory.
-If
-.Ar file
-is a block device, populate the created mfs file system with the
-contents of the FFS file system contained on the device.
-.El
-.Pp
-If the
-.Fl P Ar file
-option is not used, the owner and mode of the created mfs file
-system will be the same as the owner and mode of the mount point.
-.Sh ENVIRONMENT
-.Bl -tag -width TMPDIR
-.It Ev TMPDIR
-Directory in which to create temporary mount points for use by
-.Nm mount_mfs Fl P
-instead of
-.Pa /tmp .
 .El
 .Sh SEE ALSO
 .Xr disktab 5 ,

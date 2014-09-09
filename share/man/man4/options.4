@@ -194,17 +194,6 @@ Most machines need this if they are not running diskless.
 .It Cd option FFS2
 Includes code implementing the enhanced Fast File System
 .Em ( FFS2 ) .
-.It Cd option MFS
-Include the memory file system
-.Em ( MFS ) .
-This file system stores files in swappable memory, and produces
-notable performance improvements when it is used as the file store
-for
-.Pa /tmp
-or similar mount points.
-See
-.Xr mount_mfs 8
-for details.
 .It Cd option MSDOSFS
 Includes support for the MS-DOS FAT file system.
 The kernel also implements the Windows 95

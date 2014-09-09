@@ -40,7 +40,8 @@ DGEN=	compat compat/common \
 	nfs \
 	scsi \
 	sys \
-	ufs ufs/ffs ufs/mfs ufs/ufs \
+	tmpfs \
+	ufs ufs/ffs ufs/ufs \
 	uvm
 
 tags::

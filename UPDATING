@@ -14,6 +14,18 @@ at the beginning of the kernel dmesg(8).
 * 2014-05-07: kerberos
 * 2014-05-01: libc++
 * 2014-04-21: xlocale
+* 2014-09-15: mfs
+
+* 2014-09-15: mfs
+
+  Support for MFS (Memory File System) has been removed from Bitrig, leading to
+  the necessity for some files to be cleaned up from existing installations.
+
+  As root:
+
+	# rm /sbin/mount_mfs /usr/share/man/man8/{mount_,}mfs.8
+	# rm -rf /usr/include/ufs/mfs/
+	# rm -rf /usr/libdata/perl5/site_perl/{amd64,arm}-bitrig/ufs/mfs/
 
 * 2014-08-21: clang
 

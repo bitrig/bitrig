@@ -1855,8 +1855,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ufs/ffs/ffs_extern.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ufs/ffs/fs.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ufs/ffs/softdep.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/ufs/mfs
-./usr/libdata/perl5/site_perl/amd64-bitrig/ufs/mfs/mfs.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ufs/ufs
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ufs/ufs/dinode.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ufs/ufs/dir.ph

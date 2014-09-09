@@ -196,7 +196,6 @@
 ./sbin/mount_cd9660
 ./sbin/mount_ext2fs
 ./sbin/mount_ffs
-./sbin/mount_mfs
 ./sbin/mount_msdos
 ./sbin/mount_nfs
 ./sbin/mount_tmpfs
@@ -9731,7 +9730,6 @@
 ./usr/share/man/man8/makemap.8
 ./usr/share/man/man8/makewhatis.8
 ./usr/share/man/man8/map-mbone.8
-./usr/share/man/man8/mfs.8
 ./usr/share/man/man8/mkalias.8
 ./usr/share/man/man8/mknetid.8
 ./usr/share/man/man8/mknod.8
@@ -9744,7 +9742,6 @@
 ./usr/share/man/man8/mount_cd9660.8
 ./usr/share/man/man8/mount_ext2fs.8
 ./usr/share/man/man8/mount_ffs.8
-./usr/share/man/man8/mount_mfs.8
 ./usr/share/man/man8/mount_msdos.8
 ./usr/share/man/man8/mount_nfs.8
 ./usr/share/man/man8/mount_tmpfs.8

@@ -83,7 +83,7 @@ void	fatal(const char *fmt, ...)
 	    __attribute__((__format__ (printf, 1, 2)))
 	    __attribute__((__nonnull__ (1)));
 __dead void	usage(void);
-void	mkfs(struct partition *, char *, int, int, mode_t, uid_t, gid_t);
+void	mkfs(struct partition *, char *, int, int);
 void	rewritelabel(char *, int, struct disklabel *);
 u_short	dkcksum(struct disklabel *);
 
@@ -112,7 +112,6 @@ u_short	dkcksum(struct disklabel *);
  */
 #define	NFPI		4
 
-int	mfs;			/* run as the memory based filesystem */
 int	Nflag;			/* run without writing file system */
 int	Oflag = 2;		/* 0 = 4.3BSD ffs, 1 = 4.4BSD ffs, 2 = ffs2 */
 daddr_t	fssize;			/* file system size in 512-byte blocks */
@@ -136,37 +135,18 @@ int	unlabeled;
 extern	char *__progname;
 struct disklabel *getdisklabel(char *, int);
 
-#ifdef MFS
-static int do_exec(const char *, const char *, char *const[]);
-static int isdir(const char *);
-static void copy(char *, char *, struct mfs_args *);
-static int gettmpmnt(char *, size_t);
-#endif
-
 int
 main(int argc, char *argv[])
 {
 	int ch;
 	struct partition *pp;
 	struct disklabel *lp;
-	struct disklabel mfsfakelabel;
 	struct partition oldpartition;
 	struct stat st;
 	struct statfs *mp;
 	struct rlimit rl;
 	int fsi = -1, fso, len, n, maxpartitions;
 	char *cp = NULL, *s1, *s2, *special, *opstring, *realdev;
-#ifdef MFS
-	char mountfromname[BUFSIZ];
-	char *pop = NULL, node[MAXPATHLEN];
-	pid_t pid, res;
-	struct statfs sf;
-	struct stat mountpoint;
-	int status;
-#endif
-	uid_t mfsuid = 0;
-	gid_t mfsgid = 0;
-	mode_t mfsmode = 0;
 	char *fstype = NULL;
 	char **saveargv = argv;
 	int ffsflag = 1;
@@ -175,16 +155,11 @@ main(int argc, char *argv[])
 	int fssize_usebytes = 0;
 	u_int64_t nsecs;
 
-	if (strstr(__progname, "mfs"))
-		mfs = Nflag = quiet = 1;
-
 	maxpartitions = getmaxpartitions();
 	if (maxpartitions > 26)
 		fatal("insane maxpartitions value %d", maxpartitions);
 
-	opstring = mfs ?
-	    "P:T:b:c:e:f:i:m:o:s:" :
-	    "NO:S:T:b:c:e:f:g:h:i:m:o:qs:t:";
+	opstring = "NO:S:T:b:c:e:f:g:h:i:m:o:qs:t:";
 	while ((ch = getopt(argc, argv, opstring)) != -1) {
 		switch (ch) {
 		case 'N':
@@ -252,18 +227,13 @@ main(int argc, char *argv[])
 				    errstr, optarg);
 			break;
 		case 'o':
-			if (mfs)
-				getmntopts(optarg, mopts, &mntflags);
-			else {
-				if (strcmp(optarg, "space") == 0)
-					reqopt = opt = FS_OPTSPACE;
-				else if (strcmp(optarg, "time") == 0)
-					reqopt = opt = FS_OPTTIME;
-				else
-					fatal("%s: unknown optimization "
-					    "preference: use `space' or `time'.",
-					    optarg);
-			}
+			if (strcmp(optarg, "space") == 0)
+				reqopt = opt = FS_OPTSPACE;
+			else if (strcmp(optarg, "time") == 0)
+				reqopt = opt = FS_OPTTIME;
+			else
+				fatal("%s: unknown optimization preference: "
+				    "use `space' or `time'.", optarg);
 			break;
 		case 'q':
 			quiet = 1;
@@ -284,11 +254,6 @@ main(int argc, char *argv[])
 			if (strcmp(fstype, "ffs"))
 				ffsflag = 0;
 			break;
-#ifdef MFS
-		case 'P':
-			pop = optarg;
-			break;
-#endif
 		case '?':
 		default:
 			usage();
@@ -299,63 +264,27 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	if (ffsflag && argc - mfs != 1)
+	if (ffsflag && argc != 1)
 		usage();
-
-	if (mfs) {
-		/* Increase our data size to the max */
-		if (getrlimit(RLIMIT_DATA, &rl) == 0) {
-			rl.rlim_cur = rl.rlim_max;
-			(void)setrlimit(RLIMIT_DATA, &rl);
-		}
-	}
 
 	special = argv[0];
 
-	if (!mfs) {
-		char execname[MAXPATHLEN], name[MAXPATHLEN];
+	char execname[MAXPATHLEN], name[MAXPATHLEN];
 
-		if (fstype == NULL)
-			fstype = readlabelfs(special, 0);
-		if (fstype != NULL && strcmp(fstype, "ffs")) {
-			snprintf(name, sizeof name, "newfs_%s", fstype);
-			saveargv[0] = name;
-			snprintf(execname, sizeof execname, "%s/newfs_%s",
-			    _PATH_SBIN, fstype);
-			(void)execv(execname, saveargv);
-			snprintf(execname, sizeof execname, "%s/newfs_%s",
-			    _PATH_USRSBIN, fstype);
-			(void)execv(execname, saveargv);
-			err(1, "%s not found", name);
-		}
+	if (fstype == NULL)
+		fstype = readlabelfs(special, 0);
+	if (fstype != NULL && strcmp(fstype, "ffs")) {
+		snprintf(name, sizeof name, "newfs_%s", fstype);
+		saveargv[0] = name;
+		snprintf(execname, sizeof execname, "%s/newfs_%s", _PATH_SBIN,
+		    fstype);
+		(void)execv(execname, saveargv);
+		snprintf(execname, sizeof execname, "%s/newfs_%s",
+		    _PATH_USRSBIN, fstype);
+		(void)execv(execname, saveargv);
+		err(1, "%s not found", name);
 	}
 
-	if (mfs && !strcmp(special, "swap")) {
-		/*
-		 * it's an MFS, mounted on "swap."  fake up a label.
-		 * XXX XXX XXX
-		 */
-		fso = -1;	/* XXX; normally done below. */
-
-		memset(&mfsfakelabel, 0, sizeof(mfsfakelabel));
-		mfsfakelabel.d_secsize = 512;
-		mfsfakelabel.d_nsectors = 64;
-		mfsfakelabel.d_ntracks = 16;
-		mfsfakelabel.d_ncylinders = 16;
-		mfsfakelabel.d_secpercyl = 1024;
-		DL_SETDSIZE(&mfsfakelabel, 16384);
-		mfsfakelabel.d_npartitions = 1;
-		mfsfakelabel.d_version = 1;
-		DL_SETPSIZE(&mfsfakelabel.d_partitions[0], 16384);
-		mfsfakelabel.d_partitions[0].p_fragblock =
-		    DISKLABELV1_FFS_FRAGBLOCK(1024, 8);
-		mfsfakelabel.d_partitions[0].p_cpg = 16;
-
-		lp = &mfsfakelabel;
-		pp = &mfsfakelabel.d_partitions[0];
-
-		goto havelabel;
-	}
 	if (Nflag) {
 		fso = -1;
 	} else {
@@ -386,42 +315,29 @@ main(int argc, char *argv[])
 			++mp;
 		}
 	}
-	if (mfs && disktype != NULL) {
-		lp = (struct disklabel *)getdiskbyname(disktype);
-		if (lp == NULL)
-			fatal("%s: unknown disk type", disktype);
-		pp = &lp->d_partitions[1];
-	} else {
-		fsi = opendev(special, O_RDONLY, 0, NULL);
-		if (fsi < 0)
-			fatal("%s: %s", special, strerror(errno));
-		if (fstat(fsi, &st) < 0)
-			fatal("%s: %s", special, strerror(errno));
-		if (!mfs) {
-			if (S_ISBLK(st.st_mode))
-				fatal("%s: block device", special);
-			if (!S_ISCHR(st.st_mode))
-				warnx("%s: not a character-special device",
-				    special);
-		}
-		cp = strchr(argv[0], '\0') - 1;
-		if (cp == NULL ||
-		    ((*cp < 'a' || *cp > ('a' + maxpartitions - 1))
-		    && !isdigit((unsigned char)*cp)))
-			fatal("%s: can't figure out file system partition",
-			    argv[0]);
-		lp = getdisklabel(special, fsi);
-		if (isdigit((unsigned char)*cp))
-			pp = &lp->d_partitions[0];
-		else
-			pp = &lp->d_partitions[*cp - 'a'];
-		if (DL_GETPSIZE(pp) == 0)
-			fatal("%s: `%c' partition is unavailable",
-			    argv[0], *cp);
-		if (pp->p_fstype == FS_BOOT)
-			fatal("%s: `%c' partition overlaps boot program",
-			      argv[0], *cp);
-	}
+	fsi = opendev(special, O_RDONLY, 0, NULL);
+	if (fsi < 0)
+		fatal("%s: %s", special, strerror(errno));
+	if (fstat(fsi, &st) < 0)
+		fatal("%s: %s", special, strerror(errno));
+	if (S_ISBLK(st.st_mode))
+		fatal("%s: block device", special);
+	if (!S_ISCHR(st.st_mode))
+		warnx("%s: not a character-special device", special);
+	cp = strchr(argv[0], '\0') - 1;
+	if (cp == NULL ||
+	    ((*cp < 'a' || *cp > ('a' + maxpartitions - 1))
+	    && !isdigit((unsigned char)*cp)))
+		fatal("%s: can't figure out file system partition", argv[0]);
+	lp = getdisklabel(special, fsi);
+	if (isdigit((unsigned char)*cp))
+		pp = &lp->d_partitions[0];
+	else
+		pp = &lp->d_partitions[*cp - 'a'];
+	if (DL_GETPSIZE(pp) == 0)
+		fatal("%s: `%c' partition is unavailable", argv[0], *cp);
+	if (pp->p_fstype == FS_BOOT)
+		fatal("%s: `%c' partition overlaps boot program", argv[0], *cp);
 havelabel:
 	if (sectorsize == 0) {
 		sectorsize = lp->d_secsize;
@@ -457,7 +373,7 @@ havelabel:
 			nsecs = fssize_input;
 	}
 
-	if (nsecs > DL_GETPSIZE(pp) && !mfs)
+	if (nsecs > DL_GETPSIZE(pp))
 	       fatal("%s: maximum file system size on the `%c' partition is "
 		   "%llu sectors", argv[0], *cp, DL_GETPSIZE(pp));
 
@@ -487,95 +403,13 @@ havelabel:
 			maxbpg = MAXBLKPG_FFS2(bsize);
 	}
 	oldpartition = *pp;
-#ifdef MFS
-	if (mfs) {
-		if (realpath(argv[1], node) == NULL)
-			err(1, "realpath %s", argv[1]);
-		if (stat(node, &mountpoint) < 0)
-			err(ECANCELED, "stat %s", node);
-		mfsuid = mountpoint.st_uid;
-		mfsgid = mountpoint.st_gid;
-		mfsmode = mountpoint.st_mode & ALLPERMS;
-	}
-#endif
 
-	mkfs(pp, special, fsi, fso, mfsmode, mfsuid, mfsgid);
+	mkfs(pp, special, fsi, fso);
 	if (!Nflag && memcmp(pp, &oldpartition, sizeof(oldpartition)))
 		rewritelabel(special, fso, lp);
 	if (!Nflag)
 		close(fso);
 	close(fsi);
-#ifdef MFS
-	if (mfs) {
-		struct mfs_args args;
-		memset(&args, 0, sizeof(args));
-		args.base = membase;
-		args.size = fssize * DEV_BSIZE;
-		args.export_info.ex_root = -2;
-		if (mntflags & MNT_RDONLY)
-			args.export_info.ex_flags = MNT_EXRDONLY;
-
-		switch (pid = fork()) {
-		case -1:
-			err(10, "mfs");
-		case 0:
-			snprintf(mountfromname, sizeof(mountfromname),
-			    "mfs:%d", getpid());
-			break;
-		default:
-			snprintf(mountfromname, sizeof(mountfromname),
-			    "mfs:%d", pid);
-			for (;;) {
-				/*
-				 * spin until the mount succeeds
-				 * or the child exits
-				 */
-				usleep(1);
-
-				/*
-				 * XXX Here is a race condition: another process
-				 * can mount a filesystem which hides our
-				 * ramdisk before we see the success.
-				 */
-				if (statfs(node, &sf) < 0)
-					err(ECANCELED, "statfs %s", node);
-				if (!strcmp(sf.f_mntfromname, mountfromname) &&
-				    !strncmp(sf.f_mntonname, node,
-					     MNAMELEN) &&
-				    !strcmp(sf.f_fstypename, "mfs")) {
-					if (pop != NULL)
-						copy(pop, node, &args);
-					exit(0);
-				}
-				res = waitpid(pid, &status, WNOHANG);
-				if (res == -1)
-					err(EDEADLK, "waitpid");
-				if (res != pid)
-					continue;
-				if (WIFEXITED(status)) {
-					if (WEXITSTATUS(status) == 0)
-						exit(0);
-					errx(1, "%s: mount: %s", node,
-					     strerror(WEXITSTATUS(status)));
-				} else
-					errx(EDEADLK, "abnormal termination");
-			}
-			/* NOTREACHED */
-		}
-
-		(void) setsid();
-		(void) close(0);
-		(void) close(1);
-		(void) close(2);
-		(void) chdir("/");
-
-		args.fspec = mountfromname;
-		if (mntflags & MNT_RDONLY && pop != NULL)
-			mntflags &= ~MNT_RDONLY;
-		if (mount(MOUNT_MFS, node, mntflags, &args) < 0)
-			exit(errno); /* parent prints message */
-	}
-#endif
 	exit(0);
 }
 
@@ -676,166 +510,12 @@ usage(void)
 {
 	extern char *__progname;
 
-	if (mfs) {
-	    fprintf(stderr,
-	        "usage: %s [-b block-size] [-c fragments-per-cylinder-group] "
-		"[-e maxbpg]\n"
-		"\t[-f frag-size] [-i bytes] [-m free-space] [-o options] "
-		"[-P file]\n"
-		"\t[-s size] special node\n",
-		__progname);
-	} else {
-	    fprintf(stderr,
-	        "usage: %s [-Nq] [-b block-size] "
-		"[-c fragments-per-cylinder-group] [-e maxbpg]\n"
-		"\t[-f frag-size] [-g avgfilesize] [-h avgfpdir] [-i bytes]\n"
-		"\t[-m free-space] [-O filesystem-format] [-o optimization]\n"
-		"\t[-S sector-size] [-s size] [-T disktype] [-t fstype] "
-		"special\n",
-		__progname);
-	}
+	fprintf(stderr, "usage: %s [-Nq] [-b block-size] "
+    "[-c fragments-per-cylinder-group] [-e maxbpg]\n"
+    "\t[-f frag-size] [-g avgfilesize] [-h avgfpdir] [-i bytes]\n"
+    "\t[-m free-space] [-O filesystem-format] [-o optimization]\n"
+    "\t[-S sector-size] [-s size] [-T disktype] [-t fstype] "
+    "special\n", __progname);
 
 	exit(1);
 }
-
-#ifdef MFS
-
-static int
-do_exec(const char *dir, const char *cmd, char *const argv[])
-{
-	pid_t pid;
-	int ret, status;
-	sig_t intsave, quitsave;
-
-	switch (pid = fork()) {
-	case -1:
-		err(1, "fork");
-	case 0:
-		if (dir != NULL && chdir(dir) != 0)
-			err(1, "chdir");
-		if (execv(cmd, argv) != 0)
-			err(1, "%s", cmd);
-		break;
-	default:
-		intsave = signal(SIGINT, SIG_IGN);
-		quitsave = signal(SIGQUIT, SIG_IGN);
-		for (;;) {
-			ret = waitpid(pid, &status, 0);
-			if (ret == -1)
-				err(11, "waitpid");
-			if (WIFEXITED(status)) {
-				status = WEXITSTATUS(status);
-				if (status != 0)
-					warnx("%s: exited", cmd);
-				break;
-			} else if (WIFSIGNALED(status)) {
-				warnx("%s: %s", cmd,
-				    strsignal(WTERMSIG(status)));
-				status = 1;
-				break;
-			}
-		}
-		signal(SIGINT, intsave);
-		signal(SIGQUIT, quitsave);
-		return (status);
-	}
-	/* NOTREACHED */
-	return (-1);
-}
-
-static int
-isdir(const char *path)
-{
-	struct stat st;
-
-	if (stat(path, &st) != 0)
-		err(1, "cannot stat %s", path);
-	if (!S_ISDIR(st.st_mode) && !S_ISBLK(st.st_mode))
-		errx(1, "%s: not a dir or a block device", path);
-	return (S_ISDIR(st.st_mode));
-}
-
-static void
-copy(char *src, char *dst, struct mfs_args *args)
-{
-	int ret, dir, created = 0;
-	struct ufs_args mount_args;
-	char mountpoint[MNAMELEN];
-	char *const argv[] = { "pax", "-rw", "-pe", ".", dst, NULL } ;
-
-	dir = isdir(src);
-	if (dir)
-		strlcpy(mountpoint, src, sizeof(mountpoint));
-	else {
-		created = gettmpmnt(mountpoint, sizeof(mountpoint));
-		memset(&mount_args, 0, sizeof(mount_args));
-		mount_args.fspec = src;
-		ret = mount(MOUNT_FFS, mountpoint, MNT_RDONLY, &mount_args);
-		if (ret != 0) {
-			int saved_errno = errno;
-			if (created && rmdir(mountpoint) != 0)
-				warn("rmdir %s", mountpoint);
-			if (unmount(dst, 0) != 0)
-				warn("unmount %s", dst);
-			errc(1, saved_errno, "mount %s %s", src, mountpoint);
-		}
-	}
-	ret = do_exec(mountpoint, "/bin/pax", argv);
-	if (!dir && unmount(mountpoint, 0) != 0)
-		warn("unmount %s", mountpoint);
-	if (created && rmdir(mountpoint) != 0)
-		warn("rmdir %s", mountpoint);
-	if (ret != 0) {
-		if (unmount(dst, 0) != 0)
-			warn("unmount %s", dst);
-		errx(1, "copy %s to %s failed", mountpoint, dst);
-	}
-
-	if (mntflags & MNT_RDONLY) {
-		mntflags |= MNT_UPDATE;
-		if (mount(MOUNT_MFS, dst, mntflags, args) < 0) {
-			warn("%s: mount (update, rdonly)", dst);
-			if (unmount(dst, 0) != 0)
-				warn("unmount %s", dst);
-			exit(1);
-		}
-	}
-}
-
-static int
-gettmpmnt(char *mountpoint, size_t len)
-{
-	const char *tmp;
-	const char *mnt = _PATH_MNT;
-	struct statfs fs;
-	size_t n;
-
-	tmp = getenv("TMPDIR");
-	if (tmp == NULL || *tmp == '\0')
-		tmp = _PATH_TMP;
-
-	if (statfs(tmp, &fs) != 0)
-		err(1, "statfs %s", tmp);
-	if (fs.f_flags & MNT_RDONLY) {
-		if (statfs(mnt, &fs) != 0)
-			err(1, "statfs %s", mnt);
-		if (strcmp(fs.f_mntonname, "/") != 0)
-			errx(1, "tmp mountpoint %s busy", mnt);
-		if (strlcpy(mountpoint, mnt, len) >= len)
-			errx(1, "tmp mountpoint %s too long", mnt);
-		return (0);
-	}
-	n = strlcpy(mountpoint, tmp, len);
-	if (n >= len)
-		errx(1, "tmp mount point too long");
-	if (mountpoint[n - 1] != '/')
-		strlcat(mountpoint, "/", len);
-	n = strlcat(mountpoint, "mntXXXXXXXXXX", len);
-	if (n >= len)
-		errx(1, "tmp mount point too long");
-	if (mkdtemp(mountpoint) == NULL)
-		err(1, "mkdtemp %s", mountpoint);
-	return (1);
-}
-
-#endif /* MFS */

@@ -672,7 +672,6 @@ main(int argc, char *argv[])
 				*cp = '\0';
 
 			if ((!strcmp(mp->f_fstypename, MOUNT_FFS) ||
-			     !strcmp(mp->f_fstypename, MOUNT_MFS) ||
 			     !strcmp(mp->f_fstypename, "ufs")) &&
 			    strcmp(nm, mp[i].f_mntonname) == 0) {
 				nm = mp[i].f_mntfromname;

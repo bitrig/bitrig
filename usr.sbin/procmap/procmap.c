@@ -676,7 +676,6 @@ dump_vm_map_entry(kvm_t *kd, struct kbit *vmspace,
 			break;
 		case VT_NON:
 		case VT_NFS:
-		case VT_MFS:
 		case VT_MSDOSFS:
 		case VT_TMPFS:
 		default:

@@ -225,8 +225,7 @@ needchk(struct fstab *fs)
 	if (strcmp(fs->fs_type, FSTAB_RW))
 		return (NULL);
 	if (strcmp(fs->fs_vfstype, "ffs") &&
-	    strcmp(fs->fs_vfstype, "ufs") &&
-	    strcmp(fs->fs_vfstype, "mfs"))
+	    strcmp(fs->fs_vfstype, "ufs"))
 		return (NULL);
 	if ((qnp = malloc(sizeof(*qnp))) == NULL)
 		err(1, "%s", strerror(errno));

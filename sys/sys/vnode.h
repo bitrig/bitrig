@@ -63,17 +63,17 @@ enum vtype	{ VNON, VREG, VDIR, VBLK, VCHR, VLNK, VSOCK, VFIFO, VBAD };
  * These are for the benefit of external programs only (e.g., pstat)
  * and should NEVER be inspected by the kernel.
  *
- * Note that v_tag is actually used to tell MFS from FFS, and EXT2FS from
- * the rest, so don't believe the above comment!
+ * Note that v_tag is actually used to tell EXT2FS from the rest, so don't
+ * believe the above comment!
  */
 enum vtagtype	{
-	VT_NON, VT_UFS, VT_NFS, VT_MFS, VT_MSDOSFS,
-	VT_ISOFS, VT_EXT2FS, VT_VFS, VT_UDF, VT_TMPFS, VT_FUSEFS
+	VT_NON, VT_UFS, VT_NFS, VT_MSDOSFS, VT_ISOFS, VT_EXT2FS, VT_VFS, VT_UDF,
+	VT_TMPFS, VT_FUSEFS
 };
 
 #define	VTAG_NAMES				\
-    "NON", "UFS", "NFS", "MFS", "MSDOSFS",	\
-    "ISOFS", "EXT2FS", "VFS",  "UDF", "TMPFS", "FUSEFS"
+    "NON", "UFS", "NFS", "MSDOSFS", "ISOFS",	\
+    "EXT2FS", "VFS",  "UDF", "TMPFS", "FUSEFS"
 
 /*
  * Each underlying filesystem allocates its own private area and hangs

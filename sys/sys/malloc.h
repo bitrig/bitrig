@@ -101,9 +101,7 @@
 #define	M_PROC		41	/* Proc structures */
 #define	M_SUBPROC	42	/* Proc sub-structures */
 #define	M_VCLUSTER	43	/* Cluster for VFS */
-/* 45-46 - free */
-#define	M_MFSNODE	46	/* MFS vnode private part */
-/* 47-48 - free */
+/* 44-48 - free */
 #define	M_NETADDR	49	/* Export host address structure */
 #define	M_NFSSVC	50	/* Nfs server structure */
 /* 51 - free */
@@ -231,7 +229,7 @@
 	"VFS cluster",	/* 43 M_VCLUSTER */ \
 	NULL, \
 	NULL, \
-	"MFS node",	/* 46 M_MFSNODE */ \
+	NULL, \
 	NULL, \
 	NULL, \
 	"Export Host",	/* 49 M_NETADDR */ \

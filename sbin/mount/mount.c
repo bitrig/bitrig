@@ -379,7 +379,7 @@ mountfs(const char *vfstype, const char *spec, const char *name,
 			warn("statfs %s", name);
 			return (1);
 		}
-		/* XXX can't check f_mntfromname, thanks to mfs, etc. */
+		/* XXX can't check f_mntfromname, thanks to tmpfs, etc. */
 		if (strncmp(name, sf.f_mntonname, MNAMELEN) == 0 &&
 		    strncmp(vfstype, sf.f_fstypename, MFSNAMELEN) == 0) {
 			if (verbose) {
@@ -563,14 +563,6 @@ prmount(struct statfs *sf)
 			(void)printf(", %s=%d",
 			    "acdirmax", nfs_args->acdirmax);
 		}
-	} else if (strcmp(sf->f_fstypename, MOUNT_MFS) == 0) {
-		int headerlen;
-		long blocksize;
-		char *header;
-
-		header = getbsize(&headerlen, &blocksize);
-		(void)printf("%s%s=%lu %s", !f++ ? " (" : ", ",
-		    "size", sf->mount_info.mfs_args.size / blocksize, header);
 	} else if (strcmp(sf->f_fstypename, MOUNT_MSDOS) == 0) {
 		struct msdosfs_args *msdosfs_args = &sf->mount_info.msdosfs_args;
 
@@ -766,8 +758,7 @@ disklabelcheck(struct fstab *fs)
 			    fs->fs_spec);
 			return (0);
 		}
-		if (strcmp(fs->fs_vfstype, "mfs") == 0 &&
-		    strcmp(labelfs, "ffs") == 0)
+		if (strcmp(labelfs, "ffs") == 0)
 			return (0);
 		warnx("%s: fstab type %s != disklabel type %s",
 		    fs->fs_spec, fs->fs_vfstype, labelfs);
