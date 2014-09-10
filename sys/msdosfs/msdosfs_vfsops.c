@@ -805,9 +805,6 @@ msdosfs_check_export(struct mount *mp, struct mbuf *nam, int *exflagsp,
 #define msdosfs_vget ((int (*)(struct mount *, ino_t, struct vnode **)) \
 		      eopnotsupp)
 
-#define msdosfs_quotactl ((int (*)(struct mount *, int, uid_t, caddr_t, \
-					struct proc *))eopnotsupp)
-
 #define msdosfs_sysctl ((int (*)(int *, u_int, void *, size_t *, void *, \
                                     size_t, struct proc *))eopnotsupp)
 
@@ -816,7 +813,7 @@ const struct vfsops msdosfs_vfsops = {
 	msdosfs_start,
 	msdosfs_unmount,
 	msdosfs_root,
-	msdosfs_quotactl,
+	NULL,			/* vfs_quotactl */
 	msdosfs_statfs,
 	msdosfs_sync,
 	msdosfs_vget,

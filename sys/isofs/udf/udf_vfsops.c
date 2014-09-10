@@ -87,7 +87,7 @@ const struct vfsops udf_vfsops = {
 	.vfs_mount =		udf_mount,
 	.vfs_start =		udf_start,
 	.vfs_root =		udf_root,
-	.vfs_quotactl =		udf_quotactl,
+	.vfs_quotactl =		NULL,
 	.vfs_statfs =		udf_statfs,
 	.vfs_sync =		udf_sync,
 	.vfs_unmount =		udf_unmount,
@@ -518,13 +518,6 @@ udf_root(struct mount *mp, struct vnode **vpp)
 	vp->v_flag |= VROOT;
 
 	return (0);
-}
-
-int
-udf_quotactl(struct mount *mp, int cmds, uid_t uid, caddr_t arg,
-    struct proc *p)
-{
-	return (EOPNOTSUPP);
 }
 
 int

@@ -522,7 +522,7 @@ struct vfsops tmpfs_vfsops = {
 	tmpfs_start,			/* vfs_start */
 	tmpfs_unmount,			/* vfs_unmount */
 	tmpfs_root,			/* vfs_root */
-	(void *)eopnotsupp,		/* vfs_quotactl */
+	NULL,				/* vfs_quotactl */
 	tmpfs_statfs,			/* vfs_statfs */
 	tmpfs_sync,			/* vfs_sync */
 	tmpfs_vget,			/* vfs_vget */
@@ -530,5 +530,5 @@ struct vfsops tmpfs_vfsops = {
 	tmpfs_vptofh,			/* vfs_vptofh */
 	tmpfs_init,			/* vfs_init */
 	NULL,				/* vfs_sysctl */
-	(void *)eopnotsupp,
+	(void *)eopnotsupp,		/* vfs_checkexp */
 };

@@ -94,7 +94,6 @@ void	nfs_decode_args(struct nfsmount *, struct nfs_args *,
 int	nfs_start(struct mount *, int, struct proc *);
 int	nfs_unmount(struct mount *, int, struct proc *);
 int	nfs_root(struct mount *, struct vnode **);
-int	nfs_quotactl(struct mount *, int, uid_t, caddr_t, struct proc *);
 int	nfs_statfs(struct mount *, struct statfs *, struct proc *);
 int	nfs_sync(struct mount *, int, struct ucred *, struct proc *);
 int	nfs_vget(struct mount *, ino_t, struct vnode **);

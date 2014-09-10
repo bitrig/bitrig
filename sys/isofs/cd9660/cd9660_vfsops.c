@@ -65,7 +65,7 @@ const struct vfsops cd9660_vfsops = {
 	cd9660_start,
 	cd9660_unmount,
 	cd9660_root,
-	cd9660_quotactl,
+	NULL,		/* vfs_quotactl */
 	cd9660_statfs,
 	cd9660_sync,
 	cd9660_vget,
@@ -613,22 +613,6 @@ cd9660_root(mp, vpp)
 	 */
 	return (cd9660_vget_internal(mp, ino, vpp,
 	    imp->iso_ftype == ISO_FTYPE_RRIP, dp));
-}
-
-/*
- * Do operations associated with quotas, not supported
- */
-/* ARGSUSED */
-int
-cd9660_quotactl(mp, cmd, uid, arg, p)
-	struct mount *mp;
-	int cmd;
-	uid_t uid;
-	caddr_t arg;
-	struct proc *p;
-{
-
-	return (EOPNOTSUPP);
 }
 
 /*

@@ -84,7 +84,7 @@ const struct vfsops nfs_vfsops = {
 	nfs_start,
 	nfs_unmount,
 	nfs_root,
-	nfs_quotactl,
+	NULL,		/* vfs_quotactl */
 	nfs_statfs,
 	nfs_sync,
 	nfs_vget,
@@ -848,16 +848,6 @@ int
 nfs_start(struct mount *mp, int flags, struct proc *p)
 {
 	return (0);
-}
-
-/*
- * Do operations associated with quotas, not supported
- */
-/* ARGSUSED */
-int
-nfs_quotactl(struct mount *mp, int cmd, uid_t uid, caddr_t arg, struct proc *p)
-{
-	return (EOPNOTSUPP);
 }
 
 /*
