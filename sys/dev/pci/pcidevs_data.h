@@ -21664,8 +21664,8 @@ static const struct pci_known_product pci_known_products[] = {
 	    "TSB12LV23 FireWire",
 	},
 	{
-	    PCI_VENDOR_TI, PCI_PRODUCT_TI_ACX100B,
-	    "ACX100B FireWire",
+	    PCI_VENDOR_TI, PCI_PRODUCT_TI_TSB12LV26,
+	    "TSB12LV26 FireWire",
 	},
 	{
 	    PCI_VENDOR_TI, PCI_PRODUCT_TI_TSB43AA22,
@@ -21792,8 +21792,8 @@ static const struct pci_known_product pci_known_products[] = {
 	    "ACX100A",
 	},
 	{
-	    PCI_VENDOR_, PCI_PRODUCT__,
-	    "",
+	    PCI_VENDOR_TI, PCI_PRODUCT_TI_ACX100B,
+	    "ACX100B",
 	},
 	{
 	    PCI_VENDOR_TI, PCI_PRODUCT_TI_ACX111,
