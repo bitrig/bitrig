@@ -67,7 +67,7 @@
 
 #if !defined(_WCHAR_T_DEFINED_) && !defined(__cplusplus)
 #define _WCHAR_T_DEFINED_
-typedef	__wchar_t	wchar_t;
+typedef	___wchar_t	wchar_t;
 #endif
 
 #ifndef	_MBSTATE_T_DEFINED_

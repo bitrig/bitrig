@@ -52,7 +52,7 @@ typedef	__size_t	size_t;
 /* in C++, wchar_t is a built-in type */
 #if !defined(_WCHAR_T_DEFINED_) && !defined(__cplusplus)
 #define _WCHAR_T_DEFINED_
-typedef	__wchar_t	wchar_t;
+typedef	___wchar_t	wchar_t;
 #endif
 
 #ifndef	_WINT_T_DEFINED_

@@ -21,8 +21,11 @@
 
 #include <sys/stdint.h>
 
-#ifdef __cplusplus
-#define __wchar_t	wchar_t
+#ifndef	__cplusplus
+#ifndef _WCHAR_T_DEFINED_
+typedef	___wchar_t	wchar_t;
+#define	_WCHAR_T_DEFINED_
+#endif
 #endif
 
 /*
@@ -253,10 +256,10 @@ intmax_t	imaxabs(intmax_t);
 imaxdiv_t	imaxdiv(intmax_t, intmax_t);
 intmax_t	strtoimax(const char *, char **, int);
 uintmax_t	strtoumax(const char *, char **, int);
-intmax_t	wcstoimax(const __wchar_t * __restrict,
-		    __wchar_t ** __restrict, int);
-uintmax_t	wcstoumax(const __wchar_t * __restrict,
-		    __wchar_t ** __restrict, int);
+intmax_t	wcstoimax(const wchar_t * __restrict,
+		    wchar_t ** __restrict, int);
+uintmax_t	wcstoumax(const wchar_t * __restrict,
+		    wchar_t ** __restrict, int);
 __END_DECLS
 
 #endif /* _INTTYPES_H_ */
