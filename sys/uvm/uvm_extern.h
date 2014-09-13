@@ -200,6 +200,7 @@ typedef int		vm_prot_t;
 #include <sys/queue.h>
 #include <sys/tree.h>
 #include <sys/lock.h>
+#include <sys/mutex.h>
 
 #ifdef _KERNEL
 struct buf;
