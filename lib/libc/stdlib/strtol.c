@@ -1,4 +1,4 @@
-/*	$OpenBSD: strtol.c,v 1.9 2013/04/17 17:40:35 tedu Exp $ */
+/*	$OpenBSD: strtol.c,v 1.10 2014/09/13 20:10:12 schwarze Exp $ */
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -39,7 +39,6 @@
 #include <stdlib.h>
 #include "locale/xlocale_private.h"
 
-
 /*
  * Convert a string to a long integer.
  *
@@ -61,7 +60,7 @@ strtol_l(const char * __restrict nptr, char ** __restrict endptr, int base,
 	 * Ensure that base is between 2 and 36 inclusive, or the special
 	 * value of 0.
 	 */
-	if (base != 0 && (base < 2 || base > 36)) {
+	if (base < 0 || base == 1 || base > 36) {
 		if (endptr != 0)
 			*endptr = (char *)nptr;
 		errno = EINVAL;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: strtoul.c,v 1.8 2013/04/17 17:40:35 tedu Exp $ */
+/*	$OpenBSD: strtoul.c,v 1.9 2014/09/13 20:10:12 schwarze Exp $ */
 /*
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -58,6 +58,13 @@ strtoul_l(const char * __restrict nptr, char ** __restrict endptr, int base, loc
 	/*
 	 * See strtol for comments as to the logic used.
 	 */
+	if (base < 0 || base == 1 || base > 36) {
+		if (endptr != 0)
+			*endptr = (char *)nptr;
+		errno = EINVAL;
+		return 0;
+	}
+
 	s = nptr;
 	do {
 		c = *s++;
