@@ -37,8 +37,6 @@
 
 #ifdef _KERNEL
 
-#include <sys/mutex.h>
-
 /*
  * prototypes
  */
