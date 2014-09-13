@@ -106,19 +106,4 @@
 #define	VM_PHYSSEG_STRAT	VM_PSTRAT_BSEARCH
 #define	VM_PHYSSEG_NOADD	/* can't add RAM after vm_mem_init */
 
-#ifndef _LOCORE
-
-#define __HAVE_VM_PAGE_MD
-struct vm_page_md {
-	LIST_HEAD(,pte_desc) pv_list;
-	int pvh_attrs;				/* page attributes */
-};
-
-#define VM_MDPAGE_INIT(pg) do {			\
-        LIST_INIT(&((pg)->mdpage.pv_list));     \
-	(pg)->mdpage.pvh_attrs = 0;		\
-} while (0)
-
-#endif /* _LOCORE */
-
 #endif /* _MACHINE_VMPARAM_H_ */

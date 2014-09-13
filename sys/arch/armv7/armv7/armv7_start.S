@@ -34,9 +34,6 @@
 #include <arm/armreg.h>
 #include <arm/pte.h>
 
-#undef	DOMAIN_CLIENT	/* XXX */
-#include "assym.h"
-
 /*
  * CPWAIT -- Canonical method to wait for CP15 update.
  * NOTE: Clobbers the specified temp reg.
