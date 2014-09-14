@@ -4,6 +4,8 @@
  */
 #include <sys/mman.h>
 
+int _thread_sys_madvise(void *addr, size_t len, int behav);
+
 int
 posix_madvise(void *addr, size_t len, int behav)
 {

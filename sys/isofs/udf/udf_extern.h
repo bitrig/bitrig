@@ -23,7 +23,6 @@ int udf_mount(struct mount *, const char *, void *, struct nameidata *,
 int udf_unmount(struct mount *, int, struct proc *);
 int udf_start(struct mount *, int, struct proc *);
 int udf_root(struct mount *, struct vnode **);
-int udf_quotactl(struct mount *, int, uid_t, caddr_t, struct proc *);
 int udf_statfs(struct mount *, struct statfs *, struct proc *);
 int udf_vget(struct mount *, ino_t, struct vnode **);
 int udf_sync(struct mount *, int, struct ucred *, struct proc *);

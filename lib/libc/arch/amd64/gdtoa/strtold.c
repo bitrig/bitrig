@@ -32,6 +32,7 @@
  */
 
 #include <float.h>
+#include "locale/xlocale_private.h"
 
 #include "gdtoaimp.h"
 
@@ -45,10 +46,10 @@ strtold(const char * __restrict s, char ** __restrict sp)
 }
 
 long double
-strtold_l(const char * __restrict s, char ** __restrict sp)
+strtold_l(const char * __restrict s, char ** __restrict sp, locale_t loc)
 {
 	long double result;
 
-	strtorx_l(s, sp, FLT_ROUNDS, &result);
+	strtorx_l(s, sp, FLT_ROUNDS, &result, loc);
 	return result;
 }

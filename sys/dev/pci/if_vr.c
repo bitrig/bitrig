@@ -1256,7 +1256,10 @@ vr_encap(struct vr_softc *sc, struct vr_chain **cp, struct mbuf *m_head)
 #if NVLAN > 0
 	/* Tell chip to insert VLAN tag if needed. */
 	if (m_head->m_flags & M_VLANTAG) {
-		u_int32_t vtag = m_head->m_pkthdr.ether_vtag;
+		/* VR vlan tag doesn't have the DEI bit, it's PCP+VID */
+		u_int32_t vtag = EVL_VLANOFTAG(m_head->m_pkthdr.ether_vtag) |
+		    (EVL_PRIOFTAG(m_head->m_pkthdr.ether_vtag) <<
+			(EVL_PRIO_BITS - 1));
 		vtag = (vtag << VR_TXSTAT_PQSHIFT) & VR_TXSTAT_PQMASK;
 		vr_status |= vtag;
 		vr_ctl |= htole32(VR_TXCTL_INSERTTAG);

@@ -195,6 +195,8 @@ of the kernel.
 points outside the process's allocated address space.
 .It Bq Er EPERM
 The call was privileged and the caller was not the superuser.
+.It Bq Er EBUSY
+The underlying file system was busy and could not be locked.
 .El
 .Sh SEE ALSO
 .Xr quota 1 ,

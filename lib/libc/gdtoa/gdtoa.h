@@ -113,6 +113,13 @@ extern float  strtof ANSI((CONST char *, char **));
 extern double strtod ANSI((CONST char *, char **));
 extern int __strtodg ANSI((CONST char*, char**, FPI*, Long*, ULong*));
 
+#ifdef USE_LOCALE
+#include "locale.h"
+extern int __strtodg_l ANSI((CONST char*, char**, FPI*, Long*, ULong*, locale_t));
+extern int __strtorx_l ANSI((CONST char *, char **, int, void *, locale_t));
+#endif
+
+
 extern char*	__g_ddfmt  ANSI((char*, double*, int, size_t));
 extern char*	__g_dfmt   ANSI((char*, double*, int, size_t));
 extern char*	__g_ffmt   ANSI((char*, float*,  int, size_t));
