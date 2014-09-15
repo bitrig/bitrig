@@ -1,4 +1,4 @@
-#	$OpenBSD: crontab,v 1.19 2013/10/19 15:26:06 halex Exp $
+#	$OpenBSD: crontab,v 1.21 2014/09/15 22:28:58 matthieu Exp $
 #
 # /var/cron/tabs/root - root's crontab
 #
@@ -7,7 +7,6 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin
 HOME=/var/log
 #
 #minute	hour	mday	month	wday	command
-#
 #
 # rotate log files every hour, if necessary
 0	*	*	*	*	/usr/bin/newsyslog

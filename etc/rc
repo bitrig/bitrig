@@ -1,4 +1,4 @@
-#	$OpenBSD: rc,v 1.441 2014/08/26 19:33:48 robert Exp $
+#	$OpenBSD: rc,v 1.442 2014/09/15 22:28:58 matthieu Exp $
 
 # System startup script run by init on autoboot
 # or after single-user.
