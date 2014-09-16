@@ -1256,6 +1256,7 @@
 ./usr/include/sys/atomic.h
 ./usr/include/sys/audioio.h
 ./usr/include/sys/bitops.h
+./usr/include/sys/bmtx.h
 ./usr/include/sys/buf.h
 ./usr/include/sys/cdefs.h
 ./usr/include/sys/cdio.h
@@ -1294,6 +1295,7 @@
 ./usr/include/sys/ioccom.h
 ./usr/include/sys/ioctl.h
 ./usr/include/sys/ipc.h
+./usr/include/sys/ithread.h
 ./usr/include/sys/kcore.h
 ./usr/include/sys/kernel.h
 ./usr/include/sys/kgdb.h

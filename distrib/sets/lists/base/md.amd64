@@ -1699,6 +1699,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/atomic.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/audioio.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/bitops.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/sys/bmtx.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/buf.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/cdefs.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/cdio.ph
@@ -1737,6 +1738,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/ioccom.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/ioctl.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/ipc.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/sys/ithread.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/kcore.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/kernel.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/kgdb.ph
