@@ -1282,6 +1282,7 @@
 ./usr/include/sys/ioccom.h
 ./usr/include/sys/ioctl.h
 ./usr/include/sys/ipc.h
+./usr/include/sys/ithread.h
 ./usr/include/sys/kcore.h
 ./usr/include/sys/kernel.h
 ./usr/include/sys/kgdb.h
