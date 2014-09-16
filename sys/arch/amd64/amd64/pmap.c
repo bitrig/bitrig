@@ -1,4 +1,4 @@
-/*	$OpenBSD: pmap.c,v 1.72 2014/08/24 17:55:14 sf Exp $	*/
+/*	$OpenBSD: pmap.c,v 1.73 2014/09/16 18:57:51 sf Exp $	*/
 /*	$NetBSD: pmap.c,v 1.3 2003/05/08 18:13:13 thorpej Exp $	*/
 
 /*
@@ -478,7 +478,7 @@ pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot)
 #ifdef LARGEPAGES
 	/* XXX For now... */
 	if (opte & PG_PS)
-		panic("pmap_kenter_pa: PG_PS");
+		panic("%s: PG_PS", __func__);
 #endif
 	if (pmap_valid_entry(opte)) {
 		if (pa & PMAP_NOCACHE && (opte & PG_N) == 0)
@@ -947,7 +947,7 @@ pmap_get_ptp(struct pmap *pmap, vaddr_t va, pd_entry_t **pdes)
 				pptp = pmap_find_ptp(pmap, va, ppa, i);
 #ifdef DIAGNOSTIC
 			if (pptp == NULL)
-				panic("pde page disappeared");
+				panic("%s: pde page disappeared", __func__);
 #endif
 			pptp->wire_count++;
 		}
@@ -963,7 +963,7 @@ pmap_get_ptp(struct pmap *pmap, vaddr_t va, pd_entry_t **pdes)
 		if (ptp == NULL) {
 			printf("va %lx ppa %lx\n", (unsigned long)va,
 			    (unsigned long)ppa);
-			panic("pmap_get_ptp: unmanaged user PTP");
+			panic("%s: unmanaged user PTP", __func__);
 		}
 #endif
 	}
@@ -1084,8 +1084,8 @@ pmap_destroy(struct pmap *pmap)
 	 */
 
 #ifdef DIAGNOSTIC
-	if (pmap->pm_cpus != 0)
-		printf("pmap_destroy: pmap %p cpus=0x%llx\n",
+	if (__predict_false(pmap->pm_cpus != 0))
+		printf("%s: pmap %p cpus=0x%llx\n", __func__,
 		    (void *)pmap, pmap->pm_cpus);
 #endif
 
@@ -1192,7 +1192,7 @@ pmap_pdes_valid(vaddr_t va, pd_entry_t **pdes, pd_entry_t *lastpde)
 	for (i = PTP_LEVELS; i > 1; i--) {
 		index = pl_i(va, i);
 		pde = pdes[i - 2][index];
-		if ((pde & PG_V) == 0)
+		if (!pmap_valid_entry(pde))
 			return FALSE;
 	}
 	if (lastpde != NULL)
@@ -1232,7 +1232,7 @@ pmap_extract(struct pmap *pmap, vaddr_t va, paddr_t *pap)
 	pte = ptes[pl1_i(va)];
 	pmap_unmap_ptes(pmap);
 
-	if (__predict_true((pte & PG_V) != 0)) {
+	if (__predict_true(pmap_valid_entry(pte))) {
 		if (pap != NULL)
 			*pap = (pte & PG_FRAME) | (va & 0xfff);
 		return (TRUE);
@@ -1382,16 +1382,16 @@ pmap_remove_ptes(struct pmap *pmap, struct vm_page *ptp, vaddr_t ptpva,
 		if ((opte & PG_PVLIST) == 0) {
 #ifdef DIAGNOSTIC
 			if (pg != NULL)
-				panic("pmap_remove_ptes: managed page without "
-				      "PG_PVLIST for 0x%lx", startva);
+				panic("%s: managed page without PG_PVLIST "
+				      "for 0x%lx", __func__, startva);
 #endif
 			continue;
 		}
 
 #ifdef DIAGNOSTIC
 		if (pg == NULL)
-			panic("pmap_remove_ptes: unmanaged page marked "
-			      "PG_PVLIST, va = 0x%lx, pa = 0x%lx",
+			panic("%s: unmanaged page marked PG_PVLIST, "
+			      "va = 0x%lx, pa = 0x%lx", __func__,
 			      startva, (u_long)(opte & PG_FRAME));
 #endif
 
@@ -1449,17 +1449,16 @@ pmap_remove_pte(struct pmap *pmap, struct vm_page *ptp, pt_entry_t *pte,
 	if ((opte & PG_PVLIST) == 0) {
 #ifdef DIAGNOSTIC
 		if (pg != NULL)
-			panic("pmap_remove_pte: managed page without "
-			      "PG_PVLIST for 0x%lx", va);
+			panic("%s: managed page without PG_PVLIST for 0x%lx",
+			      __func__, va);
 #endif
 		return(TRUE);
 	}
 
 #ifdef DIAGNOSTIC
 	if (pg == NULL)
-		panic("pmap_remove_pte: unmanaged page marked "
-		    "PG_PVLIST, va = 0x%lx, pa = 0x%lx", va,
-		    (u_long)(opte & PG_FRAME));
+		panic("%s: unmanaged page marked PG_PVLIST, va = 0x%lx, "
+		      "pa = 0x%lx", __func__, va, (u_long)(opte & PG_FRAME));
 #endif
 
 	/* sync R/M bits */
@@ -1525,8 +1524,8 @@ pmap_do_remove(struct pmap *pmap, vaddr_t sva, vaddr_t eva, int flags)
 				ptp = pmap_find_ptp(pmap, sva, ptppa, 1);
 #ifdef DIAGNOSTIC
 				if (ptp == NULL)
-					panic("pmap_remove: unmanaged "
-					      "PTP detected");
+					panic("%s: unmanaged PTP detected",
+					      __func__);
 #endif
 			}
 
@@ -1598,8 +1597,7 @@ pmap_do_remove(struct pmap *pmap, vaddr_t sva, vaddr_t eva, int flags)
 			ptp = pmap_find_ptp(pmap, va, ptppa, 1);
 #ifdef DIAGNOSTIC
 			if (ptp == NULL)
-				panic("pmap_remove: unmanaged PTP "
-				      "detected");
+				panic("%s: unmanaged PTP detected", __func__);
 #endif
 		}
 		pmap_remove_ptes(pmap, ptp,
@@ -1661,14 +1659,14 @@ pmap_page_remove(struct vm_page *pg)
 #ifdef DIAGNOSTIC
 		if (pve->pv_ptp && pmap_pdes_valid(pve->pv_va, pdes, &pde) &&
 		   (pde & PG_FRAME) != VM_PAGE_TO_PHYS(pve->pv_ptp)) {
-			printf("pmap_page_remove: pg=%p: va=%lx, pv_ptp=%p\n",
+			printf("%s: pg=%p: va=%lx, pv_ptp=%p\n", __func__,
 			       pg, pve->pv_va, pve->pv_ptp);
-			printf("pmap_page_remove: PTP's phys addr: "
-			       "actual=%lx, recorded=%lx\n",
+			printf("%s: PTP's phys addr: "
+			       "actual=%lx, recorded=%lx\n", __func__,
 			       (unsigned long)(pde & PG_FRAME),
 				VM_PAGE_TO_PHYS(pve->pv_ptp));
-			panic("pmap_page_remove: mapped managed page has "
-			      "invalid pv_ptp field");
+			panic("%s: mapped managed page has "
+			      "invalid pv_ptp field", __func__);
 		}
 #endif
 
@@ -1774,8 +1772,7 @@ pmap_clear_attrs(struct vm_page *pg, unsigned long clearbits)
 		pmap_map_ptes(pve->pv_pmap, &ptes, &pdes);
 #ifdef DIAGNOSTIC
 		if (!pmap_pdes_valid(pve->pv_va, pdes, NULL))
-			panic("pmap_change_attrs: mapping without PTP "
-			      "detected");
+			panic("%s: mapping without PTP detected", __func__);
 #endif
 
 		opte = ptes[pl1_i(pve->pv_va)];
@@ -1866,14 +1863,14 @@ pmap_write_protect(struct pmap *pmap, vaddr_t sva, vaddr_t eva, vm_prot_t prot)
 
 #ifdef DIAGNOSTIC
 		if (va >= VM_MAXUSER_ADDRESS && va < VM_MAX_ADDRESS)
-			panic("pmap_write_protect: PTE space");
+			panic("%s: PTE space", __func__);
 #endif
 
 		spte = &ptes[pl1_i(va)];
 		epte = &ptes[pl1_i(blockend)];
 
 		for (/*null */; spte < epte ; spte++) {
-			if (!(*spte & PG_V))
+			if (!pmap_valid_entry(*spte))
 				continue;
 			pmap_pte_clearbits(spte, PG_RW);
 			pmap_pte_setbits(spte, nx);
@@ -1912,23 +1909,23 @@ pmap_unwire(struct pmap *pmap, vaddr_t va)
 
 #ifdef DIAGNOSTIC
 		if (!pmap_valid_entry(ptes[pl1_i(va)]))
-			panic("pmap_unwire: invalid (unmapped) va 0x%lx", va);
+			panic("%s: invalid (unmapped) va 0x%lx", __func__, va);
 #endif
-		if ((ptes[pl1_i(va)] & PG_W) != 0) {
+		if (__predict_true((ptes[pl1_i(va)] & PG_W) != 0)) {
 			pmap_pte_clearbits(&ptes[pl1_i(va)], PG_W);
 			pmap->pm_stats.wired_count--;
 		}
 #ifdef DIAGNOSTIC
 		else {
-			printf("pmap_unwire: wiring for pmap %p va 0x%lx "
-			       "didn't change!\n", pmap, va);
+			printf("%s: wiring for pmap %p va 0x%lx "
+			       "didn't change!\n", __func__, pmap, va);
 		}
 #endif
 		pmap_unmap_ptes(pmap);
 	}
 #ifdef DIAGNOSTIC
 	else {
-		panic("pmap_unwire: invalid PDE");
+		panic("%s: invalid PDE", __func__);
 	}
 #endif
 }
@@ -1988,12 +1985,12 @@ pmap_enter(struct pmap *pmap, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 
 #ifdef DIAGNOSTIC
 	if (va == (vaddr_t) PDP_BASE || va == (vaddr_t) APDP_BASE)
-		panic("pmap_enter: trying to map over PDP/APDP!");
+		panic("%s: trying to map over PDP/APDP!", __func__);
 
 	/* sanity check: kernel PTPs should already have been pre-allocated */
 	if (va >= VM_MIN_KERNEL_ADDRESS &&
 	    !pmap_valid_entry(pmap->pm_pdir[pl_i(va, PTP_LEVELS)]))
-		panic("pmap_enter: missing kernel PTP for va %lx!", va);
+		panic("%s: missing kernel PTP for va %lx!", __func__, va);
 
 #endif
 
@@ -2014,7 +2011,7 @@ pmap_enter(struct pmap *pmap, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 				error = ENOMEM;
 				goto out;
 			}
-			panic("pmap_enter: get ptp failed");
+			panic("%s: get ptp failed", __func__);
 		}
 	}
 	opte = ptes[pl1_i(va)];		/* old PTE */
@@ -2051,18 +2048,18 @@ pmap_enter(struct pmap *pmap, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 				pg = PHYS_TO_VM_PAGE(pa);
 #ifdef DIAGNOSTIC
 				if (pg == NULL)
-					panic("pmap_enter: same pa PG_PVLIST "
+					panic("%s: same pa PG_PVLIST "
 					      "mapping with unmanaged page "
-					      "pa = 0x%lx (0x%lx)", pa,
-					      atop(pa));
+					      "pa = 0x%lx (0x%lx)", __func__,
+					      pa, atop(pa));
 #endif
 				pmap_sync_flags_pte(pg, opte);
 			} else {
 #ifdef DIAGNOSTIC
 				if (PHYS_TO_VM_PAGE(pa) != NULL)
-					panic("pmap_enter: same pa, managed "
+					panic("%s: same pa, managed "
 					    "page, no PG_VLIST pa: 0x%lx\n",
-					    pa);
+					    __func__, pa);
 #endif
 			}
 			goto enter_now;
@@ -2081,9 +2078,9 @@ pmap_enter(struct pmap *pmap, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 			pg = PHYS_TO_VM_PAGE(opte & PG_FRAME);
 #ifdef DIAGNOSTIC
 			if (pg == NULL)
-				panic("pmap_enter: PG_PVLIST mapping with "
-				      "unmanaged page "
-				      "pa = 0x%lx (0x%lx)", pa, atop(pa));
+				panic("%s: PG_PVLIST mapping with unmanaged "
+				      "page pa = 0x%lx (0x%lx)",
+				      __func__, pa, atop(pa));
 #endif
 			pmap_sync_flags_pte(pg, opte);
 			pve = pmap_remove_pv(pg, pmap, va);
@@ -2120,7 +2117,7 @@ pmap_enter(struct pmap *pmap, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 					error = ENOMEM;
 					goto out;
 				}
-				panic("pmap_enter: no pv entries available");
+				panic("%s: no pv entries available", __func__);
 			}
 		}
 		pmap_enter_pv(pg, pve, pmap, va, ptp);
@@ -2140,8 +2137,7 @@ enter_now:
 	if (ptp)
 		ptp->wire_count += ptpdelta;
 
-	if (pg != PHYS_TO_VM_PAGE(pa))
-		panic("wtf?");
+	KASSERT(pg == PHYS_TO_VM_PAGE(pa));
 
 	npte = pa | protection_codes[prot] | PG_V;
 	if (pg != NULL) {
@@ -2174,7 +2170,7 @@ enter_now:
 	 * If we changed anything other than modified/used bits,
 	 * flush the TLB.  (is this overkill?)
 	 */
-	if (opte & PG_V) {
+	if (pmap_valid_entry(opte)) {
 		if (nocache && (opte & PG_N) == 0)
 			wbinvd();
 		pmap_tlb_shootpage(pmap, va);
@@ -2217,7 +2213,7 @@ pmap_get_physpage(vaddr_t va, int level, paddr_t *paddrp)
 		PMAP_SUBOBJ_UNLOCK(kpm, level - 1);
 
 		if (ptp == NULL)
-			panic("pmap_get_physpage: out of memory");
+			panic("%s: out of memory", __func__);
 		atomic_clearbits_int(&ptp->pg_flags, PG_BUSY);
 		ptp->wire_count = 1;
 		*paddrp = VM_PAGE_TO_PHYS(ptp);
@@ -2306,7 +2302,7 @@ pmap_growkernel(vaddr_t maxkvaddr)
 		 * XXX only need to check toplevel.
 		 */
 		if (target_nptp > nkptpmax[i])
-			panic("out of KVA space");
+			panic("%s: out of KVA space", __func__);
 		needed_kptp[i] = target_nptp - nkptp[i] + 1;
 	}
 
@@ -2366,7 +2362,7 @@ pmap_steal_memory(vsize_t size, vaddr_t *start, vaddr_t *end)
 			break;
 	}
 	if (segno == vm_nphysseg) {
-		panic("pmap_steal_memory: out of memory");
+		panic("%s: out of memory", __func__);
 	} else {
 		if (seg->avail_start == seg->start) {
 			pa = ptoa(seg->avail_start);
@@ -2384,7 +2380,7 @@ pmap_steal_memory(vsize_t size, vaddr_t *start, vaddr_t *end)
 		 */
 		if (seg->start == seg->end) {
 			if (vm_nphysseg-- == 1)
-				panic("pmap_steal_memory: out of memory");
+				panic("%s: out of memory", __func__);
 			while (segno < vm_nphysseg) {
 				seg[0] = seg[1]; /* struct copy */
 				seg++;
@@ -2523,7 +2519,7 @@ pmap_tlb_shootpage(struct pmap *pm, vaddr_t va)
 			if ((mask & (1ULL << ci->ci_cpuid)) == 0)
 				continue;
 			if (x86_fast_ipi(ci, LAPIC_IPI_INVLPG) != 0)
-				panic("pmap_tlb_shootpage: ipi failed");
+				panic("%s: ipi failed", __func__);
 		}
 		splx(s);
 	}
@@ -2562,7 +2558,7 @@ pmap_tlb_shootrange(struct pmap *pm, vaddr_t sva, vaddr_t eva)
 			if ((mask & (1ULL << ci->ci_cpuid)) == 0)
 				continue;
 			if (x86_fast_ipi(ci, LAPIC_IPI_INVLRANGE) != 0)
-				panic("pmap_tlb_shootrange: ipi failed");
+				panic("%s: ipi failed", __func__);
 		}
 		splx(s);
 	}
@@ -2599,7 +2595,7 @@ pmap_tlb_shoottlb(void)
 			if ((mask & (1ULL << ci->ci_cpuid)) == 0)
 				continue;
 			if (x86_fast_ipi(ci, LAPIC_IPI_INVLTLB) != 0)
-				panic("pmap_tlb_shoottlb: ipi failed");
+				panic("%s: ipi failed", __func__);
 		}
 		splx(s);
 	}
