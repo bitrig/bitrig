@@ -1,4 +1,4 @@
-/*	$OpenBSD: kdump.c,v 1.88 2014/08/18 03:29:53 guenther Exp $	*/
+/*	$OpenBSD: kdump.c,v 1.89 2014/09/17 19:12:55 guenther Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1993
@@ -577,6 +577,12 @@ ktrsyscall(struct ktr_syscall *ktr)
 			break;
 		ptracedecode();
 		break;
+	case SYS_accept4:
+		pn(NULL);
+		pn(NULL);
+		pn(NULL);
+		pn(sockflagsname);
+		break;
 	case SYS_access:
 		pn(NULL);
 		pn(accessmodename);
@@ -591,6 +597,11 @@ ktrsyscall(struct ktr_syscall *ktr)
 		break;
 	case SYS_umask:
 		pn(modename);
+		break;
+	case SYS_dup3:
+		pn(NULL);
+		pn(NULL);
+		pn(flagsname);
 		break;
 	case SYS_fcntl: {
 		int cmd;
@@ -691,6 +702,10 @@ ktrsyscall(struct ktr_syscall *ktr)
 		narg -= 2;
 		break;
 	}
+	case SYS_pipe2:
+		pn(NULL);
+		pn(flagsname);
+		break;
 	case SYS_pread:
 	case SYS_preadv:
 	case SYS_pwrite:
@@ -1462,7 +1477,7 @@ semgetname(int flag)
 static void
 flagsandmodename(int flags, int mode)
 {
-	flagsname (flags);
+	doflagsname(flags, 1);
 	if ((flags & O_CREAT) == O_CREAT) {
 		(void)putchar(',');
 		modename (mode);
