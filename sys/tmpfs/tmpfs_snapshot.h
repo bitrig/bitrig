@@ -72,10 +72,15 @@ typedef struct __attribute__((packed)) {
 	} tsn_spec;
 } tmpfs_snap_node_t;
 
+
+#ifdef _KERNEL
+
 typedef struct {
 	uint64_t	 tsb_entries;
 	uint8_t		*tsb_map;
 } tmpfs_snap_bmap_t;
+
+#endif
 
 #if BYTE_ORDER == BIG_ENDIAN
 #define TMPFS_SNAP_HTON(x)	do {} while (0)
@@ -88,6 +93,8 @@ typedef struct {
 #define TMPFS_SNAP_NODE_HTON(x)	tmpfs_snap_node_bswap(x)
 #define TMPFS_SNAP_NODE_NTOH(x)	tmpfs_snap_node_bswap(x)
 #endif
+
+#ifdef _KERNEL
 
 int	tmpfs_snap_rdwr(struct vnode *, enum uio_rw, void *, size_t,
 	    uint64_t *);
@@ -193,6 +200,8 @@ tmpfs_snap_type_node(uint8_t tsn_type)
 
 	return (-1);
 }
+
+#endif  /* _KERNEL */
 
 static __inline uint8_t
 tmpfs_snap_flags_hdr(uint32_t tn_flags)
