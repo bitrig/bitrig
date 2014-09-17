@@ -294,6 +294,18 @@ int ustar_rd(ARCHD *, char *);
 int ustar_wr(ARCHD *);
 
 /*
+ * tmpfs.c
+ */
+int tmpfs_id(char *, int);
+int tmpfs_strd(void);
+int tmpfs_rd(ARCHD *, char *);
+off_t tmpfs_endrd(void);
+int tmpfs_stwr(void);
+int tmpfs_wr(ARCHD *);
+int tmpfs_endwr(void);
+int tmpfs_trail(ARCHD *, char *, int, int *);
+
+/*
  * tty_subs.c
  */
 int tty_init(void);

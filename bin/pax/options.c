@@ -129,6 +129,15 @@ FSUB fsub[] = {
 	{"ustar", 10240, BLKMULT, 0, 1, BLKMULT, 0, ustar_id, ustar_strd,
 	ustar_rd, tar_endrd, ustar_stwr, ustar_wr, tar_endwr, tar_trail,
 	tar_opt},
+#ifdef NOTMPFS
+/* 6: BITRIG TMPFS SNAPSHOT */
+	{ },
+#else
+/* 6: BITRIG TMPFS SNAPSHOT */
+	{"tmpfs", 512, 330, 1, 1, 0, 1, tmpfs_id, tmpfs_strd, tmpfs_rd,
+	tmpfs_endrd, tmpfs_stwr, tmpfs_wr, tmpfs_endwr, tmpfs_trail,
+	bad_opt},
+#endif
 };
 #define	F_OCPIO	0	/* format when called as cpio -6 */
 #define	F_ACPIO	1	/* format when called as cpio -c */
@@ -142,7 +151,7 @@ FSUB fsub[] = {
  * of archive we are dealing with. This helps to properly id archive formats
  * some formats may be subsets of others....
  */
-int ford[] = {5, 4, 3, 2, 1, 0, -1 };
+int ford[] = {6, 5, 4, 3, 2, 1, 0, -1 };
 
 /*
  * Do we have -C anywhere?
