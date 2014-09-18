@@ -171,7 +171,7 @@ struct sys_getsockname_args {
 
 struct sys_access_args {
 	syscallarg(const char *) path;
-	syscallarg(int) flags;
+	syscallarg(int) amode;
 };
 
 struct sys_chflags_args {
