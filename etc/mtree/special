@@ -1,4 +1,4 @@
-#	$OpenBSD: special,v 1.110 2014/09/16 17:08:45 ajacoutot Exp $
+#	$OpenBSD: special,v 1.111 2014/09/19 06:18:45 ajacoutot Exp $
 #
 # Hand-crafted mtree specification for the dangerous files.
 #
