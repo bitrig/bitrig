@@ -49,7 +49,6 @@
 ./etc/protocols
 ./etc/pwd.db
 ./etc/rc
-./etc/rc.conf
 ./etc/rc.d/apmd
 ./etc/rc.d/bgpd
 ./etc/rc.d/bootparamd
