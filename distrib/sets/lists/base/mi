@@ -145,6 +145,9 @@
 ./etc/signify/bitrig-01-base.pub
 ./etc/signify/bitrig-01-fw.pub
 ./etc/signify/bitrig-01-pkg.pub
+./etc/signify/bitrig-10-base.pub
+./etc/signify/bitrig-10-fw.pub
+./etc/signify/bitrig-10-pkg.pub
 ./etc/skel
 ./etc/skel/.ssh
 ./etc/sliphome
