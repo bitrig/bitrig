@@ -46,6 +46,9 @@
 #define OpenBSD	201411		/* OpenBSD version (year & month). */
 #define OpenBSD5_6 1		/* OpenBSD 5.6 */
 
+#define Bitrig	201411		/* Bitrig version (year & month). */
+#define Bitrig1_0 1		/* Bitrig 1.0 */
+
 #ifndef _LOCORE
 #include <sys/types.h>
 #endif
