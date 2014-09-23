@@ -9,7 +9,6 @@ BSD_RD=		bsd.rd
 IMAGE=		mr.fs
 CBIN?=		instbin
 CRUNCHCONF?=	${CBIN}.conf
-CRUNCHCONFS?=	${.CURDIR}/../common/crunch.conf
 LISTS=		${.CURDIR}/list
 UTILS?=		${.CURDIR}/../../miniroot
 
