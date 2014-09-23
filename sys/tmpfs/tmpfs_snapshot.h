@@ -72,6 +72,11 @@ typedef struct __attribute__((packed)) {
 	} tsn_spec;
 } tmpfs_snap_node_t;
 
+typedef struct {
+	uint64_t	 tsb_entries;
+	uint8_t		*tsb_map;
+} tmpfs_snap_bmap_t;
+
 #if BYTE_ORDER == BIG_ENDIAN
 #define TMPFS_SNAP_HTON(x)	do {} while (0)
 #define TMPFS_SNAP_NTOH(x)	do {} while (0)
@@ -90,6 +95,13 @@ int	tmpfs_snap_file_io(struct vnode *, enum uio_rw, const tmpfs_node_t *,
 	    uint64_t *);
 
 /*
+ * Bitmap manipulation functions. Used to keep track of visited inodes for
+ * hardlink handling.
+ */
+
+int	tmpfs_snap_bmap_lookup(tmpfs_snap_bmap_t *, ino_t);
+
+/*
  * Functions to dump (generate) a snapshot.
  */
 
@@ -102,7 +114,7 @@ int	tmpfs_snap_dump_link(struct vnode *, uint64_t *, tmpfs_snap_node_t *,
 int	tmpfs_snap_dump_dev(struct vnode *, uint64_t *, tmpfs_snap_node_t *,
 	    const tmpfs_dirent_t *);
 int	tmpfs_snap_dump_dirent(struct vnode *, uint64_t *, tmpfs_snap_node_t *,
-	    const tmpfs_dirent_t *);
+	    const tmpfs_dirent_t *, tmpfs_snap_bmap_t *);
 int	tmpfs_snap_dump_root(struct vnode *, uint64_t *, const tmpfs_mount_t *,
 	    tmpfs_snap_node_t *);
 

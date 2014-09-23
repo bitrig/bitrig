@@ -22,6 +22,7 @@
 #include <sys/systm.h>
 #include <sys/fcntl.h>
 #include <sys/vnode.h>
+#include <sys/malloc.h>
 
 #include <uvm/uvm_aobj.h>
 
@@ -83,6 +84,17 @@ tmpfs_snap_file_io(struct vnode *vp, enum uio_rw rw, const tmpfs_node_t *node,
 	return (error);
 }
 
+int
+tmpfs_snap_bmap_lookup(tmpfs_snap_bmap_t *map, ino_t bitnum)
+{
+	assert(bitnum < map->tsb_entries);
+
+	if (isset(map->tsb_map, bitnum))
+		return (1);
+	setbit(map->tsb_map, bitnum);
+	return (0);
+}
+
 void
 tmpfs_snap_fill_hdr(tmpfs_snap_node_t *tnhdr, const tmpfs_node_t *node)
 {
@@ -116,11 +128,9 @@ tmpfs_snap_dump_file(struct vnode *vp, uint64_t *off, tmpfs_snap_node_t *tnhdr,
 {
 	int error;
 
-	/* Avoid dumping hardlinks multiple times. */
-	if (td == td->td_node->tn_dirent_hint)
-		tnhdr->tsn_spec.tsn_size = td->td_node->tn_size;
-
+	tnhdr->tsn_spec.tsn_size = td->td_node->tn_size;
 	error = tmpfs_snap_dump_hdr(vp, off, tnhdr);
+
 	if (error == 0 && tnhdr->tsn_spec.tsn_size != 0)
 		error = tmpfs_snap_file_io(vp, UIO_WRITE, td->td_node, off);
 
@@ -160,12 +170,17 @@ tmpfs_snap_dump_dev(struct vnode *vp, uint64_t *off, tmpfs_snap_node_t *tnhdr,
  */
 int
 tmpfs_snap_dump_dirent(struct vnode *vp, uint64_t *off,
-    tmpfs_snap_node_t *tnhdr, const tmpfs_dirent_t *td)
+    tmpfs_snap_node_t *tnhdr, const tmpfs_dirent_t *td,
+    tmpfs_snap_bmap_t *id_map)
 {
 	KASSERT(td->td_namelen <= MAXNAMLEN);
 	memcpy(tnhdr->tsn_name, td->td_name, td->td_namelen);
 
 	tmpfs_snap_fill_hdr(tnhdr, td->td_node);
+
+	/* Avoid dumping hardlinks multiple times. */
+	if (tmpfs_snap_bmap_lookup(id_map, td->td_node->tn_id))
+		return (tmpfs_snap_dump_hdr(vp, off, tnhdr));
 
 	switch (td->td_node->tn_type) {
 	case VREG:
@@ -265,11 +280,20 @@ tmpfs_snap_dump(struct mount *mp, const char *path, struct proc *p)
 	tmpfs_snap_node_t tnhdr;	/* tmpfs node header. */
 	int error;
 	off_t off = 0;
+	tmpfs_snap_bmap_t id_map;
+
+	id_map.tsb_entries = tmp->tm_highest_inode + 1;
+	id_map.tsb_map = mallocarray(howmany(id_map.tsb_entries, NBBY),
+	    sizeof(uint8_t), M_TEMP, M_WAITOK | M_CANFAIL | M_ZERO);
+	if (id_map.tsb_map == NULL)
+		return (ENOMEM);
 
 	NDINIT(&nd, CREATE, FOLLOW, UIO_SYSSPACE, path, p);
 	error = vn_open(&nd, O_CREAT | O_EXCL | FWRITE, S_IRUSR);
-	if (error)
+	if (error) {
+		free(id_map.tsb_map, M_TEMP, 0);
 		return (error);
+	}
 	vp = nd.ni_vp;
 
 	/* The snapshot file must reside on a different mountpoint. */
@@ -296,7 +320,7 @@ tmpfs_snap_dump(struct mount *mp, const char *path, struct proc *p)
 	while (tmpfs_snap_hierwalk(tmp, &td, &parent) == 0) {
 		bzero(&tnhdr, sizeof(tnhdr));
 		tnhdr.tsn_parent = parent->tn_id;
-		error = tmpfs_snap_dump_dirent(vp, &off, &tnhdr, td);
+		error = tmpfs_snap_dump_dirent(vp, &off, &tnhdr, td, &id_map);
 		if (error)
 			goto out;
 	}
@@ -308,6 +332,7 @@ tmpfs_snap_dump(struct mount *mp, const char *path, struct proc *p)
 	error = tmpfs_snap_rdwr(vp, UIO_WRITE, &tshdr, sizeof(tshdr), &off);
 
 out:
+	free(id_map.tsb_map, M_TEMP, 0);
 	VOP_UNLOCK(vp, 0);
 	vn_close(vp, FWRITE, p->p_ucred, p);
 
