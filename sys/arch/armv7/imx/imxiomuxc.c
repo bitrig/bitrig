@@ -229,7 +229,7 @@ imxiomuxc_fdt(struct imxiomuxc_softc *sc)
 			group++;
 		}
 
-		free(groups, M_DEVBUF);
+		free(groups, M_DEVBUF, ngroup * sizeof(struct imx_pin_group));
 	}
 }
 

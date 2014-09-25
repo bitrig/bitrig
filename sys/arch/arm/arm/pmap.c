@@ -759,7 +759,7 @@ pmap_free_l1(pmap_t pm)
 	/* free backing va */
 	km_free(l1->l1_kva, L1_TABLE_SIZE, &kv_any, &kp_none);
 
-	free(l1, M_VMPMAP);
+	free(l1, M_VMPMAP, sizeof(*l1));
 }
 
 /*

@@ -19,6 +19,7 @@
 #include <sys/proc.h>
 #include <sys/user.h>
 
+#include <arm/include/cpufunc.h>
 #include <arm/include/vfp.h>
 #include <arm/include/undefined.h>
 

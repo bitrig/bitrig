@@ -430,7 +430,7 @@ imxccm_pll(enum clocks clock, char *name, char *parent, uint32_t reg, uint32_t m
 		return clk;
 
 err:
-	free(clk, M_DEVBUF);
+	free(clk, M_DEVBUF, sizeof(struct clk));
 	return NULL;
 }
 
@@ -535,7 +535,7 @@ imxccm_pfd(char *name, char *parent, uint32_t reg, uint32_t idx)
 		return clk;
 
 err:
-	free(clk, M_DEVBUF);
+	free(clk, M_DEVBUF, sizeof(struct clk));
 	return NULL;
 }
 
@@ -638,7 +638,7 @@ imxccm_div_table(char *name, char *parent, uint32_t reg, uint32_t shift, uint32_
 		return clk;
 
 err:
-	free(clk, M_DEVBUF);
+	free(clk, M_DEVBUF, sizeof(struct clk));
 	return NULL;
 }
 
@@ -675,7 +675,7 @@ imxccm_fixed_clock(char *name, uint32_t val)
 		return clk;
 
 err:
-	free(clk, M_DEVBUF);
+	free(clk, M_DEVBUF, sizeof(struct clk));
 	return NULL;
 }
 
@@ -720,7 +720,7 @@ imxccm_fixed_factor(char *name, char *parent, uint32_t mul, uint32_t div)
 		return clk;
 
 err:
-	free(clk, M_DEVBUF);
+	free(clk, M_DEVBUF, sizeof(struct clk));
 	return NULL;
 }
 
@@ -786,7 +786,7 @@ imxccm_gate(char *name, char *parent, uint32_t reg, uint32_t shift)
 		return clk;
 
 err:
-	free(clk, M_DEVBUF);
+	free(clk, M_DEVBUF, sizeof(struct clk));
 	return NULL;
 }
 
@@ -872,9 +872,9 @@ imxccm_mux(char *name, uint32_t reg, uint32_t shift, uint32_t width, const char 
 		return clk;
 
 mux:
-	free(mux, M_DEVBUF);
+	free(mux, M_DEVBUF, sizeof(struct clk_mux));
 err:
-	free(clk, M_DEVBUF);
+	free(clk, M_DEVBUF, sizeof(struct clk));
 	return NULL;
 }
 
