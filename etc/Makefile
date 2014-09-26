@@ -63,7 +63,7 @@ RCDAEMONS=	apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd \
 		wsmoused xdm ypbind ypldap yppasswdd ypserv nfsd mountd lockd \
 		statd spamlogd sndiod tftpd tftpproxy unbound iscsid
 
-MISETS=	base${OSrev}.tgz comp${OSrev}.tgz etc${OSrev}.tgz
+MISETS=	base${OSrev}.tgz comp${OSrev}.tgz etc${OSrev}.tgz game${OSrev}.tgz
 
 all clean cleandir depend etc install lint:
 
