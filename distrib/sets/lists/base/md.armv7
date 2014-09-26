@@ -1564,7 +1564,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/objects.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/ocsp.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/opensslconf.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/opensslfeatures.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/openssl/opensslfeatures.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/opensslv.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/ossl_typ.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/pem.ph
