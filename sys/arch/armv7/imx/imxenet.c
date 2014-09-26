@@ -142,6 +142,7 @@
 #define ENET_HUMMINGBOARD_PHY_RST		(3*32+15)
 #define ENET_SABRELITE_PHY			6
 #define ENET_SABRELITE_PHY_RST			(2*32+23)
+#define ENET_SABRESD_PHY			1
 #define ENET_NITROGEN6X_PHY			6
 #define ENET_NITROGEN6X_PHY_RST			(0*32+27)
 #define ENET_UDOO_PHY				6
@@ -400,6 +401,9 @@ imxenet_chip_init(struct imxenet_softc *sc)
 	case BOARD_ID_IMX6_SABRELITE:
 		phy = ENET_SABRELITE_PHY;
 		break;
+	case BOARD_ID_IMX6_SABRESD:
+		phy = ENET_SABRESD_PHY;
+		break;
 	case BOARD_ID_IMX6_UDOO:
 		phy = ENET_UDOO_PHY;
 		break;
@@ -463,6 +467,7 @@ imxenet_chip_init(struct imxenet_softc *sc)
 		break;
 	case BOARD_ID_IMX6_CUBOXI:		/* AR8035 */
 	case BOARD_ID_IMX6_HUMMINGBOARD:	/* AR8035 */
+	case BOARD_ID_IMX6_SABRESD:		/* AR8031 */
 	case BOARD_ID_IMX6_UTILITE:
 	case BOARD_ID_IMX6_WANDBOARD:		/* AR8031 */
 		/* disable SmartEEE */

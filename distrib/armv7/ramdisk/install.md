@@ -68,6 +68,7 @@ md_installboot() {
 	IMX=$(scan_dmesg '/^imx0 at mainbus0: \(i.MX6.*\)/s//IMX/p')
 	CUBOX=$(scan_dmesg '/^imx0 at mainbus0: \(i.MX6 SolidRun.*\)/s//CUBOX/p')
 	NITROGEN=$(scan_dmesg '/^imx0 at mainbus0: \(i.MX6 SABRE Lite.*\)/s//NITROGEN/p')
+	SABRESD=$(scan_dmesg '/^imx0 at mainbus0: \(i.MX6 SABRE SD\)/s//SABRESD/p')
 	SUNXI=$(scan_dmesg '/^sunxi0 at mainbus0: \(A.*\)/s//SUNXI/p')
 
 	if [[ -f /mnt/bsd.${MDPLAT} ]]; then
@@ -110,6 +111,12 @@ __EOT
 			mkuboot -t script -a arm -o linux /tmp/boot.cmd /mnt/mnt/boot.scr
 			dd if=/mnt/usr/mdec/cubox/SPL of=/dev/${_disk}c bs=1024 seek=1
 			dd if=/mnt/usr/mdec/cubox/u-boot.img of=/dev/${_disk}c bs=1024 seek=42
+		elif [[ -n $SABRESD ]]; then
+			cat > /tmp/boot.cmd<<__EOT
+; setenv loadaddr ${LOADADDR} ; setenv bootargs sd0i:/bsd.umg ; for dtype in sata mmc ; do for disk in 0 1 ; do \${dtype} dev \${disk} ; for fs in fat ext2 ; do if \${fs}load \${dtype} \${disk}:1 \${loadaddr} bsd.umg ; then bootm \${loadaddr} ; fi ; done; done; done; echo; echo failed to load bsd.umg
+__EOT
+			mkuboot -t script -a arm -o linux /tmp/boot.cmd /mnt/mnt/boot.scr
+			dd if=/mnt/usr/mdec/sabresd/u-boot.img of=/dev/${_disk}c bs=1024 seek=1
 		elif [[ -n $NITROGEN ]]; then
 			cat > /tmp/6x_bootscript.scr<<__EOT
 ; setenv loadaddr ${LOADADDR} ; setenv bootargs sd0i:/bsd.umg ; for dtype in sata mmc ; do for disk in 0 1 ; do \${dtype} dev \${disk} ; for fs in fat ext2 ; do if \${fs}load \${dtype} \${disk}:1 \${loadaddr} bsd.umg ; then bootm \${loadaddr} ; fi ; done; done; done; echo; echo failed to load bsd.umg
@@ -139,12 +146,13 @@ md_prep_fdisk() {
 	# imx needs an ext2fs filesystem
 	IMX=$(scan_dmesg '/^imx0 at mainbus0: \(i.MX6.*\)/s//IMX/p')
 	CUBOX=$(scan_dmesg '/^imx0 at mainbus0: \(i.MX6 SolidRun.*\)/s//CUBOX/p')
+	SABRESD=$(scan_dmesg '/^imx0 at mainbus0: \(i.MX6 SABRE SD\)/s//SABRESD/p')
 	if [[ -n $IMX ]]; then
 		bootparttype="83"
 		bootfstype="ext2fs"
 		newfs_args=${NEWFSARGS_ext2fs}
 	fi
-	if [[ -n $CUBOX ]]; then
+	if [[ -n $CUBOX -o -n $SABRESD ]]; then
 		bootsectorstart="2048"
 	fi
 	bootsectorend=`expr $bootsectorstart + $bootsectorsize`

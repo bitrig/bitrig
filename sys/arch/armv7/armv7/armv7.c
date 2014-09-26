@@ -55,6 +55,7 @@ struct armv7_dev *armv7_devs = NULL;
 extern struct board_dev chromebook_devs[];
 extern struct board_dev hummingboard_devs[];
 extern struct board_dev sabrelite_devs[];
+extern struct board_dev sabresd_devs[];
 extern struct board_dev udoo_devs[];
 extern struct board_dev utilite_devs[];
 extern struct board_dev wandboard_devs[];
@@ -139,6 +140,11 @@ armv7_attach(struct device *parent, struct device *self, void *aux)
 		printf(": i.MX6 SABRE Lite\n");
 		imx6_init();
 		sc->sc_board_devs = sabrelite_devs;
+		break;
+	case BOARD_ID_IMX6_SABRESD:
+		printf(": i.MX6 SABRE SD\n");
+		imx6_init();
+		sc->sc_board_devs = sabresd_devs;
 		break;
 	case BOARD_ID_IMX6_UDOO:
 		printf(": i.MX6 UDOO\n");
