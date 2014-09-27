@@ -653,8 +653,6 @@
 ./usr/include/dev/pci/lofnreg.h
 ./usr/include/dev/pci/lofnvar.h
 ./usr/include/dev/pci/mpiireg.h
-./usr/include/dev/pci/musyccreg.h
-./usr/include/dev/pci/musyccvar.h
 ./usr/include/dev/pci/neoreg.h
 ./usr/include/dev/pci/nofnreg.h
 ./usr/include/dev/pci/nofnvar.h
