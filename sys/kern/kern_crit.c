@@ -23,11 +23,6 @@
 
 void	crit_rundeferred(void);
 
-//#define CRITCOUNTERS
-#ifdef CRITCOUNTERS
-uint64_t defclock, defother;
-#endif
-
 void
 crit_enter(void)
 {
