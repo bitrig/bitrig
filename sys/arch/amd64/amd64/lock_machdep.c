@@ -80,7 +80,7 @@ __mp_lock(struct __mp_lock *mpl)
 	long rf = read_rflags();
 	struct __mp_lock_cpu *cpu = &mpl->mpl_cpus[cpu_number()];
 
-	disable_intr();
+	intr_disable();
 	if (cpu->mplc_depth++ == 0)
 		cpu->mplc_ticket = fetch_and_add(&mpl->mpl_users, 1);
 	write_rflags(rf);
@@ -101,7 +101,7 @@ __mp_unlock(struct __mp_lock *mpl)
 	}
 #endif
 
-	disable_intr();	
+	intr_disable();
 	if (--cpu->mplc_depth == 0)
 		mpl->mpl_ticket++;
 	write_rflags(rf);
@@ -114,7 +114,7 @@ __mp_release_all(struct __mp_lock *mpl)
 	int rv = cpu->mplc_depth;
 	long rf = read_rflags();
 
-	disable_intr();
+	intr_disable();
 	cpu->mplc_depth = 0;
 	mpl->mpl_ticket++;
 	write_rflags(rf);
