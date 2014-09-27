@@ -91,18 +91,18 @@ crit_rundeferred(void)
 
 	KASSERT(CRIT_DEPTH == 0);
 
-	ist = state_intr();
-	disable_intr();
+	ist = intr_get_state();
+	intr_disable();
 
 	ci->ci_idepth++;
 	while (ci->ci_ipending) {
 		/* XXX can be optimized by having a btrq based flsq */
 		i = IPENDING_NEXT(ci);
 		IPENDING_CLR(ci, i);
-		enable_intr();
+		intr_enable();
 		ci->ci_isources[i]->is_run(ci->ci_isources[i]);
-		disable_intr();
+		intr_disable();
 	}
 	ci->ci_idepth--;
-	restore_intr(ist);
+	intr_set_state(ist);
 }
