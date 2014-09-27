@@ -1976,7 +1976,7 @@ acpi_sleep_pm(struct acpi_softc *sc, int state)
 	uint16_t rega, regb, regra, regrb;
 	int retry = 0;
 
-	disable_intr();
+	intr_disable();
 
 	/* Clear WAK_STS bit */
 	acpi_write_pmreg(sc, ACPIREG_PM1_STS, 0, ACPI_PM1_WAK_STS);
@@ -2131,7 +2131,7 @@ acpi_sleep_state(struct acpi_softc *sc, int state)
 	resettodr();
 
 	crit_enter();
-	disable_intr();	/* PSL_I for resume; PIC/APIC broken until repair */
+	intr_disable();	/* PSL_I for resume; PIC/APIC broken until repair */
 	cold = 1;	/* Force other code to delay() instead of tsleep() */
 
 	if (config_suspend(mainbus, DVACT_SUSPEND) != 0)
@@ -2177,7 +2177,7 @@ fail_pts:
 
 fail_suspend:
 	cold = 0;
-	enable_intr();
+	intr_enable();
 	crit_leave();
 
 	acpibtn_disable_psw();		/* disable _LID for wakeup */
@@ -2237,7 +2237,7 @@ acpi_powerdown(void)
 		return;
 
 	crit_enter();
-	disable_intr();
+	intr_disable();
 	cold = 1;
 
 	/* 1st powerdown AML step: _PTS(tostate) */

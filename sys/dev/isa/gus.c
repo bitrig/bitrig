@@ -3337,7 +3337,7 @@ gus_subattach(struct gus_softc *sc, struct isa_attach_args *ia)
 	 * The order of these operations is very magical.
 	 */
 
-	disable_intr();		/* XXX needed? */
+	intr_disable();		/* XXX needed? */
 
 	bus_space_write_1(iot, sc->sc_ioh1, GUS_REG_CONTROL, GUS_REG_IRQCTL);
 	bus_space_write_1(iot, sc->sc_ioh1, GUS_MIX_CONTROL, m);
@@ -3367,7 +3367,7 @@ gus_subattach(struct gus_softc *sc, struct isa_attach_args *ia)
 	     (m | GUSMASK_LATCHES) & ~(GUSMASK_LINE_OUT|GUSMASK_LINE_IN));
 	bus_space_write_1(iot, sc->sc_ioh2, GUS_VOICE_SELECT, 0x00);
 
-	enable_intr();
+	intr_enable();
 
 	sc->sc_mixcontrol =
 		(m | GUSMASK_LATCHES) & ~(GUSMASK_LINE_OUT|GUSMASK_LINE_IN);

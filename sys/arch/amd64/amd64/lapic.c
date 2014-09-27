@@ -98,7 +98,7 @@ lapic_map(paddr_t lapic_base)
 	pt_entry_t *pte;
 	vaddr_t va = (vaddr_t)&local_apic;
 
-	disable_intr();
+	intr_disable();
 	s = lapic_tpr;
 
 	/*
@@ -119,7 +119,7 @@ lapic_map(paddr_t lapic_base)
 #endif
 
 	lapic_tpr = s;
-	enable_intr();
+	intr_enable();
 }
 
 /*
@@ -363,7 +363,7 @@ lapic_calibrate_timer(struct cpu_info *ci)
 	i82489_writereg(LAPIC_DCR_TIMER, LAPIC_DCRT_DIV1);
 	i82489_writereg(LAPIC_ICR_TIMER, 0x80000000);
 
-	disable_intr();
+	intr_disable();
 
 	/* wait for current cycle to finish */
 	wait_next_cycle();

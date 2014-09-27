@@ -100,7 +100,7 @@ x86_64_ipi_halt(struct cpu_info *ci)
 	KERNEL_ASSERT_UNLOCKED();
 	
 	fpusave_cpu(ci, 1);
-	disable_intr();
+	intr_disable();
 	lapic_disable();
 	wbinvd();
 	ci->ci_flags &= ~CPUF_RUNNING;

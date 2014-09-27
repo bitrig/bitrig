@@ -52,7 +52,7 @@ mp_setperf(int level)
 
 	if (mp_setperf_state == MP_SETPERF_STEADY) {
 		mtx_enter(&setperf_mp_mutex);
-		disable_intr();
+		intr_disable();
 		mp_perflevel = level;
 
 		curcpu()->ci_setperf_state = CI_SETPERF_INTRANSIT;
@@ -98,7 +98,7 @@ mp_setperf(int level)
 		DELAY(2);
 		curcpu()->ci_setperf_state = CI_SETPERF_READY;
 		mp_setperf_state = MP_SETPERF_STEADY; /* restore normallity */
-		enable_intr();
+		intr_enable();
 		mtx_leave(&setperf_mp_mutex);
 	}
 
@@ -108,7 +108,7 @@ void
 x86_setperf_ipi(struct cpu_info *ci)
 {
 
-	disable_intr();
+	intr_disable();
 
 	if (ci->ci_setperf_state == CI_SETPERF_SHOULDSTOP)
 		ci->ci_setperf_state = CI_SETPERF_INTRANSIT;
@@ -124,7 +124,7 @@ x86_setperf_ipi(struct cpu_info *ci)
 		;
 	ci->ci_setperf_state = CI_SETPERF_READY;
 
-	enable_intr();
+	intr_enable();
 }
 
 void

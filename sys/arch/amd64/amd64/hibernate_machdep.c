@@ -377,13 +377,13 @@ hibernate_inflate_skip(union hibernate_info *hib_info, paddr_t dest)
 void
 hibernate_enable_intr_machdep(void)
 {
-	enable_intr();
+	intr_enable();
 }
 
 void
 hibernate_disable_intr_machdep(void)
 {
-	disable_intr();
+	intr_disable();
 }
 
 #ifdef MULTIPROCESSOR

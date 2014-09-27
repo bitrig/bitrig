@@ -217,7 +217,7 @@ gettick(void)
 	/* Don't want someone screwing with the counter while we're here. */
 	mtx_enter(&timer_mutex);
 	ef = read_rflags();
-	disable_intr();
+	intr_disable();
 	/* Select counter 0 and latch it. */
 	outb(IO_TIMER1+TIMER_MODE, TIMER_SEL0 | TIMER_LATCH);
 	lo = inb(IO_TIMER1+TIMER_CNTR0);
@@ -662,7 +662,7 @@ i8254_get_timecount(struct timecounter *tc)
 	u_long ef;
 
 	ef = read_rflags();
-	disable_intr();
+	intr_disable();
 
 	outb(IO_TIMER1+TIMER_MODE, TIMER_SEL0 | TIMER_LATCH);
 	lo = inb(IO_TIMER1+TIMER_CNTR0);

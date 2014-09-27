@@ -116,7 +116,7 @@ ioapic_lock(struct ioapic_softc *sc)
 	u_long flags;
 
 	flags = read_psl();
-	disable_intr();
+	intr_disable();
 #ifdef MULTIPROCESSOR
 	mtx_enter(&sc->sc_pic.pic_mutex);
 #endif
