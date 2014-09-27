@@ -34,7 +34,7 @@
 #ifndef _TMPFS_TMPFS_H_
 #define _TMPFS_TMPFS_H_
 
-#if !defined(_KERNEL) && !defined(_KMEMUSER)
+#if !defined(_KERNEL)
 #error "not supposed to be exposed to userland"
 #endif
 
