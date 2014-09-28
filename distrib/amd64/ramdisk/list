@@ -64,7 +64,7 @@ LINK	instbin					usr/bin/signify
 LINK	instbin					usr/sbin/installboot
 
 # copy the MAKEDEV script and make some devices
-SCRIPT	${DESTDIR}/dev/MAKEDEV			dev/MAKEDEV
+COPY	${DESTDIR}/dev/MAKEDEV			dev/MAKEDEV
 SPECIAL	cd dev; sh MAKEDEV ramdisk
 
 # for fdisk(8)
@@ -85,11 +85,11 @@ SYMLINK	/tmp/resolv.conf.shadow			etc/resolv.conf
 SYMLINK	/tmp/hosts				etc/hosts
 
 # and the installation tools
-SCRIPT	${CURDIR}/../../miniroot/dot.profile	.profile
-SCRIPT	${CURDIR}/install.md			install.md
-SCRIPT	${CURDIR}/../../miniroot/upgrade.sh	upgrade
-SCRIPT	${CURDIR}/../../miniroot/install.sh	install
-SCRIPT	${CURDIR}/../../miniroot/install.sub	install.sub
+COPY	${CURDIR}/../../miniroot/dot.profile	.profile
+COPY	${CURDIR}/install.md			install.md
+COPY	${CURDIR}/../../miniroot/upgrade.sh	upgrade
+COPY	${CURDIR}/../../miniroot/install.sh	install
+COPY	${CURDIR}/../../miniroot/install.sub	install.sub
 SPECIAL	chmod 755 install upgrade
 
 COPY	${DESTDIR}/etc/firmware/*		etc/firmware/

@@ -69,7 +69,7 @@ LINK	instbin					sbin/bioctl
 LIBS -lstubs -lutil -locurses -lressl -lssl -lcrypto -ledit -lz -lm -lc
 
 # copy the MAKEDEV script and make some devices
-SCRIPT	${DESTDIR}/dev/MAKEDEV			dev/MAKEDEV
+COPY	${DESTDIR}/dev/MAKEDEV			dev/MAKEDEV
 SPECIAL	cd dev; sh MAKEDEV ramdisk
 
 # various files that we need in /etc for the install
@@ -86,11 +86,11 @@ SYMLINK	/tmp/hosts				etc/hosts
 TERMCAP	vt100,vt220,dumb			usr/share/misc/termcap
 
 # and the installation tools
-SCRIPT	${CURDIR}/../../miniroot/dot.profile	.profile
-SCRIPT	${CURDIR}/install.md			install.md
-SCRIPT	${CURDIR}/../../miniroot/upgrade.sh	upgrade
-SCRIPT	${CURDIR}/../../miniroot/install.sh	install
-SCRIPT	${CURDIR}/../../miniroot/install.sub	install.sub
+COPY	${CURDIR}/../../miniroot/dot.profile	.profile
+COPY	${CURDIR}/install.md			install.md
+COPY	${CURDIR}/../../miniroot/upgrade.sh	upgrade
+COPY	${CURDIR}/../../miniroot/install.sh	install
+COPY	${CURDIR}/../../miniroot/install.sub	install.sub
 SPECIAL	chmod 755 install upgrade
 SPECIAL	tar cvf usr/mdec/u-boots.tgz /usr/mdec/
 

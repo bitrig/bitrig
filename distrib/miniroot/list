@@ -63,10 +63,10 @@ COPY	${CURDIR}/../miniroot/services		etc/services
 COPY	${CURDIR}/../miniroot/cert.pem		etc/ssl/cert.pem
 
 # and the installation scripts
-SCRIPT	${CURDIR}/dot.profile			.profile
-SCRIPT	${CURDIR}/upgrade.sh			upgrade
-SCRIPT	${CURDIR}/install.sh			install
-SCRIPT	${CURDIR}/install.sub			install.sub
+COPY	${CURDIR}/dot.profile			.profile
+COPY	${CURDIR}/upgrade.sh			upgrade
+COPY	${CURDIR}/install.sh			install
+COPY	${CURDIR}/install.sub			install.sub
 SPECIAL	chmod 755 install upgrade
 
 TZ

@@ -91,12 +91,6 @@ $1 == "TERMCAP" {
 	    $2, $3);
 	next;
 }
-$1 == "SCRIPT" {
-	printf("echo '%s'\n", $0);
-	printf("sed -e '/^[ 	]*#[ 	].*$/d' -e '/^[ 	]*#$/d' < %s > ${TARGDIR}/%s\n",
-	    $2, $3);
-	next;
-}
 {
 	printf("echo '%s'\n", $0);
 	printf("echo 'Unknown keyword \"%s\" at line %d of input.'\n", $1, NR);
