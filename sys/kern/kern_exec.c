@@ -1,4 +1,4 @@
-/*	$OpenBSD: kern_exec.c,v 1.145 2014/09/08 01:47:06 guenther Exp $	*/
+/*	$OpenBSD: kern_exec.c,v 1.146 2014/09/28 18:52:04 kettenis Exp $	*/
 /*	$NetBSD: kern_exec.c,v 1.75 1996/02/09 18:59:28 christos Exp $	*/
 
 /*-
@@ -72,6 +72,11 @@
 #if NSYSTRACE > 0
 #include <dev/systrace.h>
 #endif
+
+const struct kmem_va_mode kv_exec = {
+	.kv_wait = 1,
+	.kv_map = &exec_map
+};
 
 /*
  * Map the shared signal code.
@@ -226,11 +231,6 @@ bad1:
 	vput(vp);
 	return (error);
 }
-
-struct kmem_va_mode kv_exec = {
-	.kv_map = &exec_map,
-	.kv_wait = 1
-};
 
 /*
  * exec system call
