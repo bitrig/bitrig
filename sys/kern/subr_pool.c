@@ -485,9 +485,12 @@ pool_get(struct pool *pp, int flags)
 		if (pool_debug == 2)
 			yield();
 #endif
-		if (!cold && pool_debug) {
-			KERNEL_UNLOCK();
-			KERNEL_LOCK();
+		if (!cold && pool_debug && _kernel_lock_held()) {
+			int c, k;
+			k = KERNEL_UNLOCK_ALL();
+			c = crit_leave_all();
+			KERNEL_RELOCK_ALL(k);
+			crit_reenter(c);
 		}
 	}
 
