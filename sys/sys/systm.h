@@ -348,7 +348,7 @@ int	_kernel_lock_held(void);
 #ifdef DIAGNOSTIC
 #define	KERNEL_LOCK()							\
 	do {								\
-		if (CRIT_DEPTH)						\
+		if (__predict_false(CRIT_DEPTH && !_kernel_lock_held()))\
 			printf("%s:%d lock with crit depth %d\n",	\
 			    __func__, __LINE__, CRIT_DEPTH);		\
 		_kernel_lock();						\

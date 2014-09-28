@@ -168,10 +168,15 @@ malloc(size_t size, int type, int flags)
 		if (pool_debug == 2)
 			yield();
 #endif
-		if (!cold && pool_debug) {
+#ifdef MULTIPROCESSOR
+		if (!cold && pool_debug && _kernel_lock_held()) {
+			int c;
 			KERNEL_UNLOCK();
+			c = crit_leave_all();
 			KERNEL_LOCK();
+			crit_reenter(c);
 		}
+#endif
 	}
 
 #ifdef MALLOC_DEBUG
