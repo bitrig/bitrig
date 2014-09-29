@@ -71,33 +71,37 @@ crit_leave_all(void)
 }
 
 /*
- * Must always run with interrupts disabled, ci_ipending is protect by blocking
- * interrupts.
+ * Process everything that was pending due to being in a critical section.
+ * Must not be in a critical section.
  */
-#define IPENDING_ISSET(ci, slot) (ci->ci_ipending & (1ull << slot))
-#define IPENDING_CLR(ci, slot) (ci->ci_ipending &= ~(1ull << slot))
-#define IPENDING_NEXT(ci) (flsq(ci->ci_ipending) - 1)
+#define IPENDING_ISSET(ipe, slot) (ipe & (1ull << slot))
+#define IPENDING_CLR(ipe, slot) (ipe &= ~(1ull << slot))
+#define IPENDING_NEXT(ipe) (flsq(ipe) - 1)
 void
 crit_rundeferred(void)
 {
 	struct cpu_info *ci = curcpu();
-	int i;
+	u_int64_t ipending;
 	intr_state_t ist;
+	int i;
 
 	KASSERT(CRIT_DEPTH == 0);
 
 	ist = intr_get_state();
 	intr_disable();
 
+	/* Cheaper than atomic_exchange() (no bus locking) */
+	ipending = ci->ci_ipending;
+	ci->ci_ipending = 0;
+
+	intr_set_state(ist);
+
 	ci->ci_idepth++;
-	while (ci->ci_ipending) {
+	while (ipending) {
 		/* XXX can be optimized by having a btrq based flsq */
-		i = IPENDING_NEXT(ci);
-		IPENDING_CLR(ci, i);
-		intr_enable();
+		i = IPENDING_NEXT(ipending);
+		IPENDING_CLR(ipending, i);
 		ci->ci_isources[i]->is_run(ci->ci_isources[i]);
-		intr_disable();
 	}
 	ci->ci_idepth--;
-	intr_set_state(ist);
 }
