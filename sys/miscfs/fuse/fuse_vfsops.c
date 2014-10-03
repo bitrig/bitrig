@@ -1,4 +1,4 @@
-/* $OpenBSD: fuse_vfsops.c,v 1.11 2014/07/12 18:43:52 tedu Exp $ */
+/* $OpenBSD: fuse_vfsops.c,v 1.12 2014/10/03 18:53:13 tedu Exp $ */
 /*
  * Copyright (c) 2012-2013 Sylvestre Gallon <ccna.syl@gmail.com>
  *
@@ -36,6 +36,7 @@ int	fusefs_mount(struct mount *, const char *, void *, struct nameidata *,
 int	fusefs_start(struct mount *, int, struct proc *);
 int	fusefs_unmount(struct mount *, int, struct proc *);
 int	fusefs_root(struct mount *, struct vnode **);
+int	fusefs_quotactl(struct mount *, int, uid_t, caddr_t, struct proc *);
 int	fusefs_statfs(struct mount *, struct statfs *, struct proc *);
 int	fusefs_sync(struct mount *, int, struct ucred *, struct proc *);
 int	fusefs_vget(struct mount *, ino_t, struct vnode **);
@@ -52,7 +53,7 @@ const struct vfsops fusefs_vfsops = {
 	fusefs_start,
 	fusefs_unmount,
 	fusefs_root,
-	NULL,		/* vfs_quotactl */
+	fusefs_quotactl,
 	fusefs_statfs,
 	fusefs_sync,
 	fusefs_vget,
@@ -183,6 +184,12 @@ fusefs_root(struct mount *mp, struct vnode **vpp)
 
 	*vpp = nvp;
 	return (0);
+}
+
+int fusefs_quotactl(struct mount *mp, int cmds, uid_t uid, caddr_t arg,
+    struct proc *p)
+{
+	return (EOPNOTSUPP);
 }
 
 int fusefs_statfs(struct mount *mp, struct statfs *sbp, struct proc *p)
