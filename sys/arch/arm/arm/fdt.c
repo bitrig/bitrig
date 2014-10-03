@@ -33,7 +33,7 @@ void	*skip_property(u_int32_t *);
 void	*skip_props(u_int32_t *);
 void	*skip_node_name(u_int32_t *);
 void	*fdt_parent_node_recurse(void *, void *);
-void	*fdt_find_node_by_prop(void *, char *, char *, int);
+void	*fdt_find_node_by_prop(void *, char *, void *, int);
 #ifdef DEBUG
 void 	 fdt_print_node_recurse(void *, int);
 #endif
@@ -389,10 +389,41 @@ fdt_find_compatible(char *compatible)
 }
 
 /*
+ * Find the next node which is compatible.
+ */
+void *
+fdt_find_next_compatible(char *compatible, void *node)
+{
+	return fdt_find_node_by_prop(fdt_next_node(node),
+	    "compatible", compatible, strlen(compatible));
+}
+
+/*
+ * Check that node is compatible.
+ */
+int
+fdt_node_compatible(char *compatible, void *node)
+{
+	char *data;
+	int len, clen = strlen(compatible);
+
+	if (node == NULL)
+		return 0;
+
+	len = fdt_node_property(node, "compatible", &data);
+	if (len) /* Property exists and has at least '\0'. */
+		if (len >= (clen + 1)) /* Add '\0'. */
+			if (!strncmp(data, compatible, clen))
+				return 1;
+
+	return 0;
+}
+
+/*
  * Find the first node, where the value of a given property matches.
  */
 void *
-fdt_find_node_by_prop(void *node, char *propname, char *propval,
+fdt_find_node_by_prop(void *node, char *propname, void *propval,
     int proplen)
 {
 	void *child;
@@ -405,8 +436,8 @@ fdt_find_node_by_prop(void *node, char *propname, char *propval,
 	while (node != NULL) {
 		len = fdt_node_property(node, propname, &data);
 		if (len) /* Property exists and has at least '\0'. */
-			if (len == (proplen + 1)) /* Add '\0'. */
-				if (!strncmp(data, propval, proplen))
+			if (len >= proplen)
+				if (!memcmp(data, propval, proplen))
 					return node;
 
 		child = fdt_child_node(node);
@@ -421,6 +452,120 @@ fdt_find_node_by_prop(void *node, char *propname, char *propval,
 	}
 
 	return NULL;
+}
+
+/*
+ * Parse the memory address and size of a node.
+ */
+int
+fdt_get_memory_address(void *node, int idx, struct fdt_memory *mem)
+{
+	void *parent;
+	int ac, sc, off, ret, *in, inlen;
+
+	if (node == NULL)
+		return 1;
+
+	parent = fdt_parent_node(node);
+	if (parent == NULL)
+		return 1;
+
+	/* We only support 32-bit (1), and 64-bit (2) wide addresses here. */
+	ret = fdt_node_property_int(parent, "#address-cells", &ac);
+	if (ret != 1 || ac <= 0 || ac > 2)
+		return 1;
+
+	/* We only support 32-bit (1), and 64-bit (2) wide sizes here. */
+	ret = fdt_node_property_int(parent, "#size-cells", &sc);
+	if (ret != 1 || ac <= 0 || ac > 2)
+		return 1;
+
+	inlen = fdt_node_property(node, "reg", (char **)&in) / sizeof(int);
+	if (inlen < ((idx + 1) * (ac + sc)))
+		return -1;
+
+	off = idx * (ac + sc);
+
+	mem->addr = betoh32(in[off]);
+	if (ac == 2)
+		mem->addr = (mem->addr << 32) + betoh32(in[off + 1]);
+
+	mem->size = betoh32(in[off + ac]);
+	if (sc == 2)
+		mem->size = betoh32(in[off + ac + 1]);
+
+	return 0;
+}
+
+/*
+ * Find the interrupt controller either via:
+ *  - node's property "interrupt-parrent"
+ *  - parent's property "interrupt-parrent"
+ */
+static void *
+fdt_get_interrupt_controller(void *node)
+{
+	void *parent;
+	int phandle;
+
+	if (node == NULL)
+		return NULL;
+
+	if (fdt_node_property_int(node, "interrupt-parent", &phandle) != 1) {
+		parent = fdt_parent_node(node);
+		if (parent == NULL)
+			return NULL;
+
+		if (fdt_node_property_int(parent, "interrupt-parent",
+		    &phandle) != 1)
+			return NULL;
+	}
+
+	phandle = htobe32(phandle);
+	return fdt_find_node_by_prop(fdt_next_node(NULL),
+	    "phandle", &phandle, sizeof(phandle));
+}
+
+/*
+ * Get number of cells from interrupt controller.
+ */
+static int
+fdt_get_interrupt_cells(void *node, int *cells)
+{
+	void *intc = fdt_get_interrupt_controller(node);
+	if (intc == NULL)
+		return 1;
+
+	if (fdt_node_property_int(intc, "#interrupt-cells", cells) != 1)
+		return 1;
+
+	return 0;
+}
+
+/*
+ * Return interrupt number for a node.
+ */
+int
+fdt_get_interrupt(void *node, int *irqno)
+{
+	int cells;
+
+	if (fdt_get_interrupt_cells(node, &cells))
+		return 1;
+
+	int in[cells];
+	if (fdt_node_property_ints(node, "interrupts", in, cells) != cells)
+		return 1;
+
+	/* FIXME: This depends on the interrupt controller! */
+	if (cells == 0)
+		return 1;
+	else if (cells == 1)
+		*irqno = in[0];
+	else if (cells > 1)
+		*irqno = in[1];
+
+	return 0;
 }
 
 #ifdef DEBUG

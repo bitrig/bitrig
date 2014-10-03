@@ -214,7 +214,7 @@ agtimer_intr(void *frame)
 	struct agtimer_pcpu_softc *pc = &sc->sc_pstat[CPU_INFO_UNIT(curcpu())];
 	uint64_t		 now;
 	uint64_t		 nextevent;
-	uint32_t		 r, reg;
+	uint32_t		 r;
 #if defined(USE_GTIMER_CMP)
 	int			 skip = 1;
 #else
@@ -272,12 +272,6 @@ agtimer_intr(void *frame)
 
 	agtimer_set_tval(delay);
 
-	reg = agtimer_get_ctrl();
-	if (reg & GTIMER_CNTP_CTL_ISTATUS) {
-		reg |= GTIMER_CNTP_CTL_IMASK;
-		agtimer_set_ctrl(reg);
-	}
-
 	return (rc);
 }
 
@@ -321,6 +315,8 @@ agtimer_cpu_initclocks()
 	/* establish interrupts */
 	/* XXX - irq */
 	ampintc_intr_establish(29, IPL_CLOCK, agtimer_intr,
+	    NULL, "tick");
+	ampintc_intr_establish(30, IPL_CLOCK, agtimer_intr,
 	    NULL, "tick");
 
 	next = agtimer_readcnt64(sc) + sc->sc_ticks_per_intr;

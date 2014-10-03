@@ -28,6 +28,7 @@
 #include "imx.h"
 #include "omap.h"
 #include "sunxi.h"
+#include "virt.h"
 
 /* FIXME: Do not use a global variable. */
 int isomap = 0;
@@ -40,6 +41,7 @@ platform_init()
 	extern struct armv7_platform imx_platform;
 	extern struct armv7_platform omap_platform;
 	extern struct armv7_platform sunxi_platform;
+	extern struct armv7_platform virt_platform;
 
 	switch (board_id) {
 #if NEXYNOS > 0
@@ -70,6 +72,11 @@ platform_init()
 	case BOARD_ID_SUN4I_A10:
 	case BOARD_ID_SUN7I_A20:
 		platform = &sunxi_platform;
+		break;
+#endif
+#if NVIRT > 0
+	case BOARD_ID_VIRT:
+		platform = &virt_platform;
 		break;
 #endif
 	default:

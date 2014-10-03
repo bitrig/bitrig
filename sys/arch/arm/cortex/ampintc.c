@@ -241,12 +241,14 @@ ampintc_attach(struct device *parent, struct device *self, void *args)
 	for (i = 0; node == NULL && ampintc_compatibles[i] != NULL; i++)
 		node = fdt_find_compatible(ampintc_compatibles[i]);
 	if (node != NULL) {
-		uint32_t reg[4];
-		if (fdt_node_property_ints(node, "reg", reg, 4) == 4) {
-			icd = reg[0];
-			icdsize = reg[1];
-			icp = reg[2];
-			icpsize = reg[3];
+		struct fdt_memory mem;
+		if (!fdt_get_memory_address(node, 0, &mem)) {
+			icd = mem.addr;
+			icdsize = mem.size;
+		}
+		if (!fdt_get_memory_address(node, 1, &mem)) {
+			icp = mem.addr;
+			icpsize = mem.size;
 		}
 	}
 

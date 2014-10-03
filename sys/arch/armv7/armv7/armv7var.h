@@ -59,6 +59,7 @@ struct armv7_attach_args {
 	struct armv7_dev	*aa_dev;
 	bus_space_tag_t		aa_iot;
 	bus_dma_tag_t		aa_dmat;
+	void			*aa_node;
 };
 
 extern struct armv7_dev *armv7_devs;
@@ -83,6 +84,7 @@ int	armv7_submatch(struct device *, void *, void *);
 #define BOARD_ID_IMX6_HUMMINGBOARD 4773
 #define BOARD_ID_IMX6_UDOO 4800
 #define BOARD_ID_IMX6_CUBOXI 4821
+#define BOARD_ID_VIRT 0xffffffff
 extern uint32_t board_id;
 
 /* different arch init */
