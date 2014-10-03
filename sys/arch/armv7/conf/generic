@@ -60,6 +60,7 @@ include "../../../arch/armv7/conf/generic.exynos"
 include "../../../arch/armv7/conf/generic.imx"
 include "../../../arch/armv7/conf/generic.omap"
 include "../../../arch/armv7/conf/generic.sunxi"
+include "../../../arch/armv7/conf/generic.virt"
 
 
 # USB bus support

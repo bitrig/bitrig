@@ -463,10 +463,10 @@ initarm(void *arg0, void *arg1, void *arg2)
 		}
 		node = fdt_find_node("/memory");
 		if (node != NULL) {
-			uint32_t mem[2];
-			if (fdt_node_property_ints(node, "reg", mem, 2) == 2) {
-				memstart = mem[0];
-				memsize = mem[1];
+			struct fdt_memory mem;
+			if (!fdt_get_memory_address(node, 0, &mem)) {
+				memstart = mem.addr;
+				memsize = mem.size;
 				physical_start = memstart;
 				physical_end = physical_start + memsize;
 			}
