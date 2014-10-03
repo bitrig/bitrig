@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_pmemrange.c,v 1.41 2014/09/14 14:17:27 jsg Exp $	*/
+/*	$OpenBSD: uvm_pmemrange.c,v 1.42 2014/10/03 18:06:47 kettenis Exp $	*/
 
 /*
  * Copyright (c) 2009, 2010 Ariane van der Steldt <ariane@stack.nl>
@@ -22,6 +22,7 @@
 #include <sys/malloc.h>
 #include <sys/mount.h>		/* for BUFPAGES defines */
 #include <sys/kernel.h>
+#include <sys/kthread.h>
 #include <sys/mount.h>
 
 /*
@@ -108,7 +109,7 @@ void	uvm_pmr_assertvalid(struct uvm_pmemrange *pmr);
 #endif
 
 psize_t			 uvm_pmr_get1page(psize_t, int, struct pglist *,
-			    paddr_t, paddr_t);
+			    paddr_t, paddr_t, int);
 
 struct uvm_pmemrange	*uvm_pmr_allocpmr(void);
 struct vm_page		*uvm_pmr_nfindsz(struct uvm_pmemrange *, psize_t, int);
@@ -860,7 +861,7 @@ retry_desperate:
 	if (count <= maxseg && align == 1 && boundary == 0 &&
 	    (flags & UVM_PLA_TRYCONTIG) == 0) {
 		fcount += uvm_pmr_get1page(count - fcount, memtype_init,
-		    result, start, end);
+		    result, start, end, 0);
 
 		/*
 		 * If we found sufficient pages, go to the succes exit code.
@@ -1072,6 +1073,8 @@ out:
 
 		if (found->pg_flags & PG_ZERO) {
 			uvmexp.zeropages--;
+			if (uvmexp.zeropages < UVM_PAGEZERO_TARGET)
+				wakeup(&uvmexp.zeropages);
 		}
 		if (flags & UVM_PLA_ZERO) {
 			if (found->pg_flags & PG_ZERO)
@@ -1166,6 +1169,8 @@ uvm_pmr_freepages(struct vm_page *pg, psize_t count)
 		pg += pmr_count;
 	}
 	wakeup(&uvmexp.free);
+	if (uvmexp.zeropages < UVM_PAGEZERO_TARGET)
+		wakeup(&uvmexp.zeropages);
 
 	uvm_wakeup_pla(VM_PAGE_TO_PHYS(firstpg), ptoa(count));
 
@@ -1203,6 +1208,8 @@ uvm_pmr_freepageq(struct pglist *pgl)
 		uvm_wakeup_pla(pstart, ptoa(plen));
 	}
 	wakeup(&uvmexp.free);
+	if (uvmexp.zeropages < UVM_PAGEZERO_TARGET)
+		wakeup(&uvmexp.zeropages);
 	uvm_unlock_fpageq();
 
 	return;
@@ -1699,7 +1706,7 @@ uvm_pmr_rootupdate(struct uvm_pmemrange *pmr, struct vm_page *init_root,
  */
 psize_t
 uvm_pmr_get1page(psize_t count, int memtype_init, struct pglist *result,
-    paddr_t start, paddr_t end)
+    paddr_t start, paddr_t end, int memtype_only)
 {
 	struct	uvm_pmemrange *pmr;
 	struct	vm_page *found, *splitpg;
@@ -1815,6 +1822,8 @@ uvm_pmr_get1page(psize_t count, int memtype_init, struct pglist *result,
 				uvm_pmr_remove_addr(pmr, found);
 				uvm_pmr_assertvalid(pmr);
 			} else {
+				if (memtype_only)
+					break;
 				/*
 				 * Skip to the next memtype.
 				 */
@@ -1977,5 +1986,42 @@ uvm_wakeup_pla(paddr_t low, psize_t len)
 				wakeup(pma);
 			}
 		}
+	}
+}
+
+void
+uvm_pagezero_thread(void *arg)
+{
+	struct pglist pgl;
+	struct vm_page *pg;
+	int count;
+
+	/* Run at the lowest possible priority. */
+	curproc->p_p->ps_nice = NZERO + PRIO_MAX;
+
+	KERNEL_UNLOCK();
+
+	for (;;) {
+		uvm_lock_fpageq();
+		while (uvmexp.zeropages >= UVM_PAGEZERO_TARGET ||
+		    (count = uvm_pmr_get1page(16, UVM_PMR_MEMTYPE_DIRTY,
+		     &pgl, 0, 0, 1)) == 0) {
+			msleep(&uvmexp.zeropages, &uvm.fpageqlock, MAXPRI,
+			    "pgzero", 0);
+		}
+		uvm_unlock_fpageq();
+
+		TAILQ_FOREACH(pg, &pgl, pageq) {
+			uvm_pagezero(pg);
+			atomic_setbits_int(&pg->pg_flags, PG_ZERO);
+		}
+
+		uvm_lock_fpageq();
+		while (!TAILQ_EMPTY(&pgl))
+			uvm_pmr_remove_1strange(&pgl, 0, NULL, 0);
+		uvmexp.zeropages += count;
+ 		uvm_unlock_fpageq();
+
+		yield();
 	}
 }
