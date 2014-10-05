@@ -123,11 +123,15 @@ struct {								\
 
 /* Generates prototypes and inline functions */
 
-#define SPLAY_PROTOTYPE(name, type, field, cmp)				\
-void name##_SPLAY(struct name *, struct type *);			\
-void name##_SPLAY_MINMAX(struct name *, int);				\
-struct type *name##_SPLAY_INSERT(struct name *, struct type *);		\
-struct type *name##_SPLAY_REMOVE(struct name *, struct type *);		\
+#define	SPLAY_PROTOTYPE(name, type, field, cmp)				\
+	SPLAY_PROTOTYPE_INTERNAL(name, type, field, cmp,)
+#define	SPLAY_PROTOTYPE_STATIC(name, type, field, cmp)			\
+	SPLAY_PROTOTYPE_INTERNAL(name, type, field, cmp, __attribute__((__unused__)) static)
+#define SPLAY_PROTOTYPE_INTERNAL(name, type, field, cmp, attr)		\
+attr void name##_SPLAY(struct name *, struct type *);			\
+attr void name##_SPLAY_MINMAX(struct name *, int);			\
+attr struct type *name##_SPLAY_INSERT(struct name *, struct type *);	\
+attr struct type *name##_SPLAY_REMOVE(struct name *, struct type *);	\
 									\
 /* Finds the node with the same key as elm */				\
 __attribute__((__unused__)) static __inline struct type *		\
@@ -165,8 +169,12 @@ name##_SPLAY_MIN_MAX(struct name *head, int val)			\
 /* Main splay operation.
  * Moves node close to the key of elm to top
  */
-#define SPLAY_GENERATE(name, type, field, cmp)				\
-struct type *								\
+#define	SPLAY_GENERATE(name, type, field, cmp)				\
+	SPLAY_GENERATE_INTERNAL(name, type, field, cmp,)
+#define	SPLAY_GENERATE_STATIC(name, type, field, cmp)			\
+	SPLAY_GENERATE_INTERNAL(name, type, field, cmp, __attribute__((__unused__)) static)
+#define SPLAY_GENERATE_INTERNAL(name, type, field, cmp, attr)		\
+attr struct type *							\
 name##_SPLAY_INSERT(struct name *head, struct type *elm)		\
 {									\
     if (SPLAY_EMPTY(head)) {						\
@@ -190,7 +198,7 @@ name##_SPLAY_INSERT(struct name *head, struct type *elm)		\
     return (NULL);							\
 }									\
 									\
-struct type *								\
+attr struct type *							\
 name##_SPLAY_REMOVE(struct name *head, struct type *elm)		\
 {									\
 	struct type *__tmp;						\
@@ -211,7 +219,7 @@ name##_SPLAY_REMOVE(struct name *head, struct type *elm)		\
 	return (NULL);							\
 }									\
 									\
-void									\
+attr void								\
 name##_SPLAY(struct name *head, struct type *elm)			\
 {									\
 	struct type __node, *__left, *__right, *__tmp;			\
@@ -249,7 +257,8 @@ name##_SPLAY(struct name *head, struct type *elm)			\
 /* Splay with either the minimum or the maximum element			\
  * Used to find minimum or maximum element in tree.			\
  */									\
-void name##_SPLAY_MINMAX(struct name *head, int __comp) \
+attr void								\
+name##_SPLAY_MINMAX(struct name *head, int __comp)			\
 {									\
 	struct type __node, *__left, *__right, *__tmp;			\
 \

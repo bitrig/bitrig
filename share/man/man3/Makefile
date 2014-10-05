@@ -60,7 +60,8 @@ MLINKS+=stdarg.3 varargs.3 stdarg.3 va_arg.3 stdarg.3 va_end.3
 MLINKS+=stdarg.3 va_start.3 stdarg.3 va_copy.3
 MLINKS+=dlfcn.3 dlopen.3 dlfcn.3 dlclose.3 dlfcn.3 dlsym.3 dlfcn.3 dlctl.3 \
 	dlfcn.3 dlerror.3 dlfcn.3 dladdr.3
-MLINKS+=tree.3 SPLAY_PROTOTYPE.3 tree.3 SPLAY_GENERATE.3 \
+MLINKS+=tree.3 SPLAY_PROTOTYPE.3 tree.3 SPLAY_PROTOTYPE_STATIC.3 \
+	tree.3 SPLAY_GENERATE.3 tree.3 SPLAY_GENERATE_STATIC.3 \
 	tree.3 SPLAY_ENTRY.3 tree.3 SPLAY_HEAD.3 \
 	tree.3 SPLAY_INITIALIZER.3 tree.3 SPLAY_ROOT.3 \
 	tree.3 SPLAY_EMPTY.3 tree.3 SPLAY_NEXT.3 \

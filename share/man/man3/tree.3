@@ -28,7 +28,9 @@
 .Os
 .Sh NAME
 .Nm SPLAY_PROTOTYPE ,
+.Nm SPLAY_PROTOTYPE_STATIC ,
 .Nm SPLAY_GENERATE ,
+.Nm SPLAY_GENERATE_STATIC ,
 .Nm SPLAY_ENTRY ,
 .Nm SPLAY_HEAD ,
 .Nm SPLAY_INITIALIZER ,
@@ -74,7 +76,9 @@
 .In sys/tree.h
 .Pp
 .Fn SPLAY_PROTOTYPE "NAME" "TYPE" "FIELD" "CMP"
+.Fn SPLAY_PROTOTYPE_STATIC "NAME" "TYPE" "FIELD" "CMP"
 .Fn SPLAY_GENERATE "NAME" "TYPE" "FIELD" "CMP"
+.Fn SPLAY_GENERATE_STATIC "NAME" "TYPE" "FIELD" "CMP"
 .Fn SPLAY_ENTRY "TYPE"
 .Fn SPLAY_HEAD "HEADNAME" "TYPE"
 .Ft "struct TYPE *"
@@ -166,11 +170,13 @@ has to be a unique name prefix for every tree that is defined.
 .Pp
 The function prototypes are declared with
 .Li SPLAY_PROTOTYPE ,
+.Li SPLAY_PROTOTYPE_STATIC ,
 .Li RB_PROTOTYPE ,
 or
 .Li RB_PROTOTYPE_STATIC .
 The function bodies are generated with
 .Li SPLAY_GENERATE ,
+.Li SPLAY_GENERATE_STATIC ,
 .Li RB_GENERATE ,
 or
 .Li RB_GENERATE_STATIC .
@@ -227,10 +233,14 @@ argument is the name of the element defined by
 .Pp
 The function bodies are generated with the
 .Fn SPLAY_GENERATE
-macro.
-It takes the same arguments as the
+or
+.Fn SPLAY_GENERATE_STATIC
+macros.
+Theses macros take the same arguments as the
 .Fn SPLAY_PROTOTYPE
-macro, but should be used only once.
+and
+.Fn SPLAY_PROTOTYPE_STATIC
+macros, but should be used only once.
 .Pp
 Finally,
 the
