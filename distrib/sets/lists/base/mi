@@ -5225,6 +5225,7 @@
 ./usr/share/man/man3/SPLAY_FIND.3
 ./usr/share/man/man3/SPLAY_FOREACH.3
 ./usr/share/man/man3/SPLAY_GENERATE.3
+./usr/share/man/man3/SPLAY_GENERATE_STATIC.3
 ./usr/share/man/man3/SPLAY_HEAD.3
 ./usr/share/man/man3/SPLAY_INIT.3
 ./usr/share/man/man3/SPLAY_INITIALIZER.3
@@ -5234,6 +5235,7 @@
 ./usr/share/man/man3/SPLAY_MIN.3
 ./usr/share/man/man3/SPLAY_NEXT.3
 ./usr/share/man/man3/SPLAY_PROTOTYPE.3
+./usr/share/man/man3/SPLAY_PROTOTYPE_STATIC.3
 ./usr/share/man/man3/SPLAY_REMOVE.3
 ./usr/share/man/man3/SPLAY_RIGHT.3
 ./usr/share/man/man3/SPLAY_ROOT.3
