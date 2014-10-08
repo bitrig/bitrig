@@ -1,4 +1,4 @@
-/*      $OpenBSD: glxpcib.c,v 1.12 2014/09/14 14:17:25 jsg Exp $	*/
+/*      $OpenBSD: glxpcib.c,v 1.13 2014/10/08 16:07:45 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2007 Marc Balmer <mbalmer@openbsd.org>
