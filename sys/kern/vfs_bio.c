@@ -1,4 +1,4 @@
-/*	$OpenBSD: vfs_bio.c,v 1.162 2014/09/09 07:07:39 blambert Exp $	*/
+/*	$OpenBSD: vfs_bio.c,v 1.163 2014/10/08 07:33:14 blambert Exp $	*/
 /*	$NetBSD: vfs_bio.c,v 1.44 1996/06/11 11:15:36 pk Exp $	*/
 
 /*-
@@ -1080,7 +1080,6 @@ buf_get(struct vnode *vp, daddr_t blkno, size_t size)
 void
 buf_daemon(struct proc *p)
 {
-	struct timeval starttime, timediff;
 	struct buf *bp = NULL;
 	int s, pushed = 0;
 
@@ -1103,10 +1102,7 @@ buf_daemon(struct proc *p)
 			tsleep(&bd_req, PRIBIO - 7, "cleaner", 0);
 		}
 
-		getmicrouptime(&starttime);
-
 		while ((bp = bufcache_getdirtybuf())) {
-			struct timeval tv;
 
 			if (UNCLEAN_PAGES < lodirtypages &&
 			    bcstats.kvaslots_avail > 2 * RESERVE_SLOTS &&
@@ -1153,13 +1149,7 @@ buf_daemon(struct proc *p)
 
 			sched_pause();
 
-			/* Never allow processing to run for more than 1 sec */
-			getmicrouptime(&tv);
-			timersub(&tv, &starttime, &timediff);
 			s = splbio();
-			if (timediff.tv_sec)
-				break;
-
 		}
 	}
 }
