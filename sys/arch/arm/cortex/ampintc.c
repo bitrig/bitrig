@@ -1,4 +1,4 @@
-/* $OpenBSD: ampintc.c,v 1.3 2014/07/12 18:44:41 tedu Exp $ */
+/* $OpenBSD: ampintc.c,v 1.4 2014/10/08 14:53:36 rapha Exp $ */
 /*
  * Copyright (c) 2007,2009,2011 Dale Rahn <drahn@openbsd.org>
  *
@@ -37,10 +37,10 @@
 #define ICD_ADDR	0x1000
 #define ICD_SIZE	0x1000
 
-#define	ICD_A7_A15_ADDR	0x1000
-#define	ICD_A7_A15_SIZE	0x1000
-#define	ICP_A7_A15_ADDR	0x2000
-#define	ICP_A7_A15_SIZE	0x1000
+#define ICD_A7_A15_ADDR	0x1000
+#define ICD_A7_A15_SIZE	0x1000
+#define ICP_A7_A15_ADDR	0x2000
+#define ICP_A7_A15_SIZE	0x1000
 
 /* registers */
 #define	ICD_DCR			0x000
@@ -217,8 +217,8 @@ ampintc_attach(struct device *parent, struct device *self, void *args)
 	int i, nintr;
 	bus_space_tag_t		iot;
 	bus_space_handle_t	d_ioh, p_ioh;
-	void *node = NULL;
-	uint32_t icp, icpsize, icd, icdsize;
+	void			*node = NULL;
+	uint32_t		icp, icpsize, icd, icdsize;
 
 	ampintc = sc;
 
