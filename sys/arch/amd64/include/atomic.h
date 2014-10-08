@@ -339,6 +339,11 @@ atomic_sub_long(volatile long *p, unsigned long v)
 	atomic_sub_64((volatile int64_t *)p, v);
 }
 
+/* virtio needs MP membars even on SP kernels */
+#define virtio_membar_producer()	__membar("")
+#define virtio_membar_consumer()	__membar("")
+#define virtio_membar_sync()		__membar("mfence")
+
 #undef LOCK
 
 #endif /* defined(_KERNEL) && !defined(_LOCORE) */
