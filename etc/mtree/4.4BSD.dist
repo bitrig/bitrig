@@ -1,4 +1,4 @@
-#	$OpenBSD: 4.4BSD.dist,v 1.266 2014/10/01 10:11:03 mpi Exp $
+#	$OpenBSD: 4.4BSD.dist,v 1.267 2014/10/09 04:24:30 tedu Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 
@@ -202,10 +202,6 @@ usr
         ..
         smtpd			type=dir uname=root gname=wheel mode=0755
         ..
-    ..
-
-    # ./usr/lkm
-    lkm
     ..
 
     # ./usr/local
