@@ -3,8 +3,8 @@
 # THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
 # generated from:
 #
-#	OpenBSD: etc.amd64/MAKEDEV.md,v 1.56 2014/07/11 22:04:09 tedu Exp 
-#	OpenBSD: MAKEDEV.common,v 1.75 2014/07/15 17:36:13 miod Exp 
+#	OpenBSD: etc.amd64/MAKEDEV.md,v 1.58 2014/10/09 04:37:43 tedu Exp 
+#	OpenBSD: MAKEDEV.common,v 1.77 2014/10/09 04:33:50 tedu Exp 
 #	OpenBSD: MAKEDEV.mi,v 1.81 2012/11/05 08:07:09 jasper Exp 
 #	OpenBSD: MAKEDEV.sub,v 1.14 2005/02/07 06:14:18 david Exp 
 #
@@ -76,7 +76,6 @@
 #	gpio*	General Purpose Input/Output
 #	gpr*	GPR400 smartcard reader
 #	hotplug	devices hot plugging
-#	lkm	Loadable kernel modules interface
 #	nvram	NVRAM access
 #	pci*	PCI bus devices
 #	pctr*	PC Performance Tuning Register access device
@@ -310,10 +309,6 @@ nvram)
 	M nvram c 85 0 440 kmem
 	;;
 
-lkm)
-	M lkm c 28 0 640 _lkm
-	;;
-
 hotplug)
 	M hotplug c 82 $U 400
 	;;
@@ -527,10 +522,10 @@ all)
 	R audio1 audio2 fuse pppx hotplug ptm gpr0 local wscons pci0
 	R pci1 pci2 pci3 uall rmidi0 rmidi1 rmidi2 rmidi3 rmidi4
 	R rmidi5 rmidi6 rmidi7 tuner0 radio0 speaker video0 video1 uk0
-	R random lpa0 lpa1 lpa2 lpt0 lpt1 lpt2 lkm tty00 tty01 tty02
-	R tty03 tty04 tty05 tty06 tty07 tty08 tty09 tty0a tty0b ttyc0
-	R ttyc1 ttyc2 ttyc3 ttyc4 ttyc5 ttyc6 ttyc7 apm pf pctr
-	R systrace wd0 wd1 wd2 wd3 std st0 st1 fd
+	R random lpa0 lpa1 lpa2 lpt0 lpt1 lpt2 tty00 tty01 tty02 tty03
+	R tty04 tty05 tty06 tty07 tty08 tty09 tty0a tty0b ttyc0 ttyc1
+	R ttyc2 ttyc3 ttyc4 ttyc5 ttyc6 ttyc7 apm pf pctr systrace wd0
+	R wd1 wd2 wd3 std st0 st1 fd
 	;;
 
 wd*|sd*)
