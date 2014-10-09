@@ -339,23 +339,6 @@ atomic_sub_long(volatile long *p, unsigned long v)
 	atomic_sub_64((volatile int64_t *)p, v);
 }
 
-
-/*
- * The AMD64 architecture is rather strongly ordered.  When accessing
- * normal write-back cachable memory, only reads may be reordered with
- * older writes to different locations.  There are a few instructions
- * (clfush, non-temporal move instructions) that obey weaker ordering
- * rules, but those instructions will only be used in (inline)
- * assembly code where we can add the necessary fence instructions
- * ourselves.
- */
-#define __membar(_f) do { __asm __volatile(_f ::: "memory"); } while (0)
-
-/* virtio needs MP membars even on SP kernels */
-#define virtio_membar_producer()	__membar("")
-#define virtio_membar_consumer()	__membar("")
-#define virtio_membar_sync()		__membar("mfence")
-
 #undef LOCK
 
 #endif /* defined(_KERNEL) && !defined(_LOCORE) */
