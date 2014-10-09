@@ -1,4 +1,4 @@
-#	$OpenBSD: GENERIC,v 1.212 2014/10/01 10:08:29 mpi Exp $
+#	$OpenBSD: GENERIC,v 1.213 2014/10/09 03:36:32 tedu Exp $
 #
 #	Machine-independent option; used by all architectures for their
 #	GENERIC kernel
@@ -28,8 +28,6 @@ option		SYSVSEM		# System V-like semaphores
 option		SYSVSHM		# System V-like memory sharing
 
 option		UVM_SWAP_ENCRYPT# support encryption of pages going to swap
-
-option		LKM		# loadable kernel modules
 
 option		FFS		# UFS
 option		FFS2		# UFS2
