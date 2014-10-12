@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>		# for NOMAN
 
-POD2MAN=pod2man --official --release="OpenBSD ${OSREV}" --center=OpenSSL
+POD2MAN=pod2man --official --release="Bitrig ${OSREV}" --center=OpenSSL
 
 .ifndef NOMAN
 MAN=	\
