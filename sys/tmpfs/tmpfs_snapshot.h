@@ -166,7 +166,7 @@ tmpfs_snap_type_hdr(enum vtype tn_type)
 	case VFIFO:
 		return (TMPFS_SNAP_NTYPE_FIFO);
 	default:
-		panic("%s: unknown type %d", tn_type);
+		panic("%s: unknown type %d", __func__, tn_type);
 	}
 	/* NOTREACHED */
 }
