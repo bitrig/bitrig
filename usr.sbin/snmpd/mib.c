@@ -75,8 +75,6 @@ int	 mib_setsnmp(struct oid *, struct ber_oid *, struct ber_element **);
 static struct oid mib_tree[] = MIB_TREE;
 static struct ber_oid zerodotzero = { { 0, 0 }, 2 };
 
-#define sizeofa(_a) (sizeof(_a) / sizeof((_a)[0]))
-
 /* base MIB tree */
 static struct oid base_mib[] = {
 	{ MIB(mib_2),			OID_MIB },
@@ -553,7 +551,7 @@ mib_hrmemory(struct oid *oid, struct ber_oid *o, struct ber_element **elm)
 	u_int64_t		 physmem;
 	size_t			 len = sizeof(physmem);
 
-	if (sysctl(mib, sizeofa(mib), &physmem, &len, NULL, 0) == -1)
+	if (sysctl(mib, nitems(mib), &physmem, &len, NULL, 0) == -1)
 		return (-1);
 
 	ber = ber_add_integer(ber, physmem / 1024);
@@ -584,16 +582,16 @@ mib_hrstorage(struct oid *oid, struct ber_oid *o, struct ber_element **elm)
 	/* Physical memory, real memory, swap */
 	mib[1] = HW_PHYSMEM64;
 	len = sizeof(physmem);
-	if (sysctl(mib, sizeofa(mib), &physmem, &len, NULL, 0) == -1)
+	if (sysctl(mib, nitems(mib), &physmem, &len, NULL, 0) == -1)
 		return (-1);
 	mib[1] = HW_USERMEM64;
 	len = sizeof(realmem);
-	if (sysctl(mib, sizeofa(mib), &realmem, &len, NULL, 0) == -1)
+	if (sysctl(mib, nitems(mib), &realmem, &len, NULL, 0) == -1)
 		return (-1);
 	mib[0] = CTL_VM;
 	mib[1] = VM_UVMEXP;
 	len = sizeof(uvm);
-	if (sysctl(mib, sizeofa(mib), &uvm, &len, NULL, 0) == -1)
+	if (sysctl(mib, nitems(mib), &uvm, &len, NULL, 0) == -1)
 		return (-1);
 	maxsize = 10;
 
@@ -708,7 +706,7 @@ mib_hrdevice(struct oid *oid, struct ber_oid *o, struct ber_element **elm)
 	ber = ber_add_oid(ber, o);
 
 	len = sizeof(descr);
-	if (sysctl(mib, sizeofa(mib), &descr, &len, NULL, 0) == -1)
+	if (sysctl(mib, nitems(mib), &descr, &len, NULL, 0) == -1)
 		return (-1);
 	/* unknown(1), running(2), warning(3), testing(4), down(5) */
 	status = 2;
@@ -879,7 +877,7 @@ kinfo_proc(u_int32_t idx, struct kinfo_proc **kinfo)
 	for (;;) {
 		size = nkp * sizeof(*kp);
 		mib[5] = nkp;
-		if (sysctl(mib, sizeofa(mib), kp, &size, NULL, 0) == -1) {
+		if (sysctl(mib, nitems(mib), kp, &size, NULL, 0) == -1) {
 			if (errno == ENOMEM) {
 				free(kp);
 				kp = NULL;
@@ -942,7 +940,7 @@ kinfo_args(struct kinfo_proc *kinfo, char **s)
 	str[0] = '\0';
 	*s = str;
 
-	while (sysctl(mib, sizeofa(mib), buf, &buflen, NULL, 0) == -1) {
+	while (sysctl(mib, nitems(mib), buf, &buflen, NULL, 0) == -1) {
 		if (errno != ENOMEM) {
 			/* some errors are expected, dont get too upset */
 			return (0);
@@ -1167,7 +1165,7 @@ mib_iftable(struct oid *oid, struct ber_oid *o, struct ber_element **elm)
 		mib[3] = IPCTL_IFQUEUE;
 		mib[4] = IFQCTL_DROPS;
 		len = sizeof(ifq);
-		if (sysctl(mib, sizeofa(mib), &ifq, &len, 0, 0) == -1) {
+		if (sysctl(mib, nitems(mib), &ifq, &len, 0, 0) == -1) {
 			log_info("mib_iftable: %s: invalid ifq: %s",
 			    kif->if_name, strerror(errno));
 			return (-1);
@@ -1207,7 +1205,7 @@ mib_iftable(struct oid *oid, struct ber_oid *o, struct ber_element **elm)
 		mib[3] = IPCTL_IFQUEUE;
 		mib[4] = IFQCTL_LEN;
 		len = sizeof(ifq);
-		if (sysctl(mib, sizeofa(mib), &ifq, &len, 0, 0) == -1) {
+		if (sysctl(mib, nitems(mib), &ifq, &len, 0, 0) == -1) {
 			log_info("mib_iftable: %s: invalid ifq: %s",
 			    kif->if_name, strerror(errno));
 			return (-1);
@@ -2514,7 +2512,7 @@ mib_sensornum(struct oid *oid, struct ber_oid *o, struct ber_element **elm)
 
 	for (i = c = 0; ; i++) {
 		mib[2] = i;
-		if (sysctl(mib, sizeofa(mib),
+		if (sysctl(mib, nitems(mib),
 		    &sensordev, &len, NULL, 0) == -1) {
 			if (errno == ENXIO)
 				continue;
@@ -2982,7 +2980,7 @@ mib_ipforwarding(struct oid *oid, struct ber_oid *o, struct ber_element **elm)
 	int	v;
 	size_t	len = sizeof(v);
 
-	if (sysctl(mib, sizeofa(mib), &v, &len, NULL, 0) == -1)
+	if (sysctl(mib, nitems(mib), &v, &len, NULL, 0) == -1)
 		return (-1);
 
 	*elm = ber_add_integer(*elm, v);
@@ -2997,7 +2995,7 @@ mib_ipdefaultttl(struct oid *oid, struct ber_oid *o, struct ber_element **elm)
 	int	v;
 	size_t	len = sizeof(v);
 
-	if (sysctl(mib, sizeofa(mib), &v, &len, NULL, 0) == -1)
+	if (sysctl(mib, nitems(mib), &v, &len, NULL, 0) == -1)
 		return (-1);
 
 	*elm = ber_add_integer(*elm, v);
@@ -3011,7 +3009,7 @@ mib_getipstat(struct ipstat *ipstat)
 	int	 mib[] = { CTL_NET, PF_INET, IPPROTO_IP, IPCTL_STATS };
 	size_t	 len = sizeof(*ipstat);
 
-	return (sysctl(mib, sizeofa(mib), ipstat, &len, NULL, 0));
+	return (sysctl(mib, nitems(mib), ipstat, &len, NULL, 0));
 }
 
 int
@@ -3675,7 +3673,7 @@ mib_diskio(struct oid *oid, struct ber_oid *o, struct ber_element **elm)
 
 	len = sizeof(diskcount);
 	mib[1] = HW_DISKCOUNT;
-	if (sysctl(mib, sizeofa(mib), &diskcount, &len, NULL, 0) == -1)
+	if (sysctl(mib, nitems(mib), &diskcount, &len, NULL, 0) == -1)
 		return (-1);
 
 	/* Get and verify the current row index */
@@ -3693,7 +3691,7 @@ mib_diskio(struct oid *oid, struct ber_oid *o, struct ber_element **elm)
 	/* We know len won't overflow, otherwise calloc() would have failed. */
 	len = diskcount * sizeof(*stats);
 	mib[1] = HW_DISKSTATS;
-	if (sysctl(mib, sizeofa(mib), stats, &len, NULL, 0) == -1) {
+	if (sysctl(mib, nitems(mib), stats, &len, NULL, 0) == -1) {
 		free(stats);
 		return (-1);
 	}

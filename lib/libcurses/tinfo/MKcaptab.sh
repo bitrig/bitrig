@@ -41,6 +41,7 @@ cat <<'EOF'
  */
 
 #include <curses.priv.h>
+#include <sys/param.h>
 #include <tic.h>
 #include <hashsize.h>
 
@@ -115,7 +116,7 @@ _nc_build_alias(struct alias **actual,
 #define build_alias(root) _nc_build_alias(&_nc_##root##alias_table, \\
 					  root##alias_data, \\
 					  root##alias_text, \\
-					  SIZEOF(root##alias_data))
+					  nitems(root##alias_data))
 #else
 #define build_names(root) _nc_ ## root ## _table
 #define build_alias(root) _nc_ ## root ## alias_table

@@ -1202,8 +1202,6 @@ extern NCURSES_EXPORT_VAR(SIG_ATOMIC_T) _nc_have_sigwinch;
 		line->firstchar = start; \
 	line->lastchar = end
 
-#define SIZEOF(v) (sizeof(v)/sizeof(v[0]))
-
 #define FreeIfNeeded(p)  if ((p) != 0) free(p)
 
 /* FreeAndNull() is not a comma-separated expression because some compilers

@@ -35,6 +35,7 @@
  ****************************************************************************/
 
 #include <curses.priv.h>
+#include <sys/param.h>
 #include <term.h>		/* cur_term */
 
 MODULE_ID("$Id: lib_tracebits.c,v 1.10 2010/01/12 23:22:07 nicm Exp $")
@@ -198,7 +199,7 @@ _nc_trace_ttymode(TTY * tty)
 	    unsigned n;
 
 	    if (value != 0) {
-		for (n = 0; n < SIZEOF(csizes); n++) {
+		for (n = 0; n < nitems(csizes); n++) {
 		    if (csizes[n].value == value) {
 			result = csizes[n].name;
 			break;

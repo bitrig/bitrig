@@ -689,10 +689,6 @@ typedef struct _dialin_proxy_info {
 #define BCOPY(s, d, l)		memcpy(d, s, l)
 #define BZERO(s, n)		memset(s, 0, n)
 
-#ifndef	countof
-#define	countof(x)	(sizeof(x) / sizeof((x)[0]))
-#endif
-
 /*
  * MAKEHEADER - Add Header fields to a packet.
  */

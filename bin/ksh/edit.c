@@ -13,6 +13,7 @@
 #define EXTERN
 #include "edit.h"
 #undef EXTERN
+#include <sys/param.h>
 #include <sys/ioctl.h>
 #include <ctype.h>
 #include <libgen.h>
@@ -234,7 +235,7 @@ set_editmode(const char *ed)
 
 	if ((rcp = strrchr(ed, '/')))
 		ed = ++rcp;
-	for (i = 0; i < NELEM(edit_flags); i++)
+	for (i = 0; i < nitems(edit_flags); i++)
 		if (strstr(ed, options[(int) edit_flags[i]].name)) {
 			change_flag(edit_flags[i], OF_SPECIAL, 1);
 			return;

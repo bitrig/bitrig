@@ -27,7 +27,7 @@
  */
 /**@file authentication realm */
 /* $Id: npppd_auth.c,v 1.14 2014/05/30 05:06:00 yasuoka Exp $ */
-#include <sys/types.h>
+#include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -539,11 +539,11 @@ npppd_auth_radius_reload(npppd_auth_base *base, struct authconf *auth)
 
 	/* load configs for authentication server */
 	rad = _this->rad_auth_setting;
-	for (i = 0; i < countof(rad->server); i++)
+	for (i = 0; i < nitems(rad->server); i++)
 		memset(&rad->server[i], 0, sizeof(rad->server[0]));
 	i = 0;
 	TAILQ_FOREACH(server, &auth->data.radius.auth.servers, entry) {
-		if (i >= countof(rad->server))
+		if (i >= nitems(rad->server))
 			break;
 		memcpy(&rad->server[i].peer, &server->address,
 		    server->address.ss_len);
@@ -560,11 +560,11 @@ npppd_auth_radius_reload(npppd_auth_base *base, struct authconf *auth)
 
 	/* load configs for accounting server */
 	rad = _this->rad_acct_setting;
-	for (i = 0; i < countof(rad->server); i++)
+	for (i = 0; i < nitems(rad->server); i++)
 		memset(&rad->server[i], 0, sizeof(rad->server[0]));
 	i = 0;
 	TAILQ_FOREACH(server, &auth->data.radius.acct.servers, entry) {
-		if (i >= countof(rad->server))
+		if (i >= nitems(rad->server))
 			break;
 		memcpy(&rad->server[i].peer, &server->address,
 		    server->address.ss_len);
@@ -579,7 +579,7 @@ npppd_auth_radius_reload(npppd_auth_base *base, struct authconf *auth)
 	}
 	nacct = i;
 
-	for (i = 0; i < countof(_this->rad_auth_setting->server); i++) {
+	for (i = 0; i < nitems(_this->rad_auth_setting->server); i++) {
 		if (_this->rad_auth_setting->server[i].enabled)
 			base->radius_ready = 1;
 	}

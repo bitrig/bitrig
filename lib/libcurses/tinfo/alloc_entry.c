@@ -47,6 +47,7 @@
 
 #include <curses.priv.h>
 
+#include <sys/param.h>
 #include <tic.h>
 #include <term_entry.h>
 
@@ -177,7 +178,7 @@ _nc_wrap_entry(ENTRY * const ep, bool copy_strings)
     assert(tp->term_names >= stringbuf);
     n = (unsigned) (tp->term_names - stringbuf);
     for_each_string(i, &(ep->tterm)) {
-	if (i < SIZEOF(offsets)) {
+	if (i < nitems(offsets)) {
 	    if (tp->Strings[i] == ABSENT_STRING) {
 		offsets[i] = ABSENT_OFFSET;
 	    } else if (tp->Strings[i] == CANCELLED_STRING) {
@@ -201,7 +202,7 @@ _nc_wrap_entry(ENTRY * const ep, bool copy_strings)
 
     tp->term_names = tp->str_table + n;
     for_each_string(i, &(ep->tterm)) {
-	if (i < SIZEOF(offsets)) {
+	if (i < nitems(offsets)) {
 	    if (offsets[i] == ABSENT_OFFSET) {
 		tp->Strings[i] = ABSENT_STRING;
 	    } else if (offsets[i] == CANCELLED_OFFSET) {
@@ -215,7 +216,7 @@ _nc_wrap_entry(ENTRY * const ep, bool copy_strings)
 #if NCURSES_XNAMES
     if (!copy_strings) {
 	if ((n = (unsigned) NUM_EXT_NAMES(tp)) != 0) {
-	    if (n < SIZEOF(offsets)) {
+	    if (n < nitems(offsets)) {
 		size_t copied, length, strtabsize = 0;
 		for (i = 0; i < n; i++) {
 		    strtabsize += strlen(tp->ext_Names[i]) + 1;

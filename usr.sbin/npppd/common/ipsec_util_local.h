@@ -52,10 +52,6 @@ static inline int  address_compar (struct sadb_address *, struct sockaddr *, int
 static int         sadb_del_args_init (struct sadb_del_args *, uint32_t, struct sadb_address *, struct sadb_address *, int);
 static int         sockaddr_is_valid (struct sockaddr *);
 
-#ifndef countof
-#define	countof(x)	(sizeof((x)) / sizeof((x)[0]))
-#endif
-
 #ifdef USE_IPSEC_UTIL_PRIVSEP
 #include <stdio.h>
 #include "privsep.h"

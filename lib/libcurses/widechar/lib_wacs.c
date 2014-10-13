@@ -33,6 +33,7 @@
  ****************************************************************************/
 
 #include <curses.priv.h>
+#include <sys/param.h>
 #include <term.h>
 
 MODULE_ID("$Id: lib_wacs.c,v 1.1 2010/09/06 17:26:17 nicm Exp $")
@@ -99,7 +100,7 @@ _nc_init_wacs(void)
        active ? "" : " not"));
 
     _nc_wacs = typeCalloc(cchar_t, ACS_LEN);
-    for (n = 0; n < SIZEOF(table); ++n) {
+    for (n = 0; n < nitems(table); ++n) {
 	int wide = wcwidth(table[n].value[active]);
 
 	m = table[n].map;

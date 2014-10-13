@@ -19,6 +19,7 @@
 */
 
 #include "sh.h"
+#include <sys/param.h>
 #include <sys/resource.h>
 
 #define SOFT	0x1
@@ -53,7 +54,7 @@ c_ulimit(char **wp)
 #endif /* RLIMIT_VMEM */
 		{ (char *) 0 }
 	};
-	static char	options[4 + NELEM(limits) * 2];
+	static char	options[4 + nitems(limits) * 2];
 	int		how = SOFT | HARD;
 	const struct limits	*l;
 	int		optc, all = 0;

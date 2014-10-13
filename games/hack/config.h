@@ -181,6 +181,4 @@ typedef	xchar	boolean;		/* 0 or 1 */
  */
 #define	Bitfield(x,n)	unsigned x:n
 
-#define	SIZE(x)	(int)(sizeof(x) / sizeof(x[0]))
-
 #endif /* CONFIG */

@@ -65,6 +65,7 @@
  */
 
 #include <curses.priv.h>
+#include <sys/param.h>
 #include <term.h>
 
 MODULE_ID("$Id: lib_vidattr.c,v 1.9 2010/01/12 23:22:07 nicm Exp $")
@@ -136,7 +137,7 @@ vidputs(chtype newmode, int (*outc) (int))
 	 * Limit the number of attribute bits set in the newmode according to
 	 * the terminfo max_attributes value.
 	 */
-	for (n = 0; n < SIZEOF(table); ++n) {
+	for (n = 0; n < nitems(table); ++n) {
 	    if ((table[n] & SP->_ok_attributes) == 0) {
 		newmode &= ~table[n];
 	    } else if ((table[n] & newmode) != 0) {

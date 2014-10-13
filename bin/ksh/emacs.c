@@ -15,6 +15,7 @@
 #ifdef EMACS
 
 #include "sh.h"
+#include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/queue.h>
 #include <ctype.h>
@@ -1314,7 +1315,7 @@ kb_add_string(void *func, void *args, char *str)
 	struct kb_entry		*k;
 	struct x_ftab		*xf = NULL;
 
-	for (i = 0; i < NELEM(x_ftab); i++)
+	for (i = 0; i < nitems(x_ftab); i++)
 		if (x_ftab[i].xf_func == func) {
 			xf = (struct x_ftab *)&x_ftab[i];
 			break;
@@ -1390,7 +1391,7 @@ x_bind(const char *a1, const char *a2,
 
 	if (list) {
 		/* show all function names */
-		for (i = 0; i < NELEM(x_ftab); i++) {
+		for (i = 0; i < nitems(x_ftab); i++) {
 			if (x_ftab[i].xf_name &&
 			    !(x_ftab[i].xf_flags & XF_NOBIND))
 				shprintf("%s\n", x_ftab[i].xf_name);
@@ -1440,7 +1441,7 @@ x_bind(const char *a1, const char *a2,
 	}
 
 	/* set non macro binding */
-	for (i = 0; i < NELEM(x_ftab); i++) {
+	for (i = 0; i < nitems(x_ftab); i++) {
 		if (!strcmp(x_ftab[i].xf_name, a2)) {
 			/* delete old mapping */
 			TAILQ_FOREACH_SAFE(k, &kblist, entry, kb)

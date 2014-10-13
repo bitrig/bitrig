@@ -15,6 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+#include <sys/param.h>
 #include <float.h>
 #include <math.h>
 #include <stdio.h>
@@ -31,8 +32,6 @@ struct func funcs[] = { {"s", sinl},
 			{"l", logl},
 			{"a", atanl}
 };
-
-#define nitems(_a)      (sizeof((_a)) / sizeof((_a)[0]))
 
 main()
 {

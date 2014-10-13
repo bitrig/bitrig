@@ -26,7 +26,7 @@
  * SUCH DAMAGE.
  */
 /**@file */
-#include <sys/types.h>
+#include <sys/param.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
@@ -347,7 +347,7 @@ npppd_is_ifcace_ip4addr(npppd *_this, uint32_t ip4addr)
 {
 	int i;
 
-	for (i = 0; i < countof(_this->iface); i++) {
+	for (i = 0; i < nitems(_this->iface); i++) {
 		if (npppd_iface_ip_is_ready(&_this->iface[i]) &&
 		    _this->iface[i].ip4addr.s_addr == ip4addr)
 			return 1;

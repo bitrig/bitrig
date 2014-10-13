@@ -18,10 +18,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef nitems
-#define nitems(_a) (sizeof((_a)) / sizeof((_a)[0]))
-#endif
-
 #include "smtpd-defines.h"
 #include "smtpd-api.h"
 #include "ioev.h"

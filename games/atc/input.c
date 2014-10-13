@@ -42,6 +42,8 @@
  * For more info on this and all of my stuff, mail edjames@berkeley.edu.
  */
 
+#include <sys/param.h>
+
 #include "include.h"
 #include "pathnames.h"
 
@@ -80,9 +82,7 @@ typedef struct {
 #define T_POS		stack[level].pos
 #define	T_CH		stack[level].ch
 
-#define NUMELS(a)	(sizeof (a) / sizeof (*(a)))
-
-#define NUMSTATES	NUMELS(st)
+#define NUMSTATES	nitems(st)
 
 RULE	state0[] = {	{ ALPHATOKEN,	1,	"%c:",		setplane},
 			{ RETTOKEN,	-1,	"",		NULL	},
@@ -148,7 +148,7 @@ RULE	state0[] = {	{ ALPHATOKEN,	1,	"%c:",		setplane},
 			{ HELPTOKEN,	12,	" b*ea",	NULL	}},
 	state12[] = {	{ -1,		-1,	"",		NULL	}};
 
-#define DEF_STATE(s)	{ NUMELS(s),	(s)	}
+#define DEF_STATE(s)	{ nitems(s),	(s)	}
 
 STATE	st[] = {
 	DEF_STATE(state0), DEF_STATE(state1), DEF_STATE(state2),

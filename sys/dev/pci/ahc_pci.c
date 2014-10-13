@@ -674,7 +674,7 @@ ahc_find_pci_device(id, subid, func)
 	    && SUBID_9005_MFUNCENB(PCI_PRODUCT(subid)) == 0)
 		return (NULL);
 
-	for (i = 0; i < NUM_ELEMENTS(ahc_pci_ident_table); i++) {
+	for (i = 0; i < nitems(ahc_pci_ident_table); i++) {
 		entry = &ahc_pci_ident_table[i];
 		if (entry->full_id == (full_id & entry->id_mask))
 			return (entry);

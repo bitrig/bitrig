@@ -27,10 +27,6 @@
 #include <limits.h>
 #include <imsg.h>
 
-#ifndef nitems
-#define	nitems(_a)	(sizeof((_a)) / sizeof((_a)[0]))
-#endif
-
 #define CONF_FILE		"/etc/relayd.conf"
 #define RELAYD_SOCKET		"/var/run/relayd.sock"
 #define PF_SOCKET		"/dev/pf"

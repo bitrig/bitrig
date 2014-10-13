@@ -42,9 +42,7 @@
 #include <curses.priv.h>
 #include <term.h>		/* cur_term, pad_char */
 #include <termcap.h>		/* ospeed */
-#if defined(__FreeBSD__)
 #include <sys/param.h>
-#endif
 
 /*
  * These systems use similar header files, which define B1200 as 1200, etc.,
@@ -162,7 +160,7 @@ _nc_baudrate(int OSpeed)
 #endif
     if (result == ERR) {
 	if (OSpeed >= 0) {
-	    for (i = 0; i < SIZEOF(speeds); i++) {
+	    for (i = 0; i < nitems(speeds); i++) {
 		if (speeds[i].s == OSpeed) {
 		    result = speeds[i].sp;
 		    break;
@@ -186,7 +184,7 @@ _nc_ospeed(int BaudRate)
     unsigned i;
 
     if (BaudRate >= 0) {
-	for (i = 0; i < SIZEOF(speeds); i++) {
+	for (i = 0; i < nitems(speeds); i++) {
 	    if (speeds[i].sp == BaudRate) {
 		result = speeds[i].s;
 		break;

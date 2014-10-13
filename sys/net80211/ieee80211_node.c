@@ -1289,7 +1289,6 @@ ieee80211_setup_rates(struct ieee80211com *ic, struct ieee80211_node *ni,
 int
 ieee80211_iserp_sta(const struct ieee80211_node *ni)
 {
-#define N(a)	(sizeof (a) / sizeof (a)[0])
 	static const u_int8_t rates[] = { 2, 4, 11, 22, 12, 24, 48 };
 	const struct ieee80211_rateset *rs = &ni->ni_rates;
 	int i, j;
@@ -1298,7 +1297,7 @@ ieee80211_iserp_sta(const struct ieee80211_node *ni)
 	 * A STA supports ERP operation if it includes all the Clause 19
 	 * mandatory rates in its supported rate set.
 	 */
-	for (i = 0; i < N(rates); i++) {
+	for (i = 0; i < nitems(rates); i++) {
 		for (j = 0; j < rs->rs_nrates; j++) {
 			if ((rs->rs_rates[j] & IEEE80211_RATE_VAL) == rates[i])
 				break;
@@ -1307,7 +1306,6 @@ ieee80211_iserp_sta(const struct ieee80211_node *ni)
 			return 0;
 	}
 	return 1;
-#undef N
 }
 
 /*

@@ -1539,7 +1539,6 @@ wpi_notif_intr(struct wpi_softc *sc)
 void
 wpi_fatal_intr(struct wpi_softc *sc)
 {
-#define N(a)	(sizeof (a) / sizeof ((a)[0]))
 	struct wpi_fwdump dump;
 	uint32_t i, offset, count;
 
@@ -1573,7 +1572,7 @@ wpi_fatal_intr(struct wpi_softc *sc)
 		    sizeof (dump) / sizeof (uint32_t));
 
 		printf("  error type = \"%s\" (0x%08X)\n",
-		    (dump.desc < N(wpi_fw_errmsg)) ?
+		    (dump.desc < nitems(wpi_fw_errmsg)) ?
 			wpi_fw_errmsg[dump.desc] : "UNKNOWN",
 		    dump.desc);
 		printf("  error data      = 0x%08X\n",
@@ -1596,7 +1595,6 @@ wpi_fatal_intr(struct wpi_softc *sc)
 	}
 	printf("  rx ring: cur=%d\n", sc->rxq.cur);
 	printf("  802.11 state %d\n", sc->sc_ic.ic_state);
-#undef N
 }
 
 int

@@ -132,8 +132,6 @@ struct audio_device sv_device = {
 	"sv"
 };
 
-#define ARRAY_SIZE(foo)  ((sizeof(foo)) / sizeof(foo[0]))
-
 int	sv_allocmem(struct sv_softc *, size_t, size_t, struct sv_dma *);
 int	sv_freemem(struct sv_softc *, struct sv_dma *);
 
@@ -442,7 +440,7 @@ sv_allocmem(struct sv_softc *sc, size_t size, size_t align, struct sv_dma *p)
 
 	p->size = size;
 	error = bus_dmamem_alloc(sc->sc_dmatag, p->size, align, 0,
-				 p->segs, ARRAY_SIZE(p->segs),
+				 p->segs, nitems(p->segs),
 				 &p->nsegs, BUS_DMA_NOWAIT);
 	if (error)
 		return (error);
@@ -977,7 +975,7 @@ static const struct {
 
 #define SV_DEVICES_PER_PORT 2
 #define SV_FIRST_MIXER (SV_LAST_CLASS + 1)
-#define SV_LAST_MIXER (SV_DEVICES_PER_PORT * (ARRAY_SIZE(ports)) + SV_LAST_CLASS)
+#define SV_LAST_MIXER (SV_DEVICES_PER_PORT * (nitems(ports)) + SV_LAST_CLASS)
 #define SV_RECORD_SOURCE (SV_LAST_MIXER + 1)
 #define SV_MIC_BOOST (SV_LAST_MIXER + 2)
 #define SV_RECORD_GAIN (SV_LAST_MIXER + 3)
@@ -1048,11 +1046,11 @@ sv_query_devinfo(void *addr, mixer_devinfo_t *dip)
     strlcpy(dip->label.name, AudioNsource, sizeof dip->label.name);
     dip->type = AUDIO_MIXER_ENUM;
 
-    dip->un.e.num_mem = ARRAY_SIZE(record_sources);
+    dip->un.e.num_mem = nitems(record_sources);
 
     {
       int idx;
-      for (idx = 0; idx < ARRAY_SIZE(record_sources); idx++) {
+      for (idx = 0; idx < nitems(record_sources); idx++) {
 	strlcpy(dip->un.e.member[idx].label.name, record_sources[idx].name,
 	    sizeof dip->un.e.member[idx].label.name);
 	dip->un.e.member[idx].ord = record_sources[idx].idx;
@@ -1182,7 +1180,7 @@ sv_mixer_set_port(void *addr, mixer_ctrl_t *cp)
     if (cp->type != AUDIO_MIXER_ENUM)
       return (EINVAL);
 
-    for (idx = 0; idx < ARRAY_SIZE(record_sources); idx++) {
+    for (idx = 0; idx < nitems(record_sources); idx++) {
       if (record_sources[idx].idx == cp->un.ord)
 	goto found;
     }
@@ -1372,7 +1370,7 @@ sv_init_mixer(struct sv_softc *sc)
 
   sv_mixer_set_port(sc, &cp);
 
-  for (idx = 0; idx < ARRAY_SIZE(ports); idx++) {
+  for (idx = 0; idx < nitems(ports); idx++) {
     if (strcmp(ports[idx].audio, AudioNdac) == 0) {
       cp.type = AUDIO_MIXER_ENUM;
       cp.dev = SV_FIRST_MIXER + idx * SV_DEVICES_PER_PORT + 1;

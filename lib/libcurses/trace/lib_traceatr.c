@@ -39,6 +39,7 @@
  */
 
 #include <curses.priv.h>
+#include <sys/param.h>
 #include <term.h>		/* acs_chars */
 
 MODULE_ID("$Id: lib_traceatr.c,v 1.6 2010/01/12 23:22:07 nicm Exp $")
@@ -127,7 +128,7 @@ _traceattr2(int bufnum, chtype newmode)
 
 	strlcpy(result, l_brace, BUFSIZ);
 
-	for (n = 0; n < SIZEOF(names); n++) {
+	for (n = 0; n < nitems(names); n++) {
 	    if ((newmode & names[n].val) != 0) {
 		if (result[1] != '\0')
 		    result = _nc_trace_bufcat(bufnum, "|");

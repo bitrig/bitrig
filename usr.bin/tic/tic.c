@@ -41,6 +41,7 @@
  */
 
 #include <progs.priv.h>
+#include <sys/param.h>
 #include <sys/stat.h>
 
 #include <dump_entry.h>
@@ -166,7 +167,7 @@ usage(void)
     size_t j;
 
     fprintf(stderr, "Usage: %s %s\n", _nc_progname, usage_string);
-    for (j = 0; j < SIZEOF(tbl); j++) {
+    for (j = 0; j < nitems(tbl); j++) {
 	fputs(tbl[j], stderr);
 	putc('\n', stderr);
     }
@@ -1120,7 +1121,7 @@ expected_params(const char *name)
     unsigned n;
     int result = 0;		/* function-keys, etc., use none */
 
-    for (n = 0; n < SIZEOF(table); n++) {
+    for (n = 0; n < nitems(table); n++) {
 	if (!strcmp(name, table[n].name)) {
 	    result = table[n].count;
 	    break;

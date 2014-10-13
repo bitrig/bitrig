@@ -50,6 +50,7 @@
 #ifdef SMALL_KERNEL
 #define	IO_EXPAND
 #endif
+#include <sys/param.h>
 #include <dev/ic/aic7xxx_inline.h>
 #include <dev/microcode/aic7xxx/aicasm_insformat.h>
 
@@ -94,7 +95,7 @@ static struct ahc_hard_error_entry ahc_hard_errors[] = {
 	{ PCIERRSTAT,	"PCI Error detected" },
 	{ CIOPARERR,	"CIOBUS Parity Error" },
 };
-static const u_int num_errors = NUM_ELEMENTS(ahc_hard_errors);
+static const u_int num_errors = nitems(ahc_hard_errors);
 #endif /* !defined(SMALL_KERNEL) */
 
 static struct ahc_phase_table_entry ahc_phase_table[] =
@@ -115,7 +116,7 @@ static struct ahc_phase_table_entry ahc_phase_table[] =
  * In most cases we only wish to itterate over real phases, so
  * exclude the last element from the count.
  */
-static const u_int num_phases = NUM_ELEMENTS(ahc_phase_table) - 1;
+static const u_int num_phases = nitems(ahc_phase_table) - 1;
 
 /*
  * Valid SCSIRATE values.  (p. 3-17)

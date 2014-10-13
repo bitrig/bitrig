@@ -346,7 +346,7 @@ npppd_init(npppd *_this, const char *config_file)
 
 	/* start tun(4) or pppac(4) */
 	status = 0;
-	for (i = 0; i < countof(_this->iface); i++) {
+	for (i = 0; i < nitems(_this->iface); i++) {
 		if (_this->iface[i].initialized != 0)
 			status |= npppd_iface_start(&_this->iface[i]);
 	}
@@ -415,7 +415,7 @@ npppd_stop(npppd *_this)
 	close(_this->ctl_sock.cs_fd);
 	control_cleanup(&_this->ctl_sock);
 
-	for (i = countof(_this->iface) - 1; i >= 0; i--) {
+	for (i = nitems(_this->iface) - 1; i >= 0; i--) {
 		if (_this->iface[i].initialized != 0)
 			npppd_iface_stop(&_this->iface[i]);
 	}
@@ -447,7 +447,7 @@ npppd_stop_really(npppd *_this)
 		return;
 	}
 #endif
-	for (i = countof(_this->iface) - 1; i >= 0; i--) {
+	for (i = nitems(_this->iface) - 1; i >= 0; i--) {
 		npppd_iface_fini(&_this->iface[i]);
 	}
 	_this->finalized = 1;
@@ -474,12 +474,12 @@ npppd_fini(npppd *_this)
 		auth_base = slist_itr_next(&_this->realms);
 		npppd_auth_destroy(auth_base);
 	}
-	for (i = countof(_this->iface) - 1; i >= 0; i--) {
+	for (i = nitems(_this->iface) - 1; i >= 0; i--) {
 		if (_this->iface[i].initialized != 0)
 			npppd_iface_fini(&_this->iface[i]);
 	}
 
-	for (i = countof(_this->pool) - 1; i >= 0; i--) {
+	for (i = nitems(_this->pool) - 1; i >= 0; i--) {
 		if (_this->pool[i].initialized != 0)
 			npppd_pool_uninit(&_this->pool[i]);
 	}
@@ -1848,7 +1848,7 @@ npppd_reload0(npppd *_this)
 	npppd_update_pool_reference(_this);
 	npppd_auth_finalizer_periodic(_this);
 
-	for (i = 0; i < countof(_this->iface); i++) {
+	for (i = 0; i < nitems(_this->iface); i++) {
 		if (_this->iface[i].initialized != 0 &&
 		    _this->iface[i].started == 0)
 			npppd_iface_start(&_this->iface[i]);
@@ -1860,14 +1860,14 @@ npppd_update_pool_reference(npppd *_this)
 {
 	int  i, j;
 	/* update iface to pool reference */
-	for (i = 0; i < countof(_this->iface_pool); i++) {
+	for (i = 0; i < nitems(_this->iface_pool); i++) {
 		_this->iface_pool[i] = NULL;
 		if (_this->iface[i].initialized == 0)
 			continue;
 		if (_this->iface[i].ipcpconf == NULL)
 			continue;	/* no IPCP for this interface */
 
-		for (j = 0; j < countof(_this->pool); j++) {
+		for (j = 0; j < nitems(_this->pool); j++) {
 			if (_this->pool[j].initialized == 0)
 				continue;
 			if (strcmp(_this->iface[i].ipcpconf->name,
@@ -2122,7 +2122,7 @@ npppd_ppp_bind_iface(npppd *_this, npppd_ppp *ppp)
 
 	/* Search a interface */
 	ifidx = -1;
-	for (i = 0; i < countof(_this->iface); i++) {
+	for (i = 0; i < nitems(_this->iface); i++) {
 		if (_this->iface[i].initialized == 0)
 			continue;
 		if (strcmp(_this->iface[i].ifname, bind->iface->name) == 0)

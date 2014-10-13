@@ -32,10 +32,6 @@
 #ifndef RADIUSPLUS_LOCAL_H
 #define RADIUSPLUS_LOCAL_H
 
-#ifndef countof
-#define countof(x) (sizeof(x)/sizeof((x)[0]))
-#endif
-
 #pragma pack(1)
 typedef struct _RADIUS_PACKET_DATA
 {

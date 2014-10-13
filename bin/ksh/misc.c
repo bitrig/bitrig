@@ -6,7 +6,7 @@
 
 #include "sh.h"
 #include <ctype.h>
-#include <sys/param.h>	/* for MAXPATHLEN */
+#include <sys/param.h>	/* for MAXPATHLEN and nitems() */
 #include "charclass.h"
 
 short ctypes [UCHAR_MAX+1];	/* type bits for unsigned char */
@@ -179,7 +179,7 @@ option(const char *n)
 {
 	int i;
 
-	for (i = 0; i < NELEM(options); i++)
+	for (i = 0; i < nitems(options); i++)
 		if (options[i].name && strcmp(options[i].name, n) == 0)
 			return i;
 
@@ -191,7 +191,7 @@ struct options_info {
 	struct {
 		const char *name;
 		int	flag;
-	} opts[NELEM(options)];
+	} opts[nitems(options)];
 };
 
 static char *options_fmt_entry(void *arg, int i, char *buf, int buflen);
@@ -221,7 +221,7 @@ printoptions(int verbose)
 		/* verbose version */
 		shprintf("Current option settings\n");
 
-		for (i = n = oi.opt_width = 0; i < NELEM(options); i++)
+		for (i = n = oi.opt_width = 0; i < nitems(options); i++)
 			if (options[i].name) {
 				len = strlen(options[i].name);
 				oi.opts[n].name = options[i].name;
@@ -234,7 +234,7 @@ printoptions(int verbose)
 	} else {
 		/* short version ala ksh93 */
 		shprintf("set");
-		for (i = 0; i < NELEM(options); i++)
+		for (i = 0; i < nitems(options); i++)
 			if (Flag(i) && options[i].name)
 				shprintf(" -o %s", options[i].name);
 		shprintf(newline);
@@ -248,7 +248,7 @@ getoptions(void)
 	char m[(int) FNFLAGS + 1];
 	char *cp = m;
 
-	for (i = 0; i < NELEM(options); i++)
+	for (i = 0; i < nitems(options); i++)
 		if (options[i].c && Flag(i))
 			*cp++ = options[i].c;
 	*cp = 0;
@@ -320,8 +320,8 @@ parse_args(char **argv,
     int what,			/* OF_CMDLINE or OF_SET */
     int *setargsp)
 {
-	static char cmd_opts[NELEM(options) + 3]; /* o:\0 */
-	static char set_opts[NELEM(options) + 5]; /* Ao;s\0 */
+	static char cmd_opts[nitems(options) + 3]; /* o:\0 */
+	static char set_opts[nitems(options) + 5]; /* Ao;s\0 */
 	char *opts;
 	char *array = (char *) 0;
 	Getopt go;
@@ -337,7 +337,7 @@ parse_args(char **argv,
 		/* see set_opts[] declaration */
 		strlcpy(set_opts, "A:o;s", sizeof set_opts);
 		q = set_opts + strlen(set_opts);
-		for (i = 0; i < NELEM(options); i++) {
+		for (i = 0; i < nitems(options); i++) {
 			if (options[i].c) {
 				if (options[i].flags & OF_CMDLINE)
 					*p++ = options[i].c;
@@ -404,14 +404,14 @@ parse_args(char **argv,
 				sortargs = 1;
 				break;
 			}
-			for (i = 0; i < NELEM(options); i++)
+			for (i = 0; i < nitems(options); i++)
 				if (optc == options[i].c &&
 				    (what & options[i].flags)) {
 					change_flag((enum sh_flag) i, what,
 					    set);
 					break;
 				}
-			if (i == NELEM(options)) {
+			if (i == nitems(options)) {
 				internal_errorf(1, "parse_args: `%c'", optc);
 				return -1; /* not reached */
 			}

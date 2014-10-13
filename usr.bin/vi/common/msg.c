@@ -435,15 +435,14 @@ mod_rpt(sp)
 	 * I got complaints, so nvi conforms to System III/V historic practice
 	 * except that we report a yank of 1 line if report is set to 1.
 	 */
-#define	ARSIZE(a)	sizeof(a) / sizeof (*a)
 #define	MAXNUM		25
 	rptval = O_VAL(sp, O_REPORT);
-	for (cnt = 0, total = 0; cnt < ARSIZE(action); ++cnt)
+	for (cnt = 0, total = 0; cnt < nitems(action); ++cnt)
 		total += sp->rptlines[cnt];
 	if (total == 0)
 		return;
 	if (total <= rptval && sp->rptlines[L_YANKED] < rptval) {
-		for (cnt = 0; cnt < ARSIZE(action); ++cnt)
+		for (cnt = 0; cnt < nitems(action); ++cnt)
 			sp->rptlines[cnt] = 0;
 		return;
 	}
@@ -451,7 +450,7 @@ mod_rpt(sp)
 	/* Build and display the message. */
 	GET_SPACE_GOTO(sp, bp, blen, sizeof(action) * MAXNUM + 1);
 	for (p = bp, first = 1, tlen = 0,
-	    ap = action, cnt = 0; cnt < ARSIZE(action); ++ap, ++cnt)
+	    ap = action, cnt = 0; cnt < nitems(action); ++ap, ++cnt)
 		if (sp->rptlines[cnt] != 0) {
 			if (first)
 				first = 0;
@@ -488,7 +487,6 @@ mod_rpt(sp)
 alloc_err:
 	return;
 
-#undef ARSIZE
 #undef MAXNUM
 }
 

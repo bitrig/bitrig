@@ -61,6 +61,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/param.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -77,7 +78,7 @@ char *(roles[]) = {	/* must all have distinct first letter */
 	"Tourist", "Speleologist", "Fighter", "Knight",
 	"Cave-man", "Wizard"
 };
-#define	NR_OF_ROLES	SIZE(roles)
+#define	NR_OF_ROLES	nitems(roles)
 char rolesyms[NR_OF_ROLES + 1];		/* filled by u_init() */
 
 struct trobj {

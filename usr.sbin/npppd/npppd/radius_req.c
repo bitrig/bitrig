@@ -49,10 +49,6 @@
 
 #include "radius_req.h"
 
-#ifndef nitems
-#define	nitems(_a)	(sizeof((_a)) / sizeof((_a)[0]))
-#endif
-
 struct overlapped {
 	struct event		 ev_sock;
 	int			 socket;

@@ -28,10 +28,6 @@
 #ifndef	PPTP_LOCAL_H
 #define	PPTP_LOCAL_H 1
 
-#ifndef	countof
-#define	countof(x)	(sizeof(x) / sizeof((x)[0]))
-#endif
-
 struct pptp_gre_header {
 #if     BYTE_ORDER == LITTLE_ENDIAN
 	uint8_t		recur:3,

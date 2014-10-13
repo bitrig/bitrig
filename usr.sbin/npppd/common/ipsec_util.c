@@ -364,7 +364,7 @@ sadb_del_args_init(struct sadb_del_args *args, uint32_t spi,
 		}
 		args->is_valid = 1;
 	}
-	if (args->spiidx < countof(args->spi)) {
+	if (args->spiidx < nitems(args->spi)) {
 		args->spi[args->spiidx++] = spi;
 		return 0;
 	}

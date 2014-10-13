@@ -69,6 +69,7 @@
  *
  */
 
+#include <sys/param.h>
 #include <dev/ic/aic79xx_openbsd.h>
 #include <dev/ic/aic79xx_inline.h>
 #include <dev/ic/aic79xx.h>
@@ -240,7 +241,7 @@ struct ahd_pci_identity ahd_pci_ident_table [] =
 	}
 };
 
-const u_int ahd_num_pci_devs = NUM_ELEMENTS(ahd_pci_ident_table);
+const u_int ahd_num_pci_devs = nitems(ahd_pci_ident_table);
 		
 #define			DEVCONFIG		0x40
 #define			PCIXINITPAT		0x0000E000ul

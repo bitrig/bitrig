@@ -65,9 +65,6 @@
 	(s) |= *(cp)++; \
 }
 #endif
-#ifndef countof
-#define	countof(x)	(sizeof((x)) / sizeof((x)[0]))
-#endif
 
 #define	IFTYPE_IS_LAN(iftype)						\
 	((iftype) == IFT_ETHER || (iftype) == IFT_L2VLAN ||		\

@@ -190,5 +190,3 @@ extern int optind;
 #endif
 
 #define UChar(c)    ((unsigned char)(c))
-
-#define SIZEOF(v) (sizeof(v)/sizeof(v[0]))

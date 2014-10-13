@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-#include <sys/types.h>
+#include <sys/param.h>
 #include <dev/pci/if_bnxreg.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -25,8 +25,6 @@
 #include <stdio.h>
 
 #include "bnxfw.h"
-
-#define nitems(_a) (sizeof((_a)) / sizeof((_a)[0]))
 
 int	bnx_rv2p_proc1len;
 int	bnx_rv2p_proc2len;

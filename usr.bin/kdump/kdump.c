@@ -940,10 +940,6 @@ static struct ctlname machdepname[] = CTL_MACHDEP_NAMES;
 #endif
 static struct ctlname ddbname[] = CTL_DDB_NAMES;
 
-#ifndef nitems
-#define nitems(_a)    (sizeof((_a)) / sizeof((_a)[0]))
-#endif
-
 #define SETNAME(name) do { names = (name); limit = nitems(name); } while (0)
 
 static const char *

@@ -78,11 +78,6 @@ extern char   **environ;
 #define printflike4 __attribute__ ((format (printf, 4, 5)))
 #define printflike5 __attribute__ ((format (printf, 5, 6)))
 
-/* Number of items in array. */
-#ifndef nitems
-#define nitems(_a) (sizeof((_a)) / sizeof((_a)[0]))
-#endif
-
 /* Default template for choose-buffer. */
 #define CHOOSE_BUFFER_TEMPLATE					\
 	"#{buffer_name}: #{buffer_size} bytes: #{buffer_sample}"

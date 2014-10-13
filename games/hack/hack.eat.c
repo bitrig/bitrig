@@ -61,6 +61,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include	<sys/param.h>
 #include	<stdio.h>
 #include	"hack.h"
 char POISONOUS[] = "ADKSVabhks";
@@ -88,7 +89,7 @@ char *hu_stat[] = {
 	"Starved "
 };
 
-#define	TTSZ	SIZE(tintxts)
+#define	TTSZ	nitems(tintxts)
 struct {
 	char *txt;
 	int nut;

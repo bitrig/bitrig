@@ -62,6 +62,7 @@
  */
 
 #include "hack.h"
+#include <sys/param.h>
 #include <stdio.h>
 #include <stdlib.h>
 extern char plname[];
@@ -270,7 +271,7 @@ xmonnam(struct monst *mtmp, int vb)
 	case ' ':
 		{ char *gn = (char *) mtmp->mextra;
 		  if(!*gn) {		/* might also look in scorefile */
-		    gn = ghostnames[rn2(SIZE(ghostnames))];
+		    gn = ghostnames[rn2(nitems(ghostnames))];
 		    if(!rn2(2)) (void)
 		      strlcpy((char *) mtmp->mextra, !rn2(5) ? plname : gn,
 			mtmp->mxlth);

@@ -588,7 +588,7 @@ npppd_iface_write(npppd_iface *_this, int proto, u_char *pktp, int lpktp)
 	iov[1].iov_base = pktp;
 	iov[1].iov_len = lpktp;
 
-	err = writev(_this->devf, iov, countof(iov));
+	err = writev(_this->devf, iov, nitems(iov));
 
 	if (err != lpktp + sizeof(th))
 		npppd_iface_log(_this, LOG_ERR, "write failed: %m");

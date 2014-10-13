@@ -61,6 +61,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include	<sys/param.h>
 #include	<stdio.h>
 #include	<string.h>
 #include	"config.h"		/* for typedefs */
@@ -89,7 +90,7 @@ init_objects()
 
 	/* init base; if probs given check that they add up to 100, 
 	   otherwise compute probs; shuffle descriptions */
-	end = SIZE(objects);
+	end = nitems(objects);
 	first = 0;
 	while( first < end ) {
 		let = objects[first].oc_olet;
@@ -154,7 +155,7 @@ setgemprobs()
 	for(j = 0; j < 9-dlevel/3; j++)
 		objects[first+j].oc_prob = 0;
 	first += j;
-	if(first >= LAST_GEM || first >= SIZE(objects) ||
+	if(first >= LAST_GEM || first >= nitems(objects) ||
 	    objects[first].oc_olet != GEM_SYM ||
 	    objects[first].oc_name == NULL)
 		printf("Not enough gems? - first=%d j=%d LAST_GEM=%d\n",
@@ -180,7 +181,7 @@ savenames(int fd)
 	/* as long as we use only one version of Hack/Quest we
 	   need not save oc_name and oc_descr, but we must save
 	   oc_uname for all objects */
-	for(i=0; i < SIZE(objects); i++) {
+	for(i=0; i < nitems(objects); i++) {
 		if(objects[i].oc_uname) {
 			len = strlen(objects[i].oc_uname)+1;
 			bwrite(fd, &len, sizeof len);
@@ -197,7 +198,7 @@ restnames(int fd)
 
 	mread(fd, (char *) bases, sizeof bases);
 	mread(fd, (char *) objects, sizeof objects);
-	for(i=0; i < SIZE(objects); i++) if(objects[i].oc_uname) {
+	for(i=0; i < nitems(objects); i++) if(objects[i].oc_uname) {
 		mread(fd, (char *) &len, sizeof len);
 		objects[i].oc_uname = (char *) alloc(len);
 		mread(fd, objects[i].oc_uname, len);
@@ -212,7 +213,7 @@ dodiscovered()				/* free after Robert Viduya */
 
     cornline(0, "Discoveries");
 
-    end = SIZE(objects);
+    end = nitems(objects);
     for (i = 0; i < end; i++) {
 	if (interesting_to_discover (i)) {
 	    ct++;

@@ -16,6 +16,7 @@
  */
 
 #include "sh.h"
+#include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/time.h>
@@ -169,7 +170,7 @@ j_init(int mflagset)
 		/* the TF_SHELL_USES test is a kludge that lets us know if
 		 * if the signals have been changed by the shell.
 		 */
-		for (i = NELEM(tt_sigs); --i >= 0; ) {
+		for (i = nitems(tt_sigs); --i >= 0; ) {
 			sigtraps[tt_sigs[i]].flags |= TF_SHELL_USES;
 			/* j_change() sets this to SS_RESTORE_DFL if FMONITOR */
 			setsig(&sigtraps[tt_sigs[i]], SIG_IGN,
@@ -335,7 +336,7 @@ j_change(void)
 				kill(0, SIGTTIN);
 			}
 		}
-		for (i = NELEM(tt_sigs); --i >= 0; )
+		for (i = nitems(tt_sigs); --i >= 0; )
 			setsig(&sigtraps[tt_sigs[i]], SIG_IGN,
 			    SS_RESTORE_DFL|SS_FORCE);
 		if (ttypgrp_ok && our_pgrp != kshpid) {
@@ -364,11 +365,11 @@ j_change(void)
 	} else {
 		ttypgrp_ok = 0;
 		if (Flag(FTALKING))
-			for (i = NELEM(tt_sigs); --i >= 0; )
+			for (i = nitems(tt_sigs); --i >= 0; )
 				setsig(&sigtraps[tt_sigs[i]], SIG_IGN,
 				    SS_RESTORE_IGN|SS_FORCE);
 		else
-			for (i = NELEM(tt_sigs); --i >= 0; ) {
+			for (i = nitems(tt_sigs); --i >= 0; ) {
 				if (sigtraps[tt_sigs[i]].flags &
 				    (TF_ORIG_IGN | TF_ORIG_DFL))
 					setsig(&sigtraps[tt_sigs[i]],
@@ -502,7 +503,7 @@ exchild(struct op *t, int flags, volatile int *xerrok,
 		 * their inherited values.
 		 */
 		if (Flag(FMONITOR) && !(flags & XXCOM)) {
-			for (i = NELEM(tt_sigs); --i >= 0; )
+			for (i = nitems(tt_sigs); --i >= 0; )
 				setsig(&sigtraps[tt_sigs[i]], SIG_DFL,
 				    SS_RESTORE_DFL|SS_FORCE);
 		}

@@ -16,10 +16,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef nitems
-#define nitems(_a) (sizeof((_a)) / sizeof((_a)[0]))
-#endif
-
 #define SMTPD_MAXLOCALPARTSIZE	 (255 + 1)
 #define SMTPD_MAXDOMAINPARTSIZE	 (255 + 1)
 

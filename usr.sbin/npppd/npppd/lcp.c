@@ -305,7 +305,7 @@ lcp_add_auth(fsm *f, u_char **ucpp)
 	_this = &f->ppp->lcp;
 
 	for (i = 0; _this->auth_order[i] > 0 &&
-	    i < countof(_this->auth_order); i++) {
+	    i < nitems(_this->auth_order); i++) {
 		switch (_this->auth_order[i]) {
 		case PPP_AUTH_PAP:
 			if (psm_opt_is_rejected(_this, pap))

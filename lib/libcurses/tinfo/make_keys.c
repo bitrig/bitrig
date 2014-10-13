@@ -40,12 +40,13 @@
 
 #define USE_TERMLIB 1
 #include <curses.priv.h>
+#include <sys/param.h>
 
 MODULE_ID("$Id: make_keys.c,v 1.9 2010/01/12 23:22:06 nicm Exp $")
 
 #include <names.c>
 
-#define UNKNOWN (SIZEOF(strnames) + SIZEOF(strfnames))
+#define UNKNOWN (nitems(strnames) + nitems(strfnames))
 
 static size_t
 lookup(const char *name)

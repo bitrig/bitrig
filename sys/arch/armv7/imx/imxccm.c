@@ -116,8 +116,6 @@
 
 #define CCM_SENSORS				13
 
-#define NELEMS(x)				(sizeof(x) / sizeof(x[0]))
-
 #define HREAD4(sc, reg)							\
 	(bus_space_read_4((sc)->sc_iot, (sc)->sc_ioh, (reg)))
 #define HWRITE4(sc, reg, val)						\
@@ -273,25 +271,25 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 	imxccm_fixed_factor("pll3_60m", "pll3_usb_otg", 1, 8);
 
 	/* arm core clocks */
-	imxccm_mux("step", CCM_CCSR, 8, 1, step_sels, NELEMS(step_sels));
-	imxccm_mux("pll1_sw", CCM_CCSR, 2, 1, pll1_sw_sels, NELEMS(pll1_sw_sels));
+	imxccm_mux("step", CCM_CCSR, 8, 1, step_sels, nitems(step_sels));
+	imxccm_mux("pll1_sw", CCM_CCSR, 2, 1, pll1_sw_sels, nitems(pll1_sw_sels));
 	imxccm_div("arm", "pll1_sw", CCM_CACRR, 0, 3);
 
 	/* periph */
-	imxccm_mux("periph_pre", CCM_CBCMR, 18, 2, periph_pre_sels, NELEMS(periph_pre_sels));
-	imxccm_mux("periph2_pre", CCM_CBCMR, 21, 2, periph_pre_sels, NELEMS(periph_pre_sels));
-	imxccm_mux("periph_clk2_sel", CCM_CBCMR, 12, 2, periph_clk2_sels, NELEMS(periph_clk2_sels));
-	imxccm_mux("periph2_clk2_sel", CCM_CBCMR, 20, 1, periph2_clk2_sels, NELEMS(periph2_clk2_sels));
+	imxccm_mux("periph_pre", CCM_CBCMR, 18, 2, periph_pre_sels, nitems(periph_pre_sels));
+	imxccm_mux("periph2_pre", CCM_CBCMR, 21, 2, periph_pre_sels, nitems(periph_pre_sels));
+	imxccm_mux("periph_clk2_sel", CCM_CBCMR, 12, 2, periph_clk2_sels, nitems(periph_clk2_sels));
+	imxccm_mux("periph2_clk2_sel", CCM_CBCMR, 20, 1, periph2_clk2_sels, nitems(periph2_clk2_sels));
 	imxccm_div("periph_clk2", "periph_clk2_sel", CCM_CBCDR, 27, 3);
 	imxccm_div("periph2_clk2", "periph2_clk2_sel", CCM_CBCDR, 0, 3);
-	imxccm_mux("periph", CCM_CBCDR, 25, 1, periph_sels, NELEMS(periph_sels));
-	imxccm_mux("periph2", CCM_CBCDR, 26, 1, periph2_sels, NELEMS(periph2_sels));
+	imxccm_mux("periph", CCM_CBCDR, 25, 1, periph_sels, nitems(periph_sels));
+	imxccm_mux("periph2", CCM_CBCDR, 26, 1, periph2_sels, nitems(periph2_sels));
 	imxccm_div("ahb", "periph", CCM_CBCDR, 10, 3);
 	imxccm_div("ipg", "ahb", CCM_CBCDR, 8, 2);
 	imxccm_div("ipg_per", "ipg", CCM_CSCMR1, 0, 6);
 
 	/* axi */
-	imxccm_mux("axi_sel", CCM_CBCDR, 6, 2, axi_sels, NELEMS(axi_sels));
+	imxccm_mux("axi_sel", CCM_CBCDR, 6, 2, axi_sels, nitems(axi_sels));
 	imxccm_div("axi", "axi_sel", CCM_CBCDR, 16, 3);
 
 	/* uart */
@@ -300,10 +298,10 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 	imxccm_gate2("uart_serial", "uart_clk_podf", CCM_CCGR5, 26);
 
 	/* usdhc */
-	imxccm_mux("usdhc1_sel", CCM_CSCMR1, 16, 1, usdhc_sels, NELEMS(usdhc_sels));
-	imxccm_mux("usdhc2_sel", CCM_CSCMR1, 17, 1, usdhc_sels, NELEMS(usdhc_sels));
-	imxccm_mux("usdhc3_sel", CCM_CSCMR1, 18, 1, usdhc_sels, NELEMS(usdhc_sels));
-	imxccm_mux("usdhc4_sel", CCM_CSCMR1, 19, 1, usdhc_sels, NELEMS(usdhc_sels));
+	imxccm_mux("usdhc1_sel", CCM_CSCMR1, 16, 1, usdhc_sels, nitems(usdhc_sels));
+	imxccm_mux("usdhc2_sel", CCM_CSCMR1, 17, 1, usdhc_sels, nitems(usdhc_sels));
+	imxccm_mux("usdhc3_sel", CCM_CSCMR1, 18, 1, usdhc_sels, nitems(usdhc_sels));
+	imxccm_mux("usdhc4_sel", CCM_CSCMR1, 19, 1, usdhc_sels, nitems(usdhc_sels));
 	imxccm_div("usdhc1_podf", "usdhc1_sel", CCM_CSCDR1, 11, 3);
 	imxccm_div("usdhc2_podf", "usdhc2_sel", CCM_CSCDR1, 16, 3);
 	imxccm_div("usdhc3_podf", "usdhc3_sel", CCM_CSCDR1, 19, 3);
@@ -333,14 +331,14 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 	imxccm_gate("sata_ref_100m", "sata_ref", CCM_ANALOG_PLL_ENET, 20);
 
 	/* pcie */
-	imxccm_mux("pcie_axi_sel", CCM_CBCMR, 10, 1, pcie_axi_sels, NELEMS(pcie_axi_sels));
+	imxccm_mux("pcie_axi_sel", CCM_CBCMR, 10, 1, pcie_axi_sels, nitems(pcie_axi_sels));
 	imxccm_gate2("pcie_axi", "pcie_axi_sel", CCM_CCGR4, 0);
 	imxccm_fixed_factor("pcie_ref", "pll6_enet", 1, 4);
 	imxccm_gate("pcie_ref_125m", "pcie_ref", CCM_ANALOG_PLL_ENET, 19);
 
 	/* lvds */
-	imxccm_mux("lvds1_sel", CCM_PMU_MISC1, 0, 5, lvds_sels, NELEMS(lvds_sels));
-	imxccm_mux("lvds2_sel", CCM_PMU_MISC1, 5, 5, lvds_sels, NELEMS(lvds_sels));
+	imxccm_mux("lvds1_sel", CCM_PMU_MISC1, 0, 5, lvds_sels, nitems(lvds_sels));
+	imxccm_mux("lvds2_sel", CCM_PMU_MISC1, 5, 5, lvds_sels, nitems(lvds_sels));
 	imxccm_gate("lvds1_gate", "dummy", CCM_PMU_MISC1, 10);
 	imxccm_gate("lvds2_gate", "dummy", CCM_PMU_MISC1, 11);
 	clk_set_parent(clk_get("lvds1_sel"), clk_get("sata_ref")); /* PCIe */

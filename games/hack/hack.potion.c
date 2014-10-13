@@ -61,6 +61,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/param.h>
 #include "hack.h"
 extern char *nomovemsg;
 extern struct monst youmonst;
@@ -286,7 +287,7 @@ char *bottlenames[] = {
 void
 potionhit(struct monst *mon, struct obj *obj)
 {
-	char *botlnam = bottlenames[rn2(SIZE(bottlenames))];
+	char *botlnam = bottlenames[rn2(nitems(bottlenames))];
 	boolean uclose, isyou = (mon == &youmonst);
 
 	if(isyou) {

@@ -31,6 +31,7 @@
  */
 
 #include "file.h"
+#include <sys/param.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -40,8 +41,6 @@
 #include <unistd.h>
 #endif
 #include <time.h>
-
-#define SZOF(a)	(sizeof(a) / sizeof(a[0]))
 
 #ifndef COMPILE_ONLY
 protected void
@@ -61,7 +60,7 @@ file_mdump(struct magic *m)
 		if (m->in_op & FILE_OPINVERSE)
 			(void) fputc('~', stderr);
 		(void) fprintf(stderr, "%c%u),",
-			       ((m->in_op & FILE_OPS_MASK) < SZOF(optyp)) ? 
+			       ((m->in_op & FILE_OPS_MASK) < nitems(optyp)) ?
 					optyp[m->in_op & FILE_OPS_MASK] : '?',
 				m->in_offset);
 	}
@@ -90,7 +89,7 @@ file_mdump(struct magic *m)
 			(void) fprintf(stderr, "/%u", m->str_range);
 	}
 	else {
-		if ((m->mask_op & FILE_OPS_MASK) < SZOF(optyp))
+		if ((m->mask_op & FILE_OPS_MASK) < nitems(optyp))
 			(void) fputc(optyp[m->mask_op & FILE_OPS_MASK], stderr);
 		else
 			(void) fputc('?', stderr);

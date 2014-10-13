@@ -39,6 +39,7 @@
  */
 
 #include <curses.priv.h>
+#include <sys/param.h>
 #include <hashed_db.h>
 
 #include <sys/stat.h>
@@ -701,7 +702,7 @@ write_object(TERMTYPE *tp, char *buffer, unsigned *offset, unsigned limit)
 				   offsets);
 	TRACE_OUT(("after extended string capabilities, nextfree=%d", nextfree));
 
-	if (tp->ext_Strings >= SIZEOF(offsets))
+	if (tp->ext_Strings >= nitems(offsets))
 	    return (ERR);
 
 	nextfree += compute_offsets(tp->ext_Names,

@@ -41,6 +41,7 @@
  */
 
 #include <progs.priv.h>
+#include <sys/param.h>
 
 #include <dump_entry.h>
 
@@ -1019,7 +1020,7 @@ usage(void)
 #endif
     };
     const size_t first = 3;
-    const size_t last = SIZEOF(tbl);
+    const size_t last = nitems(tbl);
     const size_t left = (last - first + 1) / 2 + first;
     size_t n;
 

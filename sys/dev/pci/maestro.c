@@ -383,7 +383,6 @@ u_long maestrodma_effective;
 #endif
 
 #define MAESTRO_BUFSIZ		0x4000
-#define lengthof(array)		(sizeof (array) / sizeof (array)[0])
 
 #define STEP_VOLUME		0x22
 #define MIDDLE_VOLUME		(STEP_VOLUME * 4)
@@ -578,7 +577,7 @@ struct {
 	{ PCI_VENDOR_NEC, PCI_PRODUCT_NEC_VERSAMAESTRO,		MAESTRO_FLAG_SETUPGPIO },
 	{ PCI_VENDOR_NEC, PCI_PRODUCT_NEC_VERSAPRONXVA26D,	MAESTRO_FLAG_SETUPGPIO }
 };
-#define NMAESTRO_PCITAB	lengthof(maestro_pcitab)
+#define NMAESTRO_PCITAB	nitems(maestro_pcitab)
 
 int
 maestro_get_flags(struct pci_attach_args *pa)
@@ -959,7 +958,7 @@ struct audio_encoding maestro_tab[] = {
 int
 maestro_query_encoding(void *hdl, struct audio_encoding *fp)
 {
-	if (fp->index < 0 || fp->index >= lengthof(maestro_tab))
+	if (fp->index < 0 || fp->index >= nitems(maestro_tab))
 		return (EINVAL);
 	*fp = maestro_tab[fp->index];
 	return (0);

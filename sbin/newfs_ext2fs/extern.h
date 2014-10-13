@@ -29,10 +29,6 @@
 #define EXT2_LOG_MAXBSIZE	12
 #define EXT2_MAXBSIZE		(1 << EXT2_LOG_MAXBSIZE)
 
-#ifndef nitems
-#define nitems(_a)   (sizeof((_a)) / sizeof((_a)[0]))
-#endif
-
 /* prototypes */
 void mke2fs(const char *, int, int);
 

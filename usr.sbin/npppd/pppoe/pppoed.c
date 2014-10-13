@@ -235,7 +235,7 @@ pppoed_listener_start(pppoed_listener *_this, int restart)
 #endif
 	};
 	struct bpf_program bf_filter = {
-		.bf_len = countof(insns),
+		.bf_len = nitems(insns),
 		.bf_insns = insns
 	};
 	pppoed *_pppoed;
@@ -1076,7 +1076,7 @@ static struct _label_name {
 	{								\
 		int i;							\
 									\
-		for (i = 0; i < countof(label_names); i++) {		\
+		for (i = 0; i < nitems(label_names); i++) {		\
 			if (label_names[i].label == code)		\
 				return label_names[i].name + prefix_len;\
 		}							\

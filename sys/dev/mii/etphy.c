@@ -276,9 +276,7 @@ etphy_reset(struct mii_softc *sc)
 	PHY_WRITE(sc, ETPHY_CTRL,
 	    ETPHY_CTRL_DIAG | ETPHY_CTRL_RSV1 | ETPHY_CTRL_RSV0);
 
-#define N(arr)	(int)(sizeof(arr) / sizeof(arr[0]))
-
-	for (i = 0; i < N(etphy_dspcode); ++i) {
+	for (i = 0; i < nitems(etphy_dspcode); ++i) {
 		const struct etphy_dsp *dsp = &etphy_dspcode[i];
 
 		PHY_WRITE(sc, ETPHY_INDEX, dsp->index);
@@ -287,8 +285,6 @@ etphy_reset(struct mii_softc *sc)
 		PHY_WRITE(sc, ETPHY_INDEX, dsp->index);
 		PHY_READ(sc, ETPHY_DATA);
 	}
-
-#undef N
 
 	PHY_READ(sc, MII_BMCR);
 	PHY_READ(sc, ETPHY_CTRL);

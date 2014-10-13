@@ -102,6 +102,7 @@ END	{
 		print  ""
 		print  "#if BROKEN_LINKER || USE_REENTRANT"
 		print  ""
+		print  "#include <sys/param.h>"
 		print  "#include <term.h>"
 		print  ""
 		if (bigstrings) {
@@ -125,7 +126,7 @@ END	{
 			print  "	return *value;"
 			print  "}"
 			print  ""
-			print  "#define FIX(it) NCURSES_IMPEXP IT * NCURSES_API _nc_##it(void) { return alloc_array(&ptr_##it, _nc_offset_##it, SIZEOF(_nc_offset_##it)); }"
+			print  "#define FIX(it) NCURSES_IMPEXP IT * NCURSES_API _nc_##it(void) { return alloc_array(&ptr_##it, _nc_offset_##it, nitems(_nc_offset_##it)); }"
 		} else {
 			print  "#define DCL(it) static IT data##it[]"
 			print  ""

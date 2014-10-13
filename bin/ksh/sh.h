@@ -48,7 +48,6 @@
 #define EXECSHELL	_PATH_BSHELL
 #define EXECSHELL_STR	"EXECSHELL"
 
-#define	NELEM(a) (sizeof(a) / sizeof((a)[0]))
 #define	sizeofN(type, n) (sizeof(type) * (n))
 #define	BIT(i)	(1<<(i))	/* define bit in flag */
 

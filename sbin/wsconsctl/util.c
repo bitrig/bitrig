@@ -30,6 +30,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/param.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <dev/wscons/wsconsio.h>
@@ -40,8 +41,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "wsconsctl.h"
-
-#define TABLEN(t)		(sizeof(t)/sizeof(t[0]))
 
 extern struct wskbd_map_data kbmap;	/* from keyboard.c */
 extern struct wskbd_map_data newkbmap;	/* from map_parse.y */
@@ -265,22 +264,22 @@ pr_field(const char *pre, struct field *f, const char *sep)
 		break;
 	case FMT_KBDTYPE:
 		p = int2name(*((u_int *) f->valp), 1,
-			     kbtype_tab, TABLEN(kbtype_tab));
+			     kbtype_tab, nitems(kbtype_tab));
 		printf("%s", p);
 		break;
 	case FMT_MSTYPE:
 		p = int2name(*((u_int *) f->valp), 1,
-			     mstype_tab, TABLEN(mstype_tab));
+			     mstype_tab, nitems(mstype_tab));
 		printf("%s", p);
 		break;
 	case FMT_DPYTYPE:
 		p = int2name(*((u_int *) f->valp), 1,
-			     dpytype_tab, TABLEN(dpytype_tab));
+			     dpytype_tab, nitems(dpytype_tab));
 		printf("%s", p);
 		break;
 	case FMT_KBDENC:
 		p = int2name(KB_ENCODING(*((u_int *) f->valp)), 1,
-			     kbdenc_tab, TABLEN(kbdenc_tab));
+			     kbdenc_tab, nitems(kbdenc_tab));
 		printf("%s", p);
 
 		flags = KB_VARIANT(*((u_int *) f->valp));
@@ -288,7 +287,7 @@ pr_field(const char *pre, struct field *f, const char *sep)
 			if (!(flags & (1 << i)))
 				continue;
 			p = int2name(flags & (1 << i), 1,
-				     kbdvar_tab, TABLEN(kbdvar_tab));
+				     kbdvar_tab, nitems(kbdvar_tab));
 			printf(".%s", p);
 		}
 		break;
@@ -372,7 +371,7 @@ rd_field(struct field *f, char *val, int merge)
 		if (p != NULL)
 			*p++ = '\0';
 
-		i = name2int(val, kbdenc_tab, TABLEN(kbdenc_tab));
+		i = name2int(val, kbdenc_tab, nitems(kbdenc_tab));
 		if (i == -1)
 			errx(1, "%s: not a valid encoding", val);
 		*((u_int *) f->valp) = i;
@@ -382,7 +381,7 @@ rd_field(struct field *f, char *val, int merge)
 			p = strchr(p, '.');
 			if (p != NULL)
 				*p++ = '\0';
-			i = name2int(val, kbdvar_tab, TABLEN(kbdvar_tab));
+			i = name2int(val, kbdvar_tab, nitems(kbdvar_tab));
 			if (i == -1)
 				errx(1, "%s: not a valid variant", val);
 			*((u_int *) f->valp) |= i;

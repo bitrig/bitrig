@@ -119,16 +119,16 @@ pptpd_init(pptpd *_this)
 	slist_init(&_this->call_free_list);
 
 	/* randomize call id */
-	for (i = 0; i < countof(call) ; i++)
+	for (i = 0; i < nitems(call) ; i++)
 		call[i] = i + 1;
-	for (i = countof(call); i > 1; i--) {
+	for (i = nitems(call); i > 1; i--) {
 		m = arc4random() % i;
 		call0 = call[m];
 		call[m] = call[i - 1];
 		call[i - 1] = call0;
 	}
 
-	for (i = 0; i < MIN(PPTP_MAX_CALL, countof(call)); i++)
+	for (i = 0; i < MIN(PPTP_MAX_CALL, nitems(call)); i++)
 		slist_add(&_this->call_free_list, (void *)(uintptr_t)call[i]);
 	slist_add(&_this->call_free_list, (void *)PPTPD_SHUFFLE_MARK);
 

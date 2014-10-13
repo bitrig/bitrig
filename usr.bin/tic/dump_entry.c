@@ -36,6 +36,7 @@
 
 #define __INTERNAL_CAPS_VISIBLE
 #include <progs.priv.h>
+#include <sys/param.h>
 
 #include "dump_entry.h"
 #include "termsort.c"		/* this C file is generated */
@@ -47,7 +48,7 @@ MODULE_ID("$Id: dump_entry.c,v 1.19 2010/01/12 23:22:14 nicm Exp $")
 #define DISCARD(string) string = ABSENT_STRING
 #define PRINTF (void) printf
 
-#define OkIndex(index,array) ((int)(index) >= 0 && (int)(index) < (int) SIZEOF(array))
+#define OkIndex(index,array) ((int)(index) >= 0 && (int)(index) < (int) nitems(array))
 
 typedef struct {
     char *text;
@@ -744,7 +745,7 @@ fmt_entry(TERMTYPE *tterm,
 		snprintf(buffer, sizeof(buffer), "%s@", name);
 		WRAP_CONCAT;
 	    } else if (outform == F_TERMCAP || outform == F_TCONVERR) {
-		int params = ((i < (int) SIZEOF(parametrized))
+		int params = ((i < (int) nitems(parametrized))
 			      ? parametrized[i]
 			      : 0);
 		char *srccap = _nc_tic_expand(capability, TRUE, numbers);

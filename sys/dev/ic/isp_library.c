@@ -28,6 +28,7 @@
 /*
  * QLogic Host Adapter Internal Library Functions
  */
+#include <sys/param.h>
 #ifdef	__NetBSD__
 #include <sys/cdefs.h>
 __KERNEL_RCSID(0, "$NetBSD$");
@@ -314,7 +315,6 @@ isp_shutdown(struct ispsoftc *isp)
 #define	ISP_IS_SBUS(isp)	\
 	(ISP_SBUS_SUPPORTED && (isp)->isp_bustype == ISP_BT_SBUS)
 
-#define	ASIZE(x)	(sizeof (x) / sizeof (x[0]))
 /*
  * Swizzle/Copy Functions
  */
@@ -395,7 +395,7 @@ isp_put_request(struct ispsoftc *isp, ispreq_t *rqsrc, ispreq_t *rqdst)
 	ISP_IOXPUT_16(isp, rqsrc->req_flags, &rqdst->req_flags);
 	ISP_IOXPUT_16(isp, rqsrc->req_time, &rqdst->req_time);
 	ISP_IOXPUT_16(isp, rqsrc->req_seg_count, &rqdst->req_seg_count);
-	for (i = 0; i < ASIZE(rqsrc->req_cdb); i++) {
+	for (i = 0; i < nitems(rqsrc->req_cdb); i++) {
 		ISP_IOXPUT_8(isp, rqsrc->req_cdb[i], &rqdst->req_cdb[i]);
 	}
 	for (i = 0; i < ISP_RQDSEG; i++) {
@@ -422,7 +422,7 @@ isp_put_marker(struct ispsoftc *isp, isp_marker_t *src, isp_marker_t *dst)
 	ISP_IOXPUT_16(isp, src->mrk_modifier, &dst->mrk_modifier);
 	ISP_IOXPUT_16(isp, src->mrk_flags, &dst->mrk_flags);
 	ISP_IOXPUT_16(isp, src->mrk_lun, &dst->mrk_lun);
-	for (i = 0; i < ASIZE(src->mrk_reserved1); i++) {
+	for (i = 0; i < nitems(src->mrk_reserved1); i++) {
 		ISP_IOXPUT_8(isp, src->mrk_reserved1[i],
 		    &dst->mrk_reserved1[i]);
 	}
@@ -441,7 +441,7 @@ isp_put_request_t2(struct ispsoftc *isp, ispreqt2_t *src, ispreqt2_t *dst)
 	ISP_IOXPUT_16(isp, src->req_reserved, &dst->req_reserved);
 	ISP_IOXPUT_16(isp, src->req_time, &dst->req_time);
 	ISP_IOXPUT_16(isp, src->req_seg_count, &dst->req_seg_count);
-	for (i = 0; i < ASIZE(src->req_cdb); i++) {
+	for (i = 0; i < nitems(src->req_cdb); i++) {
 		ISP_IOXPUT_8(isp, src->req_cdb[i], &dst->req_cdb[i]);
 	}
 	ISP_IOXPUT_32(isp, src->req_totalcnt, &dst->req_totalcnt);
@@ -465,7 +465,7 @@ isp_put_request_t2e(struct ispsoftc *isp, ispreqt2e_t *src, ispreqt2e_t *dst)
 	ISP_IOXPUT_16(isp, src->req_reserved, &dst->req_reserved);
 	ISP_IOXPUT_16(isp, src->req_time, &dst->req_time);
 	ISP_IOXPUT_16(isp, src->req_seg_count, &dst->req_seg_count);
-	for (i = 0; i < ASIZE(src->req_cdb); i++) {
+	for (i = 0; i < nitems(src->req_cdb); i++) {
 		ISP_IOXPUT_8(isp, src->req_cdb[i], &dst->req_cdb[i]);
 	}
 	ISP_IOXPUT_32(isp, src->req_totalcnt, &dst->req_totalcnt);
@@ -490,7 +490,7 @@ isp_put_request_t3(struct ispsoftc *isp, ispreqt3_t *src, ispreqt3_t *dst)
 	ISP_IOXPUT_16(isp, src->req_reserved, &dst->req_reserved);
 	ISP_IOXPUT_16(isp, src->req_time, &dst->req_time);
 	ISP_IOXPUT_16(isp, src->req_seg_count, &dst->req_seg_count);
-	for (i = 0; i < ASIZE(src->req_cdb); i++) {
+	for (i = 0; i < nitems(src->req_cdb); i++) {
 		ISP_IOXPUT_8(isp, src->req_cdb[i], &dst->req_cdb[i]);
 	}
 	ISP_IOXPUT_32(isp, src->req_totalcnt, &dst->req_totalcnt);
@@ -516,7 +516,7 @@ isp_put_request_t3e(struct ispsoftc *isp, ispreqt3e_t *src, ispreqt3e_t *dst)
 	ISP_IOXPUT_16(isp, src->req_reserved, &dst->req_reserved);
 	ISP_IOXPUT_16(isp, src->req_time, &dst->req_time);
 	ISP_IOXPUT_16(isp, src->req_seg_count, &dst->req_seg_count);
-	for (i = 0; i < ASIZE(src->req_cdb); i++) {
+	for (i = 0; i < nitems(src->req_cdb); i++) {
 		ISP_IOXPUT_8(isp, src->req_cdb[i], &dst->req_cdb[i]);
 	}
 	ISP_IOXPUT_32(isp, src->req_totalcnt, &dst->req_totalcnt);
@@ -547,7 +547,7 @@ isp_put_extended_request(struct ispsoftc *isp, ispextreq_t *src, ispextreq_t *ds
 	ISP_IOXPUT_16(isp, src->req_flags, &dst->req_flags);
 	ISP_IOXPUT_16(isp, src->req_time, &dst->req_time);
 	ISP_IOXPUT_16(isp, src->req_seg_count, &dst->req_seg_count);
-	for (i = 0; i < ASIZE(src->req_cdb); i++) {
+	for (i = 0; i < nitems(src->req_cdb); i++) {
 		ISP_IOXPUT_8(isp, src->req_cdb[i], &dst->req_cdb[i]);
 	}
 }

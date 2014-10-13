@@ -64,10 +64,6 @@ struct l2tp_header {
 	uint16_t	nr;
 } __attribute__((__packed__));
 
-#ifndef	countof
-#define	countof(x)	(sizeof((x)) / sizeof((x)[0]))
-#endif
-
 #define	LISTENER_SOCK(ctrl)	\
 	((l2tpd_listener *)slist_get(&(ctrl)->l2tpd->listener, \
 	    (ctrl)->listener_index))->sock

@@ -40,10 +40,6 @@
 #include "parser.h"
 #include "npppd_ctl.h"
 
-#ifndef nitems
-#define nitems(_x)	(sizeof(_x) / sizeof(_x[0]))
-#endif
-
 #define	NMAX_DISCONNECT		2048
 
 static void         usage (void);

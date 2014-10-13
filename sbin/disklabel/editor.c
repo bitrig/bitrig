@@ -103,10 +103,6 @@ const struct space_allocation alloc_stupid[] = {
 	{    MEG(1),      MEG(2048), 100, "/"		}
 };
 
-#ifndef nitems
-#define nitems(_a)	(sizeof((_a)) / sizeof((_a)[0]))
-#endif
-
 const struct {
 	const struct space_allocation *table;
 	int sz;
