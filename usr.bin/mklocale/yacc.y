@@ -289,7 +289,7 @@ xmalloc(unsigned int sz)
 static uint32_t *
 xlalloc(unsigned int sz)
 {
-    uint32_t *r = (uint32_t *)malloc(sz * sizeof(uint32_t));
+    uint32_t *r = (uint32_t *)reallocarray(NULL, sz, sizeof(uint32_t));
     if (!r)
 	errx(1, "xlalloc");
     return(r);
@@ -298,8 +298,8 @@ xlalloc(unsigned int sz)
 static uint32_t *
 xrelalloc(uint32_t *old, unsigned int sz)
 {
-    uint32_t *r = (uint32_t *)realloc((char *)old,
-						sz * sizeof(uint32_t));
+    uint32_t *r = (uint32_t *)reallocarray((char *)old, sz,
+						sizeof(uint32_t));
     if (!r)
 	errx(1, "xrelalloc");
     return(r);
