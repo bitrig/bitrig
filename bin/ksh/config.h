@@ -32,9 +32,6 @@
 /* Specify default $ENV? */
 /* #undef DEFAULT_ENV */
 
-/* The number of bytes in a int.  */
-#define SIZEOF_INT 4
-
 /*
  * End of configuration stuff for PD ksh.
  */
