@@ -1,4 +1,4 @@
-/*	$OpenBSD: route.c,v 1.186 2014/10/08 07:37:02 mpi Exp $	*/
+/*	$OpenBSD: route.c,v 1.187 2014/10/14 09:52:26 mpi Exp $	*/
 /*	$NetBSD: route.c,v 1.14 1996/02/13 22:00:46 christos Exp $	*/
 
 /*
@@ -368,8 +368,7 @@ rtfree(struct rtentry *rt)
 {
 	struct ifaddr	*ifa;
 
-	if (rt == NULL)
-		panic("rtfree");
+	KASSERT(rt != NULL);
 
 	rt->rt_refcnt--;
 
@@ -786,8 +785,8 @@ rtrequest1(int req, struct rt_addrinfo *info, u_int8_t prio,
 			panic ("rtrequest delete");
 
 		if (rt->rt_gwroute) {
-			rt = rt->rt_gwroute; RTFREE(rt);
-			(rt = (struct rtentry *)rn)->rt_gwroute = NULL;
+			rtfree(rt->rt_gwroute);
+			rt->rt_gwroute = NULL;
 		}
 
 		if (rt->rt_parent) {
@@ -967,7 +966,7 @@ rtrequest1(int req, struct rt_addrinfo *info, u_int8_t prio,
 				    (caddr_t)info->rti_info[RTAX_NETMASK],
 				    rnh, rt->rt_nodes, rt->rt_priority);
 			}
-			RTFREE(crt);
+			rtfree(crt);
 		}
 		if (rn == 0) {
 			ifafree(ifa);
@@ -1024,7 +1023,7 @@ rt_setgate(struct rtentry *rt, struct sockaddr *dst, struct sockaddr *gate,
 		free(old, M_RTABLE, 0);
 	}
 	if (rt->rt_gwroute != NULL) {
-		RTFREE(rt->rt_gwroute);
+		rtfree(rt->rt_gwroute);
 		rt->rt_gwroute = NULL;
 	}
 	if (rt->rt_flags & RTF_GATEWAY) {
