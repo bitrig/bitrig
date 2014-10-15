@@ -99,7 +99,8 @@ struct cfdriver exgpio_cd = {
 int
 exgpio_match(struct device *parent, void *v, void *aux)
 {
-	switch (board_id) {
+	switch (board_id)
+	{
 	case BOARD_ID_EXYNOS5_CHROMEBOOK:
 		break; /* continue trying */
 	default:
@@ -123,13 +124,14 @@ exgpio_attach(struct device *parent, struct device *self, void *args)
 	sc->sc_ngpio = (aa->aa_dev->mem[0].size / GPIO_BANK_SIZE)
 	    * GPIO_PINS_PER_BANK;
 
-	switch (board_id) {
-		case BOARD_ID_EXYNOS5_CHROMEBOOK:
-			sc->sc_get_bit  = exgpio_v5_get_bit;
-			sc->sc_set_bit = exgpio_v5_set_bit;
-			sc->sc_clear_bit = exgpio_v5_clear_bit;
-			sc->sc_set_dir = exgpio_v5_set_dir;
-			break;
+	switch (board_id)
+	{
+	case BOARD_ID_EXYNOS5_CHROMEBOOK:
+		sc->sc_get_bit  = exgpio_v5_get_bit;
+		sc->sc_set_bit = exgpio_v5_set_bit;
+		sc->sc_clear_bit = exgpio_v5_clear_bit;
+		sc->sc_set_dir = exgpio_v5_set_dir;
+		break;
 	}
 
 	printf("\n");
@@ -145,11 +147,10 @@ exgpio_pin_to_inst(unsigned int gpio)
 {
 	int i;
 
-	for (i = 0; exgpio_cd.cd_devs[i] != NULL; i++)
-	{
+	for (i = 0; exgpio_cd.cd_devs[i] != NULL; i++) {
 		struct exgpio_softc *sc = exgpio_cd.cd_devs[i];
 		if (gpio < sc->sc_ngpio)
-			return sc;
+			return (sc);
 		else
 			gpio -= sc->sc_ngpio;
 	}
@@ -162,11 +163,10 @@ exgpio_pin_to_offset(unsigned int gpio)
 {
 	int i;
 
-	for (i = 0; exgpio_cd.cd_devs[i] != NULL; i++)
-	{
+	for (i = 0; exgpio_cd.cd_devs[i] != NULL; i++) {
 		struct exgpio_softc *sc = exgpio_cd.cd_devs[i];
 		if (gpio < sc->sc_ngpio)
-			return gpio;
+			return (gpio);
 		else
 			gpio -= sc->sc_ngpio;
 	}
