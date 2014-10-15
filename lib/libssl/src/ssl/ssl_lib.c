@@ -1,4 +1,4 @@
-/* $OpenBSD: ssl_lib.c,v 1.85 2014/10/03 13:58:18 jsing Exp $ */
+/* $OpenBSD: ssl_lib.c,v 1.86 2014/10/15 17:39:34 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
