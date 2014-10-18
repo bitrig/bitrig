@@ -429,10 +429,12 @@ sys_execve(struct proc *p, void *v, register_t *retval)
 
 	vm = pr->ps_vmspace;
 	/* Now map address space */
-	vm->vm_taddr = (char *)pack.ep_taddr;
-	vm->vm_tsize = atop(round_page(pack.ep_tsize));
-	vm->vm_daddr = (char *)pack.ep_daddr;
-	vm->vm_dsize = atop(round_page(pack.ep_dsize));
+	vm->vm_taddr = (char *)trunc_page(pack.ep_taddr);
+	vm->vm_tsize = atop(round_page(pack.ep_taddr + pack.ep_tsize) -
+	    trunc_page(pack.ep_taddr));
+	vm->vm_daddr = (char *)trunc_page(pack.ep_daddr);
+	vm->vm_dsize = atop(round_page(pack.ep_daddr + pack.ep_dsize) -
+	    trunc_page(pack.ep_daddr));
 	vm->vm_dused = 0;
 	vm->vm_ssize = atop(round_page(pack.ep_ssize));
 	vm->vm_maxsaddr = (char *)pack.ep_maxsaddr;
