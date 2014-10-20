@@ -1823,6 +1823,9 @@ SSL_CTX_new(const SSL_METHOD *meth)
 	 */
 	ret->options |= SSL_OP_LEGACY_SERVER_CONNECT;
 
+	/* Disable SSLv3 by default. */
+	ret->options |= SSL_OP_NO_SSLv3;
+
 	return (ret);
 err:
 	SSLerr(SSL_F_SSL_CTX_NEW,
