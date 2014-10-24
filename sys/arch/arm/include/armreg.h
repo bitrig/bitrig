@@ -62,6 +62,7 @@
 #define PSR_E_bit (1 << 9)	/* Data endianness */
 #define PSR_A_bit (1 << 8)	/* Imprecise data abort disable */
 
+#define A32_bit (1 << 8)	/* Asynchronous abort disable */
 #define I32_bit (1 << 7)	/* IRQ disable */
 #define F32_bit (1 << 6)	/* FIQ disable */
 

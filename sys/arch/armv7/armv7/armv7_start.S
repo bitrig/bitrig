@@ -87,12 +87,33 @@ _C_LABEL(bootstrap_start):
 	 * the low bits
 	 */
 
+	bl	hypervisor_stub_install	/* Setup hypervisor mode. */
+
+	/*
+	 * If we are running in HYP mode, try to get to SVC safely.
+	 */
+	mrs	r0, cpsr
+	eor	r0, r0, #(PSR_HYP32_MODE)
+	tst	r0, #(PSR_MODE)
+	bic	r0, r0, #(PSR_MODE)
+	orr	r0, r0, #(I32_bit | F32_bit | PSR_SVC32_MODE)
+	bne	1f			/* If we are not in HYP, we're done */
+	orr	r0, r0, #(A32_bit)
+	adr	lr, 2f
+	msr	ELR_hyp, lr
+	msr	spsr_fsxc, r0
+	eret				/* Use the HYP LR to get into SVC */
+1:
+	msr	cpsr_c, r0
+2:
+
+	/*
+	 * Now that we are in SVC, build up pagetables and start up.
+	 */
 	mov r9, pc
 	and r9, r9, #0xf0000000	// Leave the memory base in r9
 
 	/* create the bootstrap MMU table at offset 0x00200000 */
-
-	/* build page table from scratch */
 	orr	r0, r9, #0x00200000
 	adr	r4, mmu_init_table
 
