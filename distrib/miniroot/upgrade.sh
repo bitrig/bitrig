@@ -70,6 +70,8 @@ THESETS="$THESETS site$VERSION-$(hostname -s).tgz"
 # Configure the network.
 enable_network
 
+((NIFS != 0)) && startserverlist
+
 # Create fstab for use during upgrade.
 munge_fstab
 
