@@ -325,7 +325,7 @@ agtimer_cpu_initclocks()
 	reg = agtimer_get_ctrl();
 	reg &= GTIMER_CNTP_CTL_IMASK;
 	reg |= GTIMER_CNTP_CTL_ENABLE;
-	agtimer_set_tval(sc->sc_ticks_per_second);
+	agtimer_set_tval(sc->sc_ticks_per_intr);
 	agtimer_set_ctrl(reg);
 }
 
@@ -401,6 +401,6 @@ agtimer_startclock(void)
 	reg = agtimer_get_ctrl();
 	reg &= GTIMER_CNTP_CTL_IMASK;
 	reg |= GTIMER_CNTP_CTL_ENABLE;
-	agtimer_set_tval(sc->sc_ticks_per_second);
+	agtimer_set_tval(sc->sc_ticks_per_intr);
 	agtimer_set_ctrl(reg);
 }
