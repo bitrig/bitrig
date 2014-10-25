@@ -37,6 +37,9 @@ tmpfs_snap_rdwr(struct vnode *vp, enum uio_rw rw, void *ptr, size_t sz,
 	struct proc *p = curproc;
 	int ioflags = IO_UNIT | IO_NODELOCKED;
 
+	if (*off > OFF_MAX || OFF_MAX - *off < sz)
+		return (EINVAL);
+
 	error = vn_rdwr(rw, vp, ptr, (int)sz, *off, UIO_SYSSPACE, ioflags,
 	    p->p_ucred, NULL, p);
 
@@ -595,6 +598,9 @@ tmpfs_snap_load_vnode(struct mount *mp, struct vnode *vp, struct proc *p)
 		return (EFTYPE);
 
 	TMPFS_SNAP_NTOH(&hdr);
+
+	if (hdr.ts_snap_sz > OFF_MAX)
+		return (EINVAL);
 
 	off = sizeof(hdr);
 	while (off < hdr.ts_snap_sz) {
