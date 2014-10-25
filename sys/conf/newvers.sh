@@ -57,7 +57,7 @@ id=`basename "${d}"`
 #	and disable POOL_DEBUG in sys/conf/GENERIC
 
 ost="Bitrig"
-osr="0.1"
+osr="1.0"
 
 git_tag=
 git_branch=
@@ -72,10 +72,10 @@ if type git 1>/dev/null 2>&1 ; then
 fi
 
 cat >vers.c <<eof
-#define STATUS "-current"		/* just after a release */
+#define STATUS "-beta"			/* just before a release */
 #if 0
 #define STATUS ""			/* release */
-#define STATUS "-beta"			/* just before a release */
+#define STATUS "-current"		/* just after a release */
 #endif
 
 const char ostype[] = "${ost}";
