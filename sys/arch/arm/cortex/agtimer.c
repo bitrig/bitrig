@@ -35,8 +35,7 @@
 #define GTIMER_CNTP_CTL_IMASK		(1 << 1)
 #define GTIMER_CNTP_CTL_ISTATUS		(1 << 2)
 
-#define TIMER_FREQUENCY		24 * 1000 * 1000 /* ARM core clock */
-int32_t agtimer_frequency = TIMER_FREQUENCY;
+int32_t agtimer_frequency = 0;
 
 u_int agtimer_get_timecount(struct timecounter *);
 
@@ -98,6 +97,16 @@ struct cfattach agtimer_ca = {
 struct cfdriver agtimer_cd = {
 	NULL, "agtimer", DV_DULL
 };
+
+static int
+agtimer_get_freq()
+{
+	uint32_t val;
+
+	__asm volatile("mrc p15, 0, %0, c14, c0, 0" : "=r" (val));
+
+	return (val);
+}
 
 uint64_t
 agtimer_readcnt64(struct agtimer_softc *sc)
@@ -173,7 +182,16 @@ agtimer_attach(struct device *parent, struct device *self, void *args)
 
 	sc->sc_iot = ia->ca_iot;
 
-	sc->sc_ticks_per_second = agtimer_frequency;
+	/* TODO: use FDT instead */
+	if (agtimer_frequency)
+		sc->sc_ticks_per_second = agtimer_frequency;
+
+	if (!sc->sc_ticks_per_second)
+		sc->sc_ticks_per_second = agtimer_get_freq();
+
+	if (!sc->sc_ticks_per_second)
+		panic("%s: no clock frequency specified", self->dv_xname);
+
 	printf(": tick rate %d KHz\n", sc->sc_ticks_per_second /1000);
 
 	sc->sc_ioh = ioh;
@@ -302,7 +320,8 @@ agtimer_cpu_initclocks()
 	stathz = hz;
 	profhz = hz * 10;
 
-	if (sc->sc_ticks_per_second != agtimer_frequency) {
+	if (sc->sc_ticks_per_second != agtimer_get_freq() &&
+	    sc->sc_ticks_per_second != agtimer_frequency) {
 		agtimer_set_clockrate(agtimer_frequency);
 	}
 
@@ -325,7 +344,7 @@ agtimer_cpu_initclocks()
 	reg = agtimer_get_ctrl();
 	reg &= GTIMER_CNTP_CTL_IMASK;
 	reg |= GTIMER_CNTP_CTL_ENABLE;
-	agtimer_set_tval(sc->sc_ticks_per_second);
+	agtimer_set_tval(sc->sc_ticks_per_intr);
 	agtimer_set_ctrl(reg);
 }
 
@@ -401,6 +420,6 @@ agtimer_startclock(void)
 	reg = agtimer_get_ctrl();
 	reg &= GTIMER_CNTP_CTL_IMASK;
 	reg |= GTIMER_CNTP_CTL_ENABLE;
-	agtimer_set_tval(sc->sc_ticks_per_second);
+	agtimer_set_tval(sc->sc_ticks_per_intr);
 	agtimer_set_ctrl(reg);
 }
