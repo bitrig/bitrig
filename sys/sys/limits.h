@@ -79,6 +79,11 @@
 					/* min value for a signed long long */
 #endif
 
+#if (__BSD_VISIBLE || __ISO_C_VISIBLE >= 1999) && defined(_KERNEL)
+# define OFF_MAX	LLONG_MAX	
+					/* max value for an off_t */
+#endif
+
 #if __BSD_VISIBLE
 # define UID_MAX	UINT_MAX	/* max value for a uid_t */
 # define GID_MAX	UINT_MAX	/* max value for a gid_t */
