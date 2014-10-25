@@ -30,7 +30,6 @@
 #include <armv7/virt/pl011var.h>
 #include <armv7/armv7/armv7_machdep.h>
 
-extern int32_t agtimer_frequency;
 extern int comcnspeed;
 extern int comcnmode;
 
@@ -74,7 +73,6 @@ virt_platform_print_board_type(void)
 {
 	switch (board_id) {
 	case BOARD_ID_VIRT:
-		agtimer_frequency = 24 * 1000 * 1000;
 		printf("board type: Virt\n");
 		break;
 	default:
