@@ -1,4 +1,4 @@
-/*	$OpenBSD: bus_space.c,v 1.23 2014/03/29 18:09:28 guenther Exp $	*/
+/*	$OpenBSD: bus_space.c,v 1.24 2014/10/25 16:57:58 kettenis Exp $	*/
 /*	$NetBSD: bus_space.c,v 1.2 2003/03/14 18:47:53 christos Exp $	*/
 
 /*-
