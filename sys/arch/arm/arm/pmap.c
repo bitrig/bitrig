@@ -1,4 +1,4 @@
-/*	$OpenBSD: pmap7.c,v 1.12 2013/11/04 00:35:30 dlg Exp $	*/
+/*	$OpenBSD: pmap7.c,v 1.17 2014/10/27 00:49:05 jsg Exp $	*/
 /*	$NetBSD: pmap.c,v 1.147 2004/01/18 13:03:50 scw Exp $	*/
 
 /*
@@ -2052,7 +2052,9 @@ pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 	if ((ftype & VM_PROT_EXECUTE) && (pte & L2_V7_S_XN)) {
 printf("%s: va %08x ftype %x %c pte %08x\n", __func__, va, ftype, user ? 'u' : 's', pte);
 printf("fault on exec\n");
+#ifdef DDB
 Debugger();
+#endif
 		/* XXX FIX THIS */
 		goto out;
 	}
