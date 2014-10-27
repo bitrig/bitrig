@@ -56,6 +56,10 @@
 #elif defined(__FreeBSD__)
 #define CONFIG_OS "__FreeBSD__"
 #define CONFIG_OS_2 "__unix__"
+#elif defined(__Bitrig__)
+#define CONFIG_OS "__Bitrig__"
+#define CONFIG_OS_2 "__unix__"
+#define CONFIG_OS_3 "__OpenBSD__"
 #elif defined(__OpenBSD__)
 #define CONFIG_OS "__OpenBSD__"
 #define CONFIG_OS_2 "__unix__"

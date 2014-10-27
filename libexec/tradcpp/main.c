@@ -215,6 +215,9 @@ apply_builtin_macros(void)
 #ifdef CONFIG_OS_2
 	apply_builtin_macro(n++, CONFIG_OS_2, "1");
 #endif
+#ifdef CONFIG_OS_3
+	apply_builtin_macro(n++, CONFIG_OS_3, "1");
+#endif
 
 #ifdef CONFIG_CPU
 	apply_builtin_macro(n++, CONFIG_CPU, "1");
