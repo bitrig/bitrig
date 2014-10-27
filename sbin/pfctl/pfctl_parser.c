@@ -1,4 +1,4 @@
-/*	$OpenBSD: pfctl_parser.c,v 1.299 2014/10/25 03:18:13 lteo Exp $ */
+/*	$OpenBSD: pfctl_parser.c,v 1.300 2014/10/27 21:51:32 mikeb Exp $ */
 
 /*
  * Copyright (c) 2001 Daniel Hartmeier
