@@ -16,11 +16,9 @@
 
 #if __x86_64
 
-tu_int __udivmodti4(tu_int a, tu_int b, tu_int* rem);
-
 /* Returns: a % b */
 
-tu_int
+COMPILER_RT_ABI tu_int
 __umodti3(tu_int a, tu_int b)
 {
     tu_int r;
