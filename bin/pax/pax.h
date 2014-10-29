@@ -223,9 +223,6 @@ typedef struct oplist {
 /*
  * General Macros
  */
-#ifndef MIN
-#define	MIN(a,b) (((a)<(b))?(a):(b))
-#endif
 #define MAJOR(x)	major(x)
 #define MINOR(x)	minor(x)
 #define TODEV(x, y)	makedev((x), (y))
