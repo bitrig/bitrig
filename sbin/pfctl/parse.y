@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.636 2014/07/02 13:03:41 mikeb Exp $	*/
+/*	$OpenBSD: parse.y,v 1.636.4.1 2014/10/29 15:29:33 sthen Exp $	*/
 
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
@@ -4516,7 +4516,7 @@ expand_rule(struct pf_rule *r, int keeprule, struct node_if *interfaces,
 	char			 tagname[PF_TAG_NAME_SIZE];
 	char			 match_tagname[PF_TAG_NAME_SIZE];
 	u_int8_t		 flags, flagset, keep_state;
-	struct node_host	*srch, *dsth;
+	struct node_host	*srch, *dsth, *osrch, *odsth;
 	struct redirspec	 binat;
 	struct pf_rule		 rb;
 	int			 dir = r->direction;
@@ -4606,6 +4606,18 @@ expand_rule(struct pf_rule *r, int keeprule, struct node_if *interfaces,
 		expand_label(r->match_tagname, PF_TAG_NAME_SIZE, r->ifname,
 		    r->af, src_host, src_port, dst_host, dst_port,
 		    proto->proto);
+
+		osrch = odsth = NULL;
+		if (src_host->addr.type == PF_ADDR_DYNIFTL) {
+			osrch = src_host;
+			if ((src_host = gen_dynnode(src_host, r->af)) == NULL)
+				err(1, "expand_rule: calloc");
+		}
+		if (dst_host->addr.type == PF_ADDR_DYNIFTL) {
+			odsth = dst_host;
+			if ((dst_host = gen_dynnode(dst_host, r->af)) == NULL)
+				err(1, "expand_rule: calloc");
+		}
 
 		error += check_netmask(src_host, r->af);
 		error += check_netmask(dst_host, r->af);
@@ -4757,6 +4769,14 @@ expand_rule(struct pf_rule *r, int keeprule, struct node_if *interfaces,
 			    uid, gid, rcv, icmp_type, anchor_call);
 		}
 
+		if (osrch && src_host->addr.type == PF_ADDR_DYNIFTL) {
+			free(src_host);
+			src_host = osrch;
+		}
+		if (odsth && dst_host->addr.type == PF_ADDR_DYNIFTL) {
+			free(dst_host);
+			dst_host = odsth;
+		}
 	))))))))));
 
 	if (!keeprule) {
