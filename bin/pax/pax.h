@@ -122,9 +122,8 @@ typedef struct {
 #define PAX_FIF		7		/* fifo */
 #define PAX_HLK		8		/* hard link */
 #define PAX_HRG		9		/* hard link to a regular file */
-#define PAX_CTG		10		/* high performance file */
-#define PAX_GLL		11		/* GNU long symlink */
-#define PAX_GLF		12		/* GNU long file */
+#define PAX_GLL		10		/* GNU long symlink */
+#define PAX_GLF		11		/* GNU long file */
 } ARCHD;
 
 /*

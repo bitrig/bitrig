@@ -407,7 +407,6 @@ badlink:
 		case PAX_SLK:
 			res = symlink(arcn->ln_name, nm);
 			break;
-		case PAX_CTG:
 		case PAX_HLK:
 		case PAX_HRG:
 		case PAX_REG:

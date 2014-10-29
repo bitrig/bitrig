@@ -553,7 +553,6 @@ tar_wr(ARCHD *arcn)
 		}
 		break;
 	case PAX_REG:
-	case PAX_CTG:
 	default:
 		break;
 	}
@@ -645,7 +644,7 @@ tar_wr(ARCHD *arcn)
 		return(-1);
 	if (wr_skip((off_t)(BLKMULT - sizeof(HD_TAR))) < 0)
 		return(-1);
-	if ((arcn->type == PAX_CTG) || (arcn->type == PAX_REG))
+	if (arcn->type == PAX_REG)
 		return(0);
 	return(1);
 
@@ -1023,15 +1022,11 @@ ustar_wr(ARCHD *arcn)
 			goto out;
 		break;
 	case PAX_REG:
-	case PAX_CTG:
 	default:
 		/*
 		 * file data with this type, set the padding
 		 */
-		if (arcn->type == PAX_CTG)
-			hd->typeflag = CONTTYPE;
-		else
-			hd->typeflag = REGTYPE;
+		hd->typeflag = REGTYPE;
 		arcn->pad = TAR_PAD(arcn->sb.st_size);
 		if (uqd_oct((u_quad_t)arcn->sb.st_size, hd->size,
 		    sizeof(hd->size), 3)) {
@@ -1100,7 +1095,7 @@ ustar_wr(ARCHD *arcn)
 		return(-1);
 	if (wr_skip((off_t)(BLKMULT - sizeof(HD_USTAR))) < 0)
 		return(-1);
-	if ((arcn->type == PAX_CTG) || (arcn->type == PAX_REG))
+	if (arcn->type == PAX_REG)
 		return(0);
 	return(1);
 

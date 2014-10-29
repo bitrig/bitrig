@@ -389,7 +389,6 @@ cpio_wr(ARCHD *arcn)
 		arcn->sb.st_rdev = 0;
 
 	switch (arcn->type) {
-	case PAX_CTG:
 	case PAX_REG:
 	case PAX_HRG:
 		/*
@@ -456,8 +455,7 @@ cpio_wr(ARCHD *arcn)
 	 * if this file has data, we are done. The caller will write the file
 	 * data, if we are link tell caller we are done, go to next file
 	 */
-	if ((arcn->type == PAX_CTG) || (arcn->type == PAX_REG) ||
-	    (arcn->type == PAX_HRG))
+	if ((arcn->type == PAX_REG) || (arcn->type == PAX_HRG))
 		return(0);
 	if (arcn->type != PAX_SLK)
 		return(1);
@@ -702,7 +700,6 @@ vcpio_wr(ARCHD *arcn)
 	}
 
 	switch (arcn->type) {
-	case PAX_CTG:
 	case PAX_REG:
 	case PAX_HRG:
 		/*
@@ -777,8 +774,7 @@ vcpio_wr(ARCHD *arcn)
 	/*
 	 * if we have file data, tell the caller we are done, copy the file
 	 */
-	if ((arcn->type == PAX_CTG) || (arcn->type == PAX_REG) ||
-	    (arcn->type == PAX_HRG))
+	if ((arcn->type == PAX_REG) || (arcn->type == PAX_HRG))
 		return(0);
 
 	/*
@@ -983,7 +979,6 @@ bcpio_wr(ARCHD *arcn)
 	hd = (HD_BCPIO *)hdblk;
 
 	switch (arcn->type) {
-	case PAX_CTG:
 	case PAX_REG:
 	case PAX_HRG:
 		/*
@@ -1095,8 +1090,7 @@ bcpio_wr(ARCHD *arcn)
 	/*
 	 * if we have file data, tell the caller we are done
 	 */
-	if ((arcn->type == PAX_CTG) || (arcn->type == PAX_REG) ||
-	    (arcn->type == PAX_HRG))
+	if ((arcn->type == PAX_REG) || (arcn->type == PAX_HRG))
 		return(0);
 
 	/*
