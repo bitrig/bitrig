@@ -601,6 +601,40 @@ intr_printconfig(void)
 #endif
 }
 
+
+/*
+ * Dispatch all pending interrupts. Must not be in a critical section.
+ */
+#define IPENDING_ISSET(ipe, slot)	(ipe & (1ull << slot))
+#define IPENDING_CLR(ipe, slot)		(ipe &= ~(1ull << slot))
+#define IPENDING_NEXT(ipe)		(flsq(ipe) - 1)
+void
+intr_unpend(void)
+{
+	struct cpu_info *ci = curcpu();
+	u_int64_t ipending;
+	intr_state_t ist;
+	int i;
+
+	ist = intr_get_state();
+	intr_disable();
+
+	/* Cheaper than atomic_exchange() (no bus locking) */
+	ipending = ci->ci_ipending;
+	ci->ci_ipending = 0;
+
+	intr_set_state(ist);
+
+	while (ipending) {
+		i = IPENDING_NEXT(ipending);
+		IPENDING_CLR(ipending, i);
+		ci->ci_isources[i]->is_run(ci->ci_isources[i]);
+	}
+}
+#undef IPENDING_ISSET
+#undef IPENDING_CLR
+#undef IPENDING_NEXT
+
 /*
  * Software interrupt registration
  *
