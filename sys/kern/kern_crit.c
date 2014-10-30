@@ -19,9 +19,7 @@
 #include <sys/proc.h>
 #include <sys/ithread.h>
 
-#include <machine/cpufunc.h>
-
-void	crit_rundeferred(void);
+#include <machine/intr.h>
 
 void
 crit_enter(void)
@@ -47,7 +45,7 @@ crit_leave(void)
 		preempt(NULL);
 
 	if (--p->p_crit == 0)
-		crit_rundeferred();
+		crit_unpend();
 
 	KASSERT(p->p_crit >= 0);
 }
@@ -65,43 +63,21 @@ crit_leave_all(void)
 	int c = p->p_crit;
 
 	p->p_crit = 0;
-	crit_rundeferred();
+	crit_unpend();
 
 	return (c);
 }
 
-/*
- * Process everything that was pending due to being in a critical section.
- * Must not be in a critical section.
- */
-#define IPENDING_ISSET(ipe, slot) (ipe & (1ull << slot))
-#define IPENDING_CLR(ipe, slot) (ipe &= ~(1ull << slot))
-#define IPENDING_NEXT(ipe) (flsq(ipe) - 1)
 void
-crit_rundeferred(void)
+crit_unpend(void)
 {
 	struct cpu_info *ci = curcpu();
-	u_int64_t ipending;
-	intr_state_t ist;
-	int i;
 
 	KASSERT(CRIT_DEPTH == 0);
 
-	ist = intr_get_state();
-	intr_disable();
-
-	/* Cheaper than atomic_exchange() (no bus locking) */
-	ipending = ci->ci_ipending;
-	ci->ci_ipending = 0;
-
-	intr_set_state(ist);
-
 	ci->ci_idepth++;
-	while (ipending) {
-		/* XXX can be optimized by having a btrq based flsq */
-		i = IPENDING_NEXT(ipending);
-		IPENDING_CLR(ipending, i);
-		ci->ci_isources[i]->is_run(ci->ci_isources[i]);
-	}
+	intr_unpend();	/* MD bits */
 	ci->ci_idepth--;
+
+	KASSERT(CRIT_DEPTH == 0);
 }

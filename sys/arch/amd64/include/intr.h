@@ -204,6 +204,7 @@ int intr_handler(struct intrframe *, struct intrhand *);
 void cpu_intr_init(struct cpu_info *);
 int intr_find_mpmapping(int bus, int pin, int *handle);
 void intr_printconfig(void);
+void intr_unpend(void);
 
 #ifdef MULTIPROCESSOR
 int x86_send_ipi(struct cpu_info *, int);

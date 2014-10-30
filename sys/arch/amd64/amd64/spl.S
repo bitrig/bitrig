@@ -97,7 +97,7 @@ IDTVEC(doreti)
 	testq	$-1,CPUVAR(IPENDING)
 	jz	2f
 	sti
-	call	_C_LABEL(crit_rundeferred)
+	call	_C_LABEL(crit_unpend)
 	jmp	1b		/* Old code wanted ipending to always be 0 at cli on ret */
 2:	CHECK_ASTPENDING(%r11) /* Check for ASTs on exit to user mode. */
 	je	4f
