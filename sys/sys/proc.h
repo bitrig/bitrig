@@ -501,6 +501,7 @@ void	crit_enter(void);
 void	crit_reenter(int);
 void	crit_leave(void);
 int	crit_leave_all(void);
+void	crit_unpend(void);
 #define CRIT_DEPTH	(curproc->p_crit)
 #ifdef DIAGNOSTIC
 #define CRIT_ASSERT() do {						\
