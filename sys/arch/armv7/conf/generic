@@ -68,6 +68,7 @@ include "../../../arch/armv7/conf/generic.virt"
 
 # USB bus support
 usb*		at ehci?
+usb*		at xhci?
 uhub*		at usb?
 uhub*		at uhub?
 

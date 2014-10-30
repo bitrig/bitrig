@@ -43,3 +43,10 @@ iic*		at imxiic?
 atrom*		at iic?
 maxgpio*	at iic?
 gpio*		at maxgpio?
+
+# LS1 support
+fsluart*	at fdt?
+com*		at fsluart?
+tsec*		at fdt?
+dwcthree*	at fdt?
+xhci*		at dwcthree?

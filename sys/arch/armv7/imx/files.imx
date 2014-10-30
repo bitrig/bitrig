@@ -89,3 +89,18 @@ include "dev/pci/files.pci"
 device	imxpcibr {} : pcibus
 attach	imxpcibr at imx
 file	arch/armv7/imx/imxpcibr.c		imxpcibr
+
+# NS16550 compatible serial ports
+device fsluart {}
+attach fsluart at fdt
+attach com at fsluart with com_fsl
+file	arch/armv7/imx/fsl_com.c		fsluart
+
+device tsec: ether, ifnet, mii, ifmedia
+attach tsec at fdt
+file	arch/armv7/imx/if_tsec.c		tsec
+
+device dwcthree {}
+attach dwcthree at fdt
+attach xhci at dwcthree with xhci_dwcthree
+file	arch/armv7/imx/dwc3_xhci.c		dwcthree
