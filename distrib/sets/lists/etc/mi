@@ -155,6 +155,8 @@
 ./root/.cshrc
 ./root/.login
 ./root/.profile
+./usr/share/sysmerge/etcsum
+./usr/share/sysmerge/examplessum
 ./var/crash/minfree
 ./var/cron/at.deny
 ./var/cron/cron.deny
