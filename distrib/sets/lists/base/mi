@@ -10847,8 +10847,6 @@
 ./usr/share/snmp/mibs/OPENBSD-SENSORS-MIB.txt
 ./usr/share/snmp/mibs/OPENBSD-SNMPD-CONF.txt
 ./usr/share/sysmerge
-./usr/share/sysmerge/etcsum
-./usr/share/sysmerge/examplessum
 ./usr/share/tabset
 ./usr/share/tabset/std
 ./usr/share/tabset/stdcrt
