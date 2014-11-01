@@ -1,4 +1,4 @@
-/*	$OpenBSD: kern_sysctl.c,v 1.267 2014/10/17 01:51:39 tedu Exp $	*/
+/*	$OpenBSD: kern_sysctl.c,v 1.268 2014/11/01 23:58:28 tedu Exp $	*/
 /*	$NetBSD: kern_sysctl.c,v 1.17 1996/05/20 17:49:05 mrg Exp $	*/
 
 /*-
@@ -1294,7 +1294,7 @@ sysctl_file(int *name, u_int namelen, char *where, size_t *sizep,
 		error = EINVAL;
 		break;
 	}
-	free(kf, M_TEMP, 0);
+	free(kf, M_TEMP, sizeof(*kf));
 
 	if (!error) {
 		if (where == NULL)
@@ -1467,7 +1467,7 @@ again:
 	}
 err:
 	if (kproc)
-		free(kproc, M_TEMP, 0);
+		free(kproc, M_TEMP, sizeof(*kproc));
 	return (error);
 }
 
@@ -1748,7 +1748,7 @@ more:
 
 out:
 	uvmspace_free(vm);
-	free(buf, M_TEMP, 0);
+	free(buf, M_TEMP, PAGE_SIZE);
 	return (error);
 }
 
@@ -1812,7 +1812,7 @@ sysctl_proc_cwd(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 	}
 
 	vrele(vp);
-	free(path, M_TEMP, 0);
+	free(path, M_TEMP, len);
 
 	return (error);
 }
@@ -2109,7 +2109,7 @@ sysctl_sensors(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 		ret = sysctl_rdstruct(oldp, oldlenp, newp, usd,
 		    sizeof(struct sensordev));
 
-		free(usd, M_TEMP, 0);
+		free(usd, M_TEMP, sizeof(*usd));
 		return (ret);
 	}
 
@@ -2132,7 +2132,7 @@ sysctl_sensors(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 
 	ret = sysctl_rdstruct(oldp, oldlenp, newp, us,
 	    sizeof(struct sensor));
-	free(us, M_TEMP, 0);
+	free(us, M_TEMP, sizeof(*us));
 	return (ret);
 }
 
