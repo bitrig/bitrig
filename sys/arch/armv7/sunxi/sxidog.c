@@ -1,4 +1,4 @@
-/* $OpenBSD: sxidog.c,v 1.2 2013/10/23 18:01:52 jasper Exp $ */
+/* $OpenBSD: sxidog.c,v 1.4 2014/11/01 07:08:43 jsg Exp $ */
 /*
  * Copyright (c) 2007,2009 Dale Rahn <drahn@openbsd.org>
  *
@@ -101,7 +101,9 @@ sxidog_attach(struct device *parent, struct device *self, void *args)
 #endif
 	sxidog_sc = sc;
 
+#ifndef SMALL_KERNEL
 	wdog_register(sxidog_callback, sc);
+#endif
 
 	printf("\n");
 }
