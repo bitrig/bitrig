@@ -44,7 +44,6 @@ __KERNEL_RCSID(0, "$NetBSD: tmpfs_vnops.c,v 1.100 2012/11/05 17:27:39 dholland E
 #include <sys/dirent.h>
 #include <sys/fcntl.h>
 #include <sys/event.h>
-#include <sys/malloc.h>
 #include <sys/namei.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
