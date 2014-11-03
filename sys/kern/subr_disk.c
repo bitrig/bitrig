@@ -1,4 +1,4 @@
-/*	$OpenBSD: subr_disk.c,v 1.171 2014/11/03 03:08:00 deraadt Exp $	*/
+/*	$OpenBSD: subr_disk.c,v 1.172 2014/11/03 16:55:21 tedu Exp $	*/
 /*	$NetBSD: subr_disk.c,v 1.17 1996/03/16 23:17:08 christos Exp $	*/
 
 /*
@@ -652,6 +652,11 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 	 */
 	for (part_blkno = GPTSECTOR; ; part_blkno = gh.gh_lba_alt, 
 	    altheader = 1) {
+		uint32_t ghsize;
+		uint32_t ghpartsize;
+		uint32_t ghpartnum;
+		size_t gpsz;
+
 		/* read header record */
 		bp->b_blkno = DL_BLKTOSEC(lp, part_blkno) * DL_BLKSPERSEC(lp);
 		offset = DL_BLKOFFSET(lp, part_blkno);
@@ -670,6 +675,10 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 		}
 
 		bcopy(bp->b_data + offset, &gh, sizeof(gh));
+		ghsize = letoh32(gh.gh_size);
+		ghpartsize = letoh32(gh.gh_part_size);
+		ghpartnum = letoh32(gh.gh_part_num);
+
 
 		if (letoh64(gh.gh_sig) != GPTSIGNATURE)
 			return (EINVAL);
@@ -698,8 +707,7 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 		 * Header size must be greater than or equal to 92 and less
 		 * than or equal to the logical block size.
 		 */
-		if (letoh32(gh.gh_size) < GPTMINHDRSIZE
-		    && letoh32(gh.gh_size) > DEV_BSIZE)
+		if (ghsize < GPTMINHDRSIZE && ghsize > DEV_BSIZE)
 			return (EINVAL);
 
 		if (letoh64(gh.gh_lba_start) >= DL_GETDSIZE(lp) ||
@@ -711,8 +719,8 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 		* Size per partition entry shall be 128*(2**n) with n >= 0.
 		* We don't support partition entries larger than block size.
 		*/
-		if (letoh32(gh.gh_part_size) % GPTMINPARTSIZE
-		    || letoh32(gh.gh_part_size) > DEV_BSIZE
+		if (ghpartsize % GPTMINPARTSIZE
+		    || ghpartsize > DEV_BSIZE
 		    || GPT_PARTSPERSEC(&gh) == 0) {
 			DPRINTF("invalid partition size\n");
 			return (EINVAL);
@@ -726,16 +734,16 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 		}
 
 		/* read GPT partition entry array */
-		gpsz = letoh32(gh.gh_part_num) * sizeof(struct gpt_partition);
-		gp = malloc(gpsz, M_DEVBUF, M_NOWAIT|M_ZERO);
+		gp = mallocarray(ghpartnum, sizeof(struct gpt_partition), M_DEVBUF, M_NOWAIT|M_ZERO);
 		if (gp == NULL)
 			return (ENOMEM);
+		gpsz = ghpartnum * sizeof(struct gpt_partition);
 
 		/*
 		* XXX: Fails if # of partition entries is no multiple of
 		* GPT_PARTSPERSEC(&gh)
 		*/
-		for (i = 0; i < letoh32(gh.gh_part_num) / GPT_PARTSPERSEC(&gh);
+		for (i = 0; i < ghpartnum / GPT_PARTSPERSEC(&gh);
 		     i++) {
 			part_blkno = letoh64(gh.gh_part_lba) + i;
 			/* read partition record */
