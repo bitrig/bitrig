@@ -1,4 +1,4 @@
-/*	$OpenBSD: ufs_vnops.c,v 1.115 2014/07/12 18:44:01 tedu Exp $	*/
+/*	$OpenBSD: ufs_vnops.c,v 1.116 2014/11/03 21:28:35 tedu Exp $	*/
 /*	$NetBSD: ufs_vnops.c,v 1.18 1996/05/11 18:28:04 mycroft Exp $	*/
 
 /*-
@@ -85,6 +85,7 @@
 #include <sys/event.h>
 #include <sys/poll.h>
 #include <sys/wapbl.h>
+#include <sys/unistd.h>
 
 #include <sys/fifovnops.h>
 
