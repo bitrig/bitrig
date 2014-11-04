@@ -118,8 +118,10 @@ radio*		at udsbr?		# USB radio
 ugen*		at uhub?		# USB Generic driver
 rum*		at uhub?		# Ralink RT2501USB/RT2601USB
 
-atphy*		at mii?			# Attansic F1 PHYs
 ukphy*		at mii?			# "unknown" PHYs
+atphy*		at mii?			# Attansic F1 PHYs
+rlphy*		at mii?			# RealTek 8139 internal PHYs
+rgephy*		at mii?			# Realtek 8169S/8110S PHY
 
 scsibus*	at scsi?
 sd*		at scsibus?
