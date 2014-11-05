@@ -58,22 +58,24 @@ SECTIONS
 	. = ALIGN(__ALIGN_SIZE);
 	.rodata :
 	{
+		__rodata_start = ABSOLUTE(.);
 		*(.rodata .rodata.*)
 	} :rodata
 	PROVIDE (erodata = .);
 	_erodata = .;
 
-	/* Move .random to the next page, so we can add W bit on it and .data */
+	/* Move .data to the next page, so we can add W bit on them */
+	. = ALIGN(__ALIGN_SIZE);
+	.data :
+	{
+		__data_start = ABSOLUTE(.);
+		*(.data .data.*)
+	} :data
 	. = ALIGN(__ALIGN_SIZE);
 	.openbsd.randomdata :
 	{
 		*(.openbsd.randomdata)
 	} :openbsd_randomize :data
-
-	.data :
-	{
-		*(.data .data.*)
-	} :data
 	. = ALIGN(__ALIGN_SIZE);
 	PROVIDE (edata = .);
 	_edata = .;

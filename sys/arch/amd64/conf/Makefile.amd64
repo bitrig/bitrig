@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.amd64,v 1.60 2014/10/04 18:10:14 brad Exp $
+#	$OpenBSD: Makefile.amd64,v 1.61 2014/11/05 05:40:02 mlarkin Exp $
 
 # For instructions on building kernels consult the config(8) and options(4)
 # manual pages.
@@ -43,7 +43,7 @@ COPTS?=		-O2
 
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CWARNFLAGS} ${CMACHFLAGS}
-LINKFLAGS=	-T ldscript -e start --warn-common -nopie
+LINKFLAGS=	-T ldscript -X --warn-common -nopie
 
 .else
 
@@ -63,7 +63,7 @@ COPTS?=		-O3
 
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${AFLAGS_$*} ${CMACHFLAGS}
-LINKFLAGS=	-T ldscript -e start --warn-common -z noexecstack -nopie
+LINKFLAGS=	-T ldscript -X --warn-common -z noexecstack -nopie
 
 .if ${COMPILER_VERSION:L} == "clang"
 AFLAGS_acpi_wakecode	= -no-integrated-as
@@ -111,7 +111,6 @@ SYSTEM_LD_TAIL=	@${SIZE} $@; chmod 755 $@
 
 DEBUG?=
 .if ${DEBUG} == "-g"
-LINKFLAGS+=	-X
 STRIPFLAGS=	-g -x
 SYSTEM_LD_TAIL+=; \
 		echo mv $@ $@.gdb; rm -f $@.gdb; mv $@ $@.gdb; \
