@@ -1,4 +1,4 @@
-/*	$OpenBSD: kern_malloc.c,v 1.122 2014/11/06 03:20:36 deraadt Exp $	*/
+/*	$OpenBSD: kern_malloc.c,v 1.123 2014/11/06 17:29:23 tedu Exp $	*/
 /*	$NetBSD: kern_malloc.c,v 1.15.4.2 1996/06/13 17:10:56 cgd Exp $	*/
 
 /*
@@ -374,6 +374,8 @@ free(void *addr, int type, size_t freedsize)
 	kup = btokup(addr);
 	size = 1 << kup->ku_indx;
 	kbp = &bucket[kup->ku_indx];
+	if (size > MAXALLOCSAVE)
+		size = kup->ku_pagecnt << PAGE_SHIFT;
 	s = splvm();
 #ifdef DIAGNOSTIC
 	if (freedsize != 0 && freedsize > size)
@@ -397,7 +399,6 @@ free(void *addr, int type, size_t freedsize)
 	if (size > MAXALLOCSAVE) {
 		km_free(addr, ptoa(kup->ku_pagecnt), &kv_intrsafe, &kp_dirty);
 #ifdef KMEMSTATS
-		size = kup->ku_pagecnt << PAGE_SHIFT;
 		ksp->ks_memuse -= size;
 		kup->ku_indx = 0;
 		kup->ku_pagecnt = 0;
