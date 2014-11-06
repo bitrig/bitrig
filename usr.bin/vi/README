@@ -1,4 +1,4 @@
-#	$OpenBSD: README,v 1.10 2001/01/29 01:58:25 niklas Exp $
+#	$OpenBSD: README,v 1.11 2014/11/06 11:35:02 bentley Exp $
 
 #	@(#)README	8.149 (Berkeley) 7/14/97
 
@@ -16,14 +16,13 @@ The directory layout is as follows:
     cl .................... Vi interface to the curses(3) library.
     common ................ Code shared by ex and vi.
     docs .................. Ex/vi documentation, both current and historic.
-    docs/README ........... Documentation overview.
     docs/USD.doc/edit ..... Edit: A tutorial.
     docs/USD.doc/exref .... Ex Reference Manual -- Version 3.7.
     docs/USD.doc/vi.man ... UNIX manual page for nex/nvi.
     docs/USD.doc/vi.ref ... Nex/nvi reference manual.
     docs/USD.doc/vitut .... An Introduction to Display Editing with Vi.
     ex .................... Ex source code.
-    include ............... Include files.
+    include ............... Replacement include files.
     perl_api .............. Perl scripting language support.
     perl_scripts .......... Perl scripts.
     vi .................... Vi source code.

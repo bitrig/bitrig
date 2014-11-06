@@ -1,4 +1,4 @@
-/*	$OpenBSD: common.h,v 1.5 2009/01/28 13:02:22 sobrado Exp $	*/
+/*	$OpenBSD: common.h,v 1.6 2014/11/06 11:35:02 bentley Exp $	*/
 
 /*-
  * Copyright (c) 1991, 1993, 1994
