@@ -716,9 +716,17 @@ longmode_hi:
 	addq	$8,%rbx
 	loop	1b
 
-	/* Relocate atdevbase. */
+	/*
+	 * Relocate atdevbase. Calculate TABLESIZE again, since the reference
+	 * in -12(%ebp) becomes invalid once the identity mapping is gone.
+	 */
 	xorq	%rdx,%rdx
-	movl	-12(%rbp),%edx		/* TABLESIZE */
+	movl	_C_LABEL(nkl2), %edx
+#if L2_SLOT_KERNBASE > 0
+	shll	%edx
+#endif
+	shll	$PGSHIFT,%edx
+	addl	$TABLESIZE,%edx
 	movq	%rdx,%rax
 	addq	$KERNBASE,%rax		/* TABLESIZE + KERNBASE */
 	addq	%rsi,%rax
