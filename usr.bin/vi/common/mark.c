@@ -1,4 +1,4 @@
-/*	$OpenBSD: mark.c,v 1.8 2009/10/27 23:59:47 deraadt Exp $	*/
+/*	$OpenBSD: mark.c,v 1.9 2014/11/12 04:28:41 bentley Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -62,9 +62,7 @@ static LMARK *mark_find(SCR *, ARG_CHAR_T);
  * PUBLIC: int mark_init(SCR *, EXF *);
  */
 int
-mark_init(sp, ep)
-	SCR *sp;
-	EXF *ep;
+mark_init(SCR *sp, EXF *ep)
 {
 	/*
 	 * !!!
@@ -83,9 +81,7 @@ mark_init(sp, ep)
  * PUBLIC: int mark_end(SCR *, EXF *);
  */
 int
-mark_end(sp, ep)
-	SCR *sp;
-	EXF *ep;
+mark_end(SCR *sp, EXF *ep)
 {
 	LMARK *lmp;
 
@@ -107,11 +103,7 @@ mark_end(sp, ep)
  * PUBLIC: int mark_get(SCR *, ARG_CHAR_T, MARK *, mtype_t);
  */
 int
-mark_get(sp, key, mp, mtype)
-	SCR *sp;
-	ARG_CHAR_T key;
-	MARK *mp;
-	mtype_t mtype;
+mark_get(SCR *sp, ARG_CHAR_T key, MARK *mp, mtype_t mtype)
 {
 	LMARK *lmp;
 
@@ -152,11 +144,7 @@ mark_get(sp, key, mp, mtype)
  * PUBLIC: int mark_set(SCR *, ARG_CHAR_T, MARK *, int);
  */
 int
-mark_set(sp, key, value, userset)
-	SCR *sp;
-	ARG_CHAR_T key;
-	MARK *value;
-	int userset;
+mark_set(SCR *sp, ARG_CHAR_T key, MARK *value, int userset)
 {
 	LMARK *lmp, *lmt;
 
@@ -194,9 +182,7 @@ mark_set(sp, key, value, userset)
  *	where it would go.
  */
 static LMARK *
-mark_find(sp, key)
-	SCR *sp;
-	ARG_CHAR_T key;
+mark_find(SCR *sp, ARG_CHAR_T key)
 {
 	LMARK *lmp, *lastlmp;
 
@@ -218,10 +204,7 @@ mark_find(sp, key)
  * PUBLIC: int mark_insdel(SCR *, lnop_t, recno_t);
  */
 int
-mark_insdel(sp, op, lno)
-	SCR *sp;
-	lnop_t op;
-	recno_t lno;
+mark_insdel(SCR *sp, lnop_t op, recno_t lno)
 {
 	LMARK *lmp;
 	recno_t lline;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: v_mark.c,v 1.8 2009/10/27 23:59:48 deraadt Exp $	*/
+/*	$OpenBSD: v_mark.c,v 1.9 2014/11/12 04:28:41 bentley Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -29,9 +29,7 @@
  * PUBLIC: int v_mark(SCR *, VICMD *);
  */
 int
-v_mark(sp, vp)
-	SCR *sp;
-	VICMD *vp;
+v_mark(SCR *sp, VICMD *vp)
 {
 	return (mark_set(sp, vp->character, &vp->m_start, 1));
 }
@@ -56,9 +54,7 @@ static int mark(SCR *, VICMD *, enum which);
  * PUBLIC: int v_bmark(SCR *, VICMD *);
  */
 int
-v_bmark(sp, vp)
-	SCR *sp;
-	VICMD *vp;
+v_bmark(SCR *sp, VICMD *vp)
 {
 	return (mark(sp, vp, BQMARK));
 }
@@ -72,9 +68,7 @@ v_bmark(sp, vp)
  * PUBLIC: int v_fmark(SCR *, VICMD *);
  */
 int
-v_fmark(sp, vp)
-	SCR *sp;
-	VICMD *vp;
+v_fmark(SCR *sp, VICMD *vp)
 {
 	return (mark(sp, vp, FQMARK));
 }
@@ -84,10 +78,7 @@ v_fmark(sp, vp)
  *	Mark commands.
  */
 static int
-mark(sp, vp, cmd)
-	SCR *sp;
-	VICMD *vp;
-	enum which cmd;
+mark(SCR *sp, VICMD *vp, enum which cmd)
 {
 	MARK m;
 	size_t len;

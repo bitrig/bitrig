@@ -1,4 +1,4 @@
-/*	$OpenBSD: ex_screen.c,v 1.8 2013/11/28 22:12:40 krw Exp $	*/
+/*	$OpenBSD: ex_screen.c,v 1.9 2014/11/12 04:28:41 bentley Exp $	*/
 
 /*-
  * Copyright (c) 1993, 1994
@@ -30,9 +30,7 @@
  * PUBLIC: int ex_bg(SCR *, EXCMD *);
  */
 int
-ex_bg(sp, cmdp)
-	SCR *sp;
-	EXCMD *cmdp;
+ex_bg(SCR *sp, EXCMD *cmdp)
 {
 	return (vs_bg(sp));
 }
@@ -44,9 +42,7 @@ ex_bg(sp, cmdp)
  * PUBLIC: int ex_fg(SCR *, EXCMD *);
  */
 int
-ex_fg(sp, cmdp)
-	SCR *sp;
-	EXCMD *cmdp;
+ex_fg(SCR *sp, EXCMD *cmdp)
 {
 	SCR *nsp;
 	int newscreen;
@@ -70,9 +66,7 @@ ex_fg(sp, cmdp)
  * PUBLIC: int ex_resize(SCR *, EXCMD *);
  */
 int
-ex_resize(sp, cmdp)
-	SCR *sp;
-	EXCMD *cmdp;
+ex_resize(SCR *sp, EXCMD *cmdp)
 {
 	adj_t adj;
 
@@ -101,8 +95,7 @@ ex_resize(sp, cmdp)
  * PUBLIC: int ex_sdisplay(SCR *);
  */
 int
-ex_sdisplay(sp)
-	SCR *sp;
+ex_sdisplay(SCR *sp)
 {
 	GS *gp;
 	SCR *tsp;

@@ -1,4 +1,4 @@
-/*	$OpenBSD: v_ch.c,v 1.5 2009/10/27 23:59:47 deraadt Exp $	*/
+/*	$OpenBSD: v_ch.c,v 1.6 2014/11/12 04:28:41 bentley Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -32,9 +32,7 @@ static void noprev(SCR *);
  * PUBLIC: int v_chrepeat(SCR *, VICMD *);
  */
 int
-v_chrepeat(sp, vp)
-	SCR *sp;
-	VICMD *vp;
+v_chrepeat(SCR *sp, VICMD *vp)
 {
 	vp->character = VIP(sp)->lastckey;
 
@@ -63,9 +61,7 @@ v_chrepeat(sp, vp)
  * PUBLIC: int v_chrrepeat(SCR *, VICMD *);
  */
 int
-v_chrrepeat(sp, vp)
-	SCR *sp;
-	VICMD *vp;
+v_chrrepeat(SCR *sp, VICMD *vp)
 {
 	cdir_t savedir;
 	int rval;
@@ -104,9 +100,7 @@ v_chrrepeat(sp, vp)
  * PUBLIC: int v_cht(SCR *, VICMD *);
  */
 int
-v_cht(sp, vp)
-	SCR *sp;
-	VICMD *vp;
+v_cht(SCR *sp, VICMD *vp)
 {
 	if (v_chf(sp, vp))
 		return (1);
@@ -137,9 +131,7 @@ v_cht(sp, vp)
  * PUBLIC: int v_chf(SCR *, VICMD *);
  */
 int
-v_chf(sp, vp)
-	SCR *sp;
-	VICMD *vp;
+v_chf(SCR *sp, VICMD *vp)
 {
 	size_t len;
 	u_long cnt;
@@ -195,9 +187,7 @@ empty:		notfound(sp, key);
  * PUBLIC: int v_chT(SCR *, VICMD *);
  */
 int
-v_chT(sp, vp)
-	SCR *sp;
-	VICMD *vp;
+v_chT(SCR *sp, VICMD *vp)
 {
 	if (v_chF(sp, vp))
 		return (1);
@@ -222,9 +212,7 @@ v_chT(sp, vp)
  * PUBLIC: int v_chF(SCR *, VICMD *);
  */
 int
-v_chF(sp, vp)
-	SCR *sp;
-	VICMD *vp;
+v_chF(SCR *sp, VICMD *vp)
 {
 	size_t len;
 	u_long cnt;
@@ -277,16 +265,13 @@ empty:		notfound(sp, key);
 }
 
 static void
-noprev(sp)
-	SCR *sp;
+noprev(SCR *sp)
 {
 	msgq(sp, M_BERR, "178|No previous F, f, T or t search");
 }
 
 static void
-notfound(sp, ch)
-	SCR *sp;
-	ARG_CHAR_T ch;
+notfound(SCR *sp, ARG_CHAR_T ch)
 {
 	msgq(sp, M_BERR, "179|%s not found", KEY_NAME(sp, ch));
 }

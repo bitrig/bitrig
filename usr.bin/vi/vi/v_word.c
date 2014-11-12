@@ -1,4 +1,4 @@
-/*	$OpenBSD: v_word.c,v 1.6 2009/10/27 23:59:48 deraadt Exp $	*/
+/*	$OpenBSD: v_word.c,v 1.7 2014/11/12 04:28:41 bentley Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -74,9 +74,7 @@ static int fword(SCR *, VICMD *, enum which);
  * PUBLIC: int v_wordW(SCR *, VICMD *);
  */
 int
-v_wordW(sp, vp)
-	SCR *sp;
-	VICMD *vp;
+v_wordW(SCR *sp, VICMD *vp)
 {
 	return (fword(sp, vp, BIGWORD));
 }
@@ -88,9 +86,7 @@ v_wordW(sp, vp)
  * PUBLIC: int v_wordw(SCR *, VICMD *);
  */
 int
-v_wordw(sp, vp)
-	SCR *sp;
-	VICMD *vp;
+v_wordw(SCR *sp, VICMD *vp)
 {
 	return (fword(sp, vp, LITTLEWORD));
 }
@@ -100,10 +96,7 @@ v_wordw(sp, vp)
  *	Move forward by words.
  */
 static int
-fword(sp, vp, type)
-	SCR *sp;
-	VICMD *vp;
-	enum which type;
+fword(SCR *sp, VICMD *vp, enum which type)
 {
 	enum { INWORD, NOTWORD } state;
 	VCS cs;
@@ -241,9 +234,7 @@ ret:	if (!ISMOTION(vp) &&
  * PUBLIC: int v_wordE(SCR *, VICMD *);
  */
 int
-v_wordE(sp, vp)
-	SCR *sp;
-	VICMD *vp;
+v_wordE(SCR *sp, VICMD *vp)
 {
 	return (eword(sp, vp, BIGWORD));
 }
@@ -255,9 +246,7 @@ v_wordE(sp, vp)
  * PUBLIC: int v_worde(SCR *, VICMD *);
  */
 int
-v_worde(sp, vp)
-	SCR *sp;
-	VICMD *vp;
+v_worde(SCR *sp, VICMD *vp)
 {
 	return (eword(sp, vp, LITTLEWORD));
 }
@@ -267,10 +256,7 @@ v_worde(sp, vp)
  *	Move forward to the end of the word.
  */
 static int
-eword(sp, vp, type)
-	SCR *sp;
-	VICMD *vp;
-	enum which type;
+eword(SCR *sp, VICMD *vp, enum which type)
 {
 	enum { INWORD, NOTWORD } state;
 	VCS cs;
@@ -394,9 +380,7 @@ ret:	if (!ISMOTION(vp) &&
  * PUBLIC: int v_wordB(SCR *, VICMD *);
  */
 int
-v_wordB(sp, vp)
-	SCR *sp;
-	VICMD *vp;
+v_wordB(SCR *sp, VICMD *vp)
 {
 	return (bword(sp, vp, BIGWORD));
 }
@@ -408,9 +392,7 @@ v_wordB(sp, vp)
  * PUBLIC: int v_wordb(SCR *, VICMD *);
  */
 int
-v_wordb(sp, vp)
-	SCR *sp;
-	VICMD *vp;
+v_wordb(SCR *sp, VICMD *vp)
 {
 	return (bword(sp, vp, LITTLEWORD));
 }
@@ -420,10 +402,7 @@ v_wordb(sp, vp)
  *	Move backward by words.
  */
 static int
-bword(sp, vp, type)
-	SCR *sp;
-	VICMD *vp;
-	enum which type;
+bword(SCR *sp, VICMD *vp, enum which type)
 {
 	enum { INWORD, NOTWORD } state;
 	VCS cs;

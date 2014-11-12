@@ -1,4 +1,4 @@
-/*	$OpenBSD: cl_screen.c,v 1.20 2013/11/28 22:12:40 krw Exp $	*/
+/*	$OpenBSD: cl_screen.c,v 1.21 2014/11/12 04:28:41 bentley Exp $	*/
 
 /*-
  * Copyright (c) 1993, 1994
@@ -41,9 +41,7 @@ static int	cl_putenv(char *, char *, u_long);
  * PUBLIC: int cl_screen(SCR *, u_int32_t);
  */
 int
-cl_screen(sp, flags)
-	SCR *sp;
-	u_int32_t flags;
+cl_screen(SCR *sp, u_int32_t flags)
 {
 	CL_PRIVATE *clp;
 	GS *gp;
@@ -125,8 +123,7 @@ cl_screen(sp, flags)
  * PUBLIC: int cl_quit(GS *);
  */
 int
-cl_quit(gp)
-	GS *gp;
+cl_quit(GS *gp)
 {
 	CL_PRIVATE *clp;
 	int rval;
@@ -176,8 +173,7 @@ cl_quit(gp)
  *	Initialize the curses vi screen.
  */
 static int
-cl_vi_init(sp)
-	SCR *sp;
+cl_vi_init(SCR *sp)
 {
 	CL_PRIVATE *clp;
 	char *o_cols, *o_lines, *o_term, *ttype;
@@ -378,8 +374,7 @@ err:		(void)cl_vi_end(sp->gp);
  *	Shutdown the vi screen.
  */
 static int
-cl_vi_end(gp)
-	GS *gp;
+cl_vi_end(GS *gp)
 {
 	CL_PRIVATE *clp;
 
@@ -422,8 +417,7 @@ cl_vi_end(gp)
  *	Initialize the ex screen.
  */
 static int
-cl_ex_init(sp)
-	SCR *sp;
+cl_ex_init(SCR *sp)
 {
 	CL_PRIVATE *clp;
 
@@ -497,8 +491,7 @@ fast:	if (tcsetattr(STDIN_FILENO, TCSADRAIN | TCSASOFT, &clp->ex_enter)) {
  *	Shutdown the ex screen.
  */
 static int
-cl_ex_end(gp)
-	GS *gp;
+cl_ex_end(GS *gp)
 {
 	CL_PRIVATE *clp;
 
@@ -516,9 +509,7 @@ cl_ex_end(gp)
  * PUBLIC: int cl_getcap(SCR *, char *, char **);
  */
 int
-cl_getcap(sp, name, elementp)
-	SCR *sp;
-	char *name, **elementp;
+cl_getcap(SCR *sp, char *name, char **elementp)
 {
 	size_t len;
 	char *t;
@@ -536,8 +527,7 @@ cl_getcap(sp, name, elementp)
  *	Free any allocated termcap/terminfo strings.
  */
 static void
-cl_freecap(clp)
-	CL_PRIVATE *clp;
+cl_freecap(CL_PRIVATE *clp)
 {
 	if (clp->el != NULL) {
 		free(clp->el);
@@ -566,10 +556,7 @@ cl_freecap(clp)
  *	Put a value into the environment.
  */
 static int
-cl_putenv(name, str, value)
-	char *name, *str;
-	u_long value;
-
+cl_putenv(char *name, char *str, u_long value)
 {
 	char buf[40];
 

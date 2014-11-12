@@ -1,4 +1,4 @@
-/*	$OpenBSD: main.c,v 1.22 2013/12/01 20:22:34 krw Exp $	*/
+/*	$OpenBSD: main.c,v 1.23 2014/11/12 04:28:41 bentley Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -41,10 +41,7 @@ static int	 v_obsolete(char *, char *[]);
  * PUBLIC: int editor(GS *, int, char *[]);
  */
 int
-editor(gp, argc, argv)
-	GS *gp;
-	int argc;
-	char *argv[];
+editor(GS *gp, int argc, char *argv[])
 {
 	extern int optind;
 	extern char *optarg;
@@ -444,8 +441,7 @@ err:		rval = 1;
  * PUBLIC: void v_end(GS *);
  */
 void
-v_end(gp)
-	GS *gp;
+v_end(GS *gp)
 {
 	MSGS *mp;
 	SCR *sp;
@@ -532,8 +528,7 @@ v_end(gp)
  *	Convert historic arguments into something getopt(3) will like.
  */
 static int
-v_obsolete(name, argv)
-	char *name, *argv[];
+v_obsolete(char *name, char *argv[])
 {
 	size_t len;
 	char *p;
@@ -585,8 +580,7 @@ nomem:					v_estr(name, errno, NULL);
 
 #ifdef DEBUG
 static void
-attach(gp)
-	GS *gp;
+attach(GS *gp)
 {
 	int fd;
 	char ch;
@@ -611,9 +605,7 @@ attach(gp)
 #endif
 
 static void
-v_estr(name, eno, msg)
-	char *name, *msg;
-	int eno;
+v_estr(char *name, int eno, char *msg)
 {
 	(void)fprintf(stderr, "%s", name);
 	if (msg != NULL)

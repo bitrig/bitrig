@@ -1,4 +1,4 @@
-/*	$OpenBSD: ex_script.c,v 1.19 2013/11/28 22:12:40 krw Exp $	*/
+/*	$OpenBSD: ex_script.c,v 1.20 2014/11/12 04:28:41 bentley Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -53,9 +53,7 @@ static int	sscr_setprompt(SCR *, char *, size_t);
  * PUBLIC: int ex_script(SCR *, EXCMD *);
  */
 int
-ex_script(sp, cmdp)
-	SCR *sp;
-	EXCMD *cmdp;
+ex_script(SCR *sp, EXCMD *cmdp)
 {
 	/* Vi only command. */
 	if (!F_ISSET(sp, SC_VI)) {
@@ -80,8 +78,7 @@ ex_script(sp, cmdp)
  *	Create a pty setup for a shell.
  */
 static int
-sscr_init(sp)
-	SCR *sp;
+sscr_init(SCR *sp)
 {
 	SCRIPT *sc;
 	char *sh, *sh_path;
@@ -189,8 +186,7 @@ err:		if (sc->sh_master != -1)
  *	carriage return comes; set the prompt from that line.
  */
 static int
-sscr_getprompt(sp)
-	SCR *sp;
+sscr_getprompt(SCR *sp)
 {
 	CHAR_T *endp, *p, *t, buf[1024];
 	SCRIPT *sc;
@@ -280,9 +276,7 @@ prompterr:	sscr_end(sp);
  * PUBLIC: int sscr_exec(SCR *, recno_t);
  */
 int
-sscr_exec(sp, lno)
-	SCR *sp;
-	recno_t lno;
+sscr_exec(SCR *sp, recno_t lno)
 {
 	SCRIPT *sc;
 	recno_t last_lno;
@@ -423,8 +417,7 @@ done:
  * PUBLIC: int sscr_input(SCR *);
  */
 int
-sscr_input(sp)
-	SCR *sp;
+sscr_input(SCR *sp)
 {
 	GS *gp;
 	struct pollfd *pfd;
@@ -489,8 +482,7 @@ done:
  *	Take a line from the shell and insert it into the file.
  */
 static int
-sscr_insert(sp)
-	SCR *sp;
+sscr_insert(SCR *sp)
 {
 	CHAR_T *endp, *p, *t;
 	SCRIPT *sc;
@@ -575,10 +567,7 @@ ret:	FREE_SPACE(sp, bp, blen);
  *
  */
 static int
-sscr_setprompt(sp, buf, len)
-	SCR *sp;
-	char *buf;
-	size_t len;
+sscr_setprompt(SCR *sp, char *buf, size_t len)
 {
 	SCRIPT *sc;
 
@@ -602,10 +591,7 @@ sscr_setprompt(sp, buf, len)
  *	parts that can change, in both content and size.
  */
 static int
-sscr_matchprompt(sp, lp, line_len, lenp)
-	SCR *sp;
-	char *lp;
-	size_t line_len, *lenp;
+sscr_matchprompt(SCR *sp, char *lp, size_t line_len, size_t *lenp)
 {
 	SCRIPT *sc;
 	size_t prompt_len;
@@ -643,8 +629,7 @@ sscr_matchprompt(sp, lp, line_len, lenp)
  * PUBLIC: int sscr_end(SCR *);
  */
 int
-sscr_end(sp)
-	SCR *sp;
+sscr_end(SCR *sp)
 {
 	SCRIPT *sc;
 
@@ -677,8 +662,7 @@ sscr_end(sp)
  *	Set/clear the global scripting bit.
  */
 static void
-sscr_check(sp)
-	SCR *sp;
+sscr_check(SCR *sp)
 {
 	GS *gp;
 

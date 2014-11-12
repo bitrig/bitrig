@@ -1,4 +1,4 @@
-/*	$OpenBSD: ex_source.c,v 1.8 2013/05/03 20:43:25 kili Exp $	*/
+/*	$OpenBSD: ex_source.c,v 1.9 2014/11/12 04:28:41 bentley Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -32,10 +32,7 @@
  * PUBLIC: int ex_sourcefd(SCR *, EXCMD *, int);
  */
 int
-ex_sourcefd(sp, cmdp, fd)
-	SCR *sp;
-	EXCMD *cmdp;
-	int fd;
+ex_sourcefd(SCR *sp, EXCMD *cmdp, int fd)
 {
 	struct stat sb;
 	int len;
@@ -89,9 +86,7 @@ err:		msgq_str(sp, M_SYSERR, name, "%s");
  * PUBLIC: int ex_source(SCR *, EXCMD *);
  */
 int
-ex_source(sp, cmdp)
-	SCR *sp;
-	EXCMD *cmdp;
+ex_source(SCR *sp, EXCMD *cmdp)
 {
 	char *name;
 	int fd;

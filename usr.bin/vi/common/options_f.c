@@ -1,4 +1,4 @@
-/*	$OpenBSD: options_f.c,v 1.8 2014/10/08 00:53:45 dlg Exp $	*/
+/*	$OpenBSD: options_f.c,v 1.9 2014/11/12 04:28:41 bentley Exp $	*/
 
 /*-
  * Copyright (c) 1993, 1994
@@ -29,11 +29,7 @@
  * PUBLIC: int f_altwerase(SCR *, OPTION *, char *, u_long *);
  */
 int
-f_altwerase(sp, op, str, valp)
-	SCR *sp;
-	OPTION *op;
-	char *str;
-	u_long *valp;
+f_altwerase(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	if (!*valp)
 		O_CLR(sp, O_TTYWERASE);
@@ -44,11 +40,7 @@ f_altwerase(sp, op, str, valp)
  * PUBLIC: int f_columns(SCR *, OPTION *, char *, u_long *);
  */
 int
-f_columns(sp, op, str, valp)
-	SCR *sp;
-	OPTION *op;
-	char *str;
-	u_long *valp;
+f_columns(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	/* Validate the number. */
 	if (*valp < MINIMUM_SCREEN_COLS) {
@@ -78,11 +70,7 @@ f_columns(sp, op, str, valp)
  * PUBLIC: int f_lines(SCR *, OPTION *, char *, u_long *);
  */
 int
-f_lines(sp, op, str, valp)
-	SCR *sp;
-	OPTION *op;
-	char *str;
-	u_long *valp;
+f_lines(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	/* Validate the number. */
 	if (*valp < MINIMUM_SCREEN_ROWS) {
@@ -135,11 +123,7 @@ f_lines(sp, op, str, valp)
  * PUBLIC: int f_lisp(SCR *, OPTION *, char *, u_long *);
  */
 int
-f_lisp(sp, op, str, valp)
-	SCR *sp;
-	OPTION *op;
-	char *str;
-	u_long *valp;
+f_lisp(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	msgq(sp, M_ERR, "044|The lisp option is not implemented");
 	return (0);
@@ -149,11 +133,7 @@ f_lisp(sp, op, str, valp)
  * PUBLIC: int f_msgcat(SCR *, OPTION *, char *, u_long *);
  */
 int
-f_msgcat(sp, op, str, valp)
-	SCR *sp;
-	OPTION *op;
-	char *str;
-	u_long *valp;
+f_msgcat(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	(void)msg_open(sp, str);
 	return (0);
@@ -163,11 +143,7 @@ f_msgcat(sp, op, str, valp)
  * PUBLIC: int f_paragraph(SCR *, OPTION *, char *, u_long *);
  */
 int
-f_paragraph(sp, op, str, valp)
-	SCR *sp;
-	OPTION *op;
-	char *str;
-	u_long *valp;
+f_paragraph(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	if (strlen(str) & 1) {
 		msgq(sp, M_ERR,
@@ -181,11 +157,7 @@ f_paragraph(sp, op, str, valp)
  * PUBLIC: int f_print(SCR *, OPTION *, char *, u_long *);
  */
 int
-f_print(sp, op, str, valp)
-	SCR *sp;
-	OPTION *op;
-	char *str;
-	u_long *valp;
+f_print(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	/* Reinitialize the key fast lookup table. */
 	v_key_ilookup(sp);
@@ -199,11 +171,7 @@ f_print(sp, op, str, valp)
  * PUBLIC: int f_readonly(SCR *, OPTION *, char *, u_long *);
  */
 int
-f_readonly(sp, op, str, valp)
-	SCR *sp;
-	OPTION *op;
-	char *str;
-	u_long *valp;
+f_readonly(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	/*
 	 * !!!
@@ -220,11 +188,7 @@ f_readonly(sp, op, str, valp)
  * PUBLIC: int f_recompile(SCR *, OPTION *, char *, u_long *);
  */
 int
-f_recompile(sp, op, str, valp)
-	SCR *sp;
-	OPTION *op;
-	char *str;
-	u_long *valp;
+f_recompile(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	if (F_ISSET(sp, SC_RE_SEARCH)) {
 		regfree(&sp->re_c);
@@ -241,11 +205,7 @@ f_recompile(sp, op, str, valp)
  * PUBLIC: int f_reformat(SCR *, OPTION *, char *, u_long *);
  */
 int
-f_reformat(sp, op, str, valp)
-	SCR *sp;
-	OPTION *op;
-	char *str;
-	u_long *valp;
+f_reformat(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	F_SET(sp, SC_SCR_REFORMAT);
 	return (0);
@@ -255,11 +215,7 @@ f_reformat(sp, op, str, valp)
  * PUBLIC: int f_section(SCR *, OPTION *, char *, u_long *);
  */
 int
-f_section(sp, op, str, valp)
-	SCR *sp;
-	OPTION *op;
-	char *str;
-	u_long *valp;
+f_section(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	if (strlen(str) & 1) {
 		msgq(sp, M_ERR,
@@ -273,11 +229,7 @@ f_section(sp, op, str, valp)
  * PUBLIC: int f_ttywerase(SCR *, OPTION *, char *, u_long *);
  */
 int
-f_ttywerase(sp, op, str, valp)
-	SCR *sp;
-	OPTION *op;
-	char *str;
-	u_long *valp;
+f_ttywerase(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	if (!*valp)
 		O_CLR(sp, O_ALTWERASE);
@@ -288,11 +240,7 @@ f_ttywerase(sp, op, str, valp)
  * PUBLIC: int f_w300(SCR *, OPTION *, char *, u_long *);
  */
 int
-f_w300(sp, op, str, valp)
-	SCR *sp;
-	OPTION *op;
-	char *str;
-	u_long *valp;
+f_w300(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	u_long v;
 
@@ -309,11 +257,7 @@ f_w300(sp, op, str, valp)
  * PUBLIC: int f_w1200(SCR *, OPTION *, char *, u_long *);
  */
 int
-f_w1200(sp, op, str, valp)
-	SCR *sp;
-	OPTION *op;
-	char *str;
-	u_long *valp;
+f_w1200(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	u_long v;
 
@@ -330,11 +274,7 @@ f_w1200(sp, op, str, valp)
  * PUBLIC: int f_w9600(SCR *, OPTION *, char *, u_long *);
  */
 int
-f_w9600(sp, op, str, valp)
-	SCR *sp;
-	OPTION *op;
-	char *str;
-	u_long *valp;
+f_w9600(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	u_long v;
 
@@ -351,11 +291,7 @@ f_w9600(sp, op, str, valp)
  * PUBLIC: int f_window(SCR *, OPTION *, char *, u_long *);
  */
 int
-f_window(sp, op, str, valp)
-	SCR *sp;
-	OPTION *op;
-	char *str;
-	u_long *valp;
+f_window(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	if (*valp >= O_VAL(sp, O_LINES) - 1 &&
 	    (*valp = O_VAL(sp, O_LINES) - 1) == 0)

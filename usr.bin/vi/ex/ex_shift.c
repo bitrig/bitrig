@@ -1,4 +1,4 @@
-/*	$OpenBSD: ex_shift.c,v 1.6 2009/10/27 23:59:47 deraadt Exp $	*/
+/*	$OpenBSD: ex_shift.c,v 1.7 2014/11/12 04:28:41 bentley Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -30,9 +30,7 @@ static int shift(SCR *, EXCMD *, enum which);
  * PUBLIC: int ex_shiftl(SCR *, EXCMD *);
  */
 int
-ex_shiftl(sp, cmdp)
-	SCR *sp;
-	EXCMD *cmdp;
+ex_shiftl(SCR *sp, EXCMD *cmdp)
 {
 	return (shift(sp, cmdp, LEFT));
 }
@@ -43,9 +41,7 @@ ex_shiftl(sp, cmdp)
  * PUBLIC: int ex_shiftr(SCR *, EXCMD *);
  */
 int
-ex_shiftr(sp, cmdp)
-	SCR *sp;
-	EXCMD *cmdp;
+ex_shiftr(SCR *sp, EXCMD *cmdp)
 {
 	return (shift(sp, cmdp, RIGHT));
 }
@@ -55,10 +51,7 @@ ex_shiftr(sp, cmdp)
  *	Ex shift support.
  */
 static int
-shift(sp, cmdp, rl)
-	SCR *sp;
-	EXCMD *cmdp;
-	enum which rl;
+shift(SCR *sp, EXCMD *cmdp, enum which rl)
 {
 	recno_t from, to;
 	size_t blen, len, newcol, newidx, oldcol, oldidx, sw;

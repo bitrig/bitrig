@@ -1,4 +1,4 @@
-/*	$OpenBSD: vs_split.c,v 1.11 2013/11/28 22:12:40 krw Exp $	*/
+/*	$OpenBSD: vs_split.c,v 1.12 2014/11/12 04:28:41 bentley Exp $	*/
 
 /*-
  * Copyright (c) 1993, 1994
@@ -33,9 +33,7 @@ static SCR *vs_getbg(SCR *, char *);
  * PUBLIC: int vs_split(SCR *, SCR *, int);
  */
 int
-vs_split(sp, new, ccl)
-	SCR *sp, *new;
-	int ccl;		/* Colon-command line split. */
+vs_split(SCR *sp, SCR *new, int ccl)
 {
 	GS *gp;
 	SMAP *smp;
@@ -194,8 +192,7 @@ vs_split(sp, new, ccl)
  * PUBLIC: int vs_discard(SCR *, SCR **);
  */
 int
-vs_discard(sp, spp)
-	SCR *sp, **spp;
+vs_discard(SCR *sp, SCR **spp)
 {
 	SCR *nsp;
 	dir_t dir;
@@ -283,10 +280,7 @@ vs_discard(sp, spp)
  * PUBLIC: int vs_fg(SCR *, SCR **, CHAR_T *, int);
  */
 int
-vs_fg(sp, nspp, name, newscreen)
-	SCR *sp, **nspp;
-	CHAR_T *name;
-	int newscreen;
+vs_fg(SCR *sp, SCR **nspp, CHAR_T *name, int newscreen)
 {
 	GS *gp;
 	SCR *nsp;
@@ -333,8 +327,7 @@ vs_fg(sp, nspp, name, newscreen)
  * PUBLIC: int vs_bg(SCR *);
  */
 int
-vs_bg(sp)
-	SCR *sp;
+vs_bg(SCR *sp)
 {
 	GS *gp;
 	SCR *nsp;
@@ -372,9 +365,7 @@ vs_bg(sp)
  * PUBLIC: int vs_swap(SCR *, SCR **, char *);
  */
 int
-vs_swap(sp, nspp, name)
-	SCR *sp, **nspp;
-	char *name;
+vs_swap(SCR *sp, SCR **nspp, char *name)
 {
 	GS *gp;
 	SCR *nsp;
@@ -464,10 +455,7 @@ vs_swap(sp, nspp, name)
  * PUBLIC: int vs_resize(SCR *, long, adj_t);
  */
 int
-vs_resize(sp, count, adj)
-	SCR *sp;
-	long count;
-	adj_t adj;
+vs_resize(SCR *sp, long count, adj_t adj)
 {
 	GS *gp;
 	SCR *g, *s;
@@ -565,9 +553,7 @@ toosmall:			msgq(sp, M_BERR,
  *	background screen.
  */
 static SCR *
-vs_getbg(sp, name)
-	SCR *sp;
-	char *name;
+vs_getbg(SCR *sp, char *name)
 {
 	GS *gp;
 	SCR *nsp;

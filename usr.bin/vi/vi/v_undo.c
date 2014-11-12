@@ -1,4 +1,4 @@
-/*	$OpenBSD: v_undo.c,v 1.5 2009/10/27 23:59:48 deraadt Exp $	*/
+/*	$OpenBSD: v_undo.c,v 1.6 2014/11/12 04:28:41 bentley Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -31,9 +31,7 @@
  * PUBLIC: int v_Undo(SCR *, VICMD *);
  */
 int
-v_Undo(sp, vp)
-	SCR *sp;
-	VICMD *vp;
+v_Undo(SCR *sp, VICMD *vp)
 {
 	/*
 	 * Historically, U reset the cursor to the first column in the line
@@ -67,9 +65,7 @@ v_Undo(sp, vp)
  * PUBLIC: int v_undo(SCR *, VICMD *);
  */
 int
-v_undo(sp, vp)
-	SCR *sp;
-	VICMD *vp;
+v_undo(SCR *sp, VICMD *vp)
 {
 	EXF *ep;
 

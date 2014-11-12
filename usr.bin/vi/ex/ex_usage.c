@@ -1,4 +1,4 @@
-/*	$OpenBSD: ex_usage.c,v 1.7 2009/10/27 23:59:47 deraadt Exp $	*/
+/*	$OpenBSD: ex_usage.c,v 1.8 2014/11/12 04:28:41 bentley Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -31,9 +31,7 @@
  * PUBLIC: int ex_help(SCR *, EXCMD *);
  */
 int
-ex_help(sp, cmdp)
-	SCR *sp;
-	EXCMD *cmdp;
+ex_help(SCR *sp, EXCMD *cmdp)
 {
 	(void)ex_puts(sp,
 	    "To see the list of vi commands, enter \":viusage<CR>\"\n");
@@ -54,9 +52,7 @@ ex_help(sp, cmdp)
  * PUBLIC: int ex_usage(SCR *, EXCMD *);
  */
 int
-ex_usage(sp, cmdp)
-	SCR *sp;
-	EXCMD *cmdp;
+ex_usage(SCR *sp, EXCMD *cmdp)
 {
 	ARGS *ap;
 	EXCMDLIST const *cp;
@@ -137,9 +133,7 @@ ex_usage(sp, cmdp)
  * PUBLIC: int ex_viusage(SCR *, EXCMD *);
  */
 int
-ex_viusage(sp, cmdp)
-	SCR *sp;
-	EXCMD *cmdp;
+ex_viusage(SCR *sp, EXCMD *cmdp)
 {
 	VIKEYS const *kp;
 	int key;

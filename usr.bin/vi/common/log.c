@@ -1,4 +1,4 @@
-/*	$OpenBSD: log.c,v 1.5 2009/10/27 23:59:47 deraadt Exp $	*/
+/*	$OpenBSD: log.c,v 1.6 2014/11/12 04:28:41 bentley Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -78,9 +78,7 @@ static void	log_trace(SCR *, char *, recno_t, u_char *);
  * PUBLIC: int log_init(SCR *, EXF *);
  */
 int
-log_init(sp, ep)
-	SCR *sp;
-	EXF *ep;
+log_init(SCR *sp, EXF *ep)
 {
 	/*
 	 * !!!
@@ -114,9 +112,7 @@ log_init(sp, ep)
  * PUBLIC: int log_end(SCR *, EXF *);
  */
 int
-log_end(sp, ep)
-	SCR *sp;
-	EXF *ep;
+log_end(SCR *sp, EXF *ep)
 {
 	/*
 	 * !!!
@@ -144,8 +140,7 @@ log_end(sp, ep)
  * PUBLIC: int log_cursor(SCR *);
  */
 int
-log_cursor(sp)
-	SCR *sp;
+log_cursor(SCR *sp)
 {
 	EXF *ep;
 
@@ -172,9 +167,7 @@ log_cursor(sp)
  *	Actually push a cursor record out.
  */
 static int
-log_cursor1(sp, type)
-	SCR *sp;
-	int type;
+log_cursor1(SCR *sp, int type)
 {
 	DBT data, key;
 	EXF *ep;
@@ -209,10 +202,7 @@ log_cursor1(sp, type)
  * PUBLIC: int log_line(SCR *, recno_t, u_int);
  */
 int
-log_line(sp, lno, action)
-	SCR *sp;
-	recno_t lno;
-	u_int action;
+log_line(SCR *sp, recno_t lno, u_int action)
 {
 	DBT data, key;
 	EXF *ep;
@@ -309,9 +299,7 @@ log_line(sp, lno, action)
  * PUBLIC: int log_mark(SCR *, LMARK *);
  */
 int
-log_mark(sp, lmp)
-	SCR *sp;
-	LMARK *lmp;
+log_mark(SCR *sp, LMARK *lmp)
 {
 	DBT data, key;
 	EXF *ep;
@@ -355,9 +343,7 @@ log_mark(sp, lmp)
  * PUBLIC: int log_backward(SCR *, MARK *);
  */
 int
-log_backward(sp, rp)
-	SCR *sp;
-	MARK *rp;
+log_backward(SCR *sp, MARK *rp)
 {
 	DBT key, data;
 	EXF *ep;
@@ -461,8 +447,7 @@ err:	F_CLR(ep, F_NOLOG);
  * PUBLIC: int log_setline(SCR *);
  */
 int
-log_setline(sp)
-	SCR *sp;
+log_setline(SCR *sp)
 {
 	DBT key, data;
 	EXF *ep;
@@ -548,9 +533,7 @@ err:	F_CLR(ep, F_NOLOG);
  * PUBLIC: int log_forward(SCR *, MARK *);
  */
 int
-log_forward(sp, rp)
-	SCR *sp;
-	MARK *rp;
+log_forward(SCR *sp, MARK *rp)
 {
 	DBT key, data;
 	EXF *ep;
@@ -647,10 +630,7 @@ err:	F_CLR(ep, F_NOLOG);
  *	Try and restart the log on failure, i.e. if we run out of memory.
  */
 static void
-log_err(sp, file, line)
-	SCR *sp;
-	char *file;
-	int line;
+log_err(SCR *sp, char *file, int line)
 {
 	EXF *ep;
 
@@ -663,11 +643,7 @@ log_err(sp, file, line)
 
 #if defined(DEBUG) && 0
 static void
-log_trace(sp, msg, rno, p)
-	SCR *sp;
-	char *msg;
-	recno_t rno;
-	u_char *p;
+log_trace(SCR *sp, char *msg, recno_t rno, u_char *p)
 {
 	LMARK lm;
 	MARK m;
