@@ -403,6 +403,11 @@ tmpfs_alloc_file(struct vnode *dvp, struct vnode **vpp, struct vattr *vap,
 		goto out;
 	}
 
+	if (dnode->tn_links == 0) {
+		error = ENOENT;
+		goto out;
+	}
+
 	/* Allocate a node that represents the new file. */
 	error = tmpfs_alloc_node(tmp, vap->va_type, cnp->cn_cred->cr_uid,
 	    dnode->tn_gid, vap->va_mode, target, vap->va_rdev, &node);
