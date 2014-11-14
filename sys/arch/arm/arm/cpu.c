@@ -1,4 +1,4 @@
-/*	$OpenBSD: cpu.c,v 1.18 2014/03/29 18:09:28 guenther Exp $	*/
+/*	$OpenBSD: cpu.c,v 1.19 2014/11/14 09:56:06 dlg Exp $	*/
 /*	$NetBSD: cpu.c,v 1.56 2004/04/14 04:01:49 bsh Exp $	*/
 
 
@@ -368,20 +368,5 @@ cpu_alloc_arm_stack(struct cpu_info *ci)
 	return 0;
 }
 #endif /* MULTIPROCESSOR */
-
-/*
- * Use stdatomic instructions instead of encoding ASM.
- */
-void
-atomic_setbits_int(volatile unsigned int *uip, unsigned int v)
-{
-	atomic_fetch_or_explicit((atomic_uint *)uip, v, memory_order_seq_cst);
-}
-
-void
-atomic_clearbits_int(volatile unsigned int *uip, unsigned int v)
-{
-	atomic_fetch_and_explicit((atomic_uint *)uip, ~v, memory_order_seq_cst);
-}
 
 /* End of cpu.c */
