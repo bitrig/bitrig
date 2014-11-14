@@ -1,4 +1,4 @@
-/*	$OpenBSD: ex_cscope.c,v 1.22 2014/11/12 16:29:04 millert Exp $	*/
+/*	$OpenBSD: ex_cscope.c,v 1.23 2014/11/14 20:27:03 tedu Exp $	*/
 
 /*-
  * Copyright (c) 1994, 1996
@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <paths.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +30,6 @@
 #include <unistd.h>
 
 #include "../common/common.h"
-#include "pathnames.h"
 #include "tag.h"
 
 #define	CSCOPE_DBFILE		"cscope.out"
