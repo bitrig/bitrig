@@ -14,8 +14,8 @@
 .Os
 .Sh NAME
 .Nm release
-.Nd building an
-.Ox
+.Nd building a
+.Br
 release
 .Sh DESCRIPTION
 There are several steps necessary to build a system release.
@@ -60,7 +60,7 @@ The easiest way to ensure that the sources are complete and coherent
 is to check them out using the
 .Tn CVS
 tag the
-.Ox
+.Br
 developers add to the repository prior to making a release.
 There are two tags, one which identifies the release as it exists on the
 .Tn CD-ROM
@@ -221,7 +221,7 @@ They are:
 .Bl -tag -width "RELEASEDIR "
 .It Va DESTDIR
 This is the name of a directory which will be the root of a complete
-.Ox
+.Br
 installation, thus it must be on a disk partition large enough to store the
 entire operating system (less the X Window System and any third party
 .Sq packages ) .
@@ -274,8 +274,8 @@ pretty much match the contents of the release
 # unset RELEASEDIR DESTDIR
 .Ed
 .Pp
-At this point you have most of an
-.Ox
+At this point you have most of a
+.Br
 release.
 The only thing missing is the X Window System
 (which is covered in the next section).
@@ -328,7 +328,7 @@ The steps to build the release are (assuming you are still root, and still in
 .Ed
 .Pp
 At this point you have both
-.Ox
+.Br
 system and X Window System
 .Sq tarballs
 in your release directory.
