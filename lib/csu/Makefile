@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.19 2014/11/15 01:40:07 guenther Exp $
+#	$OpenBSD: Makefile,v 1.20 2014/11/15 21:59:29 guenther Exp $
 
 OBJS=		crt0.o gcrt0.o
 OBJS+=		crtbegin.o crtend.o
