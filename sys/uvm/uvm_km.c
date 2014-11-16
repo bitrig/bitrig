@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_km.c,v 1.116 2014/11/13 00:47:44 tedu Exp $	*/
+/*	$OpenBSD: uvm_km.c,v 1.117 2014/11/16 12:31:00 deraadt Exp $	*/
 /*	$NetBSD: uvm_km.c,v 1.42 2001/01/14 02:10:01 thorpej Exp $	*/
 
 /* 
@@ -182,8 +182,8 @@ uvm_km_init(vaddr_t start, vaddr_t end)
 	    );
 	kernel_map_store.pmap = pmap_kernel();
 	if (base != start && uvm_map(&kernel_map_store, &base, start - base,
-	    NULL, UVM_UNKNOWN_OFFSET, 0, UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL,
-	    UVM_INH_NONE, UVM_ADV_RANDOM,UVM_FLAG_FIXED)) != 0)
+	    NULL, UVM_UNKNOWN_OFFSET, 0, UVM_MAPFLAG(PROT_MASK, PROT_MASK,
+	    UVM_INH_NONE, POSIX_MADV_RANDOM, UVM_FLAG_FIXED)) != 0)
 		panic("uvm_km_init: could not reserve space for kernel");
 	
 	kernel_map = &kernel_map_store;
@@ -209,8 +209,8 @@ uvm_km_suballoc(struct vm_map *map, vaddr_t *min, vaddr_t *max, vsize_t size,
 
 	/* first allocate a blank spot in the parent map */
 	if (uvm_map(map, min, size, NULL, UVM_UNKNOWN_OFFSET, 0,
-	    UVM_MAPFLAG(UVM_PROT_ALL, UVM_PROT_ALL, UVM_INH_NONE,
-	    UVM_ADV_RANDOM, mapflags)) != 0) {
+	    UVM_MAPFLAG(PROT_MASK, PROT_MASK, UVM_INH_NONE,
+	    POSIX_MADV_RANDOM, mapflags)) != 0) {
 	       panic("uvm_km_suballoc: unable to allocate space in parent map");
 	}
 
@@ -368,7 +368,8 @@ uvm_km_page_init(void)
 		addr = vm_map_min(kernel_map);
 		if (uvm_map(kernel_map, &addr, (vsize_t)bulk << PAGE_SHIFT,
 		    NULL, UVM_UNKNOWN_OFFSET, 0,
-		    UVM_MAPFLAG(UVM_PROT_RW, UVM_PROT_RW, UVM_INH_NONE,
+		    UVM_MAPFLAG(PROT_READ | PROT_WRITE,
+		    PROT_READ | PROT_WRITE, UVM_INH_NONE,
 		    UVM_ADV_RANDOM, UVM_FLAG_TRYLOCK)) != 0) {
 			bulk /= 2;
 			continue;
@@ -431,7 +432,8 @@ uvm_km_thread(void *arg)
 			 * So, only use UVM_FLAG_TRYLOCK for the first page
 			 * if fp != NULL
 			 */
-			flags = UVM_MAPFLAG(UVM_PROT_RW, UVM_PROT_RW,
+			flags = UVM_MAPFLAG(PROT_READ | PROT_WRITE,
+			    PROT_READ | PROT_WRITE,
 			    UVM_INH_NONE, UVM_ADV_RANDOM,
 			    fp != NULL ? UVM_FLAG_TRYLOCK : 0);
 			memset(pg, 0, sizeof(pg));
@@ -444,7 +446,8 @@ uvm_km_thread(void *arg)
 				}
 
 				/* made progress, so don't sleep for more */
-				flags = UVM_MAPFLAG(UVM_PROT_RW, UVM_PROT_RW,
+				flags = UVM_MAPFLAG(PROT_READ | PROT_WRITE,
+				    PROT_READ | PROT_WRITE,
 				    UVM_INH_NONE, UVM_ADV_RANDOM,
 				    UVM_FLAG_TRYLOCK);
 			}
@@ -575,9 +578,9 @@ km_alloc(size_t sz, const struct kmem_va_mode *kv,
 #endif
 alloc_va:
 	if (kv->kv_executable) {
-		prot = VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXECUTE;
+		prot = PROT_READ | PROT_WRITE | PROT_EXEC;
 	} else {
-		prot = VM_PROT_READ | VM_PROT_WRITE;
+		prot = PROT_READ | PROT_WRITE;
 	}
 
 	if (kp->kp_pageable) {
@@ -624,7 +627,7 @@ try_map:
 		va = vm_map_min(map);
 		if (uvm_map(map, &va, sz, uobj, kd->kd_prefer,
 		    kv->kv_align, UVM_MAPFLAG(prot, prot, UVM_INH_NONE,
-		    UVM_ADV_RANDOM, mapflags))) {
+		    POSIX_MADV_RANDOM, mapflags))) {
 			if (kv->kv_wait && kd->kd_waitok) {
 				tsleep(map, PVM, "km_allocva", 0);
 				goto try_map;

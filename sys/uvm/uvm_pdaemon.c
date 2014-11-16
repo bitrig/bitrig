@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_pdaemon.c,v 1.73 2014/09/14 14:17:27 jsg Exp $	*/
+/*	$OpenBSD: uvm_pdaemon.c,v 1.74 2014/11/16 12:31:00 deraadt Exp $	*/
 /*	$NetBSD: uvm_pdaemon.c,v 1.23 2000/08/20 10:24:14 bjh21 Exp $	*/
 
 /* 
@@ -491,7 +491,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 				}
 
 				/* zap all mappings */
-				pmap_page_protect(p, VM_PROT_NONE);
+				pmap_page_protect(p, PROT_NONE);
 				uvm_pagefree(p);
 				uvmexp.pdfreed++;
 
@@ -579,7 +579,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 			swap_backed = ((p->pg_flags & PQ_SWAPBACKED) != 0);
 			atomic_setbits_int(&p->pg_flags, PG_BUSY);
 			UVM_PAGE_OWN(p, "scan_inactive");
-			pmap_page_protect(p, VM_PROT_READ);
+			pmap_page_protect(p, PROT_READ);
 			uvmexp.pgswapout++;
 
 			/*
@@ -799,7 +799,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 				p->uanon = NULL;
 
 				uvm_anfree(anon);	/* kills anon */
-				pmap_page_protect(p, VM_PROT_NONE);
+				pmap_page_protect(p, PROT_NONE);
 				anon = NULL;
 				uvm_lock_pageq();
 				nextpg = TAILQ_NEXT(p, pageq);
@@ -1039,7 +1039,7 @@ uvmpd_drop(struct pglist *pglst)
 				}
 
 				/* zap all mappings with pmap_page_protect... */
-				pmap_page_protect(p, VM_PROT_NONE);
+				pmap_page_protect(p, PROT_NONE);
 				uvm_pagefree(p);
 			}
 		}

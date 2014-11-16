@@ -1,4 +1,4 @@
-/*	$OpenBSD: i915_gem_tiling.c,v 1.14 2014/01/30 15:10:48 kettenis Exp $	*/
+/*	$OpenBSD: i915_gem_tiling.c,v 1.15 2014/11/16 12:31:00 deraadt Exp $	*/
 /*
  * Copyright (c) 2008-2009 Owain G. Ainsworth <oga@openbsd.org>
  *
@@ -490,7 +490,7 @@ i915_gem_swizzle_page(struct vm_page *pg)
 #else
 	/* will not fail since kv_wait is set */
 	va = (vaddr_t)km_alloc(PAGE_SIZE, &kv_swizzpage, &kp_none, &kd_waitok);
-	pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg), VM_PROT_READ|VM_PROT_WRITE);
+	pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg), PROT_READ | PROT_WRITE);
 	pmap_update(pmap_kernel());
 #endif
 	vaddr = (char *)va;

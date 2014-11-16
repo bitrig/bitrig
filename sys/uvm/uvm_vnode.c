@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_vnode.c,v 1.84 2014/07/11 16:35:40 jsg Exp $	*/
+/*	$OpenBSD: uvm_vnode.c,v 1.85 2014/11/16 12:31:01 deraadt Exp $	*/
 /*	$NetBSD: uvm_vnode.c,v 1.36 2000/11/24 20:34:01 chs Exp $	*/
 
 /*
@@ -173,7 +173,7 @@ uvn_attach(struct vnode *vp, vm_prot_t accessprot)
 		uvn->u_obj.uo_refs++;		/* bump uvn ref! */
 
 		/* check for new writeable uvn */
-		if ((accessprot & VM_PROT_WRITE) != 0 &&
+		if ((accessprot & PROT_WRITE) != 0 &&
 		    (uvn->u_flags & UVM_VNODE_WRITEABLE) == 0) {
 			LIST_INSERT_HEAD(&uvn_wlist, uvn, u_wlist);
 			/* we are now on wlist! */
@@ -255,7 +255,7 @@ uvn_attach(struct vnode *vp, vm_prot_t accessprot)
 	uvn->u_size = used_vnode_size;
 
 	/* if write access, we need to add it to the wlist */
-	if (accessprot & VM_PROT_WRITE) {
+	if (accessprot & PROT_WRITE) {
 		LIST_INSERT_HEAD(&uvn_wlist, uvn, u_wlist);
 		uvn->u_flags |= UVM_VNODE_WRITEABLE;	/* we are on wlist! */
 	}
@@ -690,7 +690,7 @@ uvn_flush(struct uvm_object *uobj, voff_t start, voff_t stop, int flags)
 			if ((pp->pg_flags & PG_CLEAN) != 0 &&
 			    (flags & PGO_FREE) != 0 &&
 			    (pp->pg_flags & PQ_ACTIVE) != 0)
-				pmap_page_protect(pp, VM_PROT_NONE);
+				pmap_page_protect(pp, PROT_NONE);
 			if ((pp->pg_flags & PG_CLEAN) != 0 &&
 			    pmap_is_modified(pp))
 				atomic_clearbits_int(&pp->pg_flags, PG_CLEAN);
@@ -715,7 +715,7 @@ uvn_flush(struct uvm_object *uobj, voff_t start, voff_t stop, int flags)
 					curoff -= PAGE_SIZE;
 					continue;
 				} else {
-					pmap_page_protect(pp, VM_PROT_NONE);
+					pmap_page_protect(pp, PROT_NONE);
 					/* removed page from object */
 					uvm_pagefree(pp);
 				}
@@ -733,7 +733,7 @@ uvn_flush(struct uvm_object *uobj, voff_t start, voff_t stop, int flags)
 		 */
 		atomic_setbits_int(&pp->pg_flags, PG_BUSY);
 		UVM_PAGE_OWN(pp, "uvn_flush");
-		pmap_page_protect(pp, VM_PROT_READ);
+		pmap_page_protect(pp, PROT_READ);
 		/* if we're async, free the page in aiodoned */
 		if ((flags & (PGO_FREE|PGO_SYNCIO)) == PGO_FREE)
 			atomic_setbits_int(&pp->pg_flags, PG_RELEASED);
@@ -850,7 +850,7 @@ ReTry:
 					    "lost!\n");
 					retval = FALSE;
 				}
-				pmap_page_protect(ptmp, VM_PROT_NONE);
+				pmap_page_protect(ptmp, PROT_NONE);
 				uvm_pagefree(ptmp);
 			}
 

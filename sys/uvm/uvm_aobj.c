@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_aobj.c,v 1.69 2014/09/14 14:17:27 jsg Exp $	*/
+/*	$OpenBSD: uvm_aobj.c,v 1.70 2014/11/16 12:31:00 deraadt Exp $	*/
 /*	$NetBSD: uvm_aobj.c,v 1.39 2001/02/18 21:19:08 chs Exp $	*/
 
 /*
@@ -1096,7 +1096,7 @@ uao_detach_locked(struct uvm_object *uobj)
 			uvm_lock_pageq();
 			continue;
 		}
-		pmap_page_protect(pg, VM_PROT_NONE);
+		pmap_page_protect(pg, PROT_NONE);
 		uao_dropswap(&aobj->u_obj, pg->offset >> PAGE_SHIFT);
 		uvm_pagefree(pg);
 	}
@@ -1214,7 +1214,7 @@ uao_flush(struct uvm_object *uobj, voff_t start, voff_t stop, int flags)
 				continue;
 
 			/* zap all mappings for the page. */
-			pmap_page_protect(pp, VM_PROT_NONE);
+			pmap_page_protect(pp, PROT_NONE);
 
 			uao_dropswap(uobj, pp->offset >> PAGE_SHIFT);
 			uvm_lock_pageq();
@@ -1688,7 +1688,7 @@ uao_pagein_page(struct uvm_aobj *aobj, int pageidx)
 	npages = 1;
 	offset = (voff_t)pageidx << PAGE_SHIFT;
 	rv = uao_get(&aobj->u_obj, offset, &pg, &npages, 0,
-	    VM_PROT_READ|VM_PROT_WRITE, 0, 0);
+	    PROT_READ | PROT_WRITE, 0, 0);
 	UVM_ASSERT_OBJUNLOCKED(&aobj->u_obj);
 
 

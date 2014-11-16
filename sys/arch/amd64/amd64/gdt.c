@@ -1,4 +1,4 @@
-/*	$OpenBSD: gdt.c,v 1.20 2014/09/14 14:17:23 jsg Exp $	*/
+/*	$OpenBSD: gdt.c,v 1.21 2014/11/16 12:30:56 deraadt Exp $	*/
 /*	$NetBSD: gdt.c,v 1.1 2003/04/26 18:39:28 fvdl Exp $	*/
 
 /*-

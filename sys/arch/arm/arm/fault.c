@@ -1,4 +1,4 @@
-/*	$OpenBSD: fault.c,v 1.17 2014/05/08 21:17:00 miod Exp $	*/
+/*	$OpenBSD: fault.c,v 1.18 2014/11/16 12:30:56 deraadt Exp $	*/
 /*	$NetBSD: fault.c,v 1.46 2004/01/21 15:39:21 skrll Exp $	*/
 
 /*
@@ -293,7 +293,7 @@ data_abort_handler(trapframe_t *tf)
 #endif
 	}
 
-	ftype = fsr & FAULT_WNR ? VM_PROT_WRITE : VM_PROT_READ;
+	ftype = fsr & FAULT_WNR ? PROT_WRITE : PROT_READ;
 
 	/*
 	 * See if the fault is as a result of ref/mod emulation,
@@ -567,7 +567,7 @@ prefetch_abort_handler(trapframe_t *tf)
 #ifdef DEBUG
 	last_fault_code = -1;
 #endif
-	if (pmap_fault_fixup(map->pmap, va, VM_PROT_READ|VM_PROT_EXECUTE, 1))
+	if (pmap_fault_fixup(map->pmap, va, PROT_READ | PROT_EXEC, 1))
 		goto out;
 
 #ifdef DIAGNOSTIC
@@ -577,7 +577,7 @@ prefetch_abort_handler(trapframe_t *tf)
 	}
 #endif
 
-	error = uvm_fault(map, va, 0, VM_PROT_READ|VM_PROT_EXECUTE);
+	error = uvm_fault(map, va, 0, PROT_READ | PROT_EXEC);
 	if (__predict_true(error == 0))
 		goto out;
 

@@ -692,7 +692,7 @@ printf("%s: %d %d\n", __func__, domain, ++nl1);
 	for (eva = va + L1_TABLE_SIZE; va < eva; va += PAGE_SIZE) {
 		paddr_t pa = VM_PAGE_TO_PHYS(m);
 
-		pmap_kenter_pa(va, pa, VM_PROT_READ | VM_PROT_WRITE);
+		pmap_kenter_pa(va, pa, PROT_READ | PROT_WRITE);
 		/*
 		 * Make sure the L1 descriptor table is mapped
 		 * with the cache-mode set to write-through, or
@@ -1053,7 +1053,7 @@ pmap_clearbit(struct vm_page *pg, u_int maskbits)
 			/* make the pte read only */
 			npte = (npte & ~L2_S_PROT_MASK) |
 			    L2_S_PROT(pm == pmap_kernel() ? PTE_KERNEL : PTE_USER,
-			      npte & L2_V7_S_XN ? VM_PROT_READ : VM_PROT_READ | VM_PROT_EXECUTE);
+			      npte & L2_V7_S_XN ? PROT_READ : PROT_READ | PROT_EXECUTE);
 		}
 
 		if (maskbits & PVF_REF) {
@@ -1155,7 +1155,7 @@ pmap_clean_page(struct vm_page *pg, int isync)
 	 */
 	if (!wb) {
 		*cwb_pte = L2_S_PROTO | VM_PAGE_TO_PHYS(pg) |
-		    L2_S_PROT(PTE_KERNEL, VM_PROT_WRITE) | pte_l2_s_cache_mode;
+		    L2_S_PROT(PTE_KERNEL, PROT_WRITE) | pte_l2_s_cache_mode;
 		PTE_SYNC(cwb_pte);
 		cpu_tlb_flushD_SE(cwbp);
 		cpu_cpwait();
@@ -1312,7 +1312,7 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 
 	NPDEBUG(PDB_ENTER, printf("pmap_enter: pm %p va 0x%lx pa 0x%lx prot %x flag %x\n", pm, va, pa, prot, flags));
 
-	KDASSERT((flags & PMAP_WIRED) == 0 || (flags & VM_PROT_ALL) != 0);
+	KDASSERT((flags & PMAP_WIRED) == 0 || (flags & PROT_MASK) != 0);
 	KDASSERT(((va | pa) & PGOFSET) == 0);
 
 	/*
@@ -1322,9 +1322,9 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	pg = pmap_initialized ? PHYS_TO_VM_PAGE(pa) : NULL;
 
 	nflags = 0;
-	if (prot & VM_PROT_WRITE)
+	if (prot & PROT_WRITE)
 		nflags |= PVF_WRITE;
-	if (prot & VM_PROT_EXECUTE)
+	if (prot & PROT_EXEC)
 		nflags |= PVF_EXEC;
 	if (flags & PMAP_WIRED)
 		nflags |= PVF_WIRED;
@@ -1370,7 +1370,7 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 		/*
 		 * This has to be a managed mapping.
 		 */
-		if ((flags & VM_PROT_ALL) ||
+		if ((flags & PROT_MASK) ||
 		    (pg->mdpage.pvh_attrs & PVF_REF)) {
 			/*
 			 * - The access type indicates that we don't need
@@ -1383,8 +1383,8 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 
 			nflags |= PVF_REF;
 
-			if ((prot & VM_PROT_WRITE) != 0 &&
-			    ((flags & VM_PROT_WRITE) != 0 ||
+			if ((prot & PROT_WRITE) != 0 &&
+			    ((flags & PROT_WRITE) != 0 ||
 			     (pg->mdpage.pvh_attrs & PVF_MOD) != 0)) {
 				/*
 				 * This is a writable mapping, and the
@@ -1400,7 +1400,7 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 			 */
 			npte &= ~L2_TYPE_MASK;
 			npte |= L2_TYPE_INV;
-			prot &= ~VM_PROT_WRITE;
+			prot &= ~PROT_WRITE;
 			mapped = 0;
 		}
 
@@ -1420,7 +1420,7 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 			 */
 			if ((oflags & PVF_NC) == 0 &&
 			    l2pte_is_writeable(opte, pm) &&
-			    (prot & VM_PROT_WRITE) == 0) {
+			    (prot & PROT_WRITE) == 0) {
 				cpu_dcache_wb_range(va, PAGE_SIZE);
 				cpu_sdcache_wb_range(va, opte & L2_S_FRAME,
 				    PAGE_SIZE);
@@ -1478,7 +1478,7 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	 * Make sure userland mappings get the right permissions
 	 */
 	npte |= L2_S_PROT(pm == pmap_kernel() ?  PTE_KERNEL : PTE_USER,
-	    prot & ~VM_PROT_WRITE);
+	    prot & ~PROT_WRITE);
 
 	/*
 	 * Keep the stats up to date
@@ -1531,7 +1531,7 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	 * Make sure executable pages do not have stale data in I$,
 	 * which is VIPT.
 	 */
-	if (mapped && (prot & VM_PROT_EXECUTE) != 0 && pmap_is_current(pm))
+	if (mapped && (prot & PROT_EXECUTE) != 0 && pmap_is_current(pm))
 		cpu_icache_sync_range(va, PAGE_SIZE);
 
 	pmap_release_pmap_lock(pm);
@@ -1823,13 +1823,13 @@ pmap_protect(pmap_t pm, vaddr_t sva, vaddr_t eva, vm_prot_t prot)
 	    printf("pmap_protect: pm %p sva 0x%lx eva 0x%lx prot 0x%x",
 	    pm, sva, eva, prot));
 
-	if ((prot & VM_PROT_READ) == 0) {
+	if ((prot & PROT_READ) == 0) {
 NPDEBUG(PDB_PROTECT, printf("\n"));
 		pmap_remove(pm, sva, eva);
 		return;
 	}
 
-	if (prot & VM_PROT_WRITE) {
+	if (prot & PROT_WRITE) {
 		/*
 		 * If this is a read->write transition, just ignore it and let
 		 * uvm_fault() take care of it later.
@@ -1879,7 +1879,7 @@ NPDEBUG(PDB_PROTECT, printf("\n"));
 					pmap_clean_page(pg, FALSE);
 				pte = (pte & ~L2_S_PROT_MASK) |
 				    L2_S_PROT(pm == pmap_kernel() ? PTE_KERNEL : PTE_USER,
-				      pte & L2_V7_S_XN ? VM_PROT_READ : VM_PROT_READ | VM_PROT_EXECUTE);
+				      pte & L2_V7_S_XN ? PROT_READ : PROT_READ | PROT_EXECUTE);
 				*ptep = pte;
 				PTE_SYNC(ptep);
 
@@ -1927,12 +1927,12 @@ pmap_page_protect(struct vm_page *pg, vm_prot_t prot)
 	    pg, pg->phys_addr, prot));
 
 	switch(prot) {
-	case VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE:
-	case VM_PROT_READ|VM_PROT_WRITE:
+	case PROT_READ | PROT_WRITE | PROT_EXEC:
+	case PROT_READ | PROT_WRITE:
 		return;
 
-	case VM_PROT_READ:
-	case VM_PROT_READ|VM_PROT_EXECUTE:
+	case PROT_READ:
+	case PROT_READ | PROT_EXEC:
 		pmap_clearbit(pg, PVF_WRITE);
 		break;
 
@@ -2042,14 +2042,14 @@ pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 	 */
 	if (user) {
 		/* XXX use of L2_V7_S_XN */
-		if ((pte & L2_S_PROT_MASK & ~L2_V7_S_XN) != L2_S_PROT(PTE_USER, VM_PROT_READ) &&
-		    (pte & L2_S_PROT_MASK & ~L2_V7_S_XN) != L2_S_PROT(PTE_USER, VM_PROT_WRITE))
+		if ((pte & L2_S_PROT_MASK & ~L2_V7_S_XN) != L2_S_PROT(PTE_USER, PROT_READ) &&
+		    (pte & L2_S_PROT_MASK & ~L2_V7_S_XN) != L2_S_PROT(PTE_USER, PROT_WRITE))
 			goto out;
 	}
 
 	pa = l2pte_pa(pte);
 
-	if ((ftype & VM_PROT_EXECUTE) && (pte & L2_V7_S_XN)) {
+	if ((ftype & PROT_EXECUTE) && (pte & L2_V7_S_XN)) {
 printf("%s: va %08x ftype %x %c pte %08x\n", __func__, va, ftype, user ? 'u' : 's', pte);
 printf("fault on exec\n");
 #ifdef DDB
@@ -2058,7 +2058,7 @@ Debugger();
 		/* XXX FIX THIS */
 		goto out;
 	}
-	if ((ftype & VM_PROT_WRITE) && !l2pte_is_writeable(pte, pm)) {
+	if ((ftype & PROT_WRITE) && !l2pte_is_writeable(pte, pm)) {
 		/*
 		 * This looks like a good candidate for "page modified"
 		 * emulation...
@@ -2099,7 +2099,7 @@ Debugger();
 		 */
 		*ptep = (pte & ~(L2_TYPE_MASK|L2_S_PROT_MASK)) | L2_S_PROTO |
 		    L2_S_PROT(pm == pmap_kernel() ? PTE_KERNEL : PTE_USER,
-		      pte & L2_V7_S_XN ? VM_PROT_WRITE : VM_PROT_WRITE | VM_PROT_EXECUTE);
+		      pte & L2_V7_S_XN ? PROT_WRITE : PROT_WRITE | PROT_EXECUTE);
 		PTE_SYNC(ptep);
 		rv = 1;
 	} else
@@ -2362,7 +2362,7 @@ pmap_zero_page_generic(struct vm_page *pg)
 	 * zeroed page. Invalidate the TLB as needed.
 	 */
 	*cdst_pte = L2_S_PROTO | phys |
-	    L2_S_PROT(PTE_KERNEL, VM_PROT_WRITE) | pte_l2_s_cache_mode;
+	    L2_S_PROT(PTE_KERNEL, PROT_WRITE) | pte_l2_s_cache_mode;
 	PTE_SYNC(cdst_pte);
 	cpu_tlb_flushD_SE(cdstp);
 	cpu_cpwait();
@@ -2392,10 +2392,10 @@ pmap_copy_page_generic(struct vm_page *src_pg, struct vm_page *dst_pg)
 	 * as required.
 	 */
 	*csrc_pte = L2_S_PROTO | src |
-	    L2_S_PROT(PTE_KERNEL, VM_PROT_READ) | pte_l2_s_cache_mode;
+	    L2_S_PROT(PTE_KERNEL, PROT_READ) | pte_l2_s_cache_mode;
 	PTE_SYNC(csrc_pte);
 	*cdst_pte = L2_S_PROTO | dst |
-	    L2_S_PROT(PTE_KERNEL, VM_PROT_WRITE) | pte_l2_s_cache_mode;
+	    L2_S_PROT(PTE_KERNEL, PROT_WRITE) | pte_l2_s_cache_mode;
 	PTE_SYNC(cdst_pte);
 	cpu_tlb_flushD_SE(csrcp);
 	cpu_tlb_flushD_SE(cdstp);
@@ -2446,7 +2446,7 @@ pmap_grow_map(vaddr_t va, pt_entry_t cache_mode, paddr_t *pap)
 
 	ptep = &l2b->l2b_kva[l2pte_index(va)];
 	*ptep = L2_S_PROTO | pa | cache_mode |
-	    L2_S_PROT(PTE_KERNEL, VM_PROT_READ | VM_PROT_WRITE);
+	    L2_S_PROT(PTE_KERNEL, PROT_READ | PROT_WRITE);
 	PTE_SYNC(ptep);
 	cpu_tlb_flushD_SE(va);
 

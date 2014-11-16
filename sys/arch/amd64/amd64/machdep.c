@@ -1,4 +1,4 @@
-/*	$OpenBSD: machdep.c,v 1.194 2014/11/08 03:31:58 guenther Exp $	*/
+/*	$OpenBSD: machdep.c,v 1.195 2014/11/16 12:30:56 deraadt Exp $	*/
 /*	$NetBSD: machdep.c,v 1.3 2003/05/07 22:58:18 fvdl Exp $	*/
 
 /*-
@@ -1177,7 +1177,7 @@ void
 map_tramps(void) {
 	struct pmap *kmp = pmap_kernel();
 
-	pmap_kenter_pa(lo32_vaddr, lo32_paddr, VM_PROT_ALL);
+	pmap_kenter_pa(lo32_vaddr, lo32_paddr, PROT_READ | PROT_WRITE | PROT_EXEC);
 	pmap_update(pmap_kernel());
 
 	/*
@@ -1194,12 +1194,12 @@ map_tramps(void) {
 #ifdef MULTIPROCESSOR
 	pmap_kenter_pa((vaddr_t)MP_TRAMPOLINE,	/* virtual */
 	    (paddr_t)MP_TRAMPOLINE,	/* physical */
-	    VM_PROT_ALL);		/* protection */
+	    PROT_MASK);		/* protection */
 #endif /* MULTIPROCESSOR */
 
 	pmap_kenter_pa((vaddr_t)ACPI_TRAMPOLINE, /* virtual */
 	    (paddr_t)ACPI_TRAMPOLINE,	/* physical */
-	    VM_PROT_ALL);		/* protection */
+	    PROT_MASK);		/* protection */
 	pmap_update(pmap_kernel());
 }
 #endif
@@ -1500,9 +1500,9 @@ init_x86_64(paddr_t first_avail)
 
 	pmap_growkernel(VM_MIN_KERNEL_ADDRESS + 32 * 1024 * 1024);
 
-	pmap_kenter_pa(idt_vaddr, idt_paddr, VM_PROT_READ|VM_PROT_WRITE);
+	pmap_kenter_pa(idt_vaddr, idt_paddr, PROT_READ | PROT_WRITE);
 	pmap_kenter_pa(idt_vaddr + PAGE_SIZE, idt_paddr + PAGE_SIZE,
-	    VM_PROT_READ|VM_PROT_WRITE);
+	    PROT_READ | PROT_WRITE);
 	pmap_update(pmap_kernel());
 
 #if defined(MULTIPROCESSOR) || NACPI > 0
