@@ -1,4 +1,4 @@
-/*	$OpenBSD: buf.h,v 1.95 2014/08/31 21:08:48 tedu Exp $	*/
+/*	$OpenBSD: buf.h,v 1.96 2014/11/17 16:48:33 tedu Exp $	*/
 /*	$NetBSD: buf.h,v 1.25 1997/04/09 21:12:17 mycroft Exp $	*/
 
 /*
@@ -138,10 +138,10 @@ struct buf {
 	LIST_ENTRY(buf) b_wapbllist;	/* transaction buffer list */
 	struct  proc *b_proc;		/* Associated proc; NULL if kernel. */
 	volatile long	b_flags;	/* B_* flags. */
-	int	b_error;		/* Errno value. */
 	long	b_bufsize;		/* Allocated buffer size. */
 	long	b_bcount;		/* Valid bytes in buffer. */
 	size_t	b_resid;		/* Remaining I/O. */
+	int	b_error;		/* Errno value. */
 	dev_t	b_dev;			/* Device associated with buffer. */
 	caddr_t	b_data;			/* associated data */
 
