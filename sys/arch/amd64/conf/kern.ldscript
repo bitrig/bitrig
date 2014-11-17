@@ -1,4 +1,4 @@
-/*	$OpenBSD: kern.ldscript,v 1.3 2013/12/28 17:57:14 miod Exp $	*/
+/*	$OpenBSD: kern.ldscript,v 1.4 2014/11/17 23:54:32 guenther Exp $	*/
 
 /*
  * Copyright (c) 2009 Tobias Weingartner <weingart@tepid.org>
@@ -75,7 +75,7 @@ SECTIONS
 	.openbsd.randomdata :
 	{
 		*(.openbsd.randomdata)
-	} :openbsd_randomize :data
+	} :data :openbsd_randomize
 	. = ALIGN(__ALIGN_SIZE);
 	PROVIDE (edata = .);
 	_edata = .;
