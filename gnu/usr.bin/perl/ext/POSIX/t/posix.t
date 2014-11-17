@@ -128,7 +128,10 @@ like( getcwd(), qr/$pat/, 'getcwd' );
 SKIP: { 
     skip("strtod() not present", 1) unless $Config{d_strtod};
 
-    $lc = &POSIX::setlocale(&POSIX::LC_NUMERIC, 'C') if $Config{d_setlocale};
+    if ($Config{d_setlocale}) {
+        $lc = &POSIX::setlocale(&POSIX::LC_NUMERIC);
+        &POSIX::setlocale(&POSIX::LC_NUMERIC, 'C');
+    }
 
     # we're just checking that strtod works, not how accurate it is
     ($n, $x) = &POSIX::strtod('3.14159_OR_SO');
@@ -171,9 +174,23 @@ sub try_strftime {
     is($got, $expect, "validating mini_mktime() and strftime(): $expect");
 }
 
-$lc = &POSIX::setlocale(&POSIX::LC_TIME, 'C') if $Config{d_setlocale};
+if ($Config{d_setlocale}) {
+    $lc = &POSIX::setlocale(&POSIX::LC_TIME);
+    &POSIX::setlocale(&POSIX::LC_TIME, 'C');
+}
+
 try_strftime("Wed Feb 28 00:00:00 1996 059", 0,0,0, 28,1,96);
-try_strftime("Thu Feb 29 00:00:60 1996 060", 60,0,-24, 30,1,96);
+SKIP: {
+    skip("VC++ 8 and Vista's CRTs regard 60 seconds as an invalid parameter", 1)
+	if ($Is_W32
+	    and (($Config{cc} eq 'cl' and
+		    $Config{ccversion} =~ /^(\d+)/ and $1 >= 14)
+		or ($Config{cc} eq 'icl' and
+		    `cl --version 2>&1` =~ /^.*Version\s+([\d.]+)/ and $1 >= 14)
+		or (Win32::GetOSVersion())[1] >= 6));
+
+    try_strftime("Thu Feb 29 00:00:60 1996 060", 60,0,-24, 30,1,96);
+}
 try_strftime("Fri Mar 01 00:00:00 1996 061", 0,0,-24, 31,1,96);
 try_strftime("Sun Feb 28 00:00:00 1999 059", 0,0,0, 28,1,99);
 try_strftime("Mon Mar 01 00:00:00 1999 060", 0,0,24, 28,1,99);
@@ -222,6 +239,117 @@ $result = eval {POSIX::fgets};
 is ($result, undef, "fgets should fail");
 like ($@, qr/^Use method IO::Handle::gets\(\) instead/,
       "check its redef message");
+
+{
+    no warnings 'deprecated';
+    # Simplistic tests for the isXXX() functions (bug #16799)
+    ok( POSIX::isalnum('1'),  'isalnum' );
+    ok(!POSIX::isalnum('*'),  'isalnum' );
+    ok( POSIX::isalpha('f'),  'isalpha' );
+    ok(!POSIX::isalpha('7'),  'isalpha' );
+    ok( POSIX::iscntrl("\cA"),'iscntrl' );
+    ok(!POSIX::iscntrl("A"),  'iscntrl' );
+    ok( POSIX::isdigit('1'),  'isdigit' );
+    ok(!POSIX::isdigit('z'),  'isdigit' );
+    ok( POSIX::isgraph('@'),  'isgraph' );
+    ok(!POSIX::isgraph(' '),  'isgraph' );
+    ok( POSIX::islower('l'),  'islower' );
+    ok(!POSIX::islower('L'),  'islower' );
+    ok( POSIX::isupper('U'),  'isupper' );
+    ok(!POSIX::isupper('u'),  'isupper' );
+    ok( POSIX::isprint('$'),  'isprint' );
+    ok(!POSIX::isprint("\n"), 'isprint' );
+    ok( POSIX::ispunct('%'),  'ispunct' );
+    ok(!POSIX::ispunct('u'),  'ispunct' );
+    ok( POSIX::isspace("\t"), 'isspace' );
+    ok(!POSIX::isspace('_'),  'isspace' );
+    ok( POSIX::isxdigit('f'), 'isxdigit' );
+    ok(!POSIX::isxdigit('g'), 'isxdigit' );
+    # metaphysical question : what should be returned for an empty string ?
+    # anyway this shouldn't segfault (bug #24554)
+    ok( POSIX::isalnum(''),   'isalnum empty string' );
+    ok( POSIX::isalnum(undef),'isalnum undef' );
+    # those functions should stringify their arguments
+    ok(!POSIX::isalpha([]),   'isalpha []' );
+    ok( POSIX::isprint([]),   'isprint []' );
+}
+
+eval { use strict; POSIX->import("S_ISBLK"); my $x = S_ISBLK };
+unlike( $@, qr/Can't use string .* as a symbol ref/, "Can import autoloaded constants" );
+
+SKIP: {
+    skip("localeconv() not present", 20) unless $Config{d_locconv};
+    my $conv = localeconv;
+    is(ref $conv, 'HASH', 'localconv returns a hash reference');
+
+    foreach (qw(decimal_point thousands_sep grouping int_curr_symbol
+		currency_symbol mon_decimal_point mon_thousands_sep
+		mon_grouping positive_sign negative_sign)) {
+    SKIP: {
+	    skip("localeconv has no result for $_", 1)
+		unless exists $conv->{$_};
+	    unlike(delete $conv->{$_}, qr/\A\z/,
+		   "localeconv returned a non-empty string for $_");
+	}
+    }
+
+    foreach (qw(int_frac_digits frac_digits p_cs_precedes p_sep_by_space
+		n_cs_precedes n_sep_by_space p_sign_posn n_sign_posn)) {
+    SKIP: {
+	    skip("localeconv has no result for $_", 1)
+		unless exists $conv->{$_};
+	    like(delete $conv->{$_}, qr/\A-?\d+\z/,
+		 "localeconv returned an integer for $_");
+	}
+    }
+    is_deeply([%$conv], [], 'no unexpected keys returned by localeconv');
+}
+
+my $fd1 = open("Makefile.PL", O_RDONLY, 0);
+like($fd1, qr/\A\d+\z/, 'O_RDONLY with open');
+cmp_ok($fd1, '>', $testfd);
+my $fd2 = dup($fd1);
+like($fd2, qr/\A\d+\z/, 'dup');
+cmp_ok($fd2, '>', $fd1);
+is(POSIX::close($fd1), '0 but true', 'close');
+is(POSIX::close($testfd), '0 but true', 'close');
+$! = 0;
+undef $buffer;
+is(read($fd1, $buffer, 4), undef, 'read on closed file handle fails');
+cmp_ok($!, '==', POSIX::EBADF);
+undef $buffer;
+read($fd2, $buffer, 4) if $fd2 > 2;
+is($buffer, "# Ex", 'read');
+# The descriptor $testfd was using is now free, and is lower than that which
+# $fd1 was using. Hence if dup2() behaves as dup(), we'll know :-)
+{
+    $testfd = dup2($fd2, $fd1);
+    is($testfd, $fd1, 'dup2');
+    undef $buffer;
+    read($testfd, $buffer, 4) if $testfd > 2;
+    is($buffer, 'pect', 'read');
+    is(lseek($testfd, 0, 0), 0, 'lseek back');
+    # The two should share file position:
+    undef $buffer;
+    read($fd2, $buffer, 4) if $fd2 > 2;
+    is($buffer, "# Ex", 'read');
+}
+
+# The FreeBSD man page warns:
+# The access() system call is a potential security hole due to race
+# conditions and should never be used.
+is(access('Makefile.PL', POSIX::F_OK), '0 but true', 'access');
+is(access('Makefile.PL', POSIX::R_OK), '0 but true', 'access');
+$! = 0;
+is(access('no such file', POSIX::F_OK), undef, 'access on missing file');
+cmp_ok($!, '==', POSIX::ENOENT);
+is(access('Makefile.PL/nonsense', POSIX::F_OK), undef,
+   'access on not-a-directory');
+SKIP: {
+    skip("$^O is insufficiently POSIX", 1)
+	if $Is_W32 || $Is_VMS;
+    cmp_ok($!, '==', POSIX::ENOTDIR);
+}
 
 # Check that output is not flushed by _exit. This test should be last
 # in the file, and is not counted in the total number of tests.

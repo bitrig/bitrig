@@ -9,7 +9,7 @@ BEGIN {
      skip_all_without_config('useithreads');
      skip_all_if_miniperl("no dynamic loading on miniperl, no threads");
 
-     plan(26);
+     plan(27);
 }
 
 use strict;
@@ -135,7 +135,7 @@ EOI
 #
 # run-time usage of newCONSTSUB (as done by the IO boot code) wasn't
 # thread-safe - got occasional coredumps or malloc corruption
-watchdog(600, "process");
+watchdog(180, "process");
 {
     local $SIG{__WARN__} = sub {};   # Ignore any thread creation failure warnings
     my @t;
@@ -224,5 +224,179 @@ fresh_perl_is(<<'EOI', 'ok', { }, 'Test for 34394ecd06e704e9');
     delete $h{1} && threads->create(sub {}, shift)->join();
     print 'ok';
 EOI
+
+# This will fail in "interesting" ways if stashes in clone_params is not
+# initialised correctly.
+fresh_perl_like(<<'EOI', qr/\AThread 1 terminated abnormally: Not a CODE reference/, { }, 'RT #73046');
+    use strict;
+    use threads;
+
+    sub foo::bar;
+
+    my %h = (1, *{$::{'foo::'}}{HASH});
+    *{$::{'foo::'}} = {};
+
+    threads->create({}, delete $h{1})->join();
+
+    print "end";
+EOI
+
+fresh_perl_is(<<'EOI', 'ok', { }, '0 refcnt neither on tmps stack nor in @_');
+    use threads;
+    my %h = (1, []);
+    use Scalar::Util 'weaken';
+    my $a = $h{1};
+    weaken($a);
+    delete $h{1} && threads->create(sub {}, shift)->join();
+    print 'ok';
+EOI
+
+{
+    my $got;
+    sub stuff {
+	my $a;
+	if (@_) {
+	    $a = "Leakage";
+	    threads->create(\&stuff)->join();
+	} else {
+	    is ($a, undef, 'RT #73086 - clone used to clone active pads');
+	}
+    }
+
+    stuff(1);
+
+    curr_test(curr_test() + 1);
+}
+
+{
+    my $got;
+    sub more_stuff {
+	my $a;
+	$::b = \$a;
+	if (@_) {
+	    $a = "More leakage";
+	    threads->create(\&more_stuff)->join();
+	} else {
+	    is ($a, undef, 'Just special casing lexicals in ?{ ... }');
+	}
+    }
+
+    more_stuff(1);
+
+    curr_test(curr_test() + 1);
+}
+
+# Test from Jerry Hedden, reduced by him from Object::InsideOut's tests.
+fresh_perl_is(<<'EOI', 'ok', { }, '0 refcnt during CLONE');
+use strict;
+use warnings;
+
+use threads;
+
+{
+    package My::Obj;
+    use Scalar::Util 'weaken';
+
+    my %reg;
+
+    sub new
+    {
+        # Create object with ID = 1
+        my $class = shift;
+        my $id = 1;
+        my $obj = bless(\do{ my $scalar = $id; }, $class);
+
+        # Save weak copy of object for reference during cloning
+        weaken($reg{$id} = $obj);
+
+        # Return object
+        return $obj;
+    }
+
+    # Return the internal ID of the object
+    sub id
+    {
+        my $obj = shift;
+        return $$obj;
+    }
+
+    # During cloning 'look' at the object
+    sub CLONE {
+        foreach my $id (keys(%reg)) {
+            # This triggers SvREFCNT_inc() then SvREFCNT_dec() on the referant.
+            my $obj = $reg{$id};
+        }
+    }
+}
+
+# Create object in 'main' thread
+my $obj = My::Obj->new();
+my $id = $obj->id();
+die "\$id is '$id'" unless $id == 1;
+
+# Access object in thread
+threads->create(
+    sub {
+        print $obj->id() == 1 ? "ok\n" : "not ok '" . $obj->id() . "'\n";
+    }
+)->join();
+
+EOI
+
+# make sure peephole optimiser doesn't recurse heavily.
+# (We run this inside a thread to get a small stack)
+
+{
+    # lots of constructs that have o->op_other etc
+    my $code = <<'EOF';
+	$r = $x || $y;
+	$x ||= $y;
+	$r = $x // $y;
+	$x //= $y;
+	$r = $x && $y;
+	$x &&= $y;
+	$r = $x ? $y : $z;
+	@a = map $x+1, @a;
+	@a = grep $x+1, @a;
+	$r = /$x/../$y/;
+
+	# this one will fail since we removed tail recursion optimisation
+	# with f11ca51e41e8
+	#while (1) { $x = 0 };
+
+	while (0) { $x = 0 };
+	for ($x=0; $y; $z=0) { $r = 0 };
+	for (1) { $x = 0 };
+	{ $x = 0 };
+	$x =~ s/a/$x + 1/e;
+EOF
+    $code = 'my ($r, $x,$y,$z,@a); return 5; ' . ($code x 1000);
+    my $res = threads->create(sub { eval $code})->join;
+    is($res, 5, "avoid peephole recursion");
+}
+
+
+# [perl #78494] Pipes shared between threads block when closed
+{
+  my $perl = which_perl;
+  $perl = qq'"$perl"' if $perl =~ /\s/;
+  open(my $OUT, "|$perl") || die("ERROR: $!");
+  threads->create(sub { })->join;
+  ok(1, "Pipes shared between threads do not block when closed");
+}
+
+# [perl #105208] Typeglob clones should not be cloned again during a join
+{
+  threads->create(sub { sub { $::hypogamma = 3 } })->join->();
+  is $::hypogamma, 3, 'globs cloned and joined are not recloned';
+}
+
+fresh_perl_is(
+  'use threads;' .
+  'async { delete $::{INC}; eval q"my $foo : bar" } ->join; print "ok\n";',
+  "ok",
+   {},
+  'no crash when deleting $::{INC} in thread'
+);
 
 # EOF
