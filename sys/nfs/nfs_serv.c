@@ -1,4 +1,4 @@
-/*	$OpenBSD: nfs_serv.c,v 1.99 2014/11/14 23:01:44 tedu Exp $	*/
+/*	$OpenBSD: nfs_serv.c,v 1.100 2014/11/18 02:22:33 tedu Exp $	*/
 /*     $NetBSD: nfs_serv.c,v 1.34 1997/05/12 23:37:12 fvdl Exp $       */
 
 /*
@@ -508,8 +508,6 @@ nfsrv_read(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 {
 	struct mbuf *nam = nfsd->nd_nam;
 	struct ucred *cred = &nfsd->nd_cr;
-	struct iovec *iv;
-	struct iovec *iv2;
 	struct mbuf *m;
 	struct nfs_fattr *fp;
 	struct nfsm_info	info;
@@ -588,6 +586,8 @@ nfsrv_read(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 	}
 	len = left = nfsm_rndup (cnt);
 	if (cnt > 0) {
+		struct iovec *iv, *iv2;
+		size_t ivlen;
 		/*
 		 * Generate the mbuf list with the uio_iov ref. to it.
 		 */
@@ -608,7 +608,8 @@ nfsrv_read(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 				m2 = m;
 			}
 		}
-		iv = malloc(i * sizeof(struct iovec), M_TEMP, M_WAITOK);
+		iv = mallocarray(i, sizeof(*iv), M_TEMP, M_WAITOK);
+		ivlen = i * sizeof(*iv);
 		uiop->uio_iov = iv2 = iv;
 		m = info.nmi_mb;
 		left = len;
@@ -634,7 +635,7 @@ nfsrv_read(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 		uiop->uio_segflg = UIO_SYSSPACE;
 		error = VOP_READ(vp, uiop, IO_NODELOCKED, cred);
 		off = uiop->uio_offset;
-		free(iv2, M_TEMP, 0);
+		free(iv2, M_TEMP, ivlen);
 		if (error || (getret = VOP_GETATTR(vp, &va, cred)) != 0){
 			if (!error)
 				error = getret;
@@ -678,12 +679,10 @@ nfsrv_write(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 {
 	struct mbuf *nam = nfsd->nd_nam;
 	struct ucred *cred = &nfsd->nd_cr;
-	struct iovec *ivp;
 	struct nfsm_info	info;
 	int i, cnt;
 	struct mbuf *mp;
 	struct nfs_fattr *fp;
-	struct iovec *iv;
 	struct vattr va, forat;
 	u_int32_t *tl;
 	int32_t t1;
@@ -773,7 +772,11 @@ nfsrv_write(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 		goto vbad;
 
 	if (len > 0) {
-	    ivp = malloc(cnt * sizeof(struct iovec), M_TEMP, M_WAITOK);
+	    struct iovec *iv, *ivp;
+	    size_t ivlen;
+
+	    ivp = mallocarray(cnt, sizeof(*ivp), M_TEMP, M_WAITOK);
+	    ivlen = cnt * sizeof(*ivp);
 	    uiop->uio_iov = iv = ivp;
 	    uiop->uio_iovcnt = cnt;
 	    mp = info.nmi_mrep;
@@ -799,7 +802,7 @@ nfsrv_write(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 	    uiop->uio_offset = off;
 	    error = VOP_WRITE(vp, uiop, ioflags, cred);
 	    nfsstats.srvvop_writes++;
-	    free(iv, M_TEMP, 0);
+	    free(iv, M_TEMP, ivlen);
 	}
 	aftat_ret = VOP_GETATTR(vp, &va, cred);
 	vput(vp);
@@ -2069,7 +2072,7 @@ nfsrv_readdir(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 		goto nfsmout;
 	}
 	VOP_UNLOCK(vp, 0);
-	rbuf = malloc(siz, M_TEMP, M_WAITOK);
+	rbuf = malloc(fullsiz, M_TEMP, M_WAITOK);
 again:
 	iv.iov_base = rbuf;
 	iv.iov_len = fullsiz;
@@ -2095,7 +2098,7 @@ again:
 	VOP_UNLOCK(vp, 0);
 	if (error) {
 		vrele(vp);
-		free((caddr_t)rbuf, M_TEMP, 0);
+		free(rbuf, M_TEMP, fullsiz);
 		nfsm_reply(NFSX_POSTOPATTR(info.nmi_v3));
 		nfsm_srvpostop_attr(nfsd, getret, &at, &info);
 		error = 0;
@@ -2121,7 +2124,7 @@ again:
 				tl = nfsm_build(&info.nmi_mb, 2 * NFSX_UNSIGNED);
 			*tl++ = nfs_false;
 			*tl = nfs_true;
-			free(rbuf, M_TEMP, 0);
+			free(rbuf, M_TEMP, fullsiz);
 			error = 0;
 			goto nfsmout;
 		}
@@ -2199,7 +2202,7 @@ again:
 		*tl = nfs_true;
 	else
 		*tl = nfs_false;
-	free(rbuf, M_TEMP, 0);
+	free(rbuf, M_TEMP, fullsiz);
 nfsmout:
 	return(error);
 }
@@ -2269,7 +2272,7 @@ nfsrv_readdirplus(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 	}
 	VOP_UNLOCK(vp, 0);
 
-	rbuf = malloc(siz, M_TEMP, M_WAITOK);
+	rbuf = malloc(fullsiz, M_TEMP, M_WAITOK);
 again:
 	iv.iov_base = rbuf;
 	iv.iov_len = fullsiz;
@@ -2294,7 +2297,7 @@ again:
 		error = getret;
 	if (error) {
 		vrele(vp);
-		free((caddr_t)rbuf, M_TEMP, 0);
+		free(rbuf, M_TEMP, fullsiz);
 		nfsm_reply(NFSX_V3POSTOPATTR);
 		nfsm_srvpostop_attr(nfsd, getret, &at, &info);
 		error = 0;
@@ -2317,7 +2320,7 @@ again:
 			tl += 2;
 			*tl++ = nfs_false;
 			*tl = nfs_true;
-			free(rbuf, M_TEMP, 0);
+			free(rbuf, M_TEMP, fullsiz);
 			error = 0;
 			goto nfsmout;
 		}
@@ -2441,7 +2444,7 @@ invalid:
 		*tl = nfs_true;
 	else
 		*tl = nfs_false;
-	free(rbuf, M_TEMP, 0);
+	free(rbuf, M_TEMP, fullsiz);
 nfsmout:
 	return(error);
 }
