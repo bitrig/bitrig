@@ -21,16 +21,16 @@
  * specific prior written permission.
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -51,14 +51,23 @@
 #ifdef HAVE_OPENSSL_ERR_H
 #include <openssl/err.h>
 #endif
+#ifdef HAVE_OPENSSL_RAND_H
+#include <openssl/rand.h>
+#endif
 #include <ctype.h>
 #include <unistd.h>
 #include <assert.h>
 #include <fcntl.h>
 #ifndef USE_MINI_EVENT
-#include <event.h>
+#  ifdef HAVE_EVENT_H
+#    include <event.h>
+#  else
+#    include <event2/event.h>
+#    include "event2/event_struct.h"
+#    include "event2/event_compat.h"
+#  endif
 #else
-#include "mini_event.h"
+#  include "mini_event.h"
 #endif
 #include "remote.h"
 #include "util.h"
@@ -68,7 +77,6 @@
 #include "nsd.h"
 #include "options.h"
 #include "difffile.h"
-#include "xfrd.h"
 #include "ipc.h"
 
 #ifdef HAVE_SYS_TYPES_H
@@ -233,6 +241,20 @@ daemon_remote_create(nsd_options_t* cfg)
 	ERR_load_SSL_strings();
 	OpenSSL_add_all_algorithms();
 	(void)SSL_library_init();
+
+	if(!RAND_status()) {
+		/* try to seed it */
+		unsigned char buf[256];
+		unsigned int v, seed=(unsigned)time(NULL) ^ (unsigned)getpid();
+		size_t i;
+		v = seed;
+		for(i=0; i<256/sizeof(v); i++) {
+			memmove(buf+i*sizeof(v), &v, sizeof(v));
+			v = v*seed + (unsigned int)i;
+		}
+		RAND_seed(buf, 256);
+		log_msg(LOG_WARNING, "warning: no entropy, seeding openssl PRNG with time");
+	}
 
 	rc->ctx = SSL_CTX_new(SSLv23_server_method());
 	if(!rc->ctx) {
@@ -489,7 +511,11 @@ static void
 remote_accept_callback(int fd, short event, void* arg)
 {
 	struct daemon_remote *rc = (struct daemon_remote*)arg;
+#ifdef INET6
 	struct sockaddr_storage addr;
+#else
+	struct sockaddr_in addr;
+#endif
 	socklen_t addrlen;
 	int newfd;
 	struct rc_state* n;
@@ -846,6 +872,7 @@ force_transfer_zone(xfrd_zone_t* zone)
 	/* pretend we not longer have it and force any
 	 * zone to be downloaded (even same serial, w AXFR) */
 	zone->soa_disk_acquired = 0;
+	zone->soa_nsd_acquired = 0;
 	xfrd_handle_notify_and_start_xfr(zone, NULL);
 }
 
@@ -1057,6 +1084,7 @@ do_stats(struct daemon_remote* rc, int peek, struct rc_state* rs)
 static void
 do_addzone(SSL* ssl, xfrd_state_t* xfrd, char* arg)
 {
+	const dname_type* dname;
 	zone_options_t* zopt;
 	char* arg2 = NULL;
 	if(!find_arg2(ssl, arg, &arg2))
@@ -1072,9 +1100,27 @@ do_addzone(SSL* ssl, xfrd_state_t* xfrd, char* arg)
 
 	/* check that the pattern exists */
 	if(!rbtree_search(xfrd->nsd->options->patterns, arg2)) {
-		(void)ssl_printf(ssl, "error pattern does not exist\n");
+		(void)ssl_printf(ssl, "error pattern %s does not exist\n",
+			arg2);
 		return;
 	}
+
+	dname = dname_parse(xfrd->region, arg);
+	if(!dname) {
+		(void)ssl_printf(ssl, "error cannot parse zone name\n");
+		return;
+	}
+
+	/* see if zone is a duplicate */
+	if( (zopt=zone_options_find(xfrd->nsd->options, dname)) ) {
+		region_recycle(xfrd->region, (void*)dname,
+			dname_total_size(dname));
+		(void)ssl_printf(ssl, "zone %s already exists\n", arg);
+		send_ok(ssl); /* a nop operation */
+		return;
+	}
+	region_recycle(xfrd->region, (void*)dname, dname_total_size(dname));
+	dname = NULL;
 
 	/* add to zonelist and adds to config in memory */
 	zopt = zone_list_add(xfrd->nsd->options, arg, arg2);
