@@ -21,16 +21,16 @@
  * specific prior written permission.
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /**
@@ -62,6 +62,9 @@
 #include "validator/val_anchor.h"
 #include "validator/val_kcache.h"
 #include "validator/val_kentry.h"
+#include "validator/val_utils.h"
+#include "validator/val_sigcrypt.h"
+#include "ldns/sbuffer.h"
 
 /** time when nameserver glue is said to be 'recent' */
 #define SUSPICION_RECENT_EXPIRY 86400
@@ -113,12 +116,6 @@ iter_apply_cfg(struct iter_env* iter_env, struct config_file* cfg)
 		verbose(VERB_QUERY, "target fetch policy for level %d is %d",
 			i, iter_env->target_fetch_policy[i]);
 	
-	if(!iter_env->hints)
-		iter_env->hints = hints_create();
-	if(!iter_env->hints || !hints_apply_cfg(iter_env->hints, cfg)) {
-		log_err("Could not set root or stub hints");
-		return 0;
-	}
 	if(!iter_env->donotq)
 		iter_env->donotq = donotq_create();
 	if(!iter_env->donotq || !donotq_apply_cfg(iter_env->donotq, cfg)) {
@@ -182,7 +179,7 @@ iter_apply_cfg(struct iter_env* iter_env, struct config_file* cfg)
  */
 static int
 iter_filter_unsuitable(struct iter_env* iter_env, struct module_env* env,
-	uint8_t* name, size_t namelen, uint16_t qtype, uint32_t now, 
+	uint8_t* name, size_t namelen, uint16_t qtype, time_t now, 
 	struct delegpt_addr* a)
 {
 	int rtt, lame, reclame, dnsseclame;
@@ -222,14 +219,16 @@ iter_filter_unsuitable(struct iter_env* iter_env, struct module_env* env,
 		/* select remainder from worst to best */
 		else if(reclame)
 			return rtt+USEFUL_SERVER_TOP_TIMEOUT*3; /* nonpref */
-		else if(dnsseclame )
+		else if(dnsseclame || a->dnsseclame)
 			return rtt+USEFUL_SERVER_TOP_TIMEOUT*2; /* nonpref */
 		else if(a->lame)
 			return rtt+USEFUL_SERVER_TOP_TIMEOUT+1; /* nonpref */
 		else	return rtt;
 	}
 	/* no server information present */
-	if(a->lame)
+	if(a->dnsseclame)
+		return UNKNOWN_SERVER_NICENESS+USEFUL_SERVER_TOP_TIMEOUT*2; /* nonpref */
+	else if(a->lame)
 		return USEFUL_SERVER_TOP_TIMEOUT+1+UNKNOWN_SERVER_NICENESS; /* nonpref */
 	return UNKNOWN_SERVER_NICENESS;
 }
@@ -237,7 +236,7 @@ iter_filter_unsuitable(struct iter_env* iter_env, struct module_env* env,
 /** lookup RTT information, and also store fastest rtt (if any) */
 static int
 iter_fill_rtt(struct iter_env* iter_env, struct module_env* env,
-	uint8_t* name, size_t namelen, uint16_t qtype, uint32_t now, 
+	uint8_t* name, size_t namelen, uint16_t qtype, time_t now, 
 	struct delegpt* dp, int* best_rtt, struct sock_list* blacklist)
 {
 	int got_it = 0;
@@ -266,7 +265,7 @@ iter_fill_rtt(struct iter_env* iter_env, struct module_env* env,
  * returns number of best targets (or 0, no suitable targets) */
 static int
 iter_filter_order(struct iter_env* iter_env, struct module_env* env,
-	uint8_t* name, size_t namelen, uint16_t qtype, uint32_t now, 
+	uint8_t* name, size_t namelen, uint16_t qtype, time_t now, 
 	struct delegpt* dp, int* selected_rtt, int open_target, 
 	struct sock_list* blacklist)
 {
@@ -392,7 +391,7 @@ iter_server_selection(struct iter_env* iter_env,
 }
 
 struct dns_msg* 
-dns_alloc_msg(ldns_buffer* pkt, struct msg_parse* msg, 
+dns_alloc_msg(sldns_buffer* pkt, struct msg_parse* msg, 
 	struct regional* region)
 {
 	struct dns_msg* m = (struct dns_msg*)regional_alloc(region,
@@ -423,13 +422,14 @@ dns_copy_msg(struct dns_msg* from, struct regional* region)
 	return m;
 }
 
-int 
+void 
 iter_dns_store(struct module_env* env, struct query_info* msgqinf,
-	struct reply_info* msgrep, int is_referral, uint32_t leeway,
-	struct regional* region)
+	struct reply_info* msgrep, int is_referral, time_t leeway, int pside,
+	struct regional* region, uint16_t flags)
 {
-	return dns_cache_store(env, msgqinf, msgrep, is_referral, leeway,
-		region);
+	if(!dns_cache_store(env, msgqinf, msgrep, is_referral, leeway,
+		pside, region, flags))
+		log_err("out of memory: cannot store data in cache");
 }
 
 int 
@@ -457,7 +457,8 @@ causes_cycle(struct module_qstate* qstate, uint8_t* name, size_t namelen,
 	fptr_ok(fptr_whitelist_modenv_detect_cycle(
 		qstate->env->detect_cycle));
 	return (*qstate->env->detect_cycle)(qstate, &qinf, 
-		(uint16_t)(BIT_RD|BIT_CD), qstate->is_priming);
+		(uint16_t)(BIT_RD|BIT_CD), qstate->is_priming,
+		qstate->is_valrec);
 }
 
 void 
@@ -666,7 +667,7 @@ rrset_equal(struct ub_packed_rrset_key* k1, struct ub_packed_rrset_key* k2)
 		k1->rk.rrset_class != k2->rk.rrset_class ||
 		query_dname_compare(k1->rk.dname, k2->rk.dname) != 0)
 		return 0;
-	if(d1->ttl != d2->ttl ||
+	if(	/* do not check ttl: d1->ttl != d2->ttl || */
 		d1->count != d2->count ||
 		d1->rrsig_count != d2->rrsig_count ||
 		d1->trust != d2->trust ||
@@ -675,7 +676,7 @@ rrset_equal(struct ub_packed_rrset_key* k1, struct ub_packed_rrset_key* k2)
 	t = d1->count + d1->rrsig_count;
 	for(i=0; i<t; i++) {
 		if(d1->rr_len[i] != d2->rr_len[i] ||
-			d1->rr_ttl[i] != d2->rr_ttl[i] ||
+			/* no ttl check: d1->rr_ttl[i] != d2->rr_ttl[i] ||*/
 			memcmp(d1->rr_data[i], d2->rr_data[i], 
 				d1->rr_len[i]) != 0)
 			return 0;
@@ -684,13 +685,16 @@ rrset_equal(struct ub_packed_rrset_key* k1, struct ub_packed_rrset_key* k2)
 }
 
 int 
-reply_equal(struct reply_info* p, struct reply_info* q, ldns_buffer* scratch)
+reply_equal(struct reply_info* p, struct reply_info* q, struct regional* region)
 {
 	size_t i;
 	if(p->flags != q->flags ||
 		p->qdcount != q->qdcount ||
+		/* do not check TTL, this may differ */
+		/*
 		p->ttl != q->ttl ||
 		p->prefetch_ttl != q->prefetch_ttl ||
+		*/
 		p->security != q->security ||
 		p->an_numrrsets != q->an_numrrsets ||
 		p->ns_numrrsets != q->ns_numrrsets ||
@@ -699,27 +703,12 @@ reply_equal(struct reply_info* p, struct reply_info* q, ldns_buffer* scratch)
 		return 0;
 	for(i=0; i<p->rrset_count; i++) {
 		if(!rrset_equal(p->rrsets[i], q->rrsets[i])) {
-			/* fallback procedure: try to sort and canonicalize */
-			ldns_rr_list* pl, *ql;
-			pl = packed_rrset_to_rr_list(p->rrsets[i], scratch);
-			ql = packed_rrset_to_rr_list(q->rrsets[i], scratch);
-			if(!pl || !ql) {
-				ldns_rr_list_deep_free(pl);
-				ldns_rr_list_deep_free(ql);
+			if(!rrset_canonical_equal(region, p->rrsets[i],
+				q->rrsets[i])) {
+				regional_free_all(region);
 				return 0;
 			}
-			ldns_rr_list2canonical(pl);
-			ldns_rr_list2canonical(ql);
-			ldns_rr_list_sort(pl);
-			ldns_rr_list_sort(ql);
-			if(ldns_rr_list_compare(pl, ql) != 0) {
-				ldns_rr_list_deep_free(pl);
-				ldns_rr_list_deep_free(ql);
-				return 0;
-			}
-			ldns_rr_list_deep_free(pl);
-			ldns_rr_list_deep_free(ql);
-			continue;
+			regional_free_all(region);
 		}
 	}
 	return 1;
@@ -772,7 +761,7 @@ void iter_store_parentside_neg(struct module_env* env,
 	/* TTL: NS from referral in iq->deleg_msg,
 	 *      or first RR from iq->response,
 	 *      or servfail5secs if !iq->response */ 
-	uint32_t ttl = NORR_TTL;
+	time_t ttl = NORR_TTL;
 	struct ub_packed_rrset_key* neg;
 	struct packed_rrset_data* newd;
 	if(rep) {
@@ -802,7 +791,7 @@ void iter_store_parentside_neg(struct module_env* env,
 	neg->entry.hash = rrset_key_hash(&neg->rk);
 	newd = (struct packed_rrset_data*)regional_alloc_zero(env->scratch, 
 		sizeof(struct packed_rrset_data) + sizeof(size_t) +
-		sizeof(uint8_t*) + sizeof(uint32_t) + sizeof(uint16_t));
+		sizeof(uint8_t*) + sizeof(time_t) + sizeof(uint16_t));
 	if(!newd) {
 		log_err("out of memory in store_parentside_neg");
 		return;
@@ -819,7 +808,7 @@ void iter_store_parentside_neg(struct module_env* env,
 	newd->rr_len[0] = 0 /* zero len rdata */ + sizeof(uint16_t);
 	packed_rrset_ptr_fixup(newd);
 	newd->rr_ttl[0] = newd->ttl;
-	ldns_write_uint16(newd->rr_data[0], 0 /* zero len rdata */);
+	sldns_write_uint16(newd->rr_data[0], 0 /* zero len rdata */);
 	/* store it */
 	log_rrset_key(VERB_ALGO, "store parent-side negative", neg);
 	iter_store_parentside_rrset(env, neg);
@@ -973,4 +962,67 @@ void iter_merge_retry_counts(struct delegpt* dp, struct delegpt* old)
 		prev = a;
 		a = a->next_usable;
 	}
+}
+
+int
+iter_ds_toolow(struct dns_msg* msg, struct delegpt* dp)
+{
+	/* if for query example.com, there is example.com SOA or a subdomain
+	 * of example.com, then we are too low and need to fetch NS. */
+	size_t i;
+	/* if we have a DNAME or CNAME we are probably wrong */
+	/* if we have a qtype DS in the answer section, its fine */
+	for(i=0; i < msg->rep->an_numrrsets; i++) {
+		struct ub_packed_rrset_key* s = msg->rep->rrsets[i];
+		if(ntohs(s->rk.type) == LDNS_RR_TYPE_DNAME ||
+			ntohs(s->rk.type) == LDNS_RR_TYPE_CNAME) {
+			/* not the right answer, maybe too low, check the
+			 * RRSIG signer name (if there is any) for a hint
+			 * that it is from the dp zone anyway */
+			uint8_t* sname;
+			size_t slen;
+			val_find_rrset_signer(s, &sname, &slen);
+			if(sname && query_dname_compare(dp->name, sname)==0)
+				return 0; /* it is fine, from the right dp */
+			return 1;
+		}
+		if(ntohs(s->rk.type) == LDNS_RR_TYPE_DS)
+			return 0; /* fine, we have a DS record */
+	}
+	for(i=msg->rep->an_numrrsets;
+		i < msg->rep->an_numrrsets + msg->rep->ns_numrrsets; i++) {
+		struct ub_packed_rrset_key* s = msg->rep->rrsets[i];
+		if(ntohs(s->rk.type) == LDNS_RR_TYPE_SOA) {
+			if(dname_subdomain_c(s->rk.dname, msg->qinfo.qname))
+				return 1; /* point is too low */
+			if(query_dname_compare(s->rk.dname, dp->name)==0)
+				return 0; /* right dp */
+		}
+		if(ntohs(s->rk.type) == LDNS_RR_TYPE_NSEC ||
+			ntohs(s->rk.type) == LDNS_RR_TYPE_NSEC3) {
+			uint8_t* sname;
+			size_t slen;
+			val_find_rrset_signer(s, &sname, &slen);
+			if(sname && query_dname_compare(dp->name, sname)==0)
+				return 0; /* it is fine, from the right dp */
+			return 1;
+		}
+	}
+	/* we do not know */
+	return 1;
+}
+
+int iter_dp_cangodown(struct query_info* qinfo, struct delegpt* dp)
+{
+	/* no delegation point, do not see how we can go down,
+	 * robust check, it should really exist */
+	if(!dp) return 0;
+
+	/* see if dp equals the qname, then we cannot go down further */
+	if(query_dname_compare(qinfo->qname, dp->name) == 0)
+		return 0;
+	/* if dp is one label above the name we also cannot go down further */
+	if(dname_count_labels(qinfo->qname) == dp->namelabs+1)
+		return 0;
+	return 1;
 }

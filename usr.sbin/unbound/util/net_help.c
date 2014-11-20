@@ -21,16 +21,16 @@
  * specific prior written permission.
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /**
  * \file
@@ -38,20 +38,31 @@
  */
 
 #include "config.h"
-#include <ldns/ldns.h>
 #include "util/net_help.h"
 #include "util/log.h"
 #include "util/data/dname.h"
 #include "util/module.h"
 #include "util/regional.h"
+#include "ldns/parseutil.h"
+#include "ldns/wire2str.h"
 #include <fcntl.h>
+#ifdef HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
+#endif
+#ifdef HAVE_OPENSSL_ERR_H
 #include <openssl/err.h>
+#endif
 
 /** max length of an IP address (the address portion) that we allow */
 #define MAX_ADDR_STRLEN 128 /* characters */
 /** default value for EDNS ADVERTISED size */
 uint16_t EDNS_ADVERTISED_SIZE = 4096;
+
+/** minimal responses when positive answer: default is no */
+int MINIMAL_RESPONSES = 0;
+
+/** rrset order roundrobin: default is no */
+int RRSET_ROUNDROBIN = 0;
 
 /* returns true is string addr is an ip6 specced address */
 int
@@ -149,7 +160,7 @@ log_addr(enum verbosity_value v, const char* str,
 		default: break;
 	}
 	if(inet_ntop(af, sinaddr, dest, (socklen_t)sizeof(dest)) == 0) {
-		strncpy(dest, "(inet_ntop error)", sizeof(dest));
+		(void)strlcpy(dest, "(inet_ntop error)", sizeof(dest));
 	}
 	dest[sizeof(dest)-1] = 0;
 	port = ntohs(((struct sockaddr_in*)addr)->sin_port);
@@ -170,7 +181,7 @@ extstrtoaddr(const char* str, struct sockaddr_storage* addr,
 		if(s-str >= MAX_ADDR_STRLEN) {
 			return 0;
 		}
-		strncpy(buf, str, MAX_ADDR_STRLEN);
+		(void)strlcpy(buf, str, sizeof(buf));
 		buf[s-str] = 0;
 		port = atoi(s+1);
 		if(port == 0 && strcmp(s+1,"0")!=0) {
@@ -200,7 +211,7 @@ ipstrtoaddr(const char* ip, int port, struct sockaddr_storage* addr,
 		if((s=strchr(ip, '%'))) { /* ip6%interface, rfc 4007 */
 			if(s-ip >= MAX_ADDR_STRLEN)
 				return 0;
-			strncpy(buf, ip, MAX_ADDR_STRLEN);
+			(void)strlcpy(buf, ip, sizeof(buf));
 			buf[s-ip]=0;
 			sa->sin6_scope_id = (uint32_t)atoi(s+1);
 			ip = buf;
@@ -270,15 +281,15 @@ log_nametypeclass(enum verbosity_value v, const char* str, uint8_t* name,
 	else if(type == LDNS_RR_TYPE_MAILB) ts = "MAILB";
 	else if(type == LDNS_RR_TYPE_MAILA) ts = "MAILA";
 	else if(type == LDNS_RR_TYPE_ANY) ts = "ANY";
-	else if(ldns_rr_descript(type) && ldns_rr_descript(type)->_name)
-		ts = ldns_rr_descript(type)->_name;
+	else if(sldns_rr_descript(type) && sldns_rr_descript(type)->_name)
+		ts = sldns_rr_descript(type)->_name;
 	else {
 		snprintf(t, sizeof(t), "TYPE%d", (int)type);
 		ts = t;
 	}
-	if(ldns_lookup_by_id(ldns_rr_classes, (int)dclass) &&
-		ldns_lookup_by_id(ldns_rr_classes, (int)dclass)->name)
-		cs = ldns_lookup_by_id(ldns_rr_classes, (int)dclass)->name;
+	if(sldns_lookup_by_id(sldns_rr_classes, (int)dclass) &&
+		sldns_lookup_by_id(sldns_rr_classes, (int)dclass)->name)
+		cs = sldns_lookup_by_id(sldns_rr_classes, (int)dclass)->name;
 	else {
 		snprintf(c, sizeof(c), "CLASS%d", (int)dclass);
 		cs = c;
@@ -306,7 +317,7 @@ void log_name_addr(enum verbosity_value v, const char* str, uint8_t* zone,
 		default: break;
 	}
 	if(inet_ntop(af, sinaddr, dest, (socklen_t)sizeof(dest)) == 0) {
-		strncpy(dest, "(inet_ntop error)", sizeof(dest));
+		(void)strlcpy(dest, "(inet_ntop error)", sizeof(dest));
 	}
 	dest[sizeof(dest)-1] = 0;
 	port = ntohs(((struct sockaddr_in*)addr)->sin_port);
@@ -316,6 +327,26 @@ void log_name_addr(enum verbosity_value v, const char* str, uint8_t* zone,
 			str, namebuf, family, dest, (int)port, (int)addrlen);
 	else	verbose(v, "%s <%s> %s%s#%d",
 			str, namebuf, family, dest, (int)port);
+}
+
+void log_err_addr(const char* str, const char* err,
+	struct sockaddr_storage* addr, socklen_t addrlen)
+{
+	uint16_t port;
+	char dest[100];
+	int af = (int)((struct sockaddr_in*)addr)->sin_family;
+	void* sinaddr = &((struct sockaddr_in*)addr)->sin_addr;
+	if(af == AF_INET6)
+		sinaddr = &((struct sockaddr_in6*)addr)->sin6_addr;
+	if(inet_ntop(af, sinaddr, dest, (socklen_t)sizeof(dest)) == 0) {
+		(void)strlcpy(dest, "(inet_ntop error)", sizeof(dest));
+	}
+	dest[sizeof(dest)-1] = 0;
+	port = ntohs(((struct sockaddr_in*)addr)->sin_port);
+	if(verbosity >= 4)
+		log_err("%s: %s for %s port %d (len %d)", str, err, dest,
+			(int)port, (int)addrlen);
+	else	log_err("%s: %s for %s", str, err, dest);
 }
 
 int
@@ -559,6 +590,7 @@ void sock_list_merge(struct sock_list** list, struct regional* region,
 void
 log_crypto_err(const char* str)
 {
+#ifdef HAVE_SSL
 	/* error:[error code]:[library name]:[function name]:[reason string] */
 	char buf[128];
 	unsigned long e;
@@ -568,18 +600,27 @@ log_crypto_err(const char* str)
 		ERR_error_string_n(e, buf, sizeof(buf));
 		log_err("and additionally crypto %s", buf);
 	}
+#else
+	(void)str;
+#endif /* HAVE_SSL */
 }
 
 void* listen_sslctx_create(char* key, char* pem, char* verifypem)
 {
+#ifdef HAVE_SSL
 	SSL_CTX* ctx = SSL_CTX_new(SSLv23_server_method());
 	if(!ctx) {
 		log_crypto_err("could not SSL_CTX_new");
 		return NULL;
 	}
-	/* no SSLv2 because has defects */
+	/* no SSLv2, SSLv3 because has defects */
 	if(!(SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2) & SSL_OP_NO_SSLv2)){
 		log_crypto_err("could not set SSL_OP_NO_SSLv2");
+		SSL_CTX_free(ctx);
+		return NULL;
+	}
+	if(!(SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv3) & SSL_OP_NO_SSLv3)){
+		log_crypto_err("could not set SSL_OP_NO_SSLv3");
 		SSL_CTX_free(ctx);
 		return NULL;
 	}
@@ -613,10 +654,15 @@ void* listen_sslctx_create(char* key, char* pem, char* verifypem)
 		SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
 	}
 	return ctx;
+#else
+	(void)key; (void)pem; (void)verifypem;
+	return NULL;
+#endif
 }
 
 void* connect_sslctx_create(char* key, char* pem, char* verifypem)
 {
+#ifdef HAVE_SSL
 	SSL_CTX* ctx = SSL_CTX_new(SSLv23_client_method());
 	if(!ctx) {
 		log_crypto_err("could not allocate SSL_CTX pointer");
@@ -624,6 +670,11 @@ void* connect_sslctx_create(char* key, char* pem, char* verifypem)
 	}
 	if(!(SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2) & SSL_OP_NO_SSLv2)) {
 		log_crypto_err("could not set SSL_OP_NO_SSLv2");
+		SSL_CTX_free(ctx);
+		return NULL;
+	}
+	if(!(SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv3) & SSL_OP_NO_SSLv3)) {
+		log_crypto_err("could not set SSL_OP_NO_SSLv3");
 		SSL_CTX_free(ctx);
 		return NULL;
 	}
@@ -648,7 +699,7 @@ void* connect_sslctx_create(char* key, char* pem, char* verifypem)
 		}
 	}
 	if(verifypem && verifypem[0]) {
-		if(!SSL_CTX_load_verify_locations(ctx, verifypem, NULL) != 1) {
+		if(!SSL_CTX_load_verify_locations(ctx, verifypem, NULL)) {
 			log_crypto_err("error in SSL_CTX verify");
 			SSL_CTX_free(ctx);
 			return NULL;
@@ -656,10 +707,15 @@ void* connect_sslctx_create(char* key, char* pem, char* verifypem)
 		SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
 	}
 	return ctx;
+#else
+	(void)key; (void)pem; (void)verifypem;
+	return NULL;
+#endif
 }
 
 void* incoming_ssl_fd(void* sslctx, int fd)
 {
+#ifdef HAVE_SSL
 	SSL* ssl = SSL_new((SSL_CTX*)sslctx);
 	if(!ssl) {
 		log_crypto_err("could not SSL_new");
@@ -673,10 +729,15 @@ void* incoming_ssl_fd(void* sslctx, int fd)
 		return NULL;
 	}
 	return ssl;
+#else
+	(void)sslctx; (void)fd;
+	return NULL;
+#endif
 }
 
 void* outgoing_ssl_fd(void* sslctx, int fd)
 {
+#ifdef HAVE_SSL
 	SSL* ssl = SSL_new((SSL_CTX*)sslctx);
 	if(!ssl) {
 		log_crypto_err("could not SSL_new");
@@ -690,4 +751,64 @@ void* outgoing_ssl_fd(void* sslctx, int fd)
 		return NULL;
 	}
 	return ssl;
+#else
+	(void)sslctx; (void)fd;
+	return NULL;
+#endif
 }
+
+#if defined(HAVE_SSL) && defined(OPENSSL_THREADS) && !defined(THREADS_DISABLED)
+/** global lock list for openssl locks */
+static lock_basic_t *ub_openssl_locks = NULL;
+
+/** callback that gets thread id for openssl */
+static unsigned long
+ub_crypto_id_cb(void)
+{
+	return (unsigned long)ub_thread_self();
+}
+
+static void
+ub_crypto_lock_cb(int mode, int type, const char *ATTR_UNUSED(file),
+	int ATTR_UNUSED(line))
+{
+	if((mode&CRYPTO_LOCK)) {
+		lock_basic_lock(&ub_openssl_locks[type]);
+	} else {
+		lock_basic_unlock(&ub_openssl_locks[type]);
+	}
+}
+#endif /* OPENSSL_THREADS */
+
+int ub_openssl_lock_init(void)
+{
+#if defined(HAVE_SSL) && defined(OPENSSL_THREADS) && !defined(THREADS_DISABLED)
+	int i;
+	ub_openssl_locks = (lock_basic_t*)malloc(
+		sizeof(lock_basic_t)*CRYPTO_num_locks());
+	if(!ub_openssl_locks)
+		return 0;
+	for(i=0; i<CRYPTO_num_locks(); i++) {
+		lock_basic_init(&ub_openssl_locks[i]);
+	}
+	CRYPTO_set_id_callback(&ub_crypto_id_cb);
+	CRYPTO_set_locking_callback(&ub_crypto_lock_cb);
+#endif /* OPENSSL_THREADS */
+	return 1;
+}
+
+void ub_openssl_lock_delete(void)
+{
+#if defined(HAVE_SSL) && defined(OPENSSL_THREADS) && !defined(THREADS_DISABLED)
+	int i;
+	if(!ub_openssl_locks)
+		return;
+	CRYPTO_set_id_callback(NULL);
+	CRYPTO_set_locking_callback(NULL);
+	for(i=0; i<CRYPTO_num_locks(); i++) {
+		lock_basic_destroy(&ub_openssl_locks[i]);
+	}
+	free(ub_openssl_locks);
+#endif /* OPENSSL_THREADS */
+}
+
