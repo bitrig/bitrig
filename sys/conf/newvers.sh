@@ -72,9 +72,9 @@ if type git 1>/dev/null 2>&1 ; then
 fi
 
 cat >vers.c <<eof
-#define STATUS "-beta"			/* just before a release */
-#if 0
 #define STATUS ""			/* release */
+#if 0
+#define STATUS "-beta"			/* just before a release */
 #define STATUS "-current"		/* just after a release */
 #endif
 
