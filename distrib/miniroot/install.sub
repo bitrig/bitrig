@@ -85,7 +85,7 @@ shift $((OPTIND-1))
 #	MDCDDEVS    - '/^cd[0-9][0-9]* /s/ .*//p'    assumed if not provided
 #	MDMTDEVS    - '/^[cms]t[0-9][0-9]* /s/ .*//p'
 #	MDXAPERTURE - set machdep.allowaperture=value in sysctl.conf
-. /install.md
+. install.md
 
 set_term() {
 	local _layouts
@@ -2027,8 +2027,7 @@ export EDITOR COLUMNS
 
 # umount all filesystems, just in case we are re-running install or upgrade.
 cd /
-#umount -af 1>/dev/null 2>&1
-echo "DON'T UMOUNT ALL FILESYSTEMS.  THIS NEEDS TO BE LOOKED AT"
+umount -af 1>/dev/null 2>&1
 
 # make sure only successful dhcp requests retain their state
 for _ifs in $(get_ifdevs dhcp); do
