@@ -1,6 +1,6 @@
 # $FreeBSD: src/tools/regression/fstest/tests/truncate/00.t,v 1.1 2007/01/17 01:42:12 pjd Exp $
 
-desc="truncate descrease/increase file size"
+desc="truncate decrease/increase file size"
 
 n0=`namegen`
 n1=`namegen`
