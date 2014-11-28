@@ -1479,6 +1479,7 @@ sysctl_dopool(int *name, u_int namelen, char *where, size_t *sizep)
 		pi.pr_minpages = pp->pr_minpages;
 		pi.pr_maxpages = pp->pr_maxpages;
 		pi.pr_hardlimit = pp->pr_hardlimit;
+		pi.pr_npages = pp->pr_npages;
 		pi.pr_nout = pp->pr_nout;
 		pi.pr_nitems = pp->pr_nitems;
 		pi.pr_nget = pp->pr_nget;
