@@ -1,4 +1,4 @@
-/*	$OpenBSD: mdoc_macro.c,v 1.104 2014/11/27 22:27:40 schwarze Exp $ */
+/*	$OpenBSD: mdoc_macro.c,v 1.105 2014/11/28 01:05:40 schwarze Exp $ */
 /*
  * Copyright (c) 2008-2012 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2010, 2012, 2013, 2014 Ingo Schwarze <schwarze@openbsd.org>
@@ -60,9 +60,8 @@ static	int		phrase(struct mdoc *, int, int, char *);
 static	enum mdoct	rew_alt(enum mdoct);
 static	enum rew	rew_dohalt(enum mdoct, enum mdoc_type,
 				const struct mdoc_node *);
-static	int		rew_elem(struct mdoc *, enum mdoct);
-static	int		rew_last(struct mdoc *,
-				const struct mdoc_node *);
+static	void		rew_elem(struct mdoc *, enum mdoct);
+static	void		rew_last(struct mdoc *, const struct mdoc_node *);
 static	int		rew_sub(enum mdoc_type, struct mdoc *,
 				enum mdoct, int, int);
 
@@ -237,7 +236,8 @@ mdoc_macroend(struct mdoc *mdoc)
 
 	/* Rewind to the first. */
 
-	return(rew_last(mdoc, mdoc->first));
+	rew_last(mdoc, mdoc->first);
+	return(1);
 }
 
 /*
@@ -267,15 +267,13 @@ lookup_raw(const char *p)
 	return(MDOC_MAX);
 }
 
-static int
+static void
 rew_last(struct mdoc *mdoc, const struct mdoc_node *to)
 {
 	struct mdoc_node *n, *np;
 
 	assert(to);
 	mdoc->next = MDOC_NEXT_SIBLING;
-
-
 	while (mdoc->last != to) {
 		/*
 		 * Save the parent here, because we may delete the
@@ -284,15 +282,13 @@ rew_last(struct mdoc *mdoc, const struct mdoc_node *to)
 		 * out to be lost.
 		 */
 		np = mdoc->last->parent;
-		if ( ! mdoc_valid_post(mdoc))
-			return(0);
+		mdoc_valid_post(mdoc);
 		n = mdoc->last;
 		mdoc->last = np;
 		assert(mdoc->last);
 		mdoc->last->last = n;
 	}
-
-	return(mdoc_valid_post(mdoc));
+	mdoc_valid_post(mdoc);
 }
 
 /*
@@ -454,7 +450,7 @@ rew_dohalt(enum mdoct tok, enum mdoc_type type,
 	    REWIND_FORCE : REWIND_LATER);
 }
 
-static int
+static void
 rew_elem(struct mdoc *mdoc, enum mdoct tok)
 {
 	struct mdoc_node *n;
@@ -464,8 +460,7 @@ rew_elem(struct mdoc *mdoc, enum mdoct tok)
 		n = n->parent;
 	assert(MDOC_ELEM == n->type);
 	assert(tok == n->tok);
-
-	return(rew_last(mdoc, n));
+	rew_last(mdoc, n);
 }
 
 /*
@@ -586,16 +581,14 @@ rew_sub(enum mdoc_type t, struct mdoc *mdoc,
 	}
 
 	assert(n);
-	if ( ! rew_last(mdoc, n))
-		return(0);
+	rew_last(mdoc, n);
 
 	/*
 	 * The current block extends an enclosing block.
 	 * Now that the current block ends, close the enclosing block, too.
 	 */
 	while (NULL != (n = n->pending)) {
-		if ( ! rew_last(mdoc, n))
-			return(0);
+		rew_last(mdoc, n);
 		if (MDOC_HEAD == n->type &&
 		    ! mdoc_body_alloc(mdoc, n->line, n->pos, n->tok))
 			return(0);
@@ -800,8 +793,7 @@ blk_exp_close(MACRO_PROT_ARGS)
 			if ( ! mdoc_elem_alloc(mdoc, line, ppos,
 			    MDOC_br, NULL))
 				return(0);
-			if ( ! rew_elem(mdoc, MDOC_br))
-				return(0);
+			rew_elem(mdoc, MDOC_br);
 		} else if ( ! mdoc_tail_alloc(mdoc, line, ppos, atok))
 			return(0);
 	}
@@ -811,8 +803,9 @@ blk_exp_close(MACRO_PROT_ARGS)
 		lastarg = *pos;
 
 		if (j == maxargs && ! flushed) {
-			if ( ! (endbody != NULL ? rew_last(mdoc, endbody) :
-			    rew_sub(MDOC_BLOCK, mdoc, tok, line, ppos)))
+			if (endbody != NULL)
+				rew_last(mdoc, endbody);
+			else if ( ! rew_sub(MDOC_BLOCK, mdoc, tok, line, ppos))
 				return(0);
 			flushed = 1;
 		}
@@ -836,8 +829,9 @@ blk_exp_close(MACRO_PROT_ARGS)
 		}
 
 		if ( ! flushed) {
-			if ( ! (endbody != NULL ? rew_last(mdoc, endbody) :
-			    rew_sub(MDOC_BLOCK, mdoc, tok, line, ppos)))
+			if (endbody != NULL)
+				rew_last(mdoc, endbody);
+			else if ( ! rew_sub(MDOC_BLOCK, mdoc, tok, line, ppos))
 				return(0);
 			flushed = 1;
 		}
@@ -849,9 +843,12 @@ blk_exp_close(MACRO_PROT_ARGS)
 		break;
 	}
 
-	if ( ! flushed && ! (endbody != NULL ? rew_last(mdoc, endbody) :
-	    rew_sub(MDOC_BLOCK, mdoc, tok, line, ppos)))
-		return(0);
+	if ( ! flushed) {
+		if (endbody != NULL)
+			rew_last(mdoc, endbody);
+		else if ( ! rew_sub(MDOC_BLOCK, mdoc, tok, line, ppos))
+			return(0);
+	}
 
 	if ( ! nl)
 		return(1);
@@ -958,14 +955,13 @@ in_line(MACRO_PROT_ARGS)
 		 */
 
 		if (MDOC_MAX != ntok) {
-			if (scope && ! rew_elem(mdoc, tok))
-				return(0);
+			if (scope)
+				rew_elem(mdoc, tok);
 			if (nc && 0 == cnt) {
 				if ( ! mdoc_elem_alloc(mdoc,
 				    line, ppos, tok, arg))
 					return(0);
-				if ( ! rew_last(mdoc, mdoc->last))
-					return(0);
+				rew_last(mdoc, mdoc->last);
 			} else if ( ! nc && 0 == cnt) {
 				mdoc_argv_free(arg);
 				mandoc_msg(MANDOCERR_MACRO_EMPTY,
@@ -1010,8 +1006,8 @@ in_line(MACRO_PROT_ARGS)
 			 * Close out our scope, if one is open, before
 			 * any punctuation.
 			 */
-			if (scope && ! rew_elem(mdoc, tok))
-				return(0);
+			if (scope)
+				rew_elem(mdoc, tok);
 			scope = 0;
 			if (tok == MDOC_Fn)
 				mayopen = 0;
@@ -1041,14 +1037,13 @@ in_line(MACRO_PROT_ARGS)
 		 * having to parse out spaces.
 		 */
 		if (scope && MDOC_Fl == tok) {
-			if ( ! rew_elem(mdoc, tok))
-				return(0);
+			rew_elem(mdoc, tok);
 			scope = 0;
 		}
 	}
 
-	if (scope && ! rew_elem(mdoc, tok))
-		return(0);
+	if (scope)
+		rew_elem(mdoc, tok);
 
 	/*
 	 * If no elements have been collected and we're allowed to have
@@ -1059,8 +1054,7 @@ in_line(MACRO_PROT_ARGS)
 	if (nc && 0 == cnt) {
 		if ( ! mdoc_elem_alloc(mdoc, line, ppos, tok, arg))
 			return(0);
-		if ( ! rew_last(mdoc, mdoc->last))
-			return(0);
+		rew_last(mdoc, mdoc->last);
 	} else if ( ! nc && 0 == cnt) {
 		mdoc_argv_free(arg);
 		mandoc_msg(MANDOCERR_MACRO_EMPTY, mdoc->parse,
@@ -1101,7 +1095,8 @@ blk_full(MACRO_PROT_ARGS)
 			if ( ! mdoc_elem_alloc(mdoc, line, ppos,
 			    MDOC_br, NULL))
 				return(0);
-			return(rew_elem(mdoc, MDOC_br));
+			rew_elem(mdoc, MDOC_br);
+			return(1);
 		}
 	}
 
@@ -1642,16 +1637,15 @@ in_line_argn(MACRO_PROT_ARGS)
 			       return(0);
 
 		if (j == maxargs && ! flushed) {
-			if ( ! rew_elem(mdoc, tok))
-				return(0);
+			rew_elem(mdoc, tok);
 			flushed = 1;
 		}
 
 		ntok = ARGS_QWORD == ac ? MDOC_MAX : lookup(tok, p);
 
 		if (MDOC_MAX != ntok) {
-			if ( ! flushed && ! rew_elem(mdoc, tok))
-				return(0);
+			if ( ! flushed)
+				rew_elem(mdoc, tok);
 			flushed = 1;
 			if ( ! mdoc_macro(mdoc, ntok, line, la, pos, buf))
 				return(0);
@@ -1663,8 +1657,7 @@ in_line_argn(MACRO_PROT_ARGS)
 		    ARGS_QWORD != ac &&
 		    ! flushed &&
 		    DELIM_NONE != mdoc_isdelim(p)) {
-			if ( ! rew_elem(mdoc, tok))
-				return(0);
+			rew_elem(mdoc, tok);
 			flushed = 1;
 		}
 
@@ -1679,8 +1672,8 @@ in_line_argn(MACRO_PROT_ARGS)
 
 	/* Close out in a consistent state. */
 
-	if ( ! flushed && ! rew_elem(mdoc, tok))
-		return(0);
+	if ( ! flushed)
+		rew_elem(mdoc, tok);
 	if ( ! nl)
 		return(1);
 	return(append_delims(mdoc, line, pos, buf));
@@ -1744,15 +1737,14 @@ in_line_eoln(MACRO_PROT_ARGS)
 				return(0);
 			continue;
 		}
-
-		if ( ! rew_elem(mdoc, tok))
-			return(0);
+		rew_elem(mdoc, tok);
 		return(mdoc_macro(mdoc, ntok, line, la, pos, buf));
 	}
 
 	/* Close out (no delimiters). */
 
-	return(rew_elem(mdoc, tok));
+	rew_elem(mdoc, tok);
+	return(1);
 }
 
 static int
