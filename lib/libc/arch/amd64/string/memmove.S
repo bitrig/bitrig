@@ -1,7 +1,8 @@
-/*	$OpenBSD: rindex.c,v 1.7 2014/11/30 19:43:56 deraadt Exp $ */
-/*
- * Copyright (c) 1988 Regents of the University of California.
+/*-
+ * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
+ *
+ * This code is derived from locore.s.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -11,7 +12,11 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the University nor the names of its contributors
+ * 3. All advertising materials mentioning features or use of this software
+ *    must display the following acknowledgement:
+ *	This product includes software developed by the University of
+ *	California, Berkeley and its contributors.
+ * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -28,18 +33,55 @@
  * SUCH DAMAGE.
  */
 
-#include <string.h>
+#include <machine/asm.h>
 
-char *
-rindex(const char *p, int ch)
-{
-	char *save;
+	/*
+	 * memmove (dst,src,cnt)
+	 *  ws@tools.de     (Wolfgang Solfrank, TooLs GmbH) +49-228-985800
+	 */
 
-	for (save = NULL;; ++p) {
-		if (*p == ch)
-			save = (char *)p;
-		if (!*p)
-			return(save);
-	}
-	/* NOTREACHED */
-}
+ENTRY(bcopy)
+	xchgq	%rdi,%rsi
+	/* fall into memmove */
+
+ENTRY(memmove)
+	movq	%rdi,%r11	/* save dest */
+	movq	%rdx,%rcx
+	movq	%rdi,%rax
+	subq	%rsi,%rax
+	cmpq	%rcx,%rax	/* overlapping? */
+	jb	1f
+	jmp	2f		/* nope */
+
+// ENTRY(memcpy)
+	movq	%rdi,%r11	/* save dest */
+	movq	%rdx,%rcx
+2:
+	cld			/* copy forwards. */
+	shrq	$3,%rcx		/* copy by words */
+	rep
+	movsq
+	movq	%rdx,%rcx
+	andq	$7,%rcx		/* any bytes left? */
+	rep
+	movsb
+	movq	%r11,%rax
+	ret
+1:
+	addq	%rcx,%rdi	/* copy backwards. */
+	addq	%rcx,%rsi
+	std
+	andq	$7,%rcx		/* any fractional bytes? */
+	decq	%rdi
+	decq	%rsi
+	rep
+	movsb
+	movq	%rdx,%rcx	/* copy remainder by words */
+	shrq	$3,%rcx
+	subq	$7,%rsi
+	subq	$7,%rdi
+	rep
+	movsq
+	movq	%r11,%rax
+	cld
+	ret

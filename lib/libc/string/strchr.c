@@ -1,6 +1,6 @@
-/*	$OpenBSD: rindex.c,v 1.7 2014/11/30 19:43:56 deraadt Exp $ */
-/*
- * Copyright (c) 1988 Regents of the University of California.
+/*	$OpenBSD: strchr.c,v 1.1 2014/11/30 19:43:57 deraadt Exp $ */
+/*-
+ * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,15 +31,13 @@
 #include <string.h>
 
 char *
-rindex(const char *p, int ch)
+strchr(const char *p, int ch)
 {
-	char *save;
-
-	for (save = NULL;; ++p) {
+	for (;; ++p) {
 		if (*p == ch)
-			save = (char *)p;
+			return((char *)p);
 		if (!*p)
-			return(save);
+			return((char *)NULL);
 	}
 	/* NOTREACHED */
 }

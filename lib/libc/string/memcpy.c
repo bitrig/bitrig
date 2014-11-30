@@ -1,7 +1,10 @@
-/*	$OpenBSD: index.c,v 1.6 2014/11/30 19:43:56 deraadt Exp $ */
+/*	$OpenBSD: memcpy.c,v 1.1 2014/11/30 19:43:56 deraadt Exp $ */
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
+ *
+ * This code is derived from software contributed to Berkeley by
+ * Chris Torek.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,15 +32,68 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
+#include <syslog.h>
 
-char *
-index(const char *p, int ch)
+/*
+ * sizeof(word) MUST BE A POWER OF TWO
+ * SO THAT wmask BELOW IS ALL ONES
+ */
+typedef	long word;		/* "word" used for optimal copy speed */
+
+#define	wsize	sizeof(word)
+#define	wmask	(wsize - 1)
+
+/*
+ * Copy a block of memory, not handling overlap.
+ */
+void *
+memcpy(void *dst0, const void *src0, size_t length)
 {
-	for (;; ++p) {
-		if (*p == ch)
-			return((char *)p);
-		if (!*p)
-			return((char *)NULL);
+	char *dst = dst0;
+	const char *src = src0;
+	size_t t;
+
+	if (length == 0 || dst == src)		/* nothing to do */
+		goto done;
+
+	if ((dst < src && dst + length > src) ||
+	    (src < dst && src + length > dst)) {
+		struct syslog_data sdata = SYSLOG_DATA_INIT;
+
+		syslog_r(LOG_CRIT, &sdata, "backwards memcpy");
+		abort();
 	}
-	/* NOTREACHED */
+
+	/*
+	 * Macros: loop-t-times; and loop-t-times, t>0
+	 */
+#define	TLOOP(s) if (t) TLOOP1(s)
+#define	TLOOP1(s) do { s; } while (--t)
+
+	/*
+	 * Copy forward.
+	 */
+	t = (long)src;	/* only need low bits */
+	if ((t | (long)dst) & wmask) {
+		/*
+		 * Try to align operands.  This cannot be done
+		 * unless the low bits match.
+		 */
+		if ((t ^ (long)dst) & wmask || length < wsize)
+			t = length;
+		else
+			t = wsize - (t & wmask);
+		length -= t;
+		TLOOP1(*dst++ = *src++);
+	}
+	/*
+	 * Copy whole words, then mop up any trailing bytes.
+	 */
+	t = length / wsize;
+	TLOOP(*(word *)dst = *(word *)src; src += wsize; dst += wsize);
+	t = length & wmask;
+	TLOOP(*dst++ = *src++);
+done:
+	return (dst0);
 }
