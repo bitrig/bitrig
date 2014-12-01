@@ -47,9 +47,8 @@ FOUNDFILES=false
 
 ARCH=""
 
-CPP=/usr/libexec/mcpp
-OPTS="-lang-asm"
-TRAD="-traditional -k"
+CPP=/usr/libexec/tradcpp
+OPTS=
 
 if [ ! -x $CPP ]; then
 	echo "installation problem: cpp not found/executable" >&2
@@ -65,10 +64,7 @@ do
 		STDINC=
 		;;
 	-traditional)
-		TRAD="-traditional -k"
-		;;
-	-notraditional)
-		TRAD=
+		# compat; cpp always runs in traditional mode
 		;;
 	-I*)
 		INCS="$INCS $A"
@@ -85,7 +81,7 @@ do
 		;;
 	*)
 		FOUNDFILES=true
-		eval $CPP $TRAD $DGNUC $INCS $STDINC $OPTS $A || exit $?
+		eval $CPP $DGNUC $INCS $STDINC $OPTS $A || exit $?
 		;;
 	esac
 done
@@ -93,7 +89,7 @@ done
 if ! $FOUNDFILES
 then
 	# read standard input
-	eval exec $CPP $ARCH $TRAD $DGNUC $INCS $STDINC $OPTS
+	eval exec $CPP $ARCH $DGNUC $INCS $STDINC $OPTS
 fi
 
 exit 0
