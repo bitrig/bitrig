@@ -72,7 +72,8 @@ do
 	-U__GNUC__)
 		DGNUC=
 		;;
-	-imacros|-include|-idirafter|-iprefix|-iwithprefix)
+	-I|-dirafter|-imacros|-include|-iprefix|-iquote|-isysroot|-isystem|\
+	-iwithprefix|-iwithprefixbefore)
 		INCS="$INCS '$A' '$1'"
 		shift
 		;;
