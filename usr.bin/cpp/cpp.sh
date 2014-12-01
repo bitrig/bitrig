@@ -69,9 +69,6 @@ do
 	-I*)
 		INCS="$INCS $A"
 		;;
-	-U__GNUC__)
-		DGNUC=
-		;;
 	-I|-dirafter|-imacros|-include|-iprefix|-iquote|-isysroot|-isystem|\
 	-iwithprefix|-iwithprefixbefore)
 		INCS="$INCS '$A' '$1'"
