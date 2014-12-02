@@ -163,9 +163,7 @@ struct ifaddr_item {
 int	ifai_cmp(struct ifaddr_item *,  struct ifaddr_item *);
 void	ifa_item_insert(struct sockaddr *, struct ifaddr *, struct ifnet *);
 void	ifa_item_remove(struct sockaddr *, struct ifaddr *, struct ifnet *);
-#ifndef SMALL_KERNEL
 void	ifa_print_rb(void);
-#endif
 
 RB_HEAD(ifaddr_items, ifaddr_item) ifaddr_items = RB_INITIALIZER(&ifaddr_items);
 RB_PROTOTYPE(ifaddr_items, ifaddr_item, ifai_entry, ifai_cmp);
@@ -1107,9 +1105,7 @@ if_down(struct ifnet *ifp)
 		bstp_ifstate(ifp);
 #endif
 	rt_ifmsg(ifp);
-#ifndef SMALL_KERNEL
 	rt_if_track(ifp);
-#endif
 }
 
 /*
@@ -1138,9 +1134,7 @@ if_up(struct ifnet *ifp)
 		in6_if_up(ifp);
 #endif
 
-#ifndef SMALL_KERNEL
 	rt_if_track(ifp);
-#endif
 }
 
 /*
@@ -1167,9 +1161,7 @@ if_link_state_change_task(void *arg, void *unused)
 	s = splsoftnet();
 	if ((ifp = if_get(index)) != NULL) {
 		rt_ifmsg(ifp);
-#ifndef SMALL_KERNEL
 		rt_if_track(ifp);
-#endif
 		dohooks(ifp->if_linkstatehooks, 0);
 	}
 	splx(s);
@@ -1364,7 +1356,6 @@ ifioctl(struct socket *so, u_long cmd, caddr_t data, struct proc *p)
 		}
 #endif
 
-#ifndef SMALL_KERNEL
 		if (ifp->if_capabilities & IFCAP_WOL) {
 			if (ISSET(ifr->ifr_flags, IFXF_WOL) &&
 			    !ISSET(ifp->if_xflags, IFXF_WOL)) {
@@ -1388,7 +1379,6 @@ ifioctl(struct socket *so, u_long cmd, caddr_t data, struct proc *p)
 			ifr->ifr_flags &= ~IFXF_WOL;
 			error = ENOTSUP;
 		}
-#endif
 
 		ifp->if_xflags = (ifp->if_xflags & IFXF_CANTCHANGE) |
 			(ifr->ifr_flags & ~IFXF_CANTCHANGE);
@@ -2046,11 +2036,7 @@ if_group_egress_build(void)
 		do {
 			if (rt->rt_ifp)
 				if_addgroup(rt->rt_ifp, IFG_EGRESS);
-#ifndef SMALL_KERNEL
 			rt = rt_mpath_next(rt);
-#else
-			rt = NULL;
-#endif
 		} while (rt != NULL);
 	}
 
@@ -2060,11 +2046,7 @@ if_group_egress_build(void)
 		do {
 			if (rt->rt_ifp)
 				if_addgroup(rt->rt_ifp, IFG_EGRESS);
-#ifndef SMALL_KERNEL
 			rt = rt_mpath_next(rt);
-#else
-			rt = NULL;
-#endif
 		} while (rt != NULL);
 	}
 #endif
@@ -2217,7 +2199,6 @@ ifa_item_remove(struct sockaddr *sa, struct ifaddr *ifa, struct ifnet *ifp)
 	pool_put(&ifaddr_item_pl, ifai);
 }
 
-#ifndef SMALL_KERNEL
 /* debug function, can be called from ddb> */
 void
 ifa_print_rb(void)
@@ -2249,7 +2230,6 @@ ifa_print_rb(void)
 		}
 	}
 }
-#endif /* SMALL_KERNEL */
 
 void
 ifnewlladdr(struct ifnet *ifp)

@@ -135,10 +135,8 @@ re_pci_attach(struct device *parent, struct device *self, void *aux)
 
 	pci_set_powerstate(pa->pa_pc, pa->pa_tag, PCI_PMCSR_STATE_D0);
 
-#ifndef SMALL_KERNEL
 	/* Enable power management for wake on lan. */
 	pci_conf_write(pc, pa->pa_tag, RL_PCI_PMCSR, RL_PME_EN);
-#endif
 
 	/*
 	 * Map control/status registers.

@@ -609,7 +609,6 @@ route_output(struct mbuf *m, ...)
 			rt = NULL;
 			goto flush;
 		}
-#ifndef SMALL_KERNEL
 		if (rn_mpath_capable(rnh)) {
 			/* first find the right priority */
 			rt = rt_mpath_matchgate(rt, NULL, prio);
@@ -647,7 +646,6 @@ route_output(struct mbuf *m, ...)
 			}
 			rn = (struct radix_node *)rt;
 		}
-#endif
 		rt->rt_refcnt++;
 
 		/*
@@ -755,12 +753,10 @@ report:
 					rt->rt_ifa = ifa;
 					ifa->ifa_refcnt++;
 					rt->rt_ifp = ifa->ifa_ifp;
-#ifndef SMALL_KERNEL
 					/* recheck link state after ifp change*/
 					rt_if_linkstate_change(
 					    (struct radix_node *)rt, rt->rt_ifp,
 					    tableid);
-#endif
 				}
 			}
 #ifdef MPLS

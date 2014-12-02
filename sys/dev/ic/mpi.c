@@ -164,10 +164,8 @@ int		mpi_ioctl_inq(struct mpi_softc *, struct bioc_inq *);
 int		mpi_ioctl_vol(struct mpi_softc *, struct bioc_vol *);
 int		mpi_ioctl_disk(struct mpi_softc *, struct bioc_disk *);
 int		mpi_ioctl_setstate(struct mpi_softc *, struct bioc_setstate *);
-#ifndef SMALL_KERNEL
 int		mpi_create_sensors(struct mpi_softc *);
 void		mpi_refresh_sensors(void *);
-#endif /* SMALL_KERNEL */
 #endif /* NBIO > 0 */
 
 #define DEVNAME(s)		((s)->sc_dev.dv_xname)
@@ -384,9 +382,7 @@ mpi_attach(struct mpi_softc *sc)
 	mpi_write(sc, MPI_INTR_MASK, MPI_INTR_MASK_DOORBELL);
 
 #if NBIO > 0
-#ifndef SMALL_KERNEL
 	mpi_create_sensors(sc);
-#endif /* SMALL_KERNEL */
 #endif /* NBIO > 0 */
 
 	return (0);
@@ -3408,7 +3404,6 @@ mpi_ioctl_setstate(struct mpi_softc *sc, struct bioc_setstate *bs)
 	return (ENOTTY);
 }
 
-#ifndef SMALL_KERNEL
 int
 mpi_create_sensors(struct mpi_softc *sc)
 {
@@ -3524,5 +3519,4 @@ mpi_refresh_sensors(void *arg)
 done:
 	rw_exit_write(&sc->sc_lock);
 }
-#endif /* SMALL_KERNEL */
 #endif /* NBIO > 0 */

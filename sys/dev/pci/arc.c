@@ -667,11 +667,9 @@ int			arc_bio_blink(struct arc_softc *, struct bioc_blink *);
 int			arc_bio_getvol(struct arc_softc *, int,
 			    struct arc_fw_volinfo *);
 
-#ifndef SMALL_KERNEL
 /* sensors */
 void			arc_create_sensors(void *, void *);
 void			arc_refresh_sensors(void *);
-#endif /* SMALL_KERNEL */
 #endif
 
 struct cfattach arc_ca = {
@@ -818,7 +816,6 @@ arc_attach(struct device *parent, struct device *self, void *aux)
 	if (bio_register(self, arc_bioctl) != 0)
 		panic("%s: bioctl registration failed", DEVNAME(sc));
 
-#ifndef SMALL_KERNEL
 	/*
 	 * you need to talk to the firmware to get volume info. our firmware
 	 * interface relies on being able to sleep, so we need to use a thread
@@ -827,7 +824,6 @@ arc_attach(struct device *parent, struct device *self, void *aux)
 	if (scsi_task(arc_create_sensors, sc, NULL, 1) != 0)
 		printf("%s: unable to schedule arc_create_sensors as a "
 		    "scsi task", DEVNAME(sc));
-#endif
 #endif
 
 	return;
@@ -2594,7 +2590,6 @@ arc_wait(struct arc_softc *sc)
 	splx(s);
 }
 
-#ifndef SMALL_KERNEL
 void
 arc_create_sensors(void *xsc, void *arg)
 {
@@ -2695,7 +2690,6 @@ arc_refresh_sensors(void *arg)
 
 	}
 }
-#endif /* SMALL_KERNEL */
 #endif /* NBIO > 0 */
 
 u_int32_t

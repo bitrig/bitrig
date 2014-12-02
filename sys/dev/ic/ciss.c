@@ -81,9 +81,7 @@ int	ciss_ioctl(struct device *, u_long, caddr_t);
 #endif
 int	ciss_sync(struct ciss_softc *sc);
 void	ciss_heartbeat(void *v);
-#ifndef SMALL_KERNEL
 void	ciss_sensors(void *);
-#endif
 
 void *	ciss_get_ccb(void *);
 void	ciss_put_ccb(void *, void *);
@@ -384,7 +382,6 @@ ciss_attach(struct ciss_softc *sc)
 		    sc->sc_dev.dv_xname);
 
 	sc->sc_flags |= CISS_BIO;
-#ifndef SMALL_KERNEL
 	sc->sensors = mallocarray(sc->maxunits, sizeof(struct ksensor),
 	    M_DEVBUF, M_NOWAIT | M_ZERO);
 	if (sc->sensors) {
@@ -407,7 +404,6 @@ ciss_attach(struct ciss_softc *sc)
 		else
 			sensordev_install(&sc->sensordev);
 	}
-#endif /* SMALL_KERNEL */
 #endif /* BIO > 0 */
 
 	return 0;
@@ -1126,7 +1122,6 @@ ciss_ioctl(struct device *dev, u_long cmd, caddr_t addr)
 	return error;
 }
 
-#ifndef SMALL_KERNEL
 void
 ciss_sensors(void *v)
 {
@@ -1176,7 +1171,6 @@ ciss_sensors(void *v)
 		}
 	}
 }
-#endif /* SMALL_KERNEL */
 
 int
 ciss_ldid(struct ciss_softc *sc, int target, struct ciss_ldid *id)

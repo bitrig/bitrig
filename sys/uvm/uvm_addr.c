@@ -88,7 +88,6 @@ struct uaddr_pivot_state {
 	struct uaddr_pivot		 up_pivots[NUM_PIVOTS];
 };
 
-#ifndef SMALL_KERNEL
 /*
  * Free space comparison.
  * Compares smaller free-space before larger free-space.
@@ -100,17 +99,14 @@ uvm_mapent_fspace_cmp(struct vm_map_entry *e1, struct vm_map_entry *e2)
 		return (e1->fspace < e2->fspace ? -1 : 1);
 	return (e1->start < e2->start ? -1 : e1->start > e2->start);
 }
-#endif
 
 /* Forward declaration (see below). */
 extern const struct uvm_addr_functions uaddr_kernel_functions;
 struct uvm_addr_state uaddr_kbootstrap;
 
 /* Support functions. */
-#ifndef SMALL_KERNEL
 struct vm_map_entry	*uvm_addr_entrybyspace(struct uaddr_free_rbtree*,
 			    vsize_t);
-#endif /* !SMALL_KERNEL */
 void			 uaddr_kinsert(struct vm_map *,
 			    struct uvm_addr_state *, struct vm_map_entry *);
 void			 uaddr_kremove(struct vm_map *,
@@ -144,7 +140,6 @@ int			 uaddr_bestfit_select(struct vm_map *,
 			    struct uvm_addr_state*, struct vm_map_entry **,
 			    vaddr_t *, vsize_t, vaddr_t, vaddr_t, vm_prot_t,
 			    vaddr_t);
-#ifndef SMALL_KERNEL
 int			 uaddr_pivot_select(struct vm_map *,
 			    struct uvm_addr_state *, struct vm_map_entry **,
 			    vaddr_t *, vsize_t, vaddr_t, vaddr_t, vm_prot_t,
@@ -153,7 +148,6 @@ int			 uaddr_stack_brk_select(struct vm_map *,
 			    struct uvm_addr_state *, struct vm_map_entry **,
 			    vaddr_t *, vsize_t, vaddr_t, vaddr_t, vm_prot_t,
 			    vaddr_t);
-#endif /* !SMALL_KERNEL */
 
 void			 uaddr_rnd_insert(struct vm_map *,
 			    struct uvm_addr_state *, struct vm_map_entry *);
@@ -168,13 +162,11 @@ void			 uaddr_pivot_insert(struct vm_map *,
 void			 uaddr_pivot_remove(struct vm_map *,
 			    struct uvm_addr_state *, struct vm_map_entry *);
 
-#ifndef SMALL_KERNEL
 vsize_t			 uaddr_pivot_random(void);
 int			 uaddr_pivot_newpivot(struct vm_map *,
 			    struct uaddr_pivot_state *, struct uaddr_pivot *,
 			    struct vm_map_entry **, vaddr_t *,
 			    vsize_t, vaddr_t, vaddr_t, vsize_t, vsize_t);
-#endif /* !SMALL_KERNEL */
 
 #if defined(DEBUG) || defined(DDB)
 void			 uaddr_pivot_print(struct uvm_addr_state *, boolean_t,
@@ -184,7 +176,6 @@ void			 uaddr_rnd_print(struct uvm_addr_state *, boolean_t,
 #endif /* DEBUG || DDB */
 
 
-#ifndef SMALL_KERNEL
 /*
  * Find smallest entry in tree that will fit sz bytes.
  */
@@ -204,7 +195,6 @@ uvm_addr_entrybyspace(struct uaddr_free_rbtree *free, vsize_t sz)
 	}
 	return res;
 }
-#endif /* !SMALL_KERNEL */
 
 static __inline vaddr_t
 uvm_addr_align_forward(vaddr_t addr, vaddr_t align, vaddr_t offset)
@@ -874,7 +864,6 @@ uaddr_kbootstrap_destroy(struct uvm_addr_state *uaddr)
 	KASSERT(uaddr == (struct uvm_addr_state *)&uaddr_kbootstrap);
 }
 
-#ifndef SMALL_KERNEL
 /*
  * Best fit algorithm.
  */
@@ -971,10 +960,8 @@ uaddr_bestfit_select(struct vm_map *map, struct uvm_addr_state *uaddr_p,
 	    min : max);
 	return 0;
 }
-#endif /* !SMALL_KERNEL */
 
 
-#ifndef SMALL_KERNEL
 /*
  * A userspace allocator based on pivots.
  */
@@ -1428,9 +1415,7 @@ uaddr_pivot_print(struct uvm_addr_state *uaddr_p, boolean_t full,
 	}
 }
 #endif /* DEBUG || DDB */
-#endif /* !SMALL_KERNEL */
 
-#ifndef SMALL_KERNEL
 /*
  * Strategy for uaddr_stack_brk_select.
  */
@@ -1528,10 +1513,7 @@ uaddr_stack_brk_create(vaddr_t minaddr, vaddr_t maxaddr)
 	uaddr->uaddr_functions = &uaddr_stack_brk_functions;
 	return uaddr;
 }
-#endif /* !SMALL_KERNEL */
 
 
-#ifndef SMALL_KERNEL
 RB_GENERATE(uaddr_free_rbtree, vm_map_entry, dfree.rbtree,
     uvm_mapent_fspace_cmp);
-#endif /* !SMALL_KERNEL */

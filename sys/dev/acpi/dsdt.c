@@ -36,9 +36,6 @@
 #include <dev/acpi/amltypes.h>
 #include <dev/acpi/dsdt.h>
 
-#ifdef SMALL_KERNEL
-#undef ACPI_DEBUG
-#endif
 
 #define opsize(opcode) (((opcode) & 0xFF00) ? 2 : 1)
 
@@ -275,11 +272,9 @@ struct aml_scope *aml_lastscope;
 void
 _aml_die(const char *fn, int line, const char *fmt, ...)
 {
-#ifndef SMALL_KERNEL
 	struct aml_scope *root;
 	struct aml_value *sp;
 	int idx;
-#endif /* SMALL_KERNEL */
 	va_list ap;
 
 	va_start(ap, fmt);
@@ -287,7 +282,6 @@ _aml_die(const char *fn, int line, const char *fmt, ...)
 	printf("\n");
 	va_end(ap);
 
-#ifndef SMALL_KERNEL
 	for (root = aml_lastscope; root && root->pos; root = root->parent) {
 		printf("%.4x Called: %s\n", aml_pc(root->pos),
 		    aml_nodename(root->node));
@@ -306,7 +300,6 @@ _aml_die(const char *fn, int line, const char *fmt, ...)
 			}
 		}
 	}
-#endif /* SMALL_KERNEL */
 
 	/* XXX: don't panic */
 	panic("aml_die %s:%d", fn, line);
@@ -335,7 +328,6 @@ aml_findopcode(int opcode)
 	return NULL;
 }
 
-#if defined(DDB) || !defined(SMALL_KERNEL)
 const char *
 aml_mnem(int opcode, uint8_t *pos)
 {
@@ -370,7 +362,6 @@ aml_mnem(int opcode, uint8_t *pos)
 	}
 	return ("xxx");
 }
-#endif /* defined(DDB) || !defined(SMALL_KERNEL) */
 
 struct aml_notify_data {
 	struct aml_node		*node;
@@ -522,7 +513,6 @@ aml_setbit(u_int8_t *pb, int bit, int val)
 /*
  * @@@: Notify functions
  */
-#ifndef SMALL_KERNEL
 void
 acpi_poll(void *arg)
 {
@@ -536,7 +526,6 @@ acpi_poll(void *arg)
 
 	timeout_add_sec(&acpi_softc->sc_dev_timeout, 10);
 }
-#endif
 
 void
 aml_notify_task(void *node, int notify_value)
@@ -584,7 +573,6 @@ aml_notify(struct aml_node *node, int notify_value)
 	acpi_addtask(acpi_softc, aml_notify_task, node, notify_value);
 }
 
-#ifndef SMALL_KERNEL
 void
 aml_notify_dev(const char *pnpid, int notify_value)
 {
@@ -607,7 +595,6 @@ acpi_poll_notify_task(void *arg0, int arg1)
 		if (pdata->cbproc && pdata->poll)
 			pdata->cbproc(pdata->node, 0, pdata->cbarg);
 }
-#endif
 
 /*
  * @@@: Namespace functions
@@ -794,7 +781,6 @@ aml_unlockfield(struct aml_scope *scope, struct aml_value *field)
  * @@@: Value set/compare/alloc/free routines
  */
 
-#ifndef SMALL_KERNEL
 void
 aml_showvalue(struct aml_value *val, int lvl)
 {
@@ -878,7 +864,6 @@ aml_showvalue(struct aml_value *val, int lvl)
 		printf(" !!type: %x\n", val->type);
 	}
 }
-#endif /* SMALL_KERNEL */
 
 int64_t
 aml_val2int(struct aml_value *rval)
@@ -1734,7 +1719,6 @@ aml_postparse(void)
 	}
 }
 
-#ifndef SMALL_KERNEL
 const char *
 aml_val_to_string(const struct aml_value *val)
 {
@@ -1763,7 +1747,6 @@ aml_val_to_string(const struct aml_value *val)
 
 	return (buffer);
 }
-#endif /* SMALL_KERNEL */
 
 int aml_error;
 
@@ -2113,9 +2096,7 @@ aml_convert(struct aml_value *a, int ctype, int clen)
 		break;
 	}
 	if (c == NULL) {
-#ifndef SMALL_KERNEL
 		aml_showvalue(a, 0);
-#endif
 		aml_die("Could not convert %x to %x\n", a->type, ctype);
 	}
 	return c;
@@ -3173,9 +3154,7 @@ aml_eval(struct aml_scope *scope, struct aml_value *my_ret, int ret_type,
 		break;
 	}
 	if (ret_type == 'i' && my_ret && my_ret->type != AML_OBJTYPE_INTEGER) {
-#ifndef SMALL_KERNEL
 		aml_showvalue(my_ret, 8-100);
-#endif
 		aml_die("Not Integer");
 	}
 	return my_ret;
@@ -3709,9 +3688,7 @@ aml_parse(struct aml_scope *scope, int ret_type, const char *stype)
 		/* Index: tir => ObjRef */
 		idx = opargs[1]->v_integer;
 		if (idx >= opargs[0]->length || idx < 0) {
-#ifndef SMALL_KERNEL
 			aml_showvalue(opargs[0], 0);
-#endif
 			aml_die("Index out of bounds %d/%d\n", idx,
 			    opargs[0]->length);
 		}
@@ -4289,7 +4266,6 @@ aml_searchrel(struct aml_node *root, const void *vname)
 	return NULL;
 }
 
-#ifndef SMALL_KERNEL
 
 void
 acpi_getdevlist(struct acpi_devlist_head *list, struct aml_node *root,
@@ -4321,4 +4297,3 @@ acpi_freedevlist(struct acpi_devlist_head *list)
 		acpi_os_free(dl);
 	}
 }
-#endif /* SMALL_KERNEL */

@@ -92,7 +92,6 @@ static const char ourwwn[] =
     "HBA WWNN 0x%08x%08x HBA WWPN 0x%08x%08x";
 static const char finmsg[] =
     "%d.%d.%d: FIN dl%d resid %d STS 0x%x SKEY %c XS_ERR=0x%x";
-#ifndef SMALL_KERNEL
 static const char sc0[] =
     "%s CHAN %d FTHRSH %d IID %d RESETD %d RETRYC %d RETRYD %d ASD 0x%x";
 static const char sc1[] =
@@ -100,7 +99,6 @@ static const char sc1[] =
 static const char sc2[] = "%s CHAN %d TGT %d FLAGS 0x%x 0x%x/0x%x";
 static const char sc3[] = "Generated";
 static const char sc4[] = "NVRAM";
-#endif
 static const char bun[] =
     "bad underrun for %d.%d (count %d, resid %d, status %s)";
 
@@ -711,11 +709,9 @@ isp_reset(struct ispsoftc *isp)
 		for (;;) {
 			u_int32_t nxtaddr;
 
-#ifndef SMALL_KERNEL
 			isp_prt(isp, ISP_LOGDEBUG0,
 			    "load 0x%x words of code at load address 0x%x",
 			    ptr[3], la);
-#endif
 
 			wi = 0;
 			wl = ptr[3];
@@ -830,9 +826,7 @@ isp_reset(struct ispsoftc *isp)
 		isp->isp_loaded_fw = 1;
 	} else {
 		isp->isp_loaded_fw = 0;
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG2, "skipping f/w download");
-#endif
 	}
 
 	/*
@@ -937,10 +931,8 @@ isp_reset(struct ispsoftc *isp)
 #endif
 		} else {
 			FCPARAM(isp)->isp_fwattr = mbs.param[6];
-#ifndef SMALL_KERNEL
 			isp_prt(isp, ISP_LOGDEBUG0,
 			    "Firmware Attributes = 0x%x", mbs.param[6]);
-#endif
 		}
 		FCPARAM(isp)->isp_2klogin = 0;
 		FCPARAM(isp)->isp_sccfw = 0;
@@ -1342,12 +1334,10 @@ isp_scsi_channel_init(struct ispsoftc *isp, int channel)
 			    (sdp->isp_devparam[tgt].goal_offset << 8) |
 			    (sdp->isp_devparam[tgt].goal_period);
 		}
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG0,
 		    "Initial Settings bus%d tgt%d flags 0x%x off 0x%x per 0x%x",
 		    channel, tgt, mbs.param[2], mbs.param[3] >> 8,
 		    mbs.param[3] & 0xff);
-#endif
 		mbs.logval = MBLOGNONE;
 		isp_mboxcmd(isp, &mbs);
 		if (mbs.param[0] != MBOX_COMMAND_COMPLETE) {
@@ -1581,23 +1571,19 @@ isp_fibre_init(struct ispsoftc *isp)
 		icbp->icb_fwoptions |= ICBOPT_BOTH_WWNS;
 		MAKE_NODE_NAME_FROM_WWN(icbp->icb_nodename, nwwn);
 		MAKE_NODE_NAME_FROM_WWN(icbp->icb_portname, pwwn);
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG1,
 		    "Setting ICB Node 0x%08x%08x Port 0x%08x%08x",
 		    ((u_int32_t) (nwwn >> 32)),
 		    ((u_int32_t) (nwwn & 0xffffffff)),
 		    ((u_int32_t) (pwwn >> 32)),
 		    ((u_int32_t) (pwwn & 0xffffffff)));
-#endif
 	} else if (pwwn) {
 		icbp->icb_fwoptions &= ~ICBOPT_BOTH_WWNS;
 		MAKE_NODE_NAME_FROM_WWN(icbp->icb_portname, pwwn);
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG1,
 		    "Setting ICB Port 0x%08x%08x",
 		    ((u_int32_t) (pwwn >> 32)),
 		    ((u_int32_t) (pwwn & 0xffffffff)));
-#endif
 	} else {
 		isp_prt(isp, ISP_LOGERR, "No valid WWNs to use");
 		return;
@@ -1619,11 +1605,9 @@ isp_fibre_init(struct ispsoftc *isp)
 	icbp->icb_respaddr[RQRSP_ADDR3247] = DMA_WD2(isp->isp_result_dma);
 	icbp->icb_respaddr[RQRSP_ADDR4863] = DMA_WD3(isp->isp_result_dma);
 
-#ifndef SMALL_KERNEL
 	isp_prt(isp, ISP_LOGDEBUG0,
 	    "isp_fibre_init: fwopt 0x%x xfwopt 0x%x zfwopt 0x%x",
 	    icbp->icb_fwoptions, icbp->icb_xfwoptions, icbp->icb_zfwoptions);
-#endif
 
 	FC_SCRATCH_ACQUIRE(isp);
 	isp_put_icb(isp, icbp, (isp_icb_t *)fcp->isp_scratch);
@@ -1639,11 +1623,9 @@ isp_fibre_init(struct ispsoftc *isp)
 	mbs.param[7] = DMA_WD2(fcp->isp_scdma);
 	mbs.logval = MBLOGALL;
 	mbs.timeout = 30 * 1000000;
-#ifndef SMALL_KERNEL
 	isp_prt(isp, ISP_LOGDEBUG0, "INIT F/W from %p (%08x%08x)",
 	    fcp->isp_scratch, (u_int32_t) ((u_int64_t)fcp->isp_scdma >> 32),
 	    (u_int32_t) fcp->isp_scdma);
-#endif
 	MEMORYBARRIER(isp, SYNC_SFORDEV, 0, sizeof (*icbp));
 	isp_mboxcmd(isp, &mbs);
 	FC_SCRATCH_RELEASE(isp);
@@ -1730,19 +1712,15 @@ isp_port_login(struct ispsoftc *isp, u_int16_t handle, u_int32_t portid)
 
 	switch (mbs.param[0]) {
 	case MBOX_PORT_ID_USED:
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG0,
 		    "isp_plogi_old: portid 0x%06x already logged in as %u",
 		    portid, mbs.param[1]);
-#endif
 		return (MBOX_PORT_ID_USED | (mbs.param[1] << 16));
 
 	case MBOX_LOOP_ID_USED:
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG0,
 		    "isp_plogi_old: handle %u in use for port id 0x%02xXXXX",
 		    handle, mbs.param[1] & 0xff);
-#endif
 		return (MBOX_LOOP_ID_USED);
 
 	case MBOX_COMMAND_COMPLETE:
@@ -1932,12 +1910,10 @@ isp_fclink_test(struct ispsoftc *isp, int usdelay)
 		 */
 		enano = NANOTIME_SUB(&hrb, &hra);
 
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG1,
 		    "usec%d: 0x%lx->0x%lx enano 0x%x%08x",
 		    count, (long) GET_NANOSEC(&hra), (long) GET_NANOSEC(&hrb),
 		    (u_int32_t)(enano >> 32), (u_int32_t)(enano & 0xffffffff));
-#endif
 
 		/*
 		 * If the elapsed time is less than 1 millisecond,
@@ -2319,9 +2295,7 @@ isp_scan_loop(struct ispsoftc *isp)
 		lim = 2;
 		break;
 	default:
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG0, "no loop topology to scan");
-#endif
 		fcp->isp_loopstate = LOOP_LSCAN_DONE;
 		return (0);
 	}
@@ -2559,9 +2533,7 @@ isp_gid_ft_sns(struct ispsoftc *isp)
 	sns_gid_ft_req_t *rq = &un._x;
 	mbreg_t mbs;
 
-#ifndef SMALL_KERNEL
 	isp_prt(isp, ISP_LOGDEBUG0, "scanning fabric (GID_FT) via SNS");
-#endif
 
 	MEMZERO(rq, SNS_GID_FT_REQ_SIZE);
 	rq->snscb_rblen = GIDLEN >> 1;
@@ -3306,10 +3278,8 @@ isp_start(XS_T *xs)
 		}
 
 		hdlidx = fcp->isp_ini_map[XS_TGT(xs)] - 1;
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG1, "XS_TGT(xs)=%d- hdlidx value %d",
 		    XS_TGT(xs), hdlidx);
-#endif
 		if (hdlidx < 0 || hdlidx >= MAX_FC_TARG) {
 			XS_SETERR(xs, HBA_SELTIMEOUT);
 			return (CMD_COMPLETE);
@@ -3336,9 +3306,7 @@ isp_start(XS_T *xs)
  start_again:
 
 	if (isp_getrqentry(isp, &nxti, &optr, (void *)&qep)) {
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG0, "Request Queue Overflow");
-#endif
 		XS_SETERR(xs, HBA_BOTCH);
 		return (CMD_EAGAIN);
 	}
@@ -3435,9 +3403,7 @@ isp_start(XS_T *xs)
 	}
 
 	if (isp_save_xs(isp, xs, &handle)) {
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG0, "out of xflist pointers");
-#endif
 		XS_SETERR(xs, HBA_BOTCH);
 		return (CMD_EAGAIN);
 	}
@@ -3458,12 +3424,10 @@ isp_start(XS_T *xs)
 		return (i);
 	}
 	XS_SETERR(xs, HBA_NOERROR);
-#ifndef SMALL_KERNEL
 	isp_prt(isp, ISP_LOGDEBUG0,
 	    "START cmd for %d.%d.%d cmd 0x%x datalen %ld",
 	    XS_CHANNEL(xs), XS_TGT(xs), XS_LUN(xs), XS_CDBP(xs)[0],
 	    (long) XS_XFRLEN(xs));
-#endif
 	ISP_ADD_REQUEST(isp, nxti);
 	isp->isp_nactive++;
 	return (CMD_QUEUED);
@@ -3888,11 +3852,9 @@ again:
 				}
 			}
 			isp->isp_intbogus++;
-#ifndef SMALL_KERNEL
 			isp_prt(isp, ISP_LOGDEBUG1,
 			    "bogus intr- isr %x (%x) iptr %x optr %x",
 			    isr, junk, iptr, optr);
-#endif
 		}
 	}
 	isp->isp_resodx = iptr;
@@ -3930,12 +3892,10 @@ again:
 
 		if (etype == RQSTYPE_RESPONSE) {
 			isp_get_response(isp, (ispstatusreq_t *) hp, sp);
-#ifndef SMALL_KERNEL
 			if (isp->isp_dblev & ISP_LOGDEBUG1) {
 				isp_print_bytes(isp,
 				    "Response Queue Entry", QENTRY_LEN, sp);
 			}
-#endif
 			scsi_status = sp->req_scsi_status;
 			completion_status = sp->req_completion_status;
 			req_status_flags = sp->req_status_flags;
@@ -3944,12 +3904,10 @@ again:
 		} else if (etype == RQSTYPE_RIO2) {
 			isp_rio2_t *rio = (isp_rio2_t *)qe;
 			isp_get_rio2(isp, (isp_rio2_t *) hp, rio);
-#ifndef SMALL_KERNEL
 			if (isp->isp_dblev & ISP_LOGDEBUG1) {
 				isp_print_bytes(isp,
 				    "Response Queue Entry", QENTRY_LEN, rio);
 			}
-#endif
 			for (i = 0; i < rio->req_header.rqs_seqno; i++) {
 				isp_fastpost_complete(isp, rio->req_handles[i]);
 			}
@@ -4011,10 +3969,8 @@ again:
 				continue;
 			}
 			if (sp->req_header.rqs_flags & RQSFLAG_FULL) {
-#ifndef SMALL_KERNEL
 				isp_prt(isp, ISP_LOGDEBUG1,
 				    "internal queues full");
-#endif
 				/*
 				 * We'll synthesize a QUEUE FULL message below.
 				 */
@@ -4136,11 +4092,9 @@ again:
 			if (snsp && slen) {
 				XS_SAVE_SENSE(xs, snsp, slen);
 			}
-#ifndef SMALL_KERNEL
 			isp_prt(isp, ISP_LOGDEBUG2,
 			   "asked for %ld got raw resid %ld settled for %ld",
 			    (long) XS_XFRLEN(xs), resid, (long) XS_RESID(xs));
-#endif
 			break;
 		case RQSTYPE_REQUEST:
 		case RQSTYPE_A64:
@@ -4158,10 +4112,8 @@ again:
 				 * ????
 				 */
 				XS_SETERR(xs, HBA_BOTCH);
-#ifndef SMALL_KERNEL
 				isp_prt(isp, ISP_LOGDEBUG0,
 				    "Request Queue Entry bounced back");
-#endif
 				if ((isp->isp_dblev & ISP_LOGDEBUG1) == 0) {
 					isp_print_bytes(isp, "Bounced Request",
 					    QENTRY_LEN, qe);
@@ -4262,9 +4214,7 @@ isp_parse_async(struct ispsoftc *isp, u_int16_t mbox)
 	} else {
 		bus = 0;
 	}
-#ifndef SMALL_KERNEL
 	isp_prt(isp, ISP_LOGDEBUG2, "Async Mbox 0x%x", mbox);
-#endif
 
 	switch (mbox) {
 	case ASYNC_BUS_RESET:
@@ -4581,9 +4531,7 @@ isp_parse_async(struct ispsoftc *isp, u_int16_t mbox)
 
 	case ASYNC_RJT_SENT:	/* same as ASYNC_QFULL_SENT */
 		if (IS_2200(isp)) {
-#ifndef SMALL_KERNEL
 			isp_prt(isp, ISP_LOGTDEBUG0, "QFULL sent");
-#endif
 			break;
 		}
 		/* FALLTHROUGH */
@@ -4604,10 +4552,8 @@ isp_parse_async(struct ispsoftc *isp, u_int16_t mbox)
 		}
 		for (i = 0; i < nh; i++) {
 			isp_fastpost_complete(isp, handles[i]);
-#ifndef SMALL_KERNEL
 			isp_prt(isp,  ISP_LOGDEBUG3,
 			    "fast post completion of %u", handles[i]);
-#endif
 		}
 		if (isp->isp_fpcchiwater < nh) {
 			isp->isp_fpcchiwater = nh;
@@ -4630,14 +4576,10 @@ isp_handle_other_response(struct ispsoftc *isp, int type,
 {
 	switch (type) {
 	case RQSTYPE_STATUS_CONT:
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG0, "Ignored Continuation Response");
-#endif
 		return (1);
 	case RQSTYPE_MARKER:
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG0, "Marker Response");
-#endif
 		return (1);
 	case RQSTYPE_ATIO:
 	case RQSTYPE_CTIO:
@@ -4696,11 +4638,9 @@ isp_parse_status(struct ispsoftc *isp, ispstatusreq_t *sp, XS_T *xs, long *rp)
 
 	case RQCS_INCOMPLETE:
 		if ((sp->req_state_flags & RQSF_GOT_TARGET) == 0) {
-#ifndef SMALL_KERNEL
 			isp_prt(isp, ISP_LOGDEBUG1,
 			    "Selection Timeout for %d.%d.%d",
 			    XS_CHANNEL(xs), XS_TGT(xs), XS_LUN(xs));
-#endif
 			if (XS_NOERR(xs)) {
 				XS_SETERR(xs, HBA_SELTIMEOUT);
 				*rp = XS_XFRLEN(xs);
@@ -4928,11 +4868,9 @@ isp_parse_status(struct ispsoftc *isp, ispstatusreq_t *sp, XS_T *xs, long *rp)
 		break;
 
 	case RQCS_QUEUE_FULL:
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG0,
 		    "internal queues full for %d.%d.%d status 0x%x",
 		    XS_CHANNEL(xs), XS_TGT(xs), XS_LUN(xs), *XS_STSP(xs));
-#endif
 
 		/*
 		 * If QFULL or some other status byte is set, then this
@@ -5082,10 +5020,8 @@ isp_fastpost_complete(struct ispsoftc *isp, u_int16_t fph)
 	}
 	xs = isp_find_xs(isp, fph);
 	if (xs == NULL) {
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG1,
 		    "Command for fast post handle 0x%x not found", fph);
-#endif
 		return;
 	}
 	isp_destroy_handle(isp, fph);
@@ -5277,9 +5213,6 @@ static const u_int32_t mbpscsi[] = {
 	ISPOPMAP(0x01, 0x01)	/* 0x5d: GET NOST DATA */
 };
 
-#ifdef SMALL_KERNEL
-#define ISP_STRIPPED
-#endif
 
 #ifndef		ISP_STRIPPED
 static const char *scsi_mbcmd_names[] = {
@@ -5737,10 +5670,8 @@ isp_mboxcmd(struct ispsoftc *isp, mbreg_t *mbp)
 
 	for (box = 0; box < MAX_MAILBOX(isp); box++) {
 		if (ibits & (1 << box)) {
-#ifndef SMALL_KERNEL
 			isp_prt(isp, ISP_LOGDEBUG1, "IN mbox %d = 0x%04x", box,
 			    mbp->param[box]);
-#endif
 			ISP_WRITE(isp, MBOX_OFF(box), mbp->param[box]);
 		}
 		isp->isp_mboxtmp[box] = mbp->param[box] = 0;
@@ -5778,10 +5709,8 @@ isp_mboxcmd(struct ispsoftc *isp, mbreg_t *mbp)
 	for (box = 0; box < MAX_MAILBOX(isp); box++) {
 		if (obits & (1 << box)) {
 			mbp->param[box] = isp->isp_mboxtmp[box];
-#ifndef SMALL_KERNEL
 			isp_prt(isp, ISP_LOGDEBUG1, "OUT mbox %d = 0x%04x", box,
 			    mbp->param[box]);
-#endif
 		}
 	}
 
@@ -5919,10 +5848,8 @@ isp_update_bus(struct ispsoftc *isp, int bus)
 		if (sdp->isp_devparam[tgt].dev_enable == 0) {
 			sdp->isp_devparam[tgt].dev_update = 0;
 			sdp->isp_devparam[tgt].dev_refresh = 0;
-#ifndef SMALL_KERNEL
 			isp_prt(isp, ISP_LOGDEBUG0,
 	 		    "skipping target %d bus %d update", tgt, bus);
-#endif
 			continue;
 		}
 		/*
@@ -5978,12 +5905,10 @@ isp_update_bus(struct ispsoftc *isp, int bus)
 			sdp->isp_devparam[tgt].actv_flags &= ~DPARM_TQING;
 			sdp->isp_devparam[tgt].actv_flags |=
 			    (sdp->isp_devparam[tgt].goal_flags & DPARM_TQING);
-#ifndef SMALL_KERNEL
 			isp_prt(isp, ISP_LOGDEBUG0,
 			    "bus %d set tgt %d flags 0x%x off 0x%x period 0x%x",
 			    bus, tgt, mbs.param[2], mbs.param[3] >> 8,
 			    mbs.param[3] & 0xff);
-#endif
 			get = 0;
 		} else {
 			continue;
@@ -6104,7 +6029,6 @@ isp_setdfltparm(struct ispsoftc *isp, int channel)
 		}
 	}
 
-#ifndef SMALL_KERNEL
 	isp_prt(isp, ISP_LOGDEBUG0, sc0, sc3,
 	    0, sdp->isp_fifo_threshold, sdp->isp_initiator_id,
 	    sdp->isp_bus_reset_delay, sdp->isp_retry_count,
@@ -6113,7 +6037,6 @@ isp_setdfltparm(struct ispsoftc *isp, int channel)
 	    sdp->isp_req_ack_active_neg, sdp->isp_data_line_active_neg,
 	    sdp->isp_data_dma_burst_enabl, sdp->isp_cmd_dma_burst_enable,
 	    sdp->isp_selection_timeout, sdp->isp_max_queue_depth);
-#endif
 
 	/*
 	 * The trick here is to establish a default for the default (honk!)
@@ -6160,12 +6083,10 @@ isp_setdfltparm(struct ispsoftc *isp, int channel)
 		sdp->isp_devparam[tgt].goal_period =
 		    sdp->isp_devparam[tgt].nvrm_period = per;
 
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG0, sc2, sc3,
 		    channel, tgt, sdp->isp_devparam[tgt].nvrm_flags,
 		    sdp->isp_devparam[tgt].nvrm_offset,
 		    sdp->isp_devparam[tgt].nvrm_period);
-#endif
 	}
 }
 
@@ -6381,10 +6302,8 @@ isp_read_nvram(struct ispsoftc *isp)
 			    nvram_data[2] != 0)
 				isp_prt(isp, ISP_LOGWARN,
 				    "invalid NVRAM header");
-#ifndef SMALL_KERNEL
 			isp_prt(isp, ISP_LOGDEBUG0, "%x %x %x",
 			    nvram_data[0], nvram_data[1], nvram_data[2]);
-#endif
 		}
 		retval = -1;
 		goto out;
@@ -6557,7 +6476,6 @@ isp_parse_nvram_1020(struct ispsoftc *isp, u_int8_t *nvram_data)
 
 	sdp->isp_fast_mttr = ISP_NVRAM_FAST_MTTR_ENABLE(nvram_data);
 
-#ifndef SMALL_KERNEL
 	isp_prt(isp, ISP_LOGDEBUG0, sc0, sc4,
 	    0, sdp->isp_fifo_threshold, sdp->isp_initiator_id,
 	    sdp->isp_bus_reset_delay, sdp->isp_retry_count,
@@ -6566,7 +6484,6 @@ isp_parse_nvram_1020(struct ispsoftc *isp, u_int8_t *nvram_data)
 	    sdp->isp_req_ack_active_neg, sdp->isp_data_line_active_neg,
 	    sdp->isp_data_dma_burst_enabl, sdp->isp_cmd_dma_burst_enable,
 	    sdp->isp_selection_timeout, sdp->isp_max_queue_depth);
-#endif
 
 	for (tgt = 0; tgt < MAX_TARGETS; tgt++) {
 		sdp->isp_devparam[tgt].dev_enable =
@@ -6613,12 +6530,10 @@ isp_parse_nvram_1020(struct ispsoftc *isp, u_int8_t *nvram_data)
 		if (ISP_NVRAM_TGT_DISC(nvram_data, tgt))
 			sdp->isp_devparam[tgt].nvrm_flags |= DPARM_DISC;
 		sdp->isp_devparam[tgt].actv_flags = 0; /* we don't know */
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG0, sc2, sc4,
 		    0, tgt, sdp->isp_devparam[tgt].nvrm_flags,
 		    sdp->isp_devparam[tgt].nvrm_offset,
 		    sdp->isp_devparam[tgt].nvrm_period);
-#endif
 		sdp->isp_devparam[tgt].goal_offset =
 		    sdp->isp_devparam[tgt].nvrm_offset;
 		sdp->isp_devparam[tgt].goal_period =
@@ -6673,7 +6588,6 @@ isp_parse_nvram_1080(struct ispsoftc *isp, int bus, u_int8_t *nvram_data)
 	sdp->isp_max_queue_depth =
 	     ISP1080_NVRAM_MAX_QUEUE_DEPTH(nvram_data, bus);
 
-#ifndef SMALL_KERNEL
 	isp_prt(isp, ISP_LOGDEBUG0, sc0, sc4,
 	    bus, sdp->isp_fifo_threshold, sdp->isp_initiator_id,
 	    sdp->isp_bus_reset_delay, sdp->isp_retry_count,
@@ -6682,7 +6596,6 @@ isp_parse_nvram_1080(struct ispsoftc *isp, int bus, u_int8_t *nvram_data)
 	    sdp->isp_req_ack_active_neg, sdp->isp_data_line_active_neg,
 	    sdp->isp_data_dma_burst_enabl, sdp->isp_cmd_dma_burst_enable,
 	    sdp->isp_selection_timeout, sdp->isp_max_queue_depth);
-#endif
 
 
 	for (tgt = 0; tgt < MAX_TARGETS; tgt++) {
@@ -6709,12 +6622,10 @@ isp_parse_nvram_1080(struct ispsoftc *isp, int bus, u_int8_t *nvram_data)
 		if (ISP1080_NVRAM_TGT_DISC(nvram_data, tgt, bus))
 			sdp->isp_devparam[tgt].nvrm_flags |= DPARM_DISC;
 		sdp->isp_devparam[tgt].actv_flags = 0;
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG0, sc2, sc4,
 		    bus, tgt, sdp->isp_devparam[tgt].nvrm_flags,
 		    sdp->isp_devparam[tgt].nvrm_offset,
 		    sdp->isp_devparam[tgt].nvrm_period);
-#endif
 		sdp->isp_devparam[tgt].goal_offset =
 		    sdp->isp_devparam[tgt].nvrm_offset;
 		sdp->isp_devparam[tgt].goal_period =
@@ -6769,7 +6680,6 @@ isp_parse_nvram_12160(struct ispsoftc *isp, int bus, u_int8_t *nvram_data)
 	sdp->isp_max_queue_depth =
 	     ISP12160_NVRAM_MAX_QUEUE_DEPTH(nvram_data, bus);
 
-#ifndef SMALL_KERNEL
 	isp_prt(isp, ISP_LOGDEBUG0, sc0, sc4,
 	    bus, sdp->isp_fifo_threshold, sdp->isp_initiator_id,
 	    sdp->isp_bus_reset_delay, sdp->isp_retry_count,
@@ -6778,7 +6688,6 @@ isp_parse_nvram_12160(struct ispsoftc *isp, int bus, u_int8_t *nvram_data)
 	    sdp->isp_req_ack_active_neg, sdp->isp_data_line_active_neg,
 	    sdp->isp_data_dma_burst_enabl, sdp->isp_cmd_dma_burst_enable,
 	    sdp->isp_selection_timeout, sdp->isp_max_queue_depth);
-#endif
 
 	for (tgt = 0; tgt < MAX_TARGETS; tgt++) {
 		sdp->isp_devparam[tgt].dev_enable =
@@ -6804,12 +6713,10 @@ isp_parse_nvram_12160(struct ispsoftc *isp, int bus, u_int8_t *nvram_data)
 		if (ISP12160_NVRAM_TGT_DISC(nvram_data, tgt, bus))
 			sdp->isp_devparam[tgt].nvrm_flags |= DPARM_DISC;
 		sdp->isp_devparam[tgt].actv_flags = 0;
-#ifndef SMALL_KERNEL
 		isp_prt(isp, ISP_LOGDEBUG0, sc2, sc4,
 		    bus, tgt, sdp->isp_devparam[tgt].nvrm_flags,
 		    sdp->isp_devparam[tgt].nvrm_offset,
 		    sdp->isp_devparam[tgt].nvrm_period);
-#endif
 		sdp->isp_devparam[tgt].goal_offset =
 		    sdp->isp_devparam[tgt].nvrm_offset;
 		sdp->isp_devparam[tgt].goal_period =
@@ -6908,7 +6815,6 @@ isp_parse_nvram_2100(struct ispsoftc *isp, u_int8_t *nvram_data)
 			ISP2100_NVRAM_EXECUTION_THROTTLE(nvram_data);
 	}
 	fcp->isp_fwoptions = ISP2100_NVRAM_OPTIONS(nvram_data);
-#ifndef SMALL_KERNEL
 	isp_prt(isp, ISP_LOGDEBUG0,
 	    "NVRAM 0x%08x%08x 0x%08x%08x maxalloc %d maxframelen %d",
 	    (u_int32_t) (fcp->isp_wwnn_nvram >> 32), (u_int32_t) fcp->isp_wwnn_nvram,
@@ -6921,14 +6827,11 @@ isp_parse_nvram_2100(struct ispsoftc *isp, u_int8_t *nvram_data)
 	    ISP2100_NVRAM_OPTIONS(nvram_data),
 	    ISP2100_NVRAM_HARDLOOPID(nvram_data),
 	    ISP2100_NVRAM_TOV(nvram_data));
-#endif
 	fcp->isp_xfwoptions = ISP2100_XFW_OPTIONS(nvram_data);
 	fcp->isp_zfwoptions = ISP2100_ZFW_OPTIONS(nvram_data);
-#ifndef SMALL_KERNEL
 	isp_prt(isp, ISP_LOGDEBUG0,
 	    "xfwoptions 0x%x zfw options 0x%x",
 	    ISP2100_XFW_OPTIONS(nvram_data), ISP2100_ZFW_OPTIONS(nvram_data));
-#endif
 }
 
 #ifdef	ISP_FW_CRASH_DUMP

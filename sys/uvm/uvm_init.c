@@ -164,7 +164,6 @@ uvm_init(void)
 	 */
 	uvm_anon_init();
 
-#ifndef SMALL_KERNEL
 	/*
 	 * Switch kernel and kmem_map over to a best-fit allocator,
 	 * instead of walking the tree.
@@ -175,5 +174,4 @@ uvm_init(void)
 	uvm_map_set_uaddr(kmem_map, &kmem_map->uaddr_any[3],
 	    uaddr_bestfit_create(vm_map_min(kmem_map),
 	    vm_map_max(kmem_map)));
-#endif /* !SMALL_KERNEL */
 }

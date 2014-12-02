@@ -175,7 +175,6 @@ cpu_amd64speed(int *freq)
 	return (0);
 }
 
-#ifndef SMALL_KERNEL
 void	intelcore_update_sensor(void *args);
 /*
  * Temperature read on the CPU is relative to the maximum
@@ -212,8 +211,6 @@ intelcore_update_sensor(void *args)
 		ci->ci_sensor.flags |= SENSOR_FINVALID;
 	}
 }
-
-#endif
 
 void (*setperf_setup)(struct cpu_info *);
 
@@ -309,7 +306,6 @@ via_nano_setup(struct cpu_info *ci)
 	}
 }
 
-#ifndef SMALL_KERNEL
 void via_update_sensor(void *args);
 void
 via_update_sensor(void *args)
@@ -324,7 +320,6 @@ via_update_sensor(void *args)
 	ci->ci_sensor.value += 273150000;
 	ci->ci_sensor.flags &= ~SENSOR_FINVALID;
 }
-#endif
 
 u_int64_t
 cpu_tsc_freq_ctr(struct cpu_info *ci)
@@ -509,7 +504,6 @@ identifycpu(struct cpu_info *ci)
 
 	x86_print_cacheinfo(ci);
 
-#ifndef SMALL_KERNEL
 	if (ci->ci_flags & CPUF_PRIMARY) {
 		if (pnfeatset > 0x80000007) {
 			CPUID(0x80000007, dummy, dummy, dummy, pnfeatset);
@@ -556,27 +550,22 @@ identifycpu(struct cpu_info *ci)
 		}
 	}
 
-#endif
-
 	if (!strcmp(cpu_vendor, "AuthenticAMD"))
 		amd64_errata(ci);
 
 	if (!strcmp(cpu_vendor, "CentaurHauls")) {
 		ci->cpu_setup = via_nano_setup;
-#ifndef SMALL_KERNEL
 		strlcpy(ci->ci_sensordev.xname, ci->ci_dev->dv_xname,
 		    sizeof(ci->ci_sensordev.xname));
 		ci->ci_sensor.type = SENSOR_TEMP;
 		sensor_task_register(ci, via_update_sensor, 5);
 		sensor_attach(&ci->ci_sensordev, &ci->ci_sensor);
 		sensordev_install(&ci->ci_sensordev);
-#endif
 	}
 
 	cpu_topology(ci);
 }
 
-#ifndef SMALL_KERNEL
 /*
  * Base 2 logarithm of an int. returns 0 for 0 (yeye, I know).
  */
@@ -609,7 +598,6 @@ mask_width(u_int x)
 
 	return (bit);
 }
-#endif
 
 /*
  * Build up cpu topology for given cpu, must run on the core itself.
@@ -617,7 +605,6 @@ mask_width(u_int x)
 void
 cpu_topology(struct cpu_info *ci)
 {
-#ifndef SMALL_KERNEL
 	u_int32_t eax, ebx, ecx, edx;
 	u_int32_t apicid, max_apicid = 0, max_coreid = 0;
 	u_int32_t smt_bits = 0, core_bits, pkg_bits = 0;
@@ -691,7 +678,6 @@ cpu_topology(struct cpu_info *ci)
 	return;
 	/* We can't map, so consider ci_core_id as ci_cpuid */
 no_topology:
-#endif
 	ci->ci_smt_id  = 0;
 	ci->ci_core_id = ci->ci_cpuid;
 	ci->ci_pkg_id  = 0;

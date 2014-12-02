@@ -46,9 +46,7 @@
 #include <uvm/uvm_extern.h>
 
 static
-#ifndef SMALL_KERNEL
 __inline__
-#endif
 long BUCKETINDX(size_t sz)
 {
 	long b, d;
@@ -138,10 +136,8 @@ const long addrmask[] = { 0,
 
 #endif /* DIAGNOSTIC */
 
-#ifndef SMALL_KERNEL
 struct timeval malloc_errintvl = { 5, 0 };
 struct timeval malloc_lasterr;
-#endif
 
 /*
  * Allocate a block of memory
@@ -191,11 +187,9 @@ malloc(size_t size, int type, int flags)
 
 	if (size > 65535 * PAGE_SIZE) {
 		if (flags & M_CANFAIL) {
-#ifndef SMALL_KERNEL
 			if (ratecheck(&malloc_lasterr, &malloc_errintvl))
 				printf("malloc(): allocation too large, "
 				    "type = %d, size = %lu\n", type, size);
-#endif
 			return (NULL);
 		} else
 			panic("malloc: allocation too large, "

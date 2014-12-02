@@ -274,11 +274,9 @@ union amlpci_t {
 int			aml_rdpciaddr(struct aml_node *pcidev,
 			    union amlpci_t *);
 
-#ifndef SMALL_KERNEL
 void			acpi_getdevlist(struct acpi_devlist_head *,
 			    struct aml_node *, struct aml_value *, int);
 void			aml_notify_dev(const char *, int);
-#endif
 
 void			acpi_freedevlist(struct acpi_devlist_head *);
 

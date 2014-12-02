@@ -1448,9 +1448,6 @@ struct coredump_iostate {
 int
 coredump(struct proc *p)
 {
-#ifdef SMALL_KERNEL
-	return EPERM;
-#else
 	struct process *pr = p->p_p;
 	struct vnode *vp;
 	struct ucred *cred = p->p_ucred;
@@ -1561,15 +1558,11 @@ coredump(struct proc *p)
 out:
 	crfree(cred);
 	return (error);
-#endif
 }
 
 int
 coredump_trad(struct proc *p, void *cookie)
 {
-#ifdef SMALL_KERNEL
-	return EPERM;
-#else
 	struct coredump_iostate *io = cookie;
 	struct vmspace *vm = io->io_proc->p_vmspace;
 	struct vnode *vp = io->io_vp;
@@ -1600,10 +1593,8 @@ coredump_trad(struct proc *p, void *cookie)
 	    (int)core.c_hdrsize, (off_t)0,
 	    UIO_SYSSPACE, IO_UNIT, cred, NULL, p);
 	return (error);
-#endif
 }
 
-#ifndef SMALL_KERNEL
 int
 coredump_write(void *cookie, enum uio_seg segflg, const void *data, size_t len)
 {
@@ -1650,7 +1641,6 @@ coredump_unmap(void *cookie, vaddr_t start, vaddr_t end)
 	uvm_unmap(&io->io_proc->p_vmspace->vm_map, start, end);
 }
 
-#endif	/* !SMALL_KERNEL */
 
 /*
  * Nonexistent system call-- signal process (may want to handle it).

@@ -4898,9 +4898,7 @@ uvm_map_setup_md(struct vm_map *map)
 	map->uaddr_any[0] = uaddr_rnd_create(min, max);
 #endif
 
-#ifndef SMALL_KERNEL
 	map->uaddr_brk_stack = uaddr_stack_brk_create(min, max);
-#endif /* !SMALL_KERNEL */
 }
 #elif __LP64__
 void
@@ -4933,9 +4931,7 @@ uvm_map_setup_md(struct vm_map *map)
 	map->uaddr_any[0] = uaddr_rnd_create(min, max);
 #endif
 
-#ifndef SMALL_KERNEL
 	map->uaddr_brk_stack = uaddr_stack_brk_create(min, max);
-#endif /* !SMALL_KERNEL */
 }
 #else	/* non-i386, 32 bit */
 void
@@ -4963,8 +4959,6 @@ uvm_map_setup_md(struct vm_map *map)
 	map->uaddr_any[0] = uaddr_rnd_create(min, max);
 #endif
 
-#ifndef SMALL_KERNEL
 	map->uaddr_brk_stack = uaddr_stack_brk_create(min, max);
-#endif /* !SMALL_KERNEL */
 }
 #endif

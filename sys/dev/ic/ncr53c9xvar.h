@@ -58,9 +58,7 @@
 #include <sys/timeout.h>
 
 /* Set this to 1 for normal debug, or 2 for per-target tracing. */
-#if !defined(SMALL_KERNEL)
 #define NCR53C9X_DEBUG		1
-#endif
 
 /* Wide or differential can have 16 targets */
 #define NCR_NTARG		16

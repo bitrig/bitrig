@@ -151,11 +151,9 @@ int			sr_rw(struct sr_softc *, dev_t, char *, size_t,
 void			sr_wu_done_callback(void *, void *);
 
 /* don't include these on RAMDISK */
-#ifndef SMALL_KERNEL
 void			sr_sensors_refresh(void *);
 int			sr_sensors_create(struct sr_discipline *);
 void			sr_sensors_delete(struct sr_discipline *);
-#endif
 
 /* metadata */
 int			sr_meta_probe(struct sr_discipline *, dev_t *, int);
@@ -1809,11 +1807,9 @@ sr_attach(struct device *parent, struct device *self, void *aux)
 		printf("%s: controller registration failed", DEVNAME(sc));
 #endif /* NBIO > 0 */
 
-#ifndef SMALL_KERNEL
 	strlcpy(sc->sc_sensordev.xname, DEVNAME(sc),
 	    sizeof(sc->sc_sensordev.xname));
 	sensordev_install(&sc->sc_sensordev);
-#endif /* SMALL_KERNEL */
 
 	printf("\n");
 
@@ -1848,11 +1844,9 @@ sr_detach(struct device *self, int flags)
 
 	sr_shutdown();
 
-#ifndef SMALL_KERNEL
 	if (sc->sc_sensor_task != NULL)
 		sensor_task_unregister(sc->sc_sensor_task);
 	sensordev_deinstall(&sc->sc_sensordev);
-#endif /* SMALL_KERNEL */
 
 	if (sc->sc_scsibus != NULL) {
 		rv = config_detach((struct device *)sc->sc_scsibus, flags);
@@ -3533,11 +3527,9 @@ sr_ioctl_createraid(struct sr_softc *sc, struct bioc_createraid *bc,
 		/* Update device name on any roaming chunks. */
 		sr_roam_chunks(sd);
 
-#ifndef SMALL_KERNEL
 		if (sr_sensors_create(sd))
 			sr_warn(sc, "unable to create sensor for %s",
 			    dev->dv_xname);
-#endif /* SMALL_KERNEL */
 	} else {
 		/* This volume does not attach as a system disk. */
 		ch_entry = SLIST_FIRST(cl); /* XXX */
@@ -3889,9 +3881,7 @@ sr_discipline_shutdown(struct sr_discipline *sd, int meta_save)
 		    EWOULDBLOCK)
 			break;
 
-#ifndef SMALL_KERNEL
 	sr_sensors_delete(sd);
-#endif /* SMALL_KERNEL */
 
 	if (sd->sd_target != 0)
 		scsi_detach_lun(sc->sc_scsibus, sd->sd_target, 0, DETACH_FORCE);
@@ -4785,7 +4775,6 @@ fail:
 	dma_free(buf, SR_REBUILD_IO_SIZE << DEV_BSHIFT);
 }
 
-#ifndef SMALL_KERNEL
 int
 sr_sensors_create(struct sr_discipline *sd)
 {
@@ -4859,7 +4848,6 @@ sr_sensors_refresh(void *arg)
 		}
 	}
 }
-#endif /* SMALL_KERNEL */
 
 #ifdef SR_FANCY_STATS
 void				sr_print_stats(void);

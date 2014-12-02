@@ -379,7 +379,6 @@ kern_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
 	  }
 	case KERN_VNODE:
 		return (sysctl_vnode(oldp, oldlenp, p));
-#ifndef SMALL_KERNEL
 	case KERN_PROC:
 		return (sysctl_doproc(name + 1, namelen - 1, oldp, oldlenp));
 	case KERN_PROC_ARGS:
@@ -393,7 +392,6 @@ kern_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
 		     newp, newlen, oldp, oldlenp, p));
 	case KERN_FILE:
 		return (sysctl_file(name + 1, namelen - 1, oldp, oldlenp, p));
-#endif
 	case KERN_MBSTAT:
 		return (sysctl_rdstruct(oldp, oldlenp, newp, &mbstat,
 		    sizeof(mbstat)));
@@ -555,7 +553,6 @@ kern_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
 		return (sysctl_sysvshm(name + 1, namelen - 1, oldp, oldlenp,
 		    newp, newlen));
 #endif
-#ifndef SMALL_KERNEL
 	case KERN_INTRCNT:
 		return (sysctl_intrcnt(name + 1, namelen - 1, oldp, oldlenp));
 	case KERN_WATCHDOG:
@@ -564,17 +561,14 @@ kern_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
 	case KERN_EMUL:
 		return (sysctl_emul(name + 1, namelen - 1, oldp, oldlenp,
 		    newp, newlen));
-#endif
 	case KERN_MAXCLUSTERS:
 		error = sysctl_int(oldp, oldlenp, newp, newlen, &nmbclust);
 		if (!error)
 			nmbclust_update();
 		return (error);
-#ifndef SMALL_KERNEL
 	case KERN_EVCOUNT:
 		return (evcount_sysctl(name + 1, namelen - 1, oldp, oldlenp,
 		    newp, newlen));
-#endif
 	case KERN_TIMECOUNTER:
 		return (sysctl_tc(name + 1, namelen - 1, oldp, oldlenp,
 		    newp, newlen));
@@ -678,11 +672,9 @@ hw_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
 		    disk_count * sizeof(struct diskstats)));
 	case HW_DISKCOUNT:
 		return (sysctl_rdint(oldp, oldlenp, newp, disk_count));
-#ifndef	SMALL_KERNEL
 	case HW_SENSORS:
 		return (sysctl_sensors(name + 1, namelen - 1, oldp, oldlenp,
 		    newp, newlen));
-#endif
 	case HW_CPUSPEED:
 		if (!cpu_cpuspeed)
 			return (EOPNOTSUPP);
@@ -1013,7 +1005,6 @@ sysctl_rdstruct(void *oldp, size_t *oldlenp, void *newp, const void *sp,
 	return (error);
 }
 
-#ifndef SMALL_KERNEL
 void
 fill_file(struct kinfo_file *kf, struct file *fp, struct filedesc *fdp,
 	  int fd, struct vnode *vp, struct process *pr, struct proc *p,
@@ -1893,7 +1884,6 @@ sysctl_proc_nobroadcastkill(int *name, u_int namelen, void *newp, size_t newlen,
 
 	return (error);
 }
-#endif
 
 /*
  * Initialize disknames/diskstats for export by sysctl. If update is set,
@@ -2108,7 +2098,6 @@ sysctl_sysvipc(int *name, u_int namelen, void *where, size_t *sizep)
 }
 #endif /* SYSVMSG || SYSVSEM || SYSVSHM */
 
-#ifndef	SMALL_KERNEL
 
 int
 sysctl_intrcnt(int *name, u_int namelen, void *oldp, size_t *oldlenp)
@@ -2209,7 +2198,6 @@ sysctl_emul(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 	}
 }
 
-#endif	/* SMALL_KERNEL */
 
 int
 sysctl_cptime2(int *name, u_int namelen, void *oldp, size_t *oldlenp,

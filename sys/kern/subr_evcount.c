@@ -53,7 +53,6 @@ evcount_detach(struct evcount *ec)
 	TAILQ_REMOVE(&evcount_list, ec, next);
 }
 
-#ifndef	SMALL_KERNEL
 
 int
 evcount_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
@@ -111,4 +110,3 @@ evcount_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 
 	return (error);
 }
-#endif	/* SMALL_KERNEL */

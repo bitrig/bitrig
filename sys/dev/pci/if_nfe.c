@@ -101,9 +101,7 @@ void	nfe_iff(struct nfe_softc *);
 void	nfe_get_macaddr(struct nfe_softc *, uint8_t *);
 void	nfe_set_macaddr(struct nfe_softc *, const uint8_t *);
 void	nfe_tick(void *);
-#ifndef SMALL_KERNEL
 int	nfe_wol(struct ifnet*, int);
-#endif
 
 struct cfattach nfe_ca = {
 	sizeof (struct nfe_softc), nfe_match, nfe_attach, NULL,
@@ -346,11 +344,9 @@ nfe_attach(struct device *parent, struct device *self, void *aux)
 
 	ifp->if_capabilities = IFCAP_VLAN_MTU;
 
-#ifndef SMALL_KERNEL
 	ifp->if_capabilities |= IFCAP_WOL;
 	ifp->if_wol = nfe_wol;
 	nfe_wol(ifp, 0);
-#endif
 
 	if (sc->sc_flags & NFE_USE_JUMBO)
 		ifp->if_hardmtu = NFE_JUMBO_MTU;
@@ -1801,7 +1797,6 @@ nfe_tick(void *arg)
 	timeout_add_sec(&sc->sc_tick_ch, 1);
 }
 
-#ifndef SMALL_KERNEL
 int
 nfe_wol(struct ifnet *ifp, int enable)
 {
@@ -1817,4 +1812,3 @@ nfe_wol(struct ifnet *ifp, int enable)
 
 	return 0;
 }
-#endif

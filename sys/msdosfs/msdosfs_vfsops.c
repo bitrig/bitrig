@@ -452,11 +452,9 @@ msdosfs_mountfs(struct vnode *devvp, struct mount *mp, struct proc *p,
 	fat_max_clusters = pmp->pm_fatsize / pmp->pm_fatmult;
 	fat_max_clusters *= pmp->pm_fatdiv;
 	if (pmp->pm_maxcluster >= fat_max_clusters) {
-#ifndef SMALL_KERNEL
 		printf("msdosfs: reducing max cluster to %d from %d "
 		    "due to FAT size\n", fat_max_clusters - 1,
 		    pmp->pm_maxcluster);
-#endif
 		pmp->pm_maxcluster = fat_max_clusters - 1;
 	}
 

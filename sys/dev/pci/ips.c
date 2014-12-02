@@ -441,9 +441,7 @@ int	ips_ioctl_disk(struct ips_softc *, struct bioc_disk *);
 int	ips_ioctl_setstate(struct ips_softc *, struct bioc_setstate *);
 #endif
 
-#ifndef SMALL_KERNEL
 void	ips_sensors(void *);
-#endif
 
 int	ips_load_xs(struct ips_softc *, struct ips_ccb *, struct scsi_xfer *);
 void	ips_start_xs(struct ips_softc *, struct ips_ccb *, struct scsi_xfer *);
@@ -794,7 +792,6 @@ ips_attach(struct device *parent, struct device *self, void *aux)
 		printf("%s: no ioctl support\n", sc->sc_dev.dv_xname);
 #endif
 
-#ifndef SMALL_KERNEL
 	/* Add sensors */
 	if ((sc->sc_sensors = mallocarray(sc->sc_nunits, sizeof(struct ksensor),
 	    M_DEVBUF, M_NOWAIT | M_ZERO)) == NULL) {
@@ -819,7 +816,6 @@ ips_attach(struct device *parent, struct device *self, void *aux)
 		return;
 	}
 	sensordev_install(&sc->sc_sensordev);
-#endif	/* !SMALL_KERNEL */
 
 	return;
 fail5:
@@ -1283,7 +1279,6 @@ ips_ioctl_setstate(struct ips_softc *sc, struct bioc_setstate *bs)
 }
 #endif	/* NBIO > 0 */
 
-#ifndef SMALL_KERNEL
 void
 ips_sensors(void *arg)
 {
@@ -1328,7 +1323,6 @@ ips_sensors(void *arg)
 	}
 	DPRINTF(IPS_D_INFO, ("\n"));
 }
-#endif	/* !SMALL_KERNEL */
 
 int
 ips_load_xs(struct ips_softc *sc, struct ips_ccb *ccb, struct scsi_xfer *xs)

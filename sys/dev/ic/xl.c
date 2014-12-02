@@ -188,10 +188,8 @@ void xl_testpacket(struct xl_softc *);
 int xl_miibus_readreg(struct device *, int, int);
 void xl_miibus_writereg(struct device *, int, int, int);
 void xl_miibus_statchg(struct device *);
-#ifndef SMALL_KERNEL
 int xl_wol(struct ifnet *, int);
 void xl_wol_power(struct xl_softc *);
-#endif
 
 int
 xl_activate(struct device *self, int act)
@@ -215,9 +213,7 @@ xl_activate(struct device *self, int act)
 		break;
 	case DVACT_POWERDOWN:
 		rv = config_activate_children(self, act);
-#ifndef SMALL_KERNEL
 		xl_wol_power(sc);
-#endif
 		break;
 	default:
 		rv = config_activate_children(self, act);
@@ -2370,7 +2366,6 @@ xl_stop(struct xl_softc *sc)
 	xl_freetxrx(sc);
 }
 
-#ifndef SMALL_KERNEL
 void
 xl_wol_power(struct xl_softc *sc)
 {
@@ -2381,7 +2376,6 @@ xl_wol_power(struct xl_softc *sc)
 		sc->wol_power(sc->wol_power_arg);
 	}
 }
-#endif
 
 void
 xl_attach(struct xl_softc *sc)
@@ -2650,14 +2644,12 @@ xl_attach(struct xl_softc *sc)
 		CSR_WRITE_2(sc, XL_W0_MFG_ID, XL_NO_XCVR_PWR_MAGICBITS);
 	}
 
-#ifndef SMALL_KERNEL
 	/* Check availability of WOL. */
 	if ((sc->xl_caps & XL_CAPS_PWRMGMT) != 0) {
 		ifp->if_capabilities |= IFCAP_WOL;
 		ifp->if_wol = xl_wol;
 		xl_wol(ifp, 0);
 	}
-#endif
 
 	/*
 	 * Call MI attach routines.
@@ -2690,7 +2682,6 @@ xl_detach(struct xl_softc *sc)
 	return (0);
 }
 
-#ifndef SMALL_KERNEL
 int
 xl_wol(struct ifnet *ifp, int enable)
 {
@@ -2708,7 +2699,6 @@ xl_wol(struct ifnet *ifp, int enable)
 	}
 	return (0);	
 }
-#endif
 
 struct cfdriver xl_cd = {
 	0, "xl", DV_IFNET

@@ -161,10 +161,8 @@ int		ami_ioctl_disk(struct ami_softc *, struct bioc_disk *);
 int		ami_ioctl_alarm(struct ami_softc *, struct bioc_alarm *);
 int		ami_ioctl_setstate(struct ami_softc *, struct bioc_setstate *);
 
-#ifndef SMALL_KERNEL
 int		ami_create_sensors(struct ami_softc *);
 void		ami_refresh_sensors(void *);
-#endif
 #endif /* NBIO > 0 */
 
 #define DEVNAME(_s)	((_s)->sc_dev.dv_xname)
@@ -560,10 +558,8 @@ ami_attach(struct ami_softc *sc)
 	else
 		sc->sc_ioctl = ami_ioctl;
 
-#ifndef SMALL_KERNEL
 	if (ami_create_sensors(sc) != 0)
 		printf("%s: unable to create sensors\n", DEVNAME(sc));
-#endif
 #endif
 
 	rsc = mallocarray(sc->sc_channels, sizeof(struct ami_rawsoftc),
@@ -2386,7 +2382,6 @@ done:
 	return (error);
 }
 
-#ifndef SMALL_KERNEL
 int
 ami_create_sensors(struct ami_softc *sc)
 {
@@ -2489,7 +2484,6 @@ ami_refresh_sensors(void *arg)
 		}
 	}
 }
-#endif /* SMALL_KERNEL */
 #endif /* NBIO > 0 */
 
 #ifdef AMI_DEBUG

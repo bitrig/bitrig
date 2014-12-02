@@ -39,7 +39,6 @@
 #include <dev/rasops/rasops.h>
 
 int 	rasops8_putchar(void *, int, int, u_int, long attr);
-#ifndef RASOPS_SMALL
 int 	rasops8_putchar8(void *, int, int, u_int, long attr);
 int 	rasops8_putchar12(void *, int, int, u_int, long attr);
 int 	rasops8_putchar16(void *, int, int, u_int, long attr);
@@ -51,7 +50,6 @@ void	rasops8_makestamp(struct rasops_info *ri, long);
 static int32_t	stamp[16];
 static long	stamp_attr;
 static int	stamp_mutex;	/* XXX see note in README */
-#endif
 
 /*
  * XXX this confuses the hell out of gcc2 (not egcs) which always insists
@@ -72,7 +70,6 @@ rasops8_init(struct rasops_info *ri)
 {
 
 	switch (ri->ri_font->fontwidth) {
-#ifndef RASOPS_SMALL
 	case 8:
 		ri->ri_ops.putchar = rasops8_putchar8;
 		break;
@@ -82,7 +79,6 @@ rasops8_init(struct rasops_info *ri)
 	case 16:
 		ri->ri_ops.putchar = rasops8_putchar16;
 		break;
-#endif /* !RASOPS_SMALL */
 	default:
 		ri->ri_ops.putchar = rasops8_putchar;
 		break;
@@ -157,7 +153,6 @@ rasops8_putchar(void *cookie, int row, int col, u_int uc, long attr)
 	return 0;
 }
 
-#ifndef RASOPS_SMALL
 /*
  * Recompute the 4x1 blitting stamp.
  */
@@ -396,4 +391,3 @@ rasops8_putchar16(void *cookie, int row, int col, u_int uc, long attr)
 
 	return 0;
 }
-#endif /* !RASOPS_SMALL */

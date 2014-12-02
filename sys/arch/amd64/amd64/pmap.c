@@ -701,8 +701,7 @@ pmap_bootstrap(paddr_t first_avail, paddr_t max_pa)
 	idt_paddr = first_avail;			/* steal a page */
 	first_avail += 2 * PAGE_SIZE;
 
-#if defined(MULTIPROCESSOR) || \
-    (NACPI > 0 && !defined(SMALL_KERNEL))
+#if defined(MULTIPROCESSOR) || NACPI > 0
 	/*
 	 * Grab a page below 4G for things that need it (i.e.
 	 * having an initial %cr3 for the MP trampoline).

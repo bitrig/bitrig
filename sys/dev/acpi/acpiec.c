@@ -301,10 +301,8 @@ acpiec_attach(struct device *parent, struct device *self, void *aux)
 
 	dnprintf(10, "%s: GPE: %d\n", DEVNAME(sc), sc->sc_gpe);
 
-#ifndef SMALL_KERNEL
 	acpi_set_gpehandler(sc->sc_acpi, sc->sc_gpe, acpiec_gpehandler,
 	    sc, 1);
-#endif
 	
 	if (aml_evalname(sc->sc_acpi, sc->sc_devnode, "_GLK", 0, NULL, &res))
 		sc->sc_glk = 0;

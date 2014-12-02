@@ -51,12 +51,8 @@
 #ifndef _AIC7XXX_INLINE_H_
 #define _AIC7XXX_INLINE_H_
 
-#ifdef SMALL_KERNEL
-#define	IO_INLINE
-#else
 #define	IO_INLINE	static __inline
 #define	IO_EXPAND
-#endif
 
 /************************* Sequencer Execution Control ************************/
 IO_INLINE void ahc_pause_bug_fix(struct ahc_softc *ahc);

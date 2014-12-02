@@ -96,16 +96,13 @@
 /*
  * Make sure we always have at least one font.
  * Sparc, sparc64 always provide a 8x16 font and a larger 12x22 font.
- * Other platforms also provide both, but the 12x22 font is omitted if
- * option SMALL_KERNEL.
+ * Other platforms also provide both.
  */
 #ifndef HAVE_FONT
 #define HAVE_FONT 1
 
 #define	FONT_BOLD8x16_ISO1
-#if defined(__sparc__) || defined(__sparc64__) || defined(__luna88k__) || !defined(SMALL_KERNEL)
 #define	FONT_GALLANT12x22
-#endif
 
 #endif	/* HAVE_FONT */
 
@@ -167,7 +164,6 @@ static struct font builtin_fonts[] = {
 #undef BUILTIN_FONT
 };
 
-#if !defined(SMALL_KERNEL) || defined(__alpha__)
 
 /* Reverse the bit order in a byte */
 static const u_char reverse[256] = {
@@ -205,11 +201,9 @@ static const u_char reverse[256] = {
 	0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff,
 };
 
-#endif
 
 static struct font *wsfont_find0(int);
 
-#if !defined(SMALL_KERNEL) || defined(__alpha__)
 
 /*
  * Reverse the bit order of a font
@@ -227,9 +221,7 @@ wsfont_revbit(struct wsdisplay_font *font)
 		*p = reverse[*p];
 }
 
-#endif
 
-#if !defined(SMALL_KERNEL)
 
 /*
  * Reverse the byte order of a font
@@ -262,7 +254,6 @@ wsfont_revbyte(struct wsdisplay_font *font)
 	}
 }
 
-#endif
 
 /*
  * Enumerate the list of fonts
@@ -532,31 +523,21 @@ wsfont_lock(int cookie, struct wsdisplay_font **ptr, int bitorder,
 
 	if ((ent = wsfont_find0(cookie)) != NULL) {
 		if (bitorder && bitorder != ent->font->bitorder) {
-#if !defined(SMALL_KERNEL) || defined(__alpha__)
 			if (ent->lockcount) {
 				splx(s);
 				return (-1);
 			}
 			wsfont_revbit(ent->font);
 			ent->font->bitorder = bitorder;
-#else
-			splx(s);
-			return (-1);
-#endif
 		}
 
 		if (byteorder && byteorder != ent->font->byteorder) {
-#if !defined(SMALL_KERNEL)
 			if (ent->lockcount) {
 				splx(s);
 				return (-1);
 			}
 			wsfont_revbyte(ent->font);
 			ent->font->byteorder = byteorder;
-#else
-			splx(s);
-			return (-1);
-#endif
 		}
 
 		lc = ++ent->lockcount;
@@ -590,7 +571,6 @@ wsfont_unlock(int cookie)
 	return (lc);
 }
 
-#if !defined(SMALL_KERNEL)
 
 /*
  * Unicode to font encoding mappings
@@ -710,7 +690,6 @@ static struct wsfont_level1_glyphmap encodings[] = {
 	{ ibm437_level1, 0, nitems(ibm437_level1) }
 };
 
-#endif	/* !SMALL_KERNEL */
 
 /*
  * Remap Unicode character to glyph
@@ -721,7 +700,6 @@ wsfont_map_unichar(struct wsdisplay_font *font, int c)
 	if (font->encoding == WSDISPLAY_FONTENC_ISO)
 		return (c);
 
-#if !defined(SMALL_KERNEL)
 	if (font->encoding >= 0 && font->encoding < nitems(encodings)) {
 		int hi = (c >> 8), lo = c & 255;
 		struct wsfont_level1_glyphmap *map1 =
@@ -752,7 +730,6 @@ wsfont_map_unichar(struct wsdisplay_font *font, int c)
 			}
 		}
 	}
-#endif	/* !SMALL_KERNEL */
 
 	return (-1);
 }

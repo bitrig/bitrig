@@ -317,11 +317,9 @@ thinkpad_hotkey(struct aml_node *node, int notify_type, void *arg)
 			handled = 1;
 			break;
 		case THINKPAD_BUTTON_SUSPEND:
-#ifndef SMALL_KERNEL
 			if (acpi_record_event(sc->sc_acpi, APM_USER_SUSPEND_REQ))
 				acpi_addtask(sc->sc_acpi, acpi_sleep_task, 
 				    sc->sc_acpi, ACPI_STATE_S3);
-#endif
 			handled = 1;
 			break;
 		case THINKPAD_BUTTON_VOLUME_MUTE:
@@ -343,10 +341,8 @@ thinkpad_hotkey(struct aml_node *node, int notify_type, void *arg)
 			handled = 1;
 			break;
 		case THINKPAD_BUTTON_HIBERNATE:
-#ifndef SMALL_KERNEL
 			acpi_addtask(sc->sc_acpi, acpi_sleep_task, 
 			    sc->sc_acpi, ACPI_STATE_S4);
-#endif
 			handled = 1;
 			break;
 		case THINKPAD_ADAPTIVE_NEXT:

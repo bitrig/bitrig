@@ -110,9 +110,7 @@
  * kernel debugger.  If you set AIC_DEBUG to 0 they are not included (the
  * kernel uses less memory) but you lose the debugging facilities.
  */
-#ifndef SMALL_KERNEL
 #define AIC_DEBUG		1
-#endif
 
 #define	AIC_ABORT_TIMEOUT	2000	/* time to wait for abort */
 

@@ -55,11 +55,9 @@
 
 #include <dev/usb/uhidev.h>
 
-#ifndef SMALL_KERNEL
 /* Replacement report descriptors for devices shipped with broken ones */
 #include <dev/usb/uhid_rdesc.h>
 int uhidev_use_rdesc(struct uhidev_softc *, int, int, void **, int *);
-#endif /* !SMALL_KERNEL */
 
 #define DEVNAME(sc)		((sc)->sc_dev.dv_xname)
 
@@ -103,12 +101,10 @@ uhidev_match(struct device *parent, void *match, void *aux)
 	id = usbd_get_interface_descriptor(uaa->iface);
 	if (id == NULL)
 		return (UMATCH_NONE);
-#ifndef SMALL_KERNEL
 	if (uaa->vendor == USB_VENDOR_MICROSOFT &&
 	    uaa->product == USB_PRODUCT_MICROSOFT_XBOX360_CONTROLLER &&
 	    id->bInterfaceNumber == 0)
 		return (UMATCH_VENDOR_PRODUCT);
-#endif /* !SMALL_KERNEL */
 	if (id->bInterfaceClass != UICLASS_HID)
 		return (UMATCH_NONE);
 	if (usbd_get_quirks(uaa->device)->uq_flags & UQ_BAD_HID)
@@ -176,10 +172,8 @@ uhidev_attach(struct device *parent, struct device *self, void *aux)
 		return;
 	}
 
-#ifndef SMALL_KERNEL
 	if (uhidev_use_rdesc(sc, uaa->vendor, uaa->product, &desc, &size))
 		return;
-#endif /* !SMALL_KERNEL */
 
 	if (desc == NULL) {
 		struct usb_hid_descriptor *hid;
@@ -259,7 +253,6 @@ uhidev_attach(struct device *parent, struct device *self, void *aux)
 	}
 }
 
-#ifndef SMALL_KERNEL
 int
 uhidev_use_rdesc(struct uhidev_softc *sc, int vendor, int product,
     void **descp, int *sizep)
@@ -308,7 +301,6 @@ uhidev_use_rdesc(struct uhidev_softc *sc, int vendor, int product,
 
 	return (0);
 }
-#endif /* !SMALL_KERNEL */
 
 int
 uhidev_maxrepid(void *buf, int len)

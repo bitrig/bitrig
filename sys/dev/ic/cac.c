@@ -123,10 +123,8 @@ void	cac_l0_submit(struct cac_softc *, struct cac_ccb *);
 int	cac_ioctl(struct device *, u_long, caddr_t);
 int	cac_ioctl_vol(struct cac_softc *, struct bioc_vol *);
 
-#ifndef SMALL_KERNEL
 int	cac_create_sensors(struct cac_softc *);
 void	cac_sensor_refresh(void *);
-#endif
 #endif /* NBIO > 0 */
 
 const
@@ -261,10 +259,8 @@ cac_init(struct cac_softc *sc, int startfw)
 	else
 		sc->sc_ioctl = cac_ioctl;
 
-#ifndef SMALL_KERNEL
 	if (cac_create_sensors(sc) != 0)
 		printf("%s: unable to create sensors\n", sc->sc_dv.dv_xname);
-#endif
 #endif
 
 
@@ -888,7 +884,6 @@ cac_ioctl_vol(struct cac_softc *sc, struct bioc_vol *bv)
 	return (0);
 }
 
-#ifndef SMALL_KERNEL
 int
 cac_create_sensors(struct cac_softc *sc)
 {
@@ -996,5 +991,4 @@ cac_sensor_refresh(void *arg)
 		}
 	}
 }
-#endif /* SMALL_KERNEL */
 #endif /* NBIO > 0 */

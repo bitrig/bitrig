@@ -292,7 +292,6 @@ wi_attach(struct wi_softc *sc, struct wi_funcs *funcs)
 		else
 			sc->wi_cmd_count = 2000;
 		if (sc->sc_sta_firmware_ver >= 800) {
-#ifndef SMALL_KERNEL
 			/*
 			 * USB hostap is more pain than it is worth
 			 * for now, things would have to be overhauled
@@ -300,7 +299,6 @@ wi_attach(struct wi_softc *sc, struct wi_funcs *funcs)
 			if ((sc->sc_sta_firmware_ver != 10402) &&
 			    (!(sc->wi_flags & WI_FLAGS_BUS_USB)))
 				sc->wi_flags |= WI_FLAGS_HAS_HOSTAP;
-#endif
 			sc->wi_flags |= WI_FLAGS_HAS_IBSS;
 			sc->wi_flags |= WI_FLAGS_HAS_CREATE_IBSS;
 		}

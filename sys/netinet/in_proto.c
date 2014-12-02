@@ -106,9 +106,7 @@
 #include <net/if.h>
 #include <net/route.h>
 #include <net/radix.h>
-#ifndef SMALL_KERNEL
 #include <net/radix_mpath.h>
-#endif
 
 #include <netinet/in.h>
 #include <netinet/ip.h>
@@ -315,9 +313,5 @@ struct protosw inetsw[] = {
 struct domain inetdomain =
     { AF_INET, "internet", 0, 0, 0,
       inetsw, &inetsw[nitems(inetsw)], 0,
-#ifndef SMALL_KERNEL
       rn_mpath_inithead,
-#else
-      rn_inithead,
-#endif
       32, sizeof(struct sockaddr_in) };

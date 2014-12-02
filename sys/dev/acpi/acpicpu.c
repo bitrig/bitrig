@@ -317,7 +317,7 @@ acpicpu_add_cstatepkg(struct aml_value *val, void *arg)
 {
 	struct acpicpu_softc	*sc = arg;
 
-#if defined(ACPI_DEBUG) && !defined(SMALL_KERNEL)
+#if defined(ACPI_DEBUG)
 	aml_showvalue(val, 0);
 #endif
 	if (val->type != AML_OBJTYPE_PACKAGE || val->length != 4)

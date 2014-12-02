@@ -117,11 +117,9 @@ int		mfi_ioctl_alarm(struct mfi_softc *, struct bioc_alarm *);
 int		mfi_ioctl_blink(struct mfi_softc *sc, struct bioc_blink *);
 int		mfi_ioctl_setstate(struct mfi_softc *, struct bioc_setstate *);
 int		mfi_bio_hs(struct mfi_softc *, int, int, void *);
-#ifndef SMALL_KERNEL
 int		mfi_create_sensors(struct mfi_softc *);
 void		mfi_refresh_sensors(void *);
 int		mfi_bbu(struct mfi_softc *);
-#endif /* SMALL_KERNEL */
 #endif /* NBIO > 0 */
 
 void		mfi_start(struct mfi_softc *, struct mfi_ccb *);
@@ -800,10 +798,8 @@ mfi_attach(struct mfi_softc *sc, enum mfi_iop iop)
 	else
 		sc->sc_ioctl = mfi_ioctl;
 
-#ifndef SMALL_KERNEL
 	if (mfi_create_sensors(sc) != 0)
 		printf("%s: unable to create sensors\n", DEVNAME(sc));
-#endif
 #endif /* NBIO > 0 */
 
 	return (0);
@@ -2030,7 +2026,6 @@ freeme:
 	return (rv);
 }
 
-#ifndef SMALL_KERNEL
 
 static const char *mfi_bbu_indicators[] = {
 	"pack missing",
@@ -2244,7 +2239,6 @@ mfi_refresh_sensors(void *arg)
 		}
 	}
 }
-#endif /* SMALL_KERNEL */
 #endif /* NBIO > 0 */
 
 void

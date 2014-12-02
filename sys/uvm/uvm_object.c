@@ -55,7 +55,6 @@ uvm_objinit(struct uvm_object *uobj, struct uvm_pagerops *pgops, int refs)
 	uobj->uo_refs = refs;
 }
 
-#ifndef SMALL_KERNEL
 /*
  * uvm_objwire: wire the pages of entire uobj
  *
@@ -170,4 +169,3 @@ uvm_objunwire(struct uvm_object *uobj, voff_t start, voff_t end)
 	uvm_unlock_pageq();
 	mtx_leave(&uobj->vmobjlock);
 }
-#endif /* !SMALL_KERNEL */

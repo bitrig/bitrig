@@ -364,11 +364,9 @@ int		mpii_bio_disk(struct mpii_softc *, struct bioc_disk *,
 		    u_int8_t);
 struct mpii_device *
 		mpii_find_vol(struct mpii_softc *, int);
-#ifndef SMALL_KERNEL
  int		mpii_bio_volstate(struct mpii_softc *, struct bioc_vol *);
 int		mpii_create_sensors(struct mpii_softc *);
 void		mpii_refresh_sensors(void *);
-#endif /* SMALL_KERNEL */
 #endif /* NBIO > 0 */
 
 #define DEVNAME(s)		((s)->sc_dev.dv_xname)
@@ -599,10 +597,8 @@ mpii_attach(struct device *parent, struct device *self, void *aux)
 		else
 			sc->sc_ioctl = mpii_ioctl;
 
-#ifndef SMALL_KERNEL
 		if (mpii_create_sensors(sc) != 0)
 			printf("%s: unable to create sensors\n", DEVNAME(sc));
-#endif
 	}
 #endif
 
@@ -3455,7 +3451,6 @@ mpii_find_vol(struct mpii_softc *sc, int volid)
 	return (NULL);
 }
 
-#ifndef SMALL_KERNEL
 /*
  * Non-sleeping lightweight version of the mpii_ioctl_vol
  */
@@ -3606,5 +3601,4 @@ mpii_refresh_sensors(void *arg)
 		}
 	}
 }
-#endif /* SMALL_KERNEL */
 #endif /* NBIO > 0 */

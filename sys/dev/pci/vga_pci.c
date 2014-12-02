@@ -117,7 +117,7 @@ int	vesafb_putcmap(struct vga_pci_softc *, struct wsdisplay_cmap *);
 int	vesafb_getcmap(struct vga_pci_softc *, struct wsdisplay_cmap *);
 #endif
 
-#if !defined(SMALL_KERNEL) && NACPI > 0
+#if NACPI > 0
 void	vga_save_state(struct vga_pci_softc *);
 void	vga_restore_state(struct vga_pci_softc *);
 #endif
@@ -137,7 +137,7 @@ struct cfattach vga_pci_ca = {
 	NULL, vga_pci_activate
 };
 
-#if !defined(SMALL_KERNEL) && NACPI > 0
+#if NACPI > 0
 int vga_pci_do_post;
 
 struct vga_device_description {
@@ -204,7 +204,7 @@ vga_pci_attach(struct device *parent, struct device *self, void *aux)
 	struct pci_attach_args *pa = aux;
 	pcireg_t reg;
 	struct vga_pci_softc *sc = (struct vga_pci_softc *)self;
-#if !defined(SMALL_KERNEL) && NACPI > 0
+#if NACPI > 0
 	int prod, vend, subid, subprod, subvend, i;
 #endif
 
@@ -230,7 +230,7 @@ vga_pci_attach(struct device *parent, struct device *self, void *aux)
 
 	vga_pci_bar_init(sc, pa);
 
-#if !defined(SMALL_KERNEL) && NACPI > 0
+#if NACPI > 0
 
 #ifdef X86EMU
 	if ((sc->sc_posth = vga_post_init(pa->pa_bus, pa->pa_device,
@@ -281,14 +281,14 @@ vga_pci_activate(struct device *self, int act)
 {
 	int rv = 0;
 
-#if !defined(SMALL_KERNEL) && NACPI > 0
+#if NACPI > 0
 	struct vga_pci_softc *sc = (struct vga_pci_softc *)self;
 #endif
 
 	switch (act) {
 	case DVACT_SUSPEND:
 		rv = config_activate_children(self, act);
-#if !defined(SMALL_KERNEL) && NACPI > 0
+#if NACPI > 0
 		/*
 		 * Save the common vga state. This should theoretically only
 		 * be necessary if we intend to POST, but it is preferrable
@@ -299,7 +299,7 @@ vga_pci_activate(struct device *self, int act)
 #endif
 		break;
 	case DVACT_RESUME:
-#if !defined(SMALL_KERNEL) && NACPI > 0
+#if NACPI > 0
 #if defined (X86EMU)
 		if (vga_pci_do_post)
 			vga_post_call(sc->sc_posth);
@@ -456,7 +456,7 @@ vga_pci_ioctl(void *v, u_long cmd, caddr_t addr, int flag, struct proc *pb)
 	return (error);
 }
 
-#if !defined(SMALL_KERNEL) && NACPI > 0
+#if NACPI > 0
 void
 vga_save_state(struct vga_pci_softc *sc)
 {

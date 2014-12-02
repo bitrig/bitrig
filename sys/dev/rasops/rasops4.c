@@ -44,7 +44,6 @@ int	rasops4_copycols(void *, int, int, int, int);
 int	rasops4_erasecols(void *, int, int, int, long);
 int	rasops4_do_cursor(struct rasops_info *);
 int	rasops4_putchar(void *, int, int col, u_int, long);
-#ifndef RASOPS_SMALL
 int	rasops4_putchar8(void *, int, int col, u_int, long);
 int	rasops4_putchar12(void *, int, int col, u_int, long);
 int	rasops4_putchar16(void *, int, int col, u_int, long);
@@ -56,7 +55,6 @@ void	rasops4_makestamp(struct rasops_info *, long);
 static u_int16_t	stamp[16];
 static long	stamp_attr;
 static int	stamp_mutex;	/* XXX see note in README */
-#endif
 
 /*
  * Initialize rasops_info struct for this colordepth.
@@ -67,7 +65,6 @@ rasops4_init(struct rasops_info *ri)
 	rasops_masks_init();
 
 	switch (ri->ri_font->fontwidth) {
-#ifndef RASOPS_SMALL
 	case 8:
 		ri->ri_ops.putchar = rasops4_putchar8;
 		break;
@@ -77,9 +74,8 @@ rasops4_init(struct rasops_info *ri)
 	case 16:
 		ri->ri_ops.putchar = rasops4_putchar16;
 		break;
-#endif	/* !RASOPS_SMALL */
 	default:
-		panic("fontwidth not 8/12/16 or RASOPS_SMALL - fixme!");
+		panic("fontwidth not 8/12/16 - fixme!");
 		ri->ri_ops.putchar = rasops4_putchar;
 		break;
 	}
@@ -216,7 +212,6 @@ rasops4_putchar(void *cookie, int row, int col, u_int uc, long attr)
 	return (EAGAIN);
 }
 
-#ifndef RASOPS_SMALL
 /*
  * Recompute the blitting stamp.
  */
@@ -468,7 +463,6 @@ rasops4_putchar16(void *cookie, int row, int col, u_int uc, long attr)
 
 	return 0;
 }
-#endif	/* !RASOPS_SMALL */
 
 /*
  * Grab routines common to depths where (bpp < 8)

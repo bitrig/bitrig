@@ -193,7 +193,6 @@ struct glxpcib_softc {
 
 	uint64_t 		sc_msrsave[nitems(glxpcib_msrlist)];
 
-#ifndef SMALL_KERNEL
 #if NGPIO > 0
 	/* GPIO interface */
 	bus_space_tag_t		sc_gpio_iot;
@@ -210,7 +209,6 @@ struct glxpcib_softc {
 	/* Watchdog */
 	int			sc_wdog;
 	int			sc_wdog_period;
-#endif
 };
 
 struct cfdriver glxpcib_cd = {
@@ -231,7 +229,6 @@ void	pcibattach(struct device *parent, struct device *self, void *aux);
 
 u_int	glxpcib_get_timecount(struct timecounter *tc);
 
-#ifndef SMALL_KERNEL
 int     glxpcib_wdogctl_cb(void *, int);
 #if NGPIO > 0
 void	glxpcib_gpio_pin_ctl(void *, int, int);
@@ -248,7 +245,6 @@ int	glxpcib_smb_read_byte(void *, uint8_t *, int);
 int	glxpcib_smb_write_byte(void *, uint8_t, int);
 void	glxpcib_smb_reset(struct glxpcib_softc *);
 int	glxpcib_smb_wait(struct glxpcib_softc *, int, int);
-#endif
 
 const struct pci_matchid glxpcib_devices[] = {
 	{ PCI_VENDOR_AMD,	PCI_PRODUCT_AMD_CS5536_PCIB }
@@ -271,7 +267,6 @@ glxpcib_attach(struct device *parent, struct device *self, void *aux)
 {
 	struct glxpcib_softc *sc = (struct glxpcib_softc *)self;
 	struct timecounter *tc = &sc->sc_timecounter;
-#ifndef SMALL_KERNEL
 	struct pci_attach_args *pa = (struct pci_attach_args *)aux;
 	u_int64_t wa;
 #if NGPIO > 0
@@ -283,7 +278,6 @@ glxpcib_attach(struct device *parent, struct device *self, void *aux)
 	struct i2cbus_attach_args iba;
 	int i2c = 0;
 	bus_space_handle_t tmpioh;
-#endif
 	tc->tc_get_timecount = glxpcib_get_timecount;
 	tc->tc_counter_mask = 0xffffffff;
 	tc->tc_frequency = 3579545;
@@ -300,7 +294,6 @@ glxpcib_attach(struct device *parent, struct device *self, void *aux)
 	    (int)rdmsr(AMD5536_REV) & AMD5536_REV_MASK,
 	    tc->tc_frequency);
 
-#ifndef SMALL_KERNEL
 	/* Attach the watchdog timer */
 	sc->sc_iot = pa->pa_iot;
 	wa = rdmsr(MSR_LBAR_MFGPT);
@@ -407,51 +400,40 @@ glxpcib_attach(struct device *parent, struct device *self, void *aux)
 		    BUS_SPACE_BARRIER_READ | BUS_SPACE_BARRIER_WRITE);
 		bus_space_unmap(pa->pa_iot, tmpioh, MSR_PMS_SIZE);
 	}
-#endif /* SMALL_KERNEL */
 	pcibattach(parent, self, aux);
 
-#ifndef SMALL_KERNEL
 #if NGPIO > 0
 	if (gpio)
 		config_found(&sc->sc_dev, &gba, gpiobus_print);
 #endif
 	if (i2c)
 		config_found(&sc->sc_dev, &iba, iicbus_print);
-#endif
 }
 
 int
 glxpcib_activate(struct device *self, int act)
 {
-#ifndef SMALL_KERNEL
 	struct glxpcib_softc *sc = (struct glxpcib_softc *)self;
 	uint i;
-#endif
 	int rv = 0;
 
 	switch (act) {
 	case DVACT_SUSPEND:
-#ifndef SMALL_KERNEL
 		if (sc->sc_wdog) {
 			sc->sc_wdog_period = bus_space_read_2(sc->sc_iot,
 			    sc->sc_ioh, AMD5536_MFGPT0_CMP2);
 			glxpcib_wdogctl_cb(sc, 0);
 		}
-#endif
 		rv = config_activate_children(self, act);
-#ifndef SMALL_KERNEL
 		for (i = 0; i < nitems(glxpcib_msrlist); i++)
 			sc->sc_msrsave[i] = rdmsr(glxpcib_msrlist[i]);
-#endif
 
 		break;
 	case DVACT_RESUME:
-#ifndef SMALL_KERNEL
 		if (sc->sc_wdog)
 			glxpcib_wdogctl_cb(sc, sc->sc_wdog_period);
 		for (i = 0; i < nitems(glxpcib_msrlist); i++)
 			wrmsr(glxpcib_msrlist[i], sc->sc_msrsave[i]);
-#endif
 		rv = config_activate_children(self, act);
 		break;
 	default:
@@ -467,7 +449,6 @@ glxpcib_get_timecount(struct timecounter *tc)
         return rdmsr(AMD5536_TMC);
 }
 
-#ifndef SMALL_KERNEL
 int
 glxpcib_wdogctl_cb(void *v, int period)
 {
@@ -776,4 +757,3 @@ glxpcib_smb_wait(struct glxpcib_softc *sc, int bits, int flags)
 	}
 	return (0);
 }
-#endif /* SMALL_KERNEL */

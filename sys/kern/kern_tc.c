@@ -329,9 +329,7 @@ void
 tc_setclock(struct timespec *ts)
 {
 	struct bintime bt, bt2;
-#ifndef SMALL_KERNEL
 	long long adj_ticks;
-#endif
 
 	/*
 	 * When we're called for the first time, during boot when
@@ -353,7 +351,6 @@ tc_setclock(struct timespec *ts)
 	/* XXX fiddle all the little crinkly bits around the fiords... */
 	tc_windup();
 
-#ifndef SMALL_KERNEL
 	/* convert the bintime to ticks */
 	bintime_sub(&bt, &bt2);
 	bintime_add(&naptime, &bt);
@@ -364,7 +361,6 @@ tc_setclock(struct timespec *ts)
 			adj_ticks = INT_MAX;
 		timeout_adjust_ticks(adj_ticks);
 	}
-#endif
 }
 
 /*

@@ -180,17 +180,14 @@ int
 acpibtn_notify(struct aml_node *node, int notify_type, void *arg)
 {
 	struct acpibtn_softc	*sc = arg;
-#ifndef SMALL_KERNEL
 	extern int lid_suspend;
 	int64_t lid;
-#endif
 
 	dnprintf(10, "acpibtn_notify: %.2x %s\n", notify_type,
 	    sc->sc_devnode->name);
 
 	switch (sc->sc_btn_type) {
 	case ACPIBTN_LID:
-#ifndef SMALL_KERNEL
 		/*
 		 * Notification of 0x80 for lid opens or closes.  We
 		 * need to check the current status by calling the
@@ -205,10 +202,8 @@ acpibtn_notify(struct aml_node *node, int notify_type, void *arg)
 			break;
 		if (lid == 0)
 			goto sleep;
-#endif /* SMALL_KERNEL */
 		break;
 	case ACPIBTN_SLEEP:
-#ifndef SMALL_KERNEL
 		switch (notify_type) {
 		case 0x02:
 			/* "something" has been taken care of by the system */
@@ -221,7 +216,6 @@ sleep:
 				    sc->sc_acpi, ACPI_STATE_S3);
 			break;
 		}
-#endif /* SMALL_KERNEL */
 		break;
 	case ACPIBTN_POWER:
 		if (notify_type == 0x80)

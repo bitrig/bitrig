@@ -1550,13 +1550,11 @@ ip_forward(struct mbuf *m, struct ifnet *ifp, int srcrt)
 	if (fake)
 		m_tag_delete_chain(&mfake);
  freert:
-#ifndef SMALL_KERNEL
 	if (ipmultipath && ipforward_rt.ro_rt &&
 	    (ipforward_rt.ro_rt->rt_flags & RTF_MPATH)) {
 		RTFREE(ipforward_rt.ro_rt);
 		ipforward_rt.ro_rt = 0;
 	}
-#endif
 	return;
 }
 

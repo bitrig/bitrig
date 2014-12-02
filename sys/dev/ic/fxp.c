@@ -1053,10 +1053,8 @@ fxp_detach(struct fxp_softc *sc)
 	ether_ifdetach(ifp);
 	if_detach(ifp);
 
-#ifndef SMALL_KERNEL
 	if (sc->sc_ucodebuf)
 		free(sc->sc_ucodebuf, M_DEVBUF, 0);
-#endif
 }
 
 /*
@@ -1191,9 +1189,7 @@ fxp_init(void *xsc)
 	CSR_WRITE_4(sc, FXP_CSR_SCB_GENERAL, 0);
 	fxp_scb_cmd(sc, FXP_SCB_COMMAND_RU_BASE);
 
-#ifndef SMALL_KERNEL
 	fxp_load_ucode(sc);
-#endif
 	/* Once through to set flags */
 	fxp_mc_setup(sc, 0);
 
@@ -1777,7 +1773,6 @@ fxp_mc_setup(struct fxp_softc *sc, int doit)
 
 }
 
-#ifndef SMALL_KERNEL
 #include <dev/microcode/fxp/rcvbundl.h>
 struct ucode {
 	u_int16_t	revision;
@@ -1920,4 +1915,3 @@ reloadit:
 		printf("\n");
 #endif
 }
-#endif /* SMALL_KERNEL */

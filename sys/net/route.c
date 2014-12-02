@@ -771,7 +771,6 @@ rtrequest1(int req, struct rt_addrinfo *info, u_int8_t prio,
 		    info->rti_info[RTAX_NETMASK], rnh)) == NULL)
 			senderr(ESRCH);
 		rt = (struct rtentry *)rn;
-#ifndef SMALL_KERNEL
 		/*
 		 * if we got multipath routes, we require users to specify
 		 * a matching RTAX_GATEWAY.
@@ -785,7 +784,6 @@ rtrequest1(int req, struct rt_addrinfo *info, u_int8_t prio,
 			    rt->rt_flags & RTF_MPATH))
 				senderr(ESRCH);
 		}
-#endif
 
 		if ((rn = rnh->rnh_deladdr(info->rti_info[RTAX_DST],
 		    info->rti_info[RTAX_NETMASK], rnh, rn)) == NULL)
@@ -876,7 +874,6 @@ rtrequest1(int req, struct rt_addrinfo *info, u_int8_t prio,
 		} else
 			memcpy(ndst, info->rti_info[RTAX_DST],
 			    info->rti_info[RTAX_DST]->sa_len);
-#ifndef SMALL_KERNEL
 		if (rn_mpath_capable(rnh)) {
 			/* do not permit exactly the same dst/mask/gw pair */
 			if (rt_mpath_conflict(rnh, rt,
@@ -897,7 +894,6 @@ rtrequest1(int req, struct rt_addrinfo *info, u_int8_t prio,
 				rt->rt_priority |= RTP_DOWN;
 			}
 		}
-#endif
 
 		if (info->rti_info[RTAX_LABEL] != NULL) {
 			sa_rl = (struct sockaddr_rtlabel *)
@@ -1612,7 +1608,6 @@ rt_if_remove_rtdelete(struct radix_node *rn, void *vifp, u_int id)
 	return (0);
 }
 
-#ifndef SMALL_KERNEL
 void
 rt_if_track(struct ifnet *ifp)
 {
@@ -1662,4 +1657,3 @@ rt_if_linkstate_change(struct radix_node *rn, void *arg, u_int id)
 
 	return (0);
 }
-#endif

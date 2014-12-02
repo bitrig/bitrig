@@ -210,8 +210,6 @@ acpi_release_glk(uint32_t *lock)
 	return ((old & GL_BIT_PENDING) != 0);
 }
 
-#ifndef SMALL_KERNEL
-
 void
 acpi_attach_machdep(struct acpi_softc *sc)
 {
@@ -420,5 +418,3 @@ acpi_resume_mp(void)
 	sched_start_secondary_cpus();
 }
 #endif /* MULTIPROCESSOR */
-
-#endif /* ! SMALL_KERNEL */

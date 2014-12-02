@@ -191,9 +191,7 @@ void	re_disable_hw_im(struct rl_softc *);
 void	re_disable_sim_im(struct rl_softc *);
 void	re_config_imtype(struct rl_softc *, int);
 void	re_setup_intr(struct rl_softc *, int, int);
-#ifndef SMALL_KERNEL
 int	re_wol(struct ifnet*, int);
-#endif
 
 struct cfdriver re_cd = {
 	0, "re", DV_IFNET
@@ -982,11 +980,9 @@ re_attach(struct rl_softc *sc, const char *intrstr)
 	ifp->if_capabilities |= IFCAP_VLAN_HWTAGGING;
 #endif
 
-#ifndef SMALL_KERNEL
 	ifp->if_capabilities |= IFCAP_WOL;
 	ifp->if_wol = re_wol;
 	re_wol(ifp, 0);
-#endif
 	timeout_set(&sc->timer_handle, re_tick, sc);
 
 	/* Take PHY out of power down mode. */
@@ -2189,7 +2185,6 @@ re_setup_intr(struct rl_softc *sc, int enable_intrs, int imtype)
 	}
 }
 
-#ifndef SMALL_KERNEL
 int
 re_wol(struct ifnet *ifp, int enable)
 {
@@ -2236,4 +2231,3 @@ re_wol(struct ifnet *ifp, int enable)
 
 	return (0);
 }
-#endif

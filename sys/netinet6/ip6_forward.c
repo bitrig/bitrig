@@ -540,12 +540,10 @@ senderr:
  freecopy:
 	m_freem(mcopy);
  freert:
-#ifndef SMALL_KERNEL
 	if (ip6_multipath && ip6_forward_rt.ro_rt &&
 	    (ip6_forward_rt.ro_rt->rt_flags & RTF_MPATH)) {
 		RTFREE(ip6_forward_rt.ro_rt);
 		ip6_forward_rt.ro_rt = 0;
 	}
-#endif
 	return;
 }

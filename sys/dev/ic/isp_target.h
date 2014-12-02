@@ -888,13 +888,8 @@ typedef struct {
  * Debug macros
  */
 
-#ifdef SMALL_KERNEL
-#define	ISP_TDQE(isp, msg, idx, arg)	\
-    do { } while (0)
-#else
 #define	ISP_TDQE(isp, msg, idx, arg)	\
     if (isp->isp_dblev & ISP_LOGTDEBUG2) isp_print_qentry(isp, msg, idx, arg)
-#endif
 
 #ifndef	ISP_TOOLS
 /*

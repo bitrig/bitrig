@@ -44,10 +44,8 @@ int	rasops1_copycols(void *, int, int, int, int);
 int	rasops1_erasecols(void *, int, int, int, long);
 int	rasops1_do_cursor(struct rasops_info *);
 int	rasops1_putchar(void *, int, int col, u_int, long);
-#ifndef RASOPS_SMALL
 int	rasops1_putchar8(void *, int, int col, u_int, long);
 int	rasops1_putchar16(void *, int, int col, u_int, long);
-#endif
 
 /*
  * Initialize rasops_info struct for this colordepth.
@@ -58,14 +56,12 @@ rasops1_init(struct rasops_info *ri)
 	rasops_masks_init();
 
 	switch (ri->ri_font->fontwidth) {
-#ifndef RASOPS_SMALL
 	case 8:
 		ri->ri_ops.putchar = rasops1_putchar8;
 		break;
 	case 16:
 		ri->ri_ops.putchar = rasops1_putchar16;
 		break;
-#endif
 	default:
 		ri->ri_ops.putchar = rasops1_putchar;
 		break;
@@ -223,7 +219,6 @@ rasops1_putchar(void *cookie, int row, int col, u_int uc, long attr)
 	return 0;
 }
 
-#ifndef RASOPS_SMALL
 /*
  * Paint a single character. This is for 8-pixel wide fonts.
  */
@@ -350,7 +345,6 @@ rasops1_putchar16(void *cookie, int row, int col, u_int uc, long attr)
 
 	return 0;
 }
-#endif	/* !RASOPS_SMALL */
 
 /*
  * Grab routines common to depths where (bpp < 8)

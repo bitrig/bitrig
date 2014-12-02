@@ -390,9 +390,6 @@ void			 rt_timer_timer(void *);
 
 void	 rtalloc_noclone(struct route *);
 void	 rtalloc(struct route *);
-#ifdef SMALL_KERNEL
-#define	rtalloc_mpath(r, s)	rtalloc(r)
-#endif
 struct rtentry *
 	 rtalloc1(struct sockaddr *, int, u_int);
 void	 rtfree(struct rtentry *);
@@ -408,10 +405,8 @@ void	 rtredirect(struct sockaddr *, struct sockaddr *,
 int	 rtrequest1(int, struct rt_addrinfo *, u_int8_t, struct rtentry **,
 	     u_int);
 void	 rt_if_remove(struct ifnet *);
-#ifndef SMALL_KERNEL
 void	 rt_if_track(struct ifnet *);
 int	 rt_if_linkstate_change(struct radix_node *, void *, u_int);
-#endif
 int	 rtdeletemsg(struct rtentry *, u_int);
 
 struct rtentry		*rt_lookup(struct sockaddr *, struct sockaddr *, u_int);

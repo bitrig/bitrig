@@ -38,15 +38,8 @@ CMACHFLAGS+=	-fno-builtin-printf -fno-builtin-snprintf \
 .if ${IDENT:M-DNO_PROPOLICE}
 CMACHFLAGS+=	-fno-stack-protector
 .endif
-.if ${IDENT:M-DSMALL_KERNEL}
-CMACHFLAGS+=	-Wa,-n
-.endif
 
-.if ${IDENT:M-DSMALL_KERNEL}
-COPTS?=		-Os
-.else
 COPTS?=		-O2
-.endif
 
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CWARNFLAGS} ${CMACHFLAGS}
@@ -66,11 +59,7 @@ CMACHFLAGS+=	-ffreestanding -fno-omit-frame-pointer \
 CMACHFLAGS+=	-fno-stack-protector
 .endif
 
-.if ${IDENT:M-DSMALL_KERNEL}
-COPTS?=		-Oz
-.else
 COPTS?=		-O3
-.endif
 
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${AFLAGS_$*} ${CMACHFLAGS}

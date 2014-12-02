@@ -35,10 +35,6 @@
 
 #include <sys/workq.h>
 
-#ifdef	SMALL_KERNEL
-#define	RASOPS_SMALL
-#endif
-
 #include "rasops_glue.h"
 
 struct wsdisplay_font;

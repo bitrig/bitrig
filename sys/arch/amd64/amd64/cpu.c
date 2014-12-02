@@ -117,7 +117,6 @@ struct cpu_softc {
 	struct cpu_info *sc_info;	/* pointer to CPU info */
 };
 
-#ifndef SMALL_KERNEL
 void	replacesmap(void);
 
 extern long _copyout_stac;
@@ -183,7 +182,6 @@ replacesmap(void)
 	
 	splx(s);
 }
-#endif /* !SMALL_KERNEL */
 
 #ifdef MULTIPROCESSOR
 int mp_cpu_start(struct cpu_info *);
@@ -567,10 +565,8 @@ cpu_init(struct cpu_info *ci)
 	lcr0(rcr0() | CR0_WP);
 	lcr4(rcr4() | CR4_DEFAULT |
 	    (ci->ci_feature_sefflags & SEFF0EBX_SMEP ? CR4_SMEP : 0));
-#ifndef SMALL_KERNEL
 	if (ci->ci_feature_sefflags & SEFF0EBX_SMAP)
 		lcr4(rcr4() | CR4_SMAP);
-#endif
 
 #ifdef MULTIPROCESSOR
 	ci->ci_flags |= CPUF_RUNNING;

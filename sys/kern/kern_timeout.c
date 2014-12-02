@@ -368,7 +368,6 @@ softclock(void *arg)
 	mtx_leave(&timeout_mutex);
 }
 
-#ifndef SMALL_KERNEL
 void
 timeout_adjust_ticks(int adj)
 {
@@ -398,7 +397,6 @@ timeout_adjust_ticks(int adj)
 	ticks = new_ticks;
 	mtx_leave(&timeout_mutex);
 }
-#endif
 
 #ifdef DDB
 void db_show_callout_bucket(struct circq *);

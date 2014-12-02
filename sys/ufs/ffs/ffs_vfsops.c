@@ -934,10 +934,8 @@ sbagain:
 	}
 
 	if (fs->fs_postblformat == FS_42POSTBLFMT && !ronly) {
-#ifndef SMALL_KERNEL
 		printf("ffs_mountfs(): obsolete rotational table format, "
 		    "please use fsck_ffs(8) -c 1\n");
-#endif
 		error = EFTYPE;
 		goto out;
 	}

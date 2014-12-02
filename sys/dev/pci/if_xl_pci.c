@@ -89,9 +89,7 @@ int xl_pci_match(struct device *, void *, void *);
 void xl_pci_attach(struct device *, struct device *, void *);
 int xl_pci_detach(struct device *, int);
 void xl_pci_intr_ack(struct xl_softc *);
-#ifndef SMALL_KERNEL
 void xl_pci_wol_power(void *);
-#endif
 
 struct xl_pci_softc {
 	struct xl_softc		psc_softc;
@@ -154,9 +152,7 @@ xl_pci_attach(struct device *parent, struct device *self, void *aux)
 	pci_intr_handle_t ih;
 	const char *intrstr = NULL;
 	bus_size_t iosize, funsize;
-#ifndef SMALL_KERNEL
 	u_int32_t command;
-#endif
 
 	psc->psc_pc = pc;
 	psc->psc_tag = pa->pa_tag;
@@ -225,7 +221,6 @@ xl_pci_attach(struct device *parent, struct device *self, void *aux)
 
 	pci_set_powerstate(pa->pa_pc, pa->pa_tag, PCI_PMCSR_STATE_D0);
 
-#ifndef SMALL_KERNEL
 	/*
 	 * The card is WOL-capable if it supports PME# assertion
 	 * from D3hot power state. Install a callback to configure
@@ -237,7 +232,6 @@ xl_pci_attach(struct device *parent, struct device *self, void *aux)
 		sc->wol_power = xl_pci_wol_power;
 		sc->wol_power_arg = psc;
 	}
-#endif
 
 	/*
 	 * Map control/status registers.
@@ -320,7 +314,6 @@ xl_pci_intr_ack(struct xl_softc *sc)
 	    XL_PCI_INTRACK);
 }
 
-#ifndef SMALL_KERNEL
 void
 xl_pci_wol_power(void *ppsc)
 {
@@ -332,4 +325,3 @@ xl_pci_wol_power(void *ppsc)
 	command |= XL_PME_EN;
 	pci_conf_write(psc->psc_pc, psc->psc_tag, XL_PCI_PWRMGMTCTRL, command);
 }
-#endif

@@ -790,7 +790,7 @@ haltsys:
 #endif
 
 	if ((howto & RB_HALT) != 0) {
-#if NACPI > 0 && !defined(SMALL_KERNEL)
+#if NACPI > 0
 		extern int acpi_enabled;
 
 		if (acpi_enabled) {
@@ -1196,8 +1196,7 @@ cpu_init_extents(void)
 	already_done = 1;
 }
 
-#if defined(MULTIPROCESSOR) || \
-    (NACPI > 0 && !defined(SMALL_KERNEL))
+#if defined(MULTIPROCESSOR) || NACPI > 0
 void
 map_tramps(void) {
 	struct pmap *kmp = pmap_kernel();
@@ -1314,7 +1313,7 @@ init_x86_64(paddr_t first_avail)
 		avail_start = MP_TRAMPOLINE + PAGE_SIZE;
 #endif
 
-#if (NACPI > 0 && !defined(SMALL_KERNEL))
+#if NACPI > 0
 	if (avail_start < ACPI_TRAMPOLINE + PAGE_SIZE)
 		avail_start = ACPI_TRAMPOLINE + PAGE_SIZE;
 #endif
@@ -1536,8 +1535,7 @@ init_x86_64(paddr_t first_avail)
 	    VM_PROT_READ|VM_PROT_WRITE);
 	pmap_update(pmap_kernel());
 
-#if defined(MULTIPROCESSOR) || \
-    (NACPI > 0 && !defined(SMALL_KERNEL))
+#if defined(MULTIPROCESSOR) || NACPI > 0
 	map_tramps();
 #endif
 

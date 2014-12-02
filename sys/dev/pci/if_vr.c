@@ -147,9 +147,7 @@ void vr_reset(struct vr_softc *);
 int vr_list_rx_init(struct vr_softc *);
 void vr_fill_rx_ring(struct vr_softc *);
 int vr_list_tx_init(struct vr_softc *);
-#ifndef SMALL_KERNEL
 int vr_wol(struct ifnet *, int);
-#endif
 
 int vr_alloc_mbuf(struct vr_softc *, struct vr_chain_onefrag *);
 
@@ -647,13 +645,11 @@ vr_attach(struct device *parent, struct device *self, void *aux)
 		ifp->if_capabilities |= IFCAP_VLAN_HWTAGGING;
 #endif
 
-#ifndef SMALL_KERNEL
 	if (sc->vr_revid >= REV_ID_VT3065_A) {
 		ifp->if_capabilities |= IFCAP_WOL;
 		ifp->if_wol = vr_wol;
 		vr_wol(ifp, 0);
 	}
-#endif
 
 	/*
 	 * Do MII setup.
@@ -1692,7 +1688,6 @@ vr_stop(struct vr_softc *sc)
 	bzero(&sc->vr_ldata->vr_tx_list, sizeof(sc->vr_ldata->vr_tx_list));
 }
 
-#ifndef SMALL_KERNEL
 int
 vr_wol(struct ifnet *ifp, int enable)
 {
@@ -1718,7 +1713,6 @@ vr_wol(struct ifnet *ifp, int enable)
 
 	return (0);
 }
-#endif
 
 int
 vr_alloc_mbuf(struct vr_softc *sc, struct vr_chain_onefrag *r)
