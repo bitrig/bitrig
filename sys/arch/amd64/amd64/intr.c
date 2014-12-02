@@ -1,4 +1,4 @@
-/*	$OpenBSD: intr.c,v 1.38 2014/09/14 14:17:23 jsg Exp $	*/
+/*	$OpenBSD: intr.c,v 1.39 2014/12/02 18:13:10 tedu Exp $	*/
 /*	$NetBSD: intr.c,v 1.3 2003/03/03 22:16:20 fvdl Exp $	*/
 
 /*
@@ -414,7 +414,6 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 		return NULL;
 	}
 
-
 	source->is_pin = pin;
 	source->is_pic = pic;
 
@@ -470,7 +469,6 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 	*p = ih;
 
 	intr_calculatemasks(ci);
-
 
 	if (ci->ci_isources[slot]->is_resume == NULL ||
 	    source->is_idtvec != idt_vec) {
