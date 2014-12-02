@@ -40,11 +40,13 @@ void
 ithread(void *v_is)
 {
 	struct intrsource *is = v_is;
+	struct proc *p = is->is_proc;
 	struct intrhand *ih;
 	int irc, stray;
 
-	KASSERT(curproc == is->is_proc);
+	KASSERT(curproc == p);
 	sched_peg_curproc(&cpu_info_primary);
+	atomic_setbits_int(&p->p_flag, P_ITHREAD);
 	KERNEL_UNLOCK();
 
 	DPRINTF(1, "ithread %u pin %d started\n",
@@ -122,31 +124,13 @@ ithread_run(struct intrsource *is)
 	case SONPROC:
 		break;
 	case SSLEEP:
-		/* XXX ithread may be blocked on a lock */
-		if (p->p_wchan != p)
-			goto unlock;
-		p->p_wchan = NULL;
-		p->p_stat = SRUN;
-		p->p_slptime = 0;
-		/*
-		 * Setting the thread to runnable is cheaper than a normal
-		 * process since the process state can be protected by blocking
-		 * interrupts. There is also no need to choose a cpu since we're
-		 * pinned. XXX we're not there yet and still rely on normal
-		 * SCHED_LOCK crap.
-		 */
-		setrunqueue(p);
-		resched_proc(p, p->p_priority);
-		if (kernel_preemption) {
-			if (p->p_priority < curproc->p_priority)
-				curproc->p_preempt = 1;
-		}
+		if (p->p_wchan == is)
+			setrunnable(p);
 		break;
 	default:
 		SCHED_UNLOCK();
 		panic("ithread_handler: unexpected thread state %d\n", p->p_stat);
 	}
-unlock:
 	SCHED_UNLOCK();
 }
 
@@ -256,6 +240,7 @@ void
 ithread_sleep(struct intrsource *is)
 {
 	struct proc *p = is->is_proc;
+	struct sleep_state sls;
 
 	KASSERT(curproc == p);
 	KASSERT(p->p_stat == SONPROC);
@@ -264,14 +249,6 @@ ithread_sleep(struct intrsource *is)
 	/*
 	 * The check for is_scheduled and actually sleeping must be atomic.
 	 */
-	SCHED_LOCK();
-	if (!is->is_scheduled) {
-		p->p_wchan = p;
-		p->p_wmesg = "interrupt";
-		p->p_slptime = 0;
-		p->p_priority = PVM & PRIMASK;
-		p->p_stat = SSLEEP;
-		mi_switch();
-	} else
-		SCHED_UNLOCK();
+	sleep_setup(&sls, is, PVM, "intr");
+	sleep_finish(&sls, !is->is_scheduled);
 }

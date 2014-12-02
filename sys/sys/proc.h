@@ -380,6 +380,7 @@ struct proc {
 #define	P_THREAD	0x4000000	/* Only a thread, not a real process */
 #define	P_SUSPSIG	0x8000000	/* Stopped from signal. */
 #define	P_SOFTDEP	0x10000000	/* Stuck processing softdep worklist */
+#define	P_ITHREAD	0x20000000	/* Interrupt thread */
 #define P_CPUPEG	0x40000000	/* Do not move to another cpu. */
 
 #define	P_BITS \
@@ -484,6 +485,7 @@ void	fixjobc(struct process *, struct pgrp *, int);
 int	inferior(struct process *, struct process *);
 void	leavepgrp(struct process *);
 void	preempt(struct proc *);
+void	kpreempt(struct proc *);
 void	pgdelete(struct pgrp *);
 void	procinit(void);
 void	resetpriority(struct proc *);

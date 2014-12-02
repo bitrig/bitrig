@@ -350,6 +350,30 @@ preempt(struct proc *newp)
 }
 
 /*
+ * Check if process p should preempt curproc.
+ * Still experimental until I cleanup the scheduler, this function should not
+ * exist in the future.
+ * XXX Temporary bits for kernel preemption, just allow preemption on
+ * same cpu until we make ci_schedstate.spc_curpriority actually track
+ * the running process. kernel_preemption == 2 is anything preempts
+ * anything, == 1 is only for ithreads.
+ */
+void
+kpreempt(struct proc *p)
+{
+	if (p->p_cpu != curcpu())
+		return;
+	if (kernel_preemption == 0)
+		return;
+	if (kernel_preemption == 1 && (p->p_flag & P_ITHREAD) == 0)
+		return;
+	if (p->p_priority >= curproc->p_priority)
+		return;
+
+	curproc->p_preempt = 1;
+}
+
+/*
  * Must be called with sched_lock held, will return with sched_lock unlocked.
  */
 void
