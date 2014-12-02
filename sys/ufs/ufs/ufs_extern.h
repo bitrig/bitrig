@@ -108,7 +108,8 @@ int ufs_init(struct vfsconf *);
 int ufs_reclaim(struct vnode *, struct proc *);
 
 /* ufs_lookup.c */
-void ufs_dirbad(struct inode *, doff_t, char *);
+void ufs_dirbad1(struct inode *, doff_t, char *);
+void ufs_dirbad2(struct inode *, struct buf *, struct direct *, doff_t, char *);
 int ufs_dirbadentry(struct vnode *, struct direct *, int);
 void ufs_makedirentry(struct inode *, struct componentname *,
 			   struct direct *);

@@ -449,7 +449,7 @@ found:
 	 */
 	if (entryoffsetinblock + EXT2FS_DIRSIZ(ep->e2d_namlen)
 	    > ext2fs_size(dp)) {
-		ufs_dirbad(dp, dp->i_offset, "i_size too small");
+		ufs_dirbad1(dp, dp->i_offset, "i_size too small");
 		error = ext2fs_setsize(dp,
 			entryoffsetinblock + EXT2FS_DIRSIZ(ep->e2d_namlen));
 		if (error) {
@@ -629,7 +629,7 @@ ext2fs_search_dirblock(struct inode *ip, void *data, int *foundp,
 		if (ep->e2d_reclen == 0 ||
 		    (dirchk && ext2fs_dirbadentry(vdp, ep, offset))) {
 			int i;
-			ufs_dirbad(ip, ip->i_offset, "mangled entry");
+			ufs_dirbad1(ip, ip->i_offset, "mangled entry");
 			i = dirblksize - (offset & (dirblksize - 1));
 			ip->i_offset += i;
 			offset += i;

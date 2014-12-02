@@ -44,6 +44,7 @@
 #include <sys/buf.h>
 #include <sys/file.h>
 #include <sys/stat.h>
+#include <sys/malloc.h>
 #include <sys/mount.h>
 #include <sys/proc.h>
 #include <sys/vnode.h>
@@ -286,7 +287,7 @@ searchloop:
 		    (dirchk && ufs_dirbadentry(vdp, ep, entryoffsetinblock))) {
 			int i;
 
-			ufs_dirbad(dp, dp->i_offset, "mangled entry");
+			ufs_dirbad2(dp, bp, ep, dp->i_offset, "mangled entry");
 			i = DIRBLKSIZ - (entryoffsetinblock & (DIRBLKSIZ - 1));
 			dp->i_offset += i;
 			entryoffsetinblock += i;
@@ -445,7 +446,7 @@ found:
 	 * of this entry.
 	 */
 	if (dp->i_offset + DIRSIZ(FSFMT(vdp), ep) > DIP(dp, size)) {
-		ufs_dirbad(dp, dp->i_offset, "i_ffs_size too small");
+		ufs_dirbad2(dp, bp, ep, dp->i_offset, "i_ffs_size too small");
 		DIP_ASSIGN(dp, size, dp->i_offset + DIRSIZ(FSFMT(vdp), ep));
 		dp->i_flag |= IN_CHANGE | IN_UPDATE;
 		UFS_WAPBL_UPDATE(dp, MNT_WAIT);
@@ -602,15 +603,63 @@ found:
 }
 
 void
-ufs_dirbad(struct inode *ip, doff_t offset, char *how)
+ufs_dirbad1(struct inode *ip, doff_t offset, char *how)
 {
 	struct mount *mp;
 
 	mp = ITOV(ip)->v_mount;
-	(void)printf("%s: bad dir ino %u at offset %d: %s\n",
+	printf("%s: bad dir ino %u at offset %d: %s\n",
 	    mp->mnt_stat.f_mntonname, ip->i_number, offset, how);
 	if ((mp->mnt_stat.f_flags & MNT_RDONLY) == 0)
 		panic("bad dir");
+}
+
+void
+ufs_dirbad2(struct inode *ip, struct buf *bp, struct direct *ep, doff_t offset,
+    char *how)
+{
+	struct mount *mp;
+	unsigned char *p = (unsigned char *)ep;
+	int i;
+
+	mp = ITOV(ip)->v_mount;
+	printf("%s: bad dir ino %u at offset %d: %s\n",
+	    mp->mnt_stat.f_mntonname, ip->i_number, offset, how);
+	printf("%s: bp=%p, bp->b_data=%p, ep=%p\n", mp->mnt_stat.f_mntonname,
+	    bp, bp->b_data, ep);
+	printf("%s: bp->b_lblkno=%lld, bp->b_blkno=%lld\n",
+	    mp->mnt_stat.f_mntonname, bp->b_lblkno, bp->b_blkno);
+	printf("%s: dumping bad direct: ", mp->mnt_stat.f_mntonname);
+	for (i = 0; i < sizeof(*ep); i++)
+		printf("%02x ", p[i]);
+	printf("\n");
+	if ((mp->mnt_stat.f_flags & MNT_RDONLY) == 0) {
+		/*
+		 * we're about to panic; go nuts and try deeper diagnostic
+		 * checks
+		 */
+		unsigned char *bp_data2 = malloc(bp->b_bcount, M_TEMP,
+		    M_WAITOK);
+		struct vnode *vp = bp->b_vp;
+		daddr_t lblkno = bp->b_lblkno;
+		long bcount = bp->b_bcount;
+		if (bp_data2) {
+			memcpy(bp_data2, bp->b_data, bp->b_bcount);
+			bp->b_flags |= B_INVAL;
+			brelse(bp);
+			for (i = 0; i < 5; i++) {
+				if (bread(vp, lblkno, bcount, &bp)) {
+					printf("bread failed\n");
+					break;
+				}
+				printf("memcmp %d: %d", i, memcmp(bp_data2,
+				    bp->b_data, bp->b_bcount));
+				bp->b_flags |= B_INVAL;
+				brelse(bp);
+			}
+		}
+		panic("bad dir");
+	}
 }
 
 /*

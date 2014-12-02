@@ -826,7 +826,7 @@ abortit:
 				if (namlen != 2 ||
 				    dirbuf.dotdot_name[0] != '.' ||
 				    dirbuf.dotdot_name[1] != '.') {
-					ufs_dirbad(xp, (doff_t)12,
+					ufs_dirbad1(xp, (doff_t)12,
 					    "ext2fs_rename: mangled dir");
 				} else {
 					dirbuf.dotdot_ino = htole32(newparent);
