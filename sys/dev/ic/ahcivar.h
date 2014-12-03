@@ -1,4 +1,4 @@
-/*	$OpenBSD: ahcivar.h,v 1.8 2014/04/14 04:42:22 dlg Exp $ */
+/*	$OpenBSD: ahcivar.h,v 1.9 2014/12/03 04:33:06 jsg Exp $ */
 
 /*
  * Copyright (c) 2006 David Gwynne <dlg@openbsd.org>
@@ -123,7 +123,6 @@ struct ahci_softc {
 #define AHCI_F_IPMS_PROBE		(1<<1)	/* IPMS on failed PMP probe */
 #define AHCI_F_NO_PMP			(1<<2)	/* ignore PMP capability */
 #define AHCI_F_NO_MSI			(1<<3)	/* disable MSI */
-#define AHCI_F_SUNXI_QUIRK		(1<<4)	/* quirk for armv7/sunxi */
 
 	u_int			sc_ncmds;
 
@@ -138,9 +137,12 @@ struct ahci_softc {
 	u_int32_t		sc_ccc_ports;
 	u_int32_t		sc_ccc_ports_cur;
 #endif
+
+	int			(*sc_port_start)(struct ahci_port *, int);
 };
 
 #define DEVNAME(_s)		((_s)->sc_dev.dv_xname)
+#define ahci_port_start(_p, _f)	((_p)->ap_sc->sc_port_start((_p), (_f)))
 
 int			ahci_attach(struct ahci_softc *);
 int			ahci_detach(struct ahci_softc *, int);

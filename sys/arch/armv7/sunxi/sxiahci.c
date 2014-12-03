@@ -42,6 +42,10 @@
 
 #define	SXIAHCI_TIMEOUT		0x100000
 
+#define	SXIAHCI_PREG_DMA	0x70
+#define	 SXIAHCI_PREG_DMA_MASK	(0xff<<8)
+#define	 SXIAHCI_PREG_DMA_INIT	(0x44<<8)
+
 void	sxiahci_attach(struct device *, struct device *, void *);
 
 struct cfattach sxiahci_ca = {
@@ -83,22 +87,18 @@ sxiahci_attach(struct device *parent, struct device *self, void *args)
 
 	SXISET4(sc, SXIAHCI_PHYCS1, 1 << 19);
 
-	SXICMS4(sc, SXIAHCI_PHYCS0,
-	    7 << 24,
-	    5 << 24 | 1 << 23 | 1 << 18);
+	SXICMS4(sc, SXIAHCI_PHYCS0, 7 << 24,
+	    1 << 23 | 5 << 24 | 1 << 18);
 
 	SXICMS4(sc, SXIAHCI_PHYCS1,
 	    3 << 16 | 0x1f << 8 | 3 << 6,
 	    2 << 16 | 0x06 << 8 | 2 << 6);
+
 	SXISET4(sc, SXIAHCI_PHYCS1, 1 << 28 | 1 << 15);
 	SXICLR4(sc, SXIAHCI_PHYCS1, 1 << 19);
 
-	SXICMS4(sc, SXIAHCI_PHYCS0,
-	    7 << 20,
-	    3 << 20);
-	SXICMS4(sc, SXIAHCI_PHYCS2,
-	    0x1f << 5,
-	    0x19 << 5);
+	SXICMS4(sc, SXIAHCI_PHYCS0, 0x07 << 20, 0x03 << 20);
+	SXICMS4(sc, SXIAHCI_PHYCS2, 0x1f <<  5, 0x19 << 5);
 	delay(5000);
 
 	SXISET4(sc, SXIAHCI_PHYCS0, 1 << 19);
@@ -134,7 +134,8 @@ sxiahci_attach(struct device *parent, struct device *self, void *args)
 
 	SXIWRITE4(sc, SXIAHCI_PI, 1);
 	SXICLR4(sc, SXIAHCI_CAP, AHCI_REG_CAP_SPM);
-	sc->sc_flags |= AHCI_F_NO_PMP | AHCI_F_SUNXI_QUIRK;
+	sc->sc_flags |= AHCI_F_NO_PMP;
+	sc->sc_port_start = sxiahci_port_start;
 	if (ahci_attach(sc) != 0) {
 		/* error printed by ahci_attach */
 		goto irq;
@@ -148,4 +149,18 @@ clrpwr:
 dismod:
 	sxiccmu_disablemodule(CCMU_AHCI);
 	bus_space_unmap(sc->sc_iot, sc->sc_ioh, sc->sc_ios);
+}
+
+int
+sxiahci_port_start(struct ahci_port *ap, int fre_only)
+{
+	u_int32_t			r;
+
+	/* Setup DMA */
+	r = ahci_pread(ap, SXIAHCI_PREG_DMA);
+	r &= ~SXIAHCI_PREG_DMA_MASK;
+	r |= SXIAHCI_PREG_DMA_INIT; /* XXX if fre_only? */
+	ahci_pwrite(ap, SXIAHCI_PREG_DMA, r);
+
+	return (ahci_default_port_start(ap, fre_only));
 }
