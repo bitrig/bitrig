@@ -578,10 +578,10 @@ vcpio_rd(ARCHD *arcn, char *buf)
 	    HEX);
 	devmajor = (dev_t)asc_ul(hd->c_maj, sizeof(hd->c_maj), HEX);
 	devminor = (dev_t)asc_ul(hd->c_min, sizeof(hd->c_min), HEX);
-	arcn->sb.st_dev = TODEV(devmajor, devminor);
+	arcn->sb.st_dev = makedev(devmajor, devminor);
 	devmajor = (dev_t)asc_ul(hd->c_rmaj, sizeof(hd->c_maj), HEX);
 	devminor = (dev_t)asc_ul(hd->c_rmin, sizeof(hd->c_min), HEX);
-	arcn->sb.st_rdev = TODEV(devmajor, devminor);
+	arcn->sb.st_rdev = makedev(devmajor, devminor);
 	arcn->crc = asc_ul(hd->c_chksum, sizeof(hd->c_chksum), HEX);
 
 	/*
@@ -750,13 +750,13 @@ vcpio_wr(ARCHD *arcn)
 		sizeof(hd->c_mtime), HEX) ||
 	    ul_asc((u_long)arcn->sb.st_nlink, hd->c_nlink, sizeof(hd->c_nlink),
 		HEX) ||
-	    ul_asc((u_long)MAJOR(arcn->sb.st_dev),hd->c_maj, sizeof(hd->c_maj),
+	    ul_asc((u_long)major(arcn->sb.st_dev),hd->c_maj, sizeof(hd->c_maj),
 		HEX) ||
-	    ul_asc((u_long)MINOR(arcn->sb.st_dev),hd->c_min, sizeof(hd->c_min),
+	    ul_asc((u_long)minor(arcn->sb.st_dev),hd->c_min, sizeof(hd->c_min),
 		HEX) ||
-	    ul_asc((u_long)MAJOR(arcn->sb.st_rdev),hd->c_rmaj,sizeof(hd->c_maj),
+	    ul_asc((u_long)major(arcn->sb.st_rdev),hd->c_rmaj,sizeof(hd->c_maj),
 		HEX) ||
-	    ul_asc((u_long)MINOR(arcn->sb.st_rdev),hd->c_rmin,sizeof(hd->c_min),
+	    ul_asc((u_long)minor(arcn->sb.st_rdev),hd->c_rmin,sizeof(hd->c_min),
 		HEX) ||
 	    ul_asc((u_long)nsz, hd->c_namesize, sizeof(hd->c_namesize), HEX))
 		goto out;

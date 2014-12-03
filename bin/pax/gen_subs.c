@@ -112,8 +112,8 @@ ls_list(ARCHD *arcn, time_t now, FILE *fp)
 	 */
 	if ((arcn->type == PAX_CHR) || (arcn->type == PAX_BLK))
 		(void)fprintf(fp, "%4lu, %4lu ",
-		    (unsigned long)MAJOR(sbp->st_rdev),
-		    (unsigned long)MINOR(sbp->st_rdev));
+		    (unsigned long)major(sbp->st_rdev),
+		    (unsigned long)minor(sbp->st_rdev));
 	else {
 		(void)fprintf(fp, "%9llu ", sbp->st_size);
 	}

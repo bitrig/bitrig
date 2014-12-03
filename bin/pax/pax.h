@@ -221,13 +221,6 @@ typedef struct oplist {
 } OPLIST;
 
 /*
- * General Macros
- */
-#define MAJOR(x)	major(x)
-#define MINOR(x)	minor(x)
-#define TODEV(x, y)	makedev((x), (y))
-
-/*
  * General Defines
  */
 #define HEX		16
