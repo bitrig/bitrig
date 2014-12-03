@@ -926,14 +926,12 @@ ufs_direnter(struct vnode *dvp, struct vnode *tvp, struct direct *dirp,
 	if (error == 0 && dp->i_endoff && dp->i_endoff < DIP(dp, size)) {
 		if (tvp != NULL)
 			VOP_UNLOCK(tvp, 0);
-#ifdef UFS_DIRHASH
-		if (dp->i_dirhash != NULL)
-			ufsdirhash_dirtrunc(dp, dp->i_endoff);
-#endif
-
-
 		error = UFS_TRUNCATE(dp, (off_t)dp->i_endoff, IO_SYNC, cr);
 
+#ifdef UFS_DIRHASH
+		if (error == 0 && dp->i_dirhash != NULL)
+			ufsdirhash_dirtrunc(dp, dp->i_endoff);
+#endif
 		if (tvp != NULL)
 			vn_lock(tvp, LK_EXCLUSIVE | LK_RETRY, p);
 	}
