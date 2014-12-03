@@ -1,4 +1,4 @@
-/*	$OpenBSD: if_ethersubr.c,v 1.174 2014/07/12 18:44:22 tedu Exp $	*/
+/*	$OpenBSD: src/sys/net/if_ethersubr.c,v 1.174.4.1 2014/12/01 17:50:43 tedu Exp $	*/
 /*	$NetBSD: if_ethersubr.c,v 1.19 1996/05/07 02:40:30 thorpej Exp $	*/
 
 /*
@@ -673,7 +673,12 @@ decapsulate:
 			goto done;
 
 		eh_tmp = mtod(m, struct ether_header *);
-		memcpy(eh_tmp, eh, sizeof(struct ether_header));
+		/*
+		 * danger!
+		 * eh_tmp and eh may overlap because eh
+		 * is stolen from the mbuf above.
+		 */
+		memmove(eh_tmp, eh, sizeof(struct ether_header));
 #ifdef PIPEX
 		if (pipex_enable) {
 			struct pipex_session *session;
