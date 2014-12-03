@@ -1,4 +1,4 @@
-/*	$OpenBSD: server_file.c,v 1.31 2014/08/06 11:24:12 reyk Exp $	*/
+/*	$OpenBSD: server_file.c,v 1.31.4.1 2014/11/20 07:48:45 jasper Exp $	*/
 
 /*
  * Copyright (c) 2006 - 2014 Reyk Floeter <reyk@openbsd.org>
@@ -46,42 +46,36 @@
 #include "httpd.h"
 #include "http.h"
 
-int	 server_file_access(struct client *, char *, size_t,
+int	 server_file_access(struct httpd *, struct client *, char *, size_t);
+int	 server_file_request(struct httpd *, struct client *, char *,
 	    struct stat *);
-int	 server_file_index(struct httpd *, struct client *);
+int	 server_file_index(struct httpd *, struct client *, struct stat *);
+int	 server_file_method(struct client *);
 
 int
-server_file_access(struct client *clt, char *path, size_t len,
-    struct stat *st)
+server_file_access(struct httpd *env, struct client *clt,
+    char *path, size_t len)
 {
-	struct http_descriptor	*desc = clt->clt_desc;
+	struct http_descriptor	*desc = clt->clt_descreq;
 	struct server_config	*srv_conf = clt->clt_srv_conf;
-	struct stat		 stb;
+	struct stat		 st;
 	char			*newpath;
+	int			 ret;
 
 	errno = 0;
 
-	switch (desc->http_method) {
-	case HTTP_METHOD_GET:
-	case HTTP_METHOD_HEAD:
-		break;
-	default:
-		/* Other methods are not allowed */
-		return (405);
-	}
-
 	if (access(path, R_OK) == -1) {
 		goto fail;
-	} else if (stat(path, st) == -1) {
+	} else if (stat(path, &st) == -1) {
 		goto fail;
-	} else if (S_ISDIR(st->st_mode)) {
+	} else if (S_ISDIR(st.st_mode)) {
 		/* Deny access if directory indexing is disabled */
 		if (srv_conf->flags & SRVFLAG_NO_INDEX) {
 			errno = EACCES;
 			goto fail;
 		}
 
-		if (!len) {
+		if (desc->http_path_alias != NULL) {
 			/* Recursion - the index "file" is a directory? */
 			errno = EINVAL;
 			goto fail;
@@ -93,21 +87,31 @@ server_file_access(struct client *clt, char *path, size_t len,
 			    srv_conf->flags & SRVFLAG_SSL ? "s" : "",
 			    desc->http_host, desc->http_path) == -1)
 				return (500);
-			free(desc->http_path);
-			desc->http_path = newpath;
+			/* Path alias will be used for the redirection */
+			desc->http_path_alias = newpath;
 
 			/* Indicate that the file has been moved */
 			return (301);
 		}
 
-		/* Otherwise append the default index file */
+		/* Append the default index file to the location */
+		if (asprintf(&newpath, "%s%s", desc->http_path,
+		    srv_conf->index) == -1)
+			return (500);
+		desc->http_path_alias = newpath;
+		if (server_getlocation(clt, newpath) != srv_conf) {
+			/* The location has changed */
+			return (server_file(env, clt));
+		}
+
+		/* Otherwise append the default index file to the path */
 		if (strlcat(path, srv_conf->index, len) >= len) {
 			errno = EACCES;
 			goto fail;
 		}
 
-		/* Check again but set len to 0 to avoid recursion */
-		if (server_file_access(clt, path, 0, &stb) == 404) {
+		ret = server_file_access(env, clt, path, len);
+		if (ret == 404) {
 			/*
 			 * Index file not found; fail if auto-indexing is
 			 * not enabled, otherwise return success but
@@ -118,17 +122,17 @@ server_file_access(struct client *clt, char *path, size_t len,
 				errno = EACCES;
 				goto fail;
 			}
-		} else {
-			/* return updated stat from index file */
-			memcpy(st, &stb, sizeof(*st));
+
+			return (server_file_index(env, clt, &st));
 		}
-	} else if (!S_ISREG(st->st_mode)) {
+		return (ret);
+	} else if (!S_ISREG(st.st_mode)) {
 		/* Don't follow symlinks and ignore special files */
 		errno = EACCES;
 		goto fail;
 	}
 
-	return (0);
+	return (server_file_request(env, clt, path, &st));
 
  fail:
 	switch (errno) {
@@ -146,31 +150,69 @@ server_file_access(struct client *clt, char *path, size_t len,
 int
 server_file(struct httpd *env, struct client *clt)
 {
-	struct http_descriptor	*desc = clt->clt_desc;
+	struct http_descriptor	*desc = clt->clt_descreq;
 	struct server_config	*srv_conf = clt->clt_srv_conf;
-	struct media_type	*media;
-	const char		*errstr = NULL;
-	int			 fd = -1, ret, code = 500;
 	char			 path[MAXPATHLEN];
-	struct stat		 st;
+	const char		*errstr = NULL;
+	int			 ret = 500;
+
+	if (srv_conf->flags & SRVFLAG_FCGI)
+		return (server_fcgi(env, clt));
 
 	/* Request path is already canonicalized */
 	if ((size_t)snprintf(path, sizeof(path), "%s%s",
-	    srv_conf->root, desc->http_path) >= sizeof(path)) {
+	    srv_conf->root,
+	    desc->http_path_alias != NULL ?
+	    desc->http_path_alias : desc->http_path) >= sizeof(path)) {
 		errstr = desc->http_path;
 		goto abort;
 	}
 
 	/* Returns HTTP status code on error */
-	if ((ret = server_file_access(clt, path, sizeof(path), &st)) != 0) {
-		code = ret;
-		errstr = desc->http_path;
+	if ((ret = server_file_access(env, clt, path, sizeof(path))) > 0) {
+		errstr = desc->http_path_alias != NULL ?
+		    desc->http_path_alias : desc->http_path;
 		goto abort;
 	}
 
-	if (S_ISDIR(st.st_mode)) {
-		/* List directory index */
-		return (server_file_index(env, clt));
+	return (ret);
+
+ abort:
+	if (errstr == NULL)
+		errstr = strerror(errno);
+	server_abort_http(clt, ret, errstr);
+	return (-1);
+}
+
+int
+server_file_method(struct client *clt)
+{
+	struct http_descriptor	*desc = clt->clt_descreq;
+
+	switch (desc->http_method) {
+	case HTTP_METHOD_GET:
+	case HTTP_METHOD_HEAD:
+		return (0);
+	default:
+		/* Other methods are not allowed */
+		errno = EACCES;
+		return (405);
+	}
+	/* NOTREACHED */
+}
+
+int
+server_file_request(struct httpd *env, struct client *clt, char *path,
+    struct stat *st)
+{
+	struct server_config	*srv_conf = clt->clt_srv_conf;
+	struct media_type	*media;
+	const char		*errstr = NULL;
+	int			 fd = -1, ret, code = 500;
+
+	if ((ret = server_file_method(clt)) != 0) {
+		code = ret;
+		goto abort;
 	}
 
 	/* Now open the file, should be readable or we have another problem */
@@ -178,7 +220,8 @@ server_file(struct httpd *env, struct client *clt)
 		goto abort;
 
 	media = media_find(env->sc_mediatypes, path);
-	ret = server_response_http(clt, 200, media, st.st_size);
+	ret = server_response_http(clt, 200, media, st->st_size,
+	    MIN(time(NULL), st->st_mtim.tv_sec));
 	switch (ret) {
 	case -1:
 		goto fail;
@@ -225,20 +268,25 @@ server_file(struct httpd *env, struct client *clt)
 }
 
 int
-server_file_index(struct httpd *env, struct client *clt)
+server_file_index(struct httpd *env, struct client *clt, struct stat *st)
 {
 	char			  path[MAXPATHLEN];
 	char			  tmstr[21];
-	struct http_descriptor	 *desc = clt->clt_desc;
+	struct http_descriptor	 *desc = clt->clt_descreq;
 	struct server_config	 *srv_conf = clt->clt_srv_conf;
 	struct dirent		**namelist, *dp;
 	int			  namesize, i, ret, fd = -1, namewidth, skip;
+	int			  code = 500;
 	struct evbuffer		 *evb = NULL;
 	struct media_type	 *media;
 	const char		 *style;
-	struct stat		  st;
 	struct tm		  tm;
-	time_t			  t;
+	time_t			  t, dir_mtime;
+
+	if ((ret = server_file_method(clt)) != 0) {
+		code = ret;
+		goto abort;
+	}
 
 	/* Request path is already canonicalized */
 	if ((size_t)snprintf(path, sizeof(path), "%s%s",
@@ -248,6 +296,9 @@ server_file_index(struct httpd *env, struct client *clt)
 	/* Now open the file, should be readable or we have another problem */
 	if ((fd = open(path, O_RDONLY)) == -1)
 		goto abort;
+
+	/* Save last modification time */
+	dir_mtime = MIN(time(NULL), st->st_mtim.tv_sec);
 
 	if ((evb = evbuffer_new()) == NULL)
 		goto abort;
@@ -260,7 +311,7 @@ server_file_index(struct httpd *env, struct client *clt)
 
 	/* A CSS stylesheet allows minimal customization by the user */
 	style = "body { background-color: white; color: black; font-family: "
-	    "sans-serif; }";
+	    "sans-serif; }\nhr { border: 0; border-bottom: 1px dashed; }\n";
 	/* Generate simple HTML index document */
 	if (evbuffer_add_printf(evb,
 	    "<!DOCTYPE HTML PUBLIC "
@@ -280,12 +331,12 @@ server_file_index(struct httpd *env, struct client *clt)
 		dp = namelist[i];
 
 		if (skip ||
-		    fstatat(fd, dp->d_name, &st, 0) == -1) {
+		    fstatat(fd, dp->d_name, st, 0) == -1) {
 			free(dp);
 			continue;
 		}
 
-		t = st.st_mtime;
+		t = st->st_mtime;
 		localtime_r(&t, &tm);
 		strftime(tmstr, sizeof(tmstr), "%d-%h-%Y %R", &tm);
 		namewidth = 51 - strlen(dp->d_name);
@@ -293,18 +344,18 @@ server_file_index(struct httpd *env, struct client *clt)
 		if (dp->d_name[0] == '.' &&
 		    !(dp->d_name[1] == '.' && dp->d_name[2] == '\0')) {
 			/* ignore hidden files starting with a dot */
-		} else if (S_ISDIR(st.st_mode)) {
+		} else if (S_ISDIR(st->st_mode)) {
 			namewidth -= 1; /* trailing slash */
 			if (evbuffer_add_printf(evb,
 			    "<a href=\"%s\">%s/</a>%*s%s%20s\n",
 			    dp->d_name, dp->d_name,
 			    MAX(namewidth, 0), " ", tmstr, "-") == -1)
 				skip = 1;
-		} else if (S_ISREG(st.st_mode)) {
+		} else if (S_ISREG(st->st_mode)) {
 			if (evbuffer_add_printf(evb,
 			    "<a href=\"%s\">%s</a>%*s%s%20llu\n",
 			    dp->d_name, dp->d_name,
-			    MAX(namewidth, 0), " ", tmstr, st.st_size) == -1)
+			    MAX(namewidth, 0), " ", tmstr, st->st_size) == -1)
 				skip = 1;
 		}
 		free(dp);
@@ -320,7 +371,8 @@ server_file_index(struct httpd *env, struct client *clt)
 	fd = -1;
 
 	media = media_find(env->sc_mediatypes, "index.html");
-	ret = server_response_http(clt, 200, media, EVBUFFER_LENGTH(evb));
+	ret = server_response_http(clt, 200, media, EVBUFFER_LENGTH(evb),
+	    dir_mtime);
 	switch (ret) {
 	case -1:
 		goto fail;
@@ -356,7 +408,7 @@ server_file_index(struct httpd *env, struct client *clt)
 		close(fd);
 	if (evb != NULL)
 		evbuffer_free(evb);
-	server_abort_http(clt, 500, desc->http_path);
+	server_abort_http(clt, code, desc->http_path);
 	return (-1);
 }
 
@@ -370,8 +422,16 @@ server_file_error(struct bufferevent *bev, short error, void *arg)
 		server_close(clt, "buffer event timeout");
 		return;
 	}
+	if (error & EVBUFFER_ERROR) {
+		if (errno == EFBIG) {
+			bufferevent_enable(bev, EV_READ);
+			return;
+		}
+		server_close(clt, "buffer event error");
+		return;
+	}
 	if (error & (EVBUFFER_READ|EVBUFFER_WRITE|EVBUFFER_EOF)) {
-		bufferevent_disable(bev, EV_READ);
+		bufferevent_disable(bev, EV_READ|EV_WRITE);
 
 		clt->clt_done = 1;
 
@@ -396,10 +456,6 @@ server_file_error(struct bufferevent *bev, short error, void *arg)
 		server_close(clt, "done");
 		return;
 	}
-	if (error & EVBUFFER_ERROR && errno == EFBIG) {
-		bufferevent_enable(bev, EV_READ);
-		return;
-	}
-	server_close(clt, "buffer event error");
+	server_close(clt, "unknown event error");
 	return;
 }

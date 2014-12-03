@@ -1,4 +1,4 @@
-/*	$OpenBSD: config.c,v 1.21 2014/08/06 18:21:14 reyk Exp $	*/
+/*	$OpenBSD: config.c,v 1.21.2.1 2014/11/20 07:48:45 jasper Exp $	*/
 
 /*
  * Copyright (c) 2011 - 2014 Reyk Floeter <reyk@openbsd.org>
@@ -223,7 +223,7 @@ config_getserver_config(struct httpd *env, struct server *srv,
 #ifdef DEBUG
 	struct privsep		*ps = env->sc_ps;
 #endif
-	struct server_config	*srv_conf;
+	struct server_config	*srv_conf, *parent;
 	u_int8_t		*p = imsg->data;
 	u_int			 f;
 
@@ -233,18 +233,28 @@ config_getserver_config(struct httpd *env, struct server *srv,
 	IMSG_SIZE_CHECK(imsg, srv_conf);
 	memcpy(srv_conf, p, sizeof(*srv_conf));
 
+	/* Reset these variables to avoid free'ing invalid pointers */
+	serverconfig_reset(srv_conf);
+
+	TAILQ_FOREACH(parent, &srv->srv_hosts, entry) {
+		if (strcmp(parent->name, srv_conf->name) == 0)
+			break;
+	}
+	if (parent == NULL)
+		parent = &srv->srv_conf;
+
 	if (srv_conf->flags & SRVFLAG_LOCATION) {
 		/* Inherit configuration from the parent */
 		f = SRVFLAG_INDEX|SRVFLAG_NO_INDEX;
 		if ((srv_conf->flags & f) == 0) {
-			srv_conf->flags |= srv->srv_conf.flags & f;
-			(void)strlcpy(srv_conf->index, srv->srv_conf.index,
+			srv_conf->flags |= parent->flags & f;
+			(void)strlcpy(srv_conf->index, parent->index,
 			    sizeof(srv_conf->index));
 		}
 
 		f = SRVFLAG_AUTO_INDEX|SRVFLAG_NO_AUTO_INDEX;
 		if ((srv_conf->flags & f) == 0)
-			srv_conf->flags |= srv->srv_conf.flags & f;
+			srv_conf->flags |= parent->flags & f;
 
 		f = SRVFLAG_SOCKET|SRVFLAG_FCGI;
 		if ((srv_conf->flags & f) == SRVFLAG_FCGI) {
@@ -255,48 +265,48 @@ config_getserver_config(struct httpd *env, struct server *srv,
 
 		f = SRVFLAG_ROOT;
 		if ((srv_conf->flags & f) == 0) {
-			srv_conf->flags |= srv->srv_conf.flags & f;
-			(void)strlcpy(srv_conf->root, srv->srv_conf.root,
+			srv_conf->flags |= parent->flags & f;
+			(void)strlcpy(srv_conf->root, parent->root,
 			    sizeof(srv_conf->root));
 		}
 
 		f = SRVFLAG_FCGI|SRVFLAG_NO_FCGI;
 		if ((srv_conf->flags & f) == 0)
-			srv_conf->flags |= srv->srv_conf.flags & f;
+			srv_conf->flags |= parent->flags & f;
 
 		f = SRVFLAG_LOG|SRVFLAG_NO_LOG;
 		if ((srv_conf->flags & f) == 0) {
-			srv_conf->flags |= srv->srv_conf.flags & f;
-			srv_conf->logformat = srv->srv_conf.logformat;
+			srv_conf->flags |= parent->flags & f;
+			srv_conf->logformat = parent->logformat;
 		}
 
 		f = SRVFLAG_SYSLOG|SRVFLAG_NO_SYSLOG;
 		if ((srv_conf->flags & f) == 0)
-			srv_conf->flags |= srv->srv_conf.flags & f;
+			srv_conf->flags |= parent->flags & f;
 
 		f = SRVFLAG_SSL;
-		srv_conf->flags |= srv->srv_conf.flags & f;
+		srv_conf->flags |= parent->flags & f;
 
 		f = SRVFLAG_ACCESS_LOG;
 		if ((srv_conf->flags & f) == 0) {
-			srv_conf->flags |= srv->srv_conf.flags & f;
+			srv_conf->flags |= parent->flags & f;
 			(void)strlcpy(srv_conf->accesslog,
-			    srv->srv_conf.accesslog,
+			    parent->accesslog,
 			    sizeof(srv_conf->accesslog));
 		}
 
 		f = SRVFLAG_ERROR_LOG;
 		if ((srv_conf->flags & f) == 0) {
-			srv_conf->flags |= srv->srv_conf.flags & f;
+			srv_conf->flags |= parent->flags & f;
 			(void)strlcpy(srv_conf->errorlog,
-			    srv->srv_conf.errorlog,
+			    parent->errorlog,
 			    sizeof(srv_conf->errorlog));
 		}
 
-		memcpy(&srv_conf->timeout, &srv->srv_conf.timeout,
+		memcpy(&srv_conf->timeout, &parent->timeout,
 		    sizeof(srv_conf->timeout));
-		srv_conf->maxrequests = srv->srv_conf.maxrequests;
-		srv_conf->maxrequestbody = srv->srv_conf.maxrequestbody;
+		srv_conf->maxrequests = parent->maxrequests;
+		srv_conf->maxrequestbody = parent->maxrequestbody;
 
 		DPRINTF("%s: %s %d location \"%s\", "
 		    "parent \"%s\", flags: %s",
@@ -330,6 +340,9 @@ config_getserver(struct httpd *env, struct imsg *imsg)
 	IMSG_SIZE_CHECK(imsg, &srv_conf);
 	memcpy(&srv_conf, p, sizeof(srv_conf));
 	s = sizeof(srv_conf);
+
+	/* Reset these variables to avoid free'ing invalid pointers */
+	serverconfig_reset(&srv_conf);
 
 	if ((u_int)(IMSG_DATA_SIZE(imsg) - s) <
 	    (srv_conf.ssl_cert_len + srv_conf.ssl_key_len)) {

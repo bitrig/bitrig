@@ -1,4 +1,4 @@
-/*	$OpenBSD: server_http.c,v 1.42 2014/08/06 18:21:14 reyk Exp $	*/
+/*	$OpenBSD: server_http.c,v 1.42.2.1 2014/11/20 07:48:45 jasper Exp $	*/
 
 /*
  * Copyright (c) 2006 - 2014 Reyk Floeter <reyk@openbsd.org>
@@ -86,9 +86,15 @@ server_httpdesc_init(struct client *clt)
 
 	if ((desc = calloc(1, sizeof(*desc))) == NULL)
 		return (-1);
-
 	RB_INIT(&desc->http_headers);
-	clt->clt_desc = desc;
+	clt->clt_descreq = desc;
+
+	if ((desc = calloc(1, sizeof(*desc))) == NULL) {
+		/* req will be cleaned up later */
+		return (-1);
+	}
+	RB_INIT(&desc->http_headers);
+	clt->clt_descresp = desc;
 
 	return (0);
 }
@@ -96,9 +102,15 @@ server_httpdesc_init(struct client *clt)
 void
 server_httpdesc_free(struct http_descriptor *desc)
 {
+	if (desc == NULL)
+		return;
 	if (desc->http_path != NULL) {
 		free(desc->http_path);
 		desc->http_path = NULL;
+	}
+	if (desc->http_path_alias != NULL) {
+		free(desc->http_path_alias);
+		desc->http_path_alias = NULL;
 	}
 	if (desc->http_query != NULL) {
 		free(desc->http_query);
@@ -114,6 +126,8 @@ server_httpdesc_free(struct http_descriptor *desc)
 	}
 	kv_purge(&desc->http_headers);
 	desc->http_lastheader = NULL;
+	desc->http_method = 0;
+	desc->http_chunked = 0;
 }
 
 void
@@ -121,7 +135,7 @@ server_read_http(struct bufferevent *bev, void *arg)
 {
 	struct client		*clt = arg;
 	struct server_config	*srv_conf = clt->clt_srv_conf;
-	struct http_descriptor	*desc = clt->clt_desc;
+	struct http_descriptor	*desc = clt->clt_descreq;
 	struct evbuffer		*src = EVBUFFER_INPUT(bev);
 	char			*line = NULL, *key, *value;
 	const char		*errstr;
@@ -215,18 +229,20 @@ server_read_http(struct bufferevent *bev, void *arg)
 				goto fail;
 			}
 			desc->http_version = strchr(desc->http_path, ' ');
-			if (desc->http_version != NULL)
-				*desc->http_version++ = '\0';
+			if (desc->http_version == NULL) {
+				free(line);
+				goto fail;
+			}
+			*desc->http_version++ = '\0';
 			desc->http_query = strchr(desc->http_path, '?');
 			if (desc->http_query != NULL)
 				*desc->http_query++ = '\0';
 
 			/*
 			 * Have to allocate the strings because they could
-			 * be changed independetly by the filters later.
+			 * be changed independently by the filters later.
 			 */
-			if (desc->http_version != NULL &&
-			    (desc->http_version =
+			if ((desc->http_version =
 			    strdup(desc->http_version)) == NULL) {
 				free(line);
 				goto fail;
@@ -300,11 +316,36 @@ server_read_http(struct bufferevent *bev, void *arg)
 		case HTTP_METHOD_GET:
 		case HTTP_METHOD_HEAD:
 		case HTTP_METHOD_OPTIONS:
+		/* WebDAV methods */
+		case HTTP_METHOD_COPY:
 			clt->clt_toread = 0;
 			break;
 		case HTTP_METHOD_POST:
 		case HTTP_METHOD_PUT:
 		case HTTP_METHOD_RESPONSE:
+		/* WebDAV methods */
+		case HTTP_METHOD_PROPFIND:
+		case HTTP_METHOD_PROPPATCH:
+		case HTTP_METHOD_MKCOL:
+		case HTTP_METHOD_LOCK:
+		case HTTP_METHOD_UNLOCK:
+		case HTTP_METHOD_VERSION_CONTROL:
+		case HTTP_METHOD_REPORT:
+		case HTTP_METHOD_CHECKOUT:
+		case HTTP_METHOD_CHECKIN:
+		case HTTP_METHOD_UNCHECKOUT:
+		case HTTP_METHOD_MKWORKSPACE:
+		case HTTP_METHOD_UPDATE:
+		case HTTP_METHOD_LABEL:
+		case HTTP_METHOD_MERGE:
+		case HTTP_METHOD_BASELINE_CONTROL:
+		case HTTP_METHOD_MKACTIVITY:
+		case HTTP_METHOD_ORDERPATCH:
+		case HTTP_METHOD_ACL:
+		case HTTP_METHOD_MKREDIRECTREF:
+		case HTTP_METHOD_UPDATEREDIRECTREF:
+		case HTTP_METHOD_SEARCH:
+		case HTTP_METHOD_PATCH:
 			/* HTTP request payload */
 			if (clt->clt_toread > 0)
 				bev->readcb = server_read_httpcontent;
@@ -316,10 +357,8 @@ server_read_http(struct bufferevent *bev, void *arg)
 			}
 			break;
 		default:
-			/* HTTP handler */
-			clt->clt_toread = TOREAD_HTTP_HEADER;
-			bev->readcb = server_read_http;
-			break;
+			server_abort_http(clt, 405, "method not allowed");
+			return;
 		}
 		if (desc->http_chunked) {
 			/* Chunked transfer encoding */
@@ -514,12 +553,10 @@ server_read_httpchunks(struct bufferevent *bev, void *arg)
 void
 server_reset_http(struct client *clt)
 {
-	struct http_descriptor	*desc = clt->clt_desc;
 	struct server		*srv = clt->clt_srv;
 
-	server_httpdesc_free(desc);
-	desc->http_method = 0;
-	desc->http_chunked = 0;
+	server_httpdesc_free(clt->clt_descreq);
+	server_httpdesc_free(clt->clt_descresp);
 	clt->clt_headerlen = 0;
 	clt->clt_line = 0;
 	clt->clt_done = 0;
@@ -530,16 +567,16 @@ server_reset_http(struct client *clt)
 	server_log(clt, NULL);
 }
 
-void
-server_http_date(char *tmbuf, size_t len)
+ssize_t
+server_http_time(time_t t, char *tmbuf, size_t len)
 {
-	time_t			 t;
 	struct tm		 tm;
 
 	/* New HTTP/1.1 RFC 7231 prefers IMF-fixdate from RFC 5322 */
-	time(&t);
-	gmtime_r(&t, &tm);
-	strftime(tmbuf, len, "%a, %d %h %Y %T %Z", &tm);
+	if (t == -1 || gmtime_r(&t, &tm) == NULL)
+		return (-1);
+	else
+		return (strftime(tmbuf, len, "%a, %d %h %Y %T %Z", &tm));
 }
 
 const char *
@@ -574,6 +611,55 @@ server_http_host(struct sockaddr_storage *ss, char *buf, size_t len)
 	return (buf);
 }
 
+char *
+server_http_parsehost(char *host, char *buf, size_t len, int *portval)
+{
+	char		*start, *end, *port;
+	const char	*errstr = NULL;
+
+	if (strlcpy(buf, host, len) >= len) {
+		log_debug("%s: host name too long", __func__);
+		return (NULL);
+	}
+
+	start = buf;
+	end = port = NULL;
+
+	if (*start == '[' && (end = strchr(start, ']')) != NULL) {
+		/* Address enclosed in [] with port, eg. [2001:db8::1]:80 */
+		start++;
+		*end++ = '\0';
+		if ((port = strchr(end, ':')) == NULL || *port == '\0')
+			port = NULL;
+		else
+			port++;
+		memmove(buf, start, strlen(start) + 1);
+	} else if ((end = strchr(start, ':')) != NULL) {
+		/* Name or address with port, eg. www.example.com:80 */
+		*end++ = '\0';
+		port = end;
+	} else {
+		/* Name or address with default port, eg. www.example.com */
+		port = NULL;
+	}
+
+	if (port != NULL) {
+		/* Save the requested port */
+		*portval = strtonum(port, 0, 0xffff, &errstr);
+		if (errstr != NULL) {
+			log_debug("%s: invalid port: %s", __func__,
+			    strerror(errno));
+			return (NULL);
+		}
+		*portval = htons(*portval);
+	} else {
+		/* Port not given, indicate the default port */
+		*portval = -1;
+	}
+
+	return (start);
+}
+
 void
 server_abort_http(struct client *clt, u_int code, const char *msg)
 {
@@ -598,13 +684,11 @@ server_abort_http(struct client *clt, u_int code, const char *msg)
 	if (print_host(&srv_conf->ss, hbuf, sizeof(hbuf)) == NULL)
 		goto done;
 
-	server_http_date(tmbuf, sizeof(tmbuf));
+	if (server_http_time(time(NULL), tmbuf, sizeof(tmbuf)) <= 0)
+		goto done;
 
 	/* Do not send details of the Internal Server Error */
 	switch (code) {
-	case 500:
-		/* Do not send details of the Internal Server Error */
-		break;
 	case 301:
 	case 302:
 		if (asprintf(&extraheader, "Location: %s\r\n", msg) == -1) {
@@ -613,7 +697,6 @@ server_abort_http(struct client *clt, u_int code, const char *msg)
 		}
 		break;
 	default:
-		text = msg;
 		break;
 	}
 
@@ -665,12 +748,17 @@ server_abort_http(struct client *clt, u_int code, const char *msg)
 void
 server_close_http(struct client *clt)
 {
-	struct http_descriptor *desc	= clt->clt_desc;
+	struct http_descriptor *desc;
 
-	if (desc == NULL)
-		return;
+	desc = clt->clt_descreq;
 	server_httpdesc_free(desc);
 	free(desc);
+	clt->clt_descreq = NULL;
+
+	desc = clt->clt_descresp;
+	server_httpdesc_free(desc);
+	free(desc);
+	clt->clt_descresp = NULL;
 }
 
 int
@@ -678,13 +766,17 @@ server_response(struct httpd *httpd, struct client *clt)
 {
 	char			 path[MAXPATHLEN];
 	char			 hostname[MAXHOSTNAMELEN];
-	struct http_descriptor	*desc	= clt->clt_desc;
+	struct http_descriptor	*desc = clt->clt_descreq;
+	struct http_descriptor	*resp = clt->clt_descresp;
 	struct server		*srv = clt->clt_srv;
-	struct server_config	*srv_conf = &srv->srv_conf, *location;
+	struct server_config	*srv_conf = &srv->srv_conf;
 	struct kv		*kv, key, *host;
+	int			 portval = -1;
+	char			*hostval;
 
 	/* Canonicalize the request path */
 	if (desc->http_path == NULL ||
+	    url_decode(desc->http_path) == NULL ||
 	    canonicalize_path(desc->http_path, path, sizeof(path)) == NULL)
 		goto fail;
 	free(desc->http_path);
@@ -726,11 +818,16 @@ server_response(struct httpd *httpd, struct client *clt)
 	 * XXX the Host can also appear in the URL path.
 	 */
 	if (host != NULL) {
-		/* XXX maybe better to turn srv_hosts into a tree */
+		if ((hostval = server_http_parsehost(host->kv_value,
+		    hostname, sizeof(hostname), &portval)) == NULL)
+			goto fail;
+
 		TAILQ_FOREACH(srv_conf, &srv->srv_hosts, entry) {
 			if ((srv_conf->flags & SRVFLAG_LOCATION) == 0 &&
-			    fnmatch(srv_conf->name, host->kv_value,
-			    FNM_CASEFOLD) == 0) {
+			    fnmatch(srv_conf->name, hostname,
+			    FNM_CASEFOLD) == 0 &&
+			    (portval == -1 ||
+			    (portval != -1 && portval == srv_conf->port))) {
 				/* Replace host configuration */
 				clt->clt_srv_conf = srv_conf;
 				srv_conf = NULL;
@@ -755,31 +852,46 @@ server_response(struct httpd *httpd, struct client *clt)
 	if ((desc->http_host = strdup(hostname)) == NULL)
 		goto fail;
 
-	/* Now search for the location */
-	TAILQ_FOREACH(location, &srv->srv_hosts, entry) {
-		if ((location->flags & SRVFLAG_LOCATION) &&
-		    location->id == srv_conf->id &&
-		    fnmatch(location->location, desc->http_path,
-		    FNM_CASEFOLD) == 0) {
-			/* Replace host configuration */
-			clt->clt_srv_conf = srv_conf = location;
-			break;
-		}
-	}
+	/* Now fill in the mandatory parts of the response descriptor */
+	resp->http_method = desc->http_method;
+	if ((resp->http_version = strdup(desc->http_version)) == NULL)
+		goto fail;
 
-	if (srv_conf->flags & SRVFLAG_FCGI)
-		return (server_fcgi(httpd, clt));
+	/* Now search for the location */
+	srv_conf = server_getlocation(clt, desc->http_path);
+
 	return (server_file(httpd, clt));
  fail:
 	server_abort_http(clt, 400, "bad request");
 	return (-1);
 }
 
+struct server_config *
+server_getlocation(struct client *clt, const char *path)
+{
+	struct server		*srv = clt->clt_srv;
+	struct server_config	*srv_conf = clt->clt_srv_conf, *location;
+
+	/* Now search for the location */
+	TAILQ_FOREACH(location, &srv->srv_hosts, entry) {
+		if ((location->flags & SRVFLAG_LOCATION) &&
+		    location->id == srv_conf->id &&
+		    fnmatch(location->location, path, FNM_CASEFOLD) == 0) {
+			/* Replace host configuration */
+			clt->clt_srv_conf = srv_conf = location;
+			break;
+		}
+	}
+
+	return (srv_conf);
+}
+
 int
 server_response_http(struct client *clt, u_int code,
-    struct media_type *media, size_t size)
+    struct media_type *media, size_t size, time_t mtime)
 {
-	struct http_descriptor	*desc = clt->clt_desc;
+	struct http_descriptor	*desc = clt->clt_descreq;
+	struct http_descriptor	*resp = clt->clt_descresp;
 	const char		*error;
 	struct kv		*ct, *cl;
 	char			 tmbuf[32];
@@ -790,51 +902,54 @@ server_response_http(struct client *clt, u_int code,
 	if (server_log_http(clt, code, size) == -1)
 		return (-1);
 
-	kv_purge(&desc->http_headers);
-
 	/* Add error codes */
-	if (kv_setkey(&desc->http_pathquery, "%lu", code) == -1 ||
-	    kv_set(&desc->http_pathquery, "%s", error) == -1)
+	if (kv_setkey(&resp->http_pathquery, "%lu", code) == -1 ||
+	    kv_set(&resp->http_pathquery, "%s", error) == -1)
 		return (-1);
 
 	/* Add headers */
-	if (kv_add(&desc->http_headers, "Server", HTTPD_SERVERNAME) == NULL)
+	if (kv_add(&resp->http_headers, "Server", HTTPD_SERVERNAME) == NULL)
 		return (-1);
 
 	/* Is it a persistent connection? */
 	if (clt->clt_persist) {
-		if (kv_add(&desc->http_headers,
+		if (kv_add(&resp->http_headers,
 		    "Connection", "keep-alive") == NULL)
 			return (-1);
-	} else if (kv_add(&desc->http_headers, "Connection", "close") == NULL)
+	} else if (kv_add(&resp->http_headers, "Connection", "close") == NULL)
 		return (-1);
 
 	/* Set media type */
-	if ((ct = kv_add(&desc->http_headers, "Content-Type", NULL)) == NULL ||
+	if ((ct = kv_add(&resp->http_headers, "Content-Type", NULL)) == NULL ||
 	    kv_set(ct, "%s/%s",
 	    media == NULL ? "application" : media->media_type,
 	    media == NULL ? "octet-stream" : media->media_subtype) == -1)
 		return (-1);
 
 	/* Set content length, if specified */
-	if (size && ((cl =
-	    kv_add(&desc->http_headers, "Content-Length", NULL)) == NULL ||
-	    kv_set(cl, "%ld", size) == -1))
+	if ((cl =
+	    kv_add(&resp->http_headers, "Content-Length", NULL)) == NULL ||
+	    kv_set(cl, "%ld", size) == -1)
 		return (-1);
 
-	/* Date header is mandatory and should be added last */
-	server_http_date(tmbuf, sizeof(tmbuf));
-	if (kv_add(&desc->http_headers, "Date", tmbuf) == NULL)
+	/* Set last modification time */
+	if (server_http_time(mtime, tmbuf, sizeof(tmbuf)) <= 0 ||
+	    kv_add(&resp->http_headers, "Last-Modified", tmbuf) == NULL)
+		return (-1);
+
+	/* Date header is mandatory and should be added as late as possible */
+	if (server_http_time(time(NULL), tmbuf, sizeof(tmbuf)) <= 0 ||
+	    kv_add(&resp->http_headers, "Date", tmbuf) == NULL)
 		return (-1);
 
 	/* Write completed header */
 	if (server_writeresponse_http(clt) == -1 ||
 	    server_bufferevent_print(clt, "\r\n") == -1 ||
-	    server_headers(clt, server_writeheader_http, NULL) == -1 ||
+	    server_headers(clt, resp, server_writeheader_http, NULL) == -1 ||
 	    server_bufferevent_print(clt, "\r\n") == -1)
 		return (-1);
 
-	if (desc->http_method == HTTP_METHOD_HEAD) {
+	if (size == 0 || resp->http_method == HTTP_METHOD_HEAD) {
 		bufferevent_enable(clt->clt_bev, EV_READ|EV_WRITE);
 		if (clt->clt_persist)
 			clt->clt_toread = TOREAD_HTTP_HEADER;
@@ -850,7 +965,7 @@ server_response_http(struct client *clt, u_int code,
 int
 server_writeresponse_http(struct client *clt)
 {
-	struct http_descriptor	*desc = (struct http_descriptor *)clt->clt_desc;
+	struct http_descriptor	*desc = clt->clt_descresp;
 
 	DPRINTF("version: %s rescode: %s resmsg: %s", desc->http_version,
 	    desc->http_rescode, desc->http_resmesg);
@@ -894,11 +1009,11 @@ server_writeheader_http(struct client *clt, struct kv *hdr, void *arg)
 }
 
 int
-server_headers(struct client *clt,
+server_headers(struct client *clt, void *descp,
     int (*hdr_cb)(struct client *, struct kv *, void *), void *arg)
 {
 	struct kv		*hdr, *kv;
-	struct http_descriptor	*desc = (struct http_descriptor *)clt->clt_desc;
+	struct http_descriptor	*desc = descp;
 
 	RB_FOREACH(hdr, kvtree, &desc->http_headers) {
 		if ((hdr_cb)(clt, hdr, arg) == -1)
@@ -932,7 +1047,7 @@ server_httpmethod_byname(const char *name)
 const char *
 server_httpmethod_byid(u_int id)
 {
-	const char	*name = NULL;
+	const char	*name = "<UNKNOWN>";
 	int		 i;
 
 	for (i = 0; http_methods[i].method_name != NULL; i++) {
@@ -996,7 +1111,7 @@ server_log_http(struct client *clt, u_int code, size_t len)
 		return (-1);
 	if ((srv_conf->flags & SRVFLAG_LOG) == 0)
 		return (0);
-	if ((desc = clt->clt_desc) == NULL)
+	if ((desc = clt->clt_descreq) == NULL)
 		return (-1);
 
 	if ((t = time(NULL)) == -1)

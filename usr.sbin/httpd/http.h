@@ -1,4 +1,4 @@
-/*	$OpenBSD: http.h,v 1.5 2014/08/03 21:33:27 reyk Exp $	*/
+/*	$OpenBSD: http.h,v 1.5.2.1 2014/11/20 07:48:45 jasper Exp $	*/
 
 /*
  * Copyright (c) 2012 - 2014 Reyk Floeter <reyk@openbsd.org>
@@ -44,6 +44,32 @@ enum httpmethod {
 	HTTP_METHOD_LOCK,
 	HTTP_METHOD_UNLOCK,
 
+	/* WebDAV Versioning Extension, RFC 3253 */
+	HTTP_METHOD_VERSION_CONTROL,
+	HTTP_METHOD_REPORT,
+	HTTP_METHOD_CHECKOUT,
+	HTTP_METHOD_CHECKIN,
+	HTTP_METHOD_UNCHECKOUT,
+	HTTP_METHOD_MKWORKSPACE,
+	HTTP_METHOD_UPDATE,
+	HTTP_METHOD_LABEL,
+	HTTP_METHOD_MERGE,
+	HTTP_METHOD_BASELINE_CONTROL,
+	HTTP_METHOD_MKACTIVITY,
+
+	/* WebDAV Ordered Collections, RFC 3648 */
+	HTTP_METHOD_ORDERPATCH,
+
+	/* WebDAV Access Control, RFC 3744 */
+	HTTP_METHOD_ACL,
+
+	/* WebDAV Redirect Reference Resources, RFC 4437 */
+	HTTP_METHOD_MKREDIRECTREF,
+	HTTP_METHOD_UPDATEREDIRECTREF,
+
+	/* WebDAV Search, RFC 5323 */
+	HTTP_METHOD_SEARCH,
+
 	/* PATCH, RFC 5789 */
 	HTTP_METHOD_PATCH,
 
@@ -71,6 +97,22 @@ struct http_method {
 	{ HTTP_METHOD_MOVE,		"MOVE" },	\
 	{ HTTP_METHOD_LOCK,		"LOCK" },	\
 	{ HTTP_METHOD_UNLOCK,		"UNLOCK" },	\
+	{ HTTP_METHOD_VERSION_CONTROL,	"VERSION-CONTROL" }, \
+	{ HTTP_METHOD_REPORT,		"REPORT" },	\
+	{ HTTP_METHOD_CHECKOUT,		"CHECKOUT" },	\
+	{ HTTP_METHOD_CHECKIN,		"CHECKIN" },	\
+	{ HTTP_METHOD_UNCHECKOUT,	"UNCHECKOUT" },	\
+	{ HTTP_METHOD_MKWORKSPACE,	"MKWORKSPACE" }, \
+	{ HTTP_METHOD_UPDATE,		"UPDATE" },	\
+	{ HTTP_METHOD_LABEL,		"LABEL" },	\
+	{ HTTP_METHOD_MERGE,		"MERGE" },	\
+	{ HTTP_METHOD_BASELINE_CONTROL,	"BASELINE-CONTROL" }, \
+	{ HTTP_METHOD_MKACTIVITY,	"MKACTIVITY" },	\
+	{ HTTP_METHOD_ORDERPATCH,	"ORDERPATCH" },	\
+	{ HTTP_METHOD_ACL,		"ACL" },	\
+	{ HTTP_METHOD_MKREDIRECTREF,	"MKREDIRECTREF" }, \
+	{ HTTP_METHOD_UPDATEREDIRECTREF, "UPDATEREDIRECTREF" }, \
+	{ HTTP_METHOD_SEARCH,		"SEARCH" },	\
 	{ HTTP_METHOD_PATCH,		"PATCH" },	\
 	{ HTTP_METHOD_NONE,		NULL }		\
 }
@@ -155,6 +197,9 @@ struct http_descriptor {
 	enum httpmethod		 http_method;
 	int			 http_chunked;
 	char			*http_version;
+
+	/* Rewritten path remains NULL if not used */
+	char			*http_path_alias;
 
 	/* A tree of headers and attached lists for repeated headers. */
 	struct kv		*http_lastheader;

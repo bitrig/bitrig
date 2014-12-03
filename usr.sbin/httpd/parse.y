@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.34 2014/08/06 20:29:54 reyk Exp $	*/
+/*	$OpenBSD: parse.y,v 1.34.2.1 2014/11/20 07:48:45 jasper Exp $	*/
 
 /*
  * Copyright (c) 2007 - 2014 Reyk Floeter <reyk@openbsd.org>
@@ -180,7 +180,7 @@ main		: PREFORK NUMBER	{
 				break;
 			if ($2 <= 0 || $2 > SERVER_MAXPROC) {
 				yyerror("invalid number of preforked "
-				    "servers: %d", $2);
+				    "servers: %lld", $2);
 				YYERROR;
 			}
 			conf->sc_prefork_server = $2;
@@ -196,15 +196,6 @@ server		: SERVER STRING		{
 			if (!loadcfg) {
 				free($2);
 				YYACCEPT;
-			}
-
-			TAILQ_FOREACH(s, conf->sc_servers, srv_entry)
-				if (!strcmp(s->srv_conf.name, $2))
-					break;
-			if (s != NULL) {
-				yyerror("server %s defined twice", $2);
-				free($2);
-				YYERROR;
 			}
 
 			if ((s = calloc(1, sizeof (*s))) == NULL)
@@ -252,18 +243,46 @@ server		: SERVER STRING		{
 			srv_conf = &srv->srv_conf;
 
 			SPLAY_INIT(&srv->srv_clients);
-			TAILQ_INSERT_TAIL(conf->sc_servers, srv, srv_entry);
 		} '{' optnl serveropts_l '}'	{
+			struct server	*s = NULL;
+
+			TAILQ_FOREACH(s, conf->sc_servers, srv_entry) {
+				if ((s->srv_conf.flags &
+				    SRVFLAG_LOCATION) == 0 &&
+				    strcmp(s->srv_conf.name,
+				    srv->srv_conf.name) == 0 &&
+				    s->srv_conf.port == srv->srv_conf.port &&
+				    sockaddr_cmp(
+				    (struct sockaddr *)&s->srv_conf.ss,
+				    (struct sockaddr *)&srv->srv_conf.ss,
+				    s->srv_conf.prefixlen) == 0)
+					break;
+			}
+			if (s != NULL) {
+				yyerror("server \"%s\" defined twice",
+				    srv->srv_conf.name);
+				serverconfig_free(srv_conf);
+				free(srv);
+				YYABORT;
+			}
+
 			if (srv->srv_conf.ss.ss_family == AF_UNSPEC) {
 				yyerror("listen address not specified");
-				free($2);
+				serverconfig_free(srv_conf);
+				free(srv);
 				YYERROR;
 			}
+
 			if (server_ssl_load_keypair(srv) == -1) {
 				yyerror("failed to load public/private keys "
 				    "for server %s", srv->srv_conf.name);
+				serverconfig_free(srv_conf);
+				free(srv);
 				YYERROR;
 			}
+
+			TAILQ_INSERT_TAIL(conf->sc_servers, srv, srv_entry);
+
 			srv = NULL;
 			srv_conf = NULL;
 		}
@@ -367,17 +386,6 @@ serveroptsl	: LISTEN ON STRING optssl port {
 				YYACCEPT;
 			}
 
-			TAILQ_FOREACH(s, conf->sc_servers, srv_entry)
-				if (strcmp(s->srv_conf.name,
-				    srv->srv_conf.name) == 0 &&
-				    strcmp(s->srv_conf.location, $2) == 0)
-					break;
-			if (s != NULL) {
-				yyerror("location %s defined twice", $2);
-				free($2);
-				YYERROR;
-			}
-
 			if ((s = calloc(1, sizeof (*s))) == NULL)
 				fatal("out of memory");
 
@@ -416,12 +424,31 @@ serveroptsl	: LISTEN ON STRING optssl port {
 			srv = s;
 			srv_conf = &srv->srv_conf;
 			SPLAY_INIT(&srv->srv_clients);
-			TAILQ_INSERT_TAIL(conf->sc_servers, srv, srv_entry);
 		} '{' optnl serveropts_l '}'	{
+			struct server	*s = NULL;
+
+			TAILQ_FOREACH(s, conf->sc_servers, srv_entry) {
+				if ((s->srv_conf.flags & SRVFLAG_LOCATION) &&
+				    s->srv_conf.id == srv_conf->id &&
+				    strcmp(s->srv_conf.location,
+				    srv_conf->location) == 0)
+					break;
+			}
+			if (s != NULL) {
+				yyerror("location \"%s\" defined twice",
+				    srv->srv_conf.location);
+				serverconfig_free(srv_conf);
+				free(srv);
+				YYABORT;
+			}
+
+			TAILQ_INSERT_TAIL(conf->sc_servers, srv, srv_entry);
+
 			srv = parentsrv;
 			srv_conf = &parentsrv->srv_conf;
 			parentsrv = NULL;
 		}
+		| include
 		;
 
 fastcgi		: NO FCGI		{
@@ -623,7 +650,7 @@ tcpflags	: SACK			{ srv_conf->tcpflags |= TCPFLAG_SACK; }
 		}
 		| BACKLOG NUMBER	{
 			if ($2 < 0 || $2 > SERVER_MAX_CLIENTS) {
-				yyerror("invalid backlog: %d", $2);
+				yyerror("invalid backlog: %lld", $2);
 				YYERROR;
 			}
 			srv_conf->tcpbacklog = $2;
@@ -631,13 +658,13 @@ tcpflags	: SACK			{ srv_conf->tcpflags |= TCPFLAG_SACK; }
 		| SOCKET BUFFER NUMBER	{
 			srv_conf->tcpflags |= TCPFLAG_BUFSIZ;
 			if ((srv_conf->tcpbufsiz = $3) < 0) {
-				yyerror("invalid socket buffer size: %d", $3);
+				yyerror("invalid socket buffer size: %lld", $3);
 				YYERROR;
 			}
 		}
 		| IP STRING NUMBER	{
 			if ($3 < 0) {
-				yyerror("invalid ttl: %d", $3);
+				yyerror("invalid ttl: %lld", $3);
 				free($2);
 				YYERROR;
 			}
@@ -694,6 +721,9 @@ medianamesl	: STRING				{
 			}
 			free($1);
 
+			if (!loadcfg)
+				break;
+
 			if (media_add(conf->sc_mediatypes, &media) == NULL) {
 				yyerror("failed to add media type");
 				YYERROR;
@@ -729,7 +759,7 @@ port		: PORT STRING {
 		}
 		| PORT NUMBER {
 			if ($2 <= 0 || $2 >= (int)USHRT_MAX) {
-				yyerror("invalid port: %d", $2);
+				yyerror("invalid port: %lld", $2);
 				YYERROR;
 			}
 			$$.val[0] = htons($2);
@@ -740,7 +770,7 @@ port		: PORT STRING {
 timeout		: NUMBER
 		{
 			if ($1 < 0) {
-				yyerror("invalid timeout: %d\n", $1);
+				yyerror("invalid timeout: %lld", $1);
 				YYERROR;
 			}
 			$$.tv_sec = $1;
@@ -771,15 +801,15 @@ int
 yyerror(const char *fmt, ...)
 {
 	va_list		 ap;
-	char		*nfmt;
+	char		*msg;
 
 	file->errors++;
 	va_start(ap, fmt);
-	if (asprintf(&nfmt, "%s:%d: %s", file->name, yylval.lineno, fmt) == -1)
-		fatalx("yyerror asprintf");
-	vlog(LOG_CRIT, nfmt, ap);
+	if (vasprintf(&msg, fmt, ap) == -1)
+		fatalx("yyerror vasprintf");
 	va_end(ap);
-	free(nfmt);
+	logit(LOG_CRIT, "%s:%d: %s", file->name, yylval.lineno, msg);
+	free(msg);
 	return (0);
 }
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: httpd.c,v 1.17 2014/08/05 15:36:59 reyk Exp $	*/
+/*	$OpenBSD: httpd.c,v 1.17.4.1 2014/11/20 07:48:45 jasper Exp $	*/
 
 /*
  * Copyright (c) 2014 Reyk Floeter <reyk@openbsd.org>
@@ -289,9 +289,19 @@ parent_configure(struct httpd *env)
 			fatal("send media");
 	}
 
+	/* First send the servers... */
 	TAILQ_FOREACH(srv, env->sc_servers, srv_entry) {
+		if (srv->srv_conf.flags & SRVFLAG_LOCATION)
+			continue;
 		if (config_setserver(env, srv) == -1)
 			fatal("send server");
+	}
+	/* ...and now send the locations */
+	TAILQ_FOREACH(srv, env->sc_servers, srv_entry) {
+		if ((srv->srv_conf.flags & SRVFLAG_LOCATION) == 0)
+			continue;
+		if (config_setserver(env, srv) == -1)
+			fatal("send location");
 	}
 
 	/* The servers need to reload their config. */
@@ -526,6 +536,46 @@ canonicalize_host(const char *host, char *name, size_t len)
 }
 
 const char *
+url_decode(char *url)
+{
+	char	*p, *q;
+	char	 hex[3];
+	u_long	 x;
+
+	hex[2] = '\0';
+	p = q = url;
+
+	while (*p != '\0') {
+		switch (*p) {
+		case '%':
+			/* Encoding character is followed by two hex chars */
+			if (!(isxdigit(p[1]) && isxdigit(p[2])))
+				return (NULL);
+
+			hex[0] = p[1];
+			hex[1] = p[2];
+
+			/*
+			 * We don't have to validate "hex" because it is
+			 * guaranteed to include two hex chars followed by nul.
+			 */
+			x = strtoul(hex, NULL, 16);		
+			*q = (char)x;
+			p += 2;
+			break;
+		default:
+			*q = *p;
+			break;
+		}
+		p++;
+		q++;
+	}
+	*q = '\0';
+
+	return(url);
+}
+
+const char *
 canonicalize_path(const char *input, char *path, size_t len)
 {
 	const char	*i;
@@ -580,28 +630,33 @@ canonicalize_path(const char *input, char *path, size_t len)
 	return (path);
 }
 
-ssize_t
-path_info(char *name)
+size_t
+path_info(char *path)
 {
-	char		*p, *start, *end;
-	char		 path[MAXPATHLEN];
+	char		*p, *start, *end, ch;
 	struct stat	 st;
-
-	if (strlcpy(path, name, sizeof(path)) >= sizeof(path))
-		return (-1);
+	int		 ret;
 
 	start = path;
 	end = start + strlen(path);
 
 	for (p = end; p > start; p--) {
-		if (*p != '/')
+		/* Scan every path component from the end and at each '/' */
+		if (p < end && *p != '/')
 			continue;
-		if (stat(path, &st) == 0)
-			break;
+
+		/* Temporarily cut the path component out */
+		ch = *p;
 		*p = '\0';
+		ret = stat(path, &st);
+		*p = ch;
+
+		/* Break if the initial path component was found */
+		if (ret == 0)
+			break;
 	}
 
-	return (strlen(path));
+	return (p - start);
 }
 
 void
@@ -623,6 +678,40 @@ socket_rlimit(int maxfd)
 		rl.rlim_cur = MAX(rl.rlim_max, (rlim_t)maxfd);
 	if (setrlimit(RLIMIT_NOFILE, &rl) == -1)
 		fatal("socket_rlimit: failed to set resource limit");
+}
+
+char *
+evbuffer_getline(struct evbuffer *evb)
+{
+	u_int8_t	*ptr = EVBUFFER_DATA(evb);
+	size_t		 len = EVBUFFER_LENGTH(evb);
+	char		*str;
+	u_int		 i;
+
+	/* Safe version of evbuffer_readline() */
+	if ((str = get_string(ptr, len)) == NULL)
+		return (NULL);
+
+	for (i = 0; str[i] != '\0'; i++) {
+		if (str[i] == '\r' || str[i] == '\n')
+			break;
+	}
+
+	if (i == len) {
+		free(str);
+		return (NULL);
+	}
+
+	str[i] = '\0';
+
+	if ((i + 1) < len) {
+		if (ptr[i] == '\r' && ptr[i + 1] == '\n')
+			i++;
+	}
+
+	evbuffer_drain(evb, ++i);
+
+	return (str);
 }
 
 char *

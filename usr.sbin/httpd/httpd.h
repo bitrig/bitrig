@@ -1,4 +1,4 @@
-/*	$OpenBSD: httpd.h,v 1.51 2014/08/06 18:21:14 reyk Exp $	*/
+/*	$OpenBSD: httpd.h,v 1.51.2.1 2014/11/20 07:48:45 jasper Exp $	*/
 
 /*
  * Copyright (c) 2006 - 2014 Reyk Floeter <reyk@openbsd.org>
@@ -276,7 +276,8 @@ struct client {
 	size_t			 clt_buflen;
 	struct evbuffer		*clt_output;
 	struct event		 clt_ev;
-	void			*clt_desc;
+	void			*clt_descreq;
+	void			*clt_descresp;
 	int			 clt_sndbufsiz;
 
 	int			 clt_fd;
@@ -294,6 +295,8 @@ struct client {
 	int			 clt_fcgi_toread;
 	int			 clt_fcgi_padding_len;
 	int			 clt_fcgi_type;
+	int			 clt_fcgi_chunked;
+	int			 clt_fcgi_end;
 	struct evbuffer		*clt_srvevb;
 
 	struct evbuffer		*clt_log;
@@ -463,6 +466,8 @@ pid_t	 server(struct privsep *, struct privsep_proc *);
 int	 server_ssl_load_keypair(struct server *);
 int	 server_privinit(struct server *);
 void	 server_purge(struct server *);
+void	 serverconfig_free(struct server_config *);
+void	 serverconfig_reset(struct server_config *);
 int	 server_socket_af(struct sockaddr_storage *, in_port_t);
 in_port_t
 	 server_socket_getport(struct sockaddr_storage *);
@@ -477,6 +482,8 @@ void	 server_sendlog(struct server_config *, int, const char *, ...)
 void	 server_close(struct client *, const char *);
 void	 server_dump(struct client *, const void *, size_t);
 int	 server_client_cmp(struct client *, struct client *);
+int	 server_bufferevent_printf(struct client *, const char *, ...)
+	    __attribute__((__format__ (printf, 2, 3)));
 int	 server_bufferevent_print(struct client *, const char *);
 int	 server_bufferevent_write_buffer(struct client *,
 	    struct evbuffer *);
@@ -508,17 +515,20 @@ const char
 void	 server_read_httpcontent(struct bufferevent *, void *);
 void	 server_read_httpchunks(struct bufferevent *, void *);
 int	 server_writeheader_http(struct client *clt, struct kv *, void *);
-int	 server_headers(struct client *,
+int	 server_headers(struct client *, void *,
 	    int (*)(struct client *, struct kv *, void *), void *);
 int	 server_writeresponse_http(struct client *);
 int	 server_response_http(struct client *, u_int, struct media_type *,
-	    size_t);
+	    size_t, time_t);
 void	 server_reset_http(struct client *);
 void	 server_close_http(struct client *);
 int	 server_response(struct httpd *, struct client *);
+struct server_config *
+	 server_getlocation(struct client *, const char *);
 const char *
 	 server_http_host(struct sockaddr_storage *, char *, size_t);
-void	 server_http_date(char *, size_t);
+char	*server_http_parsehost(char *, char *, size_t, int *);
+ssize_t	 server_http_time(time_t, char *, size_t);
 int	 server_log_http(struct client *, u_int, size_t);
 
 /* server_file.c */
@@ -533,13 +543,15 @@ int	 fcgi_add_stdin(struct client *, struct evbuffer *);
 void		 event_again(struct event *, int, short,
 		    void (*)(int, short, void *),
 		    struct timeval *, struct timeval *, void *);
+const char	*url_decode(char *);
 const char	*canonicalize_host(const char *, char *, size_t);
 const char	*canonicalize_path(const char *, char *, size_t);
-ssize_t		 path_info(char *);
+size_t		 path_info(char *);
 void		 imsg_event_add(struct imsgev *);
 int		 imsg_compose_event(struct imsgev *, u_int16_t, u_int32_t,
 		    pid_t, int, void *, u_int16_t);
 void		 socket_rlimit(int);
+char		*evbuffer_getline(struct evbuffer *);
 char		*get_string(u_int8_t *, size_t);
 void		*get_data(u_int8_t *, size_t);
 int		 sockaddr_cmp(struct sockaddr *, struct sockaddr *, int);
@@ -575,6 +587,7 @@ void	log_warn(const char *, ...) __attribute__((__format__ (printf, 1, 2)));
 void	log_warnx(const char *, ...) __attribute__((__format__ (printf, 1, 2)));
 void	log_info(const char *, ...) __attribute__((__format__ (printf, 1, 2)));
 void	log_debug(const char *, ...) __attribute__((__format__ (printf, 1, 2)));
+void	logit(int, const char *, ...) __attribute__((__format__ (printf, 2, 3)));
 void	vlog(int, const char *, va_list) __attribute__((__format__ (printf, 2, 0)));
 __dead void fatal(const char *);
 __dead void fatalx(const char *);
