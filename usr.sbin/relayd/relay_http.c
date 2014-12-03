@@ -1,4 +1,4 @@
-/*	$OpenBSD: relay_http.c,v 1.32 2014/07/17 11:35:26 stsp Exp $	*/
+/*	$OpenBSD: relay_http.c,v 1.32.4.1 2014/11/17 16:53:24 tedu Exp $	*/
 
 /*
  * Copyright (c) 2006 - 2014 Reyk Floeter <reyk@openbsd.org>
@@ -291,18 +291,20 @@ relay_read_http(struct bufferevent *bev, void *arg)
 				goto fail;
 			}
 			desc->http_version = strchr(desc->http_path, ' ');
-			if (desc->http_version != NULL)
-				*desc->http_version++ = '\0';
+			if (desc->http_version == NULL) {
+				free(line);
+				goto fail;
+			}
+			*desc->http_version++ = '\0';
 			desc->http_query = strchr(desc->http_path, '?');
 			if (desc->http_query != NULL)
 				*desc->http_query++ = '\0';
 
 			/*
 			 * Have to allocate the strings because they could
-			 * be changed independetly by the filters later.
+			 * be changed independently by the filters later.
 			 */
-			if (desc->http_version != NULL &&
-			    (desc->http_version =
+			if ((desc->http_version =
 			    strdup(desc->http_version)) == NULL) {
 				free(line);
 				goto fail;
