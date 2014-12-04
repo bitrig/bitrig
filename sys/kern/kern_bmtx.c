@@ -45,8 +45,12 @@ uint64_t bmtx_blocked_unlocks;
 #define bmtx_inter_lock(b)	SCHED_LOCK()
 #define bmtx_inter_unlock(b)	SCHED_UNLOCK()
 #define bmtx_cmp_set(b,o,n)						\
-	atomic_compare_exchange_weak_explicit(&(b)->bmtx_lock, (o), (n), \
+	atomic_compare_exchange_weak_explicit(&(b)->bmtx_lock, o, n,	\
 	    memory_order_acq_rel, memory_order_relaxed)
+#define bmtx_fetch_or(b,l)						\
+	atomic_fetch_or_explicit(&(b)->bmtx_lock, l, memory_order_acq_rel)
+#define bmtx_fetch_and(b,l)						\
+	atomic_fetch_and_explicit(&bmtx->bmtx_lock, l, memory_order_acq_rel)
 
 static inline struct proc *
 bmtx_owner(atomic_uintptr_t lock)
@@ -147,8 +151,7 @@ bmtx_lock(struct bmtx *bmtx)
 	/* Recursion case, try to avoid the atomic call as much as possible */
 	if (bmtx_owner(lock) == p) {
 		if ((lock & BMTX_RECURSED) == 0)
-			atomic_fetch_or_explicit(&bmtx->bmtx_lock,
-			    BMTX_RECURSED, memory_order_acquire);
+			bmtx_fetch_or(bmtx, BMTX_RECURSED);
 		bmtx->bmtx_recurse++;
 		BST(bmtx_recursed_locks);
 		return;
@@ -188,8 +191,7 @@ bmtx_unlock(struct bmtx *bmtx)
 	/* Deal with recursion */
 	if (bmtx->bmtx_lock & BMTX_RECURSED) {
 		if (--bmtx->bmtx_recurse == 0)
-			atomic_fetch_and_explicit(&bmtx->bmtx_lock,
-			    ~BMTX_RECURSED, memory_order_release);
+			bmtx_fetch_and(bmtx, ~BMTX_RECURSED);
 		BST(bmtx_recursed_unlocks);
 		return;
 	}
@@ -230,7 +232,7 @@ bmtx_unlock(struct bmtx *bmtx)
 	 * atomic_clear it without cmp_set.
 	 */
 	lock = TAILQ_EMPTY(&bmtx->bmtx_waiters) ? 0 : BMTX_WAITERS;
-	atomic_fetch_and_explicit(&bmtx->bmtx_lock, lock, memory_order_release);
+	bmtx_fetch_and(bmtx, lock);
 	bmtx_inter_unlock(bmtx);
 
 	BST(bmtx_blocked_unlocks);
@@ -242,8 +244,7 @@ bmtx_unlock_all(struct bmtx *bmtx)
 	int count = bmtx->bmtx_recurse;
 
 	bmtx->bmtx_recurse = 0;
-	atomic_fetch_and_explicit(&bmtx->bmtx_lock,
-	    ~BMTX_RECURSED, memory_order_release);
+	bmtx_fetch_and(bmtx, ~BMTX_RECURSED);
 	bmtx_unlock(bmtx);
 
 	return (count + 1);
