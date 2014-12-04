@@ -1,4 +1,4 @@
-#	$OpenBSD: files.amd64,v 1.74 2014/07/11 21:54:37 tedu Exp $
+#	$OpenBSD: files.amd64,v 1.75 2014/12/04 21:03:50 tedu Exp $
 
 maxpartitions 16
 maxusers 2 16 128
