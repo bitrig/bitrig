@@ -18,9 +18,10 @@
 #include <sys/systm.h>
 #include <sys/proc.h>
 #include <sys/stdatomic.h>
+#include <sys/stdint.h>
 #include <sys/bmtx.h>
 
-void	bmtx_lock_block(struct bmtx *, u_long);
+void	bmtx_lock_block(struct bmtx *, uintptr_t);
 
 /* #define BMTX_STATS */
 #ifdef BMTX_STATS
@@ -74,7 +75,7 @@ bmtx_owner_blocked(atomic_uintptr_t lock)
 }
 
 void
-bmtx_lock_block(struct bmtx *bmtx, u_long lock)
+bmtx_lock_block(struct bmtx *bmtx, uintptr_t lock)
 {
 	struct proc *p;
 
@@ -132,11 +133,11 @@ bmtx_held(struct bmtx *bmtx)
 void
 bmtx_lock(struct bmtx *bmtx)
 {
-	u_long lock = 0;
+	uintptr_t lock = 0;
 	struct proc *p = curproc;
 
 	/* Try to cheat */
-	if (bmtx_cmp_set(bmtx, &lock, (u_long)p)) {
+	if (bmtx_cmp_set(bmtx, &lock, (uintptr_t)p)) {
 		BST(bmtx_fast_locks);
 		return;
 	}
@@ -161,7 +162,7 @@ bmtx_lock(struct bmtx *bmtx)
 		 */
 		if (bmtx_owner(lock) == NULL) {
 			if (bmtx_cmp_set(bmtx, &lock,
-			    (u_long)p | (lock & BMTX_WAITERS))) {
+			    (uintptr_t)p | (lock & BMTX_WAITERS))) {
 				BST(bmtx_spun_locks);
 				return;
 			}
@@ -176,7 +177,7 @@ void
 bmtx_unlock(struct bmtx *bmtx)
 {
 	struct proc *p = curproc;
-	u_long lock = (u_long)p;
+	uintptr_t lock = (uintptr_t)p;
 
 	/* Try fast path unlock, uncontested */
 	if (bmtx_cmp_set(bmtx, &lock, 0)) {
