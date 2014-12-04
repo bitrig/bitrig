@@ -1359,7 +1359,6 @@ vacation
 valloc
 varargs
 verbose
-verify_krb5_conf
 vfork
 vgrind
 vhangup
