@@ -514,8 +514,9 @@ kern_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
 		    &kernel_preemption);
 		if (error)
 			return (error);
-		/* Normalize, 0 or 1 */
-		kernel_preemption = !!kernel_preemption;
+		/* Normalize */
+		if (kernel_preemption < 0 || kernel_preemption > 2)
+			kernel_preemption = 2;
 		return (0);
 	case KERN_STACKGAPRANDOM:
 		stackgap = stackgap_random;
