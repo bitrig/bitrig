@@ -360,9 +360,9 @@ term:
 	| '-' term %prec UMINUS		{ $$ = op1(UMINUS, $2); }
 	| '+' term %prec UMINUS		{ $$ = $2; }
 	| NOT term %prec UMINUS		{ $$ = op1(NOT, notnull($2)); }
-	| BLTIN '(' ')'			{ $$ = op2(BLTIN, itonp($1), rectonode()); }
+	| BLTIN '(' ')'			{ $$ = op2(BLTIN, itonp($1), NIL); }
 	| BLTIN '(' patlist ')'		{ $$ = op2(BLTIN, itonp($1), $3); }
-	| BLTIN				{ $$ = op2(BLTIN, itonp($1), rectonode()); }
+	| BLTIN				{ $$ = op2(BLTIN, itonp($1), NIL); }
 	| CALL '(' ')'			{ $$ = op2(CALL, celltonode($1,CVAR), NIL); }
 	| CALL '(' patlist ')'		{ $$ = op2(CALL, celltonode($1,CVAR), $3); }
 	| CLOSE term			{ $$ = op1(CLOSE, $2); }

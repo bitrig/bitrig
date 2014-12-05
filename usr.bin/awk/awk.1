@@ -487,7 +487,11 @@ to
 and returns the previous seed.
 If
 .Fa expr
-is omitted, the time of day is used instead.
+is omitted,
+.Xr arc4random 3
+is used to generate random numbers in subsequent
+.Fn rand
+calls.
 .El
 .Ss String Functions
 .Bl -tag -width "split(s, a, fs)"

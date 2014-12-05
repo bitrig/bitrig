@@ -35,7 +35,7 @@ THIS SOFTWARE.
 #include "awk.h"
 #include "ytab.h"
 
-#define tempfree(x)	if (istemp(x)) tfree(x); else
+#define tempfree(x)	do { if (istemp((x))) tfree((x)); } while (0)
 
 /*
 #undef tempfree
@@ -1487,8 +1487,13 @@ Cell *bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg lis
 	FILE *fp;
 
 	t = ptoi(a[0]);
-	x = execute(a[1]);
-	nextarg = a[1]->nnext;
+	if (a[1] == NULL) {
+		x = (t == FSRAND) ? NULL : execute(rectonode());
+		nextarg = NULL;
+	} else {
+		x = execute(a[1]);
+		nextarg = a[1]->nnext;
+	}
 	switch (t) {
 	case FLENGTH:
 		if (isarr(x))
@@ -1588,10 +1593,11 @@ Cell *bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg lis
 			u = (Awkfloat)arc4random() / 0xffffffff;
 		break;
 	case FSRAND:
-		if (isrec(x)) {	/* no argument provided, want arc4random() */
+		if (x == NULL) {	/* no argument provided, want arc4random() */
 			use_srandom = 0;
 			u = srand_seed;
 		} else {
+			x = execute(a[1]);
 			use_srandom = 1;
 			u = getfval(x);
 			tmp = u;
@@ -1630,7 +1636,8 @@ Cell *bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg lis
 		FATAL("illegal function type %d", t);
 		break;
 	}
-	tempfree(x);
+	if (x != NULL)
+		tempfree(x);
 	x = gettemp();
 	setfval(x, u);
 	if (nextarg != 0) {
