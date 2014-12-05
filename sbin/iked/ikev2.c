@@ -1,4 +1,4 @@
-/*	$OpenBSD: ikev2.c,v 1.116 2014/11/07 14:12:57 mikeb Exp $	*/
+/*	$OpenBSD: ikev2.c,v 1.117 2014/12/05 13:40:44 mikeb Exp $	*/
 
 /*
  * Copyright (c) 2010-2013 Reyk Floeter <reyk@openbsd.org>
