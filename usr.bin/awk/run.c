@@ -1588,9 +1588,10 @@ Cell *bltin(Node **a, int n)	/* builtin functions. a[0] is type, a[1] is arg lis
 			u = (Awkfloat)arc4random() / 0xffffffff;
 		break;
 	case FSRAND:
-		if (isrec(x))	/* no argument provided, want arc4random() */
+		if (isrec(x)) {	/* no argument provided, want arc4random() */
 			use_srandom = 0;
-		else {
+			u = srand_seed;
+		} else {
 			use_srandom = 1;
 			u = getfval(x);
 			tmp = u;
