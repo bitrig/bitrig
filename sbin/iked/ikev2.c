@@ -1118,7 +1118,7 @@ ikev2_policy2id(struct iked_static_id *polid, struct iked_id *id, int srcid)
 	struct in6_addr		 in6;
 	X509_NAME		*name = NULL;
 	u_int8_t		*p;
-	size_t			 len;
+	int			 len;
 
 	/* Fixup the local Id if not specified */
 	if (srcid && polid->id_type == 0) {
