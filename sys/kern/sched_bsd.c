@@ -501,6 +501,7 @@ resched_proc(struct proc *p, u_char pri)
 	ci = (p->p_cpu != NULL) ? p->p_cpu : curcpu();
 	if (pri < ci->ci_schedstate.spc_curpriority)
 		need_resched(ci);
+	kpreempt(p);
 }
 
 /*
