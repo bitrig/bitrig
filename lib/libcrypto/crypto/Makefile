@@ -5,7 +5,7 @@ LIB=	crypto
 SSL_SRC=	${.CURDIR}/../../libssl/src
 LCRYPTO_SRC=	${SSL_SRC}/crypto
 
-CFLAGS+= -Wall -Werror
+CFLAGS+= -Wall -Werror -Wno-pointer-sign -Wno-unused-const-variable
 
 .include <bsd.own.mk>		# for 'NOPIC' definition
 .if !defined(NOPIC)

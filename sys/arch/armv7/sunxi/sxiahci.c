@@ -47,6 +47,14 @@
 #define	 SXIAHCI_PREG_DMA_INIT	(0x44<<8)
 
 void	sxiahci_attach(struct device *, struct device *, void *);
+int	sxiahci_port_start(struct ahci_port *, int);
+
+extern int ahci_intr(void *);
+extern u_int32_t ahci_read(struct ahci_softc *, bus_size_t);
+extern void ahci_write(struct ahci_softc *, bus_size_t, u_int32_t);
+extern u_int32_t ahci_pread(struct ahci_port *, bus_size_t);
+extern void ahci_pwrite(struct ahci_port *, bus_size_t, u_int32_t);
+extern int ahci_default_port_start(struct ahci_port *, int);
 
 struct cfattach sxiahci_ca = {
 	sizeof(struct ahci_softc), NULL, sxiahci_attach

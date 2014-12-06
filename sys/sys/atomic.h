@@ -19,6 +19,7 @@
 #define _SYS_ATOMIC_H_
 
 #include <machine/atomic.h>
+#include <sys/stdatomic.h>
 
 /*
  * an arch wanting to provide its own implementations does so by defining
@@ -198,23 +199,23 @@ atomic_sub_long_nv(volatile unsigned long *p, unsigned long v)
  */
 
 #ifndef membar_enter
-#define membar_enter() __sync_synchronize()
+#define membar_enter() atomic_thread_fence(memory_order_seq_cst)
 #endif
 
 #ifndef membar_exit
-#define membar_exit() __sync_synchronize()
+#define membar_exit() atomic_thread_fence(memory_order_seq_cst)
 #endif
 
 #ifndef membar_producer
-#define membar_producer() __sync_synchronize()
+#define membar_producer() atomic_thread_fence(memory_order_release)
 #endif
 
 #ifndef membar_consumer
-#define membar_consumer() __sync_synchronize()
+#define membar_consumer() atomic_thread_fence(memory_order_acquire)
 #endif
 
 #ifndef membar_sync
-#define membar_sync() __sync_synchronize()
+#define membar_sync() atomic_thread_fence(memory_order_seq_cst)
 #endif
 
 #endif /* _SYS_ATOMIC_H_ */

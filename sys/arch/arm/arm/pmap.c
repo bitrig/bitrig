@@ -1053,7 +1053,7 @@ pmap_clearbit(struct vm_page *pg, u_int maskbits)
 			/* make the pte read only */
 			npte = (npte & ~L2_S_PROT_MASK) |
 			    L2_S_PROT(pm == pmap_kernel() ? PTE_KERNEL : PTE_USER,
-			      npte & L2_V7_S_XN ? PROT_READ : PROT_READ | PROT_EXECUTE);
+			      npte & L2_V7_S_XN ? PROT_READ : PROT_READ | PROT_EXEC);
 		}
 
 		if (maskbits & PVF_REF) {
@@ -1531,7 +1531,7 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	 * Make sure executable pages do not have stale data in I$,
 	 * which is VIPT.
 	 */
-	if (mapped && (prot & PROT_EXECUTE) != 0 && pmap_is_current(pm))
+	if (mapped && (prot & PROT_EXEC) != 0 && pmap_is_current(pm))
 		cpu_icache_sync_range(va, PAGE_SIZE);
 
 	pmap_release_pmap_lock(pm);
@@ -1879,7 +1879,7 @@ NPDEBUG(PDB_PROTECT, printf("\n"));
 					pmap_clean_page(pg, FALSE);
 				pte = (pte & ~L2_S_PROT_MASK) |
 				    L2_S_PROT(pm == pmap_kernel() ? PTE_KERNEL : PTE_USER,
-				      pte & L2_V7_S_XN ? PROT_READ : PROT_READ | PROT_EXECUTE);
+				      pte & L2_V7_S_XN ? PROT_READ : PROT_READ | PROT_EXEC);
 				*ptep = pte;
 				PTE_SYNC(ptep);
 
@@ -2049,7 +2049,7 @@ pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 
 	pa = l2pte_pa(pte);
 
-	if ((ftype & PROT_EXECUTE) && (pte & L2_V7_S_XN)) {
+	if ((ftype & PROT_EXEC) && (pte & L2_V7_S_XN)) {
 printf("%s: va %08x ftype %x %c pte %08x\n", __func__, va, ftype, user ? 'u' : 's', pte);
 printf("fault on exec\n");
 #ifdef DDB
@@ -2099,7 +2099,7 @@ Debugger();
 		 */
 		*ptep = (pte & ~(L2_TYPE_MASK|L2_S_PROT_MASK)) | L2_S_PROTO |
 		    L2_S_PROT(pm == pmap_kernel() ? PTE_KERNEL : PTE_USER,
-		      pte & L2_V7_S_XN ? PROT_WRITE : PROT_WRITE | PROT_EXECUTE);
+		      pte & L2_V7_S_XN ? PROT_WRITE : PROT_WRITE | PROT_EXEC);
 		PTE_SYNC(ptep);
 		rv = 1;
 	} else

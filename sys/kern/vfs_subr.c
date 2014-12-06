@@ -417,7 +417,7 @@ getnewvnode(enum vtagtype tag, struct mount *mp, struct vops *vops,
 	*vpp = vp;
 	vp->v_usecount = 1;
 	vp->v_data = 0;
-	mtx_init(&vp->v_uvm.u_obj.vmobjlock, IPL_NONE); /* XXX? */
+	mtx_init(&vp->v_uvm->u_obj.vmobjlock, IPL_NONE); /* XXX? */
 	return (0);
 }
 

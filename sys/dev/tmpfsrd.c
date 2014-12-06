@@ -28,6 +28,8 @@
 #include <sys/mtio.h>
 #include <sys/workq.h>
 
+#include <uvm/uvm_extern.h>
+
 void	tmpfsrdattach(int);
 void	tmpfsrd_terminate(void *, void *);
 int	tmpfsrd_match(struct device *, void *, void *);

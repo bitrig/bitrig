@@ -628,7 +628,7 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 {
 	struct gpt_header gh;
 	struct gpt_partition *gp, *gp_tmp;
-	size_t gpsz;
+	size_t gpsz = 0;
 	struct uuid uuid_part, uuid_openbsd;
 	struct partition *pp;
 

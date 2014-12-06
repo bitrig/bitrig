@@ -40,6 +40,7 @@
 
 #ifdef _KERNEL
 #include <sys/param.h>
+#include <sys/systm.h>
 #include <sys/namei.h>
 #include <sys/proc.h>
 #include <sys/uio.h>
@@ -76,6 +77,7 @@ int wapbl_verbose_commit = 0;
 #include <string.h>
 
 #include <sys/time.h>
+#include <sys/rwlock.h>
 #include <sys/wapbl.h>
 #include <sys/wapbl_replay.h>
 

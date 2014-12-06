@@ -50,6 +50,8 @@
 #include <sys/poll.h>
 #include <sys/ptrace.h>
 
+#include <machine/vmparam.h>
+
 #include <dev/systrace.h>
 
 void	systraceattach(int);

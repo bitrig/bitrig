@@ -290,13 +290,8 @@ struct cdevsw cdevsw[] = {
 	cdev_notdef(),				/* 14 was alternate serial port */
 	cdev_notdef(),				/* 15: */
 	cdev_disk_init(NWD,wd),			/* 16: ST506/ESDI/IDE disk */
-<<<<<<< HEAD
-	cdev_lkm_dummy(),			/* 17: */
-	cdev_notdef(),				/* 18: */
-=======
 	cdev_notdef(),				/* 17: */
-	cdev_disk_init(NRD,rd),			/* 18: ram disk driver */
->>>>>>> 43b7ed2... mechanical translation of dev_lkm_dummy() to dev_notdef()
+	cdev_notdef(),				/* 18: */
 	cdev_disk_init(NVND,vnd),		/* 19: vnode disk driver */
 	cdev_disk_init(NTMPFSRD,tmpfsrd),	/* 20: tmpfs RAM disk driver */
 	cdev_notdef(),				/* 21: was: concatenated disk driver */
