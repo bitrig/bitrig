@@ -1,4 +1,4 @@
-/*	$OpenBSD: wsfont.c,v 1.36 2014/07/12 18:48:53 tedu Exp $ */
+/*	$OpenBSD: wsfont.c,v 1.37 2014/12/07 13:07:18 miod Exp $ */
 /*	$NetBSD: wsfont.c,v 1.17 2001/02/07 13:59:24 ad Exp $	*/
 
 /*-
@@ -95,7 +95,8 @@
 
 /*
  * Make sure we always have at least one font.
- * Sparc, sparc64 always provide a 8x16 font and a larger 12x22 font.
+ * Some platforms (currently luna88k, sgi, sparc and sparc64) always provide
+ * a 8x16 font and a larger 12x22 font.
  * Other platforms also provide both.
  */
 #ifndef HAVE_FONT
