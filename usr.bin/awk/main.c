@@ -23,7 +23,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 ****************************************************************/
 
-const char	*version = "version 20110810";
+const char	*version = "version 20121220";
 
 #define DEBUG
 #include <stdio.h>
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 	yyin = NULL;
 	symtab = makesymtab(NSYMTAB);
 	while (argc > 1 && argv[1][0] == '-' && argv[1][1] != '\0') {
-		if (strcmp(argv[1], "--") == 0) {	/* explicit end of args */
+		if (strncmp(argv[1], "--", 2) == 0) {	/* explicit end of args */
 			argc--;
 			argv++;
 			break;

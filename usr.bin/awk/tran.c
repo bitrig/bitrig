@@ -299,6 +299,8 @@ Awkfloat setfval(Cell *vp, Awkfloat f)	/* set float val of a Cell */
 		xfree(vp->sval); /* free any previous string */
 	vp->tval &= ~STR;	/* mark string invalid */
 	vp->tval |= NUM;	/* mark number ok */
+	if (f == -0)  /* who would have thought this possible? */
+		f = 0;
 	   dprintf( ("setfval %p: %s = %g, t=%o\n", (void*)vp, NN(vp->nval), f, vp->tval) );
 	return vp->fval = f;
 }
@@ -407,7 +409,7 @@ char *tostring(const char *s)	/* make a copy of string s */
 	p = strdup(s);
 	if (p == NULL)
 		FATAL("out of space in tostring on %s", s);
-	return p;
+	return(p);
 }
 
 char *qstring(const char *is, int delim)	/* collect string up to next delim */
