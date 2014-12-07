@@ -1224,7 +1224,7 @@ Cell *split(Node **a, int nnn)	/* split(a[0], a[1], a[2]); a[3] is type */
 	int n, tempstat, arg3type;
 
 	y = execute(a[0]);	/* source string */
-	origs = s = strdup(getsval(y));
+	origs = s = tostring(getsval(y));
 	arg3type = ptoi(a[3]);
 	if (a[2] == 0)		/* fs string */
 		fs = *FS;
