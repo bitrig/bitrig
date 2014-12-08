@@ -50,7 +50,7 @@ uint64_t bmtx_blocked_unlocks;
 #define bmtx_fetch_or(b,l)						\
 	atomic_fetch_or_explicit(&(b)->bmtx_lock, l, memory_order_acq_rel)
 #define bmtx_fetch_and(b,l)						\
-	atomic_fetch_and_explicit(&bmtx->bmtx_lock, l, memory_order_acq_rel)
+	atomic_fetch_and_explicit(&(b)->bmtx_lock, l, memory_order_acq_rel)
 
 static inline struct proc *
 bmtx_owner(atomic_uintptr_t lock)
