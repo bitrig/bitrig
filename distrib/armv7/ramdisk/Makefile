@@ -12,7 +12,7 @@ CRUNCHCONF?=	${CBIN}.conf
 LISTS=		${.CURDIR}/list
 UTILS?=		${.CURDIR}/../../miniroot
 
-MOUNT_POINT=	/mnt
+FSDIR=		${.OBJDIR}/fs
 MTREE=		${UTILS}/mtree.conf
 
 VND?=		vnd0
@@ -20,8 +20,6 @@ VND_DEV=	/dev/${VND}a
 VND_RDEV=	/dev/r${VND}a
 VND_CRDEV=	/dev/r${VND}c
 PID!=		echo $$$$
-
-TMPFS_MAXSIZE=	64M
 
 KERNADDR_EXYNOS=0x40300000
 KERNADDR_IMX=0x10300000
@@ -61,24 +59,17 @@ ${BSD_RD}.${SOC}.umg: ${BSD_RD}
 	    ${BSD_RD} ${BSD_RD}.${SOC}.umg
 .endfor
 
-${IMAGE}: tmpfs_setup do_files tmpfs_snapshot tmpfs_teardown
+${IMAGE}:
+	rm -rf ${FSDIR}
+	install -d -o root -g wheel ${FSDIR}
+	mtree -def ${MTREE} -p ${FSDIR}/ -u
+	TOPDIR=${TOP} CURDIR=${.CURDIR} OBJDIR=${.OBJDIR} \
+	    REV=${REV} TARGDIR=${FSDIR} UTILS=${UTILS} \
+	    RELEASEDIR=${RELEASEDIR} sh ${UTILS}/runlist.sh ${LISTS}
+	rm ${FSDIR}/${CBIN}
+	(cd ${FSDIR} && pax -w -f ${.OBJDIR}/${IMAGE} -x tmpfs {,.}*)
 
 .endif
-
-tmpfs_setup:
-	mount -t tmpfs -o -s${TMPFS_MAXSIZE} tmpfs ${MOUNT_POINT}
-
-tmpfs_snapshot:
-	rm -f ${IMAGE}
-	mount -t tmpfs -u -o snapshot ${IMAGE} ${MOUNT_POINT}
-
-tmpfs_teardown:
-	@df -i ${MOUNT_POINT}
-	-umount ${MOUNT_POINT}
-
-unconfig:
-	-umount -f ${MOUNT_POINT}
-	-vnconfig -u ${VND}
 
 .PRECIOUS:	${IMAGE}
 
@@ -91,19 +82,13 @@ ${CBIN}: ${CBIN}.mk ${CBIN}.cache ${CBIN}.c
 ${CRUNCHCONF}: ${LISTS}
 	awk -f ${UTILS}/makeconf.awk CBIN=${CBIN} ${LISTS} > ${CBIN}.conf
 
-do_files:
-	cat ${MTREE} | mtree -de -p ${MOUNT_POINT}/ -u
-	TOPDIR=${TOP} CURDIR=${.CURDIR} OBJDIR=${.OBJDIR} \
-	    REV=${REV} TARGDIR=${MOUNT_POINT} UTILS=${UTILS} \
-	    RELEASEDIR=${RELEASEDIR} sh ${UTILS}/runlist.sh ${LISTS}
-	rm ${MOUNT_POINT}/${CBIN}
-
 clean cleandir:
 	/bin/rm -f *.core ${IMAGE} ${CBIN} ${CBIN}.mk ${CBIN}.cache \
 	    lib*.a lib*.olist ${CBIN}.map \
 	    *.o *.lo *.c ${ALLBSD} ${ALLBSDRD}
 	rm -f instbin.conf
 	rm -rf cd-dir
+	/bin/rm -rf ${FSDIR}
 
 .ifdef RELEASEDIR
 install:

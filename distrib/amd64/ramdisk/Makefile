@@ -7,9 +7,8 @@ CRUNCHCONF?=	${CBIN}.conf
 LISTS=		${.CURDIR}/list
 UTILS?=		${.CURDIR}/../../miniroot
 
-MOUNT_POINT=	/mnt
+FSDIR=		${.OBJDIR}/fs
 MTREE=		${UTILS}/mtree.conf
-TMPFS_MAXSIZE=	255M
 
 .NOTPARALLEL:
 
@@ -27,21 +26,15 @@ bsd:
 		  exec ${MAKE}; }
 	cp ${ARCH}/compile/GENERIC/bsd bsd
 
-${IMAGE}: ${CBIN} tmpfs_setup do_files tmpfs_snapshot tmpfs_teardown
-
-tmpfs_setup: ${CBIN}
-	mount -t tmpfs -o -s${TMPFS_MAXSIZE} tmpfs ${MOUNT_POINT}
-
-tmpfs_snapshot:
-	rm -f ${IMAGE}
-	mount -t tmpfs -u -o snapshot ${IMAGE} ${MOUNT_POINT}
-
-tmpfs_teardown:
-	@df -i ${MOUNT_POINT}
-	-umount ${MOUNT_POINT}
-
-unconfig:
-	-umount -f ${MOUNT_POINT}
+${IMAGE}: ${CBIN}
+	rm -rf ${FSDIR}
+	install -d -o root -g wheel ${FSDIR}
+	mtree -def ${MTREE} -p ${FSDIR}/ -u
+	TOPDIR=${TOP} CURDIR=${.CURDIR} OBJDIR=${.OBJDIR} \
+	    REV=${REV} TARGDIR=${FSDIR} UTILS=${UTILS} \
+	    RELEASEDIR=${RELEASEDIR} sh ${UTILS}/runlist.sh ${LISTS}
+	rm ${FSDIR}/${CBIN}
+	(cd ${FSDIR} && pax -w -f ${.OBJDIR}/${IMAGE} -x tmpfs {,.}*)
 
 .PRECIOUS:	${IMAGE}
 
@@ -61,17 +54,11 @@ ${CBIN}: ${CBIN}.mk ${CBIN}.cache ${CBIN}.c
 ${CRUNCHCONF}: ${LISTS}
 	awk -f ${UTILS}/makeconf.awk CBIN=${CBIN} ${LISTS} > ${CRUNCHCONF}
 
-do_files:
-	mtree -def ${MTREE} -p ${MOUNT_POINT}/ -u
-	TOPDIR=${TOP} CURDIR=${.CURDIR} OBJDIR=${.OBJDIR} \
-	    REV=${REV} TARGDIR=${MOUNT_POINT} UTILS=${UTILS} \
-	    RELEASEDIR=${RELEASEDIR} sh ${UTILS}/runlist.sh ${LISTS}
-	rm ${MOUNT_POINT}/${CBIN}
-
 clean cleandir:
 	/bin/rm -f *.core ${IMAGE} ${CBIN} ${CBIN}.mk ${CBIN}*.cache \
 	    *.o *.lo *.c bsd bsd.rd bsd.gz bsd.strip \
 	    lib*.a lib*.olist ${CBIN}.map boot ${CRUNCHCONF}
+	/bin/rm -rf ${FSDIR}
 
 .include <bsd.own.mk>
 .include <bsd.obj.mk>
