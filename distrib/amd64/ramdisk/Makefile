@@ -70,8 +70,8 @@ do_files:
 
 clean cleandir:
 	/bin/rm -f *.core ${IMAGE} ${CBIN} ${CBIN}.mk ${CBIN}*.cache \
-	    *.o *.lo *.c bsd bsd.rd bsd.gz bsd.strip floppy*.fs \
-	    lib*.a lib*.olist ${CBIN}.map boot ${CRUNCHCONF} ${FS}
+	    *.o *.lo *.c bsd bsd.rd bsd.gz bsd.strip \
+	    lib*.a lib*.olist ${CBIN}.map boot ${CRUNCHCONF}
 
 .include <bsd.own.mk>
 .include <bsd.obj.mk>
