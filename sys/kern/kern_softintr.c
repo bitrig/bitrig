@@ -31,8 +31,7 @@
  * SCHED_LOCK, which is totally unacceptable in the future.
  */
 void *
-softintr_establish_flags(int level, int (*handler)(void *), void *arg,
-    int flags)
+softintr_establish(int level, int (*handler)(void *), void *arg)
 {
 	struct intrsource *is;
 	struct intrhand *ih;
@@ -50,8 +49,8 @@ softintr_establish_flags(int level, int (*handler)(void *), void *arg,
 
 	ih->ih_fun = handler;
 	ih->ih_arg = arg;
-	ih->ih_level = level;
-	ih->ih_flags = flags;
+	ih->ih_level = level & ~IPL_FLAGS;
+	ih->ih_flags = level & IPL_FLAGS;
 	ih->ih_pin = 0;
 	ih->ih_cpu = &cpu_info_primary;
 
