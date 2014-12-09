@@ -27,12 +27,16 @@ typedef struct {
 struct thread_control_block {
 	void	*tcb_dtv;               /* internal to the runtime linker */
 	struct	pthread *tcb_thread;
+	void	*tcb_segstack;          /* used for segmented stacks */
+	void	*unused;
 };
 #elif TLS_VARIANT == 2
 struct thread_control_block {
-        struct	thread_control_block *__tcb_self;
-        void	*tcb_dtv;               /* internal to the runtime linker */
-        struct	pthread *tcb_thread;
-        int	*__tcb_errno;
+	struct	thread_control_block *__tcb_self;
+	void	*tcb_dtv;               /* internal to the runtime linker */
+	struct	pthread *tcb_thread;
+	int	*__tcb_errno;
+	void	*tcb_segstack;          /* used for segmented stacks */
+	void	*unused[3];
 };
 #endif

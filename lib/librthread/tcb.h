@@ -74,6 +74,8 @@ void	__set_tcb(void *);
 struct thread_control_block {
 	void	*tcb_dtv;		/* internal to the runtime linker */
 	struct	pthread *tcb_thread;
+	void	*tcb_segstack;	/* used for segmented stacks */
+	void	*unused;
 };
 
 #ifndef THREAD_ERRNOPTR_OFFSET
@@ -87,6 +89,8 @@ struct thread_control_block {
 	do {						\
 		(tcb)->tcb_thread = (thread);		\
 		__ERRNOPTR(thread) = (errnoptr);	\
+		(tcb)->tcb_segstack = NULL; \
+		(tcb)->unused = NULL; \
 	} while (0)
 
 
@@ -101,6 +105,8 @@ struct thread_control_block {
 	void	*tcb_dtv;		/* internal to the runtime linker */
 	struct	pthread *tcb_thread;
 	int	*__tcb_errno;
+	void	*tcb_segstack;	/* used for segmented stacks */
+	void	*unused[3];
 };
 
 #ifdef TCB_GET_MEMBER
@@ -114,6 +120,10 @@ struct thread_control_block {
 		(tcb)->__tcb_self = (tcb);		\
 		(tcb)->tcb_thread = (thread);		\
 		(tcb)->__tcb_errno = (errnoptr);	\
+		(tcb)->tcb_segstack = NULL; \
+		(tcb)->unused[0] = NULL; \
+		(tcb)->unused[1] = NULL; \
+		(tcb)->unused[2] = NULL; \
 	} while (0)
 
 
