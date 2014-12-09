@@ -28,7 +28,7 @@
 #include <sys/fcntl.h>
 #include <sys/select.h>
 #include <sys/kernel.h>
-#include <sys/proc.h>
+#include <sys/softintr.h>
 
 #include <dev/cons.h>
 
@@ -104,7 +104,7 @@ void exuart_start(struct tty *);
 void exuart_pwroff(struct exuart_softc *sc);
 void exuart_diag(void *arg);
 void exuart_raisedtr(void *arg);
-void exuart_softint(void *arg);
+int exuart_softint(void *arg);
 struct exuart_softc *exuart_sc(dev_t dev);
 
 int exuart_intr(void *);
@@ -190,7 +190,7 @@ exuartattach(struct device *parent, struct device *self, void *args)
 
 	timeout_set(&sc->sc_diag_tmo, exuart_diag, sc);
 	timeout_set(&sc->sc_dtr_tmo, exuart_raisedtr, sc);
-	sc->sc_si = ithread_softregister(IPL_TTY, exuart_softint, sc, 0);
+	sc->sc_si = softintr_establish(IPL_TTY, exuart_softint, sc);
 
 	if(sc->sc_si == NULL)
 		panic("%s: can't establish soft interrupt.",
@@ -434,7 +434,7 @@ exuart_raisedtr(void *arg)
 	//bus_space_write_2(sc->sc_iot, sc->sc_ioh, EXUART_UCR3, sc->sc_ucr3);
 }
 
-void
+int
 exuart_softint(void *arg)
 {
 	struct exuart_softc *sc = arg;
@@ -446,7 +446,7 @@ exuart_softint(void *arg)
 	int s;
 
 	if (sc == NULL || sc->sc_ibufp == sc->sc_ibuf)
-		return;
+		return 0;
 
 	tp = sc->sc_tty;
 	s = spltty();
@@ -456,7 +456,7 @@ exuart_softint(void *arg)
 
 	if (ibufp == ibufend || tp == NULL || !ISSET(tp->t_state, TS_ISOPEN)) {
 		splx(s);
-		return;
+		return 0;
 	}
 
 	sc->sc_ibufp = sc->sc_ibuf = (ibufp == sc->sc_ibufs[0]) ?
@@ -493,6 +493,8 @@ exuart_softint(void *arg)
 		c = (c & 0xff) | err;
 		(*linesw[tp->t_line].l_rint)(c, tp);
 	}
+
+	return 1;
 }
 
 int

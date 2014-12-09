@@ -287,6 +287,14 @@ __get_cpsr()
 	return ret;
 }
 
+/* XXXX ought to be in psl.h with spl() functions */
+typedef uint32_t intr_state_t;
+
+#define intr_enable()		enable_interrupts(I32_bit | F32_bit)
+#define intr_disable()		disable_interrupts(I32_bit | F32_bit)
+#define intr_set_state(state)	restore_interrupts(state)
+#define intr_get_state()	(__get_cpsr() & (I32_bit | F32_bit))
+
 #define disable_interrupts(mask)					\
 	(__set_cpsr_c((mask) & (I32_bit | F32_bit), \
 		      (mask) & (I32_bit | F32_bit)))

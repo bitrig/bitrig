@@ -22,6 +22,7 @@
 #include <arm/include/cpufunc.h>
 #include <arm/include/vfp.h>
 #include <arm/include/undefined.h>
+#include <arm/cpufunc.h>
 
 void vfp_store(struct vfp_sp_state *vfpsave);
 
@@ -128,7 +129,7 @@ vfp_enable()
 
 	if (curproc->p_addr->u_pcb.pcb_fpcpu == ci &&
 	    ci->ci_fpuproc == curproc) {
-		disable_interrupts(I32_bit);
+		intr_disable();
 
 		/* FPU state is still valid, just enable and go */
 		set_vfp_fpexc(VFPEXC_EN);
@@ -143,7 +144,7 @@ vfp_load(struct proc *p)
 	uint32_t		 scratch = 0;
 
 	/* do not allow a partially synced state here */
-	disable_interrupts(I32_bit);
+	intr_disable();
 
 	/*
 	 * p->p_pcb->pcb_fpucpu _may_ not be NULL here, but the FPU state
@@ -167,7 +168,7 @@ vfp_load(struct proc *p)
 	/* disable until return to userland */
 	set_vfp_fpexc(0);
 
-	enable_interrupts(I32_bit);
+	intr_enable();
 }
 
 

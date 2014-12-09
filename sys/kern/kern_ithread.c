@@ -73,8 +73,10 @@ ithread(void *v_is)
 			ih->ih_count.ec_count++;
 			stray = 0;
 
+#if __amd64__
 			if (!intr_shared_edge)
 				break;
+#endif
 		}
 
 		KASSERT(CRIT_DEPTH == 0);

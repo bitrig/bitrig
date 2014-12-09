@@ -62,7 +62,7 @@
 #include <sys/ptrace.h>
 #include <sys/sched.h>
 #include <sys/user.h>
-#include <sys/ithread.h>
+#include <sys/softintr.h>
 
 #include <sys/mount.h>
 #include <sys/syscallargs.h>

@@ -122,7 +122,7 @@ struct intrsource {
 	void (*is_run)(struct intrsource *);	/* Run callback to this source */
 	struct intrhand *is_handlers;	/* handler chain */
 	int is_flags;
-	int is_idtvec;
+	int is_type;			/* level, edge */
 	int is_scheduled;		/* proc is runnable */
 	struct proc *is_proc;		/* ithread proc */
 	struct pic *is_pic;		/* XXX PIC for ithread */
@@ -134,15 +134,27 @@ struct intrhand {
 	void *ih_arg;			/* arg for handler */
 	int ih_level;			/* IPL_* */
 	int ih_flags;
-	int ih_irq;			/* IRQ number */
-	struct evcount ih_count;
-	char *ih_name;
 	struct intrhand *ih_next;
+	int ih_pin;			/* IRQ number */
+	struct cpu_info *ih_cpu;
+	int ih_irq;
+	char *ih_name;
+	struct evcount ih_count;
 };
 
 struct pic {
+	struct device pic_dev;
 	void (*pic_hwunmask)(struct pic *, int);
+	void (*pic_hwmask)(struct pic *, int);
 };
+
+#define intrsource_mask(is)					\
+	((is)->is_pic->pic_hwmask((is)->is_pic, (is)->is_pin))
+#define intrsource_unmask(is)					\
+	((is)->is_pic->pic_hwunmask((is)->is_pic, (is)->is_pin))
+
+void intr_unpend(void);
+extern struct pic softintr_pic;
 
 #endif /* ! _LOCORE */
 
