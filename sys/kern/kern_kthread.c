@@ -48,8 +48,6 @@
  */
 #include <sys/stdarg.h>
 
-int	kthread_create_now;
-
 /*
  * Fork a kernel thread.  Any process can request this to be done.
  * The VM space and limits, etc. will be shared with proc0.
@@ -61,6 +59,8 @@ kthread_create(void (*func)(void *), void *arg,
 	struct proc *p;
 	int error;
 
+	if (initprocess == NULL)
+		panic("Trying to kthread_create before initprocess");
 	/*
 	 * First, create the new process.  Share the memory, file
 	 * descriptors and don't leave the exit status around for the
@@ -124,7 +124,8 @@ kthread_create_deferred(void (*func)(void *), void *arg)
 {
 	struct kthread_q *kq;
 
-	if (kthread_create_now) {
+	/* Initprocess is already created, we can go ahead. */
+	if (initprocess != NULL) {
 		(*func)(arg);
 		return;
 	}
@@ -143,9 +144,6 @@ void
 kthread_run_deferred_queue(void)
 {
 	struct kthread_q *kq;
-
-	/* No longer need to defer kthread creation. */
-	kthread_create_now = 1;
 
 	while ((kq = SIMPLEQ_FIRST(&kthread_q)) != NULL) {
 		SIMPLEQ_REMOVE_HEAD(&kthread_q, kq_q);
