@@ -567,6 +567,16 @@ success:
 				fs->fs_flags &= ~FS_DOSOFTDEP;
 		}
 		ffs_sbupdate(ump, MNT_WAIT);
+		if (ronly) {
+			int force = 0;
+
+			/*
+			 * Updating mount to readonly. Try a cache flush.
+			 * Ignore error because the ioctl may not be supported.
+			 */
+			VOP_IOCTL(ump->um_devvp, DIOCCACHESYNC, &force,
+			    FWRITE, FSCRED);
+		}
 	}
 	UFS_WAPBL_END(mp);
 	return (0);

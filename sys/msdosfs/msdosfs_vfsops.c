@@ -63,6 +63,7 @@
 #include <sys/malloc.h>
 #include <sys/dirent.h>
 #include <sys/disk.h>
+#include <sys/dkio.h>
 
 #include <msdosfs/bpb.h>
 #include <msdosfs/bootsect.h>
@@ -127,8 +128,14 @@ msdosfs_mount(struct mount *mp, const char *path, void *data,
 			if (mp->mnt_flag & MNT_FORCE)
 				flags |= FORCECLOSE;
 			error = vflush(mp, NULLVP, flags);
-			if (!error)
+			if (!error) {
+				int force = 0;
+
+				/* may be not supported, ignore error */
+				VOP_IOCTL(pmp->pm_devvp, DIOCCACHESYNC, &force,
+				    FWRITE, FSCRED);
 				pmp->pm_flags |= MSDOSFSMNT_RONLY;
+			}
 		}
 		if (!error && (mp->mnt_flag & MNT_RELOAD))
 			/* not yet implemented */
