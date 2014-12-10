@@ -166,23 +166,23 @@ void
 ithread_forkall(void)
 {
 	struct intrsource *is;
-	static int softs;
+	struct intrhand *ih;
 	char name[MAXCOMLEN+1];
 
 	TAILQ_FOREACH(is, &ithreads, entry) {
 		DPRINTF(1, "ithread forking intrsource pin %d\n", is->is_pin);
-
-		if (is->is_pic == &softintr_pic) {
-			snprintf(name, sizeof name, "ithread soft %d",
-			    softs++);
-			if (kthread_create(ithread, is, &is->is_proc, name))
-				panic("ithread_forkall");
-		} else {
-			snprintf(name, sizeof name, "ithread pin %d",
-			    is->is_pin);
-			if (kthread_create(ithread, is, &is->is_proc, name))
-				panic("ithread_forkall");
+		for (ih = is->is_handlers; ih != NULL; ih = ih->ih_next) {
+			KASSERT(ih->ih_count.ec_name != NULL);
+			if (ih == is->is_handlers) {
+				strlcpy(name, ih->ih_count.ec_name,
+				    sizeof(name));
+				continue;
+			}
+			strlcat(name, ",", sizeof(name));
+			strlcat(name, ih->ih_count.ec_name, sizeof(name));
 		}
+		if (kthread_create(ithread, is, &is->is_proc, name))
+			panic("ithread_forkall");
 	}
 }
 

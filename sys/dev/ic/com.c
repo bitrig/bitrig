@@ -1822,7 +1822,7 @@ com_attach_subr(struct com_softc *sc)
 
 	timeout_set(&sc->sc_diag_tmo, comdiag, sc);
 	timeout_set(&sc->sc_dtr_tmo, com_raisedtr, sc);
-	sc->sc_si = softintr_establish(IPL_TTY, comsoft, sc);
+	sc->sc_si = softintr_establish(IPL_TTY, comsoft, sc, "softcom");
 	if (sc->sc_si == NULL)
 		panic("%s: can't establish soft interrupt",
 		    sc->sc_dev.dv_xname);
