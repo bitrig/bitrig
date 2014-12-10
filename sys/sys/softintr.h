@@ -26,7 +26,7 @@
  * Generic software interrupt support for all platforms.
  */
 
-void	*softintr_establish(int, int (*)(void *), void *);
+void	*softintr_establish(int, int (*)(void *), void *, const char *);
 void	softintr_disestablish(void *);
 void	softintr_init(void);
 void	softintr_dispatch(int);

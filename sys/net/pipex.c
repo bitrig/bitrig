@@ -149,7 +149,7 @@ pipex_init(void)
 	IFQ_SET_MAXLEN(&pipexinq, IFQ_MAXLEN);
 	IFQ_SET_MAXLEN(&pipexoutq, IFQ_MAXLEN);
         pipex_softintr =
-	    softintr_establish(IPL_SOFTNET, pipex_softintr_handler, NULL);
+	    softintr_establish(IPL_SOFTNET, pipex_softintr_handler, NULL, "pipex");
 }
 
 void
