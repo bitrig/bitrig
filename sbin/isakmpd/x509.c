@@ -1170,9 +1170,9 @@ x509_cert_get_subjects(void *scert, int *cnt, u_int8_t ***id,
 	(*id_len)[0] =
 		ISAKMP_ID_DATA_OFF + i2d_X509_NAME(subject, NULL) -
 		    ISAKMP_GEN_SZ;
-	(*id)[0] = malloc((*id_len)[0]);
+	(*id)[0] = calloc(1, (*id_len)[0]);
 	if (!(*id)[0]) {
-		log_print("x509_cert_get_subject: malloc (%d) failed",
+		log_print("x509_cert_get_subject: calloc (%d) failed",
 		    (*id_len)[0]);
 		goto fail;
 	}
