@@ -50,7 +50,7 @@ struct pl011_softc {
 	struct device	sc_dev;
 	bus_space_tag_t sc_iot;
 	bus_space_handle_t sc_ioh;
-	struct soft_intrhand *sc_si;
+	struct intrsource *sc_si;
 	void *sc_irq;
 	struct tty	*sc_tty;
 	struct timeout	sc_diag_tmo;
@@ -103,7 +103,7 @@ void pl011_start(struct tty *);
 void pl011_pwroff(struct pl011_softc *sc);
 void pl011_diag(void *arg);
 void pl011_raisedtr(void *arg);
-void pl011_softint(void *arg);
+int pl011_softint(void *arg);
 struct pl011_softc *pl011_sc(dev_t dev);
 
 int pl011_intr(void *);
@@ -171,7 +171,7 @@ pl011attach(struct device *parent, struct device *self, void *args)
 
 	timeout_set(&sc->sc_diag_tmo, pl011_diag, sc);
 	timeout_set(&sc->sc_dtr_tmo, pl011_raisedtr, sc);
-	sc->sc_si = softintr_establish(IPL_TTY, pl011_softint, sc);
+	sc->sc_si = softintr_establish(IPL_TTY, pl011_softint, sc, "pl011");
 
 	if(sc->sc_si == NULL)
 		panic("%s: can't establish soft interrupt.",
@@ -398,7 +398,7 @@ pl011_raisedtr(void *arg)
 	//bus_space_write_4(sc->sc_iot, sc->sc_ioh, IMXUART_UCR3, sc->sc_ucr3);
 }
 
-void
+int
 pl011_softint(void *arg)
 {
 	struct pl011_softc *sc = arg;
@@ -410,7 +410,7 @@ pl011_softint(void *arg)
 	int s;
 
 	if (sc == NULL || sc->sc_ibufp == sc->sc_ibuf)
-		return;
+		return 0;
 
 	tp = sc->sc_tty;
 	s = spltty();
@@ -420,7 +420,7 @@ pl011_softint(void *arg)
 
 	if (ibufp == ibufend || tp == NULL || !ISSET(tp->t_state, TS_ISOPEN)) {
 		splx(s);
-		return;
+		return 0;
 	}
 
 	sc->sc_ibufp = sc->sc_ibuf = (ibufp == sc->sc_ibufs[0]) ?
@@ -461,6 +461,8 @@ pl011_softint(void *arg)
 		c = (c & 0xff) | err;
 		(*linesw[tp->t_line].l_rint)(c, tp);
 	}
+
+	return 1;
 }
 
 int

@@ -23,7 +23,6 @@
 #include <arm/armreg.h>
 #include <arm/cpufunc.h>
 #include <machine/intr.h>
-#include <arm/softintr.h>
 
 extern volatile int current_spl_level;
 extern volatile int softint_pending;

@@ -49,7 +49,7 @@ struct sxiuart_softc {
 	struct device	sc_dev;
 	bus_space_tag_t sc_iot;
 	bus_space_handle_t sc_ioh;
-	struct soft_intrhand *sc_si;
+	struct intrsource *sc_si;
 	void		*sc_irq;
 	struct tty	*sc_tty;
 	struct timeout	sc_diag_tmo;
@@ -100,7 +100,7 @@ void sxiuart_start(struct tty *);
 void sxiuart_pwroff(struct sxiuart_softc *);
 void sxiuart_diag(void *);
 void sxiuart_raisedtr(void *);
-void sxiuart_softint(void *);
+int sxiuart_softint(void *);
 int sxiuart_intr(void *);
 
 
@@ -163,7 +163,7 @@ sxiuartattach(struct device *parent, struct device *self, void *args)
 
 	timeout_set(&sc->sc_diag_tmo, sxiuart_diag, sc);
 	timeout_set(&sc->sc_dtr_tmo, sxiuart_raisedtr, sc);
-	sc->sc_si = softintr_establish(IPL_TTY, sxiuart_softint, sc);
+	sc->sc_si = softintr_establish(IPL_TTY, sxiuart_softint, sc, "sxuart");
 	if(sc->sc_si == NULL)
 		panic("%s: can't establish soft interrupt.",
 		    sc->sc_dev.dv_xname);
@@ -495,7 +495,7 @@ sxiuart_raisedtr(void *arg)
 	bus_space_write_1(sc->sc_iot, sc->sc_ioh, SXIUART_MCR, sc->sc_mcr);
 }
 
-void
+int
 sxiuart_softint(void *arg)
 {
 	struct sxiuart_softc *sc = arg;
@@ -511,7 +511,7 @@ sxiuart_softint(void *arg)
 	};
 
 	if (sc == NULL || sc->sc_ibufp == sc->sc_ibuf)
-		return;
+		return 0;
 	tp = sc->sc_tty;
 
 	s = spltty();
@@ -521,7 +521,7 @@ sxiuart_softint(void *arg)
 
 	if (ibufp == ibufend) {
 		splx(s);
-		return;
+		return 0;
 	}
 
 	sc->sc_ibufp = sc->sc_ibuf = (ibufp == sc->sc_ibufs[0]) ?
@@ -531,7 +531,7 @@ sxiuart_softint(void *arg)
 
 	if (tp == NULL || !ISSET(tp->t_state, TS_ISOPEN)) {
 		splx(s);
-		return;
+		return 0;
 	}
 
 	if (ISSET(tp->t_cflag, CRTSCTS) &&
@@ -557,6 +557,8 @@ sxiuart_softint(void *arg)
 #undef ASD
 		(*linesw[tp->t_line].l_rint)(c, tp);
 	}
+
+	return 1;
 }
 
 int

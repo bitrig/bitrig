@@ -48,17 +48,6 @@
 	SXIPIO_PH_NPIN + SXIPIO_PI_NPIN)
 #define	SXIPIO_PS_NPIN		84 /* for DRAM controller */
 
-
-struct intrhand {
-	int (*ih_func)(void *);		/* handler */
-	void *ih_arg;			/* arg for handler */
-	int ih_ipl;			/* IPL_* */
-	int ih_irq;			/* IRQ number */
-	int ih_gpio;			/* gpio pin */
-	struct evcount ih_count;
-	char *ih_name;
-};
-
 struct sxipio_softc {
 	struct device		sc_dev;
 	bus_space_tag_t		sc_iot;
@@ -71,8 +60,6 @@ struct sxipio_softc {
 
 	struct gpio_chipset_tag	 sc_gpio_tag[SXIPIO_NPORT];
 	gpio_pin_t		 sc_gpio_pins[SXIPIO_NPORT][32];
-
-	struct intrhand		*sc_handlers[32];
 };
 
 #define	SXIPIO_CFG(port, pin)	0x00 + ((port) * 0x24) + ((pin) << 2)

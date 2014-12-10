@@ -36,8 +36,6 @@ int ithread_debug = 10;
 
 TAILQ_HEAD(, intrsource) ithreads = TAILQ_HEAD_INITIALIZER(ithreads);
 
-struct pic softintr_pic;
-
 void
 ithread(void *v_is)
 {

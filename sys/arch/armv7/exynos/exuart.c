@@ -190,7 +190,7 @@ exuartattach(struct device *parent, struct device *self, void *args)
 
 	timeout_set(&sc->sc_diag_tmo, exuart_diag, sc);
 	timeout_set(&sc->sc_dtr_tmo, exuart_raisedtr, sc);
-	sc->sc_si = softintr_establish(IPL_TTY, exuart_softint, sc);
+	sc->sc_si = softintr_establish(IPL_TTY, exuart_softint, sc, "exuart");
 
 	if(sc->sc_si == NULL)
 		panic("%s: can't establish soft interrupt.",

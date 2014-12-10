@@ -193,7 +193,7 @@ imxuartattach(struct device *parent, struct device *self, void *args)
 
 	timeout_set(&sc->sc_diag_tmo, imxuart_diag, sc);
 	timeout_set(&sc->sc_dtr_tmo, imxuart_raisedtr, sc);
-	sc->sc_si = softintr_establish(IPL_TTY, imxuart_softint, sc);
+	sc->sc_si = softintr_establish(IPL_TTY, imxuart_softint, sc, "imxuart");
 
 	if(sc->sc_si == NULL)
 		panic("%s: can't establish soft interrupt.",

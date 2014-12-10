@@ -21,6 +21,7 @@
 #include <sys/queue.h>
 #include <sys/malloc.h>
 #include <sys/device.h>
+#include <sys/ithread.h>
 #include <sys/evcount.h>
 
 #include <machine/bus.h>
@@ -112,37 +113,17 @@ char *ipl_strtbl[NIPL] = {
 #define INTC_PRIOHI(i)		(INTC_IRQ_HIPRIO << IRQ2BIT16((i)))
 
 
-struct intrhand {
-	TAILQ_ENTRY(intrhand) ih_list;	/* link on intrq list */
-	int (*ih_func)(void *);		/* handler */
-	void *ih_arg;			/* arg for handler */
-	int ih_ipl;			/* IPL_* */
-	int ih_irq;			/* IRQ number */
-	struct evcount	ih_count;
-	char *ih_name;
-};
-
-struct intrq {
-	TAILQ_HEAD(, intrhand) iq_list;	/* handler list */
-	int iq_irq;			/* IRQ to mask while handling */
-	int iq_levels;			/* IPL_*'s this IRQ has */
-	int iq_ist;			/* share type */
-};
-
 volatile int a1xsoftint_pending;
 
-struct intrq a1xintc_handler[NIRQ];
+struct intrsource *a1xintc_handler;
 u_int32_t a1xintc_smask[NIPL];
-u_int32_t a1xintc_imask[NBANKS][NIPL];
+u_int32_t a1xintc_imask[NBANKS];
 
 bus_space_tag_t		a1xintc_iot;
 bus_space_handle_t	a1xintc_ioh;
 int			a1xintc_nirq;
 
 void	a1xintc_attach(struct device *, struct device *, void *);
-int	a1xintc_spllower(int);
-int	a1xintc_splraise(int);
-void	a1xintc_setipl(int);
 void	a1xintc_calc_masks(void);
 
 struct cfattach	a1xintc_ca = {
@@ -159,7 +140,7 @@ void
 a1xintc_attach(struct device *parent, struct device *self, void *args)
 {
 	struct armv7_attach_args *aa = args;
-	int i, j;
+	int i;
 
 	a1xintc_iot = aa->aa_iot;
 	if (bus_space_map(a1xintc_iot, aa->aa_dev->mem[0].addr,
@@ -172,28 +153,31 @@ a1xintc_attach(struct device *parent, struct device *self, void *args)
 		bus_space_write_4(a1xintc_iot, a1xintc_ioh, INTC_MASK_REG(i), 0);
 		bus_space_write_4(a1xintc_iot, a1xintc_ioh, INTC_IRQ_PENDING_REG(i),
 		    0xffffffff);
-		for (j = 0; j < NIPL; j++)
-			a1xintc_imask[i][j] = 0;
 	}
 
 	/* XXX */
 	bus_space_write_4(a1xintc_iot, a1xintc_ioh, INTC_PROTECTION_REG, 1);
 	bus_space_write_4(a1xintc_iot, a1xintc_ioh, INTC_NMI_CTRL_REG, 0);
 
-	for (i = 0; i < NIRQ; i++)
-		TAILQ_INIT(&a1xintc_handler[i].iq_list);
+	a1xintc_handler = malloc((sizeof (*a1xintc_handler) * NIRQ),
+	    M_DEVBUF, M_ZERO | M_NOWAIT);
+
+	struct pic *pic = malloc(sizeof(struct pic),
+	    M_DEVBUF, M_ZERO | M_NOWAIT);
+	//pic->pic_hwunmask = ampintc_pic_hwunmask;
+
+	for (i = 0; i < NIRQ; i++) {
+		a1xintc_handler[i].is_pin = i;
+		a1xintc_handler[i].is_pic = pic;
+	}
 
 	a1xintc_calc_masks();
 
-	arm_init_smask();
 	a1xintc_attached = 1;
 
 	/* insert self as interrupt handler */
-	arm_set_intr_handler(a1xintc_splraise, a1xintc_spllower, a1xintc_splx,
-	    a1xintc_setipl,
-	    a1xintc_intr_establish, a1xintc_intr_disestablish, a1xintc_intr_string,
-	    a1xintc_irq_handler);
-	a1xintc_setipl(IPL_HIGH);  /* XXX ??? */
+	arm_set_intr_handler(a1xintc_intr_establish, a1xintc_intr_disestablish,
+	    a1xintc_intr_string, a1xintc_irq_handler);
 	enable_interrupts(I32_bit);
 	printf("\n");
 }
@@ -201,108 +185,21 @@ a1xintc_attach(struct device *parent, struct device *self, void *args)
 void
 a1xintc_calc_masks(void)
 {
-	struct cpu_info *ci = curcpu();
-	int irq;
-	struct intrhand *ih;
-	int i;
+	int i, irq;
 
 	for (irq = 0; irq < NIRQ; irq++) {
-		int max = IPL_NONE;
-		int min = IPL_HIGH;
-		TAILQ_FOREACH(ih, &a1xintc_handler[irq].iq_list, ih_list) {
-			if (ih->ih_ipl > max)
-				max = ih->ih_ipl;
-			if (ih->ih_ipl < min)
-				min = ih->ih_ipl;
-		}
-
-		a1xintc_handler[irq].iq_irq = max;
-
-		if (max == IPL_NONE)
-			min = IPL_NONE;
-
-#ifdef DEBUG_INTC
-		if (min != IPL_NONE) {
-			printf("irq %d to block at %d %d reg %d bit %d\n",
-			    irq, max, min, IRQ2REG32(irq),
-			    IRQ2BIT32(irq));
-		}
-#endif
 		/* Enable interrupts at lower levels, clear -> enable */
-		for (i = 0; i < min; i++)
-			a1xintc_imask[IRQ2REG32(irq)][i] &=
+		if (a1xintc_handler[irq].is_handlers != NULL)
+			a1xintc_imask[IRQ2REG32(irq)] &=
 			    ~(1 << IRQ2BIT32(irq));
-		for (; i < NIPL; i++)
-			a1xintc_imask[IRQ2REG32(irq)][i] |=
+		else
+			a1xintc_imask[IRQ2REG32(irq)] |=
 			    (1 << IRQ2BIT32(irq));
-		/* XXX - set enable/disable, priority */ 
 	}
 
-	a1xintc_setipl(ci->ci_cpl);
-}
-
-void
-a1xintc_splx(int new)
-{
-	struct cpu_info *ci = curcpu();
-	a1xintc_setipl(new);
-
-	if (ci->ci_ipending & arm_smask[ci->ci_cpl])
-		arm_do_pending_intr(ci->ci_cpl);
-}
-
-int
-a1xintc_spllower(int new)
-{
-	struct cpu_info *ci = curcpu();
-	int old = ci->ci_cpl;
-	a1xintc_splx(new);
-	return (old);
-}
-
-int
-a1xintc_splraise(int new)
-{
-	struct cpu_info *ci = curcpu();
-	int old;
-	old = ci->ci_cpl;
-
-	/*
-	 * setipl must always be called because there is a race window
-	 * where the variable is updated before the mask is set
-	 * an interrupt occurs in that window without the mask always
-	 * being set, the hardware might not get updated on the next
-	 * splraise completely messing up spl protection.
-	 */
-	if (old > new)
-		new = old;
-
-	a1xintc_setipl(new);
-  
-	return (old);
-}
-
-void
-a1xintc_setipl(int new)
-{
-	struct cpu_info *ci = curcpu();
-	int i, psw;
-#if 1
-	/*
-	 * XXX not needed, because all interrupts are disabled
-	 * by default, so touching maskregs has no effect, i hope.
-	 */
-	if (a1xintc_attached == 0) {
-		ci->ci_cpl = new;
-		return;
-	}
-#endif
-	psw = disable_interrupts(I32_bit);
-	ci->ci_cpl = new;
 	for (i = 0; i < NBANKS; i++)
 		bus_space_write_4(a1xintc_iot, a1xintc_ioh,
-		    INTC_MASK_REG(i), a1xintc_imask[i][new]);
-	restore_interrupts(psw);
+		    INTC_MASK_REG(i), a1xintc_imask[i]);
 }
 
 void
@@ -311,15 +208,11 @@ a1xintc_irq_handler(void *frame)
 	struct intrhand *ih;
 	void *arg;
 	uint32_t pr;
-	int irq, prio, s;
+	int irq;
 
 	irq = bus_space_read_4(a1xintc_iot, a1xintc_ioh, INTC_VECTOR_REG) >> 2;
 	if (irq == 0)
 		return;
-
-	prio = a1xintc_handler[irq].iq_irq;
-	s = a1xintc_splraise(prio);
-	splassert(prio);
 
 	pr = bus_space_read_4(a1xintc_iot, a1xintc_ioh,
 	    INTC_ENABLE_REG(IRQ2REG32(irq)));
@@ -340,20 +233,28 @@ a1xintc_irq_handler(void *frame)
 	    INTC_ENABLE_REG(IRQ2REG32(irq)),
 	    pr | (1 << IRQ2BIT32(irq)));
 
-	TAILQ_FOREACH(ih, &a1xintc_handler[irq].iq_list, ih_list) {
-		if (ih->ih_arg != 0)
-			arg = ih->ih_arg;
-		else
-			arg = frame;
+	crit_enter();
+	if (a1xintc_handler[irq].is_flags & IPL_DIRECT) {
+		for (ih = a1xintc_handler[irq].is_handlers; ih != NULL; ih = ih->ih_next) {
+			if (ih->ih_arg != 0)
+				arg = ih->ih_arg;
+			else
+				arg = frame;
 
-		if (ih->ih_func(arg)) 
-			ih->ih_count.ec_count++;
+			if (ih->ih_fun(arg))
+				ih->ih_count.ec_count++;
+		}
+		/* ack it now */
+		//ampintc_eoi(iack_val);
+	} else {
+		ithread_run(&a1xintc_handler[irq]);
+		/* ack done after actual execution */
 	}
-	a1xintc_splx(s);
+	crit_leave();
 }
 
 void *
-a1xintc_intr_establish(int irq, int lvl, int (*f)(void *), void *arg, char *name)
+a1xintc_intr_establish(int irq, int level, int (*f)(void *), void *arg, char *name)
 {
 	int psw;
 	struct intrhand *ih;
@@ -362,7 +263,7 @@ a1xintc_intr_establish(int irq, int lvl, int (*f)(void *), void *arg, char *name
 	if (irq <= 0 || irq >= NIRQ)
 		panic("intr_establish: bogus irq %d %s\n", irq, name);
 
-	DPRINTF(("intr_establish: irq %d level %d [%s]\n", irq, lvl,
+	DPRINTF(("intr_establish: irq %d level %d [%s]\n", irq, level,
 	    name != NULL ? name : "NULL"));
 
 	psw = disable_interrupts(I32_bit);
@@ -372,13 +273,23 @@ a1xintc_intr_establish(int irq, int lvl, int (*f)(void *), void *arg, char *name
 	    cold ? M_NOWAIT : M_WAITOK);
 	if (ih == NULL)
 		panic("intr_establish: can't malloc handler info\n");
-	ih->ih_func = f;
+	ih->ih_fun = f;
 	ih->ih_arg = arg;
-	ih->ih_ipl = lvl;
+	ih->ih_level = level & ~IPL_FLAGS;
+	ih->ih_flags = level & IPL_FLAGS;
 	ih->ih_irq = irq;
 	ih->ih_name = name;
 
-	TAILQ_INSERT_TAIL(&a1xintc_handler[irq].iq_list, ih, ih_list);
+	if (a1xintc_handler[irq].is_handlers != NULL) {
+		struct intrhand *tmp;
+		for (tmp = a1xintc_handler[irq].is_handlers; tmp->ih_next != NULL; tmp = tmp->ih_next);
+		tmp->ih_next = ih;
+	} else {
+		a1xintc_handler[irq].is_handlers = ih;
+	}
+
+	if (!(ih->ih_flags & IPL_DIRECT))
+		ithread_register(&a1xintc_handler[irq]);
 
 	if (name != NULL)
 		evcount_attach(&ih->ih_count, name, &ih->ih_irq);
@@ -405,7 +316,7 @@ a1xintc_intr_disestablish(void *cookie)
 
 	psw = disable_interrupts(I32_bit);
 
-	TAILQ_REMOVE(&a1xintc_handler[irq].iq_list, ih, ih_list);
+	//TAILQ_REMOVE(&a1xintc_handler[irq].iq_list, ih, ih_list);
 
 	if (ih->ih_name != NULL)
 		evcount_detach(&ih->ih_count);

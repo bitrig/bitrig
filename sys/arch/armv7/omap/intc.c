@@ -20,6 +20,7 @@
 #include <sys/queue.h>
 #include <sys/malloc.h>
 #include <sys/device.h>
+#include <sys/ithread.h>
 #include <sys/evcount.h>
 #include <machine/bus.h>
 #include <armv7/armv7/armv7var.h>
@@ -67,37 +68,16 @@
 #define		INTC_STD_PRI	32
 #define		INTC_MAX_PRI	0
 
-struct intrhand {
-	TAILQ_ENTRY(intrhand) ih_list;	/* link on intrq list */
-	int (*ih_func)(void *);		/* handler */
-	void *ih_arg;			/* arg for handler */
-	int ih_ipl;			/* IPL_* */
-	int ih_irq;			/* IRQ number */
-	struct evcount	ih_count;
-	char *ih_name;
-};
-
-struct intrq {
-	TAILQ_HEAD(, intrhand) iq_list;	/* handler list */
-	int iq_irq;			/* IRQ to mask while handling */
-	int iq_levels;			/* IPL_*'s this IRQ has */
-	int iq_ist;			/* share type */
-};
-
 volatile int softint_pending;
 
-struct intrq intc_handler[INTC_MAX_IRQ];
-u_int32_t intc_smask[NIPL];
-u_int32_t intc_imask[INTC_MAX_BANKS][NIPL];
+struct intrsource *intc_handler;
+u_int32_t intc_imask[INTC_MAX_BANKS];
 
 bus_space_tag_t		intc_iot;
 bus_space_handle_t	intc_ioh;
 int			intc_nirq;
 
 void	intc_attach(struct device *, struct device *, void *);
-int	intc_spllower(int new);
-int	intc_splraise(int new);
-void	intc_setipl(int new);
 void	intc_calc_mask(void);
 
 struct cfattach	intc_ca = {
@@ -146,16 +126,25 @@ intc_attach(struct device *parent, struct device *self, void *args)
 		break;
 	}
 
+	intc_handler = malloc(sizeof(*intc_handler) * INTC_NUM_IRQ,
+	    M_DEVBUF, M_ZERO | M_NOWAIT);
+
+	struct pic *pic = malloc(sizeof(struct pic),
+			M_DEVBUF, M_ZERO | M_NOWAIT);
+	//pic->pic_hwunmask = intc_pic_hwunmask;
+
+	for (i = 0; i < INTC_NUM_IRQ; i++) {
+		intc_handler[i].is_pin = i;
+		intc_handler[i].is_pic = pic;
+	}
+
 	/* mask all interrupts */
 	for (i = 0; i < INTC_NUM_BANKS; i++)
 		bus_space_write_4(intc_iot, intc_ioh, INTC_MIRn(i), 0xffffffff);
 
-	for (i = 0; i < INTC_NUM_IRQ; i++) {
+	for (i = 0; i < INTC_NUM_IRQ; i++)
 		bus_space_write_4(intc_iot, intc_ioh, INTC_ILRn(i),
 		    INTC_ILR_PRIs(INTC_MIN_PRI)|INTC_ILR_IRQ);
-
-		TAILQ_INIT(&intc_handler[i].iq_list);
-	}
 
 	intc_calc_mask();
 	bus_space_write_4(intc_iot, intc_ioh, INTC_CONTROL,
@@ -164,148 +153,40 @@ intc_attach(struct device *parent, struct device *self, void *args)
 	intc_attached = 1;
 
 	/* insert self as interrupt handler */
-	arm_set_intr_handler(intc_splraise, intc_spllower, intc_splx,
-	    intc_setipl,
-	    intc_intr_establish, intc_intr_disestablish, intc_intr_string,
-	    intc_irq_handler);
+	arm_set_intr_handler(intc_intr_establish, intc_intr_disestablish,
+	    intc_intr_string, intc_irq_handler);
 
-	intc_setipl(IPL_HIGH);  /* XXX ??? */
 	enable_interrupts(I32_bit);
 }
 
 void
 intc_calc_mask(void)
 {
-	struct cpu_info *ci = curcpu();
-	int irq;
-	struct intrhand *ih;
-	int i;
+	int i, irq;
 
 	for (irq = 0; irq < INTC_NUM_IRQ; irq++) {
-		int max = IPL_NONE;
-		int min = IPL_HIGH;
-		TAILQ_FOREACH(ih, &intc_handler[irq].iq_list, ih_list) {
-			if (ih->ih_ipl > max)
-				max = ih->ih_ipl;
+		if (intc_handler[irq].is_handlers != NULL)
+			intc_imask[irq] &= ~(1 << INTC_IRQ_TO_REGi(irq));
+		else
+			intc_imask[irq] |= (1 << INTC_IRQ_TO_REGi(irq));
 
-			if (ih->ih_ipl < min)
-				min = ih->ih_ipl;
-		}
-
-		intc_handler[irq].iq_irq = max;
-
-		if (max == IPL_NONE)
-			min = IPL_NONE;
-
-#ifdef DEBUG_INTC
-		if (min != IPL_NONE) {
-			printf("irq %d to block at %d %d reg %d bit %d\n",
-			    irq, max, min, INTC_IRQ_TO_REG(irq),
-			    INTC_IRQ_TO_REGi(irq));
-		}
-#endif
-		/* Enable interrupts at lower levels, clear -> enable */
-		for (i = 0; i < min; i++)
-			intc_imask[INTC_IRQ_TO_REG(irq)][i] &=
-			    ~(1 << INTC_IRQ_TO_REGi(irq));
-		for (; i <= IPL_HIGH; i++)
-			intc_imask[INTC_IRQ_TO_REG(irq)][i] |=
-			    1 << INTC_IRQ_TO_REGi(irq);
 		/* XXX - set enable/disable, priority */ 
 		bus_space_write_4(intc_iot, intc_ioh, INTC_ILRn(irq),
-		    INTC_ILR_PRIs(NIPL-max)|INTC_ILR_IRQ);
+		    INTC_ILR_PRIs(0)|INTC_ILR_IRQ);
 	}
-	arm_init_smask();
-	intc_setipl(ci->ci_cpl);
-}
 
-void
-intc_splx(int new)
-{
-	struct cpu_info *ci = curcpu();
-	intc_setipl(new);
-
-	if (ci->ci_ipending & arm_smask[ci->ci_cpl])
-		arm_do_pending_intr(ci->ci_cpl);
-}
-
-int
-intc_spllower(int new)
-{
-	struct cpu_info *ci = curcpu();
-	int old = ci->ci_cpl;
-	intc_splx(new);
-	return (old);
-}
-
-int
-intc_splraise(int new)
-{
-	struct cpu_info *ci = curcpu();
-	int old;
-	old = ci->ci_cpl;
-
-	/*
-	 * setipl must always be called because there is a race window
-	 * where the variable is updated before the mask is set
-	 * an interrupt occurs in that window without the mask always
-	 * being set, the hardware might not get updated on the next
-	 * splraise completely messing up spl protection.
-	 */
-	if (old > new)
-		new = old;
-
-	intc_setipl(new);
-  
-	return (old);
-}
-
-void
-intc_setipl(int new)
-{
-	struct cpu_info *ci = curcpu();
-	int i;
-	int psw;
-	if (intc_attached == 0)
-		return;
-
-	psw = disable_interrupts(I32_bit);
-#if 0
-	{
-		volatile static int recursed = 0;
-		if (recursed == 0) {
-			recursed = 1;
-			if (new != 12) 
-				printf("setipl %d\n", new);
-			recursed = 0;
-		}
-	}
-#endif
-	ci->ci_cpl = new;
 	for (i = 0; i < INTC_NUM_BANKS; i++)
 		bus_space_write_4(intc_iot, intc_ioh,
-		    INTC_MIRn(i), intc_imask[i][new]);
+		    INTC_MIRn(i), intc_imask[i]);
+
 	bus_space_write_4(intc_iot, intc_ioh, INTC_CONTROL,
 	    INTC_CONTROL_NEWIRQ);
-	restore_interrupts(psw);
-}
-
-void
-intc_intr_bootstrap(vaddr_t addr)
-{
-	int i, j;
-	extern struct bus_space armv7_bs_tag;
-	intc_iot = &armv7_bs_tag;
-	intc_ioh = addr;
-	for (i = 0; i < INTC_NUM_BANKS; i++)
-		for (j = 0; j < NIPL; j++)
-			intc_imask[i][j] = 0xffffffff;
 }
 
 void
 intc_irq_handler(void *frame)
 {
-	int irq, pri, s;
+	int irq;
 	struct intrhand *ih;
 	void *arg;
 
@@ -314,22 +195,26 @@ intc_irq_handler(void *frame)
 	printf("irq %d fired\n", irq);
 #endif
 
-	pri = intc_handler[irq].iq_irq;
-	s = intc_splraise(pri);
-	TAILQ_FOREACH(ih, &intc_handler[irq].iq_list, ih_list) {
-		if (ih->ih_arg != 0)
-			arg = ih->ih_arg;
-		else
-			arg = frame;
+	crit_enter();
+	if (intc_handler[irq].is_flags & IPL_DIRECT) {
+		for (ih = intc_handler[irq].is_handlers; ih != NULL; ih = ih->ih_next) {
+			if (ih->ih_arg != 0)
+				arg = ih->ih_arg;
+			else
+				arg = frame;
 
-		if (ih->ih_func(arg)) 
-			ih->ih_count.ec_count++;
-
+			if (ih->ih_fun(arg))
+				ih->ih_count.ec_count++;
+		}
+		/* ack it now */
+		//ampintc_eoi(iack_val);
+	} else {
+		ithread_run(&intc_handler[irq]);
+		/* ack done after actual execution */
 	}
 	bus_space_write_4(intc_iot, intc_ioh, INTC_CONTROL,
 	    INTC_CONTROL_NEWIRQ);
-
-	intc_splx(s);
+	crit_leave();
 }
 
 void *
@@ -349,13 +234,23 @@ intc_intr_establish(int irqno, int level, int (*func)(void *),
 	    cold ? M_NOWAIT : M_WAITOK);
 	if (ih == NULL)
 		panic("intr_establish: can't malloc handler info");
-	ih->ih_func = func;
+	ih->ih_fun = func;
 	ih->ih_arg = arg;
-	ih->ih_ipl = level;
+	ih->ih_level = level & ~IPL_FLAGS;
+	ih->ih_flags = level & IPL_FLAGS;
 	ih->ih_irq = irqno;
 	ih->ih_name = name;
 
-	TAILQ_INSERT_TAIL(&intc_handler[irqno].iq_list, ih, ih_list);
+	if (intc_handler[irqno].is_handlers != NULL) {
+		struct intrhand *tmp;
+		for (tmp = intc_handler[irqno].is_handlers; tmp->ih_next != NULL; tmp = tmp->ih_next);
+		tmp->ih_next = ih;
+	} else {
+		intc_handler[irqno].is_handlers = ih;
+	}
+
+	if (!(ih->ih_flags & IPL_DIRECT))
+		ithread_register(&intc_handler[irqno]);
 
 	if (name != NULL)
 		evcount_attach(&ih->ih_count, name, &ih->ih_irq);
@@ -375,9 +270,9 @@ intc_intr_disestablish(void *cookie)
 {
 	int psw;
 	struct intrhand *ih = cookie;
-	int irqno = ih->ih_irq;
+	//int irqno = ih->ih_irq;
 	psw = disable_interrupts(I32_bit);
-	TAILQ_REMOVE(&intc_handler[irqno].iq_list, ih, ih_list);
+	//TAILQ_REMOVE(&intc_handler[irqno].iq_list, ih, ih_list);
 	if (ih->ih_name != NULL)
 		evcount_detach(&ih->ih_count);
 	free(ih, M_DEVBUF, 0);

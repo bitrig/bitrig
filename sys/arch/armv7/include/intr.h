@@ -48,6 +48,7 @@
 #include <sys/queue.h>
 #include <sys/evcount.h>
 #include <sys/proc.h>
+#include <sys/softintr.h>
 
 int     splraise(int);
 int     spllower(int);
@@ -104,11 +105,7 @@ void arm_clock_register(void (*)(void), void (*)(u_int), void (*)(int),
 void splassert_fail(int, int, const char *);
 extern int splassert_ctl;
 void arm_splassert_check(int, const char *);
-#define splassert(__wantipl) do {                               \
-	if (splassert_ctl > 0) {                                \
-		arm_splassert_check(__wantipl, __func__);    \
-	}                                                       \
-} while (0)
+#define splassert(__wantipl) do { /*nada */ } while (0)
 #define splsoftassert(wantipl) splassert(wantipl)
 #else
 #define splassert(wantipl)      do { /* nothing */ } while (0)
