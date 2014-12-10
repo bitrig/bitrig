@@ -197,7 +197,7 @@ usb_attach(struct device *parent, struct device *self, void *aux)
 	    USB_TASK_TYPE_EXPLORE);
 
 	sc->sc_bus->soft = softintr_establish(IPL_SOFTNET,
-	    sc->sc_bus->methods->soft_intr, sc->sc_bus);
+	    sc->sc_bus->methods->soft_intr, sc->sc_bus, "softusb");
 
 	if (!usb_attach_roothub(sc)) {
 		struct usbd_device *dev = sc->sc_bus->root_hub;

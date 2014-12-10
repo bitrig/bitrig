@@ -112,7 +112,8 @@ initclocks(void)
 {
 	int i;
 
-	softclock_si = softintr_establish(IPL_SOFTCLOCK, softclock, NULL);
+	softclock_si = softintr_establish(IPL_SOFTCLOCK, softclock, NULL,
+	    "softclock");
 
 	/*
 	 * Set divisors to 1 (normal case) and let the machine-specific

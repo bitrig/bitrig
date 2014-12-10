@@ -31,7 +31,8 @@
  * SCHED_LOCK, which is totally unacceptable in the future.
  */
 void *
-softintr_establish(int level, int (*handler)(void *), void *arg)
+softintr_establish(int level, int (*handler)(void *), void *arg,
+    const char *name)
 {
 	struct intrsource *is;
 	struct intrhand *ih;
@@ -57,6 +58,7 @@ softintr_establish(int level, int (*handler)(void *), void *arg)
 	/* Just prepend it */
 	ih->ih_next = is->is_handlers;
 	is->is_handlers = ih;
+	evcount_attach(&ih->ih_count, name, &ih->ih_irq);
 
 	ithread_register(is);
 
