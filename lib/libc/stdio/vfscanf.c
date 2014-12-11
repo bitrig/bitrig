@@ -793,7 +793,7 @@ literal:
 				}
 				nassigned++;
 			}
-			nread += p - buf;
+			nread += nr;
 			break;
 #endif /* FLOATING_POINT */
 		}
