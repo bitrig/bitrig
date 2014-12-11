@@ -1433,7 +1433,7 @@ putkey(const struct mpage *mpage, char *value, uint64_t type)
 	if (TYPE_arch == type)
 		for (cp = value; *cp; cp++)
 			if (isupper((unsigned char)*cp))
-				*cp = tolower((unsigned char)*cp);
+				*cp = _tolower((unsigned char)*cp);
 	putkeys(mpage, value, strlen(value), type);
 }
 
