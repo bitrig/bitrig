@@ -102,42 +102,6 @@ ub_random(struct ub_randstate* ATTR_UNUSED(s))
 	return (long)arc4random() & MAX_VALUE;
 }
 
-#elif defined(HAVE_NSS)
-
-/* not much to remember for NSS since we use its pk11_random, placeholder */
-struct ub_randstate {
-	int ready;
-};
-
-void ub_systemseed(unsigned int ATTR_UNUSED(seed))
-{
-}
-
-struct ub_randstate* ub_initstate(unsigned int ATTR_UNUSED(seed), 
-	struct ub_randstate* ATTR_UNUSED(from))
-{
-	struct ub_randstate* s = (struct ub_randstate*)calloc(1, sizeof(*s));
-	if(!s) {
-		log_err("malloc failure in random init");
-		return NULL;
-	}
-	return s;
-}
-
-long int ub_random(struct ub_randstate* ATTR_UNUSED(state))
-{
-	long int x;
-	/* random 31 bit value. */
-	SECStatus s = PK11_GenerateRandom((unsigned char*)&x, (int)sizeof(x));
-	if(s != SECSuccess) {
-		log_err("PK11_GenerateRandom error: %s",
-			PORT_ErrorToString(PORT_GetError()));
-	}
-	return x & MAX_VALUE;
-}
-
-#endif /* HAVE_SSL or HAVE_NSS */
-
 long int
 ub_random_max(struct ub_randstate* state, long int x)
 {
