@@ -78,6 +78,8 @@ int     toupper(int);
 #if __BSD_VISIBLE || __XPG_VISIBLE
 int     isascii(int);
 int     toascii(int);
+int	_tolower(int);
+int	_toupper(int);
 #endif
 
 #if __ISO_C_VISIBLE >= 1999
