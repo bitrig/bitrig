@@ -1,4 +1,4 @@
-/*	$OpenBSD: ffs_vfsops.c,v 1.145 2014/12/12 19:02:07 tedu Exp $	*/
+/*	$OpenBSD: ffs_vfsops.c,v 1.146 2014/12/12 22:58:48 tedu Exp $	*/
 /*	$NetBSD: ffs_vfsops.c,v 1.19 1996/02/09 22:22:26 christos Exp $	*/
 
 /*-
@@ -1137,7 +1137,7 @@ out:
 	VOP_UNLOCK(devvp, 0);
 
 	if (ump) {
-		free(ump->um_fs, M_UFSMNT, sizeof(*ump->um_fs));
+		free(ump->um_fs, M_UFSMNT, ump->um_fs->fs_sbsize);
 		free(ump, M_UFSMNT, sizeof(*ump));
 		mp->mnt_data = NULL;
 	}
@@ -1277,7 +1277,7 @@ logfail:
 		NOCRED);
 	vput(ump->um_devvp);
 	free(fs->fs_csp, M_UFSMNT, 0);
-	free(fs, M_UFSMNT, sizeof(*fs));
+	free(fs, M_UFSMNT, fs->fs_sbsize);
 	free(ump, M_UFSMNT, sizeof(*ump));
 	mp->mnt_data = (qaddr_t)0;
 	mp->mnt_flag &= ~MNT_LOCAL;
