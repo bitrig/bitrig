@@ -1,4 +1,4 @@
-/*	$OpenBSD: sysctl.h,v 1.152 2014/12/05 04:12:48 uebayasi Exp $	*/
+/*	$OpenBSD: sysctl.h,v 1.153 2014/12/12 07:45:46 tedu Exp $	*/
 /*	$NetBSD: sysctl.h,v 1.16 1996/04/09 20:55:36 cgd Exp $	*/
 
 /*
@@ -181,6 +181,7 @@ struct ctlname {
 #define	KERN_PROC_CWD		78      /* node: proc cwd */
 #define	KERN_PROC_NOBROADCASTKILL 79	/* node: proc no broadcast kill */
 #define	KERN_PROC_VMMAP		80      /* node: proc vmmap */
+#define	KERN_GLOBAL_PTRACE	81	/* allow ptrace globally */
 /* gap for Bitrig */
 #define	KERN_CHROOTMKNOD	100	/* allow mknod in chroot */
 #define	KERN_MAXID		101	/* number of valid kern ids */
@@ -267,7 +268,7 @@ struct ctlname {
 	{ "proc_cwd", CTLTYPE_NODE }, \
 	{ "proc_nobroadcastkill", CTLTYPE_NODE }, \
 	{ "proc_vmmap", CTLTYPE_NODE }, \
-	{ "gap", 0 }, \
+	{ "global_ptrace", CTLTYPE_INT }, \
 	{ "gap", 0 }, \
 	{ "gap", 0 }, \
 	{ "gap", 0 }, \
