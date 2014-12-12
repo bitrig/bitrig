@@ -226,7 +226,7 @@ process_new(struct proc *p, struct process *parent, int flags)
 	pr->ps_flags |= PS_EMBRYO;
 
 	/* Force visibility of all of the above changes */
-	membar_producer();
+	atomic_thread_fence(memory_order_release);
 
 	/* it's sufficiently inited to be globally visible */
 	LIST_INSERT_HEAD(&allprocess, pr, ps_list);

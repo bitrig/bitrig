@@ -194,28 +194,4 @@ atomic_sub_long_nv(volatile unsigned long *p, unsigned long v)
 #define atomic_dec_long(_p) ((void)atomic_dec_long_nv(_p))
 #endif
 
-/*
- * memory barriers
- */
-
-#ifndef membar_enter
-#define membar_enter() atomic_thread_fence(memory_order_seq_cst)
-#endif
-
-#ifndef membar_exit
-#define membar_exit() atomic_thread_fence(memory_order_seq_cst)
-#endif
-
-#ifndef membar_producer
-#define membar_producer() atomic_thread_fence(memory_order_release)
-#endif
-
-#ifndef membar_consumer
-#define membar_consumer() atomic_thread_fence(memory_order_acquire)
-#endif
-
-#ifndef membar_sync
-#define membar_sync() atomic_thread_fence(memory_order_seq_cst)
-#endif
-
 #endif /* _SYS_ATOMIC_H_ */
