@@ -18,8 +18,8 @@
 #ifndef _SYS_ATOMIC_H_
 #define _SYS_ATOMIC_H_
 
-#include <machine/atomic.h>
 #include <sys/stdatomic.h>
+#include <machine/atomic.h>
 
 /*
  * an arch wanting to provide its own implementations does so by defining
@@ -30,168 +30,133 @@
  * atomic_cas_*
  */
 
-#ifndef atomic_cas_uint
 static inline unsigned int
-atomic_cas_uint(unsigned int *p, unsigned int o, unsigned int n)
+atomic_cas_uint(volatile unsigned int *p, unsigned int o, unsigned int n)
 {
-	return __sync_val_compare_and_swap(p, o, n);
+	atomic_compare_exchange_weak_explicit((atomic_uint *)p, &o, n,
+	    memory_order_relaxed, memory_order_relaxed);
+	return o;
 }
-#endif
 
-#ifndef atomic_cas_ulong
 static inline unsigned long
-atomic_cas_ulong(unsigned long *p, unsigned long o, unsigned long n)
+atomic_cas_ulong(volatile unsigned long *p, unsigned long o, unsigned long n)
 {
-	return __sync_val_compare_and_swap(p, o, n);
+	atomic_compare_exchange_weak_explicit((atomic_ulong *)p, &o, n,
+	    memory_order_relaxed, memory_order_relaxed);
+	return o;
 }
-#endif
 
-#ifndef atomic_cas_ptr
 static inline void *
-atomic_cas_ptr(void **p, void *o, void *n)
+atomic_cas_ptr(volatile void **p, void *o, void *n)
 {
-	return __sync_val_compare_and_swap(p, o, n);
+	atomic_compare_exchange_weak_explicit((atomic_uintptr_t *)p,
+	    (__uintptr_t *)&o, (__uintptr_t)n,
+	    memory_order_relaxed, memory_order_relaxed);
+	return o;
 }
-#endif
 
 /*
  * atomic_swap_*
  */
 
-#ifndef atomic_swap_uint
 static inline unsigned int
 atomic_swap_uint(unsigned int *p, unsigned int v)
 {
-	return __sync_lock_test_and_set(p, v);
+	return atomic_exchange_explicit((atomic_uint *)p, v,
+	    memory_order_relaxed);
 }
-#endif
 
-#ifndef atomic_swap_ulong
 static inline unsigned long
 atomic_swap_ulong(unsigned long *p, unsigned long v)
 {
-	return __sync_lock_test_and_set(p, v);
+	return atomic_exchange_explicit((atomic_ulong *)p, v,
+	    memory_order_relaxed);
 }
-#endif
 
-#ifndef atomic_swap_ptr
 static inline void *
 atomic_swap_ptr(void **p, void *v)
 {
-	return __sync_lock_test_and_set(p, v);
+	return (void *)atomic_exchange_explicit((atomic_uintptr_t *)p,
+	    (__uintptr_t)v, memory_order_relaxed);
 }
-#endif
 
 /*
  * atomic_add_*_nv - add and fetch
  */
 
-#ifndef atomic_add_int_nv
 static inline unsigned int
 atomic_add_int_nv(volatile unsigned int *p, unsigned int v)
 {
-	return __sync_add_and_fetch(p, v);
+	return atomic_fetch_add_explicit((atomic_uint *)p, v,
+	    memory_order_relaxed) + v;
 }
-#endif
 
-#ifndef atomic_add_long_nv
 static inline unsigned long
 atomic_add_long_nv(unsigned long *p, unsigned long v)
 {
-	return __sync_add_and_fetch(p, v);
+	return atomic_fetch_add_explicit((atomic_ulong *)p, v,
+	    memory_order_relaxed) + v;
 }
-#endif
 
 /*
  * atomic_add - add
  */
 
-#ifndef atomic_add_int
 #define atomic_add_int(_p, _v) ((void)atomic_add_int_nv((_p), (_v)))
-#endif
-
-#ifndef atomic_add_long
 #define atomic_add_long(_p, _v) ((void)atomic_add_long_nv((_p), (_v)))
-#endif
 
 /*
  * atomic_inc_*_nv - increment and fetch
  */
 
-#ifndef atomic_inc_int_nv
 #define atomic_inc_int_nv(_p) atomic_add_int_nv((_p), 1)
-#endif
-
-#ifndef atomic_inc_long_nv
 #define atomic_inc_long_nv(_p) atomic_add_long_nv((_p), 1)
-#endif
 
 /*
  * atomic_inc_* - increment
  */
 
-#ifndef atomic_inc_int
 #define atomic_inc_int(_p) ((void)atomic_inc_int_nv(_p))
-#endif
 
-#ifndef atomic_inc_long
 #define atomic_inc_long(_p) ((void)atomic_inc_long_nv(_p))
-#endif
 
 /*
  * atomic_sub_*_nv - sub and fetch
  */
 
-#ifndef atomic_sub_int_nv
 static inline unsigned int
 atomic_sub_int_nv(volatile unsigned int *p, unsigned int v)
 {
-	return __sync_sub_and_fetch(p, v);
+	return atomic_fetch_sub_explicit((atomic_uint *)p, v,
+	    memory_order_relaxed) + v;
 }
-#endif
 
-#ifndef atomic_sub_long_nv
 static inline unsigned long
 atomic_sub_long_nv(volatile unsigned long *p, unsigned long v)
 {
-	return __sync_sub_and_fetch(p, v);
+	return atomic_fetch_sub_explicit((atomic_ulong *)p, v,
+	    memory_order_relaxed) + v;
 }
-#endif
 
 /*
  * atomic_sub_* - sub
  */
 
-#ifndef atomic_sub_int
 #define atomic_sub_int(_p, _v) ((void)atomic_sub_int_nv((_p), (_v)))
-#endif
-
-#ifndef atomic_sub_long
 #define atomic_sub_long(_p, _v) ((void)atomic_sub_long_nv((_p), (_v)))
-#endif
 
 /*
  * atomic_dec_*_nv - decrement and fetch
  */
 
-#ifndef atomic_dec_int_nv
 #define atomic_dec_int_nv(_p) atomic_sub_int_nv((_p), 1)
-#endif
-
-#ifndef atomic_dec_long_nv
 #define atomic_dec_long_nv(_p) atomic_sub_long_nv((_p), 1)
-#endif
 
 /*
  * atomic_dec_* - decrement
  */
 
-#ifndef atomic_dec_int
 #define atomic_dec_int(_p) ((void)atomic_dec_int_nv(_p))
-#endif
-
-#ifndef atomic_dec_long
 #define atomic_dec_long(_p) ((void)atomic_dec_long_nv(_p))
-#endif
 
 #endif /* _SYS_ATOMIC_H_ */

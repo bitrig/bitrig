@@ -110,10 +110,10 @@
 #include <sys/kernel.h>
 #include <sys/mutex.h>
 #include <sys/sched.h>
+#include <sys/atomic.h>
 
 #include <uvm/uvm.h>
 
-#include <machine/atomic.h>
 #include <machine/lock.h>
 #include <machine/cpu.h>
 #include <machine/specialreg.h>

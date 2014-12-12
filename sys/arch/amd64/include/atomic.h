@@ -55,42 +55,6 @@
 #define LOCK
 #endif
 
-static inline unsigned int
-_atomic_cas_uint(volatile unsigned int *p, unsigned int e, unsigned int n)
-{
-	__asm volatile(LOCK " cmpxchgl %2, %1"
-	    : "=a" (n), "=m" (*p)
-	    : "r" (n), "a" (e), "m" (*p)
-	    : "memory");
-
-	return (n);
-}
-#define atomic_cas_uint(_p, _e, _n) _atomic_cas_uint((_p), (_e), (_n))
-
-static inline unsigned long
-_atomic_cas_ulong(volatile unsigned long *p, unsigned long e, unsigned long n)
-{
-	__asm volatile(LOCK " cmpxchgq %2, %1"
-	    : "=a" (n), "=m" (*p)
-	    : "r" (n), "a" (e), "m" (*p)
-	    : "memory");
-
-	return (n);
-}
-#define atomic_cas_ulong(_p, _e, _n) _atomic_cas_ulong((_p), (_e), (_n))
-
-static inline void *
-_atomic_cas_ptr(volatile void *p, void *e, void *n)
-{
-	__asm volatile(LOCK " cmpxchgq %2, %1"
-	    : "=a" (n), "=m" (*(unsigned long *)p)
-	    : "r" (n), "a" (e), "m" (*(unsigned long *)p)
-	    : "memory");
-
-	return (n);
-}
-#define atomic_cas_ptr(_p, _e, _n) _atomic_cas_ptr((_p), (_e), (_n))
-
 static __inline u_int64_t
 x86_atomic_testset_u64(volatile u_int64_t *ptr, u_int64_t val)
 {

@@ -48,7 +48,7 @@
 #define __lockbarrier() __asm volatile("": : :"memory")
 #define SPINLOCK_SPIN_HOOK __asm volatile("pause": : :"memory");
 
-#include <machine/atomic.h>
+#include <sys/atomic.h>
 
 #define rw_cas(p, o, n) (atomic_cas_ulong(p, o, n) != o)
 

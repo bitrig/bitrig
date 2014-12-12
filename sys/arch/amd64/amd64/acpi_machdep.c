@@ -25,6 +25,7 @@
 #include <sys/user.h>
 #include <sys/reboot.h>
 #include <sys/hibernate.h>
+#include <sys/atomic.h>
 
 #include <uvm/uvm_extern.h>
 
