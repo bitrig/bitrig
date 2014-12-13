@@ -45,11 +45,11 @@
  *
  * The picture in the ARM manuals looks like this:
  *       3 3 2 2 2 2                            
- *       1 0 9 8 7 6                                   8 7 6 5 4       0
- *      +-+-+-+-+-+-------------------------------------+-+-+-+---------+
- *      |N|Z|C|V|Q|                reserved             |I|F|T|M M M M M|
- *      | | | | | |                                     | | | |4 3 2 1 0|
- *      +-+-+-+-+-+-------------------------------------+-+-+-+---------+
+ *       1 0 9 8 7 6                                 9 8 7 6 5 4       0
+ *      +-+-+-+-+-+---------------------------------+-+-+-+-+-+---------+
+ *      |N|Z|C|V|Q|                reserved         |E|A|I|F|T|M M M M M|
+ *      | | | | | |                                 | | | | | |4 3 2 1 0|
+ *      +-+-+-+-+-+---------------------------------+-+-+-+-+-+---------+
  */
 
 #define PSR_FLAGS 0xf0000000	/* flags */
@@ -57,14 +57,15 @@
 #define PSR_Z_bit (1 << 30)	/* zero */
 #define PSR_C_bit (1 << 29)	/* carry */
 #define PSR_V_bit (1 << 28)	/* overflow */
-
-#define PSR_Q_bit (1 << 27)	/* saturation */
+#define PSR_Q_bit (1 << 27)	/* sticky overflow */
+#define PSR_J_bit (1 << 24)	/* Java mode */
+#define PSR_E_bit (1 << 9)	/* Data endianness */
+#define PSR_A_bit (1 << 8)	/* Imprecise data abort disable */
 
 #define I32_bit (1 << 7)	/* IRQ disable */
 #define F32_bit (1 << 6)	/* FIQ disable */
 
 #define PSR_T_bit (1 << 5)	/* Thumb state */
-#define PSR_J_bit (1 << 24)	/* Java mode */
 
 #define PSR_MODE	0x0000001f	/* mode mask */
 #define PSR_USR26_MODE	0x00000000
@@ -75,7 +76,9 @@
 #define PSR_FIQ32_MODE	0x00000011
 #define PSR_IRQ32_MODE	0x00000012
 #define PSR_SVC32_MODE	0x00000013
+#define PSR_MON32_MODE	0x00000016
 #define PSR_ABT32_MODE	0x00000017
+#define PSR_HYP32_MODE	0x0000001a
 #define PSR_UND32_MODE	0x0000001b
 #define PSR_SYS32_MODE	0x0000001f
 #define PSR_32_MODE	0x00000010
