@@ -107,14 +107,7 @@ _dl_boot_bind(const long sp, long *dl_data, Elf_Dyn *dynamicp)
 	 * Cache the data for easier access.
 	 */
 
-#if defined(__alpha__)
-	dynp = (Elf_Dyn *)((long)_DYNAMIC);
-#elif defined(__sparc__) || defined(__sparc64__) || defined(__powerpc__) || \
-    defined(__hppa__) || defined(__sh__)
-	dynp = dynamicp;
-#else
 	dynp = (Elf_Dyn *)((long)_DYNAMIC + loff);
-#endif
 	while (dynp != NULL && dynp->d_tag != DT_NULL) {
 		if (dynp->d_tag < DT_NUM)
 			dynld.Dyn.info[dynp->d_tag] = dynp->d_un.d_val;

@@ -195,11 +195,6 @@ dlsym(void *handle, const char *name)
 
 	if (sym != NULL) {
 		retval += sym->st_value;
-#ifdef __hppa__
-		if (ELF_ST_TYPE(sym->st_info) == STT_FUNC)
-			retval = (void *)_dl_md_plabel((Elf_Addr)retval,
-			    pobj->dyn.pltgot);
-#endif
 		DL_DEB(("dlsym: %s in %s: %p\n",
 		    name, object->load_name, retval));
 	} else

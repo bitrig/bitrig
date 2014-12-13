@@ -34,9 +34,7 @@
 #include "link.h"
 #include "path.h"
 #include "sod.h"
-#ifndef __mips64__
 #include "machine/reloc.h"
-#endif
 #include "prebind.h"
 #include "ld.h"
 
@@ -45,35 +43,11 @@
 
 char *shstrtab;
 
-/* alpha uses RELOC_JMP_SLOT */
 #ifdef __amd64__
 #define RELOC_JMP_SLOT	R_X86_64_JUMP_SLOT
 #endif
 #ifdef __arm__
 #define RELOC_JMP_SLOT	R_ARM_JUMP_SLOT
-#endif
-#ifdef __hppa__
-#define RELOC_JMP_SLOT	RELOC_IPLT
-#endif
-#ifdef __hppa64__
-#define RELOC_JMP_SLOT	RELOC_JMPSLOT
-#endif
-#ifdef __i386__
-#define RELOC_JMP_SLOT	RELOC_JUMP_SLOT
-#endif
-#ifdef __sh__
-#define RELOC_JMP_SLOT	R_SH_JMP_SLOT
-#endif
-#ifdef __mips64__
-#define RELOC_JMP_SLOT	0		/* XXX mips64 doesnt have PLT reloc */
-#endif
-/* powerpc uses RELOC_JMP_SLOT */
-/* sparc uses RELOC_JMP_SLOT */
-/* sparc64 uses RELOC_JMP_SLOT */
-#if defined(__sparc__) && !defined(__sparc64__)
-/* ARGH, our sparc/include/reloc.h is wrong (for the moment) */
-#undef RELOC_JMP_SLOT
-#define RELOC_JMP_SLOT 21
 #endif
 
 #define BUFSZ (256 * 1024)

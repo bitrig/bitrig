@@ -34,14 +34,7 @@
 
 #include  "archdep.h"
 
-#if defined(__sparc__) && !defined(__sparcv9__)
-#define MALLOC_PAGESHIFT	(13U)
-#elif defined(__mips64__)
-#define MALLOC_PAGESHIFT	(14U)
-#else
 #define MALLOC_PAGESHIFT	(PAGE_SHIFT)
-#endif
-
 #define MALLOC_MINSHIFT		4
 #define MALLOC_MAXSHIFT		(MALLOC_PAGESHIFT - 1)
 #define MALLOC_PAGESIZE		(1UL << MALLOC_PAGESHIFT)

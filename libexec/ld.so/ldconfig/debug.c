@@ -31,9 +31,7 @@
 #include "resolve.h"
 #include "link.h"
 #include "sod.h"
-#ifndef __mips64__
 #include "machine/reloc.h"
-#endif
 #include "prebind.h"
 #include "prebind_struct.h"
 
