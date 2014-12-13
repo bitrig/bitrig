@@ -524,7 +524,11 @@ ampintc_irq_handler(void *frame)
 		sc->sc_spur.ec_count++;
 		return;
 	}
-	irq = iack_val & ((1 << sc->sc_nintr) - 1);
+
+	if (iack_val >= sc->sc_nintr)
+		return;
+
+	irq = iack_val;
 
 	pri = sc->sc_ampintc_handler[irq].iq_irq;
 	s = ampintc_splraise(pri);
