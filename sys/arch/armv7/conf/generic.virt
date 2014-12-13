@@ -1,9 +1,6 @@
-# iMX SoC
-virt0		at mainbus?
-
-# iMX on-chip devices
-pl011uart*	at virt?		# onboard uarts
-virtio*		at virt?
+# Virt on-chip devices
+pl011uart*	at fdt?		# onboard uarts
+virtio*		at fdt?
 vio*		at virtio?
 vioblk*		at virtio?
 viomb*		at virtio?

@@ -61,6 +61,7 @@ include "dev/gpio/files.gpio"
 include "dev/onewire/files.onewire"
 
 # SoC includes
+include "arch/armv7/fdt/files.fdt"
 include "arch/armv7/exynos/files.exynos"
 include "arch/armv7/imx/files.imx"
 include "arch/armv7/omap/files.omap"

@@ -19,6 +19,7 @@
 #include <sys/systm.h>
 
 #include <machine/bus.h>
+#include <machine/fdt.h>
 
 #include <armv7/armv7/armv7var.h>
 #include <armv7/armv7/armv7_machdep.h>
@@ -38,10 +39,10 @@ void
 platform_init()
 {
 	extern struct armv7_platform exynos_platform;
+	extern struct armv7_platform fdt_platform;
 	extern struct armv7_platform imx_platform;
 	extern struct armv7_platform omap_platform;
 	extern struct armv7_platform sunxi_platform;
-	extern struct armv7_platform virt_platform;
 
 	switch (board_id) {
 #if NEXYNOS > 0
@@ -74,13 +75,11 @@ platform_init()
 		platform = &sunxi_platform;
 		break;
 #endif
-#if NVIRT > 0
-	case BOARD_ID_VIRT:
-		platform = &virt_platform;
-		break;
-#endif
 	default:
-		panic("%s: board type 0x%x unknown", __func__, board_id);
+		if (fdt_next_node(0) == NULL)
+			printf("%s: board type 0x%x unknown", __func__, board_id);
+		platform = &fdt_platform;
+		break;
 	}
 }
 

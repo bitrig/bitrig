@@ -1,0 +1,7 @@
+# FDT bus
+
+define fdt {}
+device fdt: fdt
+attach fdt at mainbus
+file	arch/armv7/fdt/fdt_machdep.c		fdt	needs-flag
+file	arch/armv7/fdt/fdtbus.c			fdt

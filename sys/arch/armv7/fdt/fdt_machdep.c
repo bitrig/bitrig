@@ -20,6 +20,7 @@
 #include <sys/termios.h>
 
 #include <machine/bus.h>
+#include <machine/fdt.h>
 
 #include <dev/ic/comreg.h>
 #include <dev/ic/comvar.h>
@@ -27,71 +28,67 @@
 #include <arm/cortex/smc.h>
 #include <arm/armv7/armv7var.h>
 #include <armv7/armv7/armv7var.h>
-#include <armv7/virt/pl011var.h>
 #include <armv7/armv7/armv7_machdep.h>
+#include <armv7/virt/pl011var.h>
 
 extern int comcnspeed;
 extern int comcnmode;
 
 static void
-virt_platform_smc_write(bus_space_tag_t iot, bus_space_handle_t ioh, bus_size_t off,
+fdt_platform_smc_write(bus_space_tag_t iot, bus_space_handle_t ioh, bus_size_t off,
     uint32_t op, uint32_t val)
 {
 	bus_space_write_4(iot, ioh, off, val);
 }
 
 static void
-virt_platform_init_cons(void)
+fdt_platform_init_cons(void)
 {
-	paddr_t paddr;
+	void *node;
+	struct fdt_memory mem;
 
-	switch (board_id) {
-	case BOARD_ID_VIRT:
-		paddr = 0x9000000;
-		break;
-	default:
-		printf("board type %x unknown", board_id);
-		return;
-		/* XXX - HELP */
-	}
-	pl011cnattach(&armv7_bs_tag, paddr, comcnspeed, comcnmode);
+	if ((node = fdt_find_compatible("arm,pl011")) != NULL &&
+	    !fdt_get_memory_address(node, 0, &mem))
+		pl011cnattach(&armv7_bs_tag, mem.addr, comcnspeed, comcnmode);
+
+	comdefaultrate = comcnspeed;
 }
 
 static void
-virt_platform_watchdog_reset(void)
+fdt_platform_watchdog_reset(void)
 {
 }
 
 static void
-virt_platform_powerdown(void)
+fdt_platform_powerdown(void)
 {
 
 }
 
 static void
-virt_platform_print_board_type(void)
+fdt_platform_print_board_type(void)
 {
-	switch (board_id) {
-	case BOARD_ID_VIRT:
-		printf("board type: Virt\n");
-		break;
-	default:
+	void *node = fdt_next_node(0);
+	char *compatible;
+
+	if (!fdt_node_property(node, "compatible", &compatible))
 		printf("board type %x unknown\n", board_id);
-	}
+	else
+		printf("board: %s compatible\n", compatible);
 }
 
 static void
-virt_platform_disable_l2_if_needed(void)
+fdt_platform_disable_l2_if_needed(void)
 {
 
 }
 
-struct armv7_platform virt_platform = {
-	.boot_name = "Bitrig/virt",
-	.smc_write = virt_platform_smc_write,
-	.init_cons = virt_platform_init_cons,
-	.watchdog_reset = virt_platform_watchdog_reset,
-	.powerdown = virt_platform_powerdown,
-	.print_board_type = virt_platform_print_board_type,
-	.disable_l2_if_needed = virt_platform_disable_l2_if_needed,
+struct armv7_platform fdt_platform = {
+	.boot_name = "Bitrig/fdt",
+	.smc_write = fdt_platform_smc_write,
+	.init_cons = fdt_platform_init_cons,
+	.watchdog_reset = fdt_platform_watchdog_reset,
+	.powerdown = fdt_platform_powerdown,
+	.print_board_type = fdt_platform_print_board_type,
+	.disable_l2_if_needed = fdt_platform_disable_l2_if_needed,
 };
