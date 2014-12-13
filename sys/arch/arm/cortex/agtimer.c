@@ -28,6 +28,7 @@
 #include <arm/cpufunc.h>
 #include <machine/bus.h>
 #include <machine/intr.h>
+#include <machine/fdt.h>
 #include <arm/cortex/cortex.h>
 
 /* registers */
@@ -56,6 +57,7 @@ struct agtimer_softc {
 	bus_space_tag_t		sc_iot;
 	bus_space_handle_t	sc_ioh;
 	bus_space_handle_t	sc_pioh;
+	uint32_t		sc_physical;
 
 	struct agtimer_pcpu_softc sc_pstat[MAX_ARM_CPUS];
 
@@ -113,26 +115,38 @@ agtimer_readcnt64(struct agtimer_softc *sc)
 {
 	uint64_t val;
 
-	__asm volatile("mrrc p15, 0, %Q0, %R0, c14" : "=r" (val));
+	cpu_drain_writebuf();
+	//isb();
+	if (sc->sc_physical)
+		__asm volatile("mrrc p15, 0, %Q0, %R0, c14" : "=r" (val));
+	else
+		__asm volatile("mrrc p15, 1, %Q0, %R0, c14" : "=r" (val));
 
 	return (val);
 }
 
 static inline int
-agtimer_get_ctrl(void)
+agtimer_get_ctrl(struct agtimer_softc *sc)
 {
 	uint32_t val;
 
-	__asm volatile("mrc p15, 0, %0, c14, c2, 1" : "=r" (val));
+	if (sc->sc_physical)
+		__asm volatile("mrc p15, 0, %0, c14, c2, 1" : "=r" (val));
+	else
+		__asm volatile("mrc p15, 0, %0, c14, c3, 1" : "=r" (val));
 
 	return (val);
 }
 
 static inline int
-agtimer_set_ctrl(uint32_t val)
+agtimer_set_ctrl(struct agtimer_softc *sc, uint32_t val)
 {
-	__asm volatile("mcr p15, 0, %[val], c14, c2, 1" : :
-	    [val] "r" (val));
+	if (sc->sc_physical)
+		__asm volatile("mcr p15, 0, %[val], c14, c2, 1" : :
+		    [val] "r" (val));
+	else
+		__asm volatile("mcr p15, 0, %[val], c14, c3, 1" : :
+		    [val] "r" (val));
 
 	cpu_drain_writebuf();
 	//isb();
@@ -140,23 +154,16 @@ agtimer_set_ctrl(uint32_t val)
 	return (0);
 }
 
-#ifdef unused
 static inline int
-agtimer_get_tval(void)
+agtimer_set_tval(struct agtimer_softc *sc, uint32_t val)
 {
-	uint32_t val;
+	if (sc->sc_physical)
+		__asm volatile("mcr p15, 0, %[val], c14, c2, 0" : :
+		    [val] "r" (val));
+	else
+		__asm volatile("mcr p15, 0, %[val], c14, c3, 0" : :
+		    [val] "r" (val));
 
-	__asm volatile("mrc p15, 0, %0, c14, c2, 0" : "=r" (val));
-
-	return (val);
-}
-#endif /* unused */
-
-static inline int
-agtimer_set_tval(uint32_t val)
-{
-	__asm volatile("mcr p15, 0, %[val], c14, c2, 0" : :
-	    [val] "r" (val));
 	cpu_drain_writebuf();
 	//isb();
 
@@ -179,6 +186,8 @@ agtimer_attach(struct device *parent, struct device *self, void *args)
 	struct agtimer_softc *sc = (struct agtimer_softc *)self;
 	struct cortex_attach_args *ia = args;
 	bus_space_handle_t ioh, pioh;
+	uint32_t ints[3*4];
+	void *node;
 
 	sc->sc_iot = ia->ca_iot;
 
@@ -197,12 +206,32 @@ agtimer_attach(struct device *parent, struct device *self, void *args)
 	sc->sc_ioh = ioh;
 	sc->sc_pioh = pioh;
 
+	/* Need this later, when we are a guest. */
+	sc->sc_physical = 1;
+
 	/* XXX: disable user access */
 
 #ifdef AMPTIMER_DEBUG
 	evcount_attach(&sc->sc_clk_count, "clock", NULL);
 	evcount_attach(&sc->sc_stat_count, "stat", NULL);
 #endif
+
+	/* establish interrupts */
+	/* TODO: Add interrupt FDT API. */
+	node = fdt_find_compatible("arm,armv7-timer");
+	if (node != NULL && fdt_node_property_ints(node, "interrupts",
+	    ints, 3*4) == 3*4) {
+		/* Setup secure, non-secure and virtual timer IRQs. */
+		for (int i = 0; i < 4; i++) {
+			ampintc_intr_establish(ints[1 + 3 * i] + 16, IPL_CLOCK,
+			    agtimer_intr, NULL, "tick");
+		}
+	} else {
+		ampintc_intr_establish(29, IPL_CLOCK, agtimer_intr,
+		    NULL, "tick");
+		ampintc_intr_establish(30, IPL_CLOCK, agtimer_intr,
+		    NULL, "tick");
+	}
 
 	/*
 	 * private timer and interrupts not enabled until
@@ -239,6 +268,11 @@ agtimer_intr(void *frame)
 	int64_t			 delay;
 #endif
 	int			 rc = 0;
+	int			 ctrl;
+
+	ctrl = agtimer_get_ctrl(sc);
+	if (!(ctrl & GTIMER_CNTP_CTL_ISTATUS))
+		return (rc);
 
 	/*
 	 * DSR - I know that the tick timer is 64 bits, but the following
@@ -288,7 +322,7 @@ agtimer_intr(void *frame)
 	if (delay < 0)
 		delay = 1;
 
-	agtimer_set_tval(delay);
+	agtimer_set_tval(sc, delay);
 
 	return (rc);
 }
@@ -327,21 +361,14 @@ agtimer_cpu_initclocks()
 	sc->sc_ticks_err_cnt = sc->sc_ticks_per_second % hz;
 	pc->pc_ticks_err_sum = 0;
 
-	/* establish interrupts */
-	/* XXX - irq */
-	ampintc_intr_establish(29, IPL_CLOCK, agtimer_intr,
-	    NULL, "tick");
-	ampintc_intr_establish(30, IPL_CLOCK, agtimer_intr,
-	    NULL, "tick");
-
 	next = agtimer_readcnt64(sc) + sc->sc_ticks_per_intr;
 	pc->pc_nexttickevent = pc->pc_nextstatevent = next;
 
-	reg = agtimer_get_ctrl();
+	reg = agtimer_get_ctrl(sc);
 	reg &= GTIMER_CNTP_CTL_IMASK;
 	reg |= GTIMER_CNTP_CTL_ENABLE;
-	agtimer_set_tval(sc->sc_ticks_per_intr);
-	agtimer_set_ctrl(reg);
+	agtimer_set_tval(sc, sc->sc_ticks_per_intr);
+	agtimer_set_ctrl(sc, reg);
 }
 
 void
@@ -413,9 +440,9 @@ agtimer_startclock(void)
 	nextevent = agtimer_readcnt64(sc) + sc->sc_ticks_per_intr;
 	pc->pc_nexttickevent = pc->pc_nextstatevent = nextevent;
 
-	reg = agtimer_get_ctrl();
+	reg = agtimer_get_ctrl(sc);
 	reg &= GTIMER_CNTP_CTL_IMASK;
 	reg |= GTIMER_CNTP_CTL_ENABLE;
-	agtimer_set_tval(sc->sc_ticks_per_intr);
-	agtimer_set_ctrl(reg);
+	agtimer_set_tval(sc, sc->sc_ticks_per_intr);
+	agtimer_set_ctrl(sc, reg);
 }
