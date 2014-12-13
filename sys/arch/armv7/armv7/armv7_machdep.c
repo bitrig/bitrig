@@ -415,10 +415,6 @@ initarm(void *arg0, void *arg1, void *arg2)
 	if (set_cpufuncs())
 		panic("cpu not recognized!");
 
-	/* XXX: Use FDT information. */
-	platform_init();
-	platform_disable_l2_if_needed();
-
 	/*
 	 * Temporarily replace bus_space_map() functions so that
 	 * console devices can get mapped.
@@ -472,6 +468,10 @@ initarm(void *arg0, void *arg1, void *arg2)
 			}
 		}
 	}
+
+	/* XXX: Use FDT information. */
+	platform_init();
+	platform_disable_l2_if_needed();
 
 	/* setup a serial console for very early boot */
 	consinit();
