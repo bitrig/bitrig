@@ -48,7 +48,7 @@
 
 ENTRY(setjmp)
 	/* Block all signals and retrieve the old signal mask */
-	stmfd	sp!, {r0, r14}
+	stmfd	sp!, {r0, lr}
 	mov	r0, #0x00000000
 
 #if defined(__PIC__)
@@ -58,28 +58,27 @@ ENTRY(setjmp)
 #endif
 	mov	r1, r0
 
-	ldmfd	sp!, {r0, r14}
+	ldmfd	sp!, {r0, lr}
 
 	/* Store signal mask */
 	str	r1, [r0, #(25 * 4)]
 
 	ldr	r1, .Lsetjmp_magic
-	str	r1, [r0], #4
+	str	r1, [r0]
 
-#ifdef SOFTFLOAT
-	add	r0, r0, #52
-#else
+#ifndef SOFTFLOAT
 	/* Store fp registers */
-	vstm	r0!, {d8-d15}
-	add	r0, r0, #16 /* vfp3 fpu context is smaller */
+	add	r1, r0, #(32 * 4)
+	vstmia	r1, {d8-d15}
 	/* Store fpscr */
 	vmrs	r1, FPSCR
-	str	r1, [r0], #0x0004
+	str	r1, [r0, #(13 * 4)]
 #endif	/*SOFTFLOAT*/
 	/* Store integer registers */
-        stmia	r0, {r4-r14}
-        mov	r0, #0x00000000
-        mov	r15, r14
+	add	r0, r0, #(14 * 4)
+	stmia	r0, {r4-lr}
+	mov	r0, #0x00000000
+	mov	pc, lr
 
 .Lsetjmp_magic:
 	.word	_JB_MAGIC_SETJMP
@@ -95,7 +94,7 @@ ENTRY(longjmp)
 	ldr	r2, [r0, #(25 * 4)]
 
 	/* Set signal mask */
-	stmfd	sp!, {r0, r1, r14}
+	stmfd	sp!, {r0, r1, lr}
 	sub	sp, sp, #4	/* align the stack */
 
 	mov	r0, r2
@@ -106,25 +105,24 @@ ENTRY(longjmp)
 #endif
 
 	add	sp, sp, #4	/* unalign the stack */
-	ldmfd	sp!, {r0, r1, r14} 
+	ldmfd	sp!, {r0, r1, lr}
 
-	add	r0, r0, #4
-#ifdef SOFTFLOAT
-	add	r0, r0, #52
-#else
+#ifndef SOFTFLOAT
 	/* Restore fp registers */
-	vldm	r0!, {d8-d15}
-	add	r0, r0, #16 /* vfp3 fpu context is smaller */
+	add	ip, r0, #(32 * 4)
+	vldmia	ip, {d8-d15}
 	/* Restore fpscr */
-	ldr	r4, [r0], #0x0004
-	vmsr	FPSCR, r4
+	ldr	ip, [r0, #(13 * 4)]
+	vmsr	FPSCR, ip
 #endif	/* SOFTFLOAT */
-	/* Restore integer registers */
-        ldmia	r0, {r4-r14}
 
-	/* Validate sp and r14 */
+	/* Restore integer registers */
+	add	r0, #(14 * 4)
+	ldmia	r0, {r4-lr}
+
+	/* Validate sp and lr */
 	teq	sp, #0
-	teqne	r14, #0
+	teqne	lr, #0
 	beq	botch
 
 	/* Set return value */
@@ -132,11 +130,7 @@ ENTRY(longjmp)
 	mov	r0, r1
 	teq	r0, #0x00000000
 	moveq	r0, #0x00000001
-#ifdef __ARM_26__
-	mov	r15, r14
-#else
-	mov	r15, r14
-#endif
+	mov	pc, lr
 
 	/* validation failed, die die die. */
 botch:
