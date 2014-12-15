@@ -52,16 +52,18 @@
 ENTRY(_setjmp)
 	ldr	r1, .L_setjmp_magic
 	str	r1, [r0]
+
 #ifndef SOFTFLOAT
 	/* Store fp registers */
-	add	r1, r0, #(32 * 4)
+	add	r1, r0, #(_JB_REG_D8 * 4)
 	vstmia	r1, {d8-d15}
 	/* Store fpscr */
 	vmrs	r1, FPSCR
-	str	r1, [r0, #(13 * 4)]
+	str	r1, [r0, #(_JB_REG_FPSCR * 4)]
 #endif	/* SOFTFLOAT */
+
 	/* Store integer registers */
-	add	r0, r0, #(14 * 4)
+	add	r0, r0, #(_JB_REG_R4 * 4)
 	stmia	r0, {r4-lr}
 
 	mov	r0, #0x00000000
@@ -78,15 +80,15 @@ ENTRY(_longjmp)
 
 #ifndef SOFTFLOAT
 	/* Restore fp registers */
-	add	ip, r0, #(32 * 4)
+	add	ip, r0, #(_JB_REG_D8 * 4)
 	vldmia	ip, {d8-d15}
 	/* Restore fpscr */
-	ldr	ip, [r0, #(13 * 4)]
+	ldr	ip, [r0, #(_JB_REG_FPSCR * 4)]
 	vmsr	FPSCR, ip
 #endif	/* SOFTFLOAT */
 
 	/* Restore integer registers */
-	add	r0, #(14 * 4)
+	add	r0, #(_JB_REG_R4 * 4)
 	ldmia	r0, {r4-lr}
 
 	/* Validate sp and lr */
