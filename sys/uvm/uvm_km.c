@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_km.c,v 1.121 2014/11/27 21:40:52 kettenis Exp $	*/
+/*	$OpenBSD: uvm_km.c,v 1.122 2014/12/15 02:24:23 guenther Exp $	*/
 /*	$NetBSD: uvm_km.c,v 1.42 2001/01/14 02:10:01 thorpej Exp $	*/
 
 /* 
@@ -184,7 +184,7 @@ uvm_km_init(vaddr_t start, vaddr_t end)
 	if (base != start && uvm_map(&kernel_map_store, &base, start - base,
 	    NULL, UVM_UNKNOWN_OFFSET, 0,
 	    UVM_MAPFLAG(PROT_READ | PROT_WRITE, PROT_READ | PROT_WRITE,
-	    UVM_INH_NONE, POSIX_MADV_RANDOM, UVM_FLAG_FIXED)) != 0)
+	    MAP_INHERIT_NONE, POSIX_MADV_RANDOM, UVM_FLAG_FIXED)) != 0)
 		panic("uvm_km_init: could not reserve space for kernel");
 	
 	kernel_map = &kernel_map_store;
@@ -211,7 +211,7 @@ uvm_km_suballoc(struct vm_map *map, vaddr_t *min, vaddr_t *max, vsize_t size,
 	/* first allocate a blank spot in the parent map */
 	if (uvm_map(map, min, size, NULL, UVM_UNKNOWN_OFFSET, 0,
 	    UVM_MAPFLAG(PROT_READ | PROT_WRITE,
-	    PROT_READ | PROT_WRITE, UVM_INH_NONE,
+	    PROT_READ | PROT_WRITE, MAP_INHERIT_NONE,
 	    POSIX_MADV_RANDOM, mapflags)) != 0) {
 	       panic("uvm_km_suballoc: unable to allocate space in parent map");
 	}
@@ -371,7 +371,7 @@ uvm_km_page_init(void)
 		if (uvm_map(kernel_map, &addr, (vsize_t)bulk << PAGE_SHIFT,
 		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(PROT_READ | PROT_WRITE,
-		    PROT_READ | PROT_WRITE, UVM_INH_NONE,
+		    PROT_READ | PROT_WRITE, MAP_INHERIT_NONE,
 		    UVM_ADV_RANDOM, UVM_FLAG_TRYLOCK)) != 0) {
 			bulk /= 2;
 			continue;
@@ -436,7 +436,7 @@ uvm_km_thread(void *arg)
 			 */
 			flags = UVM_MAPFLAG(PROT_READ | PROT_WRITE,
 			    PROT_READ | PROT_WRITE,
-			    UVM_INH_NONE, UVM_ADV_RANDOM,
+			    MAP_INHERIT_NONE, UVM_ADV_RANDOM,
 			    fp != NULL ? UVM_FLAG_TRYLOCK : 0);
 			memset(pg, 0, sizeof(pg));
 			for (i = 0; i < nitems(pg); i++) {
@@ -450,7 +450,7 @@ uvm_km_thread(void *arg)
 				/* made progress, so don't sleep for more */
 				flags = UVM_MAPFLAG(PROT_READ | PROT_WRITE,
 				    PROT_READ | PROT_WRITE,
-				    UVM_INH_NONE, UVM_ADV_RANDOM,
+				    MAP_INHERIT_NONE, UVM_ADV_RANDOM,
 				    UVM_FLAG_TRYLOCK);
 			}
 
@@ -624,7 +624,7 @@ try_map:
 		map = *kv->kv_map;
 		va = vm_map_min(map);
 		if (uvm_map(map, &va, sz, uobj, kd->kd_prefer,
-		    kv->kv_align, UVM_MAPFLAG(prot, prot, UVM_INH_NONE,
+		    kv->kv_align, UVM_MAPFLAG(prot, prot, MAP_INHERIT_NONE,
 		    POSIX_MADV_RANDOM, mapflags))) {
 			if (kv->kv_wait && kd->kd_waitok) {
 				tsleep(map, PVM, "km_allocva", 0);
