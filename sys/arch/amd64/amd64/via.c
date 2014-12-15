@@ -1,4 +1,4 @@
-/*	$OpenBSD: via.c,v 1.18 2014/12/09 06:58:28 doug Exp $	*/
+/*	$OpenBSD: via.c,v 1.19 2014/12/15 01:53:45 tedu Exp $	*/
 /*	$NetBSD: machdep.c,v 1.214 1996/11/10 03:16:17 thorpej Exp $	*/
 
 /*-
@@ -159,7 +159,7 @@ viac3_crypto_newsession(u_int32_t *sidp, struct cryptoini *cri)
 			    M_NOWAIT);
 			if (ses == NULL)
 				return (ENOMEM);
-			bcopy(sc->sc_sessions, ses, sesn * sizeof(*ses));
+			memcpy(ses, sc->sc_sessions, sesn * sizeof(*ses));
 			explicit_bzero(sc->sc_sessions, sesn * sizeof(*ses));
 			free(sc->sc_sessions, M_DEVBUF, 0);
 			sc->sc_sessions = ses;
@@ -368,7 +368,7 @@ viac3_crypto_encdec(struct cryptop *crp, struct cryptodesc *crd,
 		sc->op_cw[0] = ses->ses_cw0 | C3_CRYPT_CWLO_ENCRYPT;
 		key = ses->ses_ekey;
 		if (crd->crd_flags & CRD_F_IV_EXPLICIT)
-			bcopy(crd->crd_iv, sc->op_iv, 16);
+			memcpy(sc->op_iv, crd->crd_iv, 16);
 		else
 			arc4random_buf(sc->op_iv, 16);
 
@@ -380,8 +380,8 @@ viac3_crypto_encdec(struct cryptop *crp, struct cryptodesc *crd,
 				cuio_copyback((struct uio *)crp->crp_buf,
 				    crd->crd_inject, 16, sc->op_iv);
 			else
-				bcopy(sc->op_iv, (int8_t *)crp->crp_buf
-				    + crd->crd_inject, 16);
+				memcpy((int8_t *)crp->crp_buf + crd->crd_inject,
+				    sc->op_iv, 16);
 			if (err)
 				return (err);
 		}
@@ -389,7 +389,7 @@ viac3_crypto_encdec(struct cryptop *crp, struct cryptodesc *crd,
 		sc->op_cw[0] = ses->ses_cw0 | C3_CRYPT_CWLO_DECRYPT;
 		key = ses->ses_dkey;
 		if (crd->crd_flags & CRD_F_IV_EXPLICIT)
-			bcopy(crd->crd_iv, sc->op_iv, 16);
+			memcpy(sc->op_iv, crd->crd_iv, 16);
 		else {
 			if (crp->crp_flags & CRYPTO_F_IMBUF)
 				m_copydata((struct mbuf *)crp->crp_buf,
@@ -398,8 +398,8 @@ viac3_crypto_encdec(struct cryptop *crp, struct cryptodesc *crd,
 				cuio_copydata((struct uio *)crp->crp_buf,
 				    crd->crd_inject, 16, sc->op_iv);
 			else
-				bcopy((int8_t *)crp->crp_buf + crd->crd_inject,
-				    sc->op_iv, 16);
+				memcpy(sc->op_iv, (int8_t *)crp->crp_buf
+				    + crd->crd_inject, 16);
 		}
 	}
 
@@ -410,7 +410,7 @@ viac3_crypto_encdec(struct cryptop *crp, struct cryptodesc *crd,
 		cuio_copydata((struct uio *)crp->crp_buf,
 		    crd->crd_skip, crd->crd_len, sc->op_buf);
 	else
-		bcopy((int8_t *)crp->crp_buf + crd->crd_skip, sc->op_buf,
+		memcpy(sc->op_buf, (int8_t *)crp->crp_buf + crd->crd_skip,
 		    crd->crd_len);
 
 	sc->op_cw[1] = sc->op_cw[2] = sc->op_cw[3] = 0;
@@ -424,7 +424,7 @@ viac3_crypto_encdec(struct cryptop *crp, struct cryptodesc *crd,
 		cuio_copyback((struct uio *)crp->crp_buf,
 		    crd->crd_skip, crd->crd_len, sc->op_buf);
 	else
-		bcopy(sc->op_buf, (int8_t *)crp->crp_buf + crd->crd_skip,
+		memcpy((int8_t *)crp->crp_buf + crd->crd_skip, sc->op_buf,
 		    crd->crd_len);
 
 	if (sc->op_buf != NULL) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: gdt.c,v 1.21 2014/11/16 12:30:56 deraadt Exp $	*/
+/*	$OpenBSD: gdt.c,v 1.22 2014/12/15 01:53:45 tedu Exp $	*/
 /*	$NetBSD: gdt.c,v 1.1 2003/04/26 18:39:28 fvdl Exp $	*/
 
 /*-
@@ -58,7 +58,7 @@ gdt_alloc_cpu(struct cpu_info *ci)
 		panic("gdt_init: can't alloc");
 	ci->ci_tss = (struct x86_64_tss *)((int8_t *)ci->ci_gdt + GDT_SIZE);
 
-	bcopy(gdtstore, ci->ci_gdt, GDT_SIZE);
+	memcpy(ci->ci_gdt, gdtstore, GDT_SIZE);
 }
 
 
