@@ -23,6 +23,7 @@
 #include <sys/queue.h>
 
 #include <machine/bus.h>
+#include <machine/fdt.h>
 #include <machine/clock.h>
 
 #include <dev/ic/ahcireg.h>
@@ -73,6 +74,7 @@
 #define SATA_P0PHYCR_TEST_PDDQ	(1 << 20)
 
 int	imxahci_match(struct device *, void *, void *);
+int	imxahci_fdt_match(struct device *, void *, void *);
 void	imxahci_attach(struct device *, struct device *, void *);
 int	imxahci_detach(struct device *, int);
 int	imxahci_activate(struct device *, int);
@@ -80,7 +82,13 @@ int	imxahci_activate(struct device *, int);
 extern int ahci_intr(void *);
 
 struct imxahci_softc {
-	struct ahci_softc	sc;
+	struct device		 sc_dev;
+	struct ahci_softc 	*sc_ahci;
+	bus_space_tag_t		 sc_iot;
+	bus_space_handle_t	 sc_ioh;
+	bus_size_t		 sc_ios;
+	bus_dma_tag_t		 sc_dmat;
+	void			*sc_ih;
 	struct clk		*sc_clk;
 };
 
@@ -89,11 +97,17 @@ struct cfattach imxahci_ca = {
 	imxahci_match,
 	imxahci_attach,
 	imxahci_detach,
-	imxahci_activate
+};
+
+struct cfattach imxahci_fdt_ca = {
+	sizeof(struct imxahci_softc),
+	imxahci_fdt_match,
+	imxahci_attach,
+	imxahci_detach,
 };
 
 struct cfdriver imxahci_cd = {
-	NULL, "ahci", DV_DULL
+	NULL, "imxahci", DV_DULL
 };
 
 int
@@ -106,35 +120,60 @@ imxahci_match(struct device *parent, void *v, void *aux)
 	return 0;
 }
 
+int
+imxahci_fdt_match(struct device *parent, void *v, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("fsl,imx6q-ahci", aa->aa_node))
+		return 1;
+
+	return 0;
+}
+
 void
 imxahci_attach(struct device *parent, struct device *self, void *args)
 {
 	struct armv7_attach_args *aa = args;
-	struct imxahci_softc *imxsc = (struct imxahci_softc *) self;
-	struct ahci_softc *sc = &imxsc->sc;
+	struct imxahci_softc *sc = (struct imxahci_softc *) self;
+	struct ahci_softc *asc;
 	uint32_t timeout = 0x100000;
+	struct fdt_memory mem;
+	int irq;
 
 	sc->sc_iot = aa->aa_iot;
-	sc->sc_ios = aa->aa_dev->mem[0].size;
 	sc->sc_dmat = aa->aa_dmat;
 
-	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
-		panic("imxahci_attach: bus_space_map failed!");
+	if (aa->aa_node) {
+		uint32_t ints[3];
 
-	sc->sc_ih = arm_intr_establish(aa->aa_dev->irq[0], IPL_BIO,
-	    ahci_intr, sc, sc->sc_dev.dv_xname);
-	if (sc->sc_ih == NULL) {
-		printf(": unable to establish interrupt\n");
-		goto unmap;
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+
+		/* TODO: Add interrupt FDT API. */
+		if (fdt_node_property_ints(aa->aa_node, "interrupts",
+		    ints, 3) != 3)
+			panic("%s: could not extract interrupt data from FDT",
+			    __func__);
+
+		irq = ints[1];
+	} else {
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+		irq = aa->aa_dev->irq[0];
 	}
 
-	imxsc->sc_clk = clk_get("ahb");
-	if (imxsc->sc_clk == NULL) {
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
+		panic("%s: bus_space_map failed!", __func__);
+	sc->sc_ios = mem.size;
+
+	sc->sc_clk = clk_get("ahb");
+	if (sc->sc_clk == NULL) {
 		printf(": can't get clock\n");
 		goto unmap;
 	}
-	clk_enable(imxsc->sc_clk);
+	clk_enable(sc->sc_clk);
 
 	/* power it up */
 	clk_enable(clk_get("sata_ref_100m"));
@@ -157,11 +196,29 @@ imxahci_attach(struct device *parent, struct device *self, void *args)
 
 	bus_space_write_4(sc->sc_iot, sc->sc_ioh, SATA_PI, 1);
 
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, SATA_TIMER1MS, clk_get_rate(imxsc->sc_clk));
+	bus_space_write_4(sc->sc_iot, sc->sc_ioh, SATA_TIMER1MS, clk_get_rate(sc->sc_clk));
 
 	while (!(bus_space_read_4(sc->sc_iot, sc->sc_ioh, SATA_P0SSTS) & 0xF) && timeout--);
 
-	if (ahci_attach(sc) != 0) {
+	printf("\n");
+
+	if ((asc = (struct ahci_softc *)config_found(self, NULL, NULL)) == NULL)
+		goto unmap;
+
+	sc->sc_ih = arm_intr_establish(irq, IPL_BIO,
+	    ahci_intr, asc, asc->sc_dev.dv_xname);
+	if (sc->sc_ih == NULL) {
+		printf(": unable to establish interrupt\n");
+		goto unmap;
+	}
+
+	sc->sc_ahci = asc;
+	asc->sc_iot = sc->sc_iot;
+	asc->sc_ioh = sc->sc_ioh;
+	asc->sc_ios = sc->sc_ios;
+	asc->sc_ih = sc->sc_ih;
+	asc->sc_dmat = aa->aa_dmat;
+	if (ahci_attach(asc) != 0) {
 		/* error printed by ahci_attach */
 		goto irq;
 	}
@@ -176,10 +233,10 @@ unmap:
 int
 imxahci_detach(struct device *self, int flags)
 {
-	struct imxahci_softc *imxsc = (struct imxahci_softc *) self;
-	struct ahci_softc *sc = &imxsc->sc;
+	struct imxahci_softc *sc = (struct imxahci_softc *) self;
+	struct ahci_softc *asc = sc->sc_ahci;
 
-	ahci_detach(sc, flags);
+	ahci_detach(asc, flags);
 	bus_space_unmap(sc->sc_iot, sc->sc_ioh, sc->sc_ios);
 	return 0;
 }
@@ -187,8 +244,28 @@ imxahci_detach(struct device *self, int flags)
 int
 imxahci_activate(struct device *self, int act)
 {
-	struct imxahci_softc *imxsc = (struct imxahci_softc *) self;
-	struct ahci_softc *sc = &imxsc->sc;
+	struct imxahci_softc *sc = (struct imxahci_softc *) self;
+	struct ahci_softc *asc = sc->sc_ahci;
 
-	return ahci_activate((struct device *)sc, act);
+	return ahci_activate((struct device *)asc, act);
+}
+
+int	ahci_imx_match(struct device *, void *, void *);
+void	ahci_imx_attach(struct device *, struct device *, void *);
+
+struct cfattach ahci_imx_ca = {
+	sizeof(struct ahci_softc),
+	ahci_imx_match,
+	ahci_imx_attach,
+};
+
+int
+ahci_imx_match(struct device *parent, void *v, void *aux)
+{
+	return 1;
+}
+
+void
+ahci_imx_attach(struct device *parent, struct device *self, void *args)
+{
 }

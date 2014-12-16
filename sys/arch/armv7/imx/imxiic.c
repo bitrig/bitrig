@@ -22,6 +22,7 @@
 #include <sys/systm.h>
 #include <machine/bus.h>
 #include <machine/clock.h>
+#include <machine/fdt.h>
 
 #include <armv7/armv7/armv7var.h>
 #include <armv7/imx/imxiomuxcvar.h>
@@ -65,6 +66,7 @@ struct imxiic_softc {
 	struct clk 		*sc_clk;
 };
 
+int imxiic_match(struct device *, void *, void *);
 void imxiic_attach(struct device *, struct device *, void *);
 int imxiic_detach(struct device *, int);
 void imxiic_bus_scan(struct device *, struct i2cbus_attach_args *, void *);
@@ -95,23 +97,48 @@ struct cfattach imxiic_ca = {
 	sizeof(struct imxiic_softc), NULL, imxiic_attach, imxiic_detach
 };
 
+struct cfattach imxiic_fdt_ca = {
+	sizeof(struct imxiic_softc), imxiic_match, imxiic_attach, imxiic_detach
+};
+
 struct cfdriver imxiic_cd = {
 	NULL, "imxiic", DV_DULL
 };
+
+int
+imxiic_match(struct device *parent, void *v, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("fsl,imx6q-i2c", aa->aa_node))
+		return 1;
+
+	return 0;
+}
 
 void
 imxiic_attach(struct device *parent, struct device *self, void *args)
 {
 	struct imxiic_softc *sc = (struct imxiic_softc *)self;
 	struct armv7_attach_args *aa = args;
+	struct fdt_memory mem;
 	char i2c[5];
 
 	sc->sc_iot = aa->aa_iot;
-	sc->sc_ios = aa->aa_dev->mem[0].size;
+	if (aa->aa_node) {
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+	} else {
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+	}
+
+	sc->sc_ios = mem.size;
 	sc->unit = aa->aa_dev->unit;
-	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
-		panic("imxiic_attach: bus_space_map failed!");
+
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
+		panic("%s: bus_space_map failed!", __func__);
 
 #if 0
 	sc->sc_ih = arm_intr_establish(aa->aa_dev->irq[0], IPL_BIO,

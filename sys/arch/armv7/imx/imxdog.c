@@ -25,6 +25,7 @@
 #include <sys/timeout.h>
 #include <machine/intr.h>
 #include <machine/bus.h>
+#include <machine/fdt.h>
 #include <armv7/armv7/armv7var.h>
 
 /* registers */
@@ -42,27 +43,51 @@ struct imxdog_softc {
 
 struct imxdog_softc *imxdog_sc;
 
+int imxdog_match(struct device *parent, void *v, void *aux);
 void imxdog_attach(struct device *parent, struct device *self, void *args);
 void imxdog_reset(void);
 
 struct cfattach	imxdog_ca = {
 	sizeof (struct imxdog_softc), NULL, imxdog_attach
 };
+struct cfattach	imxdog_fdt_ca = {
+	sizeof (struct imxdog_softc), imxdog_match, imxdog_attach
+};
 
 struct cfdriver imxdog_cd = {
 	NULL, "imxdog", DV_DULL
 };
+
+int
+imxdog_match(struct device *parent, void *v, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("fsl,imx6q-wdt", aa->aa_node))
+		return 1;
+
+	return 0;
+}
 
 void
 imxdog_attach(struct device *parent, struct device *self, void *args)
 {
 	struct armv7_attach_args *aa = args;
 	struct imxdog_softc *sc = (struct imxdog_softc *) self;
+	struct fdt_memory mem;
 
 	sc->sc_iot = aa->aa_iot;
-	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
-		panic("imxdog_attach: bus_space_map failed!");
+	if (aa->aa_node) {
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+	} else {
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+	}
+
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
+		panic("%s: bus_space_map failed!", __func__);
 
 	printf("\n");
 	imxdog_sc = sc;

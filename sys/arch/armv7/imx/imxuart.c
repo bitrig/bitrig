@@ -38,6 +38,7 @@
 
 #include <machine/bus.h>
 #include <machine/clock.h>
+#include <machine/fdt.h>
 #include <armv7/imx/imxuartreg.h>
 #include <armv7/imx/imxuartvar.h>
 #include <armv7/armv7/armv7var.h>
@@ -88,6 +89,7 @@ struct imxuart_softc {
 
 
 int     imxuartprobe(struct device *parent, void *self, void *aux);
+int     imxuartprobe_fdt(struct device *parent, void *self, void *aux);
 void    imxuartattach(struct device *parent, struct device *self, void *aux);
 
 void imxuartcnprobe(struct consdev *cp);
@@ -120,6 +122,9 @@ struct cfdriver imxuart_cd = {
 struct cfattach imxuart_ca = {
 	sizeof(struct imxuart_softc), imxuartprobe, imxuartattach
 };
+struct cfattach imxuart_fdt_ca = {
+	sizeof(struct imxuart_softc), imxuartprobe_fdt, imxuartattach
+};
 
 bus_space_tag_t	imxuartconsiot;
 bus_space_handle_t imxuartconsioh;
@@ -133,6 +138,17 @@ imxuartprobe(struct device *parent, void *self, void *aux)
 	return 1;
 }
 
+int
+imxuartprobe_fdt(struct device *parent, void *self, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("fsl,imx6q-uart", aa->aa_node))
+		return 1;
+
+	return 0;
+}
+
 struct cdevsw imxuartdev =
 	cdev_tty_init(3/*XXX NIMXUART */ ,imxuart);		/* 12: serial port */
 
@@ -141,16 +157,37 @@ imxuartattach(struct device *parent, struct device *self, void *args)
 {
 	struct armv7_attach_args *aa = args;
 	struct imxuart_softc *sc = (struct imxuart_softc *) self;
-
-	sc->sc_irq = arm_intr_establish(aa->aa_dev->irq[0], IPL_TTY,
-	    imxuart_intr, sc, sc->sc_dev.dv_xname);
+	struct fdt_memory mem;
+	int irq;
 
 	sc->sc_iot = aa->aa_iot;
-	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
+	if (aa->aa_node) {
+		uint32_t ints[3];
+
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+
+		/* TODO: Add interrupt FDT API. */
+		if (fdt_node_property_ints(aa->aa_node, "interrupts",
+		    ints, 3) != 3)
+			panic("%s: could not extract interrupt data from FDT",
+			    __func__);
+
+		irq = ints[1];
+	} else {
+		irq = aa->aa_dev->irq[0];
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+	}
+
+	sc->sc_irq = arm_intr_establish(irq, IPL_TTY, imxuart_intr,
+	    sc, sc->sc_dev.dv_xname);
+
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
 		panic("imxuartattach: bus_space_map failed!");
 
-	if (aa->aa_dev->mem[0].addr == imxuartconsaddr)
+	if (mem.addr == imxuartconsaddr)
 		printf(" console");
 
 	timeout_set(&sc->sc_diag_tmo, imxuart_diag, sc);

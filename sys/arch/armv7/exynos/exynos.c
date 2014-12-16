@@ -20,12 +20,18 @@
 #include <sys/systm.h>
 
 #include <machine/bus.h>
+#include <machine/fdt.h>
 
 #include <armv7/armv7/armv7var.h>
 
 static int
 exynos_match(struct device *parent, void *cfdata, void *aux)
 {
+	/* If we're running with fdt, do not attach. */
+	/* XXX: Find a better way. */
+	if (fdt_next_node(0))
+		return (0);
+
 	switch (board_id)
 	{
 	case BOARD_ID_EXYNOS5_CHROMEBOOK:

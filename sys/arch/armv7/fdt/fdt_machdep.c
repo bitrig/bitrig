@@ -30,6 +30,7 @@
 #include <armv7/armv7/armv7var.h>
 #include <armv7/armv7/armv7_machdep.h>
 #include <armv7/virt/pl011var.h>
+#include <armv7/imx/imxuartvar.h>
 
 extern int comcnspeed;
 extern int comcnmode;
@@ -45,11 +46,23 @@ static void
 fdt_platform_init_cons(void)
 {
 	void *node;
+	char *stdout_path;
 	struct fdt_memory mem;
 
 	if ((node = fdt_find_compatible("arm,pl011")) != NULL &&
 	    !fdt_get_memory_address(node, 0, &mem))
 		pl011cnattach(&armv7_bs_tag, mem.addr, comcnspeed, comcnmode);
+
+	if ((node = fdt_find_node("/chosen")) == NULL ||
+	    !fdt_node_property(node, "stdout-path", &stdout_path))
+		return;
+
+	if ((node = fdt_find_node(stdout_path)) == NULL)
+		return;
+
+	if (fdt_node_compatible("fsl,imx6q-uart", node) &&
+	    !fdt_get_memory_address(node, 0, &mem))
+		imxuartcnattach(&armv7_bs_tag, mem.addr, comcnspeed, comcnmode);
 
 	comdefaultrate = comcnspeed;
 }

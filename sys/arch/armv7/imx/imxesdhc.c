@@ -31,7 +31,9 @@
 #include <dev/sdmmc/sdmmcchip.h>
 #include <dev/sdmmc/sdmmcvar.h>
 
+#include <machine/bus.h>
 #include <machine/clock.h>
+#include <machine/fdt.h>
 #include <armv7/armv7/armv7var.h>
 #include <armv7/imx/imxccmvar.h>
 #include <armv7/imx/imxgpiovar.h>
@@ -139,9 +141,8 @@
 #define SDHC_BUFFER_TIMEOUT	hz
 #define SDHC_TRANSFER_TIMEOUT	hz
 
+int imxesdhc_match(struct device *parent, void *v, void *aux);
 void imxesdhc_attach(struct device *parent, struct device *self, void *args);
-
-#include <machine/bus.h>
 
 struct imxesdhc_softc {
 	struct device sc_dev;
@@ -242,27 +243,62 @@ struct cfattach imxesdhc_ca = {
 	sizeof(struct imxesdhc_softc), NULL, imxesdhc_attach
 };
 
+struct cfattach imxesdhc_fdt_ca = {
+	sizeof(struct imxesdhc_softc), imxesdhc_match, imxesdhc_attach
+};
+
+int
+imxesdhc_match(struct device *parent, void *v, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("fsl,imx6q-usdhc", aa->aa_node))
+		return 1;
+
+	return 0;
+}
+
 void
 imxesdhc_attach(struct device *parent, struct device *self, void *args)
 {
 	struct imxesdhc_softc		*sc = (struct imxesdhc_softc *) self;
 	struct armv7_attach_args	*aa = args;
 	struct sdmmcbus_attach_args	 saa;
-	int				 error = 1;
+	int				 irq, error = 1;
 	uint32_t			 caps;
 	char				 usdhc[7];
+	struct fdt_memory		 mem;
 
 	sc->unit = aa->aa_dev->unit;
 	sc->sc_iot = aa->aa_iot;
-	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
-		panic("imxesdhc_attach: bus_space_map failed!");
+	if (aa->aa_node) {
+		uint32_t ints[3];
+
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+
+		/* TODO: Add interrupt FDT API. */
+		if (fdt_node_property_ints(aa->aa_node, "interrupts",
+		    ints, 3) != 3)
+			panic("%s: could not extract interrupt data from FDT",
+		    __func__);
+
+		irq = ints[1];
+	} else {
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+		irq = aa->aa_dev->irq[0];
+	}
+
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
+		panic("%s: bus_space_map failed!", __func__);
 
 	printf("\n");
 
 	/* XXX DMA channels? */
 
-	sc->sc_ih = arm_intr_establish(aa->aa_dev->irq[0], IPL_SDMMC,
+	sc->sc_ih = arm_intr_establish(irq, IPL_SDMMC,
 	   imxesdhc_intr, sc, sc->sc_dev.dv_xname);
 
 	/* Get and enable clock. */

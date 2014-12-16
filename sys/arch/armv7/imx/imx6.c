@@ -63,15 +63,11 @@
 #define USBPHY1_ADDR		0x020c9000
 #define USBPHY2_ADDR		0x020ca000
 #define USBOTG_ADDR		0x02184000
-#define USBOTG_EHCI_ADDR	0x02184100
 #define USBUH1_ADDR		0x02184200
-#define USBUH1_EHCI_ADDR	0x02184300
 #define USBUH2_ADDR		0x02184400
-#define USBUH2_EHCI_ADDR	0x02184500
 #define USBUH3_ADDR		0x02184600
-#define USBUH3_EHCI_ADDR	0x02184700
 #define USBNC_ADDR		0x02184800
-#define USBx_SIZE		0x100
+#define USBx_SIZE		0x200
 
 #define USBH1_IRQ	40
 #define USBH2_IRQ	41
@@ -310,10 +306,9 @@ struct armv7_dev imx6_devs[] = {
 	/*
 	 * USB
 	 */
-	{ .name = "ehci",
+	{ .name = "imxehci",
 	  .unit = 0,
 	  .mem = {
-		  { USBUH1_EHCI_ADDR, USBx_SIZE },
 		  { USBUH1_ADDR, USBx_SIZE },
 		  { USBPHY2_ADDR, USBPHYx_SIZE },
 		  { USBNC_ADDR, USBx_SIZE },
@@ -321,10 +316,9 @@ struct armv7_dev imx6_devs[] = {
 	  .irq = { USBH1_IRQ }
 	},
 
-	{ .name = "ehci",
+	{ .name = "imxehci",
 	  .unit = 1,
 	  .mem = {
-		  { USBOTG_EHCI_ADDR, USBx_SIZE },
 		  { USBOTG_ADDR, USBx_SIZE },
 		  { USBPHY1_ADDR, USBPHYx_SIZE },
 		  { USBNC_ADDR, USBx_SIZE },
@@ -344,7 +338,7 @@ struct armv7_dev imx6_devs[] = {
 	/*
 	 * AHCI compatible SATA controller
 	 */
-	{ .name = "ahci",
+	{ .name = "imxahci",
 	  .unit = 0,
 	  .mem = { { SATA_ADDR, SATA_SIZE } },
 	  .irq = { SATA_IRQ }

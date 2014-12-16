@@ -7,14 +7,15 @@ file	arch/armv7/imx/imx_machdep.c		imx	needs-flag
 file	arch/armv7/imx/imx.c			imx
 file	arch/armv7/imx/imx6.c			imx
 
-# serial ports
-device imxuart
-attach	imxuart at imx
-file	arch/armv7/imx/imxuart.c		imxuart
+device imxocotp
+attach imxocotp at imx
+attach imxocotp at fdt with imxocotp_fdt
+file	arch/armv7/imx/imxocotp.c		imxocotp | imxocotp_fdt
 
 device imxccm
 attach imxccm at imx
-file	arch/armv7/imx/imxccm.c		imxccm
+attach imxccm at fdt with imxccm_fdt
+file	arch/armv7/imx/imxccm.c		imxccm | imxccm_fdt
 
 device imxtemp
 attach imxtemp at imx
@@ -22,34 +23,51 @@ file	arch/armv7/imx/imxtemp.c	imxtemp
 
 device imxiomuxc
 attach imxiomuxc at imx
-file	arch/armv7/imx/imxiomuxc.c	imxiomuxc
+attach imxiomuxc at fdt with imxiomuxc_fdt
+file	arch/armv7/imx/imxiomuxc.c	imxiomuxc | imxiomuxc_fdt
 
 device imxdog
 attach imxdog at imx
-file	arch/armv7/imx/imxdog.c		imxdog
+attach imxdog at fdt with imxdog_fdt
+file	arch/armv7/imx/imxdog.c		imxdog | imxdog_fdt
 
-device imxocotp
-attach imxocotp at imx
-file	arch/armv7/imx/imxocotp.c		imxocotp
+# serial ports
+device imxuart
+attach	imxuart at imx
+attach	imxuart at fdt with imxuart_fdt
+file	arch/armv7/imx/imxuart.c		imxuart | imxuart_fdt
 
 device imxgpio
 attach imxgpio at imx
-file	arch/armv7/imx/imxgpio.c		imxgpio
+attach imxgpio at fdt with imxgpio_fdt
+file	arch/armv7/imx/imxgpio.c		imxgpio | imxgpio_fdt
 
 device	imxiic: i2cbus
 attach	imxiic at imx
-file	arch/armv7/imx/imxiic.c		imxiic
-
-device imxenet: ether, ifnet, mii, ifmedia
-attach imxenet at imx
-file	arch/armv7/imx/imxenet.c		imxenet
-
-attach ehci at imx with imxehci
-file	arch/armv7/imx/imxehci.c		imxehci
+attach	imxiic at fdt with imxiic_fdt
+file	arch/armv7/imx/imxiic.c		imxiic | imxiic_fdt
 
 device imxesdhc: sdmmcbus
 attach imxesdhc at imx
-file	arch/armv7/imx/imxesdhc.c		imxesdhc
+#attach imxesdhc at fdt with imxesdhc_fdt
+file	arch/armv7/imx/imxesdhc.c		imxesdhc | imxesdhc_fdt
+
+device imxehci {}
+attach imxehci at imx
+attach imxehci at fdt with imxehci_fdt
+attach ehci at imxehci with ehci_imx
+file	arch/armv7/imx/imxehci.c		imxehci | imxehci_fdt
+
+device imxenet: ether, ifnet, mii, ifmedia
+attach imxenet at imx
+#attach imxenet at fdt with imxenet_fdt
+file	arch/armv7/imx/imxenet.c		imxenet | imxenet_fdt
+
+device imxahci {}
+attach imxahci at imx
+attach imxahci at fdt with imxahci_fdt
+attach ahci at imxahci with ahci_imx
+file	arch/armv7/imx/imxahci.c		imxahci | imxahci_fdt
 
 device imxpchb
 attach imxpchb at imx
@@ -71,6 +89,3 @@ file	arch/armv7/imx/maxim7301.c		maxgpio
 #device	imxpcibr {} : pcibus
 #attach	imxpcibr at imx
 #file	arch/armv7/imx/imxpcibr.c		imxpcibr
-
-attach ahci at imx with imxahci
-file	arch/armv7/imx/imxahci.c		imxahci

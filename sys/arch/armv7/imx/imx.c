@@ -20,12 +20,18 @@
 #include <sys/systm.h>
 
 #include <machine/bus.h>
+#include <machine/fdt.h>
 
 #include <armv7/armv7/armv7var.h>
 
 static int
 imx_match(struct device *parent, void *cfdata, void *aux)
 {
+	/* If we're running with fdt, do not attach. */
+	/* XXX: Find a better way. */
+	if (fdt_next_node(0))
+		return (0);
+
 	switch (board_id)
 	{
 	case BOARD_ID_IMX6_CUBOXI:
@@ -64,10 +70,10 @@ struct board_dev hummingboard_devs[] = {
 	{ "imxgpio",	5 },
 	{ "imxgpio",	6 },
 	{ "imxesdhc",	1 },
-	{ "ehci",	0 },
-	{ "ehci",	1 },
+	{ "imxehci",	0 },
+	{ "imxehci",	1 },
 	{ "imxenet",	0 },
-	{ "ahci",	0 },
+	{ "imxahci",	0 },
 	{ NULL,		0 }
 };
 
@@ -87,9 +93,9 @@ struct board_dev sabrelite_devs[] = {
 	{ "imxgpio",	6 },
 	{ "imxesdhc",	2 },
 	{ "imxesdhc",	3 },
-	{ "ehci",	0 },
+	{ "imxehci",	0 },
 	{ "imxenet",	0 },
-	{ "ahci",	0 },
+	{ "imxahci",	0 },
 	{ NULL,		0 }
 };
 
@@ -109,9 +115,9 @@ struct board_dev udoo_devs[] = {
 	{ "imxgpio",	6 },
 	{ "imxesdhc",	2 },
 	{ "imxesdhc",	3 },
-	{ "ehci",	0 },
+	{ "imxehci",	0 },
 	{ "imxenet",	0 },
-	{ "ahci",	0 },
+	{ "imxahci",	0 },
 	{ NULL,		0 }
 };
 
@@ -131,9 +137,9 @@ struct board_dev utilite_devs[] = {
 	{ "imxgpio",	6 },
 	{ "imxiic",	2 },
 	{ "imxesdhc",	2 },
-	{ "ehci",	0 },
+	{ "imxehci",	0 },
 	{ "imxenet",	0 },
-	{ "ahci",	0 },
+	{ "imxahci",	0 },
 	{ NULL,		0 }
 };
 
@@ -154,7 +160,7 @@ struct board_dev wandboard_devs[] = {
 	{ "imxenet",	0 },
 	{ "imxesdhc",	2 },
 	{ "imxesdhc",	0 },
-	{ "ehci",	0 },
-	{ "ahci",	0 },	/* only on quad, afaik. */
+	{ "imxehci",	0 },
+	{ "imxahci",	0 },	/* only on quad, afaik. */
 	{ NULL,		0 }
 };

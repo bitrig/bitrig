@@ -28,6 +28,7 @@
 #include <machine/intr.h>
 #include <machine/bus.h>
 #include <machine/clock.h>
+#include <machine/fdt.h>
 #include <armv7/armv7/armv7var.h>
 #include <armv7/imx/imxccmvar.h>
 
@@ -185,6 +186,7 @@ static struct clk_div_table clk_enet_ref_table[] = {
 
 struct imxccm_softc *imxccm_sc;
 
+int imxccm_match(struct device *parent, void *v, void *aux);
 void imxccm_attach(struct device *parent, struct device *self, void *args);
 int imxccm_cpuspeed(int *);
 void imxccm_register_clocks(struct imxccm_softc *);
@@ -214,23 +216,49 @@ void imxccm_gate_disable(struct clk *);
 struct cfattach	imxccm_ca = {
 	sizeof (struct imxccm_softc), NULL, imxccm_attach
 };
+struct cfattach	imxccm_fdt_ca = {
+	sizeof (struct imxccm_softc), imxccm_match, imxccm_attach
+};
 
 struct cfdriver imxccm_cd = {
 	NULL, "imxccm", DV_DULL
 };
+
+int
+imxccm_match(struct device *parent, void *v, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("fsl,imx6q-ccm", aa->aa_node))
+		return 1;
+
+	return 0;
+}
 
 void
 imxccm_attach(struct device *parent, struct device *self, void *args)
 {
 	struct armv7_attach_args *aa = args;
 	struct imxccm_softc *sc = (struct imxccm_softc *) self;
+	struct fdt_memory mem;
 	int cpu_type, i;
 	char *board;
 
 	imxccm_sc = sc;
 	sc->sc_iot = aa->aa_iot;
-	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
+
+	if (aa->aa_node) {
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+		/* XXX: We also control ANALOG, which is directly after. */
+		mem.size += 0x1000;
+	} else {
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+	}
+
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
 		panic("imxccm_attach: bus_space_map failed!");
 
 	strlcpy(sc->sc_sensordev.xname, sc->sc_dev.dv_xname,

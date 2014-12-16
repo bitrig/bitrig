@@ -43,6 +43,11 @@ platform_init()
 	extern struct armv7_platform omap_platform;
 	extern struct armv7_platform sunxi_platform;
 
+	if (fdt_next_node(0)) {
+		platform = &fdt_platform;
+		return;
+	}
+
 	switch (board_id) {
 #if NEXYNOS > 0
 	case BOARD_ID_EXYNOS5_CHROMEBOOK:
@@ -75,9 +80,7 @@ platform_init()
 		break;
 #endif
 	default:
-		if (fdt_next_node(0) == NULL)
-			printf("%s: board type 0x%x unknown", __func__, board_id);
-		platform = &fdt_platform;
+		panic("%s: board type 0x%x unknown", __func__, board_id);
 		break;
 	}
 }

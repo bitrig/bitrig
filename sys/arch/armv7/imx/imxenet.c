@@ -28,6 +28,7 @@
 #include <machine/intr.h>
 #include <machine/bus.h>
 #include <machine/clock.h>
+#include <machine/fdt.h>
 
 #include "bpfilter.h"
 
@@ -179,6 +180,7 @@ struct imxenet_softc {
 
 struct imxenet_softc *imxenet_sc;
 
+int imxenet_match(struct device *, void *, void *);
 void imxenet_attach(struct device *, struct device *, void *);
 void imxenet_chip_init(struct imxenet_softc *);
 int imxenet_ioctl(struct ifnet *, u_long, caddr_t);
@@ -205,23 +207,58 @@ struct cfattach imxenet_ca = {
 	sizeof (struct imxenet_softc), NULL, imxenet_attach
 };
 
+struct cfattach imxenet_fdt_ca = {
+	sizeof (struct imxenet_softc), imxenet_match, imxenet_attach
+};
+
 struct cfdriver imxenet_cd = {
 	NULL, "imxenet", DV_IFNET
 };
+
+int
+imxenet_match(struct device *parent, void *v, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("fsl,imx6q-fec", aa->aa_node))
+		return 1;
+
+	return 0;
+}
 
 void
 imxenet_attach(struct device *parent, struct device *self, void *args)
 {
 	struct armv7_attach_args *aa = args;
 	struct imxenet_softc *sc = (struct imxenet_softc *) self;
+	struct fdt_memory mem;
 	struct mii_data *mii;
 	struct ifnet *ifp;
-	int tsize, rsize, tbsize, rbsize, s;
+	int tsize, rsize, tbsize, rbsize, s, irq;
 
 	sc->sc_iot = aa->aa_iot;
-	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
-		panic("imxenet_attach: bus_space_map failed!");
+	if (aa->aa_node) {
+		uint32_t ints[3];
+
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+
+		/* TODO: Add interrupt FDT API. */
+		if (fdt_node_property_ints(aa->aa_node, "interrupts",
+		    ints, 3) != 3)
+			panic("%s: could not extract interrupt data from FDT",
+		    __func__);
+
+		irq = ints[1];
+	} else {
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+		irq = aa->aa_dev->irq[0];
+	}
+
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
+		panic("%s: bus_space_map failed!", __func__);
 
 	sc->sc_dma_tag = aa->aa_dmat;
 
@@ -272,7 +309,7 @@ imxenet_attach(struct device *parent, struct device *self, void *args)
 	HWRITE4(sc, ENET_EIMR, 0);
 	HWRITE4(sc, ENET_EIR, 0xffffffff);
 
-	sc->sc_ih = arm_intr_establish(aa->aa_dev->irq[0], IPL_NET,
+	sc->sc_ih = arm_intr_establish(irq, IPL_NET,
 	    imxenet_intr, sc, sc->sc_dev.dv_xname);
 
 	tsize = ENET_MAX_TXD * sizeof(struct imxenet_buf_desc);

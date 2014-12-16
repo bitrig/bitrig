@@ -3,22 +3,34 @@ imx0		at mainbus?
 
 # iMX on-chip devices
 imxccm*		at imx?			# clock control module
+imxccm*		at fdt?			# clock control module
 imxtemp*	at imx?			# temperature sensor
 imxiomuxc*	at imx?			# iomux controller
+imxiomuxc*	at fdt?			# iomux controller
 imxdog*		at imx?			# watchdog timer
+imxdog*		at fdt?			# watchdog timer
 imxocotp*	at imx?			# on-chip otp controller
+imxocotp*	at fdt?			# on-chip otp controller
 imxgpio*	at imx?			# user-visible GPIO pins?
+imxgpio*	at fdt?			# user-visible GPIO pins?
 imxesdhc*	at imx?			# SDHC controller
+#imxesdhc*	at fdt?			# SDHC controller
 imxenet*	at imx?			# ethernet
+#imxenet*	at fdt?			# ethernet
 imxuart*	at imx?			# onboard uarts
+imxuart*	at fdt?			# onboard uarts
 imxiic*		at imx?			# i2c
+imxiic*		at fdt?			# i2c
 
 #imxpcibr*	at imx?			# PCIe controller host bridge
 #pci*		at imxpcibr?
 
-ahci*		at imx?			# AHCI/SATA
+imxahci*	at imx?			# AHCI/SATA
+ahci*		at imxahci?		# AHCI/SATA
 
-ehci*		at imx?			# EHCI (shim)
+imxehci*	at imx?			# EHCI
+imxehci*	at fdt?			# EHCI
+ehci*		at imxehci?		# EHCI (shim)
 
 sdmmc*		at imxesdhc?		# SD/MMC bus
 

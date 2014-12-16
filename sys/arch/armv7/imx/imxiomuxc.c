@@ -157,6 +157,7 @@ struct imxiomuxc_softc {
 
 struct imxiomuxc_softc *imxiomuxc_sc;
 
+int imxiomuxc_match(struct device *parent, void *v, void *aux);
 void imxiomuxc_attach(struct device *parent, struct device *self, void *args);
 void imxiomuxc_fdt(struct imxiomuxc_softc *);
 void imxiomuxc_configure_group(struct imxiomuxc_softc *, struct imx_pin_group *);
@@ -170,21 +171,45 @@ void imxiomuxc_pcie_ltssm(int);
 struct cfattach imxiomuxc_ca = {
 	sizeof (struct imxiomuxc_softc), NULL, imxiomuxc_attach
 };
+struct cfattach imxiomuxc_fdt_ca = {
+	sizeof (struct imxiomuxc_softc), imxiomuxc_match, imxiomuxc_attach
+};
 
 struct cfdriver imxiomuxc_cd = {
 	NULL, "imxiomuxc", DV_DULL
 };
+
+int
+imxiomuxc_match(struct device *parent, void *v, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("fsl,imx6q-iomuxc", aa->aa_node) ||
+	    fdt_node_compatible("fsl,imx6dl-iomuxc", aa->aa_node))
+		return 1;
+
+	return 0;
+}
 
 void
 imxiomuxc_attach(struct device *parent, struct device *self, void *args)
 {
 	struct armv7_attach_args *aa = args;
 	struct imxiomuxc_softc *sc = (struct imxiomuxc_softc *) self;
+	struct fdt_memory mem;
 
 	sc->sc_iot = aa->aa_iot;
-	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
-		panic("imxiomuxc_attach: bus_space_map failed!");
+	if (aa->aa_node) {
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+	} else {
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+	}
+
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
+		panic("%s: bus_space_map failed!", __func__);
 
 	printf("\n");
 	imxiomuxc_sc = sc;
