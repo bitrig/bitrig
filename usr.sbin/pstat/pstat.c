@@ -36,6 +36,7 @@
 #include <sys/vnode.h>
 #include <sys/ucred.h>
 #include <sys/stat.h>
+#include <uvm/uvm_extern.h>
 #define _KERNEL
 #include <sys/file.h>
 #include <ufs/ufs/quota.h>

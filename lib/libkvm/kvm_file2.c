@@ -79,6 +79,8 @@
 #include <sys/sysctl.h>
 #include <sys/specdev.h>
 
+#include <uvm/uvm_extern.h>
+
 #define _KERNEL
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>

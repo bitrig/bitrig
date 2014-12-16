@@ -1,4 +1,4 @@
-/*	$OpenBSD: tmpfs.h,v 1.5 2013/12/14 18:01:52 espie Exp $	*/
+/*	$OpenBSD: tmpfs.h,v 1.6 2014/12/16 18:30:04 tedu Exp $	*/
 /*	$NetBSD: tmpfs.h,v 1.46 2013/11/08 15:44:23 rmind Exp $	*/
 
 /*
@@ -45,6 +45,8 @@
 #include <sys/stdint.h>
 #include <sys/rwlock.h>
 #include <sys/mutex.h>
+
+#include <uvm/uvm_extern.h>
 
 /*
  * Internal representation of a tmpfs directory entry.
