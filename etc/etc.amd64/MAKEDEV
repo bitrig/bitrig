@@ -32,7 +32,6 @@
 # Disks:
 #	cd*	ATAPI and SCSI CD-ROM drives
 #	fd*	Floppy disk drives (3 1/2", 5 1/4")
-#	rd*	"rd" pseudo-disks
 #	sd*	SCSI disks, including flopticals
 #	tmpfsrd*	"tmpfsrd" pseudo-disks
 #	vnd*	"file" pseudo-disk devices
@@ -221,7 +220,7 @@ U=`unt $i`
 
 case $i in
 ramdisk)
-	R std bpf0 fd0 wd0 sd0 tty00 tty01 rd0 tmpfsrd0 bio diskmap
+	R std bpf0 fd0 wd0 sd0 tty00 tty01 tmpfsrd0 bio diskmap
 	R st0 cd0 ttyC0 wskbd0 wskbd1 wskbd2 random
 	;;
 
@@ -518,10 +517,6 @@ tmpfsrd*)
 	dodisk2 tmpfsrd $U 19 48 $U 0
 	;;
 
-rd*)
-	dodisk2 rd $U 17 47 $U 0
-	;;
-
 fd*)
 	typnam=$U${i#fd[01]*}
 	case $typnam in
@@ -563,7 +558,7 @@ local)
 all)
 	R drm0 drm1 drm2 drm3 nvram gpio0 gpio1 gpio2 bktr0 vnd0 vnd1
 	R vnd2 vnd3 sd0 sd1 sd2 sd3 sd4 sd5 sd6 sd7 sd8 sd9 cd0 cd1
-	R tmpfsrd0 rd0 tun0 tun1 tun2 tun3 bpf0 bpf1 bpf2 bpf3 bpf4
+	R tmpfsrd0 tun0 tun1 tun2 tun3 bpf0 bpf1 bpf2 bpf3 bpf4
 	R bpf5 bpf6 bpf7 bpf8 bpf9 bio pty0 fd1 fd1B fd1C fd1D fd1E
 	R fd1F fd1G fd1H fd0 fd0B fd0C fd0D fd0E fd0F fd0G fd0H
 	R diskmap vscsi0 ch0 audio0 audio1 audio2 fuse pppx hotplug

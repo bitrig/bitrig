@@ -590,9 +590,6 @@ cdev_decl(st);
 bdev_decl(cd);
 cdev_decl(cd);
 
-bdev_decl(rd);
-cdev_decl(rd);
-
 bdev_decl(tmpfsrd);
 cdev_decl(tmpfsrd);
 

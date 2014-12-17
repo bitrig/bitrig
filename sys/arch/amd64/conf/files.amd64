@@ -237,6 +237,5 @@ major	{vnd = 14}
 major	{sd = 4}
 major	{st = 5}
 major	{cd = 6}
-major	{rd = 17}
 major	{tmpfsrd = 19}
 major	{wd = 0}

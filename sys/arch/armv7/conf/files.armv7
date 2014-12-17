@@ -6,7 +6,6 @@ maxusers	2 8 64
 major	{wd = 16}
 major	{sd = 24}
 major	{cd = 26}
-major	{rd = 18}
 major	{tmpfsrd = 20}
 
 file	arch/arm/arm/conf.c

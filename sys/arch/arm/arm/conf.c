@@ -87,7 +87,6 @@
 /*
  * Disk/Filesystem pseudo-devices
  */
-#include "rd.h"				/* memory disk driver */
 #include "vnd.h"			/* vnode disk driver */
 #include "tmpfsrd.h"
 
@@ -170,7 +169,7 @@ struct bdevsw bdevsw[] = {
 	bdev_lkm_dummy(),		/* 15: */
 	bdev_disk_init(NWD,wd),		/* 16: Internal IDE disk */
 	bdev_lkm_dummy(),		/* 17: */
-	bdev_disk_init(NRD,rd),		/* 18: memory disk */
+	bdev_notdef(),			/* 18: was: rd(4) ramdisk driver */
 	bdev_disk_init(NVND,vnd),	/* 19: vnode disk driver */
 	bdev_disk_init(NTMPFSRD,tmpfsrd),	/* 20: tmpfs RAM disk driver */
  	bdev_notdef(),			/* 21: was: concatenated disk driver */
@@ -295,7 +294,7 @@ struct cdevsw cdevsw[] = {
 	cdev_lkm_dummy(),			/* 15: */
 	cdev_disk_init(NWD,wd),			/* 16: ST506/ESDI/IDE disk */
 	cdev_lkm_dummy(),			/* 17: */
-	cdev_disk_init(NRD,rd),			/* 18: ram disk driver */
+	cdev_notdef(),				/* 18: */
 	cdev_disk_init(NVND,vnd),		/* 19: vnode disk driver */
 	cdev_disk_init(NTMPFSRD,tmpfsrd),	/* 20: tmpfs RAM disk driver */
 	cdev_notdef(),				/* 21: was: concatenated disk driver */
@@ -445,7 +444,7 @@ int chrtoblktbl[] = {
     /* 15 */        NODEV,
     /* 16 */        16,		/* wd */
     /* 17 */        NODEV,
-    /* 18 */        18,		/* rd */
+    /* 18 */        NODEV,
     /* 19 */        19,		/* vnd */
     /* 20 */        20,		/* tmpfsrd */
     /* 21 */        NODEV,
