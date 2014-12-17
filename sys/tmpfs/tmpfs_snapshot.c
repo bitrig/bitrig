@@ -61,11 +61,11 @@ tmpfs_snap_file_io(struct vnode *vp, enum uio_rw rw, const tmpfs_node_t *node,
 	KASSERT(node->tn_type == VREG);
 
 	if (rw == UIO_READ)
-		uvmflags = UVM_MAPFLAG(UVM_PROT_W, UVM_PROT_W, UVM_INH_NONE,
-		    UVM_ADV_SEQUENTIAL, 0);
+		uvmflags = UVM_MAPFLAG(PROT_WRITE, PROT_WRITE, MAP_INHERIT_NONE,
+		    MADV_SEQUENTIAL, 0);
 	else
-		uvmflags = UVM_MAPFLAG(UVM_PROT_R, UVM_PROT_R, UVM_INH_NONE,
-		    UVM_ADV_SEQUENTIAL, 0);
+		uvmflags = UVM_MAPFLAG(PROT_READ, PROT_READ, MAP_INHERIT_NONE,
+		    MADV_SEQUENTIAL, 0);
 
 	for (done = 0; node->tn_size - done > 0; done += sz) {
 		sz = node->tn_size - done;
