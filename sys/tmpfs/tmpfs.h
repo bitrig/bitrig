@@ -1,4 +1,4 @@
-/*	$OpenBSD: tmpfs.h,v 1.6 2014/12/16 18:30:04 tedu Exp $	*/
+/*	$OpenBSD: tmpfs.h,v 1.7 2014/12/17 19:42:15 tedu Exp $	*/
 /*	$NetBSD: tmpfs.h,v 1.46 2013/11/08 15:44:23 rmind Exp $	*/
 
 /*
