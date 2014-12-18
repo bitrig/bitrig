@@ -1,8 +1,7 @@
-.TH "nsd\-control" "8" "Oct 29, 2013" "NLnet Labs" "nsd 4.0.0"
+.TH "nsd\-control" "8" "Sep  4, 2014" "NLnet Labs" "nsd 4.1.0"
 .\" Copyright (c) 2011, NLnet Labs. All rights reserved.
 .\" See LICENSE for the license.
 .SH "NAME"
-.LP
 .B nsd\-control,
 .B nsd\-control\-setup
 \- NSD remote server control utility.
@@ -109,7 +108,9 @@ Attempt to update slave zones that are hosted on this server by contacting
 the masters.  The masters are configured via 'request\-xfr:' lists.
 If a zone is given, that zone is updated.  Usually NSD receives a NOTIFY
 from the masters (configured via 'allow\-notify:' acl list) that a new zone
-serial has to be transferred.
+serial has to be transferred.  For zones with no content, NSD may have backed
+off from asking often because the masters did not respond, but this command
+will reset the backoff to its initial timeout, for frequent retries.
 .TP
 .B force_transfer [<zone>]
 Force update slave zones that are hosted on this server.  Even if the
@@ -121,6 +122,12 @@ increases, use the 'transfer' command.
 Print state of the zone, the serial numbers and since when they have
 been acquired.  Also prints the notify action (to which server), and
 zone transfer (and from which master) if there is activity right now.
+The state of the zone is printed as: 'master' (master zones), 'ok' (slave
+zone is up\-to\-date), 'expired' (slave zone has expired), 'refreshing' (slave
+zone has transfers active).  The serial numbers printed are
+the 'served\-serial' (currently active), the 'commit\-serial' (is in reload),
+the 'notified\-serial' (got notify, busy fetching the data).  The serial
+numbers are only printed if such a serial number is available.
 .TP
 .B serverpid
 Prints the PID of the server process.  This is used for statistics (and
