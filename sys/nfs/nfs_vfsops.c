@@ -1,4 +1,4 @@
-/*	$OpenBSD: nfs_vfsops.c,v 1.104 2014/12/16 18:30:04 tedu Exp $	*/
+/*	$OpenBSD: nfs_vfsops.c,v 1.105 2014/12/18 20:59:21 tedu Exp $	*/
 /*	$NetBSD: nfs_vfsops.c,v 1.46.4.1 1996/05/25 22:40:35 fvdl Exp $	*/
 
 /*
@@ -375,7 +375,7 @@ nfs_mount_diskless(struct nfs_dlmount *ndmntp, char *mntname, int mntflag)
 
 	/* Get mbuf for server sockaddr. */
 	m = m_get(M_WAIT, MT_SONAME);
-	bcopy((caddr_t)ndmntp->ndm_args.addr, mtod(m, caddr_t),
+	bcopy(ndmntp->ndm_args.addr, mtod(m, caddr_t),
 	    (m->m_len = ndmntp->ndm_args.addr->sa_len));
 
 	error = mountnfs(&ndmntp->ndm_args, mp, m, mntname,
@@ -512,7 +512,7 @@ nfs_decode_args(struct nfsmount *nmp, struct nfs_args *argp,
 		if (nmp->nm_sotype == SOCK_DGRAM)
 			while (nfs_connect(nmp, NULL)) {
 				printf("nfs_args: retrying connect\n");
-				(void) tsleep((caddr_t)&lbolt,
+				(void) tsleep(&lbolt,
 					      PSOCK, "nfscon", 0);
 			}
 	}
@@ -582,7 +582,7 @@ nfs_mount(struct mount *mp, const char *path, void *data,
 	}
 	if (args.fhsize < 0 || args.fhsize > NFSX_V3FHMAX)
 		return (EINVAL);
-	error = copyin((caddr_t)args.fh, (caddr_t)nfh, args.fhsize);
+	error = copyin(args.fh, nfh, args.fhsize);
 	if (error)
 		return (error);
 	error = copyinstr(args.hostname, hst, MNAMELEN-1, &len);
@@ -633,7 +633,7 @@ mountnfs(struct nfs_args *argp, struct mount *mp, struct mbuf *nam,
 	nmp->nm_acregmax = NFS_MAXATTRTIMO;
 	nmp->nm_acdirmin = NFS_MINATTRTIMO;
 	nmp->nm_acdirmax = NFS_MAXATTRTIMO;
-	bcopy((caddr_t)argp->fh, (caddr_t)nmp->nm_fh, argp->fhsize);
+	bcopy(argp->fh, nmp->nm_fh, argp->fhsize);
 	strncpy(&mp->mnt_stat.f_fstypename[0], mp->mnt_vfc->vfc_name, MFSNAMELEN);
 	bcopy(pth, mp->mnt_stat.f_mntonname, MNAMELEN);
 	bcopy(hst, mp->mnt_stat.f_mntfromname, MNAMELEN);
