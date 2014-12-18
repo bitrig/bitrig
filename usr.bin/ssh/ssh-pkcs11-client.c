@@ -1,6 +1,7 @@
 /* $OpenBSD: ssh-pkcs11-client.c,v 1.5 2014/06/24 01:13:21 djm Exp $ */
 /*
  * Copyright (c) 2010 Markus Friedl.  All rights reserved.
+ * Copyright (c) 2014 Pedro Martelletto. All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -24,6 +25,7 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include <openssl/ecdsa.h>
 #include <openssl/rsa.h>
 
 #include "pathnames.h"
@@ -97,8 +99,7 @@ pkcs11_terminate(void)
 }
 
 static int
-pkcs11_rsa_private_encrypt(int flen, const u_char *from, u_char *to, RSA *rsa,
-    int padding)
+rsa_encrypt(int flen, const u_char *from, u_char *to, RSA *rsa, int padding)
 {
 	Key key;
 	u_char *blob, *signature = NULL;
@@ -133,16 +134,98 @@ pkcs11_rsa_private_encrypt(int flen, const u_char *from, u_char *to, RSA *rsa,
 	return (ret);
 }
 
-/* redirect the private key encrypt operation to the ssh-pkcs11-helper */
 static int
-wrap_key(RSA *rsa)
+ecdsa_sign_setup(EC_KEY *ec, BN_CTX *ctx, BIGNUM **kinvp, BIGNUM **rp)
 {
-	static RSA_METHOD helper_rsa;
+	error("%s called, returning -1", __func__);
+	return (-1);
+}
+
+static ECDSA_SIG *
+ecdsa_do_sign(const unsigned char *dgst, int dgst_len, const BIGNUM *inv,
+    const BIGNUM *rp, EC_KEY *ec)
+{
+	Key key;
+	u_char *blob, *signature = NULL;
+	u_int blen, slen = 0;
+	ECDSA_SIG *ret = NULL;
+	Buffer msg;
+
+	key.type = KEY_ECDSA;
+	key.ecdsa = ec;
+	key.ecdsa_nid = sshkey_ecdsa_key_to_nid(ec);
+	if (key.ecdsa_nid < 0) {
+		error("%s: couldn't get curve nid", __func__);
+		return (NULL);
+	}
+	if (key_to_blob(&key, &blob, &blen) == 0)
+		return (NULL);
+	buffer_init(&msg);
+	buffer_put_char(&msg, SSH2_AGENTC_SIGN_REQUEST);
+	buffer_put_string(&msg, blob, blen);
+	buffer_put_string(&msg, dgst, dgst_len);
+	buffer_put_int(&msg, 0);
+	free(blob);
+	send_msg(&msg);
+	buffer_clear(&msg);
+
+	if (recv_msg(&msg) == SSH2_AGENT_SIGN_RESPONSE) {
+		signature = buffer_get_string(&msg, &slen);
+		if (signature == NULL) {
+			error("%s: buffer_get_string failed", __func__);
+			goto out;
+		}
+		ret = d2i_ECDSA_SIG(NULL, (const u_char **)&signature, slen);
+		free(signature);
+	}
+out:
+	buffer_free(&msg);
+	return (ret);
+}
+
+static int
+ecdsa_do_verify(const unsigned char *dgst, int dgst_len, const ECDSA_SIG *sig,
+    EC_KEY *ec)
+{
+	error("%s called, returning -1", __func__);
+	return (-1);
+}
+
+static RSA_METHOD	 helper_rsa;
+static ECDSA_METHOD	*helper_ecdsa;
+
+/* redirect private key crypto operations to the ssh-pkcs11-helper */
+static void
+wrap_key(Key *k)
+{
+	if (k->type == KEY_RSA)
+		RSA_set_method(k->rsa, &helper_rsa);
+	else if (k->type == KEY_ECDSA)
+		ECDSA_set_method(k->ecdsa, helper_ecdsa);
+	else
+		fatal("%s: unknown key type", __func__);
+}
+
+static int
+pkcs11_start_helper_methods(void)
+{
+	if (helper_ecdsa != NULL)
+		return (0);
+
+	helper_ecdsa = ECDSA_METHOD_new(NULL);
+	if (helper_ecdsa == NULL) {
+		error("ECDSA_METHOD_new() failed");
+		return (-1);
+	}
+
+	ECDSA_METHOD_set_sign_setup(helper_ecdsa, ecdsa_sign_setup);
+	ECDSA_METHOD_set_sign(helper_ecdsa, ecdsa_do_sign);
+	ECDSA_METHOD_set_verify(helper_ecdsa, ecdsa_do_verify);
 
 	memcpy(&helper_rsa, RSA_get_default_method(), sizeof(helper_rsa));
 	helper_rsa.name = "ssh-pkcs11-helper";
-	helper_rsa.rsa_priv_enc = pkcs11_rsa_private_encrypt;
-	RSA_set_method(rsa, &helper_rsa);
+	helper_rsa.rsa_priv_enc = rsa_encrypt;
+
 	return (0);
 }
 
@@ -150,6 +233,11 @@ static int
 pkcs11_start_helper(void)
 {
 	int pair[2];
+
+	if (pkcs11_start_helper_methods() == -1) {
+		error("pkcs11_start_helper_methods failed");
+		return (-1);
+	}
 
 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, pair) == -1) {
 		error("socketpair: %s", strerror(errno));
@@ -203,7 +291,7 @@ pkcs11_add_provider(char *name, char *pin, Key ***keysp)
 			blob = buffer_get_string(&msg, &blen);
 			free(buffer_get_string(&msg, NULL));
 			k = key_from_blob(blob, blen);
-			wrap_key(k->rsa);
+			wrap_key(k);
 			(*keysp)[i] = k;
 			free(blob);
 		}

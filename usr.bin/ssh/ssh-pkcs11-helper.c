@@ -175,13 +175,26 @@ process_sign(void)
 #ifdef WITH_OPENSSL
 			int ret;
 
-			slen = RSA_size(key->rsa);
-			signature = xmalloc(slen);
-			if ((ret = RSA_private_encrypt(dlen, data, signature,
-			    found->rsa, RSA_PKCS1_PADDING)) != -1) {
-				slen = ret;
-				ok = 0;
-			}
+			if (key->type == KEY_RSA) {
+				slen = RSA_size(key->rsa);
+				signature = xmalloc(slen);
+				ret = RSA_private_encrypt(dlen, data, signature,
+				    found->rsa, RSA_PKCS1_PADDING);
+				if (ret != -1) {
+					slen = ret;
+					ok = 0;
+				}
+			} else if (key->type == KEY_ECDSA) {
+				slen = ECDSA_size(key->ecdsa);
+				signature = xmalloc(slen);
+				/* "The parameter type is ignored." */
+				ret = ECDSA_sign(-1, data, dlen, signature,
+				    &slen, found->ecdsa);
+				if (ret != 0)
+					ok = 0;
+			} else
+				error("%s: don't know how to sign with key "
+				    "type %d", __func__, (int)key->type);
 #endif /* WITH_OPENSSL */
 		}
 		key_free(key);

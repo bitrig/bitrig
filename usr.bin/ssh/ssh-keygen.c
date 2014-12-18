@@ -343,7 +343,10 @@ do_convert_to_pem(Key *k)
 			fatal("PEM_write_DSAPublicKey failed");
 		break;
 #endif
-	/* XXX ECDSA? */
+	case KEY_ECDSA:
+		if (!PEM_write_EC_PUBKEY(stdout, k->ecdsa))
+			fatal("PEM_write_EC_PUBKEY failed");
+		break;
 	default:
 		fatal("%s: unsupported key type %s", __func__, key_type(k));
 	}
@@ -623,6 +626,7 @@ do_convert_from_pem(Key **k, int *private)
 #ifdef notyet
 	DSA *dsa;
 #endif
+	EC_KEY *ec;
 
 	if ((fp = fopen(identity_file, "r")) == NULL)
 		fatal("%s: %s: %s", __progname, identity_file, strerror(errno));
@@ -642,8 +646,17 @@ do_convert_from_pem(Key **k, int *private)
 		fclose(fp);
 		return;
 	}
-	/* XXX ECDSA */
 #endif
+	if ((ec = PEM_read_EC_PUBKEY(fp, NULL, NULL, NULL)) != NULL) {
+		*k = key_new(KEY_UNSPEC);
+		(*k)->type = KEY_ECDSA;
+		(*k)->ecdsa = ec;
+		(*k)->ecdsa_nid = key_ecdsa_key_to_nid(ec);
+		if ((*k)->ecdsa_nid < 0)
+			fatal("%s: couldn't get curve nid", __func__);
+		fclose(fp);
+		return;
+	}
 	fatal("%s: unrecognised raw private key format", __func__);
 }
 

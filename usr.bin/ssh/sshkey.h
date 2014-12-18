@@ -32,6 +32,7 @@
 #include <openssl/rsa.h>
 #include <openssl/dsa.h>
 #include <openssl/ec.h>
+#include <openssl/ecdsa.h>
 #else /* OPENSSL */
 #define RSA		void
 #define DSA		void

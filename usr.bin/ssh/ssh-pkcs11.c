@@ -1,6 +1,7 @@
 /* $OpenBSD: ssh-pkcs11.c,v 1.14 2014/06/24 01:13:21 djm Exp $ */
 /*
  * Copyright (c) 2010 Markus Friedl.  All rights reserved.
+ * Copyright (c) 2014 Pedro Martelletto. All rights reserved.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -23,6 +24,7 @@
 #include <string.h>
 #include <dlfcn.h>
 
+#include <openssl/ecdsa.h>
 #include <openssl/x509.h>
 
 #define CRYPTOKI_COMPAT
@@ -60,6 +62,7 @@ struct pkcs11_key {
 	CK_ULONG		slotidx;
 	int			(*orig_finish)(RSA *rsa);
 	RSA_METHOD		rsa_method;
+	ECDSA_METHOD		*ecdsa_method;
 	char			*keyid;
 	int			keyid_len;
 };
@@ -210,40 +213,27 @@ pkcs11_find(struct pkcs11_provider *p, CK_ULONG slotidx, CK_ATTRIBUTE *attr,
 	return (ret);
 }
 
-/* openssl callback doing the actual signing operation */
 static int
-pkcs11_rsa_private_encrypt(int flen, const u_char *from, u_char *to, RSA *rsa,
-    int padding)
+pkcs11_get_key(struct pkcs11_key *k11, CK_MECHANISM_TYPE mech_type)
 {
-	struct pkcs11_key	*k11;
 	struct pkcs11_slotinfo	*si;
 	CK_FUNCTION_LIST	*f;
-	CK_OBJECT_HANDLE	obj;
-	CK_ULONG		tlen = 0;
-	CK_RV			rv;
-	CK_OBJECT_CLASS		private_key_class = CKO_PRIVATE_KEY;
-	CK_BBOOL		true_val = CK_TRUE;
-	CK_MECHANISM		mech = {
-		CKM_RSA_PKCS, NULL_PTR, 0
-	};
-	CK_ATTRIBUTE		key_filter[] = {
-		{CKA_CLASS, &private_key_class, sizeof(private_key_class) },
-		{CKA_ID, NULL, 0},
-		{CKA_SIGN, &true_val, sizeof(true_val) }
-	};
+	CK_OBJECT_HANDLE	 obj;
+	CK_RV			 rv;
+	CK_OBJECT_CLASS		 private_key_class;
+	CK_BBOOL		 true_val;
+	CK_MECHANISM		 mech;
+	CK_ATTRIBUTE		 key_filter[3];
 	char			*pin, prompt[1024];
-	int			rval = -1;
 
-	if ((k11 = RSA_get_app_data(rsa)) == NULL) {
-		error("RSA_get_app_data failed for rsa %p", rsa);
-		return (-1);
-	}
 	if (!k11->provider || !k11->provider->valid) {
-		error("no pkcs11 (valid) provider for rsa %p", rsa);
+		error("no pkcs11 (valid) provider found");
 		return (-1);
 	}
+
 	f = k11->provider->function_list;
 	si = &k11->provider->slotinfo[k11->slotidx];
+
 	if ((si->token.flags & CKF_LOGIN_REQUIRED) && !si->logged_in) {
 		if (!pkcs11_interactive) {
 			error("need pin");
@@ -263,23 +253,75 @@ pkcs11_rsa_private_encrypt(int flen, const u_char *from, u_char *to, RSA *rsa,
 		free(pin);
 		si->logged_in = 1;
 	}
+
+	memset(&key_filter, 0, sizeof(key_filter));
+	private_key_class = CKO_PRIVATE_KEY;
+	key_filter[0].type = CKA_CLASS;
+	key_filter[0].pValue = &private_key_class;
+	key_filter[0].ulValueLen = sizeof(private_key_class);
+
+	key_filter[1].type = CKA_ID;
 	key_filter[1].pValue = k11->keyid;
 	key_filter[1].ulValueLen = k11->keyid_len;
+
+	true_val = CK_TRUE;
+	key_filter[2].type = CKA_SIGN;
+	key_filter[2].pValue = &true_val;
+	key_filter[2].ulValueLen = sizeof(true_val);
+
 	/* try to find object w/CKA_SIGN first, retry w/o */
 	if (pkcs11_find(k11->provider, k11->slotidx, key_filter, 3, &obj) < 0 &&
 	    pkcs11_find(k11->provider, k11->slotidx, key_filter, 2, &obj) < 0) {
 		error("cannot find private key");
-	} else if ((rv = f->C_SignInit(si->session, &mech, obj)) != CKR_OK) {
-		error("C_SignInit failed: %lu", rv);
-	} else {
-		/* XXX handle CKR_BUFFER_TOO_SMALL */
-		tlen = RSA_size(rsa);
-		rv = f->C_Sign(si->session, (CK_BYTE *)from, flen, to, &tlen);
-		if (rv == CKR_OK) 
-			rval = tlen;
-		else 
-			error("C_Sign failed: %lu", rv);
+		return (-1);
 	}
+
+	memset(&mech, 0, sizeof(mech));
+	mech.mechanism = mech_type;
+	mech.pParameter = NULL_PTR;
+	mech.ulParameterLen = 0;
+
+	if ((rv = f->C_SignInit(si->session, &mech, obj)) != CKR_OK) {
+		error("C_SignInit failed: %lu", rv);
+		return (-1);
+	}
+
+	return (0);
+}
+
+/* openssl callback doing the actual signing operation */
+static int
+pkcs11_rsa_private_encrypt(int flen, const u_char *from, u_char *to, RSA *rsa,
+    int padding)
+{
+	struct pkcs11_key	*k11;
+	struct pkcs11_slotinfo	*si;
+	CK_FUNCTION_LIST	*f;
+	CK_ULONG		tlen = 0;
+	CK_RV			rv;
+	int			rval = -1;
+
+	if ((k11 = RSA_get_app_data(rsa)) == NULL) {
+		error("RSA_get_app_data failed for rsa %p", rsa);
+		return (-1);
+	}
+
+	if (pkcs11_get_key(k11, CKM_RSA_PKCS) == -1) {
+		error("pkcs11_get_key failed");
+		return (-1);
+	}
+
+	f = k11->provider->function_list;
+	si = &k11->provider->slotinfo[k11->slotidx];
+	tlen = RSA_size(rsa);
+
+	/* XXX handle CKR_BUFFER_TOO_SMALL */
+	rv = f->C_Sign(si->session, (CK_BYTE *)from, flen, to, &tlen);
+	if (rv == CKR_OK)
+		rval = tlen;
+	else
+		error("C_Sign failed: %lu", rv);
+
 	return (rval);
 }
 
@@ -314,6 +356,132 @@ pkcs11_rsa_wrap(struct pkcs11_provider *provider, CK_ULONG slotidx,
 	k11->rsa_method.finish = pkcs11_rsa_finish;
 	RSA_set_method(rsa, &k11->rsa_method);
 	RSA_set_app_data(rsa, k11);
+	return (0);
+}
+
+/* ~*kingdom of unimplemented callbacks*~ */
+
+static void *
+ecdsa_k11_dup(void *k11)
+{
+	fatal("%s called", __func__);
+}
+
+static void
+ecdsa_k11_free(void *k11)
+{
+	fatal("%s called", __func__);
+}
+
+static void
+ecdsa_k11_clear_free(void *k11)
+{
+	fatal("%s called", __func__);
+}
+
+static int
+ecdsa_sign_setup(EC_KEY *ec, BN_CTX *ctx, BIGNUM **kinvp, BIGNUM **rp)
+{
+	error("%s called, returning -1", __func__);
+	return (-1);
+}
+
+/* openssl callback doing the actual signing operation */
+static ECDSA_SIG *
+ecdsa_do_sign(const unsigned char *dgst, int dgst_len, const BIGNUM *inv,
+    const BIGNUM *rp, EC_KEY *ec)
+{
+	struct pkcs11_key	*k11;
+	struct pkcs11_slotinfo	*si;
+	CK_FUNCTION_LIST	*f;
+	CK_ULONG		siglen = 0;
+	CK_RV			rv;
+	ECDSA_SIG		*ret = NULL;
+	u_char			*sig;
+	const u_char		*cp;
+
+	if ((k11 = EC_KEY_get_key_method_data(ec, ecdsa_k11_dup, ecdsa_k11_free,
+	    ecdsa_k11_clear_free)) == NULL) {
+		error("EC_KEY_get_key_method_data failed for ec %p", ec);
+		return (NULL);
+	}
+
+	if (pkcs11_get_key(k11, CKM_ECDSA) == -1) {
+		error("pkcs11_get_key failed");
+		return (NULL);
+	}
+
+	f = k11->provider->function_list;
+	si = &k11->provider->slotinfo[k11->slotidx];
+
+	siglen = ECDSA_size(ec);
+	sig = xmalloc(siglen);
+
+	/* XXX handle CKR_BUFFER_TOO_SMALL */
+	rv = f->C_Sign(si->session, (CK_BYTE *)dgst, dgst_len, sig, &siglen);
+	if (rv == CKR_OK) {
+		cp = sig;
+		ret = d2i_ECDSA_SIG(NULL, &cp, siglen);
+	} else
+		error("C_Sign failed: %lu", rv);
+
+	free(sig);
+
+	return (ret);
+}
+
+static int
+ecdsa_do_verify(const unsigned char *dgst, int dgst_len, const ECDSA_SIG *sig,
+    EC_KEY *ec)
+{
+	error("%s called, returning -1", __func__);
+	return (-1);
+}
+
+static ECDSA_METHOD *ecdsa_method;
+
+static int
+pkcs11_ecdsa_start_wrapper(void)
+{
+	if (ecdsa_method != NULL)
+		return (0);
+
+	ecdsa_method = ECDSA_METHOD_new(NULL);
+	if (ecdsa_method == NULL) {
+		error("ECDSA_METHOD_new() failed");
+		return (-1);
+	}
+
+	ECDSA_METHOD_set_sign_setup(ecdsa_method, ecdsa_sign_setup);
+	ECDSA_METHOD_set_sign(ecdsa_method, ecdsa_do_sign);
+	ECDSA_METHOD_set_verify(ecdsa_method, ecdsa_do_verify);
+
+	return (0);
+}
+
+static int
+pkcs11_ecdsa_wrap(struct pkcs11_provider *provider, CK_ULONG slotidx,
+    CK_ATTRIBUTE *keyid_attrib, EC_KEY *ec)
+{
+	struct pkcs11_key	*k11;
+
+	if (pkcs11_ecdsa_start_wrapper() == -1)
+		return (-1);
+
+	k11 = xcalloc(1, sizeof(*k11));
+	k11->provider = provider;
+	provider->refcount++;	/* provider referenced by ECDSA key */
+	k11->slotidx = slotidx;
+	/* identify key object on smartcard */
+	k11->keyid_len = keyid_attrib->ulValueLen;
+	k11->keyid = xmalloc(k11->keyid_len);
+	memcpy(k11->keyid, keyid_attrib->pValue, k11->keyid_len);
+	k11->ecdsa_method = ecdsa_method;
+
+	ECDSA_set_method(ec, k11->ecdsa_method);
+	EC_KEY_insert_key_method_data(ec, k11, ecdsa_k11_dup, ecdsa_k11_free,
+	    ecdsa_k11_clear_free);
+
 	return (0);
 }
 
@@ -370,46 +538,6 @@ pkcs11_open_session(struct pkcs11_provider *p, CK_ULONG slotidx, char *pin)
 	return (0);
 }
 
-/*
- * lookup public keys for token in slot identified by slotidx,
- * add 'wrapped' public keys to the 'keysp' array and increment nkeys.
- * keysp points to an (possibly empty) array with *nkeys keys.
- */
-static int pkcs11_fetch_keys_filter(struct pkcs11_provider *, CK_ULONG,
-    CK_ATTRIBUTE [], CK_ATTRIBUTE [3], Key ***, int *)
-	__attribute__((__bounded__(__minbytes__,4, 3 * sizeof(CK_ATTRIBUTE))));
-
-static int
-pkcs11_fetch_keys(struct pkcs11_provider *p, CK_ULONG slotidx,
-    Key ***keysp, int *nkeys)
-{
-	CK_OBJECT_CLASS		pubkey_class = CKO_PUBLIC_KEY;
-	CK_OBJECT_CLASS		cert_class = CKO_CERTIFICATE;
-	CK_ATTRIBUTE		pubkey_filter[] = {
-		{ CKA_CLASS, &pubkey_class, sizeof(pubkey_class) }
-	};
-	CK_ATTRIBUTE		cert_filter[] = {
-		{ CKA_CLASS, &cert_class, sizeof(cert_class) }
-	};
-	CK_ATTRIBUTE		pubkey_attribs[] = {
-		{ CKA_ID, NULL, 0 },
-		{ CKA_MODULUS, NULL, 0 },
-		{ CKA_PUBLIC_EXPONENT, NULL, 0 }
-	};
-	CK_ATTRIBUTE		cert_attribs[] = {
-		{ CKA_ID, NULL, 0 },
-		{ CKA_SUBJECT, NULL, 0 },
-		{ CKA_VALUE, NULL, 0 }
-	};
-
-	if (pkcs11_fetch_keys_filter(p, slotidx, pubkey_filter, pubkey_attribs,
-	    keysp, nkeys) < 0 ||
-	    pkcs11_fetch_keys_filter(p, slotidx, cert_filter, cert_attribs,
-	    keysp, nkeys) < 0)
-		return (-1);
-	return (0);
-}
-
 static int
 pkcs11_key_included(Key ***keysp, int *nkeys, Key *key)
 {
@@ -421,114 +549,522 @@ pkcs11_key_included(Key ***keysp, int *nkeys, Key *key)
 	return (0);
 }
 
-static int
-pkcs11_fetch_keys_filter(struct pkcs11_provider *p, CK_ULONG slotidx,
-    CK_ATTRIBUTE filter[], CK_ATTRIBUTE attribs[3],
-    Key ***keysp, int *nkeys)
+static Key *
+pkcs11_fetch_ecdsa_pubkey(struct pkcs11_provider *p, CK_ULONG slotidx,
+    CK_OBJECT_HANDLE *obj)
 {
-	Key			*key;
-	RSA			*rsa;
-	X509 			*x509;
-	EVP_PKEY		*evp;
-	int			i;
-	const u_char		*cp;
-	CK_RV			rv;
-	CK_OBJECT_HANDLE	obj;
-	CK_ULONG		nfound;
-	CK_SESSION_HANDLE	session;
-	CK_FUNCTION_LIST	*f;
+	CK_ATTRIBUTE		 key_attr[3];
+	CK_SESSION_HANDLE	 session;
+	CK_FUNCTION_LIST	*f = NULL;
+	CK_RV			 rv;
+	EC_KEY			*ec = NULL;
+	EC_GROUP		*group = NULL;
+	Key			*key = NULL;
+	const unsigned char	*attrp = NULL;
+	int			 i;
+	int			 nid;
 
-	f = p->function_list;
+	memset(&key_attr, 0, sizeof(key_attr));
+	key_attr[0].type = CKA_ID;
+	key_attr[1].type = CKA_EC_POINT;
+	key_attr[2].type = CKA_EC_PARAMS;
+
 	session = p->slotinfo[slotidx].session;
-	/* setup a filter the looks for public keys */
-	if ((rv = f->C_FindObjectsInit(session, filter, 1)) != CKR_OK) {
+	f = p->function_list;
+
+	/* figure out size of the attributes */
+	rv = f->C_GetAttributeValue(session, *obj, key_attr, 3);
+	if (rv != CKR_OK) {
+		error("C_GetAttributeValue failed: %lu", rv);
+		return (NULL);
+	}
+
+	/* check that none of the attributes are zero length */
+	if (key_attr[0].ulValueLen == 0 ||
+	    key_attr[1].ulValueLen == 0 ||
+	    key_attr[2].ulValueLen == 0) {
+		error("invalid attribute length");
+		return (NULL);
+	}
+
+	/* allocate buffers for attributes */
+	for (i = 0; i < 3; i++)
+		key_attr[i].pValue = xcalloc(1, key_attr[i].ulValueLen);
+
+	/* retrieve ID, public point and curve parameters of EC key */
+	rv = f->C_GetAttributeValue(session, *obj, key_attr, 3);
+	if (rv != CKR_OK) {
+		error("C_GetAttributeValue failed: %lu", rv);
+		goto fail;
+	}
+
+	ec = EC_KEY_new();
+	if (ec == NULL) {
+		error("EC_KEY_new failed");
+		goto fail;
+	}
+
+	attrp = key_attr[2].pValue;
+	group = d2i_ECPKParameters(NULL, &attrp, key_attr[2].ulValueLen);
+	if (group == NULL || EC_KEY_set_group(ec, group) == 0) {
+		error("d2i_ECPKParameters failed");
+		goto fail;
+	}
+
+	if (key_attr[1].ulValueLen <= 2) {
+		error("CKA_EC_POINT too small");
+		goto fail;
+	}
+
+	attrp = (const unsigned char *)key_attr[1].pValue + 2;
+	if (o2i_ECPublicKey(&ec, &attrp, key_attr[1].ulValueLen - 2) == NULL) {
+		error("o2i_ECPublicKey failed");
+		goto fail;
+	}
+
+	nid = sshkey_ecdsa_key_to_nid(ec);
+	if (nid < 0) {
+		error("couldn't get curve nid");
+		goto fail;
+	}
+
+	if (pkcs11_ecdsa_wrap(p, slotidx, &key_attr[0], ec))
+		goto fail;
+
+	key = key_new(KEY_UNSPEC);
+	if (key == NULL) {
+		error("key_new failed");
+		goto fail;
+	}
+
+	key->ecdsa = ec;
+	key->ecdsa_nid = nid;
+	key->type = KEY_ECDSA;
+	key->flags |= SSHKEY_FLAG_EXT;
+	ec = NULL;	/* now owned by key */
+
+fail:
+	for (i = 0; i < 3; i++)
+		free(key_attr[i].pValue);
+	if (ec)
+		EC_KEY_free(ec);
+	if (group)
+		EC_GROUP_free(group);
+
+	return (key);
+}
+
+static Key *
+pkcs11_fetch_rsa_pubkey(struct pkcs11_provider *p, CK_ULONG slotidx,
+    CK_OBJECT_HANDLE *obj)
+{
+	CK_ATTRIBUTE		 key_attr[3];
+	CK_SESSION_HANDLE	 session;
+	CK_FUNCTION_LIST	*f = NULL;
+	CK_RV			 rv;
+	RSA			*rsa = NULL;
+	Key			*key = NULL;
+	int			 i;
+
+	memset(&key_attr, 0, sizeof(key_attr));
+	key_attr[0].type = CKA_ID;
+	key_attr[1].type = CKA_MODULUS;
+	key_attr[2].type = CKA_PUBLIC_EXPONENT;
+
+	session = p->slotinfo[slotidx].session;
+	f = p->function_list;
+
+	/* figure out size of the attributes */
+	rv = f->C_GetAttributeValue(session, *obj, key_attr, 3);
+	if (rv != CKR_OK) {
+		error("C_GetAttributeValue failed: %lu", rv);
+		return (NULL);
+	}
+
+	/* check that none of the attributes are zero length */
+	if (key_attr[0].ulValueLen == 0 ||
+	    key_attr[1].ulValueLen == 0 ||
+	    key_attr[2].ulValueLen == 0) {
+		error("invalid attribute length");
+		return (NULL);
+	}
+
+	/* allocate buffers for attributes */
+	for (i = 0; i < 3; i++)
+		key_attr[i].pValue = xcalloc(1, key_attr[i].ulValueLen);
+
+	/* retrieve ID, modulus and public exponent of RSA key */
+	rv = f->C_GetAttributeValue(session, *obj, key_attr, 3);
+	if (rv != CKR_OK) {
+		error("C_GetAttributeValue failed: %lu", rv);
+		goto fail;
+	}
+
+	rsa = RSA_new();
+	if (rsa == NULL) {
+		error("RSA_new failed");
+		goto fail;
+	}
+
+	rsa->n = BN_bin2bn(key_attr[1].pValue, key_attr[1].ulValueLen, NULL);
+	rsa->e = BN_bin2bn(key_attr[2].pValue, key_attr[2].ulValueLen, NULL);
+	if (rsa->n == NULL || rsa->e == NULL) {
+		error("BN_bin2bn failed");
+		goto fail;
+	}
+
+	if (pkcs11_rsa_wrap(p, slotidx, &key_attr[0], rsa))
+		goto fail;
+
+	key = key_new(KEY_UNSPEC);
+	if (key == NULL) {
+		error("key_new failed");
+		goto fail;
+	}
+
+	key->rsa = rsa;
+	key->type = KEY_RSA;
+	key->flags |= SSHKEY_FLAG_EXT;
+	rsa = NULL;	/* now owned by key */
+
+fail:
+	for (i = 0; i < 3; i++)
+		free(key_attr[i].pValue);
+	if (rsa)
+		RSA_free(rsa);
+
+	return (key);
+}
+
+static Key *
+pkcs11_fetch_x509_pubkey(struct pkcs11_provider *p, CK_ULONG slotidx,
+    CK_OBJECT_HANDLE *obj)
+{
+	CK_ATTRIBUTE		 cert_attr[3];
+	CK_SESSION_HANDLE	 session;
+	CK_FUNCTION_LIST	*f = NULL;
+	CK_RV			 rv;
+	X509			*x509 = NULL;
+	EVP_PKEY		*evp;
+	RSA			*rsa = NULL;
+	EC_KEY			*ec = NULL;
+	Key			*key = NULL;
+	int			 i;
+	int			 nid;
+	const u_char		 *cp;
+
+	memset(&cert_attr, 0, sizeof(cert_attr));
+	cert_attr[0].type = CKA_ID;
+	cert_attr[1].type = CKA_SUBJECT;
+	cert_attr[2].type = CKA_VALUE;
+
+	session = p->slotinfo[slotidx].session;
+	f = p->function_list;
+
+	/* figure out size of the attributes */
+	rv = f->C_GetAttributeValue(session, *obj, cert_attr, 3);
+	if (rv != CKR_OK) {
+		error("C_GetAttributeValue failed: %lu", rv);
+		return (NULL);
+	}
+
+	/* check that none of the attributes are zero length */
+	if (cert_attr[0].ulValueLen == 0 ||
+	    cert_attr[1].ulValueLen == 0 ||
+	    cert_attr[2].ulValueLen == 0) {
+		error("invalid attribute length");
+		return (NULL);
+	}
+
+	/* allocate buffers for attributes */
+	for (i = 0; i < 3; i++)
+		cert_attr[i].pValue = xcalloc(1, cert_attr[i].ulValueLen);
+
+	/* retrieve ID, subject and value of certificate */
+	rv = f->C_GetAttributeValue(session, *obj, cert_attr, 3);
+	if (rv != CKR_OK) {
+		error("C_GetAttributeValue failed: %lu", rv);
+		goto fail;
+	}
+
+	x509 = X509_new();
+	if (x509 == NULL) {
+		error("x509_new failed");
+		goto fail;
+	}
+
+	cp = cert_attr[2].pValue;
+	if (d2i_X509(&x509, &cp, cert_attr[2].ulValueLen) == NULL) {
+		error("d2i_x509 failed");
+		goto fail;
+	}
+
+	evp = X509_get_pubkey(x509);
+	if (evp == NULL) {
+		error("X509_get_pubkey failed");
+		goto fail;
+	}
+
+	if (evp->type == EVP_PKEY_RSA) {
+		if (evp->pkey.rsa == NULL) {
+			error("invalid x509; no rsa key");
+			goto fail;
+		}
+		if ((rsa = RSAPublicKey_dup(evp->pkey.rsa)) == NULL) {
+			error("RSAPublicKey_dup failed");
+			goto fail;
+		}
+
+		if (pkcs11_rsa_wrap(p, slotidx, &cert_attr[0], rsa))
+			goto fail;
+
+		key = key_new(KEY_UNSPEC);
+		if (key == NULL) {
+			error("key_new failed");
+			goto fail;
+		}
+
+		key->rsa = rsa;
+		key->type = KEY_RSA;
+		key->flags |= SSHKEY_FLAG_EXT;
+		rsa = NULL;	/* now owned by key */
+	} else if (evp->type == EVP_PKEY_EC) {
+		if (evp->pkey.ec == NULL) {
+			error("invalid x509; no ec key");
+			goto fail;
+		}
+		if ((ec = EC_KEY_dup(evp->pkey.ec)) == NULL) {
+			error("EC_KEY_dup failed");
+			goto fail;
+		}
+
+		nid = sshkey_ecdsa_key_to_nid(ec);
+		if (nid < 0) {
+			error("couldn't get curve nid");
+			goto fail;
+		}
+
+		if (pkcs11_ecdsa_wrap(p, slotidx, &cert_attr[0], ec))
+			goto fail;
+
+		key = key_new(KEY_UNSPEC);
+		if (key == NULL) {
+			error("key_new failed");
+			goto fail;
+		}
+
+		key->ecdsa = ec;
+		key->ecdsa_nid = nid;
+		key->type = KEY_ECDSA;
+		key->flags |= SSHKEY_FLAG_EXT;
+		ec = NULL;	/* now owned by key */
+	} else
+		error("unknown certificate key type");
+
+fail:
+	for (i = 0; i < 3; i++)
+		free(cert_attr[i].pValue);
+	if (x509)
+		X509_free(x509);
+	if (rsa)
+		RSA_free(rsa);
+	if (ec)
+		EC_KEY_free(ec);
+
+	return (key);
+}
+
+/*
+ * lookup certificates for token in slot identified by slotidx,
+ * add 'wrapped' public keys to the 'keysp' array and increment nkeys.
+ * keysp points to an (possibly empty) array with *nkeys keys.
+ */
+static int
+pkcs11_fetch_certs(struct pkcs11_provider *p, CK_ULONG slotidx, Key ***keysp,
+    int *nkeys)
+{
+	Key			*key = NULL;
+	CK_OBJECT_CLASS		 key_class;
+	CK_ATTRIBUTE		 key_attr[1];
+	CK_SESSION_HANDLE	 session;
+	CK_FUNCTION_LIST	*f = NULL;
+	CK_RV			 rv;
+	CK_OBJECT_HANDLE	 obj;
+	CK_ULONG		 n = 0;
+	int			 ret = -1;
+
+	memset(&key_attr, 0, sizeof(key_attr));
+	memset(&obj, 0, sizeof(obj));
+
+	key_class = CKO_CERTIFICATE;
+	key_attr[0].type = CKA_CLASS;
+	key_attr[0].pValue = &key_class;
+	key_attr[0].ulValueLen = sizeof(key_class);
+
+	session = p->slotinfo[slotidx].session;
+	f = p->function_list;
+
+	rv = f->C_FindObjectsInit(session, key_attr, 1);
+	if (rv != CKR_OK) {
 		error("C_FindObjectsInit failed: %lu", rv);
-		return (-1);
+		goto fail;
 	}
+
 	while (1) {
-		/* XXX 3 attributes in attribs[] */
-		for (i = 0; i < 3; i++) {
-			attribs[i].pValue = NULL;
-			attribs[i].ulValueLen = 0;
+		CK_CERTIFICATE_TYPE	ck_cert_type;
+
+		rv = f->C_FindObjects(session, &obj, 1, &n);
+		if (rv != CKR_OK) {
+			error("C_FindObjects failed: %lu", rv);
+			goto fail;
 		}
-		if ((rv = f->C_FindObjects(session, &obj, 1, &nfound)) != CKR_OK
-		    || nfound == 0)
+		if (n == 0)
 			break;
-		/* found a key, so figure out size of the attributes */
-		if ((rv = f->C_GetAttributeValue(session, obj, attribs, 3))
-		    != CKR_OK) {
+
+		memset(&ck_cert_type, 0, sizeof(ck_cert_type));
+		memset(&key_attr, 0, sizeof(key_attr));
+		key_attr[0].type = CKA_CERTIFICATE_TYPE;
+		key_attr[0].pValue = &ck_cert_type;
+		key_attr[0].ulValueLen = sizeof(ck_cert_type);
+
+		rv = f->C_GetAttributeValue(session, obj, key_attr, 1);
+		if (rv != CKR_OK) {
 			error("C_GetAttributeValue failed: %lu", rv);
+			goto fail;
+		}
+
+		switch (ck_cert_type) {
+		case CKC_X_509:
+			key = pkcs11_fetch_x509_pubkey(p, slotidx, &obj);
+			break;
+		default:
+			/* XXX print key type? */
+			error("skipping unsupported certificate type");
+		}
+
+		if (key == NULL) {
+			error("failed to fetch key");
 			continue;
 		}
-		/* check that none of the attributes are zero length */
-		if (attribs[0].ulValueLen == 0 ||
-		    attribs[1].ulValueLen == 0 ||
-		    attribs[2].ulValueLen == 0) {
-			continue;
-		}
-		/* allocate buffers for attributes */
-		for (i = 0; i < 3; i++)
-			attribs[i].pValue = xmalloc(attribs[i].ulValueLen);
-		/*
-		 * retrieve ID, modulus and public exponent of RSA key,
-		 * or ID, subject and value for certificates.
-		 */
-		rsa = NULL;
-		if ((rv = f->C_GetAttributeValue(session, obj, attribs, 3))
-		    != CKR_OK) {
-			error("C_GetAttributeValue failed: %lu", rv);
-		} else if (attribs[1].type == CKA_MODULUS ) {
-			if ((rsa = RSA_new()) == NULL) {
-				error("RSA_new failed");
-			} else {
-				rsa->n = BN_bin2bn(attribs[1].pValue,
-				    attribs[1].ulValueLen, NULL);
-				rsa->e = BN_bin2bn(attribs[2].pValue,
-				    attribs[2].ulValueLen, NULL);
-			}
+
+		if (pkcs11_key_included(keysp, nkeys, key)) {
+			key_free(key);
 		} else {
-			cp = attribs[2].pValue;
-			if ((x509 = X509_new()) == NULL) {
-				error("X509_new failed");
-			} else if (d2i_X509(&x509, &cp, attribs[2].ulValueLen)
-			    == NULL) {
-				error("d2i_X509 failed");
-			} else if ((evp = X509_get_pubkey(x509)) == NULL ||
-			    evp->type != EVP_PKEY_RSA ||
-			    evp->pkey.rsa == NULL) {
-				debug("X509_get_pubkey failed or no rsa");
-			} else if ((rsa = RSAPublicKey_dup(evp->pkey.rsa))
-			    == NULL) {
-				error("RSAPublicKey_dup");
-			}
-			if (x509)
-				X509_free(x509);
+			/* expand key array and add key */
+			*keysp = xrealloc(*keysp, *nkeys + 1, sizeof(Key *));
+			(*keysp)[*nkeys] = key;
+			*nkeys = *nkeys + 1;
+			debug("have %d keys", *nkeys);
 		}
-		if (rsa && rsa->n && rsa->e &&
-		    pkcs11_rsa_wrap(p, slotidx, &attribs[0], rsa) == 0) {
-			key = key_new(KEY_UNSPEC);
-			key->rsa = rsa;
-			key->type = KEY_RSA;
-			key->flags |= SSHKEY_FLAG_EXT;
-			if (pkcs11_key_included(keysp, nkeys, key)) {
-				key_free(key);
-			} else {
-				/* expand key array and add key */
-				*keysp = xrealloc(*keysp, *nkeys + 1,
-				    sizeof(Key *));
-				(*keysp)[*nkeys] = key;
-				*nkeys = *nkeys + 1;
-				debug("have %d keys", *nkeys);
-			}
-		} else if (rsa) {
-			RSA_free(rsa);
-		}
-		for (i = 0; i < 3; i++)
-			free(attribs[i].pValue);
 	}
-	if ((rv = f->C_FindObjectsFinal(session)) != CKR_OK)
+
+	ret = 0;
+fail:
+	rv = f->C_FindObjectsFinal(session);
+	if (rv != CKR_OK) {
 		error("C_FindObjectsFinal failed: %lu", rv);
-	return (0);
+		ret = -1;
+	}
+
+	return (ret);
+}
+
+/*
+ * lookup public keys for token in slot identified by slotidx,
+ * add 'wrapped' public keys to the 'keysp' array and increment nkeys.
+ * keysp points to an (possibly empty) array with *nkeys keys.
+ */
+static int
+pkcs11_fetch_keys(struct pkcs11_provider *p, CK_ULONG slotidx, Key ***keysp,
+    int *nkeys)
+{
+	Key			*key = NULL;
+	CK_OBJECT_CLASS		 key_class;
+	CK_ATTRIBUTE		 key_attr[1];
+	CK_SESSION_HANDLE	 session;
+	CK_FUNCTION_LIST	*f = NULL;
+	CK_RV			 rv;
+	CK_OBJECT_HANDLE	 obj;
+	CK_ULONG		 n = 0;
+	int			 ret = -1;
+
+	memset(&key_attr, 0, sizeof(key_attr));
+	memset(&obj, 0, sizeof(obj));
+
+	key_class = CKO_PUBLIC_KEY;
+	key_attr[0].type = CKA_CLASS;
+	key_attr[0].pValue = &key_class;
+	key_attr[0].ulValueLen = sizeof(key_class);
+
+	session = p->slotinfo[slotidx].session;
+	f = p->function_list;
+
+	rv = f->C_FindObjectsInit(session, key_attr, 1);
+	if (rv != CKR_OK) {
+		error("C_FindObjectsInit failed: %lu", rv);
+		goto fail;
+	}
+
+	while (1) {
+		CK_KEY_TYPE	ck_key_type;
+
+		rv = f->C_FindObjects(session, &obj, 1, &n);
+		if (rv != CKR_OK) {
+			error("C_FindObjects failed: %lu", rv);
+			goto fail;
+		}
+		if (n == 0)
+			break;
+
+		memset(&ck_key_type, 0, sizeof(ck_key_type));
+		memset(&key_attr, 0, sizeof(key_attr));
+		key_attr[0].type = CKA_KEY_TYPE;
+		key_attr[0].pValue = &ck_key_type;
+		key_attr[0].ulValueLen = sizeof(ck_key_type);
+
+		rv = f->C_GetAttributeValue(session, obj, key_attr, 1);
+		if (rv != CKR_OK) {
+			error("C_GetAttributeValue failed: %lu", rv);
+			goto fail;
+		}
+
+		switch (ck_key_type) {
+		case CKK_RSA:
+			key = pkcs11_fetch_rsa_pubkey(p, slotidx, &obj);
+			break;
+		case CKK_ECDSA:
+			key = pkcs11_fetch_ecdsa_pubkey(p, slotidx, &obj);
+			break;
+		default:
+			/* XXX print key type? */
+			error("skipping unsupported key type");
+		}
+
+		if (key == NULL) {
+			error("failed to fetch key");
+			continue;
+		}
+
+		if (pkcs11_key_included(keysp, nkeys, key)) {
+			key_free(key);
+		} else {
+			/* expand key array and add key */
+			*keysp = xrealloc(*keysp, *nkeys + 1, sizeof(Key *));
+			(*keysp)[*nkeys] = key;
+			*nkeys = *nkeys + 1;
+			debug("have %d keys", *nkeys);
+		}
+	}
+
+	ret = 0;
+fail:
+	rv = f->C_FindObjectsFinal(session);
+	if (rv != CKR_OK) {
+		error("C_FindObjectsFinal failed: %lu", rv);
+		ret = -1;
+	}
+
+	return (ret);
 }
 
 #ifdef HAVE_DLOPEN
@@ -620,8 +1156,10 @@ pkcs11_add_provider(char *provider_id, char *pin, Key ***keyp)
 		    token->label, token->manufacturerID, token->model,
 		    token->serialNumber, token->flags);
 		/* open session, login with pin and retrieve public keys */
-		if (pkcs11_open_session(p, i, pin) == 0)
+		if (pkcs11_open_session(p, i, pin) == 0) {
 			pkcs11_fetch_keys(p, i, keyp, &nkeys);
+			pkcs11_fetch_certs(p, i, keyp, &nkeys);
+		}
 	}
 	if (nkeys > 0) {
 		TAILQ_INSERT_TAIL(&pkcs11_providers, p, next);
