@@ -259,7 +259,6 @@ virtio_mmio_attach(struct device *parent, struct device *self, void *aux)
 		    vsc->sc_dev.dv_xname);
 		goto fail_2;
 	}
-	printf("%s\n", vsc->sc_dev.dv_xname);
 
 	virtio_set_status(vsc, VIRTIO_CONFIG_DEVICE_STATUS_DRIVER_OK);
 	return;
