@@ -170,7 +170,7 @@ dcache_parent_id(const char *path)
 
 	node = SPLAY_FIND(dcache, &dcache, &find);
 	if (node == NULL) {
-		paxwarn(1, "%s doesn't have a parent; attaching to root node",
+		paxwarn(0, "%s doesn't have a parent; attaching to root node",
 		    path);
 		return (ROOT_ID);
 	}
