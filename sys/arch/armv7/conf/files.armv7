@@ -22,6 +22,8 @@ file	arch/arm/arm/softintr.c
 
 # clock infrastructure
 file	arch/armv7/armv7/clock.c
+file	arch/armv7/armv7/clock_fixed_factor.c
+file	arch/armv7/armv7/clock_fixed_rate.c
 
 # Generic MD files
 file	arch/armv7/armv7/armv7.c

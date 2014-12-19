@@ -202,10 +202,6 @@ struct clk *imxccm_div(char *, char *, uint32_t, uint32_t, uint32_t);
 struct clk *imxccm_div_table(char *, char *, uint32_t, uint32_t, uint32_t, struct clk_div_table *);
 uint32_t imxccm_div_get_rate(struct clk *);
 uint32_t imxccm_div_table_get_rate(struct clk *);
-uint32_t imxccm_fixed_clock_get_rate(struct clk *);
-struct clk *imxccm_fixed_clock(char *, uint32_t);
-uint32_t imxccm_fixed_factor_get_rate(struct clk *);
-struct clk *imxccm_fixed_factor(char *, char *, uint32_t, uint32_t);
 struct clk *imxccm_var_clock(char *, uint32_t (*) (struct clk *));
 struct clk *imxccm_gate(char *, char *, uint32_t, uint32_t);
 struct clk *imxccm_gate2(char *, char *, uint32_t, uint32_t);
@@ -247,8 +243,8 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 	sensor_task_register(sc, imxccm_refresh_sensors, 60);
 
 	/* main clocks */
-	imxccm_fixed_clock("dummy", 0);
-	imxccm_fixed_clock("osc", 24000);
+	clk_fixed_rate("dummy", 0);
+	clk_fixed_rate("osc", 24000);
 
 	/* pll */
 	imxccm_pll(ARM_PLL1, "pll1_sys", "osc", CCM_ANALOG_PLL_ARM, 0x7f);
@@ -265,10 +261,10 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 	imxccm_pfd("pll3_pfd1_540m", "pll3_usb_otg", CCM_ANALOG_PFD_480, 1);
 	imxccm_pfd("pll3_pfd2_508m", "pll3_usb_otg", CCM_ANALOG_PFD_480, 2);
 	imxccm_pfd("pll3_pfd3_454m", "pll3_usb_otg", CCM_ANALOG_PFD_480, 3);
-	imxccm_fixed_factor("pll2_198m", "pll2_pfd2_396m", 1, 2);
-	imxccm_fixed_factor("pll3_120m", "pll3_usb_otg", 1, 4);
-	imxccm_fixed_factor("pll3_80m", "pll3_usb_otg", 1, 6);
-	imxccm_fixed_factor("pll3_60m", "pll3_usb_otg", 1, 8);
+	clk_fixed_factor("pll2_198m", "pll2_pfd2_396m", 1, 2);
+	clk_fixed_factor("pll3_120m", "pll3_usb_otg", 1, 4);
+	clk_fixed_factor("pll3_80m", "pll3_usb_otg", 1, 6);
+	clk_fixed_factor("pll3_60m", "pll3_usb_otg", 1, 8);
 
 	/* arm core clocks */
 	imxccm_mux("step", CCM_CCSR, 8, 1, step_sels, nitems(step_sels));
@@ -327,13 +323,13 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 
 	/* sata */
 	imxccm_gate2("sata", "ipg", CCM_CCGR5, 4);
-	imxccm_fixed_factor("sata_ref", "pll6_enet", 1, 5);
+	clk_fixed_factor("sata_ref", "pll6_enet", 1, 5);
 	imxccm_gate("sata_ref_100m", "sata_ref", CCM_ANALOG_PLL_ENET, 20);
 
 	/* pcie */
 	imxccm_mux("pcie_axi_sel", CCM_CBCMR, 10, 1, pcie_axi_sels, nitems(pcie_axi_sels));
 	imxccm_gate2("pcie_axi", "pcie_axi_sel", CCM_CCGR4, 0);
-	imxccm_fixed_factor("pcie_ref", "pll6_enet", 1, 4);
+	clk_fixed_factor("pcie_ref", "pll6_enet", 1, 4);
 	imxccm_gate("pcie_ref_125m", "pcie_ref", CCM_ANALOG_PLL_ENET, 19);
 
 	/* lvds */
@@ -631,88 +627,6 @@ imxccm_div_table(char *name, char *parent, uint32_t reg, uint32_t shift, uint32_
 
 	if (div->table != NULL)
 		clk->get_rate = imxccm_div_table_get_rate;
-
-	if (!clk_register(clk, name))
-		return clk;
-
-err:
-	free(clk, M_DEVBUF, sizeof(struct clk));
-	return NULL;
-}
-
-struct clk_fixed
-{
-	uint32_t val;
-};
-
-uint32_t
-imxccm_fixed_clock_get_rate(struct clk *clk)
-{
-	struct clk_fixed *fix = clk->data;
-	return fix->val;
-}
-
-struct clk *
-imxccm_fixed_clock(char *name, uint32_t val)
-{
-	struct clk *clk;
-	struct clk_fixed *fix;
-
-	clk = malloc(sizeof(struct clk), M_DEVBUF, M_NOWAIT|M_ZERO);
-	if (clk == NULL)
-		return NULL;
-
-	fix = malloc(sizeof(struct clk_fixed), M_DEVBUF, M_NOWAIT|M_ZERO);
-	if (fix == NULL)
-		goto err;
-
-	fix->val = val;
-	clk->data = fix;
-	clk->get_rate = imxccm_fixed_clock_get_rate;
-	if (!clk_register(clk, name))
-		return clk;
-
-err:
-	free(clk, M_DEVBUF, sizeof(struct clk));
-	return NULL;
-}
-
-struct clk_fixed_factor
-{
-	uint32_t mul;
-	uint32_t div;
-};
-
-uint32_t
-imxccm_fixed_factor_get_rate(struct clk *clk)
-{
-	struct clk_fixed_factor *fix = clk->data;
-	return (clk_get_rate_parent(clk) * fix->mul) / fix->div;
-}
-
-struct clk *
-imxccm_fixed_factor(char *name, char *parent, uint32_t mul, uint32_t div)
-{
-	struct clk *clk, *p;
-	struct clk_fixed_factor *fix;
-
-	clk = malloc(sizeof(struct clk), M_DEVBUF, M_NOWAIT|M_ZERO);
-	if (clk == NULL)
-		return NULL;
-
-	p = clk_get(parent);
-	if (p == NULL)
-		goto err;
-
-	fix = malloc(sizeof(struct clk_fixed_factor), M_DEVBUF, M_NOWAIT|M_ZERO);
-	if (fix == NULL)
-		goto err;
-
-	fix->mul = mul;
-	fix->div = div;
-	clk->data = fix;
-	clk->get_rate = imxccm_fixed_factor_get_rate;
-	clk->parent = p;
 
 	if (!clk_register(clk, name))
 		return clk;
