@@ -373,12 +373,6 @@ int chrtoblktbl[] = {
 	/* 46 */	NODEV,
 	/* 47 */	NODEV,
 	/* 48 */	19,		/* tmpfsrd */
-	/* 49 */	NODEV,
-	/* 50 */	NODEV,
-	/* 51 */	NODEV,
-	/* 52 */	NODEV,
-	/* 53 */	NODEV,
-	/* 54 */	19,		/* raid */
 };
 
 int nchrtoblktbl = nitems(chrtoblktbl);
