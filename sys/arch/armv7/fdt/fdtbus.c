@@ -78,9 +78,6 @@ fdt_iterate(struct device *self, struct device *match, void *node)
 static void
 fdt_find_match(struct device *self, void *match)
 {
-	struct cfdata *cf = match;
-
-	printf("scan: %s\n", cf->cf_driver->cd_name);
 	fdt_iterate(self, match, fdt_next_node(0));
 }
 
