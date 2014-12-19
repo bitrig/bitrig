@@ -35,8 +35,9 @@ fdt_match(struct device *parent, void *cfdata, void *aux)
 }
 
 static void
-fdt_try_node(struct device *self, void *node)
+fdt_try_node(struct device *self, void *match, void *node)
 {
+	struct cfdata *cf = match;
 	struct armv7_dev ad;
 	struct armv7_attach_args aa;
 	char  *status;
@@ -55,19 +56,32 @@ fdt_try_node(struct device *self, void *node)
 	aa.aa_dmat = &armv7_bus_dma_tag;
 	aa.aa_node = node;
 
-	config_found(self, &aa, NULL);
+	/* allow for devices to be disabled in UKC */
+	if ((*cf->cf_attach->ca_match)(self, cf, &aa) == 0)
+		return;
+
+	config_attach(self, cf, &aa, NULL);
 }
 
 static void
-fdt_iterate(struct device *self, void *node)
+fdt_iterate(struct device *self, struct device *match, void *node)
 {
 	for (;
 	    node != NULL;
 	    node = fdt_next_node(node))
 	{
-		fdt_iterate(self, fdt_child_node(node));
-		fdt_try_node(self, node);
+		fdt_iterate(self, match, fdt_child_node(node));
+		fdt_try_node(self, match, node);
 	}
+}
+
+static void
+fdt_find_match(struct device *self, void *match)
+{
+	struct cfdata *cf = match;
+
+	printf("scan: %s\n", cf->cf_driver->cd_name);
+	fdt_iterate(self, match, fdt_next_node(0));
 }
 
 static void
@@ -85,7 +99,7 @@ fdt_attach(struct device *parent, struct device *self, void *aux)
 	else
 		printf(": unknown\n");
 
-	fdt_iterate(self, fdt_child_node(node));
+	config_scan(fdt_find_match, self);
 }
 
 struct cfattach fdt_ca = {
