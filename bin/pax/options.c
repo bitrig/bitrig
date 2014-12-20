@@ -136,7 +136,7 @@ FSUB fsub[] = {
 /* 6: BITRIG TMPFS SNAPSHOT */
 	{"tmpfs", 512, 330, 1, 1, 0, 1, tmpfs_id, tmpfs_strd, tmpfs_rd,
 	tmpfs_endrd, tmpfs_stwr, tmpfs_wr, tmpfs_endwr, tmpfs_trail,
-	bad_opt},
+	tmpfs_opt},
 #endif
 };
 #define	F_OCPIO	0	/* format when called as cpio -6 */

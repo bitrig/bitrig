@@ -304,6 +304,7 @@ int tmpfs_stwr(void);
 int tmpfs_wr(ARCHD *);
 int tmpfs_endwr(void);
 int tmpfs_trail(ARCHD *, char *, int, int *);
+int tmpfs_opt(void);
 
 /*
  * tty_subs.c

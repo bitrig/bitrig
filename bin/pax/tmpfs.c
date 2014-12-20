@@ -20,12 +20,15 @@
 #include <sys/stat.h>
 #include <sys/tree.h>
 
+#include <errno.h>
+#include <grp.h>
+#include <pwd.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <errno.h>
+#include <util.h>
 
 #include <tmpfs/tmpfs_snapshot.h>
 
@@ -53,12 +56,14 @@ struct idmapnode {
 	uint64_t		to;
 };
 
-static SPLAY_HEAD(icache, icachenode)	icache = SPLAY_INITIALIZER(&icache);
-static SPLAY_HEAD(dcache, dcachenode)	dcache = SPLAY_INITIALIZER(&dcache);
-static SPLAY_HEAD(idmap, idmapnode)	idmap = SPLAY_INITIALIZER(&idmap);
-static off_t				bytes_to_read;
-static off_t				bytes_written;
-static uint64_t				highest_inode;
+static SPLAY_HEAD(icache, icachenode)	 icache = SPLAY_INITIALIZER(&icache);
+static SPLAY_HEAD(dcache, dcachenode)	 dcache = SPLAY_INITIALIZER(&dcache);
+static SPLAY_HEAD(idmap, idmapnode)	 idmap = SPLAY_INITIALIZER(&idmap);
+static off_t				 bytes_to_read;
+static off_t				 bytes_written;
+static uint64_t				 from_highest_inode;
+static uint64_t				 to_highest_inode;
+static const char			*device_manifest;
 
 static int	idcmp(struct icachenode *, struct icachenode *);
 static int	pathcmp(struct dcachenode *, struct dcachenode *);
@@ -158,26 +163,39 @@ normpath(const char *path)
 	return (path);
 }
 
+static int
+dcache_id(const char *path, uint64_t *id)
+{
+	struct dcachenode find, *node;
+
+	strlcpy(find.path, normpath(path), sizeof(find.path));
+
+	node = SPLAY_FIND(dcache, &dcache, &find);
+	if (node == NULL)
+		return (-1);
+
+	if (id)
+		*id = node->id;
+
+	return (0);
+}
+
 static uint64_t
 dcache_parent_id(const char *path)
 {
-	struct dcachenode find, *node;
-	char *slash;
+	char parent_path[PAXPATHLEN + 1], *slash;
+	uint64_t parent_id;
 
-	strlcpy(find.path, normpath(path), sizeof(find.path));
-	slash = strrchr(find.path, '/');
+	strlcpy(parent_path, normpath(path), sizeof(parent_path));
+	slash = strrchr(parent_path, '/');
 	if (slash == NULL)
 		return (ROOT_ID);
 	*slash = '\0';
 
-	node = SPLAY_FIND(dcache, &dcache, &find);
-	if (node == NULL) {
-		paxwarn(0, "%s doesn't have a parent; attaching to root node",
-		    path);
+	if (dcache_id(parent_path, &parent_id) < 0)
 		return (ROOT_ID);
-	}
 
-	return (node->id);
+	return (parent_id);
 }
 
 static int
@@ -220,13 +238,16 @@ idmap_translate(ino_t from)
 		}
 
 		node->from = from;
-		node->to = ++highest_inode;
+		node->to = ++to_highest_inode;
 		if (node->to == 0) {
 			paxwarn(1,
 			    "couldn't allocate inode number; too many files");
 			free(node);
 			return (0);
 		}
+
+		if (from > from_highest_inode)
+			from_highest_inode = from;
 
 		SPLAY_INSERT(idmap, &idmap, node);
 	}
@@ -447,7 +468,7 @@ tmpfs_stwr(void)
 	wr_skip(sizeof(tmpfs_snap_t));
 	bytes_written = sizeof(tmpfs_snap_t);
 
-	highest_inode = ROOT_ID;
+	to_highest_inode = ROOT_ID;
 
 	/*
 	 * The tmpfs snapshot format always starts with the root directory
@@ -563,12 +584,262 @@ tmpfs_wr(ARCHD *arcn)
 	return (1);	/* file ok, but don't dump its contents */
 }
 
+static int
+check_perm(char v, char c, mode_t *mode, mode_t mask)
+{
+	if (v == c)
+		*mode |= mask;
+	else if (v != '-')
+		return (-1);
+
+	return (0);
+}
+
+static int
+parse_perm(const char **line, mode_t *mode, uid_t *uid, gid_t *gid)
+{
+	char perm[17], user[17], group[17];
+	struct passwd *pwd;
+	struct group *grp;
+	int n = -1;
+
+	if (sscanf(*line, "%16s %*u %16s %16s %n", perm, user, group,
+	    &n) != 3 || n < 0)
+		return (-1);
+	*line += (size_t)n;
+
+	perm[sizeof(perm) - 1] = '\0';
+	if (strlen(perm) != 10)
+		return (-1);
+
+	*mode = 0;
+
+	switch (perm[0]) {
+	case 'b':
+		*mode |= S_IFBLK;
+		break;
+	case 'c':
+		*mode |= S_IFCHR;
+		break;
+	case 'd':
+		*mode |= S_IFDIR;
+		break;
+	case 'l':
+		*mode |= S_IFLNK;
+		break;
+	default:
+		paxwarn(1, "unknown file type '%c'", perm[0]);
+		return (-1);
+	}
+
+	if (check_perm(perm[1], 'r', mode, S_IRUSR) < 0 ||
+	    check_perm(perm[2], 'w', mode, S_IWUSR) < 0 ||
+	    check_perm(perm[3], 'x', mode, S_IXUSR) < 0 ||
+	    check_perm(perm[4], 'r', mode, S_IRGRP) < 0 ||
+	    check_perm(perm[5], 'w', mode, S_IWGRP) < 0 ||
+	    check_perm(perm[6], 'x', mode, S_IXGRP) < 0 ||
+	    check_perm(perm[7], 'r', mode, S_IROTH) < 0 ||
+	    check_perm(perm[8], 'w', mode, S_IWOTH) < 0 ||
+	    check_perm(perm[9], 'x', mode, S_IXOTH) < 0)
+		return (-1);
+
+	user[sizeof(user) - 1] = '\0';
+	if ((pwd = getpwnam(user)) == NULL) {
+		paxwarn(1, "no such user");
+		return (-1);
+	}
+	*uid = pwd->pw_uid;
+
+	group[sizeof(group) - 1] = '\0';
+	if ((grp = getgrnam(group)) == NULL) {
+		paxwarn(1, "no such group");
+		return (-1);
+	}
+	*gid = grp->gr_gid;
+
+	return (0);
+}
+
+static int
+parse_date(struct stat *st, const char **line)
+{
+	struct tm tm;
+	time_t t;
+
+	if ((*line = strptime(*line, "%b %d %T %Y", &tm)) == NULL)
+		return (-1);
+
+	t = mktime(&tm);
+	if (t == (time_t)-1)
+		return (-1);
+
+	st->st_atim.tv_sec = st->st_mtim.tv_sec = st->st_ctim.tv_sec = t;
+
+	return (0);
+}
+
+static int
+parse_device(struct stat *st, const char **line)
+{
+	unsigned int major, minor;
+	int n = -1;
+
+	if (sscanf(*line, "%u, %u %n", &major, &minor, &n) != 2 || n < 0)
+		return (-1);
+	*line += (size_t)n;
+
+	st->st_rdev = makedev(major, minor);
+
+	return (0);
+}
+
+static int
+skip_size(const char **line)
+{
+	int n = -1;
+
+	if (sscanf(*line, "%*u %n", &n) != 0 || n < 0)
+		return (-1);
+	*line += (size_t)n;
+
+	return (0);
+}
+
+static int
+parse_manifest_entry(const char *parent, const char *line)
+{
+	ARCHD arcn;
+	struct stat *st = &arcn.sb;
+	char path[64];
+	int n, r = -1;
+
+	if (strlen(parent) < 1 || strlen(line) < 1) {
+		paxwarn(1, "don't know where to place manifest entry");
+		return (-1);
+	}
+
+	memset(&arcn, 0, sizeof(arcn));
+
+	/* this is just so we can use tmpfs_wr() as it is. */
+	if (from_highest_inode == UINT64_MAX) {
+		paxwarn(1, "out of inodes");
+		return (-1);
+	}
+	arcn.sb.st_ino = ++from_highest_inode;
+
+	if (parse_perm(&line, &st->st_mode, &st->st_uid, &st->st_gid) < 0)
+		return (-1);
+
+	if (S_ISBLK(st->st_mode)) {
+		arcn.type = PAX_BLK;
+		r = parse_device(st, &line);
+	} else if (S_ISCHR(st->st_mode)) {
+		arcn.type = PAX_CHR;
+		r = parse_device(st, &line);
+	} else if (S_ISDIR(st->st_mode)) {
+		arcn.type = PAX_DIR;
+		r = skip_size(&line);
+	} else if (S_ISLNK(st->st_mode)) {
+		arcn.type = PAX_SLK;
+		r = skip_size(&line);
+	}
+
+	if (r < 0 || parse_date(st, &line) < 0)
+		return (-1);
+
+	n = -1;
+	if (arcn.type == PAX_SLK) {
+		_Static_assert(sizeof(arcn.ln_name) >= 64,
+		    "this code assumes sizeof(arcn.ln_name) >= 64");
+		if (sscanf(line, "%63s -> %63s %n", path, arcn.ln_name,
+		    &n) != 2 || n < 0)
+			return (-1);
+		arcn.ln_name[sizeof(arcn.ln_name) - 1] = '\0';
+		arcn.ln_nlen = strlen(arcn.ln_name);
+	} else if (sscanf(line, "%63s %n", path, &n) != 1 || n < 0)
+		return (-1);
+
+	line += (size_t)n;
+
+	path[sizeof(path) - 1] = '\0';
+	if (strchr(path, '/'))
+		return (-1);
+
+	n = snprintf(arcn.name, sizeof(arcn.name), "%s/%s", parent, path);
+	if (n < 0 || (size_t)n >= sizeof(arcn.name))
+		return (-1);
+	arcn.nlen = n;
+
+	return (tmpfs_wr(&arcn));
+}
+
+static int
+populate_device_manifest(const char *manifest)
+{
+	FILE *f;
+	char *l;
+	int n, ok = -1;
+	size_t ln = 0;
+	char path[64], cwd[64] = "";
+
+	if ((f = fopen(manifest, "r")) == NULL) {
+		syswarn(1, errno, "fopen %s", manifest);
+		return (-1);
+	}
+
+	if (setpassent(1) == 0)
+		syswarn(1, errno, "setpassent");
+	if (setgroupent(1) == 0)
+		syswarn(1, errno, "setgroupent");
+
+	while ((l = fparseln(f, NULL, &ln, NULL, 0)) != NULL) {
+		n = -1;
+		if (sscanf(l, "%63s %n", path, &n) == 1 && n > 0 &&
+		    (size_t)n == strlen(l)) {
+			path[sizeof(path) - 1] = '\0';
+			if (strlen(path) < 1 || path[0] != '/' ||
+			    path[strlen(path) - 1] != ':') {
+				paxwarn(1, "full path required");
+				goto out;
+			}
+			path[strlen(path) - 1] = '\0'; /* clip */
+			if (dcache_id(path, NULL) < 0 && strcmp(path, "/")) {
+				paxwarn(1, "directory not found: %s", path);
+				goto out;
+			}
+			strlcpy(cwd, path, sizeof(cwd));
+		} else if (strlen(l) && parse_manifest_entry(cwd, l) < 0)
+			goto out;
+		free(l);
+	}
+
+	ok = 0;
+out:
+	free(l);
+	fclose(f);
+	endpwent();
+	endgrent();
+
+	if (ok < 0)
+		paxwarn(1, "failed to parse device manifest line %zu", ln);
+
+	return (ok);
+}
+
 int
 tmpfs_endwr(void)
 {
 	tmpfs_snap_t tshdr;
 	struct dcachenode *dn;
 	struct idmapnode *idn;
+
+	if (device_manifest != NULL) {
+		if (populate_device_manifest(device_manifest) < 0) {
+			paxwarn(1, "failed to populate device manifest");
+			return (-1);
+		}
+		free((void *)device_manifest);
+	}
 
 	while ((dn = SPLAY_ROOT(&dcache)) != NULL) {
 		SPLAY_REMOVE(dcache, &dcache, dn);
@@ -603,4 +874,34 @@ int
 tmpfs_trail(ARCHD *arcn, char *buf, int in_resync, int *cnt)
 {
 	return (bytes_to_read > 0 ? -1 : 0);
+}
+
+int
+tmpfs_opt(void)
+{
+	OPLIST *opt;
+
+	if ((opt = opt_next()) == NULL)
+		return (0);
+
+	if (strcmp(opt->name, "devmanifest") || act != ARCHIVE) {
+		paxwarn(1, "unknown option %s", opt->name);
+		return (-1);
+	}
+
+	device_manifest = strdup(opt->value);
+	if (device_manifest == NULL) {
+		syswarn(1, errno, "strdup");
+		return (-1);
+	}
+
+	if ((opt = opt_next()) != NULL) {
+		if (strcmp(opt->name, "devmanifest") == 0)
+			paxwarn(1, "devmanifest may be specified only once");
+		else
+			paxwarn(1, "unknown option %s", opt->name);
+		return (1);
+	}
+
+	return (0);
 }
