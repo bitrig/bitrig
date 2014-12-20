@@ -501,7 +501,7 @@ next_file(ARCHD *arcn)
 	 * copy file name, set file name length
 	 */
 	arcn->nlen = strlcpy(arcn->name, ftent->fts_path, sizeof(arcn->name));
-	if (arcn->nlen >= sizeof(arcn->name))
+	if ((size_t)arcn->nlen >= sizeof(arcn->name))
 		arcn->nlen = sizeof(arcn->name) - 1; /* XXX truncate? */
 	arcn->org_name = ftent->fts_path;
 	return(0);

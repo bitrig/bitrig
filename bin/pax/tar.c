@@ -44,9 +44,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include "pax.h"
 #include "extern.h"
 #include "tar.h"
+
+_Static_assert(sizeof(time_t) == 8, "this code assumes sizeof(time_t) = 8");
 
 /*
  * Routines for reading, writing and header identify of various versions of tar
@@ -406,8 +409,8 @@ tar_rd(ARCHD *arcn, char *buf)
 	arcn->sb.st_gid = (gid_t)asc_ul(hd->gid, sizeof(hd->gid), OCT);
 	arcn->sb.st_size = (off_t)asc_uqd(hd->size, sizeof(hd->size), OCT);
 	val = asc_uqd(hd->mtime, sizeof(hd->mtime), OCT);
-	if ((time_t)val < 0 || (time_t)val != val)
-		arcn->sb.st_mtime = INT_MAX;                    /* XXX 2038 */
+	if (val > INT64_MAX)
+		arcn->sb.st_mtime = INT64_MAX;
 	else
 		arcn->sb.st_mtime = val;
 	arcn->sb.st_ctime = arcn->sb.st_atime = arcn->sb.st_mtime;
@@ -546,7 +549,8 @@ tar_wr(ARCHD *arcn)
 	case PAX_SLK:
 	case PAX_HLK:
 	case PAX_HRG:
-		if (arcn->ln_nlen > sizeof(hd->linkname)) {
+		if (arcn->ln_nlen < 0 ||
+		    (size_t)arcn->ln_nlen > sizeof(hd->linkname)) {
 			paxwarn(1, "Link name too long for tar %s",
 			    arcn->ln_name);
 			return(1);
@@ -563,7 +567,7 @@ tar_wr(ARCHD *arcn)
 	len = arcn->nlen;
 	if (arcn->type == PAX_DIR)
 		++len;
-	if (len > sizeof(hd->name)) {
+	if (len < 0 || (size_t)len > sizeof(hd->name)) {
 		paxwarn(1, "File name too long for tar %s", arcn->name);
 		return(1);
 	}
@@ -798,8 +802,8 @@ ustar_rd(ARCHD *arcn, char *buf)
 	    0xfff);
 	arcn->sb.st_size = (off_t)asc_uqd(hd->size, sizeof(hd->size), OCT);
 	val = asc_uqd(hd->mtime, sizeof(hd->mtime), OCT);
-	if ((time_t)val < 0 || (time_t)val != val)
-		arcn->sb.st_mtime = INT_MAX;                    /* XXX 2038 */
+	if (val > INT64_MAX)
+		arcn->sb.st_mtime = INT64_MAX;
 	else
 		arcn->sb.st_mtime = val;
 	arcn->sb.st_ctime = arcn->sb.st_atime = arcn->sb.st_mtime;
@@ -939,8 +943,9 @@ ustar_wr(ARCHD *arcn)
 	/*
 	 * check the length of the linkname
 	 */
-	if (((arcn->type == PAX_SLK) || (arcn->type == PAX_HLK) ||
-	    (arcn->type == PAX_HRG)) && (arcn->ln_nlen > sizeof(hd->linkname))){
+	if ((arcn->type == PAX_SLK || arcn->type == PAX_HLK ||
+	    arcn->type == PAX_HRG) && (arcn->ln_nlen < 0 ||
+	    (size_t)arcn->ln_nlen > sizeof(hd->linkname))) {
 		paxwarn(1, "Link name too long for ustar %s", arcn->ln_name);
 		return(1);
 	}

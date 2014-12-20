@@ -40,6 +40,7 @@
 #include <limits.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include "pax.h"
@@ -49,6 +50,8 @@
 static int rd_nm(ARCHD *, int);
 static int rd_ln_nm(ARCHD *);
 static int com_rd(ARCHD *);
+
+_Static_assert(sizeof(time_t) == 8, "this code assumes sizeof(time_t) = 8");
 
 /*
  * Routines which support the different cpio versions
@@ -179,7 +182,7 @@ rd_nm(ARCHD *arcn, int nsz)
 	/*
 	 * do not even try bogus values
 	 */
-	if ((nsz == 0) || (nsz > sizeof(arcn->name))) {
+	if (nsz <= 0 || (size_t)nsz > sizeof(arcn->name)) {
 		paxwarn(1, "Cpio file name length %d is out of range", nsz);
 		return(-1);
 	}
@@ -209,9 +212,9 @@ rd_ln_nm(ARCHD *arcn)
 	/*
 	 * check the length specified for bogus values
 	 */
-	if ((arcn->sb.st_size == 0) ||
-	    (arcn->sb.st_size >= sizeof(arcn->ln_name))) {
-		paxwarn(1, "Cpio link name length is invalid: %llu",
+	if (arcn->sb.st_size <= 0 || (uintmax_t)arcn->sb.st_size > SIZE_MAX ||
+	    (size_t)arcn->sb.st_size >= sizeof(arcn->ln_name)) {
+		paxwarn(1, "Cpio link name length is invalid: %lld",
 		    arcn->sb.st_size);
 		return(-1);
 	}
@@ -252,7 +255,7 @@ rd_ln_nm(ARCHD *arcn)
 int
 cpio_id(char *blk, int size)
 {
-	if ((size < sizeof(HD_CPIO)) ||
+	if (size < 0 || (size_t)size < sizeof(HD_CPIO) ||
 	    (strncmp(blk, AMAGIC, sizeof(AMAGIC) - 1) != 0))
 		return(-1);
 	return(0);
@@ -294,10 +297,10 @@ cpio_rd(ARCHD *arcn, char *buf)
 	    OCT);
 	arcn->sb.st_rdev = (dev_t)asc_ul(hd->c_rdev, sizeof(hd->c_rdev), OCT);
 	val = asc_uqd(hd->c_mtime, sizeof(hd->c_mtime), OCT);
-	if ((time_t)val < 0 || (time_t)val != val)
-		arcn->sb.st_mtime = INT_MAX;			/* XXX 2038 */
+	if (val > INT64_MAX)
+		arcn->sb.st_mtime = INT64_MAX;
 	else
-		arcn->sb.st_mtime = val;
+		arcn->sb.st_mtime = (time_t)val;
 	arcn->sb.st_ctime = arcn->sb.st_atime = arcn->sb.st_mtime;
 	arcn->sb.st_size = (off_t)asc_uqd(hd->c_filesize,sizeof(hd->c_filesize),
 	    OCT);
@@ -495,7 +498,7 @@ cpio_wr(ARCHD *arcn)
 int
 vcpio_id(char *blk, int size)
 {
-	if ((size < sizeof(HD_VCPIO)) ||
+	if (size < 0 || (size_t)size < sizeof(HD_VCPIO) ||
 	    (strncmp(blk, AVMAGIC, sizeof(AVMAGIC) - 1) != 0))
 		return(-1);
 	return(0);
@@ -512,7 +515,7 @@ vcpio_id(char *blk, int size)
 int
 crc_id(char *blk, int size)
 {
-	if ((size < sizeof(HD_VCPIO)) ||
+	if (size < 0 || (size_t)size < sizeof(HD_VCPIO) ||
 	    (strncmp(blk, AVCMAGIC, sizeof(AVCMAGIC) - 1) != 0))
 		return(-1);
 	return(0);
@@ -817,7 +820,7 @@ vcpio_wr(ARCHD *arcn)
 int
 bcpio_id(char *blk, int size)
 {
-	if (size < sizeof(HD_BCPIO))
+	if (size < 0 || (size_t)size < sizeof(HD_BCPIO))
 		return(-1);
 
 	/*

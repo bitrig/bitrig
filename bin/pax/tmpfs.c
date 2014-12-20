@@ -275,7 +275,7 @@ tmpfs_id(char *blk, int size)
 {
 	tmpfs_snap_t *hdr;
 
-	if (size < sizeof(*hdr))
+	if (size < 0 || (size_t)size < sizeof(*hdr))
 		return (-1);
 
 	hdr = (tmpfs_snap_t *)blk;
@@ -394,7 +394,8 @@ tmpfs_rd(ARCHD *arcn, char *buf)
 		arcn->type = PAX_SLK;
 		arcn->sb.st_mode |= S_IFLNK;
 		arcn->sb.st_size = hdr->tsn_spec.tsn_size;
-		if (arcn->sb.st_size >= sizeof(arcn->ln_name)) {
+		if (arcn->sb.st_size < 0 ||
+		    (size_t)arcn->sb.st_size >= sizeof(arcn->ln_name)) {
 			paxwarn(1, "symlink too long (%llu bytes)",
 			    hdr->tsn_spec.tsn_size);
 			return (-1);
