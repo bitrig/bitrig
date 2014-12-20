@@ -520,15 +520,15 @@ ampintc_irq_handler(void *frame)
 	}
 #endif
 
-	if (iack_val == 1023) {
+	irq = iack_val & ICPIAR_IRQ_M;
+
+	if (irq == 1023) {
 		sc->sc_spur.ec_count++;
 		return;
 	}
 
-	if (iack_val >= sc->sc_nintr)
+	if (irq >= sc->sc_nintr)
 		return;
-
-	irq = iack_val;
 
 	pri = sc->sc_ampintc_handler[irq].iq_irq;
 	s = ampintc_splraise(pri);
