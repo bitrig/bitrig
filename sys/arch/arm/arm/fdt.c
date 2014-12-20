@@ -34,7 +34,7 @@ void	*skip_props(u_int32_t *);
 void	*skip_node_name(u_int32_t *);
 void	*fdt_parent_node_recurse(void *, void *);
 void	*fdt_find_node_by_prop(void *, char *, void *, int);
-#ifdef DEBUG
+#ifdef FDT_DEBUG
 void 	 fdt_print_node_recurse(void *, int);
 #endif
 
@@ -568,7 +568,7 @@ fdt_get_interrupt(void *node, int *irqno)
 	return 0;
 }
 
-#ifdef DEBUG
+#ifdef FDT_DEBUG
 /*
  * Debug methods for printing whole tree, particular odes and properies
  */

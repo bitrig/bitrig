@@ -68,7 +68,7 @@ int	 fdt_node_property_int(void *, char *, int *);
 void	*fdt_parent_node(void *);
 int	 fdt_node_property_ints(void *, char *, int*, int);
 int	 fdt_node_property_int(void *, char *, int*);
-#ifdef DEBUG
+#ifdef FDT_DEBUG
 void	*fdt_print_property(void *, int);
 void	 fdt_print_node(void *, int);
 void	 fdt_print_node_recurse(void *, int);
