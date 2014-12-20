@@ -62,7 +62,6 @@ bin:	/dev/null
 named:	/dev/null
 nobody:	/dev/null
 proxy:  /dev/null
-smmsp:  /dev/null
 sshd:   /dev/null
 
 # Well-known aliases -- these should be filled in!

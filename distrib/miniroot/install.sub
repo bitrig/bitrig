@@ -377,7 +377,7 @@ user_setup() {
 		n|no)	return;;
 		y|yes)	_q="No really, what is the lower-case loginname, or 'no'?"
 			continue;;
-		root|daemon|operator|bin|smmsp|popa3d) ;;
+		root|daemon|operator|bin|popa3d) ;;
 		sshd|uucp|www|named|proxy|nobody|ftp) ;;
 		[a-z]*([a-z0-9_]))
 			((${#resp} <= 31)) && break;;

@@ -202,8 +202,6 @@ usr
     libexec
         auth		type=dir uname=root gname=auth mode=0750
         ..
-        sm.bin
-        ..
         lpr
         ..
         smtpd		type=dir uname=root gname=wheel mode=0755
@@ -1045,9 +1043,6 @@ var
 
     # ./var/spool
     spool
-        clientmqueue	mode=0770 uname=smmsp gname=smmsp
-        ..
-
         # ./var/spool/ftp
         ftp		mode=0555
             bin		mode=0511
@@ -1062,8 +1057,6 @@ var
 
         # ./var/spool/lock
         lock		uname=uucp gname=dialer mode=1775
-        ..
-        mqueue		mode=0700
         ..
         output		gname=daemon mode=0775
         ..

@@ -210,7 +210,7 @@ Useful and semi-frivolous programs.
 .It include/
 Standard C include files.
 .Pp
-.Bl -tag -width "libmilter/" -compact
+.Bl -tag -width "protocols/" -compact
 .It arpa/
 C include files for Internet service protocols.
 .It crypto/
@@ -224,10 +224,6 @@ C include files for the kernel debugger (see
 Device-specific C include files.
 .It isofs/
 C include files for the ISO standard file systems (currently only cd9660).
-.It libmilter/
-C include files for the
-.Xr sendmail 8
-mail filter API.
 .It machine/
 Machine specific C include files.
 .It miscfs/
@@ -289,7 +285,7 @@ Data files for
 .It libexec/
 System daemons and utilities (executed by other programs).
 .Pp
-.Bl -tag -width "sendmail/" -compact
+.Bl -tag -width "smtpd/" -compact
 .It auth/
 Login scripts used to authenticate users (for
 .Bx
@@ -297,13 +293,6 @@ Authentication).
 .It lpr/
 Contains the lpf filter for
 .Xr lpd 8 .
-.It sendmail/
-Contains the
-.Xr sendmail 8
-binary.
-.It sm.bin/
-Binaries to be run by
-.Xr smrsh 8 .
 .It smtpd/
 Binaries related to
 .Xr smtpd 8 .
@@ -435,9 +424,6 @@ Templates for
 .Xr make 1 .
 .It nls/
 National Language Support (NLS) catalogs.
-.It sendmail/
-Example files for
-.Xr sendmail 8 .
 .It snmp/
 Data files for
 .Xr snmpd 8 .
@@ -607,19 +593,12 @@ Timestamps for
 .It spool/
 Miscellaneous printer and mail system spooling directories.
 .Pp
-.Bl -tag -width "clientmqueue/" -compact
-.It clientmqueue/
-Mail messages waiting to be processed by the sendmail clientmqueue helper
-task (see
-.Xr sendmail 8 ) .
+.Bl -tag -width "uucppublic/" -compact
 .It ftp/
 Commonly ~ftp; the anonymous ftp root directory.
 .It lock/
 Lock files for utilities such as
 .Xr tip 1 .
-.It mqueue/
-Undelivered mail queue (see
-.Xr sendmail 8 ) .
 .It output/
 Line printer spooling directories.
 .It smtpd/

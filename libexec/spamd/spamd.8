@@ -51,9 +51,7 @@
 .Ek
 .Sh DESCRIPTION
 .Nm
-is a fake
-.Xr sendmail 8 Ns -like
-daemon which rejects false mail.
+is a fake mail server daemon which rejects false mail.
 It is designed to be very efficient so that it does not slow down the
 receiving machine.
 .Pp
@@ -75,7 +73,7 @@ hosts do not talk to
 .Nm .
 Their connections are instead sent to a real mail server,
 such as
-.Xr sendmail 8 .
+.Xr smtpd 8 .
 .Pp
 .Em greylisted
 hosts are redirected to
