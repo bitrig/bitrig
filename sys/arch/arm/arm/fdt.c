@@ -341,6 +341,9 @@ fdt_find_node(char *name)
 
 		for (child = fdt_child_node(node); child;
 		     child = fdt_next_node(child)) {
+			/* This is the end. */
+			if (fdt_node_name(child) == NULL)
+				return NULL;
 			if (strncmp(p, fdt_node_name(child), q - p) == 0) {
 				node = child;
 				break;
