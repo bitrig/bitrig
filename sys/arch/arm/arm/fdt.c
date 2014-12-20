@@ -458,6 +458,20 @@ fdt_find_node_by_prop(void *node, char *propname, void *propval,
 }
 
 /*
+ * Look for a node that has this phandle as property.
+ */
+void *
+fdt_find_node_by_phandle(void *node, int phandle)
+{
+	if (node == NULL)
+		node = fdt_next_node(0);
+
+	phandle = htobe32(phandle);
+	return fdt_find_node_by_prop(node,
+	    "phandle", &phandle, sizeof(phandle));
+}
+
+/*
  * Parse the memory address and size of a node.
  */
 int
@@ -524,9 +538,7 @@ fdt_get_interrupt_controller(void *node)
 			return NULL;
 	}
 
-	phandle = htobe32(phandle);
-	return fdt_find_node_by_prop(fdt_next_node(NULL),
-	    "phandle", &phandle, sizeof(phandle));
+	return fdt_find_node_by_phandle(NULL, phandle);
 }
 
 /*
