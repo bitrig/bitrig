@@ -56,6 +56,7 @@ struct idmapnode {
 static SPLAY_HEAD(icache, icachenode)	icache = SPLAY_INITIALIZER(&icache);
 static SPLAY_HEAD(dcache, dcachenode)	dcache = SPLAY_INITIALIZER(&dcache);
 static SPLAY_HEAD(idmap, idmapnode)	idmap = SPLAY_INITIALIZER(&idmap);
+static off_t				bytes_to_read;
 static off_t				bytes_written;
 static uint64_t				highest_inode;
 
@@ -75,6 +76,7 @@ static uint64_t			 dcache_parent_id(const char *);
 static int			 dcache_insert(const char *, uint64_t);
 static uint64_t			 idmap_translate(ino_t);
 static int			 hdr_set_type(tmpfs_snap_node_t *, mode_t);
+static int			 consume(off_t);
 
 static int
 idcmp(struct icachenode *in1, struct icachenode *in2)
@@ -257,6 +259,17 @@ hdr_set_type(tmpfs_snap_node_t *hdr, mode_t mode)
 	return (0);
 }
 
+static int
+consume(off_t n)
+{
+	if (n > bytes_to_read) {
+		paxwarn(1, "malformed tmpfs snapshot; invalid ts_snap_sz");
+		return (-1);
+	}
+	bytes_to_read -= n;
+	return (0);
+}
+
 int
 tmpfs_id(char *blk, int size)
 {
@@ -273,6 +286,7 @@ tmpfs_id(char *blk, int size)
 		return (-1);
 
 	force_one_volume = 1;
+	bytes_to_read = hdr->ts_snap_sz;
 
 	return (0);
 }
@@ -280,6 +294,8 @@ tmpfs_id(char *blk, int size)
 int
 tmpfs_strd(void)
 {
+	if (consume(sizeof(tmpfs_snap_t)) == -1)
+		return (-1);
 	return (rd_skip(sizeof(tmpfs_snap_t)));
 }
 
@@ -295,6 +311,8 @@ tmpfs_rd(ARCHD *arcn, char *buf)
 	struct icachenode *parent, *node;
 	int nlen;
 
+	if (consume(sizeof(*hdr)) == -1)
+		return (-1);
 	hdr = (tmpfs_snap_node_t *)buf;
 	TMPFS_SNAP_NODE_NTOH(hdr);
 
@@ -354,6 +372,8 @@ tmpfs_rd(ARCHD *arcn, char *buf)
 		arcn->type = PAX_REG;
 		arcn->sb.st_mode |= S_IFREG;
 		arcn->skip = arcn->sb.st_size = hdr->tsn_spec.tsn_size;
+		if (consume(hdr->tsn_spec.tsn_size) == -1)
+			return (-1);
 		break;
 	case TMPFS_SNAP_NTYPE_DIR:
 		arcn->type = PAX_DIR;
@@ -384,6 +404,8 @@ tmpfs_rd(ARCHD *arcn, char *buf)
 			paxwarn(1, "rd_wrbuf() failed");
 			return (-1);
 		}
+		if (consume(hdr->tsn_spec.tsn_size) == -1)
+			return (-1);
 		break;
 	case TMPFS_SNAP_NTYPE_SOCK:
 		arcn->type = PAX_SCK;
@@ -579,5 +601,5 @@ tmpfs_endwr(void)
 int
 tmpfs_trail(ARCHD *arcn, char *buf, int in_resync, int *cnt)
 {
-	return (-1);
+	return (bytes_to_read > 0 ? -1 : 0);
 }
