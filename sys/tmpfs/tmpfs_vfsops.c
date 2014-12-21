@@ -196,6 +196,9 @@ tmpfs_mountfs(struct mount *mp, const char *path, struct vnode *vp,
 	uint64_t nodes;
 	int error;
 
+	if (suser(p, 0))
+		return (EPERM);
+
 	if (mp->mnt_flag & MNT_UPDATE)
 		return (tmpfs_mount_update(mp, args, p));
 
