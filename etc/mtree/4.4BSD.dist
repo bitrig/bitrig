@@ -158,13 +158,6 @@ usr
             ..
         ..
 
-        # ./usr/include/mcpp-gcc-amd64
-        mcpp-gcc-amd64
-        ..
-
-        mcpp-gcc-arm
-        ..
-
         openssl		gname=bin uname=root mode=0755
         ..
 

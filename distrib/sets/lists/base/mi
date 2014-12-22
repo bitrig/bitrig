@@ -565,14 +565,6 @@
 ./usr/bin/znew
 ./usr/games
 ./usr/include
-./usr/include/mcpp-gcc-amd64
-./usr/include/mcpp-gcc-amd64/gcc42_predef_old.h
-./usr/include/mcpp-gcc-amd64/gcc42_predef_std.h
-./usr/include/mcpp-gcc-amd64/gxx42_predef_std.h
-./usr/include/mcpp-gcc-arm
-./usr/include/mcpp-gcc-arm/gcc42_predef_old.h
-./usr/include/mcpp-gcc-arm/gcc42_predef_std.h
-./usr/include/mcpp-gcc-arm/gxx42_predef_std.h
 ./usr/lib
 ./usr/lib/libc++.so.1.0
 ./usr/lib/libc++abi.so.1.0
@@ -2674,7 +2666,6 @@
 ./usr/libexec/mail.local
 ./usr/libexec/makekey
 ./usr/libexec/makewhatis
-./usr/libexec/mcpp
 ./usr/libexec/ntalkd
 ./usr/libexec/rpc.rquotad
 ./usr/libexec/rpc.rstatd
@@ -3595,7 +3586,6 @@
 ./usr/share/man/man1/makeinfo.1
 ./usr/share/man/man1/man.1
 ./usr/share/man/man1/mandoc.1
-./usr/share/man/man1/mcpp.1
 ./usr/share/man/man1/md5.1
 ./usr/share/man/man1/merge.1
 ./usr/share/man/man1/mesg.1

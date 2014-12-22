@@ -1370,14 +1370,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/machine
 ./usr/libdata/perl5/site_perl/arm-bitrig/malloc.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/math.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/mcpp-gcc-amd64
-./usr/libdata/perl5/site_perl/arm-bitrig/mcpp-gcc-amd64/gcc42_predef_old.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/mcpp-gcc-amd64/gcc42_predef_std.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/mcpp-gcc-amd64/gxx42_predef_std.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/mcpp-gcc-arm
-./usr/libdata/perl5/site_perl/arm-bitrig/mcpp-gcc-arm/gcc42_predef_old.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/mcpp-gcc-arm/gcc42_predef_std.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/mcpp-gcc-arm/gxx42_predef_std.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/md5.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/memory.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/menu.ph

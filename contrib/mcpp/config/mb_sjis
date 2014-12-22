@@ -1,2 +1,0 @@
-AC_CHECK_MBCHAR_IS_ESCAPE_FREE( [SJIS], [sjis], [•\Ž¦])
-
