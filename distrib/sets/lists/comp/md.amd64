@@ -33,7 +33,6 @@
 ./usr/include/amd64/ieeefp.h
 ./usr/include/amd64/intr.h
 ./usr/include/amd64/intrdefs.h
-./usr/include/amd64/ioctl_fd.h
 ./usr/include/amd64/isa_machdep.h
 ./usr/include/amd64/kcore.h
 ./usr/include/amd64/limits.h

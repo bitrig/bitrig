@@ -537,7 +537,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/ieeefp.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/intr.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/intrdefs.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/ioctl_fd.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/isa_machdep.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/kcore.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/limits.ph
