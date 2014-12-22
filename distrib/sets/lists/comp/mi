@@ -410,8 +410,6 @@
 ./usr/include/dev/ic/smc91cxxvar.h
 ./usr/include/dev/ic/smc93cx6var.h
 ./usr/include/dev/ic/tc921x.h
-./usr/include/dev/ic/tcic2reg.h
-./usr/include/dev/ic/tcic2var.h
 ./usr/include/dev/ic/tea5757.h
 ./usr/include/dev/ic/tireg.h
 ./usr/include/dev/ic/tivar.h
