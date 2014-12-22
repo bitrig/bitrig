@@ -4,7 +4,7 @@
 
 SUBDIR=	ac accton acpidump adduser apm apmd arp \
 	authpf bgpctl bgpd bind chroot config cron crunchgen dev_mkdb \
-	dhcpd dhcrelay dvmrpctl dvmrpd edquota fdformat \
+	dhcpd dhcrelay dvmrpctl dvmrpd edquota \
 	ftp-proxy fw_update gpioctl hostapd hotplugd httpd identd ifstated \
 	ikectl inetd installboot iostat iscsictl iscsid kgmon kvm_mkdb \
 	ldapd ldapctl ldpd ldpctl lpr mailwrapper map-mbone \
