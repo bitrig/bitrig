@@ -48,12 +48,12 @@ MAN=	aac.4 ac97.4 acphy.4 \
 	qla.4 qle.4 qlw.4 qsphy.4 radio.4 \
 	ral.4 random.4 rdac.4 re.4 rdcphy.4 rgephy.4 ricohrtc.4 \
 	rl.4 rlphy.4 route.4 rsu.4 rt.4 rtsx.4 rum.4 run.4 \
-	rtfps.4 rtii.4 rtw.4 safe.4 safte.4 san.4 sbus.4 schsio.4 \
+	rtfps.4 rtii.4 rtw.4 safe.4 safte.4 san.4 schsio.4 \
 	scsi.4 sd.4 \
 	sdmmc.4 sdhc.4 se.4 ses.4 \
 	sf.4 sf2r.4 sfr.4 sili.4 siop.4 sis.4 sk.4 sl.4 sli.4 \
 	sm.4 smsc.4 softraid.4 spdmem.4 sdtemp.4 speaker.4 sppp.4 sqphy.4 \
-	st.4 ste.4 stge.4 sti.4 \
+	st.4 ste.4 stge.4 \
 	stp.4 sv.4 sym.4 systrace.4 tcic.4 tcp.4 termios.4 tht.4 ti.4 tl.4 \
 	tlphy.4 thmc.4 tmpfsrd.4 tqphy.4 trm.4 trunk.4 tsl.4 tty.4 tun.4 twe.4 \
 	txp.4 txphy.4 uaudio.4 uark.4 uath.4 ubcmtp.4 uberry.4 ubsa.4 ubsec.4 \

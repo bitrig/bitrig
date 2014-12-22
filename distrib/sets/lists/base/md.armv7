@@ -858,8 +858,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/ic/smc91cxxreg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/ic/smc91cxxvar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/ic/smc93cx6var.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/dev/ic/stireg.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/dev/ic/stivar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/ic/tc921x.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/ic/tcic2reg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/ic/tcic2var.ph

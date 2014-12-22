@@ -17,9 +17,6 @@ attach	vga at pci with vga_pci
 file	dev/pci/vga_pci.c		vga_pci
 file	dev/pci/vga_pci_common.c	vga_pci | vgafb
 
-attach	sti at pci with sti_pci
-file	dev/pci/sti_pci.c		sti_pci
-
 # Cypress 82c693 hyperCache(tm) Stand-Alone PCI Peripheral Controller
 # with USB.  This is a combo chip:
 #

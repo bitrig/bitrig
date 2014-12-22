@@ -358,11 +358,6 @@ file	dev/ic/lpt.c			lpt & (lpt_isa | lpt_localbus |
 					       lpt_gsc | lpt_puc | lpt_apio |
 					       lpt_ebus) needs-flag
 
-# STI (hp graphics)
-device	sti: wsemuldisplaydev
-file	dev/ic/sti.c			sti & (sti_gedoens |
-					       sti_pci) needs-flag
-
 # Initio ULTRA WIDE/ULTRA2 WIDE SCSI Controllers
 device	iha: scsi
 file	dev/ic/iha.c			iha
