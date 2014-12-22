@@ -9049,7 +9049,6 @@
 ./usr/share/man/man4/ex.4
 ./usr/share/man/man4/exphy.4
 ./usr/share/man/man4/fd.4
-./usr/share/man/man4/fdc.4
 ./usr/share/man/man4/fins.4
 ./usr/share/man/man4/fms.4
 ./usr/share/man/man4/fuse.4
@@ -9070,10 +9069,6 @@
 ./usr/share/man/man4/gtp.4
 ./usr/share/man/man4/hds.4
 ./usr/share/man/man4/hifn.4
-./usr/share/man/man4/hil.4
-./usr/share/man/man4/hilid.4
-./usr/share/man/man4/hilkbd.4
-./usr/share/man/man4/hilms.4
 ./usr/share/man/man4/hme.4
 ./usr/share/man/man4/hotplug.4
 ./usr/share/man/man4/hsq.4
@@ -9246,7 +9241,6 @@
 ./usr/share/man/man4/safe.4
 ./usr/share/man/man4/safte.4
 ./usr/share/man/man4/san.4
-./usr/share/man/man4/sbus.4
 ./usr/share/man/man4/schsio.4
 ./usr/share/man/man4/scsi.4
 ./usr/share/man/man4/scsibus.4
