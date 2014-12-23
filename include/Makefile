@@ -42,7 +42,7 @@ PRDIRS=
 RDIRS=	../lib/libcrypto ../lib/libcurses ../lib/libc++ ../lib/libc++abi \
 	../lib/libedit ../lib/libevent ../lib/libexpat \
 	../lib/libform ../lib/libfuse ../lib/libkeynote \
-	../libexec/mcpp ../lib/libmenu ../lib/libocurses ../lib/libossaudio \
+	../lib/libmenu ../lib/libocurses ../lib/libossaudio \
 	../lib/libpanel ../lib/libpcap ../lib/libressl ../lib/librpcsvc \
 	../lib/librthread ../lib/libskey ../lib/libsqlite3 ../lib/libssl \
 	../lib/libusbhid ../lib/libutil ../lib/libz \
