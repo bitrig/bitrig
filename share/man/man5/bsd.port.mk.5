@@ -2917,17 +2917,17 @@ to disable the use of
 entirely; this should not be set under normal circumstances.
 Adds dependencies if necessary, and passes LIBTOOL environment variable to
 scripts invocations.
-.It Ev USE_MFS
+.It Ev USE_TMPFS
 Set to
 .Sq Yes
-to build ports under an
-.Xr mfs 8
+to build ports under a
+.Xr mount_tmpfs 8
 filesystem.
 Mostly for use by
 .Xr dpb 1
 and not intended to be a user setting.
 See
-.Ev WRKOBJDIR_MFS
+.Ev WRKOBJDIR_TMPFS
 for configuration.
 .It Ev USE_SYSTRACE
 User settings.
@@ -3030,14 +3030,14 @@ For instance, setting WRKOBJDIR_www/mozilla=/tmp/obj
 will affect only the mozilla port.
 If explicitly unset (WRKOBJDIR=), the working directory is
 created within the port directory.
-.It Ev WRKOBJDIR_MFS
+.It Ev WRKOBJDIR_TMPFS
 Alternate location for the port working directory.
-The intent is to use an
-.Xr mfs 8
+The intent is to use a
+.Xr mount_tmpfs 8
 based filesystem for small ports with
 .Xr dpb 1 .
 Active when
-.Ev USE_MFS
+.Ev USE_TMPFS
 is
 .Sq Yes .
 Defaults to
