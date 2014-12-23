@@ -86,10 +86,10 @@ int
 tmpfs_init(struct vfsconf *vfsp)
 {
 
-	pool_init(&tmpfs_dirent_pool, sizeof(tmpfs_dirent_t), 0, 0, 0,
-	    "tmpfs_dirent", &pool_allocator_nointr);
-	pool_init(&tmpfs_node_pool, sizeof(tmpfs_node_t), 0, 0, 0,
-	    "tmpfs_node", &pool_allocator_nointr);
+	pool_init(&tmpfs_dirent_pool, sizeof(tmpfs_dirent_t), 0, 0, PR_WAITOK,
+	    "tmpfs_dirent", NULL);
+	pool_init(&tmpfs_node_pool, sizeof(tmpfs_node_t), 0, 0, PR_WAITOK,
+	    "tmpfs_node", NULL);
 
 	return 0;
 }
