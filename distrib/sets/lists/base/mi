@@ -8924,7 +8924,6 @@
 ./usr/share/man/man4/ahd.4
 ./usr/share/man/man4/aibs.4
 ./usr/share/man/man4/aic.4
-./usr/share/man/man4/akbd.4
 ./usr/share/man/man4/alc.4
 ./usr/share/man/man4/ale.4
 ./usr/share/man/man4/alipm.4
@@ -8948,7 +8947,6 @@
 ./usr/share/man/man4/amdpm.4
 ./usr/share/man/man4/ami.4
 ./usr/share/man/man4/amphy.4
-./usr/share/man/man4/ams.4
 ./usr/share/man/man4/an.4
 ./usr/share/man/man4/andl.4
 ./usr/share/man/man4/aps.4
