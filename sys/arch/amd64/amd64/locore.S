@@ -452,14 +452,14 @@ cont:
 
 
 #define fillkpt_nx \
-	pushl	%ebp				;	/* save */ \
+	movl	%esp,-16(%ebp)			;	/* save */ \
 1:	movl	%eax,(%ebx)			; 	/* store phys addr */ \
-	movl	RELOC((pg_nx + 4)), %ebp	;	/* NX bit? */ \
-	movl	%ebp,4(%ebx)			; 	/* upper 32 bits */ \
+	movl	RELOC((pg_nx + 4)), %esp	;	/* NX bit? */ \
+	movl	%esp,4(%ebx)			; 	/* upper 32 bits */ \
 	addl	$8,%ebx				; 	/* next pte/pde */ \
 	addl	$NBPG,%eax			; 	/* next phys page */ \
 	loop	1b				;	/* till finished */ \
-	popl	%ebp
+	movl	-16(%ebp),%esp
 
 	/* Find end of kernel image. */
 	movl	$RELOC(end),%edi
@@ -634,10 +634,10 @@ cont:
 	movl	$(NDML2_ENTRIES * NPDPG), %ecx
 	movl	-4(%ebp),%ebx	/* PROC0_DMP2_OFF */
 1:	movl	%eax, (%ebx)
-	pushl	%ebp
-	movl	RELOC((pg_nx + 4)), %ebp
-	movl	%ebp, 4(%ebx)
-	popl	%ebp
+	movl	%esp,-16(%ebp)
+	movl	RELOC((pg_nx + 4)), %esp
+	movl	%esp, 4(%ebx)
+	movl	-16(%ebp),%esp
 	addl	$8, %ebx
 	addl	$NBPD_L2, %eax
 	loop	1b
@@ -659,10 +659,10 @@ cont:
 	leal	(PROC0_PML4_OFF)(%esi),%eax
 	orl	$(PG_V|PG_KW),%eax
 	movl	%eax,(%ebx)
-	pushl	%ebp
-	movl	RELOC((pg_nx + 4)), %ebp
-	movl	%ebp, 4(%ebx)
-	popl 	%ebp
+	movl	%esp,-16(%ebp)
+	movl	RELOC((pg_nx + 4)), %esp
+	movl	%esp, 4(%ebx)
+	movl	-16(%ebp),%esp
 
 	/* Save phys. addr of PTD, for libkvm. */
 	movl	$RELOC(PTDpaddr),%eax
