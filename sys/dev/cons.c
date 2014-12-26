@@ -76,7 +76,7 @@ cnopen(dev_t dev, int flag, int mode, struct proc *p)
 	if (cndev == dev)
 		panic("cnopen: recursive");
 #endif
-	if (cn_devvp == NULLVP) {
+	if (cn_devvp == NULL) {
 		/* try to get a reference on its vnode, but fail silently */
 		cdevvp(cndev, &cn_devvp);
 	}
@@ -97,10 +97,10 @@ cnclose(dev_t dev, int flag, int mode, struct proc *p)
 	 * screw up others who have it open.
 	 */
 	dev = cn_tab->cn_dev;
-	if (cn_devvp != NULLVP) {
+	if (cn_devvp != NULL) {
 		/* release our reference to real dev's vnode */
 		vrele(cn_devvp);
-		cn_devvp = NULLVP;
+		cn_devvp = NULL;
 	}
 	if (vfinddev(dev, VCHR, &vp) && vcount(vp))
 		return (0);

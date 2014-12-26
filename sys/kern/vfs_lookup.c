@@ -334,7 +334,7 @@ vfs_lookup(struct nameidata *ndp)
 	ndp->ni_dvp = NULL;
 	cnp->cn_flags &= ~ISSYMLINK;
 	dp = ndp->ni_startdir;
-	ndp->ni_startdir = NULLVP;
+	ndp->ni_startdir = NULL;
 	vn_lock(dp, LK_EXCLUSIVE | LK_RETRY, p);
 
 	/*

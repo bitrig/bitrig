@@ -76,7 +76,7 @@ ufs_ihashlookup(dev_t dev, ufsino_t inum)
 	if (ip)
 		return (ITOV(ip));
 
-	return (NULLVP);
+	return (NULL);
 }
 
 /*

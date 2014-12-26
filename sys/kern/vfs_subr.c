@@ -222,7 +222,7 @@ vfs_rootmountalloc(char *fstypename, char *devname, struct mount **mpp)
 	mp->mnt_vfc = vfsp;
 	mp->mnt_op = vfsp->vfc_vfsops;
 	mp->mnt_flag = MNT_RDONLY;
-	mp->mnt_vnodecovered = NULLVP;
+	mp->mnt_vnodecovered = NULL;
 	vfsp->vfc_refcount++;
 	mp->mnt_flag |= vfsp->vfc_flags & MNT_VISFLAGMASK;
 	strncpy(mp->mnt_stat.f_fstypename, vfsp->vfc_name, MFSNAMELEN);
@@ -355,7 +355,7 @@ getnewvnode(enum vtagtype tag, struct mount *mp, struct vops *vops,
 		TAILQ_INIT(&vp->v_cache_dst);
 		numvnodes++;
 	} else {
-		for (vp = TAILQ_FIRST(listhd); vp != NULLVP;
+		for (vp = TAILQ_FIRST(listhd); vp != NULL;
 		    vp = TAILQ_NEXT(vp, v_freelist)) {
 			if (VOP_ISLOCKED(vp) == 0)
 				break;
@@ -462,12 +462,12 @@ getdevvp(dev_t dev, struct vnode **vpp, enum vtype type)
 	int error;
 
 	if (dev == NODEV) {
-		*vpp = NULLVP;
+		*vpp = NULL;
 		return (0);
 	}
 	error = getnewvnode(VT_NON, NULL, &spec_vops, &nvp);
 	if (error) {
-		*vpp = NULLVP;
+		*vpp = NULL;
 		return (error);
 	}
 	vp = nvp;
@@ -496,7 +496,7 @@ checkalias(struct vnode *nvp, dev_t nvp_rdev, struct mount *mp)
 	struct vnode **vpp;
 
 	if (nvp->v_type != VBLK && nvp->v_type != VCHR)
-		return (NULLVP);
+		return (NULL);
 
 	vpp = &speclisth[SPECHASH(nvp_rdev)];
 loop:
@@ -530,12 +530,12 @@ loop:
 		nvp->v_speclockf = NULL;
 		memset(nvp->v_specbitmap, 0, sizeof(nvp->v_specbitmap));
 		*vpp = nvp;
-		if (vp != NULLVP) {
+		if (vp != NULL) {
 			nvp->v_flag |= VALIASED;
 			vp->v_flag |= VALIASED;
 			vput(vp);
 		}
-		return (NULLVP);
+		return (NULL);
 	}
 
 	/*

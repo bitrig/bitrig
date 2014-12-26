@@ -153,7 +153,7 @@ tmpfs_lookup(void *v)
 	 * directory/name couple is already in the cache.
 	 */
 	cachefound = cache_lookup(dvp, vpp, cnp);
-	if (cachefound == ENOENT /* && *vpp == NULLVP */)
+	if (cachefound == ENOENT /* && *vpp == NULL */)
 		return ENOENT; /* Negative cache hit. */
 	else if (cachefound != -1)
 		return 0; /* Found in cache. */

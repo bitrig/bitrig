@@ -145,7 +145,7 @@ fusefs_unmount(struct mount *mp, int mntflags, struct proc *p)
 		flags |= FORCECLOSE;
 	}
 
-	if ((error = vflush(mp, NULLVP, flags)))
+	if ((error = vflush(mp, NULL, flags)))
 		return (error);
 
 	if (fmp->sess_init) {
@@ -242,7 +242,7 @@ retry:
 	/*
 	 * check if vnode is in hash.
 	 */
-	if ((*vpp = ufs_ihashget(fmp->dev, ino)) != NULLVP)
+	if ((*vpp = ufs_ihashget(fmp->dev, ino)) != NULL)
 		return (0);
 
 	/*
@@ -250,7 +250,7 @@ retry:
 	 */
 	if ((error = getnewvnode(VT_FUSEFS, mp, &fusefs_vops, &nvp)) != 0) {
 		printf("fusefs: getnewvnode error\n");
-		*vpp = NULLVP;
+		*vpp = NULL;
 		return (error);
 	}
 

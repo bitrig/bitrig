@@ -131,7 +131,7 @@ ffs_checkoverlap(struct buf *bp, struct inode *ip)
 	last = start + btodb(bp->b_bcount) - 1;
 	LIST_FOREACH(ep, &bufhead, b_list) {
 		if (ep == bp || (ep->b_flags & B_INVAL) ||
-		    ep->b_vp == NULLVP)
+		    ep->b_vp == NULL)
 			continue;
 		if (VOP_BMAP(ep->b_vp, 0, &vp, NULL, NULL))
 			continue;

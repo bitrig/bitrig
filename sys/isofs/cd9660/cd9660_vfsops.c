@@ -579,7 +579,7 @@ cd9660_unmount(mp, mntflags, p)
 	if (mntinvalbuf(mp))
 		return (EBUSY);
 #endif
-	if ((error = vflush(mp, NULLVP, flags)) != 0)
+	if ((error = vflush(mp, NULL, flags)) != 0)
 		return (error);
 
 	isomp = VFSTOISOFS(mp);
@@ -691,13 +691,13 @@ cd9660_fhtovp(mp, fhp, vpp)
 #endif
 	
 	if ((error = VFS_VGET(mp, ifhp->ifid_ino, &nvp)) != 0) {
-		*vpp = NULLVP;
+		*vpp = NULL;
 		return (error);
 	}
 	ip = VTOI(nvp);
 	if (ip->inode.iso_mode == 0) {
 		vput(nvp);
-		*vpp = NULLVP;
+		*vpp = NULL;
 		return (ESTALE);
 	}
 	*vpp = nvp;
@@ -748,12 +748,12 @@ cd9660_vget_internal(mp, ino, vpp, relocated, isodir)
 retry:
 	imp = VFSTOISOFS(mp);
 	dev = imp->im_dev;
-	if ((*vpp = cd9660_ihashget(dev, ino)) != NULLVP)
+	if ((*vpp = cd9660_ihashget(dev, ino)) != NULL)
 		return (0);
 
 	/* Allocate a new vnode/iso_node. */
 	if ((error = getnewvnode(VT_ISOFS, mp, &cd9660_vops, &vp)) != 0) {
-		*vpp = NULLVP;
+		*vpp = NULL;
 		return (error);
 	}
 	ip = malloc(sizeof(*ip), M_ISOFSNODE, M_WAITOK | M_ZERO);

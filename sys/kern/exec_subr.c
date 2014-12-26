@@ -107,7 +107,7 @@ kill_vmcmds(struct exec_vmcmd_set *evsp)
 
 	for (i = 0; i < evsp->evs_used; i++) {
 		vcp = &evsp->evs_cmds[i];
-		if (vcp->ev_vp != NULLVP)
+		if (vcp->ev_vp != NULL)
 			vrele(vcp->ev_vp);
 	}
 
@@ -351,16 +351,16 @@ exec_setup_stack(struct proc *p, struct exec_package *epp)
 #ifdef MACHINE_STACK_GROWS_UP
 	NEW_VMCMD(&epp->ep_vmcmds, vmcmd_map_zero,
 	    ((epp->ep_minsaddr - epp->ep_ssize) - epp->ep_maxsaddr),
-	    epp->ep_maxsaddr + epp->ep_ssize, NULLVP, 0, VM_PROT_NONE);
+	    epp->ep_maxsaddr + epp->ep_ssize, NULL, 0, VM_PROT_NONE);
 	NEW_VMCMD(&epp->ep_vmcmds, vmcmd_map_zero, epp->ep_ssize,
-	    epp->ep_maxsaddr, NULLVP, 0,
+	    epp->ep_maxsaddr, NULL, 0,
 	    VM_PROT_READ|VM_PROT_WRITE);
 #else
 	NEW_VMCMD(&epp->ep_vmcmds, vmcmd_map_zero,
 	    ((epp->ep_minsaddr - epp->ep_ssize) - epp->ep_maxsaddr),
-	    epp->ep_maxsaddr, NULLVP, 0, VM_PROT_NONE);
+	    epp->ep_maxsaddr, NULL, 0, VM_PROT_NONE);
 	NEW_VMCMD(&epp->ep_vmcmds, vmcmd_map_zero, epp->ep_ssize,
-	    (epp->ep_minsaddr - epp->ep_ssize), NULLVP, 0,
+	    (epp->ep_minsaddr - epp->ep_ssize), NULL, 0,
 	    VM_PROT_READ|VM_PROT_WRITE);
 #endif
 

@@ -455,7 +455,7 @@ dounmount(struct mount *mp, int flags, struct proc *p, struct vnode *olddp)
 	}
 
 	TAILQ_REMOVE(&mountlist, mp, mnt_list);
-	if ((coveredvp = mp->mnt_vnodecovered) != NULLVP) {
+	if ((coveredvp = mp->mnt_vnodecovered) != NULL) {
 		coveredvp->v_mountedhere = NULL;
  		vrele(coveredvp);
  	}

@@ -440,7 +440,7 @@ chkdquot(struct inode *ip)
 		panic ("chkdquot: vnode is not locked");
 		
 	for (i = 0; i < MAXQUOTAS; i++) {
-		if (ump->um_quotas[i] == NULLVP ||
+		if (ump->um_quotas[i] == NULL ||
 		    (ump->um_qflags[i] & (QTF_OPENING|QTF_CLOSING)))
 			continue;
 		if (ip->i_dquot[i] == NODQUOT) {
@@ -515,12 +515,12 @@ quotaon(struct proc *p, struct mount *mp, int type, caddr_t fname)
 	ump->um_cred[type] = p->p_ucred;
 	ump->um_btime[type] = MAX_DQ_TIME;
 	ump->um_itime[type] = MAX_IQ_TIME;
-	if (dqget(NULLVP, 0, ump, type, &dq) == 0) {
+	if (dqget(NULL, 0, ump, type, &dq) == 0) {
 		if (dq->dq_btime > 0)
 			ump->um_btime[type] = dq->dq_btime;
 		if (dq->dq_itime > 0)
 			ump->um_itime[type] = dq->dq_itime;
-		dqrele(NULLVP, dq);
+		dqrele(NULL, dq);
 	}
 	/*
 	 * Search vnodes associated with this mount point,
@@ -576,7 +576,7 @@ quotaoff(struct proc *p, struct mount *mp, int type)
 	if (!vfs_isbusy(mp))
 		panic ("quotaoff: mount point not busy");
 #endif
-	if ((qvp = ump->um_quotas[type]) == NULLVP)
+	if ((qvp = ump->um_quotas[type]) == NULL)
 		return (0);
 	ump->um_qflags[type] |= QTF_CLOSING;
 	/*
@@ -588,12 +588,12 @@ quotaoff(struct proc *p, struct mount *mp, int type)
 	vfs_mount_foreach_vnode(mp, quotaoff_vnode, &qa);
 
 	error = vn_close(qvp, FREAD|FWRITE, p->p_ucred, p);
-	ump->um_quotas[type] = NULLVP;
+	ump->um_quotas[type] = NULL;
 	crfree(ump->um_cred[type]);
 	ump->um_cred[type] = NOCRED;
 	ump->um_qflags[type] &= ~QTF_CLOSING;
 	for (type = 0; type < MAXQUOTAS; type++)
-		if (ump->um_quotas[type] != NULLVP)
+		if (ump->um_quotas[type] != NULL)
 			break;
 	if (type == MAXQUOTAS)
 		mp->mnt_flag &= ~MNT_QUOTA;
@@ -609,10 +609,10 @@ getquota(struct mount *mp, u_long id, int type, caddr_t addr)
 	struct dquot *dq;
 	int error;
 
-	if ((error = dqget(NULLVP, id, VFSTOUFS(mp), type, &dq)) != 0)
+	if ((error = dqget(NULL, id, VFSTOUFS(mp), type, &dq)) != 0)
 		return (error);
 	error = copyout((caddr_t)&dq->dq_dqb, addr, sizeof (struct dqblk));
-	dqrele(NULLVP, dq);
+	dqrele(NULL, dq);
 	return (error);
 }
 
@@ -631,7 +631,7 @@ setquota(struct mount *mp, u_long id, int type, caddr_t addr)
 	error = copyin(addr, (caddr_t)&newlim, sizeof (struct dqblk));
 	if (error)
 		return (error);
-	if ((error = dqget(NULLVP, id, ump, type, &ndq)) != 0)
+	if ((error = dqget(NULL, id, ump, type, &ndq)) != 0)
 		return (error);
 	dq = ndq;
 	while (dq->dq_flags & DQ_LOCK) {
@@ -668,7 +668,7 @@ setquota(struct mount *mp, u_long id, int type, caddr_t addr)
 	else
 		dq->dq_flags &= ~DQ_FAKE;
 	dq->dq_flags |= DQ_MOD;
-	dqrele(NULLVP, dq);
+	dqrele(NULL, dq);
 	return (0);
 }
 
@@ -687,7 +687,7 @@ setuse(struct mount *mp, u_long id, int type, caddr_t addr)
 	error = copyin(addr, (caddr_t)&usage, sizeof (struct dqblk));
 	if (error)
 		return (error);
-	if ((error = dqget(NULLVP, id, ump, type, &ndq)) != 0)
+	if ((error = dqget(NULL, id, ump, type, &ndq)) != 0)
 		return (error);
 	dq = ndq;
 	while (dq->dq_flags & DQ_LOCK) {
@@ -711,7 +711,7 @@ setuse(struct mount *mp, u_long id, int type, caddr_t addr)
 	if (dq->dq_curinodes < dq->dq_isoftlimit)
 		dq->dq_flags &= ~DQ_INODS;
 	dq->dq_flags |= DQ_MOD;
-	dqrele(NULLVP, dq);
+	dqrele(NULL, dq);
 	return (0);
 }
 
@@ -751,7 +751,7 @@ qsync(struct mount *mp)
 	 * If not, simply return.
 	 */
 	for (i = 0; i < MAXQUOTAS; i++)
-		if (ump->um_quotas[i] != NULLVP)
+		if (ump->um_quotas[i] != NULL)
 			break;
 	if (i == MAXQUOTAS)
 		return (0);
@@ -805,7 +805,7 @@ dqget(struct vnode *vp, u_long id, struct ufsmount *ump, int type,
 	int error;
 
 	dqvp = ump->um_quotas[type];
-	if (dqvp == NULLVP || (ump->um_qflags[type] & QTF_CLOSING)) {
+	if (dqvp == NULL || (ump->um_qflags[type] & QTF_CLOSING)) {
 		*dqp = NODQUOT;
 		return (EINVAL);
 	}
@@ -942,7 +942,7 @@ dqsync(struct vnode *vp, struct dquot *dq)
 		panic("dqsync: dquot");
 	if ((dq->dq_flags & DQ_MOD) == 0)
 		return (0);
-	if ((dqvp = dq->dq_vp) == NULLVP)
+	if ((dqvp = dq->dq_vp) == NULL)
 		panic("dqsync: file");
 
 	if (vp != dqvp)

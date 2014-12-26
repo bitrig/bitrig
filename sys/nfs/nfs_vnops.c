@@ -714,7 +714,7 @@ nfs_lookup(void *v)
 	cnp->cn_flags &= ~PDIRUNLOCK;
 	flags = cnp->cn_flags;
 
-	*vpp = NULLVP;
+	*vpp = NULL;
 	if ((flags & ISLASTCN) && (dvp->v_mount->mnt_flag & MNT_RDONLY) &&
 	    (cnp->cn_nameiop == DELETE || cnp->cn_nameiop == RENAME))
 		return (EROFS);
@@ -739,14 +739,14 @@ nfs_lookup(void *v)
 		int err2;
 
 		if (error && error != ENOENT) {
-			*vpp = NULLVP;
+			*vpp = NULL;
 			return (error);
 		}
 
 		if (cnp->cn_flags & PDIRUNLOCK) {
 			err2 = vn_lock(dvp, LK_EXCLUSIVE | LK_RETRY, p);
 			if (err2 != 0) {
-				*vpp = NULLVP;
+				*vpp = NULL;
 				return (err2);
 			}
 			cnp->cn_flags &= ~PDIRUNLOCK;
@@ -760,7 +760,7 @@ nfs_lookup(void *v)
 				else
 					vrele(*vpp);
 			}
-			*vpp = NULLVP;
+			*vpp = NULL;
 			return (err2);
 		}
 
@@ -790,11 +790,11 @@ nfs_lookup(void *v)
 			vput(newvp);
 		else
 			vrele(newvp);
-		*vpp = NULLVP;
+		*vpp = NULL;
 	}
 dorpc:
 	error = 0;
-	newvp = NULLVP;
+	newvp = NULL;
 	nfsstats.lookupcache_misses++;
 	nfsstats.rpccnt[NFSPROC_LOOKUP]++;
 	len = cnp->cn_namelen;
@@ -927,7 +927,7 @@ nfsmout:
 		    cnp->cn_nameiop != CREATE) {
 			nfs_cache_enter(dvp, NULL, cnp);
 		}
-		if (newvp != NULLVP) {
+		if (newvp != NULL) {
 			vrele(newvp);
 			if (newvp != dvp)
 				VOP_UNLOCK(newvp, 0);
@@ -2285,7 +2285,7 @@ nfs_readdirplusrpc(struct vnode *vp, struct uio *uiop, struct ucred *cred,
 		panic("nfs readdirplusrpc bad uio");
 #endif
 	ndp->ni_dvp = vp;
-	newvp = NULLVP;
+	newvp = NULL;
 
 	txdr_hyper(uiop->uio_offset, &cookie.nfsuquad[0]);
 
@@ -2434,9 +2434,9 @@ nfs_readdirplusrpc(struct vnode *vp, struct uio *uiop, struct ucred *cred,
 				i = fxdr_unsigned(int, *tl);
 				nfsm_adv(nfsm_rndup(i));
 			}
-			if (newvp != NULLVP) {
+			if (newvp != NULL) {
 				vrele(newvp);
-				newvp = NULLVP;
+				newvp = NULL;
 			}
 			nfsm_dissect(tl, u_int32_t *, NFSX_UNSIGNED);
 			more_dirs = fxdr_unsigned(int, *tl);
@@ -2476,7 +2476,7 @@ nfs_readdirplusrpc(struct vnode *vp, struct uio *uiop, struct ucred *cred,
 	}
 
 nfsmout:
-	if (newvp != NULLVP)
+	if (newvp != NULL)
 		vrele(newvp);
 	return (error);
 }

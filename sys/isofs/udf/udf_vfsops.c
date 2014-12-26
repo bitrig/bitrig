@@ -718,7 +718,7 @@ udf_fhtovp(struct mount *mp, struct fid *fhp, struct vnode **vpp)
 	ifhp = (struct ifid *)fhp;
 
 	if ((error = VFS_VGET(mp, ifhp->ifid_ino, &nvp)) != 0) {
-		*vpp = NULLVP;
+		*vpp = NULL;
 		return (error);
 	}
 

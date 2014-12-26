@@ -1023,7 +1023,7 @@ sbagain:
 	ump->um_bptrtodb = fs->fs_fsbtodb;
 	ump->um_seqinc = fs->fs_frag;
 	for (i = 0; i < MAXQUOTAS; i++)
-		ump->um_quotas[i] = NULLVP;
+		ump->um_quotas[i] = NULL;
 
 	devvp->v_specmountpoint = mp;
 	ffs_oldfscompat(fs);
@@ -1298,10 +1298,10 @@ ffs_flushfiles(struct mount *mp, int flags, struct proc *p)
 	ump = VFSTOUFS(mp);
 	if (mp->mnt_flag & MNT_QUOTA) {
 		int i;
-		if ((error = vflush(mp, NULLVP, SKIPSYSTEM|flags)) != 0)
+		if ((error = vflush(mp, NULL, SKIPSYSTEM|flags)) != 0)
 			return (error);
 		for (i = 0; i < MAXQUOTAS; i++) {
-			if (ump->um_quotas[i] == NULLVP)
+			if (ump->um_quotas[i] == NULL)
 				continue;
 			quotaoff(p, mp, i);
 		}

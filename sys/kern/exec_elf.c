@@ -269,7 +269,7 @@ ELFNAME(load_psection)(struct exec_vmcmd_set *vcset, struct vnode *vp,
 	rf = round_page(*addr + ph->p_filesz + diff);
 
 	if (rm != rf) {
-		NEW_VMCMD2(vcset, vmcmd_map_zero, rm - rf, rf, NULLVP, 0,
+		NEW_VMCMD2(vcset, vmcmd_map_zero, rm - rf, rf, NULL, 0,
 		    *prot, flags);
 	}
 	*size = msize;
@@ -470,7 +470,7 @@ ELFNAME(load_file)(struct proc *p, char *path, struct exec_package *epp,
 			}
 			randomizequota -= ph[i].p_memsz;
 			NEW_VMCMD(&epp->ep_vmcmds, vmcmd_randomize,
-			    ph[i].p_memsz, ph[i].p_vaddr + pos, NULLVP, 0, 0);
+			    ph[i].p_memsz, ph[i].p_vaddr + pos, NULL, 0, 0);
 			break;
 
 		default:
@@ -705,7 +705,7 @@ ELFNAME2(exec,makecmds)(struct proc *p, struct exec_package *epp)
 			}
 			randomizequota -= ph[i].p_memsz;
 			NEW_VMCMD(&epp->ep_vmcmds, vmcmd_randomize,
-			    ph[i].p_memsz, ph[i].p_vaddr + exe_base, NULLVP, 0, 0);
+			    ph[i].p_memsz, ph[i].p_vaddr + exe_base, NULL, 0, 0);
 			break;
 
 		default:
