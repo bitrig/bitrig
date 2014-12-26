@@ -646,7 +646,7 @@ wdopen(dev_t dev, int flag, int fmt, struct proc *p)
 	 * to the adapter.
 	 */
 	if ((error = disk_lock(&wd->sc_dk)) != 0)
-		goto bad4;
+		goto bad2;
 
 	if (wd->sc_dk.dk_openmask != 0) {
 		/*
@@ -655,7 +655,7 @@ wdopen(dev_t dev, int flag, int fmt, struct proc *p)
 		 */
 		if ((wd->sc_flags & WDF_LOADED) == 0) {
 			error = EIO;
-			goto bad3;
+			goto bad1;
 		}
 	} else {
 		if ((wd->sc_flags & WDF_LOADED) == 0) {
@@ -668,29 +668,20 @@ wdopen(dev_t dev, int flag, int fmt, struct proc *p)
 			if (wdgetdisklabel(dev, wd,
 			    wd->sc_dk.dk_label, 0) == EIO) {
 				error = EIO;
-				goto bad;
+				goto bad1;
 			}
 		}
 	}
 
 	part = DISKPART(dev);
 
-	if ((error = disk_openpart(&wd->sc_dk, part, fmt, 1)) != 0)
-		goto bad;
+	error = disk_openpart(&wd->sc_dk, part, fmt, 1);
 
+bad1:
 	disk_unlock(&wd->sc_dk);
+bad2:
 	device_unref(&wd->sc_dev);
-	return 0;
-
-bad:
-	if (wd->sc_dk.dk_openmask == 0) {
-	}
-
-bad3:
-	disk_unlock(&wd->sc_dk);
-bad4:
-	device_unref(&wd->sc_dev);
-	return error;
+	return (error);
 }
 
 int
