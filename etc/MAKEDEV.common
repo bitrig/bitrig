@@ -229,35 +229,6 @@ __devitem(tmpfsrd, {-tmpfsrd*-}, quote(tmpfsrd)pseudo-disks)dnl
 _mkdev(tmpfsrd, tmpfsrd*, {-dodisk2 tmpfsrd $U major_tmpfsrd_b major_tmpfsrd_c $U 0{--}ifstep(tmpfsrd)-})dnl
 __devitem(xd, xd*, Xylogic 753/7053 disks)dnl
 __devitem(xy, xy*, {-	Xylogic 450/451 disks-})dnl
-__devitem(flo, {-fd*-}, {-Floppy disk drives (3 1/2"{-,-} 5 1/4")-},fd)dnl
-_mkdev(flo, fd*,
-{-typnam=$U${i#fd[01]*}
-	case $typnam in
-	0|1)	typnum=0;; # no type specified, assume A
-	*A)	typnum=0; typnam=0;;
-	*B)	typnum=1;;
-	*C)	typnum=2;;
-	*D)	typnum=3;;
-	*E)	typnum=4;;
-	*F)	typnum=5;;
-	*G)	typnum=6;;
-	*H)	typnum=7;;
-	*)	echo bad type $typnam for $i; exit 1;;
-	esac
-	case $U in
-	0|1)	blk=major_flo_b; chr=major_flo_c;;
-	*)	echo bad unit $U for $i; exit 1;;
-	esac
-	nam=fd${typnam}
-	n=Add(Mult($U, 128), Mult($typnum, 16))
-	M ${nam}a	b $blk $n 640 operator
-	M ${nam}b	b $blk Add($n, 1) 640 operator
-	M ${nam}c	b $blk Add($n, 2) 640 operator
-	M ${nam}i	b $blk Add($n, 8) 640 operator
-	M r${nam}a	c $chr $n 640 operator
-	M r${nam}b	c $chr Add($n, 1) 640 operator
-	M r${nam}c	c $chr Add($n, 2) 640 operator
-	M r${nam}i	c $chr Add($n, 8) 640 operator-}, 664)dnl
 __devitem(wd, {-wd*-}, {-quote(winchester)disk drives (ST506{-,-} IDE{-,-} ESDI{-,-} RLL{-,-} ...)-})dnl
 __devitem(vnd, vnd*, quote(file)pseudo-disk devices)dnl
 _mkdev(vnd, vnd*, {-dodisk vnd $U major_vnd_b major_vnd_c $U 0{--}ifstep(vnd)-})dnl

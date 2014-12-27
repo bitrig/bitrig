@@ -28,7 +28,6 @@ _DEV(std)
 _DEV(local)
 _TITLE(dis)
 _DEV(cd, 15, 6)
-_DEV(flo, 9, 2)
 _DEV(sd, 13, 4)
 _DEV(tmpfsrd, 48, 19)
 _DEV(vnd, 41, 14)
@@ -96,7 +95,7 @@ dnl
 divert(__mddivert)dnl
 dnl
 ramdisk)
-	_recurse std bpf0 fd0 wd0 sd0 tty00 tty01 tmpfsrd0 bio diskmap
+	_recurse std bpf0 wd0 sd0 tty00 tty01 tmpfsrd0 bio diskmap
 	_recurse st0 cd0 ttyC0 wskbd0 wskbd1 wskbd2 random
 	;;
 
@@ -115,8 +114,6 @@ twrget(all, au, audio, 0, 1, 2)dnl
 target(all, ch, 0)dnl
 target(all, vscsi, 0)dnl
 target(all, diskmap)dnl
-twrget(all, flo, fd, 0, 0B, 0C, 0D, 0E, 0F, 0G, 0H)dnl
-twrget(all, flo, fd, 1, 1B, 1C, 1D, 1E, 1F, 1G, 1H)dnl
 target(all, pty, 0)dnl
 target(all, bio)dnl
 target(all, bpf, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9)dnl
@@ -131,4 +128,3 @@ target(all, gpio, 0, 1, 2)dnl
 target(all, nvram)dnl
 target(all, drm, 0, 1, 2, 3)dnl
 twrget(ramd, wsdisp, ttyC, 0)dnl
-target(ramd, fd, 0)dnl
