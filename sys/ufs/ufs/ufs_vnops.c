@@ -502,7 +502,8 @@ ufs_setattr(void *v)
 		if (vap->va_size < oldsize)
 			hint |= NOTE_TRUNCATE;
 	}
-	if (vap->va_atime.tv_sec != VNOVAL || vap->va_mtime.tv_sec != VNOVAL) {
+	if (vap->va_atime.tv_nsec != UTIME_OMIT ||
+	    vap->va_mtime.tv_nsec != UTIME_OMIT) {
 		if (vp->v_mount->mnt_flag & MNT_RDONLY)
 			return (EROFS);
 		if (cred->cr_uid != DIP(ip, uid) &&
@@ -513,19 +514,19 @@ ufs_setattr(void *v)
 		error = UFS_WAPBL_BEGIN(vp->v_mount);
 		if (error)
 			return (error);
-		if (vap->va_mtime.tv_sec != VNOVAL)
+		if (vap->va_mtime.tv_nsec != UTIME_OMIT)
 			ip->i_flag |= IN_CHANGE | IN_UPDATE;
-		if (vap->va_atime.tv_sec != VNOVAL) {
+		if (vap->va_atime.tv_nsec != UTIME_OMIT) {
 			if (!(vp->v_mount->mnt_flag & MNT_NOATIME) ||
 			    (ip->i_flag & (IN_CHANGE | IN_UPDATE)))
 				ip->i_flag |= IN_ACCESS;
 		}
 		ufs_itimes(vp);
-		if (vap->va_mtime.tv_sec != VNOVAL) {
+		if (vap->va_mtime.tv_nsec != UTIME_OMIT) {
 			DIP_ASSIGN(ip, mtime, vap->va_mtime.tv_sec);
 			DIP_ASSIGN(ip, mtimensec, vap->va_mtime.tv_nsec);
 		}
-		if (vap->va_atime.tv_sec != VNOVAL) {
+		if (vap->va_atime.tv_nsec != UTIME_OMIT) {
 			DIP_ASSIGN(ip, atime, vap->va_atime.tv_sec);
 			DIP_ASSIGN(ip, atimensec, vap->va_atime.tv_nsec);
 		}

@@ -491,9 +491,6 @@ tmpfs_getattr(void *v)
 	return 0;
 }
 
-#define GOODTIME(tv)	((tv)->tv_sec != VNOVAL || (tv)->tv_nsec != VNOVAL)
-/* XXX Should this operation be atomic?  I think it should, but code in
- * XXX other places (e.g., ufs) doesn't seem to be... */
 int
 tmpfs_setattr(void *v)
 {
@@ -513,7 +510,7 @@ tmpfs_setattr(void *v)
 	/* Abort if any unsettable attribute is given. */
 	if (vap->va_type != VNON || vap->va_nlink != (nlink_t)VNOVAL ||
 	    vap->va_fsid != VNOVAL || vap->va_fileid != (u_quad_t)VNOVAL ||
-	    vap->va_blocksize != VNOVAL || GOODTIME(&vap->va_ctime) ||
+	    vap->va_blocksize != VNOVAL || vap->va_ctime.tv_nsec != UTIME_OMIT ||
 	    vap->va_gen != (u_long)VNOVAL || vap->va_rdev != VNOVAL ||
 	    vap->va_bytes != (u_quad_t)VNOVAL) {
 		return EINVAL;
@@ -543,7 +540,8 @@ tmpfs_setattr(void *v)
 			goto bail;
 	}
 
-	if (GOODTIME(&vap->va_atime) || GOODTIME(&vap->va_mtime)) {
+	if (vap->va_atime.tv_nsec != UTIME_OMIT ||
+	    vap->va_mtime.tv_nsec != UTIME_OMIT) {
 		error = tmpfs_chtimes(vp, &vap->va_atime, &vap->va_mtime,
 		    vap->va_vaflags, cred, p);
 		if (error == 0)

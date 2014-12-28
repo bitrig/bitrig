@@ -288,7 +288,8 @@ ext2fs_setattr(void *v)
 		if (error)
 			return (error);
 	}
-	if (vap->va_atime.tv_sec != VNOVAL || vap->va_mtime.tv_sec != VNOVAL) {
+	if (vap->va_atime.tv_nsec != UTIME_OMIT ||
+	    vap->va_mtime.tv_nsec != UTIME_OMIT) {
 		if (vp->v_mount->mnt_flag & MNT_RDONLY)
 			return (EROFS);
 		if (cred->cr_uid != ip->i_e2fs_uid &&
@@ -296,17 +297,17 @@ ext2fs_setattr(void *v)
 			((vap->va_vaflags & VA_UTIMES_NULL) == 0 ||
 			(error = VOP_ACCESS(vp, VWRITE, cred))))
 			return (error);
-		if (vap->va_mtime.tv_sec != VNOVAL)
+		if (vap->va_mtime.tv_nsec != UTIME_OMIT)
 			ip->i_flag |= IN_CHANGE | IN_UPDATE;
-		if (vap->va_atime.tv_sec != VNOVAL) {
+		if (vap->va_atime.tv_nsec != UTIME_OMIT) {
 			if (!(vp->v_mount->mnt_flag & MNT_NOATIME) ||
 			    (ip->i_flag & (IN_CHANGE | IN_UPDATE)))
 				ip->i_flag |= IN_ACCESS;
 		}
 		EXT2FS_ITIMES(ip);
-		if (vap->va_mtime.tv_sec != VNOVAL)
+		if (vap->va_mtime.tv_nsec != UTIME_OMIT)
 			ip->i_e2fs_mtime = vap->va_mtime.tv_sec;
-		if (vap->va_atime.tv_sec != VNOVAL)
+		if (vap->va_atime.tv_nsec != UTIME_OMIT)
 			ip->i_e2fs_atime = vap->va_atime.tv_sec;
 		error = ext2fs_update(ip, 1);
 		if (error)

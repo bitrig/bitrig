@@ -60,6 +60,7 @@
 #include <sys/lockf.h>
 #include <sys/hash.h>
 #include <sys/queue.h>
+#include <sys/stat.h>
 #include <sys/specdev.h>
 #include <sys/unistd.h>
 
@@ -566,9 +567,10 @@ nfs_setattr(void *v)
 	/*
 	 * Disallow write attempts if the filesystem is mounted read-only.
 	 */
-	if ((vap->va_uid != (uid_t)VNOVAL ||
-	    vap->va_gid != (gid_t)VNOVAL || vap->va_atime.tv_sec != VNOVAL ||
-	    vap->va_mtime.tv_sec != VNOVAL || vap->va_mode != (mode_t)VNOVAL) &&
+	if ((vap->va_uid != (uid_t)VNOVAL || vap->va_gid != (gid_t)VNOVAL ||
+	    vap->va_atime.tv_nsec != UTIME_OMIT ||
+	    vap->va_mtime.tv_nsec != UTIME_OMIT ||
+	    vap->va_mode != (mode_t)VNOVAL) &&
 	    (vp->v_mount->mnt_flag & MNT_RDONLY))
 		return (EROFS);
 	if (vap->va_size != VNOVAL) {
@@ -579,8 +581,8 @@ nfs_setattr(void *v)
 		case VBLK:
 		case VSOCK:
 		case VFIFO:
-			if (vap->va_mtime.tv_sec == VNOVAL &&
-			    vap->va_atime.tv_sec == VNOVAL &&
+			if (vap->va_mtime.tv_nsec == UTIME_OMIT &&
+			    vap->va_atime.tv_nsec == UTIME_OMIT &&
 			    vap->va_mode == (mode_t)VNOVAL &&
 			    vap->va_uid == (uid_t)VNOVAL &&
 			    vap->va_gid == (gid_t)VNOVAL)
@@ -606,8 +608,8 @@ nfs_setattr(void *v)
 			np->n_size = np->n_vattr.va_size = vap->va_size;
 			uvm_vnp_setsize(vp, np->n_size);
 		};
-	} else if ((vap->va_mtime.tv_sec != VNOVAL ||
-		vap->va_atime.tv_sec != VNOVAL) &&
+	} else if ((vap->va_mtime.tv_nsec != UTIME_OMIT ||
+		vap->va_atime.tv_nsec != UTIME_OMIT) &&
 		vp->v_type == VREG &&
 		(error = nfs_vinvalbuf(vp, V_SAVE, ap->a_cred,
 		    curproc)) == EINTR)

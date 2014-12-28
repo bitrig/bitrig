@@ -2329,21 +2329,6 @@ dovutimens(struct proc *p, struct vnode *vp, struct timespec ts[2])
 			ts[1] = now;
 	}
 
-	/*
-	 * XXX: Ideally the filesystem code would check tv_nsec ==
-	 * UTIME_OMIT instead of tv_sec == VNOVAL, but until then we
-	 * need to fudge tv_sec if it happens to equal VNOVAL.
-	 */
-	if (ts[0].tv_nsec == UTIME_OMIT)
-		ts[0].tv_sec = VNOVAL;
-	else if (ts[0].tv_sec == VNOVAL)
-		ts[0].tv_sec = VNOVAL - 1;
-
-	if (ts[1].tv_nsec == UTIME_OMIT)
-		ts[1].tv_sec = VNOVAL;
-	else if (ts[1].tv_sec == VNOVAL)
-		ts[1].tv_sec = VNOVAL - 1;
-
 	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
 	if (vp->v_mount->mnt_flag & MNT_RDONLY)
 		error = EROFS;

@@ -1143,10 +1143,10 @@ tmpfs_chtimes(struct vnode *vp, const struct timespec *atime,
 	    (error = VOP_ACCESS(vp, VWRITE, cred))))
 	    	return error;
 
-	if (atime->tv_sec != VNOVAL && atime->tv_nsec != VNOVAL)
+	if (atime->tv_nsec != UTIME_OMIT)
 		node->tn_status |= TMPFS_NODE_ACCESSED;
 
-	if (mtime->tv_sec != VNOVAL && mtime->tv_nsec != VNOVAL)
+	if (mtime->tv_nsec != UTIME_OMIT)
 		node->tn_status |= TMPFS_NODE_MODIFIED;
 
 	tmpfs_update(vp, atime, mtime, 0);

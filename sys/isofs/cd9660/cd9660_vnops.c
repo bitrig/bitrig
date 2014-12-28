@@ -93,9 +93,10 @@ cd9660_setattr(void *v)
 	struct vnode *vp = ap->a_vp;
 	struct vattr *vap = ap->a_vap;
 
-	if (vap->va_flags != VNOVAL || vap->va_uid != (uid_t)VNOVAL ||
-	    vap->va_gid != (gid_t)VNOVAL || vap->va_atime.tv_sec != VNOVAL ||
-	    vap->va_mtime.tv_sec != VNOVAL || vap->va_mode != (mode_t)VNOVAL)
+	if (vap->va_mode != (mode_t)VNOVAL || vap->va_flags != VNOVAL ||
+	    vap->va_uid != (uid_t)VNOVAL || vap->va_gid != (gid_t)VNOVAL ||
+	    vap->va_atime.tv_nsec != UTIME_OMIT ||
+	    vap->va_mtime.tv_nsec != UTIME_OMIT)
 		return (EROFS);
 	if (vap->va_size != VNOVAL) {
 		switch (vp->v_type) {

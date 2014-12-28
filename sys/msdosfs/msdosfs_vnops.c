@@ -441,7 +441,8 @@ msdosfs_setattr(void *v)
 		if (error)
 			return error;
 	}
-	if (vap->va_atime.tv_sec != VNOVAL || vap->va_mtime.tv_sec != VNOVAL) {
+	if (vap->va_atime.tv_nsec != UTIME_OMIT ||
+	    vap->va_mtime.tv_nsec != UTIME_OMIT) {
 		if (vp->v_mount->mnt_flag & MNT_RDONLY)
 			return (EINVAL);
 		if (cred->cr_uid != pmp->pm_uid &&
@@ -451,12 +452,12 @@ msdosfs_setattr(void *v)
 			return (error);
 		if (vp->v_type != VDIR) {
 			if ((pmp->pm_flags & MSDOSFSMNT_NOWIN95) == 0 &&
-			    vap->va_atime.tv_sec != VNOVAL) {
+			    vap->va_atime.tv_nsec != UTIME_OMIT) {
 				dep->de_flag &= ~DE_ACCESS;
 				unix2dostime(&vap->va_atime, &dep->de_ADate,
 				    NULL, NULL);
 			}
-			if (vap->va_mtime.tv_sec != VNOVAL) {
+			if (vap->va_mtime.tv_nsec != UTIME_OMIT) {
 				dep->de_flag &= ~DE_UPDATE;
 				unix2dostime(&vap->va_mtime, &dep->de_MDate,
 				    &dep->de_MTime, NULL);

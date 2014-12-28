@@ -293,10 +293,12 @@ vattr_null(struct vattr *vap)
 	vap->va_mode = vap->va_nlink = vap->va_uid = vap->va_gid =
 		vap->va_fsid = vap->va_fileid =
 		vap->va_blocksize = vap->va_rdev =
-		vap->va_atime.tv_sec = vap->va_atime.tv_nsec =
-		vap->va_mtime.tv_sec = vap->va_mtime.tv_nsec =
-		vap->va_ctime.tv_sec = vap->va_ctime.tv_nsec =
+		vap->va_atime.tv_sec =
+		vap->va_mtime.tv_sec =
+		vap->va_ctime.tv_sec =
 		vap->va_flags = vap->va_gen = VNOVAL;
+	vap->va_atime.tv_nsec = vap->va_mtime.tv_nsec =
+		vap->va_ctime.tv_nsec = UTIME_OMIT;
 	vap->va_vaflags = 0;
 }
 

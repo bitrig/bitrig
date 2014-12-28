@@ -26,6 +26,7 @@
 #include <sys/poll.h>
 #include <sys/proc.h>
 #include <sys/specdev.h>
+#include <sys/stat.h>
 #include <sys/statvfs.h>
 #include <sys/vnode.h>
 #include <sys/fusebuf.h>
@@ -448,7 +449,7 @@ fusefs_setattr(void *v)
 		io->fi_flags |= FUSE_FATTR_SIZE;
 	}
 
-	if (vap->va_atime.tv_sec != VNOVAL) {
+	if (vap->va_atime.tv_nsec != UTIME_OMIT) {
 		if (vp->v_mount->mnt_flag & MNT_RDONLY) {
 			error = EROFS;
 			goto out;
@@ -458,7 +459,7 @@ fusefs_setattr(void *v)
 		io->fi_flags |= FUSE_FATTR_ATIME;
 	}
 
-	if (vap->va_mtime.tv_sec != VNOVAL) {
+	if (vap->va_mtime.tv_nsec != UTIME_OMIT) {
 		if (vp->v_mount->mnt_flag & MNT_RDONLY) {
 			error = EROFS;
 			goto out;
