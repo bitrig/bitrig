@@ -477,7 +477,7 @@ tmpfs_getattr(void *v)
 	vap->va_gen = TMPFS_NODE_GEN(node);
 	vap->va_flags = node->tn_flags;
 	vap->va_rdev = (vp->v_type == VBLK || vp->v_type == VCHR) ?
-	    node->tn_spec.tn_dev.tn_rdev : VNOVAL;
+	    node->tn_spec.tn_dev.tn_rdev : NODEV;
 	if (vp->v_type == VREG && node->tn_uobj != NULL)
 		vap->va_bytes = (u_quad_t)node->tn_uobj->uo_npages <<
 		    PAGE_SHIFT;
@@ -510,7 +510,7 @@ tmpfs_setattr(void *v)
 	if (vap->va_type != VNON || vap->va_nlink != (nlink_t)VNOVAL ||
 	    vap->va_fsid != VNOVAL || vap->va_fileid != (u_quad_t)VNOVAL ||
 	    vap->va_blocksize != VNOVAL || vap->va_ctime.tv_nsec != UTIME_OMIT ||
-	    vap->va_gen != (u_long)VNOVAL || vap->va_rdev != VNOVAL ||
+	    vap->va_gen != (u_long)VNOVAL || vap->va_rdev != NODEV ||
 	    vap->va_bytes != (u_quad_t)VNOVAL) {
 		return EINVAL;
 	}

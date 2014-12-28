@@ -227,7 +227,7 @@ ufs_mknod(void *v)
 	VN_KNOTE(ap->a_dvp, NOTE_WRITE);
 	ip = VTOI(*vpp);
 	ip->i_flag |= IN_ACCESS | IN_CHANGE | IN_UPDATE;
-	if (vap->va_rdev != VNOVAL) {
+	if (vap->va_rdev != NODEV) {
 		/*
 		 * Want to be able to use this to make badblock
 		 * inodes, so don't truncate the dev number.
@@ -354,7 +354,7 @@ ufs_getattr(void *v)
 	if (vp->v_type == VBLK || vp->v_type == VCHR)
 		vap->va_rdev = (dev_t) DIP(ip, rdev);
 	else
-		vap->va_rdev = (dev_t) VNOVAL;
+		vap->va_rdev = (dev_t) NODEV;
 	vap->va_size = DIP(ip, size);
 	vap->va_atime.tv_sec = DIP(ip, atime);
 	vap->va_atime.tv_nsec = DIP(ip, atimensec);
@@ -399,7 +399,7 @@ ufs_setattr(void *v)
 	 */
 	if ((vap->va_type != VNON) || (vap->va_nlink != VNOVAL) ||
 	    (vap->va_fsid != VNOVAL) || (vap->va_fileid != VNOVAL) ||
-	    (vap->va_blocksize != VNOVAL) || (vap->va_rdev != VNOVAL) ||
+	    (vap->va_blocksize != VNOVAL) || (vap->va_rdev != NODEV) ||
 	    ((int)vap->va_bytes != VNOVAL) || (vap->va_gen != VNOVAL)) {
 		return (EINVAL);
 	}

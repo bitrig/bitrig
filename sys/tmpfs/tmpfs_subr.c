@@ -161,7 +161,7 @@ tmpfs_alloc_node(tmpfs_mount_t *tmp, enum vtype type, uid_t uid, gid_t gid,
 	case VBLK:
 	case VCHR:
 		/* Character/block special device. */
-		KASSERT(rdev != VNOVAL);
+		KASSERT(rdev != NODEV);
 		nnode->tn_spec.tn_dev.tn_rdev = rdev;
 		break;
 	case VDIR:

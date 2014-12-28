@@ -228,7 +228,7 @@ tmpfs_mountfs(struct mount *mp, const char *path, struct vnode *vp,
 	/* Allocate the root node. */
 	error = tmpfs_alloc_node(tmp, VDIR, args->ta_root_uid,
 	    args->ta_root_gid, args->ta_root_mode & ALLPERMS, NULL,
-	    VNOVAL, &root);
+	    NODEV, &root);
 	KASSERT(error == 0 && root != NULL);
 
 	/*

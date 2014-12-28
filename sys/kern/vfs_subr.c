@@ -292,14 +292,13 @@ vfs_getnewfsid(struct mount *mp)
 void
 vattr_null(struct vattr *vap)
 {
-
 	vap->va_type = VNON;
 	/* XXX These next two used to be one line, but for a GCC bug. */
 	vap->va_size = VNOVAL;
 	vap->va_bytes = VNOVAL;
+	vap->va_rdev = NODEV;
 	vap->va_mode = vap->va_nlink = vap->va_uid = vap->va_gid =
-		vap->va_fsid = vap->va_fileid =
-		vap->va_blocksize = vap->va_rdev =
+		vap->va_fsid = vap->va_fileid = vap->va_blocksize =
 		vap->va_atime.tv_sec =
 		vap->va_mtime.tv_sec =
 		vap->va_ctime.tv_sec =

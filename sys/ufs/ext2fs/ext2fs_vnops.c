@@ -103,7 +103,7 @@ ext2fs_mknod(void *v)
 		return (error);
 	ip = VTOI(*vpp);
 	ip->i_flag |= IN_ACCESS | IN_CHANGE | IN_UPDATE;
-	if (vap->va_rdev != VNOVAL) {
+	if (vap->va_rdev != NODEV) {
 		/*
 		 * Want to be able to use this to make badblock
 		 * inodes, so don't truncate the dev number.
@@ -225,7 +225,7 @@ ext2fs_setattr(void *v)
 	 */
 	if ((vap->va_type != VNON) || (vap->va_nlink != VNOVAL) ||
 		(vap->va_fsid != VNOVAL) || (vap->va_fileid != VNOVAL) ||
-		(vap->va_blocksize != VNOVAL) || (vap->va_rdev != VNOVAL) ||
+		(vap->va_blocksize != VNOVAL) || (vap->va_rdev != NODEV) ||
 		((int)vap->va_bytes != VNOVAL) || (vap->va_gen != VNOVAL)) {
 		return (EINVAL);
 	}

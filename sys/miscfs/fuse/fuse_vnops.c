@@ -427,7 +427,7 @@ fusefs_setattr(void *v)
 	 */
 	if ((vap->va_type != VNON) || (vap->va_nlink != VNOVAL) ||
 	    (vap->va_fsid != VNOVAL) || (vap->va_fileid != VNOVAL) ||
-	    (vap->va_blocksize != VNOVAL) || (vap->va_rdev != VNOVAL) ||
+	    (vap->va_blocksize != VNOVAL) || (vap->va_rdev != NODEV) ||
 	    ((int)vap->va_bytes != VNOVAL) || (vap->va_gen != VNOVAL))
 		return (EINVAL);
 
@@ -974,7 +974,7 @@ fusefs_mknod(void *v)
 	    FBT_MKNOD, p);
 
 	fbuf->fb_io_mode = MAKEIMODE(vap->va_type, vap->va_mode);
-	if (vap->va_rdev != VNOVAL)
+	if (vap->va_rdev != NODEV)
 		fbuf->fb_io_rdev = vap->va_rdev;
 
 	memcpy(fbuf->fb_dat, cnp->cn_nameptr, cnp->cn_namelen);
