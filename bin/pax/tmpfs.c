@@ -300,13 +300,14 @@ tmpfs_id(char *blk, int size)
 		return (-1);
 
 	hdr = (tmpfs_snap_t *)blk;
-	TMPFS_SNAP_NTOH(hdr);
 
 	if (strcmp(hdr->ts_magic, TMPFS_SNAP_MAGIC) ||
 	    hdr->ts_version != TMPFS_SNAP_VERSION)
 		return (-1);
 
 	force_one_volume = 1;
+
+	TMPFS_SNAP_NTOH(hdr);
 	bytes_to_read = hdr->ts_snap_sz;
 
 	return (0);
