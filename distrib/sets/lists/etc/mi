@@ -7,7 +7,6 @@
 ./etc/csh.logout
 ./etc/daily
 ./etc/dhclient.conf
-./etc/disktab
 ./etc/dumpdates
 ./etc/fbtab
 ./etc/ftpusers

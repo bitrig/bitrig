@@ -34,7 +34,7 @@ post-kernels:
 BINOWN= root
 BINGRP= wheel
 MUTABLE=changelist csh.cshrc csh.login csh.logout daily dhclient.conf \
-	etc.${MACHINE}/disktab etc.${MACHINE}/login.conf ftpusers \
+	etc.${MACHINE}/login.conf ftpusers \
 	gettytab group hosts ksh.kshrc locate.rc mailer.conf man.conf \
 	moduli monthly myname netstart networks newsyslog.conf \
 	pf.os protocols rc rc.conf rpc services shells syslog.conf weekly

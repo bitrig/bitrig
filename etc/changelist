@@ -24,7 +24,6 @@
 /etc/defaultdomain
 /etc/dhclient.conf
 /etc/dhcpd.conf
-/etc/disktab
 /etc/distfile
 /etc/dvmrpd.conf
 /etc/ethers
