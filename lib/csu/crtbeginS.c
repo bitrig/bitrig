@@ -38,7 +38,6 @@
  * constructors and destructors. The first element contains the
  * number of pointers in each.
  * The tables are also null-terminated.
-
  */
 #include <stdlib.h>
 
@@ -50,13 +49,11 @@
  * java class registration hooks
  */
 
-#if (__GNUC__ > 2)
-static void *__JCR_LIST__[]
+static void *__JCR_LIST__[] __dso_hidden
     __attribute__((section(".jcr"), aligned(sizeof(void*)))) = { };
 
 extern void _Jv_RegisterClasses (void *)
     __attribute__((weak));
-#endif
 
 /*
  * Include support for the __cxa_atexit/__cxa_finalize C++ abi for
@@ -66,9 +63,7 @@ extern void _Jv_RegisterClasses (void *)
  *     http://www.codesourcery.com/cxx-abi/abi.html#dso-dtor
  */
 
-#if (__GNUC__ > 2)
-void *__dso_handle = &__dso_handle;
-__asm(".hidden  __dso_handle");
+void *__dso_handle __dso_hidden = &__dso_handle;
 
 long __guard_local __dso_hidden __attribute__((section(".openbsd.randomdata")));
 
@@ -81,12 +76,11 @@ atexit(void (*fn)(void))
 	return (__cxa_atexit((void (*)(void *))fn, NULL, &__dso_handle));
 }
 asm(".hidden atexit");
-#endif
 
-static init_f __CTOR_LIST__[1]
-    __attribute__((section(".ctors"))) = { (void *)-1 };	/* XXX */
-static init_f __DTOR_LIST__[1]
-    __attribute__((section(".dtors"))) = { (void *)-1 };	/* XXX */
+static init_f __CTOR_LIST__[] __used
+    __attribute__((section(".ctors"), aligned(sizeof(init_f)))) = { };
+static init_f __DTOR_LIST__[] __used
+    __attribute__((section(".dtors"), aligned(sizeof(init_f)))) = { };
 
 static void	__dtors(void) __used;
 static void	__ctors(void) __used;
@@ -94,36 +88,32 @@ static void	__ctors(void) __used;
 void
 __ctors(void)
 {
-	unsigned long i = (unsigned long) __CTOR_LIST__[0];
-	init_f *p;
+	const init_f *list =__CTOR_LIST__;
+	int i;
 
-	if (i == -1)  {
-		for (i = 1; __CTOR_LIST__[i] != NULL; i++)
-			;
-		i--;
-	}
-	p = __CTOR_LIST__ + i;
-	while (i--) {
-		(**p--)();
-	}
+	for (i = 0; list[i] != NULL; i++)
+		;
+
+	while (i-- > 0)
+		(**list[i])();
 }
 
-static void
+void
 __dtors(void)
 {
-	init_f *p = __DTOR_LIST__ + 1;
+	const init_f *p = __DTOR_LIST__;
 
 	while (*p) {
 		(**p++)();
 	}
 }
-void _init(void);
-void _fini(void);
-static void _do_init(void) __used;
-static void _do_fini(void) __used;
+
+void _init(void) __dso_hidden;
+void _fini(void) __dso_hidden;
+void _do_init(void) __dso_hidden __used;
+void _do_fini(void) __dso_hidden __used;
 
 MD_SECTION_PROLOGUE(".init", _init);
-
 MD_SECTION_PROLOGUE(".fini", _fini);
 
 MD_SECT_CALL_FUNC(".init", _do_init);
@@ -141,10 +131,8 @@ _do_init(void)
 	if (!initialized) {
 		initialized = 1;
 
-#if (__GNUC__ > 2)
 		if (__JCR_LIST__[0] && _Jv_RegisterClasses)
 			_Jv_RegisterClasses(__JCR_LIST__);
-#endif
 
 		__ctors();
 	}
@@ -154,16 +142,15 @@ void
 _do_fini(void)
 {
 	static int finalized = 0;
+
 	if (!finalized) {
 		finalized = 1;
 
-#if (__GNUC__ > 2)
 		if (__cxa_finalize != NULL)
 			__cxa_finalize(__dso_handle);
-#endif
 
 		/*
-		 * since the _init() function sets up the destructors to 
+		 * since the _init() function sets up the destructors to
 		 * be called by atexit, do not call the destructors here.
 		 */
 		__dtors();

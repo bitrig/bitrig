@@ -13,10 +13,8 @@ static init_f __DTOR_LIST__[1]
 static const int __EH_FRAME_END__[]
     __used __attribute__((section(".eh_frame"), aligned(4))) = { 0 };
 
-#if (__GNUC__ > 2)
 static void * __JCR_END__[]
     __used __attribute__((section(".jcr"), aligned(sizeof(void*)))) = { 0 };
-#endif
 
 MD_SECTION_EPILOGUE(".init");
 MD_SECTION_EPILOGUE(".fini");

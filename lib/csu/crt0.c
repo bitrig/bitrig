@@ -49,8 +49,6 @@ static void		___start(MD_START_ARGS) __used;
 #define	MD_EPROL_LABEL	__asm("  .text\n_eprol:")
 #endif
 
-void	__init_tcb(char **_envp);
-#pragma weak __init_tcb
 
 static char	*_strrchr(char *, char);
 
@@ -67,6 +65,13 @@ extern unsigned char _etext, _eprol;
 #ifdef MD_CRT0_START
 MD_CRT0_START;
 #endif
+
+void __init();
+int main(int, char **, char **);
+
+//void __init_tcb(void *) __attribute__((weak));
+void __init_tcb(void *);
+extern int _DYNAMIC __attribute__((weak));
 
 void
 MD_START(MD_START_ARGS)
@@ -93,7 +98,6 @@ MD_START(MD_START_ARGS)
 #ifndef MD_NO_CLEANUP
 	if (cleanup != NULL)
 		atexit(cleanup);
-	else
 #endif
 	if (__init_tcb != NULL)
 		__init_tcb(envp);
