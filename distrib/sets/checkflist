@@ -36,7 +36,7 @@ trap 'exit' HUP TERM
 
 arch=`machine`
 
-for i in base comp etc game man; do
+for i in base comp etc game; do
 	cat ./lists/$i/mi ./lists/$i/md.${arch}
 done | sort >$TMP1
 
