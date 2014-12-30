@@ -29,7 +29,6 @@
 #include "imx.h"
 #include "omap.h"
 #include "sunxi.h"
-#include "virt.h"
 
 /* FIXME: Do not use a global variable. */
 int isomap = 0;
