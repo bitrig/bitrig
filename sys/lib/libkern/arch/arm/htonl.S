@@ -1,4 +1,4 @@
-/*	$OpenBSD: htonl.S,v 1.2 2008/06/26 05:42:20 ray Exp $	*/
+/*	$OpenBSD: htonl.S,v 1.3 2014/12/30 08:12:52 jsg Exp $	*/
 /*	$NetBSD: byte_swap_4.S,v 1.1 2000/12/29 20:51:57 bjh21 Exp $	*/
 
 /*-

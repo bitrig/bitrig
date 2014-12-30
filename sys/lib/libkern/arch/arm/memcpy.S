@@ -1,4 +1,4 @@
-/*	$OpenBSD: memcpy.S,v 1.4 2013/06/15 19:16:53 miod Exp $	*/
+/*	$OpenBSD: memcpy.S,v 1.5 2014/12/30 08:12:52 jsg Exp $	*/
 /*	$NetBSD: memcpy.S,v 1.2 2001/11/20 00:29:20 chris Exp $	*/
 
 /*-

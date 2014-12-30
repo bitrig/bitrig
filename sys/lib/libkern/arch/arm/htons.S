@@ -1,4 +1,4 @@
-/*	$OpenBSD: htons.S,v 1.2 2008/06/26 05:42:20 ray Exp $	*/
+/*	$OpenBSD: htons.S,v 1.3 2014/12/30 08:12:52 jsg Exp $	*/
 /*	$NetBSD: byte_swap_2.S,v 1.1.20.1 2002/07/02 06:50:59 lukem Exp $	*/
 
 /*-
