@@ -26,6 +26,7 @@
 #include <arm/cpufunc.h>
 
 #include <machine/bus.h>
+#include <machine/fdt.h>
 #include <machine/intr.h>
 
 #include <armv7/armv7/armv7var.h>
@@ -89,6 +90,9 @@ unsigned int exgpio_v5_get_dir(struct exgpio_softc *, unsigned int);
 
 
 struct cfattach	exgpio_ca = {
+	sizeof (struct exgpio_softc), NULL, exgpio_attach
+};
+struct cfattach	exgpio_fdt_ca = {
 	sizeof (struct exgpio_softc), exgpio_match, exgpio_attach
 };
 
@@ -99,13 +103,12 @@ struct cfdriver exgpio_cd = {
 int
 exgpio_match(struct device *parent, void *v, void *aux)
 {
-	switch (board_id) {
-	case BOARD_ID_EXYNOS5_CHROMEBOOK:
-		break; /* continue trying */
-	default:
-		return 0; /* unknown */
-	}
-	return (1);
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("samsung,exynos5250-pinctrl", aa->aa_node))
+		return 1;
+
+	return 0;
 }
 
 void
@@ -113,24 +116,26 @@ exgpio_attach(struct device *parent, struct device *self, void *args)
 {
 	struct armv7_attach_args *aa = args;
 	struct exgpio_softc *sc = (struct exgpio_softc *) self;
+	struct fdt_memory mem;
 
 	sc->sc_iot = aa->aa_iot;
-	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
-		panic("exgpio_attach: bus_space_map failed!");
-
-
-	sc->sc_ngpio = (aa->aa_dev->mem[0].size / GPIO_BANK_SIZE)
-	    * GPIO_PINS_PER_BANK;
-
-	switch (board_id) {
-		case BOARD_ID_EXYNOS5_CHROMEBOOK:
-			sc->sc_get_bit  = exgpio_v5_get_bit;
-			sc->sc_set_bit = exgpio_v5_set_bit;
-			sc->sc_clear_bit = exgpio_v5_clear_bit;
-			sc->sc_set_dir = exgpio_v5_set_dir;
-			break;
+	if (aa->aa_node) {
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+	} else {
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
 	}
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
+		panic("%s: bus_space_map failed!", __func__);
+
+	sc->sc_ngpio = (mem.size / GPIO_BANK_SIZE) * GPIO_PINS_PER_BANK;
+
+	sc->sc_get_bit  = exgpio_v5_get_bit;
+	sc->sc_set_bit = exgpio_v5_set_bit;
+	sc->sc_clear_bit = exgpio_v5_clear_bit;
+	sc->sc_set_dir = exgpio_v5_set_dir;
 
 	printf("\n");
 

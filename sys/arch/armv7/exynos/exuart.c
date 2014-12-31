@@ -37,6 +37,7 @@
 #endif
 
 #include <machine/bus.h>
+#include <machine/fdt.h>
 #include <armv7/exynos/exuartreg.h>
 #include <armv7/exynos/exuartvar.h>
 #include <armv7/armv7/armv7var.h>
@@ -86,6 +87,7 @@ struct exuart_softc {
 
 
 int     exuartprobe(struct device *parent, void *self, void *aux);
+int     exuartprobe_fdt(struct device *parent, void *self, void *aux);
 void    exuartattach(struct device *parent, struct device *self, void *aux);
 
 void exuartcnprobe(struct consdev *cp);
@@ -118,6 +120,9 @@ struct cfdriver exuart_cd = {
 struct cfattach exuart_ca = {
 	sizeof(struct exuart_softc), exuartprobe, exuartattach
 };
+struct cfattach exuart_fdt_ca = {
+	sizeof(struct exuart_softc), exuartprobe_fdt, exuartattach
+};
 
 bus_space_tag_t	exuartconsiot;
 bus_space_handle_t exuartconsioh;
@@ -131,6 +136,17 @@ exuartprobe(struct device *parent, void *self, void *aux)
 	return 1;
 }
 
+int
+exuartprobe_fdt(struct device *parent, void *self, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("samsung,exynos4210-uart", aa->aa_node))
+		return 1;
+
+	return 0;
+}
+
 struct cdevsw exuartdev =
 	cdev_tty_init(3/*XXX NEXUART */ ,exuart);		/* 12: serial port */
 
@@ -139,16 +155,36 @@ exuartattach(struct device *parent, struct device *self, void *args)
 {
 	struct armv7_attach_args *aa = args;
 	struct exuart_softc *sc = (struct exuart_softc *) self;
-
-	sc->sc_irq = arm_intr_establish(aa->aa_dev->irq[0], IPL_TTY,
-	    exuart_intr, sc, sc->sc_dev.dv_xname);
+	struct fdt_memory mem;
+	int irq;
 
 	sc->sc_iot = aa->aa_iot;
-	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
-		panic("exuartattach: bus_space_map failed!");
+	if (aa->aa_node) {
+		uint32_t ints[3];
 
-	if (aa->aa_dev->mem[0].addr == exuartconsaddr)
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+
+		/* TODO: Add interrupt FDT API. */
+		if (fdt_node_property_ints(aa->aa_node, "interrupts",
+		    ints, 3) != 3)
+			panic("%s: could not extract interrupt data from FDT",
+			    __func__);
+
+		irq = ints[1];
+	} else {
+		irq = aa->aa_dev->irq[0];
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+	}
+
+	sc->sc_irq = arm_intr_establish(irq, IPL_TTY,
+	    exuart_intr, sc, sc->sc_dev.dv_xname);
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
+		panic("%s: bus_space_map failed!", __func__);
+
+	if (mem.addr == exuartconsaddr)
 		printf(" console");
 
 	timeout_set(&sc->sc_diag_tmo, exuart_diag, sc);

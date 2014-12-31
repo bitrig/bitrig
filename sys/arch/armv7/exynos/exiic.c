@@ -21,6 +21,7 @@
 #include <sys/malloc.h>
 #include <sys/systm.h>
 #include <machine/bus.h>
+#include <machine/fdt.h>
 
 #include <armv7/armv7/armv7var.h>
 #include <armv7/exynos/exgpiovar.h>
@@ -73,6 +74,7 @@ struct exiic_softc {
 	uint16_t		intr_status;
 };
 
+int exiic_match(struct device *parent, void *v, void *aux);
 void exiic_attach(struct device *, struct device *, void *);
 int exiic_detach(struct device *, int);
 void exiic_bus_scan(struct device *, struct i2cbus_attach_args *, void *);
@@ -102,23 +104,48 @@ int exiic_i2c_exec(void *, i2c_op_t, i2c_addr_t, const void *, size_t,
 struct cfattach exiic_ca = {
 	sizeof(struct exiic_softc), NULL, exiic_attach, exiic_detach
 };
+struct cfattach exiic_fdt_ca = {
+	sizeof(struct exiic_softc), exiic_match, exiic_attach, exiic_detach
+};
 
 struct cfdriver exiic_cd = {
 	NULL, "exiic", DV_DULL
 };
+
+int
+exiic_match(struct device *parent, void *v, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("samsung,s3c2440-i2c", aa->aa_node))
+		return 1;
+
+	return 0;
+}
 
 void
 exiic_attach(struct device *parent, struct device *self, void *args)
 {
 	struct exiic_softc *sc = (struct exiic_softc *)self;
 	struct armv7_attach_args *aa = args;
+	struct fdt_memory mem;
 
 	sc->sc_iot = aa->aa_iot;
-	sc->sc_ios = aa->aa_dev->mem[0].size;
-	sc->unit = aa->aa_dev->unit;
-	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
-		panic("exiic_attach: bus_space_map failed!");
+	if (aa->aa_node) {
+		static int unit = 0;
+
+		sc->unit = unit++;
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+	} else {
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+		sc->unit = aa->aa_dev->unit;
+	}
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
+		panic("%s: bus_space_map failed!", __func__);
+	sc->sc_ios = mem.size;
 
 #if 0
 	sc->sc_ih = arm_intr_establish(aa->aa_dev->irq[0], IPL_BIO,
@@ -147,10 +174,13 @@ exiic_attach(struct device *parent, struct device *self, void *args)
 void
 exiic_bus_scan(struct device *self, struct i2cbus_attach_args *iba, void *arg)
 {
-	//struct exiic_softc *sc = (struct exiic_softc *)arg;
+	struct exiic_softc *sc = (struct exiic_softc *)arg;
 	struct i2c_attach_args ia;
 
 	/* XXX: We currently only attach cros-ec on I2C4.  We'll use FDT later. */
+	if (sc->unit != 4)
+		return;
+
 	char *name = "crosec";
 	int addr = 0x1e;
 

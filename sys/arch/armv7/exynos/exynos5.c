@@ -302,7 +302,7 @@ struct armv7_dev exynos5_devs[] = {
 	/*
 	 * USB
 	 */
-	{ .name = "ehci",
+	{ .name = "exehci",
 	  .unit = 0,
 	  .mem = {
 	    { USB_EHCI_ADDR, USBx_SIZE },

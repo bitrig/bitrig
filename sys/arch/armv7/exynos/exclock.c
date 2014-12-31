@@ -26,6 +26,7 @@
 #include <sys/timeout.h>
 #include <machine/intr.h>
 #include <machine/bus.h>
+#include <machine/fdt.h>
 #include <armv7/armv7/armv7var.h>
 
 /* registers */
@@ -86,6 +87,7 @@ enum clocks {
 
 struct exclock_softc *exclock_sc;
 
+int exclock_match(struct device *parent, void *v, void *aux);
 void exclock_attach(struct device *parent, struct device *self, void *args);
 int exclock_cpuspeed(int *);
 unsigned int exclock_decode_pll_clk(enum clocks, unsigned int, unsigned int);
@@ -96,22 +98,44 @@ unsigned int exclock_get_i2cclk(void);
 struct cfattach	exclock_ca = {
 	sizeof (struct exclock_softc), NULL, exclock_attach
 };
+struct cfattach	exclock_fdt_ca = {
+	sizeof (struct exclock_softc), exclock_match, exclock_attach
+};
 
 struct cfdriver exclock_cd = {
 	NULL, "exclock", DV_DULL
 };
+
+int
+exclock_match(struct device *parent, void *v, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("samsung,exynos5250-clock", aa->aa_node))
+		return 1;
+
+	return 0;
+}
 
 void
 exclock_attach(struct device *parent, struct device *self, void *args)
 {
 	struct armv7_attach_args *aa = args;
 	struct exclock_softc *sc = (struct exclock_softc *) self;
+	struct fdt_memory mem;
 
 	exclock_sc = sc;
 	sc->sc_iot = aa->aa_iot;
-	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
-		panic("exclock_attach: bus_space_map failed!");
+	if (aa->aa_node) {
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+	} else {
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+	}
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
+		panic("%s: bus_space_map failed!", __func__);
 
 	printf(": Exynos 5 CPU freq: %d MHz",
 	    exclock_get_armclk() / 1000);

@@ -31,6 +31,7 @@
 #include <armv7/armv7/armv7_machdep.h>
 #include <armv7/virt/pl011var.h>
 #include <armv7/imx/imxuartvar.h>
+#include <armv7/exynos/exdisplayvar.h>
 
 extern int comcnspeed;
 extern int comcnmode;
@@ -48,6 +49,10 @@ fdt_platform_init_cons(void)
 	void *node;
 	char *stdout_path;
 	struct fdt_memory mem;
+
+	if ((node = fdt_find_compatible("simple-framebuffer")) != NULL &&
+	    !fdt_get_memory_address(node, 0, &mem))
+		exdisplay_cnattach(&armv7_bs_tag, mem.addr, mem.size);
 
 	if ((node = fdt_find_compatible("arm,pl011")) != NULL &&
 	    !fdt_get_memory_address(node, 0, &mem))

@@ -10,50 +10,59 @@ file	arch/armv7/exynos/exynos5.c		exynos
 # serial ports
 device exuart
 attach	exuart at exynos
-file	arch/armv7/exynos/exuart.c		exuart
+attach	exuart at fdt with exuart_fdt
+file	arch/armv7/exynos/exuart.c		exuart | exuart_fdt
 
 device exdisplay: wsemuldisplaydev, rasops16
 attach exdisplay at exynos
-file	arch/armv7/exynos/exdisplay.c		exdisplay
+attach exdisplay at fdt with exdisplay_fdt
+file	arch/armv7/exynos/exdisplay.c		exdisplay | exdisplay_fdt
 
 device exclock
 attach exclock at exynos
-file	arch/armv7/exynos/exclock.c		exclock
+attach exclock at fdt with exclock_fdt
+file	arch/armv7/exynos/exclock.c		exclock | exclock_fdt
 
 device expower
 attach expower at exynos
-file	arch/armv7/exynos/expower.c		expower
+attach expower at fdt with expower_fdt
+file	arch/armv7/exynos/expower.c		expower | expower_fdt
 
 device exsysreg
 attach exsysreg at exynos
-file	arch/armv7/exynos/exsysreg.c		exsysreg
-
-device exiomuxc
-attach exiomuxc at exynos
-file	arch/armv7/exynos/exiomuxc.c		exiomuxc
+attach exsysreg at fdt with exsysreg_fdt
+file	arch/armv7/exynos/exsysreg.c		exsysreg | exsysreg_fdt
 
 device exmct
 attach exmct at exynos
-file	arch/armv7/exynos/exmct.c		exmct
+attach exmct at fdt with exmct_fdt
+file	arch/armv7/exynos/exmct.c		exmct | exiomuxc_fdt
 
 device exdog
 attach exdog at exynos
-file	arch/armv7/exynos/exdog.c		exdog
+attach exdog at fdt with exdog_fdt
+file	arch/armv7/exynos/exdog.c		exdog | exdog_fdt
 
 device exgpio
 attach exgpio at exynos
-file	arch/armv7/exynos/exgpio.c		exgpio
+attach exgpio at fdt with exgpio_fdt
+file	arch/armv7/exynos/exgpio.c		exgpio | exgpio_fdt
 
 device	exiic: i2cbus
 attach	exiic at exynos
-file	arch/armv7/exynos/exiic.c		exiic
+attach	exiic at fdt with exiic_fdt
+file	arch/armv7/exynos/exiic.c		exiic | exiic_fdt
 
-attach ehci at exynos with exehci
-file	arch/armv7/exynos/exehci.c		exehci
+device exehci {}
+attach exehci at exynos with exehci
+attach exehci at fdt with exehci_fdt
+attach ehci at exehci with ehci_ex
+file	arch/armv7/exynos/exehci.c		exehci | exehci_fdt
 
 device exesdhc: sdmmcbus
 attach exesdhc at exynos
-file	arch/armv7/exynos/exesdhc.c		exesdhc
+attach exesdhc at fdt with exesdhc_fdt
+file	arch/armv7/exynos/exesdhc.c		exesdhc | exesdhc_fdt
 
 device	crosec: wskbddev
 attach	crosec at i2c

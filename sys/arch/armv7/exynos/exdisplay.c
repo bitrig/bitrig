@@ -33,6 +33,7 @@
 
 #include <machine/intr.h>
 #include <machine/bus.h>
+#include <machine/fdt.h>
 #include <armv7/armv7/armv7var.h>
 
 /* registers */
@@ -45,12 +46,16 @@ struct exdisplay_softc {
 
 struct exdisplay_softc *exdisplay_sc;
 
+int exdisplay_match(struct device *parent, void *v, void *aux);
 void exdisplay_attach(struct device *parent, struct device *self, void *args);
 int exdisplay_cnattach(bus_space_tag_t iot, bus_addr_t iobase, size_t size);
 void exdisplay_setup_rasops(struct rasops_info *rinfo, struct wsscreen_descr *descr);
 
 struct cfattach	exdisplay_ca = {
 	sizeof (struct exdisplay_softc), NULL, exdisplay_attach
+};
+struct cfattach	exdisplay_fdt_ca = {
+	sizeof (struct exdisplay_softc), exdisplay_match, exdisplay_attach
 };
 
 struct cfdriver exdisplay_cd = {
@@ -63,16 +68,35 @@ bus_addr_t		exdisplayaddr;
 struct wsscreen_descr	descr;
 struct rasops_info	ri;
 
+int
+exdisplay_match(struct device *parent, void *v, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("samsung,exynos5250-fimd", aa->aa_node))
+		return 1;
+
+	return 0;
+}
+
 void
 exdisplay_attach(struct device *parent, struct device *self, void *args)
 {
 	struct armv7_attach_args *aa = args;
 	struct exdisplay_softc *sc = (struct exdisplay_softc *) self;
+	struct fdt_memory mem;
 
 	sc->sc_iot = aa->aa_iot;
-	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
-		panic("exdisplay_attach: bus_space_map failed!");
+	if (aa->aa_node) {
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+	} else {
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+	}
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
+		panic("%s: bus_space_map failed!", __func__);
 
 	printf("\n");
 	exdisplay_sc = sc;

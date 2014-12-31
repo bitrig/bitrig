@@ -27,6 +27,7 @@
 #include <sys/malloc.h>
 #include <sys/systm.h>
 #include <machine/bus.h>
+#include <machine/fdt.h>
 
 #include <dev/sdmmc/sdmmcchip.h>
 #include <dev/sdmmc/sdmmcvar.h>
@@ -138,6 +139,7 @@
 #define SDHC_BUFFER_TIMEOUT	hz
 #define SDHC_TRANSFER_TIMEOUT	hz
 
+int exesdhc_match(struct device *parent, void *v, void *aux);
 void exesdhc_attach(struct device *parent, struct device *self, void *args);
 
 #include <machine/bus.h>
@@ -239,28 +241,64 @@ struct cfdriver exesdhc_cd = {
 struct cfattach exesdhc_ca = {
 	sizeof(struct exesdhc_softc), NULL, exesdhc_attach
 };
+struct cfattach exesdhc_fdt_ca = {
+	sizeof(struct exesdhc_softc), exesdhc_match, exesdhc_attach
+};
+
+int
+exesdhc_match(struct device *parent, void *v, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("samsung,exynos5250-dw-mshc", aa->aa_node))
+		return 1;
+
+	return 0;
+}
 
 void
 exesdhc_attach(struct device *parent, struct device *self, void *args)
 {
 	struct exesdhc_softc		*sc = (struct exesdhc_softc *) self;
 	struct armv7_attach_args	*aa = args;
+	struct fdt_memory		 mem;
 	struct sdmmcbus_attach_args	 saa;
-	int				 error = 1;
+	int				 error = 1, irq;
 	uint32_t			 caps;
 
-	sc->unit = aa->aa_dev->unit;
 	sc->sc_iot = aa->aa_iot;
-	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
-		panic("exesdhc_attach: bus_space_map failed!");
+	if (aa->aa_node) {
+		static int unit = 0;
+		uint32_t ints[3];
+
+		sc->unit = unit++;
+
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+
+		/* TODO: Add interrupt FDT API. */
+		if (fdt_node_property_ints(aa->aa_node, "interrupts",
+		    ints, 3) != 3)
+			panic("%s: could not extract interrupt data from FDT",
+			    __func__);
+
+		irq = ints[1];
+	} else {
+		irq = aa->aa_dev->irq[0];
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+	}
+
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
+		panic("%s: bus_space_map failed!", __func__);
 
 	printf("\n");
 
 	/* XXX DMA channels? */
 
-	sc->sc_ih = arm_intr_establish(aa->aa_dev->irq[0], IPL_SDMMC,
-	   exesdhc_intr, sc, sc->sc_dev.dv_xname);
+	sc->sc_ih = arm_intr_establish(irq, IPL_SDMMC,
+	    exesdhc_intr, sc, sc->sc_dev.dv_xname);
 
 	/*
 	 * Reset the host controller and enable interrupts.

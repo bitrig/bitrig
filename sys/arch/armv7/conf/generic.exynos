@@ -3,20 +3,31 @@ exynos0		at mainbus?
 
 # Exynos on-chip devices
 exdisplay*	at exynos?		# display driver
+exdisplay*	at fdt?			# display driver
 wsdisplay*	at exdisplay? console ?
 exclock*	at exynos?		# clock control module
+exclock*	at fdt?			# clock control module
 expower*	at exynos?		# power controller
+expower*	at fdt?			# power controller
 exsysreg*	at exynos?		# sysreg
-exiomuxc*	at exynos?		# iomux controller
+exsysreg*	at fdt?			# sysreg
 exmct*		at exynos?		# multicore timer
+exmct*		at fdt?			# multicore timer
 exdog*		at exynos?		# watchdog timer
+exdog*		at fdt?			# watchdog timer
 exgpio*		at exynos?		# user-visible GPIO pins?
-exesdhc*	at exynos?		# SDHC controller
-exuart*		at exynos?		# onboard uarts
+exgpio*		at fdt?			# user-visible GPIO pins?
+#exesdhc*	at exynos?		# SDHC controller
+#exesdhc*	at fdt?			# SDHC controller
+#exuart*		at exynos?		# onboard uarts
+#exuart*		at fdt?			# onboard uarts
 exiic*		at exynos?		# i2c
+exiic*		at fdt?			# i2c
 
-ehci*		at exynos?		# EHCI (shim)
-sdmmc*		at exesdhc?		# SD/MMC bus
+exehci*		at exynos?		# EHCI
+exehci*		at fdt?			# EHCI
+ehci*		at exehci?		# EHCI (shim)
+#sdmmc*		at exesdhc?		# SD/MMC bus
 
 # I2C bus support
 iic*		at exiic?

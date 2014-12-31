@@ -26,6 +26,7 @@
 #include <arm/cpufunc.h>
 #include <machine/intr.h>
 #include <machine/bus.h>
+#include <machine/fdt.h>
 #include <armv7/armv7/armv7var.h>
 
 /* registers */
@@ -43,6 +44,7 @@ struct exmct_softc {
 
 struct exmct_softc *exmct_sc;
 
+int exmct_match(struct device *parent, void *v, void *aux);
 void exmct_attach(struct device *parent, struct device *self, void *args);
 void exmct_stop(void);
 void exmct_reset(void);
@@ -50,24 +52,47 @@ void exmct_reset(void);
 struct cfattach	exmct_ca = {
 	sizeof (struct exmct_softc), NULL, exmct_attach
 };
+struct cfattach	exmct_fdt_ca = {
+	sizeof (struct exmct_softc), exmct_match, exmct_attach
+};
 
 struct cfdriver exmct_cd = {
 	NULL, "exmct", DV_DULL
 };
+
+int
+exmct_match(struct device *parent, void *v, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("samsung,exynos4210-mct", aa->aa_node))
+		return 1;
+
+	return 0;
+}
 
 void
 exmct_attach(struct device *parent, struct device *self, void *args)
 {
 	struct armv7_attach_args *aa = args;
 	struct exmct_softc *sc = (struct exmct_softc *) self;
+	struct fdt_memory mem;
 	uint32_t i, mask, reg;
 
 	sc->sc_iot = aa->aa_iot;
-	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
-		panic("exmct_attach: bus_space_map failed!");
+	if (aa->aa_node) {
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+	} else {
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+	}
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
+		panic("%s: bus_space_map failed!", __func__);
 
 	printf("\n");
+
 	exmct_sc = sc;
 
 	bus_space_write_4(sc->sc_iot, sc->sc_ioh, MCT_CTRL,
