@@ -472,6 +472,23 @@ fdt_find_node_by_phandle(void *node, int phandle)
 }
 
 /*
+ * Look for a node using a phandle property.
+ */
+void *
+fdt_find_node_by_phandle_prop(void *node, char *prop)
+{
+	int phandle;
+
+	if (node == NULL)
+		node = fdt_next_node(0);
+
+	if (!fdt_node_property_int(node, prop, &phandle))
+		return NULL;
+
+	return fdt_find_node_by_phandle(node, phandle);
+}
+
+/*
  * Parse the memory address and size of a node.
  */
 int
