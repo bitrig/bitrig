@@ -191,7 +191,11 @@ agtimer_attach(struct device *parent, struct device *self, void *args)
 
 	sc->sc_iot = ia->ca_iot;
 
-	/* TODO: use FDT instead */
+	node = fdt_find_compatible("arm,armv7-timer");
+	if (node)
+		fdt_node_property_int(node, "clock-frequency",
+		    &agtimer_frequency);
+
 	if (agtimer_frequency)
 		sc->sc_ticks_per_second = agtimer_frequency;
 
@@ -218,8 +222,7 @@ agtimer_attach(struct device *parent, struct device *self, void *args)
 
 	/* establish interrupts */
 	/* TODO: Add interrupt FDT API. */
-	node = fdt_find_compatible("arm,armv7-timer");
-	if (node != NULL && fdt_node_property_ints(node, "interrupts",
+	if (node && fdt_node_property_ints(node, "interrupts",
 	    ints, 3*4) == 3*4) {
 		/* Setup secure, non-secure and virtual timer IRQs. */
 		for (int i = 0; i < 4; i++) {
