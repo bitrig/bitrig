@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.1.1.1 2015/01/01 12:53:46 schwarze Exp $
+# $OpenBSD: Makefile.inc,v 1.1 2015/01/01 12:53:46 schwarze Exp $
 
 EQN = /usr/local/bin/eqn
 
