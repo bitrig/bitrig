@@ -558,6 +558,7 @@ bwrite(struct buf *bp)
 	int rv, async, wasdelayed, s;
 	struct vnode *vp;
 	struct mount *mp;
+	struct bufq *bq;
 
 	vp = bp->b_vp;
 	if (vp != NULL)
@@ -618,6 +619,7 @@ bwrite(struct buf *bp)
 
 	/* Initiate disk write.  Make sure the appropriate party is charged. */
 	bp->b_vp->v_numoutput++;
+	bq = bp->b_bq;
 	splx(s);
 	SET(bp->b_flags, B_WRITEINPROG);
 	VOP_STRATEGY(bp);
@@ -627,8 +629,8 @@ bwrite(struct buf *bp)
 	 * the number of outstanding write bufs drops below the low
 	 * water mark.
 	 */
-	if (bp->b_bq)
-		bufq_wait(bp->b_bq, bp);
+	if (bq)
+		bufq_wait(bq);
 
 	if (async)
 		return (0);

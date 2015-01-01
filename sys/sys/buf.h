@@ -99,7 +99,7 @@ void		 bufq_requeue(struct bufq *, struct buf *);
 int		 bufq_peek(struct bufq *);
 void		 bufq_drain(struct bufq *);
 
-void		 bufq_wait(struct bufq *, struct buf *);
+void		 bufq_wait(struct bufq *);
 void		 bufq_done(struct bufq *, struct buf *);
 void		 bufq_quiesce(void);
 void		 bufq_restart(void);

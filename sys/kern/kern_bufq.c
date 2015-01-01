@@ -226,7 +226,7 @@ bufq_drain(struct bufq *bq)
 }
 
 void
-bufq_wait(struct bufq *bq, struct buf *bp)
+bufq_wait(struct bufq *bq)
 {
 	if (bq->bufq_hi) {
 		assertwaitok();
