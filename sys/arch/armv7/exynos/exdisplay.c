@@ -39,12 +39,11 @@
 /* registers */
 
 struct exdisplay_softc {
-	struct device		sc_dev;
-	bus_space_tag_t		sc_iot;
-	bus_space_handle_t	sc_ioh;
+	struct device		 sc_dev;
+	bus_space_tag_t		 sc_iot;
+	bus_space_handle_t	 sc_ioh;
+	struct rasops_info	*ro;
 };
-
-struct exdisplay_softc *exdisplay_sc;
 
 int exdisplay_match(struct device *parent, void *v, void *aux);
 void exdisplay_attach(struct device *parent, struct device *self, void *args);
@@ -62,11 +61,43 @@ struct cfdriver exdisplay_cd = {
 	NULL, "exdisplay", DV_DULL
 };
 
-bus_space_tag_t		exdisplayiot;
-bus_space_handle_t	exdisplayioh;
-bus_addr_t		exdisplayaddr;
-struct wsscreen_descr	descr;
-struct rasops_info	ri;
+int exdisplay_wsioctl(void *, u_long, caddr_t, int, struct proc *);
+paddr_t exdisplay_wsmmap(void *, off_t, int);
+int exdisplay_alloc_screen(void *, const struct wsscreen_descr *,
+    void **, int *, int *, long *);
+void exdisplay_free_screen(void *, void *);
+int exdisplay_show_screen(void *, void *, int,
+    void (*)(void *, int, int), void *);
+void exdisplay_doswitch(void *, void *);
+int exdisplay_load_font(void *, void *, struct wsdisplay_font *);
+int exdisplay_list_font(void *, struct wsdisplay_font *);
+int exdisplay_getchar(void *, int, int, struct wsdisplay_charcell *);
+void exdisplay_burner(void *, u_int, u_int);
+
+struct rasops_info exdisplay_ri;
+struct wsscreen_descr exdisplay_stdscreen = {
+	"std"
+};
+
+const struct wsscreen_descr *exdisplay_scrlist[] = {
+	&exdisplay_stdscreen,
+};
+
+struct wsscreen_list exdisplay_screenlist = {
+	nitems(exdisplay_scrlist), exdisplay_scrlist
+};
+
+struct wsdisplay_accessops exdisplay_accessops = {
+	.ioctl = exdisplay_wsioctl,
+	.mmap = exdisplay_wsmmap,
+	.alloc_screen = exdisplay_alloc_screen,
+	.free_screen = exdisplay_free_screen,
+	.show_screen = exdisplay_show_screen,
+	.getchar = exdisplay_getchar,
+	.load_font = exdisplay_load_font,
+	.list_font = exdisplay_list_font,
+	.burn_screen = exdisplay_burner
+};
 
 int
 exdisplay_match(struct device *parent, void *v, void *aux)
@@ -84,43 +115,69 @@ exdisplay_attach(struct device *parent, struct device *self, void *args)
 {
 	struct armv7_attach_args *aa = args;
 	struct exdisplay_softc *sc = (struct exdisplay_softc *) self;
+	extern int wsdisplay_console_initted;
+	struct wsemuldisplaydev_attach_args waa;
+	struct rasops_info *ri = &exdisplay_ri;
 	struct fdt_memory mem;
 
-	sc->sc_iot = aa->aa_iot;
-	if (aa->aa_node) {
-		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
-			panic("%s: could not extract memory data from FDT",
-			    __func__);
-	} else {
-		mem.addr = aa->aa_dev->mem[0].addr;
-		mem.size = aa->aa_dev->mem[0].size;
+	if (aa->aa_node == NULL) {
+		printf(": not configured without FDT\n");
+		return;
 	}
+
+	sc->sc_iot = aa->aa_iot;
+	if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+		panic("%s: could not extract memory data from FDT",
+		    __func__);
+
 	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
 		panic("%s: bus_space_map failed!", __func__);
 
 	printf("\n");
-	exdisplay_sc = sc;
+
+#if notyet
+	/* FIXME: Set up framebuffer instead of re-using. */
+	if (!fdt_find_compatible("simple-framebuffer")) {
+		long defattr;
+
+		ri->ri_bits = (u_char *)sc->sc_fbioh;
+		exdisplay_setup_rasops(ri, &exdisplay_stdscreen);
+
+		ri->ri_ops.alloc_attr(ri->ri_active, 0, 0, 0, &defattr);
+		wsdisplay_cnattach(&exdisplay_stdscreen, ri->ri_active,
+		    0, 0, defattr);
+	}
+#endif
+
+	sc->ro = ri;
+
+	waa.console = 1;
+	waa.scrdata = &exdisplay_screenlist;
+	waa.accessops = &exdisplay_accessops;
+	waa.accesscookie = sc;
+	waa.defaultscreens = 0;
+
+	printf("%s: %dx%d\n", sc->sc_dev.dv_xname, ri->ri_width, ri->ri_height);
+
+	config_found(self, &waa, wsemuldisplaydevprint);
 }
 
 int
 exdisplay_cnattach(bus_space_tag_t iot, bus_addr_t iobase, size_t size)
 {
+	struct wsscreen_descr *descr = &exdisplay_stdscreen;
+	struct rasops_info *ri = &exdisplay_ri;
 	long defattr;
 
-	if (bus_space_map(iot, iobase, size, 0, &exdisplayioh))
+	if (bus_space_map(iot, iobase, size, 0, (bus_space_handle_t *)&ri->ri_bits))
 		return ENOMEM;
 
-	exdisplayiot = iot;
-	exdisplayaddr = iobase;
-
-	ri.ri_bits = (u_char*)exdisplayioh;
-
-	exdisplay_setup_rasops(&ri, &descr);
+	exdisplay_setup_rasops(ri, descr);
 
 	/* assumes 16 bpp */
-	ri.ri_ops.alloc_attr(&ri, 0, 0, 0, &defattr);
+	ri->ri_ops.alloc_attr(ri, 0, 0, 0, &defattr);
 
-	wsdisplay_cnattach(&descr, &ri, ri.ri_ccol, ri.ri_crow, defattr);
+	wsdisplay_cnattach(descr, ri, ri->ri_ccol, ri->ri_crow, defattr);
 
 	return 0;
 }
@@ -156,4 +213,79 @@ exdisplay_setup_rasops(struct rasops_info *rinfo, struct wsscreen_descr *descr)
 	descr->ncols = rinfo->ri_cols;
 	descr->capabilities = rinfo->ri_caps;
 	descr->textops = &rinfo->ri_ops;
+}
+
+int
+exdisplay_wsioctl(void *v, u_long cmd, caddr_t data, int flag, struct proc *p)
+{
+	return (-1);
+}
+
+paddr_t
+exdisplay_wsmmap(void *v, off_t off, int prot)
+{
+	return (-1);
+}
+
+int
+exdisplay_alloc_screen(void *v, const struct wsscreen_descr *type,
+    void **cookiep, int *curxp, int *curyp, long *attrp)
+{
+	struct exdisplay_softc *sc = v;
+	struct rasops_info *ri = sc->ro;
+
+	return rasops_alloc_screen(ri, cookiep, curxp, curyp, attrp);
+}
+
+void
+exdisplay_free_screen(void *v, void *cookie)
+{
+	struct exdisplay_softc *sc = v;
+	struct rasops_info *ri = sc->ro;
+
+	return rasops_free_screen(ri, cookie);
+}
+
+int
+exdisplay_show_screen(void *v, void *cookie, int waitok,
+    void (*cb)(void *, int, int), void *cbarg)
+{
+	return (0);
+}
+
+void
+exdisplay_doswitch(void *v, void *dummy)
+{
+}
+
+int
+exdisplay_getchar(void *v, int row, int col, struct wsdisplay_charcell *cell)
+{
+	struct exdisplay_softc *sc = v;
+	struct rasops_info *ri = sc->ro;
+
+	return rasops_getchar(ri, row, col, cell);
+}
+
+int
+exdisplay_load_font(void *v, void *cookie, struct wsdisplay_font *font)
+{
+	struct exdisplay_softc *sc = v;
+	struct rasops_info *ri = sc->ro;
+
+	return rasops_load_font(ri, cookie, font);
+}
+
+int
+exdisplay_list_font(void *v, struct wsdisplay_font *font)
+{
+	struct exdisplay_softc *sc = v;
+	struct rasops_info *ri = sc->ro;
+
+	return rasops_list_font(ri, font);
+}
+
+void
+exdisplay_burner(void *v, u_int on, u_int flags)
+{
 }
