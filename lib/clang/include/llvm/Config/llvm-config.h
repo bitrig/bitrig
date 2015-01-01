@@ -121,6 +121,9 @@
 /* Minor version of the LLVM API */
 #define LLVM_VERSION_MINOR 4
 
+/* Patch version of the LLVM API */
+#define LLVM_VERSION_PATCH 2
+
 /* Define to 1 if you have the <sanitizer/msan_interface.h> header file. */
 /* #define HAVE_SANITIZER_MSAN_INTERFACE_H 1 */
 

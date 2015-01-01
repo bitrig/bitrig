@@ -604,6 +604,9 @@
 /* Minor version of the LLVM API */
 #define LLVM_VERSION_MINOR 4
 
+/* Patch version of the LLVM API */
+#define LLVM_VERSION_PATCH 2
+
 /* Define if the OS needs help to load dependent libraries for dlopen(). */
 /* #undef LTDL_DLOPEN_DEPLIBS */
 
@@ -631,13 +634,13 @@
 #define PACKAGE_NAME "LLVM"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "LLVM 3.4"
+#define PACKAGE_STRING "LLVM 3.4.2"
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.4svn"
+#define PACKAGE_VERSION "3.4.2"
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #define RETSIGTYPE void
