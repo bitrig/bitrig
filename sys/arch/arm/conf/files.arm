@@ -80,6 +80,11 @@ file	lib/libkern/arch/arm/memmove.S
 file	lib/libkern/arch/arm/ldivmod.S
 file	lib/libkern/arch/arm/ldivmod_helper.c
 
+# clock infrastructure
+file	arch/arm/clock/clock.c
+file	arch/arm/clock/clock_fixed_factor.c
+file	arch/arm/clock/clock_fixed_rate.c
+
 # fdt
 file	arch/arm/arm/fdt.c
 
