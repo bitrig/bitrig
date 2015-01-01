@@ -8,10 +8,11 @@ SRCDIR=	lib/Transforms/Instrumentation
 SRCS=	AddressSanitizer.cpp \
 	BoundsChecking.cpp \
 	DataFlowSanitizer.cpp \
-	DebugIR.cpp \
 	GCOVProfiling.cpp \
 	MemorySanitizer.cpp \
+	InstrProfiling.cpp \
 	Instrumentation.cpp \
+	SanitizerCoverage.cpp \
 	ThreadSanitizer.cpp
 
 

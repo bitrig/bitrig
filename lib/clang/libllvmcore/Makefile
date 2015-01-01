@@ -9,11 +9,15 @@ SRCS=	AsmWriter.cpp \
 	Attributes.cpp \
 	AutoUpgrade.cpp \
 	BasicBlock.cpp \
+	Comdat.cpp \
 	ConstantFold.cpp \
+	ConstantRange.cpp \
 	Constants.cpp \
 	Core.cpp \
 	DIBuilder.cpp \
 	DataLayout.cpp \
+	DiagnosticInfo.cpp \
+	DiagnosticPrinter.cpp \
 	DebugInfo.cpp \
 	DebugLoc.cpp \
 	Dominators.cpp \
@@ -26,19 +30,23 @@ SRCS=	AsmWriter.cpp \
 	Instruction.cpp \
 	Instructions.cpp \
 	IntrinsicInst.cpp \
+	IRPrintingPasses.cpp \
 	LLVMContext.cpp \
 	LLVMContextImpl.cpp \
-	LeakDetector.cpp \
 	LegacyPassManager.cpp \
+	MDBuilder.cpp \
+	Mangler.cpp \
 	Metadata.cpp \
+	MetadataTracking.cpp \
 	Module.cpp \
 	Pass.cpp \
 	PassManager.cpp \
 	PassRegistry.cpp \
-	PrintModulePass.cpp \
+	Statepoint.cpp \
 	Type.cpp \
 	TypeFinder.cpp \
 	Use.cpp \
+	UseListOrder.cpp \
 	User.cpp \
 	Value.cpp \
 	ValueSymbolTable.cpp \

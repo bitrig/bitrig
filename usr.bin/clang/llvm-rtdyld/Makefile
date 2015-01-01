@@ -11,7 +11,6 @@ SRCDIR=	tools/llvm-rtdyld
 SRCS=	llvm-rtdyld.cpp
 
 LIBDEPS=llvmdebuginfo \
-	llvmjit \
 	llvmexecutionengine \
 	llvmruntimedyld \
 	llvmaarch64disassembler \
@@ -37,26 +36,28 @@ LIBDEPS=llvmdebuginfo \
 	llvmpowerpcdesc \
 	llvmpowerpcinfo \
 	llvmpowerpcinstprinter \
-	llvmx86disassembler \
 	llvmx86asmparser \
 	llvmx86codegen \
+	llvmx86desc \
+	llvmx86disassembler \
+	llvmx86info \
+	llvmx86instprinter \
+	llvmx86utils \
 	llvmselectiondag \
 	llvmasmprinter \
-	llvmmcparser \
 	llvmcodegen \
+	llvmmcdisassembler \
 	llvmobjcarcopts \
 	llvmscalaropts \
 	llvminstcombine \
 	llvmtransformutils \
 	llvmipa \
-	llvmanalysis \
-	llvmx86desc \
-	llvmx86info \
-	llvmtarget \
-	llvmx86instprinter \
-	llvmmc \
 	llvmobject \
-	llvmx86utils \
+	llvmmcparser \
+	llvmanalysis \
+	llvmbitreader \
+	llvmtarget \
+	llvmmc \
 	llvmcore \
 	llvmsupport
 

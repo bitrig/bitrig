@@ -13,6 +13,8 @@ SRCS= \
 	AArch64MCCodeEmitter.cpp \
 	AArch64MCExpr.cpp \
 	AArch64MCTargetDesc.cpp \
+	AArch64MachObjectWriter.cpp \
+	AArch64TargetStreamer.cpp
 
 CFLAGS+= -I${LLVM_SRCS}/${SRCDIR}/..
 

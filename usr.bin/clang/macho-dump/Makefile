@@ -8,7 +8,12 @@ PROG=macho-dump
 SRCDIR=	tools/macho-dump
 SRCS=	macho-dump.cpp
 
-LIBDEPS=llvmobject \
+LIBDEPS=llvmcodegen \
+	llvmobject \
+	llvmmcparser \
+	llvmmc \
+	llvmbitreader \
+	llvmcore \
 	llvmsupport
 
 DPADD=  ${LIBCURSES}

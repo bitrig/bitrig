@@ -3,38 +3,29 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+/* Exported configuration */
+#include "llvm/Config/llvm-config.h"
+
 /* Bug report URL. */
-#define BUG_REPORT_URL ""
-
-/* Define if we have libxml2 */
-/* #undef CLANG_HAVE_LIBXML */
-
-/* Relative directory for resource files */
-#define CLANG_RESOURCE_DIR ""
-
-/* Directories clang will search for headers */
-#define C_INCLUDE_DIRS ""
-
-/* Default <path> to all compiler invocations for --sysroot=<path>. */
-/* #undef DEFAULT_SYSROOT */
+#define BUG_REPORT_URL "http://llvm.org/bugs/"
 
 /* Define if you want backtraces on crash */
-#define ENABLE_BACKTRACES 1
+#define ENABLE_BACKTRACES
 
 /* Define to enable crash overrides */
 #define ENABLE_CRASH_OVERRIDES
+
+/* Define to disable C++ atexit */
+#define DISABLE_LLVM_DYLIB_ATEXIT
 
 /* Define if position independent code is enabled */
 #define ENABLE_PIC
 
 /* Define if timestamp information (e.g., __DATE__) is allowed */
-#define ENABLE_TIMESTAMPS 0
-
-/* Directory where gcc is installed. */
-#define GCC_INSTALL_PREFIX ""
+#define ENABLE_TIMESTAMPS 1
 
 /* Define to 1 if you have the `arc4random' function. */
-#define HAVE_ARC4RANDOM 1
+#define HAVE_DECL_ARC4RANDOM 1
 
 /* Define to 1 if you have the `backtrace' function. */
 /* #undef HAVE_BACKTRACE */
@@ -44,9 +35,6 @@
 
 /* Define to 1 if you have the `ceilf' function. */
 #define HAVE_CEILF 1
-
-/* Define if the neat program is available */
-#define HAVE_CIRCO 1
 
 /* Define to 1 if you have the `closedir' function. */
 #define HAVE_CLOSEDIR 1
@@ -80,12 +68,6 @@
 /* Define if dlopen() is available on this platform. */
 #define HAVE_DLOPEN 1
 
-/* Define if the dot program is available */
-/* #undef HAVE_DOT */
-
-/* Define if the dotty program is available */
-/* #undef HAVE_DOTTY */
-
 /* Define if you have the _dyld_func_lookup function. */
 #undef HAVE_DYLD
 
@@ -97,9 +79,6 @@
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #define HAVE_FCNTL_H 1
-
-/* Define if the neat program is available */
-#define HAVE_FDP 1
 
 /* Define to 1 if you have the <fenv.h> header file. */
 #define HAVE_FENV_H 1
@@ -161,12 +140,6 @@
 /* Define to 1 if you have the `gettimeofday' function. */
 #define HAVE_GETTIMEOFDAY 1
 
-/* Define if the Graphviz program is available */
-/* #undef HAVE_GRAPHVIZ */
-
-/* Define if the gv program is available */
-/* #undef HAVE_GV */
-
 /* Define to 1 if the system has the type `int64_t'. */
 #define HAVE_INT64_T 1
 
@@ -206,14 +179,17 @@
 /* Define to 1 if you have the `shell32' library (-lshell32). */
 /* #undef HAVE_LIBSHELL32 */
 
-/* Define to 1 if you have the `udis86' library (-ludis86). */
-#undef HAVE_LIBUDIS86
-
 /* Define to 1 if you have the 'z' library (-lz). */
 #define HAVE_LIBZ 1
 
+/* Define to 1 if you have the 'edit' library (-ledit). */
+/* #undef HAVE_LIBEDIT */
+
 /* Define to 1 if you have the <limits.h> header file. */
 #define HAVE_LIMITS_H 1
+
+/* Define to 1 if you have the <link.h> header file. */
+/* #undef HAVE_LINK_H */
 
 /* Define if you can use -rdynamic. */
 #define HAVE_LINK_EXPORT_DYNAMIC 1
@@ -267,9 +243,6 @@
 
 /* Define to 1 if you have the `nearbyintf' function. */
 #define HAVE_NEARBYINTF 1
-
-/* Define if the neat program is available */
-/* #undef HAVE_NEATO */
 
 /* Define to 1 if you have the `opendir' function. */
 #define HAVE_OPENDIR 1
@@ -414,9 +387,6 @@
 /* Define to 1 if you have the <termios.h> header file. */
 #define HAVE_TERMIOS_H 1
 
-/* Define if the neat program is available */
-/* #undef HAVE_TWOPI */
-
 /* Define to 1 if the system has the type `uint64_t'. */
 #define HAVE_UINT64_T 1
 
@@ -434,9 +404,6 @@
 
 /* Define to 1 if you have the `writev' function. */
 #define HAVE_WRITEV 1
-
-/* Define if the xdot.py program is available */
-/* #undef HAVE_XDOT */
 
 /* Define to 1 if you have the <zlib.h> header file. */
 #define HAVE_ZLIB_H 1
@@ -492,120 +459,11 @@
 /* Have host's ___chkstk */
 /* #undef HAVE____CHKSTK */
 
-/* Linker version detected at compile time. */
-#undef HOST_LINK_VERSION
-
-/* Installation directory for binary executables */
-/* #undef LLVM_BINDIR */
-
-/* Time at which LLVM was configured */
-/* #undef LLVM_CONFIGTIME */
-
-/* Installation directory for data files */
-/* #undef LLVM_DATADIR */
-
-/* Target triple LLVM will generate code for by default */
-/* #undef LLVM_DEFAULT_TARGET_TRIPLE */
-
-/* Installation directory for documentation */
-/* #undef LLVM_DOCSDIR */
-
-/* Define if threads enabled */
-#define LLVM_ENABLE_THREADS 1
+/* Define if we link Polly to the tools */
+/* #undef LINK_POLLY_INTO_TOOLS */
 
 /* Define if zlib compression is available */
 #define LLVM_ENABLE_ZLIB 1
-
-/* Installation directory for config files */
-/* #undef LLVM_ETCDIR */
-
-/* Has gcc/MSVC atomic intrinsics */
-#define LLVM_HAS_ATOMICS 1
-
-/* Host triple LLVM will be executed on */
-/* #undef LLVM_HOST_TRIPLE */
-
-/* Installation directory for include files */
-/* #undef LLVM_INCLUDEDIR */
-
-/* Installation directory for .info files */
-/* #undef LLVM_INFODIR */
-
-/* Installation directory for man pages */
-/* #undef LLVM_MANDIR */
-
-/* LLVM architecture name for the native architecture, if available */
-/* #define LLVM_NATIVE_ARCH X86 */
-
-/* LLVM name for the native AsmParser init function, if available */
-#if LLVM_NATIVE_ARCH == X86
-#define LLVM_NATIVE_ASMPARSER LLVMInitializeX86AsmParser
-#define LLVM_NATIVE_ASMPRINTER LLVMInitializeX86AsmPrinter
-#define LLVM_NATIVE_DISASSEMBLER LLVMInitializeX86Disassembler
-#define LLVM_NATIVE_TARGET LLVMInitializeX86Target
-#define LLVM_NATIVE_TARGETINFO LLVMInitializeX86TargetInfo
-#define LLVM_NATIVE_TARGETMC LLVMInitializeX86TargetMC
-#elif LLVM_NATIVE_ARCH == ARM
-#define LLVM_NATIVE_ASMPARSER LLVMInitializeARMAsmParser
-#define LLVM_NATIVE_ASMPRINTER LLVMInitializeARMAsmPrinter
-#define LLVM_NATIVE_DISASSEMBLER LLVMInitializeARMDisassembler
-#define LLVM_NATIVE_TARGET LLVMInitializeARMTarget
-#define LLVM_NATIVE_TARGETINFO LLVMInitializeARMTargetInfo
-#define LLVM_NATIVE_TARGETMC LLVMInitializeARMTargetMC
-#else
-#error
-#endif
-
-/* Define if this is Unixish platform */
-#define LLVM_ON_UNIX 1
-
-/* Define if this is Win32ish platform */
-/* #undef LLVM_ON_WIN32 */
-
-/* Define to path to circo program if found or 'echo circo' otherwise */
-/* #undef LLVM_PATH_CIRCO */
-
-/* Define to path to dot program if found or 'echo dot' otherwise */
-/* #undef LLVM_PATH_DOT */
-
-/* Define to path to dotty program if found or 'echo dotty' otherwise */
-/* #undef LLVM_PATH_DOTTY */
-
-/* Define to path to fdp program if found or 'echo fdp' otherwise */
-/* #undef LLVM_PATH_FDP */
-
-/* Define to path to Graphviz program if found or 'echo Graphviz' otherwise */
-/* #undef LLVM_PATH_GRAPHVIZ */
-
-/* Define to path to gv program if found or 'echo gv' otherwise */
-/* #undef LLVM_PATH_GV */
-
-/* Define to path to neato program if found or 'echo neato' otherwise */
-/* #undef LLVM_PATH_NEATO */
-
-/* Define to path to twopi program if found or 'echo twopi' otherwise */
-/* #undef LLVM_PATH_TWOPI */
-
-/* Define to path to xdot.py program if found or 'echo xdot' otherwise */
-/* #undef LLVM_PATH_XDOT */
-
-/* Installation prefix directory */
-#define LLVM_PREFIX ""
-
-/* Define if we have the Intel JIT API runtime support library */
-/* #undef LLVM_USE_INTEL_JITEVENTS */
-
-/* Define if we have the oprofile JIT-support library */
-/* #undef LLVM_USE_OPROFILE */
-
-/* Major version of the LLVM API */
-#define LLVM_VERSION_MAJOR 3
-
-/* Minor version of the LLVM API */
-#define LLVM_VERSION_MINOR 4
-
-/* Patch version of the LLVM API */
-#define LLVM_VERSION_PATCH 2
 
 /* Define if the OS needs help to load dependent libraries for dlopen(). */
 /* #undef LTDL_DLOPEN_DEPLIBS */
@@ -634,13 +492,13 @@
 #define PACKAGE_NAME "LLVM"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "LLVM 3.4.2"
+#define PACKAGE_STRING "LLVM 3.6.0"
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.4.2"
+#define PACKAGE_VERSION "3.6.0"
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #define RETSIGTYPE void
@@ -649,7 +507,7 @@
 #undef STAT_MACROS_BROKEN
 
 /* Define to 1 if you have the ANSI C header files. */
-#define STDC_HEADERS 1
+#undef STDC_HEADERS
 
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #undef TIME_WITH_SYS_TIME
@@ -657,14 +515,8 @@
 /* Define to 1 if your <sys/time.h> declares `struct tm'. */
 #undef TM_IN_SYS_TIME
 
-/* Define if use udis86 library */
-#undef USE_UDIS86
-
 /* Type of 1st arg on ELM Callback */
 /* #undef WIN32_ELMCB_PCSTR */
-
-/* Define to empty if `const' does not conform to ANSI C. */
-#undef const
 
 /* Define to `int' if <sys/types.h> does not define. */
 #undef pid_t
@@ -686,4 +538,5 @@
 
 /* Define to 1 if you have the `_chsize_s' function. */
 /* #undef HAVE__CHSIZE_S */
+
 #endif

@@ -10,7 +10,6 @@ CFLAGS+=	-I${LLVM_SRCS}/include -I${CLANG_SRCS}/include \
 
 .if !defined(EARLY_BUILD) && defined(MK_CLANG_FULL) && ${MK_CLANG_FULL:L} != "no"
 CFLAGS+=	-DCLANG_ENABLE_ARCMT \
-		-DCLANG_ENABLE_REWRITER \
 		-DCLANG_ENABLE_STATIC_ANALYZER
 .endif # !EARLY_BUILD && MK_CLANG_FULL
 
@@ -99,7 +98,7 @@ Intrinsics.inc.h: ${LLVM_SRCS}/include/llvm/IR/Intrinsics.td \
 	DisassemblerTables/-gen-disassembler \
 	FastISel/-gen-fast-isel \
 	InstrInfo/-gen-instr-info \
-	MCCodeEmitter/-gen-emitter,-mc-emitter \
+	MCCodeEmitter/-gen-emitter \
 	MCPseudoLowering/-gen-pseudo-lowering \
 	RegisterInfo/-gen-register-info \
 	SubtargetInfo/-gen-subtarget
@@ -126,17 +125,13 @@ AttrImpl.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
 	    -gen-clang-attr-impl -o ${.TARGET} ${.ALLSRC}
 
-AttrIdentifierArg.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
-	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
-	    -gen-clang-attr-identifier-arg-list -o ${.TARGET} ${.ALLSRC}
-
-AttrLateParsed.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
-	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
-	    -gen-clang-attr-late-parsed-list -o ${.TARGET} ${.ALLSRC}
-
 AttrList.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
 	    -gen-clang-attr-list -o ${.TARGET} ${.ALLSRC}
+
+AttrHasAttributeImpl.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
+	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
+	    -gen-clang-attr-has-attribute-impl -o ${.TARGET} ${.ALLSRC}
 
 AttrParsedAttrKinds.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
@@ -150,6 +145,10 @@ AttrParsedAttrImpl.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
 	    -gen-clang-attr-parsed-attr-impl -o ${.TARGET} ${.ALLSRC}
 
+AttrParserStringSwitches.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
+	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
+	    -gen-clang-attr-parser-string-switches -o ${.TARGET} ${.ALLSRC}
+
 AttrPCHRead.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
 	    -gen-clang-attr-pch-read -o ${.TARGET} ${.ALLSRC}
@@ -157,10 +156,6 @@ AttrPCHRead.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 AttrPCHWrite.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
 	    -gen-clang-attr-pch-write -o ${.TARGET} ${.ALLSRC}
-
-AttrSpellings.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
-	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
-	    -gen-clang-attr-spelling-list -o ${.TARGET} ${.ALLSRC}
 
 AttrSpellingListIndex.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
@@ -173,6 +168,10 @@ AttrTemplateInstantiate.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 AttrTypeArg.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
 	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
 	    -gen-clang-attr-type-arg-list -o ${.TARGET} ${.ALLSRC}
+
+AttrVisitor.inc.h: ${CLANG_SRCS}/include/clang/Basic/Attr.td
+	${CLANG_TBLGEN} -I ${CLANG_SRCS}/include \
+	    -gen-clang-attr-ast-visitor -o ${.TARGET} ${.ALLSRC}
 
 CommentCommandInfo.inc.h: ${CLANG_SRCS}/include/clang/AST/CommentCommands.td
 	${CLANG_TBLGEN} \
@@ -229,11 +228,6 @@ Diagnostic${hdr}Kinds.inc.h: ${CLANG_SRCS}/include/clang/Basic/Diagnostic.td
 .endfor
 
 Options.inc.h: ${CLANG_SRCS}/include/clang/Driver/Options.td
-	${TBLGEN} -I ${CLANG_SRCS}/include/clang/Driver \
-	    -gen-opt-parser-defs -I ${LLVM_SRCS}/include \
-	    -o ${.TARGET} ${.ALLSRC}
-
-CC1AsOptions.inc.h: ${CLANG_SRCS}/include/clang/Driver/CC1AsOptions.td
 	${TBLGEN} -I ${CLANG_SRCS}/include/clang/Driver \
 	    -gen-opt-parser-defs -I ${LLVM_SRCS}/include \
 	    -o ${.TARGET} ${.ALLSRC}

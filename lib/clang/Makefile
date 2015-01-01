@@ -10,9 +10,6 @@ _libclangstaticanalyzer= \
 	libclangstaticanalyzerfrontend
 _libclangarcmigrate= \
 	libclangarcmigrate
-_libclangrewriter= \
-	libclangrewritecore \
-	libclangrewritefrontend
 .endif # !EARLY_BUILD && MK_CLANG_FULL
 
 SUBDIR=	libclanganalysis \
@@ -26,7 +23,8 @@ SUBDIR=	libclanganalysis \
 	libclangfrontendtool \
 	libclanglex \
 	libclangparse \
-	${_libclangrewriter} \
+	libclangrewrite \
+	libclangrewritefrontend \
 	libclangsema \
 	libclangserialization \
 	${_libclangstaticanalyzer} \
@@ -47,8 +45,9 @@ SUBDIR=	libclanganalysis \
 	libllvmmc \
 	libllvmmcparser \
 	libllvmobjcarcopts \
-	libllvmoption \
 	libllvmobject \
+	libllvmoption \
+	libllvmprofiledata \
 	libllvmscalaropts \
 	libllvmselectiondag \
 	libllvmsupport \
@@ -78,6 +77,7 @@ SUBDIR=	libclanganalysis \
 	libllvmmipsinfo \
 	libllvmmipsinstprinter \
 	libllvmpowerpccodegen \
+	libllvmpowerpcdisassembler \
 	libllvmpowerpcdesc \
 	libllvmpowerpcinfo \
 	libllvmpowerpcinstprinter \
@@ -93,7 +93,6 @@ SUBDIR=	libclanganalysis \
 SUBDIR+=libllvmdebuginfo \
 	libllvmexecutionengine \
 	libllvminterpreter \
-	libllvmjit \
 	libllvmmcdisassembler \
 	libllvmmcjit \
 	libllvmruntimedyld

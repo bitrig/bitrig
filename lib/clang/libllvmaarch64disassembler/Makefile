@@ -7,6 +7,7 @@ LIB=	llvmaarch64disassembler
 SRCDIR=	lib/Target/AArch64/Disassembler
 SRCS= \
 	AArch64Disassembler.cpp \
+	AArch64ExternalSymbolizer.cpp
 
 CFLAGS+= -I${LLVM_SRCS}/${SRCDIR}/..
 

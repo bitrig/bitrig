@@ -12,6 +12,7 @@ SRCS=	cc1_main.cpp \
 CFLAGS+= -pthread
 LDADD+=-lpthread
 LDADD+=-ltermlib
+LDADD+=-lz
 
 .if ${MK_SHARED_TOOLCHAIN:L} == "no"
 LDSTATIC=-static
@@ -30,7 +31,7 @@ MLINKS+= clang.1 cc.1 \
 	clang.1 CC.1
 .endif
 
-TGHDRS=	CC1AsOptions \
+TGHDRS=	\
 	DiagnosticCommonKinds \
 	DiagnosticDriverKinds \
 	DiagnosticFrontendKinds \
@@ -45,13 +46,12 @@ _clangstaticanalyzer= \
 	clangstaticanalyzercore
 _clangarcmigrate= \
 	clangarcmigrate
-_clangrewriter= \
-	clangrewritefrontend \
-	clangrewritecore
 .endif # !EARLY_BUILD && MK_CLANG_FULL
 
 LIBDEPS=clangfrontendtool \
+	clangrewritefrontend \
 	clangfrontend \
+	clangrewrite \
 	clangdriver \
 	clangserialization \
 	clangcodegen \
@@ -59,7 +59,6 @@ LIBDEPS=clangfrontendtool \
 	clangsema \
 	${_clangstaticanalyzer} \
 	${_clangarcmigrate} \
-	${_clangrewriter} \
 	clanganalysis \
 	clangedit \
 	clangast \
@@ -101,11 +100,13 @@ LIBDEPS=clangfrontendtool \
 	llvmx86codegen \
 	llvmselectiondag \
 	llvmasmprinter \
+	llvmmcdisassembler \
 	llvmmcparser \
 	llvmcodegen \
 	llvmobjcarcopts \
 	llvmoption \
 	llvmscalaropts \
+	llvmprofiledata \
 	llvminstcombine \
 	llvmtransformutils \
 	llvmipa \

@@ -27,10 +27,6 @@ SRCS=	ArgumentPromotion.cpp \
 	StripDeadPrototypes.cpp \
 	StripSymbols.cpp
 
-.if ${MK_CLANG_EXTRAS:L} != "no"
-SRCS+=	IPO.cpp
-.endif
-
 TGHDRS=	Intrinsics
 
 .include "../clang.lib.mk"

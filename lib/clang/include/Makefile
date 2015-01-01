@@ -4,13 +4,15 @@ HDRPATH= ${.CURDIR}/../../../contrib/llvm/tools/clang/lib/Headers
 SANPATH= ${.CURDIR}/../../../contrib/compiler-rt/include/sanitizer
 .PATH: ${HDRPATH}
 
-INCSDIR=/usr/lib/clang/3.4.2/include
+INCSDIR=/usr/lib/clang/3.6.0/include
 
-INCS=	__wmmintrin_aes.h \
+INCS=	__stddef_max_align_t.h \
+	__wmmintrin_aes.h \
 	__wmmintrin_pclmul.h \
 	Intrin.h \
 	altivec.h \
 	ammintrin.h \
+	arm_acle.h \
 	avx2intrin.h \
 	avxintrin.h \
 	bmi2intrin.h \
@@ -21,6 +23,7 @@ INCS=	__wmmintrin_aes.h \
 	float.h \
 	fma4intrin.h \
 	fmaintrin.h \
+	ia32intrin.h \
 	immintrin.h \
 	iso646.h \
 	limits.h \
@@ -28,7 +31,7 @@ INCS=	__wmmintrin_aes.h \
 	mm3dnow.h \
 	mm_malloc.h \
 	mmintrin.h \
-	module.map \
+	module.modulemap \
 	nmmintrin.h \
 	pmmintrin.h \
 	popcntintrin.h \

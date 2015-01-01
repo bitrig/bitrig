@@ -25,8 +25,8 @@ LIBDEPS=llvmx86disassembler \
 	llvmmcparser \
 	llvminstrumentation \
 	llvminterpreter \
+	llvmmcdisassembler \
 	llvmmcjit \
-	llvmjit \
 	llvmcodegen \
 	llvmobjcarcopts \
 	llvmscalaropts \
@@ -42,7 +42,8 @@ LIBDEPS=llvmx86disassembler \
 	llvmcore \
 	llvmsupport
 
-DPADD=  ${LIBCURSES}
+DPADD=  ${LIBCURSES} ${LIBZ}
 LDADD=  -lcurses
+LDADD+= -lz
 
 .include "../clang.prog.mk"

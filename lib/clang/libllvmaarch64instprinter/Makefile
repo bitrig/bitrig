@@ -9,6 +9,7 @@ INCDIR=	lib/Target/AArch64
 SRCS=	AArch64InstPrinter.cpp
 
 TGHDRS=	AArch64GenAsmWriter \
+	AArch64GenAsmWriter1 \
 	AArch64GenInstrInfo \
 	AArch64GenRegisterInfo \
 	AArch64GenSubtargetInfo

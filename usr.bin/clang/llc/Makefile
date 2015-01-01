@@ -38,6 +38,7 @@ LIBDEPS=llvmirreader \
 	llvmx86codegen \
 	llvmselectiondag \
 	llvmasmprinter \
+	llvmmcdisassembler \
 	llvmmcparser \
 	llvmcodegen \
 	llvmobjcarcopts \
@@ -56,7 +57,8 @@ LIBDEPS=llvmirreader \
 	llvmcore \
 	llvmsupport
 
-DPADD=  ${LIBCURSES}
+DPADD=  ${LIBCURSES} ${LIBZ}
 LDADD=  -lcurses
+LDADD+= -lz
 
 .include "../clang.prog.mk"

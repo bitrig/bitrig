@@ -2,19 +2,15 @@
 
 .include <bsd.own.mk>
 
-LIB=	clangrewritecore
+LIB=	clangrewrite
 
-SRCDIR=	tools/clang/lib/Rewrite/Core
+SRCDIR=	tools/clang/lib/Rewrite
 SRCS=	DeltaTree.cpp \
 	HTMLRewrite.cpp \
 	RewriteRope.cpp \
 	Rewriter.cpp \
 	TokenRewriter.cpp
 
-TGHDRS=	AttrList \
-	Attrs \
-	DeclNodes \
-	DiagnosticCommonKinds \
-	StmtNodes
+TGHDRS=	DiagnosticCommonKinds
 
 .include "../clang.lib.mk"

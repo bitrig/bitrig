@@ -9,12 +9,13 @@ SRCS=	APFloat.cpp \
 	APInt.cpp \
 	APSInt.cpp \
 	Allocator.cpp \
+	ARMBuildAttrs.cpp \
+	ARMWinEH.cpp \
 	Atomic.cpp \
 	BlockFrequency.cpp \
 	BranchProbability.cpp \
 	CommandLine.cpp \
 	Compression.cpp \
-	ConstantRange.cpp \
 	ConvertUTF.c \
 	ConvertUTFWrapper.cpp \
 	CrashRecoveryContext.cpp \
@@ -23,7 +24,6 @@ SRCS=	APFloat.cpp \
 	DataStream.cpp \
 	Debug.cpp \
 	DeltaAlgorithm.cpp \
-	Disassembler.cpp \
 	Dwarf.cpp \
 	DynamicLibrary.cpp \
 	Errno.cpp \
@@ -35,39 +35,44 @@ SRCS=	APFloat.cpp \
 	GraphWriter.cpp \
 	Hashing.cpp \
 	Host.cpp \
-	IncludeFile.cpp \
 	IntEqClasses.cpp \
 	IntervalMap.cpp \
 	IntrusiveRefCntPtr.cpp \
 	IsInf.cpp \
 	IsNAN.cpp \
+	LEB128.cpp \
+	LineIterator.cpp \
 	Locale.cpp \
 	LockFileManager.cpp \
 	MD5.cpp \
 	ManagedStatic.cpp \
+	MathExtras.cpp \
 	Memory.cpp \
 	MemoryBuffer.cpp \
 	MemoryObject.cpp \
 	Mutex.cpp \
+	Options.cpp \
 	Path.cpp \
 	PluginLoader.cpp \
 	PrettyStackTrace.cpp \
 	Process.cpp \
 	Program.cpp \
 	RWMutex.cpp \
+	RandomNumberGenerator.cpp \
 	Regex.cpp \
+	ScaledNumber.cpp \
 	SearchForAddressOfSpecialSymbol.cpp \
 	Signals.cpp \
 	SmallPtrSet.cpp \
 	SmallVector.cpp \
 	SourceMgr.cpp \
+	SpecialCaseList.cpp \
 	Statistic.cpp \
-	StreamableMemoryObject.cpp \
+	StreamingMemoryObject.cpp \
 	StringExtras.cpp \
 	StringMap.cpp \
 	StringPool.cpp \
 	StringRef.cpp \
-	StringRefMemoryObject.cpp \
 	SystemUtils.cpp \
 	TargetRegistry.cpp \
 	ThreadLocal.cpp \
@@ -89,17 +94,7 @@ SRCS=	APFloat.cpp \
 	regerror.c \
 	regexec.c \
 	regfree.c \
-	regstrlcpy.c \
-	system_error.cpp
-
-.if ${MK_CLANG_EXTRAS:L} != "no"
-SRCS+=	Compression.cpp \
-	DataExtractor.cpp \
-	DataStream.cpp \
-	Disassembler.cpp \
-	FileUtilities.cpp \
-	SystemUtils.cpp
-.endif
+	regstrlcpy.c
 
 .include "../clang.lib.mk"
 

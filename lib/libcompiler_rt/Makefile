@@ -14,7 +14,7 @@ CRTARCH=x86_64
 CRTARCH=${MACHINE_CPU}
 .endif
 
-CRTSRC=${.CURDIR}/../../contrib/compiler-rt/lib
+CRTSRC=${.CURDIR}/../../contrib/compiler-rt/lib/builtins
 
 .PATH: ${CRTSRC}/${CRTARCH} ${CRTSRC}
 

@@ -6,7 +6,11 @@ PROG=opt
 
 SRCDIR=	tools/opt
 SRCS=	AnalysisWrappers.cpp \
+	BreakpointPrinter.cpp \
 	GraphPrinters.cpp \
+	NewPMDriver.cpp \
+	PassPrinters.cpp \
+	Passes.cpp \
 	PrintSCC.cpp \
 	opt.cpp
 
@@ -39,6 +43,7 @@ LIBDEPS=llvmaarch64disassembler \
 	llvmx86codegen \
 	llvmselectiondag \
 	llvmasmprinter \
+	llvmmcdisassembler \
 	llvmmcparser \
 	llvmcodegen \
 	llvmx86desc \
@@ -49,6 +54,7 @@ LIBDEPS=llvmaarch64disassembler \
 	llvmvectorize \
 	llvmobjcarcopts \
 	llvmscalaropts \
+	llvmprofiledata \
 	llvminstcombine \
 	llvminstrumentation \
 	llvmtransformutils \
@@ -64,7 +70,8 @@ LIBDEPS=llvmaarch64disassembler \
 	llvmcore \
 	llvmsupport
 
-DPADD=  ${LIBCURSES}
+DPADD=  ${LIBCURSES} ${LIBZ}
 LDADD=  -lcurses
+LDADD+= -lz
 
 .include "../clang.prog.mk"

@@ -9,8 +9,7 @@ SRCDIR=	tools/llvm-mc
 SRCS=	llvm-mc.cpp \
 	Disassembler.cpp
 
-LIBDEPS=llvmmcdisassembler \
-	llvmaarch64disassembler \
+LIBDEPS=llvmaarch64disassembler \
 	llvmaarch64codegen \
 	llvmaarch64asmparser \
 	llvmaarch64desc \
@@ -38,6 +37,7 @@ LIBDEPS=llvmmcdisassembler \
 	llvmx86codegen \
 	llvmselectiondag \
 	llvmasmprinter \
+	llvmmcdisassembler \
 	llvmmcparser \
 	llvmcodegen \
 	llvmobjcarcopts \
@@ -52,11 +52,13 @@ LIBDEPS=llvmmcdisassembler \
 	llvmx86instprinter \
 	llvmmc \
 	llvmobject \
+	llvmbitreader \
 	llvmx86utils \
 	llvmcore \
 	llvmsupport
 
-DPADD=  ${LIBCURSES}
+DPADD=  ${LIBCURSES} ${LIBZ}
 LDADD=  -lcurses
+LDADD+= -lz
 
 .include "../clang.prog.mk"

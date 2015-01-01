@@ -38,12 +38,15 @@ LIBDEPS=llvmmcdisassembler \
 	llvmpowerpcdesc \
 	llvmpowerpcinfo \
 	llvmpowerpcinstprinter \
-	llvmx86disassembler \
 	llvmx86asmparser \
 	llvmx86codegen \
+	llvmx86desc \
+	llvmx86disassembler \
+	llvmx86info \
+	llvmx86instprinter \
+	llvmx86utils \
 	llvmselectiondag \
 	llvmasmprinter \
-	llvmmcparser \
 	llvmcodegen \
 	llvmobjcarcopts \
 	llvmscalaropts \
@@ -51,13 +54,11 @@ LIBDEPS=llvmmcdisassembler \
 	llvmtransformutils \
 	llvmipa \
 	llvmanalysis \
-	llvmx86desc \
-	llvmx86info \
-	llvmtarget \
-	llvmx86instprinter \
-	llvmmc \
 	llvmobject \
-	llvmx86utils \
+	llvmmcparser \
+	llvmbitreader \
+	llvmtarget \
+	llvmmc \
 	llvmcore \
 	llvmsupport
 
