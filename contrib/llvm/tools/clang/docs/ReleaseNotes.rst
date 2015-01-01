@@ -27,6 +27,20 @@ Clang web page, this document applies to the *next* release, not the current
 one. To see the release notes for a specific release, please see the `releases
 page <http://llvm.org/releases/>`_.
 
+What's New in Clang 3.4.2?
+==========================
+
+* Build fix for gcc 4.9.
+
+* Added missing addrspacecast support.
+
+What's New in Clang 3.4.1?
+==========================
+
+* Various bug fixes for AArch64, ARM, and PowerPC targets
+
+* C++11 fixes
+
 What's New in Clang 3.4?
 ========================
 
@@ -88,7 +102,7 @@ improvements since the 3.3 release include:
 
 - Boolean increment, a deprecated feature, has own warning flag
   -Wdeprecated-increment-bool, and is still part of -Wdeprecated.
-- Clang errors on builtin enum increments and decrements.
+- Clang errors on builtin enum increments and decrements in C++.
 
   .. code-block:: c++
 
@@ -99,7 +113,7 @@ improvements since the 3.3 release include:
     }
 
   returns
-  `error: must use 'enum' tag to refer to type 'A'`
+  `error: cannot increment expression of enum type 'A'`
 
 
 - -Wloop-analysis now warns on for-loops which have the same increment or
@@ -177,7 +191,7 @@ C++ Language Changes in Clang
 
 - Fixed an ABI regression, introduced in Clang 3.2, which affected
   member offsets for classes inheriting from certain classes with tail padding.
-  See PR16537.
+  See `PR16537 <http://llvm.org/PR16537>`_.
 
 - Clang 3.4 supports the 2013-08-28 draft of the ISO WG21 SG10 feature test
   macro recommendations. These aim to provide a portable method to determine

@@ -757,7 +757,7 @@ else
 Ranlib        = ranlib
 endif
 
-AliasTool     = ln -s
+AliasTool     = ln -sf
 
 #----------------------------------------------------------
 # Get the list of source files and compute object file
@@ -1027,8 +1027,9 @@ ifeq ($(HOST_OS), $(filter $(HOST_OS), Cygwin MingW))
 LLVMLibsOptions += -Wl,--enable-auto-import,--enable-runtime-pseudo-reloc \
                    -L $(SharedLibDir)
 endif
-LLVMLibsOptions += -lLLVM-$(LLVMVersion)
-LLVMLibsPaths += $(SharedLibDir)/$(SharedPrefix)LLVM-$(LLVMVersion)$(SHLIBEXT)
+LLVM_SO_NAME = LLVM-$(LLVM_VERSION_MAJOR).$(LLVM_VERSION_MINOR)$(LLVM_VERSION_SUFFIX)
+LLVMLibsOptions += -l$(LLVM_SO_NAME)
+LLVMLibsPaths += $(SharedLibDir)/$(SharedPrefix)$(LLVM_SO_NAME)$(SHLIBEXT)
 else
 
 ifndef NO_LLVM_CONFIG
@@ -1121,15 +1122,19 @@ ifdef LIBRARYNAME
 
 # Make sure there isn't any extraneous whitespace on the LIBRARYNAME option
 LIBRARYNAME := $(strip $(LIBRARYNAME))
+LIBRARYALIASNAME := $(strip $(LIBRARYALIASNAME))
 ifdef LOADABLE_MODULE
 BaseLibName.A  := $(LIBRARYNAME).a
 BaseLibName.SO := $(LIBRARYNAME)$(SHLIBEXT)
+BaseAliasName.SO := $(LIBRARYALIASNAME)$(SHLIBEXT)
 else
 BaseLibName.A  := lib$(LIBRARYNAME).a
 BaseLibName.SO := $(SharedPrefix)$(LIBRARYNAME)$(SHLIBEXT)
+BaseAliasName.SO := $(SharedPrefix)$(LIBRARYALIASNAME)$(SHLIBEXT)
 endif
 LibName.A  := $(LibDir)/$(BaseLibName.A)
 LibName.SO := $(SharedLibDir)/$(BaseLibName.SO)
+AliasName.SO := $(SharedLibDir)/$(BaseAliasName.SO)
 LibName.O  := $(LibDir)/$(LIBRARYNAME).o
 
 #---------------------------------------------------------
@@ -1140,7 +1145,12 @@ LibName.O  := $(LibDir)/$(LIBRARYNAME).o
 #---------------------------------------------------------
 ifdef SHARED_LIBRARY
 
-all-local:: $(LibName.SO)
+all-local:: $(AliasName.SO)
+
+$(AliasName.SO): $(LibName.SO)
+ifdef SHARED_ALIAS
+	$(Verb) $(AliasTool) $(BaseLibName.SO) $(AliasName.SO)
+endif
 
 ifdef EXPORTED_SYMBOL_FILE
 $(LibName.SO): $(NativeExportsFile)
@@ -1183,16 +1193,24 @@ else
 DestSharedLibDir := $(DESTDIR)$(PROJ_libdir)
 endif
 DestSharedLib := $(DestSharedLibDir)/$(BaseLibName.SO)
+DestSharedAlias := $(DestSharedLibDir)/$(BaseAliasName.SO)
 
 install-local:: $(DestSharedLib)
 
 $(DestSharedLib): $(LibName.SO) $(DestSharedLibDir)
 	$(Echo) Installing $(BuildMode) Shared Library $(DestSharedLib)
 	$(Verb) $(INSTALL) $(LibName.SO) $(DestSharedLib)
+ifdef SHARED_ALIAS
+	$(Echo) Creating alias from $(DestSharedLib) to $(DestSharedAlias)
+	$(Verb) $(AliasTool) $(BaseLibName.SO) $(DestSharedAlias)
+endif
 
 uninstall-local::
 	$(Echo) Uninstalling $(BuildMode) Shared Library $(DestSharedLib)
 	-$(Verb) $(RM) -f $(DestSharedLib)
+ifdef SHARED_ALIAS
+	-$(Verb) $(RM) -f $(DestSharedAlias)
+endif
 endif
 endif
 
