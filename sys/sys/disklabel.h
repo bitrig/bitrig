@@ -208,7 +208,7 @@ struct disklabel {
 #define	DTYPE_ST506		6		/* ST506 etc. */
 #define	DTYPE_HPIB		7		/* was: CS/80 on HP-IB */
 #define	DTYPE_HPFL		8		/* was: HP Fiber-link */
-#define	DTYPE_FLOPPY		10		/* floppy */
+#define	DTYPE_FLOPPY		10		/* was: floppy */
 #define	DTYPE_CCD		11		/* was: concatenated disk device */
 #define	DTYPE_VND		12		/* vnode pseudo-disk */
 #define	DTYPE_ATAPI		13		/* ATAPI */
@@ -226,7 +226,7 @@ static char *dktypenames[] = {
 	"HP-IB",		/* deprecated */
 	"HP-FL",		/* deprecated */
 	"type 9",
-	"floppy",
+	"floppy",		/* deprecated */
 	"ccd",			/* deprecated */
 	"vnd",
 	"ATAPI",

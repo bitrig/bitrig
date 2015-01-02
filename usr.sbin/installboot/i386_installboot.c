@@ -173,15 +173,9 @@ write_bootblocks(int devfd, char *dev, struct disklabel *dl)
 		sync(); sleep(1);
 	}
 
-	/*
-	 * Find OpenBSD partition. Floppies are special, getting an
-	 * everything-in-one /boot starting at sector 0.
-	 */
-	if (dl->d_type != DTYPE_FLOPPY) {
-		start = findopenbsd(devfd, dl);
-		if (start == (u_int)-1)
- 			errx(1, "no OpenBSD partition");
-	}
+	start = findopenbsd(devfd, dl);
+	if (start == (u_int)-1)
+		errx(1, "no OpenBSD partition");
 
 	if (verbose)
 		fprintf(stderr, "%s will be written at sector %u\n",
