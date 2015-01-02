@@ -201,13 +201,13 @@ struct disklabel {
 
 /* d_type values: */
 #define	DTYPE_SMD		1		/* SMD, XSMD; VAX hp/up */
-#define	DTYPE_MSCP		2		/* MSCP */
-#define	DTYPE_DEC		3		/* other DEC (rk, rl) */
+#define	DTYPE_MSCP		2		/* was: MSCP */
+#define	DTYPE_DEC		3		/* was: other DEC (rk, rl) */
 #define	DTYPE_SCSI		4		/* SCSI */
 #define	DTYPE_ESDI		5		/* ESDI interface */
 #define	DTYPE_ST506		6		/* ST506 etc. */
-#define	DTYPE_HPIB		7		/* CS/80 on HP-IB */
-#define	DTYPE_HPFL		8		/* HP Fiber-link */
+#define	DTYPE_HPIB		7		/* was: CS/80 on HP-IB */
+#define	DTYPE_HPFL		8		/* was: HP Fiber-link */
 #define	DTYPE_FLOPPY		10		/* floppy */
 #define	DTYPE_CCD		11		/* was: concatenated disk device */
 #define	DTYPE_VND		12		/* vnode pseudo-disk */
@@ -218,19 +218,19 @@ struct disklabel {
 static char *dktypenames[] = {
 	"unknown",
 	"SMD",
-	"MSCP",
-	"old DEC",
+	"MSCP",			/* deprecated */
+	"old DEC",		/* deprecated */
 	"SCSI",
 	"ESDI",
 	"ST506",
-	"HP-IB",
-	"HP-FL",
+	"HP-IB",		/* deprecated */
+	"HP-FL",		/* deprecated */
 	"type 9",
 	"floppy",
 	"ccd",			/* deprecated */
 	"vnd",
 	"ATAPI",
-	"RAID",
+	"RAID",			/* deprecated */
 	NULL
 };
 #define DKMAXTYPES	(sizeof(dktypenames) / sizeof(dktypenames[0]) - 1)
