@@ -153,7 +153,6 @@ checkdisklabel(void *rlp, struct disklabel *lp, u_int64_t boundstart,
     u_int64_t boundend)
 {
 	struct disklabel *dlp = rlp;
-	struct __partitionv0 *v0pp;
 	struct partition *pp;
 	u_int64_t disksize;
 	int error = 0;
@@ -163,7 +162,7 @@ checkdisklabel(void *rlp, struct disklabel *lp, u_int64_t boundstart,
 		error = ENOENT;	/* no disk label */
 	else if (dlp->d_npartitions > MAXPARTITIONS)
 		error = E2BIG;	/* too many partitions */
-	else if (dlp->d_secpercyl == 0)
+	else if (dlp->d_secpercyl == 0 || dlp->d_version != 1)
 		error = EINVAL;	/* invalid label */
 	else if (dlp->d_secsize == 0)
 		error = ENOSPC;	/* disk too small */
@@ -176,7 +175,8 @@ checkdisklabel(void *rlp, struct disklabel *lp, u_int64_t boundstart,
 		/* If it is byte-swapped, attempt to convert it */
 		if (swap32(dlp->d_magic) != DISKMAGIC ||
 		    swap32(dlp->d_magic2) != DISKMAGIC ||
-		    swap16(dlp->d_npartitions) > MAXPARTITIONS)
+		    swap16(dlp->d_npartitions) > MAXPARTITIONS ||
+		    swap16(dlp->d_version) != 1)
 			return (error);
 
 		/*
@@ -190,6 +190,8 @@ checkdisklabel(void *rlp, struct disklabel *lp, u_int64_t boundstart,
 			sum ^= *start++;
 		if (sum != 0)
 			return (error);
+
+		error = 0;
 
 		dlp->d_magic = swap32(dlp->d_magic);
 		dlp->d_type = swap16(dlp->d_type);
@@ -229,19 +231,13 @@ checkdisklabel(void *rlp, struct disklabel *lp, u_int64_t boundstart,
 			pp = &dlp->d_partitions[i];
 			pp->p_size = swap32(pp->p_size);
 			pp->p_offset = swap32(pp->p_offset);
-			if (dlp->d_version == 0) {
-				v0pp = (struct __partitionv0 *)pp;
-				v0pp->p_fsize = swap32(v0pp->p_fsize);
-			} else {
-				pp->p_offseth = swap16(pp->p_offseth);
-				pp->p_sizeh = swap16(pp->p_sizeh);
-			}
+			pp->p_offseth = swap16(pp->p_offseth);
+			pp->p_sizeh = swap16(pp->p_sizeh);
 			pp->p_cpg = swap16(pp->p_cpg);
 		}
 
 		dlp->d_checksum = 0;
 		dlp->d_checksum = dkcksum(dlp);
-		error = 0;
 	}
 
 	/* XXX should verify lots of other fields and whine a lot */
@@ -251,20 +247,6 @@ checkdisklabel(void *rlp, struct disklabel *lp, u_int64_t boundstart,
 
 	if (lp != dlp)
 		*lp = *dlp;
-
-	if (lp->d_version == 0) {
-		lp->d_version = 1;
-		lp->d_secperunith = 0;
-
-		v0pp = (struct __partitionv0 *)lp->d_partitions;
-		pp = lp->d_partitions;
-		for (i = 0; i < lp->d_npartitions; i++, pp++, v0pp++) {
-			pp->p_fragblock = DISKLABELV1_FFS_FRAGBLOCK(v0pp->
-			    p_fsize, v0pp->p_frag);
-			pp->p_offseth = 0;
-			pp->p_sizeh = 0;
-		}
-	}
 
 #ifdef DEBUG
 	if (DL_GETDSIZE(lp) != disksize)

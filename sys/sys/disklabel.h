@@ -147,20 +147,7 @@ struct disklabel {
 		u_int16_t p_cpg;	/* UFS: FS cylinders per group */
 	} d_partitions[MAXPARTITIONS];	/* actually may be more */
 };
-
-
-struct	__partitionv0 {		/* old (v0) partition table entry */
-	u_int32_t p_size;	/* number of sectors in partition */
-	u_int32_t p_offset;	/* starting sector */
-	u_int32_t p_fsize;	/* filesystem basic fragment size */
-	u_int8_t p_fstype;	/* filesystem type, see below */
-	u_int8_t p_frag;	/* filesystem fragments per block */
-	union {
-		u_int16_t cpg;	/* UFS: FS cylinders per group */
-		u_int16_t sgs;	/* LFS: FS segment shift */
-	} __partitionv0_u1;
-};
-#endif /* _LOCORE */
+#endif /* !_LOCORE */
 
 
 #define DISKLABELV1_FFS_FRAGBLOCK(fsize, frag) 			\
