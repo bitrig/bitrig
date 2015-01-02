@@ -26,6 +26,8 @@ namespace __sanitizer {
 // non-zero-initialized objects before using.
 template<class Item>
 struct IntrusiveList {
+  friend class Iterator;
+
   void clear() {
     first_ = last_ = 0;
     size_ = 0;
@@ -112,6 +114,25 @@ struct IntrusiveList {
       CHECK_EQ(last_->next, 0);
     }
   }
+
+  template<class ListTy, class ItemTy>
+  class IteratorBase {
+   public:
+    explicit IteratorBase(ListTy *list)
+        : list_(list), current_(list->first_) { }
+    ItemTy *next() {
+      ItemTy *ret = current_;
+      if (current_) current_ = current_->next;
+      return ret;
+    }
+    bool hasNext() const { return current_ != 0; }
+   private:
+    ListTy *list_;
+    ItemTy *current_;
+  };
+
+  typedef IteratorBase<IntrusiveList<Item>, Item> Iterator;
+  typedef IteratorBase<const IntrusiveList<Item>, const Item> ConstIterator;
 
 // private, don't use directly.
   uptr size_;

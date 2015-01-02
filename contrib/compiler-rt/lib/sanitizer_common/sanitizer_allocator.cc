@@ -14,12 +14,11 @@
 #include "sanitizer_allocator.h"
 #include "sanitizer_allocator_internal.h"
 #include "sanitizer_common.h"
-#include "sanitizer_flags.h"
 
 namespace __sanitizer {
 
 // ThreadSanitizer for Go uses libc malloc/free.
-#if defined(SANITIZER_GO)
+#if defined(SANITIZER_GO) || defined(SANITIZER_USE_MALLOC)
 # if SANITIZER_LINUX && !SANITIZER_ANDROID
 extern "C" void *__libc_malloc(uptr size);
 extern "C" void __libc_free(void *ptr);
@@ -61,7 +60,7 @@ InternalAllocator *internal_allocator() {
     SpinMutexLock l(&internal_alloc_init_mu);
     if (atomic_load(&internal_allocator_initialized, memory_order_relaxed) ==
         0) {
-      internal_allocator_instance->Init();
+      internal_allocator_instance->Init(/* may_return_null*/ false);
       atomic_store(&internal_allocator_initialized, 1, memory_order_release);
     }
   }
@@ -117,7 +116,7 @@ void *LowLevelAllocator::Allocate(uptr size) {
   if (allocated_end_ - allocated_current_ < (sptr)size) {
     uptr size_to_allocate = Max(size, GetPageSizeCached());
     allocated_current_ =
-        (char*)MmapOrDie(size_to_allocate, __FUNCTION__);
+        (char*)MmapOrDie(size_to_allocate, __func__);
     allocated_end_ = allocated_current_ + size_to_allocate;
     if (low_level_alloc_callback) {
       low_level_alloc_callback((uptr)allocated_current_,
@@ -140,14 +139,12 @@ bool CallocShouldReturnNullDueToOverflow(uptr size, uptr n) {
   return (max / size) < n;
 }
 
-void *AllocatorReturnNull() {
-  if (common_flags()->allocator_may_return_null)
-    return 0;
+void NORETURN ReportAllocatorCannotReturnNull() {
   Report("%s's allocator is terminating the process instead of returning 0\n",
          SanitizerToolName);
   Report("If you don't like this behavior set allocator_may_return_null=1\n");
   CHECK(0);
-  return 0;
+  Die();
 }
 
 }  // namespace __sanitizer

@@ -8,6 +8,14 @@
 // CHECK-PG: clang{{.*}}" "-cc1" "-triple" "i686-pc-openbsd"
 // CHECK-PG: ld{{.*}}" "-e" "__start" "--eh-frame-hdr" "-Bdynamic" "-dynamic-linker" "{{.*}}ld.so" "-o" "a.out" "{{.*}}gcrt0.o" "{{.*}}crtbegin.o" "{{.*}}.o" "-lgcc" "-lpthread_p" "-lc_p" "-lgcc" "{{.*}}crtend.o"
 
+// Check CPU type for MIPS64
+// RUN: %clang -target mips64-unknown-openbsd -### -c %s 2>&1 \
+// RUN:   | FileCheck -check-prefix=CHECK-MIPS64-CPU %s
+// RUN: %clang -target mips64el-unknown-openbsd -### -c %s 2>&1 \
+// RUN:   | FileCheck -check-prefix=CHECK-MIPS64EL-CPU %s
+// CHECK-MIPS64-CPU: "-target-cpu" "mips3"
+// CHECK-MIPS64EL-CPU: "-target-cpu" "mips3"
+
 // Check that the new linker flags are passed to OpenBSD
 // RUN: %clang -no-canonical-prefixes -target i686-pc-openbsd -r %s -### 2>&1 \
 // RUN:   | FileCheck --check-prefix=CHECK-LD-R %s
@@ -39,6 +47,10 @@
 // RUN:   | FileCheck -check-prefix=CHECK-AMD64-M32 %s
 // RUN: %clang -target powerpc-unknown-openbsd -### -no-integrated-as -c %s 2>&1 \
 // RUN:   | FileCheck -check-prefix=CHECK-POWERPC %s
+// RUN: %clang -target sparc-unknown-openbsd -### -no-integrated-as -c %s 2>&1 \
+// RUN:   | FileCheck -check-prefix=CHECK-SPARC %s
+// RUN: %clang -target sparc64-unknown-openbsd -### -no-integrated-as -c %s 2>&1 \
+// RUN:   | FileCheck -check-prefix=CHECK-SPARC64 %s
 // RUN: %clang -target mips64-unknown-openbsd -### -no-integrated-as -c %s 2>&1 \
 // RUN:   | FileCheck -check-prefix=CHECK-MIPS64 %s
 // RUN: %clang -target mips64-unknown-openbsd -fPIC -### -no-integrated-as -c %s 2>&1 \
@@ -49,6 +61,8 @@
 // RUN:   | FileCheck -check-prefix=CHECK-MIPS64EL-PIC %s
 // CHECK-AMD64-M32: as{{.*}}" "--32"
 // CHECK-POWERPC: as{{.*}}" "-mppc" "-many"
+// CHECK-SPARC: as{{.*}}" "-32"
+// CHECK-SPARC64: as{{.*}}" "-64" "-Av9a"
 // CHECK-MIPS64: as{{.*}}" "-mabi" "64" "-EB"
 // CHECK-MIPS64-PIC: as{{.*}}" "-mabi" "64" "-EB" "-KPIC"
 // CHECK-MIPS64EL: as{{.*}}" "-mabi" "64" "-EL"

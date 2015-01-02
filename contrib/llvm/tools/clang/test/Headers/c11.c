@@ -1,7 +1,8 @@
+// RUN: rm -rf %t
 // RUN: %clang_cc1 -fsyntax-only -verify -std=c11 %s
-// RUN: %clang_cc1 -fsyntax-only -verify -std=c11 -fmodules %s
+// RUN: %clang_cc1 -fsyntax-only -verify -std=c11 -fmodules -fmodules-cache-path=%t %s -D__STDC_WANT_LIB_EXT1__=1
 // RUN: %clang_cc1 -fsyntax-only -verify -std=c11 -ffreestanding %s
-// RUN: %clang_cc1 -fsyntax-only -verify -std=c11 -triple i686-pc-win32 -fmsc-version=1700 %s
+// RUN: %clang_cc1 -fsyntax-only -verify -std=c11 -triple i686-pc-win32 -fms-compatibility-version=17.00 %s
 
 noreturn int f(); // expected-error 1+{{}}
 

@@ -19,7 +19,7 @@ end:
 
 ; CHECK-LABEL: @test1
 ; CHECK: mfcr [[REG1:[0-9]+]]
-; CHECK-DAG: cmpld
+; CHECK-DAG: cmpd
 ; CHECK-DAG: mfocrf [[REG2:[0-9]+]],
 ; CHECK-DAG: stw [[REG1]], 8(1)
 ; CHECK-DAG: stw [[REG2]], -4(1)
@@ -41,7 +41,7 @@ entry:
   br label %foo
 
 foo:
-  call { i64, i64 } asm sideeffect "sc", "={r0},={r3},{r0},~{cc}" (i64 %a)
+  call { i64, i64 } asm sideeffect "sc", "={r0},={r3},{r0},~{cc},~{cr1},~{cr2},~{cr3},~{cr4},~{cr5},~{cr6},~{cr7}" (i64 %a)
   br i1 %c, label %bar, label %end
 
 bar:
@@ -52,7 +52,7 @@ end:
 
 ; CHECK-LABEL: @test2
 ; CHECK: mfcr [[REG1:[0-9]+]]
-; CHECK-DAG: cmpld
+; CHECK-DAG: cmpd
 ; CHECK-DAG: mfocrf [[REG2:[0-9]+]],
 ; CHECK-DAG: stw [[REG1]], 8(1)
 ; CHECK-DAG: stw [[REG2]], -4(1)

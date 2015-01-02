@@ -18,7 +18,7 @@ else
     MAKE=make
 fi
 
-projects="llvm cfe dragonegg compiler-rt libcxx test-suite clang-tools-extra"
+projects="llvm cfe dragonegg compiler-rt libcxx libcxxabi test-suite clang-tools-extra"
 
 # Base SVN URL for the sources.
 Base_url="http://llvm.org/svn/llvm-project"
@@ -26,7 +26,6 @@ Base_url="http://llvm.org/svn/llvm-project"
 Release=""
 Release_no_dot=""
 RC=""
-DOT=""
 Triple=""
 use_gzip="no"
 do_checkout="yes"
@@ -40,28 +39,30 @@ do_debug="no"
 do_asserts="no"
 do_compare="yes"
 BuildDir="`pwd`"
+BuildTriple=""
 
 function usage() {
     echo "usage: `basename $0` -release X.Y -rc NUM [OPTIONS]"
     echo ""
-    echo " -release X.Y      The release number to test."
-    echo " -rc NUM           The pre-release candidate number."
-    echo " -dot NUM          The dot release to test e.g. X.Y.DOT_NUM [default: 0]"
-    echo " -final            The final release candidate."
-    echo " -triple TRIPLE    The target triple for this machine."
-    echo " -j NUM            Number of compile jobs to run. [default: 3]"
-    echo " -build-dir DIR    Directory to perform testing in. [default: pwd]"
-    echo " -no-checkout      Don't checkout the sources from SVN."
-    echo " -no-64bit         Don't test the 64-bit version. [default: yes]"
-    echo " -enable-ada       Build Ada. [default: disable]"
-    echo " -disable-clang    Do not test clang. [default: enable]"
-    echo " -enable-dragonegg Test dragonegg. [default: disable]"
-    echo " -enable-fortran   Enable Fortran build. [default: disable]"
-    echo " -disable-objc     Disable ObjC build. [default: enable]"
-    echo " -test-debug       Test the debug build. [default: no]"
-    echo " -test-asserts     Test with asserts on. [default: no]"
-    echo " -no-compare-files Don't test that phase 2 and 3 files are identical."
-    echo " -use-gzip         Use gzip instead of xz."
+    echo " -release X.Y         The release number to test."
+    echo " -rc NUM              The pre-release candidate number."
+    echo " -final               The final release candidate."
+    echo " -triple TRIPLE       The target triple for this machine."
+    echo " -j NUM               Number of compile jobs to run. [default: 3]"
+    echo " -build-dir DIR       Directory to perform testing in. [default: pwd]"
+    echo " -no-checkout         Don't checkout the sources from SVN."
+    echo " -no-64bit            Don't test the 64-bit version. [default: yes]"
+    echo " -enable-ada          Build Ada. [default: disable]"
+    echo " -disable-clang       Do not test clang. [default: enable]"
+    echo " -enable-dragonegg    Test dragonegg. [default: disable]"
+    echo " -enable-fortran      Enable Fortran build. [default: disable]"
+    echo " -disable-objc        Disable ObjC build. [default: enable]"
+    echo " -test-debug          Test the debug build. [default: no]"
+    echo " -test-asserts        Test with asserts on. [default: no]"
+    echo " -no-compare-files    Don't test that phase 2 and 3 files are identical."
+    echo " -use-gzip            Use gzip instead of xz."
+    echo " -build-triple TRIPLE The build triple for this machine"
+    echo "                      [default: use config.guess]"
 }
 
 while [ $# -gt 0 ]; do
@@ -69,7 +70,7 @@ while [ $# -gt 0 ]; do
         -release | --release )
             shift
             Release="$1"
-            Release_no_dot="`echo $1 | sed -e 's,\.,,'`"
+            Release_no_dot="`echo $1 | sed -e 's,\.,,g'`"
             ;;
         -rc | --rc | -RC | --RC )
             shift
@@ -78,16 +79,13 @@ while [ $# -gt 0 ]; do
         -final | --final )
             RC=final
             ;;
-        -dot | --dot )
-            shift
-            DOT="$1"
-            if [ $DOT -eq 0 ]; then
-                DOT=""
-            fi
-            ;;
         -triple | --triple )
             shift
             Triple="$1"
+            ;;
+        -build-triple | --build-triple )
+            shift
+            BuildTriple="$1"
             ;;
         -j* )
             NumJobs="`echo $1 | sed -e 's,-j\([0-9]*\),\1,g'`"
@@ -145,10 +143,6 @@ while [ $# -gt 0 ]; do
     esac
     shift
 done
-
-if [ -n "$DOT" ]; then
-    Release="$Release.$DOT"
-fi
 
 # Check required arguments.
 if [ -z "$Release" ]; then
@@ -230,30 +224,13 @@ if [ `uname -s` != "Darwin" ]; then
   check_program_exists 'objdump'
 fi
 
-function get_svn_tag() {
-    case $1 in
-        # llvm and clang are the only projects currently doing dot releases.
-        llvm | cfe)
-            if [ -z $DOT ]; then
-                SvnTag="$RC"
-            else
-                SvnTag="dot$DOT-$RC"
-            fi
-            ;;
-        *)
-            SvnTag="$RC"
-            ;;
-    esac
-}
-
 # Make sure that the URLs are valid.
 function check_valid_urls() {
     for proj in $projects ; do
         echo "# Validating $proj SVN URL"
 
-        get_svn_tag "$proj"
-        if ! svn ls $Base_url/$proj/tags/RELEASE_$Release_no_dot/$SvnTag > /dev/null 2>&1 ; then
-            echo "llvm $Release release candidate $RC doesn't exist!"
+        if ! svn ls $Base_url/$proj/tags/RELEASE_$Release_no_dot/$RC > /dev/null 2>&1 ; then
+            echo "$proj $Release release candidate $RC doesn't exist!"
             exit 1
         fi
     done
@@ -264,9 +241,8 @@ function export_sources() {
     check_valid_urls
 
     for proj in $projects ; do
-        echo "# Exporting $proj $Release-RC$RC sources"
-        get_svn_tag "$proj"
-        if ! svn export -q $Base_url/$proj/tags/RELEASE_$Release_no_dot/$SvnTag $proj.src ; then
+        echo "# Exporting $proj $Release-$RC sources"
+        if ! svn export -q $Base_url/$proj/tags/RELEASE_$Release_no_dot/$RC $proj.src ; then
             echo "error: failed to export $proj project"
             exit 1
         fi
@@ -290,6 +266,9 @@ function export_sources() {
     fi
     if [ ! -h libcxx ]; then
         ln -s ../../libcxx.src libcxx
+    fi
+    if [ ! -h libcxxabi ]; then
+        ln -s ../../libcxxabi.src libcxxabi
     fi
     cd $BuildDir
 }
@@ -323,16 +302,21 @@ function configure_llvmCore() {
     echo "# Using C compiler: $c_compiler"
     echo "# Using C++ compiler: $cxx_compiler"
 
+    build_triple_option="${BuildTriple:+--build=$BuildTriple}"
+
     cd $ObjDir
     echo "# Configuring llvm $Release-$RC $Flavor"
     echo "# $BuildDir/llvm.src/configure --prefix=$InstallDir \
         --enable-optimized=$Optimized \
-        --enable-assertions=$Assertions"
+        --enable-assertions=$Assertions \
+        --disable-timestamps \
+        $build_triple_option"
     env CC="$c_compiler" CXX="$cxx_compiler" \
     $BuildDir/llvm.src/configure --prefix=$InstallDir \
         --enable-optimized=$Optimized \
         --enable-assertions=$Assertions \
         --disable-timestamps \
+        $build_triple_option \
         2>&1 | tee $LogDir/llvm.configure-Phase$Phase-$Flavor.log
     cd $BuildDir
 }

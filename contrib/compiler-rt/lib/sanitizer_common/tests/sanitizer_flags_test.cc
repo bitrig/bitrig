@@ -24,14 +24,14 @@ static const char kFlagName[] = "flag_name";
 template <typename T>
 static void TestFlag(T start_value, const char *env, T final_value) {
   T flag = start_value;
-  ParseFlag(env, &flag, kFlagName);
+  ParseFlag(env, &flag, kFlagName, "flag description");
   EXPECT_EQ(final_value, flag);
 }
 
 static void TestStrFlag(const char *start_value, const char *env,
                         const char *final_value) {
   const char *flag = start_value;
-  ParseFlag(env, &flag, kFlagName);
+  ParseFlag(env, &flag, kFlagName, "flag description");
   EXPECT_EQ(0, internal_strcmp(final_value, flag));
 }
 
@@ -49,7 +49,7 @@ TEST(SanitizerCommon, BooleanFlags) {
 
 TEST(SanitizerCommon, IntFlags) {
   TestFlag(-11, 0, -11);
-  TestFlag(-11, "flag_name", 0);
+  TestFlag(-11, "flag_name", -11);
   TestFlag(-11, "--flag_name=", 0);
   TestFlag(-11, "--flag_name=42", 42);
   TestFlag(-11, "--flag_name=-42", -42);
@@ -57,7 +57,7 @@ TEST(SanitizerCommon, IntFlags) {
 
 TEST(SanitizerCommon, StrFlags) {
   TestStrFlag("zzz", 0, "zzz");
-  TestStrFlag("zzz", "flag_name", "");
+  TestStrFlag("zzz", "flag_name", "zzz");
   TestStrFlag("zzz", "--flag_name=", "");
   TestStrFlag("", "--flag_name=abc", "abc");
   TestStrFlag("", "--flag_name='abc zxc'", "abc zxc");
@@ -70,8 +70,8 @@ static void TestTwoFlags(const char *env, bool expected_flag1,
                          const char *expected_flag2) {
   bool flag1 = !expected_flag1;
   const char *flag2 = "";
-  ParseFlag(env, &flag1, "flag1");
-  ParseFlag(env, &flag2, "flag2");
+  ParseFlag(env, &flag1, "flag1", "flag1 description");
+  ParseFlag(env, &flag2, "flag2", "flag2 description");
   EXPECT_EQ(expected_flag1, flag1);
   EXPECT_EQ(0, internal_strcmp(flag2, expected_flag2));
 }
@@ -81,6 +81,27 @@ TEST(SanitizerCommon, MultipleFlags) {
   TestTwoFlags("flag2='qxx' flag1=0", false, "qxx");
   TestTwoFlags("flag1=false:flag2='zzz'", false, "zzz");
   TestTwoFlags("flag2=qxx:flag1=yes", true, "qxx");
+  TestTwoFlags("flag2=qxx\nflag1=yes", true, "qxx");
+  TestTwoFlags("flag2=qxx\r\nflag1=yes", true, "qxx");
+  TestTwoFlags("flag2=qxx\tflag1=yes", true, "qxx");
+}
+
+TEST(SanitizerCommon, CommonFlags) {
+  CommonFlags cf;
+  cf.SetDefaults();
+  EXPECT_TRUE(cf.symbolize);
+  EXPECT_STREQ(".", cf.coverage_dir);
+
+  cf.symbolize = false;
+  cf.coverage = true;
+  cf.coverage_direct = true;
+  cf.log_path = "path/one";
+
+  cf.ParseFromString("symbolize=1:coverage_direct=false log_path='path/two'");
+  EXPECT_TRUE(cf.symbolize);
+  EXPECT_TRUE(cf.coverage);
+  EXPECT_FALSE(cf.coverage_direct);
+  EXPECT_STREQ("path/two", cf.log_path);
 }
 
 }  // namespace __sanitizer
