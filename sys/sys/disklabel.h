@@ -200,7 +200,7 @@ struct disklabel {
 #define DL_BLKOFFSET(d, n)	(((n) % DL_BLKSPERSEC(d)) * DEV_BSIZE)
 
 /* d_type values: */
-#define	DTYPE_SMD		1		/* SMD, XSMD; VAX hp/up */
+#define	DTYPE_SMD		1		/* was: SMD, XSMD; VAX hp/up */
 #define	DTYPE_MSCP		2		/* was: MSCP */
 #define	DTYPE_DEC		3		/* was: other DEC (rk, rl) */
 #define	DTYPE_SCSI		4		/* SCSI */
@@ -217,7 +217,7 @@ struct disklabel {
 #ifdef DKTYPENAMES
 static char *dktypenames[] = {
 	"unknown",
-	"SMD",
+	"SMD",			/* deprecated */
 	"MSCP",			/* deprecated */
 	"old DEC",		/* deprecated */
 	"SCSI",
