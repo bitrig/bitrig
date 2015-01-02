@@ -67,6 +67,9 @@ if type git 1>/dev/null 2>&1 ; then
 	git_branch=`git symbolic-ref HEAD 2>/dev/null | cut -d"/" -f 3-`
 	git_commit=`git log -1 --format="%H"`
 	if [ x${git_branch} != x"" -a x${git_commit} != x"" ]; then
+		if git status --porcelain -uno | grep -q "^ M"; then
+			git_commit="${git_commit}*"
+		fi
 		git_tag="    ${git_branch}:${git_commit}\n"
 	fi
 fi
