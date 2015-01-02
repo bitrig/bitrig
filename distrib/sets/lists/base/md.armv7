@@ -149,6 +149,7 @@
 ./usr/libdata/perl5/arm-bitrig/5.20.1/Filter
 ./usr/libdata/perl5/arm-bitrig/5.20.1/Filter/Util
 ./usr/libdata/perl5/arm-bitrig/5.20.1/Filter/Util/Call.pm
+./usr/libdata/perl5/arm-bitrig/5.20.1/GDBM_File.pm
 ./usr/libdata/perl5/arm-bitrig/5.20.1/Hash
 ./usr/libdata/perl5/arm-bitrig/5.20.1/Hash/Util
 ./usr/libdata/perl5/arm-bitrig/5.20.1/Hash/Util.pm
@@ -306,6 +307,8 @@
 ./usr/libdata/perl5/arm-bitrig/5.20.1/auto/Filter/Util
 ./usr/libdata/perl5/arm-bitrig/5.20.1/auto/Filter/Util/Call
 ./usr/libdata/perl5/arm-bitrig/5.20.1/auto/Filter/Util/Call/Call.so
+./usr/libdata/perl5/arm-bitrig/5.20.1/auto/GDBM_File
+./usr/libdata/perl5/arm-bitrig/5.20.1/auto/GDBM_File/GDBM_File.so
 ./usr/libdata/perl5/arm-bitrig/5.20.1/auto/Hash
 ./usr/libdata/perl5/arm-bitrig/5.20.1/auto/Hash/Util
 ./usr/libdata/perl5/arm-bitrig/5.20.1/auto/Hash/Util/FieldHash
@@ -410,6 +413,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/arm/atomic.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/arm/bus.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/arm/cdefs.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/arm/clock.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/arm/conf.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/arm/cpu.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/arm/cpuconf.ph
