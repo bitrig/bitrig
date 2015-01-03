@@ -197,7 +197,7 @@ int
 cl_bell(SCR *sp)
 {
 	if (F_ISSET(sp, SC_EX | SC_SCR_EXWROTE))
-		(void)write(STDOUT_FILENO, "\07", 1);		/* \a */
+		(void)write(STDOUT_FILENO, "\a", 1);
 	else {
 		/*
 		 * If the screen has not been setup we cannot call
@@ -213,7 +213,7 @@ cl_bell(SCR *sp)
 			else
 				(void)beep();
 		} else if (!O_ISSET(sp, O_FLASH))
-			(void)write(STDOUT_FILENO, "\07", 1);
+			(void)write(STDOUT_FILENO, "\a", 1);
 	}
 	return (0);
 }

@@ -488,7 +488,7 @@ v_end(GS *gp)
 
 	/* Ring the bell if scheduled. */
 	if (F_ISSET(gp, G_BELLSCHED))
-		(void)fprintf(stderr, "\07");		/* \a */
+		(void)fprintf(stderr, "\a");
 
 	/*
 	 * Flush any remaining messages.  If a message is here, it's almost
