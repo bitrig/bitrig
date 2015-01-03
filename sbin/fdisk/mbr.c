@@ -1,4 +1,4 @@
-/*	$OpenBSD: mbr.c,v 1.40 2014/05/21 15:55:19 krw Exp $	*/
+/*	$OpenBSD: mbr.c,v 1.41 2015/01/03 15:50:50 jsing Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -50,7 +50,7 @@
 void
 MBR_init_GPT(struct disk *disk, struct mbr *mbr)
 {
-	/* initialize a protective MBR for GPT */
+	/* Initialize a protective MBR for GPT. */
 	bzero(&mbr->part, sizeof(mbr->part));
 
 	/* Use whole disk, starting after MBR. */
@@ -58,7 +58,7 @@ MBR_init_GPT(struct disk *disk, struct mbr *mbr)
 	mbr->part[0].bs = 1;
 	mbr->part[0].ns = disk->size - 1;
 
-	/* Fix up start/length fields */
+	/* Fix up start/length fields. */
 	PRT_fix_CHS(disk, &mbr->part[0]);
 }
 

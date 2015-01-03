@@ -1,4 +1,4 @@
-/*	$OpenBSD: fdisk.c,v 1.63 2014/03/20 13:18:21 krw Exp $	*/
+/*	$OpenBSD: fdisk.c,v 1.64 2015/01/03 15:50:50 jsing Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -47,6 +47,7 @@ static unsigned char builtin_mbr[] = {
 #include "mbrcode.h"
 };
 
+int	g_flag;
 int	y_flag;
 int	g_flag;
 
@@ -56,7 +57,8 @@ usage(void)
 	extern char * __progname;
 
 	fprintf(stderr, "usage: %s "
-	    "[-egiuy] [-c cylinders -h heads -s sectors] [-f mbrfile] [-l blocks] disk\n"
+	    "[-egiuy] [-c cylinders -h heads -s sectors] [-f mbrfile] "
+	    "[-l blocks] disk\n"
 	    "\t-i: initialize disk with virgin MBR\n"
 	    "\t-u: update MBR code, preserve partition table\n"
 	    "\t-e: edit MBRs on disk interactively\n"
@@ -64,7 +66,7 @@ usage(void)
 	    "\t-chs: specify disk geometry\n"
 	    "\t-l: specify LBA block count\n"
 	    "\t-y: do not ask questions\n"
-	    "\t-g: intialize disk with EFI/GPT partition, requires -i\n"
+	    "\t-g: initialize disk with EFI/GPT partition, requires -i\n"
 	    "`disk' may be of the forms: sd0 or /dev/rsd0c.\n",
 	    __progname);
 	exit(1);
