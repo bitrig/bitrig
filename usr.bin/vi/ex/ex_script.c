@@ -12,8 +12,6 @@
  * See the LICENSE file for redistribution information.
  */
 
-#include "config.h"
-
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/queue.h>

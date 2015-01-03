@@ -9,8 +9,6 @@
  * See the LICENSE file for redistribution information.
  */
 
-#include "config.h"
-
 #include <sys/param.h>
 #include <sys/queue.h>
 #include <sys/wait.h>

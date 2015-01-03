@@ -3,13 +3,11 @@
 
 PROG=	vi
 
-# Modern curses (ncurses)
 CFLAGS+=-I${.CURDIR} -I${.CURDIR}/../include
-LDADD+=-lcurses
-DPADD+= ${LIBCURSES}
+#CFLAGS+=-DDEBUG
 
-LDADD+=-lutil
-DPADD+= ${LIBUTIL}
+LDADD+=-lcurses -lutil
+DPADD+= ${LIBCURSES} ${LIBUTIL}
 
 SRCS=	cl_funcs.c cl_main.c cl_read.c cl_screen.c cl_term.c \
 	cut.c delete.c ex.c ex_abbrev.c ex_append.c ex_args.c ex_argv.c \

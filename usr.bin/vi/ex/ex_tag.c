@@ -12,8 +12,6 @@
  * See the LICENSE file for redistribution information.
  */
 
-#include "config.h"
-
 #include <sys/param.h>
 #include <sys/mman.h>
 #include <sys/queue.h>
