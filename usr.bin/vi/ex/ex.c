@@ -20,12 +20,15 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "../common/common.h"
+#include "../cl/cl.h"
 #include "../vi/vi.h"
 
 #if defined(DEBUG) && defined(COMLOG)
@@ -60,7 +63,7 @@ ex(SCR **spp)
 
 	/* Flush any saved messages. */
 	while ((mp = LIST_FIRST(&gp->msgq)) != NULL) {
-		gp->scr_msg(sp, mp->mtype, mp->buf, mp->len);
+		vs_msg(sp, mp->mtype, mp->buf, mp->len);
 		LIST_REMOVE(mp, q);
 		free(mp->buf);
 		free(mp);
@@ -1349,7 +1352,7 @@ addr_verify:
 		if (sp->ep != NULL &&
 		    F_ISSET(sp, SC_EX) && !F_ISSET(gp, G_SCRIPTED) &&
 		    (F_ISSET(ecp, E_USELASTCMD) || ecp->cmd == &cmds[C_SCROLL]))
-			gp->scr_ex_adjust(sp, EX_TERM_SCROLL);
+			cl_ex_adjust(sp, EX_TERM_SCROLL);
 		F_CLR(ecp, E_NRSEP);
 	}
 

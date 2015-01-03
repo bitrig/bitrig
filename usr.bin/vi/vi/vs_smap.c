@@ -16,11 +16,14 @@
 #include <sys/time.h>
 
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 
 #include "../common/common.h"
+#include "../cl/cl.h"
 #include "vi.h"
 
 static int	vs_deleteln(SCR *, int);
@@ -124,7 +127,7 @@ vs_change(SCR *sp, recno_t lno, lnop_t op)
 	}
 
 	/* Save and restore the cursor for these routines. */
-	(void)sp->gp->scr_cursor(sp, &oldy, &oldx);
+	(void)cl_cursor(sp, &oldy, &oldx);
 
 	switch (op) {
 	case LINE_DELETE:
@@ -145,7 +148,7 @@ vs_change(SCR *sp, recno_t lno, lnop_t op)
 		abort();
 	}
 
-	(void)sp->gp->scr_move(sp, oldy, oldx);
+	(void)cl_move(sp, oldy, oldx);
 	return (0);
 }
 
@@ -305,7 +308,7 @@ vs_sm_delete(SCR *sp, recno_t lno)
 	HANDLE_WEIRDNESS(cnt_orig);
 
 	/* Delete that many lines from the screen. */
-	(void)sp->gp->scr_move(sp, p - HMAP, 0);
+	(void)cl_move(sp, p - HMAP, 0);
 	if (vs_deleteln(sp, cnt_orig))
 		return (1);
 
@@ -360,7 +363,7 @@ vs_sm_insert(SCR *sp, recno_t lno)
 		cnt_orig = cnt;
 
 	/* Push down that many lines. */
-	(void)sp->gp->scr_move(sp, p - HMAP, 0);
+	(void)cl_move(sp, p - HMAP, 0);
 	if (vs_insertln(sp, cnt_orig))
 		return (1);
 
@@ -433,7 +436,7 @@ vs_sm_reset(SCR *sp, recno_t lno)
 
 		/* If there are any following lines, push them down. */
 		if (cnt > 1) {
-			(void)sp->gp->scr_move(sp, p - HMAP, 0);
+			(void)cl_move(sp, p - HMAP, 0);
 			if (vs_insertln(sp, diff))
 				return (1);
 
@@ -455,7 +458,7 @@ vs_sm_reset(SCR *sp, recno_t lno)
 		diff = cnt_orig - cnt_new;
 
 		/* Delete that many lines from the screen. */
-		(void)sp->gp->scr_move(sp, p - HMAP, 0);
+		(void)cl_move(sp, p - HMAP, 0);
 		if (vs_deleteln(sp, diff))
 			return (1);
 
@@ -728,7 +731,7 @@ vs_sm_1up(SCR *sp)
 	 * Delete the top line of the screen.  Shift the screen map
 	 * up and display a new line at the bottom of the screen.
 	 */
-	(void)sp->gp->scr_move(sp, 0, 0);
+	(void)cl_move(sp, 0, 0);
 	if (vs_deleteln(sp, 1))
 		return (1);
 
@@ -753,19 +756,17 @@ vs_sm_1up(SCR *sp)
 static int
 vs_deleteln(SCR *sp, int cnt)
 {
-	GS *gp;
 	size_t oldy, oldx;
 
-	gp = sp->gp;
 	if (IS_ONELINE(sp))
-		(void)gp->scr_clrtoeol(sp);
+		(void)cl_clrtoeol(sp);
 	else {
-		(void)gp->scr_cursor(sp, &oldy, &oldx);
+		(void)cl_cursor(sp, &oldy, &oldx);
 		while (cnt--) {
-			(void)gp->scr_deleteln(sp);
-			(void)gp->scr_move(sp, LASTLINE(sp), 0);
-			(void)gp->scr_insertln(sp);
-			(void)gp->scr_move(sp, oldy, oldx);
+			(void)cl_deleteln(sp);
+			(void)cl_move(sp, LASTLINE(sp), 0);
+			(void)cl_insertln(sp);
+			(void)cl_move(sp, oldy, oldx);
 		}
 	}
 	return (0);
@@ -929,14 +930,11 @@ vs_sm_down(SCR *sp, MARK *rp, recno_t count, scroll_t scmd, SMAP *smp)
 static int
 vs_sm_erase(SCR *sp)
 {
-	GS *gp;
-
-	gp = sp->gp;
-	(void)gp->scr_move(sp, LASTLINE(sp), 0);
-	(void)gp->scr_clrtoeol(sp);
+	(void)cl_move(sp, LASTLINE(sp), 0);
+	(void)cl_clrtoeol(sp);
 	for (; sp->t_rows > sp->t_minrows; --sp->t_rows, --TMAP) {
-		(void)gp->scr_move(sp, TMAP - HMAP, 0);
-		(void)gp->scr_clrtoeol(sp);
+		(void)cl_move(sp, TMAP - HMAP, 0);
+		(void)cl_clrtoeol(sp);
 	}
 	return (0);
 }
@@ -952,7 +950,7 @@ vs_sm_1down(SCR *sp)
 	 * Insert a line at the top of the screen.  Shift the screen map
 	 * down and display a new line at the top of the screen.
 	 */
-	(void)sp->gp->scr_move(sp, 0, 0);
+	(void)cl_move(sp, 0, 0);
 	if (vs_insertln(sp, 1))
 		return (1);
 
@@ -977,20 +975,18 @@ vs_sm_1down(SCR *sp)
 static int
 vs_insertln(SCR *sp, int cnt)
 {
-	GS *gp;
 	size_t oldy, oldx;
 
-	gp = sp->gp;
 	if (IS_ONELINE(sp)) {
-		(void)gp->scr_move(sp, LASTLINE(sp), 0);
-		(void)gp->scr_clrtoeol(sp);
+		(void)cl_move(sp, LASTLINE(sp), 0);
+		(void)cl_clrtoeol(sp);
 	} else {
-		(void)gp->scr_cursor(sp, &oldy, &oldx);
+		(void)cl_cursor(sp, &oldy, &oldx);
 		while (cnt--) {
-			(void)gp->scr_move(sp, LASTLINE(sp) - 1, 0);
-			(void)gp->scr_deleteln(sp);
-			(void)gp->scr_move(sp, oldy, oldx);
-			(void)gp->scr_insertln(sp);
+			(void)cl_move(sp, LASTLINE(sp) - 1, 0);
+			(void)cl_deleteln(sp);
+			(void)cl_move(sp, oldy, oldx);
+			(void)cl_insertln(sp);
 		}
 	}
 	return (0);

@@ -33,12 +33,9 @@ static SCR *vs_getbg(SCR *, char *);
 int
 vs_split(SCR *sp, SCR *new, int ccl)
 {
-	GS *gp;
 	SMAP *smp;
 	size_t half;
 	int issmallscreen, splitup;
-
-	gp = sp->gp;
 
 	/* Check to see if it's possible. */
 	/* XXX: The IS_ONELINE fix will change this, too. */
@@ -103,7 +100,7 @@ vs_split(SCR *sp, SCR *new, int ccl)
 		sp->rows -= half;		/* Old. */
 		new->woff = sp->woff + sp->rows;
 						/* Link in after old. */
-		TAILQ_INSERT_AFTER(&gp->dq, sp, new, q);
+		TAILQ_INSERT_AFTER(&sp->gp->dq, sp, new, q);
 	}
 
 	/* Adjust maximum text count. */
@@ -445,11 +442,8 @@ vs_swap(SCR *sp, SCR **nspp, char *name)
 int
 vs_resize(SCR *sp, long count, adj_t adj)
 {
-	GS *gp;
 	SCR *g, *s;
 	size_t g_off, s_off;
-
-	gp = sp->gp;
 
 	/*
 	 * Figure out which screens will grow, which will shrink, and

@@ -21,9 +21,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "../common/common.h"
+#include "../cl/cl.h"
 
 /*
  * ex_shell -- :sh[ell]
@@ -47,13 +49,13 @@ ex_shell(SCR *sp, EXCMD *cmdp)
 	(void)snprintf(buf, sizeof(buf), "%s -i", O_STR(sp, O_SHELL));
 
 	/* Restore the window name. */
-	(void)sp->gp->scr_rename(sp, NULL, 0);
+	(void)cl_rename(sp, NULL, 0);
 
 	/* If we're still in a vi screen, move out explicitly. */
 	rval = ex_exec_proc(sp, cmdp, buf, NULL, !F_ISSET(sp, SC_SCR_EXWROTE));
 
 	/* Set the window name. */
-	(void)sp->gp->scr_rename(sp, sp->frp->name, 1);
+	(void)cl_rename(sp, sp->frp->name, 1);
 
 	/*
 	 * !!!
@@ -85,11 +87,11 @@ ex_exec_proc(SCR *sp, EXCMD *cmdp, char *cmd, const char *msg,
 
 	/* Enter ex mode. */
 	if (F_ISSET(sp, SC_VI)) {
-		if (gp->scr_screen(sp, SC_EX)) {
+		if (cl_screen(sp, SC_EX)) {
 			ex_emsg(sp, cmdp->cmd->name, EXM_NOCANON);
 			return (1);
 		}
-		(void)gp->scr_attr(sp, SA_ALTERNATE, 0);
+		(void)cl_attr(sp, SA_ALTERNATE, 0);
 		F_SET(sp, SC_SCR_EX | SC_SCR_EXWROTE);
 	}
 

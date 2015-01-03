@@ -18,12 +18,15 @@
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "common.h"
+#include "../cl/cl.h"
 
 int
 f_altwerase(SCR *sp, OPTION *op, char *str, u_long *valp)
@@ -206,7 +209,7 @@ f_w300(SCR *sp, OPTION *op, char *str, u_long *valp)
 	u_long v;
 
 	/* Historical behavior for w300 was < 1200. */
-	if (sp->gp->scr_baud(sp, &v))
+	if (cl_baud(sp, &v))
 		return (1);
 	if (v >= 1200)
 		return (0);
@@ -220,7 +223,7 @@ f_w1200(SCR *sp, OPTION *op, char *str, u_long *valp)
 	u_long v;
 
 	/* Historical behavior for w1200 was == 1200. */
-	if (sp->gp->scr_baud(sp, &v))
+	if (cl_baud(sp, &v))
 		return (1);
 	if (v < 1200 || v > 4800)
 		return (0);
@@ -234,7 +237,7 @@ f_w9600(SCR *sp, OPTION *op, char *str, u_long *valp)
 	u_long v;
 
 	/* Historical behavior for w9600 was > 1200. */
-	if (sp->gp->scr_baud(sp, &v))
+	if (cl_baud(sp, &v))
 		return (1);
 	if (v <= 4800)
 		return (0);

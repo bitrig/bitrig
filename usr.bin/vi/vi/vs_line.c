@@ -16,10 +16,13 @@
 #include <sys/time.h>
 
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include <termios.h>
 
 #include "../common/common.h"
+#include "../cl/cl.h"
 #include "vi.h"
 
 #ifdef VISIBLE_TAB_CHARS
@@ -36,7 +39,6 @@ int
 vs_line(SCR *sp, SMAP *smp, size_t *yp, size_t *xp)
 {
 	CHAR_T *kp;
-	GS *gp;
 	SMAP *tsmp;
 	size_t chlen = 0, cno_cnt, cols_per_screen, len, nlen;
 	size_t offset_in_char, offset_in_line, oldx, oldy;
@@ -79,9 +81,8 @@ vs_line(SCR *sp, SMAP *smp, size_t *yp, size_t *xp)
 	 * the real contents of the screen are.  Because of this, we have to
 	 * return to whereever we started from.
 	 */
-	gp = sp->gp;
-	(void)gp->scr_cursor(sp, &oldy, &oldx);
-	(void)gp->scr_move(sp, smp - HMAP, 0);
+	(void)cl_cursor(sp, &oldy, &oldx);
+	(void)cl_move(sp, smp - HMAP, 0);
 
 	/* Get the line. */
 	dne = db_get(sp, smp->lno, 0, &p, &len);
@@ -135,7 +136,7 @@ vs_line(SCR *sp, SMAP *smp, size_t *yp, size_t *xp)
 				    O_NUMBER_FMT, (ulong)smp->lno);
 				if (nlen >= sizeof(cbuf))
 					nlen = sizeof(cbuf) - 1;
-				(void)gp->scr_addstr(sp, cbuf, nlen);
+				(void)cl_addstr(sp, cbuf, nlen);
 			}
 		}
 	}
@@ -178,13 +179,13 @@ vs_line(SCR *sp, SMAP *smp, size_t *yp, size_t *xp)
 			} else
 				if (list_dollar) {
 					ch = '$';
-empty:					(void)gp->scr_addstr(sp,
+empty:					(void)cl_addstr(sp,
 					    KEY_NAME(sp, ch), KEY_LEN(sp, ch));
 				}
 		}
 
-		(void)gp->scr_clrtoeol(sp);
-		(void)gp->scr_move(sp, oldy, oldx);
+		(void)cl_clrtoeol(sp);
+		(void)cl_move(sp, oldy, oldx);
 		return (0);
 	}
 
@@ -394,9 +395,9 @@ display:
 		if (is_cached)
 			continue;
 
-#define	FLUSH(gp, sp, cbp, cbuf) do {					\
+#define	FLUSH(sp, cbp, cbuf) do {					\
 	*(cbp) = '\0';							\
-	(void)(gp)->scr_addstr((sp), (cbuf), (cbp) - (cbuf));		\
+	(void)cl_addstr((sp), (cbuf), (cbp) - (cbuf));			\
 	(cbp) = (cbuf);							\
 } while (0)
 		/*
@@ -409,12 +410,12 @@ display:
 		if (is_tab)
 			while (chlen--) {
 				if (cbp >= ecbp)
-					FLUSH(gp, sp, cbp, cbuf);
+					FLUSH(sp, cbp, cbuf);
 				*cbp++ = TABCH;
 			}
 		else {
 			if (cbp + chlen >= ecbp)
-				FLUSH(gp, sp, cbp, cbuf);
+				FLUSH(sp, cbp, cbuf);
 			for (kp = KEY_NAME(sp, ch) + offset_in_char; chlen--;)
 				*cbp++ = *kp++;
 		}
@@ -435,21 +436,21 @@ display:
 
 			chlen = KEY_LEN(sp, '$');
 			if (cbp + chlen >= ecbp)
-				FLUSH(gp, sp, cbp, cbuf);
+				FLUSH(sp, cbp, cbuf);
 			for (kp = KEY_NAME(sp, '$'); chlen--;)
 				*cbp++ = *kp++;
 		}
 
 		/* If still didn't paint the whole line, clear the rest. */
 		if (scno < cols_per_screen)
-			(void)gp->scr_clrtoeol(sp);
+			(void)cl_clrtoeol(sp);
 	}
 
 	/* Flush any buffered characters. */
 	if (cbp > cbuf)
-		FLUSH(gp, sp, cbp, cbuf);
+		FLUSH(sp, cbp, cbuf);
 
-ret1:	(void)gp->scr_move(sp, oldy, oldx);
+ret1:	(void)cl_move(sp, oldy, oldx);
 	return (0);
 }
 
@@ -460,13 +461,10 @@ ret1:	(void)gp->scr_move(sp, oldy, oldx);
 int
 vs_number(SCR *sp)
 {
-	GS *gp;
 	SMAP *smp;
 	size_t len, oldy, oldx;
 	int exist;
 	char nbuf[10];
-
-	gp = sp->gp;
 
 	/* No reason to do anything if we're in input mode on the info line. */
 	if (F_ISSET(sp, SC_TINPUT_INFO))
@@ -483,7 +481,7 @@ vs_number(SCR *sp)
 	 */
 	exist = db_exist(sp, TMAP->lno + 1);
 
-	(void)gp->scr_cursor(sp, &oldy, &oldx);
+	(void)cl_cursor(sp, &oldy, &oldx);
 	for (smp = HMAP; smp <= TMAP; ++smp) {
 		/* Numbers are only displayed for the first screen line. */
 		if (O_ISSET(sp, O_LEFTRIGHT)) {
@@ -500,12 +498,12 @@ vs_number(SCR *sp)
 		if (smp->lno != 1 && !exist && !db_exist(sp, smp->lno))
 			break;
 
-		(void)gp->scr_move(sp, smp - HMAP, 0);
+		(void)cl_move(sp, smp - HMAP, 0);
 		len = snprintf(nbuf, sizeof(nbuf), O_NUMBER_FMT, (ulong)smp->lno);
 		if (len >= sizeof(nbuf))
 			len = sizeof(nbuf) - 1;
-		(void)gp->scr_addstr(sp, nbuf, len);
+		(void)cl_addstr(sp, nbuf, len);
 	}
-	(void)gp->scr_move(sp, oldy, oldx);
+	(void)cl_move(sp, oldy, oldx);
 	return (0);
 }

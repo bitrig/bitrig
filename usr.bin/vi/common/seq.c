@@ -255,13 +255,11 @@ int
 seq_dump(SCR *sp, seq_t stype, int isname)
 {
 	CHAR_T *p;
-	GS *gp;
 	SEQ *qp;
 	int cnt, len, olen;
 
 	cnt = 0;
-	gp = sp->gp;
-	LIST_FOREACH(qp, &gp->seqq, q) {
+	LIST_FOREACH(qp, &sp->gp->seqq, q) {
 		if (stype != qp->stype || F_ISSET(qp, SEQ_FUNCMAP))
 			continue;
 		++cnt;

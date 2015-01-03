@@ -20,12 +20,15 @@
 #include <errno.h>
 #include <limits.h>
 #include <paths.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "common.h"
+#include "../cl/cl.h"
 #include "../vi/vi.h"
 #include "pathnames.h"
 
@@ -384,7 +387,7 @@ opts_init(SCR *sp, int *oargs)
 	 * Note, the windows option code will correct any too-large value
 	 * or when the O_LINES value is 1.
 	 */
-	if (sp->gp->scr_baud(sp, &v))
+	if (cl_baud(sp, &v))
 		return (1);
 	if (v <= 600)
 		v = 8;
@@ -572,7 +575,7 @@ opts_set(SCR *sp, ARGS *argv[], char *usage)
 			    op->func(sp, spo, NULL, &turnoff)) ||
 			    ex_optchange(sp, offset, NULL, &turnoff) ||
 			    v_optchange(sp, offset, NULL, &turnoff) ||
-			    sp->gp->scr_optchange(sp, offset, NULL, &turnoff)) {
+			    cl_optchange(sp, offset, NULL, &turnoff)) {
 				rval = 1;
 				break;
 			}
@@ -667,7 +670,7 @@ badnum:				p = msg_print(sp, name, &nf);
 			    op->func(sp, spo, sep, &value)) ||
 			    ex_optchange(sp, offset, sep, &value) ||
 			    v_optchange(sp, offset, sep, &value) ||
-			    sp->gp->scr_optchange(sp, offset, sep, &value)) {
+			    cl_optchange(sp, offset, sep, &value)) {
 				rval = 1;
 				break;
 			}
@@ -714,7 +717,7 @@ badnum:				p = msg_print(sp, name, &nf);
 			    op->func(sp, spo, sep, NULL)) ||
 			    ex_optchange(sp, offset, sep, NULL) ||
 			    v_optchange(sp, offset, sep, NULL) ||
-			    sp->gp->scr_optchange(sp, offset, sep, NULL)) {
+			    cl_optchange(sp, offset, sep, NULL)) {
 				rval = 1;
 				break;
 			}

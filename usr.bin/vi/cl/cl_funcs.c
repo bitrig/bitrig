@@ -435,14 +435,12 @@ cl_refresh(SCR *sp, int repaint)
 int
 cl_rename(SCR *sp, char *name, int on)
 {
-	GS *gp;
 	CL_PRIVATE *clp;
 	char *ttype;
 
-	gp = sp->gp;
 	clp = CLP(sp);
 
-	ttype = OG_STR(gp, GO_TERM);
+	ttype = OG_STR(sp->gp, GO_TERM);
 
 	/*
 	 * XXX

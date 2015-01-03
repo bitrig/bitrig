@@ -16,9 +16,12 @@
 #include <sys/time.h>
 
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
+#include <termios.h>
 
 #include "../common/common.h"
+#include "../cl/cl.h"
 #include "vi.h"
 
 /*
@@ -28,5 +31,5 @@
 int
 v_redraw(SCR *sp, VICMD *vp)
 {
-	return (sp->gp->scr_refresh(sp, 1));
+	return (cl_refresh(sp, 1));
 }

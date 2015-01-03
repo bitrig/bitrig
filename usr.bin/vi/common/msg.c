@@ -172,7 +172,7 @@ nofmt:	mp += len;
 	if (sp != NULL)
 		(void)ex_fflush(sp);
 	if (gp != NULL)
-		gp->scr_msg(sp, mt, bp, mlen);
+		vs_msg(sp, mt, bp, mlen);
 	else
 		(void)fprintf(stderr, "%.*s", (int)mlen, bp);
 
@@ -315,7 +315,7 @@ mod_rpt(SCR *sp)
 	++tlen;
 
 	(void)ex_fflush(sp);
-	sp->gp->scr_msg(sp, M_INFO, bp, tlen);
+	vs_msg(sp, M_INFO, bp, tlen);
 
 	FREE_SPACE(sp, bp, blen);
 alloc_err:
@@ -479,7 +479,7 @@ msgq_status(SCR *sp, recno_t lno, u_int flags)
 	/* Flush any waiting ex messages. */
 	(void)ex_fflush(sp);
 
-	sp->gp->scr_msg(sp, M_INFO, s, len);
+	vs_msg(sp, M_INFO, s, len);
 
 	FREE_SPACE(sp, bp, blen);
 alloc_err:

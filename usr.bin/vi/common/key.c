@@ -19,12 +19,15 @@
 #include <errno.h>
 #include <limits.h>
 #include <locale.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "common.h"
+#include "../cl/cl.h"
 #include "../vi/vi.h"
 
 static int	v_event_append(SCR *, EVENT *);
@@ -157,7 +160,7 @@ v_keyval(SCR *sp, int val, scr_keyval_t name)
 	int dne;
 
 	/* Get the key's value from the screen. */
-	if (sp->gp->scr_keyval(sp, name, &ch, &dne))
+	if (cl_keyval(sp, name, &ch, &dne))
 		return;
 	if (dne)
 		return;
@@ -514,7 +517,7 @@ retry:	istimeout = remap_cnt = 0;
 		 */
 		if (F_ISSET(gp, G_SCRWIN) && sscr_input(sp))
 			return (1);
-loop:		if (gp->scr_event(sp, argp,
+loop:		if (cl_event(sp, argp,
 		    LF_ISSET(EC_INTERRUPT | EC_QUOTED | EC_RAW), timeout))
 			return (1);
 		switch (argp->e_event) {
@@ -655,7 +658,7 @@ not_digit:	argp->e_c = CH_NOT_DIGIT;
 		 * get anywhere useful.
 		 */
 		if ((++remap_cnt == 1 || remap_cnt % 10 == 0) &&
-		    (gp->scr_event(sp, &ev,
+		    (cl_event(sp, &ev,
 		    EC_INTERRUPT, 0) || ev.e_event == E_INTERRUPT)) {
 			F_SET(sp->gp, G_INTERRUPTED);
 			argp->e_event = E_INTERRUPT;

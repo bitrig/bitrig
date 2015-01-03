@@ -19,12 +19,16 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "../common/common.h"
+#include "../cl/cl.h"
+#include "../vi/vi.h"
 
 enum which {WN, WQ, WRITE, XIT};
 static int exwr(SCR *, EXCMD *, enum which);
@@ -235,7 +239,7 @@ exwr(SCR *sp, EXCMD *cmdp, enum which cmd)
 			F_SET(sp->frp, FR_NAMECHANGE | FR_EXNAMED);
 
 			/* Notify the screen. */
-			(void)sp->gp->scr_rename(sp, sp->frp->name, 1);
+			(void)cl_rename(sp, sp->frp->name, 1);
 		} else
 			set_alt_name(sp, name);
 		break;
@@ -297,7 +301,7 @@ ex_writefp(SCR *sp, char *name, FILE *fp, MARK *fm, MARK *tm, u_long *nlno,
 				if (INTERRUPTED(sp))
 					break;
 				if (!silent) {
-					gp->scr_busy(sp, msg, msg == NULL ?
+					vs_busy(sp, msg, msg == NULL ?
 					    BUSY_UPDATE : BUSY_ON);
 					msg = NULL;
 				}
@@ -338,7 +342,7 @@ err:		if (!F_ISSET(sp->ep, F_MULTILOCK))
 	}
 
 	if (!silent)
-		gp->scr_busy(sp, NULL, BUSY_OFF);
+		vs_busy(sp, NULL, BUSY_OFF);
 
 	/* Report the possibly partial transfer. */
 	if (nlno != NULL) {

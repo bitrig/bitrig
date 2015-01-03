@@ -15,11 +15,14 @@
 #include <sys/queue.h>
 
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "../common/common.h"
+#include "../cl/cl.h"
 
 enum which {APPEND, CHANGE, INSERT};
 
@@ -194,7 +197,7 @@ ex_aci(SCR *sp, EXCMD *cmdp, enum which cmd)
 	 * be possible.
 	 */
 	if (F_ISSET(sp, SC_VI)) {
-		if (gp->scr_screen(sp, SC_EX)) {
+		if (cl_screen(sp, SC_EX)) {
 			ex_emsg(sp, cmdp->cmd->name, EXM_NOCANON);
 			return (1);
 		}

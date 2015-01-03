@@ -18,12 +18,15 @@
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "../common/common.h"
+#include "../cl/cl.h"
 #include "vi.h"
 
 typedef enum {
@@ -82,7 +85,7 @@ vi(SCR **spp)
 		return (1);
 
 	/* Set the focus. */
-	(void)sp->gp->scr_rename(sp, sp->frp->name, 1);
+	(void)cl_rename(sp, sp->frp->name, 1);
 
 	for (vip = VIP(sp), rval = 0;;) {
 		/* Resolve messages. */
@@ -259,7 +262,7 @@ gc_event:
 			/* Switch screens, change focus. */
 			sp = next;
 			vip = VIP(sp);
-			(void)sp->gp->scr_rename(sp, sp->frp->name, 1);
+			(void)cl_rename(sp, sp->frp->name, 1);
 
 			/* Don't trust the cursor. */
 			F_SET(vip, VIP_CUR_INVALID);
@@ -379,7 +382,7 @@ intr:			CLR_INTERRUPT(sp);
 			/* Switch screens, change focus. */
 			sp = sp->nextdisp;
 			vip = VIP(sp);
-			(void)sp->gp->scr_rename(sp, sp->frp->name, 1);
+			(void)cl_rename(sp, sp->frp->name, 1);
 
 			/* Don't trust the cursor. */
 			F_SET(vip, VIP_CUR_INVALID);
@@ -392,7 +395,7 @@ intr:			CLR_INTERRUPT(sp);
 		/* If the last command switched files, change focus. */
 		if (F_ISSET(sp, SC_FSWITCH)) {
 			F_CLR(sp, SC_FSWITCH);
-			(void)sp->gp->scr_rename(sp, sp->frp->name, 1);
+			(void)cl_rename(sp, sp->frp->name, 1);
 		}
 
 		/* If leaving vi, return to the main editor loop. */
@@ -695,7 +698,7 @@ esc:	switch (cpart) {
 	case ISPARTIAL:
 		break;
 	case NOTPARTIAL:
-		(void)sp->gp->scr_bell(sp);
+		(void)cl_bell(sp);
 		break;
 	}
 	return (GC_ERR);
@@ -919,16 +922,14 @@ v_motion(SCR *sp, VICMD *dm, VICMD *vp, int *mappedp)
 static int
 v_init(SCR *sp)
 {
-	GS *gp;
 	VI_PRIVATE *vip;
 
-	gp = sp->gp;
 	vip = VIP(sp);
 
 	/* Switch into vi. */
-	if (gp->scr_screen(sp, SC_VI))
+	if (cl_screen(sp, SC_VI))
 		return (1);
-	(void)gp->scr_attr(sp, SA_ALTERNATE, 1);
+	(void)cl_attr(sp, SA_ALTERNATE, 1);
 
 	F_CLR(sp, SC_EX | SC_SCR_EX);
 	F_SET(sp, SC_VI);
@@ -1186,7 +1187,7 @@ v_key(SCR *sp, int command_events, EVENT *evp, u_int32_t ec_flags)
 			 * generated in a row.  (Just figured you might want
 			 * to know that.)
 			 */
-			(void)sp->gp->scr_bell(sp);
+			(void)cl_bell(sp);
 			return (GC_INTERRUPT);
 		case E_REPAINT:
 			if (vs_repaint(sp, evp))

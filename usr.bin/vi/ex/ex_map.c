@@ -16,11 +16,14 @@
 
 #include <ctype.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 
 #include "../common/common.h"
+#include "../cl/cl.h"
 
 /*
  * ex_map -- :map[!] [input] [replacement]
@@ -73,8 +76,7 @@ ex_map(SCR *sp, EXCMD *cmdp)
 		    cmdp->argv[1]->bp, cmdp->argv[1]->len, stype,
 		    SEQ_FUNCMAP | SEQ_USERDEF))
 			return (1);
-		return (sp->gp->scr_fmap == NULL ? 0 :
-		    sp->gp->scr_fmap(sp, stype, input, cmdp->argv[0]->len,
+		return (cl_fmap(sp, stype, input, cmdp->argv[0]->len,
 		    cmdp->argv[1]->bp, cmdp->argv[1]->len));
 	}
 

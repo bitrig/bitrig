@@ -125,12 +125,10 @@ cl_read(SCR *sp, u_int32_t flags, CHAR_T *bp, size_t blen, int *nrp,
 {
 	struct termios term1, term2;
 	CL_PRIVATE *clp;
-	GS *gp;
 	struct pollfd pfd[1];
 	input_t rval;
 	int nr, term_reset, timeout;
 
-	gp = sp->gp;
 	clp = CLP(sp);
 	term_reset = 0;
 
@@ -202,7 +200,7 @@ tty_retry:
 	 * It's ugly that we wait on scripting file descriptors here, but it's
 	 * the only way to keep from locking out scripting windows.
 	 */
-	if (F_ISSET(gp, G_SCRWIN)) {
+	if (F_ISSET(sp->gp, G_SCRWIN)) {
 		if (sscr_check_input(sp))
 			goto err;
 	}

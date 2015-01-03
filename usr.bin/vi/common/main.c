@@ -20,12 +20,15 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <paths.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "common.h"
+#include "../cl/cl.h"
 #include "../vi/vi.h"
 
 #ifdef DEBUG
@@ -63,13 +66,6 @@ editor(GS *gp, int argc, char *argv[])
 		"c:eFlrSt:w:"
 #endif
 	};
-
-	/* Initialize the busy routine, if not defined by the screen. */
-	if (gp->scr_busy == NULL)
-		gp->scr_busy = vs_busy;
-	/* Initialize the message routine, if not defined by the screen. */
-	if (gp->scr_msg == NULL)
-		gp->scr_msg = vs_msg;
 
 	/* Common global structure initialization. */
 	TAILQ_INIT(&gp->dq);
@@ -209,7 +205,7 @@ editor(GS *gp, int argc, char *argv[])
 			break;
 		case '?':
 		default:
-			(void)gp->scr_usage();
+			cl_usage();
 			return (1);
 		}
 	argc -= optind;
@@ -403,7 +399,7 @@ editor(GS *gp, int argc, char *argv[])
 			    (ev.e_event == E_CHARACTER &&
 			    (ev.e_value == K_CR || ev.e_value == K_NL)))
 				break;
-			(void)gp->scr_bell(sp);
+			(void)cl_bell(sp);
 		}
 	}
 

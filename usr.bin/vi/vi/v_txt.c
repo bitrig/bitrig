@@ -19,12 +19,15 @@
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "../common/common.h"
+#include "../cl/cl.h"
 #include "vi.h"
 
 static int	 txt_abbrev(SCR *, TEXT *, CHAR_T *, int, int *, int *);
@@ -179,8 +182,8 @@ txt_map_end(SCR *sp)
 		 */
 		if (IS_SMALL(sp)) {
 			for (cnt = sp->t_rows; cnt <= sp->t_maxrows; ++cnt) {
-				(void)sp->gp->scr_move(sp, cnt, 0);
-				(void)sp->gp->scr_clrtoeol(sp);
+				(void)cl_move(sp, cnt, 0);
+				(void)cl_clrtoeol(sp);
 			}
 			TMAP = HMAP + (sp->t_rows - 1);
 		} else
@@ -2043,7 +2046,7 @@ retry:		for (len = 0,
 	switch (argc) {
 	case 0:				/* No matches. */
 		if (!trydir)
-			(void)sp->gp->scr_bell(sp);
+			(void)cl_bell(sp);
 		return (0);
 	case 1:				/* One match. */
 		/* If something changed, do the exchange. */
@@ -2060,7 +2063,7 @@ retry:		for (len = 0,
 
 		/* If nothing changed, period, ring the bell. */
 		if (!trydir)
-			(void)sp->gp->scr_bell(sp);
+			(void)cl_bell(sp);
 		return (0);
 	default:			/* Multiple matches. */
 		*redrawp = 1;
@@ -2626,7 +2629,7 @@ txt_isrch(SCR *sp, VICMD *vp, TEXT *tp, u_int8_t *is_flagsp)
 	if (lno != TMAP[0].lno) {
 		if (vs_line(sp, &TMAP[0], NULL, NULL))
 			return (1);
-		(void)sp->gp->scr_refresh(sp, 0);
+		(void)cl_refresh(sp, 0);
 	}
 	return (0);
 }

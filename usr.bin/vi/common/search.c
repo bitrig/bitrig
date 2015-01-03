@@ -17,12 +17,16 @@
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "common.h"
+#include "../cl/cl.h"
+#include "../vi/vi.h"
 
 typedef enum { S_EMPTY, S_EOF, S_NOPREV, S_NOTFOUND, S_SOF, S_WRAP } smsg_t;
 
@@ -233,7 +237,7 @@ f_search(SCR *sp, MARK *fm, MARK *rm, char *ptrn, size_t plen, char **eptrn,
 			if (LF_ISSET(SEARCH_MSG))
 				re_error(sp, eval, &sp->re_c);
 			else
-				(void)sp->gp->scr_bell(sp);
+				(void)cl_bell(sp);
 			break;
 		}
 
@@ -363,7 +367,7 @@ b_search(SCR *sp, MARK *fm, MARK *rm, char *ptrn, size_t plen, char **eptrn,
 			if (LF_ISSET(SEARCH_MSG))
 				re_error(sp, eval, &sp->re_c);
 			else
-				(void)sp->gp->scr_bell(sp);
+				(void)cl_bell(sp);
 			break;
 		}
 
@@ -399,7 +403,7 @@ b_search(SCR *sp, MARK *fm, MARK *rm, char *ptrn, size_t plen, char **eptrn,
 				if (LF_ISSET(SEARCH_MSG))
 					re_error(sp, eval, &sp->re_c);
 				else
-					(void)sp->gp->scr_bell(sp);
+					(void)cl_bell(sp);
 				goto err;
 			}
 			if (coff && match[0].rm_so >= coff)
@@ -461,5 +465,5 @@ search_msg(SCR *sp, smsg_t msg)
 void
 search_busy(SCR *sp, busy_t btype)
 {
-	sp->gp->scr_busy(sp, "078|Searching...", btype);
+	vs_busy(sp, "078|Searching...", btype);
 }

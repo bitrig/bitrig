@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include "../common/common.h"
+#include "../vi/vi.h"
 
 static int ex_prchars(SCR *, const char *, size_t *, size_t, u_int, int);
 
@@ -284,7 +285,7 @@ ex_fflush(SCR *sp)
 	exp = EXP(sp);
 
 	if (exp->obp_len != 0) {
-		sp->gp->scr_msg(sp, M_NONE, exp->obp, exp->obp_len);
+		vs_msg(sp, M_NONE, exp->obp, exp->obp_len);
 		exp->obp_len = 0;
 	}
 	return (0);

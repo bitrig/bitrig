@@ -16,12 +16,15 @@
 #include <sys/time.h>
 
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "../common/common.h"
+#include "../cl/cl.h"
 #include "vi.h"
 
 static int v_ecl(SCR *);
@@ -53,17 +56,13 @@ v_again(SCR *sp, VICMD *vp)
 int
 v_exmode(SCR *sp, VICMD *vp)
 {
-	GS *gp;
-
-	gp = sp->gp;
-
 	/* Try and switch screens -- the screen may not permit it. */
-	if (gp->scr_screen(sp, SC_EX)) {
+	if (cl_screen(sp, SC_EX)) {
 		msgq(sp, M_ERR,
 		    "207|The Q command requires the ex terminal interface");
 		return (1);
 	}
-	(void)gp->scr_attr(sp, SA_ALTERNATE, 0);
+	(void)cl_attr(sp, SA_ALTERNATE, 0);
 
 	/* Save the current cursor position. */
 	sp->frp->lno = sp->lno;
@@ -331,11 +330,8 @@ v_exec_ex(SCR *sp, VICMD *vp, EXCMD *exp)
 int
 v_ex(SCR *sp, VICMD *vp)
 {
-	GS *gp;
 	TEXT *tp;
 	int do_cedit, do_resolution, ifcontinue;
-
-	gp = sp->gp;
 
 	/*
 	 * !!!
@@ -352,7 +348,7 @@ v_ex(SCR *sp, VICMD *vp)
 		 * There may already be an ex command waiting to run.  If
 		 * so, we continue with it.
 		 */
-		if (!EXCMD_RUNNING(gp)) {
+		if (!EXCMD_RUNNING(sp->gp)) {
 			/* Get a command. */
 			if (v_tcmd(sp, vp, ':',
 			    TXT_BS | TXT_CEDIT | TXT_FILEC | TXT_PROMPT))

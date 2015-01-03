@@ -16,11 +16,14 @@
 
 #include <errno.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 
 #include "../common/common.h"
+#include "../cl/cl.h"
 
 /*
  * ex_file -- :f[ile] [name]
@@ -63,7 +66,7 @@ ex_file(SCR *sp, EXCMD *cmdp)
 		F_SET(frp, FR_NAMECHANGE);
 
 		/* Notify the screen. */
-		(void)sp->gp->scr_rename(sp, sp->frp->name, 1);
+		(void)cl_rename(sp, sp->frp->name, 1);
 		break;
 	default:
 		abort();

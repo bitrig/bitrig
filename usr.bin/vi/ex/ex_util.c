@@ -17,12 +17,15 @@
 
 #include <errno.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "../common/common.h"
+#include "../cl/cl.h"
 
 /*
  * ex_cinit --
@@ -134,9 +137,9 @@ ex_init(SCR *sp)
 
 	gp = sp->gp;
 
-	if (gp->scr_screen(sp, SC_EX))
+	if (cl_screen(sp, SC_EX))
 		return (1);
-	(void)gp->scr_attr(sp, SA_ALTERNATE, 0);
+	(void)cl_attr(sp, SA_ALTERNATE, 0);
 
 	sp->rows = O_VAL(sp, O_LINES);
 	sp->cols = O_VAL(sp, O_COLUMNS);

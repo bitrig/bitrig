@@ -28,6 +28,7 @@
 #include <unistd.h>
 
 #include "common.h"
+#include "../vi/vi.h"
 
 /*
  * Recovery code.
@@ -196,15 +197,14 @@ rcv_init(SCR *sp)
 			goto err;
 
 		/* Turn on a busy message, and sync it to backing store. */
-		sp->gp->scr_busy(sp,
-		    "057|Copying file for recovery...", BUSY_ON);
+		vs_busy(sp, "057|Copying file for recovery...", BUSY_ON);
 		if (ep->db->sync(ep->db, R_RECNOSYNC)) {
 			msgq_str(sp, M_SYSERR, ep->rcv_path,
 			    "058|Preservation failed: %s");
-			sp->gp->scr_busy(sp, NULL, BUSY_OFF);
+			vs_busy(sp, NULL, BUSY_OFF);
 			goto err;
 		}
-		sp->gp->scr_busy(sp, NULL, BUSY_OFF);
+		vs_busy(sp, NULL, BUSY_OFF);
 	}
 
 	/* Turn off the owner execute bit. */
@@ -278,15 +278,14 @@ rcv_sync(SCR *sp, u_int flags)
 		(void)snprintf(buf, sizeof(buf), "%s/vi.XXXXXXXXXX", dp);
 		if ((fd = rcv_mktemp(sp, buf, dp, S_IRUSR | S_IWUSR)) == -1)
 			goto err;
-		sp->gp->scr_busy(sp,
-		    "061|Copying file for recovery...", BUSY_ON);
+		vs_busy(sp, "061|Copying file for recovery...", BUSY_ON);
 		if (rcv_copy(sp, fd, ep->rcv_path) ||
 		    close(fd) || rcv_mailfile(sp, 1, buf)) {
 			(void)unlink(buf);
 			(void)close(fd);
 			rval = 1;
 		}
-		sp->gp->scr_busy(sp, NULL, BUSY_OFF);
+		vs_busy(sp, NULL, BUSY_OFF);
 	}
 	if (0) {
 err:		rval = 1;
