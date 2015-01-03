@@ -43,7 +43,6 @@ static int	sscr_getprompt(SCR *);
 static int	sscr_init(SCR *);
 static int	sscr_insert(SCR *);
 static int	sscr_matchprompt(SCR *, char *, size_t, size_t *);
-static int	sscr_pty(int *, int *, char *, size_t, struct termios *, void *);
 static int	sscr_setprompt(SCR *, char *, size_t);
 
 /*
