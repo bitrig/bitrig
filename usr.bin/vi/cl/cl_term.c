@@ -410,13 +410,3 @@ noterm:	if (row == 0)
 		*colp = col;
 	return (0);
 }
-
-/*
- * cl_putchar --
- *	Function version of putchar, for tputs.
- */
-int
-cl_putchar(int ch)
-{
-	return (putchar(ch));
-}

@@ -15,6 +15,7 @@
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <curses.h>
 #include <limits.h>
 #include <signal.h>
 #include <stdio.h>
@@ -759,13 +760,13 @@ vs_deleteln(SCR *sp, int cnt)
 	size_t oldy, oldx;
 
 	if (IS_ONELINE(sp))
-		(void)cl_clrtoeol(sp);
+		(void)clrtoeol();
 	else {
 		(void)cl_cursor(sp, &oldy, &oldx);
 		while (cnt--) {
 			(void)cl_deleteln(sp);
 			(void)cl_move(sp, LASTLINE(sp), 0);
-			(void)cl_insertln(sp);
+			(void)insertln();
 			(void)cl_move(sp, oldy, oldx);
 		}
 	}
@@ -931,10 +932,10 @@ static int
 vs_sm_erase(SCR *sp)
 {
 	(void)cl_move(sp, LASTLINE(sp), 0);
-	(void)cl_clrtoeol(sp);
+	(void)clrtoeol();
 	for (; sp->t_rows > sp->t_minrows; --sp->t_rows, --TMAP) {
 		(void)cl_move(sp, TMAP - HMAP, 0);
-		(void)cl_clrtoeol(sp);
+		(void)clrtoeol();
 	}
 	return (0);
 }
@@ -979,14 +980,14 @@ vs_insertln(SCR *sp, int cnt)
 
 	if (IS_ONELINE(sp)) {
 		(void)cl_move(sp, LASTLINE(sp), 0);
-		(void)cl_clrtoeol(sp);
+		(void)clrtoeol();
 	} else {
 		(void)cl_cursor(sp, &oldy, &oldx);
 		while (cnt--) {
 			(void)cl_move(sp, LASTLINE(sp) - 1, 0);
 			(void)cl_deleteln(sp);
 			(void)cl_move(sp, oldy, oldx);
-			(void)cl_insertln(sp);
+			(void)insertln();
 		}
 	}
 	return (0);

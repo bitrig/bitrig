@@ -16,6 +16,7 @@
 #include <sys/time.h>
 
 #include <ctype.h>
+#include <curses.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -89,7 +90,7 @@ vs_busy(SCR *sp, const char *msg, busy_t btype)
 		(void)cl_move(sp, LASTLINE(sp), 0);
 		(void)cl_addstr(sp, p, len);
 		(void)cl_cursor(sp, &notused, &vip->busy_fx);
-		(void)cl_clrtoeol(sp);
+		(void)clrtoeol();
 		(void)cl_move(sp, LASTLINE(sp), vip->busy_fx);
 		break;
 	case BUSY_OFF:
@@ -103,7 +104,7 @@ vs_busy(SCR *sp, const char *msg, busy_t btype)
 		 */
 		if (vip->totalcount == 0 && vip->busy_ref == 0) {
 			(void)cl_move(sp, LASTLINE(sp), 0);
-			(void)cl_clrtoeol(sp);
+			(void)clrtoeol();
 		}
 		(void)cl_move(sp, vip->busy_oldy, vip->busy_oldx);
 		break;
@@ -171,7 +172,7 @@ vs_update(SCR *sp, const char *m1, const char *m2)
 
 	/* Clear the bottom line. */
 	(void)cl_move(sp, LASTLINE(sp), 0);
-	(void)cl_clrtoeol(sp);
+	(void)clrtoeol();
 
 	/*
 	 * XXX
@@ -404,7 +405,7 @@ vs_output(SCR *sp, mtype_t mtype, const char *line, int llen)
 				if (vip->totalcount == 1) {
 					(void)cl_move(sp,
 					    LASTLINE(sp) - 1, 0);
-					(void)cl_clrtoeol(sp);
+					(void)clrtoeol();
 					(void)vs_divider(sp);
 					F_SET(vip, VIP_DIVIDER);
 					++vip->totalcount;
@@ -463,7 +464,7 @@ vs_output(SCR *sp, mtype_t mtype, const char *line, int llen)
 			(void)cl_attr(sp, SA_INVERSE, 0);
 
 		/* Clear the rest of the line. */
-		(void)cl_clrtoeol(sp);
+		(void)clrtoeol();
 
 		/* If we loop, it's a new line. */
 		vip->lcontinue = 0;
@@ -735,7 +736,7 @@ vs_scroll(SCR *sp, int *continuep, sw_t wtype)
 		/* If there are screens below us, push them back into place. */
 		if (TAILQ_NEXT(sp, q)) {
 			(void)cl_move(sp, LASTLINE(sp), 0);
-			(void)cl_insertln(sp);
+			(void)insertln();
 		}
 	}
 	if (wtype == SCROLL_W_QUIT && vip->linecount < sp->t_maxrows)
@@ -782,7 +783,7 @@ vs_wait(SCR *sp, int *continuep, sw_t wtype)
 	++vip->totalcount;
 	vip->linecount = 0;
 
-	(void)cl_clrtoeol(sp);
+	(void)clrtoeol();
 	(void)cl_refresh(sp, 0);
 
 	/* Get a single character from the terminal. */

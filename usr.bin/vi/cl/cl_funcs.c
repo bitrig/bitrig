@@ -107,7 +107,7 @@ cl_attr(SCR *sp, scr_attr_t attribute, int on)
 			if (clp->smcup == NULL)
 				(void)cl_getcap(sp, "smcup", &clp->smcup);
 			if (clp->smcup != NULL)
-				(void)tputs(clp->smcup, 1, cl_putchar);
+				(void)tputs(clp->smcup, 1, putchar);
 		}
 	} else
 		if (clp->ti_te != TE_SENT) {
@@ -115,7 +115,7 @@ cl_attr(SCR *sp, scr_attr_t attribute, int on)
 			if (clp->rmcup == NULL)
 				(void)cl_getcap(sp, "rmcup", &clp->rmcup);
 			if (clp->rmcup != NULL)
-				(void)tputs(clp->rmcup, 1, cl_putchar);
+				(void)tputs(clp->rmcup, 1, putchar);
 			(void)fflush(stdout);
 		}
 		(void)fflush(stdout);
@@ -125,9 +125,9 @@ cl_attr(SCR *sp, scr_attr_t attribute, int on)
 			if (clp->smso == NULL)
 				return (1);
 			if (on)
-				(void)tputs(clp->smso, 1, cl_putchar);
+				(void)tputs(clp->smso, 1, putchar);
 			else
-				(void)tputs(clp->rmso, 1, cl_putchar);
+				(void)tputs(clp->rmso, 1, putchar);
 			(void)fflush(stdout);
 		} else {
 			if (on)
@@ -211,16 +211,6 @@ cl_bell(SCR *sp)
 }
 
 /*
- * cl_clrtoeol --
- *	Clear from the current cursor to the end of the line.
- */
-int
-cl_clrtoeol(SCR *sp)
-{
-	return (clrtoeol() == ERR);
-}
-
-/*
  * cl_cursor --
  *	Return the current cursor position.
  */
@@ -295,10 +285,10 @@ cl_ex_adjust(SCR *sp, exadj_t action)
 	case EX_TERM_SCROLL:
 		/* Move the cursor up one line if that's possible. */
 		if (clp->cuu1 != NULL)
-			(void)tputs(clp->cuu1, 1, cl_putchar);
+			(void)tputs(clp->cuu1, 1, putchar);
 		else if (clp->cup != NULL)
 			(void)tputs(tgoto(clp->cup,
-			    0, LINES - 2), 1, cl_putchar);
+			    0, LINES - 2), 1, putchar);
 		else
 			return (0);
 		/* FALLTHROUGH */
@@ -306,7 +296,7 @@ cl_ex_adjust(SCR *sp, exadj_t action)
 		/* Clear the line. */
 		if (clp->el != NULL) {
 			(void)putchar('\r');
-			(void)tputs(clp->el, 1, cl_putchar);
+			(void)tputs(clp->el, 1, putchar);
 		} else {
 			/*
 			 * Historically, ex didn't erase the line, so, if the
@@ -331,20 +321,6 @@ cl_ex_adjust(SCR *sp, exadj_t action)
 		abort();
 	}
 	return (0);
-}
-
-/*
- * cl_insertln --
- *	Push down the current line, discarding the bottom line.
- */
-int
-cl_insertln(SCR *sp)
-{
-	/*
-	 * The current line is expected to be blank after this operation,
-	 * and the screen must support that semantic.
-	 */
-	return (insertln() == ERR);
 }
 
 /*

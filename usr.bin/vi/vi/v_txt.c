@@ -17,6 +17,7 @@
 #include <sys/time.h>
 
 #include <ctype.h>
+#include <curses.h>
 #include <errno.h>
 #include <limits.h>
 #include <signal.h>
@@ -183,7 +184,7 @@ txt_map_end(SCR *sp)
 		if (IS_SMALL(sp)) {
 			for (cnt = sp->t_rows; cnt <= sp->t_maxrows; ++cnt) {
 				(void)cl_move(sp, cnt, 0);
-				(void)cl_clrtoeol(sp);
+				(void)clrtoeol();
 			}
 			TMAP = HMAP + (sp->t_rows - 1);
 		} else

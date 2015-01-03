@@ -16,6 +16,7 @@
 #include <sys/time.h>
 
 #include <ctype.h>
+#include <curses.h>
 #include <limits.h>
 #include <signal.h>
 #include <stdio.h>
@@ -267,11 +268,11 @@ vs_paint(SCR *sp, u_int flags)
 				}
 			else {
 small_fill:			(void)cl_move(sp, LASTLINE(sp), 0);
-				(void)cl_clrtoeol(sp);
+				(void)clrtoeol();
 				for (; sp->t_rows > sp->t_minrows;
 				    --sp->t_rows, --TMAP) {
 					(void)cl_move(sp, TMAP - HMAP, 0);
-					(void)cl_clrtoeol(sp);
+					(void)clrtoeol();
 				}
 				if (vs_sm_fill(sp, LNO, P_FILL))
 					return (1);
@@ -674,7 +675,7 @@ paint:	for (smp = HMAP; smp <= TMAP; ++smp)
 	if (F_ISSET(sp, SC_SCR_REDRAW) && IS_SMALL(sp))
 		for (cnt = sp->t_rows; cnt <= sp->t_maxrows; ++cnt) {
 			(void)cl_move(sp, cnt, 0);
-			(void)cl_clrtoeol(sp);
+			(void)clrtoeol();
 		}
 
 	didpaint = 1;
@@ -832,7 +833,7 @@ vs_modeline(SCR *sp)
 	}
 
 	/* Clear the rest of the line. */
-	(void)cl_clrtoeol(sp);
+	(void)clrtoeol();
 
 	/*
 	 * Display the ruler.  If we're not at the midpoint yet, move there.

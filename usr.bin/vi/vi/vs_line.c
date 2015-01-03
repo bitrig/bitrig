@@ -15,6 +15,7 @@
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <curses.h>
 #include <limits.h>
 #include <signal.h>
 #include <stdio.h>
@@ -184,7 +185,7 @@ empty:					(void)cl_addstr(sp,
 				}
 		}
 
-		(void)cl_clrtoeol(sp);
+		(void)clrtoeol();
 		(void)cl_move(sp, oldy, oldx);
 		return (0);
 	}
@@ -443,7 +444,7 @@ display:
 
 		/* If still didn't paint the whole line, clear the rest. */
 		if (scno < cols_per_screen)
-			(void)cl_clrtoeol(sp);
+			(void)clrtoeol();
 	}
 
 	/* Flush any buffered characters. */

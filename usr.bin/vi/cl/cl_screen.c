@@ -104,7 +104,7 @@ cl_screen(SCR *sp, u_int32_t flags)
 		 */
 		if (F_ISSET(sp, SC_EX) && clp->cup != NULL)
 			tputs(tgoto(clp->cup,
-			    0, O_VAL(sp, O_LINES) - 1), 1, cl_putchar);
+			    0, O_VAL(sp, O_LINES) - 1), 1, putchar);
 	} else {
 		if (cl_vi_init(sp))
 			return (1);
