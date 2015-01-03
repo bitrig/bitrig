@@ -246,10 +246,6 @@ cl_cursor(SCR *sp, size_t *yp, size_t *xp)
 int
 cl_deleteln(SCR *sp)
 {
-#ifndef mvchgat
-	CHAR_T ch;
-	size_t col, lno, spcnt;
-#endif
 	size_t oldy, oldx;
 
 	/*
