@@ -243,9 +243,7 @@ file_init(SCR *sp, FREF *frp, char *rcv_name, int flags)
 
 	/* Open a db structure. */
 	if ((ep->db = dbopen(rcv_name == NULL ? oname : NULL,
-	    O_NONBLOCK | O_RDONLY,
-	    S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH,
-	    DB_RECNO, &oinfo)) == NULL) {
+	    O_NONBLOCK | O_RDONLY, DEFFILEMODE, DB_RECNO, &oinfo)) == NULL) {
 		msgq_str(sp,
 		    M_SYSERR, rcv_name == NULL ? oname : rcv_name, "%s");
 		/*
@@ -808,8 +806,7 @@ file_write(SCR *sp, MARK *fm, MARK *tm, char *name, int flags)
 
 	/* Open the file. */
 	SIGBLOCK;
-	if ((fd = open(name, oflags,
-	    S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)) < 0) {
+	if ((fd = open(name, oflags, DEFFILEMODE)) < 0) {
 		msgq_str(sp, M_SYSERR, name, "%s");
 		SIGUNBLOCK;
 		return (1);
