@@ -34,7 +34,7 @@ v_screen_copy(SCR *orig, SCR *sp)
 	VI_PRIVATE *ovip, *nvip;
 
 	/* Create the private vi structure. */
-	CALLOC_RET(orig, nvip, VI_PRIVATE *, 1, sizeof(VI_PRIVATE));
+	CALLOC_RET(orig, nvip, 1, sizeof(VI_PRIVATE));
 	sp->vi_private = nvip;
 
 	/* Invalidate the line size cache. */
@@ -47,7 +47,7 @@ v_screen_copy(SCR *orig, SCR *sp)
 
 		/* User can replay the last input, but nothing else. */
 		if (ovip->rep_len != 0) {
-			MALLOC_RET(orig, nvip->rep, EVENT *, ovip->rep_len);
+			MALLOC_RET(orig, nvip->rep, ovip->rep_len);
 			memmove(nvip->rep, ovip->rep, ovip->rep_len);
 			nvip->rep_len = ovip->rep_len;
 		}

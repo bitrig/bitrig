@@ -84,7 +84,7 @@ sscr_init(SCR *sp)
 	if (opts_empty(sp, O_SHELL, 0))
 		return (1);
 
-	MALLOC_RET(sp, sc, SCRIPT *, sizeof(SCRIPT));
+	MALLOC_RET(sp, sc, sizeof(SCRIPT));
 	sp->script = sc;
 	sc->sh_prompt = NULL;
 	sc->sh_prompt_len = 0;
@@ -352,11 +352,7 @@ sscr_check_input(SCR *sp)
 	TAILQ_FOREACH(tsp, &gp->dq, q)
 		if (F_ISSET(sp, SC_SCRIPT))
 			nfds++;
-	pfd = calloc(nfds, sizeof(struct pollfd));
-	if (pfd == NULL) {
-		msgq(sp, M_SYSERR, "malloc");
-		return (1);
-	}
+	CALLOC_RET(sp, pfd, nfds, sizeof(struct pollfd));
 
 	/* Setup events bitmasks. */
 	pfd[0].fd = STDIN_FILENO;
@@ -421,11 +417,7 @@ sscr_input(SCR *sp)
 			nfds++;
 	if (nfds == 0)
 		return (0);
-	pfd = calloc(nfds, sizeof(struct pollfd));
-	if (pfd == NULL) {
-		msgq(sp, M_SYSERR, "malloc");
-		return (1);
-	}
+	CALLOC_RET(sp, pfd, nfds, sizeof(struct pollfd));
 
 	/* Setup events bitmasks. */
 	nfds = 0;
@@ -562,7 +554,7 @@ sscr_setprompt(SCR *sp, char *buf, size_t len)
 	sc = sp->script;
 	if (sc->sh_prompt)
 		free(sc->sh_prompt);
-	MALLOC(sp, sc->sh_prompt, char *, len + 1);
+	MALLOC(sp, sc->sh_prompt, len + 1);
 	if (sc->sh_prompt == NULL) {
 		sscr_end(sp);
 		return (1);

@@ -76,9 +76,9 @@ ex_at(SCR *sp, EXCMD *cmdp)
 	 * the  range, continue to execute after a file/screen switch, which
 	 * means @ buffers are still useful in a multi-screen environment.
 	 */
-	CALLOC_RET(sp, ecp, EXCMD *, 1, sizeof(EXCMD));
+	CALLOC_RET(sp, ecp, 1, sizeof(EXCMD));
 	TAILQ_INIT(&ecp->rq);
-	CALLOC_RET(sp, rp, RANGE *, 1, sizeof(RANGE));
+	CALLOC_RET(sp, rp, 1, sizeof(RANGE));
 	rp->start = cmdp->addr1.lno;
 	if (F_ISSET(cmdp, E_ADDR_DEF)) {
 		rp->stop = rp->start;
@@ -102,7 +102,7 @@ ex_at(SCR *sp, EXCMD *cmdp)
 		len += tp->len + 1;
 	}
 
-	MALLOC_RET(sp, ecp->cp, char *, len * 2);
+	MALLOC_RET(sp, ecp->cp, len * 2);
 	ecp->o_cp = ecp->cp;
 	ecp->o_clen = len;
 	ecp->cp[len] = '\0';

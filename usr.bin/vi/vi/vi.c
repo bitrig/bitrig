@@ -959,7 +959,7 @@ v_init(SCR *sp)
 	sp->woff = 0;
 
 	/* Create a screen map. */
-	CALLOC_RET(sp, HMAP, SMAP *, SIZE_HMAP(sp), sizeof(SMAP));
+	CALLOC_RET(sp, HMAP, SIZE_HMAP(sp), sizeof(SMAP));
 	TMAP = HMAP + (sp->t_rows - 1);
 	HMAP->lno = sp->lno;
 	HMAP->coff = 0;

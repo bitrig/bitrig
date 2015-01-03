@@ -150,7 +150,7 @@ usage:		ex_emsg(sp, cmdp->cmd->usage, EXM_USAGE);
 		return (1);
 
 	/* Get an EXCMD structure. */
-	CALLOC_RET(sp, ecp, EXCMD *, 1, sizeof(EXCMD));
+	CALLOC_RET(sp, ecp, 1, sizeof(EXCMD));
 	TAILQ_INIT(&ecp->rq);
 
 	/*
@@ -165,7 +165,7 @@ usage:		ex_emsg(sp, cmdp->cmd->usage, EXM_USAGE);
 		len = 1;
 	}
 
-	MALLOC_RET(sp, ecp->cp, char *, len * 2);
+	CALLOC_RET(sp, ecp->cp, 2, len);
 	ecp->o_cp = ecp->cp;
 	ecp->o_clen = len;
 	memcpy(ecp->cp + len, p, len);
@@ -226,7 +226,7 @@ usage:		ex_emsg(sp, cmdp->cmd->usage, EXM_USAGE);
 		}
 
 		/* Allocate a new range, and append it to the list. */
-		CALLOC(sp, rp, RANGE *, 1, sizeof(RANGE));
+		CALLOC(sp, rp, 1, sizeof(RANGE));
 		if (rp == NULL)
 			return (1);
 		rp->start = rp->stop = start;
@@ -290,7 +290,7 @@ ex_g_insdel(SCR *sp, lnop_t op, recno_t lno)
 					free(rp);
 				}
 			} else {
-				CALLOC_RET(sp, nrp, RANGE *, 1, sizeof(RANGE));
+				CALLOC_RET(sp, nrp, 1, sizeof(RANGE));
 				nrp->start = lno + 1;
 				nrp->stop = rp->stop + 1;
 				rp->stop = lno - 1;

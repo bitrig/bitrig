@@ -343,15 +343,12 @@ editor(GS *gp, int argc, char *argv[])
 	 */
 	if (*argv != NULL) {
 		if (sp->frp != NULL) {
-			size_t l;
 			/* Cheat -- we know we have an extra argv slot. */
-			l = strlen(sp->frp->name) + 1;
-			MALLOC_NOMSG(sp, *--argv, char *, l);
+			*--argv = strdup(sp->frp->name);
 			if (*argv == NULL) {
 				v_estr(gp->progname, errno, NULL);
 				goto err;
 			}
-			(void)strlcpy(*argv, sp->frp->name, l);
 		}
 		sp->argv = sp->cargv = argv;
 		F_SET(sp, SC_ARGNOFREE);
@@ -522,9 +519,6 @@ v_end(GS *gp)
 static int
 v_obsolete(char *name, char *argv[])
 {
-	size_t len;
-	char *p;
-
 	/*
 	 * Translate old style arguments into something getopt will like.
 	 * Make sure it's not text space memory, because ex modifies the
@@ -545,14 +539,8 @@ v_obsolete(char *name, char *argv[])
 				if (argv[0] == NULL)
 					goto nomem;
 			} else  {
-				p = argv[0];
-				len = strlen(argv[0]);
-				MALLOC_NOMSG(NULL, argv[0], char *, len + 2);
-				if (argv[0] == NULL)
+				if (asprintf(&argv[0], "-c%s", argv[0] + 1) == -1)
 					goto nomem;
-				argv[0][0] = '-';
-				argv[0][1] = 'c';
-				(void)strlcpy(argv[0] + 2, p + 1, len);
 			}
 		} else if (argv[0][0] == '-') {
 			if (argv[0][1] == '\0') {

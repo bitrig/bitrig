@@ -55,7 +55,7 @@ ex_sourcefd(SCR *sp, EXCMD *cmdp, int fd)
 		goto err;
 	}
 
-	MALLOC(sp, bp, char *, (size_t)sb.st_size + 1);
+	MALLOC(sp, bp, (size_t)sb.st_size + 1);
 	if (bp == NULL) {
 		(void)close(fd);
 		return (1);

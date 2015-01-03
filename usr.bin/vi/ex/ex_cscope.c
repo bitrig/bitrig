@@ -238,7 +238,7 @@ cscope_add(SCR *sp, EXCMD *cmdp, char *dname)
 
 	/* Allocate a cscope connection structure and initialize its fields. */
 	len = strlen(dname);
-	CALLOC_RET(sp, csc, CSC *, 1, sizeof(CSC) + len);
+	CALLOC_RET(sp, csc, 1, sizeof(CSC) + len);
 	csc->dname = csc->buf;
 	csc->dlen = len;
 	memcpy(csc->dname, dname, len);
@@ -298,7 +298,7 @@ get_paths(SCR *sp, CSC *csc)
 	if (stat(buf, &sb) == 0) {
 		/* Read in the CSCOPE_PATHS file. */
 		len = sb.st_size;
-		MALLOC_RET(sp, csc->pbuf, char *, len + 1);
+		MALLOC_RET(sp, csc->pbuf, len + 1);
 		if ((fd = open(buf, O_RDONLY, 0)) < 0 ||
 		    read(fd, csc->pbuf, len) != len) {
 			 msgq_str(sp, M_SYSERR, buf, "%s");
@@ -315,8 +315,7 @@ get_paths(SCR *sp, CSC *csc)
 				++nentries;
 
 		/* Build an array of pointers to the paths. */
-		CALLOC_GOTO(sp,
-		    csc->paths, char **, nentries + 1, sizeof(char **));
+		CALLOC_GOTO(sp, csc->paths, nentries + 1, sizeof(char **));
 		for (pathp = csc->paths, p = strtok(csc->pbuf, ":");
 		    p != NULL; p = strtok(NULL, ":"))
 			*pathp++ = p;
@@ -331,7 +330,7 @@ get_paths(SCR *sp, CSC *csc)
 		msgq(sp, M_SYSERR, NULL);
 		return (1);
 	}
-	CALLOC_GOTO(sp, csc->paths, char **, 2, sizeof(char *));
+	CALLOC_GOTO(sp, csc->paths, 2, sizeof(char *));
 	csc->paths[0] = csc->pbuf;
 	return (0);
 
@@ -442,11 +441,11 @@ cscope_find(SCR *sp, EXCMD *cmdp, char *pattern)
 	rtqp = NULL;
 	if (TAILQ_EMPTY(&exp->tq)) {
 		/* Initialize the `local context' tag queue structure. */
-		CALLOC_GOTO(sp, rtqp, TAGQ *, 1, sizeof(TAGQ));
+		CALLOC_GOTO(sp, rtqp, 1, sizeof(TAGQ));
 		TAILQ_INIT(&rtqp->tagq);
 
 		/* Initialize and link in its tag structure. */
-		CALLOC_GOTO(sp, rtp, TAG *, 1, sizeof(TAG));
+		CALLOC_GOTO(sp, rtp, 1, sizeof(TAG));
 		TAILQ_INSERT_HEAD(&rtqp->tagq, rtp, q);
 		rtqp->current = rtp; 
 	}
@@ -609,7 +608,7 @@ usage:		(void)csc_help(sp, "find");
 		tlen = strlen(p);
 
 	/* Allocate and initialize the TAGQ structure. */
-	CALLOC(sp, tqp, TAGQ *, 1, sizeof(TAGQ) + tlen + 3);
+	CALLOC(sp, tqp, 1, sizeof(TAGQ) + tlen + 3);
 	if (tqp == NULL)
 		return (NULL);
 	TAILQ_INIT(&tqp->tagq);
@@ -711,7 +710,7 @@ parse(SCR *sp, CSC *csc, TAGQ *tqp, int *matchesp)
 		 * length cscope information that follows it.
 		 */
 		CALLOC_RET(sp, tp,
-		    TAG *, 1, sizeof(TAG) + dlen + 2 + nlen + 1 + slen + 1);
+		    1, sizeof(TAG) + dlen + 2 + nlen + 1 + slen + 1);
 		tp->fname = tp->buf;
 		if (dlen != 0) {
 			memcpy(tp->fname, dname, dlen);

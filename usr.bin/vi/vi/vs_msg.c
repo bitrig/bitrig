@@ -863,8 +863,8 @@ vs_msgsave(SCR *sp, mtype_t mt, char *p, size_t len)
 	 * allocate memory here, we're genuinely screwed, dump the message
 	 * to stderr in the (probably) vain hope that someone will see it.
 	 */
-	CALLOC_GOTO(sp, mp_n, MSGS *, 1, sizeof(MSGS));
-	MALLOC_GOTO(sp, mp_n->buf, char *, len);
+	CALLOC_GOTO(sp, mp_n, 1, sizeof(MSGS));
+	MALLOC_GOTO(sp, mp_n->buf, len);
 
 	memmove(mp_n->buf, p, len);
 	mp_n->len = len;

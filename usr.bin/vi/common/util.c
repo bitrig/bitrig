@@ -37,7 +37,7 @@ binc(SCR *sp, void *bp, size_t *bsizep, size_t min)
 		return (bp);
 
 	csize = *bsizep + MAX(min, 256);
-	REALLOC(sp, bp, void *, csize);
+	REALLOC(sp, bp, csize);
 
 	if (bp == NULL) {
 		/*
@@ -112,7 +112,7 @@ v_strdup(SCR *sp, const CHAR_T *str, size_t len)
 {
 	CHAR_T *copy;
 
-	MALLOC(sp, copy, CHAR_T *, len + 1);
+	MALLOC(sp, copy, len + 1);
 	if (copy == NULL)
 		return (NULL);
 	memcpy(copy, str, len * sizeof(CHAR_T));

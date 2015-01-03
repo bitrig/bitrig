@@ -78,8 +78,7 @@ ex_next(SCR *sp, EXCMD *cmdp)
 		sp->cargv = NULL;
 
 		/* Create a new list. */
-		CALLOC_RET(sp,
-		    sp->argv, char **, cmdp->argc + 1, sizeof(char *));
+		CALLOC_RET(sp, sp->argv, cmdp->argc + 1, sizeof(char *));
 		for (ap = sp->argv,
 		    argv = cmdp->argv; argv[0]->len != 0; ++ap, ++argv)
 			if ((*ap =
@@ -281,7 +280,7 @@ ex_buildargv(SCR *sp, EXCMD *cmdp, char *name)
 	char **ap, **s_argv;
 
 	argc = cmdp == NULL ? 1 : cmdp->argc;
-	CALLOC(sp, s_argv, char **, argc + 1, sizeof(char *));
+	CALLOC(sp, s_argv, argc + 1, sizeof(char *));
 	if ((ap = s_argv) == NULL)
 		return (NULL);
 

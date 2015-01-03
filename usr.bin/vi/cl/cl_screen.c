@@ -494,7 +494,7 @@ cl_getcap(SCR *sp, char *name, char **elementp)
 
 	if ((t = tigetstr(name)) != NULL &&
 	    t != (char *)-1 && (len = strlen(t)) != 0) {
-		MALLOC_RET(sp, *elementp, char *, len + 1);
+		MALLOC_RET(sp, *elementp, len + 1);
 		memmove(*elementp, t, len + 1);
 	}
 	return (0);

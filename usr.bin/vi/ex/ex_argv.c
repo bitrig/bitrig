@@ -393,7 +393,7 @@ argv_alloc(SCR *sp, size_t len)
 	off = exp->argsoff;
 	if (exp->argscnt == 0 || off + 2 >= exp->argscnt - 1) {
 		cnt = exp->argscnt + INCREMENT;
-		REALLOCARRAY(sp, exp->args, ARGS **, cnt, sizeof(ARGS *));
+		REALLOCARRAY(sp, exp->args, cnt, sizeof(ARGS *));
 		if (exp->args == NULL) {
 			(void)argv_free(sp);
 			goto mem;
@@ -404,7 +404,7 @@ argv_alloc(SCR *sp, size_t len)
 
 	/* First argument. */
 	if (exp->args[off] == NULL) {
-		CALLOC(sp, exp->args[off], ARGS *, 1, sizeof(ARGS));
+		CALLOC(sp, exp->args[off], 1, sizeof(ARGS));
 		if (exp->args[off] == NULL)
 			goto mem;
 	}
@@ -414,7 +414,7 @@ argv_alloc(SCR *sp, size_t len)
 	ap->len = 0;
 	if (ap->blen < len + 1) {
 		ap->blen = len + 1;
-		REALLOCARRAY(sp, ap->bp, CHAR_T *, ap->blen, sizeof(CHAR_T));
+		REALLOCARRAY(sp, ap->bp, ap->blen, sizeof(CHAR_T));
 		if (ap->bp == NULL) {
 			ap->bp = NULL;
 			ap->blen = 0;
@@ -427,7 +427,7 @@ mem:			msgq(sp, M_SYSERR, NULL);
 
 	/* Second argument. */
 	if (exp->args[++off] == NULL) {
-		CALLOC(sp, exp->args[off], ARGS *, 1, sizeof(ARGS));
+		CALLOC(sp, exp->args[off], 1, sizeof(ARGS));
 		if (exp->args[off] == NULL)
 			goto mem;
 	}
