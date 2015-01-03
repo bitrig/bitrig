@@ -49,8 +49,6 @@
  */
 #include <machine/disklabel.h>
 
-#include <sys/uuid.h>
-
 /*
  * The absolute maximum number of disk partitions allowed.
  * This is the maximum value of MAXPARTITIONS for which 'struct disklabel'
