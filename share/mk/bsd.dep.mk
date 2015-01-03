@@ -22,8 +22,8 @@ realdepend: _SUBDIRUSE
 	fi
 	@files="${.ALLSRC:M*.cc} ${.ALLSRC:M*.C} ${.ALLSRC:M*.cpp} ${.ALLSRC:M*.cxx}"; \
 	if [ "$$files" != "   " ]; then \
-	  echo mkdep -a ${MKDEP} ${CXXFLAGS:M-[ID]*} ${CPPFLAGS} $$files; \
-	  mkdep -a ${MKDEP} ${CXXFLAGS:M-[ID]*} ${CPPFLAGS} $$files; \
+	  echo mkdep -a ${MKDEP} ${CXXFLAGS:M-[ID]*} ${CXXFLAGS:M-std*} ${CPPFLAGS} $$files; \
+	  mkdep -a ${MKDEP} ${CXXFLAGS:M-[ID]*} ${CXXFLAGS:M-std*} ${CPPFLAGS} $$files; \
 	fi
 .  else
 .depend:
