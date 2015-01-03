@@ -311,21 +311,11 @@ setsig(int signo, struct sigaction *oactp, void (*handler)(int))
 	 * Use sigaction(2), not signal(3), since we don't always want to
 	 * restart system calls.  The example is when waiting for a command
 	 * mode keystroke and SIGWINCH arrives.  Besides, you can't portably
-	 * restart system calls (thanks, POSIX!).  On the other hand, you
-	 * can't portably NOT restart system calls (thanks, Sun!).  SunOS
-	 * used SA_INTERRUPT as their extension to NOT restart read calls.
-	 * We sure hope nobody else used it for anything else.  Mom told me
-	 * there'd be days like this.  She just never told me that there'd
-	 * be so many.
+	 * restart system calls (thanks, POSIX!).
 	 */
 	act.sa_handler = handler;
 	sigemptyset(&act.sa_mask);
-
-#ifdef SA_INTERRUPT
-	act.sa_flags = SA_INTERRUPT;
-#else
 	act.sa_flags = 0;
-#endif
 	return (sigaction(signo, &act, oactp));
 }
 
