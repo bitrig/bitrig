@@ -29,8 +29,6 @@ static int ex_aci(SCR *, EXCMD *, enum which);
  * ex_append -- :[line] a[ppend][!]
  *	Append one or more lines of new text after the specified line,
  *	or the current line if no address is specified.
- *
- * PUBLIC: int ex_append(SCR *, EXCMD *);
  */
 int
 ex_append(SCR *sp, EXCMD *cmdp)
@@ -41,8 +39,6 @@ ex_append(SCR *sp, EXCMD *cmdp)
 /*
  * ex_change -- :[line[,line]] c[hange][!] [count]
  *	Change one or more lines to the input text.
- *
- * PUBLIC: int ex_change(SCR *, EXCMD *);
  */
 int
 ex_change(SCR *sp, EXCMD *cmdp)
@@ -54,8 +50,6 @@ ex_change(SCR *sp, EXCMD *cmdp)
  * ex_insert -- :[line] i[nsert][!]
  *	Insert one or more lines of new text before the specified line,
  *	or the current line if no address is specified.
- *
- * PUBLIC: int ex_insert(SCR *, EXCMD *);
  */
 int
 ex_insert(SCR *sp, EXCMD *cmdp)

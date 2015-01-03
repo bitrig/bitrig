@@ -25,8 +25,6 @@
 /*
  * v_match -- %
  *	Search to matching character.
- *
- * PUBLIC: int v_match(SCR *, VICMD *);
  */
 int
 v_match(SCR *sp, VICMD *vp)

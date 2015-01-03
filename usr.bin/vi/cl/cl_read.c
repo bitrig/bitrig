@@ -37,8 +37,6 @@ static int	cl_resize(SCR *, size_t, size_t);
 /*
  * cl_event --
  *	Return a single event.
- *
- * PUBLIC: int cl_event(SCR *, EVENT *, u_int32_t, int);
  */
 int
 cl_event(SCR *sp, EVENT *evp, u_int32_t flags, int ms)

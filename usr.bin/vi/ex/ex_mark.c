@@ -23,9 +23,6 @@
  * ex_mark -- :mark char
  *	      :k char
  *	Mark lines.
- *
- *
- * PUBLIC: int ex_mark(SCR *, EXCMD *);
  */
 int
 ex_mark(SCR *sp, EXCMD *cmdp)

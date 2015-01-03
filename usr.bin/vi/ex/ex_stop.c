@@ -26,8 +26,6 @@
  * ex_stop -- :stop[!]
  *	      :suspend[!]
  *	Suspend execution.
- *
- * PUBLIC: int ex_stop(SCR *, EXCMD *);
  */
 int
 ex_stop(SCR *sp, EXCMD *cmdp)

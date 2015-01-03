@@ -28,8 +28,6 @@
 /*
  * ex_sourcefd -- :source already opened file
  *	Execute ex commands from the given file descriptor
- *
- * PUBLIC: int ex_sourcefd(SCR *, EXCMD *, int);
  */
 int
 ex_sourcefd(SCR *sp, EXCMD *cmdp, int fd)
@@ -82,8 +80,6 @@ err:		msgq_str(sp, M_SYSERR, name, "%s");
 /*
  * ex_source -- :source file
  *	Execute ex commands from a file.
- *
- * PUBLIC: int ex_source(SCR *, EXCMD *);
  */
 int
 ex_source(SCR *sp, EXCMD *cmdp)

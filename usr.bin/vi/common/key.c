@@ -93,8 +93,6 @@ static int nkeylist =
 /*
  * v_key_init --
  *	Initialize the special key lookup table.
- *
- * PUBLIC: int v_key_init(SCR *);
  */
 int
 v_key_init(SCR *sp)
@@ -182,8 +180,6 @@ v_keyval(SCR *sp, int val, scr_keyval_t name)
 /*
  * v_key_ilookup --
  *	Build the fast-lookup key display array.
- *
- * PUBLIC: void v_key_ilookup(SCR *);
  */
 void
 v_key_ilookup(SCR *sp)
@@ -202,8 +198,6 @@ v_key_ilookup(SCR *sp)
  * v_key_len --
  *	Return the length of the string that will display the key.
  *	This routine is the backup for the KEY_LEN() macro.
- *
- * PUBLIC: size_t v_key_len(SCR *, ARG_CHAR_T);
  */
 size_t
 v_key_len(SCR *sp, ARG_CHAR_T ch)
@@ -216,8 +210,6 @@ v_key_len(SCR *sp, ARG_CHAR_T ch)
  * v_key_name --
  *	Return the string that will display the key.  This routine
  *	is the backup for the KEY_NAME() macro.
- *
- * PUBLIC: CHAR_T *v_key_name(SCR *, ARG_CHAR_T);
  */
 CHAR_T *
 v_key_name(SCR *sp, ARG_CHAR_T ach)
@@ -295,8 +287,6 @@ done:	sp->cname[sp->clen = len] = '\0';
  * v_key_val --
  *	Fill in the value for a key.  This routine is the backup
  *	for the KEY_VAL() macro.
- *
- * PUBLIC: int v_key_val(SCR *, ARG_CHAR_T);
  */
 int
 v_key_val(SCR *sp, ARG_CHAR_T ch)
@@ -317,8 +307,6 @@ v_key_val(SCR *sp, ARG_CHAR_T ch)
  * front of the buffer by various other functions in ex/vi.  Each key has
  * an associated flag value, which indicates if it has already been quoted,
  * and if it is the result of a mapping or an abbreviation.
- *
- * PUBLIC: int v_event_push(SCR *, EVENT *, CHAR_T *, size_t, u_int);
  */
 int
 v_event_push(SCR *sp, EVENT *p_evp, CHAR_T *p_s, size_t nitems, u_int flags)
@@ -491,8 +479,6 @@ v_event_append(SCR *sp, EVENT *argp)
  * knew when the macro started, and, in fact, this might be worth doing at some
  * point.  Given that this might make the log grow unacceptably (consider that
  * cursor keys are done with maps), for now we leave any changes made in place.
- *
- * PUBLIC: int v_event_get(SCR *, EVENT *, int, u_int32_t);
  */
 int
 v_event_get(SCR *sp, EVENT *argp, int timeout, u_int32_t flags)
@@ -723,8 +709,6 @@ v_sync(SCR *sp, int flags)
 /*
  * v_event_err --
  *	Unexpected event.
- *
- * PUBLIC: void v_event_err(SCR *, EVENT *);
  */
 void
 v_event_err(SCR *sp, EVENT *evp)
@@ -777,8 +761,6 @@ v_event_err(SCR *sp, EVENT *evp)
 /*
  * v_event_flush --
  *	Flush any flagged keys, returning if any keys were flushed.
- *
- * PUBLIC: int v_event_flush(SCR *, u_int);
  */
 int
 v_event_flush(SCR *sp, u_int flags)

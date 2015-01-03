@@ -23,8 +23,6 @@
  * ex_open -- :[line] o[pen] [/pattern/] [flags]
  *
  *	Switch to single line "open" mode.
- *
- * PUBLIC: int ex_open(SCR *, EXCMD *);
  */
 int
 ex_open(SCR *sp, EXCMD *cmdp)

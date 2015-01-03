@@ -24,8 +24,6 @@
 /*
  * v_redraw -- ^L, ^R
  *	Redraw the screen.
- *
- * PUBLIC: int v_redraw(SCR *, VICMD *);
  */
 int
 v_redraw(SCR *sp, VICMD *vp)

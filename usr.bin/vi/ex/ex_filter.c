@@ -33,9 +33,6 @@ static int filter_ldisplay(SCR *, FILE *);
  *	Run a range of lines through a filter utility and optionally
  *	replace the original text with the stdout/stderr output of
  *	the utility.
- *
- * PUBLIC: int ex_filter(SCR *, 
- * PUBLIC:    EXCMD *, MARK *, MARK *, MARK *, char *, enum filtertype);
  */
 int
 ex_filter(SCR *sp, EXCMD *cmdp, MARK *fm, MARK *tm, MARK *rp, char *cmd,

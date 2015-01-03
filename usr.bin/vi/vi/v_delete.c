@@ -25,8 +25,6 @@
  * v_delete -- [buffer][count]d[count]motion
  *	       [buffer][count]D
  *	Delete a range of text.
- *
- * PUBLIC: int v_delete(SCR *, VICMD *);
  */
 int
 v_delete(SCR *sp, VICMD *vp)

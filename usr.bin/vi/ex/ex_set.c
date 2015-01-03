@@ -22,8 +22,6 @@
 /*
  * ex_set -- :set
  *	Ex set option.
- *
- * PUBLIC: int ex_set(SCR *, EXCMD *);
  */
 int
 ex_set(SCR *sp, EXCMD *cmdp)

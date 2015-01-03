@@ -276,8 +276,6 @@ static OABBREV const abbrev[] = {
 /*
  * opts_init --
  *	Initialize some of the options.
- *
- * PUBLIC: int opts_init(SCR *, int *);
  */
 int
 opts_init(SCR *sp, int *oargs)
@@ -440,8 +438,6 @@ err:	msgq(sp, M_ERR,
 /*
  * opts_set --
  *	Change the values of one or more options.
- *
- * PUBLIC: int opts_set(SCR *, ARGS *[], char *);
  */
 int
 opts_set(SCR *sp, ARGS *argv[], char *usage)
@@ -741,8 +737,6 @@ badnum:				p = msg_print(sp, name, &nf);
 /*
  * o_set --
  *	Set an option's value.
- *
- * PUBLIC: int o_set(SCR *, int, u_int, char *, u_long);
  */
 int
 o_set(SCR *sp, int opt, u_int flags, char *str, u_long val)
@@ -780,8 +774,6 @@ o_set(SCR *sp, int opt, u_int flags, char *str, u_long val)
 /*
  * opts_empty --
  *	Return 1 if the string option is invalid, 0 if it's OK.
- *
- * PUBLIC: int opts_empty(SCR *, int, int);
  */
 int
 opts_empty(SCR *sp, int off, int silent)
@@ -800,8 +792,6 @@ opts_empty(SCR *sp, int off, int silent)
 /*
  * opts_dump --
  *	List the current values of selected options.
- *
- * PUBLIC: void opts_dump(SCR *, enum optdisp);
  */
 void
 opts_dump(SCR *sp, enum optdisp type)
@@ -962,8 +952,6 @@ opts_print(SCR *sp, OPTLIST const *op)
 /*
  * opts_save --
  *	Write the current configuration to a file.
- *
- * PUBLIC: int opts_save(SCR *, FILE *);
  */
 int
 opts_save(SCR *sp, FILE *fp)
@@ -1017,8 +1005,6 @@ opts_save(SCR *sp, FILE *fp)
 /* 
  * opts_search --
  *	Search for an option.
- *
- * PUBLIC: OPTLIST const *opts_search(char *);
  */
 OPTLIST const *
 opts_search(char *name)
@@ -1062,8 +1048,6 @@ opts_search(char *name)
 /* 
  * opts_nomatch --
  *	Standard nomatch error message for options.
- *
- * PUBLIC: void opts_nomatch(SCR *, char *);
  */
 void
 opts_nomatch(SCR *sp, char *name)
@@ -1087,8 +1071,6 @@ opts_cmp(const void *a, const void *b)
 /*
  * opts_copy --
  *	Copy a screen's OPTION array.
- *
- * PUBLIC: int opts_copy(SCR *, SCR *);
  */
 int
 opts_copy(SCR *orig, SCR *sp)
@@ -1133,8 +1115,6 @@ nomem:			msgq(orig, M_SYSERR, NULL);
 /*
  * opts_free --
  *	Free all option strings
- *
- * PUBLIC: void opts_free(SCR *);
  */
 void
 opts_free(SCR *sp)

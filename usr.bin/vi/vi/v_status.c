@@ -25,8 +25,6 @@
 /*
  * v_status -- ^G
  *	Show the file status.
- *
- * PUBLIC: int v_status(SCR *, VICMD *);
  */
 int
 v_status(SCR *sp, VICMD *vp)

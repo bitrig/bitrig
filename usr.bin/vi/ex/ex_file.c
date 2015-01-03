@@ -25,8 +25,6 @@
 /*
  * ex_file -- :f[ile] [name]
  *	Change the file's name and display the status line.
- *
- * PUBLIC: int ex_file(SCR *, EXCMD *);
  */
 int
 ex_file(SCR *sp, EXCMD *cmdp)

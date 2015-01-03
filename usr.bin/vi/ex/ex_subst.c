@@ -40,8 +40,6 @@ static int s(SCR *, EXCMD *, char *, regex_t *, u_int);
  *	[line [,line]] s[ubstitute] [[/;]pat[/;]/repl[/;] [cgr] [count] [#lp]]
  *
  *	Substitute on lines matching a pattern.
- *
- * PUBLIC: int ex_s(SCR *, EXCMD *);
  */
 int
 ex_s(SCR *sp, EXCMD *cmdp)
@@ -245,8 +243,6 @@ tilde:				++p;
  *	[line [,line]] & [cgr] [count] [#lp]]
  *
  *	Substitute using the last substitute RE and replacement pattern.
- *
- * PUBLIC: int ex_subagain(SCR *, EXCMD *);
  */
 int
 ex_subagain(SCR *sp, EXCMD *cmdp)
@@ -267,8 +263,6 @@ ex_subagain(SCR *sp, EXCMD *cmdp)
  *	[line [,line]] ~ [cgr] [count] [#lp]]
  *
  *	Substitute using the last RE and last substitute replacement pattern.
- *
- * PUBLIC: int ex_subtilde(SCR *, EXCMD *);
  */
 int
 ex_subtilde(SCR *sp, EXCMD *cmdp)
@@ -872,9 +866,6 @@ err:		rval = 1;
 /*
  * re_compile --
  *	Compile the RE.
- *
- * PUBLIC: int re_compile(SCR *,
- * PUBLIC:     char *, size_t, char **, size_t *, regex_t *, u_int);
  */
 int
 re_compile(SCR *sp, char *ptrn, size_t plen, char **ptrnp, size_t *lenp,
@@ -1252,8 +1243,6 @@ re_cscope_conv(SCR *sp, char **ptrnp, size_t *plenp, int *replacedp)
 /*
  * re_error --
  *	Report a regular expression error.
- *
- * PUBLIC: void re_error(SCR *, int, regex_t *);
  */
 void
 re_error(SCR *sp, int errcode, regex_t *preg)

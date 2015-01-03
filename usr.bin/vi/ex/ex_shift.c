@@ -25,9 +25,6 @@ static int shift(SCR *, EXCMD *, enum which);
 
 /*
  * ex_shiftl -- :<[<...]
- *
- *
- * PUBLIC: int ex_shiftl(SCR *, EXCMD *);
  */
 int
 ex_shiftl(SCR *sp, EXCMD *cmdp)
@@ -37,8 +34,6 @@ ex_shiftl(SCR *sp, EXCMD *cmdp)
 
 /*
  * ex_shiftr -- :>[>...]
- *
- * PUBLIC: int ex_shiftr(SCR *, EXCMD *);
  */
 int
 ex_shiftr(SCR *sp, EXCMD *cmdp)

@@ -35,8 +35,6 @@ static int ex_N_next(SCR *, EXCMD *);
  * historic vi.  See nvi/docs/autowrite for details, but the basic
  * idea was that it ignored the force flag if the autowrite flag was
  * set.  This implementation handles them all identically.
- *
- * PUBLIC: int ex_next(SCR *, EXCMD *);
  */
 int
 ex_next(SCR *sp, EXCMD *cmdp)
@@ -158,8 +156,6 @@ ex_N_next(SCR *sp, EXCMD *cmdp)
 /*
  * ex_prev -- :prev
  *	Edit the previous file.
- *
- * PUBLIC: int ex_prev(SCR *, EXCMD *);
  */
 int
 ex_prev(SCR *sp, EXCMD *cmdp)
@@ -203,8 +199,6 @@ ex_prev(SCR *sp, EXCMD *cmdp)
  * and we can't clear the FR_CURSORSET bit for a single screen.  I don't see
  * anyone noticing, but if they do, we'll have to put information into the SCR
  * structure so we can keep track of it.
- *
- * PUBLIC: int ex_rew(SCR *, EXCMD *);
  */
 int
 ex_rew(SCR *sp, EXCMD *cmdp)
@@ -241,8 +235,6 @@ ex_rew(SCR *sp, EXCMD *cmdp)
 /*
  * ex_args -- :args
  *	Display the list of files.
- *
- * PUBLIC: int ex_args(SCR *, EXCMD *);
  */
 int
 ex_args(SCR *sp, EXCMD *cmdp)
@@ -280,8 +272,6 @@ ex_args(SCR *sp, EXCMD *cmdp)
 /*
  * ex_buildargv --
  *	Build a new file argument list.
- *
- * PUBLIC: char **ex_buildargv(SCR *, EXCMD *, char *);
  */
 char **
 ex_buildargv(SCR *sp, EXCMD *cmdp, char *name)

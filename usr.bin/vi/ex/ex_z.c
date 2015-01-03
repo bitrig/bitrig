@@ -24,8 +24,6 @@
 /*
  * ex_z -- :[line] z [^-.+=] [count] [flags]
  *	Adjust window.
- *
- * PUBLIC: int ex_z(SCR *, EXCMD *);
  */
 int
 ex_z(SCR *sp, EXCMD *cmdp)

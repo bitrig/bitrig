@@ -28,8 +28,6 @@ static int scr_update(SCR *, recno_t, lnop_t, int);
 /*
  * db_eget --
  *	Front-end to db_get, special case handling for empty files.
- *
- * PUBLIC: int db_eget(SCR *, recno_t, char **, size_t *, int *);
  */
 int
 db_eget(SCR *sp, recno_t lno, char **pp, size_t *lenp, int *isemptyp)
@@ -67,8 +65,6 @@ db_eget(SCR *sp, recno_t lno, char **pp, size_t *lenp, int *isemptyp)
  * db_get --
  *	Look in the text buffers for a line, followed by the cache, followed
  *	by the database.
- *
- * PUBLIC: int db_get(SCR *, recno_t, u_int32_t, char **, size_t *);
  */
 int
 db_get(SCR *sp, recno_t lno, u_int32_t flags, char **pp, size_t *lenp)
@@ -172,8 +168,6 @@ err3:		if (lenp != NULL)
 /*
  * db_delete --
  *	Delete a line from the file.
- *
- * PUBLIC: int db_delete(SCR *, recno_t);
  */
 int
 db_delete(SCR *sp, recno_t lno)
@@ -228,8 +222,6 @@ db_delete(SCR *sp, recno_t lno)
 /*
  * db_append --
  *	Append a line into the file.
- *
- * PUBLIC: int db_append(SCR *, int, recno_t, char *, size_t);
  */
 int
 db_append(SCR *sp, int update, recno_t lno, char *p, size_t len)
@@ -297,8 +289,6 @@ db_append(SCR *sp, int update, recno_t lno, char *p, size_t len)
 /*
  * db_insert --
  *	Insert a line into the file.
- *
- * PUBLIC: int db_insert(SCR *, recno_t, char *, size_t);
  */
 int
 db_insert(SCR *sp, recno_t lno, char *p, size_t len)
@@ -358,8 +348,6 @@ db_insert(SCR *sp, recno_t lno, char *p, size_t len)
 /*
  * db_set --
  *	Store a line in the file.
- *
- * PUBLIC: int db_set(SCR *, recno_t, char *, size_t);
  */
 int
 db_set(SCR *sp, recno_t lno, char *p, size_t len)
@@ -413,8 +401,6 @@ db_set(SCR *sp, recno_t lno, char *p, size_t len)
 /*
  * db_exist --
  *	Return if a line exists.
- *
- * PUBLIC: int db_exist(SCR *, recno_t);
  */
 int
 db_exist(SCR *sp, recno_t lno)
@@ -446,8 +432,6 @@ db_exist(SCR *sp, recno_t lno)
 /*
  * db_last --
  *	Return the number of lines in the file.
- *
- * PUBLIC: int db_last(SCR *, recno_t *);
  */
 int
 db_last(SCR *sp, recno_t *lnop)
@@ -505,8 +489,6 @@ db_last(SCR *sp, recno_t *lnop)
 /*
  * db_err --
  *	Report a line error.
- *
- * PUBLIC: void db_err(SCR *, recno_t);
  */
 void
 db_err(SCR *sp, recno_t lno)

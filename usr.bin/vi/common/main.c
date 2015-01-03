@@ -37,8 +37,6 @@ static int	 v_obsolete(char *, char *[]);
 /*
  * editor --
  *	Main editor routine.
- *
- * PUBLIC: int editor(GS *, int, char *[]);
  */
 int
 editor(GS *gp, int argc, char *argv[])
@@ -437,8 +435,6 @@ err:		rval = 1;
 /*
  * v_end --
  *	End the program, discarding screens and most of the global area.
- *
- * PUBLIC: void v_end(GS *);
  */
 void
 v_end(GS *gp)

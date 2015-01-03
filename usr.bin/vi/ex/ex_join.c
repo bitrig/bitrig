@@ -25,8 +25,6 @@
 /*
  * ex_join -- :[line [,line]] j[oin][!] [count] [flags]
  *	Join lines.
- *
- * PUBLIC: int ex_join(SCR *, EXCMD *);
  */
 int
 ex_join(SCR *sp, EXCMD *cmdp)

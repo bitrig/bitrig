@@ -36,8 +36,6 @@
 /*
  * cs_init --
  *	Initialize character stream routines.
- *
- * PUBLIC: int cs_init(SCR *, VCS *);
  */
 int
 cs_init(SCR *sp, VCS *csp)
@@ -63,8 +61,6 @@ cs_init(SCR *sp, VCS *csp)
 /*
  * cs_next --
  *	Retrieve the next character.
- *
- * PUBLIC: int cs_next(SCR *, VCS *);
  */
 int
 cs_next(SCR *sp, VCS *csp)
@@ -113,8 +109,6 @@ cs_next(SCR *sp, VCS *csp)
  * Semantics of checking the current character were coded for the fword()
  * function -- once the other word routines are converted, they may have
  * to change.
- *
- * PUBLIC: int cs_fspace(SCR *, VCS *);
  */
 int
 cs_fspace(SCR *sp, VCS *csp)
@@ -133,8 +127,6 @@ cs_fspace(SCR *sp, VCS *csp)
 /*
  * cs_fblank --
  *	Eat forward to the next non-whitespace character.
- *
- * PUBLIC: int cs_fblank(SCR *, VCS *);
  */
 int
 cs_fblank(SCR *sp, VCS *csp)
@@ -153,8 +145,6 @@ cs_fblank(SCR *sp, VCS *csp)
 /*
  * cs_prev --
  *	Retrieve the previous character.
- *
- * PUBLIC: int cs_prev(SCR *, VCS *);
  */
 int
 cs_prev(SCR *sp, VCS *csp)
@@ -203,8 +193,6 @@ cs_prev(SCR *sp, VCS *csp)
 /*
  * cs_bblank --
  *	Eat backward to the next non-whitespace character.
- *
- * PUBLIC: int cs_bblank(SCR *, VCS *);
  */
 int
 cs_bblank(SCR *sp, VCS *csp)

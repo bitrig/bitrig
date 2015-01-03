@@ -35,8 +35,6 @@ static int	vs_sm_up(SCR *, MARK *, recno_t, scroll_t, SMAP *);
 /*
  * vs_change --
  *	Make a change to the screen.
- *
- * PUBLIC: int vs_change(SCR *, recno_t, lnop_t);
  */
 int
 vs_change(SCR *sp, recno_t lno, lnop_t op)
@@ -162,8 +160,6 @@ vs_change(SCR *sp, recno_t lno, lnop_t op)
  * Unexported interface: if lno is OOBLNO, P_TOP means that the HMAP
  * slot is already filled in, P_BOTTOM means that the TMAP slot is
  * already filled in, and we just finish up the job.
- *
- * PUBLIC: int vs_sm_fill(SCR *, recno_t, pos_t);
  */
 int
 vs_sm_fill(SCR *sp, recno_t lno, pos_t pos)
@@ -493,8 +489,6 @@ vs_sm_reset(SCR *sp, recno_t lno)
  * vs_sm_scroll
  *	Scroll the SMAP up/down count logical lines.  Different
  *	semantics based on the vi command, *sigh*.
- *
- * PUBLIC: int vs_sm_scroll(SCR *, MARK *, recno_t, scroll_t);
  */
 int
 vs_sm_scroll(SCR *sp, MARK *rp, recno_t count, scroll_t scmd)
@@ -726,8 +720,6 @@ vs_sm_up(SCR *sp, MARK *rp, recno_t count, scroll_t scmd, SMAP *smp)
 /*
  * vs_sm_1up --
  *	Scroll the SMAP up one.
- *
- * PUBLIC: int vs_sm_1up(SCR *);
  */
 int
 vs_sm_1up(SCR *sp)
@@ -952,8 +944,6 @@ vs_sm_erase(SCR *sp)
 /*
  * vs_sm_1down --
  *	Scroll the SMAP down one.
- *
- * PUBLIC: int vs_sm_1down(SCR *);
  */
 int
 vs_sm_1down(SCR *sp)
@@ -1009,8 +999,6 @@ vs_insertln(SCR *sp, int cnt)
 /*
  * vs_sm_next --
  *	Fill in the next entry in the SMAP.
- *
- * PUBLIC: int vs_sm_next(SCR *, SMAP *, SMAP *);
  */
 int
 vs_sm_next(SCR *sp, SMAP *p, SMAP *t)
@@ -1037,8 +1025,6 @@ vs_sm_next(SCR *sp, SMAP *p, SMAP *t)
 /*
  * vs_sm_prev --
  *	Fill in the previous entry in the SMAP.
- *
- * PUBLIC: int vs_sm_prev(SCR *, SMAP *, SMAP *);
  */
 int
 vs_sm_prev(SCR *sp, SMAP *p, SMAP *t)
@@ -1062,8 +1048,6 @@ vs_sm_prev(SCR *sp, SMAP *p, SMAP *t)
 /*
  * vs_sm_cursor --
  *	Return the SMAP entry referenced by the cursor.
- *
- * PUBLIC: int vs_sm_cursor(SCR *, SMAP **);
  */
 int
 vs_sm_cursor(SCR *sp, SMAP **smpp)
@@ -1101,8 +1085,6 @@ vs_sm_cursor(SCR *sp, SMAP **smpp)
  *	Return the line/column of the top, middle or last line on the screen.
  *	(The vi H, M and L commands.)  Here because only the screen routines
  *	know what's really out there.
- *
- * PUBLIC: int vs_sm_position(SCR *, MARK *, u_long, pos_t);
  */
 int
 vs_sm_position(SCR *sp, MARK *rp, u_long cnt, pos_t pos)
@@ -1181,8 +1163,6 @@ eof:				msgq(sp, M_BERR,
  * vs_sm_nlines --
  *	Return the number of screen lines from an SMAP entry to the
  *	start of some file line, less than a maximum value.
- *
- * PUBLIC: recno_t vs_sm_nlines(SCR *, SMAP *, recno_t, size_t);
  */
 recno_t
 vs_sm_nlines(SCR *sp, SMAP *from_sp, recno_t to_lno, size_t max)

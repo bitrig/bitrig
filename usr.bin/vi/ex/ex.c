@@ -41,8 +41,6 @@ static void	ex_unknown(SCR *, char *, size_t);
 /*
  * ex --
  *	Main ex loop.
- *
- * PUBLIC: int ex(SCR **);
  */
 int
 ex(SCR **spp)
@@ -182,8 +180,6 @@ ex(SCR **spp)
  *	:set|file|append|set|file
  *
  * For extra credit, try them in a startup .exrc file.
- *
- * PUBLIC: int ex_cmd(SCR *);
  */
 int
 ex_cmd(SCR *sp)
@@ -1598,8 +1594,6 @@ rsuccess:	tmp = 0;
 /*
  * ex_range --
  *	Get a line range for ex commands, or perform a vi ex address search.
- *
- * PUBLIC: int ex_range(SCR *, EXCMD *, int *);
  */
 int
 ex_range(SCR *sp, EXCMD *ecp, int *errp)
@@ -2183,8 +2177,6 @@ alloc_err:
  *	The vi text input routine needs to know if ex thinks this is an
  *	[un]abbreviate command, so it can turn off abbreviations.  See
  *	the usual ranting in the vi/v_txt_ev.c:txt_abbrev() routine.
- *
- * PUBLIC: int ex_is_abbrev(char *, size_t);
  */
 int
 ex_is_abbrev(char *name, size_t len)
@@ -2200,8 +2192,6 @@ ex_is_abbrev(char *name, size_t len)
  *	The vi text input routine needs to know if ex thinks this is an
  *	unmap command, so it can turn off input mapping.  See the usual
  *	ranting in the vi/v_txt_ev.c:txt_unmap() routine.
- *
- * PUBLIC: int ex_is_unmap(char *, size_t);
  */
 int
 ex_is_unmap(char *name, size_t len)
@@ -2242,9 +2232,6 @@ ex_comm_search(char *name, size_t len)
 /*
  * ex_badaddr --
  *	Display a bad address message.
- *
- * PUBLIC: void ex_badaddr
- * PUBLIC:(SCR *, EXCMDLIST const *, enum badaddr, enum nresult);
  */
 void
 ex_badaddr(SCR *sp, EXCMDLIST const *cp, enum badaddr ba, enum nresult nret)

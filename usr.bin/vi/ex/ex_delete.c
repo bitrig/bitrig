@@ -23,8 +23,6 @@
  * ex_delete: [line [,line]] d[elete] [buffer] [count] [flags]
  *
  *	Delete lines from the file.
- *
- * PUBLIC: int ex_delete(SCR *, EXCMD *);
  */
 int
 ex_delete(SCR *sp, EXCMD *cmdp)

@@ -22,8 +22,6 @@
 /*
  * ex_quit -- :quit[!]
  *	Quit.
- *
- * PUBLIC: int ex_quit(SCR *, EXCMD *);
  */
 int
 ex_quit(SCR *sp, EXCMD *cmdp)

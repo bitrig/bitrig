@@ -30,8 +30,6 @@
  * ex_mkexrc -- :mkexrc[!] [file]
  *
  * Create (or overwrite) a .exrc file with the current info.
- *
- * PUBLIC: int ex_mkexrc(SCR *, EXCMD *);
  */
 int
 ex_mkexrc(SCR *sp, EXCMD *cmdp)

@@ -43,8 +43,6 @@ static void inc_err(SCR *, enum nresult);
 /*
  * v_increment -- [count]#[#+-]
  *	Increment/decrement a keyword number.
- *
- * PUBLIC: int v_increment(SCR *, VICMD *);
  */
 int
 v_increment(SCR *sp, VICMD *vp)

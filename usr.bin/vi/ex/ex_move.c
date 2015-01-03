@@ -24,8 +24,6 @@
 /*
  * ex_copy -- :[line [,line]] co[py] line [flags]
  *	Copy selected lines.
- *
- * PUBLIC: int ex_copy(SCR *, EXCMD *);
  */
 int
 ex_copy(SCR *sp, EXCMD *cmdp)
@@ -77,8 +75,6 @@ err:	text_lfree(&cb.textq);
 /*
  * ex_move -- :[line [,line]] mo[ve] line
  *	Move selected lines.
- *
- * PUBLIC: int ex_move(SCR *, EXCMD *);
  */
 int
 ex_move(SCR *sp, EXCMD *cmdp)

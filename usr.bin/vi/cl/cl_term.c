@@ -74,8 +74,6 @@ static TKLIST const m2_tklist[] = {	/* Input mappings (set or delete). */
 /*
  * cl_term_init --
  *	Initialize the special keys defined by the termcap/terminfo entry.
- *
- * PUBLIC: int cl_term_init(SCR *);
  */
 int
 cl_term_init(SCR *sp)
@@ -148,8 +146,6 @@ cl_term_init(SCR *sp)
 /*
  * cl_term_end --
  *	End the special keys defined by the termcap/terminfo entry.
- *
- * PUBLIC: int cl_term_end(GS *);
  */
 int
 cl_term_end(GS *gp)
@@ -168,8 +164,6 @@ cl_term_end(GS *gp)
 /*
  * cl_fmap --
  *	Map a function key.
- *
- * PUBLIC: int cl_fmap(SCR *, seq_t, CHAR_T *, size_t, CHAR_T *, size_t);
  */
 int
 cl_fmap(SCR *sp, seq_t stype, CHAR_T *from, size_t flen, CHAR_T *to,
@@ -215,8 +209,6 @@ cl_pfmap(SCR *sp, seq_t stype, CHAR_T *from, size_t flen, CHAR_T *to,
 /*
  * cl_optchange --
  *	Curses screen specific "option changed" routine.
- *
- * PUBLIC: int cl_optchange(SCR *, int, char *, u_long *);
  */
 int
 cl_optchange(SCR *sp, int opt, char *str, u_long *valp)
@@ -262,8 +254,6 @@ cl_optchange(SCR *sp, int opt, char *str, u_long *valp)
 /*
  * cl_omesg --
  *	Turn the tty write permission on or off.
- *
- * PUBLIC: int cl_omesg(SCR *, CL_PRIVATE *, int);
  */
 int
 cl_omesg(SCR *sp, CL_PRIVATE *clp, int on)
@@ -308,8 +298,6 @@ cl_omesg(SCR *sp, CL_PRIVATE *clp, int on)
 /*
  * cl_ssize --
  *	Return the terminal size.
- *
- * PUBLIC: int cl_ssize(SCR *, int, size_t *, size_t *, int *);
  */
 int
 cl_ssize(SCR *sp, int sigwinch, size_t *rowp, size_t *colp, int *changedp)
@@ -426,8 +414,6 @@ noterm:	if (row == 0)
 /*
  * cl_putchar --
  *	Function version of putchar, for tputs.
- *
- * PUBLIC: int cl_putchar(int);
  */
 int
 cl_putchar(int ch)

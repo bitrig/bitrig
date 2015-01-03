@@ -25,8 +25,6 @@
 /*
  * put --
  *	Put text buffer contents into the file.
- *
- * PUBLIC: int put(SCR *, CB *, CHAR_T *, MARK *, MARK *, int);
  */
 int
 put(SCR *sp, CB *cbp, CHAR_T *namep, MARK *cp, MARK *rp, int append)

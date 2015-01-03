@@ -27,8 +27,6 @@
 /*
  * v_Undo -- U
  *	Undo changes to this line.
- *
- * PUBLIC: int v_Undo(SCR *, VICMD *);
  */
 int
 v_Undo(SCR *sp, VICMD *vp)
@@ -61,8 +59,6 @@ v_Undo(SCR *sp, VICMD *vp)
 /*
  * v_undo -- u
  *	Undo the last change.
- *
- * PUBLIC: int v_undo(SCR *, VICMD *);
  */
 int
 v_undo(SCR *sp, VICMD *vp)

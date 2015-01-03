@@ -114,8 +114,6 @@ static int	 rcv_mktemp(SCR *, char *, char *, int);
 /*
  * rcv_tmp --
  *	Build a file name that will be used as the recovery file.
- *
- * PUBLIC: int rcv_tmp(SCR *, EXF *, char *);
  */
 int
 rcv_tmp(SCR *sp, EXF *ep, char *name)
@@ -175,8 +173,6 @@ err:		msgq(sp, M_ERR,
 /*
  * rcv_init --
  *	Force the file to be snapshotted for recovery.
- *
- * PUBLIC: int rcv_init(SCR *);
  */
 int
 rcv_init(SCR *sp)
@@ -237,8 +233,6 @@ err:	msgq(sp, M_ERR,
  *		snapshotting the backup file and send email to the user
  *		sending email to the user if the file was modified
  *		ending the file session
- *
- * PUBLIC: int rcv_sync(SCR *, u_int);
  */
 int
 rcv_sync(SCR *sp, u_int flags)
@@ -463,8 +457,6 @@ err:	if (!issync)
  *
  * rcv_list --
  *	List the files that can be recovered by this user.
- *
- * PUBLIC: int rcv_list(SCR *);
  */
 int
 rcv_list(SCR *sp)
@@ -565,8 +557,6 @@ next:		(void)fclose(fp);
 /*
  * rcv_read --
  *	Start a recovered file as the file to edit.
- *
- * PUBLIC: int rcv_read(SCR *, FREF *);
  */
 int
 rcv_read(SCR *sp, FREF *frp)

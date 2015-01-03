@@ -32,8 +32,6 @@ static int exwr(SCR *, EXCMD *, enum which);
 /*
  * ex_wn --	:wn[!] [>>] [file]
  *	Write to a file and switch to the next one.
- *
- * PUBLIC: int ex_wn(SCR *, EXCMD *);
  */
 int
 ex_wn(SCR *sp, EXCMD *cmdp)
@@ -52,8 +50,6 @@ ex_wn(SCR *sp, EXCMD *cmdp)
 /*
  * ex_wq --	:wq[!] [>>] [file]
  *	Write to a file and quit.
- *
- * PUBLIC: int ex_wq(SCR *, EXCMD *);
  */
 int
 ex_wq(SCR *sp, EXCMD *cmdp)
@@ -78,8 +74,6 @@ ex_wq(SCR *sp, EXCMD *cmdp)
  * ex_write --	:write[!] [>>] [file]
  *		:write [!] [cmd]
  *	Write to a file.
- *
- * PUBLIC: int ex_write(SCR *, EXCMD *);
  */
 int
 ex_write(SCR *sp, EXCMD *cmdp)
@@ -91,8 +85,6 @@ ex_write(SCR *sp, EXCMD *cmdp)
 /*
  * ex_xit -- :x[it]! [file]
  *	Write out any modifications and quit.
- *
- * PUBLIC: int ex_xit(SCR *, EXCMD *);
  */
 int
 ex_xit(SCR *sp, EXCMD *cmdp)
@@ -258,9 +250,6 @@ exwr(SCR *sp, EXCMD *cmdp, enum which cmd)
 /*
  * ex_writefp --
  *	Write a range of lines to a FILE *.
- *
- * PUBLIC: int ex_writefp(SCR *,
- * PUBLIC:    char *, FILE *, MARK *, MARK *, u_long *, u_long *, int);
  */
 int
 ex_writefp(SCR *sp, char *name, FILE *fp, MARK *fm, MARK *tm, u_long *nlno,

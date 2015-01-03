@@ -99,8 +99,6 @@ static int	 terminate(SCR *, CSC *, int);
 /*
  * ex_cscope --
  *	Perform an ex cscope.
- *
- * PUBLIC: int ex_cscope(SCR *, EXCMD *);
  */
 int
 ex_cscope(SCR *sp, EXCMD *cmdp)
@@ -891,8 +889,6 @@ cscope_reset(SCR *sp, EXCMD *cmdp, char *notusedp)
 /*
  * cscope_display --
  *	Display current connections.
- *
- * PUBLIC: int cscope_display(SCR *);
  */
 int
 cscope_display(SCR *sp)
@@ -916,8 +912,6 @@ cscope_display(SCR *sp)
 /*
  * cscope_search --
  *	Search a file for a cscope entry.
- *
- * PUBLIC: int cscope_search(SCR *, TAGQ *, TAG *);
  */
 int
 cscope_search(SCR *sp, TAGQ *tqp, TAG *tp)

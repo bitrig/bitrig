@@ -25,8 +25,6 @@
 /*
  * v_zexit -- ZZ
  *	Save the file and exit.
- *
- * PUBLIC: int v_zexit(SCR *, VICMD *);
  */
 int
 v_zexit(SCR *sp, VICMD *vp)

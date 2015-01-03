@@ -27,8 +27,6 @@
 /*
  * ex_visual -- :[line] vi[sual] [^-.+] [window_size] [flags]
  *	Switch to visual mode.
- *
- * PUBLIC: int ex_visual(SCR *, EXCMD *);
  */
 int
 ex_visual(SCR *sp, EXCMD *cmdp)

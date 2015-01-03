@@ -28,8 +28,6 @@
 /*
  * v_eof --
  *	Vi end-of-file error.
- *
- * PUBLIC: void v_eof(SCR *, MARK *);
  */
 void
 v_eof(SCR *sp, MARK *mp)
@@ -51,8 +49,6 @@ v_eof(SCR *sp, MARK *mp)
 /*
  * v_eol --
  *	Vi end-of-line error.
- *
- * PUBLIC: void v_eol(SCR *, MARK *);
  */
 void
 v_eol(SCR *sp, MARK *mp)
@@ -74,8 +70,6 @@ v_eol(SCR *sp, MARK *mp)
 /*
  * v_nomove --
  *	Vi no cursor movement error.
- *
- * PUBLIC: void v_nomove(SCR *);
  */
 void
 v_nomove(SCR *sp)
@@ -86,8 +80,6 @@ v_nomove(SCR *sp)
 /*
  * v_sof --
  *	Vi start-of-file error.
- *
- * PUBLIC: void v_sof(SCR *, MARK *);
  */
 void
 v_sof(SCR *sp, MARK *mp)
@@ -101,8 +93,6 @@ v_sof(SCR *sp, MARK *mp)
 /*
  * v_sol --
  *	Vi start-of-line error.
- *
- * PUBLIC: void v_sol(SCR *);
  */
 void
 v_sol(SCR *sp)
@@ -113,8 +103,6 @@ v_sol(SCR *sp)
 /*
  * v_isempty --
  *	Return if the line contains nothing but white-space characters.
- *
- * PUBLIC: int v_isempty(char *, size_t);
  */
 int
 v_isempty(char *p, size_t len)
@@ -128,8 +116,6 @@ v_isempty(char *p, size_t len)
 /*
  * v_emsg --
  *	Display a few common vi messages.
- *
- * PUBLIC: void v_emsg(SCR *, char *, vim_t);
  */
 void
 v_emsg(SCR *sp, char *p, vim_t which)

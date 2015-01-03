@@ -25,8 +25,6 @@
 /*
  * del --
  *	Delete a range of text.
- *
- * PUBLIC: int del(SCR *, MARK *, MARK *, int);
  */
 int
 del(SCR *sp, MARK *fm, MARK *tm, int lmode)

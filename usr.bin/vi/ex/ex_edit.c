@@ -39,8 +39,6 @@ static int ex_N_edit(SCR *, EXCMD *, FREF *, int);
  * Historic vi didn't permit the '+' command form without specifying
  * a file name as well.  This seems unreasonable, so we support it
  * regardless.
- *
- * PUBLIC: int ex_edit(SCR *, EXCMD *);
  */
 int
 ex_edit(SCR *sp, EXCMD *cmdp)

@@ -55,8 +55,6 @@ static void	v_comlog(SCR *, VICMD *);
 /*
  * vi --
  * 	Main vi command loop.
- *
- * PUBLIC: int vi(SCR **);
  */
 int
 vi(SCR **spp)

@@ -29,8 +29,6 @@ static void	db(SCR *, CB *, CHAR_T *);
  * ex_display -- :display b[uffers] | c[onnections] | s[creens] | t[ags]
  *
  *	Display cscope connections, buffers, tags or screens.
- *
- * PUBLIC: int ex_display(SCR *, EXCMD *);
  */
 int
 ex_display(SCR *sp, EXCMD *cmdp)

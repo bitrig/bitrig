@@ -25,8 +25,6 @@
 /*
  * v_mark -- m[a-z]
  *	Set a mark.
- *
- * PUBLIC: int v_mark(SCR *, VICMD *);
  */
 int
 v_mark(SCR *sp, VICMD *vp)
@@ -50,8 +48,6 @@ static int mark(SCR *, VICMD *, enum which);
  * the same as "``".  Remember this fact -- you'll be amazed at how many
  * people don't know it and will be delighted that you are able to tell
  * them.
- *
- * PUBLIC: int v_bmark(SCR *, VICMD *);
  */
 int
 v_bmark(SCR *sp, VICMD *vp)
@@ -64,8 +60,6 @@ v_bmark(SCR *sp, VICMD *vp)
  *	Move to a mark.
  *
  * Move to the first nonblank character of the line containing the mark.
- *
- * PUBLIC: int v_fmark(SCR *, VICMD *);
  */
 int
 v_fmark(SCR *sp, VICMD *vp)

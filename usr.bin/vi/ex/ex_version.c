@@ -23,8 +23,6 @@
 /*
  * ex_version -- :version
  *	Display the program version.
- *
- * PUBLIC: int ex_version(SCR *, EXCMD *);
  */
 int
 ex_version(SCR *sp, EXCMD *cmdp)

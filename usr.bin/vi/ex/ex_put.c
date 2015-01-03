@@ -24,8 +24,6 @@
 /*
  * ex_put -- [line] pu[t] [buffer]
  *	Append a cut buffer into the file.
- *
- * PUBLIC: int ex_put(SCR *, EXCMD *);
  */
 int
 ex_put(SCR *sp, EXCMD *cmdp)

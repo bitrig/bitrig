@@ -24,8 +24,6 @@
 /*
  * v_z -- [count]z[count][-.+^<CR>]
  *	Move the screen.
- *
- * PUBLIC: int v_z(SCR *, VICMD *);
  */
 int
 v_z(SCR *sp, VICMD *vp)
@@ -127,8 +125,6 @@ v_z(SCR *sp, VICMD *vp)
 /*
  * vs_crel --
  *	Change the relative size of the current screen.
- *
- * PUBLIC: int vs_crel(SCR *, long);
  */
 int
 vs_crel(SCR *sp, long count)

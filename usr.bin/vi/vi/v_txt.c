@@ -56,8 +56,6 @@ static void	 txt_unmap(SCR *, TEXT *, u_int32_t *);
 /*
  * v_tcmd --
  *	Fill a buffer from the terminal for vi.
- *
- * PUBLIC: int v_tcmd(SCR *, VICMD *, ARG_CHAR_T, u_int);
  */
 int
 v_tcmd(SCR *sp, VICMD *vp, ARG_CHAR_T prompt, u_int flags)
@@ -231,9 +229,6 @@ txt_map_end(SCR *sp)
 /*
  * v_txt --
  *	Vi text input.
- *
- * PUBLIC: int v_txt(SCR *, VICMD *, MARK *,
- * PUBLIC:    const char *, size_t, ARG_CHAR_T, recno_t, u_long, u_int32_t);
  */
 int
 v_txt(SCR *sp, VICMD *vp, MARK *tm, const char *lp, size_t len,
@@ -1760,8 +1755,6 @@ txt_ai_resolve(SCR *sp, TEXT *tp, int *changedp)
  * v_txt_auto --
  *	Handle autoindent.  If aitp isn't NULL, use it, otherwise,
  *	retrieve the line.
- *
- * PUBLIC: int v_txt_auto(SCR *, recno_t, TEXT *, size_t, TEXT *);
  */
 int
 v_txt_auto(SCR *sp, recno_t lno, TEXT *aitp, size_t len, TEXT *tp)

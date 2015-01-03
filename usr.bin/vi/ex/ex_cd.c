@@ -27,8 +27,6 @@
 /*
  * ex_cd -- :cd[!] [directory]
  *	Change directories.
- *
- * PUBLIC: int ex_cd(SCR *, EXCMD *);
  */
 int
 ex_cd(SCR *sp, EXCMD *cmdp)

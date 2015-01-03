@@ -55,8 +55,6 @@
  * match } as well as the usual { and section values.  If it matched a { or
  * a section, it did NOT include the matched line.  If it matched a }, it
  * did include the line.  No clue why.
- *
- * PUBLIC: int v_sectionf(SCR *, VICMD *);
  */
 int
 v_sectionf(SCR *sp, VICMD *vp)
@@ -162,8 +160,6 @@ ret2:	if (ISMOTION(vp)) {
 /*
  * v_sectionb -- [count][[
  *	Move backward count sections/functions.
- *
- * PUBLIC: int v_sectionb(SCR *, VICMD *);
  */
 int
 v_sectionb(SCR *sp, VICMD *vp)

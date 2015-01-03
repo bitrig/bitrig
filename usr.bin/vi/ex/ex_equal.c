@@ -21,8 +21,6 @@
 
 /*
  * ex_equal -- :address =
- *
- * PUBLIC: int ex_equal(SCR *, EXCMD *);
  */
 int
 ex_equal(SCR *sp, EXCMD *cmdp)

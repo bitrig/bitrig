@@ -59,8 +59,6 @@ static u_int32_t set_txt_std(SCR *, VICMD *, u_int32_t);
 /*
  * v_iA -- [count]A
  *	Append text to the end of the line.
- *
- * PUBLIC: int v_iA(SCR *, VICMD *);
  */
 int
 v_iA(SCR *sp, VICMD *vp)
@@ -79,8 +77,6 @@ v_iA(SCR *sp, VICMD *vp)
  * v_ia -- [count]a
  *	   [count]A
  *	Append text to the cursor position.
- *
- * PUBLIC: int v_ia(SCR *, VICMD *);
  */
 int
 v_ia(SCR *sp, VICMD *vp)
@@ -116,8 +112,6 @@ v_ia(SCR *sp, VICMD *vp)
 /*
  * v_iI -- [count]I
  *	Insert text at the first nonblank.
- *
- * PUBLIC: int v_iI(SCR *, VICMD *);
  */
 int
 v_iI(SCR *sp, VICMD *vp)
@@ -135,8 +129,6 @@ v_iI(SCR *sp, VICMD *vp)
  * v_ii -- [count]i
  *	   [count]I
  *	Insert text at the cursor position.
- *
- * PUBLIC: int v_ii(SCR *, VICMD *);
  */
 int
 v_ii(SCR *sp, VICMD *vp)
@@ -168,8 +160,6 @@ static int io(SCR *, VICMD *, enum which);
 /*
  * v_iO -- [count]O
  *	Insert text above this line.
- *
- * PUBLIC: int v_iO(SCR *, VICMD *);
  */
 int
 v_iO(SCR *sp, VICMD *vp)
@@ -180,8 +170,6 @@ v_iO(SCR *sp, VICMD *vp)
 /*
  * v_io -- [count]o
  *	Insert text after this line.
- *
- * PUBLIC: int v_io(SCR *, VICMD *);
  */
 int
 v_io(SCR *sp, VICMD *vp)
@@ -236,8 +224,6 @@ insert:		p = "";
  *	       [buffer][count]C
  *	       [buffer][count]S
  *	Change command.
- *
- * PUBLIC: int v_change(SCR *, VICMD *);
  */
 int
 v_change(SCR *sp, VICMD *vp)
@@ -375,8 +361,6 @@ v_change(SCR *sp, VICMD *vp)
 /*
  * v_Replace -- [count]R
  *	Overwrite multiple characters.
- *
- * PUBLIC: int v_Replace(SCR *, VICMD *);
  */
 int
 v_Replace(SCR *sp, VICMD *vp)
@@ -409,8 +393,6 @@ v_Replace(SCR *sp, VICMD *vp)
 /*
  * v_subst -- [buffer][count]s
  *	Substitute characters.
- *
- * PUBLIC: int v_subst(SCR *, VICMD *);
  */
 int
 v_subst(SCR *sp, VICMD *vp)

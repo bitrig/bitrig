@@ -37,8 +37,6 @@ static int	cl_putenv(char *, char *, u_long);
 /*
  * cl_screen --
  *	Switch screen types.
- *
- * PUBLIC: int cl_screen(SCR *, u_int32_t);
  */
 int
 cl_screen(SCR *sp, u_int32_t flags)
@@ -119,8 +117,6 @@ cl_screen(SCR *sp, u_int32_t flags)
 /*
  * cl_quit --
  *	Shutdown the screens.
- *
- * PUBLIC: int cl_quit(GS *);
  */
 int
 cl_quit(GS *gp)
@@ -489,8 +485,6 @@ cl_ex_end(GS *gp)
 /*
  * cl_getcap --
  *	Retrieve termcap/terminfo strings.
- *
- * PUBLIC: int cl_getcap(SCR *, char *, char **);
  */
 int
 cl_getcap(SCR *sp, char *name, char **elementp)

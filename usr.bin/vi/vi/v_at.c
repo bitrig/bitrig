@@ -25,8 +25,6 @@
 /*
  * v_at -- @
  *	Execute a buffer.
- *
- * PUBLIC: int v_at(SCR *, VICMD *);
  */
 int
 v_at(SCR *sp, VICMD *vp)

@@ -27,8 +27,6 @@
 /*
  * v_screen_copy --
  *	Copy vi screen.
- *
- * PUBLIC: int v_screen_copy(SCR *, SCR *);
  */
 int
 v_screen_copy(SCR *orig, SCR *sp)
@@ -70,8 +68,6 @@ v_screen_copy(SCR *orig, SCR *sp)
 /*
  * v_screen_end --
  *	End a vi screen.
- *
- * PUBLIC: int v_screen_end(SCR *);
  */
 int
 v_screen_end(SCR *sp)
@@ -99,8 +95,6 @@ v_screen_end(SCR *sp)
 /*
  * v_optchange --
  *	Handle change of options for vi.
- *
- * PUBLIC: int v_optchange(SCR *, int, char *, u_long *);
  */
 int
 v_optchange(SCR *sp, int offset, char *str, u_long *valp)

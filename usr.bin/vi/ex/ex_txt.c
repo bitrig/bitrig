@@ -46,8 +46,6 @@ static void	txt_prompt(SCR *, TEXT *, ARG_CHAR_T, u_int32_t);
 /*
  * ex_txt --
  *	Get lines from the terminal for ex.
- *
- * PUBLIC: int ex_txt(SCR *, TEXTH *, ARG_CHAR_T, u_int32_t);
  */
 int
 ex_txt(SCR *sp, TEXTH *tiqh, ARG_CHAR_T prompt, u_int32_t flags)

@@ -49,8 +49,6 @@ static void	vs_wait(SCR *, int *, sw_t);
  * vi text screen.  Screens using an alternate method of displaying busy
  * messages, e.g. X11 clock icons, should set their scr_busy function to the
  * correct function before calling the main editor routine.
- *
- * PUBLIC: void vs_busy(SCR *, const char *, busy_t);
  */
 void
 vs_busy(SCR *sp, const char *msg, busy_t btype)
@@ -136,8 +134,6 @@ vs_busy(SCR *sp, const char *msg, busy_t btype)
 /* 
  * vs_home --
  *	Home the cursor to the bottom row, left-most column.
- *
- * PUBLIC: void vs_home(SCR *);
  */
 void
 vs_home(SCR *sp)
@@ -149,8 +145,6 @@ vs_home(SCR *sp)
 /*
  * vs_update --
  *	Update a command.
- *
- * PUBLIC: void vs_update(SCR *, const char *, const char *);
  */
 void
 vs_update(SCR *sp, const char *m1, const char *m2)
@@ -215,8 +209,6 @@ vs_update(SCR *sp, const char *m1, const char *m2)
  * of stealing lines from the bottom of the vi text screen.  Screens using an
  * alternate method of displaying messages, e.g. dialog boxes, should set their
  * scr_msg function to the correct function before calling the editor.
- *
- * PUBLIC: void vs_msg(SCR *, mtype_t, char *, size_t);
  */
 void
 vs_msg(SCR *sp, mtype_t mtype, char *line, size_t len)
@@ -505,8 +497,6 @@ vs_output(SCR *sp, mtype_t mtype, const char *line, int llen)
  *
  * This routine is called when exiting a colon command to resolve any ex
  * output that may have occurred.
- *
- * PUBLIC: int vs_ex_resolve(SCR *, int *);
  */
 int
 vs_ex_resolve(SCR *sp, int *continuep)
@@ -629,8 +619,6 @@ vs_ex_resolve(SCR *sp, int *continuep)
 /*
  * vs_resolve --
  *	Deal with message output.
- *
- * PUBLIC: int vs_resolve(SCR *, SCR *, int);
  */
 int
 vs_resolve(SCR *sp, SCR *csp, int forcewait)

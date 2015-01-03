@@ -29,8 +29,6 @@
  * ex_shell -- :sh[ell]
  *	Invoke the program named in the SHELL environment variable
  *	with the argument -i.
- *
- * PUBLIC: int ex_shell(SCR *, EXCMD *);
  */
 int
 ex_shell(SCR *sp, EXCMD *cmdp)
@@ -70,8 +68,6 @@ ex_shell(SCR *sp, EXCMD *cmdp)
 /*
  * ex_exec_proc --
  *	Run a separate process.
- *
- * PUBLIC: int ex_exec_proc(SCR *, EXCMD *, char *, const char *, int);
  */
 int
 ex_exec_proc(SCR *sp, EXCMD *cmdp, char *cmd, const char *msg,
@@ -134,8 +130,6 @@ ex_exec_proc(SCR *sp, EXCMD *cmdp, char *cmd, const char *msg,
  * system.  It has to be cast into something or the standard promotion
  * rules get you.  I'm using a long based on the belief that nobody is
  * going to make it unsigned and it's unlikely to be a quad.
- *
- * PUBLIC: int proc_wait(SCR *, pid_t, const char *, int, int);
  */
 int
 proc_wait(SCR *sp, pid_t pid, const char *cmd, int silent, int okpipe)

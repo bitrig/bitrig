@@ -58,8 +58,6 @@ static LMARK *mark_find(SCR *, ARG_CHAR_T);
 /*
  * mark_init --
  *	Set up the marks.
- *
- * PUBLIC: int mark_init(SCR *, EXF *);
  */
 int
 mark_init(SCR *sp, EXF *ep)
@@ -77,8 +75,6 @@ mark_init(SCR *sp, EXF *ep)
 /*
  * mark_end --
  *	Free up the marks.
- *
- * PUBLIC: int mark_end(SCR *, EXF *);
  */
 int
 mark_end(SCR *sp, EXF *ep)
@@ -99,8 +95,6 @@ mark_end(SCR *sp, EXF *ep)
 /*
  * mark_get --
  *	Get the location referenced by a mark.
- *
- * PUBLIC: int mark_get(SCR *, ARG_CHAR_T, MARK *, mtype_t);
  */
 int
 mark_get(SCR *sp, ARG_CHAR_T key, MARK *mp, mtype_t mtype)
@@ -140,8 +134,6 @@ mark_get(SCR *sp, ARG_CHAR_T key, MARK *mp, mtype_t mtype)
 /*
  * mark_set --
  *	Set the location referenced by a mark.
- *
- * PUBLIC: int mark_set(SCR *, ARG_CHAR_T, MARK *, int);
  */
 int
 mark_set(SCR *sp, ARG_CHAR_T key, MARK *value, int userset)
@@ -200,8 +192,6 @@ mark_find(SCR *sp, ARG_CHAR_T key)
 /*
  * mark_insdel --
  *	Update the marks based on an insertion or deletion.
- *
- * PUBLIC: int mark_insdel(SCR *, lnop_t, recno_t);
  */
 int
 mark_insdel(SCR *sp, lnop_t op, recno_t lno)

@@ -270,8 +270,6 @@ h_winch(int signo)
 /*
  * sig_init --
  *	Initialize signals.
- *
- * PUBLIC: int sig_init(GS *, SCR *);
  */
 int
 sig_init(GS *gp, SCR *sp)

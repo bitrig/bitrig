@@ -32,8 +32,6 @@
 /*
  * msgq --
  *	Display a message.
- *
- * PUBLIC: void msgq(SCR *, mtype_t, const char *, ...);
  */
 void
 msgq(SCR *sp, mtype_t mt, const char *fmt, ...)
@@ -187,8 +185,6 @@ alloc_err:
 /*
  * msgq_str --
  *	Display a message with an embedded string.
- *
- * PUBLIC: void msgq_str(SCR *, mtype_t, char *, char *);
  */
 void
 msgq_str(SCR *sp, mtype_t mtype, char *str, char *fmt)
@@ -226,8 +222,6 @@ msgq_str(SCR *sp, mtype_t mtype, char *str, char *fmt)
  *	def
  * the command 2d}, from the 'b' would report that two lines were deleted,
  * not one.
- *
- * PUBLIC: void mod_rpt(SCR *);
  */
 void
 mod_rpt(SCR *sp)
@@ -333,8 +327,6 @@ alloc_err:
 /*
  * msgq_status --
  *	Report on the file's status.
- *
- * PUBLIC: void msgq_status(SCR *, recno_t, u_int);
  */
 void
 msgq_status(SCR *sp, recno_t lno, u_int flags)
@@ -497,8 +489,6 @@ alloc_err:
 /*
  * msg_open --
  *	Open the message catalogs.
- *
- * PUBLIC: int msg_open(SCR *, char *);
  */
 int
 msg_open(SCR *sp, char *file)
@@ -566,8 +556,6 @@ msg_open(SCR *sp, char *file)
 /*
  * msg_close --
  *	Close the message catalogs.
- *
- * PUBLIC: void msg_close(GS *);
  */
 void
 msg_close(GS *gp)
@@ -579,8 +567,6 @@ msg_close(GS *gp)
 /*
  * msg_cont --
  *	Return common continuation messages.
- *
- * PUBLIC: const char *msg_cmsg(SCR *, cmsg_t, size_t *);
  */
 const char *
 msg_cmsg(SCR *sp, cmsg_t which, size_t *lenp)
@@ -614,8 +600,6 @@ msg_cmsg(SCR *sp, cmsg_t which, size_t *lenp)
  * !!!
  * Only a single catalog message can be accessed at a time, if multiple
  * ones are needed, they must be copied into local memory.
- *
- * PUBLIC: const char *msg_cat(SCR *, const char *, size_t *);
  */
 const char *
 msg_cat(SCR *sp, const char *str, size_t *lenp)
@@ -661,8 +645,6 @@ msg_cat(SCR *sp, const char *str, size_t *lenp)
 /*
  * msg_print --
  *	Return a printable version of a string, in allocated memory.
- *
- * PUBLIC: char *msg_print(SCR *, const char *, int *);
  */
 char *
 msg_print(SCR *sp, const char *s, int *needfree)

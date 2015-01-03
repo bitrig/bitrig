@@ -33,8 +33,6 @@ static int	vs_paint(SCR *, u_int);
 /*
  * v_repaint --
  *	Repaint selected lines from the screen.
- *
- * PUBLIC: int vs_repaint(SCR *, EVENT *);
  */
 int
 vs_repaint(SCR *sp, EVENT *evp)
@@ -53,8 +51,6 @@ vs_repaint(SCR *sp, EVENT *evp)
 /*
  * vs_refresh --
  *	Refresh all screens.
- *
- * PUBLIC: int vs_refresh(SCR *, int);
  */
 int
 vs_refresh(SCR *sp, int forcepaint)

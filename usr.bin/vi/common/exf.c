@@ -51,8 +51,6 @@ static int	file_spath(SCR *, FREF *, struct stat *, int *);
  * did not do this.  The change is a logical extension of the change where
  * vi now remembers the last location in any file that it has ever edited,
  * not just the previously edited file.
- *
- * PUBLIC: FREF *file_add(SCR *, CHAR_T *);
  */
 FREF *
 file_add(SCR *sp, CHAR_T *name)
@@ -111,8 +109,6 @@ file_add(SCR *sp, CHAR_T *name)
  *	Start editing a file, based on the FREF structure.  If successsful,
  *	let go of any previous file.  Don't release the previous file until
  *	absolutely sure we have the new one.
- *
- * PUBLIC: int file_init(SCR *, FREF *, char *, int);
  */
 int
 file_init(SCR *sp, FREF *frp, char *rcv_name, int flags)
@@ -613,8 +609,6 @@ file_cinit(SCR *sp)
 /*
  * file_end --
  *	Stop editing a file.
- *
- * PUBLIC: int file_end(SCR *, EXF *, int);
  */
 int
 file_end(SCR *sp, EXF *ep, int force)
@@ -722,8 +716,6 @@ file_end(SCR *sp, EXF *ep, int force)
  *	Write the file to disk.  Historic vi had fairly convoluted
  *	semantics for whether or not writes would happen.  That's
  *	why all the flags.
- *
- * PUBLIC: int file_write(SCR *, MARK *, MARK *, char *, int);
  */
 int
 file_write(SCR *sp, MARK *fm, MARK *tm, char *name, int flags)
@@ -1198,8 +1190,6 @@ file_comment(SCR *sp)
  * file_m1 --
  * 	First modification check routine.  The :next, :prev, :rewind, :tag,
  *	:tagpush, :tagpop, ^^ modifications check.
- *
- * PUBLIC: int file_m1(SCR *, int, int);
  */
 int
 file_m1(SCR *sp, int force, int flags)
@@ -1237,8 +1227,6 @@ file_m1(SCR *sp, int force, int flags)
  * file_m2 --
  * 	Second modification check routine.  The :edit, :quit, :recover
  *	modifications check.
- *
- * PUBLIC: int file_m2(SCR *, int);
  */
 int
 file_m2(SCR *sp, int force)
@@ -1267,8 +1255,6 @@ file_m2(SCR *sp, int force)
 /*
  * file_m3 --
  * 	Third modification check routine.
- *
- * PUBLIC: int file_m3(SCR *, int);
  */
 int
 file_m3(SCR *sp, int force)
@@ -1301,8 +1287,6 @@ file_m3(SCR *sp, int force)
  *	Autowrite routine.  If modified, autowrite is set and the readonly bit
  *	is not set, write the file.  A routine so there's a place to put the
  *	comment.
- *
- * PUBLIC: int file_aw(SCR *, int);
  */
 int
 file_aw(SCR *sp, int flags)
@@ -1360,8 +1344,6 @@ file_aw(SCR *sp, int flags)
  *
  * If the user edits a temporary file, there may be times when there is no
  * alternative file name.  A name argument of NULL turns it off.
- *
- * PUBLIC: void set_alt_name(SCR *, char *);
  */
 void
 set_alt_name(SCR *sp, char *name)
@@ -1377,8 +1359,6 @@ set_alt_name(SCR *sp, char *name)
 /*
  * file_lock --
  *	Get an exclusive lock on a file.
- *
- * PUBLIC: lockr_t file_lock(SCR *, char *, int *, int, int);
  */
 lockr_t
 file_lock(SCR *sp, char *name, int *fdp, int fd, int iswrite)

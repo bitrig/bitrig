@@ -49,8 +49,6 @@ static int	sscr_setprompt(SCR *, char *, size_t);
 /*
  * ex_script -- : sc[ript][!] [file]
  *	Switch to script mode.
- *
- * PUBLIC: int ex_script(SCR *, EXCMD *);
  */
 int
 ex_script(SCR *sp, EXCMD *cmdp)
@@ -269,8 +267,6 @@ prompterr:	sscr_end(sp);
 /*
  * sscr_exec --
  *	Take a line and hand it off to the shell.
- *
- * PUBLIC: int sscr_exec(SCR *, recno_t);
  */
 int
 sscr_exec(SCR *sp, recno_t lno)
@@ -340,8 +336,6 @@ err1:			rval = 1;
 /*
  * sscr_check_input -
  *	Check for input from command input or scripting windows.
- *
- * PUBLIC: int sscr_check_input(SCR *sp);
  */
 int
 sscr_check_input(SCR *sp)
@@ -410,8 +404,6 @@ done:
 /*
  * sscr_input --
  *	Read any waiting shell input.
- *
- * PUBLIC: int sscr_input(SCR *);
  */
 int
 sscr_input(SCR *sp)
@@ -622,8 +614,6 @@ sscr_matchprompt(SCR *sp, char *lp, size_t line_len, size_t *lenp)
 /*
  * sscr_end --
  *	End the pipe to a shell.
- *
- * PUBLIC: int sscr_end(SCR *);
  */
 int
 sscr_end(SCR *sp)

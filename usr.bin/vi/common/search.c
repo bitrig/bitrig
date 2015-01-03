@@ -132,8 +132,6 @@ prev:			if (sp->re == NULL) {
 /*
  * f_search --
  *	Do a forward search.
- *
- * PUBLIC: int f_search(SCR *, MARK *, MARK *, char *, size_t, char **, u_int);
  */
 int
 f_search(SCR *sp, MARK *fm, MARK *rm, char *ptrn, size_t plen, char **eptrn,
@@ -271,8 +269,6 @@ f_search(SCR *sp, MARK *fm, MARK *rm, char *ptrn, size_t plen, char **eptrn,
 /*
  * b_search --
  *	Do a backward search.
- *
- * PUBLIC: int b_search(SCR *, MARK *, MARK *, char *, size_t, char **, u_int);
  */
 int
 b_search(SCR *sp, MARK *fm, MARK *rm, char *ptrn, size_t plen, char **eptrn,
@@ -461,8 +457,6 @@ search_msg(SCR *sp, smsg_t msg)
 /*
  * search_busy --
  *	Put up the busy searching message.
- *
- * PUBLIC: void search_busy(SCR *, busy_t);
  */
 void
 search_busy(SCR *sp, busy_t btype)

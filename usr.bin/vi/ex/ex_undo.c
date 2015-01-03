@@ -23,8 +23,6 @@
 /*
  * ex_undo -- u
  *	Undo the last change.
- *
- * PUBLIC: int ex_undo(SCR *, EXCMD *);
  */
 int
 ex_undo(SCR *sp, EXCMD *cmdp)

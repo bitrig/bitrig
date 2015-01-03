@@ -35,8 +35,6 @@
  * the first non-blank of the line marked by a, while "y`a" moved the cursor
  * to the line and column marked by a.  Hopefully, the motion component code
  * got it right...   Unlike delete, we make no adjustments here.
- *
- * PUBLIC: int v_yank(SCR *, VICMD *);
  */
 int
 v_yank(SCR *sp, VICMD *vp)

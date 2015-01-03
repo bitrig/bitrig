@@ -40,8 +40,6 @@
  * There's some fairly amazing slop in this routine to make the different
  * ways of getting here display the right things.  It took a long time to
  * get it right (wrong?), so be careful.
- *
- * PUBLIC: int ex_bang(SCR *, EXCMD *);
  */
 int
 ex_bang(SCR *sp, EXCMD *cmdp)

@@ -36,8 +36,6 @@
  * but "r<literal><escape>" erased a single character.  To enter a literal
  * <literal> character, it required three <literal> characters after the
  * command.  This may not be right, but at least it's not insane.
- *
- * PUBLIC: int v_replace(SCR *, VICMD *);
  */
 int
 v_replace(SCR *sp, VICMD *vp)

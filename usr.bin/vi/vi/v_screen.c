@@ -24,8 +24,6 @@
 /*
  * v_screen -- ^W
  *	Switch screens.
- *
- * PUBLIC: int v_screen(SCR *, VICMD *);
  */
 int
 v_screen(SCR *sp, VICMD *vp)

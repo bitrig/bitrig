@@ -24,8 +24,6 @@
 /*
  * ex_preserve -- :pre[serve]
  *	Push the file to recovery.
- *
- * PUBLIC: int ex_preserve(SCR *, EXCMD *);
  */
 int
 ex_preserve(SCR *sp, EXCMD *cmdp)
@@ -58,8 +56,6 @@ ex_preserve(SCR *sp, EXCMD *cmdp)
 /*
  * ex_recover -- :rec[over][!] file
  *	Recover the file.
- *
- * PUBLIC: int ex_recover(SCR *, EXCMD *);
  */
 int
 ex_recover(SCR *sp, EXCMD *cmdp)

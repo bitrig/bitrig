@@ -27,8 +27,6 @@
 /*
  * ex_abbr -- :abbreviate [key replacement]
  *	Create an abbreviation or display abbreviations.
- *
- * PUBLIC: int ex_abbr(SCR *, EXCMD *);
  */
 int
 ex_abbr(SCR *sp, EXCMD *cmdp)
@@ -91,8 +89,6 @@ ex_abbr(SCR *sp, EXCMD *cmdp)
 /*
  * ex_unabbr -- :unabbreviate key
  *      Delete an abbreviation.
- *
- * PUBLIC: int ex_unabbr(SCR *, EXCMD *);
  */
 int
 ex_unabbr(SCR *sp, EXCMD *cmdp)

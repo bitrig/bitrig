@@ -24,8 +24,6 @@
 /*
  * v_xchar -- [buffer] [count]x
  *	Deletes the character(s) on which the cursor sits.
- *
- * PUBLIC: int v_xchar(SCR *, VICMD *);
  */
 int
 v_xchar(SCR *sp, VICMD *vp)
@@ -71,8 +69,6 @@ nodel:		msgq(sp, M_BERR, "206|No characters to delete");
  * v_Xchar -- [buffer] [count]X
  *	Deletes the character(s) immediately before the current cursor
  *	position.
- *
- * PUBLIC: int v_Xchar(SCR *, VICMD *);
  */
 int
 v_Xchar(SCR *sp, VICMD *vp)

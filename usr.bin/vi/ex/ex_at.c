@@ -27,8 +27,6 @@
  *	    :*[* | buffer]
  *
  *	Execute the contents of the buffer.
- *
- * PUBLIC: int ex_at(SCR *, EXCMD *);
  */
 int
 ex_at(SCR *sp, EXCMD *cmdp)

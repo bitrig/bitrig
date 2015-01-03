@@ -22,8 +22,6 @@
 /*
  * ex_yank -- :[line [,line]] ya[nk] [buffer] [count]
  *	Yank the lines into a buffer.
- *
- * PUBLIC: int ex_yank(SCR *, EXCMD *);
  */
 int
 ex_yank(SCR *sp, EXCMD *cmdp)
