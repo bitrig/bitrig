@@ -15,13 +15,6 @@
 #include <sys/queue.h>
 #include <sys/stat.h>
 
-/*
- * We include <sys/file.h>, because the flock(2) and open(2) #defines
- * were found there on historical systems.  We also include <fcntl.h>
- * because the open(2) #defines are found there on newer systems.
- */
-#include <sys/file.h>
-
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
