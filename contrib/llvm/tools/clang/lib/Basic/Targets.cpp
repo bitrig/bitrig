@@ -468,10 +468,22 @@ protected:
     // Bitrig defines; list based off of gcc output
 
     Builder.defineMacro("__Bitrig__");
+    Builder.defineMacro("__OpenBSD__");
     DefineStd(Builder, "unix", Opts);
     Builder.defineMacro("__ELF__");
     if (Opts.POSIXThreads)
       Builder.defineMacro("_REENTRANT");
+
+    switch (Triple.getArch()) {
+    default:
+      break;
+    case llvm::Triple::arm:
+    case llvm::Triple::armeb:
+    case llvm::Triple::thumb:
+    case llvm::Triple::thumbeb:
+      Builder.defineMacro("__ARM_DWARF_EH__");
+      break;
+    }
   }
 public:
   BitrigTargetInfo(const llvm::Triple &Triple) : OSTargetInfo<Target>(Triple) {
@@ -3789,7 +3801,8 @@ class ARMTargetInfo : public TargetInfo {
     const llvm::Triple &T = getTriple();
 
     // size_t is unsigned long on MachO-derived environments and NetBSD.
-    if (T.isOSBinFormatMachO() || T.getOS() == llvm::Triple::NetBSD)
+    if (T.isOSBinFormatMachO() || T.getOS() == llvm::Triple::NetBSD ||
+        T.getOS() == llvm::Triple::Bitrig)
       SizeType = UnsignedLong;
     else
       SizeType = UnsignedInt;
@@ -6475,6 +6488,8 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple) {
       return new LinuxTargetInfo<AArch64leTargetInfo>(Triple);
     case llvm::Triple::NetBSD:
       return new NetBSDTargetInfo<AArch64leTargetInfo>(Triple);
+    case llvm::Triple::Bitrig:
+      return new BitrigTargetInfo<AArch64leTargetInfo>(Triple);
     default:
       return new AArch64leTargetInfo(Triple);
     }
@@ -6487,6 +6502,8 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple) {
       return new LinuxTargetInfo<AArch64beTargetInfo>(Triple);
     case llvm::Triple::NetBSD:
       return new NetBSDTargetInfo<AArch64beTargetInfo>(Triple);
+    case llvm::Triple::Bitrig:
+      return new BitrigTargetInfo<AArch64beTargetInfo>(Triple);
     default:
       return new AArch64beTargetInfo(Triple);
     }

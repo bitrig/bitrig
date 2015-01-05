@@ -6380,6 +6380,22 @@ void bitrig::Assemble::ConstructJob(Compilation &C, const JobAction &JA,
   claimNoWarnArgs(Args);
   ArgStringList CmdArgs;
 
+  if (getToolChain().getArch() == llvm::Triple::arm) {
+    StringRef MArch = getToolChain().getArchName();
+    if (MArch == "armv7" || MArch == "armv7a" || MArch == "armv7-a")
+      CmdArgs.push_back("-mfpu=neon");
+    if (MArch == "armv8" || MArch == "armv8a" || MArch == "armv8-a")
+      CmdArgs.push_back("-mfpu=crypto-neon-fp-armv8");
+
+    StringRef ARMFloatABI = arm::getARMFloatABI(getToolChain().getDriver(),
+                                          Args, getToolChain().getTriple());
+    CmdArgs.push_back(Args.MakeArgString("-mfloat-abi=" + ARMFloatABI));
+
+    Args.AddLastArg(CmdArgs, options::OPT_march_EQ);
+    Args.AddLastArg(CmdArgs, options::OPT_mcpu_EQ);
+    Args.AddLastArg(CmdArgs, options::OPT_mfpu_EQ);
+  }
+
   Args.AddAllArgValues(CmdArgs, options::OPT_Wa_COMMA,
                        options::OPT_Xassembler);
 
@@ -6479,6 +6495,9 @@ void bitrig::Link::ConstructJob(Compilation &C, const JobAction &JA,
 
     StringRef MyArch;
     switch (getToolChain().getTriple().getArch()) {
+    case llvm::Triple::aarch64:
+      MyArch = "aarch64";
+      break;
     case llvm::Triple::arm:
       MyArch = "arm";
       break;
