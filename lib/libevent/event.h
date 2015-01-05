@@ -1,5 +1,3 @@
-/*	$OpenBSD: event.h,v 1.26 2014/04/03 11:27:02 eric Exp $	*/
-
 /*
  * Copyright (c) 2000-2007 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -1208,7 +1206,7 @@ int evtag_unmarshal_string(struct evbuffer *evbuf, ev_uint32_t need_tag,
 int evtag_unmarshal_timeval(struct evbuffer *evbuf, ev_uint32_t need_tag,
     struct timeval *ptv);
 
-#define _EVENT_VERSION "1.4.14b-stable"
+#define _EVENT_VERSION "1.4.15-stable"
 
 #ifdef __cplusplus
 }
