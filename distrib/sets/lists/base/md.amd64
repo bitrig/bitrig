@@ -186,6 +186,7 @@
 ./usr/libdata/perl5/amd64-bitrig/5.20.1/Filter
 ./usr/libdata/perl5/amd64-bitrig/5.20.1/Filter/Util
 ./usr/libdata/perl5/amd64-bitrig/5.20.1/Filter/Util/Call.pm
+./usr/libdata/perl5/amd64-bitrig/5.20.1/GDBM_File.pm
 ./usr/libdata/perl5/amd64-bitrig/5.20.1/Hash
 ./usr/libdata/perl5/amd64-bitrig/5.20.1/Hash/Util
 ./usr/libdata/perl5/amd64-bitrig/5.20.1/Hash/Util.pm
@@ -343,6 +344,8 @@
 ./usr/libdata/perl5/amd64-bitrig/5.20.1/auto/Filter/Util
 ./usr/libdata/perl5/amd64-bitrig/5.20.1/auto/Filter/Util/Call
 ./usr/libdata/perl5/amd64-bitrig/5.20.1/auto/Filter/Util/Call/Call.so
+./usr/libdata/perl5/amd64-bitrig/5.20.1/auto/GDBM_File
+./usr/libdata/perl5/amd64-bitrig/5.20.1/auto/GDBM_File/GDBM_File.so
 ./usr/libdata/perl5/amd64-bitrig/5.20.1/auto/Hash
 ./usr/libdata/perl5/amd64-bitrig/5.20.1/auto/Hash/Util
 ./usr/libdata/perl5/amd64-bitrig/5.20.1/auto/Hash/Util/FieldHash
