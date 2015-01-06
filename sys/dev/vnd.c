@@ -192,7 +192,7 @@ vndopen(dev_t dev, int flags, int mode, struct proc *p)
 
 	if ((sc->sc_flags & VNF_INITED) &&
 	    (sc->sc_flags & VNF_HAVELABEL) == 0 &&
-	    sc->sc_dk.dk_openmask == 0) {
+	    (sc->sc_dk.dk_openmask & ~(1 << RAW_PART)) == 0) {
 		sc->sc_flags |= VNF_HAVELABEL;
 		vndgetdisklabel(dev, sc, sc->sc_dk.dk_label, 0);
 	}
