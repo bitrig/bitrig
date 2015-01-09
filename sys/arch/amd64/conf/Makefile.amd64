@@ -61,14 +61,17 @@ CMACHFLAGS+=	-fno-stack-protector
 
 COPTS?=		-O3
 
-CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
+CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE} ${CFLAGS_$*}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${AFLAGS_$*} ${CMACHFLAGS}
 LINKFLAGS=	-T ldscript -X --warn-common -z noexecstack -nopie
 
 .if ${COMPILER_VERSION:L} == "clang"
-AFLAGS_acpi_wakecode	= -no-integrated-as
-AFLAGS_aes_intel	= -no-integrated-as
-AFLAGS_mptramp		= -no-integrated-as
+CFLAGS_i915_gem		= -Wno-tautological-compare
+CFLAGS_i915_gem_tiling		= -Wno-tautological-compare
+CFLAGS_i915_gem_execbuffer		= -Wno-tautological-compare
+CFLAGS_intel_display	= -Wno-tautological-compare
+CFLAGS_intel_i2c	= -Wno-tautological-constant-out-of-range-compare
+CFLAGS_intel_overlay	= -Wno-tautological-compare
 .endif
 
 .endif

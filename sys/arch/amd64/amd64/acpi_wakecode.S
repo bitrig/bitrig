@@ -139,7 +139,7 @@ _ACPI_TRMP_OFFSET(acpi_s3_vector_real)
 	 * time, until we restore the saved GDT that we had when we went
 	 * to sleep.
 	 */ 
-	data32 addr32 lgdt	tmp_gdt
+	lgdtl	tmp_gdt
 
 	/*
 	 * Enable protected mode by setting the PE bit in CR0

@@ -114,7 +114,7 @@ _C_LABEL(cpu_spinup_trampoline):
 	movw	%cs, %ax
 	movw    %ax, %es
 	movw    %ax, %ss
-	data32 addr32 lgdt (mptramp_gdt32_desc)   # load flat descriptor table
+	lgdtl   (mptramp_gdt32_desc)   # load flat descriptor table
 	movl    %cr0, %eax       # get cr0
 	orl     $0x1, %eax      # enable protected mode
 	movl    %eax, %cr0      # doit
