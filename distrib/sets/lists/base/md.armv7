@@ -522,6 +522,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/arpa/tftp.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/asr.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/assert.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/bitstring.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/blf.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/bsd_auth.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/c++

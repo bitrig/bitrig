@@ -37,6 +37,7 @@
 ./usr/include/arpa/tftp.h
 ./usr/include/asr.h
 ./usr/include/assert.h
+./usr/include/bitstring.h
 ./usr/include/blf.h
 ./usr/include/bsd_auth.h
 ./usr/include/c++
