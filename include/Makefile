@@ -10,7 +10,7 @@
 .include <bsd.own.mk>
 
 # Missing: mp.h
-HFILES=	a.out.h ar.h asr.h assert.h blf.h bsd_auth.h \
+HFILES=	a.out.h ar.h asr.h assert.h bitstring.h blf.h bsd_auth.h \
 	complex.h cpio.h ctype.h _ctype.h curses.h \
 	db.h dbm.h des.h dirent.h disktab.h dlfcn.h \
 	elf_abi.h err.h errno.h fenv.h float.h fnmatch.h fstab.h fts.h \
