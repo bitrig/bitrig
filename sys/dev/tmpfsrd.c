@@ -165,10 +165,7 @@ tmpfsrd_detach(struct device *self, int flags)
 {
 	struct tmpfsrd_softc *sc = (struct tmpfsrd_softc *)self;
 
-	/*
-	 * We pass tmpfsrdopen() as a key for the disk subsystem to look us up.
-	 */
-	disk_gone(tmpfsrdopen, self->dv_unit);
+	disk_gone(&sc->sc_dk);
 	disk_detach(&sc->sc_dk);
 
 	return (0);

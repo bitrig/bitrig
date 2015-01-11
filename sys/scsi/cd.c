@@ -265,7 +265,7 @@ cddetach(struct device *self, int flags)
 
 	bufq_drain(&sc->sc_bufq);
 
-	disk_gone(cdopen, self->dv_unit);
+	disk_gone(&sc->sc_dk);
 
 	/* Detach disk. */
 	bufq_destroy(&sc->sc_bufq);
