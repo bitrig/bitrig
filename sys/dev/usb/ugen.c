@@ -39,12 +39,13 @@
 #include <sys/malloc.h>
 #include <sys/device.h>
 #include <sys/ioctl.h>
-#include <sys/conf.h>
 #include <sys/tty.h>
 #include <sys/file.h>
 #include <sys/selinfo.h>
 #include <sys/vnode.h>
 #include <sys/poll.h>
+
+#include <machine/conf.h>
 
 #include <dev/usb/usb.h>
 #include <dev/usb/usbdi.h>
@@ -740,9 +741,7 @@ ugen_detach(struct device *self, int flags)
 {
 	struct ugen_softc *sc = (struct ugen_softc *)self;
 	struct ugen_endpoint *sce;
-	int i, dir;
-	int s;
-	int maj, mn;
+	int i, dir, s, mn;
 
 	DPRINTF(("ugen_detach: sc=%p flags=%d\n", sc, flags));
 
@@ -765,14 +764,9 @@ ugen_detach(struct device *self, int flags)
 	}
 	splx(s);
 
-	/* locate the major number */
-	for (maj = 0; maj < nchrdev; maj++)
-		if (cdevsw[maj].d_open == ugenopen)
-			break;
-
 	/* Nuke the vnodes for any open instances (calls close). */
 	mn = self->dv_unit * USB_MAX_ENDPOINTS;
-	vdevgone(maj, mn, mn + USB_MAX_ENDPOINTS - 1, VCHR);
+	vdevgone(CMAJ_UGEN, mn, mn + USB_MAX_ENDPOINTS - 1, VCHR);
 
 	return (0);
 }

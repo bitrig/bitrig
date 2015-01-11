@@ -45,11 +45,12 @@
 #include <sys/syslog.h>
 #include <sys/kernel.h>
 #include <sys/signalvar.h>
-#include <sys/conf.h>
 #include <sys/audioio.h>
 #include <sys/device.h>
 #include <sys/task.h>
 #include <sys/endian.h>
+
+#include <machine/conf.h>
 
 #include <dev/audio_if.h>
 
@@ -495,7 +496,7 @@ int
 audiodetach(struct device *self, int flags)
 {
 	struct audio_softc *sc = (struct audio_softc *)self;
-	int maj, mn;
+	int mn;
 
 	DPRINTF(("audio_detach: sc=%p flags=%d\n", sc, flags));
 
@@ -516,17 +517,12 @@ audiodetach(struct device *self, int flags)
 	audio_free_ring(sc, &sc->sc_pr);
 	audio_free_ring(sc, &sc->sc_rr);
 
-	/* locate the major number */
-	for (maj = 0; maj < nchrdev; maj++)
-		if (cdevsw[maj].d_open == audioopen)
-			break;
-
 	/* Nuke the vnodes for any open instances (calls close). */
 	mn = self->dv_unit;
-	vdevgone(maj, mn | SOUND_DEVICE,    mn | SOUND_DEVICE, VCHR);
-	vdevgone(maj, mn | AUDIO_DEVICE,    mn | AUDIO_DEVICE, VCHR);
-	vdevgone(maj, mn | AUDIOCTL_DEVICE, mn | AUDIOCTL_DEVICE, VCHR);
-	vdevgone(maj, mn | MIXER_DEVICE,    mn | MIXER_DEVICE, VCHR);
+	vdevgone(CMAJ_AUDIO, mn | SOUND_DEVICE,    mn | SOUND_DEVICE, VCHR);
+	vdevgone(CMAJ_AUDIO, mn | AUDIO_DEVICE,    mn | AUDIO_DEVICE, VCHR);
+	vdevgone(CMAJ_AUDIO, mn | AUDIOCTL_DEVICE, mn | AUDIOCTL_DEVICE, VCHR);
+	vdevgone(CMAJ_AUDIO, mn | MIXER_DEVICE,    mn | MIXER_DEVICE, VCHR);
 
 	return (0);
 }

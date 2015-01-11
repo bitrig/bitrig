@@ -46,7 +46,6 @@
 #include <sys/proc.h>
 #include <sys/signalvar.h>
 #include <sys/ioctl.h>
-#include <sys/conf.h>
 #include <sys/vnode.h>
 #include <sys/file.h>
 #include <sys/socket.h>
@@ -54,6 +53,8 @@
 #include <sys/kernel.h>
 #include <sys/sysctl.h>
 #include <sys/rwlock.h>
+
+#include <machine/conf.h>
 
 #include <net/if.h>
 #include <net/bpf.h>
@@ -1449,17 +1450,11 @@ bpfdetach(struct ifnet *ifp)
 {
 	struct bpf_if *bp, *nbp, **pbp = &bpf_iflist;
 	struct bpf_d *bd;
-	int maj;
 
 	for (bp = bpf_iflist; bp; bp = nbp) {
 		nbp= bp->bif_next;
 		if (bp->bif_ifp == ifp) {
 			*pbp = nbp;
-
-			/* Locate the major number. */
-			for (maj = 0; maj < nchrdev; maj++)
-				if (cdevsw[maj].d_open == bpfopen)
-					break;
 
 			for (bd = bp->bif_dlist; bd; bd = bp->bif_dlist) {
 				struct bpf_d *d;
@@ -1470,7 +1465,7 @@ bpfdetach(struct ifnet *ifp)
 				 */
 				LIST_FOREACH(d, &bpf_d_list, bd_list)
 					if (d == bd) {
-						vdevgone(maj, d->bd_unit,
+						vdevgone(CMAJ_BPF, d->bd_unit,
 						    d->bd_unit, VCHR);
 						break;
 					}

@@ -66,8 +66,9 @@
 #include <sys/buf.h>
 #include <sys/mtio.h>
 #include <sys/device.h>
-#include <sys/conf.h>
 #include <sys/vnode.h>
+
+#include <machine/conf.h>
 
 #include <scsi/scsi_all.h>
 #include <scsi/scsi_tape.h>
@@ -369,19 +370,15 @@ int
 stdetach(struct device *self, int flags)
 {
 	struct st_softc *st = (struct st_softc *)self;
-	int bmaj, cmaj, mn;
+	int mn;
 
 	bufq_drain(&st->sc_bufq);
 
 	/* Locate the lowest minor number to be detached. */
 	mn = STMINOR(self->dv_unit, 0);
 
-	for (bmaj = 0; bmaj < nblkdev; bmaj++)
-		if (bdevsw[bmaj].d_open == stopen)
-			vdevgone(bmaj, mn, mn + MAXSTMODES - 1, VBLK);
-	for (cmaj = 0; cmaj < nchrdev; cmaj++)
-		if (cdevsw[cmaj].d_open == stopen)
-			vdevgone(cmaj, mn, mn + MAXSTMODES - 1, VCHR);
+	vdevgone(BMAJ_ST, mn, mn + MAXSTMODES - 1, VBLK);
+	vdevgone(CMAJ_ST, mn, mn + MAXSTMODES - 1, VCHR);
 
 	bufq_destroy(&st->sc_bufq);
 

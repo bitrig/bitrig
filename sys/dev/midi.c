@@ -21,7 +21,6 @@
 #include <sys/systm.h>
 #include <sys/ioctl.h>
 #include <sys/exec.h>
-#include <sys/conf.h>
 #include <sys/poll.h>
 #include <sys/kernel.h>
 #include <sys/timeout.h>
@@ -29,6 +28,8 @@
 #include <sys/signalvar.h>
 #include <sys/malloc.h>
 #include <sys/device.h>
+
+#include <machine/conf.h>
 
 #include <dev/midi_if.h>
 #include <dev/audio_if.h>
@@ -534,7 +535,7 @@ int
 mididetach(struct device *self, int flags)
 {
 	struct midi_softc *sc = (struct midi_softc *)self;
-	int maj, mn;
+	int mn;
 
 	sc->isdying = 1;
 	if (sc->wchan) {
@@ -546,14 +547,10 @@ mididetach(struct device *self, int flags)
 		wakeup(&sc->rchan);
 	}
 
-	/* locate the major number */
-	for (maj = 0; maj < nchrdev; maj++) {
-		if (cdevsw[maj].d_open == midiopen) {
-			/* Nuke the vnodes for any open instances (calls close). */
-			mn = self->dv_unit;
-			vdevgone(maj, mn, mn, VCHR);
-		}
-	}
+	/* Nuke the vnodes for any open instances (calls close). */
+	mn = self->dv_unit;
+	vdevgone(CMAJ_MIDI, mn, mn, VCHR);
+
 	return 0;
 }
 

@@ -67,7 +67,6 @@
 #include <sys/ioctl.h>
 #include <sys/selinfo.h>
 #include <sys/tty.h>
-#include <sys/conf.h>
 #include <sys/file.h>
 #include <sys/uio.h>
 #include <sys/kernel.h>
@@ -78,6 +77,7 @@
 #include <ddb/db_var.h>
 #endif
 
+#include <machine/conf.h>
 #include <machine/bus.h>
 #if !defined(__sparc__) || defined(__sparc64__)
 #include <machine/intr.h>
@@ -129,8 +129,6 @@ bus_space_handle_t comconsioh;
 int	comconsunit;
 tcflag_t comconscflag = TTYDEF_CFLAG;
 #endif
-
-int	commajor;
 
 #ifdef KGDB
 #include <sys/kgdb.h>
@@ -197,22 +195,17 @@ int
 com_detach(struct device *self, int flags)
 {
 	struct com_softc *sc = (struct com_softc *)self;
-	int maj, mn;
+	int mn;
 
 	sc->sc_swflags |= COM_SW_DEAD;
 
-	/* Locate the major number. */
-	for (maj = 0; maj < nchrdev; maj++)
-		if (cdevsw[maj].d_open == comopen)
-			break;
-
 	/* Nuke the vnodes for any open instances. */
 	mn = self->dv_unit;
-	vdevgone(maj, mn, mn, VCHR);
+	vdevgone(CMAJ_COM, mn, mn, VCHR);
 
 	/* XXX a symbolic constant for the cua bit would be nicer. */
 	mn |= 0x80;
-	vdevgone(maj, mn, mn, VCHR);
+	vdevgone(CMAJ_COM, mn, mn, VCHR);
 
 	/* Detach and free the tty. */
 	if (sc->sc_tty) {
@@ -1422,13 +1415,8 @@ comcnprobe(struct consdev *cp)
 	if (!found)
 		return;
 
-	/* Locate the major number. */
-	for (commajor = 0; commajor < nchrdev; commajor++)
-		if (cdevsw[commajor].d_open == comopen)
-			break;
-
 	/* Initialize required fields. */
-	cp->cn_dev = makedev(commajor, comconsunit);
+	cp->cn_dev = makedev(CMAJ_COM, comconsunit);
 	cp->cn_pri = CN_HIGHPRI;
 }
 
@@ -1805,15 +1793,8 @@ com_attach_subr(struct com_softc *sc)
 
 #ifdef COM_CONSOLE
 	if (ISSET(sc->sc_hwflags, COM_HW_CONSOLE)) {
-		int maj;
-
-		/* locate the major number */
-		for (maj = 0; maj < nchrdev; maj++)
-			if (cdevsw[maj].d_open == comopen)
-				break;
-
-		if (maj < nchrdev && cn_tab->cn_dev == NODEV)
-			cn_tab->cn_dev = makedev(maj, sc->sc_dev.dv_unit);
+		if (cn_tab->cn_dev == NODEV)
+			cn_tab->cn_dev = makedev(CMAJ_COM, sc->sc_dev.dv_unit);
 
 		printf("%s: console\n", sc->sc_dev.dv_xname);
 	}

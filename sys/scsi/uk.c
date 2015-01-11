@@ -40,9 +40,10 @@
 #include <sys/systm.h>
 #include <sys/errno.h>
 #include <sys/ioctl.h>
-#include <sys/conf.h>
 #include <sys/device.h>
 #include <sys/vnode.h>
+
+#include <machine/conf.h>
 
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>
@@ -98,13 +99,10 @@ ukattach(struct device *parent, struct device *self, void *aux)
 int
 ukdetach(struct device *self, int flags)
 {
-	int cmaj, mn;
+	int mn;
 
 	mn = self->dv_unit;
-
-	for (cmaj = 0; cmaj < nchrdev; cmaj++)
-		if (cdevsw[cmaj].d_open == ukopen)
-			vdevgone(cmaj, mn, mn, VCHR);
+	vdevgone(CMAJ_UK, mn, mn, VCHR);
 
 	return (0);
 }

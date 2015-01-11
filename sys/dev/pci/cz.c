@@ -79,11 +79,12 @@
 #include <sys/device.h>
 #include <sys/malloc.h>
 #include <sys/tty.h>
-#include <sys/conf.h>
 #include <sys/time.h>
 #include <sys/kernel.h>
 #include <sys/fcntl.h>
 #include <sys/syslog.h>
+
+#include <machine/conf.h>
 
 #include <dev/pci/pcireg.h>
 #include <dev/pci/pcivar.h>
@@ -178,8 +179,6 @@ int	cztty_transmit(struct cztty_softc *, struct tty *);
 int	cztty_receive(struct cztty_softc *, struct tty *);
 
 struct	cztty_softc * cztty_getttysoftc(dev_t dev);
-int	cztty_findmajor(void);
-int	cztty_major;
 int	cztty_attached_ttys;
 int	cz_timeout_ticks;
 
@@ -369,8 +368,6 @@ cz_attach(parent, self, aux)
 		    cz_timeout_ticks == 1 ? "" : "s");
 	}
 
-	if (cztty_major == 0)
-		cztty_major = cztty_findmajor();
 	/*
 	 * Allocate sufficient pointers for the children and
 	 * attach them.  Set all ports to a reasonable initial
@@ -419,7 +416,7 @@ cz_attach(parent, self, aux)
 		timeout_set(&sc->sc_diag_to, cztty_diag, sc);
 
 		tp = ttymalloc(0);
-		tp->t_dev = makedev(cztty_major,
+		tp->t_dev = makedev(CMAJ_CZTTY,
 		    (cz->cz_dev.dv_unit * ZFIRM_MAX_CHANNELS) + i);
 		tp->t_oproc = czttystart;
 		tp->t_param = czttyparam;
@@ -865,19 +862,6 @@ cztty_getttysoftc(dev_t dev)
 		return (NULL);
 	else
 		return (&cz->cz_ports[u - k]);
-}
-
-int
-cztty_findmajor(void)
-{
-	int	maj;
-
-	for (maj = 0; maj < nchrdev; maj++) {
-		if (cdevsw[maj].d_open == czttyopen)
-			break;
-	}
-
-	return (maj == nchrdev) ? 0 : maj;
 }
 
 /*

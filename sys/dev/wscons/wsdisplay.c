@@ -32,7 +32,6 @@
  */
 
 #include <sys/param.h>
-#include <sys/conf.h>
 #include <sys/device.h>
 #include <sys/ioctl.h>
 #include <sys/kernel.h>
@@ -46,6 +45,8 @@
 #include <sys/vnode.h>
 #include <sys/timeout.h>
 #include <sys/poll.h>
+
+#include <machine/conf.h>
 
 #include <dev/wscons/wscons_features.h>
 #include <dev/wscons/wsconsio.h>
@@ -427,7 +428,7 @@ wsdisplay_getscreen(struct wsdisplay_softc *sc,
 void
 wsdisplay_closescreen(struct wsdisplay_softc *sc, struct wsscreen *scr)
 {
-	int maj, mn, idx;
+	int mn, idx;
 
 	/* hangup */
 	if (WSSCREEN_HAS_TTY(scr)) {
@@ -435,10 +436,6 @@ wsdisplay_closescreen(struct wsdisplay_softc *sc, struct wsscreen *scr)
 		(*linesw[tp->t_line].l_modem)(tp, 0);
 	}
 
-	/* locate the major number */
-	for (maj = 0; maj < nchrdev; maj++)
-		if (cdevsw[maj].d_open == wsdisplayopen)
-			break;
 	/* locate the screen index */
 	for (idx = 0; idx < WSDISPLAY_MAXSCREEN; idx++)
 		if (scr == sc->sc_scr[idx])
@@ -450,7 +447,7 @@ wsdisplay_closescreen(struct wsdisplay_softc *sc, struct wsscreen *scr)
 
 	/* nuke the vnodes */
 	mn = WSDISPLAYMINOR(sc->sc_dv.dv_unit, idx);
-	vdevgone(maj, mn, mn, VCHR);
+	vdevgone(CMAJ_WSDISPLAY, mn, mn, VCHR);
 }
 
 int
@@ -543,14 +540,8 @@ wsdisplay_emul_attach(struct device *parent, struct device *self, void *aux)
 	    ap->accessops, ap->accesscookie, ap->defaultscreens);
 
 	if (ap->console && cn_tab == &wsdisplay_cons) {
-		int maj;
-
-		/* locate the major number */
-		for (maj = 0; maj < nchrdev; maj++)
-			if (cdevsw[maj].d_open == wsdisplayopen)
-				break;
-
-		cn_tab->cn_dev = makedev(maj, WSDISPLAYMINOR(self->dv_unit, 0));
+		cn_tab->cn_dev =
+		    makedev(CMAJ_WSDISPLAY, WSDISPLAYMINOR(self->dv_unit, 0));
 	}
 }
 

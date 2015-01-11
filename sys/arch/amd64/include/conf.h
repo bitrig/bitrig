@@ -57,4 +57,34 @@ cdev_decl(acpi);
 #define pctrpoll seltrue
 cdev_decl(pctr);
 
+/*
+ * These numbers have to be in sync with bdevsw/cdevsw.
+ */
+
+#define BMAJ_WD		0
+#define BMAJ_SW		1
+#define BMAJ_SD		4
+#define BMAJ_ST		5
+
+#define CMAJ_MM		2
+#define CMAJ_PTS	5
+#define CMAJ_PTC	6
+#define CMAJ_COM	8
+#define CMAJ_WSDISPLAY	12
+#define CMAJ_ST		14
+#define CMAJ_UK		20
+#define CMAJ_BPF	23
+#define CMAJ_AUDIO	42
+#define CMAJ_VIDEO	44
+#define CMAJ_MIDI	52
+#define CMAJ_UHID	62
+#define CMAJ_UGEN	63
+#define CMAJ_ULPT	64
+#define CMAJ_UCOM	66
+#define CMAJ_WSKBD	67
+#define CMAJ_WSMOUSE	68
+#define CMAJ_CZTTY	71
+#define CMAJ_RADIO	76
+#define CMAJ_GPIO	88
+
 #endif	/* _MACHINE_CONF_H_ */

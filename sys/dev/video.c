@@ -27,8 +27,9 @@
 #include <sys/vnode.h>
 #include <sys/kernel.h>
 #include <sys/malloc.h>
-#include <sys/conf.h>
 #include <sys/videoio.h>
+
+#include <machine/conf.h>
 
 #include <dev/video_if.h>
 #include <dev/videovar.h>
@@ -434,19 +435,14 @@ int
 videodetach(struct device *self, int flags)
 {
 	struct video_softc *sc = (struct video_softc *)self;
-	int maj, mn;
+	int mn;
 
 	if (sc->sc_fbuffer != NULL)
 		free(sc->sc_fbuffer, M_DEVBUF, 0);
 
-	/* locate the major number */
-	for (maj = 0; maj < nchrdev; maj++)
-		if (cdevsw[maj].d_open == videoopen)
-			break;
-
 	/* Nuke the vnodes for any open instances (calls close). */
 	mn = self->dv_unit;
-	vdevgone(maj, mn, mn, VCHR);
+	vdevgone(CMAJ_VIDEO, mn, mn, VCHR);
 
 	return (0);
 }

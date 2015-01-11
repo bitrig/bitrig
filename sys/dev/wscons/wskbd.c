@@ -80,7 +80,6 @@
  */
 
 #include <sys/param.h>
-#include <sys/conf.h>
 #include <sys/device.h>
 #include <sys/ioctl.h>
 #include <sys/kernel.h>
@@ -95,6 +94,8 @@
 #include <sys/fcntl.h>
 #include <sys/vnode.h>
 #include <sys/poll.h>
+
+#include <machine/conf.h>
 
 #include <ddb/db_var.h>
 
@@ -587,8 +588,7 @@ wskbd_detach(struct device  *self, int flags)
 {
 	struct wskbd_softc *sc = (struct wskbd_softc *)self;
 	struct wseventvar *evar;
-	int maj, mn;
-	int s;
+	int s, mn;
 
 #if NWSMUX > 0
 	/* Tell parent mux we're leaving. */
@@ -626,14 +626,9 @@ wskbd_detach(struct device  *self, int flags)
 
 	free(sc->sc_map, M_DEVBUF, 0);
 
-	/* locate the major number */
-	for (maj = 0; maj < nchrdev; maj++)
-		if (cdevsw[maj].d_open == wskbdopen)
-			break;
-
 	/* Nuke the vnodes for any open instances. */
 	mn = self->dv_unit;
-	vdevgone(maj, mn, mn, VCHR);
+	vdevgone(CMAJ_WSKBD, mn, mn, VCHR);
 
 	return (0);
 }

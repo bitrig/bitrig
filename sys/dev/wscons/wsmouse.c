@@ -76,7 +76,6 @@
  */
 
 #include <sys/param.h>
-#include <sys/conf.h>
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
 #include <sys/kernel.h>
@@ -88,6 +87,8 @@
 #include <sys/device.h>
 #include <sys/vnode.h>
 #include <sys/poll.h>
+
+#include <machine/conf.h>
 
 #include <dev/wscons/wscons_features.h>
 #include <dev/wscons/wsconsio.h>
@@ -243,8 +244,7 @@ wsmouse_detach(struct device *self, int flags)
 {
 	struct wsmouse_softc *sc = (struct wsmouse_softc *)self;
 	struct wseventvar *evar;
-	int maj, mn;
-	int s;
+	int s, mn;
 
 #if NWSMUX > 0
 	/* Tell parent mux we're leaving. */
@@ -271,14 +271,9 @@ wsmouse_detach(struct device *self, int flags)
 		splx(s);
 	}
 
-	/* locate the major number */
-	for (maj = 0; maj < nchrdev; maj++)
-		if (cdevsw[maj].d_open == wsmouseopen)
-			break;
-
 	/* Nuke the vnodes for any open instances (calls close). */
 	mn = self->dv_unit;
-	vdevgone(maj, mn, mn, VCHR);
+	vdevgone(CMAJ_WSMOUSE, mn, mn, VCHR);
 
 	return (0);
 }

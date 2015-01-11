@@ -386,8 +386,6 @@ struct cdevsw cdevsw[] = {
 int nblkdev = nitems(bdevsw);
 int nchrdev = nitems(cdevsw);
 
-int mem_no = 2; 	/* major device number of memory special file */
-
 /*
  * Swapdev is a fake device implemented
  * in sw.c used only internally to get to swstrategy.
@@ -397,7 +395,7 @@ int mem_no = 2; 	/* major device number of memory special file */
  * confuse, e.g. the hashing routines. Instead, /dev/drum is
  * provided as a character (raw) device.
  */
-dev_t	swapdev = makedev(1, 0);
+dev_t	swapdev = makedev(BMAJ_SW, 0);
 
 /*
  * Returns true if dev is /dev/mem or /dev/kmem.
@@ -406,7 +404,7 @@ int
 iskmemdev(dev)
 	dev_t dev;
 {
-	return (major(dev) == mem_no && minor(dev) < 2);
+	return (major(dev) == CMAJ_MM && minor(dev) < 2);
 }
 
 /*
@@ -416,7 +414,7 @@ int
 iszerodev(dev)
 	dev_t dev;
 {
-	return (major(dev) == mem_no && minor(dev) == 3);
+	return (major(dev) == CMAJ_MM && minor(dev) == 3);
 }
 
 
@@ -500,5 +498,5 @@ int nchrtoblktbl = nitems(chrtoblktbl);
 dev_t
 getnulldev()
 {
-	return makedev(mem_no, 2);
+	return makedev(CMAJ_MM, 2);
 }
