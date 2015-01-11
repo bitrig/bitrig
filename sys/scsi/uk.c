@@ -98,13 +98,10 @@ ukattach(struct device *parent, struct device *self, void *aux)
 int
 ukdetach(struct device *self, int flags)
 {
-	int bmaj, cmaj, mn;
+	int cmaj, mn;
 
 	mn = self->dv_unit;
 
-	for (bmaj = 0; bmaj < nblkdev; bmaj++)
-		if (bdevsw[bmaj].d_open == ukopen)
-			vdevgone(bmaj, mn, mn, VBLK);
 	for (cmaj = 0; cmaj < nchrdev; cmaj++)
 		if (cdevsw[cmaj].d_open == ukopen)
 			vdevgone(cmaj, mn, mn, VCHR);
