@@ -30,6 +30,9 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _MACHINE_CONF_H_
+#define _MACHINE_CONF_H_
+
 #include <sys/conf.h>
 
 #define	mmread	mmrw
@@ -53,3 +56,5 @@ cdev_decl(acpi);
 
 #define pctrpoll seltrue
 cdev_decl(pctr);
+
+#endif	/* _MACHINE_CONF_H_ */
