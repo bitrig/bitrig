@@ -68,7 +68,6 @@
 #else
 #define NAPM	0
 #endif
-#include "rd.h"
 
 struct vm_map *exec_map = NULL;
 struct vm_map *phys_map = NULL;
