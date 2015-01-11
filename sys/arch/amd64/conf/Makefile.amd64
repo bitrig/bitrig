@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.amd64,v 1.63 2014/11/18 01:11:13 deraadt Exp $
+#	$OpenBSD: Makefile.amd64,v 1.64 2015/01/11 19:25:13 tedu Exp $
 
 # For instructions on building kernels consult the config(8) and options(4)
 # manual pages.
@@ -25,7 +25,7 @@ INCLUDES=	-nostdinc -I$S -I. -I$S/arch
 CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL -MD -MP
 
 .if ${COMPILER_VERSION:L} == "gcc4"
-CWARNFLAGS=	-Wall -Wstrict-prototypes -Wmissing-prototypes \
+CWARNFLAGS=	-Wall -Wimplicit-function-declaration \
 		-Wno-main -Wno-uninitialized \
 		-Wno-attributes
 #		-Werror -Wframe-larger-than-2047
@@ -47,7 +47,7 @@ LINKFLAGS=	-T ldscript -X --warn-common -nopie
 
 .else
 
-CWARNFLAGS=	-Wall -Wstrict-prototypes -Wmissing-prototypes \
+CWARNFLAGS=	-Wall -Wimplicit-function-declaration \
 		-Werror -Wpointer-arith -Wno-conditional-uninitialized
 # these are to shutup clang vs gcc, should be ultimately fixed
 CWARNFLAGS+=	-Wno-pointer-sign
