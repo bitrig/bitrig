@@ -268,6 +268,27 @@ splx(int s)
 void
 intr_unpend(void)
 {
+#if 0
+	struct cpu_info *ci = curcpu();
+	u_int64_t ipending;
+	intr_state_t ist;
+	int i;
+
+	ist = intr_get_state();
+	intr_disable();
+
+	/* Cheaper than atomic_exchange() (no bus locking) */
+	ipending = ci->ci_ipending;
+	ci->ci_ipending = 0;
+
+	intr_set_state(ist);
+
+	while (ipending) {
+		i = IPENDING_NEXT(ipending);
+		IPENDING_CLR(ipending, i);
+		ci->ci_isources[i]->is_run(ci->ci_isources[i]);
+	}
+#endif
 }
 
 static void

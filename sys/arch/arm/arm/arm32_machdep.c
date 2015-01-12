@@ -62,6 +62,7 @@
 
 #include <arm/machdep.h>
 #include <machine/conf.h>
+#include <machine/intr.h>
 
 #ifdef CONF_HAVE_APM
 #include "apm.h"
@@ -85,7 +86,7 @@ pv_addr_t kernelstack;
 char	machine[] = MACHINE;		/* from <machine/param.h> */
 
 /* Statically defined CPU info. */
-struct cpu_info cpu_info_primary;
+struct cpu_info cpu_info_primary = { .ci_ipending = TAILQ_HEAD_INITIALIZER(cpu_info_primary.ci_ipending) };
 struct cpu_info *cpu_info_list = &cpu_info_primary;
 
 #ifdef MULTIPROCESSOR

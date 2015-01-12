@@ -108,6 +108,8 @@ struct intrsource {
 	struct proc *is_proc;		/* ithread proc */
 	struct pic *is_pic;		/* XXX PIC for ithread */
 	TAILQ_ENTRY(intrsource) entry;	/* entry in ithreads list */
+	TAILQ_ENTRY(intrsource) entry_pending;	/* entry in pending list */
+	int is_pending;			/* interrupt is pending */
 };
 
 struct intrhand {

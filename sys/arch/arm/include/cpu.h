@@ -102,6 +102,7 @@
 #endif	/* !_LOCORE */
 
 #include <arm/armreg.h>
+#include <sys/queue.h>
 
 #ifndef _LOCORE
 /* 1 == use cpu_sleep(), 0 == don't */
@@ -201,9 +202,8 @@ struct cpu_info {
 
 	struct intrsource *ci_isources[MAX_INTR_SOURCES];
 	uint32_t ci_ilevel;
-	uint32_t ci_ipending;
 	uint32_t ci_idepth;
-	uint32_t ci_spending;
+	TAILQ_HEAD(, intrsource) ci_ipending;
 #ifdef DIAGNOSTIC
 	int	ci_mutex_level;
 #endif
