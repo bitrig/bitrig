@@ -852,26 +852,24 @@ int
 imxuartcngetc(dev_t dev)
 {
 	int c;
-	int s;
-	s = splhigh();
+	crit_enter();
 	while((bus_space_read_2(imxuartconsiot, imxuartconsioh, IMXUART_USR2) &
 	    IMXUART_SR2_RDR) == 0)
 		;
 	c = bus_space_read_1(imxuartconsiot, imxuartconsioh, IMXUART_URXD);
-	splx(s);
+	crit_leave();
 	return c;
 }
 
 void
 imxuartcnputc(dev_t dev, int c)
 {
-	int s;
-	s = splhigh();
+	crit_enter();
 	bus_space_write_1(imxuartconsiot, imxuartconsioh, IMXUART_UTXD, (uint8_t)c);
 	while((bus_space_read_2(imxuartconsiot, imxuartconsioh, IMXUART_USR2) &
 	    IMXUART_SR2_TXDC) == 0)
 		;
-	splx(s);
+	crit_leave();
 }
 
 void

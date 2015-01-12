@@ -468,10 +468,9 @@ void
 omgpio_pin_dir_write(struct omgpio_softc *sc, unsigned int gpio,
     unsigned int dir)
 {
-	int s;
 	u_int32_t reg;
 
-	s = splhigh();
+	crit_enter();
 
 	reg = READ4(sc, sc->sc_regs.oe);
 	if (dir == OMGPIO_DIR_IN)
@@ -480,7 +479,7 @@ omgpio_pin_dir_write(struct omgpio_softc *sc, unsigned int gpio,
 		reg &= ~(1 << GPIO_PIN_TO_OFFSET(gpio));
 	WRITE4(sc, sc->sc_regs.oe, reg);
 
-	splx(s);
+	crit_leave();
 }
 
 int

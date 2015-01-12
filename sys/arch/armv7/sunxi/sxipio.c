@@ -223,18 +223,17 @@ sxipio_getcfg(int pin)
 {
 	struct sxipio_softc *sc = sxipio_sc;
 	uint32_t bit, data, off, reg, port;
-	int s;
 
 	port = pin >> 5;
 	bit = pin - (port << 5);
 	reg = SXIPIO_CFG(port, bit >> 3);
 	off = (bit & 7) << 2;
 
-	s = splhigh();
+	crit_enter();
 
 	data = SXIREAD4(sc, reg);
 
-	splx(s);
+	crit_leave();
 
 	return data >> off & 7;
 }
@@ -244,7 +243,6 @@ sxipio_setcfg(int pin, int mux)
 {
 	struct sxipio_softc *sc = sxipio_sc;
 	uint32_t bit, cmask, mask, off, reg, port;
-	int s;
 
 	port = pin >> 5;
 	bit = pin - (port << 5);
@@ -253,11 +251,11 @@ sxipio_setcfg(int pin, int mux)
 	cmask = 7 << off;
 	mask = mux << off;
 
-	s = splhigh();
+	crit_enter();
 
 	SXICMS4(sc, reg, cmask, mask);
 
-	splx(s);
+	crit_leave();
 }
 
 int
@@ -265,18 +263,17 @@ sxipio_getpin(int pin)
 {
 	struct sxipio_softc *sc = sxipio_sc;
 	uint32_t bit, data, mask, reg, port;
-	int s;
 
 	port = pin >> 5;
 	bit = pin - (port << 5);
 	reg = SXIPIO_DAT(port);
 	mask = 1 << (bit & 31);
 
-	s = splhigh();
+	crit_enter();
 
 	data = SXIREAD4(sc, reg);
 
-	splx(s);
+	crit_leave();
 
 	return data & mask ? 1 : 0;
 }
@@ -286,18 +283,17 @@ sxipio_setpin(int pin)
 {
 	struct sxipio_softc *sc = sxipio_sc;
 	uint32_t bit, mask, reg, port;
-	int s;
 
 	port = pin >> 5;
 	bit = pin - (port << 5);
 	reg = SXIPIO_DAT(port);
 	mask = 1 << (bit & 31);
 
-	s = splhigh();
+	crit_enter();
 
 	SXISET4(sc, reg, mask);
 
-	splx(s);
+	crit_leave();
 }
 
 void
@@ -305,18 +301,17 @@ sxipio_clrpin(int pin)
 {
 	struct sxipio_softc *sc = sxipio_sc;
 	uint32_t bit, mask, reg, port;
-	int s;
 
 	port = pin >> 5;
 	bit = pin - (port << 5);
 	reg = SXIPIO_DAT(port);
 	mask = 1 << (bit & 31);
 
-	s = splhigh();
+	crit_enter();
 
 	SXICLR4(sc, reg, mask);
 
-	splx(s);
+	crit_leave();
 }
 
 int
@@ -324,19 +319,18 @@ sxipio_togglepin(int pin)
 {
 	struct sxipio_softc *sc = sxipio_sc;
 	uint32_t bit, data, mask, reg, port;
-	int s;
 
 	port = pin >> 5;
 	bit = pin - (port << 5);
 	reg = SXIPIO_DAT(port);
 	mask = 1 << (bit & 31);
 
-	s = splhigh();
+	crit_enter();
 
 	data = SXIREAD4(sc, reg);
 	SXIWRITE4(sc, reg, data ^ mask);
 
-	splx(s);
+	crit_leave();
 
 	return data & mask ? GPIO_PIN_HIGH : GPIO_PIN_LOW;
 }

@@ -789,26 +789,24 @@ int
 pl011cngetc(dev_t dev)
 {
 	int c;
-	int s;
-	s = splhigh();
+	crit_enter();
 	while((bus_space_read_4(pl011consiot, pl011consioh, UART_FR) &
 	    UART_FR_RXFF) == 0)
 		;
 	c = bus_space_read_4(pl011consiot, pl011consioh, UART_DR);
-	splx(s);
+	crit_leave();
 	return c;
 }
 
 void
 pl011cnputc(dev_t dev, int c)
 {
-	int s;
-	s = splhigh();
+	crit_enter();
 	while((bus_space_read_4(pl011consiot, pl011consioh, UART_FR) &
 	    UART_FR_TXFE) == 0)
 		;
 	bus_space_write_4(pl011consiot, pl011consioh, UART_DR, (uint8_t)c);
-	splx(s);
+	crit_leave();
 }
 
 void

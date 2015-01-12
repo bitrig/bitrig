@@ -175,8 +175,8 @@ void
 arml2cc_enable(struct arml2cc_softc *sc)
 {
 	u_int32_t auxctl, prefetch;
-	int s;
-	s = splhigh();
+
+	crit_enter();
 
 	platform_smc_write(sc->sc_iot, sc->sc_ioh, L2C_CTL, SMC_L2_CTL,
 	    1);
@@ -202,21 +202,20 @@ arml2cc_enable(struct arml2cc_softc *sc)
 	arml2cc_cache_way_op(sc, L2C_INV_WAY, sc->sc_waymask);
 	arml2cc_cache_sync(sc);
 
-	splx(s);
+	crit_leave();
 }
 
 void
 arml2cc_disable(struct arml2cc_softc *sc)
 {
-	int s;
-	s = splhigh();
+	crit_enter();
 
 	arml2cc_cache_way_op(sc, L2C_CLEAN_INV_WAY, sc->sc_waymask);
 	arml2cc_cache_sync(sc);
 
 	platform_smc_write(sc->sc_iot, sc->sc_ioh, L2C_CTL, SMC_L2_CTL, 0);
 
-	splx(s);
+	crit_leave();
 }
 
 void

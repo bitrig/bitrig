@@ -141,7 +141,6 @@ sxiuartattach(struct device *parent, struct device *self, void *args)
 	struct sxiuart_softc *sc = (struct sxiuart_softc *) self;
 	bus_space_tag_t iot;
 	bus_space_handle_t ioh;
-	int s;
 
 	sc->sc_iot = iot = aa->aa_iot;
 	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
@@ -180,10 +179,10 @@ sxiuartattach(struct device *parent, struct device *self, void *args)
 	/* clear and disable fifo */
 	bus_space_write_1(iot, ioh, SXIUART_FCR, 0 | RFIFOR | XFIFOR);
 
-	s = splhigh();
+	crit_enter();
 	SET(sc->sc_mcr, MCR_DTR | MCR_RTS | MCR_IENABLE);
 	bus_space_write_1(sc->sc_iot, sc->sc_ioh, SXIUART_MCR, sc->sc_mcr);
-	splx(s);
+	crit_leave();
 
 	arm_intr_establish(aa->aa_dev->irq[0], IPL_TTY,
 	    sxiuart_intr, sc, sc->sc_dev.dv_xname);
@@ -935,7 +934,6 @@ int
 sxiuartcnattach(bus_space_tag_t iot, bus_addr_t iobase, int rate, long freq,
 	tcflag_t cflag)
 {
-	int s;
 	uint16_t ratediv;
 
 	if (bus_space_map(iot, iobase, UARTx_SIZE, 0, &sxiuartconsioh))
@@ -945,7 +943,7 @@ sxiuartcnattach(bus_space_tag_t iot, bus_addr_t iobase, int rate, long freq,
 	sxiuartconsaddr = iobase;
 	sxiuartconscflag = cflag;
 
-	s = splhigh();
+	crit_enter();
 	bus_space_write_1(iot, sxiuartconsioh, SXIUART_LCR, LCR_DLAB);
 
 	ratediv = 13; /* for 115200baud with 24000000hz freq */
@@ -959,7 +957,7 @@ sxiuartcnattach(bus_space_tag_t iot, bus_addr_t iobase, int rate, long freq,
 	bus_space_write_1(iot, sxiuartconsioh, SXIUART_FCR, FIFOE | FIFO_RXT0);
 
 	(void)bus_space_read_1(iot, sxiuartconsioh, SXIUART_IIR);
-	splx(s);
+	crit_leave();
 
 	cn_tab = &sxiuartcons;
 
@@ -969,10 +967,9 @@ sxiuartcnattach(bus_space_tag_t iot, bus_addr_t iobase, int rate, long freq,
 int
 sxiuartcngetc(dev_t dev)
 {
-	int s;
 	uint8_t c;
 
-	s = splhigh();
+	crit_enter();
 
 	while (!ISSET(bus_space_read_1(sxiuartconsiot, sxiuartconsioh,
 	    SXIUART_LSR), LSR_RXRDY))
@@ -982,7 +979,8 @@ sxiuartcngetc(dev_t dev)
 	/* clear any pending interrupts */
 	(void)bus_space_read_1(sxiuartconsiot, sxiuartconsioh, SXIUART_IIR);
 
-	splx(s);
+	crit_leave();
+
 	return (c);
 }
 
