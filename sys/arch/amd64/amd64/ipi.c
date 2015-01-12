@@ -103,6 +103,7 @@ x86_ipi_handler(struct intrsource *is_unused)
 	u_int32_t pending;
 	int bit;
 
+	crit_enter();
 	pending = x86_atomic_testset_u32(&ci->ci_ipis, 0);
 
 	for (bit = 0; bit < X86_NIPI && pending; bit++) {
@@ -112,4 +113,5 @@ x86_ipi_handler(struct intrsource *is_unused)
 			ipi_count.ec_count++;
 		}
 	}
+	crit_leave();
 }

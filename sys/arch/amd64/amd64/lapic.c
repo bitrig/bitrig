@@ -273,7 +273,9 @@ u_int32_t lapic_delaytab[26];
 void
 lapic_clockintr(void *arg, struct intrframe frame)
 {
+	crit_enter();
 	hardclock(frame.tf_clk);
+	crit_leave();
 
 	clk_count.ec_count++;
 }
@@ -281,7 +283,9 @@ lapic_clockintr(void *arg, struct intrframe frame)
 void
 lapic_clockintr_clkframe(void *arg, struct clockframe frame)
 {
+	crit_enter();
 	hardclock(&frame);
+	crit_leave();
 
 	clk_count.ec_count++;
 }

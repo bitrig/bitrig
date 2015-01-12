@@ -155,6 +155,10 @@ hardclock(struct clockframe *frame)
 	struct cpu_info *ci = curcpu();
 
 	p = curproc;
+
+	if (p)
+		KASSERT(CRIT_DEPTH == 1);
+
 	if (p && ((p->p_flag & (P_SYSTEM | P_WEXIT)) == 0)) {
 		struct process *pr = p->p_p;
 
