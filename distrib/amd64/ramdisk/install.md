@@ -1,4 +1,4 @@
-#	$OpenBSD: install.md,v 1.36 2014/08/15 09:45:54 rpe Exp $
+#	$OpenBSD: install.md,v 1.37 2015/01/12 16:33:31 deraadt Exp $
 #
 #
 # Copyright (c) 1996 The NetBSD Foundation, Inc.
@@ -36,7 +36,6 @@ MDXAPERTURE=2
 MDXDM=y
 DEFAULTSETS="bsd bsd.rd bsd.sp"
 SANESETS="bsd bsd.sp"
-MDLID=y
 
 md_installboot() {
 	if ! installboot -r /mnt ${1}; then
