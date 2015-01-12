@@ -50,9 +50,9 @@
 #include <sys/proc.h>
 #include <sys/softintr.h>
 
-int     splraise(int);
-int     spllower(int);
-void    splx(int);
+int	splraise(int);
+int	spllower(int);
+void	splx(int);
 
 void	arm_do_pending_intr(int);
 void	arm_set_intr_handler(
@@ -71,7 +71,6 @@ struct arm_intr_func {
 
 extern struct arm_intr_func arm_intr_func;
 
-#define	splhigh()	splraise(IPL_HIGH)
 #define	splsoft()	splraise(IPL_SOFT)
 #define	splsoftclock()	splraise(IPL_SOFTCLOCK)
 #define	splsoftnet()	splraise(IPL_SOFTNET)
@@ -85,9 +84,6 @@ extern struct arm_intr_func arm_intr_func;
 
 #define	spl0()		spllower(IPL_NONE)
 
-#define	splsched()	splhigh()
-#define	spllock()	splhigh()
-
 void *arm_intr_establish(int irqno, int level, int (*func)(void *),
     void *cookie, char *name);
 void arm_intr_disestablish(void *cookie);
@@ -97,20 +93,8 @@ const char *arm_intr_string(void *cookie);
 void arm_clock_register(void (*)(void), void (*)(u_int), void (*)(int),
     void (*)(void));
 
-#ifdef DIAGNOSTIC
-/*
- * Although this function is implemented in MI code, it must be in this MD
- * header because we don't want this header to include MI includes.
- */
-void splassert_fail(int, int, const char *);
-extern int splassert_ctl;
-void arm_splassert_check(int, const char *);
-#define splassert(__wantipl) do { /*nada */ } while (0)
-#define splsoftassert(wantipl) splassert(wantipl)
-#else
-#define splassert(wantipl)      do { /* nothing */ } while (0)
-#define splsoftassert(wantipl)  do { /* nothing */ } while (0)
-#endif
+#define splassert(wantipl)	do { /* nothing */ } while (0)
+#define splsoftassert(wantipl)	do { /* nothing */ } while (0)
 
 struct intrsource {
 	int is_maxlevel;		/* max. IPL for this source */
