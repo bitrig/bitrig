@@ -1,5 +1,5 @@
 /*
- * tsig.h -- TSIG definitions (RFC 2845).
+ * tsig.c -- TSIG implementation (RFC 2845).
  *
  * Copyright (c) 2001-2006, NLnet Labs. All rights reserved.
  *
@@ -8,7 +8,7 @@
  */
 
 
-#include <config.h>
+#include "config.h"
 #include <stdlib.h>
 #include <ctype.h>
 
@@ -17,16 +17,17 @@
 #include "dns.h"
 #include "packet.h"
 #include "query.h"
+#include "rbtree.h"
 
 static region_type *tsig_region;
 
 struct tsig_key_table
 {
-	struct tsig_key_table *next;
+	rbnode_t node; /* by dname */
 	tsig_key_type *key;
 };
 typedef struct tsig_key_table tsig_key_table_type;
-static tsig_key_table_type *tsig_key_table;
+static rbtree_t *tsig_key_table;
 
 struct tsig_algorithm_table
 {
@@ -36,18 +37,6 @@ struct tsig_algorithm_table
 typedef struct tsig_algorithm_table tsig_algorithm_table_type;
 static tsig_algorithm_table_type *tsig_algorithm_table;
 static size_t max_algo_digest_size = 0;
-
-tsig_lookup_algorithm_table tsig_supported_algorithms[] = {
-	{ TSIG_HMAC_MD5, "hmac-md5" },
-#ifdef HAVE_EVP_SHA1
-	{ TSIG_HMAC_SHA1, "hmac-sha1" },
-#endif /* HAVE_EVP_SHA1 */
-
-#ifdef HAVE_EVP_SHA256
-	{ TSIG_HMAC_SHA256, "hmac-sha256" },
-#endif /* HAVE_EVP_SHA256 */
-        { 0, NULL }
-};
 
 static void
 tsig_digest_variables(tsig_record_type *tsig, int tsig_timers_only)
@@ -96,27 +85,53 @@ tsig_digest_variables(tsig_record_type *tsig, int tsig_timers_only)
 	}
 }
 
+static int
+tree_dname_compare(const void* a, const void* b)
+{
+	return dname_compare((const dname_type*)a, (const dname_type*)b);
+}
+
 int
 tsig_init(region_type *region)
 {
 	tsig_region = region;
-	tsig_key_table = NULL;
+	tsig_key_table = rbtree_create(region, &tree_dname_compare);
 	tsig_algorithm_table = NULL;
 
-#if defined(TSIG) && defined(HAVE_SSL)
+#if defined(HAVE_SSL)
 	return tsig_openssl_init(region);
-#endif
+#endif /* defined(HAVE_SSL) */
 	return 1;
 }
 
 void
 tsig_add_key(tsig_key_type *key)
 {
-	tsig_key_table_type *entry = (tsig_key_table_type *) region_alloc(
+	tsig_key_table_type *entry = (tsig_key_table_type *) region_alloc_zero(
 		tsig_region, sizeof(tsig_key_table_type));
 	entry->key = key;
-	entry->next = tsig_key_table;
-	tsig_key_table = entry;
+	entry->node.key = entry->key->name;
+	(void)rbtree_insert(tsig_key_table, &entry->node);
+}
+
+void
+tsig_del_key(tsig_key_type *key)
+{
+	tsig_key_table_type *entry;
+	if(!key) return;
+	entry = (tsig_key_table_type*)rbtree_delete(tsig_key_table, key->name);
+	if(!entry) return;
+	region_recycle(tsig_region, entry, sizeof(tsig_key_table_type));
+}
+
+tsig_key_type*
+tsig_find_key(const dname_type* name)
+{
+	tsig_key_table_type* entry;
+	entry = (tsig_key_table_type*)rbtree_search(tsig_key_table, name);
+	if(entry)
+		return entry->key;
+	return NULL;
 }
 
 void
@@ -139,8 +154,8 @@ int
 tsig_strlowercmp(const char* str1, const char* str2)
 {
 	while (str1 && str2 && *str1 != '\0' && *str2 != '\0') {
-		if(tolower((int)*str1) != tolower((int)*str2)) {
-			if(tolower((int)*str1) < tolower((int)*str2))
+		if(tolower((unsigned char)*str1) != tolower((unsigned char)*str2)) {
+			if(tolower((unsigned char)*str1) < tolower((unsigned char)*str2))
 				return -1;
 			return 1;
 		}
@@ -182,19 +197,6 @@ tsig_get_algorithm_by_name(const char *name)
 	return NULL;
 }
 
-/*
- * Find an HMAC algorithm based on its id.
- */
-tsig_algorithm_type *
-tsig_get_algorithm_by_id(uint8_t alg)
-{
-	int i=0;
-	for (/*empty*/; tsig_supported_algorithms[i].id > 0; i++) {
-		if (tsig_supported_algorithms[i].id == alg)
-			return tsig_get_algorithm_by_name(tsig_supported_algorithms[i].short_name);
-	}
-	return NULL;
-}
 
 const char *
 tsig_error(int error_code)
@@ -248,8 +250,18 @@ tsig_create_record_custom(tsig_record_type *tsig, region_type *region,
 		large_object_size, initial_cleanup_size, 0);
 	tsig->context_region = region_create_custom(xalloc, free, chunk_size,
 		large_object_size, initial_cleanup_size, 0);
-	region_add_cleanup(region, tsig_cleanup, tsig);
+	if(region)
+		region_add_cleanup(region, tsig_cleanup, tsig);
 	tsig_init_record(tsig, NULL, NULL);
+}
+
+void
+tsig_delete_record(tsig_record_type* tsig, region_type* region)
+{
+	if(region)
+		region_remove_cleanup(region, tsig_cleanup, tsig);
+	region_destroy(tsig->rr_region);
+	region_destroy(tsig->context_region);
 }
 
 void
@@ -272,7 +284,6 @@ tsig_init_record(tsig_record_type *tsig,
 int
 tsig_from_query(tsig_record_type *tsig)
 {
-	tsig_key_table_type *key_entry;
 	tsig_key_type *key = NULL;
 	tsig_algorithm_table_type *algorithm_entry;
 	tsig_algorithm_type *algorithm = NULL;
@@ -283,16 +294,7 @@ tsig_from_query(tsig_record_type *tsig)
 	assert(!tsig->algorithm);
 	assert(!tsig->key);
 
-	/* XXX: TODO: slow linear check for keyname */
-	for (key_entry = tsig_key_table;
-	     key_entry;
-	     key_entry = key_entry->next)
-	{
-		if (dname_compare(tsig->key_name, key_entry->key->name) == 0) {
-			key = key_entry->key;
-			break;
-		}
-	}
+	key = (tsig_key_type*)tsig_find_key(tsig->key_name);
 
 	for (algorithm_entry = tsig_algorithm_table;
 	     algorithm_entry;
@@ -594,8 +596,6 @@ tsig_parse_rr(tsig_record_type *tsig, buffer_type *packet)
 		tsig->rr_region, buffer_current(packet), tsig->other_size);
 	buffer_skip(packet, tsig->other_size);
 	tsig->status = TSIG_OK;
-	tsig->error_code = TSIG_ERROR_NOERROR;
-
 	return 1;
 }
 
@@ -668,7 +668,7 @@ tsig_error_reply(tsig_record_type *tsig)
 void
 tsig_finalize()
 {
-#if defined(TSIG) && defined(HAVE_SSL)
+#if defined(HAVE_SSL)
 	tsig_openssl_finalize();
-#endif
+#endif /* defined(HAVE_SSL) */
 }

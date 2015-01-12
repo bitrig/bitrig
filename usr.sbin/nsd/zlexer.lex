@@ -8,7 +8,7 @@
  *
  */
 
-#include <config.h>
+#include "config.h"
 
 #include <ctype.h>
 #include <errno.h>
@@ -18,8 +18,6 @@
 #include "zonec.h"
 #include "dname.h"
 #include "zparser.h"
-
-#define YY_NO_UNPUT
 
 #if 0
 #define LEXOUT(s)  printf s /* used ONLY when debugging */
@@ -68,6 +66,23 @@ pop_parser_state(void)
 	yy_switch_to_buffer(include_stack[include_stack_ptr]);
 }
 
+static YY_BUFFER_STATE oldstate;
+/* Start string scan */
+void
+parser_push_stringbuf(char* str)
+{
+	oldstate = YY_CURRENT_BUFFER;
+	yy_switch_to_buffer(yy_scan_string(str));
+}
+
+void
+parser_pop_stringbuf(void)
+{
+	yy_delete_buffer(YY_CURRENT_BUFFER);
+	yy_switch_to_buffer(oldstate);
+	oldstate = NULL;
+}
+
 #ifndef yy_set_bol /* compat definition, for flex 2.4.6 */
 #define yy_set_bol(at_bol) \
 	{ \
@@ -78,11 +93,23 @@ pop_parser_state(void)
 #endif
 	
 %}
+%option noinput
+%option nounput
+%{
+#ifndef YY_NO_UNPUT
+#define YY_NO_UNPUT 1
+#endif
+#ifndef YY_NO_INPUT
+#define YY_NO_INPUT 1
+#endif
+%}
 
 SPACE   [ \t]
 LETTER  [a-zA-Z]
 NEWLINE [\n\r]
-ZONESTR [^ \t\n\r();.\"\$]
+ZONESTR [^ \t\n\r();.\"\$]|\\.|\\\n
+CHARSTR [^ \t\n\r();.]|\\.|\\\n
+QUOTE   \"
 DOLLAR  \$
 COMMENT ;
 DOT     \.
@@ -144,11 +171,13 @@ ANY     [^\"\n\\]|\\.
 			/* split the original yytext */
 			*tmp = '\0';
 			strip_string(yytext);
-			
+
 			dname = dname_parse(parser->region, tmp + 1);
 			if (!dname) {
 				zc_error("incorrect include origin '%s'",
 					 tmp + 1);
+			} else if (*(tmp + strlen(tmp + 1)) != '.') {
+				zc_error("$INCLUDE directive requires absolute domain name");
 			} else {
 				origin = domain_table_insert(
 					parser->db->domains, dname);
@@ -242,6 +271,8 @@ ANY     [^\"\n\\]|\\.
 <bitlabel><<EOF>>	{
 	zc_error("EOF inside bitlabel");
 	BEGIN(INITIAL);
+	yyrestart(yyin); /* this is so that lex does not give an internal err */
+	yyterminate();
 }
 <bitlabel>{BIT}*	{ yymore(); }
 <bitlabel>\n		{ ++parser->line; yymore(); }
@@ -252,21 +283,23 @@ ANY     [^\"\n\\]|\\.
 }
 
 	/* Quoted strings.  Strip leading and ending quotes.  */
-\"			{ BEGIN(quotedstring); LEXOUT(("\" ")); }
+{QUOTE}			{ BEGIN(quotedstring); LEXOUT(("\" ")); }
 <quotedstring><<EOF>> 	{
 	zc_error("EOF inside quoted string");
 	BEGIN(INITIAL);
+	yyrestart(yyin); /* this is so that lex does not give an internal err */
+	yyterminate();
 }
 <quotedstring>{ANY}*	{ LEXOUT(("STR ")); yymore(); }
 <quotedstring>\n 	{ ++parser->line; yymore(); }
-<quotedstring>\" {
+<quotedstring>{QUOTE} {
 	LEXOUT(("\" "));
 	BEGIN(INITIAL);
 	yytext[yyleng - 1] = '\0';
 	return parse_token(STR, yytext, &lexer_state);
 }
 
-({ZONESTR}|\\.|\\\n)+ {
+{ZONESTR}({CHARSTR})* {
 	/* Any allowed word.  */
 	return parse_token(STR, yytext, &lexer_state);
 }
@@ -313,7 +346,7 @@ zoctet(char *text)
 		if (s[0] != '\\') {
 			/* Ordinary character.  */
 			*p = *s;
-		} else if (isdigit((int)s[1]) && isdigit((int)s[2]) && isdigit((int)s[3])) {
+		} else if (isdigit((unsigned char)s[1]) && isdigit((unsigned char)s[2]) && isdigit((unsigned char)s[3])) {
 			/* \DDD escape.  */
 			int val = (hexdigit_to_int(s[1]) * 100 +
 				   hexdigit_to_int(s[2]) * 10 +
@@ -341,8 +374,8 @@ zoctet(char *text)
 static int
 parse_token(int token, char *yytext, enum lexer_state *lexer_state)
 {
-	char *str = region_strdup(parser->rr_region, yytext);
-	size_t len = zoctet(str);
+	size_t len;
+	char *str;
 
 	if (*lexer_state == EXPECT_OWNER) {
 		*lexer_state = PARSING_OWNER;
@@ -352,7 +385,7 @@ parse_token(int token, char *yytext, enum lexer_state *lexer_state)
 		uint16_t rrclass;
 		
 		/* type */
-		token = rrtype_to_token(str, &yylval.type);
+		token = rrtype_to_token(yytext, &yylval.type);
 		if (token != 0) {
 			*lexer_state = PARSING_RDATA;
 			LEXOUT(("%d[%s] ", token, yytext));
@@ -360,7 +393,7 @@ parse_token(int token, char *yytext, enum lexer_state *lexer_state)
 		}
 
 		/* class */
-		rrclass = rrclass_from_string(str);
+		rrclass = rrclass_from_string(yytext);
 		if (rrclass != 0) {
 			yylval.klass = rrclass;
 			LEXOUT(("CLASS "));
@@ -368,12 +401,15 @@ parse_token(int token, char *yytext, enum lexer_state *lexer_state)
 		}
 
 		/* ttl */
-		yylval.ttl = strtottl(str, &t);
+		yylval.ttl = strtottl(yytext, &t);
 		if (*t == '\0') {
 			LEXOUT(("TTL "));
 			return T_TTL;
 		}
 	}
+
+	str = region_strdup(parser->rr_region, yytext);
+	len = zoctet(str);
 
 	yylval.data.str = str;
 	yylval.data.len = len;
