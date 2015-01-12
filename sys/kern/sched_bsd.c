@@ -460,6 +460,14 @@ mi_switch(void)
 
 	SCHED_ASSERT_LOCKED();
 
+	/*
+	 * We need to clear P_SINTR before becoming premptable again, if not,
+	 * the process that preempted might end up sleeping with a stale
+	 * P_SINTR. Do the check to avoid an atomic operation.
+	 */
+	if (p->p_flag & P_SINTR)
+		atomic_clearbits_int(&p->p_flag, P_SINTR);
+
 	SCHED_UNLOCK();
 
 	SCHED_ASSERT_UNLOCKED();
