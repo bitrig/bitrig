@@ -107,6 +107,7 @@ bmtx_lock_block(struct bmtx *bmtx, uintptr_t lock)
 	BST(bmtx_lock_blocks_slept);
 	/* We really are destined to sleep */
 	p = curproc;
+	KASSERT((p->p_flag & P_SINTR) == 0);
 	TAILQ_INSERT_TAIL(&bmtx->bmtx_waiters, p, p_runq);
 	p->p_wchan = bmtx;
 	p->p_wmesg = bmtx->bmtx_name;

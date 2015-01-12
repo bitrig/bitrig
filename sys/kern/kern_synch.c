@@ -239,12 +239,6 @@ sleep_finish(struct sleep_state *sls, int do_sleep)
 	p->p_cpu->ci_schedstate.spc_curpriority = p->p_usrpri;
 	KERNEL_RELOCK_ALL(sls->sls_klocks);
 
-	/*
-	 * Even though this belongs to the signal handling part of sleep,
-	 * we need to clear it before the ktrace.
-	 */
-	atomic_clearbits_int(&p->p_flag, P_SINTR);
-
 #ifdef KTRACE
 	if (KTRPOINT(p, KTR_CSW))
 		ktrcsw(p, 0, 0);
