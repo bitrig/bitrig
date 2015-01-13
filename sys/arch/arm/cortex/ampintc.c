@@ -44,23 +44,23 @@
 
 /* registers */
 #define	ICD_DCR			0x000
-#define		ICD_DCR_ES		0x00000001
-#define		ICD_DCR_ENS		0x00000002
+#define	ICD_DCR_ES		0x00000001
+#define	ICD_DCR_ENS		0x00000002
 
-#define ICD_ICTR			0x004
-#define		ICD_ICTR_LSPI_SH	11
-#define		ICD_ICTR_LSPI_M		0x1f
-#define		ICD_ICTR_CPU_SH		5
-#define		ICD_ICTR_CPU_M		0x07
-#define		ICD_ICTR_ITL_SH		0
-#define		ICD_ICTR_ITL_M		0x1f
-#define ICD_IDIR			0x008
-#define 	ICD_DIR_PROD_SH		24
-#define 	ICD_DIR_PROD_M		0xff
-#define 	ICD_DIR_REV_SH		12
-#define 	ICD_DIR_REV_M		0xfff
-#define 	ICD_DIR_IMP_SH		0
-#define 	ICD_DIR_IMP_M		0xfff
+#define	ICD_ICTR		0x004
+#define	ICD_ICTR_LSPI_SH	11
+#define	ICD_ICTR_LSPI_M		0x1f
+#define	ICD_ICTR_CPU_SH		5
+#define	ICD_ICTR_CPU_M		0x07
+#define	ICD_ICTR_ITL_SH		0
+#define	ICD_ICTR_ITL_M		0x1f
+#define	ICD_IDIR		0x008
+#define	ICD_DIR_PROD_SH		24
+#define	ICD_DIR_PROD_M		0xff
+#define	ICD_DIR_REV_SH		12
+#define	ICD_DIR_REV_M		0xfff
+#define	ICD_DIR_IMP_SH		0
+#define	ICD_DIR_IMP_M		0xfff
 
 #define IRQ_TO_REG32(i)		(((i) >> 5) & 0x7)
 #define IRQ_TO_REG32BIT(i)	((i) & 0x1f)
@@ -82,51 +82,51 @@
 /*
  * what about (ppi|spi)_status
  */
-#define ICD_PPI			0xD00
-#define 	ICD_PPI_GTIMER	(1 << 11)
-#define 	ICD_PPI_FIQ		(1 << 12)
-#define 	ICD_PPI_PTIMER	(1 << 13)
-#define 	ICD_PPI_PWDOG	(1 << 14)
-#define 	ICD_PPI_IRQ		(1 << 15)
-#define ICD_SPI_BASE		0xD04
-#define ICD_SPIn(i)			(ICD_SPI_BASE + ((i) * 4))
+#define	ICD_PPI		0xD00
+#define	ICD_PPI_GTIMER	(1 << 11)
+#define	ICD_PPI_FIQ	(1 << 12)
+#define	ICD_PPI_PTIMER	(1 << 13)
+#define	ICD_PPI_PWDOG	(1 << 14)
+#define	ICD_PPI_IRQ	(1 << 15)
+#define	ICD_SPI_BASE	0xD04
+#define	ICD_SPIn(i)	(ICD_SPI_BASE + ((i) * 4))
 
 
-#define ICD_SGIR			0xF00
+#define	ICD_SGIR	0xF00
 
-#define ICD_PERIPH_ID_0			0xFD0
-#define ICD_PERIPH_ID_1			0xFD4
-#define ICD_PERIPH_ID_2			0xFD8
-#define ICD_PERIPH_ID_3			0xFDC
-#define ICD_PERIPH_ID_4			0xFE0
-#define ICD_PERIPH_ID_5			0xFE4
-#define ICD_PERIPH_ID_6			0xFE8
-#define ICD_PERIPH_ID_7			0xFEC
+#define	ICD_PERIPH_ID_0	0xFD0
+#define	ICD_PERIPH_ID_1	0xFD4
+#define	ICD_PERIPH_ID_2	0xFD8
+#define	ICD_PERIPH_ID_3	0xFDC
+#define	ICD_PERIPH_ID_4	0xFE0
+#define	ICD_PERIPH_ID_5	0xFE4
+#define	ICD_PERIPH_ID_6	0xFE8
+#define	ICD_PERIPH_ID_7	0xFEC
 
-#define ICD_COMP_ID_0			0xFEC
-#define ICD_COMP_ID_1			0xFEC
-#define ICD_COMP_ID_2			0xFEC
-#define ICD_COMP_ID_3			0xFEC
+#define	ICD_COMP_ID_0	0xFEC
+#define	ICD_COMP_ID_1	0xFEC
+#define	ICD_COMP_ID_2	0xFEC
+#define	ICD_COMP_ID_3	0xFEC
 
-#define ICD_SIZE 			0x1000
+#define ICD_SIZE	0x1000
 
 
-#define ICPICR				0x00
-#define ICPIPMR				0x04
+#define ICPICR			0x00
+#define ICPIPMR			0x04
 /* XXX - must left justify bits to  0 - 7  */
-#define 	ICMIPMR_SH 		4
-#define ICPBPR				0x08
-#define ICPIAR				0x0C
-#define 	ICPIAR_IRQ_SH		0
-#define 	ICPIAR_IRQ_M		0x3ff
-#define 	ICPIAR_CPUID_SH		10
-#define 	ICPIAR_CPUID_M		0x7
-#define 	ICPIAR_NO_PENDING_IRQ	ICPIAR_IRQ_M
-#define ICPEOIR				0x10
-#define ICPPRP				0x14
-#define ICPHPIR				0x18
-#define ICPIIR				0xFC
-#define ICP_SIZE			0x100
+#define	ICMIPMR_SH		4
+#define ICPBPR			0x08
+#define ICPIAR			0x0C
+#define	ICPIAR_IRQ_SH		0
+#define	ICPIAR_IRQ_M		0x3ff
+#define	ICPIAR_CPUID_SH		10
+#define	ICPIAR_CPUID_M		0x7
+#define	ICPIAR_NO_PENDING_IRQ	ICPIAR_IRQ_M
+#define ICPEOIR			0x10
+#define ICPPRP			0x14
+#define ICPHPIR			0x18
+#define ICPIIR			0xFC
+#define ICP_SIZE		0x100
 /*
  * what about periph_id and component_id 
  */
@@ -139,7 +139,7 @@
 
 struct ampintc_softc {
 	struct device		 sc_dev;
-	struct intrsource 	*sc_ampintc_handler;
+	struct intrsource	*sc_ampintc_handler;
 	int			 sc_nintr;
 	bus_space_tag_t		 sc_iot;
 	bus_space_handle_t	 sc_d_ioh, sc_p_ioh;
