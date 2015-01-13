@@ -1,4 +1,4 @@
-/*	$OpenBSD: readline.c,v 1.12 2014/10/15 10:55:11 deraadt Exp $	*/
+/*	$OpenBSD: readline.c,v 1.13 2015/01/13 08:33:12 reyk Exp $	*/
 /*	$NetBSD: readline.c,v 1.91 2010/08/28 15:44:59 christos Exp $	*/
 
 /*-
@@ -2248,4 +2248,11 @@ rl_on_new_line(void)
 void
 rl_free_line_state(void)
 {
+}
+
+int
+/*ARGSUSED*/
+rl_set_keyboard_input_timeout(int u)
+{
+	return 0;
 }
