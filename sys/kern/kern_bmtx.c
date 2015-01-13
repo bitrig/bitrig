@@ -277,7 +277,7 @@ bmtx_dump(struct bmtx *bmtx)
 		printf("\n");
 	}
 }
-
+#ifdef __amd64__		/* XXX */
 #include <machine/cpufunc.h>
 /* int bmtx_test_n = 100000; */
 int bmtx_test_n = 0;
@@ -301,3 +301,4 @@ bmtx_test(void)
 	printf("%s: %d locks/unlocks took %llu cycles, avg=%llu\n",
 	    __func__, bmtx_test_n, x, x/bmtx_test_n);
 }
+#endif

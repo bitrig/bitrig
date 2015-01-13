@@ -35,6 +35,8 @@ void	bmtx_lock(struct bmtx *);
 void	bmtx_unlock(struct bmtx *);
 int	bmtx_unlock_all(struct bmtx *);
 void	bmtx_dump(struct bmtx *);
+#ifdef __amd64__		/* XXX */
 void	bmtx_test(void);
+#endif
 
 #endif /* _SYS_BMTX_H_ */
