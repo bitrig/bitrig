@@ -99,7 +99,6 @@ struct intrhand {
 	void	*ih_arg;
 	int	ih_level;
 	int	ih_flags;
-	int	ih_pin;
 	int	ih_slot;
 	struct cpu_info *ih_cpu;
 	int	ih_irq;

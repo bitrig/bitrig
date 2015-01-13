@@ -53,7 +53,6 @@ softintr_establish(int level, int (*handler)(void *), void *arg,
 	ih->ih_arg = arg;
 	ih->ih_level = level & ~IPL_FLAGS;
 	ih->ih_flags = level & IPL_FLAGS;
-	ih->ih_pin = 0;
 	ih->ih_cpu = &cpu_info_primary;
 
 	TAILQ_INSERT_TAIL(&is->is_list, ih, ih_list);
