@@ -94,7 +94,6 @@ struct intrhand {
 	int	ih_level;
 	int	ih_flags;
 	struct	intrhand *ih_next;
-	int	ih_pin;
 	int	ih_slot;
 	struct cpu_info *ih_cpu;
 	int	ih_irq;
