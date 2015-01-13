@@ -7,6 +7,7 @@
 
 #if defined(_KERNEL)
 
+#include <sys/stdatomic.h>
 #include <arm/cpufunc.h>
 
 /*
