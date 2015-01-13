@@ -195,7 +195,7 @@ isa_intr_alloc(isa_chipset_tag_t ic, int mask, int type, int *irq)
 {
 	int i, bestirq, count;
 	int tmp;
-	struct intrhand **p, *q;
+	struct intrhand *p;
 
 	if (type == IST_NONE)
 		panic("intr_alloc: bogus type");
@@ -237,8 +237,8 @@ isa_intr_alloc(isa_chipset_tag_t ic, int mask, int type, int *irq)
 			 * interrupt level and stick IPL_TTY with other
 			 * IPL_TTY, etc.
 			 */
-			for (p = &intrhand[i], tmp = 0; (q = *p) != NULL;
-			     p = &q->ih_next, tmp++)
+			for (p = intrhand[i], tmp = 0; p != NULL;
+			     p = TAILQ_NEXT(p, ih_list), tmp++)
 				;
 			if ((bestirq == -1) || (count > tmp)) {
 				bestirq = i;

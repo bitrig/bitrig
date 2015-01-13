@@ -55,7 +55,7 @@ ithread(void *v_is)
 	for (; ;) {
 		stray = 1;
 
-		for (ih = is->is_handlers; ih != NULL; ih = ih->ih_next) {
+		TAILQ_FOREACH(ih, &is->is_list, ih_list) {
 			is->is_scheduled = 0;
 
 			if ((ih->ih_flags & IPL_MPSAFE) == 0)
@@ -172,9 +172,9 @@ ithread_forkall(void)
 
 	TAILQ_FOREACH(is, &ithreads, entry) {
 		DPRINTF(1, "ithread forking intrsource pin %d\n", is->is_pin);
-		for (ih = is->is_handlers; ih != NULL; ih = ih->ih_next) {
+		TAILQ_FOREACH(ih, &is->is_list, ih_list) {
 			KASSERT(ih->ih_count.ec_name != NULL);
-			if (ih == is->is_handlers) {
+			if (ih == TAILQ_FIRST(&is->is_list)) {
 				strlcpy(name, ih->ih_count.ec_name,
 				    sizeof(name));
 				continue;
