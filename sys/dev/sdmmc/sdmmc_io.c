@@ -23,6 +23,7 @@
 #include <sys/kernel.h>
 #include <sys/malloc.h>
 #include <sys/systm.h>
+#include <sys/proc.h>
 
 #include <dev/sdmmc/sdmmc_ioreg.h>
 #include <dev/sdmmc/sdmmcchip.h>

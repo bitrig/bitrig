@@ -39,6 +39,7 @@
 #include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/rwlock.h>
+#include <sys/proc.h>
 
 #include <uvm/uvm_extern.h>
 

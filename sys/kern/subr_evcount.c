@@ -31,6 +31,7 @@
 #include <sys/kernel.h>
 #include <sys/systm.h>
 #include <sys/sysctl.h>
+#include <sys/proc.h>
 
 static TAILQ_HEAD(,evcount) evcount_list = TAILQ_HEAD_INITIALIZER(evcount_list);
 
