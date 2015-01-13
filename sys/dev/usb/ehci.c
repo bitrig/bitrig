@@ -50,6 +50,7 @@
 #include <sys/timeout.h>
 #include <sys/pool.h>
 #include <sys/endian.h>
+#include <sys/proc.h>
 
 #include <machine/bus.h>
 
