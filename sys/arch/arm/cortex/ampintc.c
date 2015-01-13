@@ -291,7 +291,7 @@ ampintc_attach(struct device *parent, struct device *self, void *args)
 	sc->sc_ampintc_handler = mallocarray(nintr,
 	    sizeof(*sc->sc_ampintc_handler), M_DEVBUF, M_ZERO | M_NOWAIT);
 	for (i = 0; i < nintr; i++) {
-		TAILQ_INIT(&sc->sc_ampintc_handler[i].iq_list);
+		TAILQ_INIT(&sc->sc_ampintc_handler[i].is_list);
 	}
 
 	ampintc_setipl(IPL_HIGH);  /* XXX ??? */
@@ -376,7 +376,7 @@ ampintc_calc_mask(void)
 	for (irq = 0; irq < sc->sc_nintr; irq++) {
 		int max = IPL_NONE;
 		int min = IPL_HIGH;
-		TAILQ_FOREACH(ih, &sc->sc_ampintc_handler[irq].iq_list,
+		TAILQ_FOREACH(ih, &sc->sc_ampintc_handler[irq].is_list,
 		    ih_list) {
 			if (ih->ih_ipl > max)
 				max = ih->ih_ipl;
@@ -385,10 +385,10 @@ ampintc_calc_mask(void)
 				min = ih->ih_ipl;
 		}
 
-		if (sc->sc_ampintc_handler[irq].iq_irq == max) {
+		if (sc->sc_ampintc_handler[irq].is_irq == max) {
 			continue;
 		}
-		sc->sc_ampintc_handler[irq].iq_irq = max;
+		sc->sc_ampintc_handler[irq].is_irq = max;
 
 		if (max == IPL_NONE)
 			min = IPL_NONE;
@@ -525,9 +525,9 @@ ampintc_irq_handler(void *frame)
 	if (irq >= sc->sc_nintr)
 		return;
 
-	pri = sc->sc_ampintc_handler[irq].iq_irq;
+	pri = sc->sc_ampintc_handler[irq].is_irq;
 	s = ampintc_splraise(pri);
-	TAILQ_FOREACH(ih, &sc->sc_ampintc_handler[irq].iq_list, ih_list) {
+	TAILQ_FOREACH(ih, &sc->sc_ampintc_handler[irq].is_list, ih_list) {
 		if (ih->ih_arg != 0)
 			arg = ih->ih_arg;
 		else
@@ -574,7 +574,7 @@ ampintc_intr_establish(int irqno, int level, int (*func)(void *),
 
 	psw = disable_interrupts(I32_bit);
 
-	TAILQ_INSERT_TAIL(&sc->sc_ampintc_handler[irqno].iq_list, ih, ih_list);
+	TAILQ_INSERT_TAIL(&sc->sc_ampintc_handler[irqno].is_list, ih, ih_list);
 
 	if (name != NULL)
 		evcount_attach(&ih->ih_count, name, &ih->ih_irq);
@@ -597,7 +597,7 @@ ampintc_intr_disestablish(void *cookie)
 	struct intrhand *ih = cookie;
 	int irqno = ih->ih_irq;
 	psw = disable_interrupts(I32_bit);
-	TAILQ_REMOVE(&sc->sc_ampintc_handler[irqno].iq_list, ih, ih_list);
+	TAILQ_REMOVE(&sc->sc_ampintc_handler[irqno].is_list, ih, ih_list);
 	if (ih->ih_name != NULL)
 		evcount_detach(&ih->ih_count);
 	free(ih, M_DEVBUF, 0);

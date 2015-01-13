@@ -116,10 +116,8 @@ struct intrhand {
 };
 
 struct intrsource {
-	TAILQ_HEAD(, intrhand) iq_list;	/* handler list */
-	int iq_irq;			/* IRQ to mask while handling */
-	int iq_levels;			/* IPL_*'s this IRQ has */
-	int iq_ist;			/* share type */
+	TAILQ_HEAD(, intrhand) is_list;	/* handler list */
+	int is_irq;			/* IRQ to mask while handling */
 };
 
 #define splraise(cpl)		(arm_intr_func.raise(cpl))

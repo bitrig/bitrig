@@ -137,7 +137,7 @@ intc_attach(struct device *parent, struct device *self, void *args)
 		bus_space_write_4(intc_iot, intc_ioh, INTC_ILRn(i),
 		    INTC_ILR_PRIs(INTC_MIN_PRI)|INTC_ILR_IRQ);
 
-		TAILQ_INIT(&intc_handler[i].iq_list);
+		TAILQ_INIT(&intc_handler[i].is_list);
 	}
 
 	intc_calc_mask();
@@ -167,7 +167,7 @@ intc_calc_mask(void)
 	for (irq = 0; irq < INTC_NUM_IRQ; irq++) {
 		int max = IPL_NONE;
 		int min = IPL_HIGH;
-		TAILQ_FOREACH(ih, &intc_handler[irq].iq_list, ih_list) {
+		TAILQ_FOREACH(ih, &intc_handler[irq].is_list, ih_list) {
 			if (ih->ih_ipl > max)
 				max = ih->ih_ipl;
 
@@ -175,7 +175,7 @@ intc_calc_mask(void)
 				min = ih->ih_ipl;
 		}
 
-		intc_handler[irq].iq_irq = max;
+		intc_handler[irq].is_irq = max;
 
 		if (max == IPL_NONE)
 			min = IPL_NONE;
@@ -297,9 +297,9 @@ intc_irq_handler(void *frame)
 	printf("irq %d fired\n", irq);
 #endif
 
-	pri = intc_handler[irq].iq_irq;
+	pri = intc_handler[irq].is_irq;
 	s = intc_splraise(pri);
-	TAILQ_FOREACH(ih, &intc_handler[irq].iq_list, ih_list) {
+	TAILQ_FOREACH(ih, &intc_handler[irq].is_list, ih_list) {
 		if (ih->ih_arg != 0)
 			arg = ih->ih_arg;
 		else
@@ -338,7 +338,7 @@ intc_intr_establish(int irqno, int level, int (*func)(void *),
 	ih->ih_irq = irqno;
 	ih->ih_name = name;
 
-	TAILQ_INSERT_TAIL(&intc_handler[irqno].iq_list, ih, ih_list);
+	TAILQ_INSERT_TAIL(&intc_handler[irqno].is_list, ih, ih_list);
 
 	if (name != NULL)
 		evcount_attach(&ih->ih_count, name, &ih->ih_irq);
@@ -360,7 +360,7 @@ intc_intr_disestablish(void *cookie)
 	struct intrhand *ih = cookie;
 	int irqno = ih->ih_irq;
 	psw = disable_interrupts(I32_bit);
-	TAILQ_REMOVE(&intc_handler[irqno].iq_list, ih, ih_list);
+	TAILQ_REMOVE(&intc_handler[irqno].is_list, ih, ih_list);
 	if (ih->ih_name != NULL)
 		evcount_detach(&ih->ih_count);
 	free(ih, M_DEVBUF, 0);

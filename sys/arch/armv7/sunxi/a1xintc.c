@@ -163,7 +163,7 @@ a1xintc_attach(struct device *parent, struct device *self, void *args)
 	bus_space_write_4(a1xintc_iot, a1xintc_ioh, INTC_NMI_CTRL_REG, 0);
 
 	for (i = 0; i < NIRQ; i++)
-		TAILQ_INIT(&a1xintc_handler[i].iq_list);
+		TAILQ_INIT(&a1xintc_handler[i].is_list);
 
 	a1xintc_calc_masks();
 
@@ -191,14 +191,14 @@ a1xintc_calc_masks(void)
 	for (irq = 0; irq < NIRQ; irq++) {
 		int max = IPL_NONE;
 		int min = IPL_HIGH;
-		TAILQ_FOREACH(ih, &a1xintc_handler[irq].iq_list, ih_list) {
+		TAILQ_FOREACH(ih, &a1xintc_handler[irq].is_list, ih_list) {
 			if (ih->ih_ipl > max)
 				max = ih->ih_ipl;
 			if (ih->ih_ipl < min)
 				min = ih->ih_ipl;
 		}
 
-		a1xintc_handler[irq].iq_irq = max;
+		a1xintc_handler[irq].is_irq = max;
 
 		if (max == IPL_NONE)
 			min = IPL_NONE;
@@ -299,7 +299,7 @@ a1xintc_irq_handler(void *frame)
 	if (irq == 0)
 		return;
 
-	prio = a1xintc_handler[irq].iq_irq;
+	prio = a1xintc_handler[irq].is_irq;
 	s = a1xintc_splraise(prio);
 	splassert(prio);
 
@@ -322,7 +322,7 @@ a1xintc_irq_handler(void *frame)
 	    INTC_ENABLE_REG(IRQ2REG32(irq)),
 	    pr | (1 << IRQ2BIT32(irq)));
 
-	TAILQ_FOREACH(ih, &a1xintc_handler[irq].iq_list, ih_list) {
+	TAILQ_FOREACH(ih, &a1xintc_handler[irq].is_list, ih_list) {
 		if (ih->ih_arg != 0)
 			arg = ih->ih_arg;
 		else
@@ -360,7 +360,7 @@ a1xintc_intr_establish(int irq, int lvl, int (*f)(void *), void *arg, char *name
 	ih->ih_irq = irq;
 	ih->ih_name = name;
 
-	TAILQ_INSERT_TAIL(&a1xintc_handler[irq].iq_list, ih, ih_list);
+	TAILQ_INSERT_TAIL(&a1xintc_handler[irq].is_list, ih, ih_list);
 
 	if (name != NULL)
 		evcount_attach(&ih->ih_count, name, &ih->ih_irq);
@@ -387,7 +387,7 @@ a1xintc_intr_disestablish(void *cookie)
 
 	psw = disable_interrupts(I32_bit);
 
-	TAILQ_REMOVE(&a1xintc_handler[irq].iq_list, ih, ih_list);
+	TAILQ_REMOVE(&a1xintc_handler[irq].is_list, ih, ih_list);
 
 	if (ih->ih_name != NULL)
 		evcount_detach(&ih->ih_count);
