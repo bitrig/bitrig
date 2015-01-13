@@ -74,6 +74,7 @@
 #include <sys/device.h>
 #include <sys/vnode.h>
 #include <sys/softintr.h>
+#include <sys/proc.h>
 #ifdef DDB
 #include <ddb/db_var.h>
 #endif
