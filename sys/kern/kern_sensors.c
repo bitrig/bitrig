@@ -27,6 +27,7 @@
 #include <sys/timeout.h>
 #include <sys/task.h>
 #include <sys/rwlock.h>
+#include <sys/proc.h>
 
 #include <sys/sensors.h>
 #include "hotplug.h"
