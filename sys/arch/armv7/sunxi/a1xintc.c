@@ -122,16 +122,9 @@ struct intrhand {
 	char *ih_name;
 };
 
-struct intrq {
-	TAILQ_HEAD(, intrhand) iq_list;	/* handler list */
-	int iq_irq;			/* IRQ to mask while handling */
-	int iq_levels;			/* IPL_*'s this IRQ has */
-	int iq_ist;			/* share type */
-};
-
 volatile int a1xsoftint_pending;
 
-struct intrq a1xintc_handler[NIRQ];
+struct intrsource a1xintc_handler[NIRQ];
 u_int32_t a1xintc_smask[NIPL];
 u_int32_t a1xintc_imask[NBANKS][NIPL];
 

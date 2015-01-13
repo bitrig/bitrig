@@ -77,16 +77,9 @@ struct intrhand {
 	char *ih_name;
 };
 
-struct intrq {
-	TAILQ_HEAD(, intrhand) iq_list;	/* handler list */
-	int iq_irq;			/* IRQ to mask while handling */
-	int iq_levels;			/* IPL_*'s this IRQ has */
-	int iq_ist;			/* share type */
-};
-
 volatile int softint_pending;
 
-struct intrq intc_handler[INTC_MAX_IRQ];
+struct intrsource intc_handler[INTC_MAX_IRQ];
 u_int32_t intc_smask[NIPL];
 u_int32_t intc_imask[INTC_MAX_BANKS][NIPL];
 
