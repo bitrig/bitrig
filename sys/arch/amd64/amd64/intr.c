@@ -389,7 +389,6 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 	ih->ih_arg = arg;
 	ih->ih_level = level;
 	ih->ih_flags = flags; 
-	ih->ih_pin = pin;
 	ih->ih_cpu = ci;
 	ih->ih_slot = slot;
 	evcount_attach(&ih->ih_count, what, &source->is_idtvec);
@@ -443,7 +442,7 @@ intr_disestablish(struct intrhand *ih)
 	pic = source->is_pic;
 	idtvec = source->is_idtvec;
 
-	pic->pic_hwmask(pic, ih->ih_pin);	
+	pic->pic_hwmask(pic, source->is_pin);
 	x86_atomic_clearbits_u64(&ci->ci_ipending, (1UL << ih->ih_slot));
 
 	/*
@@ -452,13 +451,13 @@ intr_disestablish(struct intrhand *ih)
 	TAILQ_REMOVE(&source->is_list, ih, ih_list);
 
 	if (TAILQ_EMPTY(&source->is_list))
-		pic->pic_delroute(pic, ci, ih->ih_pin, idtvec, source->is_type);
+		pic->pic_delroute(pic, ci, source->is_pin, idtvec, source->is_type);
 	else
-		pic->pic_hwunmask(pic, ih->ih_pin);
+		pic->pic_hwunmask(pic, source->is_pin);
 
 #ifdef INTRDEBUG
 	printf("cpu%u: remove slot %d (pic %s pin %d vec %d)\n",
-	    ci->ci_apicid, ih->ih_slot, pic->pic_dev.dv_xname, ih->ih_pin,
+	    ci->ci_apicid, ih->ih_slot, pic->pic_dev.dv_xname, source->is_pin,
 	    idtvec);
 #endif
 
