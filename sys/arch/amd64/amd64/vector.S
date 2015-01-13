@@ -470,7 +470,7 @@ IDTVEC(intr_##name##num)						;\
 	incl	CPUVAR(IDEPTH)						;\
 	movq	IS_HANDLERS(%r14),%rbx					;\
 6:									\
-	movl	IH_LEVEL(%rbx),%r12d					;\
+	movl	IH_IPL(%rbx),%r12d					;\
 	cmpl	%r13d,%r12d						;\
 	jle	7f							;\
 	movl	%r12d,CPUVAR(ILEVEL)					;\

@@ -144,7 +144,7 @@ intr_calculatemasks(struct cpu_info *ci)
 			continue;
 		}
 		for (q = ci->ci_isources[irq]->is_handlers; q; q = q->ih_next)
-			levels |= (1 << q->ih_level);
+			levels |= (1 << q->ih_ipl);
 		intrlevel[irq] = levels;
 		if (levels)
 			unusedirqs &= ~(1UL << irq);
@@ -170,10 +170,10 @@ intr_calculatemasks(struct cpu_info *ci)
 			continue;
 		for (q = ci->ci_isources[irq]->is_handlers; q;
 		     q = q->ih_next) {
-			if (q->ih_level < minlevel)
-				minlevel = q->ih_level;
-			if (q->ih_level > maxlevel)
-				maxlevel = q->ih_level;
+			if (q->ih_ipl < minlevel)
+				minlevel = q->ih_ipl;
+			if (q->ih_ipl > maxlevel)
+				maxlevel = q->ih_ipl;
 		}
 		ci->ci_isources[irq]->is_maxlevel = maxlevel;
 		ci->ci_isources[irq]->is_minlevel = minlevel;
@@ -452,14 +452,14 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 	 * generally small.
 	 */
 	for (p = &ci->ci_isources[slot]->is_handlers;
-	     (q = *p) != NULL && q->ih_level > level;
+	     (q = *p) != NULL && q->ih_ipl > level;
 	     p = &q->ih_next)
 		;
 
 	ih->ih_fun = handler;
 	ih->ih_arg = arg;
 	ih->ih_next = *p;
-	ih->ih_level = level;
+	ih->ih_ipl = level;
 	ih->ih_flags = flags; 
 	ih->ih_cpu = ci;
 	ih->ih_slot = slot;
@@ -611,9 +611,10 @@ cpu_intr_init(struct cpu_info *ci)
 	isp = malloc(sizeof (struct intrsource), M_DEVBUF, M_NOWAIT|M_ZERO);
 	if (isp == NULL)
 		panic("can't allocate fixed interrupt source");
+
 	isp->is_recurse = Xsoftclock;
 	isp->is_resume = Xsoftclock;
-	fake_softclock_intrhand.ih_level = IPL_SOFTCLOCK;
+	fake_softclock_intrhand.ih_ipl = IPL_SOFTCLOCK;
 	isp->is_handlers = &fake_softclock_intrhand;
 	isp->is_pic = &softintr_pic;
 	ci->ci_isources[SIR_CLOCK] = isp;
@@ -622,7 +623,7 @@ cpu_intr_init(struct cpu_info *ci)
 		panic("can't allocate fixed interrupt source");
 	isp->is_recurse = Xsoftnet;
 	isp->is_resume = Xsoftnet;
-	fake_softnet_intrhand.ih_level = IPL_SOFTNET;
+	fake_softnet_intrhand.ih_ipl = IPL_SOFTNET;
 	isp->is_handlers = &fake_softnet_intrhand;
 	isp->is_pic = &softintr_pic;
 	ci->ci_isources[SIR_NET] = isp;
@@ -631,7 +632,7 @@ cpu_intr_init(struct cpu_info *ci)
 		panic("can't allocate fixed interrupt source");
 	isp->is_recurse = Xsofttty;
 	isp->is_resume = Xsofttty;
-	fake_softtty_intrhand.ih_level = IPL_SOFTTTY;
+	fake_softtty_intrhand.ih_ipl = IPL_SOFTTTY;
 	isp->is_handlers = &fake_softtty_intrhand;
 	isp->is_pic = &softintr_pic;
 	ci->ci_isources[SIR_TTY] = isp;
@@ -641,7 +642,7 @@ cpu_intr_init(struct cpu_info *ci)
 		panic("can't allocate fixed interrupt source");
 	isp->is_recurse = Xrecurse_lapic_ltimer;
 	isp->is_resume = Xresume_lapic_ltimer;
-	fake_timer_intrhand.ih_level = IPL_CLOCK;
+	fake_timer_intrhand.ih_ipl = IPL_CLOCK;
 	isp->is_handlers = &fake_timer_intrhand;
 	isp->is_pic = &local_pic;
 	ci->ci_isources[LIR_TIMER] = isp;
@@ -651,7 +652,7 @@ cpu_intr_init(struct cpu_info *ci)
 		panic("can't allocate fixed interrupt source");
 	isp->is_recurse = Xrecurse_lapic_ipi;
 	isp->is_resume = Xresume_lapic_ipi;
-	fake_ipi_intrhand.ih_level = IPL_IPI;
+	fake_ipi_intrhand.ih_ipl = IPL_IPI;
 	isp->is_handlers = &fake_ipi_intrhand;
 	isp->is_pic = &local_pic;
 	ci->ci_isources[LIR_IPI] = isp;
@@ -690,8 +691,8 @@ intr_printconfig(void)
 			    isp->is_pic->pic_name, isp->is_maxlevel);
 			for (ih = isp->is_handlers; ih != NULL;
 			     ih = ih->ih_next)
-				printf("\thandler %p level %d\n",
-				    ih->ih_fun, ih->ih_level);
+				printf("\thandler %p ipl %d\n",
+				    ih->ih_fun, ih->ih_ipl);
 
 		}
 		mtx_leave(&intr_lock);

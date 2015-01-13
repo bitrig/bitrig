@@ -91,7 +91,7 @@ struct intrsource {
 struct intrhand {
 	int	(*ih_fun)(void *);
 	void	*ih_arg;
-	int	ih_level;
+	int	ih_ipl;
 	int	ih_flags;
 	struct	intrhand *ih_next;
 	int	ih_slot;
