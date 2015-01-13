@@ -139,7 +139,7 @@
 
 struct ampintc_softc {
 	struct device		 sc_dev;
-	struct intrq 		*sc_ampintc_handler;
+	struct intrsource 	*sc_ampintc_handler;
 	int			 sc_nintr;
 	bus_space_tag_t		 sc_iot;
 	bus_space_handle_t	 sc_d_ioh, sc_p_ioh;
@@ -156,13 +156,6 @@ struct intrhand {
 	int ih_irq;			/* IRQ number */
 	struct evcount	ih_count;
 	char *ih_name;
-};
-
-struct intrq {
-	TAILQ_HEAD(, intrhand) iq_list;	/* handler list */
-	int iq_irq;			/* IRQ to mask while handling */
-	int iq_levels;			/* IPL_*'s this IRQ has */
-	int iq_ist;			/* share type */
 };
 
 

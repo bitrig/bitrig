@@ -104,6 +104,13 @@ struct arm_intr_func {
 
 extern struct arm_intr_func arm_intr_func;
 
+struct intrsource {
+	TAILQ_HEAD(, intrhand) iq_list;	/* handler list */
+	int iq_irq;			/* IRQ to mask while handling */
+	int iq_levels;			/* IPL_*'s this IRQ has */
+	int iq_ist;			/* share type */
+};
+
 #define splraise(cpl)		(arm_intr_func.raise(cpl))
 #define _splraise(cpl)		(arm_intr_func.raise(cpl))
 #define spllower(cpl)		(arm_intr_func.lower(cpl))
