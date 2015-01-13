@@ -117,27 +117,12 @@ member	CPU_INFO_GDT		ci_gdt
 member	CPU_INFO_TSS		ci_tss
 
 struct	intrsource
-member	is_handlers
 member	is_pic
-member	is_flags
 member	is_pin
-member	is_type
-
-struct	intrhand
-member	ih_fun
-member	ih_arg
-member	ih_next
-member	ih_level
-member	IH_COUNT	ih_count.ec_count
 
 struct	ioapic_softc
 member	IOAPIC_SC_REG	sc_reg
 member	IOAPIC_SC_DATA	sc_data
-
-struct	mutex
-member	mtx_wantipl
-member	mtx_oldipl
-member	mtx_owner
 
 # pte fields
 export	PG_V
