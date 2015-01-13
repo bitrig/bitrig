@@ -147,18 +147,6 @@ struct ampintc_softc {
 };
 struct ampintc_softc *ampintc;
 
-
-struct intrhand {
-	TAILQ_ENTRY(intrhand) ih_list;	/* link on intrq list */
-	int (*ih_func)(void *);		/* handler */
-	void *ih_arg;			/* arg for handler */
-	int ih_ipl;			/* IPL_* */
-	int ih_irq;			/* IRQ number */
-	struct evcount	ih_count;
-	char *ih_name;
-};
-
-
 int		 ampintc_match(struct device *, void *, void *);
 int		 ampintc_fdt_match(struct device *, void *, void *);
 void		 ampintc_attach(struct device *, struct device *, void *);
@@ -545,7 +533,7 @@ ampintc_irq_handler(void *frame)
 		else
 			arg = frame;
 
-		if (ih->ih_func(arg)) 
+		if (ih->ih_fun(arg))
 			ih->ih_count.ec_count++;
 
 	}
@@ -578,7 +566,7 @@ ampintc_intr_establish(int irqno, int level, int (*func)(void *),
 	    cold ? M_NOWAIT : M_WAITOK);
 	if (ih == NULL)
 		panic("intr_establish: can't malloc handler info");
-	ih->ih_func = func;
+	ih->ih_fun = func;
 	ih->ih_arg = arg;
 	ih->ih_ipl = level;
 	ih->ih_irq = irqno;

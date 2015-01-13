@@ -111,17 +111,6 @@ char *ipl_strtbl[NIPL] = {
 #define INTC_PRIOENABLE(i)	(INTC_IRQ_ENABLED << IRQ2BIT16((i)))
 #define INTC_PRIOHI(i)		(INTC_IRQ_HIPRIO << IRQ2BIT16((i)))
 
-
-struct intrhand {
-	TAILQ_ENTRY(intrhand) ih_list;	/* link on intrq list */
-	int (*ih_func)(void *);		/* handler */
-	void *ih_arg;			/* arg for handler */
-	int ih_ipl;			/* IPL_* */
-	int ih_irq;			/* IRQ number */
-	struct evcount	ih_count;
-	char *ih_name;
-};
-
 volatile int a1xsoftint_pending;
 
 struct intrsource a1xintc_handler[NIRQ];
@@ -339,7 +328,7 @@ a1xintc_irq_handler(void *frame)
 		else
 			arg = frame;
 
-		if (ih->ih_func(arg)) 
+		if (ih->ih_fun(arg))
 			ih->ih_count.ec_count++;
 	}
 	a1xintc_splx(s);
@@ -365,7 +354,7 @@ a1xintc_intr_establish(int irq, int lvl, int (*f)(void *), void *arg, char *name
 	    cold ? M_NOWAIT : M_WAITOK);
 	if (ih == NULL)
 		panic("intr_establish: can't malloc handler info\n");
-	ih->ih_func = f;
+	ih->ih_fun = f;
 	ih->ih_arg = arg;
 	ih->ih_ipl = lvl;
 	ih->ih_irq = irq;

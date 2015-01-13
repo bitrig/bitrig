@@ -124,16 +124,6 @@
 
 #define GPIO_NUM_PINS		32
 
-struct intrhand {
-	int (*ih_func)(void *);		/* handler */
-	void *ih_arg;			/* arg for handler */
-	int ih_ipl;			/* IPL_* */
-	int ih_irq;			/* IRQ number */
-	int ih_gpio;			/* gpio pin */
-	struct evcount	ih_count;
-	char *ih_name;
-};
-
 struct omgpio_regs {
 	u_int32_t	revision;
 	u_int32_t	sysconfig;
@@ -628,7 +618,7 @@ omgpio_intr_establish(struct omgpio_softc *sc, unsigned int gpio, int level, int
 	    cold ? M_NOWAIT : M_WAITOK);
 	if (ih == NULL)
 		panic("intr_establish: can't malloc handler info");
-	ih->ih_func = func;
+	ih->ih_fun = func;
 	ih->ih_arg = arg;
 	ih->ih_ipl = level;
 	ih->ih_gpio = gpio;
@@ -689,7 +679,7 @@ omgpio_irq(void *v)
 		ih = sc->sc_handlers[bit];
 
 		if (ih != NULL) {
-			if (ih->ih_func(ih->ih_arg))
+			if (ih->ih_fun(ih->ih_arg))
 				ih->ih_count.ec_count++;
 			omgpio_clear_intr(ih->ih_gpio);
 		} else {

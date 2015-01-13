@@ -75,6 +75,7 @@
 #define IST_EDGE_BOTH    6
 
 #ifndef _LOCORE
+#include <sys/evcount.h>
 #include <sys/device.h>
 #include <sys/queue.h>
 
@@ -103,6 +104,16 @@ struct arm_intr_func {
 };
 
 extern struct arm_intr_func arm_intr_func;
+
+struct intrhand {
+	TAILQ_ENTRY(intrhand) ih_list;	/* link on intrq list */
+	int (*ih_fun)(void *);		/* handler */
+	void *ih_arg;			/* arg for handler */
+	int ih_ipl;			/* IPL_* */
+	int ih_irq;			/* IRQ number */
+	struct evcount	ih_count;	/* interrupt counter */
+	char *ih_name;			/* device name */
+};
 
 struct intrsource {
 	TAILQ_HEAD(, intrhand) iq_list;	/* handler list */
