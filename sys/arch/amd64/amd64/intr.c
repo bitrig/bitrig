@@ -482,8 +482,8 @@ intr_disestablish(struct intrhand *ih)
 #endif
 
 	if (source->is_handlers == NULL) {
-		free(source, M_DEVBUF, 0);
 		ithread_deregister(source);
+		free(source, M_DEVBUF, 0);
 		ci->ci_isources[ih->ih_slot] = NULL;
 		if (pic != &i8259_pic)
 			idt_vec_free(idtvec);
