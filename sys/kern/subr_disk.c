@@ -56,6 +56,7 @@
 #include <sys/dkio.h>
 #include <sys/vnode.h>
 #include <sys/workq.h>
+#include <sys/proc.h>
 
 #include <sys/socket.h>
 #include <sys/socketvar.h>

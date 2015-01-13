@@ -18,6 +18,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <sys/mutex.h>
 #include <sys/timeout.h>
 #include <dev/ata/atascsi.h>
 #include <dev/ata/pmreg.h>
