@@ -175,6 +175,7 @@ intr_allocate_slot_cpu(struct cpu_info *ci, struct pic *pic, int pin,
 		    M_NOWAIT | M_ZERO);
 		if (isp == NULL)
 			return ENOMEM;
+		TAILQ_INIT(&isp->is_list);
 		snprintf(isp->is_evname, sizeof (isp->is_evname),
 		    "pin %d", pin);
 		ci->ci_isources[slot] = isp;
@@ -230,9 +231,9 @@ intr_allocate_slot(struct pic *pic, int legacy_irq, int pin, int level,
 		if (isp == NULL) {
 			isp = malloc(sizeof (struct intrsource), M_DEVBUF,
 			     M_NOWAIT|M_ZERO);
-			if (isp == NULL) {
+			if (isp == NULL)
 				return (ENOMEM);
-			}
+			TAILQ_INIT(&isp->is_list);
 			snprintf(isp->is_evname, sizeof (isp->is_evname),
 			    "pin %d", pin);
 
@@ -299,7 +300,7 @@ void *
 intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
     int (*handler)(void *), void *arg, const char *what)
 {
-	struct intrhand **p, *q, *ih;
+	struct intrhand *ih;
 	struct cpu_info *ci;
 	int slot, error, idt_vec;
 	struct intrsource *source;
@@ -342,7 +343,7 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 
 	source = ci->ci_isources[slot];
 
-	if (source->is_handlers != NULL &&
+	if (TAILQ_FIRST(&source->is_list) &&
 	    source->is_pic->pic_type != pic->pic_type) {
 		mtx_leave(&intr_lock);
 		free(ih, M_DEVBUF, 0);
@@ -384,19 +385,8 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 	if (!cold)
 		pic->pic_hwmask(pic, pin);
 
-	/*
-	 * Figure out where to put the handler.
-	 * This is O(N^2), but we want to preserve the order, and N is
-	 * generally small.
-	 */
-	for (p = &source->is_handlers;
-	     (q = *p) != NULL && q->ih_level > level;
-	     p = &q->ih_next)
-		;
-
 	ih->ih_fun = handler;
 	ih->ih_arg = arg;
-	ih->ih_next = *p;
 	ih->ih_level = level;
 	ih->ih_flags = flags; 
 	ih->ih_pin = pin;
@@ -404,7 +394,7 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 	ih->ih_slot = slot;
 	evcount_attach(&ih->ih_count, what, &source->is_idtvec);
 
-	*p = ih;
+	TAILQ_INSERT_TAIL(&source->is_list, ih, ih_list);
 
 	if (source->is_idtvec != idt_vec) {
 		if (source->is_idtvec != 0 && source->is_idtvec != idt_vec)
@@ -438,7 +428,6 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 void
 intr_disestablish(struct intrhand *ih)
 {
-	struct intrhand **p, *q;
 	struct cpu_info *ci;
 	struct pic *pic;
 	struct intrsource *source;
@@ -460,17 +449,9 @@ intr_disestablish(struct intrhand *ih)
 	/*
 	 * Remove the handler from the chain.
 	 */
-	for (p = &source->is_handlers; (q = *p) != NULL && q != ih;
-	     p = &q->ih_next)
-		;
-	if (q == NULL) {
-		mtx_leave(&intr_lock);
-		panic("intr_disestablish: handler not registered");
-	}
+	TAILQ_REMOVE(&source->is_list, ih, ih_list);
 
-	*p = q->ih_next;
-
-	if (source->is_handlers == NULL)
+	if (TAILQ_EMPTY(&source->is_list))
 		pic->pic_delroute(pic, ci, ih->ih_pin, idtvec, source->is_type);
 	else
 		pic->pic_hwunmask(pic, ih->ih_pin);
@@ -481,7 +462,7 @@ intr_disestablish(struct intrhand *ih)
 	    idtvec);
 #endif
 
-	if (source->is_handlers == NULL) {
+	if (TAILQ_EMPTY(&source->is_list)) {
 		ithread_deregister(source);
 		free(source, M_DEVBUF, 0);
 		ci->ci_isources[ih->ih_slot] = NULL;
@@ -547,8 +528,9 @@ cpu_intr_init(struct cpu_info *ci)
 	isp = malloc(sizeof (struct intrsource), M_DEVBUF, M_NOWAIT|M_ZERO);
 	if (isp == NULL)
 		panic("can't allocate fixed interrupt source");
+	TAILQ_INIT(&isp->is_list);
 	fake_ipi_intrhand.ih_level = IPL_IPI;
-	isp->is_handlers = &fake_ipi_intrhand;
+	TAILQ_INSERT_TAIL(&isp->is_list, &fake_ipi_intrhand, ih_list);
 	isp->is_pic = &local_pic;
 	isp->is_run = x86_ipi_handler;
 	ci->ci_isources[LIR_IPI] = isp;
@@ -556,8 +538,9 @@ cpu_intr_init(struct cpu_info *ci)
 	isp = malloc(sizeof (struct intrsource), M_DEVBUF, M_NOWAIT|M_ZERO);
 	if (isp == NULL)
 		panic("can't allocate fixed interrupt source");
+	TAILQ_INIT(&isp->is_list);
 	fake_timer_intrhand.ih_level = IPL_CLOCK;
-	isp->is_handlers = &fake_timer_intrhand;
+	TAILQ_INSERT_TAIL(&isp->is_list, &fake_timer_intrhand, ih_list);
 	isp->is_pic = &local_pic;
 	isp->is_run = Xfakeclock;
 	ci->ci_isources[LIR_TIMER] = isp;

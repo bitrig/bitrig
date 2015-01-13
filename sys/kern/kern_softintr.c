@@ -41,6 +41,7 @@ softintr_establish(int level, int (*handler)(void *), void *arg,
 	if (is == NULL)
 		panic("softintr_establish_flags");
 
+	TAILQ_INIT(&is->is_list);
 	is->is_type = IST_LEVEL; /* XXX more like level than EDGE */
 	is->is_pic = &softintr_pic;
 
@@ -55,9 +56,7 @@ softintr_establish(int level, int (*handler)(void *), void *arg,
 	ih->ih_pin = 0;
 	ih->ih_cpu = &cpu_info_primary;
 
-	/* Just prepend it */
-	ih->ih_next = is->is_handlers;
-	is->is_handlers = ih;
+	TAILQ_INSERT_TAIL(&is->is_list, ih, ih_list);
 	evcount_attach(&ih->ih_count, name, &ih->ih_irq);
 
 	ithread_register(is);

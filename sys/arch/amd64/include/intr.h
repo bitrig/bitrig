@@ -65,9 +65,9 @@ struct intrstub {
 };
 
 struct intrsource {
+	TAILQ_HEAD(, intrhand) is_list;	/* handler chain */
 	int is_pin;			/* IRQ for legacy; pin for IO APIC */
 	void (*is_run)(struct intrsource *);	/* Run callback to this source */
-	struct intrhand *is_handlers;	/* handler chain */
 	struct pic *is_pic;		/* originating PIC */
 	char is_evname[32];		/* event counter name */
 	int is_flags;			/* see below */
@@ -94,11 +94,11 @@ struct intrsource {
  */
 
 struct intrhand {
+	TAILQ_ENTRY(intrhand) ih_list;
 	int	(*ih_fun)(void *);
 	void	*ih_arg;
 	int	ih_level;
 	int	ih_flags;
-	struct	intrhand *ih_next;
 	int	ih_pin;
 	int	ih_slot;
 	struct cpu_info *ih_cpu;
