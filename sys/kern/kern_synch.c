@@ -220,15 +220,24 @@ void
 sleep_finish(struct sleep_state *sls, int do_sleep)
 {
 	struct proc *p = curproc;
+	int mi_switched = 0;
 
 	if (sls->sls_do_sleep && do_sleep) {
 		p->p_stat = SSLEEP;
 		p->p_ru.ru_nvcsw++;
 		mi_switch();
-	} else if (!do_sleep) {
+		mi_switched = 1;
+	} else if (!do_sleep)
 		unsleep(p);
-		SCHED_UNLOCK();
-	} else
+	/*
+	 * We need to clear P_SINTR before becoming premptable again, if not,
+	 * the process that preempted might end up sleeping with a stale
+	 * P_SINTR. Do the check to avoid an atomic operation.
+	 */
+	if (p->p_flag & P_SINTR)
+		atomic_clearbits_int(&p->p_flag, P_SINTR);
+
+	if (!mi_switched)
 		SCHED_UNLOCK();
 
 #ifdef DIAGNOSTIC
