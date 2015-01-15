@@ -24,14 +24,12 @@
 #include <sys/socket.h>
 #include <sys/timeout.h>
 
-#include <machine/intr.h>
 #include <machine/bus.h>
+#include <machine/fdt.h>
+#include <machine/intr.h>
 
 #include <armv7/sunxi/sunxireg.h>
 #include <armv7/armv7/armv7var.h>
-
-/* XXX other way around than bus_space_subregion? */
-extern bus_space_handle_t sxitimer_ioh;
 
 /* registers */
 #define WDOG_CR			0x00
@@ -65,6 +63,7 @@ struct sxidog_softc {
 
 struct sxidog_softc *sxidog_sc = NULL;	/* for sxidog_reset() */
 
+int sxidog_match(struct device *, void *, void *);
 void sxidog_attach(struct device *, struct device *, void *);
 int sxidog_activate(struct device *, int);
 int sxidog_callback(void *, int);
@@ -78,20 +77,45 @@ struct cfattach	sxidog_ca = {
 	NULL, sxidog_activate
 };
 
+struct cfattach	sxidog_fdt_ca = {
+	sizeof (struct sxidog_softc), sxidog_match,
+	sxidog_attach, NULL, sxidog_activate
+};
+
 struct cfdriver sxidog_cd = {
 	NULL, "sxidog", DV_DULL
 };
+
+int
+sxidog_match(struct device *parent, void *v, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("allwinner,sun4i-a10-wdt", aa->aa_node))
+		return 1;
+
+	return 0;
+}
 
 void
 sxidog_attach(struct device *parent, struct device *self, void *args)
 {
 	struct armv7_attach_args *aa = args;
 	struct sxidog_softc *sc = (struct sxidog_softc *)self;
+	struct fdt_memory mem;
 
 	sc->sc_iot = aa->aa_iot;
-	if (bus_space_subregion(sc->sc_iot, sxitimer_ioh,
-	    aa->aa_dev->mem[0].addr, aa->aa_dev->mem[0].size, &sc->sc_ioh))
-		panic("sxidog_attach: bus_space_subregion failed!");
+	if (aa->aa_node) {
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+	} else {
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+	}
+
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
+		panic("%s: bus_space_map failed!", __func__);
 
 #ifdef DEBUG
 	printf(": ctrl %x mode %x\n", SXIREAD4(sc, WDOG_CR),

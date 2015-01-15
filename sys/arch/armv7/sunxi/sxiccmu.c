@@ -26,6 +26,7 @@
 #include <arm/cpufunc.h>
 
 #include <machine/bus.h>
+#include <machine/fdt.h>
 #include <machine/intr.h>
 
 #include <armv7/armv7/armv7var.h>
@@ -95,6 +96,7 @@ struct sxiccmu_softc {
 	bus_space_handle_t	sc_ioh;
 };
 
+int	sxiccmu_match(struct device *, void *, void *);
 void	sxiccmu_attach(struct device *, struct device *, void *);
 void	sxiccmu_enablemodule(int);
 
@@ -102,21 +104,46 @@ struct cfattach	sxiccmu_ca = {
 	sizeof (struct sxiccmu_softc), NULL, sxiccmu_attach
 };
 
+struct cfattach	sxiccmu_fdt_ca = {
+	sizeof (struct sxiccmu_softc), sxiccmu_match, sxiccmu_attach
+};
+
 struct cfdriver sxiccmu_cd = {
 	NULL, "sxiccmu", DV_DULL
 };
+
+int
+sxiccmu_match(struct device *parent, void *v, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	/* XXX: hack until we got a nice implementation */
+	if (fdt_node_compatible("allwinner,sun4i-a10-pll1-clk", aa->aa_node))
+		return 1;
+
+	return 0;
+}
 
 void
 sxiccmu_attach(struct device *parent, struct device *self, void *args)
 {
 	struct sxiccmu_softc *sc = (struct sxiccmu_softc *)self;
 	struct armv7_attach_args *aa = args;
+	struct fdt_memory mem;
 
 	sc->sc_iot = aa->aa_iot;
+	if (aa->aa_node) {
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+		mem.size = 0x400; /* XXX */
+	} else {
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+	}
 
-	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
-		panic("sxiccmu_attach: bus_space_map failed!");
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
+		panic("%s: bus_space_map failed!", __func__);
 
 	printf("\n");
 }

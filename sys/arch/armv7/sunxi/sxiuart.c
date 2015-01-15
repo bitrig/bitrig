@@ -37,9 +37,11 @@
 #endif
 
 #include <machine/bus.h>
+#include <machine/fdt.h>
 
 #include <armv7/armv7/armv7var.h>
 #include <armv7/sunxi/sxiuartreg.h>
+#include <armv7/sunxi/sxiuartvar.h>
 #include <armv7/sunxi/sunxireg.h>
 
 #define DEVUNIT(x)      (minor(x) & 0x7f)
@@ -114,6 +116,10 @@ struct cfattach sxiuart_ca = {
 	sizeof(struct sxiuart_softc), NULL, sxiuartattach
 };
 
+struct cfattach sxiuart_fdt_ca = {
+	sizeof(struct sxiuart_softc), sxiuartprobe, sxiuartattach
+};
+
 struct cfdriver sxiuart_cd = {
 	NULL, "sxiuart", DV_TTY
 };
@@ -134,22 +140,50 @@ int		sxiuartdefaultrate = B115200;
 struct cdevsw sxiuartdev =
 	cdev_tty_init(1/*XXX NIMXUART */ , sxiuart); /* 12: serial port */
 
+int
+sxiuartprobe(struct device *parent, void *v, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("snps,dw-apb-uart", aa->aa_node))
+		return 1;
+
+	return 0;
+}
+
 void
 sxiuartattach(struct device *parent, struct device *self, void *args)
 {
 	struct armv7_attach_args *aa = args;
 	struct sxiuart_softc *sc = (struct sxiuart_softc *) self;
-	bus_space_tag_t iot;
-	bus_space_handle_t ioh;
-	int s;
+	struct fdt_memory mem;
+	int irq, s;
 
-	sc->sc_iot = iot = aa->aa_iot;
-	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
-		panic("sxiuartattach: bus_space_map failed!");
-	ioh = sc->sc_ioh;
+	sc->sc_iot = aa->aa_iot;
+	if (aa->aa_node) {
+		uint32_t ints[3];
 
-	if (aa->aa_dev->mem[0].addr == sxiuartconsaddr) {
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+
+		/* TODO: Add interrupt FDT API. */
+		if (fdt_node_property_ints(aa->aa_node, "interrupts",
+		    ints, 3) != 3)
+			panic("%s: could not extract interrupt data from FDT",
+		    __func__);
+
+		irq = ints[1];
+	} else {
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+		irq = aa->aa_dev->irq[0];
+	}
+
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
+		panic("%s: bus_space_map failed!", __func__);
+
+	if (mem.addr == sxiuartconsaddr) {
 		cn_tab->cn_dev = makedev(12 /* XXX */, 0);
 		cdevsw[12] = sxiuartdev;		/* KLUDGE */
 
@@ -157,8 +191,8 @@ sxiuartattach(struct device *parent, struct device *self, void *args)
 		/* XXX compare uses of COM_HW_CONSOLE against com.c */
 		SET(sc->sc_hwflags, COM_HW_CONSOLE);
 		SET(sc->sc_swflags, COM_SW_SOFTCAR);
-		sxiuartconsiot = iot;
-		sxiuartconsioh = ioh;
+		sxiuartconsiot = sc->sc_iot;
+		sxiuartconsioh = sc->sc_ioh;
 	}
 
 	timeout_set(&sc->sc_diag_tmo, sxiuart_diag, sc);
@@ -175,18 +209,17 @@ sxiuartattach(struct device *parent, struct device *self, void *args)
 		(void)bus_space_read_4(sc->sc_iot, sc->sc_ioh, SXIUART_USR);
 	sc->sc_ier = 0;
 	/* disable interrupts */
-	bus_space_write_1(iot, ioh, SXIUART_IER, sc->sc_ier);
+	bus_space_write_1(sc->sc_iot, sc->sc_ioh, SXIUART_IER, sc->sc_ier);
 
 	/* clear and disable fifo */
-	bus_space_write_1(iot, ioh, SXIUART_FCR, 0 | RFIFOR | XFIFOR);
+	bus_space_write_1(sc->sc_iot, sc->sc_ioh, SXIUART_FCR, 0 | RFIFOR | XFIFOR);
 
 	s = splhigh();
 	SET(sc->sc_mcr, MCR_DTR | MCR_RTS | MCR_IENABLE);
 	bus_space_write_1(sc->sc_iot, sc->sc_ioh, SXIUART_MCR, sc->sc_mcr);
 	splx(s);
 
-	arm_intr_establish(aa->aa_dev->irq[0], IPL_TTY,
-	    sxiuart_intr, sc, sc->sc_dev.dv_xname);
+	arm_intr_establish(irq, IPL_TTY, sxiuart_intr, sc, sc->sc_dev.dv_xname);
 
 	printf("\n");
 }

@@ -23,6 +23,7 @@
 #include <sys/evcount.h>
 
 #include <machine/bus.h>
+#include <machine/fdt.h>
 #include <machine/intr.h>
 
 #include <dev/gpio/gpiovar.h>
@@ -85,6 +86,7 @@ struct sxipio_softc {
 #define	SXIPIO_INT_STA		0x0214
 #define	SXIPIO_INT_DEB		0x0218 /* debounce register */
 
+int sxipio_match(struct device *, void *, void *);
 void sxipio_attach(struct device *, struct device *, void *);
 void sxipio_attach_gpio(struct device *);
 
@@ -92,31 +94,62 @@ struct cfattach sxipio_ca = {
 	sizeof (struct sxipio_softc), NULL, sxipio_attach
 };
 
+struct cfattach sxipio_fdt_ca = {
+	sizeof (struct sxipio_softc), sxipio_match, sxipio_attach
+};
+
 struct cfdriver sxipio_cd = {
 	NULL, "sxipio", DV_DULL
 };
 
-struct sxipio_softc	*sxipio_sc = NULL;
-bus_space_tag_t		 sxipio_iot;
-bus_space_handle_t	 sxipio_ioh;
+struct sxipio_softc *sxipio_sc;
+
+int
+sxipio_match(struct device *parent, void *v, void *aux)
+{
+	struct armv7_attach_args *aa = aux;
+
+	if (fdt_node_compatible("allwinner,sun7i-a20-pinctrl", aa->aa_node))
+		return 1;
+
+	return 0;
+}
 
 void
 sxipio_attach(struct device *parent, struct device *self, void *args)
 {
 	struct sxipio_softc *sc = (struct sxipio_softc *)self;
 	struct armv7_attach_args *aa = args;
+	struct fdt_memory mem;
+	int irq;
 
-	/* XXX check unit, bail if != 0 */
+	sc->sc_iot = aa->aa_iot;
+	if (aa->aa_node) {
+		uint32_t ints[3];
 
-	sc->sc_iot = sxipio_iot = aa->aa_iot;
-	if (bus_space_map(sxipio_iot, aa->aa_dev->mem[0].addr,
-	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh))
-		panic("sxipio_attach: bus_space_map failed!");
-	sxipio_ioh = sc->sc_ioh;
+		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
+			panic("%s: could not extract memory data from FDT",
+			    __func__);
+
+		/* TODO: Add interrupt FDT API. */
+		if (fdt_node_property_ints(aa->aa_node, "interrupts",
+		    ints, 3) != 3)
+			panic("%s: could not extract interrupt data from FDT",
+		    __func__);
+
+		irq = ints[1];
+	} else {
+		mem.addr = aa->aa_dev->mem[0].addr;
+		mem.size = aa->aa_dev->mem[0].size;
+		irq = aa->aa_dev->irq[0];
+	}
+
+	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
+		panic("%s: bus_space_map failed!", __func__);
 
 	sxipio_sc = sc;
 
-	sc->sc_irq = aa->aa_dev->irq[0];
+	sc->sc_irq = irq;
 
 	config_defer(self, sxipio_attach_gpio);
 

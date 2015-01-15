@@ -10,11 +10,13 @@ file	arch/armv7/sunxi/sun7i.c		sunxi
 
 device	sxiccmu
 attach	sxiccmu at sunxi
-file	arch/armv7/sunxi/sxiccmu.c		sxiccmu
+attach	sxiccmu at fdt with sxiccmu_fdt
+file	arch/armv7/sunxi/sxiccmu.c		sxiccmu | sxiccmu_fdt
 
 device	sxipio {}: gpiobus
 attach	sxipio at sunxi
-file	arch/armv7/sunxi/sxipio.c		sxipio
+attach	sxipio at fdt with sxipio_fdt
+file	arch/armv7/sunxi/sxipio.c		sxipio | sxipio_fdt
 
 device	a1xintc
 attach	a1xintc at sunxi
@@ -26,7 +28,8 @@ file	arch/armv7/sunxi/sxitimer.c		sxitimer
 
 device	sxidog
 attach	sxidog at sunxi
-file	arch/armv7/sunxi/sxidog.c		sxidog
+attach	sxidog at fdt with sxidog_fdt
+file	arch/armv7/sunxi/sxidog.c		sxidog | sxidog_fdt
 
 device	sxirtc
 attach	sxirtc at sunxi
@@ -43,7 +46,8 @@ file	arch/armv7/sunxi/sxiehci.c		sxiehci
 
 device	sxiuart
 attach	sxiuart at sunxi
-file	arch/armv7/sunxi/sxiuart.c		sxiuart
+attach	sxiuart at fdt with sxiuart_fdt
+file	arch/armv7/sunxi/sxiuart.c		sxiuart | sxiuart_fdt
 
 device	sxie: ether, ifnet, mii, ifmedia
 attach	sxie at sunxi
