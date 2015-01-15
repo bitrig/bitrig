@@ -322,6 +322,7 @@ IDTVEC(intr_lapic_ipi)
 	jnz	2f
 	incl	CPUVAR(IDEPTH)
 	sti
+	cld
 	pushq	%rbx
 	call	_C_LABEL(x86_ipi_handler)
 	jmp	_C_LABEL(Xdoreti)
@@ -436,6 +437,7 @@ IDTVEC(intr_##name##num)						;\
 	incl	CPUVAR(IDEPTH)						;\
 	movq	%r14, %rdi						;\
 	sti								;\
+	cld								;\
 	call	_C_LABEL(ithread_run)					;\
 	late_ack(num)							;\
 	jmp	_C_LABEL(Xdoreti)	/* lower spl and do ASTs */	;\
