@@ -1,4 +1,4 @@
-/*	$OpenBSD: locore.S,v 1.60 2014/11/27 17:35:12 mlarkin Exp $	*/
+/*	$OpenBSD: locore.S,v 1.62 2015/01/16 10:17:51 sf Exp $	*/
 /*	$NetBSD: locore.S,v 1.13 2004/03/25 18:33:17 drochner Exp $	*/
 
 /*
@@ -1224,3 +1224,13 @@ ENTRY(pagezero)
 	sfence
 	ret
 
+	.section .codepatch,"a"
+	.align  8
+	.globl _C_LABEL(codepatch_begin)
+_C_LABEL(codepatch_begin):
+	.previous
+
+	.section .codepatchend,"a"
+	.globl _C_LABEL(codepatch_end)
+_C_LABEL(codepatch_end):
+	.previous
