@@ -149,14 +149,14 @@ void
 replacesmap(void)
 {
 	static int replacedone = 0;
-	int i, s;
+	int i;
 	vaddr_t nva;
 
 	if (replacedone)
 		return;
 	replacedone = 1;
 
-	s = splhigh();
+	crit_enter();
 	/*
 	 * Create writeable aliases of memory we need
 	 * to write to as kernel is mapped read-only
@@ -180,7 +180,7 @@ replacesmap(void)
 
 	km_free((void *)nva, 2 * PAGE_SIZE, &kv_any, &kp_none);
 	
-	splx(s);
+	crit_leave();
 }
 
 #ifdef MULTIPROCESSOR
@@ -751,11 +751,11 @@ cpu_hatch(void *v)
 	if (mem_range_softc.mr_op != NULL)
 		mem_range_softc.mr_op->initAP(&mem_range_softc);
 
-	s = splhigh();
+	crit_enter();
 	lcr8(0);
 
 	nanouptime(&ci->ci_schedstate.spc_runtime);
-	splx(s);
+	crit_leave();
 
 	SCHED_LOCK();
 	cpu_switchto(NULL, curcpu()->ci_schedstate.spc_idleproc);

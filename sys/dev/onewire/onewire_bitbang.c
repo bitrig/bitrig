@@ -29,9 +29,9 @@
 int
 onewire_bb_reset(const struct onewire_bbops *ops, void *arg)
 {
-	int s, rv, i;
+	int rv, i;
 
-	s = splhigh();
+	crit_enter();
 	ops->bb_tx(arg);
 	ops->bb_set(arg, 0);
 	DELAY(480);
@@ -44,7 +44,7 @@ onewire_bb_reset(const struct onewire_bbops *ops, void *arg)
 		DELAY(20);
 	}
 	DELAY(450);
-	splx(s);
+	crit_leave();
 
 	return (rv);
 }
@@ -52,9 +52,9 @@ onewire_bb_reset(const struct onewire_bbops *ops, void *arg)
 int
 onewire_bb_bit(const struct onewire_bbops *ops, void *arg, int value)
 {
-	int s, rv, i;
+	int rv, i;
 
-	s = splhigh();
+	crit_enter();
 	ops->bb_tx(arg);
 	ops->bb_set(arg, 0);
 	DELAY(2);
@@ -72,7 +72,7 @@ onewire_bb_bit(const struct onewire_bbops *ops, void *arg, int value)
 	DELAY(60);
 	ops->bb_set(arg, 1);
 	DELAY(5);
-	splx(s);
+	crit_leave();
 
 	return (rv);
 }

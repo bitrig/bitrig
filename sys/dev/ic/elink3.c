@@ -946,7 +946,7 @@ epstart(struct ifnet *ifp)
 	bus_space_tag_t iot = sc->sc_iot;
 	bus_space_handle_t ioh = sc->sc_ioh;
 	struct mbuf *m, *m0;
-	int sh, len, pad, txreg;
+	int len, pad, txreg;
 
 	/* Don't transmit if interface is busy or not running */
 	if ((ifp->if_flags & (IFF_RUNNING | IFF_OACTIVE)) != IFF_RUNNING)
@@ -1003,10 +1003,10 @@ startagain:
 #endif
 
 	/*
-	 * Do the output at splhigh() so that an interrupt from another device
+	 * Do the output at critical section so that an interrupt from another device
 	 * won't cause a FIFO underrun.
 	 */
-	sh = splhigh();
+	crit_enter();
 
 	txreg = ep_w1_reg(sc, EP_W1_TX_PIO_WR_1);
 
@@ -1039,7 +1039,7 @@ startagain:
 	while (pad--)
 		bus_space_write_1(iot, ioh, txreg, 0);
 
-	splx(sh);
+	crit_leave();
 
 	++ifp->if_opackets;
 
@@ -1341,7 +1341,7 @@ epget(struct ep_softc *sc, int totlen)
 	bus_space_handle_t ioh = sc->sc_ioh;
 	struct ifnet *ifp = &sc->sc_arpcom.ac_if;
 	struct mbuf *m;
-	int len, pad, off, sh, rxreg;
+	int len, pad, off, rxreg;
 
 	splassert(IPL_NET);
 
@@ -1371,7 +1371,7 @@ epget(struct ep_softc *sc, int totlen)
 	 * device doesn't cause the card's buffer to overflow while we're
 	 * reading it.  We may still lose packets at other times.
 	 */
-	sh = splhigh();
+	crit_enter();
 
 	rxreg = ep_w1_reg(sc, EP_W1_RX_PIO_RD_1);
 
@@ -1407,7 +1407,7 @@ epget(struct ep_softc *sc, int totlen)
 
 	ep_discard_rxtop(iot, ioh);
 
-	splx(sh);
+	crit_leave();
 
 	return m;
 }

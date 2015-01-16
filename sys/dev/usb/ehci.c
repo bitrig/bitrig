@@ -824,9 +824,9 @@ ehci_idone(struct usbd_xfer *xfer)
 	DPRINTFN(/*12*/2, ("ehci_idone: ex=%p\n", ex));
 #ifdef DIAGNOSTIC
 	{
-		int s = splhigh();
+		crit_enter();
 		if (ex->isdone) {
-			splx(s);
+			crit_leave();
 #ifdef EHCI_DEBUG
 			printf("ehci_idone: ex is done!\n   ");
 			ehci_dump_exfer(ex);
@@ -836,7 +836,7 @@ ehci_idone(struct usbd_xfer *xfer)
 			return;
 		}
 		ex->isdone = 1;
-		splx(s);
+		crit_leave();
 	}
 #endif
 	if (xfer->status == USBD_CANCELLED ||

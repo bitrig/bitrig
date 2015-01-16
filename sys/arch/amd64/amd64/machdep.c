@@ -752,7 +752,7 @@ boot(int howto)
 	delay(4*1000000);	/* XXX */
 
 	uvm_shutdown();
-	splhigh();
+	crit_enter();		/* Disable preemption/interrupts. */
 	cold = 1;
 
 	if ((howto & RB_DUMP) != 0)
@@ -1584,8 +1584,7 @@ init_x86_64(paddr_t first_avail)
 	intr_default_setup();
 	fpuinit(&cpu_info_primary);
 
-	softintr_init();
-	splraise(IPL_IPI);
+	crit_enter();		/* XXX need to think this through */
 	enable_intr();
 
 #ifdef DDB

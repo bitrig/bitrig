@@ -147,13 +147,13 @@ atomic_cmpset_int(volatile u_int *dst, u_int exp, u_int src)
 static __inline int
 atomic_cmpset_int(__volatile__ u_int *dst, u_int old, u_int new)
 {
-	int s = splhigh();
+	crit_enter();
 	if (*dst==old) {
 		*dst = new;
 		splx(s);
 		return 1;
 	}
-	splx(s);
+	crit_leave();
 	return 0;
 }
 #endif /* !__i386__ */
@@ -161,11 +161,11 @@ atomic_cmpset_int(__volatile__ u_int *dst, u_int old, u_int new)
 static __inline atomic_t
 test_and_set_bit(u_int b, volatile void *p)
 {
-	int s = splhigh();
+	crit_enter();
 	unsigned int m = 1<<b;
 	unsigned int r = *(volatile int *)p & m;
 	*(volatile int *)p |= m;
-	splx(s);
+	crit_leave();
 	return r;
 }
 

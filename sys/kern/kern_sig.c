@@ -303,13 +303,12 @@ setsigvec(struct proc *p, int signum, struct sigaction *sa)
 {
 	struct sigacts *ps = p->p_p->ps_sigacts;
 	int bit;
-	int s;
 
 	bit = sigmask(signum);
 	/*
 	 * Change setting atomically.
 	 */
-	s = splhigh();
+	crit_enter();
 	ps->ps_sigact[signum] = sa->sa_handler;
 	if ((sa->sa_flags & SA_NODEFER) == 0)
 		sa->sa_mask |= sigmask(signum);
@@ -369,7 +368,7 @@ setsigvec(struct proc *p, int signum, struct sigaction *sa)
 		else
 			ps->ps_sigcatch |= bit;
 	}
-	splx(s);
+	crit_leave();
 }
 
 /*
@@ -440,12 +439,11 @@ sys_sigprocmask(struct proc *p, void *v, register_t *retval)
 		syscallarg(sigset_t) mask;
 	} */ *uap = v;
 	int error = 0;
-	int s;
 	sigset_t mask;
 
 	*retval = p->p_sigmask;
 	mask = SCARG(uap, mask);
-	s = splhigh();
+	crit_enter();
 
 	switch (SCARG(uap, how)) {
 	case SIG_BLOCK:
@@ -461,7 +459,7 @@ sys_sigprocmask(struct proc *p, void *v, register_t *retval)
 		error = EINVAL;
 		break;
 	}
-	splx(s);
+	crit_leave();
 	return (error);
 }
 
@@ -1368,11 +1366,7 @@ postsig(int signum)
 		 * mask from before the sigpause is what we want
 		 * restored after the signal processing is completed.
 		 */
-#ifdef MULTIPROCESSOR
-		s = splsched();
-#else
-		s = splhigh();
-#endif
+		crit_enter();
 		if (p->p_flag & P_SIGSUSPEND) {
 			atomic_clearbits_int(&p->p_flag, P_SIGSUSPEND);
 			returnmask = p->p_oldmask;
@@ -1386,7 +1380,7 @@ postsig(int signum)
 				ps->ps_sigignore |= mask;
 			ps->ps_sigact[signum] = SIG_DFL;
 		}
-		splx(s);
+		crit_leave();
 		p->p_ru.ru_nsignals++;
 		if (p->p_sisig == signum) {
 			p->p_sisig = 0;
@@ -1855,8 +1849,6 @@ single_thread_check(struct proc *p, int deep)
 
 	if (pr->ps_single != NULL && pr->ps_single != p) {
 		do {
-			int s;
-
 			/* if we're in deep, we need to unwind to the edge */
 			if (deep) {
 				if (pr->ps_flags & PS_SINGLEUNWIND)

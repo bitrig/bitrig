@@ -508,9 +508,7 @@ x86_ipi_init(int target)
 int
 x86_ipi(int vec, int target, int dl)
 {
-	int s;
-
-	s = splhigh();
+	crit_enter();
 
 	i82489_icr_wait();
 
@@ -522,7 +520,7 @@ x86_ipi(int vec, int target, int dl)
 
 	i82489_icr_wait();
 
-	splx(s);
+	crit_leave();
 
 	return 0;
 }

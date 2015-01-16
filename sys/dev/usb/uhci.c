@@ -1199,9 +1199,9 @@ uhci_idone(struct usbd_xfer *xfer)
 	DPRINTFN(12, ("uhci_idone: ux=%p\n", ux));
 #ifdef DIAGNOSTIC
 	{
-		int s = splhigh();
+		crit_enter();
 		if (ux->isdone) {
-			splx(s);
+			crit_leave();
 #ifdef UHCI_DEBUG
 			printf("uhci_idone: ux is done!\n   ");
 			uhci_dump_xfer(ux);
@@ -1211,7 +1211,7 @@ uhci_idone(struct usbd_xfer *xfer)
 			return;
 		}
 		ux->isdone = 1;
-		splx(s);
+		crit_leave();
 	}
 #endif
 
