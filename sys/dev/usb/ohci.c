@@ -90,7 +90,7 @@ usbd_status	ohci_alloc_std_chain(struct ohci_softc *, u_int,
 usbd_status	ohci_open(struct usbd_pipe *);
 int		ohci_setaddr(struct usbd_device *, int);
 void		ohci_poll(struct usbd_bus *);
-void		ohci_softintr(void *);
+int		ohci_softintr(void *);
 void		ohci_waitintr(struct ohci_softc *, struct usbd_xfer *);
 void		ohci_add_done(struct ohci_softc *, ohci_physaddr_t);
 void		ohci_rhsc(struct ohci_softc *, struct usbd_xfer *);
@@ -1210,7 +1210,7 @@ ohci_add_done(struct ohci_softc *sc, ohci_physaddr_t done)
 	*ip = sidone;
 }
 
-void
+int
 ohci_softintr(void *v)
 {
 	struct ohci_softc *sc = v;
@@ -1224,7 +1224,7 @@ ohci_softintr(void *v)
 	DPRINTFN(10,("ohci_softintr: enter\n"));
 
 	if (sc->sc_bus.dying)
-		return;
+		return (0);
 
 	sc->sc_bus.intr_context++;
 
@@ -1404,6 +1404,8 @@ ohci_softintr(void *v)
 
 	sc->sc_bus.intr_context--;
 	DPRINTFN(10,("ohci_softintr: done:\n"));
+
+	return (1);
 }
 
 void

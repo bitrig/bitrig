@@ -68,6 +68,7 @@ struct evcount ipi_count;
 void	lapic_delay(int);
 static u_int32_t lapic_gettick(void);
 void	lapic_clockintr(void *, struct intrframe);
+void	lapic_clockintr_clkframe(void *, struct clockframe);
 void	lapic_initclocks(void);
 void	lapic_map(paddr_t);
 
@@ -272,8 +273,15 @@ u_int32_t lapic_delaytab[26];
 void
 lapic_clockintr(void *arg, struct intrframe frame)
 {
+	hardclock(frame.tf_clk);
 
-	hardclock((struct clockframe *)&frame);
+	clk_count.ec_count++;
+}
+
+void
+lapic_clockintr_clkframe(void *arg, struct clockframe frame)
+{
+	hardclock(&frame);
 
 	clk_count.ec_count++;
 }

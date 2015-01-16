@@ -120,7 +120,7 @@ void 	xhci_timeout(void *);
 /* USBD Bus Interface. */
 usbd_status	  xhci_pipe_open(struct usbd_pipe *);
 int		  xhci_setaddr(struct usbd_device *, int);
-void		  xhci_softintr(void *);
+int		  xhci_softintr(void *);
 void		  xhci_poll(struct usbd_bus *);
 struct usbd_xfer *xhci_allocx(struct usbd_bus *);
 void		  xhci_freex(struct usbd_bus *, struct usbd_xfer *);
@@ -648,17 +648,19 @@ xhci_waitintr(struct xhci_softc *sc, struct usbd_xfer *xfer)
 	usb_transfer_complete(xfer);
 }
 
-void
+int
 xhci_softintr(void *v)
 {
 	struct xhci_softc *sc = v;
 
 	if (sc->sc_bus.dying)
-		return;
+		return (0);
 
 	sc->sc_bus.intr_context++;
 	xhci_event_dequeue(sc);
 	sc->sc_bus.intr_context--;
+
+	return (1);
 }
 
 void

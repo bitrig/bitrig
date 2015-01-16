@@ -42,6 +42,7 @@ member	P_MD_FLAGS	p_md.md_flags
 member	P_MD_ASTPENDING	p_md.md_astpending
 member	p_flag
 member	p_cpu
+member	p_crit
 
 export	P_SYSTEM
 
@@ -106,11 +107,9 @@ member  CPU_INFO_RESCHED	ci_want_resched
 member  CPU_INFO_CURPROC	ci_curproc
 member  CPU_INFO_CURPCB		ci_curpcb
 member  CPU_INFO_IDLE_PCB	ci_idle_pcb
-member	CPU_INFO_ILEVEL		ci_ilevel
 member	CPU_INFO_IDEPTH		ci_idepth
 member	CPU_INFO_ISOURCES	ci_isources
 member	CPU_INFO_IPENDING	ci_ipending
-member	CPU_INFO_IUNMASK	ci_iunmask
 ifdef DIAGNOSTIC
 member	CPU_INFO_MUTEX_LEVEL	ci_mutex_level
 endif
@@ -118,8 +117,6 @@ member	CPU_INFO_GDT		ci_gdt
 member	CPU_INFO_TSS		ci_tss
 
 struct	intrsource
-member	is_recurse
-member	is_resume
 member	is_handlers
 member	is_pic
 member	is_flags

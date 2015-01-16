@@ -163,9 +163,9 @@ trap(struct trapframe *frame)
 #ifdef DEBUG
 	if (trapdebug) {
 		printf("trap %d code %llx rip %llx cs %llx rflags %llx "
-		       "cr2 %llx cpl %x\n",
+		       "cr2 %llx crit %d\n",
 		    type, frame->tf_err, frame->tf_rip, frame->tf_cs,
-		    frame->tf_rflags, rcr2(), curcpu()->ci_ilevel);
+		    frame->tf_rflags, rcr2(), curproc ? CRIT_DEPTH : -1);
 		printf("curproc %p\n", curproc);
 		if (curproc)
 			printf("pid %d\n", p->p_pid);
@@ -206,9 +206,9 @@ trap(struct trapframe *frame)
 			printf("unknown trap %ld", (u_long)frame->tf_trapno);
 		printf(" in %s mode\n", (type & T_USER) ? "user" : "supervisor");
 		printf("trap type %d code %llx rip %llx cs %llx rflags %llx cr2 "
-		       " %llx cpl %x rsp %llx\n",
+		       " %llx cpl %d rsp %llx\n",
 		    type, frame->tf_err, frame->tf_rip, frame->tf_cs,
-		    frame->tf_rflags, rcr2(), curcpu()->ci_ilevel, frame->tf_rsp);
+		    frame->tf_rflags, rcr2(), curproc ? CRIT_DEPTH : -1, frame->tf_rsp);
 
 		panic("trap type %d, code=%llx, pc=%llx",
 		    type, frame->tf_err, frame->tf_rip);

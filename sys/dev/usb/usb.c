@@ -55,6 +55,7 @@
 #include <sys/signalvar.h>
 #include <sys/time.h>
 #include <sys/rwlock.h>
+#include <sys/ithread.h>
 
 #include <dev/usb/usb.h>
 #include <dev/usb/usbdi.h>
@@ -195,15 +196,8 @@ usb_attach(struct device *parent, struct device *self, void *aux)
 	usb_init_task(&sc->sc_explore_task, usb_explore, sc,
 	    USB_TASK_TYPE_EXPLORE);
 
-	sc->sc_bus->soft = softintr_establish(IPL_SOFTUSB,
-	    sc->sc_bus->methods->soft_intr, sc->sc_bus);
-	if (sc->sc_bus->soft == NULL) {
-		printf("%s: can't register softintr\n", sc->sc_dev.dv_xname);
-		sc->sc_bus->dying = 1;
-		return;
-	}
-
-
+	sc->sc_bus->soft = ithread_softregister(IPL_SOFTNET,
+	    sc->sc_bus->methods->soft_intr, sc->sc_bus, 0);
 
 	if (!usb_attach_roothub(sc)) {
 		struct usbd_device *dev = sc->sc_bus->root_hub;
@@ -904,7 +898,7 @@ usb_schedsoftintr(struct usbd_bus *bus)
 	if (bus->use_polling) {
 		bus->methods->soft_intr(bus);
 	} else {
-		softintr_schedule(bus->soft);
+		ithread_softsched(bus->soft);
 	}
 }
 
@@ -956,7 +950,7 @@ usb_detach(struct device *self, int flags)
 	}
 
 	if (sc->sc_bus->soft != NULL) {
-		softintr_disestablish(sc->sc_bus->soft);
+		ithread_softderegister(sc->sc_bus->soft);
 		sc->sc_bus->soft = NULL;
 	}
 

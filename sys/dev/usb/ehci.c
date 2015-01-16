@@ -99,7 +99,7 @@ u_int8_t		ehci_reverse_bits(u_int8_t, int);
 usbd_status	ehci_open(struct usbd_pipe *);
 int		ehci_setaddr(struct usbd_device *, int);
 void		ehci_poll(struct usbd_bus *);
-void		ehci_softintr(void *);
+int		ehci_softintr(void *);
 int		ehci_intr1(struct ehci_softc *);
 void		ehci_waitintr(struct ehci_softc *, struct usbd_xfer *);
 void		ehci_check_intr(struct ehci_softc *, struct usbd_xfer *);
@@ -639,7 +639,7 @@ ehci_setaddr(struct usbd_device *dev, int addr)
 	return (0);
 }
 
-void
+int
 ehci_softintr(void *v)
 {
 	struct ehci_softc *sc = v;
@@ -649,7 +649,7 @@ ehci_softintr(void *v)
 		     sc->sc_bus.intr_context));
 
 	if (sc->sc_bus.dying)
-		return;
+		return (0);
 
 	sc->sc_bus.intr_context++;
 
@@ -676,6 +676,8 @@ ehci_softintr(void *v)
 	}
 
 	sc->sc_bus.intr_context--;
+
+	return (1);
 }
 
 /* Check for an interrupt. */

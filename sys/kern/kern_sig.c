@@ -62,6 +62,7 @@
 #include <sys/ptrace.h>
 #include <sys/sched.h>
 #include <sys/user.h>
+#include <sys/ithread.h>
 
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
@@ -809,7 +810,7 @@ psignal(struct proc *p, int signum)
 void
 ptsignal(struct proc *p, int signum, enum signal_type type)
 {
-	int s, prop;
+	int prop;
 	sig_t action;
 	int mask;
 	struct process *pr = p->p_p;
@@ -944,7 +945,7 @@ ptsignal(struct proc *p, int signum, enum signal_type type)
 	if (action == SIG_HOLD && ((prop & SA_CONT) == 0 || p->p_stat != SSTOP))
 		return;
 
-	SCHED_LOCK(s);
+	SCHED_LOCK();
 
 	switch (p->p_stat) {
 
@@ -1077,7 +1078,7 @@ runfast:
 run:
 	setrunnable(p);
 out:
-	SCHED_UNLOCK(s);
+	SCHED_UNLOCK();
 	if (wakeparent)
 		wakeup(pr->ps_pptr);
 }
@@ -1103,7 +1104,6 @@ issignal(struct proc *p)
 	struct process *pr = p->p_p;
 	int signum, mask, prop;
 	int dolock = (p->p_flag & P_SINTR) == 0;
-	int s;
 
 	for (;;) {
 		mask = p->p_siglist & ~p->p_sigmask;
@@ -1137,10 +1137,10 @@ issignal(struct proc *p)
 				KERNEL_UNLOCK();
 
 			if (dolock)
-				SCHED_LOCK(s);
+				SCHED_LOCK();
 			proc_stop(p, 1);
 			if (dolock)
-				SCHED_UNLOCK(s);
+				SCHED_UNLOCK();
 
 			if (dolock)
 				KERNEL_LOCK();
@@ -1205,10 +1205,10 @@ issignal(struct proc *p)
 					break;	/* == ignore */
 				p->p_xstat = signum;
 				if (dolock)
-					SCHED_LOCK(s);
+					SCHED_LOCK();
 				proc_stop(p, 1);
 				if (dolock)
-					SCHED_UNLOCK(s);
+					SCHED_UNLOCK();
 				break;
 			} else if (prop & SA_IGNORE) {
 				/*
@@ -1269,7 +1269,8 @@ proc_stop(struct proc *p, int sw)
 		 * We need this soft interrupt to be handled fast.
 		 * Extra calls to softclock don't hurt.
 		 */
-                softintr_schedule(softclock_si);
+		/* XXX causes recursion on SCHED_LOCK */
+		ithread_softsched(softclock_si);
 	}
 	if (sw)
 		mi_switch();
@@ -1310,7 +1311,7 @@ postsig(int signum)
 	u_long trapno;
 	int mask, returnmask;
 	union sigval sigval;
-	int s, code;
+	int code;
 
 #ifdef DIAGNOSTIC
 	if (signum == 0)
@@ -1870,10 +1871,10 @@ single_thread_check(struct proc *p, int deep)
 				exit1(p, 0, EXIT_THREAD_NOCHECK);
 
 			/* not exiting and don't need to unwind, so suspend */
-			SCHED_LOCK(s);
+			SCHED_LOCK();
 			p->p_stat = SSTOP;
 			mi_switch();
-			SCHED_UNLOCK(s);
+			SCHED_UNLOCK();
 		} while (pr->ps_single != NULL);
 	}
 
@@ -1922,22 +1923,20 @@ single_thread_set(struct proc *p, enum single_thread_mode mode, int deep)
 	pr->ps_single = p;
 	pr->ps_singlecount = 0;
 	TAILQ_FOREACH(q, &pr->ps_threads, p_thr_link) {
-		int s;
-
 		if (q == p)
 			continue;
 		if (q->p_flag & P_WEXIT) {
 			if (mode == SINGLE_EXIT) {
-				SCHED_LOCK(s);
+				SCHED_LOCK();
 				if (q->p_stat == SSTOP) {
 					setrunnable(q);
 					pr->ps_singlecount++;
 				}
-				SCHED_UNLOCK(s);
+				SCHED_UNLOCK();
 			}
 			continue;
 		}
-		SCHED_LOCK(s);
+		SCHED_LOCK();
 		atomic_setbits_int(&q->p_flag, P_SUSPSINGLE);
 		switch (q->p_stat) {
 		case SIDL:
@@ -1971,7 +1970,7 @@ single_thread_set(struct proc *p, enum single_thread_mode mode, int deep)
 			signotify(q);
 			break;
 		}
-		SCHED_UNLOCK(s);
+		SCHED_UNLOCK();
 	}
 
 	if (mode != SINGLE_PTRACE)
@@ -2000,8 +1999,6 @@ single_thread_clear(struct proc *p, int flag)
 	pr->ps_single = NULL;
 	atomic_clearbits_int(&pr->ps_flags, PS_SINGLEUNWIND | PS_SINGLEEXIT);
 	TAILQ_FOREACH(q, &pr->ps_threads, p_thr_link) {
-		int s;
-
 		if (q == p || (q->p_flag & P_SUSPSINGLE) == 0)
 			continue;
 		atomic_clearbits_int(&q->p_flag, P_SUSPSINGLE);
@@ -2011,13 +2008,13 @@ single_thread_clear(struct proc *p, int flag)
 		 * then clearing that either makes it runnable or puts
 		 * it back into some sleep queue
 		 */
-		SCHED_LOCK(s);
+		SCHED_LOCK();
 		if (q->p_stat == SSTOP && (q->p_flag & flag) == 0) {
 			if (q->p_wchan == 0)
 				setrunnable(q);
 			else
 				q->p_stat = SSLEEP;
 		}
-		SCHED_UNLOCK(s);
+		SCHED_UNLOCK();
 	}
 }

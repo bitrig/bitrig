@@ -791,7 +791,6 @@ void
 selwakeup(struct selinfo *sip)
 {
 	struct proc *p;
-	int s;
 
 	KNOTE(&sip->si_note, 0);
 	if (sip->si_selpid == 0)
@@ -804,7 +803,7 @@ selwakeup(struct selinfo *sip)
 	p = pfind(sip->si_selpid);
 	sip->si_selpid = 0;
 	if (p != NULL) {
-		SCHED_LOCK(s);
+		SCHED_LOCK();
 		if (p->p_wchan == (caddr_t)&selwait) {
 			if (p->p_stat == SSLEEP)
 				setrunnable(p);
@@ -812,7 +811,7 @@ selwakeup(struct selinfo *sip)
 				unsleep(p);
 		} else if (p->p_flag & P_SELECT)
 			atomic_clearbits_int(&p->p_flag, P_SELECT);
-		SCHED_UNLOCK(s);
+		SCHED_UNLOCK();
 	}
 }
 
@@ -934,7 +933,7 @@ doppoll(struct proc *p, struct pollfd *fds, u_int nfds,
 	size_t sz;
 	struct pollfd pfds[4], *pl = pfds;
 	struct timespec ats, rts, tts;
-	int timo, ncoll, i, s, error;
+	int timo, ncoll, i, error;
 	extern int nselcoll, selwait;
 
 	/* Standards say no more than MAX_OPEN; this is possibly better. */

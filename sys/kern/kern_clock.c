@@ -49,6 +49,7 @@
 #include <sys/sysctl.h>
 #include <sys/sched.h>
 #include <sys/timetc.h>
+#include <sys/ithread.h>
 
 
 #ifdef GPROF
@@ -111,10 +112,7 @@ initclocks(void)
 {
 	int i;
 
-	softclock_si = softintr_establish_mpsafe(IPL_SOFTCLOCK,
-	    softclock, NULL);
-	if (softclock_si == NULL)
-		panic("initclocks: unable to register softclock intr");
+	softclock_si = ithread_softregister(IPL_SOFTCLOCK, softclock, NULL, 0);
 
 	/*
 	 * Set divisors to 1 (normal case) and let the machine-specific
@@ -199,7 +197,7 @@ hardclock(struct clockframe *frame)
 	 * relatively high clock interrupt priority any longer than necessary.
 	 */
 	if (timeout_hardclock_update())
-		softintr_schedule(softclock_si);
+		ithread_softsched(softclock_si);
 }
 
 /*

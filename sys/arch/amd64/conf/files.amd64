@@ -23,7 +23,6 @@ file	arch/amd64/amd64/sys_machdep.c
 file	arch/amd64/amd64/trap.c
 file	arch/amd64/amd64/vm_machdep.c
 file	arch/amd64/amd64/fpu.c
-file	arch/amd64/amd64/softintr.c
 file	arch/amd64/amd64/i8259.c
 file	arch/amd64/amd64/cacheinfo.c
 file	arch/amd64/amd64/vector.S

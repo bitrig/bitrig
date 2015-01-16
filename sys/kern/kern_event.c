@@ -554,7 +554,7 @@ kqueue_register(struct kqueue *kq, struct kevent *kev, struct proc *p)
 	struct filterops *fops = NULL;
 	struct file *fp = NULL;
 	struct knote *kn = NULL;
-	int s, error = 0;
+	int error = 0;
 
 	if (kev->filter < 0) {
 		if (kev->filter + EVFILT_SYSCOUNT < 0)

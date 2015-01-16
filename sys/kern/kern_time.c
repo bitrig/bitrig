@@ -783,4 +783,3 @@ ppsratecheck(struct timeval *lasttime, int *curpps, int maxpps)
 
 	return (rv);
 }
-

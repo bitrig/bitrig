@@ -328,8 +328,20 @@ fpusave_proc(struct proc *p, int save)
 		oci->ci_fpsaveproc = p;
 		x86_send_ipi(oci,
 	    	    save ? X86_IPI_SYNCH_FPU : X86_IPI_FLUSH_FPU);
-		while (p->p_addr->u_pcb.pcb_fpcpu != NULL)
+		while (p->p_addr->u_pcb.pcb_fpcpu != NULL) {
+#ifdef DIAGNOSTIC
+			u_int j = 0, i = 0;
+			if ((++i % 10000000) == 0) {
+				printf("cpu %d -> cpu %d %s:%d\n",
+				    curcpu()->ci_cpuid, oci->ci_cpuid,
+				    __func__, __LINE__);
+				if (++j == 20)
+					Debugger();
+
+			}
+#endif
 			SPINLOCK_SPIN_HOOK;
+		}
 	}
 #else
 	KASSERT(ci->ci_fpcurproc == p);
