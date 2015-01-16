@@ -70,7 +70,7 @@ udb_base*
 udb_base_create_fd(const char* fname, int fd, udb_walk_relptr_func walkfunc,
 	void* arg)
 {
-	uint64_t m;
+	uint64_t m, fsz;
 	udb_glob_d g;
 	ssize_t r;
 	udb_base* udb = (udb_base*)xalloc_zero(sizeof(*udb));
@@ -134,26 +134,49 @@ udb_base_create_fd(const char* fname, int fd, udb_walk_relptr_func walkfunc,
 	if(g.hsize > UDB_HEADER_SIZE) {
 		log_msg(LOG_WARNING, "%s: header size too large %d", fname,
 			(int)g.hsize);
-		log_msg(LOG_WARNING, "attempting to continue...");
+		goto fail;
 	}
-	if(g.clean_close != 0) {
+	if(g.clean_close != 1) {
 		log_msg(LOG_WARNING, "%s: not cleanly closed %d", fname,
 			(int)g.clean_close);
-		log_msg(LOG_WARNING, "attempting to continue...");
+		goto fail;
 	}
-	/* TODO check if too large (>4g on 32bit); mmap-usage would fail */
-	
+	if(g.dirty_alloc != 0) {
+		log_msg(LOG_WARNING, "%s: not cleanly closed (alloc:%d)", fname,
+			(int)g.dirty_alloc);
+		goto fail;
+	}
+
+	/* check file size correctly written, for 4.0.2 nsd.db failure */
+	fsz = (uint64_t)lseek(fd, (off_t)0, SEEK_END);
+	(void)lseek(fd, (off_t)0, SEEK_SET);
+	if(g.fsize != fsz) {
+		log_msg(LOG_WARNING, "%s: file size %llu but mmap header "
+			"has size %llu", fname, (unsigned long long)fsz,
+			(unsigned long long)g.fsize);
+		goto fail;
+	}
+
 	/* mmap it */
 	if(g.fsize < UDB_HEADER_SIZE || g.fsize < g.hsize) {
 		log_msg(LOG_ERR, "%s: file too short", fname);
 		goto fail;
 	}
+	if(g.fsize > (uint64_t)400*1024*1024*1024*1024) /* 400 Tb */ {
+		log_msg(LOG_WARNING, "%s: file size too large %llu",
+			fname, (unsigned long long)g.fsize);
+		goto fail;
+	}
 	udb->base_size = (size_t)g.fsize;
+#ifdef HAVE_MMAP
 	/* note the size_t casts must be there for portability, on some
 	 * systems the layout of memory is otherwise broken. */
 	udb->base = mmap(NULL, (size_t)udb->base_size,
 		(int)PROT_READ|PROT_WRITE, (int)MAP_SHARED,
 		(int)udb->fd, (off_t)0);
+#else
+	udb->base = MAP_FAILED; errno = ENOSYS;
+#endif
 	if(udb->base == MAP_FAILED) {
 		udb->base = NULL;
 		log_msg(LOG_ERR, "mmap(size %u) error: %s",
@@ -169,6 +192,7 @@ udb_base_create_fd(const char* fname, int fd, udb_walk_relptr_func walkfunc,
 	/* init completion */
 	udb->glob_data = (udb_glob_d*)(udb->base+sizeof(uint64_t));
 	r = 0;
+	/* cannot be dirty because that is goto fail above */
 	if(udb->glob_data->dirty_alloc != udb_dirty_clean)
 		r = 1;
 	udb->alloc = udb_alloc_create(udb, (udb_alloc_d*)(
@@ -183,6 +207,7 @@ udb_base_create_fd(const char* fname, int fd, udb_walk_relptr_func walkfunc,
 		udb_alloc_compact(udb, udb->alloc);
 		udb_base_sync(udb, 1);
 	}
+	udb->glob_data->clean_close = 0;
 
 	return udb;
 }
@@ -239,6 +264,7 @@ udb_base* udb_base_create_new(const char* fname, udb_walk_relptr_func walkfunc,
 	m = UDB_MAGIC;
 	udb_glob_init_new(&g);
 	udb_alloc_init_new(&a);
+	g.clean_close = 1;
 
 	/* write new data to file (closes fd on error) */
 	if(!write_fdata(fname, fd, &m, sizeof(m)))
@@ -257,6 +283,13 @@ udb_base* udb_base_create_new(const char* fname, udb_walk_relptr_func walkfunc,
 		close(fd);
 		return NULL;
 	}
+	/* truncate to the right size */
+	if(ftruncate(fd, (off_t)g.fsize) < 0) {
+		log_msg(LOG_ERR, "%s: ftruncate(%d): %s", fname,
+			(int)g.fsize, strerror(errno));
+		close(fd);
+		return NULL;
+	}
 	return udb_base_create_fd(fname, fd, walkfunc, arg);
 }
 
@@ -268,7 +301,9 @@ udb_base_shrink(udb_base* udb, uint64_t nsize)
 	udb->glob_data->fsize = nsize;
 	/* sync, does not *seem* to be required on Linux, but it is
 	   certainly required on OpenBSD.  Otherwise changed data is lost. */
+#ifdef HAVE_MMAP
 	msync(udb->base, udb->base_size, MS_ASYNC);
+#endif
 	if(ftruncate(udb->fd, (off_t)nsize) != 0) {
 		log_msg(LOG_ERR, "%s: ftruncate(%u) %s", udb->fname,
 			(unsigned)nsize, strerror(errno));
@@ -286,13 +321,16 @@ void udb_base_close(udb_base* udb)
 			udb_base_shrink(udb, nsize);
 	}
 	if(udb->fd != -1) {
+		udb->glob_data->clean_close = 1;
 		close(udb->fd);
 		udb->fd = -1;
 	}
 	if(udb->base) {
+#ifdef HAVE_MMAP
 		if(munmap(udb->base, udb->base_size) == -1) {
 			log_msg(LOG_ERR, "munmap: %s", strerror(errno));
 		}
+#endif
 		udb->base = NULL;
 	}
 }
@@ -324,10 +362,15 @@ void udb_base_free_keep_mmap(udb_base* udb)
 
 void udb_base_sync(udb_base* udb, int wait)
 {
+	if(!udb) return;
+#ifdef HAVE_MMAP
 	if(msync(udb->base, udb->base_size, wait?MS_SYNC:MS_ASYNC) != 0) {
 		log_msg(LOG_ERR, "msync(%s) error %s",
 			udb->fname, strerror(errno));
 	}
+#else
+	(void)wait;
+#endif
 }
 
 /** hash a chunk pointer */
@@ -469,6 +512,7 @@ uint8_t udb_base_get_userflags(udb_base* udb)
 static void*
 udb_base_remap(udb_base* udb, udb_alloc* alloc, uint64_t nsize)
 {
+#ifdef HAVE_MMAP
 	void* nb;
 	/* for use with valgrind, do not use mremap, but the other version */
 #ifdef MREMAP_MAYMOVE
@@ -515,6 +559,10 @@ udb_base_remap(udb_base* udb, udb_alloc* alloc, uint64_t nsize)
 	}
 	udb->base_size = nsize;
 	return nb;
+#else /* HAVE_MMAP */
+	(void)udb; (void)alloc; (void)nsize;
+	return NULL;
+#endif /* HAVE_MMAP */
 }
 
 void
@@ -1261,7 +1309,7 @@ udb_void udb_alloc_space(udb_alloc* alloc, size_t sz)
 		return ret + sizeof(udb_chunk_d); /* ptr to data */
 	}
 	/* see if we can subdivide a larger chunk */
-	for(e2 = exp+1; e2 < UDB_ALLOC_CHUNKS_MAX; e2++)
+	for(e2 = exp+1; e2 <= UDB_ALLOC_CHUNKS_MAX; e2++)
 		if(alloc->disk->free[e2-UDB_ALLOC_CHUNK_MINEXP]) {
 			udb_void big, ret; /* udb_chunk_d */
 			alloc->udb->glob_data->dirty_alloc = udb_dirty_fl;
@@ -1296,7 +1344,7 @@ have_free_for(udb_alloc* alloc, int exp)
 	int e2;
 	if(alloc->disk->free[exp-UDB_ALLOC_CHUNK_MINEXP])
 		return exp;
-	for(e2 = exp+1; e2 < UDB_ALLOC_CHUNKS_MAX; e2++)
+	for(e2 = exp+1; e2 <= UDB_ALLOC_CHUNKS_MAX; e2++)
 		if(alloc->disk->free[e2-UDB_ALLOC_CHUNK_MINEXP]) {
 			return e2;
 		}
@@ -1501,7 +1549,7 @@ coagulate_and_push(void* base, udb_alloc* alloc, udb_void last, int exp,
 }
 
 /** attempt to compact the data and move free space to the end */
-static int
+int
 udb_alloc_compact(void* base, udb_alloc* alloc)
 {
 	udb_void last;
@@ -1510,6 +1558,9 @@ udb_alloc_compact(void* base, udb_alloc* alloc)
 	uint64_t at = alloc->disk->nextgrow;
 	udb_void xl_start = 0;
 	uint64_t xl_sz = 0;
+	if(alloc->udb->inhibit_compact)
+		return 1;
+	alloc->udb->useful_compact = 0;
 	while(at > alloc->udb->glob_data->hsize) {
 		/* grab last entry */
 		exp = (int)*((uint8_t*)UDB_REL(base, at-1));
@@ -1627,6 +1678,21 @@ udb_alloc_compact(void* base, udb_alloc* alloc)
 	return 1;
 }
 
+int
+udb_compact(udb_base* udb)
+{
+	if(!udb) return 1;
+	if(!udb->useful_compact) return 1;
+	DEBUG(DEBUG_DBACCESS, 1, (LOG_INFO, "Compacting database..."));
+	return udb_alloc_compact(udb->base, udb->alloc);
+}
+
+void udb_compact_inhibited(udb_base* udb, int inhibit)
+{
+	if(!udb) return;
+	udb->inhibit_compact = inhibit;
+}
+
 #ifdef UDB_CHECK
 /** check that rptrs are really zero before free */
 void udb_check_rptr_zero(void* base, udb_rel_ptr* p, void* arg)
@@ -1703,6 +1769,10 @@ int udb_alloc_free(udb_alloc* alloc, udb_void r, size_t sz)
 	if(fp->exp == UDB_EXP_XL) {
 		udb_free_xl(base, alloc, f, (udb_xl_chunk_d*)fp, sz);
 		/* compact */
+		if(alloc->udb->inhibit_compact) {
+			alloc->udb->useful_compact = 1;
+			return 1;
+		}
 		return udb_alloc_compact(base, alloc);
 	}
 	/* it is a regular chunk of 2**exp size */
@@ -1746,6 +1816,10 @@ int udb_alloc_free(udb_alloc* alloc, udb_void r, size_t sz)
 	}
 	alloc->udb->glob_data->dirty_alloc = udb_dirty_clean;
 	/* compact */
+	if(alloc->udb->inhibit_compact) {
+		alloc->udb->useful_compact = 1;
+		return 1;
+	}
 	return udb_alloc_compact(base, alloc);
 }
 
