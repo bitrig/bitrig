@@ -1,4 +1,4 @@
-#	$OpenBSD: install.sub,v 1.810 2015/01/17 10:09:06 rpe Exp $
+#	$OpenBSD: install.sub,v 1.811 2015/01/17 14:36:58 rpe Exp $
 #
 # Copyright (c) 1997-2009 Todd Miller, Theo de Raadt, Ken Westerback
 # All rights reserved.
@@ -1951,7 +1951,7 @@ Completed $MODE. If applicable remove installation media before
 typing 'reboot' at the command prompt.
 __EOT
 
-	[[ "$MODE" == upgrade ]] && \
+	[[ $MODE == upgrade ]] && \
 		echo "After rebooting, run sysmerge(8) to update your system configuration."
 	$AUTO && >/ai.done
 }
