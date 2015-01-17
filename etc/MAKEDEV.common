@@ -142,7 +142,6 @@ twrget(all, attyB, ttyB, 0, 1, 2, 3, 4)dnl
 twrget(all, mac_tty0, tty0, 0, 1)dnl
 twrget(all, tzs, tty, a, b, c, d)dnl
 twrget(all, czs, cua, a, b, c, d)dnl
-target(all, ttyc, 0, 1, 2, 3, 4, 5, 6, 7)dnl
 twrget(all, com, tty0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b)dnl
 twrget(all, mmcl, mmclock)dnl
 target(all, lpt, 0, 1, 2)dnl
@@ -352,7 +351,6 @@ _mkdev(com, {-tty[0-7][0-9a-f]-}, {-U=${i#tty*}
 	o=$(h2d $U)
 	M tty$U c major_com_c $o 660 dialer uucp
 	M cua$U c major_com_c Add($o, 128) 660 dialer uucp-})dnl
-__devitem(ttyc, ttyc*, Cyclades serial ports,cy)dnl
 __devitem(tzs, tty[a-z]*, Zilog 8530 Serial Port,zs)dnl
 _mkdev(tzs, {-tty[a-z]-}, {-u=${i#tty*}
 	case $u in

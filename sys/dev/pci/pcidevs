@@ -193,7 +193,6 @@ vendor	AD		0x11d4	Analog Devices
 vendor	ZORAN		0x11de	Zoran
 vendor	PIJNENBURG	0x11e3	Pijnenburg
 vendor	COMPEX		0x11f6	Compex
-vendor	CYCLADES	0x120e	Cyclades
 vendor	ESSENTIAL	0x120f	Essential Communications
 vendor	O2MICRO		0x1217	O2 Micro
 vendor	3DFX		0x121a	3DFX
@@ -2293,14 +2292,6 @@ product CREATIVELABS SBJOY2	0x7004	PCI Gameport Joystick
 product CREATIVELABS SBJOY3	0x7005	PCI Gameport Joystick
 product CREATIVELABS PPB	0x7006	PCIE-PCI
 product CREATIVELABS EV1938	0x8938	Ectiva 1938
-
-/* Cyclades products */
-product CYCLADES CYCLOMY_1	0x0100	Cyclom-Y below 1M
-product CYCLADES CYCLOMY_2	0x0101	Cyclom-Y
-product CYCLADES CYCLOM4Y_1	0x0102	Cyclom-4Y below 1M
-product CYCLADES CYCLOM4Y_2	0x0103	Cyclom-4Y
-product CYCLADES CYCLOM8Y_1	0x0104	Cyclom-8Y below 1M
-product CYCLADES CYCLOM8Y_2	0x0105	Cyclom-8Y
 
 /* Cyclone Microsystems products */
 product CYCLONE PCI_700		0x0700	IQ80310

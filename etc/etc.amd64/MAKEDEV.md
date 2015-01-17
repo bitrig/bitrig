@@ -37,7 +37,6 @@ _DEV(ch, 17)
 _DEV(st, 14, 5)
 _TITLE(term)
 _DEV(com, 8)
-_DEV(ttyc, 38)
 _TITLE(pty)
 _DEV(ptm, 81)
 _DEV(pty, 6)
@@ -98,11 +97,6 @@ ramdisk)
 
 _std(1, 2, 50, 7)
 	M xf86		c 2 4 600
-	;;
-
-ttyc*)
-	M ttyc$U c 38 $U 660 dialer uucp
-	M cuac$U c 38 Add($U, 128) 660 dialer uucp
 	;;
 dnl
 dnl amd64 specific targets

@@ -348,10 +348,6 @@ file	dev/ic/pcf8584.c		pcfiic
 define	ac97
 file	dev/ic/ac97.c			ac97
 
-# Cyclades Cyclom multiport serial cards
-device	cy: tty
-file	dev/ic/cy.c			cy & (cy_isa | cy_pci)	needs-flag
-
 # PC parallel ports (IEEE 1284)
 device	lpt
 file	dev/ic/lpt.c			lpt & (lpt_isa | lpt_localbus |

@@ -7156,30 +7156,6 @@ static const struct pci_known_product pci_known_products[] = {
 	    "Ectiva 1938",
 	},
 	{
-	    PCI_VENDOR_CYCLADES, PCI_PRODUCT_CYCLADES_CYCLOMY_1,
-	    "Cyclom-Y below 1M",
-	},
-	{
-	    PCI_VENDOR_CYCLADES, PCI_PRODUCT_CYCLADES_CYCLOMY_2,
-	    "Cyclom-Y",
-	},
-	{
-	    PCI_VENDOR_CYCLADES, PCI_PRODUCT_CYCLADES_CYCLOM4Y_1,
-	    "Cyclom-4Y below 1M",
-	},
-	{
-	    PCI_VENDOR_CYCLADES, PCI_PRODUCT_CYCLADES_CYCLOM4Y_2,
-	    "Cyclom-4Y",
-	},
-	{
-	    PCI_VENDOR_CYCLADES, PCI_PRODUCT_CYCLADES_CYCLOM8Y_1,
-	    "Cyclom-8Y below 1M",
-	},
-	{
-	    PCI_VENDOR_CYCLADES, PCI_PRODUCT_CYCLADES_CYCLOM8Y_2,
-	    "Cyclom-8Y",
-	},
-	{
 	    PCI_VENDOR_CYCLONE, PCI_PRODUCT_CYCLONE_PCI_700,
 	    "IQ80310",
 	},
@@ -24826,10 +24802,6 @@ static const struct pci_known_vendor pci_known_vendors[] = {
 	{
 	    PCI_VENDOR_COMPEX,
 	    "Compex",
-	},
-	{
-	    PCI_VENDOR_CYCLADES,
-	    "Cyclades",
 	},
 	{
 	    PCI_VENDOR_ESSENTIAL,

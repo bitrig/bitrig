@@ -198,7 +198,6 @@
 #define	PCI_VENDOR_ZORAN	0x11de		/* Zoran */
 #define	PCI_VENDOR_PIJNENBURG	0x11e3		/* Pijnenburg */
 #define	PCI_VENDOR_COMPEX	0x11f6		/* Compex */
-#define	PCI_VENDOR_CYCLADES	0x120e		/* Cyclades */
 #define	PCI_VENDOR_ESSENTIAL	0x120f		/* Essential Communications */
 #define	PCI_VENDOR_O2MICRO	0x1217		/* O2 Micro */
 #define	PCI_VENDOR_3DFX	0x121a		/* 3DFX */
@@ -2298,14 +2297,6 @@
 #define	PCI_PRODUCT_CREATIVELABS_SBJOY3	0x7005		/* PCI Gameport Joystick */
 #define	PCI_PRODUCT_CREATIVELABS_PPB	0x7006		/* PCIE-PCI */
 #define	PCI_PRODUCT_CREATIVELABS_EV1938	0x8938		/* Ectiva 1938 */
-
-/* Cyclades products */
-#define	PCI_PRODUCT_CYCLADES_CYCLOMY_1	0x0100		/* Cyclom-Y below 1M */
-#define	PCI_PRODUCT_CYCLADES_CYCLOMY_2	0x0101		/* Cyclom-Y */
-#define	PCI_PRODUCT_CYCLADES_CYCLOM4Y_1	0x0102		/* Cyclom-4Y below 1M */
-#define	PCI_PRODUCT_CYCLADES_CYCLOM4Y_2	0x0103		/* Cyclom-4Y */
-#define	PCI_PRODUCT_CYCLADES_CYCLOM8Y_1	0x0104		/* Cyclom-8Y below 1M */
-#define	PCI_PRODUCT_CYCLADES_CYCLOM8Y_2	0x0105		/* Cyclom-8Y */
 
 /* Cyclone Microsystems products */
 #define	PCI_PRODUCT_CYCLONE_PCI_700	0x0700		/* IQ80310 */

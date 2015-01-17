@@ -287,13 +287,11 @@
 ./usr/include/dev/ic/bwivar.h
 ./usr/include/dev/ic/cacreg.h
 ./usr/include/dev/ic/cacvar.h
-./usr/include/dev/ic/cd1400reg.h
 ./usr/include/dev/ic/cissreg.h
 ./usr/include/dev/ic/cissvar.h
 ./usr/include/dev/ic/comreg.h
 ./usr/include/dev/ic/comvar.h
 ./usr/include/dev/ic/cs4231reg.h
-./usr/include/dev/ic/cyreg.h
 ./usr/include/dev/ic/dc21040reg.h
 ./usr/include/dev/ic/dcreg.h
 ./usr/include/dev/ic/dl10019reg.h

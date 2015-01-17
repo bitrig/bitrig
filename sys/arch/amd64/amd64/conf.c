@@ -129,8 +129,6 @@ cdev_decl(lms);
 #include "opms.h"
 cdev_decl(pms);
 #endif
-#include "cy.h"
-cdev_decl(cy);
 #include "tun.h"
 #include "audio.h"
 #include "video.h"
@@ -212,7 +210,7 @@ struct cdevsw	cdevsw[] =
 	cdev_notdef(),			/* 35: Microsoft mouse */
 	cdev_notdef(),			/* 36: Logitech mouse */
 	cdev_notdef(),			/* 37: Extended PS/2 mouse */
-	cdev_tty_init(NCY,cy),		/* 38: Cyclom serial port */
+	cdev_notdef(),			/* 38: was: Cyclom serial port */
 	cdev_notdef(),			/* 39: Mitsumi CD-ROM */
 	cdev_tun_init(NTUN,tun),	/* 40: network tunnel */
 	cdev_disk_init(NVND,vnd),	/* 41: vnode disk driver */

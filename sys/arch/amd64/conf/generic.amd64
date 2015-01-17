@@ -309,9 +309,6 @@ com3	at isa? disable port 0x2e8 irq 9 # (conflicts with some video cards)
 com*	at pcmcia?			# PCMCIA modems/serial ports
 com*	at puc?
 
-# options CY_HW_RTS
-#cy*	at pci?				# PCI cyclom serial card
-
 lpt0	at isa? port 0x378 irq 7	# standard PC parallel ports
 #lpt1	at isa? port 0x278
 #lpt2	at isa? port 0x3bc
