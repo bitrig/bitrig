@@ -144,8 +144,6 @@ cdev_decl(cy);
 #include "ugen.h"
 #include "ulpt.h"
 #include "ucom.h"
-#include "cz.h"
-cdev_decl(cztty);
 #include "radio.h"
 #include "nvram.h"
 cdev_decl(nvram);
@@ -250,7 +248,7 @@ struct cdevsw	cdevsw[] =
 	    wsmouse),
 	cdev_mouse_init(NWSMUX, wsmux),	/* 69: ws multiplexor */
 	cdev_notdef(),			/* 70: was: /dev/crypto */
-	cdev_tty_init(NCZ,cztty),	/* 71: Cyclades-Z serial port */
+	cdev_notdef(),			/* 71: was: Cyclades-Z serial port */
 #ifdef USER_PCICONF
 	cdev_pci_init(NPCI,pci),        /* 72: PCI user */
 #else

@@ -2301,8 +2301,6 @@ product CYCLADES CYCLOM4Y_1	0x0102	Cyclom-4Y below 1M
 product CYCLADES CYCLOM4Y_2	0x0103	Cyclom-4Y
 product CYCLADES CYCLOM8Y_1	0x0104	Cyclom-8Y below 1M
 product CYCLADES CYCLOM8Y_2	0x0105	Cyclom-8Y
-product CYCLADES CYCLOMZ_1	0x0200	Cyclom-Z below 1M
-product CYCLADES CYCLOMZ_2	0x0201	Cyclom-Z
 
 /* Cyclone Microsystems products */
 product CYCLONE PCI_700		0x0700	IQ80310

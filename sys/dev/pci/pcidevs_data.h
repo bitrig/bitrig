@@ -7180,14 +7180,6 @@ static const struct pci_known_product pci_known_products[] = {
 	    "Cyclom-8Y",
 	},
 	{
-	    PCI_VENDOR_CYCLADES, PCI_PRODUCT_CYCLADES_CYCLOMZ_1,
-	    "Cyclom-Z below 1M",
-	},
-	{
-	    PCI_VENDOR_CYCLADES, PCI_PRODUCT_CYCLADES_CYCLOMZ_2,
-	    "Cyclom-Z",
-	},
-	{
 	    PCI_VENDOR_CYCLONE, PCI_PRODUCT_CYCLONE_PCI_700,
 	    "IQ80310",
 	},

@@ -589,11 +589,6 @@ device	nge: ether, ifnet, mii, ifmedia, mii_phy
 attach	nge at pci
 file	dev/pci/if_nge.c		nge
 
-# Cyclades-Z series of intelligent multi-port serial adapters
-device	cz
-attach	cz at pci
-file	dev/pci/cz.c			cz		needs-flag
-
 # Level-1 LXT1001 Gigabit MAC
 device	lge: ether, ifnet, mii, ifmedia, mii_phy
 attach	lge at pci

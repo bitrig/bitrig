@@ -540,7 +540,6 @@
 ./usr/include/dev/pci/cs4281reg.h
 ./usr/include/dev/pci/cy82c693reg.h
 ./usr/include/dev/pci/cy82c693var.h
-./usr/include/dev/pci/czreg.h
 ./usr/include/dev/pci/drm
 ./usr/include/dev/pci/drm/drm.h
 ./usr/include/dev/pci/drm/drmP.h

@@ -83,7 +83,6 @@ cdev_decl(pctr);
 #define CMAJ_UCOM	66
 #define CMAJ_WSKBD	67
 #define CMAJ_WSMOUSE	68
-#define CMAJ_CZTTY	71
 #define CMAJ_RADIO	76
 #define CMAJ_GPIO	88
 

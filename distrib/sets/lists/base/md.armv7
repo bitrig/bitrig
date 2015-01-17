@@ -928,7 +928,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/cs4281reg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/cy82c693reg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/cy82c693var.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/czreg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/drm
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/drm/drm.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/drm/drmP.ph
