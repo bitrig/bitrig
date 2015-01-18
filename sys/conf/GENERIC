@@ -31,7 +31,6 @@ option		UVM_SWAP_ENCRYPT# support encryption of pages going to swap
 
 option		FFS		# UFS
 option		FFS2		# UFS2
-option		FFS_SOFTUPDATES	# Soft updates
 option		WAPBL		# File system journaling support
 option		UFS_DIRHASH	# hash large directories
 option		QUOTA		# UFS quotas
