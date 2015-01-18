@@ -1,4 +1,4 @@
-/*	$OpenBSD: fiq_subr.S,v 1.2 2011/09/20 22:02:11 miod Exp $	*/
+/*	$OpenBSD: fiq_subr.S,v 1.3 2015/01/18 12:03:11 jsg Exp $	*/
 /*	$NetBSD: fiq_subr.S,v 1.3 2002/04/12 18:50:31 thorpej Exp $	*/
 
 /*
