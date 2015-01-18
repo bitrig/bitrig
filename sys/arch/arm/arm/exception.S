@@ -1,4 +1,4 @@
-/*	$OpenBSD: exception.S,v 1.3 2011/09/20 22:02:10 miod Exp $	*/
+/*	$OpenBSD: exception.S,v 1.4 2015/01/18 10:17:41 jsg Exp $	*/
 /*	$NetBSD: exception.S,v 1.13 2003/10/31 16:30:15 scw Exp $	*/
 
 /*
