@@ -444,7 +444,7 @@ void
 cdstrategy(struct buf *bp)
 {
 	struct cd_softc *sc;
-	int s;
+	int s, bqwait;
 
 	sc = cdlookup(DISKUNIT(bp->b_dev));
 	if (sc == NULL) {
@@ -472,7 +472,7 @@ cdstrategy(struct buf *bp)
 		goto done;
 
 	/* Place it in the queue of disk activities for this disk. */
-	bufq_queue(&sc->sc_bufq, bp);	
+	bufq_queue(&sc->sc_bufq, bp, &bqwait);
 
 	/*
 	 * Tell the device to get going on the transfer if it's
@@ -480,6 +480,8 @@ cdstrategy(struct buf *bp)
 	 */
 	scsi_xsh_add(&sc->sc_xsh);
 
+	if (bqwait)
+		bufq_wait(&sc->sc_bufq);
 	device_unref(&sc->sc_dev);
 	return;
 

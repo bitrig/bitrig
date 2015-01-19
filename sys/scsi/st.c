@@ -823,7 +823,7 @@ ststrategy(struct buf *bp)
 {
 	struct scsi_link *sc_link;
 	struct st_softc *st;
-	int s;
+	int s, bqwait;
 
 	st = stlookup(STUNIT(bp->b_dev));
 	if (st == NULL) {
@@ -872,7 +872,7 @@ ststrategy(struct buf *bp)
 	 * at the end (a bit silly because we only have on user..
 	 * (but it could fork()))
 	 */
-	bufq_queue(&st->sc_bufq, bp);
+	bufq_queue(&st->sc_bufq, bp, &bqwait);
 
 	/*
 	 * Tell the device to get going on the transfer if it's
@@ -881,6 +881,8 @@ ststrategy(struct buf *bp)
 	 */
 	scsi_xsh_add(&st->sc_xsh);
 
+	if (bqwait)
+		bufq_wait(&st->sc_bufq);
 	device_unref(&st->sc_dev);
 	return;
 bad:

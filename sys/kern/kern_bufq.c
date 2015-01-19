@@ -165,7 +165,7 @@ bufq_destroy(struct bufq *bq)
 
 
 void
-bufq_queue(struct bufq *bq, struct buf *bp)
+bufq_queue(struct bufq *bq, struct buf *bp, int *bqwait)
 {
 	mtx_enter(&bq->bufq_mtx);
 	while (bq->bufq_stop) {
@@ -176,6 +176,9 @@ bufq_queue(struct bufq *bq, struct buf *bp)
 	bq->bufq_outstanding++;
 	bq->bufq_impl->impl_queue(bq->bufq_data, bp);
 	mtx_leave(&bq->bufq_mtx);
+
+	/* If it's an asynchronous write, the caller should bufq_wait(). */
+	*bqwait = (bp->b_flags & B_READ) == 0 && (bp->b_flags & B_ASYNC);
 }
 
 struct buf *

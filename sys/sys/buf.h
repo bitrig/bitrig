@@ -93,7 +93,7 @@ int		 bufq_init(struct bufq *, int);
 int		 bufq_switch(struct bufq *, int);
 void		 bufq_destroy(struct bufq *);
 
-void		 bufq_queue(struct bufq *, struct buf *);
+void		 bufq_queue(struct bufq *, struct buf *, int *);
 struct buf	*bufq_dequeue(struct bufq *);
 void		 bufq_requeue(struct bufq *, struct buf *);
 int		 bufq_peek(struct bufq *);

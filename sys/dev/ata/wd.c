@@ -401,7 +401,7 @@ void
 wdstrategy(struct buf *bp)
 {
 	struct wd_softc *wd;
-	int s;
+	int s, bqwait;
 
 	wd = wdlookup(DISKUNIT(bp->b_dev));
 	if (wd == NULL) {
@@ -429,10 +429,12 @@ wdstrategy(struct buf *bp)
 	}
 
 	/* Queue transfer on drive, activate drive and controller if idle. */
-	bufq_queue(&wd->sc_bufq, bp);
+	bufq_queue(&wd->sc_bufq, bp, &bqwait);
 	s = splbio();
 	wdstart(wd);
 	splx(s);
+	if (bqwait)
+		bufq_wait(&wd->sc_bufq);
 	device_unref(&wd->sc_dev);
 	return;
 

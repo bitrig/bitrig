@@ -1156,7 +1156,7 @@ sw_reg_strategy(struct swapdev *sdp, struct buf *bp, int bn)
 	daddr_t	nbn;
 	caddr_t		addr;
 	off_t		byteoff;
-	int		s, off, nra, error, sz, resid;
+	int		s, off, nra, error, sz, resid, bqwait;
 
 	/*
 	 * allocate a vndxfer head for this transfer and point it to
@@ -1286,7 +1286,7 @@ sw_reg_strategy(struct swapdev *sdp, struct buf *bp, int bn)
 		bgetvp(vp, &nbp->vb_buf);
 
 		/* start I/O if we are not over our limit */
-		bufq_queue(&sdp->swd_bufq, &nbp->vb_buf);
+		bufq_queue(&sdp->swd_bufq, &nbp->vb_buf, &bqwait);
 		sw_reg_start(sdp);
 		splx(s);
 
@@ -1310,6 +1310,8 @@ out: /* Arrive here at splbio */
 		biodone(bp);
 	}
 	splx(s);
+	if (bqwait)
+		bufq_wait(&sdp->swd_bufq);
 }
 
 /* sw_reg_start: start an I/O request on the requested swapdev. */

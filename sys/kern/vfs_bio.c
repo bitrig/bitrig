@@ -558,7 +558,6 @@ bwrite(struct buf *bp)
 	int rv, async, wasdelayed, s;
 	struct vnode *vp;
 	struct mount *mp;
-	struct bufq *bq;
 
 	vp = bp->b_vp;
 	if (vp != NULL)
@@ -619,31 +618,22 @@ bwrite(struct buf *bp)
 
 	/* Initiate disk write.  Make sure the appropriate party is charged. */
 	bp->b_vp->v_numoutput++;
-	bq = bp->b_bq;
 	splx(s);
 	SET(bp->b_flags, B_WRITEINPROG);
 	VOP_STRATEGY(bp);
 
-	/*
-	 * If the queue is above the high water mark, wait till
-	 * the number of outstanding write bufs drops below the low
-	 * water mark.
-	 */
-	if (bq)
-		bufq_wait(bq);
-
-	if (async)
-		return (0);
+	if (async == 0) {
+		rv = biowait(bp);	/* Wait for completion. */
+		brelse(bp);
+		return (rv);
+	}
 
 	/*
-	 * If I/O was synchronous, wait for it to complete.
+	 * In the asynchronous case, we no longer own the buffer. It is under
+	 * control of the device driver until biodone() happens.
 	 */
-	rv = biowait(bp);
 
-	/* Release the buffer. */
-	brelse(bp);
-
-	return (rv);
+	return (0);
 }
 
 /*
