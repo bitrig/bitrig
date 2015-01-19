@@ -1,4 +1,4 @@
-/*	$OpenBSD: pptpd.c,v 1.24 2014/10/25 03:23:49 lteo Exp $	*/
+/*	$OpenBSD: pptpd.c,v 1.25 2015/01/19 01:48:59 deraadt Exp $	*/
 
 /*-
  * Copyright (c) 2009 Internet Initiative Japan Inc.
@@ -25,12 +25,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-/* $Id: pptpd.c,v 1.24 2014/10/25 03:23:49 lteo Exp $ */
+/* $Id: pptpd.c,v 1.25 2015/01/19 01:48:59 deraadt Exp $ */
 
 /**@file
  * This file provides a implementation of PPTP daemon.  Currently it
  * provides functions for PAC (PPTP Access Concentrator) only.
- * $Id: pptpd.c,v 1.24 2014/10/25 03:23:49 lteo Exp $
+ * $Id: pptpd.c,v 1.25 2015/01/19 01:48:59 deraadt Exp $
  */
 #include <sys/types.h>
 #include <sys/param.h>
