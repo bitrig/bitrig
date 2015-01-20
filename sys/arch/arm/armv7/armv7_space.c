@@ -239,6 +239,9 @@ armv7_bs_barrier(void *t, bus_space_handle_t bsh, bus_size_t offset,
     bus_size_t len, int flags)
 {
 	cpu_drain_writebuf();
+	if (flags & BUS_SPACE_BARRIER_WRITE) {
+		cpu_sdcache_drain_writebuf();
+	}
 }
 
 void *
