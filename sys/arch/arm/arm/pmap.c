@@ -3473,17 +3473,11 @@ pmap_pte_init_armv7(void)
 {
 	uint32_t cachereg;
 
-	/*
-	 * XXX 
-	 * ARMv7 is compatible with generic, but we want to use proper TEX
-	 * settings eventually
-	 */
 	pmap_pte_init_generic();
 
-	/* write-allocate should be tested */
-	pte_l1_s_cache_mode = ARM_L1S_NRML_IWB_OWB;
-	pte_l2_l_cache_mode = ARM_L2L_NRML_IWB_OWB;
-	pte_l2_s_cache_mode = ARM_L2S_NRML_IWB_OWB;
+	pte_l1_s_cache_mode = ARM_L1S_NRML_IWBA_OWBA;
+	pte_l2_l_cache_mode = ARM_L2L_NRML_IWBA_OWBA;
+	pte_l2_s_cache_mode = ARM_L2S_NRML_IWBA_OWBA;
 
 	pte_l1_s_cache_mode_pt = ARM_L1S_NRML_IWT_OWT;
 	pte_l2_l_cache_mode_pt = ARM_L2L_NRML_IWT_OWT;
