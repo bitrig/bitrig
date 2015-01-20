@@ -1770,7 +1770,8 @@ em_hardware_init(struct em_softc *sc)
 	sc->tx_fifo_head = 0;
 
 	/* Make sure we have a good EEPROM before we read from it */
-	if (em_validate_eeprom_checksum(&sc->hw) < 0) {
+	if (em_get_flash_presence_i211(&sc->hw) &&
+	    em_validate_eeprom_checksum(&sc->hw) < 0) {
 		/*
 		 * Some PCIe parts fail the first check due to
 		 * the link being in sleep state, call it again,
@@ -1783,7 +1784,8 @@ em_hardware_init(struct em_softc *sc)
 		}
 	}
 
-	if (em_read_part_num(&sc->hw, &(sc->part_num)) < 0) {
+	if (em_get_flash_presence_i211(&sc->hw) &&
+	    em_read_part_num(&sc->hw, &(sc->part_num)) < 0) {
 		printf("%s: EEPROM read error while reading part number\n",
 		       sc->sc_dv.dv_xname);
 		return (EIO);

@@ -113,6 +113,9 @@ static int32_t	em_read_eeprom_ich8(struct em_hw *, uint16_t, uint16_t,
 		    uint16_t *);
 static int32_t	em_write_eeprom_ich8(struct em_hw *, uint16_t, uint16_t,
 		    uint16_t *);
+static int32_t	em_read_invm_i210(struct em_hw *, uint16_t, uint16_t,
+		    uint16_t *);
+static int32_t	em_read_invm_word_i210(struct em_hw *, uint16_t, uint16_t *);
 static void	em_release_software_flag(struct em_hw *);
 static int32_t	em_set_d3_lplu_state(struct em_hw *, boolean_t);
 static int32_t	em_set_d0_lplu_state(struct em_hw *, boolean_t);
@@ -5523,6 +5526,12 @@ em_init_eeprom_params(struct em_hw *hw)
 			eecd &= ~E1000_EECD_AUPDEN;
 			E1000_WRITE_REG(hw, EECD, eecd);
 		}
+		if (em_get_flash_presence_i211(hw) == FALSE) {
+			eeprom->type = em_eeprom_invm;
+			eeprom->word_size = INVM_SIZE;
+			eeprom->use_eerd = FALSE;
+			eeprom->use_eewr = FALSE;
+		}
 		break;
 	case em_80003es2lan:
 		eeprom->type = em_eeprom_spi;
@@ -5986,6 +5995,7 @@ em_read_eeprom(struct em_hw *hw, uint16_t offset, uint16_t words,
 	 * FW or other port software does not interrupt.
 	 */
 	if (em_is_onboard_nvm_eeprom(hw) == TRUE &&
+	    em_get_flash_presence_i211(hw) == TRUE &&
 	    hw->eeprom.use_eerd == FALSE) {
 		/* Prepare the EEPROM for bit-bang reading */
 		if (em_acquire_eeprom(hw) != E1000_SUCCESS)
@@ -5998,6 +6008,11 @@ em_read_eeprom(struct em_hw *hw, uint16_t offset, uint16_t words,
 	/* ICH EEPROM access is done via the ICH flash controller */
 	if (eeprom->type == em_eeprom_ich8)
 		return em_read_eeprom_ich8(hw, offset, words, data);
+
+	/* Some i210/i211 have a special OTP chip */
+	if (eeprom->type == em_eeprom_invm)
+		return em_read_invm_i210(hw, offset, words, data);
+
 	/*
 	 * Set up the SPI or Microwire EEPROM for bit-bang reading.  We have
 	 * acquired the EEPROM at this point, so any returns should relase it
@@ -6179,6 +6194,28 @@ em_is_onboard_nvm_eeprom(struct em_hw *hw)
 		}
 	}
 	return TRUE;
+}
+
+/******************************************************************************
+ * Check if flash device is detected.
+ *
+ * hw - Struct containing variables accessed by shared code
+ *****************************************************************************/
+boolean_t
+em_get_flash_presence_i211(struct em_hw *hw)
+{
+	uint32_t eecd;
+	DEBUGFUNC("em_get_flash_presence_i211");
+
+	if (hw->mac_type != em_i210)
+		return TRUE;
+
+	eecd = E1000_READ_REG(hw, EECD);
+
+	if (eecd & E1000_EECD_FLUPD)
+		return TRUE;
+
+	return FALSE;
 }
 
 /******************************************************************************
@@ -9725,6 +9762,84 @@ em_erase_ich8_4k_segment(struct em_hw *hw, uint32_t bank)
 	}
 	if (error_flag != 1)
 		error = E1000_SUCCESS;
+	return error;
+}
+
+/******************************************************************************
+ * Reads 16-bit words from the OTP. Return error when the word is not
+ * stored in OTP.
+ *
+ * hw - Struct containing variables accessed by shared code
+ * offset - offset of word in the OTP to read
+ * data - word read from the OTP
+ * words - number of words to read
+ *****************************************************************************/
+STATIC int32_t
+em_read_invm_i210(struct em_hw *hw, uint16_t offset, uint16_t words,
+    uint16_t *data)
+{
+	int32_t  ret_val = E1000_SUCCESS;
+
+	switch (offset)
+	{
+	case EEPROM_MAC_ADDRESS:
+	case EEPROM_MAC_ADDRESS_WORD1:
+	case EEPROM_MAC_ADDRESS_WORD2:
+		/* Generate random MAC address if there's none. */
+		ret_val = em_read_invm_word_i210(hw, offset, data);
+		if (ret_val != E1000_SUCCESS) {
+			*data = 0xFFFF;
+			ret_val = E1000_SUCCESS;
+		}
+		break;
+	case EEPROM_ID_LED_SETTINGS:
+		ret_val = em_read_invm_word_i210(hw, offset, data);
+		if (ret_val != E1000_SUCCESS) {
+			*data = ID_LED_RESERVED_FFFF;
+			ret_val = E1000_SUCCESS;
+		}
+		break;
+	}
+
+	return ret_val;
+}
+
+/******************************************************************************
+ * Reads 16-bit words from the OTP. Return error when the word is not
+ * stored in OTP.
+ *
+ * hw - Struct containing variables accessed by shared code
+ * offset - offset of word in the OTP to read
+ * data - word read from the OTP
+ *****************************************************************************/
+STATIC int32_t
+em_read_invm_word_i210(struct em_hw *hw, uint16_t address, uint16_t *data)
+{
+	int32_t  error = -E1000_NOT_IMPLEMENTED;
+	uint32_t invm_dword;
+	uint16_t i;
+	uint8_t record_type, word_address;
+
+	for (i = 0; i < INVM_SIZE; i++) {
+		invm_dword = E1000_READ_REG(hw, INVM_DATA_REG(i));
+		/* Get record type */
+		record_type = INVM_DWORD_TO_RECORD_TYPE(invm_dword);
+		if (record_type == INVM_UNINITIALIZED_STRUCTURE)
+			break;
+		if (record_type == INVM_CSR_AUTOLOAD_STRUCTURE)
+			i += INVM_CSR_AUTOLOAD_DATA_SIZE_IN_DWORDS;
+		if (record_type == INVM_RSA_KEY_SHA256_STRUCTURE)
+			i += INVM_RSA_KEY_SHA256_DATA_SIZE_IN_DWORDS;
+		if (record_type == INVM_WORD_AUTOLOAD_STRUCTURE) {
+			word_address = INVM_DWORD_TO_WORD_ADDRESS(invm_dword);
+			if (word_address == address) {
+				*data = INVM_DWORD_TO_WORD_DATA(invm_dword);
+				error = E1000_SUCCESS;
+				break;
+			}
+		}
+	}
+
 	return error;
 }
 
