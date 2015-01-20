@@ -1,4 +1,4 @@
-/*	$OpenBSD: kern_sysctl.c,v 1.278 2015/01/13 10:07:58 mpf Exp $	*/
+/*	$OpenBSD: kern_sysctl.c,v 1.279 2015/01/20 19:43:21 kettenis Exp $	*/
 /*	$NetBSD: kern_sysctl.c,v 1.17 1996/05/20 17:49:05 mrg Exp $	*/
 
 /*-
@@ -1582,6 +1582,7 @@ sysctl_proc_args(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 	char **rargv, **vargv;		/* reader vs. victim */
 	char *rarg, *varg, *buf;
 	struct vmspace *vm;
+	vaddr_t ps_strings;
 
 	if (namelen > 2)
 		return (ENOTDIR);
@@ -1626,6 +1627,7 @@ sysctl_proc_args(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 	    (error = suser(cp, 0)) != 0))
 		return (error);
 
+	ps_strings = vpr->ps_strings;
 	vm = vpr->ps_vmspace;
 	vm->vm_refcnt++;
 	vpr = NULL;
@@ -1635,8 +1637,8 @@ sysctl_proc_args(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 	iov.iov_base = &pss;
 	iov.iov_len = sizeof(pss);
 	uio.uio_iov = &iov;
-	uio.uio_iovcnt = 1;	
-	uio.uio_offset = (off_t)(vaddr_t)PS_STRINGS;
+	uio.uio_iovcnt = 1;
+	uio.uio_offset = (off_t)ps_strings;
 	uio.uio_resid = sizeof(pss);
 	uio.uio_segflg = UIO_SYSSPACE;
 	uio.uio_rw = UIO_READ;
