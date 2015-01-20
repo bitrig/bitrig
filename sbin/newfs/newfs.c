@@ -1,4 +1,4 @@
-/*	$OpenBSD: newfs.c,v 1.97 2014/07/20 01:38:40 guenther Exp $	*/
+/*	$OpenBSD: newfs.c,v 1.99 2015/01/20 18:22:21 deraadt Exp $	*/
 /*	$NetBSD: newfs.c,v 1.20 1996/05/16 07:13:03 thorpej Exp $	*/
 
 /*
