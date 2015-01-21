@@ -144,7 +144,7 @@ include	"dev/pcmcia/files.pcmcia"
 # PCI-ISA bridges
 device	pcib: isabus
 attach	pcib at pci
-file	arch/amd64/pci/pcib.c			pcib | amdpcib | tcpcib
+file	arch/amd64/pci/pcib.c			pcib | amdpcib | tcpcib | iapcu
 
 # AMD 8111 LPC bridge
 device	amdpcib: isabus
@@ -155,6 +155,11 @@ file	dev/pci/amdpcib.c			amdpcib
 device	tcpcib: isabus
 attach	tcpcib at pci
 file	dev/pci/tcpcib.c			tcpcib
+
+# Intel Atom C2000 Platform Controller Unit
+device	iapcu: isabus, gpiobus
+attach	iapcu at pci
+file	dev/pci/iapcu.c				iapcu
 
 device	aapic
 attach	aapic at pci

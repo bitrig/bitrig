@@ -96,6 +96,10 @@ uguru0	at isa? disable port 0xe0	# ABIT uGuru
 
 aps0	at isa? port 0x1600		# ThinkPad Active Protection System
 
+iapcu*	at pci?			# Intel Atom C2000 Platform Controller Unit
+gpio*	at iapcu?
+isa0	at iapcu?
+
 piixpm*	at pci?			# Intel PIIX PM
 iic*	at piixpm?
 ichiic*	at pci?			# Intel ICH SMBus controller
