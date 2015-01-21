@@ -1,4 +1,4 @@
-#	$OpenBSD: GENERIC,v 1.213 2014/10/09 03:36:32 tedu Exp $
+#	$OpenBSD: GENERIC,v 1.214 2015/01/21 02:23:14 guenther Exp $
 #
 #	Machine-independent option; used by all architectures for their
 #	GENERIC kernel

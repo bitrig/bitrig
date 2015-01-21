@@ -1,4 +1,4 @@
-/*	$OpenBSD: if_tun.c,v 1.130 2014/12/19 17:14:40 tedu Exp $	*/
+/*	$OpenBSD: if_tun.c,v 1.131 2015/01/21 02:23:14 guenther Exp $	*/
 /*	$NetBSD: if_tun.c,v 1.24 1996/05/07 02:40:48 thorpej Exp $	*/
 
 /*

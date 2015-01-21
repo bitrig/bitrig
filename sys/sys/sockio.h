@@ -1,4 +1,4 @@
-/*	$OpenBSD: sockio.h,v 1.56 2015/01/06 21:26:46 stsp Exp $	*/
+/*	$OpenBSD: sockio.h,v 1.57 2015/01/21 02:23:14 guenther Exp $	*/
 /*	$NetBSD: sockio.h,v 1.5 1995/08/23 00:40:47 thorpej Exp $	*/
 
 /*-
