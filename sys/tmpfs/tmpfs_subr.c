@@ -74,11 +74,6 @@
  *			struct vnode::v_interlock
  */
 
-#if 0
-#include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: tmpfs_subr.c,v 1.83 2013/11/08 15:44:23 rmind Exp $");
-#endif
-
 #include <sys/param.h>
 #include <sys/dirent.h>
 #include <sys/event.h>

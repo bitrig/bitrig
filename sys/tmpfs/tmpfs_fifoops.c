@@ -35,11 +35,6 @@
  * tmpfs vnode interface for named pipes.
  */
 
-#if 0
-#include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: tmpfs_fifoops.c,v 1.9 2011/05/24 20:17:49 rmind Exp $");
-#endif
-
 #include <sys/param.h>
 #include <sys/vnode.h>
 

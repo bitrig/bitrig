@@ -35,11 +35,6 @@
  * tmpfs vnode interface.
  */
 
-#if 0
-#include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: tmpfs_vnops.c,v 1.100 2012/11/05 17:27:39 dholland Exp $");
-#endif
-
 #include <sys/param.h>
 #include <sys/dirent.h>
 #include <sys/fcntl.h>

@@ -42,11 +42,6 @@
  * allocate and release resources.
  */
 
-#if 0
-#include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: tmpfs_vfsops.c,v 1.53 2013/11/08 15:44:23 rmind Exp $");
-#endif
-
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/mount.h>
