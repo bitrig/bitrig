@@ -45,11 +45,9 @@
 
 #include <dev/vndioctl.h>
 
-#include <blf.h>
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <readpassphrase.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -66,47 +64,34 @@ int verbose = 0;
 int run_mount_vnd = 0;
 
 __dead void	 usage(void);
-int		 config(char *, char *, int, struct disklabel *, char *,
-		     size_t);
+int		 config(char *, char *, int, struct disklabel *);
 int		 getinfo(const char *);
-char		*get_pkcs_key(char *, char *);
 
 int
 main(int argc, char **argv)
 {
-	int	 ch, rv, action, opt_c, opt_k, opt_K, opt_l, opt_u;
-	char	*key, *mntopts, *rounds, *saltopt;
-	size_t	 keylen = 0;
+	int	 ch, rv, action, opt_c, opt_l, opt_u;
+	char	*mntopts;
 	extern char *__progname;
 	struct disklabel *dp = NULL;
 
 	if (strcasecmp(__progname, "mount_vnd") == 0)
 		run_mount_vnd = 1;
 
-	opt_c = opt_k = opt_K = opt_l = opt_u = 0;
-	key = mntopts = rounds = saltopt = NULL;
+	opt_c = opt_l = opt_u = 0;
+	mntopts = NULL;
 	action = VND_CONFIG;
 
-	while ((ch = getopt(argc, argv, "ckK:lo:S:t:uv")) != -1) {
+	while ((ch = getopt(argc, argv, "clo:t:uv")) != -1) {
 		switch (ch) {
 		case 'c':
 			opt_c = 1;
-			break;
-		case 'k':
-			opt_k = 1;
-			break;
-		case 'K':
-			opt_K = 1;
-			rounds = optarg;
 			break;
 		case 'l':
 			opt_l = 1;
 			break;
 		case 'o':
 			mntopts = optarg;
-			break;
-		case 'S':
-			saltopt = optarg;
 			break;
 		case 't':
 			dp = getdiskbyname(optarg);
@@ -137,26 +122,8 @@ main(int argc, char **argv)
 	else
 		action = VND_CONFIG;	/* default behavior */
 
-	if (saltopt && (!opt_K))
-		errx(1, "-S only makes sense when used with -K");
-
 	if (action == VND_CONFIG && argc == 2) {
 		int ind_raw, ind_reg;
-
-		if (opt_k || opt_K) {
-			fprintf(stderr,
-			    "WARNING: Consider using softraid crypto.\n");
-		}
-		if (opt_k) {
-			if (opt_K)
-				errx(1, "-k and -K are mutually exclusive");
-			key = getpass("Encryption key: ");
-			if (key == NULL || (keylen = strlen(key)) == 0)
-				errx(1, "Need an encryption key");
-		} else if (opt_K) {
-			key = get_pkcs_key(rounds, saltopt);
-			keylen = BLF_MAXUTILIZED;
-		}
 
 		/* fix order of arguments. */
 		if (run_mount_vnd) {
@@ -166,85 +133,15 @@ main(int argc, char **argv)
 			ind_raw = 0;
 			ind_reg = 1;
 		}
-		rv = config(argv[ind_raw], argv[ind_reg], action, dp, key,
-		    keylen);
+		rv = config(argv[ind_raw], argv[ind_reg], action, dp);
 	} else if (action == VND_UNCONFIG && argc == 1)
-		rv = config(argv[0], NULL, action, NULL, NULL, 0);
+		rv = config(argv[0], NULL, action, NULL);
 	else if (action == VND_GET)
 		rv = getinfo(argc ? argv[0] : NULL);
 	else
 		usage();
 
 	exit(rv);
-}
-
-char *
-get_pkcs_key(char *arg, char *saltopt)
-{
-	char		 passphrase[128];
-	char		 saltbuf[128], saltfilebuf[PATH_MAX];
-	char		*key = NULL;
-	char		*saltfile;
-	const char	*errstr;
-	int		 rounds;
-
-	rounds = strtonum(arg, 1000, INT_MAX, &errstr);
-	if (errstr)
-		err(1, "rounds: %s", errstr);
-	bzero(passphrase, sizeof(passphrase));
-	if (readpassphrase("Encryption key: ", passphrase, sizeof(passphrase),
-	    RPP_REQUIRE_TTY) == NULL)
-		errx(1, "Unable to read passphrase");
-	if (saltopt)
-		saltfile = saltopt;
-	else {
-		printf("Salt file: ");
-		fflush(stdout);
-		saltfile = fgets(saltfilebuf, sizeof(saltfilebuf), stdin);
-		if (saltfile)
-			saltfile[strcspn(saltfile, "\n")] = '\0';
-	}
-	if (!saltfile || saltfile[0] == '\0') {
-		warnx("Skipping salt file, insecure");
-		memset(saltbuf, 0, sizeof(saltbuf));
-	} else {
-		int fd;
-
-		fd = open(saltfile, O_RDONLY);
-		if (fd == -1) {
-			int *s;
-
-			fprintf(stderr, "Salt file not found, attempting to "
-			    "create one\n");
-			fd = open(saltfile, O_RDWR|O_CREAT|O_EXCL, 0600);
-			if (fd == -1)
-				err(1, "Unable to create salt file: '%s'",
-				    saltfile);
-			for (s = (int *)saltbuf;
-			    s < (int *)(saltbuf + sizeof(saltbuf)); s++)
-				*s = arc4random();
-			if (write(fd, saltbuf, sizeof(saltbuf))
-			    != sizeof(saltbuf))
-				err(1, "Unable to write salt file: '%s'",
-				    saltfile);
-			fprintf(stderr, "Salt file created as '%s'\n",
-			    saltfile);
-		} else {
-			if (read(fd, saltbuf, sizeof(saltbuf))
-			    != sizeof(saltbuf))
-				err(1, "Unable to read salt file: '%s'",
-				    saltfile);
-		}
-		close(fd);
-	}
-	if ((key = calloc(1, BLF_MAXUTILIZED)) == NULL)
-		err(1, NULL);
-	if (pkcs5_pbkdf2(passphrase, sizeof(passphrase), saltbuf,
-	    sizeof (saltbuf), key, BLF_MAXUTILIZED, rounds))
-		errx(1, "pkcs5_pbkdf2 failed");
-	memset(passphrase, 0, sizeof(passphrase));
-
-	return (key);
 }
 
 int
@@ -294,24 +191,19 @@ query:
 }
 
 int
-config(char *dev, char *file, int action, struct disklabel *dp, char *key,
-    size_t keylen)
+config(char *dev, char *file, int action, struct disklabel *dp)
 {
 	struct vnd_ioctl vndio;
 	char *rdev;
 	int fd, rv = -1;
 
-	if ((fd = opendev(dev, O_RDONLY, OPENDEV_PART, &rdev)) < 0) {
+	if ((fd = opendev(dev, O_RDONLY, OPENDEV_PART, &rdev)) < 0)
 		err(4, "%s", rdev);
-		goto out;
-	}
 
 	vndio.vnd_file = file;
 	vndio.vnd_secsize = (dp && dp->d_secsize) ? dp->d_secsize : DEV_BSIZE;
 	vndio.vnd_nsectors = (dp && dp->d_nsectors) ? dp->d_nsectors : 100;
 	vndio.vnd_ntracks = (dp && dp->d_ntracks) ? dp->d_ntracks : 1;
-	vndio.vnd_key = (u_char *)key;
-	vndio.vnd_keylen = keylen;
 
 	/*
 	 * Clear (un-configure) the device
@@ -337,9 +229,6 @@ config(char *dev, char *file, int action, struct disklabel *dp, char *key,
 
 	close(fd);
 	fflush(stdout);
- out:
-	if (key)
-		memset(key, 0, keylen);
 	return (rv < 0);
 }
 
@@ -350,13 +239,12 @@ usage(void)
 
 	if (run_mount_vnd)
 		(void)fprintf(stderr,
-		    "usage: mount_vnd [-k] [-K rounds] [-o options] "
-		    "[-S saltfile] [-t disktype]\n"
-		    "\t\t image vnd_dev\n");
+		    "usage: %s [-o options] [-t disktype] image vnd_dev\n",
+		    __progname);
 	else
 		(void)fprintf(stderr,
-		    "usage: %s [-ckluv] [-K rounds] [-S saltfile] "
-		    "[-t disktype] vnd_dev image\n", __progname);
+		    "usage: %s [-cluv] [-t disktype] vnd_dev image\n",
+		    __progname);
 
 	exit(1);
 }

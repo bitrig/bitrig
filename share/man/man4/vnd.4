@@ -84,19 +84,13 @@ Associate the file
 .Va vnd_file
 with a
 .Nm
-pseudo device, optionally encrypted using the Blowfish cipher and the key
-specified in
-.Va vnd_key
-of length
-.Va vnd_keylen .
+pseudo device.
 The size of the configured device is returned in
 .Va vnd_size .
 .Bd -literal -offset indent
 struct vnd_ioctl {
 	char	*vnd_file;
 	off_t	vnd_size;
-	u_char	*vnd_key;
-	int	vnd_keylen;
 };
 .Ed
 .It Dv VNDIOCCLR Fa "struct vnd_ioctl *"

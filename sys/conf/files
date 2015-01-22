@@ -830,7 +830,7 @@ file crypto/md5.c
 file crypto/rmd160.c			(inet & ipsec) | crypto
 file crypto/sha1.c			(inet & ipsec) | crypto | carp | wlan
 file crypto/sha2.c
-file crypto/blf.c			(inet & ipsec) | crypto | vnd
+file crypto/blf.c			(inet & ipsec) | crypto
 file crypto/cast.c			(inet & ipsec) | crypto
 file crypto/ecb_enc.c			(inet & ipsec) | crypto
 file crypto/set_key.c			(inet & ipsec) | crypto
