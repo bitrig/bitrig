@@ -247,6 +247,39 @@ struct bioc_installboot {
 	u_int32_t	bb_bootldr_size;
 };
 
+/*
+ * vnd specific ioctls
+ *
+ * Before you can use a unit, it must be configured with BIOCVNDSET.
+ * The configuration persists across opens and closes of the device;
+ * an BIOCVNDCLR must be used to reset a configuration.  An attempt to
+ * BIOCVNDSET an already active unit will return EBUSY.
+ */
+
+#define BIOCVNDSET _IOWR('B', 42, struct bioc_vndset)	/* enable disk */
+struct bioc_vndset {
+	struct bio	bvs_bio;
+	char		*bvs_file;	/* pathname of file to mount */
+	size_t		bvs_secsize;	/* sector size in bytes */
+	size_t		bvs_nsectors;	/* number of sectors in a track */
+	size_t		bvs_ntracks;	/* number of tracks per cylinder */
+	off_t		bvs_size;	/* (returned) size of disk */
+};
+
+#define BIOCVNDCLR _IOW('B', 43, struct bioc_vndclr)	/* disable disk */
+struct bioc_vndclr {
+	struct bio	bvc_bio;
+};
+
+#define BIOCVNDGET _IOWR('B', 44, struct bioc_vndget)	/* get disk info */
+struct bioc_vndget {
+	struct bio	bvg_bio;
+#define VNDNLEN	90
+	char		bvg_file[VNDNLEN];	/* vnd file */
+	dev_t		bvg_dev;		/* vnd device */
+	ino_t		bvg_ino;		/* vnd inode */
+};
+
 /* kernel and userspace defines */
 #define BIOC_INQ		0x0001
 #define BIOC_DISK		0x0002

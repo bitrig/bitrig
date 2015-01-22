@@ -76,7 +76,6 @@ BEGIN {
 	print "#include <dev/biovar.h>"
 	print "#include <dev/systrace.h>"
 	print "#include <dev/wscons/wsconsio.h>"
-	print "#include <dev/vndioctl.h>"
 	print "#include <dev/pci/drm/drm.h>"
 	print "#include <dev/usb/usb.h>"
 	print "#include <sys/ioctl.h>"
@@ -89,7 +88,7 @@ BEGIN {
 	print ""
 }
 
-/^[ 	]*#[ 	]*define[ 	]+(ATAIO|AUDIO_|BIOC|CDIO|CHIO|DIOC|DRM|GPIO|TIO|FIO|MTIOC|LIOC|SIO|OSIO|SESIOC_|SIOC|PCIOC|PPPIOC|PPPOE|RIOC|RND|STRIOC|SCIOC|OSCIOC|TUN|USB|VIDIOC|VNDIOC|WSKBD|WSMOUSE|WSDISPLAY|WSMUX|PTM)[A-Z_0-9]*[ 	]+(DRM)?_IO/ {
+/^[ 	]*#[ 	]*define[ 	]+(ATAIO|AUDIO_|BIOC|CDIO|CHIO|DIOC|DRM|GPIO|TIO|FIO|MTIOC|LIOC|SIO|OSIO|SESIOC_|SIOC|PCIOC|PPPIOC|PPPOE|RIOC|RND|STRIOC|SCIOC|OSCIOC|TUN|USB|VIDIOC|WSKBD|WSMOUSE|WSDISPLAY|WSMUX|PTM)[A-Z_0-9]*[ 	]+(DRM)?_IO/ {
 
 	# find where the name starts
 	for (i = 1; i <= NF; i++)

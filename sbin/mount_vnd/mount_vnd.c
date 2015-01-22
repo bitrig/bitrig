@@ -43,7 +43,7 @@
 #include <sys/stat.h>
 #include <sys/disklabel.h>
 
-#include <dev/vndioctl.h>
+#include <dev/biovar.h>
 
 #include <err.h>
 #include <errno.h>
@@ -66,6 +66,7 @@ int run_mount_vnd = 0;
 __dead void	 usage(void);
 int		 config(char *, char *, int, struct disklabel *);
 int		 getinfo(const char *);
+int		 getinfo_all(void);
 
 int
 main(int argc, char **argv)
@@ -136,8 +137,12 @@ main(int argc, char **argv)
 		rv = config(argv[ind_raw], argv[ind_reg], action, dp);
 	} else if (action == VND_UNCONFIG && argc == 1)
 		rv = config(argv[0], NULL, action, NULL);
-	else if (action == VND_GET)
-		rv = getinfo(argc ? argv[0] : NULL);
+	else if (action == VND_GET && argc == 1) {
+		rv = getinfo(argv[0]);
+		if (rv == -1)
+			err(4, "BIOCLOCATE");
+	} else if (action == VND_GET && argc == 0)
+		rv = getinfo_all();
 	else
 		usage();
 
@@ -147,45 +152,58 @@ main(int argc, char **argv)
 int
 getinfo(const char *vname)
 {
-	int vd, print_all = 0;
-	struct vnd_user vnu;
+	struct bio_locate bl;
+	struct bioc_vndget vget;
+	int fd;
 
-	if (vname == NULL) {
-		vname = DEFAULT_VND;
-		print_all = 1;
+	if ((fd = open("/dev/bio", O_RDWR)) < 0)
+		err(1, "/dev/bio");
+
+	bl.bl_name = (char *)vname;
+	if (ioctl(fd, BIOCLOCATE, &bl) < 0) {
+		if (errno == ENOENT)
+			return (-1);
+		err(4, "BIOCLOCATE");
 	}
 
-	vd = opendev((char *)vname, O_RDONLY, OPENDEV_PART, NULL);
-	if (vd < 0)
-		err(1, "open: %s", vname);
+	vget.bvg_bio.bio_cookie = bl.bl_bio.bio_cookie;
 
-	vnu.vnu_unit = -1;
+	if (ioctl(fd, BIOCVNDGET, &vget) == -1)
+		err(1, "ioctl: %s", vname);
 
-query:
-	if (ioctl(vd, VNDIOCGET, &vnu) == -1) {
-		if (print_all && errno == ENXIO && vnu.vnu_unit > 0) {
-			close(vd);
-			return (0);
-		} else {
-			err(1, "ioctl: %s", vname);
-		}
-	}
+	fprintf(stdout, "%s: ", vname);
 
-	fprintf(stdout, "vnd%d: ", vnu.vnu_unit);
-
-	if (!vnu.vnu_ino)
+	if (!vget.bvg_ino)
 		fprintf(stdout, "not in use\n");
 	else
 		fprintf(stdout, "covering %s on %s, inode %llu\n",
-		    vnu.vnu_file, devname(vnu.vnu_dev, S_IFBLK),
-		    (unsigned long long)vnu.vnu_ino);
+		    vget.bvg_file, devname(vget.bvg_dev, S_IFBLK),
+		    (unsigned long long)vget.bvg_ino);
 
-	if (print_all) {
-		vnu.vnu_unit++;
-		goto query;
+	close(fd);
+	return (0);
+}
+
+int
+getinfo_all(void)
+{
+	char vname[7];
+	unsigned char i;
+	int rv;
+
+	/*
+	 * We don't know how many vnd devices are configured in the
+	 * kernel, so iterate until we hit a non-existent.
+	 */
+	for (i = 0; i < UCHAR_MAX; i++) {
+		(void)snprintf(vname, sizeof(vname), "vnd%d", i);
+		rv = getinfo(vname);
+		if (rv != 0) {
+			if (rv == -1)	/* no such file */
+				return (0);
+			return (rv);
+		}
 	}
-
-	close(vd);
 
 	return (0);
 }
@@ -193,25 +211,27 @@ query:
 int
 config(char *dev, char *file, int action, struct disklabel *dp)
 {
-	struct vnd_ioctl vndio;
-	char *rdev;
+	struct bio_locate bl;
+	struct bioc_vndset vset;
+	struct bioc_vndclr vclr;
 	int fd, rv = -1;
 
-	if ((fd = opendev(dev, O_RDONLY, OPENDEV_PART, &rdev)) < 0)
-		err(4, "%s", rdev);
+	if ((fd = open("/dev/bio", O_RDWR)) < 0)
+		err(4, "/dev/bio");
 
-	vndio.vnd_file = file;
-	vndio.vnd_secsize = (dp && dp->d_secsize) ? dp->d_secsize : DEV_BSIZE;
-	vndio.vnd_nsectors = (dp && dp->d_nsectors) ? dp->d_nsectors : 100;
-	vndio.vnd_ntracks = (dp && dp->d_ntracks) ? dp->d_ntracks : 1;
+	bl.bl_name = dev;
+	if (ioctl(fd, BIOCLOCATE, &bl) < 0)
+		err(4, "BIOCLOCATE");
 
 	/*
 	 * Clear (un-configure) the device
 	 */
 	if (action == VND_UNCONFIG) {
-		rv = ioctl(fd, VNDIOCCLR, &vndio);
+		vclr.bvc_bio.bio_cookie = bl.bl_bio.bio_cookie;
+
+		rv = ioctl(fd, BIOCVNDCLR, &vclr);
 		if (rv)
-			warn("VNDIOCCLR");
+			warn("BIOCVNDCLR");
 		else if (verbose)
 			printf("%s: cleared\n", dev);
 	}
@@ -219,11 +239,19 @@ config(char *dev, char *file, int action, struct disklabel *dp)
 	 * Configure the device
 	 */
 	if (action == VND_CONFIG) {
-		rv = ioctl(fd, VNDIOCSET, &vndio);
+		vset.bvs_bio.bio_cookie = bl.bl_bio.bio_cookie;
+		vset.bvs_file = file;
+		vset.bvs_secsize =
+		    (dp && dp->d_secsize) ? dp->d_secsize : DEV_BSIZE;
+		vset.bvs_nsectors =
+		    (dp && dp->d_nsectors) ? dp->d_nsectors : 100;
+		vset.bvs_ntracks = (dp && dp->d_ntracks) ? dp->d_ntracks : 1;
+
+		rv = ioctl(fd, BIOCVNDSET, &vset);
 		if (rv)
-			warn("VNDIOCSET");
+			warn("BIOCVNDSET");
 		else if (verbose)
-			printf("%s: %llu bytes on %s\n", dev, vndio.vnd_size,
+			printf("%s: %llu bytes on %s\n", dev, vset.bvs_size,
 			    file);
 	}
 
