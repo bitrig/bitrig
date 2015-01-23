@@ -36,6 +36,14 @@
 #define GTIMER_CNTP_CTL_IMASK		(1 << 1)
 #define GTIMER_CNTP_CTL_ISTATUS		(1 << 2)
 
+#define GTIMER_CNTKCTL_PL0PCTEN		(1 << 0) /* PL0 CNTPCT and CNTFRQ access */
+#define GTIMER_CNTKCTL_PL0VCTEN		(1 << 1) /* PL0 CNTVCT and CNTFRQ access */
+#define GTIMER_CNTKCTL_EVNTEN		(1 << 2) /* Enables virtual counter events */
+#define GTIMER_CNTKCTL_EVNTDIR		(1 << 3) /* Virtual counter event transition */
+#define GTIMER_CNTKCTL_EVNTI		(0xf << 4) /* Virtual counter event bits */
+#define GTIMER_CNTKCTL_PL0VTEN		(1 << 8) /* PL0 Virtual timer reg access */
+#define GTIMER_CNTKCTL_PL0PTEN		(1 << 9) /* PL0 Physical timer reg access */
+
 int32_t agtimer_frequency = 0;
 
 u_int agtimer_get_timecount(struct timecounter *);
@@ -170,6 +178,21 @@ agtimer_set_tval(struct agtimer_softc *sc, uint32_t val)
 	return (0);
 }
 
+static inline void
+agtimer_disable_user_access(void)
+{
+	uint32_t cntkctl;
+
+	__asm volatile("mrc p15, 0, %0, c14, c1, 0" : "=r" (cntkctl));
+	cntkctl &= ~(GTIMER_CNTKCTL_PL0PCTEN | GTIMER_CNTKCTL_PL0VCTEN |
+	    GTIMER_CNTKCTL_EVNTEN | GTIMER_CNTKCTL_PL0VTEN |
+	    GTIMER_CNTKCTL_PL0PTEN);
+	__asm volatile("mcr p15, 0, %0, c14, c1, 0" : : "r" (cntkctl));
+
+	cpu_drain_writebuf();
+	//isb();
+}
+
 int
 agtimer_match(struct device *parent, void *cfdata, void *aux)
 {
@@ -220,7 +243,8 @@ agtimer_attach(struct device *parent, struct device *self, void *args)
 	 */
 	sc->sc_physical = 0;
 
-	/* XXX: disable user access */
+	/* Disable access from PL0/userland. */
+	agtimer_disable_user_access();
 
 #ifdef AMPTIMER_DEBUG
 	evcount_attach(&sc->sc_clk_count, "clock", NULL);
