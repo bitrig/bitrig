@@ -1132,6 +1132,7 @@ disk_detach(struct disk *diskp)
 	 * Free the space used by the disklabel structures.
 	 */
 	free(diskp->dk_label, M_DEVBUF, sizeof(*diskp->dk_label));
+	diskp->dk_flags &= ~(DKF_OPENED | DKF_LABELVALID);
 
 	/*
 	 * Remove from the disklist.
