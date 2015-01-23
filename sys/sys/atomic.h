@@ -1,4 +1,4 @@
-/*	$OpenBSD: atomic.h,v 1.1 2014/01/30 00:44:20 dlg Exp $ */
+/*	$OpenBSD: atomic.h,v 1.2 2015/01/23 09:50:45 dlg Exp $ */
 /*
  * Copyright (c) 2014 David Gwynne <dlg@openbsd.org>
  *
@@ -47,7 +47,7 @@ atomic_cas_ulong(volatile unsigned long *p, unsigned long o, unsigned long n)
 }
 
 static inline void *
-atomic_cas_ptr(volatile void **p, void *o, void *n)
+atomic_cas_ptr(void *p, void *o, void *n)
 {
 	atomic_compare_exchange_weak_explicit((atomic_uintptr_t *)p,
 	    (__uintptr_t *)&o, (__uintptr_t)n,
@@ -74,7 +74,7 @@ atomic_swap_ulong(unsigned long *p, unsigned long v)
 }
 
 static inline void *
-atomic_swap_ptr(void **p, void *v)
+atomic_swap_ptr(void *p, void *v)
 {
 	return (void *)atomic_exchange_explicit((atomic_uintptr_t *)p,
 	    (__uintptr_t)v, memory_order_relaxed);
