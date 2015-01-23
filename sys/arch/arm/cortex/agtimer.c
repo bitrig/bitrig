@@ -210,8 +210,15 @@ agtimer_attach(struct device *parent, struct device *self, void *args)
 	sc->sc_ioh = ioh;
 	sc->sc_pioh = pioh;
 
-	/* Need this later, when we are a guest. */
-	sc->sc_physical = 1;
+	/*
+	 * The virtual timers are always available.
+	 *
+	 * When available, the physical timer is a better solution.
+	 * For that we need to know that we have been booted in the
+	 * hypervisor mode. So far we should be fine using the virtual
+	 * timer only. Revisit this for e.g. RK3288.
+	 */
+	sc->sc_physical = 0;
 
 	/* XXX: disable user access */
 
@@ -230,6 +237,8 @@ agtimer_attach(struct device *parent, struct device *self, void *args)
 			    agtimer_intr, NULL, "tick");
 		}
 	} else {
+		ampintc_intr_establish(27, IPL_CLOCK, agtimer_intr,
+		    NULL, "tick");
 		ampintc_intr_establish(29, IPL_CLOCK, agtimer_intr,
 		    NULL, "tick");
 		ampintc_intr_establish(30, IPL_CLOCK, agtimer_intr,
