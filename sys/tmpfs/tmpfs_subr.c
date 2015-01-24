@@ -462,6 +462,7 @@ tmpfs_alloc_dirent(tmpfs_mount_t *tmp, const char *name, uint16_t len,
 	nde->td_namelen = len;
 	memcpy(nde->td_name, name, len);
 	nde->td_seq = TMPFS_DIRSEQ_NONE;
+	nde->td_node = NULL;
 
 	*de = nde;
 	return 0;
