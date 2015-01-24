@@ -475,24 +475,14 @@ imxenet_chip_init(struct imxenet_softc *sc)
 		imxenet_miibus_writereg(dev, phy, 0x0e, 0x03ff);
 		break;
 	case BOARD_ID_IMX6_SABRELITE:	/* Micrel KSZ9021 */
-		/* prefer master mode */
-		imxenet_miibus_writereg(dev, phy, 0x9, 0x1f00);
-
 		/* min rx data delay */
 		imxenet_miibus_writereg(dev, phy, 0x0b, 0x8105);
-		imxenet_miibus_writereg(dev, phy, 0x0c, 0x0000);
-
-		/* min tx data delay */
-		imxenet_miibus_writereg(dev, phy, 0x0b, 0x8106);
 		imxenet_miibus_writereg(dev, phy, 0x0c, 0x0000);
 
 		/* max rx/tx clock delay, min rx/tx control delay */
 		imxenet_miibus_writereg(dev, phy, 0x0b, 0x8104);
 		imxenet_miibus_writereg(dev, phy, 0x0c, 0xf0f0);
 		imxenet_miibus_writereg(dev, phy, 0x0b, 0x104);
-
-		/* enable all interrupts */
-		imxenet_miibus_writereg(dev, phy, 0x1b, 0xff00);
 		break;
 	case BOARD_ID_IMX6_CUBOXI:		/* AR8035 */
 	case BOARD_ID_IMX6_HUMMINGBOARD:	/* AR8035 */
