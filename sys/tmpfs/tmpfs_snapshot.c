@@ -435,27 +435,16 @@ tmpfs_snap_attach_node(tmpfs_mount_t *tmp, tmpfs_snap_node_t *tnhdr,
 	tnhdr->tsn_name[sizeof(tnhdr->tsn_name) - 1] = '\0';
 	error = tmpfs_alloc_dirent(tmp, tnhdr->tsn_name,
 	    strlen(tnhdr->tsn_name), &de);
-	if (error) {
-		tmpfs_free_node(tmp, node);
-		return (error);
-	}
-
-	error = tmpfs_snap_find_parent(tmp, tnhdr, &dnode);
-	if (error) {
-		tmpfs_free_node(tmp, node);
-		return (error);
-	}
-
-	error = tmpfs_snap_dir_attach(dnode, de, node);
 	if (error)
-		goto out;
+		return (error);
+
+	if ((error = tmpfs_snap_find_parent(tmp, tnhdr, &dnode)) ||
+	    (error = tmpfs_snap_dir_attach(dnode, de, node))) {
+		tmpfs_free_dirent(tmp, de);
+		return (error);
+	}
 
 	return (0);
-out:
-	tmpfs_free_dirent(tmp, de);
-	tmpfs_free_node(tmp, node);
-
-	return (error);
 }
 
 int
@@ -471,8 +460,10 @@ tmpfs_snap_load_hdr(tmpfs_mount_t *tmp, tmpfs_node_t *node,
 	}
 
 	error = tmpfs_snap_attach_node(tmp, tnhdr, node);
-	if (error)
+	if (error) {
+		tmpfs_free_node(tmp, node);
 		return (error);
+	}
 
 	node->tn_flags = tmpfs_snap_flags_node(tnhdr->tsn_flags);
 	/* node->tn_btime = TMPFS_TST_TO_TS(tnhdr->tsn_btime); */
@@ -488,6 +479,7 @@ tmpfs_snap_load_file(struct vnode *vp, uint64_t *off, tmpfs_mount_t *tmp,
     tmpfs_snap_node_t *tnhdr)
 {
 	tmpfs_node_t *node = NULL;
+	uint64_t size;
 	int error;
 
 	tmpfs_snap_find_node(tmp, tnhdr->tsn_id, &node);
@@ -500,22 +492,15 @@ tmpfs_snap_load_file(struct vnode *vp, uint64_t *off, tmpfs_mount_t *tmp,
 			return (error);
 	}
 
-	if (tnhdr->tsn_spec.tsn_size) {
-		error = tmpfs_snap_node_setsize(tmp, node,
-		    tnhdr->tsn_spec.tsn_size);
-		if (error)
-			goto out;
-		error = tmpfs_snap_file_io(vp, UIO_READ, node, off);
-		if (error)
-			goto out;
+	if ((size = tnhdr->tsn_spec.tsn_size)) {
+		if ((error = tmpfs_snap_node_setsize(tmp, node, size)) ||
+		    (error = tmpfs_snap_file_io(vp, UIO_READ, node, off))) {
+			tmpfs_free_node(tmp, node);
+			return (error);
+		}
 	}
 
 	return (tmpfs_snap_load_hdr(tmp, node, tnhdr, NULL, NODEV));
-
-out:
-	tmpfs_free_node(tmp, node);
-
-	return (error);
 }
 
 int
