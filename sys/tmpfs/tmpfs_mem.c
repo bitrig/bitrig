@@ -221,10 +221,9 @@ tmpfs_strname_alloc(struct tmpfs_mount *mp, size_t len)
 {
 	const size_t sz = roundup2(len, TMPFS_NAME_QUANTUM);
 
-	KASSERT(sz > 0 && sz <= 1024);
-	if (!tmpfs_mem_incr(mp, sz)) {
+	if (sz == 0 || sz > 1024 || !tmpfs_mem_incr(mp, sz))
 		return NULL;
-	}
+
 	return malloc(sz, M_TEMP, M_WAITOK); /* XXX */
 }
 

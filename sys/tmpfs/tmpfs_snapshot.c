@@ -686,8 +686,9 @@ tmpfs_snap_node_setsize(tmpfs_mount_t *tmp, tmpfs_node_t *node, uint64_t size)
 	KASSERT(node->tn_type == VREG);
 	KASSERT(!tmpfs_uio_cached(node));
 	KASSERT(size != 0);
-	KASSERT(node->tn_size == 0);
-	KASSERT(node->tn_spec.tn_reg.tn_aobj_pages == 0);
+
+	if (node->tn_size != 0 || node->tn_spec.tn_reg.tn_aobj_pages != 0)
+		return (EINVAL);
 
 	if (size > TMPFS_MAX_FILESIZE)
 		return (EFTYPE);

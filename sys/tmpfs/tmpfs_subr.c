@@ -114,10 +114,14 @@ tmpfs_alloc_node(tmpfs_mount_t *tmp, enum vtype type, uid_t uid, gid_t gid,
 	tmpfs_node_t *nnode;
 	struct uvm_object *uobj;
 
+	/* XXX pedro: we should check for UID_MAX and GID_MAX instead. */
+	if (uid == (uid_t)VNOVAL || gid == (gid_t)VNOVAL ||
+	    mode == (mode_t)VNOVAL)
+		return EINVAL;
+
 	nnode = tmpfs_node_get(tmp);
-	if (nnode == NULL) {
+	if (nnode == NULL)
 		return ENOSPC;
-	}
 
 	/* Initially, no references and no associations. */
 	nnode->tn_links = 0;
@@ -147,11 +151,6 @@ tmpfs_alloc_node(tmpfs_mount_t *tmp, enum vtype type, uid_t uid, gid_t gid,
 	nnode->tn_ctime = nnode->tn_atime;
 	nnode->tn_mtime = nnode->tn_atime;
 
-	/* XXX pedro: we should check for UID_MAX and GID_MAX instead. */
-	KASSERT(uid != (uid_t)VNOVAL);
-	KASSERT(gid != (gid_t)VNOVAL);
-	KASSERT(mode != (mode_t)VNOVAL);
-
 	nnode->tn_uid = uid;
 	nnode->tn_gid = gid;
 	nnode->tn_mode = mode;
@@ -161,7 +160,10 @@ tmpfs_alloc_node(tmpfs_mount_t *tmp, enum vtype type, uid_t uid, gid_t gid,
 	case VBLK:
 	case VCHR:
 		/* Character/block special device. */
-		KASSERT(rdev != NODEV);
+		if (rdev == NODEV) {
+			tmpfs_node_put(tmp, nnode);
+			return EINVAL;
+		}
 		nnode->tn_spec.tn_dev.tn_rdev = rdev;
 		break;
 	case VDIR:
