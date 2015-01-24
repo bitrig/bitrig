@@ -1138,11 +1138,9 @@ pmap_clean_page(struct vm_page *pg, int isync)
 			 * now while we still have a valid mapping for it.
 			 */
 			if (!wb) {
-				paddr_t pa;
 				cpu_dcache_wb_range(pv->pv_va, PAGE_SIZE);
-				if (pmap_extract(pm, (vaddr_t)pv->pv_va, &pa))
-					cpu_sdcache_wb_range(pv->pv_va, pa,
-					    PAGE_SIZE);
+				cpu_sdcache_wb_range(pv->pv_va,
+				    VM_PAGE_TO_PHYS(pg), PAGE_SIZE);
 				wb = TRUE;
 			}
 		}
@@ -1159,10 +1157,8 @@ pmap_clean_page(struct vm_page *pg, int isync)
 		PTE_SYNC(cwb_pte);
 		cpu_tlb_flushD_SE(cwbp);
 		cpu_cpwait();
-		paddr_t pa;
 		cpu_dcache_wb_range(cwbp, PAGE_SIZE);
-		if (pmap_extract(pmap_kernel(), (vaddr_t)cwbp, &pa))
-			cpu_sdcache_wb_range(cwbp, pa, PAGE_SIZE);
+		cpu_sdcache_wb_range(cwbp, VM_PAGE_TO_PHYS(pg), PAGE_SIZE);
 	}
 }
 
