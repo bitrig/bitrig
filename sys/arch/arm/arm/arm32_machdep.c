@@ -63,12 +63,6 @@
 #include <arm/machdep.h>
 #include <machine/conf.h>
 
-#ifdef CONF_HAVE_APM
-#include "apm.h"
-#else
-#define NAPM	0
-#endif
-
 struct vm_map *exec_map = NULL;
 struct vm_map *phys_map = NULL;
 
@@ -323,10 +317,6 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 	size_t newlen;
 	struct proc *p;
 {
-#if NAPM > 0
-	extern int cpu_apmwarn;
-#endif
-
 	/* all sysctl names at this level are terminal */
 	if (namelen != 1)
 		return (ENOTDIR);		/* overloaded */
@@ -354,10 +344,6 @@ cpu_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
 		return (sysctl_rdint(oldp, oldlenp, newp, 0));
 #endif
 
-#if NAPM > 0
-	case CPU_APMWARN:
-		return (sysctl_int(oldp, oldlenp, newp, newlen, &cpu_apmwarn));
-#endif
 #if defined(__zaurus__)
 	case CPU_LIDSUSPEND:
 		return (sysctl_int(oldp, oldlenp, newp, newlen,

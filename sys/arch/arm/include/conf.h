@@ -53,19 +53,9 @@ cdev_decl(mm);
 bdev_decl(wd);
 cdev_decl(wd);
 
-/* Character device declarations */
-
-/* open, close, ioctl, kqueue */
-#define cdev_apm_init(c,n) { \
-        dev_init(c,n,open), dev_init(c,n,close), (dev_type_read((*))) enodev, \
-        (dev_type_write((*))) enodev, dev_init(c,n,ioctl), \
-	(dev_type_stop((*))) enodev, 0, selfalse, \
-	(dev_type_mmap((*))) enodev, 0, 0, dev_init(c,n,kqfilter) }
-
 cdev_decl(com);
 cdev_decl(lpt);
 cdev_decl(pci);
-cdev_decl(apm);
 cdev_decl(spkr);
 
 /*

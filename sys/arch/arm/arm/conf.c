@@ -74,15 +74,6 @@
 #include "ksyms.h"
 
 /*
- * APM interface
- */
-#ifdef CONF_HAVE_APM
-#include "apm.h"
-#else
-#define NAPM	0
-#endif
-
-/*
  * Disk/Filesystem pseudo-devices
  */
 #include "vnd.h"			/* vnode disk driver */
@@ -307,7 +298,7 @@ struct cdevsw cdevsw[] = {
 	cdev_notdef(),				/* 31: */
 	cdev_notdef(),				/* 32: */
 	cdev_tun_init(NTUN,tun),		/* 33: network tunnel */
-	cdev_apm_init(NAPM,apm),		/* 34: APM interface */
+	cdev_notdef(),				/* 34: */
 	cdev_notdef(),				/* 35: was LKM */
 	cdev_audio_init(NAUDIO,audio),		/* 36: generic audio I/O */
 	cdev_hotplug_init(NHOTPLUG,hotplug),	/* 37: devices hot plugging*/

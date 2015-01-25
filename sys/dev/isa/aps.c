@@ -33,13 +33,6 @@
 #include <dev/isa/isareg.h>
 #include <dev/isa/isavar.h>
 
-#ifdef __i386__
-#include "apm.h"
-#include <machine/acpiapm.h>
-#include <machine/biosvar.h>
-#include <machine/apmvar.h>
-#endif
-
 #if defined(APSDEBUG)
 #define DPRINTF(x)		do { printf x; } while (0)
 #else
@@ -434,10 +427,6 @@ aps_refresh_sensor_data(struct aps_softc *sc)
 {
 	int64_t temp;
 	int i;
-#if NAPM > 0
-	extern int lid_suspend;
-	extern int apm_lidclose;
-#endif
 
 	if (aps_read_data(sc))
 		return;
@@ -467,13 +456,6 @@ aps_refresh_sensor_data(struct aps_softc *sc)
 	    (sc->aps_data.input &  APS_INPUT_KB) ? 1 : 0;
 	sc->sensors[APS_SENSOR_MSACT].value =
 	    (sc->aps_data.input & APS_INPUT_MS) ? 1 : 0;
-#if NAPM > 0
-	if (lid_suspend &&
-	    (sc->sensors[APS_SENSOR_LIDOPEN].value == 1) &&
-	    (sc->aps_data.input & APS_INPUT_LIDOPEN) == 0)
-		/* Inform APM that the lid has closed */
-		apm_lidclose = 1;
-#endif
 	sc->sensors[APS_SENSOR_LIDOPEN].value =
 	    (sc->aps_data.input & APS_INPUT_LIDOPEN) ? 1 : 0;
 }
