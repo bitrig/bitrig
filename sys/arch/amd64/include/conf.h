@@ -39,9 +39,6 @@
 #define	mmwrite	mmrw
 cdev_decl(mm);
 
-bdev_decl(fd);
-cdev_decl(fd);
-
 cdev_decl(spkr);
 
 #define biosselect seltrue

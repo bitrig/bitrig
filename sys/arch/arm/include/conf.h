@@ -52,8 +52,6 @@ cdev_decl(mm);
 
 bdev_decl(wd);
 cdev_decl(wd);
-bdev_decl(fd);
-cdev_decl(fd);
 
 /* Character device declarations */
 
