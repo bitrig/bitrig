@@ -49,6 +49,7 @@
 #include <sys/namei.h>
 #include <sys/poll.h>
 #include <sys/ptrace.h>
+#include <uvm/uvm_extern.h>
 
 #include <machine/vmparam.h>
 
@@ -1825,27 +1826,32 @@ systrace_msg_policyfree(struct fsystrace *fst, struct str_policy *strpol)
  * and can be distributed under the same licence as the rest of this file.
  */
 
-caddr_t  
-stackgap_init(struct proc *p) 
+caddr_t
+stackgap_init(struct proc *p)
 {
-        return STACKGAPBASE;
+	struct process *pr = p->p_p;
+
+	if (pr->ps_stackgap == 0) {
+		if (uvm_map(&pr->ps_vmspace->vm_map, &pr->ps_stackgap,
+		    round_page(STACKGAPLEN), NULL, 0, 0,
+		    UVM_MAPFLAG(PROT_READ | PROT_WRITE, PROT_READ | PROT_WRITE,
+		    MAP_INHERIT_COPY, MADV_RANDOM, UVM_FLAG_COPYONW)))
+			sigexit(p, SIGILL);
+	}
+
+	return (caddr_t)pr->ps_stackgap;
 }
- 
-void *          
+
+void *
 stackgap_alloc(caddr_t *sgp, size_t sz)
 {
 	void *n = (void *) *sgp;
 	caddr_t nsgp;
-	
+
 	sz = ALIGN(sz);
 	nsgp = *sgp + sz;
-#ifdef MACHINE_STACK_GROWS_UP
-	if (nsgp > ((caddr_t)PS_STRINGS) + STACKGAPLEN)
+	if (nsgp > (caddr_t)trunc_page((vaddr_t)n) + STACKGAPLEN)
 		return NULL;
-#else
-	if (nsgp > ((caddr_t)PS_STRINGS))
-		return NULL;
-#endif
 	*sgp = nsgp;
 	return n;
 }
