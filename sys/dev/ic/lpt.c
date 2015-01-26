@@ -60,9 +60,10 @@
 #include <sys/kernel.h>
 #include <sys/uio.h>
 #include <sys/device.h>
-#include <sys/conf.h>
 #include <sys/syslog.h>
+#include <sys/vnode.h>
 
+#include <machine/conf.h>
 #include <machine/bus.h>
 #include <machine/intr.h>
 
@@ -140,11 +141,18 @@ lpt_attach_common(struct lpt_softc *sc)
 void
 lpt_detach_common(struct lpt_softc *sc)
 {
+	int mn;
+
 	timeout_del(&sc->sc_wakeup_tmo);
 	if (sc->sc_state != 0) {
 		sc->sc_state = 0;
 		wakeup(sc);
 	}
+
+	/* Nuke the vnodes for any open instances (calls close). */
+	mn = sc->sc_dev.dv_unit;
+	vdevgone(CMAJ_LPT, mn, mn, VCHR);
+	vdevgone(CMAJ_LPT, mn | LPT_NOINTR, mn | LPT_NOINTR, VCHR);
 }
 
 /*

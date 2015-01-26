@@ -69,18 +69,28 @@ cdev_decl(pctr);
 #define CMAJ_COM	8
 #define CMAJ_WSDISPLAY	12
 #define CMAJ_ST		14
+#define CMAJ_LPT	16
+#define CMAJ_CH		17
 #define CMAJ_UK		20
 #define CMAJ_BPF	23
+#define CMAJ_TUN	40
 #define CMAJ_AUDIO	42
 #define CMAJ_VIDEO	44
+#define CMAJ_BKTR	49
 #define CMAJ_MIDI	52
+#define CMAJ_USB	61
 #define CMAJ_UHID	62
 #define CMAJ_UGEN	63
 #define CMAJ_ULPT	64
 #define CMAJ_UCOM	66
 #define CMAJ_WSKBD	67
 #define CMAJ_WSMOUSE	68
+#ifdef USER_PCICONF
+#define CMAJ_PCI	72
+#endif
 #define CMAJ_RADIO	76
+#define CMAJ_DRM	87
 #define CMAJ_GPIO	88
+#define CMAJ_VSCSI	89
 
 #endif	/* _MACHINE_CONF_H_ */

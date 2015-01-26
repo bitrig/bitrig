@@ -54,8 +54,8 @@
 #include <sys/vnode.h>
 #include <sys/signalvar.h>
 #include <sys/poll.h>
-#include <sys/conf.h>
 
+#include <machine/conf.h>
 
 #include <net/if.h>
 #include <net/if_types.h>
@@ -241,6 +241,9 @@ tun_clone_destroy(struct ifnet *ifp)
 		ether_ifdetach(ifp);
 
 	if_detach(ifp);
+
+	/* Nuke the vnodes for any open instances (calls close). */
+	vdevgone(CMAJ_TUN, tp->tun_unit, tp->tun_unit, VCHR);
 
 	free(tp, M_DEVBUF, 0);
 	return (0);

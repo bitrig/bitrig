@@ -46,8 +46,10 @@
 #include <sys/device.h>
 #include <sys/malloc.h>
 #include <sys/pool.h>
-#include <sys/conf.h>
 #include <sys/fcntl.h>
+#include <sys/vnode.h>
+
+#include <machine/conf.h>
 
 #include <scsi/scsi_all.h>
 #include <scsi/scsi_changer.h>
@@ -95,9 +97,10 @@ struct ch_softc {
 /* Autoconfiguration glue */
 int	chmatch(struct device *, void *, void *);
 void	chattach(struct device *, struct device *, void *);
+int	chdetach(struct device *, int);
 
 struct cfattach ch_ca = {
-	sizeof(struct ch_softc), chmatch, chattach
+	sizeof(struct ch_softc), chmatch, chattach, chdetach
 };
 
 struct cfdriver ch_cd = {
@@ -165,7 +168,18 @@ chattach(struct device *parent, struct device *self, void *aux)
 	 * Store our our device's quirks.
 	 */
 	ch_get_quirks(sc, sa->sa_inqbuf);
+}
 
+int
+chdetach(struct device *self, int flags)
+{
+	int mn;
+
+	/* Nuke the vnodes for any open instances (calls close). */
+	mn = self->dv_unit;
+	vdevgone(CMAJ_CH, mn, mn, VCHR);
+
+	return (0);
 }
 
 int

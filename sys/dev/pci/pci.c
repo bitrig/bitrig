@@ -39,6 +39,9 @@
 #include <sys/systm.h>
 #include <sys/device.h>
 #include <sys/malloc.h>
+#include <sys/vnode.h>
+
+#include <machine/conf.h>
 
 #include <dev/pci/pcireg.h>
 #include <dev/pci/pcivar.h>
@@ -200,7 +203,16 @@ pciattach(struct device *parent, struct device *self, void *aux)
 int
 pcidetach(struct device *self, int flags)
 {
-	return pci_detach_devices((struct pci_softc *)self, flags);
+	int error;
+
+	error = pci_detach_devices((struct pci_softc *)self, flags);
+
+#ifdef USER_PCICONF
+	if (error == 0)
+		vdevgone(CMAJ_PCI, self->dv_unit, self->dv_unit, VCHR);
+#endif
+
+	return (error);
 }
 
 int

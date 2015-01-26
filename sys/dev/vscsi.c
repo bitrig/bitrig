@@ -22,7 +22,6 @@
 #include <sys/kernel.h>  
 #include <sys/malloc.h>
 #include <sys/device.h>
-#include <sys/conf.h>
 #include <sys/queue.h>
 #include <sys/rwlock.h>
 #include <sys/pool.h>
@@ -30,6 +29,9 @@
 #include <sys/ioctl.h>
 #include <sys/poll.h>
 #include <sys/selinfo.h>
+#include <sys/vnode.h>
+
+#include <machine/conf.h>
 
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>
@@ -38,6 +40,7 @@
 
 int		vscsi_match(struct device *, void *, void *);
 void		vscsi_attach(struct device *, struct device *, void *);
+int		vscsi_detach(struct device *, int);
 void		vscsi_shutdown(void *);
 
 struct vscsi_ccb {
@@ -83,7 +86,8 @@ struct vscsi_softc {
 struct cfattach vscsi_ca = {
 	sizeof(struct vscsi_softc),
 	vscsi_match,
-	vscsi_attach
+	vscsi_attach,
+	vscsi_detach
 };
 
 struct cfdriver vscsi_cd = {
@@ -161,6 +165,15 @@ vscsi_attach(struct device *parent, struct device *self, void *aux)
 
 	sc->sc_scsibus = (struct scsibus_softc *)config_found(&sc->sc_dev,
 	    &saa, scsiprint);
+}
+
+int
+vscsi_detach(struct device *self, int flags)
+{
+	/* Nuke the vnodes for any open instances (calls close). */
+	vdevgone(CMAJ_VSCSI, self->dv_unit, self->dv_unit, VCHR);
+
+	return (0);
 }
 
 void

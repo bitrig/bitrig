@@ -50,6 +50,8 @@
 #include <sys/ttycom.h> /* for TIOCSGRP */
 #include <sys/vnode.h>
 
+#include <machine/conf.h>
+
 #include <uvm/uvm.h>
 #include <uvm/uvm_device.h>
 
@@ -299,6 +301,9 @@ drm_detach(struct device *self, int flags)
 		drm_free(dev->agp);
 		dev->agp = NULL;
 	}
+
+	/* Nuke the vnodes for any open instances (calls close). */
+	vdevgone(CMAJ_DRM, self->dv_unit, self->dv_unit, VCHR);
 
 	return 0;
 }
