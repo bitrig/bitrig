@@ -1,4 +1,4 @@
-/*	$OpenBSD: if.c,v 1.314 2015/01/27 03:17:36 dlg Exp $	*/
+/*	$OpenBSD: if.c,v 1.315 2015/01/27 10:31:19 mpi Exp $	*/
 /*	$NetBSD: if.c,v 1.35 1996/05/07 05:26:04 thorpej Exp $	*/
 
 /*
@@ -1230,10 +1230,9 @@ ifioctl(struct socket *so, u_long cmd, caddr_t data, struct proc *p)
 #ifdef INET6
 		case AF_INET6:
 			s = splsoftnet();
-			if (cmd == SIOCIFAFATTACH) {
-				if (in6ifa_ifpforlinklocal(ifp, 0) == NULL)
-					in6_ifattach(ifp);
-			} else
+			if (cmd == SIOCIFAFATTACH)
+				in6_ifattach(ifp);
+			else
 				in6_ifdetach(ifp);
 			splx(s);
 			return (0);
@@ -1299,15 +1298,10 @@ ifioctl(struct socket *so, u_long cmd, caddr_t data, struct proc *p)
 
 #ifdef INET6
 		if (ISSET(ifr->ifr_flags, IFXF_AUTOCONF6)) {
-			if (in6ifa_ifpforlinklocal(ifp, 0) == NULL) {
-				s = splsoftnet();
-				in6_ifattach(ifp);
-				splx(s);
-			}
+			s = splsoftnet();
+			in6_ifattach(ifp);
+			splx(s);
 		}
-
-		if (ifr->ifr_flags & IFXF_AUTOCONF6)
-			nd6_rs_output_set_timo(ND6_RS_OUTPUT_QUICK_INTERVAL);
 
 		if ((ifr->ifr_flags & IFXF_AUTOCONF6) &&
 		    !(ifp->if_xflags & IFXF_AUTOCONF6)) {
@@ -2168,19 +2162,16 @@ ifnewlladdr(struct ifnet *ifp)
 			arp_ifinit((struct arpcom *)ifp, ifa);
 	}
 #ifdef INET6
-	/* Update the link-local address. Don't do it if we're
-	 * a router to avoid confusing hosts on the network. */
+	/*
+	 * Update the link-local address.  Don't do it if we're
+	 * a router to avoid confusing hosts on the network.
+	 */
 	if (!ip6_forwarding) {
 		ifa = &in6ifa_ifpforlinklocal(ifp, 0)->ia_ifa;
 		if (ifa) {
 			in6_purgeaddr(ifa);
 			dohooks(ifp->if_addrhooks, 0);
-			in6_ifattach_linklocal(ifp, NULL);
-			if (in6if_do_dad(ifp)) {
-				ifa = &in6ifa_ifpforlinklocal(ifp, 0)->ia_ifa;
-				if (ifa)
-					nd6_dad_start(ifa, NULL);
-			}
+			in6_ifattach(ifp);
 		}
 	}
 #endif
