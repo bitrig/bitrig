@@ -1,4 +1,4 @@
-/*	$OpenBSD: rnd.c,v 1.168 2014/12/23 20:32:05 tedu Exp $	*/
+/*	$OpenBSD: rnd.c,v 1.169 2015/01/27 03:17:35 dlg Exp $	*/
 
 /*
  * Copyright (c) 2011 Theo de Raadt.
@@ -548,12 +548,12 @@ extract_entropy(u_int8_t *buf)
 
 /* random keystream by ChaCha */
 
+void arc4_reinit(void *v);		/* timeout to start reinit */
+void arc4_init(void *);			/* actually do the reinit */
+
 struct mutex rndlock = MUTEX_INITIALIZER(IPL_HIGH);
 struct timeout arc4_timeout;
-struct task arc4_task;
-
-void arc4_reinit(void *v);		/* timeout to start reinit */
-void arc4_init(void *, void *);		/* actually do the reinit */
+struct task arc4_task = TASK_INITIALIZER(arc4_init, NULL);
 
 static int rs_initialized;
 static chacha_ctx rs;		/* chacha context for random keystream */
@@ -771,7 +771,7 @@ arc4random_uniform(u_int32_t upper_bound)
 
 /* ARGSUSED */
 void
-arc4_init(void *v, void *w)
+arc4_init(void *null)
 {
 	_rs_stir(1);
 }
@@ -819,8 +819,7 @@ random_start(void)
 
 	rs_initialized = 1;
 	dequeue_randomness(NULL);
-	arc4_init(NULL, NULL);
-	task_set(&arc4_task, arc4_init, NULL, NULL);
+	arc4_init(NULL);
 	timeout_set(&arc4_timeout, arc4_reinit, NULL);
 	arc4_reinit(NULL);
 	timeout_set(&rnd_timeout, dequeue_randomness, NULL);
@@ -913,7 +912,7 @@ randomwrite(dev_t dev, struct uio *uio, int flags)
 	}
 
 	if (newdata)
-		arc4_init(NULL, NULL);
+		arc4_init(NULL);
 
 	explicit_bzero(buf, POOLBYTES);
 	free(buf, M_TEMP, POOLBYTES);

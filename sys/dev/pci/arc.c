@@ -1,4 +1,4 @@
-/*	$OpenBSD: arc.c,v 1.105 2015/01/12 00:07:55 dlg Exp $ */
+/*	$OpenBSD: arc.c,v 1.106 2015/01/27 03:17:36 dlg Exp $ */
 
 /*
  * Copyright (c) 2006 David Gwynne <dlg@openbsd.org>
@@ -673,7 +673,7 @@ struct arc_task {
 	struct arc_softc *sc;
 };
 /* sensors */
-void			arc_create_sensors(void *, void *);
+void			arc_create_sensors(void *);
 void			arc_refresh_sensors(void *);
 #endif
 
@@ -831,7 +831,7 @@ arc_attach(struct device *parent, struct device *self, void *aux)
 		at = malloc(sizeof(*at), M_TEMP, M_WAITOK);
 
 		at->sc = sc;
-		task_set(&at->t, arc_create_sensors, at, NULL);
+		task_set(&at->t, arc_create_sensors, at);
 		task_add(systq, &at->t);
 	}
 #endif
@@ -2601,7 +2601,7 @@ arc_wait(struct arc_softc *sc)
 }
 
 void
-arc_create_sensors(void *xat, void *null)
+arc_create_sensors(void *xat)
 {
 	struct arc_task		*at = xat;
 	struct arc_softc	*sc = at->sc;
