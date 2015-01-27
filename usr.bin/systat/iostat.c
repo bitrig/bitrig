@@ -217,6 +217,10 @@ showdrive(int dn)
 void
 showbcache(void)
 {
+	print_fld_str(FLD_IO_SSTR, "total bufs");
+	print_fld_ssize(FLD_IO_SVAL, bccur.numbufs);
+	end_line();
+
 	print_fld_str(FLD_IO_SSTR, "total pages");
 	print_fld_ssize(FLD_IO_SVAL, bccur.numbufpages);
 	end_line();
