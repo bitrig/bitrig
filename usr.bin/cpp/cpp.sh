@@ -63,9 +63,6 @@ do
 	-nostdinc)
 		STDINC=
 		;;
-	-traditional)
-		# compat; cpp always runs in traditional mode
-		;;
 	-I*)
 		INCS="$INCS $A"
 		;;
