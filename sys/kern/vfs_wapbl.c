@@ -779,6 +779,7 @@ wapbl_doio(void *data, size_t len, struct vnode *devvp, daddr_t pbn, int flags)
 
 	s = splbio();
 	bp->b_vp = NULL;
+	bp->b_flags |= B_INVAL;
 	brelse(bp);
 	splx(s);
 
