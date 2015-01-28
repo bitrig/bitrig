@@ -116,7 +116,7 @@ tmpfs_alloc_node(tmpfs_mount_t *tmp, enum vtype type, uid_t uid, gid_t gid,
 
 	/* XXX pedro: we should check for UID_MAX and GID_MAX instead. */
 	if (uid == (uid_t)VNOVAL || gid == (gid_t)VNOVAL ||
-	    mode == (mode_t)VNOVAL)
+	    mode == (mode_t)VNOVAL || (mode & ALLPERMS) != mode)
 		return EINVAL;
 
 	nnode = tmpfs_node_get(tmp);

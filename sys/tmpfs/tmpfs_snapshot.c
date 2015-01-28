@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2014 Martin Natano <natano@natano.net>
- * Copyright (c) 2014 Pedro Martelletto <pedro@ambientworks.net>
+ * Copyright (c) 2014, 2015 Martin Natano <natano@natano.net>
+ * Copyright (c) 2014, 2015 Pedro Martelletto <pedro@ambientworks.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -402,15 +402,23 @@ tmpfs_snap_alloc_node(tmpfs_mount_t *tmp, const tmpfs_snap_node_t *tnhdr,
 	int error;
 
 	if (tnhdr->tsn_id == tnhdr->tsn_parent) {
-		if (tnhdr->tsn_id != 2)
+		/*
+		 * The root node has already been allocated in tmpfs_mountfs(),
+		 * but its attributes need to be patched here.
+		 */
+		if (tnhdr->tsn_id != 2 ||
+		    tmpfs_snap_type_node(tnhdr->tsn_type) != VDIR)
 			return (EFTYPE);
 		*node = tmp->tm_root;
+		(*node)->tn_uid = tnhdr->tsn_uid;
+		(*node)->tn_gid = tnhdr->tsn_gid;
+		(*node)->tn_mode = (tnhdr->tsn_mode & ALLPERMS);
 		return (0);
 	}
 
 	error = tmpfs_alloc_node(tmp, tmpfs_snap_type_node(tnhdr->tsn_type),
-	    tnhdr->tsn_uid, tnhdr->tsn_gid, tnhdr->tsn_mode, target, rdev,
-	    node);
+	    tnhdr->tsn_uid, tnhdr->tsn_gid, (tnhdr->tsn_mode & ALLPERMS),
+	    target, rdev, node);
 	if (error)
 		return (error);
 
@@ -484,6 +492,7 @@ tmpfs_snap_load_file(struct vnode *vp, uint64_t *off, tmpfs_mount_t *tmp,
 
 	tmpfs_snap_find_node(tmp, tnhdr->tsn_id, &node);
 	if (node) {
+		/* Only files may appear multiple times. */
 		if (node->tn_type != VREG)
 			return (EFTYPE);
 	} else {
