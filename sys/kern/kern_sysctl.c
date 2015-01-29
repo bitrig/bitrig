@@ -245,6 +245,7 @@ int hostnamelen;
 char domainname[MAXHOSTNAMELEN];
 int domainnamelen;
 long hostid;
+int hideproc;
 char *disknames = NULL;
 struct diskstats *diskstats = NULL;
 #ifdef INSECURE
@@ -590,6 +591,8 @@ kern_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
 		return sysctl_rdstruct(oldp, oldlenp, newp, &dev, sizeof(dev));
 	case KERN_NETLIVELOCKS:
 		return (sysctl_rdint(oldp, oldlenp, newp, net_livelocks));
+	case KERN_HIDEPROC:
+		return(sysctl_int(oldp, oldlenp, newp, newlen, &hideproc));
 	case KERN_POOL_DEBUG: {
 		int old_pool_debug = pool_debug;
 
@@ -1367,6 +1370,17 @@ again:
 		 * Skip embryonic processes.
 		 */
 		if (pr->ps_flags & PS_EMBRYO)
+			continue;
+
+		/*
+		* Only show user owned processes if hideproc flag is set
+		* or the last exec gave us setuid/setgid privs
+		* (unless you're root).
+		*/
+
+		if ( hideproc > 0 && (pr != curproc->p_p &&
+			(pr->ps_ucred->cr_ruid != curproc->p_ucred->cr_ruid ||
+			(pr->ps_flags & PS_SUGID)) && suser(curproc, 0) != 0))
 			continue;
 
 		/*

@@ -184,7 +184,8 @@ struct ctlname {
 #define	KERN_GLOBAL_PTRACE	81	/* allow ptrace globally */
 /* gap for Bitrig */
 #define	KERN_CHROOTMKNOD	100	/* allow mknod in chroot */
-#define	KERN_MAXID		101	/* number of valid kern ids */
+#define KERN_HIDEPROC		101	/* int: system hide other procs */
+#define	KERN_MAXID		102	/* number of valid kern ids */
 
 #define	CTL_KERN_NAMES { \
 	{ 0, 0 }, \
@@ -288,6 +289,7 @@ struct ctlname {
 	{ "gap", 0 }, \
 	{ "gap", 0 }, \
 	{ "chroot_mknod", CTLTYPE_INT }, \
+	{ "hideproc", CTLTYPE_INT }, \
 }
 
 /*
