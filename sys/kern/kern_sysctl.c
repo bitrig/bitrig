@@ -252,7 +252,6 @@ int securelevel = -1;
 #else
 int securelevel;
 #endif
-int chroot_mknod;
 
 /*
  * kernel related system variables.
@@ -262,7 +261,6 @@ kern_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
     size_t newlen, struct proc *p)
 {
 	int error, level, inthostid, stackgap;
-	int chroot_mknod_tmp;
 	dev_t dev;
 	extern int somaxconn, sominconn;
 	extern int usermount, nosuidcoredump;
@@ -309,17 +307,6 @@ kern_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
 		return (sysctl_rdstring(oldp, oldlenp, newp, osversion));
 	case KERN_VERSION:
 		return (sysctl_rdstring(oldp, oldlenp, newp, version));
-	case KERN_CHROOTMKNOD:
-		chroot_mknod_tmp = chroot_mknod;
-		if ((error = sysctl_int(oldp, oldlenp, newp, newlen, &chroot_mknod_tmp)) ||
-			newp == NULL)
-			return (error);
-		if (securelevel > 0 && chroot_mknod_tmp == 1)
-			return (EPERM);
-		if (chroot_mknod_tmp != 0 && chroot_mknod_tmp != 1)
-			return (EINVAL);
-		chroot_mknod = chroot_mknod_tmp;
-		return (0);
 	case KERN_MAXVNODES:
 		return(sysctl_int(oldp, oldlenp, newp, newlen, &maxvnodes));
 	case KERN_MAXPROC:

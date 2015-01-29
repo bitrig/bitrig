@@ -88,8 +88,6 @@ extern int nchrdev;		/* number of entries in cdevsw */
 
 extern int selwait;		/* select timeout address */
 
-extern int chroot_mknod;	/* allow mknod(2) while chrooted */
-
 #ifdef MULTIPROCESSOR
 #define curpriority (curcpu()->ci_schedstate.spc_curpriority)
 #else
