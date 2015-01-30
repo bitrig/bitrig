@@ -580,25 +580,31 @@ tmpfs_snap_load_vnode(struct mount *mp, struct vnode *vp, struct proc *p)
 
 	error = tmpfs_snap_rdwr(vp, UIO_READ, &hdr, sizeof(hdr), &off);
 	if (error)
-		return (error);
+		goto fail;
 
 	if (strcmp(hdr.ts_magic, TMPFS_SNAP_MAGIC) ||
-	    hdr.ts_version != TMPFS_SNAP_VERSION)
-		return (EFTYPE);
+	    hdr.ts_version != TMPFS_SNAP_VERSION) {
+	    	error = EFTYPE;
+	    	goto fail;
+	}
 
 	TMPFS_SNAP_NTOH(&hdr);
 
-	if (hdr.ts_snap_sz > OFF_MAX)
-		return (EINVAL);
+	if (hdr.ts_snap_sz > OFF_MAX) {
+		error = EINVAL;
+		goto fail;
+	}
 
 	off = sizeof(hdr);
 	while (off < hdr.ts_snap_sz) {
 		error = tmpfs_snap_load_node(vp, mp, &off);
-		if (error) {
-			tmpfs_snap_load_cleanup(tmp);
+		if (error)
 			break;
-		}
 	}
+
+fail:
+	if (error)
+		tmpfs_snap_load_cleanup(tmp);
 
 	return (error);
 }
