@@ -468,10 +468,8 @@ tmpfs_snap_load_hdr(tmpfs_mount_t *tmp, tmpfs_node_t *node,
 	}
 
 	error = tmpfs_snap_attach_node(tmp, tnhdr, node);
-	if (error) {
-		tmpfs_free_node(tmp, node);
+	if (error)
 		return (error);
-	}
 
 	node->tn_flags = tmpfs_snap_flags_node(tnhdr->tsn_flags);
 	/* node->tn_btime = TMPFS_TST_TO_TS(tnhdr->tsn_btime); */
@@ -503,10 +501,8 @@ tmpfs_snap_load_file(struct vnode *vp, uint64_t *off, tmpfs_mount_t *tmp,
 
 	if ((size = tnhdr->tsn_spec.tsn_size)) {
 		if ((error = tmpfs_snap_node_setsize(tmp, node, size)) ||
-		    (error = tmpfs_snap_file_io(vp, UIO_READ, node, off))) {
-			tmpfs_free_node(tmp, node);
+		    (error = tmpfs_snap_file_io(vp, UIO_READ, node, off)))
 			return (error);
-		}
 	}
 
 	return (tmpfs_snap_load_hdr(tmp, node, tnhdr, NULL, NODEV));
