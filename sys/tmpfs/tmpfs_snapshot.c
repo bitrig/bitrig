@@ -485,21 +485,20 @@ tmpfs_snap_load_file(struct vnode *vp, uint64_t *off, tmpfs_mount_t *tmp,
     tmpfs_snap_node_t *tnhdr)
 {
 	tmpfs_node_t *node = NULL;
-	uint64_t size;
-	int error;
+	uint64_t size = tnhdr->tsn_spec.tsn_size;
+	int error = 0;
 
 	tmpfs_snap_find_node(tmp, tnhdr->tsn_id, &node);
 	if (node) {
-		/* Only files may appear multiple times. */
-		if (node->tn_type != VREG)
-			return (EFTYPE);
-	} else {
+		if (node->tn_type != VREG || (node->tn_size != 0 && size != 0))
+			error = EFTYPE;
+	} else
 		error = tmpfs_snap_alloc_node(tmp, tnhdr, NULL, NODEV, &node);
-		if (error)
-			return (error);
-	}
 
-	if ((size = tnhdr->tsn_spec.tsn_size)) {
+	if (error)
+		return (error);
+
+	if (size) {
 		if ((error = tmpfs_snap_node_setsize(tmp, node, size)) ||
 		    (error = tmpfs_snap_file_io(vp, UIO_READ, node, off)))
 			return (error);
