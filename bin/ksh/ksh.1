@@ -4676,7 +4676,9 @@ if the
 option is set, the shell allows vi-like editing of the command.
 These modes are described in detail in the following sections.
 .Pp
-In these editing modes, if a line is longer than the screen width (see the
+In the
+.Ic vi
+editing mode, if a line is longer than the screen width (see the
 .Ev COLUMNS
 parameter),
 a
@@ -4688,6 +4690,11 @@ character is displayed in the last column indicating that there are more
 characters after, before and after, or before the current position,
 respectively.
 The line is scrolled horizontally as necessary.
+In the
+.Ic emacs
+editing mode, long lines are wrapped into multiple
+.Pq physical
+lines.
 .Ss Emacs editing mode
 When the
 .Ic emacs

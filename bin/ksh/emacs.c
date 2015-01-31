@@ -9,6 +9,9 @@
  *
  * partial rewrite by Marco Peereboom <marco@openbsd.org>
  * under the same license
+ *
+ * multiline editing by Martin Natano <natano@natano.net>
+ * under the same license
  */
 
 #include "config.h"
@@ -20,6 +23,7 @@
 #include <sys/queue.h>
 #include <ctype.h>
 #include <locale.h>
+#include <stdarg.h>
 #include "edit.h"
 
 static	Area	aedit;
@@ -82,22 +86,11 @@ static char    *xbuf;		/* beg input buffer */
 static char    *xend;		/* end input buffer */
 static char    *xcp;		/* current position */
 static char    *xep;		/* current end */
-static char    *xbp;		/* start of visible portion of input buffer */
-static char    *xlp;		/* last char visible on screen */
-static int	x_adj_ok;
-/*
- * we use x_adj_done so that functions can tell
- * whether x_adjust() has been called while they are active.
- */
-static int	x_adj_done;
 
-static int	xx_cols;
 static int	x_col;
-static int	x_displen;
 static int	x_arg;		/* general purpose arg */
 static int	x_arg_defaulted;/* x_arg not explicitly set; defaulted to 1 */
 
-static int	xlp_valid;
 /* end from 4.9 edit.h } */
 static	int	x_tty;		/* are we on a tty? */
 static	int	x_bind_quiet;	/* be quiet when binding keys */
@@ -113,15 +106,14 @@ static	int	x_literal_set;
 static	int	x_arg_set;
 static	char	*macro_args;
 static	int	prompt_skip;
-static	int	prompt_redraw;
 
+static void	x_cs(const char *, ...);
 static int	x_ins(char *);
 static void	x_delete(int, int);
 static int	x_bword(void);
 static int	x_fword(void);
 static void	x_goto(char *);
 static void	x_bs(int);
-static int	x_size_str(char *);
 static int	x_size(int);
 static void	x_zots(char *);
 static void	x_zotc(int);
@@ -130,14 +122,12 @@ static int	x_search(char *, int, int);
 static int	x_match(char *, char *);
 static void	x_redraw(int);
 static void	x_push(int);
-static void	x_adjust(void);
 static void	x_e_ungetc(int);
 static int	x_e_getc(void);
 static void	x_e_putc(int);
 static void	x_e_puts(const char *);
 static int	x_comment(int);
 static int	x_fold_case(int);
-static char	*x_lastcp(void);
 static void	do_complete(int, Comp_type);
 static int	x_emacs_putbuf(const char *, size_t);
 
@@ -268,30 +258,16 @@ x_emacs(char *buf, size_t len)
 	int			at = 0, submatch, ret, c;
 	const char		*p;
 
-	xbp = xbuf = buf; xend = buf + len;
-	xlp = xcp = xep = buf;
+	xbuf = buf; xend = buf + len;
+	xcp = xep = buf;
 	*xcp = 0;
-	xlp_valid = true;
 	xmp = NULL;
 	x_histp = histptr + 1;
 
-	xx_cols = x_cols;
 	x_col = promptlen(prompt, &p);
 	prompt_skip = p - prompt;
-	x_adj_ok = 1;
-	prompt_redraw = 1;
-	if (x_col > xx_cols)
-		x_col = x_col - (x_col / xx_cols) * xx_cols;
-	x_displen = xx_cols - 2 - x_col;
-	x_adj_done = 0;
 
 	pprompt(prompt, 0);
-	if (x_displen < 1) {
-		x_col = 0;
-		x_displen = xx_cols - 2;
-		x_e_putc('\n');
-		prompt_redraw = 0;
-	}
 
 	if (x_nextcmd >= 0) {
 		int off = source->line - x_nextcmd;
@@ -389,6 +365,21 @@ x_emacs(char *buf, size_t len)
 	}
 }
 
+static void
+x_cs(const char *fmt, ...)
+{
+	char buf[10];
+	va_list ap;
+
+	va_start(ap, fmt);
+	(void)vsnprintf(buf, 10, fmt, ap);
+	va_end(ap);
+
+	x_putc(CTRL('['));
+	x_putc('[');
+	x_puts(buf);
+}
+
 static int
 x_insert(int c)
 {
@@ -435,25 +426,13 @@ static int
 x_ins(char *s)
 {
 	char	*cp = xcp;
-	int	adj = x_adj_done;
 
 	if (x_do_ins(s, strlen(s)) < 0)
 		return -1;
-	/*
-	 * x_zots() may result in a call to x_adjust()
-	 * we want xcp to reflect the new position.
-	 */
-	xlp_valid = false;
-	x_lastcp();
-	x_adj_ok = (xcp >= xlp);
 	x_zots(cp);
-	if (adj == x_adj_done) {	/* has x_adjust() been called? */
-		/* no */
-		for (cp = xlp; cp > xcp; )
-			x_bs(*--cp);
-	}
+	for (cp = xep; cp > xcp; )
+		x_bs(*--cp);
 
-	x_adj_ok = 1;
 	return 0;
 }
 
@@ -527,29 +506,19 @@ x_delete(int nc, int push)
 		j += x_size((unsigned char)*cp++);
 	}
 	memmove(xcp, xcp+nc, xep - xcp + 1);	/* Copies the null */
-	x_adj_ok = 0;			/* don't redraw */
 	x_zots(xcp);
-	/*
-	 * if we are already filling the line,
-	 * there is no need to ' ','\b'.
-	 * But if we must, make sure we do the minimum.
-	 */
-	if ((i = xx_cols - 2 - x_col) > 0) {
+	if ((i = x_cols) > 0) {
 		j = (j < i) ? j : i;
 		i = j;
 		while (i--)
 			x_e_putc(' ');
 		i = j;
 		while (i--)
-			x_e_putc('\b');
+			x_bs(' ');
 	}
 	/*x_goto(xcp);*/
-	x_adj_ok = 1;
-	xlp_valid = false;
-	for (cp = x_lastcp(); cp > xcp; )
+	for (cp = xep; cp > xcp; )
 		x_bs(*--cp);
-
-	return;
 }
 
 static int
@@ -630,11 +599,7 @@ x_fword(void)
 static void
 x_goto(char *cp)
 {
-	if (cp < xbp || cp >= (xbp + x_displen)) {
-		/* we are heading off screen */
-		xcp = cp;
-		x_adjust();
-	} else if (cp < xcp) {		/* move back */
+	if (cp < xcp) {			/* move back */
 		while (cp < xcp)
 			x_bs((unsigned char)*--xcp);
 	} else if (cp > xcp) {		/* move forward */
@@ -649,17 +614,14 @@ x_bs(int c)
 	int i;
 
 	i = x_size(c);
-	while (i--)
-		x_e_putc('\b');
-}
-
-static int
-x_size_str(char *cp)
-{
-	int size = 0;
-	while (*cp)
-		size += x_size(*cp++);
-	return size;
+	while (i--) {
+		if (x_col % x_cols == 0) {
+			x_cs("A");
+			x_cs("%dC", x_cols - 1);
+		} else
+			x_putc('\b');
+		x_col--;
+	}
 }
 
 static int
@@ -675,10 +637,7 @@ x_size(int c)
 static void
 x_zots(char *str)
 {
-	int	adj = x_adj_done;
-
-	x_lastcp();
-	while (*str && str < xlp && adj == x_adj_done)
+	while (*str && str < xep)
 		x_zotc(*str++);
 }
 
@@ -768,8 +727,8 @@ x_search_char_back(int c)
 static int
 x_newline(int c)
 {
-	x_e_putc('\r');
-	x_e_putc('\n');
+	x_goto(xep);
+	x_e_puts("\r\n");
 	x_flush();
 	*xep++ = '\n';
 	return KEOL;
@@ -779,8 +738,7 @@ static int
 x_end_of_text(int c)
 {
 	x_zotc(edchars.eof);
-	x_putc('\r');
-	x_putc('\n');
+	x_e_puts("\r\n");
 	x_flush();
 	return KEOL;
 }
@@ -810,21 +768,14 @@ x_goto_hist(int c)
 static void
 x_load_hist(char **hp)
 {
-	int	oldsize;
-
 	if (hp < history || hp > histptr) {
 		x_e_putc(BEL);
 		return;
 	}
 	x_histp = hp;
-	oldsize = x_size_str(xbuf);
 	strlcpy(xbuf, *hp, xend - xbuf);
-	xbp = xbuf;
 	xep = xcp = xbuf + strlen(xbuf);
-	xlp_valid = false;
-	if (xep <= x_lastcp())
-		x_redraw(oldsize);
-	x_goto(xep);
+	x_redraw(1);
 }
 
 static int
@@ -870,6 +821,7 @@ x_search_hist(int c)
 	*p = '\0';
 	while (1) {
 		if (offset < 0) {
+			x_goto(xep);
 			x_e_puts("\nI-search: ");
 			x_e_puts(pat);
 		}
@@ -919,8 +871,10 @@ x_search_hist(int c)
 			break;
 		}
 	}
-	if (offset < 0)
-		x_redraw(-1);
+	if (offset < 0) {
+		x_e_putc('\n');
+		x_redraw(0);
+	}
 	return KSTD;
 }
 
@@ -961,18 +915,16 @@ x_match(char *str, char *pat)
 static int
 x_del_line(int c)
 {
-	int	i, j;
+	int	i;
 
 	*xep = 0;
 	i = xep - xbuf;
-	j = x_size_str(xbuf);
 	xcp = xbuf;
 	x_push(i);
-	xlp = xbp = xep = xbuf;
-	xlp_valid = true;
+	xep = xbuf;
 	*xcp = 0;
 	xmp = NULL;
-	x_redraw(j);
+	x_redraw(1);
 	return KSTD;
 }
 
@@ -993,72 +945,39 @@ x_mv_begin(int c)
 static int
 x_draw_line(int c)
 {
-	x_redraw(-1);
+	char *cp;
+
+	cp = xcp;
+	x_goto(xep);
+	xcp = cp;
+	x_e_putc('\n');
+	x_redraw(0);
 	return KSTD;
 
 }
 
-/* Redraw (part of) the line.  If limit is < 0, the everything is redrawn
- * on a NEW line, otherwise limit is the screen column up to which needs
- * redrawing.
- */
 static void
-x_redraw(int limit)
+x_redraw(int clr)
 {
-	int	i, j, truncate = 0;
-	char	*cp;
+	int current_row;
+	char *cp;
 
-	x_adj_ok = 0;
-	if (limit == -1)
-		x_e_putc('\n');
-	else
+	if (clr) {
+		current_row = (x_col + x_cols - 1) / x_cols;
+		if (current_row > 1)
+			x_cs("%dA", current_row - 1);
+		x_e_putc('\r');
+		x_cs("0J");
+	} else
 		x_e_putc('\r');
 	x_flush();
-	if (xbp == xbuf) {
-		x_col = promptlen(prompt, (const char **) 0);
-		if (x_col > xx_cols)
-			truncate = (x_col / xx_cols) * xx_cols;
-		if (prompt_redraw)
-			pprompt(prompt + prompt_skip, truncate);
-	}
-	if (x_col > xx_cols)
-		x_col = x_col - (x_col / xx_cols) * xx_cols;
-	x_displen = xx_cols - 2 - x_col;
-	if (x_displen < 1) {
-		x_col = 0;
-		x_displen = xx_cols - 2;
-	}
-	xlp_valid = false;
-	cp = x_lastcp();
-	x_zots(xbp);
-	if (xbp != xbuf || xep > xlp)
-		limit = xx_cols;
-	if (limit >= 0) {
-		if (xep > xlp)
-			i = 0;			/* we fill the line */
-		else
-			i = limit - (xlp - xbp);
 
-		for (j = 0; j < i && x_col < (xx_cols - 2); j++)
-			x_e_putc(' ');
-		i = ' ';
-		if (xep > xlp) {		/* more off screen */
-			if (xbp > xbuf)
-				i = '*';
-			else
-				i = '>';
-		} else if (xbp > xbuf)
-			i = '<';
-		x_e_putc(i);
-		j++;
-		while (j--)
-			x_e_putc('\b');
-	}
-	for (cp = xlp; cp > xcp; )
+	x_col = promptlen(prompt, NULL);
+	pprompt(prompt + prompt_skip, 0);
+	x_zots(xbuf);
+	for (cp = xep; cp > xcp; )
 		x_bs(*--cp);
-	x_adj_ok = 1;
 	D__(x_flush();)
-	return;
 }
 
 static int
@@ -1153,14 +1072,19 @@ x_push(int nchars)
 static int
 x_yank(int c)
 {
+	char *cp;
+
 	if (killsp == 0)
 		killtp = KILLSIZE;
 	else
 		killtp = killsp;
 	killtp --;
 	if (killstack[killtp] == 0) {
-		x_e_puts("\nnothing to yank");
-		x_redraw(-1);
+		cp = xcp;
+		x_goto(xep);
+		x_e_puts("\nnothing to yank\n");
+		xcp = cp;
+		x_redraw(0);
 		return KSTD;
 	}
 	xmp = xcp;
@@ -1171,12 +1095,17 @@ x_yank(int c)
 static int
 x_meta_yank(int c)
 {
-	int	len;
+	char *cp;
+	int len;
+
 	if ((x_last_command != x_yank && x_last_command != x_meta_yank) ||
 	    killstack[killtp] == 0) {
 		killtp = killsp;
-		x_e_puts("\nyank something first");
-		x_redraw(-1);
+		cp = xcp;
+		x_goto(xep);
+		x_e_puts("\nyank something first\n");
+		xcp = cp;
+		x_redraw(0);
 		return KSTD;
 	}
 	len = strlen(killstack[killtp]);
@@ -1195,9 +1124,9 @@ x_meta_yank(int c)
 static int
 x_abort(int c)
 {
+	x_goto(xep);
 	/* x_zotc(c); */
-	xlp = xep = xcp = xbp = xbuf;
-	xlp_valid = true;
+	xep = xcp = xbuf;
 	*xcp = 0;
 	return KINTR;
 }
@@ -1217,10 +1146,10 @@ x_stuffreset(int c)
 	return KINTR;
 #else
 	x_zotc(c);
-	xlp = xcp = xep = xbp = xbuf;
-	xlp_valid = true;
+	xcp = xep = xbuf;
 	*xcp = 0;
-	x_redraw(-1);
+	x_e_putc('\n');
+	x_redraw(0);
 	return KSTD;
 #endif
 }
@@ -1234,7 +1163,8 @@ x_stuff(int c)
 
 	(void)ioctl(TTY, TIOCSTI, &ch);
 	(void)x_mode(savmode);
-	x_redraw(-1);
+	x_e_putc('\n');
+	x_redraw(0);
 #endif
 	return KSTD;
 }
@@ -1652,21 +1582,19 @@ static int
 x_version(int c)
 {
 	char *o_xbuf = xbuf, *o_xend = xend;
-	char *o_xbp = xbp, *o_xep = xep, *o_xcp = xcp;
-	int lim = x_lastcp() - xbp;
+	char *o_xep = xep, *o_xcp = xcp;
 
-	xbuf = xbp = xcp = (char *) ksh_version + 4;
+	xbuf = xcp = (char *) ksh_version + 4;
 	xend = xep = (char *) ksh_version + 4 + strlen(ksh_version + 4);
-	x_redraw(lim);
+	x_redraw(1);
 	x_flush();
 
 	c = x_e_getc();
 	xbuf = o_xbuf;
 	xend = o_xend;
-	xbp = o_xbp;
 	xep = o_xep;
 	xcp = o_xcp;
-	x_redraw(strlen(ksh_version));
+	x_redraw(1);
 
 	if (c < 0)
 		return KSTD;
@@ -1755,17 +1683,15 @@ x_expand(int c)
 			return KSTD;
 		}
 	}
-	x_adjust();
 
 	return KSTD;
 }
 
-/* type == 0 for list, 1 for complete and 2 for complete-list */
 static void
 do_complete(int flags,	/* XCF_{COMMAND,FILE,COMMAND_FILE} */
     Comp_type type)
 {
-	char **words;
+	char **words, *cp;
 	int nwords;
 	int start, end, nlen, olen;
 	int is_command;
@@ -1780,6 +1706,9 @@ do_complete(int flags,	/* XCF_{COMMAND,FILE,COMMAND_FILE} */
 	}
 
 	if (type == CT_LIST) {
+		cp = xcp;
+		x_goto(xep);
+		xcp = cp;
 		x_print_expansions(nwords, words, is_command);
 		x_redraw(0);
 		x_free_words(nwords, words);
@@ -1793,8 +1722,8 @@ do_complete(int flags,	/* XCF_{COMMAND,FILE,COMMAND_FILE} */
 		x_goto(xbuf + start);
 		x_delete(olen, false);
 		x_escape(words[0], nlen, x_emacs_putbuf);
-		x_adjust();
 		completed = 1;
+		x_redraw(1);
 	}
 	/* add space if single non-dir match */
 	if (nwords == 1 && words[0][nlen - 1] != '/') {
@@ -1803,42 +1732,15 @@ do_complete(int flags,	/* XCF_{COMMAND,FILE,COMMAND_FILE} */
 	}
 
 	if (type == CT_COMPLIST && !completed) {
+		cp = xcp;
+		x_goto(xep);
+		xcp = cp;
 		x_print_expansions(nwords, words, is_command);
 		completed = 1;
+		x_redraw(0);
 	}
 
-	if (completed)
-		x_redraw(0);
-
 	x_free_words(nwords, words);
-}
-
-/* NAME:
- *      x_adjust - redraw the line adjusting starting point etc.
- *
- * DESCRIPTION:
- *      This function is called when we have exceeded the bounds
- *      of the edit window.  It increments x_adj_done so that
- *      functions like x_ins and x_delete know that we have been
- *      called and can skip the x_bs() stuff which has already
- *      been done by x_redraw.
- *
- * RETURN VALUE:
- *      None
- */
-
-static void
-x_adjust(void)
-{
-	x_adj_done++;			/* flag the fact that we were called. */
-	/*
-	 * we had a problem if the prompt length > xx_cols / 2
-	 */
-	if ((xbp = xcp - (x_displen / 2)) < xbuf)
-		xbp = xbuf;
-	xlp_valid = false;
-	x_redraw(xx_cols);
-	x_flush();
 }
 
 static int unget_char = -1;
@@ -1872,26 +1774,20 @@ x_e_getc(void)
 static void
 x_e_putc(int c)
 {
-	if (c == '\r' || c == '\n')
+	x_putc(c);
+	switch (c) {
+	case BEL:
+		break;
+	case '\r':
+	case '\n':
 		x_col = 0;
-	if (x_col < xx_cols) {
-		x_putc(c);
-		switch (c) {
-		case BEL:
-			break;
-		case '\r':
-		case '\n':
-			break;
-		case '\b':
-			x_col--;
-			break;
-		default:
-			x_col++;
-			break;
-		}
+		break;
+	default:
+		x_col++;
+		if (x_col % x_cols == 0)
+			x_puts("\r\n");
+		break;
 	}
-	if (x_adj_ok && (x_col < 0 || x_col >= (xx_cols - 2)))
-		x_adjust();
 }
 
 #ifdef DEBUG
@@ -1900,14 +1796,11 @@ x_debug_info(int c)
 {
 	x_flush();
 	shellf("\nksh debug:\n");
-	shellf("\tx_col == %d,\t\tx_cols == %d,\tx_displen == %d\n",
-	    x_col, xx_cols, x_displen);
+	shellf("\tx_col == %d,\t\tx_cols == %d\n", x_col, x_cols);
 	shellf("\txcp == 0x%lx,\txep == 0x%lx\n", (long) xcp, (long) xep);
-	shellf("\txbp == 0x%lx,\txbuf == 0x%lx\n", (long) xbp, (long) xbuf);
-	shellf("\txlp == 0x%lx\n", (long) xlp);
-	shellf("\txlp == 0x%lx\n", (long) x_lastcp());
+	shellf("\txbuf == 0x%lx\n", (long) xbuf);
 	shellf(newline);
-	x_redraw(-1);
+	x_redraw(0);
 	return 0;
 }
 #endif
@@ -1915,9 +1808,7 @@ x_debug_info(int c)
 static void
 x_e_puts(const char *s)
 {
-	int	adj = x_adj_done;
-
-	while (*s && adj == x_adj_done)
+	while (*s)
 		x_e_putc(*s++);
 }
 
@@ -1957,7 +1848,6 @@ x_set_arg(int c)
 static int
 x_comment(int c)
 {
-	int oldsize = x_size_str(xbuf);
 	int len = xep - xbuf;
 	int ret = x_do_comment(xbuf, xend - xbuf, &len);
 
@@ -1966,8 +1856,8 @@ x_comment(int c)
 	else {
 		xep = xbuf + len;
 		*xep = '\0';
-		xcp = xbp = xbuf;
-		x_redraw(oldsize);
+		xcp = xbuf;
+		x_redraw(1);
 		if (ret > 0)
 			return x_newline('\n');
 	}
@@ -2114,41 +2004,6 @@ x_fold_case(int c)
 	}
 	x_goto(cp);
 	return KSTD;
-}
-
-/* NAME:
- *      x_lastcp - last visible char
- *
- * SYNOPSIS:
- *      x_lastcp()
- *
- * DESCRIPTION:
- *      This function returns a pointer to that  char in the
- *      edit buffer that will be the last displayed on the
- *      screen.  The sequence:
- *
- *      for (cp = x_lastcp(); cp > xcp; cp)
- *        x_bs(*--cp);
- *
- *      Will position the cursor correctly on the screen.
- *
- * RETURN VALUE:
- *      cp or NULL
- */
-
-static char *
-x_lastcp(void)
-{
-	char *rcp;
-	int i;
-
-	if (!xlp_valid) {
-		for (i = 0, rcp = xbp; rcp < xep && i < x_displen; rcp++)
-			i += x_size((unsigned char)*rcp);
-		xlp = rcp;
-	}
-	xlp_valid = true;
-	return (xlp);
 }
 
 #endif /* EMACS */
