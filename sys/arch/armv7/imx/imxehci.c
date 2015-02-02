@@ -317,7 +317,7 @@ imxehci_attach(struct device *parent, struct device *self, void *aux)
 		return;
 	}
 
-	strlcpy(esc->sc_vendor, "Exynos 5", sizeof(esc->sc_vendor));
+	strlcpy(esc->sc_vendor, "i.MX6", sizeof(esc->sc_vendor));
 	r = ehci_init(esc);
 	if (r != USBD_NORMAL_COMPLETION) {
 		printf("%s: init failed, error=%d\n",
