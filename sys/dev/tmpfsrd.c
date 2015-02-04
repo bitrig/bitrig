@@ -26,12 +26,12 @@
 #include <sys/conf.h>
 #include <sys/dkio.h>
 #include <sys/mtio.h>
-#include <sys/workq.h>
+#include <sys/task.h>
 
 #include <uvm/uvm_extern.h>
 
 void	tmpfsrdattach(int);
-void	tmpfsrd_terminate(void *, void *);
+void	tmpfsrd_terminate(void *);
 int	tmpfsrd_match(struct device *, void *, void *);
 void	tmpfsrd_attach(struct device *, struct device *, void *);
 int	tmpfsrd_detach(struct device *, int);
@@ -41,6 +41,7 @@ struct tmpfsrd_softc {
 	struct device	sc_dev;
 	struct disk	sc_dk;
 	int		sc_flags;
+	struct task	sc_terminatetask;
 };
 
 #define TMPFSRD_TERMINATING	0x1
@@ -157,6 +158,8 @@ tmpfsrd_attach(struct device *parent, struct device *self, void *aux)
 
 	printf("ramdisk ready\n");
 
+	task_set(&sc->sc_terminatetask, tmpfsrd_terminate, sc);
+
 	disk_attach(&sc->sc_dev, &sc->sc_dk);
 }
 
@@ -167,6 +170,8 @@ tmpfsrd_detach(struct device *self, int flags)
 
 	disk_gone(&sc->sc_dk);
 	disk_detach(&sc->sc_dk);
+
+	task_del(systq, &sc->sc_terminatetask);
 
 	return (0);
 }
@@ -206,7 +211,7 @@ unref:
 }
 
 void
-tmpfsrd_terminate(void *arg1, void *arg2)
+tmpfsrd_terminate(void *arg1)
 {
 	config_detach((struct device *)arg1, 0);
 	explicit_bzero(tmpfsrd_disk, tmpfsrd_size);
@@ -315,8 +320,7 @@ tmpfsrdioctl(dev_t dev, u_long cmd, caddr_t data, int fflag, struct proc *p)
 	case DIOCEJECT:
 		if ((sc->sc_flags & TMPFSRD_TERMINATING) == 0) {
 			sc->sc_flags |= TMPFSRD_TERMINATING;
-			error = workq_add_task(NULL, 0, tmpfsrd_terminate,
-			    sc, NULL);
+			task_add(systq, &sc->sc_terminatetask);
 		}
 		break;
 	default:
