@@ -134,4 +134,8 @@ enum flushmode {
 	RESET_USER
 };
 
+#ifndef nitems
+#define nitems(_a)   (sizeof((_a)) / sizeof((_a)[0]))
+#endif
+
 #endif /* _IKED_TYPES_H */

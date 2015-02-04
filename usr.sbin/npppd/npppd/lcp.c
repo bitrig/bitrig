@@ -54,6 +54,10 @@
 
 #include "debugutil.h"
 
+#ifndef nitems
+#define nitems(_a)	(sizeof((_a)) / sizeof((_a)[0]))
+#endif
+
 #ifdef	LCP_DEBUG
 #define	LCP_DBG(x)	fsm_log x
 #define	LCP_ASSERT(x)	ASSERT(x)

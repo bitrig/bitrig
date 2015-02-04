@@ -51,6 +51,10 @@
 
 #include "npppd_auth_local.h"
 
+#ifndef nitems
+#define nitems(_a)	(sizeof((_a)) / sizeof((_a)[0]))
+#endif
+
 /**
  * Create a npppd_auth_base object.
  * @param auth_type	the authentication type.

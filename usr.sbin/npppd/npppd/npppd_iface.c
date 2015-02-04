@@ -72,6 +72,10 @@
 #include <net/pipex.h>
 #endif /* USE_NPPPD_PIPEX */
 
+#ifndef nitems
+#define nitems(_a)	(sizeof((_a)) / sizeof((_a)[0]))
+#endif
+
 #ifdef	NPPPD_IFACE_DEBUG
 #define	NPPPD_IFACE_DBG(x)	npppd_iface_log x
 #define	NPPPD_IFACE_ASSERT(cond)				\
@@ -96,7 +100,6 @@ static int   npppd_iface_log (npppd_iface *, int, const char *, ...)
 static int npppd_iface_pipex_enable(npppd_iface *_this);
 static int npppd_iface_pipex_disable(npppd_iface *_this);
 #endif /* USE_NPPPD_PIPEX */
-
 
 /** initialize npppd_iface */
 void

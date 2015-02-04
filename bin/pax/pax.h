@@ -1,4 +1,4 @@
-/*	$OpenBSD: pax.h,v 1.19 2014/11/23 05:32:20 guenther Exp $	*/
+/*	$OpenBSD: pax.h,v 1.20 2015/01/16 06:39:32 deraadt Exp $	*/
 /*	$NetBSD: pax.h,v 1.3 1995/03/21 09:07:41 cgd Exp $	*/
 
 /*-
@@ -219,6 +219,11 @@ typedef struct oplist {
 	char		*value;		/* value for option variable */
 	struct oplist	*fow;		/* next option */
 } OPLIST;
+
+/*
+ * General Macros
+ */
+#define MINIMUM(a, b)	(((a) < (b)) ? (a) : (b))
 
 /*
  * General Defines

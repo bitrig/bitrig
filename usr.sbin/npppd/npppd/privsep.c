@@ -38,6 +38,10 @@
 #include "npppd.h"
 #include "ppp.h"
 
+#ifndef nitems
+#define nitems(_a)	(sizeof((_a)) / sizeof((_a)[0]))
+#endif
+
 enum imsg_code {
 	PRIVSEP_OK,
 	PRIVSEP_OPEN,

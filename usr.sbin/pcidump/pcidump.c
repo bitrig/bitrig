@@ -36,6 +36,10 @@
 
 #define PCIDEV	"/dev/pci"
 
+#ifndef nitems
+#define nitems(_a)	(sizeof((_a)) / sizeof((_a)[0]))
+#endif
+
 __dead void usage(void);
 void scanpcidomain(void);
 int probe(int, int, int);

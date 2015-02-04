@@ -54,6 +54,10 @@
 
 #include "pathnames.h"
 
+#ifndef nitems
+#define nitems(_a)	(sizeof((_a)) / sizeof((_a)[0]))
+#endif
+
 #ifdef NPPPD_CONFIG_DEBUG
 #define NPPPD_CONFIG_DBG(x) 	log_printf x
 #define NPPPD_CONFIG_ASSERT(x) ASSERT(x)

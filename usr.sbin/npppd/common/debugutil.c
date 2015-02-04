@@ -43,6 +43,9 @@ static int prio_idx_inititialized = 0;
 
 static void  set_prio_idx_init __P((void));
 
+#ifndef nitems
+#define nitems(_a)	(sizeof((_a)) / sizeof((_a)[0]))
+#endif
 #define VAL_NAME(x)	{ (x), #x}
 
 #ifndef LOG_PRI

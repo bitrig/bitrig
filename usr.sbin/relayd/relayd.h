@@ -35,6 +35,10 @@
 #include <event.h>
 #include <imsg.h>
 
+#ifndef nitems
+#define nitems(_a)	(sizeof((_a)) / sizeof((_a)[0]))
+#endif
+
 #include <openssl/ssl.h>
 
 #define CONF_FILE		"/etc/relayd.conf"
