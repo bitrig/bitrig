@@ -31,12 +31,12 @@ sub find_path
 	open my $cmd, '-|', OpenBSD::Paths->sysctl, '-n', 'kern.version';
 	my $line = <$cmd>;
 	close($cmd);
-	if ($line =~ m/^OpenBSD (\d\.\d)(\S*)\s/) {
+	if ($line =~ m/^Bitrig (\d\.\d)(\S*)\s/) {
 		my ($version, $tag) = ($1, $2);
 		if ($tag eq '-current') {
 			$version = 'snapshots';
 		}
-		$state->{path} = "http://firmware.openbsd.org/firmware/$version/";
+		$state->{path} = "http://firmware.bitrig.org/firmware/$version/";
 	} else {
 		$state->fatal("Couldn't find/parse OS version");
 	}
