@@ -451,6 +451,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/bus.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/cacheinfo.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/cdefs.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/codepatch.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/conf.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/cpu.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/cpufunc.ph
@@ -546,7 +547,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/cmac.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/cryptodev.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/cryptosoft.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/des.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/des_locl.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/gmac.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/hmac.ph
@@ -581,7 +581,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ddb/db_var.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ddb/db_variables.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ddb/db_watch.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/des.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/acpi
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/acpi/acpidebug.ph
@@ -1188,6 +1187,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/usbf.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/usbfvar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/usbhid.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/uslhcomreg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/uvideo.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/xhcireg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/xhcivar.ph
@@ -1738,7 +1738,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/wait.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/wapbl.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/wapbl_replay.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/sys/workq.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sysexits.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/syslog.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/tar.ph

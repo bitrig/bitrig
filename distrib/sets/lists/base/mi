@@ -644,10 +644,10 @@
 ./usr/lib
 ./usr/lib/libc++.so.1.0
 ./usr/lib/libc++abi.so.1.0
-./usr/lib/libc.so.78.0
-./usr/lib/libcrypto.so.30.3
+./usr/lib/libc.so.78.1
+./usr/lib/libcrypto.so.30.4
 ./usr/lib/libcurses.so.15.0
-./usr/lib/libedit.so.6.1
+./usr/lib/libedit.so.6.2
 ./usr/lib/libevent.so.5.0
 ./usr/lib/libexpat.so.11.0
 ./usr/lib/libform.so.7.0
@@ -671,10 +671,10 @@
 ./usr/lib/libskey.so.7.0
 ./usr/lib/libsndio.so.6.0
 ./usr/lib/libsqlite3.so.28.0
-./usr/lib/libssl.so.30.0
+./usr/lib/libssl.so.30.1
 ./usr/lib/libtermcap.so.15.0
 ./usr/lib/libtermlib.so.15.0
-./usr/lib/libtls.so.1.0
+./usr/lib/libtls.so.1.1
 ./usr/lib/libusbhid.so.7.0
 ./usr/lib/libutil.so.13.1
 ./usr/lib/libz.so.5.0
@@ -1103,6 +1103,7 @@
 ./usr/libdata/perl5/OpenBSD/Dependencies.pm
 ./usr/libdata/perl5/OpenBSD/Error.pm
 ./usr/libdata/perl5/OpenBSD/ForwardDependencies.pm
+./usr/libdata/perl5/OpenBSD/FwUpdate.pm
 ./usr/libdata/perl5/OpenBSD/Getopt.pm
 ./usr/libdata/perl5/OpenBSD/Handle.pm
 ./usr/libdata/perl5/OpenBSD/IdCache.pm
@@ -2166,7 +2167,6 @@
 ./usr/libexec/lpr
 ./usr/libexec/lpr/lpf
 ./usr/libexec/mail.local
-./usr/libexec/makekey
 ./usr/libexec/makewhatis
 ./usr/libexec/ntalkd
 ./usr/libexec/rpc.rquotad
@@ -5725,6 +5725,7 @@
 ./usr/share/man/man3/fgetpos.3
 ./usr/share/man/man3/fgets.3
 ./usr/share/man/man3/fgetwc.3
+./usr/share/man/man3/fgetwln.3
 ./usr/share/man/man3/fgetws.3
 ./usr/share/man/man3/field_arg.3
 ./usr/share/man/man3/field_back.3
@@ -8597,6 +8598,7 @@
 ./usr/share/man/man4/myx.4
 ./usr/share/man/man4/ne.4
 ./usr/share/man/man4/neo.4
+./usr/share/man/man4/nep.4
 ./usr/share/man/man4/netintro.4
 ./usr/share/man/man4/networking.4
 ./usr/share/man/man4/nfe.4
@@ -8794,6 +8796,7 @@
 ./usr/share/man/man4/usbf.4
 ./usr/share/man/man4/uscom.4
 ./usr/share/man/man4/uslcom.4
+./usr/share/man/man4/uslhcom.4
 ./usr/share/man/man4/usps.4
 ./usr/share/man/man4/uthum.4
 ./usr/share/man/man4/uticom.4
@@ -9149,7 +9152,6 @@
 ./usr/share/man/man8/mailq.8
 ./usr/share/man/man8/mailwrapper.8
 ./usr/share/man/man8/makedbm.8
-./usr/share/man/man8/makekey.8
 ./usr/share/man/man8/makemap.8
 ./usr/share/man/man8/makewhatis.8
 ./usr/share/man/man8/map-mbone.8
@@ -9504,6 +9506,7 @@
 ./usr/share/man/man9/bus_dmamap_sync.9
 ./usr/share/man/man9/bus_dmamap_unload.9
 ./usr/share/man/man9/bus_dmamem_alloc.9
+./usr/share/man/man9/bus_dmamem_alloc_range.9
 ./usr/share/man/man9/bus_dmamem_free.9
 ./usr/share/man/man9/bus_dmamem_map.9
 ./usr/share/man/man9/bus_dmamem_mmap.9
@@ -10065,6 +10068,7 @@
 ./usr/share/man/man3/tls_config_insecure_noverifyhost.3
 ./usr/share/man/man3/tls_config_new.3
 ./usr/share/man/man3/tls_config_set_ca_file.3
+./usr/share/man/man3/tls_config_set_ca_mem.3
 ./usr/share/man/man3/tls_config_set_ca_path.3
 ./usr/share/man/man3/tls_config_set_cert_file.3
 ./usr/share/man/man3/tls_config_set_cert_mem.3
@@ -10189,10 +10193,6 @@
 ./usr/share/man/man9/wakeup_n.9
 ./usr/share/man/man9/wakeup_one.9
 ./usr/share/man/man9/wdog_register.9
-./usr/share/man/man9/workq_add_task.9
-./usr/share/man/man9/workq_create.9
-./usr/share/man/man9/workq_destroy.9
-./usr/share/man/man9/workq_queue_task.9
 ./usr/share/man/man9/writedisklabel.9
 ./usr/share/man/mandoc.db
 ./usr/share/misc

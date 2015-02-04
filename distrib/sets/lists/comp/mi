@@ -158,7 +158,6 @@
 ./usr/include/crypto/cmac.h
 ./usr/include/crypto/cryptodev.h
 ./usr/include/crypto/cryptosoft.h
-./usr/include/crypto/des.h
 ./usr/include/crypto/des_locl.h
 ./usr/include/crypto/gmac.h
 ./usr/include/crypto/hmac.h
@@ -193,7 +192,6 @@
 ./usr/include/ddb/db_var.h
 ./usr/include/ddb/db_variables.h
 ./usr/include/ddb/db_watch.h
-./usr/include/des.h
 ./usr/include/dev
 ./usr/include/dev/acpi
 ./usr/include/dev/acpi/acpidebug.h
@@ -800,6 +798,7 @@
 ./usr/include/dev/usb/usbf.h
 ./usr/include/dev/usb/usbfvar.h
 ./usr/include/dev/usb/usbhid.h
+./usr/include/dev/usb/uslhcomreg.h
 ./usr/include/dev/usb/uvideo.h
 ./usr/include/dev/usb/xhcireg.h
 ./usr/include/dev/usb/xhcivar.h
@@ -1366,7 +1365,6 @@
 ./usr/include/sys/wait.h
 ./usr/include/sys/wapbl.h
 ./usr/include/sys/wapbl_replay.h
-./usr/include/sys/workq.h
 ./usr/include/sysexits.h
 ./usr/include/syslog.h
 ./usr/include/tar.h

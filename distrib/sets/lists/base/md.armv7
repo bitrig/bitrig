@@ -546,7 +546,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/crypto/cmac.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/crypto/cryptodev.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/crypto/cryptosoft.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/crypto/des.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/crypto/des_locl.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/crypto/gmac.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/crypto/hmac.ph
@@ -581,7 +580,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/ddb/db_var.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/ddb/db_variables.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/ddb/db_watch.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/des.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/acpi
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/acpi/acpidebug.ph
@@ -1188,6 +1186,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/usbf.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/usbfvar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/usbhid.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/uslhcomreg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/uvideo.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/xhcireg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/xhcivar.ph
@@ -1738,7 +1737,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/wait.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/wapbl.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sys/wapbl_replay.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/sys/workq.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/sysexits.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/syslog.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/tar.ph
