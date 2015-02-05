@@ -11,7 +11,7 @@ TAGS=	${.CURDIR}/tags
 NOPROG=
 NOMAN=
 NOOBJ=
-SUBDIR=
+SUBDIR=	stand
 
 # config the fattest kernel we can find into a temporary dir
 # to create a Makefile.  Then use make to pull some variables

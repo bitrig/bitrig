@@ -1,0 +1,11 @@
+# Broadcom SoC
+bcmintc*		at fdt?
+bcmpm*			at fdt?
+bcmmbox*		at fdt?
+bcmgpio*		at fdt?
+gpio*			at bcmgpio?
+bcmsdhc*		at fdt?
+sdhc*			at bcmsdhc?
+sdmmc*			at sdhc?
+#dwctwo0			at fdt?
+#usb*			at dwctwo?

@@ -83,9 +83,12 @@ fdt_platform_init_cons(void)
 	comdefaultrate = comcnspeed;
 }
 
+void (*fdt_platform_watchdog_reset_fn)(void);
 static void
 fdt_platform_watchdog_reset(void)
 {
+	if (fdt_platform_watchdog_reset_fn != NULL)
+		fdt_platform_watchdog_reset_fn();
 }
 
 static void

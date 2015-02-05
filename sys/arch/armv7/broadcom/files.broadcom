@@ -1,0 +1,27 @@
+# Broadcom
+
+device bcmintc
+attach bcmintc at fdt
+file	arch/armv7/broadcom/bcm2836_intr.c		bcmintc
+
+device bcmpm
+attach bcmpm at fdt
+file	arch/armv7/broadcom/bcm2835_pm.c		bcmpm
+
+device bcmmbox
+attach bcmmbox at fdt
+file	arch/armv7/broadcom/bcm2835_mbox.c		bcmmbox
+file	arch/armv7/broadcom/bcm2835_mbox_subr.c		bcmmbox
+
+device bcmgpio {}: gpiobus
+attach bcmgpio at fdt
+file	arch/armv7/broadcom/bcm2835_gpio.c		bcmgpio
+
+device bcmsdhc {}
+attach bcmsdhc at fdt
+attach sdhc at bcmsdhc with sdhc_bcm
+file	arch/armv7/broadcom/bcm2835_sdhc.c		bcmsdhc
+
+#include		"dev/usb/dwc2/files.dwc2"
+#attach	dwctwo at fdt with bcmdwctwo
+#file	arch/armv7/broadcom/bcm2835_dwctwo.c		bcmdwctwo	needs-flag
