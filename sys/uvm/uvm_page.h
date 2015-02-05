@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_page.h,v 1.55 2014/10/03 18:06:47 kettenis Exp $	*/
+/*	$OpenBSD: uvm_page.h,v 1.56 2015/02/05 23:51:06 mpi Exp $	*/
 /*	$NetBSD: uvm_page.h,v 1.19 2000/12/28 08:24:55 chs Exp $	*/
 
 /* 
@@ -89,8 +89,6 @@
  *	object that the page belongs to (O) or by the lock on the page
  *	queues (P) [or both].
  */
-
-#include <uvm/uvm_extern.h>
 
 TAILQ_HEAD(pglist, vm_page);
 
