@@ -418,6 +418,7 @@ void			km_free(void *, size_t, const struct kmem_va_mode *,
 			    const struct kmem_pa_mode *);
 int			uvm_map(vm_map_t, vaddr_t *, vsize_t,
 			    struct uvm_object *, voff_t, vsize_t, uvm_flag_t);
+int			uvm_mapanon(vm_map_t, vaddr_t *, vsize_t, vsize_t, uvm_flag_t);
 int			uvm_map_pageable(vm_map_t, vaddr_t, 
 			    vaddr_t, boolean_t, int);
 int			uvm_map_pageable_all(vm_map_t, int, vsize_t);

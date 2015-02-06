@@ -77,6 +77,12 @@
 #include <uvm/uvm_device.h>
 #include <uvm/uvm_vnode.h>
 
+int uvm_mmapanon(vm_map_t, vaddr_t *, vsize_t, vm_prot_t, vm_prot_t, int,
+    vsize_t, struct proc *);
+int uvm_mmapfile(vm_map_t, vaddr_t *, vsize_t, vm_prot_t, vm_prot_t, int,
+    struct vnode *, voff_t, vsize_t, struct proc *);
+
+
 /*
  * Page align addr and size, returning EINVAL on wraparound.
  */
@@ -333,7 +339,6 @@ sys_mmap(struct proc *p, void *v, register_t *retval)
 	struct filedesc *fdp = p->p_fd;
 	struct file *fp = NULL;
 	struct vnode *vp;
-	caddr_t handle;
 	int error;
 
 	/* first, extract syscall args from the uap. */
@@ -488,36 +493,37 @@ sys_mmap(struct proc *p, void *v, register_t *retval)
 			/* MAP_PRIVATE mappings can always write to */
 			maxprot |= PROT_WRITE;
 		}
+		if ((flags & MAP_ANON) != 0 ||
+		    ((flags & MAP_PRIVATE) != 0 && (prot & PROT_WRITE) != 0)) {
+			if (size >
+			    (p->p_rlimit[RLIMIT_DATA].rlim_cur - ptoa(p->p_vmspace->vm_dused))) {
+				error = ENOMEM;
+				goto out;
+			}
+		}
 
-		/* set handle to vnode */
-		handle = (caddr_t)vp;
+		error = uvm_mmapfile(&p->p_vmspace->vm_map, &addr, size, prot, maxprot,
+		    flags, vp, pos, p->p_rlimit[RLIMIT_MEMLOCK].rlim_cur, p);
 	} else {		/* MAP_ANON case */
 		/*
 		 * XXX What do we do about (MAP_SHARED|MAP_PRIVATE) == 0?
 		 */
-		if (fd != -1) {
-			error = EINVAL;
-			goto out;
-		}
+		if (fd != -1)
+			return EINVAL;
 
-is_anon:		/* label for SunOS style /dev/zero */
-		handle = NULL;
+is_anon:	/* label for SunOS style /dev/zero */
+
+		if ((flags & MAP_ANON) != 0 ||
+		    ((flags & MAP_PRIVATE) != 0 && (prot & PROT_WRITE) != 0)) {
+			if (size >
+			    (p->p_rlimit[RLIMIT_DATA].rlim_cur - ptoa(p->p_vmspace->vm_dused))) {
+				return ENOMEM;
+			}
+		}
 		maxprot = PROT_MASK;
-		pos = 0;
+		error = uvm_mmapanon(&p->p_vmspace->vm_map, &addr, size, prot, maxprot,
+		    flags, p->p_rlimit[RLIMIT_MEMLOCK].rlim_cur, p);
 	}
-
-	if ((flags & MAP_ANON) != 0 ||
-	    ((flags & MAP_PRIVATE) != 0 && (prot & PROT_WRITE) != 0)) {
-		if (size >
-		    (p->p_rlimit[RLIMIT_DATA].rlim_cur - ptoa(p->p_vmspace->vm_dused))) {
-			error = ENOMEM;
-			goto out;
-		}
-	}
-
-	/* now let kernel internal function uvm_mmap do the work. */
-	error = uvm_mmap(&p->p_vmspace->vm_map, &addr, size, prot, maxprot,
-	    flags, handle, pos, p->p_rlimit[RLIMIT_MEMLOCK].rlim_cur, p);
 
 	if (error == 0)
 		/* remember to add offset */
@@ -919,19 +925,121 @@ sys_munlockall(struct proc *p, void *v, register_t *retval)
 }
 
 /*
- * uvm_mmap: internal version of mmap
+ * uvm_mmapanon: internal version of mmap for anons
  *
- * - used by sys_mmap, exec, and sysv shm
- * - handle is a vnode pointer or ignored for MAP_ANON
+ * - used by sys_mmap
+ */
+int
+uvm_mmapanon(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
+    vm_prot_t maxprot, int flags, vsize_t locklimit, struct proc *p)
+{
+	int error;
+	int advice = MADV_NORMAL;
+	uvm_flag_t uvmflag = 0;
+	vsize_t align = 0;	/* userland page size */
+
+	/* check params */
+	if (size == 0)
+		return(0);
+	if ((prot & maxprot) != prot)
+		return(EINVAL);
+
+	/*
+	 * for non-fixed mappings, round off the suggested address.
+	 * for fixed mappings, check alignment and zap old mappings.
+	 */
+	if ((flags & MAP_FIXED) == 0) {
+		*addr = round_page(*addr);	/* round */
+	} else {
+		if (*addr & PAGE_MASK)
+			return(EINVAL);
+
+		uvmflag |= UVM_FLAG_FIXED;
+		if ((flags & __MAP_NOREPLACE) == 0) {
+			KERNEL_LOCK();
+			uvm_unmap(map, *addr, *addr + size);	/* zap! */
+			KERNEL_UNLOCK();
+		}
+	}
+
+	if ((flags & MAP_FIXED) == 0 && size >= __LDPGSZ)
+		align = __LDPGSZ;
+	if ((flags & MAP_SHARED) == 0)
+		/* XXX: defer amap create */
+		uvmflag |= UVM_FLAG_COPYONW;
+	else
+		/* shared: create amap now */
+		uvmflag |= UVM_FLAG_OVERLAY;
+
+	/* set up mapping flags */
+	uvmflag = UVM_MAPFLAG(prot, maxprot,
+	    (flags & MAP_SHARED) ? MAP_INHERIT_SHARE : MAP_INHERIT_COPY,
+	    advice, uvmflag);
+
+	error = uvm_mapanon(map, addr, size, align, uvmflag);
+
+	if (error == 0) {
+		/*
+		 * POSIX 1003.1b -- if our address space was configured
+		 * to lock all future mappings, wire the one we just made.
+		 */
+		if (prot == PROT_NONE) {
+			/*
+			 * No more work to do in this case.
+			 */
+			return (0);
+		}
+
+		vm_map_lock(map);
+		if (map->flags & VM_MAP_WIREFUTURE) {
+			KERNEL_LOCK();
+			if ((atop(size) + uvmexp.wired) > uvmexp.wiredmax
+#ifdef pmap_wired_count
+			    || (locklimit != 0 && (size +
+			         ptoa(pmap_wired_count(vm_map_pmap(map)))) >
+			        locklimit)
+#endif
+			) {
+				error = ENOMEM;
+				vm_map_unlock(map);
+				/* unmap the region! */
+				uvm_unmap(map, *addr, *addr + size);
+				KERNEL_UNLOCK();
+				return (error);
+			}
+			/*
+			 * uvm_map_pageable() always returns the map
+			 * unlocked.
+			 */
+			error = uvm_map_pageable(map, *addr, *addr + size,
+			    FALSE, UVM_LK_ENTER);
+			if (error != 0) {
+				/* unmap the region! */
+				uvm_unmap(map, *addr, *addr + size);
+				KERNEL_UNLOCK();
+				return (error);
+			}
+			KERNEL_UNLOCK();
+			return (0);
+		}
+		vm_map_unlock(map);
+		return (0);
+	}
+	return(error);
+}
+
+/*
+ * uvm_mmapfile: internal version of mmap for non-anons
+ *
+ * - used by sys_mmap
  * - caller must page-align the file offset
  */
 int
-uvm_mmap(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
-    vm_prot_t maxprot, int flags, caddr_t handle, voff_t foff,
+uvm_mmapfile(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
+    vm_prot_t maxprot, int flags, struct vnode *vp, voff_t foff,
     vsize_t locklimit, struct proc *p)
 {
 	struct uvm_object *uobj;
-	struct vnode *vp;
 	int error;
 	int advice = MADV_NORMAL;
 	uvm_flag_t uvmflag = 0;
@@ -961,84 +1069,69 @@ uvm_mmap(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 	}
 
 	/*
-	 * handle anon vs. non-anon mappings.   for non-anon mappings attach
-	 * to underlying vm object.
+	 * attach to underlying vm object.
 	 */
-	if (flags & MAP_ANON) {
-		if ((flags & MAP_FIXED) == 0 && size >= __LDPGSZ)
-			align = __LDPGSZ;
-		foff = UVM_UNKNOWN_OFFSET;
-		uobj = NULL;
-		if ((flags & MAP_SHARED) == 0)
-			/* XXX: defer amap create */
-			uvmflag |= UVM_FLAG_COPYONW;
-		else
-			/* shared: create amap now */
-			uvmflag |= UVM_FLAG_OVERLAY;
-	} else {
-		vp = (struct vnode *) handle;	/* get vnode */
-		if (vp->v_type != VCHR) {
-			uobj = uvn_attach(vp, (flags & MAP_SHARED) ?
-			   maxprot : (maxprot & ~PROT_WRITE));
+	if (vp->v_type != VCHR) {
+		uobj = uvn_attach(vp, (flags & MAP_SHARED) ?
+		   maxprot : (maxprot & ~PROT_WRITE));
 
-			/*
-			 * XXXCDC: hack from old code
-			 * don't allow vnodes which have been mapped
-			 * shared-writeable to persist [forces them to be
-			 * flushed out when last reference goes].
-			 * XXXCDC: interesting side effect: avoids a bug.
-			 * note that in WRITE [ufs_readwrite.c] that we
-			 * allocate buffer, uncache, and then do the write.
-			 * the problem with this is that if the uncache causes
-			 * VM data to be flushed to the same area of the file
-			 * we are writing to... in that case we've got the
-			 * buffer locked and our process goes to sleep forever.
-			 *
-			 * XXXCDC: checking maxprot protects us from the
-			 * "persistbug" program but this is not a long term
-			 * solution.
-			 * 
-			 * XXXCDC: we don't bother calling uncache with the vp
-			 * VOP_LOCKed since we know that we are already
-			 * holding a valid reference to the uvn (from the
-			 * uvn_attach above), and thus it is impossible for
-			 * the uncache to kill the uvn and trigger I/O.
-			 */
-			if (flags & MAP_SHARED) {
-				if ((prot & PROT_WRITE) ||
-				    (maxprot & PROT_WRITE)) {
-					uvm_vnp_uncache(vp);
-				}
+		/*
+		 * XXXCDC: hack from old code
+		 * don't allow vnodes which have been mapped
+		 * shared-writeable to persist [forces them to be
+		 * flushed out when last reference goes].
+		 * XXXCDC: interesting side effect: avoids a bug.
+		 * note that in WRITE [ufs_readwrite.c] that we
+		 * allocate buffer, uncache, and then do the write.
+		 * the problem with this is that if the uncache causes
+		 * VM data to be flushed to the same area of the file
+		 * we are writing to... in that case we've got the
+		 * buffer locked and our process goes to sleep forever.
+		 *
+		 * XXXCDC: checking maxprot protects us from the
+		 * "persistbug" program but this is not a long term
+		 * solution.
+		 *
+		 * XXXCDC: we don't bother calling uncache with the vp
+		 * VOP_LOCKed since we know that we are already
+		 * holding a valid reference to the uvn (from the
+		 * uvn_attach above), and thus it is impossible for
+		 * the uncache to kill the uvn and trigger I/O.
+		 */
+		if (flags & MAP_SHARED) {
+			if ((prot & PROT_WRITE) ||
+			    (maxprot & PROT_WRITE)) {
+				uvm_vnp_uncache(vp);
 			}
-		} else {
+		}
+	} else {
+		uobj = udv_attach(vp->v_rdev,
+		    (flags & MAP_SHARED) ? maxprot :
+		    (maxprot & ~PROT_WRITE), foff, size);
+		/*
+		 * XXX Some devices don't like to be mapped with
+		 * XXX PROT_EXEC, but we don't really have a
+		 * XXX better way of handling this, right now
+		 */
+		if (uobj == NULL && (prot & PROT_EXEC) == 0) {
+			maxprot &= ~PROT_EXEC;
 			uobj = udv_attach(vp->v_rdev,
 			    (flags & MAP_SHARED) ? maxprot :
 			    (maxprot & ~PROT_WRITE), foff, size);
-			/*
-			 * XXX Some devices don't like to be mapped with
-			 * XXX PROT_EXEC, but we don't really have a
-			 * XXX better way of handling this, right now
-			 */
-			if (uobj == NULL && (prot & PROT_EXEC) == 0) {
-				maxprot &= ~PROT_EXEC;
-				uobj = udv_attach(vp->v_rdev,
-				    (flags & MAP_SHARED) ? maxprot :
-				    (maxprot & ~PROT_WRITE), foff, size);
-			}
-			advice = MADV_RANDOM;
 		}
-		
-		if (uobj == NULL)
-			return((vp->v_type == VREG) ? ENOMEM : EINVAL);
-
-		if ((flags & MAP_SHARED) == 0)
-			uvmflag |= UVM_FLAG_COPYONW;
-		if (flags & __MAP_NOFAULT)
-			uvmflag |= (UVM_FLAG_NOFAULT | UVM_FLAG_OVERLAY);
+		advice = MADV_RANDOM;
 	}
 
+	if (uobj == NULL)
+		return((vp->v_type == VREG) ? ENOMEM : EINVAL);
+
+	if ((flags & MAP_SHARED) == 0)
+		uvmflag |= UVM_FLAG_COPYONW;
+	if (flags & __MAP_NOFAULT)
+		uvmflag |= (UVM_FLAG_NOFAULT | UVM_FLAG_OVERLAY);
+
 	/* set up mapping flags */
-	uvmflag = UVM_MAPFLAG(prot, maxprot, 
+	uvmflag = UVM_MAPFLAG(prot, maxprot,
 	    (flags & MAP_SHARED) ? MAP_INHERIT_SHARE : MAP_INHERIT_COPY,
 	    advice, uvmflag);
 
@@ -1055,9 +1148,8 @@ uvm_mmap(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 			 */
 			return (0);
 		}
-		
-		vm_map_lock(map);
 
+		vm_map_lock(map);
 		if (map->flags & VM_MAP_WIREFUTURE) {
 			KERNEL_LOCK();
 			if ((atop(size) + uvmexp.wired) > uvmexp.wiredmax
@@ -1089,9 +1181,7 @@ uvm_mmap(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 			KERNEL_UNLOCK();
 			return (0);
 		}
-
 		vm_map_unlock(map);
-
 		return (0);
 	}
 

@@ -45,11 +45,11 @@ _C_LABEL(vmm_dispatch_intr):
 	movq	%rsp, %r11	/* r11 = temporary register */
 	andq    $0xFFFFFFFFFFFFFFF0, %rsp
 	movw	%ss, %ax
-	pushq   %ax
+	push    %ax
 	pushq	%r11
 	pushfq
 	movw	%cs, %ax
-	pushq   %ax
+	push    %ax
 	cli
 	callq	*%rdi
 	ret
