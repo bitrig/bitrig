@@ -1,4 +1,4 @@
-/*	$OpenBSD: exec_elf.c,v 1.109 2015/01/20 19:43:21 kettenis Exp $	*/
+/*	$OpenBSD: exec_elf.c,v 1.111 2015/02/06 23:58:12 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1996 Per Fogelstrom
@@ -121,9 +121,6 @@ extern char *syscallnames[];
  * be a reasonable limit for ELF, the most we have seen so far is 12
  */
 #define ELF_MAX_VALID_PHDR 32
-
-/* Limit on total PT_OPENBSD_RANDOMIZE bytes. */
-#define ELF_RANDOMIZE_LIMIT 1024
 
 /*
  * This is the basic elf emul. elf_probe_funcs may change to other emuls.
