@@ -1,4 +1,4 @@
-/*	$OpenBSD: apmvar.h,v 1.4 2015/02/07 22:14:43 miod Exp $	*/
+/*	$OpenBSD: apmvar.h,v 1.4 2015/02/07 22:16:52 miod Exp $	*/
 
 /*
  *  Copyright (c) 2001 Alexander Guy
