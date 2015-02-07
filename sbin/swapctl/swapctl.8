@@ -40,6 +40,8 @@
 .Op Fl p Ar priority
 .Op Fl t Ar blk|noblk
 .Nm swapctl
+.Fl D | Ar path
+.Nm swapctl
 .Fl a
 .Op Fl p Ar priority
 .Ar path
@@ -86,6 +88,15 @@ as swap devices.
 If no swap devices are configured,
 .Nm
 will exit with an error code.
+.It Fl D
+The
+.Fl D
+option sets
+.Ar path
+as the block device where kernel core dumps are stored.
+If
+.Ar path
+is not specified, kernel core dumps are disabled.
 .It Fl a
 The
 .Fl a

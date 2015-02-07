@@ -32,6 +32,7 @@
 /*
  * swapctl command:
  *	-A		add all devices listed as `sw' in /etc/fstab
+ *	-D [path]	store kernel core dumps at the device specified
  *	-t [blk|noblk]	if -A, add either all block device or all non-block
  *			devices
  *	-a <path>	add this device
@@ -75,6 +76,7 @@ int	command;
 #define	CMD_d		0x08	/* delete a swap file/device */
 #define	CMD_l		0x10	/* list swap files/devices */
 #define	CMD_s		0x20	/* summary of swap files/devices */
+#define	CMD_D		0x40	/* store kernel core dumps at device */
 
 #define	SET_COMMAND(cmd) \
 do { \
@@ -108,6 +110,7 @@ static	void change_priority(char *);
 static	void add_swap(char *);
 static	void del_swap(char *);
 static	void do_fstab(void);
+static	void set_dump(char *);
 static	void usage(void);
 static	int  swapon_command(int, char **);
 
@@ -121,10 +124,14 @@ main(int argc, char *argv[])
 	if (strcmp(__progname, "swapon") == 0)
 		return swapon_command(argc, argv);
 
-	while ((c = getopt(argc, argv, "Aacdlkp:st:")) != -1) {
+	while ((c = getopt(argc, argv, "ADacdlkp:st:")) != -1) {
 		switch (c) {
 		case 'A':
 			SET_COMMAND(CMD_A);
+			break;
+
+		case 'D':
+			SET_COMMAND(CMD_D);
 			break;
 
 		case 'a':
@@ -233,6 +240,12 @@ main(int argc, char *argv[])
 	case CMD_A:
 		do_fstab();
 		break;
+	case CMD_D:
+		if (argc == 1)
+			set_dump(argv[0]);
+		else
+			set_dump(NULL);
+		break;
 	}
 
 	return (0);
@@ -320,6 +333,17 @@ del_swap(char *path)
 {
 
 	if (swapctl(SWAP_OFF, path, pri) < 0)
+		err(1, "%s", path);
+}
+
+/*
+ * set_dump:  store kernel core dumps at the designated device.
+ */
+void
+set_dump(char *path)
+{
+
+	if (swapctl(SWAP_DUMPDEV, path, pri) < 0)
 		err(1, "%s", path);
 }
 
@@ -446,6 +470,7 @@ usage(void)
 
 	fprintf(stderr, "usage: %s -A [-p priority] [-t blk|noblk]\n",
 	    __progname);
+	fprintf(stderr, "       %s -D [path]\n", __progname);
 	fprintf(stderr, "       %s -a [-p priority] path\n", __progname);
 	fprintf(stderr, "       %s -c -p priority path\n", __progname);
 	fprintf(stderr, "       %s -d path\n", __progname);
