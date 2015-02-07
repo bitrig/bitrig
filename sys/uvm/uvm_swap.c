@@ -209,6 +209,7 @@ struct pool vndbuf_pool;
 /*
  * local variables
  */
+struct vnode *dumpdevvp;	/* keeps reference to dump device */
 struct extent *swapmap;		/* controls the mapping of /dev/drum */
 
 /* list of all active swap devices [by priority] */
@@ -683,6 +684,10 @@ sys_swapctl(struct proc *p, void *v, register_t *retval)
 
 	/* allow the dump device to be unconfigured. */
 	if (SCARG(uap, cmd) == SWAP_DUMPDEV && SCARG(uap, arg) == NULL) {
+		if (dumpdevvp != NULL) {
+			vn_close(dumpdevvp, FWRITE, p->p_ucred, p);
+			dumpdevvp = NULL;
+		}
 		dumpdev = NODEV;
 		dumpconf();
 		goto out;
@@ -710,6 +715,11 @@ sys_swapctl(struct proc *p, void *v, register_t *retval)
 			error = ENOTBLK;
 			break;
 		}
+		if ((error = VOP_OPEN(vp, FWRITE, p->p_ucred)))
+			break;
+		vref(vp);
+		vp->v_writecount++;
+		dumpdevvp = vp;
 		dumpdev = vp->v_rdev;
 		dumpconf();
 		break;
