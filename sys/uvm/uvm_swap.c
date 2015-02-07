@@ -681,6 +681,13 @@ sys_swapctl(struct proc *p, void *v, register_t *retval)
 	if ((error = suser(p, 0)))
 		goto out;
 
+	/* allow the dump device to be unconfigured. */
+	if (SCARG(uap, cmd) == SWAP_DUMPDEV && SCARG(uap, arg) == NULL) {
+		dumpdev = NODEV;
+		dumpconf();
+		goto out;
+	}
+
 	/*
 	 * at this point we expect a path name in arg.   we will
 	 * use namei() to gain a vnode reference (vref), and lock
