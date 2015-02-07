@@ -1,4 +1,4 @@
-/*	$OpenBSD: vfs_bio.c,v 1.165 2014/12/16 18:30:04 tedu Exp $	*/
+/*	$OpenBSD: vfs_bio.c,v 1.168 2015/02/07 08:21:24 miod Exp $	*/
 /*	$NetBSD: vfs_bio.c,v 1.44 1996/06/11 11:15:36 pk Exp $	*/
 
 /*-
@@ -221,7 +221,7 @@ bufinit(void)
 	 * space for mapping buffers.
 	 */
 	if (bufkvm == 0)
-		bufkvm = (VM_MAX_KERNEL_ADDRESS - VM_MIN_KERNEL_ADDRESS) / 10;
+		bufkvm = VM_KERNEL_SPACE_SIZE / 10;
 
 	/*
 	 * Don't use more than twice the amount of bufpages for mappings.
