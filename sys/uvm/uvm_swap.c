@@ -704,6 +704,7 @@ sys_swapctl(struct proc *p, void *v, register_t *retval)
 			break;
 		}
 		dumpdev = vp->v_rdev;
+		dumpconf();
 		break;
 	case SWAP_CTL:
 		/*
