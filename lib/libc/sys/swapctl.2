@@ -143,6 +143,23 @@ and
 parameters have the same function as for the
 .Dv SWAP_ON
 case, except that they change the priority of a currently enabled swap device.
+.It
+If
+.Fa cmd
+is
+.Dv SWAP_DUMPDEV ,
+the
+.Fa arg
+parameter is used as the pathname of a block device where kernel core dumps
+are to be stored.
+If
+.Fa arg
+is
+.Dv NULL ,
+kernel core dumps are disabled.
+The
+.Fa misc
+parameter is ignored.
 .El
 .Pp
 When swapping is enabled on a block device, the first portion of the disk is
@@ -210,6 +227,13 @@ An I/O error occurred while opening the swap device.
 .It Bq Er EFAULT
 .Fa arg
 points outside the process' allocated address space.
+.It Bq Er ENOTBLK
+.Dv SWAP_DUMPDEV
+was specified in
+.Fa cmd ,
+but the named device passed in
+.Fa arg
+is not a block device.
 .El
 .Sh SEE ALSO
 .Xr config 8 ,
