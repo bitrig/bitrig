@@ -78,7 +78,7 @@ list_swap(int pri, int kflag, int pflag, int dolong)
 
 	if (dolong) {
 		for (i = rnswap; i-- > 0; sep++)
-			if (pathmax < (l = strlen(sep->se_path)))
+			if ((size_t)pathmax < (l = strlen(sep->se_path)))
 				pathmax = l;
 		sep = fsep;
 		(void)printf("%-*s %*s %8s %8s %8s  %s\n",

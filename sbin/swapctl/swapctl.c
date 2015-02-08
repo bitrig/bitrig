@@ -414,7 +414,7 @@ do_fstab(void)
 			}
 			l = snprintf(cmd, sizeof(cmd), "%s %s %s",
 			    PATH_MOUNT, fp->fs_spec, spec);
-			if (l == -1 || l >= sizeof(cmd))
+			if (l < 0 || (size_t)l >= sizeof(cmd))
 				errx(1, "path too long");
 			if (system(cmd) != 0) {
 				warnx("%s: mount failed", fp->fs_spec);

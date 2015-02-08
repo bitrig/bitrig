@@ -3,6 +3,7 @@
 
 PROG=	swapctl
 SRCS=	swapctl.c swaplist.c
+CFLAGS+=-W -Wall -Werror -Wno-unused-parameter
 LDADD=	-lutil
 DPADD=	${LIBUTIL}
 MAN=	swapctl.8
