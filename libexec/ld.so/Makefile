@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.50 2014/06/21 08:00:22 otto Exp $
+#	$OpenBSD: Makefile,v 1.55 2015/02/08 00:15:22 uebayasi Exp $
 
 SUBDIR=ldconfig ldd
 MAN=	ld.so.1
