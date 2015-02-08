@@ -7,7 +7,7 @@ sys/arch/*/compile
 
 ID
 tags
-cscope.out
+cscope*.out
 cscope.files
 
 *.swp*
