@@ -581,7 +581,7 @@ aml_notify_dev(const char *pnpid, int notify_value)
 		return;
 
 	SLIST_FOREACH(pdata, &aml_notify_list, link)
-		if (pdata->pnpid && !strcmp(pdata->pnpid, pnpid))
+		if (!strcmp(pdata->pnpid, pnpid))
 			pdata->cbproc(pdata->node, notify_value, pdata->cbarg);
 }
 
