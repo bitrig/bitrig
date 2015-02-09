@@ -1020,7 +1020,7 @@ ststart(struct scsi_xfer *xs)
 		/* Update block count now, errors will set it to -1. */
 		if (st->flags & ST_FIXEDBLOCKS)
 			st->media_blkno += _3btol(cmd->len);
-		else if (cmd->len != 0)
+		else if (bp->b_bcount != 0)
 			st->media_blkno++;
 	}
 
