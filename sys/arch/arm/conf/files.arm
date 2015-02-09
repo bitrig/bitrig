@@ -84,7 +84,7 @@ file	arch/arm/clock/clock_fixed_factor.c
 file	arch/arm/clock/clock_fixed_rate.c
 
 # fdt
-file	arch/arm/arm/fdt.c
+file	arch/arm/fdt/fdt.c
 
 # quad support is necessary for 32 bit architectures
 file	lib/libkern/adddi3.c
