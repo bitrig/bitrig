@@ -297,11 +297,8 @@ label:
 
 					tm = *t;
 					mkt = mktime(&tm);
-					if (TYPE_SIGNED(time_t))
-						(void) sprintf(buf, "%ld",
-							(long) mkt);
-					else	(void) sprintf(buf, "%lu",
-							(unsigned long) mkt);
+					(void) snprintf(buf, sizeof buf,
+					    "%ld", (long) mkt);
 					pt = _add(buf, pt, ptlim);
 				}
 				continue;

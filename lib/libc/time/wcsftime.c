@@ -1,6 +1,4 @@
-/*	$OpenBSD: wcsftime.c,v 1.3 2014/05/06 15:49:45 tedu Exp $ */
-#include "private.h"
-
+/*	$OpenBSD: wcsftime.c,v 1.5 2015/02/09 14:00:03 tedu Exp $ */
 /*
 ** Based on the UCB version with the ID appearing below.
 ** This is ANSIish only when "multibyte character == plain character".
@@ -292,14 +290,9 @@ label:
 
 				tm = *t;
 				mkt = mktime(&tm);
-				if (TYPE_SIGNED(time_t))
-					(void) swprintf(buf, 
-					    sizeof buf/sizeof buf[0],
-					    L"%ld", (long) mkt);
-				else	
-					(void) swprintf(buf, 
-					    sizeof buf/sizeof buf[0],
-					    L"%lu", (unsigned long) mkt);
+				(void) swprintf(buf, 
+				    sizeof buf/sizeof buf[0],
+				    L"%ld", (long) mkt);
 				pt = _add(buf, pt, ptlim);
 			}
 			continue;
