@@ -1,4 +1,3 @@
-/*	$OpenBSD: asctime.c,v 1.17 2015/02/09 08:25:11 tedu Exp $ */
 /*
 ** This file is in the public domain, so clarified as of
 ** 1996-06-05 by Arthur David Olson.
@@ -59,7 +58,7 @@
 
 static char *
 asctime3(timeptr, buf, bufsize)
-register const struct tm *	timeptr;
+const struct tm *	timeptr;
 char *				buf;
 int				bufsize;
 {
@@ -70,8 +69,8 @@ int				bufsize;
 		"Jan", "Feb", "Mar", "Apr", "May", "Jun",
 		"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 	};
-	register const char *	wn;
-	register const char *	mn;
+	const char *	wn;
+	const char *	mn;
 	char			year[INT_STRLEN_MAXIMUM(int) + 2];
 	int			len;
 
@@ -113,7 +112,7 @@ int				bufsize;
 
 char *
 asctime_r(timeptr, buf)
-register const struct tm *	timeptr;
+const struct tm *	timeptr;
 char *				buf;
 {
 	/*

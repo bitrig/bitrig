@@ -599,8 +599,8 @@ const int		convert_yy;
 char *			pt;
 const char * const	ptlim;
 {
-	register int	lead;
-	register int	trail;
+	int	lead;
+	int	trail;
 
 #define DIVISOR	100
 	trail = a % DIVISOR + b % DIVISOR;
