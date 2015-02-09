@@ -137,7 +137,7 @@ cros_ec_init_keyboard(struct cros_ec_softc *sc)
 		panic("%s: no memory available for keyboard states", __func__);
 
 	/* FIXME: interrupt driven, please. */
-	sc->keyboard.taskq = taskq_create("crosec-keyb", 1, IPL_TTY);
+	sc->keyboard.taskq = taskq_create("crosec-keyb", 1, IPL_TTY, 0);
 	task_set(&sc->keyboard.task, cros_ec_poll_keystate, sc);
 	timeout_set(&sc->keyboard.timeout, cros_ec_add_task, sc);
 
