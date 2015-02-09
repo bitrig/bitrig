@@ -378,6 +378,9 @@ fdt_parent_node(void *node)
 	if (!tree_inited)
 		return NULL;
 
+	if (node == pnode)
+		return NULL;
+
 	return fdt_parent_node_recurse(pnode, node);
 }
 
@@ -539,23 +542,20 @@ fdt_get_memory_address(void *node, int idx, struct fdt_memory *mem)
 static void *
 fdt_get_interrupt_controller(void *node)
 {
-	void *parent;
 	int phandle;
 
 	if (node == NULL)
 		return NULL;
 
-	if (fdt_node_property_int(node, "interrupt-parent", &phandle) != 1) {
-		parent = fdt_parent_node(node);
-		if (parent == NULL)
-			return NULL;
+	do {
+		if (fdt_node_property_int(node, "interrupt-parent", &phandle) != 1) {
+			node = fdt_parent_node(node);
+		} else {
+			node = fdt_find_node_by_phandle(NULL, phandle);
+		}
+	} while (node && fdt_node_property(node, "#interrupt-cells", NULL) == 0);
 
-		if (fdt_node_property_int(parent, "interrupt-parent",
-		    &phandle) != 1)
-			return NULL;
-	}
-
-	return fdt_find_node_by_phandle(NULL, phandle);
+	return node;
 }
 
 /*
