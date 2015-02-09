@@ -86,6 +86,12 @@ file	arch/arm/clock/clock_fixed_rate.c
 # fdt
 file	arch/arm/fdt/fdt.c
 
+# FDT bus
+define fdt {}
+device fdt: fdt
+attach fdt at mainbus
+file	arch/arm/fdt/fdtbus.c			fdt
+
 # quad support is necessary for 32 bit architectures
 file	lib/libkern/adddi3.c
 file	lib/libkern/anddi3.c

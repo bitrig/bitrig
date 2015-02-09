@@ -18,12 +18,32 @@
 #include <sys/systm.h>
 
 #include <machine/fdt.h>
+#define _ARM32_BUS_DMA_PRIVATE
 #include <machine/bus.h>
 
 #include <arm/armv7/armv7var.h>
+
+/* FIXME: use own attach args */
 #include <armv7/armv7/armv7var.h>
 
-extern struct arm32_bus_dma_tag armv7_bus_dma_tag;
+struct arm32_bus_dma_tag fdt_bus_dma_tag = {
+	0,
+	0,
+	NULL,
+	_bus_dmamap_create,
+	_bus_dmamap_destroy,
+	_bus_dmamap_load,
+	_bus_dmamap_load_mbuf,
+	_bus_dmamap_load_uio,
+	_bus_dmamap_load_raw,
+	_bus_dmamap_unload,
+	_bus_dmamap_sync,
+	_bus_dmamem_alloc,
+	_bus_dmamem_free,
+	_bus_dmamem_map,
+	_bus_dmamem_unmap,
+	_bus_dmamem_mmap,
+};
 
 static int
 fdt_match(struct device *parent, void *cfdata, void *aux)
@@ -53,7 +73,7 @@ fdt_try_node(struct device *self, void *match, void *node)
 	memset(&aa, 0, sizeof(aa));
 	aa.aa_dev = &ad;
 	aa.aa_iot = &armv7_bs_tag;
-	aa.aa_dmat = &armv7_bus_dma_tag;
+	aa.aa_dmat = &fdt_bus_dma_tag;
 	aa.aa_node = node;
 
 	/* allow for devices to be disabled in UKC */
