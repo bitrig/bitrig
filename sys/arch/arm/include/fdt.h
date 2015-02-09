@@ -65,6 +65,7 @@ void	*fdt_find_compatible(char *);
 void	*fdt_find_next_compatible(char *, void *);
 int	fdt_get_memory_address(void *, int, struct fdt_memory *);
 int	fdt_get_interrupt(void *, int *);
+void	*fdt_find_node_with_prop(void *, char *);
 int	 fdt_node_property(void *, char *, char **);
 int	 fdt_node_property_int(void *, char *, int *);
 void	*fdt_parent_node(void *);

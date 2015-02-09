@@ -34,6 +34,7 @@ void	*skip_props(u_int32_t *);
 void	*skip_node_name(u_int32_t *);
 void	*fdt_parent_node_recurse(void *, void *);
 void	*fdt_find_node_by_prop(void *, char *, void *, int);
+int	fdt_node_has_property(void *, char *);
 #ifdef FDT_DEBUG
 void 	 fdt_print_node_recurse(void *, int);
 #endif
@@ -172,6 +173,36 @@ skip_node_name(u_int32_t *ptr)
 	/* skip name, aligned to 4 bytes, this is NULL term., so must add 1 */
 	return ptr + roundup(strlen((char *)ptr) + 1,
 	    sizeof(u_int32_t)) / sizeof(u_int32_t);
+}
+
+/*
+ * Check that a node has a property, no matter the value.
+ */
+int
+fdt_node_has_property(void *node, char *name)
+{
+	u_int32_t *ptr;
+	u_int32_t nameid;
+	char *tmp;
+
+	if (!tree_inited)
+		return 0;
+
+	ptr = (u_int32_t *)node;
+
+	if (betoh32(*ptr) != FDT_NODE_BEGIN)
+		return 0;
+
+	ptr = skip_node_name(ptr + 1);
+
+	while (betoh32(*ptr) == FDT_PROPERTY) {
+		nameid = betoh32(*(ptr + 2)); /* id of name in strings table */
+		tmp = fdt_get_str(nameid);
+		if (!strcmp(name, tmp))
+			return 1;
+		ptr = skip_property(ptr);
+	}
+	return 0;
 }
 
 /*
@@ -426,6 +457,15 @@ fdt_node_compatible(char *compatible, void *node)
 }
 
 /*
+ * Find the first node, where a specific property exists.
+ */
+void *
+fdt_find_node_with_prop(void *node, char *propname)
+{
+	return fdt_find_node_by_prop(node, propname, NULL, 0);
+}
+
+/*
  * Find the first node, where the value of a given property matches.
  */
 void *
@@ -440,11 +480,16 @@ fdt_find_node_by_prop(void *node, char *propname, void *propval,
 		node = fdt_next_node(0);
 
 	while (node != NULL) {
-		len = fdt_node_property(node, propname, &data);
-		if (len) /* Property exists and has at least '\0'. */
-			if (len >= proplen)
-				if (!memcmp(data, propval, proplen))
-					return node;
+		if (!proplen) {
+			if (fdt_node_has_property(node, propname))
+				return node;
+		} else {
+			len = fdt_node_property(node, propname, &data);
+			if (len) /* Property exists and has at least '\0'. */
+				if (len >= proplen)
+					if (!memcmp(data, propval, proplen))
+						return node;
+		}
 
 		child = fdt_child_node(node);
 		if (child != NULL) {
