@@ -16,6 +16,8 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
+#include <sys/malloc.h>
+#include <sys/queue.h>
 
 #define _ARM32_BUS_DMA_PRIVATE
 #include <machine/bus.h>
@@ -45,6 +47,13 @@ struct arm32_bus_dma_tag fdt_bus_dma_tag = {
 	_bus_dmamem_mmap,
 };
 
+SLIST_HEAD(, fdt_entry) fdt_dev_list = SLIST_HEAD_INITIALIZER(fdt_dev_list);
+struct fdt_entry {
+	SLIST_ENTRY(fdt_entry)	 fe_list;
+	void			*fe_node;
+	struct device		*fe_dev;
+};
+
 static int
 fdt_match(struct device *parent, void *cfdata, void *aux)
 {
@@ -59,6 +68,7 @@ fdt_try_node(struct device *self, void *match, void *node)
 {
 	struct cfdata *cf = match;
 	struct armv7_attach_args aa;
+	struct device *child;
 	char  *status;
 
 	if (!fdt_node_property(node, "compatible", NULL))
@@ -78,7 +88,26 @@ fdt_try_node(struct device *self, void *match, void *node)
 	if ((*cf->cf_attach->ca_match)(self, cf, &aa) == 0)
 		return;
 
-	config_attach(self, cf, &aa, NULL);
+	child = config_attach(self, cf, &aa, NULL);
+	if (child != NULL) {
+		struct fdt_entry *fe = malloc(sizeof(*fe), M_DEVBUF,
+		    M_NOWAIT|M_ZERO);
+		fe->fe_node = node;
+		fe->fe_dev = child;
+		SLIST_INSERT_HEAD(&fdt_dev_list, fe, fe_list);
+	}
+}
+
+static int
+fdt_is_attached(void *node)
+{
+	struct fdt_entry *fe;
+
+	SLIST_FOREACH(fe, &fdt_dev_list, fe_list)
+		if (fe->fe_node == node)
+			return (1);
+
+	return (0);
 }
 
 static void
@@ -88,6 +117,10 @@ fdt_iterate(struct device *self, struct device *match, void *node)
 	    node != NULL;
 	    node = fdt_next_node(node))
 	{
+		/* skip nodes that are already handled by some driver */
+		if (fdt_is_attached(node))
+			continue;
+
 		fdt_iterate(self, match, fdt_child_node(node));
 		fdt_try_node(self, match, node);
 	}
