@@ -21,6 +21,9 @@ device	mainbus {}
 attach	mainbus at root
 file	arch/arm/mainbus/mainbus.c		mainbus
 
+# define fdt early for cortex
+define	fdt {}
+
 include "arch/arm/cortex/files.cortex"
 
 device	cpu {}
@@ -87,7 +90,6 @@ file	arch/arm/clock/clock_fixed_rate.c
 file	arch/arm/fdt/fdt.c
 
 # FDT bus
-define fdt {}
 device fdt: fdt
 attach fdt at mainbus
 file	arch/arm/fdt/fdtbus.c			fdt

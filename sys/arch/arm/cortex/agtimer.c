@@ -82,6 +82,7 @@ struct agtimer_softc {
 };
 
 int		agtimer_match(struct device *, void *, void *);
+int		agtimer_fdt_match(struct device *, void *, void *);
 void		agtimer_attach(struct device *, struct device *, void *);
 uint64_t	agtimer_readcnt64(struct agtimer_softc *sc);
 int		agtimer_intr(void *);
@@ -102,6 +103,10 @@ void	*ampintc_intr_establish(int, int, int (*)(void *), void *, char *);
 
 struct cfattach agtimer_ca = {
 	sizeof (struct agtimer_softc), agtimer_match, agtimer_attach
+};
+
+struct cfattach agtimer_fdt_ca = {
+	sizeof (struct agtimer_softc), agtimer_fdt_match, agtimer_attach
 };
 
 struct cfdriver agtimer_cd = {
@@ -203,6 +208,17 @@ agtimer_match(struct device *parent, void *cfdata, void *aux)
 	return 0;
 }
 
+int
+agtimer_fdt_match(struct device *parent, void *cfdata, void *aux)
+{
+	struct cortex_attach_args *ca = aux;
+
+	if (fdt_node_compatible("arm,armv7-timer", ca->ca_node))
+		return (1);
+
+	return 0;
+}
+
 void
 agtimer_attach(struct device *parent, struct device *self, void *args)
 {
@@ -210,11 +226,10 @@ agtimer_attach(struct device *parent, struct device *self, void *args)
 	struct cortex_attach_args *ia = args;
 	bus_space_handle_t ioh, pioh;
 	uint32_t ints[3*4];
-	void *node;
+	void *node = ia->ca_node;
 
 	sc->sc_iot = ia->ca_iot;
 
-	node = fdt_find_compatible("arm,armv7-timer");
 	if (node)
 		fdt_node_property_int(node, "clock-frequency",
 		    &agtimer_frequency);

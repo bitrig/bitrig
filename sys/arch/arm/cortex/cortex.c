@@ -48,6 +48,7 @@
 #include <sys/device.h>
 #define _ARM32_BUS_DMA_PRIVATE
 #include <machine/bus.h>
+#include <machine/fdt.h>
 #include <arm/cpufunc.h>
 #include <arm/armv7/armv7var.h>
 #include <arm/cortex/cortex.h>
@@ -97,6 +98,9 @@ int
 cortexmatch(struct device *parent, void *cf, void *aux)
 {
 	int cputype = cpufunc_id();
+
+	if (fdt_next_node(0) != NULL)
+		return (0);
 
 	if ((cputype & CPU_ID_CORTEX_A7_MASK) == CPU_ID_CORTEX_A7 ||
 	    (cputype & CPU_ID_CORTEX_A9_MASK) == CPU_ID_CORTEX_A9 ||

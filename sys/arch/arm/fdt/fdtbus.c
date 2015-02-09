@@ -17,9 +17,9 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 
-#include <machine/fdt.h>
 #define _ARM32_BUS_DMA_PRIVATE
 #include <machine/bus.h>
+#include <machine/fdt.h>
 
 #include <arm/armv7/armv7var.h>
 
@@ -58,7 +58,6 @@ static void
 fdt_try_node(struct device *self, void *match, void *node)
 {
 	struct cfdata *cf = match;
-	struct armv7_dev ad;
 	struct armv7_attach_args aa;
 	char  *status;
 
@@ -69,9 +68,8 @@ fdt_try_node(struct device *self, void *match, void *node)
 		if (!strcmp(status, "disabled"))
 			return;
 
-	memset(&ad, 0, sizeof(ad));
 	memset(&aa, 0, sizeof(aa));
-	aa.aa_dev = &ad;
+	aa.aa_dev = NULL;
 	aa.aa_iot = &armv7_bs_tag;
 	aa.aa_dmat = &fdt_bus_dma_tag;
 	aa.aa_node = node;

@@ -166,7 +166,7 @@ pl011attach(struct device *parent, struct device *self, void *args)
 	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
 		panic("pl011attach: bus_space_map failed!");
 
-	if (aa->aa_dev->mem[0].addr == pl011consaddr)
+	if (mem.addr == pl011consaddr)
 		printf(" console");
 
 	timeout_set(&sc->sc_diag_tmo, pl011_diag, sc);

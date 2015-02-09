@@ -50,5 +50,6 @@ struct cortex_attach_args {
 	char *ca_name;
 	bus_space_tag_t ca_iot;
 	bus_dma_tag_t ca_dmat;
+	void *ca_node;
 	uint32_t ca_periphbase;
 };

@@ -167,6 +167,7 @@ struct intrq {
 
 
 int		 ampintc_match(struct device *, void *, void *);
+int		 ampintc_fdt_match(struct device *, void *, void *);
 void		 ampintc_attach(struct device *, struct device *, void *);
 int		 ampintc_spllower(int);
 void		 ampintc_splx(int);
@@ -191,6 +192,10 @@ struct cfattach	ampintc_ca = {
 	sizeof (struct ampintc_softc), ampintc_match, ampintc_attach
 };
 
+struct cfattach	ampintc_fdt_ca = {
+	sizeof (struct ampintc_softc), ampintc_fdt_match, ampintc_attach
+};
+
 struct cfdriver ampintc_cd = {
 	NULL, "ampintc", DV_DULL
 };
@@ -209,6 +214,18 @@ ampintc_match(struct device *parent, void *cfdata, void *aux)
 	return (1);
 }
 
+int
+ampintc_fdt_match(struct device *parent, void *cfdata, void *aux)
+{
+	struct cortex_attach_args *ia = aux;
+
+	for (int i = 0; ampintc_compatibles[i]; i++)
+		if (fdt_node_compatible(ampintc_compatibles[i], ia->ca_node))
+			return (1);
+
+	return (0);
+}
+
 void
 ampintc_attach(struct device *parent, struct device *self, void *args)
 {
@@ -217,7 +234,7 @@ ampintc_attach(struct device *parent, struct device *self, void *args)
 	int i, nintr;
 	bus_space_tag_t		iot;
 	bus_space_handle_t	d_ioh, p_ioh;
-	void			*node = NULL;
+	void			*node = ia->ca_node;
 	uint32_t		icp, icpsize, icd, icdsize;
 
 	ampintc = sc;
@@ -238,8 +255,6 @@ ampintc_attach(struct device *parent, struct device *self, void *args)
 		icdsize = ICD_A7_A15_SIZE;
 	}
 
-	for (i = 0; node == NULL && ampintc_compatibles[i] != NULL; i++)
-		node = fdt_find_compatible(ampintc_compatibles[i]);
 	if (node != NULL) {
 		struct fdt_memory mem;
 		if (!fdt_get_memory_address(node, 0, &mem)) {
