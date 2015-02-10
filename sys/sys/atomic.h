@@ -1,4 +1,4 @@
-/*	$OpenBSD: atomic.h,v 1.2 2015/01/23 09:50:45 dlg Exp $ */
+/*	$OpenBSD: atomic.h,v 1.3 2015/02/10 11:39:18 dlg Exp $ */
 /*
  * Copyright (c) 2014 David Gwynne <dlg@openbsd.org>
  *
@@ -47,7 +47,7 @@ atomic_cas_ulong(volatile unsigned long *p, unsigned long o, unsigned long n)
 }
 
 static inline void *
-atomic_cas_ptr(void *p, void *o, void *n)
+atomic_cas_ptr(volatile void *p, void *o, void *n)
 {
 	atomic_compare_exchange_weak_explicit((atomic_uintptr_t *)p,
 	    (__uintptr_t *)&o, (__uintptr_t)n,
@@ -60,21 +60,21 @@ atomic_cas_ptr(void *p, void *o, void *n)
  */
 
 static inline unsigned int
-atomic_swap_uint(unsigned int *p, unsigned int v)
+atomic_swap_uint(volatile unsigned int *p, unsigned int v)
 {
 	return atomic_exchange_explicit((atomic_uint *)p, v,
 	    memory_order_relaxed);
 }
 
 static inline unsigned long
-atomic_swap_ulong(unsigned long *p, unsigned long v)
+atomic_swap_ulong(volatile unsigned long *p, unsigned long v)
 {
 	return atomic_exchange_explicit((atomic_ulong *)p, v,
 	    memory_order_relaxed);
 }
 
 static inline void *
-atomic_swap_ptr(void *p, void *v)
+atomic_swap_ptr(volatile void *p, void *v)
 {
 	return (void *)atomic_exchange_explicit((atomic_uintptr_t *)p,
 	    (__uintptr_t)v, memory_order_relaxed);
@@ -92,7 +92,7 @@ atomic_add_int_nv(volatile unsigned int *p, unsigned int v)
 }
 
 static inline unsigned long
-atomic_add_long_nv(unsigned long *p, unsigned long v)
+atomic_add_long_nv(volatile unsigned long *p, unsigned long v)
 {
 	return atomic_fetch_add_explicit((atomic_ulong *)p, v,
 	    memory_order_relaxed) + v;
