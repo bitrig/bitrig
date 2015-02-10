@@ -1,4 +1,4 @@
-/* $OpenBSD: drm_drv.c,v 1.131 2014/09/24 10:35:39 jsg Exp $ */
+/* $OpenBSD: drm_drv.c,v 1.132 2015/02/10 01:39:32 jsg Exp $ */
 /*-
  * Copyright 2007-2009 Owain G. Ainsworth <oga@openbsd.org>
  * Copyright © 2008 Intel Corporation
@@ -221,7 +221,7 @@ drm_attach(struct device *parent, struct device *self, void *aux)
 	dev->pc = da->pc;
 	dev->bridgetag = da->bridgetag;
 
-	rw_init(&dev->dev_lock, "drmdevlk");
+	rw_init(&dev->struct_mutex, "drmdevlk");
 	mtx_init(&dev->event_lock, IPL_TTY);
 	mtx_init(&dev->quiesce_mtx, IPL_NONE);
 
@@ -450,13 +450,13 @@ drmopen(dev_t kdev, int flags, int fmt, struct proc *p)
 	if (flags & O_EXCL)
 		return (EBUSY); /* No exclusive opens */
 
-	DRM_LOCK();
+	mutex_lock(&dev->struct_mutex);
 	if (dev->open_count++ == 0) {
-		DRM_UNLOCK();
+		mutex_unlock(&dev->struct_mutex);
 		if ((ret = drm_firstopen(dev)) != 0)
 			goto err;
 	} else {
-		DRM_UNLOCK();
+		mutex_unlock(&dev->struct_mutex);
 	}
 
 	/* always allocate at least enough space for our data */
@@ -490,10 +490,10 @@ drmopen(dev_t kdev, int flags, int fmt, struct proc *p)
 		}
 	}
 
-	DRM_LOCK();
+	mutex_lock(&dev->struct_mutex);
 	/* first opener automatically becomes master if root */
 	if (SPLAY_EMPTY(&dev->files) && !DRM_SUSER(p)) {
-		DRM_UNLOCK();
+		mutex_unlock(&dev->struct_mutex);
 		ret = EPERM;
 		goto free_priv;
 	}
@@ -501,16 +501,16 @@ drmopen(dev_t kdev, int flags, int fmt, struct proc *p)
 	file_priv->master = SPLAY_EMPTY(&dev->files);
 
 	SPLAY_INSERT(drm_file_tree, &dev->files, file_priv);
-	DRM_UNLOCK();
+	mutex_unlock(&dev->struct_mutex);
 
 	return (0);
 
 free_priv:
 	drm_free(file_priv);
 err:
-	DRM_LOCK();
+	mutex_lock(&dev->struct_mutex);
 	--dev->open_count;
-	DRM_UNLOCK();
+	mutex_unlock(&dev->struct_mutex);
 	return (ret);
 }
 
@@ -528,14 +528,14 @@ drmclose(dev_t kdev, int flags, int fmt, struct proc *p)
 
 	DRM_DEBUG("open_count = %d\n", dev->open_count);
 
-	DRM_LOCK();
+	mutex_lock(&dev->struct_mutex);
 	file_priv = drm_find_file_by_minor(dev, minor(kdev));
 	if (file_priv == NULL) {
 		DRM_ERROR("can't find authenticator\n");
 		retcode = EINVAL;
 		goto done;
 	}
-	DRM_UNLOCK();
+	mutex_unlock(&dev->struct_mutex);
 
 	if (dev->driver->close != NULL)
 		dev->driver->close(dev, file_priv);
@@ -563,7 +563,7 @@ drmclose(dev_t kdev, int flags, int fmt, struct proc *p)
 	if (dev->driver->flags & DRIVER_MODESET)
 		drm_fb_release(dev, file_priv);
 
-	DRM_LOCK();
+	mutex_lock(&dev->struct_mutex);
 	if (dev->driver->flags & DRIVER_GEM) {
 		struct drm_handle	*han;
 		mtx_enter(&file_priv->table_lock);
@@ -584,10 +584,10 @@ drmclose(dev_t kdev, int flags, int fmt, struct proc *p)
 
 done:
 	if (--dev->open_count == 0) {
-		DRM_UNLOCK();
+		mutex_unlock(&dev->struct_mutex);
 		retcode = drm_lastclose(dev);
 	} else
-		DRM_UNLOCK();
+		mutex_unlock(&dev->struct_mutex);
 
 	return (retcode);
 }
@@ -597,9 +597,9 @@ drm_do_ioctl(struct drm_device *dev, int minor, u_long cmd, caddr_t data)
 {
 	struct drm_file *file_priv;
 
-	DRM_LOCK();
+	mutex_lock(&dev->struct_mutex);
 	file_priv = drm_find_file_by_minor(dev, minor);
-	DRM_UNLOCK();
+	mutex_unlock(&dev->struct_mutex);
 	if (file_priv == NULL) {
 		DRM_ERROR("can't find authenticator\n");
 		return EINVAL;
@@ -799,9 +799,9 @@ drmread(dev_t kdev, struct uio *uio, int ioflag)
 	if (dev == NULL)
 		return (ENXIO);
 
-	DRM_LOCK();
+	mutex_lock(&dev->struct_mutex);
 	file_priv = drm_find_file_by_minor(dev, minor(kdev));
-	DRM_UNLOCK();
+	mutex_unlock(&dev->struct_mutex);
 	if (file_priv == NULL)
 		return (ENXIO);
 
@@ -882,9 +882,9 @@ drmpoll(dev_t kdev, int events, struct proc *p)
 	if (dev == NULL)
 		return (POLLERR);
 
-	DRM_LOCK();
+	mutex_lock(&dev->struct_mutex);
 	file_priv = drm_find_file_by_minor(dev, minor(kdev));
-	DRM_UNLOCK();
+	mutex_unlock(&dev->struct_mutex);
 	if (file_priv == NULL)
 		return (POLLERR);
 
@@ -905,12 +905,12 @@ drm_getsarea(struct drm_device *dev)
 {
 	struct drm_local_map	*map;
 
-	DRM_LOCK();
+	mutex_lock(&dev->struct_mutex);
 	TAILQ_FOREACH(map, &dev->maplist, link) {
 		if (map->type == _DRM_SHM && (map->flags & _DRM_CONTAINS_LOCK))
 			break;
 	}
-	DRM_UNLOCK();
+	mutex_unlock(&dev->struct_mutex);
 	return (map);
 }
 
@@ -925,9 +925,9 @@ drmmmap(dev_t kdev, off_t offset, int prot)
 	if (dev == NULL)
 		return (-1);
 
-	DRM_LOCK();
+	mutex_lock(&dev->struct_mutex);
 	file_priv = drm_find_file_by_minor(dev, minor(kdev));
-	DRM_UNLOCK();
+	mutex_unlock(&dev->struct_mutex);
 	if (file_priv == NULL) {
 		DRM_ERROR("can't find authenticator\n");
 		return (-1);
@@ -957,7 +957,7 @@ drmmmap(dev_t kdev, off_t offset, int prot)
 	 * for performance, even if the list was a
 	 * bit longer.
 	 */
-	DRM_LOCK();
+	mutex_lock(&dev->struct_mutex);
 	TAILQ_FOREACH(map, &dev->maplist, link) {
 		if (offset >= map->ext &&
 		    offset < map->ext + map->size) {
@@ -967,17 +967,17 @@ drmmmap(dev_t kdev, off_t offset, int prot)
 	}
 
 	if (map == NULL) {
-		DRM_UNLOCK();
+		mutex_unlock(&dev->struct_mutex);
 		DRM_DEBUG("can't find map\n");
 		return (-1);
 	}
 	if (((map->flags & _DRM_RESTRICTED) && file_priv->master == 0)) {
-		DRM_UNLOCK();
+		mutex_unlock(&dev->struct_mutex);
 		DRM_DEBUG("restricted map\n");
 		return (-1);
 	}
 	type = map->type;
-	DRM_UNLOCK();
+	mutex_unlock(&dev->struct_mutex);
 
 	switch (type) {
 #if __OS_HAS_AGP
@@ -1197,9 +1197,9 @@ drm_getmagic(struct drm_device *dev, void *data, struct drm_file *file_priv)
 	if (file_priv->magic) {
 		auth->magic = file_priv->magic;
 	} else {
-		DRM_LOCK();
+		mutex_lock(&dev->struct_mutex);
 		file_priv->magic = auth->magic = dev->magicid++;
-		DRM_UNLOCK();
+		mutex_unlock(&dev->struct_mutex);
 		DRM_DEBUG("%d\n", auth->magic);
 	}
 
@@ -1222,7 +1222,7 @@ drm_authmagic(struct drm_device *dev, void *data, struct drm_file *file_priv)
 	if (auth->magic == 0)
 		return (ret);
 
-	DRM_LOCK();
+	mutex_lock(&dev->struct_mutex);
 	SPLAY_FOREACH(p, drm_file_tree, &dev->files) {
 		if (p->magic == auth->magic) {
 			p->authenticated = 1;
@@ -1231,7 +1231,7 @@ drm_authmagic(struct drm_device *dev, void *data, struct drm_file *file_priv)
 			break;
 		}
 	}
-	DRM_UNLOCK();
+	mutex_unlock(&dev->struct_mutex);
 
 	return (ret);
 }
@@ -1626,9 +1626,9 @@ drm_gem_object_handle_unreference_unlocked(struct drm_gem_object *obj)
 {
 	struct drm_device *dev = obj->dev;
 
-	DRM_LOCK();
+	mutex_lock(&dev->struct_mutex);
 	drm_gem_object_handle_unreference(obj);
-	DRM_UNLOCK();
+	mutex_unlock(&dev->struct_mutex);
 }
 
 /**
@@ -1715,20 +1715,20 @@ udv_attach_drm(dev_t device, vm_prot_t accessprot, voff_t off, vsize_t size)
 	if (dev->driver->mmap)
 		return dev->driver->mmap(dev, off, size);
 
-	DRM_LOCK();
+	mutex_lock(&dev->struct_mutex);
 	TAILQ_FOREACH(map, &dev->maplist, link) {
 		if (off >= map->ext && off + size <= map->ext + map->size)
 			break;
 	}
 
 	if (map == NULL || map->type != _DRM_GEM) {
-		DRM_UNLOCK();
+		mutex_unlock(&dev->struct_mutex);
 		return NULL;
 	}
 
 	obj = (struct drm_gem_object *)map->handle;
 	drm_ref(&obj->uobj);
-	DRM_UNLOCK();
+	mutex_unlock(&dev->struct_mutex);
 	return &obj->uobj;
 }
 
