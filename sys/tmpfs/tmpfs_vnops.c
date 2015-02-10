@@ -1040,10 +1040,10 @@ tmpfs_readlink(void *v)
 		return EINVAL;
 
 	if (node->tn_size > (int)uio->uio_resid)
-		error = uiomove(node->tn_spec.tn_lnk.tn_link,
+		error = uiomovei(node->tn_spec.tn_lnk.tn_link,
 		    (int)uio->uio_resid, uio);
 	else
-		error = uiomove(node->tn_spec.tn_lnk.tn_link,
+		error = uiomovei(node->tn_spec.tn_lnk.tn_link,
 		    (int)node->tn_size, uio);
 
 	node->tn_status |= TMPFS_NODE_ACCESSED;
