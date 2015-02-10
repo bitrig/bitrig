@@ -73,10 +73,6 @@ static const struct rwlock_op {
 	},
 };
 
-#ifndef __HAVE_MD_RWLOCK
-/*
- * Simple cases that should be in MD code and atomic.
- */
 void
 rw_enter_read(struct rwlock *rwl)
 {
@@ -135,8 +131,6 @@ rw_cas(volatile unsigned long *p, unsigned long o, unsigned long n)
 
 	return (0);
 }
-#endif
-
 #endif
 
 #ifdef DIAGNOSTIC
