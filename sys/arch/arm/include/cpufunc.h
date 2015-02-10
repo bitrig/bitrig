@@ -289,14 +289,17 @@ __get_cpsr()
 	return ret;
 }
 
-#define disable_interrupts(mask)					\
-	(__set_cpsr_c((mask) & (I32_bit | F32_bit), \
+#define arm_intr_get()					\
+	(__get_cpsr() & (I32_bit | F32_bit))
+
+#define arm_intr_disable(mask)				\
+	(__set_cpsr_c((mask) & (I32_bit | F32_bit),	\
 		      (mask) & (I32_bit | F32_bit)))
 
-#define enable_interrupts(mask)						\
+#define arm_intr_enable(mask)			\
 	(__set_cpsr_c((mask) & (I32_bit | F32_bit), 0))
 
-#define restore_interrupts(old_cpsr)					\
+#define arm_intr_restore(old_cpsr)				\
 	(__set_cpsr_c((I32_bit | F32_bit), (old_cpsr) & (I32_bit | F32_bit)))
 
 /*

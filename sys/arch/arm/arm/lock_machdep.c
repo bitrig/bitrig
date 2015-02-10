@@ -57,13 +57,13 @@ void
 __mp_lock(struct __mp_lock *mpl)
 {
 	struct __mp_lock_cpu *cpu = &mpl->mpl_cpus[cpu_number()];
-	uint32_t irq;
+	intr_state_t its;
 
-	irq = disable_interrupts(I32_bit);
+	its = intr_disable();
 	if (cpu->mplc_depth++ == 0)
 		cpu->mplc_ticket = atomic_fetch_add_explicit(&mpl->mpl_users,
 		    1, memory_order_acquire);
-	restore_interrupts(irq);
+	intr_restore(its);
 
 	__mp_lock_spin(mpl, cpu->mplc_ticket);
 }
@@ -81,13 +81,13 @@ __mp_unlock(struct __mp_lock *mpl)
 	}
 #endif
 
-	irq = disable_interrupts(I32_bit);
+	irq = intr_disable();
 	if (--cpu->mplc_depth == 0) {
 		atomic_fetch_add_explicit(&mpl->mpl_ticket, 1,
 		    memory_order_release);
 		SPINWAKE();
 	}
-	restore_interrupts(irq);
+	intr_restore(its);
 }
 
 int
@@ -95,13 +95,13 @@ __mp_release_all(struct __mp_lock *mpl)
 {
 	struct __mp_lock_cpu *cpu = &mpl->mpl_cpus[cpu_number()];
 	int rv = cpu->mplc_depth;
-	uint32_t irq;
+	intr_state_t its;
 
-	irq = disable_interrupts(I32_bit);
+	its = intr_disable();
 	cpu->mplc_depth = 0;
 	atomic_fetch_add_explicit(&mpl->mpl_ticket, 1, memory_order_release);
 	SPINWAKE();
-	restore_interrupts(irq);
+	intr_restore(its);
 
 	return (rv);
 }

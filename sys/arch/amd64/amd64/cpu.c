@@ -242,7 +242,7 @@ cpu_idle_mwait_cycle(void)
 	struct cpu_info *ci = curcpu();
 	volatile int *state = &ci->ci_mwait[0];
 
-	if ((read_rflags() & PSL_I) == 0)
+	if ((intr_get() & PSL_I) == 0)
 		panic("idle with interrupts blocked!");
 
 	/* something already queued? */
@@ -701,7 +701,7 @@ cpu_hatch(void *v)
 
 	s = splhigh();
 	lcr8(0);
-	enable_intr();
+	intr_enable();
 
 	nanouptime(&ci->ci_schedstate.spc_runtime);
 	splx(s);

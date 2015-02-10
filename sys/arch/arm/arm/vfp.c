@@ -128,7 +128,7 @@ vfp_enable()
 
 	if (curproc->p_addr->u_pcb.pcb_fpcpu == ci &&
 	    ci->ci_fpuproc == curproc) {
-		disable_interrupts(I32_bit);
+		intr_disable();
 
 		/* FPU state is still valid, just enable and go */
 		set_vfp_fpexc(VFPEXC_EN);
@@ -141,9 +141,10 @@ vfp_load(struct proc *p)
 	struct cpu_info		*ci = curcpu();
 	struct pcb		*pcb = &p->p_addr->u_pcb;
 	uint32_t		 scratch = 0;
+	intr_state_t		its;
 
 	/* do not allow a partially synced state here */
-	disable_interrupts(I32_bit);
+	its = intr_disable();
 
 	/*
 	 * p->p_pcb->pcb_fpucpu _may_ not be NULL here, but the FPU state
@@ -167,7 +168,7 @@ vfp_load(struct proc *p)
 	/* disable until return to userland */
 	set_vfp_fpexc(0);
 
-	enable_interrupts(I32_bit);
+	intr_restore(its);
 }
 
 

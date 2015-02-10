@@ -167,8 +167,9 @@ i8259_hwunmask(struct pic *pic, int pin)
 {
 	unsigned port;
 	u_int8_t byte;
+	intr_state_t its;
 
-	disable_intr();	/* XXX */
+	its = intr_disable();
 	i8259_imen &= ~(1 << pin);
 #ifdef PIC_MASKDELAY
 	delay(10);
@@ -181,7 +182,7 @@ i8259_hwunmask(struct pic *pic, int pin)
 		byte = i8259_imen & 0xff;
 	}
 	outb(port, byte);
-	enable_intr();
+	intr_restore(its);
 }
 
 static void

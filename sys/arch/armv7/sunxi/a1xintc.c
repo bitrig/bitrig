@@ -176,7 +176,7 @@ a1xintc_attach(struct device *parent, struct device *self, void *args)
 	    a1xintc_intr_establish, a1xintc_intr_disestablish, a1xintc_intr_string,
 	    a1xintc_irq_handler);
 	a1xintc_setipl(IPL_HIGH);  /* XXX ??? */
-	enable_interrupts(I32_bit);
+	intr_enable();
 	printf("\n");
 }
 
@@ -268,7 +268,8 @@ void
 a1xintc_setipl(int new)
 {
 	struct cpu_info *ci = curcpu();
-	int i, psw;
+	int i;
+	intr_state_t its;
 #if 1
 	/*
 	 * XXX not needed, because all interrupts are disabled
@@ -279,12 +280,12 @@ a1xintc_setipl(int new)
 		return;
 	}
 #endif
-	psw = disable_interrupts(I32_bit);
+	its = intr_disable();
 	ci->ci_cpl = new;
 	for (i = 0; i < NBANKS; i++)
 		bus_space_write_4(a1xintc_iot, a1xintc_ioh,
 		    INTC_MASK_REG(i), a1xintc_imask[i][new]);
-	restore_interrupts(psw);
+	intr_restore(its);
 }
 
 void
@@ -337,7 +338,7 @@ a1xintc_irq_handler(void *frame)
 void *
 a1xintc_intr_establish(int irq, int lvl, int (*f)(void *), void *arg, char *name)
 {
-	int psw;
+	intr_state_t its;
 	struct intrhand *ih;
 	uint32_t er;
 
@@ -347,7 +348,7 @@ a1xintc_intr_establish(int irq, int lvl, int (*f)(void *), void *arg, char *name
 	DPRINTF(("intr_establish: irq %d level %d [%s]\n", irq, lvl,
 	    name != NULL ? name : "NULL"));
 
-	psw = disable_interrupts(I32_bit);
+	its = intr_disable();
 
 	/* no point in sleeping unless someone can free memory. */
 	ih = (struct intrhand *)malloc (sizeof *ih, M_DEVBUF,
@@ -373,7 +374,7 @@ a1xintc_intr_establish(int irq, int lvl, int (*f)(void *), void *arg, char *name
 
 	a1xintc_calc_masks();
 	
-	restore_interrupts(psw);
+	intr_restore(its);
 	return (ih);
 }
 
@@ -385,7 +386,7 @@ a1xintc_intr_disestablish(void *cookie)
 	int psw;
 	uint32_t er;
 
-	psw = disable_interrupts(I32_bit);
+	psw = intr_disable();
 
 	TAILQ_REMOVE(&a1xintc_handler[irq].is_list, ih, ih_list);
 
@@ -402,7 +403,7 @@ a1xintc_intr_disestablish(void *cookie)
 
 	a1xintc_calc_masks();
 
-	restore_interrupts(psw);
+	intr_restore(psw);
 }
 
 const char *

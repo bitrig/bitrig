@@ -205,7 +205,7 @@ data_abort_handler(trapframe_t *tf)
 
 	/* Re-enable interrupts if they were enabled previously */
 	if (__predict_true((tf->tf_spsr & I32_bit) == 0))
-		enable_interrupts(I32_bit);
+		arm_intr_enable(I32_bit);
 
 	/* Get the current proc structure or proc0 if there is none */
 	p = (curproc != NULL) ? curproc : &proc0;
@@ -555,7 +555,7 @@ prefetch_abort_handler(trapframe_t *tf)
 	 * But we check anyway.
 	 */
 	if (__predict_true((tf->tf_spsr & I32_bit) == 0))
-		enable_interrupts(I32_bit);
+		arm_intr_enable(I32_bit);
 
 	/* Get fault address */
 	p = curproc;

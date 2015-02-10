@@ -2230,6 +2230,7 @@ pmap_activate(struct proc *p)
 {
 	pmap_t pm;
 	struct pcb *pcb;
+	intr_state_t its;
 	int s;
 
 	pm = p->p_vmspace->vm_map.pmap;
@@ -2255,7 +2256,7 @@ pmap_activate(struct proc *p)
 
 		s = splhigh();
 		pmap_acquire_pmap_lock(pm);
-		disable_interrupts(I32_bit | F32_bit);
+		its = intr_disable();
 
 		/*
 		 * We MUST, I repeat, MUST fix up the L1 entry corresponding
@@ -2275,7 +2276,7 @@ pmap_activate(struct proc *p)
 		cpu_domains(pcb->pcb_dacr);
 		cpu_setttb(pcb->pcb_pagedir);
 
-		enable_interrupts(I32_bit | F32_bit);
+		intr_restore(its);
 
 		pmap_release_pmap_lock(pm);
 		splx(s);

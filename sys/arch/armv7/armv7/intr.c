@@ -151,10 +151,10 @@ arm_setsoftintr(int si)
 	int oldirqstate;
 
 	/* XXX atomic? */
-	oldirqstate = disable_interrupts(I32_bit);
+	oldirqstate = intr_disable();
 	ci->ci_ipending |= SI_TO_IRQBIT(si);
 
-	restore_interrupts(oldirqstate);
+	intr_restore(oldirqstate);
 
 	/* Process unmasked pending soft interrupts. */
 	if (ci->ci_ipending & arm_smask[ci->ci_cpl])
@@ -168,23 +168,23 @@ arm_do_pending_intr(int pcpl)
 	static int processing = 0;
 	int oldirqstate;
 
-	oldirqstate = disable_interrupts(I32_bit);
+	oldirqstate = intr_disable();
 
 	if (processing == 1) {
 		/* Don't use splx... we are here already! */
 		arm_intr_func.setipl(pcpl);
-		restore_interrupts(oldirqstate);
+		intr_restore(oldirqstate);
 		return;
 	}
 
-#define DO_SOFTINT(si, ipl) \
-	if ((ci->ci_ipending & arm_smask[pcpl]) &	\
+#define DO_SOFTINT(si, ipl)						\
+	if ((ci->ci_ipending & arm_smask[pcpl]) &			\
 	    SI_TO_IRQBIT(si)) {						\
 		ci->ci_ipending &= ~SI_TO_IRQBIT(si);			\
 		arm_intr_func.setipl(ipl);				\
-		restore_interrupts(oldirqstate);			\
+		intr_restore(oldirqstate);				\
 		softintr_dispatch(si);					\
-		oldirqstate = disable_interrupts(I32_bit);		\
+		oldirqstate = intr_disable();				\
 	}
 
 	do {
@@ -197,7 +197,7 @@ arm_do_pending_intr(int pcpl)
 	/* Don't use splx... we are here already! */
 	arm_intr_func.setipl(pcpl);
 	processing = 0;
-	restore_interrupts(oldirqstate);
+	intr_restore(oldirqstate);
 }
 
 void arm_set_intr_handler(int (*raise)(int), int (*lower)(int),

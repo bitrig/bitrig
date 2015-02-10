@@ -724,19 +724,18 @@ spllower(int nlevel)
 	int olevel;
 	struct cpu_info *ci = curcpu();
 	u_int64_t imask;
-	u_long psl;
+	intr_state_t its;
 
 	imask = IUNMASK(ci, nlevel);
 	olevel = ci->ci_ilevel;
 
-	psl = read_psl();
-	disable_intr();
+	its = intr_disable();
 
 	if (ci->ci_ipending & imask) {
 		Xspllower(nlevel);
 	} else {
 		ci->ci_ilevel = nlevel;
-		write_psl(psl);
+		intr_restore(its);
 	}
 	return (olevel);
 }

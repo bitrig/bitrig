@@ -91,7 +91,7 @@ fiq_claim(struct fiqhandler *fh)
 	if (fh->fh_size > 0x100)
 		return (EFBIG);
 
-	oldirqstate = disable_interrupts(FIQ_BIT);
+	oldirqstate = arm_disable_interrupts(FIQ_BIT);
 
 	if ((ofh = TAILQ_FIRST(&fiqhandler_stack)) != NULL) {
 		if ((ofh->fh_flags & FH_CANPUSH) == 0) {
@@ -117,7 +117,7 @@ fiq_claim(struct fiqhandler *fh)
 	oldirqstate &= ~FIQ_BIT;
 
  out:
-	restore_interrupts(oldirqstate);
+	arm_restore_interrupts(oldirqstate);
 	return (error);
 }
 

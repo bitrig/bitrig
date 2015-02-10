@@ -591,7 +591,7 @@ void *
 omgpio_intr_establish(struct omgpio_softc *sc, unsigned int gpio, int level, int spl,
     int (*func)(void *), void *arg, char *name)
 {
-	int psw;
+	intr_state_t its;
 	struct intrhand *ih;
 	struct omgpio_softc *sc;
 
@@ -611,11 +611,10 @@ omgpio_intr_establish(struct omgpio_softc *sc, unsigned int gpio, int level, int
 		    gpio, sc->sc_handlers[GPIO_PIN_TO_OFFSET(gpio)]->ih_name,
 		    name);
 
-	psw = disable_interrupts(I32_bit);
+	its = intr_disable();
 
 	/* no point in sleeping unless someone can free memory. */
-	ih = (struct intrhand *)malloc( sizeof *ih, M_DEVBUF,
-	    cold ? M_NOWAIT : M_WAITOK);
+	ih = malloc(sizeof(*ih), M_DEVBUF, cold ? M_NOWAIT : M_WAITOK);
 	if (ih == NULL)
 		panic("intr_establish: can't malloc handler info");
 	ih->ih_fun = func;
@@ -634,7 +633,7 @@ omgpio_intr_establish(struct omgpio_softc *sc, unsigned int gpio, int level, int
 
 	omgpio_recalc_interrupts(sc);
 
-	restore_interrupts(psw);
+	intr_restore(its);
 
 	return (ih);
 }
@@ -642,11 +641,12 @@ omgpio_intr_establish(struct omgpio_softc *sc, unsigned int gpio, int level, int
 void
 omgpio_intr_disestablish(struct omgpio_softc *sc, void *cookie)
 {
-	int psw;
+	intr_state_t its;
 	struct intrhand *ih = cookie;
 	struct omgpio_softc *sc = omgpio_cd.cd_devs[GPIO_PIN_TO_INST(ih->ih_gpio)];
 	int gpio = ih->ih_gpio;
-	psw = disable_interrupts(I32_bit);
+
+	its = intr_disable();
 
 	ih = sc->sc_handlers[GPIO_PIN_TO_OFFSET(gpio)];
 	sc->sc_handlers[GPIO_PIN_TO_OFFSET(gpio)] = NULL;
@@ -661,7 +661,7 @@ omgpio_intr_disestablish(struct omgpio_softc *sc, void *cookie)
 
 	omgpio_recalc_interrupts(sc);
 
-	restore_interrupts(psw);
+	intr_restore(its);
 }
 
 int

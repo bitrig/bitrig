@@ -188,36 +188,6 @@ tlbflushg(void)
 void	setidt(int idx, /*XXX*/caddr_t func, int typ, int dpl);
 #endif
 
-
-/* XXXX ought to be in psl.h with spl() functions */
-
-static __inline void
-disable_intr(void)
-{
-	__asm volatile("cli");
-}
-
-static __inline void
-enable_intr(void)
-{
-	__asm volatile("sti");
-}
-
-static __inline u_long
-read_rflags(void)
-{
-	u_long	ef;
-
-	__asm volatile("pushfq; popq %0" : "=r" (ef));
-	return (ef);
-}
-
-static __inline void
-write_rflags(u_long ef)
-{
-	__asm volatile("pushq %0; popfq" : : "r" (ef));
-}
-
 static __inline u_int64_t
 rdmsr(u_int msr)
 {
@@ -315,9 +285,6 @@ breakpoint(void)
 {
 	__asm volatile("int $3");
 }
-
-#define read_psl()	read_rflags()
-#define write_psl(x)	write_rflags(x)
 
 void amd64_errata(struct cpu_info *);
 

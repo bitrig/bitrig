@@ -109,7 +109,7 @@ swi_handler(trapframe_t *frame)
 
 	/* Re-enable interrupts if they were enabled previously */
 	if (__predict_true((frame->tf_spsr & I32_bit) == 0))
-		enable_interrupts(I32_bit);
+		arm_intr_enable(I32_bit);
 
 	p->p_addr->u_pcb.pcb_tf = frame;
 

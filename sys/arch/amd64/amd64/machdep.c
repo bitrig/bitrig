@@ -1583,7 +1583,7 @@ init_x86_64(paddr_t first_avail)
 
 	softintr_init();
 	splraise(IPL_IPI);
-	enable_intr();
+	intr_enable();
 
 #ifdef DDB
 	db_machine_init();
@@ -1618,7 +1618,7 @@ void
 cpu_reset(void)
 {
 
-	disable_intr();
+	intr_disable();
 
 	if (cpuresetfn)
 		(*cpuresetfn)();

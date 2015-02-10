@@ -142,6 +142,17 @@ struct intrsource {
 #define	splsched()	splhigh()
 #define	spllock()	splhigh()
 
+/*
+ * intr_state_t api.
+ */
+#include <arm/cpufunc.h>
+
+typedef	int intr_state_t;
+#define	intr_get	arm_intr_get
+#define	intr_disable()	arm_intr_disable(I32_bit | F32_bit)
+#define	intr_enable()	arm_intr_enable(I32_bit | F32_bit)
+#define	intr_restore(x)	arm_intr_restore(x)
+
 void arm_init_smask(void); /* XXX */
 extern uint32_t arm_smask[NIPL];
 void arm_setsoftintr(int si);

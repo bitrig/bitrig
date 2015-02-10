@@ -110,6 +110,40 @@ int spllower(int);
 void softintr(int);
 
 /*
+ * intr_state_t api.
+ */
+typedef u_long intr_state_t;
+
+static __inline intr_state_t
+intr_get(void)
+{
+	intr_state_t	ef;
+
+	__asm volatile("pushfq; popq %0" : "=r" (ef));
+	return (ef);
+}
+
+static __inline intr_state_t
+intr_disable(void)
+{
+	intr_state_t rf = intr_get();
+	__asm volatile("cli");
+	return (rf);
+}
+
+static __inline void
+intr_enable(void)
+{
+	__asm volatile("sti");
+}
+
+static __inline void
+intr_restore(intr_state_t ef)
+{
+	__asm volatile("pushq %0; popfq" : : "r" (ef));
+}
+
+/*
  * Convert spl level to local APIC level
  */
 #define APIC_LEVEL(l)   ((l) << 4)

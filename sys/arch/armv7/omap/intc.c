@@ -153,7 +153,7 @@ intc_attach(struct device *parent, struct device *self, void *args)
 	    intc_irq_handler);
 
 	intc_setipl(IPL_HIGH);  /* XXX ??? */
-	enable_interrupts(I32_bit);
+	intr_enable();
 }
 
 void
@@ -248,11 +248,12 @@ intc_setipl(int new)
 {
 	struct cpu_info *ci = curcpu();
 	int i;
-	int psw;
+	intr_state_t its;
+
 	if (intc_attached == 0)
 		return;
 
-	psw = disable_interrupts(I32_bit);
+	its = intr_disable();
 #if 0
 	{
 		volatile static int recursed = 0;
@@ -270,7 +271,7 @@ intc_setipl(int new)
 		    INTC_MIRn(i), intc_imask[i][new]);
 	bus_space_write_4(intc_iot, intc_ioh, INTC_CONTROL,
 	    INTC_CONTROL_NEWIRQ);
-	restore_interrupts(psw);
+	intr_restore(its);
 }
 
 void
@@ -325,7 +326,7 @@ intc_intr_establish(int irqno, int level, int (*func)(void *),
 	if (irqno < 0 || irqno >= INTC_NUM_IRQ)
 		panic("intc_intr_establish: bogus irqnumber %d: %s",
 		     irqno, name);
-	psw = disable_interrupts(I32_bit);
+	psw = intr_disable();
 
 	/* no point in sleeping unless someone can free memory. */
 	ih = (struct intrhand *)malloc (sizeof *ih, M_DEVBUF,
@@ -349,22 +350,22 @@ intc_intr_establish(int irqno, int level, int (*func)(void *),
 #endif
 	intc_calc_mask();
 	
-	restore_interrupts(psw);
+	intr_restore(psw);
 	return (ih);
 }
 
 void
 intc_intr_disestablish(void *cookie)
 {
-	int psw;
+	intr_state_t its;
 	struct intrhand *ih = cookie;
 	int irqno = ih->ih_irq;
-	psw = disable_interrupts(I32_bit);
+	its = intr_disable();
 	TAILQ_REMOVE(&intc_handler[irqno].is_list, ih, ih_list);
 	if (ih->ih_name != NULL)
 		evcount_detach(&ih->ih_count);
 	free(ih, M_DEVBUF, 0);
-	restore_interrupts(psw);
+	intr_restore(its);
 }
 
 const char *

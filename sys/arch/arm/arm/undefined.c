@@ -159,7 +159,7 @@ undefinedinstruction(trapframe_t *frame)
 
 	/* Enable interrupts if they were enabled before the exception. */
 	if (!(frame->tf_spsr & I32_bit))
-		enable_interrupts(I32_bit);
+		arm_intr_enable(I32_bit);
 
 	frame->tf_pc -= INSN_SIZE;
 	fault_pc = frame->tf_pc;

@@ -93,10 +93,11 @@ void
 lapic_map(paddr_t lapic_base)
 {
 	int s;
+	intr_state_t its;
 	pt_entry_t *pte;
 	vaddr_t va = (vaddr_t)&local_apic;
 
-	disable_intr();
+	its = intr_disable();
 	s = lapic_tpr;
 
 	/*
@@ -113,7 +114,7 @@ lapic_map(paddr_t lapic_base)
 	invlpg(va);
 
 	lapic_tpr = s;
-	enable_intr();
+	intr_restore(its);
 }
 
 /*
@@ -336,7 +337,7 @@ lapic_calibrate_timer(struct cpu_info *ci)
 {
 	unsigned int startapic, endapic;
 	u_int64_t dtick, dapic, tmp;
-	long rf = read_rflags();
+	intr_state_t its;
 	int i;
 
 	if (mp_verbose)
@@ -350,7 +351,7 @@ lapic_calibrate_timer(struct cpu_info *ci)
 	i82489_writereg(LAPIC_DCR_TIMER, LAPIC_DCRT_DIV1);
 	i82489_writereg(LAPIC_ICR_TIMER, 0x80000000);
 
-	disable_intr();
+	its = intr_disable();
 
 	/* wait for current cycle to finish */
 	wait_next_cycle();
@@ -362,7 +363,7 @@ lapic_calibrate_timer(struct cpu_info *ci)
 		wait_next_cycle();
 
 	endapic = lapic_gettick();
-	write_rflags(rf);
+	intr_restore(its);
 
 	dtick = hz * rtclock_tval;
 	dapic = startapic-endapic;

@@ -305,7 +305,7 @@ ampintc_attach(struct device *parent, struct device *self, void *args)
 	/* enable interrupts */
 	bus_space_write_4(iot, d_ioh, ICD_DCR, 3);
 	bus_space_write_4(iot, p_ioh, ICPICR, 1);
-	enable_interrupts(I32_bit);
+	intr_enable();
 }
 
 void
@@ -332,13 +332,13 @@ ampintc_setipl(int new)
 	int			 psw;
 
 	/* disable here is only to keep hardware in sync with ci->ci_cpl */
-	psw = disable_interrupts(I32_bit);
+	psw = intr_disable();
 	ci->ci_cpl = new;
 
 	/* low values are higher priority thus IPL_HIGH - pri */
 	bus_space_write_4(sc->sc_iot, sc->sc_p_ioh, ICPIPMR,
 	    (IPL_HIGH - new) << ICMIPMR_SH);
-	restore_interrupts(psw);
+	intr_restore(psw);
 }
 
 void
@@ -572,7 +572,7 @@ ampintc_intr_establish(int irqno, int level, int (*func)(void *),
 	ih->ih_irq = irqno;
 	ih->ih_name = name;
 
-	psw = disable_interrupts(I32_bit);
+	psw = intr_disable();
 
 	TAILQ_INSERT_TAIL(&sc->sc_ampintc_handler[irqno].is_list, ih, ih_list);
 
@@ -585,7 +585,7 @@ ampintc_intr_establish(int irqno, int level, int (*func)(void *),
 #endif
 	ampintc_calc_mask();
 	
-	restore_interrupts(psw);
+	intr_restore(psw);
 	return (ih);
 }
 
@@ -593,15 +593,15 @@ void
 ampintc_intr_disestablish(void *cookie)
 {
 #if 0
-	int psw;
+	intr_state_t its;
 	struct intrhand *ih = cookie;
 	int irqno = ih->ih_irq;
-	psw = disable_interrupts(I32_bit);
+	its = intr_disable();
 	TAILQ_REMOVE(&sc->sc_ampintc_handler[irqno].is_list, ih, ih_list);
 	if (ih->ih_name != NULL)
 		evcount_detach(&ih->ih_count);
 	free(ih, M_DEVBUF, 0);
-	restore_interrupts(psw);
+	intr_restore(its);
 #endif
 }
 
