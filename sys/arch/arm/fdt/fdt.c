@@ -584,7 +584,7 @@ fdt_get_memory_address(void *node, int idx, struct fdt_memory *mem)
  *  - node's property "interrupt-parrent"
  *  - parent's property "interrupt-parrent"
  */
-static void *
+void *
 fdt_get_interrupt_controller(void *node)
 {
 	int phandle;

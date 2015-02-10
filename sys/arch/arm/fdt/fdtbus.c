@@ -51,7 +51,8 @@ static int fdt_match(struct device *, void *, void *);
 static void fdt_attach(struct device *, struct device *, void *);
 static void fdt_find_match(struct device *, void *);
 static void fdt_iterate(struct device *, struct device *, void *);
-static void fdt_try_node(struct device *, void *, void *);
+static void fdt_attach_node(struct device *, void *, void *);
+static void fdt_attach_interrupt_controller(struct device *);
 
 /*
  * We need to look through the tree at least twice.  To make sure we
@@ -113,6 +114,10 @@ fdt_attach(struct device *parent, struct device *self, void *aux)
 	else
 		printf(": unknown\n");
 
+	/* Scan for interrupt controllers and attach them first. */
+	fdt_attach_interrupt_controller(self);
+
+	/* Scan the rest of the tree. */
 	config_scan(fdt_find_match, self);
 }
 
@@ -143,17 +148,37 @@ fdt_iterate(struct device *self, struct device *match, void *node)
 			continue;
 
 		fdt_iterate(self, match, fdt_child_node(node));
-		fdt_try_node(self, match, node);
+		fdt_attach_node(self, match, node);
 	}
 }
 
-static void
-fdt_try_node(struct device *self, void *match, void *node)
+static inline void
+fdt_dev_list_insert(void *node, struct device *child)
 {
-	struct cfdata *cf = match;
+	struct fdt_entry *fe;
+
+	if (child == NULL)
+		return;
+
+	fe = malloc(sizeof(*fe), M_DEVBUF, M_NOWAIT|M_ZERO);
+	if (fe == NULL)
+		panic("%s: cannot allocate memory\n", __func__);
+
+	fe->fe_node = node;
+	fe->fe_dev = child;
+	SLIST_INSERT_HEAD(&fdt_dev_list, fe, fe_list);
+}
+
+/*
+ * Try to attach a node to a known driver.
+ */
+static void
+fdt_attach_node(struct device *self, void *match, void *node)
+{
 	struct armv7_attach_args aa;
-	struct device *child;
-	char  *status;
+	struct cfdata		*cf = match;
+	struct device		*child;
+	char			*status;
 
 	if (!fdt_node_property(node, "compatible", NULL))
 		return;
@@ -173,11 +198,112 @@ fdt_try_node(struct device *self, void *match, void *node)
 		return;
 
 	child = config_attach(self, cf, &aa, NULL);
-	if (child != NULL) {
-		struct fdt_entry *fe = malloc(sizeof(*fe), M_DEVBUF,
-		    M_NOWAIT|M_ZERO);
-		fe->fe_node = node;
-		fe->fe_dev = child;
-		SLIST_INSERT_HEAD(&fdt_dev_list, fe, fe_list);
+	fdt_dev_list_insert(node, child);
+}
+
+/*
+ * Look for a driver that can handle this node.
+ */
+static void *
+fdt_found_node(struct device *self, void *node)
+{
+	struct armv7_attach_args aa;
+	struct device		*child;
+	char			*status;
+
+	if (!fdt_node_property(node, "compatible", NULL))
+		return NULL;
+
+	if (fdt_node_property(node, "status", &status))
+		if (!strcmp(status, "disabled"))
+			return NULL;
+
+	memset(&aa, 0, sizeof(aa));
+	aa.aa_dev = NULL;
+	aa.aa_iot = &armv7_bs_tag;
+	aa.aa_dmat = &fdt_bus_dma_tag;
+	aa.aa_node = node;
+
+	child = config_found(self, &aa, NULL);
+	fdt_dev_list_insert(node, child);
+	return child;
+}
+
+struct ic_entry {
+	SLIST_ENTRY(ic_entry)	 ie_list;
+	void			*ie_node;
+	void			*ie_parent;
+};
+
+/*
+ * Attach interrupt controller before attaching devices. This makes
+ * sure we have a controller available to establish interrupts on.
+ */
+static void
+fdt_attach_interrupt_controller(struct device *self)
+{
+	SLIST_HEAD(, ic_entry) ic_list = SLIST_HEAD_INITIALIZER(ic_list);
+	SLIST_HEAD(, ic_entry) ip_list = SLIST_HEAD_INITIALIZER(ip_list);
+	struct ic_entry *ie, *tmp;
+	void *node = NULL, *parent;
+
+	/* Create a list of all interrupt controllers. */
+	while ((node = fdt_find_node_with_prop(fdt_next_node(node),
+	    "interrupt-controller")) != NULL) {
+		ie = malloc(sizeof(*ie), M_DEVBUF, M_NOWAIT|M_ZERO);
+		if (ie == NULL)
+			panic("%s: cannot allocate memory\n", __func__);
+
+		ie->ie_node = node;
+		ie->ie_parent = fdt_get_interrupt_controller(node);
+		if (ie->ie_parent == node)
+			ie->ie_parent = NULL;
+
+		SLIST_INSERT_HEAD(&ic_list, ie, ie_list);
+	}
+
+	/* Look for the root interrupt controller first. */
+	parent = NULL;
+
+	/* As long as we have unconfigured interrupt controllers. */
+	while (!SLIST_EMPTY(&ic_list)) {
+		SLIST_FOREACH_SAFE(ie, &ic_list, ie_list, tmp) {
+			if (ie->ie_parent != parent)
+				continue;
+
+			SLIST_REMOVE(&ic_list, ie, ic_entry, ie_list);
+
+			if (fdt_found_node(self, ie->ie_node) == NULL) {
+				free(ie, M_DEVBUF, sizeof(*ie));
+				continue;
+			}
+
+			SLIST_INSERT_HEAD(&ip_list, ie, ie_list);
+		}
+
+		/*
+		 * After attaching an interrupt controller, we must
+		 * find him here.  If we do not find one, we still
+		 * have children left but no parents to attach.
+		 */
+		ie = SLIST_FIRST(&ip_list);
+		if (ie == SLIST_END(&ip_list)) {
+			printf("%s: no parents left, but children remaining\n",
+			    __func__);
+			break;
+		}
+		parent = ie->ie_node;
+		SLIST_REMOVE(&ip_list, ie, ic_entry, ie_list);
+		free(ie, M_DEVBUF, sizeof(*ie));
+	}
+
+	/* Clean up. */
+	SLIST_FOREACH_SAFE(ie, &ip_list, ie_list, tmp) {
+		SLIST_REMOVE(&ip_list, ie, ic_entry, ie_list);
+		free(ie, M_DEVBUF, sizeof(*ie));
+	}
+	SLIST_FOREACH_SAFE(ie, &ic_list, ie_list, tmp) {
+		SLIST_REMOVE(&ic_list, ie, ic_entry, ie_list);
+		free(ie, M_DEVBUF, sizeof(*ie));
 	}
 }
