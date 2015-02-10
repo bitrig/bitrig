@@ -1,4 +1,4 @@
-/*	$OpenBSD: pstat.c,v 1.97 2015/01/16 06:40:19 deraadt Exp $	*/
+/*	$OpenBSD: pstat.c,v 1.98 2015/02/10 11:16:04 miod Exp $	*/
 /*	$NetBSD: pstat.c,v 1.27 1996/10/23 22:50:06 cgd Exp $	*/
 
 /*-
@@ -57,6 +57,7 @@
 #include <sys/sysctl.h>
 
 #include <stdint.h>
+#include <endian.h>
 #include <err.h>
 #include <kvm.h>
 #include <limits.h>
@@ -219,7 +220,7 @@ main(int argc, char *argv[])
 	if (dformat) {
 		struct nlist *nl;
 		int longformat = 0, stringformat = 0, error = 0, n;
-		int mask = ~0;
+		uint32_t mask = ~0;
 		char format[10], buf[1024];
 		
 		n = strlen(dformat);
@@ -279,7 +280,7 @@ main(int argc, char *argv[])
 		kvm_nlist(kd, nl);
 		globalnl = nl;
 		for (i = 0; i < argc; i++) {
-			long long v;
+			uint64_t v;
 
 			printf("%s ", argv[i]);
 			if (!nl[i].n_value && argv[i][0] == '0') {
@@ -303,8 +304,22 @@ main(int argc, char *argv[])
 					printf(format, &buf);
 				else if (longformat)
 					printf(format, v);
-				else
-					printf(format, ((int)v) & mask);
+				else {
+#if BYTE_ORDER == BIG_ENDIAN
+					switch (mask) {
+					case 0xff:
+						v >>= 8;
+						/* FALLTHROUGH */
+					case 0xffff:
+						v >>= 16;
+						/* FALLTHROUGH */
+					case 0xffffffff:
+						v >>= 32;
+						break;
+					}
+#endif
+					printf(format, ((uint32_t)v) & mask);
+				}
 			}
 			printf("\n");
 		}
