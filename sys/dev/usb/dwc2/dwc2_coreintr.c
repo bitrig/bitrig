@@ -1,4 +1,5 @@
-/*	$NetBSD$	*/
+/*	$OpenBSD: dwc2_coreintr.c,v 1.2 2015/02/10 12:58:47 uebayasi Exp $	*/
+/*	$NetBSD: dwc2_coreintr.c,v 1.8 2014/04/04 05:40:57 skrll Exp $	*/
 
 /*
  * core_intr.c - DesignWare HS OTG Controller common interrupt handling
@@ -40,8 +41,10 @@
  * This file contains the common interrupt handlers
  */
 
+#if 0
 #include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD$");
+__KERNEL_RCSID(0, "$NetBSD: dwc2_coreintr.c,v 1.8 2014/04/04 05:40:57 skrll Exp $");
+#endif
 
 #include <sys/param.h>
 #include <sys/kernel.h>

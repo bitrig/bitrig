@@ -1,4 +1,5 @@
-/*	$NetBSD$	*/
+/*	$OpenBSD: dwc2.h,v 1.2 2015/02/10 12:58:47 uebayasi Exp $	*/
+/*	$NetBSD: dwc2.h,v 1.4 2014/12/23 16:20:06 macallan Exp $	*/
 
 /*-
  * Copyright (c) 2013 The NetBSD Foundation, Inc.
