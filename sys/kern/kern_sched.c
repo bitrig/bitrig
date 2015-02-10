@@ -147,17 +147,10 @@ sched_idle(void *v)
 
 	while (1) {
 		while (!curcpu_is_idle()) {
-			struct proc *dead;
-
 			SCHED_LOCK(s);
 			p->p_stat = SSLEEP;
 			mi_switch();
 			SCHED_UNLOCK(s);
-
-			while ((dead = LIST_FIRST(&spc->spc_deadproc))) {
-				LIST_REMOVE(dead, p_hash);
-				exit2(dead);
-			}
 		}
 
 		splassert(IPL_NONE);
@@ -199,7 +192,6 @@ sched_exit(struct proc *p)
 {
 	struct schedstate_percpu *spc = &curcpu()->ci_schedstate;
 	struct timespec ts;
-	struct proc *idle;
 	int s;
 
 	nanouptime(&ts);
@@ -214,9 +206,7 @@ sched_exit(struct proc *p)
 #endif
 
 	SCHED_LOCK(s);
-	idle = spc->spc_idleproc;
-	idle->p_stat = SRUN;
-	cpu_switchto(NULL, idle);
+	cpu_switchto(NULL, sched_chooseproc());
 	panic("cpu_switchto returned");
 }
 

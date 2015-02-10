@@ -437,6 +437,11 @@ mi_switch(void)
 	SCHED_ASSERT_UNLOCKED();
 
 	/*
+	 * It's now safe to send our dead processes to the reaper.
+	 */
+	reaper_movedead();
+
+	/*
 	 * We're running again; record our new start time.  We might
 	 * be running on a new CPU now, so don't use the cache'd
 	 * schedstate_percpu pointer.
