@@ -84,6 +84,9 @@ int     spllower(int);
 void    splx(int);
 
 void	arm_do_pending_intr(int);
+void	arm_set_intr_handler_fdt(void *node,
+	void *(*intr_establish)(void *node, int idx, int level,
+	    int (*func)(void *), void *cookie, char *name));
 void	arm_set_intr_handler(int (*raise)(int), int (*lower)(int),
 	void (*x)(int), void (*setipl)(int),
 	void *(*intr_establish)(int irqno, int level, int (*func)(void *),
@@ -163,6 +166,10 @@ void arm_setsoftintr(int si);
     
 void *arm_intr_establish(int irqno, int level, int (*func)(void *),
     void *cookie, char *name);
+void *arm_intr_establish_fdt(void *node, int level, int (*func)(void *),
+    void *cookie, char *name);
+void *arm_intr_establish_fdt_idx(void *node, int idx, int level,
+    int (*func)(void *), void *cookie, char *name);
 void arm_intr_disestablish(void *cookie);
 const char *arm_intr_string(void *cookie);
 

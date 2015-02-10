@@ -104,7 +104,6 @@ struct virtio_mmio_softc {
 	bus_size_t		sc_iosize;
 	bus_dma_tag_t		sc_dmat;
 
-	int			sc_irqno;
 	void			*sc_ih;
 
 	int			sc_config_offset;
@@ -195,9 +194,6 @@ virtio_mmio_attach(struct device *parent, struct device *self, void *aux)
 	if (fdt_get_memory_address(aa->aa_node, 0, &mem))
 		panic("%s: could not extract memory data from FDT", __func__);
 
-	if (fdt_get_interrupt(aa->aa_node, &sc->sc_irqno))
-		panic("%s: could not extract interrupt data from FDT", __func__);
-
 	sc->sc_iosize = mem.size;
 	sc->sc_iot = aa->aa_iot;
 	sc->sc_dmat = aa->aa_dmat;
@@ -252,7 +248,7 @@ virtio_mmio_attach(struct device *parent, struct device *self, void *aux)
 		goto fail_1;
 	}
 
-	sc->sc_ih = arm_intr_establish(sc->sc_irqno, vsc->sc_ipl,
+	sc->sc_ih = arm_intr_establish_fdt(aa->aa_node, vsc->sc_ipl,
 	    virtio_mmio_intr, sc, vsc->sc_dev.dv_xname);
 	if (sc->sc_ih == NULL) {
 		printf("%s: couldn't establish interrupt\n",

@@ -225,7 +225,6 @@ agtimer_attach(struct device *parent, struct device *self, void *args)
 	struct agtimer_softc *sc = (struct agtimer_softc *)self;
 	struct cortex_attach_args *ia = args;
 	bus_space_handle_t ioh, pioh;
-	uint32_t ints[3*4];
 	void *node = ia->ca_node;
 
 	sc->sc_iot = ia->ca_iot;
@@ -268,11 +267,10 @@ agtimer_attach(struct device *parent, struct device *self, void *args)
 
 	/* establish interrupts */
 	/* TODO: Add interrupt FDT API. */
-	if (node && fdt_node_property_ints(node, "interrupts",
-	    ints, 3*4) == 3*4) {
+	if (node) {
 		/* Setup secure, non-secure and virtual timer IRQs. */
 		for (int i = 0; i < 4; i++) {
-			ampintc_intr_establish(ints[1 + 3 * i] + 16, IPL_CLOCK,
+			arm_intr_establish_fdt_idx(node, i, IPL_CLOCK,
 			    agtimer_intr, NULL, "tick");
 		}
 	} else {

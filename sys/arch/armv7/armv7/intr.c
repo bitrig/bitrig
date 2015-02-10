@@ -19,10 +19,12 @@
 #include <sys/systm.h>
 #include <sys/param.h>
 #include <sys/timetc.h>
+#include <sys/malloc.h>
 
 #include <dev/clock_subr.h>
 #include <arm/cpufunc.h>
 #include <machine/cpu.h>
+#include <machine/fdt.h>
 #include <machine/intr.h>
 
 int arm_dflt_splraise(int);
@@ -65,16 +67,51 @@ arm_dflt_intr(void *frame)
 	panic("arm_dflt_intr() called");
 }
 
+SLIST_HEAD(, ic_entry) ic_list = SLIST_HEAD_INITIALIZER(ic_list);
+struct ic_entry {
+	SLIST_ENTRY(ic_entry)	 ie_list;
+	void			*ie_node;
+	struct device		*ie_dev;
+	void *(*ie_intr_establish)(void *node, int idx, int level,
+	    int (*func)(void *), void *cookie, char *name);
+};
+
+void *arm_intr_establish_fdt(void *node, int level, int (*func)(void *),
+    void *cookie, char *name)
+{
+	return arm_intr_establish_fdt_idx(node, 0, level, func, cookie, name);
+}
+
+void *arm_intr_establish_fdt_idx(void *node, int idx, int level,
+    int (*func)(void *), void *cookie, char *name)
+{
+	struct ic_entry *ie, *ip;
+
+	ip = fdt_get_interrupt_controller(node);
+	if (ip == NULL)
+		return NULL;
+
+	SLIST_FOREACH(ie, &ic_list, ie_list) {
+		if (ie->ie_node != ip)
+			continue;
+		return ie->ie_intr_establish(node, idx, level, func, cookie,
+		    name);
+	}
+
+	return NULL;
+}
 
 void *arm_intr_establish(int irqno, int level, int (*func)(void *),
     void *cookie, char *name)
 {
 	return arm_intr_func.intr_establish(irqno, level, func, cookie, name);
 }
+
 void arm_intr_disestablish(void *cookie)
 {
 	arm_intr_func.intr_disestablish(cookie);
 }
+
 const char *arm_intr_string(void *cookie)
 {
 	return arm_intr_func.intr_string(cookie);
@@ -198,6 +235,26 @@ arm_do_pending_intr(int pcpl)
 	arm_intr_func.setipl(pcpl);
 	processing = 0;
 	intr_restore(oldirqstate);
+}
+
+void
+arm_set_intr_handler_fdt(void *node,
+	void *(*intr_establish)(void *node, int idx, int level,
+	    int (*func)(void *), void *cookie, char *name))
+{
+	struct ic_entry *ie;
+
+	if (node == NULL)
+		return;
+
+	ie = malloc(sizeof(*ie), M_DEVBUF, M_NOWAIT|M_ZERO);
+	if (ie == NULL)
+		panic("%s: cannot allocate ic entry", __func__);
+
+	ie->ie_node = node;
+	ie->ie_intr_establish = intr_establish;
+
+	SLIST_INSERT_HEAD(&ic_list, ie, ie_list);
 }
 
 void arm_set_intr_handler(int (*raise)(int), int (*lower)(int),

@@ -144,6 +144,7 @@ struct ampintc_softc {
 	bus_space_tag_t		 sc_iot;
 	bus_space_handle_t	 sc_d_ioh, sc_p_ioh;
 	struct evcount		 sc_spur;
+	int			 sc_ncells;
 };
 struct ampintc_softc *ampintc;
 
@@ -159,6 +160,8 @@ void		*ampintc_intr_establish(int, int, int (*)(void *), void *,
 		    char *);
 void		*ampintc_intr_establish_ext(int, int, int (*)(void *), void *,
 		    char *);
+void		*ampintc_intr_establish_fdt_idx(void *, int, int,
+		    int (*)(void *), void *, char *);
 void		 ampintc_intr_disestablish(void *);
 void		 ampintc_irq_handler(void *);
 const char	*ampintc_intr_string(void *);
@@ -246,6 +249,11 @@ ampintc_attach(struct device *parent, struct device *self, void *args)
 			icp = mem.addr;
 			icpsize = mem.size;
 		}
+
+		if (fdt_node_property_int(node, "#interrupt-cells",
+		    &sc->sc_ncells) != 1)
+			panic("%s: no #interrupt-cells property",
+			    sc->sc_dev.dv_xname);
 	}
 
 	if (bus_space_map(iot, icp, icpsize, 0, &p_ioh))
@@ -301,6 +309,8 @@ ampintc_attach(struct device *parent, struct device *self, void *args)
 	arm_set_intr_handler(ampintc_splraise, ampintc_spllower, ampintc_splx,
 	    ampintc_setipl, ampintc_intr_establish_ext,
 	    ampintc_intr_disestablish, ampintc_intr_string, ampintc_irq_handler);
+
+	arm_set_intr_handler_fdt(node, ampintc_intr_establish_fdt_idx);
 
 	/* enable interrupts */
 	bus_space_write_4(iot, d_ioh, ICD_DCR, 3);
@@ -547,6 +557,34 @@ ampintc_intr_establish_ext(int irqno, int level, int (*func)(void *),
     void *arg, char *name)
 {
 	return ampintc_intr_establish(irqno+32, level, func, arg, name);
+}
+
+void *
+ampintc_intr_establish_fdt_idx(void *node, int idx, int level,
+    int (*func)(void *), void *arg, char *name)
+{
+	struct ampintc_softc	*sc = ampintc;
+	int			 nints = sc->sc_ncells * (idx + 1);
+	int			 intr_elem = idx * sc->sc_ncells;
+	int			 ints[nints];
+	int			 irq;
+
+	/* Load only parts needed from the interrupt property, not all. */
+	if (fdt_node_property_ints(node, "interrupts", ints, nints) != nints)
+		panic("%s: no interrupts property", sc->sc_dev.dv_xname);
+
+	/* 2nd cell contains the interrupt number */
+	irq = ints[intr_elem + 1];
+
+	/* 1st cell contains type: 0 SPI (32-X), 1 PPI (16-31) */
+	if (ints[intr_elem] == 0)
+		irq += 32;
+	else if (ints[intr_elem] == 1)
+		irq += 16;
+	else
+		panic("%s: bogus interrupt type", sc->sc_dev.dv_xname);
+
+	return ampintc_intr_establish(irq, level, func, arg, name);
 }
 
 void *
