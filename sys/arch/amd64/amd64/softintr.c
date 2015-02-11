@@ -108,9 +108,9 @@ softintr_biglock_wrap(void *arg)
 {
 	struct x86_soft_intrhand	*sih = arg;
 
-	__mp_lock(&kernel_lock);
+	KERNEL_LOCK();
 	sih->sih_fnwrap(sih->sih_argwrap);
-	__mp_unlock(&kernel_lock);
+	KERNEL_UNLOCK();
 }
 #endif
 

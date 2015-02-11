@@ -97,7 +97,7 @@ void
 x86_64_ipi_halt(struct cpu_info *ci)
 {
 	SCHED_ASSERT_UNLOCKED();
-	KASSERT(!__mp_lock_held(&kernel_lock));
+	KERNEL_ASSERT_UNLOCKED();
 	
 	fpusave_cpu(ci, 1);
 	disable_intr();
