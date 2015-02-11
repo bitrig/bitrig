@@ -317,6 +317,9 @@ void swi_handler	(trapframe_t *);
 /* machine_machdep.c */
 void board_startup(void);
 
+/* stubs.c */
+void	dumpconf(void);
+
 #endif	/* !_LOCORE */
 
 #endif /* _KERNEL */
