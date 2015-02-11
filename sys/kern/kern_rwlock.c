@@ -22,11 +22,24 @@
 #include <sys/proc.h>
 #include <sys/rwlock.h>
 #include <sys/limits.h>
-
-#include <machine/lock.h>
+#include <sys/atomic.h>
 
 /* XXX - temporary measure until proc0 is properly aligned */
 #define RW_PROC(p) (((long)p) & ~RWLOCK_MASK)
+
+#ifdef MULTIPROCESSOR
+#define rw_cas(p, o, n)	(atomic_cas_ulong(p, o, n) != o)
+#else
+static inline int
+rw_cas(volatile unsigned long *p, unsigned long o, unsigned long n)
+{
+	if (*p != o)
+		return (1);
+	*p = n;
+
+	return (0);
+}
+#endif
 
 /*
  * Magic wand for lock operations. Every operation checks if certain
@@ -120,18 +133,6 @@ rw_exit_write(struct rwlock *rwl)
 	    rw_cas(&rwl->rwl_owner, owner, 0)))
 		rw_exit(rwl);
 }
-
-#ifndef rw_cas
-int
-rw_cas(volatile unsigned long *p, unsigned long o, unsigned long n)
-{
-	if (*p != o)
-		return (1);
-	*p = n;
-
-	return (0);
-}
-#endif
 
 #ifdef DIAGNOSTIC
 /*
