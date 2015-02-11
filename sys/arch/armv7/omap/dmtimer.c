@@ -153,7 +153,7 @@ dmtimer_attach(struct device *parent, struct device *self, void *args)
 
 	if (bus_space_map(sc->sc_iot, aa->aa_dev->mem[0].addr,
 	    aa->aa_dev->mem[0].size, 0, &ioh))
-		panic("%s: bus_space_map failed!\n", __func__);
+		panic("%s: bus_space_map failed!", __func__);
 
 
 	prcm_setclock(1, PRCM_CLK_SPEED_32);

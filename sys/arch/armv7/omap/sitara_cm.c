@@ -383,7 +383,7 @@ sitara_cm_attach(struct device *parent, struct device *self, void *aux)
 
 	if (bus_space_map(aa->aa_iot, aa->aa_dev->mem[0].addr,
 	    aa->aa_dev->mem[0].size, 0, &sc->sc_ioh) != 0)
-		panic("%s: bus_space_map failed!\n", __func__);
+		panic("%s: bus_space_map failed!", __func__);
 
 	sitara_cm_sc = sc;
 

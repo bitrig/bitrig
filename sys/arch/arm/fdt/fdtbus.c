@@ -162,7 +162,7 @@ fdt_dev_list_insert(void *node, struct device *child)
 
 	fe = malloc(sizeof(*fe), M_DEVBUF, M_NOWAIT|M_ZERO);
 	if (fe == NULL)
-		panic("%s: cannot allocate memory\n", __func__);
+		panic("%s: cannot allocate memory", __func__);
 
 	fe->fe_node = node;
 	fe->fe_dev = child;
@@ -252,7 +252,7 @@ fdt_attach_interrupt_controller(struct device *self)
 	    "interrupt-controller")) != NULL) {
 		ie = malloc(sizeof(*ie), M_DEVBUF, M_NOWAIT|M_ZERO);
 		if (ie == NULL)
-			panic("%s: cannot allocate memory\n", __func__);
+			panic("%s: cannot allocate memory", __func__);
 
 		ie->ie_node = node;
 		ie->ie_parent = fdt_get_interrupt_controller(node);

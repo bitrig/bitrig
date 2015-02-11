@@ -154,7 +154,7 @@ arml2cc_attach(struct device *parent, struct device *self, void *args)
 	arml2cc_sc = sc;
 
 	if (bus_space_read_4(sc->sc_iot, sc->sc_ioh, L2C_CTL))
-		panic("L2 Cache controller was already enabled\n");
+		panic("L2 Cache controller was already enabled");
 
 	sc->sc_dcache_line_size = 32 << (bus_space_read_4(sc->sc_iot, sc->sc_ioh, L2C_CACHE_TYPE) & L2C_CACHE_TYPE_LINESIZE);
 	sc->sc_waymask = (8 << ((bus_space_read_4(sc->sc_iot, sc->sc_ioh, L2C_AUXCTL)

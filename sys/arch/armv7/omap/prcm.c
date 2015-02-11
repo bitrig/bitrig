@@ -283,7 +283,7 @@ prcm_v3_bit(int mod)
 	case PRCM_GPIO5:
 		return PRCM_CLK_EN_GPIO6;
 	default:
-		panic("%s: module not found\n", __func__);
+		panic("%s: module not found", __func__);
 	}
 }
 
@@ -326,7 +326,7 @@ prcm_am335x_clkctrl(int mod)
 	case PRCM_I2C2:
 		return PRCM_AM335X_I2C2_CLKCTRL;
 	default:
-		panic("%s: module not found\n", __func__);
+		panic("%s: module not found", __func__);
 	}
 }
 
@@ -412,7 +412,7 @@ prcm_v4_enablemodule(struct prcm_softc *sc, int mod)
 			/* XXX */
 			break;
 	default:
-		panic("%s: module not found\n", __func__);
+		panic("%s: module not found", __func__);
 	}
 }
 

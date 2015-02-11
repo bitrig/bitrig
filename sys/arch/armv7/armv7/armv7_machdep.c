@@ -924,7 +924,7 @@ platform_bootconfig_dram(BootConfig *bootconfig, psize_t *memstart, psize_t *mem
 	int loop;
 
 	if (bootconfig->dramblocks == 0)
-		panic("%s: dramblocks not set up!\n", __func__);
+		panic("%s: dramblocks not set up!", __func__);
 
 	*memstart = bootconfig->dram[0].address;
 	*memsize = bootconfig->dram[0].pages * PAGE_SIZE;

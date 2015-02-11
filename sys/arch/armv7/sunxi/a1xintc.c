@@ -342,7 +342,7 @@ a1xintc_intr_establish(int irq, int lvl, int (*f)(void *), void *arg, char *name
 	uint32_t er;
 
 	if (irq <= 0 || irq >= NIRQ)
-		panic("intr_establish: bogus irq %d %s\n", irq, name);
+		panic("intr_establish: bogus irq %d %s", irq, name);
 
 	DPRINTF(("intr_establish: irq %d level %d [%s]\n", irq, lvl,
 	    name != NULL ? name : "NULL"));
@@ -353,7 +353,7 @@ a1xintc_intr_establish(int irq, int lvl, int (*f)(void *), void *arg, char *name
 	ih = (struct intrhand *)malloc (sizeof *ih, M_DEVBUF,
 	    cold ? M_NOWAIT : M_WAITOK);
 	if (ih == NULL)
-		panic("intr_establish: can't malloc handler info\n");
+		panic("intr_establish: can't malloc handler info");
 	ih->ih_fun = f;
 	ih->ih_arg = arg;
 	ih->ih_ipl = lvl;
