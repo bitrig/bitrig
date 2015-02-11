@@ -1,4 +1,4 @@
-/*	$OpenBSD: lock.h,v 1.23 2014/07/09 13:32:00 guenther Exp $	*/
+/*	$OpenBSD: lock.h,v 1.25 2015/02/11 07:22:15 dlg Exp $	*/
 
 /* 
  * Copyright (c) 1995
@@ -37,10 +37,6 @@
 
 #ifndef	_LOCK_H_
 #define	_LOCK_H_
-
-#ifdef _KERNEL
-#include <machine/lock.h>
-#endif
 
 #include <sys/rwlock.h>
 
