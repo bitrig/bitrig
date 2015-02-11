@@ -27,6 +27,7 @@
 .Op Fl l Ar loadaddr
 .Op Fl n Ar name
 .Op Fl o Ar os
+.Op Fl r
 .Op Fl t Ar type
 .Ar infile outfile
 .Sh DESCRIPTION
@@ -56,6 +57,8 @@ can be either
 .Dq Linux
 or
 .Dq OpenBSD .
+.It Fl r
+Produce a raw binary instead of a U-Boot image.
 .It Fl t Ar type
 Sets the type of the object to be loaded.
 For a list of valid arguments, see below.

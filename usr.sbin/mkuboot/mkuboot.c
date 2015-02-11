@@ -144,16 +144,19 @@ main(int argc, char *argv[])
 	const char *os = "OpenBSD";
 	const char *type = "kernel";
 	const char *imgname = "boot";
-	int ifd, ofd;
+	int ifd, ofd, raw = 0;
 	uint32_t fsize;
 	u_long crc;
 	int c, ep, load;
 
 	ep = load = 0;
-	while ((c = getopt(argc, argv, "a:e:l:n:o:t:")) != -1) {
+	while ((c = getopt(argc, argv, "a:e:l:n:o:rt:")) != -1) {
 		switch (c) {
 		case 'a':
 			arch = optarg;
+			break;
+		case 'r':
+			raw = 1;
 			break;
 		case 'e':
 			sscanf(optarg, "0x%x", &ep);
@@ -233,7 +236,7 @@ main(int argc, char *argv[])
 	}
 
 	/* Write initial header. */
-	if (write(ofd, &ih, sizeof ih) != sizeof ih)
+	if (!raw && write(ofd, &ih, sizeof ih) != sizeof ih)
 		err(1, "%s", oname);
 
 	/* Write data, calculating the data CRC as we go. */
@@ -270,7 +273,7 @@ main(int argc, char *argv[])
 	/* Write finalized header. */
 	if (lseek(ofd, 0, SEEK_SET) != 0)
 		err(1, "%s", oname);
-	if (write(ofd, &ih, sizeof ih) != sizeof ih)
+	if (!raw && write(ofd, &ih, sizeof ih) != sizeof ih)
 		err(1, "%s", oname);
 
 	return(0);
