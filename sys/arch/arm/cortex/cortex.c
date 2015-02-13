@@ -135,6 +135,7 @@ cortexsearch(struct device *parent, void *vcf, void *aux)
 	ca.ca_name = cf->cf_driver->cd_name;
 	ca.ca_iot = &armv7_bs_tag;
 	ca.ca_dmat = &cortex_bus_dma_tag;
+	ca.ca_node = NULL;
 	ca.ca_periphbase = armv7_periphbase();
 
 	/* allow for devices to be disabled in UKC */
