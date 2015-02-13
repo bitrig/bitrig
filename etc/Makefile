@@ -1,7 +1,7 @@
 #	$OpenBSD: Makefile,v 1.400 2014/12/03 20:13:49 florian Exp $
 
 TZDIR=		/usr/share/zoneinfo
-LOCALTIME=	Canada/Mountain
+LOCALTIME=	UTC
 MTREEDIR=	/etc/mtree
 
 NOOBJ=
