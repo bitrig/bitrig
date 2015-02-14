@@ -30,7 +30,6 @@
 ./usr/include/arm/limits.h
 ./usr/include/arm/lock.h
 ./usr/include/arm/machdep.h
-./usr/include/arm/mplock.h
 ./usr/include/arm/mutex.h
 ./usr/include/arm/param.h
 ./usr/include/arm/pcb.h
@@ -87,7 +86,6 @@
 ./usr/include/armv7/lock.h
 ./usr/include/armv7/machine_reg.h
 ./usr/include/armv7/math.h
-./usr/include/armv7/mplock.h
 ./usr/include/armv7/mutex.h
 ./usr/include/armv7/param.h
 ./usr/include/armv7/pcb.h
