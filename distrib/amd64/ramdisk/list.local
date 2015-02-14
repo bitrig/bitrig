@@ -1,0 +1,8 @@
+# add any site local files to include in the ramdisk here
+#
+# To make an automatic install ramdisk, first create a file called
+# auto_install.conf in the same directory as this file and uncomment the line
+# below. The contents and format of auto_install.conf is documented in the
+# AUTOINSTALL(8) man page.
+#
+# COPY  ${CURDIR}/auto_install.conf     auto_install.conf
