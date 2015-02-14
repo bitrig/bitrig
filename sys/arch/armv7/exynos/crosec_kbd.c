@@ -179,8 +179,6 @@ cros_ec_get_keystate(struct cros_ec_softc *sc)
 				wskbd_input(sc->keyboard.wskbddev, WSCONS_EVENT_KEY_UP, off+col);
 			} else if (sc->keyboard.state[off+col]) {
 				//printf("row %d col %d id %d repeated\n", row, col, off+col);
-				if (sc->keyboard.polling)
-					return off+col;
 			}
 		}
 	}
