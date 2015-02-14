@@ -4,7 +4,7 @@ REV=		${OSrev}
 IMAGE=		mr.fs
 CBIN?=		instbin
 CRUNCHCONF?=	${CBIN}.conf
-LISTS=		${.CURDIR}/list
+LISTS=		${.CURDIR}/list ${.CURDIR}/list.local
 UTILS?=		${.CURDIR}/../../miniroot
 
 FSDIR=		${.OBJDIR}/fs
