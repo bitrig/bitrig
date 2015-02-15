@@ -164,22 +164,18 @@ static int	 g_Ctoc(const Char *, char *, size_t);
 static int	 g_lstat(Char *, struct stat *, glob_t *);
 static DIR	*g_opendir(Char *, glob_t *);
 static const Char *g_strchr(const Char *, wchar_t);
-#ifdef notdef
-static Char	*g_strcat(Char *, const Char *);
-#endif
 static int	 g_stat(Char *, struct stat *, glob_t *);
 static int	 glob0(const Char *, glob_t *, struct glob_limit *);
 static int	 glob1(Char *, glob_t *, struct glob_limit *);
 static int	 glob2(Char *, Char *, Char *, Char *, glob_t *,
-    struct glob_limit *);
+		    struct glob_limit *);
 static int	 glob3(Char *, Char *, Char *, Char *, Char *, glob_t *,
-    struct glob_limit *);
+		    struct glob_limit *);
 static int	 globextend(const Char *, glob_t *, struct glob_limit *);
-static const Char *
-		 globtilde(const Char *, Char *, size_t, glob_t *);
+static const Char *globtilde(const Char *, Char *, size_t, glob_t *);
 static int	 globexp1(const Char *, glob_t *, struct glob_limit *);
 static int	 globexp2(const Char *, const Char *, glob_t *, int *,
-    struct glob_limit *);
+		    struct glob_limit *);
 static int	 match(Char *, Char *, Char *);
 #ifdef DEBUG
 static void	 qprintf(const char *, Char *);
@@ -249,9 +245,9 @@ glob(const char * __restrict pattern, int flags,
 	*bufnext = EOS;
 
 	if (flags & GLOB_BRACE)
-	    return (globexp1(patbuf, pglob, &limit));
+		return (globexp1(patbuf, pglob, &limit));
 	else
-	    return (glob0(patbuf, pglob, &limit));
+		return (glob0(patbuf, pglob, &limit));
 }
 
 /*
@@ -273,13 +269,13 @@ globexp1(const Char *pattern, glob_t *pglob, struct glob_limit *limit)
 
 	/* Protect a single {}, for find(1), like csh */
 	if (pattern[0] == LBRACE && pattern[1] == RBRACE && pattern[2] == EOS)
-		return glob0(pattern, pglob, limit);
+		return (glob0(pattern, pglob, limit));
 
 	while ((ptr = g_strchr(ptr, LBRACE)) != NULL)
 		if (!globexp2(ptr, pattern, pglob, &rv, limit))
-			return rv;
+			return (rv);
 
-	return glob0(pattern, pglob, limit);
+	return (glob0(pattern, pglob, limit));
 }
 
 
@@ -304,7 +300,7 @@ globexp2(const Char *ptr, const Char *pattern, glob_t *pglob, int *rv,
 	ls = lm;
 
 	/* Find the balanced brace */
-	for (i = 0, pe = ++ptr; *pe; pe++)
+	for (i = 0, pe = ++ptr; *pe; pe++) {
 		if (*pe == LBRACKET) {
 			/* Ignore everything between [] */
 			for (pm = pe++; *pe != RBRACKET && *pe != EOS; pe++)
@@ -316,14 +312,14 @@ globexp2(const Char *ptr, const Char *pattern, glob_t *pglob, int *rv,
 				 */
 				pe = pm;
 			}
-		}
-		else if (*pe == LBRACE)
+		} else if (*pe == LBRACE) {
 			i++;
-		else if (*pe == RBRACE) {
+		} else if (*pe == RBRACE) {
 			if (i == 0)
 				break;
 			i--;
 		}
+	}
 
 	/* Non matching braces; just glob the pattern */
 	if (i != 0 || *pe == EOS) {
@@ -331,7 +327,7 @@ globexp2(const Char *ptr, const Char *pattern, glob_t *pglob, int *rv,
 		return (0);
 	}
 
-	for (i = 0, pl = pm = ptr; pm <= pe; pm++)
+	for (i = 0, pl = pm = ptr; pm <= pe; pm++) {
 		switch (*pm) {
 		case LBRACKET:
 			/* Ignore everything between [] */
@@ -352,8 +348,8 @@ globexp2(const Char *ptr, const Char *pattern, glob_t *pglob, int *rv,
 
 		case RBRACE:
 			if (i) {
-			    i--;
-			    break;
+				i--;
+				break;
 			}
 			/* FALLTHROUGH */
 		case COMMA:
@@ -384,6 +380,7 @@ globexp2(const Char *ptr, const Char *pattern, glob_t *pglob, int *rv,
 		default:
 			break;
 		}
+	}
 	*rv = 0;
 	return (0);
 }
@@ -405,7 +402,7 @@ globtilde(const Char *pattern, Char *patbuf, size_t patbuf_len, glob_t *pglob)
 		return (pattern);
 
 	/* 
-	 * Copy up to the end of the string or / 
+	 * Copy up to the end of the string or /
 	 */
 	eb = &patbuf[patbuf_len - 1];
 	for (p = pattern + 1, h = (char *) patbuf;
@@ -429,8 +426,7 @@ globtilde(const Char *pattern, Char *patbuf, size_t patbuf_len, glob_t *pglob)
 			else
 				return (pattern);
 		}
-	}
-	else {
+	} else {
 		/*
 		 * Expand a ~user
 		 */
@@ -511,7 +507,7 @@ glob0(const Char *pattern, glob_t *pglob, struct glob_limit *limit)
 			 * to avoid exponential behavior
 			 */
 			if (bufnext == patbuf || bufnext[-1] != M_ALL)
-			    *bufnext++ = M_ALL;
+				*bufnext++ = M_ALL;
 			break;
 		default:
 			*bufnext++ = CHAR(c);
@@ -524,7 +520,7 @@ glob0(const Char *pattern, glob_t *pglob, struct glob_limit *limit)
 #endif
 
 	if ((err = glob1(patbuf, pglob, limit)) != 0)
-		return(err);
+		return (err);
 
 	/*
 	 * If there was no match we are going to append the pattern
@@ -828,7 +824,7 @@ match(Char *name, Char *pat, Char *patend)
 				return (0);
 			if ((negate_range = ((*pat & M_MASK) == M_NOT)) != EOS)
 				++pat;
-			while (((c = *pat++) & M_MASK) != M_END)
+			while (((c = *pat++) & M_MASK) != M_END) {
 				if ((*pat & M_MASK) == M_RNG) {
 					if (table->__collate_load_error ?
 					    CHAR(c) <= CHAR(k) && CHAR(k) <= CHAR(pat[1]) :
@@ -839,6 +835,7 @@ match(Char *name, Char *pat, Char *patend)
 					pat += 2;
 				} else if (c == k)
 					ok = 1;
+			}
 			if (ok == negate_range)
 				return (0);
 			break;
@@ -896,7 +893,7 @@ g_lstat(Char *fn, struct stat *sb, glob_t *pglob)
 		return (-1);
 	}
 	if (pglob->gl_flags & GLOB_ALTDIRFUNC)
-		return((*pglob->gl_lstat)(buf, sb));
+		return ((*pglob->gl_lstat)(buf, sb));
 	return (lstat(buf, sb));
 }
 
