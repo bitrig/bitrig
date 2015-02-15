@@ -122,6 +122,7 @@ int test_glob(struct gl_entry *entry)
 			goto badmode;
 		}
 		free(entry->results[i]);
+		entry->results[i] = NULL;
 	}
 	return (0);
  badmode:
