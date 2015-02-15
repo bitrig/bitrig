@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_map.c,v 1.185 2015/02/09 07:14:38 kettenis Exp $	*/
+/*	$OpenBSD: uvm_map.c,v 1.186 2015/02/15 21:34:33 miod Exp $	*/
 /*	$NetBSD: uvm_map.c,v 1.86 2000/11/27 08:40:03 chs Exp $	*/
 
 /*
@@ -3042,7 +3042,7 @@ uvmspace_init(struct vmspace *vm, struct pmap *pmap, vaddr_t min, vaddr_t max,
 	vm->vm_refcnt = 1;
 
 	if (remove_holes)
-		pmap_remove_holes(&vm->vm_map);
+		pmap_remove_holes(vm);
 }
 
 /*
