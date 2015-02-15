@@ -114,3 +114,10 @@ fake/bin/cat
 [fake/b[a-z]*] <0x4000>
 fake/bin 0040755
 
+[fake/u8/[[:alpha:]]] <0x0>
+fake/u8/Ä
+fake/u8/Ö
+fake/u8/Ü
+fake/u8/ä
+fake/u8/ö
+fake/u8/ü

@@ -6,6 +6,7 @@
 
 #include <err.h>
 #include <glob.h>
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,6 +31,8 @@ main(int argc, char **argv)
 	int errors = 0, lineno, mode;
 	struct gl_entry entry;
 	size_t len;
+
+	setlocale(LC_CTYPE, "en_US.UTF-8");
 
 	if (argc > 1) {
 		if ((fp = fopen(argv[1], "r")) == NULL)

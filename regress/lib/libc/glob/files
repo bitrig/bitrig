@@ -45,3 +45,9 @@ fake/bin/sync
 fake/bin/systrace
 fake/bin/tar
 fake/bin/test
+fake/u8/Ä
+fake/u8/Ö
+fake/u8/Ü
+fake/u8/ä
+fake/u8/ö
+fake/u8/ü
