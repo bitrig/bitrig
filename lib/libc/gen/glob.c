@@ -35,8 +35,6 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-
 /*
  * glob(3) -- a superset of the one defined in POSIX 1003.2.
  *
@@ -75,6 +73,7 @@
  * 3. State-dependent encodings are not currently supported.
  */
 
+#include <sys/cdefs.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 
@@ -90,7 +89,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <wchar.h>
+#include <wctype.h>
 
+#include "charclass.h"
 #include "../locale/collate.h"
 
 /*
@@ -164,6 +165,7 @@ typedef char Char;
 #define	M_ONE		META('?')
 #define	M_RNG		META('-')
 #define	M_SET		META('[')
+#define	M_CLASS		META(':')
 #define	ismeta(c)	(((c)&M_QUOTE) != 0)
 
 
@@ -174,6 +176,8 @@ static int	 g_lstat(Char *, struct stat *, glob_t *);
 static DIR	*g_opendir(Char *, glob_t *);
 static const Char *g_strchr(const Char *, wchar_t);
 static int	 g_stat(Char *, struct stat *, glob_t *);
+static int	 g_strncmp(const Char *, const char *, size_t);
+static int	 g_charclass(const Char **, Char **);
 static int	 glob0(const Char *, glob_t *, struct glob_limit *);
 static int	 glob1(Char *, glob_t *, struct glob_limit *);
 static int	 glob2(Char *, Char *, Char *, Char *, glob_t *,
@@ -459,6 +463,47 @@ globtilde(const Char *pattern, Char *patbuf, size_t patbuf_len, glob_t *pglob)
 	return (patbuf);
 }
 
+static int
+g_strncmp(const Char *s1, const char *s2, size_t n)
+{
+	int rv = 0;
+
+	while (n--) {
+		rv = *(Char *)s1 - *(const unsigned char *)s2++;
+		if (rv)
+			break;
+		if (*s1++ == '\0')
+			break;
+	}
+	return (rv);
+}
+
+static int
+g_charclass(const Char **patternp, Char **bufnextp)
+{
+	const Char *pattern = *patternp + 1;
+	Char *bufnext = *bufnextp;
+	const Char *colon;
+	struct cclass *cc;
+	size_t len;
+
+	if ((colon = g_strchr(pattern, ':')) == NULL || colon[1] != ']')
+		return (1);	/* not a character class */
+
+	len = (size_t)(colon - pattern);
+	for (cc = cclasses; cc->name != NULL; cc++) {
+		if (!g_strncmp(pattern, cc->name, len) && cc->name[len] == '\0')
+			break;
+	}
+	if (cc->name == NULL)
+		return (-1);	/* invalid character class */
+	*bufnext++ = M_CLASS;
+	*bufnext++ = (Char)(cc - &cclasses[0]);
+	*bufnextp = bufnext;
+	*patternp += len + 3;
+
+	return (0);
+}
 
 /*
  * The main glob() routine: compiles the pattern (optionally processing
@@ -497,6 +542,20 @@ glob0(const Char *pattern, glob_t *pglob, struct glob_limit *limit)
 				*bufnext++ = M_NOT;
 			c = *qpatnext++;
 			do {
+				if (c == LBRACKET && *qpatnext == ':') {
+					do {
+						err = g_charclass(&qpatnext,
+						    &bufnext);
+						if (err)
+							break;
+						c = *qpatnext++;
+					} while (c == LBRACKET && *qpatnext == ':');
+					if (err == -1 &&
+					    !(pglob->gl_flags & GLOB_NOCHECK))
+						return GLOB_NOMATCH;
+					if (c == RBRACKET)
+						break;
+				}
 				*bufnext++ = CHAR(c);
 				if (*qpatnext == RANGE &&
 				    (c = qpatnext[1]) != RBRACKET) {
@@ -899,7 +958,13 @@ match(Char *name, Char *pat, Char *patend)
 			if ((negate_range = ((*pat & M_MASK) == M_NOT)) != EOS)
 				++pat;
 			while (((c = *pat++) & M_MASK) != M_END) {
-				if ((*pat & M_MASK) == M_RNG) {
+				if ((c & M_MASK) == M_CLASS) {
+					Char idx = *pat & M_MASK;
+					if (idx < NCCLASSES &&
+					    cclasses[idx].iswctype(k))
+						ok = 1;
+					++pat;
+				} else if ((*pat & M_MASK) == M_RNG) {
 					if (table->__collate_load_error ?
 					    CHAR(c) <= CHAR(k) && CHAR(k) <= CHAR(pat[1]) :
 					       __collate_range_cmp(table, CHAR(c), CHAR(k)) <= 0
