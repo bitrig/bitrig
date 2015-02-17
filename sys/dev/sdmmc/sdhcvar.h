@@ -24,10 +24,10 @@
 struct sdhc_host;
 
 struct sdhc_softc {
-	struct device sc_dev;
-	struct sdhc_host **sc_host;
-	int sc_nhosts;
-	u_int sc_flags;
+	struct device		sc_dev;
+	struct sdhc_host	**sc_host;
+	int			sc_nhosts;
+	uint32_t		sc_flags;
 };
 
 /* Host controller functions called by the attachment driver. */
