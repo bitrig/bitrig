@@ -28,16 +28,20 @@ struct sdhc_softc {
 	struct sdhc_host	**sc_host;
 	int			sc_nhosts;
 	uint32_t		sc_flags;
+	uint32_t		sc_caps;
 };
 
 /* Host controller functions called by the attachment driver. */
 int	sdhc_host_found(struct sdhc_softc *, bus_space_tag_t,
-	    bus_space_handle_t, bus_size_t, int, u_int32_t);
+	    bus_space_handle_t, bus_size_t);
 int	sdhc_activate(struct device *, int);
 void	sdhc_shutdown(void *);
 int	sdhc_intr(void *);
 
 /* flag values */
-#define SDHC_F_NOPWR0		(1 << 0)
+#define	SDHC_F_USE_DMA		0x0001
+#define	SDHC_F_FORCE_DMA	0x0002
+#define	SDHC_F_NOPWR0		0x0004
+#define	SDHC_F_HOSTCAPS		0x0200	/* No device provided capabilities */
 
 #endif

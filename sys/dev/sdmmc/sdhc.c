@@ -129,10 +129,11 @@ struct cfdriver sdhc_cd = {
  */
 int
 sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
-    bus_space_handle_t ioh, bus_size_t iosize, int usedma, u_int32_t caps)
+    bus_space_handle_t ioh, bus_size_t iosize)
 {
 	struct sdmmcbus_attach_args saa;
 	struct sdhc_host *hp;
+	uint32_t caps = 0;
 	int error = 1;
 #ifdef SDHC_DEBUG
 	u_int16_t version;
@@ -166,11 +167,15 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	(void)sdhc_host_reset(hp);
 
 	/* Determine host capabilities. */
-	if (caps == 0)
+	if (ISSET(sc->sc_flags, SDHC_F_HOSTCAPS))
+		caps = sc->sc_caps;
+	else
 		caps = HREAD4(hp, SDHC_CAPABILITIES);
 
 	/* Use DMA if the host system and the controller support it. */
-	if (usedma && ISSET(caps, SDHC_DMA_SUPPORT))
+	if (ISSET(sc->sc_flags, SDHC_F_FORCE_DMA) ||
+	    (ISSET(sc->sc_flags, SDHC_F_USE_DMA) &&
+	    ISSET(caps, SDHC_DMA_SUPPORT)))
 		SET(hp->flags, SHF_USE_DMA);
 
 	/*

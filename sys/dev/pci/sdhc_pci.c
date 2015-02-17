@@ -109,7 +109,6 @@ sdhc_pci_attach(struct device *parent, struct device *self, void *aux)
 	bus_space_tag_t iot;
 	bus_space_handle_t ioh;
 	bus_size_t size;
-	u_int32_t caps = 0;
 
 	sc->sc_pc = pa->pa_pc;
 	sc->sc_tag = pa->pa_tag;
@@ -148,6 +147,8 @@ sdhc_pci_attach(struct device *parent, struct device *self, void *aux)
 
 	/* Enable use of DMA if supported by the interface. */
 	usedma = PCI_INTERFACE(pa->pa_class) == SDHC_PCI_INTERFACE_DMA;
+	if (usedma)
+		sc->sc.sc_flags |= SDHC_F_USE_DMA;
 
 	/*
 	 * Map and attach all hosts supported by the host controller.
@@ -177,7 +178,7 @@ sdhc_pci_attach(struct device *parent, struct device *self, void *aux)
 			continue;
 		}
 
-		if (sdhc_host_found(&sc->sc, iot, ioh, size, usedma, caps) != 0)
+		if (sdhc_host_found(&sc->sc, iot, ioh, size) != 0)
 			/* XXX: sc->sc_host leak */
 			printf("%s at 0x%x: can't initialize host\n",
 			    sc->sc.sc_dev.dv_xname, reg);
