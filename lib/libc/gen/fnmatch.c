@@ -53,12 +53,14 @@
  *    to support state-dependent encodings.
  */
 
+#include <ctype.h>
 #include <fnmatch.h>
 #include <limits.h>
 #include <string.h>
 #include <wchar.h>
 #include <wctype.h>
 
+#include "charclass.h"
 #include "../locale/collate.h"
 
 #define	EOS	'\0'
@@ -70,6 +72,7 @@
 static int rangematch(const char *, wchar_t, int, char **, mbstate_t *);
 static int fnmatch1(const char *, const char *, const char *, int, mbstate_t,
 		mbstate_t);
+static int classmatch(const char **, wchar_t, int);
 
 int
 fnmatch(pattern, string, flags)
@@ -217,7 +220,7 @@ rangematch(pattern, test, flags, newp, patmbs)
 	char **newp;
 	mbstate_t *patmbs;
 {
-	int negate, ok;
+	int negate, ok, n;
 	wchar_t c, c2;
 	size_t pclen;
 	const char *origpat;
@@ -248,6 +251,11 @@ rangematch(pattern, test, flags, newp, patmbs)
 		if (*pattern == ']' && pattern > origpat) {
 			pattern++;
 			break;
+		} else if (pattern[0] == '[' && pattern[1] == ':' &&
+		    (n = classmatch(&pattern, test, flags)) != RANGE_ERROR) {
+			if (n == RANGE_MATCH)
+				ok = 1;
+			continue;
 		} else if (*pattern == '\0') {
 			return (RANGE_ERROR);
 		} else if (*pattern == '/' && (flags & FNM_PATHNAME)) {
@@ -289,4 +297,34 @@ rangematch(pattern, test, flags, newp, patmbs)
 
 	*newp = (char *)pattern;
 	return (ok == negate ? RANGE_NOMATCH : RANGE_MATCH);
+}
+
+static int
+classmatch(const char **pattern, wchar_t test, int flags)
+{
+	const char *p, *col;
+	struct cclass *cc;
+	size_t len;
+
+	p = *pattern + strlen("[:");
+
+	if (flags & FNM_CASEFOLD &&
+	    strncmp(p, "upper:]", strlen("upper:]")) == 0)
+		p = "lower:]";
+
+	col = strstr(p, ":]");
+	if (col == NULL)
+		return (RANGE_ERROR);
+	len = col - p;
+
+	for (cc = cclasses; cc->name != NULL; cc++) {
+		if (strncmp(p, cc->name, len) == 0 && cc->name[len] == EOS) {
+			if (cc->iswctype((wint_t)test)) {
+				*pattern += strlen("[:") + len + strlen(":]");
+				return (RANGE_MATCH);
+			}
+			return (RANGE_NOMATCH);
+		}
+	}
+	return (RANGE_ERROR);
 }
