@@ -51,6 +51,7 @@ STD_HEADERS=	__bit_reference\
 		__hash_table\
 		__locale\
 		__mutex_base\
+		__refstring\
 		__split_buffer\
 		__sso_allocator\
 		__std_stream\

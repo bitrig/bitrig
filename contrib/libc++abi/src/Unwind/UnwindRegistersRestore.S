@@ -347,7 +347,7 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm20restoreCoreAndJu
 @  values pointer is in r0
 @
   .p2align 2
-DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFLDMDEPy)
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFLDMDEPd)
 #if defined(__ARM_FP)
   @ VFP and iwMMX instructions are only available when compiling with the flags
   @ that enable them. We do not want to do that in the library (because we do not
@@ -371,7 +371,7 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFL
 @  values pointer is in r0
 @
   .p2align 2
-DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFLDMXEPy)
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFLDMXEPd)
 #if defined(__ARM_FP)
 #if __ARM_ARCH < 7
   ldc p11, cr0, [r0], {0x21}  @ fldmiax r0, {d0-d15}
@@ -388,7 +388,7 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFL
 @  values pointer is in r0
 @
   .p2align 2
-DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm12restoreVFPv3EPy)
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm12restoreVFPv3EPd)
 #if defined(__ARM_FP)
 #ifndef __ARM_NEON
   ldcl p11, cr0, [r0], {0x20}  @ vldm r0, {d16-d31}
@@ -405,7 +405,7 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm12restoreVFPv3EPy)
 @  values pointer is in r0
 @
   .p2align 2
-DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm12restoreiWMMXEPy)
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm12restoreiWMMXEPd)
 #if (!defined(__ARM_ARCH_6M__) && !defined(__ARM_ARCH_6SM__)) || __ARM_WMMX
   ldcl p1, cr0, [r0], #8  @ wldrd wR0, [r0], #8
   ldcl p1, cr1, [r0], #8  @ wldrd wR1, [r0], #8

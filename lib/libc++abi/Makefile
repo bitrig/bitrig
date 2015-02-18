@@ -17,6 +17,7 @@ SRCS+=		abort_message.cpp\
 		cxa_handlers.hpp\
 		cxa_new_delete.cpp\
 		cxa_personality.cpp\
+		cxa_thread_atexit.cpp\
 		cxa_unexpected.cpp\
 		cxa_vector.cpp\
 		cxa_virtual.cpp\
@@ -24,16 +25,16 @@ SRCS+=		abort_message.cpp\
 		private_typeinfo.cpp\
 		stdexcept.cpp\
 		typeinfo.cpp\
+		Unwind-EHABI.cpp\
 		Unwind-sjlj.c\
 		UnwindLevel1-gcc-ext.c\
 		UnwindLevel1.c\
 		UnwindRegistersRestore.S\
 		UnwindRegistersSave.S\
-		Unwind_BitrigExtras.cpp\
 		libunwind.cpp
 
 WARNS=		0
-CFLAGS+=	-nostdlib -I${CXXINCLUDEDIR}
+CFLAGS+=	-nostdlib -I${CXXINCLUDEDIR} -funwind-tables
 CPPFLAGS+=	${CFLAGS}
 .if empty(CXXFLAGS:M-std=*)
 CXXFLAGS+=	-std=c++11

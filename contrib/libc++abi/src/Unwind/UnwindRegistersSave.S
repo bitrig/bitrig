@@ -326,7 +326,7 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
 @  values pointer is in r0
 @
   .p2align 2
-DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMDEPy)
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMDEPd)
 #if defined(__ARM_FP)
 #if __ARM_ARCH < 7
   stc p11, cr0, [r0], {0x20}  @ fstmiad r0, {d0-d15}
@@ -343,7 +343,7 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMD
 @  values pointer is in r0
 @
   .p2align 2
-DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMXEPy)
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMXEPd)
 #if defined(__ARM_FP)
 #if __ARM_ARCH < 7
   stc p11, cr0, [r0], {0x21}  @ fstmiax r0, {d0-d15}
@@ -360,7 +360,7 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMX
 @  values pointer is in r0
 @
   .p2align 2
-DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm9saveVFPv3EPy)
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm9saveVFPv3EPd)
 #if defined(__ARM_FP)
   @ VFP and iwMMX instructions are only available when compiling with the flags
   @ that enable them. We do not want to do that in the library (because we do not
@@ -384,7 +384,7 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm9saveVFPv3EPy)
 @  values pointer is in r0
 @
   .p2align 2
-DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm9saveiWMMXEPy)
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm9saveiWMMXEPd)
 #if (!defined(__ARM_ARCH_6M__) && !defined(__ARM_ARCH_6SM__)) || __ARM_WMMX
   stcl p1, cr0, [r0], #8  @ wstrd wR0, [r0], #8
   stcl p1, cr1, [r0], #8  @ wstrd wR1, [r0], #8

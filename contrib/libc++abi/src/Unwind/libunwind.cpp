@@ -55,7 +55,7 @@ _LIBUNWIND_EXPORT int unw_init_local(unw_cursor_t *cursor,
 #elif __arm64__
   new ((void *)cursor) UnwindCursor<LocalAddressSpace, Registers_arm64>(
                                  context, LocalAddressSpace::sThisAddressSpace);
-#elif LIBCXXABI_ARM_EHABI
+#elif __arm__
   new ((void *)cursor) UnwindCursor<LocalAddressSpace, Registers_arm>(
                                  context, LocalAddressSpace::sThisAddressSpace);
 #endif
