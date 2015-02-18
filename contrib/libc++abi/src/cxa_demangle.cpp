@@ -38,7 +38,8 @@ template <class C>
 template <class C>
     const char* parse_encoding(const char* first, const char* last, C& db);
 template <class C>
-    const char* parse_name(const char* first, const char* last, C& db);
+    const char* parse_name(const char* first, const char* last, C& db,
+                           bool* ends_with_template_args = 0);
 template <class C>
     const char* parse_expression(const char* first, const char* last, C& db);
 template <class C>
@@ -155,7 +156,11 @@ constexpr const char* float_data<double>::spec;
 template <>
 struct float_data<long double>
 {
+#if defined(__arm__)
+    static const size_t mangled_size = 16;
+#else
     static const size_t mangled_size = 20;  // May need to be adjusted to 16 or 24 on other platforms
+#endif
     static const size_t max_demangled_size = 40;
     static constexpr const char* spec = "%LaL";
 };
@@ -3893,7 +3898,8 @@ parse_template_args(const char* first, const char* last, C& db)
 
 template <class C>
 const char*
-parse_nested_name(const char* first, const char* last, C& db)
+parse_nested_name(const char* first, const char* last, C& db,
+                  bool* ends_with_template_args)
 {
     if (first != last && *first == 'N')
     {
@@ -3924,8 +3930,10 @@ parse_nested_name(const char* first, const char* last, C& db)
             return first;
         }
         bool pop_subs = false;
+        bool component_ends_with_template_args = false;
         while (*t0 != 'E')
         {
+            component_ends_with_template_args = false;
             const char* t1;
             switch (*t0)
             {
@@ -3995,6 +4003,7 @@ parse_nested_name(const char* first, const char* last, C& db)
                     db.names.back().first += name;
                     db.subs.push_back(typename C::sub_type(1, db.names.back(), db.names.get_allocator()));
                     t0 = t1;
+                    component_ends_with_template_args = true;
                 }
                 else
                     return first;
@@ -4026,6 +4035,8 @@ parse_nested_name(const char* first, const char* last, C& db)
         db.cv = cv;
         if (pop_subs && !db.subs.empty())
             db.subs.pop_back();
+        if (ends_with_template_args)
+            *ends_with_template_args = component_ends_with_template_args;
     }
     return first;
 }
@@ -4073,7 +4084,8 @@ parse_discriminator(const char* first, const char* last)
 
 template <class C>
 const char*
-parse_local_name(const char* first, const char* last, C& db)
+parse_local_name(const char* first, const char* last, C& db,
+                 bool* ends_with_template_args)
 {
     if (first != last && *first == 'Z')
     {
@@ -4095,7 +4107,8 @@ parse_local_name(const char* first, const char* last, C& db)
                     if (t1 != last && *t1 == '_')
                     {
                         t = t1 + 1;
-                        t1 = parse_name(t, last, db);
+                        t1 = parse_name(t, last, db,
+                                        ends_with_template_args);
                         if (t1 != t)
                         {
                             if (db.names.size() < 2)
@@ -4113,7 +4126,8 @@ parse_local_name(const char* first, const char* last, C& db)
                 break;
             default:
                 {
-                    const char* t1 = parse_name(t, last, db);
+                    const char* t1 = parse_name(t, last, db,
+                                                ends_with_template_args);
                     if (t1 != t)
                     {
                         // parse but ignore discriminator
@@ -4145,7 +4159,8 @@ parse_local_name(const char* first, const char* last, C& db)
 
 template <class C>
 const char*
-parse_name(const char* first, const char* last, C& db)
+parse_name(const char* first, const char* last, C& db,
+           bool* ends_with_template_args)
 {
     if (last - first >= 2)
     {
@@ -4157,14 +4172,16 @@ parse_name(const char* first, const char* last, C& db)
         {
         case 'N':
           {
-            const char* t1 = parse_nested_name(t0, last, db);
+            const char* t1 = parse_nested_name(t0, last, db,
+                                               ends_with_template_args);
             if (t1 != t0)
                 first = t1;
             break;
           }
         case 'Z':
           {
-            const char* t1 = parse_local_name(t0, last, db);
+            const char* t1 = parse_local_name(t0, last, db,
+                                              ends_with_template_args);
             if (t1 != t0)
                 first = t1;
             break;
@@ -4189,6 +4206,8 @@ parse_name(const char* first, const char* last, C& db)
                         db.names.pop_back();
                         db.names.back().first += tmp;
                         first = t1;
+                        if (ends_with_template_args)
+                            *ends_with_template_args = true;
                     }
                 }
                 else   // <unscoped-name>
@@ -4209,6 +4228,8 @@ parse_name(const char* first, const char* last, C& db)
                         db.names.pop_back();
                         db.names.back().first += tmp;
                         first = t1;
+                        if (ends_with_template_args)
+                            *ends_with_template_args = true;
                     }
                 }
             }
@@ -4472,7 +4493,9 @@ parse_encoding(const char* first, const char* last, C& db)
             break;
         default:
           {
-            const char* t = parse_name(first, last, db);
+            bool ends_with_template_args = false;
+            const char* t = parse_name(first, last, db,
+                                       &ends_with_template_args);
             unsigned cv = db.cv;
             unsigned ref = db.ref;
             if (t != first)
@@ -4488,8 +4511,7 @@ parse_encoding(const char* first, const char* last, C& db)
                     const typename C::String& nm = db.names.back().first;
                     if (nm.empty())
                         return first;
-                    if (!db.parsed_ctor_dtor_cv && nm.back() == '>' && nm[nm.size()-2] != '-'
-                                                                    && nm[nm.size()-2] != '>')
+                    if (!db.parsed_ctor_dtor_cv && ends_with_template_args)
                     {
                         t2 = parse_type(t, last, db);
                         if (t2 == t)
@@ -4825,32 +4847,33 @@ operator!=(const malloc_alloc<T>& x, const malloc_alloc<U>& y) noexcept
 const size_t bs = 4 * 1024;
 template <class T> using Alloc = short_alloc<T, bs>;
 template <class T> using Vector = std::vector<T, Alloc<T>>;
-using String = std::basic_string<char, std::char_traits<char>, malloc_alloc<char>>;
 
+template <class StrT>
 struct string_pair
 {
-    String first;
-    String second;
+    StrT first;
+    StrT second;
 
     string_pair() = default;
-    string_pair(String f) : first(std::move(f)) {}
-    string_pair(String f, String s)
+    string_pair(StrT f) : first(std::move(f)) {}
+    string_pair(StrT f, StrT s)
         : first(std::move(f)), second(std::move(s)) {}
     template <size_t N>
         string_pair(const char (&s)[N]) : first(s, N-1) {}
 
     size_t size() const {return first.size() + second.size();}
-    String full() const {return first + second;}
-    String move_full() {return std::move(first) + std::move(second);}
+    StrT full() const {return first + second;}
+    StrT move_full() {return std::move(first) + std::move(second);}
 };
 
 struct Db
 {
-    typedef String String;
-    typedef Vector<string_pair> sub_type;
+    typedef std::basic_string<char, std::char_traits<char>,
+                              malloc_alloc<char>> String;
+    typedef Vector<string_pair<String>> sub_type;
     typedef Vector<sub_type> template_param_type;
-    Vector<string_pair> names;
-    Vector<sub_type> subs;
+    sub_type names;
+    template_param_type subs;
     Vector<template_param_type> template_param;
     unsigned cv;
     unsigned ref;
@@ -4870,8 +4893,8 @@ struct Db
 
 }  // unnamed namespace
 
-__attribute__ ((__visibility__("default")))
 extern "C"
+__attribute__ ((__visibility__("default")))
 char*
 __cxa_demangle(const char* mangled_name, char* buf, size_t* n, int* status)
 {

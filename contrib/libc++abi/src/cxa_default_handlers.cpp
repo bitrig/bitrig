@@ -13,6 +13,7 @@
 #include <new>
 #include <exception>
 #include "abort_message.h"
+#include "config.h" // For __sync_swap
 #include "cxxabi.h"
 #include "cxa_handlers.hpp"
 #include "cxa_exception.hpp"
@@ -100,9 +101,10 @@ namespace std
 unexpected_handler
 set_unexpected(unexpected_handler func) _NOEXCEPT
 {
-	if (func == 0)
-		func = default_unexpected_handler;
-	return __sync_swap(&__cxa_unexpected_handler, func);
+    if (func == 0)
+        func = default_unexpected_handler;
+    return __atomic_exchange_n(&__cxa_unexpected_handler, func,
+                               __ATOMIC_ACQ_REL);
 //  Using of C++11 atomics this should be rewritten
 //  return __cxa_unexpected_handler.exchange(func, memory_order_acq_rel);
 }
@@ -110,9 +112,10 @@ set_unexpected(unexpected_handler func) _NOEXCEPT
 terminate_handler
 set_terminate(terminate_handler func) _NOEXCEPT
 {
-	if (func == 0)
-		func = default_terminate_handler;
-	return __sync_swap(&__cxa_terminate_handler, func);
+    if (func == 0)
+        func = default_terminate_handler;
+    return __atomic_exchange_n(&__cxa_terminate_handler, func,
+                               __ATOMIC_ACQ_REL);
 //  Using of C++11 atomics this should be rewritten
 //  return __cxa_terminate_handler.exchange(func, memory_order_acq_rel);
 }

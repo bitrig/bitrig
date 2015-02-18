@@ -308,16 +308,27 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind15Registers_arm646jumptoEv)
   ldp    x0, x1,  [x0, #0x000]  ; restore x0,x1
   ret    lr            ; jump to pc
 
-#elif __arm__
+#elif __arm__ && !__APPLE__
+
+#if !defined(__ARM_ARCH_ISA_ARM)
+  .thumb
+#endif
 
 @
-@ void libunwind::Registers_arm::jumpto()
+@ void libunwind::Registers_arm::restoreCoreAndJumpTo()
 @
 @ On entry:
 @  thread_state pointer is in r0
 @
   .p2align 2
-DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm6jumptoEv)
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm20restoreCoreAndJumpToEv)
+#if !defined(__ARM_ARCH_ISA_ARM)
+  ldr r2, [r0, #52]
+  ldr r3, [r0, #60]
+  mov sp, r2
+  mov lr, r3         @ restore pc into lr
+  ldm r0, {r0-r7}
+#else
   @ Use lr as base so that r0 can be restored.
   mov lr, r0
   @ 32bit thumb-2 restrictions for ldm:
@@ -326,6 +337,109 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm6jumptoEv)
   ldm lr, {r0-r12}
   ldr sp, [lr, #52]
   ldr lr, [lr, #60]  @ restore pc into lr
-  mov pc, lr
+#endif
+  JMP(lr)
+
+@
+@ static void libunwind::Registers_arm::restoreVFPWithFLDMD(unw_fpreg_t* values)
+@
+@ On entry:
+@  values pointer is in r0
+@
+  .p2align 2
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFLDMDEPy)
+#if defined(__ARM_FP)
+  @ VFP and iwMMX instructions are only available when compiling with the flags
+  @ that enable them. We do not want to do that in the library (because we do not
+  @ want the compiler to generate instructions that access those) but this is
+  @ only accessed if the personality routine needs these registers. Use of
+  @ these registers implies they are, actually, available on the target, so
+  @ it's ok to execute.
+  @ So, generate the instruction using the corresponding coprocessor mnemonic.
+#if __ARM_ARCH < 7
+  ldc p11, cr0, [r0], {0x20}  @ fldmiad r0, {d0-d15}
+#else
+  vldmia r0, {d0-d15}
+#endif
+#endif
+  JMP(lr)
+
+@
+@ static void libunwind::Registers_arm::restoreVFPWithFLDMX(unw_fpreg_t* values)
+@
+@ On entry:
+@  values pointer is in r0
+@
+  .p2align 2
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFLDMXEPy)
+#if defined(__ARM_FP)
+#if __ARM_ARCH < 7
+  ldc p11, cr0, [r0], {0x21}  @ fldmiax r0, {d0-d15}
+#else
+  vldmia r0, {d0-d15} @ fldmiax is deprecated in ARMv7+ and now behaves like vldmia
+#endif
+#endif
+  JMP(lr)
+
+@
+@ static void libunwind::Registers_arm::restoreVFPv3(unw_fpreg_t* values)
+@
+@ On entry:
+@  values pointer is in r0
+@
+  .p2align 2
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm12restoreVFPv3EPy)
+#if defined(__ARM_FP)
+#ifndef __ARM_NEON
+  ldcl p11, cr0, [r0], {0x20}  @ vldm r0, {d16-d31}
+#else
+  vldmia r0, {d16-d31}
+#endif
+#endif
+  JMP(lr)
+
+@
+@ static void libunwind::Registers_arm::restoreiWMMX(unw_fpreg_t* values)
+@
+@ On entry:
+@  values pointer is in r0
+@
+  .p2align 2
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm12restoreiWMMXEPy)
+#if (!defined(__ARM_ARCH_6M__) && !defined(__ARM_ARCH_6SM__)) || __ARM_WMMX
+  ldcl p1, cr0, [r0], #8  @ wldrd wR0, [r0], #8
+  ldcl p1, cr1, [r0], #8  @ wldrd wR1, [r0], #8
+  ldcl p1, cr2, [r0], #8  @ wldrd wR2, [r0], #8
+  ldcl p1, cr3, [r0], #8  @ wldrd wR3, [r0], #8
+  ldcl p1, cr4, [r0], #8  @ wldrd wR4, [r0], #8
+  ldcl p1, cr5, [r0], #8  @ wldrd wR5, [r0], #8
+  ldcl p1, cr6, [r0], #8  @ wldrd wR6, [r0], #8
+  ldcl p1, cr7, [r0], #8  @ wldrd wR7, [r0], #8
+  ldcl p1, cr8, [r0], #8  @ wldrd wR8, [r0], #8
+  ldcl p1, cr9, [r0], #8  @ wldrd wR9, [r0], #8
+  ldcl p1, cr10, [r0], #8  @ wldrd wR10, [r0], #8
+  ldcl p1, cr11, [r0], #8  @ wldrd wR11, [r0], #8
+  ldcl p1, cr12, [r0], #8  @ wldrd wR12, [r0], #8
+  ldcl p1, cr13, [r0], #8  @ wldrd wR13, [r0], #8
+  ldcl p1, cr14, [r0], #8  @ wldrd wR14, [r0], #8
+  ldcl p1, cr15, [r0], #8  @ wldrd wR15, [r0], #8
+#endif
+  JMP(lr)
+
+@
+@ static void libunwind::Registers_arm::restoreiWMMXControl(unw_uint32_t* values)
+@
+@ On entry:
+@  values pointer is in r0
+@
+  .p2align 2
+DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreiWMMXControlEPj)
+#if (!defined(__ARM_ARCH_6M__) && !defined(__ARM_ARCH_6SM__)) || __ARM_WMMX
+  ldc2 p1, cr8, [r0], #4  @ wldrw wCGR0, [r0], #4
+  ldc2 p1, cr9, [r0], #4  @ wldrw wCGR1, [r0], #4
+  ldc2 p1, cr10, [r0], #4  @ wldrw wCGR2, [r0], #4
+  ldc2 p1, cr11, [r0], #4  @ wldrw wCGR3, [r0], #4
+#endif
+  JMP(lr)
 
 #endif

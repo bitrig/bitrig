@@ -21,6 +21,14 @@
 #define _LIBCPPABI_VERSION 1001
 #define LIBCXXABI_NORETURN  __attribute__((noreturn))
 
+// FIXME: This is also in unwind.h and libunwind.h, can we consolidate?
+#if !defined(__USING_SJLJ_EXCEPTIONS__) && defined(__arm__) && \
+    !defined(__ARM_DWARF_EH__) && !defined(__APPLE__)
+#define LIBCXXABI_ARM_EHABI 1
+#else
+#define LIBCXXABI_ARM_EHABI 0
+#endif
+
 #ifdef __cplusplus
 
 namespace std {
@@ -44,6 +52,10 @@ extern LIBCXXABI_NORETURN void __cxa_throw(void * thrown_exception,
 extern void * __cxa_get_exception_ptr(void * exceptionObject) throw();
 extern void * __cxa_begin_catch(void * exceptionObject) throw();
 extern void __cxa_end_catch();
+#if LIBCXXABI_ARM_EHABI
+extern bool __cxa_begin_cleanup(void * exceptionObject) throw();
+extern void __cxa_end_cleanup();
+#endif
 extern std::type_info * __cxa_current_exception_type();
 
 // 2.5.4 Rethrowing Exceptions
@@ -54,6 +66,7 @@ extern LIBCXXABI_NORETURN void __cxa_rethrow();
 // 2.6 Auxiliary Runtime APIs
 extern LIBCXXABI_NORETURN void __cxa_bad_cast(void);
 extern LIBCXXABI_NORETURN void __cxa_bad_typeid(void);
+extern LIBCXXABI_NORETURN void __cxa_throw_bad_array_new_length(void);
 
 
 
@@ -165,11 +178,17 @@ extern void __cxa_decrement_exception_refcount(void* primary_exception) throw();
 // Apple addition to support std::uncaught_exception()
 extern bool __cxa_uncaught_exception() throw();
 
+#ifdef __linux__
+// Linux TLS support. Not yet an official part of the Itanium ABI.
+// https://sourceware.org/glibc/wiki/Destructor%20support%20for%20thread_local%20variables
+extern int __cxa_thread_atexit(void (*)(void *), void *, void *) throw();
+#endif
+
   } // extern "C"
 } // namespace __cxxabiv1
 
-#endif // __cplusplus
-
 namespace abi = __cxxabiv1;
+
+#endif // __cplusplus
 
 #endif // __CXXABI_H 

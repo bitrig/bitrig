@@ -44,19 +44,38 @@
 #include <string>
 #if defined(_LIBCPP_MSVCRT) || defined(__MINGW32__)
 #include <io.h> // _mktemp
+#else
+#include <unistd.h> // close
+#endif
+
+#if defined(_NEWLIB_VERSION) && defined(__STRICT_ANSI__)
+// Newlib provies this, but in the header it's under __STRICT_ANSI__
+extern "C" {
+  int mkstemp(char*);
+}
 #endif
 
 inline
 std::string
 get_temp_file_name()
 {
-   std::string s("temp.XXXXXX");
 #if defined(_LIBCPP_MSVCRT) || defined(__MINGW32__)
-   _mktemp(&s[0]);
+    char Path[MAX_PATH+1];
+    char FN[MAX_PATH+1];
+    do { } while (0 == GetTempPath(MAX_PATH+1, Path));
+    do { } while (0 == GetTempFileName(Path, "libcxx", 0, FN));
+    return FN;
 #else
-   mktemp(&s[0]);
+    std::string Name;
+    int FD = -1;
+    do {
+      Name = "libcxx.XXXXXX";
+      FD = mkstemp(&Name[0]);
+      assert(errno != EINVAL && "Something is wrong with the mkstemp's argument");
+    } while (FD == -1 || errno == EEXIST);
+    close(FD);
+    return Name;
 #endif
-   return s;
 }
 
 #endif // PLATFORM_SUPPORT_H

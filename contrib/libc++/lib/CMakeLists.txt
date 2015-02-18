@@ -3,6 +3,9 @@ file(GLOB LIBCXX_SOURCES ../src/*.cpp)
 if(WIN32)
   file(GLOB LIBCXX_WIN32_SOURCES ../src/support/win32/*.cpp)
   list(APPEND LIBCXX_SOURCES ${LIBCXX_WIN32_SOURCES})
+elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "SunOS")
+  file(GLOB LIBCXX_SOLARIS_SOURCES ../src/support/solaris/*.c)
+  list(APPEND LIBCXX_SOURCES ${LIBCXX_SOLARIS_SOURCES})
 endif()
 
 # Add all the headers to the project for IDEs.
@@ -32,29 +35,33 @@ else()
 endif()
 
 if (DEFINED LIBCXX_CXX_ABI_DEPS)
-  add_dependencies(cxx ${LIBCXX_CXX_ABI_DEPS})
+  add_dependencies(cxx LIBCXX_CXX_ABI_DEPS)
 endif()
 
 # Generate library list.
-set(libraries ${LIBCXX_CXX_ABI_LIBRARIES})
+set(libraries ${LIBCXX_CXX_ABI_LIBRARY})
 append_if(libraries LIBCXX_HAS_PTHREAD_LIB pthread)
 append_if(libraries LIBCXX_HAS_C_LIB c)
 append_if(libraries LIBCXX_HAS_M_LIB m)
 append_if(libraries LIBCXX_HAS_RT_LIB rt)
 append_if(libraries LIBCXX_HAS_GCC_S_LIB gcc_s)
 
+#if LIBCXX_CXX_ABI_LIBRARY_PATH is defined we want to add it to the search path.
+if (DEFINED LIBCXX_CXX_ABI_LIBRARY_PATH)
+  target_link_libraries(cxx "-L${LIBCXX_CXX_ABI_LIBRARY_PATH}")
+endif()
 target_link_libraries(cxx ${libraries})
 
 # Setup flags.
-append_if(compile_flags LIBCXX_HAS_FPIC_FLAG -fPIC)
-append_if(link_flags LIBCXX_HAS_NODEFAULTLIBS_FLAG -nodefaultlibs)
+append_if(LIBCXX_COMPILE_FLAGS LIBCXX_HAS_FPIC_FLAG -fPIC)
+append_if(LIBCXX_LINK_FLAGS LIBCXX_HAS_NODEFAULTLIBS_FLAG -nodefaultlibs)
 
 if ( APPLE )
   if ( CMAKE_OSX_DEPLOYMENT_TARGET STREQUAL "10.6" )
-    list(APPEND compile_flags "-U__STRICT_ANSI__")
-    list(APPEND link_flags
+    list(APPEND LIBCXX_COMPILE_FLAGS "-U__STRICT_ANSI__")
+    list(APPEND LIBCXX_LINK_FLAGS
       "-compatibility_version 1"
-      "-current_version ${LIBCXX_VERSION}"
+      "-current_version 1"
       "-install_name /usr/lib/libc++.1.dylib"
       "-Wl,-reexport_library,/usr/lib/libc++abi.dylib"
       "-Wl,-unexported_symbols_list,${CMAKE_CURRENT_SOURCE_DIR}/libc++unexp.exp"
@@ -74,7 +81,7 @@ if ( APPLE )
       set (OSX_RE_EXPORT_LINE "/usr/lib/libc++abi.dylib -Wl,-reexported_symbols_list,${CMAKE_CURRENT_SOURCE_DIR}/libc++abi${LIBCXX_LIBCPPABI_VERSION}.exp")
     endif()
 
-    list(APPEND link_flags
+    list(APPEND LIBCXX_LINK_FLAGS
       "-compatibility_version 1"
       "-install_name /usr/lib/libc++.1.dylib"
       "-Wl,-unexported_symbols_list,${CMAKE_CURRENT_SOURCE_DIR}/libc++unexp.exp"
@@ -84,18 +91,19 @@ if ( APPLE )
   endif()
 endif()
 
-string(REPLACE ";" " " link_flags "${link_flags}")
+string(REPLACE ";" " " LIBCXX_COMPILE_FLAGS "${LIBCXX_COMPILE_FLAGS}")
+string(REPLACE ";" " " LIBCXX_LINK_FLAGS "${LIBCXX_LINK_FLAGS}")
 
 set_target_properties(cxx
   PROPERTIES
-    COMPILE_FLAGS "${compile_flags}"
-    LINK_FLAGS    "${link_flags}"
+    COMPILE_FLAGS "${LIBCXX_COMPILE_FLAGS}"
+    LINK_FLAGS    "${LIBCXX_LINK_FLAGS}"
     OUTPUT_NAME   "c++"
     VERSION       "1.0"
     SOVERSION     "1"
   )
 
 install(TARGETS cxx
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib${LIBCXX_LIBDIR_SUFFIX}
+  ARCHIVE DESTINATION lib${LIBCXX_LIBDIR_SUFFIX}
   )

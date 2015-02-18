@@ -202,12 +202,16 @@ operator>=(const _Tp& __x, const _Tp& __y)
 
 // swap_ranges
 
+// forward
+template<class _Tp, size_t _Np>
+void swap(_Tp (&__a)[_Np], _Tp (&__b)[_Np]) _NOEXCEPT_(__is_nothrow_swappable<_Tp>::value);
+
 template <class _ForwardIterator1, class _ForwardIterator2>
 inline _LIBCPP_INLINE_VISIBILITY
 _ForwardIterator2
 swap_ranges(_ForwardIterator1 __first1, _ForwardIterator1 __last1, _ForwardIterator2 __first2)
 {
-    for(; __first1 != __last1; ++__first1, ++__first2)
+    for(; __first1 != __last1; ++__first1, (void) ++__first2)
         swap(*__first1, *__first2);
     return __first2;
 }
@@ -345,9 +349,9 @@ struct _LIBCPP_TYPE_VIS_ONLY pair
         _LIBCPP_INLINE_VISIBILITY _LIBCPP_CONSTEXPR_AFTER_CXX11
         pair(_Tuple&& __p)
             : first(_VSTD::forward<typename tuple_element<0,
-                                  typename __make_tuple_types<_Tuple>::type>::type>(get<0>(__p))),
+                                  typename __make_tuple_types<_Tuple>::type>::type>(_VSTD::get<0>(__p))),
               second(_VSTD::forward<typename tuple_element<1,
-                                   typename __make_tuple_types<_Tuple>::type>::type>(get<1>(__p)))
+                                   typename __make_tuple_types<_Tuple>::type>::type>(_VSTD::get<1>(__p)))
             {}
 
 

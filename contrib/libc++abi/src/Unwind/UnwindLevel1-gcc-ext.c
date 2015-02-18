@@ -10,24 +10,43 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <stdint.h>
+#include <inttypes.h>
 #include <stdbool.h>
-#include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "libunwind.h"
 #include "unwind.h"
 #include "libunwind_ext.h"
 #include "config.h"
 
+#if LIBCXXABI_ARM_EHABI
+#include "Unwind-EHABI.h"
+#endif
+
 #if _LIBUNWIND_BUILD_ZERO_COST_APIS
 
 ///  Called by __cxa_rethrow().
 _LIBUNWIND_EXPORT _Unwind_Reason_Code
-_Unwind_Resume_or_Rethrow(struct _Unwind_Exception *exception_object) {
+_Unwind_Resume_or_Rethrow(_Unwind_Exception *exception_object) {
+#if LIBCXXABI_ARM_EHABI
   _LIBUNWIND_TRACE_API("_Unwind_Resume_or_Rethrow(ex_obj=%p), "
-                             "private_1=%ld\n",
-                              exception_object, exception_object->private_1);
+                       "private_1=%ld\n",
+                       exception_object,
+                       (long)exception_object->unwinder_cache.reserved1);
+#else
+  _LIBUNWIND_TRACE_API("_Unwind_Resume_or_Rethrow(ex_obj=%p), "
+                       "private_1=%ld\n",
+                       exception_object,
+                       (long)exception_object->private_1);
+#endif
+
+#if LIBCXXABI_ARM_EHABI
+  // _Unwind_RaiseException on EHABI will always set the reserved1 field to 0,
+  // which is in the same position as private_1 below.
+  return _Unwind_RaiseException(exception_object);
+#else
   // If this is non-forced and a stopping place was found, then this is a
   // re-throw.
   // Call _Unwind_RaiseException() as if this was a new exception
@@ -42,6 +61,7 @@ _Unwind_Resume_or_Rethrow(struct _Unwind_Exception *exception_object) {
   _Unwind_Resume(exception_object);
   _LIBUNWIND_ABORT("_Unwind_Resume_or_Rethrow() called _Unwind_RaiseException()"
                    " which unexpectedly returned");
+#endif
 }
 
 
@@ -83,7 +103,6 @@ _LIBUNWIND_EXPORT void *_Unwind_FindEnclosingFunction(void *pc) {
     return NULL;
 }
 
-
 /// Walk every frame and call trace function at each one.  If trace function
 /// returns anything other than _URC_NO_REASON, then walk is terminated.
 _LIBUNWIND_EXPORT _Unwind_Reason_Code
@@ -97,6 +116,7 @@ _Unwind_Backtrace(_Unwind_Trace_Fn callback, void *ref) {
 
   // walk each frame
   while (true) {
+    _Unwind_Reason_Code result;
 
     // ask libuwind to get next frame (skip over first frame which is
     // _Unwind_Backtrace())
@@ -107,21 +127,65 @@ _Unwind_Backtrace(_Unwind_Trace_Fn callback, void *ref) {
       return _URC_END_OF_STACK;
     }
 
+#if LIBCXXABI_ARM_EHABI
+    // Get the information for this frame.
+    unw_proc_info_t frameInfo;
+    if (unw_get_proc_info(&cursor, &frameInfo) != UNW_ESUCCESS) {
+      return _URC_END_OF_STACK;
+    }
+
+    struct _Unwind_Context *context = (struct _Unwind_Context *)&cursor;
+    const uint32_t* unwindInfo = (uint32_t *) frameInfo.unwind_info;
+    if ((*unwindInfo & 0x80000000) == 0) {
+      // 6.2: Generic Model
+      // EHT entry is a prel31 pointing to the PR, followed by data understood
+      // only by the personality routine. Since EHABI doesn't guarantee the
+      // location or availability of the unwind opcodes in the generic model,
+      // we have to call personality functions with (_US_VIRTUAL_UNWIND_FRAME |
+      // _US_FORCE_UNWIND) state.
+
+      // Create a mock exception object for force unwinding.
+      _Unwind_Exception ex;
+      ex.exception_class = 0x434C4E47554E5700; // CLNGUNW\0
+      ex.pr_cache.fnstart = frameInfo.start_ip;
+      ex.pr_cache.ehtp = (_Unwind_EHT_Header *) unwindInfo;
+      ex.pr_cache.additional= frameInfo.flags;
+
+      // Get and call the personality function to unwind the frame.
+      __personality_routine pr = (__personality_routine) readPrel31(unwindInfo);
+      if (pr(_US_VIRTUAL_UNWIND_FRAME | _US_FORCE_UNWIND, &ex, context) !=
+              _URC_CONTINUE_UNWIND) {
+        return _URC_END_OF_STACK;
+      }
+    } else {
+      size_t off, len;
+      unwindInfo = decode_eht_entry(unwindInfo, &off, &len);
+      if (unwindInfo == NULL) {
+        return _URC_FAILURE;
+      }
+
+      result = _Unwind_VRS_Interpret(context, unwindInfo, off, len);
+      if (result != _URC_CONTINUE_UNWIND) {
+        return _URC_END_OF_STACK;
+      }
+    }
+#endif // LIBCXXABI_ARM_EHABI
+
     // debugging
     if (_LIBUNWIND_TRACING_UNWINDING) {
       char functionName[512];
-      unw_proc_info_t frameInfo;
+      unw_proc_info_t frame;
       unw_word_t offset;
       unw_get_proc_name(&cursor, functionName, 512, &offset);
-      unw_get_proc_info(&cursor, &frameInfo);
+      unw_get_proc_info(&cursor, &frame);
       _LIBUNWIND_TRACE_UNWINDING(
           " _backtrace: start_ip=0x%llX, func=%s, lsda=0x%llX, context=%p\n",
-          frameInfo.start_ip, functionName, frameInfo.lsda, &cursor);
+          (long long)frame.start_ip, functionName,
+          (long long)frame.lsda, &cursor);
     }
 
     // call trace function with this frame
-    _Unwind_Reason_Code result =
-        (*callback)((struct _Unwind_Context *)(&cursor), ref);
+    result = (*callback)((struct _Unwind_Context *)(&cursor), ref);
     if (result != _URC_NO_REASON) {
       _LIBUNWIND_TRACE_UNWINDING(" _backtrace: ended because callback "
                                  "returned %d\n",
@@ -158,8 +222,8 @@ _LIBUNWIND_EXPORT uintptr_t _Unwind_GetCFA(struct _Unwind_Context *context) {
   unw_cursor_t *cursor = (unw_cursor_t *)context;
   unw_word_t result;
   unw_get_reg(cursor, UNW_REG_SP, &result);
-  _LIBUNWIND_TRACE_API("_Unwind_GetCFA(context=%p) => 0x%llX\n", context,
-                  (uint64_t) result);
+  _LIBUNWIND_TRACE_API("_Unwind_GetCFA(context=%p) => 0x%" PRIx64 "\n", context,
+                       (uint64_t)result);
   return (uintptr_t)result;
 }
 

@@ -7,8 +7,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define _LIBCPP_EXTERN_TEMPLATE(...) extern template __VA_ARGS__;
-
 // On Solaris, we need to define something to make the C99 parts of localeconv
 // visible.
 #ifdef __sun__
@@ -30,9 +28,9 @@
 #include "__sso_allocator"
 #if defined(_LIBCPP_MSVCRT) || defined(__MINGW32__)
 #include <support/win32/locale_win32.h>
-#else // _LIBCPP_MSVCRT
+#elif !defined(__ANDROID__)
 #include <langinfo.h>
-#endif // !_LIBCPP_MSVCRT
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -1021,7 +1019,7 @@ extern "C" const int ** __ctype_toupper_loc();
 const ctype<char>::mask*
 ctype<char>::classic_table()  _NOEXCEPT
 {
-#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__Bitrig__)
+#if defined(__APPLE__) || defined(__FreeBSD__)
     return _DefaultRuneLocale.__runetype;
 #elif defined(__NetBSD__)
     return _C_ctype_tab_ + 1;
@@ -1037,6 +1035,8 @@ ctype<char>::classic_table()  _NOEXCEPT
     return *__ctype_b_loc();
 #elif defined(_AIX)
     return (const unsigned int *)__lc_ctype_ptr->obj->mask;
+#elif defined(__ANDROID__)
+    return reinterpret_cast<const unsigned char*>(_ctype_) + 1;
 #else
     // Platform not supported: abort so the person doing the port knows what to
     // fix

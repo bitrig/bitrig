@@ -1192,7 +1192,8 @@ regex_traits<_CharT>::__lookup_collatename(_ForwardIterator __f,
 
 // lookup_classname
 
-ctype_base::mask _LIBCPP_FUNC_VIS __get_classname(const char* __s, bool __icase);
+regex_traits<char>::char_class_type _LIBCPP_FUNC_VIS
+__get_classname(const char* __s, bool __icase);
 
 template <class _CharT>
 template <class _ForwardIterator>
@@ -2184,8 +2185,8 @@ class __bracket_expression
     vector<pair<string_type, string_type> > __ranges_;
     vector<pair<_CharT, _CharT> > __digraphs_;
     vector<string_type> __equivalences_;
-    ctype_base::mask __mask_;
-    ctype_base::mask __neg_mask_;
+    typename regex_traits<_CharT>::char_class_type __mask_;
+    typename regex_traits<_CharT>::char_class_type __neg_mask_;
     bool __negate_;
     bool __icase_;
     bool __collate_;
@@ -2281,10 +2282,10 @@ public:
     void __add_equivalence(const string_type& __s)
         {__equivalences_.push_back(__s);}
     _LIBCPP_INLINE_VISIBILITY
-    void __add_class(ctype_base::mask __mask)
+    void __add_class(typename regex_traits<_CharT>::char_class_type __mask)
         {__mask_ |= __mask;}
     _LIBCPP_INLINE_VISIBILITY
-    void __add_neg_class(ctype_base::mask __mask)
+    void __add_neg_class(typename regex_traits<_CharT>::char_class_type __mask)
         {__neg_mask_ |= __mask;}
 };
 
@@ -2598,9 +2599,7 @@ public:
         assign(_ForwardIterator __first, _ForwardIterator __last,
                             flag_type __f = regex_constants::ECMAScript)
         {
-            __member_init(__f);
-            __parse(__first, __last);
-            return *this;
+            return assign(basic_regex(__first, __last, __f));
         }
 
 #ifndef _LIBCPP_HAS_NO_GENERALIZED_INITIALIZERS
@@ -4541,6 +4540,13 @@ basic_regex<_CharT, _Traits>::__parse_character_escape(_ForwardIterator __first,
                 __push_char(_CharT(__sum));
             ++__first;
             break;
+        case '0':
+            if (__str)
+                *__str = _CharT(0);
+            else
+                __push_char(_CharT(0));
+            ++__first;
+            break;
         default:
             if (*__first != '_' && !__traits_.isctype(*__first, ctype_base::alnum))
             {
@@ -4918,7 +4924,7 @@ bool
 operator==(const basic_string<typename iterator_traits<_BiIter>::value_type, _ST, _SA>& __x,
            const sub_match<_BiIter>& __y)
 {
-    return __y.compare(__x.c_str()) == 0;
+    return __y.compare(typename sub_match<_BiIter>::string_type(__x.data(), __x.size())) == 0;
 }
 
 template <class _BiIter, class _ST, class _SA>
@@ -4936,7 +4942,7 @@ bool
 operator<(const basic_string<typename iterator_traits<_BiIter>::value_type, _ST, _SA>& __x,
           const sub_match<_BiIter>& __y)
 {
-    return __y.compare(__x.c_str()) > 0;
+    return __y.compare(typename sub_match<_BiIter>::string_type(__x.data(), __x.size())) > 0;
 }
 
 template <class _BiIter, class _ST, class _SA>
@@ -4971,7 +4977,7 @@ bool
 operator==(const sub_match<_BiIter>& __x,
            const basic_string<typename iterator_traits<_BiIter>::value_type, _ST, _SA>& __y)
 {
-    return __x.compare(__y.c_str()) == 0;
+    return __x.compare(typename sub_match<_BiIter>::string_type(__y.data(), __y.size())) == 0;
 }
 
 template <class _BiIter, class _ST, class _SA>
@@ -4989,7 +4995,7 @@ bool
 operator<(const sub_match<_BiIter>& __x,
           const basic_string<typename iterator_traits<_BiIter>::value_type, _ST, _SA>& __y)
 {
-    return __x.compare(__y.c_str()) < 0;
+    return __x.compare(typename sub_match<_BiIter>::string_type(__y.data(), __y.size())) < 0;
 }
 
 template <class _BiIter, class _ST, class _SA>
