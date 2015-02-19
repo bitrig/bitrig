@@ -7,6 +7,7 @@ SRCS+= divsi3.S
 SRCS+= modsi3.S
 SRCS+= udivsi3.S
 SRCS+= umodsi3.S
+SRCS+= aeabi_div0.c
 ELF_LDFLAGS+=-z nocombreloc
 LIBCOMPILER_RTDIR=${.CURDIR}/../../contrib/compiler-rt
-.PATH: ${LIBCOMPILER_RTDIR}/lib/arm
+.PATH: ${LIBCOMPILER_RTDIR}/lib/builtins/arm

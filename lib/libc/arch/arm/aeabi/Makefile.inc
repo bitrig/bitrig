@@ -19,7 +19,7 @@ SRCS+=	aeabi_memcmp.S		\
 	aeabi_memmove.S		\
 	aeabi_memset.S
 
-.PATH: ${LIBCSRCDIR}/../../contrib/compiler-rt/lib/arm
+.PATH: ${LIBCSRCDIR}/../../contrib/compiler-rt/lib/builtins/arm
 
 # FIXME
 # Mark the functions as hidden so they are not available outside of libc.

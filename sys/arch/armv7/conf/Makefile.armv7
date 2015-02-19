@@ -28,7 +28,7 @@ CWARNFLAGS=	-Werror -Wall -Wimplicit-function-declaration \
 		-Wno-conditional-uninitialized
 #		-Wframe-larger-than-2047
 
-CMACHFLAGS=	-ffreestanding -msoft-float
+CMACHFLAGS=	-ffreestanding -msoft-float -no-integrated-as
 #CMACHFLAGS+=	-fno-builtin-printf -fno-builtin-snprintf \
 #		-fno-builtin-vsnprintf -fno-builtin-log \
 #		-fno-builtin-log2 -fno-builtin-malloc ${NOPIE_FLAGS}
@@ -100,7 +100,8 @@ LINKFLAGS+=	-x
 assym.h: $S/kern/genassym.sh Makefile \
 	 ${_archdir}/${_arch}/genassym.cf ${_machdir}/${_mach}/genassym.cf
 	cat ${_archdir}/${_arch}/genassym.cf ${_machdir}/${_mach}/genassym.cf | \
-	    sh $S/kern/genassym.sh ${CC} ${CFLAGS} ${CPPFLAGS} -MF assym.P > assym.h.tmp
+	    sh $S/kern/genassym.sh ${CC} ${CFLAGS} ${CPPFLAGS} -no-integrated-as \
+		-MF assym.P > assym.h.tmp
 	sed '1s/.*/assym.h: \\/' assym.P > assym.d
 	sort -u assym.h.tmp > assym.h
 

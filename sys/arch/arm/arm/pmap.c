@@ -2666,9 +2666,6 @@ pmap_get_pde_pte(pmap_t pm, vaddr_t va, pd_entry_t **pdp, pt_entry_t **ptp)
 		return (TRUE);
 	}
 
-	if (pm->pm_l2 == NULL)
-		return (FALSE);
-
 	l2 = pm->pm_l2[L2_IDX(l1idx)];
 
 	if (l2 == NULL ||
