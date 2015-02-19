@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_map.c,v 1.186 2015/02/15 21:34:33 miod Exp $	*/
+/*	$OpenBSD: uvm_map.c,v 1.187 2015/02/19 03:06:53 mlarkin Exp $	*/
 /*	$NetBSD: uvm_map.c,v 1.86 2000/11/27 08:40:03 chs Exp $	*/
 
 /*
@@ -938,7 +938,6 @@ uvm_map_addr_augment(struct vm_map_entry *entry)
  * uvm_map: establish a valid mapping in map
  *
  * => *addr and sz must be a multiple of PAGE_SIZE.
- * => *addr is ignored, except if flags contains UVM_FLAG_FIXED.
  * => map must be unlocked.
  * => <uobj,uoffset> value meanings (4 cases):
  *	[1] <NULL,uoffset>		== uoffset is a hint for PMAP_PREFER
