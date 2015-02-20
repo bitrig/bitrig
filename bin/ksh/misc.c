@@ -6,6 +6,7 @@
 
 #include "sh.h"
 #include <ctype.h>
+#include <wctype.h>
 #include <sys/param.h>	/* for MAXPATHLEN and nitems() */
 #include "charclass.h"
 
