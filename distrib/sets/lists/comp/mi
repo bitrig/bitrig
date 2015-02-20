@@ -51,6 +51,7 @@
 ./usr/include/c++/v1/__hash_table
 ./usr/include/c++/v1/__locale
 ./usr/include/c++/v1/__mutex_base
+./usr/include/c++/v1/__refstring
 ./usr/include/c++/v1/__split_buffer
 ./usr/include/c++/v1/__sso_allocator
 ./usr/include/c++/v1/__std_stream
