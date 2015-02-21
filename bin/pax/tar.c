@@ -1,4 +1,4 @@
-/*	$OpenBSD: tar.c,v 1.53 2014/02/19 03:59:47 guenther Exp $	*/
+/*	$OpenBSD: tar.c,v 1.55 2015/02/21 22:48:23 guenther Exp $	*/
 /*	$NetBSD: tar.c,v 1.5 1995/03/21 09:07:49 cgd Exp $	*/
 
 /*-
