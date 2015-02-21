@@ -588,7 +588,7 @@ vi_insert(int ch)
 				es->cbuf[es->cursor] = undo->cbuf[es->cursor];
 		} else {
 			if (es->cursor == 0) {
-				/* x_putc(BEL); no annoying bell here */
+				/* x_putc('\a'); no annoying bell here */
 				return 0;
 			}
 			if (inslen > 0)
@@ -2125,7 +2125,7 @@ vi_error(void)
 {
 	/* Beem out of any macros as soon as an error occurs */
 	vi_macro_reset();
-	x_putc(BEL);
+	x_putc('\a');
 	x_flush();
 }
 

@@ -23,8 +23,6 @@
 # define EXTERN_DEFINED
 #endif
 
-#define	BEL		0x07
-
 /* tty driver characters we are interested in */
 typedef struct {
 	int erase;

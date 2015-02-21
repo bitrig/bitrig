@@ -389,7 +389,7 @@ x_insert(int c)
 	 *  Should allow tab and control chars.
 	 */
 	if (c == 0) {
-		x_e_putc(BEL);
+		x_e_putc('\a');
 		return KSTD;
 	}
 	str[0] = c;
@@ -411,7 +411,7 @@ static int
 x_do_ins(const char *cp, int len)
 {
 	if (xep+len >= xend) {
-		x_e_putc(BEL);
+		x_e_putc('\a');
 		return -1;
 	}
 
@@ -451,7 +451,7 @@ x_del_back(int c)
 	int col = xcp - xbuf;
 
 	if (col == 0) {
-		x_e_putc(BEL);
+		x_e_putc('\a');
 		return KSTD;
 	}
 	if (x_arg > col)
@@ -467,7 +467,7 @@ x_del_char(int c)
 	int nleft = xep - xcp;
 
 	if (!nleft) {
-		x_e_putc(BEL);
+		x_e_putc('\a');
 		return KSTD;
 	}
 	if (x_arg > nleft)
@@ -556,7 +556,7 @@ x_bword(void)
 	char	*cp = xcp;
 
 	if (cp == xbuf) {
-		x_e_putc(BEL);
+		x_e_putc('\a');
 		return 0;
 	}
 	while (x_arg--) {
@@ -580,7 +580,7 @@ x_fword(void)
 	char	*cp = xcp;
 
 	if (cp == xep) {
-		x_e_putc(BEL);
+		x_e_putc('\a');
 		return 0;
 	}
 	while (x_arg--) {
@@ -660,7 +660,7 @@ x_mv_back(int c)
 	int col = xcp - xbuf;
 
 	if (col == 0) {
-		x_e_putc(BEL);
+		x_e_putc('\a');
 		return KSTD;
 	}
 	if (x_arg > col)
@@ -675,7 +675,7 @@ x_mv_forw(int c)
 	int nleft = xep - xcp;
 
 	if (!nleft) {
-		x_e_putc(BEL);
+		x_e_putc('\a');
 		return KSTD;
 	}
 	if (x_arg > nleft)
@@ -695,7 +695,7 @@ x_search_char_forw(int c)
 		if (c < 0 ||
 		    ((cp = (cp == xep) ? NULL : strchr(cp + 1, c)) == NULL &&
 		    (cp = strchr(xbuf, c)) == NULL)) {
-			x_e_putc(BEL);
+			x_e_putc('\a');
 			return KSTD;
 		}
 	}
@@ -714,7 +714,7 @@ x_search_char_back(int c)
 			if (p-- == xbuf)
 				p = xep;
 			if (c < 0 || p == cp) {
-				x_e_putc(BEL);
+				x_e_putc('\a');
 				return KSTD;
 			}
 			if (*p == c)
@@ -769,7 +769,7 @@ static void
 x_load_hist(char **hp)
 {
 	if (hp < history || hp > histptr) {
-		x_e_putc(BEL);
+		x_e_putc('\a');
 		return;
 	}
 	x_histp = hp;
@@ -849,7 +849,7 @@ x_search_hist(int c)
 			/* add char to pattern */
 			/* overflow check... */
 			if (p >= &pat[sizeof(pat) - 1]) {
-				x_e_putc(BEL);
+				x_e_putc('\a');
 				continue;
 			}
 			*p++ = c, *p = '\0';
@@ -891,7 +891,7 @@ x_search(char *pat, int sameline)
 	strlcpy(xbuf, pat, xend - xbuf);
 	xep = xcp = xbuf + strlen(xbuf);
 	x_redraw(1);
-	x_e_putc(BEL);
+	x_e_putc('\a');
 	x_histp = histptr;
 	return -1;
 }
@@ -996,11 +996,11 @@ x_transpose(int c)
 	 * to the one they want.
 	 */
 	if (xcp == xbuf) {
-		x_e_putc(BEL);
+		x_e_putc('\a');
 		return KSTD;
 	} else if (xcp == xep || Flag(FGMACS)) {
 		if (xcp - xbuf == 1) {
-			x_e_putc(BEL);
+			x_e_putc('\a');
 			return KSTD;
 		}
 		/* Gosling/Unipress emacs style: Swap two characters before the
@@ -1131,7 +1131,7 @@ x_abort(int c)
 static int
 x_error(int c)
 {
-	x_e_putc(BEL);
+	x_e_putc('\a');
 	return KSTD;
 }
 
@@ -1544,7 +1544,7 @@ x_kill_region(int c)
 	char	*xr;
 
 	if (xmp == NULL) {
-		x_e_putc(BEL);
+		x_e_putc('\a');
 		return KSTD;
 	}
 	if (xmp > xcp) {
@@ -1566,7 +1566,7 @@ x_xchg_point_mark(int c)
 	char	*tmp;
 
 	if (xmp == NULL) {
-		x_e_putc(BEL);
+		x_e_putc('\a');
 		return KSTD;
 	}
 	tmp = xmp;
@@ -1667,7 +1667,7 @@ x_expand(int c)
 	    &start, &end, &words, &is_command);
 
 	if (nwords == 0) {
-		x_e_putc(BEL);
+		x_e_putc('\a');
 		return KSTD;
 	}
 
@@ -1676,7 +1676,7 @@ x_expand(int c)
 	for (i = 0; i < nwords;) {
 		if (x_escape(words[i], strlen(words[i]), x_emacs_putbuf) < 0 ||
 		    (++i < nwords && x_ins(space) < 0)) {
-			x_e_putc(BEL);
+			x_e_putc('\a');
 			return KSTD;
 		}
 	}
@@ -1698,7 +1698,7 @@ do_complete(int flags,	/* XCF_{COMMAND,FILE,COMMAND_FILE} */
 	    &start, &end, &words, &is_command);
 	/* no match */
 	if (nwords == 0) {
-		x_e_putc(BEL);
+		x_e_putc('\a');
 		return;
 	}
 
@@ -1779,7 +1779,7 @@ x_e_putc(int c)
 {
 	x_putc(c);
 	switch (c) {
-	case BEL:
+	case '\a':
 		break;
 	case '\r':
 	case '\n':
@@ -1834,7 +1834,7 @@ x_set_arg(int c)
 	for (; c >= 0 && isdigit(c); c = x_e_getc(0), first = 0)
 		n = n * 10 + (c - '0');
 	if (c < 0 || first) {
-		x_e_putc(BEL);
+		x_e_putc('\a');
 		x_arg = 1;
 		x_arg_defaulted = 1;
 	} else {
@@ -1855,7 +1855,7 @@ x_comment(int c)
 	int ret = x_do_comment(xbuf, xend - xbuf, &len);
 
 	if (ret < 0)
-		x_e_putc(BEL);
+		x_e_putc('\a');
 	else {
 		xep = xbuf + len;
 		*xep = '\0';
@@ -1891,7 +1891,7 @@ x_prev_histword(int c)
 
 	cp = *histptr;
 	if (!cp)
-		x_e_putc(BEL);
+		x_e_putc('\a');
 	else if (x_arg_defaulted) {
 		rcp = &cp[strlen(cp) - 1];
 		/*
@@ -1968,7 +1968,7 @@ x_fold_case(int c)
 	char *cp = xcp;
 
 	if (cp == xep) {
-		x_e_putc(BEL);
+		x_e_putc('\a');
 		return KSTD;
 	}
 	while (x_arg--) {
