@@ -44,6 +44,7 @@ EXTERN X_chars edchars;
 #define XCF_COMMAND_FILE (XCF_COMMAND|XCF_FILE)
 
 /* edit.c */
+void	x_check_sigwinch(void);
 int	x_getc(void);
 void	x_flush(void);
 void	x_putc(int);

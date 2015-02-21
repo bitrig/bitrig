@@ -27,6 +27,7 @@ struct edstate {
 };
 
 
+static int	vi_getc(void);
 static int	vi_hook(int);
 static void	vi_reset(char *, size_t);
 static int	nextstate(int);
@@ -205,10 +206,10 @@ x_vi(char *buf, size_t len)
 					continue;
 				/* must be the end of all the macros */
 				vi_macro_reset();
-				c = x_getc();
+				c = vi_getc();
 			}
 		} else
-			c = x_getc();
+			c = vi_getc();
 
 		if (c == -1)
 			break;
@@ -245,6 +246,18 @@ x_vi(char *buf, size_t len)
 	buf[es->linelen++] = '\n';
 
 	return es->linelen;
+}
+
+static int
+vi_getc()
+{
+	int c;
+
+	do {
+		c = x_getc();
+	} while (c < 0 && errno == EINTR);
+
+	return (c);
 }
 
 static int

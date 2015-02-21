@@ -23,7 +23,6 @@
 
 static void x_sigwinch(int);
 volatile sig_atomic_t got_sigwinch;
-static void check_sigwinch(void);
 
 static int	x_file_glob(int, const char *, int, char ***);
 static int	x_command_glob(int, const char *, int, char ***);
@@ -43,7 +42,7 @@ x_init(void)
 	if (setsig(&sigtraps[SIGWINCH], x_sigwinch, SS_RESTORE_ORIG|SS_SHTRAP))
 		sigtraps[SIGWINCH].flags |= TF_SHELL_USES;
 	got_sigwinch = 1; /* force initial check */
-	check_sigwinch();
+	x_check_sigwinch();
 
 #ifdef EMACS
 	x_init_emacs();
@@ -57,8 +56,8 @@ x_sigwinch(int sig)
 	got_sigwinch = 1;
 }
 
-static void
-check_sigwinch(void)
+void
+x_check_sigwinch(void)
 {
 	if (got_sigwinch) {
 		struct winsize ws;
@@ -107,7 +106,7 @@ x_read(char *buf, size_t len)
 #endif
 		i = -1;		/* internal error */
 	x_mode(false);
-	check_sigwinch();
+	x_check_sigwinch();
 	return i;
 }
 
@@ -119,12 +118,13 @@ x_getc(void)
 	char c;
 	int n;
 
-	while ((n = blocking_read(STDIN_FILENO, &c, 1)) < 0 && errno == EINTR)
-		if (trap) {
-			x_mode(false);
-			runtraps(0);
-			x_mode(true);
-		}
+	n = blocking_read(STDIN_FILENO, &c, 1);
+	if (n < 0 && errno == EINTR && trap) {
+		x_mode(false);
+		runtraps(0);
+		x_mode(true);
+	}
+
 	if (n != 1)
 		return -1;
 	return (int) (unsigned char) c;
