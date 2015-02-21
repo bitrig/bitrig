@@ -535,7 +535,7 @@ sethistfile(const char *name)
 void
 init_histvec(void)
 {
-	if (history == (char **)NULL) {
+	if (history == NULL) {
 		histsize = HISTORYSIZE;
 		history = (char **)alloc(histsize*sizeof (char *), APERM);
 		histptr = history - 1;

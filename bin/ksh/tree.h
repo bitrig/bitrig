@@ -4,12 +4,6 @@
  * command trees for compile/execute
  */
 
-/* $From: tree.h,v 1.3 1994/05/31 13:34:34 michael Exp $ */
-
-#define	NOBLOCK	((struct op *)NULL)
-#define	NOWORD	((char *)NULL)
-#define	NOWORDS	((char **)NULL)
-
 /*
  * Description of a command or an operation on commands.
  */
