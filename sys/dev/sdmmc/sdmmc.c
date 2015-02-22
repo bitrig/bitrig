@@ -106,6 +106,9 @@ sdmmc_attach(struct device *parent, struct device *self, void *aux)
 	sc->sc_flags = saa->flags;
 	sc->sc_caps = saa->caps;
 	sc->sc_max_xfer = saa->max_xfer;
+	sc->sc_clkmin = saa->clkmin;
+	sc->sc_clkmax = saa->clkmax;
+	sc->sc_busclk = sc->sc_clkmax;
 
 	SIMPLEQ_INIT(&sc->sf_head);
 	TAILQ_INIT(&sc->sc_tskq);
@@ -412,11 +415,6 @@ sdmmc_enable(struct sdmmc_softc *sc)
 	if (ISSET(sc->sc_flags, SMF_MEM_MODE) &&
 	    (error = sdmmc_mem_enable(sc)) != 0)
 		goto err;
-
-	/* XXX respect host and card capabilities */
-	if (ISSET(sc->sc_flags, SMF_SD_MODE))
-		(void)sdmmc_chip_bus_clock(sc->sct, sc->sch,
-		    SDMMC_SDCLK_25MHZ);
 
  err:
 	if (error != 0)
