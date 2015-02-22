@@ -29,6 +29,7 @@ struct sdhc_softc {
 	int			sc_nhosts;
 	uint32_t		sc_flags;
 	uint32_t		sc_caps;
+	uint32_t		sc_clkbase;
 };
 
 /* Host controller functions called by the attachment driver. */

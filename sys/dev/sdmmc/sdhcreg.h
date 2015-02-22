@@ -95,6 +95,8 @@
 #define SDHC_CLOCK_CTL			0x2c
 #define  SDHC_SDCLK_DIV_SHIFT		8
 #define  SDHC_SDCLK_DIV_MASK		0xff
+#define  SDHC_SDCLK_XDIV_SHIFT		6
+#define  SDHC_SDCLK_XDIV_MASK		0x3
 #define  SDHC_SDCLK_ENABLE		(1<<2)
 #define  SDHC_INTCLK_STABLE		(1<<1)
 #define  SDHC_INTCLK_ENABLE		(1<<0)
@@ -148,6 +150,7 @@
 #define  SDHC_MAX_BLK_LEN_MASK		0x3
 #define  SDHC_BASE_FREQ_SHIFT		8
 #define  SDHC_BASE_FREQ_MASK		0x3f
+#define  SDHC_BASE_V3_FREQ_MASK		0xff
 #define  SDHC_TIMEOUT_FREQ_UNIT		(1<<7)	/* 0=KHz, 1=MHz */
 #define  SDHC_TIMEOUT_FREQ_SHIFT	0
 #define  SDHC_TIMEOUT_FREQ_MASK		0x1f
@@ -159,7 +162,14 @@
 #define  SDHC_VENDOR_VERS_SHIFT		8
 #define  SDHC_VENDOR_VERS_MASK		0xff
 
+/* SDHC_SPEC_VERS */
+#define SDHC_SPEC_VERS_100		0x00
+#define SDHC_SPEC_VERS_200		0x01
+#define SDHC_SPEC_VERS_300		0x02
+
 /* SDHC_CAPABILITIES decoding */
+#define SDHC_BASE_V3_FREQ_KHZ(cap)					\
+	((((cap) >> SDHC_BASE_FREQ_SHIFT) & SDHC_BASE_V3_FREQ_MASK) * 1000)
 #define SDHC_BASE_FREQ_KHZ(cap)						\
 	((((cap) >> SDHC_BASE_FREQ_SHIFT) & SDHC_BASE_FREQ_MASK) * 1000)
 #define SDHC_TIMEOUT_FREQ(cap)						\
