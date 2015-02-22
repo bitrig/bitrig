@@ -95,6 +95,48 @@ md_prep_disklabel() {
 
 	md_prep_fdisk $_disk
 
+	if ! dmesg | grep '^${_disk}.*SR CRYPTO'; then
+		ask_yn "Encrypt the contents of $_disk using softraid(4)?" yes
+		if [[ $resp == y ]]; then
+			rm -f /tmp/softraid.label
+			disklabel -d -E $_disk <<__EOT >/dev/null
+a a
+
+
+RAID
+s /tmp/softraid.label
+x
+__EOT
+			cat <<__EOT
+Please note that this procedure will cause $_disk to be abstracted under a
+different name. The auto-allocated layout for $_disk is:
+__EOT
+
+
+			cat /tmp/softraid.label
+			ask_yn "Use this disklabel for ${_disk}?" yes
+			[[ $resp == y ]] || return
+			disklabel -R $_disk /tmp/softraid.label
+			# XXX overwrite the first 1MB to get rid of 
+			# potentially stale softraid(4) metadata. there must be
+			# a better way of doing this!
+			dd if=/dev/zero of=/dev/${_disk}a bs=4k count=256 \
+				>/dev/null 2>&1
+			disklabel -R $_disk /tmp/softraid.label
+			echo "Configuring softraid(4) disk..."
+			bioctl -c C -l ${_disk}a softraid0 > /tmp/softraid.out
+			# XXX this will break if there are other softraid
+			# disks. we need to come up with a better way of
+			# detecting the newly configured device.
+			_new_disk=$(dmesg | grep '^sd[0-9].*SR CRYPTO')
+			_new_disk=${_new_disk%% *}
+			echo "$_disk has been abstracted as ${_new_disk}."
+			[[ $_disk == $ROOTDISK ]] && ROOTDISK=$_new_disk
+			_disk=$_new_disk
+			DISK=$_new_disk
+		fi
+	fi
+
 	_f=/tmp/fstab.$_disk
 	if [[ $_disk == $ROOTDISK ]]; then
 		while :; do
