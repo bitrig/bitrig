@@ -707,7 +707,6 @@ shf_smprintf(const char *fmt, ...)
 
 #undef FP			/* if you want floating point stuff */
 
-#define BUF_SIZE	128
 #define FPBUF_SIZE	(DMAXEXP+16)/* this must be >
 				 *	MAX(DMAXEXP, log10(pow(2, DSIGNIF)))
 				 *    + ceil(log10(DMAXEXP)) + 8 (I think).
@@ -730,7 +729,6 @@ shf_smprintf(const char *fmt, ...)
 	    (long) va_arg((a), int) : va_arg((a), unsigned)) :		\
 	    va_arg((a), unsigned)))
 
-#define ABIGNUM		32000	/* big numer that will fit in a short */
 #define LOG2_10		3.321928094887362347870319429	/* log base 2 of 10 */
 
 #define	FL_HASH		0x001	/* `#' seen */
