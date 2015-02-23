@@ -45,6 +45,7 @@ int	sdhc_intr(void *);
 #define	SDHC_F_NOPWR0		0x0004
 #define	SDHC_F_HAVE_DVS		0x0008
 #define	SDHC_F_32BIT_ACCESS	0x0010
+#define	SDHC_F_ENHANCED		0x0020	/* Freescale ESDHC */
 #define	SDHC_F_HOSTCAPS		0x0200	/* No device provided capabilities */
 
 #endif
