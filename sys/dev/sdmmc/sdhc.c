@@ -293,7 +293,9 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	saa.sct = &sdhc_functions;
 	saa.sch = hp;
 	saa.clkmax = hp->clkbase;
-	if (hp->specver == SDHC_SPEC_VERS_300)
+	if (ISSET(hp->sc->sc_flags, SDHC_F_HAVE_DVS))
+		saa.clkmin = hp->clkbase / 256 / 16;
+	else if (hp->specver == SDHC_SPEC_VERS_300)
 		saa.clkmin = hp->clkbase / 0x3ff;
 	else
 		saa.clkmin = hp->clkbase / 256;
@@ -552,6 +554,28 @@ sdhc_clock_divisor(struct sdhc_host *hp, u_int freq, u_int *divp)
 {
 	u_int div;
 
+	if (ISSET(hp->sc->sc_flags, SDHC_F_HAVE_DVS)) {
+		u_int dvs = (hp->clkbase + freq - 1) / freq;
+		u_int roundup = dvs & 1;
+		for (dvs >>= 1, div = 1; div <= 256; div <<= 1, dvs >>= 1) {
+			if (dvs + roundup <= 16) {
+				dvs += roundup - 1;
+				*divp = (div << SDHC_SDCLK_DIV_SHIFT)
+				    |   (dvs << SDHC_SDCLK_DVS_SHIFT);
+				DPRINTF(2,
+				    ("%s: divisor for freq %u is %u * %u\n",
+				    HDEVNAME(hp), freq, div * 2, dvs + 1));
+				//freq = hp->clkbase / (div * 2) * (dvs + 1);
+				return true;
+			}
+			/*
+			 * If we drop bits, we need to round up the divisor.
+			 */
+			roundup |= dvs & 1;
+		}
+		/* No divisor found. */
+		return false;
+	}
 	if (hp->specver == SDHC_SPEC_VERS_300) {
 		div = howmany(hp->clkbase, freq);
 		div = div > 1 ? howmany(div, 2) : 0;

@@ -97,6 +97,8 @@
 #define  SDHC_SDCLK_DIV_MASK		0xff
 #define  SDHC_SDCLK_XDIV_SHIFT		6
 #define  SDHC_SDCLK_XDIV_MASK		0x3
+#define  SDHC_SDCLK_DVS_SHIFT		4
+#define  SDHC_SDCLK_DVS_MASK		0xf
 #define  SDHC_SDCLK_ENABLE		(1<<2)
 #define  SDHC_INTCLK_STABLE		(1<<1)
 #define  SDHC_INTCLK_ENABLE		(1<<0)
