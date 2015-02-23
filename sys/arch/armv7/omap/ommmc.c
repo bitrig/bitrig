@@ -393,6 +393,9 @@ ommmc_attach(struct device *parent, struct device *self, void *args)
 	saa.caps = 0;
 	if (caps & MMCHS_CAPA_HSS)
 		saa.caps |= SMC_CAPS_MMC_HIGHSPEED;
+	saa.clkmax = sc->clkbase;
+	saa.clkmin = sc->clkbase /
+	    (MMCHS_SYSCTL_CLKD_MASK>>MMCHS_SYSCTL_CLKD_SH);
 
 	sc->sdmmc = config_found(&sc->sc_dev, &saa, NULL);
 	if (sc->sdmmc == NULL) {
