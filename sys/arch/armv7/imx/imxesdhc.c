@@ -369,6 +369,8 @@ imxesdhc_attach(struct device *parent, struct device *self, void *args)
 	saa.saa_busname = "sdmmc";
 	saa.sct = &imxesdhc_functions;
 	saa.sch = sc;
+	saa.clkmax = sc->clkbase;
+	saa.clkmin = sc->clkbase / 256 / 16;
 
 	sc->sdmmc = config_found(&sc->sc_dev, &saa, NULL);
 	if (sc->sdmmc == NULL) {
