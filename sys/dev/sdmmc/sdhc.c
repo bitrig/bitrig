@@ -134,8 +134,9 @@ int	sdhc_wait_state(struct sdhc_host *, u_int32_t, u_int32_t);
 int	sdhc_soft_reset(struct sdhc_host *, int);
 int	sdhc_wait_intr(struct sdhc_host *, int, int);
 void	sdhc_transfer_data(struct sdhc_host *, struct sdmmc_command *);
-void	sdhc_read_data(struct sdhc_host *, u_char *, int);
-void	sdhc_write_data(struct sdhc_host *, u_char *, int);
+int	sdhc_transfer_data_pio(struct sdhc_host *, struct sdmmc_command *);
+void	sdhc_read_data_pio(struct sdhc_host *, u_char *, int);
+void	sdhc_write_data_pio(struct sdhc_host *, u_char *, int);
 
 #ifdef SDHC_DEBUG
 int sdhcdebug = 0;
@@ -852,18 +853,10 @@ sdhc_start_command(struct sdhc_host *hp, struct sdmmc_command *cmd)
 void
 sdhc_transfer_data(struct sdhc_host *hp, struct sdmmc_command *cmd)
 {
-	u_char *datap = cmd->c_data;
-	int i, datalen;
-	int mask;
 	int error;
 
-	mask = ISSET(cmd->c_flags, SCF_CMD_READ) ?
-	    SDHC_BUFFER_READ_ENABLE : SDHC_BUFFER_WRITE_ENABLE;
-	error = 0;
-	datalen = cmd->c_datalen;
-
 	DPRINTF(1,("%s: resp=%#x datalen=%d\n", DEVNAME(hp->sc),
-	    MMC_R1(cmd->c_resp), datalen));
+	    MMC_R1(cmd->c_resp), cmd->c_datalen));
 
 #ifdef SDHC_DEBUG
 	/* XXX I forgot why I wanted to know when this happens :-( */
@@ -872,6 +865,28 @@ sdhc_transfer_data(struct sdhc_host *hp, struct sdmmc_command *cmd)
 		printf("%s: CMD52/53 error response flags %#x\n",
 		    DEVNAME(hp->sc), MMC_R1(cmd->c_resp) & 0xff00);
 #endif
+
+	/* TODO: DMA */
+	error = sdhc_transfer_data_pio(hp, cmd);
+	if (error != 0)
+		cmd->c_error = error;
+	SET(cmd->c_flags, SCF_ITSDONE);
+
+	DPRINTF(1,("%s: data transfer done (error=%d)\n",
+	    DEVNAME(hp->sc), cmd->c_error));
+}
+
+int
+sdhc_transfer_data_pio(struct sdhc_host *hp, struct sdmmc_command *cmd)
+{
+	u_char *datap = cmd->c_data;
+	int i, datalen;
+	int mask;
+	int error = 0;
+
+	mask = ISSET(cmd->c_flags, SCF_CMD_READ) ?
+	    SDHC_BUFFER_READ_ENABLE : SDHC_BUFFER_WRITE_ENABLE;
+	datalen = cmd->c_datalen;
 
 	while (datalen > 0) {
 		if (!sdhc_wait_intr(hp, SDHC_BUFFER_READ_READY|
@@ -885,9 +900,9 @@ sdhc_transfer_data(struct sdhc_host *hp, struct sdmmc_command *cmd)
 
 		i = MIN(datalen, cmd->c_blklen);
 		if (ISSET(cmd->c_flags, SCF_CMD_READ))
-			sdhc_read_data(hp, datap, i);
+			sdhc_read_data_pio(hp, datap, i);
 		else
-			sdhc_write_data(hp, datap, i);
+			sdhc_write_data_pio(hp, datap, i);
 
 		datap += i;
 		datalen -= i;
@@ -897,16 +912,11 @@ sdhc_transfer_data(struct sdhc_host *hp, struct sdmmc_command *cmd)
 	    SDHC_TRANSFER_TIMEOUT))
 		error = ETIMEDOUT;
 
-	if (error != 0)
-		cmd->c_error = error;
-	SET(cmd->c_flags, SCF_ITSDONE);
-
-	DPRINTF(1,("%s: data transfer done (error=%d)\n",
-	    DEVNAME(hp->sc), cmd->c_error));
+	return error;
 }
 
 void
-sdhc_read_data(struct sdhc_host *hp, u_char *datap, int datalen)
+sdhc_read_data_pio(struct sdhc_host *hp, u_char *datap, int datalen)
 {
 	while (datalen > 3) {
 		*(u_int32_t *)datap = HREAD4(hp, SDHC_DATA);
@@ -923,7 +933,7 @@ sdhc_read_data(struct sdhc_host *hp, u_char *datap, int datalen)
 }
 
 void
-sdhc_write_data(struct sdhc_host *hp, u_char *datap, int datalen)
+sdhc_write_data_pio(struct sdhc_host *hp, u_char *datap, int datalen)
 {
 	while (datalen > 3) {
 		DPRINTF(3,("%08x\n", *(u_int32_t *)datap));
