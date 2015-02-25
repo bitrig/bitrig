@@ -118,7 +118,7 @@ static int	x_size(int);
 static void	x_zots(char *);
 static void	x_zotc(int);
 static void	x_load_hist(char **);
-static int	x_search(char *, int, int);
+static int	x_search(char *, int);
 static int	x_match(char *, char *);
 static void	x_redraw(int);
 static void	x_push(int);
@@ -835,7 +835,7 @@ x_search_hist(int c)
 				x_e_ungetc(c);
 			break;
 		} else if (f == x_search_hist)
-			offset = x_search(pat, 0, offset);
+			offset = x_search(pat, 0);
 		else if (f == x_del_back) {
 			if (p == pat) {
 				offset = -1;
@@ -846,7 +846,7 @@ x_search_hist(int c)
 			if (p == pat)
 				offset = -1;
 			else
-				offset = x_search(pat, 1, offset);
+				offset = x_search(pat, 1);
 			continue;
 		} else if (f == x_insert) {
 			/* add char to pattern */
@@ -865,7 +865,7 @@ x_search_hist(int c)
 					continue;
 				}
 			}
-			offset = x_search(pat, 0, offset);
+			offset = x_search(pat, 0);
 		} else { /* other command */
 			x_e_ungetc(c);
 			break;
@@ -880,7 +880,7 @@ x_search_hist(int c)
 
 /* search backward from current line */
 static int
-x_search(char *pat, int sameline, int offset)
+x_search(char *pat, int sameline)
 {
 	char **hp;
 	int i;
@@ -888,8 +888,6 @@ x_search(char *pat, int sameline, int offset)
 	for (hp = x_histp - (sameline ? 0 : 1) ; hp >= history; --hp) {
 		i = x_match(*hp, pat);
 		if (i >= 0) {
-			if (offset < 0)
-				x_e_putc('\n');
 			x_load_hist(hp);
 			x_goto(xbuf + i + strlen(pat) - (*pat == '^'));
 			return i;
