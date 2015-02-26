@@ -123,6 +123,7 @@ int			sr_alloc_resources(struct sr_discipline *);
 void			sr_free_resources(struct sr_discipline *);
 void			sr_set_chunk_state(struct sr_discipline *, int, int);
 void			sr_set_vol_state(struct sr_discipline *);
+int			sr_flush(struct sr_discipline *sd);
 
 /* utility functions */
 void			sr_shutdown(void);
@@ -2459,6 +2460,9 @@ sr_scsi_probe(struct scsi_link *link)
 int
 sr_scsi_ioctl(struct scsi_link *link, u_long cmd, caddr_t addr, int flag)
 {
+	struct sr_softc		*sc;
+	struct sr_discipline	*sd;
+
 	DNPRINTF(SR_D_IOCTL, "%s: sr_scsi_ioctl cmd: %#x\n",
 	    DEVNAME((struct sr_softc *)link->adapter_softc), cmd);
 
@@ -2470,6 +2474,16 @@ sr_scsi_ioctl(struct scsi_link *link, u_long cmd, caddr_t addr, int flag)
 	case DIOCGCACHE:
 	case DIOCSCACHE:
 		return (EOPNOTSUPP);
+	case DIOCCACHESYNC:
+		sc = link->adapter_softc;
+		if (sc == NULL)
+			return (ENODEV);
+		TAILQ_FOREACH(sd, &sc->sc_dis_list, sd_link)
+			if (sd->sd_scsibus_dev == link->device_softc)
+				break;
+		if (sd == NULL)
+			return (ENODEV);
+		return (sr_flush(sd));
 	default:
 		return (ENOTTY);
 	}
@@ -4390,6 +4404,28 @@ die:
 	}
 
 	sd->sd_vol_status = new_state;
+}
+
+/*
+ * Tell the individual physical devices forming a discipline to flush any
+ * internal caches they might have.
+ */
+int
+sr_flush(struct sr_discipline *sd)
+{
+	struct sr_chunk	*chunk;
+	int		 rv = 0, error, force = 1;
+
+	SLIST_FOREACH(chunk, &sd->sd_vol.sv_chunk_list, src_link) {
+		if (chunk->src_vn == NULL)
+			rv = ENOTTY;
+		error = VOP_IOCTL(chunk->src_vn, DIOCCACHESYNC, &force, FWRITE,
+		    FSCRED);
+		if (error && rv == 0)
+			rv = error;
+	}
+
+	return (rv);
 }
 
 void *
