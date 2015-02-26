@@ -3486,7 +3486,7 @@ sr_ioctl_createraid(struct sr_softc *sc, struct bioc_createraid *bc,
 		}
 
 		link = scsi_get_link(sc->sc_scsibus, target, 0);
-		dev = link->device_softc;
+		dev = sd->sd_scsibus_dev = link->device_softc;
 		DNPRINTF(SR_D_IOCTL, "%s: sr device added: %s at target %d\n",
 		    DEVNAME(sc), dev->dv_xname, sd->sd_target);
 
