@@ -1805,6 +1805,7 @@ sr_attach(struct device *parent, struct device *self, void *aux)
 	sc->sc_link.adapter = &sr_switch;
 	sc->sc_link.adapter_target = SR_MAX_LD;
 	sc->sc_link.adapter_buswidth = SR_MAX_LD;
+	sc->sc_link.flags = SDEV_SOFTRAID;
 	sc->sc_link.luns = 1;
 
 	bzero(&saa, sizeof(saa));

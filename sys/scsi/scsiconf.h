@@ -314,6 +314,7 @@ struct scsi_link {
 #define SDEV_UMASS		0x0800	/* device is UMASS SCSI */
 #define SDEV_VIRTUAL		0x1000	/* device is virtualised on the hba */
 #define SDEV_OWN_IOPL		0x2000	/* scsibus */
+#define SDEV_SOFTRAID		0x4000	/* device is a softraid(4) disk */
 	u_int16_t quirks;		/* per-device oddities */
 #define	SDEV_AUTOSAVE		0x0001	/* do implicit SAVEDATAPOINTER on disconnect */
 #define	SDEV_NOSYNC		0x0002	/* does not grok SDTR */
