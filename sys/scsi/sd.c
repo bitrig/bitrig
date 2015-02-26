@@ -940,8 +940,15 @@ sdioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 			error = EBADF;
 			goto exit;
 		}
-		if ((sc->flags & SDF_DIRTY) != 0 || *(int *)addr != 0)
-			error = sd_flush(sc, 0);
+		if ((sc->flags & SDF_DIRTY) != 0 || *(int *)addr != 0) {
+			/* Propagate the ioctl to softraid(4). */
+			if (sc->sc_link->flags & SDEV_SOFTRAID) {
+				error =
+				    (sc->sc_link->adapter->ioctl)(sc->sc_link,
+				    cmd, (caddr_t)&sc->sc_dev, flag);
+			} else
+				error = sd_flush(sc, 0);
+		}
 		return (error);
 
 	default:
