@@ -174,6 +174,7 @@ extern const struct builtin shbuiltins [], kshbuiltins [];
 /* values for set_prompt() */
 #define PS1	0		/* command */
 #define PS2	1		/* command continuation */
+#define ISEARCH	2		/* incremental search */
 
 EXTERN char *path;		/* copy of either PATH or def_path */
 EXTERN const char *def_path;	/* path to use if PATH not set */

@@ -819,12 +819,9 @@ x_search_hist(int c)
 	int (*f)(int);
 
 	*p = '\0';
+	set_prompt(ISEARCH, NULL);
+	x_redraw(1);
 	while (1) {
-		if (offset < 0) {
-			x_goto(xep);
-			x_e_puts("\nI-search: ");
-			x_e_puts(pat);
-		}
 		x_flush();
 		if ((c = x_e_getc(offset >= 0)) < 0)
 			return (KSTD);
@@ -871,10 +868,8 @@ x_search_hist(int c)
 			break;
 		}
 	}
-	if (offset < 0) {
-		x_e_putc('\n');
-		x_redraw(0);
-	}
+	set_prompt(PS1, NULL);
+	x_redraw(1);
 	return KSTD;
 }
 
@@ -893,6 +888,9 @@ x_search(char *pat, int sameline)
 			return i;
 		}
 	}
+	strlcpy(xbuf, pat, xend - xbuf);
+	xep = xcp = xbuf + strlen(xbuf);
+	x_redraw(1);
 	x_e_putc(BEL);
 	x_histp = histptr;
 	return -1;
