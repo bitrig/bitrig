@@ -887,7 +887,7 @@ x_search(char *pat, int sameline)
 
 	for (hp = x_histp - (sameline ? 0 : 1) ; hp >= history; --hp) {
 		i = x_match(*hp, pat);
-		if (i >= 0) {
+		if (i >= 0 && (*x_histp == NULL || strcmp(*x_histp, *hp) != 0)) {
 			x_load_hist(hp);
 			x_goto(xbuf + i + strlen(pat) - (*pat == '^'));
 			return i;
