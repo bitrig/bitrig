@@ -251,11 +251,22 @@ x_vi(char *buf, size_t len)
 static int
 vi_getc()
 {
-	int c;
+	int olinelen, ocursor, owinleft, c;
 
-	do {
-		c = x_getc();
-	} while (c < 0 && errno == EINTR);
+	while (got_sigwinch || ((c = x_getc()) < 0 && errno == EINTR)) {
+		x_check_sigwinch();
+		olinelen = es->linelen;
+		ocursor = es->cursor;
+		owinleft = es->winleft;
+		edit_reset(es->cbuf, es->cbufsize);
+		es->linelen = olinelen;
+		es->cursor = ocursor;
+		es->winleft = owinleft;
+		x_putc('\r');
+		redraw_line(0);
+		refresh(0);
+		x_flush();
+	}
 
 	return (c);
 }
@@ -1361,7 +1372,7 @@ static int	prompt_trunc;		/* how much of prompt to truncate */
 static int	prompt_skip;		/* how much of prompt to skip */
 static int	winwidth;		/* width of window */
 static char	*wbuf[2];		/* window buffers */
-static int	wbuf_len;		/* length of window buffers (x_cols-3)*/
+static int	wbuf_len;		/* length of window buffers (x_cols-2)*/
 static int	win;			/* window buffer in use */
 static char	morec;			/* more character at right of window */
 static int	lastref;		/* argument to last refresh() */
@@ -1436,20 +1447,20 @@ edit_reset(char *buf, size_t len)
 
 	cur_col = pwidth = promptlen(prompt, &p);
 	prompt_skip = p - prompt;
-	if (pwidth > x_cols - 3 - MIN_EDIT_SPACE) {
-		cur_col = x_cols - 3 - MIN_EDIT_SPACE;
+	if (pwidth > x_cols - 2 - MIN_EDIT_SPACE) {
+		cur_col = x_cols - 2 - MIN_EDIT_SPACE;
 		prompt_trunc = pwidth - cur_col;
 		pwidth -= prompt_trunc;
 	} else
 		prompt_trunc = 0;
-	if (!wbuf_len || wbuf_len != x_cols - 3) {
-		wbuf_len = x_cols - 3;
+	if (!wbuf_len || wbuf_len != x_cols - 2) {
+		wbuf_len = x_cols - 2;
 		wbuf[0] = aresize(wbuf[0], wbuf_len, APERM);
 		wbuf[1] = aresize(wbuf[1], wbuf_len, APERM);
 	}
 	(void) memset(wbuf[0], ' ', wbuf_len);
 	(void) memset(wbuf[1], ' ', wbuf_len);
-	winwidth = x_cols - pwidth - 3;
+	winwidth = x_cols - pwidth - 2;
 	win = 0;
 	morec = ' ';
 	lastref = 1;
@@ -1873,7 +1884,6 @@ display(char *wb1, char *wb2, int leftside)
 	if (mc != morec) {
 		ed_mov_opt(pwidth + winwidth + 1, wb1);
 		x_putc(mc);
-		cur_col++;
 		morec = mc;
 	}
 	if (cur_col != ncol)
