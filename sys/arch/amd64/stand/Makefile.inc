@@ -36,7 +36,7 @@ SACFLAGS+=-nostdinc -fno-builtin -fpack-struct
 	@([ X$(S) = X -o -h machine ] || ln -s $(S)/arch/amd64/include machine)
 
 assym.h: ${S}/kern/genassym.sh ${SADIR}/etc/genassym.cf
-	sh ${S}/kern/genassym.sh ${CC} ${CFLAGS} ${CPPFLAGS} \
+	sh ${S}/kern/genassym.sh ${CC} ${CFLAGS} ${CPPFLAGS} -no-integrated-as \
 	    ${PARAM} < ${SADIR}/etc/genassym.cf > assym.h.tmp && \
 	    mv -f assym.h.tmp assym.h
 .endif
