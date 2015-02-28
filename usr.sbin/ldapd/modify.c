@@ -216,7 +216,8 @@ ldap_modify(struct request *req)
 	char			*dn;
 	long long		 op;
 	char			*attr;
-	struct ber_element	*mods, *entry, *mod, *vals, *a, *set, *prev = NULL;
+	struct ber_element	*mods, *entry, *mod, *vals = NULL, *a, *set;
+	struct ber_element	*prev = NULL;
 	struct namespace	*ns;
 	struct attr_type	*at;
 	struct referrals	*refs;
