@@ -71,4 +71,11 @@ TGHDRS=	AttrList \
 	StmtNodes \
 	arm_neon
 
+# FIXME: Workaround for ARM. clang process
+#	 gets too big on this file.
+CFLAGS+=${CFLAGS_$*}
+.if ${MACHINE_ARCH} == "arm"
+CFLAGS_SemaDeclObjC+=-O0
+.endif
+
 .include "../clang.lib.mk"
