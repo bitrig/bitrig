@@ -1764,7 +1764,7 @@ x_e_getc(int redr)
 		macro_args = NULL;
 	}
 
-	while ((c = x_getc()) < 0 && errno == EINTR) {
+	while (got_sigwinch || (c = x_getc()) < 0 && errno == EINTR) {
 		if (redr) {
 			x_redraw(1);
 			x_flush();
