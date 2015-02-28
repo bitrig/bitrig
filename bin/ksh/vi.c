@@ -1694,17 +1694,26 @@ static int
 grabsearch(int save, int start, int fwd, char *pat)
 {
 	char	*hptr;
-	int	hist;
-	int	anchored;
+	int	hist, anchored, current;
 
 	if ((start == 0 && fwd == 0) || (start >= hlast-1 && fwd == 1))
 		return -1;
+
+	current = start;
 	if (fwd)
 		start++;
 	else
 		start--;
 	anchored = *pat == '^' ? (++pat, 1) : 0;
-	if ((hist = findhist(start, fwd, pat, anchored)) < 0) {
+	while ((hist = findhist(start, fwd, pat, anchored)) >= 0) {
+		if (history[current] != NULL &&
+		    strcmp(history[hist], history[current]) == 0) {
+			start = hist + (fwd ? 1 : -1);
+			continue;
+		} else
+			break;
+	}
+	if (hist < 0) {
 		/* if (start != 0 && fwd && match(holdbuf, pat) >= 0) { */
 		/* XXX should strcmp be strncmp? */
 		if (start != 0 && fwd && strcmp(holdbuf, pat) >= 0) {
