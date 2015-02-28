@@ -204,7 +204,7 @@ int
 read_mb(void)
 {
 	struct kinfo_pool pool;
-	struct ifaddrs *ifap, *ifa;
+	struct ifaddrs *ifap = NULL, *ifa;
 	struct if_info *ifi;
 	struct if_rxring_info *ifr;
 	int mib[4];
@@ -257,7 +257,7 @@ read_mb(void)
 		if (ifa->ifa_addr == NULL ||
 		    ifa->ifa_addr->sa_family != AF_LINK)
 			continue;
-			
+
 		strlcpy(ifi->name, ifa->ifa_name, sizeof(ifi->name));
 		for (;;) {
 			struct ifreq ifreq;
@@ -282,7 +282,7 @@ read_mb(void)
 			}
 
 			if (rings >= ifi->data.ifri_total)
-				break;  
+				break;
 
 			ifr = reallocarray(ifi->data.ifri_entries,
 			    ifi->data.ifri_total, sizeof(*ifr));
