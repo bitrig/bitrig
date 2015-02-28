@@ -8,10 +8,21 @@ If you are unsure of the date of your current system snapshot, the build date
 and git commit SHA of the kernel are included in the copyright message printed
 at the beginning of the kernel dmesg(8).
 
+* 2015-02-28: clang 3.6.0
 * 2015-01-23: vnd encryption support removed
 * 2015-01-02: clang 3.4.2
 * 2014-12-29: /var/tmp
 
+
+* 2015-02-28: clang 3.6.0
+
+  Clang has been updated from 3.4.2 to 3.6.0. As a result of that change
+  the headers are installed into a new directory. The old headers have to
+  be removed manually after upgrading.
+
+  As root:
+
+	# rm -r /usr/lib/clang/3.4.2
 
 * 2015-01-23: vnd encryption support removed
 
