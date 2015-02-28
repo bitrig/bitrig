@@ -1,0 +1,182 @@
+commit d43f90ca58006d34e07e3d0f1877d11e28b5f1ad
+Author: Patrick Wildt <patrick@blueri.se>
+Date:   Mon Jan 5 21:10:58 2015 +0100
+
+    LLVM: Reapply patches from 3.4 to 3.6.
+    
+    The following changes are in here:
+     * Important parts of the changes from FreeBSD.
+     * Define __OpenBSD__
+     * -p alias for -pg
+     * AArch64 pieces
+     * arm: size_t is unsigned long
+     * arm: use DwarfCFI Exceptions
+     * arm: pass -march, -mcpu and -mfpu to gas
+
+diff --git a/contrib/llvm/lib/Support/Unix/Host.inc b/contrib/llvm/lib/Support/Unix/Host.inc
+index 519f2a1..bdf7caa 100644
+--- a/contrib/llvm/lib/Support/Unix/Host.inc
++++ b/contrib/llvm/lib/Support/Unix/Host.inc
+@@ -25,6 +25,11 @@
+ 
+ using namespace llvm;
+ 
++#ifdef __Bitrig__
++std::string sys::getDefaultTargetTriple() {
++  return LLVM_DEFAULT_TARGET_TRIPLE;
++}
++#else // __Bitrig__
+ static std::string getOSVersion() {
+   struct utsname info;
+ 
+@@ -61,3 +66,4 @@ std::string sys::getDefaultTargetTriple() {
+ 
+   return Triple::normalize(Triple);
+ }
++#endif // __Bitrig__
+diff --git a/contrib/llvm/lib/Support/Unix/Memory.inc b/contrib/llvm/lib/Support/Unix/Memory.inc
+index 7ccde46..351f1b4 100644
+--- a/contrib/llvm/lib/Support/Unix/Memory.inc
++++ b/contrib/llvm/lib/Support/Unix/Memory.inc
+@@ -333,7 +333,7 @@ void Memory::InvalidateInstructionCache(const void *Addr,
+   for (intptr_t Line = StartLine; Line < EndLine; Line += LineSize)
+     asm volatile("icbi 0, %0" : : "r"(Line));
+   asm volatile("isync");
+-#  elif (defined(__arm__) || defined(__aarch64__)) && defined(__GNUC__)
++#  elif (defined(__arm__) || defined(__aarch64__)) && defined(__GNUC__) && !defined(__Bitrig__)
+   // FIXME: Can we safely always call this for __GNUC__ everywhere?
+   const char *Start = static_cast<const char *>(Addr);
+   const char *End = Start + Len;
+diff --git a/contrib/llvm/lib/Target/ARM/MCTargetDesc/ARMMCAsmInfo.cpp b/contrib/llvm/lib/Target/ARM/MCTargetDesc/ARMMCAsmInfo.cpp
+index 66a1618..caa8736 100644
+--- a/contrib/llvm/lib/Target/ARM/MCTargetDesc/ARMMCAsmInfo.cpp
++++ b/contrib/llvm/lib/Target/ARM/MCTargetDesc/ARMMCAsmInfo.cpp
+@@ -59,6 +59,7 @@ ARMELFMCAsmInfo::ARMELFMCAsmInfo(StringRef TT) {
+ 
+   // Exceptions handling
+   switch (TheTriple.getOS()) {
++  case Triple::Bitrig:
+   case Triple::NetBSD:
+     ExceptionsType = ExceptionHandling::DwarfCFI;
+     break;
+diff --git a/contrib/llvm/tools/clang/include/clang/Driver/Options.td b/contrib/llvm/tools/clang/include/clang/Driver/Options.td
+index b68a46b..ca112fd 100644
+--- a/contrib/llvm/tools/clang/include/clang/Driver/Options.td
++++ b/contrib/llvm/tools/clang/include/clang/Driver/Options.td
+@@ -1423,7 +1423,7 @@ def private__bundle : Flag<["-"], "private_bundle">;
+ def pthreads : Flag<["-"], "pthreads">;
+ def pthread : Flag<["-"], "pthread">, Flags<[CC1Option]>,
+   HelpText<"Support POSIX threads in generated code">;
+-def p : Flag<["-"], "p">;
++def p : Flag<["-"], "p">, Alias<pg>;
+ def pie : Flag<["-"], "pie">;
+ def read__only__relocs : Separate<["-"], "read_only_relocs">;
+ def remap : Flag<["-"], "remap">;
+diff --git a/contrib/llvm/tools/clang/lib/Basic/Targets.cpp b/contrib/llvm/tools/clang/lib/Basic/Targets.cpp
+index bf60bbf..a4f78e1 100644
+--- a/contrib/llvm/tools/clang/lib/Basic/Targets.cpp
++++ b/contrib/llvm/tools/clang/lib/Basic/Targets.cpp
+@@ -468,10 +468,22 @@ protected:
+     // Bitrig defines; list based off of gcc output
+ 
+     Builder.defineMacro("__Bitrig__");
++    Builder.defineMacro("__OpenBSD__");
+     DefineStd(Builder, "unix", Opts);
+     Builder.defineMacro("__ELF__");
+     if (Opts.POSIXThreads)
+       Builder.defineMacro("_REENTRANT");
++
++    switch (Triple.getArch()) {
++    default:
++      break;
++    case llvm::Triple::arm:
++    case llvm::Triple::armeb:
++    case llvm::Triple::thumb:
++    case llvm::Triple::thumbeb:
++      Builder.defineMacro("__ARM_DWARF_EH__");
++      break;
++    }
+   }
+ public:
+   BitrigTargetInfo(const llvm::Triple &Triple) : OSTargetInfo<Target>(Triple) {
+@@ -3789,7 +3801,8 @@ class ARMTargetInfo : public TargetInfo {
+     const llvm::Triple &T = getTriple();
+ 
+     // size_t is unsigned long on MachO-derived environments and NetBSD.
+-    if (T.isOSBinFormatMachO() || T.getOS() == llvm::Triple::NetBSD)
++    if (T.isOSBinFormatMachO() || T.getOS() == llvm::Triple::NetBSD ||
++        T.getOS() == llvm::Triple::Bitrig)
+       SizeType = UnsignedLong;
+     else
+       SizeType = UnsignedInt;
+@@ -6475,6 +6488,8 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple) {
+       return new LinuxTargetInfo<AArch64leTargetInfo>(Triple);
+     case llvm::Triple::NetBSD:
+       return new NetBSDTargetInfo<AArch64leTargetInfo>(Triple);
++    case llvm::Triple::Bitrig:
++      return new BitrigTargetInfo<AArch64leTargetInfo>(Triple);
+     default:
+       return new AArch64leTargetInfo(Triple);
+     }
+@@ -6487,6 +6502,8 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple) {
+       return new LinuxTargetInfo<AArch64beTargetInfo>(Triple);
+     case llvm::Triple::NetBSD:
+       return new NetBSDTargetInfo<AArch64beTargetInfo>(Triple);
++    case llvm::Triple::Bitrig:
++      return new BitrigTargetInfo<AArch64beTargetInfo>(Triple);
+     default:
+       return new AArch64beTargetInfo(Triple);
+     }
+diff --git a/contrib/llvm/tools/clang/lib/Basic/Version.cpp b/contrib/llvm/tools/clang/lib/Basic/Version.cpp
+index b631b3e..982410b 100644
+--- a/contrib/llvm/tools/clang/lib/Basic/Version.cpp
++++ b/contrib/llvm/tools/clang/lib/Basic/Version.cpp
+@@ -128,8 +128,10 @@ std::string getClangToolFullVersion(StringRef ToolName) {
+   OS << ToolName << " version " CLANG_VERSION_STRING " "
+      << getClangFullRepositoryVersion();
+ 
++#ifdef CLANG_VENDOR_SUFFIX
++  OS << CLANG_VENDOR_SUFFIX;
++#elif defined(CLANG_VENDOR)
+   // If vendor supplied, include the base LLVM version as well.
+-#ifdef CLANG_VENDOR
+   OS << " (based on " << BACKEND_PACKAGE_STRING << ")";
+ #endif
+ 
+diff --git a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+index 75eef9e..fa8950c 100644
+--- a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
++++ b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+@@ -6380,6 +6380,22 @@ void bitrig::Assemble::ConstructJob(Compilation &C, const JobAction &JA,
+   claimNoWarnArgs(Args);
+   ArgStringList CmdArgs;
+ 
++  if (getToolChain().getArch() == llvm::Triple::arm) {
++    StringRef MArch = getToolChain().getArchName();
++    if (MArch == "armv7" || MArch == "armv7a" || MArch == "armv7-a")
++      CmdArgs.push_back("-mfpu=neon");
++    if (MArch == "armv8" || MArch == "armv8a" || MArch == "armv8-a")
++      CmdArgs.push_back("-mfpu=crypto-neon-fp-armv8");
++
++    StringRef ARMFloatABI = arm::getARMFloatABI(getToolChain().getDriver(),
++                                          Args, getToolChain().getTriple());
++    CmdArgs.push_back(Args.MakeArgString("-mfloat-abi=" + ARMFloatABI));
++
++    Args.AddLastArg(CmdArgs, options::OPT_march_EQ);
++    Args.AddLastArg(CmdArgs, options::OPT_mcpu_EQ);
++    Args.AddLastArg(CmdArgs, options::OPT_mfpu_EQ);
++  }
++
+   Args.AddAllArgValues(CmdArgs, options::OPT_Wa_COMMA,
+                        options::OPT_Xassembler);
+ 
+@@ -6479,6 +6495,9 @@ void bitrig::Link::ConstructJob(Compilation &C, const JobAction &JA,
+ 
+     StringRef MyArch;
+     switch (getToolChain().getTriple().getArch()) {
++    case llvm::Triple::aarch64:
++      MyArch = "aarch64";
++      break;
+     case llvm::Triple::arm:
+       MyArch = "arm";
+       break;
