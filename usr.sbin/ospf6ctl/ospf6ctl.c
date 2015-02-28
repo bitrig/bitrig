@@ -542,7 +542,7 @@ log_adv_rtr(u_int32_t adv_rtr)
 void
 show_database_head(struct in_addr aid, char *ifname, u_int16_t type)
 {
-	char	*header, *format;
+	char	*header = NULL, *format;
 	int	cleanup = 0;
 
 	switch (ntohs(type)) {
