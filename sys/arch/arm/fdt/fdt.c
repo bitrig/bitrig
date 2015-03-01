@@ -537,6 +537,85 @@ fdt_find_node_by_phandle_prop(void *node, char *prop)
 }
 
 /*
+ * Translate memory address depending on parent's range.
+ */
+static int
+fdt_translate_memory_address(void *node, struct fdt_memory *mem)
+{
+	void *parent;
+	int pac, psc, ac, sc, ret, rlen, rone, *range;
+	uint64_t from, to, size;
+
+	if (node == NULL || mem == NULL)
+		return -1;
+
+	parent = fdt_parent_node(node);
+	if (parent == NULL)
+		return 0;
+
+	/* Empty ranges, no need to do anything. */
+	rlen = fdt_node_property(parent, "ranges", (char **)&range) / sizeof(int);
+	if (rlen <= 0)
+		return 0;
+
+	/* We only support 32-bit (1), and 64-bit (2) wide addresses here. */
+	ret = fdt_node_property_int(parent, "#address-cells", &pac);
+	if (ret != 1 || pac <= 0 || pac > 2)
+		return -1;
+
+	/* We only support 32-bit (1), and 64-bit (2) wide sizes here. */
+	ret = fdt_node_property_int(parent, "#size-cells", &psc);
+	if (ret != 1 || psc <= 0 || psc > 2)
+		return -1;
+
+	/* We only support 32-bit (1), and 64-bit (2) wide addresses here. */
+	ret = fdt_node_property_int(node, "#address-cells", &ac);
+	if (ret <= 0)
+		ac = pac;
+	else if (ret > 1 || ac <= 0 || ac > 2)
+		return -1;
+
+	/* We only support 32-bit (1), and 64-bit (2) wide sizes here. */
+	ret = fdt_node_property_int(node, "#size-cells", &sc);
+	if (ret <= 0)
+		sc = psc;
+	else if (ret > 1 || sc <= 0 || sc > 2)
+		return -1;
+
+	/* Must have at least one range. */
+	rone = pac + ac + sc;
+	if (rlen < rone)
+		return -1;
+
+	/* For each range. */
+	for (; rlen >= rone; rlen -= rone, range += rone) {
+		/* Extract from and size, so we can see if we fit. */
+		from = betoh32(range[0]);
+		if (ac == 2)
+			from = (from << 32) + betoh32(range[1]);
+		size = betoh32(range[ac + pac]);
+		if (sc == 2)
+			size = (size << 32) + betoh32(range[ac + pac + 1]);
+
+		/* Try next, if we're not in the range. */
+		if (mem->addr < from || (mem->addr + mem->size) > (from + size))
+			continue;
+
+		/* All good, extract to address and translate. */
+		to = betoh32(range[ac]);
+		if (pac == 2)
+			to = (to << 32) + betoh32(range[ac + 1]);
+
+		mem->addr -= from;
+		mem->addr += to;
+		return 0;
+	}
+
+	/* Range must have been in there. */
+	return -1;
+}
+
+/*
  * Parse the memory address and size of a node.
  */
 int
@@ -559,7 +638,7 @@ fdt_get_memory_address(void *node, int idx, struct fdt_memory *mem)
 
 	/* We only support 32-bit (1), and 64-bit (2) wide sizes here. */
 	ret = fdt_node_property_int(parent, "#size-cells", &sc);
-	if (ret != 1 || ac <= 0 || ac > 2)
+	if (ret != 1 || sc <= 0 || sc > 2)
 		return 1;
 
 	inlen = fdt_node_property(node, "reg", (char **)&in) / sizeof(int);
@@ -574,9 +653,9 @@ fdt_get_memory_address(void *node, int idx, struct fdt_memory *mem)
 
 	mem->size = betoh32(in[off + ac]);
 	if (sc == 2)
-		mem->size = betoh32(in[off + ac + 1]);
+		mem->size = (mem->size << 32) + betoh32(in[off + ac + 1]);
 
-	return 0;
+	return fdt_translate_memory_address(node, mem);
 }
 
 /*
