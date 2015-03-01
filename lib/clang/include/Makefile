@@ -10,6 +10,7 @@ INCS=	__stddef_max_align_t.h \
 	__wmmintrin_aes.h \
 	__wmmintrin_pclmul.h \
 	Intrin.h \
+	adxintrin.h \
 	altivec.h \
 	ammintrin.h \
 	arm_acle.h \
