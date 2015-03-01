@@ -418,21 +418,33 @@ fdt_parent_node(void *node)
 /*
  * Find the first node which is compatible.
  */
+static void *
+fdt_find_compatible_node(char *compatible, void *node)
+{
+	void *child;
+
+	while (node != NULL) {
+		if (fdt_node_compatible(compatible, node))
+			return node;
+
+		child = fdt_child_node(node);
+		if (child != NULL) {
+			child = fdt_find_compatible_node(compatible,
+			    fdt_child_node(node));
+			if (child != NULL)
+				return child;
+		}
+
+		node = fdt_next_node(node);
+	}
+
+	return NULL;
+}
+
 void *
 fdt_find_compatible(char *compatible)
 {
-	return fdt_find_node_by_prop(NULL, "compatible",
-	    compatible, strlen(compatible));
-}
-
-/*
- * Find the next node which is compatible.
- */
-void *
-fdt_find_next_compatible(char *compatible, void *node)
-{
-	return fdt_find_node_by_prop(fdt_next_node(node),
-	    "compatible", compatible, strlen(compatible));
+	return fdt_find_compatible_node(compatible, fdt_next_node(0));
 }
 
 /*
@@ -448,10 +460,12 @@ fdt_node_compatible(char *compatible, void *node)
 		return 0;
 
 	len = fdt_node_property(node, "compatible", &data);
-	if (len) /* Property exists and has at least '\0'. */
-		if (len >= (clen + 1)) /* Add '\0'. */
-			if (!strncmp(data, compatible, clen))
-				return 1;
+	while (len > 0 && len >= clen + 1) {
+		if (!strncmp(data, compatible, clen))
+			return 1;
+		len -= (strlen(data) + 1);
+		data += (strlen(data) + 1);
+	}
 
 	return 0;
 }
