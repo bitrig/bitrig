@@ -1,0 +1,22 @@
+commit be2b565139ac1eda2433d1a3938caf7e4dcf5c99
+Author: Patrick Wildt <patrick@blueri.se>
+Date:   Sun Mar 1 23:34:05 2015 +0100
+
+    libc++: Make the forward declaration for array swap have the same inline/visibility attributes as the definition. Thanks to Steven Wu for the catch.
+    
+    Commit fec08372b8300aa1346485f705cd5c507ada0c53 from upstream.
+    
+    Found by marco@.
+
+diff --git a/contrib/libc++/include/utility b/contrib/libc++/include/utility
+index 2cb1018..96db60a 100644
+--- a/contrib/libc++/include/utility
++++ b/contrib/libc++/include/utility
+@@ -204,6 +204,7 @@ operator>=(const _Tp& __x, const _Tp& __y)
+ 
+ // forward
+ template<class _Tp, size_t _Np>
++inline _LIBCPP_INLINE_VISIBILITY
+ void swap(_Tp (&__a)[_Np], _Tp (&__b)[_Np]) _NOEXCEPT_(__is_nothrow_swappable<_Tp>::value);
+ 
+ template <class _ForwardIterator1, class _ForwardIterator2>
