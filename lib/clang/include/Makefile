@@ -15,6 +15,11 @@ INCS=	__stddef_max_align_t.h \
 	ammintrin.h \
 	arm_acle.h \
 	avx2intrin.h \
+	avx512bwintrin.h \
+	avx512erintrin.h \
+	avx512fintrin.h \
+	avx512vlbwintrin.h \
+	avx512vlintrin.h \
 	avxintrin.h \
 	bmi2intrin.h \
 	bmiintrin.h \
@@ -30,8 +35,8 @@ INCS=	__stddef_max_align_t.h \
 	limits.h \
 	lzcntintrin.h \
 	mm3dnow.h \
-	mm_malloc.h \
 	mmintrin.h \
+	mm_malloc.h \
 	module.modulemap \
 	nmmintrin.h \
 	pmmintrin.h \
@@ -43,6 +48,7 @@ INCS=	__stddef_max_align_t.h \
 	smmintrin.h \
 	stdalign.h \
 	stdarg.h \
+	stdatomic.h \
 	stdbool.h \
 	stddef.h \
 	stdint.h \
@@ -51,6 +57,7 @@ INCS=	__stddef_max_align_t.h \
 	tgmath.h \
 	tmmintrin.h \
 	unwind.h \
+	vadefs.h \
 	varargs.h \
 	wmmintrin.h \
 	x86intrin.h \
