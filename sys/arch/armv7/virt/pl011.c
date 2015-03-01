@@ -75,6 +75,7 @@ struct pl011_softc {
 #define COM_SW_CRTSCTS  0x04
 #define COM_SW_MDMBUF   0x08
 #define COM_SW_PPS      0x10
+	int		sc_fifolen;
 
 	u_int8_t	sc_initialize;
 	u_int8_t	sc_cua;
@@ -147,7 +148,6 @@ pl011attach(struct device *parent, struct device *self, void *args)
 	struct armv7_attach_args *aa = args;
 	struct pl011_softc *sc = (struct pl011_softc *) self;
 	struct fdt_memory mem;
-	uint32_t ints[3];
 
 	if (aa->aa_node == NULL)
 		panic("%s: no fdt node", __func__);
@@ -155,12 +155,8 @@ pl011attach(struct device *parent, struct device *self, void *args)
 	if (fdt_get_memory_address(aa->aa_node, 0, &mem))
 		panic("%s: could not extract memory data from FDT", __func__);
 
-	/* TODO: Add interrupt FDT API. */
-	if (fdt_node_property_ints(aa->aa_node, "interrupts", ints, 3) != 3)
-		panic("%s: could not extract interrupt data from FDT", __func__);
-
-	sc->sc_irq = arm_intr_establish(ints[1], IPL_TTY, pl011_intr, sc,
-	    sc->sc_dev.dv_xname);
+	sc->sc_irq = arm_intr_establish_fdt(aa->aa_node, IPL_TTY, pl011_intr,
+	    sc, sc->sc_dev.dv_xname);
 
 	sc->sc_iot = aa->aa_iot;
 	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
@@ -179,6 +175,9 @@ pl011attach(struct device *parent, struct device *self, void *args)
 
 	bus_space_write_4(sc->sc_iot, sc->sc_ioh, UART_IMSC, (UART_IMSC_RXIM | UART_IMSC_TXIM));
 	bus_space_write_4(sc->sc_iot, sc->sc_ioh, UART_ICR, 0x7ff);
+	bus_space_write_4(sc->sc_iot, sc->sc_ioh, UART_LCR_H,
+	    bus_space_read_4(sc->sc_iot, sc->sc_ioh, UART_LCR_H) &
+	    ~UART_LCR_H_FEN);
 
 	printf("\n");
 }
@@ -321,46 +320,33 @@ pl011_start(struct tty *tp)
 
 	int s;
 	s = spltty();
-	if (ISSET(tp->t_state, TS_BUSY)) {
-		splx(s);
-		return;
-	}
-	if (ISSET(tp->t_state, TS_TIMEOUT | TS_TTSTOP))
-		goto stopped;
+	if (ISSET(tp->t_state, TS_BUSY | TS_TIMEOUT | TS_TTSTOP))
+		goto out;
 	if (tp->t_outq.c_cc <= tp->t_lowat) {
 		if (ISSET(tp->t_state, TS_ASLEEP)) {
 			CLR(tp->t_state, TS_ASLEEP);
 			wakeup(&tp->t_outq);
 		}
 		if (tp->t_outq.c_cc == 0)
-			goto stopped;
+			goto out;
 		selwakeup(&tp->t_wsel);
 	}
 	SET(tp->t_state, TS_BUSY);
 
-	/*
-	if (!ISSET(sc->sc_ucr1, IMXUART_CR1_TXMPTYEN)) {
-		SET(sc->sc_ucr1, IMXUART_CR1_TXMPTYEN);
-		bus_space_write_4(iot, ioh, IMXUART_UCR1, sc->sc_ucr1);
-	}
-	*/
+	if (ISSET(sc->sc_hwflags, COM_HW_FIFO)) {
+		u_char buffer[64];	/* largest fifo */
+		int i, n;
 
-	{
-		u_char buf[32];
-		int n = q_to_b(&tp->t_outq, buf, 32/*XXX*/);
-		int i;
-		for (i = 0; i < n; i++)
-			bus_space_write_1(iot, ioh, UART_DR, buf[i]);
-	}
-	splx(s);
-	return;
-stopped:
-	/*
-	if (ISSET(sc->sc_ucr1, IMXUART_CR1_TXMPTYEN)) {
-		CLR(sc->sc_ucr1, IMXUART_CR1_TXMPTYEN);
-		bus_space_write_4(iot, ioh, IMXUART_UCR1, sc->sc_ucr1);
-	}
-	*/
+		n = q_to_b(&tp->t_outq, buffer,
+		    min(sc->sc_fifolen, sizeof buffer));
+		for (i = 0; i < n; i++) {
+			bus_space_write_4(iot, ioh, UART_DR, buffer[i]);
+		}
+		bzero(buffer, n);
+	} else if (tp->t_outq.c_cc != 0)
+		bus_space_write_4(iot, ioh, UART_DR, getc(&tp->t_outq));
+
+out:
 	splx(s);
 }
 
@@ -771,6 +757,10 @@ pl011cnattach(bus_space_tag_t iot, bus_addr_t iobase, int rate, tcflag_t cflag)
 
 	if (bus_space_map(iot, iobase, UART_SPACE, 0, &pl011consioh))
 			return ENOMEM;
+
+	/* Disable FIFO. */
+	bus_space_write_4(iot, pl011consioh, UART_LCR_H,
+	    bus_space_read_4(iot, pl011consioh, UART_LCR_H) & ~UART_LCR_H_FEN);
 
 	cn_tab = &pl011cons;
 	cn_tab->cn_dev = makedev(12 /* XXX */, 0);
