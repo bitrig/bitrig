@@ -115,3 +115,15 @@ index f21e35d..a05e4ed 100644
      return _DefaultRuneLocale.__runetype;
  #elif defined(__NetBSD__)
      return _C_ctype_tab_ + 1;
+diff --git a/contrib/libc++/include/utility b/contrib/libc++/include/utility
+index 2cb1018..96db60a 100644
+--- a/contrib/libc++/include/utility
++++ b/contrib/libc++/include/utility
+@@ -204,6 +204,7 @@ operator>=(const _Tp& __x, const _Tp& __y)
+ 
+ // forward
+ template<class _Tp, size_t _Np>
++inline _LIBCPP_INLINE_VISIBILITY
+ void swap(_Tp (&__a)[_Np], _Tp (&__b)[_Np]) _NOEXCEPT_(__is_nothrow_swappable<_Tp>::value);
+ 
+ template <class _ForwardIterator1, class _ForwardIterator2>
