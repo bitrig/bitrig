@@ -1461,11 +1461,17 @@
 ./usr/lib/clang/3.6.0/include/__stddef_max_align_t.h
 ./usr/lib/clang/3.6.0/include/__wmmintrin_aes.h
 ./usr/lib/clang/3.6.0/include/__wmmintrin_pclmul.h
+./usr/lib/clang/3.6.0/include/adxintrin.h
 ./usr/lib/clang/3.6.0/include/altivec.h
 ./usr/lib/clang/3.6.0/include/ammintrin.h
 ./usr/lib/clang/3.6.0/include/arm_acle.h
 ./usr/lib/clang/3.6.0/include/arm_neon.h
 ./usr/lib/clang/3.6.0/include/avx2intrin.h
+./usr/lib/clang/3.6.0/include/avx512bwintrin.h
+./usr/lib/clang/3.6.0/include/avx512erintrin.h
+./usr/lib/clang/3.6.0/include/avx512fintrin.h
+./usr/lib/clang/3.6.0/include/avx512vlbwintrin.h
+./usr/lib/clang/3.6.0/include/avx512vlintrin.h
 ./usr/lib/clang/3.6.0/include/avxintrin.h
 ./usr/lib/clang/3.6.0/include/bmi2intrin.h
 ./usr/lib/clang/3.6.0/include/bmiintrin.h
@@ -1501,6 +1507,7 @@
 ./usr/lib/clang/3.6.0/include/smmintrin.h
 ./usr/lib/clang/3.6.0/include/stdalign.h
 ./usr/lib/clang/3.6.0/include/stdarg.h
+./usr/lib/clang/3.6.0/include/stdatomic.h
 ./usr/lib/clang/3.6.0/include/stdbool.h
 ./usr/lib/clang/3.6.0/include/stddef.h
 ./usr/lib/clang/3.6.0/include/stdint.h
@@ -1509,6 +1516,7 @@
 ./usr/lib/clang/3.6.0/include/tgmath.h
 ./usr/lib/clang/3.6.0/include/tmmintrin.h
 ./usr/lib/clang/3.6.0/include/unwind.h
+./usr/lib/clang/3.6.0/include/vadefs.h
 ./usr/lib/clang/3.6.0/include/varargs.h
 ./usr/lib/clang/3.6.0/include/wmmintrin.h
 ./usr/lib/clang/3.6.0/include/x86intrin.h
