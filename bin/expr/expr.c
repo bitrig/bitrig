@@ -15,11 +15,11 @@
 #include <regex.h>
 #include <err.h>
 
-struct val	*make_int(int);
+struct val	*make_int(long);
 struct val	*make_str(char *);
 void		 free_value(struct val *);
-int		 is_integer(struct val *, int *);
-int		 to_integer(struct val *);
+int		 is_integer(struct val *, long *);
+long		 to_integer(struct val *);
 void		 to_string(struct val *);
 int		 is_zero_or_null(struct val *);
 void		 nexttoken(int);
@@ -45,7 +45,7 @@ struct val {
 
 	union {
 		char	       *s;
-		int		i;
+		long		i;
 	} u;
 };
 
@@ -54,7 +54,7 @@ struct val     *tokval;
 char	      **av;
 
 struct val *
-make_int(int i)
+make_int(long i)
 {
 	struct val     *vp;
 
@@ -93,11 +93,11 @@ free_value(struct val *vp)
 
 /* determine if vp is an integer; if so, return it's value in *r */
 int
-is_integer(struct val *vp, int *r)
+is_integer(struct val *vp, long *r)
 {
 	char	       *s;
 	int		neg;
-	int		i;
+	long		i;
 
 	if (vp->type == integer) {
 		*r = vp->u.i;
@@ -134,10 +134,10 @@ is_integer(struct val *vp, int *r)
 
 
 /* coerce to vp to an integer */
-int
+long
 to_integer(struct val *vp)
 {
-	int		r;
+	long		r;
 
 	if (vp->type == integer)
 		return 1;
@@ -162,7 +162,7 @@ to_string(struct val *vp)
 	if (vp->type == string)
 		return;
 
-	if (asprintf(&tmp, "%d", vp->u.i) == -1)
+	if (asprintf(&tmp, "%ld", vp->u.i) == -1)
 		err(3, NULL);
 
 	vp->type = string;
@@ -286,7 +286,7 @@ eval5(void)
 				v = make_str(l->u.s + rm[1].rm_so);
 
 			} else {
-				v = make_int((int)(rm[0].rm_eo - rm[0].rm_so));
+				v = make_int((long)(rm[0].rm_eo - rm[0].rm_so));
 			}
 		} else {
 			if (rp.re_nsub == 0) {
@@ -380,7 +380,7 @@ eval2(void)
 {
 	struct val     *l, *r;
 	enum token	op;
-	int		v = 0, li, ri;
+	long		v = 0, li, ri;
 
 	l = eval3();
 	while ((op = token) == EQ || op == NE || op == LT || op == GT ||
@@ -514,7 +514,7 @@ main(int argc, char *argv[])
 	}
 
 	if (vp->type == integer)
-		printf("%d\n", vp->u.i);
+		printf("%ld\n", vp->u.i);
 	else
 		printf("%s\n", vp->u.s);
 
