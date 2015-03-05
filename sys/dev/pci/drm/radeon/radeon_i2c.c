@@ -1136,7 +1136,7 @@ out_free:
 
 void radeon_i2c_destroy(struct radeon_i2c_chan *i2c)
 {
-	printf("%s stub\n", __func__);
+	DRM_DEBUG("%s stub\n", __func__);
 #ifdef notyet
 	if (!i2c)
 		return;
@@ -1211,7 +1211,7 @@ void radeon_i2c_get_byte(struct radeon_i2c_chan *i2c_bus,
 			 u8 addr,
 			 u8 *val)
 {
-	printf("%s stub\n", __func__);
+	DRM_DEBUG("%s stub\n", __func__);
 #ifdef notyet
 	u8 out_buf[2];
 	u8 in_buf[2];
@@ -1248,7 +1248,7 @@ void radeon_i2c_put_byte(struct radeon_i2c_chan *i2c_bus,
 			 u8 addr,
 			 u8 val)
 {
-	printf("%s stub\n", __func__);
+	DRM_DEBUG("%s stub\n", __func__);
 #ifdef notyet
 	uint8_t out_buf[2];
 	struct i2c_msg msg = {
