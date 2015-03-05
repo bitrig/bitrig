@@ -3,4 +3,6 @@
 PROG=		expr
 SRCS=		expr.c
 
+CFLAGS+= -W -Wall -Werror
+
 .include <bsd.prog.mk>
