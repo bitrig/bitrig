@@ -33,7 +33,7 @@
 .\"
 .\"	@(#)cp.1	8.3 (Berkeley) 4/18/94
 .\"
-.Dd $Mdocdate: March 19 2014 $
+.Dd $Mdocdate: March 6 2015 $
 .Dt CP 1
 .Os
 .Sh NAME
@@ -41,14 +41,14 @@
 .Nd copy files
 .Sh SYNOPSIS
 .Nm cp
-.Op Fl fip
+.Op Fl fipv
 .Oo
 .Fl R
 .Op Fl H | L | P
 .Oc
 .Ar source target
 .Nm cp
-.Op Fl fip
+.Op Fl fipv
 .Oo
 .Fl R
 .Op Fl H | L | P
@@ -145,6 +145,10 @@ use a utility such as
 or
 .Xr tar 1
 instead.
+.It Fl v
+Causes
+.Nm
+to be verbose, showing files as they are copied.
 .El
 .Pp
 For each destination file that already exists, its contents are
@@ -234,6 +238,10 @@ The
 utility is compliant with the
 .St -p1003.1-2008
 specification.
+.Pp
+The flag
+.Op Fl v
+is an extension to that specification.
 .Pp
 Historic versions of the
 .Nm

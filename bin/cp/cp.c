@@ -72,7 +72,7 @@
 PATH_T to = { to.p_path, "" };
 
 uid_t myuid;
-int Rflag, fflag, iflag, pflag, rflag;
+int Rflag, fflag, iflag, pflag, rflag, vflag;
 mode_t myumask;
 
 enum op { FILE_TO_FILE, FILE_TO_DIR, DIR_TO_DNE };
@@ -91,7 +91,7 @@ main(int argc, char *argv[])
 	(void)setlocale(LC_ALL, "");
 
 	Hflag = Lflag = Pflag = Rflag = 0;
-	while ((ch = getopt(argc, argv, "HLPRfipr")) != -1)
+	while ((ch = getopt(argc, argv, "HLPRfiprv")) != -1)
 		switch (ch) {
 		case 'H':
 			Hflag = 1;
@@ -121,6 +121,9 @@ main(int argc, char *argv[])
 			break;
 		case 'r':
 			rflag = 1;
+			break;
+		case 'v':
+			vflag = 1;
 			break;
 		default:
 			usage();
@@ -387,8 +390,10 @@ copy(char *argv[], enum op type, int fts_options)
 
 		switch (curr->fts_statp->st_mode & S_IFMT) {
 		case S_IFLNK:
-			if (copy_link(curr, !fts_dne(curr)))
+			if (copy_link(curr, !fts_dne(curr))) {
 				rval = 1;
+				continue;
+			}
 			break;
 		case S_IFDIR:
 			if (!Rflag && !rflag) {
@@ -396,7 +401,7 @@ copy(char *argv[], enum op type, int fts_options)
 				    curr->fts_path);
 				(void)fts_set(ftsp, curr, FTS_SKIP);
 				rval = 1;
-				break;
+				continue;
 			}
 			/*
 			 * If the directory doesn't exist, create the new
@@ -415,29 +420,33 @@ copy(char *argv[], enum op type, int fts_options)
 			break;
 		case S_IFBLK:
 		case S_IFCHR:
-			if (Rflag) {
-				if (copy_special(curr->fts_statp, !fts_dne(curr)))
-					rval = 1;
-			} else
-				if (copy_file(curr, fts_dne(curr)))
-					rval = 1;
+			if (Rflag ?
+			    copy_special(curr->fts_statp, !fts_dne(curr)) :
+			    copy_file(curr, fts_dne(curr))) {
+				rval = 1;
+				continue;
+			}
 			break;
 		case S_IFIFO:
-			if (Rflag) {
-				if (copy_fifo(curr->fts_statp, !fts_dne(curr)))
-					rval = 1;
-			} else
-				if (copy_file(curr, fts_dne(curr)))
-					rval = 1;
+			if (Rflag ?
+			    copy_fifo(curr->fts_statp, !fts_dne(curr)) :
+			    copy_file(curr, fts_dne(curr))) {
+				rval = 1;
+				continue;
+			}
 			break;
 		case S_IFSOCK:
 			warnc(EOPNOTSUPP, "%s", curr->fts_path);
 			break;
 		default:
-			if (copy_file(curr, fts_dne(curr)))
+			if (copy_file(curr, fts_dne(curr))) {
 				rval = 1;
+				continue;
+			}
 			break;
 		}
+		if (vflag)
+			(void)printf("%s -> %s\n", curr->fts_path, to.p_path);
 	}
 	if (errno)
 		err(1, "fts_read");
