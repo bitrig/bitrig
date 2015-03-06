@@ -1,0 +1,34 @@
+commit f766a70fb124f28e82fde9d016e54ead2297b657
+Author: Pedro Martelletto <pedro@ambientworks.net>
+Date:   Sun Mar 1 08:33:16 2015 +0100
+
+    Reapply 35e66e84.
+    
+    Reapply 35e66e84, which was lost in the upgrade to clang 3.6.
+    
+    OK natano@.
+    
+    commit 35e66e842e21f767da5d9d1c621b28a3d7977888
+    Author: pedro martelletto <pedro@ambientworks.net>
+    Date:   Sat Jul 19 09:30:34 2014 +0200
+    
+        disable colours by default in clang
+    
+        make '-fno-color-diagnostics' the default in clang. to enable colours,
+        use -fcolor-diagnostics.
+    
+        ok natano@ patrick@ jcv@
+
+diff --git a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+index fa8950c..5e13d60 100644
+--- a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
++++ b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+@@ -4269,7 +4269,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
+   // them.
+   // Support both clang's -f[no-]color-diagnostics and gcc's
+   // -f[no-]diagnostics-colors[=never|always|auto].
+-  enum { Colors_On, Colors_Off, Colors_Auto } ShowColors = Colors_Auto;
++  enum { Colors_On, Colors_Off, Colors_Auto } ShowColors = Colors_Off;
+   for (const auto &Arg : Args) {
+     const Option &O = Arg->getOption();
+     if (!O.matches(options::OPT_fcolor_diagnostics) &&

@@ -1,0 +1,32 @@
+commit 581f43778b40b30e014fbb778c9fde7e59e11a7f
+Author: Patrick Wildt <patrick@blueri.se>
+Date:   Fri Mar 6 14:56:10 2015 +0100
+
+    llvm: switch back to DWARF version 2, like we had before
+    
+    noticed by pedro@
+
+diff --git a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+index 5e13d60..a1c6bee 100644
+--- a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
++++ b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+@@ -3178,7 +3178,8 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
+       const llvm::Triple &Triple = getToolChain().getTriple();
+       if (Triple.isOSDarwin() || Triple.getOS() == llvm::Triple::OpenBSD ||
+           Triple.getOS() == llvm::Triple::FreeBSD ||
+-          Triple.getOS() == llvm::Triple::Solaris)
++          Triple.getOS() == llvm::Triple::Solaris ||
++          Triple.getOS() == llvm::Triple::Bitrig)
+         CmdArgs.push_back("-gdwarf-2");
+     } else if (A->getOption().matches(options::OPT_gdwarf_2))
+       CmdArgs.push_back("-gdwarf-2");
+@@ -3192,7 +3193,8 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
+       const llvm::Triple &Triple = getToolChain().getTriple();
+       if (Triple.isOSDarwin() || Triple.getOS() == llvm::Triple::OpenBSD ||
+           Triple.getOS() == llvm::Triple::FreeBSD ||
+-          Triple.getOS() == llvm::Triple::Solaris)
++          Triple.getOS() == llvm::Triple::Solaris ||
++          Triple.getOS() == llvm::Triple::Bitrig)
+         CmdArgs.push_back("-gdwarf-2");
+       else
+         CmdArgs.push_back("-g");
