@@ -40,9 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <arm/armreg.h>
 #include <machine/asm.h>
 
-.Lpj4b_cache_line_size:
-	.word	_C_LABEL(arm_dcache_align)
-
 ENTRY(pj4b_cpu_sleep)
 	dsb
 	wfi				@ wait for an interrupt

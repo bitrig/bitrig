@@ -267,6 +267,9 @@
 #define CPU_CT_DSIZE(x)		(((x) >> 12) & 0xfff)	/* D$ info */
 #define CPU_CT_S		(1U << 24)		/* split cache */
 #define CPU_CT_CTYPE(x)		(((x) >> 25) & 0xf)	/* cache type */
+/* Cache type register definitions for ARM v7 */
+#define CPU_CT_IMINLINE(x)	((x) & 0xf)		/* I$ min line size */
+#define CPU_CT_DMINLINE(x)	(((x) >> 16) & 0xf)	/* D$ min line size */
 
 #define CPU_CT_CTYPE_WT		0	/* write-through */
 #define CPU_CT_CTYPE_WB1	1	/* write-back, clean w/ read */
@@ -278,6 +281,27 @@
 #define CPU_CT_xSIZE_M		(1U << 2)		/* multiplier */
 #define CPU_CT_xSIZE_ASSOC(x)	(((x) >> 3) & 0x7)	/* associativity */
 #define CPU_CT_xSIZE_SIZE(x)	(((x) >> 6) & 0x7)	/* size */
+
+#define CPU_CT_ARMV7		0x4
+/* ARM v7 Cache type definitions */
+#define CPUV7_CT_CTYPE_WT	(1U << 31)
+#define CPUV7_CT_CTYPE_WB	(1 << 30)
+#define CPUV7_CT_CTYPE_RA	(1 << 29)
+#define CPUV7_CT_CTYPE_WA	(1 << 28)
+
+#define CPUV7_CT_xSIZE_LEN(x)	((x) & 0x7)		/* line size */
+#define CPUV7_CT_xSIZE_ASSOC(x)	(((x) >> 3) & 0x3ff)	/* associativity */
+#define CPUV7_CT_xSIZE_SET(x)	(((x) >> 13) & 0x7fff)	/* num sets */
+
+#define CPU_CLIDR_CTYPE(reg,x)	(((reg) >> ((x) * 3)) & 0x7)
+#define CPU_CLIDR_LOUIS(reg)	(((reg) >> 21) & 0x7)
+#define CPU_CLIDR_LOC(reg)	(((reg) >> 24) & 0x7)
+#define CPU_CLIDR_LOUU(reg)	(((reg) >> 27) & 0x7)
+
+#define CACHE_ICACHE		1
+#define CACHE_DCACHE		2
+#define CACHE_SEP_CACHE		3
+#define CACHE_UNI_CACHE		4
 
 /* Fault status register definitions */
 

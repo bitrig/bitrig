@@ -172,31 +172,12 @@ const struct cpu_classtab cpu_classes[] = {
  * arm specific information in the cpu structure to identify the processor.
  * The remaining fields in the cpu structure are filled in appropriately.
  */
-
-static const char * const wtnames[] = {
-	"wr-thru",
-	"wr-back",
-	"wr-back",
-	"**unknown 3**",
-	"**unknown 4**",
-	"wr-back-lock",		/* XXX XScale-specific? */
-	"wr-back-lock-A",
-	"wr-back-lock-B",
-	"**unknown 8**",
-	"**unknown 9**",
-	"**unknown 10**",
-	"**unknown 11**",
-	"**unknown 12**",
-	"**unknown 13**",
-	"**unknown 14**",
-	"**unknown 15**"
-};
-
 void
 identify_arm_cpu(struct device *dv, struct cpu_info *ci)
 {
-	u_int cpuid;
+	u_int cpuid, reg, size, sets, ways;
 	enum cpu_class cpu_class = CPU_CLASS_NONE;
+	u_int8_t type, linesize;
 	int i;
 
 	cpuid = ci->ci_arm_cpuid;
@@ -256,24 +237,65 @@ identify_arm_cpu(struct device *dv, struct cpu_info *ci)
 	printf("\n");
 
 	/* Print cache info. */
-	if (arm_picache_line_size == 0 && arm_pdcache_line_size == 0)
-		goto skip_pcache;
+	if (!arm_cache_level)
+		goto skip_cache;
 
-	if (arm_pcache_unified) {
-		printf("%s: %dKB/%dB %d-way %s unified cache\n",
-		    dv->dv_xname, arm_pdcache_size / 1024,
-		    arm_pdcache_line_size, arm_pdcache_ways,
-		    wtnames[arm_pcache_type]);
-	} else {
-		printf("%s: %dKB(%db/l,%dway) I-cache, %dKB(%db/l,%dway) %s D-cache\n",
-		    dv->dv_xname, arm_picache_size / 1024,
-		    arm_picache_line_size, arm_picache_ways,
-		    arm_pdcache_size / 1024, arm_pdcache_line_size, 
-		    arm_pdcache_ways, wtnames[arm_pcache_type]);
+	i = 0;
+	while (((type = CPU_CLIDR_CTYPE(arm_cache_level, i)) != 0) && i < 7) {
+		printf("%s: L%d", dv->dv_xname, i + 1);
+		if (type == CACHE_DCACHE || type == CACHE_UNI_CACHE ||
+		    type == CACHE_SEP_CACHE) {
+			reg = arm_cache_type[2 * i];
+			ways = CPUV7_CT_xSIZE_ASSOC(reg) + 1;
+			sets = CPUV7_CT_xSIZE_SET(reg) + 1;
+			linesize = 1 << (CPUV7_CT_xSIZE_LEN(reg) + 4);
+			size = (ways * sets * linesize) / 1024;
+
+			if (type == CACHE_UNI_CACHE)
+				printf(" %dKB(%db/l,%dway) unified cache", size, linesize,ways);
+			else
+				printf(" %dKB(%db/l,%dway) data cache", size, linesize, ways);
+#ifdef VERBOSE_IDENTIFY
+			if (reg & CPUV7_CT_CTYPE_WT)
+				printf(" WT");
+			if (reg & CPUV7_CT_CTYPE_WB)
+				printf(" WB");
+			if (reg & CPUV7_CT_CTYPE_RA)
+				printf(" Read-Alloc");
+			if (reg & CPUV7_CT_CTYPE_WA)
+				printf(" Write-Alloc");
+#endif
+		}
+
+		if (type == CACHE_SEP_CACHE)
+			printf(",");
+
+		if (type == CACHE_ICACHE || type == CACHE_SEP_CACHE) {
+			reg = arm_cache_type[(2 * i) + 1];
+
+			ways = CPUV7_CT_xSIZE_ASSOC(reg) + 1;
+			sets = CPUV7_CT_xSIZE_SET(reg) + 1;
+			linesize = 1 << (CPUV7_CT_xSIZE_LEN(reg) + 4);
+			size = (ways * sets * linesize) / 1024;
+
+			printf(" %dKB(%db/l,%dway) instruction cache", size, linesize, ways);
+
+#ifdef VERBOSE_IDENTIFY
+			if (reg & CPUV7_CT_CTYPE_WT)
+				printf(" WT");
+			if (reg & CPUV7_CT_CTYPE_WB)
+				printf(" WB");
+			if (reg & CPUV7_CT_CTYPE_RA)
+				printf(" Read-Alloc");
+			if (reg & CPUV7_CT_CTYPE_WA)
+				printf(" Write-Alloc");
+#endif
+		}
+		printf("\n");
+		i++;
 	}
 
- skip_pcache:
-
+skip_cache:
 	switch (cpu_class) {
 	case CPU_CLASS_ARMv7:
 	case CPU_CLASS_PJ4B:
@@ -291,7 +313,6 @@ identify_arm_cpu(struct device *dv, struct cpu_info *ci)
 		}
 		break;
 	}
-			       
 }
 #ifdef MULTIPROCESSOR
 void

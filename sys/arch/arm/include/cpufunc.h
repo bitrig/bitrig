@@ -218,16 +218,12 @@ u_int	cpufunc_ifar		(void);
 #ifdef CPU_ARMv7
 void	armv7_setttb		(u_int);
 
-void	armv7_tlb_flushID_SE	(u_int);
-void	armv7_tlb_flushI_SE	(u_int);
-
 void	armv7_context_switch	(u_int);
 
 void	armv7_setup		(void);
+
 void	armv7_tlb_flushID	(void);
-void	armv7_tlb_flushI	(void);
-void	armv7_tlb_flushD	(void);
-void	armv7_tlb_flushD_SE	(u_int va);
+void	armv7_tlb_flushID_SE	(u_int);
 
 void	armv7_drain_writebuf	(void);
 void	armv7_cpu_sleep		(int mode);
@@ -248,11 +244,6 @@ void	armv7_idcache_wbinv_range	(vaddr_t, vsize_t);
 void	pj4b_cpu_sleep		(int mode);
 void	pj4b_config		(void);
 void	pj4bv7_setup		(void);
-
-extern unsigned armv7_dcache_sets_max;
-extern unsigned armv7_dcache_sets_inc;
-extern unsigned armv7_dcache_index_max;
-extern unsigned armv7_dcache_index_inc;
 #endif
 
 /* still used by bus_dma */
@@ -331,19 +322,16 @@ void cpu_reset		(void) __attribute__((__noreturn__));
  */
 
 /* PRIMARY CACHE VARIABLES */
-extern int	arm_picache_size;
-extern int	arm_picache_line_size;
-extern int	arm_picache_ways;
-
-extern int	arm_pdcache_size;	/* and unified */
-extern int	arm_pdcache_line_size;
-extern int	arm_pdcache_ways; 
-
-extern int	arm_pcache_type;
-extern int	arm_pcache_unified;
+extern int	arm_dcache_min_line_size;
+extern int	arm_icache_min_line_size;
+extern int	arm_idcache_min_line_size;
 
 extern int	arm_dcache_align;
 extern int	arm_dcache_align_mask;
+
+extern u_int	arm_cache_level;
+extern u_int	arm_cache_type[14];
+extern u_int	arm_cache_loc;
 
 #endif	/* _KERNEL */
 #endif	/* _ARM_CPUFUNC_H_ */

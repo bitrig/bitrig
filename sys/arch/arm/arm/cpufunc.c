@@ -61,19 +61,16 @@ struct arm_pmc_funcs *arm_pmc;
 #endif
 
 /* PRIMARY CACHE VARIABLES */
-int	arm_picache_size;
-int	arm_picache_line_size;
-int	arm_picache_ways;
-
-int	arm_pdcache_size;	/* and unified */
-int	arm_pdcache_line_size;
-int	arm_pdcache_ways;
-
-int	arm_pcache_type;
-int	arm_pcache_unified;
+int	arm_dcache_min_line_size = 32;
+int	arm_icache_min_line_size = 32;
+int	arm_idcache_min_line_size = 32;
 
 int	arm_dcache_align;
 int	arm_dcache_align_mask;
+
+u_int	arm_cache_level;
+u_int	arm_cache_type[14];
+u_int	arm_cache_loc;
 
 /* 1 == use cpu_sleep(), 0 == don't */
 int cpu_do_powersave;
@@ -99,10 +96,10 @@ struct cpu_functions armv7_cpufuncs = {
 
 	armv7_tlb_flushID,		/* tlb_flushID		*/
 	armv7_tlb_flushID_SE,		/* tlb_flushID_SE	*/
-	armv7_tlb_flushI,		/* tlb_flushI		*/
-	armv7_tlb_flushI_SE,		/* tlb_flushI_SE	*/
-	armv7_tlb_flushD,		/* tlb_flushD		*/
-	armv7_tlb_flushD_SE,		/* tlb_flushD_SE	*/
+	armv7_tlb_flushID,		/* tlb_flushI		*/
+	armv7_tlb_flushID_SE,		/* tlb_flushI_SE	*/
+	armv7_tlb_flushID,		/* tlb_flushD		*/
+	armv7_tlb_flushID_SE,		/* tlb_flushD_SE	*/
 
 	/* Cache operations */
 
@@ -155,10 +152,10 @@ struct cpu_functions pj4bv7_cpufuncs = {
 
 	armv7_tlb_flushID,		/* tlb_flushID		*/
 	armv7_tlb_flushID_SE,		/* tlb_flushID_SE	*/
-	armv7_tlb_flushI,		/* tlb_flushI		*/
-	armv7_tlb_flushI_SE,		/* tlb_flushI_SE	*/
-	armv7_tlb_flushD,		/* tlb_flushD		*/
-	armv7_tlb_flushD_SE,		/* tlb_flushD_SE	*/
+	armv7_tlb_flushID,		/* tlb_flushI		*/
+	armv7_tlb_flushID_SE,		/* tlb_flushI_SE	*/
+	armv7_tlb_flushID,		/* tlb_flushD		*/
+	armv7_tlb_flushID_SE,		/* tlb_flushD_SE	*/
 
 	/* Cache operations */
 
@@ -200,150 +197,56 @@ struct cpu_functions cpufuncs;
 u_int cputype;
 
 #ifdef CPU_ARMv7
-void arm_get_cachetype_cp15v7 (void);
-int	arm_dcache_l2_nsets;
-int	arm_dcache_l2_assoc;
-int	arm_dcache_l2_linesize;
-
-/*
- * Base 2 logarithm of an int. returns 0 for 0 (yeye, I know).
- */
-static int
-log2(unsigned int i)
-{
-	int ret = 0;
-
-	while (i >>= 1)
-		ret++;
-
-	return (ret);
-}
-
 void
 arm_get_cachetype_cp15v7(void)
 {
-	uint32_t cachereg;
-	uint32_t cache_level_id;
-	uint32_t sets;
-	uint32_t sel, level;
+	uint32_t csize, cachetype, clevel;
+	uint32_t i, sel, type;
+
+	/* Cache Type Register */
+	__asm volatile("mrc p15, 0, %0, c0, c0, 1"
+	    : "=r" (cachetype));
+
+	arm_dcache_min_line_size = 1 << (CPU_CT_DMINLINE(cachetype) + 2);
+	arm_icache_min_line_size = 1 << (CPU_CT_IMINLINE(cachetype) + 2);
+	arm_idcache_min_line_size =
+	    min(arm_icache_min_line_size, arm_dcache_min_line_size);
 
 	/* CLIDR - Cache Level ID Register */
 	__asm volatile("mrc p15, 1, %0, c0, c0, 1"
-		: "=r" (cache_level_id) :);
-	cpu_drain_writebuf();
+	    : "=r" (clevel));
+	arm_cache_level = clevel;
+	arm_cache_loc = CPU_CLIDR_LOC(arm_cache_level);
 
-	/* L1 Cache available. */
-	level = 0;
-	if (cache_level_id & (0x7 << level)) {
-		/* Unified cache. */
-		if (cache_level_id & (0x4 << level))
-			arm_pcache_unified = 1;
-
-		/* Unified or data cache separate. */
-		if (cache_level_id & (0x4 << level) ||
-		    cache_level_id & (0x2 << level)) {
-			sel = level << 1 | 0 << 0; /* L1 | unified/data cache */
+	i = 0;
+	while ((type = clevel & 0x7) && i < 7) {
+		if (type == CACHE_DCACHE || type == CACHE_UNI_CACHE ||
+		    type == CACHE_SEP_CACHE) {
+			sel = i << 1;
 			/* CSSELR - Cache Size Selection Register */
 			__asm volatile("mcr p15, 2, %0, c0, c0, 0"
-				:: "r" (sel));
-			cpu_drain_writebuf();
+			    : : "r" (sel));
 			/* CCSIDR - Cache Size Identification Register */
 			__asm volatile("mrc p15, 1, %0, c0, c0, 0"
-			: "=r" (cachereg) :);
-			cpu_drain_writebuf();
-			sets = ((cachereg >> 13) & 0x7fff) + 1;
-			arm_pdcache_line_size = 1 << ((cachereg & 0x7) + 4);
-			arm_pdcache_ways = ((cachereg >> 3) & 0x3ff) + 1;
-			arm_pdcache_size = arm_pdcache_line_size * arm_pdcache_ways * sets;
-			switch (cachereg & 0xc0000000) {
-			case 0x00000000:
-				arm_pcache_type = 0;
-				break;
-			case 0x40000000:
-			case 0xc0000000:
-				arm_pcache_type = CPU_CT_CTYPE_WB1;
-				break;
-			case 0x80000000:
-				arm_pcache_type = CPU_CT_CTYPE_WT;
-				break;
-			}
+			    : "=r" (csize));
+			arm_cache_type[sel] = csize;
+			arm_dcache_align = 1 <<
+			    (CPUV7_CT_xSIZE_LEN(csize) + 4);
+			arm_dcache_align_mask = arm_dcache_align - 1;
 		}
-
-		/* Instruction cache separate. */
-		if (cache_level_id & (0x1 << level)) {
-			sel = level << 1 | 1 << 0; /* L1 | instruction cache */
+		if (type == CACHE_ICACHE || type == CACHE_SEP_CACHE) {
+			sel = (i << 1) | 1;
 			/* CSSELR - Cache Size Selection Register */
 			__asm volatile("mcr p15, 2, %0, c0, c0, 0"
-				:: "r" (sel));
-			cpu_drain_writebuf();
+			    : : "r" (sel));
 			/* CCSIDR - Cache Size Identification Register */
 			__asm volatile("mrc p15, 1, %0, c0, c0, 0"
-			: "=r" (cachereg) :);
-			cpu_drain_writebuf();
-			sets = ((cachereg >> 13) & 0x7fff) + 1;
-			arm_picache_line_size = 1 << ((cachereg & 0x7) + 4);
-			arm_picache_ways = ((cachereg >> 3) & 0x3ff) + 1;
-			arm_picache_size = arm_picache_line_size * arm_picache_ways * sets;
+			    : "=r" (csize));
+			arm_cache_type[sel] = csize;
 		}
+		i++;
+		clevel >>= 3;
 	}
-
-	arm_dcache_align = arm_pdcache_line_size;
-	arm_dcache_align_mask = arm_dcache_align - 1;
-
-	arm_dcache_l2_nsets = arm_pdcache_size/arm_pdcache_ways/arm_pdcache_line_size;
-	arm_dcache_l2_assoc = log2(arm_pdcache_ways);
-	arm_dcache_l2_linesize = log2(arm_pdcache_line_size);
-}
-
-/* 
- */
-void
-armv7_idcache_wbinv_all()
-{
-	uint32_t arg;
-	arg = 0;
-	__asm volatile("mcr	p15, 0, r0, c7, c5, 0" :: "r" (arg));
-	armv7_dcache_wbinv_all();
-}
-/* brute force cache flushing */
-void
-armv7_dcache_wbinv_all()
-{
-	int sets, ways, lvl;
-	int nsets, nways;
-	uint32_t wayincr, setincr;
-	uint32_t wayval, setval;
-	uint32_t word;
-
-	nsets = arm_dcache_l2_nsets;
-	nways = arm_pdcache_ways;
-
-	setincr = armv7_dcache_sets_inc;
-	wayincr = armv7_dcache_index_inc;
-
-#if 0
-	printf("l1 nsets %d nways %d wayincr %x setincr %x\n",
-	    nsets, nways, wayincr, setincr);
-#endif
-
-	lvl = 0; /* L1 */
-	setval = 0;
-	for (sets = 0; sets < nsets; sets++)  {
-		wayval = 0;
-		for (ways = 0; ways < nways; ways++) {
-			word = wayval | setval | lvl;
-
-			/* Clean D cache SE with Set/Index */
-			__asm volatile("mcr	p15, 0, %0, c7, c10, 2"
-			    : : "r" (word));
-			wayval += wayincr;
-		}
-		setval += setincr;
-	}
-	/* drain the write buffer */
-	cpu_drain_writebuf();
-
-	/* L2 cache flushing removed. Our current L2 caches are separate. */
 }
 #endif /* CPU_ARMv7 */
 
@@ -371,12 +274,6 @@ set_cpufuncs()
 	    (cputype & CPU_ID_CORTEX_A15_MASK) == CPU_ID_CORTEX_A15) {
 		cpufuncs = armv7_cpufuncs;
 		arm_get_cachetype_cp15v7();
-		armv7_dcache_sets_inc = 1U << arm_dcache_l2_linesize;
-		armv7_dcache_sets_max =
-		    (1U << (arm_dcache_l2_linesize + arm_dcache_l2_nsets)) -
-		    armv7_dcache_sets_inc;
-		armv7_dcache_index_inc = 1U << (32 - arm_dcache_l2_assoc);
-		armv7_dcache_index_max = 0U - armv7_dcache_index_inc;
 		pmap_pte_init_armv7();
 
 		/* Use powersave on this CPU. */
@@ -390,12 +287,6 @@ set_cpufuncs()
 	    cputype == CPU_ID_ARM_88SV581X_V7)) {
 		cpufuncs = pj4bv7_cpufuncs;
 		arm_get_cachetype_cp15v7();
-		armv7_dcache_sets_inc = 1U << arm_dcache_l2_linesize;
-		armv7_dcache_sets_max =
-		    (1U << (arm_dcache_l2_linesize + arm_dcache_l2_nsets)) -
-		    armv7_dcache_sets_inc;
-		armv7_dcache_index_inc = 1U << (32 - arm_dcache_l2_assoc);
-		armv7_dcache_index_max = 0U - armv7_dcache_index_inc;
 		pmap_pte_init_armv7();
 
 		/* Use powersave on this CPU. */
