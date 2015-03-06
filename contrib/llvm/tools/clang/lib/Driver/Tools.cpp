@@ -3178,7 +3178,8 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       const llvm::Triple &Triple = getToolChain().getTriple();
       if (Triple.isOSDarwin() || Triple.getOS() == llvm::Triple::OpenBSD ||
           Triple.getOS() == llvm::Triple::FreeBSD ||
-          Triple.getOS() == llvm::Triple::Solaris)
+          Triple.getOS() == llvm::Triple::Solaris ||
+          Triple.getOS() == llvm::Triple::Bitrig)
         CmdArgs.push_back("-gdwarf-2");
     } else if (A->getOption().matches(options::OPT_gdwarf_2))
       CmdArgs.push_back("-gdwarf-2");
@@ -3192,7 +3193,8 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       const llvm::Triple &Triple = getToolChain().getTriple();
       if (Triple.isOSDarwin() || Triple.getOS() == llvm::Triple::OpenBSD ||
           Triple.getOS() == llvm::Triple::FreeBSD ||
-          Triple.getOS() == llvm::Triple::Solaris)
+          Triple.getOS() == llvm::Triple::Solaris ||
+          Triple.getOS() == llvm::Triple::Bitrig)
         CmdArgs.push_back("-gdwarf-2");
       else
         CmdArgs.push_back("-g");
