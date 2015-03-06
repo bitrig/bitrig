@@ -1095,7 +1095,7 @@ ReFault:
 		 * We do, however, have to go through the ReFault path,
 		 * as the map may change while we're asleep.
 		 */
-		uvmfault_unlockall(&ufi, amap, uobj, oanon);
+		uvmfault_unlockall(&ufi, amap, uobj, anon);
 		KASSERT(uvmexp.swpgonly <= uvmexp.swpages);
 		if (uvmexp.swpgonly == uvmexp.swpages) {
 			/* XXX instrumentation */
