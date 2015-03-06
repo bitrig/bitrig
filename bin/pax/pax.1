@@ -34,7 +34,7 @@
 .\"
 .\"	@(#)pax.1	8.4 (Berkeley) 4/18/94
 .\"
-.Dd $Mdocdate: January 15 2015 $
+.Dd $Mdocdate: March 6 2015 $
 .Dt PAX 1
 .Os
 .Sh NAME
@@ -1127,7 +1127,8 @@ and when
 completes it will exit with a non-zero exit status.
 .Sh SEE ALSO
 .Xr cpio 1 ,
-.Xr tar 1
+.Xr tar 1 ,
+.Xr rdconfig 8
 .Sh STANDARDS
 The
 .Nm
@@ -1146,8 +1147,9 @@ the archive formats
 .Cm bcpio ,
 .Cm sv4cpio ,
 .Cm sv4crc ,
-and
 .Cm tar ,
+and
+.Cm tmpfs ,
 the
 .Cm b , k ,
 and
@@ -1161,4 +1163,6 @@ are extensions to that specification.
 .An Keith Muller
 at the University of California, San Diego.
 .Pp
-tmpfs support was added by Martin Natano and Pedro Martelletto.
+Support for the
+.Cm tmpfs
+snapshot format was added by Martin Natano and Pedro Martelletto.

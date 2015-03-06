@@ -12,7 +12,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: June 7 2014 $
+.Dd $Mdocdate: March 6 2015 $
 .Dt TMPFSRD 4
 .Os
 .Sh NAME
@@ -30,6 +30,13 @@ The
 .Xr rdconfig 8
 utility may be used to configure a kernel for usage by
 .Nm .
+.Sh FILES
+.Bl -tag -width /dev/rtmpfsrd??XXX -compact
+.It Pa "/dev/tmpfsrd??"
+Block mode ramdisk devices.
+.It Pa "/dev/rtmpfsrd??"
+Raw mode ramdisk devices.
+.El
 .Sh SEE ALSO
 .Xr elf 5 ,
 .Xr rdconfig 8
