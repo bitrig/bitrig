@@ -722,6 +722,7 @@ uvm_pmr_getpages(psize_t count, paddr_t start, paddr_t end, paddr_t align,
 	struct	uvm_pmemrange *pmr;	/* Iterate memory ranges. */
 	struct	vm_page *found, *f_next; /* Iterate chunks. */
 	psize_t	fcount;			/* Current found pages. */
+	psize_t	zcount;			/* Number of zero pages found. */
 	int	fnsegs;			/* Current segment counter. */
 	int	try, start_try;
 	psize_t	search[3];
@@ -839,6 +840,7 @@ uvm_pmr_getpages(psize_t count, paddr_t start, paddr_t end, paddr_t align,
 retry:		/* Return point after sleeping. */
 	fcount = 0;
 	fnsegs = 0;
+	zcount = 0;
 
 	/*
 	 * fail if any of these conditions are true:
@@ -1071,11 +1073,8 @@ out:
 	TAILQ_FOREACH(found, result, pageq) {
 		atomic_clearbits_int(&found->pg_flags, PG_PMAPMASK);
 
-		if (found->pg_flags & PG_ZERO) {
-			uvmexp.zeropages--;
-			if (uvmexp.zeropages < UVM_PAGEZERO_TARGET)
-				wakeup(&uvmexp.zeropages);
-		}
+		if (found->pg_flags & PG_ZERO)
+			zcount++;
 		if (flags & UVM_PLA_ZERO) {
 			if (found->pg_flags & PG_ZERO)
 				uvmexp.pga_zerohit++;
@@ -1126,6 +1125,14 @@ out:
 		    fcount, fnsegs, count, maxseg);
 	}
 #endif /* DIAGNOSTIC */
+
+	if (zcount) {
+		uvm_lock_fpageq();
+		uvmexp.zeropages -= zcount;
+		if (uvmexp.zeropages < UVM_PAGEZERO_TARGET)
+			wakeup(&uvmexp.zeropages);
+		uvm_unlock_fpageq();
+	}
 
 	return 0;
 }
