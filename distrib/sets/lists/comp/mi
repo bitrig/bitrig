@@ -600,6 +600,8 @@
 ./usr/include/dev/pci/if_ipwvar.h
 ./usr/include/dev/pci/if_iwireg.h
 ./usr/include/dev/pci/if_iwivar.h
+./usr/include/dev/pci/if_iwmreg.h
+./usr/include/dev/pci/if_iwmvar.h
 ./usr/include/dev/pci/if_iwnreg.h
 ./usr/include/dev/pci/if_iwnvar.h
 ./usr/include/dev/pci/if_ix.h
@@ -731,6 +733,12 @@
 ./usr/include/dev/spdmemvar.h
 ./usr/include/dev/systrace.h
 ./usr/include/dev/usb
+./usr/include/dev/usb/dwc2
+./usr/include/dev/usb/dwc2/dwc2.h
+./usr/include/dev/usb/dwc2/dwc2_core.h
+./usr/include/dev/usb/dwc2/dwc2_hcd.h
+./usr/include/dev/usb/dwc2/dwc2_hw.h
+./usr/include/dev/usb/dwc2/dwc2var.h
 ./usr/include/dev/usb/ehcireg.h
 ./usr/include/dev/usb/ehcivar.h
 ./usr/include/dev/usb/hid.h
@@ -1105,7 +1113,6 @@
 ./usr/include/openssl/rand.h
 ./usr/include/openssl/rc2.h
 ./usr/include/openssl/rc4.h
-./usr/include/openssl/rc5.h
 ./usr/include/openssl/ripemd.h
 ./usr/include/openssl/rsa.h
 ./usr/include/openssl/safestack.h
@@ -1116,7 +1123,6 @@
 ./usr/include/openssl/ssl23.h
 ./usr/include/openssl/ssl3.h
 ./usr/include/openssl/stack.h
-./usr/include/openssl/store.h
 ./usr/include/openssl/tls1.h
 ./usr/include/openssl/ts.h
 ./usr/include/openssl/txt_db.h

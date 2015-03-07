@@ -987,6 +987,8 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/if_ipwvar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/if_iwireg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/if_iwivar.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/if_iwmreg.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/if_iwmvar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/if_iwnreg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/if_iwnvar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/if_ix.ph
@@ -1118,6 +1120,12 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/spdmemvar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/systrace.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/dwc2
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/dwc2/dwc2.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/dwc2/dwc2_core.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/dwc2/dwc2_hcd.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/dwc2/dwc2_hw.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/dwc2/dwc2var.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/ehcireg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/ehcivar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/hid.ph
@@ -1491,7 +1499,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/rand.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/rc2.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/rc4.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/rc5.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/ripemd.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/rsa.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/safestack.ph
@@ -1502,7 +1509,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/ssl23.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/ssl3.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/stack.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/store.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/tls1.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/ts.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/txt_db.ph

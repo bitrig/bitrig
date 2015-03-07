@@ -645,7 +645,7 @@
 ./usr/lib/libc++.so.2.0
 ./usr/lib/libc++abi.so.2.0
 ./usr/lib/libc.so.78.2
-./usr/lib/libcrypto.so.30.4
+./usr/lib/libcrypto.so.32.0
 ./usr/lib/libcurses.so.15.0
 ./usr/lib/libedit.so.6.2
 ./usr/lib/libevent.so.5.0
@@ -653,7 +653,7 @@
 ./usr/lib/libform.so.7.0
 ./usr/lib/libformw.so.7.0
 ./usr/lib/libfuse.so.1.1
-./usr/lib/libkvm.so.16.0
+./usr/lib/libkvm.so.16.1
 ./usr/lib/libm.so.10.0
 ./usr/lib/libmenu.so.7.0
 ./usr/lib/libmenuw.so.7.0
@@ -671,10 +671,10 @@
 ./usr/lib/libskey.so.7.0
 ./usr/lib/libsndio.so.6.0
 ./usr/lib/libsqlite3.so.28.0
-./usr/lib/libssl.so.30.1
+./usr/lib/libssl.so.32.0
 ./usr/lib/libtermcap.so.15.0
 ./usr/lib/libtermlib.so.15.0
-./usr/lib/libtls.so.1.1
+./usr/lib/libtls.so.3.0
 ./usr/lib/libusbhid.so.7.0
 ./usr/lib/libutil.so.13.1
 ./usr/lib/libz.so.5.0
@@ -4802,6 +4802,7 @@
 ./usr/share/man/man3/SSL_CTX_use_certificate.3
 ./usr/share/man/man3/SSL_CTX_use_certificate_ASN1.3
 ./usr/share/man/man3/SSL_CTX_use_certificate_chain_file.3
+./usr/share/man/man3/SSL_CTX_use_certificate_chain_mem.3
 ./usr/share/man/man3/SSL_CTX_use_certificate_file.3
 ./usr/share/man/man3/SSL_CTX_use_psk_identity_hint.3
 ./usr/share/man/man3/SSL_SESSION_free.3
@@ -7252,6 +7253,7 @@
 ./usr/share/man/man3/store.3
 ./usr/share/man/man3/stpcpy.3
 ./usr/share/man/man3/stpncpy.3
+./usr/share/man/man3/stravis.3
 ./usr/share/man/man3/strcasecmp.3
 ./usr/share/man/man3/strcasestr.3
 ./usr/share/man/man3/strcat.3
@@ -8545,6 +8547,7 @@
 ./usr/share/man/man4/it.4
 ./usr/share/man/man4/itherm.4
 ./usr/share/man/man4/iwi.4
+./usr/share/man/man4/iwm.4
 ./usr/share/man/man4/iwn.4
 ./usr/share/man/man4/ix.4
 ./usr/share/man/man4/ixgb.4
@@ -8665,6 +8668,7 @@
 ./usr/share/man/man4/random.4
 ./usr/share/man/man4/rdac.4
 ./usr/share/man/man4/rdcphy.4
+./usr/share/man/man4/rdomain.4
 ./usr/share/man/man4/re.4
 ./usr/share/man/man4/rgephy.4
 ./usr/share/man/man4/ricohrtc.4
@@ -8673,6 +8677,7 @@
 ./usr/share/man/man4/route.4
 ./usr/share/man/man4/rsu.4
 ./usr/share/man/man4/rt.4
+./usr/share/man/man4/rtable.4
 ./usr/share/man/man4/rtfps.4
 ./usr/share/man/man4/rtii.4
 ./usr/share/man/man4/rtsx.4
@@ -9835,6 +9840,7 @@
 ./usr/share/man/man9/ml_dequeue.9
 ./usr/share/man/man9/ml_empty.9
 ./usr/share/man/man9/ml_enqueue.9
+./usr/share/man/man9/ml_filter.9
 ./usr/share/man/man9/ml_init.9
 ./usr/share/man/man9/ml_len.9
 ./usr/share/man/man9/mono_time.9
@@ -9847,6 +9853,7 @@
 ./usr/share/man/man9/mq_empty.9
 ./usr/share/man/man9/mq_enlist.9
 ./usr/share/man/man9/mq_enqueue.9
+./usr/share/man/man9/mq_filter.9
 ./usr/share/man/man9/mq_init.9
 ./usr/share/man/man9/mq_len.9
 ./usr/share/man/man9/mq_set_maxlen.9
@@ -10060,20 +10067,23 @@
 ./usr/share/man/man9/timeout_triggered.9
 ./usr/share/man/man9/timingsafe_bcmp.9
 ./usr/share/man/man3/timingsafe_memcmp.3
+./usr/share/man/man3/tls_accept_socket.3
 ./usr/share/man/man3/tls_client.3
 ./usr/share/man/man3/tls_close.3
 ./usr/share/man/man3/tls_config_clear_keys.3
 ./usr/share/man/man3/tls_config_free.3
 ./usr/share/man/man3/tls_config_insecure_noverifycert.3
-./usr/share/man/man3/tls_config_insecure_noverifyhost.3
+./usr/share/man/man3/tls_config_insecure_noverifyname.3
 ./usr/share/man/man3/tls_config_new.3
+./usr/share/man/man3/tls_config_parse_protocols.3
 ./usr/share/man/man3/tls_config_set_ca_file.3
 ./usr/share/man/man3/tls_config_set_ca_mem.3
 ./usr/share/man/man3/tls_config_set_ca_path.3
 ./usr/share/man/man3/tls_config_set_cert_file.3
 ./usr/share/man/man3/tls_config_set_cert_mem.3
 ./usr/share/man/man3/tls_config_set_ciphers.3
-./usr/share/man/man3/tls_config_set_ecdhcurve.3
+./usr/share/man/man3/tls_config_set_dheparams.3
+./usr/share/man/man3/tls_config_set_ecdhecurve.3
 ./usr/share/man/man3/tls_config_set_key_file.3
 ./usr/share/man/man3/tls_config_set_key_mem.3
 ./usr/share/man/man3/tls_config_set_protocols.3
@@ -10081,10 +10091,13 @@
 ./usr/share/man/man3/tls_config_verify.3
 ./usr/share/man/man3/tls_configure.3
 ./usr/share/man/man3/tls_connect.3
+./usr/share/man/man3/tls_connect_fds.3
+./usr/share/man/man3/tls_connect_servername.3
 ./usr/share/man/man3/tls_connect_socket.3
 ./usr/share/man/man3/tls_error.3
 ./usr/share/man/man3/tls_free.3
 ./usr/share/man/man3/tls_init.3
+./usr/share/man/man3/tls_load_file.3
 ./usr/share/man/man3/tls_read.3
 ./usr/share/man/man3/tls_reset.3
 ./usr/share/man/man3/tls_server.3
@@ -10098,6 +10111,7 @@
 ./usr/share/man/man9/uao_reference.9
 ./usr/share/man/man9/uio.9
 ./usr/share/man/man9/uiomove.9
+./usr/share/man/man9/uiomovei.9
 ./usr/share/man/man9/ulmax.9
 ./usr/share/man/man9/ulmin.9
 ./usr/share/man/man9/uprintf.9

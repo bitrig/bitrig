@@ -985,6 +985,8 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/if_ipwvar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/if_iwireg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/if_iwivar.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/if_iwmreg.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/if_iwmvar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/if_iwnreg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/if_iwnvar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/pci/if_ix.ph
@@ -1116,6 +1118,12 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/spdmemvar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/systrace.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb
+./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/dwc2
+./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/dwc2/dwc2.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/dwc2/dwc2_core.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/dwc2/dwc2_hcd.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/dwc2/dwc2_hw.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/dwc2/dwc2var.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/ehcireg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/ehcivar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/usb/hid.ph
@@ -1489,7 +1497,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/rand.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/rc2.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/rc4.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/openssl/rc5.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/ripemd.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/rsa.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/safestack.ph
@@ -1500,7 +1507,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/ssl23.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/ssl3.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/stack.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/openssl/store.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/tls1.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/ts.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/txt_db.ph
