@@ -1224,6 +1224,10 @@ static const struct pci_known_product pci_known_products[] = {
 	    "AMD64 15/1xh IOMMU",
 	},
 	{
+	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_AMD64_16_PCIE,
+	    "AMD64 16h PCIE",
+	},
+	{
 	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_AMD64_14_HB,
 	    "AMD64 14h Host",
 	},
@@ -1248,8 +1252,28 @@ static const struct pci_known_product pci_known_products[] = {
 	    "AMD64 14h PCIE",
 	},
 	{
+	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_AMD64_16_LINK,
+	    "AMD64 16h Link Cfg",
+	},
+	{
+	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_AMD64_16_ADDR,
+	    "AMD64 16h Address Map",
+	},
+	{
+	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_AMD64_16_DRAM,
+	    "AMD64 16h DRAM Cfg",
+	},
+	{
 	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_AMD64_16_MISC,
 	    "AMD64 16h Misc Cfg",
+	},
+	{
+	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_AMD64_16_CPU_PM,
+	    "AMD64 16h CPU Power",
+	},
+	{
+	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_AMD64_16_HB,
+	    "AMD64 16h Host",
 	},
 	{
 	    PCI_VENDOR_AMD, PCI_PRODUCT_AMD_AMD64_15_0x_LINK,
@@ -2086,6 +2110,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_ASMEDIA, PCI_PRODUCT_ASMEDIA_ASM1080,
 	    "ASM1083/1085 PCIE-PCI",
+	},
+	{
+	    PCI_VENDOR_ASMEDIA, PCI_PRODUCT_ASMEDIA_ASM1042A,
+	    "ASM1042A xHCI",
 	},
 	{
 	    PCI_VENDOR_ASUSTEK, PCI_PRODUCT_ASUSTEK_HFCPCI,
@@ -11289,6 +11317,10 @@ static const struct pci_known_product pci_known_products[] = {
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_ATOMC2000_AHCI_3,
+	    "Atom C2000 AHCI",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_ATOMC2000_AHCI_4,
 	    "Atom C2000 AHCI",
 	},
 	{
