@@ -1911,7 +1911,7 @@ radeon_atombios_get_tv_dac_info(struct radeon_encoder *encoder)
 	return tv_dac;
 }
 
-static const char *thermal_controller_names[] = {
+static const __unused char *thermal_controller_names[] = {
 	"NONE",
 	"lm63",
 	"adm1032",
@@ -1922,7 +1922,7 @@ static const char *thermal_controller_names[] = {
 	"asc7xxx",
 };
 
-static const char *pp_lib_thermal_controller_names[] = {
+static const __unused char *pp_lib_thermal_controller_names[] = {
 	"NONE",
 	"lm63",
 	"adm1032",

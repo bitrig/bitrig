@@ -33,7 +33,7 @@
 #include "radeon.h"
 #include "atom.h"
 
-static const char radeon_family_name[][16] = {
+static const __unused char radeon_family_name[][16] = {
 	"R100",
 	"RV100",
 	"RS100",
