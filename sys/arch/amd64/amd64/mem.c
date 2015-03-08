@@ -131,7 +131,7 @@ mmrw(dev_t dev, struct uio *uio, int flags)
 {
 	extern vaddr_t kern_end;
 	vaddr_t v;
-	int c;
+	size_t c;
 	struct iovec *iov;
 	int error = 0;
 
@@ -155,7 +155,7 @@ mmrw(dev_t dev, struct uio *uio, int flags)
 /* minor device 1 is kernel memory */
 		case 1:
 			v = uio->uio_offset;
-			c = min(iov->iov_len, MAXPHYS);
+			c = (iov->iov_len < MAXPHYS) ? iov->iov_len : MAXPHYS;
 			if (v >= (vaddr_t)&start && v < kern_end) {
                                 if (v < (vaddr_t)&etext &&
                                     uio->uio_rw == UIO_WRITE)
@@ -171,7 +171,7 @@ mmrw(dev_t dev, struct uio *uio, int flags)
 			    uio->uio_rw == UIO_READ ? B_READ : B_WRITE)) &&
 			    (v < PMAP_DIRECT_BASE && v > PMAP_DIRECT_END))
 				return (EFAULT);
-			error = uiomove((caddr_t)v, c, uio);
+			error = uiomove((caddr_t)v, (int)c, uio);
 			continue;
 
 /* minor device 2 is EOF/RATHOLE */
@@ -189,8 +189,8 @@ mmrw(dev_t dev, struct uio *uio, int flags)
 			if (zeropage == NULL)
 				zeropage = (caddr_t)
 				    malloc(PAGE_SIZE, M_TEMP, M_WAITOK|M_ZERO);
-			c = min(iov->iov_len, PAGE_SIZE);
-			error = uiomove(zeropage, c, uio);
+			c = (iov->iov_len < PAGE_SIZE) ? iov->iov_len : PAGE_SIZE;
+			error = uiomove(zeropage, (int)c, uio);
 			continue;
 
 		default:
