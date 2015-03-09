@@ -147,7 +147,7 @@ mmrw(dev_t dev, struct uio *uio, int flags)
 /* minor device 1 is kernel memory */
 		case 1:
 			v = uio->uio_offset;
-			c = (iov->iov_len < MAXPHYS) ? iov->iov_len : MAXPHYS;
+			c = szmin(iov->iov_len, MAXPHYS);
 			if (v >= (vaddr_t)&start && v < kern_end) {
                                 if (v < (vaddr_t)&etext &&
                                     uio->uio_rw == UIO_WRITE)
@@ -174,7 +174,7 @@ mmrw(dev_t dev, struct uio *uio, int flags)
 			if (zeropage == NULL)
 				zeropage = (caddr_t)
 				    malloc(PAGE_SIZE, M_TEMP, M_WAITOK|M_ZERO);
-			c = (iov->iov_len < PAGE_SIZE) ? iov->iov_len : PAGE_SIZE;
+			c = szmin(iov->iov_len, PAGE_SIZE);
 			error = uiomove(zeropage, c, uio);
 			continue;
 

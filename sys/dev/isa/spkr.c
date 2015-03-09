@@ -432,7 +432,7 @@ spkrwrite(dev_t dev, struct uio *uio, int flags)
 	if (minor(dev) != 0)
 		return (ENXIO);
 	else {
-		n = ulmin(DEV_BSIZE, uio->uio_resid);
+		n = szmin(DEV_BSIZE, uio->uio_resid);
 		error = uiomove(spkr_inbuf, n, uio);
 		if (!error)
 			playstring((char *)spkr_inbuf, n);

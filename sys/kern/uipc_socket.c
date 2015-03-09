@@ -640,8 +640,8 @@ soreceive(struct socket *so, struct mbuf **paddr, struct uio *uio,
 		if (error)
 			goto bad;
 		do {
-			error = uiomovei(mtod(m, caddr_t),
-			    (int) min(uio->uio_resid, m->m_len), uio);
+			error = uiomove(mtod(m, caddr_t),
+			    szmin(uio->uio_resid, m->m_len), uio);
 			m = m_free(m);
 		} while (uio->uio_resid && error == 0 && m);
 bad:
