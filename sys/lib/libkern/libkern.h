@@ -51,6 +51,8 @@ LIBKERN_INLINE long lmax(long, long);
 LIBKERN_INLINE long lmin(long, long);
 LIBKERN_INLINE u_long ulmax(u_long, u_long);
 LIBKERN_INLINE u_long ulmin(u_long, u_long);
+LIBKERN_INLINE size_t szmax(size_t, size_t);
+LIBKERN_INLINE size_t szmin(size_t, size_t);
 LIBKERN_INLINE int abs(int);
 
 #ifdef LIBKERN_BODY
@@ -91,6 +93,16 @@ ulmax(u_long a, u_long b)
 }
 LIBKERN_INLINE u_long
 ulmin(u_long a, u_long b)
+{
+	return (a < b ? a : b);
+}
+LIBKERN_INLINE size_t
+szmax(size_t a, size_t b)
+{
+	return (a > b ? a : b);
+}
+LIBKERN_INLINE size_t
+szmin(size_t a, size_t b)
 {
 	return (a < b ? a : b);
 }

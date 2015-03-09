@@ -55,15 +55,20 @@ library implements a set of useful functions and macros inside the kernel.
 .Ft u_long
 .Fn ulmin "u_long a" "u_long b"
 .Ft int
+.Fn szmax "size_t a" "size_t b"
+.Ft u_long
+.Fn szmin "size_t a" "size_t b"
+.Ft int
 .Fn abs "int j"
 .nr nS 0
 .Pp
 The
 .Fn min ,
 .Fn imin ,
-.Fn lmin
-and
+.Fn lmin ,
 .Fn ulmin
+and
+.Fn szmin
 functions return the smallest integer between
 .Fa a
 and
@@ -72,9 +77,10 @@ inclusive.
 The
 .Fn max ,
 .Fn imax ,
-.Fn lmax
-and
+.Fn lmax ,
 .Fn ulmax
+and
+.Fn szmax
 functions return the largest integer between
 .Fa a
 and
