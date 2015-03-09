@@ -857,16 +857,16 @@ randomread(dev_t dev, struct uio *uio, int ioflag)
 	}
 
 	while (ret == 0 && uio->uio_resid > 0) {
-		int	n = min(POOLBYTES, uio->uio_resid);
+		size_t	n = szmin(POOLBYTES, uio->uio_resid);
 
 		if (myctx) {
 #ifndef KEYSTREAM_ONLY
 			memset(buf, 0, n);
 #endif
-			chacha_encrypt_bytes(&lctx, buf, buf, n);
+			chacha_encrypt_bytes(&lctx, buf, buf, (u32)n);
 		} else
 			arc4random_buf(buf, n);
-		ret = uiomovei(buf, n, uio);
+		ret = uiomove(buf, n, uio);
 		if (ret == 0 && uio->uio_resid > 0)
 			yield();
 	}
@@ -889,9 +889,9 @@ randomwrite(dev_t dev, struct uio *uio, int flags)
 	buf = malloc(POOLBYTES, M_TEMP, M_WAITOK);
 
 	while (ret == 0 && uio->uio_resid > 0) {
-		int	n = min(POOLBYTES, uio->uio_resid);
+		size_t	n = szmin(POOLBYTES, uio->uio_resid);
 
-		ret = uiomovei(buf, n, uio);
+		ret = uiomove(buf, n, uio);
 		if (ret != 0)
 			break;
 		while (n % sizeof(u_int32_t))
