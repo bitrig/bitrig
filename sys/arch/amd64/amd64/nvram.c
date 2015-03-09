@@ -95,7 +95,7 @@ nvramread(dev_t dev, struct uio *uio, int flags)
 	u_char buf[NVRAM_SIZE];
 	u_int pos = uio->uio_offset;
 	u_char *tmp;
-	int count = min(sizeof(buf), uio->uio_resid);
+	size_t count = szmin(sizeof(buf), uio->uio_resid);
 	int ret;
 
 	if (!nvram_initialized)
@@ -105,7 +105,7 @@ nvramread(dev_t dev, struct uio *uio, int flags)
 		return (0);
 
 #ifdef NVRAM_DEBUG
-	printf("attempting to read %d bytes at offset %d\n", count, pos);
+	printf("attempting to read %zu bytes at offset %d\n", count, pos);
 #endif
 
 	for (tmp = buf; count-- > 0 && pos < NVRAM_SIZE; ++pos, ++tmp)
@@ -115,7 +115,7 @@ nvramread(dev_t dev, struct uio *uio, int flags)
 	printf("nvramread read %d bytes (%s)\n", (tmp - buf), tmp);
 #endif
 
-	ret = uiomovei((caddr_t)buf, (tmp - buf), uio);
+	ret = uiomove((caddr_t)buf, (size_t)(tmp - buf), uio);
 
 	uio->uio_offset += uio->uio_resid;
 
