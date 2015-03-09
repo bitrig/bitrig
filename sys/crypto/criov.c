@@ -38,7 +38,7 @@ cuio_copydata(struct uio *uio, int off, int len, caddr_t cp)
 {
 	struct iovec *iov = uio->uio_iov;
 	int iol = uio->uio_iovcnt;
-	unsigned count;
+	size_t count;
 
 	if (off < 0)
 		panic("cuio_copydata: off %d < 0", off);
@@ -56,7 +56,7 @@ cuio_copydata(struct uio *uio, int off, int len, caddr_t cp)
 	while (len > 0) {
 		if (iol == 0)
 			panic("cuio_copydata: empty");
-		count = min(iov->iov_len - off, len);
+		count = szmin(iov->iov_len - off, len);
 		bcopy(((caddr_t)iov->iov_base) + off, cp, count);
 		len -= count;
 		cp += count;
@@ -71,7 +71,7 @@ cuio_copyback(struct uio *uio, int off, int len, const void *_cp)
 {
 	struct iovec *iov = uio->uio_iov;
 	int iol = uio->uio_iovcnt;
-	unsigned count;
+	size_t count;
 	caddr_t cp = (caddr_t)_cp;
 
 	if (off < 0)
@@ -90,7 +90,7 @@ cuio_copyback(struct uio *uio, int off, int len, const void *_cp)
 	while (len > 0) {
 		if (iol == 0)
 			panic("uio_copyback: empty");
-		count = min(iov->iov_len - off, len);
+		count = szmin(iov->iov_len - off, len);
 		bcopy(cp, ((caddr_t)iov->iov_base) + off, count);
 		len -= count;
 		cp += count;
@@ -130,7 +130,7 @@ cuio_apply(struct uio *uio, int off, int len,
     int (*f)(caddr_t, caddr_t, unsigned int), caddr_t fstate)
 {
 	int rval, ind, uiolen;
-	unsigned int count;
+	size_t count;
 
 	if (len < 0)
 		panic("cuio_apply: len %d < 0", len);
@@ -152,10 +152,10 @@ cuio_apply(struct uio *uio, int off, int len,
 		if (ind >= uio->uio_iovcnt)
 			panic("cuio_apply: ind %d >= uio_iovcnt %d for len",
 			    ind, uio->uio_iovcnt);
-		count = min(uio->uio_iov[ind].iov_len - off, len);
+		count = szmin(uio->uio_iov[ind].iov_len - off, len);
 
 		rval = f(fstate, (char *)uio->uio_iov[ind].iov_base + off,
-		    count);
+		    (unsigned int)count);
 		if (rval)
 			return (rval);
 
