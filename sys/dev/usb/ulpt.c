@@ -602,7 +602,7 @@ ulptclose(dev_t dev, int flag, int mode, struct proc *p)
 int
 ulpt_do_write(struct ulpt_softc *sc, struct uio *uio, int flags)
 {
-	u_int32_t n;
+	size_t n;
 	int error = 0;
 	void *bufp;
 	struct usbd_xfer *xfer;
@@ -617,13 +617,13 @@ ulpt_do_write(struct ulpt_softc *sc, struct uio *uio, int flags)
 		usbd_free_xfer(xfer);
 		return (ENOMEM);
 	}
-	while ((n = min(ULPT_BSIZE, uio->uio_resid)) != 0) {
+	while ((n = szmin(ULPT_BSIZE, uio->uio_resid)) != 0) {
 		ulpt_statusmsg(ulpt_status(sc), sc);
-		error = uiomovei(bufp, n, uio);
+		error = uiomove(bufp, n, uio);
 		if (error)
 			break;
-		DPRINTFN(1, ("ulptwrite: transfer %d bytes\n", n));
-		usbd_setup_xfer(xfer, sc->sc_out_pipe, 0, bufp, n,
+		DPRINTFN(1, ("ulptwrite: transfer %zu bytes\n", n));
+		usbd_setup_xfer(xfer, sc->sc_out_pipe, 0, bufp, (u_int32_t)n,
 		    USBD_NO_COPY | USBD_SYNCHRONOUS | USBD_CATCH, 0, NULL);
 		err = usbd_transfer(xfer);
 		if (err) {
