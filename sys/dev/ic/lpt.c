@@ -375,8 +375,8 @@ lptwrite(dev_t dev, struct uio *uio, int flags)
 	size_t n;
 	int error = 0;
 
-	while ((n = min(LPT_BSIZE, uio->uio_resid)) != 0) {
-		error = uiomovei(sc->sc_cp = sc->sc_inbuf->b_data, n, uio);
+	while ((n = szmin(LPT_BSIZE, uio->uio_resid)) != 0) {
+		error = uiomove(sc->sc_cp = sc->sc_inbuf->b_data, n, uio);
 		if (error != 0)
 			return error;
 		sc->sc_count = n;
