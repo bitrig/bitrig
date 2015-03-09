@@ -288,16 +288,16 @@ uhid_do_read(struct uhid_softc *sc, struct uio *uio, int flag)
 
 	/* Transfer as many chunks as possible. */
 	while (sc->sc_q.c_cc > 0 && uio->uio_resid > 0 && !error) {
-		length = min(sc->sc_q.c_cc, uio->uio_resid);
+		length = szmin(sc->sc_q.c_cc, uio->uio_resid);
 		if (length > sizeof(buffer))
 			length = sizeof(buffer);
 
 		/* Remove a small chunk from the input queue. */
-		(void) q_to_b(&sc->sc_q, buffer, length);
-		DPRINTFN(5, ("uhidread: got %lu chars\n", (u_long)length));
+		(void) q_to_b(&sc->sc_q, buffer, (int)length);
+		DPRINTFN(5, ("uhidread: got %zu chars\n", length));
 
 		/* Copy the data to the user process. */
-		if ((error = uiomovei(buffer, length, uio)) != 0)
+		if ((error = uiomove(buffer, length, uio)) != 0)
 			break;
 	}
 
