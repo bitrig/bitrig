@@ -569,7 +569,6 @@
 ./usr/bin/systat
 ./usr/bin/tail
 ./usr/bin/talk
-./usr/bin/tcopy
 ./usr/bin/tcpbench
 ./usr/bin/tee
 ./usr/bin/telnet
@@ -3338,7 +3337,6 @@
 ./usr/share/man/man1/tail.1
 ./usr/share/man/man1/talk.1
 ./usr/share/man/man1/tar.1
-./usr/share/man/man1/tcopy.1
 ./usr/share/man/man1/tcpbench.1
 ./usr/share/man/man1/tee.1
 ./usr/share/man/man1/telnet.1
