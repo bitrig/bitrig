@@ -70,6 +70,11 @@ static void tar_usage(void);
 static void cpio_options(int, char **);
 static void cpio_usage(void);
 
+static int compress_id(char *_blk, int _size);
+static int gzip_id(char *_blk, int _size);
+static int bzip2_id(char *_blk, int _size);
+static int xz_id(char *_blk, int _size);
+
 /* errors from get_line */
 #define GETLINE_FILE_CORRUPT 1
 #define GETLINE_OUT_OF_MEM 2
@@ -138,6 +143,30 @@ FSUB fsub[] = {
 	tmpfs_endrd, tmpfs_stwr, tmpfs_wr, tmpfs_endwr, tmpfs_trail,
 	tmpfs_opt},
 #endif
+
+#ifdef SMALL
+/* 7: compress, to detect failure to use -Z */
+	{ },
+/* 8: xz, to detect failure to decompress it */
+	{ },
+/* 9: bzip2, to detect failure to use -j */
+	{ },
+/* 10: gzip, to detect failure to use -z */
+	{ },
+#else
+/* 7: compress, to detect failure to use -Z */
+	{NULL, 0, 4, 0, 0, 0, 0, compress_id, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL},
+/* 8: xz, to detect failure to decompress it */
+	{NULL, 0, 4, 0, 0, 0, 0, xz_id, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL},
+/* 9: bzip2, to detect failure to use -j */
+	{NULL, 0, 4, 0, 0, 0, 0, bzip2_id, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL},
+/* 10: gzip, to detect failure to use -z */
+	{NULL, 0, 4, 0, 0, 0, 0, gzip_id, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL},
+#endif
 };
 #define	F_OCPIO	0	/* format when called as cpio -6 */
 #define	F_ACPIO	1	/* format when called as cpio -c */
@@ -151,7 +180,7 @@ FSUB fsub[] = {
  * of archive we are dealing with. This helps to properly id archive formats
  * some formats may be subsets of others....
  */
-int ford[] = {6, 5, 4, 3, 2, 1, 0, -1 };
+int ford[] = {6, 5, 4, 10, 9, 8, 7, 3, 2, 1, 0, -1};
 
 /*
  * Do we have -C anywhere and what is it?
@@ -1637,3 +1666,48 @@ cpio_usage(void)
 	exit(1);
 }
 #endif /* !NOCPIO */
+
+#ifndef SMALL
+static int
+compress_id(char *blk, int size)
+{
+	if (size >= 2 && blk[0] == '\037' && blk[1] == '\235') {
+		paxwarn(0, "input compressed with %s; use the -%c option"
+		    " to decompress it", "compress", 'Z');
+		exit(1);
+	}
+	return (-1);
+}
+
+static int
+gzip_id(char *blk, int size)
+{
+	if (size >= 2 && blk[0] == '\037' && blk[1] == '\213') {
+		paxwarn(0, "input compressed with %s; use the -%c option"
+		    " to decompress it", "gzip", 'z');
+		exit(1);
+	}
+	return (-1);
+}
+
+static int
+bzip2_id(char *blk, int size)
+{
+	if (size >= 3 && blk[0] == 'B' && blk[1] == 'Z' && blk[2] == 'h') {
+		paxwarn(0, "input compressed with %s; use the -%c option"
+		    " to decompress it", "bzip2", 'j');
+		exit(1);
+	}
+	return (-1);
+}
+
+static int
+xz_id(char *blk, int size)
+{
+	if (size >= 6 && memcmp(blk, "\xFD\x37\x7A\x58\x5A", 6) == 0) {
+		paxwarn(0, "input compressed with xz");
+		exit(1);
+	}
+	return (-1);
+}
+#endif /* !SMALL */
