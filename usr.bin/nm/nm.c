@@ -216,9 +216,9 @@ main(int argc, char *argv[])
 		eval |= process_file(1, "a.out");
 
 	if (issize && print_totals)
-		printf("\n%lu\t%lu\t%lu\t%lu\t%lx\tTOTAL\n",
+		printf("\n%-9lu%-9lu%-9lu%-9lu%-9lx%-9s\n",
 		    total_text, total_data, total_bss,
-		    total_total, total_total);
+		    total_total, total_total, "TOTAL");
 	exit(eval);
 }
 
@@ -656,14 +656,15 @@ show_file(int count, int warn_fmt, const char *name, FILE *fp, off_t foff, union
 
 		if (first) {
 			first = 0;
-			printf("text\tdata\tbss\tdec\thex\n");
+			printf("%-9s%-9s%-9s%-9s%-9s\n", "text", "data", "bss",
+			    "dec", "hex");
 		}
 
 		total = text + data + bss;
-		printf("%lu\t%lu\t%lu\t%lu\t%lx",
-		    text, data, bss, total, total);
+		printf("%-9lu%-9lu%-9lu%-9lu%-9lx", text, data, bss, total,
+		    total);
 		if (count > 1)
-			(void)printf("\t%s", name);
+			(void)printf("%-9s", name);
 
 		total_text += text;
 		total_data += data;
