@@ -970,7 +970,6 @@ file lib/libkern/explicit_bzero.c
 file lib/libkern/timingsafe_bcmp.c
 file lib/libkern/arch/${MACHINE_ARCH}/strchr.S | lib/libkern/strchr.c
 file lib/libkern/arch/${MACHINE_ARCH}/strrchr.S | lib/libkern/strrchr.c
-file lib/libkern/arch/${MACHINE_ARCH}/__main.S | lib/libkern/__main.c
 file lib/libkern/arch/${MACHINE_ARCH}/memchr.S | lib/libkern/memchr.c
 file lib/libkern/arch/${MACHINE_ARCH}/memcmp.S | lib/libkern/memcmp.c
 file lib/libkern/arch/${MACHINE_ARCH}/bcmp.S | lib/libkern/bcmp.c
