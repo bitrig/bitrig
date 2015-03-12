@@ -48,7 +48,7 @@ struct open_file;
  * Useful macros
  */
 /* don't define if libkern included */
-#ifndef LIBKERN_INLINE
+#ifndef __LIBKERN_H__
 #define	max(a,b)	(((a)>(b))? (a) : (b))
 #define	min(a,b)	(((a)>(b))? (b) : (a))
 #endif

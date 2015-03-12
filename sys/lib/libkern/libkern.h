@@ -37,82 +37,63 @@
 
 #include <sys/types.h>
 
-#ifndef LIBKERN_INLINE
-#define LIBKERN_INLINE	static __inline
-#define LIBKERN_BODY
-#endif
 
-
-LIBKERN_INLINE int imax(int, int);
-LIBKERN_INLINE int imin(int, int);
-LIBKERN_INLINE u_int max(u_int, u_int);
-LIBKERN_INLINE u_int min(u_int, u_int);
-LIBKERN_INLINE long lmax(long, long);
-LIBKERN_INLINE long lmin(long, long);
-LIBKERN_INLINE u_long ulmax(u_long, u_long);
-LIBKERN_INLINE u_long ulmin(u_long, u_long);
-LIBKERN_INLINE size_t szmax(size_t, size_t);
-LIBKERN_INLINE size_t szmin(size_t, size_t);
-LIBKERN_INLINE int abs(int);
-
-#ifdef LIBKERN_BODY
-LIBKERN_INLINE int
+static inline int
 imax(int a, int b)
 {
 	return (a > b ? a : b);
 }
-LIBKERN_INLINE int
+static inline int
 imin(int a, int b)
 {
 	return (a < b ? a : b);
 }
-LIBKERN_INLINE long
+static inline long
 lmax(long a, long b)
 {
 	return (a > b ? a : b);
 }
-LIBKERN_INLINE long
+static inline long
 lmin(long a, long b)
 {
 	return (a < b ? a : b);
 }
-LIBKERN_INLINE u_int
+static inline u_int
 max(u_int a, u_int b)
 {
 	return (a > b ? a : b);
 }
-LIBKERN_INLINE u_int
+static inline u_int
 min(u_int a, u_int b)
 {
 	return (a < b ? a : b);
 }
-LIBKERN_INLINE u_long
+static inline u_long
 ulmax(u_long a, u_long b)
 {
 	return (a > b ? a : b);
 }
-LIBKERN_INLINE u_long
+static inline u_long
 ulmin(u_long a, u_long b)
 {
 	return (a < b ? a : b);
 }
-LIBKERN_INLINE size_t
+static inline size_t
 szmax(size_t a, size_t b)
 {
 	return (a > b ? a : b);
 }
-LIBKERN_INLINE size_t
+static inline size_t
 szmin(size_t a, size_t b)
 {
 	return (a < b ? a : b);
 }
 
-LIBKERN_INLINE int
+static inline int
 abs(int j)
 {
 	return(j < 0 ? -j : j);
 }
-#endif
 
 #ifdef NDEBUG						/* tradition! */
 #define	assert(e)	((void)0)
