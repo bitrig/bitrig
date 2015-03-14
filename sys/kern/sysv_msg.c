@@ -636,7 +636,7 @@ msg_copyout(struct msg *msg, char *ubuf, size_t *len, struct proc *p)
 #endif
 
 	/* silently truncate messages too large for user buffer */
-	xfer = min(*len, msg->msg_len);
+	xfer = szmin(*len, msg->msg_len);
 
 	if ((error = copyout(&msg->msg_type, ubuf, sizeof(long))))
 		return (error);
