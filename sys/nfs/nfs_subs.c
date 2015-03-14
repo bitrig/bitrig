@@ -713,8 +713,8 @@ nfsm_uiotombuf(struct mbuf **mp, struct uio *uiop, size_t len)
 	uiop->uio_rw = UIO_WRITE;
 
 	while (len) {
-		xfer = min(len, M_TRAILINGSPACE(mb));
-		uiomovei(mb_offset(mb), xfer, uiop);
+		xfer = szmin(len, M_TRAILINGSPACE(mb));
+		uiomove(mb_offset(mb), xfer, uiop);
 		mb->m_len += xfer;
 		len -= xfer;
 		if (len > 0) {
