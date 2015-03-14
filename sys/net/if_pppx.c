@@ -271,8 +271,8 @@ pppxread(dev_t dev, struct uio *uio, int ioflag)
 {
 	struct pppx_dev *pxd = pppx_dev2pxd(dev);
 	struct mbuf *m, *m0;
-	int error = 0;
-	int len, s;
+	int error = 0, s;
+	size_t len;
 
 	if (!pxd)
 		return (ENXIO);
@@ -298,9 +298,9 @@ pppxread(dev_t dev, struct uio *uio, int ioflag)
 	splx(s);
 
 	while (m0 != NULL && uio->uio_resid > 0 && error == 0) {
-		len = min(uio->uio_resid, m0->m_len);
+		len = szmin(uio->uio_resid, m0->m_len);
 		if (len != 0)
-			error = uiomovei(mtod(m0, caddr_t), len, uio);
+			error = uiomove(mtod(m0, caddr_t), len, uio);
 		MFREE(m0, m);
 		m0 = m;
 	}
@@ -318,8 +318,8 @@ pppxwrite(dev_t dev, struct uio *uio, int ioflag)
 	struct pppx_hdr *th;
 	struct mbuf *top, **mp, *m;
 	struct ifqueue *ifq;
-	int tlen, mlen;
-	int isr, s, error = 0;
+	u_int mlen;
+	int tlen, isr, s, error = 0;
 
 	if (uio->uio_resid < sizeof(*th) || uio->uio_resid > MCLBYTES)
 		return (EMSGSIZE);
@@ -343,8 +343,8 @@ pppxwrite(dev_t dev, struct uio *uio, int ioflag)
 	mp = &top;
 
 	while (error == 0 && uio->uio_resid > 0) {
-		m->m_len = min(mlen, uio->uio_resid);
-		error = uiomovei(mtod (m, caddr_t), m->m_len, uio);
+		m->m_len = (u_int)szmin(mlen, uio->uio_resid);
+		error = uiomove(mtod (m, caddr_t), m->m_len, uio);
 		*mp = m;
 		mp = &m->m_next;
 		if (error == 0 && uio->uio_resid > 0) {
