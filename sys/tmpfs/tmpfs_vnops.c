@@ -1035,16 +1035,15 @@ tmpfs_readlink(void *v)
 	KASSERT(vp->v_type == VLNK);
 	node = VP_TO_TMPFS_NODE(vp);
 
-	if (node->tn_size < 0 || node->tn_size > INT_MAX ||
-	    uio->uio_resid > INT_MAX)
+	if (node->tn_size < 0 || node->tn_size > SIZE_MAX)
 		return EINVAL;
 
-	if (node->tn_size > (int)uio->uio_resid)
-		error = uiomovei(node->tn_spec.tn_lnk.tn_link,
-		    (int)uio->uio_resid, uio);
+	if (node->tn_size > uio->uio_resid)
+		error = uiomove(node->tn_spec.tn_lnk.tn_link,
+		    uio->uio_resid, uio);
 	else
-		error = uiomovei(node->tn_spec.tn_lnk.tn_link,
-		    (int)node->tn_size, uio);
+		error = uiomove(node->tn_spec.tn_lnk.tn_link,
+		    (size_t)node->tn_size, uio);
 
 	node->tn_status |= TMPFS_NODE_ACCESSED;
 
