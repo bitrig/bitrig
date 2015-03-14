@@ -11,7 +11,6 @@
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
 #include <sys/poll.h>
-#include <sys/event.h>
 
 #define	s(type)	sizeof(type)
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: vfs_bio.c,v 1.168 2015/02/07 08:21:24 miod Exp $	*/
+/*	$OpenBSD: vfs_bio.c,v 1.169 2015/03/14 03:38:51 jsg Exp $	*/
 /*	$NetBSD: vfs_bio.c,v 1.44 1996/06/11 11:15:36 pk Exp $	*/
 
 /*-
@@ -86,10 +86,6 @@
 #include <sys/conf.h>
 #include <sys/kernel.h>
 #include <sys/wapbl.h>
-
-#ifdef HIBERNATE
-#include <sys/hibernate.h>
-#endif /* HIBERNATE */
 
 #include <uvm/uvm_extern.h>
 

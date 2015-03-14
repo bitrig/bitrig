@@ -1,4 +1,4 @@
-/*	$OpenBSD: ext2fs_subr.c,v 1.32 2014/07/13 16:59:35 pelikan Exp $	*/
+/*	$OpenBSD: ext2fs_subr.c,v 1.33 2015/03/14 03:38:52 jsg Exp $	*/
 /*	$NetBSD: ext2fs_subr.c,v 1.1 1997/06/11 09:34:03 bouyer Exp $	*/
 
 /*

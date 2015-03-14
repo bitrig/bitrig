@@ -1,4 +1,4 @@
-/*	$OpenBSD: intr.c,v 1.39 2014/12/02 18:13:10 tedu Exp $	*/
+/*	$OpenBSD: intr.c,v 1.41 2015/03/14 03:38:46 jsg Exp $	*/
 /*	$NetBSD: intr.c,v 1.3 2003/03/03 22:16:20 fvdl Exp $	*/
 
 /*
@@ -57,7 +57,6 @@
 #include "lapic.h"
 
 #if NIOAPIC > 0
-#include <machine/i82093var.h> 
 #include <machine/mpbiosvar.h>
 #endif
 
