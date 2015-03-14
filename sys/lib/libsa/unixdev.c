@@ -176,8 +176,3 @@ cnspeed(dev_t dev, int sp)
 {
 	return 9600;
 }
-
-void
-__main(void)
-{
-}
