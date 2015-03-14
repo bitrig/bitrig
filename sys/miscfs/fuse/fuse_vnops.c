@@ -728,7 +728,7 @@ fusefs_readdir(void *v)
 			break;
 		}
 
-		if ((error = uiomovei(fbuf->fb_dat, fbuf->fb_len, uio))) {
+		if ((error = uiomove(fbuf->fb_dat, fbuf->fb_len, uio))) {
 			fb_delete(fbuf);
 			break;
 		}
@@ -810,7 +810,7 @@ fusefs_readlink(void *v)
 		return (error);
 	}
 
-	error = uiomovei(fbuf->fb_dat, fbuf->fb_len, uio);
+	error = uiomove(fbuf->fb_dat, fbuf->fb_len, uio);
 	fb_delete(fbuf);
 
 	return (error);
@@ -1059,7 +1059,7 @@ fusefs_read(void *v)
 		if (error)
 			break;
 
-		error = uiomovei(fbuf->fb_dat, MIN(size, fbuf->fb_len), uio);
+		error = uiomove(fbuf->fb_dat, MIN(size, fbuf->fb_len), uio);
 		if (error)
 			break;
 
@@ -1113,7 +1113,7 @@ fusefs_write(void *v)
 		fbuf->fb_io_off = uio->uio_offset;
 		fbuf->fb_io_len = len;
 
-		if ((error = uiomovei(fbuf->fb_dat, len, uio))) {
+		if ((error = uiomove(fbuf->fb_dat, len, uio))) {
 			printf("fusefs: uio error %i\n", error);
 			break;
 		}

@@ -171,7 +171,7 @@ ksymsread(dev_t dev, struct uio *uio, int flags)
 		if (len > uio->uio_resid)
 			len = uio->uio_resid;
 
-		if ((error = uiomovei(v, len, uio)) != 0)
+		if ((error = uiomove(v, len, uio)) != 0)
 			return (error);
 	}
 

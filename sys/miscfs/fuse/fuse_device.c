@@ -496,7 +496,7 @@ fusewrite(dev_t dev, struct uio *uio, int ioflag)
 	}
 
 	/* Get the missing datas from the fbuf */
-	error = uiomovei(&fbuf->FD, uio->uio_resid, uio);
+	error = uiomove(&fbuf->FD, uio->uio_resid, uio);
 	if (error)
 		return error;
 	fbuf->fb_dat = NULL;

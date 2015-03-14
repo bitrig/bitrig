@@ -110,7 +110,7 @@ uvm_io(vm_map_t map, struct uio *uio, int flags)
 		sz = chunksz - pageoffset;
 		if (sz > togo)
 			sz = togo;
-		error = uiomovei((caddr_t) (kva + pageoffset), sz, uio);
+		error = uiomove((caddr_t) (kva + pageoffset), sz, uio);
 		togo -= sz;
 		baseva += chunksz;
 
