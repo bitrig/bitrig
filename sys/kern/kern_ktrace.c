@@ -235,13 +235,12 @@ ktremul(struct proc *p)
 
 void
 ktrgenio(struct proc *p, int fd, enum uio_rw rw, struct iovec *iov,
-    ssize_t len)
+    size_t len)
 {
 	struct ktr_header kth;
 	struct ktr_genio *ktp;
 	caddr_t cp;
-	int count;
-	int mlen, buflen;
+	size_t count, mlen, buflen;
 
 	atomic_setbits_int(&p->p_flag, P_INKTR);
 
@@ -268,7 +267,7 @@ ktrgenio(struct proc *p, int fd, enum uio_rw rw, struct iovec *iov,
 		if (curcpu()->ci_schedstate.spc_schedflags & SPCF_SHOULDYIELD)
 			preempt(NULL);
 
-		count = lmin(iov->iov_len, buflen);
+		count = szmin(iov->iov_len, buflen);
 		if (count > len)
 			count = len;
 		if (copyin(iov->iov_base, cp, count))

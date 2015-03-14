@@ -46,7 +46,7 @@
 .Ft void
 .Fn ktremul "struct proc *p" "char *emul"
 .Ft void
-.Fn ktrgenio "struct proc *p" "int fd" "enum uio_rw rw" "struct iovec *iov" "int len" "int error"
+.Fn ktrgenio "struct proc *p" "int fd" "enum uio_rw rw" "struct iovec *iov" "size_t len"
 .Ft void
 .Fn ktrnamei "struct proc *p" "char *path"
 .Ft void
@@ -103,14 +103,11 @@ for the
 .Nm enum uio_rw
 definition),
 .Fa iov
-input/output data vector,
+input/output data vector, and
 .Fa len
 size of the
 .Fa iov
-vector,
-and, lastly,
-.Fa error
-status of the transaction.
+vector.
 .Pp
 .Fn ktrnamei
 should be called every time a
