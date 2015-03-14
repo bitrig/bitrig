@@ -3489,36 +3489,24 @@ uvm_map_hint(struct vmspace *vm, vm_prot_t prot)
 	vaddr_t addr;
 	vaddr_t spacing;
 
-#ifdef __i386__
-	/*
-	 * If executable skip first two pages, otherwise start
-	 * after data + heap region.
-	 */
-	if ((prot & PROT_EXEC) != 0 &&
-	    (vaddr_t)vm->vm_daddr >= I386_MAX_EXE_ADDR) {
-		addr = (PAGE_SIZE*2) +
-		    (arc4random() & (I386_MAX_EXE_ADDR / 2 - 1));
-		return (round_page(addr));
-	}
-#endif
-
-#if defined (__LP64__) && !defined (__mips64__)
+#if defined (__LP64__)
 	spacing = (MIN((4UL * 1024 * 1024 * 1024), BRKSIZ) - 1);
 #else
 	spacing = (MIN((256 * 1024 * 1024), BRKSIZ) - 1);
 #endif
 
 	addr = (vaddr_t)vm->vm_daddr;
+
 	/*
 	 * Start malloc/mmap after the brk.
 	 * If the random spacing area has been used up,
 	 * the brk area becomes fair game for mmap as well.
 	 */
+
 	if (vm->vm_dused < spacing >> PAGE_SHIFT)
 		addr += BRKSIZ;
-#if !defined(__vax__)
 	addr += arc4random() & spacing;
-#endif
+
 	return (round_page(addr));
 }
 
@@ -4930,38 +4918,7 @@ RB_GENERATE(uvm_map_addr, vm_map_entry, daddrs.addr_entry,
  * MD code: vmspace allocator setup.
  */
 
-#ifdef __i386__
-void
-uvm_map_setup_md(struct vm_map *map)
-{
-	vaddr_t		min, max;
-
-	min = map->min_offset;
-	max = map->max_offset;
-
-	/*
-	 * Ensure the selectors will not try to manage page 0;
-	 * it's too special.
-	 */
-	if (min < VMMAP_MIN_ADDR)
-		min = VMMAP_MIN_ADDR;
-
-#if 0	/* Cool stuff, not yet */
-	/* Hinted allocations. */
-	map->uaddr_any[1] = uaddr_hint_create(MAX(min, VMMAP_MIN_ADDR), max,
-	    1024 * 1024 * 1024);
-
-	/* Executable code is special. */
-	map->uaddr_exe = uaddr_rnd_create(min, I386_MAX_EXE_ADDR);
-	/* Place normal allocations beyond executable mappings. */
-	map->uaddr_any[3] = uaddr_pivot_create(2 * I386_MAX_EXE_ADDR, max);
-#else	/* Crappy stuff, for now */
-	map->uaddr_any[0] = uaddr_rnd_create(min, max);
-#endif
-
-	map->uaddr_brk_stack = uaddr_stack_brk_create(min, max);
-}
-#elif __LP64__
+#if defined(__LP64__)
 void
 uvm_map_setup_md(struct vm_map *map)
 {
@@ -4994,7 +4951,7 @@ uvm_map_setup_md(struct vm_map *map)
 
 	map->uaddr_brk_stack = uaddr_stack_brk_create(min, max);
 }
-#else	/* non-i386, 32 bit */
+#else	/* !__LP64__ */
 void
 uvm_map_setup_md(struct vm_map *map)
 {
@@ -5022,4 +4979,4 @@ uvm_map_setup_md(struct vm_map *map)
 
 	map->uaddr_brk_stack = uaddr_stack_brk_create(min, max);
 }
-#endif
+#endif /* __LP64__ */
