@@ -542,6 +542,9 @@ sys_msync(struct proc *p, void *v, register_t *retval)
 	size = (vsize_t)SCARG(uap, len);
 	flags = SCARG(uap, flags);
 
+	if (addr & PAGE_MASK)
+		return (EINVAL);
+
 	/* sanity check flags */
 	if ((flags & ~(MS_ASYNC | MS_SYNC | MS_INVALIDATE)) != 0 ||
 			(flags & (MS_ASYNC | MS_SYNC | MS_INVALIDATE)) == 0 ||
@@ -589,7 +592,10 @@ sys_munmap(struct proc *p, void *v, register_t *retval)
 	/* get syscall args... */
 	addr = (vaddr_t) SCARG(uap, addr);
 	size = (vsize_t) SCARG(uap, len);
-	
+
+	if (addr & PAGE_MASK)
+		return (EINVAL);
+
 	/* align address to a page boundary, and adjust size accordingly */
 	ALIGN_ADDR(addr, size, pageoff);
 
