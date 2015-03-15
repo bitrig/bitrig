@@ -163,13 +163,13 @@ struct disklabel {
 #define DL_SETPSIZE(p, n)	do { \
 					u_int64_t x = (n); \
 					(p)->p_sizeh = x >> 32; \
-					(p)->p_size = x; \
+					(p)->p_size = x & 0xffffffff; \
 				} while (0)
 #define DL_GETPOFFSET(p)	(((u_int64_t)(p)->p_offseth << 32) + (p)->p_offset)
 #define DL_SETPOFFSET(p, n)	do { \
 					u_int64_t x = (n); \
 					(p)->p_offseth = x >> 32; \
-					(p)->p_offset = x; \
+					(p)->p_offset = x & 0xffffffff; \
 				} while (0)
 
 #define DL_GETDSIZE(d)		(((u_int64_t)(d)->d_secperunith << 32) + \
@@ -177,21 +177,21 @@ struct disklabel {
 #define DL_SETDSIZE(d, n)	do { \
 					u_int64_t x = (n); \
 					(d)->d_secperunith = x >> 32; \
-					(d)->d_secperunit = x; \
+					(d)->d_secperunit = x & 0xffffffff; \
 				} while (0)
 #define DL_GETBSTART(d)		(((u_int64_t)(d)->d_bstarth << 32) + \
 				    (d)->d_bstart)
 #define DL_SETBSTART(d, n)	do { \
 					u_int64_t x = (n); \
 					(d)->d_bstarth = x >> 32; \
-					(d)->d_bstart = x; \
+					(d)->d_bstart = x & 0xffffffff; \
 				} while (0)
 #define DL_GETBEND(d)		(((u_int64_t)(d)->d_bendh << 32) + \
 				    (d)->d_bend)
 #define DL_SETBEND(d, n)	do { \
 					u_int64_t x = (n); \
 					(d)->d_bendh = x >> 32; \
-					(d)->d_bend = x; \
+					(d)->d_bend = x & 0xffffffff; \
 				} while (0)
 
 #define DL_BLKSPERSEC(d)	((d)->d_secsize / DEV_BSIZE)
