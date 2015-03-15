@@ -1,4 +1,4 @@
-/* $OpenBSD: x509_req.c,v 1.16 2014/09/28 10:50:33 miod Exp $ */
+/* $OpenBSD: x509_req.c,v 1.17 2015/03/15 22:52:17 doug Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
