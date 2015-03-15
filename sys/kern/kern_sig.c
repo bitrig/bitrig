@@ -1596,8 +1596,8 @@ coredump_write(void *cookie, enum uio_seg segflg, const void *data, size_t len)
 {
 	struct coredump_iostate *io = cookie;
 	off_t coffset = 0;
-	size_t csize;
-	int chunk, error;
+	size_t csize, chunk;
+	int error;
 
 	csize = len;
 	do {
@@ -1607,9 +1607,9 @@ coredump_write(void *cookie, enum uio_seg segflg, const void *data, size_t len)
 		/* Rest of the loop sleeps with lock held, so... */
 		yield();
 
-		chunk = MIN(csize, MAXPHYS);
+		chunk = szmin(csize, MAXPHYS);
 		error = vn_rdwr(UIO_WRITE, io->io_vp,
-		    (caddr_t)data + coffset, chunk,
+		    (caddr_t)data + coffset, (int)chunk,
 		    io->io_offset + coffset, segflg,
 		    IO_UNIT, io->io_cred, NULL, io->io_proc);
 		if (error) {

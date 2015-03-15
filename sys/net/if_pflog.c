@@ -308,7 +308,7 @@ pflog_bpfcopy(const void *src_arg, void *dst_arg, size_t len)
 {
 	struct mbuf		*m, *mp, *mhdr, *mptr;
 	struct pfloghdr		*pfloghdr;
-	u_int			 count;
+	size_t			 count;
 	u_char			*dst, *mdst;
 	int			 afto, hlen, mlen, off;
 	union pf_headers {
@@ -339,7 +339,7 @@ pflog_bpfcopy(const void *src_arg, void *dst_arg, size_t len)
 	/* first mbuf holds struct pfloghdr */
 	pfloghdr = mtod(m, struct pfloghdr *);
 	afto = pfloghdr->af != pfloghdr->naf;
-	count = min(m->m_len, len);
+	count = szmin(m->m_len, len);
 	bcopy(pfloghdr, dst, count);
 	pfloghdr = (struct pfloghdr *)dst;
 	dst += count;
@@ -456,7 +456,8 @@ pflog_bpfcopy(const void *src_arg, void *dst_arg, size_t len)
 		pfloghdr->dport = odport;
 	}
 
-	pd.tot_len = min(pd.tot_len, len);
+	if (pd.tot_len > len)
+		pd.tot_len = len;
 	pd.tot_len -= pd.m->m_data - pd.m->m_pktdat;
 
 #if INET && INET6

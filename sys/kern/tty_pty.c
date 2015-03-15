@@ -454,7 +454,7 @@ ptcread(dev_t dev, struct uio *uio, int flag)
 				if (error)
 					return (error);
 				if (pti->pt_send & TIOCPKT_IOCTL) {
-					cc = MIN(uio->uio_resid,
+					cc = (int)szmin(uio->uio_resid,
 						sizeof(tp->t_termios));
 					error = uiomovei(&tp->t_termios, cc, uio);
 					if (error)
@@ -485,7 +485,7 @@ ptcread(dev_t dev, struct uio *uio, int flag)
 	if (pti->pt_flags & (PF_PKT|PF_UCNTL))
 		error = ureadc(0, uio);
 	while (uio->uio_resid > 0 && error == 0) {
-		cc = MIN(uio->uio_resid, BUFSIZ);
+		cc = (int)szmin(uio->uio_resid, BUFSIZ);
 		cc = q_to_b(&tp->t_outq, buf, cc);
 		if (cc > bufcc)
 			bufcc = cc;
@@ -519,7 +519,7 @@ again:
 			goto block;
 		while (uio->uio_resid > 0 && tp->t_canq.c_cc < TTYHOG(tp) - 1) {
 			if (cc == 0) {
-				cc = MIN(uio->uio_resid, BUFSIZ);
+				cc = (int)szmin(uio->uio_resid, BUFSIZ);
 				cc = min(cc, TTYHOG(tp) - 1 - tp->t_canq.c_cc);
 				if (cc > bufcc)
 					bufcc = cc;
@@ -544,7 +544,7 @@ again:
 	}
 	do {
 		if (cc == 0) {
-			cc = MIN(uio->uio_resid, BUFSIZ);
+			cc = (int)szmin(uio->uio_resid, BUFSIZ);
 			if (cc > bufcc)
 				bufcc = cc;
 			cp = buf;

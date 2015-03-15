@@ -2233,7 +2233,7 @@ urtwn_load_firmware(struct urtwn_softc *sc)
 	    urtwn_read_1(sc, R92C_MCUFWDL) | R92C_MCUFWDL_CHKSUM_RPT);
 
 	for (page = 0; len > 0; page++) {
-		mlen = MIN(len, R92C_FW_PAGE_SIZE);
+		mlen = (int)szmin(len, R92C_FW_PAGE_SIZE);
 		error = urtwn_fw_loadpage(sc, page, ptr, mlen);
 		if (error != 0) {
 			printf("%s: could not load firmware page %d\n",

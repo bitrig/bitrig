@@ -539,7 +539,7 @@ uvm_page_rle(paddr_t addr)
 	for (pg_end = pg; pg_end <= vmp->lastpg &&
 	    (pg_end->pg_flags & PQ_FREE) == PQ_FREE; pg_end++)
 		;
-	return min((pg_end - pg), HIBERNATE_CHUNK_SIZE/PAGE_SIZE);
+	return (int)szmin(pg_end - pg, HIBERNATE_CHUNK_SIZE/PAGE_SIZE);
 }
 
 /*
@@ -593,7 +593,7 @@ get_hibernate_info(union hibernate_info *hib, int suspend)
 	/* Stash kernel version information */
 	memset(&hib->kernel_version, 0, 128);
 	bcopy(version, &hib->kernel_version,
-	    min(strlen(version), sizeof(hib->kernel_version)-1));
+	    szmin(strlen(version), sizeof(hib->kernel_version)-1));
 
 	if (suspend) {
 		/* Grab the previously-allocated piglet addresses */

@@ -447,7 +447,7 @@ myx_query(struct myx_softc *sc, char *part, size_t partlen)
 			    sc->sc_ac.ac_enaddr, maxlen);
 		} else if (maxlen > 3 && memcmp("PC=", &strings[i], 3) == 0) {
 			i += 3;
-			i += strlcpy(part, &strings[i], min(maxlen, partlen));
+			i += strlcpy(part, &strings[i], szmin(maxlen, partlen));
 		}
 		for (; i < len; i++) {
 			if (strings[i] == '\0')
@@ -499,7 +499,7 @@ myx_loadfirmware(struct myx_softc *sc, const char *filename)
 
 	/* Write the firmware to the card's SRAM */
 	for (i = 0; i < fwlen; i += 256)
-		myx_write(sc, i + MYX_FW, fw + i, min(256, fwlen - i));
+		myx_write(sc, i + MYX_FW, fw + i, szmin(256, fwlen - i));
 
 	if (myx_boot(sc, fwlen) != 0) {
 		printf("%s: failed to boot %s\n", DEVNAME(sc), filename);

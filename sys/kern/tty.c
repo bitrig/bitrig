@@ -1779,7 +1779,7 @@ loop:
 		 * leftover from last time.
 		 */
 		if (cc == 0) {
-			cc = MIN(uio->uio_resid, OBUFSIZ);
+			cc = (int)szmin(uio->uio_resid, OBUFSIZ);
 			cp = obuf;
 			error = uiomovei(cp, cc, uio);
 			if (error) {

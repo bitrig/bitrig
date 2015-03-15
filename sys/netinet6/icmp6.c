@@ -1633,8 +1633,7 @@ icmp6_redirect_output(struct mbuf *m0, struct rtentry *rt)
 		goto fail;
 	m->m_pkthdr.rcvif = NULL;
 	m->m_len = 0;
-	maxlen = M_TRAILINGSPACE(m);
-	maxlen = min(IPV6_MMTU, maxlen);
+	maxlen = szmin(M_TRAILINGSPACE(m), IPV6_MMTU);
 	/* just for safety */
 	if (maxlen < sizeof(struct ip6_hdr) + sizeof(struct icmp6_hdr) +
 	    ((sizeof(struct nd_opt_hdr) + ifp->if_addrlen + 7) & ~7)) {

@@ -445,7 +445,7 @@ otus_load_firmware(struct otus_softc *sc, const char *name, uint32_t addr)
 	ptr = fw;
 	addr >>= 8;
 	while (size > 0) {
-		mlen = MIN(size, 4096);
+		mlen = (int)szmin(size, 4096);
 
 		USETW(req.wValue, addr);
 		USETW(req.wLength, mlen);

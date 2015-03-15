@@ -2156,7 +2156,7 @@ sysctl_sysvipc(int *name, u_int namelen, void *where, size_t *sizep)
 		*sizep = 0;
 		return (ENOMEM);
 	}
-	buf = malloc(min(tsize, buflen), M_TEMP, M_WAITOK|M_ZERO);
+	buf = malloc(szmin(tsize, buflen), M_TEMP, M_WAITOK|M_ZERO);
 
 	switch (*name) {
 #ifdef SYSVSEM

@@ -665,7 +665,7 @@ athn_usb_load_firmware(struct athn_usb_softc *usc)
 	req.bRequest = AR_FW_DOWNLOAD;
 	USETW(req.wIndex, 0);
 	while (size > 0) {
-		mlen = MIN(size, 4096);
+		mlen = (int)szmin(size, 4096);
 
 		USETW(req.wValue, addr);
 		USETW(req.wLength, mlen);

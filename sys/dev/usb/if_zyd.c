@@ -2520,7 +2520,7 @@ zyd_loadfirmware(struct zyd_softc *sc, u_char *fw, size_t size)
 
 	addr = ZYD_FIRMWARE_START_ADDR;
 	while (size > 0) {
-		const int mlen = min(size, 4096);
+		const int mlen = (int)szmin(size, 4096);
 
 		DPRINTF(("loading firmware block: len=%d, addr=0x%x\n", mlen,
 		    addr));

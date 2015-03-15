@@ -602,9 +602,9 @@ msg_copyin(struct msg *msg, const char *ubuf, size_t len, struct proc *p)
 		m = m_get(M_WAIT, MT_DATA);
 		if (len >= MINCLSIZE) {
 			MCLGET(m, M_WAIT);
-			xfer = min(len, MCLBYTES);
+			xfer = szmin(len, MCLBYTES);
 		} else {
-			xfer = min(len, MLEN);
+			xfer = szmin(len, MLEN);
 		}
 		m->m_len = xfer;
 		msg->msg_len += xfer;

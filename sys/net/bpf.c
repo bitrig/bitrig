@@ -1152,7 +1152,7 @@ void
 bpf_mcopy(const void *src_arg, void *dst_arg, size_t len)
 {
 	const struct mbuf *m;
-	u_int count;
+	size_t count;
 	u_char *dst;
 
 	m = src_arg;
@@ -1160,7 +1160,7 @@ bpf_mcopy(const void *src_arg, void *dst_arg, size_t len)
 	while (len > 0) {
 		if (m == 0)
 			panic("bpf_mcopy");
-		count = min(m->m_len, len);
+		count = szmin(m->m_len, len);
 		bcopy(mtod(m, caddr_t), (caddr_t)dst, count);
 		m = m->m_next;
 		dst += count;
