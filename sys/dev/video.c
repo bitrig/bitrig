@@ -137,7 +137,8 @@ int
 videoread(dev_t dev, struct uio *uio, int ioflag)
 {
 	struct video_softc *sc;
-	int unit, error, size;
+	int unit, error;
+	size_t size;
 
 	unit = VIDEOUNIT(dev);
 	if (unit >= video_cd.cd_ndevs ||
@@ -158,7 +159,7 @@ videoread(dev_t dev, struct uio *uio, int ioflag)
 		sc->sc_vidmode = VIDMODE_READ;
  	}
  
-	DPRINTF(("resid=%d\n", uio->uio_resid));
+	DPRINTF(("resid=%zu\n", uio->uio_resid));
 
 	if (sc->sc_frames_ready < 1) {
 		/* block userland read until a frame is ready */
@@ -170,16 +171,13 @@ videoread(dev_t dev, struct uio *uio, int ioflag)
 	}
 
 	/* move no more than 1 frame to userland, as per specification */
-	if (sc->sc_fsize < uio->uio_resid)
-		size = sc->sc_fsize;
-	else
-		size = uio->uio_resid;
-	error = uiomovei(sc->sc_fbuffer, size, uio);
+	size = szmin(sc->sc_fsize, uio->uio_resid);
+	error = uiomove(sc->sc_fbuffer, size, uio);
 	sc->sc_frames_ready--;
 	if (error)
 		return (error);
 
-	DPRINTF(("uiomove successfully done (%d bytes)\n", size));
+	DPRINTF(("uiomove successfully done (%zu bytes)\n", size));
 
 	return (0);
 }
