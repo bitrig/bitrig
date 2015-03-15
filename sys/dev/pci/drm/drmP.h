@@ -366,20 +366,19 @@ static inline uint32_t ror32(uint32_t word, unsigned int shift)
 static __inline void
 udelay(unsigned long usecs)
 {
-	DELAY(usecs);
+	DELAY((int)usecs);
 }
 
 static __inline void
 usleep_range(unsigned long min, unsigned long max)
 {
-	DELAY(min);
+	DELAY((int)usecs);
 }
 
 static __inline void
 mdelay(unsigned long msecs)
 {
-	int loops = msecs;
-	while (loops--)
+	while (msecs-- > 0)
 		DELAY(1000);
 }
 
