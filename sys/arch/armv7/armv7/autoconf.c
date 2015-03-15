@@ -116,7 +116,7 @@ diskconf(void)
 
 	/* Lookup boot device from boot if not set by configuration */
 	if (bootdv == NULL) {
-		int len;
+		size_t len;
 		char *p;
 
 		/* boot_file is of the form wd0a:/bsd, we want 'wd0a' */

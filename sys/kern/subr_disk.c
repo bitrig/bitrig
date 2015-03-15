@@ -1345,7 +1345,7 @@ dk_mountroot(void)
 }
 
 struct device *
-getdisk(char *str, int len, int defpart, dev_t *devp)
+getdisk(char *str, size_t len, int defpart, dev_t *devp)
 {
 	struct device *dv;
 
@@ -1365,7 +1365,7 @@ getdisk(char *str, int len, int defpart, dev_t *devp)
 }
 
 struct device *
-parsedisk(char *str, int len, int defpart, dev_t *devp)
+parsedisk(char *str, size_t len, int defpart, dev_t *devp)
 {
 	struct device *dv;
 	int majdev, part = defpart;
@@ -1443,7 +1443,8 @@ setroot_swapgeneric(struct device *bootdv, dev_t *nrootdev)
 void
 setroot(struct device *bootdv, int part, int exitflags)
 {
-	int majdev, unit, len, s, slept = 0;
+	int majdev, unit, s, slept = 0;
+	size_t len;
 	struct swdevt *swp;
 	struct device *rootdv, *dv;
 	dev_t nrootdev, nswapdev = NODEV, temp = NODEV;

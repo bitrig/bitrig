@@ -203,8 +203,8 @@ struct nam2blk {
 int	findblkmajor(struct device *dv);
 char	*findblkname(int);
 void	setroot(struct device *, int, int);
-struct	device *getdisk(char *str, int len, int defpart, dev_t *devp);
-struct	device *parsedisk(char *str, int len, int defpart, dev_t *devp);
+struct	device *getdisk(char *str, size_t len, int defpart, dev_t *devp);
+struct	device *parsedisk(char *str, size_t len, int defpart, dev_t *devp);
 void	device_register(struct device *, void *);
 
 int loadfirmware(const char *name, u_char **bufp, size_t *buflen);
