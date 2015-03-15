@@ -45,6 +45,3 @@ ${f}.S: ${LCRYPTO_SRC}/${dir}/asm/${f}.pl
 
 CFLAGS+= -DOPENSSL_CPUID_OBJ
 SRCS+=	armv4cpuid.S armcap.c
-
-# XXX Needed for current version of armv4-gf2m
-AFLAGS+= -no-integrated-as
