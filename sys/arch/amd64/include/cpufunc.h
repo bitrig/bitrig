@@ -95,11 +95,9 @@ lcr0(u_int val)
 static __inline u_int
 rcr0(void)
 {
-	u_int64_t val64;
-	u_int val;
-	__asm volatile("movq %%cr0,%0" : "=r" (val64));
-	val = val64;
-	return val;
+	u_int64_t val;
+	__asm volatile("movq %%cr0,%0" : "=r" (val));
+	return ((u_int)val);
 }
 
 static __inline u_int64_t
@@ -138,11 +136,9 @@ lcr4(u_int val)
 static __inline u_int
 rcr4(void)
 {
-	u_int val;
-	u_int64_t val64;
-	__asm volatile("movq %%cr4,%0" : "=r" (val64));
-	val = val64;
-	return val;
+	u_int64_t val;
+	__asm volatile("movq %%cr4,%0" : "=r" (val));
+	return ((u_int)val);
 }
 
 static __inline void
