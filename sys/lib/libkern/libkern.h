@@ -176,7 +176,7 @@ size_t	 strlcat(char *, const char *, size_t)
 int	 strcmp(const char *, const char *);
 int	 strncmp(const char *, const char *, size_t);
 int	 strncasecmp(const char *, const char *, size_t);
-int	 getsn(char *, int);
+size_t	 getsn(char *, size_t);
 char	*strchr(const char *, int);
 char	*strrchr(const char *, int);
 int	 timingsafe_bcmp(const void *, const void *, size_t);

@@ -29,10 +29,11 @@
 #include <sys/systm.h>
 #include <dev/cons.h>
 
-int
-getsn(char *cp, int size)
+size_t
+getsn(char *cp, size_t size)
 {
-	int len = 0, c;
+	size_t len = 0;
+	int c;
 	char *lp = cp;
 
 	while (1) {

@@ -421,14 +421,13 @@ userconf_modify(char *item, int *val)
 	int ok = 0;
 	int a;
 	char *c;
-	int i;
 
 	while (!ok) {
 		printf("%s [", item);
 		userconf_pnum(*val);
 		printf("] ? ");
 
-		i = getsn(userconf_argbuf, sizeof(userconf_argbuf));
+		(void)getsn(userconf_argbuf, sizeof(userconf_argbuf));
 
 		c = userconf_argbuf;
 		while (*c == ' ' || *c == '\t' || *c == '\n') c++;
@@ -994,14 +993,13 @@ userconf_add_read(char *prompt, char field, char *dev, int len, int *val)
 	int ok = 0;
 	int a;
 	char *c;
-	int i;
 
 	*val = -1;
 
 	while (!ok) {
 		printf("%s ? ", prompt);
 
-		i = getsn(userconf_argbuf, sizeof(userconf_argbuf));
+		(void)getsn(userconf_argbuf, sizeof(userconf_argbuf));
 
 		c = userconf_argbuf;
 		while (*c == ' ' || *c == '\t' || *c == '\n')
