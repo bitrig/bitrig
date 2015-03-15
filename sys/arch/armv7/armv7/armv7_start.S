@@ -37,6 +37,9 @@
 #undef	DOMAIN_CLIENT	/* XXX */
 #include "assym.h"
 
+#define ERET	.long	0xe160006e		@ eret
+#define ELR	.long	0xe12ef30e		@ msr ELR_hyp, lr
+
 /*
  * CPWAIT -- Canonical method to wait for CP15 update.
  * NOTE: Clobbers the specified temp reg.
@@ -100,9 +103,9 @@ _C_LABEL(bootstrap_start):
 	bne	1f			/* If we are not in HYP, we're done */
 	orr	r0, r0, #(A32_bit)
 	adr	lr, 2f
-	msr	ELR_hyp, lr
+	ELR				/* msr	ELR_hyp, lr */
 	msr	spsr_fsxc, r0
-	eret				/* Use the HYP LR to get into SVC */
+	ERET				/* Use the HYP LR to get into SVC */
 1:
 	msr	cpsr_c, r0
 2:

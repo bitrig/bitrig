@@ -54,7 +54,7 @@
 
 #define	MCOUNT								\
 	__asm__(".text");						\
-	__asm__(".align	0");						\
+	__asm__(".align	2");						\
 	__asm__(".type	" MCOUNT_ASM_NAME ",%function");		\
 	__asm__(".global	" MCOUNT_ASM_NAME);			\
 	__asm__(MCOUNT_ASM_NAME ":");					\

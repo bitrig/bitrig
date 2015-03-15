@@ -214,9 +214,9 @@ ASENTRY_NP(L_cksumdata)
 	blt	.Lcksumdata_endgame
 	cmp	r7, #0x02
 	ldrb	r4, [r0], #0x01		/* Fetch 1st byte */
-	ldrgeb	r5, [r0], #0x01		/* Fetch 2nd byte */
+	ldrbge	r5, [r0], #0x01		/* Fetch 2nd byte */
 	movlt	r5, #0x00
-	ldrgtb	r6, [r0], #0x01		/* Fetch 3rd byte */
+	ldrbgt	r6, [r0], #0x01		/* Fetch 3rd byte */
 	movle	r6, #0x00
 	/* Combine the three bytes depending on endianness and alignment */
 	orreq	r2, r4, r5, lsl #8
@@ -324,9 +324,9 @@ ASENTRY_NP(L_cksumdata)
 .Lcksumdata_endgame:
 	ldrb	r3, [r0]		/* Fetch first byte */
 	cmp	r1, #0x02
-	ldrgeb	r4, [r0, #0x01]		/* Fetch 2nd and 3rd as necessary */
+	ldrbge	r4, [r0, #0x01]		/* Fetch 2nd and 3rd as necessary */
 	movlt	r4, #0x00
-	ldrgtb	r5, [r0, #0x02]
+	ldrbgt	r5, [r0, #0x02]
 	movle	r5, #0x00
 	/* Combine the three bytes depending on endianness and alignment */
 	tst	r0, #0x01

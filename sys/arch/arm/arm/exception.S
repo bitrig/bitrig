@@ -52,7 +52,7 @@
 #include "assym.h"
 
 	.text	
-	.align	0
+	.align	2
 
 #define RESTOREVFP							\
 	ldr	r0, [sp]		/* Get the SPSR from stack */	;\
@@ -124,7 +124,7 @@ abortprefetch:
 
 abortprefetchmsg:
         .asciz  "abortprefetch"
-        .align  0
+        .align  2
 
 /*
  * data_abort_entry:
@@ -157,7 +157,7 @@ abortdata:
 
 abortdatamsg:
         .asciz  "abortdata"
-        .align  0
+        .align  2
 
 /*
  * address_exception_entry:
@@ -232,7 +232,7 @@ ENTRY_NP(undefinedinstruction_bounce)
 	b	_C_LABEL(undefinedinstruction)
 
 	.data
-	.align	0
+	.align	2
 
 /*
  * Indirection data

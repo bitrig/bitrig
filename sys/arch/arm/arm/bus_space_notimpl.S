@@ -62,7 +62,7 @@ LABEL(func)							;	\
 								;	\
 LLABEL(__C(func,_text))						;	\
 	.asciz	__S(func)                                       ;	\
-	.align	0						;
+	.align	2						;
 
 bs_notimpl_message:
 	.asciz  __S(BUS_SPACE), "_%s: args at %p"

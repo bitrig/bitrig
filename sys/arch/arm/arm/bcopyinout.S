@@ -41,7 +41,7 @@
 #include <machine/asm.h>
 
 	.text
-	.align	0
+	.align	2
 
 #define SAVE_REGS	stmfd	sp!, {r4-r11}
 #define RESTORE_REGS	ldmfd	sp!, {r4-r11}

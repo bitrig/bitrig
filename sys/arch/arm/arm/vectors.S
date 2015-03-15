@@ -44,7 +44,7 @@
  */
 
 	.text
-	.align	0
+	.align	2
 	.global	_C_LABEL(page0), _C_LABEL(page0_data), _C_LABEL(page0_end)
 	.global _C_LABEL(fiqvector)
 
@@ -97,7 +97,7 @@ _C_LABEL(page0_end):
 
 #ifdef __ARM_FIQ_INDIRECT
 	.data
-	.align	0
+	.align	2
 _C_LABEL(fiqvector):
 	subs	pc, lr, #4
 	.org	_C_LABEL(fiqvector) + 0x100

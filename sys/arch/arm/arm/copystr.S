@@ -44,7 +44,7 @@
 #include <sys/errno.h>
 
 	.text
-	.align	0
+	.align	2
 
 /*
  * r0 - from
@@ -194,5 +194,5 @@ ENTRY(copyoutstr)
 
 Lcopystrpcbfaulttext:
 	.asciz	"No valid PCB during copyinoutstr() addr1=%08x addr2=%08x\n"
-	.align	0
+	.align	2
 #endif

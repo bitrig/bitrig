@@ -17,13 +17,16 @@
 #include <arm/armreg.h>
 #include <machine/asm.h>
 
+#define ERET	.long	0xe160006e		@ eret
+#define HVC	.long	0xe1400070		@ hvc #0
+
 ENTRY_NP(hypervisor_get_vectors)
 	mov	r0, #-1
-	hvc	#0
+	HVC
 	mov	pc, lr
 
 ENTRY_NP(hypervisor_set_vectors)
-	hvc	#0
+	HVC
 	mov	pc, lr
 
 ENTRY_NP(hypervisor_stub_install)
@@ -87,7 +90,7 @@ ENTRY_NP(hypervisor_stub_do_trap)
 	cmp	r0, #-1
 	mrceq	p15, 4, r0, c12, c0, 0	@ get HVBAR
 	mcrne	p15, 4, r0, c12, c0, 0	@ set HVBAR
-	eret
+	ERET
 
 .align 5
 hypervisor_stub_vectors:

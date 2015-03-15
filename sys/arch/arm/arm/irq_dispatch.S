@@ -85,7 +85,7 @@
  *	which can be used by different platforms.
  */
 	.text
-	.align	0
+	.align	2
 
 #define STOREVFP							\
 	bl	_C_LABEL(vfp_save)					
@@ -127,7 +127,7 @@ ASENTRY_NP(irq_entry)
 	movs	pc, lr			/* Exit */
 
 	.bss
-	.align	0
+	.align	2
 
 	.global _C_LABEL(astpending)
 _C_LABEL(astpending):

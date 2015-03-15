@@ -26,14 +26,12 @@
 void vfp_store(struct vfp_sp_state *vfpsave);
 
 #define set_vfp_fpexc(val)						\
-	__asm __volatile("mcr p10, 7, %0, c8, c0, 0" :: 		\
-	    "r" (val))
+	__asm __volatile("vmsr fpexc, %0" :: "r" (val))
 
 #define get_vfp_fpexc()							\
 ({									\
 	uint32_t val = 0;						\
-	__asm __volatile("mrc p10, 7, %0, c8, c0, 0" :	 		\
-	    "=r" (val));						\
+	__asm __volatile("vmrs %0, fpexc" : "=r" (val));		\
 	val;								\
 })
 
@@ -72,9 +70,9 @@ vfp_store(struct vfp_sp_state *vfpsave)
 
 	if (get_vfp_fpexc() & VFPEXC_EN) {
 		__asm __volatile(
-		    "stc	p11, c0, [%1], #128\n"		/* d0-d15 */
-		    "stcl	p11, c0, [%1], #128\n"		/* d16-d31 */
-		    "mrc	p10, 7, %0, c1, c0, 0\n"
+		    "vstmia	%1!, {d0-d15}\n"		/* d0-d15 */
+		    "vstmia	%1!, {d16-d31}\n"		/* d16-d31 */
+		    "vmrs	%0, fpscr\n"
 		    "str	%0, [%1]\n"			/* save vfpscr */
 		: "=&r" (scratch) : "r" (vfpsave));
 	}
@@ -156,10 +154,10 @@ vfp_load(struct proc *p)
 	set_vfp_fpexc(VFPEXC_EN);
 
 	__asm __volatile(
-	    "ldc	p11, c0, [%1], #128\n"		/* d0-d15 */
-	    "ldcl	p11, c0, [%1], #128\n"		/* d16-d31 */
+	    "vldmia	%1!, {d0-d15}\n"		/* d0-d15 */
+	    "vldmia	%1!, {d16-d31}\n"		/* d16-d31 */
 	    "ldr	%0, [%1]\n"			/* set old vfpscr */
-	    "mcr	p10, 7, %0, c1, c0, 0\n"
+	    "vmsr	fpscr, %0\n"
 	    : "=&r" (scratch) : "r" (&pcb->pcb_fpstate));
 
 	ci->ci_fpuproc = p;

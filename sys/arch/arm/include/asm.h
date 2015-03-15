@@ -58,7 +58,7 @@
 #endif
 
 #ifndef _ALIGN_TEXT
-# define _ALIGN_TEXT .align 0
+# define _ALIGN_TEXT .align 2
 #endif
 
 /*

@@ -50,7 +50,7 @@ ENTRY_NP(sigcode)
  */
 /*	mov	r0, sp */
 	add	r0, sp, #SIGF_SC
-	ldr	r12, =SYS_sigreturn
+	mov	r12, #SYS_sigreturn
 	swi	SYS_sigreturn
 
 /* Well if that failed we better exit quick ! */

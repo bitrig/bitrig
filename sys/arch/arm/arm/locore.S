@@ -48,7 +48,7 @@
  */
 
 	.text
-	.align	0
+	.align	2
 
 ENTRY_NP(kernel_text)
 
@@ -95,14 +95,14 @@ ASENTRY_NP(start)
 
 .Lmainreturned:
 	.asciz	"main() returned"
-	.align	0
+	.align	2
 
 	.bss
 svcstk:
 	.space	INIT_ARM_STACK_SIZE
 
 	.text
-	.align	0
+	.align	2
 
 #ifndef OFW
 	/* OFW based systems will use OF_boot() */

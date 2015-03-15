@@ -46,7 +46,7 @@
 #include <machine/asm.h>
 
 	.text
-	.align	0
+	.align	2
 
 ENTRY(cpufunc_nullop)
 	mov	pc, lr
