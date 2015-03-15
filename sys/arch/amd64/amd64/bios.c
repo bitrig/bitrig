@@ -345,7 +345,8 @@ smbios_info(char * str)
 	struct smbtable stbl, btbl;
 	struct smbios_sys *sys;
 	struct smbios_board *board;
-	int i, infolen, uuidf, havebb;
+	size_t infolen, i;
+	int uuidf, havebb;
 	char *p;
 
 	if (smbios_entry.mjr < 2)
