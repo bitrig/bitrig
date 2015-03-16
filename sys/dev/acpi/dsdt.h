@@ -1,4 +1,4 @@
-/* $OpenBSD: dsdt.h,v 1.62 2014/05/02 14:10:15 kettenis Exp $ */
+/* $OpenBSD: dsdt.h,v 1.63 2015/03/16 20:31:46 deraadt Exp $ */
 /*
  * Copyright (c) 2005 Marco Peereboom <marco@openbsd.org>
  *

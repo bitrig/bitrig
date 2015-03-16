@@ -1,4 +1,4 @@
-/* $OpenBSD: dsdt.c,v 1.215 2015/03/14 03:38:47 jsg Exp $ */
+/* $OpenBSD: dsdt.c,v 1.216 2015/03/16 20:31:46 deraadt Exp $ */
 /*
  * Copyright (c) 2005 Jordan Hargrave <jordan@openbsd.org>
  *
