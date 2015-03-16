@@ -244,9 +244,14 @@ typedef struct tmpfs_mount {
 	struct rwlock		tm_lock;
 	struct tmpfs_node_list	tm_nodes;
 
+	/* Internal mount point flags. */
+	uint8_t			tm_flags;
+
 	/* Snapshot location or "tmpfs". */
 	char			tm_fspec[MAXPATHLEN];
 } tmpfs_mount_t;
+
+#define	TMPFS_MOUNT_READONLY	0x01
 
 /*
  * This structure maps a file identifier to a tmpfs node.  Used by the

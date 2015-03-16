@@ -148,6 +148,7 @@ tmpfs_mount_update(struct mount *mp, struct tmpfs_args *args, struct proc *p)
 		error = vflush(mp, rootvp, WRITECLOSE);
 		if (error)
 			goto bail;
+		tmp->tm_flags |= TMPFS_MOUNT_READONLY;
 	}
 
 	if (args->ta_nodes_max != 0 || args->ta_size_max != 0) {
@@ -214,6 +215,9 @@ tmpfs_mountfs(struct mount *mp, const char *path, struct vnode *vp,
 	tmp->tm_nodes_max = (unsigned int)nodes;
 	tmp->tm_nodes_cnt = 0;
 	tmp->tm_highest_inode = 1;
+	tmp->tm_flags = 0;
+	if (mp->mnt_flag & MNT_RDONLY)
+		tmp->tm_flags |= TMPFS_MOUNT_READONLY;
 	strlcpy(tmp->tm_fspec, fspec, sizeof(tmp->tm_fspec));
 	LIST_INIT(&tmp->tm_nodes);
 
