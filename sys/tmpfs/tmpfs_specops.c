@@ -95,7 +95,7 @@ tmpfs_spec_close(void *v)
 	} */ *ap = v;
 	struct vnode *vp = ap->a_vp;
 
-	tmpfs_update(vp, NULL, NULL, 0);
+	tmpfs_update(VP_TO_TMPFS_NODE(vp), NULL);
 	return (spec_close(ap));
 }
 

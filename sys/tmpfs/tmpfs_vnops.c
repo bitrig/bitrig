@@ -396,7 +396,8 @@ tmpfs_close(void *v)
 
 	KASSERT(VOP_ISLOCKED(vp));
 
-	tmpfs_update(vp, NULL, NULL, 0);
+	tmpfs_update(VP_TO_TMPFS_NODE(vp), NULL);
+
 	return 0;
 }
 
@@ -454,7 +455,7 @@ tmpfs_getattr(void *v)
 
 	vattr_null(vap);
 
-	tmpfs_update(vp, NULL, NULL, 0);
+	tmpfs_update(node, NULL);
 
 	vap->va_type = vp->v_type;
 	vap->va_mode = node->tn_mode;
@@ -543,7 +544,8 @@ tmpfs_setattr(void *v)
 	}
 
 bail:
-	tmpfs_update(vp, NULL, NULL, 0);
+	tmpfs_update(VP_TO_TMPFS_NODE(vp), NULL);
+
 	return error;
 }
 
@@ -693,9 +695,11 @@ tmpfs_fsync(void *v)
 	} */ *ap = v;
 	struct vnode *vp = ap->a_vp;
 
-	/* Nothing to do.  Just update. */
 	KASSERT(VOP_ISLOCKED(vp));
-	tmpfs_update(vp, NULL, NULL, 0);
+
+	/* Nothing to do.  Just update. */
+	tmpfs_update(VP_TO_TMPFS_NODE(vp), NULL);
+
 	return 0;
 }
 
@@ -765,7 +769,7 @@ tmpfs_remove(void *v)
 	if (node->tn_links > 0)  {
 		/* We removed a hard link. */
 		node->tn_status |= TMPFS_NODE_CHANGED;
-		tmpfs_update(vp, NULL, NULL, 0);
+		tmpfs_update(node, NULL);
 	}
 	error = 0;
 out:
@@ -844,7 +848,7 @@ tmpfs_link(void *v)
 		VN_KNOTE(node->tn_vnode, NOTE_LINK);
 	}
 	node->tn_status |= TMPFS_NODE_CHANGED;
-	tmpfs_update(vp, NULL, NULL, 0);
+	tmpfs_update(node, NULL);
 	error = 0;
 out:
 	pool_put(&namei_pool, cnp->cn_pnbuf);

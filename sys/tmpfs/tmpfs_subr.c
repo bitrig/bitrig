@@ -514,7 +514,7 @@ tmpfs_dir_attach(tmpfs_node_t *dnode, tmpfs_dirent_t *de, tmpfs_node_t *node)
 	TAILQ_INSERT_TAIL(&dnode->tn_spec.tn_dir.tn_dir, de, td_entries);
 	dnode->tn_size += sizeof(tmpfs_dirent_t);
 	dnode->tn_status |= TMPFS_NODE_MODIFIED | TMPFS_NODE_CHANGED;
-	tmpfs_update(dvp, NULL, NULL, 0);
+	tmpfs_update(dnode, NULL);
 	uvm_vnp_setsize(dvp, dnode->tn_size);
 
 	if (node->tn_type == VDIR) {
@@ -584,7 +584,7 @@ tmpfs_dir_detach(tmpfs_node_t *dnode, tmpfs_dirent_t *de)
 	dnode->tn_status |= TMPFS_NODE_MODIFIED | TMPFS_NODE_CHANGED;
 	tmpfs_dir_putseq(dnode, de);
 	if (dvp) {
-		tmpfs_update(dvp, NULL, NULL, 0);
+		tmpfs_update(dnode, NULL);
 		uvm_vnp_setsize(dvp, dnode->tn_size);
 		VN_KNOTE(dvp, events);
 	}
@@ -1143,16 +1143,15 @@ tmpfs_chtimes(struct vnode *vp, const struct timespec *atime,
 	if (cred->cr_uid != node->tn_uid && (error = suser_ucred(cred)) &&
 	    ((vaflags & VA_UTIMES_NULL) == 0 ||
 	    (error = VOP_ACCESS(vp, VWRITE, cred))))
-	    	return error;
+		return error;
 
 	if (atime->tv_nsec != UTIME_OMIT)
-		node->tn_status |= TMPFS_NODE_ACCESSED;
-
+		node->tn_atime = *atime;
 	if (mtime->tv_nsec != UTIME_OMIT)
-		node->tn_status |= TMPFS_NODE_MODIFIED;
+		node->tn_mtime = *mtime;
 
-	tmpfs_update(vp, atime, mtime, 0);
 	VN_KNOTE(vp, NOTE_ATTRIB);
+
 	return 0;
 }
 
@@ -1160,32 +1159,26 @@ tmpfs_chtimes(struct vnode *vp, const struct timespec *atime,
  * tmpfs_update: update timestamps, et al.
  */
 void
-tmpfs_update(struct vnode *vp, const struct timespec *acc,
-    const struct timespec *mod, int flags)
+tmpfs_update(tmpfs_node_t *node, const struct timespec *tm)
 {
-	tmpfs_node_t *node = VP_TO_TMPFS_NODE(vp);
 	struct timespec nowtm;
 
-	/* KASSERT(VOP_ISLOCKED(vp)); */
-#if 0
-	if (flags & UPDATE_CLOSE) {
-		/* XXX Need to do anything special? */
-	}
-#endif
-	if ((node->tn_status & TMPFS_NODE_STATUSALL) == 0) {
+	if (node->tn_status & TMPFS_NODE_READONLY) {
+		node->tn_status &= ~TMPFS_NODE_STATUSALL;
 		return;
 	}
-	nanotime(&nowtm);
 
-	if (node->tn_status & TMPFS_NODE_ACCESSED) {
-		node->tn_atime = acc ? *acc : nowtm;
-	}
-	if (node->tn_status & TMPFS_NODE_MODIFIED) {
-		node->tn_mtime = mod ? *mod : nowtm;
-	}
-	if (node->tn_status & TMPFS_NODE_CHANGED) {
+	if (tm == NULL)
+		nanotime(&nowtm);
+	else
+		nowtm = *tm;
+
+	if (node->tn_status & TMPFS_NODE_ACCESSED)
+		node->tn_atime = nowtm;
+	if (node->tn_status & TMPFS_NODE_MODIFIED)
+		node->tn_mtime = nowtm;
+	if (node->tn_status & TMPFS_NODE_CHANGED)
 		node->tn_ctime = nowtm;
-	}
 
 	node->tn_status &= ~TMPFS_NODE_STATUSALL;
 }
@@ -1218,7 +1211,7 @@ tmpfs_truncate(struct vnode *vp, off_t length)
 out:
 	if (error == 0)
 		VN_KNOTE(vp, NOTE_ATTRIB);
-	tmpfs_update(vp, NULL, NULL, 0);
+	tmpfs_update(node, NULL);
 	return error;
 }
 

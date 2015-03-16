@@ -306,8 +306,7 @@ int		tmpfs_chsize(struct vnode *, u_quad_t, struct ucred *,
 int		tmpfs_chtimes(struct vnode *, const struct timespec *,
 		    const struct timespec *, int, struct ucred *,
 		    struct proc *);
-void		tmpfs_update(struct vnode *, const struct timespec *,
-		    const struct timespec *, int);
+void		tmpfs_update(tmpfs_node_t *, const struct timespec *);
 int		tmpfs_zeropg(tmpfs_node_t *, voff_t, vaddr_t);
 int		tmpfs_uio_cached(tmpfs_node_t *);
 int		tmpfs_uiomove(tmpfs_node_t *, struct uio *, vsize_t);
