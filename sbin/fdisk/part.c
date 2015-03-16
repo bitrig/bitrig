@@ -1,4 +1,4 @@
-/*	$OpenBSD: part.c,v 1.68 2015/03/14 18:32:29 krw Exp $	*/
+/*	$OpenBSD: part.c,v 1.69 2015/03/16 23:51:50 krw Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -168,8 +168,8 @@ PRT_ascii_id(int id)
 }
 
 void
-PRT_parse(struct disk *disk, struct dos_partition *prt, off_t offset,
-    off_t reloff, struct prt *partn)
+PRT_parse(struct dos_partition *prt, off_t offset, off_t reloff,
+    struct prt *partn)
 {
 	off_t off;
 	uint32_t t;
@@ -200,7 +200,7 @@ PRT_parse(struct disk *disk, struct dos_partition *prt, off_t offset,
 	partn->ns = letoh32(t);
 #endif
 
-	PRT_fix_CHS(disk, partn);
+	PRT_fix_CHS(partn);
 }
 
 int
@@ -304,7 +304,7 @@ PRT_overlap(struct prt *p1, struct prt *p2)
 }
 
 void
-PRT_fix_BN(struct disk *disk, struct prt *part, int pn)
+PRT_fix_BN(struct prt *part, int pn)
 {
 	uint32_t start, end;
 
@@ -314,8 +314,8 @@ PRT_fix_BN(struct disk *disk, struct prt *part, int pn)
 		return;
 	}
 
-	start = CHS_to_BN(disk, part->scyl, part->shead, part->ssect);
-	end = CHS_to_BN(disk, part->ecyl, part->ehead, part->esect);
+	start = CHS_to_BN(part->scyl, part->shead, part->ssect);
+	end = CHS_to_BN(part->ecyl, part->ehead, part->esect);
 
 	/* XXX - Should handle this... */
 	if (start > end)
@@ -326,7 +326,7 @@ PRT_fix_BN(struct disk *disk, struct prt *part, int pn)
 }
 
 void
-PRT_fix_CHS(struct disk *disk, struct prt *part)
+PRT_fix_CHS(struct prt *part)
 {
 	uint32_t start, end, size;
 
@@ -340,6 +340,6 @@ PRT_fix_CHS(struct disk *disk, struct prt *part)
 	size = part->ns;
 	end = (start + size) - 1;
 
-	BN_to_CHS(disk, start, &part->scyl, &part->shead, &part->ssect);
-	BN_to_CHS(disk, end, &part->ecyl, &part->ehead, &part->esect);
+	BN_to_CHS(start, &part->scyl, &part->shead, &part->ssect);
+	BN_to_CHS(end, &part->ecyl, &part->ehead, &part->esect);
 }

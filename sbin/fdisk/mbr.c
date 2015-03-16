@@ -1,4 +1,4 @@
-/*	$OpenBSD: mbr.c,v 1.46 2015/03/14 18:32:29 krw Exp $	*/
+/*	$OpenBSD: mbr.c,v 1.47 2015/03/16 23:51:50 krw Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -38,7 +38,7 @@
 #include "part.h"
 
 void
-MBR_init_GPT(struct disk *disk, struct mbr *mbr)
+MBR_init_GPT(struct mbr *mbr)
 {
 	/* Initialize a protective MBR for GPT. */
 	bzero(&mbr->part, sizeof(mbr->part));
@@ -46,19 +46,19 @@ MBR_init_GPT(struct disk *disk, struct mbr *mbr)
 	/* Use whole disk, starting after MBR. */
 	mbr->part[0].id = DOSPTYP_EFI;
 	mbr->part[0].bs = 1;
-	mbr->part[0].ns = disk->size - 1;
+	mbr->part[0].ns = disk.size - 1;
 
 	/* Fix up start/length fields. */
-	PRT_fix_CHS(disk, &mbr->part[0]);
+	PRT_fix_CHS(&mbr->part[0]);
 }
 
 void
-MBR_init(struct disk *disk, struct mbr *mbr)
+MBR_init(struct mbr *mbr)
 {
 	extern int g_flag;
 
 	if (g_flag) {
-		MBR_init_GPT(disk, mbr);
+		MBR_init_GPT(mbr);
 		return;
 	}
 
@@ -76,12 +76,11 @@ MBR_init(struct disk *disk, struct mbr *mbr)
 	mbr->part[3].flag = 0;
 #endif
 
-	MBR_fillremaining(mbr, disk, 3);
+	MBR_fillremaining(mbr, 3);
 }
 
 void
-MBR_parse(struct disk *disk, struct dos_mbr *dos_mbr, off_t offset,
-    off_t reloff, struct mbr *mbr)
+MBR_parse(struct dos_mbr *dos_mbr, off_t offset, off_t reloff, struct mbr *mbr)
 {
 	struct dos_partition dos_parts[NDOSPART];
 	int i;
@@ -94,7 +93,7 @@ MBR_parse(struct disk *disk, struct dos_mbr *dos_mbr, off_t offset,
 	memcpy(dos_parts, dos_mbr->dmbr_parts, sizeof(dos_parts));
 
 	for (i = 0; i < NDOSPART; i++)
-		PRT_parse(disk, &dos_parts[i], offset, reloff, &mbr->part[i]);
+		PRT_parse(&dos_parts[i], offset, reloff, &mbr->part[i]);
 }
 
 void
@@ -170,13 +169,13 @@ MBR_write(int fd, off_t where, struct dos_mbr *dos_mbr)
  * untouched.
  */
 void
-MBR_pcopy(struct disk *disk, struct mbr *mbr)
+MBR_pcopy(struct mbr *mbr)
 {
 	struct dos_partition dos_parts[NDOSPART];
 	struct dos_mbr dos_mbr;
 	int i, fd, error;
 
-	fd = DISK_open(disk->name, O_RDONLY);
+	fd = DISK_open(disk.name, O_RDONLY);
 	error = MBR_read(fd, 0, &dos_mbr);
 	close(fd);
 
@@ -186,7 +185,7 @@ MBR_pcopy(struct disk *disk, struct mbr *mbr)
 	memcpy(dos_parts, dos_mbr.dmbr_parts, sizeof(dos_parts));
 
 	for (i = 0; i < NDOSPART; i++)
-		PRT_parse(disk, &dos_parts[i], 0, 0, &mbr->part[i]);
+		PRT_parse(&dos_parts[i], 0, 0, &mbr->part[i]);
 }
 
 /*
@@ -327,7 +326,7 @@ MBR_verify(struct mbr *mbr)
 }
 
 void
-MBR_fillremaining(struct mbr *mbr, struct disk *disk, int pn)
+MBR_fillremaining(struct mbr *mbr, int pn)
 {
 	struct prt *part, *p;
 	uint64_t adj;
@@ -336,23 +335,23 @@ MBR_fillremaining(struct mbr *mbr, struct disk *disk, int pn)
 	part = &mbr->part[pn];
 
 	/* Use whole disk. Reserve first track, or first cyl, if possible. */
-	if (disk->heads > 1)
+	if (disk.heads > 1)
 		part->shead = 1;
 	else
 		part->shead = 0;
-	if (disk->heads < 2 && disk->cylinders > 1)
+	if (disk.heads < 2 && disk.cylinders > 1)
 		part->scyl = 1;
 	else
 		part->scyl = 0;
 	part->ssect = 1;
 
 	/* Go right to the end */
-	part->ecyl = disk->cylinders - 1;
-	part->ehead = disk->heads - 1;
-	part->esect = disk->sectors;
+	part->ecyl = disk.cylinders - 1;
+	part->ehead = disk.heads - 1;
+	part->esect = disk.sectors;
 
 	/* Fix up start/length fields */
-	PRT_fix_BN(disk, part, pn);
+	PRT_fix_BN(part, pn);
 
 #if defined(__powerpc__) || defined(__mips__)
 	if ((part->shead != 1) || (part->ssect != 1)) {
@@ -362,7 +361,7 @@ MBR_fillremaining(struct mbr *mbr, struct disk *disk, int pn)
 		part->scyl += 1;
 	}
 	/* Fix up start/length fields */
-	PRT_fix_BN(disk, part, pn);
+	PRT_fix_BN(part, pn);
 #endif
 
 	/* Start OpenBSD MBR partition on a power of 2 block number. */
@@ -372,7 +371,7 @@ MBR_fillremaining(struct mbr *mbr, struct disk *disk, int pn)
 	adj = DL_BLKTOSEC(&dl, i) - part->bs;
 	part->bs += adj;
 	part->ns -= adj;
-	PRT_fix_CHS(disk, part);
+	PRT_fix_CHS(part);
 
 	/* Shrink to remaining free space */
 	for (i = 0; i < NDOSPART; i++) {
@@ -387,17 +386,17 @@ MBR_fillremaining(struct mbr *mbr, struct disk *disk, int pn)
 			}
 		}
 	}
-	PRT_fix_CHS(disk, part);
+	PRT_fix_CHS(part);
 }
 
 void
-MBR_grow_part(struct mbr *mbr, struct disk *disk, int pn)
+MBR_grow_part(struct mbr *mbr, int pn)
 {
 	struct prt *part, *p;
 	int i;
 
 	part = &mbr->part[pn];
-	part->ns = disk->size - part->bs;
+	part->ns = disk.size - part->bs;
 
 	for (i = 0; i < NDOSPART; i++) {
 		p = &mbr->part[i];
@@ -405,10 +404,10 @@ MBR_grow_part(struct mbr *mbr, struct disk *disk, int pn)
 			if (p->bs > part->bs)
 				part->ns = p->bs - part->bs;
 			else {
-				warnx("No free space at sector %d!", part->bs);
+				warnx("No free space at sector %llu!", part->bs);
 				part->ns = 0;
 			}
 		}
 	}
-	PRT_fix_CHS(disk, part);
+	PRT_fix_CHS(part);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: misc.c,v 1.44 2015/03/14 18:32:29 krw Exp $	*/
+/*	$OpenBSD: misc.c,v 1.45 2015/03/16 23:51:50 krw Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -188,7 +188,7 @@ ask_yn(const char *str)
  * adapted from sbin/disklabel/editor.c
  */
 uint32_t
-getuint(struct disk *disk, char *prompt, uint32_t oval, uint32_t maxval)
+getuint(char *prompt, uint32_t oval, uint32_t maxval)
 {
 	char buf[BUFSIZ], *endptr, *p, operator = '\0';
 	size_t n;
@@ -200,7 +200,7 @@ getuint(struct disk *disk, char *prompt, uint32_t oval, uint32_t maxval)
 	if (oval > maxval)
 		oval = maxval;
 
-	secpercyl = disk->sectors * disk->heads;
+	secpercyl = disk.sectors * disk.heads;
 
 	do {
 		printf("%s: [%u] ", prompt, oval);
@@ -301,16 +301,15 @@ getuint(struct disk *disk, char *prompt, uint32_t oval, uint32_t maxval)
 }
 
 void
-BN_to_CHS(struct disk *disk, uint32_t lba,
-    uint32_t *cyl, uint32_t *head, uint32_t *sect)
+BN_to_CHS(uint32_t lba, uint32_t *cyl, uint32_t *head, uint32_t *sect)
 {
-	*cyl = lba / (disk->sectors * disk->heads);
-	*head = (lba / disk->sectors) % disk->heads;
-	*sect = (lba % disk->sectors) + 1;
+	*cyl = lba / (disk.sectors * disk.heads);
+	*head = (lba / disk.sectors) % disk.heads;
+	*sect = (lba % disk.sectors) + 1;
 }
 
 uint32_t
-CHS_to_BN(struct disk *disk, uint32_t cyl, uint32_t head, uint32_t sect)
+CHS_to_BN(uint32_t cyl, uint32_t head, uint32_t sect)
 {
-	return ((cyl * disk->heads + head) * disk->sectors + sect - 1);
+	return ((cyl * disk.heads + head) * disk.sectors + sect - 1);
 }
