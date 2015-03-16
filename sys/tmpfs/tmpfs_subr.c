@@ -138,6 +138,8 @@ tmpfs_alloc_node(tmpfs_mount_t *tmp, enum vtype type, uid_t uid, gid_t gid,
 	nnode->tn_type = type;
 	nnode->tn_size = 0;
 	nnode->tn_status = 0;
+	if (tmp->tm_flags & TMPFS_MOUNT_READONLY)
+		nnode->tn_status |= TMPFS_NODE_READONLY;
 	nnode->tn_flags = 0;
 	nnode->tn_lockf = NULL;
 	nnode->tn_gen = TMPFS_NODE_GEN_MASK & arc4random();

@@ -114,6 +114,7 @@ int
 tmpfs_mount_update(struct mount *mp, struct tmpfs_args *args, struct proc *p)
 {
 	tmpfs_mount_t *tmp;
+	tmpfs_node_t *node;
 	struct vnode *rootvp;
 	char fspec[MAXPATHLEN];
 	int error = 0;
@@ -139,8 +140,10 @@ tmpfs_mount_update(struct mount *mp, struct tmpfs_args *args, struct proc *p)
 			goto bail;
 	}
 
-	/* ro->rw transition: nothing to do? */
+	/* ro->rw transition */
 	if (mp->mnt_flag & MNT_WANTRDWR) {
+		LIST_FOREACH(node, &tmp->tm_nodes, tn_entries)
+			node->tn_status &= ~TMPFS_NODE_READONLY;
 		error = 0;
 		goto bail;
 	} else if (mp->mnt_flag & MNT_RDONLY) {
