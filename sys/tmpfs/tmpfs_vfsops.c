@@ -514,6 +514,20 @@ tmpfs_statfs(struct mount *mp, struct statfs *sbp, struct proc *p)
 int
 tmpfs_sync(struct mount *mp, int waitfor, struct ucred *cred, struct proc *p)
 {
+	tmpfs_mount_t *tmp = VFS_TO_TMPFS(mp);
+	tmpfs_node_t *node;
+	struct timespec tm;
+
+	if (waitfor == MNT_LAZY || mp->mnt_flag & MNT_RDONLY)
+		return 0;
+
+	nanotime(&tm);
+
+	rw_enter_write(&tmp->tm_lock);
+	LIST_FOREACH(node, &tmp->tm_nodes, tn_entries)
+		if (node->tn_status & TMPFS_NODE_STATUSALL)
+			tmpfs_update(node, &tm);
+	rw_exit_write(&tmp->tm_lock);
 
 	return 0;
 }
