@@ -55,8 +55,8 @@ struct nfsm_info {
 };
 
 #define nfsm_dissect(a, c, s) {						\
-	t1 = mtod(info.nmi_md, caddr_t) + info.nmi_md->m_len -		\
-	    info.nmi_dpos;						\
+	t1 = (int32_t)(info.nmi_md->m_len -				\
+	    (info.nmi_dpos - mtod(info.nmi_md, caddr_t)));		\
 	if (t1 >= (s)) {						\
 		(a) = (c)(info.nmi_dpos);				\
 		info.nmi_dpos += (s);					\
