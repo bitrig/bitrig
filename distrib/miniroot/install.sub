@@ -1,4 +1,4 @@
-#	$OpenBSD: install.sub,v 1.818 2015/03/15 00:09:50 krw Exp $
+#	$OpenBSD: install.sub,v 1.819 2015/03/17 15:21:02 rpe Exp $
 #
 # Copyright (c) 1997-2015 Todd Miller, Theo de Raadt, Ken Westerback
 # All rights reserved.
@@ -1849,17 +1849,14 @@ questions() {
 	fi
 
 	aperture=
-	ask_xdm=y
+	resp=
 	xdm=
 	if [[ -n $DISPLAY ]]; then
 		if [[ -n $(scan_dmesg '/^[a-z]*[01]: aperture needed/p') ]]; then
-			ask_yn "Do you expect to run the X Window System?" yes
-			ask_xdm=$resp
-			if [[ $resp == y ]]; then
+			ask_yn "Do you expect to run the X Window System?" yes &&
 				aperture=$MDXAPERTURE
-			fi
 		fi
-		if [[ -n $MDXDM ]] && [[ $ask_xdm == y ]]; then
+		if [[ -n $MDXDM && $resp != n ]]; then
 			ask_yn "Do you want the X Window System to be started by xdm(1)?"
 			xdm=$resp
 		fi
