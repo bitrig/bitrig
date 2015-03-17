@@ -4429,7 +4429,7 @@ ahc_alloc_scbs(struct ahc_softc *ahc)
 void
 ahc_controller_info(struct ahc_softc *ahc, char *buf, size_t buf_len)
 {
-	int len = 0;
+	size_t len = 0;
 
 	snprintf(buf + len, buf_len - len, "%s: ",
 		 ahc_chip_names[ahc->chip & AHC_CHIPID_MASK]);

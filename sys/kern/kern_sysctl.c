@@ -912,7 +912,8 @@ int
 sysctl__string(void *oldp, size_t *oldlenp, void *newp, size_t newlen,
     char *str, int maxlen, int trunc)
 {
-	int len, error = 0;
+	size_t len;
+	int error = 0;
 
 	len = strlen(str) + 1;
 	if (oldp && *oldlenp < len) {
@@ -945,7 +946,8 @@ sysctl__string(void *oldp, size_t *oldlenp, void *newp, size_t newlen,
 int
 sysctl_rdstring(void *oldp, size_t *oldlenp, void *newp, const char *str)
 {
-	int len, error = 0;
+	size_t len;
+	int error = 0;
 
 	len = strlen(str) + 1;
 	if (oldp && *oldlenp < len)
