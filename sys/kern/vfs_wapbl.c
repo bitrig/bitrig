@@ -567,6 +567,7 @@ wapbl_discard(struct wapbl *wl)
 	 * if we want to call flush from inside a transaction
 	 */
 	rw_enter(&wl->wl_rwlock, RW_WRITE);
+	curproc->p_flag |= P_XXX;
 	wl->wl_flush(wl->wl_mount, wl->wl_deallocblks, wl->wl_dealloclens,
 	    wl->wl_dealloccnt);
 
@@ -678,6 +679,7 @@ wapbl_discard(struct wapbl *wl)
 	KASSERT(wl->wl_inohashcnt == 0);
 
 	rw_exit(&wl->wl_rwlock);
+	curproc->p_flag &= ~P_XXX;
 }
 
 int
@@ -962,6 +964,7 @@ wapbl_begin(struct wapbl *wl, const char *file, int line)
 	}
 
 	rw_enter(&wl->wl_rwlock, RW_READ);
+	curproc->p_flag |= P_XXX;
 	mtx_enter(&wl->wl_mtx);
 	wl->wl_lock_count++;
 	mtx_leave(&wl->wl_mtx);
@@ -1007,6 +1010,7 @@ wapbl_end(struct wapbl *wl)
 	mtx_leave(&wl->wl_mtx);
 
 	rw_exit(&wl->wl_rwlock);
+	curproc->p_flag &= ~P_XXX;
 }
 
 void
@@ -1481,6 +1485,7 @@ wapbl_flush(struct wapbl *wl, int waitfor)
 	 * if we want to call flush from inside a transaction
 	 */
 	rw_enter(&wl->wl_rwlock, RW_WRITE);
+	curproc->p_flag |= P_XXX;
 	wl->wl_flush(wl->wl_mount, wl->wl_deallocblks, wl->wl_dealloclens,
 	    wl->wl_dealloccnt);
 
@@ -1710,6 +1715,7 @@ wapbl_flush(struct wapbl *wl, int waitfor)
 #endif
 
 	rw_exit(&wl->wl_rwlock);
+	curproc->p_flag &= ~P_XXX;
 	return error;
 }
 

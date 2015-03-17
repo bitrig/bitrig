@@ -381,6 +381,7 @@ struct proc {
 #define	P_SUSPSIG	0x8000000	/* Stopped from signal. */
 #define	P_SOFTDEP	0x10000000	/* Stuck processing softdep worklist */
 #define P_CPUPEG	0x40000000	/* Do not move to another cpu. */
+#define P_XXX		0x80000000	/* process owns a wapbl lock */
 
 #define	P_BITS \
     ("\20" "\01INKTR" "\02PROFPEND" "\03ALRMPEND" "\04SIGSUSPEND" \

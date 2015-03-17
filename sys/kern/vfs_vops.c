@@ -45,11 +45,16 @@
 #include <sys/param.h>
 #include <sys/mount.h>
 #include <sys/vnode.h>
+#include <sys/proc.h>
 #include <sys/unistd.h>
+#include <sys/systm.h>
+
+#ifdef DDB
+#include <ddb/db_output.h>	/* db_printf, db_putchar prototypes */
+#include <ddb/db_var.h>		/* db_log, db_radix */
+#endif
 
 #ifdef VFSLCKDEBUG
-#include <sys/systm.h>		/* for panic() */
-
 #define ASSERT_VP_ISLOCKED(vp) do {				\
 	if (((vp)->v_flag & VLOCKSWORK) && !VOP_ISLOCKED(vp)) {	\
 		VOP_PRINT(vp);					\
@@ -498,6 +503,11 @@ VOP_LOCK(struct vnode *vp, int flags)
 	if (vp->v_op->vop_lock == NULL)
 		return (EOPNOTSUPP);
 
+	if (vp->v_mount && vp->v_mount->mnt_wapbl)
+		if (curproc->p_flag & P_XXX) {
+			printf("grabbing vnode lock with wapbl lock held\n");
+			db_stack_dump();
+		}
 	return ((vp->v_op->vop_lock)(&a));
 }
 
