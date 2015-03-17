@@ -773,7 +773,7 @@ mpii_load_xs(struct mpii_ccb *ccb)
 			    MPII_SGE_FL_SIZE_64 | len);
 			/* address of the next sge */
 			mpii_dvatosge(csge, ccb->ccb_cmd_dva +
-			    (caddr_t)nsge - (caddr_t)io);
+			    ((bus_addr_t)nsge - (bus_addr_t)io));
 		}
 
 		sge = nsge;
