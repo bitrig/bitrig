@@ -372,7 +372,7 @@ udelay(unsigned long usecs)
 static __inline void
 usleep_range(unsigned long min, unsigned long max)
 {
-	DELAY((int)usecs);
+	DELAY((int)min);
 }
 
 static __inline void
