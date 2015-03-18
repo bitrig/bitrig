@@ -243,7 +243,7 @@ spec_read(void *v)
 		do {
 			bn = btodb(uio->uio_offset) & ~(bscale - 1);
 			on = uio->uio_offset % bsize;
-			n = min((bsize - on), uio->uio_resid);
+			n = (int)szmin((bsize - on), uio->uio_resid);
 			if (vp->v_lastr + bscale == bn) {
 				nextbn = bn + bscale;
 				error = breadn(vp, bn, bsize, &nextbn, &bsize,
@@ -251,7 +251,7 @@ spec_read(void *v)
 			} else
 				error = bread(vp, bn, bsize, &bp);
 			vp->v_lastr = bn;
-			n = min(n, bsize - bp->b_resid);
+			n = (int)szmin(n, bsize - bp->b_resid);
 			if (error) {
 				brelse(bp);
 				return (error);
@@ -331,9 +331,9 @@ spec_write(void *v)
 		do {
 			bn = btodb(uio->uio_offset) & ~(bscale - 1);
 			on = uio->uio_offset % bsize;
-			n = min((bsize - on), uio->uio_resid);
+			n = (int)szmin((bsize - on), uio->uio_resid);
 			error = bread(vp, bn, bsize, &bp);
-			n = min(n, bsize - bp->b_resid);
+			n = (int)szmin(n, bsize - bp->b_resid);
 			if (error) {
 				brelse(bp);
 				return (error);

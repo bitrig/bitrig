@@ -141,7 +141,7 @@ msgbuf_putchar(struct msgbuf *mbp, const char c)
 		return;
 
 	mbp->msg_bufc[mbp->msg_bufx++] = c;
-	mbp->msg_bufl = min(mbp->msg_bufl+1, mbp->msg_bufs);
+	mbp->msg_bufl = lmin(mbp->msg_bufl+1, mbp->msg_bufs);
 	if (mbp->msg_bufx < 0 || mbp->msg_bufx >= mbp->msg_bufs)
 		mbp->msg_bufx = 0;
 	/* If the buffer is full, keep the most recent data. */
@@ -204,7 +204,7 @@ logread(dev_t dev, struct uio *uio, int flag)
 		l = mbp->msg_bufx - mbp->msg_bufr;
 		if (l < 0)
 			l = mbp->msg_bufs - mbp->msg_bufr;
-		l = min(l, uio->uio_resid);
+		l = (long)szmin(l, uio->uio_resid);
 		if (l == 0)
 			break;
 		error = uiomovei(&mbp->msg_bufc[mbp->msg_bufr], (int)l, uio);

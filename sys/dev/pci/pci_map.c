@@ -339,14 +339,14 @@ pci_mapreg_map(struct pci_attach_args *pa, int reg, pcireg_t type, int flags,
 		if (PCI_MAPREG_TYPE(type) == PCI_MAPREG_TYPE_IO) {
 			ex = pa->pa_ioex;
 			if (ex != NULL) {
-				start = max(PCI_IO_START, ex->ex_start);
-				end = min(PCI_IO_END, ex->ex_end);
+				start = ulmax(PCI_IO_START, ex->ex_start);
+				end = ulmin(PCI_IO_END, ex->ex_end);
 			}
 		} else {
 			ex = pa->pa_memex;
 			if (ex != NULL) {
-				start = max(PCI_MEM_START, ex->ex_start);
-				end = min(PCI_MEM_END, ex->ex_end);
+				start = ulmax(PCI_MEM_START, ex->ex_start);
+				end = ulmin(PCI_MEM_END, ex->ex_end);
 			}
 		}
 

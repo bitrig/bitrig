@@ -504,7 +504,7 @@ sys_execve(struct proc *p, void *v, register_t *retval)
 
 	/* set command name & other accounting info */
 	memset(p->p_comm, 0, sizeof(p->p_comm));
-	len = min(nid.ni_cnd.cn_namelen, MAXCOMLEN);
+	len = szmin((size_t)nid.ni_cnd.cn_namelen, MAXCOMLEN);
 	memcpy(p->p_comm, nid.ni_cnd.cn_nameptr, len);
 	pr->ps_acflag &= ~AFORK;
 

@@ -1329,7 +1329,7 @@ bpf_catchpacket(struct bpf_d *d, u_char *pkt, size_t pktlen, size_t snaplen,
 	 * much.  Otherwise, transfer the whole packet (unless
 	 * we hit the buffer size limit).
 	 */
-	totlen = hdrlen + min(snaplen, pktlen);
+	totlen = hdrlen + szmin(snaplen, pktlen);
 	if (totlen > d->bd_bufsize)
 		totlen = d->bd_bufsize;
 
