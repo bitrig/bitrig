@@ -574,7 +574,7 @@
 ./usr/include/dev/pci/esovar.h
 ./usr/include/dev/pci/fmsreg.h
 ./usr/include/dev/pci/fmsvar.h
-./usr/include/dev/pci/gcu.h
+./usr/include/dev/pci/gcu_var.h
 ./usr/include/dev/pci/gcu_reg.h
 ./usr/include/dev/pci/glxreg.h
 ./usr/include/dev/pci/glxvar.h
@@ -1388,7 +1388,6 @@
 ./usr/include/tmpfs/tmpfs_specops.h
 ./usr/include/tmpfs/tmpfs_vnops.h
 ./usr/include/ttyent.h
-./usr/include/tzfile.h
 ./usr/include/uchar.h
 ./usr/include/ufs
 ./usr/include/ufs/ext2fs

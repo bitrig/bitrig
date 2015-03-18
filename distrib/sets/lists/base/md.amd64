@@ -961,7 +961,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/esovar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/fmsreg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/fmsvar.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/gcu.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/gcu_var.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/gcu_reg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/glxreg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/glxvar.ph
@@ -1759,7 +1759,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/tmpfs/tmpfs_specops.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/tmpfs/tmpfs_vnops.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ttyent.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/tzfile.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/uchar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ufs
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ufs/ext2fs
