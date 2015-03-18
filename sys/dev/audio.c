@@ -1630,7 +1630,7 @@ audio_silence_copyout(struct audio_softc *sc, int n, struct uio *uio)
 
 	error = 0;
 	while (n > 0 && uio->uio_resid > 0 && !error) {
-		k = min(n, min(uio->uio_resid, sizeof zerobuf));
+		k = min(n, (int)szmin(uio->uio_resid, sizeof zerobuf));
 		error = uiomovei(zerobuf, k, uio);
 		n -= k;
 	}

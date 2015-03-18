@@ -1362,7 +1362,7 @@ nfs_realign_fixup(struct mbuf *m, struct mbuf *n, unsigned int *off)
 		if (m == NULL)
 			return;
 
-		padding = min(ALIGN(n->m_len) - n->m_len, m->m_len);
+		padding = szmin(ALIGN(n->m_len) - n->m_len, m->m_len);
 		if (padding > M_TRAILINGSPACE(n))
 			panic("nfs_realign_fixup: no memory to pad to");
 

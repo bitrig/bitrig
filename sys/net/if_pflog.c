@@ -467,7 +467,7 @@ pflog_bpfcopy(const void *src_arg, void *dst_arg, size_t len)
 
 	m = pd.m;
  copy:
-	mlen = min(m->m_pkthdr.len, len);
+	mlen = (int)szmin(m->m_pkthdr.len, len);
 	m_copydata(m, 0, mlen, dst);
 	len -= mlen;
 	if (len > 0)

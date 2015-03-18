@@ -1023,7 +1023,7 @@ auvia_build_dma_ops(struct auvia_softc *sc, struct auvia_softc_chan *ch,
 
 	while (l) {
 		op->ptr = htole32(s);
-		l = l - min(l, blksize);
+		l = l - szmin(l, (size_t)blksize);
 		/* if last block */
 		op->flags = htole32((l? AUVIA_DMAOP_FLAG : AUVIA_DMAOP_EOL) | blksize);
 		s += blksize;

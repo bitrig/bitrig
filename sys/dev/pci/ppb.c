@@ -581,8 +581,8 @@ ppb_alloc_resources(struct ppb_softc *sc, struct pci_attach_args *pa)
 		sc->sc_iobase |= (blr & 0x0000ffff) << 16;
 		sc->sc_iolimit |= (blr & 0xffff0000);
 		if (sc->sc_iolimit < sc->sc_iobase || sc->sc_iobase == 0) {
-			start = max(PCI_IO_START, pa->pa_ioex->ex_start);
-			end = min(PCI_IO_END, pa->pa_ioex->ex_end);
+			start = ulmax(PCI_IO_START, pa->pa_ioex->ex_start);
+			end = ulmin(PCI_IO_END, pa->pa_ioex->ex_end);
 			for (size = 0x2000; size >= PPB_IO_MIN; size >>= 1)
 				if (extent_alloc_subregion(pa->pa_ioex, start,
 				    end, size, size, 0, 0, 0, &base) == 0)
@@ -613,8 +613,8 @@ ppb_alloc_resources(struct ppb_softc *sc, struct pci_attach_args *pa)
 		sc->sc_membase = (blr << PPB_MEM_SHIFT) & PPB_MEM_MASK;
 		sc->sc_memlimit = (blr & PPB_MEM_MASK) | 0x000fffff;
 		if (sc->sc_memlimit < sc->sc_membase || sc->sc_membase == 0) {
-			start = max(PCI_MEM_START, pa->pa_memex->ex_start);
-			end = min(PCI_MEM_END, pa->pa_memex->ex_end);
+			start = ulmax(PCI_MEM_START, pa->pa_memex->ex_start);
+			end = ulmin(PCI_MEM_END, pa->pa_memex->ex_end);
 			for (size = 0x2000000; size >= PPB_MEM_MIN; size >>= 1)
 				if (extent_alloc_subregion(pa->pa_memex, start,
 				    end, size, size, 0, 0, 0, &base) == 0)
