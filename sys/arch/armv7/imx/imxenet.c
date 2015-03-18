@@ -1,4 +1,4 @@
-/* $OpenBSD: imxenet.c,v 1.8 2014/12/22 02:26:53 tedu Exp $ */
+/* $OpenBSD: imxenet.c,v 1.11 2015/03/18 13:33:55 mpi Exp $ */
 /*
  * Copyright (c) 2012-2013 Patrick Wildt <patrick@blueri.se>
  *
@@ -899,6 +899,7 @@ void
 imxenet_recv(struct imxenet_softc *sc)
 {
 	struct ifnet *ifp = &sc->sc_ac.ac_if;
+	struct mbuf_list ml = MBUF_LIST_INITIALIZER();
 
 	bus_dmamap_sync(sc->rbdma.dma_tag, sc->rbdma.dma_map,
 	    0, sc->rbdma.dma_size,
@@ -919,7 +920,6 @@ imxenet_recv(struct imxenet_softc *sc)
 		}
 
 		ifp->if_ipackets++;
-		m->m_pkthdr.rcvif = ifp;
 		m->m_pkthdr.len = m->m_len = sc->rx_desc_base[sc->cur_rx].data_length;
 		m_adj(m, ETHER_ALIGN);
 
@@ -943,17 +943,14 @@ imxenet_recv(struct imxenet_softc *sc)
 		else
 			sc->cur_rx++;
 
-		/* push the packet up */
-#if NBPFILTER > 0
-		if (ifp->if_bpf)
-			bpf_mtap(ifp->if_bpf, m, BPF_DIRECTION_IN);
-#endif
-		ether_input_mbuf(ifp, m);
+		ml_enqueue(&ml, m);
 	}
 
 done:
 	/* rx descriptors are ready */
 	HWRITE4(sc, ENET_RDAR, ENET_RDAR_RDAR);
+
+	if_input(ifp, &ml);
 }
 
 int
