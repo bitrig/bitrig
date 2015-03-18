@@ -1510,7 +1510,7 @@ ffs_sync(struct mount *mp, int waitfor, struct ucred *cred, struct proc *p)
 
 #ifdef WAPBL
 	if (mp->mnt_wapbl) {
-		error = wapbl_flush(mp->mnt_wapbl, 0);
+		error = wapbl_flush(mp->mnt_wapbl, waitfor != MNT_NOWAIT);
 		if (error)
 			allerror = error;
 	}
