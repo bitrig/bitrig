@@ -1,4 +1,4 @@
-/*	$OpenBSD: mbr.c,v 1.47 2015/03/16 23:51:50 krw Exp $	*/
+/*	$OpenBSD: mbr.c,v 1.48 2015/03/18 14:46:59 krw Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -36,6 +36,8 @@
 #include "misc.h"
 #include "mbr.h"
 #include "part.h"
+
+struct mbr initial_mbr;
 
 void
 MBR_init_GPT(struct mbr *mbr)
