@@ -1458,6 +1458,7 @@ wapbl_flush(struct wapbl *wl, int waitfor)
 	size_t flushsize;
 	size_t reserved;
 	int error = 0, s;
+	int rwflags = RW_WRITE;
 
 	/*
 	 * Do a quick check to see if a full flush can be skipped
@@ -1474,13 +1475,15 @@ wapbl_flush(struct wapbl *wl, int waitfor)
 		mtx_leave(&wl->wl_mtx);
 		if (nbufs == 0)
 			return 0;
+		rwflags |= RW_NOSLEEP;
 	}
 
 	/*
 	 * XXX we may consider using LK_UPGRADE here
 	 * if we want to call flush from inside a transaction
 	 */
-	rw_enter(&wl->wl_rwlock, RW_WRITE);
+	if (rw_enter(&wl->wl_rwlock, rwflags) != 0)
+		return 0;
 	wl->wl_flush(wl->wl_mount, wl->wl_deallocblks, wl->wl_dealloclens,
 	    wl->wl_dealloccnt);
 
