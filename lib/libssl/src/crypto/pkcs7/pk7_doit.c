@@ -1,4 +1,4 @@
-/* $OpenBSD: pk7_doit.c,v 1.31 2015/02/07 13:19:15 doug Exp $ */
+/* $OpenBSD: pk7_doit.c,v 1.32 2015/03/19 14:00:22 tedu Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *

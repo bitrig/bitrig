@@ -1,4 +1,4 @@
-/* $OpenBSD: ec_asn1.c,v 1.12 2015/02/10 05:43:09 jsing Exp $ */
+/* $OpenBSD: ec_asn1.c,v 1.13 2015/03/19 14:00:22 tedu Exp $ */
 /*
  * Written by Nils Larsch for the OpenSSL project.
  */

@@ -1,4 +1,4 @@
-/* $OpenBSD: a_set.c,v 1.16 2014/07/11 08:44:47 jsing Exp $ */
+/* $OpenBSD: a_set.c,v 1.17 2015/03/19 14:00:22 tedu Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
