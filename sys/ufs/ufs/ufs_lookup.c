@@ -59,6 +59,8 @@
 #include <ufs/ufs/ufs_extern.h>
 #include <ufs/ufs/ufs_wapbl.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 extern	struct nchstats nchstats;
 
 #ifdef DIAGNOSTIC

@@ -55,6 +55,8 @@
 
 #include <crypto/siphash.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 /*
  * The following structure records disk usage for a user or group on a
  * filesystem. There is one allocated for each quota that exists on any

@@ -62,6 +62,8 @@
 #include <dev/systrace.h>
 #endif
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 /*
  * Convert a pathname into a pointer to a vnode.
  *

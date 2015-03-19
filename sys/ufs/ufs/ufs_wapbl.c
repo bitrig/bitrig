@@ -90,6 +90,8 @@
 
 #include <uvm/uvm.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 #ifdef WAPBL_DEBUG_INODES
 #error WAPBL_DEBUG_INODES: not functional before ufs_wapbl.c is updated
 void

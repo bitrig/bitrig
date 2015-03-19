@@ -53,6 +53,8 @@
 #include <ufs/ffs/fs.h>
 #include <ufs/ffs/ffs_extern.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 int ffs_indirtrunc(struct inode *, daddr_t, daddr_t, daddr_t, int, long *);
 
 /*
@@ -384,7 +386,7 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 		bsize = blksize(fs, oip, i);
 		if (oip->i_ump->um_mountp->mnt_wapbl && ovp->v_type != VREG) {
 			UFS_WAPBL_REGISTER_DEALLOCATION(oip->i_ump->um_mountp,
-			    fsbtodb(fs, bn), bsize);
+			    fsbtodb(fs, bn), (int)bsize);
 		} else
 			ffs_blkfree(oip, bn, bsize);
 		blocksreleased += btodb(bsize);
@@ -420,9 +422,10 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 			    ovp->v_type != VREG) {
 				UFS_WAPBL_REGISTER_DEALLOCATION(
 				    oip->i_ump->um_mountp, fsbtodb(fs, bn),
-				    oldspace - newspace);
+				    (int)(oldspace - newspace));
 			} else
-				ffs_blkfree(oip, bn, oldspace - newspace);
+				ffs_blkfree(oip, bn,
+				    (int)(oldspace - newspace));
 			blocksreleased += btodb(oldspace - newspace);
 		}
 	}

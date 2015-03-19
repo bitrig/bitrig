@@ -160,7 +160,7 @@ void	wapbl_unregister_inode(struct wapbl *, ino_t, mode_t);
  * the corresponding blocks from being reused as data
  * blocks until the log is on disk.
  */
-void	wapbl_register_deallocation(struct wapbl *, daddr_t, long);
+void	wapbl_register_deallocation(struct wapbl *, daddr_t, int);
 
 void	wapbl_jlock_assert(struct wapbl *wl);
 void	wapbl_junlock_assert(struct wapbl *wl);

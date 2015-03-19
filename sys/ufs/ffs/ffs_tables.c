@@ -35,6 +35,8 @@
 #include <sys/param.h>
 #include <ufs/ffs/fs.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 /*
  * Bit patterns for identifying fragments in the block map
  * used as ((map & around) == inside)

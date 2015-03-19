@@ -90,6 +90,8 @@
 #include <ufs/ffs/fs.h>
 #include <ufs/ffs/ffs_extern.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 #define ffs_fserr(fs, uid, cp) do {				\
 	log(LOG_ERR, "uid %u on %s: %s\n", (uid),		\
 	    (fs)->fs_fsmnt, (cp));				\

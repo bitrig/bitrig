@@ -26,6 +26,8 @@
 
 #include <uvm/uvm_extern.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 vaddr_t buf_kva_start, buf_kva_end;
 int buf_needva;
 TAILQ_HEAD(,buf) buf_valist;

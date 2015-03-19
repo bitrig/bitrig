@@ -54,6 +54,8 @@
 #include <ufs/ufs/dirhash.h>
 #endif
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 /*
  * Make a filesystem operational.
  * Nothing to do at the moment.

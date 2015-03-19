@@ -43,6 +43,8 @@
 #include <sys/malloc.h>
 #include <sys/pool.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 /*
  * TODO: namecache access should really be locked.
  */

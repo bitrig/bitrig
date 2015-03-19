@@ -45,6 +45,8 @@
 #include <sys/pool.h>
 #include <sys/wapbl.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 struct pool namei_pool;
 
 /* This defines the root filesystem. */

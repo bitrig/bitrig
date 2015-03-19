@@ -53,6 +53,8 @@ __FBSDID("$FreeBSD: src/sys/ufs/ufs/ufs_dirhash.c,v 1.18 2004/02/15 21:39:35 dwm
 #include <ufs/ufs/ufsmount.h>
 #include <ufs/ufs/ufs_extern.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 #define WRAPINCR(val, limit)	(((val) + 1 == (limit)) ? 0 : ((val) + 1))
 #define WRAPDECR(val, limit)	(((val) == 0) ? ((limit) - 1) : ((val) - 1))
 #define OFSFMT(vp)		((vp)->v_mount->mnt_maxsymlinklen <= 0)

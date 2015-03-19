@@ -54,6 +54,9 @@
 #include <ufs/ffs/fs.h>
 #include <ufs/ffs/ffs_extern.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
+
 #ifdef WAPBL_DEBUG
 int ffs_wapbl_debug = 1;
 #define DPRINTF(fmt, args...)						\

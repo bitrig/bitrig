@@ -33,6 +33,8 @@
  * This implements file system independent write ahead filesystem logging.
  */
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 #define WAPBL_INTERNAL
 
 #include <sys/param.h>
@@ -467,8 +469,9 @@ wapbl_start(struct wapbl ** wlp, struct mount *mp, struct vnode *vp,
 	wl->wl_bufcount_max = (((bufpages << PAGE_SHIFT) >> 14) / 2) * 1024;
 
 	/* XXX tie this into resource estimation */
-	wl->wl_dealloclim = wl->wl_bufbytes_max / mp->mnt_stat.f_bsize / 2;
-	
+	wl->wl_dealloclim = (int)(wl->wl_bufbytes_max / mp->mnt_stat.f_bsize
+	    / 2);
+
 	wl->wl_deallocblks = wapbl_alloc(sizeof(*wl->wl_deallocblks) *
 	    wl->wl_dealloclim);
 	wl->wl_dealloclens = wapbl_alloc(sizeof(*wl->wl_dealloclens) *
@@ -485,7 +488,7 @@ wapbl_start(struct wapbl ** wlp, struct mount *mp, struct vnode *vp,
 		size_t len = 1 << wl->wl_log_dev_bshift;
 		wc = dma_alloc(len, PR_WAITOK | PR_ZERO);
 		wc->wc_type = WAPBL_WC_HEADER;
-		wc->wc_len = len;
+		wc->wc_len = (int)len;
 		wc->wc_circ_off = wl->wl_circ_off;
 		wc->wc_circ_size = wl->wl_circ_size;
 		/* XXX wc->wc_fsid */
@@ -1843,7 +1846,7 @@ wapbl_dump(struct wapbl *wl)
 /****************************************************************/
 
 void
-wapbl_register_deallocation(struct wapbl *wl, daddr_t blk, long len)
+wapbl_register_deallocation(struct wapbl *wl, daddr_t blk, int len)
 {
 
 	wapbl_jlock_assert(wl);
@@ -2065,7 +2068,7 @@ wapbl_write_commit(struct wapbl *wl, off_t head, off_t tail)
 	wc->wc_version = 1;
 	getnanotime(&ts);
 	wc->wc_time = ts.tv_sec;
-	wc->wc_timensec = ts.tv_nsec;
+	wc->wc_timensec = (int32_t)ts.tv_nsec;
 
 	WAPBL_PRINTF(WAPBL_PRINT_WRITE,
 	    ("wapbl_write_commit: head = %lld tail = %lld\n",
@@ -2160,7 +2163,8 @@ wapbl_write_blocks(struct wapbl *wl, off_t *offp)
 			KASSERT(bp->b_blkno > 0);
 
 			wc->wc_blocks[wc->wc_blkcount].wc_daddr = bp->b_blkno;
-			wc->wc_blocks[wc->wc_blkcount].wc_dlen = bp->b_bcount;
+			wc->wc_blocks[wc->wc_blkcount].wc_dlen =
+			    (int32_t)bp->b_bcount;
 			wc->wc_len += bp->b_bcount;
 			wc->wc_blkcount++;
 			bp = LIST_NEXT(bp, b_wapbllist);
@@ -2275,7 +2279,8 @@ wapbl_write_inodes(struct wapbl *wl, off_t *offp)
 				    <= wl->wl_inohashmask);
 				wi = LIST_FIRST(wih++);
 			}
-			wc->wc_inodes[wc->wc_inocnt].wc_inumber = wi->wi_ino;
+			wc->wc_inodes[wc->wc_inocnt].wc_inumber =
+			    (uint32_t)wi->wi_ino;
 			wc->wc_inodes[wc->wc_inocnt].wc_imode = wi->wi_mode;
 			wc->wc_inocnt++;
 			i++;
@@ -2288,7 +2293,7 @@ wapbl_write_inodes(struct wapbl *wl, off_t *offp)
 		if (error)
 			return error;
 	} while (i < wl->wl_inohashcnt);
-	
+
 	*offp = off;
 	return 0;
 }
@@ -2554,7 +2559,7 @@ wapbl_replay_start(struct wapbl_replay **wrp, struct vnode *vp,
 	    wch->wc_head, wch->wc_tail, wch->wc_circ_off,
 	    wch->wc_circ_size, used));
 
-	wapbl_blkhash_init(wr, (used >> wch->wc_fs_dev_bshift));
+	wapbl_blkhash_init(wr, (unsigned int)(used >> wch->wc_fs_dev_bshift));
 
 	error = wapbl_replay_process(wr, wch->wc_head, wch->wc_tail);
 	if (error) {

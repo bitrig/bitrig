@@ -103,6 +103,8 @@
 
 #include <uvm/uvm_extern.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 #ifdef WAPBL
 int ufs_rename_wrap(void *v);
 #endif

@@ -48,6 +48,8 @@
 
 #include <ufs/ffs/ffs_extern.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 /*
  * Return buffer with the contents of block "offset" from the beginning of
  * directory "ip".  If "res" is non-zero, fill it in with a pointer to the

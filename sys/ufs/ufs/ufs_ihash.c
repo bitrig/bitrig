@@ -44,6 +44,8 @@
 #include <dev/rndvar.h>
 #include <crypto/siphash.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 /*
  * Structures associated with inode cacheing.
  */

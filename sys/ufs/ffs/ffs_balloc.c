@@ -57,6 +57,8 @@
 #include <ufs/ffs/fs.h>
 #include <ufs/ffs/ffs_extern.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 int ffs1_balloc(struct inode *, off_t, int, struct ucred *, int, struct buf **);
 #ifdef FFS2
 int ffs2_balloc(struct inode *, off_t, int, struct ucred *, int, struct buf **);

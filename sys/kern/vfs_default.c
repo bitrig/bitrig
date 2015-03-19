@@ -50,6 +50,8 @@
 #include <uvm/uvm_extern.h>
 #include <uvm/uvm_vnode.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 int filt_read_event(struct knote *, long);
 int filt_write_event(struct knote *, long);
 int filt_vnode_event(struct knote *, long);

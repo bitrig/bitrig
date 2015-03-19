@@ -93,6 +93,8 @@
 
 #include <uvm/uvm_extern.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 int nobuffers;
 int needbuffer;
 struct bio_ops bioops;
@@ -265,7 +267,7 @@ bufinit(void)
  * Change cachepct
  */
 void
-bufadjust(int newbufpages)
+bufadjust(long newbufpages)
 {
 	struct buf *bp;
 	int s;
@@ -967,7 +969,7 @@ buf_get(struct vnode *vp, daddr_t blkno, size_t size)
 			bcstats.kvaslots_avail <= 2 * RESERVE_SLOTS)
 			wakeup(&bd_req);
 
-		npages = atop(round_page(size));
+		npages = (int)atop(round_page(size));
 
 		/*
 		 * if our cache has been previously shrunk,

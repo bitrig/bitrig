@@ -82,6 +82,8 @@
 #include <sys/kernel.h>
 #include <sys/sched.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 #ifdef FFS_SOFTUPDATES
 int   softdep_process_worklist(struct mount *);
 #endif
@@ -135,7 +137,7 @@ vn_initialize_syncerd(void)
 {
 	syncer_workitem_pending = hashinit(syncer_maxdelay, M_VNODE, M_WAITOK,
 	    &syncer_mask);
-	syncer_maxdelay = syncer_mask + 1;
+	syncer_maxdelay = (int)(syncer_mask + 1);
 }
 
 /*
@@ -335,7 +337,7 @@ vfs_allocate_syncvnode(struct mount *mp)
 		}
 		next = start;
 	}
-	vn_syncer_add_to_worklist(vp, next);
+	vn_syncer_add_to_worklist(vp, (int)next);
 	mp->mnt_syncer = vp;
 	return (0);
 }

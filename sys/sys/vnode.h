@@ -594,7 +594,7 @@ void	copy_statfs_info(struct statfs *, const struct mount *);
 #define GETCWD_CHECK_ACCESS 0x0001
 int vfs_getcwd_scandir(struct vnode **, struct vnode **, char **, char *,
     struct proc *);
-int vfs_getcwd_common(struct vnode *, struct vnode *, char **, char *, int,
+int vfs_getcwd_common(struct vnode *, struct vnode *, char **, char *, size_t,
     int, struct proc *);
 int vfs_getcwd_getcache(struct vnode **, struct vnode **, char **, char *);
 

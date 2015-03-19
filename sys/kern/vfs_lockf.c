@@ -46,6 +46,8 @@
 #include <sys/lockf.h>
 #include <sys/unistd.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 struct pool lockfpool;
 
 /*

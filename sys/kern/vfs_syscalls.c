@@ -60,6 +60,8 @@
 
 #include <sys/syscallargs.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 extern int suid_clear;
 int	usermount = 0;		/* sysctl: by default, users may not mount */
 

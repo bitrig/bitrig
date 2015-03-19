@@ -40,6 +40,8 @@
 #include <sys/systm.h>
 #include <sys/resourcevar.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 void cluster_wbuild(struct vnode *, struct buf *, long, daddr_t, int,
     daddr_t);
 struct cluster_save *cluster_collectbufs(struct vnode *, struct cluster_info *,
@@ -82,7 +84,7 @@ cluster_write(struct buf *bp, struct cluster_info *ci, u_quad_t filesize)
 			 * cluster size, then push the previous cluster.
 			 * Otherwise try reallocating to make it sequential.
 			 */
-			cursize = ci->ci_lastw - ci->ci_cstart + 1;
+			cursize = (int)(ci->ci_lastw - ci->ci_cstart + 1);
 			if (((u_quad_t)(lbn + 1)) * bp->b_bcount != filesize ||
 			    lbn != ci->ci_lastw + 1 || ci->ci_clen <= cursize) {
 				cluster_wbuild(vp, NULL, bp->b_bcount,
@@ -186,7 +188,7 @@ redo:
 		if (last_bp) {
 			bawrite(last_bp);
 		} else if (len) {
-			bp = getblk(vp, start_lbn, size, 0, 0);
+			bp = getblk(vp, start_lbn, (int)size, 0, 0);
 			/*
 			 * The buffer could have already been flushed out of
 			 * the cache. If that has happened, we'll get a new
@@ -200,7 +202,7 @@ redo:
 		return;
 	}
 
-	bp = getblk(vp, start_lbn, size, 0, 0);
+	bp = getblk(vp, start_lbn, (int)size, 0, 0);
 	if (!(bp->b_flags & B_DELWRI)) {
 		++start_lbn;
 		--len;
@@ -226,13 +228,13 @@ cluster_collectbufs(struct vnode *vp, struct cluster_info *ci,
 	daddr_t lbn;
 	int i, len;
 
-	len = ci->ci_lastw - ci->ci_cstart + 1;
+	len = (int)(ci->ci_lastw - ci->ci_cstart + 1);
 	buflist = malloc(sizeof(struct buf *) * (len + 1) + sizeof(*buflist),
 	    M_VCLUSTER, M_WAITOK);
 	buflist->bs_nchildren = 0;
 	buflist->bs_children = (struct buf **)(buflist + 1);
 	for (lbn = ci->ci_cstart, i = 0; i < len; lbn++, i++)
-		(void)bread(vp, lbn, last_bp->b_bcount,
+		(void)bread(vp, lbn, (int)last_bp->b_bcount,
 		    &buflist->bs_children[i]);
 	buflist->bs_children[i] = last_bp;
 	buflist->bs_nchildren = i + 1;

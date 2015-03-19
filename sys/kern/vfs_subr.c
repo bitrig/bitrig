@@ -71,6 +71,8 @@
 
 #include "softraid.h"
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 void sr_shutdown(void);
 
 enum vtype iftovt_tab[16] = {
@@ -292,26 +294,32 @@ vfs_getnewfsid(struct mount *mp)
 void
 vattr_null(struct vattr *vap)
 {
-	vap->va_type = VNON;
-	/* XXX These next two used to be one line, but for a GCC bug. */
-	vap->va_size = VNOVAL;
-	vap->va_bytes = VNOVAL;
-	vap->va_rdev = NODEV;
-	vap->va_mode = vap->va_nlink = vap->va_uid = vap->va_gid =
-		vap->va_fsid = vap->va_fileid = vap->va_blocksize =
-		vap->va_atime.tv_sec =
-		vap->va_mtime.tv_sec =
-		vap->va_ctime.tv_sec =
-		vap->va_flags = vap->va_gen = VNOVAL;
-	vap->va_atime.tv_nsec = vap->va_mtime.tv_nsec =
-		vap->va_ctime.tv_nsec = UTIME_OMIT;
-	vap->va_vaflags = 0;
+	vap->va_type =		VNON;
+	vap->va_size =		VNOVAL;
+	vap->va_bytes =		VNOVAL;
+	vap->va_rdev =		NODEV;
+	vap->va_mode =		VNOVAL;
+	vap->va_nlink =		VNOVAL;
+	vap->va_uid =		VNOVAL;
+	vap->va_gid =		VNOVAL;
+	vap->va_fsid =		VNOVAL;
+	vap->va_fileid =	VNOVAL;
+	vap->va_blocksize =	VNOVAL;
+	vap->va_atime.tv_sec =	VNOVAL;
+	vap->va_mtime.tv_sec =	VNOVAL;
+	vap->va_ctime.tv_sec =	VNOVAL;
+	vap->va_flags =		VNOVAL;
+	vap->va_gen =		VNOVAL;
+	vap->va_atime.tv_nsec =	UTIME_OMIT;
+	vap->va_mtime.tv_nsec =	UTIME_OMIT;
+	vap->va_ctime.tv_nsec =	UTIME_OMIT;
+	vap->va_vaflags =	0;
 }
 
 /*
  * Routines having to do with the management of the vnode table.
  */
-long numvnodes;
+int numvnodes;
 
 /*
  * Return the next vnode from the free list.
@@ -330,8 +338,7 @@ getnewvnode(enum vtagtype tag, struct mount *mp, struct vops *vops,
 	 * allow maxvnodes to increase if the buffer cache itself
 	 * is big enough to justify it. (we don't shrink it ever)
 	 */
-	maxvnodes = maxvnodes < bcstats.numbufs ? bcstats.numbufs
-	    : maxvnodes;
+	maxvnodes = imax(maxvnodes, (int)bcstats.numbufs);
 
 	/*
 	 * We must choose whether to allocate a new vnode or recycle an

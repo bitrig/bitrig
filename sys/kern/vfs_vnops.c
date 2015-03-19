@@ -59,6 +59,8 @@
 #include <sys/specdev.h>
 #include <sys/unistd.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 int vn_read(struct file *, off_t *, struct uio *, struct ucred *);
 int vn_write(struct file *, off_t *, struct uio *, struct ucred *);
 int vn_poll(struct file *, int, struct proc *);
@@ -406,7 +408,7 @@ vn_stat(struct vnode *vp, struct stat *sb, struct proc *p)
 	 * Copy from vattr table
 	 */
 	memset(sb, 0, sizeof(*sb));
-	sb->st_dev = va.va_fsid;
+	sb->st_dev = (dev_t)va.va_fsid;
 	sb->st_ino = va.va_fileid;
 	mode = va.va_mode;
 	switch (vp->v_type) {
@@ -446,9 +448,9 @@ vn_stat(struct vnode *vp, struct stat *sb, struct proc *p)
 	sb->st_mtim.tv_nsec = va.va_mtime.tv_nsec;
 	sb->st_ctim.tv_sec  = va.va_ctime.tv_sec;
 	sb->st_ctim.tv_nsec = va.va_ctime.tv_nsec;
-	sb->st_blksize = va.va_blocksize;
-	sb->st_flags = va.va_flags;
-	sb->st_gen = va.va_gen;
+	sb->st_blksize = (int32_t)va.va_blocksize;
+	sb->st_flags = (uint32_t)va.va_flags;
+	sb->st_gen = (uint32_t)va.va_gen;
 	sb->st_blocks = va.va_bytes / S_BLKSIZE;
 	return (0);
 }
@@ -471,7 +473,7 @@ vn_ioctl(struct file *fp, u_long com, caddr_t data, struct proc *p)
 			error = VOP_GETATTR(vp, &vattr, p->p_ucred);
 			if (error)
 				return (error);
-			*(int *)data = vattr.va_size - fp->f_offset;
+			*(int *)data = (int)(vattr.va_size - fp->f_offset);
 			return (0);
 		}
 		if (com == FIONBIO || com == FIOASYNC)  /* XXX */
@@ -479,7 +481,7 @@ vn_ioctl(struct file *fp, u_long com, caddr_t data, struct proc *p)
 		/* FALLTHROUGH */
 	default:
 		return (ENOTTY);
-		
+
 	case VFIFO:
 	case VCHR:
 	case VBLK:

@@ -51,6 +51,8 @@
 #include <ufs/ufs/ufsmount.h>
 #include <ufs/ufs/ufs_extern.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 /*
  * Bmap converts a the logical block number of a file to its physical block
  * number on the disk. The conversion is done by using the logical block

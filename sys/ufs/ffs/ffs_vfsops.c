@@ -95,6 +95,8 @@
 
 #include <uvm/uvm_extern.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 int ffs_sbupdate(struct ufsmount *, int);
 int ffs_reload_vnode(struct vnode *, void *);
 int ffs_sync_vnode(struct vnode *, void *);

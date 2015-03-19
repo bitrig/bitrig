@@ -57,6 +57,8 @@
 #endif
 #include <ufs/ffs/fs.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 /*
  * Last reference to an inode.  If necessary, write or delete it.
  */

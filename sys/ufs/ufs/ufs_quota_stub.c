@@ -14,6 +14,8 @@
 #include <ufs/ufs/ufsmount.h>
 #include <ufs/ufs/ufs_extern.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 #ifndef QUOTA
 
 int

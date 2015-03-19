@@ -60,6 +60,8 @@
 #define ASSERT_VP_ISLOCKED(vp)  /* nothing */
 #endif
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 int
 VOP_ISLOCKED(struct vnode *vp)
 {

@@ -89,6 +89,8 @@
 #include <ufs/ffs/fs.h>
 #include <ufs/ffs/ffs_extern.h>
 
+#pragma clang diagnostic warning "-Wshorten-64-to-32"
+
 struct vops ffs_vops = {
 	.vop_lookup	= ufs_lookup,
 	.vop_create	= ufs_create,
