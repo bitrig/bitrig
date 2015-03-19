@@ -939,20 +939,16 @@ dtls1_send_client_key_exchange(SSL *s)
 			RSA *rsa;
 			unsigned char tmp_buf[SSL_MAX_MASTER_KEY_LENGTH];
 
-			if (s->session->sess_cert->peer_rsa_tmp != NULL)
-				rsa = s->session->sess_cert->peer_rsa_tmp;
-			else {
-				pkey = X509_get_pubkey(s->session->sess_cert->peer_pkeys[SSL_PKEY_RSA_ENC].x509);
-				if ((pkey == NULL) ||
-				    (pkey->type != EVP_PKEY_RSA) ||
-				    (pkey->pkey.rsa == NULL)) {
-					SSLerr(SSL_F_DTLS1_SEND_CLIENT_KEY_EXCHANGE,
-					    ERR_R_INTERNAL_ERROR);
-					goto err;
-				}
-				rsa = pkey->pkey.rsa;
-				EVP_PKEY_free(pkey);
+			pkey = X509_get_pubkey(s->session->sess_cert->peer_pkeys[SSL_PKEY_RSA_ENC].x509);
+			if ((pkey == NULL) ||
+			    (pkey->type != EVP_PKEY_RSA) ||
+			    (pkey->pkey.rsa == NULL)) {
+				SSLerr(SSL_F_DTLS1_SEND_CLIENT_KEY_EXCHANGE,
+				    ERR_R_INTERNAL_ERROR);
+				goto err;
 			}
+			rsa = pkey->pkey.rsa;
+			EVP_PKEY_free(pkey);
 
 			tmp_buf[0] = s->client_version >> 8;
 			tmp_buf[1] = s->client_version&0xff;
