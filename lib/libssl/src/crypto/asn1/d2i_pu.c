@@ -130,7 +130,7 @@ d2i_PublicKey(int type, EVP_PKEY **a, const unsigned char **pp, long length)
 	return (ret);
 
 err:
-	if ((ret != NULL) && ((a == NULL) || (*a != ret)))
+	if (a == NULL || *a != ret)
 		EVP_PKEY_free(ret);
 	return (NULL);
 }
