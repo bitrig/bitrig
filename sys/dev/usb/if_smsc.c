@@ -1,4 +1,4 @@
-/*	$OpenBSD: if_smsc.c,v 1.14 2014/12/22 02:28:52 tedu Exp $	*/
+/*	$OpenBSD: if_smsc.c,v 1.16 2015/03/19 02:02:43 jsg Exp $	*/
 /* $FreeBSD: src/sys/dev/usb/net/if_smsc.c,v 1.1 2012/08/15 04:03:55 gonzo Exp $ */
 /*-
  * Copyright (c) 2012
@@ -84,7 +84,6 @@
 #include <netinet/in.h>
 #include <netinet/if_ether.h>
 
-#include <dev/mii/mii.h>
 #include <dev/mii/miivar.h>
 
 #include <dev/usb/usb.h>
@@ -261,9 +260,9 @@ smsc_miibus_readreg(struct device *dev, int phy, int reg)
 		smsc_warn_printf(sc, "MII read timeout\n");
 
 	smsc_read_reg(sc, SMSC_MII_DATA, &val);
-	smsc_unlock_mii(sc);
-	
+
 done:
+	smsc_unlock_mii(sc);
 	return (val & 0xFFFF);
 }
 
