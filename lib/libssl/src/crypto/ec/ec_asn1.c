@@ -918,19 +918,19 @@ d2i_ECPKParameters(EC_GROUP ** a, const unsigned char **in, long len)
 
 	if ((params = d2i_ECPKPARAMETERS(NULL, in, len)) == NULL) {
 		ECerr(EC_F_D2I_ECPKPARAMETERS, EC_R_D2I_ECPKPARAMETERS_FAILURE);
-		ECPKPARAMETERS_free(params);
-		return NULL;
+		goto err;
 	}
 	if ((group = ec_asn1_pkparameters2group(params)) == NULL) {
 		ECerr(EC_F_D2I_ECPKPARAMETERS, EC_R_PKPARAMETERS2GROUP_FAILURE);
-		ECPKPARAMETERS_free(params);
-		return NULL;
+		goto err;
 	}
-	if (a && *a)
-		EC_GROUP_clear_free(*a);
-	if (a)
-		*a = group;
 
+	if (a != NULL) {
+		EC_GROUP_clear_free(*a);
+		*a = group;
+	}
+
+err:
 	ECPKPARAMETERS_free(params);
 	return (group);
 }
@@ -958,7 +958,6 @@ i2d_ECPKParameters(const EC_GROUP * a, unsigned char **out)
 EC_KEY *
 d2i_ECPrivateKey(EC_KEY ** a, const unsigned char **in, long len)
 {
-	int ok = 0;
 	EC_KEY *ret = NULL;
 	EC_PRIVATEKEY *priv_key = NULL;
 
@@ -973,12 +972,9 @@ d2i_ECPrivateKey(EC_KEY ** a, const unsigned char **in, long len)
 	}
 	if (a == NULL || *a == NULL) {
 		if ((ret = EC_KEY_new()) == NULL) {
-			ECerr(EC_F_D2I_ECPRIVATEKEY,
-			    ERR_R_MALLOC_FAILURE);
+			ECerr(EC_F_D2I_ECPRIVATEKEY, ERR_R_MALLOC_FAILURE);
 			goto err;
 		}
-		if (a)
-			*a = ret;
 	} else
 		ret = *a;
 
@@ -1028,17 +1024,19 @@ d2i_ECPrivateKey(EC_KEY ** a, const unsigned char **in, long len)
 			goto err;
 		}
 	}
-	ok = 1;
+
+	EC_PRIVATEKEY_free(priv_key);
+	if (a != NULL)
+		*a = ret;
+	return (ret);
+
 err:
-	if (!ok) {
-		if (ret)
-			EC_KEY_free(ret);
-		ret = NULL;
-	}
+	if (a == NULL || *a != ret)
+		EC_KEY_free(ret);
 	if (priv_key)
 		EC_PRIVATEKEY_free(priv_key);
 
-	return (ret);
+	return (NULL);
 }
 
 int 
@@ -1151,8 +1149,6 @@ d2i_ECParameters(EC_KEY ** a, const unsigned char **in, long len)
 			ECerr(EC_F_D2I_ECPARAMETERS, ERR_R_MALLOC_FAILURE);
 			return NULL;
 		}
-		if (a)
-			*a = ret;
 	} else
 		ret = *a;
 
@@ -1160,6 +1156,9 @@ d2i_ECParameters(EC_KEY ** a, const unsigned char **in, long len)
 		ECerr(EC_F_D2I_ECPARAMETERS, ERR_R_EC_LIB);
 		return NULL;
 	}
+
+	if (a != NULL)
+		*a = ret;
 	return ret;
 }
 

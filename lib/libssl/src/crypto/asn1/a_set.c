@@ -225,7 +225,7 @@ d2i_ASN1_SET(STACK_OF(OPENSSL_BLOCK) **a, const unsigned char **pp, long length,
 	return ret;
 
 err:
-	if (ret != NULL && (a == NULL || *a != ret)) {
+	if (a == NULL || *a != ret) {
 		if (free_func != NULL)
 			sk_OPENSSL_BLOCK_pop_free(ret, free_func);
 		else
