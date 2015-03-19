@@ -176,7 +176,6 @@ static int	x_set_mark(int);
 static int	x_stuff(int);
 static int	x_stuffreset(int);
 static int	x_transpose(int);
-static int	x_version(int);
 static int	x_xchg_point_mark(int);
 static int	x_yank(int);
 static int	x_comp_list(int);
@@ -235,7 +234,6 @@ static const struct x_ftab x_ftab[] = {
 	{ x_stuff,		"stuff",			0 },
 	{ x_stuffreset,		"stuff-reset",			0 },
 	{ x_transpose,		"transpose-chars",		0 },
-	{ x_version,		"version",			0 },
 	{ x_xchg_point_mark,	"exchange-point-and-mark",	0 },
 	{ x_yank,		"yank",				0 },
 	{ x_comp_list,		"complete-list",		0 },
@@ -1572,33 +1570,6 @@ x_xchg_point_mark(int c)
 	tmp = xmp;
 	xmp = xcp;
 	x_goto( tmp );
-	return KSTD;
-}
-
-static int
-x_version(int c)
-{
-	char *o_xbuf = xbuf, *o_xend = xend;
-	char *o_xep = xep, *o_xcp = xcp;
-
-	xbuf = xcp = (char *) ksh_version + 4;
-	xend = xep = (char *) ksh_version + 4 + strlen(ksh_version + 4);
-	x_redraw(1);
-	x_flush();
-
-	c = x_e_getc();
-	xbuf = o_xbuf;
-	xend = o_xend;
-	xep = o_xep;
-	xcp = o_xcp;
-	x_redraw(1);
-
-	if (c < 0)
-		return KSTD;
-	/* This is what at&t ksh seems to do...  Very bizarre */
-	if (c != ' ')
-		x_e_ungetc(c);
-
 	return KSTD;
 }
 
