@@ -123,7 +123,7 @@ static int	x_match(char *, char *);
 static void	x_redraw(int);
 static void	x_push(int);
 static void	x_e_ungetc(int);
-static int	x_e_getc(int);
+static int	x_e_getc(void);
 static void	x_e_putc(int);
 static void	x_e_puts(const char *);
 static int	x_comment(int);
@@ -282,7 +282,7 @@ x_emacs(char *buf, size_t len)
 	x_last_command = NULL;
 	while (1) {
 		x_flush();
-		if ((c = x_e_getc(1)) < 0)
+		if ((c = x_e_getc()) < 0)
 			return 0;
 
 		line[at++] = c;
@@ -690,7 +690,7 @@ x_search_char_forw(int c)
 	char *cp = xcp;
 
 	*xep = '\0';
-	c = x_e_getc(1);
+	c = x_e_getc();
 	while (x_arg--) {
 		if (c < 0 ||
 		    ((cp = (cp == xep) ? NULL : strchr(cp + 1, c)) == NULL &&
@@ -708,7 +708,7 @@ x_search_char_back(int c)
 {
 	char *cp = xcp, *p;
 
-	c = x_e_getc(1);
+	c = x_e_getc();
 	for (; x_arg--; cp = p)
 		for (p = cp; ; ) {
 			if (p-- == xbuf)
@@ -823,7 +823,7 @@ x_search_hist(int c)
 	x_redraw(1);
 	while (1) {
 		x_flush();
-		if ((c = x_e_getc(offset >= 0)) < 0)
+		if ((c = x_e_getc()) < 0)
 			return (KSTD);
 		f = kb_find_hist_func(c);
 		if (c == CTRL('[')) {
@@ -1586,7 +1586,7 @@ x_version(int c)
 	x_redraw(1);
 	x_flush();
 
-	c = x_e_getc(0);
+	c = x_e_getc();
 	xbuf = o_xbuf;
 	xend = o_xend;
 	xep = o_xep;
@@ -1749,7 +1749,7 @@ x_e_ungetc(int c)
 }
 
 static int
-x_e_getc(int redr)
+x_e_getc(void)
 {
 	int c;
 
@@ -1765,10 +1765,8 @@ x_e_getc(int redr)
 	}
 
 	while (got_sigwinch || ((c = x_getc()) < 0 && errno == EINTR)) {
-		if (redr) {
-			x_redraw(1);
-			x_flush();
-		}
+		x_redraw(1);
+		x_flush();
 	}
 
 	return (c);
@@ -1831,7 +1829,7 @@ x_set_arg(int c)
 	int n = 0;
 	int first = 1;
 
-	for (; c >= 0 && isdigit(c); c = x_e_getc(0), first = 0)
+	for (; c >= 0 && isdigit(c); c = x_e_getc(), first = 0)
 		n = n * 10 + (c - '0');
 	if (c < 0 || first) {
 		x_e_putc('\a');
