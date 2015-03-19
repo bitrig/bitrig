@@ -65,10 +65,10 @@ int ufs_dirhashcheck;
 
 SIPHASH_KEY ufsdirhash_key;
 
-int ufsdirhash_hash(struct dirhash *dh, char *name, int namelen);
+int ufsdirhash_hash(struct dirhash *dh, char *name, size_t namelen);
 void ufsdirhash_adjfree(struct dirhash *dh, doff_t offset, int diff);
 void ufsdirhash_delslot(struct dirhash *dh, int slot);
-int ufsdirhash_findslot(struct dirhash *dh, char *name, int namelen,
+int ufsdirhash_findslot(struct dirhash *dh, char *name, size_t namelen,
    doff_t offset);
 doff_t ufsdirhash_getprev(struct direct *dp, doff_t offset);
 int ufsdirhash_recycle(int wanted);
@@ -140,11 +140,11 @@ ufsdirhash_build(struct inode *ip)
 	vp = ip->i_vnode;
 	/* Allocate 50% more entries than this dir size could ever need. */
 	DIRHASH_ASSERT(DIP(ip, size) >= DIRBLKSIZ, ("ufsdirhash_build size"));
-	nslots = DIP(ip, size) / DIRECTSIZ(1);
+	nslots = (int)(DIP(ip, size) / DIRECTSIZ(1));
 	nslots = (nslots * 3 + 1) / 2;
 	narrays = howmany(nslots, DH_NBLKOFF);
 	nslots = narrays * DH_NBLKOFF;
-	dirblocks = howmany(DIP(ip, size), DIRBLKSIZ);
+	dirblocks = (int)howmany(DIP(ip, size), DIRBLKSIZ);
 	nblocks = (dirblocks * 3 + 1) / 2;
 
 	memreqd = sizeof(*dh) + narrays * sizeof(*dh->dh_hash) +
@@ -309,7 +309,7 @@ ufsdirhash_free(struct inode *ip)
  * is the first in a block, the start of the block is used).
  */
 int
-ufsdirhash_lookup(struct inode *ip, char *name, int namelen, doff_t *offp,
+ufsdirhash_lookup(struct inode *ip, char *name, size_t namelen, doff_t *offp,
     struct buf **bpp, doff_t *prevoffp)
 {
 	struct dirhash *dh, *dh_next;
@@ -857,7 +857,7 @@ ufsdirhash_checkblock(struct inode *ip, char *buf, doff_t offset)
  * Hash the specified filename into a dirhash slot.
  */
 int
-ufsdirhash_hash(struct dirhash *dh, char *name, int namelen)
+ufsdirhash_hash(struct dirhash *dh, char *name, size_t namelen)
 {
 	return SipHash24(&ufsdirhash_key, name, namelen) % dh->dh_hlen;
 }
@@ -907,7 +907,8 @@ ufsdirhash_adjfree(struct dirhash *dh, doff_t offset, int diff)
  * `dh' must be locked on entry and remains so on return.
  */
 int
-ufsdirhash_findslot(struct dirhash *dh, char *name, int namelen, doff_t offset)
+ufsdirhash_findslot(struct dirhash *dh, char *name, size_t namelen,
+    doff_t offset)
 {
 	int slot;
 

@@ -101,6 +101,8 @@ int	dirchk = 0;
  *	  inode and return info to allow rewrite
  *	if not at end, add name to cache; if at end and neither creating
  *	  nor deleting, add name to cache
+ *
+ * XXX due to doff_t, directories in UFS can't be more than 2GB in size.
  */
 int
 ufs_lookup(void *v)
@@ -129,8 +131,8 @@ ufs_lookup(void *v)
 	struct vnode **vpp = ap->a_vpp;
 	struct componentname *cnp = ap->a_cnp;
 	struct ucred *cred = cnp->cn_cred;
-	int flags;
-	int nameiop = cnp->cn_nameiop;
+	unsigned long flags;
+	unsigned long nameiop = cnp->cn_nameiop;
 	struct proc *p = cnp->cn_proc;
 
 	cnp->cn_flags &= ~PDIRUNLOCK;
@@ -177,8 +179,8 @@ ufs_lookup(void *v)
 	if ((nameiop == CREATE || nameiop == RENAME) &&
 	    (flags & ISLASTCN)) {
 		slotstatus = NONE;
-		slotneeded = (sizeof(struct direct) - MAXNAMLEN +
-			cnp->cn_namelen + 3) &~ 3;
+		slotneeded = (int)((sizeof(struct direct) - MAXNAMLEN +
+			cnp->cn_namelen + 3) &~ 3);
 	}
 
 	/*
@@ -203,7 +205,7 @@ ufs_lookup(void *v)
 	 */
 	if (ufsdirhash_build(dp) == 0) {
 		/* Look for a free slot if needed. */
-		enduseful = DIP(dp, size);
+		enduseful = (doff_t)DIP(dp, size);
 		if (slotstatus != FOUND) {
 			slotoffset = ufsdirhash_findfree(dp, slotneeded,
 			    &slotsize);
@@ -211,21 +213,23 @@ ufs_lookup(void *v)
 				slotstatus = COMPACT;
 				enduseful = ufsdirhash_enduseful(dp);
 				if (enduseful < 0)
-					enduseful = DIP(dp, size);
+					enduseful = (doff_t)DIP(dp, size);
 			}
 		}
 		/* Look up the component. */
 		numdirpasses = 1;
 		entryoffsetinblock = 0; /* silence compiler warning */
-		switch (ufsdirhash_lookup(dp, cnp->cn_nameptr, cnp->cn_namelen,
-		    &dp->i_offset, &bp, nameiop == DELETE ? &prevoff : NULL)) {
+		switch (ufsdirhash_lookup(dp, cnp->cn_nameptr,
+		    (size_t)cnp->cn_namelen, &dp->i_offset, &bp,
+		    nameiop == DELETE ? &prevoff : NULL)) {
 		case 0:
 			ep = (struct direct *)((char *)bp->b_data +
 			    (dp->i_offset & bmask));
 			goto foundentry;
 		case ENOENT:
 #define roundup2(x, y)	(((x)+((y)-1))&(~((y)-1))) /* if y is powers of two */
-			dp->i_offset = roundup2(DIP(dp, size), DIRBLKSIZ);
+			dp->i_offset = (doff_t)roundup2(DIP(dp, size),
+			    DIRBLKSIZ);
 			goto notfound;
 		default:
 			/* Something failed; just do a linear search. */
@@ -248,7 +252,7 @@ ufs_lookup(void *v)
 		nchstats.ncs_2passes++;
 	}
 	prevoff = dp->i_offset;
-	endsearch = roundup(DIP(dp, size), DIRBLKSIZ);
+	endsearch = (doff_t)roundup(DIP(dp, size), DIRBLKSIZ);
 	enduseful = 0;
 
 searchloop:
@@ -394,7 +398,8 @@ notfound:
 		 * dp->i_offset + dp->i_count.
 		 */
 		if (slotstatus == NONE) {
-			dp->i_offset = roundup(DIP(dp, size), DIRBLKSIZ);
+			dp->i_offset = (doff_t)roundup(DIP(dp, size),
+			    DIRBLKSIZ);
 			dp->i_count = 0;
 			enduseful = dp->i_offset;
 		} else if (nameiop == DELETE) {
@@ -862,8 +867,8 @@ ufs_direnter(struct vnode *dvp, struct vnode *tvp, struct direct *dirp,
 #ifdef UFS_DIRHASH
 		if (dp->i_dirhash != NULL)
 			ufsdirhash_move(dp, nep,
-			    dp->i_offset + ((char *)nep - dirbuf),
-			    dp->i_offset + ((char *)ep - dirbuf));
+			    (doff_t)(dp->i_offset + ((char *)nep - dirbuf)),
+			    (doff_t)(dp->i_offset + ((char *)ep - dirbuf)));
 #endif
  		if (DOINGSOFTDEP(dvp))
  			softdep_change_directoryentry_offset(dp, dirbuf,
@@ -895,7 +900,8 @@ ufs_direnter(struct vnode *dvp, struct vnode *tvp, struct direct *dirp,
 #ifdef UFS_DIRHASH
 	if (dp->i_dirhash != NULL && (ep->d_ino == 0 ||
 	    dirp->d_reclen == spacefree))
-		ufsdirhash_add(dp, dirp, dp->i_offset + ((char *)ep - dirbuf));
+		ufsdirhash_add(dp, dirp,
+		    (doff_t)(dp->i_offset + ((char *)ep - dirbuf)));
 #endif
 	memcpy(ep, dirp, newentrysize);
 #ifdef UFS_DIRHASH
@@ -952,7 +958,8 @@ ufs_direnter(struct vnode *dvp, struct vnode *tvp, struct direct *dirp,
  * to the size of the previous entry.
  */
 int
-ufs_dirremove(struct vnode *dvp, struct inode *ip, int flags, int isrmdir)
+ufs_dirremove(struct vnode *dvp, struct inode *ip, unsigned long flags,
+    int isrmdir)
 {
 	struct inode *dp;
 	struct direct *ep;

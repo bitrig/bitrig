@@ -171,16 +171,31 @@ ufs_itimes(struct vnode *vp)
 
 	getnanotime(&ts);
 	if (ip->i_flag & IN_ACCESS) {
-		DIP_ASSIGN(ip, atime, ts.tv_sec);
-		DIP_ASSIGN(ip, atimensec, ts.tv_nsec);
+		if (ip->i_ump->um_fstype == UM_UFS1) {
+			ip->i_ffs1_atime = (int32_t)ts.tv_sec;
+			ip->i_ffs1_atimensec = (int32_t)ts.tv_nsec;
+		} else {
+			ip->i_ffs2_atime = ts.tv_sec;
+			ip->i_ffs2_atimensec = (int32_t)ts.tv_nsec;
+		}
 	}
 	if (ip->i_flag & IN_UPDATE) {
-		DIP_ASSIGN(ip, mtime, ts.tv_sec);
-		DIP_ASSIGN(ip, mtimensec, ts.tv_nsec);
+		if (ip->i_ump->um_fstype == UM_UFS1) {
+			ip->i_ffs1_mtime = (int32_t)ts.tv_sec;
+			ip->i_ffs1_mtimensec = (int32_t)ts.tv_nsec;
+		} else {
+			ip->i_ffs2_mtime = ts.tv_sec;
+			ip->i_ffs2_mtimensec = (int32_t)ts.tv_nsec;
+		}
 	}
 	if (ip->i_flag & IN_CHANGE) {
-		DIP_ASSIGN(ip, ctime, ts.tv_sec);
-		DIP_ASSIGN(ip, ctimensec, ts.tv_nsec);
+		if (ip->i_ump->um_fstype == UM_UFS1) {
+			ip->i_ffs1_ctime = (int32_t)ts.tv_sec;
+			ip->i_ffs1_ctimensec = (int32_t)ts.tv_nsec;
+		} else {
+			ip->i_ffs2_ctime = ts.tv_sec;
+			ip->i_ffs2_ctimensec = (int32_t)ts.tv_nsec;
+		}
 		ip->i_modrev++;
 	}
 
@@ -420,7 +435,7 @@ ufs_setattr(void *v)
 				UFS_WAPBL_END(vp->v_mount);
 				return (EPERM);
 			}
-			DIP_ASSIGN(ip, flags, vap->va_flags);
+			DIP_ASSIGN(ip, flags, (uint32_t)vap->va_flags);
 		} else {
 			if (DIP(ip, flags) & (SF_IMMUTABLE | SF_APPEND) ||
 			    (vap->va_flags & UF_SETTABLE) != vap->va_flags) {
@@ -526,12 +541,28 @@ ufs_setattr(void *v)
 		}
 		ufs_itimes(vp);
 		if (vap->va_mtime.tv_nsec != UTIME_OMIT) {
-			DIP_ASSIGN(ip, mtime, vap->va_mtime.tv_sec);
-			DIP_ASSIGN(ip, mtimensec, vap->va_mtime.tv_nsec);
+			if (ip->i_ump->um_fstype == UM_UFS1) {
+				ip->i_ffs1_mtime =
+				    (int32_t)vap->va_mtime.tv_sec;
+				ip->i_ffs1_mtimensec =
+				    (int32_t)vap->va_mtime.tv_nsec;
+			} else {
+				ip->i_ffs2_mtime = vap->va_mtime.tv_sec;
+				ip->i_ffs2_mtimensec =
+				    (int32_t)vap->va_mtime.tv_nsec;
+			}
 		}
 		if (vap->va_atime.tv_nsec != UTIME_OMIT) {
-			DIP_ASSIGN(ip, atime, vap->va_atime.tv_sec);
-			DIP_ASSIGN(ip, atimensec, vap->va_atime.tv_nsec);
+			if (ip->i_ump->um_fstype == UM_UFS1) {
+				ip->i_ffs1_atime =
+				    (int32_t)vap->va_atime.tv_sec;
+				ip->i_ffs1_atimensec =
+				    (int32_t)vap->va_atime.tv_nsec;
+			} else {
+				ip->i_ffs2_atime = vap->va_atime.tv_sec;
+				ip->i_ffs2_atimensec =
+				    (int32_t)vap->va_atime.tv_nsec;
+			}
 		}
 		error = UFS_UPDATE(ip, 0);
 		UFS_WAPBL_END(vp->v_mount);
@@ -1587,7 +1618,7 @@ ufs_symlink(void *v)
 		return (error);
 	VN_KNOTE(ap->a_dvp, NOTE_WRITE);
 	vp = *vpp;
-	len = strlen(ap->a_target);
+	len = (int)strlen(ap->a_target);
 	if (len < vp->v_mount->mnt_maxsymlinklen) {
 		ip = VTOI(vp);
 		memcpy(SHORTLINK(ip), ap->a_target, len);
@@ -1623,8 +1654,8 @@ ufs_readdir(void *v)
 	struct direct *dp;
 	char *edp;
 	caddr_t diskbuf;
-	size_t count, entries;
-	int readcnt, error;
+	size_t count, entries, readcnt;
+	int error;
 #if (BYTE_ORDER == LITTLE_ENDIAN)
 	int ofmt = ap->a_vp->v_mount->mnt_maxsymlinklen <= 0;
 #endif
@@ -1645,7 +1676,7 @@ ufs_readdir(void *v)
 	 */
 
 	/* read from disk, stopping on a block boundary, max 64kB */
-	readcnt = max(count, 64*1024) - entries;
+	readcnt = szmax(count, 64*1024) - entries;
 
 	auio = *uio;
 	auio.uio_iov = &aiov;
@@ -1725,7 +1756,7 @@ ufs_readlink(void *v)
 	struct inode *ip = VTOI(vp);
 	int isize;
 
-	isize = DIP(ip, size);
+	isize = (int)DIP(ip, size);
 	if (isize < vp->v_mount->mnt_maxsymlinklen ||
 	    (vp->v_mount->mnt_maxsymlinklen == 0 && DIP(ip, blocks) == 0)) {
 		return (uiomovei((char *)SHORTLINK(ip), isize, ap->a_uio));
@@ -2046,7 +2077,8 @@ ufs_vinit(struct mount *mntp, struct vops *specops, struct vops *fifoops,
 	case VCHR:
 	case VBLK:
 		vp->v_op = specops;
-		if ((nvp = checkalias(vp, DIP(ip, rdev), mntp)) != NULL) {
+		nvp = checkalias(vp, (dev_t)DIP(ip, rdev), mntp);
+		if (nvp != NULL) {
 			/*
 			 * Discard unneeded vnode, but save its inode.
 			 * Note that the lock is carried over in the inode
@@ -2088,8 +2120,8 @@ ufs_vinit(struct mount *mntp, struct vops *specops, struct vops *fifoops,
 	 * Initialize modrev times
 	 */
 	getmicrouptime(&mtv);
-	SETHIGH(ip->i_modrev, mtv.tv_sec);
-	SETLOW(ip->i_modrev, mtv.tv_usec * 4294);
+	SETHIGH(ip->i_modrev, (int32_t)mtv.tv_sec);
+	SETLOW(ip->i_modrev, (int32_t)(mtv.tv_usec * 4294));
 	*vpp = vp;
 	return (0);
 }
@@ -2217,7 +2249,7 @@ ufs_gop_alloc(struct vnode *vp, off_t off, off_t len, int flags,
         len += delta;
 
         while (len > 0) {
-                bsize = MIN(bsize, len);
+                bsize = imin(bsize, (int)len);
 
                 error = UFS_BUF_ALLOC(ip, off, bsize, cred, flags, NULL);
                 if (error) {

@@ -325,15 +325,16 @@ struct indir {
 #define	VTOI(vp)	((struct inode *)(vp)->v_data)
 #define	ITOV(ip)	((ip)->i_vnode)
 
+/* XXX 2038 */
 #define	EXT2FS_ITIMES(ip) do {						\
 	if ((ip)->i_flag & (IN_ACCESS | IN_CHANGE | IN_UPDATE)) {	\
 		(ip)->i_flag |= IN_MODIFIED;				\
 		if ((ip)->i_flag & IN_ACCESS)				\
-			(ip)->i_e2fs_atime = time_second;		\
+			(ip)->i_e2fs_atime = (uint32_t)time_second;	\
 		if ((ip)->i_flag & IN_UPDATE)				\
-			(ip)->i_e2fs_mtime = time_second;		\
+			(ip)->i_e2fs_mtime = (uint32_t)time_second;	\
 		if ((ip)->i_flag & IN_CHANGE) {				\
-			(ip)->i_e2fs_ctime = time_second;		\
+			(ip)->i_e2fs_ctime = (uint32_t)time_second;	\
 			(ip)->i_modrev++;				\
 		}							\
 		(ip)->i_flag &= ~(IN_ACCESS | IN_CHANGE | IN_UPDATE);	\

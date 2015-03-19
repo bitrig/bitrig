@@ -118,8 +118,8 @@ void	ufsdirhash_uninit(void);
 int	ufsdirhash_build(struct inode *);
 doff_t	ufsdirhash_findfree(struct inode *, int, int *);
 doff_t	ufsdirhash_enduseful(struct inode *);
-int	ufsdirhash_lookup(struct inode *, char *, int, doff_t *, struct buf **,
-	    doff_t *);
+int	ufsdirhash_lookup(struct inode *, char *, size_t, doff_t *,
+	    struct buf **, doff_t *);
 void	ufsdirhash_newblk(struct inode *, doff_t);
 void	ufsdirhash_add(struct inode *, struct direct *, doff_t);
 void	ufsdirhash_remove(struct inode *, struct direct *, doff_t);

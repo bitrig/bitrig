@@ -285,7 +285,7 @@ ufs_getlbns(struct vnode *vp, daddr_t bn, struct indir *ap, int *nump)
 			break;
 
 		blockcnt /= MNINDIR(ump);
-		off = (bn / blockcnt) % MNINDIR(ump);
+		off = (int)((bn / blockcnt) % MNINDIR(ump));
 
 		++numlevels;
 		ap->in_lbn = metalbn;

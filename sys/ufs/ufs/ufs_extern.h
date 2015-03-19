@@ -114,7 +114,7 @@ void ufs_makedirentry(struct inode *, struct componentname *,
 			   struct direct *);
 int ufs_direnter(struct vnode *, struct vnode *, struct direct *,
 		      struct componentname *, struct buf *);
-int ufs_dirremove(struct vnode *, struct inode *, int, int);
+int ufs_dirremove(struct vnode *, struct inode *, unsigned long, int);
 int ufs_dirrewrite(struct inode *, struct inode *,
 		        ufsino_t, int, int);
 int ufs_dirempty(struct inode *, ufsino_t, struct ucred *);
