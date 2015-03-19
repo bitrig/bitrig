@@ -2452,8 +2452,6 @@ ffs_clusteracct(struct fs *fs, const struct cg *cgp, daddr_t blkno, int cnt)
 	u_char *freemapp, *mapp;
 	int i, start, end, forw, back, map, bit;
 
-	KASSERT(blkno > 0 && blkno < INT_MAX);
-
 	if (fs->fs_contigsumsize <= 0)
 		return;
 	freemapp = cg_clustersfree(cgp);
