@@ -557,8 +557,8 @@ wapbl_log_position(struct mount *mp, struct fs *fs, struct vnode *devvp,
 	desired_logsize =
 	    lfragtosize(fs, fs->fs_size) / UFS_WAPBL_JOURNAL_SCALE;
 	DPRINTF("desired log size = %lld kB\n", desired_logsize / 1024);
-	desired_logsize = max(desired_logsize, UFS_WAPBL_MIN_JOURNAL_SIZE);
-	desired_logsize = min(desired_logsize, UFS_WAPBL_MAX_JOURNAL_SIZE);
+	desired_logsize = lmax(desired_logsize, UFS_WAPBL_MIN_JOURNAL_SIZE);
+	desired_logsize = lmin(desired_logsize, UFS_WAPBL_MAX_JOURNAL_SIZE);
 	DPRINTF("adjusted desired log size = %lld kB\n",
 	    desired_logsize / 1024);
 
@@ -768,8 +768,8 @@ wapbl_find_log_start(struct mount *mp, struct vnode *vp, off_t logsize,
 		logsize = lfragtosize(fs, fs->fs_dsize) /
 		    UFS_WAPBL_JOURNAL_SCALE;
 		DPRINTF("suggested log size = %lld\n", logsize);
-		logsize = max(logsize, UFS_WAPBL_MIN_JOURNAL_SIZE);
-		logsize = min(logsize, UFS_WAPBL_MAX_JOURNAL_SIZE);
+		logsize = lmax(logsize, UFS_WAPBL_MIN_JOURNAL_SIZE);
+		logsize = lmin(logsize, UFS_WAPBL_MAX_JOURNAL_SIZE);
 		DPRINTF("adjusted log size = %lld\n", logsize);
 	} else {
 		fixedsize = 1;
@@ -903,7 +903,7 @@ wapbl_find_log_start(struct mount *mp, struct vnode *vp, off_t logsize,
 		*addr = best_addr + blkstofrags(fs, indir_blks);
 		*indir_addr = best_addr;
 	}
-	*size = min(desired_blks, best_blks) - indir_blks;
+	*size = lmin(desired_blks, best_blks) - indir_blks;
 	return;
 
 bad:

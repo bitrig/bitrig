@@ -245,7 +245,7 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 	 * of subsequent file growth. Directories however are not
 	 * zero'ed as they should grow back initialized to empty.
 	 */
-	offset = blkoff(fs, length);
+	offset = (int)blkoff(fs, length);
 	if (offset == 0) {
 		DIP_ASSIGN(oip, size, length);
 	} else {
@@ -324,12 +324,18 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 	 */
 	for (i = 0; i < NDADDR; i++) {
 		newblks[i] = DIP(oip, db[i]);
-		DIP_ASSIGN(oip, db[i], oldblks[i]);
+		if (oip->i_ump->um_fstype == UM_UFS1)
+			oip->i_ffs1_db[i] = (int32_t)oldblks[i];
+		else
+			oip->i_ffs2_db[i] = oldblks[i];
 	}
 
 	for (i = 0; i < NIADDR; i++) {
 		newblks[NDADDR + i] = DIP(oip, ib[i]);
-		DIP_ASSIGN(oip, ib[i], oldblks[NDADDR + i]);
+		if (oip->i_ump->um_fstype == UM_UFS1)
+			oip->i_ffs1_ib[i] = (int32_t)oldblks[NDADDR + i];
+		else
+			oip->i_ffs2_ib[i] = oldblks[NDADDR + i];
 	}
 
 	DIP_ASSIGN(oip, size, osize);
@@ -412,7 +418,7 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 			bn += numfrags(fs, newspace);
 			if (oip->i_ump->um_mountp->mnt_wapbl &&
 			    ovp->v_type != VREG) {
-			    	UFS_WAPBL_REGISTER_DEALLOCATION(
+				UFS_WAPBL_REGISTER_DEALLOCATION(
 				    oip->i_ump->um_mountp, fsbtodb(fs, bn),
 				    oldspace - newspace);
 			} else
@@ -470,12 +476,11 @@ int
 ffs_indirtrunc(struct inode *ip, daddr_t lbn, daddr_t dbn,
     daddr_t lastbn, int level, long *countp)
 {
-	int i;
 	struct buf *bp;
 	struct fs *fs = ip->i_fs;
 	struct vnode *vp;
 	void *copy = NULL;
-	daddr_t nb, nlbn, last;
+	daddr_t i, nb, nlbn, last;
 	long blkcount, factor;
 	int nblocks, blocksreleased = 0;
 	int error = 0, allerror = 0;
@@ -570,7 +575,7 @@ ffs_indirtrunc(struct inode *ip, daddr_t lbn, daddr_t dbn,
 		}
 		if (ip->i_ump->um_mountp->mnt_wapbl &&
 		    ((level > SINGLE) || ITOV(ip)->v_type != VREG)) {
-		    	UFS_WAPBL_REGISTER_DEALLOCATION(ip->i_ump->um_mountp,
+			UFS_WAPBL_REGISTER_DEALLOCATION(ip->i_ump->um_mountp,
 			    fsbtodb(fs, nb), fs->fs_bsize);
 		} else
 			ffs_blkfree(ip, nb, fs->fs_bsize);
@@ -597,7 +602,7 @@ ffs_indirtrunc(struct inode *ip, daddr_t lbn, daddr_t dbn,
 		bp->b_flags |= B_INVAL;
 		brelse(bp);
 	}
-		
+
 	*countp = blocksreleased;
 	return (allerror);
 }

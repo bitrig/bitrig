@@ -270,11 +270,11 @@ ffs_read(void *v)
 			xfersize = bytesinfile;
 
 		if (lblktosize(fs, nextlbn) >= DIP(ip, size))
-			error = bread(vp, lbn, size, &bp);
+			error = bread(vp, lbn, (int)size, &bp);
 		else if (doclusterread && lbn - 1 == ip->i_ci.ci_lastr) {
-			error = bread_cluster(vp, lbn, size, &bp);
+			error = bread_cluster(vp, lbn, (int)size, &bp);
 		} else
-			error = bread(vp, lbn, size, &bp);
+			error = bread(vp, lbn, (int)size, &bp);
 
 		if (error)
 			break;
@@ -387,10 +387,10 @@ ffs_write(void *v)
 
 	for (error = 0; uio->uio_resid > 0;) {
 		lbn = lblkno(fs, uio->uio_offset);
-		blkoffset = blkoff(fs, uio->uio_offset);
+		blkoffset = (int)blkoff(fs, uio->uio_offset);
 		xfersize = fs->fs_bsize - blkoffset;
 		if (uio->uio_resid < xfersize)
-			xfersize = uio->uio_resid;
+			xfersize = (int)uio->uio_resid;
 		if (fs->fs_bsize > xfersize)
 			flags |= B_CLRBUF;
 		else
@@ -406,7 +406,7 @@ ffs_write(void *v)
 		}
 		(void)uvm_vnp_uncache(vp);
 
-		size = blksize(fs, ip, lbn) - bp->b_resid;
+		size = (int)(blksize(fs, ip, lbn) - bp->b_resid);
 		if (size < xfersize)
 			xfersize = size;
 

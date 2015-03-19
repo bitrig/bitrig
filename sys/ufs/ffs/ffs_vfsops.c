@@ -1007,7 +1007,7 @@ sbagain:
 			*lp++ = fs->fs_contigsumsize;
 	}
 	mp->mnt_data = (qaddr_t)ump;
-	mp->mnt_stat.f_fsid.val[0] = (long)dev;
+	mp->mnt_stat.f_fsid.val[0] = dev;
 	/* Use on-disk fsid if it exists, else fake it */
 	if (fs->fs_id[0] != 0 && fs->fs_id[1] != 0)
 		mp->mnt_stat.f_fsid.val[1] = fs->fs_id[1];
@@ -1211,11 +1211,11 @@ ffs1_compat_write(struct fs *fs, struct ufsmount *ump)
 	if (fs->fs_magic != FS_UFS1_MAGIC)
 		return; /* UFS2 */
 
-	fs->fs_ffs1_time = fs->fs_time;
-	fs->fs_ffs1_cstotal.cs_ndir = fs->fs_cstotal.cs_ndir;
-	fs->fs_ffs1_cstotal.cs_nbfree = fs->fs_cstotal.cs_nbfree;
-	fs->fs_ffs1_cstotal.cs_nifree = fs->fs_cstotal.cs_nifree;
-	fs->fs_ffs1_cstotal.cs_nffree = fs->fs_cstotal.cs_nffree;
+	fs->fs_ffs1_time = (int32_t)fs->fs_time;
+	fs->fs_ffs1_cstotal.cs_ndir = (int32_t)fs->fs_cstotal.cs_ndir;
+	fs->fs_ffs1_cstotal.cs_nbfree = (int32_t)fs->fs_cstotal.cs_nbfree;
+	fs->fs_ffs1_cstotal.cs_nifree = (int32_t)fs->fs_cstotal.cs_nifree;
+	fs->fs_ffs1_cstotal.cs_nffree = (int32_t)fs->fs_cstotal.cs_nffree;
 }
 
 /*
@@ -1546,7 +1546,7 @@ ffs_vget(struct mount *mp, ino_t ino, struct vnode **vpp)
 	ump = VFSTOUFS(mp);
 	dev = ump->um_dev;
 retry:
-	if ((*vpp = ufs_ihashget(dev, ino)) != NULL)
+	if ((*vpp = ufs_ihashget(dev, (ufsino_t)ino)) != NULL)
 		return (0);
 
 	/* Allocate a new vnode/inode. */
@@ -1566,7 +1566,7 @@ retry:
 	ip->i_vnode = vp;
 	ip->i_fs = fs = ump->um_fs;
 	ip->i_dev = dev;
-	ip->i_number = ino;
+	ip->i_number = (ufsino_t)ino;
 	ip->i_vtbl = &ffs_vtbl;
 
 	/*
@@ -1576,7 +1576,7 @@ retry:
 	 * disk portion of this inode to be read.
 	 */
 	error = ufs_ihashins(ip);
-	
+
 	if (error) {
 		/*
 		 * Inode has not been inserted into the chain, so make sure

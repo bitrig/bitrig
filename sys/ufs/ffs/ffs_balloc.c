@@ -86,7 +86,7 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 	fs = ip->i_fs;
 	p = curproc;
 	lbn = lblkno(fs, startoffset);
-	size = blkoff(fs, startoffset) + size;
+	size = (int)blkoff(fs, startoffset) + size;
 	if (size > fs->fs_bsize)
 		panic("ffs1_balloc: blk too big");
 	if (bpp != NULL)
@@ -116,7 +116,7 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 
 			ip->i_ffs1_size = lblktosize(fs, nb + 1);
 			uvm_vnp_setsize(vp, ip->i_ffs1_size);
-			ip->i_ffs1_db[nb] = newb;
+			ip->i_ffs1_db[nb] = (int32_t)newb;
 			ip->i_flag |= IN_CHANGE | IN_UPDATE;
 			if (bpp != NULL) {
 				if (flags & B_SYNC)
@@ -216,7 +216,7 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 				softdep_setup_allocdirect(ip, lbn, newb, 0,
 				    nsize, 0, bpp ? *bpp : NULL);
 		}
-		ip->i_ffs1_db[lbn] = newb;
+		ip->i_ffs1_db[lbn] = (int32_t)newb;
 		ip->i_flag |= IN_CHANGE | IN_UPDATE;
 		return (0);
 	}
@@ -248,7 +248,7 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 			goto fail;
 		nb = newb;
 
-		*allocblk++ = nb;
+		*allocblk++ = (int32_t)nb;
 		bp = getblk(vp, indirs[1].in_lbn, fs->fs_bsize, 0, 0);
 		bp->b_blkno = fsbtodb(fs, nb);
 		clrbuf(bp);
@@ -266,7 +266,7 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 				goto fail;
 		}
 		allocib = &ip->i_ffs1_ib[indirs[0].in_off];
-		*allocib = nb;
+		*allocib = (int32_t)nb;
 		ip->i_flag |= IN_CHANGE | IN_UPDATE;
 	}
 
@@ -298,7 +298,7 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 			goto fail;
 		}
 		nb = newb;
-		*allocblk++ = nb;
+		*allocblk++ = (int32_t)nb;
 		nbp = getblk(vp, indirs[i].in_lbn, fs->fs_bsize, 0, 0);
 		nbp->b_blkno = fsbtodb(fs, nb);
 		clrbuf(nbp);
@@ -317,7 +317,7 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 				goto fail;
 			}
 		}
-		bap[indirs[i - 1].in_off] = nb;
+		bap[indirs[i - 1].in_off] = (int32_t)nb;
 		if (allocib == NULL && unwindidx < 0)
 			unwindidx = i - 1;
 		/*
@@ -349,7 +349,7 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 			goto fail;
 		}
 		nb = newb;
-		*allocblk++ = nb;
+		*allocblk++ = (int32_t)nb;
 		if (bpp != NULL) {
 			nbp = getblk(vp, lbn, fs->fs_bsize, 0, 0);
 			nbp->b_blkno = fsbtodb(fs, nb);
@@ -360,7 +360,7 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 		if (DOINGSOFTDEP(vp))
 			softdep_setup_allocindir_page(ip, lbn, bp,
 			    indirs[i].in_off, nb, 0, bpp ? *bpp : NULL);
-		bap[indirs[i].in_off] = nb;
+		bap[indirs[i].in_off] = (int32_t)nb;
 		/*
 		 * If required, write synchronously, otherwise use
 		 * delayed write.
@@ -453,14 +453,14 @@ ffs2_balloc(struct inode *ip, off_t off, int size, struct ucred *cred,
 	const struct fs *fs;
 	struct vnode *vp;
 	const struct proc *p;
-	
+
 	vp = ITOV(ip);
 	fs = ip->i_fs;
 	p = curproc;
 	unwindidx = -1;
 
 	lbn = lblkno(fs, off);
-	size = blkoff(fs, off) + size;
+	size = (int)blkoff(fs, off) + size;
 
 	if (size > fs->fs_bsize)
 		panic("ffs2_balloc: block too big");
@@ -482,7 +482,7 @@ ffs2_balloc(struct inode *ip, off_t off, int size, struct ucred *cred,
 		osize = blksize(fs, ip, nb);
 		if (osize < fs->fs_bsize && osize > 0) {
 			error = ffs_realloccg(ip, nb, ffs2_blkpref(ip,
-			    lastlbn, nb, flags, &ip->i_ffs2_db[0]), osize,
+			    lastlbn, (int)nb, flags, &ip->i_ffs2_db[0]), osize,
 			    (int) fs->fs_bsize, flags, cred, bpp, &newb);
 			if (error)
 				return (error);

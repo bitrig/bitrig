@@ -1843,7 +1843,7 @@ wapbl_dump(struct wapbl *wl)
 /****************************************************************/
 
 void
-wapbl_register_deallocation(struct wapbl *wl, daddr_t blk, int len)
+wapbl_register_deallocation(struct wapbl *wl, daddr_t blk, long len)
 {
 
 	wapbl_jlock_assert(wl);
