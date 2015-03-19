@@ -315,12 +315,12 @@ struct ncr53c9x_softc {
 	size_t	sc_cmdlen;	/* Size of command in transit */
 
 	/* Hardware attributes */
-	int sc_freq;		/* SCSI bus frequency in MHz */
-	int sc_id;		/* Our SCSI id */
-	int sc_rev;		/* Chip revision */
-	int sc_features;	/* Chip features */
-	int sc_minsync;		/* Minimum sync period / 4 */
-	int sc_maxxfer;		/* Maximum transfer size */
+	int	sc_freq;	/* SCSI bus frequency in MHz */
+	int	sc_id;		/* Our SCSI id */
+	int	sc_rev;		/* Chip revision */
+	int	sc_features;	/* Chip features */
+	int	sc_minsync;	/* Minimum sync period / 4 */
+	size_t	sc_maxxfer;	/* Maximum transfer size */
 };
 
 /* values for sc_state */
