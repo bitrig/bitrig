@@ -61,18 +61,18 @@ LIST_HEAD(, vm_amap) amap_list;
  */
 
 static struct vm_amap *amap_alloc1(int, int, int);
-static __inline void amap_list_insert(struct vm_amap *);
-static __inline void amap_list_remove(struct vm_amap *);   
+static inline void amap_list_insert(struct vm_amap *);
+static inline void amap_list_remove(struct vm_amap *);
 
-static __inline void
+static inline void
 amap_list_insert(struct vm_amap *amap)
 {
 	LIST_INSERT_HEAD(&amap_list, amap, am_list);
 }
 
-static __inline void
+static inline void
 amap_list_remove(struct vm_amap *amap)
-{ 
+{
 	LIST_REMOVE(amap, am_list);
 }
 
