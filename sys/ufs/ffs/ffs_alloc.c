@@ -1481,7 +1481,8 @@ ffs_fragextend(const struct inode *ip, int cg, daddr_t bprev, int osize,
 		return (0);
 
 	cgp = (struct cg *)bp->b_data;
-	cgp->cg_ffs2_time = cgp->cg_time = time_second;
+	cgp->cg_ffs2_time = time_second;
+	cgp->cg_time = (int32_t)cgp->cg_ffs2_time;
 
 	bno = dtogd(fs, bprev);
 	for (i = numfrags(fs, osize); i < frags; i++)
@@ -1543,7 +1544,8 @@ ffs_alloccg(const struct inode *ip, int cg, daddr_t bpref, int size, int flags)
 		return (0);
 	}
 
-	cgp->cg_ffs2_time = cgp->cg_time = time_second;
+	cgp->cg_ffs2_time = time_second;
+	cgp->cg_time = (int32_t)cgp->cg_ffs2_time;
 
 	if (size == fs->fs_bsize) {
 		/* allocate and return a complete data block */
@@ -1767,7 +1769,8 @@ ffs_clusteralloc(const struct inode *ip, int cg, daddr_t bpref, int len,
 	/*
 	 * Allocate the cluster that we have found.
 	 */
-	cgp->cg_ffs2_time = cgp->cg_time = time_second;
+	cgp->cg_ffs2_time = time_second;
+	cgp->cg_time = (int32_t)cgp->cg_ffs2_time;
 
 #ifdef DIAGNOSTIC
 	for (i = 1; i <= len; i++)
@@ -1829,7 +1832,8 @@ ffs_nodealloccg(const struct inode *ip, int cg, daddr_t ipref, int mode,
 	 * We are committed to the allocation from now on, so update the time
 	 * on the cylinder group.
 	 */
-	cgp->cg_ffs2_time = cgp->cg_time = time_second;
+	cgp->cg_ffs2_time = time_second;
+	cgp->cg_time = (int32_t)cgp->cg_ffs2_time;
 
 	/*
 	 * If there was a preferred location for the new inode, try to find it.
@@ -1988,7 +1992,8 @@ ffs_blkalloc_ump(struct ufsmount *ump, daddr_t bno, long size)
 		brelse(bp);
 		return EIO;
 	}
-	cgp->cg_ffs2_time = cgp->cg_time = time_second;
+	cgp->cg_ffs2_time = time_second;
+	cgp->cg_time = (int32_t)cgp->cg_ffs2_time;
 	cgbno = dtogd(fs, bno);
 	blksfree = cg_blksfree(cgp);
 
@@ -2076,7 +2081,8 @@ ffs_wapbl_blkfree(struct fs *fs, struct vnode *devvp, daddr_t bno, long size)
 		return;
 
 	cgp = (struct cg *)bp->b_data;
-	cgp->cg_ffs2_time = cgp->cg_time = time_second;
+	cgp->cg_ffs2_time = time_second;
+	cgp->cg_time = (int32_t)cgp->cg_ffs2_time;
 
 	bno = dtogd(fs, bno);
 	if (size == fs->fs_bsize) {
@@ -2182,7 +2188,8 @@ ffs_blkfree(struct inode *ip, daddr_t bno, long size)
 		return;
 
 	cgp = (struct cg *)bp->b_data;
-	cgp->cg_ffs2_time = cgp->cg_time = time_second;
+	cgp->cg_ffs2_time = time_second;
+	cgp->cg_time = (int32_t)cgp->cg_ffs2_time;
 
 	bno = dtogd(fs, bno);
 	if (size == fs->fs_bsize) {
@@ -2291,7 +2298,8 @@ ffs_freefile(const struct inode *pip, ufsino_t ino, mode_t mode)
 		return (0);
 
 	cgp = (struct cg *)bp->b_data;
-	cgp->cg_ffs2_time = cgp->cg_time = time_second;
+	cgp->cg_ffs2_time = time_second;
+	cgp->cg_time = (int32_t)cgp->cg_ffs2_time;
 
 	ino %= fs->fs_ipg;
 	if (isclr(cg_inosused(cgp), ino)) {
