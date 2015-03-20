@@ -195,7 +195,7 @@ msdosfs_lookup(void *v)
 	
 #ifdef MSDOSFS_DEBUG
 	printf("msdosfs_lookup(): dos version of filename '%.11s', length %d\n",
-	    dosfilename, cnp->cn_namelen);
+	    dosfilename, (int)cnp->cn_namelen);
 #endif
 
 	/*

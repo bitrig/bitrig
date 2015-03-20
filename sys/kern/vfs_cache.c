@@ -79,8 +79,10 @@ namecache_compare(struct namecache *n1, struct namecache *n2)
 {
 	if (n1->nc_nlen == n2->nc_nlen)
 		return (memcmp(n1->nc_name, n2->nc_name, n1->nc_nlen));
+	else if (n1->nc_nlen > n2->nc_nlen)
+		return (1);
 	else
-		return (n1->nc_nlen - n2->nc_nlen);
+		return (-1);
 }
 
 RB_GENERATE(namecache_rb_cache, namecache, n_rbcache, namecache_compare);

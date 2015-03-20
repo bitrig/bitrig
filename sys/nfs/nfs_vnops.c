@@ -2366,7 +2366,7 @@ nfs_readdirplusrpc(struct vnode *vp, struct uio *uiop, struct ucred *cred,
 				    NFS_DIRHDSIZ;
 				uiop->uio_iov->iov_len -= NFS_DIRHDSIZ;
 				cnp->cn_nameptr = uiop->uio_iov->iov_base;
-				cnp->cn_namelen = len;
+				cnp->cn_namelen = (u_char)len;
 				nfsm_mtouio(uiop, len);
 				cp = uiop->uio_iov->iov_base;
 				tlen -= NFS_DIRHDSIZ + len;

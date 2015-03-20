@@ -387,11 +387,11 @@ dirloop:
 	cp = cnp->cn_nameptr;
 	while (*cp && (*cp != '/'))
 		cp++;
-	cnp->cn_namelen = cp - cnp->cn_nameptr;
-	if (cnp->cn_namelen > NAME_MAX) {
+	if (cp - cnp->cn_nameptr > NAME_MAX) {
 		error = ENAMETOOLONG;
 		goto bad;
 	}
+	cnp->cn_namelen = (u_char)(cp - cnp->cn_nameptr);
 
 #ifdef NAMEI_DIAGNOSTIC
 	{ char c = *cp;

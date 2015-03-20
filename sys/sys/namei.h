@@ -91,7 +91,7 @@ struct nameidata {
 		 */
 		char	*cn_pnbuf;	/* pathname buffer */
 		char	*cn_nameptr;	/* pointer to looked up name */
-		long	cn_namelen;	/* length of looked up component */
+		u_char	cn_namelen;	/* length of looked up component */
 		long	cn_consume;	/* chars to consume in lookup() */
 	} ni_cnd;
 };
@@ -176,7 +176,7 @@ struct	namecache {
 	struct	vnode *nc_vp;		/* vnode the name refers to */
 	u_int	nc_dvpid;		/* capability number of nc_dvp */
 	u_int	nc_vpid;		/* capability number of nc_vp */
-	char	nc_nlen;		/* length of name */
+	u_char	nc_nlen;		/* length of name */
 	char	nc_name[NAMECACHE_MAXLEN];	/* segment name */
 };
 
