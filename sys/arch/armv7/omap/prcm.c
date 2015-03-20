@@ -383,7 +383,6 @@ prcm_v3_enablemodule(struct prcm_softc *sc, int mod)
 		iclk = bus_space_read_4(sc->sc_iot, sc->sc_prcm, ireg);
 		bus_space_write_4(sc->sc_iot, sc->sc_prcm, ireg, iclk | mbit);
 	}
-	printf("\n");
 }
 
 void
