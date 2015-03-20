@@ -72,7 +72,7 @@ int doingcache = 1;			/* 1 => enable the cache */
 struct pool nch_pool;
 
 void cache_zap(struct namecache *);
-u_long nextvnodeid;
+u_int nextvnodeid;
 
 static int
 namecache_compare(struct namecache *n1, struct namecache *n2)
@@ -140,7 +140,7 @@ cache_lookup(struct vnode *dvp, struct vnode **vpp,
 	struct namecache n;
 	struct vnode *vp;
 	struct proc *p = curproc;
-	u_long vpid;
+	u_int vpid;
 	int error;
 
 	*vpp = NULL;

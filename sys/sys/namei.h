@@ -173,9 +173,9 @@ struct	namecache {
 	RB_ENTRY(namecache) n_rbcache;  /* Namecache rb tree from vnode */
 	TAILQ_ENTRY(namecache) nc_me;	/* ncp's referring to me */
 	struct	vnode *nc_dvp;		/* vnode of parent of name */
-	u_long	nc_dvpid;		/* capability number of nc_dvp */
 	struct	vnode *nc_vp;		/* vnode the name refers to */
-	u_long	nc_vpid;		/* capability number of nc_vp */
+	u_int	nc_dvpid;		/* capability number of nc_dvp */
+	u_int	nc_vpid;		/* capability number of nc_vp */
 	char	nc_nlen;		/* length of name */
 	char	nc_name[NAMECACHE_MAXLEN];	/* segment name */
 };
