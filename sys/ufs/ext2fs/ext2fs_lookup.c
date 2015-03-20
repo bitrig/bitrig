@@ -248,8 +248,8 @@ ext2fs_lookup(void *v)
 	struct vnode **vpp = ap->a_vpp;
 	struct componentname *cnp = ap->a_cnp;
 	struct ucred *cred = cnp->cn_cred;
-	int flags = cnp->cn_flags;
-	int nameiop = cnp->cn_nameiop;
+	u_long flags = cnp->cn_flags;
+	u_long nameiop = cnp->cn_nameiop;
 	struct proc *p = cnp->cn_proc;
 	int dirblksize, entry_found = 0, error;
 

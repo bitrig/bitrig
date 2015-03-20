@@ -122,8 +122,8 @@ cd9660_lookup(v)
 	struct vnode **vpp = ap->a_vpp;
 	struct componentname *cnp = ap->a_cnp;
 	struct ucred *cred = cnp->cn_cred;
-	int flags;
-	int nameiop = cnp->cn_nameiop;
+	u_long flags;
+	u_long nameiop = cnp->cn_nameiop;
 	struct proc *p = cnp->cn_proc;
 
 	cnp->cn_flags &= ~PDIRUNLOCK;

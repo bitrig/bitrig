@@ -108,8 +108,8 @@ msdosfs_lookup(void *v)
 	u_char dosfilename[11];
 	u_char *adjp;
 	int adjlen;
-	int flags;
-	int nameiop = cnp->cn_nameiop;
+	u_long flags;
+	u_long nameiop = cnp->cn_nameiop;
 	int wincnt = 1;
 	int chksum = -1, chksum_ok;
 	int olddos = 1;
@@ -364,7 +364,7 @@ notfound:;
 	 * the pathname and the directory hasn't been removed.
 	 */
 #ifdef MSDOSFS_DEBUG
-	printf("msdosfs_lookup(): op %d, refcnt %d\n",
+	printf("msdosfs_lookup(): op %lu, refcnt %d\n",
 	    nameiop, dp->de_refcnt);
 	printf("               slotcount %d, slotoffset %d\n",
 	    slotcount, slotoffset);

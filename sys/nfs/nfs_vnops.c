@@ -699,7 +699,7 @@ nfs_lookup(void *v)
 	struct vnode **vpp = ap->a_vpp;
 	struct proc *p = cnp->cn_proc;
 	struct nfsm_info	info;
-	int flags;
+	u_long flags;
 	struct vnode *newvp;
 	u_int32_t *tl;
 	int32_t t1;

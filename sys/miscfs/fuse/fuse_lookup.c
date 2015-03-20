@@ -43,8 +43,8 @@ fusefs_lookup(void *v)
 	struct componentname *cnp = ap->a_cnp;
 	struct proc *p = cnp->cn_proc;
 	struct ucred *cred = cnp->cn_cred;
-	int flags;
-	int nameiop = cnp->cn_nameiop;
+	u_long flags;
+	u_long nameiop = cnp->cn_nameiop;
 	int wantparent;
 	int error = 0;
 	uint64_t nid;
