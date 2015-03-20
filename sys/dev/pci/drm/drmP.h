@@ -37,6 +37,9 @@
 
 #if defined(_KERNEL) || defined(__KERNEL__)
 
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wshorten-64-to-32"
+#endif
 
 #include <sys/param.h>
 #include <sys/queue.h>
