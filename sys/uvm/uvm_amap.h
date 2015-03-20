@@ -215,16 +215,6 @@ struct vm_amap {
 #ifdef _KERNEL
 
 /*
- * macros
- */
-
-/* AMAP_B2SLOT: convert byte offset to slot */
-#define AMAP_B2SLOT(S,B) {						\
-	KASSERT(((B) & (PAGE_SIZE - 1)) == 0);				\
-	(S) = (B) >> PAGE_SHIFT;					\
-}
-
-/*
  * lock/unlock/refs/flags macros
  */
 

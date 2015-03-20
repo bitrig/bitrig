@@ -63,6 +63,7 @@ LIST_HEAD(, vm_amap) amap_list;
 static struct vm_amap *amap_alloc1(int, int, int);
 static inline void amap_list_insert(struct vm_amap *);
 static inline void amap_list_remove(struct vm_amap *);
+static inline int amap_b2slot(voff_t);
 
 static inline void
 amap_list_insert(struct vm_amap *amap)
@@ -74,6 +75,14 @@ static inline void
 amap_list_remove(struct vm_amap *amap)
 {
 	LIST_REMOVE(amap, am_list);
+}
+
+static inline int
+amap_b2slot(voff_t byte_off)
+{
+	KASSERT(byte_off >= 0 && byte_off < INT_MAX);
+	KASSERT((byte_off & (PAGE_SIZE - 1)) == 0);
+	return ((int)(byte_off >> PAGE_SHIFT));
 }
 
 #ifdef UVM_AMAP_PPREF
@@ -219,8 +228,8 @@ amap_alloc(vaddr_t sz, vaddr_t padsz, int waitf)
 	struct vm_amap *amap;
 	int slots, padslots;
 
-	AMAP_B2SLOT(slots, sz);		/* load slots */
-	AMAP_B2SLOT(padslots, padsz);
+	slots = amap_b2slot(sz);
+	padslots = amap_b2slot(padsz);
 
 	amap = amap_alloc1(slots, padslots, waitf);
 	if (amap) {
@@ -283,8 +292,8 @@ amap_extend(struct vm_map_entry *entry, vsize_t addsize)
 	 * forget that ar_pageoff could be non-zero: this means that
 	 * there are some unused slots before us in the amap.
 	 */
-	AMAP_B2SLOT(slotmapped, entry->end - entry->start); /* slots mapped */
-	AMAP_B2SLOT(slotadd, addsize);			/* slots to add */
+	slotmapped = amap_b2slot(entry->end - entry->start);
+	slotadd = amap_b2slot(addsize);
 	slotneed = slotoff + slotmapped + slotadd;
 
 	/*
@@ -430,7 +439,7 @@ amap_share_protect(struct vm_map_entry *entry, vm_prot_t prot)
 	struct vm_amap *amap = entry->aref.ar_amap;
 	int slots, lcv, slot, stop;
 
-	AMAP_B2SLOT(slots, (entry->end - entry->start));
+	slots = amap_b2slot(entry->end - entry->start);
 	stop = entry->aref.ar_pageoff + slots;
 
 	if (slots < amap->am_nused) {
@@ -570,7 +579,7 @@ amap_copy(struct vm_map *map, struct vm_map_entry *entry, int waitf,
 	}
 
 	/* looks like we need to copy the map. */
-	AMAP_B2SLOT(slots, entry->end - entry->start);
+	slots = amap_b2slot(entry->end - entry->start);
 	amap = amap_alloc1(slots, 0, waitf);
 	if (amap == NULL)
 		return;
@@ -758,7 +767,7 @@ amap_splitref(struct vm_aref *origref, struct vm_aref *splitref, vaddr_t offset)
 {
 	int leftslots;
 
-	AMAP_B2SLOT(leftslots, offset);
+	leftslots = amap_b2slot(offset);
 	if (leftslots == 0)
 		panic("amap_splitref: split at zero offset");
 
@@ -1029,7 +1038,7 @@ amap_lookup(struct vm_aref *aref, vaddr_t offset)
 	int slot;
 	struct vm_amap *amap = aref->ar_amap;
 
-	AMAP_B2SLOT(slot, offset);
+	slot = amap_b2slot(offset);
 	slot += aref->ar_pageoff;
 
 	if (slot >= amap->am_nslot)
@@ -1051,7 +1060,7 @@ amap_lookups(struct vm_aref *aref, vaddr_t offset,
 	int slot;
 	struct vm_amap *amap = aref->ar_amap;
 
-	AMAP_B2SLOT(slot, offset);
+	slot = amap_b2slot(offset);
 	slot += aref->ar_pageoff;
 
 	if ((slot + (npages - 1)) >= amap->am_nslot)
@@ -1077,7 +1086,7 @@ amap_add(struct vm_aref *aref, vaddr_t offset, struct vm_anon *anon,
 	int slot;
 	struct vm_amap *amap = aref->ar_amap;
 
-	AMAP_B2SLOT(slot, offset);
+	slot = amap_b2slot(offset);
 	slot += aref->ar_pageoff;
 
 	if (slot < 0 || slot >= amap->am_nslot)
@@ -1117,7 +1126,7 @@ amap_unadd(struct vm_aref *aref, vaddr_t offset)
 	int ptr, slot;
 	struct vm_amap *amap = aref->ar_amap;
 
-	AMAP_B2SLOT(slot, offset);
+	slot = amap_b2slot(offset);
 	slot += aref->ar_pageoff;
 
 	if (slot >= amap->am_nslot)
