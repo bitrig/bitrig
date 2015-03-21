@@ -821,16 +821,17 @@ amap_pp_establish(struct vm_amap *amap)
 void
 amap_pp_adjref(struct vm_amap *amap, int curslot, vsize_t slotlen, int adjval)
 {
- 	int stopslot, *ppref, lcv, prevlcv;
- 	int ref, len, prevref, prevlen;
+	int stopslot, *ppref, lcv, prevlcv;
+	int ref, len, prevref, prevlen;
 
-	stopslot = curslot + slotlen;
+	KASSERT(curslot + slotlen < INT_MAX);
+	stopslot = (int)(curslot + slotlen);
 	ppref = amap->am_ppref;
- 	prevlcv = 0;
+	prevlcv = 0;
 
 	/*
- 	 * first advance to the correct place in the ppref array,
- 	 * fragment if needed.
+	 * first advance to the correct place in the ppref array,
+	 * fragment if needed.
 	 */
 	for (lcv = 0 ; lcv < curslot ; lcv += len) {
 		pp_getreflen(ppref, lcv, &ref, &len);
@@ -847,7 +848,7 @@ amap_pp_adjref(struct vm_amap *amap, int curslot, vsize_t slotlen, int adjval)
 		/* Ensure that the "prevref == ref" test below always
 		 * fails, since we're starting from the beginning of
 		 * the ppref array; that is, there is no previous
-		 * chunk.  
+		 * chunk.
 		 */
 		prevref = -1;
 		prevlen = 0;
