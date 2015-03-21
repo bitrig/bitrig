@@ -187,8 +187,9 @@ amap_alloc1(int slots, int padslots, int waitf)
 	if (amap == NULL)
 		return(NULL);
 
-	totalslots = malloc_roundup((slots + padslots) * MALLOC_SLOT_UNIT) /
-	    MALLOC_SLOT_UNIT;
+	totalslots = slots + padslots;
+	totalslots = (int)(malloc_roundup(totalslots * MALLOC_SLOT_UNIT) /
+	    MALLOC_SLOT_UNIT);
 	amap->am_ref = 1;
 	amap->am_flags = 0;
 #ifdef UVM_AMAP_PPREF
@@ -342,8 +343,8 @@ amap_extend(struct vm_map_entry *entry, vsize_t addsize)
 	if (slotneed >= UVM_AMAP_LARGE)
 		return E2BIG;
 
-	slotalloc = malloc_roundup(slotneed * MALLOC_SLOT_UNIT) /
-	    MALLOC_SLOT_UNIT;
+	slotalloc = (int)(malloc_roundup(slotneed * MALLOC_SLOT_UNIT) /
+	    MALLOC_SLOT_UNIT);
 #ifdef UVM_AMAP_PPREF
 	newppref = NULL;
 	if (amap->am_ppref && amap->am_ppref != PPREF_NONE) {
