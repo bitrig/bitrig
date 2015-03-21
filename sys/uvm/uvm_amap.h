@@ -95,7 +95,7 @@ void		amap_splitref(struct vm_aref *, struct vm_aref *, vaddr_t);
 					/* remove an anon from an amap */
 void		amap_unadd(struct vm_aref *, vaddr_t);
 					/* drop reference to an amap */
-void		amap_unref(struct vm_amap *, vaddr_t, vsize_t, int);
+void		amap_unref(struct vm_amap *, int, vsize_t, int);
 					/* remove all anons from amap */
 void		amap_wipeout(struct vm_amap *);
 boolean_t	amap_swap_off(int, int);

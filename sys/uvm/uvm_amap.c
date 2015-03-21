@@ -1182,7 +1182,7 @@ amap_ref(struct vm_amap *amap, int offset, vsize_t len, int flags)
  * => amap must be unlocked (we will lock it).
  */
 void
-amap_unref(struct vm_amap *amap, vaddr_t offset, vsize_t len, boolean_t all)
+amap_unref(struct vm_amap *amap, int offset, vsize_t len, boolean_t all)
 {
 
 	/* if we are the last reference, free the amap and return. */
