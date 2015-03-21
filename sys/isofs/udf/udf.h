@@ -114,7 +114,7 @@ struct udf_dirstream {
 		((daddr_t)(sector) << ump->um_bshift) / DEV_BSIZE, size, bp)
 
 static __inline int
-udf_readlblks(struct umount *ump, int sector, int size, struct buf **bp)
+udf_readlblks(struct umount *ump, daddr_t sector, int size, struct buf **bp)
 {
 	return (RDSECTOR(ump->um_devvp, sector,
 			 (size + ump->um_bmask) & ~ump->um_bmask, bp));

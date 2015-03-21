@@ -1264,9 +1264,9 @@ udf_bmap_internal(struct unode *up, off_t offset, daddr_t *sector,
 	void *icb;
 	struct icb_tag *tag;
 	uint32_t icblen = 0;
-	daddr_t lsector;
+	daddr_t lsector, p_offset;
 	int ad_offset, ad_num = 0;
-	int i, p_offset, l_ea, l_ad;
+	int i, l_ea, l_ad;
 
 	ump = up->u_ump;
 	xfentry = up->u_fentry;
