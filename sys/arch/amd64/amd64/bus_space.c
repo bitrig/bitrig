@@ -636,19 +636,19 @@ bus_space_subregion(bus_space_tag_t t, bus_space_handle_t bsh,
 u_int8_t
 x86_bus_space_io_read_1(bus_space_handle_t h, bus_size_t o)
 {
-	return (inb(h + o));
+	return (inb((unsigned int)(h + o)));
 }
 
 u_int16_t
 x86_bus_space_io_read_2(bus_space_handle_t h, bus_size_t o)
 {
-	return (inw(h + o));
+	return (inw((unsigned int)(h + o)));
 }
 
 u_int32_t
 x86_bus_space_io_read_4(bus_space_handle_t h, bus_size_t o)
 {
-	return (inl(h + o));
+	return (inl((unsigned int)(h + o)));
 }
 
 u_int64_t
@@ -661,21 +661,21 @@ void
 x86_bus_space_io_read_multi_1(bus_space_handle_t h, bus_size_t o,
     u_int8_t *ptr, bus_size_t cnt)
 {
-	insb(h + o, ptr, cnt);
+	insb((unsigned int)(h + o), ptr, (int)cnt);
 }
 
 void
 x86_bus_space_io_read_multi_2(bus_space_handle_t h, bus_size_t o,
     u_int16_t *ptr, bus_size_t cnt)
 {
-	insw(h + o, ptr, cnt);
+	insw((unsigned int)(h + o), ptr, (int)cnt);
 }
 
 void
 x86_bus_space_io_read_multi_4(bus_space_handle_t h, bus_size_t o,
     u_int32_t *ptr, bus_size_t cnt)
 {
-	insl(h + o, ptr, cnt);
+	insl((unsigned int)(h + o), ptr, (int)cnt);
 }
 
 void
@@ -693,7 +693,7 @@ x86_bus_space_io_read_region_1(bus_space_handle_t h,
 	void *dummy2;
 	int dummy3;
 	int __x;
-	u_int32_t port = h + o;
+	u_int32_t port = (uint32_t)(h + o);
 	__asm volatile(" cld				;"
 	"1:	inb %w1,%%al				;"
 	"	stosb					;"
@@ -713,7 +713,7 @@ x86_bus_space_io_read_region_2(bus_space_handle_t h,
 	void *dummy2;
 	int dummy3;
 	int __x;
-	u_int32_t port = h + o;
+	u_int32_t port = (uint32_t)(h + o);
 	__asm volatile(" cld				;"
 	"1:	inw %w1,%%ax				;"
 	"	stosw					;"
@@ -733,7 +733,7 @@ x86_bus_space_io_read_region_4(bus_space_handle_t h,
 	void *dummy2;
 	int dummy3;
 	int __x;
-	u_int32_t port = h + o;
+	u_int32_t port = (uint32_t)(h + o);
 	__asm volatile("cld				;"
 	"1:	inl %w1,%%eax				;"
 	"	stosl					;"
@@ -755,19 +755,19 @@ x86_bus_space_io_read_region_8(bus_space_handle_t h,
 void
 x86_bus_space_io_write_1(bus_space_handle_t h, bus_size_t o, u_int8_t v)
 {
-	outb(h + o, v);
+	outb((unsigned int)(h + o), v);
 }
 
 void
 x86_bus_space_io_write_2(bus_space_handle_t h, bus_size_t o, u_int16_t v)
 {
-	outw(h + o, v);
+	outw((unsigned int)(h + o), v);
 }
 
 void
 x86_bus_space_io_write_4(bus_space_handle_t h, bus_size_t o, u_int32_t v)
 {
-	outl(h + o, v);
+	outl((unsigned int)(h + o), v);
 }
 
 void
@@ -780,21 +780,21 @@ void
 x86_bus_space_io_write_multi_1(bus_space_handle_t h,
     bus_size_t o, const u_int8_t *ptr, bus_size_t cnt)
 {
-	outsb(h + o, ptr, cnt);
+	outsb((unsigned int)(h + o), ptr, (int)cnt);
 }
 
 void
 x86_bus_space_io_write_multi_2(bus_space_handle_t h,
     bus_size_t o, const u_int16_t *ptr, bus_size_t cnt)
 {
-	outsw(h + o, ptr, cnt);
+	outsw((unsigned int)(h + o), ptr, (int)cnt);
 }
 
 void
 x86_bus_space_io_write_multi_4(bus_space_handle_t h,
     bus_size_t o, const u_int32_t *ptr, bus_size_t cnt)
 {
-	outsl(h + o, ptr, cnt);
+	outsl((unsigned int)(h + o), ptr, (int)cnt);
 }
 
 void
@@ -812,7 +812,7 @@ x86_bus_space_io_write_region_1(bus_space_handle_t h,
 	void *dummy2;
 	int dummy3;
 	int __x;
-	u_int32_t port = h + o;
+	u_int32_t port = (u_int32_t)(h + o);
 	__asm volatile("cld				;"
 	"1:	lodsb					;"
 	"	outb %%al,%w1				;"
@@ -832,7 +832,7 @@ x86_bus_space_io_write_region_2(bus_space_handle_t h,
 	void *dummy2;
 	int dummy3;
 	int __x;
-	u_int32_t port = h + o;
+	u_int32_t port = (uint32_t)(h + o);
 	__asm volatile("cld				;"
 	"1:	lodsw					;"
 	"	outw %%ax,%w1				;"
@@ -852,7 +852,7 @@ x86_bus_space_io_write_region_4(bus_space_handle_t h,
 	void *dummy2;
 	int dummy3;
 	int __x;
-	u_int32_t port = h + o;
+	u_int32_t port = (uint32_t)(h + o);
 	__asm volatile(" cld				;"
 	"1:	lodsl					;"
 	"	outl %%eax,%w1				;"
@@ -878,7 +878,7 @@ x86_bus_space_io_set_multi_1(bus_space_handle_t h, bus_size_t o,
 	bus_addr_t addr = h + o;
 
 	while (c--)
-		outb(addr, v);
+		outb((unsigned int)addr, v);
 }
 
 void
@@ -888,7 +888,7 @@ x86_bus_space_io_set_multi_2(bus_space_handle_t h, bus_size_t o,
 	bus_addr_t addr = h + o;
 
 	while (c--)
-		outw(addr, v);
+		outw((unsigned int)addr, v);
 }
 
 void
@@ -898,7 +898,7 @@ x86_bus_space_io_set_multi_4(bus_space_handle_t h, bus_size_t o,
 	bus_addr_t addr = h + o;
 
 	while (c--)
-		outl(addr, v);
+		outl((unsigned int)addr, v);
 }
 
 void
@@ -915,7 +915,7 @@ x86_bus_space_io_set_region_1(bus_space_handle_t h, bus_size_t o,
 	bus_addr_t addr = h + o;
 
 	for (; c != 0; c--, addr++)
-		outb(addr, v);
+		outb((unsigned int)addr, v);
 }
 
 void
@@ -925,7 +925,7 @@ x86_bus_space_io_set_region_2(bus_space_handle_t h, bus_size_t o,
 	bus_addr_t addr = h + o;
 
 	for (; c != 0; c--, addr += sizeof(v))
-		outw(addr, v);
+		outw((unsigned int)addr, v);
 }
 
 void
@@ -935,7 +935,7 @@ x86_bus_space_io_set_region_4(bus_space_handle_t h, bus_size_t o,
 	bus_addr_t addr = h + o;
 
 	for (; c != 0; c--, addr += sizeof(v))
-		outl(addr, v);
+		outl((unsigned int)addr, v);
 }
 
 void
@@ -955,12 +955,12 @@ x86_bus_space_io_copy_1(bus_space_handle_t h1, bus_size_t o1,
 	if (addr1 >= addr2) {
 		/* src after dest: copy forward */
 		for (; c != 0; c--, addr1++, addr2++)
-			outb(addr2, inb(addr1));
+			outb((unsigned int)addr2, inb((unsigned int)addr1));
 	} else {
 		/* dest after src: copy backwards */
 		for (addr1 += (c - 1), addr2 += (c - 1);
 		    c != 0; c--, addr1--, addr2--)
-			outb(addr2, inb(addr1));
+			outb((unsigned int)addr2, inb((unsigned int)addr1));
 	}
 }
 
@@ -974,12 +974,12 @@ x86_bus_space_io_copy_2(bus_space_handle_t h1, bus_size_t o1,
 	if (addr1 >= addr2) {
 		/* src after dest: copy forward */
 		for (; c != 0; c--, addr1 += 2, addr2 += 2)
-			outw(addr2, inw(addr1));
+			outw((unsigned int)addr2, inw((unsigned int)addr1));
 	} else {
 		/* dest after src: copy backwards */
 		for (addr1 += 2 * (c - 1), addr2 += 2 * (c - 1);
 		    c != 0; c--, addr1 -= 2, addr2 -= 2)
-			outw(addr2, inw(addr1));
+			outw((unsigned int)addr2, inw((unsigned int)addr1));
 	}
 }
 
@@ -993,12 +993,12 @@ x86_bus_space_io_copy_4(bus_space_handle_t h1, bus_size_t o1,
 	if (addr1 >= addr2) {
 		/* src after dest: copy forward */
 		for (; c != 0; c--, addr1 += 4, addr2 += 4)
-			outl(addr2, inl(addr1));
+			outl((unsigned int)addr2, inl((unsigned int)addr1));
 	} else {
 		/* dest after src: copy backwards */
 		for (addr1 += 4 * (c - 1), addr2 += 4 * (c - 1);
 		    c != 0; c--, addr1 -= 4, addr2 -= 4)
-			outl(addr2, inl(addr1));
+			outl((unsigned int)addr2, inl((unsigned int)addr1));
 	}
 }
 
