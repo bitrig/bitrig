@@ -85,7 +85,7 @@ struct vm_anon	*amap_lookup(struct vm_aref *, vaddr_t);
 					/* lookup multiple anons */
 void		amap_lookups(struct vm_aref *, vaddr_t, struct vm_anon **, int);
 					/* add a reference to an amap */
-void		amap_ref(struct vm_amap *, vaddr_t, vsize_t, int);
+void		amap_ref(struct vm_amap *, int, vsize_t, int);
 					/* get number of references of amap */
 int		amap_refs(struct vm_amap *);
 					/* protect pages in a shared amap */

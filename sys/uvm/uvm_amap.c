@@ -1154,9 +1154,8 @@ amap_unadd(struct vm_aref *aref, vaddr_t offset)
  * => called at fork time to gain the child's reference
  */
 void
-amap_ref(struct vm_amap *amap, vaddr_t offset, vsize_t len, int flags)
+amap_ref(struct vm_amap *amap, int offset, vsize_t len, int flags)
 {
-
 	amap->am_ref++;
 	if (flags & AMAP_SHARED)
 		amap->am_flags |= AMAP_SHARED;
