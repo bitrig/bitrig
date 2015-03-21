@@ -574,8 +574,8 @@ pfsync_state_import(struct pfsync_state *sp, int flags)
 
 	/* copy to state */
 	bcopy(&sp->rt_addr, &st->rt_addr, sizeof(st->rt_addr));
-	st->creation = time_uptime - ntohl(sp->creation);
-	st->expire = time_uptime;
+	st->creation = (int32_t)(time_uptime - ntohl(sp->creation));
+	st->expire = (int32_t)time_uptime;
 	if (ntohl(sp->expire)) {
 		u_int32_t timeout;
 
@@ -606,7 +606,7 @@ pfsync_state_import(struct pfsync_state *sp, int flags)
 	st->anchor.ptr = NULL;
 	st->rt_kif = NULL;
 
-	st->pfsync_time = time_uptime;
+	st->pfsync_time = (int32_t)time_uptime;
 	st->sync_state = PFSYNC_S_NONE;
 
 	/* XXX when we have anchors, use STATE_INC_COUNTERS */
@@ -951,10 +951,10 @@ pfsync_in_upd(caddr_t buf, int len, int count, int flags)
 		if (sync < 2) {
 			pfsync_alloc_scrub_memory(&sp->dst, &st->dst);
 			pf_state_peer_ntoh(&sp->dst, &st->dst);
-			st->expire = time_uptime;
+			st->expire = (int32_t)time_uptime;
 			st->timeout = sp->timeout;
 		}
-		st->pfsync_time = time_uptime;
+		st->pfsync_time = (int32_t)time_uptime;
 
 		if (sync) {
 			pfsyncstats.pfsyncs_stale++;
@@ -1025,10 +1025,10 @@ pfsync_in_upd_c(caddr_t buf, int len, int count, int flags)
 		if (sync < 2) {
 			pfsync_alloc_scrub_memory(&up->dst, &st->dst);
 			pf_state_peer_ntoh(&up->dst, &st->dst);
-			st->expire = time_uptime;
+			st->expire = (int32_t)time_uptime;
 			st->timeout = up->timeout;
 		}
-		st->pfsync_time = time_uptime;
+		st->pfsync_time = (int32_t)time_uptime;
 
 		if (sync) {
 			pfsyncstats.pfsyncs_stale++;
@@ -1560,7 +1560,8 @@ pfsync_sendout(void)
 	}
 
 	if (max_linkhdr + sc->sc_len > MHLEN) {
-		MCLGETI(m, M_DONTWAIT, NULL, max_linkhdr + sc->sc_len);
+		MCLGETI(m, M_DONTWAIT, NULL,
+		    (unsigned int)(max_linkhdr + sc->sc_len));
 		if (!ISSET(m->m_flags, M_EXT)) {
 			m_free(m);
 			sc->sc_if.if_oerrors++;
@@ -1570,7 +1571,7 @@ pfsync_sendout(void)
 		}
 	}
 	m->m_data += max_linkhdr;
-	m->m_len = m->m_pkthdr.len = sc->sc_len;
+	m->m_len = m->m_pkthdr.len = (int)sc->sc_len;
 
 	/* build the ip header */
 	ip = mtod(m, struct ip *);
@@ -1671,10 +1672,10 @@ pfsync_sendout(void)
 #if NBPFILTER > 0
 	if (ifp->if_bpf) {
 		m->m_data += sizeof(*ip);
-		m->m_len = m->m_pkthdr.len = sc->sc_len - sizeof(*ip);
+		m->m_len = m->m_pkthdr.len = (int)(sc->sc_len - sizeof(*ip));
 		bpf_mtap(ifp->if_bpf, m, BPF_DIRECTION_OUT);
 		m->m_data -= sizeof(*ip);
-		m->m_len = m->m_pkthdr.len = sc->sc_len;
+		m->m_len = m->m_pkthdr.len = (int)sc->sc_len;
 	}
 
 	if (sc->sc_sync_if == NULL) {
@@ -1926,7 +1927,7 @@ pfsync_request_full_update(struct pfsync_softc *sc)
 {
 	if (sc->sc_sync_if && ISSET(sc->sc_if.if_flags, IFF_RUNNING)) {
 		/* Request a full state table update. */
-		sc->sc_ureq_sent = time_uptime;
+		sc->sc_ureq_sent = (u_int32_t)time_uptime;
 #if NCARP > 0
 		if (!sc->sc_link_demoted && pfsync_sync_ok)
 			carp_group_demote_adj(&sc->sc_if, 1,
@@ -2219,7 +2220,7 @@ pfsync_bulk_start(void)
 	if (TAILQ_EMPTY(&state_list))
 		pfsync_bulk_status(PFSYNC_BUS_END);
 	else {
-		sc->sc_ureq_received = time_uptime;
+		sc->sc_ureq_received = (u_int32_t)time_uptime;
 
 		if (sc->sc_bulk_next == NULL)
 			sc->sc_bulk_next = TAILQ_FIRST(&state_list);
@@ -2291,7 +2292,7 @@ pfsync_bulk_status(u_int8_t status)
 	r.subh.count = htons(1);
 
 	r.bus.creatorid = pf_status.hostid;
-	r.bus.endtime = htonl(time_uptime - sc->sc_ureq_received);
+	r.bus.endtime = htonl((u_int32_t)(time_uptime - sc->sc_ureq_received));
 	r.bus.status = status;
 
 	pfsync_send_plus(&r, sizeof(r));
