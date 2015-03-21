@@ -53,7 +53,7 @@ int udf_pathconf(void *);
 int udf_islocked(void *v);
 int udf_print(void *v);
 int udf_transname(char *, char *, int, struct umount *);
-int udf_readatoffset(struct unode *, int *, off_t, struct buf **,
+int udf_readatoffset(struct unode *, size_t *, off_t, struct buf **,
     uint8_t **);
 
 /*

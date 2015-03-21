@@ -1196,7 +1196,7 @@ udf_reclaim(void *v)
  *
  */
 int
-udf_readatoffset(struct unode *up, int *size, off_t offset,
+udf_readatoffset(struct unode *up, size_t *size, off_t offset,
     struct buf **bp, uint8_t **data)
 {
 	struct umount *ump;
@@ -1233,9 +1233,9 @@ udf_readatoffset(struct unode *up, int *size, off_t offset,
 	/* Adjust the size so that it is within range */
 	if (*size == 0 || *size > max_size)
 		*size = max_size;
-	*size = min(*size, MAXBSIZE);
+	*size = szmin(*size, MAXBSIZE);
 
-	if ((error = udf_readlblks(ump, sector, *size, bp))) {
+	if ((error = udf_readlblks(ump, sector, (int)*size, bp))) {
 		printf("warning: udf_readlblks returned error %d\n", error);
 		/* note: *bp may be non-NULL */
 		return (error);
