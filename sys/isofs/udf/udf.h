@@ -93,11 +93,11 @@ struct udf_dirstream {
 	struct buf	*bp;
 	uint8_t		*data;
 	uint8_t		*buf;
-	int		fsize;
-	int		off;
-	int		this_off;
-	int		offset;
-	int		size;
+	size_t		fsize;
+	off_t		off;
+	off_t		this_off;
+	off_t		offset;
+	size_t		size;
 	int		error;
 	int		fid_fragment;
 };

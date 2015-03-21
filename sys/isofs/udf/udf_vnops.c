@@ -575,7 +575,8 @@ static struct fileid_desc *
 udf_getfid(struct udf_dirstream *ds)
 {
 	struct fileid_desc *fid;
-	int error, frag_size = 0, total_fid_size;
+	size_t frag_size = 0, total_fid_size;
+	int error;
 
 	/* End of directory? */
 	if (ds->offset + ds->off >= ds->fsize) {
@@ -617,19 +618,20 @@ udf_getfid(struct udf_dirstream *ds)
 	if (ds->off + UDF_FID_SIZE > ds->size ||
 	    ds->off + letoh16(fid->l_iu) + fid->l_fi + UDF_FID_SIZE > ds->size){
 
-		/* Copy what we have of the fid into a buffer */
-		frag_size = ds->size - ds->off;
-		if (frag_size >= ds->ump->um_bsize) {
+		if (ds->off > ds->size ||
+		    ds->size - ds->off >= ds->ump->um_bsize) {
 			printf("udf: invalid FID fragment\n");
 			ds->error = EINVAL;
 			return (NULL);
 		}
 
 		/*
-		 * File ID descriptors can only be at most one
-		 * logical sector in size.
+                 * Copy what we have of the fid into a buffer. File ID
+                 * descriptors can only be at most one logical sector in
+                 * size.
 		 */
 		ds->buf = malloc(ds->ump->um_bsize, M_UDFFID, M_WAITOK|M_ZERO);
+		frag_size = ds->size - ds->off;
 		bcopy(fid, ds->buf, frag_size);
 
 		/* Reduce all of the casting magic */
@@ -993,8 +995,10 @@ udf_lookup(void *v)
 	char *nameptr;
 	long namelen;
 	udfino_t id = 0;
-	int offset, error = 0;
-	int numdirpasses, fsize;
+	size_t fsize;
+	off_t offset;
+	int error = 0;
+	int numdirpasses;
 
 	extern struct nchstats nchstats;
 
@@ -1075,7 +1079,7 @@ lookloop:
 			}
 		} else {
 			if (!(udf_cmpname(&fid->data[fid->l_iu],
-			    nameptr, fid->l_fi, namelen, ump))) {
+			    nameptr, fid->l_fi, (int)namelen, ump))) {
 				id = udf_getid(&fid->icb);
 				break;
 			}
