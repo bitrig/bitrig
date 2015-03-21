@@ -382,7 +382,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 			 * update our copy of "free" and see if we've met
 			 * our target
 			 */
-			free = uvmexp.free - BUFPAGES_DEFICIT;
+			free = (int)(uvmexp.free - BUFPAGES_DEFICIT);
 
 			if (free + uvmexp.paging >= uvmexp.freetarg << 2 ||
 			    dirtyreacts == UVMPD_NUMDIRTYREACTS) {
@@ -563,7 +563,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 				}
 				if (p->pg_flags & PQ_AOBJ) {
 					uao_dropswap(p->uobject,
-						     p->offset >> PAGE_SHIFT);
+					    (int)(p->offset >> PAGE_SHIFT));
 				}
 			}
 
@@ -596,7 +596,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 					}
 				} else {
 					uao_dropswap(uobj,
-						     p->offset >> PAGE_SHIFT);
+					    (int)(p->offset >> PAGE_SHIFT));
 				}
 
 				/* start new cluster (if necessary) */
@@ -627,7 +627,7 @@ uvmpd_scan_inactive(struct pglist *pglst)
 					anon->an_swslot = swslot + swcpages;
 				else
 					uao_set_swslot(uobj,
-					    p->offset >> PAGE_SHIFT,
+					    (int)(p->offset >> PAGE_SHIFT),
 					    swslot + swcpages);
 				swcpages++;
 			}
@@ -877,7 +877,7 @@ uvmpd_scan(void)
 	/*
 	 * get current "free" page count
 	 */
-	free = uvmexp.free - BUFPAGES_DEFICIT;
+	free = (int)(uvmexp.free - BUFPAGES_DEFICIT);
 
 #ifndef __SWAP_BROKEN
 	/*
@@ -917,7 +917,8 @@ uvmpd_scan(void)
 	 * we have done the scan to get free pages.   now we work on meeting
 	 * our inactive target.
 	 */
-	inactive_shortage = uvmexp.inactarg - uvmexp.inactive - BUFPAGES_INACT;
+	inactive_shortage = (int)(uvmexp.inactarg - uvmexp.inactive -
+	    BUFPAGES_INACT);
 
 	/*
 	 * detect if we're not going to be able to page anything out
@@ -980,7 +981,7 @@ uvmpd_scan(void)
 			}
 			if (p->pg_flags & PQ_AOBJ) {
 				int slot = uao_set_swslot(p->uobject,
-					p->offset >> PAGE_SHIFT, 0);
+				    (int)(p->offset >> PAGE_SHIFT), 0);
 				if (slot) {
 					uvm_swap_free(slot, 1);
 					atomic_clearbits_int(&p->pg_flags,
