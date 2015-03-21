@@ -515,7 +515,8 @@ udf_transname(char *cs0string, char *destname, int len, struct umount *ump)
  * done here also.
  */
 static int
-udf_cmpname(char *cs0string, char *cmpname, int cs0len, int cmplen, struct umount *ump)
+udf_cmpname(char *cs0string, char *cmpname, int cs0len, int cmplen,
+    struct umount *ump)
 {
 	char *transname;
 	int error = 0;
@@ -557,7 +558,7 @@ udf_uiodir(struct udf_uiodir *uiodir, struct uio *uio, long off)
 }
 
 static struct udf_dirstream *
-udf_opendir(struct unode *up, int offset, int fsize, struct umount *ump)
+udf_opendir(struct unode *up, off_t offset, size_t fsize, struct umount *ump)
 {
 	struct udf_dirstream *ds;
 
