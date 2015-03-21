@@ -435,9 +435,9 @@ udf_read(void *v)
 	struct unode *up = VTOU(vp);
 	struct buf *bp;
 	uint8_t *data;
-	off_t fsize, offset;
+	off_t fsize;
+	size_t size;
 	int error = 0;
-	int size;
 
 	if (uio->uio_offset < 0)
 		return (EINVAL);
@@ -445,14 +445,14 @@ udf_read(void *v)
 	fsize = letoh64(up->u_fentry->inf_len);
 
 	while (uio->uio_offset < fsize && uio->uio_resid > 0) {
-		offset = uio->uio_offset;
-		if (uio->uio_resid + offset <= fsize)
-			size = uio->uio_resid;
+		if (uio->uio_offset + uio->uio_resid > fsize)
+			size = fsize - uio->uio_offset;
 		else
-			size = fsize - offset;
-		error = udf_readatoffset(up, &size, offset, &bp, &data);
+			size = uio->uio_resid;
+		error = udf_readatoffset(up, &size, uio->uio_offset, &bp,
+		    &data);
 		if (error == 0)
-			error = uiomovei(data, size, uio);
+			error = uiomove(data, size, uio);
 		if (bp != NULL) {
 			brelse(bp);
 			bp = NULL;
