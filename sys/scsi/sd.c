@@ -561,7 +561,7 @@ sd_cmd_rw6(struct scsi_xfer *xs, int read, u_int64_t secno, u_int nsecs)
 	struct scsi_rw *cmd = (struct scsi_rw *)xs->cmd;
 
 	cmd->opcode = read ? READ_COMMAND : WRITE_COMMAND;
-	_lto3b(secno, cmd->addr);
+	_lto3b((u_int32_t)secno, cmd->addr);
 	cmd->length = nsecs;
 
 	xs->cmdlen = sizeof(*cmd);
@@ -573,7 +573,7 @@ sd_cmd_rw10(struct scsi_xfer *xs, int read, u_int64_t secno, u_int nsecs)
 	struct scsi_rw_big *cmd = (struct scsi_rw_big *)xs->cmd;
 
 	cmd->opcode = read ? READ_BIG : WRITE_BIG;
-	_lto4b(secno, cmd->addr);
+	_lto4b((u_int32_t)secno, cmd->addr);
 	_lto2b(nsecs, cmd->length);
 
 	xs->cmdlen = sizeof(*cmd);
@@ -585,7 +585,7 @@ sd_cmd_rw12(struct scsi_xfer *xs, int read, u_int64_t secno, u_int nsecs)
 	struct scsi_rw_12 *cmd = (struct scsi_rw_12 *)xs->cmd;
 
 	cmd->opcode = read ? READ_12 : WRITE_12;
-	_lto4b(secno, cmd->addr);
+	_lto4b((u_int32_t)secno, cmd->addr);
 	_lto4b(nsecs, cmd->length);
 
 	xs->cmdlen = sizeof(*cmd);
@@ -671,7 +671,7 @@ sdstart(struct scsi_xfer *xs)
 	xs->flags |= (read ? SCSI_DATA_IN : SCSI_DATA_OUT);
 	xs->timeout = 60000;
 	xs->data = bp->b_data;
-	xs->datalen = bp->b_bcount;
+	xs->datalen = (int)bp->b_bcount;
 
 	xs->done = sd_buf_done;
 	xs->cookie = bp;
@@ -1073,10 +1073,10 @@ sdgetdisklabel(dev_t dev, struct sd_softc *sc, struct disklabel *lp,
 
 	bzero(lp, sizeof(struct disklabel));
 
-	lp->d_secsize = sc->params.secsize;
-	lp->d_ntracks = sc->params.heads;
-	lp->d_nsectors = sc->params.sectors;
-	lp->d_ncylinders = sc->params.cyls;
+	lp->d_secsize = (u_int32_t)sc->params.secsize;
+	lp->d_ntracks = (u_int32_t)sc->params.heads;
+	lp->d_nsectors = (u_int32_t)sc->params.sectors;
+	lp->d_ncylinders = (u_int32_t)sc->params.cyls;
 	lp->d_secpercyl = lp->d_ntracks * lp->d_nsectors;
 	if (lp->d_secpercyl == 0) {
 		lp->d_secpercyl = 100;
@@ -1488,7 +1488,7 @@ sd_thin_pages(struct sd_softc *sc, int flags)
 	if (pg == NULL)
 		return (ENOMEM);
 
-	rv = scsi_inquire_vpd(sc->sc_link, pg, sizeof(*pg) + len,
+	rv = scsi_inquire_vpd(sc->sc_link, pg, (u_int)(sizeof(*pg) + len),
 	    SI_PG_SUPPORTED, flags);
 	if (rv != 0)
 		goto done;
@@ -1683,7 +1683,8 @@ sd_get_parms(struct sd_softc *sc, struct disk_parms *dp, int flags)
 			heads = rigid->nheads;
 			cyls = _3btol(rigid->ncyl);
 			if (heads * cyls > 0)
-				sectors = dp->disksize / (heads * cyls);
+				sectors = (u_int32_t)(dp->disksize /
+				    (heads * cyls));
 		} else {
 			err = scsi_do_mode_sense(sc->sc_link,
 			    PAGE_FLEX_GEOMETRY, buf, (void **)&flex, NULL, NULL,
