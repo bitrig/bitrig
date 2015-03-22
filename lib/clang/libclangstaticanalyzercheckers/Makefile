@@ -33,7 +33,6 @@ SRCS=	AllocationDiagnostics.cpp \
 	ExprInspectionChecker.cpp \
 	FixedAddressChecker.cpp \
 	GenericTaintChecker.cpp \
-	IdempotentOperationChecker.cpp \
 	IdenticalExprChecker.cpp \
 	IvarInvalidationChecker.cpp \
 	LLVMConventionsChecker.cpp \
@@ -75,6 +74,7 @@ SRCS=	AllocationDiagnostics.cpp \
 	VirtualCallChecker.cpp
 
 TGHDRS=	AttrList \
+	AttrVisitor \
 	Attrs \
 	Checkers \
 	CommentCommandList \
