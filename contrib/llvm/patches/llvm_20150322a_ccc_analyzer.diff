@@ -1,0 +1,20 @@
+commit 2719be8071d759f302b49c0be128fefcb866e615
+Author: Martin Natano <natano@natano.net>
+Date:   Sun Mar 22 18:23:07 2015 +0100
+
+    Use clang per default for ccc-analyzer; ok patrick@
+
+diff --git a/contrib/llvm/tools/clang/tools/scan-build/ccc-analyzer b/contrib/llvm/tools/clang/tools/scan-build/ccc-analyzer
+index 9de38d4..3cb3c13 100755
+--- a/contrib/llvm/tools/clang/tools/scan-build/ccc-analyzer
++++ b/contrib/llvm/tools/clang/tools/scan-build/ccc-analyzer
+@@ -53,6 +53,9 @@ if (`uname -a` =~ m/Darwin/) {
+   if (-x "/usr/bin/xcrun") {
+     $UseXCRUN = 1;
+   }
++} elsif (`uname -a` =~ m/Bitrig/) {
++  $DefaultCCompiler = 'clang';
++  $DefaultCXXCompiler = 'clang++';
+ } else {
+   $DefaultCCompiler = 'gcc';
+   $DefaultCXXCompiler = 'g++';
