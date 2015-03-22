@@ -53,6 +53,9 @@ if (`uname -a` =~ m/Darwin/) {
   if (-x "/usr/bin/xcrun") {
     $UseXCRUN = 1;
   }
+} elsif (`uname -a` =~ m/Bitrig/) {
+  $DefaultCCompiler = 'clang';
+  $DefaultCXXCompiler = 'clang++';
 } else {
   $DefaultCCompiler = 'gcc';
   $DefaultCXXCompiler = 'g++';
