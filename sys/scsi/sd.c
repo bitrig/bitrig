@@ -623,7 +623,7 @@ sdstart(struct scsi_xfer *xs)
 	struct sd_softc *sc = link->device_softc;
 	struct buf *bp;
 	u_int64_t secno;
-	int nsecs;
+	unsigned int nsecs;
 	int read;
 	struct partition *p;
 
@@ -647,7 +647,8 @@ sdstart(struct scsi_xfer *xs)
 
 	p = &sc->sc_dk.dk_label->d_partitions[DISKPART(bp->b_dev)];
 	secno += DL_GETPOFFSET(p);
-	nsecs = howmany(bp->b_bcount, sc->sc_dk.dk_label->d_secsize);
+	nsecs = (unsigned int)howmany(bp->b_bcount,
+	    sc->sc_dk.dk_label->d_secsize);
 	read = bp->b_flags & B_READ;
 
 	/*
