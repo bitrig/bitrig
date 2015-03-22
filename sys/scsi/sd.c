@@ -1291,10 +1291,7 @@ sddump(dev_t dev, daddr_t blkno, caddr_t va, size_t size)
 	blkno += sectoff;
 
 	while (totwrt > 0) {
-		if (totwrt > UINT32_MAX)
-			nwrt = UINT32_MAX;
-		else
-			nwrt = totwrt;
+		nwrt = (u_int32_t)ulmin(totwrt, UINT32_MAX);
 
 #ifndef	SD_DUMP_NOT_TRUSTED
 		xs = scsi_xs_get(sc->sc_link, SCSI_NOSLEEP);
