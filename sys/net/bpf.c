@@ -178,7 +178,7 @@ bpf_movein(struct uio *uio, u_int linktype, struct mbuf **mp,
 
 	if (uio->uio_resid > MAXMCLBYTES)
 		return (EIO);
-	len = uio->uio_resid;
+	len = (u_int)uio->uio_resid;
 
 	MGETHDR(m, M_WAIT, MT_DATA);
 	m->m_pkthdr.rcvif = NULL;
@@ -434,7 +434,7 @@ bpfread(dev_t dev, struct uio *uio, int ioflag)
 		} else {
 			if ((d->bd_rdStart + d->bd_rtout) < ticks) {
 				error = tsleep((caddr_t)d, PRINET|PCATCH, "bpf",
-				    d->bd_rtout);
+				    (int)d->bd_rtout);
 			} else
 				error = EWOULDBLOCK;
 		}
@@ -791,8 +791,8 @@ bpfioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 		{
 			struct bpf_stat *bs = (struct bpf_stat *)addr;
 
-			bs->bs_recv = d->bd_rcount;
-			bs->bs_drop = d->bd_dcount;
+			bs->bs_recv = (u_int)d->bd_rcount;
+			bs->bs_drop = (u_int)d->bd_dcount;
 			break;
 		}
 
@@ -1200,7 +1200,7 @@ _bpf_mtap(caddr_t arg, struct mbuf *m, u_int direction,
 			slen = 0;
 		else
 			slen = bpf_filter(d->bd_rfilter, (u_char *)m,
-			    pktlen, 0);
+			    (u_int)pktlen, 0);
 
 		if (slen == 0)
 			continue;
@@ -1320,8 +1320,8 @@ bpf_catchpacket(struct bpf_d *d, u_char *pkt, size_t pktlen, size_t snaplen,
     void (*cpfn)(const void *, void *, size_t), struct timeval *tv)
 {
 	struct bpf_hdr *hp;
-	int totlen, curlen;
-	int hdrlen = d->bd_bif->bif_hdrlen;
+	u_int totlen, curlen;
+	u_int hdrlen = d->bd_bif->bif_hdrlen;
 
 	/*
 	 * Figure out how many bytes to move.  If the packet is
@@ -1329,7 +1329,7 @@ bpf_catchpacket(struct bpf_d *d, u_char *pkt, size_t pktlen, size_t snaplen,
 	 * much.  Otherwise, transfer the whole packet (unless
 	 * we hit the buffer size limit).
 	 */
-	totlen = hdrlen + min(snaplen, pktlen);
+	totlen = hdrlen + (u_int)szmin(snaplen, pktlen);
 	if (totlen > d->bd_bufsize)
 		totlen = d->bd_bufsize;
 
@@ -1360,14 +1360,16 @@ bpf_catchpacket(struct bpf_d *d, u_char *pkt, size_t pktlen, size_t snaplen,
 	 * Append the bpf header.
 	 */
 	hp = (struct bpf_hdr *)(d->bd_sbuf + curlen);
-	hp->bh_tstamp.tv_sec = tv->tv_sec;
-	hp->bh_tstamp.tv_usec = tv->tv_usec;
-	hp->bh_datalen = pktlen;
-	hp->bh_hdrlen = hdrlen;
+	hp->bh_tstamp.tv_sec = (u_int32_t)tv->tv_sec;	/* XXX: 2106 */
+	hp->bh_tstamp.tv_usec = (u_int32_t)tv->tv_usec;
+	hp->bh_datalen = (u_int32_t)pktlen;
+	hp->bh_hdrlen = (u_int16_t)hdrlen;
+	hp->bh_caplen = (u_int32_t)(totlen - hdrlen);
+
 	/*
 	 * Copy the packet data into the store buffer and update its length.
 	 */
-	(*cpfn)(pkt, (u_char *)hp + hdrlen, (hp->bh_caplen = totlen - hdrlen));
+	(*cpfn)(pkt, (u_char *)hp + hdrlen, hp->bh_caplen);
 	d->bd_slen = curlen + totlen;
 
 	if (d->bd_immediate) {
