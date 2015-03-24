@@ -2339,8 +2339,6 @@ acpi_powerdown(void)
 
 	acpi_sleep_pm(sc, state);
 	panic("acpi S5 transition did not happen");
-	while (1)
-		;
 }
 
 void
@@ -2394,10 +2392,8 @@ acpi_thread(void *arg)
 		}
 		sc->sc_threadwaiting = 1;
 		splx(s);
-		if (aml_busy) {
+		if (aml_busy)
 			panic("thread woke up to find aml was busy");
-			continue;
-		}
 
 		/* Run ACPI taskqueue */
 		while(acpi_dotask(acpi_softc))
