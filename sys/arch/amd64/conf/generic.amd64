@@ -384,8 +384,6 @@ atapiscsi* at wdc?
 atapiscsi* at pciide?
 
 # Networking devices
-lmc*	at pci?				# Lan Media Corp SSI/T3/HSSI
-san*	at pci?				# Sangoma PCI AFT card
 de*	at pci?				# DC21X4X-based ethernet
 fxp*	at pci?				# EtherExpress 10/100B ethernet
 fxp*	at cardbus?			# Intel PRO/100 ethernet
