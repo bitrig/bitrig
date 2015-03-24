@@ -1093,15 +1093,18 @@ gdt_intr(void *arg)
 	return (1);
 }
 
+_Static_assert(!((GDT_MAXOFFSETS - 1) * PAGE_SIZE < MAXPHYS), "fix gdtminphys");
 void
 gdtminphys(struct buf *bp, struct scsi_link *sl)
 {
 	GDT_DPRINTF(GDT_D_MISC, ("gdtminphys(0x%x) ", bp));
 
+#if 0
 	/* As this is way more than MAXPHYS it's really not necessary. */
 	if ((GDT_MAXOFFSETS - 1) * PAGE_SIZE < MAXPHYS &&
 	    bp->b_bcount > ((GDT_MAXOFFSETS - 1) * PAGE_SIZE))
 		bp->b_bcount = ((GDT_MAXOFFSETS - 1) * PAGE_SIZE);
+#endif
 
 	minphys(bp);
 }

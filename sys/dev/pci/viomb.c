@@ -123,6 +123,8 @@ struct cfdriver viomb_cd = {
 	NULL, "viomb", DV_DULL
 };
 
+_Static_assert(VIRTIO_PAGE_SIZE == PAGE_SIZE, "non-4K page size arch found");
+
 int
 viomb_match(struct device *parent, void *match, void *aux)
 {
@@ -143,13 +145,6 @@ viomb_attach(struct device *parent, struct device *self, void *aux)
 	if (vsc->sc_child != NULL) {
 		printf("child already attached for %s; something wrong...\n",
 		    parent->dv_xname);
-		return;
-	}
-
-	/* fail on non-4K page size archs */
-	if (VIRTIO_PAGE_SIZE != PAGE_SIZE){
-		printf("non-4K page size arch found, needs %d, got %d\n",
-		    VIRTIO_PAGE_SIZE, PAGE_SIZE);
 		return;
 	}
 
