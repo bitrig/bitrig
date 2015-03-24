@@ -1425,7 +1425,7 @@ ar5008_tx(struct athn_softc *sc, struct mbuf *m, struct ieee80211_node *ni,
 	     IEEE80211_QOS_ACK_POLICY_NOACK))
 		ds->ds_ctl1 |= AR_TXC1_NO_ACK;
 
-	if (0 && k != NULL) {
+	if ((0) && k != NULL) {
 		/*
 		 * Map 802.11 cipher to hardware encryption type and
 		 * compute MIC+ICV overhead.

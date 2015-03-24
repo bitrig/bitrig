@@ -2475,7 +2475,7 @@ bridge_ip(struct bridge_softc *sc, int dir, struct ifnet *ifp,
 		in_proto_cksum_out(m, ifp);
 		ip = mtod(m, struct ip *);
 		ip->ip_sum = 0;
-		if (0 && (ifp->if_capabilities & IFCAP_CSUM_IPv4))
+		if ((0) && (ifp->if_capabilities & IFCAP_CSUM_IPv4))
 			m->m_pkthdr.csum_flags |= M_IPV4_CSUM_OUT;
 		else {
 			ipstat.ips_outswcsum++;

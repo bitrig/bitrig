@@ -594,7 +594,7 @@ ar9285_cl_cal(struct athn_softc *sc, struct ieee80211_channel *c,
 
 	AR_SETBITS(sc, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
 #ifndef IEEE80211_NO_HT
-	if (0 && extc == NULL) {	/* XXX IS_CHAN_HT20!! */
+	if ((0) && extc == NULL) {	/* XXX IS_CHAN_HT20!! */
 		AR_SETBITS(sc, AR_PHY_CL_CAL_CTL, AR_PHY_PARALLEL_CAL_ENABLE);
 		AR_SETBITS(sc, AR_PHY_TURBO, AR_PHY_FC_DYN2040_EN);
 		AR_CLRBITS(sc, AR_PHY_AGC_CONTROL,

@@ -2247,7 +2247,7 @@ athn_hw_reset(struct athn_softc *sc, struct ieee80211_channel *c,
 	if (AR_SREV_9380_10_OR_LATER(sc))
 		sc->imask |= AR_IMR_RXERR | AR_IMR_HP_RXOK;
 #ifndef IEEE80211_STA_ONLY
-	if (0 && ic->ic_opmode == IEEE80211_M_HOSTAP)
+	if ((0) && ic->ic_opmode == IEEE80211_M_HOSTAP)
 		sc->imask |= AR_IMR_MIB;
 #endif
 	AR_WRITE(sc, AR_IMR, sc->imask);
