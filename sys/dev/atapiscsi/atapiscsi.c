@@ -246,10 +246,11 @@ atapiscsi_attach(struct device *parent, struct device *self, void *aux)
 		    id->atap_config, id->atap_capabilities1),
 		    DEBUG_PROBE);
 
-	if ((NERRS_MAX - 2) > 0)
-		drvp->n_dmaerrs = NERRS_MAX - 2;
-	else
-		drvp->n_dmaerrs = 0;
+#if (NERRS_MAX > 2)
+	drvp->n_dmaerrs = NERRS_MAX - 2;
+#else
+	drvp->n_dmaerrs = 0;
+#endif
 	drvp->drive_flags |= DRIVE_DEVICE_RESET;
 
 	/* Tape drives do funny DSC stuff */

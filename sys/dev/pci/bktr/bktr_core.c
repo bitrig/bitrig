@@ -382,10 +382,11 @@ common_bktr_attach( bktr_ptr_t bktr, int unit, u_int pci_id, u_int rev )
 	    VBI_BUFFER_SIZE);
 
         /* allocate space for pixel buffer */
-        if (BROOKTREE_ALLOC)
-                buf = get_bktr_mem(bktr, &bktr->dm_mem, BROOKTREE_ALLOC);
-        else
-                buf = 0;
+#if (BROOKTREE_ALLOC > 0)
+	buf = get_bktr_mem(bktr, &bktr->dm_mem, BROOKTREE_ALLOC);
+#else
+	buf = 0;
+#endif
 
 	if ( bootverbose ) {
 		printf("%s: buffer size %d, addr 0x%lx\n",

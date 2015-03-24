@@ -187,10 +187,11 @@ wdattach(struct device *parent, struct device *self, void *aux)
 	    sizeof(wd->drvp->drive_name));
 	wd->drvp->cf_flags = wd->sc_dev.dv_cfdata->cf_flags;
 
-	if ((NERRS_MAX - 2) > 0)
-		wd->drvp->n_dmaerrs = NERRS_MAX - 2;
-	else
-		wd->drvp->n_dmaerrs = 0;
+#if (NERRS_MAX > 2)
+	wd->drvp->n_dmaerrs = NERRS_MAX - 2;
+#else
+	wd->drvp->n_dmaerrs = 0;
+#endif
 
 	/* read our drive info */
 	if (wd_get_params(wd, at_poll, &wd->sc_params) != 0) {
@@ -860,10 +861,6 @@ wdioctl(dev_t dev, u_long xfer, caddr_t addr, int flag, struct proc *p)
 		error = wdc_ioctl(wd->drvp, xfer, addr, flag, p);
 		goto exit;
 	}
-
-#ifdef DIAGNOSTIC
-	panic("wdioctl: impossible");
-#endif
 
  exit:
 	device_unref(&wd->sc_dev);
