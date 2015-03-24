@@ -1461,6 +1461,10 @@ void
 ncr53c9x_msgin(sc)
 	struct ncr53c9x_softc *sc;
 {
+	struct ncr53c9x_ecb *ecb;
+	struct ncr53c9x_tinfo *ti;
+	struct ncr53c9x_linfo *li;
+	int lun;
 
 	NCR_TRACE(("[ncr53c9x_msgin(curmsglen:%ld)] ", (long)sc->sc_imlen));
 
@@ -1537,11 +1541,6 @@ gotit:
 	 * NCR_MAX_MSG_LEN.  Longer messages will be amputated.
 	 */
 	switch (sc->sc_state) {
-		struct ncr53c9x_ecb *ecb;
-		struct ncr53c9x_tinfo *ti;
-		struct ncr53c9x_linfo *li;
-		int lun;
-
 	case NCR_CONNECTED:
 		ecb = sc->sc_nexus;
 		ti = &sc->sc_tinfo[ecb->xs->sc_link->target];

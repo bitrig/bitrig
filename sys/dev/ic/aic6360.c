@@ -873,6 +873,9 @@ aic_msgin(struct aic_softc *sc)
 	bus_space_handle_t ioh = sc->sc_ioh;
 	u_char sstat1;
 	int n;
+	struct aic_acb *acb;
+	struct scsi_link *sc_link;
+	struct aic_tinfo *ti;
 
 	AIC_TRACE(("aic_msgin  "));
 
@@ -961,10 +964,6 @@ nextbyte:
 
 	/* We now have a complete message.  Parse it. */
 	switch (sc->sc_state) {
-		struct aic_acb *acb;
-		struct scsi_link *sc_link;
-		struct aic_tinfo *ti;
-
 	case AIC_CONNECTED:
 		AIC_ASSERT(sc->sc_nexus != NULL);
 		acb = sc->sc_nexus;
