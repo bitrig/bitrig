@@ -387,9 +387,10 @@ shmget_allocate_segment(struct proc *p,
 	struct shmid_ds *shmseg;
 	struct shm_handle *shm_handle;
 	int error = 0;
-	
+
 	if (SCARG(uap, size) < shminfo.shmmin ||
-	    SCARG(uap, size) > shminfo.shmmax)
+	    SCARG(uap, size) > shminfo.shmmax ||
+	    SCARG(uap, size) > INT_MAX)
 		return (EINVAL);
 	if (shm_nused >= shminfo.shmmni) /* any shmids left? */
 		return (ENOSPC);
@@ -439,7 +440,7 @@ shmget_allocate_segment(struct proc *p,
 	shmseg->shm_perm.mode = (mode & ACCESSPERMS);
 	shmseg->shm_perm.seq = shmseqs[segnum] = (shmseqs[segnum] + 1) & 0x7fff;
 	shmseg->shm_perm.key = key;
-	shmseg->shm_segsz = SCARG(uap, size);
+	shmseg->shm_segsz = (int)SCARG(uap, size); /* XXX */
 	shmseg->shm_cpid = p->p_p->ps_pid;
 	shmseg->shm_lpid = shmseg->shm_nattch = 0;
 	shmseg->shm_atime = shmseg->shm_dtime = 0;
