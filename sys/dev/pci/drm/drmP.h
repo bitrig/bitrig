@@ -39,6 +39,7 @@
 
 #ifdef __clang__
 #pragma clang diagnostic ignored "-Wshorten-64-to-32"
+#pragma clang diagnostic ignored "-Wunreachable-code"
 #endif
 
 #include <sys/param.h>
