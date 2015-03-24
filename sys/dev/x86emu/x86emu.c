@@ -276,6 +276,11 @@ x86emu_exec_intr(struct x86emu *emu, uint8_t intr)
 	x86emu_exec(emu);
 }
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunreachable-code"
+#endif
+
 /*
  * REMARKS:
  * Halts the system by setting the halted system flag.
@@ -290,6 +295,10 @@ x86emu_halt_sys(struct x86emu *emu)
 #endif
 	panic("%s: longjmp returned", __func__);
 }
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 /*
  * PARAMETERS:
