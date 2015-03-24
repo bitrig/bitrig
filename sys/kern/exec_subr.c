@@ -228,6 +228,8 @@ vmcmd_map_readvn(struct proc *p, struct exec_vmcmd *cmd)
 
 	if (cmd->ev_len == 0)
 		return (0);
+	if (cmd->ev_len > INT_MAX)
+		return (EINVAL); /* XXX vn_rdwr() */
 
 	prot = cmd->ev_prot;
 
@@ -241,7 +243,7 @@ vmcmd_map_readvn(struct proc *p, struct exec_vmcmd *cmd)
 		return (error);
 
 	error = vn_rdwr(UIO_READ, cmd->ev_vp, (caddr_t)cmd->ev_addr,
-	    cmd->ev_len, cmd->ev_offset, UIO_USERSPACE, IO_UNIT,
+	    (int)cmd->ev_len, cmd->ev_offset, UIO_USERSPACE, IO_UNIT,
 	    p->p_ucred, NULL, p);
 	if (error)
 		return (error);
