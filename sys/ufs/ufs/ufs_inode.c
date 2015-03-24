@@ -129,6 +129,7 @@ ufs_inactive(void *v)
 		DIP_ASSIGN(ip, mode, 0);
 		ip->i_flag |= IN_CHANGE | IN_UPDATE;
 
+#ifdef FFS_SOFTUPDATES
 		/*
 		 * Setting the mode to zero needs to wait for the inode to be
 		 * written just as does a change to the link count. So, rather
@@ -143,6 +144,7 @@ ufs_inactive(void *v)
 		 */
 		if (DOINGSOFTDEP(vp))
 			softdep_change_linkcnt(ip, 1);
+#endif
 
 		UFS_INODE_FREE(ip, ip->i_number, mode);
 	}

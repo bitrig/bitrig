@@ -730,8 +730,10 @@ ufs_direnter(struct vnode *dvp, struct vnode *tvp, struct direct *dirp,
 			flags |= B_SYNC;
 		if ((error = UFS_BUF_ALLOC(dp, (off_t)dp->i_offset, DIRBLKSIZ,
 		    cr, flags, &bp)) != 0) {
+#ifdef FFS_SOFTUPDATES
 			if (DOINGSOFTDEP(dvp) && newdirbp != NULL)
 				bdwrite(newdirbp);
+#endif
 			return (error);
 		}
 		DIP_ASSIGN(dp, size, dp->i_offset + DIRBLKSIZ);
@@ -751,6 +753,7 @@ ufs_direnter(struct vnode *dvp, struct vnode *tvp, struct direct *dirp,
 		}
 #endif
 
+#ifdef FFS_SOFTUPDATES
 		if (DOINGSOFTDEP(dvp)) {
 			/*
 			 * Ensure that the entire newly allocated block is a
@@ -788,6 +791,7 @@ ufs_direnter(struct vnode *dvp, struct vnode *tvp, struct direct *dirp,
 				vn_lock(tvp, LK_EXCLUSIVE | LK_RETRY, p);
 			return (error);
 		}
+#endif /* FFS_SOFTUPDATES */
 		error = VOP_BWRITE(bp);
  		ret = UFS_UPDATE(dp, !DOINGSOFTDEP(dvp));
  		if (error == 0)
@@ -821,8 +825,10 @@ ufs_direnter(struct vnode *dvp, struct vnode *tvp, struct direct *dirp,
 	 */
  	if ((error = UFS_BUFATOFF(dp, (off_t)dp->i_offset, &dirbuf, &bp)) 
 	    != 0) {
+#ifdef FFS_SOFTUPDATES
  		if (DOINGSOFTDEP(dvp) && newdirbp != NULL)
  			bdwrite(newdirbp);
+#endif
   		return (error);
  	}
 	/*
@@ -865,10 +871,12 @@ ufs_direnter(struct vnode *dvp, struct vnode *tvp, struct direct *dirp,
 			    dp->i_offset + ((char *)nep - dirbuf),
 			    dp->i_offset + ((char *)ep - dirbuf));
 #endif
+#ifdef FFS_SOFTUPDATES
  		if (DOINGSOFTDEP(dvp))
  			softdep_change_directoryentry_offset(dp, dirbuf,
  			    (caddr_t)nep, (caddr_t)ep, dsize); 
  		else
+#endif
  			memmove(ep, nep, dsize);
 	}
 	/*
@@ -904,13 +912,15 @@ ufs_direnter(struct vnode *dvp, struct vnode *tvp, struct direct *dirp,
 		    (dp->i_offset & (DIRBLKSIZ - 1)),
 		    dp->i_offset & ~(DIRBLKSIZ - 1));
 #endif
-
+#ifdef FFS_SOFTUPDATES
   	if (DOINGSOFTDEP(dvp)) {
   		(void)softdep_setup_directory_add(bp, dp,
   		    dp->i_offset + (caddr_t)ep - dirbuf,
 		    dirp->d_ino, newdirbp, 0);
   		bdwrite(bp);
-  	} else {
+  	} else
+#endif
+  	{
   		error = VOP_BWRITE(bp);
   	}
 	dp->i_flag |= IN_CHANGE | IN_UPDATE;
@@ -993,6 +1003,7 @@ ufs_dirremove(struct vnode *dvp, struct inode *ip, int flags, int isrmdir)
 		    ((dp->i_offset - dp->i_count) & (DIRBLKSIZ - 1)),
 		    dp->i_offset & ~(DIRBLKSIZ - 1));
 #endif
+#ifdef FFS_SOFTUPDATES
  	if (DOINGSOFTDEP(dvp)) {
 		if (ip) {
 			ip->i_effnlink--;
@@ -1005,7 +1016,9 @@ ufs_dirremove(struct vnode *dvp, struct inode *ip, int flags, int isrmdir)
 			bdwrite(bp);
 			error = 0;
 		}
- 	} else {
+ 	} else
+#endif
+ 	{
 		if (ip) {
 			ip->i_effnlink--;
 			DIP_ADD(ip, nlink, -1);
@@ -1044,11 +1057,14 @@ ufs_dirrewrite(struct inode *dp, struct inode *oip, ufsino_t newinum,
 	if (vdp->v_mount->mnt_maxsymlinklen > 0)
  		ep->d_type = newtype;
  	oip->i_effnlink--;
+#ifdef FFS_SOFTUPDATES 
  	if (DOINGSOFTDEP(vdp)) {
 		softdep_change_linkcnt(oip, 0);
  		softdep_setup_directory_change(bp, dp, oip, newinum, isrmdir);
  		bdwrite(bp);
- 	} else {
+ 	} else
+#endif
+ 	{
 		DIP_ADD(oip, nlink, -1);
 		oip->i_flag |= IN_CHANGE;
 		UFS_WAPBL_UPDATE(oip, MNT_WAIT);

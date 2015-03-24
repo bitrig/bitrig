@@ -108,9 +108,12 @@ ffs_update(struct inode *ip, int waitfor)
 		}
 	}
 
+#ifdef FFS_SOFTUPDATES
 	if (DOINGSOFTDEP(vp))
 		softdep_update_inodeblock(ip, bp, waitfor);
-	else if (ip->i_effnlink != DIP(ip, nlink))
+	else
+#endif
+	if (ip->i_effnlink != DIP(ip, nlink))
 		panic("ffs_update: bad link cnt");
 
 #ifdef FFS2
@@ -185,6 +188,7 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 	oip->i_ci.ci_lasta = oip->i_ci.ci_clen 
 	    = oip->i_ci.ci_cstart = oip->i_ci.ci_lastw = 0;
 
+#ifdef FFS_SOFTUPDATES
 	if (DOINGSOFTDEP(ovp)) {
 		if (length > 0 || softdep_slowdown(ovp)) {
 			/*
@@ -207,6 +211,7 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 			return (UFS_UPDATE(oip, 0));
 		}
 	}
+#endif
 
 	fs = oip->i_fs;
 	osize = DIP(oip, size);
@@ -257,6 +262,7 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 				   cred, aflags, &bp);
 		if (error)
 			return (error);
+#ifdef FFS_SOFTUPDATES
 		/*
 		 * When we are doing soft updates and the UFS_BALLOC
 		 * above fills in a direct block hole with a full sized
@@ -269,6 +275,7 @@ ffs_truncate(struct inode *oip, off_t length, int flags, struct ucred *cred)
 		    fragroundup(fs, blkoff(fs, length)) < fs->fs_bsize &&
 		    (error = VOP_FSYNC(ovp, cred, MNT_WAIT)) != 0)
 			return (error);
+#endif
 		DIP_ASSIGN(oip, size, length);
 		size = blksize(fs, oip, lbn);
 		(void) uvm_vnp_uncache(ovp);

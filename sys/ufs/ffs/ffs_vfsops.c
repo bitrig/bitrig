@@ -1628,9 +1628,11 @@ retry:
 
 	brelse(bp);
 
+#ifdef FFS_SOFTUPDATES
 	if (DOINGSOFTDEP(vp))
 		softdep_load_inodeblock(ip);
 	else
+#endif
 		ip->i_effnlink = DIP(ip, nlink);
 
 	/*

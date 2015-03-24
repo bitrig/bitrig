@@ -109,10 +109,12 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 			    flags, cred, bpp, &newb);
 			if (error)
 				return (error);
+#ifdef FFS_SOFTUPDATES
 			if (DOINGSOFTDEP(vp))
 				softdep_setup_allocdirect(ip, nb, newb,
 				    ip->i_ffs1_db[nb], fs->fs_bsize, osize,
 				    bpp ? *bpp : NULL);
+#endif
 
 			ip->i_ffs1_size = lblktosize(fs, nb + 1);
 			uvm_vnp_setsize(vp, ip->i_ffs1_size);
@@ -181,10 +183,12 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 				    osize, nsize, flags, cred, bpp, &newb);
 				if (error)
 					return (error);
+#ifdef FFS_SOFTUPDATES
 				if (DOINGSOFTDEP(vp))
 					softdep_setup_allocdirect(ip, lbn,
 					    newb, nb, nsize, osize,
 					    bpp ? *bpp : NULL);
+#endif
 			}
 		} else {
 			/*
@@ -212,9 +216,11 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 				if (flags & B_CLRBUF)
 					clrbuf(*bpp);
 			}
+#ifdef FFS_SOFTUPDATES
 			if (DOINGSOFTDEP(vp))
 				softdep_setup_allocdirect(ip, lbn, newb, 0,
 				    nsize, 0, bpp ? *bpp : NULL);
+#endif
 		}
 		ip->i_ffs1_db[lbn] = newb;
 		ip->i_flag |= IN_CHANGE | IN_UPDATE;
@@ -253,11 +259,14 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 		bp->b_blkno = fsbtodb(fs, nb);
 		clrbuf(bp);
 
+#ifdef FFS_SOFTUPDATES
 		if (DOINGSOFTDEP(vp)) {
 			softdep_setup_allocdirect(ip, NDADDR + indirs[0].in_off,
 			    newb, 0, fs->fs_bsize, 0, bp);
 			bdwrite(bp);
-		} else {
+		} else
+#endif
+		{
 			/*
 			 * Write synchronously so that indirect blocks
 			 * never point at garbage.
@@ -303,11 +312,14 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 		nbp->b_blkno = fsbtodb(fs, nb);
 		clrbuf(nbp);
 
+#ifdef FFS_SOFTUPDATES
 		if (DOINGSOFTDEP(vp)) {
 			softdep_setup_allocindir_meta(nbp, ip, bp,
 			    indirs[i - 1].in_off, nb);
 			bdwrite(nbp);
-		} else {
+		} else
+#endif
+		{
 			/*
 			 * Write synchronously so that indirect blocks
 			 * never point at garbage.
@@ -357,9 +369,11 @@ ffs1_balloc(struct inode *ip, off_t startoffset, int size, struct ucred *cred,
 				clrbuf(nbp);
 			*bpp = nbp;
 		}
+#ifdef FFS_SOFTUPDATES
 		if (DOINGSOFTDEP(vp))
 			softdep_setup_allocindir_page(ip, lbn, bp,
 			    indirs[i].in_off, nb, 0, bpp ? *bpp : NULL);
+#endif
 		bap[indirs[i].in_off] = nb;
 		/*
 		 * If required, write synchronously, otherwise use
@@ -487,10 +501,12 @@ ffs2_balloc(struct inode *ip, off_t off, int size, struct ucred *cred,
 			if (error)
 				return (error);
 
+#ifdef FFS_SOFTUPDATES
 			if (DOINGSOFTDEP(vp))
 				softdep_setup_allocdirect(ip, nb, newb,
 				    ip->i_ffs2_db[nb], fs->fs_bsize, osize,
 				    bpp ? *bpp : NULL);
+#endif
 
 			ip->i_ffs2_size = lblktosize(fs, nb + 1);
 			uvm_vnp_setsize(vp, ip->i_ffs2_size);
@@ -565,10 +581,12 @@ ffs2_balloc(struct inode *ip, off_t off, int size, struct ucred *cred,
 				if (error)
 					return (error);
 
+#ifdef FFS_SOFTUPDATES
 				if (DOINGSOFTDEP(vp))
 					softdep_setup_allocdirect(ip, lbn,
 					    newb, nb, nsize, osize,
 					    bpp ? *bpp : NULL);
+#endif
 			}
 		} else {
 			/*
@@ -599,9 +617,11 @@ ffs2_balloc(struct inode *ip, off_t off, int size, struct ucred *cred,
 				*bpp = bp;
 			}
 
+#ifdef FFS_SOFTUPDATES
 			if (DOINGSOFTDEP(vp))
 				softdep_setup_allocdirect(ip, lbn, newb, 0,
 				    nsize, 0, bpp ? *bpp : NULL);
+#endif
 		}
 
 		ip->i_ffs2_db[lbn] = newb;
@@ -645,11 +665,14 @@ ffs2_balloc(struct inode *ip, off_t off, int size, struct ucred *cred,
 		bp->b_blkno = fsbtodb(fs, nb);
 		clrbuf(bp);
 
+#ifdef FFS_SOFTUPDATES
 		if (DOINGSOFTDEP(vp)) {
 			softdep_setup_allocdirect(ip, NDADDR + indirs[0].in_off,
 			    newb, 0, fs->fs_bsize, 0, bp);
 			bdwrite(bp);
-		} else {
+		} else
+#endif
+		{
 			/*
 			 * Write synchronously so that indirect blocks never
 			 * point at garbage.
@@ -705,11 +728,14 @@ ffs2_balloc(struct inode *ip, off_t off, int size, struct ucred *cred,
 		nbp->b_blkno = fsbtodb(fs, nb);
 		clrbuf(nbp);
 
+#ifdef FFS_SOFTUPDATES
 		if (DOINGSOFTDEP(vp)) {
 			softdep_setup_allocindir_meta(nbp, ip, bp,
 			    indirs[i - 1].in_off, nb);
 			bdwrite(nbp);
-		} else {
+		} else
+#endif
+		{
 			/*
 			 * Write synchronously so that indirect blocks never
 			 * point at garbage.
@@ -767,9 +793,11 @@ ffs2_balloc(struct inode *ip, off_t off, int size, struct ucred *cred,
 			*bpp = nbp;
 		}
 
+#ifdef FFS_SOFTUPDATES
 		if (DOINGSOFTDEP(vp))
 			softdep_setup_allocindir_page(ip, lbn, bp,
 			    indirs[num].in_off, nb, 0, bpp ? *bpp : NULL);
+#endif
 
 		bap[indirs[num].in_off] = nb;
 
@@ -857,11 +885,12 @@ fail:
 			}
 		}
 
+#ifdef FFS_SOFTUPDATES
 		if (DOINGSOFTDEP(vp) && unwindidx == 0) {
 			ip->i_flag |= IN_CHANGE | IN_UPDATE;
 			ffs_update(ip, 1);
 		}
-
+#endif
 		/*
 		 * Now that any dependencies that we created have been
 		 * resolved, we can undo the partial allocation.
@@ -869,8 +898,10 @@ fail:
 		if (unwindidx == 0) {
 			*allocib = 0;
 			ip->i_flag |= IN_CHANGE | IN_UPDATE;
+#ifdef FFS_SOFTUPDATES
 			if (DOINGSOFTDEP(vp))
 				ffs_update(ip, 1);
+#endif
 		} else {
 			r = bread(vp, indirs[unwindidx].in_lbn,
 			    (int)fs->fs_bsize, &bp);

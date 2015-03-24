@@ -297,6 +297,7 @@ ufs_access(void *v)
 	struct vnode *vp = ap->a_vp;
 	struct inode *ip = VTOI(vp);
 	mode_t mode = ap->a_mode;
+	int error;
 
 	/*
 	 * Disallow write attempts on read-only file systems;
@@ -305,7 +306,6 @@ ufs_access(void *v)
 	 */
 	if (mode & VWRITE) {
 		switch (vp->v_type) {
-			int error;
 		case VDIR:
 		case VLNK:
 		case VREG:
@@ -768,8 +768,10 @@ ufs_link(void *v)
 	ip->i_effnlink++;
 	DIP_ADD(ip, nlink, 1);
 	ip->i_flag |= IN_CHANGE;
+#ifdef FFS_SOFTUPDATES
 	if (DOINGSOFTDEP(vp))
 		softdep_change_linkcnt(ip, 0);
+#endif
 	if ((error = UFS_UPDATE(ip, !DOINGSOFTDEP(vp))) == 0) {
 		ufs_makedirentry(ip, cnp, &newdir);
 		error = ufs_direnter(dvp, vp, &newdir, cnp, NULL);
@@ -779,8 +781,10 @@ ufs_link(void *v)
 		DIP_ADD(ip, nlink, -1);
 		ip->i_flag |= IN_CHANGE;
 		UFS_WAPBL_UPDATE(ip, MNT_WAIT);
+#ifdef FFS_SOFTUPDATES
 		if (DOINGSOFTDEP(vp))
 			softdep_change_linkcnt(ip, 0);
+#endif
 	}
 	UFS_WAPBL_END(vp->v_mount);
 	pool_put(&namei_pool, cnp->cn_pnbuf);
@@ -978,8 +982,10 @@ abortit:
 	ip->i_effnlink++;
 	DIP_ADD(ip, nlink, 1);
 	ip->i_flag |= IN_CHANGE;
+#ifdef FFS_SOFTUPDATES
 	if (DOINGSOFTDEP(fvp))
 		softdep_change_linkcnt(ip, 0);
+#endif
 	if ((error = UFS_UPDATE(ip, !DOINGSOFTDEP(fvp))) != 0) {
 		VOP_UNLOCK(fvp, 0);
 		goto bad;
@@ -1048,15 +1054,19 @@ abortit:
 			dp->i_effnlink++;
 			DIP_ADD(dp, nlink, 1);
 			dp->i_flag |= IN_CHANGE;
+#ifdef FFS_SOFTUPDATES
 			if (DOINGSOFTDEP(tdvp))
                                softdep_change_linkcnt(dp, 0);
+#endif
 			if ((error = UFS_UPDATE(dp, !DOINGSOFTDEP(tdvp))) 
 			    != 0) {
 				dp->i_effnlink--;
 				DIP_ADD(dp, nlink, -1);
 				dp->i_flag |= IN_CHANGE;
+#ifdef FFS_SOFTUPDATES
 				if (DOINGSOFTDEP(tdvp))
 					softdep_change_linkcnt(dp, 0);
+#endif
 				goto bad;
 			}
 		}
@@ -1066,8 +1076,10 @@ abortit:
 				dp->i_effnlink--;
 				DIP_ADD(dp, nlink, -1);
 				dp->i_flag |= IN_CHANGE;
+#ifdef FFS_SOFTUPDATES
 				if (DOINGSOFTDEP(tdvp))
 					softdep_change_linkcnt(dp, 0);
+#endif
 				(void)UFS_UPDATE(dp, 1);
 			}
 			goto bad;
@@ -1114,7 +1126,7 @@ abortit:
 			error = EISDIR;
 			goto bad;
 		}
-		
+
 		if ((error = ufs_dirrewrite(dp, xp, ip->i_number,
                    IFTODT(DIP(ip, mode)), (doingdirectory && newparent) ?
 		   newparent : doingdirectory)) != 0)
@@ -1122,12 +1134,16 @@ abortit:
 		if (doingdirectory) {
 			if (!newparent) {
 				dp->i_effnlink--;
+#ifdef FFS_SOFTUPDATES
 				if (DOINGSOFTDEP(tdvp))
 					softdep_change_linkcnt(dp, 0);
+#endif
 			}
 			xp->i_effnlink--;
+#ifdef FFS_SOFTUPDATES
 			if (DOINGSOFTDEP(tvp))
 				softdep_change_linkcnt(xp, 0);
+#endif
 		}
 		if (doingdirectory && !DOINGSOFTDEP(tvp)) {
 		       /*
@@ -1237,8 +1253,10 @@ out:
 		ip->i_flag |= IN_CHANGE;
 		ip->i_flag &= ~IN_RENAME;
 		UFS_WAPBL_UPDATE(ip, 0);
+#ifdef FFS_SOFTUPDATES
 		if (DOINGSOFTDEP(fvp))
 			softdep_change_linkcnt(ip, 0);
+#endif
 		vput(fvp);
 	} else
 		vrele(fvp);
@@ -1306,7 +1324,10 @@ ufs_mkdir(void *v)
 	struct buf *bp;
 	struct direct newdir;
 	struct dirtemplate dirtemplate, *dtp;
-	int error, dmode, blkoff;
+	int error, dmode;
+#ifdef FFS_SOFTUPDATES
+	int blkoff;
+#endif
 
 #ifdef DIAGNOSTIC
 	if ((cnp->cn_flags & HASBUF) == 0)
@@ -1355,8 +1376,10 @@ ufs_mkdir(void *v)
 	tvp->v_type = VDIR;	/* Rest init'd in getnewvnode(). */
 	ip->i_effnlink = 2;
 	DIP_ASSIGN(ip, nlink, 2);
+#ifdef FFS_SOFTUPDATES
 	if (DOINGSOFTDEP(tvp))
 		softdep_change_linkcnt(ip, 0);
+#endif
 
 	/*
 	 * Bump link count in parent directory to reflect work done below.
@@ -1366,8 +1389,10 @@ ufs_mkdir(void *v)
 	dp->i_effnlink++;
 	DIP_ADD(dp, nlink, 1);
 	dp->i_flag |= IN_CHANGE;
+#ifdef FFS_SOFTUPDATES
 	if (DOINGSOFTDEP(dvp))
 		softdep_change_linkcnt(dp, 0);
+#endif
 	if ((error = UFS_UPDATE(dp, !DOINGSOFTDEP(dvp))) != 0)
 		goto bad;
 
@@ -1389,6 +1414,7 @@ ufs_mkdir(void *v)
 	ip->i_flag |= IN_CHANGE | IN_UPDATE;
 	uvm_vnp_setsize(tvp, DIP(ip, size));
 	memcpy(bp->b_data, &dirtemplate, sizeof(dirtemplate));
+#ifdef FFS_SOFTUPDATES
 	if (DOINGSOFTDEP(tvp)) {
 		/*
 		 * Ensure that the entire newly allocated block is a
@@ -1403,6 +1429,7 @@ ufs_mkdir(void *v)
 			blkoff += DIRBLKSIZ;
 		}
 	}
+#endif
 	if ((error = UFS_UPDATE(ip, !DOINGSOFTDEP(tvp))) != 0) {
 		(void)VOP_BWRITE(bp);
 		goto bad;
@@ -1434,8 +1461,10 @@ bad:
                 DIP_ADD(dp, nlink, -1);
                 dp->i_flag |= IN_CHANGE;
                 UFS_WAPBL_UPDATE(dp, MNT_WAIT);
+#ifdef FFS_SOFTUPDATES
 		if (DOINGSOFTDEP(dvp))
 			softdep_change_linkcnt(dp, 0);
+#endif
                 /*
                  * No need to do an explicit VOP_TRUNCATE here, vrele will
                  * do this for us because we set the link count to 0.
@@ -1445,8 +1474,10 @@ bad:
                 ip->i_flag |= IN_CHANGE;
                 UFS_WAPBL_UPDATE(ip, MNT_WAIT);
                 UFS_WAPBL_END(dvp->v_mount);
+#ifdef FFS_SOFTUPDATES
 		if (DOINGSOFTDEP(tvp))
 			softdep_change_linkcnt(ip, 0);
+#endif
 		vput(tvp);
 	}
 out:
@@ -1511,20 +1542,24 @@ ufs_rmdir(void *v)
 	 * inode.  If we crash in between, the directory
 	 * will be reattached to lost+found,
 	 */
+#ifdef FFS_SOFTUPDATES
 	if (DOINGSOFTDEP(vp)) {
 		dp->i_effnlink--;
 		ip->i_effnlink--;
 		softdep_change_linkcnt(dp, 0);
 		softdep_change_linkcnt(ip, 0);
 	}
+#endif
 	if ((error = ufs_dirremove(dvp, ip, cnp->cn_flags, 1)) != 0) {
 		UFS_WAPBL_END(dvp->v_mount);
+#ifdef FFS_SOFTUPDATES
 		if (DOINGSOFTDEP(vp)) {
 			dp->i_effnlink++;
 			ip->i_effnlink++;
 			softdep_change_linkcnt(dp, 0);
 			softdep_change_linkcnt(ip, 0);
 		}
+#endif
 		goto out;
 	}
 
@@ -2155,8 +2190,10 @@ ufs_makeinode(int mode, struct vnode *dvp, struct vnode **vpp,
 	tvp->v_type = IFTOVT(mode);	/* Rest init'd in getnewvnode(). */
 	ip->i_effnlink = 1;
 	DIP_ASSIGN(ip, nlink, 1);
+#ifdef FFS_SOFTUPDATES
 	if (DOINGSOFTDEP(tvp))
 		softdep_change_linkcnt(ip, 0);
+#endif
 	if ((DIP(ip, mode) & ISGID) &&
 		!groupmember(DIP(ip, gid), cnp->cn_cred) &&
 	    suser_ucred(cnp->cn_cred))
@@ -2189,8 +2226,10 @@ bad:
 	DIP_ASSIGN(ip, nlink, 0);
 	ip->i_flag |= IN_CHANGE;
 	UFS_WAPBL_UPDATE(VTOI(tvp), 0);
+#ifdef FFS_SOFTUPDATES
 	if (DOINGSOFTDEP(tvp))
 		softdep_change_linkcnt(ip, 0);
+#endif
 	tvp->v_type = VNON;
 	UFS_WAPBL_END1(dvp->v_mount, dvp);
 	vput(tvp);

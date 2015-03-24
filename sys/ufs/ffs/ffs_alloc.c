@@ -543,6 +543,7 @@ ffs1_reallocblks(void *v)
 		if (prtrealloc)
 			printf(" %d,", *bap);
 #endif
+#ifdef FFS_SOFTUPDATES
 		if (DOINGSOFTDEP(vp)) {
 			if (sbap == &ip->i_ffs1_db[0] && i < ssize)
 				softdep_setup_allocdirect(ip, start_lbn + i,
@@ -553,7 +554,7 @@ ffs1_reallocblks(void *v)
 				    i < ssize ? sbp : ebp, soff + i, blkno,
 				    *bap, buflist->bs_children[i]);
 		}
-
+#endif
 		*bap++ = blkno;
 	}
 	/*
@@ -762,6 +763,7 @@ ffs2_reallocblks(void *v)
 		if (prtrealloc)
 			printf(" %lld,", (long long)*bap);
 #endif
+#ifdef FFS_SOFTUPDATES
 		if (DOINGSOFTDEP(vp)) {
 			if (sbap == &ip->i_din2->di_db[0] && i < ssize)
 				softdep_setup_allocdirect(ip, start_lbn + i,
@@ -772,6 +774,7 @@ ffs2_reallocblks(void *v)
 				    i < ssize ? sbp : ebp, soff + i, blkno,
 				    *bap, buflist->bs_children[i]);
 		}
+#endif
 		*bap++ = blkno;
 	}
 
@@ -1509,8 +1512,10 @@ ffs_fragextend(const struct inode *ip, int cg, daddr_t bprev, int osize,
 		fs->fs_cs(fs, cg).cs_nffree--;
 	}
 	fs->fs_fmod = 1;
+#ifdef FFS_SOFTUPDATES
 	if (DOINGSOFTDEP(ITOV(ip)))
 		softdep_setup_blkmapdep(bp, fs, bprev);
+#endif
 
 	bdwrite(bp);
 	return (bprev);
@@ -1601,8 +1606,10 @@ ffs_alloccg(const struct inode *ip, int cg, daddr_t bpref, int size, int flags)
 		cgp->cg_frsum[allocsiz - frags]++;
 
 	blkno = cgbase(fs, cg) + bno;
+#ifdef FFS_SOFTUPDATES
 	if (DOINGSOFTDEP(ITOV(ip)))
 		softdep_setup_blkmapdep(bp, fs, blkno);
+#endif
 	bdwrite(bp);
 	return (blkno);
 }
@@ -1674,8 +1681,10 @@ gotit:
 	fs->fs_fmod = 1;
 	blkno = cgbase(fs, cgp->cg_cgx) + bno;
 
+#ifdef FFS_SOFTUPDATES
 	if (DOINGSOFTDEP(ITOV(ip)))
 		softdep_setup_blkmapdep(bp, fs, blkno);
+#endif
 
 	return (blkno);
 }
@@ -1929,8 +1938,10 @@ gotit:
         }
 #endif /* FFS2 */
 
+#ifdef FFS_SOFTUPDATES
 	if (DOINGSOFTDEP(ITOV(ip)))
 		softdep_setup_inomapdep(bp, ip, cg * fs->fs_ipg + ipref);
+#endif
 
 	setbit(cg_inosused(cgp), ipref);
 
@@ -2266,12 +2277,14 @@ ffs_blkfree(struct inode *ip, daddr_t bno, long size)
 int
 ffs_inode_free(const struct inode *pip, ufsino_t ino, mode_t mode)
 {
+#ifdef FFS_SOFTUPDATES
 	struct vnode *pvp = ITOV(pip);
 
 	if (DOINGSOFTDEP(pvp)) {
 		softdep_freefile(pvp, ino, mode);
 		return (0);
 	}
+#endif
 
 	return (ffs_freefile(pip, ino, mode));
 }
