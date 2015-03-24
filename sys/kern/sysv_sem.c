@@ -398,7 +398,7 @@ sys_semget(struct proc *p, void *v, register_t *retval)
 		syscallarg(int) semflg;
 	} */ *uap = v;
 	int semid, error;
-	int key = SCARG(uap, key);
+	key_t key = SCARG(uap, key);
 	int nsems = SCARG(uap, nsems);
 	int semflg = SCARG(uap, semflg);
 	struct semid_ds *semaptr, *semaptr_new = NULL;
