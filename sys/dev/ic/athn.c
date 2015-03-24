@@ -905,14 +905,13 @@ athn_switch_chan(struct athn_softc *sc, struct ieee80211_channel *c,
 	AR_WRITE(sc, AR_FILT_OFDM, 0);
 	AR_WRITE(sc, AR_FILT_CCK, 0);
 	athn_set_rxfilter(sc, 0);
+#ifdef notyet
 	error = athn_stop_rx_dma(sc);
 	if (error != 0)
 		goto reset;
 
-#ifdef notyet
 	/* AR9280 needs a full reset. */
 	if (AR_SREV_9280(sc))
-#endif
 		goto reset;
 
 	/* If band or bandwidth changes, we need to do a full reset. */
@@ -933,6 +932,14 @@ athn_switch_chan(struct athn_softc *sc, struct ieee80211_channel *c,
 		if (error != 0)	/* Hopeless case. */
 			return (error);
 	}
+#else
+	/* XXX resort to a full reset for now. */
+	athn_stop_rx_dma(sc);
+	DPRINTFN(3, ("needs a full reset\n"));
+	error = athn_hw_reset(sc, c, extc, 0);
+	if (error != 0)	/* Hopeless case. */
+		return (error);
+#endif
 	athn_rx_start(sc);
 
 	/* Re-enable interrupts. */
