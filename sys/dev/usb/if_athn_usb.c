@@ -1376,11 +1376,13 @@ athn_usb_updateedca_cb(struct athn_usb_softc *usc, void *arg)
 void
 athn_usb_updateslot(struct ieee80211com *ic)
 {
+	return;	/* XXX */
+#if 0
 	struct athn_usb_softc *usc = ic->ic_softc;
 
-	return;	/* XXX */
 	/* Do it in a process context. */
 	athn_usb_do_async(usc, athn_usb_updateslot_cb, NULL, 0);
+#endif
 }
 
 void

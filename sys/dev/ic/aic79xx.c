@@ -933,6 +933,7 @@ ahd_handle_hwerrint(struct ahd_softc *ahd)
 	ahd_dump_card_state(ahd);
 	panic("BRKADRINT");
 
+#if 0
 	/* Tell everyone that this HBA is no longer available */
 	ahd_abort_scbs(ahd, CAM_TARGET_WILDCARD, ALL_CHANNELS,
 		       CAM_LUN_WILDCARD, SCB_LIST_NULL, ROLE_UNKNOWN,
@@ -940,6 +941,7 @@ ahd_handle_hwerrint(struct ahd_softc *ahd)
 
 	/* Tell the system that this controller has gone away. */
 	ahd_free(ahd);
+#endif
 }
 
 void

@@ -2493,12 +2493,14 @@ printf("<<RESELECT CONT'd>>");
 			DELAY(1);
 			goto reset;
 		}
+#if 0
 		if (sc->sc_state == NCR_IDLE) {
 			printf("%s: stray interrupt\n",
 			    sc->sc_dev.dv_xname);
 				return (0);
 		}
 		break;
+#endif
 
 	case NCR_CONNECTED:
 		if (sc->sc_flags & NCR_ICCS) {

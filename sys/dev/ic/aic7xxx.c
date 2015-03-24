@@ -497,7 +497,7 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
 			       intstat, scb_index);
 			ahc_dump_card_state(ahc);
 			panic("for safety");
-			goto unpause;
+			/* goto unpause; */
 		}
 
 		hscb = scb->hscb; 
@@ -1006,7 +1006,7 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
 		       intstat, ahc_inb(ahc, SCSISIGI));
 		break;
 	}
-unpause:
+/* unpause: */
 	/*
 	 *  The sequencer is paused immediately on
 	 *  a SEQINT, so we should restart it when
