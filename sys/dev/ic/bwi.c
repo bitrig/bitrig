@@ -4277,9 +4277,7 @@ bwi_phy812_value(struct bwi_mac *mac, uint16_t lpd)
 		}
 	}
 
-	panic("never reached");
-
-	return (0);
+	/* NOTREACHED */
 }
 
 void
