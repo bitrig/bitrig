@@ -626,7 +626,7 @@ fusefs_symlink(void *v)
 	struct fusebuf *fbuf;
 	struct vnode *tdp;
 	int error = 0;
-	int len;
+	size_t len;
 
 	dp = VTOI(dvp);
 	fmp = (struct fusefs_mnt *)dp->ufs_ino.i_ump;
@@ -638,6 +638,11 @@ fusefs_symlink(void *v)
 
 	if (fmp->undef_op & UNDEF_SYMLINK) {
 		error = ENOSYS;
+		goto bad;
+	}
+
+	if (SIZE_MAX - strlen(target) < cnp->cn_namelen + 2) {
+		error = ENAMETOOLONG;
 		goto bad;
 	}
 
