@@ -37,6 +37,7 @@ imx_match(struct device *parent, void *cfdata, void *aux)
 	case BOARD_ID_IMX6_CUBOXI:
 	case BOARD_ID_IMX6_HUMMINGBOARD:
 	case BOARD_ID_IMX6_SABRELITE:
+	case BOARD_ID_IMX6_SABRESD:
 	case BOARD_ID_IMX6_UDOO:
 	case BOARD_ID_IMX6_UTILITE:
 	case BOARD_ID_IMX6_WANDBOARD:
@@ -97,6 +98,29 @@ struct board_dev sabrelite_devs[] = {
 	{ "imxehci",	0 },
 	{ "imxenet",	0 },
 	{ "imxahci",	0 },
+	{ NULL,		0 }
+};
+
+struct board_dev sabresd_devs[] = {
+	{ "imxocotp",	0 },
+	{ "imxccm",	0 },
+	{ "imxtemp",	0 },
+	{ "imxiomuxc",	0 },
+	{ "imxdog",	0 },
+	{ "imxuart",	0 },
+	{ "imxgpio",	0 },
+	{ "imxgpio",	1 },
+	{ "imxgpio",	2 },
+	{ "imxgpio",	3 },
+	{ "imxgpio",	4 },
+	{ "imxgpio",	5 },
+	{ "imxgpio",	6 },
+	{ "imxesdhc",	1 },
+	{ "imxesdhc",	2 },
+	{ "imxesdhc",	3 },
+	{ "ehci",	0 },
+	{ "imxenet",	0 },
+	{ "ahci",	0 },
 	{ NULL,		0 }
 };
 

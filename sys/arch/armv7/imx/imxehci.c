@@ -76,6 +76,7 @@
 #define EHCI_HUMMINGBOARD_USB_H1_PWR		0
 #define EHCI_HUMMINGBOARD_USB_OTG_PWR		(2*32+22)
 #define EHCI_NITROGEN6X_USB_HUB_RST		(6*32+12)
+#define EHCI_SABRESD_USB_PWR			(0*32+29)
 #define EHCI_UTILITE_USB_HUB_RST		(6*32+8)
 
 int	imxehci_match(struct device *, void *, void *);
@@ -208,6 +209,11 @@ imxehci_attach(struct device *parent, struct device *self, void *aux)
 			imxgpio_set_dir(EHCI_NITROGEN6X_USB_HUB_RST, IMXGPIO_DIR_OUT);
 			delay(1000 * 2);
 			imxgpio_set_bit(EHCI_NITROGEN6X_USB_HUB_RST);
+			delay(10);
+			break;
+		case BOARD_ID_IMX6_SABRESD:
+			imxgpio_set_bit(EHCI_SABRESD_USB_PWR);
+			imxgpio_set_dir(EHCI_SABRESD_USB_PWR, IMXGPIO_DIR_OUT);
 			delay(10);
 			break;
 		case BOARD_ID_IMX6_UTILITE:

@@ -503,6 +503,21 @@ imxesdhc_card_detect(sdmmc_chipset_handle_t sch)
 		}
 		imxgpio_set_dir(gpio, IMXGPIO_DIR_IN);
 		return imxgpio_get_bit(gpio) ? 0 : 1;
+	case BOARD_ID_IMX6_SABRESD:
+		switch (sc->unit) {
+			case 1:
+				gpio = 1*32 + 2;
+				break;
+			case 2:
+				gpio = 1*32 + 0;
+				break;
+			case 3:
+				return 1;
+			default:
+				return 0;
+		}
+		imxgpio_set_dir(gpio, IMXGPIO_DIR_IN);
+		return imxgpio_get_bit(gpio) ? 0 : 1;
 	case BOARD_ID_IMX6_UTILITE:
 		switch (sc->unit) {
 			case 2:
