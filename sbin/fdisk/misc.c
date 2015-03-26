@@ -1,4 +1,4 @@
-/*	$OpenBSD: misc.c,v 1.47 2015/03/26 16:32:16 krw Exp $	*/
+/*	$OpenBSD: misc.c,v 1.48 2015/03/26 20:32:10 krw Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -122,12 +122,14 @@ ask_num(const char *str, uint32_t dflt, uint32_t low, uint32_t high)
 }
 
 int
-ask_pid(unsigned char dflt)
+ask_pid(int dflt, int low, int high)
 {
 	char lbuf[100], *cp;
 	size_t lbuflen;
 	int num = -1;
-	const int low = 0, high = 0xff;
+
+	if (low == 1)
+		low = 0;	/* Show continguous range */
 
 	do {
 		printf("Partition id ('0' to disable) [%X - %X]: [%X] ", low,
@@ -155,6 +157,8 @@ ask_pid(unsigned char dflt)
 		if (*cp != '\0') {
 			printf("'%s' is not a valid number.\n", lbuf);
 			num = low - 1;
+		} else if (num == 0) {
+			break;
 		} else if (num < low || num > high) {
 			printf("'%x' is out of range.\n", num);
 		}
@@ -319,4 +323,31 @@ uint32_t
 CHS_to_BN(uint32_t cyl, uint32_t head, uint32_t sect)
 {
 	return ((cyl * disk.heads + head) * disk.sectors + sect - 1);
+}
+
+char *
+ask_string(const char *prompt, const char *oval)
+{
+	static char buf[BUFSIZ];
+	int n;
+
+	buf[0] = '\0';
+	do {
+		printf("%s: [%s] ", prompt, oval ? oval : "");
+		if (fgets(buf, sizeof(buf), stdin) == NULL) {
+			buf[0] = '\0';
+			if (feof(stdin)) {
+				clearerr(stdin);
+				putchar('\n');
+				return(NULL);
+			}
+		}
+		n = strlen(buf);
+		if (n > 0 && buf[n-1] == '\n')
+			buf[--n] = '\0';
+		else if (oval != NULL && buf[0] == '\0')
+			strlcpy(buf, oval, sizeof(buf));
+	} while (buf[0] == '?');
+
+	return(&buf[0]);
 }
