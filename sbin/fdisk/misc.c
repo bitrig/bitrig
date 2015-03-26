@@ -1,4 +1,4 @@
-/*	$OpenBSD: misc.c,v 1.46 2015/03/26 14:08:12 krw Exp $	*/
+/*	$OpenBSD: misc.c,v 1.47 2015/03/26 16:32:16 krw Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -31,12 +31,13 @@
 #include "part.h"
 
 struct unit_type unit_types[] = {
-	{"b", 1			, "Bytes"},
-	{" ", 0			, "Sectors"},	/* Filled in from disklabel. */
-	{"K", 1024		, "Kilobytes"},
-	{"M", 1024 * 1024	, "Megabytes"},
-	{"G", 1024 * 1024 *1024	, "Gigabytes"},
-	{NULL, 0		, NULL },
+	{ "b"	, 1LL				, "Bytes"	},
+	{ " "	, 0LL				, "Sectors"	},
+	{ "K"	, 1024LL			, "Kilobytes"	},
+	{ "M"	, 1024LL * 1024			, "Megabytes"	},
+	{ "G"	, 1024LL * 1024 *1024		, "Gigabytes"	},
+	{ "T"	, 1024LL * 1024 * 1024 * 1024	, "Terabytes"	},
+	{ NULL	, 0				, NULL		},
 };
 
 int
@@ -190,9 +191,10 @@ ask_yn(const char *str)
 uint64_t
 getuint64(char *prompt, uint64_t oval, uint64_t maxval)
 {
+	const int secsize = unit_types[SECTORS].conversion;
 	char buf[BUFSIZ], *endptr, *p, operator = '\0';
 	size_t n;
-	int mult = 1, secsize = unit_types[SECTORS].conversion;
+	int64_t mult = 1;
 	double d, d2;
 	int secpercyl, saveerr;
 	char unit;
