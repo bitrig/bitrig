@@ -1,4 +1,4 @@
-/*	$OpenBSD: part.h,v 1.18 2015/03/16 23:51:50 krw Exp $	*/
+/*	$OpenBSD: part.h,v 1.19 2015/03/26 14:08:12 krw Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -20,10 +20,10 @@
 #define _PART_H
 
 struct prt {
+	uint64_t bs;
+	uint64_t ns;
 	uint32_t shead, scyl, ssect;
 	uint32_t ehead, ecyl, esect;
-	uint32_t bs;
-	uint32_t ns;
 	unsigned char flag;
 	unsigned char id;
 };

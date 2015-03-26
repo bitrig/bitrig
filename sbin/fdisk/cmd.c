@@ -1,4 +1,4 @@
-/*	$OpenBSD: cmd.c,v 1.79 2015/03/19 22:48:57 krw Exp $	*/
+/*	$OpenBSD: cmd.c,v 1.80 2015/03/26 14:08:12 krw Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -191,15 +191,16 @@ Xedit(char *args, struct mbr *mbr)
 		PRT_fix_CHS(pp);
 	} else {
 #define	EDIT_BN(p, v, n)				\
-	if ((num = getuint(p, v, n)) != v)	\
+	if ((num = getuint64(p, v, n)) != v)	\
 		ret = CMD_DIRTY;			\
 	v = num;
-		EDIT_BN("Partition offset", pp->bs, disk.size);
+		EDIT_BN("Partition offset", pp->bs, (uint64_t)disk.size);
 
 		if (ret == CMD_DIRTY)
 			MBR_grow_part(mbr, pn);
 
-		EDIT_BN("Partition size", pp->ns, disk.size - pp->bs);
+		EDIT_BN("Partition size", pp->ns,
+		    (uint64_t)(disk.size - pp->bs));
 #undef EDIT_BN
 
 		/* Fix up CHS values */
@@ -241,8 +242,8 @@ int
 Xselect(char *args, struct mbr *mbr)
 {
 	const char *errstr;
-	static int firstoff = 0;
-	int off;
+	static off_t firstoff = 0;
+	off_t off;
 	int pn;
 
 	pn = strtonum(args, 0, 3, &errstr);
@@ -268,7 +269,7 @@ Xselect(char *args, struct mbr *mbr)
 		return (CMD_CONT);
 	} else {
 		printf("Selected extended partition %d\n", pn);
-		printf("New MBR at offset %d.\n", off);
+		printf("New MBR at offset %lld.\n", (long long)off);
 	}
 
 	/* Recursion is beautiful! */
