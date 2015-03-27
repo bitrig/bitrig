@@ -914,7 +914,7 @@ pppoe_ioctl(struct ifnet *ifp, unsigned long cmd, caddr_t data)
 	case PPPOESETPARMS:
 	{
 		struct pppoediscparms *parms = (struct pppoediscparms *)data;
-		int len;
+		size_t len;
 
 		if ((error = suser(p, 0)) != 0)
 			return (error);
