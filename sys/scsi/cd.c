@@ -142,10 +142,6 @@ int	dvd_read_bca(struct cd_softc *, union dvd_struct *);
 int	dvd_read_manufact(struct cd_softc *, union dvd_struct *);
 int	dvd_read_struct(struct cd_softc *, union dvd_struct *);
 
-#if defined(__macppc__)
-int	cd_eject(void);
-#endif
-
 struct cfattach cd_ca = {
 	sizeof(struct cd_softc), cdmatch, cdattach,
 	cddetach, cdactivate
@@ -2227,34 +2223,3 @@ exit:
 		*blksize = 0;
 	return (0);
 }
-
-#if defined(__macppc__)
-int
-cd_eject(void)
-{
-	struct cd_softc *sc;
-	int error = 0;
-	
-	if (cd_cd.cd_ndevs == 0 || (sc = cd_cd.cd_devs[0]) == NULL)
-		return (ENXIO);
-
-	if ((error = disk_lock(&sc->sc_dk)) != 0)
-		return (error);
-
-	if (sc->sc_dk.dk_openmask == 0) {
-		sc->sc_link->flags |= SDEV_EJECTING;
-
-		scsi_prevent(sc->sc_link, PR_ALLOW,
-		    SCSI_IGNORE_ILLEGAL_REQUEST | SCSI_IGNORE_NOT_READY |
-		    SCSI_SILENT | SCSI_IGNORE_MEDIA_CHANGE);
-		sc->sc_link->flags &= ~SDEV_MEDIA_LOADED;
-
-		scsi_start(sc->sc_link, SSS_STOP|SSS_LOEJ, 0);
-
-		sc->sc_link->flags &= ~SDEV_EJECTING;
-	}
-	disk_unlock(&sc->sc_dk);
-
-	return (error);
-}
-#endif
