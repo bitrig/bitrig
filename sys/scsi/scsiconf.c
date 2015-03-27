@@ -1103,16 +1103,16 @@ scsi_inqmatch(struct scsi_inquiry_data *inqbuf, const void *_base,
 		if (removable != match->removable)
 			continue;
 		priority = 2;
-		len = strlen(match->vendor);
-		if (bcmp(inqbuf->vendor, match->vendor, len))
+		len = (int)strlen(match->vendor);
+		if (memcmp(inqbuf->vendor, match->vendor, len))
 			continue;
 		priority += len;
-		len = strlen(match->product);
-		if (bcmp(inqbuf->product, match->product, len))
+		len = (int)strlen(match->product);
+		if (memcmp(inqbuf->product, match->product, len))
 			continue;
 		priority += len;
-		len = strlen(match->revision);
-		if (bcmp(inqbuf->revision, match->revision, len))
+		len = (int)strlen(match->revision);
+		if (memcmp(inqbuf->revision, match->revision, len))
 			continue;
 		priority += len;
 

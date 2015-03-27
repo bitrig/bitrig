@@ -829,7 +829,7 @@ atascsi_disk_vpd_ident(struct scsi_xfer *xs)
 
 	pg.hdr.device = T_DIRECT;
 	pg.hdr.page_code = SI_PG_DEVID;
-	_lto2b(pg_len, pg.hdr.page_length);
+	_lto2b((u_int32_t)pg_len, pg.hdr.page_length);
 	pg_len += sizeof(pg.hdr);
 
 	bcopy(&pg, xs->data, MIN(pg_len, xs->datalen));
@@ -1319,7 +1319,7 @@ atascsi_disk_capacity(struct scsi_xfer *xs)
 	if (capacity > 0xffffffff)
 		capacity = 0xffffffff;
 
-	_lto4b(capacity, rcd.addr);
+	_lto4b((u_int32_t)capacity, rcd.addr);
 	_lto4b(ata_identify_blocksize(&ap->ap_identify), rcd.length);
 
 	bcopy(&rcd, xs->data, MIN(sizeof(rcd), xs->datalen));

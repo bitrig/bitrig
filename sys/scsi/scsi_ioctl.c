@@ -107,6 +107,8 @@ scsi_ioc_cmd(struct scsi_link *link, scsireq_t *screq)
 		return (EFAULT);
 	if (screq->datalen > MAXPHYS)
 		return (EINVAL);
+	if (screq->timeout > INT_MAX)
+		return (EINVAL);
 
 	xs = scsi_xs_get(link, 0);
 	if (xs == NULL)
@@ -121,7 +123,7 @@ scsi_ioc_cmd(struct scsi_link *link, scsireq_t *screq)
 			err = ENOMEM;
 			goto err;
 		}
-		xs->datalen = screq->datalen;
+		xs->datalen = (int)screq->datalen;
 	}
 
 	if (screq->flags & SCCMD_READ)
@@ -137,7 +139,7 @@ scsi_ioc_cmd(struct scsi_link *link, scsireq_t *screq)
 	}
 
 	xs->flags |= SCSI_SILENT;	/* User is responsible for errors. */
-	xs->timeout = screq->timeout;
+	xs->timeout = (int)screq->timeout;
 	xs->retries = 0; /* user must do the retries *//* ignored */
 
 	scsi_xs_sync(xs);
@@ -243,7 +245,7 @@ scsi_ioc_ata_cmd(struct scsi_link *link, atareq_t *atareq)
 			err = ENOMEM;
 			goto err;
 		}
-		xs->datalen = atareq->datalen;
+		xs->datalen = (int)atareq->datalen;
 	}
 
 	if (atareq->flags & ATACMD_READ)
