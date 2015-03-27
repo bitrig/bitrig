@@ -280,9 +280,8 @@ if_attachsetup(struct ifnet *ifp)
 void
 if_alloc_sadl(struct ifnet *ifp)
 {
-	unsigned int socksize;
-	int namelen, masklen;
 	struct sockaddr_dl *sdl;
+	size_t namelen, masklen, socksize;
 
 	/*
 	 * If the interface already has a link name, release it
@@ -293,17 +292,20 @@ if_alloc_sadl(struct ifnet *ifp)
 		if_free_sadl(ifp);
 
 	namelen = strlen(ifp->if_xname);
+	if (namelen > UCHAR_MAX)
+		panic("%s: namelen", __func__);
+
 	masklen = offsetof(struct sockaddr_dl, sdl_data[0]) + namelen;
-	socksize = masklen + ifp->if_addrlen;
-#define ROUNDUP(a) (1 + (((a) - 1) | (sizeof(long) - 1)))
-	if (socksize < sizeof(*sdl))
-		socksize = sizeof(*sdl);
-	socksize = ROUNDUP(socksize);
+	socksize = roundup(szmax(masklen + ifp->if_addrlen, sizeof(*sdl)),
+	    sizeof(long));
+	if (socksize > UCHAR_MAX)
+		panic("%s: socksize");
+
 	sdl = malloc(socksize, M_IFADDR, M_WAITOK|M_ZERO);
-	sdl->sdl_len = socksize;
+	sdl->sdl_len = (unsigned char)socksize;
 	sdl->sdl_family = AF_LINK;
-	bcopy(ifp->if_xname, sdl->sdl_data, namelen);
-	sdl->sdl_nlen = namelen;
+	memcpy(sdl->sdl_data, ifp->if_xname, namelen);
+	sdl->sdl_nlen = (unsigned char)namelen;
 	sdl->sdl_alen = ifp->if_addrlen;
 	sdl->sdl_index = ifp->if_index;
 	sdl->sdl_type = ifp->if_type;
