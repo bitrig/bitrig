@@ -109,7 +109,7 @@ midiread(dev_t dev, struct uio *uio, int ioflag)
 {
 	struct midi_softc  *sc = MIDI_DEV2SC(dev);
 	struct midi_buffer *mb = &sc->inbuf;
-	unsigned int count;
+	size_t count;
 	int error;
 
 	if (!(sc->flags & FREAD))
@@ -138,12 +138,10 @@ midiread(dev_t dev, struct uio *uio, int ioflag)
 	/* at this stage, there is at least 1 byte */
 
 	while (uio->uio_resid > 0 && mb->used > 0) {
-		count = MIDIBUF_SIZE - mb->start;
-		if (count > mb->used)
-			count = mb->used;
+		count = szmin(MIDIBUF_SIZE - mb->start, mb->used);
 		if (count > uio->uio_resid)
 			count = uio->uio_resid;
-		error = uiomovei(mb->data + mb->start, count, uio);
+		error = uiomove(mb->data + mb->start, count, uio);
 		if (error) {
 			mtx_leave(&audio_lock);
 			return error;
@@ -235,7 +233,7 @@ midiwrite(dev_t dev, struct uio *uio, int ioflag)
 {
 	struct midi_softc  *sc = MIDI_DEV2SC(dev);
 	struct midi_buffer *mb = &sc->outbuf;
-	unsigned int count;
+	size_t count;
 	int error;
 
 	if (!(sc->flags & FWRITE))
@@ -276,12 +274,10 @@ midiwrite(dev_t dev, struct uio *uio, int ioflag)
 			}
 		}
 
-		count = MIDIBUF_SIZE - MIDIBUF_END(mb);
-		if (count > MIDIBUF_AVAIL(mb))
-			count = MIDIBUF_AVAIL(mb);
+		count = szmin(MIDIBUF_SIZE - MIDIBUF_END(mb), MIDIBUF_AVAIL(mb));
 		if (count > uio->uio_resid)
 			count = uio->uio_resid;
-		error = uiomovei(mb->data + MIDIBUF_END(mb), count, uio);
+		error = uiomove(mb->data + MIDIBUF_END(mb), count, uio);
 		if (error) {
 			mtx_leave(&audio_lock);
 			return error;
