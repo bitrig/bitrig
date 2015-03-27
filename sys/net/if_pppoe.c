@@ -1073,7 +1073,7 @@ static int
 pppoe_send_padi(struct pppoe_softc *sc)
 {
 	struct mbuf *m0;
-	int len, l1 = 0, l2 = 0; /* XXX: gcc */
+	size_t len, l1 = 0, l2 = 0;
 	u_int8_t *p;
 
 	if (sc->sc_state > PPPOE_STATE_PADI_SENT)
