@@ -1,4 +1,4 @@
-/*	$OpenBSD: gs.h,v 1.13 2014/11/20 08:50:53 bentley Exp $	*/
+/*	$OpenBSD: gs.h,v 1.14 2015/03/27 04:11:25 brynet Exp $	*/
 
 /*-
  * Copyright (c) 1993, 1994
@@ -146,21 +146,3 @@ struct _gs {
 #define	G_TMP_INUSE	0x0100		/* Temporary buffer in use. */
 	u_int32_t flags;
 };
-
-/*
- * XXX
- * Block signals if there are asynchronous events.  Used to keep DB system calls
- * from being interrupted and not restarted, as that will result in consistency
- * problems.  This should be handled by DB.
- */
-#ifdef BLOCK_SIGNALS
-#include <signal.h>
-extern sigset_t	__sigblockset;
-#define	SIGBLOCK \
-	(void)sigprocmask(SIG_BLOCK, &__sigblockset, NULL)
-#define	SIGUNBLOCK \
-	(void)sigprocmask(SIG_UNBLOCK, &__sigblockset, NULL);
-#else
-#define	SIGBLOCK
-#define	SIGUNBLOCK
-#endif

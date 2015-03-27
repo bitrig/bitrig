@@ -803,13 +803,10 @@ file_write(SCR *sp, MARK *fm, MARK *tm, char *name, int flags)
 		return (1);
 
 	/* Open the file. */
-	SIGBLOCK;
 	if ((fd = open(name, oflags, DEFFILEMODE)) < 0) {
 		msgq_str(sp, M_SYSERR, name, "%s");
-		SIGUNBLOCK;
 		return (1);
 	}
-	SIGUNBLOCK;
 
 	/* Try and get a lock. */
 	if (!noname && file_lock(sp, NULL, NULL, fd, 0) == LOCK_UNAVAIL)
