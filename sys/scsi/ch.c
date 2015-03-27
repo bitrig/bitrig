@@ -48,6 +48,7 @@
 #include <sys/pool.h>
 #include <sys/fcntl.h>
 #include <sys/vnode.h>
+#include <sys/stdint.h>
 
 #include <machine/conf.h>
 
@@ -641,6 +642,9 @@ ch_getelemstatus(struct ch_softc *sc, int first, int count, caddr_t data,
 	struct scsi_xfer *xs;
 	int error;
 
+	if (datalen > INT_MAX || datalen > UINT32_MAX)
+		return (EINVAL);
+
 	/*
 	 * Build SCSI command.
 	 */
@@ -649,7 +653,7 @@ ch_getelemstatus(struct ch_softc *sc, int first, int count, caddr_t data,
 		return (ENOMEM);
 	xs->cmdlen = sizeof(*cmd);
 	xs->data = data;
-	xs->datalen = datalen;
+	xs->datalen = (int)datalen;
 	xs->retries = CHRETRIES;
 	xs->timeout = 100000;
 
@@ -657,7 +661,7 @@ ch_getelemstatus(struct ch_softc *sc, int first, int count, caddr_t data,
 	cmd->opcode = READ_ELEMENT_STATUS;
 	_lto2b(first, cmd->sea);
 	_lto2b(count, cmd->count);
-	_lto3b(datalen, cmd->len);
+	_lto3b((u_int32_t)datalen, cmd->len);
 	if (voltag)
 		cmd->byte2 |= READ_ELEMENT_STATUS_VOLTAG;
 
