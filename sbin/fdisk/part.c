@@ -1,4 +1,4 @@
-/*	$OpenBSD: part.c,v 1.70 2015/03/26 14:08:12 krw Exp $	*/
+/*	$OpenBSD: part.c,v 1.71 2015/03/27 15:56:45 krw Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
