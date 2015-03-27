@@ -1046,6 +1046,10 @@ pppoe_get_mbuf(size_t len)
 {
 	struct mbuf *m;
 
+	if (SIZE_MAX - len < sizeof(struct ether_header) ||
+	    len + sizeof(struct ether_header) > MCLBYTES)
+		return (NULL);
+
 	MGETHDR(m, M_DONTWAIT, MT_DATA);
 	if (m == NULL)
 		return (NULL);
@@ -1057,8 +1061,8 @@ pppoe_get_mbuf(size_t len)
 		}
 	}
 	m->m_data += sizeof(struct ether_header);
-	m->m_len = len;
-	m->m_pkthdr.len = len;
+	m->m_len = (unsigned int)len;
+	m->m_pkthdr.len = (int)len;
 	m->m_pkthdr.rcvif = NULL;
 
 	return (m);
