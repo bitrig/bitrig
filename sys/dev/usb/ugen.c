@@ -839,7 +839,7 @@ ugen_isoc_rintr(struct usbd_xfer *xfer, void *addr, usbd_status status)
 
 		/* copy data to buffer */
 		while (actlen > 0) {
-			n = min(actlen, sce->limit - sce->fill);
+			n = (u_int32_t)szmin(actlen, sce->limit - sce->fill);
 			memcpy(sce->fill, buf, n);
 
 			buf += n;
