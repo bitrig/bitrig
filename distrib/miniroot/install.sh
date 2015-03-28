@@ -1,5 +1,5 @@
 #!/bin/ksh
-#	$OpenBSD: install.sh,v 1.260 2015/03/11 21:00:35 krw Exp $
+#	$OpenBSD: install.sh,v 1.261 2015/03/28 00:03:05 rpe Exp $
 #	$NetBSD: install.sh,v 1.5.2.8 1996/08/27 18:15:05 gwr Exp $
 #
 # Copyright (c) 1997-2015 Todd Miller, Theo de Raadt, Ken Westerback
@@ -55,10 +55,10 @@
 
 #	Bitrig installation script.
 
-# install.sub needs to know the MODE
+# install.sub needs to know the MODE.
 MODE=install
 
-# include common subroutines and initialization code
+# Include common subroutines and initialization code.
 . /install.sub
 
 ask_until "System hostname? (short form, e.g. 'foo')" "$(hostname -s)"
@@ -88,7 +88,7 @@ user_setup
 set_timezone /var/tzlist
 echo
 
-# Configure disks
+# Configure disks.
 get_rootinfo
 
 DISK=
@@ -227,7 +227,7 @@ feed_random
 install_sets
 
 # If we did not succeed at setting TZ yet, we try again
-# using the timezone names extracted from the base set
+# using the timezone names extracted from the base set.
 if [[ -z $TZ ]]; then
 	(cd /mnt/usr/share/zoneinfo
 		ls -1dF $(tar cvf /dev/null [A-Za-y]*) >/mnt/tmp/tzlist )
@@ -302,7 +302,7 @@ if [[ -n $user ]]; then
 w
 q" | ed /mnt/etc/group 2>/dev/null
 
-	# Add public ssh key to authorized_keys
+	# Add public ssh key to authorized_keys.
 	[[ -n "$userkey" ]] &&
 		print -r -- "$userkey" >> $_home/.ssh/authorized_keys
 fi
@@ -315,7 +315,7 @@ q" | ed /mnt/etc/master.passwd 2>/dev/null
 fi
 /mnt/usr/sbin/pwd_mkdb -p -d /mnt/etc /etc/master.passwd
 
-# Add public ssh key to authorized_keys
+# Add public ssh key to authorized_keys.
 [[ -n "$rootkey" ]] && (
 	umask 077
 	mkdir /mnt/root/.ssh
