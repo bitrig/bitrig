@@ -99,7 +99,7 @@ read_seeprom(sd, buf, start_addr, count)
 	bus_size_t count;
 {
 	int i = 0;
-	u_int k = 0;
+	bus_size_t k = 0;
 	u_int16_t v;
 	u_int32_t temp;
 
