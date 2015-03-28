@@ -1,4 +1,4 @@
-/*	$OpenBSD: v_match.c,v 1.7 2014/11/12 04:28:41 bentley Exp $	*/
+/*	$OpenBSD: v_match.c,v 1.8 2015/03/28 12:54:37 bcallah Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -13,6 +13,7 @@
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
