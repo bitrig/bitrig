@@ -1,4 +1,4 @@
-/*	$OpenBSD: misc.c,v 1.48 2015/03/26 20:32:10 krw Exp $	*/
+/*	$OpenBSD: misc.c,v 1.49 2015/03/28 13:29:16 krw Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -350,4 +350,27 @@ ask_string(const char *prompt, const char *oval)
 	} while (buf[0] == '?');
 
 	return(&buf[0]);
+}
+
+/*
+ * Adapted from Hacker's Delight crc32b().
+ */
+uint32_t
+crc32(const unsigned char *buf, const uint32_t size)
+{
+	int j;
+	uint32_t i, byte, crc, mask;
+
+	crc = 0xFFFFFFFF;
+
+	for (i = 0; i < size; i++) {
+		byte = buf[i];			/* Get next byte. */
+		crc = crc ^ byte;
+		for (j = 7; j >= 0; j--) {	/* Do eight times. */
+			mask = -(crc & 1);
+			crc = (crc >> 1) ^ (0xEDB88320 & mask);
+		}
+	}
+
+	return ~crc;
 }
