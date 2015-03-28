@@ -253,7 +253,7 @@ uhub_attach(struct device *parent, struct device *self, void *aux)
 
 	err = usbd_open_pipe_intr(iface, ed->bEndpointAddress,
 		  USBD_SHORT_XFER_OK, &sc->sc_ipipe, sc, sc->sc_statusbuf,
-		  sc->sc_statuslen, uhub_intr, UHUB_INTR_INTERVAL);
+		  (u_int32_t)sc->sc_statuslen, uhub_intr, UHUB_INTR_INTERVAL);
 	if (err) {
 		printf("%s: cannot open interrupt pipe\n",
 		       sc->sc_dev.dv_xname);
