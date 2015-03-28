@@ -1683,11 +1683,11 @@ ahci_load_prdt(struct ahci_ccb *ccb)
 
 	for (i = 0; i < dmap->dm_nsegs - 1; i++) {
 		ahci_load_prdt_seg(&prdt[i], dmap->dm_segs[i].ds_addr,
-		    dmap->dm_segs[i].ds_len, 0);
+		    (u_int32_t)dmap->dm_segs[i].ds_len, 0);
 	}
 
 	ahci_load_prdt_seg(&prdt[i],
-	    dmap->dm_segs[i].ds_addr, dmap->dm_segs[i].ds_len,
+	    dmap->dm_segs[i].ds_addr, (u_int32_t)dmap->dm_segs[i].ds_len,
 	    ISSET(xa->flags, ATA_F_PIO) ? AHCI_PRDT_FLAG_INTR : 0);
 
 	htolem16(&cmd_slot->prdtl, dmap->dm_nsegs);
@@ -3129,7 +3129,7 @@ ahci_hibernate_load_prdt(struct ahci_ccb *ccb)
 	/* derived from i386/amd64 _bus_dma_load_buffer;
 	 * for amd64 the buffer will always be dma safe.
 	 */
-	 
+
 	buflen = xa->datalen;
 	data_addr = (vaddr_t)xa->data;
 	for (i = 0; buflen > 0; i++) {
@@ -3142,7 +3142,8 @@ ahci_hibernate_load_prdt(struct ahci_ccb *ccb)
 		if (buflen < seglen)
 			seglen = buflen;
 
-		ahci_load_prdt_seg(&prdt[i], data_bus_phys, seglen, 0);
+		ahci_load_prdt_seg(&prdt[i], data_bus_phys, (u_int32_t)seglen,
+		    0);
 
 		data_addr += seglen;
 		buflen -= seglen;
