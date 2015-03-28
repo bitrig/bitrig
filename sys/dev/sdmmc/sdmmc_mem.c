@@ -369,6 +369,11 @@ sdmmc_mem_send_cxd_data(struct sdmmc_softc *sc, int opcode, void *data,
 	void *ptr = NULL;
 	int error = 0;
 
+	if (datalen > INT_MAX) {
+		error = EINVAL;
+		goto out;
+	}
+
 	ptr = malloc(datalen, M_DEVBUF, M_NOWAIT | M_ZERO);
 	if (ptr == NULL) {
 		error = ENOMEM;
@@ -377,8 +382,8 @@ sdmmc_mem_send_cxd_data(struct sdmmc_softc *sc, int opcode, void *data,
 
 	memset(&cmd, 0, sizeof(cmd));
 	cmd.c_data = ptr;
-	cmd.c_datalen = datalen;
-	cmd.c_blklen = datalen;
+	cmd.c_datalen = (int)datalen;
+	cmd.c_blklen = (int)datalen;
 	cmd.c_opcode = opcode;
 	cmd.c_arg = 0;
 	cmd.c_flags = SCF_CMD_ADTC | SCF_CMD_READ;
@@ -619,13 +624,17 @@ sdmmc_mem_read_block_subr(struct sdmmc_function *sf, int blkno, u_char *data,
 	struct sdmmc_command cmd;
 	int error;
 
+	if (datalen > INT_MAX) {
+		error = EINVAL;
+		goto err;
+	}
 
 	if ((error = sdmmc_select_card(sc, sf)) != 0)
 		goto err;
 
 	bzero(&cmd, sizeof cmd);
 	cmd.c_data = data;
-	cmd.c_datalen = datalen;
+	cmd.c_datalen = (int)datalen;
 	cmd.c_blklen = sf->csd.sector_size;
 	cmd.c_opcode = (datalen / cmd.c_blklen) > 1 ?
 	    MMC_READ_BLOCK_MULTIPLE : MMC_READ_BLOCK_SINGLE;
@@ -709,12 +718,17 @@ sdmmc_mem_write_block_subr(struct sdmmc_function *sf, int blkno, u_char *data,
 	struct sdmmc_command cmd;
 	int error;
 
+	if (datalen > INT_MAX) {
+		error = EINVAL;
+		goto err;
+	}
+
 	if ((error = sdmmc_select_card(sc, sf)) != 0)
 		goto err;
 
 	bzero(&cmd, sizeof cmd);
 	cmd.c_data = data;
-	cmd.c_datalen = datalen;
+	cmd.c_datalen = (int)datalen;
 	cmd.c_blklen = sf->csd.sector_size;
 	cmd.c_opcode = (datalen / cmd.c_blklen) > 1 ?
 	    MMC_WRITE_BLOCK_MULTIPLE : MMC_WRITE_BLOCK_SINGLE;
