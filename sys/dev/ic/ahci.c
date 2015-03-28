@@ -3172,7 +3172,7 @@ ahci_hibernate_io(dev_t dev, daddr_t blkno, vaddr_t addr, size_t size,
 		size_t psize;
 	} *my = page;
 	struct ata_fis_h2d *fis;
-	u_int32_t sector_count;
+	u_int64_t sector_count;
 	struct ahci_cmd_hdr *cmd_slot;
 	int rc;
 	int timeout;
