@@ -1,4 +1,4 @@
-/*	$OpenBSD: misc.h,v 1.28 2015/03/28 13:29:16 krw Exp $	*/
+/*	$OpenBSD: misc.h,v 1.29 2015/03/29 21:16:39 krw Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -38,5 +38,7 @@ uint64_t getuint64(char *, uint64_t, uint64_t);
 void BN_to_CHS(uint32_t, uint32_t *, uint32_t *, uint32_t *);
 uint32_t CHS_to_BN(uint32_t, uint32_t, uint32_t);
 uint32_t crc32(const unsigned char *, const uint32_t);
+char *readsector(int, off_t);
+int writesector(int, char *, off_t);
 
 #endif /* _MISC_H */
