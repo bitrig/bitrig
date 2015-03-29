@@ -34,6 +34,7 @@
 #include <sys/kernel.h>
 #include <sys/socket.h>
 #include <sys/systm.h>
+#include <sys/stdint.h>
 #include <sys/timeout.h>
 #include <sys/conf.h>
 #include <sys/device.h>
@@ -173,7 +174,7 @@ int	uath_set_led(struct uath_softc *, int, int);
 int	uath_switch_channel(struct uath_softc *, struct ieee80211_channel *);
 int	uath_init(struct ifnet *);
 void	uath_stop(struct ifnet *, int);
-int	uath_loadfirmware(struct uath_softc *, const u_char *, int);
+int	uath_loadfirmware(struct uath_softc *, const u_char *, size_t);
 
 int uath_match(struct device *, void *, void *);
 void uath_attach(struct device *, struct device *, void *);
@@ -1997,12 +1998,17 @@ uath_stop(struct ifnet *ifp, int disable)
  * through /dev/ugen.
  */
 int
-uath_loadfirmware(struct uath_softc *sc, const u_char *fw, int len)
+uath_loadfirmware(struct uath_softc *sc, const u_char *fw, size_t len)
 {
 	struct usbd_xfer *ctlxfer, *txxfer, *rxxfer;
 	struct uath_fwblock *txblock, *rxblock;
 	uint8_t *txdata;
 	int error = 0;
+
+	if (len > UINT32_MAX) {
+		error = USBD_INVAL;
+		goto fail1;
+	}
 
 	if ((ctlxfer = usbd_alloc_xfer(sc->sc_udev)) == NULL) {
 		printf("%s: could not allocate Tx control xfer\n",
@@ -2048,15 +2054,15 @@ uath_loadfirmware(struct uath_softc *sc, const u_char *fw, int len)
 
 	bzero(txblock, sizeof (struct uath_fwblock));
 	txblock->flags = htobe32(UATH_WRITE_BLOCK);
-	txblock->total = htobe32(len);
+	txblock->total = htobe32((uint32_t)len);
 
 	while (len > 0) {
-		int mlen = min(len, UATH_MAX_FWBLOCK_SIZE);
+		size_t mlen = szmin(len, UATH_MAX_FWBLOCK_SIZE);
 
-		txblock->remain = htobe32(len - mlen);
-		txblock->len = htobe32(mlen);
+		txblock->remain = htobe32((uint32_t)(len - mlen));
+		txblock->len = htobe32((uint32_t)mlen);
 
-		DPRINTF(("sending firmware block: %d bytes remaining\n",
+		DPRINTF(("sending firmware block: %zu bytes remaining\n",
 		    len - mlen));
 
 		/* send firmware block meta-data */
@@ -2072,8 +2078,9 @@ uath_loadfirmware(struct uath_softc *sc, const u_char *fw, int len)
 
 		/* send firmware block data */
 		bcopy(fw, txdata, mlen);
-		usbd_setup_xfer(txxfer, sc->data_tx_pipe, sc, txdata, mlen,
-		    USBD_NO_COPY | USBD_SYNCHRONOUS, UATH_DATA_TIMEOUT, NULL);
+		usbd_setup_xfer(txxfer, sc->data_tx_pipe, sc, txdata,
+		    (u_int32_t)mlen, USBD_NO_COPY | USBD_SYNCHRONOUS,
+		    UATH_DATA_TIMEOUT, NULL);
 		if ((error = usbd_transfer(txxfer)) != 0) {
 			printf("%s: could not send firmware block data\n",
 			    sc->sc_dev.dv_xname);

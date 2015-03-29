@@ -95,6 +95,7 @@
 #include <sys/mbuf.h>
 #include <sys/socket.h>
 #include <sys/sockio.h>
+#include <sys/stdint.h>
 #include <sys/ioctl.h>
 #include <sys/errno.h>
 #include <sys/device.h>
@@ -176,7 +177,7 @@ const char *	acx_get_rf(int);
 int	 acx_get_maxrssi(int);
 
 int	 acx_load_firmware(struct acx_softc *, uint32_t,
-	     const uint8_t *, int);
+	     const uint8_t *, size_t);
 int	 acx_load_radio_firmware(struct acx_softc *, const char *);
 int	 acx_load_base_firmware(struct acx_softc *, const char *);
 
@@ -1647,12 +1648,12 @@ acx_load_radio_firmware(struct acx_softc *sc, const char *name)
 
 int
 acx_load_firmware(struct acx_softc *sc, uint32_t offset, const uint8_t *data,
-    int data_len)
+    size_t data_len)
 {
 	struct ifnet *ifp = &sc->sc_ic.ic_if;
 	const uint32_t *fw;
 	u_int32_t csum = 0;
-	int i, fw_len;
+	size_t i, fw_len;
 
 	for (i = 4; i < data_len; i++)
 		csum += data[i];
@@ -1672,6 +1673,13 @@ acx_load_firmware(struct acx_softc *sc, uint32_t offset, const uint8_t *data,
 	fw = (const uint32_t *)data;
 	fw_len = data_len / sizeof(uint32_t);
 
+#ifndef LOADFW_AUTO_INC
+	if (UINT32_MAX - offset < (fw_len - 1) * 4) {
+		printf("%s: firmware file too large!\n");
+		return (ENXIO);
+	}
+#endif
+
 	/*
 	 * LOADFW_AUTO_INC only works with some older firmware:
 	 * 1) acx100's firmware
@@ -1689,7 +1697,7 @@ acx_load_firmware(struct acx_softc *sc, uint32_t offset, const uint8_t *data,
 
 	for (i = 0; i < fw_len; ++i) {
 #ifndef LOADFW_AUTO_INC
-		CSR_WRITE_4(sc, ACXREG_FWMEM_ADDR, offset + (i * 4));
+		CSR_WRITE_4(sc, ACXREG_FWMEM_ADDR, offset + (uint32_t)(i * 4));
 #endif
 		CSR_WRITE_4(sc, ACXREG_FWMEM_DATA, betoh32(fw[i]));
 	}
@@ -1707,7 +1715,7 @@ acx_load_firmware(struct acx_softc *sc, uint32_t offset, const uint8_t *data,
 		uint32_t val;
 
 #ifndef LOADFW_AUTO_INC
-		CSR_WRITE_4(sc, ACXREG_FWMEM_ADDR, offset + (i * 4));
+		CSR_WRITE_4(sc, ACXREG_FWMEM_ADDR, offset + (uint32_t)(i * 4));
 #endif
 		val = CSR_READ_4(sc, ACXREG_FWMEM_DATA);
 		if (betoh32(fw[i]) != val) {
