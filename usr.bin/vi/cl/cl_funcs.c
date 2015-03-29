@@ -1,4 +1,4 @@
-/*	$OpenBSD: cl_funcs.c,v 1.17 2014/11/12 16:29:04 millert Exp $	*/
+/*	$OpenBSD: cl_funcs.c,v 1.18 2015/03/29 01:04:23 bcallah Exp $	*/
 
 /*-
  * Copyright (c) 1993, 1994

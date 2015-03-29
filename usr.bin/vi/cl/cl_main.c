@@ -1,4 +1,4 @@
-/*	$OpenBSD: cl_main.c,v 1.25 2014/11/19 03:42:40 bentley Exp $	*/
+/*	$OpenBSD: cl_main.c,v 1.26 2015/03/29 01:04:23 bcallah Exp $	*/
 
 /*-
  * Copyright (c) 1993, 1994
