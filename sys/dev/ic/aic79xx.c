@@ -9126,7 +9126,7 @@ ahd_timeout(void *arg)
 	struct scb *scb, *list_scb;
 	struct ahd_softc *ahd;
 	char channel;
-	long s;
+	int s;
 	int found;
 #ifdef AHD_DEBUG
 	int was_paused;
