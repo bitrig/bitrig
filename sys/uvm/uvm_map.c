@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_map.c,v 1.188 2015/03/14 03:38:53 jsg Exp $	*/
+/*	$OpenBSD: uvm_map.c,v 1.189 2015/03/30 21:08:40 miod Exp $	*/
 /*	$NetBSD: uvm_map.c,v 1.86 2000/11/27 08:40:03 chs Exp $	*/
 
 /*
@@ -3483,7 +3483,8 @@ uvmspace_fork(struct process *pr)
  * creating a new mapping with "prot" protection.
  */
 vaddr_t
-uvm_map_hint(struct vmspace *vm, vm_prot_t prot)
+uvm_map_hint(struct vmspace *vm, vm_prot_t prot, vaddr_t minaddr,
+    vaddr_t maxaddr)
 {
 	vaddr_t addr;
 	vaddr_t spacing;
@@ -3504,6 +3505,10 @@ uvm_map_hint(struct vmspace *vm, vm_prot_t prot)
 
 	if (vm->vm_dused < spacing >> PAGE_SHIFT)
 		addr += BRKSIZ;
+	if (addr < maxaddr) {
+		while (spacing > maxaddr - addr)
+			spacing >>= 1;
+	}
 	addr += arc4random() & spacing;
 
 	return (round_page(addr));
