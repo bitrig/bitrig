@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_map.c,v 1.189 2015/03/30 21:08:40 miod Exp $	*/
+/*	$OpenBSD: uvm_map.c,v 1.190 2015/03/30 21:09:55 miod Exp $	*/
 /*	$NetBSD: uvm_map.c,v 1.86 2000/11/27 08:40:03 chs Exp $	*/
 
 /*
