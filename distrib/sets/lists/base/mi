@@ -278,7 +278,6 @@
 ./sbin/kbd
 ./sbin/ldattach
 ./sbin/ldconfig
-./sbin/lmccontrol
 ./sbin/mkfifo
 ./sbin/mknod
 ./sbin/mount
