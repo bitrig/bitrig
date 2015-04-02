@@ -2,6 +2,7 @@
 
 /*
  * Copyright (c) 2008 Mark Kettenis
+ * Copyright (c) 2015 Patrick Wildt <patrick@blueri.se>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -99,10 +100,16 @@
 #define  TSEC_IMASK_DXAEN	TSEC_IMASK_CRLEN
 #define  TSEC_IMASK_XFUNEN	0x00010000
 #define  TSEC_IMASK_RXBEN	0x00008000
+#define  TSEC_IMASK_MAGEN	0x00000800
 #define  TSEC_IMASK_MMRD	0x00000400
 #define  TSEC_IMASK_MMWR	0x00000200
 #define  TSEC_IMASK_GRSCEN	0x00000100
 #define  TSEC_IMASK_RXFEN	0x00000080
+#define  TSEC_IMASK_FGPIEN	0x00000010
+#define  TSEC_IMASK_FIREN	0x00000008
+#define  TSEC_IMASK_FIQEN	0x00000004
+#define  TSEC_IMASK_DPEEN	0x00000002
+#define  TSEC_IMASK_PERREN	0x00000001
 #define TSEC_EDIS		0x018
 #define TSEC_ECNTRL		0x020
 #define  TSEC_ECNTRL_FIFM	0x00008000
@@ -124,6 +131,10 @@
 #define  TSEC_DMACTRL_WWR	0x00000002
 #define  TSEC_DMACTRL_WOP	0x00000001
 #define TSEC_TBIPA		0x030
+
+#define TSEC_FIFO_TX_THR	0x08c
+#define TSEC_FIFO_TX_STARVE	0x098
+#define TSEC_FIFO_TX_STARVE_SHUTOFF	0x09c
 
 #define TSEC_TCTRL		0x100
 #define TSEC_TSTAT		0x104
@@ -157,6 +168,7 @@
 #define  TSEC_MACCFG2_PAD	0x00000004
 #define  TSEC_MACCFG2_CRC	0x00000002
 #define  TSEC_MACCFG2_FDX	0x00000001 /* Full duplex */
+#define TSEC_MAXFRM		0x510
 #define TSEC_MIIMCFG		0x520
 #define  TSEC_MIIMCFG_RESET	0x80000000 /* Reset */
 #define TSEC_MIIMCOM		0x524
@@ -285,6 +297,8 @@ struct tsec_buf {
 };
 
 #define TSEC_NTXDESC	256
+#define TSEC_NTXSEGS	16
+
 #define TSEC_NRXDESC	256
 
 struct tsec_dmamem {
@@ -522,6 +536,14 @@ tsec_attach(struct device *parent, struct device *self, void *aux)
 	ifmedia_init(&sc->sc_media, 0, tsec_media_change, tsec_media_status);
 
 	tsec_reset(sc);
+
+	/* HW init */
+	tsec_write(sc, TSEC_ECNTRL, TSEC_ECNTRL_INIT_SETTINGS);
+	tsec_write(sc, TSEC_ATTRELI, 0);
+	tsec_write(sc, TSEC_ATTR, 0);
+	tsec_write(sc, TSEC_FIFO_TX_THR, 0x100);
+	tsec_write(sc, TSEC_FIFO_TX_STARVE, 0x40);
+	tsec_write(sc, TSEC_FIFO_TX_STARVE_SHUTOFF, 0x80);
 
 	/* Reset management. */
 	tsec_write(sc, TSEC_MIIMCFG, TSEC_MIIMCFG_RESET);
@@ -939,6 +961,7 @@ tsec_rx_proc(struct tsec_softc *sc)
 	struct ifnet *ifp = &sc->sc_ac.ac_if;
 	struct tsec_desc *rxd;
 	struct tsec_buf *rxb;
+	struct mbuf_list ml = MBUF_LIST_INITIALIZER();
 	struct mbuf *m;
 	int idx, len;
 
@@ -971,18 +994,11 @@ tsec_rx_proc(struct tsec_softc *sc)
 
 		m = rxb->tb_m;
 		rxb->tb_m = NULL;
-		m->m_pkthdr.rcvif = ifp;
 		m->m_pkthdr.len = m->m_len = len;
-		m->m_data += ETHER_ALIGN;
 
 		ifp->if_ipackets++;
 
-#if NBPFILTER > 0
-		if (ifp->if_bpf)
-			bpf_mtap(ifp->if_bpf, m, BPF_DIRECTION_IN);
-#endif
-
-		ether_input_mbuf(ifp, m);
+		ml_enqueue(&ml, m);
 
 		if_rxr_put(&sc->sc_rx_ring, 1);
 		if (betoh16(rxd->td_status) & TSEC_RX_W)
@@ -996,6 +1012,8 @@ tsec_rx_proc(struct tsec_softc *sc)
 	bus_dmamap_sync(sc->sc_dmat, TSEC_DMA_MAP(sc->sc_rxring), 0,
 	    TSEC_DMA_LEN(sc->sc_rxring),
 	    BUS_DMASYNC_PREREAD | BUS_DMASYNC_PREWRITE);
+
+	if_input(ifp, &ml);
 }
 
 #define	MII_TBICON		0x11
@@ -1024,7 +1042,7 @@ tsec_up(struct tsec_softc *sc)
 	struct ifnet *ifp = &sc->sc_ac.ac_if;
 	struct tsec_desc *txd, *rxd;
 	struct tsec_buf *txb, *rxb;
-	uint32_t maccfg1, maccfg2, ecntrl, dmactrl, attr;
+	uint32_t maccfg1, maccfg2, ecntrl, dmactrl;
 	int i;
 
 	/* Allocate Tx descriptor ring. */
@@ -1036,7 +1054,7 @@ tsec_up(struct tsec_softc *sc)
 	    M_DEVBUF, M_WAITOK);
 	for (i = 0; i < TSEC_NTXDESC; i++) {
 		txb = &sc->sc_txbuf[i];
-		bus_dmamap_create(sc->sc_dmat, MCLBYTES, 1,
+		bus_dmamap_create(sc->sc_dmat, MCLBYTES, TSEC_NTXSEGS,
 		    MCLBYTES, 0, BUS_DMA_WAITOK, &txb->tb_map);
 		txb->tb_m = NULL;
 	}
@@ -1050,8 +1068,6 @@ tsec_up(struct tsec_softc *sc)
 
 	sc->sc_tx_prod = sc->sc_tx_cons = 0;
 	sc->sc_tx_cnt = 0;
-
-	tsec_write(sc, TSEC_TBASE, TSEC_DMA_DVA(sc->sc_txring));
 
 	/* Allocate Rx descriptor ring. */
 	sc->sc_rxring = tsec_dmamem_alloc(sc,
@@ -1079,11 +1095,20 @@ tsec_up(struct tsec_softc *sc)
 	if_rxr_init(&sc->sc_rx_ring, 2, TSEC_NRXDESC);
 	tsec_fill_rx_ring(sc);
 
+	tsec_write(sc, TSEC_MAXFRM, MCLBYTES);
 	tsec_write(sc, TSEC_MRBLR, MCLBYTES);
+	tsec_write(sc, TSEC_MINFLR, 0x40);
 
-	tsec_write(sc, TSEC_RBASE, TSEC_DMA_DVA(sc->sc_rxring));
-
-	tsec_lladdr_write(sc);
+	/*
+	 * Default to full-duplex MII mode, which is the mode most
+	 * likely used by a directly connected integrated switch.  For
+	 * a real PHY the mode will be set later, based on the
+	 * parameters negotiated by the PHY.
+	 */
+	maccfg2 = tsec_read(sc, TSEC_MACCFG2);
+	maccfg2 &= ~TSEC_MACCFG2_IF_MODE;
+	maccfg2 |= TSEC_MACCFG2_IF_MII | TSEC_MACCFG2_FDX;
+	tsec_write(sc, TSEC_MACCFG2, maccfg2 | TSEC_MACCFG2_PAD);
 
 	tsec_write(sc, TSEC_IADDR0, 0);
 	tsec_write(sc, TSEC_IADDR1, 0);
@@ -1102,42 +1127,32 @@ tsec_up(struct tsec_softc *sc)
 	tsec_write(sc, TSEC_GADDR6, 0);
 	tsec_write(sc, TSEC_GADDR7, 0);
 
-	tsec_write(sc, TSEC_TXIC, TSEC_TXIC_ICEN |
-	    TSEC_TXIC_ICFT(16) | TSEC_TXIC_ICTT(21));
+	tsec_lladdr_write(sc);
+
+	/* TODO: interrupt coalescing */
+	tsec_write(sc, TSEC_TXIC, 0);
 	tsec_write(sc, TSEC_RXIC, 0);
 
-	maccfg1 = tsec_read(sc, TSEC_MACCFG1);
-	maccfg1 |= TSEC_MACCFG1_TXEN;
-	maccfg1 |= TSEC_MACCFG1_RXEN;
-	tsec_write(sc, TSEC_MACCFG1, maccfg1);
-
-	/*
-	 * Default to full-duplex MII mode, which is the mode most
-	 * likely used by a directly connected integrated switch.  For
-	 * a real PHY the mode will be set later, based on the
-	 * parameters negotiaded by the PHY.
-	 */
-	maccfg2 = tsec_read(sc, TSEC_MACCFG2);
-	maccfg2 &= ~TSEC_MACCFG2_IF_MODE;
-	maccfg2 |= TSEC_MACCFG2_IF_MII | TSEC_MACCFG2_FDX;
-	tsec_write(sc, TSEC_MACCFG2, maccfg2 | TSEC_MACCFG2_PAD);
-
-	tsec_write(sc, TSEC_ECNTRL, TSEC_ECNTRL_INIT_SETTINGS);
+	tsec_write(sc, TSEC_TBASE, TSEC_DMA_DVA(sc->sc_txring));
+	tsec_write(sc, TSEC_RBASE, TSEC_DMA_DVA(sc->sc_rxring));
 
 	dmactrl = tsec_read(sc, TSEC_DMACTRL);
 	dmactrl |= TSEC_DMACTRL_LE;
 	dmactrl |= TSEC_DMACTRL_WWR;
 	dmactrl |= TSEC_DMACTRL_WOP;
+	tsec_write(sc, TSEC_DMACTRL, dmactrl);
+
+	dmactrl = tsec_read(sc, TSEC_DMACTRL);
 	dmactrl &= ~(TSEC_DMACTRL_GTS | TSEC_DMACTRL_GRS);
 	tsec_write(sc, TSEC_DMACTRL, dmactrl);
 
-	attr = tsec_read(sc, TSEC_ATTR);
-	attr |= TSEC_ATTR_RDSEN;
-	attr |= TSEC_ATTR_RBDSEN;
-	tsec_write(sc, TSEC_ATTR, attr);
-
 	tsec_write(sc, TSEC_TSTAT, TSEC_TSTAT_THLT);
 	tsec_write(sc, TSEC_RSTAT, TSEC_RSTAT_QHLT);
+
+	maccfg1 = tsec_read(sc, TSEC_MACCFG1);
+	maccfg1 |= TSEC_MACCFG1_TXEN;
+	maccfg1 |= TSEC_MACCFG1_RXEN;
+	tsec_write(sc, TSEC_MACCFG1, maccfg1);
 
 	/* Configure media. */
 	if (LIST_FIRST(&sc->sc_mii.mii_phys))
@@ -1254,7 +1269,7 @@ tsec_iff(struct tsec_softc *sc)
 int
 tsec_encap(struct tsec_softc *sc, struct mbuf *m, int *idx)
 {
-	struct tsec_desc *txd;
+	struct tsec_desc *txd, *txd_start;
 	bus_dmamap_t map;
 	int cur, frag, i;
 	uint16_t status;
@@ -1274,16 +1289,17 @@ tsec_encap(struct tsec_softc *sc, struct mbuf *m, int *idx)
 	bus_dmamap_sync(sc->sc_dmat, map, 0, map->dm_mapsize,
 	    BUS_DMASYNC_PREWRITE);
 
-	txd = &sc->sc_txdesc[frag];
+	txd = txd_start = &sc->sc_txdesc[frag];
 	for (i = 0; i < map->dm_nsegs; i++) {
 		status = be16toh(txd->td_status) & TSEC_TX_W;
 		status |= TSEC_TX_TO1;
 		if (i == (map->dm_nsegs - 1))
-			status |= TSEC_TX_L;
+			status |= TSEC_TX_L | TSEC_TX_I;
+		if (i != 0)
+			status |= TSEC_TX_R;
 		txd->td_len = htobe16(map->dm_segs[i].ds_len);
 		txd->td_addr = htobe32(map->dm_segs[i].ds_addr);
-		cpu_drain_writebuf();
-		txd->td_status = htobe16(status | TSEC_TX_R | TSEC_TX_I | TSEC_TX_TC);
+		txd->td_status = htobe16(status);
 
 		bus_dmamap_sync(sc->sc_dmat, TSEC_DMA_MAP(sc->sc_txring),
 		    frag * sizeof(*txd), sizeof(*txd), BUS_DMASYNC_PREWRITE);
@@ -1297,9 +1313,14 @@ tsec_encap(struct tsec_softc *sc, struct mbuf *m, int *idx)
 			frag++;
 		}
 		KASSERT(frag != sc->sc_tx_cons);
-
-		tsec_write(sc, TSEC_TSTAT, TSEC_TSTAT_THLT);
 	}
+
+	txd_start->td_status |= htobe16(TSEC_TX_R | TSEC_TX_TC);
+
+	bus_dmamap_sync(sc->sc_dmat, TSEC_DMA_MAP(sc->sc_txring),
+	    *idx * sizeof(*txd), sizeof(*txd), BUS_DMASYNC_PREWRITE);
+
+	tsec_write(sc, TSEC_TSTAT, TSEC_TSTAT_THLT);
 
 	KASSERT(sc->sc_txbuf[cur].tb_m == NULL);
 	sc->sc_txbuf[*idx].tb_map = sc->sc_txbuf[cur].tb_map;
@@ -1413,7 +1434,8 @@ tsec_alloc_mbuf(struct tsec_softc *sc, bus_dmamap_t map)
 	m = MCLGETI(NULL, M_DONTWAIT, NULL, MCLBYTES);
 	if (!m)
 		return (NULL);
-	m->m_len = m->m_pkthdr.len = MCLBYTES;
+	m->m_data += ETHER_ALIGN;
+	m->m_len = m->m_pkthdr.len = MCLBYTES - ETHER_ALIGN;
 
 	if (bus_dmamap_load_mbuf(sc->sc_dmat, map, m, BUS_DMA_NOWAIT) != 0) {
 		printf("%s: could not load mbuf DMA map", DEVNAME(sc));
