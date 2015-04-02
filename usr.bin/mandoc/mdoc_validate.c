@@ -1,4 +1,4 @@
-/*	$OpenBSD: mdoc_validate.c,v 1.200 2015/04/02 21:03:18 schwarze Exp $ */
+/*	$OpenBSD: mdoc_validate.c,v 1.201 2015/04/02 22:06:17 schwarze Exp $ */
 /*
  * Copyright (c) 2008-2012 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2010-2015 Ingo Schwarze <schwarze@openbsd.org>
@@ -38,7 +38,7 @@
 
 /* FIXME: .Bl -diag can't have non-text children in HEAD. */
 
-#define	PRE_ARGS  struct mdoc *mdoc, struct mdoc_node *n
+#define	PRE_ARGS  struct mdoc *mdoc, struct roff_node *n
 #define	POST_ARGS struct mdoc *mdoc
 
 enum	check_ineq {
@@ -57,11 +57,11 @@ struct	valids {
 
 static	void	 check_text(struct mdoc *, int, int, char *);
 static	void	 check_argv(struct mdoc *,
-			struct mdoc_node *, struct mdoc_argv *);
-static	void	 check_args(struct mdoc *, struct mdoc_node *);
-static	int	 child_an(const struct mdoc_node *);
-static	enum mdoc_sec	a2sec(const char *);
-static	size_t		macro2len(enum mdoct);
+			struct roff_node *, struct mdoc_argv *);
+static	void	 check_args(struct mdoc *, struct roff_node *);
+static	int	 child_an(const struct roff_node *);
+static	enum roff_sec	a2sec(const char *);
+static	size_t		macro2len(int);
 static	void	 rewrite_macro2len(char **);
 
 static	void	 post_an(POST_ARGS);
@@ -247,7 +247,7 @@ static	const struct valids mdoc_valids[MDOC_MAX] = {
 
 #define	RSORD_MAX 14 /* Number of `Rs' blocks. */
 
-static	const enum mdoct rsord[RSORD_MAX] = {
+static	const int rsord[RSORD_MAX] = {
 	MDOC__A,
 	MDOC__T,
 	MDOC__B,
@@ -292,7 +292,7 @@ static	const char * const secnames[SEC__MAX] = {
 
 
 void
-mdoc_valid_pre(struct mdoc *mdoc, struct mdoc_node *n)
+mdoc_valid_pre(struct mdoc *mdoc, struct roff_node *n)
 {
 	v_pre	 p;
 
@@ -320,7 +320,7 @@ mdoc_valid_pre(struct mdoc *mdoc, struct mdoc_node *n)
 void
 mdoc_valid_post(struct mdoc *mdoc)
 {
-	struct mdoc_node *n;
+	struct roff_node *n;
 	v_post p;
 
 	n = mdoc->last;
@@ -361,7 +361,7 @@ mdoc_valid_post(struct mdoc *mdoc)
 }
 
 static void
-check_args(struct mdoc *mdoc, struct mdoc_node *n)
+check_args(struct mdoc *mdoc, struct roff_node *n)
 {
 	int		 i;
 
@@ -374,7 +374,7 @@ check_args(struct mdoc *mdoc, struct mdoc_node *n)
 }
 
 static void
-check_argv(struct mdoc *mdoc, struct mdoc_node *n, struct mdoc_argv *v)
+check_argv(struct mdoc *mdoc, struct roff_node *n, struct mdoc_argv *v)
 {
 	int		 i;
 
@@ -398,7 +398,7 @@ check_text(struct mdoc *mdoc, int ln, int pos, char *p)
 static void
 pre_display(PRE_ARGS)
 {
-	struct mdoc_node *node;
+	struct roff_node *node;
 
 	if (n->type != ROFFT_BLOCK)
 		return;
@@ -768,7 +768,7 @@ pre_dd(PRE_ARGS)
 static void
 post_bf(POST_ARGS)
 {
-	struct mdoc_node *np, *nch;
+	struct roff_node *np, *nch;
 	enum mdocargt	  arg;
 
 	/*
@@ -830,7 +830,7 @@ post_bf(POST_ARGS)
 static void
 post_lb(POST_ARGS)
 {
-	struct mdoc_node	*n;
+	struct roff_node	*n;
 	char			*libname;
 
 	n = mdoc->last->child;
@@ -843,7 +843,7 @@ post_lb(POST_ARGS)
 static void
 post_eoln(POST_ARGS)
 {
-	const struct mdoc_node *n;
+	const struct roff_node *n;
 
 	n = mdoc->last;
 	if (n->child)
@@ -856,7 +856,7 @@ post_eoln(POST_ARGS)
 static void
 post_fname(POST_ARGS)
 {
-	const struct mdoc_node	*n;
+	const struct roff_node	*n;
 	const char		*cp;
 	size_t			 pos;
 
@@ -879,7 +879,7 @@ post_fn(POST_ARGS)
 static void
 post_fo(POST_ARGS)
 {
-	const struct mdoc_node	*n;
+	const struct roff_node	*n;
 
 	n = mdoc->last;
 
@@ -905,7 +905,7 @@ post_fo(POST_ARGS)
 static void
 post_fa(POST_ARGS)
 {
-	const struct mdoc_node *n;
+	const struct roff_node *n;
 	const char *cp;
 
 	for (n = mdoc->last->child; n != NULL; n = n->next) {
@@ -926,7 +926,7 @@ post_fa(POST_ARGS)
 static void
 post_vt(POST_ARGS)
 {
-	const struct mdoc_node *n;
+	const struct roff_node *n;
 
 	/*
 	 * The Vt macro comes in both ELEM and BLOCK form, both of which
@@ -948,7 +948,7 @@ post_vt(POST_ARGS)
 static void
 post_nm(POST_ARGS)
 {
-	struct mdoc_node	*n;
+	struct roff_node	*n;
 
 	n = mdoc->last;
 
@@ -970,7 +970,7 @@ post_nm(POST_ARGS)
 static void
 post_nd(POST_ARGS)
 {
-	struct mdoc_node	*n;
+	struct roff_node	*n;
 
 	n = mdoc->last;
 
@@ -987,7 +987,7 @@ post_nd(POST_ARGS)
 static void
 post_d1(POST_ARGS)
 {
-	struct mdoc_node	*n;
+	struct roff_node	*n;
 
 	n = mdoc->last;
 
@@ -1004,7 +1004,7 @@ post_d1(POST_ARGS)
 static void
 post_literal(POST_ARGS)
 {
-	struct mdoc_node	*n;
+	struct roff_node	*n;
 
 	n = mdoc->last;
 
@@ -1026,7 +1026,7 @@ post_literal(POST_ARGS)
 static void
 post_defaults(POST_ARGS)
 {
-	struct mdoc_node *nn;
+	struct roff_node *nn;
 
 	/*
 	 * The `Ar' defaults to "file ..." if no value is provided as an
@@ -1060,7 +1060,7 @@ post_defaults(POST_ARGS)
 static void
 post_at(POST_ARGS)
 {
-	struct mdoc_node	*n;
+	struct roff_node	*n;
 	const char		*std_att;
 	char			*att;
 
@@ -1094,7 +1094,7 @@ post_at(POST_ARGS)
 static void
 post_an(POST_ARGS)
 {
-	struct mdoc_node *np, *nch;
+	struct roff_node *np, *nch;
 
 	np = mdoc->last;
 	nch = np->child;
@@ -1125,9 +1125,9 @@ post_es(POST_ARGS)
 static void
 post_it(POST_ARGS)
 {
+	struct roff_node *nbl, *nit, *nch;
 	int		  i, cols;
 	enum mdoc_list	  lt;
-	struct mdoc_node *nbl, *nit, *nch;
 
 	nit = mdoc->last;
 	if (nit->type != ROFFT_BLOCK)
@@ -1193,7 +1193,7 @@ post_it(POST_ARGS)
 static void
 post_bl_block(POST_ARGS)
 {
-	struct mdoc_node *n, *ni, *nc;
+	struct roff_node *n, *ni, *nc;
 
 	/*
 	 * These are fairly complicated, so we've broken them into two
@@ -1254,7 +1254,7 @@ void
 rewrite_macro2len(char **arg)
 {
 	size_t		  width;
-	enum mdoct	  tok;
+	int		  tok;
 
 	if (*arg == NULL)
 		return;
@@ -1272,7 +1272,7 @@ rewrite_macro2len(char **arg)
 static void
 post_bl_block_tag(POST_ARGS)
 {
-	struct mdoc_node *n, *nn;
+	struct roff_node *n, *nn;
 	size_t		  sz, ssz;
 	int		  i;
 	char		  buf[24];
@@ -1337,7 +1337,7 @@ post_bl_block_tag(POST_ARGS)
 static void
 post_bl_head(POST_ARGS)
 {
-	struct mdoc_node *nbl, *nh, *nch, *nnext;
+	struct roff_node *nbl, *nh, *nch, *nnext;
 	struct mdoc_argv *argv;
 	int		  i, j;
 
@@ -1399,9 +1399,9 @@ post_bl_head(POST_ARGS)
 static void
 post_bl(POST_ARGS)
 {
-	struct mdoc_node	*nparent, *nprev; /* of the Bl block */
-	struct mdoc_node	*nblock, *nbody;  /* of the Bl */
-	struct mdoc_node	*nchild, *nnext;  /* of the Bl body */
+	struct roff_node	*nparent, *nprev; /* of the Bl block */
+	struct roff_node	*nblock, *nbody;  /* of the Bl */
+	struct roff_node	*nchild, *nnext;  /* of the Bl body */
 
 	nbody = mdoc->last;
 	switch (nbody->type) {
@@ -1482,7 +1482,7 @@ post_bl(POST_ARGS)
 static void
 post_bk(POST_ARGS)
 {
-	struct mdoc_node	*n;
+	struct roff_node	*n;
 
 	n = mdoc->last;
 
@@ -1496,7 +1496,7 @@ post_bk(POST_ARGS)
 static void
 post_sm(struct mdoc *mdoc)
 {
-	struct mdoc_node	*nch;
+	struct roff_node	*nch;
 
 	nch = mdoc->last->child;
 
@@ -1526,7 +1526,7 @@ post_sm(struct mdoc *mdoc)
 static void
 post_root(POST_ARGS)
 {
-	struct mdoc_node *n;
+	struct roff_node *n;
 
 	/* Add missing prologue data. */
 
@@ -1566,7 +1566,7 @@ post_root(POST_ARGS)
 static void
 post_st(POST_ARGS)
 {
-	struct mdoc_node	 *n, *nch;
+	struct roff_node	 *n, *nch;
 	const char		 *p;
 
 	n = mdoc->last;
@@ -1587,7 +1587,7 @@ post_st(POST_ARGS)
 static void
 post_rs(POST_ARGS)
 {
-	struct mdoc_node *np, *nch, *next, *prev;
+	struct roff_node *np, *nch, *next, *prev;
 	int		  i, j;
 
 	np = mdoc->last;
@@ -1681,7 +1681,7 @@ post_rs(POST_ARGS)
 static void
 post_hyph(POST_ARGS)
 {
-	struct mdoc_node	*nch;
+	struct roff_node	*nch;
 	char			*cp;
 
 	for (nch = mdoc->last->child; nch != NULL; nch = nch->next) {
@@ -1740,7 +1740,7 @@ post_sh(POST_ARGS)
 static void
 post_sh_name(POST_ARGS)
 {
-	struct mdoc_node *n;
+	struct roff_node *n;
 	int hasnm, hasnd;
 
 	hasnm = hasnd = 0;
@@ -1778,7 +1778,7 @@ post_sh_name(POST_ARGS)
 static void
 post_sh_see_also(POST_ARGS)
 {
-	const struct mdoc_node	*n;
+	const struct roff_node	*n;
 	const char		*name, *sec;
 	const char		*lastname, *lastsec, *lastpunct;
 	int			 cmp;
@@ -1838,7 +1838,7 @@ post_sh_see_also(POST_ARGS)
 }
 
 static int
-child_an(const struct mdoc_node *n)
+child_an(const struct roff_node *n)
 {
 
 	for (n = n->child; n != NULL; n = n->next)
@@ -1859,10 +1859,10 @@ post_sh_authors(POST_ARGS)
 static void
 post_sh_head(POST_ARGS)
 {
-	struct mdoc_node *n;
+	struct roff_node *n;
 	const char	*goodsec;
 	char		*secname;
-	enum mdoc_sec	 sec;
+	enum roff_sec	 sec;
 
 	/*
 	 * Process a new section.  Sections are either "named" or
@@ -1979,7 +1979,7 @@ post_sh_head(POST_ARGS)
 static void
 post_ignpar(POST_ARGS)
 {
-	struct mdoc_node *np;
+	struct roff_node *np;
 
 	switch (mdoc->last->type) {
 	case ROFFT_HEAD:
@@ -2045,7 +2045,7 @@ pre_par(PRE_ARGS)
 static void
 post_par(POST_ARGS)
 {
-	struct mdoc_node *np;
+	struct roff_node *np;
 
 	np = mdoc->last;
 
@@ -2108,7 +2108,7 @@ pre_literal(PRE_ARGS)
 static void
 post_dd(POST_ARGS)
 {
-	struct mdoc_node *n;
+	struct roff_node *n;
 	char		 *datestr;
 
 	if (mdoc->meta.date)
@@ -2137,7 +2137,7 @@ out:
 static void
 post_dt(POST_ARGS)
 {
-	struct mdoc_node *nn, *n;
+	struct roff_node *nn, *n;
 	const char	 *cp;
 	char		 *p;
 
@@ -2222,7 +2222,7 @@ out:
 static void
 post_bx(POST_ARGS)
 {
-	struct mdoc_node	*n;
+	struct roff_node	*n;
 
 	/*
 	 * Make `Bx's second argument always start with an uppercase
@@ -2242,7 +2242,7 @@ post_os(POST_ARGS)
 	struct utsname	  utsname;
 	static char	 *defbuf;
 #endif
-	struct mdoc_node *n;
+	struct roff_node *n;
 
 	n = mdoc->last;
 
@@ -2292,7 +2292,7 @@ out:
 static void
 post_ex(POST_ARGS)
 {
-	struct mdoc_node *n;
+	struct roff_node *n;
 
 	n = mdoc->last;
 
@@ -2310,20 +2310,20 @@ post_ex(POST_ARGS)
 	mdoc->last = n;
 }
 
-static enum mdoc_sec
+static enum roff_sec
 a2sec(const char *p)
 {
 	int		 i;
 
 	for (i = 0; i < (int)SEC__MAX; i++)
 		if (secnames[i] && 0 == strcmp(p, secnames[i]))
-			return((enum mdoc_sec)i);
+			return((enum roff_sec)i);
 
 	return(SEC_CUSTOM);
 }
 
 static size_t
-macro2len(enum mdoct macro)
+macro2len(int macro)
 {
 
 	switch (macro) {

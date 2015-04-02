@@ -1,4 +1,4 @@
-/*	$OpenBSD: mdoc_man.c,v 1.87 2015/04/02 21:03:18 schwarze Exp $ */
+/*	$OpenBSD: mdoc_man.c,v 1.88 2015/04/02 22:06:17 schwarze Exp $ */
 /*
  * Copyright (c) 2011-2015 Ingo Schwarze <schwarze@openbsd.org>
  *
@@ -28,7 +28,7 @@
 #include "out.h"
 #include "main.h"
 
-#define	DECL_ARGS const struct mdoc_meta *meta, struct mdoc_node *n
+#define	DECL_ARGS const struct mdoc_meta *meta, struct roff_node *n
 
 struct	manact {
 	int		(*cond)(DECL_ARGS); /* DON'T run actions */
@@ -106,7 +106,7 @@ static	int	  pre_sm(DECL_ARGS);
 static	int	  pre_sp(DECL_ARGS);
 static	int	  pre_sect(DECL_ARGS);
 static	int	  pre_sy(DECL_ARGS);
-static	void	  pre_syn(const struct mdoc_node *);
+static	void	  pre_syn(const struct roff_node *);
 static	int	  pre_vt(DECL_ARGS);
 static	int	  pre_ux(DECL_ARGS);
 static	int	  pre_xr(DECL_ARGS);
@@ -115,7 +115,7 @@ static	void	  print_line(const char *, int);
 static	void	  print_block(const char *, int);
 static	void	  print_offs(const char *, int);
 static	void	  print_width(const struct mdoc_bl *,
-			const struct mdoc_node *);
+			const struct roff_node *);
 static	void	  print_count(int *);
 static	void	  print_node(DECL_ARGS);
 
@@ -467,7 +467,7 @@ print_offs(const char *v, int keywords)
  * Set up the indentation for a list item; used from pre_it().
  */
 static void
-print_width(const struct mdoc_bl *bl, const struct mdoc_node *child)
+print_width(const struct mdoc_bl *bl, const struct roff_node *child)
 {
 	char		  buf[24];
 	struct roffsu	  su;
@@ -547,7 +547,7 @@ void
 man_mdoc(void *arg, const struct mdoc *mdoc)
 {
 	const struct mdoc_meta *meta;
-	struct mdoc_node *n;
+	struct roff_node *n;
 
 	meta = mdoc_meta(mdoc);
 	n = mdoc_node(mdoc)->child;
@@ -577,7 +577,7 @@ static void
 print_node(DECL_ARGS)
 {
 	const struct manact	*act;
-	struct mdoc_node	*sub;
+	struct roff_node	*sub;
 	int			 cond, do_sub;
 
 	/*
@@ -807,7 +807,7 @@ post_sect(DECL_ARGS)
 
 /* See mdoc_term.c, synopsis_pre() for comments. */
 static void
-pre_syn(const struct mdoc_node *n)
+pre_syn(const struct roff_node *n)
 {
 
 	if (NULL == n->prev || ! (MDOC_SYNPRETTY & n->flags))
@@ -1365,7 +1365,7 @@ post_in(DECL_ARGS)
 static int
 pre_it(DECL_ARGS)
 {
-	const struct mdoc_node *bln;
+	const struct roff_node *bln;
 
 	switch (n->type) {
 	case ROFFT_HEAD:
@@ -1462,7 +1462,7 @@ mid_it(void)
 static void
 post_it(DECL_ARGS)
 {
-	const struct mdoc_node *bln;
+	const struct roff_node *bln;
 
 	bln = n->parent->parent;
 
@@ -1532,7 +1532,7 @@ post_lb(DECL_ARGS)
 static int
 pre_lk(DECL_ARGS)
 {
-	const struct mdoc_node *link, *descr;
+	const struct roff_node *link, *descr;
 
 	if (NULL == (link = n->child))
 		return(0);
