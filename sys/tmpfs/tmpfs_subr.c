@@ -1145,10 +1145,15 @@ tmpfs_chtimes(struct vnode *vp, const struct timespec *atime,
 	    (error = VOP_ACCESS(vp, VWRITE, cred))))
 		return error;
 
-	if (atime->tv_nsec != UTIME_OMIT)
+	if (atime->tv_nsec != UTIME_OMIT) {
+		node->tn_status &= ~TMPFS_NODE_ACCESSED;
 		node->tn_atime = *atime;
-	if (mtime->tv_nsec != UTIME_OMIT)
+	}
+
+	if (mtime->tv_nsec != UTIME_OMIT) {
+		node->tn_status &= ~TMPFS_NODE_MODIFIED;
 		node->tn_mtime = *mtime;
+	}
 
 	VN_KNOTE(vp, NOTE_ATTRIB);
 
