@@ -670,7 +670,7 @@
 ./usr/lib/librpcsvc.so.2.0
 ./usr/lib/libskey.so.7.0
 ./usr/lib/libsndio.so.6.0
-./usr/lib/libsqlite3.so.28.0
+./usr/lib/libsqlite3.so.29.0
 ./usr/lib/libssl.so.32.0
 ./usr/lib/libtermcap.so.15.0
 ./usr/lib/libtermlib.so.15.0
