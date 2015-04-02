@@ -1,4 +1,4 @@
-/*	$OpenBSD: mdoc_man.c,v 1.86 2015/02/17 20:33:44 schwarze Exp $ */
+/*	$OpenBSD: mdoc_man.c,v 1.87 2015/04/02 21:03:18 schwarze Exp $ */
 /*
  * Copyright (c) 2011-2015 Ingo Schwarze <schwarze@openbsd.org>
  *
@@ -20,11 +20,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "mandoc.h"
 #include "mandoc_aux.h"
-#include "out.h"
-#include "man.h"
+#include "mandoc.h"
+#include "roff.h"
 #include "mdoc.h"
+#include "man.h"
+#include "out.h"
 #include "main.h"
 
 #define	DECL_ARGS const struct mdoc_meta *meta, struct mdoc_node *n
@@ -491,7 +492,7 @@ print_width(const struct mdoc_bl *bl, const struct mdoc_node *child)
 	/* XXX Rough estimation, might have multiple parts. */
 	if (bl->type == LIST_enum)
 		chsz = (bl->count > 8) + 1;
-	else if (child != NULL && child->type == MDOC_TEXT)
+	else if (child != NULL && child->type == ROFFT_TEXT)
 		chsz = strlen(child->string);
 	else
 		chsz = 0;
@@ -591,7 +592,7 @@ print_node(DECL_ARGS)
 	do_sub = 1;
 	n->flags &= ~MDOC_ENDED;
 
-	if (MDOC_TEXT == n->type) {
+	if (n->type == ROFFT_TEXT) {
 		/*
 		 * Make sure that we don't happen to start with a
 		 * control character at the start of a line.
@@ -647,14 +648,14 @@ static int
 cond_head(DECL_ARGS)
 {
 
-	return(MDOC_HEAD == n->type);
+	return(n->type == ROFFT_HEAD);
 }
 
 static int
 cond_body(DECL_ARGS)
 {
 
-	return(MDOC_BODY == n->type);
+	return(n->type == ROFFT_BODY);
 }
 
 static int
@@ -777,7 +778,7 @@ static int
 pre_sect(DECL_ARGS)
 {
 
-	if (MDOC_HEAD == n->type) {
+	if (n->type == ROFFT_HEAD) {
 		outflags |= MMAN_sp;
 		print_block(manacts[n->tok].prefix, 0);
 		print_word("");
@@ -794,7 +795,7 @@ static void
 post_sect(DECL_ARGS)
 {
 
-	if (MDOC_HEAD != n->type)
+	if (n->type != ROFFT_HEAD)
 		return;
 	outflags &= ~MMAN_spc;
 	print_word("");
@@ -931,9 +932,9 @@ pre_bf(DECL_ARGS)
 {
 
 	switch (n->type) {
-	case MDOC_BLOCK:
+	case ROFFT_BLOCK:
 		return(1);
-	case MDOC_BODY:
+	case ROFFT_BODY:
 		break;
 	default:
 		return(0);
@@ -956,7 +957,7 @@ static void
 post_bf(DECL_ARGS)
 {
 
-	if (MDOC_BODY == n->type)
+	if (n->type == ROFFT_BODY)
 		font_pop();
 }
 
@@ -965,9 +966,9 @@ pre_bk(DECL_ARGS)
 {
 
 	switch (n->type) {
-	case MDOC_BLOCK:
+	case ROFFT_BLOCK:
 		return(1);
-	case MDOC_BODY:
+	case ROFFT_BODY:
 		outflags |= MMAN_Bk;
 		return(1);
 	default:
@@ -979,7 +980,7 @@ static void
 post_bk(DECL_ARGS)
 {
 
-	if (MDOC_BODY == n->type)
+	if (n->type == ROFFT_BODY)
 		outflags &= ~MMAN_Bk;
 }
 
@@ -1234,7 +1235,7 @@ post_fl(DECL_ARGS)
 	font_pop();
 	if ( ! (n->nchild ||
 	    n->next == NULL ||
-	    n->next->type == MDOC_TEXT ||
+	    n->next->type == ROFFT_TEXT ||
 	    n->next->flags & MDOC_LINE))
 		outflags &= ~MMAN_spc;
 }
@@ -1281,17 +1282,17 @@ pre_fo(DECL_ARGS)
 {
 
 	switch (n->type) {
-	case MDOC_BLOCK:
+	case ROFFT_BLOCK:
 		pre_syn(n);
 		break;
-	case MDOC_HEAD:
+	case ROFFT_HEAD:
 		if (n->child == NULL)
 			return(0);
 		if (MDOC_SYNPRETTY & n->flags)
 			print_block(".HP 4n", MMAN_nl);
 		font_push('B');
 		break;
-	case MDOC_BODY:
+	case ROFFT_BODY:
 		outflags &= ~(MMAN_spc | MMAN_nl);
 		print_word("(");
 		outflags &= ~MMAN_spc;
@@ -1307,11 +1308,11 @@ post_fo(DECL_ARGS)
 {
 
 	switch (n->type) {
-	case MDOC_HEAD:
+	case ROFFT_HEAD:
 		if (n->child != NULL)
 			font_pop();
 		break;
-	case MDOC_BODY:
+	case ROFFT_BODY:
 		post_fn(meta, n);
 		break;
 	default:
@@ -1367,7 +1368,7 @@ pre_it(DECL_ARGS)
 	const struct mdoc_node *bln;
 
 	switch (n->type) {
-	case MDOC_HEAD:
+	case ROFFT_HEAD:
 		outflags |= MMAN_PP | MMAN_nl;
 		bln = n->parent->parent;
 		if (0 == bln->norm->Bl.comp ||
@@ -1466,7 +1467,7 @@ post_it(DECL_ARGS)
 	bln = n->parent->parent;
 
 	switch (n->type) {
-	case MDOC_HEAD:
+	case ROFFT_HEAD:
 		switch (bln->norm->Bl.type) {
 		case LIST_diag:
 			outflags &= ~MMAN_spc;
@@ -1479,7 +1480,7 @@ post_it(DECL_ARGS)
 			break;
 		}
 		break;
-	case MDOC_BODY:
+	case ROFFT_BODY:
 		switch (bln->norm->Bl.type) {
 		case LIST_bullet:
 			/* FALLTHROUGH */
@@ -1573,16 +1574,16 @@ pre_nm(DECL_ARGS)
 {
 	char	*name;
 
-	if (MDOC_BLOCK == n->type) {
+	if (n->type == ROFFT_BLOCK) {
 		outflags |= MMAN_Bk;
 		pre_syn(n);
 	}
-	if (MDOC_ELEM != n->type && MDOC_HEAD != n->type)
+	if (n->type != ROFFT_ELEM && n->type != ROFFT_HEAD)
 		return(1);
 	name = n->child ? n->child->string : meta->name;
 	if (NULL == name)
 		return(0);
-	if (MDOC_HEAD == n->type) {
+	if (n->type == ROFFT_HEAD) {
 		if (NULL == n->parent->prev)
 			outflags |= MMAN_sp;
 		print_block(".HP", 0);
@@ -1600,12 +1601,12 @@ post_nm(DECL_ARGS)
 {
 
 	switch (n->type) {
-	case MDOC_BLOCK:
+	case ROFFT_BLOCK:
 		outflags &= ~MMAN_Bk;
 		break;
-	case MDOC_HEAD:
+	case ROFFT_HEAD:
 		/* FALLTHROUGH */
-	case MDOC_ELEM:
+	case ROFFT_ELEM:
 		if (n->child != NULL || meta->name != NULL)
 			font_pop();
 		break;
@@ -1769,10 +1770,10 @@ pre_vt(DECL_ARGS)
 
 	if (MDOC_SYNPRETTY & n->flags) {
 		switch (n->type) {
-		case MDOC_BLOCK:
+		case ROFFT_BLOCK:
 			pre_syn(n);
 			return(1);
-		case MDOC_BODY:
+		case ROFFT_BODY:
 			break;
 		default:
 			return(0);
@@ -1786,7 +1787,7 @@ static void
 post_vt(DECL_ARGS)
 {
 
-	if (MDOC_SYNPRETTY & n->flags && MDOC_BODY != n->type)
+	if (n->flags & MDOC_SYNPRETTY && n->type != ROFFT_BODY)
 		return;
 	font_pop();
 }
