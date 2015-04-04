@@ -1,4 +1,4 @@
-/*	$OpenBSD: crtend.c,v 1.10 2012/12/05 23:19:57 deraadt Exp $	*/
+/*	$OpenBSD: crtend.c,v 1.11 2015/04/04 18:05:05 guenther Exp $	*/
 /*	$NetBSD: crtend.c,v 1.1 1996/09/12 16:59:04 cgd Exp $	*/
 
 #include <sys/types.h>

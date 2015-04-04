@@ -1,4 +1,4 @@
-/*	$OpenBSD: crtbegin.c,v 1.17 2013/12/28 18:38:42 kettenis Exp $	*/
+/*	$OpenBSD: crtbegin.c,v 1.18 2015/04/04 18:05:05 guenther Exp $	*/
 /*	$NetBSD: crtbegin.c,v 1.1 1996/09/12 16:59:03 cgd Exp $	*/
 
 /*
