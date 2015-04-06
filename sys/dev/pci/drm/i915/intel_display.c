@@ -1,4 +1,4 @@
-/*	$OpenBSD: intel_display.c,v 1.44 2015/04/06 05:35:29 jsg Exp $	*/
+/*	$OpenBSD: intel_display.c,v 1.45 2015/04/06 10:03:34 jsg Exp $	*/
 /*
  * Copyright © 2006-2007 Intel Corporation
  *
@@ -9100,6 +9100,7 @@ void intel_modeset_init_hw(struct drm_device *dev)
 
 void intel_modeset_init(struct drm_device *dev)
 {
+	struct drm_i915_private *dev_priv = dev->dev_private;
 	int i, ret;
 
 	drm_mode_config_init(dev);
@@ -9128,11 +9129,7 @@ void intel_modeset_init(struct drm_device *dev)
 		dev->mode_config.max_width = 8192;
 		dev->mode_config.max_height = 8192;
 	}
-#ifdef notyet
 	dev->mode_config.fb_base = dev_priv->mm.gtt_base_addr;
-#else
-	DRM_DEBUG_KMS("todo set fb base\n");
-#endif
 
 	DRM_DEBUG_KMS("%d display pipe%s available.\n",
 		      INTEL_INFO(dev)->num_pipes,
