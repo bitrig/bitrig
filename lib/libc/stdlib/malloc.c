@@ -1,4 +1,4 @@
-/*	$OpenBSD: malloc.c,v 1.173 2015/01/16 16:48:51 deraadt Exp $	*/
+/*	$OpenBSD: malloc.c,v 1.174 2015/04/06 09:18:51 tedu Exp $	*/
 /*
  * Copyright (c) 2008, 2010, 2011 Otto Moerbeek <otto@drijf.net>
  * Copyright (c) 2012 Matthew Dempsky <matthew@openbsd.org>
@@ -388,7 +388,7 @@ zapcacheregion(struct dir_info *d, void *p, size_t len)
 }
 
 static void *
-map(struct dir_info *d, size_t sz, int zero_fill)
+map(struct dir_info *d, void *hint, size_t sz, int zero_fill)
 {
 	size_t psz = sz >> MALLOC_PAGESHIFT;
 	struct region_info *r, *big = NULL;
@@ -402,7 +402,7 @@ map(struct dir_info *d, size_t sz, int zero_fill)
 		wrterror("map round", NULL);
 		return MAP_FAILED;
 	}
-	if (psz > d->free_regions_size) {
+	if (!hint && psz > d->free_regions_size) {
 		_MALLOC_LEAVE();
 		p = MMAP(sz);
 		_MALLOC_ENTER();
@@ -415,6 +415,8 @@ map(struct dir_info *d, size_t sz, int zero_fill)
 	for (i = 0; i < mopts.malloc_cache; i++) {
 		r = &d->free_regions[(i + offset) & (mopts.malloc_cache - 1)];
 		if (r->p != NULL) {
+			if (hint && r->p != hint)
+				continue;
 			if (r->size == psz) {
 				p = r->p;
 				r->p = NULL;
@@ -436,7 +438,8 @@ map(struct dir_info *d, size_t sz, int zero_fill)
 	}
 	if (big != NULL) {
 		r = big;
-		p = (char *)r->p + ((r->size - psz) << MALLOC_PAGESHIFT);
+		p = r->p;
+		r->p = (char *)r->p + (psz << MALLOC_PAGESHIFT);
 		if (mopts.malloc_freeunmap)
 			mprotect(p, sz, PROT_READ | PROT_WRITE);
 		if (mopts.malloc_hint)
@@ -449,6 +452,8 @@ map(struct dir_info *d, size_t sz, int zero_fill)
 			memset(p, SOME_FREEJUNK, sz);
 		return p;
 	}
+	if (hint)
+		return MAP_FAILED;
 	if (d->free_regions_size > mopts.malloc_cache)
 		wrterror("malloc cache", NULL);
 	_MALLOC_LEAVE();
@@ -839,7 +844,7 @@ omalloc_make_chunks(struct dir_info *d, int bits, int listnum)
 	int		i, k;
 
 	/* Allocate a new bucket */
-	pp = map(d, MALLOC_PAGESIZE, 0);
+	pp = map(d, NULL, MALLOC_PAGESIZE, 0);
 	if (pp == MAP_FAILED)
 		return NULL;
 
@@ -1068,7 +1073,7 @@ omalloc(size_t sz, int zero_fill, void *f)
 		}
 		sz += mopts.malloc_guard;
 		psz = PAGEROUND(sz);
-		p = map(pool, psz, zero_fill);
+		p = map(pool, NULL, psz, zero_fill);
 		if (p == MAP_FAILED) {
 			errno = ENOMEM;
 			return NULL;
@@ -1327,9 +1332,13 @@ orealloc(void *p, size_t newsz, void *f)
 				size_t needed = rnewsz - roldsz;
 
 				STATS_INC(pool->cheap_realloc_tries);
+				q = map(pool, hint, needed, 0);
+				if (q == hint)
+					goto gotit;
 				zapcacheregion(pool, hint, needed);
 				q = MMAPA(hint, needed);
 				if (q == hint) {
+gotit:
 					STATS_ADD(pool->malloc_used, needed);
 					if (mopts.malloc_junk == 2)
 						memset(q, SOME_JUNK, needed);
@@ -1484,7 +1493,7 @@ mapalign(struct dir_info *d, size_t alignment, size_t sz, int zero_fill)
 	if (alignment > SIZE_MAX - sz)
 		return MAP_FAILED;
 
-	p = map(d, sz + alignment, zero_fill);
+	p = map(d, NULL, sz + alignment, zero_fill);
 	if (p == MAP_FAILED)
 		return MAP_FAILED;
 	q = (char *)(((uintptr_t)p + alignment - 1) & ~(alignment - 1));
