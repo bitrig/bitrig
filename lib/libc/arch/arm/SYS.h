@@ -1,4 +1,4 @@
-/*	$OpenBSD: SYS.h,v 1.8 2015/03/31 12:31:19 jsing Exp $	*/
+/*	$OpenBSD: SYS.h,v 1.9 2015/04/07 01:27:06 guenther Exp $	*/
 /*	$NetBSD: SYS.h,v 1.8 2003/08/07 16:42:02 agc Exp $	*/
 
 /*-
@@ -42,6 +42,8 @@
 	.weak _C_LABEL(x);				\
 	_C_LABEL(x) = _C_LABEL(_thread_sys_ ## x);	\
 	ENTRY(_thread_sys_ ## x)
+#define SYSENTRY_HIDDEN(x)				\
+	ENTRY(_thread_sys_ ## x)
 
 #define SYSTRAP(x) \
 	ldr	r12, =SYS_ ## x;		\
@@ -54,14 +56,23 @@
 #define _SYSCALL_NOERROR(x,y)						\
 	SYSENTRY(x);							\
 	SYSTRAP(y)
+#define _SYSCALL_HIDDEN_NOERROR(x,y)					\
+	SYSENTRY_HIDDEN(x);						\
+	SYSTRAP(y)
 
 #if  defined(__PIC__)
 #define _SYSCALL(x, y)							\
 	_SYSCALL_NOERROR(x,y);						\
 	bcs CERROR(PLT)
+#define _SYSCALL_HIDDEN(x, y)						\
+	_SYSCALL_HIDDEN_NOERROR(x,y);					\
+	bcs CERROR(PLT)
 #else
 #define _SYSCALL(x, y)							\
 	_SYSCALL_NOERROR(x,y);						\
+	bcs CERROR
+#define _SYSCALL_HIDDEN(x, y)						\
+	_SYSCALL_HIDDEN_NOERROR(x,y);					\
 	bcs CERROR
 #endif
 
@@ -79,6 +90,9 @@
 #define PSEUDO(x,y)							\
 	_SYSCALL(x,y);							\
 	mov r15, r14
+#define PSEUDO_HIDDEN(x,y)						\
+	_SYSCALL_HIDDEN(x,y);						\
+	mov r15, r14
 
 
 #define RSYSCALL_NOERROR(x)						\
@@ -86,5 +100,7 @@
 
 #define RSYSCALL(x)							\
 	PSEUDO(x,x)
+#define RSYSCALL_HIDDEN(x)						\
+	PSEUDO_HIDDEN(x,x)
 
 	.globl	CERROR
