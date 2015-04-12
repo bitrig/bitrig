@@ -44,14 +44,14 @@
 .Op Fl fipv
 .Oo
 .Fl R
-.Op Fl H | L | P
+.Op Fl H | L | P | x
 .Oc
 .Ar source target
 .Nm cp
 .Op Fl fipv
 .Oo
 .Fl R
-.Op Fl H | L | P
+.Op Fl H | L | P | x
 .Oc
 .Ar source ... directory
 .Sh DESCRIPTION
@@ -149,6 +149,8 @@ instead.
 Causes
 .Nm
 to be verbose, showing files as they are copied.
+.It Fl x
+When copying recursively do not cross mount points.
 .El
 .Pp
 For each destination file that already exists, its contents are
