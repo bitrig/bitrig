@@ -52,6 +52,7 @@
 extern char *__progname;
 
 int dflag, eval, fflag, iflag, Pflag, stdin_ok;
+int xflag;
 
 int	check(char *, char *, struct stat *);
 void	checkdot(char **);
@@ -75,8 +76,8 @@ main(int argc, char *argv[])
 
 	setlocale(LC_ALL, "");
 
-	Pflag = rflag = 0;
-	while ((ch = getopt(argc, argv, "dfiPRr")) != -1)
+	Pflag = rflag = xflag = 0;
+	while ((ch = getopt(argc, argv, "dfiPRrx")) != -1)
 		switch(ch) {
 		case 'd':
 			dflag = 1;
@@ -95,6 +96,9 @@ main(int argc, char *argv[])
 		case 'R':
 		case 'r':			/* Compatibility. */
 			rflag = 1;
+			break;
+		case 'x':
+			xflag = 1;
 			break;
 		default:
 			usage();
@@ -142,6 +146,8 @@ rm_tree(char **argv)
 	flags = FTS_PHYSICAL;
 	if (!needstat)
 		flags |= FTS_NOSTAT;
+	if (xflag)
+		flags |= FTS_XDEV;
 	if (!(fts = fts_open(argv, flags, NULL)))
 		err(1, NULL);
 	while ((p = fts_read(fts)) != NULL) {
@@ -416,6 +422,6 @@ checkdot(char **argv)
 void
 usage(void)
 {
-	(void)fprintf(stderr, "usage: %s [-dfiPRr] file ...\n", __progname);
+	(void)fprintf(stderr, "usage: %s [-dfiPRrx] file ...\n", __progname);
 	exit(1);
 }
