@@ -318,9 +318,9 @@ void
 usage(void)
 {
 	(void)fprintf(stderr,
-	    "usage: %s [-fip] [-R [-H | -L | -P]] source target\n", __progname);
+	    "usage: %s [-fipv] [-R [-H | -L | -P]] source target\n", __progname);
 	(void)fprintf(stderr,
-	    "       %s [-fip] [-R [-H | -L | -P]] source ... directory\n",
+	    "       %s [-fipv] [-R [-H | -L | -P]] source ... directory\n",
 	    __progname);
 	exit(1);
 }
