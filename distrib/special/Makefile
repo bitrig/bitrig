@@ -2,7 +2,7 @@
 
 SUBDIR=	libstubs \
 	arch date dd dhclient dmesg ed grep gzip ifconfig init \
-	installboot kbd md5 more mt newfs pax ping restore \
+	installboot kbd md5 more mt newfs pax ping pwd_mkdb restore \
 	sed sysctl signify umount
 
 install:
