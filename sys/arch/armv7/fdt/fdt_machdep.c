@@ -65,9 +65,11 @@ fdt_platform_init_cons(void)
 		sxiuartcnattach(&armv7_a4x_bs_tag, mem.addr, comcnspeed,
 		    24000000, comcnmode);
 
-	if ((node = fdt_find_compatible("fsl,ns16550")) != NULL &&
+	if ((((node = fdt_find_compatible("fsl,ns16550")) != NULL) ||
+	    ((node = fdt_find_compatible("fsl,16550-FIFO64")) != NULL)) &&
 	    !fdt_get_memory_address(node, 0, &mem))
-		comcnattach(&armv7_bs_tag, mem.addr, comcnspeed, 150000000, comcnmode);
+		comcnattach(&armv7_bs_tag, mem.addr, comcnspeed,
+		    150000000, comcnmode);
 
 	if ((node = fdt_find_node("/chosen")) == NULL ||
 	    !fdt_node_property(node, "stdout-path", &stdout_path))
