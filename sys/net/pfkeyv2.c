@@ -1,4 +1,4 @@
-/* $OpenBSD: pfkeyv2.c,v 1.140 2015/04/13 08:45:48 mpi Exp $ */
+/* $OpenBSD: pfkeyv2.c,v 1.141 2015/04/14 12:22:15 mikeb Exp $ */
 
 /*
  *	@(#)COPYRIGHT	1.1 (NRL) 17 January 1995
@@ -529,18 +529,6 @@ pfkeyv2_get(struct tdb *sa, void **headers, void **buffer, int *lenp)
 	if (sa->tdb_dstid)
 		i += sizeof(struct sadb_ident) + PADUP(sa->tdb_dstid->ref_len);
 
-	if (sa->tdb_local_cred)
-		i += sizeof(struct sadb_x_cred) + PADUP(sa->tdb_local_cred->ref_len);
-
-	if (sa->tdb_remote_cred)
-		i += sizeof(struct sadb_x_cred) + PADUP(sa->tdb_remote_cred->ref_len);
-
-	if (sa->tdb_local_auth)
-		i += sizeof(struct sadb_x_cred) + PADUP(sa->tdb_local_auth->ref_len);
-
-	if (sa->tdb_remote_auth)
-		i += sizeof(struct sadb_x_cred) + PADUP(sa->tdb_remote_auth->ref_len);
-
 	if (sa->tdb_amxkey)
 		i += sizeof(struct sadb_key) + PADUP(sa->tdb_amxkeylen);
 
@@ -635,28 +623,6 @@ pfkeyv2_get(struct tdb *sa, void **headers, void **buffer, int *lenp)
 	if (sa->tdb_dstid) {
 		headers[SADB_EXT_IDENTITY_DST] = p;
 		export_identity(&p, sa, PFKEYV2_IDENTITY_DST);
-	}
-
-	/* Export credentials, if present */
-	if (sa->tdb_local_cred) {
-		headers[SADB_X_EXT_LOCAL_CREDENTIALS] = p;
-		export_credentials(&p, sa, PFKEYV2_CRED_LOCAL);
-	}
-
-	if (sa->tdb_remote_cred) {
-		headers[SADB_X_EXT_REMOTE_CREDENTIALS] = p;
-		export_credentials(&p, sa, PFKEYV2_CRED_REMOTE);
-	}
-
-	/* Export authentication information, if present */
-	if (sa->tdb_local_auth) {
-		headers[SADB_X_EXT_LOCAL_AUTH] = p;
-		export_auth(&p, sa, PFKEYV2_AUTH_LOCAL);
-	}
-
-	if (sa->tdb_remote_auth) {
-		headers[SADB_X_EXT_REMOTE_AUTH] = p;
-		export_auth(&p, sa, PFKEYV2_AUTH_REMOTE);
 	}
 
 	/* Export authentication key, if present */
@@ -1034,16 +1000,6 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 			    PFKEYV2_IDENTITY_SRC);
 			import_identity(newsa, headers[SADB_EXT_IDENTITY_DST],
 			    PFKEYV2_IDENTITY_DST);
-			import_credentials(newsa,
-			    headers[SADB_X_EXT_LOCAL_CREDENTIALS],
-			    PFKEYV2_CRED_LOCAL);
-			import_credentials(newsa,
-			    headers[SADB_X_EXT_REMOTE_CREDENTIALS],
-			    PFKEYV2_CRED_REMOTE);
-			import_auth(newsa, headers[SADB_X_EXT_LOCAL_AUTH],
-			    PFKEYV2_AUTH_LOCAL);
-			import_auth(newsa, headers[SADB_X_EXT_REMOTE_AUTH],
-			    PFKEYV2_AUTH_REMOTE);
 			import_flow(&newsa->tdb_filter, &newsa->tdb_filtermask,
 			    headers[SADB_X_EXT_SRC_FLOW],
 			    headers[SADB_X_EXT_SRC_MASK],
@@ -1202,16 +1158,6 @@ pfkeyv2_send(struct socket *socket, void *message, int len)
 			import_identity(newsa, headers[SADB_EXT_IDENTITY_DST],
 			    PFKEYV2_IDENTITY_DST);
 
-			import_credentials(newsa,
-			    headers[SADB_X_EXT_LOCAL_CREDENTIALS],
-			    PFKEYV2_CRED_LOCAL);
-			import_credentials(newsa,
-			    headers[SADB_X_EXT_REMOTE_CREDENTIALS],
-			    PFKEYV2_CRED_REMOTE);
-			import_auth(newsa, headers[SADB_X_EXT_LOCAL_AUTH],
-			    PFKEYV2_AUTH_LOCAL);
-			import_auth(newsa, headers[SADB_X_EXT_REMOTE_AUTH],
-			    PFKEYV2_AUTH_REMOTE);
 			import_flow(&newsa->tdb_filter, &newsa->tdb_filtermask,
 			    headers[SADB_X_EXT_SRC_FLOW],
 			    headers[SADB_X_EXT_SRC_MASK],
@@ -1868,7 +1814,6 @@ pfkeyv2_acquire(struct ipsec_policy *ipo, union sockaddr_union *gw,
 {
 	void *p, *headers[SADB_EXT_MAX + 1], *buffer = NULL;
 	struct sadb_ident *srcid, *dstid;
-	struct sadb_x_cred *lcred, *lauth;
 	struct sadb_comb *sadb_comb;
 	struct sadb_address *sadd;
 	struct sadb_prop *sa_prop;
@@ -1895,12 +1840,6 @@ pfkeyv2_acquire(struct ipsec_policy *ipo, union sockaddr_union *gw,
 
 	if (ipo->ipo_dstid)
 		i += sizeof(struct sadb_ident) + PADUP(ipo->ipo_dstid->ref_len);
-
-	if (ipo->ipo_local_cred)
-		i += sizeof(struct sadb_x_cred) + PADUP(ipo->ipo_local_cred->ref_len);
-
-	if (ipo->ipo_local_auth)
-		i += sizeof(struct sadb_x_cred) + PADUP(ipo->ipo_local_auth->ref_len);
 
 	/* Allocate */
 	if (!(p = malloc(i, M_PFKEY, M_NOWAIT | M_ZERO))) {
@@ -1972,47 +1911,6 @@ pfkeyv2_acquire(struct ipsec_policy *ipo, union sockaddr_union *gw,
 		bcopy(ipo->ipo_dstid + 1,
 		    (int8_t *)headers[SADB_EXT_IDENTITY_DST] +
 		    sizeof(struct sadb_ident), ipo->ipo_dstid->ref_len);
-	}
-
-	if (ipo->ipo_local_cred) {
-		headers[SADB_X_EXT_LOCAL_CREDENTIALS] = p;
-		p = (int8_t *)p + sizeof(struct sadb_x_cred)
-		    + PADUP(ipo->ipo_local_cred->ref_len);
-		lcred = (struct sadb_x_cred *) headers[SADB_X_EXT_LOCAL_CREDENTIALS];
-		lcred->sadb_x_cred_len = (sizeof(struct sadb_x_cred) +
-		    PADUP(ipo->ipo_local_cred->ref_len)) / sizeof(u_int64_t);
-		switch (ipo->ipo_local_cred->ref_type) {
-		case IPSP_CRED_KEYNOTE:
-			lcred->sadb_x_cred_type = SADB_X_CREDTYPE_KEYNOTE;
-			break;
-		case IPSP_CRED_X509:
-			lcred->sadb_x_cred_type = SADB_X_CREDTYPE_X509;
-			break;
-		}
-		bcopy(ipo->ipo_local_cred + 1,
-		    (int8_t *)headers[SADB_X_EXT_LOCAL_CREDENTIALS] +
-		    sizeof(struct sadb_x_cred), ipo->ipo_local_cred->ref_len);
-	}
-
-	if (ipo->ipo_local_auth) {
-		headers[SADB_X_EXT_LOCAL_AUTH] = p;
-		p = (int8_t *)p + sizeof(struct sadb_x_cred)
-		    + PADUP(ipo->ipo_local_auth->ref_len);
-		lauth = (struct sadb_x_cred *) headers[SADB_X_EXT_LOCAL_AUTH];
-		lauth->sadb_x_cred_len = (sizeof(struct sadb_x_cred) +
-		    PADUP(ipo->ipo_local_auth->ref_len)) / sizeof(u_int64_t);
-		switch (ipo->ipo_local_auth->ref_type) {
-		case IPSP_AUTH_PASSPHRASE:
-			lauth->sadb_x_cred_type = SADB_X_AUTHTYPE_PASSPHRASE;
-			break;
-		case IPSP_AUTH_RSA:
-			lauth->sadb_x_cred_type = SADB_X_AUTHTYPE_RSA;
-			break;
-		}
-
-		bcopy(ipo->ipo_local_auth + 1,
-		    (int8_t *)headers[SADB_X_EXT_LOCAL_AUTH] +
-		    sizeof(struct sadb_x_cred), ipo->ipo_local_auth->ref_len);
 	}
 
 	headers[SADB_EXT_PROPOSAL] = p;
