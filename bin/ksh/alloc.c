@@ -62,6 +62,9 @@ alloc(size_t size, Area *ap)
 {
 	struct link *l;
 
+	if (SIZE_MAX - size < sizeof(struct link))
+		internal_errorf(1, "unable to allocate memory");
+
 	l = calloc(1, sizeof(struct link) + size);
 	if (l == NULL)
 		internal_errorf(1, "unable to allocate memory");
@@ -85,6 +88,9 @@ aresize(void *ptr, size_t size, Area *ap)
 	l = P2L(ptr);
 	lprev = l->prev;
 	lnext = l->next;
+
+	if (SIZE_MAX - size < sizeof(struct link))
+		internal_errorf(1, "unable to allocate memory");
 
 	l2 = realloc(l, sizeof(struct link) + size);
 	if (l2 == NULL)
