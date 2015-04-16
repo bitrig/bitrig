@@ -78,11 +78,9 @@ include "../../../arch/armv7/conf/generic.virt"
 # USB bus support
 usb*		at ehci?
 usb*		at xhci?
-uhub*		at usb?
-uhub*		at uhub?
-
 uhub*		at usb?			# USB Hubs
 uhub*		at uhub?		# USB Hubs
+ualea*		at uhub?		# Araneus Alea II TRNG
 umodem*		at uhub?		# USB Modems/Serial
 ucom*		at umodem?
 uvisor*		at uhub?		# Handspring Visor

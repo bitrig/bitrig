@@ -171,6 +171,7 @@ usb*	at ohci?
 # USB devices
 uhub*	at usb?			# USB Hubs
 uhub*	at uhub?		# USB Hubs
+ualea*	at uhub?		# Araneus Alea II TRNG
 umodem*	at uhub?		# USB Modems/Serial
 ucom*	at umodem?
 uvisor*	at uhub?		# Handspring Visor
