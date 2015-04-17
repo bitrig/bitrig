@@ -328,8 +328,7 @@ shf_emptybuf(struct shf *shf, int flags)
 		    !(shf->flags & SHF_ALLOCB))
 			return EOF;
 		/* allocate more space for buffer */
-		nbuf = (unsigned char *) aresize(shf->buf, shf->wbsize * 2,
-		    shf->areap);
+		nbuf = aresizearray(shf->buf, 2, shf->wbsize, shf->areap);
 		shf->rp = nbuf + (shf->rp - shf->buf);
 		shf->wp = nbuf + (shf->wp - shf->buf);
 		shf->rbsize += shf->wbsize;

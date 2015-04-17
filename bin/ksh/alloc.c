@@ -78,6 +78,15 @@ alloc(size_t size, Area *ap)
 }
 
 void *
+acalloc(size_t nmemb, size_t size, Area *ap)
+{
+	if (nmemb > 0 && SIZE_MAX / nmemb < size)
+		internal_errorf(1, "unable to allocate memory");
+
+	return (alloc(nmemb * size, ap));
+}
+
+void *
 aresize(void *ptr, size_t size, Area *ap)
 {
 	struct link *l, *l2, *lprev, *lnext;
@@ -103,6 +112,15 @@ aresize(void *ptr, size_t size, Area *ap)
 		lnext->prev = l2;
 
 	return L2P(l2);
+}
+
+void *
+aresizearray(void *ptr, size_t nmemb, size_t size, Area *ap)
+{
+	if (nmemb > 0 && SIZE_MAX / nmemb < size)
+		internal_errorf(1, "unable to allocate memory");
+
+	return (aresize(ptr, nmemb * size, ap));
 }
 
 void

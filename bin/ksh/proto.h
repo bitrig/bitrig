@@ -10,7 +10,9 @@
 Area *	ainit(Area *);
 void	afreeall(Area *);
 void *	alloc(size_t, Area *);
+void *	acalloc(size_t, size_t, Area *);
 void *	aresize(void *, size_t, Area *);
+void *	aresizearray(void *, size_t, size_t, Area *);
 void	afree(void *, Area *);
 /* c_ksh.c */
 int	c_hash(char **);

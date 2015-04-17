@@ -196,8 +196,7 @@ get_command(int cf)
 	XPtrV args, vars;
 	struct nesting_state old_nesting;
 
-	iops = (struct ioword **) alloc(sizeofN(struct ioword *, NUFILE+1),
-	    ATEMP);
+	iops = acalloc(NUFILE + 1, sizeof(struct ioword *), ATEMP);
 	XPinit(args, 16);
 	XPinit(vars, 16);
 
@@ -388,8 +387,7 @@ get_command(int cf)
 		t->ioact = NULL;
 	} else {
 		iops[iopn++] = NULL;
-		iops = (struct ioword **) aresize((void*) iops,
-		    sizeofN(struct ioword *, iopn), ATEMP);
+		iops = aresizearray(iops, iopn, sizeof(struct ioword *), ATEMP);
 		t->ioact = iops;
 	}
 
@@ -564,8 +562,8 @@ function_body(char *name,
 		 * be used as input), we pretend there is a colon here.
 		 */
 		t->left = newtp(TCOM);
-		t->left->args = (char **) alloc(sizeof(char *) * 2, ATEMP);
-		t->left->args[0] = alloc(sizeof(char) * 3, ATEMP);
+		t->left->args = acalloc(2, sizeof(char *), ATEMP);
+		t->left->args[0] = acalloc(3, sizeof(char), ATEMP);
 		t->left->args[0][0] = CHAR;
 		t->left->args[0][1] = ':';
 		t->left->args[0][2] = EOS;

@@ -78,7 +78,7 @@ make_argv(int argc, char *argv[])
 	char **nargv = argv;
 
 	if (strcmp(argv[0], kshname) != 0) {
-		nargv = alloc(sizeof(char *) * (argc + 1), &aperm);
+		nargv = acalloc(argc + 1, sizeof(char *), &aperm);
 		nargv[0] = (char *) kshname;
 		for (i = 1; i < argc; i++)
 			nargv[i] = argv[i];

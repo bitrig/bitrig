@@ -614,7 +614,7 @@ c_set(char **wp)
 		while (*++wp != NULL)
 			*wp = str_save(*wp, &l->area);
 		l->argc = wp - owp - 1;
-		l->argv = (char **) alloc(sizeofN(char *, l->argc+2), &l->area);
+		l->argv = acalloc(l->argc+2, sizeof(char *), &l->area);
 		for (wp = l->argv; (*wp++ = *owp++) != NULL; )
 			;
 	}

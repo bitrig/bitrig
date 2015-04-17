@@ -469,8 +469,7 @@ tcopy(struct op *t, Area *ap)
 	else {
 		for (tw = t->vars; *tw++ != NULL; )
 			;
-		rw = r->vars = (char **)
-			alloc((tw - t->vars + 1) * sizeof(*tw), ap);
+		rw = r->vars = acalloc(tw - t->vars + 1, sizeof(char *), ap);
 		for (tw = t->vars; *tw != NULL; )
 			*rw++ = wdcopy(*tw++, ap);
 		*rw = NULL;
@@ -481,8 +480,7 @@ tcopy(struct op *t, Area *ap)
 	else {
 		for (tw = t->args; *tw++ != NULL; )
 			;
-		rw = r->args = (char **)
-			alloc((tw - t->args + 1) * sizeof(*tw), ap);
+		rw = r->args = acalloc(tw - t->args + 1, sizeof(char *), ap);
 		for (tw = t->args; *tw != NULL; )
 			*rw++ = wdcopy(*tw++, ap);
 		*rw = NULL;
@@ -632,7 +630,7 @@ iocopy(struct ioword **iow, Area *ap)
 
 	for (ior = iow; *ior++ != NULL; )
 		;
-	ior = (struct ioword **) alloc((ior - iow + 1) * sizeof(*ior), ap);
+	ior = acalloc(ior - iow + 1, sizeof(struct ioword *), ap);
 
 	for (i = 0; iow[i] != NULL; i++) {
 		struct ioword *p, *q;

@@ -42,7 +42,6 @@
 #define EXECSHELL	_PATH_BSHELL
 #define EXECSHELL_STR	"EXECSHELL"
 
-#define	sizeofN(type, n) (sizeof(type) * (n))
 #define	BIT(i)	(1<<(i))	/* define bit in flag */
 
 /* Table flag type - needs > 16 and < 32 bits */

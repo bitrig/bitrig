@@ -490,7 +490,7 @@ sethistsize(int n)
 			cursize = n;
 		}
 
-		history = (char **)aresize(history, n*sizeof(char *), APERM);
+		history = aresizearray(history, n, sizeof(char *), APERM);
 
 		histsize = n;
 		histptr = history + cursize;
@@ -537,7 +537,7 @@ init_histvec(void)
 {
 	if (history == NULL) {
 		histsize = HISTORYSIZE;
-		history = (char **)alloc(histsize*sizeof (char *), APERM);
+		history = acalloc(histsize, sizeof(char *), APERM);
 		histptr = history - 1;
 	}
 }

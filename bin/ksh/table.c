@@ -40,7 +40,7 @@ texpand(struct table *tp, int nsize)
 	struct tbl **ntblp, **otblp = tp->tbls;
 	int osize = tp->size;
 
-	ntblp = (struct tbl**) alloc(sizeofN(struct tbl *, nsize), tp->areap);
+	ntblp = acalloc(nsize, sizeof(struct tbl *), tp->areap);
 	for (i = 0; i < nsize; i++)
 		ntblp[i] = NULL;
 	tp->size = nsize;
@@ -170,7 +170,7 @@ ktsort(struct table *tp)
 	int i;
 	struct tbl **p, **sp, **dp;
 
-	p = (struct tbl **)alloc(sizeofN(struct tbl *, tp->size+1), ATEMP);
+	p = acalloc(tp->size + 1, sizeof(struct tbl *), ATEMP);
 	sp = tp->tbls;		/* source */
 	dp = p;			/* dest */
 	for (i = 0; i < tp->size; i++)
