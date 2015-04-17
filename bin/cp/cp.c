@@ -72,7 +72,7 @@
 PATH_T to = { to.p_path, "" };
 
 uid_t myuid;
-int Rflag, fflag, iflag, pflag, rflag, vflag;
+int Rflag, fflag, iflag, pflag, rflag, vflag, xflag;
 mode_t myumask;
 
 enum op { FILE_TO_FILE, FILE_TO_DIR, DIR_TO_DNE };
@@ -90,8 +90,8 @@ main(int argc, char *argv[])
 
 	(void)setlocale(LC_ALL, "");
 
-	Hflag = Lflag = Pflag = Rflag = 0;
-	while ((ch = getopt(argc, argv, "HLPRfiprv")) != -1)
+	Hflag = Lflag = Pflag = Rflag = xflag = 0;
+	while ((ch = getopt(argc, argv, "HLPRfiprvx")) != -1)
 		switch (ch) {
 		case 'H':
 			Hflag = 1;
@@ -125,6 +125,9 @@ main(int argc, char *argv[])
 		case 'v':
 			vflag = 1;
 			break;
+		case 'x':
+			xflag = 1;
+			break;
 		default:
 			usage();
 			break;
@@ -136,6 +139,8 @@ main(int argc, char *argv[])
 		usage();
 
 	fts_options = FTS_NOCHDIR | FTS_PHYSICAL;
+	if (xflag)
+		fts_options |= FTS_XDEV;
 	if (rflag) {
 		if (Rflag)
 			errx(1,

@@ -318,9 +318,10 @@ void
 usage(void)
 {
 	(void)fprintf(stderr,
-	    "usage: %s [-fipv] [-R [-H | -L | -P]] source target\n", __progname);
+	    "usage: %s [-fipvx] [-R [-H | -L | -P]] source target\n",
+	    __progname);
 	(void)fprintf(stderr,
-	    "       %s [-fipv] [-R [-H | -L | -P]] source ... directory\n",
+	    "       %s [-fipvx] [-R [-H | -L | -P]] source ... directory\n",
 	    __progname);
 	exit(1);
 }

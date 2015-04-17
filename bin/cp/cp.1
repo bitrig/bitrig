@@ -43,14 +43,14 @@
 .Nm cp
 .Op Fl fipv
 .Oo
-.Fl R
+.Fl Rx
 .Op Fl H | L | P
 .Oc
 .Ar source target
 .Nm cp
 .Op Fl fipv
 .Oo
-.Fl R
+.Fl Rx
 .Op Fl H | L | P
 .Oc
 .Ar source ... directory
@@ -149,6 +149,8 @@ instead.
 Causes
 .Nm
 to be verbose, showing files as they are copied.
+.It Fl x
+Do not cross mount points when copying recursively.
 .El
 .Pp
 For each destination file that already exists, its contents are
@@ -239,9 +241,9 @@ utility is compliant with the
 .St -p1003.1-2008
 specification.
 .Pp
-The flag
-.Op Fl v
-is an extension to that specification.
+The flags
+.Op Fl vx
+are extensions to that specification.
 .Pp
 Historic versions of the
 .Nm
