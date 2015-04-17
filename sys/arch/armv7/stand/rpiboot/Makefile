@@ -1,6 +1,7 @@
 .if ${MACHINE} == "armv7"
-PROG=	rpiboot
-SRCS=	rpi.S
+PROG=		rpiboot
+SRCS=		rpi.S
+OBJCOPY?=	objcopy
 
 ${PROG}: ${OBJS}
 	${OBJCOPY} ${OBJS} -O binary ${PROG}
