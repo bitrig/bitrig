@@ -1,4 +1,4 @@
-/*	$OpenBSD: intel_ddi.c,v 1.13 2015/02/12 04:56:03 kettenis Exp $	*/
+/*	$OpenBSD: intel_ddi.c,v 1.14 2015/04/18 14:47:34 jsg Exp $	*/
 /*
  * Copyright © 2012 Intel Corporation
  *
@@ -76,7 +76,8 @@ static enum port intel_ddi_get_encoder_port(struct intel_encoder *intel_encoder)
 		return PORT_E;
 
 	} else {
-		panic("Invalid DDI encoder type %d\n", type);
+		DRM_ERROR("Invalid DDI encoder type %d\n", type);
+		BUG();
 	}
 }
 
