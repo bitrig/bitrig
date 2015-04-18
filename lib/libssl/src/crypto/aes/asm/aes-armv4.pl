@@ -171,7 +171,13 @@ AES_encrypt:
 	stmdb   sp!,{r1,r4-r12,lr}
 	mov	$rounds,r0		@ inp
 	mov	$key,r2
+#ifdef __clang__
+	@ workaround for clang integrated assembler bug
+	ldr	r0,=(AES_encrypt-AES_Te)
+	sub	r10,r3,r0
+#else
 	sub	$tbl,r3,#AES_encrypt-AES_Te	@ Te
+#endif
 #if __ARM_ARCH__<7
 	ldrb	$s0,[$rounds,#3]	@ load input data in endian-neutral
 	ldrb	$t1,[$rounds,#2]	@ manner...
@@ -426,7 +432,13 @@ _armv4_AES_set_encrypt_key:
 	bne	.Labrt
 
 .Lok:	stmdb   sp!,{r4-r12,lr}
+#ifdef __clang__
+	@ workaround for clang integrated assembler bug
+	ldr	$tbl,=(_armv4_AES_set_encrypt_key-AES_Te-1024)
+	sub	$tbl,r3,$tbl
+#else
 	sub	$tbl,r3,#_armv4_AES_set_encrypt_key-AES_Te-1024	@ Te4
+#endif
 
 	mov	$rounds,r0		@ inp
 	mov	lr,r1			@ bits
@@ -887,7 +899,13 @@ AES_decrypt:
 	stmdb   sp!,{r1,r4-r12,lr}
 	mov	$rounds,r0		@ inp
 	mov	$key,r2
+#ifdef __clang__
+	@ workaround for clang integrated assembler bug
+	ldr	r0,=(AES_decrypt-AES_Td)
+	sub	r10,r3,r0
+#else
 	sub	$tbl,r3,#AES_decrypt-AES_Td		@ Td
+#endif
 #if __ARM_ARCH__<7
 	ldrb	$s0,[$rounds,#3]	@ load input data in endian-neutral
 	ldrb	$t1,[$rounds,#2]	@ manner...
