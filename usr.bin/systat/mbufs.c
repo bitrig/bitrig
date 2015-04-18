@@ -1,4 +1,4 @@
-/*	$OpenBSD: mbufs.c,v 1.39 2015/01/20 18:26:57 deraadt Exp $ */
+/*	$OpenBSD: mbufs.c,v 1.40 2015/04/18 09:32:59 jsg Exp $ */
 /*
  * Copyright (c) 2008 Can Erkin Acar <canacar@openbsd.org>
  *
@@ -344,7 +344,8 @@ read_mb(void)
 	}
 
  exit:
-	freeifaddrs(ifap);
+	if (ifap)
+		freeifaddrs(ifap);
 	return (ret);
 }
 
