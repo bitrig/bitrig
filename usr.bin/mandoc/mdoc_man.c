@@ -1,4 +1,4 @@
-/*	$OpenBSD: mdoc_man.c,v 1.89 2015/04/02 23:47:43 schwarze Exp $ */
+/*	$OpenBSD: mdoc_man.c,v 1.90 2015/04/18 16:04:40 schwarze Exp $ */
 /*
  * Copyright (c) 2011-2015 Ingo Schwarze <schwarze@openbsd.org>
  *
@@ -531,7 +531,7 @@ print_count(int *count)
 }
 
 void
-man_man(void *arg, const struct man *man)
+man_man(void *arg, const struct roff_man *man)
 {
 
 	/*
@@ -544,7 +544,7 @@ man_man(void *arg, const struct man *man)
 }
 
 void
-man_mdoc(void *arg, const struct mdoc *mdoc)
+man_mdoc(void *arg, const struct roff_man *mdoc)
 {
 	const struct roff_meta *meta;
 	struct roff_node *n;
