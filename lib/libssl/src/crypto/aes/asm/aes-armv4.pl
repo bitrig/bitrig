@@ -174,7 +174,7 @@ AES_encrypt:
 #ifdef __clang__
 	@ workaround for clang integrated assembler bug
 	ldr	r0,=(AES_encrypt-AES_Te)
-	sub	r10,r3,r0
+	sub	$tbl,r3,r0
 #else
 	sub	$tbl,r3,#AES_encrypt-AES_Te	@ Te
 #endif
@@ -902,7 +902,7 @@ AES_decrypt:
 #ifdef __clang__
 	@ workaround for clang integrated assembler bug
 	ldr	r0,=(AES_decrypt-AES_Td)
-	sub	r10,r3,r0
+	sub	$tbl,r3,r0
 #else
 	sub	$tbl,r3,#AES_decrypt-AES_Td		@ Td
 #endif
