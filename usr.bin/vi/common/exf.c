@@ -1,4 +1,4 @@
-/*	$OpenBSD: exf.c,v 1.32 2014/11/14 20:23:56 tedu Exp $	*/
+/*	$OpenBSD: exf.c,v 1.35 2015/04/19 01:10:59 millert Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -318,7 +318,7 @@ file_init(SCR *sp, FREF *frp, char *rcv_name, int flags)
 	 * when locking is a little more reliable, this should change to be
 	 * an error.
 	 */
-	if (rcv_name == NULL)
+	if (rcv_name == NULL && !O_ISSET(sp, O_READONLY))
 		switch (file_lock(sp, oname,
 		    &ep->fcntl_fd, ep->db->fd(ep->db), 0)) {
 		case LOCK_FAILED:
@@ -326,10 +326,8 @@ file_init(SCR *sp, FREF *frp, char *rcv_name, int flags)
 			break;
 		case LOCK_UNAVAIL:
 			readonly = 1;
-			if (!O_ISSET(sp, O_READONLY)) {
-				msgq_str(sp, M_INFO, oname,
-				    "239|%s already locked, session is read-only");
-			}
+			msgq_str(sp, M_INFO, oname,
+			    "239|%s already locked, session is read-only");
 			break;
 		case LOCK_SUCCESS:
 			break;
