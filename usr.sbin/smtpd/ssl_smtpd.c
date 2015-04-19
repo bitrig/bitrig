@@ -1,4 +1,4 @@
-/*	$OpenBSD: ssl_smtpd.c,v 1.8 2015/01/16 06:40:21 deraadt Exp $	*/
+/*	$OpenBSD: ssl_smtpd.c,v 1.9 2015/04/19 20:29:12 gilles Exp $	*/
 
 /*
  * Copyright (c) 2008 Pierre-Yves Ritschard <pyr@openbsd.org>
