@@ -379,16 +379,25 @@ vndioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 	case DIOCRLDINFO:
 		if ((sc->sc_flags & VNF_HAVELABEL) == 0)
 			return (ENOTTY);
-		lp = malloc(sizeof(*lp), M_TEMP, M_WAITOK);
-		vndgetdisklabel(dev, sc, lp, 0);
-		*(sc->sc_dk.dk_label) = *lp;
+
+		lp = malloc(sizeof(*lp), M_TEMP, M_WAITOK | M_CANFAIL);
+		if (lp == NULL)
+			return (ENOMEM);
+
+		if (vndgetdisklabel(dev, sc, lp, 0) == 0)
+			*(sc->sc_dk.dk_label) = *lp;
+		else
+			error = EIO;
+
 		free(lp, M_TEMP, 0);
-		return (0);
+		return (error);
 
 	case DIOCGPDINFO:
 		if ((sc->sc_flags & VNF_HAVELABEL) == 0)
 			return (ENOTTY);
-		vndgetdisklabel(dev, sc, (struct disklabel *)addr, 1);
+
+		if (vndgetdisklabel(dev, sc, (struct disklabel *)addr, 1) != 0)
+			return (EIO);
 		return (0);
 
 	case DIOCGDINFO:

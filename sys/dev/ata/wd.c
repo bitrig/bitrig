@@ -783,14 +783,23 @@ wdioctl(dev_t dev, u_long xfer, caddr_t addr, int flag, struct proc *p)
 
 	switch (xfer) {
 	case DIOCRLDINFO:
-		lp = malloc(sizeof(*lp), M_TEMP, M_WAITOK);
-		wdgetdisklabel(dev, wd, lp, 0);
-		bcopy(lp, wd->sc_dk.dk_label, sizeof(*lp));
+		lp = malloc(sizeof(*lp), M_TEMP, M_WAITOK | M_CANFAIL);
+		if (lp == NULL) {
+			error = ENOMEM;
+			goto exit;
+		}
+
+		if (wdgetdisklabel(dev, wd, lp, 0) == 0)
+			*(wd->sc_dk.dk_label) = *lp;
+		else
+			error = EIO;
+
 		free(lp, M_TEMP, 0);
 		goto exit;
 
 	case DIOCGPDINFO:
-		wdgetdisklabel(dev, wd, (struct disklabel *)addr, 1);
+		if (wdgetdisklabel(dev, wd, (struct disklabel *)addr, 1) != 0)
+			error = EIO;
 		goto exit;
 
 	case DIOCGDINFO:

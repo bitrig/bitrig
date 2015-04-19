@@ -786,14 +786,23 @@ cdioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 
 	switch (cmd) {
 	case DIOCRLDINFO:
-		lp = malloc(sizeof(*lp), M_TEMP, M_WAITOK);
-		cdgetdisklabel(dev, sc, lp, 0);
-		memcpy(sc->sc_dk.dk_label, lp, sizeof(*lp));
+		lp = malloc(sizeof(*lp), M_TEMP, M_WAITOK | M_CANFAIL);
+		if (lp == NULL) {
+			error = ENOMEM;
+			break;
+		}
+
+		if (cdgetdisklabel(dev, sc, lp, 0) == 0)
+			*(sc->sc_dk.dk_label) = *lp;
+		else
+			error = EIO;
+
 		free(lp, M_TEMP, sizeof(*lp));
 		break;
 
 	case DIOCGPDINFO:
-		cdgetdisklabel(dev, sc, (struct disklabel *)addr, 1);
+		if (cdgetdisklabel(dev, sc, (struct disklabel *)addr, 1) != 0)
+			error = EIO;
 		break;
 
 	case DIOCGDINFO:

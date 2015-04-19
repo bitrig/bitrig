@@ -155,6 +155,10 @@ is not valid.
 .It Bq Er EFAULT
 .Fa arg
 points outside the process's allocated address space.
+.It Bq Er EIO
+An I/O error occurred while performing the request.
+.It Bq Er ENOMEM
+The system was unable to allocate sufficient memory to fulfill the request.
 .El
 .Sh SEE ALSO
 .Xr cdio 1 ,
