@@ -3086,7 +3086,7 @@ pipex_sockaddr_compar_addr(struct sockaddr *a, struct sockaddr *b)
 	return (-1);
 }
 
-Static inline int
+static inline int
 pipex_mppe_setkey(struct pipex_mppe *mppe)
 {
 	rc4_keysetup(&mppe->rc4ctx, mppe->session_key, mppe->keylen);
@@ -3094,7 +3094,7 @@ pipex_mppe_setkey(struct pipex_mppe *mppe)
 	return (0);
 }
 
-Static inline int
+static inline int
 pipex_mppe_setoldkey(struct pipex_mppe *mppe, uint16_t coher_cnt)
 {
 	KASSERT(mppe->old_session_keys != NULL);
@@ -3106,7 +3106,7 @@ pipex_mppe_setoldkey(struct pipex_mppe *mppe, uint16_t coher_cnt)
 	return (0);
 }
 
-Static inline void
+static inline void
 pipex_mppe_crypt(struct pipex_mppe *mppe, int len, u_char *indata,
     u_char *outdata)
 {

@@ -76,8 +76,8 @@
 
 #include <dev/pci/pcivar.h>
 
-__inline uint64_t ahd_compose_id(u_int, u_int, u_int, u_int);
-__inline uint64_t
+static inline uint64_t ahd_compose_id(u_int, u_int, u_int, u_int);
+static inline uint64_t
 ahd_compose_id(u_int device, u_int vendor, u_int subdevice, u_int subvendor)
 {
 	uint64_t id;
