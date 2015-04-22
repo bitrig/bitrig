@@ -1930,7 +1930,7 @@ expand_word(int command)
 
 	nwords = x_cf_glob(XCF_COMMAND_FILE|XCF_FULLPATH,
 	    es->cbuf, es->linelen, es->cursor,
-	    &start, &end, &words, (int *) 0);
+	    &start, &end, &words, NULL);
 	if (nwords == 0) {
 		vi_error();
 		return -1;
@@ -2016,12 +2016,12 @@ complete_word(int command, int count)
 		 */
 		if (is_command) {
 			match = words[count] +
-			    x_basename(words[count], (char *) 0);
+			    x_basename(words[count], NULL);
 			/* If more than one possible match, use full path */
 			for (i = 0; i < nwords; i++)
 				if (i != count &&
 				    strcmp(words[i] + x_basename(words[i],
-				    (char *) 0), match) == 0) {
+				    NULL), match) == 0) {
 					match = words[count];
 					break;
 				}

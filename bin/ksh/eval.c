@@ -187,7 +187,7 @@ expand(char *cp,	/* input word */
 	doblank = 0;
 	make_magic = 0;
 	word = (f&DOBLANK) ? IFS_WS : IFS_WORD;
-	st_head.next = (SubType *) 0;
+	st_head.next = NULL;
 	st = &st_head;
 
 	while (1) {
@@ -294,7 +294,7 @@ expand(char *cp,	/* input word */
 
 						newst = (SubType *) alloc(
 						    sizeof(SubType), ATEMP);
-						newst->next = (SubType *) 0;
+						newst->next = NULL;
 						newst->prev = st;
 						st->next = newst;
 					}
@@ -704,7 +704,7 @@ varsub(Expand *xp, char *sp, char *word,
 	if (sp[0] == '\0')	/* Bad variable name */
 		return -1;
 
-	xp->var = (struct tbl *) 0;
+	xp->var = NULL;
 
 	/* ${#var}, string length or array size */
 	if (sp[0] == '#' && (c = sp[1]) != '\0') {
@@ -864,7 +864,7 @@ comsub(Expand *xp, char *cp)
 
 		if ((io->flag&IOTYPE) != IOREAD)
 			errorf("funny $() command: %s",
-			    snptreef((char *) 0, 32, "%R", io));
+			    snptreef(NULL, 32, "%R", io));
 		shf = shf_open(name = evalstr(io->name, DOTILDE), O_RDONLY, 0,
 			SHF_MAPHI|SHF_CLEXEC);
 		if (shf == NULL)
@@ -874,7 +874,7 @@ comsub(Expand *xp, char *cp)
 	} else {
 		int ofd1, pv[2];
 		openpipe(pv);
-		shf = shf_fdopen(pv[0], SHF_RD, (struct shf *) 0);
+		shf = shf_fdopen(pv[0], SHF_RD, NULL);
 		ofd1 = savefd(1);
 		if (pv[1] != 1) {
 			ksh_dup2(pv[1], 1, false);
@@ -1193,7 +1193,7 @@ maybe_expand_tilde(char *p, XString *dsp, char **dpp, int isassign)
 	}
 	*tp = '\0';
 	r = (p[0] == EOS || p[0] == CHAR || p[0] == CSUBST) ?
-	    tilde(Xstring(ts, tp)) : (char *) 0;
+	    tilde(Xstring(ts, tp)) : NULL;
 	Xfree(ts, tp);
 	if (r) {
 		while (*r) {
@@ -1229,7 +1229,7 @@ tilde(char *cp)
 		dp = homedir(cp);
 	/* If HOME, PWD or OLDPWD are not set, don't expand ~ */
 	if (dp == null)
-		dp = (char *) 0;
+		dp = NULL;
 	return dp;
 }
 
@@ -1274,7 +1274,7 @@ alt_expand(XPtrV *wp, char *start, char *exp_start, char *end, int fdo)
 
 	/* find matching close brace, if any */
 	if (p) {
-		comma = (char *) 0;
+		comma = NULL;
 		count = 1;
 		for (p += 2; *p && count; p++) {
 			if (ISMAGIC(*p)) {

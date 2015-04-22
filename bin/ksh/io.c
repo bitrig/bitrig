@@ -75,7 +75,7 @@ bi_errorf(const char *fmt, ...)
 	 */
 	if ((builtin_flag & SPEC_BI) ||
 	    (Flag(FPOSIX) && (builtin_flag & KEEPASN))) {
-		builtin_argv0 = (char *) 0;
+		builtin_argv0 = NULL;
 		unwind(LERROR);
 	}
 }
@@ -424,12 +424,12 @@ maketemp(Area *ap, Temp_type type, struct temp **tlist)
 	len = strlen(dir) + 3 + 20 + 20 + 1;
 	tp = (struct temp *) alloc(sizeof(struct temp) + len, ap);
 	tp->name = path = (char *) &tp[1];
-	tp->shf = (struct shf *) 0;
+	tp->shf = NULL;
 	tp->type = type;
 	shf_snprintf(path, len, "%s/shXXXXXXXX", dir);
 	fd = mkstemp(path);
 	if (fd >= 0)
-		tp->shf = shf_fdopen(fd, SHF_WR, (struct shf *) 0);
+		tp->shf = shf_fdopen(fd, SHF_WR, NULL);
 	tp->pid = procpid;
 
 	tp->next = *tlist;
