@@ -1830,4 +1830,5 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/zconf.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/zlib.ph
 ./usr/local/libdata/perl5/site_perl/arm-bitrig
+./usr/mdec/rpiboot
 ./usr/sbin/gpioctl
