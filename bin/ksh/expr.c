@@ -174,8 +174,8 @@ v_evaluate(struct tbl *vp, const char *expr, volatile int error_ok,
 	curstate.expression = curstate.tokp = expr;
 	curstate.noassign = 0;
 	curstate.arith = arith;
-	curstate.evaling = (struct tbl *) 0;
-	curstate.val = (struct tbl *) 0;
+	curstate.evaling = NULL;
+	curstate.val = NULL;
 
 	newenv(E_ERRH);
 	i = sigsetjmp(e->jbuf, 0);
@@ -203,7 +203,7 @@ v_evaluate(struct tbl *vp, const char *expr, volatile int error_ok,
 	v = intvar(es, evalexpr(es, MAX_PREC));
 
 	if (es->tok != END)
-		evalerr(es, ET_UNEXPECTED, (char *) 0);
+		evalerr(es, ET_UNEXPECTED, NULL);
 
 	if (vp->flag & INTEGER)
 		setint_v(vp, v, es->arith);
@@ -307,7 +307,7 @@ evalexpr(Expr_state *es, enum prec prec)
 			vl = es->val;
 			token(es);
 		} else {
-			evalerr(es, ET_UNEXPECTED, (char *) 0);
+			evalerr(es, ET_UNEXPECTED, NULL);
 			/* NOTREACHED */
 		}
 		if (es->tok == O_PLUSPLUS || es->tok == O_MINUSMINUS) {
@@ -588,7 +588,7 @@ intvar(Expr_state *es, struct tbl *vp)
 		vp->flag |= EXPRINEVAL;
 		v_evaluate(vq, str_val(vp), KSH_UNWIND_ERROR, es->arith);
 		vp->flag &= ~EXPRINEVAL;
-		es->evaling = (struct tbl *) 0;
+		es->evaling = NULL;
 	}
 	return vq;
 }

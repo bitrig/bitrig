@@ -728,9 +728,9 @@ Done:
 				ungetsc(c2);
 		}
 
-		iop->name = (char *) 0;
-		iop->delim = (char *) 0;
-		iop->heredoc = (char *) 0;
+		iop->name = NULL;
+		iop->delim = NULL;
+		iop->heredoc = NULL;
 		Xfree(ws, wp);	/* free word */
 		yylval.iop = iop;
 		return REDIR;
@@ -1135,7 +1135,7 @@ getsc_line(Source *s)
 #endif /* HISTORY */
 	}
 	if (interactive)
-		set_prompt(PS2, (Source *) 0);
+		set_prompt(PS2, NULL);
 }
 
 static char *
