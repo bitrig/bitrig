@@ -1,4 +1,4 @@
-/*	$OpenBSD: sxiuart.c,v 1.2 2013/10/23 18:01:52 jasper Exp $	*/
+/*	$OpenBSD: sxiuart.c,v 1.4 2015/04/22 11:39:04 jsg Exp $	*/
 /*
  * Copyright (c) 2005 Dale Rahn <drahn@motorola.com>
  * Copyright (c) 2013 Artturi Alm
@@ -334,8 +334,7 @@ sxiuart_param(struct tty *tp, struct termios *t)
 	int error;
 	tcflag_t oldcflag;
 	uint16_t ratediv;
-	uint8_t lcr;
-
+	uint8_t lcr = 0;
 
 	if (t->c_ospeed < 0 || (t->c_ispeed && t->c_ispeed != t->c_ospeed))
 		return (EINVAL);
