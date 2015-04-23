@@ -23,7 +23,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: March 18 2009 $
+.Dd $Mdocdate: May 22 2015 $
 .Dt MAKEDEV 8 amd64
 .Os
 .Sh NAME
@@ -84,6 +84,10 @@ SCSI disks, including flopticals, see
 .Dq tmpfsrd
 pseudo-disks, see
 .Xr tmpfsrd 4 .
+.It Ar nbd*
+.Dq network
+pseudo-disk devices, see
+.Xr nbd 4 .
 .It Ar vnd*
 .Dq file
 pseudo-disk devices, see

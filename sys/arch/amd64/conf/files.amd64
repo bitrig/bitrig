@@ -244,6 +244,7 @@ attach	vmt at mainbus
 # device major numbers
 #
 
+major	{nbd = 20}
 major	{vnd = 14}
 major	{sd = 4}
 major	{st = 5}

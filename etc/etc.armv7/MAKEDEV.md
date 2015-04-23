@@ -37,6 +37,7 @@ _DEV(cd, 26, 26)
 _DEV(ch, 27)
 _DEV(sd, 24, 24)
 _DEV(tmpfsrd, 20, 20)
+_DEV(nbd, 21, 21)
 _DEV(vnd, 19, 19)
 _DEV(wd, 16, 16)
 _TITLE(tap)
@@ -90,7 +91,7 @@ divert(__mddivert)dnl
 dnl
 ramdisk)
 	_recurse std bpf0 wd0 wd1 sd0 tty00 tmpfsrd0 wsmouse
-	_recurse st0 ttyC0 wskbd0 apm bio diskmap random
+	_recurse st0 ttyC0 wskbd0 apm bio diskmap random nbd0
 	;;
 
 _std(1, 2, 8, 6)
@@ -109,5 +110,6 @@ target(all, xy, 0, 1, 2, 3)dnl
 target(all, tmpfsrd, 0)dnl
 target(all, cd, 0, 1)dnl
 target(all, sd, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9)dnl
+target(all, nbd, 0, 1, 2, 3)dnl
 target(all, vnd, 0, 1, 2, 3)dnl
 target(all, gpio, 0, 1, 2, 3, 4, 5, 6, 7, 8)dnl

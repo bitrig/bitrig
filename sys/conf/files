@@ -513,6 +513,7 @@ device	spdmem
 file	dev/spdmem.c			spdmem
 
 # legitimate pseudo-devices
+pseudo-device nbd: disk
 pseudo-device vnd: disk
 pseudo-device tmpfsrd: disk
 file	dev/tmpfsrd.c			tmpfsrd needs-flag
@@ -619,6 +620,7 @@ file dev/ic/tc921x.c			tc921x
 file dev/ic/pt2254a.c			pt2254a
 file dev/midi.c				midi | midibus		needs-flag
 file dev/mulaw.c			mulaw
+file dev/nbd.c				nbd			needs-flag
 file dev/systrace.c			systrace		needs-flag
 file dev/vnd.c				vnd			needs-flag
 file dev/rnd.c

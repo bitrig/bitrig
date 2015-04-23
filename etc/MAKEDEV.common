@@ -226,6 +226,8 @@ _mkdev(tmpfsrd, tmpfsrd*, {-dodisk2 tmpfsrd $U major_tmpfsrd_b major_tmpfsrd_c $
 __devitem(xd, xd*, Xylogic 753/7053 disks)dnl
 __devitem(xy, xy*, {-	Xylogic 450/451 disks-})dnl
 __devitem(wd, {-wd*-}, {-quote(winchester)disk drives (ST506{-,-} IDE{-,-} ESDI{-,-} RLL{-,-} ...)-})dnl
+__devitem(nbd, nbd*, quote(network)pseudo-disk devices)dnl
+_mkdev(nbd, nbd*, {-dodisk nbd $U major_nbd_b major_nbd_c $U 0{--}ifstep(nbd)-})dnl
 __devitem(vnd, vnd*, quote(file)pseudo-disk devices)dnl
 _mkdev(vnd, vnd*, {-dodisk vnd $U major_vnd_b major_vnd_c $U 0{--}ifstep(vnd)-})dnl
 __devitem(ra, ra*, {-MSCP disks-})dnl

@@ -78,6 +78,7 @@
  */
 #include "vnd.h"			/* vnode disk driver */
 #include "tmpfsrd.h"
+#include "nbd.h"
 
 /*
  * WD/ATA devices
@@ -160,7 +161,7 @@ struct bdevsw bdevsw[] = {
 	bdev_notdef(),			/* 18: was: rd(4) ramdisk driver */
 	bdev_disk_init(NVND,vnd),	/* 19: vnode disk driver */
 	bdev_disk_init(NTMPFSRD,tmpfsrd),	/* 20: tmpfs RAM disk driver */
- 	bdev_notdef(),			/* 21: was: concatenated disk driver */
+	bdev_disk_init(NNBD,nbd),	/* 21: network block device */
 	bdev_notdef(),			/* 22: */
 	bdev_notdef(),			/* 23: */
 	bdev_disk_init(NSD,sd),		/* 24: SCSI disk */
@@ -285,7 +286,7 @@ struct cdevsw cdevsw[] = {
 	cdev_notdef(),				/* 18: */
 	cdev_disk_init(NVND,vnd),		/* 19: vnode disk driver */
 	cdev_disk_init(NTMPFSRD,tmpfsrd),	/* 20: tmpfs RAM disk driver */
-	cdev_notdef(),				/* 21: was: concatenated disk driver */
+	cdev_disk_init(NNBD,nbd),		/* 21: network block deivce */
 	cdev_bpf_init(NBPFILTER,bpf),		/* 22: Berkeley packet filter */
 	cdev_notdef(),				/* 23: */
 	cdev_disk_init(NSD,sd),			/* 24: SCSI disk */
@@ -432,7 +433,7 @@ int chrtoblktbl[] = {
     /* 18 */        NODEV,
     /* 19 */        19,		/* vnd */
     /* 20 */        20,		/* tmpfsrd */
-    /* 21 */        NODEV,
+    /* 21 */        21,		/* nbd */
     /* 22 */        NODEV,
     /* 23 */        NODEV,
     /* 24 */        24,		/* sd */

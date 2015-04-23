@@ -47,6 +47,7 @@ bdev_decl(wd);
 #include "cd.h"
 #include "uk.h"
 #include "vnd.h"
+#include "nbd.h"
 #include "tmpfsrd.h"
 
 struct bdevsw	bdevsw[] =
@@ -71,6 +72,7 @@ struct bdevsw	bdevsw[] =
 	bdev_notdef(),			/* 17: was: rd(4) ramdisk driver */
 	bdev_notdef(),			/* 18 */
 	bdev_disk_init(NTMPFSRD,tmpfsrd),	/* 19: tmpfs RAM disk driver */
+	bdev_disk_init(NNBD,nbd),	/* 20: network block device */
 };
 int	nblkdev = nitems(bdevsw);
 
@@ -215,7 +217,7 @@ struct cdevsw	cdevsw[] =
 	cdev_tun_init(NTUN,tun),	/* 40: network tunnel */
 	cdev_disk_init(NVND,vnd),	/* 41: vnode disk driver */
 	cdev_audio_init(NAUDIO,audio),	/* 42: generic audio I/O */
-	cdev_notdef(),			/* 43 */
+	cdev_disk_init(NNBD,nbd),	/* 43: network block device*/
 	cdev_video_init(NVIDEO,video),	/* 44: generic video I/O */
 	cdev_random_init(1,random),	/* 45: random data source */
 	cdev_ocis_init(NPCTR,pctr),	/* 46: performance counters */
@@ -357,7 +359,7 @@ int chrtoblktbl[] = {
 	/* 40 */	NODEV,
 	/* 41 */	14,		/* vnd */
 	/* 42 */	NODEV,
-	/* 43 */	NODEV,
+	/* 43 */	20,		/* nbd */
 	/* 44 */	NODEV,
 	/* 45 */	NODEV,
 	/* 46 */	NODEV,

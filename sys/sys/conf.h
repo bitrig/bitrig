@@ -536,6 +536,9 @@ cdev_decl(cn);
 
 bdev_decl(sw);
 
+bdev_decl(nbd);
+cdev_decl(nbd);
+
 bdev_decl(vnd);
 cdev_decl(vnd);
 
