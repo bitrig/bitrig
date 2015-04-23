@@ -52,7 +52,7 @@ c_ulimit(char **wp)
 #ifdef RLIMIT_VMEM
 		{ "vmemory(kbytes)", RLIMIT_VMEM, 1024, 'v' },
 #endif /* RLIMIT_VMEM */
-		{ (char *) 0 }
+		{ NULL }
 	};
 	static char	options[4 + nitems(limits) * 2];
 	int		how = SOFT | HARD;

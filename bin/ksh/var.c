@@ -108,7 +108,7 @@ initvar(void)
 		{ "SECONDS",		V_SECONDS },
 		{ "TMOUT",		V_TMOUT },
 		{ "LINENO",		V_LINENO },
-		{ (char *) 0,	0 }
+		{ NULL,	0 }
 	};
 	int i;
 	struct tbl *tp;
@@ -260,7 +260,7 @@ local(const char *n, bool copy)
 	vp = ktenter(&l->vars, n, h);
 	if (copy && !(vp->flag & DEFINED)) {
 		struct block *ll = l;
-		struct tbl *vq = (struct tbl *) 0;
+		struct tbl *vq = NULL;
 
 		while ((ll = ll->next) && !(vq = ktsearch(&ll->vars, n, h)))
 			;
@@ -669,11 +669,10 @@ typeset(const char *var, Tflag set, Tflag clr, int field, int base)
 			if (fake_assign) {
 				if (t->flag & INTEGER) {
 					s = str_val(t);
-					free_me = (char *) 0;
+					free_me = NULL;
 				} else {
 					s = t->val.s + t->type;
-					free_me = (t->flag & ALLOC) ? t->val.s :
-					    (char *) 0;
+					free_me = (t->flag & ALLOC) ? t->val.s : NULL;
 				}
 				t->flag &= ~ALLOC;
 			}
@@ -753,7 +752,7 @@ unset(struct tbl *vp, int array_ref)
 				afree((void *) tmp->val.s, tmp->areap);
 			afree(tmp, tmp->areap);
 		}
-		vp->u.array = (struct tbl *) 0;
+		vp->u.array = NULL;
 	}
 	/* If foo[0] is being unset, the remainder of the array is kept... */
 	vp->flag &= SPECIAL | (array_ref ? ARRAY|DEFINED : 0);
@@ -974,7 +973,7 @@ setspec(struct tbl *vp)
 	case V_TMPDIR:
 		if (tmpdir) {
 			afree(tmpdir, APERM);
-			tmpdir = (char *) 0;
+			tmpdir = NULL;
 		}
 		/* Use tmpdir iff it is an absolute path, is writable and
 		 * searchable and is a directory...
@@ -1064,14 +1063,14 @@ unsetspec(struct tbl *vp)
 		/* should not become unspecial */
 		if (tmpdir) {
 			afree(tmpdir, APERM);
-			tmpdir = (char *) 0;
+			tmpdir = NULL;
 		}
 		break;
 	case V_MAIL:
-		mbset((char *) 0);
+		mbset(NULL);
 		break;
 	case V_MAILPATH:
-		mpset((char *) 0);
+		mpset(NULL);
 		break;
 	case V_LINENO:
 	case V_MAILCHECK:	/* at&t ksh leaves previous value in place */

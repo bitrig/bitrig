@@ -168,7 +168,7 @@ execute(struct op *volatile t,
 		e->type = E_ERRH;
 		i = sigsetjmp(e->jbuf, 0);
 		if (i) {
-			sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
+			sigprocmask(SIG_SETMASK, &omask, NULL);
 			quitenv(NULL);
 			unwind(i);
 			/* NOTREACHED */
@@ -190,7 +190,7 @@ execute(struct op *volatile t,
 			close(pv[0]);
 		}
 		coproc.write = pv[1];
-		coproc.job = (void *) 0;
+		coproc.job = NULL;
 
 		if (coproc.readw >= 0)
 			ksh_dup2(coproc.readw, 1, false);
@@ -203,7 +203,7 @@ execute(struct op *volatile t,
 			/* create new coprocess id */
 			++coproc.id;
 		}
-		sigprocmask(SIG_SETMASK, &omask, (sigset_t *) 0);
+		sigprocmask(SIG_SETMASK, &omask, NULL);
 		e->type = E_EXEC; /* no more need for error handler */
 
 		/* exchild() closes coproc.* in child after fork,
@@ -549,7 +549,7 @@ comexec(struct op *t, struct tbl *volatile tp, char **ap, volatile int flags,
 				}
 				break;
 			}
-			if (include(tp->u.fpath, 0, (char **) 0, 0) < 0) {
+			if (include(tp->u.fpath, 0, NULL, 0) < 0) {
 				warningf(true,
 				    "%s: can't open function definition file %s - %s",
 				    cp, tp->u.fpath, strerror(errno));
@@ -691,7 +691,7 @@ scriptexec(struct op *tp, char **ap)
 
 	shell = str_val(global(EXECSHELL_STR));
 	if (shell && *shell)
-		shell = search(shell, path, X_OK, (int *) 0);
+		shell = search(shell, path, X_OK, NULL);
 	if (!shell || !*shell)
 		shell = EXECSHELL;
 
@@ -723,7 +723,7 @@ struct tbl *
 findfunc(const char *name, unsigned int h, int create)
 {
 	struct block *l;
-	struct tbl *tp = (struct tbl *) 0;
+	struct tbl *tp = NULL;
 
 	for (l = e->loc; l; l = l->next) {
 		tp = ktsearch(&l->funs, name, h);
@@ -733,7 +733,7 @@ findfunc(const char *name, unsigned int h, int create)
 			tp = ktenter(&l->funs, name, h);
 			tp->flag = DEFINED;
 			tp->type = CFUNC;
-			tp->val.t = (struct op *) 0;
+			tp->val.t = NULL;
 			break;
 		}
 	}
@@ -841,7 +841,7 @@ findcom(const char *name, int flags)
 		tp = findfunc(name, h, false);
 		if (tp && !(tp->flag & ISSET)) {
 			if ((fpath = str_val(global("FPATH"))) == null) {
-				tp->u.fpath = (char *) 0;
+				tp->u.fpath = NULL;
 				tp->u2.errno_ = 0;
 			} else
 				tp->u.fpath = search(name, fpath, R_OK,
@@ -898,7 +898,7 @@ findcom(const char *name, int flags)
 		} else if ((flags & FC_FUNC) &&
 		    (fpath = str_val(global("FPATH"))) != null &&
 		    (npath = search(name, fpath, R_OK,
-		    &tp->u2.errno_)) != (char *) 0) {
+		    &tp->u2.errno_)) != NULL) {
 			/* An undocumented feature of at&t ksh is that it
 			 * searches FPATH if a command is not found, even
 			 * if the command hasn't been set up as an autoloaded
@@ -1017,7 +1017,7 @@ call_builtin(struct tbl *tp, char **wp)
 	shf_flush(shl_stdout);
 	shl_stdout_ok = 0;
 	builtin_flag = 0;
-	builtin_argv0 = (char *) 0;
+	builtin_argv0 = NULL;
 	return rv;
 }
 
@@ -1039,13 +1039,13 @@ iosetup(struct ioword *iop, struct tbl *tp)
 
 	/* Used for tracing and error messages to print expanded cp */
 	iotmp = *iop;
-	iotmp.name = (iotype == IOHERE) ? (char *) 0 : cp;
+	iotmp.name = (iotype == IOHERE) ? NULL : cp;
 	iotmp.flag |= IONAMEXP;
 
 	if (Flag(FXTRACE))
 		shellf("%s%s\n",
 		    PS4_SUBSTITUTE(str_val(global("PS4"))),
-		    snptreef((char *) 0, 32, "%R", &iotmp));
+		    snptreef(NULL, 32, "%R", &iotmp));
 
 	switch (iotype) {
 	case IOREAD:
@@ -1089,7 +1089,7 @@ iosetup(struct ioword *iop, struct tbl *tp)
 		    X_OK | ((iop->flag & IORDUP) ? R_OK : W_OK),
 		    &emsg)) < 0) {
 			warningf(true, "%s: %s",
-			    snptreef((char *) 0, 32, "%R", &iotmp), emsg);
+			    snptreef(NULL, 32, "%R", &iotmp), emsg);
 			return -1;
 		}
 		if (u == iop->unit)
@@ -1135,7 +1135,7 @@ iosetup(struct ioword *iop, struct tbl *tp)
 		if (ksh_dup2(u, iop->unit, true) < 0) {
 			warningf(true,
 			    "could not finish (dup) redirection %s: %s",
-			    snptreef((char *) 0, 32, "%R", &iotmp),
+			    snptreef(NULL, 32, "%R", &iotmp),
 			    strerror(errno));
 			if (iotype != IODUP)
 				close(u);
@@ -1172,7 +1172,7 @@ herein(const char *content, int sub)
 	int i;
 
 	/* ksh -c 'cat << EOF' can cause this... */
-	if (content == (char *) 0) {
+	if (content == NULL) {
 		warningf(true, "here document missing");
 		return -2; /* special to iosetup(): don't print error */
 	}
@@ -1232,7 +1232,7 @@ static char *
 do_selectargs(char **ap, bool print_menu)
 {
 	static const char *const read_args[] = {
-		"read", "-r", "REPLY", (char *) 0
+		"read", "-r", "REPLY", NULL
 	};
 	char *s;
 	int i, argct;
@@ -1249,7 +1249,7 @@ do_selectargs(char **ap, bool print_menu)
 			pr_menu(ap);
 		shellf("%s", str_val(global("PS3")));
 		if (call_builtin(findcom("read", FC_BI), (char **) read_args))
-			return (char *) 0;
+			return NULL;
 		s = str_val(global("REPLY"));
 		if (*s) {
 			i = atoi(s);
@@ -1403,7 +1403,7 @@ dbteste_getopnd(Test_env *te, Test_op op, int do_eval)
 	char *s = *te->pos.wp;
 
 	if (!s)
-		return (char *) 0;
+		return NULL;
 
 	te->pos.wp++;
 
