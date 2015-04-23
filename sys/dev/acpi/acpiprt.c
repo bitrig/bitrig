@@ -167,6 +167,22 @@ acpiprt_getirq(union acpi_resource *crs, void *arg)
 	default:
 		printf("unknown interrupt: %x\n", typ);
 	}
+
+	if (irq->_int < 16 && irq->_he && irq->_ll) {
+		printf("IRQ override\n")
+		irq->_ll = 0;
+	}
+//#if defined(__amd64__) || defined(__i386__)
+//    /*
+//     * XXX: Certain BIOSes have buggy AML that specify an IRQ that is
+//     * edge-sensitive and active-lo.  However, edge-sensitive IRQs
+//     * should be active-hi.  Force IRQs with an ISA IRQ value to be
+//     * active-hi instead.
+//     */
+//	if (irq < 16 && trig == ACPI_EDGE_SENSITIVE && pol == ACPI_ACTIVE_LOW)
+//		pol = ACPI_ACTIVE_HIGH;
+//#endif
+
 	return (0);
 }
 
