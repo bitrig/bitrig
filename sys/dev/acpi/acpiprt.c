@@ -169,7 +169,7 @@ acpiprt_getirq(union acpi_resource *crs, void *arg)
 	}
 
 	if (irq->_int < 16 && irq->_he && irq->_ll) {
-		printf("IRQ override\n")
+		printf("IRQ override\n");
 		irq->_ll = 0;
 	}
 //#if defined(__amd64__) || defined(__i386__)
