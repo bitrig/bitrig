@@ -1,4 +1,4 @@
-/*	$OpenBSD: recover.c,v 1.19 2014/11/14 20:27:03 tedu Exp $	*/
+/*	$OpenBSD: recover.c,v 1.22 2015/04/24 21:48:31 brynet Exp $	*/
 
 /*-
  * Copyright (c) 1993, 1994
@@ -12,6 +12,7 @@
 #include <sys/param.h>
 #include <sys/queue.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 
 #include <dirent.h>
 #include <errno.h>
@@ -555,7 +556,7 @@ rcv_read(SCR *sp, FREF *frp)
 	struct stat sb;
 	DIR *dirp;
 	EXF *ep;
-	time_t rec_mtime;
+	struct timespec rec_mtim;
 	int fd, found, locked, requested, sv_fd;
 	char *name, *p, *t, *rp, *recp, *pathp;
 	char file[MAXPATHLEN], path[MAXPATHLEN], recpath[MAXPATHLEN];
@@ -570,7 +571,7 @@ rcv_read(SCR *sp, FREF *frp)
 
 	name = frp->name;
 	sv_fd = -1;
-	rec_mtime = 0;
+	rec_mtim.tv_sec = rec_mtim.tv_nsec = 0;
 	recp = pathp = NULL;
 	for (found = requested = 0; (dp = readdir(dirp)) != NULL;) {
 		if (strncmp(dp->d_name, "recover.", 8))
@@ -650,14 +651,10 @@ rcv_read(SCR *sp, FREF *frp)
 
 		/*
 		 * If we've found more than one, take the most recent.
-		 *
-		 * XXX
-		 * Since we're using st_mtime, for portability reasons,
-		 * we only get a single second granularity, instead of
-		 * getting it right.
 		 */
 		(void)fstat(fd, &sb);
-		if (recp == NULL || rec_mtime < sb.st_mtime) {
+		if (recp == NULL ||
+		    timespeccmp(&rec_mtim, &sb.st_mtim, <)) {
 			p = recp;
 			t = pathp;
 			if ((recp = strdup(recpath)) == NULL) {
@@ -676,7 +673,7 @@ rcv_read(SCR *sp, FREF *frp)
 				free(p);
 				free(t);
 			}
-			rec_mtime = sb.st_mtime;
+			rec_mtim = sb.st_mtim;
 			if (sv_fd != -1)
 				(void)close(sv_fd);
 			sv_fd = fd;
