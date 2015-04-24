@@ -288,10 +288,10 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 	imxccm_pfd("pll3_pfd1_540m", "pll3_usb_otg", CCM_ANALOG_PFD_480, 1);
 	imxccm_pfd("pll3_pfd2_508m", "pll3_usb_otg", CCM_ANALOG_PFD_480, 2);
 	imxccm_pfd("pll3_pfd3_454m", "pll3_usb_otg", CCM_ANALOG_PFD_480, 3);
-	clk_fixed_factor("pll2_198m", "pll2_pfd2_396m", 1, 2);
-	clk_fixed_factor("pll3_120m", "pll3_usb_otg", 1, 4);
-	clk_fixed_factor("pll3_80m", "pll3_usb_otg", 1, 6);
-	clk_fixed_factor("pll3_60m", "pll3_usb_otg", 1, 8);
+	clk_fixed_factor("pll2_198m", clk_get("pll2_pfd2_396m"), 1, 2);
+	clk_fixed_factor("pll3_120m", clk_get("pll3_usb_otg"), 1, 4);
+	clk_fixed_factor("pll3_80m", clk_get("pll3_usb_otg"), 1, 6);
+	clk_fixed_factor("pll3_60m", clk_get("pll3_usb_otg"), 1, 8);
 
 	/* arm core clocks */
 	imxccm_mux("step", CCM_CCSR, 8, 1, step_sels, nitems(step_sels));
@@ -352,13 +352,13 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 
 	/* sata */
 	imxccm_gate2("sata", "ipg", CCM_CCGR5, 4);
-	clk_fixed_factor("sata_ref", "pll6_enet", 1, 5);
+	clk_fixed_factor("sata_ref", clk_get("pll6_enet"), 1, 5);
 	imxccm_gate("sata_ref_100m", "sata_ref", CCM_ANALOG_PLL_ENET, 20);
 
 	/* pcie */
 	imxccm_mux("pcie_axi_sel", CCM_CBCMR, 10, 1, pcie_axi_sels, nitems(pcie_axi_sels));
 	imxccm_gate2("pcie_axi", "pcie_axi_sel", CCM_CCGR4, 0);
-	clk_fixed_factor("pcie_ref", "pll6_enet", 1, 4);
+	clk_fixed_factor("pcie_ref", clk_get("pll6_enet"), 1, 4);
 	imxccm_gate("pcie_ref_125m", "pcie_ref", CCM_ANALOG_PLL_ENET, 19);
 	clk_set_parent(clk_get("pcie_axi_sel"), clk_get("axi"));
 

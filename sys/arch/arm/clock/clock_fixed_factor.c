@@ -33,18 +33,17 @@ clk_fixed_factor_get_rate(struct clk *clk)
 }
 
 struct clk *
-clk_fixed_factor(char *name, char *parent, uint32_t mul, uint32_t div)
+clk_fixed_factor(char *name, struct clk *parent, uint32_t mul, uint32_t div)
 {
-	struct clk *clk, *p;
+	struct clk *clk;
 	struct clk_fixed_factor *fix;
+
+	if (parent == NULL)
+		return NULL;
 
 	clk = malloc(sizeof(struct clk), M_DEVBUF, M_NOWAIT|M_ZERO);
 	if (clk == NULL)
 		return NULL;
-
-	p = clk_get(parent);
-	if (p == NULL)
-		goto err;
 
 	fix = malloc(sizeof(struct clk_fixed_factor), M_DEVBUF, M_NOWAIT|M_ZERO);
 	if (fix == NULL)
@@ -54,7 +53,7 @@ clk_fixed_factor(char *name, char *parent, uint32_t mul, uint32_t div)
 	fix->div = div;
 	clk->data = fix;
 	clk->get_rate = clk_fixed_factor_get_rate;
-	clk->parent = p;
+	clk->parent = parent;
 
 	if (!clk_register(clk, name))
 		return clk;

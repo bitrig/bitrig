@@ -40,8 +40,8 @@ uint32_t			clk_round_rate(struct clk *, uint32_t);
 struct clk *			clk_get_parent(struct clk *);
 int				clk_set_parent(struct clk *, struct clk *);
 
-struct clk			*clk_fixed_factor(char *, char *, uint32_t,
-				    uint32_t);
+struct clk			*clk_fixed_factor(char *, struct clk *,
+				    uint32_t, uint32_t);
 struct clk			*clk_fixed_rate(char *, uint32_t);
 
 #ifdef CLK_DEBUG
