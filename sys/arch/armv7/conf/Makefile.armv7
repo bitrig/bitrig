@@ -183,6 +183,8 @@ bsd.OMAP.umg: bsd
 	mkuboot -a arm -o linux -e 0x80300000 -l 0x80300000 bsd bsd.OMAP.umg
 bsd.SUNXI.umg: bsd
 	mkuboot -a arm -o linux -e 0x40300000 -l 0x40300000 bsd bsd.SUNXI.umg
+bsd.MARVELL.umg: bsd
+	mkuboot -a arm -o linux -e 0x00300000 -l 0x00300000 bsd bsd.MARVELL.umg
 bsd.RAW.umg: bsd
 	mkuboot -r bsd bsd.RAW.umg
 

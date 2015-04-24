@@ -1,0 +1,16 @@
+# Marvell SoC
+mvsysctrl*		at fdt?
+#mvliicc*		at fdt?
+mvmbus*			at fdt?
+mvpmsu*			at fdt?
+mvaxpcc*		at fdt?
+mvaxpgc*		at fdt?
+mvaxpcpu*		at fdt?
+mvaxpwdt*		at fdt?
+mvaxptherm*		at fdt?
+mvmpic*			at fdt?
+mvtimer*		at fdt?
+mvsdio*			at fdt?
+sdmmc*			at mvsdio?
+mvmdio*			at fdt?
+mvneta*			at fdt?

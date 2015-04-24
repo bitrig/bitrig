@@ -1,0 +1,57 @@
+# Marvell
+
+device mvsysctrl
+attach mvsysctrl at fdt
+file	arch/armv7/marvell/mvsysctrl.c			mvsysctrl
+
+device mvliicc
+attach mvliicc at fdt
+file	arch/armv7/marvell/mvl2cc.c			mvliicc
+
+device mvmbus
+attach mvmbus at fdt
+file	arch/armv7/marvell/mvmbus.c			mvmbus
+
+device mvpmsu
+attach mvpmsu at fdt
+file	arch/armv7/marvell/mvpmsu.c			mvpmsu
+
+device mvaxpcc
+attach mvaxpcc at fdt
+file	arch/armv7/marvell/mvaxpcc.c			mvaxpcc
+
+device mvaxpgc
+attach mvaxpgc at fdt
+file	arch/armv7/marvell/mvaxpgc.c			mvaxpgc
+
+device mvaxpcpu
+attach mvaxpcpu at fdt
+file	arch/armv7/marvell/mvaxpcpu.c			mvaxpcpu
+
+device mvaxpwdt
+attach mvaxpwdt at fdt
+file	arch/armv7/marvell/mvaxpwdt.c			mvaxpwdt
+
+device mvaxptherm
+attach mvaxptherm at fdt
+file	arch/armv7/marvell/mvaxptherm.c			mvaxptherm
+
+device mvmpic
+attach mvmpic at fdt
+file	arch/armv7/marvell/mvmpic.c			mvmpic
+
+device mvtimer
+attach mvtimer at fdt
+file	arch/armv7/marvell/mvtimer.c			mvtimer
+
+device mvsdio: sdmmcbus
+attach mvsdio at fdt
+file	arch/armv7/marvell/mvsdio.c			mvsdio
+
+device mvmdio
+attach mvmdio at fdt
+file	arch/armv7/marvell/mvmdio.c			mvmdio
+
+device mvneta: ether, ifnet, mii, ifmedia
+attach mvneta at fdt
+file	arch/armv7/marvell/if_mvneta.c			mvneta
