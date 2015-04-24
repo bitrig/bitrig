@@ -57,6 +57,10 @@ agtimer*	at fdt?
 armliicc*	at cortex?
 ampscu*		at cortex?
 
+# Clocks
+clkff*		at fdt?
+clkfr*		at fdt?
+
 # SoCs
 include "../../../arch/armv7/conf/generic.fdt"
 include "../../../arch/armv7/conf/generic.broadcom"

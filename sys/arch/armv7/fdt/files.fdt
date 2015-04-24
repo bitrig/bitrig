@@ -1,2 +1,12 @@
 # FDT bus
 file	arch/armv7/fdt/fdt_machdep.c		fdt	needs-flag
+
+# fixed factor clock
+device clkff
+attach clkff at fdt
+file	arch/armv7/fdt/clkff.c			clkff
+
+# fixed rate clock
+device clkfr
+attach clkfr at fdt
+file	arch/armv7/fdt/clkfr.c			clkfr

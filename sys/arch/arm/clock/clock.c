@@ -17,7 +17,9 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/malloc.h>
+#include <sys/queue.h>
 #include <machine/clock.h>
+#include <machine/fdt.h>
 
 struct clk_list {
 	struct clk *		clk;
@@ -194,3 +196,108 @@ clk_dump(void)
 	}
 }
 #endif
+
+struct clk_provider {
+	SLIST_ENTRY(clk_provider)	 cp_entry;
+	void				*cp_node;
+	struct clk			*(*cp_cb)(void *, void *, int *, int);
+	void				*cp_cbarg;
+};
+
+SLIST_HEAD(, clk_provider) cp_list = SLIST_HEAD_INITIALIZER(clk_provider);
+
+void
+clk_fdt_register_provider(void *node,
+    struct clk *(*cb)(void *, void *, int *, int), void *cbarg)
+{
+	struct clk_provider *cp = malloc(sizeof(struct clk_provider),
+	    M_DEVBUF, M_NOWAIT|M_ZERO);
+	if (cp == NULL)
+		panic("%s: cannot allocate memory\n", __func__);
+
+	cp->cp_node = node;
+	cp->cp_cb = cb;
+	cp->cp_cbarg = cbarg;
+
+	SLIST_INSERT_HEAD(&cp_list, cp, cp_entry);
+}
+
+static struct clk *
+clk_fdt_get_by_clkspec(void *node, int *clocks, int nclock)
+{
+	struct clk_provider *cp;
+
+	SLIST_FOREACH(cp, &cp_list, cp_entry) {
+		if (cp->cp_node != node)
+			continue;
+		return cp->cp_cb(cp->cp_cbarg, node, clocks, nclock);
+	}
+
+	return NULL;
+}
+
+struct clk *
+clk_fdt_get(void *node, int index)
+{
+	int idx, nclk;
+
+	if (node == NULL)
+		return NULL;
+
+	nclk = fdt_node_property(node, "clocks", NULL) / sizeof(uint32_t);
+	if (nclk <= 0 || index > nclk)
+		return NULL;
+
+	int clocks[nclk];
+	if (fdt_node_property_ints(node, "clocks", clocks, nclk) != nclk)
+		panic("%s: can't extract clocks, but they exist", __func__);
+
+	for (idx = 0; idx < nclk; idx++, index--) {
+		void *clkc = fdt_find_node_by_phandle(NULL, clocks[idx]);
+		if (clkc == NULL) {
+			printf("%s: can't find clock controller\n",
+			    __func__);
+			return NULL;
+		}
+
+		int cells;
+		if (!fdt_node_property_int(clkc, "#clock-cells", &cells)) {
+			printf("%s: can't find size of clock cells\n",
+			    __func__);
+			return NULL;
+		}
+
+		/* At this point we found the controller. */
+		if (index == 0)
+			return clk_fdt_get_by_clkspec(clkc, &clocks[idx],
+			    cells);
+
+		idx += cells;
+	}
+
+	return NULL;
+}
+
+struct clk *
+clk_fdt_get_by_name(void *node, char *name)
+{
+	char *data;
+	int index = 0, len, nlen = strlen(name);
+
+	if (node == NULL)
+		return NULL;
+
+	if (!fdt_node_property(node, "clocks", NULL))
+		return NULL;
+
+	len = fdt_node_property(node, "clock-names", &data);
+	while (len > 0 && len >= nlen + 1) {
+		if (!strncmp(data, name, nlen))
+			return clk_fdt_get(node, index);
+		len -= (strlen(data) + 1);
+		data += (strlen(data) + 1);
+		index += 1;
+	}
+
+	return NULL;
+}

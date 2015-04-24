@@ -29,6 +29,8 @@ struct clk {
 	int			(*set_parent) (struct clk *, struct clk *);
 };
 
+void				clk_init(void);
+
 struct clk *			clk_get(const char *);
 int				clk_register(struct clk *, char *);
 int				clk_enable(struct clk *);
@@ -43,6 +45,12 @@ int				clk_set_parent(struct clk *, struct clk *);
 struct clk			*clk_fixed_factor(char *, struct clk *,
 				    uint32_t, uint32_t);
 struct clk			*clk_fixed_rate(char *, uint32_t);
+
+struct clk			*clk_fdt_get(void *, int);
+struct clk			*clk_fdt_get_by_name(void *, char *);
+void				clk_fdt_register_provider(void *,
+				    struct clk *(*)(void*, void *, int *, int),
+				    void *);
 
 #ifdef CLK_DEBUG
 void				clk_dump(void);

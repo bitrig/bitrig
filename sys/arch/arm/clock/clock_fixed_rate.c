@@ -55,4 +55,3 @@ err:
 	free(clk, M_DEVBUF, sizeof(struct clk));
 	return NULL;
 }
-

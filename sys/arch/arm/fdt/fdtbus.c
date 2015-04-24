@@ -53,6 +53,7 @@ static void fdt_find_match(struct device *, void *);
 static void fdt_iterate(struct device *, struct device *, void *);
 static void fdt_attach_node(struct device *, void *, void *);
 static void fdt_attach_interrupt_controller(struct device *);
+static int fdt_attach_clocks(struct device *, void *);
 
 /*
  * We need to look through the tree at least twice.  To make sure we
@@ -197,6 +198,11 @@ fdt_attach_node(struct device *self, void *match, void *node)
 	if ((*cf->cf_attach->ca_match)(self, cf, &aa) == 0)
 		return;
 
+	if (fdt_attach_clocks(self, node)) {
+		printf("%s: can't supply needed clocks\n", __func__);
+		return;
+	}
+
 	child = config_attach(self, cf, &aa, NULL);
 	fdt_dev_list_insert(node, child);
 }
@@ -306,4 +312,54 @@ fdt_attach_interrupt_controller(struct device *self)
 		SLIST_REMOVE(&ic_list, ie, ic_entry, ie_list);
 		free(ie, M_DEVBUF, sizeof(*ie));
 	}
+}
+
+/*
+ * Before attaching a device we need to make sure that all
+ * clock controllers the device depends on are attached.
+ */
+static int
+fdt_attach_clocks(struct device *self, void *node)
+{
+	int idx, nclk;
+
+	nclk = fdt_node_property(node, "clocks", NULL) / sizeof(uint32_t);
+	if (nclk <= 0)
+		return 0;
+
+	int clocks[nclk];
+	if (fdt_node_property_ints(node, "clocks", clocks, nclk) != nclk)
+		panic("%s: can't extract clocks, but they exist", __func__);
+
+	for (idx = 0; idx < nclk; idx++) {
+		void *clkc = fdt_find_node_by_phandle(NULL, clocks[idx]);
+		if (clkc == NULL) {
+			printf("%s: can't find clock controller\n",
+			    __func__);
+			return -1;
+		}
+
+		int cells;
+		if (!fdt_node_property_int(clkc, "#clock-cells", &cells)) {
+			printf("%s: can't find size of clock cells\n",
+			    __func__);
+			return -1;
+		}
+		idx += cells;
+
+		if (fdt_is_attached(clkc))
+			continue;
+
+		if (fdt_attach_clocks(self, clkc)) {
+			printf("%s: can't attach parent clocks\n", __func__);
+			return -1;
+		}
+
+		if (fdt_found_node(self, clkc) == NULL) {
+			printf("%s: can't find clock driver\n", __func__);
+			return -1;
+		}
+	}
+
+	return 0;
 }
