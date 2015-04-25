@@ -82,6 +82,7 @@ file	lib/libkern/arch/arm/ldivmod_helper.c
 file	arch/arm/clock/clock.c
 file	arch/arm/clock/clock_fixed_factor.c
 file	arch/arm/clock/clock_fixed_rate.c
+file	arch/arm/clock/clock_gate.c
 
 # fdt
 file	arch/arm/fdt/fdt.c

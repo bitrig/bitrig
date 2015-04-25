@@ -183,6 +183,8 @@ static struct clk_div_table clk_enet_ref_table[] = {
 	{ },
 };
 
+struct clk_mem imxccm_clk_mem;
+
 struct imxccm_softc *imxccm_sc;
 
 int imxccm_match(struct device *parent, void *v, void *aux);
@@ -204,13 +206,9 @@ struct clk *imxccm_div_table(char *, char *, uint32_t, uint32_t, uint32_t, struc
 uint32_t imxccm_div_get_rate(struct clk *);
 uint32_t imxccm_div_table_get_rate(struct clk *);
 struct clk *imxccm_var_clock(char *, uint32_t (*) (struct clk *));
-struct clk *imxccm_gate(char *, char *, uint32_t, uint32_t);
-struct clk *imxccm_gate2(char *, char *, uint32_t, uint32_t);
 struct clk *imxccm_mux(char *, uint32_t, uint32_t, uint32_t, const char **, int);
 struct clk *imxccm_mux_get_parent(struct clk *);
 int imxccm_mux_set_parent(struct clk *, struct clk *);
-int imxccm_gate_enable(struct clk *);
-void imxccm_gate_disable(struct clk *);
 
 struct cfattach	imxccm_ca = {
 	sizeof (struct imxccm_softc), NULL, imxccm_attach
@@ -259,6 +257,9 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 
 	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
 		panic("imxccm_attach: bus_space_map failed!");
+
+	imxccm_clk_mem.iot = sc->sc_iot;
+	imxccm_clk_mem.ioh = sc->sc_ioh;
 
 	strlcpy(sc->sc_sensordev.xname, sc->sc_dev.dv_xname,
 	    sizeof(sc->sc_sensordev.xname));
@@ -317,8 +318,8 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 
 	/* uart */
 	imxccm_div("uart_clk_podf", "pll3_80m", CCM_CSCDR1, 0, 6);
-	imxccm_gate2("uart_ipg", "ipg", CCM_CCGR5, 24);
-	imxccm_gate2("uart_serial", "uart_clk_podf", CCM_CCGR5, 26);
+	clk_gate2("uart_ipg", clk_get("ipg"), CCM_CCGR5, 24, &imxccm_clk_mem);
+	clk_gate2("uart_serial", clk_get("uart_clk_podf"), CCM_CCGR5, 26, &imxccm_clk_mem);
 
 	/* usdhc */
 	imxccm_mux("usdhc1_sel", CCM_CSCMR1, 16, 1, usdhc_sels, nitems(usdhc_sels));
@@ -329,44 +330,44 @@ imxccm_attach(struct device *parent, struct device *self, void *args)
 	imxccm_div("usdhc2_podf", "usdhc2_sel", CCM_CSCDR1, 16, 3);
 	imxccm_div("usdhc3_podf", "usdhc3_sel", CCM_CSCDR1, 19, 3);
 	imxccm_div("usdhc4_podf", "usdhc4_sel", CCM_CSCDR1, 22, 3);
-	imxccm_gate2("usdhc1", "usdhc1_podf", CCM_CCGR6, 2);
-	imxccm_gate2("usdhc2", "usdhc2_podf", CCM_CCGR6, 4);
-	imxccm_gate2("usdhc3", "usdhc3_podf", CCM_CCGR6, 6);
-	imxccm_gate2("usdhc4", "usdhc4_podf", CCM_CCGR6, 8);
+	clk_gate2("usdhc1", clk_get("usdhc1_podf"), CCM_CCGR6, 2, &imxccm_clk_mem);
+	clk_gate2("usdhc2", clk_get("usdhc2_podf"), CCM_CCGR6, 4, &imxccm_clk_mem);
+	clk_gate2("usdhc3", clk_get("usdhc3_podf"), CCM_CCGR6, 6, &imxccm_clk_mem);
+	clk_gate2("usdhc4", clk_get("usdhc4_podf"), CCM_CCGR6, 8, &imxccm_clk_mem);
 
 	/* i2c */
-	imxccm_gate2("i2c1", "ipg_per", CCM_CCGR2, 6);
-	imxccm_gate2("i2c2", "ipg_per", CCM_CCGR2, 8);
-	imxccm_gate2("i2c3", "ipg_per", CCM_CCGR2, 10);
+	clk_gate2("i2c1", clk_get("ipg_per"), CCM_CCGR2, 6, &imxccm_clk_mem);
+	clk_gate2("i2c2", clk_get("ipg_per"), CCM_CCGR2, 8, &imxccm_clk_mem);
+	clk_gate2("i2c3", clk_get("ipg_per"), CCM_CCGR2, 10, &imxccm_clk_mem);
 
 	/* enet */
 	imxccm_div_table("enet_ref", "pll6_enet", CCM_ANALOG_PLL_ENET, 0, 2, clk_enet_ref_table);
-	imxccm_gate2("enet", "ipg", CCM_CCGR1, 10);
+	clk_gate2("enet", clk_get("ipg"), CCM_CCGR1, 10, &imxccm_clk_mem);
 
 	/* usb */
-	imxccm_gate2("usboh3", "ipg", CCM_CCGR6, 0);
-	imxccm_gate("usbphy1", "pll3_usb_otg", CCM_ANALOG_PLL_USB1, 20);
-	imxccm_gate("usbphy2", "pll7_usb_host", CCM_ANALOG_PLL_USB2, 20);
-	imxccm_gate("usbphy1_gate", "dummy", CCM_ANALOG_PLL_USB1, 6);
-	imxccm_gate("usbphy2_gate", "dummy", CCM_ANALOG_PLL_USB2, 6);
+	clk_gate2("usboh3", clk_get("ipg"), CCM_CCGR6, 0, &imxccm_clk_mem);
+	clk_gate("usbphy1", clk_get("pll3_usb_otg"), CCM_ANALOG_PLL_USB1, 20, &imxccm_clk_mem);
+	clk_gate("usbphy2", clk_get("pll7_usb_host"), CCM_ANALOG_PLL_USB2, 20, &imxccm_clk_mem);
+	clk_gate("usbphy1_gate", clk_get("dummy"), CCM_ANALOG_PLL_USB1, 6, &imxccm_clk_mem);
+	clk_gate("usbphy2_gate", clk_get("dummy"), CCM_ANALOG_PLL_USB2, 6, &imxccm_clk_mem);
 
 	/* sata */
-	imxccm_gate2("sata", "ipg", CCM_CCGR5, 4);
+	clk_gate2("sata", clk_get("ipg"), CCM_CCGR5, 4, &imxccm_clk_mem);
 	clk_fixed_factor("sata_ref", clk_get("pll6_enet"), 1, 5);
-	imxccm_gate("sata_ref_100m", "sata_ref", CCM_ANALOG_PLL_ENET, 20);
+	clk_gate("sata_ref_100m", clk_get("sata_ref"), CCM_ANALOG_PLL_ENET, 20, &imxccm_clk_mem);
 
 	/* pcie */
 	imxccm_mux("pcie_axi_sel", CCM_CBCMR, 10, 1, pcie_axi_sels, nitems(pcie_axi_sels));
-	imxccm_gate2("pcie_axi", "pcie_axi_sel", CCM_CCGR4, 0);
+	clk_gate2("pcie_axi", clk_get("pcie_axi_sel"), CCM_CCGR4, 0, &imxccm_clk_mem);
 	clk_fixed_factor("pcie_ref", clk_get("pll6_enet"), 1, 4);
-	imxccm_gate("pcie_ref_125m", "pcie_ref", CCM_ANALOG_PLL_ENET, 19);
+	clk_gate("pcie_ref_125m", clk_get("pcie_ref"), CCM_ANALOG_PLL_ENET, 19, &imxccm_clk_mem);
 	clk_set_parent(clk_get("pcie_axi_sel"), clk_get("axi"));
 
 	/* lvds */
 	imxccm_mux("lvds1_sel", CCM_PMU_MISC1, 0, 5, lvds_sels, nitems(lvds_sels));
 	imxccm_mux("lvds2_sel", CCM_PMU_MISC1, 5, 5, lvds_sels, nitems(lvds_sels));
-	imxccm_gate("lvds1_out", "lvds1_sel", CCM_PMU_MISC1, 10);
-	imxccm_gate("lvds2_out", "lvds1_sel", CCM_PMU_MISC1, 11);
+	clk_gate("lvds1_out", clk_get("lvds1_sel"), CCM_PMU_MISC1, 10, &imxccm_clk_mem);
+	clk_gate("lvds2_out", clk_get("lvds1_sel"), CCM_PMU_MISC1, 11, &imxccm_clk_mem);
 	clk_set_parent(clk_get("lvds1_sel"), clk_get("sata_ref")); /* PCIe */
 
 	cpu_type = HREAD4(sc, CCM_ANALOG_DIGPROG_MX6SL);
@@ -682,93 +683,13 @@ imxccm_var_clock(char *name, uint32_t (*get_rate) (struct clk *))
 	return NULL;
 }
 
-struct clk_gate {
-	uint32_t reg;
-	uint32_t val;
-	uint32_t shift;
-	uint32_t mask;
-};
-
 /*
- * CGR values:
+ * CGR values: (clock gates)
  * 00: Clock is off during all modes. Stop enter hardware handshake is disabled.
  * 01: Clock is on in run mode, but off in WAIt and STOP modes.
  * 10: Not applicable (Reserved).
  * 11: Clock is on during all modes, except STOP mode.
  */
-struct clk *
-imxccm_gate(char *name, char *parent, uint32_t reg, uint32_t shift)
-{
-	struct clk *clk, *p;
-	struct clk_gate *gate;
-
-	clk = malloc(sizeof(struct clk), M_DEVBUF, M_NOWAIT|M_ZERO);
-	if (clk == NULL)
-		return NULL;
-
-	p = clk_get(parent);
-	if (p == NULL)
-		goto err;
-
-	gate = malloc(sizeof(struct clk_gate), M_DEVBUF, M_NOWAIT|M_ZERO);
-	if (gate == NULL)
-		goto err;
-
-	gate->reg = reg;
-	gate->val = 1;
-	gate->mask = 0x1;
-	gate->shift = shift;
-	clk->data = gate;
-	clk->enable = imxccm_gate_enable;
-	clk->disable = imxccm_gate_disable;
-	clk->get_rate = clk_get_rate_parent;
-	clk->parent = p;
-
-	if (!clk_register(clk, name))
-		return clk;
-
-err:
-	free(clk, M_DEVBUF, sizeof(struct clk));
-	return NULL;
-}
-
-/*
- * 2-bit wide clock gate
- */
-
-struct clk *
-imxccm_gate2(char *name, char *parent, uint32_t reg, uint32_t shift)
-{
-	struct clk *clk = imxccm_gate(name, parent, reg, shift);
-	struct clk_gate *gate;
-
-	if (clk == NULL)
-		return NULL;
-
-	gate = clk->data;
-	gate->val = 3;
-	gate->mask = 0x3;
-
-	return clk;
-}
-
-int
-imxccm_gate_enable(struct clk *clk)
-{
-	struct imxccm_softc *sc = imxccm_sc;
-	struct clk_gate *gate = clk->data;
-	HWRITE4(sc, gate->reg, (HREAD4(sc, gate->reg)
-	    & ~(gate->mask << gate->shift)) | (gate->val << gate->shift));
-	return 0;
-}
-
-void
-imxccm_gate_disable(struct clk *clk)
-{
-	struct imxccm_softc *sc = imxccm_sc;
-	struct clk_gate *gate = clk->data;
-	HCLR4(sc, gate->reg, gate->mask << gate->shift);
-}
 
 struct clk_mux {
 	uint32_t reg;

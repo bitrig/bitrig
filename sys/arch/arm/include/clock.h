@@ -15,6 +15,8 @@
  */
 
 #ifndef _MACHINE_CLOCK_H
+#include <machine/bus.h>
+
 struct clk {
 	char *			name;
 	int			users;
@@ -27,6 +29,11 @@ struct clk {
 	void			(*set_rate) (struct clk *, uint32_t);
 	uint32_t		(*round_rate) (struct clk *, uint32_t);
 	int			(*set_parent) (struct clk *, struct clk *);
+};
+
+struct clk_mem {
+	bus_space_tag_t		iot;
+	bus_space_handle_t	ioh;
 };
 
 void				clk_init(void);
@@ -45,6 +52,13 @@ int				clk_set_parent(struct clk *, struct clk *);
 struct clk			*clk_fixed_factor(char *, struct clk *,
 				    uint32_t, uint32_t);
 struct clk			*clk_fixed_rate(char *, uint32_t);
+
+struct clk			*clk_gate(char *, struct clk *, uint32_t,
+				    uint32_t, struct clk_mem *);
+struct clk			*clk_gate2(char *, struct clk *, uint32_t,
+				    uint32_t, struct clk_mem *);
+int				clk_gate_enable(struct clk *);
+void				clk_gate_disable(struct clk *);
 
 struct clk			*clk_fdt_get(void *, int);
 struct clk			*clk_fdt_get_by_name(void *, char *);
