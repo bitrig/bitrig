@@ -567,10 +567,12 @@ fdt_translate_memory_address(void *node, struct fdt_memory *mem)
 	if (parent == NULL)
 		return 0;
 
-	/* Empty ranges, no need to do anything. */
+	/* Empty ranges, 1:1 mapping. No ranges, translation barrier. */
 	rlen = fdt_node_property(parent, "ranges", (char **)&range) / sizeof(int);
-	if (rlen <= 0)
+	if (range == NULL)
 		return 0;
+	if (rlen <= 0)
+		return fdt_translate_memory_address(parent, mem);
 
 	/* We only support 32-bit (1), and 64-bit (2) wide addresses here. */
 	ret = fdt_node_property_int(parent, "#address-cells", &pac);
@@ -622,7 +624,7 @@ fdt_translate_memory_address(void *node, struct fdt_memory *mem)
 
 		mem->addr -= from;
 		mem->addr += to;
-		return 0;
+		return fdt_translate_memory_address(parent, mem);
 	}
 
 	/* Range must have been in there. */
