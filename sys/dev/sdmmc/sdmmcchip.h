@@ -19,6 +19,8 @@
 #ifndef _SDMMC_CHIP_H_
 #define _SDMMC_CHIP_H_
 
+#include <machine/bus.h>
+
 struct sdmmc_command;
 
 typedef struct sdmmc_chip_functions *sdmmc_chipset_tag_t;
@@ -77,6 +79,7 @@ struct sdmmcbus_attach_args {
 	const char *saa_busname;
 	sdmmc_chipset_tag_t sct;
 	sdmmc_chipset_handle_t sch;
+	bus_dma_tag_t dmat;
 	int	flags;
 	int	caps;
 	u_int	clkmin;

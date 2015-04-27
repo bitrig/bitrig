@@ -98,17 +98,29 @@ sdmmc_attach(struct device *parent, struct device *self, void *aux)
 {
 	struct sdmmc_softc *sc = (struct sdmmc_softc *)self;
 	struct sdmmcbus_attach_args *saa = aux;
+	int error;
 
 	printf("\n");
 
 	sc->sct = saa->sct;
 	sc->sch = saa->sch;
+	sc->sc_dmat = saa->dmat;
 	sc->sc_flags = saa->flags;
 	sc->sc_caps = saa->caps;
 	sc->sc_max_xfer = saa->max_xfer;
 	sc->sc_clkmin = saa->clkmin;
 	sc->sc_clkmax = saa->clkmax;
 	sc->sc_busclk = sc->sc_clkmax;
+
+	if (ISSET(sc->sc_caps, SMC_CAPS_DMA)) {
+		error = bus_dmamap_create(sc->sc_dmat, MAXPHYS, SDMMC_MAXNSEGS,
+		    MAXPHYS, 0, BUS_DMA_NOWAIT|BUS_DMA_ALLOCNOW, &sc->sc_dmap);
+		if (error) {
+			printf("%s: couldn't create dma map. (error=%d)\n",
+			    DEVNAME(sc), error);
+			return;
+		}
+	}
 
 	SIMPLEQ_INIT(&sc->sf_head);
 	TAILQ_INIT(&sc->sc_tskq);
@@ -142,6 +154,12 @@ sdmmc_detach(struct device *self, int flags)
 		wakeup(&sc->sc_tskq);
 		tsleep(sc, PWAIT, "mmcdie", 0);
 	}
+
+	if (ISSET(sc->sc_caps, SMC_CAPS_DMA)) {
+		bus_dmamap_unload(sc->sc_dmat, sc->sc_dmap);
+		bus_dmamap_destroy(sc->sc_dmat, sc->sc_dmap);
+	}
+
 	return 0;
 }
 
@@ -478,12 +496,67 @@ sdmmc_function_alloc(struct sdmmc_softc *sc)
 	sf->cis.manufacturer = SDMMC_VENDOR_INVALID;
 	sf->cis.product = SDMMC_PRODUCT_INVALID;
 	sf->cis.function = SDMMC_FUNCTION_INVALID;
+
+	if (ISSET(sc->sc_flags, SMF_MEM_MODE) &&
+	    ISSET(sc->sc_caps, SMC_CAPS_DMA) &&
+	    !ISSET(sc->sc_caps, SMC_CAPS_MULTI_SEG_DMA)) {
+		bus_dma_segment_t ds;
+		int rseg, error;
+
+		error = bus_dmamap_create(sc->sc_dmat, MAXPHYS, 1,
+		    MAXPHYS, 0, BUS_DMA_WAITOK, &sf->bbuf_dmap);
+		if (error)
+			goto fail1;
+		error = bus_dmamem_alloc(sc->sc_dmat, MAXPHYS,
+		    PAGE_SIZE, 0, &ds, 1, &rseg, BUS_DMA_WAITOK);
+		if (error)
+			goto fail2;
+		error = bus_dmamem_map(sc->sc_dmat, &ds, 1, MAXPHYS,
+		    (caddr_t *)&sf->bbuf, BUS_DMA_WAITOK);
+		if (error)
+			goto fail3;
+		error = bus_dmamap_load(sc->sc_dmat, sf->bbuf_dmap,
+		    sf->bbuf, MAXPHYS, NULL,
+		    BUS_DMA_WAITOK|BUS_DMA_READ|BUS_DMA_WRITE);
+		if (error)
+			goto fail4;
+		error = bus_dmamap_create(sc->sc_dmat, MAXPHYS, 1,
+		    MAXPHYS, 0, BUS_DMA_WAITOK, &sf->sseg_dmap);
+		if (!error)
+			goto out;
+
+		bus_dmamap_unload(sc->sc_dmat, sf->bbuf_dmap);
+fail4:
+		bus_dmamem_unmap(sc->sc_dmat, sf->bbuf, MAXPHYS);
+fail3:
+		bus_dmamem_free(sc->sc_dmat, &ds, 1);
+fail2:
+		bus_dmamap_destroy(sc->sc_dmat, sf->bbuf_dmap);
+fail1:
+		free(sf, M_DEVBUF, 0);
+		sf = NULL;
+	}
+out:
+
 	return sf;
 }
 
 void
 sdmmc_function_free(struct sdmmc_function *sf)
 {
+	struct sdmmc_softc *sc = sf->sc;
+
+	if (ISSET(sc->sc_flags, SMF_MEM_MODE) &&
+	    ISSET(sc->sc_caps, SMC_CAPS_DMA) &&
+	    !ISSET(sc->sc_caps, SMC_CAPS_MULTI_SEG_DMA)) {
+		bus_dmamap_destroy(sc->sc_dmat, sf->sseg_dmap);
+		bus_dmamap_unload(sc->sc_dmat, sf->bbuf_dmap);
+		bus_dmamem_unmap(sc->sc_dmat, sf->bbuf, MAXPHYS);
+		bus_dmamem_free(sc->sc_dmat,
+		    sf->bbuf_dmap->dm_segs, sf->bbuf_dmap->dm_nsegs);
+		bus_dmamap_destroy(sc->sc_dmat, sf->bbuf_dmap);
+	}
+
 	free(sf, M_DEVBUF, 0);
 }
 

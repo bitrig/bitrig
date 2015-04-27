@@ -22,11 +22,16 @@
 #include <sys/queue.h>
 #include <sys/rwlock.h>
 
+#include <machine/bus.h>
+
 #include <scsi/scsi_all.h>
 #include <scsi/scsiconf.h>
 
 #include <dev/sdmmc/sdmmcchip.h>
 #include <dev/sdmmc/sdmmcreg.h>
+
+#define	SDMMC_SECTOR_SIZE_SB	9
+#define	SDMMC_SECTOR_SIZE	(1 << SDMMC_SECTOR_SIZE_SB)	/* =512 */
 
 struct sdmmc_csd {
 	int	csdver;		/* CSD structure format */
@@ -73,6 +78,9 @@ struct sdmmc_command {
 	u_int16_t	 c_opcode;	/* SD or MMC command index */
 	u_int32_t	 c_arg;		/* SD/MMC command argument */
 	sdmmc_response	 c_resp;	/* response buffer */
+	bus_dmamap_t	 c_dmamap;
+	int		 c_dmaseg;	/* DMA segment number */
+	int		 c_dmaoff;	/* offset in DMA segment */
 	void		*c_data;	/* buffer to send or read into */
 	int		 c_datalen;	/* length of data buffer */
 	int		 c_blklen;	/* block length */
@@ -147,6 +155,10 @@ struct sdmmc_function {
 	struct sdmmc_csd csd;		/* decoded CSD value */
 	struct sdmmc_cid cid;		/* decoded CID value */
 	sdmmc_response raw_cid;		/* temp. storage for decoding */
+
+	void *bbuf;			/* bounce buffer */
+	bus_dmamap_t bbuf_dmap;		/* DMA map for bounce buffer */
+	bus_dmamap_t sseg_dmap;		/* DMA map for single segment */
 };
 
 /*
@@ -157,6 +169,10 @@ struct sdmmc_softc {
 #define DEVNAME(sc)	((sc)->sc_dev.dv_xname)
 	sdmmc_chipset_tag_t sct;	/* host controller chipset tag */
 	sdmmc_chipset_handle_t sch;	/* host controller chipset handle */
+	bus_dma_tag_t sc_dmat;
+	bus_dmamap_t sc_dmap;
+#define	SDMMC_MAXNSEGS		((MAXPHYS / PAGE_SIZE) + 1)
+
 	int sc_flags;
 #define SMF_SD_MODE		0x0001	/* host in SD mode (MMC otherwise) */
 #define SMF_IO_MODE		0x0002	/* host in I/O mode (SD mode only) */
