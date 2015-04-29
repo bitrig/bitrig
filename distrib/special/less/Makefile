@@ -7,8 +7,8 @@ SRCS=	main.c screen.c brac.c ch.c charset.c cmdbuf.c command.c cvt.c \
 	pattern.c position.c prompt.c search.c signal.c ttyin.c version.c
 CFLAGS=	${PIPE} ${DEBUG} -I${.CURDIR}
 
-DPADD=	${LIBOCURSES}
-LDADD=	-locurses
+DPADD=	${LIBCURSES}
+LDADD=	-lcurses
 
 .PATH:	${.CURDIR}/../../../usr.bin/less
 

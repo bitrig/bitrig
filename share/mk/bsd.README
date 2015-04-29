@@ -350,7 +350,6 @@ DPADD		Additional dependencies for the program.  Usually used for
 			LIBM		/usr/lib/libm.a
 			LIBMENU		/usr/lib/libmenu.a
 			LIBMENUW	/usr/lib/libmenuw.a
-			LIBOLDCURSES	/usr/lib/libocurses.a
 			LIBOSSAUDIO	/usr/lib/libossaudio.a
 			LIBPANEL	/usr/lib/libpanel.a
 			LIBPANELW	/usr/lib/libpanelw.a

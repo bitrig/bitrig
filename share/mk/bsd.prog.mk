@@ -41,7 +41,6 @@ LIBL?=		${DESTDIR}/usr/lib/libl.a
 LIBM?=		${DESTDIR}/usr/lib/libm.a
 LIBMENU?=	${DESTDIR}/usr/lib/libmenu.a
 LIBMENUW?=	${DESTDIR}/usr/lib/libmenuw.a
-LIBOLDCURSES?=	${DESTDIR}/usr/lib/libocurses.a
 LIBOSSAUDIO?=	${DESTDIR}/usr/lib/libossaudio.a
 LIBPANEL?=	${DESTDIR}/usr/lib/libpanel.a
 LIBPANELW?=	${DESTDIR}/usr/lib/libpanelw.a

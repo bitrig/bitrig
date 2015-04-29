@@ -1442,7 +1442,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/nfs/xdr_subs.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/nl_types.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/nlist.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/ocurses.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/ohash.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl
 ./usr/libdata/perl5/site_perl/arm-bitrig/openssl/aes.ph

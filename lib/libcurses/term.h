@@ -43,10 +43,6 @@
 #ifndef NCURSES_TERM_H_incl
 #define NCURSES_TERM_H_incl 1
 
-#ifdef _USE_OLD_CURSES_
-#error Cannot mix ncurses term.h with old curses.h
-#endif
-
 #undef  NCURSES_VERSION
 #define NCURSES_VERSION "5.7"
 

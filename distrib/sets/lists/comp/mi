@@ -1057,7 +1057,6 @@
 ./usr/include/nfs/xdr_subs.h
 ./usr/include/nl_types.h
 ./usr/include/nlist.h
-./usr/include/ocurses.h
 ./usr/include/ohash.h
 ./usr/include/openssl
 ./usr/include/openssl/aes.h
@@ -1579,12 +1578,8 @@
 ./usr/lib/libncurses_p.a
 ./usr/lib/libncursesw.a
 ./usr/lib/libncursesw_p.a
-./usr/lib/libocurses.a
-./usr/lib/libocurses_p.a
 ./usr/lib/libossaudio.a
 ./usr/lib/libossaudio_p.a
-./usr/lib/libotermcap.a
-./usr/lib/libotermcap_p.a
 ./usr/lib/libpanel.a
 ./usr/lib/libpanel_p.a
 ./usr/lib/libpanelw.a

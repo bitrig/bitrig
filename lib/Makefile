@@ -5,7 +5,7 @@
 
 SUBDIR=	csu libarch libc libc++ libc++abi libcrypto libcurses libedit \
 	libevent libexpat libform libfuse libkeynote libkvm libl libm libmenu \
-	libocurses libossaudio libpanel libpcap librthread librpcsvc \
+	libossaudio libpanel libpcap librthread librpcsvc \
 	libskey libsndio libsqlite3 libssl libtls libusbhid libutil liby libz
 .if ${MK_ENABLE_CLANG:L} == "yes"
 SUBDIR+=libcompiler_rt

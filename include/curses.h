@@ -8,10 +8,6 @@
 #ifndef _CURSES_H_
 #define _CURSES_H_
 
-#ifdef _USE_OLD_CURSES_
-#include <ocurses.h>
-#else
 #include <ncurses.h>
-#endif
 
 #endif /* _CURSES_H_ */

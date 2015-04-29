@@ -1444,7 +1444,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/nfs/xdr_subs.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/nl_types.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/nlist.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/ocurses.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ohash.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl
 ./usr/libdata/perl5/site_perl/amd64-bitrig/openssl/aes.ph

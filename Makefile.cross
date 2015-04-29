@@ -238,11 +238,11 @@ cross-lib:	${CROSSGCC}
 		    ${MAKE} WANTLINT=no install); \
 	    done; \
 	    eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
-	        SKIPDIR=\"${NO_CROSS} libocurses/PSD.doc\" \
+	        SKIPDIR=\"${NO_CROSS}\" \
 	        ${MAKE} WANTLINT=no depend all ; \
 	    eval ${CROSSENV} MAKEOBJDIR=obj.${MACHINE}.${TARGET} \
 		DESTDIR=${CROSSDIR} \
-	        SKIPDIR=\"${NO_CROSS} libocurses/PSD.doc\" \
+	        SKIPDIR=\"${NO_CROSS}\" \
 	        ${MAKE} WANTLINT=no install)
 
 cross-bin:	${CROSSOBJ}
