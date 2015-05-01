@@ -245,6 +245,10 @@ void	armv7_dcache_wb_range		(vaddr_t, vsize_t);
 void	armv7_idcache_wbinv_all		(void);
 void	armv7_idcache_wbinv_range	(vaddr_t, vsize_t);
 
+void	pj4b_cpu_sleep		(int mode);
+void	pj4b_config		(void);
+void	pj4bv7_setup		(void);
+
 extern unsigned armv7_dcache_sets_max;
 extern unsigned armv7_dcache_sets_inc;
 extern unsigned armv7_dcache_index_max;

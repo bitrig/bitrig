@@ -43,6 +43,7 @@ file	arch/arm/arm/copystr.S
 file	arch/arm/arm/cpufunc.c
 file	arch/arm/arm/cpufunc_asm.S
 file	arch/arm/arm/cpufunc_asm_armv7.S	cpu_armv7
+file	arch/arm/arm/cpufunc_asm_pj4b.S		cpu_armv7
 file	arch/arm/arm/process_machdep.c
 file	arch/arm/arm/sig_machdep.c
 file	arch/arm/arm/sigcode.S

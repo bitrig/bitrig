@@ -164,7 +164,15 @@
 #define CPU_ID_CORTEX_A15_R3	0x413fc0f0
 #define CPU_ID_CORTEX_A15_R4	0x414fc0f0
 #define CPU_ID_CORTEX_A15_MASK	0xff0ffff0
-
+#define CPU_ID_MV88SV58XX_P(n)	((n & 0xff0fff00) == 0x560f5800)
+#define CPU_ID_MV88SV581X_V6	0x560f5810 /* Marvell Sheeva 88SV581x v6 Core */
+#define CPU_ID_MV88SV581X_V7	0x561f5810 /* Marvell Sheeva 88SV581x v7 Core */
+#define CPU_ID_MV88SV584X_V6	0x561f5840 /* Marvell Sheeva 88SV584x v6 Core */
+#define CPU_ID_MV88SV584X_V7	0x562f5840 /* Marvell Sheeva 88SV584x v7 Core */
+/* Marvell's CPUIDs with ARM ID in implementor field */
+#define CPU_ID_ARM_88SV581X_V6	0x410fb760 /* Marvell Sheeva 88SV581x v6 Core */
+#define CPU_ID_ARM_88SV581X_V7	0x413fc080 /* Marvell Sheeva 88SV581x v7 Core */
+#define CPU_ID_ARM_88SV584X_V6	0x410fb020 /* Marvell Sheeva 88SV584x v6 Core */
 
 /* ARM3-specific coprocessor 15 registers */
 #define ARM3_CP15_FLUSH		1
@@ -235,6 +243,7 @@
 /* below were added by V6 */
 #define CPU_CONTROL_FI		(1<<21) /* FI: fast interrupts */
 #define CPU_CONTROL_U		(1<<22) /* U: Unaligned */
+#define CPU_CONTROL_XP		(1<<23) /* XP: extended page table */
 #define CPU_CONTROL_VE		(1<<24) /* VE: Vector enable */
 #define CPU_CONTROL_EE		(1<<25) /* EE: Exception Endianness */
 #define CPU_CONTROL_L2		(1<<25) /* L2: L2 cache enable */

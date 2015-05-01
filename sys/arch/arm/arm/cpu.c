@@ -86,7 +86,8 @@ cpu_attach(struct device *dv)
 
 enum cpu_class {
 	CPU_CLASS_NONE,
-	CPU_CLASS_ARMv7
+	CPU_CLASS_ARMv7,
+	CPU_CLASS_PJ4B
 };
 
 static const char * const generic_steppings[16] = {
@@ -137,6 +138,21 @@ const struct cpuidtab cpuids[] = {
 	{ CPU_ID_CORTEX_A15_R4,	CPU_CLASS_ARMv7,	"ARM Cortex A15 R4",
 	  generic_steppings },
 
+	{ CPU_ID_MV88SV581X_V6, CPU_CLASS_PJ4B,		"Sheeva 88SV581x",
+	  generic_steppings },
+	{ CPU_ID_ARM_88SV581X_V6, CPU_CLASS_PJ4B,	"Sheeva 88SV581x",
+	  generic_steppings },
+	{ CPU_ID_MV88SV581X_V7, CPU_CLASS_PJ4B,		"Sheeva 88SV581x",
+	  generic_steppings },
+	{ CPU_ID_ARM_88SV581X_V7, CPU_CLASS_PJ4B,	"Sheeva 88SV581x",
+	  generic_steppings },
+	{ CPU_ID_MV88SV584X_V6, CPU_CLASS_PJ4B,		"Sheeva 88SV584x",
+	  generic_steppings },
+	{ CPU_ID_ARM_88SV584X_V6, CPU_CLASS_PJ4B,	"Sheeva 88SV584x",
+	  generic_steppings },
+	{ CPU_ID_MV88SV584X_V7, CPU_CLASS_PJ4B,		"Sheeva 88SV584x",
+	  generic_steppings },
+
 	{ 0, CPU_CLASS_NONE, NULL, NULL }
 };
 
@@ -147,8 +163,8 @@ struct cpu_classtab {
 
 const struct cpu_classtab cpu_classes[] = {
 	{ "unknown",	NULL },			/* CPU_CLASS_NONE */
-	{ "ARMv7",	"CPU_ARMv7" }		/* CPU_CLASS_ARMv7 */
-
+	{ "ARMv7",	"CPU_ARMv7" },		/* CPU_CLASS_ARMv7 */
+	{ "Marvell",	"CPU_PJ4B" },		/* CPU_CLASS_PJ4B */
 };
 
 /*
@@ -211,6 +227,7 @@ identify_arm_cpu(struct device *dv, struct cpu_info *ci)
 
 	switch (cpu_class) {
 	case CPU_CLASS_ARMv7:
+	case CPU_CLASS_PJ4B:
 		if ((ci->ci_ctrl & CPU_CONTROL_DC_ENABLE) == 0)
 			printf(" DC disabled");
 		else
@@ -259,6 +276,7 @@ identify_arm_cpu(struct device *dv, struct cpu_info *ci)
 
 	switch (cpu_class) {
 	case CPU_CLASS_ARMv7:
+	case CPU_CLASS_PJ4B:
 		break;
 	default:
 		if (cpu_classes[cpu_class].class_option != NULL)

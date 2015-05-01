@@ -134,6 +134,62 @@ struct cpu_functions armv7_cpufuncs = {
 	armv7_context_switch,		/* context_switch	*/
 	armv7_setup			/* cpu setup		*/
 };
+
+struct cpu_functions pj4bv7_cpufuncs = {
+	/* CPU functions */
+
+	cpufunc_id,			/* id			*/
+	armv7_drain_writebuf,		/* cpwait		*/
+
+	/* MMU functions */
+
+	cpufunc_control,		/* control		*/
+	cpufunc_domains,		/* Domain		*/
+	armv7_setttb,			/* Setttb		*/
+	cpufunc_dfsr,			/* dfsr			*/
+	cpufunc_dfar,			/* dfar			*/
+	cpufunc_ifsr,			/* ifsr			*/
+	cpufunc_ifar,			/* ifar			*/
+
+	/* TLB functions */
+
+	armv7_tlb_flushID,		/* tlb_flushID		*/
+	armv7_tlb_flushID_SE,		/* tlb_flushID_SE	*/
+	armv7_tlb_flushI,		/* tlb_flushI		*/
+	armv7_tlb_flushI_SE,		/* tlb_flushI_SE	*/
+	armv7_tlb_flushD,		/* tlb_flushD		*/
+	armv7_tlb_flushD_SE,		/* tlb_flushD_SE	*/
+
+	/* Cache operations */
+
+	armv7_icache_sync_all,		/* icache_sync_all	*/
+	armv7_icache_sync_range,	/* icache_sync_range	*/
+
+	armv7_dcache_wbinv_all,		/* dcache_wbinv_all	*/
+	armv7_dcache_wbinv_range,	/* dcache_wbinv_range	*/
+	armv7_dcache_inv_range,		/* dcache_inv_range	*/
+	armv7_dcache_wb_range,		/* dcache_wb_range	*/
+
+	armv7_idcache_wbinv_all,	/* idcache_wbinv_all	*/
+	armv7_idcache_wbinv_range,	/* idcache_wbinv_range	*/
+
+	cpufunc_nullop,			/* sdcache_wbinv_all	*/
+	(void *)cpufunc_nullop,		/* sdcache_wbinv_range	*/
+	(void *)cpufunc_nullop,		/* sdcache_inv_range	*/
+	(void *)cpufunc_nullop,		/* sdcache_wb_range	*/
+	(void *)cpufunc_nullop,		/* sdcache_drain_writebuf	*/
+
+	/* Other functions */
+
+	cpufunc_nullop,			/* flush_prefetchbuf	*/
+	armv7_drain_writebuf,		/* drain_writebuf	*/
+
+	pj4b_cpu_sleep,			/* sleep (wait for interrupt) */
+
+	/* Soft functions */
+	armv7_context_switch,		/* context_switch	*/
+	pj4bv7_setup			/* cpu setup		*/
+};
 #endif /* CPU_ARMv7 */
 
 /*
@@ -327,6 +383,25 @@ set_cpufuncs()
 		cpu_do_powersave = 1;
 		return 0;
 	}
+	if ((cputype == CPU_ID_MV88SV581X_V6 ||
+	    cputype == CPU_ID_MV88SV581X_V7 ||
+	    cputype == CPU_ID_MV88SV584X_V7 ||
+	    cputype == CPU_ID_ARM_88SV581X_V6 ||
+	    cputype == CPU_ID_ARM_88SV581X_V7)) {
+		cpufuncs = pj4bv7_cpufuncs;
+		arm_get_cachetype_cp15v7();
+		armv7_dcache_sets_inc = 1U << arm_dcache_l2_linesize;
+		armv7_dcache_sets_max =
+		    (1U << (arm_dcache_l2_linesize + arm_dcache_l2_nsets)) -
+		    armv7_dcache_sets_inc;
+		armv7_dcache_index_inc = 1U << (32 - arm_dcache_l2_assoc);
+		armv7_dcache_index_max = 0U - armv7_dcache_index_inc;
+		pmap_pte_init_armv7();
+
+		/* Use powersave on this CPU. */
+		cpu_do_powersave = 1;
+		return 0;
+	}
 #endif /* CPU_ARMv7 */
 	/*
 	 * Bzzzz. And the answer was ...
@@ -397,5 +472,36 @@ armv7_setup()
 
 	/* And again. */
 	cpu_idcache_wbinv_all();
+}
+
+void
+pj4bv7_setup()
+{
+	int cpuctrl;
+
+	pj4b_config();
+
+	cpuctrl = CPU_CONTROL_MMU_ENABLE;
+	//cpuctrl |= CPU_CONTROL_AFLT_ENABLE;
+	cpuctrl |= CPU_CONTROL_DC_ENABLE;
+	cpuctrl |= CPU_CONTROL_IC_ENABLE;
+	cpuctrl |= (0xf << 3);
+	cpuctrl |= CPU_CONTROL_BPRD_ENABLE;
+	cpuctrl |= (0x5 << 16) | (1 < 22);
+	cpuctrl |= CPU_CONTROL_XP;
+
+	if (vector_page == ARM_VECTORS_HIGH)
+		cpuctrl |= CPU_CONTROL_VECRELOC;
+
+	/* Clear out the cache */
+	cpu_idcache_wbinv_all();
+
+	/* Set the control register */
+	cpu_control(0xffffffff, cpuctrl);
+
+	/* And again. */
+	cpu_idcache_wbinv_all();
+
+	curcpu()->ci_ctrl = cpuctrl;
 }
 #endif	/* CPU_ARMv7 */
