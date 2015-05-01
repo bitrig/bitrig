@@ -67,7 +67,7 @@ clk_fdt_fixed_rate_attach(struct device *parent, struct device *self, void *args
 	if (!fdt_node_property_int(aa->aa_node, "clock-frequency", &freq))
 		return;
 
-	sc->sc_clk = clk_fixed_rate(names, freq);
+	sc->sc_clk = clk_fixed_rate(names, freq / 1000);
 
 	clk_fdt_register_provider(aa->aa_node,
 	    clk_fdt_fixed_rate_provider_get, self);
