@@ -269,7 +269,7 @@ clk_fdt_get(void *node, int index)
 
 		/* At this point we found the controller. */
 		if (index == 0)
-			return clk_fdt_get_by_clkspec(clkc, &clocks[idx],
+			return clk_fdt_get_by_clkspec(clkc, &clocks[idx+1],
 			    cells);
 
 		idx += cells;
