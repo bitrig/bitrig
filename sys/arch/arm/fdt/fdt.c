@@ -568,7 +568,7 @@ fdt_translate_memory_address(void *node, struct fdt_memory *mem)
 		return 0;
 
 	/* Empty ranges, 1:1 mapping. No ranges, translation barrier. */
-	rlen = fdt_node_property(parent, "ranges", (char **)&range) / sizeof(int);
+	rlen = fdt_node_property(node, "ranges", (char **)&range) / sizeof(int);
 	if (range == NULL)
 		return 0;
 	if (rlen <= 0)
@@ -671,7 +671,7 @@ fdt_get_memory_address(void *node, int idx, struct fdt_memory *mem)
 	if (sc == 2)
 		mem->size = (mem->size << 32) + betoh32(in[off + ac + 1]);
 
-	return fdt_translate_memory_address(node, mem);
+	return fdt_translate_memory_address(parent, mem);
 }
 
 /*
