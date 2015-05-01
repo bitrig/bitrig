@@ -145,11 +145,10 @@ fdt_iterate(struct device *self, struct device *match, void *node)
 	    node = fdt_next_node(node))
 	{
 		/* skip nodes that are already handled by some driver */
-		if (fdt_is_attached(node))
-			continue;
+		if (!fdt_is_attached(node))
+			fdt_attach_node(self, match, node);
 
 		fdt_iterate(self, match, fdt_child_node(node));
-		fdt_attach_node(self, match, node);
 	}
 }
 
