@@ -1,4 +1,4 @@
-/*	$OpenBSD: vnode.h,v 1.129 2015/01/09 05:01:57 tedu Exp $	*/
+/*	$OpenBSD: vnode.h,v 1.131 2015/05/01 01:30:58 millert Exp $	*/
 /*	$NetBSD: vnode.h,v 1.38 1996/02/29 20:59:05 cgd Exp $	*/
 
 /*
@@ -382,9 +382,10 @@ int VOP_IOCTL(struct vnode *, u_long, void *, int, struct ucred *);
 
 struct vop_poll_args {
 	struct vnode *a_vp;
+	int a_fflag;
 	int a_events;
 };
-int VOP_POLL(struct vnode *, int);
+int VOP_POLL(struct vnode *, int, int);
 
 struct vop_kqfilter_args {
 	struct vnode *a_vp;
