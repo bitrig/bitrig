@@ -730,6 +730,13 @@ static void getARMTargetFeatures(const Driver &D, const llvm::Triple &Triple,
       Features.push_back("+soft-float-abi");
   }
 
+  /* Disable NEON on Bitrig unless overridden. */
+  if (Triple.getOS() == llvm::Triple::Bitrig &&
+      !Args.getLastArg(options::OPT_mfpu_EQ)) {
+    Features.push_back("+vfp3");
+    Features.push_back("-neon");
+  }
+
   // Honor -mfpu=.
   if (const Arg *A = Args.getLastArg(options::OPT_mfpu_EQ))
     getARMFPUFeatures(D, A, Args, Features);
