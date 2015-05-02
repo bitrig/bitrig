@@ -1212,12 +1212,28 @@ comintr(void *arg)
 	bus_space_tag_t iot = sc->sc_iot;
 	bus_space_handle_t ioh = sc->sc_ioh;
 	struct tty *tp;
-	u_char lsr, data, msr, delta;
+	u_char iir, lsr, data, msr, delta;
+
+	iir = bus_space_read_1(iot, ioh, com_iir);
+
+	/* Handle ns16750-specific busy interrupt. */
+	if (ISSET(sc->sc_hwflags, COM_HW_IIR_BUSY) &&
+	    (iir & IIR_BUSY) == IIR_BUSY) {
+		for (int timeout = 10000;
+		    (bus_space_read_1(iot, ioh, com_usr) & 0x1) != 0; timeout--)
+			if (timeout <= 0) {
+				printf("%s: timeout while waiting for BUSY "
+				    "interrupt acknowledge\n",
+				    sc->sc_dev.dv_xname);
+				return (0);
+			}
+		iir = bus_space_read_1(iot, ioh, com_iir);
+	}
 
 	if (!sc->sc_tty)
 		return (0);		/* Can't do squat. */
 
-	if (ISSET(bus_space_read_1(iot, ioh, com_iir), IIR_NOPEND))
+	if (ISSET(iir, IIR_NOPEND))
 		return (0);
 
 	tp = sc->sc_tty;

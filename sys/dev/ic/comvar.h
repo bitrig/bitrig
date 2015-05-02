@@ -106,6 +106,7 @@ struct com_softc {
 	u_char sc_hwflags;
 #define	COM_HW_NOIEN	0x01
 #define	COM_HW_FIFO	0x02
+#define	COM_HW_IIR_BUSY	0x04
 #define	COM_HW_SIR	0x20
 #define	COM_HW_CONSOLE	0x40
 #define	COM_HW_KGDB	0x80
@@ -117,7 +118,7 @@ struct com_softc {
 #define	COM_SW_PPS	0x10
 #define	COM_SW_DEAD	0x20
 	int	sc_fifolen;
-	u_char sc_msr, sc_mcr, sc_lcr, sc_ier;
+	u_char sc_msr, sc_mcr, sc_lcr, sc_ier, sc_iir;
 	u_char sc_dtr;
 
 	u_char	sc_cua;

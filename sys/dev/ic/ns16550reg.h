@@ -50,3 +50,4 @@
 #define	com_lsr		5	/* line status register (R/W) */
 #define	com_msr		6	/* modem status register (R/W) */
 #define com_scratch	7	/* scratch register (R/W) */
+#define com_usr		31	/* NS16750: status register (R) */

@@ -82,6 +82,7 @@
 #define	IIR_MLSC	0x0	/* Modem status */
 #define	IIR_NOPEND	0x1	/* No pending interrupts */
 #define	IIR_FIFO_MASK	0xc0	/* set if FIFOs are enabled */
+#define	IIR_BUSY	0x7	/* NS16750: Busy indicator */
 
 /* fifo control register */
 #define	FIFO_ENABLE	0x01	/* Turn the FIFO on */
