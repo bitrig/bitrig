@@ -161,19 +161,9 @@ sxiuartattach(struct device *parent, struct device *self, void *args)
 
 	sc->sc_iot = aa->aa_iot;
 	if (aa->aa_node) {
-		uint32_t ints[3];
-
 		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
 			panic("%s: could not extract memory data from FDT",
 			    __func__);
-
-		/* TODO: Add interrupt FDT API. */
-		if (fdt_node_property_ints(aa->aa_node, "interrupts",
-		    ints, 3) != 3)
-			panic("%s: could not extract interrupt data from FDT",
-		    __func__);
-
-		irq = ints[1];
 	} else {
 		mem.addr = aa->aa_dev->mem[0].addr;
 		mem.size = aa->aa_dev->mem[0].size;
@@ -219,7 +209,12 @@ sxiuartattach(struct device *parent, struct device *self, void *args)
 	bus_space_write_1(sc->sc_iot, sc->sc_ioh, SXIUART_MCR, sc->sc_mcr);
 	splx(s);
 
-	arm_intr_establish(irq, IPL_TTY, sxiuart_intr, sc, sc->sc_dev.dv_xname);
+	if (aa->aa_node)
+		arm_intr_establish_fdt(aa->aa_node, IPL_TTY, sxiuart_intr, sc,
+		    sc->sc_dev.dv_xname);
+	else
+		arm_intr_establish(irq, IPL_TTY, sxiuart_intr, sc,
+		    sc->sc_dev.dv_xname);
 
 	printf("\n");
 }
