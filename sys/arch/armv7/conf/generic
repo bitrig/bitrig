@@ -61,6 +61,9 @@ ampscu*		at cortex?
 clkff*		at fdt?
 clkfr*		at fdt?
 
+# NS16550 compatible serial ports
+com*		at fdt?
+
 # SoCs
 include "../../../arch/armv7/conf/generic.fdt"
 include "../../../arch/armv7/conf/generic.broadcom"

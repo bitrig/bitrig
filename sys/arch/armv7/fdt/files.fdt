@@ -10,3 +10,7 @@ file	arch/armv7/fdt/clkff.c			clkff
 device clkfr
 attach clkfr at fdt
 file	arch/armv7/fdt/clkfr.c			clkfr
+
+# NS16550 compatible serial ports
+attach	com at fdt with com_fdt
+file	arch/armv7/fdt/fdt_com.c		com_fdt
