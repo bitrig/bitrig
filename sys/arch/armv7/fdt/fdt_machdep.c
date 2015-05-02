@@ -51,6 +51,19 @@ fdt_platform_init_cons(void)
 	void *node;
 	char *stdout_path;
 	struct fdt_memory mem;
+	uint32_t freq;
+
+	/*
+	 * XXX: Without attaching the clocks we cannot find out
+	 * XXX: the frequency we need. Thus try to make an educated
+	 * XXX: guess about the frequency used.
+	 */
+	if (fdt_find_compatible("marvell,armada-370-xp"))
+		freq = 250000000;
+	else if (fdt_find_compatible("allwinner,sun7i-a20"))
+		freq = 24000000;
+	else
+		freq = COM_FREQ;
 
 	if ((node = fdt_find_compatible("simple-framebuffer")) != NULL &&
 	    !fdt_get_memory_address(node, 0, &mem))
@@ -62,8 +75,8 @@ fdt_platform_init_cons(void)
 
 	if ((node = fdt_find_compatible("snps,dw-apb-uart")) != NULL &&
 	    !fdt_get_memory_address(node, 0, &mem))
-		sxiuartcnattach(&armv7_a4x_bs_tag, mem.addr, comcnspeed,
-		    24000000, comcnmode);
+		comcnattach(&armv7_a4x_bs_tag, mem.addr, comcnspeed,
+		    freq, comcnmode);
 
 	if ((((node = fdt_find_compatible("fsl,ns16550")) != NULL) ||
 	    ((node = fdt_find_compatible("fsl,16550-FIFO64")) != NULL)) &&
