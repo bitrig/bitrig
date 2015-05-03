@@ -1,4 +1,4 @@
-/*	$OpenBSD: nfs_vnops.c,v 1.162 2015/03/14 03:38:52 jsg Exp $	*/
+/*	$OpenBSD: nfs_vnops.c,v 1.164 2015/05/03 02:02:15 guenther Exp $	*/
 /*	$NetBSD: nfs_vnops.c,v 1.62.4.1 1996/07/08 20:26:52 jtc Exp $	*/
 
 /*
@@ -1987,7 +1987,8 @@ nfs_readdir(void *v)
 
 	cnt = 5;
 
-	data = malloc(NFS_DIRBLKSIZ, M_TEMP, M_WAITOK);
+	/* M_ZERO to avoid leaking kernel data in dirent padding */
+	data = malloc(NFS_DIRBLKSIZ, M_TEMP, M_WAITOK|M_ZERO);
 	do {
 		struct nfs_dirent *ndp = data;
 
