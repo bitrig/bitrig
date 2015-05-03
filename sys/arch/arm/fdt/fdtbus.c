@@ -23,6 +23,8 @@
 #include <machine/bus.h>
 #include <machine/fdt.h>
 
+#include <arm/fdt/fdtbusvar.h>
+
 #include <arm/armv7/armv7var.h>
 
 /* FIXME: use own attach args */
@@ -67,16 +69,16 @@ struct fdt_entry {
 	struct device		*fe_dev;
 };
 
-static int
+static struct device *
 fdt_is_attached(void *node)
 {
 	struct fdt_entry *fe;
 
 	SLIST_FOREACH(fe, &fdt_dev_list, fe_list)
 		if (fe->fe_node == node)
-			return (1);
+			return fe->fe_dev;
 
-	return (0);
+	return NULL;
 }
 
 struct cfattach fdt_ca = {
@@ -361,4 +363,13 @@ fdt_attach_clocks(struct device *self, void *node)
 	}
 
 	return 0;
+}
+
+/*
+ * Public API
+ */
+struct device *
+fdt_get_device(void *node)
+{
+	return fdt_is_attached(node);
 }
