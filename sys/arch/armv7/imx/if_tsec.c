@@ -463,7 +463,7 @@ tsec_attach(struct device *parent, struct device *self, void *aux)
 	if (!fdt_node_property_int(sc->sc_node, "phy-handle", &phy))
 		panic("%s: could not extract phy handle from FDT", __func__);
 
-	node = fdt_find_node_by_phandle(NULL, phy);
+	node = fdt_find_node_by_phandle(phy);
 	if (node == NULL)
 		panic("%s: could not get phy node\n");
 
@@ -471,7 +471,7 @@ tsec_attach(struct device *parent, struct device *self, void *aux)
 		panic("%s: could not extract phy addr from FDT", __func__);
 
 	if (fdt_node_property_int(sc->sc_node, "tbi-handle", &tbi) > 0) {
-		node = fdt_find_node_by_phandle(NULL, tbi);
+		node = fdt_find_node_by_phandle(tbi);
 		if (node == NULL)
 			panic("%s: could not get tbi node\n");
 

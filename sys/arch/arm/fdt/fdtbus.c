@@ -333,7 +333,7 @@ fdt_attach_clocks(struct device *self, void *node)
 		panic("%s: can't extract clocks, but they exist", __func__);
 
 	for (idx = 0; idx < nclk; idx++) {
-		void *clkc = fdt_find_node_by_phandle(NULL, clocks[idx]);
+		void *clkc = fdt_find_node_by_phandle(clocks[idx]);
 		if (clkc == NULL) {
 			printf("%s: can't find clock controller\n",
 			    __func__);

@@ -523,13 +523,10 @@ fdt_find_node_by_prop(void *node, char *propname, void *propval,
  * Look for a node that has this phandle as property.
  */
 void *
-fdt_find_node_by_phandle(void *node, int phandle)
+fdt_find_node_by_phandle(int phandle)
 {
-	if (node == NULL)
-		node = fdt_next_node(0);
-
 	phandle = htobe32(phandle);
-	return fdt_find_node_by_prop(node,
+	return fdt_find_node_by_prop(fdt_next_node(0),
 	    "phandle", &phandle, sizeof(phandle));
 }
 
@@ -542,12 +539,12 @@ fdt_find_node_by_phandle_prop(void *node, char *prop)
 	int phandle;
 
 	if (node == NULL)
-		node = fdt_next_node(0);
+		return NULL;
 
 	if (!fdt_node_property_int(node, prop, &phandle))
 		return NULL;
 
-	return fdt_find_node_by_phandle(node, phandle);
+	return fdt_find_node_by_phandle(phandle);
 }
 
 /*
@@ -691,7 +688,7 @@ fdt_get_interrupt_controller(void *node)
 		if (fdt_node_property_int(node, "interrupt-parent", &phandle) != 1) {
 			node = fdt_parent_node(node);
 		} else {
-			node = fdt_find_node_by_phandle(NULL, phandle);
+			node = fdt_find_node_by_phandle(phandle);
 		}
 	} while (node && fdt_node_property(node, "#interrupt-cells", NULL) == 0);
 

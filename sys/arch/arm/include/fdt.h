@@ -59,7 +59,7 @@ void	*fdt_child_node(void *);
 int	 fdt_node_compatible(char *, void *);
 char	*fdt_node_name(void *);
 void	*fdt_find_node(char *);
-void	*fdt_find_node_by_phandle(void *, int);
+void	*fdt_find_node_by_phandle(int);
 void	*fdt_find_node_by_phandle_prop(void *, char *);
 void	*fdt_find_compatible(char *);
 int	fdt_get_memory_address(void *, int, struct fdt_memory *);
