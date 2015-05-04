@@ -1,4 +1,4 @@
-/*	$OpenBSD: sxipio.c,v 1.4 2013/11/03 14:08:56 rapha Exp $	*/
+/*	$OpenBSD: sxipio.c,v 1.6 2015/05/04 03:59:42 jsg Exp $	*/
 /*
  * Copyright (c) 2010 Miodrag Vallat.
  * Copyright (c) 2013 Artturi Alm
@@ -222,7 +222,7 @@ next:
 		sc->sc_gpio_pins[port][pin].pin_state =
 		    sxipio_getpin((port * 32) + pin);
 		sc->sc_gpio_pins[port][pin].pin_flags = GPIO_PIN_SET |
-		    cfg ? GPIO_PIN_OUTPUT : GPIO_PIN_INPUT;
+		    (cfg ? GPIO_PIN_OUTPUT : GPIO_PIN_INPUT);
 	} else {
 		/* disable control of taken over pins */
 		sc->sc_gpio_pins[port][pin].pin_caps = 0;
