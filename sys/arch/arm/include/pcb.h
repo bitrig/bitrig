@@ -1,4 +1,4 @@
-/*	$OpenBSD: pcb.h,v 1.4 2011/09/20 22:02:13 miod Exp $	*/
+/*	$OpenBSD: pcb.h,v 1.6 2015/05/05 02:13:46 guenther Exp $	*/
 /*	$NetBSD: pcb.h,v 1.10 2003/10/13 21:46:39 scw Exp $	*/
 
 /*
@@ -82,13 +82,6 @@ struct pcb {
 	struct cpu_info *pcb_fpcpu;
 
 	uint32_t pcb_tcb;
-};
-
-/*
- * No additional data for core dumps.
- */
-struct md_coredump {
-	int	md_empty;
 };
 
 #endif	/* _ARM_PCB_H_ */
