@@ -353,7 +353,7 @@ nbdioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 	case NBD_SET_SOCK:
 		if (sc->sc_socket != NULL)
 			return (EBUSY);
-		if ((error = getsock(p->p_fd, arg, &sc->sc_socket)) != 0)
+		if ((error = getsock(p, arg, &sc->sc_socket)) != 0)
 			return (error);
 		sc->sc_disconnect = 0;
 		break;
