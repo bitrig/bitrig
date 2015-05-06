@@ -14,7 +14,6 @@ ioctl.c: ${.CURDIR}/Makefile ${.CURDIR}/mkioctls
 	    ${SYS_DIR}/dev/biovar.h \
 	    ${SYS_DIR}/dev/systrace.h \
 	    ${SYS_DIR}/dev/wscons/wsconsio.h \
-	    ${SYS_DIR}/dev/vndioctl.h \
 	    ${SYS_DIR}/dev/pci/drm/drm.h \
 	    ${SYS_DIR}/dev/usb/usb.h \
 	    ${SYS_DIR}/net/bpf.h \
