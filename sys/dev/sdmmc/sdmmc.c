@@ -111,6 +111,7 @@ sdmmc_attach(struct device *parent, struct device *self, void *aux)
 	sc->sc_clkmin = saa->clkmin;
 	sc->sc_clkmax = saa->clkmax;
 	sc->sc_busclk = sc->sc_clkmax;
+	sc->sc_buswidth = 1;
 
 	if (ISSET(sc->sc_caps, SMC_CAPS_DMA)) {
 		error = bus_dmamap_create(sc->sc_dmat, MAXPHYS, SDMMC_MAXNSEGS,
@@ -452,6 +453,7 @@ sdmmc_disable(struct sdmmc_softc *sc)
 	(void)sdmmc_select_card(sc, NULL);
 
 	/* Turn off bus power and clock. */
+	(void)sdmmc_chip_bus_width(sc->sct, sc->sch, 1);
 	(void)sdmmc_chip_bus_clock(sc->sct, sc->sch, SDMMC_SDCLK_OFF);
 	(void)sdmmc_chip_bus_power(sc->sct, sc->sch, 0);
 }
@@ -496,6 +498,7 @@ sdmmc_function_alloc(struct sdmmc_softc *sc)
 	sf->cis.manufacturer = SDMMC_VENDOR_INVALID;
 	sf->cis.product = SDMMC_PRODUCT_INVALID;
 	sf->cis.function = SDMMC_FUNCTION_INVALID;
+	sf->width = 1;
 
 	if (ISSET(sc->sc_flags, SMF_MEM_MODE) &&
 	    ISSET(sc->sc_caps, SMC_CAPS_DMA) &&

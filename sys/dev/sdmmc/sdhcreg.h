@@ -80,7 +80,9 @@
 #define  SDHC_CMD_INHIBIT_CMD		(1<<0)
 #define  SDHC_CMD_INHIBIT_MASK		0x0003
 #define SDHC_HOST_CTL			0x28
+#define  SDHC_8BIT_MODE			(1<<5)
 #define  SDHC_HIGH_SPEED		(1<<2)
+#define  SDHC_ESDHC_8BIT_MODE		(1<<2)	/* eSDHC */
 #define  SDHC_4BIT_MODE			(1<<1)
 #define  SDHC_LED_ON			(1<<0)
 #define SDHC_POWER_CTL			0x29

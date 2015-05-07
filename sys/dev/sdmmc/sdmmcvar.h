@@ -143,6 +143,7 @@ struct sdmmc_function {
 	/* common members */
 	struct sdmmc_softc *sc;		/* card slot softc */
 	u_int16_t rca;			/* relative card address */
+	int width;			/* bus width */
 	int flags;
 #define SFF_ERROR		0x0001	/* function is poo; ignore it */
 #define SFF_SDHC		0x0002	/* SD High Capacity card */
@@ -211,6 +212,7 @@ struct sdmmc_softc {
 	u_int sc_clkmin;		/* host min bus clock */
 	u_int sc_clkmax;		/* host max bus clock */
 	u_int sc_busclk;		/* host bus clock */
+	int sc_buswidth;		/* host bus width */
 };
 
 /*

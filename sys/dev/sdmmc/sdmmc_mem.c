@@ -499,6 +499,7 @@ sdmmc_mem_mmc_init(struct sdmmc_softc *sc, struct sdmmc_function *sf)
 	u_int8_t ext_csd[512];
 	int hs_timing = 0;
 	int bus_clock = 0;
+	int width, value;
 	u_int32_t sectors = 0;
 
 	/* change bus clock */
@@ -577,6 +578,33 @@ sdmmc_mem_mmc_init(struct sdmmc_softc *sc, struct sdmmc_function *sf)
 			sf->flags |= SFF_SDHC;
 			sf->csd.capacity = sectors;
 		}
+
+		if (ISSET(sc->sc_caps, SMC_CAPS_8BIT_MODE)) {
+			width = 8;
+			value = EXT_CSD_BUS_WIDTH_8;
+		} else if (ISSET(sc->sc_caps, SMC_CAPS_4BIT_MODE)) {
+			width = 4;
+			value = EXT_CSD_BUS_WIDTH_4;
+		} else {
+			width = 1;
+			value = EXT_CSD_BUS_WIDTH_1;
+		}
+
+		if (width != 1) {
+			error = sdmmc_mem_mmc_switch(sf, EXT_CSD_CMD_SET_NORMAL,
+			    EXT_CSD_BUS_WIDTH, value);
+			if (error == 0)
+				error = sdmmc_chip_bus_width(sc->sct,
+				    sc->sch, width);
+			else {
+				DPRINTF(("%s: can't change bus width"
+				    " (%d bit)\n", DEVNAME(sc), width));
+				return error;
+			}
+
+			/* XXXX: need bus test? (using by CMD14 & CMD19) */
+		}
+		sf->width = width;
 	} else {
 		if (sc->sc_busclk > sf->csd.tran_speed)
 			sc->sc_busclk = sf->csd.tran_speed;

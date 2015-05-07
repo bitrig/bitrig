@@ -97,6 +97,7 @@ int	rtsx_host_maxblklen(sdmmc_chipset_handle_t);
 int	rtsx_card_detect(sdmmc_chipset_handle_t);
 int	rtsx_bus_power(sdmmc_chipset_handle_t, u_int32_t);
 int	rtsx_bus_clock(sdmmc_chipset_handle_t, int);
+int	rtsx_bus_width(sdmmc_chipset_handle_t, int);
 int	rtsx_bus_rod(sdmmc_chipset_handle_t, int);
 void	rtsx_exec_command(sdmmc_chipset_handle_t, struct sdmmc_command *);
 int	rtsx_init(struct rtsx_softc *, int);
@@ -148,6 +149,7 @@ struct sdmmc_chip_functions rtsx_functions = {
 	/* bus power and clock frequency */
 	rtsx_bus_power,
 	rtsx_bus_clock,
+	rtsx_bus_width,
 	rtsx_bus_rod,
 	/* command execution */
 	rtsx_exec_command,
@@ -201,6 +203,9 @@ rtsx_attach(struct rtsx_softc *sc, bus_space_tag_t iot,
 	saa.sct = &rtsx_functions;
 	saa.sch = sc;
 	saa.flags = SMF_STOP_AFTER_MULTIPLE;
+	saa.clkmin = SDMMC_SDCLK_400KHZ;
+	saa.clkmax = 25000;
+	saa.caps = SMC_CAPS_4BIT_MODE;
 
 	sc->sdmmc = config_found(&sc->sc_dev, &saa, NULL);
 	if (sc->sdmmc == NULL)
@@ -660,6 +665,14 @@ rtsx_bus_clock(sdmmc_chipset_handle_t sch, int freq)
 ret:
 	splx(s);
 	return error;
+}
+
+int
+rtsx_bus_width(sdmmc_chipset_handle_t sch, int width)
+{
+	struct rtsx_softc *sc = sch;
+
+	return rtsx_set_bus_width(sc, width);
 }
 
 int

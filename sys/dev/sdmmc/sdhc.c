@@ -126,6 +126,7 @@ int	sdhc_host_maxblklen(sdmmc_chipset_handle_t);
 int	sdhc_card_detect(sdmmc_chipset_handle_t);
 int	sdhc_bus_power(sdmmc_chipset_handle_t, u_int32_t);
 int	sdhc_bus_clock(sdmmc_chipset_handle_t, int);
+int	sdhc_bus_width(sdmmc_chipset_handle_t, int);
 int	sdhc_bus_rod(sdmmc_chipset_handle_t, int);
 void	sdhc_card_intr_mask(sdmmc_chipset_handle_t, int);
 void	sdhc_card_intr_ack(sdmmc_chipset_handle_t);
@@ -154,9 +155,10 @@ struct sdmmc_chip_functions sdhc_functions = {
 	sdhc_host_maxblklen,
 	/* card detection */
 	sdhc_card_detect,
-	/* bus power and clock frequency */
+	/* bus power, clock frequency and width */
 	sdhc_bus_power,
 	sdhc_bus_clock,
+	sdhc_bus_width,
 	sdhc_bus_rod,
 	/* command execution */
 	sdhc_exec_command,
@@ -298,6 +300,9 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 		saa.clkmin = hp->clkbase / 0x3ff;
 	else
 		saa.clkmin = hp->clkbase / 256;
+	saa.caps = SMC_CAPS_4BIT_MODE|SMC_CAPS_AUTO_STOP;
+	if (ISSET(sc->sc_flags, SDHC_F_8BIT_MODE))
+		saa.caps |= SMC_CAPS_8BIT_MODE;
 
 	hp->sdmmc = config_found(&sc->sc_dev, &saa, NULL);
 	if (hp->sdmmc == NULL) {
@@ -640,6 +645,44 @@ sdhc_bus_clock(sdmmc_chipset_handle_t sch, int freq)
 ret:
 	splx(s);
 	return error;
+}
+
+int
+sdhc_bus_width(sdmmc_chipset_handle_t sch, int width)
+{
+	struct sdhc_host *hp = (struct sdhc_host *)sch;
+	int reg;
+
+	switch (width) {
+	case 1:
+	case 4:
+		break;
+
+	case 8:
+		if (ISSET(hp->sc->sc_flags, SDHC_F_8BIT_MODE))
+			break;
+		/* FALLTHROUGH */
+	default:
+		DPRINTF(0,("%s: unsupported bus width (%d)\n",
+		    DEVNAME(hp->sc), width));
+		return 1;
+	}
+
+	reg = HREAD1(hp, SDHC_HOST_CTL);
+	if (ISSET(hp->sc->sc_flags, SDHC_F_ENHANCED)) {
+		reg &= ~(SDHC_4BIT_MODE|SDHC_ESDHC_8BIT_MODE);
+		if (width == 4)
+			reg |= SDHC_4BIT_MODE;
+		else if (width == 8)
+			reg |= SDHC_ESDHC_8BIT_MODE;
+	} else {
+		reg &= ~SDHC_4BIT_MODE;
+		if (width == 4)
+			reg |= SDHC_4BIT_MODE;
+	}
+	HWRITE1(hp, SDHC_HOST_CTL, reg);
+
+	return 0;
 }
 
 int

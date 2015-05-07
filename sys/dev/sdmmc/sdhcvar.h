@@ -44,6 +44,8 @@ int	sdhc_intr(void *);
 #define	SDHC_F_FORCE_DMA	0x0002
 #define	SDHC_F_NOPWR0		0x0004
 #define	SDHC_F_32BIT_ACCESS	0x0010
+#define	SDHC_F_ENHANCED		0x0020	/* Freescale ESDHC */
+#define	SDHC_F_8BIT_MODE	0x0040	/* MMC 8bit mode is supported */
 #define	SDHC_F_HOSTCAPS		0x0200	/* No device provided capabilities */
 
 #endif

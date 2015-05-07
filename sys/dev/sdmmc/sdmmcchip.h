@@ -37,6 +37,7 @@ struct sdmmc_chip_functions {
 	/* bus power and clock frequency and ROD(OpenDrain/PushPull) */
 	int	(*bus_power)(sdmmc_chipset_handle_t, u_int32_t);
 	int	(*bus_clock)(sdmmc_chipset_handle_t, int);
+	int	(*bus_width)(sdmmc_chipset_handle_t, int);
 	int	(*bus_rod)(sdmmc_chipset_handle_t, int);
 	/* command execution */
 	void	(*exec_command)(sdmmc_chipset_handle_t,
@@ -62,6 +63,8 @@ struct sdmmc_chip_functions {
 	((tag)->bus_power((handle), (ocr)))
 #define sdmmc_chip_bus_clock(tag, handle, freq)				\
 	((tag)->bus_clock((handle), (freq)))
+#define sdmmc_chip_bus_width(tag, handle, width)			\
+	((tag)->bus_width((handle), (width)))
 #define sdmmc_chip_bus_rod(tag, handle, width)				\
 	((tag)->bus_rod((handle), (width)))
 /* command execution */
