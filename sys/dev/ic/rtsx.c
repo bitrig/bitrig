@@ -97,6 +97,7 @@ int	rtsx_host_maxblklen(sdmmc_chipset_handle_t);
 int	rtsx_card_detect(sdmmc_chipset_handle_t);
 int	rtsx_bus_power(sdmmc_chipset_handle_t, u_int32_t);
 int	rtsx_bus_clock(sdmmc_chipset_handle_t, int);
+int	rtsx_bus_rod(sdmmc_chipset_handle_t, int);
 void	rtsx_exec_command(sdmmc_chipset_handle_t, struct sdmmc_command *);
 int	rtsx_init(struct rtsx_softc *, int);
 void	rtsx_soft_reset(struct rtsx_softc *);
@@ -147,6 +148,7 @@ struct sdmmc_chip_functions rtsx_functions = {
 	/* bus power and clock frequency */
 	rtsx_bus_power,
 	rtsx_bus_clock,
+	rtsx_bus_rod,
 	/* command execution */
 	rtsx_exec_command,
 	/* card interrupt */
@@ -658,6 +660,12 @@ rtsx_bus_clock(sdmmc_chipset_handle_t sch, int freq)
 ret:
 	splx(s);
 	return error;
+}
+
+int
+rtsx_bus_rod(sdmmc_chipset_handle_t sch, int on)
+{
+	return 0;
 }
 
 int

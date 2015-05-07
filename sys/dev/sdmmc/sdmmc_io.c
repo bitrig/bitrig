@@ -147,6 +147,9 @@ sdmmc_io_scan(struct sdmmc_softc *sc)
 	sc->sc_fn0 = sf0;
 	SIMPLEQ_INSERT_TAIL(&sc->sf_head, sf0, sf_list);
 
+	/* Go to Data Transfer Mode, if possible. */
+	sdmmc_chip_bus_rod(sc->sct, sc->sch, 0);
+
 	/* Verify that the RCA has been set by selecting the card. */
 	if (sdmmc_select_card(sc, sf0) != 0) {
 		printf("%s: can't select I/O RCA %d\n", DEVNAME(sc),

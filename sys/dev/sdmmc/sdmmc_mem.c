@@ -212,6 +212,9 @@ sdmmc_mem_scan(struct sdmmc_softc *sc)
 		SIMPLEQ_INSERT_TAIL(&sc->sf_head, sf, sf_list);
 	}
 
+	/* Go to Data Transfer Mode, if possible. */
+	sdmmc_chip_bus_rod(sc->sct, sc->sch, 0);
+
 	/*
 	 * All cards are either inactive or awaiting further commands.
 	 * Read the CSDs and decode the raw CID for each card.

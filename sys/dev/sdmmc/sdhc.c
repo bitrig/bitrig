@@ -126,6 +126,7 @@ int	sdhc_host_maxblklen(sdmmc_chipset_handle_t);
 int	sdhc_card_detect(sdmmc_chipset_handle_t);
 int	sdhc_bus_power(sdmmc_chipset_handle_t, u_int32_t);
 int	sdhc_bus_clock(sdmmc_chipset_handle_t, int);
+int	sdhc_bus_rod(sdmmc_chipset_handle_t, int);
 void	sdhc_card_intr_mask(sdmmc_chipset_handle_t, int);
 void	sdhc_card_intr_ack(sdmmc_chipset_handle_t);
 void	sdhc_exec_command(sdmmc_chipset_handle_t, struct sdmmc_command *);
@@ -156,6 +157,7 @@ struct sdmmc_chip_functions sdhc_functions = {
 	/* bus power and clock frequency */
 	sdhc_bus_power,
 	sdhc_bus_clock,
+	sdhc_bus_rod,
 	/* command execution */
 	sdhc_exec_command,
 	/* card interrupt */
@@ -638,6 +640,12 @@ sdhc_bus_clock(sdmmc_chipset_handle_t sch, int freq)
 ret:
 	splx(s);
 	return error;
+}
+
+int
+sdhc_bus_rod(sdmmc_chipset_handle_t sch, int on)
+{
+	return 0;
 }
 
 void

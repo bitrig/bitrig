@@ -229,6 +229,7 @@ int	ommmc_host_maxblklen(sdmmc_chipset_handle_t);
 int	ommmc_card_detect(sdmmc_chipset_handle_t);
 int	ommmc_bus_power(sdmmc_chipset_handle_t, uint32_t);
 int	ommmc_bus_clock(sdmmc_chipset_handle_t, int);
+int	ommmc_bus_rod(sdmmc_chipset_handle_t, int);
 void	ommmc_card_intr_mask(sdmmc_chipset_handle_t, int);
 void	ommmc_card_intr_ack(sdmmc_chipset_handle_t);
 void	ommmc_exec_command(sdmmc_chipset_handle_t, struct sdmmc_command *);
@@ -260,6 +261,7 @@ struct sdmmc_chip_functions ommmc_functions = {
 	/* bus power and clock frequency */
 	ommmc_bus_power,
 	ommmc_bus_clock,
+	ommmc_bus_rod,
 	/* command execution */
 	ommmc_exec_command,
 	/* card interrupt */
@@ -696,6 +698,19 @@ ommmc_bus_clock(sdmmc_chipset_handle_t sch, int freq)
 ret:
 	splx(s);
 	return (error);
+}
+
+int
+ommmc_bus_rod(sdmmc_chipset_handle_t sch, int on)
+{
+	struct ommmc_softc *sc = sch;
+
+	if (on)
+		HSET4(sc, MMCHS_CON, MMCHS_CON_OD);
+	else
+		HCLR4(sc, MMCHS_CON, MMCHS_CON_OD);
+
+	return 0;
 }
 
 void

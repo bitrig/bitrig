@@ -198,6 +198,7 @@ int	imxesdhc_host_maxblklen(sdmmc_chipset_handle_t);
 int	imxesdhc_card_detect(sdmmc_chipset_handle_t);
 int	imxesdhc_bus_power(sdmmc_chipset_handle_t, uint32_t);
 int	imxesdhc_bus_clock(sdmmc_chipset_handle_t, int);
+int	imxesdhc_bus_rod(sdmmc_chipset_handle_t, int);
 void	imxesdhc_card_intr_mask(sdmmc_chipset_handle_t, int);
 void	imxesdhc_card_intr_ack(sdmmc_chipset_handle_t);
 void	imxesdhc_exec_command(sdmmc_chipset_handle_t, struct sdmmc_command *);
@@ -228,6 +229,7 @@ struct sdmmc_chip_functions imxesdhc_functions = {
 	/* bus power and clock frequency */
 	imxesdhc_bus_power,
 	imxesdhc_bus_clock,
+	imxesdhc_bus_rod,
 	/* command execution */
 	imxesdhc_exec_command,
 	/* card interrupt */
@@ -636,6 +638,12 @@ imxesdhc_bus_clock(sdmmc_chipset_handle_t sch, int freq)
 ret:
 	splx(s);
 	return error;
+}
+
+int
+imxesdhc_bus_rod(sdmmc_chipset_handle_t sch, int freq)
+{
+	return 0;
 }
 
 void
