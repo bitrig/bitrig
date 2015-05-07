@@ -303,6 +303,8 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	saa.caps = SMC_CAPS_4BIT_MODE|SMC_CAPS_AUTO_STOP;
 	if (ISSET(sc->sc_flags, SDHC_F_8BIT_MODE))
 		saa.caps |= SMC_CAPS_8BIT_MODE;
+	if (ISSET(caps, SDHC_HIGH_SPEED_SUPP))
+		saa.caps |= SMC_CAPS_SD_HIGHSPEED;
 
 	hp->sdmmc = config_found(&sc->sc_dev, &saa, NULL);
 	if (hp->sdmmc == NULL) {
@@ -512,15 +514,15 @@ sdhc_bus_power(sdmmc_chipset_handle_t sch, u_int32_t ocr)
 	}
 
 	/*
-	 * Select the maximum voltage according to capabilities.
+	 * Select the lowest voltage according to capabilities.
 	 */
 	ocr &= hp->ocr;
-	if (ISSET(ocr, MMC_OCR_3_2V_3_3V|MMC_OCR_3_3V_3_4V))
-		vdd = SDHC_VOLTAGE_3_3V;
+	if (ISSET(ocr, MMC_OCR_1_7V_1_8V|MMC_OCR_1_8V_1_9V))
+		vdd = SDHC_VOLTAGE_1_8V;
 	else if (ISSET(ocr, MMC_OCR_2_9V_3_0V|MMC_OCR_3_0V_3_1V))
 		vdd = SDHC_VOLTAGE_3_0V;
-	else if (ISSET(ocr, MMC_OCR_1_7V_1_8V|MMC_OCR_1_8V_1_9V))
-		vdd = SDHC_VOLTAGE_1_8V;
+	else if (ISSET(ocr, MMC_OCR_3_2V_3_3V|MMC_OCR_3_3V_3_4V))
+		vdd = SDHC_VOLTAGE_3_3V;
 	else {
 		/* Unsupported voltage level requested. */
 		splx(s);
@@ -641,6 +643,12 @@ sdhc_bus_clock(sdmmc_chipset_handle_t sch, int freq)
 	 * Enable SD clock.
 	 */
 	HSET2(hp, SDHC_CLOCK_CTL, SDHC_SDCLK_ENABLE);
+
+	if (freq > 25000 &&
+	    !ISSET(hp->sc->sc_flags, SDHC_F_NO_HS_BIT))
+		HSET1(hp, SDHC_HOST_CTL, SDHC_HIGH_SPEED);
+	else
+		HCLR1(hp, SDHC_HOST_CTL, SDHC_HIGH_SPEED);
 
 ret:
 	splx(s);

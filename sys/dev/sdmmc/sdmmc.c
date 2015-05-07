@@ -61,7 +61,6 @@ int	sdmmc_enable(struct sdmmc_softc *);
 void	sdmmc_disable(struct sdmmc_softc *);
 int	sdmmc_scan(struct sdmmc_softc *);
 int	sdmmc_init(struct sdmmc_softc *);
-int	sdmmc_set_bus_width(struct sdmmc_function *);
 #ifdef SDMMC_IOCTL
 int	sdmmc_ioctl(struct device *, u_long, caddr_t);
 #endif
@@ -764,15 +763,16 @@ sdmmc_set_relative_addr(struct sdmmc_softc *sc,
  * Switch card and host to the maximum supported bus width.
  */
 int
-sdmmc_set_bus_width(struct sdmmc_function *sf)
+sdmmc_set_bus_width(struct sdmmc_function *sf, int width)
 {
 	struct sdmmc_softc *sc = sf->sc;
 	struct sdmmc_command cmd;
 	int error;
 
-	rw_enter_write(&sc->sc_lock);
+	rw_assert_wrlock(&sc->sc_lock);
 
-	if (!ISSET(sc->sc_flags, SMF_SD_MODE)) {
+	if (!ISSET(sc->sc_flags, SMF_SD_MODE) ||
+	    ISSET(sc->sc_caps, SMC_CAPS_SPI_MODE)) {
 		rw_exit(&sc->sc_lock);
 		return EOPNOTSUPP;
 	}
@@ -784,10 +784,24 @@ sdmmc_set_bus_width(struct sdmmc_function *sf)
 
 	bzero(&cmd, sizeof cmd);
 	cmd.c_opcode = SD_APP_SET_BUS_WIDTH;
-	cmd.c_arg = SD_ARG_BUS_WIDTH_4;
 	cmd.c_flags = SCF_CMD_AC | SCF_RSP_R1;
+
+	switch (width) {
+	case 1:
+		cmd.c_arg = SD_ARG_BUS_WIDTH_1;
+		break;
+
+	case 4:
+		cmd.c_arg = SD_ARG_BUS_WIDTH_4;
+		break;
+
+	default:
+		return EINVAL;
+	}
+
 	error = sdmmc_app_command(sc, &cmd);
-	rw_exit(&sc->sc_lock);
+	if (error == 0)
+		error = sdmmc_chip_bus_width(sc->sct, sc->sch, width);
 	return error;
 }
 

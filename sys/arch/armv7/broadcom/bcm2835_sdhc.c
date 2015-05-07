@@ -83,9 +83,11 @@ bcm_sdhc_attach(struct device *parent, struct device *self, void *args)
 	ssc->sc_flags = 0;
 	ssc->sc_flags |= SDHC_F_32BIT_ACCESS;
 	ssc->sc_flags |= SDHC_F_HOSTCAPS;
+	ssc->sc_flags |= SDHC_F_NO_HS_BIT;
 	ssc->sc_caps = SDHC_VOLTAGE_SUPP_3_3V | SDHC_HIGH_SPEED_SUPP |
 	    (SDHC_MAX_BLK_LEN_1024 << SDHC_MAX_BLK_LEN_SHIFT);
-	ssc->sc_clkbase = 50000; /* Default to 50MHz */
+	/* TODO: dynamically extract clock base */
+	ssc->sc_clkbase = 250000; /* Default to 250MHz */
 
 	/* TODO: Fetch frequency from FDT. */
 

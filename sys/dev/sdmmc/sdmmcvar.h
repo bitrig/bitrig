@@ -40,6 +40,7 @@ struct sdmmc_csd {
 	int	sector_size;	/* sector size in bytes */
 	int	read_bl_len;	/* block length for reads */
 	int	tran_speed;	/* transfer speed (kbit/s) */
+	int	ccc;		/* Card Command Class for SD */
 	/* ... */
 };
 
@@ -50,6 +51,11 @@ struct sdmmc_cid {
 	int	rev;		/* product revision */
 	int	psn;		/* product serial number */
 	int	mdt;		/* manufacturing date */
+};
+
+struct sdmmc_scr {
+	int	sd_spec;
+	int	bus_width;
 };
 
 typedef u_int32_t sdmmc_response[4];
@@ -97,6 +103,11 @@ struct sdmmc_command {
 #define SCF_RSP_CRC	 0x0400
 #define SCF_RSP_IDX	 0x0800
 #define SCF_RSP_PRESENT	 0x1000
+/* SPI */
+#define SCF_RSP_SPI_S1	 0x0400
+#define SCF_RSP_SPI_S2	 0x0800
+#define SCF_RSP_SPI_B4	 0x1000
+#define SCF_RSP_SPI_BSY	 0x2000
 /* response types */
 #define SCF_RSP_R0	 0 /* none */
 #define SCF_RSP_R1	 (SCF_RSP_PRESENT|SCF_RSP_CRC|SCF_RSP_IDX)
@@ -108,6 +119,16 @@ struct sdmmc_command {
 #define SCF_RSP_R5B	 (SCF_RSP_PRESENT|SCF_RSP_CRC|SCF_RSP_IDX|SCF_RSP_BSY)
 #define SCF_RSP_R6	 (SCF_RSP_PRESENT|SCF_RSP_CRC|SCF_RSP_IDX)
 #define SCF_RSP_R7	 (SCF_RSP_PRESENT|SCF_RSP_CRC|SCF_RSP_IDX)
+#define SCF_RSP_MASK	 (0x1f << 1)
+/* SPI */
+#define SCF_RSP_SPI_R1	 (SCF_RSP_SPI_S1)
+#define SCF_RSP_SPI_R1B	 (SCF_RSP_SPI_S1|SCF_RSP_SPI_BSY)
+#define SCF_RSP_SPI_R2	 (SCF_RSP_SPI_S1|SCF_RSP_SPI_S2)
+#define SCF_RSP_SPI_R3	 (SCF_RSP_SPI_S1|SCF_RSP_SPI_B4)
+#define SCF_RSP_SPI_R4	 (SCF_RSP_SPI_S1|SCF_RSP_SPI_B4)
+#define SCF_RSP_SPI_R5	 (SCF_RSP_SPI_S1|SCF_RSP_SPI_S2)
+#define SCF_RSP_SPI_R7	 (SCF_RSP_SPI_S1|SCF_RSP_SPI_B4)
+#define SCF_RSP_SPI_MASK (0xf << 10)
 	int		 c_error;	/* errno value on completion */
 
 	/* Host controller owned fields for data xfer in progress */
@@ -156,6 +177,8 @@ struct sdmmc_function {
 	struct sdmmc_csd csd;		/* decoded CSD value */
 	struct sdmmc_cid cid;		/* decoded CID value */
 	sdmmc_response raw_cid;		/* temp. storage for decoding */
+	uint32_t raw_scr[2];
+	struct sdmmc_scr scr;		/* decoded SCR value */
 
 	void *bbuf;			/* bounce buffer */
 	bus_dmamap_t bbuf_dmap;		/* DMA map for bounce buffer */
@@ -235,6 +258,7 @@ void	sdmmc_del_task(struct sdmmc_task *);
 struct	sdmmc_function *sdmmc_function_alloc(struct sdmmc_softc *);
 void	sdmmc_function_free(struct sdmmc_function *);
 int	sdmmc_set_bus_power(struct sdmmc_softc *, u_int32_t, u_int32_t);
+int	sdmmc_set_bus_width(struct sdmmc_function *, int);
 int	sdmmc_mmc_command(struct sdmmc_softc *, struct sdmmc_command *);
 int	sdmmc_app_command(struct sdmmc_softc *, struct sdmmc_command *);
 void	sdmmc_go_idle_state(struct sdmmc_softc *);
