@@ -184,9 +184,8 @@ vfp_fault(unsigned int pc, unsigned int insn, trapframe_t *tf, int fault_code)
 	if (get_vfp_fpexc() & VFPEXC_EN) {
 		/*
 		 * We probably ran into an unsupported instruction,
-		 * like NEON on a non-NEON system. Abort the process.
+		 * like NEON on a non-NEON system. Let the process know.
 		 */
-		set_vfp_fpexc(0);
 		return 1;
 	}
 
