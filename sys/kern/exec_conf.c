@@ -39,7 +39,7 @@
 #include <sys/exec_elf.h>
 #endif
 
-extern struct emul emul_native, emul_elf32, emul_elf64, emul_linux_elf;
+extern struct emul emul_native;
 
 struct execsw execsw[] = {
 	{ EXEC_SCRIPT_HDRSZ, exec_script_makecmds, &emul_native, },	/* shell scripts */

@@ -117,9 +117,6 @@ struct	emul {
 #define	EMUL_ENABLED	0x0001		/* Allow exec to continue */
 #define	EMUL_NATIVE	0x0002		/* Always enabled */
 
-extern struct emul *emulsw[];		/* All emuls in system */
-extern int nemuls;			/* Number of emuls */
-
 /*
  * time usage: accumulated times in ticks
  * One a second, each thread's immediate counts (p_[usi]ticks) are
