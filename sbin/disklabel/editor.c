@@ -1,4 +1,4 @@
-/*	$OpenBSD: editor.c,v 1.294 2015/04/29 16:46:39 henning Exp $	*/
+/*	$OpenBSD: editor.c,v 1.295 2015/05/08 12:15:50 sthen Exp $	*/
 
 /*
  * Copyright (c) 1997-2000 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -119,6 +119,7 @@ struct alloc_table alloc_table_default[] = {
 	{ alloc_stupid,	nitems(alloc_stupid) }
 };
 struct alloc_table *alloc_table = alloc_table_default;
+int alloc_table_nitems = 4;
 
 void	edit_parms(struct disklabel *);
 void	editor_resize(struct disklabel *, char *);
@@ -610,7 +611,7 @@ again:
 		if (j == MAXPARTITIONS) {
 			/* It did not work out, try next strategy */
 			free(alloc);
-			if (++index < nitems(alloc_table))
+			if (++index < alloc_table_nitems)
 				goto again;
 			else
 				return;
@@ -673,7 +674,7 @@ cylinderalign:
 		if (secs < ap->minsz) {
 			/* It did not work out, try next strategy */
 			free(alloc);
-			if (++index < nitems(alloc_table))
+			if (++index < alloc_table_nitems)
 				goto again;
 			else
 				return;
@@ -2381,6 +2382,7 @@ parse_autotable(char *filename)
 		err(1, "%s", filename);
 	if ((alloc_table = calloc(1, sizeof(struct alloc_table))) == NULL)
 		err(1, NULL);
+	alloc_table_nitems = 1;
 
 	while ((buf = fgetln(cfile, &len)) != NULL) {
 		if ((alloc_table[0].table = reallocarray(alloc_table[0].table,
