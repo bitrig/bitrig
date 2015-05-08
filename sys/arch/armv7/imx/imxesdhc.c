@@ -528,6 +528,19 @@ imxesdhc_card_detect(sdmmc_chipset_handle_t sch)
 		}
 		imxgpio_set_dir(gpio, IMXGPIO_DIR_IN);
 		return imxgpio_get_bit(gpio) ? 0 : 1;
+	case BOARD_ID_IMX6_NOVENA:
+		switch (sc->unit) {
+			case 2:
+				gpio = 0*32 + 4;
+				break;
+			/* no card detect for uSD */
+			case 3:
+				return 1;
+			default:
+				return 0;
+		}
+		imxgpio_set_dir(gpio, IMXGPIO_DIR_IN);
+		return imxgpio_get_bit(gpio) ? 0 : 1;
 	case BOARD_ID_IMX6_WANDBOARD:
 		switch (sc->unit) {
 			case 0:

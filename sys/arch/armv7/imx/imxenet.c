@@ -1,4 +1,4 @@
-/* $OpenBSD: imxenet.c,v 1.11 2015/03/18 13:33:55 mpi Exp $ */
+/* $OpenBSD: imxenet.c,v 1.13 2015/05/08 03:38:26 jsg Exp $ */
 /*
  * Copyright (c) 2012-2013 Patrick Wildt <patrick@blueri.se>
  *
@@ -148,6 +148,8 @@
 #define ENET_UDOO_PWR				(1*32+31)
 #define ENET_UTILITE_PHY			0
 #define ENET_WANDBOARD_PHY			1
+#define ENET_NOVENA_PHY				7
+#define ENET_NOVENA_PHY_RST			(2*32+23)
 
 #define HREAD4(sc, reg)							\
 	(bus_space_read_4((sc)->sc_iot, (sc)->sc_ioh, (reg)))
@@ -309,6 +311,13 @@ imxenet_attach(struct device *parent, struct device *self, void *args)
 		imxgpio_set_bit(ENET_UDOO_PHY_RST);
 		delay(1000 * 100);
 		break;
+	case BOARD_ID_IMX6_NOVENA:
+		imxgpio_clear_bit(ENET_NOVENA_PHY_RST);
+		imxgpio_set_dir(ENET_NOVENA_PHY_RST, IMXGPIO_DIR_OUT);
+		delay(1000 * 10);
+		imxgpio_set_bit(ENET_NOVENA_PHY_RST);
+		delay(100);
+		break;
 	}
 
 	/* reset the controller */
@@ -451,6 +460,9 @@ imxenet_chip_init(struct imxenet_softc *sc)
 	case BOARD_ID_IMX6_UTILITE:
 		phy = ENET_UTILITE_PHY;
 		break;
+	case BOARD_ID_IMX6_NOVENA:
+		phy = ENET_NOVENA_PHY;
+		break;
 	case BOARD_ID_IMX6_WANDBOARD:
 		phy = ENET_WANDBOARD_PHY;
 		break;
@@ -487,6 +499,7 @@ imxenet_chip_init(struct imxenet_softc *sc)
 		imxenet_miibus_writereg(dev, phy, 0x0e, 0x03ff);
 		break;
 	case BOARD_ID_IMX6_SABRELITE:	/* Micrel KSZ9021 */
+	case BOARD_ID_IMX6_NOVENA:	/* Micrel KSZ9021 */
 		/* min rx data delay */
 		imxenet_miibus_writereg(dev, phy, 0x0b, 0x8105);
 		imxenet_miibus_writereg(dev, phy, 0x0c, 0x0000);

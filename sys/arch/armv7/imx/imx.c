@@ -169,6 +169,27 @@ struct board_dev utilite_devs[] = {
 	{ NULL,		0 }
 };
 
+struct board_dev novena_devs[] = {
+	{ "imxccm",	0 },
+	{ "imxiomuxc",	0 },
+	{ "imxdog",	0 },
+	{ "imxocotp",	0 },
+	{ "imxuart",	1 },
+	{ "imxgpio",	0 },
+	{ "imxgpio",	1 },
+	{ "imxgpio",	2 },
+	{ "imxgpio",	3 },
+	{ "imxgpio",	4 },
+	{ "imxgpio",	5 },
+	{ "imxgpio",	6 },
+	{ "imxesdhc",	2 },
+	{ "imxesdhc",	3 },
+	{ "ehci",	0 },
+	{ "imxenet",	0 },
+	{ "ahci",	0 },
+	{ NULL,		0 }
+};
+
 struct board_dev wandboard_devs[] = {
 	{ "imxocotp",	0 },
 	{ "imxccm",	0 },

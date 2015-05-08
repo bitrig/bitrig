@@ -1,4 +1,4 @@
-/* $OpenBSD: omgpio.c,v 1.8 2011/11/10 19:37:01 uwe Exp $ */
+/* $OpenBSD: imxgpio.c,v 1.5 2015/05/08 03:38:26 jsg Exp $ */
 /*
  * Copyright (c) 2007,2009 Dale Rahn <drahn@openbsd.org>
  * Copyright (c) 2012-2013 Patrick Wildt <patrick@blueri.se>

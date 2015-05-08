@@ -1,4 +1,4 @@
-/* $OpenBSD: armv7.c,v 1.6 2015/05/07 01:55:43 jsg Exp $ */
+/* $OpenBSD: armv7.c,v 1.7 2015/05/08 03:38:26 jsg Exp $ */
 /*
  * Copyright (c) 2005,2008 Dale Rahn <drahn@openbsd.com>
  * Copyright (c) 2012-2013 Patrick Wildt <patrick@blueri.se>
@@ -58,6 +58,7 @@ extern struct board_dev sabrelite_devs[];
 extern struct board_dev sabresd_devs[];
 extern struct board_dev udoo_devs[];
 extern struct board_dev utilite_devs[];
+extern struct board_dev novena_devs[];
 extern struct board_dev wandboard_devs[];
 extern struct board_dev beagleboard_devs[];
 extern struct board_dev beaglebone_devs[];
@@ -155,6 +156,11 @@ armv7_attach(struct device *parent, struct device *self, void *aux)
 		printf(": i.MX6 Utilite\n");
 		imx6_init();
 		sc->sc_board_devs = utilite_devs;
+		break;
+	case BOARD_ID_IMX6_NOVENA:
+		printf(": i.MX6 Novena\n");
+		imx6_init();
+		sc->sc_board_devs = novena_devs;
 		break;
 	case BOARD_ID_IMX6_WANDBOARD:
 		printf(": i.MX6 Wandboard\n");
