@@ -272,6 +272,7 @@ typedef struct tmpfs_fid {
 int		tmpfs_alloc_node(tmpfs_mount_t *, enum vtype, uid_t, gid_t,
 		    mode_t, char *, dev_t, tmpfs_node_t **);
 void		tmpfs_free_node(tmpfs_mount_t *, tmpfs_node_t *);
+void		tmpfs_mount_cleanup(tmpfs_mount_t *);
 
 int		tmpfs_alloc_file(struct vnode *, struct vnode **, struct vattr *,
 		    struct componentname *, char *);

@@ -273,6 +273,35 @@ tmpfs_free_node(tmpfs_mount_t *tmp, tmpfs_node_t *node)
 	tmpfs_node_put(tmp, node);
 }
 
+void
+tmpfs_mount_cleanup(tmpfs_mount_t *tmp)
+{
+	tmpfs_node_t *node, *cnode;
+	tmpfs_dirent_t *de;
+
+	/*
+	 * First round, detach and destroy all directory entries.
+	 * Also, clear the pointers to the vnodes - they are gone.
+	 */
+	LIST_FOREACH(node, &tmp->tm_nodes, tn_entries) {
+		node->tn_vnode = NULL;
+		if (node->tn_type != VDIR)
+			continue;
+
+		while ((de = TAILQ_FIRST(&node->tn_spec.tn_dir.tn_dir)) != NULL) {
+			cnode = de->td_node;
+			if (cnode)
+				cnode->tn_vnode = NULL;
+			tmpfs_dir_detach(node, de);
+			tmpfs_free_dirent(tmp, de);
+		}
+	}
+
+	/* Second round, destroy all inodes. */
+	while ((node = LIST_FIRST(&tmp->tm_nodes)) != NULL)
+		tmpfs_free_node(tmp, node);
+}
+
 /*
  * tmpfs_vnode_get: allocate or reclaim a vnode for a specified inode.
  *

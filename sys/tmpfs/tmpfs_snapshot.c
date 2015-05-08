@@ -343,28 +343,6 @@ out:
 }
 
 void
-tmpfs_snap_load_cleanup(tmpfs_mount_t *tmp)
-{
-	tmpfs_node_t *node, *nnode;
-	tmpfs_dirent_t *de, *nde;
-
-	LIST_FOREACH(node, &tmp->tm_nodes, tn_entries) {
-		if (node->tn_type != VDIR)
-			continue;
-
-		TAILQ_FOREACH_SAFE(de, &node->tn_spec.tn_dir.tn_dir,
-		    td_entries, nde) {
-			tmpfs_dir_detach(node, de);
-			tmpfs_free_dirent(tmp, de);
-		}
-	}
-
-	LIST_FOREACH_SAFE(node, &tmp->tm_nodes, tn_entries, nnode) {
-		tmpfs_free_node(tmp, node);
-	}
-}
-
-void
 tmpfs_snap_find_node(const tmpfs_mount_t *tmp, ino_t id, tmpfs_node_t **nodepp)
 {
 	tmpfs_node_t *node;
@@ -604,7 +582,7 @@ tmpfs_snap_load_vnode(struct mount *mp, struct vnode *vp, struct proc *p)
 
 fail:
 	if (error)
-		tmpfs_snap_load_cleanup(tmp);
+		tmpfs_mount_cleanup(tmp);
 
 	return (error);
 }

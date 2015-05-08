@@ -130,7 +130,6 @@ int	tmpfs_snap_dump_root(struct vnode *, uint64_t *, const tmpfs_mount_t *,
  */
 
 void	tmpfs_snap_find_node(const tmpfs_mount_t *, ino_t, tmpfs_node_t **);
-void	tmpfs_snap_load_cleanup(tmpfs_mount_t *);
 int	tmpfs_snap_find_parent(const tmpfs_mount_t *, const tmpfs_snap_node_t *,
 	    tmpfs_node_t **);
 int	tmpfs_snap_load_hdr(tmpfs_mount_t *, tmpfs_node_t *,

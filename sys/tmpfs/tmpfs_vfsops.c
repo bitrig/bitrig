@@ -357,7 +357,6 @@ int
 tmpfs_unmount(struct mount *mp, int mntflags, struct proc *p)
 {
 	tmpfs_mount_t *tmp = VFS_TO_TMPFS(mp);
-	tmpfs_node_t *node, *cnode;
 	int error, flags = 0;
 
 	/* Handle forced unmounts. */
@@ -369,30 +368,7 @@ tmpfs_unmount(struct mount *mp, int mntflags, struct proc *p)
 	if (error != 0)
 		return error;
 
-	/*
-	 * First round, detach and destroy all directory entries.
-	 * Also, clear the pointers to the vnodes - they are gone.
-	 */
-	LIST_FOREACH(node, &tmp->tm_nodes, tn_entries) {
-		tmpfs_dirent_t *de;
-
-		node->tn_vnode = NULL;
-		if (node->tn_type != VDIR) {
-			continue;
-		}
-		while ((de = TAILQ_FIRST(&node->tn_spec.tn_dir.tn_dir)) != NULL) {
-			cnode = de->td_node;
-			if (cnode)
-				cnode->tn_vnode = NULL;
-			tmpfs_dir_detach(node, de);
-			tmpfs_free_dirent(tmp, de);
-		}
-	}
-
-	/* Second round, destroy all inodes. */
-	while ((node = LIST_FIRST(&tmp->tm_nodes)) != NULL) {
-		tmpfs_free_node(tmp, node);
-	}
+	tmpfs_mount_cleanup(tmp);
 
 	/* Throw away the tmpfs_mount structure. */
 	tmpfs_mntmem_destroy(tmp);
