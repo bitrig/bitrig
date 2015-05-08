@@ -182,9 +182,12 @@ vfp_fault(unsigned int pc, unsigned int insn, trapframe_t *tf, int fault_code)
 	ci = curcpu();
 
 	if (get_vfp_fpexc() & VFPEXC_EN) {
+		/*
+		 * We probably ran into an unsupported instruction,
+		 * like NEON on a non-NEON system. Abort the process.
+		 */
 		set_vfp_fpexc(0);
-		panic("%s: we shall not fault when FPU is enabled",
-		    __func__);
+		return 1;
 	}
 
 	/* we should be able to ignore old state of pcb_fpcpu ci_fpuproc */
