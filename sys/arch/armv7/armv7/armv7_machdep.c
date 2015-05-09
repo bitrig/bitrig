@@ -888,6 +888,12 @@ process_kernel_args(char *args)
 		case 's':
 			fl |= RB_SINGLE;
 			break;
+		case '1':
+			comcnspeed = B115200;
+			break;
+		case '9':
+			comcnspeed = B9600;
+			break;
 		default:
 			printf("unknown option `%c'\n", *cp);
 			break;
