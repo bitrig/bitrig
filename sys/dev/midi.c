@@ -1,4 +1,4 @@
-/*	$OpenBSD: midi.c,v 1.34 2015/03/14 03:38:46 jsg Exp $	*/
+/*	$OpenBSD: midi.c,v 1.35 2015/05/12 18:05:43 ratchov Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 Alexandre Ratchov
@@ -140,11 +140,11 @@ midiread(dev_t dev, struct uio *uio, int ioflag)
 		count = szmin(MIDIBUF_SIZE - mb->start, mb->used);
 		if (count > uio->uio_resid)
 			count = uio->uio_resid;
-		error = uiomove(mb->data + mb->start, count, uio);
-		if (error) {
-			mtx_leave(&audio_lock);
+		mtx_leave(&audio_lock);
+		error = uiomovei(mb->data + mb->start, count, uio);
+		if (error)
 			return error;
-		}
+		mtx_enter(&audio_lock);
 		MIDIBUF_REMOVE(mb, count);
 	}
 	mtx_leave(&audio_lock);
@@ -245,12 +245,13 @@ midiwrite(dev_t dev, struct uio *uio, int ioflag)
 	 * in the buffer to store at least one byte. If not then dont
 	 * start the write process.
 	 */
-
-	if ((ioflag & IO_NDELAY) && MIDIBUF_ISFULL(mb) && (uio->uio_resid > 0))
+	mtx_enter(&audio_lock);
+	if ((ioflag & IO_NDELAY) && MIDIBUF_ISFULL(mb) && (uio->uio_resid > 0)) {
+		mtx_leave(&audio_lock);
 		return EWOULDBLOCK;
+	}
 
 	while (uio->uio_resid > 0) {
-		mtx_enter(&audio_lock);
 		while (MIDIBUF_ISFULL(mb)) {
 			if (ioflag & IO_NDELAY) {
 				/*
@@ -276,15 +277,15 @@ midiwrite(dev_t dev, struct uio *uio, int ioflag)
 		count = szmin(MIDIBUF_SIZE - MIDIBUF_END(mb), MIDIBUF_AVAIL(mb));
 		if (count > uio->uio_resid)
 			count = uio->uio_resid;
-		error = uiomove(mb->data + MIDIBUF_END(mb), count, uio);
-		if (error) {
-			mtx_leave(&audio_lock);
+		mtx_leave(&audio_lock);
+		error = uiomovei(mb->data + MIDIBUF_END(mb), count, uio);
+		if (error)
 			return error;
-		}
+		mtx_enter(&audio_lock);
 		mb->used += count;
 		midi_out_start(sc);
-		mtx_leave(&audio_lock);
 	}
+	mtx_leave(&audio_lock);
 	return 0;
 }
 
