@@ -1,0 +1,126 @@
+commit 7ed188e08045892313d8f06523762533939e1ffe
+Author: Patrick Wildt <patrick@blueri.se>
+Date:   Tue May 5 09:28:16 2015 +0200
+
+    libc++abi: add .fpu directives to ARM unwind save & restore functions.
+    
+    This makes libc++abi compile after removing NEON support. From upstream.
+
+diff --git a/contrib/libc++abi/src/Unwind/UnwindRegistersRestore.S b/contrib/libc++abi/src/Unwind/UnwindRegistersRestore.S
+index 8c87d46..efc5257 100644
+--- a/contrib/libc++abi/src/Unwind/UnwindRegistersRestore.S
++++ b/contrib/libc++abi/src/Unwind/UnwindRegistersRestore.S
+@@ -347,8 +347,8 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm20restoreCoreAndJu
+ @  values pointer is in r0
+ @
+   .p2align 2
++  .fpu vfpv3-d16
+ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFLDMDEPd)
+-#if defined(__ARM_FP)
+   @ VFP and iwMMX instructions are only available when compiling with the flags
+   @ that enable them. We do not want to do that in the library (because we do not
+   @ want the compiler to generate instructions that access those) but this is
+@@ -356,12 +356,7 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFL
+   @ these registers implies they are, actually, available on the target, so
+   @ it's ok to execute.
+   @ So, generate the instruction using the corresponding coprocessor mnemonic.
+-#if __ARM_ARCH < 7
+-  ldc p11, cr0, [r0], {0x20}  @ fldmiad r0, {d0-d15}
+-#else
+   vldmia r0, {d0-d15}
+-#endif
+-#endif
+   JMP(lr)
+ 
+ @
+@@ -371,14 +366,9 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFL
+ @  values pointer is in r0
+ @
+   .p2align 2
++  .fpu vfpv3-d16
+ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFLDMXEPd)
+-#if defined(__ARM_FP)
+-#if __ARM_ARCH < 7
+-  ldc p11, cr0, [r0], {0x21}  @ fldmiax r0, {d0-d15}
+-#else
+   vldmia r0, {d0-d15} @ fldmiax is deprecated in ARMv7+ and now behaves like vldmia
+-#endif
+-#endif
+   JMP(lr)
+ 
+ @
+@@ -388,14 +378,9 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm19restoreVFPWithFL
+ @  values pointer is in r0
+ @
+   .p2align 2
++  .fpu vfpv3
+ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm12restoreVFPv3EPd)
+-#if defined(__ARM_FP)
+-#ifndef __ARM_NEON
+-  ldcl p11, cr0, [r0], {0x20}  @ vldm r0, {d16-d31}
+-#else
+   vldmia r0, {d16-d31}
+-#endif
+-#endif
+   JMP(lr)
+ 
+ @
+diff --git a/contrib/libc++abi/src/Unwind/UnwindRegistersSave.S b/contrib/libc++abi/src/Unwind/UnwindRegistersSave.S
+index de5da70..6eeb217 100644
+--- a/contrib/libc++abi/src/Unwind/UnwindRegistersSave.S
++++ b/contrib/libc++abi/src/Unwind/UnwindRegistersSave.S
+@@ -326,14 +326,9 @@ DEFINE_LIBUNWIND_FUNCTION(unw_getcontext)
+ @  values pointer is in r0
+ @
+   .p2align 2
++  .fpu vfpv3-d16
+ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMDEPd)
+-#if defined(__ARM_FP)
+-#if __ARM_ARCH < 7
+-  stc p11, cr0, [r0], {0x20}  @ fstmiad r0, {d0-d15}
+-#else
+   vstmia r0, {d0-d15}
+-#endif
+-#endif
+   JMP(lr)
+ 
+ @
+@@ -343,14 +338,9 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMD
+ @  values pointer is in r0
+ @
+   .p2align 2
++  .fpu vfpv3-d16
+ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMXEPd)
+-#if defined(__ARM_FP)
+-#if __ARM_ARCH < 7
+-  stc p11, cr0, [r0], {0x21}  @ fstmiax r0, {d0-d15}
+-#else
+   vstmia r0, {d0-d15} @ fstmiax is deprecated in ARMv7+ and now behaves like vstmia
+-#endif
+-#endif
+   JMP(lr)
+ 
+ @
+@@ -360,8 +350,8 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm16saveVFPWithFSTMX
+ @  values pointer is in r0
+ @
+   .p2align 2
++  .fpu vfpv3
+ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm9saveVFPv3EPd)
+-#if defined(__ARM_FP)
+   @ VFP and iwMMX instructions are only available when compiling with the flags
+   @ that enable them. We do not want to do that in the library (because we do not
+   @ want the compiler to generate instructions that access those) but this is
+@@ -369,12 +359,7 @@ DEFINE_LIBUNWIND_PRIVATE_FUNCTION(_ZN9libunwind13Registers_arm9saveVFPv3EPd)
+   @ these registers implies they are, actually, available on the target, so
+   @ it's ok to execute.
+   @ So, generate the instructions using the corresponding coprocessor mnemonic.
+-#ifndef __ARM_NEON
+-  stcl p11, cr0, [r0], {0x20}  @ vstm r0, {d16-d31}
+-#else
+   vstmia r0, {d16-d31}
+-#endif
+-#endif
+   JMP(lr)
+ 
+ @
