@@ -1,4 +1,4 @@
-#	$OpenBSD: sys.mk,v 1.71 2015/01/01 15:50:27 deraadt Exp $
+#	$OpenBSD: sys.mk,v 1.72 2015/05/14 02:56:01 jsg Exp $
 #	$NetBSD: sys.mk,v 1.27 1996/04/10 05:47:19 mycroft Exp $
 #	@(#)sys.mk	5.11 (Berkeley) 3/13/91
 
@@ -21,21 +21,23 @@ COMPILER_VERSION?=clang
 CPP?=		cpp
 CPPFLAGS?=
 
+PIPE?=		-pipe
+
 .if ${COMPILER_VERSION:L} == "gcc4"
 CC?=		cc
 CXX?=		c++
 HOSTCC?=	cc
 OPTLVL?=	-O2
-CFLAGS?=	${OPTLVL}
-CXXFLAGS?=	${OPTLVL}
+CFLAGS?=	${OPTLVL} ${PIPE} ${DEBUG}
+CXXFLAGS?=	${OPTLVL} ${PIPE} ${DEBUG}
 .else
 # XXX remove -W ones once stand is fixed
 CC?=		clang
 CXX?=		clang++
 HOSTCC?=	clang
 OPTLVL?=	-O3
-CFLAGS?=	${OPTLVL}
-CXXFLAGS?=	${OPTLVL}
+CFLAGS?=	${OPTLVL} ${PIPE} ${DEBUG}
+CXXFLAGS?=	${OPTLVL} ${PIPE} ${DEBUG}
 .endif
 
 AR?=		ar
@@ -50,13 +52,9 @@ LINK.s?=	${CC} ${AFLAGS} ${LDFLAGS}
 COMPILE.S?=	${CC} ${AFLAGS} ${CPPFLAGS} -c
 LINK.S?=	${CC} ${AFLAGS} ${CPPFLAGS} ${LDFLAGS}
 
-PIPE?=		-pipe
-
-CFLAGS+=	${PIPE} ${DEBUG}
 COMPILE.c?=	${CC} ${CFLAGS} ${CPPFLAGS} -c
 LINK.c?=	${CC} ${CFLAGS} ${CPPFLAGS} ${LDFLAGS}
 
-CXXFLAGS?=	${PIPE} ${DEBUG}
 COMPILE.cc?=	${CXX} ${CXXFLAGS} ${CPPFLAGS} -c
 LINK.cc?=	${CXX} ${CXXFLAGS} ${CPPFLAGS} ${LDFLAGS}
 
