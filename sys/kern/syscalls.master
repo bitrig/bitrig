@@ -561,3 +561,4 @@
 328	STD		{ int sys_uuidgen(struct uuid *store, int count); }
 329	STD NOLOCK	{ void sys___set_tcb(void *tcb); }
 330	STD NOLOCK	{ void *sys___get_tcb(void); }
+331	STD		{ int sys_pivot_root(const char *root_new, const char *root_old); }

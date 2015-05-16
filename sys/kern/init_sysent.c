@@ -750,5 +750,7 @@ struct sysent sysent[] = {
 	    sys___set_tcb },			/* 329 = __set_tcb */
 	{ 0, 0, SY_NOLOCK | 0,
 	    sys___get_tcb },			/* 330 = __get_tcb */
+	{ 2, s(struct sys_pivot_root_args), 0,
+	    sys_pivot_root },			/* 331 = pivot_root */
 };
 

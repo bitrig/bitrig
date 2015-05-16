@@ -45,7 +45,7 @@ ASM=	__get_tcb.o __getcwd.o __semctl.o __set_tcb.o __syscall.o \
 	mknod.o mknodat.o mlock.o mlockall.o mount.o mprotect.o \
 	msgctl.o msgget.o msgrcv.o msgsnd.o msync.o munlock.o \
 	munlockall.o munmap.o nanosleep.o nfssvc.o \
-	open.o openat.o pathconf.o pipe.o pipe2.o \
+	open.o openat.o pathconf.o pipe.o pipe2.o pivot_root.o \
 	poll.o ppoll.o profil.o pselect.o \
 	quotactl.o read.o readlink.o readlinkat.o readv.o reboot.o \
 	recvfrom.o recvmsg.o rename.o renameat.o revoke.o rmdir.o \

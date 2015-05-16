@@ -391,4 +391,5 @@ char *syscallnames[] = {
 	"uuidgen",			/* 328 = uuidgen */
 	"__set_tcb",			/* 329 = __set_tcb */
 	"__get_tcb",			/* 330 = __get_tcb */
+	"pivot_root",			/* 331 = pivot_root */
 };

@@ -36,6 +36,31 @@
  *
  *	@(#)vfs_syscalls.c	8.28 (Berkeley) 12/10/94
  */
+/*-
+ * Copyright (c) 2012 Adrian Steinmann <ast at NetBSD org>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -2996,3 +3021,258 @@ sys_pwritev(struct proc *p, void *v, register_t *retval)
 	    1, &offset, retval));
 }
 
+/*
+ * Pseudocode for pivot_root(root_new, root_old)
+ *   root_new: absolute path to new root
+ *   root_old: absolute path under root_new where old root gets mounted
+ *
+ * Get rootvnode from point of view of process, return EPERM
+ * unless it the real rootvnode (i.e., not in chroot env)
+ *
+ * Get ovp (vnode of root_old)
+ *   Exit if not a suitable new mountpoint for old root
+ * Get nvp (vnode of root_new)
+ *   Exit if not a mountpoint distinct from root
+ *   Exit if ovp not under nvp
+ *
+ * Chdir to new root when cwd is not under new root
+ * Move nmp (mountpoint of new root) to head of mountlist
+ * Adjust mount information for all mountpoints
+ * Update nvp information
+ * Release nvp lock, but keeping original rootvnode lock
+ * Notify all processes that rootvnode has changed
+ */
+
+int
+sys_pivot_root(struct proc *p, void *v, register_t *retval)
+{
+	struct sys_pivot_root_args /* {
+		syscallarg(const char *) root_new;
+		syscallarg(const char *) root_old;
+	} */ *uap = v;
+	const char *root_new, *root_old;
+	char npath[MNAMELEN], opath[MNAMELEN];
+	struct nameidata nd;
+
+	struct vnode *orootvnode = NULL, *ovp = NULL, *nvp = NULL;
+	struct mount *omp, *nmp, *mp;
+	size_t nplen;
+	int error = 0;
+
+	/*
+	 * Don't allow pivot_root from a chroot environment
+	 */
+	if (usermount == 0 && (error = suser(p, 0)))
+		return (error);
+	if (p->p_fd->fd_rdir)
+		return (EINVAL);
+
+	/*
+	 * Copy mountpoint strings from user space.
+	 */
+	root_old = SCARG(uap, root_old);
+	memset(opath, 0, sizeof(opath));
+	if ((error = copyinstr(root_old, opath, sizeof(opath), NULL)) != 0) {
+		goto done;
+	}
+	root_new = SCARG(uap, root_new);
+	memset(npath, 0, sizeof(npath));
+	if ((error = copyinstr(root_new, npath, sizeof(npath), NULL)) != 0) {
+		goto done;
+	}
+
+	/*
+	 * Get vnode to be covered
+	 */
+	NDINIT(&nd, LOOKUP, FOLLOW, UIO_SYSSPACE, "/", p);
+	if ((error = namei(&nd)) != 0) {
+		orootvnode = NULL;
+		goto done;
+	}
+	orootvnode = nd.ni_vp;
+	if (orootvnode != rootvnode) {
+		error = EPERM;
+		goto done;
+	}
+
+	/*
+	 * root_old must be a suitable mountpoint, currently nothing mounted
+	 */
+	NDINIT(&nd, LOOKUP, FOLLOW, UIO_SYSSPACE, opath, p);
+	if ((error = namei(&nd)) != 0) {
+		ovp = NULL;
+		goto done;
+	}
+	ovp = nd.ni_vp;
+	if (ovp == NULL) {
+		error = EINVAL;
+		goto done;
+	}
+	omp = ovp->v_mount;
+
+	if (ovp->v_type != VDIR)
+		error = ENOTDIR;
+	else if ((omp->mnt_flag & MNT_ROOTFS) != 0)
+		error = EBUSY;
+	else if ((ovp->v_flag & VROOT) != 0)
+		error = EBUSY;
+	else if (omp->mnt_vnodecovered == NULL)
+		error = EINVAL;
+	if (error != 0)
+		goto done;
+
+	/*
+	 * root_new must to be a mountpoint other than root
+	 */
+	NDINIT(&nd, LOOKUP, FOLLOW, UIO_SYSSPACE, npath, p);
+	if ((error = namei(&nd)) != 0) {
+		nvp = NULL;
+		goto done;
+	}
+	nvp = nd.ni_vp;
+	if (nvp == NULL) {
+		error = EINVAL;
+		goto done;
+	}
+	nmp = nvp->v_mount;
+
+	if (nvp->v_type != VDIR)
+		error = ENOTDIR;
+	else if ((nmp->mnt_flag & MNT_ROOTFS) != 0)
+		error = EINVAL;
+	else if (nmp->mnt_vnodecovered == NULL)
+		error = EINVAL;
+	else if (nmp->mnt_vnodecovered->v_mountedhere == NULL)
+		error = ENOENT;
+	else if ((nvp->v_flag & VROOT) == 0)
+		error = EBUSY;
+	if (error != 0)
+		goto done;
+
+	/*
+	 * Check if the caller used normalized absolute pathnames
+	 * (i.e., realpath) for the system call; further check if
+	 * root_old is actually under root_new.
+	 */
+	nplen = strlen(npath);
+	if ((strlen(opath) <= nplen) || (opath[nplen] != '/') ||
+	    strncmp(opath, npath, nplen) || !vn_isunder(ovp, nvp, p)) {
+		error = EINVAL;
+		goto done;
+	}
+
+	/*
+	 * Reinsert new root fs at mountlist head (where it is expected)
+	 * and adjust statfs and mount point information where applicable.
+	 */
+	TAILQ_REMOVE(&mountlist, nmp, mnt_list);
+	TAILQ_INSERT_HEAD(&mountlist, nmp, mnt_list);
+	TAILQ_FOREACH(mp, &mountlist, mnt_list) {
+		char path[MNAMELEN];
+		char *oldp = mp->mnt_stat.f_mntonname;
+		struct vnode *vp = NULL;
+		memset(path, 0, sizeof(path));
+		if (mp == nmp) {
+			/* move new root to top */
+			strlcpy(path, "/", sizeof(path));
+			vn_lock(mp->mnt_vnodecovered, LK_EXCLUSIVE | LK_RETRY, p);
+			vp = mp->mnt_vnodecovered;
+			error = vinvalbuf(nvp, 0, NOCRED, p, 0, 0);
+			if (error) {
+				VOP_UNLOCK(vp, 0);
+				goto done;
+			}
+			cache_purge(vp);
+			nmp->mnt_vnodecovered->v_mountedhere = NULL;
+			mp->mnt_vnodecovered = NULL;
+			mp->mnt_flag |= MNT_ROOTFS;
+			/* unlock and dereference vnode covered by new root */
+			vput(vp);
+		} else if (mp == rootvnode->v_mount) {
+			/* move old root under opath */
+			KASSERT(mp != omp);
+			strlcpy(path, opath + nplen, sizeof(path));
+			vn_lock(rootvnode, LK_EXCLUSIVE | LK_RETRY, p);
+			error = vinvalbuf(rootvnode, 0, NOCRED, p, 0, 0);
+			if (error) {
+				VOP_UNLOCK(rootvnode, 0);
+				goto done;
+			}
+			cache_purge(rootvnode);
+			KASSERT(rootvnode->v_mountedhere == NULL);
+			/* needed in checkdirs() */
+			rootvnode->v_mountedhere = omp;
+			/* keep a reference to rootvnode for checkdirs() */
+			VOP_UNLOCK(rootvnode, 0);
+			vn_lock(ovp, LK_EXCLUSIVE | LK_RETRY, p);
+			error = vinvalbuf(ovp, 0, NOCRED, p, 0, 0);
+			if (error) {
+				VOP_UNLOCK(ovp, 0);
+				goto done;
+			}
+			cache_purge(ovp);
+			KASSERT(mp->mnt_vnodecovered == NULL);
+			mp->mnt_vnodecovered = ovp;
+			vref(ovp);
+			ovp->v_mountedhere = mp;
+			VOP_UNLOCK(ovp, 0);
+			mp->mnt_flag &= ~MNT_ROOTFS;
+		} else {
+			/* adjust paths for new root mounts under old root */
+			if (((strlen(oldp) > nplen) &&
+			    (strncmp(oldp, npath, nplen) == 0) &&
+			    (oldp[nplen] == '/'))) {
+				strlcpy(path, oldp + nplen, sizeof(path));
+			} else {
+				strlcpy(path, opath + nplen, sizeof(path));
+				strlcat(path, oldp, sizeof(path));
+			}
+		}
+		memset(oldp, 0, sizeof(mp->mnt_stat.f_mntonname));
+		strlcpy(oldp, path, sizeof(mp->mnt_stat.f_mntonname));
+		cache_purgevfs(mp);
+	}
+
+	/*
+	 * fixup old rootvnode
+	 */
+	vn_lock(ovp, LK_EXCLUSIVE | LK_RETRY, p);
+	KASSERT(ovp->v_mount == omp);
+
+	vn_lock(orootvnode, LK_EXCLUSIVE | LK_RETRY, p);
+	KASSERT(orootvnode->v_mount != omp);
+
+	cache_purge(orootvnode);
+	cache_purgevfs(orootvnode->v_mount);
+
+	cache_purge(ovp);
+	cache_purgevfs(omp);
+
+	VOP_UNLOCK(orootvnode, 0);
+	VOP_UNLOCK(ovp, 0);
+
+	/*
+	 * Adjust cwd for all processes; note that when checkdirs()
+	 * is called with rootvnode, the latter is redefined to nvp, i.e.
+	 * VFS_ROOT(rootvnode->v_mountedhere,...), after all the cwd
+	 * adjustments have been made - see checkdirs()
+	 */
+
+	KASSERT(rootvnode != nvp);
+	checkdirs(rootvnode);
+	KASSERT(rootvnode == nvp);
+
+	orootvnode->v_mountedhere = NULL;
+
+done:
+	if (orootvnode != NULL)
+		vrele(orootvnode);
+
+	if (ovp != NULL)
+		vrele(ovp);
+
+	if (nvp != NULL)
+		vrele(nvp);
+
+	return error;
+}

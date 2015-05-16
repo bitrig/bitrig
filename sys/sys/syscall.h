@@ -692,4 +692,7 @@
 /* syscall: "__get_tcb" ret: "void *" args: */
 #define	SYS___get_tcb	330
 
-#define	SYS_MAXSYSCALL	331
+/* syscall: "pivot_root" ret: "int" args: "const char *" "const char *" */
+#define	SYS_pivot_root	331
+
+#define	SYS_MAXSYSCALL	332

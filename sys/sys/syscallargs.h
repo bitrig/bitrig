@@ -1073,6 +1073,11 @@ struct sys___set_tcb_args {
 	syscallarg(void *) tcb;
 };
 
+struct sys_pivot_root_args {
+	syscallarg(const char *) root_new;
+	syscallarg(const char *) root_old;
+};
+
 /*
  * System call prototypes.
  */
@@ -1318,3 +1323,4 @@ int	sys_unlinkat(struct proc *, void *, register_t *);
 int	sys_uuidgen(struct proc *, void *, register_t *);
 int	sys___set_tcb(struct proc *, void *, register_t *);
 int	sys___get_tcb(struct proc *, void *, register_t *);
+int	sys_pivot_root(struct proc *, void *, register_t *);
