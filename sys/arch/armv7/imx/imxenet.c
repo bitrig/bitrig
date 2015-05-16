@@ -499,14 +499,17 @@ imxenet_chip_init(struct imxenet_softc *sc)
 		imxenet_miibus_writereg(dev, phy, 0x0e, 0x03ff);
 		break;
 	case BOARD_ID_IMX6_SABRELITE:	/* Micrel KSZ9021 */
-		/* min rx data delay */
+		/* TXEN_SKEW_PS/TXC_SKEW_PS/RXDV_SKEW_PS/RXC_SKEW_PS */
+		imxenet_miibus_writereg(dev, phy, 0x0b, 0x8104);
+		imxenet_miibus_writereg(dev, phy, 0x0c, 0xf0f0);
+
+		/* RXD0_SKEW_PS/RXD1_SKEW_PS/RXD2_SKEW_PS/RXD3_SKEW_PS */
 		imxenet_miibus_writereg(dev, phy, 0x0b, 0x8105);
 		imxenet_miibus_writereg(dev, phy, 0x0c, 0x0000);
 
-		/* max rx/tx clock delay, min rx/tx control delay */
-		imxenet_miibus_writereg(dev, phy, 0x0b, 0x8104);
-		imxenet_miibus_writereg(dev, phy, 0x0c, 0xf0f0);
-		imxenet_miibus_writereg(dev, phy, 0x0b, 0x104);
+		/* TXD0_SKEW_PS/TXD1_SKEW_PS/TXD2_SKEW_PS/TXD3_SKEW_PS */
+		imxenet_miibus_writereg(dev, phy, 0x0b, 0x8106);
+		imxenet_miibus_writereg(dev, phy, 0x0c, 0x0000);
 		break;
 	case BOARD_ID_IMX6_NOVENA:	/* Micrel KSZ9021 */
 		/* TXEN_SKEW_PS/TXC_SKEW_PS/RXDV_SKEW_PS/RXC_SKEW_PS */
