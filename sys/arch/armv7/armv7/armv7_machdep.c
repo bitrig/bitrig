@@ -384,6 +384,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	extern uint32_t esym; /* &_end if no symbols are loaded */
 	extern uint32_t eramdisk; /* zero if no ramdisk is loaded */
 	uint32_t kernel_end = eramdisk ? eramdisk : esym;
+	uint32_t initrd = 0, initrdsize = 0; /* initrd information from fdt */
 
 	/* early bus_space_map support */
 	struct bus_space tmp_bs_tag;
@@ -433,23 +434,39 @@ initarm(void *arg0, void *arg1, void *arg2)
 	}
 
 	if (fdt_init(config) && fdt_get_size(config) != 0) {
+		struct fdt_memory mem;
 		void *node;
+
+		node = fdt_find_node("/memory");
+		if (node == NULL || fdt_get_memory_address(node, 0, &mem))
+			panic("initarm: no memory specificed");
+
+		memstart = mem.addr;
+		memsize = mem.size;
+		physical_start = mem.addr;
+		physical_end = MIN(mem.addr + mem.size, (paddr_t)-PAGE_SIZE);
+
 		node = fdt_find_node("/chosen");
 		if (node != NULL) {
 			char *bootargs;
 			if (fdt_node_property(node, "bootargs", &bootargs))
 				process_kernel_args(bootargs);
-		}
-		node = fdt_find_node("/memory");
-		if (node != NULL) {
-			struct fdt_memory mem;
-			if (!fdt_get_memory_address(node, 0, &mem)) {
-				memstart = mem.addr;
-				memsize = mem.size;
-				physical_start = mem.addr;
-				physical_end = MIN(mem.addr + mem.size,
-				    (paddr_t)-PAGE_SIZE);
-			}
+
+			uint32_t einitrd = 0;
+			fdt_node_property_int(node,
+			    "linux,initrd-start", &initrd);
+			fdt_node_property_int(node,
+			    "linux,initrd-end", &einitrd);
+			initrdsize = einitrd - initrd;
+			if (initrd && einitrd && einitrd > initrd &&
+			    initrd > (esym + initrdsize -
+			    KERNEL_TEXT_BASE + physical_start)) {
+				kernel_end = eramdisk =
+				    round_page(esym) + round_page(initrdsize);
+				bootstrap_bs_map(NULL, (bus_addr_t)initrd,
+				    initrdsize, 0, (bus_space_handle_t *)&initrd);
+			} else
+				initrd = initrdsize = 0;
 		}
 	}
 
@@ -808,6 +825,12 @@ initarm(void *arg0, void *arg1, void *arg2)
 			ramdisk += PAGE_SIZE;
 			pramdisk += PAGE_SIZE;
 		}
+		/*
+		 * Copy u-boot-passed ramdisk now, if there's any.
+		 */
+		if (initrd && initrdsize)
+			memcpy((char *)round_page(esym), (char *)initrd,
+			    initrdsize);
 	}
 
 #ifdef DDB

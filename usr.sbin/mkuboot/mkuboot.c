@@ -46,6 +46,7 @@
 
 #define IH_TYPE_STANDALONE	1 /* Standalone */
 #define IH_TYPE_KERNEL		2 /* OS Kernel Image */
+#define IH_TYPE_RAMDISK		3 /* RAMDisk Image */
 #define IH_TYPE_SCRIPT		6 /* Script file */
 
 #define IH_COMP_NONE		0 /* No compression */
@@ -115,6 +116,7 @@ struct type_map {
 static const struct type_map typemap[] = {
     { IH_TYPE_STANDALONE,	"standalone" },
     { IH_TYPE_KERNEL,		"kernel" },
+    { IH_TYPE_RAMDISK,		"ramdisk" },
     { IH_TYPE_SCRIPT,		"script" },
     { 0, NULL }
 };
