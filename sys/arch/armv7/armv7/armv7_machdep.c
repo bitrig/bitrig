@@ -121,7 +121,6 @@
 
 #include <machine/db_machdep.h>
 #include <machine/bootconfig.h>
-#include <machine/machine_reg.h>
 #include <machine/bus.h>
 
 #include <arm/undefined.h>
@@ -348,7 +347,7 @@ copy_io_area_map(pd_entry_t *new_pd)
 	pd_entry_t *cur_pd = read_ttb();
 	vaddr_t va;
 
-	for (va = MACHINE_IO_AREA_VBASE;
+	for (va = 0xfd000000;
 	     (cur_pd[va>>L1_S_SHIFT] & L1_TYPE_MASK) == L1_TYPE_S;
 	     va += L1_S_SIZE) {
 

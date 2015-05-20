@@ -490,7 +490,6 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/limits.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/loadfile_machdep.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/lock.ph
-./usr/libdata/perl5/site_perl/arm-bitrig/armv7/machine_reg.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/math.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/mutex.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/armv7/param.ph

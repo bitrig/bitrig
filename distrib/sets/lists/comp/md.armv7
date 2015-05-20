@@ -84,7 +84,6 @@
 ./usr/include/armv7/limits.h
 ./usr/include/armv7/loadfile_machdep.h
 ./usr/include/armv7/lock.h
-./usr/include/armv7/machine_reg.h
 ./usr/include/armv7/math.h
 ./usr/include/armv7/mutex.h
 ./usr/include/armv7/param.h
