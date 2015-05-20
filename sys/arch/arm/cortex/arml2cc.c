@@ -1,4 +1,4 @@
-/* $OpenBSD: arml2cc.c,v 1.3 2013/06/14 23:58:30 patrick Exp $ */
+/* $OpenBSD: arml2cc.c,v 1.4 2015/05/20 00:39:16 jsg Exp $ */
 /*
  * Copyright (c) 2013 Patrick Wildt <patrick@blueri.se>
  *
