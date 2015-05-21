@@ -644,7 +644,7 @@
 ./usr/lib
 ./usr/lib/libc++.so.2.0
 ./usr/lib/libc++abi.so.2.0
-./usr/lib/libc.so.78.2
+./usr/lib/libc.so.78.3
 ./usr/lib/libcrypto.so.32.0
 ./usr/lib/libcurses.so.15.0
 ./usr/lib/libedit.so.6.2

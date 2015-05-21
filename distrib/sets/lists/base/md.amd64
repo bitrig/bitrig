@@ -1677,6 +1677,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/param.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/pciio.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/pipe.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/sys/pivot_root.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/poll.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/pool.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/proc.ph

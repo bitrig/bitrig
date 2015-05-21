@@ -1306,6 +1306,7 @@
 ./usr/include/sys/param.h
 ./usr/include/sys/pciio.h
 ./usr/include/sys/pipe.h
+./usr/include/sys/pivot_root.h
 ./usr/include/sys/poll.h
 ./usr/include/sys/pool.h
 ./usr/include/sys/proc.h
