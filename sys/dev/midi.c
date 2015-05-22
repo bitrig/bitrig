@@ -1,4 +1,4 @@
-/*	$OpenBSD: midi.c,v 1.39 2015/05/16 09:56:10 ratchov Exp $	*/
+/*	$OpenBSD: midi.c,v 1.40 2015/05/22 12:52:00 jsg Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 Alexandre Ratchov
@@ -108,7 +108,7 @@ int
 midiread(dev_t dev, struct uio *uio, int ioflag)
 {
 	struct midi_softc *sc;
-	struct midi_buffer *mb = &sc->inbuf;
+	struct midi_buffer *mb;
 	size_t count;
 	int error;
 
@@ -119,6 +119,7 @@ midiread(dev_t dev, struct uio *uio, int ioflag)
 		error = ENXIO;
 		goto done;
 	}
+	mb = &sc->inbuf;
 
 	/* if there is no data then sleep (unless IO_NDELAY flag is set) */
 	error = 0;
@@ -239,7 +240,7 @@ int
 midiwrite(dev_t dev, struct uio *uio, int ioflag)
 {
 	struct midi_softc *sc;
-	struct midi_buffer *mb = &sc->outbuf;
+	struct midi_buffer *mb;
 	size_t count;
 	int error;
 
@@ -250,6 +251,7 @@ midiwrite(dev_t dev, struct uio *uio, int ioflag)
 		error = ENXIO;
 		goto done;
 	}
+	mb = &sc->outbuf;
 
 	/*
 	 * If IO_NDELAY flag is set then check if there is enough room
