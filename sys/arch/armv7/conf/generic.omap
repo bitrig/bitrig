@@ -17,11 +17,12 @@ gpio*		at omgpio?
 gptimer*	at omap?		# general purpose timers
 dmtimer*	at omap?		# am335x dual mode timers
 ommmc*		at omap?		# SD/MMC card controller
+sdmmc*		at ommmc?
+omsdhc*		at omap?
+sdhc*		at omsdhc?
 cpsw*		at omap?
 
 ehci*		at omap?		# EHCI (shim)
 
 # onboard uarts
 com*		at omap?
-
-sdmmc*		at ommmc?		# SD/MMC bus

@@ -17,6 +17,11 @@ device ommmc: sdmmcbus
 attach ommmc at omap
 file	arch/armv7/omap/ommmc.c			ommmc
 
+device omsdhc {}
+attach omsdhc at omap
+attach sdhc at omsdhc with sdhc_omap
+file	arch/armv7/omap/omsdhc.c		omsdhc
+
 device cpsw: ether, ifnet, mii, ifmedia
 attach cpsw at omap
 file	arch/armv7/omap/if_cpsw.c		cpsw

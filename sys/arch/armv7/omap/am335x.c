@@ -232,13 +232,13 @@ struct armv7_dev am335x_devs[] = {
 	 * MMC
 	 */
 
-	{ .name = "ommmc",
+	{ .name = "omsdhc",
 	  .unit = 0,
 	  .mem = { { HSMMC0_ADDR, HSMMCx_SIZE } },
 	  .irq = { HSMMC0_IRQ }
 	},
 
-	{ .name = "ommmc",
+	{ .name = "omsdhc",
 	  .unit = 1,
 	  .mem = { { HSMMC1_ADDR, HSMMCx_SIZE } },
 	  .irq = { HSMMC1_IRQ }
