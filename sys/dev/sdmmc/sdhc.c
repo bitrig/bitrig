@@ -118,10 +118,14 @@ hwrite2(struct sdhc_host *hp, bus_size_t o, uint16_t val)
 	HWRITE1((hp), (reg), HREAD1((hp), (reg)) & ~(bits))
 #define HCLR2(hp, reg, bits)						\
 	HWRITE2((hp), (reg), HREAD2((hp), (reg)) & ~(bits))
+#define HCLR4(hp, reg, bits)						\
+	HWRITE4((hp), (reg), HREAD4((hp), (reg)) & ~(bits))
 #define HSET1(hp, reg, bits)						\
 	HWRITE1((hp), (reg), HREAD1((hp), (reg)) | (bits))
 #define HSET2(hp, reg, bits)						\
 	HWRITE2((hp), (reg), HREAD2((hp), (reg)) | (bits))
+#define HSET4(hp, reg, bits)						\
+	HWRITE4((hp), (reg), HREAD4((hp), (reg)) | (bits))
 
 int	sdhc_host_reset(sdmmc_chipset_handle_t);
 u_int32_t sdhc_host_ocr(sdmmc_chipset_handle_t);
@@ -474,10 +478,12 @@ sdhc_host_reset(sdmmc_chipset_handle_t sch)
 		HWRITE4(hp, SDHC_NINTR_STATUS_EN, imask);
 		imask ^=
 		    (SDHC_EINTR_STATUS_MASK ^ SDHC_EINTR_SIGNAL_MASK) << 16;
+		imask ^= SDHC_BUFFER_READ_READY ^ SDHC_BUFFER_WRITE_READY;
 		HWRITE4(hp, SDHC_NINTR_SIGNAL_EN, imask);
 	} else {
 		HWRITE2(hp, SDHC_NINTR_STATUS_EN, imask);
 		HWRITE2(hp, SDHC_EINTR_STATUS_EN, SDHC_EINTR_STATUS_MASK);
+		imask ^= SDHC_BUFFER_READ_READY ^ SDHC_BUFFER_WRITE_READY;
 		HWRITE2(hp, SDHC_NINTR_SIGNAL_EN, imask);
 		HWRITE2(hp, SDHC_EINTR_SIGNAL_EN, SDHC_EINTR_SIGNAL_MASK);
 	}
@@ -1083,22 +1089,30 @@ int
 sdhc_transfer_data_pio(struct sdhc_host *hp, struct sdmmc_command *cmd)
 {
 	u_char *datap = cmd->c_data;
-	int i, datalen, mask;
+	int i, datalen, imask, pmask;
 	int error = 0;
 
 	datalen = cmd->c_datalen;
-	mask = ISSET(cmd->c_flags, SCF_CMD_READ) ?
+	pmask = ISSET(cmd->c_flags, SCF_CMD_READ) ?
 	    SDHC_BUFFER_READ_ENABLE : SDHC_BUFFER_WRITE_ENABLE;
+	imask = ISSET(cmd->c_flags, SCF_CMD_READ) ?
+	    SDHC_BUFFER_READ_READY : SDHC_BUFFER_WRITE_READY;
 
 	while (datalen > 0) {
-		if (!sdhc_wait_intr(hp, SDHC_BUFFER_READ_READY|
-		    SDHC_BUFFER_WRITE_READY, SDHC_BUFFER_TIMEOUT)) {
-			error = ETIMEDOUT;
-			break;
-		}
+		if (!ISSET(HREAD4(hp, SDHC_PRESENT_STATE), imask)) {
+			if (ISSET(hp->sc->sc_flags, SDHC_F_32BIT_ACCESS)) {
+				HSET4(hp, SDHC_NINTR_SIGNAL_EN, imask);
+			} else {
+				HSET2(hp, SDHC_NINTR_SIGNAL_EN, imask);
+			}
+			if (!sdhc_wait_intr(hp, imask, SDHC_BUFFER_TIMEOUT)) {
+				error = ETIMEDOUT;
+				break;
+			}
 
-		if ((error = sdhc_wait_state(hp, mask, mask)) != 0)
-			break;
+			if ((error = sdhc_wait_state(hp, pmask, pmask)) != 0)
+				break;
+		}
 
 		i = MIN(datalen, cmd->c_blklen);
 		if (ISSET(cmd->c_flags, SCF_CMD_READ))
@@ -1223,8 +1237,9 @@ sdhc_wait_intr(struct sdhc_host *hp, int mask, int timo)
 	    hp->intr_error_status));
 	
 	/* Command timeout has higher priority than command complete. */
-	if (ISSET(status, SDHC_ERROR_INTERRUPT)) {
+	if (ISSET(status, SDHC_ERROR_INTERRUPT) || hp->intr_error_status) {
 		hp->intr_error_status = 0;
+		hp->intr_status &= ~SDHC_ERROR_INTERRUPT;
 		(void)sdhc_soft_reset(hp, SDHC_RESET_DAT|SDHC_RESET_CMD);
 		status = 0;
 	}
