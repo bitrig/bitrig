@@ -30,6 +30,10 @@ struct sdhc_softc {
 	uint32_t		sc_flags;
 	uint32_t		sc_caps;
 	uint32_t		sc_clkbase;
+
+	int (*sc_vendor_rod)(struct sdhc_softc *, int);
+	int (*sc_vendor_card_detect)(struct sdhc_softc *);
+	int (*sc_vendor_bus_clock)(struct sdhc_softc *, int);
 };
 
 /* Host controller functions called by the attachment driver. */

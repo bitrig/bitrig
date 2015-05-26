@@ -482,6 +482,10 @@ int
 sdhc_card_detect(sdmmc_chipset_handle_t sch)
 {
 	struct sdhc_host *hp = sch;
+
+	if (hp->sc->sc_vendor_card_detect)
+		return (*hp->sc->sc_vendor_card_detect)(hp->sc);
+
 	return ISSET(HREAD4(hp, SDHC_PRESENT_STATE), SDHC_CARD_INSERTED) ?
 	    1 : 0;
 }
@@ -608,6 +612,12 @@ sdhc_bus_clock(sdmmc_chipset_handle_t sch, int freq)
 		printf("sdhc_sdclk_frequency_select: command in progress\n");
 #endif
 
+	if (hp->sc->sc_vendor_bus_clock) {
+		error = (*hp->sc->sc_vendor_bus_clock)(hp->sc, freq);
+		if (error != 0)
+			goto ret;
+	}
+
 	/*
 	 * Stop SD clock before changing the frequency.
 	 */
@@ -696,6 +706,11 @@ sdhc_bus_width(sdmmc_chipset_handle_t sch, int width)
 int
 sdhc_bus_rod(sdmmc_chipset_handle_t sch, int on)
 {
+	struct sdhc_host *hp = (struct sdhc_host *)sch;
+
+	if (hp->sc->sc_vendor_rod)
+		return (*hp->sc->sc_vendor_rod)(hp->sc, on);
+
 	return 0;
 }
 
