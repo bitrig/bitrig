@@ -3465,15 +3465,18 @@ pmap_pte_init_generic(void)
 void
 pmap_pte_init_armv7(void)
 {
+	uint32_t cachereg;
+
 	pmap_pte_init_generic();
 
 	pte_l1_s_cache_mode = ARM_L1S_NRML_IWBA_OWBA;
 	pte_l2_l_cache_mode = ARM_L2L_NRML_IWBA_OWBA;
 	pte_l2_s_cache_mode = ARM_L2S_NRML_IWBA_OWBA;
 
-	pte_l1_s_cache_mode_pt = ARM_L1S_NRML_IWBA_OWBA;
-	pte_l2_l_cache_mode_pt = ARM_L2L_NRML_IWBA_OWBA;
-	pte_l2_s_cache_mode_pt = ARM_L2S_NRML_IWBA_OWBA;
+	/* XXX: use write-through until write-back is fixed */
+	pte_l1_s_cache_mode_pt = ARM_L1S_NRML_IWT_OWT;
+	pte_l2_l_cache_mode_pt = ARM_L2L_NRML_IWT_OWT;
+	pte_l2_s_cache_mode_pt = ARM_L2S_NRML_IWT_OWT;
 
 	pte_l1_s_cache_mask = L1_S_CACHE_MASK_v7;
 	pte_l2_l_cache_mask = L2_L_CACHE_MASK_v7;
@@ -3487,7 +3490,14 @@ pmap_pte_init_armv7(void)
 	pte_l1_c_proto = L1_C_PROTO_v7;
 	pte_l2_s_proto = L2_S_PROTO_v7;
 
-	pmap_needs_pte_sync = 1;
+	/* probe L1 dcache, check for write through support */
+	__asm volatile("mcr p15, 2, %0, c0, c0, 0" :: "r" (0) );
+	__asm volatile("mrc p15, 1, %0, c0, c0, 0" : "=r" (cachereg) );
+	if ((cachereg & 0x80000000) == 0) {
+		pte_l1_s_cache_mode_pt = ARM_L1S_NRML_NOCACHE;
+		pte_l2_l_cache_mode_pt = ARM_L2L_NRML_NOCACHE;
+		pte_l2_s_cache_mode_pt = ARM_L2S_NRML_NOCACHE;
+	}
 }
 
 uint32_t pmap_alias_dist;
