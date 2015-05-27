@@ -300,7 +300,10 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	saa.sct = &sdhc_functions;
 	saa.sch = hp;
 	saa.clkmax = hp->clkbase;
-	if (hp->specver == SDHC_SPEC_VERS_300)
+	if (hp->sc->sc_clkmsk != 0)
+		saa.clkmin = hp->clkbase / (hp->sc->sc_clkmsk >>
+		    (ffs(hp->sc->sc_clkmsk) - 1));
+	else if (hp->specver == SDHC_SPEC_VERS_300)
 		saa.clkmin = hp->clkbase / 0x3ff;
 	else
 		saa.clkmin = hp->clkbase / 256;
@@ -568,6 +571,14 @@ sdhc_clock_divisor(struct sdhc_host *hp, u_int freq, u_int *divp)
 {
 	u_int div;
 
+	if (hp->sc->sc_clkmsk != 0) {
+		div = howmany(hp->clkbase, freq);
+		if (div > (hp->sc->sc_clkmsk >> (ffs(hp->sc->sc_clkmsk) - 1)))
+			return false;
+		*divp = div << (ffs(hp->sc->sc_clkmsk) - 1);
+		//freq = hp->clkbase / div;
+		return true;
+	}
 	if (hp->specver == SDHC_SPEC_VERS_300) {
 		div = howmany(hp->clkbase, freq);
 		div = div > 1 ? howmany(div, 2) : 0;
