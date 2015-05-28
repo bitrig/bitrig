@@ -232,7 +232,7 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	/*
 	 * Determine the base clock frequency. (2.2.24)
 	 */
-	if (hp->specver == SDHC_SPEC_VERS_300) {
+	if (hp->specver >= SDHC_SPEC_VERS_300) {
 		hp->clkbase = SDHC_BASE_V3_FREQ_KHZ(caps);
 	} else {
 		hp->clkbase = SDHC_BASE_FREQ_KHZ(caps);
@@ -303,7 +303,7 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	if (hp->sc->sc_clkmsk != 0)
 		saa.clkmin = hp->clkbase / (hp->sc->sc_clkmsk >>
 		    (ffs(hp->sc->sc_clkmsk) - 1));
-	else if (hp->specver == SDHC_SPEC_VERS_300)
+	else if (hp->specver >= SDHC_SPEC_VERS_300)
 		saa.clkmin = hp->clkbase / 0x3ff;
 	else
 		saa.clkmin = hp->clkbase / 256;
@@ -579,7 +579,7 @@ sdhc_clock_divisor(struct sdhc_host *hp, u_int freq, u_int *divp)
 		//freq = hp->clkbase / div;
 		return true;
 	}
-	if (hp->specver == SDHC_SPEC_VERS_300) {
+	if (hp->specver >= SDHC_SPEC_VERS_300) {
 		div = howmany(hp->clkbase, freq);
 		div = div > 1 ? howmany(div, 2) : 0;
 		if (div > 0x3ff)
