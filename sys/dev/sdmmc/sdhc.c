@@ -806,6 +806,15 @@ sdhc_exec_command(sdmmc_chipset_handle_t sch, struct sdmmc_command *cmd)
 			cmd->c_resp[1] = HREAD4(hp, SDHC_RESPONSE + 4);
 			cmd->c_resp[2] = HREAD4(hp, SDHC_RESPONSE + 8);
 			cmd->c_resp[3] = HREAD4(hp, SDHC_RESPONSE + 12);
+			if (ISSET(hp->sc->sc_flags, SDHC_F_RSP136_CRC)) {
+				cmd->c_resp[0] = (cmd->c_resp[0] >> 8) |
+				    (cmd->c_resp[1] << 24);
+				cmd->c_resp[1] = (cmd->c_resp[1] >> 8) |
+				    (cmd->c_resp[2] << 24);
+				cmd->c_resp[2] = (cmd->c_resp[2] >> 8) |
+				    (cmd->c_resp[3] << 24);
+				cmd->c_resp[3] = (cmd->c_resp[3] >> 8);
+			}
 		}
 	}
 
