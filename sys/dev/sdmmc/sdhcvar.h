@@ -57,6 +57,7 @@ int	sdhc_intr(void *);
 #define	SDHC_F_NO_LED_ON	0x0100	/* LED_ON unsupported in HOST_CTL */
 #define	SDHC_F_HOSTCAPS		0x0200	/* No device provided capabilities */
 #define	SDHC_F_RSP136_CRC	0x0400	/* Resp 136 with CRC and end-bit */
+#define	SDHC_F_SINGLE_ONLY	0x0800	/* Single transfer only */
 #define	SDHC_F_NO_HS_BIT	0x2000	/* Don't set SDHC_HIGH_SPEED bit */
 #define	SDHC_F_EXTERNAL_DMA	0x4000
 #define	SDHC_F_EXTDMA_DMAEN	0x8000	/* ext. dma need SDHC_DMA_ENABLE */

@@ -327,6 +327,8 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 		if (!ISSET(hp->sc->sc_flags, SDHC_F_ENHANCED))
 			saa.caps |= SMC_CAPS_MULTI_SEG_DMA;
 	}
+	if (ISSET(sc->sc_flags, SDHC_F_SINGLE_ONLY))
+		saa.caps |= SMC_CAPS_SINGLE_ONLY;
 
 	hp->sdmmc = config_found(&sc->sc_dev, &saa, NULL);
 	if (hp->sdmmc == NULL) {
