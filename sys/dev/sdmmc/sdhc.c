@@ -283,6 +283,9 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	case SDHC_MAX_BLK_LEN_2048:
 		hp->maxblklen = 2048;
 		break;
+	case SDHC_MAX_BLK_LEN_4096:
+		hp->maxblklen = 4096;
+		break;
 	default:
 		hp->maxblklen = 1;
 		break;
