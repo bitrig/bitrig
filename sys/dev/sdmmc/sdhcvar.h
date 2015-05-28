@@ -54,6 +54,7 @@ int	sdhc_intr(void *);
 #define	SDHC_F_32BIT_ACCESS	0x0010
 #define	SDHC_F_ENHANCED		0x0020	/* Freescale ESDHC */
 #define	SDHC_F_8BIT_MODE	0x0040	/* MMC 8bit mode is supported */
+#define	SDHC_F_NO_LED_ON	0x0100	/* LED_ON unsupported in HOST_CTL */
 #define	SDHC_F_HOSTCAPS		0x0200	/* No device provided capabilities */
 #define	SDHC_F_RSP136_CRC	0x0400	/* Resp 136 with CRC and end-bit */
 #define	SDHC_F_NO_HS_BIT	0x2000	/* Don't set SDHC_HIGH_SPEED bit */

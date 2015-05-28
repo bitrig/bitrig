@@ -840,8 +840,11 @@ sdhc_exec_command(sdmmc_chipset_handle_t sch, struct sdmmc_command *cmd)
 	if (cmd->c_error == 0 && cmd->c_data != NULL)
 		sdhc_transfer_data(hp, cmd);
 
-	/* Turn off the LED. */
-	HCLR1(hp, SDHC_HOST_CTL, SDHC_LED_ON);
+	if (!ISSET(hp->sc->sc_flags, SDHC_F_ENHANCED)
+	    && !ISSET(hp->sc->sc_flags, SDHC_F_NO_LED_ON)) {
+		/* Turn off the LED. */
+		HCLR1(hp, SDHC_HOST_CTL, SDHC_LED_ON);
+	}
 
 	DPRINTF(1,("%s: cmd %u done (flags=%#x error=%d)\n",
 	    DEVNAME(hp->sc), cmd->c_opcode, cmd->c_flags, cmd->c_error));
@@ -937,8 +940,10 @@ sdhc_start_command(struct sdhc_host *hp, struct sdmmc_command *cmd)
 	blksize |= (MAX(0, PAGE_SHIFT - 12) & SDHC_DMA_BOUNDARY_MASK) <<
 	    SDHC_DMA_BOUNDARY_SHIFT;	/* PAGE_SIZE DMA boundary */
 
-	/* Alert the user not to remove the card. */
-	HSET1(hp, SDHC_HOST_CTL, SDHC_LED_ON);
+	if (!ISSET(hp->sc->sc_flags, SDHC_F_ENHANCED)) {
+		/* Alert the user not to remove the card. */
+		HSET1(hp, SDHC_HOST_CTL, SDHC_LED_ON);
+	}
 
 	/* Set DMA start address. */
 	if (ISSET(mode, SDHC_DMA_ENABLE) &&
