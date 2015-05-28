@@ -842,6 +842,13 @@ sdhc_exec_command(sdmmc_chipset_handle_t sch, struct sdmmc_command *cmd)
 	 */
 	if (cmd->c_error == 0 && cmd->c_data != NULL)
 		sdhc_transfer_data(hp, cmd);
+	else if (ISSET(cmd->c_flags, SCF_RSP_BSY)) {
+		if (!sdhc_wait_intr(hp, SDHC_TRANSFER_COMPLETE, hz * 10)) {
+			cmd->c_error = ETIMEDOUT;
+			SET(cmd->c_flags, SCF_ITSDONE);
+			return;
+		}
+	}
 
 	if (!ISSET(hp->sc->sc_flags, SDHC_F_ENHANCED)
 	    && !ISSET(hp->sc->sc_flags, SDHC_F_NO_LED_ON)) {
