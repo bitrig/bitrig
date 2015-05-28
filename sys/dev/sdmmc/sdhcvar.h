@@ -48,19 +48,20 @@ void	sdhc_shutdown(void *);
 int	sdhc_intr(void *);
 
 /* flag values */
-#define	SDHC_F_USE_DMA		0x0001
-#define	SDHC_F_FORCE_DMA	0x0002
-#define	SDHC_F_NOPWR0		0x0004
-#define	SDHC_F_32BIT_ACCESS	0x0010
-#define	SDHC_F_ENHANCED		0x0020	/* Freescale ESDHC */
-#define	SDHC_F_8BIT_MODE	0x0040	/* MMC 8bit mode is supported */
-#define	SDHC_F_NO_LED_ON	0x0100	/* LED_ON unsupported in HOST_CTL */
-#define	SDHC_F_HOSTCAPS		0x0200	/* No device provided capabilities */
-#define	SDHC_F_RSP136_CRC	0x0400	/* Resp 136 with CRC and end-bit */
-#define	SDHC_F_SINGLE_ONLY	0x0800	/* Single transfer only */
-#define	SDHC_F_WAIT_RESET	0x1000	/* Wait for soft resets to start */
-#define	SDHC_F_NO_HS_BIT	0x2000	/* Don't set SDHC_HIGH_SPEED bit */
-#define	SDHC_F_EXTERNAL_DMA	0x4000
-#define	SDHC_F_EXTDMA_DMAEN	0x8000	/* ext. dma need SDHC_DMA_ENABLE */
+#define	SDHC_F_USE_DMA		0x00000001
+#define	SDHC_F_FORCE_DMA	0x00000002
+#define	SDHC_F_NOPWR0		0x00000004
+#define	SDHC_F_32BIT_ACCESS	0x00000010
+#define	SDHC_F_ENHANCED		0x00000020	/* Freescale ESDHC */
+#define	SDHC_F_8BIT_MODE	0x00000040	/* MMC 8bit mode is supported */
+#define	SDHC_F_NO_LED_ON	0x00000100	/* LED_ON unsupported in HOST_CTL */
+#define	SDHC_F_HOSTCAPS		0x00000200	/* No device provided capabilities */
+#define	SDHC_F_RSP136_CRC	0x00000400	/* Resp 136 with CRC and end-bit */
+#define	SDHC_F_SINGLE_ONLY	0x00000800	/* Single transfer only */
+#define	SDHC_F_WAIT_RESET	0x00001000	/* Wait for soft resets to start */
+#define	SDHC_F_NO_HS_BIT	0x00002000	/* Don't set SDHC_HIGH_SPEED bit */
+#define	SDHC_F_EXTERNAL_DMA	0x00004000
+#define	SDHC_F_EXTDMA_DMAEN	0x00008000	/* ext. dma need SDHC_DMA_ENABLE */
+#define	SDHC_F_SINGLE_POWER_WRITE 0x00040000
 
 #endif

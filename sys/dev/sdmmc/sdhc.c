@@ -525,6 +525,8 @@ sdhc_bus_power(sdmmc_chipset_handle_t sch, u_int32_t ocr)
 	struct sdhc_host *hp = sch;
 	u_int8_t vdd;
 	int s;
+	const uint32_t pcmask =
+	    ~(SDHC_BUS_POWER | (SDHC_VOLTAGE_MASK << SDHC_VOLTAGE_SHIFT));
 
 	s = splsdmmc();
 
@@ -562,9 +564,20 @@ sdhc_bus_power(sdmmc_chipset_handle_t sch, u_int32_t ocr)
 	 * Enable bus power.  Wait at least 1 ms (or 74 clocks) plus
 	 * voltage ramp until power rises.
 	 */
-	HWRITE1(hp, SDHC_POWER_CTL, (vdd << SDHC_VOLTAGE_SHIFT) |
-	    SDHC_BUS_POWER);
-	sdmmc_delay(10000);
+	if (ISSET(hp->sc->sc_flags, SDHC_F_SINGLE_POWER_WRITE)) {
+		HWRITE1(hp, SDHC_POWER_CTL, (vdd << SDHC_VOLTAGE_SHIFT) |
+		    SDHC_BUS_POWER);
+		sdmmc_delay(10000);
+	} else {
+		HWRITE1(hp, SDHC_POWER_CTL,
+		    HREAD1(hp, SDHC_POWER_CTL) & pcmask);
+		sdmmc_delay(1);
+		HWRITE1(hp, SDHC_POWER_CTL,
+		    (vdd << SDHC_VOLTAGE_SHIFT));
+		sdmmc_delay(1);
+		HSET1(hp, SDHC_POWER_CTL, SDHC_BUS_POWER);
+		sdmmc_delay(10000);
+	}
 
 	/*
 	 * The host system may not power the bus due to battery low,
@@ -654,7 +667,7 @@ sdhc_bus_clock(sdmmc_chipset_handle_t sch, int freq)
 	/*
 	 * Stop SD clock before changing the frequency.
 	 */
-	HWRITE2(hp, SDHC_CLOCK_CTL, 0);
+	HCLR2(hp, SDHC_CLOCK_CTL, SDHC_SDCLK_ENABLE);
 	if (freq == SDMMC_SDCLK_OFF)
 		goto ret;
 
@@ -666,7 +679,8 @@ sdhc_bus_clock(sdmmc_chipset_handle_t sch, int freq)
 		error = EINVAL;
 		goto ret;
 	}
-	HWRITE2(hp, SDHC_CLOCK_CTL, div);
+	HWRITE2(hp, SDHC_CLOCK_CTL, (HREAD2(hp, SDHC_CLOCK_CTL) &
+	    (SDHC_INTCLK_STABLE | SDHC_INTCLK_ENABLE)) | div);
 
 	/*
 	 * Start internal clock.  Wait 10ms for stabilization.
