@@ -900,16 +900,13 @@ sdhc_start_command(struct sdhc_host *hp, struct sdmmc_command *cmd)
 	}
 
 	/* Prepare transfer mode register value. (2.2.5) */
-	mode = 0;
+	mode = SDHC_BLOCK_COUNT_ENABLE;
 	if (ISSET(cmd->c_flags, SCF_CMD_READ))
 		mode |= SDHC_READ_MODE;
-	if (blkcount > 0) {
-		mode |= SDHC_BLOCK_COUNT_ENABLE;
-		if (blkcount > 1) {
-			mode |= SDHC_MULTI_BLOCK_MODE;
-			/* XXX only for memory commands? */
-			mode |= SDHC_AUTO_CMD12_ENABLE;
-		}
+	if (blkcount > 1) {
+		mode |= SDHC_MULTI_BLOCK_MODE;
+		/* XXX only for memory commands? */
+		mode |= SDHC_AUTO_CMD12_ENABLE;
 	}
 	if (cmd->c_dmamap != NULL && cmd->c_datalen > 0 &&
 	    ISSET(hp->flags, SHF_MODE_DMAEN)) {
@@ -969,11 +966,10 @@ sdhc_start_command(struct sdhc_host *hp, struct sdmmc_command *cmd)
 		HWRITE4(hp, SDHC_ARGUMENT, cmd->c_arg);
 		HWRITE4(hp, SDHC_TRANSFER_MODE, mode | (command << 16));
 	} else {
-		HWRITE2(hp, SDHC_TRANSFER_MODE, mode);
 		HWRITE2(hp, SDHC_BLOCK_SIZE, blksize);
-		if (blkcount > 1)
-			HWRITE2(hp, SDHC_BLOCK_COUNT, blkcount);
+		HWRITE2(hp, SDHC_BLOCK_COUNT, blkcount);
 		HWRITE4(hp, SDHC_ARGUMENT, cmd->c_arg);
+		HWRITE2(hp, SDHC_TRANSFER_MODE, mode);
 		HWRITE2(hp, SDHC_COMMAND, command);
 	}
 
