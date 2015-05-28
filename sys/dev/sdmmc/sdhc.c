@@ -232,7 +232,11 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	else
 		caps = HREAD4(hp, SDHC_CAPABILITIES);
 
-	/* Use DMA if the host system and the controller support it. */
+	/*
+	 * Use DMA if the host system and the controller support it.
+	 * Suports integrated or external DMA egine, with or without
+	 * SDHC_DMA_ENABLE in the command.
+	 */
 	if (ISSET(sc->sc_flags, SDHC_F_FORCE_DMA) ||
 	    (ISSET(sc->sc_flags, SDHC_F_USE_DMA) &&
 	    ISSET(caps, SDHC_DMA_SUPPORT))) {
