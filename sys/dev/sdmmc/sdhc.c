@@ -266,6 +266,7 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	 * XXX Set the data timeout counter value according to
 	 * capabilities. (2.2.15)
 	 */
+	HWRITE1(hp, SDHC_TIMEOUT_CTL, SDHC_TIMEOUT_MAX);
 
 	/*
 	 * Determine SD bus voltage levels supported by the controller.
