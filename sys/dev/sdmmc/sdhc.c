@@ -1145,17 +1145,37 @@ sdhc_soft_reset(struct sdhc_host *hp, int mask)
 
 	DPRINTF(1,("%s: software reset reg=%#x\n", DEVNAME(hp->sc), mask));
 
+	/* Request the reset. */
 	HWRITE1(hp, SDHC_SOFTWARE_RESET, mask);
+
+	/*
+	 * If necessary, wait for the controller to set the bits to
+	 * acknowledge the reset.
+	 */
+	if (ISSET(hp->sc->sc_flags, SDHC_F_WAIT_RESET) &&
+	    ISSET(mask, (SDHC_RESET_DAT | SDHC_RESET_CMD))) {
+		for (timo = 10000; timo > 0; timo--) {
+			if (ISSET(HREAD1(hp, SDHC_SOFTWARE_RESET), mask))
+				break;
+			/* Short delay because I worry we may miss it...  */
+			sdmmc_delay(1);
+		}
+		if (timo == 0)
+			return ETIMEDOUT;
+	}
+
+	/*
+	 * Wait for the controller to clear the bits to indicate that
+	 * the reset has completed.
+	 */
 	for (timo = 10; timo > 0; timo--) {
 		if (!ISSET(HREAD1(hp, SDHC_SOFTWARE_RESET), mask))
 			break;
 		sdmmc_delay(10000);
-		HWRITE1(hp, SDHC_SOFTWARE_RESET, 0);
 	}
 	if (timo == 0) {
 		DPRINTF(1,("%s: timeout reg=%#x\n", DEVNAME(hp->sc),
 		    HREAD1(hp, SDHC_SOFTWARE_RESET)));
-		HWRITE1(hp, SDHC_SOFTWARE_RESET, 0);
 		return (ETIMEDOUT);
 	}
 
