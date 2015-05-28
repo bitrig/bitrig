@@ -801,14 +801,12 @@ sdhc_exec_command(sdmmc_chipset_handle_t sch, struct sdmmc_command *cmd)
 	 * driver (without padding).
 	 */
 	if (cmd->c_error == 0 && ISSET(cmd->c_flags, SCF_RSP_PRESENT)) {
+		cmd->c_resp[0] = HREAD4(hp, SDHC_RESPONSE + 0);
 		if (ISSET(cmd->c_flags, SCF_RSP_136)) {
-			u_char *p = (u_char *)cmd->c_resp;
-			int i;
-
-			for (i = 0; i < 15; i++)
-				*p++ = HREAD1(hp, SDHC_RESPONSE + i);
-		} else
-			cmd->c_resp[0] = HREAD4(hp, SDHC_RESPONSE);
+			cmd->c_resp[1] = HREAD4(hp, SDHC_RESPONSE + 4);
+			cmd->c_resp[2] = HREAD4(hp, SDHC_RESPONSE + 8);
+			cmd->c_resp[3] = HREAD4(hp, SDHC_RESPONSE + 12);
+		}
 	}
 
 	/*
