@@ -279,8 +279,10 @@ nbdstrategy(struct buf *bp)
 
 	/* Insert bp/request into queue. */
 	req = malloc(sizeof(struct nbd_wait), M_DEVBUF, M_WAITOK | M_ZERO);
-	if (req == NULL)
+	if (req == NULL) {
+		bp->b_error = ENOMEM;
 		goto bad;
+	}
 
 	req->bp = bp;
 	req->from = off;
@@ -291,6 +293,7 @@ nbdstrategy(struct buf *bp)
 	/* Wait until done. */
 	tsleep(req, PWAIT, sc->sc_dev.dv_xname, 0);
 	if (req->error != 0) {
+		bp->error = req->error;
 		free(req, M_DEVBUF, 0);
 		goto bad;
 	}
@@ -611,7 +614,9 @@ nbd_send_thread(void *arg)
 		if (error) {
 			printf("%s: request transfer error %d\n",
 			    sc->sc_dev.dv_xname, error);
-			break;
+			req->error = error;
+			wakeup(req);
+			continue;
 		}
 
 		if (req->cmd == NBD_CMD_WRITE) {
@@ -619,7 +624,9 @@ nbd_send_thread(void *arg)
 			if (error) {
 				printf("%s: data transfer error %d\n",
 				    sc->sc_dev.dv_xname, error);
-				break;
+				req->error = error;
+				wakeup(req);
+				continue;
 			}
 		}
 
