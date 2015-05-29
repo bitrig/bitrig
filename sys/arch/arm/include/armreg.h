@@ -1,4 +1,4 @@
-/*	$OpenBSD: armreg.h,v 1.15 2015/01/17 08:00:41 jsg Exp $	*/
+/*	$OpenBSD: armreg.h,v 1.16 2015/05/29 05:48:07 jsg Exp $	*/
 /*	$NetBSD: armreg.h,v 1.27 2003/09/06 08:43:02 rearnsha Exp $	*/
 
 /*
@@ -164,6 +164,18 @@
 #define CPU_ID_CORTEX_A15_R3	0x413fc0f0
 #define CPU_ID_CORTEX_A15_R4	0x414fc0f0
 #define CPU_ID_CORTEX_A15_MASK	0xff0ffff0
+#define CPU_ID_CORTEX_A17	0x410fc0e0
+#define CPU_ID_CORTEX_A17_R1	0x411fc0e0
+#define CPU_ID_CORTEX_A17_MASK	0xff0ffff0
+#define CPU_ID_CORTEX_A53	0x410fd030
+#define CPU_ID_CORTEX_A53_R1	0x411fd030
+#define CPU_ID_CORTEX_A53_MASK	0xff0ffff0
+#define CPU_ID_CORTEX_A57	0x410fd070
+#define CPU_ID_CORTEX_A57_R1	0x411fd070
+#define CPU_ID_CORTEX_A57_MASK	0xff0ffff0
+#define CPU_ID_CORTEX_A72	0x410fd080
+#define CPU_ID_CORTEX_A72_R1	0x411fd080
+#define CPU_ID_CORTEX_A57_MASK	0xff0ffff0
 #define CPU_ID_MV88SV58XX_P(n)	((n & 0xff0fff00) == 0x560f5800)
 #define CPU_ID_MV88SV581X_V6	0x560f5810 /* Marvell Sheeva 88SV581x v6 Core */
 #define CPU_ID_MV88SV581X_V7	0x561f5810 /* Marvell Sheeva 88SV581x v7 Core */
