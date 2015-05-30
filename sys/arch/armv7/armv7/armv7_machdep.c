@@ -381,6 +381,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 {
 	int i, physsegs;
 	pv_addr_t fdt;
+	void *config;
 	struct fdt_memory mem;
 	paddr_t memstart;
 	psize_t memsize;
@@ -397,9 +398,27 @@ initarm(void *arg0, void *arg1, void *arg2)
 	if (set_cpufuncs())
 		panic("cpu not recognized!");
 
-	platform_disable_l2_if_needed();
-
-	if (fdt_init(arg2)) {
+	/*
+	 * Now, map the bootconfig/FDT area.
+	 *
+	 * As we don't know the size of a possible FDT, map the size of a
+	 * typical bootstrap bs map.  The FDT is probably not aligned,
+	 * so this will take up to two L1_S_SIZEd mappings.  In the unlikely
+	 * case that the FDT is bigger than L1_S_SIZE (0x00100000), we need to
+	 * remap it.
+	 *
+	 * XXX: There's (currently) no way to unmap a bootstrap mapping, so we
+	 * might lose a bit of the bootstrap address space.
+	 */
+	bootstrap_bs_map(NULL, (bus_addr_t)arg2, L1_S_SIZE, 0,
+	    (bus_space_handle_t *)&config);
+	if (fdt_init(config) && fdt_get_size(config) != 0) {
+		uint32_t size = fdt_get_size(config);
+		if (size > L1_S_SIZE)
+			bootstrap_bs_map(NULL, (bus_addr_t)arg2, size, 0,
+			    (bus_space_handle_t *)&config);
+	}
+	if (fdt_init(config) && fdt_get_size(config) != 0) {
 		void *node;
 
 		node = fdt_find_node("/memory");
@@ -447,8 +466,8 @@ initarm(void *arg0, void *arg1, void *arg2)
 
 	printf("arg0 %p arg1 %p arg2 %p\n", arg0, arg1, arg2);
 
-	if (fdt_get_size(arg2) == 0) {
-		parse_uboot_tags(arg2);
+	if (fdt_get_size(config) == 0) {
+		parse_uboot_tags(config);
 
 		/*
 		 * Examine the boot args string for options we need to know about
@@ -507,10 +526,10 @@ initarm(void *arg0, void *arg1, void *arg2)
 	/*
 	 * Allocate pages for an FDT copy.
 	 */
-	if (fdt_get_size(arg2) != 0) {
-		uint32_t size = fdt_get_size(arg2);
+	if (fdt_get_size(config) != 0) {
+		uint32_t size = fdt_get_size(config);
 		valloc_pages(fdt, round_page(size) / PAGE_SIZE);
-		memcpy((void *)fdt.pv_pa, arg2, size);
+		memcpy((void *)fdt.pv_pa, config, size);
 	}
 
 	pmap_bootstrap(KERNEL_VM_BASE,
