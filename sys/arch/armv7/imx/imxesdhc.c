@@ -1,4 +1,4 @@
-/*	$OpenBSD: imxesdhc.c,v 1.11 2015/05/30 02:17:36 jsg Exp $	*/
+/*	$OpenBSD: imxesdhc.c,v 1.12 2015/05/30 03:20:54 jsg Exp $	*/
 /*
  * Copyright (c) 2009 Dale Rahn <drahn@openbsd.org>
  * Copyright (c) 2006 Uwe Stuehler <uwe@openbsd.org>
@@ -130,6 +130,7 @@
 #define SDHC_PROT_CTRL_DMASEL_SDMA_MASK		(0x3 << 8)
 #define SDHC_HOST_CTRL_CAP_MBL_SHIFT		16
 #define SDHC_HOST_CTRL_CAP_MBL_MASK		0x7
+#define SDHC_HOST_CTRL_CAP_HSS			(1 << 21)
 #define SDHC_HOST_CTRL_CAP_VS33			(1 << 24)
 #define SDHC_HOST_CTRL_CAP_VS30			(1 << 25)
 #define SDHC_HOST_CTRL_CAP_VS18			(1 << 26)
@@ -375,6 +376,8 @@ imxesdhc_attach(struct device *parent, struct device *self, void *args)
 	saa.sch = sc;
 	saa.clkmax = sc->clkbase;
 	saa.clkmin = sc->clkbase / 256 / 16;
+	if (caps & SDHC_HOST_CTRL_CAP_HSS)
+		saa.caps |= SMC_CAPS_MMC_HIGHSPEED;
 
 	sc->sdmmc = config_found(&sc->sc_dev, &saa, NULL);
 	if (sc->sdmmc == NULL) {
