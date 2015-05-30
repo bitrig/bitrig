@@ -293,7 +293,7 @@ nbdstrategy(struct buf *bp)
 	/* Wait until done. */
 	tsleep(req, PWAIT, sc->sc_dev.dv_xname, 0);
 	if (req->error != 0) {
-		bp->error = req->error;
+		bp->b_error = req->error;
 		free(req, M_DEVBUF, 0);
 		goto bad;
 	}
