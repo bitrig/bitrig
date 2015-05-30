@@ -76,6 +76,7 @@ fdt_platform_init_cons(void)
 {
 	struct fdt_memory mem;
 	uint32_t freq;
+	return;
 
 	/*
 	 * XXX: Without having all clocks attached, we cannot look up

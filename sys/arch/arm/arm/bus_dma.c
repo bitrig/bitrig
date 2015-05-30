@@ -965,14 +965,15 @@ _bus_dmamap_load_buffer(bus_dma_tag_t t, bus_dmamap_t map, void *buf,
 	bus_size_t sgsize;
 	bus_addr_t curaddr, lastaddr, baddr, bmask;
 	vaddr_t vaddr = (vaddr_t)buf;
-#ifdef WTF 
 	struct arm32_dma_range *dr;
+#ifdef WTF 
 	pd_entry_t *pde;
 	pt_entry_t pte;
 	pt_entry_t *ptep;
 #endif
 	int seg;
 	pmap_t pmap;
+	printf("dmamap\n");
 
 #ifdef DEBUG_DMA
 	printf("_bus_dmamem_load_buffer(buf=%p, len=%lx, flags=%d, 1st=%d)\n",
@@ -1028,6 +1029,13 @@ _bus_dmamap_load_buffer(bus_dma_tag_t t, bus_dmamap_t map, void *buf,
 			(void) pmap_extract(pmap, vaddr, &curaddr);
 			map->_dm_flags &= ~ARM32_DMAMAP_COHERENT;
 		}
+#else
+		(void) pmap_extract(pmap, vaddr, &curaddr);
+		if (curaddr == 0x7ff2b000)
+			Debugger();
+		printf("%x %x\n", vaddr, curaddr);
+		map->_dm_flags &= ~ARM32_DMAMAP_COHERENT;
+#endif /* WTF? */
 
 		/*
 		 * Make sure we're in an allowed DMA range.
@@ -1045,7 +1053,6 @@ _bus_dmamap_load_buffer(bus_dma_tag_t t, bus_dmamap_t map, void *buf,
 			 */
 			curaddr = (curaddr - dr->dr_sysbase) + dr->dr_busbase;
 		}
-#endif /* WTF? */
 
 		/*
 		 * Compute the segment size, and adjust counts.

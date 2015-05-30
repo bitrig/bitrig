@@ -535,7 +535,7 @@ pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot)
 void
 pmap_kenter_cache(vaddr_t va, paddr_t pa, vm_prot_t prot, int cacheable)
 {
-        _pmap_kenter_pa(va, pa, prot, 0, cacheable);
+        _pmap_kenter_pa(va, pa, prot, 0, cacheable ? PMAP_CACHE_DEFAULT : PMAP_CACHE_CI);
 }
 
 /*
@@ -1179,7 +1179,8 @@ pmap_extract(pmap_t pm, vaddr_t va, paddr_t *pa)
 	if (pted->pted_pte == 0)
 		return FALSE;
 
-	*pa = (pted->pted_pte & PTE_RPGN) | (va & ~PTE_RPGN);
+	if (pa != NULL)
+		*pa = (pted->pted_pte & PTE_RPGN) | (va & ~PTE_RPGN);
 
 	return TRUE;
 }

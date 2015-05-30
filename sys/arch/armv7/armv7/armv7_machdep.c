@@ -156,7 +156,6 @@ vaddr_t physical_start;
 vaddr_t physical_freestart;
 vaddr_t physical_freeend;
 vaddr_t physical_end;
-u_int free_pages;
 int physmem = 0;
 
 /*int debug_flags;*/
@@ -506,7 +505,6 @@ initarm(void *arg0, void *arg1, void *arg2)
 	physical_freestart += ((np) * PAGE_SIZE);       \
 	if (physical_freeend < physical_freestart)      \
 		panic("initarm: out of memory");        \
-	free_pages -= (np);                             \
 	memset((char *)(var), 0, ((np) * PAGE_SIZE));
 
 	vector_page = ARM_VECTORS_HIGH;
@@ -546,14 +544,6 @@ initarm(void *arg0, void *arg1, void *arg2)
         /* Map the vector page. */
 	pmap_kenter_cache(vector_page, systempage.pv_pa,
 		PROT_EXEC|PROT_WRITE|PROT_READ,  PMAP_CACHE_WB);
-
-	/* Map the FDT. */
-/*
-	if (fdt.pv_va && fdt.pv_pa)
-		pmap_map_chunk(l1pagetable, fdt.pv_va, fdt.pv_pa,
-		    round_page(fdt_get_size((void *)fdt.pv_pa)),
-		    PROT_READ | PROT_WRITE, PTE_CACHE);
-*/
 
 	/*
 	 * Now we have the real page tables in place so we can switch to them.
@@ -614,11 +604,15 @@ initarm(void *arg0, void *arg1, void *arg2)
 	data_abort_handler_address = (u_int)data_abort_handler;
 	prefetch_abort_handler_address = (u_int)prefetch_abort_handler;
 	undefined_handler_address = (u_int)undefinedinstruction_bounce;
+	printf("%x\n", data_abort_handler);
 
 	printf("survived that1\n");
 	/* Now we can reinit the FDT, using the virtual address. */
-	if (fdt.pv_va && fdt.pv_pa)
+	if (fdt.pv_va && fdt.pv_pa) {
+		pmap_kenter_cache(fdt.pv_va, fdt.pv_pa,
+		    PROT_READ | PROT_WRITE, PMAP_CACHE_WB);
 		fdt_init((void *)fdt.pv_va);
+	}
 
 	printf("survived that2\n");
 	/* Initialise the undefined instruction handlers */
@@ -648,7 +642,9 @@ initarm(void *arg0, void *arg1, void *arg2)
 		    atop(dramstart), atop(dramend), 0);
 	}
 
-	consinit();
+	printf("survived that4\n");
+	//consinit();
+	printf("survived that4\n");
 
 	/*
 	 * Make sure ramdisk is mapped, if there is any.
