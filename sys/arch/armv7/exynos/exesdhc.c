@@ -1,4 +1,4 @@
-/*	$OpenBSD: exesdhc.c,v 1.14 2011/11/15 21:46:44 drahn Exp $	*/
+/*	$OpenBSD: exesdhc.c,v 1.3 2015/05/30 02:17:36 jsg Exp $	*/
 /*
  * Copyright (c) 2009 Dale Rahn <drahn@openbsd.org>
  * Copyright (c) 2006 Uwe Stuehler <uwe@openbsd.org>
@@ -590,7 +590,7 @@ exesdhc_wait_state(struct exesdhc_softc *sc, uint32_t mask, uint32_t value)
 			return 0;
 		delay(10);
 	}
-	DPRINTF(0,("%s: timeout waiting for %x\n", HDEVNAME(sc),
+	DPRINTF(0,("%s: timeout waiting for %x, state %x\n", HDEVNAME(sc),
 	    value, state));
 	return ETIMEDOUT;
 }
@@ -665,7 +665,7 @@ exesdhc_start_command(struct exesdhc_softc *sc, struct sdmmc_command *cmd)
 	int error;
 	int s;
 
-	DPRINTF(1,("%s: start cmd %u arg=%#x data=%#x dlen=%d flags=%#x "
+	DPRINTF(1,("%s: start cmd %u arg=%#x data=%p dlen=%d flags=%#x "
 	    "proc=\"%s\"\n", HDEVNAME(sc), cmd->c_opcode, cmd->c_arg,
 	    cmd->c_data, cmd->c_datalen, cmd->c_flags, curproc ?
 	    curproc->p_comm : ""));
@@ -956,7 +956,7 @@ exesdhc_intr(void *arg)
 	/* Acknowledge the interrupts we are about to handle. */
 	HWRITE4(sc, SDHC_INT_STATUS, status);
 	DPRINTF(2,("%s: interrupt status=0x%08x\n", HDEVNAME(sc),
-	    status, status));
+	    status));
 
 	/*
 	 * Service error interrupts.
