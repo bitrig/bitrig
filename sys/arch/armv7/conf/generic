@@ -24,6 +24,8 @@ include "../../../conf/GENERIC"
 options	TIMEZONE=0	# time zone to adjust RTC time by
 options	DST=0		# daylight saving time used by RTC
 #options	NFSCLIENT	# NFS
+makeoptions	KERNEL_BASE_VIRT="0xc0300000"
+options		KERNEL_BASE_VIRT="0xc0300000"
 
 #options		APERTURE
 

@@ -336,11 +336,11 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	 * Insert into table, if this mapping said it needed to be mapped
 	 * now.
 	 */
-	if (flags & (VM_PROT_READ|VM_PROT_WRITE|PMAP_WIRED)) {
+	if (flags & (PROT_READ|PROT_WRITE|PMAP_WIRED)) {
 		pte_insert(pted);
 	}
 
-	if (prot & VM_PROT_EXECUTE) {
+	if (prot & PROT_EXEC) {
 		if (pg != NULL) {
 			need_sync = ((pg->pg_flags & PG_PMAP_EXE) == 0);
 			atomic_setbits_int(&pg->pg_flags, PG_PMAP_EXE);
@@ -351,7 +351,7 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 		 * Should we be paranoid about writeable non-exec
 		 * mappings ? if so, clear the exec tag
 		 */
-		if ((prot & VM_PROT_WRITE) && (pg != NULL))
+		if ((prot & PROT_WRITE) && (pg != NULL))
 			atomic_clearbits_int(&pg->pg_flags, PG_PMAP_EXE);
 	}
 
@@ -623,7 +623,7 @@ pmap_fill_pte(pmap_t pm, vaddr_t va, paddr_t pa, struct pte_desc *pted,
 	
 	pted->pted_pte = pa & PTE_RPGN;
 
-	pted->pted_va |= prot & (VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE);
+	pted->pted_va |= prot & (PROT_READ|PROT_WRITE|PROT_EXEC);
 
 	if (flags & PMAP_WIRED)
 		pted->pted_va |= PTED_VA_WIRED_M;
@@ -658,7 +658,7 @@ pmap_zero_page(struct vm_page *pg)
 	paddr_t pa = VM_PAGE_TO_PHYS(pg);
 
 	/* simple_lock(&pmap_zero_page_lock); */  
-	pmap_kenter_pa(zero_page, pa, VM_PROT_READ|VM_PROT_WRITE);
+	pmap_kenter_pa(zero_page, pa, PROT_READ|PROT_WRITE);
 
 	bzero((void *)zero_page, PAGE_SIZE);
 
@@ -676,8 +676,8 @@ pmap_copy_page(struct vm_page *srcpg, struct vm_page *dstpg)
 	paddr_t dstpa = VM_PAGE_TO_PHYS(dstpg);
 	/* simple_lock(&pmap_copy_page_lock); */
 			   
-	pmap_kenter_pa(copy_src_page, srcpa, VM_PROT_READ);
-	pmap_kenter_pa(copy_dst_page, dstpa, VM_PROT_READ|VM_PROT_WRITE);
+	pmap_kenter_pa(copy_src_page, srcpa, PROT_READ);
+	pmap_kenter_pa(copy_dst_page, dstpa, PROT_READ|PROT_WRITE);
   
 	bcopy((void *)copy_src_page, (void *)copy_dst_page, PAGE_SIZE);
 
@@ -1029,9 +1029,9 @@ printf("allocated pted vp3 %x %x %x %x\n", idx1, idx2, vect, pa);
 		for (pa = mp->start, va = pa + kvo, size = mp->size & ~0xfff;
 		    size > 0; va += PAGE_SIZE, pa+= PAGE_SIZE, size -= PAGE_SIZE) {
 			pa = va - kvo;
-			prot = VM_PROT_READ|VM_PROT_WRITE;
+			prot = PROT_READ|PROT_WRITE;
 			if (va >= KERNEL_BASE_VIRT && va < (vaddr_t)etext)
-				prot |= VM_PROT_EXECUTE;
+				prot |= PROT_EXEC;
 			pmap_kenter_cache(va, pa, prot, PMAP_CACHE_WB);
 		}
 	}
@@ -1233,7 +1233,7 @@ pmap_page_protect(struct vm_page *pg, vm_prot_t prot)
 	/* need to lock for this pv */
 	s = splvm();
 
-	if (prot == VM_PROT_NONE) {
+	if (prot == PROT_NONE) {
 		while (!LIST_EMPTY(&(pg->mdpage.pv_list))) {
 			pted = LIST_FIRST(&(pg->mdpage.pv_list));
 			pmap_remove_pg(pted->pted_pmap, pted->pted_va);
@@ -1255,7 +1255,7 @@ void
 pmap_protect(pmap_t pm, vaddr_t sva, vaddr_t eva, vm_prot_t prot)
 {
 	int s;
-	if (prot & (VM_PROT_READ | VM_PROT_EXECUTE)) {
+	if (prot & (PROT_READ | PROT_EXEC)) {
 		s = splvm();
 		while (sva < eva) {
 			pmap_page_ro(pm, sva, 0);
@@ -1365,25 +1365,25 @@ pte_spill_v(pmap_t pm, u_int32_t va, u_int32_t dsisr, int exec_fault)
 #endif
 
 static uint32_t ap_bits_user [16] = {
-	[VM_PROT_NONE]				= 0, 
-	[VM_PROT_READ]				= L2_P_AP1|L2_P_AP1|L2_S_XN, 
-	[VM_PROT_WRITE]				= L2_P_AP1|L2_P_XN, 
-	[VM_PROT_WRITE|VM_PROT_READ]		= L2_P_AP1|L2_P_XN, 
-	[VM_PROT_EXECUTE]			= 0, 
-	[VM_PROT_EXECUTE|VM_PROT_READ]			= L2_P_AP1, 
-	[VM_PROT_EXECUTE|VM_PROT_WRITE]			= L2_P_AP2|L2_P_AP1, 
-	[VM_PROT_EXECUTE|VM_PROT_WRITE|VM_PROT_READ]	= L2_P_AP2|L2_P_AP1, 
+	[PROT_NONE]				= 0, 
+	[PROT_READ]				= L2_P_AP1|L2_P_AP1|L2_S_XN, 
+	[PROT_WRITE]				= L2_P_AP1|L2_P_XN, 
+	[PROT_WRITE|PROT_READ]		= L2_P_AP1|L2_P_XN, 
+	[PROT_EXEC]			= 0, 
+	[PROT_EXEC|PROT_READ]			= L2_P_AP1, 
+	[PROT_EXEC|PROT_WRITE]			= L2_P_AP2|L2_P_AP1, 
+	[PROT_EXEC|PROT_WRITE|PROT_READ]	= L2_P_AP2|L2_P_AP1, 
 };
 
 static uint32_t ap_bits_kern [16] = {
-	[VM_PROT_NONE]				= 0, 
-	[VM_PROT_READ]				= L2_P_AP2|L2_S_XN, 
-	[VM_PROT_WRITE]				= L2_P_XN, 
-	[VM_PROT_WRITE|VM_PROT_READ]		= L2_P_XN, 
-	[VM_PROT_EXECUTE]			= 0, 
-	[VM_PROT_EXECUTE|VM_PROT_READ]			= L2_P_AP2, 
-	[VM_PROT_EXECUTE|VM_PROT_WRITE]			= 0,
-	[VM_PROT_EXECUTE|VM_PROT_WRITE|VM_PROT_READ]	= 0
+	[PROT_NONE]				= 0, 
+	[PROT_READ]				= L2_P_AP2|L2_S_XN, 
+	[PROT_WRITE]				= L2_P_XN, 
+	[PROT_WRITE|PROT_READ]		= L2_P_XN, 
+	[PROT_EXEC]			= 0, 
+	[PROT_EXEC|PROT_READ]			= L2_P_AP2, 
+	[PROT_EXEC|PROT_WRITE]			= 0,
+	[PROT_EXEC|PROT_WRITE|PROT_READ]	= 0
 };
 
 void
@@ -1415,9 +1415,9 @@ pte_insert(struct pte_desc *pted)
 	}
 
 	if (pm == pmap_kernel()) {
-		access_bits = ap_bits_kern[pted->pted_va & VM_PROT_ALL];
+		access_bits = ap_bits_kern[pted->pted_va & PROT_MASK];
 	} else {
-		access_bits = ap_bits_user[pted->pted_va & VM_PROT_ALL];
+		access_bits = ap_bits_user[pted->pted_va & PROT_MASK];
 	}
 	access_bits |= L2_P_AP0;
 
@@ -1462,10 +1462,10 @@ void    pmap_map_section(vaddr_t l1_addr, vaddr_t va, paddr_t pa, int flags, int
 	int ap_flag;
 
 	switch (flags) {
-	case VM_PROT_READ:
+	case PROT_READ:
 		ap_flag = AP_KR;
 		break;
-	case VM_PROT_READ | VM_PROT_WRITE:
+	case PROT_READ | PROT_WRITE:
 		ap_flag = AP_KRW;
 		break;
 	}
@@ -1532,7 +1532,7 @@ void pmap_unwire(pmap_t pm, vaddr_t va)
 {
 }
 
-void pmap_remove_holes(struct vm_map *v0)
+void pmap_remove_holes(struct vmspace *v0)
 {
 }
 
@@ -1739,10 +1739,10 @@ pmap_map_stolen()
 			pa = mp->start + e;
 			va = pmap_avail_kvo + pa;
 			if (va >= KERNEL_BASE_VIRT && va < (uint32_t)&etext) {
-				prot = VM_PROT_READ|VM_PROT_WRITE|
-				    VM_PROT_EXECUTE;
+				prot = PROT_READ|PROT_WRITE|
+				    PROT_EXEC;
 			} else {
-				prot = VM_PROT_READ|VM_PROT_WRITE;
+				prot = PROT_READ|PROT_WRITE;
 			}
 			if (prot != oldprot) {
 				printf("mapping  v %08x p %08x prot %x\n", va,

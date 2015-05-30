@@ -183,7 +183,7 @@ armv7_bs_map(void *t, bus_addr_t bpa, bus_size_t size,
 	*bshp = (bus_space_handle_t)(va + (bpa - startpa));
 
 	for (pa = startpa; pa < endpa; pa += PAGE_SIZE, va += PAGE_SIZE) {
-		pmap_kenter_cache(va, pa, VM_PROT_READ | VM_PROT_WRITE,
+		pmap_kenter_cache(va, pa, PROT_READ | PROT_WRITE,
 		    PMAP_CACHE_CI);
 	}
 	pmap_update(pmap_kernel());

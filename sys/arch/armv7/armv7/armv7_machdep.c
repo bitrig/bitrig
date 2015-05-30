@@ -381,6 +381,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 {
 	int i, physsegs;
 	pv_addr_t fdt;
+	struct fdt_memory mem;
 	paddr_t memstart;
 	psize_t memsize;
 	extern uint32_t esym; /* &_end if no symbols are loaded */
@@ -525,7 +526,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 
         /* Map the vector page. */
 	pmap_kenter_cache(vector_page, systempage.pv_pa,
-		VM_PROT_EXECUTE|VM_PROT_WRITE|VM_PROT_READ,  PMAP_CACHE_WB);
+		PROT_EXEC|PROT_WRITE|PROT_READ,  PMAP_CACHE_WB);
 
 	/* Map the FDT. */
 /*
@@ -558,13 +559,13 @@ initarm(void *arg0, void *arg1, void *arg2)
 	proc0.p_addr = proc0paddr;
 
 	pmap_kenter_cache(vector_page, systempage.pv_pa,
-		VM_PROT_EXECUTE|VM_PROT_WRITE|VM_PROT_READ,  PMAP_CACHE_WB);
+		PROT_EXEC|PROT_WRITE|PROT_READ,  PMAP_CACHE_WB);
 
 	arm32_vector_init(vector_page, ARM_VEC_ALL);
 
 
 	pmap_protect(pmap_kernel(), systempage.pv_pa,
-	    systempage.pv_pa+PAGE_SIZE, VM_PROT_EXECUTE|VM_PROT_READ);
+	    systempage.pv_pa+PAGE_SIZE, PROT_EXEC|PROT_READ);
 	/*
 	 * Pages were allocated during the secondary bootstrap for the
 	 * stacks for different CPU modes.

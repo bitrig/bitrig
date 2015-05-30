@@ -313,7 +313,7 @@ protoconsole2(uint32_t board_id, void *bootarg) {
 
 		exuartconsioh = 0xc0000000;
 		pmap_kenter_cache(exuartconsioh, 0x13800000,
-		    VM_PROT_WRITE|VM_PROT_READ,  PMAP_CACHE_CI);
+		    PROT_WRITE|PROT_READ,  PMAP_CACHE_CI);
 
 		cn_tab = &protocons;
 		exuartconsiot = &armv7_bs_tag;
