@@ -282,49 +282,35 @@ static struct consdev protocons = {
 void
 protoconsole(uint32_t board_id, void *bootarg) {
 
-	switch (board_id) {
-#if NVIRT > 0
-	case 0xd33: /* NURI (qemu target) */
-		// hack up a virt console attachment for 0x13800000
-
-
-		if (bootstrap_bs_map(NULL, 0x13800000, 4096, 0,
-		    &pl011consioh)) {
-			panic("cannot attach console, ew");
-		}
-		pl011consiot = &armv7_bs_tag;
-
-		protocons.cn_getc =  pl011cngetc;
-		protocons.cn_putc =  pl011cnputc;
-		protocons.cn_pollc =  pl011cnpollc;
-		cn_tab = &protocons;
-#endif
-	default:
-		; /* not much sense printing, wont be seen. */
+	// hack up a virt console attachment for 0x13800000
+	if (bootstrap_bs_map(NULL, 0x09000000, 4096, 0,
+	    &pl011consioh)) {
+		panic("cannot attach console, ew");
 	}
+	pl011consiot = &armv7_bs_tag;
+
+	protocons.cn_getc =  pl011cngetc;
+	protocons.cn_putc =  pl011cnputc;
+	protocons.cn_pollc =  pl011cnpollc;
+	cn_tab = &protocons;
 }
 
 void
 protoconsole2(uint32_t board_id, void *bootarg) {
 
-	switch (board_id) {
 #if NVIRT > 0
-	case 0xd33: /* NURI (qemu target) */
-		// hack up a pl011 console attachment for 0x13800000
+	// hack up a pl011 console attachment for 0x13800000
 
-		pl011consioh = 0xc0000000;
-		pmap_kenter_cache(pl011consioh, 0x13800000,
-		    PROT_WRITE|PROT_READ,  PMAP_CACHE_CI);
+	pl011consioh = 0xc0000000;
+	pmap_kenter_cache(pl011consioh, 0x09000000,
+	    PROT_WRITE|PROT_READ,  PMAP_CACHE_CI);
 
-		cn_tab = &protocons;
-		pl011consiot = &armv7_bs_tag;
+	cn_tab = &protocons;
+	pl011consiot = &armv7_bs_tag;
 
-		protocons.cn_getc =  pl011cngetc;
-		protocons.cn_putc =  pl011cnputc;
-		protocons.cn_pollc =  pl011cnpollc;
-		cn_tab = &protocons;
+	protocons.cn_getc =  pl011cngetc;
+	protocons.cn_putc =  pl011cnputc;
+	protocons.cn_pollc =  pl011cnpollc;
+	cn_tab = &protocons;
 #endif
-	default:
-		; /* not much sense printing, wont be seen. */
-	}
 }
