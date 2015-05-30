@@ -287,7 +287,6 @@ set_cpufuncs()
 	    cputype == CPU_ID_ARM_88SV581X_V7)) {
 		cpufuncs = pj4bv7_cpufuncs;
 		arm_get_cachetype_cp15v7();
-		pmap_pte_init_armv7();
 
 		/* Use powersave on this CPU. */
 		cpu_do_powersave = 1;

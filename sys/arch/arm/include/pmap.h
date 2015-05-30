@@ -112,33 +112,18 @@ void	pmap_link_l2pt(vaddr_t, vaddr_t, pv_addr_t *);
 extern vaddr_t	pmap_curmaxkvaddr;
 
 #ifndef _LOCORE
-/*
- * pmap-specific data store in the vm_page structure.
- */
+
+#define __HAVE_VM_PAGE_MD
 struct vm_page_md {
-	struct pv_entry *pvh_list;		/* pv_entry list */
-	struct simplelock pvh_slock;		/* lock on this head */
+	LIST_HEAD(,pte_desc) pv_list;
 	int pvh_attrs;				/* page attributes */
-	u_int uro_mappings;
-	u_int urw_mappings;
-	union {
-		u_short s_mappings[2];	/* Assume kernel count <= 65535 */
-		u_int i_mappings;
-	} k_u;
-#define	kro_mappings	k_u.s_mappings[0]
-#define	krw_mappings	k_u.s_mappings[1]
-#define	k_mappings	k_u.i_mappings
 };
 
-#define	VM_MDPAGE_INIT(pg)						\
-do {									\
-	(pg)->mdpage.pvh_list = NULL;					\
-	simple_lock_init(&(pg)->mdpage.pvh_slock);			\
-	(pg)->mdpage.pvh_attrs = 0;					\
-	(pg)->mdpage.uro_mappings = 0;					\
-	(pg)->mdpage.urw_mappings = 0;					\
-	(pg)->mdpage.k_mappings = 0;					\
-} while (/*CONSTCOND*/0)
+#define VM_MDPAGE_INIT(pg) do {			\
+        LIST_INIT(&((pg)->mdpage.pv_list));     \
+	(pg)->mdpage.pvh_attrs = 0;		\
+} while (0)
+
 #endif /* _LOCORE */
 
 #endif	/* _ARM_PMAP_H_ */

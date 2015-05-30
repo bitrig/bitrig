@@ -34,9 +34,6 @@
 #include <arm/armreg.h>
 #include <arm/pte.h>
 
-#undef	DOMAIN_CLIENT	/* XXX */
-#include "assym.h"
-
 #define ERET	.long	0xe160006e		@ eret
 #define ELR	.long	0xe12ef30e		@ msr ELR_hyp, lr
 
