@@ -32,6 +32,7 @@
 #include "imx.h"
 #include "omap.h"
 #include "sunxi.h"
+#include "virt.h"
 
 struct arm32_bus_dma_tag armv7_bus_dma_tag = {
 	0,
@@ -250,10 +251,10 @@ armv7_attach(struct device *parent, struct device *self, void *aux)
 
 
 
-#if NEXYNOS > 0
-dev_type_cngetc(exuartcngetc);
-dev_type_cnputc(exuartcnputc);
-dev_type_cnpollc(exuartcnpollc);
+#if NVIRT > 0
+dev_type_cngetc(pl011cngetc);
+dev_type_cnputc(pl011cnputc);
+dev_type_cnpollc(pl011cnpollc);
 #endif
 
 int
@@ -266,38 +267,38 @@ extern struct bus_space armv7_bs_tag;
 void	protoconsole(uint32_t, void *);
 void	protoconsole2(uint32_t, void *);
 /* bootarg may be fdt or old style boot args */
-#if NEXYNOS > 0 /* or other recognized protocon */
+#if NVIRT > 0 /* or other recognized protocon */
 static struct consdev protocons = {
 	NULL, NULL, NULL, NULL, NULL, NULL,
 	NODEV, 0
 };
 #endif
 
-#if NEXYNOS > 0
-	extern bus_space_handle_t exuartconsioh;
-	extern bus_space_tag_t exuartconsiot;
+#if NVIRT > 0
+	extern bus_space_handle_t pl011consioh;
+	extern bus_space_tag_t pl011consiot;
 #endif
 
 void
 protoconsole(uint32_t board_id, void *bootarg) {
 
 	switch (board_id) {
-#if NEXYNOS > 0
+#if NVIRT > 0
 	case 0xd33: /* NURI (qemu target) */
-		// hack up a exuart console attachment for 0x13800000
+		// hack up a virt console attachment for 0x13800000
 
 
 		if (bootstrap_bs_map(NULL, 0x13800000, 4096, 0,
-		    &exuartconsioh)) {
+		    &pl011consioh)) {
 			panic("cannot attach console, ew");
 		}
-		exuartconsiot = &armv7_bs_tag;
+		pl011consiot = &armv7_bs_tag;
 
-		protocons.cn_getc =  exuartcngetc;
-		protocons.cn_putc =  exuartcnputc;
-		protocons.cn_pollc =  exuartcnpollc;
+		protocons.cn_getc =  pl011cngetc;
+		protocons.cn_putc =  pl011cnputc;
+		protocons.cn_pollc =  pl011cnpollc;
 		cn_tab = &protocons;
-	#endif
+#endif
 	default:
 		; /* not much sense printing, wont be seen. */
 	}
@@ -307,20 +308,20 @@ void
 protoconsole2(uint32_t board_id, void *bootarg) {
 
 	switch (board_id) {
-#if NEXYNOS > 0
+#if NVIRT > 0
 	case 0xd33: /* NURI (qemu target) */
-		// hack up a exuart console attachment for 0x13800000
+		// hack up a pl011 console attachment for 0x13800000
 
-		exuartconsioh = 0xc0000000;
-		pmap_kenter_cache(exuartconsioh, 0x13800000,
+		pl011consioh = 0xc0000000;
+		pmap_kenter_cache(pl011consioh, 0x13800000,
 		    PROT_WRITE|PROT_READ,  PMAP_CACHE_CI);
 
 		cn_tab = &protocons;
-		exuartconsiot = &armv7_bs_tag;
+		pl011consiot = &armv7_bs_tag;
 
-		protocons.cn_getc =  exuartcngetc;
-		protocons.cn_putc =  exuartcnputc;
-		protocons.cn_pollc =  exuartcnpollc;
+		protocons.cn_getc =  pl011cngetc;
+		protocons.cn_putc =  pl011cnputc;
+		protocons.cn_pollc =  pl011cnpollc;
 		cn_tab = &protocons;
 #endif
 	default:
