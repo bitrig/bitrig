@@ -118,9 +118,9 @@ struct board_dev sabresd_devs[] = {
 	{ "imxesdhc",	1 },
 	{ "imxesdhc",	2 },
 	{ "imxesdhc",	3 },
-	{ "ehci",	0 },
+	{ "imxehci",	0 },
 	{ "imxenet",	0 },
-	{ "ahci",	0 },
+	{ "imxahci",	0 },
 	{ NULL,		0 }
 };
 
@@ -184,9 +184,9 @@ struct board_dev novena_devs[] = {
 	{ "imxgpio",	6 },
 	{ "imxesdhc",	1 },
 	{ "imxesdhc",	2 },
-	{ "ehci",	0 },
+	{ "imxehci",	0 },
 	{ "imxenet",	0 },
-	{ "ahci",	0 },
+	{ "imxahci",	0 },
 	{ NULL,		0 }
 };
 
