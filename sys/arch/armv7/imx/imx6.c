@@ -369,6 +369,11 @@ struct armv7_dev imx6_devs[] = {
 	  },
 	  .irq = { PCIE_IRQ0, PCIE_IRQ1, PCIE_IRQ1, PCIE_IRQ2 }
 	},
+
+	/* Terminator */
+	{ .name = NULL,
+	  .unit = 0,
+	}
 };
 
 void
