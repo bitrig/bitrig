@@ -91,26 +91,12 @@ __EOT
 }
 
 md_prep_disklabel() {
-	local _disk=$1 _f _op
+	local _disk=$1 _f=/tmp/fstab.$1
 
 	md_prep_fdisk $_disk
 
-	_f=/tmp/fstab.$_disk
-	if [[ $_disk == $ROOTDISK ]]; then
-		while :; do
-			echo "The auto-allocated layout for $_disk is:"
-			disklabel -h -A $_disk | egrep "^#  |^  [a-p]:"
-			ask "Use (A)uto layout, (E)dit auto layout, or create (C)ustom layout?" a
-			case $resp in
-			a*|A*)	_op=-w ;;
-			e*|E*)	_op=-E ;;
-			c*|C*)	break ;;
-			*)	continue ;;
-			esac
-			disklabel $FSTABFLAG $_f $_op -A $_disk
-			return
-		done
-	fi
+	disklabel_autolayout $_disk $_f || return
+	[[ -s $_f ]] && return
 
 	cat <<__EOT
 
