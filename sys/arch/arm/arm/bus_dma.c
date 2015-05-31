@@ -880,7 +880,8 @@ _bus_dmamem_map(bus_dma_tag_t t, bus_dma_segment_t *segs, int nsegs,
 				panic("_bus_dmamem_map: size botch");
 			pmap_kenter_cache(va, addr,
 			    PROT_READ | PROT_WRITE,
-			    !(flags & BUS_DMA_COHERENT));
+			    (flags & BUS_DMA_COHERENT) ?
+			    PMAP_CACHE_CI : PMAP_CACHE_WB);
 
 #ifdef DEBUG_DMA
 			ptep = vtopte(va);
@@ -973,7 +974,6 @@ _bus_dmamap_load_buffer(bus_dma_tag_t t, bus_dmamap_t map, void *buf,
 #endif
 	int seg;
 	pmap_t pmap;
-	printf("dmamap\n");
 
 #ifdef DEBUG_DMA
 	printf("_bus_dmamem_load_buffer(buf=%p, len=%lx, flags=%d, 1st=%d)\n",
@@ -1031,9 +1031,6 @@ _bus_dmamap_load_buffer(bus_dma_tag_t t, bus_dmamap_t map, void *buf,
 		}
 #else
 		(void) pmap_extract(pmap, vaddr, &curaddr);
-		if (curaddr == 0x7ff2b000)
-			Debugger();
-		printf("%x %x\n", vaddr, curaddr);
 		map->_dm_flags &= ~ARM32_DMAMAP_COHERENT;
 #endif /* WTF? */
 

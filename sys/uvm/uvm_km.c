@@ -615,7 +615,11 @@ try_map:
 	TAILQ_FOREACH(pg, &pgl, pageq) {
 		if (kp->kp_pageable)
 			panic("km_alloc: kp_pageable mapping got to enter");
-		pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg), prot);
+		if (kp->kp_cacheattr)
+			pmap_kenter_cache(va, VM_PAGE_TO_PHYS(pg), prot,
+			    kp->kp_cacheattr);
+		else
+			pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg), prot);
 		va += PAGE_SIZE;
 	}
 	pmap_update(pmap_kernel());

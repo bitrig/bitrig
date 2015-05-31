@@ -342,6 +342,7 @@ struct kmem_pa_mode {
 	char kp_nomem;
 	char kp_zero;
 	char kp_pageable;
+	int kp_cacheattr;
 };
 
 /*

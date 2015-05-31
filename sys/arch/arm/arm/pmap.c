@@ -535,7 +535,7 @@ pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot)
 void
 pmap_kenter_cache(vaddr_t va, paddr_t pa, vm_prot_t prot, int cacheable)
 {
-        _pmap_kenter_pa(va, pa, prot, 0, cacheable ? PMAP_CACHE_DEFAULT : PMAP_CACHE_CI);
+        _pmap_kenter_pa(va, pa, prot, 0, cacheable);
 }
 
 /*
@@ -687,17 +687,24 @@ pmap_copy_page(struct vm_page *srcpg, struct vm_page *dstpg)
 }
 
 
+const struct kmem_pa_mode kp_l1 = {
+	.kp_constraint = &no_constraint,
+	.kp_cacheattr = PMAP_CACHE_PTE,
+	.kp_maxseg = 1,
+	.kp_zero = 1
+};
+
 void
 pmap_pinit(pmap_t pm)
 {
-#if 0
-        int i, k, try, tblidx, tbloff;
-        int s, seg;
-#endif
+	bzero(pm, sizeof (struct pmap));
 
-        bzero(pm, sizeof (struct pmap));
-                  
-        pmap_reference(pm);
+	while (pm->pm_pt1 == NULL) {
+		pm->pm_pt1 = km_alloc(L1_TABLE_SIZE, &kv_any,
+		    &kp_l1, &kd_nowait);
+	}
+
+	pmap_reference(pm);
 }
 
 /*
@@ -894,8 +901,8 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 
 	/* allocate kernel l1 page table */
 	pa = pmap_steal_avail(L1_TABLE_SIZE, L1_TABLE_SIZE, &va);
-	pmap_kernel()->l1_va = va;
-	pmap_kernel()->l1_pa = (uint32_t)pa;
+	pmap_kernel()->pm_pt1 = va;
+	pmap_kernel()->pm_pt1pa = (uint32_t)pa;
 
 	/* allocate v->p mappings for pmap_kernel() */
 	for (i = 0; i < VP_IDX1_CNT; i++) {
@@ -1078,8 +1085,8 @@ printf("allocated pted vp3 %x %x %x %x\n", idx1, idx2, vect, pa);
 		struct pmapvp3 *vp3;
 		uint32_t *l2p;
 
-		if  (pmap_kernel()->l1_va[i] != 0) {
-			printf("%04x: %08x\n", i, pmap_kernel()->l1_va[i]);
+		if  (pmap_kernel()->pm_pt1[i] != 0) {
+			printf("%04x: %08x\n", i, pmap_kernel()->pm_pt1[i]);
 			if (pmap_kernel()->pm_vp[idx1] == 0) {
 				printf("no tx for idx %d\n", idx1);
 				continue;
@@ -1143,7 +1150,7 @@ pmap_set_l2(struct pmap *pm, uint32_t va, vaddr_t l2_va, uint32_t l2_pa)
 	vp2 = pmap_kernel()->pm_vp[idx1];
 	vp2->l2[idx2] = (uint32_t *)l2_va;
 
-	pmap_kernel()->l1_va[va>>VP_IDX2_POS] = pg_entry;
+	pmap_kernel()->pm_pt1[va>>VP_IDX2_POS] = pg_entry;
 }
 
 /*
@@ -1152,15 +1159,28 @@ pmap_set_l2(struct pmap *pm, uint32_t va, vaddr_t l2_va, uint32_t l2_pa)
 void
 pmap_activate(struct proc *p)
 {
+	pmap_t pm;
+	struct pcb *pcb;
+	intr_state_t its;
+
+	pm = p->p_vmspace->vm_map.pmap;
+	pcb = &p->p_addr->u_pcb;
+
+	its = intr_disable();
+
+	pcb->pcb_pagedir = pm->pm_pt1pa;
+	cpu_setttb(pcb->pcb_pagedir);
+
+	intr_restore(its);
 }
 
 /*
  * deactivate a pmap entry
- * NOOP on powerpc
  */
 void
 pmap_deactivate(struct proc *p)
 {
+	/* NOOP */
 }
 
 /*
@@ -1535,17 +1555,18 @@ void pmap_unwire(pmap_t pm, vaddr_t va)
 
 void pmap_remove_holes(struct vmspace *v0)
 {
+	/* NOOP */
 }
 
 void pmap_virtual_space(vaddr_t *start, vaddr_t *end)
 {
-        *start = virtual_avail;
+	*start = virtual_avail;
 	*end = virtual_end;
 }
 
 vaddr_t  pmap_curmaxkvaddr;
 
-void    pmap_set_pcb_pagedir(pmap_t pm, struct pcb *pcb)
+void pmap_set_pcb_pagedir(pmap_t pm, struct pcb *pcb)
 {
 }
 
@@ -1733,7 +1754,7 @@ pmap_map_stolen()
 	for (mp = pmap_allocated; mp->size; mp++) {
 		printf("start %08x end %08x\n", mp->start, mp->start + mp->size);
 		printf("exe range %08x, %08x\n", KERNEL_BASE_VIRT,
-		    (uint32_t)etext);
+		    (uint32_t)&etext);
 		for (e = 0; e < mp->size; e += PAGE_SIZE) {
 			/* XXX - is this a kernel text mapping? */
 			/* XXX - Do we care about KDB ? */

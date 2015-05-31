@@ -557,7 +557,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 
 	printf("About to go virtual on kernel map\n");
 	/* NO PRINTING FROM HERE UNTIL consinit()!!!! */
-	setttb(pmap_kernel()->l1_pa);
+	setttb(pmap_kernel()->pm_pt1pa);
 	cpu_tlb_flushID();
 
 	/*

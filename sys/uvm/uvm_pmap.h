@@ -138,6 +138,7 @@ vaddr_t		 pmap_growkernel(vaddr_t);
 void		 pmap_init(void);
 
 void		 pmap_kenter_pa(vaddr_t, paddr_t, vm_prot_t);
+void		 pmap_kenter_cache(vaddr_t, paddr_t, vm_prot_t, int);
 void		 pmap_kremove(vaddr_t, vsize_t);
 #if !defined(pmap_is_modified)
 boolean_t	 pmap_is_modified(struct vm_page *);
