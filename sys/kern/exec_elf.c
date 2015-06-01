@@ -353,6 +353,8 @@ ELFNAME(load_file)(struct proc *p, char *path, struct exec_package *epp,
 
 	for (i = 0; i < eh.e_phnum; i++) {
 		if (ph[i].p_type == PT_LOAD) {
+			if (ph[i].p_filesz > ph[i].p_memsz)
+				goto bad1;
 			loadmap[idx].vaddr = trunc_page(ph[i].p_vaddr);
 			loadmap[idx].memsz = round_page (ph[i].p_vaddr +
 			    ph[i].p_memsz - loadmap[idx].vaddr);
@@ -541,14 +543,20 @@ ELFNAME2(exec,makecmds)(struct proc *p, struct exec_package *epp)
 
 	for (i = 0, pp = ph; i < eh->e_phnum; i++, pp++) {
 		if (pp->p_type == PT_INTERP && !interp) {
-			if (pp->p_filesz >= MAXPATHLEN)
+			if (pp->p_filesz < 2 || pp->p_filesz > MAXPATHLEN)
 				goto bad;
 			interp = pool_get(&namei_pool, PR_WAITOK);
 			if ((error = ELFNAME(read_from)(p, epp->ep_vp,
 			    pp->p_offset, interp, pp->p_filesz)) != 0) {
 				goto bad;
 			}
+			if (interp[pp->p_filesz - 1] != '\0')
+				goto bad;
 		} else if (pp->p_type == PT_LOAD) {
+			if (pp->p_filesz > pp->p_memsz) {
+				error = EINVAL;
+				goto bad;
+			}
 			if (base_ph == NULL)
 				base_ph = pp;
 		}
