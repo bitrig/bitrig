@@ -851,6 +851,11 @@ server_accept(int fd, short event, void *arg)
 	if ((clt = calloc(1, sizeof(*clt))) == NULL)
 		goto err;
 
+	/* Pre-allocate log buffer */
+	clt->clt_log = evbuffer_new();
+	if (clt->clt_log == NULL)
+		goto err;
+
 	clt->clt_s = s;
 	clt->clt_fd = -1;
 	clt->clt_toread = TOREAD_UNLIMITED;
@@ -895,13 +900,6 @@ server_accept(int fd, short event, void *arg)
 	clt->clt_output = evbuffer_new();
 	if (clt->clt_output == NULL) {
 		server_close(clt, "failed to allocate output buffer");
-		return;
-	}
-
-	/* Pre-allocate log buffer */
-	clt->clt_log = evbuffer_new();
-	if (clt->clt_log == NULL) {
-		server_close(clt, "failed to allocate log buffer");
 		return;
 	}
 
