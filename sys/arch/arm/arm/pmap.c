@@ -80,6 +80,8 @@ vaddr_t pmap_map_stolen(void);
 void pmap_physload_avail(void);
 extern caddr_t msgbufaddr;
 
+/* TODO: ttb flags */
+static uint32_t ttb_flags = 0;
 
 /* pte invalidation */
 void pte_invalidate(void *ptp, struct pte_desc *pted);
@@ -693,7 +695,6 @@ pmap_zero_page(struct vm_page *pg)
 	bzero((void *)zero_page, PAGE_SIZE);
 
 	pmap_kremove_pg(zero_page);
-
 }
 
 /*
@@ -826,6 +827,10 @@ pmap_vp_destroy(pmap_t pm)
 			s = splvm();
 			pool_put(&pmap_vp_pool, vp3);
 			splx(s);
+
+			if ((j % 4) == 0)
+				km_free(vp2->l2[j], 4 * L2_TABLE_SIZE,
+				    &kv_any, &kp_none);
 		}
 		pm->pm_vp[i] = NULL;
 		s = splvm();
@@ -1205,7 +1210,7 @@ pmap_activate(struct proc *p)
 	pcb = &p->p_addr->u_pcb;
 
 	pcb->pcb_pl1vec = NULL;
-	pcb->pcb_pagedir = pm->pm_pt1pa;
+	pcb->pcb_pagedir = pm->pm_pt1pa | ttb_flags;
 	cpu_setttb(pcb->pcb_pagedir);
 
 	intr_restore(its);
@@ -1605,7 +1610,7 @@ vaddr_t  pmap_curmaxkvaddr;
 
 void pmap_set_pcb_pagedir(pmap_t pm, struct pcb *pcb)
 {
-	pcb->pcb_pagedir = pm->pm_pt1pa;
+	pcb->pcb_pagedir = pm->pm_pt1pa | ttb_flags;
 }
 
 void pmap_avail_fixup(void);
