@@ -1,4 +1,4 @@
-#	$OpenBSD: install.md,v 1.37 2015/01/12 16:33:31 deraadt Exp $
+#	$OpenBSD: install.md,v 1.40 2015/06/02 19:39:18 rpe Exp $
 #
 #
 # Copyright (c) 1996 The NetBSD Foundation, Inc.
@@ -50,9 +50,9 @@ md_prep_fdisk() {
 
 	while :; do
 		_d=whole
-		if [[ -n $(fdisk $_disk | grep 'Signature: 0xAA55') ]]; then
+		if fdisk $_disk | grep -q 'Signature: 0xAA55'; then
 			fdisk $_disk
-			if [[ -n $(fdisk $_disk | grep '^..: A6 ') ]]; then
+			if fdisk $_disk | grep -q '^..: A6 '; then
 				_q=", use the (B)itrig area,"
 				_d=Bitrig
 			fi
@@ -83,7 +83,7 @@ must be marked as the only active partition.  Inside the fdisk command, the
 $(fdisk ${_disk})
 __EOT
 			fdisk -e ${_disk}
-			[[ -n $(fdisk $_disk | grep ' A6 ') ]] && return
+			fdisk $_disk | grep -q ' A6 ' && return
 			echo No Bitrig partition in MBR, try again. ;;
 		b*|B*)	return ;;
 		esac
