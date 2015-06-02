@@ -185,11 +185,10 @@ ENTRY(cpu_switchto)
 	 * process that called it was exiting. This means that we do
 	 * not need to save the current context (we nevertheless need
 	 * to clear the cache and TLB).
+	 * XXX: Store r4-r12, sp, lr, pc?
 	 */
 	teq	r0, #0x00000000
 	beq	.Lswitch_exited
-
-	/* Stage two: Save old context */
 
 	/* Save all the registers in the old proc's pcb */
 	add	r7, r6, #(PCB_R8)
@@ -214,10 +213,10 @@ ENTRY(cpu_switchto)
 	 * This can be optimised... We know we want to go from SVC32
 	 * mode to UND32 mode
 	 */
-        mrs	r3, cpsr
+	mrs	r3, cpsr
 	bic	r2, r3, #(PSR_MODE)
 	orr	r2, r2, #(PSR_UND32_MODE | I32_bit)
-        msr	cpsr_c, r2
+	msr	cpsr_c, r2
 
 #ifdef notworthit
 	teq	r0, #0x00000000
@@ -226,7 +225,7 @@ ENTRY(cpu_switchto)
 	str	sp, [r8, #(PCB_UND_SP)]
 #endif
 
-        msr	cpsr_c, r3		/* Restore the old mode */
+	msr	cpsr_c, r3		/* Restore the old mode */
 
 	/* rem: r0 = old proc */
 	/* rem: r1 = r6 = new process */
@@ -248,89 +247,16 @@ ENTRY(cpu_switchto)
 	ldr	r10, [r8, #(PCB_PAGEDIR)]	/* r10 = old L1 */
 	ldr	r11, [r9, #(PCB_PAGEDIR)]	/* r11 = new L1 */
 
-	ldr	r0, [r8, #(PCB_DACR)]		/* r0 = old DACR */
-	ldr	r1, [r9, #(PCB_DACR)]		/* r1 = new DACR */
-
 	teq	r10, r11			/* Same L1? */
-	cmpeq	r0, r1				/* Same DACR? */
 	beq	.Lcs_context_switched		/* yes! */
-
-	mov	r2, #DOMAIN_CLIENT
-	cmp	r1, r2, lsl #(PMAP_DOMAIN_KERNEL * 2) /* Sw to kernel thread? */
-	beq	.Lcs_cache_purge_skipped	/* Yup. Don't flush cache */
-
-	stmfd	sp!, {r0-r3}
-	ldr	r1, .Lcpufuncs
-	mov	lr, pc
-	ldr	pc, [r1, #CF_ICACHE_SYNC_ALL]
-	ldmfd	sp!, {r0-r3}
-
-.Lcs_cache_purge_skipped:
-	/* rem: r1 = new DACR */
-	/* rem: r6 = new proc */
-	/* rem: r9 = new PCB */
-	/* rem: r10 = old L1 */
-	/* rem: r11 = new L1 */
-
-	ldr	r7, [r9, #(PCB_PL1VEC)]
-
-	/*
-	 * At this point we need to kill IRQ's again.
-	 *
-	 * XXXSCW: Don't need to block FIQs if vectors have been relocated
-	 */
-	IRQdisableALL
-
-	/*
-	 * Ensure the vector table is accessible by fixing up the L1
-	 */
-	cmp	r7, #0			/* No need to fixup vector table? */
-	ldrne	r2, [r7]		/* But if yes, fetch current value */
-	ldrne	r0, [r9, #(PCB_L1VEC)]	/* Fetch new vector_page value */
-	mcr	p15, 0, r1, c3, c0, 0	/* Update DACR for new context */
-	cmpne	r2, r0			/* Stuffing the same value? */
-#ifndef PMAP_INCLUDE_PTE_SYNC
-	strne	r0, [r7]		/* Nope, update it */
-#else
-	beq	.Lcs_same_vector
-	str	r0, [r7]		/* Otherwise, update it */
-
-	/*
-	 * Need to sync the cache to make sure that last store is
-	 * visible to the MMU.
-	 */
-	ldr	r2, .Lcpufuncs
-	mov	r0, r7
-	mov	r1, #4
-	mov	lr, pc
-	ldr	pc, [r2, #CF_DCACHE_WB_RANGE]
-
-.Lcs_same_vector:
-#endif /* PMAP_INCLUDE_PTE_SYNC */
-
-	cmp	r10, r11		/* Switching to the same L1? */
-	ldr	r10, .Lcpufuncs
-	beq	.Lcs_same_l1		/* Yup. */
 
 	/*
 	 * Do a full context switch, including full TLB flush.
 	 */
+	ldr	r10, .Lcpufuncs
 	mov	r0, r11
 	mov	lr, pc
 	ldr	pc, [r10, #CF_CONTEXT_SWITCH]
-
-	b	.Lcs_context_switched
-
-	/*
-	 * We're switching to a different process in the same L1.
-	 * In this situation, we only need to flush the TLB for the
-	 * vector_page mapping, and even then only if r7 is non-NULL.
-	 */
-.Lcs_same_l1:
-	cmp	r7, #0
-	movne	r0, #0			/* We *know* vector_page's VA is 0x0 */
-	movne	lr, pc
-	ldrne	pc, [r10, #CF_TLB_FLUSHID_SE]
 
 .Lcs_context_switched:
 
@@ -341,41 +267,28 @@ ENTRY(cpu_switchto)
 
 	/* stick tcb into user visable register (V7 only) */
 	ldr	r3, [r9, #(PCB_TCB)]
-	mcr p15, 0, r3, c13, c0, 3
+	mcr	p15, 0, r3, c13, c0, 3
 
 	/*
 	 * This can be optimised... We know we want to go from SVC32
 	 * mode to UND32 mode
 	 */
-        mrs	r3, cpsr
+	mrs	r3, cpsr
 	bic	r2, r3, #(PSR_MODE)
 	orr	r2, r2, #(PSR_UND32_MODE)
-        msr	cpsr_c, r2
+	msr	cpsr_c, r2
 
 	ldr	sp, [r9, #(PCB_UND_SP)]
 
-        msr	cpsr_c, r3		/* Restore the old mode */
+	msr	cpsr_c, r3		/* Restore the old mode */
 
 	/* Restore all the save registers */
 	add	r7, r9, #PCB_R8
 	ldmia	r7, {r8-r13}
 
-	sub	r7, r7, #PCB_R8		/* restore PCB pointer */
-
-	/* rem: r6 = new proc */
-	/* rem: r7 = new pcb */
-
 	/* We can enable interrupts again */
 	IRQenableALL
 
-	/* rem: r6 = new proc */
-	/* rem: r7 = new PCB */
-
-.Lswitch_return:
-	/*
-	 * Pull the registers that got pushed when either savectx() or
-	 * cpu_switch() was called and return.
-	 */
 	add	sp, sp, #4
 	ldmfd	sp!, {r4-r7, pc}
 

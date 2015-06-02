@@ -50,27 +50,6 @@
 .Lpage_mask:
 	.word	0xfff
 
-#define PT_NOS		(1 << 5)
-#define PT_S		(1 << 1)
-#define PT_INNER_NC	0
-#define PT_INNER_WT	(1 << 0)
-#define PT_INNER_WB	((1 << 0) | (1 << 6))
-#define PT_INNER_WBWA	(1 << 6)
-#define PT_OUTER_NC	0
-#define PT_OUTER_WT	(2 << 3)
-#define PT_OUTER_WB	(3 << 3)
-#define PT_OUTER_WBWA	(1 << 3)
-
-#if 0
-#ifdef MULTIPROCESSOR
-#define PT_ATTR (PT_S|PT_INNER_WBWA|PT_OUTER_WBWA|PT_NOS)
-#else
-#define PT_ATTR (PT_INNER_WBWA|PT_OUTER_WBWA)
-#endif
-#else
-#define PT_ATTR 0
-#endif
-
 ENTRY(armv7_cpu_sleep)
 	dsb
 	wfi
@@ -98,7 +77,6 @@ ENTRY(armv7_periphbase)
  */
 ENTRY(armv7_setttb)
 	dsb
-	orr	r0, r0, #PT_ATTR
 	mcr	p15, 0, r0, c2, c0,  0 /* Translation Table Base Register 0 */
 	isb
 #ifdef MULTIPROCESSOR
@@ -309,17 +287,12 @@ ENTRY_NP(armv7_icache_sync_range)
  */
 ENTRY(armv7_context_switch)
 	dsb
-	orr	r0, r0, #PT_ATTR
-
-	mcr	p15, 0, r0, c2, c0,  0 /* Translation Table Base Register 0 */
+	mcr	p15, 0, r0, c2, c0, 0 /* Translation Table Base Register 0 */
 	isb
-#ifdef MULTIPROCESSOR
-	mcr	p15, 0, r0, c8, c3, 0 /* Invalidate entire unified TLB IS */
-#else
-	mcr	p15, 0, r0, c8, c7, 0 /* Invalidate entire unified TLB */
-#endif
+	mov	r0, #0
+	mcr	p15, 0, r0, c8, c7, 2 /* Invalidate unified TLB by ASID */
+	mcr	p15, 0, r0, c7, c5, 6 /* Branch predictor invalidate all */
 	dsb
-	isb
 	mov	pc, lr
 
 /*

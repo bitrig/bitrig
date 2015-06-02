@@ -691,7 +691,8 @@ const struct kmem_pa_mode kp_l1 = {
 	.kp_constraint = &no_constraint,
 	.kp_cacheattr = PMAP_CACHE_PTE,
 	.kp_maxseg = 1,
-	.kp_zero = 1
+	.kp_align = L1_TABLE_SIZE,
+	.kp_zero = 1,
 };
 
 void
@@ -699,10 +700,15 @@ pmap_pinit(pmap_t pm)
 {
 	bzero(pm, sizeof (struct pmap));
 
+	/* Allocate a full L1 table. */
 	while (pm->pm_pt1 == NULL) {
 		pm->pm_pt1 = km_alloc(L1_TABLE_SIZE, &kv_any,
-		    &kp_l1, &kd_nowait);
+		    &kp_l1, &kd_waitok);
 	}
+
+	pmap_extract(pmap_kernel(), (uint32_t)pm->pm_pt1, (paddr_t *)&pm->pm_pt1pa);
+
+	memcpy(pm->pm_pt1, pmap_kernel()->pm_pt1, L1_TABLE_SIZE);
 
 	pmap_reference(pm);
 }
@@ -1147,10 +1153,10 @@ pmap_set_l2(struct pmap *pm, uint32_t va, vaddr_t l2_va, uint32_t l2_pa)
 	//idx2 = (va >> VP_IDX2_POS) & VP_IDX2_MASK;
 	idx1 = VP_IDX1(va);
 	idx2 = VP_IDX2(va);
-	vp2 = pmap_kernel()->pm_vp[idx1];
+	vp2 = pm->pm_vp[idx1];
 	vp2->l2[idx2] = (uint32_t *)l2_va;
 
-	pmap_kernel()->pm_pt1[va>>VP_IDX2_POS] = pg_entry;
+	pm->pm_pt1[va>>VP_IDX2_POS] = pg_entry;
 }
 
 /*
@@ -1163,11 +1169,12 @@ pmap_activate(struct proc *p)
 	struct pcb *pcb;
 	intr_state_t its;
 
+	its = intr_disable();
+
 	pm = p->p_vmspace->vm_map.pmap;
 	pcb = &p->p_addr->u_pcb;
 
-	its = intr_disable();
-
+	pcb->pcb_pl1vec = NULL;
 	pcb->pcb_pagedir = pm->pm_pt1pa;
 	cpu_setttb(pcb->pcb_pagedir);
 
@@ -1444,7 +1451,7 @@ pte_insert(struct pte_desc *pted)
 
 	pte =  pted->pted_pte | cache_bits | access_bits | L2_P;
 
-	vp2 = pmap_kernel()->pm_vp[VP_IDX1(pted->pted_va)];
+	vp2 = pm->pm_vp[VP_IDX1(pted->pted_va)];
 	if (vp2->l2[VP_IDX2(pted->pted_va)] == NULL) {
 		panic("have a pted, but missing the l2 for %x va pmap %x",
 		    pted->pted_va, pm);
@@ -1463,7 +1470,7 @@ pte_remove(struct pte_desc *pted)
 	uint32_t *l2;
 	pmap_t pm = pted->pted_pmap;
 
-	vp2 = pmap_kernel()->pm_vp[VP_IDX1(pted->pted_va)];
+	vp2 = pm->pm_vp[VP_IDX1(pted->pted_va)];
 	if (vp2->l2[VP_IDX2(pted->pted_va)] == NULL) {
 		panic("have a pted, but missing the l2 for %x va pmap %x",
 		    pted->pted_va, pm);
