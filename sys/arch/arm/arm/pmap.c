@@ -1575,6 +1575,7 @@ vaddr_t  pmap_curmaxkvaddr;
 
 void pmap_set_pcb_pagedir(pmap_t pm, struct pcb *pcb)
 {
+	pcb->pcb_pagedir = pm->pm_pt1pa;
 }
 
 void pmap_avail_fixup(void);
