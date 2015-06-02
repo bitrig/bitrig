@@ -1,4 +1,4 @@
-#	$OpenBSD: bsd.own.mk,v 1.168 2015/06/01 17:36:19 miod Exp $
+#	$OpenBSD: bsd.own.mk,v 1.169 2015/06/02 04:33:39 miod Exp $
 #	$NetBSD: bsd.own.mk,v 1.24 1996/04/13 02:08:09 thorpej Exp $
 
 # Host-specific overrides
@@ -135,7 +135,7 @@ ASPICFLAG=-KPIC
 .endif
 
 .if ${MACHINE_ARCH} == "alpha" || ${MACHINE_ARCH} == "powerpc" || \
-    ${MACHINE_ARCH} == "sparc64"
+    ${MACHINE_ARCH} == "sparc" || ${MACHINE_ARCH} == "sparc64"
 # big PIE
 DEFAULT_PIE_DEF=-DPIE_DEFAULT=2
 .else
