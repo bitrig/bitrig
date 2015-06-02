@@ -56,8 +56,6 @@ _C_LABEL(page0):
 	ldr	pc, .Ldata_abort_target
 	ldr	pc, .Laddress_exception_target
 	ldr	pc, .Lirq_target
-	ldr	pc, .Lirq_target
-#if 0
 #ifdef __ARM_FIQ_INDIRECT
 	ldr	pc, .Lfiq_target
 #else
@@ -65,7 +63,6 @@ _C_LABEL(page0):
 	.set	_C_LABEL(fiqvector), . - _C_LABEL(page0)
 	subs	pc, lr, #4
 	.org	.Lfiqvector + 0x100
-#endif
 #endif
 
 _C_LABEL(page0_data):
