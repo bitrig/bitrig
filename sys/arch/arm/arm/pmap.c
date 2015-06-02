@@ -189,6 +189,14 @@ pmap_vp_remove(pmap_t pm, vaddr_t va)
 	return pted;
 }
 
+const struct kmem_pa_mode kp_l2 = {
+	.kp_constraint = &no_constraint,
+	.kp_cacheattr = PMAP_CACHE_PTE,
+	.kp_maxseg = 1,
+	.kp_align = L2_TABLE_SIZE,
+	.kp_zero = 1,
+};
+
 /*
  * Create a V -> P mapping for the given pmap and virtual address
  * with reference to the pte descriptor that is used to map the page.
@@ -200,6 +208,9 @@ pmap_vp_enter(pmap_t pm, vaddr_t va, struct pte_desc *pted)
 {
 	struct pmapvp2 *vp2;
 	struct pmapvp3 *vp3;
+	paddr_t l2_pa = 0;
+	vaddr_t l2_va = 0;
+	vaddr_t base_va;
 	int s;
 
 	vp2 = pm->pm_vp[VP_IDX1(va)];
@@ -212,12 +223,31 @@ pmap_vp_enter(pmap_t pm, vaddr_t va, struct pte_desc *pted)
 
 	vp3 = vp2->vp[VP_IDX2(va)];
 	if (vp3 == NULL) {
-		s = splvm();
-		vp3 = pool_get(&pmap_vp_pool, PR_NOWAIT | PR_ZERO);
-		splx(s);
-		vp2->vp[VP_IDX2(va)] = vp3;
+		/* No vp3 means no L2 yet, allocate now. */
+		while (!l2_va) {
+			l2_va = (vaddr_t)km_alloc(4 * L2_TABLE_SIZE, &kv_any,
+			    &kp_l2, &kd_nowait);
+		}
+
+		/* XXX: Check error? */
+		pmap_extract(pmap_kernel(), l2_va, &l2_pa);
+
+		base_va = va & ~(0x3 << VP_IDX2_POS);
+		for (int i = 0; i < 4; i++) {
+			s = splvm();
+			vp3 = pool_get(&pmap_vp_pool, PR_NOWAIT | PR_ZERO);
+			splx(s);
+			vp2->vp[VP_IDX2(base_va) + i] = vp3;
+
+			pmap_set_l2(pm, base_va + (i << VP_IDX2_POS),
+			    l2_va, l2_pa);
+
+			l2_va += L2_TABLE_SIZE;
+			l2_pa += L2_TABLE_SIZE;
+		}
 	}
 
+	vp3 = vp2->vp[VP_IDX2(va)]; /* XXX: check vp3? */
 	vp3->vp[VP_IDX3(va)] = pted;
 }
 
