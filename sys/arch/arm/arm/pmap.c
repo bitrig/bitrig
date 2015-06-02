@@ -247,9 +247,9 @@ pmap_vp_enter(pmap_t pm, vaddr_t va, struct pte_desc *pted)
 			l2_va += L2_TABLE_SIZE;
 			l2_pa += L2_TABLE_SIZE;
 		}
+		vp3 = vp2->vp[VP_IDX2(va)];
 	}
 
-	vp3 = vp2->vp[VP_IDX2(va)]; /* XXX: check vp3? */
 	vp3->vp[VP_IDX3(va)] = pted;
 }
 
@@ -828,9 +828,10 @@ pmap_vp_destroy(pmap_t pm)
 			pool_put(&pmap_vp_pool, vp3);
 			splx(s);
 
-			if ((j % 4) == 0)
+			if ((j % 4) == 0) {
 				km_free(vp2->l2[j], 4 * L2_TABLE_SIZE,
 				    &kv_any, &kp_none);
+			}
 		}
 		pm->pm_vp[i] = NULL;
 		s = splvm();
