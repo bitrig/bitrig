@@ -1502,7 +1502,7 @@ pte_insert(struct pte_desc *pted)
 	}
 	l2 = vp2->l2[VP_IDX2(pted->pted_va)];
 	l2[VP_IDX3(pted->pted_va)] = pte;
-	/* tlbie (pted->pted_va &PTE_RPN); */
+	cpu_tlb_flushID_SE(pted->pted_va);
 }
 
 void
@@ -1521,7 +1521,7 @@ pte_remove(struct pte_desc *pted)
 	}
 	l2 = vp2->l2[VP_IDX2(pted->pted_va)];
 	l2[VP_IDX3(pted->pted_va)] = 0;
-	/* tlbie (pted->pted_va &PTE_RPN); */
+	cpu_tlb_flushID_SE(pted->pted_va);
 }
 
 int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
