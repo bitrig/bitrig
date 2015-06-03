@@ -1549,23 +1549,27 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 		return 0;
 	}
 
-#if 0
-	if ((ftype & PROT_EXEC) && !XN) {
-		printf("%s: exec, but XN\n", __func__);
-	}
-#endif
-
 	if ((ftype & PROT_WRITE) && /* write fault */
 	    !(pted->pted_pte & PROT_WRITE) && /* and write is disabled now */
-	    (pted->pted_va & PROT_WRITE) && /* but is allowed */
-	    (pg->pg_flags & PG_PMAP_REF)) { /* and it's referenced ? */
+	    (pted->pted_va & PROT_WRITE)) { /* but is allowed */
 
 		/* page modified emulation */
 		pg->pg_flags |= PG_PMAP_MOD;
 		pg->pg_flags |= PG_PMAP_REF;
 
 		/* enable all */
-		pted->pted_pte |= (pted->pted_va & (PROT_MASK));
+		pted->pted_pte |= (pted->pted_va & (PROT_READ|PROT_WRITE));
+
+		/* insert change */
+		pte_insert(pted);
+
+		return 1;
+	} else if ((ftype & PROT_EXEC) &&
+		    !(pted->pted_pte & PROT_EXEC) && /* and write is disabled now */
+		    (pted->pted_va & PROT_EXEC)) { /* but is allowed */
+
+		/* enable exec */
+		pted->pted_pte |= (pted->pted_va & PROT_EXEC);
 
 		/* insert change */
 		pte_insert(pted);
@@ -1576,7 +1580,7 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 		pg->pg_flags |= PG_PMAP_REF;
 
 		/* enable read/exec */
-		pted->pted_pte |= (pted->pted_va & (PROT_READ|PROT_EXEC));
+		pted->pted_pte |= (pted->pted_va & PROT_READ);
 
 		/* insert change */
 		pte_insert(pted);
