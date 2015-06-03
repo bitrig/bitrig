@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2014/01/18 05:54:51 martynas Exp $
+#	$OpenBSD: Makefile,v 1.7 2015/06/03 20:43:21 reyk Exp $
 
 .PATH:		${.CURDIR}/../relayd
 
