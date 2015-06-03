@@ -561,13 +561,13 @@ _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags, int cache)
 void
 pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot)
 {
-	_pmap_kenter_pa(va, pa, prot, 0, PMAP_CACHE_DEFAULT);
+	_pmap_kenter_pa(va, pa, prot, prot, PMAP_CACHE_DEFAULT);
 }
 
 void
 pmap_kenter_cache(vaddr_t va, paddr_t pa, vm_prot_t prot, int cacheable)
 {
-	_pmap_kenter_pa(va, pa, prot, 0, cacheable);
+	_pmap_kenter_pa(va, pa, prot, prot, cacheable);
 }
 
 /*
