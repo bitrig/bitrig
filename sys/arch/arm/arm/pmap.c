@@ -1517,9 +1517,67 @@ pte_remove(struct pte_desc *pted)
 	/* tlbie (pted->pted_va &PTE_RPN); */
 }
 
-int     pmap_fault_fixup(pmap_t pm0, vaddr_t v0, vm_prot_t p0, int i0)
+int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 {
-return 0;
+	struct pte_desc *pted;
+	struct vm_page *pg;
+	paddr_t pa;
+
+	printf("fault pm %x va %x ftype %x user %x\n", pm, va, ftype, user);
+
+	/* Every VA needs a pted, even unmanaged ones. */
+	pted = pmap_vp_lookup(pm, va);
+	if (!pted || !PTED_VALID(pted)) {
+		return 0;
+	}
+
+	/* There has to be a PA for the VA, go look. */
+	if (pmap_extract(pm, va, &pa) == FALSE) {
+		return 0;
+	}
+
+	/* If it's unmanaged, it must not fault. */
+	pg = PHYS_TO_VM_PAGE(pa);
+	if (pg == NULL) {
+		return 0;
+	}
+
+#if 0
+	if ((ftype & PROT_EXEC) && !XN) {
+		printf("%s: exec, but XN\n", __func__);
+	}
+#endif
+
+	if ((ftype & PROT_WRITE) && /* write fault */
+	    !(pted->pted_pte & PROT_WRITE) && /* and write is disabled now */
+	    (pted->pted_va & PROT_WRITE) && /* but is allowed */
+	    (pg->pg_flags & PG_PMAP_REF)) { /* and it's referenced ? */
+
+		/* page modified emulation */
+		pg->pg_flags |= PG_PMAP_MOD;
+
+		/* enable write */
+		pted->pted_pte |= PROT_WRITE;
+
+		/* insert change */
+		pte_insert(pted);
+
+		return 1;
+	} else if (!(pg->pg_flags & PG_PMAP_REF)) {
+		/* page referenced emulation */
+		pg->pg_flags |= PG_PMAP_REF;
+
+		/* enable read/exec */
+		pted->pted_pte |= (pted->pted_va & (PROT_WRITE|PROT_EXEC));
+
+		/* insert change */
+		pte_insert(pted);
+
+		return 1;
+	}
+
+	/* didn't catch it, so probably broken */
+	return 0;
 }
 void pmap_postinit(void) {}
 void    pmap_map_section(vaddr_t l1_addr, vaddr_t va, paddr_t pa, int flags, int cache) {
