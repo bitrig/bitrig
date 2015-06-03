@@ -653,12 +653,13 @@ pmap_fill_pte(pmap_t pm, vaddr_t va, paddr_t pa, struct pte_desc *pted,
 	}
 	pted->pted_va |= cache;
 
-	pted->pted_pte = pa & PTE_RPGN;
-
 	pted->pted_va |= prot & (PROT_READ|PROT_WRITE|PROT_EXEC);
 
 	if (flags & PMAP_WIRED)
 		pted->pted_va |= PTED_VA_WIRED_M;
+
+	pted->pted_pte = pa & PTE_RPGN;
+	pted->pted_pte |= flags & (PROT_READ|PROT_WRITE|PROT_EXEC);
 }
 
 
@@ -1479,13 +1480,13 @@ pte_insert(struct pte_desc *pted)
 	}
 
 	if (pm == pmap_kernel()) {
-		access_bits = ap_bits_kern[pted->pted_va & PROT_MASK];
+		access_bits = ap_bits_kern[pted->pted_pte & PROT_MASK];
 	} else {
-		access_bits = ap_bits_user[pted->pted_va & PROT_MASK];
+		access_bits = ap_bits_user[pted->pted_pte & PROT_MASK];
 	}
 	access_bits |= L2_P_AP0;
 
-	pte =  pted->pted_pte | cache_bits | access_bits | L2_P;
+	pte = (pted->pted_pte & PTE_RPGN) | cache_bits | access_bits | L2_P;
 
 	vp2 = pm->pm_vp[VP_IDX1(pted->pted_va)];
 	if (vp2->l2[VP_IDX2(pted->pted_va)] == NULL) {
