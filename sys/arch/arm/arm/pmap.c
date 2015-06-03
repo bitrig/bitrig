@@ -693,6 +693,7 @@ pmap_collect(pmap_t pm)
 void
 pmap_zero_page(struct vm_page *pg)
 {
+	printf("%s\n", __func__);
 	paddr_t pa = VM_PAGE_TO_PHYS(pg);
 
 	/* simple_lock(&pmap_zero_page_lock); */
@@ -709,6 +710,7 @@ pmap_zero_page(struct vm_page *pg)
 void
 pmap_copy_page(struct vm_page *srcpg, struct vm_page *dstpg)
 {
+	printf("%s\n", __func__);
 	paddr_t srcpa = VM_PAGE_TO_PHYS(srcpg);
 	paddr_t dstpa = VM_PAGE_TO_PHYS(dstpg);
 	/* simple_lock(&pmap_copy_page_lock); */
@@ -1199,6 +1201,7 @@ pmap_set_l2(struct pmap *pm, uint32_t va, vaddr_t l2_va, uint32_t l2_pa)
 	vp2->l2[idx2] = (uint32_t *)l2_va;
 
 	pm->pm_pt1[va>>VP_IDX2_POS] = pg_entry;
+	__asm __volatile("dsb");
 }
 
 /*
@@ -1502,6 +1505,7 @@ pte_insert(struct pte_desc *pted)
 	}
 	l2 = vp2->l2[VP_IDX2(pted->pted_va)];
 	l2[VP_IDX3(pted->pted_va)] = pte;
+	__asm __volatile("dsb");
 	cpu_tlb_flushID_SE(pted->pted_va);
 }
 
@@ -1521,6 +1525,7 @@ pte_remove(struct pte_desc *pted)
 	}
 	l2 = vp2->l2[VP_IDX2(pted->pted_va)];
 	l2[VP_IDX3(pted->pted_va)] = 0;
+	__asm __volatile("dsb");
 	cpu_tlb_flushID_SE(pted->pted_va);
 }
 
@@ -1557,7 +1562,7 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 		pg->pg_flags |= PG_PMAP_MOD;
 		pg->pg_flags |= PG_PMAP_REF;
 
-		/* enable all */
+		/* enable read/write */
 		pted->pted_pte |= (pted->pted_va & (PROT_READ|PROT_WRITE));
 
 		/* insert change */
@@ -1565,21 +1570,27 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 
 		return 1;
 	} else if ((ftype & PROT_EXEC) &&
-		    !(pted->pted_pte & PROT_EXEC) && /* and write is disabled now */
-		    (pted->pted_va & PROT_EXEC)) { /* but is allowed */
+	    !(pted->pted_pte & PROT_EXEC) && /* and exec is disabled now */
+	    (pted->pted_va & PROT_EXEC)) { /* but is allowed */
 
-		/* enable exec */
-		pted->pted_pte |= (pted->pted_va & PROT_EXEC);
+		/* page referenced emulation */
+		pg->pg_flags |= PG_PMAP_REF;
+
+		/* enable read/exec */
+		pted->pted_pte |= (pted->pted_va & (PROT_READ|PROT_EXEC));
 
 		/* insert change */
 		pte_insert(pted);
 
 		return 1;
-	} else if (!(pg->pg_flags & PG_PMAP_REF)) {
+	} else if ((ftype & PROT_READ) &&
+	    !(pted->pted_pte & PROT_READ) && /* and read is disabled now */
+	    (pted->pted_va & PROT_READ)) { /* but is allowed */
+
 		/* page referenced emulation */
 		pg->pg_flags |= PG_PMAP_REF;
 
-		/* enable read/exec */
+		/* enable read */
 		pted->pted_pte |= (pted->pted_va & PROT_READ);
 
 		/* insert change */
