@@ -330,6 +330,8 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	int need_sync = 0;
 	int cache;
 
+	if (!cold)
+	printf("%s: %x %x %x %x %x\n", __func__, va, pa, prot, flags, pm);
 	/* MP - Acquire lock for this pmap */
 
 	s = splvm();
@@ -517,6 +519,9 @@ _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags, int cache)
 	struct pte_desc *pted;
 	int s;
 	pmap_t pm;
+
+	if (!cold)
+	printf("%s: %x %x %x %x %x\n", __func__, va, pa, prot, flags, cache);
 
 	pm = pmap_kernel();
 
@@ -1319,6 +1324,8 @@ pmap_page_protect(struct vm_page *pg, vm_prot_t prot)
 void
 pmap_protect(pmap_t pm, vaddr_t sva, vaddr_t eva, vm_prot_t prot)
 {
+	if (!cold)
+	printf("%s\n", __func__);
 	int s;
 	if (prot & (PROT_READ | PROT_EXEC)) {
 		s = splvm();
@@ -1555,9 +1562,10 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 
 		/* page modified emulation */
 		pg->pg_flags |= PG_PMAP_MOD;
+		pg->pg_flags |= PG_PMAP_REF;
 
-		/* enable write */
-		pted->pted_pte |= PROT_WRITE;
+		/* enable all */
+		pted->pted_pte |= (pted->pted_va & (PROT_MASK));
 
 		/* insert change */
 		pte_insert(pted);
@@ -1568,7 +1576,7 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 		pg->pg_flags |= PG_PMAP_REF;
 
 		/* enable read/exec */
-		pted->pted_pte |= (pted->pted_va & (PROT_WRITE|PROT_EXEC));
+		pted->pted_pte |= (pted->pted_va & (PROT_READ|PROT_EXEC));
 
 		/* insert change */
 		pte_insert(pted);
@@ -1616,46 +1624,67 @@ void memhook()
 {
 }
 
-void    pmap_link_l2pt(vaddr_t v0, vaddr_t v1, pv_addr_t * p1) {}
-
 paddr_t zero_page;
 paddr_t copy_src_page;
 paddr_t copy_dst_page;
 
 
-int pmap_is_referenced(struct vm_page *v0);
-int pmap_is_referenced(struct vm_page *v0)
+int pmap_is_referenced(struct vm_page *pg)
 {
-return 0;
+	printf("%s\n", __func__);
+	return ((pg->pg_flags & PG_PMAP_REF) != 0);
 }
 
-int pmap_is_modified(struct vm_page *v0);
-int pmap_is_modified(struct vm_page *v0)
+int pmap_is_modified(struct vm_page *pg)
 {
-return 0;
+	printf("%s\n", __func__);
+	return ((pg->pg_flags & PG_PMAP_MOD) != 0);
 }
 
-int pmap_clear_modify(struct vm_page *v0);
-int pmap_clear_modify(struct vm_page *v0)
+int pmap_clear_modify(struct vm_page *pg)
 {
-return 0;
+	struct pte_desc *pted;
+
+	printf("%s\n", __func__);
+
+	pg->pg_flags &= ~PG_PMAP_MOD;
+
+	LIST_FOREACH(pted, &(pg->mdpage.pv_list), pted_pv_list) {
+		pte_remove(pted);
+		pted->pted_pte &= ~PROT_WRITE;
+		pte_insert(pted);
+	}
+
+	return 0;
 }
 
-int pmap_clear_reference(struct vm_page *v0);
-int pmap_clear_reference(struct vm_page *v0)
+int pmap_clear_reference(struct vm_page *pg)
 {
-return 0;
+	struct pte_desc *pted;
+
+	printf("%s\n", __func__);
+
+	pg->pg_flags &= ~PG_PMAP_REF;
+
+	LIST_FOREACH(pted, &(pg->mdpage.pv_list), pted_pv_list) {
+		pte_remove(pted);
+		pted->pted_pte &= ~PROT_MASK;
+	}
+
+	return 0;
 }
 
 void pmap_copy(pmap_t src_pmap, pmap_t dst_pmap, vaddr_t src, vsize_t sz, vaddr_t dst)
 {
+	printf("%s\n", __func__);
 }
 
 void pmap_unwire(pmap_t pm, vaddr_t va)
 {
+	printf("%s\n", __func__);
 }
 
-void pmap_remove_holes(struct vmspace *v0)
+void pmap_remove_holes(struct vmspace *vm)
 {
 	/* NOOP */
 }
