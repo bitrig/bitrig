@@ -1,4 +1,4 @@
-#	$OpenBSD: install.md,v 1.12 2015/06/02 19:54:06 rpe Exp $
+#	$OpenBSD: install.md,v 1.13 2015/06/03 01:30:29 jsg Exp $
 #
 #
 # Copyright (c) 1996 The NetBSD Foundation, Inc.
@@ -105,7 +105,7 @@ __EOT
 	elif [[ ${MDPLAT} == "IMX" ]]; then
 		if [[ -n $CUBOX ]]; then
 			cat > /tmp/boot.cmd<<__EOT
-; setenv loadaddr ${LOADADDR} ; setenv bootargs sd0i:/bsd.umg ; for dtype in sata mmc ; do for disk in 0 1 ; do \${dtype} dev \${disk} ; for fs in fat ext2 ; do if \${fs}load \${dtype} \${disk}:1 \${loadaddr} bsd.umg ; then bootm \${loadaddr} ; fi ; done; done; done; echo; echo failed to load bsd.umg
+; setenv loadaddr ${LOADADDR} ; setenv bootargs sd0i:/bsd.umg ; for dtype in sata usb mmc ; do for disk in 0 1 ; do \${dtype} dev \${disk} ; for fs in fat ext2 ; do if \${fs}load \${dtype} \${disk}:1 \${loadaddr} bsd.umg ; then bootm \${loadaddr} ; fi ; done; done; done; echo; echo failed to load bsd.umg
 __EOT
 			mkuboot -t script -a arm -o linux /tmp/boot.cmd /mnt/mnt/boot.scr
 			dd if=/mnt/usr/mdec/cubox/SPL of=/dev/${_disk}c bs=1024 seek=1
