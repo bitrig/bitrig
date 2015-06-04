@@ -360,6 +360,18 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 		cache = PMAP_CACHE_CI;
 	}
 
+	/*
+	 * If it should be enabled _right now_, we can skip doing ref/mod
+	 * emulation. Any access includes reference, modified only by write.
+	 */
+	if (pg != NULL &&
+	    ((flags & PROT_MASK) || (pg->pg_flags & PG_PMAP_REF))) {
+		pg->pg_flags |= PG_PMAP_REF;
+		if ((prot & PROT_WRITE) && (flags & PROT_WRITE)) {
+			pg->pg_flags |= PG_PMAP_MOD;
+		}
+	}
+
 	pmap_fill_pte(pm, va, pa, pted, prot, flags, cache);
 
 	if (pg != NULL) {
@@ -412,6 +424,8 @@ pmap_remove(pmap_t pm, vaddr_t va, vaddr_t endva)
 	int i_vp3, s_vp3, e_vp3;
 	struct pmapvp2 *vp2;
 	struct pmapvp3 *vp3;
+
+	printf("%s: %x %x %x\n", __func__, pm, va, endva);
 
 	/* I suspect that if this loop were unrolled better
 	 * it would have better performance, testing i_vp1 and i_vp2
@@ -1529,6 +1543,11 @@ pte_remove(struct pte_desc *pted)
 	cpu_tlb_flushID_SE(pted->pted_va);
 }
 
+/*
+ * This function exists to do software referenced/modified emulation.
+ * It's purpose is to tell the caller that a fault was generated either
+ * for this emulation, or to tell the caller that it's a legit fault.
+ */
 int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 {
 	struct pte_desc *pted;
@@ -1554,46 +1573,57 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 		return 0;
 	}
 
-	if ((ftype & PROT_WRITE) && /* write fault */
+	/*
+	 * Check the fault types to find out if we were doing
+	 * any mod/ref emulation and fixup the PTE if we were.
+	 */
+	if ((ftype & PROT_WRITE) && /* fault caused by a write */
 	    !(pted->pted_pte & PROT_WRITE) && /* and write is disabled now */
-	    (pted->pted_va & PROT_WRITE)) { /* but is allowed */
+	    (pted->pted_va & PROT_WRITE)) { /* but is supposedly allowed */
 
-		/* page modified emulation */
+		/*
+		 * Page modified emulation. A write always
+		 * includes a reference.
+		 */
 		pg->pg_flags |= PG_PMAP_MOD;
 		pg->pg_flags |= PG_PMAP_REF;
 
-		/* enable read/write */
+		/* Thus, enable read and write. */
 		pted->pted_pte |= (pted->pted_va & (PROT_READ|PROT_WRITE));
 
-		/* insert change */
+		/* Insert change. */
 		pte_insert(pted);
 
 		return 1;
-	} else if ((ftype & PROT_EXEC) &&
+	} else if ((ftype & PROT_EXEC) && /* fault caused by an exec */
 	    !(pted->pted_pte & PROT_EXEC) && /* and exec is disabled now */
-	    (pted->pted_va & PROT_EXEC)) { /* but is allowed */
+	    (pted->pted_va & PROT_EXEC)) { /* but is supposedly allowed */
 
-		/* page referenced emulation */
+		/*
+		 * Exec always includes a read/reference.
+		 */
 		pg->pg_flags |= PG_PMAP_REF;
 
-		/* enable read/exec */
+		/* Thus, enable read and exec. */
 		pted->pted_pte |= (pted->pted_va & (PROT_READ|PROT_EXEC));
 
-		/* insert change */
+		/* Insert change. */
 		pte_insert(pted);
 
 		return 1;
-	} else if ((ftype & PROT_READ) &&
+	} else if ((ftype & PROT_READ) && /* fault caused by a read */
 	    !(pted->pted_pte & PROT_READ) && /* and read is disabled now */
-	    (pted->pted_va & PROT_READ)) { /* but is allowed */
+	    (pted->pted_va & PROT_READ)) { /* but is supposedly allowed */
 
-		/* page referenced emulation */
+		/*
+		 * Page referenced emulation.
+		 */
 		pg->pg_flags |= PG_PMAP_REF;
 
-		/* enable read */
+		/* Thus, enable read. */
 		pted->pted_pte |= (pted->pted_va & PROT_READ);
 
-		/* insert change */
+		/* Insert change. */
 		pte_insert(pted);
 
 		return 1;
@@ -1602,6 +1632,7 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 	/* didn't catch it, so probably broken */
 	return 0;
 }
+
 void pmap_postinit(void) {}
 void    pmap_map_section(vaddr_t l1_addr, vaddr_t va, paddr_t pa, int flags, int cache) {
 	uint32_t *l1 = (uint32_t *)l1_addr;
