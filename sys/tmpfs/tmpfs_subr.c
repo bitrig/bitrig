@@ -1184,6 +1184,7 @@ tmpfs_chtimes(struct vnode *vp, const struct timespec *atime,
 		node->tn_mtime = *mtime;
 	}
 
+	node->tn_status |= TMPFS_NODE_CHANGED;
 	VN_KNOTE(vp, NOTE_ATTRIB);
 
 	return 0;

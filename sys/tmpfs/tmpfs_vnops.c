@@ -540,7 +540,7 @@ tmpfs_setattr(void *v)
 		error = tmpfs_chtimes(vp, &vap->va_atime, &vap->va_mtime,
 		    vap->va_vaflags, cred, p);
 		if (error == 0)
-			return 0;
+			goto bail;
 	}
 
 bail:
