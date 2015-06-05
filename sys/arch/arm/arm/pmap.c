@@ -311,8 +311,6 @@ pmap_vp_enter(pmap_t pm, vaddr_t va, struct pte_desc *pted)
 		vp3 = pool_get(&pmap_vp_pool, PR_NOWAIT | PR_ZERO);
 		splx(s);
 
-		printf("l2_va %x vp3 %x\n", l2_va, vp3);
-
 		vp2->vp[VP_IDX2(base_va)] = vp3;
 	}
 
@@ -430,7 +428,6 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	 * If it should be enabled _right now_, we can skip doing ref/mod
 	 * emulation. Any access includes reference, modified only by write.
 	 */
-	//if (!cold) printf("pg %x prot %x flags %x\n", pg, prot, flags);
 	if (pg != NULL &&
 	    ((flags & PROT_MASK) || (pg->pg_flags & PG_PMAP_REF))) {
 		pg->pg_flags |= PG_PMAP_REF;
@@ -1317,6 +1314,16 @@ pmap_activate(struct proc *p)
 	pm = p->p_vmspace->vm_map.pmap;
 	pcb = &p->p_addr->u_pcb;
 
+#if 0
+	if (pm != pmap_kernel()) {
+		uint32_t vm_offset = VM_MIN_KERNEL_ADDRESS >> VP_IDX2_POS;
+		uint32_t vm_end = 0xffffffff >> VP_IDX2_POS;
+		uint32_t vm_size = (vm_end - vm_offset) * sizeof(uint32_t);
+		memcpy(&pm->pm_pt1[vm_offset], &(pmap_kernel()->pm_pt1[vm_offset]), vm_size);
+		dcache_wb_pou((vaddr_t)&pm->pm_pt1[vm_offset], vm_size);
+	}
+#endif
+
 	pcb->pcb_pl1vec = NULL;
 	pcb->pcb_pagedir = pm->pm_pt1pa | ttb_flags;
 	cpu_setttb(pcb->pcb_pagedir);
@@ -1414,8 +1421,7 @@ pmap_page_protect(struct vm_page *pg, vm_prot_t prot)
 	int s;
 	struct pte_desc *pted;
 
-	if (!cold)
-		printf("%s: prot %x\n", __func__, prot);
+	//if (!cold) printf("%s: prot %x\n", __func__, prot);
 
 	/* need to lock for this pv */
 	s = splvm();
@@ -1441,8 +1447,8 @@ pmap_page_protect(struct vm_page *pg, vm_prot_t prot)
 void
 pmap_protect(pmap_t pm, vaddr_t sva, vaddr_t eva, vm_prot_t prot)
 {
-	if (!cold)
-	printf("%s\n", __func__);
+	//if (!cold) printf("%s\n", __func__);
+
 	int s;
 	if (prot & (PROT_READ | PROT_EXEC)) {
 		s = splvm();
@@ -1494,7 +1500,7 @@ pmap_init()
 	pool_setlowat(&pmap_pted_pool, 20);
 	pool_init(&pmap_l2_pool, L2_TABLE_SIZE, L2_TABLE_SIZE, 0, 0, "l2",
 	    NULL);
-	pool_setlowat(&pmap_l2_pool, 20);
+	pool_setlowat(&pmap_l2_pool, 10);
 
 	pmap_initialized = 1;
 }
@@ -1659,7 +1665,7 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 	struct vm_page *pg;
 	paddr_t pa;
 
-	printf("fault pm %x va %x ftype %x user %x\n", pm, va, ftype, user);
+	//printf("fault pm %x va %x ftype %x user %x\n", pm, va, ftype, user);
 
 	/* Every VA needs a pted, even unmanaged ones. */
 	pted = pmap_vp_lookup(pm, va);
@@ -1791,13 +1797,13 @@ paddr_t copy_dst_page;
 
 int pmap_is_referenced(struct vm_page *pg)
 {
-	printf("%s\n", __func__);
+	//printf("%s\n", __func__);
 	return ((pg->pg_flags & PG_PMAP_REF) != 0);
 }
 
 int pmap_is_modified(struct vm_page *pg)
 {
-	printf("%s\n", __func__);
+	//printf("%s\n", __func__);
 	return ((pg->pg_flags & PG_PMAP_MOD) != 0);
 }
 
@@ -1805,7 +1811,7 @@ int pmap_clear_modify(struct vm_page *pg)
 {
 	struct pte_desc *pted;
 
-	printf("%s\n", __func__);
+	//printf("%s\n", __func__);
 
 	pg->pg_flags &= ~PG_PMAP_MOD;
 
@@ -1822,7 +1828,7 @@ int pmap_clear_reference(struct vm_page *pg)
 {
 	struct pte_desc *pted;
 
-	printf("%s\n", __func__);
+	//printf("%s\n", __func__);
 
 	pg->pg_flags &= ~PG_PMAP_REF;
 
@@ -1836,7 +1842,7 @@ int pmap_clear_reference(struct vm_page *pg)
 
 void pmap_copy(pmap_t src_pmap, pmap_t dst_pmap, vaddr_t src, vsize_t sz, vaddr_t dst)
 {
-	printf("%s\n", __func__);
+	//printf("%s\n", __func__);
 }
 
 void pmap_unwire(pmap_t pm, vaddr_t va)
@@ -1844,6 +1850,7 @@ void pmap_unwire(pmap_t pm, vaddr_t va)
 	struct pte_desc *pted;
 
 	//printf("%s\n", __func__);
+
 	pted = pmap_vp_lookup(pm, va);
 	if (pted != NULL)
 		pted->pted_va &= ~PTED_VA_WIRED_M;
