@@ -1841,7 +1841,12 @@ void pmap_copy(pmap_t src_pmap, pmap_t dst_pmap, vaddr_t src, vsize_t sz, vaddr_
 
 void pmap_unwire(pmap_t pm, vaddr_t va)
 {
-	printf("%s\n", __func__);
+	struct pte_desc *pted;
+
+	//printf("%s\n", __func__);
+	pted = pmap_vp_lookup(pm, va);
+	if (pted != NULL)
+		pted->pted_va &= ~PTED_VA_WIRED_M;
 }
 
 void pmap_remove_holes(struct vmspace *vm)
