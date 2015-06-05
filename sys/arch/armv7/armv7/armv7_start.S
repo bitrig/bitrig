@@ -147,6 +147,9 @@ _C_LABEL(bootstrap_start):
 	mcr	p15, 0, r0, c2, c0, 0	/* Set TTB */
 	mcr	p15, 0, r0, c8, c7, 0	/* Flush TLB */
 
+	mov	r0, #1
+	mcr	p15, 0, r0, c13, c0, 1 /* Set ASID to 0 */
+
 	/* Set the Domain Access register.  Very important! */
         mov     r0, #((DOMAIN_CLIENT << (PMAP_DOMAIN_KERNEL*2)) | DOMAIN_CLIENT)
 	mcr	p15, 0, r0, c3, c0, 0

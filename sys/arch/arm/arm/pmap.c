@@ -33,6 +33,76 @@
 #include <ddb/db_extern.h>
 #include <ddb/db_output.h>
 
+/* FIXME FROM FREEBSD */
+/* Write back D-cache to PoU */
+static __inline void
+dcache_wb_pou(vaddr_t va, vsize_t size)
+{
+	vaddr_t eva = va + size;
+
+	__asm __volatile("dsb");
+	//va &= ~cpuinfo.dcache_line_mask;
+	//for ( ; va < eva; va += cpuinfo.dcache_line_size) {
+	va &= ~63;
+	for ( ; va < eva; va += 64) {
+#ifdef MULTIPROCESSOR
+		__asm __volatile("mcr p15, 0, %0, c7, c11, 1" :: "r" (va));
+#else
+		__asm __volatile("mcr p15, 0, %0, c7, c10, 1" :: "r" (va));
+#endif
+	}
+	__asm __volatile("dsb");
+}
+
+/* Write back and invalidate D-cache to PoC */
+static __inline void
+dcache_wbinv_poc(vaddr_t sva, paddr_t pa, vsize_t size)
+{
+	vaddr_t va;
+	vaddr_t eva = sva + size;
+
+	__asm __volatile("dsb");
+	/* write back L1 first */
+	//va = sva & ~cpuinfo.dcache_line_mask;
+	//for ( ; va < eva; va += cpuinfo.dcache_line_size) {
+	va = sva & ~63;
+	for ( ; va < eva; va += 64) {
+		__asm __volatile("mcr p15, 0, %0, c7, c10, 1" :: "r" (va));
+	}
+	__asm __volatile("dsb");
+
+	/* then write back and invalidate L2 */
+	cpu_sdcache_wbinv_range(0, pa, size);
+
+	/* then invalidate L1 */
+	//va = sva & ~cpuinfo.dcache_line_mask;
+	//for ( ; va < eva; va += cpuinfo.dcache_line_size) {
+	va = sva & ~63;
+	for ( ; va < eva; va += 64) {
+		__asm __volatile("mcr p15, 0, %0, c7, c6, 1" :: "r" (va));
+	}
+	__asm __volatile("dsb");
+}
+
+static __inline void
+ttlb_flush(vaddr_t va)
+{
+	__asm __volatile("dsb");
+	__asm __volatile("mcr p15, 0, %0, c8, c3, 3" :: "r" (va));
+	__asm __volatile("dsb");
+}
+
+static __inline void
+ttlb_flush_range(vaddr_t va, vsize_t size)
+{
+	vaddr_t eva = va + size;
+
+	__asm __volatile("dsb");
+	for ( ; va < eva; va += PAGE_SIZE)
+		__asm __volatile("mcr p15, 0, %0, c8, c3, 3" :: "r" (va));
+	__asm __volatile("dsb");
+}
+
 struct pmap kernel_pmap_;
 
 LIST_HEAD(pted_pv_head, pte_desc);
@@ -90,6 +160,7 @@ void pte_invalidate(void *ptp, struct pte_desc *pted);
 struct pool pmap_pmap_pool;
 struct pool pmap_vp_pool;
 struct pool pmap_pted_pool;
+struct pool pmap_l2_pool;
 
 /* list of L1 tables */
 
@@ -226,28 +297,23 @@ pmap_vp_enter(pmap_t pm, vaddr_t va, struct pte_desc *pted)
 	vp3 = vp2->vp[VP_IDX2(va)];
 	if (vp3 == NULL) {
 		/* No vp3 means no L2 yet, allocate now. */
-		while (!l2_va) {
-			l2_va = (vaddr_t)km_alloc(4 * L2_TABLE_SIZE, &kv_any,
-			    &kp_l2, &kd_nowait);
-		}
+		s = splvm();
+		l2_va = (vaddr_t)pool_get(&pmap_l2_pool, PR_NOWAIT | PR_ZERO);
+		splx(s);
 
 		/* XXX: Check error? */
 		pmap_extract(pmap_kernel(), l2_va, &l2_pa);
 
-		base_va = va & ~(0x3 << VP_IDX2_POS);
-		for (int i = 0; i < 4; i++) {
-			s = splvm();
-			vp3 = pool_get(&pmap_vp_pool, PR_NOWAIT | PR_ZERO);
-			splx(s);
-			vp2->vp[VP_IDX2(base_va) + i] = vp3;
+		base_va = va & ~((0x1 << VP_IDX2_POS) - 1);
+		pmap_set_l2(pm, base_va, l2_va, l2_pa);
 
-			pmap_set_l2(pm, base_va + (i << VP_IDX2_POS),
-			    l2_va, l2_pa);
+		s = splvm();
+		vp3 = pool_get(&pmap_vp_pool, PR_NOWAIT | PR_ZERO);
+		splx(s);
 
-			l2_va += L2_TABLE_SIZE;
-			l2_pa += L2_TABLE_SIZE;
-		}
-		vp3 = vp2->vp[VP_IDX2(va)];
+		printf("l2_va %x vp3 %x\n", l2_va, vp3);
+
+		vp2->vp[VP_IDX2(base_va)] = vp3;
 	}
 
 	vp3->vp[VP_IDX3(va)] = pted;
@@ -330,8 +396,8 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	int need_sync = 0;
 	int cache;
 
-	if (!cold)
-	printf("%s: %x %x %x %x %x\n", __func__, va, pa, prot, flags, pm);
+	//if (!cold) printf("%s: %x %x %x %x %x %x\n", __func__, va, pa, prot, flags, pm, pmap_kernel());
+
 	/* MP - Acquire lock for this pmap */
 
 	s = splvm();
@@ -364,6 +430,7 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	 * If it should be enabled _right now_, we can skip doing ref/mod
 	 * emulation. Any access includes reference, modified only by write.
 	 */
+	//if (!cold) printf("pg %x prot %x flags %x\n", pg, prot, flags);
 	if (pg != NULL &&
 	    ((flags & PROT_MASK) || (pg->pg_flags & PG_PMAP_REF))) {
 		pg->pg_flags |= PG_PMAP_REF;
@@ -385,6 +452,11 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	if (flags & (PROT_READ|PROT_WRITE|PMAP_WIRED)) {
 		pte_insert(pted);
 	}
+
+//	cpu_dcache_inv_range(va & PAGE_MASK, PAGE_SIZE);
+//	cpu_sdcache_inv_range(va & PAGE_MASK, pa & PAGE_MASK, PAGE_SIZE);
+//	cpu_drain_writebuf();
+	ttlb_flush(va & PTE_RPGN);
 
 	if (prot & PROT_EXEC) {
 		if (pg != NULL) {
@@ -425,7 +497,7 @@ pmap_remove(pmap_t pm, vaddr_t va, vaddr_t endva)
 	struct pmapvp2 *vp2;
 	struct pmapvp3 *vp3;
 
-	printf("%s: %x %x %x\n", __func__, pm, va, endva);
+	//if (!cold) printf("%s: %x %x %x\n", __func__, pm, va, endva);
 
 	/* I suspect that if this loop were unrolled better
 	 * it would have better performance, testing i_vp1 and i_vp2
@@ -485,6 +557,8 @@ pmap_remove_pg(pmap_t pm, vaddr_t va)
 	struct pte_desc *pted;
 	int s;
 
+	//if (!cold) printf("%s: %x %x\n", __func__, pm, va);
+
 	s = splvm();
 	if (pm == pmap_kernel()) {
 		pted = pmap_vp_lookup(pm, va);
@@ -501,7 +575,12 @@ pmap_remove_pg(pmap_t pm, vaddr_t va)
 	}
 	pm->pm_stats.resident_count--;
 
+	__asm __volatile("dsb");
+	dcache_wbinv_poc(va & PTE_RPGN, pted->pted_pte & PTE_RPGN, PAGE_SIZE);
+
 	pte_remove(pted);
+
+	ttlb_flush(pted->pted_va & PTE_RPGN);
 
 	if (pted->pted_va & PTED_VA_EXEC_M) {
 		pted->pted_va &= ~PTED_VA_EXEC_M;
@@ -534,8 +613,7 @@ _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags, int cache)
 	int s;
 	pmap_t pm;
 
-	if (!cold)
-	printf("%s: %x %x %x %x %x\n", __func__, va, pa, prot, flags, cache);
+	//if (!cold) printf("%s: %x %x %x %x %x\n", __func__, va, pa, prot, flags, cache);
 
 	pm = pmap_kernel();
 
@@ -574,6 +652,8 @@ _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags, int cache)
 	 */
 	pte_insert(pted);
 
+	ttlb_flush(va & PTE_RPGN);
+
 	splx(s);
 }
 
@@ -599,6 +679,8 @@ pmap_kremove_pg(vaddr_t va)
 	pmap_t pm;
 	int s;
 
+	//if (!cold) printf("%s: %x\n", __func__, va);
+
 	pm = pmap_kernel();
 	pted = pmap_vp_lookup(pm, va);
 	if (pted == NULL)
@@ -617,6 +699,8 @@ pmap_kremove_pg(vaddr_t va)
 	 * or that the mapping is not present in the hash table.
 	 */
 	pte_remove(pted);
+
+	ttlb_flush(pted->pted_va & PTE_RPGN);
 
 	if (pted->pted_va & PTED_VA_EXEC_M)
 		pted->pted_va &= ~PTED_VA_EXEC_M;
@@ -638,6 +722,7 @@ pmap_kremove_pg(vaddr_t va)
 void
 pmap_kremove(vaddr_t va, vsize_t len)
 {
+	//if (!cold) printf("%s: %x %x\n", __func__, va, len);
 	for (len >>= PAGE_SHIFT; len >0; len--, va += PAGE_SIZE)
 		pmap_kremove_pg(va);
 }
@@ -707,7 +792,7 @@ pmap_collect(pmap_t pm)
 void
 pmap_zero_page(struct vm_page *pg)
 {
-	printf("%s\n", __func__);
+	//printf("%s\n", __func__);
 	paddr_t pa = VM_PAGE_TO_PHYS(pg);
 
 	/* simple_lock(&pmap_zero_page_lock); */
@@ -724,7 +809,7 @@ pmap_zero_page(struct vm_page *pg)
 void
 pmap_copy_page(struct vm_page *srcpg, struct vm_page *dstpg)
 {
-	printf("%s\n", __func__);
+	//printf("%s\n", __func__);
 	paddr_t srcpa = VM_PAGE_TO_PHYS(srcpg);
 	paddr_t dstpa = VM_PAGE_TO_PHYS(dstpg);
 	/* simple_lock(&pmap_copy_page_lock); */
@@ -848,12 +933,8 @@ pmap_vp_destroy(pmap_t pm)
 
 			s = splvm();
 			pool_put(&pmap_vp_pool, vp3);
+			pool_put(&pmap_l2_pool, vp2->l2[j]);
 			splx(s);
-
-			if ((j % 4) == 0) {
-				km_free(vp2->l2[j], 4 * L2_TABLE_SIZE,
-				    &kv_any, &kp_none);
-			}
 		}
 		pm->pm_vp[i] = NULL;
 		s = splvm();
@@ -917,7 +998,7 @@ pmap_steal_memory(vsize_t size, vaddr_t *start, vaddr_t *end)
 			}
 		}
 
-		va = (vaddr_t)pa;       /* 1:1 mapping */
+		va = (vaddr_t)pa;	/* 1:1 mapping */
 		bzero((void *)va, size);
 	}
 
@@ -1216,6 +1297,9 @@ pmap_set_l2(struct pmap *pm, uint32_t va, vaddr_t l2_va, uint32_t l2_pa)
 
 	pm->pm_pt1[va>>VP_IDX2_POS] = pg_entry;
 	__asm __volatile("dsb");
+	dcache_wb_pou((vaddr_t)&pm->pm_pt1[va>>VP_IDX2_POS], sizeof(pm->pm_pt1[va>>VP_IDX2_POS]));
+
+	ttlb_flush_range(va & PTE_RPGN, 1<<VP_IDX2_POS);
 }
 
 /*
@@ -1301,9 +1385,22 @@ copyoutstr(const void *kaddr, void *udaddr, size_t len, size_t *done)
 void
 pmap_page_ro(pmap_t pm, vaddr_t va, vm_prot_t prot)
 {
+	struct pte_desc *pted;
+
+	/* Every VA needs a pted, even unmanaged ones. */
+	pted = pmap_vp_lookup(pm, va);
+	if (!pted || !PTED_VALID(pted)) {
+		return;
+	}
+
+	pted->pted_va &= ~PROT_WRITE;
+	pted->pted_pte &= ~PROT_WRITE;
+	pte_insert(pted);
+
+	ttlb_flush(pted->pted_va & PTE_RPGN);
+
 	return;
 }
-
 
 /*
  * Lower the protection on the specified physical page.
@@ -1316,6 +1413,9 @@ pmap_page_protect(struct vm_page *pg, vm_prot_t prot)
 {
 	int s;
 	struct pte_desc *pted;
+
+	if (!cold)
+		printf("%s: prot %x\n", __func__, prot);
 
 	/* need to lock for this pv */
 	s = splvm();
@@ -1392,6 +1492,9 @@ pmap_init()
 	pool_init(&pmap_pted_pool, sizeof(struct pte_desc), 0, 0, 0, "pted",
 	    NULL);
 	pool_setlowat(&pmap_pted_pool, 20);
+	pool_init(&pmap_l2_pool, L2_TABLE_SIZE, L2_TABLE_SIZE, 0, 0, "l2",
+	    NULL);
+	pool_setlowat(&pmap_l2_pool, 20);
 
 	pmap_initialized = 1;
 }
@@ -1455,7 +1558,7 @@ pte_spill_v(pmap_t pm, u_int32_t va, u_int32_t dsisr, int exec_fault)
 
 static uint32_t ap_bits_user [16] = {
 	[PROT_NONE]				= 0,
-	[PROT_READ]				= L2_P_AP1|L2_P_AP1|L2_S_XN,
+	[PROT_READ]				= L2_P_AP1|L2_P_AP1|L2_P_XN,
 	[PROT_WRITE]				= L2_P_AP1|L2_P_XN,
 	[PROT_WRITE|PROT_READ]		= L2_P_AP1|L2_P_XN,
 	[PROT_EXEC]			= 0,
@@ -1466,7 +1569,7 @@ static uint32_t ap_bits_user [16] = {
 
 static uint32_t ap_bits_kern [16] = {
 	[PROT_NONE]				= 0,
-	[PROT_READ]				= L2_P_AP2|L2_S_XN,
+	[PROT_READ]				= L2_P_AP2|L2_P_XN,
 	[PROT_WRITE]				= L2_P_XN,
 	[PROT_WRITE|PROT_READ]		= L2_P_XN,
 	[PROT_EXEC]			= 0,
@@ -1520,7 +1623,8 @@ pte_insert(struct pte_desc *pted)
 	l2 = vp2->l2[VP_IDX2(pted->pted_va)];
 	l2[VP_IDX3(pted->pted_va)] = pte;
 	__asm __volatile("dsb");
-	cpu_tlb_flushID_SE(pted->pted_va);
+	dcache_wb_pou((vaddr_t)&l2[VP_IDX3(pted->pted_va)], sizeof(l2[VP_IDX3(pted->pted_va)]));
+	//cpu_tlb_flushID_SE(pted->pted_va & PTE_RPGN);
 }
 
 void
@@ -1540,7 +1644,8 @@ pte_remove(struct pte_desc *pted)
 	l2 = vp2->l2[VP_IDX2(pted->pted_va)];
 	l2[VP_IDX3(pted->pted_va)] = 0;
 	__asm __volatile("dsb");
-	cpu_tlb_flushID_SE(pted->pted_va);
+	dcache_wb_pou((vaddr_t)&l2[VP_IDX3(pted->pted_va)], sizeof(l2[VP_IDX3(pted->pted_va)]));
+	//cpu_tlb_flushID_SE(pted->pted_va & PTE_RPGN);
 }
 
 /*
@@ -1594,6 +1699,9 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 		/* Insert change. */
 		pte_insert(pted);
 
+		/* Flush tlb. */
+		ttlb_flush(va & PTE_RPGN);
+
 		return 1;
 	} else if ((ftype & PROT_EXEC) && /* fault caused by an exec */
 	    !(pted->pted_pte & PROT_EXEC) && /* and exec is disabled now */
@@ -1610,6 +1718,9 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 		/* Insert change. */
 		pte_insert(pted);
 
+		/* Flush tlb. */
+		ttlb_flush(va & PTE_RPGN);
+
 		return 1;
 	} else if ((ftype & PROT_READ) && /* fault caused by a read */
 	    !(pted->pted_pte & PROT_READ) && /* and read is disabled now */
@@ -1625,6 +1736,9 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 
 		/* Insert change. */
 		pte_insert(pted);
+
+		/* Flush tlb. */
+		ttlb_flush(va & PTE_RPGN);
 
 		return 1;
 	}

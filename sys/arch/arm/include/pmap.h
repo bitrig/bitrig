@@ -43,14 +43,14 @@ void pmap_kenter_cache(vaddr_t va, paddr_t pa, vm_prot_t prot, int cacheable);
 #define PMAP_CACHE_PTE		(PMAP_MD2)	/* PTE mapping */
 #define PMAP_CACHE_BITS		(PMAP_MD0|PMAP_MD1|PMAP_MD2)	
 
-#define PTED_VA_MANAGED_M       (PMAP_MD3)
-#define PTED_VA_WIRED_M         (PMAP_MD3 << 1)
-#define PTED_VA_EXEC_M          (PMAP_MD3 << 2)
+#define PTED_VA_MANAGED_M	(PMAP_MD3)
+#define PTED_VA_WIRED_M		(PMAP_MD3 << 1)
+#define PTED_VA_EXEC_M		(PMAP_MD3 << 2)
 
-#define PG_PMAP_MOD     PG_PMAP0
-#define PG_PMAP_REF     PG_PMAP1
-#define PG_PMAP_EXE     PG_PMAP2
- 
+#define PG_PMAP_MOD		PG_PMAP0
+#define PG_PMAP_REF		PG_PMAP1
+#define PG_PMAP_EXE		PG_PMAP2
+
 extern paddr_t zero_page;
 extern paddr_t copy_src_page;
 extern paddr_t copy_dst_page;
