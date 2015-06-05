@@ -1558,13 +1558,13 @@ pte_spill_v(pmap_t pm, u_int32_t va, u_int32_t dsisr, int exec_fault)
 
 static uint32_t ap_bits_user [16] = {
 	[PROT_NONE]				= 0,
-	[PROT_READ]				= L2_P_AP1|L2_P_AP1|L2_P_XN,
+	[PROT_READ]				= L2_P_AP2|L2_P_AP1|L2_P_XN,
 	[PROT_WRITE]				= L2_P_AP1|L2_P_XN,
-	[PROT_WRITE|PROT_READ]		= L2_P_AP1|L2_P_XN,
-	[PROT_EXEC]			= 0,
-	[PROT_EXEC|PROT_READ]			= L2_P_AP1,
-	[PROT_EXEC|PROT_WRITE]			= L2_P_AP2|L2_P_AP1,
-	[PROT_EXEC|PROT_WRITE|PROT_READ]	= L2_P_AP2|L2_P_AP1,
+	[PROT_WRITE|PROT_READ]			= L2_P_AP1|L2_P_XN,
+	[PROT_EXEC]				= 0,
+	[PROT_EXEC|PROT_READ]			= L2_P_AP2|L2_P_AP1,
+	[PROT_EXEC|PROT_WRITE]			= L2_P_AP1,
+	[PROT_EXEC|PROT_WRITE|PROT_READ]	= L2_P_AP1,
 };
 
 static uint32_t ap_bits_kern [16] = {
