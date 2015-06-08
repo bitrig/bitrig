@@ -1,4 +1,4 @@
-/*	$OpenBSD: _memcpy.S,v 1.3 2008/06/26 05:42:04 ray Exp $	*/
+/*	$OpenBSD: _memcpy.S,v 1.4 2015/06/08 14:22:05 jsg Exp $	*/
 /*	$NetBSD: _memcpy.S,v 1.4 2003/04/05 23:08:52 bjh21 Exp $	*/
 
 /*-
@@ -62,6 +62,8 @@
  *
  * Apologies for the state of the comments ;-)
  */
+
+.syntax unified
 
 ENTRY(_memcpy)
 	/* Determine copy direction */

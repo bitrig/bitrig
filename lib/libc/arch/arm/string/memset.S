@@ -1,4 +1,4 @@
-/*	$OpenBSD: memset.S,v 1.2 2004/02/01 05:40:52 drahn Exp $	*/
+/*	$OpenBSD: memset.S,v 1.3 2015/06/08 14:22:05 jsg Exp $	*/
 /*	$NetBSD: memset.S,v 1.3 2003/04/05 23:08:52 bjh21 Exp $	*/
 
 /*
@@ -46,6 +46,8 @@
  * On exit:
  *   r0 - dest address
  */
+
+.syntax unified
 
 ENTRY(memset)
 	stmfd	sp!, {r0}		/* Remember address for return value */

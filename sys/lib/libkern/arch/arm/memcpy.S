@@ -1,4 +1,4 @@
-/*	$OpenBSD: memcpy.S,v 1.5 2014/12/30 08:12:52 jsg Exp $	*/
+/*	$OpenBSD: memcpy.S,v 1.6 2015/06/08 14:22:05 jsg Exp $	*/
 /*	$NetBSD: memcpy.S,v 1.2 2001/11/20 00:29:20 chris Exp $	*/
 
 /*-
@@ -62,6 +62,8 @@
  *
  * Apologies for the state of the comments ;-)
  */
+
+.syntax unified
 
 #ifdef __ARM_EABI__
 ENTRY_NP(__aeabi_memcpy)

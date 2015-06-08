@@ -1,4 +1,4 @@
-/*	$OpenBSD: in_cksum_arm.S,v 1.4 2014/12/22 02:26:53 tedu Exp $	*/
+/*	$OpenBSD: in_cksum_arm.S,v 1.5 2015/06/08 14:22:05 jsg Exp $	*/
 /*	$NetBSD: in_cksum_arm.S,v 1.3 2003/11/26 10:31:53 rearnsha Exp $ */
 
 /*
@@ -42,6 +42,8 @@
 
 #include <machine/asm.h>
 #include "assym.h"
+
+.syntax unified
 
 /*
  * int in_cksum(struct mbuf *m, int len)
