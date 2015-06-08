@@ -1,4 +1,4 @@
-#	$OpenBSD: install.md,v 1.13 2015/06/03 01:30:29 jsg Exp $
+#	$OpenBSD: install.md,v 1.14 2015/06/08 17:35:43 jsg Exp $
 #
 #
 # Copyright (c) 1996 The NetBSD Foundation, Inc.
