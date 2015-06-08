@@ -334,7 +334,7 @@ bootstrap_bs_map(void *t, bus_addr_t bpa, bus_size_t size,
 
 	for (pa = startpa; pa < endpa; pa += L1_S_SIZE, va += L1_S_SIZE)
 		pmap_map_section((vaddr_t)pagedir, va, pa,
-		    PROT_READ | PROT_WRITE, PTE_NOCACHE);
+		    PROT_READ | PROT_WRITE, PMAP_CACHE_CI);
 
 	cpu_tlb_flushD();
 

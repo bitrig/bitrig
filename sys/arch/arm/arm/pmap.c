@@ -1564,24 +1564,24 @@ pte_spill_v(pmap_t pm, u_int32_t va, u_int32_t dsisr, int exec_fault)
 
 static uint32_t ap_bits_user [16] = {
 	[PROT_NONE]				= 0,
-	[PROT_READ]				= L2_P_AP2|L2_P_AP1|L2_P_XN,
-	[PROT_WRITE]				= L2_P_AP1|L2_P_XN,
-	[PROT_WRITE|PROT_READ]			= L2_P_AP1|L2_P_XN,
-	[PROT_EXEC]				= 0,
-	[PROT_EXEC|PROT_READ]			= L2_P_AP2|L2_P_AP1,
-	[PROT_EXEC|PROT_WRITE]			= L2_P_AP1,
-	[PROT_EXEC|PROT_WRITE|PROT_READ]	= L2_P_AP1,
+	[PROT_READ]				= L2_P_AP2|L2_P_AP1|L2_P_AP0|L2_P_XN,
+	[PROT_WRITE]				= L2_P_AP1|L2_P_AP0|L2_P_XN,
+	[PROT_WRITE|PROT_READ]			= L2_P_AP1|L2_P_AP0|L2_P_XN,
+	[PROT_EXEC]				= L2_P_AP2|L2_P_AP1|L2_P_AP0,
+	[PROT_EXEC|PROT_READ]			= L2_P_AP2|L2_P_AP1|L2_P_AP0,
+	[PROT_EXEC|PROT_WRITE]			= L2_P_AP1|L2_P_AP0,
+	[PROT_EXEC|PROT_WRITE|PROT_READ]	= L2_P_AP1|L2_P_AP0,
 };
 
 static uint32_t ap_bits_kern [16] = {
 	[PROT_NONE]				= 0,
-	[PROT_READ]				= L2_P_AP2|L2_P_XN,
-	[PROT_WRITE]				= L2_P_XN,
-	[PROT_WRITE|PROT_READ]		= L2_P_XN,
-	[PROT_EXEC]			= 0,
-	[PROT_EXEC|PROT_READ]			= L2_P_AP2,
-	[PROT_EXEC|PROT_WRITE]			= 0,
-	[PROT_EXEC|PROT_WRITE|PROT_READ]	= 0
+	[PROT_READ]				= L2_P_AP2|L2_P_AP0|L2_P_XN,
+	[PROT_WRITE]				= L2_P_AP0|L2_P_XN,
+	[PROT_WRITE|PROT_READ]			= L2_P_AP0|L2_P_XN,
+	[PROT_EXEC]				= L2_P_AP2|L2_P_AP0,
+	[PROT_EXEC|PROT_READ]			= L2_P_AP2|L2_P_AP0,
+	[PROT_EXEC|PROT_WRITE]			= L2_P_AP0,
+	[PROT_EXEC|PROT_WRITE|PROT_READ]	= L2_P_AP0,
 };
 
 void
@@ -1617,9 +1617,12 @@ pte_insert(struct pte_desc *pted)
 	} else {
 		access_bits = ap_bits_user[pted->pted_pte & PROT_MASK];
 	}
-	access_bits |= L2_P_AP0;
 
-	pte = (pted->pted_pte & PTE_RPGN) | cache_bits | access_bits | L2_P;
+	if (access_bits == 0)
+		pte = 0;
+	else
+		pte = (pted->pted_pte & PTE_RPGN) | cache_bits |
+		    access_bits | L2_P;
 
 	vp2 = pm->pm_vp[VP_IDX1(pted->pted_va)];
 	if (vp2->l2[VP_IDX2(pted->pted_va)] == NULL) {
@@ -1756,18 +1759,34 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 void pmap_postinit(void) {}
 void    pmap_map_section(vaddr_t l1_addr, vaddr_t va, paddr_t pa, int flags, int cache) {
 	uint32_t *l1 = (uint32_t *)l1_addr;
+	uint32_t cache_bits;
 	int ap_flag;
 
 	switch (flags) {
 	case PROT_READ:
-		ap_flag = AP_KR;
+		ap_flag = L1_S_AP2|L1_S_AP0|L1_S_XN;
 		break;
 	case PROT_READ | PROT_WRITE:
-		ap_flag = AP_KRW;
+		ap_flag = L1_S_AP0|L1_S_XN;
 		break;
 	}
 
-	l1[va>>VP_IDX2_POS] = (pa & L1_S_RPGN) | L1_S_AP(ap_flag) | L1_TYPE_S;
+	switch (cache) {
+	case PMAP_CACHE_WB:
+		cache_bits = L1_MODE_MEMORY;
+		break;
+	case PMAP_CACHE_WT: /* for the momemnt treating this as uncached */
+		cache_bits = L1_MODE_DISPLAY;
+		break;
+	case PMAP_CACHE_CI:
+		cache_bits = L1_MODE_DEV;
+		break;
+	case PMAP_CACHE_PTE:
+		cache_bits = L1_MODE_PTE;
+		break;
+	}
+
+	l1[va>>VP_IDX2_POS] = (pa & L1_S_RPGN) | ap_flag | cache_bits | L1_TYPE_S;
 }
 
 void    pmap_map_entry(vaddr_t l1, vaddr_t va, paddr_t pa, int i0, int i1) {}

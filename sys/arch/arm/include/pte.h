@@ -32,6 +32,9 @@
 #define L1_S_C		(1<<3)	/* cacheable Section */
 #define L1_S_S		(1<<10)	/* shareable Section */
 #define L1_S_AP(ap)	((((ap) & 0x4) << 13) | (((ap) & 3) << 10))
+#define L1_S_AP0	(1<<10)
+#define L1_S_AP1	(1<<11)
+#define L1_S_AP2	(1<<15)
 #define L1_S_TEX(x)	(((x)&0x7)<<12)
 #define L1_S_G(x)	(((x)&0x1)<<17)
 #define L1_S_RPGN	(0xfff00000)
@@ -117,7 +120,7 @@ ts */
 #define	DOMAIN_RESERVED	0x02		/* reserved */
 #define	DOMAIN_MANAGER	0x03		/* manager */
 
-#define PMAP_DOMAIN_KERNEL      15      /* The kernel uses domain #15 */
+#define PMAP_DOMAIN_KERNEL	0	/* The kernel uses domain #0 */
 
 /* physical page mask */
 #define PTE_RPGN 0xfffff000

@@ -142,7 +142,7 @@ static struct data_abort data_aborts[] = {
 	{dab_fatal,	"Access Flag Fault (S)"},
 	{dab_buserr,	"External Linefetch Abort (S)"},
 	{NULL,		"Translation Fault (S)"},
-	{dab_fatal,	"Access Flag Fault (P)"},
+	{NULL,		"Access Flag Fault (P)"},
 	{NULL,		"Translation Fault (P)"},
 	{dab_buserr,	"External Non-Linefetch Abort (S)"},
 	{NULL,		"Domain Fault (S)"},
