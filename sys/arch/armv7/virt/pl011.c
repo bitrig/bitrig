@@ -183,20 +183,6 @@ pl011attach(struct device *parent, struct device *self, void *args)
 	bus_space_write_4(sc->sc_iot, sc->sc_ioh, UART_LCR_H,
 	    bus_space_read_4(sc->sc_iot, sc->sc_ioh, UART_LCR_H) & ~UART_LCR_H_FEN);
 
-	/* FIXME BIG HACK FOLLOWING */
-	static struct consdev pl011cons = {
-		NULL, NULL, pl011cngetc, pl011cnputc, pl011cnpollc, NULL,
-		NODEV, CN_MIDPRI
-	};
-
-	cn_tab = &pl011cons;
-	cn_tab->cn_dev = makedev(12 /* XXX */, 0);
-	cdevsw[12] = pl011dev; 	/* KLUDGE */
-
-	pl011consiot = sc->sc_iot;
-	pl011consaddr = mem.addr;
-	pl011conscflag = 0;
-
 	printf("\n");
 }
 

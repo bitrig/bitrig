@@ -202,8 +202,6 @@ int	bootstrap_bs_map(void *, bus_addr_t, bus_size_t, int,
 void	process_kernel_args(char *);
 void	parse_uboot_tags(void *);
 void	consinit(void);
-void	protoconsole(uint32_t, void *);
-void	protoconsole2(uint32_t, void *);
 void	platform_bootconfig_dram(BootConfig *, psize_t *, psize_t *);
 
 bs_protos(bs_notimpl);
@@ -319,9 +317,12 @@ bootstrap_bs_map(void *t, bus_addr_t bpa, bus_size_t size,
     int flags, bus_space_handle_t *bshp)
 {
 	u_long startpa, pa, endpa;
-	vaddr_t va;
-	pd_entry_t *pagedir = read_ttb();
-	/* This assumes PA==VA for page directory */
+	vaddr_t va, l1;
+
+	if (pmap_kernel()->pm_pt1 != NULL)
+		l1 = (vaddr_t)pmap_kernel()->pm_pt1;
+	else
+		l1 = (vaddr_t)read_ttb();
 
 	va = section_free;
 
@@ -333,7 +334,7 @@ bootstrap_bs_map(void *t, bus_addr_t bpa, bus_size_t size,
 	*bshp = (bus_space_handle_t)(va + (bpa - startpa));
 
 	for (pa = startpa; pa < endpa; pa += L1_S_SIZE, va += L1_S_SIZE)
-		pmap_map_section((vaddr_t)pagedir, va, pa,
+		pmap_map_section(l1, va, pa,
 		    PROT_READ | PROT_WRITE, PMAP_CACHE_CI);
 
 	cpu_tlb_flushD();
@@ -342,25 +343,6 @@ bootstrap_bs_map(void *t, bus_addr_t bpa, bus_size_t size,
 
 	return 0;
 }
-
-/*
-dead code aint much fun.
-static void
-copy_io_area_map(pd_entry_t *new_pd)
-{
-	pd_entry_t *cur_pd = read_ttb();
-	vaddr_t va;
-
-	for (va = 0xfd000000;
-	     (cur_pd[va>>L1_S_SHIFT] & L1_TYPE_MASK) == L1_TYPE_S;
-	     va += L1_S_SIZE) {
-
-		new_pd[va>>L1_S_SHIFT] = cur_pd[va>>L1_S_SHIFT];
-		if (va == (ARM_VECTORS_HIGH & ~(0x00400000 - 1)))
-			break;
-	}
-}
-*/
 
 /*
  * u_int initarm(...)
@@ -380,10 +362,9 @@ initarm(void *arg0, void *arg1, void *arg2)
 {
 	int i, physsegs;
 	pv_addr_t fdt;
-	void *config;
-	struct fdt_memory mem;
 	paddr_t memstart;
 	psize_t memsize;
+	void *config;
 	extern uint32_t esym; /* &_end if no symbols are loaded */
 	extern uint32_t eramdisk; /* zero if no ramdisk is loaded */
 	uint32_t kernel_end = eramdisk ? eramdisk : esym;
@@ -418,6 +399,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 			    (bus_space_handle_t *)&config);
 	}
 	if (fdt_init(config) && fdt_get_size(config) != 0) {
+		struct fdt_memory mem;
 		void *node;
 
 		node = fdt_find_node("/memory");
@@ -457,14 +439,6 @@ initarm(void *arg0, void *arg1, void *arg2)
 	platform_init();
 	platform_disable_l2_if_needed();
 
-	/* setup a serial console for very early boot */
-	//consinit();
-
-	/* Talk to the user */
-	printf("\n%s booting ...\n", platform_boot_name());
-
-	printf("arg0 %p arg1 %p arg2 %p\n", arg0, arg1, arg2);
-
 	if (fdt_get_size(config) == 0) {
 		parse_uboot_tags(config);
 
@@ -487,8 +461,6 @@ initarm(void *arg0, void *arg1, void *arg2)
 		physical_end = MIN((uint64_t)physical_start +
 		    (bootconfig.dram[0].pages * PAGE_SIZE), (paddr_t)-PAGE_SIZE);
 	}
-
-	protoconsole(board_id, arg2);
 
 	physical_freestart = (((unsigned long)kernel_end - KERNEL_TEXT_BASE +0xfff) & ~0xfff) + memstart;
 	physical_freeend = MIN((uint64_t)memstart+memsize,
@@ -536,12 +508,8 @@ initarm(void *arg0, void *arg1, void *arg2)
 	uvm_setpagesize();        /* initialize PAGE_SIZE-dependent variables */
 
 	physmem = (physical_end - physical_start) / PAGE_SIZE;
-	printf("physical_end %x physical_start %x, physmem %x\n", 
-	    physical_end, physical_start, physmem);
 
-	printf("success thus far physmem %x\n", physmem);
-
-        /* Map the vector page. */
+	/* Map the vector page. */
 	pmap_kenter_cache(vector_page, systempage.pv_pa,
 		PROT_EXEC|PROT_WRITE|PROT_READ,  PMAP_CACHE_WB);
 
@@ -551,12 +519,8 @@ initarm(void *arg0, void *arg1, void *arg2)
 	 * tables.
 	 */
 
-	/* be a client to all domains */
-	cpu_domains(0x55555555);
 	/* Switch tables */
-
-	printf("About to go virtual on kernel map\n");
-	/* NO PRINTING FROM HERE UNTIL consinit()!!!! */
+	cpu_domains(DOMAIN_CLIENT);
 	setttb(pmap_kernel()->pm_pt1pa);
 	cpu_tlb_flushID();
 
@@ -571,7 +535,6 @@ initarm(void *arg0, void *arg1, void *arg2)
 		PROT_EXEC|PROT_WRITE|PROT_READ,  PMAP_CACHE_WB);
 
 	arm32_vector_init(vector_page, ARM_VEC_ALL);
-
 
 	pmap_protect(pmap_kernel(), systempage.pv_pa,
 	    systempage.pv_pa+PAGE_SIZE, PROT_EXEC|PROT_READ);
@@ -589,8 +552,6 @@ initarm(void *arg0, void *arg1, void *arg2)
 	set_stackptr(PSR_UND32_MODE,
 	    kernelstack.pv_va + USPACE_UNDEF_STACK_TOP);
 
-	protoconsole2(board_id, arg2);
-
 	/*
 	 * Well we should set a data abort handler.
 	 * Once things get going this will change as we will need a proper
@@ -604,9 +565,7 @@ initarm(void *arg0, void *arg1, void *arg2)
 	data_abort_handler_address = (u_int)data_abort_handler;
 	prefetch_abort_handler_address = (u_int)prefetch_abort_handler;
 	undefined_handler_address = (u_int)undefinedinstruction_bounce;
-	printf("%x\n", data_abort_handler);
 
-	printf("survived that1\n");
 	/* Now we can reinit the FDT, using the virtual address. */
 	if (fdt.pv_va && fdt.pv_pa) {
 		pmap_kenter_cache(fdt.pv_va, fdt.pv_pa,
@@ -614,19 +573,24 @@ initarm(void *arg0, void *arg1, void *arg2)
 		fdt_init((void *)fdt.pv_va);
 	}
 
-	printf("survived that2\n");
+	/* Set up late-early console. */
+	consinit();
+
+	/* Talk to the user */
+	printf("\n%s booting ...\n", platform_boot_name());
+
+	printf("arg0 %p arg1 %p arg2 %p\n", arg0, arg1, arg2);
+
 	/* Initialise the undefined instruction handlers */
 #ifdef VERBOSE_INIT_ARM
 	printf("undefined ");
 #endif
 	undefined_init();
-	printf("survived that3\n");
 
 	/* Load memory into UVM. */
 #ifdef VERBOSE_INIT_ARM
 	printf("page ");
 #endif
-	printf("survived that4\n");
 	// only first block was originally given to pmap_bootstrap
 	// provide the rest here.
 	// XXX - what about ram below the kernel.
@@ -641,10 +605,6 @@ initarm(void *arg0, void *arg1, void *arg2)
 		uvm_page_physload(atop(dramstart), atop(dramend),
 		    atop(dramstart), atop(dramend), 0);
 	}
-
-	printf("survived that4\n");
-	//consinit();
-	printf("survived that4\n");
 
 	/*
 	 * Make sure ramdisk is mapped, if there is any.
@@ -760,7 +720,24 @@ consinit(void)
 
 	consinit_called = 1;
 
+	/*
+	 * Temporarily replace bus_space_map() functions so that
+	 * console devices can get mapped.
+	 *
+	 * Note that this relies upon the fact that both regular
+	 * and a4x bus_space tags use the same map function.
+	 */
+	int (*armv7_bs_map)(void *, bus_addr_t, bus_size_t, int,
+	    bus_space_handle_t *);
+
+	armv7_bs_map = armv7_bs_tag.bs_map;
+	armv7_bs_tag.bs_map = bootstrap_bs_map;
+	armv7_a4x_bs_tag.bs_map = bootstrap_bs_map;
+
 	platform_init_cons();
+
+	armv7_bs_tag.bs_map = armv7_bs_map;
+	armv7_a4x_bs_tag.bs_map = armv7_bs_map;
 }
 
 void
