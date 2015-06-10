@@ -651,6 +651,8 @@ _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags, int cache)
 
 	ttlb_flush(va & PTE_RPGN);
 
+	pm->pm_pt1gen++;
+
 	splx(s);
 }
 
@@ -722,6 +724,8 @@ pmap_kremove(vaddr_t va, vsize_t len)
 	//if (!cold) printf("%s: %x %x\n", __func__, va, len);
 	for (len >>= PAGE_SHIFT; len >0; len--, va += PAGE_SIZE)
 		pmap_kremove_pg(va);
+
+	pmap_kernel()->pm_pt1gen++;
 }
 
 void
@@ -844,6 +848,8 @@ pmap_pinit(pmap_t pm)
 	pmap_extract(pmap_kernel(), (uint32_t)pm->pm_pt1, (paddr_t *)&pm->pm_pt1pa);
 
 	memcpy(pm->pm_pt1, pmap_kernel()->pm_pt1, L1_TABLE_SIZE);
+
+	pm->pm_pt1gen = pmap_kernel()->pm_pt1gen;
 
 	pmap_reference(pm);
 }
@@ -1045,6 +1051,7 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 	pa = pmap_steal_avail(L1_TABLE_SIZE, L1_TABLE_SIZE, &va);
 	pmap_kernel()->pm_pt1 = va;
 	pmap_kernel()->pm_pt1pa = (uint32_t)pa;
+	pmap_kernel()->pm_pt1gen = 0;
 
 	/* allocate v->p mappings for pmap_kernel() */
 	for (i = 0; i < VP_IDX1_CNT; i++) {
@@ -1314,15 +1321,14 @@ pmap_activate(struct proc *p)
 	pm = p->p_vmspace->vm_map.pmap;
 	pcb = &p->p_addr->u_pcb;
 
-#if 0
-	if (pm != pmap_kernel()) {
+	if (pm->pm_pt1gen != pmap_kernel()->pm_pt1gen) {
 		uint32_t vm_offset = VM_MIN_KERNEL_ADDRESS >> VP_IDX2_POS;
 		uint32_t vm_end = 0xffffffff >> VP_IDX2_POS;
 		uint32_t vm_size = (vm_end - vm_offset) * sizeof(uint32_t);
 		memcpy(&pm->pm_pt1[vm_offset], &(pmap_kernel()->pm_pt1[vm_offset]), vm_size);
 		dcache_wb_pou((vaddr_t)&pm->pm_pt1[vm_offset], vm_size);
+		pm->pm_pt1gen = pmap_kernel()->pm_pt1gen;
 	}
-#endif
 
 	pcb->pcb_pl1vec = NULL;
 	pcb->pcb_pagedir = pm->pm_pt1pa | ttb_flags;
