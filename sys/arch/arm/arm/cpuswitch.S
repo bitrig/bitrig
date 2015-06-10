@@ -286,9 +286,6 @@ ENTRY(cpu_switchto)
 	add	r7, r9, #PCB_R8
 	ldmia	r7, {r8-r13}
 
-	/* We can enable interrupts again */
-	IRQenableALL
-
 	add	sp, sp, #4
 	ldmfd	sp!, {r4-r7, pc}
 
