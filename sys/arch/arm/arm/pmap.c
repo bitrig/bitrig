@@ -831,6 +831,7 @@ const struct kmem_pa_mode kp_l1 = {
 void
 pmap_pinit(pmap_t pm)
 {
+	uint32_t vm_offset, vm_end, vm_size;
 	bzero(pm, sizeof (struct pmap));
 
 	/* Allocate a full L1 table. */
@@ -841,7 +842,11 @@ pmap_pinit(pmap_t pm)
 
 	pmap_extract(pmap_kernel(), (uint32_t)pm->pm_pt1, (paddr_t *)&pm->pm_pt1pa);
 
-	memcpy(pm->pm_pt1, pmap_kernel()->pm_pt1, L1_TABLE_SIZE);
+	vm_offset = VM_MIN_KERNEL_ADDRESS >> VP_IDX2_POS;
+	vm_end = 0xffffffff >> VP_IDX2_POS;
+	vm_size = (vm_end - vm_offset + 1) * sizeof(uint32_t);
+	memcpy(&pm->pm_pt1[vm_offset], &(pmap_kernel()->pm_pt1[vm_offset]), vm_size);
+	dcache_wb_pou((vaddr_t)&pm->pm_pt1[vm_offset], vm_size);
 
 	pm->pm_pt1gen = pmap_kernel()->pm_pt1gen;
 
@@ -1309,6 +1314,7 @@ pmap_activate(struct proc *p)
 	pmap_t pm;
 	struct pcb *pcb;
 	intr_state_t its;
+	uint32_t vm_offset, vm_end, vm_size;
 
 	its = intr_disable();
 
@@ -1316,9 +1322,9 @@ pmap_activate(struct proc *p)
 	pcb = &p->p_addr->u_pcb;
 
 	if (pm->pm_pt1gen != pmap_kernel()->pm_pt1gen) {
-		uint32_t vm_offset = VM_MIN_KERNEL_ADDRESS >> VP_IDX2_POS;
-		uint32_t vm_end = 0xffffffff >> VP_IDX2_POS;
-		uint32_t vm_size = (vm_end - vm_offset) * sizeof(uint32_t);
+		vm_offset = VM_MIN_KERNEL_ADDRESS >> VP_IDX2_POS;
+		vm_end = 0xffffffff >> VP_IDX2_POS;
+		vm_size = (vm_end - vm_offset + 1) * sizeof(uint32_t);
 		memcpy(&pm->pm_pt1[vm_offset], &(pmap_kernel()->pm_pt1[vm_offset]), vm_size);
 		dcache_wb_pou((vaddr_t)&pm->pm_pt1[vm_offset], vm_size);
 		pm->pm_pt1gen = pmap_kernel()->pm_pt1gen;
@@ -1326,7 +1332,10 @@ pmap_activate(struct proc *p)
 
 	pcb->pcb_pl1vec = NULL;
 	pcb->pcb_pagedir = pm->pm_pt1pa | ttb_flags;
-	cpu_setttb(pcb->pcb_pagedir);
+
+	if (p == curproc) {
+		cpu_setttb(pcb->pcb_pagedir);
+	}
 
 	intr_restore(its);
 }
