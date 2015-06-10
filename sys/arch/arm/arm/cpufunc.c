@@ -62,7 +62,9 @@ struct arm_pmc_funcs *arm_pmc;
 
 /* PRIMARY CACHE VARIABLES */
 int	arm_dcache_min_line_size = 32;
+int	arm_dcache_min_line_mask = 31;
 int	arm_icache_min_line_size = 32;
+int	arm_icache_min_line_mask = 31;
 int	arm_idcache_min_line_size = 32;
 
 int	arm_dcache_align;
@@ -208,7 +210,9 @@ arm_get_cachetype_cp15v7(void)
 	    : "=r" (cachetype));
 
 	arm_dcache_min_line_size = 1 << (CPU_CT_DMINLINE(cachetype) + 2);
+	arm_dcache_min_line_mask = arm_dcache_min_line_size - 1;
 	arm_icache_min_line_size = 1 << (CPU_CT_IMINLINE(cachetype) + 2);
+	arm_icache_min_line_mask = arm_icache_min_line_size - 1;
 	arm_idcache_min_line_size =
 	    min(arm_icache_min_line_size, arm_dcache_min_line_size);
 

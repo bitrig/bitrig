@@ -323,7 +323,9 @@ void cpu_reset		(void) __attribute__((__noreturn__));
 
 /* PRIMARY CACHE VARIABLES */
 extern int	arm_dcache_min_line_size;
+extern int	arm_dcache_min_line_mask;
 extern int	arm_icache_min_line_size;
+extern int	arm_icache_min_line_mask;
 extern int	arm_idcache_min_line_size;
 
 extern int	arm_dcache_align;

@@ -41,10 +41,8 @@ dcache_wb_pou(vaddr_t va, vsize_t size)
 	vaddr_t eva = va + size;
 
 	__asm __volatile("dsb");
-	//va &= ~cpuinfo.dcache_line_mask;
-	//for ( ; va < eva; va += cpuinfo.dcache_line_size) {
-	va &= ~63;
-	for ( ; va < eva; va += 64) {
+	va &= ~arm_dcache_min_line_mask;
+	for ( ; va < eva; va += arm_dcache_min_line_size) {
 #ifdef MULTIPROCESSOR
 		__asm __volatile("mcr p15, 0, %0, c7, c11, 1" :: "r" (va));
 #else
@@ -63,10 +61,8 @@ dcache_wbinv_poc(vaddr_t sva, paddr_t pa, vsize_t size)
 
 	__asm __volatile("dsb");
 	/* write back L1 first */
-	//va = sva & ~cpuinfo.dcache_line_mask;
-	//for ( ; va < eva; va += cpuinfo.dcache_line_size) {
-	va = sva & ~63;
-	for ( ; va < eva; va += 64) {
+	va = sva & ~arm_dcache_min_line_mask;
+	for ( ; va < eva; va += arm_dcache_min_line_size) {
 		__asm __volatile("mcr p15, 0, %0, c7, c10, 1" :: "r" (va));
 	}
 	__asm __volatile("dsb");
@@ -75,10 +71,8 @@ dcache_wbinv_poc(vaddr_t sva, paddr_t pa, vsize_t size)
 	cpu_sdcache_wbinv_range(0, pa, size);
 
 	/* then invalidate L1 */
-	//va = sva & ~cpuinfo.dcache_line_mask;
-	//for ( ; va < eva; va += cpuinfo.dcache_line_size) {
-	va = sva & ~63;
-	for ( ; va < eva; va += 64) {
+	va = sva & ~arm_dcache_min_line_mask;
+	for ( ; va < eva; va += arm_dcache_min_line_size) {
 		__asm __volatile("mcr p15, 0, %0, c7, c6, 1" :: "r" (va));
 	}
 	__asm __volatile("dsb");
