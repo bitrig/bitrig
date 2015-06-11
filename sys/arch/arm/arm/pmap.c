@@ -52,32 +52,6 @@ dcache_wb_pou(vaddr_t va, vsize_t size)
 	__asm __volatile("dsb");
 }
 
-/* Write back and invalidate D-cache to PoC */
-static __inline void
-dcache_wbinv_poc(vaddr_t sva, paddr_t pa, vsize_t size)
-{
-	vaddr_t va;
-	vaddr_t eva = sva + size;
-
-	__asm __volatile("dsb");
-	/* write back L1 first */
-	va = sva & ~arm_dcache_min_line_mask;
-	for ( ; va < eva; va += arm_dcache_min_line_size) {
-		__asm __volatile("mcr p15, 0, %0, c7, c10, 1" :: "r" (va));
-	}
-	__asm __volatile("dsb");
-
-	/* then write back and invalidate L2 */
-	cpu_sdcache_wbinv_range(0, pa, size);
-
-	/* then invalidate L1 */
-	va = sva & ~arm_dcache_min_line_mask;
-	for ( ; va < eva; va += arm_dcache_min_line_size) {
-		__asm __volatile("mcr p15, 0, %0, c7, c6, 1" :: "r" (va));
-	}
-	__asm __volatile("dsb");
-}
-
 static __inline void
 ttlb_flush(vaddr_t va)
 {
@@ -95,6 +69,52 @@ ttlb_flush_range(vaddr_t va, vsize_t size)
 	for ( ; va < eva; va += PAGE_SIZE)
 		__asm __volatile("mcr p15, 0, %0, c8, c3, 3" :: "r" (va));
 	__asm __volatile("dsb");
+}
+
+/*
+ *  Clean L1 data cache range by physical address.
+ *  The range must be within a single page.
+ */
+void pmap_kremove_pg(vaddr_t va);
+static void
+pmap_dcache_wb_pou(paddr_t pa, vsize_t size)
+{
+	int s;
+
+	if (((pa & PAGE_MASK) + size) > PAGE_SIZE)
+	    panic("%s: not on single page", __func__);
+
+	s = splvm();
+	pmap_kenter_pa(icache_page, pa, PROT_READ|PROT_WRITE);
+	ttlb_flush(icache_page); // XXX tlb_flush_local
+	dcache_wb_pou(icache_page + (pa & PAGE_MASK), size);
+	pmap_kremove_pg(icache_page);
+	splx(s);
+}
+
+/*
+ *  Sync instruction cache range which is not mapped yet.
+ */
+void
+cache_icache_sync_fresh(vaddr_t va, paddr_t pa, vsize_t size)
+{
+	uint32_t len, offset;
+
+	/* Write back d-cache on given address range. */
+	offset = pa & PAGE_MASK;
+	for ( ; size != 0; size -= len, pa += len, offset = 0) {
+		len = min(PAGE_SIZE - offset, size);
+		pmap_dcache_wb_pou(pa, len);
+	}
+	/*
+	 * I-cache is VIPT. Only way how to flush all virtual mappings
+	 * on given physical address is to invalidate all i-cache.
+	 */
+	/* TODO: invalidate VA only? */
+	//__asm __volatile("mcr p15, 0, r0, c7, c1,  0 /* Instruction cache invalidate all PoU, IS */"); MP
+	__asm __volatile("mcr p15, 0, r0, c7, c5,  0 /* Instruction cache invalidate all PoU */");
+	__asm __volatile("dsb");
+	__asm __volatile("isb");
 }
 
 struct pmap kernel_pmap_;
@@ -436,19 +456,6 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 		pmap_enter_pv(pted, pg); /* only managed mem */
 	}
 
-	/*
-	 * Insert into table, if this mapping said it needed to be mapped
-	 * now.
-	 */
-	if (flags & (PROT_READ|PROT_WRITE|PMAP_WIRED)) {
-		pte_insert(pted);
-	}
-
-//	cpu_dcache_inv_range(va & PAGE_MASK, PAGE_SIZE);
-//	cpu_sdcache_inv_range(va & PAGE_MASK, pa & PAGE_MASK, PAGE_SIZE);
-//	cpu_drain_writebuf();
-	ttlb_flush(va & PTE_RPGN);
-
 	if (prot & PROT_EXEC) {
 		if (pg != NULL) {
 			need_sync = ((pg->pg_flags & PG_PMAP_EXE) == 0);
@@ -464,13 +471,22 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 			atomic_clearbits_int(&pg->pg_flags, PG_PMAP_EXE);
 	}
 
-	splx(s);
-
-#if 0
 	/* only instruction sync executable pages */
-	if (need_sync)
-		pmap_syncicache_user_virt(pm, va);
-#endif
+	if (need_sync) {
+		cache_icache_sync_fresh(va, pa, PAGE_SIZE);
+	}
+
+	/*
+	 * Insert into table, if this mapping said it needed to be mapped
+	 * now.
+	 */
+	if (flags & (PROT_READ|PROT_WRITE|PROT_EXEC|PMAP_WIRED)) {
+		pte_insert(pted);
+	}
+
+	ttlb_flush(va & PTE_RPGN);
+
+	splx(s);
 
 	/* MP - free pmap lock */
 	return 0;
@@ -566,9 +582,6 @@ pmap_remove_pg(pmap_t pm, vaddr_t va)
 	}
 	pm->pm_stats.resident_count--;
 
-	__asm __volatile("dsb");
-	dcache_wbinv_poc(va & PTE_RPGN, pted->pted_pte & PTE_RPGN, PAGE_SIZE);
-
 	pte_remove(pted);
 
 	ttlb_flush(pted->pted_va & PTE_RPGN);
@@ -624,12 +637,11 @@ _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags, int cache)
 
 	pm->pm_stats.resident_count++;
 
+	/* XXX: multiple pages with different cache attrs? */
+	/* XXX: need to write back cache when some page goes WT from WB */
 	if (cache == PMAP_CACHE_DEFAULT) {
-		if (PHYS_TO_VM_PAGE(pa) != NULL) {
-			/* MAXIMUM cacheability */
-			cache = PMAP_CACHE_WB; /* managed memory is cacheable */
-		} else
-			cache = PMAP_CACHE_CI;
+		/* MAXIMUM cacheability */
+		cache = PMAP_CACHE_WB; /* managed memory is cacheable */
 	}
 
 	flags |= PMAP_WIRED; /* kernel mappings are always wired. */
@@ -1205,6 +1217,8 @@ printf("allocated pted vp3 %x %x %x %x\n", idx1, idx2, vect, pa);
 	/* XXX */
 
 	zero_page = vstart;
+	vstart += PAGE_SIZE;
+	icache_page = vstart;
 	vstart += PAGE_SIZE;
 	copy_src_page = vstart;
 	vstart += PAGE_SIZE;
@@ -1819,6 +1833,7 @@ void memhook()
 }
 
 paddr_t zero_page;
+paddr_t icache_page;
 paddr_t copy_src_page;
 paddr_t copy_dst_page;
 
