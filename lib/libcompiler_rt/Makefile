@@ -172,7 +172,8 @@ SRCS+=	${file}.c
 .endfor
 
 .if ${MACHINE_CPU} == "arm" && ${MK_ARM_EABI:L} != "no"
-SRCS+=	aeabi_idivmod.S \
+SRCS+=	aeabi_div0.c \
+	aeabi_idivmod.S \
 	aeabi_ldivmod.S \
 	aeabi_memcmp.S \
 	aeabi_memcpy.S \
