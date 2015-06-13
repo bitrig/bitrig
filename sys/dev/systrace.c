@@ -47,6 +47,7 @@
 #include <sys/namei.h>
 #include <sys/poll.h>
 #include <sys/ptrace.h>
+#include <sys/exec.h>
 #include <uvm/uvm_extern.h>
 
 #include <machine/vmparam.h>

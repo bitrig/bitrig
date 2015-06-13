@@ -31,6 +31,7 @@
 #include <sys/statvfs.h>
 #include <sys/vnode.h>
 #include <sys/lock.h>
+#include <sys/stdint.h>
 #include <sys/fusebuf.h>
 
 #include "fusefs_node.h"

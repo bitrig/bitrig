@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdint.h>
 
 #include <errno.h>
 #include <fcntl.h>

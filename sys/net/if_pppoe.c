@@ -43,6 +43,7 @@
 #include <sys/socket.h>
 #include <sys/syslog.h>
 #include <sys/ioctl.h>
+#include <sys/stdint.h>
 #include <net/if.h>
 #include <net/if_var.h>
 #include <net/if_types.h>
