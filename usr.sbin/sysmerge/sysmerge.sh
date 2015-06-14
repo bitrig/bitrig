@@ -204,20 +204,23 @@ sm_init() {
 			for _k in ${_mismatch}; do
 				# skip sum files
 				[[ ${_k} == ./usr/share/sysmerge/${_i} ]] && continue
+				# XXX We do not use CVS $Ids, therefore we need to find another
+				# XXX solution to check for changed files.  Until then, show
+				# XXX us all changes, even though files might not have changed.
 				# compare CVS Id first so if the file hasn't been modified,
 				# it will be deleted from temproot and ignored from comparison;
 				# several files are generated from scripts so CVS ID is not a
 				# reliable way of detecting changes: leave for a full diff
-				if ! ${PKGMODE} && \
-					[[ ${_k} != ./etc/@(fbtab|ttys) && \
-					! -h ${_k} ]]; then
-					_cvsid1=$(sed -n "/[$]OpenBSD:.*Exp [$]/{p;q;}" ${_k#.} 2>/dev/null)
-					_cvsid2=$(sed -n "/[$]OpenBSD:.*Exp [$]/{p;q;}" ${_k} 2>/dev/null)
-					[[ -n ${_cvsid1} ]] && \
-						[[ ${_cvsid1} == ${_cvsid2} ]] && \
-						[[ -f ${_k} ]] && rm ${_k} && \
-						continue
-				fi
+				#if ! ${PKGMODE} && \
+				#	[[ ${_k} != ./etc/@(fbtab|ttys) && \
+				#	! -h ${_k} ]]; then
+				#	_cvsid1=$(sed -n "/[$]OpenBSD:.*Exp [$]/{p;q;}" ${_k#.} 2>/dev/null)
+				#	_cvsid2=$(sed -n "/[$]OpenBSD:.*Exp [$]/{p;q;}" ${_k} 2>/dev/null)
+				#	[[ -n ${_cvsid1} ]] && \
+				#		[[ ${_cvsid1} == ${_cvsid2} ]] && \
+				#		[[ -f ${_k} ]] && rm ${_k} && \
+				#		continue
+				#fi
 				# redirect stderr: file may not exist
 				_cursum=$(cd / && sha256 ${_k} 2>/dev/null)
 				grep -q "${_cursum}" /usr/share/sysmerge/${_i} && \
