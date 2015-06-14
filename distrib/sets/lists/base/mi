@@ -494,7 +494,7 @@
 ./usr/bin/paste
 ./usr/bin/patch
 ./usr/bin/perl
-./usr/bin/perl5.20.1
+./usr/bin/perl5.20.2
 ./usr/bin/perlbug
 ./usr/bin/perldoc
 ./usr/bin/perlivp
@@ -578,7 +578,6 @@
 ./usr/bin/tftp
 ./usr/bin/tic
 ./usr/bin/time
-./usr/bin/tip
 ./usr/bin/tmux
 ./usr/bin/top
 ./usr/bin/touch
@@ -643,8 +642,8 @@
 ./usr/lib
 ./usr/lib/libc++.so.2.0
 ./usr/lib/libc++abi.so.2.0
-./usr/lib/libc.so.78.3
-./usr/lib/libcrypto.so.32.0
+./usr/lib/libc.so.79.0
+./usr/lib/libcrypto.so.33.0
 ./usr/lib/libcurses.so.15.0
 ./usr/lib/libedit.so.6.2
 ./usr/lib/libevent.so.5.0
@@ -662,16 +661,16 @@
 ./usr/lib/libpanel.so.6.0
 ./usr/lib/libpanelw.so.6.0
 ./usr/lib/libpcap.so.9.0
-./usr/lib/libperl.so.17.0
-./usr/lib/libpthread.so.20.1
+./usr/lib/libperl.so.17.1
+./usr/lib/libpthread.so.21.0
 ./usr/lib/librpcsvc.so.2.0
 ./usr/lib/libskey.so.7.0
 ./usr/lib/libsndio.so.6.0
-./usr/lib/libsqlite3.so.29.0
+./usr/lib/libsqlite3.so.30.1
 ./usr/lib/libssl.so.32.0
 ./usr/lib/libtermcap.so.15.0
 ./usr/lib/libtermlib.so.15.0
-./usr/lib/libtls.so.3.0
+./usr/lib/libtls.so.3.1
 ./usr/lib/libusbhid.so.7.0
 ./usr/lib/libutil.so.13.1
 ./usr/lib/libz.so.5.0
@@ -1504,8 +1503,10 @@
 ./usr/libdata/perl5/pod/perl5180delta.pod
 ./usr/libdata/perl5/pod/perl5181delta.pod
 ./usr/libdata/perl5/pod/perl5182delta.pod
+./usr/libdata/perl5/pod/perl5184delta.pod
 ./usr/libdata/perl5/pod/perl5200delta.pod
 ./usr/libdata/perl5/pod/perl5201delta.pod
+./usr/libdata/perl5/pod/perl5202delta.pod
 ./usr/libdata/perl5/pod/perl561delta.pod
 ./usr/libdata/perl5/pod/perl56delta.pod
 ./usr/libdata/perl5/pod/perl581delta.pod
@@ -1646,6 +1647,7 @@
 ./usr/libdata/perl5/pod/perltru64.pod
 ./usr/libdata/perl5/pod/perltw.pod
 ./usr/libdata/perl5/pod/perlunicode.pod
+./usr/libdata/perl5/pod/perlunicook.pod
 ./usr/libdata/perl5/pod/perlunifaq.pod
 ./usr/libdata/perl5/pod/perluniintro.pod
 ./usr/libdata/perl5/pod/perluniprops.pod
@@ -3125,8 +3127,10 @@
 ./usr/share/man/man1/perl5180delta.1
 ./usr/share/man/man1/perl5181delta.1
 ./usr/share/man/man1/perl5182delta.1
+./usr/share/man/man1/perl5184delta.1
 ./usr/share/man/man1/perl5200delta.1
 ./usr/share/man/man1/perl5201delta.1
+./usr/share/man/man1/perl5202delta.1
 ./usr/share/man/man1/perl561delta.1
 ./usr/share/man/man1/perl56delta.1
 ./usr/share/man/man1/perl581delta.1
@@ -3242,6 +3246,7 @@
 ./usr/share/man/man1/perltrap.1
 ./usr/share/man/man1/perltru64.1
 ./usr/share/man/man1/perlunicode.1
+./usr/share/man/man1/perlunicook.1
 ./usr/share/man/man1/perlunifaq.1
 ./usr/share/man/man1/perluniintro.1
 ./usr/share/man/man1/perluniprops.1
@@ -3347,7 +3352,6 @@
 ./usr/share/man/man1/tftp.1
 ./usr/share/man/man1/tic.1
 ./usr/share/man/man1/time.1
-./usr/share/man/man1/tip.1
 ./usr/share/man/man1/tmux.1
 ./usr/share/man/man1/top.1
 ./usr/share/man/man1/touch.1
@@ -7391,7 +7395,6 @@
 ./usr/share/man/man3/timerisset.3
 ./usr/share/man/man3/timersub.3
 ./usr/share/man/man3/times.3
-./usr/share/man/man3/timezone.3
 ./usr/share/man/man3/timingsafe_bcmp.3
 ./usr/share/man/man3/tmpfile.3
 ./usr/share/man/man3/tmpnam.3
@@ -8558,7 +8561,6 @@
 ./usr/share/man/man4/lii.4
 ./usr/share/man/man4/lisa.4
 ./usr/share/man/man4/lm.4
-./usr/share/man/man4/lmc.4
 ./usr/share/man/man4/lmenv.4
 ./usr/share/man/man4/lmn.4
 ./usr/share/man/man4/lmtemp.4
@@ -8676,11 +8678,11 @@
 ./usr/share/man/man4/rtii.4
 ./usr/share/man/man4/rtsx.4
 ./usr/share/man/man4/rtw.4
+./usr/share/man/man4/rtwn.4
 ./usr/share/man/man4/rum.4
 ./usr/share/man/man4/run.4
 ./usr/share/man/man4/safe.4
 ./usr/share/man/man4/safte.4
-./usr/share/man/man4/san.4
 ./usr/share/man/man4/schsio.4
 ./usr/share/man/man4/scsi.4
 ./usr/share/man/man4/scsibus.4
@@ -8738,6 +8740,7 @@
 ./usr/share/man/man4/twe.4
 ./usr/share/man/man4/txp.4
 ./usr/share/man/man4/txphy.4
+./usr/share/man/man4/ualea.4
 ./usr/share/man/man4/uark.4
 ./usr/share/man/man4/uath.4
 ./usr/share/man/man4/uaudio.4
@@ -9131,7 +9134,6 @@
 ./usr/share/man/man8/ldconfig.8
 ./usr/share/man/man8/ldpctl.8
 ./usr/share/man/man8/ldpd.8
-./usr/share/man/man8/lmccontrol.8
 ./usr/share/man/man8/locate.updatedb.8
 ./usr/share/man/man8/login_activ.8
 ./usr/share/man/man8/login_chpass.8
@@ -9603,9 +9605,6 @@
 ./usr/share/man/man9/crypto_freesession.9
 ./usr/share/man/man9/crypto_get_driverid.9
 ./usr/share/man/man9/crypto_getreq.9
-./usr/share/man/man9/crypto_kdispatch.9
-./usr/share/man/man9/crypto_kdone.9
-./usr/share/man/man9/crypto_kregister.9
 ./usr/share/man/man9/crypto_newsession.9
 ./usr/share/man/man9/crypto_register.9
 ./usr/share/man/man9/crypto_unregister.9
@@ -9675,7 +9674,6 @@
 ./usr/share/man/man9/htolem32.9
 ./usr/share/man/man9/htolem64.9
 ./usr/share/man/man9/hz.9
-./usr/share/man/man9/hzto.9
 ./usr/share/man/man9/idgen32.9
 ./usr/share/man/man9/idgen32_init.9
 ./usr/share/man/man9/ieee80211.9
@@ -10061,6 +10059,7 @@
 ./usr/share/man/man9/timeout_triggered.9
 ./usr/share/man/man9/timingsafe_bcmp.9
 ./usr/share/man/man3/timingsafe_memcmp.3
+./usr/share/man/man3/tls_accept_fds.3
 ./usr/share/man/man3/tls_accept_socket.3
 ./usr/share/man/man3/tls_client.3
 ./usr/share/man/man3/tls_close.3
@@ -10109,6 +10108,10 @@
 ./usr/share/man/man9/ulmax.9
 ./usr/share/man/man9/ulmin.9
 ./usr/share/man/man9/uprintf.9
+./usr/share/man/man9/usbd_abort_pipe.9
+./usr/share/man/man9/usbd_close_pipe.9
+./usr/share/man/man9/usbd_open_pipe.9
+./usr/share/man/man9/usbd_open_pipe_intr.9
 ./usr/share/man/man9/usbd_setup_xfer.9
 ./usr/share/man/man9/usbd_transfer.9
 ./usr/share/man/man9/uvm.9
