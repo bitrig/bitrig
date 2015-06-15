@@ -52,6 +52,7 @@ void pmap_kenter_cache(vaddr_t va, paddr_t pa, vm_prot_t prot, int cacheable);
 #define PG_PMAP_EXE		PG_PMAP2
 
 extern paddr_t zero_page;
+extern paddr_t icache_page;
 extern paddr_t copy_src_page;
 extern paddr_t copy_dst_page;
 
