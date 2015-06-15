@@ -1612,7 +1612,7 @@ pte_insert(struct pte_desc *pted)
 {
 	/* put entry into table */
 	/* need to deal with ref/change here */
-	uint32_t pte, cache_bits, access_bits;
+	uint32_t pte, cache_bits, access_bits, global;
 	struct pmapvp2 *vp2;
 	uint32_t *l2;
 	pmap_t pm = pted->pted_pmap;
@@ -1637,15 +1637,17 @@ pte_insert(struct pte_desc *pted)
 
 	if (pm == pmap_kernel()) {
 		access_bits = ap_bits_kern[pted->pted_pte & PROT_MASK];
+		global = 0;
 	} else {
 		access_bits = ap_bits_user[pted->pted_pte & PROT_MASK];
+		global = L2_S_nG;
 	}
 
 	if (access_bits == 0)
 		pte = 0;
 	else
 		pte = (pted->pted_pte & PTE_RPGN) | cache_bits |
-		    access_bits | L2_P;
+		    access_bits | global | L2_P;
 
 	vp2 = pm->pm_vp[VP_IDX1(pted->pted_va)];
 	if (vp2->l2[VP_IDX2(pted->pted_va)] == NULL) {
