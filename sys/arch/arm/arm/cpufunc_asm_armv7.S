@@ -78,14 +78,14 @@ ENTRY(armv7_periphbase)
 ENTRY(armv7_setttb)
 	dsb
 	mcr	p15, 0, r0, c2, c0,  0 /* Translation Table Base Register 0 */
-	isb
-#ifdef MULTIPROCESSOR
-	mcr	p15, 0, r0, c8, c3, 0 /* Invalidate entire unified TLB IS */
-#else
-	mcr	p15, 0, r0, c8, c7, 0 /* Invalidate entire unified TLB */
-#endif
+	dsb
+	mcr	p15, 0, r0, c7, c5,  6 /* Branch predictor invalidate all */
 	dsb
 	isb
+	dsb
+	mov	r0, #0
+	mcr	p15, 0, r0, c8, c7, 2 /* Invalidate unified TLB by ASID */
+	dsb
 
 	mov	pc, lr
 
