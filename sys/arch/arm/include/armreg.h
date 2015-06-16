@@ -66,7 +66,11 @@
 
 #define A32_bit (1 << 8)	/* Asynchronous abort disable */
 #define I32_bit (1 << 7)	/* IRQ disable */
+#ifdef __HAVE_FIQ
 #define F32_bit (1 << 6)	/* FIQ disable */
+#else
+#define F32_bit 0
+#endif
 
 #define PSR_T_bit (1 << 5)	/* Thumb state */
 
