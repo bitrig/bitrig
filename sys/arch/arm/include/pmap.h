@@ -66,7 +66,6 @@ struct pmap {
 	uint32_t pm_pt1gen;
 	int pm_refs;				/* ref count */
 	struct pmap_statistics  pm_stats;	/* pmap statistics */
-	/* delete this */ union pmap_cache_state	pm_cstate;
 };
 
 

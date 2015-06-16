@@ -46,8 +46,8 @@ struct trapframe;
 
 struct pcb_arm32 {
 	paddr_t	pcb32_pagedir;			/* PT hooks */
-	pd_entry_t *pcb32_pl1vec;		/* PTR to vector_base L1 entry*/
-	pd_entry_t pcb32_l1vec;			/* Value to stuff on ctx sw */
+	uint32_t *pcb32_pl1vec;		/* PTR to vector_base L1 entry*/
+	uint32_t pcb32_l1vec;			/* Value to stuff on ctx sw */
 	u_int	pcb32_dacr;			/* Domain Access Control Reg */
 	void	*pcb32_cstate;			/* &pmap->pm_cstate */
 	u_int	pcb32_r8;			/* used */

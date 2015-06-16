@@ -105,12 +105,11 @@
 /* 
  * NON-TEX Access permission bits
  */
-#define AP_PF           0x00            /* all accesses generate permission faul
-ts */
-#define AP_KR           0x05            /* kernel read */
-#define AP_KRW          0x01            /* kernel read/write */
-#define AP_KRWUR        0x02            /* kernel read/write usr read */
-#define AP_KRWURW       0x03            /* kernel read/write usr read/write */
+#define AP_PF		0x00		/* all accesses generate permission faults */
+#define AP_KR		0x05		/* kernel read */
+#define AP_KRW		0x01		/* kernel read/write */
+#define AP_KRWUR	0x02		/* kernel read/write usr read */
+#define AP_KRWURW	0x03		/* kernel read/write usr read/write */
 
 /*
  * Domain Types for the Domain Access Control Register.
@@ -125,48 +124,8 @@ ts */
 /* physical page mask */
 #define PTE_RPGN 0xfffff000
 
-/* XXX */
-#ifndef _LOCORE
-struct pte {
-        uint32_t pte;
-};
-
-typedef uint32_t pd_entry_t;	/* L1 table entry */
-typedef uint32_t pt_entry_t;	/* L2 table entry */
-
-struct pv_node {
-};
-
-
-/*
-deleteme
-*/
-
-union pmap_cache_state {
-	struct {
-		union {
-			u_int8_t csu_cache_b[2];
-			u_int16_t csu_cache;
-		} cs_cache_u;
-
-		union {
-			u_int8_t csu_tlb_b[2];
-			u_int16_t csu_tlb;
-		} cs_tlb_u;
-	} cs_s;
-	u_int32_t cs_all;
-};
-#define	cs_cache_id	cs_s.cs_cache_u.csu_cache_b[0]
-#define	cs_cache_d	cs_s.cs_cache_u.csu_cache_b[1]
-#define	cs_cache	cs_s.cs_cache_u.csu_cache
-#define	cs_tlb_id	cs_s.cs_tlb_u.csu_tlb_b[0]
-#define	cs_tlb_d	cs_s.cs_tlb_u.csu_tlb_b[1]
-#define	cs_tlb		cs_s.cs_tlb_u.csu_tlb
-
-#endif /* _LOCORE */
-
-
 /// REWRITE
+
 #define L2_L_SIZE       0x00010000      /* 64K */
 #define L2_L_OFFSET     (L2_L_SIZE - 1)
 #define L2_L_FRAME      (~L2_L_OFFSET)

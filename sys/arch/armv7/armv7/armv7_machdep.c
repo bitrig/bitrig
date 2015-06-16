@@ -295,14 +295,14 @@ boot(int howto)
 }
 
 static __inline
-pd_entry_t *
+uint32_t *
 read_ttb(void)
 {
 	long ttb;
 
 	__asm volatile("mrc	p15, 0, %0, c2, c0, 0" : "=r" (ttb));
 
-	return (pd_entry_t *)(ttb & ~((1<<14)-1));
+	return (uint32_t *)(ttb & ~((1<<14)-1));
 }
 
 /*

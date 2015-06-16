@@ -113,18 +113,6 @@ struct	vmspace
 member	vm_map
 member	VM_PMAP			vm_map.pmap
 
-union	pmap_cache_state
-member	cs_tlb_id
-member	cs_tlb_d
-member	cs_tlb
-member	cs_cache_id
-member	cs_cache_d
-member	cs_cache
-member	cs_all
-
-struct	pmap
-member	PMAP_CSTATE		pm_cstate
-
 struct	uprof
 member	pr_base
 member	pr_size

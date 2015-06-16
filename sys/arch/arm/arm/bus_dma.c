@@ -724,6 +724,8 @@ _bus_dmamap_sync(bus_dma_tag_t t, bus_dmamap_t map, bus_addr_t offset,
 		return;
 	}
 
+#if 0
+	// FIXME check this
 	/*
 	 * If the mapping belongs to a non-kernel vmspace, and the
 	 * vmspace has not been active since the last time a full
@@ -732,6 +734,7 @@ _bus_dmamap_sync(bus_dma_tag_t t, bus_dmamap_t map, bus_addr_t offset,
 	if (__predict_false(map->_dm_proc != NULL &&
 	    map->_dm_proc->p_vmspace->vm_map.pmap->pm_cstate.cs_cache_d == 0))
 		return;
+#endif
 
 	switch (map->_dm_buftype) {
 	case ARM32_BUFTYPE_LINEAR:
