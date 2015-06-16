@@ -626,7 +626,7 @@ nfsm_rpchead(struct nfsreq *req, struct ucred *cr, int auth_type)
 	}
 
 	mb->m_pkthdr.len += authsiz + 10 * NFSX_UNSIGNED;
-	mb->m_pkthdr.rcvif = NULL;
+	mb->m_pkthdr.ph_ifidx = 0;
 }
 
 /*
