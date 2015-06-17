@@ -1,4 +1,4 @@
-/*	$OpenBSD: param.h,v 1.116 2015/06/17 22:32:08 deraadt Exp $	*/
+/*	$OpenBSD: param.h,v 1.117 2015/06/17 22:35:08 deraadt Exp $	*/
 
 /*-
  * Copyright (c) 1982, 1986, 1989, 1993
@@ -44,7 +44,7 @@
 #define BSD4_4	1
 
 #define OpenBSD	201510		/* OpenBSD version (year & month). */
-c#define OpenBSD5_8 1		/* OpenBSD 5.8 */
+#define OpenBSD5_8 1		/* OpenBSD 5.8 */
 
 #define Bitrig	201411		/* Bitrig version (year & month). */
 #define Bitrig1_0 1		/* Bitrig 1.0 */
