@@ -1,4 +1,4 @@
-/*	$OpenBSD: route.c,v 1.213 2015/06/06 09:31:53 mpi Exp $	*/
+/*	$OpenBSD: route.c,v 1.214 2015/06/22 09:07:11 mpi Exp $	*/
 /*	$NetBSD: route.c,v 1.14 1996/02/13 22:00:46 christos Exp $	*/
 
 /*
@@ -860,14 +860,14 @@ rtrequest1(int req, struct rt_addrinfo *info, u_int8_t prio,
 			    info->rti_info[RTAX_NETMASK],
 			    info->rti_info[RTAX_GATEWAY], prio,
 			    info->rti_flags & RTF_MPATH)) {
-				free(ndst, M_RTABLE, 0);
+				free(ndst, M_RTABLE, dlen);
 				return (EEXIST);
 			}
 		}
 #endif
 		rt = pool_get(&rtentry_pool, PR_NOWAIT | PR_ZERO);
 		if (rt == NULL) {
-			free(ndst, M_RTABLE, 0);
+			free(ndst, M_RTABLE, dlen);
 			return (ENOBUFS);
 		}
 
@@ -875,14 +875,6 @@ rtrequest1(int req, struct rt_addrinfo *info, u_int8_t prio,
 		rt->rt_tableid = tableid;
 		rt->rt_priority = prio;	/* init routing priority */
 		LIST_INIT(&rt->rt_timer);
-		rt->rt_nodes->rn_key = (caddr_t)ndst;
-
-		if ((error = rt_setgate(rt, info->rti_info[RTAX_GATEWAY],
-		    tableid))) {
-			free(ndst, M_RTABLE, 0);
-			pool_put(&rtentry_pool, rt);
-			return (error);
-		}
 
 		if (rn_mpath_capable(rnh)) {
 			/* check the link state since the table supports it */
@@ -915,11 +907,7 @@ rtrequest1(int req, struct rt_addrinfo *info, u_int8_t prio,
 			    M_TEMP, M_NOWAIT|M_ZERO);
 
 			if (rt->rt_llinfo == NULL) {
-				if (rt->rt_gwroute)
-					rtfree(rt->rt_gwroute);
-				if (rt->rt_gateway)
-					free(rt->rt_gateway, M_RTABLE, 0);
-				free(rt_key(rt), M_RTABLE, 0);
+				free(ndst, M_RTABLE, dlen);
 				pool_put(&rtentry_pool, rt);
 				return (ENOMEM);
 			}
@@ -970,6 +958,19 @@ rtrequest1(int req, struct rt_addrinfo *info, u_int8_t prio,
 			rt->rt_parent = *ret_nrt;	 /* Back ptr. to parent. */
 			rt->rt_parent->rt_refcnt++;
 		}
+
+		/*
+		 * We must set rt->rt_gateway before adding ``rt'' to
+		 * the routing table because the radix MPATH code use
+		 * it to (re)order routes.
+		 */
+		if ((error = rt_setgate(rt, info->rti_info[RTAX_GATEWAY],
+		    tableid))) {
+			free(ndst, M_RTABLE, dlen);
+			pool_put(&rtentry_pool, rt);
+			return (error);
+		}
+
 		rn = rnh->rnh_addaddr((caddr_t)ndst,
 		    (caddr_t)info->rti_info[RTAX_NETMASK], rnh, rt->rt_nodes,
 		    rt->rt_priority);
@@ -991,7 +992,7 @@ rtrequest1(int req, struct rt_addrinfo *info, u_int8_t prio,
 				rtfree(rt->rt_gwroute);
 			if (rt->rt_gateway)
 				free(rt->rt_gateway, M_RTABLE, 0);
-			free(rt_key(rt), M_RTABLE, 0);
+			free(ndst, M_RTABLE, dlen);
 			pool_put(&rtentry_pool, rt);
 			return (EEXIST);
 		}
