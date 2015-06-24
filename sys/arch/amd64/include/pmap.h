@@ -1,4 +1,4 @@
-/*	$OpenBSD: pmap.h,v 1.54 2015/02/19 03:19:11 mlarkin Exp $	*/
+/*	$OpenBSD: pmap.h,v 1.56 2015/06/24 07:18:13 mlarkin Exp $	*/
 /*	$NetBSD: pmap.h,v 1.1 2003/04/26 18:39:46 fvdl Exp $	*/
 
 /*
@@ -128,17 +128,6 @@
  * The unused space can be used if needed, but it adds a little more
  * complexity to the calculations.
  */
-
-/*
- * The first generation of Hammer processors can use 48 bits of
- * virtual memory, and 40 bits of physical memory. This will be
- * more for later generations. These defines can be changed to
- * variable names containing the # of bits, extracted from an
- * extended cpuid instruction (variables are harder to use during
- * bootstrap, though)
- */
-#define VIRT_BITS	48
-#define PHYS_BITS	40
 
 /*
  * Mask to get rid of the sign-extended part of addresses.
