@@ -130,17 +130,6 @@
  */
 
 /*
- * The first generation of Hammer processors can use 48 bits of
- * virtual memory, and 40 bits of physical memory. This will be
- * more for later generations. These defines can be changed to
- * variable names containing the # of bits, extracted from an
- * extended cpuid instruction (variables are harder to use during
- * bootstrap, though)
- */
-#define VIRT_BITS	48
-#define PHYS_BITS	40
-
-/*
  * Mask to get rid of the sign-extended part of addresses.
  */
 #define VA_SIGN_MASK		0xffff000000000000
