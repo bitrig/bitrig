@@ -149,6 +149,7 @@ sdhc_pci_attach(struct device *parent, struct device *self, void *aux)
 	usedma = PCI_INTERFACE(pa->pa_class) == SDHC_PCI_INTERFACE_DMA;
 	if (usedma)
 		sc->sc.sc_flags |= SDHC_F_USE_DMA;
+	sc->sc.sc_dmat = pa->pa_dmat;
 
 	/*
 	 * Map and attach all hosts supported by the host controller.
