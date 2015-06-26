@@ -1264,8 +1264,7 @@ rd_xheader(ARCHD *arcn, int global, off_t size)
 			    "out of range", len);
 			/* if we can just toss this record, do so */
 			len -= end - p;
-			if (size <= ULONG_MAX && len <= (unsigned long)size &&
-			    rd_skip(len) == 0) {
+			if (len <= (unsigned)size && rd_skip(len) == 0) {
 				size -= len;
 				p = end = buf;
 				continue;
