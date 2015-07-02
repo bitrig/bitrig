@@ -13,7 +13,6 @@ LINK	instbin					bin/date
 LINK	instbin					bin/dd
 LINK	instbin					bin/df
 LINK	instbin					bin/ed
-LINK	instbin					bin/expr
 LINK	instbin					bin/hostname
 LINK	instbin					bin/ksh bin/sh
 ARGVLINK ksh					-sh
