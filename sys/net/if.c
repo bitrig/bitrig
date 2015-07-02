@@ -1,4 +1,4 @@
-/*	$OpenBSD: if.c,v 1.347 2015/06/30 13:54:42 mpi Exp $	*/
+/*	$OpenBSD: if.c,v 1.348 2015/07/02 09:40:02 mpi Exp $	*/
 /*	$NetBSD: if.c,v 1.35 1996/05/07 05:26:04 thorpej Exp $	*/
 
 /*
@@ -551,7 +551,7 @@ if_input_process(void *xmq)
 
 #if NBRIDGE > 0
 		if (ifp->if_bridgeport && (m->m_flags & M_PROTO1) == 0) {
-			m = bridge_input(m);
+			m = bridge_input(ifp, m);
 			if (m == NULL)
 				continue;
 		}
@@ -563,7 +563,7 @@ if_input_process(void *xmq)
 		 * interface until it is consumed.
 		 */
 		SLIST_FOREACH(ifih, &ifp->if_inputs, ifih_next) {
-			if ((*ifih->ifih_input)(m))
+			if ((*ifih->ifih_input)(ifp, m))
 				break;
 		}
 	}
