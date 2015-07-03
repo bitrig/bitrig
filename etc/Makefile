@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.403 2015/05/18 15:17:29 ajacoutot Exp $
+#	$OpenBSD: Makefile,v 1.404 2015/07/03 22:05:53 millert Exp $
 
 TZDIR=		/usr/share/zoneinfo
 LOCALTIME=	UTC
@@ -198,8 +198,6 @@ distribution-etc-root-var: distrib-dirs
 	cd ../usr.sbin/ldapd && exec ${MAKE} distribution
 	cd ../usr.sbin/npppd && exec ${MAKE} distribution
 	cd mail && exec ${MAKE} distribution
-	${INSTALL} -c -o root -g wheel -m 440 ../usr.bin/sudo/sudoers \
-	    ${DESTDIR}/etc/sudoers
 	cd rc.d; \
 		${INSTALL} -c -o root -g wheel -m 644 rc.subr \
 		    ${DESTDIR}/etc/rc.d && \
