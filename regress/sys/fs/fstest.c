@@ -124,7 +124,6 @@ static struct flag chflags_flags[] = {
 	{ UF_NODUMP, "UF_NODUMP" },
 	{ UF_IMMUTABLE, "UF_IMMUTABLE" },
 	{ UF_APPEND, "UF_APPEND" },
-	{ UF_OPAQUE, "UF_OPAQUE" },
 	{ SF_ARCHIVED, "SF_ARCHIVED" },
 	{ SF_IMMUTABLE, "SF_IMMUTABLE" },
 	{ SF_APPEND, "SF_APPEND" },

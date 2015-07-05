@@ -450,12 +450,6 @@ print_fileflags(char *buf, size_t buflen, struct intercept_translate *tl)
 			continue;
 		}
 
-		if (flags & UF_OPAQUE) {
-			strlcat(buf, "UF_OPAQUE", buflen);
-			flags &= ~UF_OPAQUE;
-			continue;
-		}
-
 		if (flags & SF_ARCHIVED) {
 			strlcat(buf, "SF_ARCHIVED", buflen);
 			flags &= ~SF_ARCHIVED;

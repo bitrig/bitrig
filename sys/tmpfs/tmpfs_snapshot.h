@@ -57,7 +57,7 @@ typedef struct __attribute__((packed)) {
 #define TMPFS_SNAP_UF_NODUMP	0x01
 #define TMPFS_SNAP_UF_IMMUTABLE	0x02
 #define TMPFS_SNAP_UF_APPEND	0x04
-#define TMPFS_SNAP_UF_OPAQUE	0x08
+/* was:  TMPFS_SNAP_UF_OPAQUE	0x08 */
 #define TMPFS_SNAP_SF_ARCHIVED	0x10
 #define TMPFS_SNAP_SF_IMMUTABLE	0x20
 #define TMPFS_SNAP_SF_APPEND	0x40
@@ -213,8 +213,6 @@ tmpfs_snap_flags_hdr(uint32_t tn_flags)
 		tsn_flags |= TMPFS_SNAP_UF_IMMUTABLE;
 	if (tn_flags & UF_APPEND)
 		tsn_flags |= TMPFS_SNAP_UF_APPEND;
-	if (tn_flags & UF_OPAQUE)
-		tsn_flags |= TMPFS_SNAP_UF_OPAQUE;
 	if (tn_flags & SF_ARCHIVED)
 		tsn_flags |= TMPFS_SNAP_SF_ARCHIVED;
 	if (tn_flags & SF_IMMUTABLE)
@@ -236,8 +234,6 @@ tmpfs_snap_flags_node(uint8_t tsn_flags)
 		tn_flags |= UF_IMMUTABLE;
 	if (tsn_flags & TMPFS_SNAP_UF_APPEND)
 		tn_flags |= UF_APPEND;
-	if (tsn_flags & TMPFS_SNAP_UF_OPAQUE)
-		tn_flags |= UF_OPAQUE;
 	if (tsn_flags & TMPFS_SNAP_SF_ARCHIVED)
 		tn_flags |= SF_ARCHIVED;
 	if (tsn_flags & TMPFS_SNAP_SF_IMMUTABLE)

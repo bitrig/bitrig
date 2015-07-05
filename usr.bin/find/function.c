@@ -716,7 +716,7 @@ f_flags(PLAN *plan, FTSENT *entry)
 	u_int flags;
 
 	flags = entry->fts_statp->st_flags &
-	    (UF_NODUMP | UF_IMMUTABLE | UF_APPEND | UF_OPAQUE |
+	    (UF_NODUMP | UF_IMMUTABLE | UF_APPEND |
 	     SF_ARCHIVED | SF_IMMUTABLE | SF_APPEND);
 	if (plan->flags == F_ATLEAST)
 		/* note that plan->fl_flags always is a subset of

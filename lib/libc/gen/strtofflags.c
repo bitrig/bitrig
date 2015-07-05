@@ -60,7 +60,6 @@ static const struct {
 	{ "nouchange",		UF_IMMUTABLE,	0 },
 	{ "nouimmutable",	UF_IMMUTABLE,	0 },
 	{ "nodump",		UF_NODUMP,	1 },
-	{ "noopaque",		UF_OPAQUE,	0 },
 #ifdef __FreeBSD__
 	{ "nouunlnk",		UF_NOUNLINK,	0 },
 	{ "nouunlink",		UF_NOUNLINK,	0 }

@@ -165,7 +165,7 @@ struct stat {
 #define	UF_NODUMP	0x00000001	/* do not dump file */
 #define	UF_IMMUTABLE	0x00000002	/* file may not be changed */
 #define	UF_APPEND	0x00000004	/* writes to file may only append */
-#define	UF_OPAQUE	0x00000008	/* directory is opaque wrt. union */
+/* was: UF_OPAQUE	0x00000008 */
 /*
  * Super-user changeable flags.
  */
@@ -179,7 +179,6 @@ struct stat {
 /*
  * Shorthand abbreviations of above.
  */
-#define	OPAQUE		(UF_OPAQUE)
 #define	APPEND		(UF_APPEND | SF_APPEND)
 #define	IMMUTABLE	(UF_IMMUTABLE | SF_IMMUTABLE)
 #endif /* _KERNEL */
