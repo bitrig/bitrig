@@ -41,7 +41,6 @@
 .Fa "struct vnode *vp"
 .Fa "int mode"
 .Fa "struct ucred *cred"
-.Fa "struct proc *p"
 .Fc
 .Ft int
 .Fo VOP_ADVLOCK
@@ -68,7 +67,6 @@
 .Fa "struct vnode *vp"
 .Fa "int fflag"
 .Fa "struct ucred *cred"
-.Fa "struct proc *p"
 .Fc
 .Ft int
 .Fo VOP_CREATE
@@ -82,19 +80,16 @@
 .Fa "struct vnode *vp"
 .Fa "struct ucred *cred"
 .Fa "int waitfor"
-.Fa "struct proc *p"
 .Fc
 .Ft int
 .Fo VOP_GETATTR
 .Fa "struct vnode *vp"
 .Fa "struct vattr *vap"
 .Fa "struct ucred *cred"
-.Fa "struct proc *p"
 .Fc
 .Ft int
 .Fo VOP_INACTIVE
 .Fa "struct vnode *vp"
-.Fa "struct proc *p"
 .Fc
 .Ft int
 .Fo VOP_IOCTL
@@ -103,7 +98,6 @@
 .Fa "void *data"
 .Fa "int fflag"
 .Fa "struct ucred *cred"
-.Fa "struct proc *p"
 .Fc
 .Ft int
 .Fo VOP_ISLOCKED
@@ -124,7 +118,6 @@
 .Fo VOP_LOCK
 .Fa "struct vnode *vp"
 .Fa "int flags"
-.Fa "struct proc *p"
 .Fc
 .Ft int
 .Fo VOP_LOOKUP
@@ -151,7 +144,6 @@
 .Fa "struct vnode *vp"
 .Fa "int mode"
 .Fa "struct ucred *cred"
-.Fa "struct proc *p"
 .Fc
 .Ft int
 .Fo VOP_PATHCONF
@@ -163,7 +155,6 @@
 .Fo VOP_POLL
 .Fa "struct vnode *vp"
 .Fa "int events"
-.Fa "struct proc *p"
 .Fc
 .Ft int
 .Fo VOP_PRINT
@@ -197,7 +188,6 @@
 .Ft int
 .Fo VOP_RECLAIM
 .Fa "struct vnode *vp"
-.Fa "struct proc *p"
 .Fc
 .Ft int
 .Fo VOP_REMOVE
@@ -230,7 +220,6 @@
 .Fa "struct vnode *vp"
 .Fa "struct vattr *vap"
 .Fa "struct ucred *cred"
-.Fa "struct proc *p"
 .Fc
 .Ft int
 .Fo VOP_STRATEGY
@@ -248,7 +237,6 @@
 .Fo VOP_UNLOCK
 .Fa "struct vnode *vp"
 .Fa "int flags"
-.Fa "struct proc *p"
 .Fc
 .Ft int
 .Fo VOP_WRITE
@@ -274,10 +262,6 @@ function consist of one or more vnode pointers along with other data
 needed to perform the operation.
 Care must be taken to obey the vnode locking discipline when using
 VOP functions.
-Many VOP calls take a
-.Vt struct proc *p
-argument.
-This should be the current process.
 VOP calls are not safe to call in an interrupt context.
 .Pp
 The following sections comment on the VOP functions from the consumer's
@@ -292,12 +276,10 @@ associated with the path name
 This is mostly used by internal VFS code and should not be needed by
 file system implementors.
 .Pp
-.It Fn VOP_ACCESS vp mode cred p
+.It Fn VOP_ACCESS vp mode cred
 Determine if the locked vnode
 .Fa vp
-can be accessed by the calling process
-.Fa p
-with credentials
+can be accessed by the current process with credentials
 .Fa cred
 for the given access
 .Fa mode .
@@ -388,14 +370,12 @@ Write a file system buffer to disk.
 Upon success, zero is returned; otherwise, an appropriate error code is
 returned.
 .Pp
-.It Fn VOP_CLOSE vp fflag cred p
+.It Fn VOP_CLOSE vp fflag cred
 Close the file associated with the locked vnode
 .Fa vp
 with file flags
 .Fa fflag
-by the calling process
-.Fa p
-with credentials
+by the current process with credentials
 .Fa cred .
 This operation should be performed only when the file is no longer being
 used.
@@ -412,7 +392,7 @@ The file name is in
 and its permissions will be
 .Fa vap .
 .Pp
-.It Fn VOP_FSYNC vp cred waitfor p
+.It Fn VOP_FSYNC vp cred waitfor
 Flush any dirty buffers associated with
 .Fa vp
 to disk.
@@ -424,15 +404,13 @@ to indicate that
 .Fn VOP_FSYNC
 should not return until all data is written.
 .Pp
-.It Fn VOP_GETATTR vp vap cred p
-.It Fn VOP_SETATTR vp vap cred p
+.It Fn VOP_GETATTR vp vap cred
+.It Fn VOP_SETATTR vp vap cred
 Access the vnode attributes
 .Fa vap
 of the vnode
 .Fa vp
-by the calling process
-.Fa p
-with credentials
+by the current process with credentials
 .Fa cred .
 .Fn VOP_SETATTR
 requires that
@@ -449,13 +427,11 @@ or should not be changed by
 Upon success of obtaining or changing the attributes, zero is returned;
 otherwise, an appropriate error code is returned.
 .Pp
-.It Fn VOP_INACTIVE vp p
+.It Fn VOP_INACTIVE vp
 Notify the underlying file system that the locked vnode
 .Fa vp
 is no longer in use.
 The vnode will be unlocked upon return.
-.Fa p
-specifies the calling process.
 This may happen when the vnode reference count reaches zero or
 when the underlying file system has disappeared or has been forcibly
 unmounted.
@@ -471,7 +447,7 @@ so that it can be immediately reactivated in case the file is used again.
 Upon success, zero is returned; otherwise, an appropriate error code is
 returned.
 .Pp
-.It Fn VOP_IOCTL vp command data fflag cred p
+.It Fn VOP_IOCTL vp command data fflag cred
 Perform the control operation
 .Fa command
 with additional information
@@ -481,15 +457,13 @@ on the vnode
 normally associated with a device,
 with file flags
 .Fa fflag
-by the calling process
-.Fa p
-with credentials
+by the current process with credentials
 .Fa cred .
 Upon success, zero is returned; otherwise, an appropriate error code is
 returned.
 .Pp
 .It Fn VOP_ISLOCKED vp
-.It Fn VOP_LOCK vp flags p
+.It Fn VOP_LOCK vp flags
 .It Fn VOP_UNLOCK vp flags p
 .Fn VOP_LOCK
 is used internally by
@@ -589,14 +563,12 @@ is not
 Upon success, zero is returned; otherwise, an appropriate error code is
 returned.
 .Pp
-.It Fn VOP_OPEN vp mode cred p
+.It Fn VOP_OPEN vp mode cred
 Open the file associated with the vnode
 .Fa vp
 with the access modes
 .Fa mode
-by the calling process
-.Fa p
-with credentials
+by the current process with credentials
 .Fa cred .
 .Fa mode
 takes the flags described in
@@ -622,15 +594,14 @@ The result is placed in
 Upon success, zero is returned; otherwise, an appropriate error code is
 returned.
 .Pp
-.It Fn VOP_POLL vp events p
+.It Fn VOP_POLL vp events
 Determine whether the vnode
 .Fa vp
 is ready to perform the operations specified by
 .Fa events
 (see
 .Xr poll 2 )
-for the calling process
-.Fa p .
+for the current process.
 The
 .Fn selrecord
 routine may be used to detect selection collisions for multiple
@@ -703,7 +674,7 @@ is the locked vnode for the file, and
 is a cluster of the outstanding buffers about to be written.
 Currently, only FFS implements this call.
 .Pp
-.It Fn VOP_RECLAIM vp p
+.It Fn VOP_RECLAIM vp
 Used by
 .Xr vclean 9
 so that the file system has an opportunity to free memory
