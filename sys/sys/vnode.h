@@ -232,7 +232,6 @@ TAILQ_HEAD(freelst, vnode);
 extern struct freelst vnode_hold_list;	/* free vnodes referencing buffers */
 extern struct freelst vnode_free_list;	/* vnode free list */
 
-#define	VATTR_NULL(vap)	vattr_null(vap)
 #define	VN_KNOTE(vp, b)					\
 	KNOTE(&vp->v_selectinfo.si_note, (b))
 

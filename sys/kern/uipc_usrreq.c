@@ -455,7 +455,7 @@ unp_bind(struct unpcb *unp, struct mbuf *nam, struct proc *p)
 		m_freem(nam2);
 		return (EADDRINUSE);
 	}
-	VATTR_NULL(&vattr);
+	vattr_null(&vattr);
 	vattr.va_type = VSOCK;
 	vattr.va_mode = ACCESSPERMS &~ p->p_fd->fd_cmask;
 	error = VOP_CREATE(nd.ni_dvp, &nd.ni_vp, &nd.ni_cnd, &vattr);

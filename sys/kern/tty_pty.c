@@ -1009,7 +1009,7 @@ ptm_vn_open(struct nameidata *ndp)
 	error = VOP_OPEN(vp, FREAD|FWRITE, cred);
 	if (!error) {
 		/* update atime/mtime */
-		VATTR_NULL(&vattr);
+		vattr_null(&vattr);
 		getnanotime(&vattr.va_atime);
 		vattr.va_mtime = vattr.va_atime;
 		vattr.va_vaflags |= VA_UTIMES_NULL;
@@ -1112,7 +1112,7 @@ retry:
 			/* get real uid */
 			uid = p->p_ucred->cr_ruid;
 
-			VATTR_NULL(&vattr);
+			vattr_null(&vattr);
 			vattr.va_uid = uid;
 			vattr.va_gid = gid;
 			vattr.va_mode = (S_IRUSR|S_IWUSR|S_IWGRP) & ALLPERMS;

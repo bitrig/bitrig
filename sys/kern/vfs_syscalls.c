@@ -947,7 +947,7 @@ doopenat(struct proc *p, int fd, const char *path, int oflags, mode_t mode,
 		else if (vp->v_type == VDIR)
 			error = EISDIR;
 		else if ((error = vn_writechk(vp)) == 0) {
-			VATTR_NULL(&vattr);
+			vattr_null(&vattr);
 			vattr.va_size = 0;
 			error = VOP_SETATTR(vp, &vattr, fp->f_cred);
 		}
@@ -1085,7 +1085,7 @@ sys_fhopen(struct proc *p, void *v, register_t *retval)
 			goto bad;
 	}
 	if (flags & O_TRUNC) {
-		VATTR_NULL(&va);
+		vattr_null(&va);
 		va.va_size = 0;
 		if ((error = VOP_SETATTR(vp, &va, cred)) != 0)
 			goto bad;
@@ -1263,7 +1263,7 @@ domknodat(struct proc *p, int fd, const char *path, mode_t mode, dev_t dev)
 	if (vp != NULL)
 		error = EEXIST;
 	else {
-		VATTR_NULL(&vattr);
+		vattr_null(&vattr);
 		vattr.va_mode = (mode & ALLPERMS) &~ p->p_fd->fd_cmask;
 		vattr.va_rdev = dev;
 
@@ -1476,7 +1476,7 @@ dosymlinkat(struct proc *p, const char *upath, int fd, const char *link)
 		error = EEXIST;
 		goto out;
 	}
-	VATTR_NULL(&vattr);
+	vattr_null(&vattr);
 	vattr.va_mode = ACCESSPERMS &~ p->p_fd->fd_cmask;
 	error = VOP_SYMLINK(nd.ni_dvp, &nd.ni_vp, &nd.ni_cnd, &vattr, path);
 out:
@@ -1965,7 +1965,7 @@ dovchflags(struct proc *p, struct vnode *vp, u_int flags)
 				goto out;
 			}
 		}
-		VATTR_NULL(&vattr);
+		vattr_null(&vattr);
 		vattr.va_flags = flags;
 		error = VOP_SETATTR(vp, &vattr, p->p_ucred);
 	}
@@ -2025,7 +2025,7 @@ dofchmodat(struct proc *p, int fd, const char *path, mode_t mode, int flag)
 	if (vp->v_mount->mnt_flag & MNT_RDONLY)
 		error = EROFS;
 	else {
-		VATTR_NULL(&vattr);
+		vattr_null(&vattr);
 		vattr.va_mode = mode & ALLPERMS;
 		error = VOP_SETATTR(vp, &vattr, p->p_ucred);
 	}
@@ -2059,7 +2059,7 @@ sys_fchmod(struct proc *p, void *v, register_t *retval)
 	if (vp->v_mount && vp->v_mount->mnt_flag & MNT_RDONLY)
 		error = EROFS;
 	else {
-		VATTR_NULL(&vattr);
+		vattr_null(&vattr);
 		vattr.va_mode = SCARG(uap, mode) & ALLPERMS;
 		error = VOP_SETATTR(vp, &vattr, p->p_ucred);
 	}
@@ -2133,7 +2133,7 @@ dofchownat(struct proc *p, int fd, const char *path, uid_t uid, gid_t gid,
 		}
 		else
 			mode = VNOVAL;
-		VATTR_NULL(&vattr);
+		vattr_null(&vattr);
 		vattr.va_uid = uid;
 		vattr.va_gid = gid;
 		vattr.va_mode = mode;
@@ -2183,7 +2183,7 @@ sys_lchown(struct proc *p, void *v, register_t *retval)
 		}
 		else
 			mode = VNOVAL;
-		VATTR_NULL(&vattr);
+		vattr_null(&vattr);
 		vattr.va_uid = uid;
 		vattr.va_gid = gid;
 		vattr.va_mode = mode;
@@ -2231,7 +2231,7 @@ sys_fchown(struct proc *p, void *v, register_t *retval)
 				mode = VNOVAL;
 		} else
 			mode = VNOVAL;
-		VATTR_NULL(&vattr);
+		vattr_null(&vattr);
 		vattr.va_uid = uid;
 		vattr.va_gid = gid;
 		vattr.va_mode = mode;
@@ -2335,7 +2335,7 @@ dovutimens(struct proc *p, struct vnode *vp, struct timespec ts[2])
 	}
 #endif
 
-	VATTR_NULL(&vattr);
+	vattr_null(&vattr);
 	if (ts[0].tv_nsec == UTIME_NOW || ts[1].tv_nsec == UTIME_NOW) {
 		if (ts[0].tv_nsec == UTIME_NOW && ts[1].tv_nsec == UTIME_NOW)
 			vattr.va_vaflags |= VA_UTIMES_NULL;
@@ -2457,7 +2457,7 @@ sys_truncate(struct proc *p, void *v, register_t *retval)
 	    		vput(vp);
 	    		return (EINVAL);
 		}
-		VATTR_NULL(&vattr);
+		vattr_null(&vattr);
 		vattr.va_size = SCARG(uap, length);
 		error = VOP_SETATTR(vp, &vattr, p->p_ucred);
 	}
@@ -2495,7 +2495,7 @@ sys_ftruncate(struct proc *p, void *v, register_t *retval)
 	if (vp->v_type == VDIR)
 		error = EISDIR;
 	else if ((error = vn_writechk(vp)) == 0) {
-		VATTR_NULL(&vattr);
+		vattr_null(&vattr);
 		vattr.va_size = len;
 		error = VOP_SETATTR(vp, &vattr, fp->f_cred);
 	}
@@ -2693,7 +2693,7 @@ domkdirat(struct proc *p, int fd, const char *path, mode_t mode)
 		vrele(vp);
 		return (EEXIST);
 	}
-	VATTR_NULL(&vattr);
+	vattr_null(&vattr);
 	vattr.va_type = VDIR;
 	vattr.va_mode = (mode & ACCESSPERMS) &~ p->p_fd->fd_cmask;
 	error = VOP_MKDIR(nd.ni_dvp, &nd.ni_vp, &nd.ni_cnd, &vattr);

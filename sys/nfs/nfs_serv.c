@@ -231,7 +231,7 @@ nfsrv_setattr(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 
 	fhp = &nfh.fh_generic;
 	nfsm_srvmtofh(fhp);
-	VATTR_NULL(&va);
+	vattr_null(&va);
 	if (info.nmi_v3) {
 		va.va_vaflags |= VA_UTIMES_NULL;
 		error = nfsm_srvsattr(&info.nmi_md, &va, info.nmi_mrep, &info.nmi_dpos);
@@ -903,7 +903,7 @@ nfsrv_create(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 		return (0);
 	}
 
-	VATTR_NULL(&va);
+	vattr_null(&va);
 	if (info.nmi_v3) {
 		nfsm_dissect(tl, u_int32_t *, NFSX_UNSIGNED);
 		how = fxdr_unsigned(int, *tl);
@@ -963,7 +963,7 @@ nfsrv_create(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 				pool_put(&namei_pool, nd.ni_cnd.cn_pnbuf);
 				if (exclusive_flag) {
 					exclusive_flag = 0;
-					VATTR_NULL(&va);
+					vattr_null(&va);
 					bcopy(cverf, (caddr_t)&va.va_atime,
 						NFSX_V3CREATEVERF);
 					error = VOP_SETATTR(nd.ni_vp, &va, cred);
@@ -1047,7 +1047,7 @@ nfsrv_create(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 			    (nd.ni_cnd.cn_flags & RDONLY), procp, 0);
 			if (!error) {
 				tempsize = va.va_size;
-				VATTR_NULL(&va);
+				vattr_null(&va);
 				va.va_size = tempsize;
 				error = VOP_SETATTR(vp, &va, cred);
 			}
@@ -1162,7 +1162,7 @@ nfsrv_mknod(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 		vput(nd.ni_dvp);
 		goto out;
 	}
-	VATTR_NULL(&va);
+	vattr_null(&va);
 	error = nfsm_srvsattr(&info.nmi_md, &va, info.nmi_mrep, &info.nmi_dpos);
 	if (error)
 		goto nfsmout;
@@ -1677,7 +1677,7 @@ nfsrv_symlink(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 	}
 	if (error)
 		goto out;
-	VATTR_NULL(&va);
+	vattr_null(&va);
 	if (info.nmi_v3) {
 		error = nfsm_srvsattr(&info.nmi_md, &va, info.nmi_mrep,
 		    &info.nmi_dpos);
@@ -1826,7 +1826,7 @@ nfsrv_mkdir(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 		return (0);
 	}
 
-	VATTR_NULL(&va);
+	vattr_null(&va);
 	if (info.nmi_v3) {
 		error = nfsm_srvsattr(&info.nmi_md, &va, info.nmi_mrep,
 		    &info.nmi_dpos);

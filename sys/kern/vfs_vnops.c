@@ -95,7 +95,7 @@ vn_open(struct nameidata *ndp, int fmode, int cmode)
 			return (error);
 
 		if (ndp->ni_vp == NULL) {
-			VATTR_NULL(&va);
+			vattr_null(&va);
 			va.va_type = VREG;
 			va.va_mode = cmode;
 			if (fmode & O_EXCL)
@@ -156,7 +156,7 @@ vn_open(struct nameidata *ndp, int fmode, int cmode)
 		}
 	}
 	if ((fmode & O_TRUNC) && vp->v_type == VREG) {
-		VATTR_NULL(&va);
+		vattr_null(&va);
 		va.va_size = 0;
 		if ((error = VOP_SETATTR(vp, &va, cred)) != 0)
 			goto bad;
