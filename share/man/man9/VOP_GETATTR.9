@@ -75,8 +75,16 @@ Depending on the specific filesystem implementation, some values may not be
 available for modification and/or retrieval.
 In these cases, the corresponding fields in the
 .Fa vattr
-structure should be set to
-.Dv VNOVAL .
+structure should be set to their respective null value, as listed below.
+.Bl -column "va_atime.tv_nsec" "Null Value" -offset indent
+.It Em Field Ta Em "Null Value"
+.It Fa va_type          Ta Dv VNON
+.It Fa va_atime.tv_nsec Ta Dv UTIME_OMIT
+.It Fa va_mtime.tv_nsec Ta Dv UTIME_OMIT
+.It Fa va_ctime.tv_nsec Ta Dv UTIME_OMIT
+.It Fa va_rdev          Ta Dv NODEV
+.It all other fields    Ta Dv VNOVAL
+.El
 .Pp
 Upon return from a
 .Fn VOP_GETATTR
