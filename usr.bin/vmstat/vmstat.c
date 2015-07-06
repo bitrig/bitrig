@@ -501,6 +501,8 @@ dosum(void)
 
 	/* vm_page constants */
 	(void)printf("%11u bytes per page\n", uvmexp.pagesize);
+	(void)printf("%11s mask %#x, shift %u\n",
+		     "", uvmexp.pagemask, uvmexp.pageshift);
 
 	/* vm_page counters */
 	(void)printf("%11u pages managed\n", uvmexp.npages);
@@ -516,8 +518,11 @@ dosum(void)
 		     uvmexp.reserve_kernel);
 
 	/* swap */
+	(void)printf("%11u configured swap devices\n", uvmexp.nswapdev);
 	(void)printf("%11u swap pages\n", uvmexp.swpages);
 	(void)printf("%11u swap pages in use\n", uvmexp.swpginuse);
+	(void)printf("%11u pages only in swap\n", uvmexp.swpgonly);
+	(void)printf("%11u calls to uvm_swap_get()\n", uvmexp.nswget);
 	(void)printf("%11u total anon's in system\n", uvmexp.nanon);
 	(void)printf("%11u free anon's\n", uvmexp.nfreeanon);
 
@@ -530,7 +535,10 @@ dosum(void)
 	(void)printf("%11u software interrupts\n", uvmexp.softs);
 	(void)printf("%11u syscalls\n", uvmexp.syscalls);
 	(void)printf("%11u pagein operations\n", uvmexp.pageins);
+	(void)printf("%11u pages swapped in\n", uvmexp.pgswapin);
+	(void)printf("%11u pages swapped out\n", uvmexp.pgswapout);
 	(void)printf("%11u forks\n", uvmexp.forks);
+	(void)printf("%11u forks where parent waits\n", uvmexp.forks_ppwait);
 	(void)printf("%11u forks where vmspace is shared\n",
 		     uvmexp.forks_sharevm);
 	(void)printf("%11u kernel map entries\n", uvmexp.kmapent);
@@ -541,10 +549,20 @@ dosum(void)
 	(void)printf("%11u number of times the pagedaemon woke up\n",
 		     uvmexp.pdwoke);
 	(void)printf("%11u revolutions of the clock hand\n", uvmexp.pdrevs);
+	(void)printf("%11u calls to pagedaemon for swapout\n", uvmexp.pdswout);
 	(void)printf("%11u pages freed by pagedaemon\n", uvmexp.pdfreed);
 	(void)printf("%11u pages scanned by pagedaemon\n", uvmexp.pdscans);
+	(void)printf("%11u anonymous pages scanned by pagedaemon\n",
+		     uvmexp.pdanscan);
+	(void)printf("%11u object pages scanned by pagedaemon\n",
+		     uvmexp.pdobscan);
 	(void)printf("%11u pages reactivated by pagedaemon\n", uvmexp.pdreact);
 	(void)printf("%11u busy pages found by pagedaemon\n", uvmexp.pdbusy);
+	(void)printf("%11u pageouts started by pagedaemon\n",
+		     uvmexp.pdpageouts);
+	(void)printf("%11u pending pageouts got by pagedaemon\n",
+		     uvmexp.pdpending);
+	(void)printf("%11u pages deactivated by pagedaemon\n", uvmexp.pddeact);
 
 	if (nlistf == NULL && memf == NULL) {
 		size = sizeof(nchstats);
