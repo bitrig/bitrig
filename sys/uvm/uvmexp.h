@@ -55,9 +55,9 @@ struct uvmexp {
 	int zeropages;		/* number of zero'd pages */
 	int reserve_pagedaemon; /* number of pages reserved for pagedaemon */
 	int reserve_kernel;	/* number of pages reserved for kernel */
-	int anonpages;		/* number of pages used by anon pagers */
-	int vnodepages;		/* number of pages used by vnode page cache */
-	int vtextpages;		/* number of pages used by vtext vnodes */
+	int obsolete_anonpages;	/* number of pages used by anon pagers */
+	int obsolete_vnodepages;/* number of pages used by vnode page cache */
+	int obsolete_vtextpages;/* number of pages used by vtext vnodes */
 
 	/* pageout params */
 	int freemin;    /* min number of free pages */
@@ -78,8 +78,8 @@ struct uvmexp {
 	int swpgonly;	/* number of swap pages in use, not also in RAM */
 	int nswget;	/* number of times fault calls uvm_swap_get() */
 	int nanon;	/* number total of anon's in system */
-	int nanonneeded;/* number of anons currently needed */
-	int nfreeanon;	/* number of free anon's */
+	int obsolete_nanonneeded;	/* number of anons currently needed */
+	int obsolete_nfreeanon;		/* number of free anon's */
 
 	/* stat counters */
 	int faults;		/* page fault count */
@@ -101,7 +101,7 @@ struct uvmexp {
 				   was available */
 	int pga_zeromiss;	/* pagealloc where zero wanted and zero
 				   not available */
-	int zeroaborts;		/* number of times page zeroing was
+	int obsolete_zeroaborts;/* number of times page zeroing was
 				   aborted */
 
 	/* fault subcounters */
@@ -137,9 +137,9 @@ struct uvmexp {
 	int pdpageouts;	/* number of times daemon started a pageout */
 	int pdpending;	/* number of times daemon got a pending pagout */
 	int pddeact;	/* number of pages daemon deactivates */
-	int pdreanon;	/* anon pages reactivated due to min threshold */
-	int pdrevnode;	/* vnode pages reactivated due to min threshold */
-	int pdrevtext;	/* vtext pages reactivated due to min threshold */
+	int obsolete_pdreanon;	/* anon pages reactivated due to min threshold */
+	int obsolete_pdrevnode;	/* vnode pages reactivated due to min threshold */
+	int obsolete_pdrevtext;	/* vtext pages reactivated due to min threshold */
 
 	int fpswtch;	/* FPU context switches */
 	int kmapent;	/* number of kernel map entries */

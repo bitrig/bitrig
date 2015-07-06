@@ -524,7 +524,6 @@ dosum(void)
 	(void)printf("%11u pages only in swap\n", uvmexp.swpgonly);
 	(void)printf("%11u calls to uvm_swap_get()\n", uvmexp.nswget);
 	(void)printf("%11u total anon's in system\n", uvmexp.nanon);
-	(void)printf("%11u free anon's\n", uvmexp.nfreeanon);
 
 	/* stat counters */
 	(void)printf("%11u page faults\n", uvmexp.faults);
