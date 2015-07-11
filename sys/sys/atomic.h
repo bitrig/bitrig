@@ -128,14 +128,14 @@ static inline unsigned int
 atomic_sub_int_nv(volatile unsigned int *p, unsigned int v)
 {
 	return atomic_fetch_sub_explicit((atomic_uint *)p, v,
-	    memory_order_relaxed) + v;
+	    memory_order_relaxed) - v;
 }
 
 static inline unsigned long
 atomic_sub_long_nv(volatile unsigned long *p, unsigned long v)
 {
 	return atomic_fetch_sub_explicit((atomic_ulong *)p, v,
-	    memory_order_relaxed) + v;
+	    memory_order_relaxed) - v;
 }
 
 /*
