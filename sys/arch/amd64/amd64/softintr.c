@@ -1,4 +1,4 @@
-/*	$OpenBSD: softintr.c,v 1.6 2014/07/12 18:44:41 tedu Exp $	*/
+/*	$OpenBSD: softintr.c,v 1.8 2015/07/16 05:10:14 guenther Exp $	*/
 /*	$NetBSD: softintr.c,v 1.1 2003/02/26 21:26:12 fvdl Exp $	*/
 
 /*-
@@ -83,6 +83,7 @@ softintr_dispatch(int which)
 	void				*arg;
 	void				(*fn)(void *);
 
+	KERNEL_LOCK();
 	for (;;) {
 		mtx_enter(&si->softintr_lock);
 		sih = TAILQ_FIRST(&si->softintr_q);
@@ -100,6 +101,7 @@ softintr_dispatch(int which)
 
 		(*fn)(arg);
 	}
+	KERNEL_UNLOCK();
 }
 
 #ifdef MULTIPROCESSOR

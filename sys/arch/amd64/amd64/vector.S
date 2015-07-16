@@ -1,4 +1,4 @@
-/*	$OpenBSD: vector.S,v 1.41 2015/07/09 13:23:51 mikeb Exp $	*/
+/*	$OpenBSD: vector.S,v 1.42 2015/07/16 05:10:14 guenther Exp $	*/
 /*	$NetBSD: vector.S,v 1.5 2004/06/28 09:13:11 fvdl Exp $	*/
 
 /*
@@ -1001,7 +1001,6 @@ IDTVEC(softtty)
 	movl	$IPL_SOFTTTY, CPUVAR(ILEVEL)
 	sti
 	incl	CPUVAR(IDEPTH)
-	movq	CPUVAR(ISOURCES) + SIR_TTY * 8, %r12
 	movl	$X86_SOFTINTR_SOFTTTY,%edi
 	call	_C_LABEL(softintr_dispatch)
 	decl	CPUVAR(IDEPTH)
@@ -1011,7 +1010,6 @@ IDTVEC(softnet)
 	movl	$IPL_SOFTNET, CPUVAR(ILEVEL)
 	sti
 	incl	CPUVAR(IDEPTH)
-	movq	CPUVAR(ISOURCES) + SIR_NET * 8, %r12
 	movl	$X86_SOFTINTR_SOFTNET,%edi
 	call	_C_LABEL(softintr_dispatch)
 	decl	CPUVAR(IDEPTH)
@@ -1021,8 +1019,6 @@ IDTVEC(softclock)
 	movl	$IPL_SOFTCLOCK, CPUVAR(ILEVEL)
 	sti
 	incl	CPUVAR(IDEPTH)
-	movq	CPUVAR(ISOURCES) + SIR_CLOCK * 8, %r12
-
 	movl	$X86_SOFTINTR_SOFTCLOCK,%edi
 	call	_C_LABEL(softintr_dispatch)
 	decl	CPUVAR(IDEPTH)
