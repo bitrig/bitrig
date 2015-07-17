@@ -455,8 +455,8 @@ ufs2_open(char *path, struct open_file *f)
 		 * Check for symbolic link.
 		 */
 		if ((fp->f_di.di_mode & IFMT) == IFLNK) {
-			int link_len = fp->f_di.di_size;
-			int len;
+			u_int64_t link_len = fp->f_di.di_size;
+			size_t len;
 
 			len = strlen(cp);
 
@@ -469,8 +469,7 @@ ufs2_open(char *path, struct open_file *f)
 			bcopy(cp, &namebuf[link_len], len + 1);
 
 			if (link_len < fs->fs_maxsymlinklen) {
-				bcopy(fp->f_di.di_shortlink, namebuf,
-				    (unsigned) link_len);
+				bcopy(fp->f_di.di_shortlink, namebuf, link_len);
 			} else {
 				/*
 				 * Read file for symbolic link
@@ -492,7 +491,7 @@ ufs2_open(char *path, struct open_file *f)
 				if (rc)
 					goto out;
 
-				bcopy(buf, namebuf, (unsigned)link_len);
+				bcopy(buf, namebuf, link_len);
 			}
 
 			/*
