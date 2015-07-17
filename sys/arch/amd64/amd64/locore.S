@@ -1,4 +1,4 @@
-/*	$OpenBSD: locore.S,v 1.70 2015/07/16 23:04:12 mlarkin Exp $	*/
+/*	$OpenBSD: locore.S,v 1.71 2015/07/17 06:13:44 mlarkin Exp $	*/
 /*	$NetBSD: locore.S,v 1.13 2004/03/25 18:33:17 drochner Exp $	*/
 
 /*
@@ -182,8 +182,6 @@ _C_LABEL(lapic_isr):
 	.globl	_C_LABEL(eramdisk)
 	.globl	_C_LABEL(nkl2)
 	.globl	_C_LABEL(pg_nx)
-_C_LABEL(cpu):		.long	0	# are we 386, 386sx, or 486,
-					#   or Pentium, or..
 _C_LABEL(cpu_id):	.long	0	# saved from `cpuid' instruction
 _C_LABEL(cpu_feature):	.long	0	# feature flags from 'cpuid'
 					#   instruction
