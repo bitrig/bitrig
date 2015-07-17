@@ -1,4 +1,4 @@
-/* $OpenBSD: omap.c,v 1.3 2011/11/15 23:01:11 drahn Exp $ */
+/* $OpenBSD: exynos.c,v 1.8 2015/07/17 17:33:50 jsg Exp $ */
 /*
  * Copyright (c) 2005,2008 Dale Rahn <drahn@openbsd.com>
  * Copyright (c) 2012-2013 Patrick Wildt <patrick@blueri.se>
@@ -67,5 +67,6 @@ struct board_dev chromebook_devs[] = {
 	{ "exiic",	4 },
 //	{ "exesdhc",	2 },
 //	{ "exesdhc",	3 },
+	{ "exdisplay",	0 },
 	{ NULL,		0 }
 };

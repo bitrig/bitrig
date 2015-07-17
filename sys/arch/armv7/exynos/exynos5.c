@@ -1,4 +1,4 @@
-/* $OpenBSD: exynos5.c,v 1.2 2015/06/14 07:34:57 jsg Exp $ */
+/* $OpenBSD: exynos5.c,v 1.4 2015/07/17 17:33:50 jsg Exp $ */
 /*
  * Copyright (c) 2011 Uwe Stuehler <uwe@openbsd.org>
  * Copyright (c) 2012 Patrick Wildt <patrick@blueri.se>
@@ -111,6 +111,9 @@
 #define PCIE_IRQ1	121
 #define PCIE_IRQ2	122
 #define PCIE_IRQ3	123
+
+#define EXDISPLAY_ADDR	0xbfc00000
+#define EXDISPLAY_SIZE	0x202000
 
 struct armv7_dev exynos5_devs[] = {
 
@@ -309,6 +312,11 @@ struct armv7_dev exynos5_devs[] = {
 	    { USB_PHY_ADDR, USBx_SIZE },
 	  },
 	  .irq = { USB_IRQ }
+	},
+
+	{ .name = "exdisplay",
+	  .unit = 0,
+	  .mem = { { EXDISPLAY_ADDR, EXDISPLAY_SIZE } },
 	},
 
 	/* Terminator */
