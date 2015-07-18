@@ -1,4 +1,4 @@
-/*	$OpenBSD: cpu.c,v 1.84 2015/07/13 17:45:55 mikeb Exp $	*/
+/*	$OpenBSD: cpu.c,v 1.85 2015/07/18 00:53:37 guenther Exp $	*/
 /* $NetBSD: cpu.c,v 1.1 2003/04/26 18:39:26 fvdl Exp $ */
 
 /*-
@@ -139,7 +139,7 @@ replacesmap(void)
 
 	codepatch_replace(CPTAG_STAC, &_stac, 3);
 	codepatch_replace(CPTAG_CLAC, &_clac, 3);
-	
+
 	splx(s);
 }
 
@@ -473,6 +473,8 @@ cpu_attach(struct device *parent, struct device *self, void *aux)
 void
 cpu_init(struct cpu_info *ci)
 {
+	u_int cr4;
+
 	/* configure the CPU if needed */
 	if (ci->cpu_setup != NULL)
 		(*ci->cpu_setup)(ci);
@@ -483,15 +485,20 @@ cpu_init(struct cpu_info *ci)
 	patinit(ci);
 
 	lcr0(rcr0() | CR0_WP);
-	lcr4(rcr4() | CR4_DEFAULT |
-	    (ci->ci_feature_sefflags & SEFF0EBX_SMEP ? CR4_SMEP : 0));
+	cr4 = rcr4() | CR4_DEFAULT;
+	if (ci->ci_feature_sefflags & SEFF0EBX_SMEP)
+		cr4 |= CR4_SMEP;
 	if (ci->ci_feature_sefflags & SEFF0EBX_SMAP)
-		lcr4(rcr4() | CR4_SMAP);
+		cr4 |= CR4_SMAP;
+	if (ci->ci_feature_sefflags & SEFF0EBX_FSGSBASE)
+		cr4 |= CR4_FSGSBASE;
+	if (cpu_ecxfeature & CPUIDECX_XSAVE)
+		cr4 |= CR4_OSXSAVE;
+	lcr4(cr4);
 
 	if (cpu_ecxfeature & CPUIDECX_XSAVE) {
 		u_int32_t eax, ebx, ecx, edx;
 
-		lcr4(rcr4() | CR4_OSXSAVE);
 		xsave_mask = XCR0_X87 | XCR0_SSE;
 		CPUID_LEAF(0xd, 0, eax, ebx, ecx, edx);
 		if (eax & XCR0_AVX)
@@ -822,7 +829,7 @@ patinit(struct cpu_info *ci)
 #define	PAT_WP		0x5UL
 #define	PAT_WB		0x6UL
 #define	PAT_UCMINUS	0x7UL
-	/* 
+	/*
 	 * Set up PAT bits.
 	 * The default pat table is the following:
 	 * WB, WT, UC- UC, WB, WT, UC-, UC
