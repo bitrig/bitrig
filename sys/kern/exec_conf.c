@@ -1,4 +1,4 @@
-/*	$OpenBSD: exec_conf.c,v 1.32 2014/10/09 04:04:27 tedu Exp $	*/
+/*	$OpenBSD: exec_conf.c,v 1.33 2015/07/18 00:15:10 mpi Exp $	*/
 /*	$NetBSD: exec_conf.c,v 1.16 1995/12/09 05:34:47 cgd Exp $	*/
 
 /*
