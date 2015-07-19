@@ -1,4 +1,4 @@
-/* $OpenBSD$ */
+/* $OpenBSD: crosecvar.h,v 1.2 2015/07/19 01:13:27 bmercer Exp $ */
 /*
  * Copyright (c) 2013 Patrick Wildt <patrick@blueri.se>
  *
