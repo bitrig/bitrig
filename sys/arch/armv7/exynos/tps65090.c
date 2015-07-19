@@ -1,4 +1,4 @@
-/* $OpenBSD$ */
+/* $OpenBSD: tps65090.c,v 1.2 2015/07/19 02:41:39 bmercer Exp $ */
 /*
  * Copyright (c) 2013 Patrick Wildt <patrick@blueri.se>
  *
@@ -89,7 +89,7 @@ struct cfattach tpspmic_ca = {
 };
 
 struct cfdriver tpspmic_cd = {
-	NULL, "tps65090", DV_DULL
+	NULL, "tpspmic", DV_DULL
 };
 
 int
