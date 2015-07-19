@@ -1,4 +1,4 @@
-#	$OpenBSD: install.sub,v 1.847 2015/07/17 15:11:52 rpe Exp $
+#	$OpenBSD: install.sub,v 1.848 2015/07/19 19:33:51 rpe Exp $
 #
 # Copyright (c) 1997-2015 Todd Miller, Theo de Raadt, Ken Westerback
 # Copyright (c) 2015, Robert Peichaer <rpe@openbsd.org>
