@@ -1,4 +1,4 @@
-/* $OpenBSD: crosec_kbd.c,v 1.2 2015/05/26 23:47:04 jsg Exp $ */
+/* $OpenBSD: crosec_kbd.c,v 1.3 2015/07/19 01:13:27 bmercer Exp $ */
 /*
  * Copyright (c) 2013 Patrick Wildt <patrick@blueri.se>
  *
