@@ -1,5 +1,5 @@
 #!/bin/ksh
-#	$OpenBSD: install.sh,v 1.268 2015/06/02 19:54:06 rpe Exp $
+#	$OpenBSD: install.sh,v 1.269 2015/07/19 21:05:41 rpe Exp $
 #	$NetBSD: install.sh,v 1.5.2.8 1996/08/27 18:15:05 gwr Exp $
 #
 # Copyright (c) 1997-2015 Todd Miller, Theo de Raadt, Ken Westerback
@@ -313,10 +313,9 @@ if [[ -n $user ]]; then
 	_home=/mnt$_home
 	mkdir -p $_home
 	(cd /mnt/etc/skel; cp -pR . $_home)
-	chown -R 1000:1000 $_home 
-	echo "1,s@wheel:.:0:root\$@wheel:\*:0:root,${user}@
-w
-q" | ed /mnt/etc/group 2>/dev/null
+	chown -R 1000:1000 $_home
+	sed -i -e "s@^wheel:.:0:root\$@wheel:\*:0:root,${user}@" \
+		/mnt/etc/group 2>/dev/null
 
 	# During autoinstall, add public ssh key to authorized_keys.
 	[[ -n "$userkey" ]] &&
@@ -326,9 +325,7 @@ fi
 # Store root password and rebuild password database.
 if [[ -n "$_rootpass" ]]; then
 	_encr=$(encr_pwd "$_rootpass")
-	echo "1,s@^root::@root:${_encr}:@
-w
-q" | ed /mnt/etc/master.passwd 2>/dev/null
+	sed -i -e "s@^root::@root:${_encr}:@" /mnt/etc/master.passwd 2>/dev/null
 fi
 pwd_mkdb -p -d /mnt/etc /etc/master.passwd
 
