@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.38 2014/09/08 01:47:06 guenther Exp $
+#	$OpenBSD: Makefile,v 1.39 2015/07/21 04:14:48 jasper Exp $
 
 # Makefile for kernel tags files, init_sysent, etc.
 
