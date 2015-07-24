@@ -42,8 +42,8 @@
 #define LINENUM_MAX LONG_MAX
 
 #define RCSSUFFIX ",v"
-#define CHECKOUT "co -l %s"
-#define RCSDIFF "rcsdiff %s > /dev/null"
+#define CHECKOUT "/usr/bin/co"
+#define RCSDIFF "/usr/bin/rcsdiff"
 
 #define ORIGEXT ".orig"
 #define REJEXT ".rej"
