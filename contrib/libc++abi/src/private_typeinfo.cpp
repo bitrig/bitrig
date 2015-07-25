@@ -381,8 +381,30 @@ __pointer_type_info::can_catch(const __shim_type_info* thrown_type,
     if (is_equal(__pointee, thrown_pointer_type->__pointee, false))
         return true;
     // bullet 3A
-    if (is_equal(__pointee, &typeid(void), false))
-        return true;
+    if (is_equal(__pointee, &typeid(void), false)) {
+        // pointers to functions cannot be converted to void*.
+        // pointers to member functions are not handled here.
+        const __function_type_info* thrown_function =
+            dynamic_cast<const __function_type_info*>(thrown_pointer_type->__pointee);
+        return (thrown_function == nullptr);
+    }
+    // Handle pointer to pointer
+    const __pointer_type_info* nested_pointer_type =
+        dynamic_cast<const __pointer_type_info*>(__pointee);
+    if (nested_pointer_type) {
+        if (~__flags & __const_mask) return false;
+        return nested_pointer_type->can_catch_nested(thrown_pointer_type->__pointee);
+    }
+
+    // Handle pointer to pointer to member
+    const __pointer_to_member_type_info* member_ptr_type =
+        dynamic_cast<const __pointer_to_member_type_info*>(__pointee);
+    if (member_ptr_type) {
+        if (~__flags & __const_mask) return false;
+        return member_ptr_type->can_catch_nested(thrown_pointer_type->__pointee);
+    }
+
+    // Handle pointer to class type
     const __class_type_info* catch_class_type =
         dynamic_cast<const __class_type_info*>(__pointee);
     if (catch_class_type == 0)
@@ -401,6 +423,81 @@ __pointer_type_info::can_catch(const __shim_type_info* thrown_type,
         return true;
     }
     return false;
+}
+
+bool __pointer_type_info::can_catch_nested(
+    const __shim_type_info* thrown_type) const
+{
+  const __pointer_type_info* thrown_pointer_type =
+        dynamic_cast<const __pointer_type_info*>(thrown_type);
+    if (thrown_pointer_type == 0)
+        return false;
+    // bullet 3B
+    if (thrown_pointer_type->__flags & ~__flags)
+        return false;
+    if (is_equal(__pointee, thrown_pointer_type->__pointee, false))
+        return true;
+    // If the pointed to types differ then the catch type must be const
+    // qualified.
+    if (~__flags & __const_mask)
+        return false;
+
+    // Handle pointer to pointer
+    const __pointer_type_info* nested_pointer_type =
+        dynamic_cast<const __pointer_type_info*>(__pointee);
+    if (nested_pointer_type) {
+        return nested_pointer_type->can_catch_nested(
+            thrown_pointer_type->__pointee);
+    }
+
+    // Handle pointer to pointer to member
+    const __pointer_to_member_type_info* member_ptr_type =
+        dynamic_cast<const __pointer_to_member_type_info*>(__pointee);
+    if (member_ptr_type) {
+        return member_ptr_type->can_catch_nested(thrown_pointer_type->__pointee);
+    }
+
+    return false;
+}
+
+bool __pointer_to_member_type_info::can_catch(
+    const __shim_type_info* thrown_type, void*& adjustedPtr) const {
+    // bullets 1 and 4
+    if (__pbase_type_info::can_catch(thrown_type, adjustedPtr))
+        return true;
+
+    const __pointer_to_member_type_info* thrown_pointer_type =
+        dynamic_cast<const __pointer_to_member_type_info*>(thrown_type);
+    if (thrown_pointer_type == 0)
+        return false;
+    if (thrown_pointer_type->__flags & ~__flags)
+        return false;
+    if (!is_equal(__pointee, thrown_pointer_type->__pointee, false))
+        return false;
+    if (is_equal(__context, thrown_pointer_type->__context, false))
+        return true;
+
+    // [except.handle] does not allow the pointer-to-member conversions mentioned
+    // in [mem.conv] to take place. For this reason we don't check Derived->Base
+    // for Derived->Base conversions.
+
+    return false;
+}
+
+bool __pointer_to_member_type_info::can_catch_nested(
+    const __shim_type_info* thrown_type) const
+{
+    const __pointer_to_member_type_info* thrown_member_ptr_type =
+        dynamic_cast<const __pointer_to_member_type_info*>(thrown_type);
+    if (thrown_member_ptr_type == 0)
+        return false;
+    if (~__flags & thrown_member_ptr_type->__flags)
+        return false;
+    if (!is_equal(__pointee, thrown_member_ptr_type->__pointee, false))
+        return false;
+    if (!is_equal(__context, thrown_member_ptr_type->__context, false))
+        return false;
+    return true;
 }
 
 #pragma clang diagnostic pop
