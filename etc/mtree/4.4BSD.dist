@@ -169,7 +169,7 @@ usr
     # ./usr/lib
     lib
         clang		gname=bin uname=root mode=0755
-            3.6.0	gname=bin uname=root mode=0755
+            3.6.2	gname=bin uname=root mode=0755
                 include		gname=bin uname=root mode=0755
                 	sanitizer		gname=bin uname=root mode=0755
                 	..

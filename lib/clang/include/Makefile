@@ -4,7 +4,7 @@ HDRPATH= ${.CURDIR}/../../../contrib/llvm/tools/clang/lib/Headers
 SANPATH= ${.CURDIR}/../../../contrib/compiler-rt/include/sanitizer
 .PATH: ${HDRPATH}
 
-INCSDIR=/usr/lib/clang/3.6.0/include
+INCSDIR=/usr/lib/clang/3.6.2/include
 
 INCS=	__stddef_max_align_t.h \
 	__wmmintrin_aes.h \

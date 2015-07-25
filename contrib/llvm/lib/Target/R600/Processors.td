@@ -99,22 +99,35 @@ def : ProcessorModel<"hainan",   SIQuarterSpeedModel, [FeatureSouthernIslands]>;
 // Sea Islands
 //===----------------------------------------------------------------------===//
 
-def : ProcessorModel<"bonaire",    SIQuarterSpeedModel, [FeatureSeaIslands]>;
+def : ProcessorModel<"bonaire",    SIQuarterSpeedModel,
+  [FeatureSeaIslands, FeatureLDSBankCount32]
+>;
 
-def : ProcessorModel<"kabini",     SIQuarterSpeedModel, [FeatureSeaIslands]>;
+def : ProcessorModel<"kabini",     SIQuarterSpeedModel,
+  [FeatureSeaIslands, FeatureLDSBankCount16]
+>;
 
-def : ProcessorModel<"kaveri",     SIQuarterSpeedModel, [FeatureSeaIslands]>;
+def : ProcessorModel<"kaveri",     SIQuarterSpeedModel,
+  [FeatureSeaIslands, FeatureLDSBankCount32]
+>;
 
-def : ProcessorModel<"hawaii",     SIFullSpeedModel, [FeatureSeaIslands]>;
+def : ProcessorModel<"hawaii", SIFullSpeedModel,
+  [FeatureSeaIslands, FeatureLDSBankCount32]
+>;
 
-def : ProcessorModel<"mullins",    SIQuarterSpeedModel, [FeatureSeaIslands]>;
+def : ProcessorModel<"mullins",    SIQuarterSpeedModel,
+  [FeatureSeaIslands, FeatureLDSBankCount16]>;
 
 //===----------------------------------------------------------------------===//
 // Volcanic Islands
 //===----------------------------------------------------------------------===//
 
-def : ProcessorModel<"tonga",   SIFullSpeedModel, [FeatureVolcanicIslands]>;
+def : ProcessorModel<"tonga",   SIQuarterSpeedModel,
+  [FeatureVolcanicIslands, FeatureSGPRInitBug]
+>;
 
-def : ProcessorModel<"iceland", SIQuarterSpeedModel, [FeatureVolcanicIslands]>;
+def : ProcessorModel<"iceland", SIQuarterSpeedModel,
+  [FeatureVolcanicIslands, FeatureSGPRInitBug]
+>;
 
 def : ProcessorModel<"carrizo", SIQuarterSpeedModel, [FeatureVolcanicIslands]>;

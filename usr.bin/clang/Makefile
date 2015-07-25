@@ -28,7 +28,7 @@ HOSTARCH!=uname -p
 bootstrap:
 	(cd ../../lib/clang && ${MAKE} obj)
 	(cd ../../usr.bin/clang && ${MAKE} obj)
-	mkdir -p /usr/lib/clang/3.6.0/include/sanitizer
+	mkdir -p /usr/lib/clang/3.6.2/include/sanitizer
 	(cd ../../lib/clang/include && ${MAKE} includes)
 	(cd ../../lib/clang/libllvmtablegen && ${MAKE} depend )
 	(cd ../../lib/clang/libllvmtablegen && ${MAKE} all)
@@ -52,7 +52,7 @@ bootstrap:
 	(cd ../../usr.bin/clang && ${MAKE} all)
 
 snapstrap:
-	mkdir -p /usr/lib/clang/3.6.0/include/sanitizer
+	mkdir -p /usr/lib/clang/3.6.2/include/sanitizer
 	(cd ../../lib/clang/libllvmtablegen && ${MAKE} depend )
 	(cd ../../lib/clang/libllvmtablegen && ${MAKE} all)
 	(cd ../../lib/clang/libllvmsupport && ${MAKE} depend)

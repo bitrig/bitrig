@@ -35,7 +35,9 @@ enum {
   SMRD = 1 << 16,
   DS = 1 << 17,
   MIMG = 1 << 18,
-  FLAT = 1 << 19
+  FLAT = 1 << 19,
+  WQM = 1 << 20,
+  VGPRSpill = 1 << 21
 };
 }
 

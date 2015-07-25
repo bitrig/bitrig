@@ -35,15 +35,15 @@ index 519f2a1..bdf7caa 100644
  }
 +#endif // __Bitrig__
 diff --git a/contrib/llvm/lib/Support/Unix/Memory.inc b/contrib/llvm/lib/Support/Unix/Memory.inc
-index 7ccde46..351f1b4 100644
+index c421ee8..8b45f50 100644
 --- a/contrib/llvm/lib/Support/Unix/Memory.inc
 +++ b/contrib/llvm/lib/Support/Unix/Memory.inc
-@@ -333,7 +333,7 @@ void Memory::InvalidateInstructionCache(const void *Addr,
-   for (intptr_t Line = StartLine; Line < EndLine; Line += LineSize)
+@@ -334,7 +334,7 @@ void Memory::InvalidateInstructionCache(const void *Addr,
      asm volatile("icbi 0, %0" : : "r"(Line));
    asm volatile("isync");
--#  elif (defined(__arm__) || defined(__aarch64__)) && defined(__GNUC__)
-+#  elif (defined(__arm__) || defined(__aarch64__)) && defined(__GNUC__) && !defined(__Bitrig__)
+ #  elif (defined(__arm__) || defined(__aarch64__) || defined(__mips__)) && \
+-        defined(__GNUC__)
++        defined(__GNUC__) && !defined(__Bitrig__)
    // FIXME: Can we safely always call this for __GNUC__ everywhere?
    const char *Start = static_cast<const char *>(Addr);
    const char *End = Start + Len;

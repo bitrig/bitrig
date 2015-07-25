@@ -45,6 +45,10 @@ public:
     VOLCANIC_ISLANDS,
   };
 
+  enum {
+    FIXED_SGPR_COUNT_FOR_INIT_BUG = 80
+  };
+
 private:
   std::string DevName;
   bool Is64bit;
@@ -66,6 +70,8 @@ private:
   bool CFALUBug;
   int LocalMemorySize;
   bool EnableVGPRSpilling;
+  bool SGPRInitBug;
+  int LDSBankCount;
 
   const DataLayout DL;
   AMDGPUFrameLowering FrameLowering;
@@ -201,6 +207,14 @@ public:
 
   int getLocalMemorySize() const {
     return LocalMemorySize;
+  }
+
+  bool hasSGPRInitBug() const {
+    return SGPRInitBug;
+  }
+
+  int getLDSBankCount() const {
+    return LDSBankCount;
   }
 
   unsigned getAmdKernelCodeChipID() const;
