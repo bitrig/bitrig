@@ -1457,15 +1457,6 @@ posix_name(const struct file_name *names, bool assume_exists)
 	}
 	if (path == NULL && !assume_exists) {
 		/*
-		 * No files found, look for something we can checkout from
-		 * RCS dirs.  Same order as above.
-		 */
-		for (i = 0; i < MAX_FILE; i++) {
-			if (names[i].path != NULL &&
-			    (path = checked_in(names[i].path)) != NULL)
-				break;
-		}
-		/*
 		 * Still no match?  Check to see if the diff could be creating
 		 * a new file.
 		 */
@@ -1478,7 +1469,7 @@ posix_name(const struct file_name *names, bool assume_exists)
 }
 
 static char *
-compare_names(const struct file_name *names, bool assume_exists, int phase)
+compare_names(const struct file_name *names, bool assume_exists)
 {
 	size_t min_components, min_baselen, min_len, tmp;
 	char *best = NULL;
@@ -1495,9 +1486,7 @@ compare_names(const struct file_name *names, bool assume_exists, int phase)
 	min_components = min_baselen = min_len = SIZE_MAX;
 	for (i = INDEX_FILE; i >= OLD_FILE; i--) {
 		path = names[i].path;
-		if (path == NULL ||
-		    (phase == 1 && !names[i].exists && !assume_exists) ||
-		    (phase == 2 && checked_in(path) == NULL))
+		if (path == NULL || (!names[i].exists && !assume_exists))
 			continue;
 		if ((tmp = num_components(path)) > min_components)
 			continue;
@@ -1528,13 +1517,9 @@ best_name(const struct file_name *names, bool assume_exists)
 {
 	char *best;
 
-	best = compare_names(names, assume_exists, 1);
+	best = compare_names(names, assume_exists);
 	if (best == NULL) {
-		best = compare_names(names, assume_exists, 2);
-		/*
-		 * Still no match?  Check to see if the diff could be creating
-		 * a new file.
-		 */
+		/* Check to see if the diff could be creating a new file. */
 		if (best == NULL && ok_to_create_file &&
 		    names[NEW_FILE].path != NULL)
 			best = names[NEW_FILE].path;

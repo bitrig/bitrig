@@ -388,30 +388,6 @@ fetchname(const char *at, bool *exists, int strip_leading)
 	return name;
 }
 
-/*
- * Takes the name returned by fetchname and looks in RCS directory
- * for a checked in version.
- */
-char *
-checked_in(char *file)
-{
-	char		*filebase, *filedir, tmpbuf[PATH_MAX];
-	struct stat	filestat;
-
-	filebase = basename(file);
-	filedir = dirname(file);
-
-#define try(f, a1, a2, a3) \
-(snprintf(tmpbuf, sizeof tmpbuf, f, a1, a2, a3), stat(tmpbuf, &filestat) == 0)
-
-	if (try("%s/RCS/%s%s", filedir, filebase, RCSSUFFIX) ||
-	    try("%s/RCS/%s%s", filedir, filebase, "") ||
-	    try("%s/%s%s", filedir, filebase, RCSSUFFIX))
-		return file;
-
-	return NULL;
-}
-
 void
 version(void)
 {

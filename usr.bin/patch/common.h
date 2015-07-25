@@ -41,10 +41,6 @@
 #define BUFFERSIZE 1024
 #define LINENUM_MAX LONG_MAX
 
-#define RCSSUFFIX ",v"
-#define CHECKOUT "/usr/bin/co"
-#define RCSDIFF "/usr/bin/rcsdiff"
-
 #define ORIGEXT ".orig"
 #define REJEXT ".rej"
 

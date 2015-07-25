@@ -133,14 +133,12 @@ reallocate_lines(size_t *lines_allocated)
 static bool
 plan_a(const char *filename)
 {
-	int		ifd, statfailed, devnull, pstat;
-	char		*p, *s, lbuf[MAXLINELEN];
+	int		ifd, statfailed;
+	char		*p, *s;
 	struct stat	filestat;
 	off_t		i;
 	ptrdiff_t	sz;
 	size_t		iline, lines_allocated;
-	pid_t		pid;
-	char		*argp[4] = {NULL};
 
 #ifdef DEBUGGING
 	if (debug & 8)
@@ -168,91 +166,8 @@ plan_a(const char *filename)
 	}
 	if (statfailed && check_only)
 		fatal("%s not found, -C mode, can't probe further\n", filename);
-	/* For nonexistent or read-only files, look for RCS versions.  */
-	if (statfailed ||
-	    /* No one can write to it.  */
-	    (filestat.st_mode & 0222) == 0 ||
-	    /* I can't write to it.  */
-	    ((filestat.st_mode & 0022) == 0 && filestat.st_uid != getuid())) {
-		char	*filebase, *filedir;
-		struct stat	cstat;
-
-		filebase = basename(filename);
-		filedir = dirname(filename);
-
-#define try(f, a1, a2, a3) \
-	(snprintf(lbuf, sizeof lbuf, f, a1, a2, a3), stat(lbuf, &cstat) == 0)
-
-		/*
-		 * else we can't write to it but it's not under a version
-		 * control system, so just proceed.
-		 */
-		if (try("%s/RCS/%s%s", filedir, filebase, RCSSUFFIX) ||
-		    try("%s/RCS/%s%s", filedir, filebase, "") ||
-		    try("%s/%s%s", filedir, filebase, RCSSUFFIX)) {
-			if (!statfailed) {
-				if ((filestat.st_mode & 0222) != 0)
-					/* The owner can write to it.  */
-					fatal("file %s seems to be locked "
-					    "by somebody else under RCS\n",
-					    filename);
-				/*
-				 * It might be checked out unlocked.  See if
-				 * it's safe to check out the default version
-				 * locked.
-				 */
-				if (verbose)
-					say("Comparing file %s to default "
-					    "RCS version...\n", filename);
-
-				switch (pid = fork()) {
-				case -1:
-					fatal("can't fork: %s\n",
-					    strerror(errno));
-				case 0:
-					devnull = open("/dev/null", O_RDONLY);
-					if (devnull == -1) {
-						fatal("can't open /dev/null: %s",
-						    strerror(errno));
-					}
-					(void)dup2(devnull, STDOUT_FILENO);
-					argp[0] = RCSDIFF;
-					argp[1] = filename;
-					execv(RCSDIFF, argp);
-					exit(127);
-				}
-				pid = waitpid(pid, &pstat, 0);
-				if (pid == -1 || WEXITSTATUS(pstat) != 0) {
-					fatal("can't check out file %s: "
-					    "differs from default RCS version\n",
-					    filename);
-				}
-			}
-
-			if (verbose)
-				say("Checking out file %s from RCS...\n",
-				    filename);
-
-			switch (pid = fork()) {
-			case -1:
-				fatal("can't fork: %s\n", strerror(errno));
-			case 0:
-				argp[0] = CHECKOUT;
-				argp[1] = "-l";
-				argp[2] = filename;
-				execv(CHECKOUT, argp);
-				exit(127);
-			}
-			pid = waitpid(pid, &pstat, 0);
-			if (pid == -1 || WEXITSTATUS(pstat) != 0 ||
-			    stat(filename, &filestat)) {
-				fatal("can't check out file %s from RCS\n",
-				    filename);
-			}
-		} else if (statfailed) {
-			fatal("can't find %s\n", filename);
-		}
-	}
+	if (statfailed)
+		fatal("can't find %s\n", filename);
 	filemode = filestat.st_mode;
 	if (!S_ISREG(filemode))
 		fatal("%s is not a normal file--can't patch\n", filename);
