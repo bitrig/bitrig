@@ -34,8 +34,8 @@
 #include <locale.h>
 #include <string.h>
 #include <time.h>
-#include <tzfile.h>
 #include <time/timelocal.h>
+#include "tzfile.h"
 
 /*
  * We do not implement alternate representations. However, we always
