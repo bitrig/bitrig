@@ -1,4 +1,4 @@
-/*	$OpenBSD: util.h,v 1.16 2014/12/13 10:31:07 tobias Exp $	*/
+/*	$OpenBSD: util.h,v 1.17 2015/07/26 14:32:19 millert Exp $	*/
 
 /*
  * patch - a program to apply diffs to original files
