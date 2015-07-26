@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.56 2015/05/26 20:15:54 miod Exp $
+#	$OpenBSD: Makefile,v 1.57 2015/07/26 19:30:58 guenther Exp $
 
 SUBDIR=ldconfig ldd
 MAN=	ld.so.1
@@ -37,7 +37,7 @@ CLEANFILES+=	test-$(PROG)
 test_cmd= 	'ulimit -c 0; [ "`${.OBJDIR}/$(test_prog) ok`" = ok ]'
 
 $(test_prog):
-	printf '#include <stdio.h>\nint main(int argc, char **argv){ printf("%%s\\n", argv[1]); }\n' | \
+	printf '#include <stdio.h>\nint main(int argc, char **argv){ printf("%%s: ", argv[0]); printf("%%s!\\n", argv[1] ? argv[1] : "foo"); }\n' | \
 	$(CC) -x c - -Wl,-dynamic-linker,${.OBJDIR}/$(candidate) -o $@
 
 .endif
