@@ -1,4 +1,4 @@
-/*	$OpenBSD: inp.c,v 1.43 2015/02/05 12:59:57 millert Exp $	*/
+/*	$OpenBSD: inp.c,v 1.44 2015/07/26 14:32:19 millert Exp $	*/
 
 /*
  * patch - a program to apply diffs to original files
@@ -164,8 +164,6 @@ plan_a(const char *filename)
 		close(creat(filename, 0666));
 		statfailed = stat(filename, &filestat);
 	}
-	if (statfailed && check_only)
-		fatal("%s not found, -C mode, can't probe further\n", filename);
 	if (statfailed)
 		fatal("can't find %s\n", filename);
 	filemode = filestat.st_mode;

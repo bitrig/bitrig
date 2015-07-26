@@ -1,4 +1,4 @@
-/*	$OpenBSD: pch.c,v 1.51 2015/02/05 12:59:57 millert Exp $	*/
+/*	$OpenBSD: pch.c,v 1.52 2015/07/26 14:32:19 millert Exp $	*/
 
 /*
  * patch - a program to apply diffs to original files
@@ -1470,8 +1470,8 @@ posix_name(const struct file_name *names, bool assume_exists)
 	}
 	if (path == NULL && !assume_exists) {
 		/*
-		 * Still no match?  Check to see if the diff could be creating
-		 * a new file.
+		 * No files found, check to see if the diff could be
+		 * creating a new file.
 		 */
 		if (path == NULL && ok_to_create_file &&
 		    names[NEW_FILE].path != NULL)
@@ -1531,12 +1531,11 @@ best_name(const struct file_name *names, bool assume_exists)
 	char *best;
 
 	best = compare_names(names, assume_exists);
-	if (best == NULL) {
-		/* Check to see if the diff could be creating a new file. */
-		if (best == NULL && ok_to_create_file &&
-		    names[NEW_FILE].path != NULL)
-			best = names[NEW_FILE].path;
-	}
+
+	/* No match?  Check to see if the diff could be creating a new file. */
+	if (best == NULL && ok_to_create_file)
+		best = names[NEW_FILE].path;
+
 	return best ? xstrdup(best) : NULL;
 }
 
