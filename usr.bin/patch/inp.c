@@ -163,70 +163,8 @@ plan_a(const char *filename)
 	}
 	if (statfailed && check_only)
 		fatal("%s not found, -C mode, can't probe further\n", filename);
-	/* For nonexistent or read-only files, look for RCS or SCCS versions.  */
-	if (statfailed ||
-	    /* No one can write to it.  */
-	    (filestat.st_mode & 0222) == 0 ||
-	    /* I can't write to it.  */
-	    ((filestat.st_mode & 0022) == 0 && filestat.st_uid != getuid())) {
-		char	*cs = NULL, *filebase, *filedir;
-		struct stat	cstat;
-
-		filebase = basename(filename);
-		filedir = dirname(filename);
-
-		/* Leave room in lbuf for the diff command.  */
-		s = lbuf + 20;
-
-#define try(f, a1, a2, a3) \
-	(snprintf(s, sizeof lbuf - 20, f, a1, a2, a3), stat(s, &cstat) == 0)
-
-		if (try("%s/RCS/%s%s", filedir, filebase, RCSSUFFIX) ||
-		    try("%s/RCS/%s%s", filedir, filebase, "") ||
-		    try("%s/%s%s", filedir, filebase, RCSSUFFIX)) {
-			snprintf(buf, sizeof buf, CHECKOUT, filename);
-			snprintf(lbuf, sizeof lbuf, RCSDIFF, filename);
-			cs = "RCS";
-		} else if (try("%s/SCCS/%s%s", filedir, SCCSPREFIX, filebase) ||
-		    try("%s/%s%s", filedir, SCCSPREFIX, filebase)) {
-			snprintf(buf, sizeof buf, GET, s);
-			snprintf(lbuf, sizeof lbuf, SCCSDIFF, s, filename);
-			cs = "SCCS";
-		} else if (statfailed)
-			fatal("can't find %s\n", filename);
-		/*
-		 * else we can't write to it but it's not under a version
-		 * control system, so just proceed.
-		 */
-		if (cs) {
-			if (!statfailed) {
-				if ((filestat.st_mode & 0222) != 0)
-					/* The owner can write to it.  */
-					fatal("file %s seems to be locked "
-					    "by somebody else under %s\n",
-					    filename, cs);
-				/*
-				 * It might be checked out unlocked.  See if
-				 * it's safe to check out the default version
-				 * locked.
-				 */
-				if (verbose)
-					say("Comparing file %s to default "
-					    "%s version...\n",
-					    filename, cs);
-				if (system(lbuf))
-					fatal("can't check out file %s: "
-					    "differs from default %s version\n",
-					    filename, cs);
-			}
-			if (verbose)
-				say("Checking out file %s from %s...\n",
-				    filename, cs);
-			if (system(buf) || stat(filename, &filestat))
-				fatal("can't check out file %s from %s\n",
-				    filename, cs);
-		}
-	}
+	if (statfailed)
+		fatal("can't find %s\n", filename);
 	filemode = filestat.st_mode;
 	if (!S_ISREG(filemode))
 		fatal("%s is not a normal file--can't patch\n", filename);
