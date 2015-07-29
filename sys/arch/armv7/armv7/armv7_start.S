@@ -159,7 +159,6 @@ _C_LABEL(bootstrap_start):
 	mcr	p15, 0, r0, c10, c2, 1
 	ldr	r0, =Ldefault_prrr
 	mcr	p15, 0, r0, c10, c2, 0
-	mcr	p15, 0, r0, c10, c2, 0
 
 	mrc	p15, 0, r0, c1, c0, 0
 	orr	r0, r0, #CPU_CONTROL_MMU_ENABLE|CPU_CONTROL_TRE|CPU_CONTROL_AFE
