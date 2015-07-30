@@ -1369,6 +1369,7 @@ do_ed_script(void)
 	char	*t;
 	long	beginning_of_this_line;
 	FILE	*pipefp = NULL;
+	int	continuation;
 
 	if (!skip_rest_of_patch) {
 		if (copy_file(filearg[0], TMPOUTNAME) < 0) {
@@ -1393,7 +1394,19 @@ do_ed_script(void)
 		    (*t == 'a' || *t == 'c' || *t == 'd' || *t == 'i' || *t == 's')) {
 			if (pipefp != NULL)
 				fputs(buf, pipefp);
-			if (*t != 'd') {
+			if (*t == 's') {
+				for (;;) {
+					continuation = 0;
+					t = strchr(buf, '\0') - 1;
+					while (--t >= buf && *t == '\\')
+						continuation = !continuation;
+					if (!continuation ||
+					    pgets(buf, sizeof buf, pfp) == NULL)
+						break;
+					if (pipefp != NULL)
+						fputs(buf, pipefp);
+				}
+			} else if (*t != 'd') {
 				while (pgets(buf, sizeof buf, pfp) != NULL) {
 					p_input_line++;
 					if (pipefp != NULL)
