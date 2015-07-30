@@ -1378,6 +1378,7 @@ do_ed_script(void)
 	char	*t;
 	off_t	beginning_of_this_line;
 	FILE	*pipefp = NULL;
+	int	continuation;
 
 	if (!skip_rest_of_patch) {
 		if (copy_file(filearg[0], TMPOUTNAME) < 0) {
@@ -1402,7 +1403,19 @@ do_ed_script(void)
 		    *t != '\0' && strchr("acdis", *t) != NULL) {
 			if (pipefp != NULL)
 				fputs(buf, pipefp);
-			if (*t != 'd' && *t != 's') {
+			if (*t == 's') {
+				for (;;) {
+					continuation = 0;
+					t = strchr(buf, '\0') - 1;
+					while (--t >= buf && *t == '\\')
+						continuation = !continuation;
+					if (!continuation ||
+					    pgets(buf, sizeof buf, pfp) == NULL)
+						break;
+					if (pipefp != NULL)
+						fputs(buf, pipefp);
+				}
+			} else if (*t != 'd') {
 				while (pgets(buf, sizeof buf, pfp) != NULL) {
 					p_input_line++;
 					if (pipefp != NULL)
