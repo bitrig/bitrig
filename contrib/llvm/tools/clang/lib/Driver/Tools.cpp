@@ -2702,6 +2702,33 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     }
   }
 
+  // Bitrig-specific defaults for PIE
+  if (getToolChain().getTriple().getOS() == llvm::Triple::Bitrig) {
+    switch (getToolChain().getTriple().getArch()) {
+    case llvm::Triple::arm:
+    case llvm::Triple::armeb:
+    case llvm::Triple::thumb:
+    case llvm::Triple::thumbeb:
+    case llvm::Triple::aarch64:
+    case llvm::Triple::mips:
+    case llvm::Triple::mipsel:
+    case llvm::Triple::mips64:
+    case llvm::Triple::mips64el:
+    case llvm::Triple::sparc:
+    case llvm::Triple::x86:
+    case llvm::Triple::x86_64:
+      IsPICLevelTwo = false; // "-fpie"
+      break;
+
+    case llvm::Triple::ppc:
+    case llvm::Triple::sparcv9:
+      IsPICLevelTwo = true; // "-fPIE"
+      break;
+
+    default:
+      break;
+    }
+  }
   // For the PIC and PIE flag options, this logic is different from the
   // legacy logic in very old versions of GCC, as that logic was just
   // a bug no one had ever fixed. This logic is both more rational and
@@ -6446,6 +6473,9 @@ void bitrig::Link::ConstructJob(Compilation &C, const JobAction &JA,
       CmdArgs.push_back("/usr/libexec/ld.so");
     }
   }
+
+  if (Args.hasArg(options::OPT_nopie))
+    CmdArgs.push_back("-nopie");
 
   if (Output.isFilename()) {
     CmdArgs.push_back("-o");
