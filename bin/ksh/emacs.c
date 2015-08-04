@@ -814,15 +814,19 @@ x_search_hist(int c)
 	int offset = -1;	/* offset of match in xbuf, else -1 */
 	char pat [256+1];	/* pattern buffer */
 	char *p = pat;
+	const char *oprompt;
 	int (*f)(int);
 
 	*p = '\0';
-	set_prompt(ISEARCH, NULL);
+	oprompt = prompt;
+	prompt = "I-search: ";
 	x_redraw(1);
 	while (1) {
 		x_flush();
-		if ((c = x_e_getc()) < 0)
+		if ((c = x_e_getc()) < 0) {
+			prompt = oprompt;
 			return (KSTD);
+		}
 		f = kb_find_hist_func(c);
 		if (c == CTRL('[')) {
 			/* might be part of an escape sequence */
@@ -866,9 +870,9 @@ x_search_hist(int c)
 			break;
 		}
 	}
-	set_prompt(PS1, NULL);
+	prompt = oprompt;
 	x_redraw(1);
-	return KSTD;
+	return (KSTD);
 }
 
 /* search backward from current line */

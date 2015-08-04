@@ -1180,9 +1180,6 @@ set_prompt(int to, Source *s)
 	case PS2: /* command continuation */
 		prompt = str_val(global("PS2"));
 		break;
-	case ISEARCH: /* incremental search */
-		prompt = "I-search: ";
-		break;
 	}
 }
 
