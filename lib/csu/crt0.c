@@ -35,6 +35,10 @@
 #include <limits.h>
 
 #include "md_init.h"
+#ifdef MD_RCRT0_START
+#include "boot.h"
+#endif
+
 
 /* some defaults */
 #ifndef	MD_START_ARGS
@@ -62,8 +66,14 @@ extern void	_mcleanup(void);
 extern unsigned char _etext, _eprol;
 #endif /* MCRT0 */
 
-#ifdef MD_CRT0_START
+#ifdef RCRT0
+# ifdef MD_RCRT0_START
+MD_RCRT0_START;
+# endif
+#else
+# ifdef MD_CRT0_START
 MD_CRT0_START;
+# endif
 #endif
 
 void __init();
@@ -71,7 +81,9 @@ int main(int, char **, char **);
 
 //void __init_tcb(void *) __attribute__((weak));
 void __init_tcb(void *);
-extern int _DYNAMIC __attribute__((weak));
+#pragma weak __init_tcb
+
+//extern int _DYNAMIC __attribute__((weak));
 
 void
 MD_START(MD_START_ARGS)
