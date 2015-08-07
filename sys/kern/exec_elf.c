@@ -505,7 +505,7 @@ ELFNAME2(exec,makecmds)(struct proc *p, struct exec_package *epp)
 	Elf_Phdr *ph, *pp, *base_ph = NULL;
 	Elf_Addr phdr = 0, exe_base = 0;
 	struct elf_args *ap;
-	int error, i;
+	int error, i, has_phdr = 0;
 	char *interp = NULL;
 	u_long pos = 0, phsize;
 	size_t randomizequota = ELF_RANDOMIZE_LIMIT;
@@ -560,13 +560,17 @@ ELFNAME2(exec,makecmds)(struct proc *p, struct exec_package *epp)
 			}
 			if (base_ph == NULL)
 				base_ph = pp;
+		} else if (pp->p_type == PT_PHDR) {
+			has_phdr = 1;
 		}
 	}
 
 	if (eh->e_type == ET_DYN) {
-		/* need an interpreter and load sections for PIE */
-		if (interp == NULL || base_ph == NULL)
+		/* need a phdr and load sections for PIE */
+		if (!has_phdr || base_ph == NULL) {
+			error = EINVAL;
 			goto bad;
+		}
 		/* randomize exe_base for PIE */
 		exe_base = uvm_map_pie(base_ph->p_align);
 	}
@@ -754,6 +758,9 @@ ELFNAME2(exec,makecmds)(struct proc *p, struct exec_package *epp)
 	ap->arg_phentsize = eh->e_phentsize;
 	ap->arg_phnum = eh->e_phnum;
 	ap->arg_entry = eh->e_entry + exe_base;
+	if (has_phdr) {
+		ap->arg_interp = exe_base;
+	}
 
 	epp->ep_emul_arg = ap;
 
@@ -831,7 +838,7 @@ ELFNAME2(exec,fixup)(struct proc *p, struct exec_package *epp)
 		a->au_v = PAGE_SIZE;
 		a++;
 
-		if (interp != NULL) {
+		if (ap->arg_interp != 0) {
 			a->au_id = AUX_base;
 			a->au_v = ap->arg_interp;
 			a++;
