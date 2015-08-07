@@ -81,7 +81,8 @@ int main(int, char **, char **);
 
 //void __init_tcb(void *) __attribute__((weak));
 void __init_tcb(void *);
-#pragma weak __init_tcb
+// currently __init_tcb must be run
+//#pragma weak __init_tcb
 
 //extern int _DYNAMIC __attribute__((weak));
 

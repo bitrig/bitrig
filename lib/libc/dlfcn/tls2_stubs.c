@@ -57,7 +57,7 @@
 #endif
 
 
-#ifndef __PIC__
+#if !defined(__PIC__) || defined(__PIE__)
 
 /*
  * Static vars usable after bootstrapping.
@@ -274,14 +274,14 @@ __libc_allocate_tls(void *oldtls, size_t tcbsize, size_t tcbalign)
 
 #endif /* TLS_VARIANT_II */
 
-#endif /* __PIC__ */
+#endif /* !defined(__PIC__) || defined(__PIE__) */
 
 void __set_tcb(void*);
 
 void
 __init_tcb(__unused void **envp)
 {
-#ifndef __PIC__
+#if !defined(__PIC__) || defined(__PIE__)
 	Elf_Addr *sp;
 	AuxInfo *aux, *auxp;
 	Elf_Phdr *phdr;
@@ -332,5 +332,5 @@ __init_tcb(__unused void **envp)
 	tls = __libc_allocate_tls(NULL, TLS_TCB_SIZE, TLS_TCB_ALIGN);
 
 	__set_tcb(tls);
-#endif /* !__PIC__ */
+#endif /* !defined(__PIC__) || defined(__PIE__) */
 }
