@@ -221,8 +221,8 @@ std)
 	M stdin		c 7 0
 	M stdout	c 7 1
 	M stderr	c 7 2
-	M ksyms		c 8 0 640 kmem
-	M klog		c 6 0 600
+	M ksyms		c 8 0 440 kmem
+	M klog		c 6 0 400
 	;;
 
 vscsi*)

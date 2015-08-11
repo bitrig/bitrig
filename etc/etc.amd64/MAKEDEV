@@ -230,8 +230,8 @@ std)
 	M stdin		c 22 0
 	M stdout	c 22 1
 	M stderr	c 22 2
-	M ksyms		c 50 0 640 kmem
-	M klog		c 7 0 600
+	M ksyms		c 50 0 440 kmem
+	M klog		c 7 0 400
 	M xf86		c 2 4 600
 	;;
 

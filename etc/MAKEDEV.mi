@@ -46,8 +46,8 @@ std)
 	M stdin		c major_fdesc_c 0
 	M stdout	c major_fdesc_c 1
 	M stderr	c major_fdesc_c 2
-	M ksyms		c $3 0 640 kmem
-	M klog		c $4 0 600-})dnl
+	M ksyms		c $3 0 440 kmem
+	M klog		c $4 0 400-})dnl
 dnl
 divert(1)dnl
 define(__mddivert,7)dnl
