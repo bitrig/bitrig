@@ -399,6 +399,33 @@ struct fault_entry
 #define PTE_P	(1L << 0)
 #define PTE_R	0x00
 #define PTE_W	(1L << 1)
+#define PTE_US  (1L << 2)
+#define PTE_PWT (1L << 3)
+#define PTE_PCD (1L << 4)
+#define PTE_A   (1L << 5)
+#define PTE_D   (1L << 6)
+#define PTE_PAT (1L << 7)
+#define PTE_G   (1L << 8)
+#define PTE_EA  (1L << 10)
+#define PTE_XD  (1LL << 63)
+
+/* PDE Level entry */
+#define PTE_PS  (1L << 7)
+
+/* PDPE Level entry */
+
+/* ----------------------------------------------------------------
+ * 5555555444444444333333333222222222111111111000000000------------ 
+ * [PML4 ->] PDPE.1GB
+ * [PML4 ->] PDPE.PDE -> PDE.2MB
+ * [PML4 ->] PDPE.PDE -> PDE -> PTE
+ * GAW0 = (12.20) (PTE)
+ * GAW1 = (21.29) (PDE)
+ * GAW2 = (30.38) (PDPE)
+ * GAW3 = (39.47) (PML4)
+ * GAW4 = (48.57)
+ * GAW5 = (58.63)
+ */
 struct pte_entry {
 	uint64_t	val;
 };

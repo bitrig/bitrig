@@ -114,6 +114,9 @@ struct domain {
 	TAILQ_ENTRY(domain)	link;
 };
 
+#define DOM_DEBUG 0x1
+#define DOM_NOMAP 0x2
+
 struct dmar_devlist {
 	int				type;
 	int				bus;
@@ -229,8 +232,6 @@ int		acpidmar_intr(void *);
 
 #define DID_UNITY 0x1
 
-int drma_alloc;
-
 struct domain *domain_create(struct iommu_softc *, int);
 struct domain *domain_lookup(struct acpidmar_softc *, int, int);
 
@@ -259,7 +260,7 @@ uint32_t iommu_readl(struct iommu_softc *, int);
 uint64_t iommu_readq(struct iommu_softc *, int);
 void iommu_showfault(struct iommu_softc *, int,
     struct fault_entry *);
-void iommu_showcfg(struct iommu_softc *);
+void iommu_showcfg(struct iommu_softc *, int);
 
 int iommu_init(struct acpidmar_softc *, struct iommu_softc *,
     struct acpidmar_drhd *);
@@ -267,7 +268,7 @@ int iommu_enable_translation(struct iommu_softc *, int);
 void iommu_enable_qi(struct iommu_softc *, int);
 void iommu_flush_cache(struct iommu_softc *, void *, size_t);
 void *iommu_alloc_page(struct iommu_softc *, paddr_t *);
-
+void iommu_flush_write_buffer(struct iommu_softc *);
 void iommu_issue_qi(struct iommu_softc *, struct qi_entry *);
 
 void iommu_flush_ctx(struct iommu_softc *, int, int, int, int);
@@ -313,25 +314,11 @@ static void dmar_dmamem_unmap(bus_dma_tag_t, caddr_t, size_t);
 static paddr_t	dmar_dmamem_mmap(bus_dma_tag_t, bus_dma_segment_t *, int, off_t,
     int, int);
 
-int dmar_dbg = 0;
-
 static inline int
 debugme(struct domain *dom)
 {
-	return (dom->flag);
+	return (dom->flag & DOM_DEBUG);
 }
-
-#if 0
-void
-dmar_printf(const char *fmt, ...)
-{
-	va_list ap;
-
-	return;
-	va_start(ap,fmt);
-	vprintf(fmt,ap);
-}
-#endif
 
 const char *dom_bdf(struct domain *dom);
 
@@ -340,11 +327,9 @@ void dmar_ptmap(bus_dma_tag_t tag, bus_addr_t addr)
 {
 	struct domain *dom = tag->_cookie;
 
-	if (!acpidmar_sc) {
+	if (!acpidmar_sc)
 		return;
-	}
-
-	domain_map_page(dom, addr, addr, PTE_P|PTE_R|PTE_W);
+	domain_map_page(dom, addr, addr, PTE_P | PTE_R | PTE_W);
 }
 
 /* Map a range of pages 1:1 */
@@ -376,12 +361,12 @@ domain_map_page(struct domain *dom, vaddr_t va, paddr_t pa, int flags)
 		v = context_user(ctx);
 		if (v != 0xA) {
 			printf("  map: %.4x:%.2x:%.2x.%x iommu:%d did:%.4x\n",
-				iommu->segment,
-				sid_bus(dd->sid),
-				sid_dev(dd->sid),
-				sid_fun(dd->sid),
-				iommu->id,
-				dom->did);
+			    iommu->segment,
+			    sid_bus(dd->sid),
+			    sid_dev(dd->sid),
+			    sid_fun(dd->sid),
+			    iommu->id,
+			    dom->did);
 			context_set_user(ctx, 0xA);
 		}
 	}
@@ -393,7 +378,6 @@ domain_map_page(struct domain *dom, vaddr_t va, paddr_t pa, int flags)
 
 	/* Only handle 4k pages for now */
 	npte = dom->pte;
-	/* XXX why 12? */
 	for (lvl = iommu->agaw - VTD_STRIDE_SIZE; lvl>= VTD_LEVEL0;
 	    lvl -= VTD_STRIDE_SIZE) {
 		idx = (va>> lvl) & VTD_STRIDE_MASK;
@@ -417,7 +401,7 @@ static void dmar_dumpseg(bus_dma_tag_t, int, bus_dma_segment_t *, const char *);
 
 static
 void dmar_dumpseg(bus_dma_tag_t tag, int nseg, bus_dma_segment_t *segs, 
-	const char *lbl)
+    const char *lbl)
 {
 	struct domain	*dom = tag->_cookie;
 	int i;
@@ -427,8 +411,8 @@ void dmar_dumpseg(bus_dma_tag_t tag, int nseg, bus_dma_segment_t *segs,
 	printf("%s: %s\n", lbl, dom_bdf(dom));
 	for (i=0; i<nseg; i++) {
 		printf("  %.16llx %.8x\n", 
-			(uint64_t)segs[i].ds_addr,
-			(uint32_t)segs[i].ds_len);
+		    (uint64_t)segs[i].ds_addr,
+		    (uint32_t)segs[i].ds_len);
 	}
 }
 
@@ -439,7 +423,7 @@ domain_unload_map(struct domain *dom, bus_dmamap_t dmam)
 	bus_dma_segment_t	*seg;
 	paddr_t			base, end, idx;
 	psize_t			alen;
-	int			i, s;
+	int			i;
 
 	if (iommu_bad(dom->iommu)) {
 		printf("unload map no iommu\n");
@@ -456,12 +440,12 @@ domain_unload_map(struct domain *dom, bus_dmamap_t dmam)
 
 		if (debugme(dom)) {
 			printf("  va:%.16llx len:%x\n",
-				    (uint64_t)base, (uint32_t)alen);
+			    (uint64_t)base, (uint32_t)alen);
 		}
 
-		s = splhigh();
+		mtx_enter(&dom->iommu->reg_lock);
 		extent_free(dom->iovamap, base, alen, EX_NOWAIT);
-		splx(s);
+		mtx_leave(&dom->iommu->reg_lock);
 
 		/* Clear PTE */
 		for (idx = 0; idx < alen; idx+=VTD_PAGE_SIZE)
@@ -478,7 +462,7 @@ domain_load_map(struct domain *dom, bus_dmamap_t map, int flags, const char *fn)
 	paddr_t			base, end, idx;
 	psize_t			alen;
 	u_long			res;
-	int			i, s;
+	int			i;
 
 	iommu = dom->iommu;
 	if (!iommu_enabled(iommu)) {
@@ -487,10 +471,7 @@ domain_load_map(struct domain *dom, bus_dmamap_t map, int flags, const char *fn)
 			return;
 		}
 	}
-	acpidmar_intr(dom->iommu);
-	if (debugme(dom)) {
-		printf("%s: %s\n", fn, dom_bdf(dom));
-	}
+	acpidmar_intr(iommu);
 	for (i = 0; i < map->dm_nsegs; i++) {
 		seg = &map->dm_segs[i];
 
@@ -498,16 +479,15 @@ domain_load_map(struct domain *dom, bus_dmamap_t map, int flags, const char *fn)
 		end  = roundup(seg->ds_addr + seg->ds_len, VTD_PAGE_SIZE);
 		alen = end - base;
 
-		if (drma_alloc) {
-			printf("skip alloc: 1:1\n");
-			goto drma;
+		if (dom->flag & DOM_NOMAP) {
+			goto nomap;
 		}
 
-		s = splhigh();
+		mtx_enter(&iommu->reg_lock);
 		/* Allocate DMA Virtual Address */
 		extent_alloc(dom->iovamap, alen, VTD_PAGE_SIZE, 0,
 		    map->_dm_boundary, EX_NOWAIT, &res);
-		splx(s);
+		mtx_leave(&iommu->reg_lock);
 
 		if (debugme(dom)) {
 			printf("  %.16llx %x => %.16llx\n",
@@ -517,13 +497,18 @@ domain_load_map(struct domain *dom, bus_dmamap_t map, int flags, const char *fn)
 
 		/* Reassign DMA address */
 		seg->ds_addr = res | (seg->ds_addr & VTD_PAGE_MASK);
-drma:
+nomap:
 		for (idx = 0; idx < alen; idx += VTD_PAGE_SIZE) {
 			domain_map_page(dom, res + idx, base + idx,
 			    PTE_P | PTE_R | PTE_W);
 		}
 	}
-	iommu_flush_tlb(dom->iommu, IOTLB_DOMAIN, dom->did);
+	int force = 1;
+	if ((iommu->cap & CAP_CM) || force) {
+		iommu_flush_tlb(iommu, IOTLB_DOMAIN, dom->did);
+	} else {
+		iommu_flush_write_buffer(iommu);
+	}
 }
 
 /* Bus DMA Map functions */
@@ -548,9 +533,10 @@ dmar_dmamap_create(bus_dma_tag_t tag, bus_size_t size, int nsegments,
 
 	rc=_bus_dmamap_create(tag,size,nsegments,maxsegsz,boundary,
 	    flags,dmamp);
-	if (!rc)
-		dmar_dumpseg(tag, (*dmamp)->dm_nsegs, 
-			(*dmamp)->dm_segs, __FUNCTION__);
+	if (!rc) {
+		dmar_dumpseg(tag, (*dmamp)->dm_nsegs, (*dmamp)->dm_segs,
+		    __FUNCTION__);
+	}
 	return (rc);
 }
 
@@ -570,7 +556,11 @@ dmar_dmamap_load(bus_dma_tag_t tag, bus_dmamap_t dmam, void *buf,
 
 	rc=_bus_dmamap_load(tag,dmam,buf,buflen,p,flags);
 	if (!rc) {
+		dmar_dumpseg(tag, dmam->dm_nsegs, dmam->dm_segs,
+		    __FUNCTION__);
 		domain_load_map(dom, dmam, flags, __FUNCTION__);
+		dmar_dumpseg(tag, dmam->dm_nsegs, dmam->dm_segs,
+		    __FUNCTION__);
 	}
 	return (rc);
 }
@@ -584,7 +574,11 @@ dmar_dmamap_load_mbuf(bus_dma_tag_t tag, bus_dmamap_t dmam, struct mbuf *chain,
 
 	rc=_bus_dmamap_load_mbuf(tag,dmam,chain,flags);
 	if (!rc) {
+		dmar_dumpseg(tag, dmam->dm_nsegs, dmam->dm_segs,
+		    __FUNCTION__);
 		domain_load_map(dom, dmam, flags, __FUNCTION__);
+		dmar_dumpseg(tag, dmam->dm_nsegs, dmam->dm_segs,
+		    __FUNCTION__);
 	}
 	return (rc);
 }
@@ -598,7 +592,11 @@ dmar_dmamap_load_uio(bus_dma_tag_t tag, bus_dmamap_t dmam, struct uio *uio,
 
 	rc=_bus_dmamap_load_uio(tag,dmam,uio,flags);
 	if (!rc) {
+		dmar_dumpseg(tag, dmam->dm_nsegs, dmam->dm_segs,
+		    __FUNCTION__);
 		domain_load_map(dom, dmam, flags, __FUNCTION__);
+		dmar_dumpseg(tag, dmam->dm_nsegs, dmam->dm_segs,
+		    __FUNCTION__);
 	}
 	return (rc);
 }
@@ -612,7 +610,11 @@ dmar_dmamap_load_raw(bus_dma_tag_t tag, bus_dmamap_t dmam,
 
 	rc=_bus_dmamap_load_raw(tag,dmam,segs,nsegs,size,flags);
 	if (!rc) {
+		dmar_dumpseg(tag, dmam->dm_nsegs, dmam->dm_segs,
+		    __FUNCTION__);
 		domain_load_map(dom, dmam, flags, __FUNCTION__);
+		dmar_dumpseg(tag, dmam->dm_nsegs, dmam->dm_segs,
+		    __FUNCTION__);
 	}
 	return (rc);
 }
@@ -656,8 +658,9 @@ dmar_dmamem_alloc(bus_dma_tag_t tag, bus_size_t size, bus_size_t alignment,
 
 	rc = _bus_dmamem_alloc(tag,size,alignment,boundary,segs,nsegs,rsegs,
 	    flags);
-	if (!rc)
+	if (!rc) {
 		dmar_dumpseg(tag, *rsegs, segs, __FUNCTION__);
+	}
 	return (rc);
 }
 
@@ -783,7 +786,7 @@ iommu_flush_tlb_qi(struct iommu_softc *iommu, int mode, int did)
 
 void
 iommu_flush_ctx_qi(struct iommu_softc *iommu, int mode, int did,
-	int sid, int fm)
+    int sid, int fm)
 {
 	struct qi_entry qi;
 
@@ -805,9 +808,29 @@ iommu_flush_ctx_qi(struct iommu_softc *iommu, int mode, int did,
 }
 
 void
+iommu_flush_write_buffer(struct iommu_softc *iommu)
+{
+	int i, sts;
+
+	if (!(iommu->cap & CAP_RWBF))
+		return;
+	printf("writebuf\n");
+	iommu_writel(iommu, DMAR_GCMD_REG, iommu->gcmd | GCMD_WBF);
+	for (i=0; i<5; i++) {
+		sts = iommu_readl(iommu, DMAR_GSTS_REG);
+		if (sts & GSTS_WBFS)
+			break;
+		delay(10000);
+	}
+	if (i == 5) {
+		printf("write buffer flush fails\n");
+	}
+}
+
+void
 iommu_flush_cache(struct iommu_softc *iommu, void *addr, size_t size)
 {
-	if (!(iommu->ecap & ECAP_C))
+	//if (!(iommu->ecap & ECAP_C))
 		pmap_flush_cache((vaddr_t)addr, size);
 }
 
@@ -957,7 +980,7 @@ iommu_enable_translation(struct iommu_softc *iommu, int enable)
 	reg = 0;
 	if (enable) {
 		printf("enable iommu %d\n", iommu->id);
-		iommu_showcfg(iommu);
+		iommu_showcfg(iommu, -1);
 
 		iommu->gcmd |= GCMD_TE;
 
@@ -965,15 +988,13 @@ iommu_enable_translation(struct iommu_softc *iommu, int enable)
 		printf(" pre tes: ");
 
 		mtx_enter(&iommu->reg_lock);
-
 		iommu_writel(iommu, DMAR_GCMD_REG, iommu->gcmd);
 		printf("xxx");
 		do {
 			printf("yyy");
 			sts = iommu_readl(iommu, DMAR_GSTS_REG);
-			delay(n * 1000);
+			delay(n * 10000);
 		} while (n++ < 5 && !(sts & GSTS_TES));
-
 		mtx_leave(&iommu->reg_lock);
 
 		printf(" set.tes: %d\n", n);
@@ -985,9 +1006,7 @@ iommu_enable_translation(struct iommu_softc *iommu, int enable)
 
 			/* Disable IOMMU */
 			iommu->gcmd &= ~GCMD_TE;
-			mtx_enter(&iommu->reg_lock);
 			iommu_writel(iommu, DMAR_GCMD_REG, iommu->gcmd);
-			mtx_leave(&iommu->reg_lock);
 
 			return (1);
 		}
@@ -1036,26 +1055,35 @@ iommu_init(struct acpidmar_softc *sc, struct iommu_softc *iommu,
 	iommu->ndoms = cap_nd(iommu->cap);
 
 	printf("caps: %s%s%s%s%s%s%s%s%s%s%s\n",
-		iommu->cap & CAP_AFL ? "afl " : "",		// adv fault
-		iommu->cap & CAP_RWBF ? "rwbf " : "",		// write-buffer flush
-		iommu->cap & CAP_PLMR ? "plmr " : "",		// protected lo region
-		iommu->cap & CAP_PHMR ? "phmr " : "",		// protected hi region
-		iommu->cap & CAP_CM ? "cm " : "",		// caching mode
-		iommu->cap & CAP_ZLR ? "zlr " : "",		// zero-length read
-		iommu->cap & CAP_PSI ? "psi " : "",		// page invalidate
-		iommu->cap & CAP_DWD ? "dwd " : "",		// write drain
-		iommu->cap & CAP_DRD ? "drd " : "",		// read drain
-		iommu->cap & CAP_FL1GP ? "Gb " : "",		// 1Gb pages
-		iommu->cap & CAP_PI ? "pi " : "");		// posted interrupts
-	printf("ecap: %s%s%s%s%s%s%s%s\n",
-		iommu->ecap & ECAP_C ? "c " : "",		// coherent
-		iommu->ecap & ECAP_QI ? "qi " : "",		// queued invalidate
-		iommu->ecap & ECAP_DT ? "dt " : "",		// device iotlb
-		iommu->ecap & ECAP_IR ? "ir " : "",		// intr remap
-		iommu->ecap & ECAP_EIM ? "eim " : "",		// x2apic
-		iommu->ecap & ECAP_PT ? "pt " : "",		// passthrough
-		iommu->ecap & ECAP_SC ? "sc " : "",		// snoop control
-		iommu->ecap & ECAP_PASID ? "pas " : "");	// pasid
+	    iommu->cap & CAP_AFL ? "afl " : "",		// adv fault
+	    iommu->cap & CAP_RWBF ? "rwbf " : "",	// write-buffer flush
+	    iommu->cap & CAP_PLMR ? "plmr " : "",	// protected lo region
+	    iommu->cap & CAP_PHMR ? "phmr " : "",	// protected hi region
+	    iommu->cap & CAP_CM ? "cm " : "",		// caching mode
+	    iommu->cap & CAP_ZLR ? "zlr " : "",		// zero-length read
+	    iommu->cap & CAP_PSI ? "psi " : "",		// page invalidate
+	    iommu->cap & CAP_DWD ? "dwd " : "",		// write drain
+	    iommu->cap & CAP_DRD ? "drd " : "",		// read drain
+	    iommu->cap & CAP_FL1GP ? "Gb " : "",	// 1Gb pages
+	    iommu->cap & CAP_PI ? "pi " : "");		// posted interrupts
+	printf("ecap: %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
+	    iommu->ecap & ECAP_C ? "c " : "",		// coherent
+	    iommu->ecap & ECAP_QI ? "qi " : "",		// queued invalidate
+	    iommu->ecap & ECAP_DT ? "dt " : "",		// device iotlb
+	    iommu->ecap & ECAP_IR ? "ir " : "",		// intr remap
+	    iommu->ecap & ECAP_EIM ? "eim " : "",	// x2apic
+	    iommu->ecap & ECAP_PT ? "pt " : "",		// passthrough
+	    iommu->ecap & ECAP_SC ? "sc " : "",		// snoop control
+	    iommu->ecap & ECAP_ECS ? "ecs " : "",	// extended context
+	    iommu->ecap & ECAP_MTS ? "mts " : "",	// memory type
+	    iommu->ecap & ECAP_NEST ? "nest " : "",	// nested translations
+	    iommu->ecap & ECAP_DIS ? "dis " : "",	// deferred invalidation
+	    iommu->ecap & ECAP_PASID ? "pas " : "",	// pasid
+	    iommu->ecap & ECAP_PRS ? "prs " : "",	// page request
+	    iommu->ecap & ECAP_ERS ? "ers " : "",	// execute request
+	    iommu->ecap & ECAP_SRS ? "srs " : "",	// supervisor request
+	    iommu->ecap & ECAP_NWFS ? "nwfs " : "",	// no write flag
+	    iommu->ecap & ECAP_EAFS ? "eafs " : "");	// extended accessed flag
 
 	mtx_init(&iommu->reg_lock, IPL_HIGH);
 
@@ -1075,6 +1103,7 @@ iommu_init(struct acpidmar_softc *sc, struct iommu_softc *iommu,
 	printf("Allocated root pointer: pa:%.16llx va:%p\n",
 	    (uint64_t)paddr, iommu->root);
 #endif
+	iommu_flush_write_buffer(iommu);
 	iommu_set_rtaddr(iommu, paddr);
 
 #if 0
@@ -1092,12 +1121,15 @@ iommu_init(struct acpidmar_softc *sc, struct iommu_softc *iommu,
 
 	gaw = -1;
 	iommu->mgaw = cap_mgaw(iommu->cap);
+	printf("gaw: %d { ", iommu->mgaw);
 	for (i = 0; i < 5; i++) {
 		if (cap_sagaw(iommu->cap) & (1L << i)) {
 			gaw = (i * VTD_STRIDE_SIZE) + 30;
+			printf("%d ", gaw);
 			iommu->agaw = gaw;
 		}
 	}
+	printf("}\n");
 
 	sts = iommu_readl(iommu, DMAR_GSTS_REG);
 	if (sts & GSTS_TES)
@@ -1369,7 +1401,7 @@ acpidmar_pci_attach(struct acpidmar_softc *sc, int segment, int sid)
 		iommu->root[bus].lo = paddr | ROOT_P;
 		iommu_flush_cache(iommu, &iommu->root[bus],
 		    sizeof(struct root_entry));
-		dprintf("iommu%d: Allocate context for bus: %.2x pa:%.16llx va:%p\n", 
+		printf("iommu%d: Allocate context for bus: %.2x pa:%.16llx va:%p\n",
 		    iommu->id, bus, (uint64_t)paddr,
 		    iommu->ctx[bus]);
 	}
@@ -1391,9 +1423,14 @@ acpidmar_pci_attach(struct acpidmar_softc *sc, int segment, int sid)
 
 		/* Flush it */
 		iommu_flush_cache(iommu, ctx, sizeof(struct context_entry));
-		iommu_flush_ctx(iommu, CTX_DEVICE, dom->did, sid, 0);
-		iommu_flush_tlb(iommu, IOTLB_GLOBAL, 0);
-		dprintf("iommu%d: %s set context ptep:%.16llx lvl:%d did:%.4x tt:%d\n", 
+		int force = 1;
+		if ((iommu->cap & CAP_CM) || force) {
+			iommu_flush_ctx(iommu, CTX_DEVICE, dom->did, sid, 0);
+			iommu_flush_tlb(iommu, IOTLB_GLOBAL, 0);
+		} else {
+			iommu_flush_write_buffer(iommu);
+		}
+		dprintf("iommu%d: %s set context ptep:%.16llx lvl:%d did:%.4x tt:%d\n",
 		    iommu->id, dmar_bdf(sid), (uint64_t)dom->ptep, lvl,
 		    dom->did, tt);
 	}
@@ -1429,7 +1466,7 @@ acpidmar_pci_hook(pci_chipset_tag_t pc, struct pci_attach_args *pa)
 
 	if (PCI_CLASS(reg) == PCI_CLASS_DISPLAY &&
 	    PCI_SUBCLASS(reg) == PCI_SUBCLASS_DISPLAY_VGA) {
-		dom->flag = 1;
+		dom->flag = DOM_DEBUG | DOM_NOMAP;
 	}
 	if (PCI_CLASS(reg) == PCI_CLASS_BRIDGE &&
 	    PCI_SUBCLASS(reg) == PCI_SUBCLASS_BRIDGE_ISA) {
@@ -1619,8 +1656,8 @@ acpidmar_init(struct acpidmar_softc *sc, struct acpi_dmar *dmar)
 			dom = acpidmar_pci_attach(sc, iommu->segment, sid);
 			if (dom != NULL) {
 				printf("%.4x:%.2x:%.2x.%x iommu:%d did:%.4x\n",
-					iommu->segment, dl->bus, dl->dp[0].device, dl->dp[0].function,
-				iommu->id, dom->did);
+				    iommu->segment, dl->bus, dl->dp[0].device, dl->dp[0].function,
+				    iommu->id, dom->did);
 			}
 		}
 	}
@@ -1657,17 +1694,18 @@ acpidmar_activate(struct device *self, int act)
 	switch (act) {
 	case DVACT_RESUME:
 		TAILQ_FOREACH(iommu, &sc->sc_drhds, link) {
+			iommu_flush_write_buffer(iommu);
 			iommu_set_rtaddr(iommu, iommu->rtaddr);
 			iommu_writel(iommu, DMAR_FEDATA_REG, iommu->fedata);
 			iommu_writel(iommu, DMAR_FEADDR_REG, iommu->feaddr);
 			iommu_writel(iommu, DMAR_FEUADDR_REG,
 			    iommu->feaddr>> 32);
 			if ((iommu->flags & (IOMMU_FLAGS_BAD|IOMMU_FLAGS_SUSPEND)) ==
-			     IOMMU_FLAGS_SUSPEND) {
+			    IOMMU_FLAGS_SUSPEND) {
 				printf("enable wakeup translation\n");
 				iommu_enable_translation(iommu, 1);
 			}
-			iommu_showcfg(iommu);
+			iommu_showcfg(iommu, -1);
 		}
 		break;
 	case DVACT_SUSPEND:
@@ -1808,8 +1846,10 @@ acpidmar_intr(void *ctx)
 	int				fro, nfr, fri, i;
 	uint32_t			sts;
 
+	if (!(iommu->gcmd & GCMD_TE)) {
+		return (1);
+	}
 	mtx_enter(&iommu->reg_lock);
-
 	sts = iommu_readl(iommu, DMAR_FECTL_REG);
 	if (sts & FECTL_IP) {
 		printf("IP set\n");
@@ -1863,24 +1903,50 @@ enum {
 
 const char *vtd_faults[] = {
 	"Software",
-	"Root Entry Not Present",
-	"Context Entry Not Present",
-	"Context Entry Invalid",
+	"Root Entry Not Present", 	/* ok (rtaddr + 4096) */
+	"Context Entry Not Present",	/* ok (no CTX_P) */
+	"Context Entry Invalid",	/* ok (tt = 3) */
 	"Address Beyond MGAW",
-	"Write",
-	"Read",
-	"Paging Entry Invalid",
+	"Write",			/* ok */
+	"Read",				/* ok */
+	"Paging Entry Invalid",		/* ok */
 	"Root Table Invalid",
 	"Context Table Invalid",
-	"Root Entry Reserved",
+	"Root Entry Resexrved",		/* ok (root.lo |= 0x4) */
 	"Context Entry Reserved",
 	"Paging Entry Reserved",
 	"Context Entry TT",
 	"Reserved",
 };
 
+void iommu_showpte(uint64_t, int, uint64_t);
+
 void
-iommu_showcfg(struct iommu_softc *iommu)
+iommu_showpte(uint64_t ptep, int lvl, uint64_t base)
+{
+	uint64_t nb, pb, i;
+	struct pte_entry *pte;
+
+	pte = (void *)PMAP_DIRECT_MAP(ptep);
+	for (i=0; i<512; i++) {
+		if (!(pte[i].val & PTE_P))
+			continue;
+		nb = base + (i << lvl);
+		pb = pte[i].val & ~VTD_PAGE_MASK;
+		if (lvl == 12) {
+			printf("   %3llx %.16llx = %.16llx %c %s\n", 
+			    i, nb, pb,
+			    pte[i].val & PTE_W ? 'w' : ' ',
+			    (nb == pb) ? " ident" : "");
+			return;
+		} else {
+			iommu_showpte(pb, lvl - VTD_STRIDE_SIZE, nb);
+		}
+	}
+}
+
+void
+iommu_showcfg(struct iommu_softc *iommu, int sid)
 {
 	int i, j, sts, cmd;
 	struct context_entry *ctx;
@@ -1914,19 +1980,8 @@ iommu_showcfg(struct iommu_softc *iommu)
 			    context_pte(ctx),
 			    context_user(ctx),
 			    clc);
-#if 0
-			if (clc == 0x010601) {
-				vaddr_t va;
-				pcireg_t bar;
-
-				/* ahci */
-				bar = pci_conf_read(NULL, tag, 0x24) & ~0xF;
-				va = (vaddr_t)km_alloc(4096, &kv_any, &kp_none, &kd_nowait);
-				pmap_kenter_pa(va, bar, PROT_READ|PROT_WRITE);
-				pmap_update(pmap_kernel(0));
-				showahci((void *)va);
-			}
-#endif
+			/* dump pagetables */
+			iommu_showpte(ctx->lo & ~VTD_PAGE_MASK, iommu->agaw - VTD_STRIDE_SIZE, 0);
 		}
 	}
 }
@@ -1936,21 +1991,32 @@ iommu_showfault(struct iommu_softc *iommu, int fri, struct fault_entry *fe)
 {
 	int bus, dev, fun, type, fr;
 	bios_memmap_t	*im;
+	const char *mapped;
 
 	if (!(fe->hi & FRCD_HI_F))
 		return;
-	iommu_showcfg(iommu);
 	type = (fe->hi & FRCD_HI_T) ? 'r' : 'w';
 	fr = (fe->hi>> FRCD_HI_FR_SHIFT) & FRCD_HI_FR_MASK;
 	bus = (fe->hi>> FRCD_HI_BUS_SHIFT) & FRCD_HI_BUS_MASK;
 	dev = (fe->hi>> FRCD_HI_DEV_SHIFT) & FRCD_HI_DEV_MASK;
 	fun = (fe->hi>> FRCD_HI_FUN_SHIFT) & FRCD_HI_FUN_MASK;
-	printf("fri%d: dmar: %.2x:%.2x.%x %s error at %llx fr:%d [%s] iommu:%d\n",
-	    fri, bus, dev, fun, 
+	iommu_showcfg(iommu, mksid(bus,dev,fun));
+	if (!iommu->ctx[bus]) {
+		mapped = "nobus";
+	} else if (!context_entry_is_valid(&iommu->ctx[bus][(dev << 3) + fun])) {
+		mapped = "nodevfn";
+	} else if (context_user(&iommu->ctx[bus][(dev << 3) + fun]) != 0xA) {
+		mapped = "nomap";
+	} else {
+		mapped = "mapped";
+	}
+	printf("fri%d: dmar: %.2x:%.2x.%x %s error at %llx fr:%d [%s] iommu:%d [%s]\n",
+	    fri, bus, dev, fun,
 	    type == 'r' ? "read" : "write",
 	    fe->lo,
 	    fr, fr <= 13 ? vtd_faults[fr] : "unknown",
-	    iommu->id);
+	    iommu->id,
+	    mapped);
 	for (im = bios_memmap; im->type != BIOS_MAP_END; im++) {
 		if ((im->type == BIOS_MAP_RES) &&	
 		    (im->addr <= fe->lo) &&
@@ -1959,70 +2025,4 @@ iommu_showfault(struct iommu_softc *iommu, int fri, struct fault_entry *fe)
 		}
 	}
 	//panic("error");
-}
-
-
-struct ahci_mmap
-{
-  uint32_t cap;
-  uint32_t ghc;
-  uint32_t is;
-  uint32_t pi;
-  uint32_t vs;
-  uint32_t ccc_ctl;
-  uint32_t ccc_pts;
-  uint32_t em_loc;
-  uint32_t em_ctl;
-  uint32_t cap2;
-  uint32_t bohc;
-  uint8_t  rsv[0xA0-0x2C];
-  uint8_t  vendor[0x100-0xa0];
-};
-
-struct ahci_port_mmap
-{
-  uint32_t clb;
-  uint32_t clbu;
-  uint32_t fb;
-  uint32_t fbu;
-  uint32_t is;
-  uint32_t ie;
-  uint32_t cmd;
-  uint32_t rsv0;
-  uint32_t tfd;
-  uint32_t sig;
-  uint32_t ssts;
-  uint32_t sctrl;
-  uint32_t serr;
-  uint32_t sact;
-  uint32_t ci;
-  uint32_t sntf;
-  uint32_t fbs;
-  uint32_t rsv1[11];
-  uint32_t vendor[4];
-};
-
-void showahci(void *a)
-{
-  struct ahci_mmap *am = a;
-  struct ahci_port_mmap *ap = (void *)&am[1];
-  int i;
-
-  printf("cap: %.8x %.8x\n", am->cap, am->cap2);
-  printf("ghc: %.8x\n", am->ghc);
-  printf("is:  %.8x\n", am->is);
-  printf("pi:  %.8x\n", am->pi);
-  printf("vs:  %.8x\n", am->vs);
-  printf("ctl: %.8x\n", am->ccc_ctl);
-  printf("pts: %.8x\n", am->ccc_pts);
-  printf("loc: %.8x\n", am->em_loc);
-  printf("ctl: %.8x\n", am->em_ctl);
-  printf("bohc:%.8x\n", am->bohc);
-
-  for (i=0; i<32; i++) {
-    if (am->pi & (1L << i)) {
-	printf("  port%d: clb:%.8x clbu:%.8x fb:%.8x fbu:%.8x\n",
-		i, ap[i].clb, ap[i].clbu, ap[i].fb, ap[i].fbu);
-	}
-  }
 }
