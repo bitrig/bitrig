@@ -1,4 +1,4 @@
-/*	$OpenBSD: disklabel.c,v 1.202 2015/06/03 02:24:36 millert Exp $	*/
+/*	$OpenBSD: disklabel.c,v 1.203 2015/08/15 17:16:10 krw Exp $	*/
 
 /*
  * Copyright (c) 1987, 1993
@@ -1031,7 +1031,7 @@ getasciilabel(FILE *f, struct disklabel *lp)
 		free(mountpoints[part]);
 		mountpoints[part] = NULL;
 	}
-	
+
 	while (fgets(line, sizeof(line), f)) {
 		lineno++;
 		mp = NULL;
@@ -1287,7 +1287,7 @@ getasciilabel(FILE *f, struct disklabel *lp)
 	if (errors > 0)
 		mpcopy(mountpoints, omountpoints);
 	mpfree(omountpoints);
-	
+
 	return (errors > 0);
 }
 
