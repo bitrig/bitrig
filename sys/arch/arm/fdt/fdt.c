@@ -461,8 +461,9 @@ fdt_node_compatible(char *compatible, void *node)
 
 	len = fdt_node_property(node, "compatible", &data);
 	while (len > 0 && len >= clen + 1) {
-		if (!strncmp(data, compatible, clen))
-			return 1;
+		if (strlen(data) == clen)
+			if (!strncmp(data, compatible, clen))
+				return 1;
 		len -= (strlen(data) + 1);
 		data += (strlen(data) + 1);
 	}
