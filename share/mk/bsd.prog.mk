@@ -10,7 +10,7 @@
 
 .SUFFIXES: .out .o .c .cc .cpp .C .cxx .y .l .s .8 .7 .6 .5 .4 .3 .2 .1 .0
 
-.if defined(LDSTATIC) || defined(NOPIE)
+.if defined(NOPIE)
 CFLAGS+=       ${NOPIE_FLAGS}
 CXXFLAGS+=     ${NOPIE_FLAGS}
 AFLAGS+=       ${NOPIE_FLAGS}
