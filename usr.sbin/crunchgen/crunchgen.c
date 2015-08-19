@@ -871,6 +871,7 @@ top_makefile_rules(FILE * outmk)
 
 	fprintf(outmk, ".include <bsd.own.mk>\n");
 	fprintf(outmk, "CFLAGS+=$(NOPIE_FLAGS)\n");
+	fprintf(outmk, "LDFLAGS+=$(NOPIE_LDFLAGS)\n");
 	fprintf(outmk, "STRIP?=strip\n");
 	fprintf(outmk, "LINK=$(LD) -dc -r\n");
 	fprintf(outmk, "LIBS=");
