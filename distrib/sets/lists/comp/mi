@@ -573,8 +573,8 @@
 ./usr/include/dev/pci/esovar.h
 ./usr/include/dev/pci/fmsreg.h
 ./usr/include/dev/pci/fmsvar.h
-./usr/include/dev/pci/gcu_var.h
 ./usr/include/dev/pci/gcu_reg.h
+./usr/include/dev/pci/gcu_var.h
 ./usr/include/dev/pci/glxreg.h
 ./usr/include/dev/pci/glxvar.h
 ./usr/include/dev/pci/hifn7751reg.h
@@ -1604,6 +1604,7 @@
 ./usr/lib/liby_p.a
 ./usr/lib/libz.a
 ./usr/lib/libz_p.a
+./usr/lib/rcrt0.o
 ./usr/share/llvm
 ./usr/share/llvm/scanview.css
 ./usr/share/llvm/sorttable.js
