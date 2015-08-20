@@ -1,4 +1,4 @@
-/*	$OpenBSD: mountd.c,v 1.79 2015/01/16 06:39:59 deraadt Exp $	*/
+/*	$OpenBSD: mountd.c,v 1.80 2015/08/20 22:02:21 deraadt Exp $	*/
 /*	$NetBSD: mountd.c,v 1.31 1996/02/18 11:57:53 fvdl Exp $	*/
 
 /*
@@ -819,7 +819,7 @@ get_exportlist(void)
 					ep = get_exp();
 					ep->ex_fs = fsb.f_fsid;
 					len = strlen(fsb.f_mntonname) + 1;
-					ep->ex_fsdir = (char *)malloc(len);
+					ep->ex_fsdir = malloc(len);
 					if (ep->ex_fsdir)
 					    strlcpy(ep->ex_fsdir,
 					        fsb.f_mntonname, len);
@@ -922,7 +922,7 @@ get_exportlist(void)
 			if (debug)
 				fprintf(stderr, "Adding a default entry\n");
 			/* add a default group and make the grp list NULL */
-			hpe = (struct hostent *)malloc(sizeof(struct hostent));
+			hpe = malloc(sizeof(struct hostent));
 			if (hpe == NULL)
 				out_of_mem();
 			hpe->h_name = strdup("Default");
@@ -1115,7 +1115,7 @@ add_expdir(struct dirlist **dpp, char *cp, int len)
 	struct dirlist *dp;
 
 	/* do not need +1 because of dp_dirp[1] */
-	dp = (struct dirlist *)malloc(sizeof (struct dirlist) + len);
+	dp = malloc(sizeof (struct dirlist) + len);
 	if (dp == NULL)
 		out_of_mem();
 	dp->dp_left = *dpp;
@@ -1451,13 +1451,12 @@ get_host(char *cp, struct grouplist *grp, struct grouplist *tgrp)
 	}
 
 	grp->gr_type = GT_HOST;
-	nhp = grp->gr_ptr.gt_hostent = (struct hostent *)
-		malloc(sizeof(struct hostent));
+	nhp = grp->gr_ptr.gt_hostent = malloc(sizeof(struct hostent));
 	if (nhp == NULL)
 		out_of_mem();
 	memcpy(nhp, hp, sizeof(struct hostent));
 	i = strlen(hp->h_name)+1;
-	nhp->h_name = (char *)malloc(i);
+	nhp->h_name = malloc(i);
 	if (nhp->h_name == NULL)
 		out_of_mem();
 	memcpy(nhp->h_name, hp->h_name, i);
@@ -1465,14 +1464,12 @@ get_host(char *cp, struct grouplist *grp, struct grouplist *tgrp)
 	i = 1;
 	while (*addrp++)
 		i++;
-	naddrp = nhp->h_addr_list = (char **)
-		malloc(i*sizeof(char *));
+	naddrp = nhp->h_addr_list = malloc(i*sizeof(char *));
 	if (naddrp == NULL)
 		out_of_mem();
 	addrp = hp->h_addr_list;
 	while (*addrp) {
-		*naddrp = (char *)
-		    malloc(hp->h_length);
+		*naddrp = malloc(hp->h_length);
 		if (*naddrp == NULL)
 		    out_of_mem();
 		memcpy(*naddrp, *addrp, hp->h_length);
@@ -1522,7 +1519,7 @@ get_ht(void)
 {
 	struct hostlist *hp;
 
-	hp = (struct hostlist *)malloc(sizeof (struct hostlist));
+	hp = malloc(sizeof (struct hostlist));
 	if (hp == NULL)
 		out_of_mem();
 	hp->ht_next = NULL;
@@ -1719,7 +1716,7 @@ get_net(char *cp, struct netmsk *net, int maskflg)
 		else
 			name = inet_ntoa(inetaddr);
 		len = strlen(name) + 1;
-		net->nt_name = (char *)malloc(len);
+		net->nt_name = malloc(len);
 		if (net->nt_name == NULL)
 			out_of_mem();
 		strlcpy(net->nt_name, name, len);
@@ -1889,7 +1886,7 @@ get_mountlist(void)
 		dirp = strsep(&cp, " \t\n");
 		if (host == NULL || dirp == NULL)
 			continue;
-		mlp = (struct mountlist *)malloc(sizeof (*mlp));
+		mlp = malloc(sizeof (*mlp));
 		if (mlp == NULL)
 			out_of_mem();
 		strlcpy(mlp->ml_host, host, sizeof(mlp->ml_host));
@@ -1952,7 +1949,7 @@ add_mlist(char *hostp, char *dirp)
 		mlpp = &mlp->ml_next;
 		mlp = mlp->ml_next;
 	}
-	mlp = (struct mountlist *)malloc(sizeof (*mlp));
+	mlp = malloc(sizeof (*mlp));
 	if (mlp == NULL)
 		out_of_mem();
 	strlcpy(mlp->ml_host, hostp, sizeof(mlp->ml_host));
