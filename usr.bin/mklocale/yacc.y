@@ -147,28 +147,28 @@ entry	:	ENCODING STRING
 
 list	:	RUNE
 		{
-		    $$ = (rune_list *)xmalloc(sizeof(rune_list));
+		    $$ = xmalloc(sizeof(rune_list));
 		    $$->min = $1;
 		    $$->max = $1;
 		    $$->next = 0;
 		}
 	|	RUNE THRU RUNE
 		{
-		    $$ = (rune_list *)xmalloc(sizeof(rune_list));
+		    $$ = xmalloc(sizeof(rune_list));
 		    $$->min = $1;
 		    $$->max = $3;
 		    $$->next = 0;
 		}
 	|	list RUNE
 		{
-		    $$ = (rune_list *)xmalloc(sizeof(rune_list));
+		    $$ = xmalloc(sizeof(rune_list));
 		    $$->min = $2;
 		    $$->max = $2;
 		    $$->next = $1;
 		}
 	|	list RUNE THRU RUNE
 		{
-		    $$ = (rune_list *)xmalloc(sizeof(rune_list));
+		    $$ = xmalloc(sizeof(rune_list));
 		    $$->min = $2;
 		    $$->max = $4;
 		    $$->next = $1;
@@ -177,7 +177,7 @@ list	:	RUNE
 
 map	:	LBRK RUNE RUNE RBRK
 		{
-		    $$ = (rune_list *)xmalloc(sizeof(rune_list));
+		    $$ = xmalloc(sizeof(rune_list));
 		    $$->min = $2;
 		    $$->max = $2;
 		    $$->map = $3;
@@ -185,7 +185,7 @@ map	:	LBRK RUNE RUNE RBRK
 		}
 	|	map LBRK RUNE RUNE RBRK
 		{
-		    $$ = (rune_list *)xmalloc(sizeof(rune_list));
+		    $$ = xmalloc(sizeof(rune_list));
 		    $$->min = $3;
 		    $$->max = $3;
 		    $$->map = $4;
@@ -193,7 +193,7 @@ map	:	LBRK RUNE RUNE RBRK
 		}
 	|	LBRK RUNE THRU RUNE ':' RUNE RBRK
 		{
-		    $$ = (rune_list *)xmalloc(sizeof(rune_list));
+		    $$ = xmalloc(sizeof(rune_list));
 		    $$->min = $2;
 		    $$->max = $4;
 		    $$->map = $6;
@@ -201,7 +201,7 @@ map	:	LBRK RUNE RUNE RBRK
 		}
 	|	map LBRK RUNE THRU RUNE ':' RUNE RBRK
 		{
-		    $$ = (rune_list *)xmalloc(sizeof(rune_list));
+		    $$ = xmalloc(sizeof(rune_list));
 		    $$->min = $3;
 		    $$->max = $5;
 		    $$->map = $7;
@@ -324,7 +324,7 @@ set_digitmap(rune_map *map, rune_list *list)
 	rune_list *nlist = list->next;
 	for (i = list->min; i <= list->max; ++i) {
 	    if (list->map + (i - list->min)) {
-		rune_list *tmp = (rune_list *)xmalloc(sizeof(rune_list));
+		rune_list *tmp = xmalloc(sizeof(rune_list));
 		tmp->min = i;
 		tmp->max = i;
 		add_map(map, tmp, list->map + (i - list->min));
