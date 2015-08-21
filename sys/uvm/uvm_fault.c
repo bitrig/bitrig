@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_fault.c,v 1.84 2015/03/14 03:38:53 jsg Exp $	*/
+/*	$OpenBSD: uvm_fault.c,v 1.85 2015/08/21 16:04:35 visa Exp $	*/
 /*	$NetBSD: uvm_fault.c,v 1.51 2000/08/06 00:22:53 thorpej Exp $	*/
 
 /*
@@ -181,8 +181,7 @@ uvmfault_anonflush(struct vm_anon **anons, int n)
 			continue;
 		mtx_enter(&anons[lcv]->an_lock);
 		pg = anons[lcv]->an_page;
-		if (pg && (pg->pg_flags & PG_BUSY) == 0 &&
-		    pg->loan_count == 0) {
+		if (pg && (pg->pg_flags & PG_BUSY) == 0) {
 			uvm_lock_pageq();
 			if (pg->wire_count == 0)
 				uvm_pagedeactivate(pg);
@@ -264,10 +263,6 @@ uvmfault_amapcopy(struct uvm_faultinfo *ufi)
  * => we don't move the page on the queues [gets moved later]
  * => if we allocate a new page [we_own], it gets put on the queues.
  *    either way, the result is that the page is on the queues at return time
- * => for pages which are on loan from a uvm_object (and thus are not
- *    owned by the anon): if successful, we return with the owning object
- *    locked.   the caller must unlock this object when it unlocks everything
- *    else.
  */
 int
 uvmfault_anonget(struct uvm_faultinfo *ufi, struct vm_amap *amap,
@@ -293,25 +288,17 @@ uvmfault_anonget(struct uvm_faultinfo *ufi, struct vm_amap *amap,
 		we_own = FALSE;		/* TRUE if we set PG_BUSY on a page */
 		pg = anon->an_page;
 
-		/*
-		 * if there is a resident page and it is loaned, then anon
-		 * may not own it.   call out to uvm_anon_lockpage() to ensure
-		 * the real owner of the page has been identified and locked.
-		 */
-		if (pg && pg->loan_count)
-			pg = uvm_anon_lockloanpg(anon);
-
 		/* page there?   make sure it is not busy/released. */
 		if (pg) {
+			KASSERT(pg->pg_flags & PQ_ANON);
+			KASSERT(pg->uanon == anon);
+			
 			/*
-			 * at this point, if the page has a uobject [meaning
-			 * we have it on loan], then that uobject is locked
-			 * by us!   if the page is busy, we drop all the
-			 * locks (including uobject) and try again.
+			 * if the page is busy, we drop all the locks and
+			 * try again.
 			 */
-			if ((pg->pg_flags & (PG_BUSY|PG_RELEASED)) == 0) {
+			if ((pg->pg_flags & (PG_BUSY|PG_RELEASED)) == 0)
 				return (VM_PAGER_OK);
-			}
 			atomic_setbits_int(&pg->pg_flags, PG_WANTED);
 			uvmexp.fltpgwait++;
 
@@ -319,18 +306,9 @@ uvmfault_anonget(struct uvm_faultinfo *ufi, struct vm_amap *amap,
 			 * the last unlock must be an atomic unlock+wait on
 			 * the owner of page
 			 */
-			if (pg->uobject) {	/* owner is uobject ? */
-				UVM_ASSERT_OBJLOCKED(pg->uobject);
-
-				uvmfault_unlockall(ufi, amap, NULL, anon);
-				msleep(pg, &pg->uobject->vmobjlock,
-				    PVM | PNORELOCK, "anonget1", 0);
-			} else {
-				/* anon owns page */
-				uvmfault_unlockall(ufi, amap, NULL, NULL);
-				msleep(pg, &anon->an_lock, PVM | PNORELOCK,
-				    "anonget2", 0);
-			}
+			uvmfault_unlockall(ufi, amap, NULL, NULL);
+			msleep(pg, &anon->an_lock, PVM | PNORELOCK,
+			    "anonget2", 0);
 			/* ready to relock and try again */
 		} else {
 			/* no page, we must try and bring it in. */
@@ -730,8 +708,7 @@ ReFault:
 		}
 		anon = anons[lcv];
 		mtx_enter(&anon->an_lock);
-		/* ignore loaned pages */
-		if (anon->an_page && anon->an_page->loan_count == 0 &&
+		if (anon->an_page &&
 		    (anon->an_page->pg_flags & (PG_RELEASED|PG_BUSY)) == 0) {
 			uvm_lock_pageq();
 			uvm_pageactivate(anon->an_page);	/* reactivate */
@@ -953,81 +930,8 @@ ReFault:
 #endif
 	}
 
-	/* uobj is non null if the page is on loan from an object (i.e. uobj) */
-	uobj = anon->an_page->uobject;	/* locked by anonget if !NULL */
-
-
-	/* locked: maps(read), amap, anon, uobj(if one) */
-#ifdef UVMLOCKDEBUG
-	if (uobj)
-		UVM_ASSERT_OBJLOCKED(uobj);
-#endif
+	/* locked: maps(read), amap, anon */
 	UVM_ASSERT_ANONLOCKED(anon);
-
-	/* special handling for loaned pages */
-	if (anon->an_page->loan_count) {
-		if ((access_type & PROT_WRITE) == 0) {
-			/*
-			 * for read faults on loaned pages we just cap the
-			 * protection at read-only.
-			 */
-			enter_prot = enter_prot & ~PROT_WRITE;
-		} else {
-			/*
-			 * note that we can't allow writes into a loaned page!
-			 *
-			 * if we have a write fault on a loaned page in an
-			 * anon then we need to look at the anon's ref count.
-			 * if it is greater than one then we are going to do
-			 * a normal copy-on-write fault into a new anon (this
-			 * is not a problem).  however, if the reference count
-			 * is one (a case where we would normally allow a
-			 * write directly to the page) then we need to kill
-			 * the loan before we continue.
-			 */
-
-			/* >1 case is already ok */
-			if (anon->an_ref == 1) {
-				/* get new un-owned replacement page */
-				pg = uvm_pagealloc(NULL, 0, NULL, 0);
-				if (pg == NULL) {
-					uvmfault_unlockall(&ufi, amap, uobj,
-					    anon);
-					uvm_wait("flt_noram2");
-					goto ReFault;
-				}
-
-				/* copy data, kill loan */
-				/* copy old -> new */
-				uvm_pagecopy(anon->an_page, pg);
-
-				/* force reload */
-				pmap_page_protect(anon->an_page, PROT_NONE);
-				uvm_lock_pageq();	  /* KILL loan */
-				if (uobj)
-					/* if we were loaning */
-					anon->an_page->loan_count--;
-				anon->an_page->uanon = NULL;
-				/* in case we owned */
-				atomic_clearbits_int(
-				    &anon->an_page->pg_flags, PQ_ANON);
-				uvm_pageactivate(pg);
-				uvm_unlock_pageq();
-				if (uobj) {
-					mtx_leave(&uobj->vmobjlock);
-					uobj = NULL;
-				}
-
-				/* install new page in anon */
-				anon->an_page = pg;
-				pg->uanon = anon;
-				atomic_setbits_int(&pg->pg_flags, PQ_ANON);
-				atomic_clearbits_int(&pg->pg_flags,
-				    PG_BUSY|PG_FAKE);
-				UVM_PAGE_OWN(pg, NULL);
-			}     /* ref == 1 */
-		}       /* write fault */
-	}         /* loan count */
 
 	/*
 	 * if we are case 1B then we will need to allocate a new blank
@@ -1052,7 +956,7 @@ ReFault:
 				anon->an_ref--;
 				uvm_anfree(anon);
 			}
-			uvmfault_unlockall(&ufi, amap, uobj, oanon);
+			uvmfault_unlockall(&ufi, amap, NULL, oanon);
 			KASSERT(uvmexp.swpgonly <= uvmexp.swpages);
 			if (anon == NULL || uvmexp.swpgonly == uvmexp.swpages) {
 				uvmexp.fltnoanon++;
@@ -1094,7 +998,7 @@ ReFault:
 		 * We do, however, have to go through the ReFault path,
 		 * as the map may change while we're asleep.
 		 */
-		uvmfault_unlockall(&ufi, amap, uobj, anon);
+		uvmfault_unlockall(&ufi, amap, NULL, anon);
 		KASSERT(uvmexp.swpgonly <= uvmexp.swpages);
 		if (uvmexp.swpgonly == uvmexp.swpages) {
 			/* XXX instrumentation */
@@ -1126,7 +1030,7 @@ ReFault:
 	uvm_unlock_pageq();
 
 	/* done case 1! finish up by unlocking everything and returning success */
-	uvmfault_unlockall(&ufi, amap, uobj, anon);
+	uvmfault_unlockall(&ufi, amap, NULL, anon);
 	pmap_update(ufi.orig_map->pmap);
 	return (0);
 
@@ -1278,84 +1182,8 @@ Case2:
 		/* assert(uobjpage != PGO_DONTCARE) */
 
 		/*
-		 * we are faulting directly on the page.   be careful
-		 * about writing to loaned pages...
+		 * we are faulting directly on the page.
 		 */
-		if (uobjpage->loan_count) {
-
-			if ((access_type & PROT_WRITE) == 0) {
-				/* read fault: cap the protection at readonly */
-				enter_prot = enter_prot & ~PROT_WRITE;
-			} else {
-				/* write fault: must break the loan here */
-				/* alloc new un-owned page */
-				pg = uvm_pagealloc(NULL, 0, NULL, 0);
-
-				if (pg == NULL) {
-					/*
-					 * drop ownership of page, it can't
-					 * be released
-					 */
-					if (uobjpage->pg_flags & PG_WANTED)
-						wakeup(uobjpage);
-					atomic_clearbits_int(
-					    &uobjpage->pg_flags,
-					    PG_BUSY|PG_WANTED);
-					UVM_PAGE_OWN(uobjpage, NULL);
-
-					uvm_lock_pageq();
-					/* activate: we will need it later */
-					uvm_pageactivate(uobjpage);
-
-					uvm_unlock_pageq();
-					uvmfault_unlockall(&ufi, amap, uobj,
-					  NULL);
-					uvmexp.fltnoram++;
-					uvm_wait("flt_noram4");
-					goto ReFault;
-				}
-
-				/*
-				 * copy the data from the old page to the new
-				 * one and clear the fake/clean flags on the
-				 * new page (keep it busy).  force a reload
-				 * of the old page by clearing it from all
-				 * pmaps.  then lock the page queues to
-				 * rename the pages.
-				 */
-				uvm_pagecopy(uobjpage, pg);	/* old -> new */
-				atomic_clearbits_int(&pg->pg_flags,
-				    PG_FAKE|PG_CLEAN);
-				pmap_page_protect(uobjpage, PROT_NONE);
-				if (uobjpage->pg_flags & PG_WANTED)
-					wakeup(uobjpage);
-				/* uobj still locked */
-				atomic_clearbits_int(&uobjpage->pg_flags,
-				    PG_BUSY|PG_WANTED);
-				UVM_PAGE_OWN(uobjpage, NULL);
-
-				uvm_lock_pageq();
-				uoff = uobjpage->offset;
-				/* remove old page */
-				uvm_pagerealloc(uobjpage, NULL, 0);
-
-				/*
-				 * at this point we have absolutely no
-				 * control over uobjpage
-				 */
-				/* install new page */
-				uvm_pagerealloc(pg, uobj, uoff);
-				uvm_unlock_pageq();
-
-				/*
-				 * done!  loan is broken and "pg" is
-				 * PG_BUSY.   it can now replace uobjpage.
-				 */
-
-				uobjpage = pg;
-
-			}		/* write fault case */
-		}		/* if loan_count */
 	} else {
 		/*
 		 * if we are going to promote the data to an anon we

@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_anon.c,v 1.43 2014/12/23 04:56:47 tedu Exp $	*/
+/*	$OpenBSD: uvm_anon.c,v 1.44 2015/08/21 16:04:35 visa Exp $	*/
 /*	$NetBSD: uvm_anon.c,v 1.10 2000/11/25 06:27:59 chs Exp $	*/
 
 /*
@@ -92,48 +92,24 @@ uvm_anfree(struct vm_anon *anon)
 	pg = anon->an_page;
 
 	/*
-	 * if there is a resident page and it is loaned, then anon may not
-	 * own it.   call out to uvm_anon_lockpage() to ensure the real owner
- 	 * of the page has been identified and locked.
-	 */
-	if (pg && pg->loan_count)
-		pg = uvm_anon_lockloanpg(anon);
-
-	/*
 	 * if we have a resident page, we must dispose of it before freeing
 	 * the anon.
 	 */
 	if (pg) {
 		/*
-		 * if the page is owned by a uobject (now locked), then we must 
-		 * kill the loan on the page rather than free it.
+		 * if page is busy then we just mark it as released (who ever
+		 * has it busy must check for this when they wake up). if the
+		 * page is not busy then we can free it now.
 		 */
-		if (pg->uobject) {
-			uvm_lock_pageq();
-			KASSERT(pg->loan_count > 0);
-			pg->loan_count--;
-			pg->uanon = NULL;
-			uvm_unlock_pageq();
-			mtx_leave(&pg->uobject->vmobjlock);
-		} else {
-			/*
-			 * page has no uobject, so we must be the owner of it.
-			 *
-			 * if page is busy then we just mark it as released
-			 * (who ever has it busy must check for this when they
-			 * wake up).    if the page is not busy then we can
-			 * free it now.
-			 */
-			if ((pg->pg_flags & PG_BUSY) != 0) {
-				/* tell them to dump it when done */
-				atomic_setbits_int(&pg->pg_flags, PG_RELEASED);
-				return;
-			} 
-			pmap_page_protect(pg, PROT_NONE);
-			uvm_lock_pageq();	/* lock out pagedaemon */
-			uvm_pagefree(pg);	/* bye bye */
-			uvm_unlock_pageq();	/* free the daemon */
-		}
+		if ((pg->pg_flags & PG_BUSY) != 0) {
+			/* tell them to dump it when done */
+			atomic_setbits_int(&pg->pg_flags, PG_RELEASED);
+			return;
+		} 
+		pmap_page_protect(pg, PROT_NONE);
+		uvm_lock_pageq();	/* lock out pagedaemon */
+		uvm_pagefree(pg);	/* bye bye */
+		uvm_unlock_pageq();	/* free the daemon */
 	}
 	if (pg == NULL && anon->an_swslot != 0) {
 		/* this page is no longer only in swap. */
@@ -173,90 +149,6 @@ uvm_anon_dropswap(struct vm_anon *anon)
 
 	uvm_swap_free(anon->an_swslot, 1);
 	anon->an_swslot = 0;
-}
-
-/*
- * uvm_anon_lockloanpg: given a locked anon, lock its resident page
- *
- * => anon is locked by caller
- * => on return: anon is locked
- *		 if there is a resident page:
- *			if it has a uobject, it is locked by us
- *			if it is ownerless, we take over as owner
- *		 we return the resident page (it can change during
- *		 this function)
- * => note that the only time an anon has an ownerless resident page
- *	is if the page was loaned from a uvm_object and the uvm_object
- *	disowned it
- * => this only needs to be called when you want to do an operation
- *	on an anon's resident page and that page has a non-zero loan
- *	count.
- */
-struct vm_page *
-uvm_anon_lockloanpg(struct vm_anon *anon)
-{
-	struct vm_page *pg;
-	boolean_t locked = FALSE;
-
-	UVM_ASSERT_ANONLOCKED(anon);
-	/*
-	 * loop while we have a resident page that has a non-zero loan count.
-	 * if we successfully get our lock, we will "break" the loop.
-	 * note that the test for pg->loan_count is not protected -- this
-	 * may produce false positive results.   note that a false positive
-	 * result may cause us to do more work than we need to, but it will
-	 * not produce an incorrect result.
-	 */
-	while (((pg = anon->an_page) != NULL) && pg->loan_count != 0) {
-
-		/*
-		 * quickly check to see if the page has an object before
-		 * bothering to lock the page queues.   this may also produce
-		 * a false positive result, but that's ok because we do a real
-		 * check after that.
-		 *
-		 * XXX: quick check -- worth it?   need volatile?
-		 */
-		if (pg->uobject) {
-
-			uvm_lock_pageq();
-			if (pg->uobject) {	/* the "real" check */
-				locked = mtx_enter_try(&pg->uobject->vmobjlock);
-			} else {
-				/* object disowned before we got PQ lock */
-				locked = TRUE;
-			}
-			uvm_unlock_pageq();
-
-			/*
-			 * if we didn't get a lock (try lock failed), then we
-			 * toggle our anon lock and try again
-			 */
-			if (!locked) {
-				mtx_leave(&anon->an_lock);
-
-				/*
-				 * someone locking the object has a chance to
-				 * lock us right now.
-				 */
-				mtx_enter(&anon->an_lock);
-				continue;
-			}
-		}
-
-		/*
-		 * if page is un-owned [i.e. the object dropped its ownership],
-		 * then we can take over as owner!
-		 */
-		if (pg->uobject == NULL && (pg->pg_flags & PQ_ANON) == 0) {
-			uvm_lock_pageq();
-			atomic_setbits_int(&pg->pg_flags, PQ_ANON);
-			pg->loan_count--;	/* ... and drop our loan */
-			uvm_unlock_pageq();
-		}
-		break;
-	}
-	return(pg);
 }
 
 /*
