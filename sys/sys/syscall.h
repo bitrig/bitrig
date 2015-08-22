@@ -329,7 +329,7 @@
 /* syscall: "chflagsat" ret: "int" args: "int" "const char *" "u_int" "int" */
 #define	SYS_chflagsat	107
 
-/* syscall: "tame" ret: "int" args: "int" */
+/* syscall: "tame" ret: "int" args: "int" "char **" */
 #define	SYS_tame	108
 
 /* syscall: "ppoll" ret: "int" args: "struct pollfd *" "u_int" "const struct timespec *" "const sigset_t *" */
