@@ -246,7 +246,7 @@ struct sysent sysent[] = {
 	    sys_listen },			/* 106 = listen */
 	{ 4, s(struct sys_chflagsat_args), 0,
 	    sys_chflagsat },			/* 107 = chflagsat */
-	{ 1, s(struct sys_tame_args), 0,
+	{ 2, s(struct sys_tame_args), 0,
 	    sys_tame },				/* 108 = tame */
 	{ 4, s(struct sys_ppoll_args), 0,
 	    sys_ppoll },			/* 109 = ppoll */
