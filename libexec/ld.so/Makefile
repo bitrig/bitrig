@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.57 2015/07/26 19:30:58 guenther Exp $
+#	$OpenBSD: Makefile,v 1.58 2015/08/23 23:20:00 guenther Exp $
 
 SUBDIR=ldconfig ldd
 MAN=	ld.so.1
@@ -9,6 +9,9 @@ MAN=	ld.so.1
 NOPROG=
 .else
 PROG=	ld.so
+
+VERSION_SCRIPT=	${.CURDIR}/Symbols.map
+LDADD+=	--version-script=${VERSION_SCRIPT}
 
 VPATH=${.CURDIR}/../../lib/libc/string
 
@@ -41,7 +44,7 @@ $(test_prog):
 	$(CC) -x c - -Wl,-dynamic-linker,${.OBJDIR}/$(candidate) -o $@
 
 .endif
-$(PROG): $(test_prog)
+$(PROG): $(test_prog) ${VERSION_SCRIPT}
 	$(LD) -x -e _dl_start $(ELF_LDFLAGS) -o $(candidate) $(OBJS) $(LDADD)
 	eval $(test_cmd)
 	cp $(candidate) $@
