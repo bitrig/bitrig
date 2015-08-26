@@ -544,7 +544,7 @@ struct sys_chflagsat_args {
 
 struct sys_tame_args {
 	syscallarg(int) flags;
-	syscallarg(char **) paths;
+	syscallarg(const char **) paths;
 };
 
 struct sys_ppoll_args {
