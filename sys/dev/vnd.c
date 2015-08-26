@@ -1,4 +1,4 @@
-/*	$OpenBSD: vnd.c,v 1.156 2015/08/25 07:01:24 deraadt Exp $	*/
+/*	$OpenBSD: vnd.c,v 1.157 2015/08/26 22:36:18 deraadt Exp $	*/
 /*	$NetBSD: vnd.c,v 1.26 1996/03/30 23:06:11 christos Exp $	*/
 
 /*
