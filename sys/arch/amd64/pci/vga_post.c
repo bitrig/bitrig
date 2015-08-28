@@ -1,4 +1,4 @@
-/* $OpenBSD: vga_post.c,v 1.9 2015/03/14 03:38:46 jsg Exp $ */
+/* $OpenBSD: vga_post.c,v 1.10 2015/08/28 00:03:53 deraadt Exp $ */
 /* $NetBSD: vga_post.c,v 1.12 2009/03/15 21:32:36 cegger Exp $ */
 
 /*-
@@ -142,7 +142,7 @@ vga_post_init(int bus, int device, int function)
 	err = uvm_pglistalloc(BASE_MEMORY, 0, (paddr_t)-1, 0, 0,
 	    &sc->ram_backing, BASE_MEMORY/PAGE_SIZE, UVM_PLA_WAITOK);
 	if (err) {
-		free(sc, M_DEVBUF, 0);
+		free(sc, M_DEVBUF, sizeof(*sc));
 		km_free((void *)sys_image, 1024 * 1024, &kv_any, &kp_dma);
 		km_free((void *)sys_bios_data, PAGE_SIZE, &kv_any, &kp_none);
 		return NULL;
@@ -215,7 +215,7 @@ vga_post_free(struct vga_post *sc)
 	pmap_kremove(sc->sys_image, 1024 * 1024);
 	pmap_update(pmap_kernel());
 	km_free((void *)sc->sys_image, 1024 * 1024, &kv_any, &kp_dma);
-	free(sc, M_DEVBUF, 0);
+	free(sc, M_DEVBUF, sizeof(*sc));
 }
 
 #ifdef DDB

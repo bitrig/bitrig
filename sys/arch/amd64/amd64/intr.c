@@ -1,4 +1,4 @@
-/*	$OpenBSD: intr.c,v 1.43 2015/07/16 05:10:14 guenther Exp $	*/
+/*	$OpenBSD: intr.c,v 1.44 2015/08/28 00:03:53 deraadt Exp $	*/
 /*	$NetBSD: intr.c,v 1.3 2003/03/03 22:16:20 fvdl Exp $	*/
 
 /*
@@ -406,7 +406,7 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 	if (source->is_handlers != NULL &&
 	    source->is_pic->pic_type != pic->pic_type) {
 		mtx_leave(&intr_lock);
-		free(ih, M_DEVBUF, 0);
+		free(ih, M_DEVBUF, sizeof(*ih));
 		printf("intr_establish: can't share intr source between "
 		       "different PIC types (legacy_irq %d pin %d slot %d)\n",
 		    legacy_irq, pin, slot);
@@ -432,7 +432,7 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 			printf("intr_establish: pic %s pin %d: can't share "
 			       "type %d with %d\n", pic->pic_name, pin,
 				source->is_type, type);
-			free(ih, M_DEVBUF, 0);
+			free(ih, M_DEVBUF, sizeof(*ih));
 			return NULL;
 		}
 		break;
@@ -553,7 +553,7 @@ intr_disestablish(struct intrhand *ih)
 	evcount_detach(&ih->ih_count);
 	mtx_leave(&intr_lock);
 
-	free(ih, M_DEVBUF, 0);
+	free(ih, M_DEVBUF, sizeof(*ih));
 }
 
 int
