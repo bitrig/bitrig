@@ -1,4 +1,4 @@
-/*	$OpenBSD: if_tun.c,v 1.151 2015/07/20 22:54:29 mpi Exp $	*/
+/*	$OpenBSD: if_tun.c,v 1.152 2015/08/28 15:37:04 reyk Exp $	*/
 /*	$NetBSD: if_tun.c,v 1.24 1996/05/07 02:40:48 thorpej Exp $	*/
 
 /*
@@ -808,6 +808,9 @@ tunwrite(dev_t dev, struct uio *uio, int ioflag)
 	struct mbuf		*top, **mp, *m;
 	size_t			 mlen;
 	int			 error=0, s, tlen;
+#if NBPFILTER > 0
+	int			 s;
+#endif
 
 	if ((tp = tun_lookup(minor(dev))) == NULL)
 		return (ENXIO);
