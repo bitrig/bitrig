@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.58 2015/08/23 23:20:00 guenther Exp $
+#	$OpenBSD: Makefile,v 1.59 2015/08/28 14:16:01 kettenis Exp $
 
 SUBDIR=ldconfig ldd
 MAN=	ld.so.1
@@ -11,7 +11,7 @@ NOPROG=
 PROG=	ld.so
 
 VERSION_SCRIPT=	${.CURDIR}/Symbols.map
-LDADD+=	--version-script=${VERSION_SCRIPT}
+ELF_LDFLAGS+=--version-script=${VERSION_SCRIPT}
 
 VPATH=${.CURDIR}/../../lib/libc/string
 
