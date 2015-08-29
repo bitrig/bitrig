@@ -1,4 +1,4 @@
-/*	$OpenBSD: subr_disk.c,v 1.192 2015/08/28 22:42:05 krw Exp $	*/
+/*	$OpenBSD: subr_disk.c,v 1.193 2015/08/29 20:48:55 krw Exp $	*/
 /*	$NetBSD: subr_disk.c,v 1.17 1996/03/16 23:17:08 christos Exp $	*/
 
 /*
@@ -641,7 +641,6 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 
 		/* read header record */
 		bp->b_blkno = DL_BLKTOSEC(lp, part_blkno) * DL_BLKSPERSEC(lp);
-		offset = DL_BLKOFFSET(lp, part_blkno);
 		bp->b_bcount = lp->d_secsize;
 		bp->b_error = 0; /* B_ERROR and b_error may have stale data. */
 		CLR(bp->b_flags, B_READ | B_WRITE | B_DONE | B_ERROR);
@@ -656,7 +655,7 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 			return (error);
 		}
 
-		bcopy(bp->b_data + offset, &gh, sizeof(gh));
+		bcopy(bp->b_data, &gh, sizeof(gh));
 		ghsize = letoh32(gh.gh_size);
 		ghpartsize = letoh32(gh.gh_part_size);
 		ghpartspersec = lp->d_secsize / ghpartsize;
@@ -730,7 +729,6 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 			/* read partition record */
 			bp->b_blkno = DL_BLKTOSEC(lp, part_blkno) *
 			    DL_BLKSPERSEC(lp);
-			offset = DL_BLKOFFSET(lp, part_blkno);
 			bp->b_bcount = lp->d_secsize;
 			/* B_ERROR and b_error may have stale data. */
 			bp->b_error = 0;
@@ -745,7 +743,7 @@ readgptlabel(struct buf *bp, void (*strat)(struct buf *),
 				return (error);
 			}
 
-			bcopy(bp->b_data + offset, gp + i * ghpartspersec,
+			bcopy(bp->b_data, gp + i * ghpartspersec,
 			    ghpartspersec * sizeof(struct gpt_partition));
 		}
 
