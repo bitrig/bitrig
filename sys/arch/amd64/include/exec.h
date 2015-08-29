@@ -1,4 +1,4 @@
-/*	$OpenBSD: exec.h,v 1.6 2015/08/29 01:58:39 guenther Exp $	*/
+/*	$OpenBSD: exec.h,v 1.5 2015/08/29 01:58:39 guenther Exp $	*/
 /*
  * Written by Artur Grabowski <art@openbsd.org> Public Domain
  */
