@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.36 2015/07/17 23:29:14 jsg Exp $	*/
+/*	$OpenBSD: video.c,v 1.37 2015/08/29 20:51:46 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2008 Robert Nagy <robert@openbsd.org>
@@ -70,21 +70,21 @@ videoattach(struct device *parent, struct device *self, void *aux)
 {
 	struct video_softc *sc = (void *)self;
 	struct video_attach_args *sa = aux;
-	int video_buf_size = 0;
 
 	printf("\n");
 	sc->hw_if = sa->hwif;
 	sc->hw_hdl = sa->hdl;
 	sc->sc_dev = parent;
+	sc->sc_fbufferlen = 0;
 
 	if (sc->hw_if->get_bufsize)
-		video_buf_size = (sc->hw_if->get_bufsize)(sc->hw_hdl);
-	if (video_buf_size == EINVAL) {
+		sc->sc_fbufferlen = (sc->hw_if->get_bufsize)(sc->hw_hdl);
+	if (sc->sc_fbufferlen == 0) {
 		printf("video: could not request frame buffer size\n");
 		return;
 	}
 
-	sc->sc_fbuffer = malloc(video_buf_size, M_DEVBUF, M_NOWAIT);
+	sc->sc_fbuffer = malloc(sc->sc_fbufferlen, M_DEVBUF, M_NOWAIT);
 	if (sc->sc_fbuffer == NULL) {
 		printf("video: could not allocate frame buffer\n");
 		return;
@@ -437,7 +437,7 @@ videodetach(struct device *self, int flags)
 	int mn;
 
 	if (sc->sc_fbuffer != NULL)
-		free(sc->sc_fbuffer, M_DEVBUF, 0);
+		free(sc->sc_fbuffer, M_DEVBUF, sc->sc_fbufferlen);
 
 	/* Nuke the vnodes for any open instances (calls close). */
 	mn = self->dv_unit;
