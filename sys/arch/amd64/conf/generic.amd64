@@ -322,6 +322,9 @@ lpt0	at isa? port 0x378 irq 7	# standard PC parallel ports
 #lpt2	at isa? port 0x3bc
 lpt*	at puc?
 
+#efifb0		at mainbus?		# EFI Framebuffer
+#wsdisplay0	at efifb? console 1
+
 #bha*	at pci?				# BusLogic [57]4X SCSI controllers
 ahc*	at pci?				# Adaptec 2940 SCSI controllers
 jmb*	at pci?				# JMicron JMB36x controllers
