@@ -1,4 +1,4 @@
-/*	$OpenBSD: nfs_serv.c,v 1.105 2015/07/15 22:16:42 deraadt Exp $	*/
+/*	$OpenBSD: nfs_serv.c,v 1.106 2015/08/30 02:18:28 deraadt Exp $	*/
 /*     $NetBSD: nfs_serv.c,v 1.34 1997/05/12 23:37:12 fvdl Exp $       */
 
 /*
@@ -1646,7 +1646,7 @@ nfsrv_symlink(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 	char *pathcp = NULL, *cp2;
 	struct uio io;
 	struct iovec iv;
-	int error = 0, len, len2, dirfor_ret = 1, diraft_ret = 1;
+	int error = 0, len, pathlen, len2, dirfor_ret = 1, diraft_ret = 1;
 	struct vnode *dirp = NULL;
 	nfsfh_t nfh;
 	fhandle_t *fhp;
@@ -1685,7 +1685,8 @@ nfsrv_symlink(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 			goto nfsmout;
 	}
 	nfsm_strsiz(len2, NFS_MAXPATHLEN);
-	pathcp = malloc(len2 + 1, M_TEMP, M_WAITOK);
+	pathlen = len2 + 1;
+	pathcp = malloc(pathlen, M_TEMP, M_WAITOK);
 	iv.iov_base = pathcp;
 	iv.iov_len = len2;
 	io.uio_resid = len2;
@@ -1738,7 +1739,7 @@ nfsrv_symlink(struct nfsrv_descript *nfsd, struct nfssvc_sock *slp,
 	}
 out:
 	if (pathcp)
-		free(pathcp, M_TEMP, 0);
+		free(pathcp, M_TEMP, pathlen);
 	if (dirp) {
 		diraft_ret = VOP_GETATTR(dirp, &diraft, cred);
 		vrele(dirp);
@@ -1769,7 +1770,7 @@ nfsmout:
 	if (nd.ni_vp)
 		vrele(nd.ni_vp);
 	if (pathcp)
-		free(pathcp, M_TEMP, 0);
+		free(pathcp, M_TEMP, pathlen);
 	return (error);
 }
 
