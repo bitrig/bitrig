@@ -1,4 +1,4 @@
-#	$OpenBSD: bsd.own.mk,v 1.169 2015/06/02 04:33:39 miod Exp $
+#	$OpenBSD: bsd.own.mk,v 1.171 2015/08/31 20:02:49 deraadt Exp $
 #	$NetBSD: bsd.own.mk,v 1.24 1996/04/13 02:08:09 thorpej Exp $
 
 # Host-specific overrides
