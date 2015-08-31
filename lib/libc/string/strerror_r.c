@@ -1,4 +1,4 @@
-/* $OpenBSD: strerror_r.c,v 1.11 2015/09/06 20:26:20 guenther Exp $ */
+/* $OpenBSD: strerror_r.c,v 1.9 2015/08/31 02:53:57 guenther Exp $ */
 /* Public Domain <marc@snafu.org> */
 
 #ifdef NLS
@@ -118,6 +118,7 @@ strerror_r(int errnum, char *strerrbuf, size_t buflen)
 	errno = ret_errno ? ret_errno : save_errno;
 	return (ret_errno);
 }
+DEF_WEAK(strerror_r);
 
 #define USIGPREFIX "Unknown signal: "
 

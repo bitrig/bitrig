@@ -1,4 +1,4 @@
-/*-
+/*
  * Copyright (c) 1995 Alex Tatmanjants <alex@elvisti.kiev.ua>
  *		at Electronni Visti IA, Kiev, Ukraine.
  *			All rights reserved.
@@ -42,6 +42,7 @@ int
 strcoll_l(const char *s, const char *s2, locale_t locale)
 {
 	int len, len2, prim, prim2, sec, sec2, ret, ret2;
+DEF_STRONG(strcoll);
 	const char *t, *t2;
 	char *tt, *tt2;
 	FIX_LOCALE(locale);

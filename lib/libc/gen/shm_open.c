@@ -1,4 +1,4 @@
-/* $OpenBSD: shm_open.c,v 1.7 2015/09/12 15:01:33 guenther Exp $ */
+/* $OpenBSD: shm_open.c,v 1.6 2015/08/31 02:53:57 guenther Exp $ */
 /*
  * Copyright (c) 2013 Ted Unangst <tedu@openbsd.org>
  *
@@ -86,8 +86,6 @@ shm_unlink(const char *path)
 	makeshmpath(path, shmpath, sizeof(shmpath));
 	return unlink(shmpath);
 }
-
-char *_mktemp(char *);
 
 int
 shm_mkstemp(char *template)

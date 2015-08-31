@@ -1,4 +1,4 @@
-/*	$OpenBSD: vsnprintf.c,v 1.15 2009/11/09 00:18:28 kurt Exp $ */
+/*	$OpenBSD: vsnprintf.c,v 1.16 2015/08/31 02:53:57 guenther Exp $ */
 /*-
  * Copyright (c) 2011 The FreeBSD Foundation
  * Copyright (c) 1990, 1993
@@ -68,6 +68,7 @@ vsnprintf_l(char *str, size_t n, locale_t locale, const char *fmt, __va_list ap)
 	*f._p = '\0';
 	return (ret);
 }
+DEF_STRONG(vsnprintf);
 
 int
 vsnprintf(char *str, size_t n, const char *fmt, __va_list ap)

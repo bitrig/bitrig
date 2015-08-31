@@ -1,4 +1,4 @@
-/*-
+/*
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -65,3 +65,4 @@ sscanf_l(const char * __restrict str, locale_t locale,
 	va_end(ap);
 	return (ret);
 }
+DEF_STRONG(sscanf);

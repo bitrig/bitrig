@@ -1,4 +1,4 @@
-/*	$OpenBSD: fputws.c,v 1.7 2013/11/12 07:04:35 deraadt Exp $	*/
+/*	$OpenBSD: fputws.c,v 1.8 2015/08/31 02:53:57 guenther Exp $	*/
 /* $NetBSD: fputws.c,v 1.1 2003/03/07 07:11:37 tshiozak Exp $ */
 
 /*-
@@ -55,6 +55,7 @@ fputws_l(const wchar_t * __restrict ws, FILE * __restrict fp, locale_t locale)
 
 	return (0);
 }
+DEF_STRONG(fputws);
 
 int
 fputws(const wchar_t * __restrict ws, FILE * __restrict fp)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: fputwc.c,v 1.4 2009/11/09 00:18:27 kurt Exp $	*/
+/*	$OpenBSD: fputwc.c,v 1.5 2015/08/31 02:53:57 guenther Exp $	*/
 /* $NetBSD: fputwc.c,v 1.3 2003/03/07 07:11:37 tshiozak Exp $ */
 
 /*-
@@ -89,6 +89,7 @@ fputwc_l(wchar_t wc, FILE *fp, locale_t locale)
 
 	return (r);
 }
+DEF_STRONG(fputwc);
 
 wint_t
 fputwc(wchar_t wc, FILE *fp)

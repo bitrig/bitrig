@@ -1,4 +1,4 @@
-/*-
+/*
  * Copyright (c) 1995 Alex Tatmanjants <alex@elvisti.kiev.ua>
  *		at Electronni Visti IA, Kiev, Ukraine.
  *			All rights reserved.
@@ -49,6 +49,7 @@ strxfrm_l(char * __restrict dest, const char * __restrict src, size_t len, local
 	size_t slen;
 	char *s, *ss;
 	FIX_LOCALE(locale);
+DEF_STRONG(strxfrm);
 	struct xlocale_collate *table =
 		(struct xlocale_collate*)locale->components[XLC_COLLATE];
 

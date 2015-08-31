@@ -1,4 +1,4 @@
-/* $OpenBSD: fwscanf.c,v 1.2 2012/12/05 23:20:01 deraadt Exp $ */
+/* $OpenBSD: fwscanf.c,v 1.3 2015/08/31 02:53:57 guenther Exp $ */
 
 /*-
  * Copyright (c) 2002 Tim J. Robbins
@@ -45,6 +45,7 @@ fwscanf_l(FILE * __restrict fp, locale_t locale,
 
 	return (r);
 }
+DEF_STRONG(fwscanf);
 
 int
 fwscanf(FILE * __restrict fp, const wchar_t * __restrict fmt, ...)

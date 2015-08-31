@@ -1,4 +1,4 @@
-/* $OpenBSD: vswscanf.c,v 1.2 2012/12/05 23:20:01 deraadt Exp $ */
+/* $OpenBSD: vswscanf.c,v 1.3 2015/08/31 02:53:57 guenther Exp $ */
 
 /*-
  * Copyright (c) 1990, 1993
@@ -92,6 +92,7 @@ vswscanf_l(const wchar_t * __restrict str, locale_t locale,
 
 	return (r);
 }
+DEF_STRONG(vswscanf);
 
 int
 vswscanf(const wchar_t * __restrict str, const wchar_t * __restrict fmt,

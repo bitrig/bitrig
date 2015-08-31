@@ -524,12 +524,6 @@ _tolower
 _tolower_tab_
 _toupper
 _toupper_tab_
-_verr
-_verrx
-_vwarn
-_vwarnx
-_warn
-_warnx
 alarm
 alphasort
 auth_approval
@@ -813,10 +807,6 @@ errc
 verrc
 vwarnc
 warnc
-_errc
-_verrc
-_vwarnc
-_warnc
 
 /* crypt */
 Blowfish_decipher

@@ -86,5 +86,5 @@ ENTRY(memmove)
 	cld
 	ret
 // END(memcpy)
-END_WEAK(memmove)
+END_STRONG(memmove)
 END_WEAK(bcopy)

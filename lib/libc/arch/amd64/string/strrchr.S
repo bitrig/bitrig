@@ -1,4 +1,4 @@
-/*	$OpenBSD: strrchr.S,v 1.6 2015/05/29 07:21:09 uebayasi Exp $	*/
+/*	$OpenBSD: strrchr.S,v 1.7 2015/08/31 02:53:56 guenther Exp $	*/
 /*	$NetBSD: strrchr.S,v 1.3 2014/03/22 19:16:34 jakllsch Exp $	*/
 
 /*
@@ -121,4 +121,4 @@ ENTRY(strrchr)
 
 .Ldone:
 	ret
-END_WEAK(strrchr)
+END_STRONG(strrchr)

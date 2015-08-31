@@ -1,4 +1,4 @@
-/*	$OpenBSD: strcasecmp.c,v 1.6 2005/08/08 08:05:37 espie Exp $	*/
+/*	$OpenBSD: strcasecmp.c,v 1.7 2015/08/31 02:53:57 guenther Exp $	*/
 
 /*
  * Copyright (c) 1987, 1993
@@ -60,6 +60,7 @@ strncasecmp(const char *s1, const char *s2, size_t n)
 {
 	return strncasecmp_l(s1, s2, n, __get_locale());
 }
+DEF_WEAK(strcasecmp);
 
 int
 strncasecmp_l(const char *s1, const char *s2, size_t n, locale_t locale)
@@ -79,3 +80,4 @@ strncasecmp_l(const char *s1, const char *s2, size_t n, locale_t locale)
 	}
 	return (0);
 }
+DEF_WEAK(strncasecmp);

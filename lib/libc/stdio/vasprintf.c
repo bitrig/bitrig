@@ -1,4 +1,4 @@
-/*	$OpenBSD: vasprintf.c,v 1.17 2015/08/20 21:49:29 deraadt Exp $	*/
+/*	$OpenBSD: vasprintf.c,v 1.18 2015/08/31 02:53:57 guenther Exp $	*/
 
 /*
  * Copyright (c) 2011 The FreeBSD Foundation
@@ -63,6 +63,7 @@ err:
 	errno = ENOMEM;
 	return (-1);
 }
+DEF_WEAK(vasprintf);
 
 int
 vasprintf(char **str, const char *fmt, __va_list ap)

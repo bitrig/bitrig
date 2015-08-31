@@ -240,8 +240,8 @@ ssize_t	 getline(char ** __restrict, size_t * __restrict,
 #if __BSD_VISIBLE && !defined(__SYS_ERRLIST)
 #define __SYS_ERRLIST
 
-extern int sys_nerr;			/* perror(3) external variables */
-extern char *sys_errlist[];
+extern const int sys_nerr;			/* perror(3) external variables */
+extern const char *const sys_errlist[];
 #endif
 void	 perror(const char *);
 int	 printf(const char *, ...);

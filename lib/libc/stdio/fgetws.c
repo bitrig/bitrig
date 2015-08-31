@@ -1,4 +1,4 @@
-/*	$OpenBSD: fgetws.c,v 1.6 2009/11/09 00:18:27 kurt Exp $	*/
+/*	$OpenBSD: fgetws.c,v 1.7 2015/08/31 02:53:57 guenther Exp $	*/
 /* $NetBSD: fgetws.c,v 1.1 2003/03/07 07:11:37 tshiozak Exp $ */
 
 /*-
@@ -80,6 +80,7 @@ error:
 	FUNLOCKFILE(fp);
 	return (NULL);
 }
+DEF_STRONG(fgetws);
 
 wchar_t *
 fgetws(wchar_t * __restrict ws, int n, FILE * __restrict fp)

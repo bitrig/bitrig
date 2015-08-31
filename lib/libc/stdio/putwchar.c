@@ -1,4 +1,4 @@
-/*	$OpenBSD: putwchar.c,v 1.1 2005/06/17 20:40:32 espie Exp $	*/
+/*	$OpenBSD: putwchar.c,v 1.2 2015/08/31 02:53:57 guenther Exp $	*/
 /* $NetBSD: putwchar.c,v 1.3 2003/01/18 11:29:56 thorpej Exp $ */
 
 /*-
@@ -43,6 +43,7 @@ putwchar_l(wchar_t wc, locale_t locale)
 {
 	FIX_LOCALE(locale);
 	return (fputwc_l(wc, stdout, locale));
+DEF_STRONG(putwchar);
 }
 
 wint_t

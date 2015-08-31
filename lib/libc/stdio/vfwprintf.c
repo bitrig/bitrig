@@ -1,4 +1,4 @@
-/*	$OpenBSD: vfwprintf.c,v 1.14 2015/09/29 03:19:24 guenther Exp $ */
+/*	$OpenBSD: vfwprintf.c,v 1.13 2015/08/31 02:53:57 guenther Exp $ */
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -450,6 +450,7 @@ __vfwprintf(FILE * __restrict fp, locale_t locale,
 	if (io_flush(&io, locale)) \
 		goto error; \
 }
+DEF_STRONG(vfwprintf);
 
 	/*
 	 * Get the argument indexed by nextarg.   If the argument table is

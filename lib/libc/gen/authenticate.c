@@ -1,4 +1,4 @@
-/*	$OpenBSD: authenticate.c,v 1.24 2015/09/14 16:09:13 tedu Exp $	*/
+/*	$OpenBSD: authenticate.c,v 1.22 2015/08/31 02:53:57 guenther Exp $	*/
 
 /*-
  * Copyright (c) 1997 Berkeley Software Design, Inc. All rights reserved.
@@ -196,7 +196,7 @@ auth_approval(auth_session_t *as, login_cap_t *lc, char *name, char *type)
 		else {
 			if ((pwd = getpwuid(getuid())) == NULL) {
 				syslog(LOG_ERR, "no such user id %u", getuid());
-				_warnx("cannot approve who we don't recognize");
+				warnx("cannot approve who we don't recognize");
 				return (0);
 			}
 			name = pwd->pw_name;
@@ -210,7 +210,7 @@ auth_approval(auth_session_t *as, login_cap_t *lc, char *name, char *type)
 		if (strlen(name) >= PATH_MAX) {
 			syslog(LOG_ERR, "username to login %.*s...",
 			    PATH_MAX, name);
-			_warnx("username too long");
+			warnx("username too long");
 			return (0);
 		}
 		if (pwd == NULL && (approve = strchr(name, '.')) != NULL) {
@@ -220,7 +220,7 @@ auth_approval(auth_session_t *as, login_cap_t *lc, char *name, char *type)
 		}
 		lc = login_getclass(pwd ? pwd->pw_class : NULL);
 		if (lc == NULL) {
-			_warnx("unable to classify user");
+			warnx("unable to classify user");
 			return (0);
 		}
 	}
@@ -237,7 +237,7 @@ auth_approval(auth_session_t *as, login_cap_t *lc, char *name, char *type)
 				login_close(lc);
 			syslog(LOG_ERR, "approval path too long %.*s...",
 			    PATH_MAX, type);
-			_warnx("approval script path too long");
+			warnx("approval script path too long");
 			return (0);
 		}
 	}
@@ -249,7 +249,7 @@ auth_approval(auth_session_t *as, login_cap_t *lc, char *name, char *type)
 		if (close_lc_on_exit)
 			login_close(lc);
 		syslog(LOG_ERR, "Invalid %s script: %s", s, approve);
-		_warnx("invalid path to approval script");
+		warnx("invalid path to approval script");
 		free(approve);
 		return (0);
 	}
@@ -266,7 +266,7 @@ auth_approval(auth_session_t *as, login_cap_t *lc, char *name, char *type)
 	auth_setstate(as, AUTH_OKAY);
 	if (auth_setitem(as, AUTHV_NAME, name) < 0) {
 		syslog(LOG_ERR, "%m");
-		_warn(NULL);
+		warn(NULL);
 		goto out;
 	}
 	if (auth_check_expire(as) < 0)	/* is this account expired */

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.24 2015/08/31 19:43:39 deraadt Exp $
+#	$OpenBSD: Makefile.inc,v 1.23 2015/08/31 02:53:56 guenther Exp $
 #
 # This file contains make rules used to build libc
 #

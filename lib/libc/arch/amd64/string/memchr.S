@@ -19,4 +19,4 @@ ENTRY(memchr)
 	ret
 L1:	xorq	%rax,%rax
 	ret
-END_WEAK(memchr)
+END_STRONG(memchr)

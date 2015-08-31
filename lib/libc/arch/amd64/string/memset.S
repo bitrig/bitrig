@@ -53,4 +53,4 @@ L1:	rep
 	movq	%r11,%rax
 
 	ret
-END_WEAK(memset)
+END_STRONG(memset)

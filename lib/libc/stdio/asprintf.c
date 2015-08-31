@@ -1,4 +1,5 @@
-/*-
+/*	$OpenBSD: asprintf.c,v 1.21 2015/08/31 02:53:57 guenther Exp $	*/
+/*
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -61,4 +62,5 @@ asprintf_l(char ** __restrict s, locale_t locale, char const * __restrict fmt,
 	ret = vasprintf_l(s, locale, fmt, ap);
 	va_end(ap);
 	return (ret);
+DEF_WEAK(asprintf);
 }

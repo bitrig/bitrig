@@ -1,4 +1,4 @@
-/*-
+/*
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -43,6 +43,7 @@ vprintf(const char *fmt, __va_list ap)
 {
 	return (vfprintf(stdout, fmt, ap));
 }
+DEF_STRONG(vprintf);
 
 int
 vprintf_l(locale_t locale, const char * __restrict fmt, __va_list ap)

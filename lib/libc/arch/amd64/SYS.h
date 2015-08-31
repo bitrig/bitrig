@@ -1,4 +1,4 @@
-/*	$OpenBSD: SYS.h,v 1.15 2015/09/05 06:22:46 guenther Exp $	*/
+/*	$OpenBSD: SYS.h,v 1.14 2015/08/31 02:53:56 guenther Exp $	*/
 
 /*-
  * Copyright (c) 1990 The Regents of the University of California.

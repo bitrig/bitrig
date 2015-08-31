@@ -1,4 +1,4 @@
-/*-
+/*
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -39,6 +39,7 @@
 #include "local.h"
 #include "locale/xlocale_private.h"
 
+DEF_STRONG(vscanf);
 int
 vscanf_l(locale_t locale, const char * __restrict fmt, __va_list ap)
 {

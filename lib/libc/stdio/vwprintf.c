@@ -1,4 +1,4 @@
-/*-
+/*
  * Copyright (c) 2002 Tim J. Robbins
  * All rights reserved.
  *
@@ -39,6 +39,7 @@ vwprintf(const wchar_t * __restrict fmt, __va_list ap)
 {
 	return (vfwprintf(stdout, fmt, ap));
 }
+DEF_STRONG(vwprintf);
 
 int
 vwprintf_l(locale_t locale, const wchar_t * __restrict fmt, va_list ap)
