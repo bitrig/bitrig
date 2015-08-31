@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.22 2014/08/31 09:36:39 miod Exp $
+#	$OpenBSD: Makefile.inc,v 1.24 2015/08/31 19:43:39 deraadt Exp $
 #
 # This file contains make rules used to build libc
 #
@@ -41,7 +41,12 @@ AINC+=  -nostdinc -idirafter ${DESTDIR}/usr/include
 .include "${LIBCSRCDIR}/asr/Makefile.inc"
 .include "${LIBCSRCDIR}/net/Makefile.inc"
 .include "${LIBCSRCDIR}/nls/Makefile.inc"
+
+# 32-bit systems need these
+.if (${MACHINE_CPU} == "ark")
 .include "${LIBCSRCDIR}/quad/Makefile.inc"
+.endif
+
 .include "${LIBCSRCDIR}/regex/Makefile.inc"
 .include "${LIBCSRCDIR}/rpc/Makefile.inc"
 .include "${LIBCSRCDIR}/stdio/Makefile.inc"
