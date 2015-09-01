@@ -1,4 +1,4 @@
-/*	$OpenBSD: expand.h,v 1.6 2005/03/30 17:16:37 deraadt Exp $	*/
+/*	$OpenBSD: expand.h,v 1.7 2015/09/01 13:12:31 tedu Exp $	*/
 
 /*
  * Expanding strings
@@ -55,7 +55,7 @@ typedef char * XStringP;
 #define Xcheck(xs, xp)	XcheckN(xs, xp, 1)
 
 /* free string */
-#define	Xfree(xs, xp)	afree((void*) (xs).beg, (xs).areap)
+#define	Xfree(xs, xp)	afree((xs).beg, (xs).areap)
 
 /* close, return string */
 #define	Xclose(xs, xp)	(char*) aresize((void*)(xs).beg, \
@@ -103,4 +103,4 @@ typedef struct XPtrV {
 
 #define	XPclose(x)	aresizearray((x).beg, XPsize(x), sizeof(void *), ATEMP)
 
-#define	XPfree(x)	afree((void*) (x).beg, ATEMP)
+#define	XPfree(x)	afree((x).beg, ATEMP)

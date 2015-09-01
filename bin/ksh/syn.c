@@ -1,4 +1,4 @@
-/*	$OpenBSD: syn.c,v 1.29 2013/06/03 18:40:05 jca Exp $	*/
+/*	$OpenBSD: syn.c,v 1.30 2015/09/01 13:12:31 tedu Exp $	*/
 
 /*
  * shell parser (C version)
@@ -204,7 +204,7 @@ get_command(int cf)
 	switch (c = token(cf|KEYWORD|ALIAS|VARASN)) {
 	default:
 		REJECT;
-		afree((void*) iops, ATEMP);
+		afree(iops, ATEMP);
 		XPfree(args);
 		XPfree(vars);
 		return NULL; /* empty line */
@@ -383,7 +383,7 @@ get_command(int cf)
 	}
 
 	if (iopn == 0) {
-		afree((void*) iops, ATEMP);
+		afree(iops, ATEMP);
 		t->ioact = NULL;
 	} else {
 		iops[iopn++] = NULL;
