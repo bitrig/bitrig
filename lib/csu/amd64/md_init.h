@@ -1,4 +1,4 @@
-/* $OpenBSD: md_init.h,v 1.3 2013/12/03 06:21:40 guenther Exp $ */
+/* $OpenBSD: md_init.h,v 1.5 2015/09/01 05:40:06 guenther Exp $ */
 
 /*-
  * Copyright (c) 2001 Ross Harvey
@@ -80,46 +80,52 @@
 	"	jmp	___start		\n" \
 	"	.previous")
 
-#define        MD_RCRT0_START                                  \
-	__asm(                                          \
-	".text                                          \n" \
-	"       .align  8                               \n" \
-	"       .globl  __start                         \n" \
-	"       .type   __start,@function               \n" \
-	"_start:                                        \n" \
-	"__start:                                       \n" \
-	"       movq    %rsp, %r12                      \n" \
-	"       subq    $8, %rsp                        \n" \
-	"       andq    $~15, %rsp                      \n" \
-	"       addq    $8, %rsp                        \n" \
-	"       pushq   %rbx                            \n" \
-	"       subq    $(16*8), %rsp                   \n" \
-	"       leaq    _DYNAMIC(%rip),%rdx             \n" \
-	"       movq    %rsp, %rsi                      \n" \
-	"       movq    %r12, %rdi                      \n" \
-	"       call    _dl_boot_bind@PLT               \n" \
-	"                                               \n" \
-	"       movq    $0, %rcx                        \n" \
-	"       movq    %r12, %rsp                      \n" \
-	"       movq    (%rsp),%rdi                     \n" \
-	"       leaq    16(%rsp,%rdi,8),%rdx            \n" \
-	"       leaq    8(%rsp),%rsi                    \n" \
-	"       subq    $8,%rsp                         \n" \
-	"       andq    $~15,%rsp                       \n" \
-	"       addq    $8,%rsp                         \n" \
-	"       jmp     ___start                        \n" \
-	"                                               \n" \
-	"       .global _dl_exit                        \n" \
-	"       .type   _dl_exit,@function              \n" \
-	"       .align  8                               \n" \
-	"_dl_exit:                                      \n" \
-	"       movl    $(1), %eax                      \n" \
-	"       movq    %rcx, %r10                      \n" \
-	"       syscall                                 \n" \
-	"       jb      1f                              \n" \
-	"       ret                                     \n" \
-	"1:                                             \n" \
-	"       neg     %rax                            \n" \
-	"       ret                                     \n" \
-	"       .previous")
+#define	MD_RCRT0_START					\
+	__asm(						\
+	".text						\n" \
+	"	.align	8				\n" \
+	"	.globl	__start				\n" \
+	"	.type	__start,@function		\n" \
+	"_start:					\n" \
+	"__start:					\n" \
+	"	movq	%rsp, %r12			\n" \
+	"	subq	$8, %rsp			\n" \
+	"	andq	$~15, %rsp			\n" \
+	"	addq	$8, %rsp			\n" \
+	"	pushq	%rbx				\n" \
+	"	subq	$(16*8), %rsp			\n" \
+	"	leaq	_DYNAMIC(%rip),%rdx		\n" \
+	"	movq	%rsp, %rsi			\n" \
+	"	movq	%r12, %rdi			\n" \
+	"	call	_dl_boot_bind@PLT		\n" \
+	"						\n" \
+	"	movq	$0, %rcx			\n" \
+	"	movq	%r12, %rsp			\n" \
+	"	movq	(%rsp),%rdi			\n" \
+	"	leaq	16(%rsp,%rdi,8),%rdx		\n" \
+	"	leaq	8(%rsp),%rsi			\n" \
+	"	subq	$8,%rsp				\n" \
+	"	andq	$~15,%rsp			\n" \
+	"	addq	$8,%rsp				\n" \
+	"	jmp	___start			\n" \
+	"						\n" \
+	"	.global _dl_exit			\n" \
+	"	.type	_dl_exit,@function		\n" \
+	"	.align	8				\n" \
+	"_dl_exit:					\n" \
+	"	movl	$(1), %eax			\n" \
+	"	syscall					\n" \
+	"	jb	1f				\n" \
+	"	ret					\n" \
+	"1:						\n" \
+	"	neg	%rax				\n" \
+	"	ret					\n" \
+	"	.previous")
 
+#include <sys/syscall.h>
+#define	MD_DISABLE_KBIND						\
+	do {								\
+		register long syscall_num __asm("rax") = SYS_kbind;	\
+		__asm volatile("syscall" : "+r" (syscall_num) :		\
+		    "D" (0) : "cc", "rdx", "rcx", "r11", "memory");	\
+	} while (0)
