@@ -1,4 +1,4 @@
-/*	$OpenBSD: route.h,v 1.110 2015/08/20 12:39:43 mpi Exp $	*/
+/*	$OpenBSD: route.h,v 1.111 2015/09/01 12:50:03 mpi Exp $	*/
 /*	$NetBSD: route.h,v 1.9 1996/02/13 22:00:49 christos Exp $	*/
 
 /*
@@ -377,6 +377,7 @@ void			 rt_timer_queue_destroy(struct rttimer_queue *);
 unsigned long		 rt_timer_queue_count(struct rttimer_queue *);
 void			 rt_timer_timer(void *);
 
+int	 rtisvalid(struct rtentry *);
 struct	 rtentry *rtalloc_mpath(struct sockaddr *, uint32_t *, u_int);
 struct	 rtentry *rtalloc(struct sockaddr *, int, unsigned int);
 void	 rtfree(struct rtentry *);
