@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.23 2014/11/19 20:09:58 miod Exp $
+#	$OpenBSD: Makefile,v 1.24 2015/09/02 01:52:26 yasuoka Exp $
 
 MAN=	pxeboot.8
 
