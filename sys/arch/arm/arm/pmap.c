@@ -75,7 +75,6 @@ ttlb_flush_range(vaddr_t va, vsize_t size)
  *  Clean L1 data cache range by physical address.
  *  The range must be within a single page.
  */
-void pmap_kremove_pg(vaddr_t va);
 static void
 pmap_dcache_wb_pou(paddr_t pa, vsize_t size)
 {
@@ -88,7 +87,7 @@ pmap_dcache_wb_pou(paddr_t pa, vsize_t size)
 	pmap_kenter_pa(icache_page, pa, PROT_READ|PROT_WRITE);
 	ttlb_flush(icache_page); // XXX tlb_flush_local
 	dcache_wb_pou(icache_page + (pa & PAGE_MASK), size);
-	pmap_kremove_pg(icache_page);
+	pmap_kremove(icache_page, PAGE_SIZE);
 	splx(s);
 }
 
@@ -129,7 +128,7 @@ struct pte_desc {
 };
 
 /* VP routines */
-void pmap_vp_enter(pmap_t pm, vaddr_t va, struct pte_desc *pted);
+int pmap_vp_enter(pmap_t pm, vaddr_t va, struct pte_desc *pted, int flags);
 struct pte_desc *pmap_vp_remove(pmap_t pm, vaddr_t va);
 void pmap_vp_destroy(pmap_t pm);
 struct pte_desc *pmap_vp_lookup(pmap_t pm, vaddr_t va);
@@ -141,8 +140,8 @@ void pmap_remove_pv(struct pte_desc *pted);
 void _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags,
     int cache);
 
-void pmap_remove_pg(pmap_t pm, vaddr_t va);
-void pmap_kremove_pg(vaddr_t va);
+void pmap_remove_pted(pmap_t pm, struct pte_desc *pted);
+void pmap_kremove(vaddr_t va, vsize_t);
 void pmap_set_l2(struct pmap *pm, uint32_t pa, vaddr_t va, uint32_t l2_pa);
 
 
@@ -167,9 +166,6 @@ extern caddr_t msgbufaddr;
 /* TODO: ttb flags */
 static uint32_t ttb_flags = 0;
 
-/* pte invalidation */
-void pte_invalidate(void *ptp, struct pte_desc *pted);
-
 /* XXX - panic on pool get failures? */
 struct pool pmap_pmap_pool;
 struct pool pmap_vp_pool;
@@ -191,6 +187,37 @@ struct mem_region *pmap_avail = &pmap_avail_regions[0];
 struct mem_region *pmap_allocated = &pmap_allocated_regions[0];
 int pmap_cnt_avail, pmap_cnt_allocated;
 uint32_t pmap_avail_kvo;
+
+#ifdef MULTIPROCESSOR
+struct __mp_lock pmap_hash_lock;
+
+#define PMAP_VP_LOCK_INIT(pm)		mtx_init(&pm->pm_mtx, IPL_VM)
+
+#define PMAP_VP_LOCK(pm)						\
+do {									\
+	if (pm != pmap_kernel())					\
+		mtx_enter(&pm->pm_mtx);					\
+} while (0)
+
+#define PMAP_VP_UNLOCK(pm)						\
+do {									\
+	if (pm != pmap_kernel())					\
+		mtx_leave(&pm->pm_mtx);					\
+} while (0)
+
+#define PMAP_VP_ASSERT_LOCKED(pm)					\
+do {									\
+	if (pm != pmap_kernel())					\
+		MUTEX_ASSERT_LOCKED(&pm->pm_mtx);			\
+} while (0)
+
+#else /* ! MULTIPROCESSOR */
+
+#define PMAP_VP_LOCK_INIT(pm)		/* nothing */
+#define PMAP_VP_LOCK(pm)		/* nothing */
+#define PMAP_VP_UNLOCK(pm)		/* nothing */
+#define PMAP_VP_ASSERT_LOCKED(pm)	/* nothing */
+#endif /* MULTIPROCESSOR */
 
 
 /* virtual to physical helpers */
@@ -235,6 +262,8 @@ pmap_vp_lookup(pmap_t pm, vaddr_t va)
 	struct pmapvp3 *vp3;
 	struct pte_desc *pted;
 
+	PMAP_VP_ASSERT_LOCKED(pm);
+
 	vp2 = pm->pm_vp[VP_IDX1(va)];
 	if (vp2 == NULL) {
 		return NULL;
@@ -259,6 +288,8 @@ pmap_vp_remove(pmap_t pm, vaddr_t va)
 	struct pmapvp2 *vp2;
 	struct pmapvp3 *vp3;
 	struct pte_desc *pted;
+
+	PMAP_VP_ASSERT_LOCKED(pm);
 
 	vp2 = pm->pm_vp[VP_IDX1(va)];
 	if (vp2 == NULL) {
@@ -290,30 +321,37 @@ const struct kmem_pa_mode kp_l2 = {
  * This code should track allocations of vp table allocations
  * so they can be freed efficiently.
  */
-void
-pmap_vp_enter(pmap_t pm, vaddr_t va, struct pte_desc *pted)
+int
+pmap_vp_enter(pmap_t pm, vaddr_t va, struct pte_desc *pted, int flags)
 {
 	struct pmapvp2 *vp2;
 	struct pmapvp3 *vp3;
 	paddr_t l2_pa = 0;
 	vaddr_t l2_va = 0;
 	vaddr_t base_va;
-	int s;
+
+	PMAP_VP_ASSERT_LOCKED(pm);
 
 	vp2 = pm->pm_vp[VP_IDX1(va)];
 	if (vp2 == NULL) {
-		s = splvm();
 		vp2 = pool_get(&pmap_vp_pool, PR_NOWAIT | PR_ZERO);
-		splx(s);
+		if (vp2 == NULL) {
+			if ((flags & PMAP_CANFAIL) == 0)
+				panic("pmap_vp_enter: failed to allocate vp2");
+			return ENOMEM;
+		}
 		pm->pm_vp[VP_IDX1(va)] = vp2;
 	}
 
 	vp3 = vp2->vp[VP_IDX2(va)];
 	if (vp3 == NULL) {
 		/* No vp3 means no L2 yet, allocate now. */
-		s = splvm();
 		l2_va = (vaddr_t)pool_get(&pmap_l2_pool, PR_NOWAIT | PR_ZERO);
-		splx(s);
+		if (l2_va == 0) {
+			if ((flags & PMAP_CANFAIL) == 0)
+				panic("pmap_vp_enter: failed to allocate l2_va");
+			return ENOMEM;
+		}
 
 		/* XXX: Check error? */
 		pmap_extract(pmap_kernel(), l2_va, &l2_pa);
@@ -321,14 +359,18 @@ pmap_vp_enter(pmap_t pm, vaddr_t va, struct pte_desc *pted)
 		base_va = va & ~((0x1 << VP_IDX2_POS) - 1);
 		pmap_set_l2(pm, base_va, l2_va, l2_pa);
 
-		s = splvm();
 		vp3 = pool_get(&pmap_vp_pool, PR_NOWAIT | PR_ZERO);
-		splx(s);
+		if (vp3 == NULL) {
+			if ((flags & PMAP_CANFAIL) == 0)
+				panic("pmap_vp_enter: failed to allocate vp3");
+			return ENOMEM;
+		}
 
 		vp2->vp[VP_IDX2(base_va)] = vp3;
 	}
 
 	vp3->vp[VP_IDX3(va)] = pted;
+	return 0;
 }
 
 
@@ -404,18 +446,15 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 {
 	struct pte_desc *pted;
 	struct vm_page *pg;
-	int s;
 	int need_sync = 0;
-	int cache;
+	int cache, error = 0;
 
 	//if (!cold) printf("%s: %x %x %x %x %x %x\n", __func__, va, pa, prot, flags, pm, pmap_kernel());
 
-	/* MP - Acquire lock for this pmap */
-
-	s = splvm();
+	PMAP_VP_LOCK(pm);
 	pted = pmap_vp_lookup(pm, va);
 	if (pted && PTED_VALID(pted)) {
-		pmap_remove_pg(pm, va);
+		pmap_remove_pted(pm, pted);
 		/* we lost our pted if it was user */
 		if (pm != pmap_kernel())
 			pted = pmap_vp_lookup(pm, va);
@@ -426,10 +465,20 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	/* Do not have pted for this, get one and put it in VP */
 	if (pted == NULL) {
 		pted = pool_get(&pmap_pted_pool, PR_NOWAIT | PR_ZERO);
-		pmap_vp_enter(pm, va, pted);
+		if (pted == NULL) {
+			if ((flags & PMAP_CANFAIL) == 0) {
+				error = ENOMEM;
+				goto out;
+			}
+			panic("pmap_enter: failed to allocate pted");
+		}
+		error = pmap_vp_enter(pm, va, pted, flags);
+		if (error) {
+			pool_put(&pmap_pted_pool, pted);
+			goto out;
+		}
 	}
 
-	/* Calculate PTE */
 	pg = PHYS_TO_VM_PAGE(pa);
 	if (pg != NULL) {
 		/* max cacheable */
@@ -459,7 +508,12 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	if (prot & PROT_EXEC) {
 		if (pg != NULL) {
 			need_sync = ((pg->pg_flags & PG_PMAP_EXE) == 0);
-			atomic_setbits_int(&pg->pg_flags, PG_PMAP_EXE);
+			if (prot & PROT_WRITE)
+				atomic_clearbits_int(&pg->pg_flags,
+				    PG_PMAP_EXE);
+			else
+				atomic_setbits_int(&pg->pg_flags,
+				    PG_PMAP_EXE);
 		} else
 			need_sync = 1;
 	} else {
@@ -486,119 +540,63 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 
 	ttlb_flush(va & PTE_RPGN);
 
-	splx(s);
-
-	/* MP - free pmap lock */
-	return 0;
+out:
+	PMAP_VP_UNLOCK(pm);
+	return (error);
 }
 
 /*
  * Remove the given range of mapping entries.
  */
 void
-pmap_remove(pmap_t pm, vaddr_t va, vaddr_t endva)
+pmap_remove(pmap_t pm, vaddr_t sva, vaddr_t eva)
 {
-	int i_vp1, s_vp1, e_vp1;
-	int i_vp2, s_vp2, e_vp2;
-	int i_vp3, s_vp3, e_vp3;
-	struct pmapvp2 *vp2;
-	struct pmapvp3 *vp3;
+	struct pte_desc *pted;
+	vaddr_t va;
 
 	//if (!cold) printf("%s: %x %x %x\n", __func__, pm, va, endva);
 
-	/* I suspect that if this loop were unrolled better
-	 * it would have better performance, testing i_vp1 and i_vp2
-	 * in the middle loop seems excessive
-	 */
-
-	s_vp1 = VP_IDX1(va);
-	e_vp1 = VP_IDX1(endva);
-	for (i_vp1 = s_vp1; i_vp1 <= e_vp1; i_vp1++) {
-		vp2 = pm->pm_vp[i_vp1];
-		if (vp2 == NULL)
-			continue;
-
-		if (i_vp1 == s_vp1)
-			s_vp2 = VP_IDX2(va);
-		else
-			s_vp2 = 0;
-
-		if (i_vp1 == e_vp1)
-			e_vp2 = VP_IDX2(endva);
-		else
-			e_vp2 = VP_IDX2_CNT-1;
-
-		for (i_vp2 = s_vp2; i_vp2 <= e_vp2; i_vp2++) {
-			vp3 = vp2->vp[i_vp2];
-			if (vp3 == NULL)
-				continue;
-
-			if ((i_vp1 == s_vp1) && (i_vp2 == s_vp2))
-				s_vp3 = VP_IDX3(va);
-			else
-				s_vp3 = 0;
-
-			if ((i_vp1 == e_vp1) && (i_vp2 == e_vp2))
-				e_vp3 = VP_IDX3(endva);
-			else
-				e_vp3 = VP_IDX3_CNT;
-
-			for (i_vp3 = s_vp3; i_vp3 < e_vp3; i_vp3++) {
-				if (vp3->vp[i_vp3] != NULL) {
-					pmap_remove_pg(pm,
-					    (i_vp1 << VP_IDX1_POS) |
-					    (i_vp2 << VP_IDX2_POS) |
-					    (i_vp3 << VP_IDX3_POS));
-				}
-			}
-		}
+	KERNEL_LOCK();
+	PMAP_VP_LOCK(pm);
+	for (va = sva; va < eva; va += PAGE_SIZE) {
+		pted = pmap_vp_lookup(pm, va);
+		if (pted && PTED_VALID(pted))
+			pmap_remove_pted(pm, pted);
 	}
+	PMAP_VP_UNLOCK(pm);
+	KERNEL_UNLOCK();
 }
+
 
 /*
  * remove a single mapping, notice that this code is O(1)
  */
 void
-pmap_remove_pg(pmap_t pm, vaddr_t va)
+pmap_remove_pted(pmap_t pm, struct pte_desc *pted)
 {
-	struct pte_desc *pted;
-	int s;
-
 	//if (!cold) printf("%s: %x %x\n", __func__, pm, va);
 
-	s = splvm();
-	if (pm == pmap_kernel()) {
-		pted = pmap_vp_lookup(pm, va);
-		if (pted == NULL || !PTED_VALID(pted)) {
-			splx(s);
-			return;
-		}
-	} else {
-		pted = pmap_vp_remove(pm, va);
-		if (pted == NULL || !PTED_VALID(pted)) {
-			splx(s);
-			return;
-		}
-	}
+	KASSERT(pm == pted->pted_pmap);
+	PMAP_VP_ASSERT_LOCKED(pm);
+
 	pm->pm_stats.resident_count--;
 
 	pte_remove(pted);
 
 	ttlb_flush(pted->pted_va & PTE_RPGN);
 
-	if (pted->pted_va & PTED_VA_EXEC_M) {
+	if (pted->pted_va & PTED_VA_EXEC_M)
 		pted->pted_va &= ~PTED_VA_EXEC_M;
-	}
 
 	pted->pted_pte = 0;
 
 	if (PTED_MANAGED(pted))
 		pmap_remove_pv(pted);
 
-	if (pm != pmap_kernel())
+	if (pm != pmap_kernel()) {
+		pmap_vp_remove(pm, pted->pted_va);
 		pool_put(&pmap_pted_pool, pted);
-
-	splx(s);
+	}
 }
 
 /*
@@ -614,28 +612,30 @@ void
 _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags, int cache)
 {
 	struct pte_desc *pted;
-	int s;
+	struct vm_page *pg;
 	pmap_t pm;
 
 	//if (!cold) printf("%s: %x %x %x %x %x\n", __func__, va, pa, prot, flags, cache);
 
 	pm = pmap_kernel();
 
-	/* MP - lock pmap. */
-	s = splvm();
-
 	pted = pmap_vp_lookup(pm, va);
+	if (pted && PTED_VALID(pted))
+		pmap_remove_pted(pm, pted); /* pted is reused */
+
+	pm->pm_stats.resident_count++;
+
+	if (prot & PROT_WRITE) {
+		pg = PHYS_TO_VM_PAGE(pa);
+		if (pg != NULL)
+			atomic_clearbits_int(&pg->pg_flags, PG_PMAP_EXE);
+	}
 
 	/* Do not have pted for this, get one and put it in VP */
 	if (pted == NULL) {
 		panic("pted not preallocated in pmap_kernel() va %lx pa %lx\n",
 		    va, pa);
 	}
-
-	if (pted && PTED_VALID(pted))
-		pmap_kremove_pg(va); /* pted is reused */
-
-	pm->pm_stats.resident_count++;
 
 	/* XXX: multiple pages with different cache attrs? */
 	/* XXX: need to write back cache when some page goes WT from WB */
@@ -658,8 +658,6 @@ _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags, int cache)
 	ttlb_flush(va & PTE_RPGN);
 
 	pm->pm_pt1gen++;
-
-	splx(s);
 }
 
 void
@@ -675,72 +673,23 @@ pmap_kenter_cache(vaddr_t va, paddr_t pa, vm_prot_t prot, int cacheable)
 }
 
 /*
- * remove kernel (pmap_kernel()) mapping, one page
- */
-void
-pmap_kremove_pg(vaddr_t va)
-{
-	struct pte_desc *pted;
-	pmap_t pm;
-	int s;
-
-	//if (!cold) printf("%s: %x\n", __func__, va);
-
-	pm = pmap_kernel();
-	pted = pmap_vp_lookup(pm, va);
-	if (pted == NULL)
-		return;
-
-	if (!PTED_VALID(pted))
-		return; /* not mapped */
-
-	s = splvm();
-
-	pm->pm_stats.resident_count--;
-
-	/*
-	 * Table needs to be locked here as well as pmap, and pv list.
-	 * so that we know the mapping information is either valid,
-	 * or that the mapping is not present in the hash table.
-	 */
-	pte_remove(pted);
-
-	ttlb_flush(pted->pted_va & PTE_RPGN);
-
-	if (pted->pted_va & PTED_VA_EXEC_M)
-		pted->pted_va &= ~PTED_VA_EXEC_M;
-
-	if (PTED_MANAGED(pted))
-		pmap_remove_pv(pted);
-
-	/* invalidate pted; */
-	pted->pted_pte = 0;
-	pted->pted_va = 0;
-
-	splx(s);
-
-}
-
-/*
  * remove kernel (pmap_kernel()) mappings
  */
 void
 pmap_kremove(vaddr_t va, vsize_t len)
 {
+	struct pte_desc *pted;
+
 	//if (!cold) printf("%s: %x %x\n", __func__, va, len);
-	for (len >>= PAGE_SHIFT; len >0; len--, va += PAGE_SIZE)
-		pmap_kremove_pg(va);
+
+	for (len >>= PAGE_SHIFT; len > 0; len--, va += PAGE_SIZE) {
+		pted = pmap_vp_lookup(pmap_kernel(), va);
+		if (pted && PTED_VALID(pted))
+			pmap_remove_pted(pmap_kernel(), pted);
+	}
 
 	pmap_kernel()->pm_pt1gen++;
 }
-
-void
-pte_invalidate(void *ptp, struct pte_desc *pted)
-{
-	panic("implement pte_invalidate");
-}
-
-
 
 void
 pmap_fill_pte(pmap_t pm, vaddr_t va, paddr_t pa, struct pte_desc *pted,
@@ -802,12 +751,11 @@ pmap_zero_page(struct vm_page *pg)
 	//printf("%s\n", __func__);
 	paddr_t pa = VM_PAGE_TO_PHYS(pg);
 
-	/* simple_lock(&pmap_zero_page_lock); */
 	pmap_kenter_pa(zero_page, pa, PROT_READ|PROT_WRITE);
 
 	bzero((void *)zero_page, PAGE_SIZE);
 
-	pmap_kremove_pg(zero_page);
+	pmap_kremove(zero_page, PAGE_SIZE);
 }
 
 /*
@@ -819,16 +767,14 @@ pmap_copy_page(struct vm_page *srcpg, struct vm_page *dstpg)
 	//printf("%s\n", __func__);
 	paddr_t srcpa = VM_PAGE_TO_PHYS(srcpg);
 	paddr_t dstpa = VM_PAGE_TO_PHYS(dstpg);
-	/* simple_lock(&pmap_copy_page_lock); */
 
 	pmap_kenter_pa(copy_src_page, srcpa, PROT_READ);
 	pmap_kenter_pa(copy_dst_page, dstpa, PROT_READ|PROT_WRITE);
 
 	bcopy((void *)copy_src_page, (void *)copy_dst_page, PAGE_SIZE);
 
-	pmap_kremove_pg(copy_src_page);
-	pmap_kremove_pg(copy_dst_page);
-	/* simple_unlock(&pmap_copy_page_lock); */
+	pmap_kremove(copy_src_page, PAGE_SIZE);
+	pmap_kremove(copy_dst_page, PAGE_SIZE);
 }
 
 
@@ -844,7 +790,8 @@ void
 pmap_pinit(pmap_t pm)
 {
 	uint32_t vm_offset, vm_end, vm_size;
-	bzero(pm, sizeof (struct pmap));
+
+	PMAP_VP_LOCK_INIT(pm);
 
 	/* Allocate a full L1 table. */
 	while (pm->pm_pt1 == NULL) {
@@ -871,14 +818,12 @@ pmap_pinit(pmap_t pm)
 pmap_t
 pmap_create()
 {
-	pmap_t pmap;
-	int s;
+	pmap_t pm;
 
-	s = splvm();
-	pmap = pool_get(&pmap_pmap_pool, PR_WAITOK);
-	splx(s);
-	pmap_pinit(pmap);
-	return (pmap);
+	pm = pool_get(&pmap_pmap_pool, PR_WAITOK|PR_ZERO);
+	pmap_pinit(pm);
+
+	return (pm);
 }
 
 /*
@@ -887,9 +832,7 @@ pmap_create()
 void
 pmap_reference(pmap_t pm)
 {
-	/* simple_lock(&pmap->pm_obj.vmobjlock); */
 	pm->pm_refs++;
-	/* simple_unlock(&pmap->pm_obj.vmobjlock); */
 }
 
 /*
@@ -900,11 +843,10 @@ void
 pmap_destroy(pmap_t pm)
 {
 	int refs;
-	int s;
 
-	/* simple_lock(&pmap->pm_obj.vmobjlock); */
 	refs = --pm->pm_refs;
-	/* simple_unlock(&pmap->pm_obj.vmobjlock); */
+	if (refs == -1)
+		panic("re-entering pmap_destroy");
 	if (refs > 0)
 		return;
 
@@ -912,9 +854,7 @@ pmap_destroy(pmap_t pm)
 	 * reference count is zero, free pmap resources and free pmap.
 	 */
 	pmap_release(pm);
-	s = splvm();
 	pool_put(&pmap_pmap_pool, pm);
-	splx(s);
 }
 
 /*
@@ -931,7 +871,6 @@ void
 pmap_vp_destroy(pmap_t pm)
 {
 	int i, j;
-	int s;
 	struct pmapvp2 *vp2;
 	struct pmapvp3 *vp3;
 
@@ -945,15 +884,11 @@ pmap_vp_destroy(pmap_t pm)
 			if (vp3 == NULL)
 				continue;
 
-			s = splvm();
 			pool_put(&pmap_vp_pool, vp3);
 			pool_put(&pmap_l2_pool, vp2->l2[j]);
-			splx(s);
 		}
 		pm->pm_vp[i] = NULL;
-		s = splvm();
 		pool_put(&pmap_vp_pool, vp2);
-		splx(s);
 	}
 }
 
@@ -1266,7 +1201,7 @@ printf("allocated pted vp3 %x %x %x %x\n", idx1, idx2, vect, pa);
 					    l2p[idx3]);
 				}
 				if (vp3->vp[idx3] != NULL) {
-					if (vp3->vp[idx3]->pted_pte != 0) {
+					if (PTED_VALID(vp3->vp[idx3])) {
 						printf("%04x %02x:"
 						    " vp %08x %p va %08x\n", i,
 						    idx3,
@@ -1371,17 +1306,18 @@ pmap_extract(pmap_t pm, vaddr_t va, paddr_t *pa)
 {
 	struct pte_desc *pted;
 
+	PMAP_VP_LOCK(pm);
 	pted = pmap_vp_lookup(pm, va);
 
-	if (pted == NULL)
+	if (pted == NULL || !PTED_VALID(pted)) {
+		PMAP_VP_UNLOCK(pm);
 		return FALSE;
-
-	if (pted->pted_pte == 0)
-		return FALSE;
+	}
 
 	if (pa != NULL)
 		*pa = (pted->pted_pte & PTE_RPGN) | (va & ~PTE_RPGN);
 
+	PMAP_VP_UNLOCK(pm);
 	return TRUE;
 }
 
@@ -1413,16 +1349,8 @@ copyoutstr(const void *kaddr, void *udaddr, size_t len, size_t *done)
 */
 
 void
-pmap_page_ro(pmap_t pm, vaddr_t va, vm_prot_t prot)
+pmap_pted_ro(struct pte_desc *pted, vm_prot_t prot)
 {
-	struct pte_desc *pted;
-
-	/* Every VA needs a pted, even unmanaged ones. */
-	pted = pmap_vp_lookup(pm, va);
-	if (!pted || !PTED_VALID(pted)) {
-		return;
-	}
-
 	pted->pted_va &= ~PROT_WRITE;
 	pted->pted_pte &= ~PROT_WRITE;
 	pte_insert(pted);
@@ -1441,29 +1369,26 @@ pmap_page_ro(pmap_t pm, vaddr_t va, vm_prot_t prot)
 void
 pmap_page_protect(struct vm_page *pg, vm_prot_t prot)
 {
-	int s;
 	struct pte_desc *pted;
+	pmap_t pm;
 
 	//if (!cold) printf("%s: prot %x\n", __func__, prot);
 
-	/* need to lock for this pv */
-	s = splvm();
-
 	if (prot == PROT_NONE) {
-		while (!LIST_EMPTY(&(pg->mdpage.pv_list))) {
-			pted = LIST_FIRST(&(pg->mdpage.pv_list));
-			pmap_remove_pg(pted->pted_pmap, pted->pted_va);
+		while ((pted = LIST_FIRST(&(pg->mdpage.pv_list))) != NULL) {
+			pm = pted->pted_pmap;
+			PMAP_VP_LOCK(pm);
+			pmap_remove_pted(pm, pted);
+			PMAP_VP_UNLOCK(pm);
 		}
 		/* page is being reclaimed, sync icache next use */
 		atomic_clearbits_int(&pg->pg_flags, PG_PMAP_EXE);
-		splx(s);
 		return;
 	}
 
 	LIST_FOREACH(pted, &(pg->mdpage.pv_list), pted_pv_list) {
-		pmap_page_ro(pted->pted_pmap, pted->pted_va, prot);
+		pmap_pted_ro(pted, prot);
 	}
-	splx(s);
 }
 
 
@@ -1472,14 +1397,17 @@ pmap_protect(pmap_t pm, vaddr_t sva, vaddr_t eva, vm_prot_t prot)
 {
 	//if (!cold) printf("%s\n", __func__);
 
-	int s;
 	if (prot & (PROT_READ | PROT_EXEC)) {
-		s = splvm();
+		struct pte_desc *pted;
+
+		PMAP_VP_LOCK(pm);
 		while (sva < eva) {
-			pmap_page_ro(pm, sva, 0);
+			pted = pmap_vp_lookup(pm, sva);
+			if (pted && PTED_VALID(pted))
+				pmap_pted_ro(pted, prot);
 			sva += PAGE_SIZE;
 		}
-		splx(s);
+		PMAP_VP_UNLOCK(pm);
 		return;
 	}
 	pmap_remove(pm, sva, eva);
