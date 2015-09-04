@@ -27,9 +27,10 @@
 #define L1_PT_PXN	(1<<2)
 
 /* Short-decriptor translation table First level descriptor format */
-#define L1_S_XN		(1<<0)	/* eXecute Never */
+#define L1_S_PXN	(1<<0)	/* privilege eXecute Never */
 #define L1_S_B		(1<<2)	/* bufferable Section */
 #define L1_S_C		(1<<3)	/* cacheable Section */
+#define L1_S_XN		(1<<4)	/* eXecute Never */
 #define L1_S_S		(1<<10)	/* shareable Section */
 #define L1_S_AP(ap)	((((ap) & 0x4) << 13) | (((ap) & 3) << 10))
 #define L1_S_AP0	(1<<10)
