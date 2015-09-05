@@ -1,8 +1,9 @@
-/*	$OpenBSD: namespace.h,v 1.2 1996/08/19 08:28:08 tholo Exp $	*/
+/*	$OpenBSD: namespace.h,v 1.4 2015/09/05 11:25:30 guenther Exp $	*/
 
-#define catclose	_catclose
-#define catgets		_catgets
-#define catopen		_catopen
+#ifndef _LIBC_NAMESPACE_H_
+#define _LIBC_NAMESPACE_H_
+
+/* These will be replaced with symbol renaming ala PROTO_NORMAL */
 #define err		_err
 #define errx		_errx
 #define strtoq		_strtoq
@@ -22,3 +23,4 @@
 #define pthread_key_create	_pthread_key_create
 #define pthread_once		_pthread_once
 
+#endif
