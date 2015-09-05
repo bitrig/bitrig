@@ -1,10 +1,7 @@
-/* $OpenBSD: strerror_r.c,v 1.8 2013/06/01 21:26:18 stsp Exp $ */
+/* $OpenBSD: strerror_r.c,v 1.10 2015/09/05 11:25:30 guenther Exp $ */
 /* Public Domain <marc@snafu.org> */
 
 #ifdef NLS
-#define catclose	_catclose
-#define catgets		_catgets
-#define catopen		_catopen
 #include <nl_types.h>
 #endif
 
