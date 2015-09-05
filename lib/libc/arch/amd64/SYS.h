@@ -1,4 +1,4 @@
-/*	$OpenBSD: SYS.h,v 1.13 2015/08/26 01:54:09 guenther Exp $	*/
+/*	$OpenBSD: SYS.h,v 1.15 2015/09/05 06:22:46 guenther Exp $	*/
 
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
@@ -46,10 +46,13 @@
 	.weak _C_LABEL(x);						\
 	_C_LABEL(x) = _C_LABEL(_thread_sys_ ## x)
 #define SYSENTRY_HIDDEN(x)						\
-	ENTRY(_thread_sys_ ## x)					\
+	ENTRY(_thread_sys_ ## x)
 
-#define	SYSEXIT_HIDDEN(x)	END(_thread_sys_ ## x)
-#define	SYSEXIT(x)		SYSEXIT_HIDDEN(x); END(x)    
+#define	SYSEXIT_HIDDEN(x)						\
+	END(_thread_sys_ ## x);						\
+	_HIDDEN_FALIAS(x,_thread_sys_##x);				\
+	END(_HIDDEN(x))
+#define	SYSEXIT(x)		SYSEXIT_HIDDEN(x); END(x)
 
 #define CERROR		_C_LABEL(__cerror)
 #define _CERROR		_C_LABEL(___cerror)
