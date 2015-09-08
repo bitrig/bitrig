@@ -1,4 +1,4 @@
-/*	$OpenBSD: pmap.c,v 1.94 2015/07/10 10:08:49 kettenis Exp $	*/
+/*	$OpenBSD: pmap.c,v 1.96 2015/09/08 21:28:35 kettenis Exp $	*/
 /*	$NetBSD: pmap.c,v 1.3 2003/05/08 18:13:13 thorpej Exp $	*/
 
 /*
@@ -731,7 +731,7 @@ pmap_bootstrap(paddr_t first_avail, paddr_t max_pa)
 	pool_init(&pmap_pmap_pool, sizeof(struct pmap), 0, 0, PR_WAITOK,
 	    "pmappl", NULL);
 	pool_init(&pmap_pv_pool, sizeof(struct pv_entry), 0, 0, 0, "pvpl",
-	    &pool_allocator_nointr);
+	    &pool_allocator_single);
 	pool_sethiwat(&pmap_pv_pool, 32 * 1024);
 
 	/*
