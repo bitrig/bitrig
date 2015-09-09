@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_extern.h,v 1.133 2015/07/19 21:21:14 beck Exp $	*/
+/*	$OpenBSD: uvm_extern.h,v 1.134 2015/09/09 14:52:12 miod Exp $	*/
 /*	$NetBSD: uvm_extern.h,v 1.57 2001/03/09 01:02:12 chs Exp $	*/
 
 /*
@@ -258,11 +258,7 @@ extern struct vm_map *phys_map;
 /* base of kernel virtual memory */
 extern vaddr_t vm_min_kernel_address;
 
-#ifdef	pmap_resident_count
 #define vm_resident_count(vm) (pmap_resident_count((vm)->vm_map.pmap))
-#else
-#define vm_resident_count(vm) ((vm)->vm_rssize)
-#endif
 
 void			vmapbuf(struct buf *, vsize_t);
 void			vunmapbuf(struct buf *, vsize_t);
