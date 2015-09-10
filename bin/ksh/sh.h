@@ -1,4 +1,4 @@
-/*	$OpenBSD: sh.h,v 1.33 2013/12/18 13:53:12 millert Exp $	*/
+/*	$OpenBSD: sh.h,v 1.34 2015/09/10 13:04:52 nicm Exp $	*/
 
 /*
  * Public Domain Bourne/Korn shell
@@ -346,7 +346,7 @@ EXTERN Getopt user_opt;		/* parsing state for getopts builtin command */
 
 /* This for co-processes */
 
-typedef int Coproc_id; /* something that won't (realisticly) wrap */
+typedef int Coproc_id; /* something that won't (realistically) wrap */
 struct coproc {
 	int	read;		/* pipe from co-process's stdout */
 	int	readw;		/* other side of read (saved temporarily) */
