@@ -1,4 +1,4 @@
-/*	$OpenBSD: kern_sysctl.c,v 1.290 2015/09/03 12:13:13 mpi Exp $	*/
+/*	$OpenBSD: kern_sysctl.c,v 1.291 2015/09/10 18:10:35 deraadt Exp $	*/
 /*	$NetBSD: kern_sysctl.c,v 1.17 1996/05/20 17:49:05 mrg Exp $	*/
 
 /*-
@@ -2168,7 +2168,7 @@ sysctl_sysvipc(int *name, u_int namelen, void *where, size_t *sizep)
 #ifdef SYSVSHM
 	struct shm_sysctl_info *shmsi;
 #endif
-	size_t infosize, dssize, tsize, buflen;
+	size_t infosize, dssize, tsize, buflen, bufsiz;
 	int i, nds, error, ret;
 	void *buf;
 
@@ -2218,7 +2218,8 @@ sysctl_sysvipc(int *name, u_int namelen, void *where, size_t *sizep)
 		*sizep = 0;
 		return (ENOMEM);
 	}
-	buf = malloc(szmin(tsize, buflen), M_TEMP, M_WAITOK|M_ZERO);
+	bufsiz = szmin(tsize, buflen);
+	buf = malloc(bufsiz, M_TEMP, M_WAITOK|M_ZERO);
 
 	switch (*name) {
 #ifdef SYSVSEM
@@ -2269,7 +2270,7 @@ sysctl_sysvipc(int *name, u_int namelen, void *where, size_t *sizep)
 	}
 	*sizep -= buflen;
 	error = copyout(buf, where, *sizep);
-	free(buf, M_TEMP, 0);
+	free(buf, M_TEMP, bufsiz);
 	/* If copyout succeeded, use return code set earlier. */
 	return (error ? error : ret);
 }
