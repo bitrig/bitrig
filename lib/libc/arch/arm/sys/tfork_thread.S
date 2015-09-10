@@ -1,4 +1,4 @@
-/* $OpenBSD: tfork_thread.S,v 1.2 2012/06/21 00:56:59 guenther Exp $ */
+/* $OpenBSD: tfork_thread.S,v 1.3 2015/09/10 13:29:09 guenther Exp $ */
 /*
  * Copyright (c) 2005 Dale Rahn <drahn@openbsd.org>
  *
@@ -43,3 +43,4 @@ ENTRY(__tfork_thread)
 #else
 	b	CERROR
 #endif
+END(__tfork_thread)

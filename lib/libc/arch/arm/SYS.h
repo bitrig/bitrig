@@ -1,4 +1,4 @@
-/*	$OpenBSD: SYS.h,v 1.10 2015/08/26 01:54:09 guenther Exp $	*/
+/*	$OpenBSD: SYS.h,v 1.13 2015/09/10 13:29:09 guenther Exp $	*/
 /*	$NetBSD: SYS.h,v 1.8 2003/08/07 16:42:02 agc Exp $	*/
 
 /*-
@@ -44,6 +44,12 @@
 	ENTRY(_thread_sys_ ## x)
 #define SYSENTRY_HIDDEN(x)				\
 	ENTRY(_thread_sys_ ## x)
+#define __END_HIDDEN(x)					\
+	END(_thread_sys_ ## x);				\
+	_HIDDEN_FALIAS(x, _thread_sys_ ## x);		\
+	END(_HIDDEN(x))
+#define __END(x)					\
+	__END_HIDDEN(x); END(x)
 
 #define SYSTRAP(x) \
 	ldr	r12, =SYS_ ## x;		\
@@ -84,14 +90,17 @@
 
 #define PSEUDO_NOERROR(x,y)						\
 	_SYSCALL_NOERROR(x,y);						\
-	mov r15, r14
+	mov r15, r14;							\
+	__END(x)
 
 #define PSEUDO(x,y)							\
 	_SYSCALL(x,y);							\
-	mov r15, r14
+	mov r15, r14;							\
+	__END(x)
 #define PSEUDO_HIDDEN(x,y)						\
 	_SYSCALL_HIDDEN(x,y);						\
-	mov r15, r14
+	mov r15, r14;							\
+	__END_HIDDEN(x)
 
 
 #define RSYSCALL_NOERROR(x)						\
@@ -101,5 +110,7 @@
 	PSEUDO(x,x)
 #define RSYSCALL_HIDDEN(x)						\
 	PSEUDO_HIDDEN(x,x)
+#define SYSCALL_END(x)							\
+	__END(x)
 
 	.globl	CERROR
