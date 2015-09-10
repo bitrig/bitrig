@@ -1,4 +1,4 @@
-/*	$OpenBSD: arc.c,v 1.106 2015/01/27 03:17:36 dlg Exp $ */
+/*	$OpenBSD: arc.c,v 1.107 2015/09/10 18:10:33 deraadt Exp $ */
 
 /*
  * Copyright (c) 2006 David Gwynne <dlg@openbsd.org>
@@ -1941,7 +1941,7 @@ arc_bio_alarm_state(struct arc_softc *sc, struct bioc_alarm *ba)
 	ba->ba_status = sysinfo->alarm;
 
 out:
-	free(sysinfo, M_TEMP, 0);
+	free(sysinfo, M_TEMP, sizeof *sysinfo);
 	return (error);
 }
 
@@ -2000,8 +2000,8 @@ arc_bio_inq(struct arc_softc *sc, struct bioc_inq *bi)
 	DPRINTF("%s: volume set number = %d\n", DEVNAME(sc), nvols);
 out:
 	arc_unlock(sc);
-	free(volinfo, M_TEMP, 0);
-	free(sysinfo, M_TEMP, 0);
+	free(volinfo, M_TEMP, sizeof *volinfo);
+	free(sysinfo, M_TEMP, sizeof *sysinfo);
 	return (error);
 }
 
@@ -2084,7 +2084,7 @@ arc_bio_getvol(struct arc_softc *sc, int vol, struct arc_fw_volinfo *volinfo)
 	}
 
 out:
-	free(sysinfo, M_TEMP, 0);
+	free(sysinfo, M_TEMP, sizeof *sysinfo);
 	return (error);
 }
 
@@ -2164,7 +2164,7 @@ arc_bio_vol(struct arc_softc *sc, struct bioc_vol *bv)
 	}
 
 out:
-	free(volinfo, M_TEMP, 0);
+	free(volinfo, M_TEMP, sizeof *volinfo);
 	return (error);
 }
 
@@ -2253,9 +2253,9 @@ arc_bio_disk(struct arc_softc *sc, struct bioc_disk *bd)
 
 out:
 	arc_unlock(sc);
-	free(diskinfo, M_TEMP, 0);
-	free(raidinfo, M_TEMP, 0);
-	free(volinfo, M_TEMP, 0);
+	free(diskinfo, M_TEMP, sizeof *diskinfo);
+	free(raidinfo, M_TEMP, sizeof *raidinfo);
+	free(volinfo, M_TEMP, sizeof *volinfo);
 	return (error);
 }
 
@@ -2659,7 +2659,8 @@ arc_create_sensors(void *xat)
 	return;
 
 bad:
-	free(sc->sc_sensors, M_DEVBUF, 0);
+	free(sc->sc_sensors, M_DEVBUF,
+	    sc->sc_nsensors * sizeof(struct ksensor));
 }
 
 void
@@ -2862,7 +2863,7 @@ free:
 destroy:
 	bus_dmamap_destroy(sc->sc_dmat, adm->adm_map);
 admfree:
-	free(adm, M_DEVBUF, 0);
+	free(adm, M_DEVBUF, sizeof *adm);
 
 	return (NULL);
 }
@@ -2874,7 +2875,7 @@ arc_dmamem_free(struct arc_softc *sc, struct arc_dmamem *adm)
 	bus_dmamem_unmap(sc->sc_dmat, adm->adm_kva, adm->adm_size);
 	bus_dmamem_free(sc->sc_dmat, &adm->adm_seg, 1);
 	bus_dmamap_destroy(sc->sc_dmat, adm->adm_map);
-	free(adm, M_DEVBUF, 0);
+	free(adm, M_DEVBUF, sizeof *adm);
 }
 
 int
@@ -2944,7 +2945,7 @@ free_maps:
 	arc_dmamem_free(sc, sc->sc_requests);
 
 free_ccbs:
-	free(sc->sc_ccbs, M_DEVBUF, 0);
+	free(sc->sc_ccbs, M_DEVBUF, sizeof(struct arc_ccb) * ARCMSR_MAX_CCB_COUNT);
 
 	return (1);
 }
