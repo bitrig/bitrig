@@ -1,4 +1,4 @@
-/*	$OpenBSD: subr_disk.c,v 1.203 2015/09/10 14:28:17 krw Exp $	*/
+/*	$OpenBSD: subr_disk.c,v 1.204 2015/09/10 16:30:23 krw Exp $	*/
 /*	$NetBSD: subr_disk.c,v 1.17 1996/03/16 23:17:08 christos Exp $	*/
 
 /*
@@ -106,9 +106,7 @@ void disk_attach_callback(void *);
 
 int readdisksector(struct buf *, void (*)(struct buf *), struct disklabel *,
     u_int64_t);
-#ifdef GPT
 int gpt_chk_mbr(struct dos_partition *, struct disklabel *);
-#endif
 
 struct device *setroot_swapgeneric(struct device *, dev_t *);
 
@@ -354,7 +352,6 @@ readdoslabel(struct buf *bp, void (*strat)(struct buf *),
 			    (bp->b_data[511] & 0xff);
 			if (mbrtest != 0x55aa)
 				goto notmbr;
-#ifdef GPT
 			if (gpt_chk_mbr(dp, lp) == 0) {
 				error = readgptlabel(bp, strat, lp,
 				    partoffp ? &dospartoff : NULL, spoofonly);
@@ -370,7 +367,6 @@ readdoslabel(struct buf *bp, void (*strat)(struct buf *),
 					goto notmbr;
 				}
 			}
-#endif
 		}
 
 		if(dp[0].dp_typ == DOSPTYP_EFI)
