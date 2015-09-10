@@ -979,7 +979,6 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 	struct pte_desc *pted;
 	vaddr_t vstart, vend;
 	int i, j, k;
-	int dump = 0;
 
 	kvo = KERNEL_BASE_VIRT - (ram_start +(KERNEL_BASE_VIRT&0x0fffffff));
 
@@ -1023,19 +1022,24 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 		} else {
 			lb_idx2 = 0;
 		}
-		if (i == VP_IDX1(VM_MIN_KERNEL_ADDRESS)) {
+		if (i == VP_IDX1(VM_MAX_KERNEL_ADDRESS)) {
 			ub_idx2 = VP_IDX2(VM_MAX_KERNEL_ADDRESS);
 		} else {
 			ub_idx2 = VP_IDX2_CNT-1;
 		}
+		void *l2_pa = NULL, *l2_va = NULL;
+		if (lb_idx2 <= ub_idx2)
+			l2_pa = pmap_steal_avail((ub_idx2 - lb_idx2 + 1) *
+			    L2_TABLE_SIZE, L2_TABLE_SIZE, &l2_va);
 		for (j = lb_idx2; j <= ub_idx2; j++) {
 			pa = pmap_steal_avail(sizeof (struct pmapvp3), 4, &va);
 			vp3 = va;
 			vp2->vp[j] = vp3;
-			pa = pmap_steal_avail(L2_TABLE_SIZE, L2_TABLE_SIZE, &va);
 			pmap_set_l2(pmap_kernel(),
 			    (i << VP_IDX1_POS) | (j << VP_IDX2_POS),
-			    (vaddr_t)va, (uint32_t)pa);
+			    (vaddr_t)l2_va, (uint32_t)l2_pa);
+			l2_va += L2_TABLE_SIZE;
+			l2_pa += L2_TABLE_SIZE;
 		}
 	}
 	pmap_curmaxkvaddr = VM_MAX_KERNEL_ADDRESS;
@@ -1051,7 +1055,7 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 		} else {
 			lb_idx2 = 0;
 		}
-		if (i == VP_IDX1(VM_MIN_KERNEL_ADDRESS)) {
+		if (i == VP_IDX1(VM_MAX_KERNEL_ADDRESS)) {
 			ub_idx2 = VP_IDX2(VM_MAX_KERNEL_ADDRESS);
 		} else {
 			ub_idx2 = VP_IDX2_CNT-1;
@@ -1061,13 +1065,13 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 
 			if ((i == VP_IDX1(VM_MIN_KERNEL_ADDRESS))
 			    && (j == VP_IDX2(VM_MIN_KERNEL_ADDRESS))) {
-				lb_idx3 = VP_IDX2(VM_MIN_KERNEL_ADDRESS);
+				lb_idx3 = VP_IDX3(VM_MIN_KERNEL_ADDRESS);
 			} else {
 				lb_idx3 = 0;
 			}
 			if ((i == VP_IDX1(VM_MAX_KERNEL_ADDRESS))
 			    && (j == VP_IDX2(VM_MAX_KERNEL_ADDRESS))) {
-				ub_idx3 = VP_IDX2(VM_MAX_KERNEL_ADDRESS);
+				ub_idx3 = VP_IDX3(VM_MAX_KERNEL_ADDRESS);
 			} else {
 				ub_idx3 = VP_IDX3_CNT-1;
 			}
@@ -1172,13 +1176,21 @@ printf("allocated pted vp3 %x %x %x %x\n", idx1, idx2, vect, pa);
 	virtual_avail = vstart;
 	virtual_end = vend;
 
+	uvmexp.pagesize = PAGE_SIZE;
+	uvm_setpagesize();
 
-	if (dump) {
-	for (i = 0; i < 4096; i++) {
+	pmap_physload_avail();
+
+}
+
+void
+pmap_dump(void)
+{
+	for (int i = 0; i < 4096; i++) {
 		int idx1, idx2, idx3;
 		uint32_t pa = i << VP_IDX2_POS;
-		idx1 = pa >> VP_IDX1_POS;
-		idx2 = (pa >> VP_IDX2_POS) & VP_IDX2_MASK;
+		idx1 = VP_IDX1(pa);
+		idx2 = VP_IDX2(pa);
 		struct pmapvp3 *vp3;
 		uint32_t *l2p;
 
@@ -1214,14 +1226,8 @@ printf("allocated pted vp3 %x %x %x %x\n", idx1, idx2, vect, pa);
 			}
 		}
 	}
-	}
-
-	uvmexp.pagesize = PAGE_SIZE;
-	uvm_setpagesize();
-
-	pmap_physload_avail();
-
 }
+
 
 void
 pmap_set_l2(struct pmap *pm, uint32_t va, vaddr_t l2_va, uint32_t l2_pa)
