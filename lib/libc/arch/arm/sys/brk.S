@@ -1,4 +1,4 @@
-/*	$OpenBSD: brk.S,v 1.6 2015/08/26 01:54:09 guenther Exp $	*/
+/*	$OpenBSD: brk.S,v 1.7 2015/09/10 13:29:09 guenther Exp $	*/
 /*	$NetBSD: brk.S,v 1.7 2003/12/26 11:23:44 martin Exp $	*/
 
 /*-
@@ -37,18 +37,19 @@
 	.globl	_C_LABEL(end)
 	.globl	__curbrk
 
-WEAK_ALIAS(brk, _brk)
-
 	.data
 	.align	0
 	.type	__minbrk,#object
 __minbrk:
 	.word	_C_LABEL(end)
+	END(__minbrk)
+
+	.weak	brk
 
 /*
  * Change the data segment size
  */
-ENTRY(_brk)
+ENTRY(brk)
 #ifdef __PIC__
 	/* Setup the GOT */
 	ldr	r3, .Lgot
@@ -104,3 +105,4 @@ ENTRY(_brk)
 .Lcurbrk:
 	.word	CURBRK
 #endif
+END(brk)

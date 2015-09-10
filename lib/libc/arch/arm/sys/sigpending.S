@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 /*	$OpenBSD: sigpending.S,v 1.2 2004/02/01 05:40:52 drahn Exp $	*/
+=======
+/*	$OpenBSD: sigpending.S,v 1.4 2015/09/10 13:29:09 guenther Exp $	*/
+>>>>>>> 413e464... Adds hidden _libc_FOO aliases for the system call stubs.
 /*	$NetBSD: sigpending.S,v 1.5 2003/08/07 16:42:05 agc Exp $	*/
 
 /*-
@@ -34,6 +38,11 @@
 
 #include "SYS.h"
 
-#include "SYS.h"
-
-RSYSCALL(sigpending)
+SYSENTRY(sigpending)
+	mov	r2, r0
+	SYSTRAP(sigpending)
+	bcs	PIC_SYM(CERROR, PLT)
+	str	r0, [r2]
+	mov	r0, #0x00000000
+	mov	r15, r14
+SYSCALL_END(sigpending)
