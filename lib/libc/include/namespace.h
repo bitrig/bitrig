@@ -1,4 +1,4 @@
-/*	$OpenBSD: namespace.h,v 1.5 2015/09/06 20:26:20 guenther Exp $	*/
+/*	$OpenBSD: namespace.h,v 1.7 2015/09/11 09:18:27 guenther Exp $	*/
 
 #ifndef _LIBC_NAMESPACE_H_
 #define _LIBC_NAMESPACE_H_
@@ -124,6 +124,12 @@
  *	only be needed for syscalls that have C instead of asm stubs.
  *	Matches with PROTO_NORMAL(), PROTO_CANCEL(), or PROTO_WRAP()
  *	ex: DEF_SYS(pread)
+ *
+ *   MAKE_CLONE(dst, src)	Symbols that are exact clones of other symbols
+ *	This declares _libc_dst as being the same type as dst, and makes
+ *	_libc_dst a strong, hidden alias for _libc_src.  You still need to
+ *	DEF_STRONG(dst) or DEF_WEAK(dst) to alias dst itself
+ *	ex: MAKE_CLONE(SHA224Pad, SHA256Pad)
  */
 
 #define	HIDDEN(x)		_libc_##x
@@ -143,5 +149,22 @@
 #define	DEF_CANCEL(x)		__weak_alias(x, CANCEL(x))
 #define	DEF_WRAP(x)		__weak_alias(x, WRAP(x))
 #define	DEF_SYS(x)		__strong_alias(_thread_sys_##x, HIDDEN(x))
+
+#define	MAKE_CLONE(dst, src)	__dso_hidden typeof(dst) HIDDEN(dst) \
+				__attribute__((alias (HIDDEN_STRING(src))))
+
+
+/*
+ * gcc will generate calls to the functions below.
+ * Declare and redirect them here so we always go
+ * directly to our hidden aliases.
+ */
+#include <sys/_types.h>
+void	*memcpy(void *__restrict, const void *__restrict, __size_t);
+void	*memset(void *, int, __size_t);
+void	__stack_smash_handler(const char [], int __attribute__((__unused__)));
+PROTO_NORMAL(memcpy);
+PROTO_NORMAL(memset);
+PROTO_NORMAL(__stack_smash_handler);
 
 #endif  /* _LIBC_NAMESPACE_H_ */
