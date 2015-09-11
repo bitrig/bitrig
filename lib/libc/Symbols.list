@@ -1202,7 +1202,6 @@ __xdrrec_setnonblock
 __xprt_register
 _authenticate
 _null_auth
-_rpc_dtablesize
 _seterr_reply
 _svcauth_null
 _svcauth_short
