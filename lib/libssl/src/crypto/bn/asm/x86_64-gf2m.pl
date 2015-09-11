@@ -31,7 +31,8 @@ $0 =~ m/(.*[\/\\])[^\/\\]+$/; $dir=$1;
 ( $xlate="${dir}../../perlasm/x86_64-xlate.pl" and -f $xlate) or
 die "can't locate x86_64-xlate.pl";
 
-open STDOUT,"| $^X $xlate $flavour $output";
+open OUT,"| \"$^X\" $xlate $flavour $output";
+*STDOUT=*OUT;
 
 ($lo,$hi)=("%rax","%rdx");	$a=$lo;
 ($i0,$i1)=("%rsi","%rdi");
@@ -142,12 +143,12 @@ $code.=<<___;
 	mov	(%rsp,$i1,8),$t1
 	mov	$t1,$t0
 	shl	\$`8*$n-4`,$t1
-	movq	$R,$i0
+	movd	$R,$i0
 	shr	\$`64-(8*$n-4)`,$t0
 	xor	$t1,$lo
 	psrldq	\$8,$R
 	xor	$t0,$hi
-	movq	$R,$i1
+	movd	$R,$i1
 	xor	$i0,$lo
 	xor	$i1,$hi
 
@@ -170,15 +171,15 @@ bn_GF2m_mul_2x2:
 	bt	\$33,%rax
 	jnc	.Lvanilla_mul_2x2
 
-	movq		$a1,%xmm0
-	movq		$b1,%xmm1
-	movq		$a0,%xmm2
+	movd		$a1,%xmm0
+	movd		$b1,%xmm1
+	movd		$a0,%xmm2
 ___
 $code.=<<___ if ($win64);
 	movq		40(%rsp),%xmm3
 ___
 $code.=<<___ if (!$win64);
-	movq		$b0,%xmm3
+	movd		$b0,%xmm3
 ___
 $code.=<<___;
 	movdqa		%xmm0,%xmm4
