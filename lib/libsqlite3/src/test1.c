@@ -14,6 +14,10 @@
 ** testing of the SQLite library.
 */
 #include "sqliteInt.h"
+#if SQLITE_OS_WIN
+#  include "os_win.h"
+#endif
+
 #include "vdbeInt.h"
 #include "tcl.h"
 #include <stdlib.h>
@@ -90,10 +94,7 @@ static int get_sqlite_pointer(
     return TCL_ERROR;
   }
   p = (struct SqliteDb*)cmdInfo.objClientData;
-  sprintf(zBuf, "%p", p->db);
-  if( strncmp(zBuf,"0x",2) ){
-    sprintf(zBuf, "0x%p", p->db);
-  }
+  sqlite3_snprintf(sizeof(zBuf), zBuf, "%p", p->db);
   Tcl_AppendResult(interp, zBuf, 0);
   return TCL_OK;
 }
@@ -113,64 +114,18 @@ int getDbPointer(Tcl_Interp *interp, const char *zA, sqlite3 **ppDb){
   return TCL_OK;
 }
 
-
-const char *sqlite3TestErrorName(int rc){
-  const char *zName = 0;
-  switch( rc ){
-    case SQLITE_OK:                  zName = "SQLITE_OK";                break;
-    case SQLITE_ERROR:               zName = "SQLITE_ERROR";             break;
-    case SQLITE_INTERNAL:            zName = "SQLITE_INTERNAL";          break;
-    case SQLITE_PERM:                zName = "SQLITE_PERM";              break;
-    case SQLITE_ABORT:               zName = "SQLITE_ABORT";             break;
-    case SQLITE_BUSY:                zName = "SQLITE_BUSY";              break;
-    case SQLITE_LOCKED:              zName = "SQLITE_LOCKED";            break;
-    case SQLITE_LOCKED_SHAREDCACHE:  zName = "SQLITE_LOCKED_SHAREDCACHE";break;
-    case SQLITE_NOMEM:               zName = "SQLITE_NOMEM";             break;
-    case SQLITE_READONLY:            zName = "SQLITE_READONLY";          break;
-    case SQLITE_INTERRUPT:           zName = "SQLITE_INTERRUPT";         break;
-    case SQLITE_IOERR:               zName = "SQLITE_IOERR";             break;
-    case SQLITE_CORRUPT:             zName = "SQLITE_CORRUPT";           break;
-    case SQLITE_NOTFOUND:            zName = "SQLITE_NOTFOUND";          break;
-    case SQLITE_FULL:                zName = "SQLITE_FULL";              break;
-    case SQLITE_CANTOPEN:            zName = "SQLITE_CANTOPEN";          break;
-    case SQLITE_PROTOCOL:            zName = "SQLITE_PROTOCOL";          break;
-    case SQLITE_EMPTY:               zName = "SQLITE_EMPTY";             break;
-    case SQLITE_SCHEMA:              zName = "SQLITE_SCHEMA";            break;
-    case SQLITE_TOOBIG:              zName = "SQLITE_TOOBIG";            break;
-    case SQLITE_CONSTRAINT:          zName = "SQLITE_CONSTRAINT";        break;
-    case SQLITE_MISMATCH:            zName = "SQLITE_MISMATCH";          break;
-    case SQLITE_MISUSE:              zName = "SQLITE_MISUSE";            break;
-    case SQLITE_NOLFS:               zName = "SQLITE_NOLFS";             break;
-    case SQLITE_AUTH:                zName = "SQLITE_AUTH";              break;
-    case SQLITE_FORMAT:              zName = "SQLITE_FORMAT";            break;
-    case SQLITE_RANGE:               zName = "SQLITE_RANGE";             break;
-    case SQLITE_NOTADB:              zName = "SQLITE_NOTADB";            break;
-    case SQLITE_ROW:                 zName = "SQLITE_ROW";               break;
-    case SQLITE_DONE:                zName = "SQLITE_DONE";              break;
-    case SQLITE_IOERR_READ:          zName = "SQLITE_IOERR_READ";        break;
-    case SQLITE_IOERR_SHORT_READ:    zName = "SQLITE_IOERR_SHORT_READ";  break;
-    case SQLITE_IOERR_WRITE:         zName = "SQLITE_IOERR_WRITE";       break;
-    case SQLITE_IOERR_FSYNC:         zName = "SQLITE_IOERR_FSYNC";       break;
-    case SQLITE_IOERR_DIR_FSYNC:     zName = "SQLITE_IOERR_DIR_FSYNC";   break;
-    case SQLITE_IOERR_TRUNCATE:      zName = "SQLITE_IOERR_TRUNCATE";    break;
-    case SQLITE_IOERR_FSTAT:         zName = "SQLITE_IOERR_FSTAT";       break;
-    case SQLITE_IOERR_UNLOCK:        zName = "SQLITE_IOERR_UNLOCK";      break;
-    case SQLITE_IOERR_RDLOCK:        zName = "SQLITE_IOERR_RDLOCK";      break;
-    case SQLITE_IOERR_DELETE:        zName = "SQLITE_IOERR_DELETE";      break;
-    case SQLITE_IOERR_BLOCKED:       zName = "SQLITE_IOERR_BLOCKED";     break;
-    case SQLITE_IOERR_NOMEM:         zName = "SQLITE_IOERR_NOMEM";       break;
-    case SQLITE_IOERR_ACCESS:        zName = "SQLITE_IOERR_ACCESS";      break;
-    case SQLITE_IOERR_CHECKRESERVEDLOCK:
-                               zName = "SQLITE_IOERR_CHECKRESERVEDLOCK"; break;
-    case SQLITE_IOERR_LOCK:          zName = "SQLITE_IOERR_LOCK";        break;
-    case SQLITE_CORRUPT_VTAB:        zName = "SQLITE_CORRUPT_VTAB";      break;
-    case SQLITE_READONLY_RECOVERY:   zName = "SQLITE_READONLY_RECOVERY"; break;
-    case SQLITE_READONLY_CANTLOCK:   zName = "SQLITE_READONLY_CANTLOCK"; break;
-    default:                         zName = "SQLITE_Unknown";           break;
-  }
-  return zName;
+#if SQLITE_OS_WIN
+/*
+** Decode a Win32 HANDLE object.
+*/
+int getWin32Handle(Tcl_Interp *interp, const char *zA, LPHANDLE phFile){
+  *phFile = (HANDLE)sqlite3TestTextToPtr(zA);
+  return TCL_OK;
 }
-#define t1ErrorName sqlite3TestErrorName
+#endif
+
+extern const char *sqlite3ErrName(int);
+#define t1ErrorName sqlite3ErrName
 
 /*
 ** Convert an sqlite3_stmt* into an sqlite3*.  This depends on the
@@ -187,7 +142,8 @@ int sqlite3TestErrCode(Tcl_Interp *interp, sqlite3 *db, int rc){
    && sqlite3_errcode(db)!=rc ){
     char zBuf[200];
     int r2 = sqlite3_errcode(db);
-    sprintf(zBuf, "error code %s (%d) does not match sqlite3_errcode %s (%d)",
+    sqlite3_snprintf(sizeof(zBuf), zBuf,
+       "error code %s (%d) does not match sqlite3_errcode %s (%d)",
        t1ErrorName(rc), rc, t1ErrorName(r2), r2);
     Tcl_ResetResult(interp);
     Tcl_AppendResult(interp, zBuf, 0);
@@ -298,7 +254,34 @@ static int test_io_trace(
   return TCL_OK;
 }
 
-
+/*
+** Usage:  clang_sanitize_address 
+**
+** Returns true if the program was compiled using clang with the 
+** -fsanitize=address switch on the command line. False otherwise.
+**
+** Also return true if the OMIT_MISUSE environment variable exists.
+*/
+static int clang_sanitize_address(
+  void *NotUsed,
+  Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
+  int argc,              /* Number of arguments */
+  char **argv            /* Text of each argument */
+){
+  int res = 0;
+#if defined(__has_feature)
+# if __has_feature(address_sanitizer)
+  res = 1;
+# endif
+#endif
+#ifdef __SANITIZE_ADDRESS__
+  res = 1;
+#endif
+  if( res==0 && getenv("OMIT_MISUSE")!=0 ) res = 1;
+  Tcl_SetObjResult(interp, Tcl_NewIntObj(res));
+  return TCL_OK;
+}
+  
 /*
 ** Usage:  sqlite3_exec_printf  DB  FORMAT  STRING
 **
@@ -328,7 +311,7 @@ static int test_exec_printf(
   zSql = sqlite3_mprintf(argv[2], argv[3]);
   rc = sqlite3_exec(db, zSql, exec_printf_cb, &str, &zErr);
   sqlite3_free(zSql);
-  sprintf(zBuf, "%d", rc);
+  sqlite3_snprintf(sizeof(zBuf), zBuf, "%d", rc);
   Tcl_AppendElement(interp, zBuf);
   Tcl_AppendElement(interp, rc==SQLITE_OK ? Tcl_DStringValue(&str) : zErr);
   Tcl_DStringFree(&str);
@@ -375,7 +358,7 @@ static int test_exec_hex(
   zSql[i] = 0;
   Tcl_DStringInit(&str);
   rc = sqlite3_exec(db, zSql, exec_printf_cb, &str, &zErr);
-  sprintf(zBuf, "%d", rc);
+  sqlite3_snprintf(sizeof(zBuf), zBuf, "%d", rc);
   Tcl_AppendElement(interp, zBuf);
   Tcl_AppendElement(interp, rc==SQLITE_OK ? Tcl_DStringValue(&str) : zErr);
   Tcl_DStringFree(&str);
@@ -460,7 +443,7 @@ static int test_exec(
   zSql[j] = 0;
   rc = sqlite3_exec(db, zSql, exec_printf_cb, &str, &zErr);
   sqlite3_free(zSql);
-  sprintf(zBuf, "%d", rc);
+  sqlite3_snprintf(sizeof(zBuf), zBuf, "%d", rc);
   Tcl_AppendElement(interp, zBuf);
   Tcl_AppendElement(interp, rc==SQLITE_OK ? Tcl_DStringValue(&str) : zErr);
   Tcl_DStringFree(&str);
@@ -585,7 +568,7 @@ static int test_get_table_printf(
   Tcl_DString str;
   int rc;
   char *zErr = 0;
-  int nRow, nCol;
+  int nRow = 0, nCol = 0;
   char **aResult;
   int i;
   char zBuf[30];
@@ -609,13 +592,13 @@ static int test_get_table_printf(
     resCount = (nRow+1)*nCol;
   }
   sqlite3_free(zSql);
-  sprintf(zBuf, "%d", rc);
+  sqlite3_snprintf(sizeof(zBuf), zBuf, "%d", rc);
   Tcl_AppendElement(interp, zBuf);
   if( rc==SQLITE_OK ){
     if( argc==4 ){
-      sprintf(zBuf, "%d", nRow);
+      sqlite3_snprintf(sizeof(zBuf), zBuf, "%d", nRow);
       Tcl_AppendElement(interp, zBuf);
-      sprintf(zBuf, "%d", nCol);
+      sqlite3_snprintf(sizeof(zBuf), zBuf, "%d", nCol);
       Tcl_AppendElement(interp, zBuf);
     }
     for(i=0; i<resCount; i++){
@@ -652,7 +635,7 @@ static int test_last_rowid(
     return TCL_ERROR;
   }
   if( getDbPointer(interp, argv[1], &db) ) return TCL_ERROR;
-  sprintf(zBuf, "%lld", sqlite3_last_insert_rowid(db));
+  sqlite3_snprintf(sizeof(zBuf), zBuf, "%lld", sqlite3_last_insert_rowid(db));
   Tcl_AppendResult(interp, zBuf, 0);
   return SQLITE_OK;
 }
@@ -738,6 +721,30 @@ static int sqlite_test_close(
 }
 
 /*
+** Usage:  sqlite3_close_v2 DB
+**
+** Closes the database opened by sqlite3_open.
+*/
+static int sqlite_test_close_v2(
+  void *NotUsed,
+  Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
+  int argc,              /* Number of arguments */
+  char **argv            /* Text of each argument */
+){
+  sqlite3 *db;
+  int rc;
+  if( argc!=2 ){
+    Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
+       " FILENAME\"", 0);
+    return TCL_ERROR;
+  }
+  if( getDbPointer(interp, argv[1], &db) ) return TCL_ERROR;
+  rc = sqlite3_close_v2(db);
+  Tcl_SetResult(interp, (char *)t1ErrorName(rc), TCL_STATIC);
+  return TCL_OK;
+}
+
+/*
 ** Implementation of the x_coalesce() function.
 ** Return the first argument non-NULL argument.
 */
@@ -768,7 +775,7 @@ static void hex8Func(sqlite3_context *p, int argc, sqlite3_value **argv){
   char zBuf[200];
   z = sqlite3_value_text(argv[0]);
   for(i=0; i<sizeof(zBuf)/2 - 2 && z[i]; i++){
-    sprintf(&zBuf[i*2], "%02x", z[i]&0xff);
+    sqlite3_snprintf(sizeof(zBuf)-i*2, &zBuf[i*2], "%02x", z[i]);
   }
   zBuf[i*2] = 0;
   sqlite3_result_text(p, (char*)zBuf, -1, SQLITE_TRANSIENT);
@@ -780,7 +787,7 @@ static void hex16Func(sqlite3_context *p, int argc, sqlite3_value **argv){
   char zBuf[400];
   z = sqlite3_value_text16(argv[0]);
   for(i=0; i<sizeof(zBuf)/4 - 4 && z[i]; i++){
-    sprintf(&zBuf[i*4], "%04x", z[i]&0xff);
+    sqlite3_snprintf(sizeof(zBuf)-i*4, &zBuf[i*4],"%04x", z[i]&0xff);
   }
   zBuf[i*4] = 0;
   sqlite3_result_text(p, (char*)zBuf, -1, SQLITE_TRANSIENT);
@@ -800,7 +807,7 @@ struct dstr {
 ** Append text to a dstr
 */
 static void dstrAppend(struct dstr *p, const char *z, int divider){
-  int n = strlen(z);
+  int n = (int)strlen(z);
   if( p->nUsed + n + 2 > p->nAlloc ){
     char *zNew;
     p->nAlloc = p->nAlloc*2 + n + 200;
@@ -974,9 +981,21 @@ static void ptrChngFunction(
   sqlite3_result_int(context, p1!=p2);
 }
 
+/*
+** This SQL function returns a different answer each time it is called, even if
+** the arguments are the same.
+*/
+static void nondeterministicFunction(
+  sqlite3_context *context, 
+  int argc,  
+  sqlite3_value **argv
+){
+  static int cnt = 0;
+  sqlite3_result_int(context, cnt++);
+}
 
 /*
-** Usage:  sqlite_test_create_function DB
+** Usage:  sqlite3_create_function DB
 **
 ** Call the sqlite3_create_function API on the given database in order
 ** to create a function named "x_coalesce".  This function does the same thing
@@ -1005,16 +1024,16 @@ static int test_create_function(
     return TCL_ERROR;
   }
   if( getDbPointer(interp, argv[1], &db) ) return TCL_ERROR;
-  rc = sqlite3_create_function(db, "x_coalesce", -1, SQLITE_ANY, 0, 
+  rc = sqlite3_create_function(db, "x_coalesce", -1, SQLITE_UTF8, 0, 
         t1_ifnullFunc, 0, 0);
   if( rc==SQLITE_OK ){
-    rc = sqlite3_create_function(db, "hex8", 1, SQLITE_ANY, 0, 
-          hex8Func, 0, 0);
+    rc = sqlite3_create_function(db, "hex8", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC,
+          0, hex8Func, 0, 0);
   }
 #ifndef SQLITE_OMIT_UTF16
   if( rc==SQLITE_OK ){
-    rc = sqlite3_create_function(db, "hex16", 1, SQLITE_ANY, 0, 
-          hex16Func, 0, 0);
+    rc = sqlite3_create_function(db, "hex16", 1, SQLITE_UTF16 | SQLITE_DETERMINISTIC,
+          0, hex16Func, 0, 0);
   }
 #endif
   if( rc==SQLITE_OK ){
@@ -1024,6 +1043,19 @@ static int test_create_function(
   if( rc==SQLITE_OK ){
     rc = sqlite3_create_function(db, "pointer_change", 4, SQLITE_ANY, 0, 
           ptrChngFunction, 0, 0);
+  }
+
+  /* Functions counter1() and counter2() have the same implementation - they
+  ** both return an ascending integer with each call.  But counter1() is marked
+  ** as non-deterministic and counter2() is marked as deterministic.
+  */
+  if( rc==SQLITE_OK ){
+    rc = sqlite3_create_function(db, "counter1", -1, SQLITE_UTF8,
+          0, nondeterministicFunction, 0, 0);
+  }
+  if( rc==SQLITE_OK ){
+    rc = sqlite3_create_function(db, "counter2", -1, SQLITE_UTF8|SQLITE_DETERMINISTIC,
+          0, nondeterministicFunction, 0, 0);
   }
 
 #ifndef SQLITE_OMIT_UTF16
@@ -1541,7 +1573,6 @@ static int test_libversion_number(
 ** Usage: sqlite3_table_column_metadata DB dbname tblname colname
 **
 */
-#ifdef SQLITE_ENABLE_COLUMN_METADATA
 static int test_table_column_metadata(
   ClientData clientData, /* Pointer to sqlite3_enable_XXX function */
   Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
@@ -1561,14 +1592,14 @@ static int test_table_column_metadata(
   int primarykey;
   int autoincrement;
 
-  if( objc!=5 ){
+  if( objc!=5 && objc!=4 ){
     Tcl_WrongNumArgs(interp, 1, objv, "DB dbname tblname colname");
     return TCL_ERROR;
   }
   if( getDbPointer(interp, Tcl_GetString(objv[1]), &db) ) return TCL_ERROR;
   zDb = Tcl_GetString(objv[2]);
   zTbl = Tcl_GetString(objv[3]);
-  zCol = Tcl_GetString(objv[4]);
+  zCol = objc==5 ? Tcl_GetString(objv[4]) : 0;
 
   if( strlen(zDb)==0 ) zDb = 0;
 
@@ -1590,7 +1621,6 @@ static int test_table_column_metadata(
 
   return TCL_OK;
 }
-#endif
 
 #ifndef SQLITE_OMIT_INCRBLOB
 
@@ -1623,154 +1653,6 @@ static int blobHandleFromObj(
   return TCL_OK;
 }
 
-/*
-** sqlite3_blob_bytes  CHANNEL
-*/
-static int test_blob_bytes(
-  ClientData clientData, /* Not used */
-  Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
-  int objc,              /* Number of arguments */
-  Tcl_Obj *CONST objv[]  /* Command arguments */
-){
-  sqlite3_blob *pBlob;
-  int nByte;
-  
-  if( objc!=2 ){
-    Tcl_WrongNumArgs(interp, 1, objv, "CHANNEL");
-    return TCL_ERROR;
-  }
-
-  if( blobHandleFromObj(interp, objv[1], &pBlob) ) return TCL_ERROR;
-  nByte = sqlite3_blob_bytes(pBlob);
-  Tcl_SetObjResult(interp, Tcl_NewIntObj(nByte));
-
-  return TCL_OK;
-}
-
-/*
-** sqlite3_blob_close  CHANNEL
-*/
-static int test_blob_close(
-  ClientData clientData, /* Not used */
-  Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
-  int objc,              /* Number of arguments */
-  Tcl_Obj *CONST objv[]  /* Command arguments */
-){
-  sqlite3_blob *pBlob;
-  
-  if( objc!=2 ){
-    Tcl_WrongNumArgs(interp, 1, objv, "CHANNEL");
-    return TCL_ERROR;
-  }
-
-  if( blobHandleFromObj(interp, objv[1], &pBlob) ) return TCL_ERROR;
-  sqlite3_blob_close(pBlob);
-
-  return TCL_OK;
-}
-
-/*
-** sqlite3_blob_read  CHANNEL OFFSET N
-**
-**   This command is used to test the sqlite3_blob_read() in ways that
-**   the Tcl channel interface does not. The first argument should
-**   be the name of a valid channel created by the [incrblob] method
-**   of a database handle. This function calls sqlite3_blob_read()
-**   to read N bytes from offset OFFSET from the underlying SQLite
-**   blob handle.
-**
-**   On success, a byte-array object containing the read data is 
-**   returned. On failure, the interpreter result is set to the
-**   text representation of the returned error code (i.e. "SQLITE_NOMEM")
-**   and a Tcl exception is thrown.
-*/
-static int test_blob_read(
-  ClientData clientData, /* Not used */
-  Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
-  int objc,              /* Number of arguments */
-  Tcl_Obj *CONST objv[]  /* Command arguments */
-){
-  sqlite3_blob *pBlob;
-  int nByte;
-  int iOffset;
-  unsigned char *zBuf = 0;
-  int rc;
-  
-  if( objc!=4 ){
-    Tcl_WrongNumArgs(interp, 1, objv, "CHANNEL OFFSET N");
-    return TCL_ERROR;
-  }
-
-  if( blobHandleFromObj(interp, objv[1], &pBlob) ) return TCL_ERROR;
-  if( TCL_OK!=Tcl_GetIntFromObj(interp, objv[2], &iOffset)
-   || TCL_OK!=Tcl_GetIntFromObj(interp, objv[3], &nByte)
-  ){ 
-    return TCL_ERROR;
-  }
-
-  if( nByte>0 ){
-    zBuf = (unsigned char *)Tcl_Alloc(nByte);
-  }
-  rc = sqlite3_blob_read(pBlob, zBuf, nByte, iOffset);
-  if( rc==SQLITE_OK ){
-    Tcl_SetObjResult(interp, Tcl_NewByteArrayObj(zBuf, nByte));
-  }else{
-    Tcl_SetResult(interp, (char *)sqlite3TestErrorName(rc), TCL_VOLATILE);
-  }
-  Tcl_Free((char *)zBuf);
-
-  return (rc==SQLITE_OK ? TCL_OK : TCL_ERROR);
-}
-
-/*
-** sqlite3_blob_write CHANNEL OFFSET DATA ?NDATA?
-**
-**   This command is used to test the sqlite3_blob_write() in ways that
-**   the Tcl channel interface does not. The first argument should
-**   be the name of a valid channel created by the [incrblob] method
-**   of a database handle. This function calls sqlite3_blob_write()
-**   to write the DATA byte-array to the underlying SQLite blob handle.
-**   at offset OFFSET.
-**
-**   On success, an empty string is returned. On failure, the interpreter
-**   result is set to the text representation of the returned error code 
-**   (i.e. "SQLITE_NOMEM") and a Tcl exception is thrown.
-*/
-static int test_blob_write(
-  ClientData clientData, /* Not used */
-  Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
-  int objc,              /* Number of arguments */
-  Tcl_Obj *CONST objv[]  /* Command arguments */
-){
-  sqlite3_blob *pBlob;
-  int iOffset;
-  int rc;
-
-  unsigned char *zBuf;
-  int nBuf;
-  
-  if( objc!=4 && objc!=5 ){
-    Tcl_WrongNumArgs(interp, 1, objv, "CHANNEL OFFSET DATA ?NDATA?");
-    return TCL_ERROR;
-  }
-
-  if( blobHandleFromObj(interp, objv[1], &pBlob) ) return TCL_ERROR;
-  if( TCL_OK!=Tcl_GetIntFromObj(interp, objv[2], &iOffset) ){ 
-    return TCL_ERROR;
-  }
-
-  zBuf = Tcl_GetByteArrayFromObj(objv[3], &nBuf);
-  if( objc==5 && Tcl_GetIntFromObj(interp, objv[4], &nBuf) ){
-    return TCL_ERROR;
-  }
-  rc = sqlite3_blob_write(pBlob, zBuf, nBuf, iOffset);
-  if( rc!=SQLITE_OK ){
-    Tcl_SetResult(interp, (char *)sqlite3TestErrorName(rc), TCL_VOLATILE);
-  }
-
-  return (rc==SQLITE_OK ? TCL_OK : TCL_ERROR);
-}
-
 static int test_blob_reopen(
   ClientData clientData, /* Not used */
   Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
@@ -1791,7 +1673,7 @@ static int test_blob_reopen(
 
   rc = sqlite3_blob_reopen(pBlob, iRowid);
   if( rc!=SQLITE_OK ){
-    Tcl_SetResult(interp, (char *)sqlite3TestErrorName(rc), TCL_VOLATILE);
+    Tcl_SetResult(interp, (char *)sqlite3ErrName(rc), TCL_VOLATILE);
   }
 
   return (rc==SQLITE_OK ? TCL_OK : TCL_ERROR);
@@ -2001,7 +1883,7 @@ static int test_create_function_v2(
   );
   if( rc!=SQLITE_OK ){
     Tcl_ResetResult(interp);
-    Tcl_AppendResult(interp, sqlite3TestErrorName(rc), 0);
+    Tcl_AppendResult(interp, sqlite3ErrName(rc), 0);
     return TCL_ERROR;
   }
   return TCL_OK;
@@ -2239,7 +2121,7 @@ static int test_stmt_status(
   Tcl_Obj *CONST objv[]
 ){
   int iValue;
-  int i, op, resetFlag;
+  int i, op = 0, resetFlag;
   const char *zOpName;
   sqlite3_stmt *pStmt;
 
@@ -2250,6 +2132,7 @@ static int test_stmt_status(
     { "SQLITE_STMTSTATUS_FULLSCAN_STEP",   SQLITE_STMTSTATUS_FULLSCAN_STEP   },
     { "SQLITE_STMTSTATUS_SORT",            SQLITE_STMTSTATUS_SORT            },
     { "SQLITE_STMTSTATUS_AUTOINDEX",       SQLITE_STMTSTATUS_AUTOINDEX       },
+    { "SQLITE_STMTSTATUS_VM_STEP",         SQLITE_STMTSTATUS_VM_STEP         },
   };
   if( objc!=4 ){
     Tcl_WrongNumArgs(interp, 1, objv, "STMT PARAMETER RESETFLAG");
@@ -2271,6 +2154,77 @@ static int test_stmt_status(
   Tcl_SetObjResult(interp, Tcl_NewIntObj(iValue));
   return TCL_OK;
 }
+
+#ifdef SQLITE_ENABLE_STMT_SCANSTATUS
+/*
+** Usage:  sqlite3_stmt_scanstatus STMT IDX
+*/
+static int test_stmt_scanstatus(
+  void * clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  sqlite3_stmt *pStmt;            /* First argument */
+  int idx;                        /* Second argument */
+
+  const char *zName;
+  const char *zExplain;
+  sqlite3_int64 nLoop;
+  sqlite3_int64 nVisit;
+  double rEst;
+  int res;
+
+  if( objc!=3 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "STMT IDX");
+    return TCL_ERROR;
+  }
+  if( getStmtPointer(interp, Tcl_GetString(objv[1]), &pStmt) ) return TCL_ERROR;
+  if( Tcl_GetIntFromObj(interp, objv[2], &idx) ) return TCL_ERROR;
+
+  res = sqlite3_stmt_scanstatus(pStmt, idx, SQLITE_SCANSTAT_NLOOP, (void*)&nLoop);
+  if( res==0 ){
+    Tcl_Obj *pRet = Tcl_NewObj();
+    Tcl_ListObjAppendElement(0, pRet, Tcl_NewStringObj("nLoop", -1));
+    Tcl_ListObjAppendElement(0, pRet, Tcl_NewWideIntObj(nLoop));
+    sqlite3_stmt_scanstatus(pStmt, idx, SQLITE_SCANSTAT_NVISIT, (void*)&nVisit);
+    Tcl_ListObjAppendElement(0, pRet, Tcl_NewStringObj("nVisit", -1));
+    Tcl_ListObjAppendElement(0, pRet, Tcl_NewWideIntObj(nVisit));
+    sqlite3_stmt_scanstatus(pStmt, idx, SQLITE_SCANSTAT_EST, (void*)&rEst);
+    Tcl_ListObjAppendElement(0, pRet, Tcl_NewStringObj("nEst", -1));
+    Tcl_ListObjAppendElement(0, pRet, Tcl_NewDoubleObj(rEst));
+    sqlite3_stmt_scanstatus(pStmt, idx, SQLITE_SCANSTAT_NAME, (void*)&zName);
+    Tcl_ListObjAppendElement(0, pRet, Tcl_NewStringObj("zName", -1));
+    Tcl_ListObjAppendElement(0, pRet, Tcl_NewStringObj(zName, -1));
+    sqlite3_stmt_scanstatus(pStmt, idx, SQLITE_SCANSTAT_EXPLAIN, (void*)&zExplain);
+    Tcl_ListObjAppendElement(0, pRet, Tcl_NewStringObj("zExplain", -1));
+    Tcl_ListObjAppendElement(0, pRet, Tcl_NewStringObj(zExplain, -1));
+    Tcl_SetObjResult(interp, pRet);
+  }else{
+    Tcl_ResetResult(interp);
+  }
+  return TCL_OK;
+}
+
+/*
+** Usage:  sqlite3_stmt_scanstatus_reset  STMT
+*/
+static int test_stmt_scanstatus_reset(
+  void * clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  sqlite3_stmt *pStmt;            /* First argument */
+  if( objc!=2 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "STMT");
+    return TCL_ERROR;
+  }
+  if( getStmtPointer(interp, Tcl_GetString(objv[1]), &pStmt) ) return TCL_ERROR;
+  sqlite3_stmt_scanstatus_reset(pStmt);
+  return TCL_OK;
+}
+#endif
 
 /*
 ** Usage:  sqlite3_next_stmt  DB  STMT
@@ -2501,7 +2455,7 @@ static int sqlite_static_bind_nbyte = 0;
 /*
 ** Usage:  sqlite3_bind  VM  IDX  VALUE  FLAGS
 **
-** Sets the value of the IDX-th occurance of "?" in the original SQL
+** Sets the value of the IDX-th occurrence of "?" in the original SQL
 ** string.  VALUE is the new value.  If FLAGS=="null" then VALUE is
 ** ignored and the value is set to NULL.  If FLAGS=="static" then
 ** the value is set to the value of a static variable named
@@ -2544,7 +2498,7 @@ static int test_bind(
   if( sqlite3TestErrCode(interp, StmtToDb(pStmt), rc) ) return TCL_ERROR;
   if( rc ){
     char zBuf[50];
-    sprintf(zBuf, "(%d) ", rc);
+    sqlite3_snprintf(sizeof(zBuf), zBuf, "(%d) ", rc);
     Tcl_AppendResult(interp, zBuf, sqlite3ErrStr(rc), 0);
     return TCL_ERROR;
   }
@@ -2576,7 +2530,7 @@ static int test_bind(
 ** SQLite selected to call. The TCL test script implements the
 ** "test_collate" proc.
 **
-** Note that this will only work with one intepreter at a time, as the
+** Note that this will only work with one interpreter at a time, as the
 ** interp pointer to use when evaluating the TCL script is stored in
 ** pTestCollateInterp.
 */
@@ -2677,7 +2631,7 @@ static int test_collate(
   if( sqlite3TestErrCode(interp, db, rc) ) return TCL_ERROR;
   
   if( rc!=SQLITE_OK ){
-    Tcl_AppendResult(interp, sqlite3TestErrorName(rc), 0);
+    Tcl_AppendResult(interp, sqlite3ErrName(rc), 0);
     return TCL_ERROR;
   }
   return TCL_OK;
@@ -2685,6 +2639,46 @@ static int test_collate(
 bad_args:
   Tcl_AppendResult(interp, "wrong # args: should be \"",
       Tcl_GetStringFromObj(objv[0], 0), " <DB> <utf8> <utf16le> <utf16be>", 0);
+  return TCL_ERROR;
+}
+
+/*
+** Usage: add_test_utf16bin_collate <db ptr>
+**
+** Add a utf-16 collation sequence named "utf16bin" to the database
+** handle. This collation sequence compares arguments in the same way as the
+** built-in collation "binary".
+*/
+static int test_utf16bin_collate_func(
+  void *pCtx, 
+  int nA, const void *zA,
+  int nB, const void *zB
+){
+  int nCmp = (nA>nB ? nB : nA);
+  int res = memcmp(zA, zB, nCmp);
+  if( res==0 ) res = nA - nB;
+  return res;
+}
+static int test_utf16bin_collate(
+  void * clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  sqlite3 *db;
+  int rc;
+
+  if( objc!=2 ) goto bad_args;
+  if( getDbPointer(interp, Tcl_GetString(objv[1]), &db) ) return TCL_ERROR;
+
+  rc = sqlite3_create_collation(db, "utf16bin", SQLITE_UTF16, 0, 
+      test_utf16bin_collate_func
+  );
+  if( sqlite3TestErrCode(interp, db, rc) ) return TCL_ERROR;
+  return TCL_OK;
+
+bad_args:
+  Tcl_WrongNumArgs(interp, 1, objv, "DB");
   return TCL_ERROR;
 }
 
@@ -3015,6 +3009,43 @@ static int test_bind_zeroblob(
 }
 
 /*
+** Usage:   sqlite3_bind_zeroblob64  STMT IDX N
+**
+** Test the sqlite3_bind_zeroblob64 interface.  STMT is a prepared statement.
+** IDX is the index of a wildcard in the prepared statement.  This command
+** binds a N-byte zero-filled BLOB to the wildcard.
+*/
+static int test_bind_zeroblob64(
+  void * clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  sqlite3_stmt *pStmt;
+  int idx;
+  i64 n;
+  int rc;
+
+  if( objc!=4 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "STMT IDX N");
+    return TCL_ERROR;
+  }
+
+  if( getStmtPointer(interp, Tcl_GetString(objv[1]), &pStmt) ) return TCL_ERROR;
+  if( Tcl_GetIntFromObj(interp, objv[2], &idx) ) return TCL_ERROR;
+  if( Tcl_GetWideIntFromObj(interp, objv[3], &n) ) return TCL_ERROR;
+
+  rc = sqlite3_bind_zeroblob64(pStmt, idx, n);
+  if( sqlite3TestErrCode(interp, StmtToDb(pStmt), rc) ) return TCL_ERROR;
+  if( rc!=SQLITE_OK ){
+    Tcl_AppendResult(interp, sqlite3ErrName(rc), 0);
+    return TCL_ERROR;
+  }
+
+  return TCL_OK;
+}
+
+/*
 ** Usage:   sqlite3_bind_int  STMT N VALUE
 **
 ** Test the sqlite3_bind_int interface.  STMT is a prepared statement.
@@ -3067,7 +3098,7 @@ static int test_bind_int64(
 ){
   sqlite3_stmt *pStmt;
   int idx;
-  i64 value;
+  Tcl_WideInt value;
   int rc;
 
   if( objc!=4 ){
@@ -3105,7 +3136,7 @@ static int test_bind_double(
 ){
   sqlite3_stmt *pStmt;
   int idx;
-  double value;
+  double value = 0;
   int rc;
   const char *zVal;
   int i;
@@ -3235,7 +3266,7 @@ static int test_bind_text(
   rc = sqlite3_bind_text(pStmt, idx, value, bytes, SQLITE_TRANSIENT);
   if( sqlite3TestErrCode(interp, StmtToDb(pStmt), rc) ) return TCL_ERROR;
   if( rc!=SQLITE_OK ){
-    Tcl_AppendResult(interp, sqlite3TestErrorName(rc), 0);
+    Tcl_AppendResult(interp, sqlite3ErrName(rc), 0);
     return TCL_ERROR;
   }
 
@@ -3263,7 +3294,7 @@ static int test_bind_text16(
   char *value;
   int rc;
 
-  void (*xDel)() = (objc==6?SQLITE_STATIC:SQLITE_TRANSIENT);
+  void (*xDel)(void*) = (objc==6?SQLITE_STATIC:SQLITE_TRANSIENT);
   Tcl_Obj *oStmt    = objv[objc-4];
   Tcl_Obj *oN       = objv[objc-3];
   Tcl_Obj *oString  = objv[objc-2];
@@ -3283,7 +3314,7 @@ static int test_bind_text16(
   rc = sqlite3_bind_text16(pStmt, idx, (void *)value, bytes, xDel);
   if( sqlite3TestErrCode(interp, StmtToDb(pStmt), rc) ) return TCL_ERROR;
   if( rc!=SQLITE_OK ){
-    Tcl_AppendResult(interp, sqlite3TestErrorName(rc), 0);
+    Tcl_AppendResult(interp, sqlite3ErrName(rc), 0);
     return TCL_ERROR;
   }
 
@@ -3609,16 +3640,16 @@ static int test_prepare(
   if( sqlite3TestErrCode(interp, db, rc) ) return TCL_ERROR;
   if( zTail && objc>=5 ){
     if( bytes>=0 ){
-      bytes = bytes - (zTail-zSql);
+      bytes = bytes - (int)(zTail-zSql);
     }
-    if( strlen(zTail)<bytes ){
-      bytes = strlen(zTail);
+    if( (int)strlen(zTail)<bytes ){
+      bytes = (int)strlen(zTail);
     }
     Tcl_ObjSetVar2(interp, objv[4], 0, Tcl_NewStringObj(zTail, bytes), 0);
   }
   if( rc!=SQLITE_OK ){
     assert( pStmt==0 );
-    sprintf(zBuf, "(%d) ", rc);
+    sqlite3_snprintf(sizeof(zBuf), zBuf, "(%d) ", rc);
     Tcl_AppendResult(interp, zBuf, sqlite3_errmsg(db), 0);
     return TCL_ERROR;
   }
@@ -3646,6 +3677,7 @@ static int test_prepare_v2(
 ){
   sqlite3 *db;
   const char *zSql;
+  char *zCopy = 0;                /* malloc() copy of zSql */
   int bytes;
   const char *zTail = 0;
   sqlite3_stmt *pStmt = 0;
@@ -3661,19 +3693,33 @@ static int test_prepare_v2(
   zSql = Tcl_GetString(objv[2]);
   if( Tcl_GetIntFromObj(interp, objv[3], &bytes) ) return TCL_ERROR;
 
-  rc = sqlite3_prepare_v2(db, zSql, bytes, &pStmt, objc>=5 ? &zTail : 0);
+  /* Instead of using zSql directly, make a copy into a buffer obtained
+  ** directly from malloc(). The idea is to make it easier for valgrind
+  ** to spot buffer overreads.  */
+  if( bytes>=0 ){
+    zCopy = malloc(bytes);
+    memcpy(zCopy, zSql, bytes);
+  }else{
+    int n = (int)strlen(zSql) + 1;
+    zCopy = malloc(n);
+    memcpy(zCopy, zSql, n);
+  }
+  rc = sqlite3_prepare_v2(db, zCopy, bytes, &pStmt, objc>=5 ? &zTail : 0);
+  free(zCopy);
+  zTail = &zSql[(zTail - zCopy)];
+
   assert(rc==SQLITE_OK || pStmt==0);
   Tcl_ResetResult(interp);
   if( sqlite3TestErrCode(interp, db, rc) ) return TCL_ERROR;
-  if( zTail && objc>=5 ){
+  if( rc==SQLITE_OK && zTail && objc>=5 ){
     if( bytes>=0 ){
-      bytes = bytes - (zTail-zSql);
+      bytes = bytes - (int)(zTail-zSql);
     }
     Tcl_ObjSetVar2(interp, objv[4], 0, Tcl_NewStringObj(zTail, bytes), 0);
   }
   if( rc!=SQLITE_OK ){
     assert( pStmt==0 );
-    sprintf(zBuf, "(%d) ", rc);
+    sqlite3_snprintf(sizeof(zBuf), zBuf, "(%d) ", rc);
     Tcl_AppendResult(interp, zBuf, sqlite3_errmsg(db), 0);
     return TCL_ERROR;
   }
@@ -3689,7 +3735,7 @@ static int test_prepare_v2(
 ** Usage: sqlite3_prepare_tkt3134 DB
 **
 ** Generate a prepared statement for a zero-byte string as a test
-** for ticket #3134.  The string should be preceeded by a zero byte.
+** for ticket #3134.  The string should be preceded by a zero byte.
 */
 static int test_prepare_tkt3134(
   void * clientData,
@@ -3714,7 +3760,7 @@ static int test_prepare_tkt3134(
   if( sqlite3TestErrCode(interp, db, rc) ) return TCL_ERROR;
   if( rc!=SQLITE_OK ){
     assert( pStmt==0 );
-    sprintf(zBuf, "(%d) ", rc);
+    sqlite3_snprintf(sizeof(zBuf), zBuf, "(%d) ", rc);
     Tcl_AppendResult(interp, zBuf, sqlite3_errmsg(db), 0);
     return TCL_ERROR;
   }
@@ -3768,7 +3814,7 @@ static int test_prepare16(
 
   if( objc>=5 ){
     if( zTail ){
-      objlen = objlen - ((u8 *)zTail-(u8 *)zSql);
+      objlen = objlen - (int)((u8 *)zTail-(u8 *)zSql);
     }else{
       objlen = 0;
     }
@@ -3828,7 +3874,7 @@ static int test_prepare16_v2(
 
   if( objc>=5 ){
     if( zTail ){
-      objlen = objlen - ((u8 *)zTail-(u8 *)zSql);
+      objlen = objlen - (int)((u8 *)zTail-(u8 *)zSql);
     }else{
       objlen = 0;
     }
@@ -4529,7 +4575,7 @@ static int get_autocommit(
     return TCL_ERROR;
   }
   if( getDbPointer(interp, argv[1], &db) ) return TCL_ERROR;
-  sprintf(zBuf, "%d", sqlite3_get_autocommit(db));
+  sqlite3_snprintf(sizeof(zBuf), zBuf, "%d", sqlite3_get_autocommit(db));
   Tcl_AppendResult(interp, zBuf, 0);
   return TCL_OK;
 }
@@ -4557,7 +4603,7 @@ static int test_busy_timeout(
   if( getDbPointer(interp, argv[1], &db) ) return TCL_ERROR;
   if( Tcl_GetInt(interp, argv[2], &ms) ) return TCL_ERROR;
   rc = sqlite3_busy_timeout(db, ms);
-  Tcl_AppendResult(interp, sqlite3TestErrorName(rc), 0);
+  Tcl_AppendResult(interp, sqlite3ErrName(rc), 0);
   return TCL_OK;
 }
 
@@ -4703,7 +4749,7 @@ static int test_soft_heap_limit(
   Tcl_Obj *CONST objv[]
 ){
   sqlite3_int64 amt;
-  sqlite3_int64 N = -1;
+  Tcl_WideInt N = -1;
   if( objc!=1 && objc!=2 ){
     Tcl_WrongNumArgs(interp, 1, objv, "?N?");
     return TCL_ERROR;
@@ -5078,7 +5124,7 @@ static int file_control_chunksize_test(
 
   rc = sqlite3_file_control(db, zDb, SQLITE_FCNTL_CHUNK_SIZE, (void *)&nSize);
   if( rc ){
-    Tcl_SetResult(interp, (char *)sqlite3TestErrorName(rc), TCL_STATIC);
+    Tcl_SetResult(interp, (char *)sqlite3ErrName(rc), TCL_STATIC);
     return TCL_ERROR;
   }
   return TCL_OK;
@@ -5096,7 +5142,7 @@ static int file_control_sizehint_test(
   int objc,              /* Number of arguments */
   Tcl_Obj *CONST objv[]  /* Command arguments */
 ){
-  sqlite3_int64 nSize;            /* Hinted size */
+  Tcl_WideInt nSize;              /* Hinted size */
   char *zDb;                      /* Db name ("main", "temp" etc.) */
   sqlite3 *db;                    /* Database handle */
   int rc;                         /* file_control() return code */
@@ -5115,7 +5161,7 @@ static int file_control_sizehint_test(
 
   rc = sqlite3_file_control(db, zDb, SQLITE_FCNTL_SIZE_HINT, (void *)&nSize);
   if( rc ){
-    Tcl_SetResult(interp, (char *)sqlite3TestErrorName(rc), TCL_STATIC);
+    Tcl_SetResult(interp, (char *)sqlite3ErrName(rc), TCL_STATIC);
     return TCL_ERROR;
   }
   return TCL_OK;
@@ -5165,7 +5211,7 @@ static int file_control_lockproxy_test(
       Tcl_AppendResult(interp, "PWD too big", (void*)0);
       return TCL_ERROR;
     }
-    sprintf(proxyPath, "%s/test.proxy", zPwd);
+    sqlite3_snprintf(sizeof(proxyPath), proxyPath, "%s/test.proxy", zPwd);
     rc = sqlite3_file_control(db, NULL, SQLITE_SET_LOCKPROXYFILE, proxyPath);
     if( rc ){
       Tcl_SetObjResult(interp, Tcl_NewIntObj(rc)); 
@@ -5191,6 +5237,7 @@ static int file_control_lockproxy_test(
   return TCL_OK;  
 }
 
+#if SQLITE_OS_WIN
 /*
 ** tclcmd:   file_control_win32_av_retry DB  NRETRY  DELAY
 **
@@ -5223,6 +5270,42 @@ static int file_control_win32_av_retry(
   Tcl_AppendResult(interp, z, (char*)0);
   return TCL_OK;  
 }
+
+/*
+** tclcmd:   file_control_win32_set_handle DB HANDLE
+**
+** This TCL command runs the sqlite3_file_control interface with
+** the SQLITE_FCNTL_WIN32_SET_HANDLE opcode.
+*/
+static int file_control_win32_set_handle(
+  ClientData clientData, /* Pointer to sqlite3_enable_XXX function */
+  Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
+  int objc,              /* Number of arguments */
+  Tcl_Obj *CONST objv[]  /* Command arguments */
+){
+  sqlite3 *db;
+  int rc;
+  HANDLE hFile = NULL;
+  char z[100];
+
+  if( objc!=3 ){
+    Tcl_AppendResult(interp, "wrong # args: should be \"",
+        Tcl_GetStringFromObj(objv[0], 0), " DB HANDLE", 0);
+    return TCL_ERROR;
+  }
+  if( getDbPointer(interp, Tcl_GetString(objv[1]), &db) ){
+    return TCL_ERROR;
+  }
+  if( getWin32Handle(interp, Tcl_GetString(objv[2]), &hFile) ){
+    return TCL_ERROR;
+  }
+  rc = sqlite3_file_control(db, NULL, SQLITE_FCNTL_WIN32_SET_HANDLE,
+                            (void*)&hFile);
+  sqlite3_snprintf(sizeof(z), z, "%d %p", rc, (void*)hFile);
+  Tcl_AppendResult(interp, z, (char*)0);
+  return TCL_OK;  
+}
+#endif
 
 /*
 ** tclcmd:   file_control_persist_wal DB PERSIST-FLAG
@@ -5321,6 +5404,38 @@ static int file_control_vfsname(
   return TCL_OK;  
 }
 
+/*
+** tclcmd:   file_control_tempfilename DB ?AUXDB?
+**
+** Return a string that is a temporary filename
+*/
+static int file_control_tempfilename(
+  ClientData clientData, /* Pointer to sqlite3_enable_XXX function */
+  Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
+  int objc,              /* Number of arguments */
+  Tcl_Obj *CONST objv[]  /* Command arguments */
+){
+  sqlite3 *db;
+  const char *zDbName = "main";
+  char *zTName = 0;
+
+  if( objc!=2 && objc!=3 ){
+    Tcl_AppendResult(interp, "wrong # args: should be \"",
+        Tcl_GetStringFromObj(objv[0], 0), " DB ?AUXDB?", 0);
+    return TCL_ERROR;
+  }
+  if( getDbPointer(interp, Tcl_GetString(objv[1]), &db) ){
+    return TCL_ERROR;
+  }
+  if( objc==3 ){
+    zDbName = Tcl_GetString(objv[2]);
+  }
+  sqlite3_file_control(db, zDbName, SQLITE_FCNTL_TEMPFILENAME, (void*)&zTName);
+  Tcl_AppendResult(interp, zTName, (char*)0);
+  sqlite3_free(zTName);
+  return TCL_OK;  
+}
+
 
 /*
 ** tclcmd:   sqlite3_vfs_list
@@ -5375,12 +5490,13 @@ static int test_limit(
     { "SQLITE_LIMIT_LIKE_PATTERN_LENGTH", SQLITE_LIMIT_LIKE_PATTERN_LENGTH  },
     { "SQLITE_LIMIT_VARIABLE_NUMBER",     SQLITE_LIMIT_VARIABLE_NUMBER      },
     { "SQLITE_LIMIT_TRIGGER_DEPTH",       SQLITE_LIMIT_TRIGGER_DEPTH        },
+    { "SQLITE_LIMIT_WORKER_THREADS",      SQLITE_LIMIT_WORKER_THREADS       },
     
     /* Out of range test cases */
     { "SQLITE_LIMIT_TOOSMALL",            -1,                               },
-    { "SQLITE_LIMIT_TOOBIG",              SQLITE_LIMIT_TRIGGER_DEPTH+1      },
+    { "SQLITE_LIMIT_TOOBIG",              SQLITE_LIMIT_WORKER_THREADS+1     },
   };
-  int i, id;
+  int i, id = 0;
   int val;
   const char *zId;
 
@@ -5449,6 +5565,37 @@ static int reset_prng_state(
   Tcl_Obj *CONST objv[]  /* Command arguments */
 ){
   sqlite3_test_control(SQLITE_TESTCTRL_PRNG_RESET);
+  return TCL_OK;
+}
+
+/*
+** tclcmd:  database_may_be_corrupt
+**
+** Indicate that database files might be corrupt.  In other words, set the normal
+** state of operation.
+*/
+static int database_may_be_corrupt(
+  ClientData clientData, /* Pointer to sqlite3_enable_XXX function */
+  Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
+  int objc,              /* Number of arguments */
+  Tcl_Obj *CONST objv[]  /* Command arguments */
+){
+  sqlite3_test_control(SQLITE_TESTCTRL_NEVER_CORRUPT, 0);
+  return TCL_OK;
+}
+/*
+** tclcmd:  database_never_corrupt
+**
+** Indicate that database files are always well-formed.  This enables extra assert()
+** statements that test conditions that are always true for well-formed databases.
+*/
+static int database_never_corrupt(
+  ClientData clientData, /* Pointer to sqlite3_enable_XXX function */
+  Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
+  int objc,              /* Number of arguments */
+  Tcl_Obj *CONST objv[]  /* Command arguments */
+){
+  sqlite3_test_control(SQLITE_TESTCTRL_NEVER_CORRUPT, 1);
   return TCL_OK;
 }
 
@@ -5563,7 +5710,7 @@ static int test_wal_checkpoint(
 **
 ** Otherwise, this command returns a list of three integers. The first integer
 ** is 1 if SQLITE_BUSY was returned, or 0 otherwise. The following two integers
-** are the values returned via the output paramaters by wal_checkpoint_v2() -
+** are the values returned via the output parameters by wal_checkpoint_v2() -
 ** the number of frames in the log and the number of frames in the log
 ** that have been checkpointed.
 */
@@ -5582,10 +5729,11 @@ static int test_wal_checkpoint_v2(
   int nCkpt = -555;
   Tcl_Obj *pRet;
 
-  const char * aMode[] = { "passive", "full", "restart", 0 };
+  const char * aMode[] = { "passive", "full", "restart", "truncate", 0 };
   assert( SQLITE_CHECKPOINT_PASSIVE==0 );
   assert( SQLITE_CHECKPOINT_FULL==1 );
   assert( SQLITE_CHECKPOINT_RESTART==2 );
+  assert( SQLITE_CHECKPOINT_TRUNCATE==3 );
 
   if( objc!=3 && objc!=4 ){
     Tcl_WrongNumArgs(interp, 1, objv, "DB MODE ?NAME?");
@@ -5595,15 +5743,18 @@ static int test_wal_checkpoint_v2(
   if( objc==4 ){
     zDb = Tcl_GetString(objv[3]);
   }
-  if( getDbPointer(interp, Tcl_GetString(objv[1]), &db)
-   || Tcl_GetIndexFromObj(interp, objv[2], aMode, "mode", 0, &eMode) 
-  ){
+  if( getDbPointer(interp, Tcl_GetString(objv[1]), &db) || (
+      TCL_OK!=Tcl_GetIntFromObj(0, objv[2], &eMode)
+   && TCL_OK!=Tcl_GetIndexFromObj(interp, objv[2], aMode, "mode", 0, &eMode) 
+  )){
     return TCL_ERROR;
   }
 
   rc = sqlite3_wal_checkpoint_v2(db, zDb, eMode, &nLog, &nCkpt);
   if( rc!=SQLITE_OK && rc!=SQLITE_BUSY ){
-    Tcl_SetResult(interp, (char *)sqlite3_errmsg(db), TCL_VOLATILE);
+    const char *zErrCode = sqlite3ErrName(rc);
+    Tcl_ResetResult(interp);
+    Tcl_AppendResult(interp, zErrCode, " - ", (char *)sqlite3_errmsg(db), 0);
     return TCL_ERROR;
   }
 
@@ -5617,6 +5768,43 @@ static int test_wal_checkpoint_v2(
 }
 
 /*
+** tclcmd:  sqlite3_wal_autocheckpoint db VALUE
+*/
+static int test_wal_autocheckpoint(
+  ClientData clientData, /* Unused */
+  Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
+  int objc,              /* Number of arguments */
+  Tcl_Obj *CONST objv[]  /* Command arguments */
+){
+  sqlite3 *db;
+  int rc;
+  int iVal;
+
+
+  if( objc!=3 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "DB VALUE");
+    return TCL_ERROR;
+  }
+
+  if( getDbPointer(interp, Tcl_GetString(objv[1]), &db) 
+   || Tcl_GetIntFromObj(0, objv[2], &iVal)
+  ){
+    return TCL_ERROR;
+  }
+
+  rc = sqlite3_wal_autocheckpoint(db, iVal);
+  Tcl_ResetResult(interp);
+  if( rc!=SQLITE_OK ){
+    const char *zErrCode = sqlite3ErrName(rc);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(zErrCode, -1));
+    return TCL_ERROR;
+  }
+
+  return TCL_OK;
+}
+
+
+/*
 ** tclcmd:  test_sqlite3_log ?SCRIPT?
 */
 static struct LogCallback {
@@ -5627,7 +5815,7 @@ static void xLogcallback(void *unused, int err, char *zMsg){
   Tcl_Obj *pNew = Tcl_DuplicateObj(logcallback.pObj);
   Tcl_IncrRefCount(pNew);
   Tcl_ListObjAppendElement(
-      0, pNew, Tcl_NewStringObj(sqlite3TestErrorName(err), -1)
+      0, pNew, Tcl_NewStringObj(sqlite3ErrName(err), -1)
   );
   Tcl_ListObjAppendElement(0, pNew, Tcl_NewStringObj(zMsg, -1));
   Tcl_EvalObjEx(logcallback.pInterp, pNew, TCL_EVAL_GLOBAL|TCL_EVAL_DIRECT);
@@ -5766,6 +5954,8 @@ static int test_test_control(
     int i;
   } aVerb[] = {
     { "SQLITE_TESTCTRL_LOCALTIME_FAULT", SQLITE_TESTCTRL_LOCALTIME_FAULT }, 
+    { "SQLITE_TESTCTRL_SORTER_MMAP",     SQLITE_TESTCTRL_SORTER_MMAP     }, 
+    { "SQLITE_TESTCTRL_IMPOSTER",        SQLITE_TESTCTRL_IMPOSTER        },
   };
   int iVerb;
   int iFlag;
@@ -5793,11 +5983,66 @@ static int test_test_control(
       sqlite3_test_control(SQLITE_TESTCTRL_LOCALTIME_FAULT, val);
       break;
     }
+
+    case SQLITE_TESTCTRL_SORTER_MMAP: {
+      int val;
+      sqlite3 *db;
+      if( objc!=4 ){
+        Tcl_WrongNumArgs(interp, 2, objv, "DB LIMIT");
+        return TCL_ERROR;
+      }
+      if( getDbPointer(interp, Tcl_GetString(objv[2]), &db) ) return TCL_ERROR;
+      if( Tcl_GetIntFromObj(interp, objv[3], &val) ) return TCL_ERROR;
+      sqlite3_test_control(SQLITE_TESTCTRL_SORTER_MMAP, db, val);
+      break;
+    }
+
+    case SQLITE_TESTCTRL_IMPOSTER: {
+      int onOff, tnum;
+      const char *zDbName;
+      sqlite3 *db;
+      if( objc!=6 ){
+        Tcl_WrongNumArgs(interp, 2, objv, "DB dbName onOff tnum");
+        return TCL_ERROR;
+      }
+      if( getDbPointer(interp, Tcl_GetString(objv[2]), &db) ) return TCL_ERROR;
+      zDbName = Tcl_GetString(objv[3]);
+      if( Tcl_GetIntFromObj(interp, objv[4], &onOff) ) return TCL_ERROR;
+      if( Tcl_GetIntFromObj(interp, objv[5], &tnum) ) return TCL_ERROR;
+      sqlite3_test_control(SQLITE_TESTCTRL_IMPOSTER, db, zDbName, onOff, tnum);
+      break;
+    }
   }
 
   Tcl_ResetResult(interp);
   return TCL_OK;
 }
+
+#if SQLITE_OS_UNIX
+#include <sys/time.h>
+#include <sys/resource.h>
+
+static int test_getrusage(
+  void * clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  char buf[1024];
+  struct rusage r;
+  memset(&r, 0, sizeof(r));
+  getrusage(RUSAGE_SELF, &r);
+
+  sqlite3_snprintf(sizeof(buf), buf,
+    "ru_utime=%d.%06d ru_stime=%d.%06d ru_minflt=%d ru_majflt=%d", 
+    (int)r.ru_utime.tv_sec, (int)r.ru_utime.tv_usec, 
+    (int)r.ru_stime.tv_sec, (int)r.ru_stime.tv_usec, 
+    (int)r.ru_minflt, (int)r.ru_majflt
+  );
+  Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
+  return TCL_OK;
+}
+#endif
 
 #if SQLITE_OS_WIN
 /*
@@ -5816,6 +6061,7 @@ struct win32FileLocker {
 
 
 #if SQLITE_OS_WIN
+#include <process.h>
 /*
 ** The background thread that does file locking.
 */
@@ -5907,6 +6153,145 @@ static int win32_file_lock(
   CloseHandle(ev);
   return TCL_OK;
 }
+
+/*
+**      exists_win32_path PATH
+**
+** Returns non-zero if the specified path exists, whose fully qualified name
+** may exceed 260 characters if it is prefixed with "\\?\".
+*/
+static int win32_exists_path(
+  void *clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  if( objc!=2 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "PATH");
+    return TCL_ERROR;
+  }
+  Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
+      GetFileAttributesW( Tcl_GetUnicode(objv[1]))!=INVALID_FILE_ATTRIBUTES ));
+  return TCL_OK;
+}
+
+/*
+**      find_win32_file PATTERN
+**
+** Returns a list of entries in a directory that match the specified pattern,
+** whose fully qualified name may exceed 248 characters if it is prefixed with
+** "\\?\".
+*/
+static int win32_find_file(
+  void *clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  HANDLE hFindFile = INVALID_HANDLE_VALUE;
+  WIN32_FIND_DATAW findData;
+  Tcl_Obj *listObj;
+  DWORD lastErrno;
+  if( objc!=2 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "PATTERN");
+    return TCL_ERROR;
+  }
+  hFindFile = FindFirstFileW(Tcl_GetUnicode(objv[1]), &findData);
+  if( hFindFile==INVALID_HANDLE_VALUE ){
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(GetLastError()));
+    return TCL_ERROR;
+  }
+  listObj = Tcl_NewObj();
+  Tcl_IncrRefCount(listObj);
+  do {
+    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewUnicodeObj(
+        findData.cFileName, -1));
+    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewWideIntObj(
+        findData.dwFileAttributes));
+  } while( FindNextFileW(hFindFile, &findData) );
+  lastErrno = GetLastError();
+  if( lastErrno!=NO_ERROR && lastErrno!=ERROR_NO_MORE_FILES ){
+    FindClose(hFindFile);
+    Tcl_DecrRefCount(listObj);
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(GetLastError()));
+    return TCL_ERROR;
+  }
+  FindClose(hFindFile);
+  Tcl_SetObjResult(interp, listObj);
+  return TCL_OK;
+}
+
+/*
+**      delete_win32_file FILENAME
+**
+** Deletes the specified file, whose fully qualified name may exceed 260
+** characters if it is prefixed with "\\?\".
+*/
+static int win32_delete_file(
+  void *clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  if( objc!=2 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "FILENAME");
+    return TCL_ERROR;
+  }
+  if( !DeleteFileW(Tcl_GetUnicode(objv[1])) ){
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(GetLastError()));
+    return TCL_ERROR;
+  }
+  Tcl_ResetResult(interp);
+  return TCL_OK;
+}
+
+/*
+**      make_win32_dir DIRECTORY
+**
+** Creates the specified directory, whose fully qualified name may exceed 248
+** characters if it is prefixed with "\\?\".
+*/
+static int win32_mkdir(
+  void *clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  if( objc!=2 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "DIRECTORY");
+    return TCL_ERROR;
+  }
+  if( !CreateDirectoryW(Tcl_GetUnicode(objv[1]), NULL) ){
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(GetLastError()));
+    return TCL_ERROR;
+  }
+  Tcl_ResetResult(interp);
+  return TCL_OK;
+}
+
+/*
+**      remove_win32_dir DIRECTORY
+**
+** Removes the specified directory, whose fully qualified name may exceed 248
+** characters if it is prefixed with "\\?\".
+*/
+static int win32_rmdir(
+  void *clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  if( objc!=2 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "DIRECTORY");
+    return TCL_ERROR;
+  }
+  if( !RemoveDirectoryW(Tcl_GetUnicode(objv[1])) ){
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(GetLastError()));
+    return TCL_ERROR;
+  }
+  Tcl_ResetResult(interp);
+  return TCL_OK;
+}
 #endif
 
 
@@ -5927,20 +6312,25 @@ static int optimization_control(
   sqlite3 *db;
   const char *zOpt;
   int onoff;
-  int mask;
+  int mask = 0;
   static const struct {
     const char *zOptName;
     int mask;
   } aOpt[] = {
-    { "all",              SQLITE_OptMask        },
-    { "query-flattener",  SQLITE_QueryFlattener },
-    { "column-cache",     SQLITE_ColumnCache    },
-    { "index-sort",       SQLITE_IndexSort      },
-    { "index-search",     SQLITE_IndexSearch    },
-    { "index-cover",      SQLITE_IndexCover     },
-    { "groupby-order",    SQLITE_GroupByOrder   },
-    { "factor-constants", SQLITE_FactorOutConst },
-    { "real-as-int",      SQLITE_IdxRealAsInt   },
+    { "all",                 SQLITE_AllOpts        },
+    { "none",                0                     },
+    { "query-flattener",     SQLITE_QueryFlattener },
+    { "column-cache",        SQLITE_ColumnCache    },
+    { "groupby-order",       SQLITE_GroupByOrder   },
+    { "factor-constants",    SQLITE_FactorOutConst },
+    { "distinct-opt",        SQLITE_DistinctOpt    },
+    { "cover-idx-scan",      SQLITE_CoverIdxScan   },
+    { "order-by-idx-join",   SQLITE_OrderByIdxJoin },
+    { "transitive",          SQLITE_Transitive     },
+    { "subquery-coroutine",  SQLITE_SubqCoroutine  },
+    { "omit-noop-join",      SQLITE_OmitNoopJoin   },
+    { "stat3",               SQLITE_Stat34         },
+    { "stat4",               SQLITE_Stat34         },
   };
 
   if( objc!=4 ){
@@ -5961,12 +6351,412 @@ static int optimization_control(
     Tcl_AppendResult(interp, "unknown optimization - should be one of:",
                      (char*)0);
     for(i=0; i<sizeof(aOpt)/sizeof(aOpt[0]); i++){
-      Tcl_AppendResult(interp, " ", aOpt[i].zOptName);
+      Tcl_AppendResult(interp, " ", aOpt[i].zOptName, (char*)0);
     }
     return TCL_ERROR;
   }
   sqlite3_test_control(SQLITE_TESTCTRL_OPTIMIZATIONS, db, mask);
   return TCL_OK;
+}
+
+typedef struct sqlite3_api_routines sqlite3_api_routines;
+/*
+**     load_static_extension DB NAME ...
+**
+** Load one or more statically linked extensions.
+*/
+static int tclLoadStaticExtensionCmd(
+  void * clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  extern int sqlite3_amatch_init(sqlite3*,char**,const sqlite3_api_routines*);
+  extern int sqlite3_closure_init(sqlite3*,char**,const sqlite3_api_routines*);
+  extern int sqlite3_eval_init(sqlite3*,char**,const sqlite3_api_routines*);
+  extern int sqlite3_fileio_init(sqlite3*,char**,const sqlite3_api_routines*);
+  extern int sqlite3_fuzzer_init(sqlite3*,char**,const sqlite3_api_routines*);
+  extern int sqlite3_ieee_init(sqlite3*,char**,const sqlite3_api_routines*);
+  extern int sqlite3_nextchar_init(sqlite3*,char**,const sqlite3_api_routines*);
+  extern int sqlite3_percentile_init(sqlite3*,char**,const sqlite3_api_routines*);
+  extern int sqlite3_regexp_init(sqlite3*,char**,const sqlite3_api_routines*);
+  extern int sqlite3_spellfix_init(sqlite3*,char**,const sqlite3_api_routines*);
+  extern int sqlite3_totype_init(sqlite3*,char**,const sqlite3_api_routines*);
+  extern int sqlite3_wholenumber_init(sqlite3*,char**,const sqlite3_api_routines*);
+  extern int sqlite3_fts5_init(sqlite3*,char**,const sqlite3_api_routines*);
+  static const struct {
+    const char *zExtName;
+    int (*pInit)(sqlite3*,char**,const sqlite3_api_routines*);
+  } aExtension[] = {
+    { "amatch",                sqlite3_amatch_init               },
+    { "closure",               sqlite3_closure_init              },
+    { "eval",                  sqlite3_eval_init                 },
+#ifdef SQLITE_ENABLE_FTS5
+    { "fts5",                  sqlite3_fts5_init                 },
+#endif
+    { "fileio",                sqlite3_fileio_init               },
+    { "fuzzer",                sqlite3_fuzzer_init               },
+    { "ieee754",               sqlite3_ieee_init                 },
+    { "nextchar",              sqlite3_nextchar_init             },
+    { "percentile",            sqlite3_percentile_init           },
+    { "regexp",                sqlite3_regexp_init               },
+    { "spellfix",              sqlite3_spellfix_init             },
+    { "totype",                sqlite3_totype_init               },
+    { "wholenumber",           sqlite3_wholenumber_init          },
+  };
+  sqlite3 *db;
+  const char *zName;
+  int i, j, rc;
+  char *zErrMsg = 0;
+  if( objc<3 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "DB NAME ...");
+    return TCL_ERROR;
+  }
+  if( getDbPointer(interp, Tcl_GetString(objv[1]), &db) ) return TCL_ERROR;
+  for(j=2; j<objc; j++){
+    zName = Tcl_GetString(objv[j]);
+    for(i=0; i<ArraySize(aExtension); i++){
+      if( strcmp(zName, aExtension[i].zExtName)==0 ) break;
+    }
+    if( i>=ArraySize(aExtension) ){
+      Tcl_AppendResult(interp, "no such extension: ", zName, (char*)0);
+      return TCL_ERROR;
+    }
+    rc = aExtension[i].pInit(db, &zErrMsg, 0);
+    if( rc!=SQLITE_OK || zErrMsg ){
+      Tcl_AppendResult(interp, "initialization of ", zName, " failed: ", zErrMsg,
+                       (char*)0);
+      sqlite3_free(zErrMsg);
+      return TCL_ERROR;
+    }
+  }
+  return TCL_OK;
+}
+
+/*
+**     sorter_test_fakeheap BOOL
+**
+*/
+static int sorter_test_fakeheap(
+  void * clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  int bArg;
+  if( objc!=2 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "BOOL");
+    return TCL_ERROR;
+  }
+
+  if( Tcl_GetBooleanFromObj(interp, objv[1], &bArg) ){
+    return TCL_ERROR;
+  }
+
+  if( bArg ){
+    if( sqlite3GlobalConfig.pHeap==0 ){
+      sqlite3GlobalConfig.pHeap = SQLITE_INT_TO_PTR(-1);
+    }
+  }else{
+    if( sqlite3GlobalConfig.pHeap==SQLITE_INT_TO_PTR(-1) ){
+      sqlite3GlobalConfig.pHeap = 0;
+    }
+  }
+
+  Tcl_ResetResult(interp);
+  return TCL_OK;
+}
+
+/*
+**     sorter_test_sort4_helper DB SQL1 NSTEP SQL2
+**
+** Compile SQL statement $SQL1 and step it $NSTEP times. For each row, 
+** check that the leftmost and rightmost columns returned are both integers,
+** and that both contain the same value.
+**
+** Then execute statement $SQL2. Check that the statement returns the same
+** set of integers in the same order as in the previous step (using $SQL1).
+*/
+static int sorter_test_sort4_helper(
+  void * clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  const char *zSql1;
+  const char *zSql2;
+  int nStep; 
+  int iStep; 
+  int iCksum1 = 0; 
+  int iCksum2 = 0; 
+  int rc;
+  int iB;
+  sqlite3 *db;
+  sqlite3_stmt *pStmt;
+  
+  if( objc!=5 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "DB SQL1 NSTEP SQL2");
+    return TCL_ERROR;
+  }
+
+  if( getDbPointer(interp, Tcl_GetString(objv[1]), &db) ) return TCL_ERROR;
+  zSql1 = Tcl_GetString(objv[2]);
+  if( Tcl_GetIntFromObj(interp, objv[3], &nStep) ) return TCL_ERROR;
+  zSql2 = Tcl_GetString(objv[4]);
+
+  rc = sqlite3_prepare_v2(db, zSql1, -1, &pStmt, 0);
+  if( rc!=SQLITE_OK ) goto sql_error;
+
+  iB = sqlite3_column_count(pStmt)-1;
+  for(iStep=0; iStep<nStep && SQLITE_ROW==sqlite3_step(pStmt); iStep++){
+    int a = sqlite3_column_int(pStmt, 0);
+    if( a!=sqlite3_column_int(pStmt, iB) ){
+      Tcl_AppendResult(interp, "data error: (a!=b)", 0);
+      return TCL_ERROR;
+    }
+
+    iCksum1 += (iCksum1 << 3) + a;
+  }
+  rc = sqlite3_finalize(pStmt);
+  if( rc!=SQLITE_OK ) goto sql_error;
+
+  rc = sqlite3_prepare_v2(db, zSql2, -1, &pStmt, 0);
+  if( rc!=SQLITE_OK ) goto sql_error;
+  for(iStep=0; SQLITE_ROW==sqlite3_step(pStmt); iStep++){
+    int a = sqlite3_column_int(pStmt, 0);
+    iCksum2 += (iCksum2 << 3) + a;
+  }
+  rc = sqlite3_finalize(pStmt);
+  if( rc!=SQLITE_OK ) goto sql_error;
+
+  if( iCksum1!=iCksum2 ){
+    Tcl_AppendResult(interp, "checksum mismatch", 0);
+    return TCL_ERROR;
+  }
+
+  return TCL_OK;
+ sql_error:
+  Tcl_AppendResult(interp, "sql error: ", sqlite3_errmsg(db), 0);
+  return TCL_ERROR;
+}
+
+
+#ifdef SQLITE_USER_AUTHENTICATION
+#include "sqlite3userauth.h"
+/*
+** tclcmd:  sqlite3_user_authenticate DB USERNAME PASSWORD
+*/
+static int test_user_authenticate(
+  ClientData clientData, /* Unused */
+  Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
+  int objc,              /* Number of arguments */
+  Tcl_Obj *CONST objv[]  /* Command arguments */
+){
+  char *zUser = 0;
+  char *zPasswd = 0;
+  int nPasswd = 0;
+  sqlite3 *db;
+  int rc;
+
+  if( objc!=4 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "DB USERNAME PASSWORD");
+    return TCL_ERROR;
+  }
+  if( getDbPointer(interp, Tcl_GetString(objv[1]), &db) ){
+    return TCL_ERROR;
+  }
+  zUser = Tcl_GetString(objv[2]);
+  zPasswd = Tcl_GetStringFromObj(objv[3], &nPasswd);
+  rc = sqlite3_user_authenticate(db, zUser, zPasswd, nPasswd);
+  Tcl_SetResult(interp, (char *)t1ErrorName(rc), TCL_STATIC);
+  return TCL_OK;
+}
+#endif /* SQLITE_USER_AUTHENTICATION */
+
+#ifdef SQLITE_USER_AUTHENTICATION
+/*
+** tclcmd:  sqlite3_user_add DB USERNAME PASSWORD ISADMIN
+*/
+static int test_user_add(
+  ClientData clientData, /* Unused */
+  Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
+  int objc,              /* Number of arguments */
+  Tcl_Obj *CONST objv[]  /* Command arguments */
+){
+  char *zUser = 0;
+  char *zPasswd = 0;
+  int nPasswd = 0;
+  int isAdmin = 0;
+  sqlite3 *db;
+  int rc;
+
+  if( objc!=5 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "DB USERNAME PASSWORD ISADMIN");
+    return TCL_ERROR;
+  }
+  if( getDbPointer(interp, Tcl_GetString(objv[1]), &db) ){
+    return TCL_ERROR;
+  }
+  zUser = Tcl_GetString(objv[2]);
+  zPasswd = Tcl_GetStringFromObj(objv[3], &nPasswd);
+  Tcl_GetBooleanFromObj(interp, objv[4], &isAdmin);
+  rc = sqlite3_user_add(db, zUser, zPasswd, nPasswd, isAdmin);
+  Tcl_SetResult(interp, (char *)t1ErrorName(rc), TCL_STATIC);
+  return TCL_OK;
+}
+#endif /* SQLITE_USER_AUTHENTICATION */
+
+#ifdef SQLITE_USER_AUTHENTICATION
+/*
+** tclcmd:  sqlite3_user_change DB USERNAME PASSWORD ISADMIN
+*/
+static int test_user_change(
+  ClientData clientData, /* Unused */
+  Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
+  int objc,              /* Number of arguments */
+  Tcl_Obj *CONST objv[]  /* Command arguments */
+){
+  char *zUser = 0;
+  char *zPasswd = 0;
+  int nPasswd = 0;
+  int isAdmin = 0;
+  sqlite3 *db;
+  int rc;
+
+  if( objc!=5 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "DB USERNAME PASSWORD ISADMIN");
+    return TCL_ERROR;
+  }
+  if( getDbPointer(interp, Tcl_GetString(objv[1]), &db) ){
+    return TCL_ERROR;
+  }
+  zUser = Tcl_GetString(objv[2]);
+  zPasswd = Tcl_GetStringFromObj(objv[3], &nPasswd);
+  Tcl_GetBooleanFromObj(interp, objv[4], &isAdmin);
+  rc = sqlite3_user_change(db, zUser, zPasswd, nPasswd, isAdmin);
+  Tcl_SetResult(interp, (char *)t1ErrorName(rc), TCL_STATIC);
+  return TCL_OK;
+}
+#endif /* SQLITE_USER_AUTHENTICATION */
+
+#ifdef SQLITE_USER_AUTHENTICATION
+/*
+** tclcmd:  sqlite3_user_delete DB USERNAME
+*/
+static int test_user_delete(
+  ClientData clientData, /* Unused */
+  Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
+  int objc,              /* Number of arguments */
+  Tcl_Obj *CONST objv[]  /* Command arguments */
+){
+  char *zUser = 0;
+  sqlite3 *db;
+  int rc;
+
+  if( objc!=3 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "DB USERNAME");
+    return TCL_ERROR;
+  }
+  if( getDbPointer(interp, Tcl_GetString(objv[1]), &db) ){
+    return TCL_ERROR;
+  }
+  zUser = Tcl_GetString(objv[2]);
+  rc = sqlite3_user_delete(db, zUser);
+  Tcl_SetResult(interp, (char *)t1ErrorName(rc), TCL_STATIC);
+  return TCL_OK;
+}
+#endif /* SQLITE_USER_AUTHENTICATION */
+
+/*
+** tclcmd: bad_behavior TYPE
+**
+** Do some things that should trigger a valgrind or -fsanitize=undefined
+** warning.  This is used to verify that errors and warnings output by those
+** tools are detected by the test scripts.
+**
+**       TYPE       BEHAVIOR
+**       1          Overflow a signed integer
+**       2          Jump based on an uninitialized variable
+**       3          Read after free
+**       4          Panic
+*/
+static int test_bad_behavior(
+  ClientData clientData, /* Pointer to an integer containing zero */
+  Tcl_Interp *interp,    /* The TCL interpreter that invoked this command */
+  int objc,              /* Number of arguments */
+  Tcl_Obj *CONST objv[]  /* Command arguments */
+){
+  int iType;
+  int xyz;
+  int i = *(int*)clientData;
+  int j;
+  int w[10];
+  int *a;
+  if( objc!=2 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "TYPE");
+    return TCL_ERROR;
+  }
+  if( Tcl_GetIntFromObj(interp, objv[1], &iType) ) return TCL_ERROR;
+  switch( iType ){
+    case 1: {
+      xyz = 0x7fffff00 - i;
+      xyz += 0x100;
+      Tcl_SetObjResult(interp, Tcl_NewIntObj(xyz));
+      break;
+    }
+    case 2: {
+      w[1] = 5;
+      if( w[i]>0 ) w[1]++;
+      Tcl_SetObjResult(interp, Tcl_NewIntObj(w[1]));
+      break;
+    }
+    case 3: {
+      a = malloc( sizeof(int)*10 );
+      for(j=0; j<10; j++) a[j] = j;
+      free(a);
+      Tcl_SetObjResult(interp, Tcl_NewIntObj(a[i]));
+      break;
+    }
+    case 4: {
+      Tcl_Panic("Deliberate panic");
+      break;
+    }
+  }
+  return TCL_OK;
+}  
+
+/*
+** tclcmd:   register_dbstat_vtab DB
+**
+** Cause the dbstat virtual table to be available on the connection DB
+*/
+static int test_register_dbstat_vtab(
+  void *clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+#ifdef SQLITE_OMIT_VIRTUALTABLE
+  Tcl_AppendResult(interp, "dbstat not available because of "
+                           "SQLITE_OMIT_VIRTUALTABLE", (void*)0);
+  return TCL_ERROR;
+#else
+  struct SqliteDb { sqlite3 *db; };
+  char *zDb;
+  Tcl_CmdInfo cmdInfo;
+
+  if( objc!=2 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "DB");
+    return TCL_ERROR;
+  }
+
+  zDb = Tcl_GetString(objv[1]);
+  if( Tcl_GetCommandInfo(interp, zDb, &cmdInfo) ){
+    sqlite3* db = ((struct SqliteDb*)cmdInfo.objClientData)->db;
+    sqlite3DbstatRegister(db);
+  }
+  return TCL_OK;
+#endif /* SQLITE_OMIT_VIRTUALTABLE */
 }
 
 /*
@@ -5985,6 +6775,7 @@ int Sqlitetest1_Init(Tcl_Interp *interp){
   extern int sqlite3_max_blobsize;
   extern int sqlite3BtreeSharedCacheReport(void*,
                                           Tcl_Interp*,int,Tcl_Obj*CONST*);
+  static int iZero = 0;
   static struct {
      char *zName;
      Tcl_CmdProc *xProc;
@@ -6012,6 +6803,7 @@ int Sqlitetest1_Init(Tcl_Interp *interp){
      { "sqlite3_get_table_printf",      (Tcl_CmdProc*)test_get_table_printf },
 #endif
      { "sqlite3_close",                 (Tcl_CmdProc*)sqlite_test_close     },
+     { "sqlite3_close_v2",              (Tcl_CmdProc*)sqlite_test_close_v2  },
      { "sqlite3_create_function",       (Tcl_CmdProc*)test_create_function  },
      { "sqlite3_create_aggregate",      (Tcl_CmdProc*)test_create_aggregate },
      { "sqlite_register_test_function", (Tcl_CmdProc*)test_register_func    },
@@ -6029,15 +6821,19 @@ int Sqlitetest1_Init(Tcl_Interp *interp){
      { "sqlite3_busy_timeout",          (Tcl_CmdProc*)test_busy_timeout     },
      { "printf",                        (Tcl_CmdProc*)test_printf           },
      { "sqlite3IoTrace",              (Tcl_CmdProc*)test_io_trace         },
+     { "clang_sanitize_address",        (Tcl_CmdProc*)clang_sanitize_address },
   };
   static struct {
      char *zName;
      Tcl_ObjCmdProc *xProc;
      void *clientData;
   } aObjCmd[] = {
+     { "bad_behavior",                  test_bad_behavior,  (void*)&iZero },
+     { "register_dbstat_vtab",          test_register_dbstat_vtab  },
      { "sqlite3_connection_pointer",    get_sqlite_pointer, 0 },
      { "sqlite3_bind_int",              test_bind_int,      0 },
      { "sqlite3_bind_zeroblob",         test_bind_zeroblob, 0 },
+     { "sqlite3_bind_zeroblob64",       test_bind_zeroblob64, 0 },
      { "sqlite3_bind_int64",            test_bind_int64,    0 },
      { "sqlite3_bind_double",           test_bind_double,   0 },
      { "sqlite3_bind_null",             test_bind_null     ,0 },
@@ -6092,9 +6888,16 @@ int Sqlitetest1_Init(Tcl_Interp *interp){
      { "save_prng_state",               save_prng_state,    0 },
      { "restore_prng_state",            restore_prng_state, 0 },
      { "reset_prng_state",              reset_prng_state,   0 },
+     { "database_never_corrupt",        database_never_corrupt, 0},
+     { "database_may_be_corrupt",       database_may_be_corrupt, 0},
      { "optimization_control",          optimization_control,0},
 #if SQLITE_OS_WIN
      { "lock_win32_file",               win32_file_lock,    0 },
+     { "exists_win32_path",             win32_exists_path,  0 },
+     { "find_win32_file",               win32_find_file,    0 },
+     { "delete_win32_file",             win32_delete_file,  0 },
+     { "make_win32_dir",                win32_mkdir,        0 },
+     { "remove_win32_dir",              win32_rmdir,        0 },
 #endif
      { "tcl_objproc",                   runAsObjProc,       0 },
 
@@ -6128,7 +6931,7 @@ int Sqlitetest1_Init(Tcl_Interp *interp){
 #endif
 #ifdef SQLITE_ENABLE_COLUMN_METADATA
 {"sqlite3_column_database_name16",
-  test_stmt_utf16, sqlite3_column_database_name16},
+  test_stmt_utf16, (void*)sqlite3_column_database_name16},
 {"sqlite3_column_table_name16", test_stmt_utf16, (void*)sqlite3_column_table_name16},
 {"sqlite3_column_origin_name16", test_stmt_utf16, (void*)sqlite3_column_origin_name16},
 #endif
@@ -6145,10 +6948,14 @@ int Sqlitetest1_Init(Tcl_Interp *interp){
      { "file_control_lockproxy_test", file_control_lockproxy_test,  0   },
      { "file_control_chunksize_test", file_control_chunksize_test,  0   },
      { "file_control_sizehint_test",  file_control_sizehint_test,   0   },
+#if SQLITE_OS_WIN
      { "file_control_win32_av_retry", file_control_win32_av_retry,  0   },
+     { "file_control_win32_set_handle", file_control_win32_set_handle, 0  },
+#endif
      { "file_control_persist_wal",    file_control_persist_wal,     0   },
      { "file_control_powersafe_overwrite",file_control_powersafe_overwrite,0},
      { "file_control_vfsname",        file_control_vfsname,         0   },
+     { "file_control_tempfilename",   file_control_tempfilename,    0   },
      { "sqlite3_vfs_list",           vfs_list,     0   },
      { "sqlite3_create_function_v2", test_create_function_v2, 0 },
 
@@ -6157,6 +6964,7 @@ int Sqlitetest1_Init(Tcl_Interp *interp){
      { "add_test_collate",        test_collate, 0            },
      { "add_test_collate_needed", test_collate_needed, 0     },
      { "add_test_function",       test_function, 0           },
+     { "add_test_utf16bin_collate",    test_utf16bin_collate, 0        },
 #endif
      { "sqlite3_test_errstr",     test_errstr, 0             },
      { "tcl_variable_type",       tcl_variable_type, 0       },
@@ -6165,15 +6973,9 @@ int Sqlitetest1_Init(Tcl_Interp *interp){
      { "sqlite3_shared_cache_report", sqlite3BtreeSharedCacheReport, 0},
 #endif
      { "sqlite3_libversion_number", test_libversion_number, 0  },
-#ifdef SQLITE_ENABLE_COLUMN_METADATA
      { "sqlite3_table_column_metadata", test_table_column_metadata, 0  },
-#endif
 #ifndef SQLITE_OMIT_INCRBLOB
-     { "sqlite3_blob_read",   test_blob_read, 0  },
-     { "sqlite3_blob_write",  test_blob_write, 0  },
      { "sqlite3_blob_reopen", test_blob_reopen, 0  },
-     { "sqlite3_blob_bytes",  test_blob_bytes, 0  },
-     { "sqlite3_blob_close",  test_blob_close, 0  },
 #endif
      { "pcache_stats",       test_pcache_stats, 0  },
 #ifdef SQLITE_ENABLE_UNLOCK_NOTIFY
@@ -6181,11 +6983,29 @@ int Sqlitetest1_Init(Tcl_Interp *interp){
 #endif
      { "sqlite3_wal_checkpoint",   test_wal_checkpoint, 0  },
      { "sqlite3_wal_checkpoint_v2",test_wal_checkpoint_v2, 0  },
+     { "sqlite3_wal_autocheckpoint",test_wal_autocheckpoint, 0  },
      { "test_sqlite3_log",         test_sqlite3_log, 0  },
 #ifndef SQLITE_OMIT_EXPLAIN
      { "print_explain_query_plan", test_print_eqp, 0  },
 #endif
      { "sqlite3_test_control", test_test_control },
+#if SQLITE_OS_UNIX
+     { "getrusage", test_getrusage },
+#endif
+     { "load_static_extension", tclLoadStaticExtensionCmd },
+     { "sorter_test_fakeheap", sorter_test_fakeheap },
+     { "sorter_test_sort4_helper", sorter_test_sort4_helper },
+#ifdef SQLITE_USER_AUTHENTICATION
+     { "sqlite3_user_authenticate", test_user_authenticate, 0 },
+     { "sqlite3_user_add",          test_user_add,          0 },
+     { "sqlite3_user_change",       test_user_change,       0 },
+     { "sqlite3_user_delete",       test_user_delete,       0 },
+#endif
+#ifdef SQLITE_ENABLE_STMT_SCANSTATUS
+     { "sqlite3_stmt_scanstatus",       test_stmt_scanstatus,   0 },
+     { "sqlite3_stmt_scanstatus_reset", test_stmt_scanstatus_reset,   0 },
+#endif
+
   };
   static int bitmask_size = sizeof(Bitmask)*8;
   int i;
@@ -6197,17 +7017,14 @@ int Sqlitetest1_Init(Tcl_Interp *interp){
   extern int sqlite3_pager_writedb_count;
   extern int sqlite3_pager_writej_count;
 #if SQLITE_OS_WIN
-  extern int sqlite3_os_type;
+  extern LONG volatile sqlite3_os_type;
 #endif
 #ifdef SQLITE_DEBUG
   extern int sqlite3WhereTrace;
   extern int sqlite3OSTrace;
-  extern int sqlite3VdbeAddopTrace;
   extern int sqlite3WalTrace;
 #endif
 #ifdef SQLITE_TEST
-  extern char sqlite3_query_plan[];
-  static char *query_plan = sqlite3_query_plan;
 #ifdef SQLITE_ENABLE_FTS3
   extern int sqlite3_fts3_enable_parentheses;
 #endif
@@ -6258,15 +7075,16 @@ int Sqlitetest1_Init(Tcl_Interp *interp){
 #endif
 #if SQLITE_OS_WIN
   Tcl_LinkVar(interp, "sqlite_os_type",
-      (char*)&sqlite3_os_type, TCL_LINK_INT);
+      (char*)&sqlite3_os_type, TCL_LINK_LONG);
 #endif
 #ifdef SQLITE_TEST
-  Tcl_LinkVar(interp, "sqlite_query_plan",
-      (char*)&query_plan, TCL_LINK_STRING|TCL_LINK_READ_ONLY);
+  {
+    static const char *query_plan = "*** OBSOLETE VARIABLE ***";
+    Tcl_LinkVar(interp, "sqlite_query_plan",
+       (char*)&query_plan, TCL_LINK_STRING|TCL_LINK_READ_ONLY);
+  }
 #endif
 #ifdef SQLITE_DEBUG
-  Tcl_LinkVar(interp, "sqlite_addop_trace",
-      (char*)&sqlite3VdbeAddopTrace, TCL_LINK_INT);
   Tcl_LinkVar(interp, "sqlite_where_trace",
       (char*)&sqlite3WhereTrace, TCL_LINK_INT);
   Tcl_LinkVar(interp, "sqlite_os_trace",
@@ -6286,6 +7104,8 @@ int Sqlitetest1_Init(Tcl_Interp *interp){
       (char*)&sqlite_static_bind_nbyte, TCL_LINK_INT);
   Tcl_LinkVar(interp, "sqlite_temp_directory",
       (char*)&sqlite3_temp_directory, TCL_LINK_STRING);
+  Tcl_LinkVar(interp, "sqlite_data_directory",
+      (char*)&sqlite3_data_directory, TCL_LINK_STRING);
   Tcl_LinkVar(interp, "bitmask_size",
       (char*)&bitmask_size, TCL_LINK_INT|TCL_LINK_READ_ONLY);
   Tcl_LinkVar(interp, "sqlite_sync_count",

@@ -9,7 +9,7 @@
 **    May you share freely, never taking more than you give.
 **
 *************************************************************************
-** This file implements a external (disk-based) database using BTrees.
+** This file implements an external (disk-based) database using BTrees.
 ** For a detailed discussion of BTrees, refer to
 **
 **     Donald E. Knuth, THE ART OF COMPUTER PROGRAMMING, Volume 3:
@@ -56,13 +56,13 @@
 **
 **   OFFSET   SIZE    DESCRIPTION
 **      0      16     Header string: "SQLite format 3\000"
-**     16       2     Page size in bytes.  
+**     16       2     Page size in bytes.  (1 means 65536)
 **     18       1     File format write version
 **     19       1     File format read version
 **     20       1     Bytes of unused space at the end of each page
-**     21       1     Max embedded payload fraction
-**     22       1     Min embedded payload fraction
-**     23       1     Min leaf payload fraction
+**     21       1     Max embedded payload fraction (must be 64)
+**     22       1     Min embedded payload fraction (must be 32)
+**     23       1     Min leaf payload fraction (must be 32)
 **     24       4     File change counter
 **     28       4     Reserved for future use
 **     32       4     First freelist page
@@ -76,9 +76,10 @@
 **     56       4     1=UTF-8 2=UTF16le 3=UTF16be
 **     60       4     User version
 **     64       4     Incremental vacuum mode
-**     68       4     unused
-**     72       4     unused
-**     76       4     unused
+**     68       4     Application-ID
+**     72      20     unused
+**     92       4     The version-valid-for number
+**     96       4     SQLITE_VERSION_NUMBER
 **
 ** All of the integer values are big-endian (most significant byte first).
 **
@@ -134,7 +135,7 @@
 **
 ** The flags define the format of this btree page.  The leaf flag means that
 ** this page has no children.  The zerodata flag means that this page carries
-** only keys and no data.  The intkey flag means that the key is a integer
+** only keys and no data.  The intkey flag means that the key is an integer
 ** which is stored in the key size entry of the cell header rather than in
 ** the payload area.
 **
@@ -230,6 +231,7 @@
 /* Forward declarations */
 typedef struct MemPage MemPage;
 typedef struct BtLock BtLock;
+typedef struct CellInfo CellInfo;
 
 /*
 ** This is a magic string that appears at the beginning of every
@@ -272,12 +274,14 @@ typedef struct BtLock BtLock;
 struct MemPage {
   u8 isInit;           /* True if previously initialized. MUST BE FIRST! */
   u8 nOverflow;        /* Number of overflow cell bodies in aCell[] */
-  u8 intKey;           /* True if intkey flag is set */
-  u8 leaf;             /* True if leaf flag is set */
-  u8 hasData;          /* True if this page stores data */
+  u8 intKey;           /* True if table b-trees.  False for index b-trees */
+  u8 intKeyLeaf;       /* True if the leaf of an intKey table */
+  u8 noPayload;        /* True if internal intKey page (thus w/o data) */
+  u8 leaf;             /* True if a leaf page */
   u8 hdrOffset;        /* 100 for page 1.  0 otherwise */
   u8 childPtrSize;     /* 0 if leaf==1.  4 if leaf==0 */
   u8 max1bytePayload;  /* min(maxLocal,127) */
+  u8 bBusy;            /* Prevent endless loops on corrupt database files */
   u16 maxLocal;        /* Copy of BtShared.maxLocal or BtShared.maxLeaf */
   u16 minLocal;        /* Copy of BtShared.minLocal or BtShared.minLeaf */
   u16 cellOffset;      /* Index in aData of first cell pointer */
@@ -291,7 +295,10 @@ struct MemPage {
   u8 *aData;           /* Pointer to disk image of the page data */
   u8 *aDataEnd;        /* One byte past the end of usable data */
   u8 *aCellIdx;        /* The cell index area */
+  u8 *aDataOfst;       /* Same as aData for leaves.  aData+4 for interior */
   DbPage *pDbPage;     /* Pager page handle */
+  u16 (*xCellSize)(MemPage*,u8*);             /* cellSizePtr method */
+  void (*xParseCell)(MemPage*,u8*,CellInfo*); /* btreeParseCell method */
   Pgno pgno;           /* Page number for this page */
 };
 
@@ -347,8 +354,10 @@ struct Btree {
   u8 inTrans;        /* TRANS_NONE, TRANS_READ or TRANS_WRITE */
   u8 sharable;       /* True if we can share pBt with another db */
   u8 locked;         /* True if db currently has pBt locked */
+  u8 hasIncrblobCur; /* True if there are one or more Incrblob cursors */
   int wantToLock;    /* Number of nested calls to sqlite3BtreeEnter() */
   int nBackup;       /* Number of backup operations reading this btree */
+  u32 iDataVersion;  /* Combines with pBt->pPager->iDataVersion */
   Btree *pNext;      /* List of other sharable Btrees from the same db */
   Btree *pPrev;      /* Back pointer of the same list */
 #ifndef SQLITE_OMIT_SHARED_CACHE
@@ -411,9 +420,13 @@ struct BtShared {
 #ifndef SQLITE_OMIT_AUTOVACUUM
   u8 autoVacuum;        /* True if auto-vacuum is enabled */
   u8 incrVacuum;        /* True if incr-vacuum is enabled */
+  u8 bDoTruncate;       /* True to truncate db on commit */
 #endif
   u8 inTransaction;     /* Transaction state */
   u8 max1bytePayload;   /* Maximum first byte of cell for a 1-byte payload */
+#ifdef SQLITE_HAS_CODEC
+  u8 optimalReserve;    /* Desired amount of reserved space per page */
+#endif
   u16 btsFlags;         /* Boolean parameters.  See BTS_* macros below */
   u16 maxLocal;         /* Maximum local payload in non-LEAFDATA tables */
   u16 minLocal;         /* Minimum local payload in non-LEAFDATA tables */
@@ -433,7 +446,7 @@ struct BtShared {
   BtLock *pLock;        /* List of locks held on this shared-btree struct */
   Btree *pWriter;       /* Btree with currently open write transaction */
 #endif
-  u8 *pTmpSpace;        /* BtShared.pageSize bytes of space for tmp use */
+  u8 *pTmpSpace;        /* Temp space sufficient to hold a single cell */
 };
 
 /*
@@ -452,14 +465,11 @@ struct BtShared {
 ** about a cell.  The parseCellPtr() function fills in this structure
 ** based on information extract from the raw disk page.
 */
-typedef struct CellInfo CellInfo;
 struct CellInfo {
-  i64 nKey;      /* The key for INTKEY tables, or number of bytes in key */
-  u8 *pCell;     /* Pointer to the start of cell content */
-  u32 nData;     /* Number of bytes of data */
-  u32 nPayload;  /* Total amount of payload */
-  u16 nHeader;   /* Size of the cell content header in bytes */
-  u16 nLocal;    /* Amount of payload held locally */
+  i64 nKey;      /* The key for INTKEY tables, or nPayload otherwise */
+  u8 *pPayload;  /* Pointer to the start of payload */
+  u32 nPayload;  /* Bytes of payload */
+  u16 nLocal;    /* Amount of payload held locally, not on overflow */
   u16 iOverflow; /* Offset to overflow page number.  Zero if no overflow */
   u16 nSize;     /* Size of the cell content on the main b-tree page */
 };
@@ -488,43 +498,64 @@ struct CellInfo {
 **
 ** Fields in this structure are accessed under the BtShared.mutex
 ** found at self->pBt->mutex. 
+**
+** skipNext meaning:
+**    eState==SKIPNEXT && skipNext>0:  Next sqlite3BtreeNext() is no-op.
+**    eState==SKIPNEXT && skipNext<0:  Next sqlite3BtreePrevious() is no-op.
+**    eState==FAULT:                   Cursor fault with skipNext as error code.
 */
 struct BtCursor {
   Btree *pBtree;            /* The Btree to which this cursor belongs */
   BtShared *pBt;            /* The BtShared this cursor points to */
-  BtCursor *pNext, *pPrev;  /* Forms a linked list of all cursors */
-  struct KeyInfo *pKeyInfo; /* Argument passed to comparison function */
-#ifndef SQLITE_OMIT_INCRBLOB
+  BtCursor *pNext;          /* Forms a linked list of all cursors */
   Pgno *aOverflow;          /* Cache of overflow page locations */
-#endif
-  Pgno pgnoRoot;            /* The root page of this tree */
-  sqlite3_int64 cachedRowid; /* Next rowid cache.  0 means not valid */
   CellInfo info;            /* A parse of the cell we are pointing at */
-  i64 nKey;        /* Size of pKey, or last integer key */
-  void *pKey;      /* Saved key that was cursor's last known position */
-  int skipNext;    /* Prev() is noop if negative. Next() is noop if positive */
-  u8 wrFlag;                /* True if writable */
-  u8 atLast;                /* Cursor pointing to the last entry */
-  u8 validNKey;             /* True if info.nKey is valid */
+  i64 nKey;                 /* Size of pKey, or last integer key */
+  void *pKey;               /* Saved key that was cursor last known position */
+  Pgno pgnoRoot;            /* The root page of this tree */
+  int nOvflAlloc;           /* Allocated size of aOverflow[] array */
+  int skipNext;    /* Prev() is noop if negative. Next() is noop if positive.
+                   ** Error code if eState==CURSOR_FAULT */
+  u8 curFlags;              /* zero or more BTCF_* flags defined below */
+  u8 curPagerFlags;         /* Flags to send to sqlite3PagerAcquire() */
   u8 eState;                /* One of the CURSOR_XXX constants (see below) */
-#ifndef SQLITE_OMIT_INCRBLOB
-  u8 isIncrblobHandle;      /* True if this cursor is an incr. io handle */
-#endif
-  i16 iPage;                            /* Index of current page in apPage */
+  u8 hints;                 /* As configured by CursorSetHints() */
+  /* All fields above are zeroed when the cursor is allocated.  See
+  ** sqlite3BtreeCursorZero().  Fields that follow must be manually
+  ** initialized. */
+  i8 iPage;                 /* Index of current page in apPage */
+  u8 curIntKey;             /* Value of apPage[0]->intKey */
+  struct KeyInfo *pKeyInfo; /* Argument passed to comparison function */
+  void *padding1;           /* Make object size a multiple of 16 */
   u16 aiIdx[BTCURSOR_MAX_DEPTH];        /* Current index in apPage[i] */
   MemPage *apPage[BTCURSOR_MAX_DEPTH];  /* Pages from root to current page */
 };
 
 /*
+** Legal values for BtCursor.curFlags
+*/
+#define BTCF_WriteFlag    0x01   /* True if a write cursor */
+#define BTCF_ValidNKey    0x02   /* True if info.nKey is valid */
+#define BTCF_ValidOvfl    0x04   /* True if aOverflow is valid */
+#define BTCF_AtLast       0x08   /* Cursor is pointing ot the last entry */
+#define BTCF_Incrblob     0x10   /* True if an incremental I/O handle */
+#define BTCF_Multiple     0x20   /* Maybe another cursor on the same btree */
+
+/*
 ** Potential values for BtCursor.eState.
-**
-** CURSOR_VALID:
-**   Cursor points to a valid entry. getPayload() etc. may be called.
 **
 ** CURSOR_INVALID:
 **   Cursor does not point to a valid entry. This can happen (for example) 
 **   because the table is empty or because BtreeCursorFirst() has not been
 **   called.
+**
+** CURSOR_VALID:
+**   Cursor points to a valid entry. getPayload() etc. may be called.
+**
+** CURSOR_SKIPNEXT:
+**   Cursor is valid except that the Cursor.skipNext field is non-zero
+**   indicating that the next sqlite3BtreeNext() or sqlite3BtreePrevious()
+**   operation should be a no-op.
 **
 ** CURSOR_REQUIRESEEK:
 **   The table that this cursor was opened on still exists, but has been 
@@ -534,16 +565,17 @@ struct BtCursor {
 **   seek the cursor to the saved position.
 **
 ** CURSOR_FAULT:
-**   A unrecoverable error (an I/O error or a malloc failure) has occurred
+**   An unrecoverable error (an I/O error or a malloc failure) has occurred
 **   on a different connection that shares the BtShared cache with this
 **   cursor.  The error has left the cache in an inconsistent state.
 **   Do nothing else with this cursor.  Any attempt to use the cursor
-**   should return the error code stored in BtCursor.skip
+**   should return the error code stored in BtCursor.skipNext
 */
 #define CURSOR_INVALID           0
 #define CURSOR_VALID             1
-#define CURSOR_REQUIRESEEK       2
-#define CURSOR_FAULT             3
+#define CURSOR_SKIPNEXT          2
+#define CURSOR_REQUIRESEEK       3
+#define CURSOR_FAULT             4
 
 /* 
 ** The database page the PENDING_BYTE occupies. This page is never used.
@@ -631,17 +663,26 @@ struct BtCursor {
 /*
 ** This structure is passed around through all the sanity checking routines
 ** in order to keep track of some global state information.
+**
+** The aRef[] array is allocated so that there is 1 bit for each page in
+** the database. As the integrity-check proceeds, for each page used in
+** the database the corresponding bit is set. This allows integrity-check to 
+** detect pages that are used twice and orphaned pages (both of which 
+** indicate corruption).
 */
 typedef struct IntegrityCk IntegrityCk;
 struct IntegrityCk {
   BtShared *pBt;    /* The tree being checked out */
   Pager *pPager;    /* The associated pager.  Also accessible by pBt->pPager */
-  int *anRef;       /* Number of times each page is referenced */
+  u8 *aPgRef;       /* 1 bit per page in the db (see above) */
   Pgno nPage;       /* Number of pages in the database */
   int mxErr;        /* Stop accumulating errors when this reaches zero */
   int nErr;         /* Number of messages written to zErrMsg so far */
   int mallocFailed; /* A memory allocation error has occurred */
+  const char *zPfx; /* Error message prefix */
+  int v1, v2;       /* Values for up to two %d fields in zPfx */
   StrAccum errMsg;  /* Accumulate the error message text here */
+  u32 *heap;        /* Min-heap used for analyzing cell coverage */
 };
 
 /*
@@ -651,3 +692,18 @@ struct IntegrityCk {
 #define put2byte(p,v) ((p)[0] = (u8)((v)>>8), (p)[1] = (u8)(v))
 #define get4byte sqlite3Get4byte
 #define put4byte sqlite3Put4byte
+
+/*
+** get2byteAligned(), unlike get2byte(), requires that its argument point to a
+** two-byte aligned address.  get2bytea() is only used for accessing the
+** cell addresses in a btree header.
+*/
+#if SQLITE_BYTEORDER==4321
+# define get2byteAligned(x)  (*(u16*)(x))
+#elif SQLITE_BYTEORDER==1234 && GCC_VERSION>=4008000
+# define get2byteAligned(x)  __builtin_bswap16(*(u16*)(x))
+#elif SQLITE_BYTEORDER==1234 && defined(_MSC_VER) && _MSC_VER>=1300
+# define get2byteAligned(x)  _byteswap_ushort(*(u16*)(x))
+#else
+# define get2byteAligned(x)  ((x)[0]<<8 | (x)[1])
+#endif
