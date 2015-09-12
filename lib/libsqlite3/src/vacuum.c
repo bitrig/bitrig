@@ -72,19 +72,40 @@ static int execExecSql(sqlite3 *db, char **pzErrMsg, const char *zSql){
 }
 
 /*
-** The non-standard VACUUM command is used to clean up the database,
+** The VACUUM command is used to clean up the database,
 ** collapse free space, etc.  It is modelled after the VACUUM command
-** in PostgreSQL.
+** in PostgreSQL.  The VACUUM command works as follows:
 **
-** In version 1.0.x of SQLite, the VACUUM command would call
-** gdbm_reorganize() on all the database tables.  But beginning
-** with 2.0.0, SQLite no longer uses GDBM so this command has
-** become a no-op.
+**   (1)  Create a new transient database file
+**   (2)  Copy all content from the database being vacuumed into
+**        the new transient database file
+**   (3)  Copy content from the transient database back into the
+**        original database.
+**
+** The transient database requires temporary disk space approximately
+** equal to the size of the original database.  The copy operation of
+** step (3) requires additional temporary disk space approximately equal
+** to the size of the original database for the rollback journal.
+** Hence, temporary disk space that is approximately 2x the size of the
+** original database is required.  Every page of the database is written
+** approximately 3 times:  Once for step (2) and twice for step (3).
+** Two writes per page are required in step (3) because the original
+** database content must be written into the rollback journal prior to
+** overwriting the database with the vacuumed content.
+**
+** Only 1x temporary space and only 1x writes would be required if
+** the copy of step (3) were replaced by deleting the original database
+** and renaming the transient database as the original.  But that will
+** not work if other processes are attached to the original database.
+** And a power loss in between deleting the original and renaming the
+** transient would cause the database file to appear to be deleted
+** following reboot.
 */
 void sqlite3Vacuum(Parse *pParse){
   Vdbe *v = sqlite3GetVdbe(pParse);
   if( v ){
     sqlite3VdbeAddOp2(v, OP_Vacuum, 0, 0);
+    sqlite3VdbeUsesBtree(v, 0);
   }
   return;
 }
@@ -110,7 +131,7 @@ int sqlite3RunVacuum(char **pzErrMsg, sqlite3 *db){
     sqlite3SetString(pzErrMsg, db, "cannot VACUUM from within a transaction");
     return SQLITE_ERROR;
   }
-  if( db->activeVdbeCnt>1 ){
+  if( db->nVdbeActive>1 ){
     sqlite3SetString(pzErrMsg, db,"cannot VACUUM - SQL statements in progress");
     return SQLITE_ERROR;
   }
@@ -163,7 +184,7 @@ int sqlite3RunVacuum(char **pzErrMsg, sqlite3 *db){
   ** cause problems for the call to BtreeSetPageSize() below.  */
   sqlite3BtreeCommit(pTemp);
 
-  nRes = sqlite3BtreeGetReserve(pMain);
+  nRes = sqlite3BtreeGetOptimalReserve(pMain);
 
   /* A VACUUM cannot change the pagesize of an encrypted database. */
 #ifdef SQLITE_HAS_CODEC
@@ -213,7 +234,7 @@ int sqlite3RunVacuum(char **pzErrMsg, sqlite3 *db){
   rc = execExecSql(db, pzErrMsg,
       "SELECT 'CREATE TABLE vacuum_db.' || substr(sql,14) "
       "  FROM sqlite_master WHERE type='table' AND name!='sqlite_sequence'"
-      "   AND rootpage>0"
+      "   AND coalesce(rootpage,1)>0"
   );
   if( rc!=SQLITE_OK ) goto end_of_vacuum;
   rc = execExecSql(db, pzErrMsg,
@@ -229,13 +250,17 @@ int sqlite3RunVacuum(char **pzErrMsg, sqlite3 *db){
   ** an "INSERT INTO vacuum_db.xxx SELECT * FROM main.xxx;" to copy
   ** the contents to the temporary database.
   */
+  assert( (db->flags & SQLITE_Vacuum)==0 );
+  db->flags |= SQLITE_Vacuum;
   rc = execExecSql(db, pzErrMsg,
       "SELECT 'INSERT INTO vacuum_db.' || quote(name) "
       "|| ' SELECT * FROM main.' || quote(name) || ';'"
       "FROM main.sqlite_master "
       "WHERE type = 'table' AND name!='sqlite_sequence' "
-      "  AND rootpage>0"
+      "  AND coalesce(rootpage,1)>0"
   );
+  assert( (db->flags & SQLITE_Vacuum)!=0 );
+  db->flags &= ~SQLITE_Vacuum;
   if( rc!=SQLITE_OK ) goto end_of_vacuum;
 
   /* Copy over the sequence table
@@ -288,6 +313,7 @@ int sqlite3RunVacuum(char **pzErrMsg, sqlite3 *db){
        BTREE_DEFAULT_CACHE_SIZE, 0,  /* Preserve the default page cache size */
        BTREE_TEXT_ENCODING,      0,  /* Preserve the text encoding */
        BTREE_USER_VERSION,       0,  /* Preserve the user version */
+       BTREE_APPLICATION_ID,     0,  /* Preserve the application id */
     };
 
     assert( 1==sqlite3BtreeIsInTrans(pTemp) );
@@ -339,7 +365,7 @@ end_of_vacuum:
 
   /* This both clears the schemas and reduces the size of the db->aDb[]
   ** array. */ 
-  sqlite3ResetInternalSchema(db, -1);
+  sqlite3ResetAllSchemasOfConnection(db);
 
   return rc;
 }
