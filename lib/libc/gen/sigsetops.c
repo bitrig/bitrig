@@ -1,4 +1,4 @@
-/*	$OpenBSD: sigsetops.c,v 1.6 2010/12/31 02:58:57 guenther Exp $ */
+/*	$OpenBSD: sigsetops.c,v 1.7 2015/09/12 16:46:12 guenther Exp $ */
 /*-
  * Copyright (c) 1989, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -40,6 +40,7 @@ sigemptyset(sigset_t *set)
 	*set = 0;
 	return (0);
 }
+DEF_WEAK(sigemptyset);
 
 int
 sigfillset(sigset_t *set)
@@ -47,6 +48,7 @@ sigfillset(sigset_t *set)
 	*set = ~(sigset_t)0;
 	return (0);
 }
+DEF_WEAK(sigfillset);
 
 int
 sigaddset(sigset_t *set, int signo)
@@ -58,6 +60,7 @@ sigaddset(sigset_t *set, int signo)
 	*set |= sigmask(signo);
 	return (0);
 }
+DEF_WEAK(sigaddset);
 
 int
 sigdelset(sigset_t *set, int signo)
@@ -69,6 +72,7 @@ sigdelset(sigset_t *set, int signo)
 	*set &= ~sigmask(signo);
 	return (0);
 }
+DEF_WEAK(sigdelset);
 
 int
 sigismember(const sigset_t *set, int signo)
@@ -79,3 +83,4 @@ sigismember(const sigset_t *set, int signo)
 	}
 	return ((*set & sigmask(signo)) != 0);
 }
+DEF_WEAK(sigismember);
