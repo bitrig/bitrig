@@ -1,4 +1,4 @@
-/*	$OpenBSD: strptime.c,v 1.18 2014/10/11 02:21:27 doug Exp $ */
+/*	$OpenBSD: strptime.c,v 1.21 2015/09/12 14:35:40 guenther Exp $ */
 /*	$NetBSD: strptime.c,v 1.12 1998/01/20 21:39:40 mycroft Exp $	*/
 
 /*-
@@ -88,6 +88,7 @@ strptime_l(const char *buf, const char *fmt, struct tm *tm, locale_t loc)
 	FIX_LOCALE(loc);
 	return (_strptime(buf, fmt, tm, 1, loc));
 }
+DEF_WEAK(strptime);
 
 static char *
 _strptime(const char *buf, const char *fmt, struct tm *tm, int initialize,
