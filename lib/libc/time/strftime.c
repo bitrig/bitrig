@@ -1,4 +1,4 @@
-/*	$OpenBSD: strftime.c,v 1.26 2015/02/16 17:11:54 tedu Exp $ */
+/*	$OpenBSD: strftime.c,v 1.27 2015/09/12 14:35:40 guenther Exp $ */
 /*
  * Copyright (c) 1989 The Regents of the University of California.
  * All rights reserved.
@@ -98,6 +98,7 @@ strftime_l(char * __restrict s, size_t maxsize, const char * __restrict format,
 	*p = '\0';
 	return p - s;
 }
+DEF_STRONG(strftime);
 
 size_t
 strftime(char * __restrict s, size_t maxsize, const char * __restrict format,
