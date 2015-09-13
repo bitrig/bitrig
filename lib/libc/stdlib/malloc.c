@@ -1,4 +1,4 @@
-/*	$OpenBSD: malloc.c,v 1.174 2015/04/06 09:18:51 tedu Exp $	*/
+/*	$OpenBSD: malloc.c,v 1.176 2015/09/13 20:29:23 guenther Exp $	*/
 /*
  * Copyright (c) 2008, 2010, 2011 Otto Moerbeek <otto@drijf.net>
  * Copyright (c) 2012 Matthew Dempsky <matthew@openbsd.org>
@@ -1183,6 +1183,7 @@ malloc(size_t size)
 		errno = saved_errno;
 	return r;
 }
+/*DEF_STRONG(malloc);*/
 
 static void
 ofree(void *p)
@@ -1286,6 +1287,7 @@ free(void *ptr)
 	_MALLOC_UNLOCK();
 	errno = saved_errno;
 }
+/*DEF_STRONG(free);*/
 
 
 static void *
@@ -1422,6 +1424,7 @@ realloc(void *ptr, size_t size)
 		errno = saved_errno;
 	return r;
 }
+/*DEF_STRONG(realloc);*/
 
 
 /*
@@ -1469,6 +1472,7 @@ calloc(size_t nmemb, size_t size)
 		errno = saved_errno;
 	return r;
 }
+/*DEF_STRONG(calloc);*/
 
 static void *
 mapalign(struct dir_info *d, size_t alignment, size_t sz, int zero_fill)
@@ -1602,6 +1606,7 @@ err:
 	errno = saved_errno;
 	return res;
 }
+/*DEF_STRONG(posix_memalign);*/
 
 #ifdef MALLOC_STATS
 
