@@ -1,4 +1,4 @@
-/*	$OpenBSD: fpsetmask.c,v 1.3 2012/12/05 23:20:01 deraadt Exp $	*/
+/*	$OpenBSD: fpsetmask.c,v 1.5 2015/09/13 14:21:46 miod Exp $	*/
 /* $NetBSD: fpsetmask.c,v 1.3 2002/05/12 13:12:45 bjh21 Exp $ */
 
 /*-
@@ -37,7 +37,7 @@
 #include "softfloat-for-gcc.h"
 #endif
 #include "milieu.h"
-#include "softfloat.h"
+#include <softfloat.h>
 
 #ifdef __weak_alias
 __weak_alias(_fpsetmask,fpsetmask);
