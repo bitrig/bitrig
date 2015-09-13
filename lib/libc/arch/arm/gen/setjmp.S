@@ -1,4 +1,4 @@
-/*	$OpenBSD: setjmp.S,v 1.2 2004/02/01 05:40:52 drahn Exp $	*/
+/*	$OpenBSD: setjmp.S,v 1.3 2015/09/13 07:36:58 guenther Exp $	*/
 /*	$NetBSD: setjmp.S,v 1.5 2003/04/05 23:08:51 bjh21 Exp $	*/
 
 /*
@@ -52,9 +52,9 @@ ENTRY(setjmp)
 	mov	r0, #0x00000000
 
 #if defined(__PIC__)
-	bl	_C_LABEL(sigblock)(PLT)
+	bl	_C_LABEL(_libc_sigblock)(PLT)
 #else
-	bl	_C_LABEL(sigblock)
+	bl	_C_LABEL(_libc_sigblock)
 #endif
 	mov	r1, r0
 
@@ -100,9 +100,9 @@ ENTRY(longjmp)
 
 	mov	r0, r2
 #if defined(__PIC__)
-	bl	_C_LABEL(sigsetmask)(PLT)
+	bl	_C_LABEL(_libc_sigsetmask)(PLT)
 #else
-	bl	_C_LABEL(sigsetmask)
+	bl	_C_LABEL(_libc_sigsetmask)
 #endif
 
 	add	sp, sp, #4	/* unalign the stack */
