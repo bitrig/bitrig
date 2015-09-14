@@ -196,3 +196,4 @@ nl_langinfo(nl_item item)
 {
 	return nl_langinfo_l(item, __get_locale());
 }
+DEF_WEAK(nl_langinfo);
