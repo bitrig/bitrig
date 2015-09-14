@@ -1,3 +1,4 @@
+/*	$OpenBSD: setlocale.c,v 1.24 2015/09/14 12:21:03 guenther Exp $	*/
 /*
  * Copyright (c) 1996 - 2002 FreeBSD Project
  * Copyright (c) 1991, 1993
@@ -203,6 +204,7 @@ setlocale(category, locale)
 	}
 	return (currentlocale());
 }
+DEF_STRONG(setlocale);
 
 static char *
 currentlocale()

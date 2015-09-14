@@ -1,3 +1,4 @@
+/*	$OpenBSD: localeconv.c,v 1.7 2015/09/14 12:21:03 guenther Exp $ */
 /*
  * Copyright (c) 2001 Alexey Zelkin <phantom@FreeBSD.org>
  * Copyright (c) 1991, 1993
@@ -111,3 +112,4 @@ localeconv(void)
 {
 	return localeconv_l(__get_locale());
 }
+DEF_STRONG(localeconv);
