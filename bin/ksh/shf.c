@@ -1,4 +1,4 @@
-/*	$OpenBSD: shf.c,v 1.18 2015/09/14 09:42:33 nicm Exp $	*/
+/*	$OpenBSD: shf.c,v 1.19 2015/09/15 18:15:05 tedu Exp $	*/
 
 /*
  *  Shell file I/O routines
