@@ -1,4 +1,4 @@
-/*	$OpenBSD: syn.c,v 1.30 2015/09/01 13:12:31 tedu Exp $	*/
+/*	$OpenBSD: syn.c,v 1.31 2015/09/15 18:15:05 tedu Exp $	*/
 
 /*
  * shell parser (C version)

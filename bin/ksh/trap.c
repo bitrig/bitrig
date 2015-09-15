@@ -1,4 +1,4 @@
-/*	$OpenBSD: trap.c,v 1.23 2010/05/19 17:36:08 jasper Exp $	*/
+/*	$OpenBSD: trap.c,v 1.24 2015/09/15 18:15:05 tedu Exp $	*/
 
 /*
  * signal handling

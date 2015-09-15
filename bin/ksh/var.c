@@ -1,4 +1,4 @@
-/*	$OpenBSD: var.c,v 1.46 2015/09/14 16:08:50 nicm Exp $	*/
+/*	$OpenBSD: var.c,v 1.47 2015/09/15 18:15:05 tedu Exp $	*/
 
 #include "sh.h"
 #include <time.h>
@@ -667,7 +667,8 @@ typeset(const char *var, int set, int clr, int field, int base)
 					free_me = NULL;
 				} else {
 					s = t->val.s + t->type;
-					free_me = (t->flag & ALLOC) ? t->val.s : NULL;
+					free_me = (t->flag & ALLOC) ? t->val.s :
+					    NULL;
 				}
 				t->flag &= ~ALLOC;
 			}

@@ -1,4 +1,4 @@
-/*	$OpenBSD: misc.c,v 1.42 2015/09/15 18:07:22 tedu Exp $	*/
+/*	$OpenBSD: misc.c,v 1.43 2015/09/15 18:15:05 tedu Exp $	*/
 
 /*
  * Miscellaneous functions

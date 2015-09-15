@@ -1,4 +1,4 @@
-/*	$OpenBSD: c_ksh.c,v 1.39 2015/09/15 18:07:22 tedu Exp $	*/
+/*	$OpenBSD: c_ksh.c,v 1.40 2015/09/15 18:15:05 tedu Exp $	*/
 
 /*
  * built-in Korn commands: c_*

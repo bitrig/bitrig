@@ -1,4 +1,4 @@
-/*	$OpenBSD: path.c,v 1.13 2015/09/05 09:47:08 jsg Exp $	*/
+/*	$OpenBSD: path.c,v 1.14 2015/09/15 18:15:05 tedu Exp $	*/
 
 #include "sh.h"
 #include <sys/stat.h>

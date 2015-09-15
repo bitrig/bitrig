@@ -1,4 +1,4 @@
-/*	$OpenBSD: c_sh.c,v 1.46 2015/07/20 20:46:24 guenther Exp $	*/
+/*	$OpenBSD: c_sh.c,v 1.47 2015/09/15 18:15:05 tedu Exp $	*/
 
 /*
  * built-in Bourne commands

@@ -1,4 +1,4 @@
-/*	$OpenBSD: edit.c,v 1.41 2015/09/01 13:12:31 tedu Exp $	*/
+/*	$OpenBSD: edit.c,v 1.42 2015/09/15 18:15:05 tedu Exp $	*/
 
 /*
  * Command line editing - common code
@@ -322,7 +322,8 @@ x_print_expansions(int nwords, char *const *words, int is_command)
 			prefix_len = x_basename(words[0], NULL);
 		/* Any (non-trailing) slashes in non-common word suffixes? */
 		for (i = 0; i < nwords; i++)
-			if (x_basename(words[i] + prefix_len, NULL) > prefix_len)
+			if (x_basename(words[i] + prefix_len, NULL) >
+			    prefix_len)
 				break;
 		/* All in same directory? */
 		if (i == nwords) {

@@ -1,4 +1,4 @@
-/*	$OpenBSD: history.c,v 1.41 2015/09/01 13:12:31 tedu Exp $	*/
+/*	$OpenBSD: history.c,v 1.42 2015/09/15 18:15:05 tedu Exp $	*/
 
 #include "sh.h"
 
@@ -34,13 +34,13 @@ static struct stat last_sb;
 int
 c_fc(char **wp)
 {
-	struct shf	*shf;
-	struct temp	*tf = NULL;
-	char		*p, *editor = NULL;
-	int		gflag = 0, lflag = 0, nflag = 0, sflag = 0, rflag = 0;
-	int		optc;
-	char		*first = NULL, *last = NULL;
-	char		**hfirst, **hlast, **hp;
+	struct shf *shf;
+	struct temp *tf = NULL;
+	char *p, *editor = NULL;
+	int gflag = 0, lflag = 0, nflag = 0, sflag = 0, rflag = 0;
+	int optc;
+	char *first = NULL, *last = NULL;
+	char **hfirst, **hlast, **hp;
 
 	if (!Flag(FTALKING_I)) {
 		bi_errorf("history functions not available");
