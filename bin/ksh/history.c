@@ -1,4 +1,4 @@
-/*	$OpenBSD: history.c,v 1.43 2015/09/17 14:21:33 nicm Exp $	*/
+/*	$OpenBSD: history.c,v 1.44 2015/09/17 21:39:54 nicm Exp $	*/
 
 #include "sh.h"
 
@@ -330,8 +330,8 @@ hist_replace(char **hp, const char *pat, const char *rep, int global)
 static char **
 hist_get(const char *str, int approx, int allow_cur)
 {
-	char		**hp = NULL;
-	int		n;
+	char **hp = NULL;
+	int n;
 
 	if (getn(str, &n)) {
 		hp = histptr + (n < 0 ? n : (n - hist_source->line));

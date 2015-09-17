@@ -1,4 +1,4 @@
-/*	$OpenBSD: jobs.c,v 1.46 2015/09/17 14:21:33 nicm Exp $	*/
+/*	$OpenBSD: jobs.c,v 1.47 2015/09/17 21:39:54 nicm Exp $	*/
 
 /*
  * Process and job control
@@ -1437,7 +1437,7 @@ j_lookup(const char *cp, int *ecodep)
 		if (errstr) {
 			if (ecodep)
 				*ecodep = JL_NOSUCH;
-			return (Job *) 0;
+			return NULL;
 		}
 		/* Look for last_proc->pid (what $! returns) first... */
 		for (j = job_list; j != NULL; j = j->next)
