@@ -1,4 +1,4 @@
-/*	$OpenBSD: syn.c,v 1.31 2015/09/15 18:15:05 tedu Exp $	*/
+/*	$OpenBSD: syn.c,v 1.32 2015/09/17 14:21:33 nicm Exp $	*/
 
 /*
  * shell parser (C version)
@@ -196,7 +196,8 @@ get_command(int cf)
 	XPtrV args, vars;
 	struct nesting_state old_nesting;
 
-	iops = acalloc(NUFILE + 1, sizeof(struct ioword *), ATEMP);
+	iops = acalloc(NUFILE + 1, sizeof(struct ioword *),
+	    ATEMP);
 	XPinit(args, 16);
 	XPinit(vars, 16);
 
@@ -568,7 +569,7 @@ function_body(char *name,
 		t->left->args[0][1] = ':';
 		t->left->args[0][2] = EOS;
 		t->left->args[1] = NULL;
-		t->left->vars = (char **) alloc(sizeof(char *), ATEMP);
+		t->left->vars = alloc(sizeof(char *), ATEMP);
 		t->left->vars[0] = NULL;
 		t->left->lineno = 1;
 	}
@@ -740,7 +741,7 @@ newtp(int type)
 {
 	struct op *t;
 
-	t = (struct op *) alloc(sizeof(*t), ATEMP);
+	t = alloc(sizeof(*t), ATEMP);
 	t->type = type;
 	t->u.evalflags = 0;
 	t->args = t->vars = NULL;

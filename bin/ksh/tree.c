@@ -1,4 +1,4 @@
-/*	$OpenBSD: tree.c,v 1.22 2015/09/15 18:15:05 tedu Exp $	*/
+/*	$OpenBSD: tree.c,v 1.23 2015/09/17 14:21:33 nicm Exp $	*/
 
 /*
  * command tree climbing
@@ -457,7 +457,7 @@ tcopy(struct op *t, Area *ap)
 	if (t == NULL)
 		return NULL;
 
-	r = (struct op *) alloc(sizeof(struct op), ap);
+	r = alloc(sizeof(struct op), ap);
 
 	r->type = t->type;
 	r->u.evalflags = t->u.evalflags;
@@ -636,7 +636,7 @@ iocopy(struct ioword **iow, Area *ap)
 		struct ioword *p, *q;
 
 		p = iow[i];
-		q = (struct ioword *) alloc(sizeof(*p), ap);
+		q = alloc(sizeof(*p), ap);
 		ior[i] = q;
 		*q = *p;
 		if (p->name != NULL)

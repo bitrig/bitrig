@@ -1,4 +1,4 @@
-/*	$OpenBSD: table.c,v 1.16 2015/09/01 13:12:31 tedu Exp $	*/
+/*	$OpenBSD: table.c,v 1.17 2015/09/17 14:21:33 nicm Exp $	*/
 
 /*
  * dynamic hashed associative table for commands and variables
@@ -117,7 +117,7 @@ ktenter(struct table *tp, const char *n, unsigned int h)
 
 	/* create new tbl entry */
 	len = strlen(n) + 1;
-	p = (struct tbl *) alloc(offsetof(struct tbl, name[0]) + len,
+	p = alloc(offsetof(struct tbl, name[0]) + len,
 				 tp->areap);
 	p->flag = 0;
 	p->type = 0;
