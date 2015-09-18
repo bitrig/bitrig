@@ -1,4 +1,4 @@
-/*	$OpenBSD: exec.c,v 1.55 2015/09/17 14:21:33 nicm Exp $	*/
+/*	$OpenBSD: exec.c,v 1.56 2015/09/18 07:28:24 nicm Exp $	*/
 
 /*
  * execute command tree

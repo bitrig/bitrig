@@ -1,4 +1,4 @@
-/*	$OpenBSD: c_ksh.c,v 1.40 2015/09/15 18:15:05 tedu Exp $	*/
+/*	$OpenBSD: c_ksh.c,v 1.41 2015/09/18 07:28:24 nicm Exp $	*/
 
 /*
  * built-in Korn commands: c_*
@@ -940,7 +940,8 @@ c_alias(char **wp)
 				afree(ap->val.s, APERM);
 			}
 			/* ignore values for -t (at&t ksh does this) */
-			newval = tflag ? search(alias, path, X_OK, NULL) : val;
+			newval = tflag ? search(alias, path, X_OK, NULL) :
+			    val;
 			if (newval) {
 				ap->val.s = str_save(newval, APERM);
 				ap->flag |= ALLOC|ISSET;
