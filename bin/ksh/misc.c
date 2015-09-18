@@ -1,4 +1,4 @@
-/*	$OpenBSD: misc.c,v 1.44 2015/09/17 14:21:33 nicm Exp $	*/
+/*	$OpenBSD: misc.c,v 1.45 2015/09/18 07:28:24 nicm Exp $	*/
 
 /*
  * Miscellaneous functions

@@ -1,4 +1,4 @@
-/*	$OpenBSD: expr.c,v 1.26 2015/09/17 14:21:33 nicm Exp $	*/
+/*	$OpenBSD: expr.c,v 1.27 2015/09/18 07:28:24 nicm Exp $	*/
 
 /*
  * Korn expression evaluation

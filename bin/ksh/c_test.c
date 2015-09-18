@@ -1,4 +1,4 @@
-/*	$OpenBSD: c_test.c,v 1.19 2015/09/15 18:15:05 tedu Exp $	*/
+/*	$OpenBSD: c_test.c,v 1.20 2015/09/18 07:28:24 nicm Exp $	*/
 
 /*
  * test(1); version 7-like  --  author Erik Baalbergen
@@ -471,7 +471,8 @@ test_primary(Test_env *te, int do_eval)
 				return 0;
 			}
 
-			return (*te->eval)(te, op, opnd1, NULL, do_eval);
+			return (*te->eval)(te, op, opnd1, NULL,
+			    do_eval);
 		}
 	}
 	opnd1 = (*te->getopnd)(te, TO_NONOP, do_eval);

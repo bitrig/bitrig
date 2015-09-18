@@ -1,4 +1,4 @@
-/*	$OpenBSD: main.c,v 1.59 2015/09/17 14:21:33 nicm Exp $	*/
+/*	$OpenBSD: main.c,v 1.60 2015/09/18 07:28:24 nicm Exp $	*/
 
 /*
  * startup, main loop, environments and error handling

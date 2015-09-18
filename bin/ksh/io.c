@@ -1,4 +1,4 @@
-/*	$OpenBSD: io.c,v 1.28 2015/09/17 14:21:33 nicm Exp $	*/
+/*	$OpenBSD: io.c,v 1.29 2015/09/18 07:28:24 nicm Exp $	*/
 
 /*
  * shell buffered IO and formatted output
