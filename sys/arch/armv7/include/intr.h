@@ -1,4 +1,4 @@
-/*	$OpenBSD: intr.h,v 1.1 2013/09/04 14:38:27 patrick Exp $	*/
+/*	$OpenBSD: intr.h,v 1.2 2015/09/19 02:13:05 jsg Exp $	*/
 /*	$NetBSD: intr.h,v 1.12 2003/06/16 20:00:59 thorpej Exp $	*/
 
 /*
@@ -155,6 +155,7 @@ typedef	int intr_state_t;
 #define	intr_disable()	arm_intr_disable(I32_bit | F32_bit)
 #define	intr_enable()	arm_intr_enable(I32_bit | F32_bit)
 #define	intr_restore(x)	arm_intr_restore(x)
+void	intr_barrier(void *);
 
 void arm_init_smask(void); /* XXX */
 extern uint32_t arm_smask[NIPL];
