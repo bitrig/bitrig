@@ -100,8 +100,27 @@
  * ALSO: all WB mappings here are WriteBack No Allocate, main memory
  * mappings likely should be configured as Write Allocate if supported.
  */
-#define NMRR_DEFAULT		0x00cc00c0
-#define PRRR_DEFAULT		0xf00a00a9
+#define NMRR_DEFAULT		0x00440044 // 0000 0000 0100 0100 0000 0000 0100 0100
+#define PRRR_DEFAULT		0x0003aaa9 // 0000 0000 0000 0011 0000 0000 1010 1001
+//#define NMRR_DEFAULT		0x00cc00c0 // 0000 0000 1100 1100 0000 0000 1100 0000
+//#define PRRR_DEFAULT		0xf00a00a9 // 1111 0000 0000 1010 0000 0000 1010 1001
+
+/*
+ * TEX remap registers attributes
+ */
+#define	PRRR_SO		0	/* Strongly ordered memory */
+#define	PRRR_DEV	1	/* Device memory */
+#define	PRRR_MEM	2	/* Normal memory */
+#define	PRRR_DS0	(1 << 16) /* Shared bit for Device, S = 0 */
+#define	PRRR_DS1	(1 << 17) /* Shared bit for Device, S = 1 */
+#define	PRRR_NS0	(1 << 18) /* Shared bit for Normal, S = 0 */
+#define	PRRR_NS1	(1 << 19) /* Shared bit for Normal, S = 1 */
+#define	PRRR_NOS_SHIFT	24	/* base shif for Not Outer Shared bits */
+
+#define	NMRR_NC		0	/* Noncachable*/
+#define	NMRR_WB_WA	1	/* Write Back, Write Allocate */
+#define	NMRR_WT		2	/* Write Through, Non-Write Allocate */
+#define	NMRR_WB		3	/* Write Back, Non-Write Allocate */
 
 /* 
  * NON-TEX Access permission bits

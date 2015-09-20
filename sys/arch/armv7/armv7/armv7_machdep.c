@@ -502,6 +502,13 @@ initarm(void *arg0, void *arg1, void *arg2)
 		memcpy((void *)fdt.pv_pa, config, size);
 	}
 
+#if 0
+	extern bus_space_handle_t imxuartconsioh;
+	extern int imxuartcnattach(bus_space_tag_t iot, bus_addr_t iobase, int rate, tcflag_t cflag);
+	imxuartcnattach(&armv7_bs_tag, 0x021f0000, 0, 0);
+	imxuartconsioh = (bus_space_handle_t)0x021f0000;
+#endif
+
 	pmap_bootstrap(KERNEL_VM_BASE,
 	    physical_freestart-memstart+KERNEL_TEXT_BASE,
 	    physical_start, physical_end);
@@ -520,9 +527,14 @@ initarm(void *arg0, void *arg1, void *arg2)
 	 */
 
 	/* Switch tables */
+	extern uint32_t ttb_flags;
 	cpu_domains(DOMAIN_CLIENT);
-	setttb(pmap_kernel()->pm_pt1pa);
+//	cpu_setttb(pmap_kernel()->pm_pt1pa | ttb_flags);
+	cpu_setttb(pmap_kernel()->pm_pt1pa);
 	cpu_tlb_flushID();
+
+	/* Enable caches */
+	//cpu_control(CPU_CONTROL_DC_ENABLE, CPU_CONTROL_DC_ENABLE);
 
 	/*
 	 * Moved from cpu_startup() as data_abort_handler() references
@@ -635,6 +647,11 @@ initarm(void *arg0, void *arg1, void *arg2)
 		Debugger();
 #endif
 	platform_print_board_type();
+
+	uint32_t clevel;
+	__asm volatile("mrc p15, 1, %0, c0, c0, 1"
+	    : "=r" (clevel));
+	printf("clevel 0x%08x\n", clevel);
 
 	/* We return the new stack pointer address */
 	return(kernelstack.pv_va + USPACE_SVC_STACK_TOP);

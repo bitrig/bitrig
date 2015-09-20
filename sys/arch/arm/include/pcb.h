@@ -48,7 +48,6 @@ struct pcb_arm32 {
 	paddr_t	pcb32_pagedir;			/* PT hooks */
 	uint32_t *pcb32_pl1vec;		/* PTR to vector_base L1 entry*/
 	uint32_t pcb32_l1vec;			/* Value to stuff on ctx sw */
-	u_int	pcb32_dacr;			/* Domain Access Control Reg */
 	void	*pcb32_cstate;			/* &pmap->pm_cstate */
 	u_int	pcb32_r8;			/* used */
 	u_int	pcb32_r9;			/* used */
@@ -63,7 +62,6 @@ struct pcb_arm32 {
 #define	pcb_pagedir	pcb_un.un_32.pcb32_pagedir
 #define	pcb_pl1vec	pcb_un.un_32.pcb32_pl1vec
 #define	pcb_l1vec	pcb_un.un_32.pcb32_l1vec
-#define	pcb_dacr	pcb_un.un_32.pcb32_dacr
 #define	pcb_cstate	pcb_un.un_32.pcb32_cstate
 
 /*

@@ -71,6 +71,14 @@ ttlb_flush_range(vaddr_t va, vsize_t size)
 	__asm __volatile("dsb");
 }
 
+static __inline void
+ttlb_flush_all_local(void)
+{
+	__asm __volatile("dsb");
+	__asm __volatile("mcr p15, 0, r0, c8, c7, 0 /* Invalidate entire unified TLB */");
+	__asm __volatile("dsb");
+}
+
 /*
  *  Clean L1 data cache range by physical address.
  *  The range must be within a single page.
@@ -114,6 +122,136 @@ cache_icache_sync_fresh(vaddr_t va, paddr_t pa, vsize_t size)
 	__asm __volatile("mcr p15, 0, r0, c7, c5,  0 /* Instruction cache invalidate all PoU */");
 	__asm __volatile("dsb");
 	__asm __volatile("isb");
+}
+
+/*
+ *  This table must corespond with memory attribute configuration in vm.h.
+ *  First entry is used for normal system mapping.
+ *
+ *  Device memory is always marked as shared.
+ *  Normal memory is shared only in SMP .
+ *  Not outer shareable bits are not used yet.
+ *  Class 6 cannot be used on ARM11.
+ */
+#define TEXDEF_TYPE_SHIFT	0
+#define TEXDEF_TYPE_MASK	0x3
+#define TEXDEF_INNER_SHIFT	2
+#define TEXDEF_INNER_MASK	0x3
+#define TEXDEF_OUTER_SHIFT	4
+#define TEXDEF_OUTER_MASK	0x3
+#define TEXDEF_NOS_SHIFT	6
+#define TEXDEF_NOS_MASK		0x1
+
+#define TEX(t, i, o, s)				\
+		((t) << TEXDEF_TYPE_SHIFT) |	\
+		((i) << TEXDEF_INNER_SHIFT) |	\
+		((o) << TEXDEF_OUTER_SHIFT |	\
+		((s) << TEXDEF_NOS_SHIFT))
+
+static uint32_t tex_class[8] = {
+/*	type      inner cache outer cache */
+//	TEX(PRRR_MEM, NMRR_WB_WA, NMRR_WB_WA, 0),  /* 0 - ATTR_WB_WA */
+//	TEX(PRRR_MEM, NMRR_NC,	  NMRR_NC,    0),  /* 1 - ATTR_NOCACHE */
+//	TEX(PRRR_DEV, NMRR_NC,	  NMRR_NC,    0),  /* 2 - ATTR_DEVICE */
+//	TEX(PRRR_SO,  NMRR_NC,	  NMRR_NC,    0),  /* 3 - ATTR_SO    */
+	TEX(PRRR_DEV, NMRR_NC,	  NMRR_NC,    0),  /* 0 - DEVICE */
+	TEX(PRRR_MEM, NMRR_WB_WA, NMRR_WB_WA, 0),  /* 1 - PTE */
+	TEX(PRRR_MEM, NMRR_NC,	  NMRR_NC,    0),  /* 2 - DISPLAY */
+	TEX(PRRR_MEM, NMRR_WB_WA, NMRR_WB_WA, 0),  /* 3 - MEMORY */
+	TEX(PRRR_MEM, NMRR_NC,	  NMRR_NC,    0),  /* 4 - NOT USED YET */
+	TEX(PRRR_MEM, NMRR_NC,	  NMRR_NC,    0),  /* 5 - NOT USED YET */
+	TEX(PRRR_MEM, NMRR_NC,	  NMRR_NC,    0),  /* 6 - NOT USED YET */
+	TEX(PRRR_MEM, NMRR_NC,	  NMRR_NC,    0),  /* 7 - NOT USED YET */
+};
+#undef TEX
+
+
+uint32_t ttb_flags = 0;
+
+static __inline void __unused
+cp15_prrr_set(uint32_t prrr)
+{
+	__asm __volatile("mcr	p15, 0, %0, c10, c2, 0" :: "r" (prrr));
+}
+
+static __inline void __unused
+cp15_nmrr_set(uint32_t nmrr)
+{
+	__asm __volatile("mcr	p15, 0, %0, c10, c2, 1" :: "r" (nmrr));
+}
+
+
+/*
+ * Convert TEX definition entry to TTB flags.
+ */
+static uint32_t
+encode_ttb_flags(int idx)
+{
+	uint32_t inner, outer, nos, reg;
+
+	inner = (tex_class[idx] >> TEXDEF_INNER_SHIFT) &
+		TEXDEF_INNER_MASK;
+	outer = (tex_class[idx] >> TEXDEF_OUTER_SHIFT) &
+		TEXDEF_OUTER_MASK;
+	nos = (tex_class[idx] >> TEXDEF_NOS_SHIFT) &
+		TEXDEF_NOS_MASK;
+
+	reg = nos << 5;
+	reg |= outer << 3;
+//	if (cpuinfo.coherent_walk)
+		reg |= (inner & 0x1) << 6;
+	reg |= (inner & 0x2) >> 1;
+#ifdef MULTIPROCESSOR
+	reg |= 1 << 1;
+#endif
+	return reg;
+}
+
+/*
+ *  Set TEX remapping registers in current CPU.
+ */
+void
+pmap_set_tex(void)
+{
+	uint32_t prrr, nmrr;
+	uint32_t type, inner, outer, nos;
+	int i;
+
+//	ttb_flags = encode_ttb_flags(0);
+	ttb_flags = encode_ttb_flags(1);
+
+	prrr = 0;
+	nmrr = 0;
+
+	/* Build remapping register from TEX classes. */
+	for (i = 0; i < 8; i++) {
+		type = (tex_class[i] >> TEXDEF_TYPE_SHIFT) &
+			TEXDEF_TYPE_MASK;
+		inner = (tex_class[i] >> TEXDEF_INNER_SHIFT) &
+			TEXDEF_INNER_MASK;
+		outer = (tex_class[i] >> TEXDEF_OUTER_SHIFT) &
+			TEXDEF_OUTER_MASK;
+		nos = (tex_class[i] >> TEXDEF_NOS_SHIFT) &
+			TEXDEF_NOS_MASK;
+
+		prrr |= type  << (i * 2);
+		prrr |= nos   << (i + 24);
+		nmrr |= inner << (i * 2);
+		nmrr |= outer << (i * 2 + 16);
+	}
+	/* Add shareable bits for device memory. */
+	prrr |= PRRR_DS0 | PRRR_DS1;
+
+	/* Add shareable bits for normal memory in SMP case. */
+#ifdef MULTIPROCESSOR
+	prrr |= PRRR_NS1;
+#endif
+	printf("prrr %lx nmrr %lx %lx\n", prrr, nmrr, ttb_flags);
+//	cp15_prrr_set(prrr);
+//	cp15_nmrr_set(nmrr);
+
+	/* Caches are disabled, so full TLB flush should be enough. */
+	ttlb_flush_all_local();
 }
 
 struct pmap kernel_pmap_;
@@ -162,9 +300,6 @@ void pmap_avail_fixup(void);
 vaddr_t pmap_map_stolen(void);
 void pmap_physload_avail(void);
 extern caddr_t msgbufaddr;
-
-/* TODO: ttb flags */
-static uint32_t ttb_flags = 0;
 
 /* XXX - panic on pool get failures? */
 struct pool pmap_pmap_pool;
@@ -980,6 +1115,8 @@ pmap_bootstrap(u_int kernelstart, u_int kernelend, uint32_t ram_start,
 	vaddr_t vstart, vend;
 	int i, j, k;
 
+	pmap_set_tex();
+
 	kvo = KERNEL_BASE_VIRT - (ram_start +(KERNEL_BASE_VIRT&0x0fffffff));
 
 	pmap_setup_avail(ram_start, ram_end, kvo);
@@ -1196,6 +1333,9 @@ pmap_dump(void)
 				continue;
 			}
 			l2p = pmap_kernel()->pm_vp[idx1]->l2[idx2];
+			paddr_t l2pp;
+			pmap_extract(pmap_kernel(), (vaddr_t)pmap_kernel()->pm_vp[idx1]->l2[idx2], &l2pp);
+			printf("%08x %08x\n", l2pp, pmap_kernel()->pm_vp[idx1]->l2[idx2]);
 			vp3 = pmap_kernel()->pm_vp[idx1]->vp[idx2];
 			for (idx3 = 0; idx3 < VP_IDX3_CNT; idx3++) {
 				if (l2p == 0) {
@@ -1230,6 +1370,8 @@ pmap_set_l2(struct pmap *pm, uint32_t va, vaddr_t l2_va, uint32_t l2_pa)
 	uint32_t pg_entry;
 	struct pmapvp2 *vp2;
 	int idx1, idx2;
+
+//	printf("set_l2 va %lx l2_va %lx l2_pa %lx\n", va, l2_va, l2_pa);
 
 	if (l2_pa & (L2_TABLE_SIZE-1)) {
 		panic("misaligned L2 table\n");
@@ -1577,6 +1719,10 @@ pte_insert(struct pte_desc *pted)
 	else
 		pte = (pted->pted_pte & PTE_RPGN) | cache_bits |
 		    access_bits | global | L2_P;
+	if ((pted->pted_pte & PTE_RPGN) == 0x20c4000) {
+		printf("put in pte %lx for %lx\n", pte, pted->pted_pte & PTE_RPGN);
+	pmap_set_tex();
+	}
 
 	vp2 = pm->pm_vp[VP_IDX1(pted->pted_va)];
 	if (vp2->l2[VP_IDX2(pted->pted_va)] == NULL) {

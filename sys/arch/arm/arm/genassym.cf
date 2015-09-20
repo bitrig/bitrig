@@ -87,7 +87,6 @@ member	pcb_tf
 member	pcb_pagedir
 member	pcb_pl1vec
 member	pcb_l1vec
-member	pcb_dacr
 member	pcb_cstate
 member	pcb_flags
 member	PCB_R8			pcb_un.un_32.pcb32_r8

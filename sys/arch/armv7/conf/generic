@@ -56,7 +56,7 @@ ampintc*	at fdt?
 amptimer*	at cortex?
 agtimer*	at cortex?
 agtimer*	at fdt?
-armliicc*	at cortex?
+#armliicc*	at cortex?
 ampscu*		at cortex?
 
 # Clocks
