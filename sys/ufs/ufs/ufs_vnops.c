@@ -1,4 +1,4 @@
-/*	$OpenBSD: ufs_vnops.c,v 1.120 2015/03/14 03:38:53 jsg Exp $	*/
+/*	$OpenBSD: ufs_vnops.c,v 1.122 2015/09/23 15:37:26 tedu Exp $	*/
 /*	$NetBSD: ufs_vnops.c,v 1.18 1996/05/11 18:28:04 mycroft Exp $	*/
 
 /*-
@@ -1890,7 +1890,6 @@ ufs_print(void *v)
 	if (vp->v_type == VFIFO)
 		fifo_printinfo(vp);
 #endif /* FIFO */
-	lockmgr_printinfo(&ip->i_lock);
 	printf("\n");
 
 #endif /* DIAGNOSTIC */
