@@ -1,4 +1,4 @@
-/*	$OpenBSD: disklabel.c,v 1.205 2015/09/09 13:51:55 krw Exp $	*/
+/*	$OpenBSD: disklabel.c,v 1.206 2015/09/24 19:49:38 krw Exp $	*/
 
 /*
  * Copyright (c) 1987, 1993
@@ -400,6 +400,7 @@ writelabel(int f, char *boot, struct disklabel *lp)
 			return (1);
 		}
 	}
+
 	/* Finally, write out any mount point information. */
 	if (!donothing) {
 		/* First refresh our copy of the current label to get UID. */
