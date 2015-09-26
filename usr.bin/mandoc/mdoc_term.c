@@ -1,4 +1,4 @@
-/*	$OpenBSD: mdoc_term.c,v 1.225 2015/09/21 13:24:32 schwarze Exp $ */
+/*	$OpenBSD: mdoc_term.c,v 1.226 2015/09/26 00:53:15 schwarze Exp $ */
 /*
  * Copyright (c) 2008, 2009, 2010, 2011 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2010, 2012-2015 Ingo Schwarze <schwarze@openbsd.org>
@@ -1723,7 +1723,6 @@ termp_xx_pre(DECL_ARGS)
 		break;
 	default:
 		abort();
-		/* NOTREACHED */
 	}
 
 	term_word(p, pp);
@@ -1920,7 +1919,6 @@ termp_quote_pre(DECL_ARGS)
 		break;
 	default:
 		abort();
-		/* NOTREACHED */
 	}
 
 	p->flags |= TERMP_NOSPACE;
@@ -1991,7 +1989,6 @@ termp_quote_post(DECL_ARGS)
 		break;
 	default:
 		abort();
-		/* NOTREACHED */
 	}
 }
 
@@ -2220,7 +2217,6 @@ termp_bk_pre(DECL_ARGS)
 		break;
 	default:
 		abort();
-		/* NOTREACHED */
 	}
 
 	return(1);
