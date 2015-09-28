@@ -266,7 +266,8 @@ _dl_boot_bind(const long sp, long *dl_data, Elf_Dyn *dynamicp)
 
 			sp = dynld.dyn.symtab;
 			sp += ELF_R_SYM(rp->r_info);
-			if (ELF_R_SYM(rp->r_info) && sp->st_value == 0) {
+			if (ELF_R_SYM(rp->r_info) && sp->st_value == 0 &&
+			    sp->st_size == 0) {
 #if 0
 				_dl_wrstderr("Dynamic loader failure: self bootstrapping impossible.\n");
 				_dl_wrstderr("Undefined symbol: ");
