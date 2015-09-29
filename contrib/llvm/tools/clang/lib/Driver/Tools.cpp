@@ -2771,8 +2771,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   llvm::Triple Triple(TripleStr);
   if (KernelOrKext && (!Triple.isiOS() || Triple.isOSVersionLT(6)))
     PIC = PIE = false;
-  if (Args.hasArg(options::OPT_static))
-    PIC = PIE = false;
+  if (getToolChain().getTriple().getOS() != llvm::Triple::Bitrig &&
+      getToolChain().getTriple().getOS() != llvm::Triple::OpenBSD){
+    if (Args.hasArg(options::OPT_static))
+      PIC = PIE = false;
+  }
 
   if (Arg *A = Args.getLastArg(options::OPT_mdynamic_no_pic)) {
     // This is a very special mode. It trumps the other modes, almost no one
