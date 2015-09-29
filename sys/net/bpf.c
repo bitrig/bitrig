@@ -1,4 +1,4 @@
-/*	$OpenBSD: bpf.c,v 1.128 2015/09/29 10:11:40 deraadt Exp $	*/
+/*	$OpenBSD: bpf.c,v 1.129 2015/09/29 10:58:51 dlg Exp $	*/
 /*	$NetBSD: bpf.c,v 1.33 1997/02/21 23:59:35 thorpej Exp $	*/
 
 /*
@@ -525,6 +525,8 @@ bpfwrite(dev_t dev, struct uio *uio, int ioflag)
 	struct bpf_d *d;
 	struct ifnet *ifp;
 	struct mbuf *m;
+	struct bpf_program *bf;
+	struct bpf_insn *fcode = NULL;
 	int error, s;
 	struct sockaddr_storage dst;
 
@@ -541,8 +543,12 @@ bpfwrite(dev_t dev, struct uio *uio, int ioflag)
 		return (0);
 
 	KERNEL_ASSERT_LOCKED(); /* for accessing bd_wfilter */
+	bf = srp_get_locked(&d->bd_wfilter);
+	if (bf != NULL)
+		fcode = bf->bf_insns;
+
 	error = bpf_movein(uio, d->bd_bif->bif_dlt, &m,
-	    (struct sockaddr *)&dst, srp_get_locked(&d->bd_wfilter));
+	    (struct sockaddr *)&dst, fcode);
 	if (error)
 		return (error);
 
@@ -918,6 +924,7 @@ bpfioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 int
 bpf_setf(struct bpf_d *d, struct bpf_program *fp, int wf)
 {
+	struct bpf_program *bf;
 	struct srp *filter;
 	struct bpf_insn *fcode;
 	u_int flen, size;
@@ -939,18 +946,28 @@ bpf_setf(struct bpf_d *d, struct bpf_program *fp, int wf)
 	if (flen > BPF_MAXINSNS)
 		return (EINVAL);
 
-	fcode = mallocarray(flen, sizeof(*fp->bf_insns), M_DEVBUF, M_WAITOK);
+	fcode = mallocarray(flen, sizeof(*fp->bf_insns), M_DEVBUF,
+	    M_WAITOK | M_CANFAIL);
+	if (fcode == NULL)
+		return (ENOMEM);
+
 	size = flen * sizeof(*fp->bf_insns);
-	if (copyin(fp->bf_insns, fcode, size) == 0 &&
-	    bpf_validate(fcode, (int)flen)) {
-		srp_update_locked(&bpf_insn_gc, filter, fcode);
-		s = splnet();
-		bpf_reset_d(d);
-		splx(s);
-		return (0);
+	if (copyin(fp->bf_insns, fcode, size) != 0 ||
+	    bpf_validate(fcode, (int)flen) == 0) {
+		free(fcode, M_DEVBUF, size);
+		return (EINVAL);
 	}
-	free(fcode, M_DEVBUF, size);
-	return (EINVAL);
+
+	bf = malloc(sizeof(*bf), M_DEVBUF, M_WAITOK);
+	bf->bf_len = flen;
+	bf->bf_insns = fcode;
+
+	srp_update_locked(&bpf_insn_gc, filter, bf);
+
+	s = splnet();
+	bpf_reset_d(d);
+	splx(s);
+	return (0);
 }
 
 /*
@@ -1135,10 +1152,14 @@ bpf_tap(caddr_t arg, u_char *pkt, u_int pktlen, u_int direction)
 		if ((direction & d->bd_dirfilt) != 0)
 			slen = 0;
 		else {
-			struct bpf_insn *fcode;
-			fcode = srp_enter(&d->bd_rfilter);
+			struct bpf_program *bf;
+			struct bpf_insn *fcode = NULL;
+
+			bf = srp_enter(&d->bd_rfilter);
+			if (bf != NULL)
+				fcode = bf->bf_insns;
 			slen = bpf_filter(fcode, pkt, pktlen, 0);
-			srp_leave(&d->bd_rfilter, fcode);
+			srp_leave(&d->bd_rfilter, bf);
 		}
 
 		if (slen > 0) {
@@ -1215,11 +1236,14 @@ _bpf_mtap(caddr_t arg, struct mbuf *m, u_int direction,
 		else if (d->bd_queue && m->m_pkthdr.pf.qid != d->bd_queue)
 			slen = 0;
 		else {
-			struct bpf_insn *fcode;
-			fcode = srp_enter(&d->bd_rfilter);
-			slen = bpf_filter(fcode, (u_char *)m,
-			    (u_int)pktlen, 0);
-			srp_leave(&d->bd_rfilter, fcode);
+			struct bpf_program *bf;
+			struct bpf_insn *fcode = NULL;
+
+			bf = srp_enter(&d->bd_rfilter);
+			if (bf != NULL)
+				fcode = bf->bf_insns;
+			slen = bpf_filter(fcode, (u_char *)m, (u_int)pktlen, 0);
+			srp_leave(&d->bd_rfilter, bf);
 		}
 
 		if (slen > 0) {
@@ -1677,7 +1701,11 @@ bpf_d_unref(void *null, void *d)
 }
 
 void
-bpf_insn_dtor(void *null, void *fcode)
+bpf_insn_dtor(void *null, void *f)
 {
-	free(fcode, M_DEVBUF, 0);
+	struct bpf_program *bf = f;
+	struct bpf_insn *insns = bf->bf_insns;
+
+	free(insns, M_DEVBUF, bf->bf_len * sizeof(*insns));
+	free(bf, M_DEVBUF, sizeof(*bf));
 }
