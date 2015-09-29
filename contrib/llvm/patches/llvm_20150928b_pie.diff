@@ -1,0 +1,20 @@
+commit ebc9e5d6899e09aaa7084940e61a8126223ab8a3
+Author: Dale Rahn <drahn@dalerahn.com>
+Date:   Fri Aug 7 12:47:03 2015 -0400
+
+    Link static pie binaries against rcrt0.o
+
+diff --git a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+index fba4f55..7ef48f9 100644
+--- a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
++++ b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+@@ -6490,6 +6490,9 @@ void bitrig::Link::ConstructJob(Compilation &C, const JobAction &JA,
+       if (Args.hasArg(options::OPT_pg))
+         CmdArgs.push_back(Args.MakeArgString(
+                                 getToolChain().GetFilePath("gcrt0.o")));
++      else if ( Args.hasArg(options::OPT_static) && !Args.hasArg(options::OPT_nopie))
++        CmdArgs.push_back(Args.MakeArgString(
++                                getToolChain().GetFilePath("rcrt0.o")));
+       else
+         CmdArgs.push_back(Args.MakeArgString(
+                                 getToolChain().GetFilePath("crt0.o")));

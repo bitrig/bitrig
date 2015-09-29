@@ -1,0 +1,72 @@
+commit af51b5129ab63562d4b8cb81d31c8d0d454539fa
+Author: Patrick Wildt <patrick@blueri.se>
+Date:   Mon Aug 3 20:02:30 2015 +0200
+
+    Clang changes for PIE on Bitrig.
+    
+    Pass nopie to gnu LD when not building in PIE mode.
+    Default to pie enabled for amd64.
+    Automatically set IsPICLevelTwo for potential Bitrig processors.
+
+diff --git a/contrib/llvm/tools/clang/lib/Driver/ToolChains.h b/contrib/llvm/tools/clang/lib/Driver/ToolChains.h
+index 47fb10d..2ca1fa2 100644
+--- a/contrib/llvm/tools/clang/lib/Driver/ToolChains.h
++++ b/contrib/llvm/tools/clang/lib/Driver/ToolChains.h
+@@ -546,6 +546,9 @@ public:
+ 
+   bool IsMathErrnoDefault() const override { return false; }
+   bool IsObjCNonFragileABIDefault() const override { return true; }
++  bool isPIEDefault() const override {
++    return getTriple().getArch() == llvm::Triple::x86_64;
++  }
+ 
+   CXXStdlibType GetCXXStdlibType(const llvm::opt::ArgList &Args) const override;
+   void
+diff --git a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+index e69c8c2..fba4f55 100644
+--- a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
++++ b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+@@ -2702,6 +2702,33 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
+     }
+   }
+ 
++  // Bitrig-specific defaults for PIE
++  if (getToolChain().getTriple().getOS() == llvm::Triple::Bitrig) {
++    switch (getToolChain().getTriple().getArch()) {
++    case llvm::Triple::arm:
++    case llvm::Triple::armeb:
++    case llvm::Triple::thumb:
++    case llvm::Triple::thumbeb:
++    case llvm::Triple::aarch64:
++    case llvm::Triple::mips:
++    case llvm::Triple::mipsel:
++    case llvm::Triple::mips64:
++    case llvm::Triple::mips64el:
++    case llvm::Triple::sparc:
++    case llvm::Triple::x86:
++    case llvm::Triple::x86_64:
++      IsPICLevelTwo = false; // "-fpie"
++      break;
++
++    case llvm::Triple::ppc:
++    case llvm::Triple::sparcv9:
++      IsPICLevelTwo = true; // "-fPIE"
++      break;
++
++    default:
++      break;
++    }
++  }
+   // For the PIC and PIE flag options, this logic is different from the
+   // legacy logic in very old versions of GCC, as that logic was just
+   // a bug no one had ever fixed. This logic is both more rational and
+@@ -6447,6 +6474,9 @@ void bitrig::Link::ConstructJob(Compilation &C, const JobAction &JA,
+     }
+   }
+ 
++  if (Args.hasArg(options::OPT_nopie))
++    CmdArgs.push_back("-nopie");
++
+   if (Output.isFilename()) {
+     CmdArgs.push_back("-o");
+     CmdArgs.push_back(Output.getFilename());

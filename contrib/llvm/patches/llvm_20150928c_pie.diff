@@ -1,0 +1,28 @@
+commit 9f0255428d7bd2396bda6147e0d68da159c90496
+Author: Dale Rahn <drahn@dalerahn.com>
+Date:   Mon Sep 28 20:04:43 2015 -0400
+
+    Allow cc -static -o tst tst.c to compile pie binary.
+    
+    Even if static is specified, if the target is Bitrig or OpenBSD,
+    pic/pie flags should not be overwritten, this allows
+    pie binaries to be build with source files on the link line.
+
+diff --git a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+index 7ef48f9..6047dfb 100644
+--- a/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
++++ b/contrib/llvm/tools/clang/lib/Driver/Tools.cpp
+@@ -2771,8 +2771,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
+   llvm::Triple Triple(TripleStr);
+   if (KernelOrKext && (!Triple.isiOS() || Triple.isOSVersionLT(6)))
+     PIC = PIE = false;
+-  if (Args.hasArg(options::OPT_static))
+-    PIC = PIE = false;
++  if (getToolChain().getTriple().getOS() != llvm::Triple::Bitrig &&
++      getToolChain().getTriple().getOS() != llvm::Triple::OpenBSD){
++    if (Args.hasArg(options::OPT_static))
++      PIC = PIE = false;
++  }
+ 
+   if (Arg *A = Args.getLastArg(options::OPT_mdynamic_no_pic)) {
+     // This is a very special mode. It trumps the other modes, almost no one
