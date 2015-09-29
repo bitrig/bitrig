@@ -1,4 +1,4 @@
-/*	$OpenBSD: vfprintf.c,v 1.67 2014/12/21 00:23:30 daniel Exp $	*/
+/*	$OpenBSD: vfprintf.c,v 1.69 2015/09/29 03:19:24 guenther Exp $	*/
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
