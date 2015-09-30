@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_mmap.c,v 1.115 2015/09/23 00:16:44 guenther Exp $	*/
+/*	$OpenBSD: uvm_mmap.c,v 1.119 2015/09/30 11:36:07 semarie Exp $	*/
 /*	$NetBSD: uvm_mmap.c,v 1.49 2001/02/18 21:19:08 chs Exp $	*/
 
 /*
@@ -65,6 +65,7 @@
 #include <sys/stat.h>
 #include <sys/specdev.h>
 #include <sys/stdint.h>
+#include <sys/tame.h>
 #include <sys/unistd.h>		/* for KBIND* */
 #include <sys/user.h>
 
@@ -366,6 +367,11 @@ sys_mmap(struct proc *p, void *v, register_t *retval)
 	if (size == 0)
 		return (EINVAL);
 
+	if ((p->p_p->ps_flags & PS_TAMED) &&
+	    !(p->p_p->ps_tame & TAME_PROTEXEC) &&
+	    (prot & PROT_EXEC))
+		return (tame_fail(p, EPERM, TAME_PROTEXEC));
+
 	/* align file position and save offset.  adjust size. */
 	ALIGN_ADDR(pos, size, pageoff);
 
@@ -662,6 +668,11 @@ sys_mprotect(struct proc *p, void *v, register_t *retval)
 	
 	if ((prot & PROT_MASK) != prot)
 		return (EINVAL);
+
+	if ((p->p_p->ps_flags & PS_TAMED) &&
+	    !(p->p_p->ps_tame & TAME_PROTEXEC) &&
+	    (prot & PROT_EXEC))
+		return (tame_fail(p, EPERM, TAME_PROTEXEC));
 
 	/*
 	 * align the address to a page boundary, and adjust the size accordingly
