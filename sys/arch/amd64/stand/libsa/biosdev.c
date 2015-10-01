@@ -1,4 +1,4 @@
-/*	$OpenBSD: biosdev.c,v 1.25 2015/10/01 16:08:19 krw Exp $	*/
+/*	$OpenBSD: biosdev.c,v 1.26 2015/10/01 16:16:23 krw Exp $	*/
 
 /*
  * Copyright (c) 1996 Michael Shalayeff
