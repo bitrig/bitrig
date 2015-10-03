@@ -1,4 +1,4 @@
-/*	$OpenBSD: kdump.c,v 1.109 2015/10/03 09:12:39 zhuk Exp $	*/
+/*	$OpenBSD: kdump.c,v 1.110 2015/10/03 21:47:40 guenther Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1993
@@ -88,7 +88,7 @@ pid_t pid_opt = -1;
 #define SYSVSEM
 #define SYSVMSG
 #define SYSVSHM
-#define LFS
+#define ACCOUNTING
 #include <kern/syscalls.c>
 
 #undef KTRACE
@@ -98,7 +98,7 @@ pid_t pid_opt = -1;
 #undef SYSVSEM
 #undef SYSVMSG
 #undef SYSVSHM
-#undef LFS
+#undef ACCOUNTING
 
 struct emulation {
 	char *name;		/* Emulation name */
