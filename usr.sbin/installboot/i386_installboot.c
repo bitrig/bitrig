@@ -1,4 +1,4 @@
-/*	$OpenBSD: i386_installboot.c,v 1.9 2015/10/03 16:56:52 krw Exp $	*/
+/*	$OpenBSD: i386_installboot.c,v 1.10 2015/10/05 16:07:57 krw Exp $	*/
 /*	$NetBSD: installboot.c,v 1.5 1995/11/17 23:23:50 gwr Exp $ */
 
 /*
