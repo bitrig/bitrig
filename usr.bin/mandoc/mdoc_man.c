@@ -1,4 +1,4 @@
-/*	$OpenBSD: mdoc_man.c,v 1.91 2015/04/18 17:50:02 schwarze Exp $ */
+/*	$OpenBSD: mdoc_man.c,v 1.92 2015/10/06 18:30:44 schwarze Exp $ */
 /*
  * Copyright (c) 2011-2015 Ingo Schwarze <schwarze@openbsd.org>
  *
@@ -642,14 +642,14 @@ static int
 cond_head(DECL_ARGS)
 {
 
-	return(n->type == ROFFT_HEAD);
+	return n->type == ROFFT_HEAD;
 }
 
 static int
 cond_body(DECL_ARGS)
 {
 
-	return(n->type == ROFFT_BODY);
+	return n->type == ROFFT_BODY;
 }
 
 static int
@@ -659,10 +659,10 @@ pre_enc(DECL_ARGS)
 
 	prefix = manacts[n->tok].prefix;
 	if (NULL == prefix)
-		return(1);
+		return 1;
 	print_word(prefix);
 	outflags &= ~MMAN_spc;
-	return(1);
+	return 1;
 }
 
 static void
@@ -710,7 +710,7 @@ pre_ex(DECL_ARGS)
 
 	print_word("on success, and\\~>0 if an error occurs.");
 	outflags |= MMAN_nl;
-	return(0);
+	return 0;
 }
 
 static void
@@ -748,7 +748,7 @@ pre__t(DECL_ARGS)
 		outflags &= ~MMAN_spc;
 	} else
 		font_push('I');
-	return(1);
+	return 1;
 }
 
 static void
@@ -779,7 +779,7 @@ pre_sect(DECL_ARGS)
 		putchar('\"');
 		outflags &= ~MMAN_spc;
 	}
-	return(1);
+	return 1;
 }
 
 /*
@@ -847,18 +847,18 @@ pre_an(DECL_ARGS)
 	case AUTH_split:
 		outflags &= ~MMAN_An_nosplit;
 		outflags |= MMAN_An_split;
-		return(0);
+		return 0;
 	case AUTH_nosplit:
 		outflags &= ~MMAN_An_split;
 		outflags |= MMAN_An_nosplit;
-		return(0);
+		return 0;
 	default:
 		if (MMAN_An_split & outflags)
 			outflags |= MMAN_br;
 		else if (SEC_AUTHORS == n->sec &&
 		    ! (MMAN_An_nosplit & outflags))
 			outflags |= MMAN_An_split;
-		return(1);
+		return 1;
 	}
 }
 
@@ -869,7 +869,7 @@ pre_ap(DECL_ARGS)
 	outflags &= ~MMAN_spc;
 	print_word("'");
 	outflags &= ~MMAN_spc;
-	return(0);
+	return 0;
 }
 
 static int
@@ -879,7 +879,7 @@ pre_aq(DECL_ARGS)
 	print_word(n->nchild == 1 &&
 	    n->child->tok == MDOC_Mt ?  "<" : "\\(la");
 	outflags &= ~MMAN_spc;
-	return(1);
+	return 1;
 }
 
 static void
@@ -903,7 +903,7 @@ pre_bd(DECL_ARGS)
 	if (0 == n->norm->Bd.comp && NULL != n->parent->prev)
 		outflags |= MMAN_sp;
 	print_offs(n->norm->Bd.offs, 1);
-	return(1);
+	return 1;
 }
 
 static void
@@ -927,11 +927,11 @@ pre_bf(DECL_ARGS)
 
 	switch (n->type) {
 	case ROFFT_BLOCK:
-		return(1);
+		return 1;
 	case ROFFT_BODY:
 		break;
 	default:
-		return(0);
+		return 0;
 	}
 	switch (n->norm->Bf.font) {
 	case FONT_Em:
@@ -944,7 +944,7 @@ pre_bf(DECL_ARGS)
 		font_push('R');
 		break;
 	}
-	return(1);
+	return 1;
 }
 
 static void
@@ -961,12 +961,12 @@ pre_bk(DECL_ARGS)
 
 	switch (n->type) {
 	case ROFFT_BLOCK:
-		return(1);
+		return 1;
 	case ROFFT_BODY:
 		outflags |= MMAN_Bk;
-		return(1);
+		return 1;
 	default:
-		return(0);
+		return 0;
 	}
 }
 
@@ -996,11 +996,11 @@ pre_bl(DECL_ARGS)
 	switch (n->norm->Bl.type) {
 	case LIST_enum:
 		n->norm->Bl.count = 0;
-		return(1);
+		return 1;
 	case LIST_column:
 		break;
 	default:
-		return(1);
+		return 1;
 	}
 
 	if (n->nchild) {
@@ -1010,7 +1010,7 @@ pre_bl(DECL_ARGS)
 		print_word(".");
 	}
 	outflags |= MMAN_nl;
-	return(1);
+	return 1;
 }
 
 static void
@@ -1050,7 +1050,7 @@ pre_br(DECL_ARGS)
 {
 
 	outflags |= MMAN_br;
-	return(0);
+	return 0;
 }
 
 static int
@@ -1065,12 +1065,12 @@ pre_bx(DECL_ARGS)
 	}
 	print_word("BSD");
 	if (NULL == n)
-		return(0);
+		return 0;
 	outflags &= ~MMAN_spc;
 	print_word("-");
 	outflags &= ~MMAN_spc;
 	print_word(n->string);
-	return(0);
+	return 0;
 }
 
 static int
@@ -1078,7 +1078,7 @@ pre_dl(DECL_ARGS)
 {
 
 	print_offs("6n", 0);
-	return(1);
+	return 1;
 }
 
 static void
@@ -1097,7 +1097,7 @@ pre_em(DECL_ARGS)
 {
 
 	font_push('I');
-	return(1);
+	return 1;
 }
 
 static int
@@ -1106,11 +1106,11 @@ pre_en(DECL_ARGS)
 
 	if (NULL == n->norm->Es ||
 	    NULL == n->norm->Es->child)
-		return(1);
+		return 1;
 
 	print_word(n->norm->Es->child->string);
 	outflags &= ~MMAN_spc;
-	return(1);
+	return 1;
 }
 
 static void
@@ -1140,7 +1140,7 @@ pre_eo(DECL_ARGS)
 	    n->parent->head->child != NULL && (n->child != NULL ||
 	    (n->parent->tail != NULL && n->parent->tail->child != NULL)))
 		outflags &= ~(MMAN_spc | MMAN_nl);
-	return(1);
+	return 1;
 }
 
 static void
@@ -1183,7 +1183,7 @@ pre_fa(DECL_ARGS)
 		if (NULL != (n = n->next))
 			print_word(",");
 	}
-	return(0);
+	return 0;
 }
 
 static void
@@ -1200,7 +1200,7 @@ pre_fd(DECL_ARGS)
 
 	pre_syn(n);
 	font_push('B');
-	return(1);
+	return 1;
 }
 
 static void
@@ -1219,7 +1219,7 @@ pre_fl(DECL_ARGS)
 	print_word("\\-");
 	if (n->nchild)
 		outflags &= ~MMAN_spc;
-	return(1);
+	return 1;
 }
 
 static void
@@ -1242,7 +1242,7 @@ pre_fn(DECL_ARGS)
 
 	n = n->child;
 	if (NULL == n)
-		return(0);
+		return 0;
 
 	if (MDOC_SYNPRETTY & n->flags)
 		print_block(".HP 4n", MMAN_nl);
@@ -1257,7 +1257,7 @@ pre_fn(DECL_ARGS)
 	n = n->next;
 	if (NULL != n)
 		pre_fa(meta, n);
-	return(0);
+	return 0;
 }
 
 static void
@@ -1281,7 +1281,7 @@ pre_fo(DECL_ARGS)
 		break;
 	case ROFFT_HEAD:
 		if (n->child == NULL)
-			return(0);
+			return 0;
 		if (MDOC_SYNPRETTY & n->flags)
 			print_block(".HP 4n", MMAN_nl);
 		font_push('B');
@@ -1294,7 +1294,7 @@ pre_fo(DECL_ARGS)
 	default:
 		break;
 	}
-	return(1);
+	return 1;
 }
 
 static void
@@ -1320,7 +1320,7 @@ pre_ft(DECL_ARGS)
 
 	pre_syn(n);
 	font_push('I');
-	return(1);
+	return 1;
 }
 
 static int
@@ -1337,7 +1337,7 @@ pre_in(DECL_ARGS)
 		outflags &= ~MMAN_spc;
 		font_push('I');
 	}
-	return(1);
+	return 1;
 }
 
 static void
@@ -1372,7 +1372,7 @@ pre_it(DECL_ARGS)
 		outflags &= ~MMAN_br;
 		switch (bln->norm->Bl.type) {
 		case LIST_item:
-			return(0);
+			return 0;
 		case LIST_inset:
 			/* FALLTHROUGH */
 		case LIST_diag:
@@ -1383,7 +1383,7 @@ pre_it(DECL_ARGS)
 			else
 				print_line(".R \"", 0);
 			outflags &= ~MMAN_spc;
-			return(1);
+			return 1;
 		case LIST_bullet:
 			/* FALLTHROUGH */
 		case LIST_dash:
@@ -1399,31 +1399,31 @@ pre_it(DECL_ARGS)
 				print_word("-");
 			font_pop();
 			outflags |= MMAN_nl;
-			return(0);
+			return 0;
 		case LIST_enum:
 			print_width(&bln->norm->Bl, NULL);
 			TPremain = 0;
 			outflags |= MMAN_nl;
 			print_count(&bln->norm->Bl.count);
 			outflags |= MMAN_nl;
-			return(0);
+			return 0;
 		case LIST_hang:
 			print_width(&bln->norm->Bl, n->child);
 			TPremain = 0;
 			outflags |= MMAN_nl;
-			return(1);
+			return 1;
 		case LIST_tag:
 			print_width(&bln->norm->Bl, n->child);
 			putchar('\n');
 			outflags &= ~MMAN_spc;
-			return(1);
+			return 1;
 		default:
-			return(1);
+			return 1;
 		}
 	default:
 		break;
 	}
-	return(1);
+	return 1;
 }
 
 /*
@@ -1529,7 +1529,7 @@ pre_lk(DECL_ARGS)
 	const struct roff_node *link, *descr;
 
 	if (NULL == (link = n->child))
-		return(0);
+		return 0;
 
 	if (NULL != (descr = link->next)) {
 		font_push('I');
@@ -1544,7 +1544,7 @@ pre_lk(DECL_ARGS)
 	font_push('B');
 	print_word(link->string);
 	font_pop();
-	return(0);
+	return 0;
 }
 
 static int
@@ -1552,7 +1552,7 @@ pre_ll(DECL_ARGS)
 {
 
 	print_line(".ll", 0);
-	return(1);
+	return 1;
 }
 
 static int
@@ -1560,7 +1560,7 @@ pre_li(DECL_ARGS)
 {
 
 	font_push('R');
-	return(1);
+	return 1;
 }
 
 static int
@@ -1573,10 +1573,10 @@ pre_nm(DECL_ARGS)
 		pre_syn(n);
 	}
 	if (n->type != ROFFT_ELEM && n->type != ROFFT_HEAD)
-		return(1);
+		return 1;
 	name = n->child ? n->child->string : meta->name;
 	if (NULL == name)
-		return(0);
+		return 0;
 	if (n->type == ROFFT_HEAD) {
 		if (NULL == n->parent->prev)
 			outflags |= MMAN_sp;
@@ -1587,7 +1587,7 @@ pre_nm(DECL_ARGS)
 	font_push('B');
 	if (NULL == n->child)
 		print_word(meta->name);
-	return(1);
+	return 1;
 }
 
 static void
@@ -1614,7 +1614,7 @@ pre_no(DECL_ARGS)
 {
 
 	outflags |= MMAN_spc_force;
-	return(1);
+	return 1;
 }
 
 static int
@@ -1622,7 +1622,7 @@ pre_ns(DECL_ARGS)
 {
 
 	outflags &= ~MMAN_spc;
-	return(0);
+	return 0;
 }
 
 static void
@@ -1641,7 +1641,7 @@ pre_pp(DECL_ARGS)
 		outflags |= MMAN_PP;
 	outflags |= MMAN_sp | MMAN_nl;
 	outflags &= ~MMAN_br;
-	return(0);
+	return 0;
 }
 
 static int
@@ -1652,7 +1652,7 @@ pre_rs(DECL_ARGS)
 		outflags |= MMAN_PP | MMAN_sp | MMAN_nl;
 		outflags &= ~MMAN_br;
 	}
-	return(1);
+	return 1;
 }
 
 static int
@@ -1704,14 +1704,14 @@ pre_rv(DECL_ARGS)
 
 	print_word("is set to indicate the error.");
 	outflags |= MMAN_nl;
-	return(0);
+	return 0;
 }
 
 static int
 pre_skip(DECL_ARGS)
 {
 
-	return(0);
+	return 0;
 }
 
 static int
@@ -1728,7 +1728,7 @@ pre_sm(DECL_ARGS)
 	if (MMAN_Sm & outflags)
 		outflags |= MMAN_spc;
 
-	return(0);
+	return 0;
 }
 
 static int
@@ -1740,7 +1740,7 @@ pre_sp(DECL_ARGS)
 		print_line(".PP", 0);
 	} else
 		print_line(".sp", 0);
-	return(1);
+	return 1;
 }
 
 static void
@@ -1755,7 +1755,7 @@ pre_sy(DECL_ARGS)
 {
 
 	font_push('B');
-	return(1);
+	return 1;
 }
 
 static int
@@ -1766,15 +1766,15 @@ pre_vt(DECL_ARGS)
 		switch (n->type) {
 		case ROFFT_BLOCK:
 			pre_syn(n);
-			return(1);
+			return 1;
 		case ROFFT_BODY:
 			break;
 		default:
-			return(0);
+			return 0;
 		}
 	}
 	font_push('I');
-	return(1);
+	return 1;
 }
 
 static void
@@ -1792,16 +1792,16 @@ pre_xr(DECL_ARGS)
 
 	n = n->child;
 	if (NULL == n)
-		return(0);
+		return 0;
 	print_node(meta, n);
 	n = n->next;
 	if (NULL == n)
-		return(0);
+		return 0;
 	outflags &= ~MMAN_spc;
 	print_word("(");
 	print_node(meta, n);
 	print_word(")");
-	return(0);
+	return 0;
 }
 
 static int
@@ -1810,9 +1810,9 @@ pre_ux(DECL_ARGS)
 
 	print_word(manacts[n->tok].prefix);
 	if (NULL == n->child)
-		return(0);
+		return 0;
 	outflags &= ~MMAN_spc;
 	print_word("\\ ");
 	outflags &= ~MMAN_spc;
-	return(1);
+	return 1;
 }
