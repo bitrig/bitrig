@@ -1340,14 +1340,14 @@ myx_down(struct myx_softc *sc)
 	    BUS_DMASYNC_PREREAD|BUS_DMASYNC_PREWRITE);
 
 	sc->sc_state = MYX_S_DOWN;
-	membar_producer();
+	atomic_thread_fence(memory_order_release);
 
 	memset(&mc, 0, sizeof(mc));
 	(void)myx_cmd(sc, MYXCMD_SET_IFDOWN, &mc, NULL);
 
 	while (sc->sc_state != MYX_S_OFF) {
 		sleep_setup(&sls, sts, PWAIT, "myxdown");
-		membar_consumer();
+		atomic_thread_fence(memory_order_acquire);
 		sleep_finish(&sls, sc->sc_state != MYX_S_OFF);
 	}
 
@@ -1641,7 +1641,7 @@ myx_intr(void *arg)
 		if (state == MYX_S_DOWN &&
 		    sc->sc_linkdown != sts->ms_linkdown) {
 			sc->sc_state = MYX_S_OFF;
-			membar_producer();
+			atomic_thread_fence(memory_order_release);
 			wakeup(sts);
 			start = 0;
 		} else {
@@ -1860,13 +1860,13 @@ destroy:
 	return (rv);
 }
 
-static inline int
+static inline int __unused
 myx_rx_ring_enter(struct myx_rx_ring *mrr)
 {
 	return (atomic_inc_int_nv(&mrr->mrr_running) == 1);
 }
 
-static inline int
+static inline int __unused
 myx_rx_ring_leave(struct myx_rx_ring *mrr)
 {
 	if (atomic_cas_uint(&mrr->mrr_running, 1, 0) == 1)

@@ -3704,7 +3704,6 @@ int drm_mode_page_flip_ioctl(struct drm_device *dev,
 	struct drm_framebuffer *fb = NULL, *old_fb = NULL;
 	struct drm_pending_vblank_event *e = NULL;
 	unsigned long flags = 0;
-	int hdisplay, vdisplay;
 	int ret = -EINVAL;
 
 	if (page_flip->flags & ~DRM_MODE_PAGE_FLIP_FLAGS ||

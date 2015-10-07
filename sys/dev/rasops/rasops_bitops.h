@@ -158,7 +158,7 @@ int
 NAME(copycols)(void *cookie, int row, int src, int dst, int num)
 {
 	int tmp, lmask, rmask, height, lnum, rnum, sb, db, cnt, full;
-	int32_t *sp, *dp, *srp, *drp;
+	int32_t *sp = NULL, *dp, *srp, *drp;
 	struct rasops_info *ri;
 
 	ri = (struct rasops_info *)cookie;

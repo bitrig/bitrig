@@ -1483,7 +1483,7 @@ carp_vhe_match(struct carp_softc *sc, uint8_t *ena)
 {
 	struct carp_vhost_entry *vhe;
 	struct srpl_iter i;
-	int match;
+	int match = 0;
 
 	if (sc->sc_balancing == CARP_BAL_ARP) {
 		SRPL_FOREACH(vhe, &sc->carp_vhosts, &i, vhost_entries) {

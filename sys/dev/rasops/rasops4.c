@@ -76,7 +76,6 @@ rasops4_init(struct rasops_info *ri)
 		break;
 	default:
 		panic("fontwidth not 8/12/16 - fixme!");
-		ri->ri_ops.putchar = rasops4_putchar;
 		break;
 	}
 

@@ -905,12 +905,12 @@ int intel_opregion_setup(struct drm_device *dev)
 
 	if (mboxes & MBOX_SWSCI) {
 		DRM_DEBUG_DRIVER("SWSCI supported\n");
-		opregion->swsci = base + OPREGION_SWSCI_OFFSET;
+		opregion->swsci = (void *)((char *)base + OPREGION_SWSCI_OFFSET);
 		swsci_setup(dev);
 	}
 	if (mboxes & MBOX_ASLE) {
 		DRM_DEBUG_DRIVER("ASLE supported\n");
-		opregion->asle = base + OPREGION_ASLE_OFFSET;
+		opregion->asle = (void *)((char *)base + OPREGION_ASLE_OFFSET);
 
 		iowrite32(ASLE_ARDY_NOT_READY, &opregion->asle->ardy);
 	}

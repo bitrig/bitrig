@@ -95,6 +95,7 @@ namei(struct nameidata *ndp)
 	int error;
 	size_t linklen;
 	struct componentname *cnp = &ndp->ni_cnd;
+	struct proc *p = cnp->cn_proc;
 
 	ndp->ni_cnd.cn_cred = ndp->ni_cnd.cn_proc->p_ucred;
 #ifdef DIAGNOSTIC

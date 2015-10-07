@@ -931,7 +931,7 @@ void i915_capture_error_state(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct drm_i915_error_state *error;
-	unsigned long flags;
+	unsigned long flags = 0;
 	int pipe;
 
 	spin_lock_irqsave(&dev_priv->gpu_error.lock, flags);
@@ -1025,7 +1025,7 @@ void i915_error_state_get(struct drm_device *dev,
 			  struct i915_error_state_file_priv *error_priv)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	unsigned long flags;
+	unsigned long flags = 0;
 
 	spin_lock_irqsave(&dev_priv->gpu_error.lock, flags);
 	error_priv->error = dev_priv->gpu_error.first_error;
@@ -1045,7 +1045,7 @@ void i915_destroy_error_state(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct drm_i915_error_state *error;
-	unsigned long flags;
+	unsigned long flags = 0;
 
 	spin_lock_irqsave(&dev_priv->gpu_error.lock, flags);
 	error = dev_priv->gpu_error.first_error;

@@ -5204,7 +5204,7 @@ bool intel_display_power_enabled(struct drm_device *dev,
 static void hsw_power_well_post_enable(struct drm_i915_private *dev_priv)
 {
 	struct drm_device *dev = dev_priv->dev;
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 
 	/*
 	 * After we re-enable the power well, if we touch VGA register 0x3d5
@@ -5245,7 +5245,7 @@ static void hsw_power_well_post_disable(struct drm_i915_private *dev_priv)
 {
 	struct drm_device *dev = dev_priv->dev;
 	enum pipe p;
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 
 	/*
 	 * After this, the registers on the pipes that are part of the power

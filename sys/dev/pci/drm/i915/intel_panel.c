@@ -503,7 +503,7 @@ void intel_panel_set_backlight(struct intel_connector *connector, u32 level,
 	struct intel_panel *panel = &connector->panel;
 	enum pipe pipe = intel_get_pipe_from_connector(connector);
 	u32 freq;
-	unsigned long flags;
+	unsigned long flags = 0;
 	u64 n;
 
 	if (!panel->backlight.present || pipe == INVALID_PIPE)
@@ -580,7 +580,7 @@ void intel_panel_disable_backlight(struct intel_connector *connector)
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct intel_panel *panel = &connector->panel;
 	enum pipe pipe = intel_get_pipe_from_connector(connector);
-	unsigned long flags;
+	unsigned long flags = 0;
 
 	if (!panel->backlight.present || pipe == INVALID_PIPE)
 		return;
@@ -788,7 +788,7 @@ void intel_panel_enable_backlight(struct intel_connector *connector)
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct intel_panel *panel = &connector->panel;
 	enum pipe pipe = intel_get_pipe_from_connector(connector);
-	unsigned long flags;
+	unsigned long flags = 0;
 
 	if (!panel->backlight.present || pipe == INVALID_PIPE)
 		return;
@@ -1100,7 +1100,7 @@ int intel_panel_setup_backlight(struct drm_connector *connector)
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct intel_connector *intel_connector = to_intel_connector(connector);
 	struct intel_panel *panel = &intel_connector->panel;
-	unsigned long flags;
+	unsigned long flags = 0;
 	int ret;
 
 	/* set level and max in panel struct */

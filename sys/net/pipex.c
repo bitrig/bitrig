@@ -454,7 +454,7 @@ pipex_add_session(struct pipex_session_req *req,
 			return (ENOMEM);
 		}
 	}
-	if (0) { /* NOT YET */
+	if ((0)) { /* NOT YET */
 		rn = rn_addroute(&session->ip6_address, &session->ip6_prefixlen,
 		    &pipex_rd_head6, session->ps6_rn, RTP_STATIC);
 		if (rn == NULL) {

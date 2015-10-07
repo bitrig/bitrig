@@ -309,7 +309,7 @@ relocate_entry_gtt(struct drm_i915_gem_object *obj,
 	reloc_page = bus_space_vaddr(dev_priv->bst, bsh);
 #endif
 	reloc_entry = (uint32_t __iomem *)
-		(reloc_page + offset_in_page(reloc->offset));
+		((char *)reloc_page + offset_in_page(reloc->offset));
 	iowrite32(reloc->delta, reloc_entry);
 
 	if (INTEL_INFO(dev)->gen >= 8) {
