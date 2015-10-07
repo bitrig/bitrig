@@ -1,4 +1,4 @@
-/*	$OpenBSD: route.c,v 1.247 2015/10/07 08:43:36 mpi Exp $	*/
+/*	$OpenBSD: route.c,v 1.248 2015/10/07 08:58:01 mpi Exp $	*/
 /*	$NetBSD: route.c,v 1.14 1996/02/13 22:00:46 christos Exp $	*/
 
 /*
@@ -159,6 +159,12 @@ int	rt_if_remove_rtdelete(struct rtentry *, void *, u_int);
 
 struct	ifaddr *ifa_ifwithroute(int, struct sockaddr *, struct sockaddr *,
 		    u_int);
+
+#ifdef DDB
+void	db_print_sa(struct sockaddr *);
+void	db_print_ifa(struct ifaddr *);
+int	db_show_rtentry(struct rtentry *, void *, unsigned int);
+#endif
 
 #define	LABELID_MAX	50000
 
@@ -375,8 +381,6 @@ miss:
 	return (rt);
 }
 
-#ifndef SMALL_KERNEL
-
 /*
  * Originated from bridge_hash() in if_bridge.c
  */
@@ -467,7 +471,6 @@ rtalloc_mpath(struct sockaddr *dst, uint32_t *src, unsigned int rtableid)
 
 	return (rtable_mpath_select(rt, rt_hash(rt, src) & 0xffff));
 }
-#endif /* SMALL_KERNEL */
 
 void
 rtref(struct rtentry *rt)
@@ -965,7 +968,6 @@ rtrequest1(int req, struct rt_addrinfo *info, u_int8_t prio,
 		else
 			memcpy(ndst, info->rti_info[RTAX_DST], dlen);
 
-#ifndef SMALL_KERNEL
 		/* Do not permit exactly the same dst/mask/gw pair. */
 		if (rtable_mpath_conflict(tableid, ndst,
 		    info->rti_info[RTAX_NETMASK], info->rti_info[RTAX_GATEWAY],
@@ -973,7 +975,6 @@ rtrequest1(int req, struct rt_addrinfo *info, u_int8_t prio,
 			free(ndst, M_RTABLE, dlen);
 			return (EEXIST);
 		}
-#endif
 		rt = pool_get(&rtentry_pool, PR_NOWAIT | PR_ZERO);
 		if (rt == NULL) {
 			free(ndst, M_RTABLE, dlen);
