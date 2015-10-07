@@ -784,7 +784,6 @@ bool intel_ddi_pll_select(struct intel_crtc *intel_crtc)
 		}
 
 	} else if (type == INTEL_OUTPUT_ANALOG) {
-		reg = SPLL_CTL;
 		if (plls->spll_refcount == 0) {
 			DRM_DEBUG_KMS("Using SPLL on pipe %c\n",
 				      pipe_name(pipe));

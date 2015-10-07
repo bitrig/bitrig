@@ -379,7 +379,7 @@ bool intel_set_cpu_fifo_underrun_reporting(struct drm_device *dev,
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct drm_crtc *crtc = dev_priv->pipe_to_crtc_mapping[pipe];
 	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
-	unsigned long flags;
+	unsigned long flags = 0;
 	bool ret;
 
 	spin_lock_irqsave(&dev_priv->irq_lock, flags);
@@ -424,7 +424,7 @@ bool intel_set_pch_fifo_underrun_reporting(struct drm_device *dev,
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct drm_crtc *crtc = dev_priv->pipe_to_crtc_mapping[pch_transcoder];
 	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
-	unsigned long flags;
+	unsigned long flags = 0;
 	bool ret;
 
 	/*
@@ -649,7 +649,7 @@ static int i915_get_crtc_scanoutpos(struct drm_device *dev, int pipe,
 	int vbl_start, vbl_end, htotal, vtotal;
 	bool in_vbl = true;
 	int ret = 0;
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 
 	if (!intel_crtc->active) {
 		DRM_DEBUG_DRIVER("trying to get scanoutpos for disabled "
@@ -864,7 +864,7 @@ static void i915_hotplug_work_func(struct work_struct *work)
 	struct intel_connector *intel_connector;
 	struct intel_encoder *intel_encoder;
 	struct drm_connector *connector;
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 	bool hpd_disabled = false;
 	bool changed = false;
 	u32 hpd_event_bits;
@@ -2369,7 +2369,7 @@ static void valleyview_disable_vblank(struct drm_device *dev, int pipe)
 static void gen8_disable_vblank(struct drm_device *dev, int pipe)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 
 	if (!i915_pipe_enabled(dev, pipe))
 		return;
@@ -2412,7 +2412,7 @@ semaphore_waits_for(struct intel_ring_buffer *ring, u32 *seqno)
 	acthd = intel_ring_get_active_head(ring) & HEAD_ADDR;
 	acthd_min = max((int)acthd - 3 * 4, 0);
 	do {
-		cmd = ioread32(ring->virtual_start + acthd);
+		cmd = ioread32((char *)ring->virtual_start + acthd);
 		if (cmd == ipehr)
 			break;
 
@@ -2421,7 +2421,7 @@ semaphore_waits_for(struct intel_ring_buffer *ring, u32 *seqno)
 			return NULL;
 	} while (1);
 
-	*seqno = ioread32(ring->virtual_start+acthd+4)+1;
+	*seqno = ioread32((char *)ring->virtual_start+acthd+4)+1;
 	return &dev_priv->ring[(ring->id + (((ipehr >> 17) & 1) + 1)) % 3];
 }
 
@@ -2862,7 +2862,7 @@ static void gen5_gt_irq_postinstall(struct drm_device *dev)
 
 static int ironlake_irq_postinstall(struct drm_device *dev)
 {
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 	drm_i915_private_t *dev_priv = (drm_i915_private_t *) dev->dev_private;
 	u32 display_mask, extra_mask;
 
@@ -2917,7 +2917,7 @@ static int valleyview_irq_postinstall(struct drm_device *dev)
 	u32 enable_mask;
 	u32 pipestat_enable = PLANE_FLIP_DONE_INT_EN_VLV |
 		PIPE_CRC_DONE_ENABLE;
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 
 	enable_mask = I915_DISPLAY_PORT_INTERRUPT;
 	enable_mask |= I915_DISPLAY_PIPE_A_EVENT_INTERRUPT |
@@ -3150,7 +3150,7 @@ static void i8xx_irq_preinstall(struct drm_device * dev)
 static int i8xx_irq_postinstall(struct drm_device *dev)
 {
 	drm_i915_private_t *dev_priv = (drm_i915_private_t *) dev->dev_private;
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 
 	I915_WRITE16(EMR,
 		     ~(I915_ERROR_PAGE_TABLE | I915_ERROR_MEMORY_REFRESH));
@@ -3322,7 +3322,7 @@ static int i915_irq_postinstall(struct drm_device *dev)
 {
 	drm_i915_private_t *dev_priv = (drm_i915_private_t *) dev->dev_private;
 	u32 enable_mask;
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 
 	I915_WRITE(EMR, ~(I915_ERROR_PAGE_TABLE | I915_ERROR_MEMORY_REFRESH));
 
@@ -3555,7 +3555,7 @@ static int i965_irq_postinstall(struct drm_device *dev)
 	drm_i915_private_t *dev_priv = (drm_i915_private_t *) dev->dev_private;
 	u32 enable_mask;
 	u32 error_mask;
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 
 	/* Unmask the interrupts that we always want on. */
 	dev_priv->irq_mask = ~(I915_ASLE_INTERRUPT |
@@ -3794,7 +3794,7 @@ static void i915_reenable_hotplug_timer_func(unsigned long data)
 	drm_i915_private_t *dev_priv = (drm_i915_private_t *)data;
 	struct drm_device *dev = dev_priv->dev;
 	struct drm_mode_config *mode_config = &dev->mode_config;
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 	int i;
 
 	spin_lock_irqsave(&dev_priv->irq_lock, irqflags);
@@ -3912,7 +3912,7 @@ void intel_hpd_init(struct drm_device *dev)
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct drm_mode_config *mode_config = &dev->mode_config;
 	struct drm_connector *connector;
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 	int i;
 
 	for (i = 1; i < HPD_NUM_PINS; i++) {
@@ -3938,7 +3938,7 @@ void intel_hpd_init(struct drm_device *dev)
 void hsw_pc8_disable_interrupts(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 
 	spin_lock_irqsave(&dev_priv->irq_lock, irqflags);
 
@@ -3962,7 +3962,7 @@ void hsw_pc8_disable_interrupts(struct drm_device *dev)
 void hsw_pc8_restore_interrupts(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 	uint32_t val;
 
 	spin_lock_irqsave(&dev_priv->irq_lock, irqflags);

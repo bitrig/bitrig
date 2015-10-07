@@ -983,7 +983,7 @@ static inline void gen8_set_pte(void __iomem *addr, gen8_gtt_pte_t pte)
 	writeq(pte, addr);
 #else
 	iowrite32((u32)pte, addr);
-	iowrite32(pte >> 32, addr + 4);
+	iowrite32(pte >> 32, (char *)addr + 4);
 #endif
 }
 

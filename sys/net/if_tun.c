@@ -811,7 +811,7 @@ tunwrite(dev_t dev, struct uio *uio, int ioflag)
 	u_int32_t		*th;
 	struct mbuf		*top, **mp, *m;
 	size_t			 mlen;
-	int			 error=0, s, tlen;
+	int			 error=0, tlen;
 #if NBPFILTER > 0
 	int			 s;
 #endif

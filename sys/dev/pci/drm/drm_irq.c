@@ -283,7 +283,7 @@ static void drm_irq_vgaarb_nokms(void *cookie, bool state)
  */
 int drm_irq_install(struct drm_device *dev)
 {
-	int ret;
+	int ret = 0;
 #ifdef __linux__
 	unsigned long sh_flags = 0;
 	char *irqname;

@@ -66,6 +66,7 @@ AFLAGS=		-D_LOCORE -x assembler-with-cpp ${AFLAGS_$*} ${CMACHFLAGS}
 LINKFLAGS=	-T ldscript -X --warn-common -z noexecstack -nopie
 
 .if ${COMPILER_VERSION:L} == "clang"
+CFLAGS_i915_drv		= -Wno-initializer-overrides
 CFLAGS_i915_gem		= -Wno-tautological-compare
 CFLAGS_i915_gem_tiling		= -Wno-tautological-compare
 CFLAGS_i915_gem_execbuffer		= -Wno-tautological-compare

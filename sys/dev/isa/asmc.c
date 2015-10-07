@@ -494,8 +494,8 @@ asmc_lights(struct asmc_softc *sc, uint8_t *n)
 static int
 asmc_motions(struct asmc_softc *sc, uint8_t *n)
 {
-	uint8_t buf[2], s;
-	int i;
+	uint8_t buf[2], s = 0;
+//	int i;
 
 	*n = 0;
 	if (asmc_try(sc, ASMC_READ, "MOCN", buf, 2) &&
@@ -506,6 +506,7 @@ asmc_motions(struct asmc_softc *sc, uint8_t *n)
 	if (s == ASMC_NOTFOUND)
 		return 0;
 
+#if 0
 	*n = 1;
 #if 0 /* todo: initialize sudden motion sensors and setup interrupt handling */
 	buf[0] = 0xe0, buf[1] = 0xf8;
@@ -527,13 +528,14 @@ asmc_motions(struct asmc_softc *sc, uint8_t *n)
 		sensor_attach(&sc->sc_sensor_dev, &sc->sc_sensor_motion[i]);
 #endif
 	}
+#endif
 	return 0;
 }
 
 int
 asmc_init(struct asmc_softc *sc)
 {
-	uint8_t buf[6], n, s;
+	uint8_t buf[6], n, s = 0;
 
 	printf("%s:", sc->sc_dev.dv_xname);
 

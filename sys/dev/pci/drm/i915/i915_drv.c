@@ -353,13 +353,14 @@ static const struct intel_device_info intel_ivybridge_m_info = {
 	.is_mobile = 1,
 };
 
+#ifdef notyet
 static const struct intel_device_info intel_ivybridge_q_info = {
 	GEN7_FEATURES,
 	.is_ivybridge = 1,
 	.num_pipes = 0, /* legal, last one wins */
 };
+#endif
 
-#ifdef notyet
 static const struct intel_device_info intel_valleyview_m_info = {
 	GEN7_FEATURES,
 	.is_mobile = 1,
@@ -378,7 +379,6 @@ static const struct intel_device_info intel_valleyview_d_info = {
 	.has_fbc = 0, /* legal, last one wins */
 	.has_llc = 0, /* legal, last one wins */
 };
-#endif
 
 static const struct intel_device_info intel_haswell_d_info = {
 	GEN7_FEATURES,

@@ -117,7 +117,7 @@ srp_v_referenced(struct srp *srp, void *v)
 
 			if (hzrd->sh_p != srp)
 				continue;
-			membar_consumer();
+			atomic_thread_fence(memory_order_acquire);
 			if (hzrd->sh_v != v)
 				continue;
 
@@ -199,7 +199,7 @@ srp_v(struct srp_hazard *hzrd, struct srp *srp)
 	do {
 		v = srp->ref;
 		hzrd->sh_v = v;
-		membar_consumer();
+		atomic_thread_fence(memory_order_acquire);
 	} while (__predict_false(v != srp->ref));
 
 	return (v);

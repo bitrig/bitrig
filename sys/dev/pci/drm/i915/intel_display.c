@@ -1667,7 +1667,7 @@ static void lpt_enable_pch_transcoder(struct drm_i915_private *dev_priv,
 
 	/* FDI must be feeding us bits for PCH ports */
 	assert_fdi_tx_enabled(dev_priv, (enum pipe) cpu_transcoder);
-	assert_fdi_rx_enabled(dev_priv, TRANSCODER_A);
+	assert_fdi_rx_enabled(dev_priv, (enum pipe) TRANSCODER_A);
 
 	/* Workaround: set timing override bit. */
 	val = I915_READ(_TRANSA_CHICKEN2);
@@ -1763,9 +1763,9 @@ static void intel_enable_pipe(struct drm_i915_private *dev_priv, enum pipe pipe,
 	assert_sprites_disabled(dev_priv, pipe);
 
 	if (HAS_PCH_LPT(dev_priv->dev))
-		pch_transcoder = TRANSCODER_A;
+		pch_transcoder = (enum pipe)TRANSCODER_A;
 	else
-		pch_transcoder = (enum transcoder)pipe;
+		pch_transcoder = pipe;
 
 	/*
 	 * A pipe without a PLL won't actually be able to drive bits from
@@ -3279,7 +3279,7 @@ static void lpt_pch_enable(struct drm_crtc *crtc)
 	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
 	enum transcoder cpu_transcoder = intel_crtc->config.cpu_transcoder;
 
-	assert_pch_transcoder_disabled(dev_priv, TRANSCODER_A);
+	assert_pch_transcoder_disabled(dev_priv, (enum pipe) TRANSCODER_A);
 
 	lpt_program_iclkip(crtc);
 
@@ -6532,7 +6532,7 @@ static void assert_can_disable_lcpll(struct drm_i915_private *dev_priv)
 	struct drm_device *dev = dev_priv->dev;
 	struct intel_ddi_plls *plls = &dev_priv->ddi_plls;
 	struct intel_crtc *crtc;
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 	uint32_t val;
 
 	list_for_each_entry(crtc, &dev->mode_config.crtc_list, base.head)

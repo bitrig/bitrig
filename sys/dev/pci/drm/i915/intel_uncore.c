@@ -251,7 +251,7 @@ static void __vlv_force_wake_put(struct drm_i915_private *dev_priv,
 void vlv_force_wake_get(struct drm_i915_private *dev_priv,
 						int fw_engine)
 {
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 
 	spin_lock_irqsave(&dev_priv->uncore.lock, irqflags);
 	if (FORCEWAKE_RENDER & fw_engine) {
@@ -271,7 +271,7 @@ void vlv_force_wake_get(struct drm_i915_private *dev_priv,
 void vlv_force_wake_put(struct drm_i915_private *dev_priv,
 						int fw_engine)
 {
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 
 	spin_lock_irqsave(&dev_priv->uncore.lock, irqflags);
 
@@ -296,7 +296,7 @@ static void gen6_force_wake_work(struct work_struct *work)
 {
 	struct drm_i915_private *dev_priv =
 		container_of(work, typeof(*dev_priv), uncore.force_wake_work.work);
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 
 	spin_lock_irqsave(&dev_priv->uncore.lock, irqflags);
 	if (--dev_priv->uncore.forcewake_count == 0)
@@ -373,7 +373,7 @@ void intel_uncore_sanitize(struct drm_device *dev)
  */
 void gen6_gt_force_wake_get(struct drm_i915_private *dev_priv, int fw_engine)
 {
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 
 	if (!dev_priv->uncore.funcs.force_wake_get)
 		return;
@@ -395,7 +395,7 @@ void gen6_gt_force_wake_get(struct drm_i915_private *dev_priv, int fw_engine)
  */
 void gen6_gt_force_wake_put(struct drm_i915_private *dev_priv, int fw_engine)
 {
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 
 	if (!dev_priv->uncore.funcs.force_wake_put)
 		return;
@@ -457,7 +457,7 @@ assert_device_not_suspended(struct drm_i915_private *dev_priv)
 }
 
 #define REG_READ_HEADER(x) \
-	unsigned long irqflags; \
+	unsigned long irqflags = 0; \
 	u##x val = 0; \
 	spin_lock_irqsave(&dev_priv->uncore.lock, irqflags)
 
@@ -555,7 +555,7 @@ __gen4_read(64)
 #undef REG_READ_HEADER
 
 #define REG_WRITE_HEADER \
-	unsigned long irqflags; \
+	unsigned long irqflags = 0; \
 	trace_i915_reg_rw(true, reg, val, sizeof(val), trace); \
 	spin_lock_irqsave(&dev_priv->uncore.lock, irqflags)
 
@@ -948,7 +948,7 @@ static int gen6_do_reset(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	int	ret;
-	unsigned long irqflags;
+	unsigned long irqflags = 0;
 
 	/* Hold uncore.lock across reset to prevent any register access
 	 * with forcewake not set correctly

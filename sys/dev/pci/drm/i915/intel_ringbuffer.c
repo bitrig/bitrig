@@ -561,9 +561,6 @@ init_pipe_control(struct intel_ring_buffer *ring)
 			 ring->name, ring->scratch.gtt_offset);
 	return 0;
 
-err_unmap:
-	uvm_unmap(kernel_map, (vaddr_t)pc->cpu_page,
-	    (vaddr_t)pc->cpu_page + PAGE_SIZE);
 err_unpin:
 	i915_gem_object_unpin(ring->scratch.obj);
 err_unref:
@@ -1096,7 +1093,7 @@ hsw_vebox_get_irq(struct intel_ring_buffer *ring)
 {
 	struct drm_device *dev = ring->dev;
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	unsigned long flags;
+	unsigned long flags = 0;
 
 	if (!dev->irq_enabled)
 		return false;
@@ -1116,7 +1113,7 @@ hsw_vebox_put_irq(struct intel_ring_buffer *ring)
 {
 	struct drm_device *dev = ring->dev;
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	unsigned long flags;
+	unsigned long flags = 0;
 
 	if (!dev->irq_enabled)
 		return;
@@ -1134,7 +1131,7 @@ gen8_ring_get_irq(struct intel_ring_buffer *ring)
 {
 	struct drm_device *dev = ring->dev;
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	unsigned long flags;
+	unsigned long flags = 0;
 
 	if (!dev->irq_enabled)
 		return false;
@@ -1160,7 +1157,7 @@ gen8_ring_put_irq(struct intel_ring_buffer *ring)
 {
 	struct drm_device *dev = ring->dev;
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	unsigned long flags;
+	unsigned long flags = 0;
 
 	spin_lock_irqsave(&dev_priv->irq_lock, flags);
 	if (--ring->irq_refcount == 0) {
@@ -1596,7 +1593,7 @@ static int intel_wrap_ring_buffer(struct intel_ring_buffer *ring)
 			return ret;
 	}
 
-	virt = ring->virtual_start + ring->tail;
+	virt = (void *)((char *)ring->virtual_start + ring->tail);
 	rem /= 4;
 	while (rem--)
 		iowrite32(MI_NOOP, virt++);

@@ -1879,7 +1879,7 @@ wapbl_inodetrk_init(struct wapbl *wl, u_int size)
 	if (atomic_fetch_add_explicit(&wapbl_ino_pool_refcount, 1,
 	    memory_order_seq_cst) == 0) {
 		pool_init(&wapbl_ino_pool, sizeof(struct wapbl_ino), 0, 0, 0,
-		    "wapblinopl", &pool_allocator_nointr);
+		    "wapblinopl", &pool_allocator_single);
 	}
 }
 

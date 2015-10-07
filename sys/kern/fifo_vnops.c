@@ -50,6 +50,7 @@
 #include <sys/poll.h>
 #include <sys/un.h>
 #include <sys/unistd.h>
+#include <sys/unpcb.h>
 
 #include <sys/fifovnops.h>
 
