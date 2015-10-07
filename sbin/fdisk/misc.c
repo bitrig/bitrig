@@ -1,4 +1,4 @@
-/*	$OpenBSD: misc.c,v 1.52 2015/08/27 20:58:27 krw Exp $	*/
+/*	$OpenBSD: misc.c,v 1.53 2015/10/07 00:04:57 krw Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -354,6 +354,14 @@ ask_string(const char *prompt, const char *oval)
 
 /*
  * Adapted from Hacker's Delight crc32b().
+ *
+ * To quote http://www.hackersdelight.org/permissions.htm :
+ *
+ * "You are free to use, copy, and distribute any of the code on
+ *  this web site, whether modified by you or not. You need not give
+ *  attribution. This includes the algorithms (some of which appear
+ *  in Hacker's Delight), the Hacker's Assistant, and any code submitted
+ *  by readers. Submitters implicitly agree to this."
  */
 uint32_t
 crc32(const unsigned char *buf, const uint32_t size)
