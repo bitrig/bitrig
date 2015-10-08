@@ -1,4 +1,4 @@
-/*	$OpenBSD: if.c,v 1.385 2015/10/05 19:05:09 uebayasi Exp $	*/
+/*	$OpenBSD: if.c,v 1.386 2015/10/08 09:51:00 mpi Exp $	*/
 /*	$NetBSD: if.c,v 1.35 1996/05/07 05:26:04 thorpej Exp $	*/
 
 /*
@@ -781,7 +781,6 @@ if_input_process(void *xmq)
 
 	add_net_randomness(ml_len(&ml));
 
-	KERNEL_LOCK();
 	s = splnet();
 	while ((m = ml_dequeue(&ml)) != NULL) {
 		sched_pause();
@@ -819,7 +818,6 @@ if_input_process(void *xmq)
 		if_put(ifp);
 	}
 	splx(s);
-	KERNEL_UNLOCK();
 }
 
 void
