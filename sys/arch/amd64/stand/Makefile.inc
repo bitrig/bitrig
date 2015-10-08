@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.12 2015/09/18 13:30:55 miod Exp $
+#	$OpenBSD: Makefile.inc,v 1.13 2015/10/08 22:41:12 yasuoka Exp $
 
 CFLAGS=${DEBUG} ${COPTS} -Os -Wall # -Werror
 CFLAGS+=	-fno-stack-protector -DMDRANDOM
@@ -20,7 +20,7 @@ LINKADDR=0x40120
 LINKADDR=0x40140
 .endif
 LOADADDR=0x40000
-HEAP_LIMIT=0x90000
+HEAP_LIMIT=0xA0000
 BOOTREL=0x60000
 BOOTMAGIC=0xc001d00d
 #ROM_SIZE=32768
