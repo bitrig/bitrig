@@ -1,4 +1,4 @@
-/*	$OpenBSD: stubs.c,v 1.2 2014/01/18 01:49:30 jsing Exp $	*/
+/*	$OpenBSD: stubs.c,v 1.4 2015/10/15 04:41:10 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2014 Joel Sing <jsing@openbsd.org>
