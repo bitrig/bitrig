@@ -968,6 +968,8 @@ uvm_map(struct vm_map *map, vaddr_t *addr, vsize_t sz,
 
 	if ((map->flags & VM_MAP_INTRSAFE) == 0)
 		splassert(IPL_NONE);
+	else
+		splassert(IPL_VM);
 
 	/*
 	 * We use pmap_align and pmap_offset as alignment and offset variables.
@@ -1036,8 +1038,9 @@ uvm_map(struct vm_map *map, vaddr_t *addr, vsize_t sz,
 			error = EFAULT;
 			goto out;
 		}
-	} else
+	} else {
 		vm_map_lock(map);
+	}
 
 	first = last = NULL;
 	if (flags & UVM_FLAG_FIXED) {
@@ -1341,9 +1344,12 @@ void
 uvm_unmap_detach(struct uvm_map_deadq *deadq, int flags)
 {
 	struct vm_map_entry *entry;
-	int waitok;
+	int waitok = flags & UVM_PLA_WAITOK;
 
-	waitok = flags & UVM_PLA_WAITOK;
+	if (TAILQ_EMPTY(deadq))
+		return;
+
+	KERNEL_LOCK();
 	while ((entry = TAILQ_FIRST(deadq)) != NULL) {
 		if (waitok)
 			uvm_pause();
@@ -1368,6 +1374,7 @@ uvm_unmap_detach(struct uvm_map_deadq *deadq, int flags)
 		TAILQ_REMOVE(deadq, entry, dfree.deadq);
 		uvm_mapent_free(entry);
 	}
+	KERNEL_UNLOCK();
 }
 
 /*
@@ -1460,8 +1467,8 @@ struct vm_map_entry *
 uvm_mapent_alloc(struct vm_map *map, int flags)
 {
 	struct vm_map_entry *me, *ne;
-	int i;
 	int pool_flags;
+	int i;
 
 	pool_flags = PR_WAITOK;
 	if (flags & UVM_FLAG_TRYLOCK)
@@ -2398,16 +2405,21 @@ uvm_map_splitentry(struct vm_map *map, struct vm_map_entry *orig,
 		orig->guard = 0;
 		orig->end = next->start = split;
 
-		if (next->aref.ar_amap)
+		if (next->aref.ar_amap) {
+			KERNEL_LOCK();
 			amap_splitref(&orig->aref, &next->aref, adj);
+			KERNEL_UNLOCK();
+		}
 		if (UVM_ET_ISSUBMAP(orig)) {
 			uvm_map_reference(next->object.sub_map);
 			next->offset += adj;
 		} else if (UVM_ET_ISOBJ(orig)) {
 			if (next->object.uvm_obj->pgops &&
 			    next->object.uvm_obj->pgops->pgo_reference) {
+				KERNEL_LOCK();
 				next->object.uvm_obj->pgops->pgo_reference(
 				    next->object.uvm_obj);
+				KERNEL_UNLOCK();
 			}
 			next->offset += adj;
 		}
