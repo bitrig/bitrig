@@ -14,7 +14,6 @@ sxidog*		at sunxi?		# watchdog timer
 sxidog*		at fdt?			# watchdog timer
 sxirtc*		at sunxi?		# Real Time Clock
 sxiuart*	at sunxi?		# onboard UARTs
-#sxiuart*	at fdt?			# onboard UARTs
 sxie*		at sunxi?
 ahci*		at sunxi?		# AHCI/SATA (shim)
 ehci*		at sunxi?		# EHCI (shim)

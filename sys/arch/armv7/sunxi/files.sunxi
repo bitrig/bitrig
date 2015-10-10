@@ -46,8 +46,7 @@ file	arch/armv7/sunxi/sxiehci.c		sxiehci
 
 device	sxiuart
 attach	sxiuart at sunxi
-attach	sxiuart at fdt with sxiuart_fdt
-file	arch/armv7/sunxi/sxiuart.c		sxiuart | sxiuart_fdt
+file	arch/armv7/sunxi/sxiuart.c		sxiuart
 
 device	sxie: ether, ifnet, mii, ifmedia
 attach	sxie at sunxi

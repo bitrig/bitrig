@@ -116,10 +116,6 @@ struct cfattach sxiuart_ca = {
 	sizeof(struct sxiuart_softc), NULL, sxiuartattach
 };
 
-struct cfattach sxiuart_fdt_ca = {
-	sizeof(struct sxiuart_softc), sxiuartprobe, sxiuartattach
-};
-
 struct cfdriver sxiuart_cd = {
 	NULL, "sxiuart", DV_TTY
 };
@@ -140,17 +136,6 @@ int		sxiuartdefaultrate = B115200;
 struct cdevsw sxiuartdev =
 	cdev_tty_init(1/*XXX NIMXUART */ , sxiuart); /* 12: serial port */
 
-int
-sxiuartprobe(struct device *parent, void *v, void *aux)
-{
-	struct armv7_attach_args *aa = aux;
-
-	if (fdt_node_compatible("snps,dw-apb-uart", aa->aa_node))
-		return 1;
-
-	return 0;
-}
-
 void
 sxiuartattach(struct device *parent, struct device *self, void *args)
 {
@@ -160,15 +145,9 @@ sxiuartattach(struct device *parent, struct device *self, void *args)
 	int irq, s;
 
 	sc->sc_iot = aa->aa_iot;
-	if (aa->aa_node) {
-		if (fdt_get_memory_address(aa->aa_node, 0, &mem))
-			panic("%s: could not extract memory data from FDT",
-			    __func__);
-	} else {
-		mem.addr = aa->aa_dev->mem[0].addr;
-		mem.size = aa->aa_dev->mem[0].size;
-		irq = aa->aa_dev->irq[0];
-	}
+	mem.addr = aa->aa_dev->mem[0].addr;
+	mem.size = aa->aa_dev->mem[0].size;
+	irq = aa->aa_dev->irq[0];
 
 	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
 		panic("%s: bus_space_map failed!", __func__);
@@ -209,12 +188,8 @@ sxiuartattach(struct device *parent, struct device *self, void *args)
 	bus_space_write_1(sc->sc_iot, sc->sc_ioh, SXIUART_MCR, sc->sc_mcr);
 	splx(s);
 
-	if (aa->aa_node)
-		arm_intr_establish_fdt(aa->aa_node, IPL_TTY, sxiuart_intr, sc,
-		    sc->sc_dev.dv_xname);
-	else
-		arm_intr_establish(irq, IPL_TTY, sxiuart_intr, sc,
-		    sc->sc_dev.dv_xname);
+	arm_intr_establish(irq, IPL_TTY, sxiuart_intr, sc,
+	    sc->sc_dev.dv_xname);
 
 	printf("\n");
 }
