@@ -45,54 +45,66 @@ fdt_platform_smc_write(bus_space_tag_t iot, bus_space_handle_t ioh, bus_size_t o
 	bus_space_write_4(iot, ioh, off, val);
 }
 
+static int
+fdt_find_stdout(char *compatible, struct fdt_memory *mem)
+{
+	char *stdout_path;
+	char *stdout_options;
+	void *node;
+
+	if (compatible == NULL || mem == NULL)
+		return 1;
+
+	if ((node = fdt_find_node("/chosen")) != NULL &&
+	    (fdt_node_property(node, "stdout-path", &stdout_path) ||
+	    fdt_node_property(node, "linux,stdout-path", &stdout_path))) {
+		if ((stdout_options = strchr(stdout_path, ':')) != NULL)
+			*stdout_options = '\0';
+		if ((node = fdt_find_node(stdout_path)) != NULL &&
+		    fdt_node_compatible(compatible, node))
+			return fdt_get_memory_address(node, 0, mem);
+	}
+
+	if ((node = fdt_find_compatible(compatible)) != NULL)
+		return fdt_get_memory_address(node, 0, mem);
+
+	return 1;
+}
+
 static void
 fdt_platform_init_cons(void)
 {
-	void *node;
-	char *stdout_path;
 	struct fdt_memory mem;
 	uint32_t freq;
 
 	/*
-	 * XXX: Without attaching the clocks we cannot find out
-	 * XXX: the frequency we need. Thus try to make an educated
-	 * XXX: guess about the frequency used.
+	 * XXX: Without having all clocks attached, we cannot look up
+	 * XXX: the frequency. Thus make an educated guess.
 	 */
 	if (fdt_find_compatible("marvell,armada-370-xp"))
 		freq = 250000000;
-	else if (fdt_find_compatible("allwinner,sun7i-a20"))
+	else if (fdt_find_compatible("allwinner,sun7i-a20") ||
+	    fdt_find_compatible("allwinner,sun6i-a31"))
 		freq = 24000000;
 	else
 		freq = COM_FREQ;
 
-	if ((node = fdt_find_compatible("simple-framebuffer")) != NULL &&
-	    !fdt_get_memory_address(node, 0, &mem))
+	if (!fdt_find_stdout("simple-framebuffer", &mem))
 		exdisplay_cnattach(&armv7_bs_tag, mem.addr, mem.size);
 
-	if ((node = fdt_find_compatible("arm,pl011")) != NULL &&
-	    !fdt_get_memory_address(node, 0, &mem))
+	if (!fdt_find_stdout("arm,pl011", &mem))
 		pl011cnattach(&armv7_bs_tag, mem.addr, comcnspeed, comcnmode);
 
-	if ((node = fdt_find_compatible("snps,dw-apb-uart")) != NULL &&
-	    !fdt_get_memory_address(node, 0, &mem))
+	if (!fdt_find_stdout("snps,dw-apb-uart", &mem))
 		comcnattach(&armv7_a4x_bs_tag, mem.addr, comcnspeed,
 		    freq, comcnmode);
 
-	if ((((node = fdt_find_compatible("fsl,ns16550")) != NULL) ||
-	    ((node = fdt_find_compatible("fsl,16550-FIFO64")) != NULL)) &&
-	    !fdt_get_memory_address(node, 0, &mem))
+	if (!fdt_find_stdout("fsl,ns16550", &mem) ||
+	    !fdt_find_stdout("fsl,16550-FIFO64", &mem))
 		comcnattach(&armv7_bs_tag, mem.addr, comcnspeed,
 		    150000000, comcnmode);
 
-	if ((node = fdt_find_node("/chosen")) == NULL ||
-	    !fdt_node_property(node, "stdout-path", &stdout_path))
-		return;
-
-	if ((node = fdt_find_node(stdout_path)) == NULL)
-		return;
-
-	if (fdt_node_compatible("fsl,imx6q-uart", node) &&
-	    !fdt_get_memory_address(node, 0, &mem))
+	if (!fdt_find_stdout("fsl,imx6q-uart", &mem))
 		imxuartcnattach(&armv7_bs_tag, mem.addr, comcnspeed, comcnmode);
 
 	comdefaultrate = comcnspeed;
