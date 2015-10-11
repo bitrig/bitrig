@@ -394,8 +394,11 @@ sys_mmap(struct proc *p, void *v, register_t *retval)
 
 	/* check for file mappings (i.e. not anonymous) and verify file. */
 	if ((flags & MAP_ANON) == 0) {
-		if ((fp = fd_getfile(fdp, fd)) == NULL)
+		KERNEL_LOCK();
+		if ((fp = fd_getfile(fdp, fd)) == NULL) {
+			KERNEL_UNLOCK();
 			return (EBADF);
+		}
 
 		FREF(fp);
 
@@ -421,6 +424,8 @@ sys_mmap(struct proc *p, void *v, register_t *retval)
 			flags |= MAP_ANON;
 			FRELE(fp, p);
 			fp = NULL;
+			/* XXX */
+			KERNEL_UNLOCK();
 			goto is_anon;
 		}
 
@@ -525,8 +530,10 @@ is_anon:		/* label for SunOS style /dev/zero */
 		*retval = (register_t)(addr + pageoff);
 
 out:
-	if (fp)
-		FRELE(fp, p);	
+	if (fp) {
+		FRELE(fp, p);
+		KERNEL_UNLOCK();
+	}
 	return (error);
 }
 
@@ -1058,6 +1065,7 @@ uvm_mmap(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 		vm_map_lock(map);
 
 		if (map->flags & VM_MAP_WIREFUTURE) {
+			KERNEL_LOCK();
 			if ((atop(size) + uvmexp.wired) > uvmexp.wiredmax
 #ifdef pmap_wired_count
 			    || (locklimit != 0 && (size +
@@ -1069,6 +1077,7 @@ uvm_mmap(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 				vm_map_unlock(map);
 				/* unmap the region! */
 				uvm_unmap(map, *addr, *addr + size);
+				KERNEL_UNLOCK();
 				goto bad;
 			}
 			/*
@@ -1080,8 +1089,10 @@ uvm_mmap(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 			if (error != 0) {
 				/* unmap the region! */
 				uvm_unmap(map, *addr, *addr + size);
+				KERNEL_UNLOCK();
 				goto bad;
 			}
+			KERNEL_UNLOCK();
 			return (0);
 		}
 
