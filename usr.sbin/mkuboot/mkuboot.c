@@ -1,4 +1,4 @@
-/*	$OpenBSD: mkuboot.c,v 1.2 2013/07/28 18:07:16 miod Exp $	*/
+/*	$OpenBSD: mkuboot.c,v 1.5 2015/10/12 05:54:18 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2008 Mark Kettenis
@@ -228,14 +228,12 @@ main(int argc, char *argv[])
 	ifd = open(iname, O_RDONLY);
 	if (ifd < 0)
 		err(1, "%s", iname);
+	if (fstat(ifd, &sb) == -1)
+		err(1, "%s", iname);
 
 	ofd = open(oname, O_RDWR | O_TRUNC | O_CREAT, 0644);
 	if (ofd < 0)
 		err(1, "%s", oname);
-
-	if (stat(iname, &sb) == -1) {
-		err(1, "%s", oname);
-	}
 
 	/* Write initial header. */
 	if (!raw && write(ofd, &ih, sizeof ih) != sizeof ih)
