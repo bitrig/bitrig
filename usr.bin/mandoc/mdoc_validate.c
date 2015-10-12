@@ -1,4 +1,4 @@
-/*	$OpenBSD: mdoc_validate.c,v 1.210 2015/10/06 18:30:44 schwarze Exp $ */
+/*	$OpenBSD: mdoc_validate.c,v 1.211 2015/10/12 00:07:27 schwarze Exp $ */
 /*
  * Copyright (c) 2008-2012 Kristaps Dzonsons <kristaps@bsd.lv>
  * Copyright (c) 2010-2015 Ingo Schwarze <schwarze@openbsd.org>
@@ -300,11 +300,9 @@ mdoc_valid_pre(struct roff_man *mdoc, struct roff_node *n)
 	case ROFFT_TEXT:
 		if (n->sec != SEC_SYNOPSIS || n->parent->tok != MDOC_Fd)
 			check_text(mdoc, n->line, n->pos, n->string);
-		/* FALLTHROUGH */
+		return;
 	case ROFFT_TBL:
-		/* FALLTHROUGH */
 	case ROFFT_EQN:
-		/* FALLTHROUGH */
 	case ROFFT_ROOT:
 		return;
 	default:
@@ -330,9 +328,7 @@ mdoc_valid_post(struct roff_man *mdoc)
 
 	switch (n->type) {
 	case ROFFT_TEXT:
-		/* FALLTHROUGH */
 	case ROFFT_EQN:
-		/* FALLTHROUGH */
 	case ROFFT_TBL:
 		break;
 	case ROFFT_ROOT:
@@ -565,13 +561,9 @@ pre_bl(PRE_ARGS)
 			    n->line, n->pos, "Bl -tag");
 		break;
 	case LIST_column:
-		/* FALLTHROUGH */
 	case LIST_diag:
-		/* FALLTHROUGH */
 	case LIST_ohang:
-		/* FALLTHROUGH */
 	case LIST_inset:
-		/* FALLTHROUGH */
 	case LIST_item:
 		if (n->norm->Bl.width)
 			mandoc_vmsg(MANDOCERR_BL_SKIPW, mdoc->parse,
@@ -579,9 +571,7 @@ pre_bl(PRE_ARGS)
 			    mdoc_argnames[mdoclt]);
 		break;
 	case LIST_bullet:
-		/* FALLTHROUGH */
 	case LIST_dash:
-		/* FALLTHROUGH */
 	case LIST_hyphen:
 		if (NULL == n->norm->Bl.width)
 			n->norm->Bl.width = "2n";
@@ -1023,7 +1013,6 @@ post_defaults(POST_ARGS)
 		roff_word_alloc(mdoc, nn->line, nn->pos, "...");
 		break;
 	case MDOC_Pa:
-		/* FALLTHROUGH */
 	case MDOC_Mt:
 		roff_word_alloc(mdoc, nn->line, nn->pos, "~");
 		break;
@@ -1114,13 +1103,9 @@ post_it(POST_ARGS)
 
 	switch (lt) {
 	case LIST_tag:
-		/* FALLTHROUGH */
 	case LIST_hang:
-		/* FALLTHROUGH */
 	case LIST_ohang:
-		/* FALLTHROUGH */
 	case LIST_inset:
-		/* FALLTHROUGH */
 	case LIST_diag:
 		if (nit->head->child == NULL)
 			mandoc_vmsg(MANDOCERR_IT_NOHEAD,
@@ -1129,11 +1114,8 @@ post_it(POST_ARGS)
 			    mdoc_argnames[nbl->args->argv[0].arg]);
 		break;
 	case LIST_bullet:
-		/* FALLTHROUGH */
 	case LIST_dash:
-		/* FALLTHROUGH */
 	case LIST_enum:
-		/* FALLTHROUGH */
 	case LIST_hyphen:
 		if (nit->body == NULL || nit->body->child == NULL)
 			mandoc_vmsg(MANDOCERR_IT_NOBODY,
@@ -1194,9 +1176,7 @@ post_bl_block(POST_ARGS)
 		while (NULL != nc) {
 			switch (nc->tok) {
 			case MDOC_Pp:
-				/* FALLTHROUGH */
 			case MDOC_Lp:
-				/* FALLTHROUGH */
 			case MDOC_br:
 				break;
 			default:
@@ -1929,7 +1909,6 @@ post_sh_head(POST_ARGS)
 		goodsec = "2, 3, 4, 9";
 		/* FALLTHROUGH */
 	case SEC_RETURN_VALUES:
-		/* FALLTHROUGH */
 	case SEC_LIBRARY:
 		if (*mdoc->meta.msec == '2')
 			break;
