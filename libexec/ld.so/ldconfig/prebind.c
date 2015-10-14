@@ -1,4 +1,4 @@
-/* $OpenBSD: prebind.c,v 1.29 2015/06/03 02:24:36 millert Exp $ */
+/* $OpenBSD: prebind.c,v 1.31 2015/10/14 17:29:44 tobias Exp $ */
 /*
  * Copyright (c) 2006 Dale Rahn <drahn@dalerahn.com>
  *
@@ -2184,9 +2184,12 @@ elf_load_existing_prebind(struct elf_object *object, int fd)
 {
 	struct prebind_footer footer;
 	void *prebind_data;
+	ssize_t len;
 
 	lseek(fd, -((off_t)sizeof(struct prebind_footer)), SEEK_END);
-	read(fd, &footer, sizeof(struct prebind_footer));
+	len = read(fd, &footer, sizeof(struct prebind_footer));
+	if (len != sizeof(struct prebind_footer))
+		return;
 
 	if (footer.bind_id[0] != BIND_ID0 ||
 	    footer.bind_id[1] != BIND_ID1 ||
@@ -2196,6 +2199,8 @@ elf_load_existing_prebind(struct elf_object *object, int fd)
 
 	prebind_data = mmap(0, footer.prebind_size, PROT_READ,
 	    MAP_FILE, fd, footer.prebind_base);
+	if (prebind_data == MAP_FAILED)
+		return;
 	objarray[object->dyn.null].oprebind_data = prebind_data;
 	objarray[object->dyn.null].id0 = footer.id0;
 	objarray[object->dyn.null].id1 = footer.id1;
