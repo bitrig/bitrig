@@ -1,4 +1,4 @@
-/*	$OpenBSD: syn.c,v 1.34 2015/10/06 21:21:39 nicm Exp $	*/
+/*	$OpenBSD: syn.c,v 1.35 2015/10/15 22:53:50 mmcc Exp $	*/
 
 /*
  * shell parser (C version)
