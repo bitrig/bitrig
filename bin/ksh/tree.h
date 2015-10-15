@@ -1,8 +1,10 @@
-/*	$OpenBSD: tree.h,v 1.11 2015/10/06 21:19:06 nicm Exp $	*/
+/*	$OpenBSD: tree.h,v 1.12 2015/10/15 22:53:50 mmcc Exp $	*/
 
 /*
  * command trees for compile/execute
  */
+
+/* $From: tree.h,v 1.3 1994/05/31 13:34:34 michael Exp $ */
 
 /*
  * Description of a command or an operation on commands.
