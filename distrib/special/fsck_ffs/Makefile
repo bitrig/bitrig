@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2014/12/23 17:16:02 deraadt Exp $
+#	$OpenBSD: Makefile,v 1.2 2015/10/15 15:11:10 semarie Exp $
 
 PROG=	fsck_ffs
 MAN=	fsck_ffs.8
