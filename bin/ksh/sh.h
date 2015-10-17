@@ -1,4 +1,4 @@
-/*	$OpenBSD: sh.h,v 1.38 2015/10/17 18:26:24 mmcc Exp $	*/
+/*	$OpenBSD: sh.h,v 1.39 2015/10/17 18:43:22 mmcc Exp $	*/
 
 /*
  * Public Domain Bourne/Korn shell
@@ -38,9 +38,8 @@
 # define EXTERN_DEFINED
 #endif
 
-#define EXECSHELL	_PATH_BSHELL
-#define EXECSHELL_STR	"EXECSHELL"
-
+#define	NELEM(a) (sizeof(a) / sizeof((a)[0]))
+#define	sizeofN(type, n) (sizeof(type) * (n))
 #define	BIT(i)	(1<<(i))	/* define bit in flag */
 
 #define	NUFILE	32		/* Number of user-accessible files */
