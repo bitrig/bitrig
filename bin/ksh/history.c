@@ -1,5 +1,7 @@
 /*	$OpenBSD: history.c,v 1.44 2015/09/17 21:39:54 nicm Exp $	*/
 
+#include <string.h>
+
 #include "sh.h"
 
 #ifdef HISTORY
