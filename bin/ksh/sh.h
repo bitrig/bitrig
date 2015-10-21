@@ -1,4 +1,4 @@
-/*	$OpenBSD: sh.h,v 1.46 2015/10/19 17:15:53 mmcc Exp $	*/
+/*	$OpenBSD: sh.h,v 1.47 2015/10/21 14:30:43 mmcc Exp $	*/
 
 /*
  * Public Domain Bourne/Korn shell
@@ -204,9 +204,7 @@ enum sh_flag {
 
 extern	char shell_flags[FNFLAGS];
 
-EXTERN	char	null [] I__("");	/* null value for variable */
-EXTERN	char	space [] I__(" ");
-EXTERN	char	newline [] I__("\n");
+extern	char	null[];	/* null value for variable */
 
 enum temp_type {
 	TT_HEREDOC_EXP,	/* expanded heredoc */
@@ -229,7 +227,7 @@ struct temp {
 #define shl_spare	(&shf_iob[0])	/* for c_read()/c_print() */
 #define shl_stdout	(&shf_iob[1])
 #define shl_out		(&shf_iob[2])
-EXTERN int shl_stdout_ok;
+extern int shl_stdout_ok;
 
 /*
  * trap handlers
@@ -270,9 +268,9 @@ typedef struct trap {
 #define SIGEXIT_	0	/* for trap EXIT */
 #define SIGERR_		NSIG	/* for trap ERR */
 
-EXTERN	volatile sig_atomic_t trap;	/* traps pending? */
-EXTERN	volatile sig_atomic_t intrsig;	/* pending trap interrupts command */
-EXTERN	volatile sig_atomic_t fatal_trap;/* received a fatal signal */
+extern	volatile sig_atomic_t trap;	/* traps pending? */
+extern	volatile sig_atomic_t intrsig;	/* pending trap interrupts command */
+extern	volatile sig_atomic_t fatal_trap;	/* received a fatal signal */
 extern	volatile sig_atomic_t got_sigwinch;
 extern	Trap	sigtraps[NSIG+1];
 
@@ -285,11 +283,11 @@ enum tmout_enum {
 	TMOUT_READING,		/* waiting for input */
 	TMOUT_LEAVING		/* have timed out */
 };
-EXTERN unsigned int ksh_tmout;
-EXTERN enum tmout_enum ksh_tmout_state I__(TMOUT_EXECUTING);
+extern unsigned int ksh_tmout;
+extern enum tmout_enum ksh_tmout_state;
 
 /* For "You have stopped jobs" message */
-EXTERN int really_exit;
+extern int really_exit;
 
 /*
  * fast character classes
@@ -311,7 +309,7 @@ extern	short ctypes [];
 #define	digit(c)	ctype(c, C_DIGIT)
 #define	letnum(c)	ctype(c, C_ALPHA|C_DIGIT)
 
-EXTERN int ifs0 I__(' ');	/* for "$*" */
+extern int ifs0;	/* for "$*" */
 
 /* Argument parsing for built-in commands and getopts command */
 
@@ -335,8 +333,8 @@ typedef struct {
 	char		buf[2];	/* for bad option OPTARG value */
 } Getopt;
 
-EXTERN Getopt builtin_opt;	/* for shell builtin commands */
-EXTERN Getopt user_opt;		/* parsing state for getopts builtin command */
+extern Getopt builtin_opt;	/* for shell builtin commands */
+extern Getopt user_opt;		/* parsing state for getopts builtin command */
 
 /* This for co-processes */
 
