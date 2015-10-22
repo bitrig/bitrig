@@ -56,7 +56,7 @@ EXAMPLES_600=bgpd.conf dvmrpd.conf eigrpd.conf hostapd.conf iked.conf \
 
 # -r-xr-xr-x
 RCDAEMONS=apmd bgpd bootparamd cron dhcpd dhcrelay dvmrpd eigrpd ftpd \
-	ftpproxy ftpproxy6 hostapd hotplugd httpd identd ifstated
+	ftpproxy ftpproxy6 hostapd hotplugd httpd identd ifstated \
 	iked inetd isakmpd iscsid ldapd ldattach ldpd lpd lockd \
 	mountd mrouted nfsd npppd nsd ntpd ospf6d ospfd \
 	pflogd portmap radiusd rarpd rbootd relayd ripd route6d \
