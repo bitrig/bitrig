@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.411 2015/10/19 19:08:44 schwarze Exp $
+#	$OpenBSD: Makefile,v 1.412 2015/10/23 06:42:53 tedu Exp $
 
 TZDIR=		/usr/share/zoneinfo
 LOCALTIME=	UTC
@@ -245,7 +245,8 @@ release-sets:
 
 sha:
 	-cd ${RELEASEDIR}; \
-	    cksum -a sha256 \
+	    date -u "+Build date: %s - %+" > BUILDINFO; \
+	    cksum -a sha256 BUILDINFO INSTALL.`arch -ks` \
 	    ${ALL_KERNELS} ${MDEXT} ${MISETS} | sort > SHA256
 
 release: sha
