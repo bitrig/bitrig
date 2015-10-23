@@ -1,9 +1,0 @@
-__divsi3
-__mcount
-__modsi3
-__udivsi3
-__umodsi3
-_mcount
-frexpl
-ldexpl
-modfl
