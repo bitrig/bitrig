@@ -1,4 +1,4 @@
-/*	$OpenBSD: msdosfs_vnops.c,v 1.103 2015/10/23 17:21:34 krw Exp $	*/
+/*	$OpenBSD: msdosfs_vnops.c,v 1.104 2015/10/23 18:04:37 krw Exp $	*/
 /*	$NetBSD: msdosfs_vnops.c,v 1.63 1997/10/17 11:24:19 ws Exp $	*/
 
 /*-
@@ -1172,8 +1172,9 @@ abortit:
 					VOP_UNLOCK(fdvp, 0);
 				goto bad;
 			}
+			ip->de_diroffset = to_diroffset;
 			if (ip->de_dirclust != MSDOSFSROOT)
-				ip->de_diroffset = to_diroffset & pmp->pm_crbomask;
+				ip->de_diroffset &= pmp->pm_crbomask;
 		}
 		reinsert(ip);
 		if (newparent)
