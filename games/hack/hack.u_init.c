@@ -1,4 +1,4 @@
-/*	$OpenBSD: hack.u_init.c,v 1.9 2009/10/27 23:59:25 deraadt Exp $	*/
+/*	$OpenBSD: hack.u_init.c,v 1.10 2015/10/24 17:40:38 mmcc Exp $	*/
 
 /*
  * Copyright (c) 1985, Stichting Centrum voor Wiskunde en Informatica,
@@ -170,7 +170,8 @@ u_init()
 	rolesyms[i] = 0;
 
 	if ((pc = pl_character[0])) {
-		if (islower(pc)) pc = toupper(pc);
+		if (islower((unsigned char)pc))
+			pc = toupper((unsigned char)pc);
 		if ((i = role_index(pc)) >= 0)
 			goto got_suffix;	/* implies experienced */
 		printf("\nUnknown role: %c\n", pc);
@@ -203,7 +204,8 @@ u_init()
 	printf("? [%s] ", rolesyms);
 
 	while ((pc = readchar())) {
-		if(islower(pc)) pc = toupper(pc);
+		if(islower((unsigned char)pc))
+			pc = toupper((unsigned char)pc);
 		if((i = role_index(pc)) >= 0) {
 			printf("%c\n", pc);	/* echo */
 			(void) fflush(stdout);	/* should be seen */
