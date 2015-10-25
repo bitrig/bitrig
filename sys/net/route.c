@@ -1,4 +1,4 @@
-/*	$OpenBSD: route.c,v 1.259 2015/10/23 14:48:22 mpi Exp $	*/
+/*	$OpenBSD: route.c,v 1.261 2015/10/25 10:05:09 bluhm Exp $	*/
 /*	$NetBSD: route.c,v 1.14 1996/02/13 22:00:46 christos Exp $	*/
 
 /*
@@ -235,7 +235,7 @@ rtalloc(struct sockaddr *dst, int flags, unsigned int tableid)
 		rtstat.rts_unreach++;
 miss:
 		if (ISSET(flags, RT_REPORT))
-			rt_missmsg(RTM_MISS, &info, 0, NULL, error, tableid);
+			rt_missmsg(RTM_MISS, &info, 0, 0, error, tableid);
 	}
 	KERNEL_UNLOCK();
 	splx(s);
@@ -393,7 +393,8 @@ rt_sendmsg(struct rtentry *rt, int cmd, u_int rtableid)
 		info.rti_info[RTAX_IFA] = rt->rt_ifa->ifa_addr;
 	}
 
-	rt_missmsg(cmd, &info, rt->rt_flags, rt->rt_ifp, 0, rtableid);
+	rt_missmsg(cmd, &info, rt->rt_flags, rt->rt_ifidx, 0, rtableid);
+	if_put(ifp);
 }
 
 void
@@ -425,7 +426,7 @@ rtredirect(struct sockaddr *dst, struct sockaddr *gateway,
 	u_int32_t		*stat = NULL;
 	struct rt_addrinfo	 info;
 	struct ifaddr		*ifa;
-	struct ifnet		*ifp = NULL;
+	unsigned int		 ifidx;
 
 	splsoftassert(IPL_SOFTNET);
 
@@ -434,7 +435,7 @@ rtredirect(struct sockaddr *dst, struct sockaddr *gateway,
 		error = ENETUNREACH;
 		goto out;
 	}
-	ifp = ifa->ifa_ifp;
+	ifidx = ifa->ifa_ifp->if_index;
 	rt = rtalloc(dst, 0, rdomain);
 	/*
 	 * If the redirect isn't from our current router for this dst,
@@ -515,7 +516,7 @@ out:
 	info.rti_info[RTAX_GATEWAY] = gateway;
 	info.rti_info[RTAX_NETMASK] = netmask;
 	info.rti_info[RTAX_AUTHOR] = src;
-	rt_missmsg(RTM_REDIRECT, &info, flags, ifp, error, rdomain);
+	rt_missmsg(RTM_REDIRECT, &info, flags, ifidx, error, rdomain);
 }
 
 /*
@@ -526,7 +527,7 @@ rtdeletemsg(struct rtentry *rt, u_int tableid)
 {
 	int			error;
 	struct rt_addrinfo	info;
-	struct ifnet		*ifp;
+	unsigned int		ifidx;
 
 	/*
 	 * Request the new route so that the entry is not actually
@@ -538,9 +539,9 @@ rtdeletemsg(struct rtentry *rt, u_int tableid)
 	info.rti_info[RTAX_NETMASK] = rt_mask(rt);
 	info.rti_info[RTAX_GATEWAY] = rt->rt_gateway;
 	info.rti_flags = rt->rt_flags;
-	ifp = rt->rt_ifp;
+	ifidx = rt->rt_ifidx;
 	error = rtrequest1(RTM_DELETE, &info, rt->rt_priority, &rt, tableid);
-	rt_missmsg(RTM_DELETE, &info, info.rti_flags, ifp, error, tableid);
+	rt_missmsg(RTM_DELETE, &info, info.rti_flags, ifidx, error, tableid);
 	if (error == 0)
 		rtfree(rt);
 	return (error);
