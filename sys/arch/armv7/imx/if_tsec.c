@@ -1,4 +1,4 @@
-/*	$OpenBSD: if_tsec.c,v 1.34 2014/12/22 02:26:53 tedu Exp $	*/
+/*	$OpenBSD: if_tsec.c,v 1.38 2015/10/25 13:22:09 mpi Exp $	*/
 
 /*
  * Copyright (c) 2008 Mark Kettenis
@@ -675,7 +675,6 @@ int
 tsec_ioctl(struct ifnet *ifp, u_long cmd, caddr_t addr)
 {
 	struct tsec_softc *sc = ifp->if_softc;
-	struct ifaddr *ifa = (struct ifaddr *)addr;
 	struct ifreq *ifr = (struct ifreq *)addr;
 	int error = 0, s;
 
@@ -684,8 +683,6 @@ tsec_ioctl(struct ifnet *ifp, u_long cmd, caddr_t addr)
 	switch (cmd) {
 	case SIOCSIFADDR:
 		ifp->if_flags |= IFF_UP;
-		if (ifa->ifa_addr->sa_family == AF_INET)
-			arp_ifinit(&sc->sc_ac, ifa);
 		/* FALLTHROUGH */
 	case SIOCSIFFLAGS:
 		if (ifp->if_flags & IFF_UP) {
