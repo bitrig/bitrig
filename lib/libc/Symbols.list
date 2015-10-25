@@ -1436,8 +1436,6 @@ random
 
 /* stdlib */
 _Exit
-__atexit
-__atexit_register_cleanup
 __cxa_atexit
 __cxa_finalize
 __isthreaded
