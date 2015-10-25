@@ -1,4 +1,4 @@
-/*	$OpenBSD: if_ie.c,v 1.43 2015/06/24 09:40:54 mpi Exp $	*/
+/*	$OpenBSD: if_ie.c,v 1.44 2015/10/25 13:13:06 mpi Exp $	*/
 /*	$NetBSD: if_ie.c,v 1.51 1996/05/12 23:52:48 mycroft Exp $	*/
 
 /*-
@@ -2027,7 +2027,6 @@ ieioctl(ifp, cmd, data)
 	caddr_t data;
 {
 	struct ie_softc *sc = ifp->if_softc;
-	struct ifaddr *ifa = (struct ifaddr *)data;
 	int s, error = 0;
 
 	s = splnet();
@@ -2035,16 +2034,7 @@ ieioctl(ifp, cmd, data)
 	switch (cmd) {
 	case SIOCSIFADDR:
 		ifp->if_flags |= IFF_UP;
-
-		switch (ifa->ifa_addr->sa_family) {
-		case AF_INET:
-			ieinit(sc);
-			arp_ifinit(&sc->sc_arpcom, ifa);
-			break;
-		default:
-			ieinit(sc);
-			break;
-		}
+		ieinit(sc);
 		break;
 
 	case SIOCSIFFLAGS:
