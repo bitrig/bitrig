@@ -1,4 +1,4 @@
-/*	$OpenBSD: misc.c,v 1.53 2015/10/07 00:04:57 krw Exp $	*/
+/*	$OpenBSD: misc.c,v 1.54 2015/10/26 15:08:26 krw Exp $	*/
 
 /*
  * Copyright (c) 1997 Tobias Weingartner
@@ -25,6 +25,7 @@
 #include <string.h>
 #include <err.h>
 #include <errno.h>
+#include <uuid.h>
 
 #include "disk.h"
 #include "misc.h"
@@ -61,18 +62,38 @@ unit_lookup(char *units)
 }
 
 int
+string_from_line(char *buf, size_t buflen)
+{
+	char *line;
+	size_t sz;
+
+	line = fgetln(stdin, &sz);
+	if (line == NULL)
+		return (1);
+
+	if (line[sz - 1] == '\n')
+		line[--sz] = '\0';
+
+	if (sz < buflen) {
+		memcpy(buf, line, sz);
+		buf[sz] = '\0';
+	} else {
+		memcpy(buf, line, buflen - 1);
+		buf[buflen - 1] = '\0';
+	}
+
+	return (0);
+}
+
+int
 ask_cmd(char **cmd, char **args)
 {
 	static char lbuf[100];
 	char *cp, *buf;
-	size_t lbuflen;
 
 	/* Get input */
-	if (fgets(lbuf, sizeof lbuf, stdin) == NULL)
+	if (string_from_line(lbuf, sizeof(lbuf)))
 		errx(1, "eof");
-	lbuflen = strlen(lbuf);
-	if (lbuflen > 0 && lbuf[lbuflen - 1] == '\n')
-		lbuf[lbuflen - 1] = '\0';
 
 	/* Parse input */
 	buf = lbuf;
@@ -90,8 +111,7 @@ ask_num(const char *str, uint32_t dflt, uint32_t low, uint32_t high)
 {
 	char lbuf[100];
 	const char *errstr;
-	size_t lbuflen;
-	uint32_t num;
+	int num;
 
 	if (dflt < low)
 		dflt = low;
@@ -101,12 +121,8 @@ ask_num(const char *str, uint32_t dflt, uint32_t low, uint32_t high)
 	do {
 		printf("%s [%d - %d]: [%d] ", str, low, high, dflt);
 
-		if (fgets(lbuf, sizeof lbuf, stdin) == NULL)
+		if (string_from_line(lbuf, sizeof(lbuf)))
 			errx(1, "eof");
-
-		lbuflen = strlen(lbuf);
-		if (lbuflen > 0 && lbuf[lbuflen - 1] == '\n')
-			lbuf[lbuflen - 1] = '\0';
 
 		if (lbuf[0] == '\0') {
 			num = dflt;
@@ -122,29 +138,27 @@ ask_num(const char *str, uint32_t dflt, uint32_t low, uint32_t high)
 }
 
 int
-ask_pid(int dflt, int low, int high)
+ask_pid(int dflt, struct uuid *guid)
 {
 	char lbuf[100], *cp;
-	size_t lbuflen;
-	int num = -1;
-
-	if (low == 1)
-		low = 0;	/* Show continguous range */
+	int num = -1, status;
 
 	do {
-		printf("Partition id ('0' to disable) [%X - %X]: [%X] ", low,
-		    high, dflt);
+		printf("Partition id ('0' to disable) [01 - FF]: [%X] ", dflt);
 		printf("(? for help) ");
 
-		if (fgets(lbuf, sizeof lbuf, stdin) == NULL)
+		if (string_from_line(lbuf, sizeof(lbuf)))
 			errx(1, "eof");
-		lbuflen = strlen(lbuf);
-		if (lbuflen > 0 && lbuf[lbuflen - 1] == '\n')
-			lbuf[lbuflen - 1] = '\0';
 
 		if (lbuf[0] == '?') {
 			PRT_printall();
 			continue;
+		}
+
+		if (guid) {
+			uuid_from_string(lbuf, guid, &status);
+			if (status == uuid_s_ok)
+				return (0x100);
 		}
 
 		/* Convert */
@@ -156,13 +170,13 @@ ask_pid(int dflt, int low, int high)
 			num = dflt;
 		if (*cp != '\0') {
 			printf("'%s' is not a valid number.\n", lbuf);
-			num = low - 1;
+			num = -1;
 		} else if (num == 0) {
 			break;
-		} else if (num < low || num > high) {
+		} else if (num < 0 || num > 0xff) {
 			printf("'%x' is out of range.\n", num);
 		}
-	} while (num < low || num > high);
+	} while (num < 0 || num > 0xff);
 
 	return (num);
 }
@@ -211,12 +225,8 @@ getuint64(char *prompt, uint64_t oval, uint64_t maxval)
 	do {
 		printf("%s: [%llu] ", prompt, oval);
 
-		if (fgets(buf, sizeof(buf), stdin) == NULL)
+		if (string_from_line(buf, sizeof(buf)))
 			errx(1, "eof");
-
-		n = strlen(buf);
-		if (n > 0 && buf[n-1] == '\n')
-			buf[--n] = '\0';
 
 		if (buf[0] == '\0') {
 			return (oval);
@@ -225,6 +235,7 @@ getuint64(char *prompt, uint64_t oval, uint64_t maxval)
 		}
 
 		/* deal with units */
+		n = strlen(buf);
 		switch (tolower((unsigned char)buf[n-1])) {
 		case 'c':
 			unit = 'c';
@@ -328,28 +339,17 @@ CHS_to_BN(uint32_t cyl, uint32_t head, uint32_t sect)
 char *
 ask_string(const char *prompt, const char *oval)
 {
-	static char buf[BUFSIZ];
-	int n;
+	static char buf[37];
 
 	buf[0] = '\0';
-	do {
-		printf("%s: [%s] ", prompt, oval ? oval : "");
-		if (fgets(buf, sizeof(buf), stdin) == NULL) {
-			buf[0] = '\0';
-			if (feof(stdin)) {
-				clearerr(stdin);
-				putchar('\n');
-				return(NULL);
-			}
-		}
-		n = strlen(buf);
-		if (n > 0 && buf[n-1] == '\n')
-			buf[--n] = '\0';
-		else if (oval != NULL && buf[0] == '\0')
-			strlcpy(buf, oval, sizeof(buf));
-	} while (buf[0] == '?');
+	printf("%s: [%s] ", prompt, oval ? oval : "");
+	if (string_from_line(buf, sizeof(buf)))
+		errx(1, "eof");
 
-	return(&buf[0]);
+	if (buf[0] == '\0' && oval)
+		strlcpy(buf, oval, sizeof(buf));
+
+	return(buf);
 }
 
 /*
@@ -381,4 +381,38 @@ crc32(const unsigned char *buf, const uint32_t size)
 	}
 
 	return ~crc;
+}
+
+char *
+utf16le_to_string(u_int16_t *utf)
+{
+	static char name[36];
+	int i;
+
+	for (i = 0; i < sizeof(name); i++) {
+		name[i] = letoh16(utf[i]) & 0x7F;
+		if (name[i] == '\0')
+			break;
+	}
+	if (i == sizeof(name))
+		name[i - 1] = '\0';
+
+	return (name);
+}
+
+u_int16_t *
+string_to_utf16le(char *ch)
+{
+	static u_int16_t utf[36];
+	int i;
+
+	for (i = 0; i < sizeof(utf); i++) {
+		utf[i] = htole16((unsigned int)ch[i]);
+		if (utf[i] == 0)
+			break;
+	}
+	if (i == sizeof(utf))
+		utf[i - 1] = 0;
+
+	return (utf);
 }
