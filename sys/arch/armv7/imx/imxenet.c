@@ -1,4 +1,4 @@
-/* $OpenBSD: imxenet.c,v 1.16 2015/06/24 09:40:53 mpi Exp $ */
+/* $OpenBSD: imxenet.c,v 1.17 2015/10/27 15:07:56 mpi Exp $ */
 /*
  * Copyright (c) 2012-2013 Patrick Wildt <patrick@blueri.se>
  *
@@ -740,7 +740,6 @@ imxenet_ioctl(struct ifnet *ifp, u_long cmd, caddr_t data)
 {
 	struct imxenet_softc *sc = ifp->if_softc;
 	struct ifreq *ifr = (struct ifreq *)data;
-	struct ifaddr *ifa = (struct ifaddr *)data;
 	int s, error = 0;
 
 	s = splnet();
@@ -750,9 +749,6 @@ imxenet_ioctl(struct ifnet *ifp, u_long cmd, caddr_t data)
 		if (!(ifp->if_flags & IFF_UP)) {
 			ifp->if_flags |= IFF_UP;
 			imxenet_init(sc);
-		}
-		if (ifa->ifa_addr->sa_family == AF_INET)
-			arp_ifinit(&sc->sc_ac, ifa);
 		break;
 
 	case SIOCSIFFLAGS:
