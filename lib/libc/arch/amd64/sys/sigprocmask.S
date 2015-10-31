@@ -1,5 +1,5 @@
-/*	$OpenBSD: sigprocmask.S,v 1.8 2015/10/23 04:39:24 guenther Exp $	*/
-/*	$NetBSD: sigprocmask.S,v 1.1 2001/06/19 00:25:06 fvdl Exp $	*/
+/*	$OpenBSD: sigprocmask.S,v 1.4 2015/10/31 09:30:57 miod Exp $	*/
+/*	$NetBSD: sigprocmask.S,v 1.6 2003/08/07 16:42:21 agc Exp $	*/
 
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
@@ -40,24 +40,29 @@
 #include "SYS.h"
 
 SYSENTRY_HIDDEN(sigprocmask)
-	testq	%rsi,%rsi		# check new sigset pointer
-	jnz	1f			# if not null, indirect
-	movl	$1,%edi			# SIG_BLOCK
-	jmp	2f
-1:	movl	(%rsi),%esi		# fetch indirect  ...
-2:	SYSTRAP(sigprocmask)
-	jc	1f
-	testq	%rdx,%rdx		# test if old mask requested
-	jz	out
-	movl	%eax,(%rdx)		# store old mask
-out:
-	xorl	%eax,%eax
-	ret
-1:
-#ifdef __PIC__
-	movq	PIC_GOT(CERROR), %rcx
-	jmp	*%rcx
-#else
-	jmp	CERROR
-#endif
+	mov	r5, r2			/* fetch new sigset pointer */
+	tst	r2, r2			/* check new sigset pointer */
+	bf	1f			/* if not null, indirect */
+	mov	#1, r4			/* SIG_BLOCK */
+	bra	2f
+	nop
+1:	mov.l	@r2, r2			/* fetch indirect ... */
+	mov	r2, r5			/* to new mask arg */
+2:	mov.l	LSYS_sigprocmask, r0
+	trapa	#0x80
+	bf	4f
+	mov	r6, r2			/* fetch old mask requested */
+	tst	r2, r2			/* test if old mask requested */
+	bt	3f
+	mov.l	r0, @r2			/* store old mask */
+3:
+	xor	r0, r0
+	rts
+	nop
+4:
+	JUMP_CERROR
+
+	.align	2
+LSYS_sigprocmask:
+	.long	SYS_sigprocmask
 SYSCALL_END_HIDDEN(sigprocmask)
