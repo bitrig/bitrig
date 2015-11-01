@@ -1,4 +1,4 @@
-/*	$OpenBSD: regcomp.c,v 1.24 2014/05/06 15:48:38 tedu Exp $ */
+/*	$OpenBSD: regcomp.c,v 1.27 2015/11/01 03:45:29 guenther Exp $ */
 /*-
  * Copyright (c) 1992, 1993, 1994 Henry Spencer.
  * Copyright (c) 1992, 1993, 1994
@@ -1159,6 +1159,21 @@ CHadd(struct parse *p, cset *cs, wint_t ch)
 		if ((nch = towupper(ch)) < NC)
 			cs->bmp[nch >> 3] |= 1 << (nch & 7);
 	}
+	cs->multis = np;
+
+	strlcpy(cs->multis + oldend - 1, cp, cs->smultis - oldend + 1);
+}
+
+/*
+ - mcinvert - invert the list of collating elements in a cset
+ *
+ * This would have to know the set of possibilities.  Implementation
+ * is deferred.
+ */
+static void
+mcinvert(struct parse *p, cset *cs)
+{
+	assert(cs->multis == NULL);	/* xxx */
 }
 
 /*
