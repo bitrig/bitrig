@@ -1,5 +1,5 @@
-/*	$OpenBSD: kgdb.h,v 1.5 2005/11/13 17:50:45 fgsch Exp $	*/
-/*	$NetBSD: kgdb.h,v 1.5 1998/09/13 14:46:24 christos Exp $	*/
+/*	$OpenBSD: intr.h,v 1.5 2015/11/02 16:55:31 mpi Exp $	*/
+/*	$NetBSD: cpu.h,v 1.24 1997/03/15 22:25:15 pk Exp $ */
 
 /*
  * Copyright (c) 1992, 1993
@@ -50,6 +50,8 @@
  */
 
 #include <machine/db_machdep.h>
+
+void	intr_barrier(void *);
 
 /*
  * Message types.
