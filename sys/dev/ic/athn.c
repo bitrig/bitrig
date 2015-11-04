@@ -1,4 +1,4 @@
-/*	$OpenBSD: athn.c,v 1.87 2015/10/25 12:48:46 mpi Exp $	*/
+/*	$OpenBSD: athn.c,v 1.88 2015/11/04 12:11:59 dlg Exp $	*/
 
 /*-
  * Copyright (c) 2009 Damien Bergamini <damien.bergamini@free.fr>
@@ -2556,7 +2556,7 @@ athn_start(struct ifnet *ifp)
 			break;
 		}
 		/* Send pending management frames first. */
-		IF_DEQUEUE(&ic->ic_mgtq, m);
+		m = mq_dequeue(&ic->ic_mgtq);
 		if (m != NULL) {
 			ni = m->m_pkthdr.ph_cookie;
 			goto sendit;
@@ -2564,7 +2564,7 @@ athn_start(struct ifnet *ifp)
 		if (ic->ic_state != IEEE80211_S_RUN)
 			break;
 
-		IF_DEQUEUE(&ic->ic_pwrsaveq, m);
+		m = mq_dequeue(&ic->ic_pwrsaveq);
 		if (m != NULL) {
 			ni = m->m_pkthdr.ph_cookie;
 			goto sendit;
