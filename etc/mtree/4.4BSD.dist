@@ -1,4 +1,4 @@
-#	$OpenBSD: 4.4BSD.dist,v 1.274 2015/10/10 09:45:15 ajacoutot Exp $
+#	$OpenBSD: 4.4BSD.dist,v 1.275 2015/11/05 23:38:07 bluhm Exp $
 
 /set type=dir uname=root gname=wheel mode=0755
 
@@ -136,53 +136,36 @@ usr
     ..
 
     # ./usr/include
-    include		gname=bin uname=root mode=0755
-        arpa		gname=bin uname=root mode=0755
+    include			gname=bin uname=root mode=0755
+        arpa			gname=bin uname=root mode=0755
         ..
 
-        g++		gname=bin uname=root mode=0755
-        ..
-
-        # ./usr/include/c++
-        c++
-            v1
-                ext
-                ..
-
-                mach-o
-                ..
+        # ./usr/include/g++
+        g++			gname=bin uname=root mode=0755
+            std			gname=bin uname=root mode=0755
             ..
         ..
-
-        openssl		gname=bin uname=root mode=0755
+        objc			gname=bin uname=root mode=0755
         ..
-
-        protocols	gname=bin uname=root mode=0755
+        openssl			gname=bin uname=root mode=0755
         ..
-
-        rpc		gname=bin uname=root mode=0755
+        protocols		gname=bin uname=root mode=0755
         ..
-        rpcsvc		gname=bin uname=root mode=0755
+        readline		gname=bin uname=root mode=0755
+        ..
+        rpc			gname=bin uname=root mode=0755
+        ..
+        rpcsvc			gname=bin uname=root mode=0755
         ..
     ..
 
     # ./usr/lib
     lib
-        clang		gname=bin uname=root mode=0755
-            3.6.0	gname=bin uname=root mode=0755
-                include		gname=bin uname=root mode=0755
-                	sanitizer		gname=bin uname=root mode=0755
-                	..
-		..
-            ..
+        debug			gname=bin uname=root mode=0755
         ..
-
-        # ./usr/lib/debug
-        debug		gname=bin uname=root mode=0755
+        locate			gname=bin uname=root mode=0755
         ..
-        locate	gname=bin uname=root mode=0755
-        ..
-        pkgconfig	gname=bin uname=root mode=0755
+        pkgconfig		gname=bin uname=root mode=0755
         ..
     ..
 
@@ -196,7 +179,7 @@ usr
 
     # ./usr/libexec
     libexec
-        auth		type=dir uname=root gname=auth mode=0750
+        auth			type=dir uname=root gname=auth mode=0750
         ..
         lpr
         ..
@@ -427,9 +410,7 @@ usr
     # ./usr/mdec
     mdec
     ..
-    obj		gname=wsrc mode=0775
-    ..
-    ports		gname=wsrc mode=0775
+    obj				gname=wsrc mode=0775
     ..
     sbin
     ..
@@ -467,359 +448,8 @@ usr
         info
         ..
 
-        llvm
-        ..
-
         # ./usr/share/locale
         locale
-            UTF-8
-            ..
-            af_ZA.ISO8859-1
-            ..
-            af_ZA.ISO8859-15
-            ..
-            af_ZA.UTF-8
-            ..
-            am_ET.UTF-8
-            ..
-            be_BY.CP1131
-            ..
-            be_BY.CP1251
-            ..
-            be_BY.ISO8859-5
-            ..
-            be_BY.UTF-8
-            ..
-            bg_BG.CP1251
-            ..
-            bg_BG.UTF-8
-            ..
-            ca_AD.ISO8859-1
-            ..
-            ca_AD.ISO8859-15
-            ..
-            ca_AD.UTF-8
-            ..
-            ca_ES.ISO8859-1
-            ..
-            ca_ES.ISO8859-15
-            ..
-            ca_ES.UTF-8
-            ..
-            ca_FR.ISO8859-1
-            ..
-            ca_FR.ISO8859-15
-            ..
-            ca_FR.UTF-8
-            ..
-            ca_IT.ISO8859-1
-            ..
-            ca_IT.ISO8859-15
-            ..
-            ca_IT.UTF-8
-            ..
-            cs_CZ.ISO8859-2
-            ..
-            cs_CZ.UTF-8
-            ..
-            da_DK.ISO8859-1
-            ..
-            da_DK.ISO8859-15
-            ..
-            da_DK.UTF-8
-            ..
-            de_AT.ISO8859-1
-            ..
-            de_AT.ISO8859-15
-            ..
-            de_AT.UTF-8
-            ..
-            de_CH.ISO8859-1
-            ..
-            de_CH.ISO8859-15
-            ..
-            de_CH.UTF-8
-            ..
-            de_DE.ISO8859-1
-            ..
-            de_DE.ISO8859-15
-            ..
-            de_DE.UTF-8
-            ..
-            el_GR.ISO8859-7
-            ..
-            el_GR.UTF-8
-            ..
-            en_AU.ISO8859-1
-            ..
-            en_AU.ISO8859-15
-            ..
-            en_AU.US-ASCII
-            ..
-            en_AU.UTF-8
-            ..
-            en_CA.ISO8859-1
-            ..
-            en_CA.ISO8859-15
-            ..
-            en_CA.US-ASCII
-            ..
-            en_CA.UTF-8
-            ..
-            en_GB.ISO8859-1
-            ..
-            en_GB.ISO8859-15
-            ..
-            en_GB.US-ASCII
-            ..
-            en_GB.UTF-8
-            ..
-            en_IE.UTF-8
-            ..
-            en_NZ.ISO8859-1
-            ..
-            en_NZ.ISO8859-15
-            ..
-            en_NZ.US-ASCII
-            ..
-            en_NZ.UTF-8
-            ..
-            en_US.ISO8859-1
-            ..
-            en_US.ISO8859-15
-            ..
-            en_US.US-ASCII
-            ..
-            en_US.UTF-8
-            ..
-            es_ES.ISO8859-1
-            ..
-            es_ES.ISO8859-15
-            ..
-            es_ES.UTF-8
-            ..
-            et_EE.ISO8859-15
-            ..
-            et_EE.UTF-8
-            ..
-            eu_ES.ISO8859-1
-            ..
-            eu_ES.ISO8859-15
-            ..
-            eu_ES.UTF-8
-            ..
-            fi_FI.ISO8859-1
-            ..
-            fi_FI.ISO8859-15
-            ..
-            fi_FI.UTF-8
-            ..
-            fr_BE.ISO8859-1
-            ..
-            fr_BE.ISO8859-15
-            ..
-            fr_BE.UTF-8
-            ..
-            fr_CA.ISO8859-1
-            ..
-            fr_CA.ISO8859-15
-            ..
-            fr_CA.UTF-8
-            ..
-            fr_CH.ISO8859-1
-            ..
-            fr_CH.ISO8859-15
-            ..
-            fr_CH.UTF-8
-            ..
-            fr_FR.ISO8859-1
-            ..
-            fr_FR.ISO8859-15
-            ..
-            fr_FR.UTF-8
-            ..
-            he_IL.UTF-8
-            ..
-            hi_IN.ISCII-DEV
-            ..
-            hr_HR.ISO8859-2
-            ..
-            hr_HR.UTF-8
-            ..
-            hu_HU.ISO8859-2
-            ..
-            hu_HU.UTF-8
-            ..
-            hy_AM.ARMSCII-8
-            ..
-            hy_AM.UTF-8
-            ..
-            is_IS.ISO8859-1
-            ..
-            is_IS.ISO8859-15
-            ..
-            is_IS.UTF-8
-            ..
-            it_CH.ISO8859-1
-            ..
-            it_CH.ISO8859-15
-            ..
-            it_CH.UTF-8
-            ..
-            it_IT.ISO8859-1
-            ..
-            it_IT.ISO8859-15
-            ..
-            it_IT.UTF-8
-            ..
-            ja_JP.SJIS
-            ..
-            ja_JP.UTF-8
-            ..
-            ja_JP.eucJP
-            ..
-            kk_KZ.PT154
-            ..
-            kk_KZ.UTF-8
-            ..
-            ko_KR.CP949
-            ..
-            ko_KR.UTF-8
-            ..
-            ko_KR.eucKR
-            ..
-            la_LN.ISO8859-1
-            ..
-            la_LN.ISO8859-13
-            ..
-            la_LN.ISO8859-15
-            ..
-            la_LN.ISO8859-2
-            ..
-            la_LN.ISO8859-4
-            ..
-            la_LN.US-ASCII
-            ..
-            lt_LT.ISO8859-13
-            ..
-            lt_LT.ISO8859-4
-            ..
-            lt_LT.UTF-8
-            ..
-            lv_LV.ISO8859-13
-            ..
-            lv_LV.UTF-8
-            ..
-            mn_MN.UTF-8
-            ..
-            nb_NO.ISO8859-1
-            ..
-            nb_NO.ISO8859-15
-            ..
-            nb_NO.UTF-8
-            ..
-            nl_BE.ISO8859-1
-            ..
-            nl_BE.ISO8859-15
-            ..
-            nl_BE.UTF-8
-            ..
-            nl_NL.ISO8859-1
-            ..
-            nl_NL.ISO8859-15
-            ..
-            nl_NL.UTF-8
-            ..
-            nn_NO.ISO8859-1
-            ..
-            nn_NO.ISO8859-15
-            ..
-            nn_NO.UTF-8
-            ..
-            no_NO.ISO8859-1
-            ..
-            no_NO.ISO8859-15
-            ..
-            no_NO.UTF-8
-            ..
-            pl_PL.ISO8859-2
-            ..
-            pl_PL.UTF-8
-            ..
-            pt_BR.ISO8859-1
-            ..
-            pt_BR.UTF-8
-            ..
-            pt_PT.ISO8859-1
-            ..
-            pt_PT.ISO8859-15
-            ..
-            pt_PT.UTF-8
-            ..
-            ro_RO.ISO8859-2
-            ..
-            ro_RO.UTF-8
-            ..
-            ru_RU.CP1251
-            ..
-            ru_RU.CP866
-            ..
-            ru_RU.ISO8859-5
-            ..
-            ru_RU.KOI8-R
-            ..
-            ru_RU.UTF-8
-            ..
-            sk_SK.ISO8859-2
-            ..
-            sk_SK.UTF-8
-            ..
-            sl_SI.ISO8859-2
-            ..
-            sl_SI.UTF-8
-            ..
-            sr_YU.ISO8859-2
-            ..
-            sr_YU.ISO8859-5
-            ..
-            sr_YU.UTF-8
-            ..
-            sv_SE.ISO8859-1
-            ..
-            sv_SE.ISO8859-15
-            ..
-            sv_SE.UTF-8
-            ..
-            tr_TR.ISO8859-9
-            ..
-            tr_TR.UTF-8
-            ..
-            uk_UA.CP1251
-            ..
-            uk_UA.ISO8859-5
-            ..
-            uk_UA.KOI8-U
-            ..
-            uk_UA.UTF-8
-            ..
-            zh_CN.GB18030
-            ..
-            zh_CN.GB2312
-            ..
-            zh_CN.GBK
-            ..
-            zh_CN.UTF-8
-            ..
-            zh_CN.eucCN
-            ..
-            zh_HK.Big5HKSCS
-            ..
-            zh_HK.UTF-8
-            ..
-            zh_TW.Big5
-            ..
-            zh_TW.UTF-8
-            ..
         ..
 
         # ./usr/share/man
@@ -827,31 +457,101 @@ usr
             man1
                 amd64
                 ..
+                i386
+                ..
+                sparc
+                ..
+                sparc64
+                ..
             ..
 
             # ./usr/share/man/man2
             man2
+                alpha
+                ..
                 amd64
+                ..
+                armish
+                ..
+                i386
+                ..
+                zaurus
                 ..
             ..
 
             # ./usr/share/man/man3
             man3
+                loongson
+                ..
+                sgi
+                ..
+                vax
+                ..
             ..
+
+            # ./usr/share/man/man3p
             man3p
             ..
 
             # ./usr/share/man/man4
             man4
+                alpha
+                ..
                 amd64
                 ..
+                armish
+                ..
                 armv7
+                ..
+                aviion
+                ..
+                hppa
+                ..
+                i386
+                ..
+                landisk
+                ..
+                loongson
+                ..
+                luna88k
+                ..
+                macppc
+                ..
+                octeon
+                ..
+                sgi
+                ..
+                socppc
+                ..
+                sparc
+                ..
+                sparc64
+                ..
+                vax
+                ..
+                zaurus
                 ..
             ..
 
             # ./usr/share/man/man5
             man5
                 amd64
+                ..
+                armish
+                ..
+                hppa
+                ..
+                hppa64
+                ..
+                i386
+                ..
+                landisk
+                ..
+                macppc
+                ..
+                socppc
+                ..
+                zaurus
                 ..
             ..
 
@@ -863,9 +563,43 @@ usr
 
             # ./usr/share/man/man8
             man8
+                alpha
+                ..
                 amd64
                 ..
+                armish
+                ..
                 armv7
+                ..
+                aviion
+                ..
+                hppa
+                ..
+                hppa64
+                ..
+                i386
+                ..
+                landisk
+                ..
+                loongson
+                ..
+                luna88k
+                ..
+                macppc
+                ..
+                octeon
+                ..
+                sgi
+                ..
+                socppc
+                ..
+                sparc
+                ..
+                sparc64
+                ..
+                vax
+                ..
+                zaurus
                 ..
             ..
 
@@ -877,11 +611,7 @@ usr
         # ./usr/share/misc
         misc
         ..
-
         mk
-        ..
-
-        nls
         ..
 
         # ./usr/share/snmp
@@ -901,38 +631,36 @@ usr
         ..
 
         # ./usr/share/zoneinfo
-        zoneinfo         gname=bin uname=root mode=0555
-            Australia        gname=bin uname=root mode=0555
+        zoneinfo		gname=bin uname=root mode=0555
+            Australia		gname=bin uname=root mode=0555
             ..
-            Brazil           gname=bin uname=root mode=0555
+            Brazil		gname=bin uname=root mode=0555
             ..
-            Canada           gname=bin uname=root mode=0555
+            Canada		gname=bin uname=root mode=0555
             ..
-            Chile            gname=bin uname=root mode=0555
+            Chile		gname=bin uname=root mode=0555
             ..
-            Mexico           gname=bin uname=root mode=0555
+            Mexico		gname=bin uname=root mode=0555
             ..
-            US               gname=bin uname=root mode=0555
+            US			gname=bin uname=root mode=0555
             ..
         ..
-    ..
+   ..
 
-    # ./usr/src
-    src		gname=wsrc mode=0775
-    ..
+   # ./usr/src
+   #src				gname=wsrc mode=0775
+   #..
 
-    xenocara	gname=wsrc mode=0775
-    ..
-
-    xobj		gname=wsrc mode=0775
-    ..
+   # ./usr/xobj
+   xobj				gname=wsrc mode=0775
+   ..
 ..
 
 # ./var
 var
     account
     ..
-    authpf		uname=root gname=authpf mode=0770
+    authpf			uname=root gname=authpf mode=0770
     ..
 
     # ./var/empty
@@ -940,24 +668,24 @@ var
     ..
 
     # ./var/backups
-    backups		mode=0700
+    backups			mode=0700
     ..
-    yp		mode=755
+    yp				mode=755
     ..
-    crash		mode=770
+    crash			mode=770
     ..
 
     # ./var/cron
-    cron		mode=0555
-        atjobs		gname=crontab mode=01770
+    cron			mode=0555
+        atjobs			gname=crontab mode=01770
         ..
-        tabs		gname=crontab mode=01730
+        tabs			gname=crontab mode=01730
         ..
     ..
 
     # ./var/db
     db
-        ldap		mode=0700
+        ldap			mode=0700
         ..
         ns
         ..
@@ -968,16 +696,16 @@ var
     ..
 
     # ./var/games
-    games            uname=root gname=games mode=0775
-        hackdir          uname=root gname=games mode=0775
-            save		 uname=root gname=games mode=0770
+    games			uname=root gname=games mode=0775
+        hackdir			uname=root gname=games mode=0775
+            save		uname=root gname=games mode=0770
             ..
         ..
 
         # ./var/games/save
-        save		uname=root gname=games mode=0775
+        save			uname=root gname=games mode=0775
         ..
-        phantasia        uname=root gname=games mode=0775
+        phantasia		uname=root gname=games mode=0775
         ..
     ..
 
@@ -993,14 +721,14 @@ var
 
     # ./var/nsd
     nsd
-        db		uname=root gname=_nsd mode=0775
+        db			uname=root gname=_nsd mode=0775
         ..
         etc			uname=root gname=_nsd mode=0750
         ..
 
         # ./var/nsd/run
-        run		uname=root gname=_nsd mode=0775
-            xfr		uname=root gname=_nsd mode=0770
+        run			uname=root gname=_nsd mode=0775
+            xfr			uname=root gname=_nsd mode=0770
             ..
         ..
 
@@ -1014,7 +742,7 @@ var
     ..
 
     # ./var/quotas
-    quotas            gname=operator mode=0750
+    quotas			gname=operator mode=0750
     ..
     run
     ..
@@ -1027,21 +755,21 @@ var
     spool
 
         # ./var/spool/ftp
-        ftp		mode=0555
-            bin		mode=0511
+        ftp			mode=0555
+            bin			mode=0511
             ..
-            etc		mode=0511
+            etc			mode=0511
             ..
-            hidden           mode=0111
+            hidden		mode=0111
             ..
             #pub		mode=0555
             #..
         ..
 
         # ./var/spool/lock
-        lock		uname=uucp gname=dialer mode=1775
+        lock			uname=uucp gname=dialer mode=1775
         ..
-        output		gname=daemon mode=0775
+        output			gname=daemon mode=0775
         ..
         # ./var/spool/smtpd
         smtpd			type=dir uname=root gname=wheel mode=0711
@@ -1058,11 +786,11 @@ var
             temporary		type=dir uname=_smtpq gname=wheel mode=0700
             ..
         ..
-        #sockets	mode=777
+        #sockets		mode=777
         #..
-        uucp		uname=uucp gname=daemon
+        uucp			uname=uucp gname=daemon
         ..
-        uucppublic	uname=uucp gname=daemon mode=0755
+        uucppublic		uname=uucp gname=daemon mode=0755
         ..
     ..
 
@@ -1070,29 +798,29 @@ var
     unbound
         etc			uname=root gname=wheel mode=0755
         ..
-        db		uname=root gname=_unbound mode=0775
+        db			uname=root gname=_unbound mode=0775
         ..
     ..
 
     # ./var/www
-    www type=dir uname=root gname=daemon mode=755
-        cache type=dir uname=www gname=daemon mode=1700
+    www				type=dir uname=root gname=daemon mode=755
+        cache			type=dir uname=www gname=daemon mode=1700
         ..
         cgi-bin			type=dir uname=root gname=daemon mode=755
         ..
-        htdocs  type=dir uname=root gname=daemon mode=755
+        htdocs			type=dir uname=root gname=daemon mode=755
         ..
-        logs  type=dir uname=root gname=daemon mode=755
+        logs			type=dir uname=root gname=daemon mode=755
         ..
-        conf  type=dir uname=root gname=daemon mode=755
+        conf			type=dir uname=root gname=daemon mode=755
         ..
-        bin  type=dir uname=root gname=daemon mode=755
+        bin			type=dir uname=root gname=daemon mode=755
         ..
-        run  type=dir uname=root gname=daemon mode=755
+        run			type=dir uname=root gname=daemon mode=755
         ..
     ..
 
     # ./var/audit
-    audit type=dir uname=root gname=wheel mode=2770
+    audit			type=dir uname=root gname=wheel mode=2770
     ..
 ..
