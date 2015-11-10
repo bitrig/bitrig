@@ -1,3 +1,4 @@
+.\"	$OpenBSD: uuid.3,v 1.5 2015/11/20 21:05:52 tim Exp $
 .\"	$NetBSD: uuid.3,v 1.7 2008/05/02 18:11:05 martin Exp $
 .\"
 .\" Copyright (c) 2004 The NetBSD Foundation, Inc.
@@ -54,8 +55,8 @@
 .\"
 .\" $FreeBSD: src/lib/libc/uuid/uuid.3,v 1.4 2003/08/08 19:12:28 marcel Exp $
 .\"
-.Dd $Mdocdate: August 31 2014 $
-.Dt UUID 3
+.Dd $Mdocdate: November 20 2015 $
+.Dt UUID_COMPARE 3
 .Os
 .Sh NAME
 .Nm uuid_compare , uuid_create , uuid_create_nil , uuid_equal ,
@@ -176,7 +177,8 @@ and
 .Fn uuid_to_string
 functions return successful or unsuccessful completion status in the
 .Fa status
-argument.
+argument unless it is
+.Dv NULL .
 Possible values are:
 .Bl -tag -width ".Dv uuid_s_invalid_string_uuid"
 .It Dv uuid_s_ok
@@ -188,9 +190,8 @@ The string representation of a UUID is not valid.
 .It Dv uuid_s_no_memory
 Memory could not be allocated for the operation.
 .El
-.Sh SEE ALSO
-.Xr uuidgen 1 ,
-.Xr uuidgen 2
+.\" .Sh SEE ALSO
+.\" .Xr uuidgen 1
 .Sh STANDARDS
 The
 .Fn uuid_compare ,
