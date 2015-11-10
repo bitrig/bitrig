@@ -277,6 +277,11 @@ LIST_HEAD(pmap_head, pmap); /* struct pmap_head: head of a pmap list */
  * page list, and number of PTPs within the pmap.
  */
 
+#define PMAP_TYPE_NORMAL	1
+#define PMAP_TYPE_EPT		2
+#define PMAP_TYPE_RVI		3
+#define pmap_nested(pm) ((pm)->pm_type != PMAP_TYPE_NORMAL)
+
 struct pmap {
 	struct mutex pm_mtx;
 	struct uvm_object pm_obj[PTP_LEVELS-1]; /* objects for lvl >= 1) */
@@ -288,6 +293,7 @@ struct pmap {
 	struct pmap_statistics pm_stats;  /* pmap stats (lck by object lock) */
 
 	u_int64_t pm_cpus;		/* mask of CPUs using pmap */
+	int pm_type;			/* Type of pmap this is (PMAP_TYPE_x) */
 };
 
 /*
@@ -373,6 +379,8 @@ vaddr_t reserve_dumppages(vaddr_t); /* XXX: not a pmap fn */
 paddr_t	pmap_prealloc_lowmem_ptps(paddr_t);
 
 void	pagezero(vaddr_t);
+
+int	pmap_convert(struct pmap *, int);
 
 /* 
  * functions for flushing the cache for vaddrs and pages.
