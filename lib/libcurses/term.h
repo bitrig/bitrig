@@ -1,4 +1,4 @@
-/* $OpenBSD: term.h,v 1.14 2010/01/12 23:21:59 nicm Exp $ */
+/* $OpenBSD: term.h,v 1.15 2015/11/14 23:56:49 deraadt Exp $ */
 
 /****************************************************************************
  * Copyright (c) 1998-2007,2008 Free Software Foundation, Inc.              *
@@ -34,7 +34,7 @@
 /*    and: Thomas E. Dickey                        1995-on                  */
 /****************************************************************************/
 
-/* $Id: term.h,v 1.14 2010/01/12 23:21:59 nicm Exp $ */
+/* $Id: term.h,v 1.15 2015/11/14 23:56:49 deraadt Exp $ */
 
 /*
 **	term.h -- Definition of struct term

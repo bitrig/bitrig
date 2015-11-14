@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.cross,v 1.78 2015/06/05 21:48:35 tobiasu Exp $
+# $OpenBSD: Makefile.cross,v 1.80 2015/11/14 23:56:48 deraadt Exp $
 
 # preconditions for cross build environment
 # build and install the binutils cross package eg bitrig-newbinutils-2.22-arm
