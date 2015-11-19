@@ -1,4 +1,4 @@
-/*	$OpenBSD: ex_tag.c,v 1.20 2014/11/12 16:29:04 millert Exp $	*/
+/*	$OpenBSD: ex_tag.c,v 1.22 2015/11/19 07:53:31 bentley Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -234,10 +234,8 @@ ex_tag_next(SCR *sp, EXCMD *cmdp)
 		return (1);
 	tqp->current = tp;
 
-	if (F_ISSET(tqp, TAG_CSCOPE))
-		(void)cscope_search(sp, tqp, tp);
-	else
-		(void)ctag_search(sp, tp->search, tp->slen, tqp->tag);
+	(void)ctag_search(sp, tp->search, tp->slen, tqp->tag);
+
 	return (0);
 }
 
@@ -265,10 +263,8 @@ ex_tag_prev(SCR *sp, EXCMD *cmdp)
 		return (1);
 	tqp->current = tp;
 
-	if (F_ISSET(tqp, TAG_CSCOPE))
-		(void)cscope_search(sp, tqp, tp);
-	else
-		(void)ctag_search(sp, tp->search, tp->slen, tqp->tag);
+	(void)ctag_search(sp, tp->search, tp->slen, tqp->tag);
+
 	return (0);
 }
 
