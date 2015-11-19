@@ -1,4 +1,4 @@
-/*	$OpenBSD: queue.h,v 1.40 2015/10/30 12:20:56 jasper Exp $	*/
+/*	$OpenBSD: queue.h,v 1.41 2015/11/19 13:38:07 millert Exp $	*/
 /*	$NetBSD: queue.h,v 1.11 1996/05/16 05:17:14 mycroft Exp $	*/
 
 /*
@@ -332,6 +332,14 @@ struct {								\
 		(head)->sqh_last = &(elm)->field.sqe_next;		\
 } while (0)
 
+#define SIMPLEQ_CONCAT(head1, head2) do {				\
+	if (!SIMPLEQ_EMPTY((head2))) {					\
+		*(head1)->sqh_last = (head2)->sqh_first;		\
+		(head1)->sqh_last = (head2)->sqh_last;			\
+		SIMPLEQ_INIT((head2));					\
+	}								\
+} while (0)
+
 /*
  * XOR Simple queue definitions.
  */
@@ -547,6 +555,13 @@ struct {								\
 		swap_first->field.tqe_prev = &(head2)->tqh_first;	\
 	else								\
 		(head2)->tqh_last = &(head2)->tqh_first;		\
+#define TAILQ_CONCAT(head1, head2, field) do {				\
+	if (!TAILQ_EMPTY(head2)) {					\
+		*(head1)->tqh_last = (head2)->tqh_first;		\
+		(head2)->tqh_first->field.tqe_prev = (head1)->tqh_last;	\
+		(head1)->tqh_last = (head2)->tqh_last;			\
+		TAILQ_INIT((head2));					\
+	}								\
 } while (0)
 
 /*
