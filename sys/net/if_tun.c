@@ -1,4 +1,4 @@
-/*	$OpenBSD: if_tun.c,v 1.162 2015/11/20 05:38:10 dlg Exp $	*/
+/*	$OpenBSD: if_tun.c,v 1.163 2015/11/20 12:20:30 mpi Exp $	*/
 /*	$NetBSD: if_tun.c,v 1.24 1996/05/07 02:40:48 thorpej Exp $	*/
 
 /*
@@ -762,40 +762,39 @@ tapread(dev_t dev, struct uio *uio, int ioflag)
 int
 tun_dev_read(struct tun_softc *tp, struct uio *uio, int ioflag)
 {
-	struct ifnet		*ifp;
+	struct ifnet		*ifp = &tp->tun_if;
 	struct mbuf		*m, *m0;
-	size_t			 len;
-	int			 error = 0, s;
-	unsigned int		ifindex;
+	unsigned int		 ifidx;
+	int			 error = 0, len, s;
 
-	ifp = if_ref(&tp->tun_if);
-	ifindex = ifp->if_index;
-	TUNDEBUG(("%s: read\n", ifp->if_xname));
-	if ((tp->tun_flags & TUN_READY) != TUN_READY) {
-		TUNDEBUG(("%s: not ready %#x\n", ifp->if_xname, tp->tun_flags));
-		if_put(ifp);
+	if ((tp->tun_flags & TUN_READY) != TUN_READY)
 		return (EHOSTDOWN);
-	}
 
+	ifidx = ifp->if_index;
 	tp->tun_flags &= ~TUN_RWAIT;
 
 	s = splnet();
 	do {
+		struct ifnet *ifp1;
+		int destroyed;
+
 		while ((tp->tun_flags & TUN_READY) != TUN_READY) {
-			if_put(ifp);
 			if ((error = tsleep((caddr_t)tp,
 			    (PZERO + 1)|PCATCH, "tunread", 0)) != 0) {
 				splx(s);
 				return (error);
 			}
-			if ((ifp = if_get(ifindex)) == NULL) {
+			/* Make sure the interface still exists. */
+			ifp1 = if_get(ifidx);
+			destroyed = (ifp1 == NULL);
+			if_put(ifp1);
+			if (destroyed) {
 				splx(s);
 				return (ENXIO);
 			}
 		}
 		IFQ_DEQUEUE(&ifp->if_snd, m0);
 		if (m0 == NULL) {
-			if_put(ifp);
 			if (tp->tun_flags & TUN_NBIO && ioflag & IO_NDELAY) {
 				splx(s);
 				return (EWOULDBLOCK);
@@ -806,7 +805,11 @@ tun_dev_read(struct tun_softc *tp, struct uio *uio, int ioflag)
 				splx(s);
 				return (error);
 			}
-			if ((ifp = if_get(ifindex)) == NULL) {
+			/* Make sure the interface still exists. */
+			ifp1 = if_get(ifidx);
+			destroyed = (ifp1 == NULL);
+			if_put(ifp1);
+			if (destroyed) {
 				splx(s);
 				return (ENXIO);
 			}
@@ -838,7 +841,6 @@ tun_dev_read(struct tun_softc *tp, struct uio *uio, int ioflag)
 	if (error)
 		ifp->if_oerrors++;
 
-	if_put(ifp);
 	return (error);
 }
 
@@ -1081,10 +1083,7 @@ tun_dev_kqfilter(struct tun_softc *tp, struct knote *kn)
 	struct ifnet		*ifp;
 
 	ifp = &tp->tun_if;
-
-	s = splnet();
 	TUNDEBUG(("%s: tunkqfilter\n", ifp->if_xname));
-	splx(s);
 
 	switch (kn->kn_filter) {
 		case EVFILT_READ:
