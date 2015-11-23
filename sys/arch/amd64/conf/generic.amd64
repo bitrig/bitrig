@@ -23,7 +23,6 @@ option		MTRR		# CPU memory range attributes control
 #option		"KGDB_DEVNAME=\"com\"",KGDBADDR=0x2f8,KGDBRATE=9600
 
 option		HIBERNATE	# Hibernate support
-option		VMM		# VMM support
 
 mainbus0 at root
 
