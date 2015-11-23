@@ -1,4 +1,4 @@
-/*	$OpenBSD: newfs.c,v 1.100 2015/09/29 03:19:24 guenther Exp $	*/
+/*	$OpenBSD: newfs.c,v 1.102 2015/11/23 19:19:30 deraadt Exp $	*/
 /*	$NetBSD: newfs.c,v 1.20 1996/05/16 07:13:03 thorpej Exp $	*/
 
 /*
@@ -83,7 +83,8 @@ void	fatal(const char *fmt, ...)
 	    __attribute__((__format__ (printf, 1, 2)))
 	    __attribute__((__nonnull__ (1)));
 __dead void	usage(void);
-void	mkfs(struct partition *, char *, int, int);
+void	mkfs(struct partition *, char *, int, int, mode_t, uid_t, gid_t);
+void	getphysmem(void);
 void	rewritelabel(char *, int, struct disklabel *);
 u_short	dkcksum(struct disklabel *);
 
@@ -135,6 +136,18 @@ int	unlabeled;
 extern	char *__progname;
 struct disklabel *getdisklabel(char *, int);
 
+int64_t physmem;
+
+void
+getphysmem(void)
+{
+	int mib[] = { CTL_HW, HW_PHYSMEM64 };
+	size_t len = sizeof(physmem);
+	
+	if (sysctl(mib, 2, &physmem, &len, NULL, 0) != 0)
+		err(1, "can't get physmem");
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -155,6 +168,7 @@ main(int argc, char *argv[])
 	int fssize_usebytes = 0;
 	u_int64_t nsecs;
 
+	getphysmem();
 	maxpartitions = getmaxpartitions();
 	if (maxpartitions > 26)
 		fatal("insane maxpartitions value %d", maxpartitions);
@@ -320,24 +334,32 @@ main(int argc, char *argv[])
 		fatal("%s: %s", special, strerror(errno));
 	if (fstat(fsi, &st) < 0)
 		fatal("%s: %s", special, strerror(errno));
-	if (S_ISBLK(st.st_mode))
-		fatal("%s: block device", special);
-	if (!S_ISCHR(st.st_mode))
-		warnx("%s: not a character-special device", special);
+	if (!mfs) {
+		if (S_ISBLK(st.st_mode))
+			fatal("%s: block device", special);
+		if (!S_ISCHR(st.st_mode))
+			warnx("%s: not a character-special device",
+			    special);
+	}
 	cp = strchr(argv[0], '\0') - 1;
 	if (cp == NULL ||
 	    ((*cp < 'a' || *cp > ('a' + maxpartitions - 1))
 	    && !isdigit((unsigned char)*cp)))
-		fatal("%s: can't figure out file system partition", argv[0]);
+		fatal("%s: can't figure out file system partition",
+		    argv[0]);
 	lp = getdisklabel(special, fsi);
+	if (pledge("stdio disklabel tty", NULL) == -1)
+		err(1, "pledge");
 	if (isdigit((unsigned char)*cp))
 		pp = &lp->d_partitions[0];
 	else
 		pp = &lp->d_partitions[*cp - 'a'];
 	if (DL_GETPSIZE(pp) == 0)
-		fatal("%s: `%c' partition is unavailable", argv[0], *cp);
+		fatal("%s: `%c' partition is unavailable",
+		    argv[0], *cp);
 	if (pp->p_fstype == FS_BOOT)
-		fatal("%s: `%c' partition overlaps boot program", argv[0], *cp);
+		fatal("%s: `%c' partition overlaps boot program",
+		      argv[0], *cp);
 havelabel:
 	if (sectorsize == 0) {
 		sectorsize = lp->d_secsize;
