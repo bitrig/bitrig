@@ -1,4 +1,4 @@
-/*	$OpenBSD: bwi.c,v 1.121 2015/11/12 10:25:03 dlg Exp $	*/
+/*	$OpenBSD: bwi.c,v 1.122 2015/11/25 03:09:58 dlg Exp $	*/
 
 /*
  * Copyright (c) 2007 The DragonFly Project.  All rights reserved.
@@ -7086,7 +7086,7 @@ bwi_init_statechg(struct bwi_softc *sc, int statechg)
 	bwi_enable_intrs(sc, BWI_INIT_INTRS);
 
 	ifp->if_flags |= IFF_RUNNING;
-	ifp->if_flags &= ~IFF_OACTIVE;
+	ifq_clr_oactive(&ifp->if_snd);
 
 	if (statechg) {
 		if (ic->ic_opmode != IEEE80211_M_MONITOR) {
@@ -7179,7 +7179,7 @@ bwi_start(struct ifnet *ifp)
 	struct bwi_txbuf_data *tbd = &sc->sc_tx_bdata[BWI_TX_DATA_RING];
 	int trans, idx;
 
-	if ((ifp->if_flags & IFF_OACTIVE) || (ifp->if_flags & IFF_RUNNING) == 0)
+	if (ifq_is_oactive(&ifp->if_snd) || (ifp->if_flags & IFF_RUNNING) == 0)
 		return;
 
 	trans = 0;
@@ -7262,7 +7262,7 @@ bwi_start(struct ifnet *ifp)
 		idx = (idx + 1) % BWI_TX_NDESC;
 
 		if (tbd->tbd_used + BWI_TX_NSPRDESC >= BWI_TX_NDESC) {
-			ifp->if_flags |= IFF_OACTIVE;
+			ifq_set_oactive(&ifp->if_snd);
 			break;
 		}
 	}
@@ -7354,7 +7354,8 @@ bwi_stop(struct bwi_softc *sc, int state_chg)
 
 	sc->sc_tx_timer = 0;
 	ifp->if_timer = 0;
-	ifp->if_flags &= ~(IFF_RUNNING | IFF_OACTIVE);
+	ifp->if_flags &= ~IFF_RUNNING;
+	ifq_clr_oactive(&ifp->if_snd);
 
 	/* power off cardbus socket */
 	if (sc->sc_disable)
@@ -9065,7 +9066,7 @@ bwi_txeof_status32(struct bwi_softc *sc)
 	CSR_WRITE_4(sc, ctrl_base + BWI_RX32_INDEX,
 	    end_idx * sizeof(struct bwi_desc32));
 
-	if ((ifp->if_flags & IFF_OACTIVE) == 0)
+	if (ifq_is_oactive(&ifp->if_snd) == 0)
 		ifp->if_start(ifp);
 }
 
@@ -9109,7 +9110,7 @@ _bwi_txeof(struct bwi_softc *sc, uint16_t tx_id)
 	if (tbd->tbd_used == 0)
 		sc->sc_tx_timer = 0;
 
-	ifp->if_flags &= ~IFF_OACTIVE;
+	ifq_clr_oactive(&ifp->if_snd);
 }
 
 void
@@ -9154,7 +9155,7 @@ bwi_txeof(struct bwi_softc *sc)
 		ifp->if_opackets++;
 	}
 
-	if ((ifp->if_flags & IFF_OACTIVE) == 0)
+	if (ifq_is_oactive(&ifp->if_snd) == 0)
 		ifp->if_start(ifp);
 }
 

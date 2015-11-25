@@ -1,4 +1,4 @@
-/*	$OpenBSD: if_nfe.c,v 1.115 2015/11/24 17:11:39 mpi Exp $	*/
+/*	$OpenBSD: if_nfe.c,v 1.116 2015/11/25 03:09:59 dlg Exp $	*/
 
 /*-
  * Copyright (c) 2006, 2007 Damien Bergamini <damien.bergamini@free.fr>
@@ -848,7 +848,7 @@ skip:		sc->txq.queued--;
 	}
 
 	if (data != NULL) {	/* at least one slot freed */
-		ifp->if_flags &= ~IFF_OACTIVE;
+		ifq_clr_oactive(&ifp->if_snd);
 		nfe_start(ifp);
 	}
 }
@@ -965,7 +965,7 @@ nfe_start(struct ifnet *ifp)
 	int old = sc->txq.cur;
 	struct mbuf *m0;
 
-	if ((ifp->if_flags & (IFF_RUNNING | IFF_OACTIVE)) != IFF_RUNNING)
+	if (!(ifp->if_flags & IFF_RUNNING) || ifq_is_oactive(&ifp->if_snd))
 		return;
 
 	for (;;) {
@@ -975,7 +975,7 @@ nfe_start(struct ifnet *ifp)
 
 		if (nfe_encap(sc, m0) != 0) {
 			ifq_deq_rollback(&ifp->if_snd, m0);
-			ifp->if_flags |= IFF_OACTIVE;
+			ifq_set_oactive(&ifp->if_snd);
 			break;
 		}
 
@@ -1116,7 +1116,7 @@ nfe_init(struct ifnet *ifp)
 	timeout_add_sec(&sc->sc_tick_ch, 1);
 
 	ifp->if_flags |= IFF_RUNNING;
-	ifp->if_flags &= ~IFF_OACTIVE;
+	ifq_clr_oactive(&ifp->if_snd);
 
 	return 0;
 }
@@ -1129,7 +1129,8 @@ nfe_stop(struct ifnet *ifp, int disable)
 	timeout_del(&sc->sc_tick_ch);
 
 	ifp->if_timer = 0;
-	ifp->if_flags &= ~(IFF_RUNNING | IFF_OACTIVE);
+	ifp->if_flags &= ~IFF_RUNNING;
+	ifq_clr_oactive(&ifp->if_snd);
 
 	mii_down(&sc->sc_mii);
 
