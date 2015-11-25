@@ -1,4 +1,4 @@
-/*	$OpenBSD: stack_protector.c,v 1.16 2015/01/16 16:48:51 deraadt Exp $	*/
+/*	$OpenBSD: stack_protector.c,v 1.20 2015/11/25 00:16:40 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2002 Hiroaki Etoh, Federico G. Schwindt, and Miodrag Vallat.
@@ -46,10 +46,11 @@ void __attribute__((noreturn)) __stack_chk_fail(void);
 void
 __stack_smash_handler(const char func[], int damaged)
 {
-	struct syslog_data sdata = SYSLOG_DATA_INIT;
-	const char *message = "stack overflow in function %s";
+	extern char *__progname;
 	struct sigaction sa;
 	sigset_t mask;
+	char buf[1024];
+	size_t len;
 
 	/* clang can't tell us the function */
 	if (func == NULL) {
@@ -62,8 +63,16 @@ __stack_smash_handler(const char func[], int damaged)
 	sigdelset(&mask, SIGABRT);
 	sigprocmask(SIG_BLOCK, &mask, NULL);
 
-	/* This may fail on a chroot jail... */
-	syslog_r(LOG_CRIT, &sdata, message, func);
+	/* <10> is LOG_CRIT */
+	len = strlcpy(buf, "<10>", sizeof buf);
+	strlcpy(buf + len, __progname, sizeof buf - len);
+
+	/* truncate progname in case it is too long */
+	buf[sizeof(buf) / 2] = '\0';
+	strlcat(buf, ": stack overflow in function ", sizeof buf);
+	strlcat(buf, func, sizeof buf);
+
+	sendsyslog2(buf, strlen(buf), LOG_CONS);
 
 	bzero(&sa, sizeof(struct sigaction));
 	sigemptyset(&sa.sa_mask);
