@@ -1,4 +1,4 @@
-#	$OpenBSD: install.md,v 1.43 2015/10/09 18:30:54 rpe Exp $
+#	$OpenBSD: install.md,v 1.67 2015/12/02 21:17:17 krw Exp $
 #
 #
 # Copyright (c) 1996 The NetBSD Foundation, Inc.
@@ -104,7 +104,9 @@ __EOT
 			fdisk -e ${_disk}
 			fdisk $_disk | grep -q ' A6 ' && return
 			echo No Bitrig partition in MBR, try again. ;;
-		b*|B*)	return ;;
+		b*|B*
+			[[ $_d == Bitrig ]] || continue
+			return ;;
 		esac
 	done
 }
