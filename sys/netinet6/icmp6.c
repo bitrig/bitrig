@@ -1,4 +1,4 @@
-/*	$OpenBSD: icmp6.c,v 1.180 2015/12/02 13:29:26 claudio Exp $	*/
+/*	$OpenBSD: icmp6.c,v 1.181 2015/12/02 16:35:53 bluhm Exp $	*/
 /*	$KAME: icmp6.c,v 1.217 2001/06/20 15:03:29 jinmei Exp $	*/
 
 /*
@@ -1958,7 +1958,7 @@ icmp6_mtudisc_timeout(struct rtentry *rt, struct rttimer *r)
 		int s;
 
 		s = splsoftnet();
-		rtdeletemsg(rt, r->rtt_tableid);
+		rtdeletemsg(rt, NULL, r->rtt_tableid);
 		splx(s);
 	} else {
 		if (!(rt->rt_rmx.rmx_locks & RTV_MTU))
@@ -1976,7 +1976,7 @@ icmp6_redirect_timeout(struct rtentry *rt, struct rttimer *r)
 		int s;
 
 		s = splsoftnet();
-		rtdeletemsg(rt, r->rtt_tableid);
+		rtdeletemsg(rt, NULL, r->rtt_tableid);
 		splx(s);
 	}
 }
