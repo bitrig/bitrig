@@ -1,0 +1,119 @@
+.\"	$OpenBSD: vmctl.8,v 1.1 2015/12/03 21:45:45 reyk Exp $
+.\"
+.\" Copyright (c) 2015 Mike Larkin <mlarkin@openbsd.org>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd $Mdocdate: December 3 2015 $
+.Dt VMCTL 8
+.Os
+.Sh NAME
+.Nm vmctl
+.Nd control the virtual machine daemon
+.Sh SYNOPSIS
+.Nm
+.Op Fl s Ar socket
+.Ar command
+.Op Ar arg ...
+.Sh DESCRIPTION
+The
+.Nm
+utility is used to control the virtual machine monitor (VMM) subsystem.
+A VMM manages virtual machines (VMs) on a
+.Ar host .
+The VMM subsystem is responsible for creating, destroying, and executing
+VMs.
+.Pp
+Within the commands,
+the
+.Ar bytes
+argument can be specified with a human-readable scale,
+using the format described in
+.Xr scan_scaled 3 .
+.Sh VM COMMANDS
+The options are as follows:
+.Bl -tag -width Ds
+.It Cm create Ar path Fl s Ar bytes
+Creates a VM disk image file with the specified pathname and size,
+rounded to megabytes.
+.It Xo Cm start Ar name
+.Fl k Ar path
+.Fl m Ar bytes
+.Op Fl d Ar path
+.Op Fl i Ar count
+.Xc
+Starts a VM defined by the specified name and parameters:
+.Bl -tag -width "memory size"
+.It Fl d Ar path
+Disk image file (may be specified multiple times to add multiple disk images).
+.It Fl k Ar path
+Kernel to load when booting the VM.
+.It Fl m Ar bytes
+Memory size of the VM, in bytes, rounded to megabytes.
+.It Fl i Ar count
+Number of network interfaces to add to the VM.
+.El
+.It Cm status Op Ar id
+Lists VMs running on the host, optionally listing just the selected VM
+.Ar id .
+.It Cm stop Ar id
+Stops (terminates) a VM defined by the specified VM
+.Ar id .
+.El
+.Sh FILES
+.Bl -tag -width "/etc/var/run/vmd.sockXX" -compact
+.It Pa /etc/vm.conf
+Default configuration file.
+.It Pa /var/run/vmd.sock
+.Ux Ns -domain
+socket used for communication with
+.Xr vmd 8 .
+.El
+.Sh EXIT STATUS
+.Ex -std vmctl
+.Nm
+may fail due to one of the following reasons:
+.Pp
+.Bl -bullet -compact
+.It
+The VMM subsystem could not be enabled or disabled as requested.
+.It
+A requested VM-based operation could not be completed.
+.El
+.Sh EXAMPLES
+Create a 4.5 Gigabyte disk image, disk.img:
+.Dl $ vmctl create disk.img -s 4.5G
+.Pp
+Create a new VM with 512MB memory, one network interface, one disk image
+('disk.img') and boot from kernel '/bsd':
+.Bd -literal -offset indent
+$ vmctl start "myvm" -m 512M -i 1 -d disk.img -k /bsd
+.Ed
+.Pp
+Terminate VM number 1:
+.Dl $ vmctl stop 1
+.Sh SEE ALSO
+.Xr vmm 4 ,
+.Xr vm.conf 5 ,
+.Xr rc.conf 8 ,
+.Xr vmd 8
+.Sh HISTORY
+The
+.Nm
+command first appeared in
+.Ox 5.9 .
+.Sh AUTHORS
+.An -nosplit
+.An Mike Larkin Aq Mt mlarkin@openbsd.org
+and
+.An Reyk Floeter Aq Mt reyk@openbsd.org .
