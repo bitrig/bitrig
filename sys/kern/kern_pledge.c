@@ -1,4 +1,4 @@
-/*	$OpenBSD: kern_pledge.c,v 1.131 2015/12/04 06:01:55 deraadt Exp $	*/
+/*	$OpenBSD: kern_pledge.c,v 1.132 2015/12/04 07:33:05 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2015 Nicholas Marriott <nicm@openbsd.org>
@@ -273,6 +273,9 @@ const u_int pledge_syscalls[SYS_MAXSYSCALL] = {
 	[SYS_mkdir] = PLEDGE_CPATH,
 	[SYS_mkdirat] = PLEDGE_CPATH,
 
+	[SYS_mkfifo] = PLEDGE_DPATH,
+	[SYS_mknod] = PLEDGE_DPATH,
+
 	[SYS_chroot] = PLEDGE_ID,	/* also requires PLEDGE_PROC */
 
 	[SYS_revoke] = PLEDGE_TTY,	/* also requires PLEDGE_RPATH */
@@ -325,9 +328,11 @@ static const struct {
 	int flags;
 } pledgereq[] = {
 	{ "abort",		0 },	/* XXX reserve for later */
+	{ "audio",		PLEDGE_AUDIO },
 	{ "cpath",		PLEDGE_CPATH },
 	{ "disklabel",		PLEDGE_DISKLABEL },
 	{ "dns",		PLEDGE_DNS },
+	{ "dpath",		PLEDGE_DPATH },
 	{ "exec",		PLEDGE_EXEC },
 	{ "fattr",		PLEDGE_FATTR },
 	{ "flock",		PLEDGE_FLOCK },
