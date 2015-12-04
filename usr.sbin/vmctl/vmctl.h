@@ -22,6 +22,8 @@
 #ifndef VMCTL_PARSER_H
 #define VMCTL_PARSER_H
 
+#define VMCTL_CU	"/usr/bin/cu"
+
 enum actions {
 	NONE,
 	CMD_CREATE,
@@ -69,7 +71,7 @@ int	 parse(int, char *[]);
 /* vmctl.c */
 int	 create_imagefile(const char *, long);
 int	 start_vm(const char *, int, int, int, char **, char *);
-int	 start_vm_complete(struct imsg *, int *);
+int	 start_vm_complete(struct imsg *, int *, int);
 void	 terminate_vm(uint32_t);
 int	 terminate_vm_complete(struct imsg *, int *);
 void	 get_info_vm(uint32_t);
