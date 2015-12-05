@@ -293,8 +293,8 @@ print_vm_info(struct vmop_info_result *list, size_t ct)
 	size_t i, j;
 	char *vcpu_state;
 
-	printf("%5s %5s %5s %9s %*s %s\n", "ID", "PID", "VCPUS", "MAXMEM",
-	    VM_TTYNAME_MAX, "TTY", "NAME");
+	printf("%5s %5s %5s %9s   %s\n", "ID", "PID", "VCPUS", "MAXMEM",
+	    "NAME");
 	for (i = 0; i < ct; i++) {
 		vir = &list[i].vir_info;
 		if (info_id == 0 || info_id == vir->vir_id)
