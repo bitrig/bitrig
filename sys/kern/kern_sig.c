@@ -1,4 +1,4 @@
-/*	$OpenBSD: kern_sig.c,v 1.189 2015/11/02 16:31:55 semarie Exp $	*/
+/*	$OpenBSD: kern_sig.c,v 1.191 2015/12/05 10:11:53 tedu Exp $	*/
 /*	$NetBSD: kern_sig.c,v 1.54 1996/04/22 01:38:32 christos Exp $	*/
 
 /*
@@ -223,7 +223,6 @@ sigactsfree(struct process *pr)
 	pool_put(&sigacts_pool, ps);
 }
 
-/* ARGSUSED */
 int
 sys_sigaction(struct proc *p, void *v, register_t *retval)
 {
@@ -462,7 +461,6 @@ sys_sigprocmask(struct proc *p, void *v, register_t *retval)
 	return (error);
 }
 
-/* ARGSUSED */
 int
 sys_sigpending(struct proc *p, void *v, register_t *retval)
 {
@@ -490,7 +488,6 @@ dosigsuspend(struct proc *p, sigset_t newmask)
  * in the meantime.  Note nonstandard calling convention:
  * libc stub passes mask, not pointer, to save a copyin.
  */
-/* ARGSUSED */
 int
 sys_sigsuspend(struct proc *p, void *v, register_t *retval)
 {
@@ -1616,7 +1613,6 @@ coredump_unmap(void *cookie, vaddr_t start, vaddr_t end)
  * Nonexistent system call-- signal process (may want to handle it).
  * Flag error in case process won't see signal immediately (blocked or ignored).
  */
-/* ARGSUSED */
 int
 sys_nosys(struct proc *p, void *v, register_t *retval)
 {

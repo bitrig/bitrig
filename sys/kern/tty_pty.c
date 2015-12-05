@@ -1,4 +1,4 @@
-/*	$OpenBSD: tty_pty.c,v 1.73 2015/11/02 16:31:55 semarie Exp $	*/
+/*	$OpenBSD: tty_pty.c,v 1.74 2015/12/05 10:11:53 tedu Exp $	*/
 /*	$NetBSD: tty_pty.c,v 1.33.4.1 1996/06/02 09:08:11 mrg Exp $	*/
 
 /*
@@ -216,7 +216,6 @@ ptyattach(int n)
 	npty = n;
 }
 
-/*ARGSUSED*/
 int
 ptsopen(dev_t dev, int flag, int devtype, struct proc *p)
 {
@@ -394,7 +393,6 @@ ptcwakeup(struct tty *tp, int flag)
 
 int ptcopen(dev_t, int, int, struct proc *);
 
-/*ARGSUSED*/
 int
 ptcopen(dev_t dev, int flag, int devtype, struct proc *p)
 {
@@ -421,7 +419,6 @@ ptcopen(dev_t dev, int flag, int devtype, struct proc *p)
 	return (0);
 }
 
-/*ARGSUSED*/
 int
 ptcclose(dev_t dev, int flag, int devtype, struct proc *p)
 {
@@ -755,7 +752,6 @@ ptytty(dev_t dev)
 	return (tp);
 }
 
-/*ARGSUSED*/
 int
 ptyioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 {
