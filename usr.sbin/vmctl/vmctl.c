@@ -130,8 +130,7 @@ start_vm_complete(struct imsg *imsg, int *ret, int autoconnect)
 			/* Only returns on error */
 			if (execl(VMCTL_CU, VMCTL_CU,
 			    "-l", vmr->vmr_ttyname, "-s", "9600", NULL) == -1) {
-				fprintf(stderr, "%s: failed to open "
-				    "the console\n", __progname);
+				warn("failed to open the console");
 				*ret = errno;
 			}
 		} else {
