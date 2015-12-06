@@ -1,4 +1,4 @@
-/*	$OpenBSD: newfs.c,v 1.102 2015/11/23 19:19:30 deraadt Exp $	*/
+/*	$OpenBSD: newfs.c,v 1.104 2015/12/06 11:56:47 tobias Exp $	*/
 /*	$NetBSD: newfs.c,v 1.20 1996/05/16 07:13:03 thorpej Exp $	*/
 
 /*
@@ -334,20 +334,25 @@ main(int argc, char *argv[])
 		fatal("%s: %s", special, strerror(errno));
 	if (fstat(fsi, &st) < 0)
 		fatal("%s: %s", special, strerror(errno));
-	if (S_ISBLK(st.st_mode))
-		fatal("%s: block device", special);
-	if (!S_ISCHR(st.st_mode))
-		warnx("%s: not a character-special device",
-		    special);
-	cp = strchr(argv[0], '\0') - 1;
-	if (cp == NULL ||
-	    ((*cp < 'a' || *cp > ('a' + maxpartitions - 1))
-	    && !isdigit((unsigned char)*cp)))
+	if (!mfs) {
+		if (S_ISBLK(st.st_mode))
+			fatal("%s: block device", special);
+		if (!S_ISCHR(st.st_mode))
+			warnx("%s: not a character-special device",
+			    special);
+	}
+	if (*argv[0] == '\0')
+		fatal("empty partition name supplied");
+	cp = argv[0] + strlen(argv[0]) - 1;
+	if ((*cp < 'a' || *cp > ('a' + maxpartitions - 1))
+	    && !isdigit((unsigned char)*cp))
 		fatal("%s: can't figure out file system partition",
 		    argv[0]);
 	lp = getdisklabel(special, fsi);
-	if (pledge("stdio disklabel tty", NULL) == -1)
-		err(1, "pledge");
+	if (!mfs) {
+		if (pledge("stdio disklabel tty", NULL) == -1)
+			err(1, "pledge");
+	}
 	if (isdigit((unsigned char)*cp))
 		pp = &lp->d_partitions[0];
 	else
