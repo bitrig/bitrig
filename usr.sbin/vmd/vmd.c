@@ -131,8 +131,7 @@ vmd_dispatch_vmm(int fd, struct privsep_proc *p, struct imsg *imsg)
 		vmr.vmr_result = res;
 		(void)strlcpy(vmr.vmr_ttyname, vm->vm_ttyname,
 		    sizeof(vmr.vmr_ttyname));
-		if (proc_compose_imsg(ps, PROC_CONTROL, -1,
-		    IMSG_VMDOP_START_VM_RESPONSE,
+		if (proc_compose_imsg(ps, PROC_CONTROL, -1, imsg->hdr.type,
 		    vm->vm_peerid, -1, &vmr, sizeof(vmr)) == -1) {
 			vm_remove(vm);
 			return (-1);

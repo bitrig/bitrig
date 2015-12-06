@@ -71,6 +71,11 @@ struct vmop_info_result {
 	char			 vir_ttyname[VM_TTYNAME_MAX];
 };
 
+struct vmop_info_result {
+	struct vm_info_result	 vir_info;
+	char			 vir_ttyname[VM_TTYNAME_MAX];
+};
+
 struct vmd_vm {
 	struct vm_create_params	 vm_params;
 	uint32_t		 vm_vmid;
