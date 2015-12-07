@@ -1,4 +1,4 @@
-/*	$OpenBSD: ex_source.c,v 1.9 2014/11/12 04:28:41 bentley Exp $	*/
+/*	$OpenBSD: ex_source.c,v 1.10 2015/12/07 20:39:19 mmcc Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994

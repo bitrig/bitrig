@@ -1,4 +1,4 @@
-/*	$OpenBSD: v_paragraph.c,v 1.7 2014/11/12 04:28:41 bentley Exp $	*/
+/*	$OpenBSD: v_paragraph.c,v 1.8 2015/12/07 20:39:19 mmcc Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994

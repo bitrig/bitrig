@@ -1,4 +1,4 @@
-/*	$OpenBSD: main.c,v 1.30 2015/11/20 04:12:19 bentley Exp $	*/
+/*	$OpenBSD: main.c,v 1.31 2015/12/07 20:39:19 mmcc Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -349,7 +349,8 @@ editor(GS *gp, int argc, char *argv[])
 	if (*argv != NULL) {
 		if (sp->frp != NULL) {
 			/* Cheat -- we know we have an extra argv slot. */
-			*--argv = strdup(sp->frp->name);
+			l = strlen(sp->frp->name) + 1;
+			MALLOC_NOMSG(sp, *--argv, l);
 			if (*argv == NULL) {
 				v_estr(gp->progname, errno, NULL);
 				goto err;
@@ -544,7 +545,10 @@ v_obsolete(char *name, char *argv[])
 				if (argv[0] == NULL)
 					goto nomem;
 			} else  {
-				if (asprintf(&argv[0], "-c%s", argv[0] + 1) == -1)
+				p = argv[0];
+				len = strlen(argv[0]);
+				MALLOC_NOMSG(NULL, argv[0], len + 2);
+				if (argv[0] == NULL)
 					goto nomem;
 			}
 		} else if (argv[0][0] == '-') {

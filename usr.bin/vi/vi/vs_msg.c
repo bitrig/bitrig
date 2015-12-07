@@ -1,4 +1,4 @@
-/*	$OpenBSD: vs_msg.c,v 1.14 2015/04/24 21:48:31 brynet Exp $	*/
+/*	$OpenBSD: vs_msg.c,v 1.15 2015/12/07 20:39:19 mmcc Exp $	*/
 
 /*-
  * Copyright (c) 1993, 1994

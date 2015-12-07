@@ -1,4 +1,4 @@
-/*	$OpenBSD: util.c,v 1.11 2015/03/28 12:54:37 bcallah Exp $	*/
+/*	$OpenBSD: util.c,v 1.12 2015/12/07 20:39:19 mmcc Exp $	*/
 
 /*-
  * Copyright (c) 1991, 1993, 1994
@@ -35,7 +35,7 @@ binc(SCR *sp, void *bp, size_t *bsizep, size_t min)
 	if (min && *bsizep >= min)
 		return (bp);
 
-	csize = *bsizep + MAX(min, 256);
+	csize = *bsizep + MAXIMUM(min, 256);
 	REALLOC(sp, bp, csize);
 
 	if (bp == NULL) {

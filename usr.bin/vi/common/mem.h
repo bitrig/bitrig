@@ -1,4 +1,4 @@
-/*	$OpenBSD: mem.h,v 1.6 2014/10/14 22:23:12 deraadt Exp $	*/
+/*	$OpenBSD: mem.h,v 1.7 2015/12/07 20:39:19 mmcc Exp $	*/
 
 /*-
  * Copyright (c) 1993, 1994
@@ -110,44 +110,50 @@
 } while (0)
 
 /*
- * Malloc a buffer.  Various versions.
+ * Malloc a buffer, casting the return pointer.  Various versions.
  */
-#define	CALLOC(sp, p, nmemb, size) do {					\
+#define	CALLOC(sp, p, nmemb, size) {					\
 	if (((p) = calloc((nmemb), (size))) == NULL)			\
 		msgq((sp), M_SYSERR, NULL);				\
-} while (0)
-#define	CALLOC_GOTO(sp, p, nmemb, size) do {				\
+}
+#define	CALLOC_GOTO(sp, p, nmemb, size) {				\
 	if (((p) = calloc((nmemb), (size))) == NULL)			\
 		goto alloc_err;						\
-} while (0)
-#define	CALLOC_RET(sp, p, nmemb, size) do {				\
+}
+#define	CALLOC_NOMSG(sp, p, nmemb, size) {				\
+	(p) = calloc((nmemb), (size));					\
+}
+#define	CALLOC_RET(sp, p, nmemb, size) {				\
 	if (((p) = calloc((nmemb), (size))) == NULL) {			\
 		msgq((sp), M_SYSERR, NULL);				\
 		return (1);						\
 	}								\
 } while (0)
 
-#define	MALLOC(sp, p, size) do {					\
+#define	MALLOC(sp, p, size) {						\
 	if (((p) = malloc(size)) == NULL)				\
 		msgq((sp), M_SYSERR, NULL);				\
-} while (0)
-#define	MALLOC_GOTO(sp, p, size) do {					\
+}
+#define	MALLOC_GOTO(sp, p, size) {					\
 	if (((p) = malloc(size)) == NULL)				\
 		goto alloc_err;						\
-} while (0)
-#define	MALLOC_RET(sp, p, size) do {					\
+}
+#define	MALLOC_NOMSG(sp, p, size) {					\
+	(p) = malloc(size);						\
+}
+#define	MALLOC_RET(sp, p, size) {					\
 	if (((p) = malloc(size)) == NULL) {				\
 		msgq((sp), M_SYSERR, NULL);				\
 		return (1);						\
 	}								\
 } while (0)
 
-#define	REALLOC(sp, p, size) do {					\
+#define	REALLOC(sp, p, size) {						\
 	if (((p) = (realloc((p), (size)))) == NULL)			\
 		msgq((sp), M_SYSERR, NULL);				\
 } while (0)
 
-#define	REALLOCARRAY(sp, p, nelem, size) do {				\
+#define	REALLOCARRAY(sp, p, nelem, size) {				\
 	if (((p) = (reallocarray((p), (nelem), (size)))) == NULL)	\
 		msgq((sp), M_SYSERR, NULL);				\
 } while (0)

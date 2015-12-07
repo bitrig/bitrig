@@ -1,4 +1,4 @@
-/*	$OpenBSD: ex_tag.c,v 1.22 2015/11/19 07:53:31 bentley Exp $	*/
+/*	$OpenBSD: ex_tag.c,v 1.23 2015/12/07 20:39:19 mmcc Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994

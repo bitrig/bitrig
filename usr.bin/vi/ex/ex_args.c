@@ -1,4 +1,4 @@
-/*	$OpenBSD: ex_args.c,v 1.10 2014/11/12 04:28:41 bentley Exp $	*/
+/*	$OpenBSD: ex_args.c,v 1.11 2015/12/07 20:39:19 mmcc Exp $	*/
 
 /*-
  * Copyright (c) 1991, 1993, 1994
@@ -76,7 +76,8 @@ ex_next(SCR *sp, EXCMD *cmdp)
 		sp->cargv = NULL;
 
 		/* Create a new list. */
-		CALLOC_RET(sp, sp->argv, cmdp->argc + 1, sizeof(char *));
+		CALLOC_RET(sp,
+		    sp->argv, cmdp->argc + 1, sizeof(char *));
 		for (ap = sp->argv,
 		    argv = cmdp->argv; argv[0]->len != 0; ++ap, ++argv)
 			if ((*ap =

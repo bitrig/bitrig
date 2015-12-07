@@ -1,4 +1,4 @@
-/*	$OpenBSD: ex_script.c,v 1.21 2014/11/12 16:29:04 millert Exp $	*/
+/*	$OpenBSD: ex_script.c,v 1.22 2015/12/07 20:39:19 mmcc Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994

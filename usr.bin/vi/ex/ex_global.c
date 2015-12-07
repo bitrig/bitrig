@@ -1,4 +1,4 @@
-/*	$OpenBSD: ex_global.c,v 1.13 2014/11/12 04:28:41 bentley Exp $	*/
+/*	$OpenBSD: ex_global.c,v 1.14 2015/12/07 20:39:19 mmcc Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -163,7 +163,7 @@ usage:		ex_emsg(sp, cmdp->cmd->usage, EXM_USAGE);
 		len = 1;
 	}
 
-	CALLOC_RET(sp, ecp->cp, 2, len);
+	MALLOC_RET(sp, ecp->cp, len * 2);
 	ecp->o_cp = ecp->cp;
 	ecp->o_clen = len;
 	memcpy(ecp->cp + len, p, len);

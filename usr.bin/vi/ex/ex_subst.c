@@ -1,4 +1,4 @@
-/*	$OpenBSD: ex_subst.c,v 1.23 2015/11/19 07:53:31 bentley Exp $	*/
+/*	$OpenBSD: ex_subst.c,v 1.24 2015/12/07 20:39:19 mmcc Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -302,7 +302,7 @@ ex_subtilde(SCR *sp, EXCMD *cmdp)
 
 #define	BUILD(sp, l, len) {						\
 	if (lbclen + (len) > lblen) {					\
-		lblen += MAX(lbclen + (len), 256);			\
+		lblen += MAXIMUM(lbclen + (len), 256);			\
 		REALLOC((sp), lb, lblen);				\
 		if (lb == NULL) {					\
 			lbclen = 0;					\
@@ -315,7 +315,7 @@ ex_subtilde(SCR *sp, EXCMD *cmdp)
 
 #define	NEEDSP(sp, len, pnt) {						\
 	if (lbclen + (len) > lblen) {					\
-		lblen += MAX(lbclen + (len), 256);			\
+		lblen += MAXIMUM(lbclen + (len), 256);			\
 		REALLOC((sp), lb, lblen);				\
 		if (lb == NULL) {					\
 			lbclen = 0;					\
