@@ -64,6 +64,8 @@ ipmi0	at mainbus? disable	# IPMI
 
 vmt0	at pvbus?		# VMware Tools
 
+#xen0	at pvbus?		# Xen HVM domU
+
 option		PCIVERBOSE
 option		USBVERBOSE
 
