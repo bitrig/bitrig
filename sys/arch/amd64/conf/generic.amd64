@@ -593,7 +593,7 @@ hifn*	at pci?			# Hi/fn 7751 crypto card
 ubsec*	at pci?			# Bluesteel Networks 5xxx crypto card
 safe*	at pci?			# SafeNet SafeXcel 1141/1741
 
-xspd0  at pci?			# XenSource Platform Device
+#xspd0  at pci?			# XenSource Platform Device
 
 # 1-Wire devices
 option ONEWIREVERBOSE
