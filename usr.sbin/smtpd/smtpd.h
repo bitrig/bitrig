@@ -1,4 +1,4 @@
-/*	$OpenBSD: smtpd.h,v 1.497 2015/12/11 21:44:01 gilles Exp $	*/
+/*	$OpenBSD: smtpd.h,v 1.498 2015/12/12 08:35:19 gilles Exp $	*/
 
 /*
  * Copyright (c) 2008 Gilles Chehade <gilles@poolp.org>
@@ -1060,11 +1060,13 @@ enum ca_resp_status {
 struct ca_cert_req_msg {
 	uint64_t		reqid;
 	char			name[HOST_NAME_MAX+1];
+	int			fallback;
 };
 
 struct ca_cert_resp_msg {
 	uint64_t		reqid;
 	enum ca_resp_status	status;
+	char			name[HOST_NAME_MAX+1];
 	char		       *cert;
 	off_t			cert_len;
 };
@@ -1072,6 +1074,7 @@ struct ca_cert_resp_msg {
 struct ca_vrfy_req_msg {
 	uint64_t		reqid;
 	char			name[HOST_NAME_MAX+1];
+	int			fallback;
 	unsigned char  	       *cert;
 	off_t			cert_len;
 	size_t			n_chain;
