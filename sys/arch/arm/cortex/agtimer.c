@@ -1,4 +1,4 @@
-/* $OpenBSD: agtimer.c,v 1.3 2015/05/29 05:48:07 jsg Exp $ */
+/* $OpenBSD: agtimer.c,v 1.5 2015/12/12 19:57:00 mmcc Exp $ */
 /*
  * Copyright (c) 2011 Dale Rahn <drahn@openbsd.org>
  * Copyright (c) 2013 Patrick Wildt <patrick@blueri.se>
@@ -91,7 +91,7 @@ void		agtimer_startclock(void);
 
 /* hack - XXXX
  * agtimer connects directly to ampintc, not thru the generic
- * inteface because it uses an 'internal' interupt
+ * interface because it uses an 'internal' interrupt
  * not a peripheral interrupt.
  */
 void	*ampintc_intr_establish(int, int, int (*)(void *), void *, char *);
