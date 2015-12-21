@@ -606,5 +606,6 @@ virtio*		at pci?		# Virtio PCI device
 vioblk*		at virtio?	# Virtio block device
 vio*		at virtio?	# Virtio network device
 vioscsi*	at virtio?	# Virtio SCSI device
+viocon*		at virtio?	# Virtio console device
 viomb*		at virtio?	# Virtio memory ballooning device
 viornd*		at virtio?	# Virtio entropy device

@@ -1,4 +1,4 @@
-/*	$OpenBSD: conf.c,v 1.52 2015/11/13 07:52:20 mlarkin Exp $	*/
+/*	$OpenBSD: conf.c,v 1.53 2015/12/21 22:15:53 sf Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995 Charles M. Hannum.  All rights reserved.
@@ -159,6 +159,8 @@ cdev_decl(nvram);
 cdev_decl(drm);
 #include "vmm.h"
 cdev_decl(vmm);
+#include "viocon.h"
+cdev_decl(viocon);
 
 #include "wsdisplay.h"
 #include "wskbd.h"
@@ -284,6 +286,8 @@ struct cdevsw	cdevsw[] =
 	cdev_disk_init(1,diskmap),	/* 90: disk mapper */
 	cdev_pppx_init(NPPPX,pppx),     /* 91: pppx */
 	cdev_fuse_init(NFUSE,fuse),	/* 92: fuse */
+	cdev_tun_init(NTUN,tap),	/* 93: Ethernet network tunnel */
+	cdev_tty_init(NVIOCON,viocon),  /* 94: virtio console */
 };
 int	nchrdev = nitems(cdevsw);
 
