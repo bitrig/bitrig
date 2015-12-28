@@ -1,4 +1,4 @@
-/*	$OpenBSD: vfprintf.c,v 1.68 2015/08/31 02:53:57 guenther Exp $	*/
+/*	$OpenBSD: vfprintf.c,v 1.70 2015/12/28 22:08:18 mmcc Exp $	*/
 /*-
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -865,10 +865,8 @@ fp_common:
 			if (flags & LONGINT) {
 				wchar_t *wcp;
 
-				if (convbuf != NULL) {
-					free(convbuf);
-					convbuf = NULL;
-				}
+				free(convbuf);
+				convbuf = NULL;
 				if ((wcp = GETARG(wchar_t *)) == NULL) {
 					cp = "(null)";
 				} else {
@@ -1077,8 +1075,7 @@ overflow:
 
 finish:
 #ifdef PRINTF_WIDE_CHAR
-	if (convbuf != NULL)
-		free(convbuf);
+	free(convbuf);
 #endif
 #ifdef FLOATING_POINT
 	if (dtoaresult != NULL)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: vfwprintf.c,v 1.13 2015/08/31 02:53:57 guenther Exp $ */
+/*	$OpenBSD: vfwprintf.c,v 1.15 2015/12/28 22:08:18 mmcc Exp $ */
 /*-
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -764,10 +764,7 @@ reswitch:	switch (ch) {
 				prec = dtoaend - dtoaresult;
 			if (expt == INT_MAX)
 				ox[1] = '\0';
-			if (convbuf != NULL) {
-				free(convbuf);
-				convbuf = NULL;
-			}
+			free(convbuf);
 			cp = convbuf = __mbsconv(dtoaresult, -1);
 			if (cp == NULL)
 				goto error;
@@ -815,11 +812,8 @@ fp_begin:
 				}
 				if (expt == 9999)
 					expt = INT_MAX;
-			}
-			if (convbuf != NULL) {
-				free(convbuf);
-				convbuf = NULL;
-			}
+ 			}
+			free(convbuf);
 			cp = convbuf = __mbsconv(dtoaresult, -1);
 			if (cp == NULL)
 				goto error;
@@ -932,20 +926,15 @@ fp_common:
 				if ((cp = GETARG(wchar_t *)) == NULL)
 					cp = L"(null)";
 			} else {
-				char *mbp;
-
-				if (convbuf != NULL) {
-					free(convbuf);
-					convbuf = NULL;
-				}
-				if ((mbp = GETARG(char *)) == NULL)
-					cp = L"(null)";
-				else {
-					convbuf = __mbsconv(mbp, prec);
-					if (convbuf == NULL) {
-						fp->_flags |= __SERR;
-						goto error;
-					}
+				char *mbsarg;
+				if ((mbsarg = GETARG(char *)) == NULL)
+					mbsarg = "(null)";
+				free(convbuf);
+				convbuf = __mbsconv(mbsarg, prec);
+				if (convbuf == NULL) {
+					fp->_flags |= __SERR;
+					goto error;
+				} else
 					cp = convbuf;
 				}
 			}
@@ -1143,8 +1132,7 @@ overflow:
 	ret = -1;
 
 finish:
-	if (convbuf != NULL)
-		free(convbuf);
+	free(convbuf);
 #ifdef FLOATING_POINT
 	if (dtoaresult != NULL)
 		__freedtoa(dtoaresult);

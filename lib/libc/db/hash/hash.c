@@ -1,4 +1,4 @@
-/*	$OpenBSD: hash.c,v 1.26 2015/01/16 16:48:51 deraadt Exp $	*/
+/*	$OpenBSD: hash.c,v 1.28 2015/12/28 22:08:18 mmcc Exp $	*/
 
 /*-
  * Copyright (c) 1990, 1993, 1994
@@ -408,12 +408,9 @@ hdestroy(HTAB *hashp)
 		save_errno = errno;
 	/* Free Bigmaps */
 	for (i = 0; i < hashp->nmaps; i++)
-		if (hashp->mapp[i])
-			free(hashp->mapp[i]);
-	if (hashp->tmp_key)
-		free(hashp->tmp_key);
-	if (hashp->tmp_buf)
-		free(hashp->tmp_buf);
+		free(hashp->mapp[i]);
+	free(hashp->tmp_key);
+	free(hashp->tmp_buf);
 
 	if (hashp->fp != -1)
 		(void)close(hashp->fp);

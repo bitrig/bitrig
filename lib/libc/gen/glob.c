@@ -1,4 +1,4 @@
-/*	$OpenBSD: glob.c,v 1.45 2015/11/24 22:03:33 millert Exp $ */
+/*	$OpenBSD: glob.c,v 1.46 2015/12/28 22:08:18 mmcc Exp $ */
 /*
  * Copyright (c) 1989, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -858,22 +858,24 @@ globextend(const Char *path, glob_t *pglob, struct glob_limit *limit,
 	struct stat **statv;
 
 	newn = 2 + pglob->gl_pathc + pglob->gl_offs;
-
-	if ((pglob->gl_flags & GLOB_LIMIT) &&
-	    pglob->gl_matchc > limit->l_path_lim) {
-		errno = 0;
-		return (GLOB_NOSPACE);
-	}
-
-	if ((pglob->gl_flags & GLOB_LIMIT)) {
-		len = sizeof(*pathv) + sizeof(**pathv);
-		if ((pglob->gl_flags & GLOB_KEEPSTAT))
-			len += sizeof(*statv) + sizeof(**statv);
-		if (GLOB_LIMIT_MALLOC - limit->l_malloc <= len) {
-			errno = 0;
-			return (GLOB_NOSPACE);
+	if (pglob->gl_offs >= INT_MAX ||
+	    pglob->gl_pathc >= INT_MAX ||
+	    newn >= INT_MAX ||
+	    SIZE_MAX / sizeof(*pathv) <= newn ||
+	    SIZE_MAX / sizeof(*statv) <= newn) {
+ nospace:
+		for (i = pglob->gl_offs; i < (ssize_t)(newn - 2); i++) {
+			if (pglob->gl_pathv && pglob->gl_pathv[i])
+				free(pglob->gl_pathv[i]);
+			if ((pglob->gl_flags & GLOB_KEEPSTAT) != 0 &&
+			    pglob->gl_pathv && pglob->gl_pathv[i])
+				free(pglob->gl_statv[i]);
 		}
-		limit->l_malloc += len;
+		free(pglob->gl_pathv);
+		pglob->gl_pathv = NULL;
+		free(pglob->gl_statv);
+		pglob->gl_statv = NULL;
+		return(GLOB_NOSPACE);
 	}
 
 	pathv = reallocarray(pglob->gl_pathv, newn, sizeof(*pathv));
