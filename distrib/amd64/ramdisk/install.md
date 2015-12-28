@@ -1,4 +1,4 @@
-#	$OpenBSD: install.md,v 1.67 2015/12/02 21:17:17 krw Exp $
+#	$OpenBSD: install.md,v 1.49 2015/12/28 17:00:13 rpe Exp $
 #
 #
 # Copyright (c) 1996 The NetBSD Foundation, Inc.
@@ -101,11 +101,19 @@ must be marked as the only active partition.  Inside the fdisk command, the
 
 $(fdisk ${_disk})
 __EOT
-			fdisk -e ${_disk}
-			fdisk $_disk | grep -q ' A6 ' && return
-			echo No Bitrig partition in MBR, try again. ;;
-		b*|B*
+				fdisk -e $_disk
+				disk_has $_disk mbr openbsd && return
+				echo -n "No Bitrig partition in MBR,"
+			fi
+			echo "try again." ;;
+		b*|B*)
 			[[ $_d == Bitrig ]] || continue
+			if [[ $_disk == $ROOTDISK ]] && disk_has $_disk gpt &&
+				! disk_has $_disk gpt efisys; then
+				echo "No EFI Sys partition in GPT, try again."
+				$AUTO && exit 1
+				continue
+			fi
 			return ;;
 		esac
 	done
