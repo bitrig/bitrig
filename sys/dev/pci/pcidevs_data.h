@@ -2,7 +2,7 @@
  * THIS FILE AUTOMATICALLY GENERATED.  DO NOT EDIT.
  *
  * generated from:
- *	OpenBSD: pcidevs,v 1.1781 2015/12/26 21:57:25 kettenis Exp 
+ *	OpenBSD: pcidevs,v 1.1782 2015/12/29 22:33:42 kettenis Exp 
  */
 
 /*	$NetBSD: pcidevs,v 1.30 1997/06/24 06:20:24 thorpej Exp $	*/
@@ -16062,6 +16062,10 @@ static const struct pci_known_product pci_known_products[] = {
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_C610_SMB,
 	    "C610 SMBus",
+	},
+	{
+	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_C610_THERM,
+	    "C610 Thermal",
 	},
 	{
 	    PCI_VENDOR_INTEL, PCI_PRODUCT_INTEL_C610_EHCI_1,
