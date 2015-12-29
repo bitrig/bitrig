@@ -1,4 +1,4 @@
-#	$OpenBSD: install.md,v 1.49 2015/12/28 17:00:13 rpe Exp $
+#	$OpenBSD: install.md,v 1.51 2016/02/08 17:28:08 krw Exp $
 #
 #
 # Copyright (c) 1996 The NetBSD Foundation, Inc.
@@ -54,59 +54,75 @@ md_prep_fdisk() {
 
 	while :; do
 		_d=whole
+		_q="Use (W)hole disk MBR, whole disk (G)PT"
 
-		[[ $MDEFI == y && $_disk == $ROOTDISK ]] &&
-			_q=", whole disk (G)PT,"
+		[[ $MDEFI == y ]] && _d=gpt
 
-		if fdisk $_disk | grep -q 'Signature: 0xAA55'; then
+		if disk_has $_disk mbr bitrig || disk_has $_disk gpt bitrig; then
+			_q="$_q, (B)itrig area"
+			_d=Bitrig
 			fdisk $_disk
-			if fdisk $_disk | grep -q '^..: A6 '; then
-				_q=", use the (B)itrig area,"
-				_d=Bitrig
-			fi
 		else
-			echo "MBR has invalid signature; not showing it."
+			echo "No valid MBR or GPT."
 		fi
-		ask "Use (W)hole disk MBR$_q or (E)dit the MBR?" "$_d"
+
+		ask "$_q or (E)dit?" "$_d"
 		case $resp in
-		w*|W*)
+		[wW]*)
 			echo -n "Setting Bitrig MBR partition to whole $_disk..."
-			fdisk -e ${_disk} <<__EOT >/dev/null
-reinit
-update
-write
-quit
-__EOT
+			fdisk -iy $_disk >/dev/null
 			echo "done."
 			return ;;
-		g*|G*)
-			if [[ $MDEFI != y || $_disk != $ROOTDISK ]]; then
-				echo "'$resp' is not a valid choice."
-				$AUTO && exit 1
-				continue
+		[gG]*)
+			if [[ $MDEFI != y ]]; then
+				ask_yn "An EFI/GPT disk may not boot. Proceed?"
+				[[ $resp == n ]] && continue
 			fi
 
-			echo -n "Setting OpenBSD GPT partition to whole $_disk..."
-			fdisk -i -g -b 960 -y $_disk >/dev/null
+			echo -n "Setting Bitrig GPT partition to whole $_disk..."
+			fdisk -iy -g -b 960 $_disk >/dev/null
 			echo "done."
 			return ;;
-		e*|E*)
-			# Manually configure the MBR.
-			cat <<__EOT
+		[eE]*)
+			if disk_has $_disk gpt; then
+				# Manually configure the GPT.
+				cat <<__EOT
+
+You will now create two GPT partitions. The first must have an id
+of 'EF' and be large enough to contain the Bitrig boot programs,
+at least 960 blocks. The second must have an id of 'A6' and will
+contain your Bitrig data. Neither may overlap other partitions.
+Inside the fdisk command, the 'manual' command describes the fdisk
+commands in detail.
+
+$(fdisk ${_disk})
+__EOT
+				fdisk -e $_disk
+
+				if ! disk_has $_disk gpt bitrig; then
+					echo -n "No Bitrig partition in GPT,"
+				elif ! disk_has $_disk gpt efisys; then
+					echo -n "No EFI Sys partition in GPT,"
+				else
+					return
+				fi
+			else
+				# Manually configure the MBR.
+				cat <<__EOT
 
 You will now create a single MBR partition to contain your Bitrig data. This
 partition must have an id of 'A6'; must *NOT* overlap other partitions; and
 must be marked as the only active partition.  Inside the fdisk command, the
 'manual' command describes all the fdisk commands in detail.
 
-$(fdisk ${_disk})
+$(fdisk $_disk)
 __EOT
 				fdisk -e $_disk
-				disk_has $_disk mbr openbsd && return
+				disk_has $_disk mbr bitrig && return
 				echo -n "No Bitrig partition in MBR,"
 			fi
 			echo "try again." ;;
-		b*|B*)
+		[oO]*)
 			[[ $_d == Bitrig ]] || continue
 			if [[ $_disk == $ROOTDISK ]] && disk_has $_disk gpt &&
 				! disk_has $_disk gpt efisys; then
