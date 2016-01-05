@@ -274,12 +274,12 @@ mrt2mtrr(u_int64_t flags)
 void
 mrstore(struct mem_range_softc *sc)
 {
-	intr_disable();
+	disable_intr();				/* disable interrupts */
 #ifdef MULTIPROCESSOR
 	x86_broadcast_ipi(X86_IPI_MTRR);
 #endif
 	mrstoreone(sc);
-	intr_enable();
+	enable_intr();
 }
 
 /*
@@ -616,7 +616,7 @@ mrinit_cpu(struct mem_range_softc *sc)
 void
 mrreload_cpu(struct mem_range_softc *sc)
 {
-	intr_disable();
+	disable_intr();
 	mrstoreone(sc); /* set MTRRs to match BSP */
-	intr_enable();
+	enable_intr();
 }

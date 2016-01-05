@@ -44,7 +44,6 @@
 #include <sys/syslog.h>
 #include <sys/device.h>
 #include <sys/malloc.h>
-#include <sys/mutex.h>
 #include <sys/errno.h>
 
 #include <machine/atomic.h>
@@ -78,12 +77,6 @@ struct pic softintr_pic = {
 };
 
 /*
- * Protects the interrupt handler chains from modification while we are
- * accessing them.
- */
-struct mutex	intr_lock = MUTEX_INITIALIZER(IPL_NONE);
-
-/*
  * Fill in default interrupt table (in case of spurious interrupt
  * during configuration of kernel), setup interrupt control unit
  */
@@ -92,7 +85,6 @@ intr_default_setup(void)
 {
 	int i;
 
-	mtx_enter(&intr_lock);
 	/* icu vectors */
 	for (i = 0; i < NUM_LEGACY_IRQS; i++) {
 		idt_allocmap[ICU_OFFSET + i] = 1;
@@ -105,7 +97,6 @@ intr_default_setup(void)
 	 * Eventually might want to check if it's actually there.
 	 */
 	i8259_default_setup();
-	mtx_leave(&intr_lock);
 }
 
 /*
@@ -121,8 +112,6 @@ x86_nmi(void)
 
 /*
  * Recalculate the interrupt masks from scratch.
- *
- * Must be called with intr_lock held.
  */
 void
 intr_calculatemasks(struct cpu_info *ci)
@@ -130,8 +119,6 @@ intr_calculatemasks(struct cpu_info *ci)
 	int irq, level;
 	u_int64_t unusedirqs, intrlevel[MAX_INTR_SOURCES];
 	struct intrhand *q;
-
-	MUTEX_ASSERT_LOCKED(&intr_lock);
 
 	/* First, figure out which levels each IRQ uses. */
 	unusedirqs = 0xffffffffffffffffUL;
@@ -143,7 +130,7 @@ intr_calculatemasks(struct cpu_info *ci)
 			continue;
 		}
 		for (q = ci->ci_isources[irq]->is_handlers; q; q = q->ih_next)
-			levels |= (1 << q->ih_ipl);
+			levels |= (1 << q->ih_level);
 		intrlevel[irq] = levels;
 		if (levels)
 			unusedirqs &= ~(1UL << irq);
@@ -169,10 +156,10 @@ intr_calculatemasks(struct cpu_info *ci)
 			continue;
 		for (q = ci->ci_isources[irq]->is_handlers; q;
 		     q = q->ih_next) {
-			if (q->ih_ipl < minlevel)
-				minlevel = q->ih_ipl;
-			if (q->ih_ipl > maxlevel)
-				maxlevel = q->ih_ipl;
+			if (q->ih_level < minlevel)
+				minlevel = q->ih_level;
+			if (q->ih_level > maxlevel)
+				maxlevel = q->ih_level;
 		}
 		ci->ci_isources[irq]->is_maxlevel = maxlevel;
 		ci->ci_isources[irq]->is_minlevel = minlevel;
@@ -182,18 +169,12 @@ intr_calculatemasks(struct cpu_info *ci)
 		ci->ci_iunmask[level] = ~ci->ci_imask[level];
 }
 
-/* 
- * Allocate an interrupt slot on the given cpu.
- * - Called with intr_lock held.
- */
 int
 intr_allocate_slot_cpu(struct cpu_info *ci, struct pic *pic, int pin,
     int *index)
 {
 	int start, slot, i;
 	struct intrsource *isp;
-
-	MUTEX_ASSERT_LOCKED(&intr_lock);
 
 	start = CPU_IS_PRIMARY(ci) ? NUM_LEGACY_IRQS : 0;
 	slot = -1;
@@ -217,15 +198,17 @@ intr_allocate_slot_cpu(struct cpu_info *ci, struct pic *pic, int pin,
 			continue;
 		}
 	}
-	if (slot == -1)
+	if (slot == -1) {
 		return EBUSY;
+	}
 
 	isp = ci->ci_isources[slot];
 	if (isp == NULL) {
 		isp = malloc(sizeof (struct intrsource), M_DEVBUF,
-		    M_NOWAIT | M_ZERO);
-		if (isp == NULL)
+		    M_NOWAIT|M_ZERO);
+		if (isp == NULL) {
 			return ENOMEM;
+		}
 		snprintf(isp->is_evname, sizeof (isp->is_evname),
 		    "pin %d", pin);
 		ci->ci_isources[slot] = isp;
@@ -245,18 +228,7 @@ intr_allocate_slot(struct pic *pic, int legacy_irq, int pin, int level,
 	CPU_INFO_ITERATOR cii;
 	struct cpu_info *ci;
 	struct intrsource *isp;
-	int slot, idtvec, error = 0;
-
-	/*
-	 * This function is always called with the intr_lock locked because
-	 * a slot it not allocated until the handler has been inserted to
-	 * the chain and these two operations must be atomic. Perhaps when
-	 * we move to allocating vectors more equally over the different
-	 * cpus then this locking could be a bit more fine grained.
-	 * establishing new interrupt handlers is a rare enough event that
-	 * it should not matter.
-	 */
-	MUTEX_ASSERT_LOCKED(&intr_lock);
+	int slot, idtvec, error;
 
 	/*
 	 * If a legacy IRQ is wanted, try to use a fixed slot pointing
@@ -281,18 +253,16 @@ intr_allocate_slot(struct pic *pic, int legacy_irq, int pin, int level,
 		if (isp == NULL) {
 			isp = malloc(sizeof (struct intrsource), M_DEVBUF,
 			     M_NOWAIT|M_ZERO);
-			if (isp == NULL) {
-				return (ENOMEM);
-			}
+			if (isp == NULL)
+				return ENOMEM;
 			snprintf(isp->is_evname, sizeof (isp->is_evname),
 			    "pin %d", pin);
 
 			ci->ci_isources[slot] = isp;
 		} else {
 			if (isp->is_pic != pic || isp->is_pin != pin) {
-				if (pic == &i8259_pic) {
-					return (EINVAL);
-				}
+				if (pic == &i8259_pic)
+					return EINVAL;
 				goto other;
 			}
 		}
@@ -307,9 +277,8 @@ duplicate:
 #endif
 				idtvec = idt_vec_alloc(APIC_LEVEL(level),
 				    IDT_INTR_HIGH);
-				if (idtvec == 0) {
-					return (EBUSY);
-				}
+				if (idtvec == 0)
+					return EBUSY;
 			} else
 				idtvec = isp->is_idtvec;
 		}
@@ -334,20 +303,19 @@ other:
 			if (error == 0)
 				goto found;
 		}
-		return (EBUSY);
+		return EBUSY;
 found:
 		idtvec = idt_vec_alloc(APIC_LEVEL(level), IDT_INTR_HIGH);
 		if (idtvec == 0) {
 			free(ci->ci_isources[slot], M_DEVBUF, sizeof (struct intrsource));
 			ci->ci_isources[slot] = NULL;
-			return (EBUSY);
+			return EBUSY;
 		}
 	}
 	*idt_slot = idtvec;
 	*index = slot;
 	*cip = ci;
-
-	return (0);
+	return 0;
 }
 
 /*
@@ -374,6 +342,20 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 	if (legacy_irq == -1 && pic == &i8259_pic)
 		panic("intr_establish: non-legacy IRQ on i8259");
 #endif
+
+	flags = level & IPL_MPSAFE;
+	level &= ~IPL_MPSAFE;
+
+	KASSERT(level <= IPL_TTY || level >= IPL_CLOCK || flags & IPL_MPSAFE);
+
+	error = intr_allocate_slot(pic, legacy_irq, pin, level, &ci, &slot,
+	    &idt_vec);
+	if (error != 0) {
+		printf("failed to allocate interrupt slot for PIC %s pin %d\n",
+		    pic->pic_dev.dv_xname, pin);
+		return NULL;
+	}
+
 	/* no point in sleeping unless someone can free memory. */
 	ih = malloc(sizeof *ih, M_DEVBUF, cold ? M_NOWAIT : M_WAITOK);
 	if (ih == NULL) {
@@ -381,31 +363,10 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 		return NULL;
 	}
 
-	flags = level & IPL_MPSAFE;
-	level &= ~IPL_MPSAFE;
-
-	KASSERT(level <= IPL_TTY || level >= IPL_CLOCK || flags & IPL_MPSAFE);
-
-	/*
-	 * From here on we are messing with the handler chains and must be
-	 * locked.
-	 */
-	mtx_enter(&intr_lock);
-	error = intr_allocate_slot(pic, legacy_irq, pin, level, &ci, &slot,
-	    &idt_vec);
-	if (error != 0) {
-		mtx_leave(&intr_lock);
-		free(ih, M_DEVBUF, 0);
-		printf("failed to allocate interrupt slot for PIC %s pin %d\n",
-		    pic->pic_dev.dv_xname, pin);
-		return NULL;
-	}
-
 	source = ci->ci_isources[slot];
 
 	if (source->is_handlers != NULL &&
 	    source->is_pic->pic_type != pic->pic_type) {
-		mtx_leave(&intr_lock);
 		free(ih, M_DEVBUF, sizeof(*ih));
 		printf("intr_establish: can't share intr source between "
 		       "different PIC types (legacy_irq %d pin %d slot %d)\n",
@@ -428,7 +389,6 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 			break;
 	case IST_PULSE:
 		if (type != IST_NONE) {
-			mtx_leave(&intr_lock);
 			printf("intr_establish: pic %s pin %d: can't share "
 			       "type %d with %d\n", pic->pic_name, pin,
 				source->is_type, type);
@@ -437,7 +397,6 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 		}
 		break;
 	default:
-		mtx_leave(&intr_lock);
 		panic("intr_establish: bad intr type %d for pic %s pin %d",
 		    source->is_type, pic->pic_dev.dv_xname, pin);
 	}
@@ -451,15 +410,16 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 	 * generally small.
 	 */
 	for (p = &ci->ci_isources[slot]->is_handlers;
-	     (q = *p) != NULL && q->ih_ipl > level;
+	     (q = *p) != NULL && q->ih_level > level;
 	     p = &q->ih_next)
 		;
 
 	ih->ih_fun = handler;
 	ih->ih_arg = arg;
 	ih->ih_next = *p;
-	ih->ih_ipl = level;
+	ih->ih_level = level;
 	ih->ih_flags = flags; 
+	ih->ih_pin = pin;
 	ih->ih_cpu = ci;
 	ih->ih_slot = slot;
 	evcount_attach(&ih->ih_count, what, &source->is_idtvec);
@@ -485,7 +445,6 @@ intr_establish(int legacy_irq, struct pic *pic, int pin, int type, int level,
 
 	if (!cold)
 		pic->pic_hwunmask(pic, pin);
-	mtx_leave(&intr_lock);
 
 #ifdef INTRDEBUG
 	printf("allocated pic %s type %s pin %d level %d to cpu%u slot %d idt entry %d\n",
@@ -509,13 +468,11 @@ intr_disestablish(struct intrhand *ih)
 	int idtvec;
 
 	ci = ih->ih_cpu;
-
-	mtx_enter(&intr_lock);
+	pic = ci->ci_isources[ih->ih_slot]->is_pic;
 	source = ci->ci_isources[ih->ih_slot];
-	pic = source->is_pic;
 	idtvec = source->is_idtvec;
 
-	pic->pic_hwmask(pic, source->is_pin);
+	pic->pic_hwmask(pic, ih->ih_pin);	
 	x86_atomic_clearbits_u64(&ci->ci_ipending, (1UL << ih->ih_slot));
 
 	/*
@@ -525,7 +482,6 @@ intr_disestablish(struct intrhand *ih)
 	     p = &q->ih_next)
 		;
 	if (q == NULL) {
-		mtx_leave(&intr_lock);
 		panic("intr_disestablish: handler not registered");
 	}
 
@@ -533,13 +489,13 @@ intr_disestablish(struct intrhand *ih)
 
 	intr_calculatemasks(ci);
 	if (source->is_handlers == NULL)
-		pic->pic_delroute(pic, ci, source->is_pin, idtvec, source->is_type);
+		pic->pic_delroute(pic, ci, ih->ih_pin, idtvec, source->is_type);
 	else
-		pic->pic_hwunmask(pic, source->is_pin);
+		pic->pic_hwunmask(pic, ih->ih_pin);
 
 #ifdef INTRDEBUG
 	printf("cpu%u: remove slot %d (pic %s pin %d vec %d)\n",
-	    ci->ci_apicid, ih->ih_slot, pic->pic_dev.dv_xname, source->is_pin,
+	    ci->ci_apicid, ih->ih_slot, pic->pic_dev.dv_xname, ih->ih_pin,
 	    idtvec);
 #endif
 
@@ -551,14 +507,14 @@ intr_disestablish(struct intrhand *ih)
 	}
 
 	evcount_detach(&ih->ih_count);
-	mtx_leave(&intr_lock);
-
 	free(ih, M_DEVBUF, sizeof(*ih));
 }
 
 int
 intr_handler(struct intrframe *frame, struct intrhand *ih)
 {
+	struct cpu_info *ci = curcpu();
+	int floor;
 	int rc;
 #ifdef MULTIPROCESSOR
 	int need_lock;
@@ -569,12 +525,15 @@ intr_handler(struct intrframe *frame, struct intrhand *ih)
 		need_lock = frame->if_ppl < IPL_SCHED;
 
 	if (need_lock)
-		KERNEL_LOCK();
+		__mp_lock(&kernel_lock);
 #endif
+	floor = ci->ci_handled_intr_level;
+	ci->ci_handled_intr_level = ih->ih_level;
 	rc = (*ih->ih_fun)(ih->ih_arg ? ih->ih_arg : frame);
+	ci->ci_handled_intr_level = floor;
 #ifdef MULTIPROCESSOR
 	if (need_lock)
-		KERNEL_UNLOCK();
+		__mp_unlock(&kernel_lock);
 #endif
 	return rc;
 }
@@ -610,10 +569,9 @@ cpu_intr_init(struct cpu_info *ci)
 	isp = malloc(sizeof (struct intrsource), M_DEVBUF, M_NOWAIT|M_ZERO);
 	if (isp == NULL)
 		panic("can't allocate fixed interrupt source");
-
 	isp->is_recurse = Xsoftclock;
 	isp->is_resume = Xsoftclock;
-	fake_softclock_intrhand.ih_ipl = IPL_SOFTCLOCK;
+	fake_softclock_intrhand.ih_level = IPL_SOFTCLOCK;
 	isp->is_handlers = &fake_softclock_intrhand;
 	isp->is_pic = &softintr_pic;
 	ci->ci_isources[SIR_CLOCK] = isp;
@@ -622,7 +580,7 @@ cpu_intr_init(struct cpu_info *ci)
 		panic("can't allocate fixed interrupt source");
 	isp->is_recurse = Xsoftnet;
 	isp->is_resume = Xsoftnet;
-	fake_softnet_intrhand.ih_ipl = IPL_SOFTNET;
+	fake_softnet_intrhand.ih_level = IPL_SOFTNET;
 	isp->is_handlers = &fake_softnet_intrhand;
 	isp->is_pic = &softintr_pic;
 	ci->ci_isources[SIR_NET] = isp;
@@ -631,7 +589,7 @@ cpu_intr_init(struct cpu_info *ci)
 		panic("can't allocate fixed interrupt source");
 	isp->is_recurse = Xsofttty;
 	isp->is_resume = Xsofttty;
-	fake_softtty_intrhand.ih_ipl = IPL_SOFTTTY;
+	fake_softtty_intrhand.ih_level = IPL_SOFTTTY;
 	isp->is_handlers = &fake_softtty_intrhand;
 	isp->is_pic = &softintr_pic;
 	ci->ci_isources[SIR_TTY] = isp;
@@ -641,7 +599,7 @@ cpu_intr_init(struct cpu_info *ci)
 		panic("can't allocate fixed interrupt source");
 	isp->is_recurse = Xrecurse_lapic_ltimer;
 	isp->is_resume = Xresume_lapic_ltimer;
-	fake_timer_intrhand.ih_ipl = IPL_CLOCK;
+	fake_timer_intrhand.ih_level = IPL_CLOCK;
 	isp->is_handlers = &fake_timer_intrhand;
 	isp->is_pic = &local_pic;
 	ci->ci_isources[LIR_TIMER] = isp;
@@ -651,7 +609,7 @@ cpu_intr_init(struct cpu_info *ci)
 		panic("can't allocate fixed interrupt source");
 	isp->is_recurse = Xrecurse_lapic_ipi;
 	isp->is_resume = Xresume_lapic_ipi;
-	fake_ipi_intrhand.ih_ipl = IPL_IPI;
+	fake_ipi_intrhand.ih_level = IPL_IPI;
 	isp->is_handlers = &fake_ipi_intrhand;
 	isp->is_pic = &local_pic;
 	ci->ci_isources[LIR_IPI] = isp;
@@ -659,9 +617,7 @@ cpu_intr_init(struct cpu_info *ci)
 #endif
 #endif
 
-	mtx_enter(&intr_lock);
 	intr_calculatemasks(ci);
-	mtx_leave(&intr_lock);
 
 }
 
@@ -680,7 +636,6 @@ intr_printconfig(void)
 		for (i = 0; i < NIPL; i++)
 			printf("IPL %d mask %lx unmask %lx\n", i,
 			    (u_long)ci->ci_imask[i], (u_long)ci->ci_iunmask[i]);
-		mtx_enter(&intr_lock);
 		for (i = 0; i < MAX_INTR_SOURCES; i++) {
 			isp = ci->ci_isources[i];
 			if (isp == NULL)
@@ -690,11 +645,10 @@ intr_printconfig(void)
 			    isp->is_pic->pic_name, isp->is_maxlevel);
 			for (ih = isp->is_handlers; ih != NULL;
 			     ih = ih->ih_next)
-				printf("\thandler %p ipl %d\n",
-				    ih->ih_fun, ih->ih_ipl);
+				printf("\thandler %p level %d\n",
+				    ih->ih_fun, ih->ih_level);
 
 		}
-		mtx_leave(&intr_lock);
 	}
 #endif
 }
@@ -729,18 +683,19 @@ spllower(int nlevel)
 	int olevel;
 	struct cpu_info *ci = curcpu();
 	u_int64_t imask;
-	intr_state_t its;
+	u_long psl;
 
 	imask = IUNMASK(ci, nlevel);
 	olevel = ci->ci_ilevel;
 
-	its = intr_disable();
+	psl = read_psl();
+	disable_intr();
 
 	if (ci->ci_ipending & imask) {
 		Xspllower(nlevel);
 	} else {
 		ci->ci_ilevel = nlevel;
-		intr_restore(its);
+		write_psl(psl);
 	}
 	return (olevel);
 }

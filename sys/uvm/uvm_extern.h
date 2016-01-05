@@ -133,6 +133,15 @@ typedef int		vm_prot_t;
 #define	UVM_PGA_ZERO		0x0002	/* returned page must be zeroed */
 
 /*
+ *  * the following defines are for uvm_km_kmemalloc's flags
+ *   */
+#define UVM_KMF_NOWAIT  0x1			/* matches M_NOWAIT */
+#define UVM_KMF_VALLOC  0x2			/* allocate VA only */
+#define UVM_KMF_CANFAIL 0x4			/* caller handles failure */
+#define UVM_KMF_ZERO    0x08			/* zero pages */
+#define UVM_KMF_TRYLOCK UVM_FLAG_TRYLOCK	/* try locking only */
+
+/*
  * flags for uvm_pglistalloc()
  */
 #define UVM_PLA_WAITOK		0x0001	/* may sleep */
@@ -258,6 +267,10 @@ extern struct vm_map *phys_map;
 /* base of kernel virtual memory */
 extern vaddr_t vm_min_kernel_address;
 
+/* zalloc zeros memory, alloc does not */
+#define uvm_km_zalloc(MAP,SIZE) uvm_km_alloc1(MAP,SIZE,0,TRUE)
+#define uvm_km_alloc(MAP,SIZE)  uvm_km_alloc1(MAP,SIZE,0,FALSE)
+
 #define vm_resident_count(vm) (pmap_resident_count((vm)->vm_map.pmap))
 
 void			vmapbuf(struct buf *, vsize_t);
@@ -274,7 +287,7 @@ int			uvm_fault(vm_map_t, vaddr_t, vm_fault_t, vm_prot_t);
 #if defined(KGDB)
 void			uvm_chgkprot(caddr_t, size_t, int);
 #endif
-struct user		*uvm_uarea_alloc(void);
+vaddr_t			uvm_uarea_alloc(void);
 void			uvm_uarea_free(struct proc *);
 void			uvm_exit(struct process *);
 void			uvm_init_limits(struct proc *);
@@ -292,6 +305,21 @@ void			uvm_init(void);
 int			uvm_io(vm_map_t, struct uio *, int);
 
 #define	UVM_IO_FIXPROT	0x01
+
+vaddr_t			uvm_km_alloc1(vm_map_t, vsize_t, vsize_t, boolean_t);
+void			uvm_km_free(vm_map_t, vaddr_t, vsize_t);
+void			uvm_km_free_wakeup(vm_map_t, vaddr_t, vsize_t);
+vaddr_t			uvm_km_kmemalloc_pla(struct vm_map *,
+			    struct uvm_object *, vsize_t, vsize_t, int,
+			    paddr_t, paddr_t, paddr_t, paddr_t, int);
+#define uvm_km_kmemalloc(map, obj, sz, flags)				\
+	uvm_km_kmemalloc_pla(map, obj, sz, 0, flags, 0, (paddr_t)-1, 0, 0, 0)
+vaddr_t			uvm_km_valloc(vm_map_t, vsize_t);
+vaddr_t			uvm_km_valloc_try(vm_map_t, vsize_t);
+vaddr_t			uvm_km_valloc_wait(vm_map_t, vsize_t);
+vaddr_t			uvm_km_valloc_align(struct vm_map *, vsize_t,
+			    vsize_t, int);
+vaddr_t			uvm_km_valloc_prefer_wait(vm_map_t, vsize_t, voff_t);
 
 struct vm_map		*uvm_km_suballoc(vm_map_t, vaddr_t *,
 				vaddr_t *, vsize_t, int,

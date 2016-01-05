@@ -639,8 +639,6 @@ file kern/kern_ktrace.c			ktrace
 file kern/kern_lock.c
 file kern/kern_malloc.c
 file kern/kern_malloc_debug.c		malloc_debug
-file kern/kern_mplock.c
-file kern/kern_mutex.c
 file kern/kern_rwlock.c
 file kern/kern_physio.c
 file kern/kern_proc.c

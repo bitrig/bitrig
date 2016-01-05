@@ -115,7 +115,7 @@ bios_attach(struct device *parent, struct device *self, void *aux)
 	if (hdr != NULL) {
 		pa = trunc_page(hdr->addr);
 		end = round_page(hdr->addr + hdr->size);
-		va = (vaddr_t)km_alloc(end - pa, &kv_any, &kp_none, &kd_nowait);
+		va = uvm_km_valloc(kernel_map, end-pa);
 		if (va == 0)
 			goto out;
 
@@ -127,7 +127,6 @@ bios_attach(struct device *parent, struct device *self, void *aux)
 
 		for (; pa < end; pa+= NBPG, va+= NBPG)
 			pmap_kenter_pa(va, pa, PROT_READ);
-		pmap_update(pmap_kernel());
 
 		printf(": SMBIOS rev. %d.%d @ 0x%x (%d entries)",
 		    hdr->majrev, hdr->minrev, hdr->addr, hdr->count);

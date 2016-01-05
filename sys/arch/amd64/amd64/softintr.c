@@ -49,8 +49,6 @@ const int x86_soft_intr_to_ssir[X86_NSOFTINTR] = {
 	SIR_TTY,
 };
 
-void	softintr_biglock_wrap(void *);
-
 /*
  * softintr_init:
  *
@@ -78,11 +76,15 @@ softintr_init(void)
 void
 softintr_dispatch(int which)
 {
-	struct x86_soft_intr		*si = &x86_soft_intrs[which];
-	struct x86_soft_intrhand	*sih;
-	void				*arg;
-	void				(*fn)(void *);
+	struct cpu_info *ci = curcpu();
+	struct x86_soft_intr *si = &x86_soft_intrs[which];
+	struct x86_soft_intrhand *sih;
+	int floor;
 
+	floor = ci->ci_handled_intr_level;
+	ci->ci_handled_intr_level = ci->ci_ilevel;
+
+	KERNEL_LOCK();
 	for (;;) {
 		mtx_enter(&si->softintr_lock);
 		sih = TAILQ_FIRST(&si->softintr_q);
@@ -94,25 +96,15 @@ softintr_dispatch(int which)
 		sih->sih_pending = 0;
 
 		uvmexp.softs++;
-		arg = sih->sih_arg;
-		fn = sih->sih_fn;
+
 		mtx_leave(&si->softintr_lock);
 
-		(*fn)(arg);
+		(*sih->sih_fn)(sih->sih_arg);
 	}
-}
-
-#ifdef MULTIPROCESSOR
-void
-softintr_biglock_wrap(void *arg)
-{
-	struct x86_soft_intrhand	*sih = arg;
-
-	KERNEL_LOCK();
-	sih->sih_fnwrap(sih->sih_argwrap);
 	KERNEL_UNLOCK();
+
+	ci->ci_handled_intr_level = floor;
 }
-#endif
 
 /*
  * softintr_establish:		[interface]
@@ -120,7 +112,7 @@ softintr_biglock_wrap(void *arg)
  *	Register a software interrupt handler.
  */
 void *
-softintr_establish_flags(int ipl, void (*func)(void *), void *arg, int flags)
+softintr_establish(int ipl, void (*func)(void *), void *arg)
 {
 	struct x86_soft_intr *si;
 	struct x86_soft_intrhand *sih;
@@ -146,22 +138,12 @@ softintr_establish_flags(int ipl, void (*func)(void *), void *arg, int flags)
 
 	si = &x86_soft_intrs[which];
 
-	sih = malloc(sizeof(*sih), M_DEVBUF, M_NOWAIT | M_ZERO);
+	sih = malloc(sizeof(*sih), M_DEVBUF, M_NOWAIT);
 	if (__predict_true(sih != NULL)) {
 		sih->sih_intrhead = si;
-#ifdef MULTIPROCESSOR
-		if (flags & SOFTINTR_ESTABLISH_MPSAFE) {
-#endif
-			sih->sih_fn = func;
-			sih->sih_arg = arg;
-#ifdef MULTIPROCESSOR
-		} else {
-			sih->sih_fnwrap = func;
-			sih->sih_argwrap = arg;
-			sih->sih_fn = softintr_biglock_wrap;
-			sih->sih_arg = sih;
-		}
-#endif
+		sih->sih_fn = func;
+		sih->sih_arg = arg;
+		sih->sih_pending = 0;
 	}
 	return (sih);
 }

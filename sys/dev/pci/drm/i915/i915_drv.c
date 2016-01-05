@@ -353,13 +353,11 @@ static const struct intel_device_info intel_ivybridge_m_info = {
 	.is_mobile = 1,
 };
 
-#ifdef notyet
-static const struct intel_device_info intel_ivybridge_q_info = {
+static const __unused struct intel_device_info intel_ivybridge_q_info = {
 	GEN7_FEATURES,
 	.is_ivybridge = 1,
 	.num_pipes = 0, /* legal, last one wins */
 };
-#endif
 
 static const struct intel_device_info intel_valleyview_m_info = {
 	GEN7_FEATURES,
@@ -1542,16 +1540,6 @@ inteldrm_detach(struct device *self, int flags)
 		config_detach((struct device *)dev_priv->dev, flags);
 		dev_priv->dev = NULL;
 	}
-
-#if 0
-	if (!I915_NEED_GFX_HWS(dev) && dev_priv->hws_dmamem) {
-		drm_dmamem_free(dev_priv->dmat, dev_priv->hws_dmamem);
-		dev_priv->hws_dmamem = NULL;
-		/* Need to rewrite hardware status page */
-		I915_WRITE(HWS_PGA, 0x1ffff000);
-//		dev_priv->hw_status_page = NULL;
-	}
-#endif
 
 	if (IS_I9XX(dev) && dev_priv->ifp.i9xx.bsh != 0) {
 		bus_space_unmap(dev_priv->ifp.i9xx.bst, dev_priv->ifp.i9xx.bsh,

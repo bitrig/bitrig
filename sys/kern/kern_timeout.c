@@ -82,7 +82,12 @@ timeout_from_circq(struct circq *p)
 	return ((struct timeout *)(p));
 }
 
-/* All wheels are locked with the same mutex.  */
+/*
+ * All wheels are locked with the same mutex.
+ *
+ * We need locking since the timeouts are manipulated from hardclock that's
+ * not behind the big lock.
+ */
 struct mutex timeout_mutex = MUTEX_INITIALIZER(IPL_HIGH);
 
 /*
@@ -147,13 +152,11 @@ timeout_startup(void)
 }
 
 void
-timeout_set_flags(struct timeout *new, void (*fn)(void *), void *arg, int flags)
+timeout_set(struct timeout *new, void (*fn)(void *), void *arg)
 {
 	new->to_func = fn;
 	new->to_arg = arg;
 	new->to_flags = TIMEOUT_INITIALIZED;
-	if (flags & TIMEOUT_SET_MPSAFE)
-		new->to_flags |= TIMEOUT_MPSAFE;
 }
 
 
@@ -323,8 +326,6 @@ softclock(void *arg)
 {
 	struct timeout *to;
 	void (*fn)(void *);
-	void *fnarg;
-	int mpsafe;
 
 	mtx_enter(&timeout_mutex);
 	while (!CIRCQ_EMPTY(&timeout_todo)) {
@@ -346,20 +347,10 @@ softclock(void *arg)
 			to->to_flags |= TIMEOUT_TRIGGERED;
 
 			fn = to->to_func;
-			fnarg = to->to_arg;
-
-			mpsafe = (to->to_flags & TIMEOUT_MPSAFE);
+			arg = to->to_arg;
 
 			mtx_leave(&timeout_mutex);
-#ifdef MULTIPROCESSOR
-			if (mpsafe == 0)
-				_kernel_lock();
-#endif
-			fn(fnarg);
-#ifdef MULTIPROCESSOR
-			if (mpsafe == 0)
-				_kernel_unlock();
-#endif
+			fn(arg);
 			mtx_enter(&timeout_mutex);
 		}
 	}

@@ -169,6 +169,10 @@ malloc(size_t size, int type, int flags)
 		if (pool_debug == 2)
 			yield();
 #endif
+		if (!cold && pool_debug) {
+			KERNEL_UNLOCK();
+			KERNEL_LOCK();
+		}
 	}
 
 #ifdef MALLOC_DEBUG
@@ -211,8 +215,12 @@ malloc(size_t size, int type, int flags)
 		allocsize = 1 << indx;
 	if (XSIMPLEQ_FIRST(&kbp->kb_freelist) == NULL) {
 		npg = atop(round_page(allocsize));
-		va = km_alloc(ptoa(npg), &kv_intrsafe, &kp_dirty,
-		    (flags & M_NOWAIT) ? &kd_nowait : &kd_waitok);
+		va = (caddr_t)uvm_km_kmemalloc_pla(kmem_map, NULL,
+		    (vsize_t)ptoa(npg), 0,
+		    ((flags & M_NOWAIT) ? UVM_KMF_NOWAIT : 0) |
+		    ((flags & M_CANFAIL) ? UVM_KMF_CANFAIL : 0),
+		    no_constraint.ucr_low, no_constraint.ucr_high,
+		    0, 0, 0);
 		if (va == NULL) {
 			/*
 			 * Kmem_malloc() can return NULL, even if it can
@@ -392,7 +400,7 @@ free(void *addr, int type, size_t freedsize)
 			addr, size, memname[type], alloc);
 #endif /* DIAGNOSTIC */
 	if (size > MAXALLOCSAVE) {
-		km_free(addr, ptoa(kup->ku_pagecnt), &kv_intrsafe, &kp_dirty);
+		uvm_km_free(kmem_map, (vaddr_t)addr, ptoa(kup->ku_pagecnt));
 #ifdef KMEMSTATS
 		ksp->ks_memuse -= size;
 		kup->ku_indx = 0;
@@ -529,8 +537,8 @@ kmeminit(void)
 	    FALSE, &kmem_map_store);
 	kmembase = (char *)base;
 	kmemlimit = (char *)limit;
-	kmemusage = (struct kmemusage *)km_alloc(round_page(nkmempages *
-	    sizeof(struct kmemusage)), &kv_any, &kp_zero, &kd_waitok);
+	kmemusage = (struct kmemusage *) uvm_km_zalloc(kernel_map,
+	    (vsize_t)(nkmempages * sizeof(struct kmemusage)));
 	for (indx = 0; indx < MINBUCKET + 16; indx++) {
 		XSIMPLEQ_INIT(&bucket[indx].kb_freelist);
 	}

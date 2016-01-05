@@ -382,7 +382,6 @@ static int intel_lvds_get_modes(struct drm_connector *connector)
 	return 1;
 }
 
-#ifdef notyet
 static int intel_no_modeset_on_lid_dmi_callback(const struct dmi_system_id *id)
 {
 	DRM_INFO("Skipping forced modeset for %s\n", id->ident);
@@ -390,7 +389,7 @@ static int intel_no_modeset_on_lid_dmi_callback(const struct dmi_system_id *id)
 }
 
 /* The GPU hangs up on these systems if modeset is performed on LID open */
-static const struct dmi_system_id intel_no_modeset_on_lid[] = {
+static const __unused struct dmi_system_id intel_no_modeset_on_lid[] = {
 	{
 		.callback = intel_no_modeset_on_lid_dmi_callback,
 		.ident = "Toshiba Tecra A11",
@@ -403,6 +402,7 @@ static const struct dmi_system_id intel_no_modeset_on_lid[] = {
 	{ }	/* terminating entry */
 };
 
+#ifdef notyet
 /*
  * Lid events. Note the use of 'modeset':
  *  - we set it to MODESET_ON_LID_OPEN on lid close,

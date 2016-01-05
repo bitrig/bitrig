@@ -50,14 +50,24 @@
 void
 gdt_alloc_cpu(struct cpu_info *ci)
 {
-	/* Can't sleep, in autoconf */
-	ci->ci_gdt = km_alloc(round_page(GDT_SIZE + sizeof(*ci->ci_tss)),
-	    &kv_any, &kp_zero, &kd_nowait);
-	if (ci->ci_gdt == NULL)
-		panic("gdt_init: can't alloc");
-	ci->ci_tss = (struct x86_64_tss *)((int8_t *)ci->ci_gdt + GDT_SIZE);
+	struct vm_page *pg;
+	vaddr_t va;
 
+	ci->ci_gdt = (char *)uvm_km_valloc(kernel_map,
+	    GDT_SIZE + sizeof(*ci->ci_tss));
+	ci->ci_tss = (void *)(ci->ci_gdt + GDT_SIZE);
+	uvm_map_pageable(kernel_map, (vaddr_t)ci->ci_gdt,
+            (vaddr_t)ci->ci_gdt + GDT_SIZE, FALSE, FALSE);
+	for (va = (vaddr_t)ci->ci_gdt;
+	    va < (vaddr_t)ci->ci_gdt + GDT_SIZE + sizeof(*ci->ci_tss);
+	    va += PAGE_SIZE) {
+		pg = uvm_pagealloc(NULL, 0, NULL, UVM_PGA_ZERO);
+		if (pg == NULL)
+			panic("gdt_init: no pages");
+		pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg), PROT_READ | PROT_WRITE);
+	}
 	memcpy(ci->ci_gdt, cpu_info_primary.ci_gdt, GDT_SIZE);
+	bzero(ci->ci_tss, sizeof(*ci->ci_tss));
 }
 
 

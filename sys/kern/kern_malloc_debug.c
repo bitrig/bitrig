@@ -230,7 +230,7 @@ debug_malloc_init(void)
 void
 debug_malloc_allocate_free(int wait)
 {
-	vaddr_t va;
+	vaddr_t va, offset;
 	struct vm_page *pg;
 	struct debug_malloc_entry *md;
 
@@ -240,13 +240,14 @@ debug_malloc_allocate_free(int wait)
 	if (md == NULL)
 		return;
 
-	va = (vaddr_t)km_alloc(PAGE_SIZE * 2, &kv_intrsafe, &kp_none,
-	    &kd_waitok);
+	va = uvm_km_kmemalloc(kmem_map, NULL, PAGE_SIZE * 2,
+	    UVM_KMF_VALLOC | (wait ? 0: UVM_KMF_NOWAIT));
 	if (va == 0) {
 		pool_put(&debug_malloc_pool, md);
 		return;
 	}
 
+	offset = va - vm_map_min(kernel_map);
 	for (;;) {
 		pg = uvm_pagealloc(NULL, 0, NULL, 0);
 		if (pg) {

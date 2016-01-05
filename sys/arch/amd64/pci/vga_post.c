@@ -125,15 +125,13 @@ vga_post_init(int bus, int device, int function)
 	vaddr_t sys_image, sys_bios_data;
 	int err;
 
-	sys_bios_data = (vaddr_t)km_alloc(PAGE_SIZE, &kv_any, &kp_none,
-	    &kd_nowait);
+	sys_bios_data = uvm_km_valloc(kernel_map, PAGE_SIZE);
 	if (sys_bios_data == 0)
 		return NULL;
 
-	sys_image = (vaddr_t)km_alloc(1024 * 1024, &kv_any, &kp_none,
-	    &kd_nowait);
+	sys_image = uvm_km_valloc(kernel_map, 1024 * 1024);
 	if (sys_image == 0) {
-		km_free((void *)sys_bios_data, PAGE_SIZE, &kv_any, &kp_none);
+		uvm_km_free(kernel_map, sys_bios_data, PAGE_SIZE);
 		return NULL;
 	}
 	sc = malloc(sizeof(*sc), M_DEVBUF, M_WAITOK|M_ZERO);
@@ -142,9 +140,8 @@ vga_post_init(int bus, int device, int function)
 	err = uvm_pglistalloc(BASE_MEMORY, 0, (paddr_t)-1, 0, 0,
 	    &sc->ram_backing, BASE_MEMORY/PAGE_SIZE, UVM_PLA_WAITOK);
 	if (err) {
+		uvm_km_free(kernel_map, sc->sys_image, 1024 * 1024);
 		free(sc, M_DEVBUF, sizeof(*sc));
-		km_free((void *)sys_image, 1024 * 1024, &kv_any, &kp_dma);
-		km_free((void *)sys_bios_data, PAGE_SIZE, &kv_any, &kp_none);
 		return NULL;
 	}
 
@@ -155,8 +152,7 @@ vga_post_init(int bus, int device, int function)
 	pmap_update(pmap_kernel());
 	memcpy((void *)sc->bios_data, (void *)sys_bios_data, PAGE_SIZE);
 	pmap_kremove(sys_bios_data, PAGE_SIZE);
-	pmap_update(pmap_kernel());
-	km_free((void *)sys_bios_data, PAGE_SIZE, &kv_any, &kp_none);
+	uvm_km_free(kernel_map, sys_bios_data, PAGE_SIZE);
 
 	iter = 0;
 	TAILQ_FOREACH(pg, &sc->ram_backing, pageq) {
@@ -213,8 +209,8 @@ vga_post_free(struct vga_post *sc)
 {
 	uvm_pglistfree(&sc->ram_backing);
 	pmap_kremove(sc->sys_image, 1024 * 1024);
+	uvm_km_free(kernel_map, sc->sys_image, 1024 * 1024);
 	pmap_update(pmap_kernel());
-	km_free((void *)sc->sys_image, 1024 * 1024, &kv_any, &kp_dma);
 	free(sc, M_DEVBUF, sizeof(*sc));
 }
 

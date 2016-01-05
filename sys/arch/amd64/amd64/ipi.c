@@ -93,9 +93,12 @@ x86_ipi_handler(void)
 	struct cpu_info *ci = curcpu();
 	u_int32_t pending;
 	int bit;
+	int floor;
 
-	pending = x86_atomic_testset_u32(&ci->ci_ipis, 0);
+	floor = ci->ci_handled_intr_level;
+	ci->ci_handled_intr_level = ci->ci_ilevel;
 
+	pending = atomic_swap_uint(&ci->ci_ipis, 0);
 	for (bit = 0; bit < X86_NIPI && pending; bit++) {
 		if (pending & (1<<bit)) {
 			pending &= ~(1<<bit);
@@ -103,4 +106,6 @@ x86_ipi_handler(void)
 			ipi_count.ec_count++;
 		}
 	}
+
+	ci->ci_handled_intr_level = floor;
 }

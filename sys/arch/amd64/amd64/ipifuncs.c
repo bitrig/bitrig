@@ -40,7 +40,6 @@
 #include <sys/device.h>
 #include <sys/memrange.h>
 #include <sys/systm.h>
-#include <sys/mplock.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -51,6 +50,7 @@
 #include <machine/i82489reg.h>
 #include <machine/i82489var.h>
 #include <machine/fpu.h>
+#include <machine/mplock.h>
 
 #include <machine/db_machdep.h>
 
@@ -96,10 +96,10 @@ void
 x86_64_ipi_halt(struct cpu_info *ci)
 {
 	SCHED_ASSERT_UNLOCKED();
-	KERNEL_ASSERT_UNLOCKED();
+	KASSERT(!__mp_lock_held(&kernel_lock));
 	
 	fpusave_cpu(ci, 1);
-	intr_disable();
+	disable_intr();
 	lapic_disable();
 	wbinvd();
 	ci->ci_flags &= ~CPUF_RUNNING;

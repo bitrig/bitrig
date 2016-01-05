@@ -209,17 +209,18 @@ rtcintr(void *arg)
 int
 gettick(void)
 {
-	intr_state_t its;
+	u_long ef;
 	u_char lo, hi;
 
 	/* Don't want someone screwing with the counter while we're here. */
 	mtx_enter(&timer_mutex);
-	its = intr_disable();
+	ef = read_rflags();
+	disable_intr();
 	/* Select counter 0 and latch it. */
 	outb(IO_TIMER1+TIMER_MODE, TIMER_SEL0 | TIMER_LATCH);
 	lo = inb(IO_TIMER1+TIMER_CNTR0);
 	hi = inb(IO_TIMER1+TIMER_CNTR0);
-	intr_restore(its);
+	write_rflags(ef);
 	mtx_leave(&timer_mutex);
 	return ((hi << 8) | lo);
 }
@@ -657,9 +658,10 @@ i8254_get_timecount(struct timecounter *tc)
 {
 	u_char hi, lo;
 	u_int count;
-	intr_state_t its;
+	u_long ef;
 
-	its = intr_disable();
+	ef = read_rflags();
+	disable_intr();
 
 	outb(IO_TIMER1+TIMER_MODE, TIMER_SEL0 | TIMER_LATCH);
 	lo = inb(IO_TIMER1+TIMER_CNTR0);
@@ -673,7 +675,7 @@ i8254_get_timecount(struct timecounter *tc)
 	}
 	i8254_lastcount = count;
 	count += i8254_offset;
-	intr_restore(its);
+	write_rflags(ef);
 
 	return (count);
 }

@@ -47,8 +47,16 @@ struct vm_anon {
 	 */
 	int		 an_swslot;
 
-	struct mutex	 an_lock;
+	struct mutex	an_lock;
 };
+
+#ifdef UVMLOCKDEBUG
+#      define UVM_ASSERT_ANONLOCKED(anon) MUTEX_ASSERT_LOCKED(&(anon)->an_lock)
+#      define UVM_ASSERT_ANONUNLOCKED(anon) MUTEX_ASSERT_UNLOCKED(&(anon)->an_lock)
+#else
+#      define UVM_ASSERT_ANONLOCKED(obj)
+#      define UVM_ASSERT_ANONUNLOCKED(obj)
+#endif /* UVMLOCKDEBUG */
 
 /*
  * for active vm_anon's the data can be in one of the following state:
@@ -86,13 +94,5 @@ void		 uvm_anon_init(void);
 void		 uvm_anon_dropswap(struct vm_anon *);
 boolean_t	 uvm_anon_pagein(struct vm_anon *);
 #endif /* _KERNEL */
-
-#ifdef UVMLOCKDEBUG
-#	define UVM_ASSERT_ANONLOCKED(anon) MUTEX_ASSERT_LOCKED(&(anon)->an_lock)
-#	define UVM_ASSERT_ANONUNLOCKED(anon) MUTEX_ASSERT_UNLOCKED(&(anon)->an_lock)
-#else
-#	define UVM_ASSERT_ANONLOCKED(obj)
-#	define UVM_ASSERT_ANONUNLOCKED(obj)
-#endif	/* UVMLOCKDEBUG */
 
 #endif /* _UVM_UVM_ANON_H_ */

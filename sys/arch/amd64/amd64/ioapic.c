@@ -112,22 +112,23 @@ void ioapic_set_id(struct ioapic_softc *);
 static __inline u_long
 ioapic_lock(struct ioapic_softc *sc)
 {
-	intr_state_t its;
+	u_long flags;
 
-	its = intr_disable();
+	flags = read_psl();
+	disable_intr();
 #ifdef MULTIPROCESSOR
 	mtx_enter(&sc->sc_pic.pic_mutex);
 #endif
-	return (its);
+	return flags;
 }
 
 static __inline void
-ioapic_unlock(struct ioapic_softc *sc, u_long its)
+ioapic_unlock(struct ioapic_softc *sc, u_long flags)
 {
 #ifdef MULTIPROCESSOR
 	mtx_leave(&sc->sc_pic.pic_mutex);
 #endif
-	intr_restore(its);
+	write_psl(flags);
 }
 
 /*

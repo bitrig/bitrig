@@ -177,16 +177,6 @@ const struct pci_matchid bce_devices[] = {
 	{ PCI_VENDOR_BROADCOM, PCI_PRODUCT_BROADCOM_BCM4401B1 }
 };
 
-struct uvm_constraint_range bce_constraint = {
-	.ucr_low = 0,
-	.ucr_high = 0x40000000 - 1,
-};
-
-const struct kmem_pa_mode kp_bce = {
-	.kp_constraint = &bce_constraint,
-	.kp_maxseg = 1,
-};
-
 int
 bce_probe(struct device *parent, void *match, void *aux)
 {
@@ -264,8 +254,9 @@ bce_attach(struct device *parent, struct device *self, void *aux)
 	bce_reset(sc);
 
 	/* Create the data DMA region and maps. */
-	if ((sc->bce_data = km_alloc((BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES,
-	    &kv_any, &kp_bce, &kd_nowait)) == NULL) {
+	if ((sc->bce_data = (caddr_t)uvm_km_kmemalloc_pla(kernel_map,
+	    uvm.kernel_object, (BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES, 0,
+	    UVM_KMF_NOWAIT, 0, (paddr_t)(0x40000000 - 1), 0, 0, 1)) == NULL) {
 		printf(": unable to alloc space for ring");
 		return;
 	}
@@ -275,8 +266,8 @@ bce_attach(struct device *parent, struct device *self, void *aux)
 	    1, BCE_NRXDESC * MCLBYTES, 0, BUS_DMA_NOWAIT | BUS_DMA_ALLOCNOW,
 	    &sc->bce_rxdata_map))) {
 		printf(": unable to create ring DMA map, error = %d\n", error);
-		km_free(sc->bce_data, (BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES,
-		    &kv_any, &kp_bce);
+		uvm_km_free(kernel_map, (vaddr_t)sc->bce_data,
+		    (BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES);
 		return;
 	}
 
@@ -284,8 +275,8 @@ bce_attach(struct device *parent, struct device *self, void *aux)
 	if (bus_dmamap_load(sc->bce_dmatag, sc->bce_rxdata_map, sc->bce_data,
 	    BCE_NRXDESC * MCLBYTES, NULL, BUS_DMA_READ | BUS_DMA_NOWAIT)) {
 		printf(": unable to load rx ring DMA map\n");
-		km_free(sc->bce_data, (BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES,
-		    &kv_any, &kp_bce);
+		uvm_km_free(kernel_map, (vaddr_t)sc->bce_data,
+		    (BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES);
 		bus_dmamap_destroy(sc->bce_dmatag, sc->bce_rxdata_map);
 		return;
 	}
@@ -295,8 +286,8 @@ bce_attach(struct device *parent, struct device *self, void *aux)
 	    1, BCE_NTXDESC * MCLBYTES, 0, BUS_DMA_NOWAIT | BUS_DMA_ALLOCNOW,
 	    &sc->bce_txdata_map))) {
 		printf(": unable to create ring DMA map, error = %d\n", error);
-		km_free(sc->bce_data, (BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES,
-		    &kv_any, &kp_bce);
+		uvm_km_free(kernel_map, (vaddr_t)sc->bce_data,
+		    (BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES);
 		bus_dmamap_destroy(sc->bce_dmatag, sc->bce_rxdata_map);
 		return;
 	}
@@ -306,8 +297,8 @@ bce_attach(struct device *parent, struct device *self, void *aux)
 	    sc->bce_data + BCE_NRXDESC * MCLBYTES,
 	    BCE_NTXDESC * MCLBYTES, NULL, BUS_DMA_WRITE | BUS_DMA_NOWAIT)) {
 		printf(": unable to load tx ring DMA map\n");
-		km_free(sc->bce_data, (BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES,
-		    &kv_any, &kp_bce);
+		uvm_km_free(kernel_map, (vaddr_t)sc->bce_data,
+		    (BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES);
 		bus_dmamap_destroy(sc->bce_dmatag, sc->bce_rxdata_map);
 		bus_dmamap_destroy(sc->bce_dmatag, sc->bce_txdata_map);
 		return;
@@ -328,8 +319,8 @@ bce_attach(struct device *parent, struct device *self, void *aux)
 	    (bus_addr_t)0, (bus_addr_t)0x3fffffff))) {
 		printf(": unable to alloc space for ring descriptors, "
 		    "error = %d\n", error);
-		km_free(sc->bce_data, (BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES,
-		    &kv_any, &kp_bce);
+		uvm_km_free(kernel_map, (vaddr_t)sc->bce_data,
+		    (BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES);
 		bus_dmamap_destroy(sc->bce_dmatag, sc->bce_rxdata_map);
 		bus_dmamap_destroy(sc->bce_dmatag, sc->bce_txdata_map);
 		return;
@@ -339,8 +330,8 @@ bce_attach(struct device *parent, struct device *self, void *aux)
 	if ((error = bus_dmamem_map(sc->bce_dmatag, &seg, rseg,
 	    2 * PAGE_SIZE, &kva, BUS_DMA_NOWAIT))) {
 		printf(": unable to map DMA buffers, error = %d\n", error);
-		km_free(sc->bce_data, (BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES,
-		    &kv_any, &kp_bce);
+		uvm_km_free(kernel_map, (vaddr_t)sc->bce_data,
+		    (BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES);
 		bus_dmamap_destroy(sc->bce_dmatag, sc->bce_rxdata_map);
 		bus_dmamap_destroy(sc->bce_dmatag, sc->bce_txdata_map);
 		bus_dmamem_free(sc->bce_dmatag, &seg, rseg);
@@ -351,8 +342,8 @@ bce_attach(struct device *parent, struct device *self, void *aux)
 	if ((error = bus_dmamap_create(sc->bce_dmatag, 2 * PAGE_SIZE, 1,
 	    2 * PAGE_SIZE, 0, BUS_DMA_NOWAIT, &sc->bce_ring_map))) {
 		printf(": unable to create ring DMA map, error = %d\n", error);
-		km_free(sc->bce_data, (BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES,
-		    &kv_any, &kp_bce);
+		uvm_km_free(kernel_map, (vaddr_t)sc->bce_data,
+		    (BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES);
 		bus_dmamap_destroy(sc->bce_dmatag, sc->bce_rxdata_map);
 		bus_dmamap_destroy(sc->bce_dmatag, sc->bce_txdata_map);
 		bus_dmamem_free(sc->bce_dmatag, &seg, rseg);
@@ -363,8 +354,8 @@ bce_attach(struct device *parent, struct device *self, void *aux)
 	if (bus_dmamap_load(sc->bce_dmatag, sc->bce_ring_map, kva,
 	    2 * PAGE_SIZE, NULL, BUS_DMA_NOWAIT)) {
 		printf(": unable to load ring DMA map\n");
-		km_free(sc->bce_data, (BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES,
-		    &kv_any, &kp_bce);
+		uvm_km_free(kernel_map, (vaddr_t)sc->bce_data,
+		    (BCE_NTXDESC + BCE_NRXDESC) * MCLBYTES);
 		bus_dmamap_destroy(sc->bce_dmatag, sc->bce_rxdata_map);
 		bus_dmamap_destroy(sc->bce_dmatag, sc->bce_txdata_map);
 		bus_dmamap_destroy(sc->bce_dmatag, sc->bce_ring_map);

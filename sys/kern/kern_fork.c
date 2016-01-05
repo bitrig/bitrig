@@ -241,7 +241,7 @@ process_new(struct proc *p, struct process *parent, int flags)
 	pr->ps_flags |= PS_EMBRYO;
 
 	/* Force visibility of all of the above changes */
-	atomic_thread_fence(memory_order_release);
+	membar_producer();
 
 	/* it's sufficiently inited to be globally visible */
 	LIST_INSERT_HEAD(&allprocess, pr, ps_list);
@@ -261,7 +261,7 @@ fork1(struct proc *curp, int flags, void *stack, pid_t *tidptr,
 	uid_t uid;
 	struct vmspace *vm;
 	int count;
-	struct user *uaddr;
+	vaddr_t uaddr;
 	int s;
 	struct  ptrace_state *newptstat = NULL;
 #if NSYSTRACE > 0
@@ -324,7 +324,7 @@ fork1(struct proc *curp, int flags, void *stack, pid_t *tidptr,
 	}
 
 	uaddr = uvm_uarea_alloc();
-	if (uaddr == NULL) {
+	if (uaddr == 0) {
 		if ((flags & FORK_THREAD) == 0) {
 			(void)chgproccnt(uid, -1);
 			nprocesses--;
@@ -627,7 +627,6 @@ proc_trampoline_mp(void)
 
 	SCHED_ASSERT_LOCKED();
 	__mp_unlock(&sched_lock);
-	reaper_movedead();
 	spl0();
 	SCHED_ASSERT_UNLOCKED();
 	KERNEL_ASSERT_UNLOCKED();

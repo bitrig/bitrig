@@ -103,6 +103,7 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
+#include <sys/atomic.h>
 #include <sys/proc.h>
 #include <sys/malloc.h>
 #include <sys/pool.h>
@@ -110,7 +111,6 @@
 #include <sys/kernel.h>
 #include <sys/mutex.h>
 #include <sys/sched.h>
-#include <sys/atomic.h>
 
 #include <uvm/uvm.h>
 
@@ -172,11 +172,16 @@
  *  - there are three data structures that we must dynamically allocate:
  *
  * [A] new process' page directory page (PDP)
- *	- plan 1: done at pmap_create() we use a pool(9) to do this allocation.
+ *	- plan 1: done at pmap_create() we use
+ *	  uvm_km_alloc(kernel_map, PAGE_SIZE)  [fka kmem_alloc] to do this
+ *	  allocation.
  *
  * if we are low in free physical memory then we sleep in
- * pool_get() -- in this case this is ok since we are creating
+ * uvm_km_alloc -- in this case this is ok since we are creating
  * a new pmap and should not be holding any locks.
+ *
+ * if the kernel is totally out of virtual space
+ * (i.e. uvm_km_alloc returns NULL), then we panic.
  *
  * XXX: the fork code currently has no way to return an "out of
  * memory, try again" error code since uvm_fork [fka vm_fork]
@@ -205,32 +210,9 @@ long nkptpmax[] = NKPTPMAX_INITIALIZER;
 long nbpd[] = NBPD_INITIALIZER;
 pd_entry_t *normal_pdes[] = PDES_INITIALIZER;
 
-/*
- * This is a bit of a hack to ensure that UVMLOCKDEBUG asserts in
- * uvm_page.c won't fire when we alloc in subobjects. We don't do
- * anything otherwise because all allocations are protected
- * by the lock on the first object.
- */
-#ifdef UVMLOCKDEBUG
-#define PMAP_SUBOBJ_LOCK(pm, idx) do {				\
-	UVM_ASSERT_OBJLOCKED(&pm->pm_obj[0]);			\
-	if ((idx)) /* only if not idx 0 */			\
-		mtx_enter(&pm->pm_obj[(idx)].vmobjlock);	\
-} while (/* CONSTCOND */ 0)
-#define PMAP_SUBOBJ_UNLOCK(pm, idx) do {			\
-	if ((idx) != 0)						\
-		mtx_leave(&pm->pm_obj[(idx)].vmobjlock);	\
-	UVM_ASSERT_OBJLOCKED(&pm->pm_obj[0]);			\
-} while (/* CONSTCOND */ 0)
-#else
-#define PMAP_SUBOBJ_LOCK(pm, idx)	/* null */
-#define PMAP_SUBOBJ_UNLOCK(pm, idx)	/* null */
-#endif /* UVMLOCKDEBUG */
-
-#define pmap_pte_set(p, n)		x86_atomic_testset_u64(p, n)
+#define pmap_pte_set(p, n)		atomic_swap_64(p, n)
 #define pmap_pte_clearbits(p, b)	x86_atomic_clearbits_u64(p, b)
 #define pmap_pte_setbits(p, b)		x86_atomic_setbits_u64(p, b)
-
 
 /*
  * global data structures
@@ -261,7 +243,6 @@ struct pool pmap_pv_pool;
  * linked list of all non-kernel pmaps
  */
 
-struct mutex pmaps_lock;
 struct pmap_head pmaps;
 
 /*
@@ -307,9 +288,7 @@ int pmap_find_pte_direct(struct pmap *pm, vaddr_t va, pt_entry_t **pd, int *offs
 void pmap_free_ptp(struct pmap *, struct vm_page *,
     vaddr_t, pt_entry_t *, pd_entry_t **, struct pg_to_free *);
 void pmap_freepage(struct pmap *, struct vm_page *, int, struct pg_to_free *);
-#ifdef MULTIPROCESSOR
 static boolean_t pmap_is_active(struct pmap *, int);
-#endif
 void pmap_map_ptes(struct pmap *, pt_entry_t **, pd_entry_t ***, paddr_t *);
 struct pv_entry *pmap_remove_pv(struct vm_page *, struct pmap *, vaddr_t);
 void pmap_do_remove(struct pmap *, vaddr_t, vaddr_t, int);
@@ -320,6 +299,7 @@ void pmap_remove_ptes(struct pmap *, struct vm_page *, vaddr_t,
 #define PMAP_REMOVE_ALL		0	/* remove all mappings */
 #define PMAP_REMOVE_SKIPWIRED	1	/* skip wired mappings */
 
+void pmap_unmap_ptes(struct pmap *, paddr_t);
 boolean_t pmap_get_physpage(vaddr_t, int, paddr_t *);
 boolean_t pmap_pdes_valid(vaddr_t, pd_entry_t **, pd_entry_t *);
 void pmap_alloc_level(pd_entry_t **, vaddr_t, int, long *);
@@ -356,14 +336,12 @@ pmap_is_curpmap(struct pmap *pmap)
  * pmap_is_active: is this pmap loaded into the specified processor's %cr3?
  */
 
-#ifdef MULTIPROCESSOR
 static __inline boolean_t
 pmap_is_active(struct pmap *pmap, int cpu_id)
 {
 	return (pmap == pmap_kernel() ||
 	    (pmap->pm_cpus & (1ULL << cpu_id)) != 0);
 }
-#endif
 
 static __inline u_int
 pmap_pte2flags(u_long pte)
@@ -380,41 +358,8 @@ pmap_sync_flags_pte(struct vm_page *pg, u_long pte)
 	}
 }
 
-static __inline void
-pmap_lock(struct pmap *pmap)
-{
-	if (pmap_is_curpmap(pmap)) {
-		if (pmap != pmap_kernel())
-			mtx_enter(&pmap->pm_lock);
-	} else {
-		/* need to lock both curpmap and pmap: use ordered locking */
-		if ((vaddr_t)pmap < (vaddr_t)curpcb->pcb_pmap) {
-			mtx_enter(&pmap->pm_lock);
-			mtx_enter(&curpcb->pcb_pmap->pm_lock);
-		} else {
-			mtx_enter(&curpcb->pcb_pmap->pm_lock);
-			mtx_enter(&pmap->pm_lock);
-		}
-	}
-}
-
-static __inline void
-pmap_unlock(struct pmap *pmap)
-{
-	if (pmap_is_curpmap(pmap)) {
-		if (pmap != pmap_kernel())
-			mtx_leave(&pmap->pm_lock);
-	} else {
-		mtx_leave(&pmap->pm_lock);
-		mtx_leave(&curpcb->pcb_pmap->pm_lock);
-	}
-}
-
 /*
  * pmap_map_ptes: map a pmap's PTEs into KVM
- *
- * => we lock enough pmaps to keep things locked in
- * => must be undone with pmap_unmap_ptes before returning
  */
 
 void
@@ -439,13 +384,19 @@ pmap_map_ptes(struct pmap *pmap, pt_entry_t **ptepp, pd_entry_t ***pdeppp, paddr
 		lcr3(pmap->pm_pdirpa);
 	}
 
+	if (pmap != pmap_kernel())
+		mtx_enter(&pmap->pm_mtx);
+
 	*ptepp = PTE_BASE;
 	*pdeppp = normal_pdes;
 }
 
-static __inline void
+void
 pmap_unmap_ptes(struct pmap *pmap, paddr_t save_cr3)
 {
+	if (pmap != pmap_kernel())
+		mtx_leave(&pmap->pm_mtx);
+
 	if (save_cr3 != 0) {
 		x86_atomic_clearbits_u64(&pmap->pm_cpus, (1ULL << cpu_number()));
 		lcr3(save_cr3);
@@ -707,7 +658,8 @@ pmap_bootstrap(paddr_t first_avail, paddr_t max_pa)
 	idt_paddr = first_avail;			/* steal a page */
 	first_avail += 2 * PAGE_SIZE;
 
-#if defined(MULTIPROCESSOR) || NACPI > 0
+#if defined(MULTIPROCESSOR) || \
+    (NACPI > 0 && !defined(SMALL_KERNEL))
 	/*
 	 * Grab a page below 4G for things that need it (i.e.
 	 * having an initial %cr3 for the MP trampoline).
@@ -722,7 +674,6 @@ pmap_bootstrap(paddr_t first_avail, paddr_t max_pa)
 	 * init the global lists.
 	 */
 	LIST_INIT(&pmaps);
-	mtx_init(&pmaps_lock, IPL_NONE);
 
 	/*
 	 * initialize the pmap pool.
@@ -733,6 +684,7 @@ pmap_bootstrap(paddr_t first_avail, paddr_t max_pa)
 	pool_init(&pmap_pv_pool, sizeof(struct pv_entry), 0, 0, 0, "pvpl",
 	    &pool_allocator_single);
 	pool_sethiwat(&pmap_pv_pool, 32 * 1024);
+	pool_setipl(&pmap_pv_pool, IPL_VM);
 
 	/*
 	 * initialize the PDE pool.
@@ -817,8 +769,10 @@ pmap_enter_pv(struct vm_page *pg, struct pv_entry *pve, struct pmap *pmap,
 	pve->pv_pmap = pmap;
 	pve->pv_va = va;
 	pve->pv_ptp = ptp;			/* NULL for kernel pmap */
+	mtx_enter(&pg->mdpage.pv_mtx);
 	pve->pv_next = pg->mdpage.pv_list;	/* add to ... */
 	pg->mdpage.pv_list = pve;		/* ... list */
+	mtx_leave(&pg->mdpage.pv_mtx);
 }
 
 /*
@@ -833,6 +787,7 @@ pmap_remove_pv(struct vm_page *pg, struct pmap *pmap, vaddr_t va)
 {
 	struct pv_entry *pve, **prevptr;
 
+	mtx_enter(&pg->mdpage.pv_mtx);
 	prevptr = &pg->mdpage.pv_list;
 	while ((pve = *prevptr) != NULL) {
 		if (pve->pv_pmap == pmap && pve->pv_va == va) {	/* match? */
@@ -841,6 +796,7 @@ pmap_remove_pv(struct vm_page *pg, struct pmap *pmap, vaddr_t va)
 		}
 		prevptr = &pve->pv_next;		/* previous pointer */
 	}
+	mtx_leave(&pg->mdpage.pv_mtx);
 	return(pve);				/* return removed pve */
 }
 
@@ -858,9 +814,7 @@ pmap_find_ptp(struct pmap *pmap, vaddr_t va, paddr_t pa, int level)
 	    pa == VM_PAGE_TO_PHYS(pmap->pm_ptphint[lidx]))
 		return (pmap->pm_ptphint[lidx]);
 
-	PMAP_SUBOBJ_LOCK(pmap, lidx);
 	pg = uvm_pagelookup(&pmap->pm_obj[lidx], ptp_va2o(va, level));
-	PMAP_SUBOBJ_UNLOCK(pmap, lidx);
 
 	return pg;
 }
@@ -875,16 +829,11 @@ pmap_freepage(struct pmap *pmap, struct vm_page *ptp, int level,
 	lidx = level - 1;
 
 	obj = &pmap->pm_obj[lidx];
-	PMAP_SUBOBJ_LOCK(pmap, lidx);
 	pmap->pm_stats.resident_count--;
 	if (pmap->pm_ptphint[lidx] == ptp)
 		pmap->pm_ptphint[lidx] = RB_ROOT(&obj->memt);
 	ptp->wire_count = 0;
-	/* we do all the freeing once we've shot down all the tlbs, so
-	 * remove this from the backing object and put it on the list
-	 */
 	uvm_pagerealloc(ptp, NULL, 0);
-	PMAP_SUBOBJ_UNLOCK(pmap, lidx);
 	TAILQ_INSERT_TAIL(pagelist, ptp, pageq);
 }
 
@@ -962,11 +911,9 @@ pmap_get_ptp(struct pmap *pmap, vaddr_t va, pd_entry_t **pdes)
 			continue;
 		}
 
-		obj = &pmap->pm_obj[i - 2];
-		PMAP_SUBOBJ_LOCK(pmap, i - 2);
+		obj = &pmap->pm_obj[i-2];
 		ptp = uvm_pagealloc(obj, ptp_va2o(va, i - 1), NULL,
 		    UVM_PGA_USERESERVE|UVM_PGA_ZERO);
-		PMAP_SUBOBJ_UNLOCK(pmap, i - 2);
 
 		if (ptp == NULL)
 			return NULL;
@@ -1066,6 +1013,8 @@ pmap_create(void)
 
 	pmap = pool_get(&pmap_pmap_pool, PR_WAITOK);
 
+	mtx_init(&pmap->pm_mtx, IPL_VM);
+
 	/* init uvm_object */
 	for (i = 0; i < PTP_LEVELS - 1; i++) {
 		uvm_objinit(&pmap->pm_obj[i], NULL, 1);
@@ -1084,14 +1033,11 @@ pmap_create(void)
 	 */
 
 	pmap->pm_pdir = pool_get(&pmap_pdp_pool, PR_WAITOK);
-	mtx_enter(&pmaps_lock);
 	pmap_pdp_ctor(pmap->pm_pdir);
 
 	pmap->pm_pdirpa = pmap->pm_pdir[PDIR_SLOT_PTE] & PG_FRAME;
 
 	LIST_INSERT_HEAD(&pmaps, pmap, pm_list);
-	mtx_leave(&pmaps_lock);
-
 	return (pmap);
 }
 
@@ -1111,10 +1057,8 @@ pmap_destroy(struct pmap *pmap)
 	 * drop reference count
 	 */
 
-	mtx_enter(&pmap->pm_lock);
-	refs = --pmap->pm_obj[0].uo_refs;
+	refs = atomic_dec_int_nv(&pmap->pm_obj[0].uo_refs);
 	if (refs > 0) {
-		mtx_leave(&pmap->pm_lock);
 		return;
 	}
 
@@ -1131,25 +1075,20 @@ pmap_destroy(struct pmap *pmap)
 	/*
 	 * remove it from global list of pmaps
 	 */
-	mtx_enter(&pmaps_lock);
 	LIST_REMOVE(pmap, pm_list);
-	mtx_leave(&pmaps_lock);
 
 	/*
 	 * free any remaining PTPs
 	 */
 
 	for (i = 0; i < PTP_LEVELS - 1; i++) {
-		PMAP_SUBOBJ_LOCK(pmap, i);
 		while ((pg = RB_ROOT(&pmap->pm_obj[i].memt)) != NULL) {
 			KASSERT((pg->pg_flags & PG_BUSY) == 0);
 
 			pg->wire_count = 0;
 			uvm_pagefree(pg);
 		}
-		PMAP_SUBOBJ_UNLOCK(pmap, i);
 	}
-	mtx_leave(&pmap->pm_lock);
 
 	/* XXX: need to flush it out of other processor's space? */
 	pool_put(&pmap_pdp_pool, pmap->pm_pdir);
@@ -1164,9 +1103,7 @@ pmap_destroy(struct pmap *pmap)
 void
 pmap_reference(struct pmap *pmap)
 {
-	mtx_enter(&pmap->pm_lock);
-	pmap->pm_obj[0].uo_refs++;
-	mtx_leave(&pmap->pm_lock);
+	atomic_inc_int(&pmap->pm_obj[0].uo_refs);
 }
 
 /*
@@ -1244,7 +1181,6 @@ pmap_extract(struct pmap *pmap, vaddr_t va, paddr_t *pap)
 {
 	pt_entry_t *ptes;
 	int level, offs;
-	boolean_t ret = FALSE;
 
 	if (pmap == pmap_kernel() && va >= PMAP_DIRECT_BASE &&
 	    va < PMAP_DIRECT_END) {
@@ -1252,23 +1188,20 @@ pmap_extract(struct pmap *pmap, vaddr_t va, paddr_t *pap)
 		return (TRUE);
 	}
 
-	pmap_lock(pmap);
-
 	level = pmap_find_pte_direct(pmap, va, &ptes, &offs);
 
 	if (__predict_true(level == 0 && pmap_valid_entry(ptes[offs]))) {
 		if (pap != NULL)
 			*pap = (ptes[offs] & PG_FRAME) | (va & PAGE_MASK);
-		ret = TRUE;
-	} else if (level == 1 && (ptes[offs] & (PG_PS|PG_V)) == (PG_PS|PG_V)) {
+		return (TRUE);
+	}
+	if (level == 1 && (ptes[offs] & (PG_PS|PG_V)) == (PG_PS|PG_V)) {
 		if (pap != NULL)
 			*pap = (ptes[offs] & PG_LGFRAME) | (va & PAGE_MASK_L2);
-		ret = TRUE;
+		return (TRUE);
 	}
 
-	pmap_unlock(pmap);
-
-	return (ret);
+	return FALSE;
 }
 
 /*
@@ -1499,10 +1432,8 @@ pmap_do_remove(struct pmap *pmap, vaddr_t sva, vaddr_t eva, int flags)
 
 	TAILQ_INIT(&empty_ptps);
 
-	pmap_lock(pmap);
 	pmap_map_ptes(pmap, &ptes, &pdes, &scr3);
 	shootself = (scr3 == 0);
-
 
 	/*
 	 * removing one page?  take shortcut function.
@@ -1546,7 +1477,6 @@ pmap_do_remove(struct pmap *pmap, vaddr_t sva, vaddr_t eva, int flags)
 		} else {
 			pmap_unmap_ptes(pmap, scr3);
 		}
-		pmap_unlock(pmap);
 
 		goto cleanup;
 	}
@@ -1611,12 +1541,7 @@ pmap_do_remove(struct pmap *pmap, vaddr_t sva, vaddr_t eva, int flags)
 
 	pmap_unmap_ptes(pmap, scr3);
 	pmap_tlb_shootwait();
-	pmap_unlock(pmap);
 
-	/*
-	 * ptps were already removed from the uvm_objects, and they have
-	 * never been on uvm page queues so no locking is needed.
-	 */
 cleanup:
 	while ((pve = free_pvs) != NULL) {
 		free_pvs = pve->pv_next;
@@ -1639,6 +1564,7 @@ void
 pmap_page_remove(struct vm_page *pg)
 {
 	struct pv_entry *pve;
+	struct pmap *pm;
 	pt_entry_t *ptes, opte;
 	pd_entry_t **pdes;
 #ifdef DIAGNOSTIC
@@ -1651,13 +1577,37 @@ pmap_page_remove(struct vm_page *pg)
 
 	TAILQ_INIT(&empty_ptps);
 
+	mtx_enter(&pg->mdpage.pv_mtx);
 	while ((pve = pg->mdpage.pv_list) != NULL) {
-		pg->mdpage.pv_list = pve->pv_next;
+		pmap_reference(pve->pv_pmap);
+		pm = pve->pv_pmap;
+		mtx_leave(&pg->mdpage.pv_mtx);
 
 		/* XXX use direct map? */
-		pmap_lock(pve->pv_pmap);
-		pmap_map_ptes(pve->pv_pmap, &ptes, &pdes, &scr3);
+		pmap_map_ptes(pm, &ptes, &pdes, &scr3);	/* locks pmap */
 		shootself = (scr3 == 0);
+
+		/*
+		 * We dropped the pvlist lock before grabbing the pmap
+		 * lock to avoid lock ordering problems.  This means
+		 * we have to check the pvlist again since somebody
+		 * else might have modified it.  All we care about is
+		 * that the pvlist entry matches the pmap we just
+		 * locked.  If it doesn't, unlock the pmap and try
+		 * again.
+		 */
+		mtx_enter(&pg->mdpage.pv_mtx);
+		if ((pve = pg->mdpage.pv_list) == NULL ||
+		    pve->pv_pmap != pm) {
+			mtx_leave(&pg->mdpage.pv_mtx);
+			pmap_unmap_ptes(pm, scr3);	/* unlocks pmap */
+			pmap_destroy(pm);
+			mtx_enter(&pg->mdpage.pv_mtx);
+			continue;
+		}
+
+		pg->mdpage.pv_list = pve->pv_next;
+		mtx_leave(&pg->mdpage.pv_mtx);
 
 #ifdef DIAGNOSTIC
 		if (pve->pv_ptp && pmap_pdes_valid(pve->pv_va, pdes, &pde) &&
@@ -1692,10 +1642,12 @@ pmap_page_remove(struct vm_page *pg)
 				    pve->pv_va, ptes, pdes, &empty_ptps);
 			}
 		}
-		pmap_unmap_ptes(pve->pv_pmap, scr3);
-		pmap_unlock(pve->pv_pmap);
+		pmap_unmap_ptes(pve->pv_pmap, scr3);	/* unlocks pmap */
+		pmap_destroy(pve->pv_pmap);
 		pool_put(&pmap_pv_pool, pve);
+		mtx_enter(&pg->mdpage.pv_mtx);
 	}
+	mtx_leave(&pg->mdpage.pv_mtx);
 
 	pmap_tlb_shootwait();
 
@@ -1730,14 +1682,14 @@ pmap_test_attrs(struct vm_page *pg, unsigned int testbits)
 		return (TRUE);
 
 	mybits = 0;
+	mtx_enter(&pg->mdpage.pv_mtx);
 	for (pve = pg->mdpage.pv_list; pve != NULL && mybits == 0;
 	    pve = pve->pv_next) {
-		pmap_lock(pve->pv_pmap);
 		level = pmap_find_pte_direct(pve->pv_pmap, pve->pv_va, &ptes,
 		    &offs);
 		mybits |= (ptes[offs] & testbits);
-		pmap_unlock(pve->pv_pmap);
 	}
+	mtx_leave(&pg->mdpage.pv_mtx);
 
 	if (mybits == 0)
 		return (FALSE);
@@ -1767,8 +1719,8 @@ pmap_clear_attrs(struct vm_page *pg, unsigned long clearbits)
 	if (result)
 		atomic_clearbits_int(&pg->pg_flags, clearflags);
 
+	mtx_enter(&pg->mdpage.pv_mtx);
 	for (pve = pg->mdpage.pv_list; pve != NULL; pve = pve->pv_next) {
-		pmap_lock(pve->pv_pmap);
 		level = pmap_find_pte_direct(pve->pv_pmap, pve->pv_va, &ptes,
 		    &offs);
 		opte = ptes[offs];
@@ -1778,8 +1730,8 @@ pmap_clear_attrs(struct vm_page *pg, unsigned long clearbits)
 			pmap_tlb_shootpage(pve->pv_pmap, pve->pv_va,
 				pmap_is_curpmap(pve->pv_pmap));
 		}
-		pmap_unlock(pve->pv_pmap);
 	}
+	mtx_leave(&pg->mdpage.pv_mtx);
 
 	pmap_tlb_shootwait();
 
@@ -1821,7 +1773,6 @@ pmap_write_protect(struct pmap *pmap, vaddr_t sva, vaddr_t eva, vm_prot_t prot)
 	vaddr_t va;
 	paddr_t scr3;
 
-	pmap_lock(pmap);
 	pmap_map_ptes(pmap, &ptes, &pdes, &scr3);
 	shootself = (scr3 == 0);
 
@@ -1880,8 +1831,6 @@ pmap_write_protect(struct pmap *pmap, vaddr_t sva, vaddr_t eva, vm_prot_t prot)
 		pmap_tlb_shootrange(pmap, sva, eva, shootself);
 
 	pmap_unmap_ptes(pmap, scr3);
-	pmap_unlock(pmap);
-
 	pmap_tlb_shootwait();
 }
 
@@ -1900,8 +1849,6 @@ pmap_unwire(struct pmap *pmap, vaddr_t va)
 {
 	pt_entry_t *ptes;
 	int level, offs;
-
-	pmap_lock(pmap);
 
 	level = pmap_find_pte_direct(pmap, va, &ptes, &offs);
 
@@ -1927,7 +1874,6 @@ pmap_unwire(struct pmap *pmap, vaddr_t va)
 		panic("%s: invalid PDE", __func__);
 	}
 #endif
-	pmap_unlock(pmap);
 }
 
 /*
@@ -1973,7 +1919,7 @@ pmap_enter(struct pmap *pmap, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	pt_entry_t *ptes, opte, npte;
 	pd_entry_t **pdes;
 	struct vm_page *ptp, *pg = NULL;
-	struct pv_entry *pve = NULL;
+	struct pv_entry *pve, *opve = NULL;
 	int ptpdelta, wireddelta, resdelta;
 	boolean_t wired = (flags & PMAP_WIRED) != 0;
 	boolean_t nocache = (pa & PMAP_NOCACHE) != 0;
@@ -1995,11 +1941,19 @@ pmap_enter(struct pmap *pmap, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 
 #endif
 
+	pve = pool_get(&pmap_pv_pool, PR_NOWAIT);
+	if (pve == NULL) {
+		if (flags & PMAP_CANFAIL) {
+			error = ENOMEM;
+			goto out;
+		}
+		panic("%s: no pv entries available", __func__);
+	}
+
 	/*
 	 * map in ptes and get a pointer to our PTP (unless we are the kernel)
 	 */
 
-	pmap_lock(pmap);
 	pmap_map_ptes(pmap, &ptes, &pdes, &scr3);
 	shootself = (scr3 == 0);
 	if (pmap == pmap_kernel()) {
@@ -2008,6 +1962,7 @@ pmap_enter(struct pmap *pmap, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 		ptp = pmap_get_ptp(pmap, va, pdes);
 		if (ptp == NULL) {
 			if (flags & PMAP_CANFAIL) {
+				pmap_unmap_ptes(pmap, scr3);
 				error = ENOMEM;
 				goto out;
 			}
@@ -2083,11 +2038,10 @@ pmap_enter(struct pmap *pmap, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 				      __func__, pa, atop(pa));
 #endif
 			pmap_sync_flags_pte(pg, opte);
-			pve = pmap_remove_pv(pg, pmap, va);
+			opve = pmap_remove_pv(pg, pmap, va);
 			pg = NULL; /* This is not the page we are looking for */
 		}
 	} else {	/* opte not valid */
-		pve = NULL;
 		resdelta = 1;
 		if (wired)
 			wireddelta = 1;
@@ -2110,21 +2064,8 @@ pmap_enter(struct pmap *pmap, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 		pg = PHYS_TO_VM_PAGE(pa);
 
 	if (pg != NULL) {
-		if (pve == NULL) {
-			pve = pool_get(&pmap_pv_pool, PR_NOWAIT);
-			if (pve == NULL) {
-				if (flags & PMAP_CANFAIL) {
-					error = ENOMEM;
-					goto out;
-				}
-				panic("%s: no pv entries available", __func__);
-			}
-		}
 		pmap_enter_pv(pg, pve, pmap, va, ptp);
-	} else {
-		/* new mapping is not PG_PVLIST.   free pve if we've got one */
-		if (pve)
-			pool_put(&pmap_pv_pool, pve);
+		pve = NULL;
 	}
 
 enter_now:
@@ -2174,14 +2115,18 @@ enter_now:
 		if (nocache && (opte & PG_N) == 0)
 			wbinvd();
 		pmap_tlb_shootpage(pmap, va, shootself);
-		pmap_tlb_shootwait();
 	}
+
+	pmap_unmap_ptes(pmap, scr3);
+	pmap_tlb_shootwait();
 
 	error = 0;
 
 out:
-	pmap_unmap_ptes(pmap, scr3);
-	pmap_unlock(pmap);
+	if (pve)
+		pool_put(&pmap_pv_pool, pve);
+	if (opve)
+		pool_put(&pmap_pv_pool, opve);
 
 	return error;
 }
@@ -2191,8 +2136,6 @@ pmap_get_physpage(vaddr_t va, int level, paddr_t *paddrp)
 {
 	struct vm_page *ptp;
 	struct pmap *kpm = pmap_kernel();
-
-	MUTEX_ASSERT_LOCKED(&kpm->pm_lock);
 
 	if (uvm.page_init_done == FALSE) {
 		vaddr_t va;
@@ -2206,12 +2149,9 @@ pmap_get_physpage(vaddr_t va, int level, paddr_t *paddrp)
 		va = pmap_steal_memory(PAGE_SIZE, NULL, NULL);
 		*paddrp = PMAP_DIRECT_UNMAP(va);
 	} else {
-		PMAP_SUBOBJ_LOCK(kpm, level - 1);
 		ptp = uvm_pagealloc(&kpm->pm_obj[level - 1],
 				    ptp_va2o(va, level), NULL,
 				    UVM_PGA_USERESERVE|UVM_PGA_ZERO);
-		PMAP_SUBOBJ_UNLOCK(kpm, level - 1);
-
 		if (ptp == NULL)
 			panic("%s: out of memory", __func__);
 		atomic_clearbits_int(&ptp->pg_flags, PG_BUSY);
@@ -2238,8 +2178,6 @@ pmap_alloc_level(pd_entry_t **pdes, vaddr_t kva, int lvl, long *needed_ptps)
 	unsigned long index, endindex;
 	int level;
 	pd_entry_t *pdep;
-
-	MUTEX_ASSERT_LOCKED(&pmap_kernel()->pm_lock);
 
 	for (level = lvl; level > 1; level--) {
 		if (level == PTP_LEVELS)
@@ -2279,15 +2217,12 @@ vaddr_t
 pmap_growkernel(vaddr_t maxkvaddr)
 {
 	struct pmap *kpm = pmap_kernel(), *pm;
-	int i;
+	int s, i;
 	unsigned newpdes;
 	long needed_kptp[PTP_LEVELS], target_nptp, old;
 
-	mtx_enter(&kpm->pm_lock);
-	if (maxkvaddr <= pmap_maxkvaddr) {
-		mtx_leave(&kpm->pm_lock);
+	if (maxkvaddr <= pmap_maxkvaddr)
 		return pmap_maxkvaddr;
-	}
 
 	maxkvaddr = x86_round_pdr(maxkvaddr);
 	old = nkptp[PTP_LEVELS - 1];
@@ -2306,20 +2241,17 @@ pmap_growkernel(vaddr_t maxkvaddr)
 		needed_kptp[i] = target_nptp - nkptp[i] + 1;
 	}
 
+
+	s = splhigh();	/* to be safe */
 	pmap_alloc_level(normal_pdes, pmap_maxkvaddr, PTP_LEVELS,
 	    needed_kptp);
 
 	/*
 	 * If the number of top level entries changed, update all
 	 * pmaps.
-	 * Since we lock the pmap list we do not need to worry about
-	 * locking here, since the only thing to touch this part of the
-	 * pmaps will be us. (no one will be accessing the new ptps
-	 * until we return)
 	 */
 	if (needed_kptp[PTP_LEVELS - 1] != 0) {
 		newpdes = nkptp[PTP_LEVELS - 1] - old;
-		mtx_enter(&pmaps_lock);
 		LIST_FOREACH(pm, &pmaps, pm_list) {
 			memcpy(&pm->pm_pdir[PDIR_SLOT_KERN + old],
 			       &kpm->pm_pdir[PDIR_SLOT_KERN + old],
@@ -2330,10 +2262,9 @@ pmap_growkernel(vaddr_t maxkvaddr)
 #if 0
 		pool_cache_invalidate(&pmap_pdp_cache);
 #endif
-		mtx_leave(&pmaps_lock);
 	}
 	pmap_maxkvaddr = maxkvaddr;
-	mtx_leave(&kpm->pm_lock);
+	splx(s);
 
 	return maxkvaddr;
 }
@@ -2425,8 +2356,6 @@ pmap_dump(struct pmap *pmap, vaddr_t sva, vaddr_t eva)
 	if (eva > VM_MAXUSER_ADDRESS || eva <= sva)
 		eva = VM_MAXUSER_ADDRESS;
 
-
-	pmap_lock(pmap);
 	pmap_map_ptes(pmap, &ptes, &pdes, &scr3);
 
 	/*
@@ -2453,7 +2382,6 @@ pmap_dump(struct pmap *pmap, vaddr_t sva, vaddr_t eva)
 		}
 	}
 	pmap_unmap_ptes(pmap, scr3);
-	pmap_unlock(pmap);
 }
 #endif
 

@@ -105,7 +105,7 @@ uvm_anfree(struct vm_anon *anon)
 			/* tell them to dump it when done */
 			atomic_setbits_int(&pg->pg_flags, PG_RELEASED);
 			return;
-		} 
+		}
 		pmap_page_protect(pg, PROT_NONE);
 		uvm_lock_pageq();	/* lock out pagedaemon */
 		uvm_pagefree(pg);	/* bye bye */
@@ -217,5 +217,6 @@ uvm_anon_pagein(struct vm_anon *anon)
 	if (uobj) {
 		mtx_leave(&uobj->vmobjlock);
 	}
+
 	return FALSE;
 }

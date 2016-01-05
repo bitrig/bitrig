@@ -154,14 +154,6 @@ struct idechnl {
 
 int	acpi_add_device(struct aml_node *node, void *arg);
 
-struct gpe_block *acpi_find_gpe(struct acpi_softc *, int);
-void	acpi_enable_onegpe(struct acpi_softc *, int);
-int	acpi_gpe(struct acpi_softc *, int, void *);
-
-void	acpi_enable_rungpes(struct acpi_softc *);
-void	acpi_enable_wakegpes(struct acpi_softc *, int);
-void	acpi_disable_allgpes(struct acpi_softc *);
-
 /*
  * This is a list of Synaptics devices with a 'top button area'
  * based on the list in Linux supplied by Synaptics
@@ -2128,7 +2120,7 @@ acpi_sleep_pm(struct acpi_softc *sc, int state)
 	uint16_t rega, regb, regra, regrb;
 	int retry = 0;
 
-	intr_disable();
+	disable_intr();
 
 	/* Clear WAK_STS bit */
 	acpi_write_pmreg(sc, ACPIREG_PM1_STS, 0, ACPI_PM1_WAK_STS);
@@ -2301,7 +2293,7 @@ acpi_sleep_state(struct acpi_softc *sc, int state)
 	resettodr();
 
 	s = splhigh();
-	intr_disable();	/* PSL_I for resume; PIC/APIC broken until repair */
+	disable_intr();	/* PSL_I for resume; PIC/APIC broken until repair */
 	cold = 2;	/* Force other code to delay() instead of tsleep() */
 
 	if (config_suspend_all(DVACT_SUSPEND) != 0)
@@ -2349,7 +2341,7 @@ fail_pts:
 
 fail_suspend:
 	cold = 0;
-	intr_enable();
+	enable_intr();
 	splx(s);
 
 	acpibtn_disable_psw();		/* disable _LID for wakeup */
@@ -2413,7 +2405,7 @@ acpi_powerdown(void)
 		return;
 
 	s = splhigh();
-	intr_disable();
+	disable_intr();
 	cold = 1;
 
 	/* 1st powerdown AML step: _PTS(tostate) */

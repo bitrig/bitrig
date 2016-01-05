@@ -1178,10 +1178,10 @@ acpicpu_idle(void)
 		unsigned int hints;
 
 #ifdef __LP64__
-		if ((intr_get() & PSL_I) == 0)
+		if ((read_rflags() & PSL_I) == 0)
 			panic("idle with interrupts blocked!");
 #else
-		if ((intr_get() & PSL_I) == 0)
+		if ((read_eflags() & PSL_I) == 0)
 			panic("idle with interrupts blocked!");
 #endif
 
@@ -1205,9 +1205,9 @@ acpicpu_idle(void)
 		if (ci->ci_schedstate.spc_whichqs == 0) {
 			/* intel errata AAI65: cflush before monitor */
 			if (ci->ci_cflushsz != 0) {
-				atomic_thread_fence(memory_order_seq_cst);
+				membar_sync();
 				clflush((unsigned long)&ci->ci_mwait);
-				atomic_thread_fence(memory_order_seq_cst);
+				membar_sync();
 			}
 
 			monitor(&ci->ci_mwait, 0, 0);

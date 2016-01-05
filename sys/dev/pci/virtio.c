@@ -639,7 +639,7 @@ publish_avail_idx(struct virtio_softc *sc, struct virtqueue *vq)
 {
 	vq_sync_aring(sc, vq, BUS_DMASYNC_PREWRITE);
 
-	atomic_thread_fence(memory_order_release);
+	virtio_membar_producer();
 	vq->vq_avail->idx = vq->vq_avail_idx;
 	vq_sync_aring(sc, vq, BUS_DMASYNC_POSTWRITE);
 	vq->vq_queued = 1;
@@ -670,14 +670,14 @@ notify:
 			uint16_t t;
 			publish_avail_idx(sc, vq);
 
-			atomic_thread_fence(memory_order_seq_cst);
+			virtio_membar_sync();
 			t = VQ_AVAIL_EVENT(vq) + 1;
 			if ((uint16_t)(n - t) < (uint16_t)(n - o))
 				sc->sc_ops->kick(sc, vq->vq_index);
 		} else {
 			publish_avail_idx(sc, vq);
 
-			atomic_thread_fence(memory_order_seq_cst);
+			virtio_membar_sync();
 			if (!(vq->vq_used->flags & VRING_USED_F_NO_NOTIFY))
 				sc->sc_ops->kick(sc, vq->vq_index);
 		}
@@ -731,7 +731,7 @@ virtio_dequeue(struct virtio_softc *sc, struct virtqueue *vq,
 	usedidx = vq->vq_used_idx++;
 	usedidx &= vq->vq_mask;
 
-	atomic_thread_fence(memory_order_acquire);
+	virtio_membar_consumer();
 	slot = vq->vq_used->ring[usedidx].id;
 	qe = &vq->vq_entries[slot];
 
@@ -782,7 +782,7 @@ virtio_postpone_intr(struct virtqueue *vq, uint16_t nslots)
 
 	/* set the new event index: avail_ring->used_event = idx */
 	VQ_USED_EVENT(vq) = idx;
-	atomic_thread_fence(memory_order_seq_cst);
+	virtio_membar_sync();
 
 	vq_sync_aring(vq->vq_owner, vq, BUS_DMASYNC_PREWRITE);
 	vq->vq_queued++;
@@ -857,7 +857,7 @@ virtio_start_vq_intr(struct virtio_softc *sc, struct virtqueue *vq)
 	else
 		vq->vq_avail->flags &= ~VRING_AVAIL_F_NO_INTERRUPT;
 
-	atomic_thread_fence(memory_order_seq_cst);
+	virtio_membar_sync();
 
 	vq_sync_aring(sc, vq, BUS_DMASYNC_PREWRITE);
 	vq->vq_queued++;

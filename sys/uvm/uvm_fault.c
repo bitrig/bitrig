@@ -645,11 +645,8 @@ ReFault:
 		/* flush object? */
 		if (uobj) {
 			uoff = (startva - ufi.entry->start) + ufi.entry->offset;
-			mtx_enter(&uobj->vmobjlock);
 			(void) uobj->pgops->pgo_flush(uobj, uoff, uoff + 
 			    ((vsize_t)nback << PAGE_SHIFT), PGO_DEACTIVATE);
-			UVM_ASSERT_OBJLOCKED(uobj);
-			mtx_leave(&uobj->vmobjlock);
 		}
 
 		/* now forget about the backpages */
@@ -735,14 +732,9 @@ ReFault:
 	 * providing a pgo_fault routine.
 	 */
 	if (uobj && shadowed == FALSE && uobj->pgops->pgo_fault != NULL) {
-		mtx_enter(&uobj->vmobjlock);
-
-		/* locked: maps(read), amap (if there), uobj */
-		UVM_ASSERT_OBJLOCKED(uobj);
 		result = uobj->pgops->pgo_fault(&ufi, startva, pages, npages,
 				    centeridx, fault_type, access_type,
 				    PGO_LOCKED);
-		UVM_ASSERT_OBJUNLOCKED(uobj);
 
 		/* locked: nothing, pgo_fault has unlocked everything */
 
@@ -764,8 +756,6 @@ ReFault:
 	 * ("get" has the option of doing a pmap_enter for us)
 	 */
 	if (uobj && shadowed == FALSE) {
-		mtx_enter(&uobj->vmobjlock);
-
 		/* locked (!shadowed): maps(read), amap (if there), uobj */
 		/*
 		 * the following call to pgo_get does _not_ change locking state
@@ -773,14 +763,11 @@ ReFault:
 
 		uvmexp.fltlget++;
 		gotpages = npages;
-		UVM_ASSERT_OBJLOCKED(uobj);
 		(void) uobj->pgops->pgo_get(uobj, ufi.entry->offset +
 				(startva - ufi.entry->start),
 				pages, &gotpages, centeridx,
 				access_type & MASK(ufi.entry),
 				ufi.entry->advice, PGO_LOCKED);
-		/* PGO_LOCKED pgo_get should not unlock before returning */
-		UVM_ASSERT_OBJLOCKED(uobj);
 
 		/* check for pages to map, if we got any */
 		uobjpage = NULL;
@@ -843,8 +830,6 @@ ReFault:
 			}	/* for "lcv" loop */
 			pmap_update(ufi.orig_map->pmap);
 		}   /* "gotpages" != 0 */
-		/* note: object still _locked_ */
-		UVM_ASSERT_OBJLOCKED(uobj);
 	} else {
 		uobjpage = NULL;
 	}
@@ -1024,15 +1009,6 @@ ReFault:
 Case2:
 	/* handle case 2: faulting on backing object or zero fill */
 	/*
-	 * locked:
-	 * maps(read), amap(if there), uobj(if !null), uobjpage(if !null)
-	 */
-#ifdef UVMLOCKDEBUG
-	if (uobj)
-		UVM_ASSERT_OBJLOCKED(uobj);
-#endif
-
-	/*
 	 * note that uobjpage can not be PGO_DONTCARE at this point.  we now
 	 * set uobjpage to PGO_DONTCARE if we are doing a zero fill.  if we
 	 * have a backing object, check and see if we are going to promote
@@ -1069,11 +1045,9 @@ Case2:
 		uvmexp.fltget++;
 		gotpages = 1;
 		uoff = (ufi.orig_rvaddr - ufi.entry->start) + ufi.entry->offset;
-		UVM_ASSERT_OBJLOCKED(uobj);
 		result = uobj->pgops->pgo_get(uobj, uoff, &uobjpage, &gotpages,
 		    0, access_type & MASK(ufi.entry), ufi.entry->advice,
 		    PGO_SYNCIO);
-		UVM_ASSERT_OBJUNLOCKED(uobj);
 
 		/* locked: uobjpage(if result OK) */
 
@@ -1097,7 +1071,6 @@ Case2:
 
 		/* re-verify the state of the world.  */
 		locked = uvmfault_relock(&ufi);
-		mtx_enter(&uobj->vmobjlock);
 		
 		/* locked(locked): maps(read), amap(if !null), uobj, uobjpage */
 		/* locked(!locked): uobj, uobjpage */
@@ -1126,7 +1099,6 @@ Case2:
 			atomic_clearbits_int(&uobjpage->pg_flags,
 			    PG_BUSY|PG_WANTED);
 			UVM_PAGE_OWN(uobjpage, NULL);
-			mtx_leave(&uobj->vmobjlock);
 			goto ReFault;
 		}
 
@@ -1136,15 +1108,6 @@ Case2:
 		 */
 		/* locked: maps(read), amap(if !null), uobj, uobjpage */
 	}
-
-	/*
-	 * locked:
-	 * maps(read), amap(if !null), uobj(if !null), uobjpage(if uobj)
-	 */
-#ifdef UVMLOCKDEBUG
-	if (uobj)
-		UVM_ASSERT_OBJLOCKED(uobj);
-#endif
 
 	/*
 	 * notes:
@@ -1245,7 +1208,6 @@ Case2:
 			uvm_lock_pageq();
 			uvm_pageactivate(uobjpage);
 			uvm_unlock_pageq();
-			mtx_leave(&uobj->vmobjlock);
 			uobj = NULL;
 		} else {
 			uvmexp.flt_przero++;
@@ -1261,19 +1223,6 @@ Case2:
 		    anon, 0);
 	}
 
-	/*
-	 * locked:
-	 * maps(read), amap(if !null), uobj(if !null), uobjpage(if uobj)
-	 * 
-	 * note: pg is either the uobjpage or the new page in the new anon
-	 * anon if present is NOT locked, but the amap is locked and it is
-	 * a fresh anon with us owning the sole reference count, therefore it
-	 * will not be messed with.
-	 */
-#ifdef UVMLOCKDEBUG
-	if (uobj)
-		UVM_ASSERT_OBJLOCKED(uobj);
-#endif
 	/*
 	 * all resources are present.   we can now map it in and free our
 	 * resources.
@@ -1471,17 +1420,8 @@ void
 uvmfault_unlockall(struct uvm_faultinfo *ufi, struct vm_amap *amap,
     struct uvm_object *uobj, struct vm_anon *anon)
 {
-#ifdef UVMLOCKDEBUG
-	if (uobj)
-		UVM_ASSERT_OBJLOCKED(uobj);
-	if (anon)
-		UVM_ASSERT_ANONLOCKED(anon);
-#endif
-
 	if (anon)
 		mtx_leave(&anon->an_lock);
-	if (uobj)
-		mtx_leave(&uobj->vmobjlock);
 	uvmfault_unlockmaps(ufi, FALSE);
 }
 

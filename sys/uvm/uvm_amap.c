@@ -995,8 +995,6 @@ amap_swap_off(int startslot, int endslot)
 			am->am_flags |= AMAP_SWAPOFF;
 
 			rv = uvm_anon_pagein(anon);
-			/* uvm_anon_pagein() should return with anon unlocked */
-			UVM_ASSERT_ANONUNLOCKED(anon);
 
 			am->am_flags &= ~AMAP_SWAPOFF;
 			if (amap_refs(am) == 0) {
@@ -1092,7 +1090,6 @@ amap_add(struct vm_aref *aref, vaddr_t offset, struct vm_anon *anon,
 			panic("amap_add: replacing null anon");
 		if (amap->am_anon[slot]->an_page != NULL && 
 		    (amap->am_flags & AMAP_SHARED) != 0) {
-			UVM_ASSERT_ANONLOCKED(amap->am_anon[slot]);
 			pmap_page_protect(amap->am_anon[slot]->an_page,
 			    PROT_NONE);
 			/*

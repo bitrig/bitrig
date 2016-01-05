@@ -189,9 +189,11 @@ int
 uvm_vslock_device(struct proc *p, void *addr, size_t len,
     vm_prot_t access_type, void **retp)
 {
+	struct vm_page *pg;
+	struct pglist pgl;
 	int npages;
 	vaddr_t start, end, off;
-	void *va;
+	vaddr_t sva, va;
 	vsize_t sz;
 	int error, i;
 
@@ -224,17 +226,35 @@ uvm_vslock_device(struct proc *p, void *addr, size_t len,
 		return (0);
 	}
 
-	if ((va = km_alloc(sz, &kv_any, &kp_dma, &kd_waitok)) == NULL) {
+	if ((va = uvm_km_valloc(kernel_map, sz)) == 0) {
 		error = ENOMEM;
 		goto out_unwire;
 	}
+	sva = va;
 
-	*retp = (int8_t *)va + off;
+	TAILQ_INIT(&pgl);
+	error = uvm_pglistalloc(npages * PAGE_SIZE, dma_constraint.ucr_low,
+	    dma_constraint.ucr_high, 0, 0, &pgl, npages, UVM_PLA_WAITOK);
+	if (error)
+		goto out_unmap;
+
+	while ((pg = TAILQ_FIRST(&pgl)) != NULL) {
+		TAILQ_REMOVE(&pgl, pg, pageq);
+		pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg), PROT_READ | PROT_WRITE);
+		va += PAGE_SIZE;
+	}
+	pmap_update(pmap_kernel());
+	KASSERT(va == sva + sz);
+	*retp = (void *)(sva + off);
 
 	if ((error = copyin(addr, *retp, len)) == 0)
 		return 0;
 
-	km_free(va, sz, &kv_any, &kp_dma);
+	uvm_km_pgremove_intrsafe(sva, sva + sz);
+	pmap_kremove(sva, sz);
+	pmap_update(pmap_kernel());
+out_unmap:
+	uvm_km_free(kernel_map, sva, sz);
 out_unwire:
 	uvm_fault_unwire(&p->p_vmspace->vm_map, start, end);
 	return (error);
@@ -244,6 +264,7 @@ void
 uvm_vsunlock_device(struct proc *p, void *addr, size_t len, void *map)
 {
 	vaddr_t start, end;
+	vaddr_t kva;
 	vsize_t sz;
 
 	start = trunc_page((vaddr_t)addr);
@@ -259,23 +280,25 @@ uvm_vsunlock_device(struct proc *p, void *addr, size_t len, void *map)
 	if (!map)
 		return;
 
-	km_free((void *)trunc_page((vaddr_t)map), sz, &kv_any, &kp_dma);
+	kva = trunc_page((vaddr_t)map);
+	uvm_km_pgremove_intrsafe(kva, kva + sz);
+	pmap_kremove(kva, sz);
+	pmap_update(pmap_kernel());
+	uvm_km_free(kernel_map, kva, sz);
 }
-
-const struct kmem_va_mode kv_fork = {
-	.kv_map = &kernel_map,
-	.kv_align = USPACE_ALIGN
-};
 
 /*
  * uvm_uarea_alloc: allocate the u-area for a new thread
  */
-struct user *
+vaddr_t
 uvm_uarea_alloc(void)
 {
 	vaddr_t uaddr;
 
-	uaddr = (vaddr_t)km_alloc(USPACE, &kv_fork, &kp_zero, &kd_waitok);
+	uaddr = uvm_km_kmemalloc_pla(kernel_map, uvm.kernel_object, USPACE,
+	    USPACE_ALIGN, UVM_KMF_ZERO,
+	    no_constraint.ucr_low, no_constraint.ucr_high,
+	    0, 0, USPACE/PAGE_SIZE);
 
 #ifdef PMAP_UAREA
 	/* Tell the pmap this is a u-area mapping */
@@ -283,7 +306,7 @@ uvm_uarea_alloc(void)
 		PMAP_UAREA(uaddr);
 #endif
 
-	return ((struct user *)uaddr);
+	return (uaddr);
 }
 
 /*
@@ -295,7 +318,7 @@ uvm_uarea_alloc(void)
 void
 uvm_uarea_free(struct proc *p)
 {
-	km_free(p->p_addr, USPACE, &kv_fork, &kp_dma);
+	uvm_km_free(kernel_map, (vaddr_t)p->p_addr, USPACE);
 	p->p_addr = NULL;
 }
 

@@ -199,7 +199,7 @@ free1:
 int
 pipespace(struct pipe *cpipe, u_int size)
 {
-	void *buffer;
+	caddr_t buffer;
 
 	buffer = km_alloc(size, &kv_any, &kp_pageable, &kd_waitok);
 	if (buffer == NULL) {

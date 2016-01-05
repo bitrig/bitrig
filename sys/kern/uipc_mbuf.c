@@ -144,7 +144,6 @@ mbinit(void)
 #endif
 
 	pool_init(&mbpool, MSIZE, 0, 0, 0, "mbufpl", NULL);
-	pool_setipl(&mbpool, IPL_NET);
 	pool_set_constraints(&mbpool, &kp_dma_contig);
 	pool_setlowat(&mbpool, mblowat);
 	pool_setipl(&mbpool, IPL_NET);
@@ -158,7 +157,6 @@ mbinit(void)
 		    mclsizes[i] >> 10);
 		pool_init(&mclpools[i], mclsizes[i], 0, 0, 0,
 		    mclnames[i], NULL);
-		pool_setipl(&mclpools[i], IPL_NET);
 		pool_set_constraints(&mclpools[i], &kp_dma_contig);
 		pool_setlowat(&mclpools[i], mcllowat);
 		pool_setipl(&mclpools[i], IPL_NET);

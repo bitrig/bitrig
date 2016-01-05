@@ -28,8 +28,6 @@
 #ifndef _SYS_MUTEX_H_
 #define _SYS_MUTEX_H_
 
-#include <sys/stdatomic.h>
-
 /*
  * A mutex is:
  *  - owned by a cpu.
@@ -44,56 +42,16 @@
  * "mtx_enter(foo); mtx_enter(bar); mtx_leave(foo); mtx_leave(bar);"
  */
 
-struct mutex {
-	void	*mtx_owner;		/* Current CPU owning lock. */
-	int	 mtx_wantipl;		/* IPL while locked. */
-	int	 mtx_oldipl;		/* IPL prior to locking. */
-	atomic_int mtx_ticket;		/* First available ticket. */
-	atomic_int mtx_cur;		/* Active ticket. */
-};
+#include <machine/mutex.h>
 
-__BEGIN_DECLS
+/*
+ * Some architectures need to do magic for the ipl, so they need a macro.
+ */
+#ifndef mtx_init
 void mtx_init(struct mutex *, int);
+#endif
 void mtx_enter(struct mutex *);
 void mtx_leave(struct mutex *);
 int mtx_enter_try(struct mutex *);
-__END_DECLS
-
-/*
- * To prevent lock ordering problems with the kernel lock, we need to
- * make sure we block all interrupts that can grab the kernel lock.
- * The simplest way to achieve this is to make sure mutexes always
- * raise the interrupt ptiority level to the highest level that has
- * interrupts that grab the kernel lock.
- */
-#ifdef MULTIPROCESSOR
-#define __MUTEX_IPL(ipl) \
-    (((ipl) > IPL_NONE && (ipl) < IPL_TTY) ? IPL_TTY : (ipl))
-#else
-#define __MUTEX_IPL(ipl) (ipl)
-#endif
-
-#define MUTEX_INITIALIZER(ipl)						\
-	{								\
-		NULL,							\
-		__MUTEX_IPL((ipl)),					\
-		IPL_NONE,						\
-	}
-
-#define MUTEX_OLDIPL(mtx)	((mtx)->mtx_oldipl)
-
-#define MUTEX_ASSERT_LOCKED(mtx)					\
-	do {								\
-		if ((mtx)->mtx_owner != curcpu())			\
-			panic("mutex %p not held in %s:%d",		\
-			    (mtx), __func__, __LINE__);			\
-	} while (0)
-
-#define MUTEX_ASSERT_UNLOCKED(mtx)					\
-	do {								\
-		if ((mtx)->mtx_owner == curcpu())			\
-			panic("mutex %p held in %s:%d",			\
-			    (mtx), __func__, __LINE__);			\
-	} while (0)
 
 #endif
