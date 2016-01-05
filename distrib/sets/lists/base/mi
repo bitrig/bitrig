@@ -241,6 +241,7 @@
 ./etc/signify/bitrig-11-fw.pub
 ./etc/signify/bitrig-11-pkg.pub
 ./etc/signify/openbsd-59-base.pub
+./etc/signify/openbsd-60-base.pub
 ./etc/signify/openbsd-59-fw.pub
 ./etc/signify/openbsd-59-pkg.pub
 ./etc/skel
