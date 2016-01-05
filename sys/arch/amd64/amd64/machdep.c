@@ -1197,7 +1197,6 @@ map_tramps(void)
 #endif
 
 	pmap_kenter_pa(lo32_vaddr, lo32_paddr, PROT_READ | PROT_WRITE);
-	pmap_update(pmap_kernel());
 
 	/*
 	 * The initial PML4 pointer must be below 4G, so if the
@@ -1219,8 +1218,6 @@ map_tramps(void)
 
 	pmap_kenter_pa(MP_TRAMP_DATA, MP_TRAMP_DATA,
 	    PROT_READ | PROT_WRITE);
-
-	pmap_update(pmap_kernel());
 
 	memcpy((caddr_t)MP_TRAMPOLINE,
 	    cpu_spinup_trampoline,
@@ -1546,7 +1543,6 @@ init_x86_64(paddr_t first_avail)
 	pmap_kenter_pa(idt_vaddr, idt_paddr, PROT_READ | PROT_WRITE);
 	pmap_kenter_pa(idt_vaddr + PAGE_SIZE, idt_paddr + PAGE_SIZE,
 	    PROT_READ | PROT_WRITE);
-	pmap_update(pmap_kernel());
 
 #if defined(MULTIPROCESSOR) || NACPI > 0
 	map_tramps();
@@ -1595,7 +1591,7 @@ init_x86_64(paddr_t first_avail)
 
 	softintr_init();
 	splraise(IPL_IPI);
-	intr_enable();
+	enable_intr();
 
 #ifdef DDB
 	db_machine_init();
@@ -1630,7 +1626,7 @@ void
 cpu_reset(void)
 {
 
-	intr_disable();
+	disable_intr();
 
 	if (cpuresetfn)
 		(*cpuresetfn)();
@@ -1743,7 +1739,7 @@ need_resched(struct cpu_info *ci)
 
 /*
  * Allocate an IDT vector slot within the given range.
- * - only allocated from interrupt code, which is already locked
+ * XXX needs locking to avoid MP allocation races.
  */
 
 int
@@ -1783,13 +1779,13 @@ void
 splassert_check(int wantipl, const char *func)
 {
 	int cpl = curcpu()->ci_ilevel;
+	int floor = curcpu()->ci_handled_intr_level;
 
 	if (cpl < wantipl) {
 		splassert_fail(wantipl, cpl, func);
 	}
-
-	if (wantipl == IPL_NONE && curcpu()->ci_idepth != 0) {
-		splassert_fail(-1, curcpu()->ci_idepth, func);
+	if (floor > wantipl) {
+		splassert_fail(wantipl, floor, func);
 	}
 }
 #endif

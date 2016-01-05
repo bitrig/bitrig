@@ -387,40 +387,33 @@ exit1(struct proc *p, int rv, int flags)
 struct mutex deadproc_mutex = MUTEX_INITIALIZER(IPL_NONE);
 struct proclist deadproc = LIST_HEAD_INITIALIZER(deadproc);
 
+/*
+ * We are called from cpu_exit() once it is safe to schedule the
+ * dead process's resources to be freed.
+ *
+ * NOTE: One must be careful with locking in this routine.  It's
+ * called from a critical section in machine-dependent code, so
+ * we should refrain from changing any interrupt state.
+ *
+ * We lock the deadproc list, place the proc on that list (using
+ * the p_hash member), and wake up the reaper.
+ */
+void
+exit2(struct proc *p)
+{
+	mtx_enter(&deadproc_mutex);
+	LIST_INSERT_HEAD(&deadproc, p, p_hash);
+	mtx_leave(&deadproc_mutex);
+
+	wakeup(&deadproc);
+}
+
 void
 proc_free(struct proc *p)
 {
 	crfree(p->p_ucred);
 	pool_put(&proc_pool, p);
 	nthreads--;
-}
-
-/*
- * When a process exits, it goes to the percpu deadproc list. When a process
- * switches context, the new context moves the processes in the deadproc list to
- * the reaper and wakes it up. We can't send it directly to the reaper on the
- * context of the exiting process, if we do this, the process may start to be
- * reaped in another cpu while we are still onproc.
- */
-int
-reaper_movedead(void)
-{
-	struct schedstate_percpu *spc = &curcpu()->ci_schedstate;
-	struct proc *dead;
-	int n = 0;
-
-	if (!LIST_FIRST(&spc->spc_deadproc))
-		return (0);
-	mtx_enter(&deadproc_mutex);
-	while ((dead = LIST_FIRST(&spc->spc_deadproc))) {
-		++n;
-		LIST_REMOVE(dead, p_hash);
-		LIST_INSERT_HEAD(&deadproc, dead, p_hash);
-	}
-	wakeup(&deadproc);
-	mtx_leave(&deadproc_mutex);
-
-	return (n);
 }
 
 /*

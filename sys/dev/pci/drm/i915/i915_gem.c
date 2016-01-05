@@ -1592,8 +1592,6 @@ i915_gem_fault(struct drm_gem_object *gem_obj, struct uvm_faultinfo *ufi,
 		uvmfault_unlockall(ufi, NULL, &obj->base.uobj, NULL);
 		mutex_lock(&dev->struct_mutex);
 		locked = uvmfault_relock(ufi);
-		if (locked)
-			mtx_enter(&obj->base.uobj.vmobjlock);
 	}
 	if (!locked) {
 		mutex_unlock(&dev->struct_mutex);
@@ -1606,11 +1604,6 @@ i915_gem_fault(struct drm_gem_object *gem_obj, struct uvm_faultinfo *ufi,
 		ret = -EINVAL;
 		goto unlock;
 	}
-	/*
-	 * We have the drm lock now and don't need to use the obj lock as
-	 * an interlock.
-	 */
-	mtx_leave(&obj->base.uobj.vmobjlock);
 
 	/* Now bind it into the GTT if needed */
 	ret = i915_gem_obj_ggtt_pin(obj,  0, true, false);
@@ -1650,7 +1643,6 @@ i915_gem_fault(struct drm_gem_object *gem_obj, struct uvm_faultinfo *ufi,
 
 		if (pmap_enter(ufi->orig_map->pmap, vaddr, paddr,
 		    mapprot, PMAP_CANFAIL | mapprot) != 0) {
-			pmap_update(pmap_kernel());
 			i915_gem_object_unpin(obj);
 			uvmfault_unlockall(ufi, ufi->entry->aref.ar_amap,
 			    NULL, NULL);
@@ -1929,10 +1921,8 @@ i915_gem_object_truncate(struct drm_i915_gem_object *obj)
 {
 	i915_gem_object_free_mmap_offset(obj);
 
-	mtx_enter(&obj->base.uao->vmobjlock);
 	obj->base.uao->pgops->pgo_flush(obj->base.uao, 0, obj->base.size,
 	    PGO_ALLPAGES | PGO_FREE);
-	mtx_leave(&obj->base.uao->vmobjlock);
 
 	obj->madv = __I915_MADV_PURGED;
 }

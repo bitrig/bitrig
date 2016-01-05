@@ -1,4 +1,4 @@
-/*	$OpenBSD: mplock.h,v 1.9 2007/11/26 17:15:29 art Exp $	*/
+/*	$OpenBSD: mplock.h,v 1.3 2014/03/14 02:08:57 dlg Exp $	*/
 
 /*
  * Copyright (c) 2004 Niklas Hallqvist.  All rights reserved.
@@ -24,14 +24,22 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _MPLOCK_H_
-#define _MPLOCK_H_
+#ifndef _MACHINE_MPLOCK_H_
+#define _MACHINE_MPLOCK_H_
 
-#ifdef notyet
-/*
- * Enable the prototypes once the architectures stop playing around
- * with inlines.
- */
+struct __mp_lock_cpu {
+	u_int			mplc_ticket;
+	u_int			mplc_depth;
+};
+
+struct __mp_lock {
+	struct __mp_lock_cpu	mpl_cpus[MAXCPUS];
+	volatile u_int		mpl_ticket;
+	u_int			mpl_users;
+};
+
+#ifndef _LOCORE
+
 void __mp_lock_init(struct __mp_lock *);
 void __mp_lock(struct __mp_lock *);
 void __mp_unlock(struct __mp_lock *);
@@ -39,10 +47,7 @@ int __mp_release_all(struct __mp_lock *);
 int __mp_release_all_but_one(struct __mp_lock *);
 void __mp_acquire_count(struct __mp_lock *, int);
 int __mp_lock_held(struct __mp_lock *);
+
 #endif
 
-#include <machine/mplock.h>
-
-extern struct __mp_lock kernel_lock;
-
-#endif /* !_MPLOCK_H */
+#endif /* !_MACHINE_MPLOCK_H */

@@ -1,4 +1,4 @@
-/*	$OpenBSD: lock_machdep.c,v 1.7 2015/02/11 06:39:24 dlg Exp $	*/
+/*	$OpenBSD: lock_machdep.c,v 1.9 2015/06/25 00:58:49 dlg Exp $	*/
 
 /*
  * Copyright (c) 2007 Artur Grabowski <art@openbsd.org>
@@ -19,16 +19,19 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/mplock.h>
+
+#include <machine/atomic.h>
+#include <machine/lock.h>
+#include <machine/cpufunc.h>
 
 #include <ddb/db_output.h>
 
 void
 __mp_lock_init(struct __mp_lock *mpl)
 {
-	bzero(mpl->mpl_cpus, sizeof(mpl->mpl_cpus));
+	memset(mpl->mpl_cpus, 0, sizeof(mpl->mpl_cpus));
+	mpl->mpl_users = 0;
 	mpl->mpl_ticket = 0;
-	atomic_init(&mpl->mpl_users, 0);
 }
 
 #if defined(MP_LOCKDEBUG)
@@ -45,31 +48,41 @@ __mp_lock_spin(struct __mp_lock *mpl, u_int me)
 {
 #ifndef MP_LOCKDEBUG
 	while (mpl->mpl_ticket != me)
-		SPINWAIT();
+		SPINLOCK_SPIN_HOOK;
 #else
 	int ticks = __mp_lock_spinout;
 
 	while (mpl->mpl_ticket != me && --ticks > 0)
-		SPINWAIT();
+		SPINLOCK_SPIN_HOOK;
 
 	if (ticks == 0) {
-		db_printf("__mp_lock(%p): lock spun out\n", mpl);
+		db_printf("__mp_lock(%p): lock spun out", mpl);
 		Debugger();
 	}
 #endif
 }
 
+static inline u_int
+fetch_and_add(u_int *var, u_int value)
+{
+	asm volatile("lock; xaddl %%eax, %2;"
+	    : "=a" (value)
+	    : "a" (value), "m" (*var)
+	    : "memory");
+
+	return (value);
+}
+
 void
 __mp_lock(struct __mp_lock *mpl)
 {
-	intr_state_t its;
 	struct __mp_lock_cpu *cpu = &mpl->mpl_cpus[cpu_number()];
+	long rf = read_rflags();
 
-	its = intr_disable();
+	disable_intr();
 	if (cpu->mplc_depth++ == 0)
-		cpu->mplc_ticket = atomic_fetch_add_explicit(&mpl->mpl_users,
-		    1, memory_order_acquire);
-	intr_restore(its);
+		cpu->mplc_ticket = fetch_and_add(&mpl->mpl_users, 1);
+	write_rflags(rf);
 
 	__mp_lock_spin(mpl, cpu->mplc_ticket);
 }
@@ -77,8 +90,8 @@ __mp_lock(struct __mp_lock *mpl)
 void
 __mp_unlock(struct __mp_lock *mpl)
 {
-	intr_state_t its;
 	struct __mp_lock_cpu *cpu = &mpl->mpl_cpus[cpu_number()];
+	long rf = read_rflags();
 
 #ifdef MP_LOCKDEBUG
 	if (!__mp_lock_held(mpl)) {
@@ -87,26 +100,24 @@ __mp_unlock(struct __mp_lock *mpl)
 	}
 #endif
 
-	its = intr_disable();
-	if (--cpu->mplc_depth == 0) {
+	disable_intr();	
+	if (--cpu->mplc_depth == 0)
 		mpl->mpl_ticket++;
-		SPINWAKE();
-	}
-	intr_restore(its);
+	write_rflags(rf);
 }
 
 int
 __mp_release_all(struct __mp_lock *mpl)
 {
 	struct __mp_lock_cpu *cpu = &mpl->mpl_cpus[cpu_number()];
-	int rv = cpu->mplc_depth;
-	intr_state_t its;
+	long rf = read_rflags();
+	int rv;
 
-	its = intr_disable();
+	disable_intr();
+ 	rv = cpu->mplc_depth;
 	cpu->mplc_depth = 0;
 	mpl->mpl_ticket++;
-	SPINWAKE();
-	intr_restore(its);
+	write_rflags(rf);
 
 	return (rv);
 }

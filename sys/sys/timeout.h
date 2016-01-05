@@ -70,7 +70,6 @@ struct timeout {
 #define TIMEOUT_ONQUEUE		2	/* timeout is on the todo queue */
 #define TIMEOUT_INITIALIZED	4	/* timeout is initialized */
 #define TIMEOUT_TRIGGERED	8	/* timeout is running or ran */
-#define TIMEOUT_MPSAFE		16	/* timeout is mpsafe */
 
 #ifdef _KERNEL
 /*
@@ -87,13 +86,8 @@ struct timeout {
 	{ { NULL, NULL }, (_f), (_a), 0, TIMEOUT_INITIALIZED }
 
 struct bintime;
-#define TIMEOUT_SET_MPSAFE	0x01
 
-void timeout_set_flags(struct timeout *, void (*)(void *), void *, int);
-#define	timeout_set(t, f, a)						\
-	timeout_set_flags(t, f, a, 0)
-#define	timeout_set_mpsafe(t, f, a)					\
-	timeout_set_flags(t, f, a, TIMEOUT_SET_MPSAFE)
+void timeout_set(struct timeout *, void (*)(void *), void *);
 int timeout_add(struct timeout *, int);
 int timeout_add_tv(struct timeout *, const struct timeval *);
 int timeout_add_ts(struct timeout *, const struct timespec *);

@@ -161,11 +161,6 @@ setredzone(struct proc *p)
 #endif
 }
 
-struct kmem_va_mode kv_physwait = {
-	.kv_map = &phys_map,
-	.kv_wait = 1,
-};
-
 /*
  * Map a user I/O request into kernel virtual address space.
  * Note: the pages are already locked by uvm_vslock(), so we
@@ -182,7 +177,7 @@ vmapbuf(struct buf *bp, vsize_t len)
 	faddr = trunc_page((vaddr_t)(bp->b_saveaddr = bp->b_data));
 	off = (vaddr_t)bp->b_data - faddr;
 	len = round_page(off + len);
-	taddr = (vaddr_t)km_alloc(len, &kv_physwait, &kp_none, &kd_waitok);
+	taddr= uvm_km_valloc_wait(phys_map, len);
 	bp->b_data = (caddr_t)(taddr + off);
 	/*
 	 * The region is locked, so we expect that pmap_pte() will return
@@ -204,7 +199,6 @@ vmapbuf(struct buf *bp, vsize_t len)
 		taddr += PAGE_SIZE;
 		len -= PAGE_SIZE;
 	}
-	pmap_update(pmap_kernel());
 }
 
 /*
@@ -222,7 +216,7 @@ vunmapbuf(struct buf *bp, vsize_t len)
 	len = round_page(off + len);
 	pmap_kremove(addr, len);
 	pmap_update(pmap_kernel());
-	km_free((void *)addr, len, &kv_physwait, &kp_none);
+	uvm_km_free_wakeup(phys_map, addr, len);
 	bp->b_data = bp->b_saveaddr;
 	bp->b_saveaddr = 0;
 }

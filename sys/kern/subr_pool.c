@@ -191,6 +191,8 @@ pr_find_pagehead(struct pool *pp, void *v)
 {
 	struct pool_item_header *ph, key;
 
+	MUTEX_ASSERT_LOCKED(&pp->pr_mtx);
+
 	if (POOL_INPGHDR(pp)) {
 		caddr_t page;
 
@@ -430,7 +432,7 @@ pool_get(struct pool *pp, int flags)
 	int slowdown = 0;
 
 	KASSERT(flags & (PR_WAITOK | PR_NOWAIT));
-
+	MUTEX_ASSERT_UNLOCKED(&pp->pr_mtx);
 
 	mtx_enter(&pp->pr_mtx);
 	if (pp->pr_nout >= pp->pr_hardlimit) {
@@ -641,6 +643,8 @@ pool_put(struct pool *pp, void *v)
 		panic("%s: NULL item", __func__);
 #endif
 
+	MUTEX_ASSERT_UNLOCKED(&pp->pr_mtx);
+
 	mtx_enter(&pp->pr_mtx);
 
 	if (pp->pr_ipl != -1)
@@ -717,6 +721,8 @@ pool_prime(struct pool *pp, int n)
 	struct pool_pagelist pl = TAILQ_HEAD_INITIALIZER(pl);
 	struct pool_item_header *ph;
 	int newpages;
+
+	MUTEX_ASSERT_UNLOCKED(&pp->pr_mtx);
 
 	newpages = roundup(n, pp->pr_itemsperpage) / pp->pr_itemsperpage;
 
@@ -875,6 +881,8 @@ pool_p_remove(struct pool *pp, struct pool_item_header *ph)
 void
 pool_update_curpage(struct pool *pp)
 {
+	MUTEX_ASSERT_LOCKED(&pp->pr_mtx);
+
 	pp->pr_curpage = TAILQ_LAST(&pp->pr_partpages, pool_pagelist);
 	if (pp->pr_curpage == NULL) {
 		pp->pr_curpage = TAILQ_LAST(&pp->pr_emptypages, pool_pagelist);

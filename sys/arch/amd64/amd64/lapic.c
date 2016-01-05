@@ -146,14 +146,12 @@ x2apic_writereg(int reg, u_int32_t val)
 	wrmsr(MSR_X2APIC_BASE + (reg >> 4), val);
 }
 
-#ifdef MULTIPROCESSOR
 static inline void
 x2apic_writeicr(u_int32_t hi, u_int32_t lo)
 {
 	u_int32_t msr = MSR_X2APIC_BASE + (LAPIC_ICRLO >> 4);
 	__asm volatile("wrmsr" : : "a" (lo), "d" (hi), "c" (msr));
 }
-#endif
 
 u_int32_t
 lapic_cpu_number()
@@ -168,7 +166,6 @@ void
 lapic_map(paddr_t lapic_base)
 {
 	int s;
-	intr_state_t its;
 	pt_entry_t *pte;
 	vaddr_t va;
 
@@ -183,7 +180,7 @@ lapic_map(paddr_t lapic_base)
 	if ((cpu_ecxfeature&CPUIDECX_X2APIC) && (cpu_ecxfeature&CPUIDECX_HV)) {
 		u_int64_t msr;
 
-		intr_disable();
+		disable_intr();
 		s = lapic_tpr;
 
 		msr = rdmsr(MSR_APICBASE);
@@ -200,14 +197,14 @@ lapic_map(paddr_t lapic_base)
 		codepatch_call(CPTAG_EOI, &x2apic_eoi);
 
 		lapic_writereg(LAPIC_TPRI, s);
-		intr_enable();
+		enable_intr();
 
 		return;
 	}
 
 	va = (vaddr_t)&local_apic;
 
-	its = intr_disable();
+	disable_intr();
 	s = lapic_tpr;
 
 	/*
@@ -224,7 +221,7 @@ lapic_map(paddr_t lapic_base)
 	invlpg(va);
 
 	lapic_tpr = s;
-	intr_restore(its);
+	enable_intr();
 }
 
 /*
@@ -383,8 +380,13 @@ u_int32_t lapic_delaytab[26];
 void
 lapic_clockintr(void *arg, struct intrframe frame)
 {
+	struct cpu_info *ci = curcpu();
+	int floor;
 
+	floor = ci->ci_handled_intr_level;
+	ci->ci_handled_intr_level = ci->ci_ilevel;
 	hardclock((struct clockframe *)&frame);
+	ci->ci_handled_intr_level = floor;
 
 	clk_count.ec_count++;
 }
@@ -447,7 +449,7 @@ lapic_calibrate_timer(struct cpu_info *ci)
 {
 	unsigned int startapic, endapic;
 	u_int64_t dtick, dapic, tmp;
-	intr_state_t its;
+	long rf = read_rflags();
 	int i;
 
 	if (mp_verbose)
@@ -461,7 +463,7 @@ lapic_calibrate_timer(struct cpu_info *ci)
 	lapic_writereg(LAPIC_DCR_TIMER, LAPIC_DCRT_DIV1);
 	lapic_writereg(LAPIC_ICR_TIMER, 0x80000000);
 
-	its = intr_disable();
+	disable_intr();
 
 	/* wait for current cycle to finish */
 	wait_next_cycle();
@@ -473,7 +475,7 @@ lapic_calibrate_timer(struct cpu_info *ci)
 		wait_next_cycle();
 
 	endapic = lapic_gettick();
-	intr_restore(its);
+	write_rflags(rf);
 
 	dtick = hz * rtclock_tval;
 	dapic = startapic-endapic;
@@ -566,7 +568,6 @@ lapic_delay(int usec)
  * XXX the following belong mostly or partly elsewhere..
  */
 
-#ifdef MULTIPROCESSOR
 static __inline void i82489_icr_wait(void);
 
 static __inline void
@@ -586,6 +587,7 @@ i82489_icr_wait(void)
 	}
 }
 
+#ifdef MULTIPROCESSOR
 void
 i82489_ipi_init(int target)
 {

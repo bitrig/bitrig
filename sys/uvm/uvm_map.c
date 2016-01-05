@@ -2632,6 +2632,7 @@ uvm_map_init(void)
 	    0, 0, PR_WAITOK, "vmsppl", NULL);
 	pool_init(&uvm_map_entry_pool, sizeof(struct vm_map_entry),
 	    0, 0, PR_WAITOK, "vmmpepl", NULL);
+	pool_setipl(&uvm_map_entry_pool, IPL_VM);
 	pool_init(&uvm_map_entry_kmem_pool, sizeof(struct vm_map_entry),
 	    0, 0, 0, "vmmpekpl", NULL);
 	pool_sethiwat(&uvm_map_entry_pool, 8192);

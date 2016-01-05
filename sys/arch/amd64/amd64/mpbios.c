@@ -249,8 +249,7 @@ mpbios_map(paddr_t pa, int len, struct mp_map *handle)
 {
 	paddr_t pgpa = trunc_page(pa);
 	paddr_t endpa = round_page(pa + len);
-	vaddr_t va = (vaddr_t)km_alloc(endpa - pgpa, &kv_any, &kp_none,
-	    &kd_nowait);
+	vaddr_t va = uvm_km_valloc(kernel_map, endpa - pgpa);
 	vaddr_t retva = va + (pa & PGOFSET);
 
 	handle->pa = pa;
@@ -264,7 +263,6 @@ mpbios_map(paddr_t pa, int len, struct mp_map *handle)
 		va += PAGE_SIZE;
 		pgpa += PAGE_SIZE;
 	} while (pgpa < endpa);
-	pmap_update(pmap_kernel());
 
 	return ((const void *)retva);
 }
@@ -273,8 +271,7 @@ void
 mpbios_unmap(struct mp_map *handle)
 {
 	pmap_kremove(handle->baseva, handle->vsize);
-	pmap_update(pmap_kernel());
-	km_free((void *)handle->baseva, handle->vsize, &kv_any, &kp_none);
+	uvm_km_free(kernel_map, handle->baseva, handle->vsize);
 }
 
 /*

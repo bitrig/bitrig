@@ -134,7 +134,7 @@ struct	intrhand
 member	ih_fun
 member	ih_arg
 member	ih_next
-member	ih_ipl
+member	ih_level
 member	IH_COUNT	ih_count.ec_count
 
 struct	ioapic_softc

@@ -154,9 +154,7 @@ udv_attach(dev_t device, vm_prot_t accessprot, voff_t off, vsize_t size)
 			mtx_leave(&udv_lock);
 
 			/* bump reference count, unhold, return. */
-			mtx_enter(&lcv->u_obj.vmobjlock);
 			lcv->u_obj.uo_refs++;
-			mtx_leave(&lcv->u_obj.vmobjlock);
 
 			mtx_enter(&udv_lock);
 			if (lcv->u_flags & UVM_DEVICE_WANTED)
@@ -217,10 +215,7 @@ udv_attach(dev_t device, vm_prot_t accessprot, voff_t off, vsize_t size)
 static void
 udv_reference(struct uvm_object *uobj)
 {
-
-	mtx_enter(&uobj->vmobjlock);
 	uobj->uo_refs++;
-	mtx_leave(&uobj->vmobjlock);
 }
 
 /*
@@ -237,10 +232,8 @@ udv_detach(struct uvm_object *uobj)
 
 	/* loop until done */
 again:
-	mtx_enter(&uobj->vmobjlock);
 	if (uobj->uo_refs > 1) {
 		uobj->uo_refs--;
-		mtx_leave(&uobj->vmobjlock);
 		return;
 	}
 	KASSERT(uobj->uo_npages == 0 && RB_EMPTY(&uobj->memt));
@@ -253,7 +246,6 @@ again:
 		 * lock interleaving. -- this is ok in this case since the
 		 * locks are both IPL_NONE
 		 */
-		mtx_leave(&uobj->vmobjlock);
 		msleep(udv, &udv_lock, PVM | PNORELOCK, "udv_detach", 0);
 		goto again;
 	}
@@ -263,7 +255,6 @@ again:
 	if (udv->u_flags & UVM_DEVICE_WANTED)
 		wakeup(udv);
 	mtx_leave(&udv_lock);
-	mtx_leave(&uobj->vmobjlock);
 	free(udv, M_TEMP, sizeof(*udv));
 }
 
@@ -310,8 +301,6 @@ udv_fault(struct uvm_faultinfo *ufi, vaddr_t vaddr, vm_page_t *pps, int npages,
 	paddr_t (*mapfn)(dev_t, off_t, int);
 	vm_prot_t mapprot;
 
-	UVM_ASSERT_OBJLOCKED(uobj);
-
 	/*
 	 * we do not allow device mappings to be mapped copy-on-write
 	 * so we kill any attempt to do so here.
@@ -324,13 +313,6 @@ udv_fault(struct uvm_faultinfo *ufi, vaddr_t vaddr, vm_page_t *pps, int npages,
 	/* get device map function. */
 	device = udv->u_device;
 	mapfn = cdevsw[major(device)].d_mmap;
-	/*
-	 * The uobj will not be going away since we have at least a read lock
-	 * on the map which has a reference on it. It is assumed here that a
-	 * lock on the udv is NOT necessary for the mmap callback from a device.
-	 * Hence, we unlock here so that mmap functions can sleep.
-	 */
-	mtx_leave(&uobj->vmobjlock);
 
 	/*
 	 * now we must determine the offset in udv to use and the VA to

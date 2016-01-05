@@ -262,9 +262,6 @@ sys_mincore(struct proc *p, void *v, register_t *retval)
 		amap = entry->aref.ar_amap;	/* top layer */
 		uobj = entry->object.uvm_obj;	/* bottom layer */
 
-		if (uobj != NULL)
-			mtx_enter(&uobj->vmobjlock);
-
 		for (/* nothing */; start < lim; start += PAGE_SIZE, pgi++) {
 			*pgi = 0;
 			if (amap != NULL) {
@@ -294,9 +291,6 @@ sys_mincore(struct proc *p, void *v, register_t *retval)
 				}
 			}
 		}
-
-		if (uobj != NULL)
-			mtx_leave(&uobj->vmobjlock);
 	}
 
  out:

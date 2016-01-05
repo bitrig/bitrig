@@ -91,9 +91,10 @@ struct intrsource {
 struct intrhand {
 	int	(*ih_fun)(void *);
 	void	*ih_arg;
-	int	ih_ipl;
+	int	ih_level;
 	int	ih_flags;
 	struct	intrhand *ih_next;
+	int	ih_pin;
 	int	ih_slot;
 	struct cpu_info *ih_cpu;
 	int	ih_irq;
@@ -108,40 +109,6 @@ extern void Xspllower(int);
 int splraise(int);
 int spllower(int);
 void softintr(int);
-
-/*
- * intr_state_t api.
- */
-typedef u_long intr_state_t;
-
-static __inline intr_state_t
-intr_get(void)
-{
-	intr_state_t	ef;
-
-	__asm volatile("pushfq; popq %0" : "=r" (ef));
-	return (ef);
-}
-
-static __inline intr_state_t
-intr_disable(void)
-{
-	intr_state_t rf = intr_get();
-	__asm volatile("cli");
-	return (rf);
-}
-
-static __inline void
-intr_enable(void)
-{
-	__asm volatile("sti");
-}
-
-static __inline void
-intr_restore(intr_state_t ef)
-{
-	__asm volatile("pushq %0; popfq" : : "r" (ef));
-}
 
 /*
  * Convert spl level to local APIC level
@@ -273,9 +240,7 @@ struct x86_soft_intrhand {
 		sih_q;
 	struct x86_soft_intr *sih_intrhead;
 	void	(*sih_fn)(void *);
-	void	(*sih_fnwrap)(void *);
 	void	*sih_arg;
-	void	*sih_argwrap;
 	int	sih_pending;
 };
 
@@ -286,13 +251,7 @@ struct x86_soft_intr {
 	struct mutex	softintr_lock;
 };
 
-#define	SOFTINTR_ESTABLISH_MPSAFE	0x01
-
-void	*softintr_establish_flags(int, void (*)(void *), void *, int);
-#define softintr_establish(i, f, a)					\
-	softintr_establish_flags(i, f, a, 0)
-#define softintr_establish_mpsafe(i, f, a)				\
-	softintr_establish_flags(i, f, a, SOFTINTR_ESTABLISH_MPSAFE)
+void	*softintr_establish(int, void (*)(void *), void *);
 void	softintr_disestablish(void *);
 void	softintr_init(void);
 void	softintr_dispatch(int);

@@ -1311,12 +1311,6 @@ static int init_status_page(struct intel_ring_buffer *ring)
 		goto err_unpin;
 	}
 
-	if (uvm_map_pageable(kernel_map, (vaddr_t)ring->status_page.page_addr,
-	    (vaddr_t)ring->status_page.page_addr + PAGE_SIZE, FALSE, 0)) {
-		DRM_ERROR("Failed to fault in status page.\n");
-		goto err_unmap;
-	}
-
 	ring->status_page.obj = obj;
 	memset(ring->status_page.page_addr, 0, PAGE_SIZE);
 
@@ -1325,9 +1319,6 @@ static int init_status_page(struct intel_ring_buffer *ring)
 
 	return 0;
 
-err_unmap:
-	uvm_unmap(kernel_map, (vaddr_t)ring->status_page.page_addr,
-	    (vaddr_t)ring->status_page.page_addr + PAGE_SIZE);
 err_unpin:
 	i915_gem_object_unpin(obj);
 err_unref:

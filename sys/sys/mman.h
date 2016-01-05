@@ -43,6 +43,7 @@
 #define	PROT_READ	0x01	/* pages can be read */
 #define	PROT_WRITE	0x02	/* pages can be written */
 #define	PROT_EXEC	0x04	/* pages can be executed */
+#define	PROT_ALL	(PROT_READ|PROT_WRITE|PROT_EXEC)
 
 /*
  * Flags contain sharing type and options.

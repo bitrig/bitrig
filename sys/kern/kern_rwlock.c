@@ -2,7 +2,7 @@
 
 /*
  * Copyright (c) 2002, 2003 Artur Grabowski <art@openbsd.org>
- * Copyright (c) 2011 Thordur I. Bjornsson <thib@secnorth.net>
+ * Copyright (c) 2011 Thordur Bjornsson <thib@secnorth.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -91,11 +91,11 @@ rw_enter_read(struct rwlock *rwl)
 {
 	unsigned long owner = rwl->rwl_owner;
 
-	assertwaitok();
-
 	if (__predict_false((owner & RWLOCK_WRLOCK) ||
 	    rw_cas(&rwl->rwl_owner, owner, owner + RWLOCK_READ_INCR)))
 		rw_enter(rwl, RW_READ);
+	else
+		membar_enter();
 }
 
 void
@@ -103,11 +103,11 @@ rw_enter_write(struct rwlock *rwl)
 {
 	struct proc *p = curproc;
 
-	assertwaitok();
-
 	if (__predict_false(rw_cas(&rwl->rwl_owner, 0,
 	    RW_PROC(p) | RWLOCK_WRLOCK)))
 		rw_enter(rwl, RW_WRITE);
+	else
+		membar_enter();
 }
 
 void
@@ -117,6 +117,7 @@ rw_exit_read(struct rwlock *rwl)
 
 	rw_assert_rdlock(rwl);
 
+	membar_exit();
 	if (__predict_false((owner & RWLOCK_WAIT) ||
 	    rw_cas(&rwl->rwl_owner, owner, owner - RWLOCK_READ_INCR)))
 		rw_exit(rwl);
@@ -129,6 +130,7 @@ rw_exit_write(struct rwlock *rwl)
 
 	rw_assert_wrlock(rwl);
 
+	membar_exit();
 	if (__predict_false((owner & RWLOCK_WAIT) ||
 	    rw_cas(&rwl->rwl_owner, owner, 0)))
 		rw_exit(rwl);
@@ -185,9 +187,6 @@ rw_enter(struct rwlock *rwl, int flags)
 	unsigned long inc, o;
 	int error;
 
-	if (!(flags & RW_NOSLEEP))
-		assertwaitok();
-
 	op = &rw_ops[(flags & RW_OPMASK) - 1];
 
 	inc = op->inc + RW_PROC(curproc) * op->proc_mult;
@@ -217,6 +216,7 @@ retry:
 
 	if (__predict_false(rw_cas(&rwl->rwl_owner, o, o + inc)))
 		goto retry;
+	membar_enter();
 
 	/*
 	 * If old lock had RWLOCK_WAIT and RWLOCK_WRLOCK set, it means we
@@ -242,6 +242,7 @@ rw_exit(struct rwlock *rwl)
 	else
 		rw_assert_rdlock(rwl);
 
+	membar_exit();
 	do {
 		owner = rwl->rwl_owner;
 		if (wrlock)
@@ -343,6 +344,5 @@ rrw_exit(struct rrwlock *rrwl)
 int
 rrw_status(struct rrwlock *rrwl)
 {
-
 	return (rw_status(&rrwl->rrwl_lock));
 }

@@ -508,6 +508,7 @@ void	unsleep(struct proc *);
 int	reaper_movedead(void);
 void	reaper(void);
 void	exit1(struct proc *, int, int);
+void	exit2(struct proc *);
 int	dowait4(struct proc *, pid_t, int *, int, struct rusage *,
 	    register_t *);
 void	cpu_exit(struct proc *);

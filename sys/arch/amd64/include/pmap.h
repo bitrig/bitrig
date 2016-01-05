@@ -73,6 +73,7 @@
 #include <machine/cpufunc.h>
 #include <machine/segments.h>
 #endif /* _KERNEL */
+#include <sys/mutex.h>
 #include <uvm/uvm_object.h>
 #include <machine/pte.h>
 #endif
@@ -176,7 +177,7 @@
 
 #define NKL4_KIMG_ENTRIES	1
 #define NKL3_KIMG_ENTRIES	1
-#define NKL2_KIMG_ENTRIES	18
+#define NKL2_KIMG_ENTRIES	16
 
 #define NDML4_ENTRIES		1
 #define NDML3_ENTRIES		1
@@ -222,6 +223,9 @@
 				  NKL3_MAX_ENTRIES, NKL4_MAX_ENTRIES }
 #define NBPD_INITIALIZER	{ NBPD_L1, NBPD_L2, NBPD_L3, NBPD_L4 }
 #define PDES_INITIALIZER	{ L2_BASE, L3_BASE, L4_BASE }
+
+#define pmap_is_direct_mapped(va)	(va >= PMAP_DIRECT_BASE &&	\
+					    va <= PMAP_DIRECT_END)
 
 /*
  * PTP macros:
@@ -269,17 +273,13 @@ LIST_HEAD(pmap_head, pmap); /* struct pmap_head: head of a pmap list */
 /*
  * the pmap structure
  *
- * note that the pm_obj contains the lock, the reference count,
+ * note that the pm_obj contains the reference count,
  * page list, and number of PTPs within the pmap.
- *
- * pm_lock is the same as the spinlock for vm object 0. Changes to
- * the other objects may only be made if that lock has been taken
- * (the other object locks are only used when uvm_pagealloc is called)
  */
 
 struct pmap {
+	struct mutex pm_mtx;
 	struct uvm_object pm_obj[PTP_LEVELS-1]; /* objects for lvl >= 1) */
-#define	pm_lock	pm_obj[0].vmobjlock
 	LIST_ENTRY(pmap) pm_list;	/* list (lck by pm_list lock) */
 	pd_entry_t *pm_pdir;		/* VA of PD (lck by object lock) */
 	paddr_t pm_pdirpa;		/* PA of PD (read-only after create) */
@@ -456,7 +456,6 @@ pmap_protect(struct pmap *pmap, vaddr_t sva, vaddr_t eva, vm_prot_t prot)
 			pmap_write_protect(pmap, sva, eva, prot);
 		} else {
 			pmap_remove(pmap, sva, eva);
-			pmap_update(pmap);
 		}
 	}
 }
@@ -496,8 +495,6 @@ kvtopte(vaddr_t va)
 #define PMAP_DIRECT_UNMAP(va)	((paddr_t)(va) - PMAP_DIRECT_BASE)
 #define pmap_map_direct(pg)	PMAP_DIRECT_MAP(VM_PAGE_TO_PHYS(pg))
 #define pmap_unmap_direct(va)	PHYS_TO_VM_PAGE(PMAP_DIRECT_UNMAP(va))
-#define pmap_is_direct_mapped(va)	(va >= PMAP_DIRECT_BASE &&	\
-					    va <= PMAP_DIRECT_END)
 
 #define __HAVE_PMAP_DIRECT
 
@@ -506,10 +503,12 @@ kvtopte(vaddr_t va)
 #ifndef _LOCORE
 struct pv_entry;
 struct vm_page_md {
+	struct mutex pv_mtx;
 	struct pv_entry *pv_list;
 };
 
 #define VM_MDPAGE_INIT(pg) do {		\
+	mtx_init(&(pg)->mdpage.pv_mtx, IPL_VM); \
 	(pg)->mdpage.pv_list = NULL;	\
 } while (0)
 #endif	/* !_LOCORE */

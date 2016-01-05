@@ -70,6 +70,7 @@
 #include <sys/systm.h>
 #include <sys/sched.h>
 #include <sys/vnode.h>
+#include <sys/mount.h>
 #include <sys/proc.h>
 
 #include <uvm/uvm.h>
@@ -123,7 +124,6 @@ static void uvm_pageremove(struct vm_page *);
 /*
  * uvm_pageinsert: insert a page in the object
  *
- * => caller must lock object
  * => caller must lock page queues XXX questionable
  * => call should have already set pg's object and offset pointers
  *    and bumped the version counter
@@ -132,8 +132,6 @@ __inline static void
 uvm_pageinsert(struct vm_page *pg)
 {
 	struct vm_page	*dupe;
-
-	UVM_ASSERT_OBJLOCKED(pg->uobject);
 
 	KASSERT((pg->pg_flags & PG_TABLED) == 0);
 	dupe = RB_INSERT(uvm_objtree, &pg->uobject->memt, pg);
@@ -146,15 +144,12 @@ uvm_pageinsert(struct vm_page *pg)
 /*
  * uvm_page_remove: remove page from object
  *
- * => caller must lock object
  * => caller must lock page queues
  */
 static __inline void
 uvm_pageremove(struct vm_page *pg)
 {
 	KASSERT(pg->pg_flags & PG_TABLED);
-	UVM_ASSERT_OBJLOCKED(pg->uobject);
-
 	RB_REMOVE(uvm_objtree, &pg->uobject->memt, pg);
 
 	atomic_clearbits_int(&pg->pg_flags, PG_TABLED);
@@ -184,7 +179,6 @@ uvm_page_init(vaddr_t *kvm_startp, vaddr_t *kvm_endp)
 	TAILQ_INIT(&uvm.page_active);
 	TAILQ_INIT(&uvm.page_inactive_swp);
 	TAILQ_INIT(&uvm.page_inactive_obj);
-	mtx_init(&uvm.pageqlock, IPL_NONE);
 	mtx_init(&uvm.fpageqlock, IPL_VM);
 	uvm_pmr_init();
 
@@ -546,12 +540,8 @@ uvm_page_physload(paddr_t start, paddr_t end, paddr_t avail_start,
 
  		npages = end - start;  /* # of pages */
 
-		/*
-		 * if we don't have the space for it in kva we probably never
-		 * will, so don't bother sleeping.
-		 */
-		pgs = km_alloc(round_page(npages * sizeof(*pgs)), &kv_any,
-		    &kp_zero, &kd_nowait);
+		pgs = (struct vm_page *)uvm_km_zalloc(kernel_map,
+		    npages * sizeof(*pgs));
 		if (pgs == NULL) {
 			printf("uvm_page_physload: can not malloc vm_page "
 			    "structs for segment\n");
@@ -690,11 +680,6 @@ uvm_pagealloc_pg(struct vm_page *pg, struct uvm_object *obj, voff_t off,
 {
 	int	flags;
 
-	if (obj)
-		UVM_ASSERT_OBJLOCKED(obj);
-	if (anon)
-		UVM_ASSERT_ANONLOCKED(anon);
-
 	flags = PG_BUSY | PG_FAKE;
 	pg->offset = off;
 	pg->uobject = obj;
@@ -736,13 +721,41 @@ int
 uvm_pglistalloc(psize_t size, paddr_t low, paddr_t high, paddr_t alignment,
     paddr_t boundary, struct pglist *rlist, int nsegs, int flags)
 {
-
 	KASSERT((alignment & (alignment - 1)) == 0);
 	KASSERT((boundary & (boundary - 1)) == 0);
 	KASSERT(!(flags & UVM_PLA_WAITOK) ^ !(flags & UVM_PLA_NOWAIT));
 
 	if (size == 0)
 		return (EINVAL);
+	size = atop(round_page(size));
+
+	/*
+	 * check to see if we need to generate some free pages waking
+	 * the pagedaemon.
+	 */
+	if ((uvmexp.free - BUFPAGES_DEFICIT) < uvmexp.freemin ||
+	    ((uvmexp.free - BUFPAGES_DEFICIT) < uvmexp.freetarg &&
+	    (uvmexp.inactive + BUFPAGES_INACT) < uvmexp.inactarg))
+		wakeup(&uvm.pagedaemon);
+
+	/*
+	 * XXX uvm_pglistalloc is currently only used for kernel
+	 * objects. Unlike the checks in uvm_pagealloc, below, here
+	 * we are always allowed to use the kernel reserve. However, we
+	 * have to enforce the pagedaemon reserve here or allocations
+	 * via this path could consume everything and we can't
+	 * recover in the page daemon.
+	 */
+ again:
+	if ((uvmexp.free <= uvmexp.reserve_pagedaemon + size &&
+	    !((curproc == uvm.pagedaemon_proc) ||
+		(curproc == syncerproc)))) {
+		if (flags & UVM_PLA_WAITOK) {
+			uvm_wait("uvm_pglistalloc");
+			goto again;
+		}
+		return (ENOMEM);
+	}
 
 	if ((high & PAGE_MASK) != PAGE_MASK) {
 		printf("uvm_pglistalloc: Upper boundary 0x%lx "
@@ -764,7 +777,6 @@ uvm_pglistalloc(psize_t size, paddr_t low, paddr_t high, paddr_t alignment,
 	 * low<high assert will fail.
 	 */
 	high = atop(high + 1);
-	size = atop(round_page(size));
 	alignment = atop(alignment);
 	if (boundary < PAGE_SIZE && boundary != 0)
 		boundary = PAGE_SIZE;
@@ -804,7 +816,6 @@ uvm_pagealloc_multi(struct uvm_object *obj, voff_t off, vsize_t size,
 	    flags);
 	if (r == 0) {
 		i = 0;
-		mtx_enter(&obj->vmobjlock);
 		while ((pg = TAILQ_FIRST(&plist)) != NULL) {
 			pg->wire_count = 1;
 			atomic_setbits_int(&pg->pg_flags, PG_CLEAN | PG_FAKE);
@@ -812,7 +823,6 @@ uvm_pagealloc_multi(struct uvm_object *obj, voff_t off, vsize_t size,
 			TAILQ_REMOVE(&plist, pg, pageq);
 			uvm_pagealloc_pg(pg, obj, off + ptoa(i++), NULL);
 		}
-		mtx_leave(&obj->vmobjlock);
 	}
 	return r;
 }
@@ -831,6 +841,7 @@ uvm_pagerealloc_multi(struct uvm_object *obj, voff_t off, vsize_t size,
 	int              i, r;
 	voff_t		offset;
 
+
 	TAILQ_INIT(&plist);
 	if (size == 0)
 		panic("size 0 uvm_pagerealloc");
@@ -841,14 +852,11 @@ uvm_pagerealloc_multi(struct uvm_object *obj, voff_t off, vsize_t size,
 		while((pg = TAILQ_FIRST(&plist)) != NULL) {
 			offset = off + ptoa(i++);
 			tpg = uvm_pagelookup(obj, offset);
-			KASSERT(tpg != NULL);
 			pg->wire_count = 1;
 			atomic_setbits_int(&pg->pg_flags, PG_CLEAN | PG_FAKE);
 			KASSERT((pg->pg_flags & PG_DEV) == 0);
 			TAILQ_REMOVE(&plist, pg, pageq);
 			uvm_pagecopy(tpg, pg);
-			KASSERT(tpg->wire_count == 1);
-			tpg->wire_count = 0;
 			uvm_pagefree(tpg);
 			uvm_pagealloc_pg(pg, obj, offset, NULL);
 		}
@@ -861,8 +869,6 @@ uvm_pagerealloc_multi(struct uvm_object *obj, voff_t off, vsize_t size,
  *
  * => return null if no pages free
  * => wake up pagedaemon if number of free pages drops below low water mark
- * => if obj != NULL, obj must be locked (to put in tree)
- * => if anon != NULL, anon must be locked (to put in anon)
  * => only one of obj or anon can be non-null
  * => caller must activate/deactivate page if it is not wired.
  */
@@ -874,23 +880,42 @@ uvm_pagealloc(struct uvm_object *obj, voff_t off, struct vm_anon *anon,
 	struct vm_page *pg;
 	struct pglist pgl;
 	int pmr_flags;
+	boolean_t use_reserve;
 
 	KASSERT(obj == NULL || anon == NULL);
 	KASSERT(off == trunc_page(off));
-	if (obj)
-		UVM_ASSERT_OBJLOCKED(obj);
-	if (anon)
-		UVM_ASSERT_ANONLOCKED(anon);
 
-	/* XXX these functions should share flags */
+	/*
+	 * check to see if we need to generate some free pages waking
+	 * the pagedaemon.
+	 */
+	if ((uvmexp.free - BUFPAGES_DEFICIT) < uvmexp.freemin ||
+	    ((uvmexp.free - BUFPAGES_DEFICIT) < uvmexp.freetarg &&
+	    (uvmexp.inactive + BUFPAGES_INACT) < uvmexp.inactarg))
+		wakeup(&uvm.pagedaemon);
+
+	/*
+	 * fail if any of these conditions is true:
+	 * [1]  there really are no free pages, or
+	 * [2]  only kernel "reserved" pages remain and
+	 *        the page isn't being allocated to a kernel object.
+	 * [3]  only pagedaemon "reserved" pages remain and
+	 *        the requestor isn't the pagedaemon.
+	 */
+	use_reserve = (flags & UVM_PGA_USERESERVE) ||
+		(obj && UVM_OBJ_IS_KERN_OBJECT(obj));
+	if ((uvmexp.free <= uvmexp.reserve_kernel && !use_reserve) ||
+	    (uvmexp.free <= uvmexp.reserve_pagedaemon &&
+	     !((curproc == uvm.pagedaemon_proc) ||
+	      (curproc == syncerproc))))
+		goto fail;
+
 	pmr_flags = UVM_PLA_NOWAIT;
 	if (flags & UVM_PGA_ZERO)
 		pmr_flags |= UVM_PLA_ZERO;
-	if (flags & UVM_PGA_USERESERVE)
-		pmr_flags |= UVM_PLA_USERESERVE;
 	TAILQ_INIT(&pgl);
 	if (uvm_pmr_getpages(1, 0, 0, 1, 0, 1, pmr_flags, &pgl) != 0)
-		return (NULL);
+		goto fail;
 
 	pg = TAILQ_FIRST(&pgl);
 	KASSERT(pg != NULL && TAILQ_NEXT(pg, pageq) == NULL);
@@ -902,25 +927,19 @@ uvm_pagealloc(struct uvm_object *obj, voff_t off, struct vm_anon *anon,
 	else
 		atomic_setbits_int(&pg->pg_flags, PG_CLEAN);
 
-	return (pg);
+	return(pg);
+
+fail:
+	return (NULL);
 }
 
 /*
  * uvm_pagerealloc: reallocate a page from one object to another
- *
- * => both objects must be locked
  */
 
 void
 uvm_pagerealloc(struct vm_page *pg, struct uvm_object *newobj, voff_t newoff)
 {
-
-#ifdef UVMLOCKDEBUG
-	if (pg->uobject)
-		UVM_ASSERT_OBJLOCKED(pg->uobject);
-	if (newobj)
-		UVM_ASSERT_OBJLOCKED(newobj);
-#endif /* UVMLOCKDEBUG */
 
 	/* remove it from the old object */
 	if (pg->uobject) {
@@ -942,11 +961,7 @@ uvm_pagerealloc(struct vm_page *pg, struct uvm_object *newobj, voff_t newoff)
  *
  * => erase page's identity (i.e. remove from object)
  * => put page on free list
- * => caller must lock owning object (either anon or uvm_object)
- * => caller must lock page queues if the page has ever been on a page queue.
- *	note that this means pmaps, etc that pagealloc to an object, use it
- *	for their own needs, then eventually free it do *not* not to lock the
- *	page queues.
+ * => caller must lock page queues
  * => assumes all valid mappings of pg are gone
  */
 void
@@ -960,11 +975,6 @@ uvm_pagefree(struct vm_page *pg)
 		panic("uvm_pagefree: freeing free page %p", pg);
 	}
 #endif
-
-	if (pg->uobject)
-		UVM_ASSERT_OBJLOCKED(pg->uobject);
-	if (pg->uanon)
-		UVM_ASSERT_ANONLOCKED(pg->uanon);
 
 	KASSERT((pg->pg_flags & PG_DEV) == 0);
 
@@ -1019,20 +1029,14 @@ uvm_pagefree(struct vm_page *pg)
  * uvm_page_unbusy: unbusy an array of pages.
  *
  * => pages must either all belong to the same object, or all belong to anons.
- * => if pages are object-owned, object must be locked.
- * => if pages are anon-owned, anons must be locked.
- * => caller must ensure that anon-owned pages are not PG_RELEASED.
+ * => if pages are anon-owned, anons must have 0 refcount.
  */
 void
 uvm_page_unbusy(struct vm_page **pgs, int npgs)
 {
 	struct vm_page *pg;
+	struct uvm_object *uobj;
 	int i;
-
-#ifdef UVMLOCKDEBUG
-	if (pgs[0]->uobject)
-		UVM_ASSERT_OBJLOCKED(pgs[0]->uobject);
-#endif /* UVMLOCKDEBUG */
 
 	for (i = 0; i < npgs; i++) {
 		pg = pgs[i];
@@ -1040,22 +1044,25 @@ uvm_page_unbusy(struct vm_page **pgs, int npgs)
 		if (pg == NULL || pg == PGO_DONTCARE) {
 			continue;
 		}
-		if (pg->uanon)
-			UVM_ASSERT_ANONLOCKED(pg->uanon);
 		if (pg->pg_flags & PG_WANTED) {
 			wakeup(pg);
 		}
 		if (pg->pg_flags & PG_RELEASED) {
-			KASSERT(pg->uobject != NULL ||
-			    (pg->uanon != NULL && pg->uanon->an_ref > 0));
-			uvm_lock_pageq();
-			pmap_page_protect(pg, PROT_NONE);
-			/* XXX won't happen right now */
-			if (pg->pg_flags & PQ_AOBJ)
-				uao_dropswap(pg->uobject,
-				    pg->offset >> PAGE_SHIFT);
-			uvm_pagefree(pg);
-			uvm_unlock_pageq();
+			uobj = pg->uobject;
+			if (uobj != NULL) {
+				uvm_lock_pageq();
+				pmap_page_protect(pg, PROT_NONE);
+				/* XXX won't happen right now */
+				if (pg->pg_flags & PQ_AOBJ)
+					uao_dropswap(uobj,
+					    pg->offset >> PAGE_SHIFT);
+				uvm_pagefree(pg);
+				uvm_unlock_pageq();
+			} else {
+				atomic_clearbits_int(&pg->pg_flags, PG_BUSY);
+				UVM_PAGE_OWN(pg, NULL);
+				uvm_anfree(pg->uanon);
+			}
 		} else {
 			atomic_clearbits_int(&pg->pg_flags, PG_WANTED|PG_BUSY);
 			UVM_PAGE_OWN(pg, NULL);
@@ -1070,7 +1077,6 @@ uvm_page_unbusy(struct vm_page **pgs, int npgs)
  * => this is a debugging function that keeps track of who sets PG_BUSY
  *	and where they do it.   it can be used to track down problems
  *	such a process setting "PG_BUSY" and never releasing it.
- * => page's object [if any] must be locked
  * => if "tag" is NULL then we are releasing page ownership
  */
 void
@@ -1188,17 +1194,12 @@ PHYS_TO_VM_PAGE(paddr_t pa)
 
 /*
  * uvm_pagelookup: look up a page
- *
- * => caller should lock object to keep someone from pulling the page
- *	out from under it
  */
 struct vm_page *
 uvm_pagelookup(struct uvm_object *obj, voff_t off)
 {
 	/* XXX if stack is too much, handroll */
 	struct vm_page pg;
-
-	UVM_ASSERT_OBJLOCKED(obj);
 
 	pg.offset = off;
 	return (RB_FIND(uvm_objtree, &obj->memt, &pg));
@@ -1259,27 +1260,6 @@ uvm_pageunwire(struct vm_page *pg)
 void
 uvm_pagedeactivate(struct vm_page *pg)
 {
-#ifdef UVMLOCKDEBUG
-	if (pg->uobject)
-		UVM_ASSERT_OBJLOCKED(pg->uobject);
-#endif /* UVMLOCKDEBUG */
-
-	/*
-	 * XXX this isn't technically correct.
-	 * The normal clock hand algorithm would just clear the referenced bit
-	 * on the page upon deactivation, whereas here we also remove all
-	 * mappings to the page so any new mappings with fault (and thus
-	 * activate the page again). This is more expensive, but due to pmap
-	 * bugs on some archs (sparc and alpha seem to both show it) we end up
-	 * with the referenced bit not being 100% reliable.
-	 *
-	 * With the current code the easy way to check is to see if
-	 * uvmexp.pdreact is non-zero. due to the page_protect this case will
-	 * never occur while we protect deactivated cases on kernels with
-	 * reliable referenced bits..
-	 */
-	pmap_page_protect(pg, PROT_NONE);
-
 	if (pg->pg_flags & PQ_ACTIVE) {
 		TAILQ_REMOVE(&uvm.page_active, pg, pageq);
 		atomic_clearbits_int(&pg->pg_flags, PQ_ACTIVE);
@@ -1341,36 +1321,20 @@ uvm_pageactivate(struct vm_page *pg)
 
 /*
  * uvm_pagezero: zero fill a page
- *
- * => if page is part of an object then the object should be locked
- *	to protect pg->flags.
  */
 void
 uvm_pagezero(struct vm_page *pg)
 {
-#ifdef UVMLOCKDEBUG
-	if (pg->uobject)
-		UVM_ASSERT_OBJLOCKED(pg->uobject);
-#endif /* UVMLOCKDEBUG */
-
 	atomic_clearbits_int(&pg->pg_flags, PG_CLEAN);
 	pmap_zero_page(pg);
 }
 
 /*
  * uvm_pagecopy: copy a page
- *
- * => if page is part of an object then the object should be locked
- *	to protect pg->flags.
  */
 void
 uvm_pagecopy(struct vm_page *src, struct vm_page *dst)
 {
-#ifdef UVMLOCKDEBUG
-	if (dst->uobject)
-		UVM_ASSERT_OBJLOCKED(dst->uobject);
-#endif /* UVMLOCKDEBUG */
-
 	atomic_clearbits_int(&dst->pg_flags, PG_CLEAN);
 	pmap_copy_page(src, dst);
 }

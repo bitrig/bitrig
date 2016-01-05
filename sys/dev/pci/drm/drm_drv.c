@@ -50,8 +50,6 @@
 #include <sys/ttycom.h> /* for TIOCSGRP */
 #include <sys/vnode.h>
 
-#include <machine/conf.h>
-
 #include <uvm/uvm.h>
 #include <uvm/uvm_device.h>
 
@@ -468,9 +466,6 @@ drm_detach(struct device *self, int flags)
 		drm_free(dev->agp);
 		dev->agp = NULL;
 	}
-
-	/* Nuke the vnodes for any open instances (calls close). */
-	vdevgone(CMAJ_DRM, self->dv_unit, self->dv_unit, VCHR);
 
 	return 0;
 }
@@ -1384,9 +1379,7 @@ struct uvm_pagerops drm_pgops = {
 void
 drm_ref(struct uvm_object *uobj)
 {
-	mtx_enter(&uobj->vmobjlock);
 	uobj->uo_refs++;
-	mtx_leave(&uobj->vmobjlock);
 }
 
 void
@@ -1395,13 +1388,10 @@ drm_unref(struct uvm_object *uobj)
 	struct drm_gem_object *obj = (struct drm_gem_object *)uobj;
 	struct drm_device *dev = obj->dev;
 
-	mtx_enter(&uobj->vmobjlock);
 	if (uobj->uo_refs > 1) {
 		uobj->uo_refs--;
-		mtx_leave(&uobj->vmobjlock);
 		return;
 	}
-	mtx_leave(&uobj->vmobjlock);
 
 	/* We own this thing now. It is on no queues, though it may still
 	 * be bound to the aperture (and on the inactive list, in which case

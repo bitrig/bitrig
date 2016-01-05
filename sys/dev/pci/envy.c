@@ -1748,17 +1748,6 @@ envy_close(void *self)
 {
 }
 
-#define ENVY_ALIGN	4
-#define ENVY_MAXADDR	((1 << 28) - 1)
-struct uvm_constraint_range envy_constraint = {
-	.ucr_low = 0,
-	.ucr_high = ENVY_MAXADDR,
-};
-const struct kmem_pa_mode kp_envy = {
-	.kp_constraint = &envy_constraint,
-	.kp_maxseg = 1,
-};
-
 void *
 envy_allocm(void *self, int dir, size_t size, int type, int flags)
 {
@@ -1781,8 +1770,12 @@ envy_allocm(void *self, int dir, size_t size, int type, int flags)
 	buf->size = size;
 	wait = (flags & M_NOWAIT) ? BUS_DMA_NOWAIT : BUS_DMA_WAITOK;
 
-	buf->addr = km_alloc(buf->size, &kv_any, &kp_envy,
-	    &kd_nowait);
+#define ENVY_ALIGN	4
+#define ENVY_MAXADDR	((1 << 28) - 1)
+
+	buf->addr = (caddr_t)uvm_km_kmemalloc_pla(kernel_map,
+	    uvm.kernel_object, buf->size, 0, UVM_KMF_NOWAIT, 0,
+	    (paddr_t)ENVY_MAXADDR, 0, 0, 1);
 	if (buf->addr == NULL) {
 		DPRINTF("%s: unable to alloc dma segment\n", DEVNAME(sc));
 		goto err_ret;
@@ -1813,7 +1806,7 @@ envy_allocm(void *self, int dir, size_t size, int type, int flags)
  err_destroy:
 	bus_dmamap_destroy(sc->pci_dmat, buf->map);
  err_unmap:
-	km_free(buf->addr, buf->size, &kv_any, &kp_envy);
+	uvm_km_free(kernel_map, (vaddr_t)buf->addr, buf->size);
  err_ret:
 	return NULL;
 }
@@ -1837,7 +1830,7 @@ envy_freem(void *self, void *addr, int type)
 	}
 	bus_dmamap_unload(sc->pci_dmat, buf->map);
 	bus_dmamap_destroy(sc->pci_dmat, buf->map);
-	km_free(buf->addr, buf->size, &kv_any, &kp_envy);
+	uvm_km_free(kernel_map, (vaddr_t)&buf->addr, buf->size);
 	buf->addr = NULL;
 	DPRINTF("%s: freed buffer (mode=%d)\n", DEVNAME(sc), dir);
 }

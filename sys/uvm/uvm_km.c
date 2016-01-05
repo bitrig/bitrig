@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_km.c,v 1.127 2015/09/17 18:04:49 kettenis Exp $	*/
+/*	$OpenBSD: uvm_km.c,v 1.128 2015/09/26 17:55:00 kettenis Exp $	*/
 /*	$NetBSD: uvm_km.c,v 1.42 2001/01/14 02:10:01 thorpej Exp $	*/
 
 /* 
@@ -246,12 +246,11 @@ uvm_km_pgremove(struct uvm_object *uobj, vaddr_t start, vaddr_t end)
 
 	KASSERT(uobj->pgops == &aobj_pager);
 
-	mtx_enter(&uobj->vmobjlock);
 	for (curoff = start ; curoff < end ; curoff += PAGE_SIZE) {
 		pp = uvm_pagelookup(uobj, curoff);
 		if (pp && pp->pg_flags & PG_BUSY) {
 			atomic_setbits_int(&pp->pg_flags, PG_WANTED);
-			msleep(pp, &uobj->vmobjlock, PVM, "km_pgrm", 0);
+			UVM_WAIT(pp, 0, "km_pgrm", 0);
 			curoff -= PAGE_SIZE; /* loop back to us */
 			continue;
 		}
@@ -264,12 +263,9 @@ uvm_km_pgremove(struct uvm_object *uobj, vaddr_t start, vaddr_t end)
 			uvm_pagefree(pp);
 			uvm_unlock_pageq();
 		} else if (slot != 0) {
-			simple_lock(&uvm.swap_data_lock);
 			uvmexp.swpgonly--;
-			simple_unlock(&uvm.swap_data_lock);
 		}
 	}
-	mtx_leave(&uobj->vmobjlock);
 }
 
 
@@ -300,13 +296,312 @@ uvm_km_pgremove_intrsafe(vaddr_t start, vaddr_t end)
 	}
 }
 
+/*
+ * uvm_km_kmemalloc: lower level kernel memory allocator for malloc()
+ *
+ * => we map wired memory into the specified map using the obj passed in
+ * => NOTE: we can return NULL even if we can wait if there is not enough
+ *	free VM space in the map... caller should be prepared to handle
+ *	this case.
+ * => we return KVA of memory allocated
+ * => flags: NOWAIT, VALLOC - just allocate VA, TRYLOCK - fail if we can't
+ *	lock the map
+ * => low, high, alignment, boundary, nsegs are the corresponding parameters
+ *	to uvm_pglistalloc
+ * => flags: ZERO - correspond to uvm_pglistalloc flags
+ */
+vaddr_t
+uvm_km_kmemalloc_pla(struct vm_map *map, struct uvm_object *obj, vsize_t size,
+    vsize_t valign, int flags, paddr_t low, paddr_t high, paddr_t alignment,
+    paddr_t boundary, int nsegs)
+{
+	vaddr_t kva, loopva;
+	voff_t offset;
+	struct vm_page *pg;
+	struct pglist pgl;
+	int pla_flags;
+
+	KASSERT(vm_map_pmap(map) == pmap_kernel());
+	/* UVM_KMF_VALLOC => !UVM_KMF_ZERO */
+	KASSERT(!(flags & UVM_KMF_VALLOC) ||
+	    !(flags & UVM_KMF_ZERO));
+
+	/* setup for call */
+	size = round_page(size);
+	kva = vm_map_min(map);	/* hint */
+	if (nsegs == 0)
+		nsegs = atop(size);
+
+	/* allocate some virtual space */
+	if (__predict_false(uvm_map(map, &kva, size, obj, UVM_UNKNOWN_OFFSET,
+	    valign, UVM_MAPFLAG(PROT_READ | PROT_WRITE, PROT_READ | PROT_WRITE,
+	    MAP_INHERIT_NONE, MADV_RANDOM, (flags & UVM_KMF_TRYLOCK))) != 0)) {
+		return(0);
+	}
+
+	/* if all we wanted was VA, return now */
+	if (flags & UVM_KMF_VALLOC) {
+		return(kva);
+	}
+
+	/* recover object offset from virtual address */
+	if (obj != NULL)
+		offset = kva - vm_map_min(kernel_map);
+	else
+		offset = 0;
+
+	/*
+	 * now allocate and map in the memory... note that we are the only ones
+	 * whom should ever get a handle on this area of VM.
+	 */
+	TAILQ_INIT(&pgl);
+	pla_flags = 0;
+	KASSERT(uvmexp.swpgonly <= uvmexp.swpages);
+	if ((flags & UVM_KMF_NOWAIT) ||
+	    ((flags & UVM_KMF_CANFAIL) &&
+	    uvmexp.swpages - uvmexp.swpgonly <= atop(size)))
+		pla_flags |= UVM_PLA_NOWAIT;
+	else
+		pla_flags |= UVM_PLA_WAITOK;
+	if (flags & UVM_KMF_ZERO)
+		pla_flags |= UVM_PLA_ZERO;
+	if (uvm_pglistalloc(size, low, high, alignment, boundary, &pgl, nsegs,
+	    pla_flags) != 0) {
+		/* Failed. */
+		uvm_unmap(map, kva, kva + size);
+		return (0);
+	}
+
+	loopva = kva;
+	while (loopva != kva + size) {
+		pg = TAILQ_FIRST(&pgl);
+		TAILQ_REMOVE(&pgl, pg, pageq);
+		uvm_pagealloc_pg(pg, obj, offset, NULL);
+		atomic_clearbits_int(&pg->pg_flags, PG_BUSY);
+		UVM_PAGE_OWN(pg, NULL);
+
+		/*
+		 * map it in: note that we call pmap_enter with the map and
+		 * object unlocked in case we are kmem_map.
+		 */
+		if (obj == NULL) {
+			pmap_kenter_pa(loopva, VM_PAGE_TO_PHYS(pg),
+			    PROT_READ | PROT_WRITE);
+		} else {
+			pmap_enter(map->pmap, loopva, VM_PAGE_TO_PHYS(pg),
+			    PROT_READ | PROT_WRITE,
+			    PROT_READ | PROT_WRITE | PMAP_WIRED);
+		}
+		loopva += PAGE_SIZE;
+		offset += PAGE_SIZE;
+	}
+	KASSERT(TAILQ_EMPTY(&pgl));
+	pmap_update(pmap_kernel());
+
+	return(kva);
+}
+
+/*
+ * uvm_km_free: free an area of kernel memory
+ */
+void
+uvm_km_free(struct vm_map *map, vaddr_t addr, vsize_t size)
+{
+	uvm_unmap(map, trunc_page(addr), round_page(addr+size));
+}
+
+/*
+ * uvm_km_free_wakeup: free an area of kernel memory and wake up
+ * anyone waiting for vm space.
+ *
+ * => XXX: "wanted" bit + unlock&wait on other end?
+ */
+void
+uvm_km_free_wakeup(struct vm_map *map, vaddr_t addr, vsize_t size)
+{
+	struct uvm_map_deadq dead_entries;
+
+	vm_map_lock(map);
+	TAILQ_INIT(&dead_entries);
+	uvm_unmap_remove(map, trunc_page(addr), round_page(addr+size), 
+	     &dead_entries, FALSE, TRUE);
+	wakeup(map);
+	vm_map_unlock(map);
+
+	uvm_unmap_detach(&dead_entries, 0);
+}
+
+/*
+ * uvm_km_alloc1: allocate wired down memory in the kernel map.
+ *
+ * => we can sleep if needed
+ */
+vaddr_t
+uvm_km_alloc1(struct vm_map *map, vsize_t size, vsize_t align, boolean_t zeroit)
+{
+	vaddr_t kva, loopva;
+	voff_t offset;
+	struct vm_page *pg;
+
+	KASSERT(vm_map_pmap(map) == pmap_kernel());
+
+	size = round_page(size);
+	kva = vm_map_min(map);		/* hint */
+
+	/* allocate some virtual space */
+	if (__predict_false(uvm_map(map, &kva, size, uvm.kernel_object,
+	    UVM_UNKNOWN_OFFSET, align,
+	    UVM_MAPFLAG(PROT_READ | PROT_WRITE,
+	    PROT_READ | PROT_WRITE | PROT_EXEC,
+	    MAP_INHERIT_NONE, MADV_RANDOM, 0)) != 0)) {
+		return(0);
+	}
+
+	/* recover object offset from virtual address */
+	offset = kva - vm_map_min(kernel_map);
+
+	/* now allocate the memory.  we must be careful about released pages. */
+	loopva = kva;
+	while (size) {
+		/* allocate ram */
+		pg = uvm_pagealloc(uvm.kernel_object, offset, NULL, 0);
+		if (pg) {
+			atomic_clearbits_int(&pg->pg_flags, PG_BUSY);
+			UVM_PAGE_OWN(pg, NULL);
+		}
+		if (__predict_false(pg == NULL)) {
+			if (curproc == uvm.pagedaemon_proc) {
+				/*
+				 * It is unfeasible for the page daemon to
+				 * sleep for memory, so free what we have
+				 * allocated and fail.
+				 */
+				uvm_unmap(map, kva, loopva - kva);
+				return (0);
+			} else {
+				uvm_wait("km_alloc1w");	/* wait for memory */
+				continue;
+			}
+		}
+
+		/*
+		 * map it in; note we're never called with an intrsafe
+		 * object, so we always use regular old pmap_enter().
+		 */
+		pmap_enter(map->pmap, loopva, VM_PAGE_TO_PHYS(pg),
+		    PROT_READ | PROT_WRITE,
+		    PROT_READ | PROT_WRITE | PMAP_WIRED);
+
+		loopva += PAGE_SIZE;
+		offset += PAGE_SIZE;
+		size -= PAGE_SIZE;
+	}
+	pmap_update(map->pmap);
+	
+	/*
+	 * zero on request (note that "size" is now zero due to the above loop
+	 * so we need to subtract kva from loopva to reconstruct the size).
+	 */
+	if (zeroit)
+		memset((caddr_t)kva, 0, loopva - kva);
+
+	return(kva);
+}
+
+/*
+ * uvm_km_valloc: allocate zero-fill memory in the kernel's address space
+ *
+ * => memory is not allocated until fault time
+ */
+
+vaddr_t
+uvm_km_valloc(struct vm_map *map, vsize_t size)
+{
+	return(uvm_km_valloc_align(map, size, 0, 0));
+}
+
+vaddr_t
+uvm_km_valloc_try(struct vm_map *map, vsize_t size)
+{
+	return(uvm_km_valloc_align(map, size, 0, UVM_FLAG_TRYLOCK));
+}
+
+vaddr_t
+uvm_km_valloc_align(struct vm_map *map, vsize_t size, vsize_t align, int flags)
+{
+	vaddr_t kva;
+
+	KASSERT(vm_map_pmap(map) == pmap_kernel());
+
+	size = round_page(size);
+	kva = vm_map_min(map);		/* hint */
+
+	/* allocate some virtual space, demand filled by kernel_object. */
+
+	if (__predict_false(uvm_map(map, &kva, size, uvm.kernel_object,
+	    UVM_UNKNOWN_OFFSET, align,
+	    UVM_MAPFLAG(PROT_READ | PROT_WRITE, PROT_READ | PROT_WRITE,
+	    MAP_INHERIT_NONE, MADV_RANDOM, flags)) != 0)) {
+		return(0);
+	}
+
+	return(kva);
+}
+
+/*
+ * uvm_km_valloc_wait: allocate zero-fill memory in the kernel's address space
+ *
+ * => memory is not allocated until fault time
+ * => if no room in map, wait for space to free, unless requested size
+ *    is larger than map (in which case we return 0)
+ */
+vaddr_t
+uvm_km_valloc_prefer_wait(struct vm_map *map, vsize_t size, voff_t prefer)
+{
+	vaddr_t kva;
+
+	KASSERT(vm_map_pmap(map) == pmap_kernel());
+
+	size = round_page(size);
+	if (size > vm_map_max(map) - vm_map_min(map))
+		return(0);
+
+	while (1) {
+		kva = vm_map_min(map);		/* hint */
+
+		/*
+		 * allocate some virtual space.   will be demand filled
+		 * by kernel_object.
+		 */
+		if (__predict_true(uvm_map(map, &kva, size, uvm.kernel_object,
+		    prefer, 0,
+		    UVM_MAPFLAG(PROT_READ | PROT_WRITE, PROT_READ | PROT_WRITE,
+		    MAP_INHERIT_NONE, MADV_RANDOM, 0)) == 0)) {
+			return(kva);
+		}
+
+		/* failed.  sleep for a while (on map) */
+		tsleep(map, PVM, "vallocwait", 0);
+	}
+	/*NOTREACHED*/
+}
+
+vaddr_t
+uvm_km_valloc_wait(struct vm_map *map, vsize_t size)
+{
+	return uvm_km_valloc_prefer_wait(map, size, UVM_UNKNOWN_OFFSET);
+}
+
 #if defined(__HAVE_PMAP_DIRECT)
 /*
  * uvm_km_page allocator, __HAVE_PMAP_DIRECT arch
- * On architectures with machine memory direct mapped into a portion *
- of KVM, we have very little work to do.  Just get a physical page, *
- and find and return its VA.  */
-void uvm_km_page_init(void) {
+ * On architectures with machine memory direct mapped into a portion
+ * of KVM, we have very little work to do.  Just get a physical page,
+ * and find and return its VA.
+ */
+void
+uvm_km_page_init(void)
+{
 	/* nothing */
 }
 
@@ -366,7 +661,7 @@ uvm_km_page_init(void)
 		    NULL, UVM_UNKNOWN_OFFSET, 0,
 		    UVM_MAPFLAG(PROT_READ | PROT_WRITE,
 		    PROT_READ | PROT_WRITE, MAP_INHERIT_NONE,
-		    MADV_RANDOM, UVM_FLAG_TRYLOCK)) != 0) {
+		    MADV_RANDOM, UVM_KMF_TRYLOCK)) != 0) {
 			bulk /= 2;
 			continue;
 		}
@@ -408,7 +703,6 @@ uvm_km_thread(void *arg)
 	int flags;
 	struct uvm_km_free_page *fp = NULL;
 
-	KERNEL_ASSERT_LOCKED();
 	KERNEL_UNLOCK();
 
 	for (;;) {
@@ -428,12 +722,12 @@ uvm_km_thread(void *arg)
 			/*
 			 * If there was nothing on the freelist, then we
 			 * must obtain at least one page to make progress.
-			 * So, only use UVM_FLAG_TRYLOCK for the first page
+			 * So, only use UVM_KMF_TRYLOCK for the first page
 			 * if fp != NULL
 			 */
 			flags = UVM_MAPFLAG(PROT_READ | PROT_WRITE,
 			    PROT_READ | PROT_WRITE, MAP_INHERIT_NONE,
-			    MADV_RANDOM, fp != NULL ? UVM_FLAG_TRYLOCK : 0);
+			    MADV_RANDOM, fp != NULL ? UVM_KMF_TRYLOCK : 0);
 			memset(pg, 0, sizeof(pg));
 			for (i = 0; i < nitems(pg); i++) {
 				pg[i] = vm_map_min(kernel_map);
@@ -446,7 +740,7 @@ uvm_km_thread(void *arg)
 				/* made progress, so don't sleep for more */
 				flags = UVM_MAPFLAG(PROT_READ | PROT_WRITE,
 				    PROT_READ | PROT_WRITE, MAP_INHERIT_NONE,
-				    MADV_RANDOM, UVM_FLAG_TRYLOCK);
+				    MADV_RANDOM, UVM_KMF_TRYLOCK);
 			}
 
 			mtx_enter(&uvm_km_pages.mtx);
@@ -596,7 +890,7 @@ alloc_va:
 		struct uvm_object *uobj = NULL;
 
 		if (kd->kd_trylock)
-			mapflags |= UVM_FLAG_TRYLOCK;
+			mapflags |= UVM_KMF_TRYLOCK;
 
 		if (kp->kp_object)
 			uobj = *kp->kp_object;
@@ -617,8 +911,10 @@ try_map:
 	sva = va;
 	TAILQ_FOREACH(pg, &pgl, pageq) {
 		if (kp->kp_pageable)
-			panic("km_alloc: kp_pageable mapping got to enter");
-		pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg), prot);
+			pmap_enter(pmap_kernel(), va, VM_PAGE_TO_PHYS(pg),
+			    prot, prot | PMAP_WIRED);
+		else
+			pmap_kenter_pa(va, VM_PAGE_TO_PHYS(pg), prot);
 		va += PAGE_SIZE;
 	}
 	pmap_update(pmap_kernel());

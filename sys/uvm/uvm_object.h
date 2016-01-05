@@ -94,14 +94,6 @@ void	uvm_objinit(struct uvm_object *, struct uvm_pagerops *, int);
 int	uvm_objwire(struct uvm_object *, voff_t, voff_t, struct pglist *);
 void	uvm_objunwire(struct uvm_object *, voff_t, voff_t);
 
-#ifdef UVMLOCKDEBUG
-#	define UVM_ASSERT_OBJLOCKED(obj) MUTEX_ASSERT_LOCKED(&(obj)->vmobjlock)
-#	define UVM_ASSERT_OBJUNLOCKED(obj) MUTEX_ASSERT_UNLOCKED(&(obj)->vmobjlock)
-#else
-#	define UVM_ASSERT_OBJLOCKED(obj)
-#	define UVM_ASSERT_OBJUNLOCKED(obj)
-#endif	/* UVMLOCKDEBUG */
-
 #endif /* _KERNEL */
 
 #endif /* _UVM_UVM_OBJECT_H_ */

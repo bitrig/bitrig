@@ -242,7 +242,7 @@ cpu_idle_mwait_cycle(void)
 {
 	struct cpu_info *ci = curcpu();
 
-	if ((intr_get() & PSL_I) == 0)
+	if ((read_rflags() & PSL_I) == 0)
 		panic("idle with interrupts blocked!");
 
 	/* something already queued? */
@@ -319,7 +319,6 @@ cpu_attach(struct device *parent, struct device *self, void *aux)
 	struct cpu_attach_args *caa = aux;
 	struct cpu_info *ci;
 #if defined(MULTIPROCESSOR)
-	struct cpu_info *ciaux;
 	int cpunum = sc->sc_dev.dv_unit;
 	vaddr_t kstack;
 	struct pcb *pcb;
@@ -362,13 +361,13 @@ cpu_attach(struct device *parent, struct device *self, void *aux)
 	ci->ci_cpuid = 0;	/* False for APs, but they're not used anyway */
 #endif
 	ci->ci_func = caa->cpu_func;
+	ci->ci_handled_intr_level = IPL_NONE;
 
 #if defined(MULTIPROCESSOR)
 	/*
-	 * Allocate USPACE pages for the idle PCB and stack.
-	 * XXX should we just sleep here?
+	 * Allocate UPAGES contiguous pages for the idle PCB and stack.
 	 */
-	kstack = (vaddr_t)km_alloc(USPACE, &kv_any, &kp_zero, &kd_nowait);
+	kstack = uvm_km_alloc (kernel_map, USPACE);
 	if (kstack == 0) {
 		if (caa->cpu_role != CPU_ROLE_AP) {
 			panic("cpu_attach: unable to allocate idle stack for"
@@ -379,6 +378,7 @@ cpu_attach(struct device *parent, struct device *self, void *aux)
 		return;
 	}
 	pcb = ci->ci_idle_pcb = (struct pcb *)kstack;
+	memset(pcb, 0, USPACE);
 
 	pcb->pcb_kstack = kstack + USPACE - 16;
 	pcb->pcb_rbp = pcb->pcb_rsp = kstack + USPACE - 16;
@@ -440,11 +440,8 @@ cpu_attach(struct device *parent, struct device *self, void *aux)
 		cpu_start_secondary(ci);
 		ncpus++;
 		if (ci->ci_flags & CPUF_PRESENT) {
-			for (ciaux = cpu_info_list;
-			     ciaux->ci_next != NULL;
-			     ciaux = ciaux->ci_next)
-				;
-			ciaux->ci_next = ci;
+			ci->ci_next = cpu_info_list->ci_next;
+			cpu_info_list->ci_next = ci;
 		}
 #else
 		printf("%s: not started\n", sc->sc_dev.dv_xname);
@@ -690,7 +687,7 @@ cpu_hatch(void *v)
 
 	s = splhigh();
 	lcr8(0);
-	intr_enable();
+	enable_intr();
 
 	nanouptime(&ci->ci_schedstate.spc_runtime);
 	splx(s);
@@ -747,10 +744,8 @@ mp_cpu_start(struct cpu_info *ci)
 	dwordptr[1] = MP_TRAMPOLINE >> 4;
 
 	pmap_kenter_pa(0, 0, PROT_READ | PROT_WRITE);
-	pmap_update(pmap_kernel());
 	memcpy((u_int8_t *) 0x467, dwordptr, 4);
 	pmap_kremove(0, PAGE_SIZE);
-	pmap_update(pmap_kernel());
 
 #if NLAPIC > 0
 	/*

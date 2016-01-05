@@ -25,7 +25,6 @@
 #include <sys/user.h>
 #include <sys/reboot.h>
 #include <sys/hibernate.h>
-#include <sys/atomic.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -72,8 +71,7 @@ acpi_map(paddr_t pa, size_t len, struct acpi_mem_map *handle)
 {
 	paddr_t pgpa = trunc_page(pa);
 	paddr_t endpa = round_page(pa + len);
-	vaddr_t va = (vaddr_t)km_alloc(endpa - pgpa, &kv_any, &kp_none,
-	    &kd_nowait);
+	vaddr_t va = uvm_km_valloc(kernel_map, endpa - pgpa);
 
 	if (va == 0)
 		return (ENOMEM);
@@ -88,7 +86,6 @@ acpi_map(paddr_t pa, size_t len, struct acpi_mem_map *handle)
 		va += NBPG;
 		pgpa += NBPG;
 	} while (pgpa < endpa);
-	pmap_update(pmap_kernel());
 
 	return 0;
 }
@@ -97,8 +94,7 @@ void
 acpi_unmap(struct acpi_mem_map *handle)
 {
 	pmap_kremove(handle->baseva, handle->vsize);
-	pmap_update(pmap_kernel());
-	km_free((void *)handle->baseva, handle->vsize, &kv_any, &kp_none);
+	uvm_km_free(kernel_map, handle->baseva, handle->vsize);
 }
 
 u_int8_t *
@@ -273,13 +269,10 @@ acpi_sleep_clocks(struct acpi_softc *sc, int state)
 void
 acpi_resume_clocks(struct acpi_softc *sc)
 {
-	extern struct mutex intr_lock;
 #if NISA > 0
 	i8259_default_setup();
 #endif
-	mtx_enter(&intr_lock);
 	intr_calculatemasks(curcpu());
-	mtx_leave(&intr_lock);
 
 #if NIOAPIC > 0
 	ioapic_enable();
@@ -441,6 +434,7 @@ acpi_resume_mp(void)
 		pcb->pcb_rbp = 0;
 
 		ci->ci_idepth = 0;
+		ci->ci_handled_intr_level = IPL_NONE;
 
 		ci->ci_flags &= ~CPUF_PRESENT;
 		cpu_start_secondary(ci);

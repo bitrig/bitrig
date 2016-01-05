@@ -108,6 +108,15 @@ struct uvm {
 extern struct uvm uvm;
 
 /*
+ * UVM_WAIT: wait... wrapper around the tsleep() function.
+ */
+
+#define UVM_WAIT(event, intr, msg, timo)			\
+do {								\
+	tsleep(event, PVM|(intr ? PCATCH : 0), msg, timo);	\
+} while (0)
+
+/*
  * UVM_PAGE_OWN: track page ownership (only if UVM_PAGE_TRKOWN)
  */
 
