@@ -1241,7 +1241,7 @@ em_encap(struct em_softc *sc, struct mbuf *m_head)
 	tx_buffer = &sc->tx_buffer_area[first];
 	tx_buffer->next_eop = last;
 
-	membar_producer();
+	atomic_thread_fence(memory_order_release);
 
 	sc->next_avail_tx_desc = i;
 	if (sc->pcix_82544)
@@ -2376,7 +2376,7 @@ em_transmit_checksum_setup(struct em_softc *sc, struct mbuf *mp,
 	tx_buffer->m_head = NULL;
 	tx_buffer->next_eop = -1;
 
-	membar_producer();
+	atomic_thread_fence(memory_order_release);
 
 	if (++curr_txd == sc->num_tx_desc)
 		curr_txd = 0;
@@ -2403,7 +2403,7 @@ em_txeof(struct em_softc *sc)
 	if (sc->num_tx_desc_avail == sc->num_tx_desc)
 		return;
 
-	membar_consumer();
+	atomic_thread_fence(memory_order_acquire);
 
 	first = sc->next_tx_to_clean;
 	tx_desc = &sc->tx_desc_base[first];
