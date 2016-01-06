@@ -1,4 +1,4 @@
-/*	$OpenBSD: line.c,v 1.14 2015/03/27 04:11:25 brynet Exp $	*/
+/*	$OpenBSD: line.c,v 1.15 2016/01/06 22:28:52 millert Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -196,7 +196,7 @@ db_delete(SCR *sp, recno_t lno)
 	key.size = sizeof(lno);
 	if (ep->db->del(ep->db, &key, 0) == 1) {
 		msgq(sp, M_SYSERR,
-		    "003|unable to delete line %lu", (u_long)lno);
+		    "unable to delete line %lu", (u_long)lno);
 		return (1);
 	}
 
@@ -242,7 +242,7 @@ db_append(SCR *sp, int update, recno_t lno, char *p, size_t len)
 	data.size = len;
 	if (ep->db->put(ep->db, &key, &data, R_IAFTER) == -1) {
 		msgq(sp, M_SYSERR,
-		    "004|unable to append to line %lu", (u_long)lno);
+		    "unable to append to line %lu", (u_long)lno);
 		return (1);
 	}
 
@@ -308,7 +308,7 @@ db_insert(SCR *sp, recno_t lno, char *p, size_t len)
 	data.size = len;
 	if (ep->db->put(ep->db, &key, &data, R_IBEFORE) == -1) {
 		msgq(sp, M_SYSERR,
-		    "005|unable to insert at line %lu", (u_long)lno);
+		    "unable to insert at line %lu", (u_long)lno);
 		return (1);
 	}
 
@@ -368,7 +368,7 @@ db_set(SCR *sp, recno_t lno, char *p, size_t len)
 	data.size = len;
 	if (ep->db->put(ep->db, &key, &data, 0) == -1) {
 		msgq(sp, M_SYSERR,
-		    "006|unable to store line %lu", (u_long)lno);
+		    "unable to store line %lu", (u_long)lno);
 		return (1);
 	}
 
@@ -453,7 +453,7 @@ db_last(SCR *sp, recno_t *lnop)
 
 	switch (ep->db->seq(ep->db, &key, &data, R_LAST)) {
         case -1:
-		msgq(sp, M_SYSERR, "007|unable to get last line");
+		msgq(sp, M_SYSERR, "unable to get last line");
 		*lnop = 0;
 		return (1);
         case 1:
@@ -484,7 +484,7 @@ void
 db_err(SCR *sp, recno_t lno)
 {
 	msgq(sp, M_ERR,
-	    "008|Error: unable to retrieve line %lu", (u_long)lno);
+	    "Error: unable to retrieve line %lu", (u_long)lno);
 }
 
 /*

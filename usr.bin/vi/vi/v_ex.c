@@ -1,4 +1,4 @@
-/*	$OpenBSD: v_ex.c,v 1.12 2014/11/12 04:28:41 bentley Exp $	*/
+/*	$OpenBSD: v_ex.c,v 1.13 2016/01/06 22:28:52 millert Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -57,7 +57,7 @@ v_exmode(SCR *sp, VICMD *vp)
 	/* Try and switch screens -- the screen may not permit it. */
 	if (cl_screen(sp, SC_EX)) {
 		msgq(sp, M_ERR,
-		    "207|The Q command requires the ex terminal interface");
+		    "The Q command requires the ex terminal interface");
 		return (1);
 	}
 	(void)cl_attr(sp, SA_ALTERNATE, 0);
@@ -165,7 +165,7 @@ v_switch(SCR *sp, VICMD *vp)
 	 * name.  Use the real name, not the user's current name.
 	 */
 	if (sp->alt_name == NULL) {
-		msgq(sp, M_ERR, "180|No previous file to edit");
+		msgq(sp, M_ERR, "No previous file to edit");
 		return (1);
 	}
 	if ((name = strdup(sp->alt_name)) == NULL) {
@@ -546,7 +546,7 @@ v_ecl_exec(SCR *sp)
 		return (1);
 	}
 	if (len == 0) {
-		msgq(sp, M_BERR, "307|No ex command to execute");
+		msgq(sp, M_BERR, "No ex command to execute");
 		return (1);
 	}
 	
