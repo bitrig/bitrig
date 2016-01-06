@@ -1,4 +1,4 @@
-/*	$OpenBSD: vs_msg.c,v 1.15 2015/12/07 20:39:19 mmcc Exp $	*/
+/*	$OpenBSD: vs_msg.c,v 1.16 2016/01/06 22:29:38 millert Exp $	*/
 
 /*-
  * Copyright (c) 1993, 1994
@@ -57,7 +57,6 @@ vs_busy(SCR *sp, const char *msg, busy_t btype)
 	static const char flagc[] = "|/-\\";
 	struct timespec ts, ts_diff;
 	size_t len, notused;
-	const char *p;
 
 	/* Ex doesn't display busy messages. */
 	if (F_ISSET(sp, SC_EX | SC_SCR_EXWROTE))
@@ -85,12 +84,11 @@ vs_busy(SCR *sp, const char *msg, busy_t btype)
 		(void)cl_cursor(sp, &vip->busy_oldy, &vip->busy_oldx);
 
 		/* Display the busy message. */
-		p = msg_cat(sp, msg, &len);
-		(void)cl_move(sp, LASTLINE(sp), 0);
-		(void)cl_addstr(sp, p, len);
-		(void)cl_cursor(sp, &notused, &vip->busy_fx);
-		(void)clrtoeol();
-		(void)cl_move(sp, LASTLINE(sp), vip->busy_fx);
+		(void)gp->scr_move(sp, LASTLINE(sp), 0);
+		(void)gp->scr_addstr(sp, msg, strlen(msg));
+		(void)gp->scr_cursor(sp, &notused, &vip->busy_fx);
+		(void)gp->scr_clrtoeol(sp);
+		(void)gp->scr_move(sp, LASTLINE(sp), vip->busy_fx);
 		break;
 	case BUSY_OFF:
 		if (vip->busy_ref == 0)
