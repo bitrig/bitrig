@@ -1,4 +1,4 @@
-/*	$OpenBSD: conf.c,v 1.53 2015/12/21 22:15:53 sf Exp $	*/
+/*	$OpenBSD: conf.c,v 1.54 2016/01/08 11:20:58 reyk Exp $	*/
 
 /*
  * Copyright (c) 1994, 1995 Charles M. Hannum.  All rights reserved.
@@ -157,8 +157,6 @@ cdev_decl(pms);
 cdev_decl(nvram);
 #include "drm.h"
 cdev_decl(drm);
-#include "vmm.h"
-cdev_decl(vmm);
 #include "viocon.h"
 cdev_decl(viocon);
 
