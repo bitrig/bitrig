@@ -157,8 +157,7 @@ cdev_decl(pms);
 cdev_decl(nvram);
 #include "drm.h"
 cdev_decl(drm);
-#include "vmm.h"
-cdev_decl(vmm);
+#include "viocon.h"
 
 #include "wsdisplay.h"
 #include "wskbd.h"
