@@ -1,4 +1,4 @@
-/*	$OpenBSD: rnd.c,v 1.177 2015/12/28 05:21:53 tedu Exp $	*/
+/*	$OpenBSD: rnd.c,v 1.178 2016/01/08 07:54:02 stefan Exp $	*/
 
 /*
  * Copyright (c) 2011 Theo de Raadt.
@@ -856,7 +856,7 @@ randomread(dev_t dev, struct uio *uio, int ioflag)
 	}
 
 	while (ret == 0 && uio->uio_resid > 0) {
-		int	n = ulmin(POOLBYTES, uio->uio_resid);
+		size_t	n = ulmin(POOLBYTES, uio->uio_resid);
 
 		if (myctx) {
 #ifndef KEYSTREAM_ONLY
@@ -888,7 +888,7 @@ randomwrite(dev_t dev, struct uio *uio, int flags)
 	buf = malloc(POOLBYTES, M_TEMP, M_WAITOK);
 
 	while (ret == 0 && uio->uio_resid > 0) {
-		int	n = ulmin(POOLBYTES, uio->uio_resid);
+		size_t	n = ulmin(POOLBYTES, uio->uio_resid);
 
 		ret = uiomove(buf, n, uio);
 		if (ret != 0)
