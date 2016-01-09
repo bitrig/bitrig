@@ -1,4 +1,4 @@
-/*	$OpenBSD: hack.do_name.c,v 1.10 2014/03/11 08:05:15 guenther Exp $	*/
+/*	$OpenBSD: hack.do_name.c,v 1.11 2016/01/09 18:33:15 mestre Exp $	*/
 
 /*
  * Copyright (c) 1985, Stichting Centrum voor Wiskunde en Informatica,
@@ -61,10 +61,11 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "hack.h"
-#include <sys/param.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "hack.h"
+
 extern char plname[];
 static void do_oname(struct obj *);
 static char *lmonnam(struct monst *);
@@ -111,7 +112,7 @@ getpos(int force, char *goal)
 }
 
 int
-do_mname()
+do_mname(void)
 {
 	char buf[BUFSZ];
 	coord cc;
@@ -206,7 +207,7 @@ do_oname(struct obj *obj)
 }
 
 int
-ddocall()
+ddocall(void)
 {
 	struct obj *obj;
 
