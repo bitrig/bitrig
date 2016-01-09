@@ -1,4 +1,4 @@
-#	$OpenBSD: install.sub,v 1.867 2015/12/27 18:42:11 rpe Exp $
+#	$OpenBSD: install.sub,v 1.868 2016/01/09 18:10:57 krw Exp $
 #
 # Copyright (c) 1997-2015 Todd Miller, Theo de Raadt, Ken Westerback
 # Copyright (c) 2015, Robert Peichaer <rpe@openbsd.org>
@@ -261,6 +261,46 @@ getdevname() {
 	else
 		_dev=${_dev#/dev/}
 		print -r -- "${_dev%[a-p]}"
+	fi
+}
+
+# Inspect disk $1 if it has a partition-table of type $2 and optionally
+# if it has a partition of type $3.
+disk_has() {
+	local _disk=$1 _pttype=$2 _part=$3 _cmd _p_pttype _p_part
+
+	[[ -n $_disk && -n $_pttype ]] || exit
+
+	# Commands to inspect disk. Default: "fdisk $_disk"
+	local _c_hfs="pdisk -l /dev/${_disk}c"
+	local _c_sr="bioctl -q $_disk"
+
+	# Patterns for partition-table-types and partition-types.
+	local _p_gpt='Usable LBA:'
+	local _p_gpt_openbsd='^[ *]...: Bitrig '
+	local _p_gpt_efisys='^[ *]...: EFI Sys '
+	local _p_hfs='^Partition map '
+	local _p_hfs_openbsd=' Bitrig Bitrig '
+	local _p_mbr='Signature: 0xAA55'
+	local _p_mbr_openbsd='^..: A6 '
+	local _p_mbr_dos='^..: 06 '
+	local _p_mbr_dos_active='^\*.: 06 '
+	local _p_mbr_linux='^..: 83 '
+	local _p_sr='OPENBSD, SR'
+	local _p_sr_crypto='OPENBSD, SR CRYPTO'
+
+	eval "_cmd=\"\$_c_${_pttype}\""
+	eval "_p_pttype=\"\$_p_${_pttype}\""
+	eval "_p_part=\"\$_p_${_pttype}_${_part}\""
+	_cmd=${_cmd:-fdisk $_disk}
+
+	[[ -z $_p_pttype ]] && exit
+	[[ -n $_part && -z $_p_part ]] && exit
+
+	if [[ -z $_p_part ]]; then
+		$_cmd | grep -Eq "$_p_pttype"
+	else
+		$_cmd | grep -Eq "$_p_pttype" && $_cmd | grep -Eq "$_p_part"
 	fi
 }
 
