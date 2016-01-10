@@ -1,4 +1,4 @@
-/*	$OpenBSD: sdhc.c,v 1.39 2015/03/14 03:38:49 jsg Exp $	*/
+/*	$OpenBSD: sdhc.c,v 1.40 2016/01/10 14:11:43 kettenis Exp $	*/
 
 /*
  * Copyright (c) 2006 Uwe Stuehler <uwe@openbsd.org>
@@ -278,9 +278,8 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	/*
 	 * Determine SD bus voltage levels supported by the controller.
 	 */
-	if (ISSET(caps, SDHC_VOLTAGE_SUPP_1_8V) &&
-	    hp->specver < SDHC_SPEC_VERS_300)
-		SET(hp->ocr, MMC_OCR_1_7V_1_8V | MMC_OCR_1_8V_1_9V);
+	if (ISSET(caps, SDHC_VOLTAGE_SUPP_1_8V))
+		SET(hp->ocr, MMC_OCR_1_65V_1_95V);
 	if (ISSET(caps, SDHC_VOLTAGE_SUPP_3_0V))
 		SET(hp->ocr, MMC_OCR_2_9V_3_0V | MMC_OCR_3_0V_3_1V);
 	if (ISSET(caps, SDHC_VOLTAGE_SUPP_3_3V))
@@ -561,8 +560,8 @@ sdhc_bus_power(sdmmc_chipset_handle_t sch, u_int32_t ocr)
 		vdd = SDHC_VOLTAGE_1_8V;
 	else if (ISSET(ocr, MMC_OCR_2_9V_3_0V|MMC_OCR_3_0V_3_1V))
 		vdd = SDHC_VOLTAGE_3_0V;
-	else if (ISSET(ocr, MMC_OCR_3_2V_3_3V|MMC_OCR_3_3V_3_4V))
-		vdd = SDHC_VOLTAGE_3_3V;
+	else if (ISSET(ocr, MMC_OCR_1_65V_1_95V))
+		vdd = SDHC_VOLTAGE_1_8V;
 	else {
 		/* Unsupported voltage level requested. */
 		splx(s);
