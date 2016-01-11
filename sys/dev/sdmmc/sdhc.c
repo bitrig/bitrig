@@ -1,4 +1,4 @@
-/*	$OpenBSD: sdhc.c,v 1.40 2016/01/10 14:11:43 kettenis Exp $	*/
+/*	$OpenBSD: sdhc.c,v 1.41 2016/01/11 06:54:53 kettenis Exp $	*/
 
 /*
  * Copyright (c) 2006 Uwe Stuehler <uwe@openbsd.org>
@@ -44,6 +44,7 @@ struct sdhc_host {
 	bus_space_tag_t iot;		/* host register set tag */
 	bus_space_handle_t ioh;		/* host register set handle */
 	bus_dma_tag_t dmat;		/* host DMA tag */
+	u_int16_t version;		/* specification version */
 	u_int clkbase;			/* base clock frequency in KHz */
 	int maxblklen;			/* maximum block length */
 	int flags;			/* flags for this host */
@@ -192,6 +193,9 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	uint32_t caps = 0;
 	uint16_t version;
 	int error = 1;
+	int max_clock;
+#ifdef SDHC_DEBUG
+	u_int16_t version;
 
 	/* Allocate one more host structure. */
 	sc->sc_nhosts++;
@@ -219,6 +223,19 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 		break;
 	}
 #endif
+
+	/* Allocate one more host structure. */
+	sc->sc_nhosts++;
+	hp = malloc(sizeof(*hp), M_DEVBUF, M_WAITOK | M_ZERO);
+	sc->sc_host[sc->sc_nhosts - 1] = hp;
+
+	/* Fill in the new host structure. */
+	hp->sc = sc;
+	hp->iot = iot;
+	hp->ioh = ioh;
+
+	/* Store specification version. */
+	hp->version = bus_space_read_2(iot, ioh, SDHC_HOST_CTL_VERSION);
 
 	/*
 	 * Reset the host controller and enable interrupts.
@@ -248,22 +265,23 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	/*
 	 * Determine the base clock frequency. (2.2.24)
 	 */
-	if (hp->specver >= SDHC_SPEC_VERS_300) {
-		hp->clkbase = SDHC_BASE_V3_FREQ_KHZ(caps);
+	if (SDHC_SPEC_VERSION(hp->version) >= SDHC_SPEC_V3) {
+		/* SDHC 3.0 supports 10-255 MHz. */
+		max_clock = 255000;
+		if (SDHC_BASE_FREQ_KHZ_V3(caps) != 0)
+			hp->clkbase = SDHC_BASE_FREQ_KHZ_V3(caps);
 	} else {
-		hp->clkbase = SDHC_BASE_FREQ_KHZ(caps);
+		/* SDHC 1.0/2.0 supports only 10-63 MHz. */
+		max_clock = 63000;
+		if (SDHC_BASE_FREQ_KHZ(caps) != 0)
+			hp->clkbase = SDHC_BASE_FREQ_KHZ(caps);
 	}
 	if (hp->clkbase == 0) {
-		if (sc->sc_clkbase == 0) {
-			/* The attachment driver must tell us. */
-			printf("%s: base clock frequency unknown\n",
-			    sc->sc_dev.dv_xname);
-			goto err;
-		}
-		hp->clkbase = sc->sc_clkbase;
-	}
-	if (hp->clkbase < 10000 || hp->clkbase > 10000 * 256) {
-		/* SDHC 1.0 supports only 10-63 MHz. */
+		/* The attachment driver must tell us. */
+		printf("%s: base clock frequency unknown\n",
+		    sc->sc_dev.dv_xname);
+		goto err;
+	} else if (hp->clkbase < 10000 || hp->clkbase > max_clock) {
 		printf("%s: base clock frequency out of range: %u MHz\n",
 		    sc->sc_dev.dv_xname, hp->clkbase / 1000);
 		goto err;
@@ -608,38 +626,15 @@ sdhc_bus_power(sdmmc_chipset_handle_t sch, u_int32_t ocr)
 static bool
 sdhc_clock_divisor(struct sdhc_host *hp, u_int freq, u_int *divp)
 {
-	u_int div;
+	int max_div = 256;
+	int div;
 
-	if (hp->sc->sc_clkmsk != 0) {
-		div = howmany(hp->clkbase, freq);
-		if (div > (hp->sc->sc_clkmsk >> (ffs(hp->sc->sc_clkmsk) - 1)))
-			return false;
-		*divp = div << (ffs(hp->sc->sc_clkmsk) - 1);
-		//freq = hp->clkbase / div;
-		return true;
-	}
-	if (hp->specver >= SDHC_SPEC_VERS_300) {
-		div = howmany(hp->clkbase, freq);
-		div = div > 1 ? howmany(div, 2) : 0;
-		if (div > 0x3ff)
-			return false;
-		*divp = (((div >> 8) & SDHC_SDCLK_XDIV_MASK)
-			 << SDHC_SDCLK_XDIV_SHIFT) |
-			(((div >> 0) & SDHC_SDCLK_DIV_MASK)
-			 << SDHC_SDCLK_DIV_SHIFT);
-		//freq = hp->clkbase / div;
-		return true;
-	} else {
-		for (div = 1; div <= 256; div *= 2) {
-			if ((hp->clkbase / div) <= freq) {
-				*divp = (div / 2) << SDHC_SDCLK_DIV_SHIFT;
-				//freq = hp->clkbase / div;
-				return true;
-			}
-		}
-		/* No divisor found. */
-		return false;
-	}
+	if (SDHC_SPEC_VERSION(hp->version) >= SDHC_SPEC_V3)
+		max_div = 2046;
+
+	for (div = 1; div <= max_div; div *= 2)
+		if ((hp->clkbase / div) <= freq)
+			return (div / 2);
 	/* No divisor found. */
 	return false;
 }
@@ -654,6 +649,7 @@ sdhc_bus_clock(sdmmc_chipset_handle_t sch, int freq)
 	struct sdhc_host *hp = sch;
 	int s;
 	int div;
+	int sdclk;
 	int timo;
 	int error = 0;
 
@@ -687,8 +683,11 @@ sdhc_bus_clock(sdmmc_chipset_handle_t sch, int freq)
 		error = EINVAL;
 		goto ret;
 	}
-	HWRITE2(hp, SDHC_CLOCK_CTL, (HREAD2(hp, SDHC_CLOCK_CTL) &
-	    (SDHC_INTCLK_STABLE | SDHC_INTCLK_ENABLE)) | div);
+	if (SDHC_SPEC_VERSION(hp->version) >= SDHC_SPEC_V3)
+		sdclk = SDHC_SDCLK_DIV_V3(div);
+	else
+		sdclk = SDHC_SDCLK_DIV(div);
+	HWRITE2(hp, SDHC_CLOCK_CTL, sdclk);
 
 	/*
 	 * Start internal clock.  Wait 10ms for stabilization.
