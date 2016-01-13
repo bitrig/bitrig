@@ -1,4 +1,5 @@
-/*	$NetBSD: tmpfs_vfsops.c,v 1.53 2013/11/08 15:44:23 rmind Exp $	*/
+/*	$OpenBSD: tmpfs_vfsops.c,v 1.8 2016/01/13 13:01:40 gsoares Exp $	*/
+/*	$NetBSD: tmpfs_vfsops.c,v 1.52 2011/09/27 01:10:43 christos Exp $	*/
 
 /*
  * Copyright (c) 2005, 2006, 2007 The NetBSD Foundation, Inc.
@@ -210,8 +211,6 @@ tmpfs_mountfs(struct mount *mp, const char *path, struct vnode *vp,
 
 	/* Allocate the tmpfs mount structure and fill it. */
 	tmp = malloc(sizeof(tmpfs_mount_t), M_MISCFSMNT, M_WAITOK);
-	if (tmp == NULL)
-		return ENOMEM;
 
 	tmpfs_mountfs_getparams(args, &memlimit, &nodes);
 
