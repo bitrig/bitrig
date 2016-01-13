@@ -100,12 +100,13 @@ PIE_DEFAULT=
 		
 # explicit cross-compile
 NO_CROSS+=microcode
-NO_CROSS+=groff perl texinfo
+NO_CROSS+=perl texinfo
 NO_CROSS+=nsd
 NO_CROSS+=sqlite3
 NO_CROSS+=bgplg
 NO_CROSS+=bind
 NO_CROSS+=unbound
+NO_CROSS+=clang
 
 cross-dirs:	${CROSSDIRS}
 cross-obj:	${CROSSOBJ}
