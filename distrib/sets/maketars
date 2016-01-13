@@ -47,6 +47,18 @@ lists=`pwd`/lists
 tardir=$RELEASEDIR
 fsdir=$DESTDIR
 
+if [ $# > 1 ] 
+then
+	if [ $# > 3 ]
+	then
+		if [ $1 == "-a" ]
+		then
+			arch=$2
+		fi
+		RELEASE=$3
+	fi
+fi
+
 TMP=`mktemp /tmp/_maketars.XXXXXXXXXX` || exit 1
 TMP2=`mktemp /tmp/_maketars2.XXXXXXXXXX` || exit 1
 trap 'rm -f $TMP $TMP2; exit 1' 1 15
