@@ -114,6 +114,7 @@ struct nbd_softc *nbd_softc;
 int numnbd = 0;
 
 /* prototypes */
+void		 nbdattach(int);
 int		 nbdgetdisklabel(dev_t, struct nbd_softc *, struct disklabel *, int);
 int		 nbd_do_it(struct nbd_softc *);
 void		 nbd_send_thread(void *);

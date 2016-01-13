@@ -43,6 +43,9 @@ ARCH_SRCS = e_acos.S e_asin.S e_atan2.S e_exp.S e_fmod.S e_log.S e_log10.S \
 .elif (${MACHINE_ARCH} == "arm")
 .PATH:	${.CURDIR}/arch/arm
 EXTRA_SRCS = fenv-softfp.c fenv-vfp.c
+.elif (${MACHINE_ARCH} == "aarch64")
+ARCH_SRCS = 
+.PATH:	${.CURDIR}/arch/aarch64
 .endif
 
 .PATH:	${.CURDIR}/man
@@ -127,6 +130,10 @@ SRCS=	${COMMON_SRCS} ${PURE_SRCS} ${EXTRA_SRCS}
 .PATH:		${.CURDIR}/src/ld80
 CPPFLAGS+=	-I${.CURDIR}/src -I${.CURDIR}/src/ld80
 SRCS+=		${LONG_SRCS}
+.endif
+.if (${MACHINE_ARCH} == "aarch64")
+CPPFLAGS+=	-I${.CURDIR}/src
+SRCS+=		s_rintl.c s_scalbnl.c
 .endif
 
 # Substitute common sources with any arch specific sources 

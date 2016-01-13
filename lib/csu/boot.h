@@ -67,6 +67,7 @@ extern char __got_end[];
 void
 _dl_boot_bind(const long sp, long *dl_data, Elf_Dyn *dynamicp)
 {
+#if !defined(__aarch64__) // aarch64 is not PIE yet.
 	struct elf_object  dynld;	/* Resolver data for the loader */
 	AuxInfo		*auxstack;
 	long		*stack;
@@ -157,6 +158,9 @@ _dl_boot_bind(const long sp, long *dl_data, Elf_Dyn *dynamicp)
 				;
 			}
 		}
+	} else {
+		extern char *__tdata_end, *__tdata_start;
+		tlssize = &__tdata_end - &__tdata_start;
 	}
 
 
@@ -321,6 +325,7 @@ _dl_boot_bind(const long sp, long *dl_data, Elf_Dyn *dynamicp)
 	start = ELF_TRUNC((Elf_Addr)__got_start, pagesize);
 	size = ELF_ROUND((Elf_Addr)__got_end - start, pagesize);
 	mprotect((void *)start, size, GOT_PERMS | prot_exec);
+#endif
 }
 
 #ifdef __alpha__

@@ -2,7 +2,7 @@
 
 .PATH: ${.CURDIR}/../../../usr.sbin/mkuboot
 
-.if ${MACHINE} == "armv7"
+.if ${MACHINE} == "armv7" || ${MACHINE} == "arm64"
 
 BINDIR=	/usr/sbin
 PROG=	mkuboot

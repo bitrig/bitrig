@@ -18,6 +18,8 @@ CCCROSSOPTS=
 TARGET_ARCH=	arm
 TARGET_ARCHCOMP=	armv7
 CANON_ABI=-gnueabihf
+.elif	(${TARGET} == "arm64")
+TARGET_ARCH=	aarch64
 .else
 TARGET_ARCH=	${TARGET}
 .endif
@@ -28,7 +30,7 @@ OSR!=grep ^osr sys/conf/newvers.sh | sed -e 's/osr=//' -e 's/"//g'
 
 # List of LP64 archs
 # XXX move to bsd.*.mk?
-LP64_ARCH = amd64
+LP64_ARCH = amd64 aarch64
 
 TARGET_IS_LP64 =
 MACHINE_IS_LP64 =

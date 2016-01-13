@@ -39,7 +39,7 @@
 #define _DYN_LOADER
 #include <sys/exec_elf.h>
 
-#if defined(__ia64__) || defined(__amd64__)
+#if defined(__ia64__) || defined(__amd64__) || defined(__aarch64__)
 #define TLS_TCB_ALIGN 16
 #elif defined(__powerpc__) || defined(__i386__) || defined(__arm__) || \
     defined(__sparc64__) || defined(__mips__)
@@ -49,7 +49,7 @@
 #endif
 
 #if defined(__arm__) || defined(__ia64__) || defined(__mips__) || \
-    defined(__powerpc__)
+    defined(__powerpc__) || defined(__aarch64__)
 #define TLS_VARIANT_I
 #endif
 #if defined(__i386__) || defined(__amd64__) || defined(__sparc64__)
@@ -130,8 +130,8 @@ _lt_free(void *p)
 #define round(size, align) \
         (((size) + (align) - 1) & ~((align) - 1))
 
-static size_t tls_static_space;
-static size_t tls_init_size;
+static ssize_t tls_static_space;
+static ssize_t tls_init_size;
 static void *tls_init;
 
 #ifdef TLS_VARIANT_I
@@ -310,15 +310,20 @@ __init_tcb(__unused void **envp)
 			break;
 		}
 	}
-	if (phdr == 0 || phent != sizeof(Elf_Phdr) || phnum == 0)
-		return;
-
-	for (i = 0; (unsigned) i < phnum; i++) {
-		if (phdr[i].p_type == PT_TLS) {
-			tls_static_space = round(phdr[i].p_memsz,
-			    phdr[i].p_align);
-			tls_init_size = phdr[i].p_filesz;
-			tls_init = (void*) phdr[i].p_vaddr;
+	if (phdr == 0 || phent != sizeof(Elf_Phdr) || phnum == 0) {
+		// try tls symbols
+		extern char *__tdata_start, *__tdata_end;
+		tls_init = (void*)&__tdata_start;
+		tls_init_size = (char*)&__tdata_end - (char*)&__tdata_start;
+		tls_static_space = round(tls_init_size, sizeof(long));
+	} else {
+		for (i = 0; (unsigned) i < phnum; i++) {
+			if (phdr[i].p_type == PT_TLS) {
+				tls_static_space = round(phdr[i].p_memsz,
+				    phdr[i].p_align);
+				tls_init_size = phdr[i].p_filesz;
+				tls_init = (void*) phdr[i].p_vaddr;
+			}
 		}
 	}
 

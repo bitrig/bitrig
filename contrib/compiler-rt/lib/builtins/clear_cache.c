@@ -77,6 +77,26 @@
   #include <asm/unistd.h>
 #endif
 
+#if defined(__OpenBSD__) || defined(__Bitrig__)
+#include <sys/types.h>
+# if defined(__arm__)
+#include <machine/asm.h>
+#include <sys/syscall.h>
+#include <arm/swi.h>
+
+static inline void
+sysarch (int32_t sysarch_id, void *arg)
+{
+	__asm volatile(" mov r0, %0;"
+	    " mov r1, %1;"
+	    " ldr r12, =%c2;"
+	    " swi %3" ::
+	    "r" (sysarch_id), "r" (arg), "i"(SYS_sysarch), "i"(SYS_sysarch|SWI_OS_NETBSD):
+	    "0", "1");
+}
+# endif
+#endif
+
 /*
  * The compiler generates calls to __clear_cache() when creating 
  * trampoline functions on the stack for use with nested functions.

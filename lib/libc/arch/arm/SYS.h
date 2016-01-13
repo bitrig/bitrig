@@ -126,7 +126,6 @@
 	mov r15, r14;							\
 	__END_HIDDEN(x)
 
-
 #define RSYSCALL_NOERROR(x)						\
 	PSEUDO_NOERROR(x,x)
 

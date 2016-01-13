@@ -100,6 +100,10 @@ INSTALL_STRIP?=	-s
 # routers and other embedded systems); normal systems should leave it alone!
 STATIC?=	-static
 
+# Workaround for aarch64 attempting to link non-pie static binaries against
+# rcrt0.o
+STATIC+=-nopie
+
 # Define SYS_INCLUDE to indicate whether you want symbolic links to the system
 # source (``symlinks''), or a separate copy (``copies''); (latter useful
 # in environments where it's not possible to keep /sys publicly readable)
@@ -107,7 +111,7 @@ STATIC?=	-static
 
 # don't try to generate PIC versions of libraries on machines
 # which don't support PIC.
-.if ${MACHINE_ARCH} == "m88k" || ${MACHINE_ARCH} == "vax"
+.if ${MACHINE_ARCH} == "m88k" || ${MACHINE_ARCH} == "aarch64"
 NOPIC=
 .endif
 

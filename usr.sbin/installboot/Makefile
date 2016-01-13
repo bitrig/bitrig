@@ -25,6 +25,10 @@ SRCS += i386_softraid.c
 SRCS += stubs.c
 .endif
 
+.if ${MACHINE} == "arm64"
+SRCS += stubs.c
+.endif
+
 .if ${MACHINE} == "armv7"
 SRCS += stubs.c
 .endif

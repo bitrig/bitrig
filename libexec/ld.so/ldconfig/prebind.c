@@ -1,5 +1,4 @@
-/* $OpenBSD: prebind.c,v 1.29 2015/06/03 02:24:36 millert Exp $ */
-/*
+/* $OpenBSD: prebind.c,v 1.29 2015/06/03 02:24:36 millert Exp $ */ /*
  * Copyright (c) 2006 Dale Rahn <drahn@dalerahn.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
@@ -46,6 +45,10 @@ char *shstrtab;
 #define RELOC_JMP_SLOT	R_X86_64_JUMP_SLOT
 #endif
 #ifdef __arm__
+#define RELOC_JMP_SLOT	R_ARM_JUMP_SLOT
+#endif
+#ifdef __aarch64__
+// XXX THIS IS COMPLETELY BOGUS!!!!
 #define RELOC_JMP_SLOT	R_ARM_JUMP_SLOT
 #endif
 

@@ -39,6 +39,9 @@
 #include <sys/sysctl.h>
 #include <sys/mount.h>
 #include <sys/syscallargs.h>
+#ifdef SYSCALL_DEBUG
+#include <sys/proc.h>
+#endif /* SYSCALL_DEBUG */
 
 int
 sys_reboot(struct proc *p, void *v, register_t *retval)
