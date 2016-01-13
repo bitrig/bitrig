@@ -1,0 +1,93 @@
+maxpartitions	16
+maxusers	2 8 64
+
+major	{wd = 16}
+major	{sd = 24}
+major	{cd = 26}
+
+file	arch/arm64/arm64/autoconf.c
+file	arch/arm64/arm64/copy.S
+file	arch/arm64/arm64/copystr.S
+file	arch/arm64/arm64/cpuswitch.S
+file	arch/arm64/arm64/conf.c
+file	arch/arm64/arm64/disksubr.c
+file	arch/arm64/arm64/machdep.c
+file	arch/arm64/arm64/mem.c
+file	arch/arm64/arm64/pmap.c
+file	arch/arm64/arm64/vm_machdep.c
+file	arch/arm64/arm64/process_machdep.c
+file	arch/arm64/arm64/sig_machdep.c
+file	arch/arm64/arm64/syscall.c
+file	arch/arm64/arm64/sys_machdep.c
+
+file	arch/arm64/arm64/intr.c
+file	arch/arm64/arm64/softintr.c
+file	arch/arm64/arm64/vfp.c
+file	arch/arm64/arm64/exception.S
+file	arch/arm64/arm64/trap.c
+file	arch/arm64/arm64/ast.c
+
+file	arch/arm64/arm64/support.S
+file	arch/arm64/arm64/bus_dma.c
+file	arch/arm64/arm64/arm64_iobus.c
+
+file	arch/arm64/dev/arm64_bus_space.c
+
+# XXX should this really reach over into arm? (copy files or move out of arm?)
+# clock infrastructure
+file    arch/arm/clock/clock.c
+file    arch/arm/clock/clock_fixed_factor.c
+file    arch/arm/clock/clock_fixed_rate.c
+file    arch/arm/clock/clock_gate.c
+
+file	arch/arm64/ddb/db_disasm.c		ddb
+file	arch/arm64/ddb/db_interface.c		ddb
+file	arch/arm64/ddb/db_trace.c		ddb
+
+# mainbus files
+device	mainbus {}
+attach	mainbus at root
+file	arch/arm64/dev/mainbus.c		mainbus
+
+# define fdt early for cortex
+define  fdt {}
+
+# FDT bus
+device fdt: fdt
+attach fdt at mainbus
+file    arch/arm64/fdt/fdtbus.c                   fdt
+
+
+# Machine-independent SCSI drivers
+include "scsi/files.scsi"
+include "dev/atapiscsi/files.atapiscsi"
+
+# Machine-independent ATA drivers
+include "dev/ata/files.ata"
+
+# Include WSCONS stuff
+include "dev/wscons/files.wscons"
+include "dev/rasops/files.rasops"
+include "dev/wsfont/files.wsfont"
+
+# Include USB stuff
+include "dev/usb/files.usb"
+
+include "arch/arm64/fdt/files.fdt"
+
+device	ampintc
+attach	ampintc at fdt with ampintc_fdt
+file	arch/arm64/dev/ampintc.c		ampintc
+
+device  agtimer
+attach  agtimer at fdt with agtimer_fdt
+file    arch/arm64/dev/agtimer.c               agtimer
+
+
+file	netinet/in_cksum.c			inet
+file	netinet/in4_cksum.c			inet
+
+include "dev/mii/files.mii"
+include "dev/pci/files.pci"
+
+include "arch/arm64/virt/files.virt"

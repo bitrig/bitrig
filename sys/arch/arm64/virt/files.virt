@@ -1,0 +1,10 @@
+#	$OpenBSD: files.beagle,v 1.11 2011/11/10 19:37:01 uwe Exp $
+
+# serial ports
+device pl011uart
+attach	pl011uart at fdt
+file	arch/arm64/virt/pl011.c		pl011uart
+
+# VirtIO
+attach	virtio at fdt with virtio_mmio
+file	arch/arm64/virt/virtio_mmio.c	virtio_mmio

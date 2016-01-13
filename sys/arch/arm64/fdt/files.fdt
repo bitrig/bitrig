@@ -1,0 +1,18 @@
+# FDT bus
+file	arch/arm64/fdt/fdt_machdep.c		fdt	needs-flag
+
+# fixed factor clock
+device clkff
+attach clkff at fdt
+file	arch/arm64/fdt/clkff.c			clkff
+
+# fixed rate clock
+device clkfr
+attach clkfr at fdt
+file	arch/arm64/fdt/clkfr.c			clkfr
+
+# NS16550 compatible serial ports
+attach	com at fdt with com_fdt
+file	arch/arm64/fdt/fdt_com.c		com_fdt
+
+file	arch/arm64/fdt/fdt.c			fdt

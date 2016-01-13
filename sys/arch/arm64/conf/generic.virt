@@ -1,0 +1,7 @@
+# Virt on-chip devices
+pl011uart*	at fdt?		# onboard uarts
+virtio*		at fdt?
+vio*		at virtio?
+vioblk*		at virtio?
+viomb*		at virtio?
+viornd*		at virtio?

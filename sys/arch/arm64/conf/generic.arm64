@@ -1,0 +1,55 @@
+#
+# GENERIC machine description file
+#
+# This machine description file is used to generate the default OpenBSD
+# kernel.  The generic kernel does not include all options, subsystems
+# and device drivers, but should be useful for most applications.
+#
+# The machine description file can be customised for your specific
+# machine to reduce the kernel size and improve its performance.
+#
+# For further information on compiling OpenBSD kernels, see the config(8)
+# man page.
+#
+# For further information on hardware support for this architecture, see
+# the intro(4) man page.  For further information about kernel options
+# for this architecture, see the options(4) man page.  For an explanation
+# of each device driver in this file see the section 4 man page for the
+# device.
+
+machine	arm64
+include	"../../../conf/GENERIC"
+
+options	TIMEZONE=0	# time zone to adjust RTC time by
+options	DST=0		# daylight saving time used by RTC
+#options	NFSCLIENT	# NFS 
+
+makeoptions	KERNEL_BASE_PHYS="0x00080000"
+makeoptions	KERNEL_BASE_VIRT="0xffffff8000080000"
+
+# estimated number of users
+maxusers	32
+
+# The main bus device
+mainbus0	at root
+
+scsibus*	at scsi?
+sd*		at scsibus?
+st*		at scsibus?
+cd*		at scsibus?
+ch*		at scsibus?
+uk*		at scsibus?
+
+include "../../../arch/arm64/conf/generic.fdt"
+
+ampintc*   at fdt?
+agtimer*   at fdt?
+
+# Clocks
+clkff*          at fdt?
+clkfr*          at fdt?
+
+# NS16550 compatible serial ports
+com*            at fdt?
+
+include "../../../arch/arm64/conf/generic.virt"
