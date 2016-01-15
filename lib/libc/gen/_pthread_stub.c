@@ -22,18 +22,13 @@
 #include <pthread.h>
 #include <errno.h>
 
-void *_pthread_getspecific(pthread_key_t key);
-int _pthread_setspecific(pthread_key_t key, const void *value);
-int _pthread_key_create(pthread_key_t *key, void (*destructor)(void *));
-int _pthread_once(pthread_once_t *once_control, void (*init_routine)(void));
-
 void *pthread_getspecific(pthread_key_t key) __attribute__((weak));
 int pthread_setspecific(pthread_key_t key, const void *value) __attribute__((weak));
 int pthread_key_create(pthread_key_t *key, void (*destructor)(void *)) __attribute__((weak));
 int pthread_once(pthread_once_t *once_control, void (*init_routine)(void)) __attribute__((weak));
 
 void *
-_pthread_getspecific(pthread_key_t key)
+_libc_pthread_getspecific(pthread_key_t key)
 {
 	void *(*func)(pthread_key_t key);
 	func = pthread_getspecific;
@@ -43,7 +38,7 @@ _pthread_getspecific(pthread_key_t key)
 }
 
 int
-_pthread_setspecific(pthread_key_t key, const void *value)
+_libc_pthread_setspecific(pthread_key_t key, const void *value)
 {
 	int (*func)(pthread_key_t key, const void *value);
 	func = pthread_setspecific;
@@ -54,7 +49,7 @@ _pthread_setspecific(pthread_key_t key, const void *value)
 
 
 int
-_pthread_key_create(pthread_key_t *key, void (*destructor)(void *))
+_libc_pthread_key_create(pthread_key_t *key, void (*destructor)(void *))
 {
 	int (*func)(pthread_key_t *key, void (*destructor)(void *));
 	func = pthread_key_create;
@@ -64,7 +59,7 @@ _pthread_key_create(pthread_key_t *key, void (*destructor)(void *))
 }
 
 int
-_pthread_once(pthread_once_t *once_control, void (*init_routine)(void))
+_libc_pthread_once(pthread_once_t *once_control, void (*init_routine)(void))
 {
 	int (*func)(pthread_once_t *once_control, void (*init_routine)(void));
 	func = pthread_once;

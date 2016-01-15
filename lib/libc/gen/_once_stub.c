@@ -59,6 +59,6 @@ _once(pthread_once_t *once_control, void (*init_routine)(void))
 {
 
 	if (__isthreaded)
-		return (_pthread_once(once_control, init_routine));
+		return (_libc_pthread_once(once_control, init_routine));
 	return (_libc_once(once_control, init_routine));
 }

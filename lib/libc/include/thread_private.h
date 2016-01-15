@@ -193,4 +193,11 @@ pid_t	_thread_fork(void);
 void	*_rtld_allocate_tls(void *, size_t, size_t) __attribute__((weak));
 void	_rtld_free_tls(void *, size_t, size_t) __attribute__((weak));
 
+#include <pthread.h> /* for pthread_key_t */
+
+void *_libc_pthread_getspecific(pthread_key_t key);
+int _libc_pthread_setspecific(pthread_key_t key, const void *value);
+int _libc_pthread_key_create(pthread_key_t *key, void (*destructor)(void *));
+int _libc_pthread_once(pthread_once_t *once_control, void (*init_routine)(void));
+
 #endif /* _THREAD_PRIVATE_H_ */
