@@ -39,12 +39,12 @@ extern
 #endif
 long __stack_chk_guard[8] __attribute__((alias("__guard")));
 
-void __stack_smash_handler(char func[], int damaged __attribute__((unused)));
+void __stack_smash_handler(const char func[], int damaged __attribute__((unused)));
 void __attribute__((noreturn)) __stack_chk_fail(void);
 
 /*ARGSUSED*/
 void
-__stack_smash_handler(char func[], int damaged)
+__stack_smash_handler(const char func[], int damaged)
 {
 	struct syslog_data sdata = SYSLOG_DATA_INIT;
 	const char *message = "stack overflow in function %s";
