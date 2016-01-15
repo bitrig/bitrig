@@ -1580,7 +1580,6 @@ pmap_proc_iflush(struct proc *p, vaddr_t addr, vsize_t len)
 
 
 STATIC uint64_t ap_bits_user [8] = {
-	#if 0
 	[PROT_NONE]			= ATTR_nG|ATTR_UXN|ATTR_AP(2),
 	[PROT_READ]			= ATTR_nG|ATTR_UXN|ATTR_AF|ATTR_AP(3),
 	[PROT_WRITE]			= ATTR_nG|ATTR_UXN|ATTR_AF|ATTR_AP(1),
@@ -1589,16 +1588,6 @@ STATIC uint64_t ap_bits_user [8] = {
 	[PROT_EXEC|PROT_READ]		= ATTR_nG|ATTR_AF|ATTR_AP(3),
 	[PROT_EXEC|PROT_WRITE]		= ATTR_nG|ATTR_AF|ATTR_AP(1),
 	[PROT_EXEC|PROT_WRITE|PROT_READ]= ATTR_nG|ATTR_AF|ATTR_AP(1),
-	#else
-	[PROT_NONE]			= ATTR_UXN|ATTR_AP(2),
-	[PROT_READ]			= ATTR_UXN|ATTR_AF|ATTR_AP(3),
-	[PROT_WRITE]			= ATTR_UXN|ATTR_AF|ATTR_AP(1),
-	[PROT_WRITE|PROT_READ]		= ATTR_UXN|ATTR_AF|ATTR_AP(1),
-	[PROT_EXEC]			= ATTR_AF|ATTR_AP(3),
-	[PROT_EXEC|PROT_READ]		= ATTR_AF|ATTR_AP(3),
-	[PROT_EXEC|PROT_WRITE]		= ATTR_AF|ATTR_AP(1),
-	[PROT_EXEC|PROT_WRITE|PROT_READ]= ATTR_AF|ATTR_AP(1),
-	#endif
 };
 
 STATIC uint64_t ap_bits_kern [8] = {
@@ -1877,13 +1866,11 @@ vaddr_t copy_dst_page;
 
 int pmap_is_referenced(struct vm_page *pg)
 {
-	//printf("%s\n", __func__);
 	return ((pg->pg_flags & PG_PMAP_REF) != 0);
 }
 
 int pmap_is_modified(struct vm_page *pg)
 {
-	//printf("%s\n", __func__);
 	return ((pg->pg_flags & PG_PMAP_MOD) != 0);
 }
 
