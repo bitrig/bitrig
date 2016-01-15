@@ -103,7 +103,7 @@ GENERATE.pseudo_noerr=\
 	printf '\#include "SYS.h"\nPSEUDO_NOERROR(${.PREFIX},${.PREFIX:S/_//})\n'
 
 # ...and one of these to control how it's compiled
-FINISH=	${COMPILE.S} ${CFLAGS:M-[ID]*} ${AINC} -x assembler-with-cpp -
+FINISH=	${COMPILE.S} ${CFLAGS:M-[ID]*} ${AINC} -x assembler-with-cpp -no-integrated-as -
 FINISH.go=${FINISH} -o ${.TARGET}.o			&& ${TRIM.debug}
 FINISH.po=${FINISH} -o ${.TARGET}.o -DPROF		&& ${TRIM.debug}
 FINISH.so=${FINISH} -o ${.TARGET}   ${PICFLAG}
