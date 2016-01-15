@@ -19,6 +19,7 @@
 #define _LIBC_TERMIOS_H_
 
 #include_next <termios.h>
+#include "namespace.h"
 
 PROTO_DEPRECATED(cfgetispeed);
 PROTO_DEPRECATED(cfgetospeed);

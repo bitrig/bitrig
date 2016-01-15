@@ -19,6 +19,7 @@
 #define _LIBC_DBM_H_
 
 #include_next <dbm.h>
+#include "namespace.h"
 
 PROTO_DEPRECATED(dbmclose);
 PROTO_DEPRECATED(dbminit);

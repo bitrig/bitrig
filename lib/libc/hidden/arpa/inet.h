@@ -19,6 +19,7 @@
 #define	_LIBC_INET_H_
 
 #include_next <arpa/inet.h>
+#include "namespace.h"
 
 PROTO_DEPRECATED(inet_addr);
 PROTO_NORMAL(inet_aton);

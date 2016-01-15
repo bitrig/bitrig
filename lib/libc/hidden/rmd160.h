@@ -19,6 +19,7 @@
 #define  _LIBC_RMD160_H
 
 #include_next <rmd160.h>
+#include "namespace.h"
 
 PROTO_NORMAL(RMD160Data);
 PROTO_NORMAL(RMD160End);

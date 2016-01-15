@@ -1,6 +1,5 @@
-/*	$OpenBSD: regex.h,v 1.1 2015/09/14 12:22:49 guenther Exp $	*/
 /*
- * Copyright (c) 2015 Philip Guenther <guenther@openbsd.org>
+ * Copyright (c) 2016 Dale Rahn <drah@dalerahn.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,16 +13,15 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+#ifndef _LIBC_PTHREAD_H_
+#define _LIBC_PTHREAD_H_
 
-#ifndef _LIBC_REGEX_H_
-#define	_LIBC_REGEX_H_
-
-#include_next <regex.h>
+#include_next <pthread.h>
 #include "namespace.h"
 
-PROTO_DEPRECATED(regcomp);
-PROTO_DEPRECATED(regerror);
-PROTO_DEPRECATED(regexec);
-PROTO_NORMAL(regfree);
+PROTO_NORMAL(pthread_getspecific);
+PROTO_NORMAL(pthread_setspecific);
+PROTO_NORMAL(pthread_key_create);
+PROTO_NORMAL(pthread_once);
 
-#endif /* !_LIBC_REGEX_H_ */
+#endif /* _LIBC_PTHREAD_H_ */

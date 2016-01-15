@@ -19,6 +19,7 @@
 #define	_LIBC_UTIME_H_
 
 #include_next <utime.h>
+#include "namespace.h"
 
 PROTO_DEPRECATED(utime);
 

@@ -19,6 +19,7 @@
 #define _LIBC_RPC_SVC_H
 
 #include_next <rpc/svc.h>
+#include "namespace.h"
 
 __BEGIN_HIDDEN_DECLS
 int	__xprt_register(SVCXPRT *);

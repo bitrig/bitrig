@@ -19,6 +19,7 @@
 #define	_LIBC_FCNTL_H_
 
 #include_next <fcntl.h>
+#include "namespace.h"
 
 PROTO_DEPRECATED(creat);
 /*PROTO_CANCEL(fcntl);*/

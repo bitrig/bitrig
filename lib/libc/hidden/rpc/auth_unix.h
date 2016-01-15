@@ -19,6 +19,7 @@
 #define _LIBC_RPC_AUTH_UNIX_H
 
 #include_next <rpc/auth_unix.h>
+#include "namespace.h"
 
 PROTO_NORMAL(xdr_authunix_parms);
 

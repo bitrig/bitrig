@@ -19,6 +19,7 @@
 #define _LIBC_READPASSPHRASE_H_
 
 #include_next <readpassphrase.h>
+#include "namespace.h"
 
 PROTO_NORMAL(readpassphrase);
 

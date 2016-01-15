@@ -19,6 +19,7 @@
 #define _LIBC_SYS_MMAN_H_
 
 #include_next <sys/mman.h>
+#include "namespace.h"
 
 PROTO_NORMAL(madvise);
 PROTO_NORMAL(mincore);

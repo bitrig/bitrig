@@ -19,6 +19,7 @@
 #define _LIBC_SYS_MOUNT_H_
 
 #include_next <sys/mount.h>
+#include "namespace.h"
 
 PROTO_NORMAL(fhopen);
 PROTO_NORMAL(fhstat);

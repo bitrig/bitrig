@@ -35,14 +35,14 @@ PROTO_DEPRECATED(psignal);
 /*PROTO_NORMAL(pthread_sigmask);*/
 PROTO_NORMAL(raise);
 /*PROTO_WRAP(sigaction);	wrap to hide SIGTHR */
-PROTO_NORMAL(sigaddset);
+//PROTO_NORMAL(sigaddset); // __only_inline
 PROTO_NORMAL(sigaltstack);
 PROTO_NORMAL(sigblock);
-PROTO_NORMAL(sigdelset);
+//PROTO_NORMAL(sigdelset); // __only_inline
 PROTO_NORMAL(sigemptyset);
 PROTO_NORMAL(sigfillset);
 PROTO_DEPRECATED(siginterrupt);
-PROTO_NORMAL(sigismember);
+//PROTO_NORMAL(sigismember); // __only_inline
 PROTO_NORMAL(signal);
 PROTO_DEPRECATED(sigpause);
 /*PROTO_NORMAL(sigpending);	wrap to hide SIGTHR */

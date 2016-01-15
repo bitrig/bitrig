@@ -19,6 +19,7 @@
 #define	_LIBC_NDBM_H_
 
 #include_next <ndbm.h>
+#include "namespace.h"
 
 PROTO_DEPRECATED(dbm_clearerr);
 PROTO_NORMAL(dbm_close);

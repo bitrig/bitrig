@@ -20,6 +20,7 @@
 #define _LIBC_SHA1_H
 
 #include_next <sha1.h>
+#include "namespace.h"
 
 PROTO_NORMAL(SHA1Data);
 PROTO_NORMAL(SHA1End);

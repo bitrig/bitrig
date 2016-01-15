@@ -5,6 +5,7 @@
 #define	_LIBC_SOFTFLOAT_H_
 
 #include_next <softfloat.h>
+#include "namespace.h"
 
 PROTO_NORMAL(float_raise);
 

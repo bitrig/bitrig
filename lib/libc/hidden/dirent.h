@@ -19,6 +19,7 @@
 #define	_LIBC_DIRENT_H_
 
 #include_next <dirent.h>
+#include "namespace.h"
 
 PROTO_DEPRECATED(alphasort);
 PROTO_NORMAL(closedir);

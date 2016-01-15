@@ -19,6 +19,7 @@
 #define	_LIBC_SYS_IOCTL_H_
 
 #include_next <sys/ioctl.h>
+#include "namespace.h"
 
 PROTO_NORMAL(ioctl);
 

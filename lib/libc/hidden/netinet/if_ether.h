@@ -19,6 +19,7 @@
 #define _LIBC_NETINET_IF_ETHER_H_
 
 #include_next <netinet/if_ether.h>
+#include "namespace.h"
 
 PROTO_DEPRECATED(ether_aton);
 PROTO_DEPRECATED(ether_hostton);

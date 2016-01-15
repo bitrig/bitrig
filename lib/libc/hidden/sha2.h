@@ -20,6 +20,7 @@
 #define _LIBC_SHA2_H
 
 #include_next <sha2.h>
+#include "namespace.h"
 
 PROTO_NORMAL(SHA224Data);
 PROTO_NORMAL(SHA224End);

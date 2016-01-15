@@ -22,6 +22,7 @@
 #define __SYS_ERRLIST
 
 #include_next <stdio.h>
+#include "namespace.h"
 
 __BEGIN_HIDDEN_DECLS
 char	*_mktemp(char *);

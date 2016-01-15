@@ -19,6 +19,7 @@
 #define	_LIBC_SYS_SYSCTL_H_
 
 #include_next <sys/sysctl.h>
+#include "namespace.h"
 
 PROTO_NORMAL(sysctl);
 

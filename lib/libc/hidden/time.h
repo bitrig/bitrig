@@ -19,6 +19,7 @@
 #define	_LIBC_TIME_H_
 
 #include_next <time.h>
+#include "namespace.h"
 
 extern PROTO_NORMAL(tzname);
 

@@ -19,6 +19,7 @@
 #define _LIBC_NET_IF_H_
 
 #include_next <net/if.h>
+#include "namespace.h"
 
 PROTO_NORMAL(if_indextoname);
 PROTO_DEPRECATED(if_freenameindex);

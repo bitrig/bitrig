@@ -19,6 +19,7 @@
 #define _LIBC_RPC_PMAPPROT_H
 
 #include_next <rpc/pmap_prot.h>
+#include "namespace.h"
 
 PROTO_NORMAL(xdr_pmap);
 PROTO_NORMAL(xdr_pmaplist);

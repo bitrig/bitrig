@@ -19,6 +19,7 @@
 #define _LIBC_VIS_H_
 
 #include_next <vis.h>
+#include "namespace.h"
 
 PROTO_DEPRECATED(stravis);
 PROTO_DEPRECATED(strnunvis);

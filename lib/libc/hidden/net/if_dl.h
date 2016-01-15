@@ -19,6 +19,7 @@
 #define _LIBC_NET_IF_DL_H_
 
 #include_next <net/if_dl.h>
+#include "namespace.h"
 
 PROTO_DEPRECATED(link_ntoa);
 

@@ -19,6 +19,7 @@
 #define _LIBC_LOCALE_H_
 
 #include_next <locale.h>
+#include "namespace.h"
 
 PROTO_NORMAL(localeconv);
 PROTO_NORMAL(setlocale);

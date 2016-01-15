@@ -19,6 +19,7 @@
 #define	_LIBC_PWD_H_
 
 #include_next <pwd.h>
+#include "namespace.h"
 
 __BEGIN_HIDDEN_DECLS
 int	_bcrypt_autorounds(void);

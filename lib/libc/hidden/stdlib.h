@@ -36,6 +36,7 @@
 #define _LIBC_STDLIB_H_
 
 #include_next <stdlib.h>
+#include "namespace.h"
 
 __BEGIN_HIDDEN_DECLS
 char	*__findenv(const char *, int, int *);

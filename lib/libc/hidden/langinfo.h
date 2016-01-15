@@ -19,6 +19,7 @@
 #define _LIBC_LANGINFO_H_
 
 #include_next <langinfo.h>
+#include "namespace.h"
 
 PROTO_NORMAL(nl_langinfo);
 

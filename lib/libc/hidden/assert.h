@@ -17,6 +17,7 @@
 
 /* outside the conditional for changes in NDEBUG */
 #include_next <assert.h>
+#include "namespace.h"
 
 #ifndef _LIBC_ASSERT_H_
 #define _LIBC_ASSERT_H_

@@ -19,6 +19,7 @@
 #define	_LIBC_RESOLV_H_
 
 #include_next <resolv.h>
+#include "namespace.h"
 
 PROTO_STD_DEPRECATED(__b64_ntop);
 PROTO_STD_DEPRECATED(__b64_pton);

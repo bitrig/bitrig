@@ -19,6 +19,7 @@
 #define _LIBC_RPC_AUTH_H
 
 #include_next <rpc/auth.h>
+#include "namespace.h"
 
 PROTO_NORMAL(authnone_create);
 PROTO_NORMAL(authunix_create);

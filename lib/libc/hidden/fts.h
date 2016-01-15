@@ -19,6 +19,7 @@
 #define	_LIBC_FTS_H_
 
 #include_next <fts.h>
+#include "namespace.h"
 
 PROTO_NORMAL(fts_children);
 PROTO_NORMAL(fts_close);

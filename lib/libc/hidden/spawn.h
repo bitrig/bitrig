@@ -19,6 +19,7 @@
 #define _LIBC_SPAWN_H_
 
 #include_next <spawn.h>
+#include "namespace.h"
 
 PROTO_DEPRECATED(posix_spawn);
 PROTO_DEPRECATED(posix_spawn_file_actions_addclose);

@@ -116,6 +116,8 @@ char	*__hdtoa(double, const char *, int, int *, int *, char **);
 char	*__hldtoa(long double, const char *, int, int *, int *, char **);
 char	*__ldtoa(long double *, int, int, int *, int *, char **);
 
+#include "namespace.h"
+
 PROTO_NORMAL(__dtoa);
 PROTO_NORMAL(__gdtoa);
 PROTO_NORMAL(__freedtoa);

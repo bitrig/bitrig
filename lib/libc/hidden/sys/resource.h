@@ -19,6 +19,7 @@
 #define	_LIBC_SYS_RESOURCE_H_
 
 #include_next <sys/resource.h>
+#include "namespace.h"
 
 PROTO_NORMAL(getpriority);
 PROTO_NORMAL(getrlimit);

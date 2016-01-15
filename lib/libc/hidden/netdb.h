@@ -19,6 +19,7 @@
 #define _LIBC_NETDB_H
 
 #include_next <netdb.h>
+#include "namespace.h"
 
 __BEGIN_HIDDEN_DECLS
 extern int _net_stayopen;

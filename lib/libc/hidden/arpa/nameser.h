@@ -19,6 +19,7 @@
 #define _LIBC_NAMESER_H_
 
 #include_next <arpa/nameser.h>
+#include "namespace.h"
 
 PROTO_NORMAL(_getshort);
 PROTO_NORMAL(_getlong);

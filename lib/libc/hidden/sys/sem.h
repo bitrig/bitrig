@@ -19,6 +19,7 @@
 #define _LIBC_SYS_SEM_H_
 
 #include_next <sys/sem.h>
+#include "namespace.h"
 
 PROTO_DEPRECATED(semctl);
 PROTO_NORMAL(__semctl);

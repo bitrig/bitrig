@@ -19,6 +19,7 @@
 #define	_LIBC_SIPHASH
 
 #include_next <siphash.h>
+#include "namespace.h"
 
 PROTO_NORMAL(SipHash_Init);
 PROTO_NORMAL(SipHash_Update);

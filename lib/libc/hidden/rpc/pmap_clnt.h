@@ -19,6 +19,7 @@
 #define _LIBC_RPC_PMAPCLNT_H
 
 #include_next <rpc/pmap_clnt.h>
+#include "namespace.h"
 
 PROTO_DEPRECATED(clnt_broadcast);
 PROTO_DEPRECATED(pmap_getmaps);

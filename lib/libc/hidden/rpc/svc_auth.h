@@ -19,6 +19,7 @@
 #define _LIBC_RPC_SVCAUTH_H
 
 #include_next <rpc/svc_auth.h>
+#include "namespace.h"
 
 __BEGIN_HIDDEN_DECLS
 enum auth_stat _authenticate(struct svc_req *, struct rpc_msg *);

@@ -19,6 +19,7 @@
 #define	_LIBC_SYS_STAT_H_
 
 #include_next <sys/stat.h>
+#include "namespace.h"
 
 PROTO_NORMAL(chflags);
 PROTO_NORMAL(chmod);

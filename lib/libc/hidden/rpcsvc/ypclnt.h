@@ -19,6 +19,7 @@
 #define _LIBC_RPCSVC_YPCLNT_H_
 
 #include_next <rpcsvc/ypclnt.h>
+#include "namespace.h"
 
 PROTO_NORMAL(_yp_dobind);
 PROTO_DEPRECATED(yp_all);
