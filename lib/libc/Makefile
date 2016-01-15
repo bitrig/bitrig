@@ -12,6 +12,7 @@
 LIB=c
 CLEANFILES+=tags Symbols.map
 CFLAGS+=-Wimplicit
+CFLAGS+= ${CFLAGS_$*}
 #CFLAGS+=-Werror
 LDADD=-nodefaultlibs -lclang_rt.${MACHINE_ARCH}
 
