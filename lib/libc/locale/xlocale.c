@@ -34,7 +34,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <runetype.h>
-//#include "libc_private.h"
 #include "xlocale_private.h"
 
 /**
@@ -124,10 +123,10 @@ static locale_t thread_local_locale;
 static void init_key(void)
 {
 
-	_pthread_key_create(&locale_info_key, xlocale_release);
-	_pthread_setspecific(locale_info_key, (void*)42);
-	if (_pthread_getspecific(locale_info_key) == (void*)42) {
-		_pthread_setspecific(locale_info_key, 0);
+	pthread_key_create(&locale_info_key, xlocale_release);
+	pthread_setspecific(locale_info_key, (void*)42);
+	if (pthread_getspecific(locale_info_key) == (void*)42) {
+		pthread_setspecific(locale_info_key, 0);
 	} else {
 		fake_tls = 1;
 	}
@@ -145,7 +144,7 @@ get_thread_locale(void)
 	_once(&once_control, init_key);
 	
 	return (fake_tls ? thread_local_locale :
-		_pthread_getspecific(locale_info_key));
+		pthread_getspecific(locale_info_key));
 }
 
 #ifdef __NO_TLS
@@ -167,14 +166,14 @@ set_thread_locale(locale_t loc)
 	if (NULL != loc) {
 		xlocale_retain((struct xlocale_refcounted*)loc);
 	}
-	locale_t old = _pthread_getspecific(locale_info_key);
+	locale_t old = pthread_getspecific(locale_info_key);
 	if ((NULL != old) && (loc != old)) {
 		xlocale_release((struct xlocale_refcounted*)old);
 	}
 	if (fake_tls) {
 		thread_local_locale = loc;
 	} else {
-		_pthread_setspecific(locale_info_key, loc);
+		pthread_setspecific(locale_info_key, loc);
 	}
 #ifndef __NO_TLS
 	__thread_locale = loc;
