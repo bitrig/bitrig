@@ -7,3 +7,5 @@ SRCS+=	memcpy.c memmove.S \
 	memcmp.c strcpy.c strcspn.c strlen.S strlcat.c \
 	strlcpy.c strncat.c strncmp.c strncpy.c strpbrk.c \
 	strsep.c strspn.c strstr.c swab.c
+
+AINC+= -no-integrated-as
