@@ -6,7 +6,7 @@
  * Public domain.
  */
 
-#include <machine/asm.h>
+#include <SYS.h>
 
 ENTRY(strcmp)
 	/*
@@ -69,4 +69,4 @@ ENTRY(strcmp)
 	movzbq	%dl,%rdx
 	subq	%rdx,%rax
 	ret
-END(strcmp)
+END_WEAK(strcmp)

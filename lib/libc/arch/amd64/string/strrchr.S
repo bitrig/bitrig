@@ -6,7 +6,7 @@
  * Public domain.
  */
 
-#include <machine/asm.h>
+#include <SYS.h>
 
 WEAK_ALIAS(rindex, strrchr)
 
@@ -121,4 +121,4 @@ ENTRY(strrchr)
 
 .Ldone:
 	ret
-END(strrchr)
+END_WEAK(strrchr)

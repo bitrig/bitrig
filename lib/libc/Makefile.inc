@@ -8,10 +8,11 @@ all:
 	@echo "need to define LIBCSRCDIR" >&2; exit 1
 .endif
 
-CFLAGS+=	-I${LIBCSRCDIR}/include -Werror-implicit-function-declaration
+CFLAGS+=-I${LIBCSRCDIR}/include -I${LIBCSRCDIR}/hidden \
+	-Werror-implicit-function-declaration -include namespace.h
 
 # Include link-time warnings about unsafe API uses (ie. strcpy)
-#CFLAGS+=-DAPIWARN
+CFLAGS+=-DAPIWARN
 
 .if (${YP:L} == "yes")
 CFLAGS+=-DYP -I${LIBCSRCDIR}/yp
@@ -60,5 +61,7 @@ AINC+=  -nostdinc -idirafter ${DESTDIR}/usr/include
 .if (${YP:L} == "yes")
 .include "${LIBCSRCDIR}/yp/Makefile.inc"
 .endif
+
+${OBJS} ${GOBJS} ${POBJS} ${SOBJS} ${DOBJS}: ${LIBCSRCDIR}/include/namespace.h
 
 CFLAGS+=-DNLS

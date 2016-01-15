@@ -5,7 +5,7 @@
  * Adapted for NetBSD/x86_64 by Frank van der Linden <fvdl@wasabisystems.com>
  */
 
-#include <machine/asm.h>
+#include <SYS.h>
 
 ENTRY(ffs)
 	bsfl	%edi,%eax
@@ -16,4 +16,4 @@ ENTRY(ffs)
 	_ALIGN_TEXT
 L1:	xorl	%eax,%eax		/* clear result */
 	ret
-END(ffs)
+END_WEAK(ffs)

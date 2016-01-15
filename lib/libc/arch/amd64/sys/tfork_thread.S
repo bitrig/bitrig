@@ -51,7 +51,7 @@ ENTRY(__tfork_thread)
 	/*
 	 * Prepare and execute the thread creation syscall
 	 */
-	movl	$(SYS___tfork), %eax
+	movl	$SYS___tfork, %eax
 	syscall
 	jb 	2f
 
@@ -74,7 +74,7 @@ ENTRY(__tfork_thread)
 	/*
 	 * Thread exit system call
 	 */
-	movl	$(SYS___threxit), %eax
+	movl	$SYS___threxit, %eax
 	xorl	%edi, %edi
 	syscall
 

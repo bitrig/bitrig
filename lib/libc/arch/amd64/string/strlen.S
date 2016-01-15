@@ -35,7 +35,7 @@
  * (Only the long comment really remains his work!)
  */
 
-#include <machine/asm.h>
+#include <SYS.h>
 
 /*
  * There are many well known branch-free sequences which are used
@@ -154,4 +154,4 @@ ENTRY(strlen)
 	dec	%rsi
 	or	%rsi,%rdx		/* low bytes now non-zero */
 	jmp	2b
-END(strlen)
+END_WEAK(strlen)

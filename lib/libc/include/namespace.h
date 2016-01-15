@@ -132,6 +132,8 @@
  *	ex: MAKE_CLONE(SHA224Pad, SHA256Pad)
  */
 
+#include <sys/cdefs.h>	/* for __dso_hidden and __{weak,strong}_alias */
+
 #define	HIDDEN(x)		_libc_##x
 #define	CANCEL(x)		_libc_##x##_cancel
 #define	WRAP(x)			_libc_##x##_wrap

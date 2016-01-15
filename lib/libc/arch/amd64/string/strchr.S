@@ -32,7 +32,7 @@
 
 /* See comments in strlen.S about checking words for byte values */
 
-#include <machine/asm.h>
+#include <SYS.h>
 
 WEAK_ALIAS(index, strchr)
 
@@ -123,4 +123,4 @@ ENTRY(strchr)
 	sar	%cl,%r10	/* top bytes 0xff */
 	and	%r10,%rax	/* clear lsb from unwanted low bytes */
 	jmp	21b
-END(strchr)
+END_WEAK(strchr)
