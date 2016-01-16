@@ -276,23 +276,21 @@ _dl_allocate_module_tls(int index)
 void *
 _rtld_allocate_tls(void *oldtls, size_t tcbsize, size_t tcbalign)
 {
-	sigset_t savedmask;
 	void *ret;
 
-	_dl_thread_bind_lock(0, &savedmask);
+	_dl_thread_kern_stop();
 	ret = _dl_allocate_tls(oldtls, _dl_objects, tcbsize, tcbalign);
-	_dl_thread_bind_lock(1, &savedmask);
+	_dl_thread_kern_go();
 	return (ret);
 }
 
 void
 _rtld_free_tls(void *tcb, size_t tcbsize, size_t tcbalign)
 {
-	sigset_t savedmask;
 
-	_dl_thread_bind_lock(0, &savedmask);
+	_dl_thread_kern_stop();
 	_dl_free_tls(tcb, tcbsize, tcbalign);
-	_dl_thread_bind_lock(1, &savedmask);
+	_dl_thread_kern_go();
 }
 
 /*
@@ -301,7 +299,6 @@ _rtld_free_tls(void *tcb, size_t tcbsize, size_t tcbalign)
 void *
 _dl_tls_get_addr_common(Elf_Addr** dtvp, int index, size_t offset)
 {
-	sigset_t savedmask;
 	Elf_Addr* dtv = *dtvp;
 
 	DL_DEB(("tls_get_addr_common %p %d %lu\n", dtv, index, offset));
@@ -311,7 +308,7 @@ _dl_tls_get_addr_common(Elf_Addr** dtvp, int index, size_t offset)
 		Elf_Addr* newdtv;
 		int to_copy;
 
-		_dl_thread_bind_lock(0, &savedmask);
+		_dl_thread_kern_stop();
 		newdtv = _dl_malloc((_dl_tls_max_index + 1) * sizeof(Elf_Addr));
 		to_copy = dtv[1];
 		if (to_copy > _dl_tls_max_index)
@@ -320,7 +317,7 @@ _dl_tls_get_addr_common(Elf_Addr** dtvp, int index, size_t offset)
 		newdtv[0] = _dl_tls_dtv_generation;
 		newdtv[1] = _dl_tls_max_index;
 		*dtvp = newdtv;
-		_dl_thread_bind_lock(1, &savedmask);
+		_dl_thread_kern_go();
 		_dl_free(dtv);
 		dtv = newdtv;
 	}
@@ -328,10 +325,10 @@ _dl_tls_get_addr_common(Elf_Addr** dtvp, int index, size_t offset)
 	/* Dynamically allocate module TLS if necessary */
 	if (!dtv[index + 1]) {
 		/* Signal safe, wlock will block out signals. */
-		_dl_thread_bind_lock(0, &savedmask);
+		_dl_thread_kern_stop();
 		if (!dtv[index + 1])
 			dtv[index + 1] = (Elf_Addr)_dl_allocate_module_tls(index);
-		_dl_thread_bind_lock(1, &savedmask);
+		_dl_thread_kern_go();
 	}
 	return (void*) (dtv[index + 1] + offset);
 }
