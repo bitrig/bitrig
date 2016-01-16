@@ -1685,3 +1685,9 @@ yperr_string
 ypprot_err
 _yp_check		/* chpass, passwd, login_chpass */
 yp_unbind		/* passwd */
+
+/* stack protector, not object aware */
+__stack_chk_guard
+
+/* TLS */
+__tls_get_addr

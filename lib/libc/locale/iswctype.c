@@ -36,6 +36,7 @@
  */
 
 #include <sys/cdefs.h>
+#include <stdio.h>
 
 #include <wctype.h>
 
@@ -46,6 +47,7 @@ iswalnum(wc)
 {
 	return (__istype(wc, _CTYPE_A|_CTYPE_D));
 }
+DEF_STRONG(iswalnum);
 
 #undef iswalpha
 int
@@ -54,6 +56,7 @@ iswalpha(wc)
 {
 	return (__istype(wc, _CTYPE_A));
 }
+DEF_STRONG(iswalpha);
 
 #undef iswascii
 int
@@ -62,6 +65,7 @@ iswascii(wc)
 {
 	return ((wc & ~0x7F) == 0);
 }
+DEF_STRONG(iswascii);
 
 #undef iswblank
 int
@@ -70,6 +74,7 @@ iswblank(wc)
 {
 	return (__istype(wc, _CTYPE_B));
 }
+DEF_STRONG(iswblank);
 
 #undef iswcntrl
 int
@@ -78,6 +83,7 @@ iswcntrl(wc)
 {
 	return (__istype(wc, _CTYPE_C));
 }
+DEF_STRONG(iswctrl);
 
 #undef iswdigit
 int
@@ -86,6 +92,7 @@ iswdigit(wc)
 {
 	return (__isctype(wc, _CTYPE_D));
 }
+DEF_STRONG(iswdigit);
 
 #undef iswgraph
 int
@@ -94,6 +101,7 @@ iswgraph(wc)
 {
 	return (__istype(wc, _CTYPE_G));
 }
+DEF_STRONG(iswgraph);
 
 #undef iswhexnumber 
 int
@@ -102,6 +110,7 @@ iswhexnumber(wc)
 {
 	return (__istype(wc, _CTYPE_X));
 }
+DEF_STRONG(iswhexnumber);
 
 #undef iswideogram
 int
@@ -110,6 +119,7 @@ iswideogram(wc)
 {
 	return (__istype(wc, _CTYPE_I));
 }
+DEF_STRONG(iswideogram);
 
 #undef iswlower
 int
@@ -118,6 +128,7 @@ iswlower(wc)
 {
 	return (__istype(wc, _CTYPE_L));
 }
+DEF_STRONG(iswlower);
 
 #undef iswnumber
 int
@@ -126,6 +137,7 @@ iswnumber(wc)
 {
 	return (__istype(wc, _CTYPE_D));
 }
+DEF_STRONG(iswnumber);
 
 #undef iswphonogram	
 int
@@ -134,6 +146,7 @@ iswphonogram(wc)
 {
 	return (__istype(wc, _CTYPE_Q));
 }
+DEF_STRONG(iswphonogram);
 
 #undef iswprint
 int
@@ -142,6 +155,7 @@ iswprint(wc)
 {
 	return (__istype(wc, _CTYPE_R));
 }
+DEF_STRONG(iswprint);
 
 #undef iswpunct
 int
@@ -150,6 +164,7 @@ iswpunct(wc)
 {
 	return (__istype(wc, _CTYPE_P));
 }
+DEF_STRONG(iswpunct);
 
 #undef iswrune
 int
@@ -158,6 +173,7 @@ iswrune(wc)
 {
 	return (__istype(wc, 0xFFFFFF00L));
 }
+DEF_STRONG(iswrune);
 
 #undef iswspace
 int
@@ -166,6 +182,7 @@ iswspace(wc)
 {
 	return (__istype(wc, _CTYPE_S));
 }
+DEF_STRONG(iswspace);
 
 #undef iswspecial
 int
@@ -174,6 +191,7 @@ iswspecial(wc)
 {
 	return (__istype(wc, _CTYPE_T));
 }
+DEF_STRONG(iswspecial);
 
 #undef iswupper
 int
@@ -182,6 +200,7 @@ iswupper(wc)
 {
 	return (__istype(wc, _CTYPE_U));
 }
+DEF_STRONG(iswupper);
 
 #undef iswxdigit
 int
@@ -190,6 +209,7 @@ iswxdigit(wc)
 {
 	return (__isctype(wc, _CTYPE_X));
 }
+DEF_STRONG(iswxdigit);
 
 #undef towlower
 wint_t
@@ -198,6 +218,7 @@ towlower(wc)
 {
         return (__tolower(wc));
 }
+DEF_STRONG(towlower);
 
 #undef towupper
 wint_t
@@ -206,4 +227,4 @@ towupper(wc)
 {
         return (__toupper(wc));
 }
-
+DEF_STRONG(towupper);

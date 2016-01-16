@@ -42,84 +42,98 @@ isalnum(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & (_U|_L|_N)));
 }
+DEF_STRONG(isalnum);
 
 int
 isalpha(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & (_U|_L)));
 }
+DEF_STRONG(isalpha);
 
 int
 isblank(int c)
 {
 	return (c == ' ' || c == '\t');
 }
+DEF_STRONG(isblank);
 
 int
 iscntrl(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _C));
 }
+DEF_STRONG(iscntrl);
 
 int
 isdigit(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _N));
 }
+DEF_STRONG(isdigit);
 
 int
 isgraph(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & (_P|_U|_L|_N)));
 }
+DEF_STRONG(isgraph);
 
 int
 islower(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _L));
 }
+DEF_STRONG(islower);
 
 int
 isprint(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & (_P|_U|_L|_N|_B)));
 }
+DEF_STRONG(isprint);
 
 int
 ispunct(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _P));
 }
+DEF_STRONG(ispunct);
 
 int
 isspace(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _S));
 }
+DEF_STRONG(isspace);
 
 int
 isupper(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & _U));
 }
+DEF_STRONG(isupper);
 
 int
 isxdigit(int c)
 {
 	return (c == EOF ? 0 : ((_ctype_ + 1)[(unsigned char)c] & (_N|_X)));
 }
+DEF_STRONG(isxdigit);
 
 int
 isascii(int c)
 {
 	return ((unsigned int)c <= 0177);
 }
+DEF_WEAK(isascii);
 
 int
 toascii(int c)
 {
 	return (c & 0177);
 }
+DEF_STRONG(toascii);
 
 int
 _toupper(int c)
