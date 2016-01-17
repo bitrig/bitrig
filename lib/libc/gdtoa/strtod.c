@@ -1103,7 +1103,8 @@ strtod_l
 	if (se)
 		*se = (char *)s;
 	return sign ? -dval(&rv) : dval(&rv);
-	}
+}
+DEF_STRONG(strtod_l);
 
 double
 strtod
@@ -1115,4 +1116,5 @@ strtod
 {
 	return strtod_l(s00, se, __get_locale());
 }
+DEF_STRONG(strtod);
 
