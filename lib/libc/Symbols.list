@@ -1698,6 +1698,7 @@ _ThreadRuneLocale
 /* locale functions */
 __mb_sb_limit
 ___mb_cur_max_l
+___mb_cur_max
 ___runetype_l
 ___tolower_l
 ___toupper_l
