@@ -1692,6 +1692,7 @@ __stack_chk_fail
 
 /* TLS */
 __tls_get_addr
+__init_tcb
 _ThreadRuneLocale
 
 /* locale functions */
