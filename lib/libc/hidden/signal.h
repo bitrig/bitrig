@@ -19,7 +19,6 @@
 #define _LIBC_SIGNAL_H
 
 #include_next <signal.h>
-#include "namespace.h"
 
 __BEGIN_HIDDEN_DECLS
 extern sigset_t __sigintr;

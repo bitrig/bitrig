@@ -19,7 +19,6 @@
 #define	_LIBC_SYSLOG_H_
 
 #include_next <syslog.h>
-#include "namespace.h"
 
 int	sendsyslog(const char *, __size_t);
 PROTO_NORMAL(sendsyslog);

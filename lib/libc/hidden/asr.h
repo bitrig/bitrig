@@ -19,7 +19,6 @@
 #define _LIBC_ASR_H_
 
 #include_next <asr.h>
-#include "namespace.h"
 
 PROTO_DEPRECATED(asr_abort);
 PROTO_NORMAL(asr_run);

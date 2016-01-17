@@ -9,7 +9,7 @@ all:
 .endif
 
 CFLAGS+=-I${LIBCSRCDIR}/include -I${LIBCSRCDIR}/hidden \
-	-Werror-implicit-function-declaration
+	-Werror-implicit-function-declaration -include namespace.h
 
 # Include link-time warnings about unsafe API uses (ie. strcpy)
 CFLAGS+=-DAPIWARN

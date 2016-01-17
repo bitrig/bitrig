@@ -19,7 +19,6 @@
 #define _LIBC_FSTAB_H_
 
 #include_next <fstab.h>
-#include "namespace.h"
 
 PROTO_DEPRECATED(endfsent);
 PROTO_DEPRECATED(getfsent);

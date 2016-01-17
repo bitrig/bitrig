@@ -19,7 +19,6 @@
 #define _LIBC_MD5_H_
 
 #include_next <md5.h>
-#include "namespace.h"
 
 PROTO_NORMAL(MD5Data);
 PROTO_NORMAL(MD5End);

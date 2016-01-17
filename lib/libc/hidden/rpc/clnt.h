@@ -19,7 +19,6 @@
 #define _LIBC_RPC_CLNT_H_
 
 #include_next <rpc/clnt.h>
-#include "namespace.h"
 
 PROTO_DEPRECATED(clnt_create);
 PROTO_NORMAL(clnt_pcreateerror);

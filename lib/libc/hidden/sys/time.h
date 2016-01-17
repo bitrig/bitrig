@@ -19,7 +19,6 @@
 #define _LIBC_SYS_TIME_H_
 
 #include_next <sys/time.h>
-#include "namespace.h"
 
 PROTO_NORMAL(adjfreq);
 PROTO_NORMAL(adjtime);

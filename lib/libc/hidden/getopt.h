@@ -19,7 +19,6 @@
 #define _LIBC_GETOPT_H_
 
 #include_next <getopt.h>
-#include "namespace.h"
 
 extern PROTO_NORMAL(opterr);
 extern PROTO_NORMAL(optind);

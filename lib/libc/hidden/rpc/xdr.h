@@ -19,7 +19,6 @@
 #define _LIBC_RPC_XDR_H
 
 #include_next <rpc/xdr.h>
-#include "namespace.h"
 
 PROTO_NORMAL(xdr_array);
 PROTO_NORMAL(xdr_bool);

@@ -19,7 +19,6 @@
 #define _LIBC_SEARCH_H_
 
 #include_next <search.h>
-#include "namespace.h"
 
 PROTO_DEPRECATED(hcreate);
 PROTO_DEPRECATED(hdestroy);

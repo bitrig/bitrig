@@ -19,7 +19,6 @@
 #define _LIBC_RPC_RPC_H
 
 #include_next <rpc/rpc.h>
-#include "namespace.h"
 
 PROTO_DEPRECATED(callrpc);
 PROTO_NORMAL(endrpcent);

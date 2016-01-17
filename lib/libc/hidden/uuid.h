@@ -19,7 +19,6 @@
 #define _LIBC_UUID_H_
 
 #include_next <uuid.h>
-#include "namespace.h"
 
 PROTO_DEPRECATED(uuid_compare);
 PROTO_DEPRECATED(uuid_create);

@@ -19,7 +19,6 @@
 #define	_LIBC_REGEX_H_
 
 #include_next <regex.h>
-#include "namespace.h"
 
 PROTO_DEPRECATED(regcomp);
 PROTO_DEPRECATED(regerror);

@@ -19,7 +19,6 @@
 #define	_LIBC_STRING_H_
 
 #include_next <string.h>
-#include "namespace.h"
 
 /* XXX should make this __BEGIN_HIDDEN_DECLS */
 __BEGIN_DECLS

@@ -19,7 +19,6 @@
 #define	_LIBC_DB_H_
 
 #include_next <db.h>
-#include "namespace.h"
 
 __BEGIN_HIDDEN_DECLS
 DB	*__bt_open(const char *, int, int, const BTREEINFO *, int);

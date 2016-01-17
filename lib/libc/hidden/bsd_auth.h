@@ -19,7 +19,6 @@
 #define _LIBC_BSD_AUTH_H_
 
 #include_next <bsd_auth.h>
-#include "namespace.h"
 
 PROTO_NORMAL(auth_approval);
 PROTO_NORMAL(auth_call);

@@ -19,7 +19,6 @@
 #define _LIBC_RPC_PMAPRMT_H
 
 #include_next <rpc/pmap_rmt.h>
-#include "namespace.h"
 
 PROTO_NORMAL(xdr_rmtcall_args);
 PROTO_NORMAL(xdr_rmtcallres);

@@ -17,7 +17,6 @@
 #define _LIBC_PTHREAD_H_
 
 #include_next <pthread.h>
-#include "namespace.h"
 
 PROTO_NORMAL(pthread_getspecific);
 PROTO_NORMAL(pthread_setspecific);

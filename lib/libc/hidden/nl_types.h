@@ -19,7 +19,6 @@
 #define _LIBC_NL_TYPES_H_
 
 #include_next <nl_types.h>
-#include "namespace.h"
 
 PROTO_NORMAL(catclose);
 PROTO_NORMAL(catgets);

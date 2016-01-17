@@ -20,8 +20,15 @@
 #ifndef	_LIBC_STDIO_H_
 #define	_LIBC_STDIO_H_
 
+#if 0
+/* This function is used in header files, attempt to pre-hide it */
+typedef	struct __sFILE FILE;
+int __swbuf(int c, FILE *fp);
+PROTO_NORMAL(__swbuf);
+#endif
+
+
 #include_next <stdio.h>
-#include "namespace.h"
 
 __BEGIN_HIDDEN_DECLS
 char	*_mktemp(char *);
@@ -131,7 +138,6 @@ PROTO_NORMAL(vsscanf);
 #define __SYS_ERRLIST
 
 #include_next <stdio.h>
-#include "namespace.h"
 
 __BEGIN_HIDDEN_DECLS
 char	*_mktemp(char *);

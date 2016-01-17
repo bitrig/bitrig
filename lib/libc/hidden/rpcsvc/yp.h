@@ -19,7 +19,6 @@
 #define	_LIBC_RPCSVC_YP_H_
 
 #include_next <rpcsvc/yp.h>
-#include "namespace.h"
 
 PROTO_NORMAL(xdr_domainname);
 PROTO_NORMAL(xdr_keydat);

@@ -19,7 +19,6 @@
 #define	_LIBC_GRP_H_
 
 #include_next <grp.h>
-#include "namespace.h"
 
 __BEGIN_HIDDEN_DECLS
 struct group *_getgrent_yp(int *);

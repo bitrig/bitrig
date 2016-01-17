@@ -19,7 +19,6 @@
 #define _LIBC_LOGIN_CAP_H_
 
 #include_next <login_cap.h>
-#include "namespace.h"
 
 PROTO_NORMAL(login_close);
 PROTO_NORMAL(login_getcapbool);

@@ -22,7 +22,6 @@
 #define __SYS_ERRLIST
 
 #include_next <errno.h>
-#include "namespace.h"
 
 extern const int sys_nerr;
 extern const char *const sys_errlist[];

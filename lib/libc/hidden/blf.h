@@ -19,7 +19,6 @@
 #define _LIBC_BLF_H_
 
 #include_next <blf.h>
-#include "namespace.h"
 
 PROTO_NORMAL(Blowfish_decipher);
 PROTO_NORMAL(Blowfish_encipher);

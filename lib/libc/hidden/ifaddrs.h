@@ -19,7 +19,6 @@
 #define	_LIBC_IFADDRS_H_
 
 #include_next <ifaddrs.h>
-#include "namespace.h"
 
 PROTO_NORMAL(getifaddrs);
 PROTO_NORMAL(freeifaddrs);

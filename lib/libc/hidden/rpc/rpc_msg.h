@@ -19,7 +19,6 @@
 #define _LIBC_RPC_RPCMSG_H
 
 #include_next <rpc/rpc_msg.h>
-#include "namespace.h"
 
 PROTO_NORMAL(_seterr_reply);
 PROTO_NORMAL(xdr_callhdr);

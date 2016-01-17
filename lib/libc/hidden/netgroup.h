@@ -19,7 +19,6 @@
 #define	_LIBC_NETGROUP_H_
 
 #include_next <netgroup.h>
-#include "namespace.h"
 
 PROTO_NORMAL(endnetgrent);
 PROTO_NORMAL(getnetgrent);

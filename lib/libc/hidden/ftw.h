@@ -19,7 +19,6 @@
 #define	_LIBC_FTW_H_
 
 #include_next <ftw.h>
-#include "namespace.h"
 
 PROTO_DEPRECATED(ftw);
 PROTO_DEPRECATED(nftw);

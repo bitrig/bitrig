@@ -19,7 +19,6 @@
 #define	_LIBC_SYS_SOCKET_H_
 
 #include_next <sys/socket.h>
-#include "namespace.h"
 
 PROTO_NORMAL(bind);
 PROTO_DEPRECATED(getpeereid);

@@ -19,7 +19,6 @@
 #define	_LIBC_UNISTD_H_
 
 #include_next <unistd.h>
-#include "namespace.h"
 
 PROTO_NORMAL(__tfork_thread);
 PROTO_NORMAL(_exit);

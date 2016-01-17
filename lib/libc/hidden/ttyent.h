@@ -19,7 +19,6 @@
 #define	_LIBC_TTYENT_H_
 
 #include_next <ttyent.h>
-#include "namespace.h"
 
 PROTO_NORMAL(endttyent);
 PROTO_NORMAL(getttyent);

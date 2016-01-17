@@ -19,7 +19,6 @@
 #define	_LIBC_NETINET_IN_H_
 
 #include_next <netinet/in.h>
-#include "namespace.h"
 
 extern PROTO_DEPRECATED(in6addr_any);
 extern PROTO_DEPRECATED(in6addr_loopback);
