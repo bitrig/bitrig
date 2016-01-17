@@ -1,4 +1,4 @@
-.\"	$OpenBSD: iic.4,v 1.82 2013/07/16 16:05:49 schwarze Exp $
+.\"	$OpenBSD: iic.4,v 1.85 2016/01/17 05:28:40 jsg Exp $
 .\"
 .\" Copyright (c) 2004, 2006 Alexander Yurchenko <grange@openbsd.org>
 .\"
@@ -14,24 +14,19 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: July 16 2013 $
+.Dd $Mdocdate: January 17 2016 $
 .Dt IIC 4
 .Os
 .Sh NAME
 .Nm iic
 .Nd Inter IC (I2C) bus
 .Sh SYNOPSIS
-.Cd "iic* at kiic?                  # macppc"
-.Cd "iic* at piic?                  # macppc"
-.Cd "iic* at smu?                   # macppc"
-.Cd "iic* at alipm?                 # alpha sparc64"
 .Cd "iic* at amdiic?                # amd64"
 .Cd "iic* at ichiic?                # amd64"
 .Cd "iic* at nviic?                 # amd64"
-.Cd "iic* at pcfiic?                # sparc64"
 .Cd "iic* at piixpm?                # amd64"
 .Cd "iic* at viapm?                 # amd64"
-.Cd "iic* at gdiumiic?              # loongson"
+.Cd "iic* at dwiic?                 # amd64"
 .Sh DESCRIPTION
 .Tn I2C
 is a two-wire bus developed by Philips used for connecting
@@ -76,6 +71,8 @@ Acer Labs M7101 SMBus controller
 AMD-8111 SMBus controller
 .It Xr amdpm 4
 AMD-756/766/768/8111 Power Management and SMBus controller
+.It Xr dwiic 4
+Synopsys DesignWare I2C controller
 .It Xr glxpcib 4
 AMD CS5536 PCI-ISA bridge with timecounter, watchdog timer, and GPIO
 .It Xr gpioiic 4
@@ -135,6 +132,8 @@ Apple Fan Control Unit sensor device
 Fintek F75375 temperature sensor
 .It Xr glenv 4
 Genesys Logic GL518SM temperature, voltage, and fan sensor
+.It Xr ihidev 4
+HID over I2C support
 .It Xr lisa 4
 STMicroelectronics LIS331DL MEMS motion sensor
 .It Xr lm 4
