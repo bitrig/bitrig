@@ -34,7 +34,7 @@ extern PROTO_NORMAL(sys_nerr);
 extern PROTO_NORMAL(sys_errlist);
 
 PROTO_NORMAL(__srget);
-PROTO_NORMAL(__swbuf);
+//PROTO_NORMAL(__swbuf);
 PROTO_NORMAL(asprintf);
 PROTO_NORMAL(clearerr);
 PROTO_NORMAL(ctermid);
