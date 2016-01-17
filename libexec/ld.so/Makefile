@@ -33,21 +33,25 @@ INSTALL_STRIP=
 
 ELF_LDFLAGS+=--shared -Bsymbolic --no-undefined
 
+test_prog=      test-$(PROG)
+CLEANFILES+=    test-$(PROG)
 candidate=	$(PROG).test
 CLEANFILES+=	${candidate}
-.if ${HOSTCC} == ${CC}
-test_prog=	test-$(PROG)
-CLEANFILES+=	test-$(PROG)
-test_cmd= 	'ulimit -c 0; [ "`${.OBJDIR}/$(test_prog) ok`" = ok ]'
 
 $(test_prog):
 	printf '#include <stdio.h>\nint main(int argc, char **argv){ printf("%%s: ", argv[0]); printf("%%s!\\n", argv[1] ? argv[1] : "foo"); }\n' | \
 	$(CC) -x c - -Wl,-dynamic-linker,${.OBJDIR}/$(candidate) -o $@
 
-.endif
+
 $(PROG): $(test_prog) ${VERSION_SCRIPT}
 	$(LD) -x -e _dl_start $(ELF_LDFLAGS) -o $(candidate) $(OBJS) $(LDADD)
 	eval $(test_cmd)
+	cp $(candidate) $@
+$(PROG): $(test_prog) ${VERSION_SCRIPT}
+	$(LD) -x -e _dl_start $(ELF_LDFLAGS) -o $(candidate) $(OBJS) $(LDADD)
+.ifndef CROSSDIR
+	ulimit -c 0; [ "`${.OBJDIR}/$(test_prog) ok`" = "${.OBJDIR}/$(test_prog) : ok!" ]
+.endif
 	cp $(candidate) $@
 .endif
 
