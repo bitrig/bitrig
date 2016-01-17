@@ -164,4 +164,3 @@ strtoll(const char * __restrict nptr, char ** __restrict endptr, int base)
 DEF_STRONG(strtoll);
 
 __strong_alias(strtoq, strtoll);
-DEF_STRONG(strtoq);
