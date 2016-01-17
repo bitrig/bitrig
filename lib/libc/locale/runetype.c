@@ -81,6 +81,8 @@ int ___mb_cur_max(void)
 {
 	return XLOCALE_CTYPE(__get_locale())->__mb_cur_max;
 }
+DEF_STRONG(___mb_cur_max);
+
 int ___mb_cur_max_l(locale_t locale)
 {
 	FIX_LOCALE(locale);

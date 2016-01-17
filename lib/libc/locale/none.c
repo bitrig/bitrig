@@ -62,6 +62,7 @@ static size_t	_none_wcsnrtombs(char * __restrict, const wchar_t ** __restrict,
 /* setup defaults */
 
 size_t __mb_cur_max = 1;
+DEF_STRONG(__mb_cur_max);
 int __mb_sb_limit = 256; /* Expected to be <= _CACHED_RUNES */
 
 int
