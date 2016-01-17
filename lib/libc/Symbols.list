@@ -1690,12 +1690,30 @@ yp_unbind		/* passwd */
 __stack_chk_guard
 __stack_chk_fail
 
+/* uuid */
+uuid_compare
+uuid_create
+uuid_create_nil
+uuid_equal
+uuid_from_string
+uuid_hash
+uuid_is_nil
+uuid_to_string
+uuid_enc_le
+uuid_dec_le
+uuid_enc_be
+uuid_dec_be
+uuidgen
+
 /* TLS */
 __tls_get_addr
 __init_tcb
 _ThreadRuneLocale
 
 /* locale functions */
+__runes_for_locale
+newlocale
+freelocale
 __mb_sb_limit
 ___mb_cur_max_l
 ___mb_cur_max
