@@ -120,9 +120,12 @@ noconv:
 		*endptr = (wchar_t *)(any ? s - 1 : nptr);
 	return (acc);
 }
+DEF_STRONG(wcstoull_l);
+
 unsigned long long
 wcstoull(const wchar_t * __restrict nptr, wchar_t ** __restrict endptr,
     int base)
 {
 	return wcstoull_l(nptr, endptr, base, __get_locale());
 }
+DEF_STRONG(wcstoull);

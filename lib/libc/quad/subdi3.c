@@ -49,3 +49,4 @@ __subdi3(quad_t a, quad_t b)
 	diff.ul[H] = aa.ul[H] - bb.ul[H] - (diff.ul[L] > aa.ul[L]);
 	return (diff.q);
 }
+DEF_STRONG(__subdi3);

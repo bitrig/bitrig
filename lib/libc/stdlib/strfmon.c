@@ -413,6 +413,7 @@ strfmon_l(char * __restrict s, size_t maxsize, locale_t loc, const char * __rest
 	va_end(ap);
 	return ret;
 }
+DEF_STRONG(strfmon_l);
 
 ssize_t
 strfmon(char * __restrict s, size_t maxsize, const char * __restrict format,
@@ -425,6 +426,7 @@ strfmon(char * __restrict s, size_t maxsize, const char * __restrict format,
 	va_end(ap);
 	return ret;
 }
+DEF_STRONG(strfmon);
 
 
 static void

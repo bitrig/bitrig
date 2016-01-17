@@ -160,6 +160,7 @@ __muldi3(a, b)
 #undef v1
 #undef v0
 }
+DEF_STRONG(__muldi3);
 
 /*
  * Multiply two 2N-bit ints to produce a 4N-bit quad, where N is half

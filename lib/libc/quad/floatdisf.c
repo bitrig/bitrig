@@ -66,3 +66,4 @@ __floatdisf(quad_t x)
 
 	return (neg ? -f : f);
 }
+DEF_STRONG(__floatdisf);

@@ -128,11 +128,14 @@ noconv:
 		*endptr = (char *)(any ? s - 1 : nptr);
 	return (acc);
 }
+DEF_STRONG(strtoull_l);
 
 unsigned long long
 strtoull(const char * __restrict nptr, char ** __restrict endptr, int base)
 {
 	return strtoull_l(nptr, endptr, base, __get_locale());
 }
+DEF_STRONG(strtoull);
 
 __strong_alias(strtouq, strtoull);
+DEF_STRONG(strtouq);

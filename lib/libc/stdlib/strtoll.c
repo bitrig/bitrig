@@ -154,11 +154,14 @@ noconv:
 		*endptr = (char *)(any ? s - 1 : nptr);
 	return (acc);
 }
+DEF_STRONG(strtoll_l);
 
 long long
 strtoll(const char * __restrict nptr, char ** __restrict endptr, int base)
 {
 	return strtoll_l(nptr, endptr, base, __get_locale());
 }
+DEF_STRONG(strtoll);
 
 __strong_alias(strtoq, strtoll);
+DEF_STRONG(strtoq);

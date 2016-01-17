@@ -54,3 +54,4 @@ arc4random_uniform(uint32_t upper_bound)
 
 	return r % upper_bound;
 }
+DEF_STRONG(arc4random_uniform);

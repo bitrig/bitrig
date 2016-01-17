@@ -72,3 +72,4 @@ system(const char *command)
 	(void)signal(SIGQUIT, quitsave);
 	return (pid == -1 ? -1 : pstat);
 }
+DEF_STRONG(system);

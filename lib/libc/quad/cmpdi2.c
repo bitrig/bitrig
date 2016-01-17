@@ -49,3 +49,4 @@ __cmpdi2(quad_t a, quad_t b)
 	return (aa.sl[H] < bb.sl[H] ? 0 : aa.sl[H] > bb.sl[H] ? 2 :
 	    aa.ul[L] < bb.ul[L] ? 0 : aa.ul[L] > bb.ul[L] ? 2 : 1);
 }
+DEF_STRONG(__cmpdi2);

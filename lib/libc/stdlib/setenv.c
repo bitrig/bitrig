@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 char *__findenv(const char *name, int len, int *offset);
 
@@ -81,6 +82,7 @@ putenv(char *str)
 	environ[cnt + 1] = NULL;
 	return (0);
 }
+DEF_STRONG(putenv);
 
 /*
  * setenv --
@@ -147,6 +149,7 @@ setenv(const char *name, const char *value, int rewrite)
 		;
 	return (0);
 }
+DEF_STRONG(setenv);
 
 /*
  * unsetenv(name) --
@@ -178,3 +181,4 @@ unsetenv(const char *name)
 	}
 	return (0);
 }
+DEF_STRONG(unsetenv);

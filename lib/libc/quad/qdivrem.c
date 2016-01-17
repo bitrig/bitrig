@@ -256,6 +256,7 @@ __qdivrem(u_quad_t uq, u_quad_t vq, u_quad_t *arq)
 	tmp.ul[L] = COMBINE(qspace[3], qspace[4]);
 	return (tmp.q);
 }
+DEF_STRONG(__qdivrem);
 
 /*
  * Shift p[0]..p[len] left `sh' bits, ignoring any bits that

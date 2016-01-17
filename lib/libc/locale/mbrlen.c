@@ -42,9 +42,11 @@ mbrlen_l(const char * __restrict s, size_t n, mbstate_t * __restrict ps, locale_
 		ps = &locale->mbrlen;
 	return (XLOCALE_CTYPE(locale)->__mbrtowc(NULL, s, n, ps));
 }
+DEF_STRONG(mbrlen_l);
 
 size_t
 mbrlen(const char * __restrict s, size_t n, mbstate_t * __restrict ps)
 {
 	return mbrlen_l(s, n, ps, __get_locale());
 }
+DEF_STRONG(mbrlen);

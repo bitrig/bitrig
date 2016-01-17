@@ -48,3 +48,4 @@ __xordi3(quad_t a, quad_t b)
 	aa.ul[1] ^= bb.ul[1];
 	return (aa.q);
 }
+DEF_STRONG(__xordi3);

@@ -55,3 +55,4 @@ __lshrdi3(quad_t a, qshift_t shift)
 	}
 	return (aa.q);
 }
+DEF_STRONG(__lshrdi3);

@@ -48,8 +48,11 @@ wctob_l(wint_t c, locale_t locale)
 		return (EOF);
 	return ((unsigned char)*buf);
 }
+DEF_STRONG(wctob_l);
+
 int
 wctob(wint_t c)
 {
 	return wctob_l(c, __get_locale());
 }
+DEF_STRONG(wctob);

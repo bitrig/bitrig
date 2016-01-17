@@ -50,3 +50,4 @@ __adddi3(quad_t a, quad_t b)
 	sum.ul[H] = aa.ul[H] + bb.ul[H] + (sum.ul[L] < bb.ul[L]);
 	return (sum.q);
 }
+DEF_STRONG(__adddi3);

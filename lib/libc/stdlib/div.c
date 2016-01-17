@@ -69,3 +69,4 @@ div(int num, int denom)
 	}
 	return (r);
 }
+DEF_STRONG(div);

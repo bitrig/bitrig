@@ -43,3 +43,4 @@ __udivdi3(u_quad_t a, u_quad_t b)
 
 	return (__qdivrem(a, b, (u_quad_t *)0));
 }
+DEF_STRONG(__udivdi3);

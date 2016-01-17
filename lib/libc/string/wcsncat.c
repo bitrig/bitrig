@@ -50,3 +50,4 @@ wcsncat(wchar_t *s1, const wchar_t *s2, size_t n)
 	*q = '\0';
 	return s1;
 }
+DEF_STRONG(wcsncat);

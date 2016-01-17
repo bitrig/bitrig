@@ -29,3 +29,4 @@ wcsdup(const wchar_t *str)
 
 	return (wmemcpy(copy, str, len));
 }
+DEF_STRONG(wcsdup);

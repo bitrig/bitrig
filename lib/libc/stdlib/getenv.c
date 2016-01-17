@@ -79,3 +79,4 @@ getenv(const char *name)
 		;
 	return (__findenv(name, (int)(np - name), &offset));
 }
+DEF_STRONG(getenv);

@@ -53,3 +53,4 @@ wcsspn(const wchar_t *s, const wchar_t *set)
 done:
 	return (p - s);
 }
+DEF_STRONG(wcsspn);

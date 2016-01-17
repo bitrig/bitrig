@@ -53,3 +53,4 @@ wcscat(wchar_t *s1, const wchar_t *s2)
 	*q = '\0';
 	return s1;
 }
+DEF_STRONG(wcscat);

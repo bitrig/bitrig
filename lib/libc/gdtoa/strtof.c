@@ -81,7 +81,8 @@ strtof_l(CONST char *s, char **sp, locale_t loc)
 	if (k & STRTOG_Neg)
 		u.L[0] |= 0x80000000L;
 	return u.f;
-	}
+}
+DEF_STRONG(strtof_l);
 
  float
 #ifdef KR_headers
@@ -92,3 +93,4 @@ strtof(CONST char *s, char **sp)
 {
 	return strtof_l(s, sp, __get_locale());
 }
+DEF_STRONG(strtof);

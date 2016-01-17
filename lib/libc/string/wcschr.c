@@ -48,3 +48,4 @@ wcschr(const wchar_t *s, wchar_t c)
 	}
 	/* NOTREACHED */
 }
+DEF_STRONG(wcschr);

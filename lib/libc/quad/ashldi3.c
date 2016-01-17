@@ -56,3 +56,4 @@ __ashldi3(quad_t a, qshift_t shift)
 	}
 	return (aa.q);
 }
+DEF_STRONG(__ashldi3);

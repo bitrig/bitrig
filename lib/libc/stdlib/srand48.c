@@ -35,3 +35,4 @@ srand48_deterministic(long seed)
 	__rand48_mult[2] = RAND48_MULT_2;
 	__rand48_add = RAND48_ADD;
 }
+DEF_STRONG(srand48_deterministic);

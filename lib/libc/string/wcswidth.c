@@ -50,9 +50,11 @@ wcswidth_l(const wchar_t *s, size_t n, locale_t locale)
 
 	return w;
 }
+DEF_STRONG(wcswidth_l);
 
 int
 wcswidth(const wchar_t *s, size_t n)
 {
 	return (wcswidth_l(s, n, __get_locale()));
 }
+DEF_STRONG(wcswidth);

@@ -44,9 +44,11 @@ wcscasecmp_l(const wchar_t *s1, const wchar_t *s2, locale_t locale)
 	}
 	return (-*s2);
 }
+DEF_STRONG(wcscasecmp_l);
 
 int
 wcscasecmp(const wchar_t *s1, const wchar_t *s2)
 {
 	return (wcscasecmp_l(s1, s2, __get_locale()));
 }
+DEF_STRONG(wcscasecmp);

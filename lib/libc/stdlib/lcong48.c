@@ -33,3 +33,4 @@ lcong48_deterministic(unsigned short p[7])
 	__rand48_mult[2] = p[5];
 	__rand48_add = p[6];
 }
+DEF_STRONG(lcong48_deterministic);

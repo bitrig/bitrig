@@ -53,8 +53,11 @@ wcwidth(wchar_t wc)
 {
 	return (__wcwidth(wc));
 }
+DEF_STRONG(wcwidth);
+
 int
 wcwidth_l(wchar_t wc, locale_t locale)
 {
 	return (__wcwidth_l(wc, locale));
 }
+DEF_STRONG(wcwidth_l);

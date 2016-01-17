@@ -48,3 +48,4 @@ wcsrchr(const wchar_t *s, wchar_t c)
 	}
 	return NULL;
 }
+DEF_STRONG(wcsrchr);

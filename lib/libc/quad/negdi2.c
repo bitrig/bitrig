@@ -47,3 +47,4 @@ __negdi2(quad_t a)
 	res.ul[H] = -aa.ul[H] - (res.ul[L] > 0);
 	return (res.q);
 }
+DEF_STRONG(__negdi2);

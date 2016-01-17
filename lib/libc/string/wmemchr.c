@@ -45,3 +45,4 @@ wmemchr(const wchar_t *s, wchar_t c, size_t n)
 	}
 	return NULL;
 }
+DEF_STRONG(wmemchr);

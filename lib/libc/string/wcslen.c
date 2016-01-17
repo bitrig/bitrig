@@ -42,3 +42,4 @@ wcslen(const wchar_t *s)
 
 	return p - s;
 }
+DEF_STRONG(wcslen);

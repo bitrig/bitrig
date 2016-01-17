@@ -43,11 +43,12 @@ getwchar_l(locale_t locale)
 {
 	FIX_LOCALE(locale);
 	return fgetwc_l(stdin, locale);
-DEF_STRONG(getwchar);
 }
+DEF_STRONG(getwchar_l);
 
 wint_t
 getwchar()
 {
 	return (getwchar_l(__get_locale()));
 }
+DEF_STRONG(getwchar);

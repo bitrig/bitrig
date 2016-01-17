@@ -70,3 +70,4 @@ __fixunsdfdi(double x)
 	t.ul[H] = tmp;
 	return (t.uq);
 }
+DEF_STRONG(__fixunsdfdi);

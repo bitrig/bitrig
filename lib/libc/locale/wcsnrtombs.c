@@ -46,12 +46,15 @@ wcsnrtombs_l(char * __restrict dst, const wchar_t ** __restrict src, size_t nwc,
 		ps = &locale->wcsnrtombs;
 	return (XLOCALE_CTYPE(locale)->__wcsnrtombs(dst, src, nwc, len, ps));
 }
+DEF_STRONG(wcsnrtombs_l);
+
 size_t
 wcsnrtombs(char * __restrict dst, const wchar_t ** __restrict src, size_t nwc,
     size_t len, mbstate_t * __restrict ps)
 {
 	return wcsnrtombs_l(dst, src, nwc, len, ps, __get_locale());
 }
+DEF_STRONG(wcsnrtombs);
 
 
 size_t

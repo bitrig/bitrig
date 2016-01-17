@@ -48,3 +48,4 @@ wcslcpy(wchar_t *dst, const wchar_t *src, size_t dsize)
 
 	return(src - osrc - 1);	/* count does not include NUL */
 }
+DEF_STRONG(wcslcpy);

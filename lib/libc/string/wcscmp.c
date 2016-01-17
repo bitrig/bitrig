@@ -49,3 +49,4 @@ wcscmp(const wchar_t *s1, const wchar_t *s2)
 	/* XXX assumes wchar_t = int */
 	return (*(const __rune_t *)s1 - *(const __rune_t *)--s2);
 }
+DEF_STRONG(wcscmp);

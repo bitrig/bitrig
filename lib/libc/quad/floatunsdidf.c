@@ -49,3 +49,4 @@ __floatunsdidf(u_quad_t x)
 	d += u.ul[L];
 	return (d);
 }
+DEF_STRONG(__floatunsdidf);

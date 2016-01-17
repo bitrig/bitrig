@@ -61,3 +61,4 @@ abort(void)
 	(void)raise(SIGABRT);
 	_exit(1);
 }
+DEF_STRONG(abort);

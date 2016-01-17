@@ -51,6 +51,8 @@ asprintf(char ** __restrict s, char const * __restrict fmt, ...)
 	va_end(ap);
 	return (ret);
 }
+DEF_WEAK(asprintf);
+
 int
 asprintf_l(char ** __restrict s, locale_t locale, char const * __restrict fmt,
 		...)
@@ -62,5 +64,5 @@ asprintf_l(char ** __restrict s, locale_t locale, char const * __restrict fmt,
 	ret = vasprintf_l(s, locale, fmt, ap);
 	va_end(ap);
 	return (ret);
-DEF_WEAK(asprintf);
 }
+DEF_WEAK(asprintf_l);

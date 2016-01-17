@@ -57,3 +57,4 @@ __divdi3(quad_t a, quad_t b)
 		uq = - uq;
 	return uq;
 }
+DEF_STRONG(__divdi3);

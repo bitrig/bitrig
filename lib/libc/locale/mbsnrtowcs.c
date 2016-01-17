@@ -46,12 +46,15 @@ mbsnrtowcs_l(wchar_t * __restrict dst, const char ** __restrict src,
 		ps = &locale->mbsnrtowcs;
 	return (XLOCALE_CTYPE(locale)->__mbsnrtowcs(dst, src, nms, len, ps));
 }
+DEF_STRONG(mbsnrtowcs_l);
+
 size_t
 mbsnrtowcs(wchar_t * __restrict dst, const char ** __restrict src,
     size_t nms, size_t len, mbstate_t * __restrict ps)
 {
 	return mbsnrtowcs_l(dst, src, nms, len, ps, __get_locale());
 }
+DEF_STRONG(mbrsnrtowcs);
 
 size_t
 __mbsnrtowcs_std(wchar_t * __restrict dst, const char ** __restrict src,

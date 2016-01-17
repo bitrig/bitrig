@@ -299,3 +299,4 @@ yp_unbind(const char *dom)
 		ypbp = ypb;
 	}
 }
+DEF_WEAK(yp_unbind);

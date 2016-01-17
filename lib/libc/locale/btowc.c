@@ -56,8 +56,11 @@ btowc_l(int c, locale_t l)
 		return (WEOF);
 	return (wc);
 }
+DEF_STRONG(btowc_l);
+
 wint_t
 btowc(int c)
 {
 	return btowc_l(c, __get_locale());
 }
+DEF_STRONG(btowc);

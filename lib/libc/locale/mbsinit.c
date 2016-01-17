@@ -40,8 +40,11 @@ mbsinit_l(const mbstate_t *ps, locale_t locale)
 	FIX_LOCALE(locale);
 	return (XLOCALE_CTYPE(locale)->__mbsinit(ps));
 }
+DEF_STRONG(mbsinit_l);
+
 int
 mbsinit(const mbstate_t *ps)
 {
 	return mbsinit_l(ps, __get_locale());
 }
+DEF_STRONG(mbsinit);

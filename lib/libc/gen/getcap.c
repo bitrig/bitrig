@@ -76,6 +76,7 @@ cgetusedb(int new_usedb)
 	usedb = new_usedb;
 	return(old_usedb);
 }
+DEF_STRONG(cgetusedb);
 
 /*
  * Cgetset() allows the addition of a user specified buffer to be added
@@ -98,6 +99,7 @@ cgetset(const char *ent)
 	memcpy(toprec, ent, topreclen + 1);
 	return (0);
 }
+DEF_STRONG(cgetset);
 
 /*
  * Cgetcap searches the capability record buf for the capability cap with
@@ -152,6 +154,7 @@ cgetcap(char *buf, const char *cap, int type)
 	}
 	/* NOTREACHED */
 }
+DEF_STRONG(cgetcap);
 
 /*
  * Cgetent extracts the capability record name from the NULL terminated file
@@ -169,6 +172,7 @@ cgetent(char **buf, char **db_array, const char *name)
 
 	return (getent(buf, &dummy, db_array, NULL, name, 0, NULL));
 }
+DEF_STRONG(cgetent);
 
 /*
  * Getent implements the functions of cgetent.  If fp is non-NULL,
@@ -619,6 +623,7 @@ cgetmatch(char *buf, const char *name)
 					break;	/* found next name */
 	}
 }
+DEF_STRONG(cgetmatch);
 
 int
 cgetfirst(char **buf, char **db_array)
@@ -627,6 +632,7 @@ cgetfirst(char **buf, char **db_array)
 	(void)cgetclose();
 	return (cgetnext(buf, db_array));
 }
+DEF_STRONG(cgetfirst);
 
 static FILE *pfp;
 static int slash;
@@ -645,6 +651,7 @@ cgetclose(void)
 	slash = 0;
 	return(0);
 }
+DEF_STRONG(cgetclose);
 
 /*
  * Cgetnext() gets either the first or next entry in the logical database
@@ -795,6 +802,7 @@ done:
 
 	return (status);
 }
+DEF_STRONG(cgetnext);
 
 /*
  * Cgetstr retrieves the value of the string capability cap from the
@@ -925,6 +933,7 @@ cgetstr(char *buf, const char *cap, char **str)
 	*str = mem;
 	return (len);
 }
+DEF_STRONG(cgetstr);
 
 /*
  * Cgetustr retrieves the value of the string capability cap from the
@@ -1005,6 +1014,7 @@ cgetustr(char *buf, const char *cap, char **str)
 	*str = mem;
 	return (len);
 }
+DEF_STRONG(cgetustr);
 
 /*
  * Cgetnum retrieves the value of the numeric capability cap from the
@@ -1069,6 +1079,7 @@ cgetnum(char *buf, const char *cap, long *num)
 	*num = n;
 	return (0);
 }
+DEF_STRONG(cgetnum);
 
 /*
  * Compare name field of record.

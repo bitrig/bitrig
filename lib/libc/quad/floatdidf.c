@@ -64,3 +64,4 @@ __floatdidf(quad_t x)
 
 	return (neg ? -d : d);
 }
+DEF_STRONG(__floatdidf);

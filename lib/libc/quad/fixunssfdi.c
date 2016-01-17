@@ -91,3 +91,4 @@ __fixunssfdi(float f)
 	t.ul[L] = (u_int)x;
 	return (t.uq);
 }
+DEF_STRONG(__fixunssfdi);

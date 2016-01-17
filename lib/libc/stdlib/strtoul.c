@@ -125,8 +125,11 @@ noconv:
 		*endptr = (char *)(any ? s - 1 : nptr);
 	return (acc);
 }
+DEF_STRONG(strtoul_l);
+
 unsigned long
 strtoul(const char * __restrict nptr, char ** __restrict endptr, int base)
 {
 	return strtoul_l(nptr, endptr, base, __get_locale());
 }
+DEF_STRONG(strtoul);

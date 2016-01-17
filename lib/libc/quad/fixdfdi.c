@@ -52,3 +52,4 @@ __fixdfdi(double x)
 		else
 			return ((quad_t)(u_quad_t)x);
 }
+DEF_STRONG(__fixdfdi);

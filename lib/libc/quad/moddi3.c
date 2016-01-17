@@ -57,3 +57,4 @@ __moddi3(quad_t a, quad_t b)
 		ur = -ur;
 	return (ur);
 }
+DEF_STRONG(__moddi3);

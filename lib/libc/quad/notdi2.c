@@ -48,3 +48,4 @@ __one_cmpldi2(quad_t a)
 	aa.ul[1] = ~aa.ul[1];
 	return (aa.q);
 }
+DEF_STRONG(__one_cmpldi2);

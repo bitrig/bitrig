@@ -122,8 +122,11 @@ noconv:
 		*endptr = (wchar_t *)(any ? s - 1 : nptr);
 	return (acc);
 }
+DEF_STRONG(wcstoll_l);
+
 long long
 wcstoll(const wchar_t * __restrict nptr, wchar_t ** __restrict endptr, int base)
 {
 	return wcstoll_l(nptr, endptr, base, __get_locale());
 }
+DEF_STRONG(wcstoll);

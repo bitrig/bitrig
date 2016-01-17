@@ -43,9 +43,11 @@ wcrtomb_l(char * __restrict s, wchar_t wc, mbstate_t * __restrict ps,
 		ps = &locale->wcrtomb;
 	return (XLOCALE_CTYPE(locale)->__wcrtomb(s, wc, ps));
 }
+DEF_STRONG(wcrtomb_l);
 
 size_t
 wcrtomb(char * __restrict s, wchar_t wc, mbstate_t * __restrict ps)
 {
 	return wcrtomb_l(s, wc, ps, __get_locale());
 }
+DEF_STRONG(wcrtomb);

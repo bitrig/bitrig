@@ -63,10 +63,11 @@ err:
 	errno = ENOMEM;
 	return (-1);
 }
-DEF_WEAK(vasprintf);
+DEF_WEAK(vasprintf_l);
 
 int
 vasprintf(char **str, const char *fmt, __va_list ap)
 {
 	return (vasprintf_l(str, __get_locale(), fmt, ap));
 }
+DEF_WEAK(vasprintf);

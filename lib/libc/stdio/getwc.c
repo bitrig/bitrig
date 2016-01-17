@@ -43,11 +43,12 @@ getwc_l(FILE *fp, locale_t locale)
 {
 	FIX_LOCALE(locale);
 	return fgetwc_l(fp, locale);
-DEF_STRONG(getwc);
 }
+DEF_STRONG(getwc_l);
 
 wint_t
 getwc(FILE *fp)
 {
 	return (fgetwc_l(fp, __get_locale()));
 }
+DEF_STRONG(getwc);

@@ -63,3 +63,4 @@ strtonum(const char *numstr, long long minval, long long maxval,
 
 	return (ll);
 }
+DEF_STRONG(strtonum);

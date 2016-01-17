@@ -149,3 +149,4 @@ loop:	SWAPINIT(a, es);
 	}
 /*		qsort(pn - r, r / es, es, cmp);*/
 }
+DEF_STRONG(qsort);

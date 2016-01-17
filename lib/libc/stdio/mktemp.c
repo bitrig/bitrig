@@ -141,6 +141,7 @@ mkostemp(char *path, int flags)
 {
 	return(mktemp_internal(path, 0, MKTEMP_FILE, flags));
 }
+DEF_WEAK(mkostemp);
 
 int
 mkstemps(char *path, int slen)

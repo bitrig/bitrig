@@ -45,3 +45,4 @@ __umoddi3(u_quad_t a, u_quad_t b)
 	(void)__qdivrem(a, b, &r);
 	return (r);
 }
+DEF_STRONG(__umoddi3);

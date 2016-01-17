@@ -186,6 +186,7 @@ arc4random(void)
 	_ARC4_UNLOCK();
 	return val;
 }
+DEF_STRONG(arc4random);
 
 void
 arc4random_buf(void *buf, size_t n)
@@ -194,3 +195,4 @@ arc4random_buf(void *buf, size_t n)
 	_rs_random_buf(buf, n);
 	_ARC4_UNLOCK();
 }
+DEF_STRONG(arc4random_buf);

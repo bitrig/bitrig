@@ -106,3 +106,4 @@ devname(dev_t dev, mode_t type)
 	}
 	return (name ? name : "??");
 }
+DEF_STRONG(devname);

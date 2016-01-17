@@ -43,11 +43,12 @@ putwchar_l(wchar_t wc, locale_t locale)
 {
 	FIX_LOCALE(locale);
 	return (fputwc_l(wc, stdout, locale));
-DEF_STRONG(putwchar);
 }
+DEF_STRONG(putwchar_l);
 
 wint_t
 putwchar(wchar_t wc)
 {
 	return (putwchar_l(wc, __get_locale()));
 }
+DEF_STRONG(putwchar);

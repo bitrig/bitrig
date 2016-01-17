@@ -105,8 +105,11 @@ wcstod_l(const wchar_t * __restrict nptr, wchar_t ** __restrict endptr,
 
 	return (val);
 }
+DEF_STRONG(wcstod_l);
+
 double
 wcstod(const wchar_t * __restrict nptr, wchar_t ** __restrict endptr)
 {
 	return wcstod_l(nptr, endptr, __get_locale());
 }
+DEF_STRONG(wcstod);
