@@ -138,4 +138,3 @@ strtoull(const char * __restrict nptr, char ** __restrict endptr, int base)
 DEF_STRONG(strtoull);
 
 __strong_alias(strtouq, strtoull);
-DEF_STRONG(strtouq);
