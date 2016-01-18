@@ -13,6 +13,9 @@
 		_dl_bind;
 		_dl_debug_state;
 
+		/* TLS */
+		__tls_get_addr;
+
 	local:
 		*;
 };
