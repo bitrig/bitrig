@@ -1,4 +1,4 @@
-/*	$OpenBSD: dlfcn.c,v 1.91 2015/09/19 20:56:47 guenther Exp $ */
+/*	$OpenBSD: dlfcn.c,v 1.90 2015/01/22 05:48:17 deraadt Exp $ */
 
 /*
  * Copyright (c) 1998 Per Fogelstrom, Opsycon AB
@@ -45,6 +45,7 @@ int _dl_tracelib;
 
 int _dl_real_close(void *handle);
 void (*_dl_thread_fnc)(int) = NULL;
+void (*_dl_bind_lock_f)(int) = NULL;
 static elf_object_t *obj_from_addr(const void *addr);
 
 void *
@@ -213,7 +214,8 @@ dlctl(void *handle, int command, void *data)
 		retval = 0;
 		break;
 	case DL_SETBINDLCK:
-		/* made superfluous by kbind */
+		DL_DEB(("dlctl: _dl_bind_lock_f set to %p\n", data));
+		_dl_bind_lock_f = data;
 		retval = 0;
 		break;
 	case 0x20:
@@ -510,6 +512,21 @@ _dl_show_objects(void)
 		    _dl_symcachestat_lookups, _dl_symcachestat_hits,
 		    (_dl_symcachestat_hits * 100) /
 		    _dl_symcachestat_lookups));
+}
+
+void
+_dl_thread_bind_lock(int what, sigset_t *omask)
+{
+	if (! what) {
+		sigset_t nmask;
+
+		sigfillset(&nmask);
+		_dl_sigprocmask(SIG_BLOCK, &nmask, omask);
+	}
+	if (_dl_bind_lock_f != NULL)
+		(*_dl_bind_lock_f)(what);
+	if (what)
+		_dl_sigprocmask(SIG_SETMASK, omask, NULL);
 }
 
 void

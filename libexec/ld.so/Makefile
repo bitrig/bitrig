@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.60 2015/08/31 02:53:57 guenther Exp $
+#	$OpenBSD: Makefile,v 1.56 2015/05/26 20:15:54 miod Exp $
 
 SUBDIR=ldconfig ldd
 MAN=	ld.so.1
@@ -9,9 +9,6 @@ MAN=	ld.so.1
 NOPROG=
 .else
 PROG=	ld.so
-
-VERSION_SCRIPT=	${.CURDIR}/Symbols.map
-ELF_LDFLAGS+=--version-script=${VERSION_SCRIPT}
 
 VPATH=${.CURDIR}/../../lib/libc/string
 
@@ -33,25 +30,21 @@ INSTALL_STRIP=
 
 ELF_LDFLAGS+=--shared -Bsymbolic --no-undefined
 
-test_prog=      test-$(PROG)
-CLEANFILES+=    test-$(PROG)
 candidate=	$(PROG).test
 CLEANFILES+=	${candidate}
+.if ${HOSTCC} == ${CC}
+test_prog=	test-$(PROG)
+CLEANFILES+=	test-$(PROG)
+test_cmd= 	'ulimit -c 0; [ "`${.OBJDIR}/$(test_prog) ok`" = ok ]'
 
 $(test_prog):
-	printf '#include <stdio.h>\nint main(int argc, char **argv){ printf("%%s: ", argv[0]); printf("%%s!\\n", argv[1] ? argv[1] : "foo"); }\n' | \
+	printf '#include <stdio.h>\nint main(int argc, char **argv){ printf("%%s\\n", argv[1]); }\n' | \
 	$(CC) -x c - -Wl,-dynamic-linker,${.OBJDIR}/$(candidate) -o $@
 
-
-$(PROG): $(test_prog) ${VERSION_SCRIPT}
+.endif
+$(PROG): $(test_prog)
 	$(LD) -x -e _dl_start $(ELF_LDFLAGS) -o $(candidate) $(OBJS) $(LDADD)
 	eval $(test_cmd)
-	cp $(candidate) $@
-$(PROG): $(test_prog) ${VERSION_SCRIPT}
-	$(LD) -x -e _dl_start $(ELF_LDFLAGS) -o $(candidate) $(OBJS) $(LDADD)
-.ifndef CROSSDIR
-	ulimit -c 0; [ "`${.OBJDIR}/$(test_prog) ok`" = "${.OBJDIR}/$(test_prog) : ok!" ]
-.endif
 	cp $(candidate) $@
 .endif
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: resolve.h,v 1.73 2015/09/19 20:56:47 guenther Exp $ */
+/*	$OpenBSD: resolve.h,v 1.71 2015/01/22 05:48:17 deraadt Exp $ */
 
 /*
  * Copyright (c) 1998 Per Fogelstrom, Opsycon AB
@@ -32,6 +32,7 @@
 #include <sys/queue.h>
 #include <link.h>
 #include <dlfcn.h>
+#include <signal.h>
 
 struct load_list {
 	struct load_list *next;
@@ -256,6 +257,8 @@ void	_dl_debug_state(void);
 void	_dl_thread_kern_go(void);
 void	_dl_thread_kern_stop(void);
 
+void	_dl_thread_bind_lock(int, sigset_t *);
+
 char	*_dl_getenv(const char *, char **);
 void	_dl_unsetenv(const char *, char **);
 
@@ -318,8 +321,8 @@ TAILQ_HEAD(dlochld, dep_node);
 extern struct dlochld _dlopened_child_list;
 
 /* variables used to avoid duplicate node checking */
-extern int _dl_searchnum;
-extern uint32_t _dl_skipnum;
+int _dl_searchnum;
+uint32_t _dl_skipnum;
 void _dl_newsymsearch(void);
 
 #endif /* _RESOLVE_H_ */
