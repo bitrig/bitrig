@@ -121,7 +121,7 @@ SRCS=	alerts.c \
 
 CDIAGFLAGS+= -Wno-long-long -Wall -W -Wnested-externs -Wformat=2
 CDIAGFLAGS+= -Wmissing-prototypes -Wstrict-prototypes -Wmissing-declarations
-CDIAGFLAGS+= -Wwrite-strings -Wshadow -Wpointer-arith -Wsign-compare
+CDIAGFLAGS+= -Wwrite-strings -Wshadow -Wsign-compare
 CDIAGFLAGS+= -Wundef -Wbad-function-cast -Winline -Wcast-align
 
 LDADD=  -lutil -lcurses -levent
