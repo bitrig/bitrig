@@ -18,9 +18,11 @@
 
 #include_next <pthread.h>
 
+#ifndef NO_HIDE_PTHREADS
 PROTO_NORMAL(pthread_getspecific);
 PROTO_NORMAL(pthread_setspecific);
 PROTO_NORMAL(pthread_key_create);
 PROTO_NORMAL(pthread_once);
+#endif
 
 #endif /* _LIBC_PTHREAD_H_ */

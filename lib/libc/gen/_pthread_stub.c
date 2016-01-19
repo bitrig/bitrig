@@ -19,6 +19,7 @@
  * will think it has access to libpthread symbols.
  */
 
+#define NO_HIDE_PTHREADS
 #include <pthread.h>
 #include <errno.h>
 
