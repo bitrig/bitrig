@@ -20,6 +20,14 @@
 
 #include_next <locale.h>
 
+/* _locale */
+PROTO_NORMAL(duplocale);
+PROTO_NORMAL(freelocale);
+PROTO_NORMAL(newlocale);
+PROTO_NORMAL(querylocale);
+PROTO_NORMAL(uselocale);
+
+/* locale.h */
 PROTO_NORMAL(localeconv);
 PROTO_NORMAL(setlocale);
 

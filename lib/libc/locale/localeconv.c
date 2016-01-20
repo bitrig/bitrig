@@ -112,4 +112,4 @@ localeconv(void)
 {
 	return localeconv_l(__get_locale());
 }
-DEF_STRONG(localeconv);
+DEF_WEAK(localeconv);

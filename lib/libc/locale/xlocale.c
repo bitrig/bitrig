@@ -305,6 +305,8 @@ locale_t newlocale(int mask, const char *locale, locale_t base)
 	return (new);
 }
 
+DEF_WEAK(newlocale);
+
 locale_t duplocale(locale_t base)
 {
 	locale_t new = alloc_locale();
@@ -326,6 +328,8 @@ locale_t duplocale(locale_t base)
 	return (new);
 }
 
+DEF_WEAK(duplocale);
+
 /*
  * Free a locale_t.  This is quite a poorly named function.  It actually
  * disclaims a reference to a locale_t, rather than freeing it.  
@@ -346,6 +350,8 @@ freelocale(locale_t loc)
 	return (0);
 }
 
+DEF_WEAK(freelocale);
+
 /*
  * Returns the name of the locale for a particular component of a locale_t.
  */
@@ -359,6 +365,8 @@ const char *querylocale(int mask, locale_t loc)
 		return (loc->components[type]->locale);
 	return ("C");
 }
+
+DEF_WEAK(querylocale);
 
 /*
  * Installs the specified locale_t as this thread's locale.
@@ -375,3 +383,4 @@ locale_t uselocale(locale_t loc)
 	return (old ? old : LC_GLOBAL_LOCALE);
 }
 
+DEF_WEAK(uselocale);

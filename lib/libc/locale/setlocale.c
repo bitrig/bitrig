@@ -204,7 +204,7 @@ setlocale(category, locale)
 	}
 	return (currentlocale());
 }
-DEF_STRONG(setlocale);
+DEF_WEAK(setlocale);
 
 static char *
 currentlocale()
