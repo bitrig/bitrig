@@ -111,6 +111,7 @@ _atomic_swap_ulong(volatile unsigned long *p, unsigned long n)
 }
 #define atomic_swap_ulong(_p, _n) _atomic_swap_ulong((_p), (_n))
 
+#ifdef _LP64
 static inline uint64_t
 _atomic_swap_64(volatile uint64_t *p, uint64_t n)
 {
@@ -120,6 +121,17 @@ _atomic_swap_64(volatile uint64_t *p, uint64_t n)
 
 	return (n);
 }
+#else // !_LP64
+static inline uint64_t
+_atomic_swap_64(volatile uint64_t *p, uint64_t n)
+{
+	__asm volatile("xchgq %0, %1"
+	    : "=A" (n), "=m" (*p)
+	    : "0" (n), "m" (*p));
+
+	return (n);
+}
+#endif // !_LP64
 #define atomic_swap_64(_p, _n) _atomic_swap_64((_p), (_n))
 
 static inline void *
