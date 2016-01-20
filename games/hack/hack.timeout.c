@@ -120,8 +120,8 @@ stoned_dialogue()
 {
 	long i = (Stoned & TIMEOUT);
 
-	if(i > 0 && i <= SIZE(stoned_texts))
-		pline("%s", stoned_texts[SIZE(stoned_texts) - i]);
+	if(i > 0 && i <= nitems(stoned_texts))
+		pline("%s", stoned_texts[nitems(stoned_texts) - i]);
 	if(i == 5)
 		Fast = 0;
 	if(i == 3)
