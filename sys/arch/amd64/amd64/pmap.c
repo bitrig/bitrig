@@ -288,7 +288,6 @@ int pmap_find_pte_direct(struct pmap *pm, vaddr_t va, pt_entry_t **pd, int *offs
 void pmap_free_ptp(struct pmap *, struct vm_page *,
     vaddr_t, pt_entry_t *, pd_entry_t **, struct pg_to_free *);
 void pmap_freepage(struct pmap *, struct vm_page *, int, struct pg_to_free *);
-static boolean_t pmap_is_active(struct pmap *, int);
 void pmap_map_ptes(struct pmap *, pt_entry_t **, pd_entry_t ***, paddr_t *);
 struct pv_entry *pmap_remove_pv(struct vm_page *, struct pmap *, vaddr_t);
 void pmap_do_remove(struct pmap *, vaddr_t, vaddr_t, int);
@@ -311,6 +310,7 @@ void pmap_tlb_shootrange(struct pmap *, vaddr_t, vaddr_t, int);
 void pmap_tlb_shoottlb(struct pmap *, int);
 #ifdef MULTIPROCESSOR
 void pmap_tlb_shootwait(void);
+static boolean_t pmap_is_active(struct pmap *, int);
 #else
 #define	pmap_tlb_shootwait()
 #endif
@@ -336,12 +336,14 @@ pmap_is_curpmap(struct pmap *pmap)
  * pmap_is_active: is this pmap loaded into the specified processor's %cr3?
  */
 
+#ifdef MULTIPROCESSOR
 static __inline boolean_t
 pmap_is_active(struct pmap *pmap, int cpu_id)
 {
 	return (pmap == pmap_kernel() ||
 	    (pmap->pm_cpus & (1ULL << cpu_id)) != 0);
 }
+#endif /* MULTIPROCESSOR */
 
 static __inline u_int
 pmap_pte2flags(u_long pte)

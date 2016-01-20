@@ -146,12 +146,14 @@ x2apic_writereg(int reg, u_int32_t val)
 	wrmsr(MSR_X2APIC_BASE + (reg >> 4), val);
 }
 
+#ifdef MULTIPROCESSOR
 static inline void
 x2apic_writeicr(u_int32_t hi, u_int32_t lo)
 {
 	u_int32_t msr = MSR_X2APIC_BASE + (LAPIC_ICRLO >> 4);
 	__asm volatile("wrmsr" : : "a" (lo), "d" (hi), "c" (msr));
 }
+#endif /* MULTIPROCESSOR */
 
 u_int32_t
 lapic_cpu_number()
@@ -568,6 +570,7 @@ lapic_delay(int usec)
  * XXX the following belong mostly or partly elsewhere..
  */
 
+#ifdef MULTIPROCESSOR
 static __inline void i82489_icr_wait(void);
 
 static __inline void
@@ -587,7 +590,6 @@ i82489_icr_wait(void)
 	}
 }
 
-#ifdef MULTIPROCESSOR
 void
 i82489_ipi_init(int target)
 {
