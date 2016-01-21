@@ -530,9 +530,6 @@ ReTry:
 	 */
 	if (result == VM_PAGER_PEND || result == VM_PAGER_OK) {
 		if (result == VM_PAGER_OK && (flags & PGO_PDFREECLUST)) {
-			if (uobj)
-				/* required for dropcluster */
-				mtx_enter(&uobj->vmobjlock);
 			/* drop cluster */
 			if (*npages > 1 || pg == NULL)
 				uvm_pager_dropcluster(uobj, pg, ppsp, npages,
@@ -549,9 +546,6 @@ ReTry:
 	 * to worry about.
 	 */
 	if (*npages > 1 || pg == NULL) {
-		if (uobj) {
-			mtx_enter(&uobj->vmobjlock);
-		}
 		uvm_pager_dropcluster(uobj, pg, ppsp, npages, PGO_REALLOCSWAP);
 
 		/*
@@ -568,11 +562,9 @@ ReTry:
 				pg->uanon->an_swslot = nswblk;
 				mtx_leave(&pg->uanon->an_lock);
 			} else {
-				mtx_enter(&pg->uobject->vmobjlock);
 				uao_set_swslot(pg->uobject,
 					       pg->offset >> PAGE_SHIFT,
 					       nswblk);
-				mtx_leave(&pg->uobject->vmobjlock);
 			}
 		}
 		if (result == VM_PAGER_AGAIN) {
@@ -603,9 +595,6 @@ ReTry:
 			/* XXX daddr_t -> int */
 			uvm_swap_markbad(swblk, *npages);
 		}
-
-		if (uobj)
-			mtx_leave(&uobj->vmobjlock);
 	}
 
 	/*
@@ -613,9 +602,7 @@ ReTry:
 	 * was one).    give up!   the caller only has one page ("pg")
 	 * to worry about.
 	 */
-	
-	if (uobj && (flags & PGO_PDFREECLUST) != 0)
-		mtx_enter(&uobj->vmobjlock);
+
 	return(result);
 }
 
@@ -666,7 +653,6 @@ uvm_pager_dropcluster(struct uvm_object *uobj, struct vm_page *pg,
 					  /* zap swap block */
 					  ppsp[lcv]->uanon->an_swslot = 0;
 			} else {
-				mtx_enter(&ppsp[lcv]->uobject->vmobjlock);
 				if (flags & PGO_REALLOCSWAP)
 					uao_set_swslot(ppsp[lcv]->uobject,
 					    ppsp[lcv]->offset >> PAGE_SHIFT, 0);
@@ -715,8 +701,6 @@ uvm_pager_dropcluster(struct uvm_object *uobj, struct vm_page *pg,
 		if (!uobj) {
 			if (ppsp[lcv]->pg_flags & PQ_ANON)
 				mtx_leave(&ppsp[lcv]->uanon->an_lock);
-			else
-				mtx_leave(&ppsp[lcv]->uobject->vmobjlock);
 		}
 	}
 }
@@ -782,15 +766,12 @@ uvm_aio_aiodone(struct buf *bp)
 			swap = (pg->pg_flags & PQ_SWAPBACKED) != 0;
 			if (!swap) {
 				uobj = pg->uobject;
-				mtx_enter(&uobj->vmobjlock);
 			}
 		}
 		KASSERT(swap || pg->uobject == uobj);
 		if (swap) {
 			if (pg->pg_flags & PQ_ANON) {
 				mtx_enter(&pg->uanon->an_lock);
-			} else {
-				mtx_enter(&pg->uobject->vmobjlock);
 			}
 		}
 
@@ -832,15 +813,12 @@ out:
 				uvm_page_unbusy(&pg, 1);
 				if (pg->pg_flags & PQ_ANON) {
 					mtx_leave(&pg->uanon->an_lock);
-				} else {
-					mtx_leave(&pg->uobject->vmobjlock);
 				}
 			}
 		}
 	}
 	if (!swap || (!write && error)) {
 		uvm_page_unbusy(pgs, npages);
-		mtx_leave(&uobj->vmobjlock);
 	}
 
 #ifdef UVM_SWAP_ENCRYPT

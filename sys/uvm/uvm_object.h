@@ -40,7 +40,6 @@
  */
 
 struct uvm_object {
-	struct mutex			 vmobjlock;	/* lock on memt */
 	struct uvm_pagerops		*pgops;		/* pager ops */
 	RB_HEAD(uvm_objtree, vm_page)	 memt;		/* pages in object */
 	int				 uo_npages;	/* # of pages in memt */

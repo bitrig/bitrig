@@ -1711,7 +1711,6 @@ uao_setsize(struct uvm_object *uobj, int pages)
 	struct uvm_aobj *aobj = (struct uvm_aobj *)uobj;
 	int ret;
 
-	mtx_enter(&uobj->vmobjlock);
 	do {
 		if (pages > aobj->u_pages) {
 			ret = uao_grow(uobj, pages);
@@ -1729,8 +1728,6 @@ uao_setsize(struct uvm_object *uobj, int pages)
 	if (UAO_USES_SWHASH(aobj->u_pages))
 		uao_check_swhash(aobj);
 #endif
-
-	mtx_leave(&uobj->vmobjlock);
 
 	return ret;
 }

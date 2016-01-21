@@ -214,9 +214,6 @@ uvm_anon_pagein(struct vm_anon *anon)
 	 */
 
 	mtx_leave(&anon->an_lock);
-	if (uobj) {
-		mtx_leave(&uobj->vmobjlock);
-	}
 
 	return FALSE;
 }
