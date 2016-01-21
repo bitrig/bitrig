@@ -1,9 +1,0 @@
-# LIVECD is basically GENERIC
-
-include		"arch/amd64/conf/generic.amd64"
-
-option		MULTIPROCESSOR	# Multiple processor support
-
-cpu*		at mainbus?
-
-config		bsd root on cd0a
