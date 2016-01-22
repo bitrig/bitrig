@@ -1,4 +1,4 @@
-/* $OpenBSD: fuse_vnops.c,v 1.25 2015/09/23 15:37:26 tedu Exp $ */
+/* $OpenBSD: fuse_vnops.c,v 1.26 2016/01/22 17:09:43 stefan Exp $ */
 /*
  * Copyright (c) 2012-2013 Sylvestre Gallon <ccna.syl@gmail.com>
  *
@@ -1064,7 +1064,7 @@ fusefs_read(void *v)
 		if (error)
 			break;
 
-		error = uiomove(fbuf->fb_dat, MIN(size, fbuf->fb_len), uio);
+		error = uiomove(fbuf->fb_dat, ulmin(size, fbuf->fb_len), uio);
 		if (error)
 			break;
 
