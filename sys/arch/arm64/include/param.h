@@ -64,7 +64,7 @@
 #define	USPACE		(UPAGES * PAGE_SIZE)	/* total size of u-area */
 #define	USPACE_ALIGN	0			/* u-area alignment 0-none */
 
-#define	NMBCLUSTERS	6144			/* map size, max cluster allocation */
+#define	NMBCLUSTERS	4096			/* map size, max cluster allocation */
 
 #ifndef	MSGBUFSIZE
 #define	MSGBUFSIZE	(16 * PAGE_SIZE)	/* default message buffer size */
