@@ -1,4 +1,4 @@
-/*	$OpenBSD: mount_vnd.c,v 1.17 2015/01/16 06:39:59 deraadt Exp $	*/
+/*	$OpenBSD: mount_vnd.c,v 1.18 2016/01/24 01:02:24 gsoares Exp $	*/
 /*
  * Copyright (c) 1993 University of Utah.
  * Copyright (c) 1990, 1993
@@ -150,6 +150,75 @@ main(int argc, char **argv)
 	exit(rv);
 }
 
+char *
+get_pkcs_key(char *arg, char *saltopt)
+{
+	char		 passphrase[128];
+	char		 saltbuf[128], saltfilebuf[PATH_MAX];
+	char		*key = NULL;
+	char		*saltfile;
+	const char	*errstr;
+	int		 rounds;
+
+	rounds = strtonum(arg, 1000, INT_MAX, &errstr);
+	if (errstr)
+		err(1, "rounds: %s", errstr);
+	bzero(passphrase, sizeof(passphrase));
+	if (readpassphrase("Encryption key: ", passphrase, sizeof(passphrase),
+	    RPP_REQUIRE_TTY) == NULL)
+		errx(1, "Unable to read passphrase");
+	if (saltopt)
+		saltfile = saltopt;
+	else {
+		printf("Salt file: ");
+		fflush(stdout);
+		saltfile = fgets(saltfilebuf, sizeof(saltfilebuf), stdin);
+		if (saltfile)
+			saltfile[strcspn(saltfile, "\n")] = '\0';
+	}
+	if (!saltfile || saltfile[0] == '\0') {
+		warnx("Skipping salt file, insecure");
+		memset(saltbuf, 0, sizeof(saltbuf));
+	} else {
+		int fd;
+
+		fd = open(saltfile, O_RDONLY);
+		if (fd == -1) {
+			int *s;
+
+			fprintf(stderr, "Salt file not found, attempting to "
+			    "create one\n");
+			fd = open(saltfile, O_RDWR|O_CREAT|O_EXCL, 0600);
+			if (fd == -1)
+				err(1, "Unable to create salt file: '%s'",
+				    saltfile);
+			for (s = (int *)saltbuf;
+			    s < (int *)(saltbuf + sizeof(saltbuf)); s++)
+				*s = arc4random();
+			if (write(fd, saltbuf, sizeof(saltbuf))
+			    != sizeof(saltbuf))
+				err(1, "Unable to write salt file: '%s'",
+				    saltfile);
+			fprintf(stderr, "Salt file created as '%s'\n",
+			    saltfile);
+		} else {
+			if (read(fd, saltbuf, sizeof(saltbuf))
+			    != sizeof(saltbuf))
+				err(1, "Unable to read salt file: '%s'",
+				    saltfile);
+		}
+		close(fd);
+	}
+	if ((key = calloc(1, BLF_MAXUTILIZED)) == NULL)
+		err(1, NULL);
+	if (pkcs5_pbkdf2(passphrase, sizeof(passphrase), saltbuf,
+	    sizeof (saltbuf), key, BLF_MAXUTILIZED, rounds))
+		errx(1, "pkcs5_pbkdf2 failed");
+	explicit_bzero(passphrase, 0, sizeof(passphrase));
+
+	return (key);
+}
+
 int
 getinfo(const char *vname)
 {
@@ -258,6 +327,9 @@ config(char *dev, char *file, int action, struct disklabel *dp)
 
 	close(fd);
 	fflush(stdout);
+ out:
+	if (key)
+		explicit_bzero(key, 0, keylen);
 	return (rv < 0);
 }
 
