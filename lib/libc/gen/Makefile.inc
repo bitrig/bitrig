@@ -44,10 +44,8 @@ MAN+=	__tfork_thread.3 alarm.3 auth_subr.3 authenticate.3 basename.3 clock.3 \
 	getfsent.3 getgrent.3 getgrouplist.3 gethostname.3 getloadavg.3 \
 	getmntinfo.3 getnetgrent.3 getpagesize.3 getpass.3 getprogname.3 \
 	getpwent.3 getpwnam.3 \
-	getttyent.3 getusershell.3 glob.3 initgroups.3 \
-	isascii.3 isblank.3 iscntrl.3 isdigit.3 isfdtype.3 isgraph.3 \
-	isgreater.3 islower.3 isprint.3 ispunct.3 isspace.3 isupper.3 \
-	isxdigit.3 ldexp.3 lockf.3 login_cap.3 modf.3 nice.3 nlist.3 pause.3 \
+	getttyent.3 getusershell.3 glob.3 initgroups.3 isfdtype.3 isgreater.3 \
+	ldexp.3 lockf.3 login_cap.3 modf.3 nice.3 nlist.3 pause.3 \
 	popen.3 posix_spawn.3 posix_spawn_file_actions_addopen.3 \
 	posix_spawn_file_actions_init.3 posix_spawnattr_getflags.3 \
 	posix_spawnattr_getpgroup.3 posix_spawnattr_init.3 \
