@@ -13,7 +13,7 @@ SRCS+=  alarm.c assert.c auth_subr.c authenticate.c \
         getdomainname.c getgrent.c getgrouplist.c gethostname.c \
         getloadavg.c getlogin.c getmntinfo.c getnetgrent.c getpagesize.c \
         getprogname.c getpwent.c getttyent.c getusershell.c glob.c \
-        initgroups.c isatty.c isctype.c isfdtype.c isfinite.c isinf.c \
+        initgroups.c isatty.c isfdtype.c isfinite.c isinf.c \
         isnan.c isnormal.c signbit.c lockf.c login_cap.c nice.c \
         nlist.c nftw.c _once_stub.c opendir.c pause.c popen.c posix_spawn.c \
 	psignal.c \
@@ -23,8 +23,8 @@ SRCS+=  alarm.c assert.c auth_subr.c authenticate.c \
         siginterrupt.c siglist.c signal.c signame.c \
         sigsetops.c sleep.c statvfs.c strtofflags.c sysconf.c \
         syslog.c syslog_r.c telldir.c time.c times.c \
-        tolower_.c ttyname.c \
-        ttyslot.c toupper_.c ualarm.c uname.c unvis.c usleep.c \
+        ttyname.c \
+        ttyslot.c ualarm.c uname.c unvis.c usleep.c \
         utime.c valloc.c vis.c wait.c wait3.c waitpid.c warn.c \
         warnc.c warnx.c vwarn.c vwarnc.c vwarnx.c verr.c verrc.c verrx.c \
         _pthread_stub.c
@@ -44,7 +44,7 @@ MAN+=	__tfork_thread.3 alarm.3 auth_subr.3 authenticate.3 basename.3 clock.3 \
 	getfsent.3 getgrent.3 getgrouplist.3 gethostname.3 getloadavg.3 \
 	getmntinfo.3 getnetgrent.3 getpagesize.3 getpass.3 getprogname.3 \
 	getpwent.3 getpwnam.3 \
-	getttyent.3 getusershell.3 glob.3 initgroups.3 isalnum.3 isalpha.3 \
+	getttyent.3 getusershell.3 glob.3 initgroups.3 \
 	isascii.3 isblank.3 iscntrl.3 isdigit.3 isfdtype.3 isgraph.3 \
 	isgreater.3 islower.3 isprint.3 ispunct.3 isspace.3 isupper.3 \
 	isxdigit.3 ldexp.3 lockf.3 login_cap.3 modf.3 nice.3 nlist.3 pause.3 \
@@ -55,7 +55,7 @@ MAN+=	__tfork_thread.3 alarm.3 auth_subr.3 authenticate.3 basename.3 clock.3 \
 	scandir.3 setjmp.3 setmode.3 setproctitle.3 shm_open.3 \
 	siginterrupt.3 signal.3 \
 	sigsetops.3 sleep.3 statvfs.3 sysconf.3 sysctl.3 strtofflags.3 \
-	syslog.3 time.3 times.3 toascii.3 tolower.3 toupper.3 \
+	syslog.3 time.3 times.3 toascii.3 \
 	ttyname.3 ualarm.3 uname.3 unvis.3 usleep.3 utime.3 valloc.3 vis.3
 
 MLINKS+=__tfork_thread.3 __tfork.2
@@ -154,8 +154,6 @@ MLINKS+=strtofflags.3 fflagstostr.3
 MLINKS+=syslog.3 closelog.3 syslog.3 openlog.3 syslog.3 setlogmask.3 \
 	syslog.3 vsyslog.3 syslog.3 syslog_r.3 syslog.3 closelog_r.3 \
 	syslog.3 openlog_r.3 syslog.3 setlogmask_r.3 syslog.3 vsyslog_r.3
-MLINKS+=tolower.3 _tolower.3
-MLINKS+=toupper.3 _toupper.3
 MLINKS+=ttyname.3 ttyname_r.3 ttyname.3 isatty.3 ttyname.3 ttyslot.3
 MLINKS+=unvis.3 strunvis.3 unvis.3 strnunvis.3
 MLINKS+=vis.3 strvis.3 vis.3 strnvis.3 vis.3 strvisx.3 vis.3 stravis.3

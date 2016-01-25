@@ -52,8 +52,11 @@ mbtowc_l(wchar_t * __restrict pwc, const char * __restrict s, size_t n, locale_t
 		return (-1);
 	return ((int)rval);
 }
+DEF_WEAK(mbtowc_l);
+
 int
 mbtowc(wchar_t * __restrict pwc, const char * __restrict s, size_t n)
 {
 	return mbtowc_l(pwc, s, n, __get_locale());
 }
+DEF_WEAK(mbtowc);

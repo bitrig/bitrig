@@ -99,7 +99,7 @@ PROTO_DEPRECATED(lrand48);
 /*PROTO_NORMAL(malloc);			not yet, breaks emacs */
 PROTO_STD_DEPRECATED(mblen);
 PROTO_STD_DEPRECATED(mbstowcs);
-PROTO_STD_DEPRECATED(mbtowc);
+PROTO_NORMAL(mbtowc);
 PROTO_DEPRECATED(mergesort);
 PROTO_DEPRECATED(mkdtemp);
 PROTO_NORMAL(mkostemp);
