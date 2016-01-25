@@ -87,13 +87,13 @@ int     isblank(int);
 #endif
 
 #if __BSD_VISIBLE
-int     digittoint(int);
-int     ishexnumber(int);
-int     isideogram(int);
-int     isnumber(int);
-int     isphonogram(int);
-int     isrune(int);
-int     isspecial(int);
+#define digittoint(c)   __sbmaskrune((c), 0xFF)
+#define ishexnumber(c)  __sbistype((c), _CTYPE_X)
+#define isideogram(c)   __sbistype((c), _CTYPE_I)
+#define isnumber(c)     __sbistype((c), _CTYPE_D)
+#define isphonogram(c)  __sbistype((c), _CTYPE_Q)
+#define isrune(c)       __sbistype((c), 0xFFFFFF00L)
+#define isspecial(c)    __sbistype((c), _CTYPE_T)
 #endif
 
 #if __POSIX_VISIBLE >= 200809 || defined(_XLOCALE_H_)

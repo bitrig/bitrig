@@ -177,8 +177,6 @@ wint_t nextwctype_l(wint_t __wc, wctype_t wct, locale_t __l);
 wctrans_t wctrans_l(const char *__charclass, locale_t __l);
 #undef _XLOCALE_WCTYPES
 #else
-int digittoint(int);
-
 _XLOCALE_INLINE int digittoint_l(int, locale_t);
 _XLOCALE_INLINE int tolower_l(int, locale_t);
 _XLOCALE_INLINE int toupper_l(int, locale_t);
