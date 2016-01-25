@@ -76,6 +76,8 @@ __stack_smash_handler(const char func[], int damaged)
 	_exit(127);
 }
 
+DEF_WEAK(__stack_smash_handler);
+
 void
 __stack_chk_fail(void)
 {

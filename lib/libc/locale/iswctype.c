@@ -47,7 +47,7 @@ iswalnum(wc)
 {
 	return (__istype(wc, _CTYPE_A|_CTYPE_D));
 }
-DEF_STRONG(iswalnum);
+DEF_WEAK(iswalnum);
 
 #undef iswalpha
 int
@@ -56,7 +56,7 @@ iswalpha(wc)
 {
 	return (__istype(wc, _CTYPE_A));
 }
-DEF_STRONG(iswalpha);
+DEF_WEAK(iswalpha);
 
 #undef iswascii
 int
@@ -65,7 +65,7 @@ iswascii(wc)
 {
 	return ((wc & ~0x7F) == 0);
 }
-DEF_STRONG(iswascii);
+DEF_WEAK(iswascii);
 
 #undef iswblank
 int
@@ -74,7 +74,7 @@ iswblank(wc)
 {
 	return (__istype(wc, _CTYPE_B));
 }
-DEF_STRONG(iswblank);
+DEF_WEAK(iswblank);
 
 #undef iswcntrl
 int
@@ -83,7 +83,7 @@ iswcntrl(wc)
 {
 	return (__istype(wc, _CTYPE_C));
 }
-DEF_STRONG(iswctrl);
+DEF_WEAK(iswctrl);
 
 #undef iswdigit
 int
@@ -92,7 +92,7 @@ iswdigit(wc)
 {
 	return (__isctype(wc, _CTYPE_D));
 }
-DEF_STRONG(iswdigit);
+DEF_WEAK(iswdigit);
 
 #undef iswgraph
 int
@@ -101,7 +101,7 @@ iswgraph(wc)
 {
 	return (__istype(wc, _CTYPE_G));
 }
-DEF_STRONG(iswgraph);
+DEF_WEAK(iswgraph);
 
 #undef iswhexnumber 
 int
@@ -110,7 +110,7 @@ iswhexnumber(wc)
 {
 	return (__istype(wc, _CTYPE_X));
 }
-DEF_STRONG(iswhexnumber);
+DEF_WEAK(iswhexnumber);
 
 #undef iswideogram
 int
@@ -119,7 +119,7 @@ iswideogram(wc)
 {
 	return (__istype(wc, _CTYPE_I));
 }
-DEF_STRONG(iswideogram);
+DEF_WEAK(iswideogram);
 
 #undef iswlower
 int
@@ -128,7 +128,7 @@ iswlower(wc)
 {
 	return (__istype(wc, _CTYPE_L));
 }
-DEF_STRONG(iswlower);
+DEF_WEAK(iswlower);
 
 #undef iswnumber
 int
@@ -137,7 +137,7 @@ iswnumber(wc)
 {
 	return (__istype(wc, _CTYPE_D));
 }
-DEF_STRONG(iswnumber);
+DEF_WEAK(iswnumber);
 
 #undef iswphonogram	
 int
@@ -146,7 +146,7 @@ iswphonogram(wc)
 {
 	return (__istype(wc, _CTYPE_Q));
 }
-DEF_STRONG(iswphonogram);
+DEF_WEAK(iswphonogram);
 
 #undef iswprint
 int
@@ -155,7 +155,7 @@ iswprint(wc)
 {
 	return (__istype(wc, _CTYPE_R));
 }
-DEF_STRONG(iswprint);
+DEF_WEAK(iswprint);
 
 #undef iswpunct
 int
@@ -164,7 +164,7 @@ iswpunct(wc)
 {
 	return (__istype(wc, _CTYPE_P));
 }
-DEF_STRONG(iswpunct);
+DEF_WEAK(iswpunct);
 
 #undef iswrune
 int
@@ -173,7 +173,7 @@ iswrune(wc)
 {
 	return (__istype(wc, 0xFFFFFF00L));
 }
-DEF_STRONG(iswrune);
+DEF_WEAK(iswrune);
 
 #undef iswspace
 int
@@ -182,7 +182,7 @@ iswspace(wc)
 {
 	return (__istype(wc, _CTYPE_S));
 }
-DEF_STRONG(iswspace);
+DEF_WEAK(iswspace);
 
 #undef iswspecial
 int
@@ -191,7 +191,7 @@ iswspecial(wc)
 {
 	return (__istype(wc, _CTYPE_T));
 }
-DEF_STRONG(iswspecial);
+DEF_WEAK(iswspecial);
 
 #undef iswupper
 int
@@ -200,7 +200,7 @@ iswupper(wc)
 {
 	return (__istype(wc, _CTYPE_U));
 }
-DEF_STRONG(iswupper);
+DEF_WEAK(iswupper);
 
 #undef iswxdigit
 int
@@ -209,7 +209,7 @@ iswxdigit(wc)
 {
 	return (__isctype(wc, _CTYPE_X));
 }
-DEF_STRONG(iswxdigit);
+DEF_WEAK(iswxdigit);
 
 #undef towlower
 wint_t
@@ -218,7 +218,7 @@ towlower(wc)
 {
         return (__tolower(wc));
 }
-DEF_STRONG(towlower);
+DEF_WEAK(towlower);
 
 #undef towupper
 wint_t
@@ -227,4 +227,4 @@ towupper(wc)
 {
         return (__toupper(wc));
 }
-DEF_STRONG(towupper);
+DEF_WEAK(towupper);

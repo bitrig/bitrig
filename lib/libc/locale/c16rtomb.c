@@ -73,9 +73,13 @@ c16rtomb_l(char * __restrict s, char16_t c16, mbstate_t * __restrict ps,
 	return (c32rtomb_l(s, c32, &cs->c32_mbstate, locale));
 }
 
+DEF_WEAK(c16rtomb_l);
+
 size_t
 c16rtomb(char * __restrict s, char16_t c16, mbstate_t * __restrict ps)
 {
 
 	return (c16rtomb_l(s, c16, ps, __get_locale()));
 }
+
+DEF_WEAK(c16rtomb);

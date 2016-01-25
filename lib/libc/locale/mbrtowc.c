@@ -43,7 +43,7 @@ mbrtowc_l(wchar_t * __restrict pwc, const char * __restrict s,
 		ps = &locale->mbrtowc;
 	return (XLOCALE_CTYPE(locale)->__mbrtowc(pwc, s, n, ps));
 }
-DEF_STRONG(mbrtowc_l);
+DEF_WEAK(mbrtowc_l);
 
 size_t
 mbrtowc(wchar_t * __restrict pwc, const char * __restrict s,
@@ -51,4 +51,4 @@ mbrtowc(wchar_t * __restrict pwc, const char * __restrict s,
 {
 	return mbrtowc_l(pwc, s, n, ps, __get_locale());
 }
-DEF_STRONG(mbrtowc);
+DEF_WEAK(mbrtowc);

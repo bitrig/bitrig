@@ -82,11 +82,11 @@ wcstold_l(const wchar_t * __restrict nptr, wchar_t ** __restrict endptr,
 
 	return (val);
 }
-DEF_STRONG(wcstold_l);
+DEF_WEAK(wcstold_l);
 
 long double
 wcstold(const wchar_t * __restrict nptr, wchar_t ** __restrict endptr)
 {
 	return wcstold_l(nptr, endptr, __get_locale());
 }
-DEF_STRONG(wcstold);
+DEF_WEAK(wcstold);

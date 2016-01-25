@@ -75,11 +75,11 @@ wcstof_l(const wchar_t * __restrict nptr, wchar_t ** __restrict endptr,
 
 	return (val);
 }
-DEF_STRONG(wcstof_l);
+DEF_WEAK(wcstof_l);
 
 float
 wcstof(const wchar_t * __restrict nptr, wchar_t ** __restrict endptr)
 {
 	return wcstof_l(nptr, endptr, __get_locale());
 }
-DEF_STRONG(wcstof);
+DEF_WEAK(wcstof);
