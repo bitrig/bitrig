@@ -51,8 +51,7 @@ look(u_char *string, u_char *front, u_char *back)
 
 	/* Convert string to lower case before searching. */
 	for (s = string; *s; s++) {
-		if (isupper(*s))
-			*s = _tolower(*s);
+		*s = tolower(*s);
 	}
 
 	front = binary_search(string, front, back);
@@ -163,7 +162,7 @@ compare(u_char *s1, u_char *s2, u_char *back)
 		if (*s2 == '\n' || s2 == back)
 			ch = '\0';
 		else if (isupper(*s2))
-			ch = _tolower(*s2);
+			ch = tolower(*s2);
 		else
 			ch = *s2;
 		if (*s1 != ch)

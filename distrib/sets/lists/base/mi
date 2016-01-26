@@ -5059,8 +5059,6 @@
 ./usr/share/man/man3/__tfork_thread.3
 ./usr/share/man/man3/_longjmp.3
 ./usr/share/man/man3/_setjmp.3
-./usr/share/man/man3/_tolower.3
-./usr/share/man/man3/_toupper.3
 ./usr/share/man/man3/a64l.3
 ./usr/share/man/man3/abort.3
 ./usr/share/man/man3/abs.3
