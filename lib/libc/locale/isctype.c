@@ -39,14 +39,21 @@
 
 #include <ctype.h>
 
+// This file implements functions which should be inlined
+// into all callers, however for ABI purposes, the
+// functions must export their strong/weak themselves
+// without using PROTO_NORMAL or DEF_(STRONG|WEAK) as the
+// inlined/defined version are affected by those interfaces.
+
 #undef digittoint
+int digittoint(int c) __attribute((weak));
 int
 digittoint(c)
 	int c;
 {
 	return (__sbmaskrune(c, 0xFF));
 }
-DEF_WEAK(digittoint);
+//DEF_WEAK(digittoint);
 
 #undef isalnum
 int
@@ -55,25 +62,27 @@ isalnum(c)
 {
 	return (__sbistype(c, _CTYPE_A|_CTYPE_D));
 }
-DEF_STRONG(isalnum);
+//DEF_STRONG(isalnum);
 
 #undef isalpha
+int isalpha(int c) __attribute((weak));
 int
 isalpha(c)
 	int c;
 {
 	return (__sbistype(c, _CTYPE_A));
 }
-DEF_WEAK(isalpha);
+//DEF_WEAK(isalpha);
 
 #undef isascii
+int isascii(int c) __attribute((weak));
 int
 isascii(c)
 	int c;
 {
 	return ((c & ~0x7F) == 0);
 }
-DEF_WEAK(isascii);
+//DEF_WEAK(isascii);
 
 #undef isblank
 int
@@ -82,7 +91,7 @@ isblank(c)
 {
 	return (__sbistype(c, _CTYPE_B));
 }
-DEF_STRONG(isblank);
+//DEF_STRONG(isblank);
 
 #undef iscntrl
 int
@@ -91,7 +100,7 @@ iscntrl(c)
 {
 	return (__sbistype(c, _CTYPE_C));
 }
-DEF_STRONG(iscntrl);
+//DEF_STRONG(iscntrl);
 
 #undef isdigit
 int
@@ -100,7 +109,7 @@ isdigit(c)
 {
 	return (__isctype(c, _CTYPE_D));
 }
-DEF_STRONG(isdigit);
+//DEF_STRONG(isdigit);
 
 #undef isgraph
 int
@@ -109,25 +118,27 @@ isgraph(c)
 {
 	return (__sbistype(c, _CTYPE_G));
 }
-DEF_STRONG(isgraph);
+//DEF_STRONG(isgraph);
 
 #undef ishexnumber 
+int ishexnumber(int c) __attribute((weak));
 int
 ishexnumber(c)
 	int c;
 {
 	return (__sbistype(c, _CTYPE_X));
 }
-DEF_WEAK(ishexnumber);
+//DEF_WEAK(ishexnumber);
 
 #undef isideogram
+int isideogram(int c) __attribute((weak));
 int
 isideogram(c)
 	int c;
 {
 	return (__sbistype(c, _CTYPE_I));
 }
-DEF_WEAK(isideogram);
+//DEF_WEAK(isideogram);
 
 #undef islower
 int
@@ -136,25 +147,27 @@ islower(c)
 {
 	return (__sbistype(c, _CTYPE_L));
 }
-DEF_STRONG(islower);
+//DEF_STRONG(islower);
 
 #undef isnumber
+int isnumber(int c) __attribute((weak));
 int
 isnumber(c)
 	int c;
 {
 	return (__sbistype(c, _CTYPE_D));
 }
-DEF_WEAK(isnumber);
+//DEF_WEAK(isnumber);
 
 #undef isphonogram	
+int isphonogram(int c) __attribute((weak));
 int
 isphonogram(c)
 	int c;
 {
 	return (__sbistype(c, _CTYPE_Q));
 }
-DEF_WEAK(isphonogram);
+//DEF_WEAK(isphonogram);
 
 #undef isprint
 int
@@ -163,7 +176,7 @@ isprint(c)
 {
 	return (__sbistype(c, _CTYPE_R));
 }
-DEF_STRONG(isprint);
+//DEF_STRONG(isprint);
 
 #undef ispunct
 int
@@ -172,16 +185,17 @@ ispunct(c)
 {
 	return (__sbistype(c, _CTYPE_P));
 }
-DEF_STRONG(ispunct);
+//DEF_STRONG(ispunct);
 
 #undef isrune
+int isrune(int c) __attribute((weak));
 int
 isrune(c)
 	int c;
 {
 	return (__sbistype(c, 0xFFFFFF00L));
 }
-DEF_WEAK(isrune);
+//DEF_WEAK(isrune);
 
 #undef isspace
 int
@@ -190,16 +204,17 @@ isspace(c)
 {
 	return (__sbistype(c, _CTYPE_S));
 }
-DEF_STRONG(isspace);
+//DEF_STRONG(isspace);
 
 #undef isspecial
+int isspecial(int c) __attribute((weak));
 int
 isspecial(c)
 	int c;
 {
 	return (__sbistype(c, _CTYPE_T));
 }
-DEF_WEAK(isspecial);
+//DEF_WEAK(isspecial);
 
 #undef isupper
 int
@@ -208,7 +223,7 @@ isupper(c)
 {
 	return (__sbistype(c, _CTYPE_U));
 }
-DEF_STRONG(isupper);
+//DEF_STRONG(isupper);
 
 #undef isxdigit
 int
@@ -217,16 +232,17 @@ isxdigit(c)
 {
 	return (__isctype(c, _CTYPE_X));
 }
-DEF_STRONG(isxdigit);
+//DEF_STRONG(isxdigit);
 
 #undef toascii
+int toascii(int c) __attribute((weak));
 int
 toascii(c)
 	int c;
 {
 	return (c & 0x7F);
 }
-DEF_WEAK(toascii);
+//DEF_WEAK(toascii);
 
 #undef tolower
 int
@@ -235,7 +251,7 @@ tolower(c)
 {
 	return (__sbtolower(c));
 }
-DEF_STRONG(tolower);
+//DEF_STRONG(tolower);
 
 #undef toupper
 int
@@ -244,4 +260,4 @@ toupper(c)
 {
 	return (__sbtoupper(c));
 }
-DEF_STRONG(toupper);
+//DEF_STRONG(toupper);
