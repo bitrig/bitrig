@@ -1,4 +1,4 @@
-/*	$OpenBSD: msdosfs_vnops.c,v 1.105 2016/01/13 10:00:55 mpi Exp $	*/
+/*	$OpenBSD: msdosfs_vnops.c,v 1.106 2016/01/27 17:09:41 stefan Exp $	*/
 /*	$NetBSD: msdosfs_vnops.c,v 1.63 1997/10/17 11:24:19 ws Exp $	*/
 
 /*-
@@ -507,10 +507,9 @@ msdosfs_read(void *v)
 	struct msdosfsmount *pmp = dep->de_pmp;
 	struct uio *uio = ap->a_uio;
 	int isadir, error = 0;
-	uint32_t n, diff, size;
+	uint32_t n, diff, size, on;
 	struct buf *bp;
 	daddr_t cn;
-	long on;
 
 	/*
 	 * If they didn't ask for any data, then we are done.
@@ -528,7 +527,7 @@ msdosfs_read(void *v)
 		cn = de_cluster(pmp, uio->uio_offset);
 		size = pmp->pm_bpcluster;
 		on = uio->uio_offset & pmp->pm_crbomask;
-		n = min((uint32_t) (pmp->pm_bpcluster - on), uio->uio_resid);
+		n = ulmin(pmp->pm_bpcluster - on, uio->uio_resid);
 
 		/*
 		 * de_FileSize is uint32_t, and we know that uio_offset <
@@ -560,7 +559,7 @@ msdosfs_read(void *v)
 			brelse(bp);
 			return (error);
 		}
-		error = uiomovei(bp->b_data + on, (int) n, uio);
+		error = uiomove(bp->b_data + on, n, uio);
 		brelse(bp);
 	} while (error == 0 && uio->uio_resid > 0 && n != 0);
 	if (!isadir && !(vp->v_mount->mnt_flag & MNT_NOATIME))
@@ -575,9 +574,8 @@ int
 msdosfs_write(void *v)
 {
 	struct vop_write_args *ap = v;
-	int n;
-	int croffset;
-	int resid;
+	uint32_t n, croffset;
+	size_t resid;
 	ssize_t overrun;
 	int extended = 0;
 	uint32_t osize;
@@ -706,7 +704,7 @@ msdosfs_write(void *v)
 			}
 		}
 
-		n = min(uio->uio_resid, pmp->pm_bpcluster - croffset);
+		n = ulmin(uio->uio_resid, pmp->pm_bpcluster - croffset);
 		if (uio->uio_offset + n > dep->de_FileSize) {
 			dep->de_FileSize = uio->uio_offset + n;
 			uvm_vnp_setsize(vp, dep->de_FileSize);
@@ -720,7 +718,7 @@ msdosfs_write(void *v)
 		/*
 		 * Copy the data from user space into the buf header.
 		 */
-		error = uiomovei(bp->b_data + croffset, n, uio);
+		error = uiomove(bp->b_data + croffset, n, uio);
 
 		/*
 		 * If they want this synchronous then write it and wait for
@@ -1535,7 +1533,7 @@ msdosfs_readdir(void *v)
 				    sizeof(struct direntry);
 				if (uio->uio_resid < dirbuf.d_reclen)
 					goto out;
-				error = uiomovei(&dirbuf, dirbuf.d_reclen, uio);
+				error = uiomove(&dirbuf, dirbuf.d_reclen, uio);
 				if (error)
 					goto out;
 				offset = dirbuf.d_off;
@@ -1663,7 +1661,7 @@ msdosfs_readdir(void *v)
 				goto out;
 			}
 			wlast = -1;
-			error = uiomovei(&dirbuf, dirbuf.d_reclen, uio);
+			error = uiomove(&dirbuf, dirbuf.d_reclen, uio);
 			if (error) {
 				brelse(bp);
 				goto out;
