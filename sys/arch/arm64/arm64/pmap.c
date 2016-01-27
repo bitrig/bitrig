@@ -630,6 +630,7 @@ pmap_remove_pted(pmap_t pm, struct pte_desc *pted)
 
 	if (pm != pmap_kernel())
 		pool_put(&pmap_pted_pool, pted);
+	splx(s);
 }
 
 
