@@ -1,4 +1,4 @@
-/*	$OpenBSD: rthread.h,v 1.52 2015/05/19 20:50:06 guenther Exp $ */
+/*	$OpenBSD: rthread.h,v 1.55 2016/01/27 08:40:05 kettenis Exp $ */
 /*
  * Copyright (c) 2004,2005 Ted Unangst <tedu@openbsd.org>
  * All Rights Reserved.
@@ -224,6 +224,7 @@ void	_rthread_debug_init(void);
 void	_rthread_dl_lock(int what);
 void	_rthread_bind_lock(int);
 #endif
+void	_thread_malloc_reinit(void);
 
 /* rthread_cancel.c */
 void	_enter_cancel(pthread_t);
