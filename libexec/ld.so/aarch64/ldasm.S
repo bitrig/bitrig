@@ -1,7 +1,5 @@
-/*	$OpenBSD: ldasm.S,v 1.16 2014/07/14 03:54:51 deraadt Exp $ */
-
 /*
- * Copyright (c) 2004 Dale Rahn
+ * Copyright (c) 2016 Dale Rahn
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,51 +24,40 @@
  *
  */
 
-#define DL_DATA_SIZE	(16 * 4)	/* XXX */
+#define DL_DATA_SIZE	(16 * 8)	/* XXX */
 #include <machine/asm.h>
 #include <sys/syscall.h>
 #include <SYS.h>
 
 ENTRY(_dl_start)
-#if 0
-	mov	fp, sp
-	mov	r5, sp
-	mov	lr, r6				@ save lr
-	sub	sp, sp, #4+4+DL_DATA_SIZE
-	add	r7, sp, #4			@ dl_data
+	mov	x29, sp
+	// need to worry about alignment, I think not?
+	mov	x19, sp
+	sub	sp, sp, #8+8+DL_DATA_SIZE	// dl_data size
+	add	x20, sp, #4			// dl_data
+	mov	x21, lr				// save old lr
 
-	mov	r0, fp				@ original stack
-	mov	r1, r7				@ dl_data
+	mov	x0, x29				// original stack
+	mov	x1, x20				// dl_data
 
-	bl	_dl_boot_bind
+	bl _dl_boot_bind
 
-	add	r0, r5, #4			@ argv
-	ldr	r1, [r5, #0x0]			@ envp
-	add	r1, r1, #2
-	add	r1, fp, r1, lsl #2
-	ldr	r2, [r7, #7*4]			@ loff from dl_data
-	mov	r3, r7				@ dl_data
-	bl	_dl_boot
+	add	x0, x29, #8			// argv
+	ldr	x1, [x29]			// load argc
+	add	x1, x0, x1, lsl #3		// envp = argv + argc * 8
+	add	x1, x1, #8			//                        + 8
+	ldr	x2, [x20, #7*8]			// loff from dl_data
+	mov	x3, x20				// dl_data
+	bl _dl_boot
 
-	mov	sp, fp
-	mov	fp, #0
-	mov	lr, r6
+	mov	sp, x29				// move stack back
+	mov	x29, xzr			// clear frame back pointer
+	mov	lr, xzr
 
-	mov	r1, r0
-	ldr	r2, .L_GOT
-#endif
-1:
-#if 0
-	add	r2, pc, r2
-	ldr	r0, .L_dl_dtors
-	add	r0, r0, r2 
-	mov	pc, r1
-#endif
-.L_GOT:
-	.xword	_GLOBAL_OFFSET_TABLE_-(1b+8)
-.L_dl_dtors:
-	.xword	_dl_dtors /*@(GOTOFF) */
+	adrp	x8, :got:_dl_dtors
+	ldr	x2, [ x8, :got_lo12:_dl_dtors]
 
+	br x0
 
 ENTRY(_dl_bind_start)
 	/*
@@ -78,6 +65,33 @@ ENTRY(_dl_bind_start)
 	 * lr is pointer to pltgot[2], which is entry -1 of got plt reloc.
 	 * return address is on stack
 	 */
+	stp	x29, x30, [sp, #-160]!
+	stp	 x0,  x1, [sp,#16]
+	stp	 x2,  x3, [sp,#32]
+	stp	 x4,  x5, [sp,#48]
+	stp	 x6,  x7, [sp,#64]
+	stp	 x8,  x9, [sp,#80]
+	stp	x10, x11, [sp,#96]
+	stp	x12, x13, [sp,#112]
+	stp	x14, x15, [sp,#128]
+	str	x18,      [sp,#144]
+
+	mov	x1, x16		// reladdr
+
+
+	ldp	 x0,  x1, [sp,#16]
+	ldp	 x2,  x3, [sp,#32]
+	ldp	 x4,  x5, [sp,#48]
+	ldp	 x6,  x7, [sp,#64]
+	ldp	 x8,  x9, [sp,#80]
+	ldp	x10, x11, [sp,#96]
+	ldp	x12, x13, [sp,#112]
+	ldp	x14, x15, [sp,#128]
+	ldr	x18,      [sp,#144]
+	ldp	x29, x30, [sp], #-160
+	br x16
+
+
 #if 0
 	stmdb	sp!, {r0-r4,sl,fp}
 

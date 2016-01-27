@@ -31,7 +31,7 @@
 
 #define	DL_MALLOC_ALIGN	4	/* Arch constraint or otherwise */
 
-#define	MACHID	EM_ARM	/* ELF e_machine ID value checked */
+#define	MACHID	EM_AARCH64	/* ELF e_machine ID value checked */
 
 #define	RELTYPE	Elf64_Rela
 #define	RELSIZE	sizeof(Elf64_Rela)
@@ -57,20 +57,21 @@ _dl_mmap(void *addr, unsigned int len, unsigned int prot,
 static inline void
 RELOC_REL(Elf_Rel *r, const Elf_Sym *s, Elf_Addr *p, unsigned long v)
 {
-	if (ELF_R_TYPE(r->r_info) == R_ARM_RELATIVE) {
-		*p += v;
-	} else {
-		/* XXX - printf might not work here, but we give it a shot. */
-		_dl_printf("Unknown bootstrap relocation.\n");
-		_dl_exit(6);
-	}
+	_dl_exit(18);
 }
 
 static inline void
 RELOC_RELA(Elf64_Rela *r, const Elf64_Sym *s, Elf64_Addr *p, unsigned long v,
     Elf_Addr *pltgot)
 {
-	_dl_exit(20);
+	if (ELF64_R_TYPE(r->r_info) == R_AARCH64_RELATIVE) {
+		*p = v + r->r_addend;
+	} else if (ELF64_R_TYPE(r->r_info) == R_AARCH64_GLOB_DAT) {
+		*p = v + s->st_value + r->r_addend;
+	} else {
+		_dl_printf("unknown bootstrap relocation\n");
+		_dl_exit(6);
+	}
 }
 
 #define RELOC_GOT(obj, offs)
