@@ -1041,3 +1041,18 @@ pmap_bootstrap_bs_map(bus_space_tag_t t, bus_addr_t bpa, bus_size_t size,
 	return 0;
 }
 
+// debug function, not certain where this should go
+
+void
+dumpregs(struct trapframe *frame)
+{
+	int i;
+	for (i = 0; i < 30; i+=2) {
+		printf("x%02d: 0x%016llx 0x%016llx\n",
+		    i, frame->tf_x[i], frame->tf_x[i+1]);
+	}
+	printf("sp: 0x%016llx\n", frame->tf_sp);
+	printf("lr: 0x%016llx\n", frame->tf_lr);
+	printf("pc: 0x%016llx\n", frame->tf_elr);
+	printf("spsr: 0x%016llx\n", frame->tf_spsr);
+}

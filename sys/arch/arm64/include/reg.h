@@ -18,7 +18,7 @@
 #define _MACHINE_REG_H_
 
 struct reg {
-	unsigned long x[29];
+	unsigned long x[30];
 	unsigned long x_sp;
 	unsigned long x_lr;
 	unsigned long x_pc;

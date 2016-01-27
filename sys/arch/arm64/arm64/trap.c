@@ -121,6 +121,8 @@ svc_handler(struct trapframe *frame)
 }
 #endif
 
+void dumpregs(struct trapframe*);
+
 static void
 data_abort(struct trapframe *frame, uint64_t esr, int lower, int exe)
 {
@@ -197,6 +199,7 @@ data_abort(struct trapframe *frame, uint64_t esr, int lower, int exe)
 			else
 				sig = SIGSEGV;
 			sv.sival_ptr = (u_int64_t *)far;
+			dumpregs(frame);
 
 			trapsignal(p, sig, 0, SEGV_ACCERR, sv);
 		} else {
@@ -304,8 +307,16 @@ do_el0_sync(struct trapframe *frame)
 		data_abort(frame, esr, 1, 0);
 		break;
 	default:
-		panic("Unknown userland exception %x esr_el1 %lx\n", exception,
-		    esr);
+		// panic("Unknown userland exception %x esr_el1 %lx\n", exception,
+		//    esr);
+		// USERLAND MUST NOT PANIC MACHINE 
+		{
+			// only here to debug !?!?
+			void dumpregs(struct trapframe *frame);
+			dumpregs(frame);
+		}
+		sigexit(curproc, SIGILL);
+		userret(curproc);
 	}
 }
 

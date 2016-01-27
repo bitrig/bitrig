@@ -24,7 +24,7 @@
 #include <machine/pcb.h>
 
 static inline void
-__arm_set_tcb(uint64_t tcb) {
+__aarch64_set_tcb(uint64_t tcb) {
 	__asm volatile("msr tpidr_el0, %x0" :: "r" (tcb));
 	return ;
 }
@@ -33,7 +33,7 @@ __arm_set_tcb(uint64_t tcb) {
 #define TCB_SET(p, addr)        \
 	do {								\
 	(((struct pcb *)(p)->p_addr)->pcb_tcb = (uint64_t)(addr));	\
-	__arm_set_tcb((uint64_t)addr);						\
+	__aarch64_set_tcb((uint64_t)addr);						\
 	} while (0)
 
 #else /* _KERNEL */
@@ -42,7 +42,7 @@ __arm_set_tcb(uint64_t tcb) {
 #define TLS_VARIANT	1
 
 static inline uint64_t
-__arm_read_tcb(void) {
+__aarch64_read_tcb(void) {
         uint64_t tcb;
 	__asm volatile("mrs %x0, tpidr_el0": "=r" (tcb));
 
@@ -50,10 +50,10 @@ __arm_read_tcb(void) {
 }
 
 #define TCB_GET(p)              \
-	((void *)__arm_read_tcb())
+	((void *)__aarch64_read_tcb())
 
 #define TCB_GET_MEMBER(member)	\
-	(((struct thread_control_block *)__arm_read_tcb())->member)
+	(((struct thread_control_block *)__aarch64_read_tcb())->member)
 
 #endif /* _KERNEL */
 
