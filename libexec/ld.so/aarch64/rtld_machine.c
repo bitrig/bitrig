@@ -41,7 +41,7 @@
 #include "tls.h"
 
 void _dl_bind_start(void); /* XXX */
-Elf_Addr _dl_bind(elf_object_t *object, unsigned long reloff);
+Elf_Addr _dl_bind(elf_object_t *object, int index);
 #define _RF_S		0x80000000		/* Resolve symbol */
 #define _RF_A		0x40000000		/* Use addend */
 #define _RF_P		0x20000000		/* Location relative */
@@ -58,9 +58,9 @@ static int reloc_target_flags[] = {
 	[ R_AARCH64_GLOB_DAT ] = 
 	  _RF_V|_RF_S|_RF_A|		_RF_SZ(64) | _RF_RS(0),	/* GLOB_DAT */
 	[ R_AARCH64_JUMP_SLOT ] = 
-	  _RF_V|_RF_S|		_RF_SZ(64) | _RF_RS(0),	/* JUMP_SLOT */
+	  _RF_V|_RF_S|			_RF_SZ(64) | _RF_RS(0),	/* JUMP_SLOT */
 	[ R_AARCH64_RELATIVE ] = 
-	  _RF_V|_RF_S|_RF_P|_RF_A|	_RF_SZ(64) | _RF_RS(0),	/* REL64 */
+	  _RF_V|_RF_B|_RF_A|		_RF_SZ(64) | _RF_RS(0),	/* REL64 */
 	[ R_AARCH64_TLSDESC ] = 
 	  _RF_V|_RF_S,
 	[ R_AARCH64_TLS_TPREL64 ] = 
@@ -112,7 +112,7 @@ _dl_md_reloc(elf_object_t *object, int rel, int relsz)
 
 	loff = object->obj_base;
 	numrel = object->Dyn.info[relsz] / sizeof(Elf_RelA);
-	relrel = rel == DT_REL ? object->relcount : 0;
+	relrel = rel == DT_RELA ? object->relcount : 0;
 	rels = (Elf_RelA *)(object->Dyn.info[rel]);
 
 	if (rels == NULL)
@@ -175,11 +175,11 @@ _dl_md_reloc(elf_object_t *object, int rel, int relsz)
 		where = (Elf_Addr *)(rels->r_offset + loff);
 
 		if (RELOC_USE_ADDEND(type))
-#ifdef LDSO_ARCH_IS_RELA_
+//#ifdef LDSO_ARCH_IS_RELA_
 			value = rels->r_addend;
-#else
-			value = *where & RELOC_VALUE_BITMASK(type);
-#endif
+//#else
+//			value = *where & RELOC_VALUE_BITMASK(type);
+//#endif
 		else
 			value = 0;
 
@@ -246,6 +246,12 @@ resolve_failed:
 			if (value == 0)
 				goto resolve_failed;
 			*where = (Elf_Addr) refobj->tls_index;
+			continue;
+		}
+		if (type == R_TYPE(TLS_TPREL64)) {
+			if (value == 0)
+				goto resolve_failed;
+			*where = (Elf_Addr) this->st_value;
 			continue;
 		}
 #if 0
@@ -331,7 +337,7 @@ _dl_md_reloc_got(elf_object_t *object, int lazy)
 	int i, num;
 	Elf_RelA *rel;
 
-	if (object->Dyn.info[DT_PLTREL] != DT_REL)
+	if (object->Dyn.info[DT_PLTREL] != DT_RELA)
 		return (0);
 
 	object->got_addr = 0;
@@ -400,7 +406,7 @@ _dl_bind(elf_object_t *object, int relidx)
 	Elf_Addr ooff, newval;
 	sigset_t savedmask;
 
-	rel = ((Elf_Rel *)object->Dyn.info[DT_JMPREL]) + (relidx);
+	rel = ((Elf_RelA *)object->Dyn.info[DT_JMPREL]) + (relidx);
 
 	sym = object->dyn.symtab;
 	sym += ELF_R_SYM(rel->r_info);
