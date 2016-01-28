@@ -1835,6 +1835,7 @@ strptime_l
 strtof_l
 strtoimax_l
 strtol_l
+strtod_l
 strtold_l
 strtoll_l
 strtoul_l
