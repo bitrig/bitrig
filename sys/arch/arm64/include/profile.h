@@ -19,7 +19,7 @@
 #define MCOUNT_ASM_NAME "__mcount"
 
 #ifdef __PIC__
-#define	PLTSYM		"(PLT)"
+#define	PLTSYM		"" /* XXX -aarch64 defaults to PLT? */
 #else 
 #define	PLTSYM		""
 #endif
