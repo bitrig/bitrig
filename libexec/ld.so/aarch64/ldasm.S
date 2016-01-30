@@ -172,3 +172,7 @@ _dl_sigprocmask:
 .L_cerr:
 	neg	w0, w0		/* r0 = -errno */
 	ret
+
+ENTRY(_rtld_tlsdesc)
+	ldr	x0, [x0, #8]
+	ret

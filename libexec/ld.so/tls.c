@@ -62,6 +62,14 @@ _dl_allocate_tls_offset(elf_object_t *object)
 		return;
 	}
 
+#if TLS_DESC
+	if (object->initial_module == 0) {
+		DL_DEB(("Unable to allocate TLS DESC on dlopened libs\n"));
+		// write more code!
+		_dl_exit(41);
+	}
+#endif
+
 #if TLS_VARIANT == 1
 	/* round up to the required alignment, then allocate the space */
 	object->tls_offset = ELF_ROUND(_dl_tls_free_idx, object->tls_align);

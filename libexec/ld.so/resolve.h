@@ -159,6 +159,7 @@ struct elf_object {
 	const void *tls_static_data;
 	int tls_done;
 	int tls_offset;
+	int initial_module; /* tls needs to know if this is startup or dlopen */
 
 	/* last symbol lookup on this object, to avoid mutiple searches */
 	int lastlookup_head;

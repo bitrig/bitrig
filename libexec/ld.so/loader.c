@@ -546,6 +546,7 @@ _dl_boot(const char **argv, char **envp, const long dyn_loff, long *dl_data)
 		for (obj = _dl_objects->next;
 		    obj != NULL;
 		    obj = obj->next ) {
+			obj->initial_module = 1;
 			_dl_allocate_tls_offset(obj);
 		}
 		DL_DEB(("tls_free_idx %d\n", _dl_tls_free_idx ));

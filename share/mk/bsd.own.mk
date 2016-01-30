@@ -111,7 +111,7 @@ STATIC+=-nopie
 
 # don't try to generate PIC versions of libraries on machines
 # which don't support PIC.
-.if ${MACHINE_ARCH} == "m88k" || ${MACHINE_ARCH} == "aarch64"
+.if ${MACHINE_ARCH} == "m88k"
 NOPIC=
 .endif
 

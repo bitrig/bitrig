@@ -97,6 +97,8 @@ void _dl_reloc_plt(Elf_Word *where, Elf_Addr value, Elf_RelA *rel);
 
 #define nitems(_a)     (sizeof((_a)) / sizeof((_a)[0]))
 
+long _rtld_tlsdesc(long);
+
 int
 _dl_md_reloc(elf_object_t *object, int rel, int relsz)
 {
@@ -245,24 +247,18 @@ resolve_failed:
 		if (type == R_TYPE(TLS_DTPMOD64)) {
 			if (value == 0)
 				goto resolve_failed;
-			*where = (Elf_Addr) refobj->tls_index;
+			*where = (Elf_Addr) refobj->tls_index + rels->r_addend;
 			continue;
 		}
 		if (type == R_TYPE(TLS_TPREL64)) {
 			if (value == 0)
 				goto resolve_failed;
-			*where = (Elf_Addr) this->st_value;
+			*where = (Elf_Addr) this->st_value +
+			    (Elf_Addr) refobj->tls_offset +
+			    sizeof(struct thread_control_block);
 			continue;
 		}
-#if 0
-/* XXX */
-		if (type == R_TYPE(TLS_DTPOFF64)) {
-			if (value == 0)
-				goto resolve_failed;
-			*where = (Elf_Addr) this->st_value;
-			continue;
-		}
-		if (type == R_TYPE(TLS_TPOFF64)) {
+		if (type == R_TYPE(TLSDESC)) {
 			if (value == 0)
 				goto resolve_failed;
 			if (refobj->tls_done == 0) {
@@ -270,12 +266,18 @@ resolve_failed:
 				  refobj->load_name);
 				_dl_exit(21);
 			}
-			*where = (Elf_Addr) this->st_value +
-			    (Elf_Addr) refobj->tls_offset +
-			    sizeof(struct thread_control_block);
+			if (refobj->initial_module == 1) {
+				where[0] = (Elf_Addr)_rtld_tlsdesc;
+				where[1] = (Elf_Addr) this->st_value +
+				    (Elf_Addr) refobj->tls_offset + 
+				    (Elf_Addr) rels->r_addend +
+				    sizeof(struct thread_control_block);
+			} else {
+				_dl_exit(23);
+			}
+
 			continue;
 		}
-#endif
 
 		if (RELOC_PC_RELATIVE(type))
 			value -= (Elf_Addr)where;
