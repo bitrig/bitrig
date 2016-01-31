@@ -1,4 +1,4 @@
-/*	$OpenBSD: if_pppx.c,v 1.49 2016/01/14 09:20:31 mpi Exp $ */
+/*	$OpenBSD: if_pppx.c,v 1.50 2016/01/31 13:54:13 stefan Exp $ */
 
 /*
  * Copyright (c) 2010 Claudio Jeker <claudio@openbsd.org>
@@ -272,7 +272,8 @@ pppxread(dev_t dev, struct uio *uio, int ioflag)
 {
 	struct pppx_dev *pxd = pppx_dev2pxd(dev);
 	struct mbuf *m, *m0;
-	int error = 0, s;
+	int error = 0;
+	int s;
 	size_t len;
 
 	if (!pxd)
@@ -292,7 +293,7 @@ pppxread(dev_t dev, struct uio *uio, int ioflag)
 	}
 
 	while (m0 != NULL && uio->uio_resid > 0 && error == 0) {
-		len = szmin(uio->uio_resid, m0->m_len);
+		len = ulmin(uio->uio_resid, m0->m_len);
 		if (len != 0)
 			error = uiomove(mtod(m0, caddr_t), len, uio);
 		m = m_free(m0);
@@ -342,7 +343,7 @@ pppxwrite(dev_t dev, struct uio *uio, int ioflag)
 	mp = &top;
 
 	while (error == 0 && uio->uio_resid > 0) {
-		m->m_len = (u_int)szmin(mlen, uio->uio_resid);
+		m->m_len = ulmin(mlen, uio->uio_resid);
 		error = uiomove(mtod (m, caddr_t), m->m_len, uio);
 		*mp = m;
 		mp = &m->m_next;
