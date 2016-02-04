@@ -1,4 +1,4 @@
-/*	$OpenBSD: ufs_vnops.c,v 1.122 2015/09/23 15:37:26 tedu Exp $	*/
+/*	$OpenBSD: ufs_vnops.c,v 1.124 2016/02/04 12:45:03 mikeb Exp $	*/
 /*	$NetBSD: ufs_vnops.c,v 1.18 1996/05/11 18:28:04 mycroft Exp $	*/
 
 /*-
@@ -109,24 +109,6 @@ int ufs_do_rename(void *v);
 
 int ufs_chmod(struct vnode *, int, struct ucred *, struct proc *);
 int ufs_chown(struct vnode *, uid_t, gid_t, struct ucred *, struct proc *);
-
-union _qcvt {
-	int64_t	qcvt;
-	int32_t val[2];
-};
-
-#define SETHIGH(q, h) { \
-	union _qcvt tmp; \
-	tmp.qcvt = (q); \
-	tmp.val[_QUAD_HIGHWORD] = (h); \
-	(q) = tmp.qcvt; \
-}
-#define SETLOW(q, l) { \
-	union _qcvt tmp; \
-	tmp.qcvt = (q); \
-	tmp.val[_QUAD_LOWWORD] = (l); \
-	(q) = tmp.qcvt; \
-}
 
 /*
  * A virgin directory (no blushing please).
@@ -2121,8 +2103,8 @@ ufs_vinit(struct mount *mntp, struct vops *specops, struct vops *fifoops,
 	 * Initialize modrev times
 	 */
 	getmicrouptime(&mtv);
-	SETHIGH(ip->i_modrev, mtv.tv_sec);
-	SETLOW(ip->i_modrev, mtv.tv_usec * 4294);
+	ip->i_modrev = (u_quad_t)mtv.tv_sec << 32;
+	ip->i_modrev |= (u_quad_t)mtv.tv_usec * 4294;
 	*vpp = vp;
 	return (0);
 }
