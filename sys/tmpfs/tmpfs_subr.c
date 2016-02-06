@@ -1,4 +1,4 @@
-/*	$OpenBSD: tmpfs_subr.c,v 1.13 2015/02/10 21:56:10 miod Exp $	*/
+/*	$OpenBSD: tmpfs_subr.c,v 1.15 2016/02/06 16:10:23 stefan Exp $	*/
 /*	$NetBSD: tmpfs_subr.c,v 1.79 2012/03/13 18:40:50 elad Exp $	*/
 
 /*
@@ -1301,7 +1301,7 @@ tmpfs_uiomove(tmpfs_node_t *node, struct uio *uio, vsize_t len)
 	if (pgoff + len < PAGE_SIZE) {
 		va = tmpfs_uio_lookup(node, pgnum);
 		if (va != (vaddr_t)NULL)
-			return uiomove((void *)(va + pgoff), (size_t)len, uio);
+			return uiomove((void *)va + pgoff, len, uio);
 	}
 
 	if (len >= TMPFS_UIO_MAXBYTES) {
@@ -1325,7 +1325,7 @@ tmpfs_uiomove(tmpfs_node_t *node, struct uio *uio, vsize_t len)
 		return error;
 	}
 
-	error = uiomove((void *)(va + pgoff), (size_t)sz, uio);
+	error = uiomove((void *)va + pgoff, sz, uio);
 	if (error == 0 && pgoff + sz < PAGE_SIZE)
 		tmpfs_uio_cache(node, pgnum, va);
 	else
