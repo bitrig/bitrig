@@ -143,18 +143,8 @@ md_prep_disklabel() {
 	disklabel_autolayout $_disk $_f || return
 	[[ -s $_f ]] && return
 
-	cat <<__EOT
-
-You will now create a Bitrig disklabel inside the Bitrig MBR
-partition. The disklabel defines how Bitrig splits up the MBR partition
-into Bitrig partitions in which filesystems and swap space are created.
-You must provide each filesystem's mountpoint in this program.
-
-The offsets used in the disklabel are ABSOLUTE, i.e. relative to the
-start of the disk, NOT the start of the Bitrig MBR partition.
-
-__EOT
-
+	# Edit disklabel manually.
+	# Abandon all hope, ye who enter here.
 	disklabel -F $_f -E $_disk
 }
 
