@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.37 2015/08/29 20:51:46 deraadt Exp $	*/
+/*	$OpenBSD: video.c,v 1.38 2016/02/08 17:21:10 stefan Exp $	*/
 
 /*
  * Copyright (c) 2008 Robert Nagy <robert@openbsd.org>
@@ -171,7 +171,7 @@ videoread(dev_t dev, struct uio *uio, int ioflag)
 	}
 
 	/* move no more than 1 frame to userland, as per specification */
-	size = szmin(sc->sc_fsize, uio->uio_resid);
+	size = ulmin(uio->uio_resid, sc->sc_fsize);
 	error = uiomove(sc->sc_fbuffer, size, uio);
 	sc->sc_frames_ready--;
 	if (error)
