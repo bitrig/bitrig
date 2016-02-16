@@ -111,3 +111,8 @@ file	dev/acpi/acpipwrres.c		acpipwrres needs-flag
 device	aibs
 attach	aibs at acpi
 file	dev/acpi/atk0110.c		aibs
+
+# DMAR device
+device	acpidmar
+attach	acpidmar at acpi
+file	dev/acpi/acpidmar.c		acpidmar

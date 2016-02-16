@@ -147,6 +147,15 @@ struct bus_dma_tag pci_bus_dma_tag = {
 	_bus_dmamem_mmap,
 };
 
+extern void acpidmar_pci_hook(pci_chipset_tag_t, struct pci_attach_args *);
+
+int
+pci_probe_device_hook(pci_chipset_tag_t pc, struct pci_attach_args *pa)
+{
+	acpidmar_pci_hook(pc, pa);
+	return (0);
+}
+
 void
 pci_attach_hook(struct device *parent, struct device *self,
     struct pcibus_attach_args *pba)
