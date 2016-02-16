@@ -32,25 +32,27 @@
 #define _xbit(x,y) (((x)>> (y)) & 1)
 #define _xfld(x,y) (uint32_t)(((x)>> y##_SHIFT) & y##_MASK)
 
-#define DMAR_VER_REG		0x00		/* 32:Arch version supported by this IOMMU */
-#define DMAR_RTADDR_REG		0x20		/* 64:Root entry table */
-#define DMAR_FEDATA_REG		0x3c		/* 32:Fault event interrupt data register */
-#define DMAR_FEADDR_REG		0x40		/* 32:Fault event interrupt addr register */
-#define DMAR_FEUADDR_REG	0x44		/* 32:Upper address register */
-#define DMAR_AFLOG_REG		0x58		/* 64:Advanced Fault control */
-#define DMAR_PMEN_REG		0x64		/* 32:Enable Protected Memory Region */
-#define DMAR_PLMBASE_REG	0x68		/* 32:PMRR Low addr */
-#define DMAR_PLMLIMIT_REG	0x6c		/* 32:PMRR low limit */
-#define DMAR_PHMBASE_REG	0x70		/* 64:pmrr high base addr */
-#define DMAR_PHMLIMIT_REG	0x78		/* 64:pmrr high limit */
-#define DMAR_ICS_REG		0x9C		/* 32:Invalidation complete status register */
-#define DMAR_IECTL_REG		0xa0		/* 32:Invalidation event control register */
-#define DMAR_IEDATA_REG		0xa4		/* 32:Invalidation event data register */
-#define DMAR_IEADDR_REG		0xa8		/* 32:Invalidation event address register */
-#define DMAR_IEUADDR_REG	0xac		/* 32:Invalidation event upper address register */
-#define DMAR_IRTA_REG		0xb8		/* 64:Interrupt remapping table addr register */
+#define VTD_AWTOLEVEL(x)    (((x) - 30) / VTD_STRIDE_SIZE)
+#define VTD_LEVELTOAW(x)    (((x) * VTD_STRIDE_SIZE) + 30)
 
-#define DMAR_CAP_REG		0x08		/* 64:Hardware supported capabilities */
+#define DMAR_VER_REG		0x00    /* 32:Arch version supported by this IOMMU */
+#define DMAR_RTADDR_REG		0x20    /* 64:Root entry table */
+#define DMAR_FEDATA_REG		0x3c    /* 32:Fault event interrupt data register */
+#define DMAR_FEADDR_REG		0x40    /* 32:Fault event interrupt addr register */
+#define DMAR_FEUADDR_REG	0x44    /* 32:Upper address register */
+#define DMAR_AFLOG_REG		0x58    /* 64:Advanced Fault control */
+#define DMAR_PMEN_REG		0x64    /* 32:Enable Protected Memory Region */
+#define DMAR_PLMBASE_REG	0x68    /* 32:PMRR Low addr */
+#define DMAR_PLMLIMIT_REG	0x6c    /* 32:PMRR low limit */
+#define DMAR_PHMBASE_REG	0x70    /* 64:pmrr high base addr */
+#define DMAR_PHMLIMIT_REG	0x78    /* 64:pmrr high limit */
+#define DMAR_ICS_REG		0x9C    /* 32:Invalidation complete status register */
+#define DMAR_IECTL_REG		0xa0    /* 32:Invalidation event control register */
+#define DMAR_IEDATA_REG		0xa4    /* 32:Invalidation event data register */
+#define DMAR_IEADDR_REG		0xa8    /* 32:Invalidation event address register */
+#define DMAR_IEUADDR_REG	0xac    /* 32:Invalidation event upper address register */
+#define DMAR_IRTA_REG		0xb8    /* 64:Interrupt remapping table addr register */
+#define DMAR_CAP_REG		0x08    /* 64:Hardware supported capabilities */
 #define   CAP_PI		(1LL << 59)
 #define   CAP_FL1GP		(1LL << 56)
 #define   CAP_DRD		(1LL << 55)
@@ -74,7 +76,7 @@
 #define   cap_mgaw(x)		(_xfld(x,CAP_MGAW) + 1)
 #define   CAP_SAGAW_MASK	0x1F
 #define   CAP_SAGAW_SHIFT	8LL
-#define   cap_sagaw(x)		_xfld(x,CAP_SAGAW) 
+#define   cap_sagaw(x)		_xfld(x,CAP_SAGAW)
 #define   CAP_CM		(1LL << 7)
 #define   CAP_PHMR		(1LL << 6)
 #define   CAP_PLMR		(1LL << 5)
@@ -84,7 +86,7 @@
 #define   CAP_ND_SHIFT		0x00
 #define   cap_nd(x)		(16 << (((x) & CAP_ND_MASK) << 1))
 
-#define DMAR_ECAP_REG		0x10		/* 64:Extended capabilities supported */
+#define DMAR_ECAP_REG		0x10	/* 64:Extended capabilities supported */
 #define   ECAP_PSS_MASK		0x1F
 #define   ECAP_PSS_SHIFT	35
 #define   ECAP_EAFS		(1LL << 34)
@@ -212,9 +214,9 @@
 #define IIG_DOMAIN	IOTLB_IIRG(IOTLB_DOMAIN)
 #define IIG_PAGE	IOTLB_IIRG(IOTLB_PAGE)
 
-#define DMAR_IQH_REG	0x80		/* 64:Invalidation queue head register */
-#define DMAR_IQT_REG	0x88		/* 64:Invalidation queue tail register */
-#define DMAR_IQA_REG	0x90		/* 64:Invalidation queue addr register */
+#define DMAR_IQH_REG	0x80	/* 64:Invalidation queue head register */
+#define DMAR_IQT_REG	0x88	/* 64:Invalidation queue tail register */
+#define DMAR_IQA_REG	0x90	/* 64:Invalidation queue addr register */
 #define IQA_QS_256	0	/* 256 entries */
 #define IQA_QS_512	1	/* 512 */
 #define IQA_QS_1K	2	/* 1024 */
@@ -353,8 +355,7 @@ context_domain_id(struct context_entry *ce)
 static inline int
 context_address_width(struct context_entry *ce)
 {
-	return 30 + ((ce->hi >> CTX_H_AW_SHIFT) & CTX_H_AW_MASK) *
-	    VTD_STRIDE_SIZE;
+	return VTD_LEVELTOAW((ce->hi >> CTX_H_AW_SHIFT) & CTX_H_AW_MASK);
 }
 
 /* Check if context entry is valid */
@@ -423,8 +424,8 @@ struct fault_entry
  * GAW1 = (21.29) (PDE)
  * GAW2 = (30.38) (PDPE)
  * GAW3 = (39.47) (PML4)
- * GAW4 = (48.57)
- * GAW5 = (58.63)
+ * GAW4 = (48.57) (n/a)
+ * GAW5 = (58.63) (n/a)
  */
 struct pte_entry {
 	uint64_t	val;
@@ -493,6 +494,22 @@ enum {
 	IOTLB_GLOBAL = 1,
 	IOTLB_DOMAIN,
 	IOTLB_PAGE,
+};
+
+enum {
+	VTD_FAULT_ROOT_P = 0x1,         /* P field in root entry is 0 */
+	VTD_FAULT_CTX_P = 0x2,          /* P field in context entry is 0 */
+	VTD_FAULT_CTX_INVAL = 0x3,      /* context AW/TT/SLPPTR invalid */
+	VTD_FAULT_LIMIT = 0x4,          /* Address is outside of MGAW */
+	VTD_FAULT_WRITE = 0x5,          /* Address-translation fault, non-writable */
+	VTD_FAULT_READ = 0x6,           /* Address-translation fault, non-readable */
+	VTD_FAULT_PTE_INVAL = 0x7,      /* page table hw access error */
+	VTD_FAULT_ROOT_INVAL = 0x8,     /* root table hw access error */
+	VTD_FAULT_CTX_TBL_INVAL = 0x9,  /* context entry hw access error */
+	VTD_FAULT_ROOT_RESERVED = 0xa,  /* non-zero reserved field in root entry */
+	VTD_FAULT_CTX_RESERVED = 0xb,   /* non-zero reserved field in context entry */
+	VTD_FAULT_PTE_RESERVED = 0xc,   /* non-zero reserved field in paging entry */
+	VTD_FAULT_CTX_TT = 0xd,         /* invalid translation type */
 };
 
 #endif

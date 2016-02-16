@@ -112,7 +112,7 @@ device	aibs
 attach	aibs at acpi
 file	dev/acpi/atk0110.c		aibs
 
-# DMAR device
-device	acpidmar
-attach	acpidmar at acpi
-file	dev/acpi/acpidmar.c		acpidmar
+# DMA Remapping Table
+device  acpidmar
+attach  acpidmar at acpi
+file    dev/acpi/acpidmar.c		acpidmar
