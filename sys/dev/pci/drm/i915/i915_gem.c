@@ -50,6 +50,8 @@
 
 #include <machine/pmap.h>
 
+extern void dmar_ptmap(bus_dma_tag_t tag, bus_addr_t addr);
+
 static void i915_gem_object_flush_gtt_write_domain(struct drm_i915_gem_object *obj);
 static void i915_gem_object_flush_cpu_write_domain(struct drm_i915_gem_object *obj,
 						   bool force);
@@ -2131,6 +2133,9 @@ i915_gem_object_get_pages_gtt(struct drm_i915_gem_object *obj)
 	struct vm_page **st;
 	struct pglist plist;
 	struct vm_page *page;
+	uint64_t ptaddr;
+	struct drm_device *dev = obj->base.dev;
+	struct drm_i915_private *dev_priv = dev->dev_private;
 #endif
 
 	/* Assert that the object is not currently in any GPU domain. As it
@@ -2223,6 +2228,8 @@ i915_gem_object_get_pages_gtt(struct drm_i915_gem_object *obj)
 
 	i = 0;
 	TAILQ_FOREACH(page, &plist, pageq) {
+		ptaddr = VM_PAGE_TO_PHYS(page);
+		dmar_ptmap(dev_priv->dmat, ptaddr);
 		st[i] = page;
 		i++;
 	}

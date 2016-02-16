@@ -1470,7 +1470,7 @@ static int setup_scratch_page(struct drm_device *dev)
 		return -ENOMEM;
 
 	dev_priv->gtt.base.scratch.page = page;
-	dev_priv->gtt.base.scratch.addr = page->segs[0].ds_addr;
+	dev_priv->gtt.base.scratch.addr = page->map->dm_segs[0].ds_addr;
 
 	return 0;
 }
