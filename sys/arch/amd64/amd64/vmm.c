@@ -412,7 +412,7 @@ vm_readpage(struct vm_readpage_params *vrp)
 	/* Enter the mapping in the kernel pmap and copyout */
 	pmap_kenter_pa((vaddr_t)kva, host_pa, PROT_READ);
 
-	if (copyout(kva + ((vaddr_t)vrp->vrp_paddr & PAGE_MASK),
+	if (copyout((uint8_t *)kva + ((vaddr_t)vrp->vrp_paddr & PAGE_MASK),
 	    vrp->vrp_data, vrp->vrp_len) == EFAULT) {
 		DPRINTF("vm_readpage: can't copyout\n");
 		pmap_kremove((vaddr_t)kva, PAGE_SIZE);
