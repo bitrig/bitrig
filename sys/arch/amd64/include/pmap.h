@@ -1,4 +1,4 @@
-/*	$OpenBSD: pmap.h,v 1.59 2015/08/22 07:19:03 mlarkin Exp $	*/
+/*	$OpenBSD: pmap.h,v 1.61 2015/11/13 07:52:20 mlarkin Exp $	*/
 /*	$NetBSD: pmap.h,v 1.1 2003/04/26 18:39:46 fvdl Exp $	*/
 
 /*
@@ -366,6 +366,7 @@ static void	pmap_update_pg(vaddr_t);
 static void	pmap_update_2pg(vaddr_t,vaddr_t);
 void		pmap_write_protect(struct pmap *, vaddr_t,
 				vaddr_t, vm_prot_t);
+int		pmap_fix_ept(struct pmap *, vaddr_t, int *);
 
 vaddr_t reserve_dumppages(vaddr_t); /* XXX: not a pmap fn */
 
