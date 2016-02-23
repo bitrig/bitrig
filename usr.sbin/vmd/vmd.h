@@ -72,11 +72,6 @@ struct vmop_info_result {
 };
 
 
-struct vmop_info_result {
-	struct vm_info_result	 vir_info;
-	char			 vir_ttyname[VM_TTYNAME_MAX];
-};
-
 struct vmop_id {
 	uint32_t		 vid_id;
 	char			 vid_name[VMM_MAX_NAME_LEN];
