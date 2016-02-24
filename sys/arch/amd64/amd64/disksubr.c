@@ -1,4 +1,4 @@
-/*	$OpenBSD: disksubr.c,v 1.77 2015/09/29 20:24:25 krw Exp $	*/
+/*	$OpenBSD: disksubr.c,v 1.81 2016/02/24 18:25:50 krw Exp $	*/
 /*	$NetBSD: disksubr.c,v 1.21 1996/05/03 19:42:03 christos Exp $	*/
 
 /*
@@ -117,6 +117,87 @@ done:
 		brelse(bp);
 	}
 	disk_change = 1;
+	return (error);
+}
+
+int
+readdpmelabel(struct buf *bp, void (*strat)(struct buf *),
+    struct disklabel *lp, daddr_t *partoffp, int spoofonly)
+{
+	int error, i, part_cnt, n, hfspartoff = -1;
+	long long hfspartend = DL_GETDSIZE(lp);
+	struct part_map_entry *part;
+
+	/* First check for a DPME (HFS) disklabel */
+	error = readdisksector(bp, strat, lp, DL_BLKTOSEC(lp, LABELSECTOR));
+	if (error)
+		return (error);
+
+	/* if successful, wander through DPME partition table */
+	part = (struct part_map_entry *)bp->b_data;
+	/* if first partition is not valid, assume not HFS/DPME partitioned */
+	if (part->pmSig != PART_ENTRY_MAGIC)
+		return (EINVAL);	/* not a DPME partition */
+	part_cnt = part->pmMapBlkCnt;
+	n = 8;
+	for (i = 0; i < part_cnt; i++) {
+		struct partition *pp;
+		char *s;
+
+		error = readdisksector(bp, strat, lp, DL_BLKTOSEC(lp,
+		    LABELSECTOR + i));
+		if (error)
+			return (error);
+
+		part = (struct part_map_entry *)bp->b_data;
+		/* toupper the string, in case caps are different... */
+		for (s = part->pmPartType; *s; s++)
+			if ((*s >= 'a') && (*s <= 'z'))
+				*s = (*s - 'a' + 'A');
+
+		if (strcmp(part->pmPartType, PART_TYPE_OPENBSD) == 0) {
+			hfspartoff = part->pmPyPartStart;
+			hfspartend = hfspartoff + part->pmPartBlkCnt;
+			if (partoffp) {
+				*partoffp = hfspartoff;
+				return (0);
+			} else {
+				DL_SETBSTART(lp, hfspartoff);
+				DL_SETBEND(lp,
+				    hfspartend < DL_GETDSIZE(lp) ? hfspartend :
+				    DL_GETDSIZE(lp));
+			}
+			continue;
+		}
+
+		if (n >= MAXPARTITIONS || partoffp)
+			continue;
+
+		/* Currently we spoof HFS partitions only. */
+		if (strcmp(part->pmPartType, PART_TYPE_MAC) == 0) {
+			pp = &lp->d_partitions[n];
+			DL_SETPOFFSET(pp, part->pmPyPartStart);
+			DL_SETPSIZE(pp, part->pmPartBlkCnt);
+			pp->p_fstype = FS_HFS;
+			n++;
+		}
+
+	}
+
+	if (hfspartoff == -1)
+		return (EINVAL);	/* no OpenBSD partition inside DPME label */
+
+	if (spoofonly)
+		return (0);
+
+	/* next, dig out disk label */
+	error = readdisksector(bp, strat, lp, DL_BLKTOSEC(lp, hfspartoff));
+	if (error)
+		return (error);
+
+	error = checkdisklabel(bp->b_data + LABELOFFSET, lp, hfspartoff,
+	    hfspartend);
+
 	return (error);
 }
 
