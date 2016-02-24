@@ -373,8 +373,8 @@ pledge_ioctl_vmm(struct proc *p, long com)
 	case VMM_IOC_CREATE:
 	case VMM_IOC_INFO:
 		/* The "parent" process in vmd forks and manages VMs */
-		if (p->p_p->ps_pledge & PLEDGE_PROC)
-			return (0);
+		//if (p->p_p->ps_pledge & PLEDGE_PROC)
+		//	return (0);
 		break;
 	case VMM_IOC_TERM:
 		/* XXX VM processes should only terminate themselves */

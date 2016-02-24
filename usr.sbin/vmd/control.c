@@ -69,8 +69,8 @@ control_run(struct privsep *ps, struct privsep_proc *p, void *arg)
  	 * stdio - for malloc and basic I/O including events.
 	 * unix - for the control socket.
 	 */
-	if (pledge("stdio unix", NULL) == -1)
-		fatal("pledge");
+	//if (pledge("stdio unix", NULL) == -1)
+	//	fatal("pledge");
 }
 
 int

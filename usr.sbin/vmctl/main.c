@@ -143,11 +143,11 @@ parse(int argc, char *argv[])
 	res.action = ctl->action;
 	res.ctl = ctl;
 
-	if (!ctl->has_pledge) {
-		/* pledge(2) default if command doesn't have its own pledge */
-		if (pledge("stdio rpath exec unix", NULL) == -1)
-			err(1, "pledge");
-	}
+	//if (!ctl->has_pledge) {
+	//	/* pledge(2) default if command doesn't have its own pledge */
+	//	if (pledge("stdio rpath exec unix", NULL) == -1)
+	//		err(1, "pledge");
+	//}
 	if (ctl->main(&res, argc, argv) != 0)
 		err(1, "failed");
 
@@ -400,8 +400,8 @@ ctl_create(struct parse_result *res, int argc, char *argv[])
 
 	paths[0] = argv[1];
 	paths[1] = NULL;
-	if (pledge("stdio rpath wpath cpath", NULL) == -1)
-		err(1, "pledge");
+	//if (pledge("stdio rpath wpath cpath", NULL) == -1)
+	//	err(1, "pledge");
 	argc--;
 	argv++;
 

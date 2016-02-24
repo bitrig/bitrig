@@ -425,8 +425,8 @@ vmd_configure(void)
 	 * proc - run kill to terminate its children safely.
 	 * sendfd - for disks, interfaces and other fds.
 	 */
-	if (pledge("stdio rpath wpath proc tty sendfd", NULL) == -1)
-		fatal("pledge");
+	//if (pledge("stdio rpath wpath proc tty sendfd", NULL) == -1)
+	//	fatal("pledge");
 
 	if (parse_config(env->vmd_conffile) == -1) {
 		proc_kill(&env->vmd_ps);
