@@ -431,7 +431,9 @@ rtredirect(struct sockaddr *dst, struct sockaddr *gateway,
 	u_int32_t		*stat = NULL;
 	struct rt_addrinfo	 info;
 	struct ifaddr		*ifa;
-	unsigned int		 ifidx;
+	/* XXX: mathieu, investigate the right value, putting 0
+	 * for the moment to avoid using uninit-ed data */
+	unsigned int		 ifidx = 0;
 
 	splsoftassert(IPL_SOFTNET);
 
