@@ -299,7 +299,7 @@ intagp*		at vga?		# intel integrated graphics
 agp*		at intagp?
 #agp*		at mmuagp?
 
-inteldrm*	at vga? 	# Intel i915, i945 DRM driver
+inteldrm*	at pci? 	# Intel i915, i945 DRM driver
 drm0		at inteldrm? console 1
 drm*		at inteldrm?
 radeondrm*	at pci? 	# ATI Radeon DRM driver
