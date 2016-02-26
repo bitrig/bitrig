@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_mmap.c,v 1.119 2015/09/30 11:36:07 semarie Exp $	*/
+/*	$OpenBSD: uvm_mmap.c,v 1.122 2015/11/11 15:59:33 mmcc Exp $	*/
 /*	$NetBSD: uvm_mmap.c,v 1.49 2001/02/18 21:19:08 chs Exp $	*/
 
 /*
@@ -65,7 +65,7 @@
 #include <sys/stat.h>
 #include <sys/specdev.h>
 #include <sys/stdint.h>
-#include <sys/tame.h>
+#include <sys/pledge.h>
 #include <sys/unistd.h>		/* for KBIND* */
 #include <sys/user.h>
 
@@ -274,7 +274,6 @@ sys_mincore(struct proc *p, void *v, register_t *retval)
 				/* Check the top layer first. */
 				anon = amap_lookup(&entry->aref,
 				    start - entry->start);
-				/* Don't need to lock anon here. */
 				if (anon != NULL && anon->an_page != NULL) {
 					/*
 					 * Anon has the page for this entry
@@ -366,10 +365,9 @@ sys_mmap(struct proc *p, void *v, register_t *retval)
 	if (size == 0)
 		return (EINVAL);
 
-	if ((p->p_p->ps_flags & PS_TAMED) &&
-	    !(p->p_p->ps_tame & TAME_PROTEXEC) &&
-	    (prot & PROT_EXEC))
-		return (tame_fail(p, EPERM, TAME_PROTEXEC));
+	//error = pledge_protexec(p, prot);
+	//if (error)
+	//	return (error);
 
 	/* align file position and save offset.  adjust size. */
 	ALIGN_ADDR(pos, size, pageoff);
@@ -501,7 +499,6 @@ sys_mmap(struct proc *p, void *v, register_t *retval)
 				goto out;
 			}
 		}
-
 		error = uvm_mmapfile(&p->p_vmspace->vm_map, &addr, size, prot, maxprot,
 		    flags, vp, pos, p->p_rlimit[RLIMIT_MEMLOCK].rlim_cur, p);
 	} else {		/* MAP_ANON case */
@@ -559,9 +556,6 @@ sys_msync(struct proc *p, void *v, register_t *retval)
 	size = (vsize_t)SCARG(uap, len);
 	flags = SCARG(uap, flags);
 
-	if (addr & PAGE_MASK)
-		return (EINVAL);
-
 	/* sanity check flags */
 	if ((flags & ~(MS_ASYNC | MS_SYNC | MS_INVALIDATE)) != 0 ||
 			(flags & (MS_ASYNC | MS_SYNC | MS_INVALIDATE)) == 0 ||
@@ -609,10 +603,7 @@ sys_munmap(struct proc *p, void *v, register_t *retval)
 	/* get syscall args... */
 	addr = (vaddr_t) SCARG(uap, addr);
 	size = (vsize_t) SCARG(uap, len);
-
-	if (addr & PAGE_MASK)
-		return (EINVAL);
-
+	
 	/* align address to a page boundary, and adjust size accordingly */
 	ALIGN_ADDR(addr, size, pageoff);
 
@@ -664,6 +655,7 @@ sys_mprotect(struct proc *p, void *v, register_t *retval)
 	vaddr_t addr;
 	vsize_t size, pageoff;
 	vm_prot_t prot;
+	//int error;
 
 	/*
 	 * extract syscall args from uap
@@ -676,10 +668,9 @@ sys_mprotect(struct proc *p, void *v, register_t *retval)
 	if ((prot & PROT_MASK) != prot)
 		return (EINVAL);
 
-	if ((p->p_p->ps_flags & PS_TAMED) &&
-	    !(p->p_p->ps_tame & TAME_PROTEXEC) &&
-	    (prot & PROT_EXEC))
-		return (tame_fail(p, EPERM, TAME_PROTEXEC));
+	//error = pledge_protexec(p, prot);
+	//if (error)
+	//	return (error);
 
 	/*
 	 * align the address to a page boundary, and adjust the size accordingly
@@ -925,6 +916,62 @@ sys_munlockall(struct proc *p, void *v, register_t *retval)
 }
 
 /*
+ * common code for mmapanon and mmapfile to lock a mmaping
+ */
+int
+uvm_mmaplock(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
+    vsize_t locklimit)
+{
+	int error;
+
+	/*
+	 * POSIX 1003.1b -- if our address space was configured
+	 * to lock all future mappings, wire the one we just made.
+	 */
+	if (prot == PROT_NONE) {
+		/*
+		 * No more work to do in this case.
+		 */
+		return (0);
+	}
+
+	vm_map_lock(map);
+	if (map->flags & VM_MAP_WIREFUTURE) {
+		KERNEL_LOCK();
+		if ((atop(size) + uvmexp.wired) > uvmexp.wiredmax
+#ifdef pmap_wired_count
+		    || (locklimit != 0 && (size +
+			 ptoa(pmap_wired_count(vm_map_pmap(map)))) >
+			locklimit)
+#endif
+		) {
+			error = ENOMEM;
+			vm_map_unlock(map);
+			/* unmap the region! */
+			uvm_unmap(map, *addr, *addr + size);
+			KERNEL_UNLOCK();
+			return (error);
+		}
+		/*
+		 * uvm_map_pageable() always returns the map
+		 * unlocked.
+		 */
+		error = uvm_map_pageable(map, *addr, *addr + size,
+		    FALSE, UVM_LK_ENTER);
+		if (error != 0) {
+			/* unmap the region! */
+			uvm_unmap(map, *addr, *addr + size);
+			KERNEL_UNLOCK();
+			return (error);
+		}
+		KERNEL_UNLOCK();
+		return (0);
+	}
+	vm_map_unlock(map);
+	return (0);
+}
+
+/*
  * uvm_mmapanon: internal version of mmap for anons
  *
  * - used by sys_mmap
@@ -935,14 +982,8 @@ uvm_mmapanon(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 {
 	int error;
 	int advice = MADV_NORMAL;
-	uvm_flag_t uvmflag = 0;
+	unsigned int uvmflag = 0;
 	vsize_t align = 0;	/* userland page size */
-
-	/* check params */
-	if (size == 0)
-		return(0);
-	if ((prot & maxprot) != prot)
-		return(EINVAL);
 
 	/*
 	 * for non-fixed mappings, round off the suggested address.
@@ -955,11 +996,8 @@ uvm_mmapanon(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 			return(EINVAL);
 
 		uvmflag |= UVM_FLAG_FIXED;
-		if ((flags & __MAP_NOREPLACE) == 0) {
-			KERNEL_LOCK();
-			uvm_unmap(map, *addr, *addr + size);	/* zap! */
-			KERNEL_UNLOCK();
-		}
+		if ((flags & __MAP_NOREPLACE) == 0)
+			uvmflag |= UVM_FLAG_UNMAP;
 	}
 
 	if ((flags & MAP_FIXED) == 0 && size >= __LDPGSZ)
@@ -978,54 +1016,9 @@ uvm_mmapanon(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 
 	error = uvm_mapanon(map, addr, size, align, uvmflag);
 
-	if (error == 0) {
-		/*
-		 * POSIX 1003.1b -- if our address space was configured
-		 * to lock all future mappings, wire the one we just made.
-		 */
-		if (prot == PROT_NONE) {
-			/*
-			 * No more work to do in this case.
-			 */
-			return (0);
-		}
-
-		vm_map_lock(map);
-		if (map->flags & VM_MAP_WIREFUTURE) {
-			KERNEL_LOCK();
-			if ((atop(size) + uvmexp.wired) > uvmexp.wiredmax
-#ifdef pmap_wired_count
-			    || (locklimit != 0 && (size +
-			         ptoa(pmap_wired_count(vm_map_pmap(map)))) >
-			        locklimit)
-#endif
-			) {
-				error = ENOMEM;
-				vm_map_unlock(map);
-				/* unmap the region! */
-				uvm_unmap(map, *addr, *addr + size);
-				KERNEL_UNLOCK();
-				return (error);
-			}
-			/*
-			 * uvm_map_pageable() always returns the map
-			 * unlocked.
-			 */
-			error = uvm_map_pageable(map, *addr, *addr + size,
-			    FALSE, UVM_LK_ENTER);
-			if (error != 0) {
-				/* unmap the region! */
-				uvm_unmap(map, *addr, *addr + size);
-				KERNEL_UNLOCK();
-				return (error);
-			}
-			KERNEL_UNLOCK();
-			return (0);
-		}
-		vm_map_unlock(map);
-		return (0);
-	}
-	return(error);
+	if (error == 0)
+		error = uvm_mmaplock(map, addr, size, prot, locklimit);
+	return error;
 }
 
 /*
@@ -1042,16 +1035,8 @@ uvm_mmapfile(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 	struct uvm_object *uobj;
 	int error;
 	int advice = MADV_NORMAL;
-	uvm_flag_t uvmflag = 0;
+	unsigned int uvmflag = 0;
 	vsize_t align = 0;	/* userland page size */
-
-	/* check params */
-	if (size == 0)
-		return(0);
-	if (foff & PAGE_MASK)
-		return(EINVAL);
-	if ((prot & maxprot) != prot)
-		return(EINVAL);
 
 	/*
 	 * for non-fixed mappings, round off the suggested address.
@@ -1065,7 +1050,7 @@ uvm_mmapfile(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 
 		uvmflag |= UVM_FLAG_FIXED;
 		if ((flags & __MAP_NOREPLACE) == 0)
-			uvm_unmap(map, *addr, *addr + size);	/* zap! */
+			uvmflag |= UVM_FLAG_UNMAP;
 	}
 
 	/*
@@ -1137,59 +1122,13 @@ uvm_mmapfile(vm_map_t map, vaddr_t *addr, vsize_t size, vm_prot_t prot,
 
 	error = uvm_map(map, addr, size, uobj, foff, align, uvmflag);
 
-	if (error == 0) {
-		/*
-		 * POSIX 1003.1b -- if our address space was configured
-		 * to lock all future mappings, wire the one we just made.
-		 */
-		if (prot == PROT_NONE) {
-			/*
-			 * No more work to do in this case.
-			 */
-			return (0);
-		}
-
-		vm_map_lock(map);
-		if (map->flags & VM_MAP_WIREFUTURE) {
-			KERNEL_LOCK();
-			if ((atop(size) + uvmexp.wired) > uvmexp.wiredmax
-#ifdef pmap_wired_count
-			    || (locklimit != 0 && (size +
-			         ptoa(pmap_wired_count(vm_map_pmap(map)))) >
-			        locklimit)
-#endif
-			) {
-				error = ENOMEM;
-				vm_map_unlock(map);
-				/* unmap the region! */
-				uvm_unmap(map, *addr, *addr + size);
-				KERNEL_UNLOCK();
-				goto bad;
-			}
-			/*
-			 * uvm_map_pageable() always returns the map
-			 * unlocked.
-			 */
-			error = uvm_map_pageable(map, *addr, *addr + size,
-			    FALSE, UVM_LK_ENTER);
-			if (error != 0) {
-				/* unmap the region! */
-				uvm_unmap(map, *addr, *addr + size);
-				KERNEL_UNLOCK();
-				goto bad;
-			}
-			KERNEL_UNLOCK();
-			return (0);
-		}
-		vm_map_unlock(map);
-		return (0);
-	}
+	if (error == 0)
+		return uvm_mmaplock(map, addr, size, prot, locklimit);
 
 	/* errors: first detach from the uobj, if any.  */
 	if (uobj)
 		uobj->pgops->pgo_detach(uobj);
 
-bad:
 	return (error);
 }
 

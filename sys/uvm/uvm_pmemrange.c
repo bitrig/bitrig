@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_pmemrange.c,v 1.48 2015/08/21 16:04:35 visa Exp $	*/
+/*	$OpenBSD: uvm_pmemrange.c,v 1.50 2016/01/29 11:50:40 tb Exp $	*/
 
 /*
  * Copyright (c) 2009, 2010 Ariane van der Steldt <ariane@stack.nl>
@@ -20,7 +20,6 @@
 #include <sys/systm.h>
 #include <uvm/uvm.h>
 #include <sys/malloc.h>
-#include <sys/mount.h>		/* for BUFPAGES defines */
 #include <sys/kernel.h>
 #include <sys/kthread.h>
 #include <sys/mount.h>
@@ -193,7 +192,7 @@ uvm_pmemrange_addr_cmp(struct uvm_pmemrange *lhs, struct uvm_pmemrange *rhs)
  * Comparator: sort by use ascending.
  *
  * The higher the use value of a range, the more devices need memory in
- * this range. Therefor allocate from the range with the lowest use first.
+ * this range. Therefore allocate from the range with the lowest use first.
  */
 int
 uvm_pmemrange_use_cmp(struct uvm_pmemrange *lhs, struct uvm_pmemrange *rhs)
@@ -722,7 +721,6 @@ uvm_pmr_getpages(psize_t count, paddr_t start, paddr_t end, paddr_t align,
 	struct	uvm_pmemrange *pmr;	/* Iterate memory ranges. */
 	struct	vm_page *found, *f_next; /* Iterate chunks. */
 	psize_t	fcount;			/* Current found pages. */
-	psize_t	zcount;			/* Number of zero pages found. */
 	int	fnsegs;			/* Current segment counter. */
 	int	try, start_try;
 	psize_t	search[3];
@@ -730,7 +728,6 @@ uvm_pmr_getpages(psize_t count, paddr_t start, paddr_t end, paddr_t align,
 	int	memtype;		/* Requested memtype. */
 	int	memtype_init;		/* Best memtype. */
 	int	desperate;		/* True if allocation failed. */
-	int	is_pdaemon;
 #ifdef DIAGNOSTIC
 	struct	vm_page *diag_prev;	/* Used during validation. */
 #endif /* DIAGNOSTIC */
@@ -746,26 +743,6 @@ uvm_pmr_getpages(psize_t count, paddr_t start, paddr_t end, paddr_t align,
 	KASSERT(boundary == 0 || powerof2(boundary));
 	KASSERT(boundary == 0 || maxseg * boundary >= count);
 	KASSERT(TAILQ_EMPTY(result));
-
-	is_pdaemon = ((curproc == uvm.pagedaemon_proc) ||
-	      (curproc == syncerproc));
-
-	/*
-	 * All allocations by the pagedaemon automatically get access to
-	 * the kernel reserve of pages so swapping can catch up with memory
-	 * exhaustion
-	 */
-	if (is_pdaemon)
-		flags |= UVM_PLA_USERESERVE;
-
-	/*
-	 * check to see if we need to generate some free pages waking
-	 * the pagedaemon.
-	 */
-	if ((uvmexp.free - BUFPAGES_DEFICIT) < uvmexp.freemin ||
-	    ((uvmexp.free - BUFPAGES_DEFICIT) < uvmexp.freetarg &&
-	    (uvmexp.inactive + BUFPAGES_INACT) < uvmexp.inactarg))
-		wakeup(&uvm.pagedaemon);
 
 	/*
 	 * TRYCONTIG is a noop if you only want a single segment.
@@ -840,21 +817,6 @@ uvm_pmr_getpages(psize_t count, paddr_t start, paddr_t end, paddr_t align,
 retry:		/* Return point after sleeping. */
 	fcount = 0;
 	fnsegs = 0;
-	zcount = 0;
-
-	/*
-	 * fail if any of these conditions are true:
-	 * [1]  there really are no free pages, or
-	 * [2]  only kernel "reserved" pages remain and
-	 *        the we are not allowed to use them.
-	 * [3]  only pagedaemon "reserved" pages remain and
-	 *        the requestor isn't the pagedaemon.
-	 */
-	if (((uvmexp.reserve_kernel + count) > uvmexp.free &&
-	    (flags & UVM_PLA_USERESERVE) == 0) ||
-	    ((uvmexp.reserve_pagedaemon + count) > uvmexp.free &&
-	    !is_pdaemon))
-		goto fail;
 
 retry_desperate:
 	/*
@@ -1073,8 +1035,13 @@ out:
 	TAILQ_FOREACH(found, result, pageq) {
 		atomic_clearbits_int(&found->pg_flags, PG_PMAPMASK);
 
-		if (found->pg_flags & PG_ZERO)
-			zcount++;
+		if (found->pg_flags & PG_ZERO) {
+			uvm_lock_fpageq();
+			uvmexp.zeropages--;
+			if (uvmexp.zeropages < UVM_PAGEZERO_TARGET)
+				wakeup(&uvmexp.zeropages);
+			uvm_unlock_fpageq();
+		}
 		if (flags & UVM_PLA_ZERO) {
 			if (found->pg_flags & PG_ZERO)
 				uvmexp.pga_zerohit++;
@@ -1125,14 +1092,6 @@ out:
 		    fcount, fnsegs, count, maxseg);
 	}
 #endif /* DIAGNOSTIC */
-
-	if (zcount) {
-		uvm_lock_fpageq();
-		uvmexp.zeropages -= zcount;
-		if (uvmexp.zeropages < UVM_PAGEZERO_TARGET)
-			wakeup(&uvmexp.zeropages);
-		uvm_unlock_fpageq();
-	}
 
 	return 0;
 }

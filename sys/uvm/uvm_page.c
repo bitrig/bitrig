@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_page.c,v 1.142 2015/09/21 12:59:01 visa Exp $	*/
+/*	$OpenBSD: uvm_page.c,v 1.144 2015/10/30 16:47:01 miod Exp $	*/
 /*	$NetBSD: uvm_page.c,v 1.44 2000/11/27 08:40:04 chs Exp $	*/
 
 /*
@@ -179,6 +179,7 @@ uvm_page_init(vaddr_t *kvm_startp, vaddr_t *kvm_endp)
 	TAILQ_INIT(&uvm.page_active);
 	TAILQ_INIT(&uvm.page_inactive_swp);
 	TAILQ_INIT(&uvm.page_inactive_obj);
+	mtx_init(&uvm.pageqlock, IPL_NONE);
 	mtx_init(&uvm.fpageqlock, IPL_VM);
 	uvm_pmr_init();
 
@@ -248,7 +249,7 @@ uvm_page_init(vaddr_t *kvm_startp, vaddr_t *kvm_endp)
 			curpg->phys_addr = paddr;
 			VM_MDPAGE_INIT(curpg);
 			if (pgno >= seg->avail_start &&
-			    pgno <= seg->avail_end) {
+			    pgno < seg->avail_end) {
 				uvmexp.npages++;
 			}
 		}
@@ -554,7 +555,7 @@ uvm_page_physload(paddr_t start, paddr_t end, paddr_t avail_start,
 			pgs[lcv].phys_addr = paddr;
 			VM_MDPAGE_INIT(&pgs[lcv]);
 			if (atop(paddr) >= avail_start &&
-			    atop(paddr) <= avail_end) {
+			    atop(paddr) < avail_end) {
 				if (flags & PHYSLOAD_DEVICE) {
 					atomic_setbits_int(&pgs[lcv].pg_flags,
 					    PG_DEV);

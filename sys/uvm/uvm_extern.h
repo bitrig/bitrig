@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_extern.h,v 1.134 2015/09/09 14:52:12 miod Exp $	*/
+/*	$OpenBSD: uvm_extern.h,v 1.137 2015/12/02 09:50:46 blambert Exp $	*/
 /*	$NetBSD: uvm_extern.h,v 1.57 2001/03/09 01:02:12 chs Exp $	*/
 
 /*
@@ -60,7 +60,7 @@
 #ifndef _UVM_UVM_EXTERN_H_
 #define _UVM_UVM_EXTERN_H_
 
-typedef unsigned int  uvm_flag_t;
+typedef unsigned int uvm_flag_t;
 typedef int vm_fault_t;
 
 typedef int vm_inherit_t;	/* XXX: inheritance codes */
@@ -112,6 +112,8 @@ typedef int		vm_prot_t;
 #define UVM_FLAG_HOLE    0x0400000 /* no backend */
 #define UVM_FLAG_QUERY   0x0800000 /* do everything, except actual execution */
 #define UVM_FLAG_NOFAULT 0x1000000 /* don't fault */
+#define UVM_FLAG_UNMAP   0x2000000 /* unmap to make space */
+
 
 /* macros to extract info */
 #define UVM_PROTECTION(X)	((X) & PROT_MASK)
@@ -127,19 +129,19 @@ typedef int		vm_prot_t;
 				/* offset not known(obj) or don't care(!obj) */
 
 /*
+ * the following defines are for uvm_km_kmemalloc's flags
+ */
+#define UVM_KMF_NOWAIT	0x1			/* matches M_NOWAIT */
+#define UVM_KMF_VALLOC	0x2			/* allocate VA only */
+#define UVM_KMF_CANFAIL	0x4			/* caller handles failure */
+#define UVM_KMF_ZERO	0x08			/* zero pages */
+#define UVM_KMF_TRYLOCK	UVM_FLAG_TRYLOCK	/* try locking only */
+
+/*
  * flags for uvm_pagealloc()
  */
 #define UVM_PGA_USERESERVE	0x0001	/* ok to use reserve pages */
 #define	UVM_PGA_ZERO		0x0002	/* returned page must be zeroed */
-
-/*
- *  * the following defines are for uvm_km_kmemalloc's flags
- *   */
-#define UVM_KMF_NOWAIT  0x1			/* matches M_NOWAIT */
-#define UVM_KMF_VALLOC  0x2			/* allocate VA only */
-#define UVM_KMF_CANFAIL 0x4			/* caller handles failure */
-#define UVM_KMF_ZERO    0x08			/* zero pages */
-#define UVM_KMF_TRYLOCK UVM_FLAG_TRYLOCK	/* try locking only */
 
 /*
  * flags for uvm_pglistalloc()
@@ -149,7 +151,6 @@ typedef int		vm_prot_t;
 #define UVM_PLA_ZERO		0x0004	/* zero all pages before returning */
 #define UVM_PLA_TRYCONTIG	0x0008	/* try to allocate contig physmem */
 #define UVM_PLA_FAILOK		0x0010	/* caller can handle failure */
-#define UVM_PLA_USERESERVE	0x0020	/* ok to use reserve pages */
 
 /*
  * lockflags that control the locking behavior of various functions.
@@ -164,8 +165,6 @@ typedef int		vm_prot_t;
 
 #include <sys/queue.h>
 #include <sys/tree.h>
-#include <sys/lock.h>
-#include <sys/mutex.h>
 #include <sys/mman.h>
 
 #ifdef _KERNEL
@@ -320,11 +319,8 @@ vaddr_t			uvm_km_valloc_wait(vm_map_t, vsize_t);
 vaddr_t			uvm_km_valloc_align(struct vm_map *, vsize_t,
 			    vsize_t, int);
 vaddr_t			uvm_km_valloc_prefer_wait(vm_map_t, vsize_t, voff_t);
-
-struct vm_map		*uvm_km_suballoc(vm_map_t, vaddr_t *,
-				vaddr_t *, vsize_t, int,
-				boolean_t, vm_map_t);
-
+struct vm_map		*uvm_km_suballoc(vm_map_t, vaddr_t *, vaddr_t *,
+			    vsize_t, int, boolean_t, vm_map_t);
 /*
  * Allocation mode for virtual space.
  *
@@ -417,8 +413,8 @@ void			*km_alloc(size_t, const struct kmem_va_mode *,
 void			km_free(void *, size_t, const struct kmem_va_mode *,
 			    const struct kmem_pa_mode *);
 int			uvm_map(vm_map_t, vaddr_t *, vsize_t,
-			    struct uvm_object *, voff_t, vsize_t, uvm_flag_t);
-int			uvm_mapanon(vm_map_t, vaddr_t *, vsize_t, vsize_t, uvm_flag_t);
+			    struct uvm_object *, voff_t, vsize_t, unsigned int);
+int			uvm_mapanon(vm_map_t, vaddr_t *, vsize_t, vsize_t, unsigned int);
 int			uvm_map_pageable(vm_map_t, vaddr_t, 
 			    vaddr_t, boolean_t, int);
 int			uvm_map_pageable_all(vm_map_t, int, vsize_t);
@@ -437,12 +433,6 @@ struct vmspace		*uvmspace_share(struct process *);
 void			uvm_meter(void);
 int			uvm_sysctl(int *, u_int, void *, size_t *, 
 			    void *, size_t, struct proc *);
-int			uvm_mmap(vm_map_t, vaddr_t *, vsize_t,
-			    vm_prot_t, vm_prot_t, int, 
-			    caddr_t, voff_t, vsize_t, struct proc *);
-
-void			 uvm_objalloc_dma(struct uvm_object *,
-			     voff_t, vsize_t, paddr_t, paddr_t, int);
 struct vm_page		*uvm_pagealloc(struct uvm_object *,
 			    voff_t, struct vm_anon *, int);
 vaddr_t			uvm_pagealloc_contig(vaddr_t, vaddr_t,
@@ -458,7 +448,6 @@ void			uvm_page_physload(paddr_t, paddr_t, paddr_t,
 			    paddr_t, int);
 void			uvm_setpagesize(void);
 void			uvm_shutdown(void);
-void			uvm_aio_biodone1(struct buf *);
 void			uvm_aio_biodone(struct buf *);
 void			uvm_aio_aiodone(struct buf *);
 void			uvm_pageout(void *);
