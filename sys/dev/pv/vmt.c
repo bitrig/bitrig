@@ -420,7 +420,7 @@ vmt_kvop(void *arg, int op, char *key, char *value, size_t valuelen)
 		goto done;
 	}
 
-	if (vm_rpc_send_rpci_tx(sc, buf) != 0) {
+	if (vm_rpc_send_rpci_tx(sc, "KvOp %s\n", buf) != 0) {
 		DPRINTF("%s: error sending command: %s\n", DEVNAME(sc), buf);
 		sc->sc_rpc_error = 1;
 		error = EIO;
