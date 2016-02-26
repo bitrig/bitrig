@@ -858,7 +858,7 @@ in_selectsrc(struct in_addr **insrc, struct sockaddr_in *sin,
 		rtfree(ro->ro_rt);
 		ro->ro_rt = NULL;
 	}
-	if ((ro->ro_rt == NULL)) {
+	if (ro->ro_rt == NULL) {
 		/* No route yet, so try to acquire one */
 		ro->ro_dst.sa_family = AF_INET;
 		ro->ro_dst.sa_len = sizeof(struct sockaddr_in);
