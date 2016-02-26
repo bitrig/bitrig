@@ -361,7 +361,7 @@ siop*	at pci?				# NCR 538XX SCSI controllers
 adw*	at pci?				# AdvanSys ULTRA WIDE SCSI
 pcscp*	at pci?				# AMD 53c974 PCscsi-PCI SCSI
 #trm*	at pci?				# Tekram DC-3x5U SCSI Controllers
-vmwpvs*	at pci?			# VMware ParaVirtual SCSI
+vmwpvs*	at pci?				# VMware ParaVirtual SCSI
 
 scsibus* at scsi?
 sd*	at scsibus?			# SCSI disk drives
@@ -605,7 +605,7 @@ pseudo-device	wsmux		2
 virtio*		at pci?		# Virtio PCI device
 vioblk*		at virtio?	# Virtio block device
 vio*		at virtio?	# Virtio network device
-vioscsi*	at virtio?	# Virtio SCSI device
-viocon*		at virtio?	# Virtio console device
 viomb*		at virtio?	# Virtio memory ballooning device
 viornd*		at virtio?	# Virtio entropy device
+vioscsi*	at virtio?	# Virtio SCSI device
+viocon*		at virtio?	# Virtio console device

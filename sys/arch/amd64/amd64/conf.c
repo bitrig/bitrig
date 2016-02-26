@@ -287,7 +287,7 @@ struct cdevsw	cdevsw[] =
 	cdev_disk_init(1,diskmap),	/* 90: disk mapper */
 	cdev_pppx_init(NPPPX,pppx),     /* 91: pppx */
 	cdev_fuse_init(NFUSE,fuse),	/* 92: fuse */
-	cdev_tun_init(NTUN,tap),	/* 93: Ethernet network tunnel */
+	cdev_notdef(),			/* 93 */
 	cdev_tty_init(NVIOCON,viocon),  /* 94: virtio console */
 	cdev_pvbus_init(NPVBUS,pvbus),	/* 95: pvbus(4) control interface */
 };
