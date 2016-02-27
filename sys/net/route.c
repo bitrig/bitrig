@@ -242,6 +242,8 @@ miss:
 	return (rt);
 }
 
+#ifndef SMALL_KERNEL
+
 /*
  * Originated from bridge_hash() in if_bridge.c
  */
@@ -332,6 +334,7 @@ rtalloc_mpath(struct sockaddr *dst, uint32_t *src, unsigned int rtableid)
 
 	return (rtable_mpath_select(rt, rt_hash(rt, src) & 0xffff));
 }
+#endif /* SMALL_KERNEL */
 
 void
 rtref(struct rtentry *rt)
@@ -380,16 +383,18 @@ rtfree(struct rtentry *rt)
 void
 rt_sendmsg(struct rtentry *rt, int cmd, u_int rtableid)
 {
-	struct rt_addrinfo info;
-	struct sockaddr_rtlabel sa_rl;
+	struct rt_addrinfo	 info;
+	struct ifnet		*ifp;
+	struct sockaddr_rtlabel	 sa_rl;
 
 	memset(&info, 0, sizeof(info));
 	info.rti_info[RTAX_DST] = rt_key(rt);
 	info.rti_info[RTAX_GATEWAY] = rt->rt_gateway;
 	info.rti_info[RTAX_NETMASK] = rt_mask(rt);
 	info.rti_info[RTAX_LABEL] = rtlabel_id2sa(rt->rt_labelid, &sa_rl);
-	if (rt->rt_ifp != NULL) {
-		info.rti_info[RTAX_IFP] = sdltosa(rt->rt_ifp->if_sadl);
+	ifp = if_get(rt->rt_ifidx);
+	if (ifp != NULL) {
+		info.rti_info[RTAX_IFP] = sdltosa(ifp->if_sadl);
 		info.rti_info[RTAX_IFA] = rt->rt_ifa->ifa_addr;
 	}
 
@@ -844,6 +849,7 @@ rtrequest(int req, struct rt_addrinfo *info, u_int8_t prio,
 		rt->rt_priority = prio;	/* init routing priority */
 		LIST_INIT(&rt->rt_timer);
 
+#ifndef SMALL_KERNEL
 		/* Check the link state if the table supports it. */
 		if (rtable_mpath_capable(tableid, ndst->sa_family) &&
 		    !ISSET(rt->rt_flags, RTF_LOCAL) &&
@@ -852,6 +858,7 @@ rtrequest(int req, struct rt_addrinfo *info, u_int8_t prio,
 			rt->rt_flags &= ~RTF_UP;
 			rt->rt_priority |= RTP_DOWN;
 		}
+#endif
 
 		if (info->rti_info[RTAX_LABEL] != NULL) {
 			sa_rl = (struct sockaddr_rtlabel *)
@@ -1046,7 +1053,7 @@ rt_checkgate(struct ifnet *ifp, struct rtentry *rt, struct sockaddr *dst,
 		 * loops, for example when rt->rt_gwroute points to rt.
 		 */
 		if (((rt->rt_gwroute->rt_flags & (RTF_UP|RTF_GATEWAY)) !=
-		    RTF_UP) || (rt->rt_gwroute->rt_ifp != ifp)) {
+		    RTF_UP) || (rt->rt_gwroute->rt_ifidx != ifp->if_index)) {
 			rtfree(rt->rt_gwroute);
 			rt->rt_gwroute = NULL;
 			return (EHOSTUNREACH);
@@ -1601,7 +1608,7 @@ rt_if_remove_rtdelete(struct rtentry *rt, void *vifp, u_int id)
 {
 	struct ifnet	*ifp = vifp;
 
-	if (rt->rt_ifp == ifp) {
+	if (rt->rt_ifidx == ifp->if_index) {
 		int	cloning = (rt->rt_flags & RTF_CLONING);
 
 		if (rtdeletemsg(rt, id) == 0 && cloning)
@@ -1616,6 +1623,7 @@ rt_if_remove_rtdelete(struct rtentry *rt, void *vifp, u_int id)
 	return (0);
 }
 
+#ifndef SMALL_KERNEL
 void
 rt_if_track(struct ifnet *ifp)
 {
@@ -1642,7 +1650,7 @@ rt_if_linkstate_change(struct rtentry *rt, void *arg, u_int id)
 {
 	struct ifnet *ifp = arg;
 
-	if (rt->rt_ifp != ifp)
+	if (rt->rt_ifidx != ifp->if_index)
 	    	return (0);
 
 	/* Local routes are always usable. */
@@ -1677,3 +1685,83 @@ rt_if_linkstate_change(struct rtentry *rt, void *arg, u_int id)
 
 	return (0);
 }
+#endif
+
+#ifdef DDB
+#include <machine/db_machdep.h>
+#include <ddb/db_output.h>
+
+void
+db_print_sa(struct sockaddr *sa)
+{
+	int len;
+	u_char *p;
+
+	if (sa == NULL) {
+		db_printf("[NULL]");
+		return;
+	}
+
+	p = (u_char *)sa;
+	len = sa->sa_len;
+	db_printf("[");
+	while (len > 0) {
+		db_printf("%d", *p);
+		p++;
+		len--;
+		if (len)
+			db_printf(",");
+	}
+	db_printf("]\n");
+}
+
+void
+db_print_ifa(struct ifaddr *ifa)
+{
+	if (ifa == NULL)
+		return;
+	db_printf("  ifa_addr=");
+	db_print_sa(ifa->ifa_addr);
+	db_printf("  ifa_dsta=");
+	db_print_sa(ifa->ifa_dstaddr);
+	db_printf("  ifa_mask=");
+	db_print_sa(ifa->ifa_netmask);
+	db_printf("  flags=0x%x, refcnt=%d, metric=%d\n",
+	    ifa->ifa_flags, ifa->ifa_refcnt, ifa->ifa_metric);
+}
+
+/*
+ * Function to pass to rtalble_walk().
+ * Return non-zero error to abort walk.
+ */
+int
+db_show_rtentry(struct rtentry *rt, void *w, unsigned int id)
+{
+	db_printf("rtentry=%p", rt);
+
+	db_printf(" flags=0x%x refcnt=%d use=%llu expire=%lld rtableid=%u\n",
+	    rt->rt_flags, rt->rt_refcnt, rt->rt_use, rt->rt_expire, id);
+
+	db_printf(" key="); db_print_sa(rt_key(rt));
+	db_printf(" mask="); db_print_sa(rt_mask(rt));
+	db_printf(" gw="); db_print_sa(rt->rt_gateway);
+	db_printf(" ifidx=%u ", rt->rt_ifidx);
+	db_printf(" ifa=%p\n", rt->rt_ifa);
+	db_print_ifa(rt->rt_ifa);
+
+	db_printf(" gwroute=%p llinfo=%p\n", rt->rt_gwroute, rt->rt_llinfo);
+	return (0);
+}
+
+/*
+ * Function to print all the route trees.
+ * Use this from ddb:  "call db_show_arptab"
+ */
+int
+db_show_arptab(void)
+{
+	db_printf("Route tree for AF_INET\n");
+	rtable_walk(0, AF_INET, db_show_rtentry, NULL);
+	return (0);
+}
+#endif /* DDB */
