@@ -33,7 +33,7 @@ PROTO_DEPRECATED(killpg);
 PROTO_DEPRECATED(psignal);
 PROTO_DEPRECATED(pthread_sigmask);
 PROTO_NORMAL(raise);
-/*PROTO_WRAP(sigaction);	wrap to hide SIGTHR */
+PROTO_WRAP(sigaction);
 //PROTO_NORMAL(sigaddset); // __only_inline
 PROTO_NORMAL(sigaltstack);
 PROTO_NORMAL(sigblock);
