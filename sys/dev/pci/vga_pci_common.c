@@ -75,3 +75,4 @@ vga_aperture_needed(struct pci_attach_args *pa)
 #endif
 	return (1);
 }
+#endif /* RAMDISK_HOOKS */
