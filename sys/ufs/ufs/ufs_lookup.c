@@ -1,4 +1,4 @@
-/*	$OpenBSD: ufs_lookup.c,v 1.47 2015/03/14 03:38:53 jsg Exp $	*/
+/*	$OpenBSD: ufs_lookup.c,v 1.48 2016/02/27 18:50:38 natano Exp $	*/
 /*	$NetBSD: ufs_lookup.c,v 1.7 1996/02/09 22:36:06 christos Exp $	*/
 
 /*
@@ -66,7 +66,7 @@ int	dirchk = 1;
 int	dirchk = 0;
 #endif
 
-#define FSFMT(vp)	((vp)->v_mount->mnt_maxsymlinklen <= 0)
+#define OFSFMT(ip)	((ip)->i_ump->um_maxsymlinklen == 0)
 
 /*
  * Convert a component of a pathname into a pointer to a locked inode.
@@ -302,7 +302,7 @@ searchloop:
 			int size = ep->d_reclen;
 
 			if (ep->d_ino != 0)
-				size -= DIRSIZ(FSFMT(vdp), ep);
+				size -= DIRSIZ(OFSFMT(dp), ep);
 			if (size > 0) {
 				if (size >= slotneeded) {
 					slotstatus = FOUND;
@@ -326,10 +326,10 @@ searchloop:
 		 */
 		if (ep->d_ino) {
 #			if (BYTE_ORDER == LITTLE_ENDIAN)
-				if (vdp->v_mount->mnt_maxsymlinklen > 0)
-					namlen = ep->d_namlen;
-				else
+				if (OFSFMT(dp))
 					namlen = ep->d_type;
+				else
+					namlen = ep->d_namlen;
 #			else
 				namlen = ep->d_namlen;
 #			endif
@@ -443,9 +443,9 @@ found:
 	 * Check that directory length properly reflects presence
 	 * of this entry.
 	 */
-	if (dp->i_offset + DIRSIZ(FSFMT(vdp), ep) > DIP(dp, size)) {
+	if (dp->i_offset + DIRSIZ(OFSFMT(dp), ep) > DIP(dp, size)) {
 		ufs_dirbad(dp, dp->i_offset, "i_ffs_size too small");
-		DIP_ASSIGN(dp, size, dp->i_offset + DIRSIZ(FSFMT(vdp), ep));
+		DIP_ASSIGN(dp, size, dp->i_offset + DIRSIZ(OFSFMT(dp), ep));
 		dp->i_flag |= IN_CHANGE | IN_UPDATE;
 		UFS_WAPBL_UPDATE(dp, MNT_WAIT);
 	}
@@ -621,22 +621,25 @@ ufs_dirbad(struct inode *ip, doff_t offset, char *how)
  *	name must be as long as advertised, and null terminated
  */
 int
-ufs_dirbadentry(struct vnode *dp, struct direct *ep, int entryoffsetinblock)
+ufs_dirbadentry(struct vnode *vdp, struct direct *ep, int entryoffsetinblock)
 {
+	struct inode *dp;
 	int i;
 	int namlen;
 
+	dp = VTOI(vdp);
+
 #	if (BYTE_ORDER == LITTLE_ENDIAN)
-		if (dp->v_mount->mnt_maxsymlinklen > 0)
-			namlen = ep->d_namlen;
-		else
+		if (OFSFMT(dp))
 			namlen = ep->d_type;
+		else
+			namlen = ep->d_namlen;
 #	else
 		namlen = ep->d_namlen;
 #	endif
 	if ((ep->d_reclen & 0x3) != 0 ||
 	    ep->d_reclen > DIRBLKSIZ - (entryoffsetinblock & (DIRBLKSIZ - 1)) ||
-	    ep->d_reclen < DIRSIZ(FSFMT(dp), ep) || namlen > MAXNAMLEN) {
+	    ep->d_reclen < DIRSIZ(OFSFMT(dp), ep) || namlen > MAXNAMLEN) {
 		/*return (1); */
 		printf("First bad\n");
 		goto bad;
@@ -672,16 +675,15 @@ ufs_makedirentry(struct inode *ip, struct componentname *cnp,
 	newdirp->d_ino = ip->i_number;
 	newdirp->d_namlen = cnp->cn_namelen;
 	memcpy(newdirp->d_name, cnp->cn_nameptr, cnp->cn_namelen + 1);
-	if (ITOV(ip)->v_mount->mnt_maxsymlinklen > 0)
-		newdirp->d_type = IFTODT(DIP(ip, mode));
-  	else {
+	if (OFSFMT(ip)) {
 		newdirp->d_type = 0;
 #		if (BYTE_ORDER == LITTLE_ENDIAN)
 			{ u_char tmp = newdirp->d_namlen;
 			newdirp->d_namlen = newdirp->d_type;
 			newdirp->d_type = tmp; }
 #		endif
-  	}
+	} else
+		newdirp->d_type = IFTODT(DIP(ip, mode));
 }
   
 /*
@@ -713,7 +715,7 @@ ufs_direnter(struct vnode *dvp, struct vnode *tvp, struct direct *dirp,
  	cr = cnp->cn_cred;
  	p = cnp->cn_proc;
   	dp = VTOI(dvp);
-  	newentrysize = DIRSIZ(FSFMT(dvp), dirp);
+	newentrysize = DIRSIZ(OFSFMT(dp), dirp);
 
 	if (dp->i_count == 0) {
 		/*
@@ -837,7 +839,7 @@ ufs_direnter(struct vnode *dvp, struct vnode *tvp, struct direct *dirp,
 	 * dp->i_offset + dp->i_count would yield the space.
 	 */
 	ep = (struct direct *)dirbuf;
-	dsize = ep->d_ino ? DIRSIZ(FSFMT(dvp), ep) : 0;
+	dsize = ep->d_ino ? DIRSIZ(OFSFMT(dp), ep) : 0;
 	spacefree = ep->d_reclen - dsize;
 	for (loc = ep->d_reclen; loc < dp->i_count; ) {
 		nep = (struct direct *)(dirbuf + loc);
@@ -862,7 +864,7 @@ ufs_direnter(struct vnode *dvp, struct vnode *tvp, struct direct *dirp,
 			dsize = 0;
 			continue;
 		}
-		dsize = DIRSIZ(FSFMT(dvp), nep);
+		dsize = DIRSIZ(OFSFMT(dp), nep);
 		spacefree += nep->d_reclen - dsize;
 #ifdef UFS_DIRHASH
 		if (dp->i_dirhash != NULL)
@@ -1053,7 +1055,7 @@ ufs_dirrewrite(struct inode *dp, struct inode *oip, ufsino_t newinum,
 	if (error)
 		return (error);
 	ep->d_ino = newinum;
-	if (vdp->v_mount->mnt_maxsymlinklen > 0)
+	if (!OFSFMT(dp))
  		ep->d_type = newtype;
  	oip->i_effnlink--;
 #ifdef FFS_SOFTUPDATES 
@@ -1116,10 +1118,10 @@ ufs_dirempty(struct inode *ip, ufsino_t parentino, struct ucred *cred)
 			continue;
 		/* accept only "." and ".." */
 #		if (BYTE_ORDER == LITTLE_ENDIAN)
-			if (ITOV(ip)->v_mount->mnt_maxsymlinklen > 0)
-				namlen = dp->d_namlen;
-			else
+			if (OFSFMT(ip))
 				namlen = dp->d_type;
+			else
+				namlen = dp->d_namlen;
 #		else
 			namlen = dp->d_namlen;
 #		endif
@@ -1174,10 +1176,10 @@ ufs_checkpath(struct inode *source, struct inode *target, struct ucred *cred)
 		if (error != 0)
 			break;
 #		if (BYTE_ORDER == LITTLE_ENDIAN)
-			if (vp->v_mount->mnt_maxsymlinklen > 0)
-				namlen = dirbuf.dotdot_namlen;
-			else
+			if (OFSFMT(VTOI(vp)))
 				namlen = dirbuf.dotdot_type;
+			else
+				namlen = dirbuf.dotdot_namlen;
 #		else
 			namlen = dirbuf.dotdot_namlen;
 #		endif
