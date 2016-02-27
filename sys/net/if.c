@@ -427,8 +427,9 @@ if_attachsetup(struct ifnet *ifp)
 void
 if_alloc_sadl(struct ifnet *ifp)
 {
+	unsigned int socksize;
+	int namelen, masklen;
 	struct sockaddr_dl *sdl;
-	size_t namelen, masklen, socksize;
 
 	/*
 	 * If the interface already has a link name, release it
@@ -439,20 +440,17 @@ if_alloc_sadl(struct ifnet *ifp)
 		if_free_sadl(ifp);
 
 	namelen = strlen(ifp->if_xname);
-	if (namelen > UCHAR_MAX)
-		panic("%s: namelen", __func__);
-
 	masklen = offsetof(struct sockaddr_dl, sdl_data[0]) + namelen;
-	socksize = roundup(szmax(masklen + ifp->if_addrlen, sizeof(*sdl)),
-	    sizeof(long));
-	if (socksize > UCHAR_MAX)
-		panic("%s: socksize");
-
+	socksize = masklen + ifp->if_addrlen;
+#define ROUNDUP(a) (1 + (((a) - 1) | (sizeof(long) - 1)))
+	if (socksize < sizeof(*sdl))
+		socksize = sizeof(*sdl);
+	socksize = ROUNDUP(socksize);
 	sdl = malloc(socksize, M_IFADDR, M_WAITOK|M_ZERO);
-	sdl->sdl_len = (unsigned char)socksize;
+	sdl->sdl_len = socksize;
 	sdl->sdl_family = AF_LINK;
-	memcpy(sdl->sdl_data, ifp->if_xname, namelen);
-	sdl->sdl_nlen = (unsigned char)namelen;
+	bcopy(ifp->if_xname, sdl->sdl_data, namelen);
+	sdl->sdl_nlen = namelen;
 	sdl->sdl_alen = ifp->if_addrlen;
 	sdl->sdl_index = ifp->if_index;
 	sdl->sdl_type = ifp->if_type;
@@ -1410,7 +1408,9 @@ if_linkstate(void *xifp)
 
 	s = splsoftnet();
 	rt_ifmsg(ifp);
+#ifndef SMALL_KERNEL
 	rt_if_track(ifp);
+#endif
 	dohooks(ifp->if_linkstatehooks, 0);
 	splx(s);
 }
@@ -1547,6 +1547,9 @@ ifioctl(struct socket *so, u_long cmd, caddr_t data, struct proc *p)
 	switch (cmd) {
 
 	case SIOCGIFCONF:
+#ifdef COMPAT_LINUX
+	case OSIOCGIFCONF:
+#endif
 		return (ifconf(cmd, data));
 	}
 	ifr = (struct ifreq *)data;
@@ -1693,6 +1696,7 @@ ifioctl(struct socket *so, u_long cmd, caddr_t data, struct proc *p)
 		}
 #endif	/* MPLS */
 
+#ifndef SMALL_KERNEL
 		if (ifp->if_capabilities & IFCAP_WOL) {
 			if (ISSET(ifr->ifr_flags, IFXF_WOL) &&
 			    !ISSET(ifp->if_xflags, IFXF_WOL)) {
@@ -1716,6 +1720,7 @@ ifioctl(struct socket *so, u_long cmd, caddr_t data, struct proc *p)
 			ifr->ifr_flags &= ~IFXF_WOL;
 			error = ENOTSUP;
 		}
+#endif
 
 		ifp->if_xflags = (ifp->if_xflags & IFXF_CANTCHANGE) |
 			(ifr->ifr_flags & ~IFXF_CANTCHANGE);
@@ -1973,6 +1978,9 @@ ifconf(u_long cmd, caddr_t data)
 				TAILQ_FOREACH(ifa,
 				    &ifp->if_addrlist, ifa_list) {
 					sa = ifa->ifa_addr;
+#ifdef COMPAT_LINUX
+					if (cmd != OSIOCGIFCONF)
+#endif
 					if (sa->sa_len > sizeof(*sa))
 						space += sa->sa_len -
 						    sizeof(*sa);
@@ -2001,6 +2009,16 @@ ifconf(u_long cmd, caddr_t data)
 
 				if (space < sizeof(ifr))
 					break;
+#ifdef COMPAT_LINUX
+				if (cmd == OSIOCGIFCONF) {
+					ifr.ifr_addr = *sa;
+					*(u_int16_t *)&ifr.ifr_addr =
+					    sa->sa_family;
+					error = copyout((caddr_t)&ifr,
+					    (caddr_t)ifrp, sizeof (ifr));
+					ifrp++;
+				} else
+#endif
 				if (sa->sa_len <= sizeof(*sa)) {
 					ifr.ifr_addr = *sa;
 					error = copyout((caddr_t)&ifr,
@@ -2340,6 +2358,9 @@ if_group_egress_build(void)
 			}
 #ifndef SMALL_KERNEL
 			rt = rt_mpath_next(rt);
+#else
+			rt = NULL;
+#endif
 		} while (rt != NULL);
 	}
 	rtfree(rt0);
@@ -2357,6 +2378,9 @@ if_group_egress_build(void)
 			}
 #ifndef SMALL_KERNEL
 			rt = rt_mpath_next(rt);
+#else
+			rt = NULL;
+#endif
 		} while (rt != NULL);
 	}
 	rtfree(rt0);
