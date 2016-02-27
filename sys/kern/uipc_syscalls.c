@@ -230,7 +230,7 @@ doaccept(struct proc *p, int sock, struct sockaddr *name, socklen_t *anamelen,
     int flags, register_t *retval)
 {
 	struct filedesc *fdp = p->p_fd;
-	struct file *fp, *headfp;
+	struct file *fp, *headfp = NULL;
 	struct mbuf *nam;
 	socklen_t namelen;
 	int error, s, tmpfd;
@@ -243,7 +243,7 @@ doaccept(struct proc *p, int sock, struct sockaddr *name, socklen_t *anamelen,
 		return (error);
 	if (isdnssocket((struct socket *)fp->f_data)) {
 		error = EINVAL;
-		goto bad;
+		goto badnospl;
 	}
 	headfp = fp;
 	s = splsoftnet();
@@ -342,6 +342,7 @@ redo:
 	m_freem(nam);
 bad:
 	splx(s);
+badnospl:
 	FRELE(headfp, p);
 	return (error);
 }
