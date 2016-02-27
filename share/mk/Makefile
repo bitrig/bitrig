@@ -10,7 +10,7 @@ FILES=	bsd.README bsd.dep.mk bsd.lib.mk bsd.man.mk \
 NOOBJ=	noobj
 
 install:
-	${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 ${IFILES} \
+	${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 ${FILES} \
 	    ${DESTDIR}${BINDIR}/mk
 
 .include <bsd.prog.mk>
