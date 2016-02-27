@@ -40,7 +40,6 @@
 #include <dev/pci/drm/i915/i915_devlist.h>
 #include <dev/pci/drm/radeon/radeon_devlist.h>
 
-#ifdef RAMDISK_HOOKS
 static const struct pci_matchid aperture_blacklist[] = {
 	/* server adapters found in mga200 drm driver */
 	{ PCI_VENDOR_MATROX,	PCI_PRODUCT_MATROX_G200E_SE },
@@ -75,4 +74,3 @@ vga_aperture_needed(struct pci_attach_args *pa)
 #endif
 	return (1);
 }
-#endif /* RAMDISK_HOOKS */
