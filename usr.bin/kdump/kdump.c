@@ -1,4 +1,4 @@
-/*	$OpenBSD: kdump.c,v 1.119 2015/10/28 16:03:06 deraadt Exp $	*/
+/*	$OpenBSD: kdump.c,v 1.121 2016/02/28 15:55:58 naddy Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1993
@@ -93,7 +93,6 @@ pid_t pid_opt = -1;
 #define SYSVSHM
 #define ACCOUNTING
 #include <kern/syscalls.c>
-
 #undef KTRACE
 #undef PTRACE
 #undef NFSCLIENT
