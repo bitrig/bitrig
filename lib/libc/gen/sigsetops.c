@@ -34,6 +34,12 @@
 #include <errno.h>
 #include <signal.h>
 
+#undef sigemptyset
+#undef sigfillset
+#undef sigaddset
+#undef sigdelset
+#undef sigismember
+
 int
 sigemptyset(sigset_t *set)
 {
