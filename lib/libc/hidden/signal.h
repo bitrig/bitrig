@@ -34,14 +34,16 @@ PROTO_DEPRECATED(psignal);
 PROTO_DEPRECATED(pthread_sigmask);
 PROTO_NORMAL(raise);
 PROTO_WRAP(sigaction);
-//PROTO_NORMAL(sigaddset); // __only_inline
 PROTO_NORMAL(sigaltstack);
 PROTO_NORMAL(sigblock);
-//PROTO_NORMAL(sigdelset); // __only_inline
 PROTO_NORMAL(sigemptyset);
 PROTO_NORMAL(sigfillset);
 PROTO_DEPRECATED(siginterrupt);
+#if defined(_ANSI_LIBRARY)
+PROTO_NORMAL(sigaddset); // __only_inline
+PROTO_NORMAL(sigdelset); // __only_inline
 PROTO_NORMAL(sigismember);
+#endif
 PROTO_STD_DEPRECATED(signal);
 PROTO_DEPRECATED(sigpause);
 PROTO_NORMAL(sigpending);

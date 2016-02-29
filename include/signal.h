@@ -55,11 +55,8 @@ void	(*bsd_signal(int, void (*)(int)))(int);
 int	kill(pid_t, int);
 int	sigaction(int, const struct sigaction *__restrict,
 	    struct sigaction *__restrict);
-int	sigaddset(sigset_t *, int);
-int	sigdelset(sigset_t *, int);
 int	sigemptyset(sigset_t *);
 int	sigfillset(sigset_t *);
-int	sigismember(const sigset_t *, int);
 int	sigpending(sigset_t *);
 int	sigprocmask(int, const sigset_t *__restrict, sigset_t *__restrict);
 #if __POSIX_VISIBLE >= 199506
@@ -68,10 +65,15 @@ int	pthread_sigmask(int, const sigset_t *__restrict, sigset_t *__restrict);
 int	sigsuspend(const sigset_t *);
 
 #if !defined(_ANSI_LIBRARY)
+#ifdef __clang__
+# define ONLY_INLINE_STATIC static __only_inline 
+#else
+# define ONLY_INLINE_STATIC __only_inline 
+#endif
 
 extern int *__errno(void);
 
-__only_inline int sigaddset(sigset_t *__set, int __signo) {
+ONLY_INLINE_STATIC int sigaddset(sigset_t *__set, int __signo) {
 	if (__signo <= 0 || __signo >= _NSIG) {
 		*__errno() = 22;		/* EINVAL */
 		return -1;
@@ -80,7 +82,7 @@ __only_inline int sigaddset(sigset_t *__set, int __signo) {
 	return (0);
 }
 
-__only_inline int sigdelset(sigset_t *__set, int __signo) {
+ONLY_INLINE_STATIC int sigdelset(sigset_t *__set, int __signo) {
 	if (__signo <= 0 || __signo >= _NSIG) {
 		*__errno() = 22;		/* EINVAL */
 		return -1;
@@ -89,13 +91,17 @@ __only_inline int sigdelset(sigset_t *__set, int __signo) {
 	return (0);
 }
 
-__only_inline int sigismember(const sigset_t *__set, int __signo) {
+ONLY_INLINE_STATIC int sigismember(const sigset_t *__set, int __signo) {
 	if (__signo <= 0 || __signo >= _NSIG) {
 		*__errno() = 22;		/* EINVAL */
 		return -1;
 	}
 	return ((*__set & (1U << ((__signo)-1))) != 0);
 }
+#else
+int	sigaddset(sigset_t *, int);
+int	sigdelset(sigset_t *, int);
+int	sigismember(const sigset_t *, int);
 #endif /* !_ANSI_LIBRARY */
 
 /* List definitions after function declarations, or Reiser cpp gets upset. */
