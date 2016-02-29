@@ -55,8 +55,11 @@ void	(*bsd_signal(int, void (*)(int)))(int);
 int	kill(pid_t, int);
 int	sigaction(int, const struct sigaction *__restrict,
 	    struct sigaction *__restrict);
+int	sigaddset(sigset_t *, int);
+int	sigdelset(sigset_t *, int);
 int	sigemptyset(sigset_t *);
 int	sigfillset(sigset_t *);
+int	sigismember(const sigset_t *, int);
 int	sigpending(sigset_t *);
 int	sigprocmask(int, const sigset_t *__restrict, sigset_t *__restrict);
 #if __POSIX_VISIBLE >= 199506
@@ -64,8 +67,7 @@ int	pthread_sigmask(int, const sigset_t *__restrict, sigset_t *__restrict);
 #endif
 int	sigsuspend(const sigset_t *);
 
-
-#ifndef _ANSI_LIBRARY
+#if !defined(_ANSI_LIBRARY)
 
 extern int *__errno(void);
 
@@ -94,12 +96,11 @@ __only_inline int sigismember(const sigset_t *__set, int __signo) {
 	}
 	return ((*__set & (1U << ((__signo)-1))) != 0);
 }
+#endif /* !_ANSI_LIBRARY */
 
 /* List definitions after function declarations, or Reiser cpp gets upset. */
 #define	sigemptyset(set)	(*(set) = 0, 0)
 #define	sigfillset(set)		(*(set) = ~(sigset_t)0, 0)
-
-#endif /* !_ANSI_LIBRARY */
 
 #if __BSD_VISIBLE || __XPG_VISIBLE >= 420
 int	killpg(pid_t, int);
