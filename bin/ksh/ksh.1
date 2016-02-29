@@ -1,8 +1,8 @@
-.\"	$OpenBSD: ksh.1,v 1.165 2015/10/30 15:16:05 jmc Exp $
+.\"	$OpenBSD: ksh.1,v 1.161 2015/09/14 20:06:58 schwarze Exp $
 .\"
 .\"	Public Domain
 .\"
-.Dd $Mdocdate: October 30 2015 $
+.Dd $Mdocdate: September 14 2015 $
 .Dt KSH 1
 .Os
 .Sh NAME
@@ -847,7 +847,7 @@ integer='typeset -i'
 local='typeset'
 login='exec login'
 nohup='nohup '
-r='fc -s'
+r='fc -e -'
 stop='kill -STOP'
 type='whence -v'
 .Ed
@@ -3110,7 +3110,6 @@ A command that exits with a non-zero status.
 .Op Fl r
 .Op Ar first Op Ar last
 .Xc
-Fix command.
 .Ar first
 and
 .Ar last
@@ -3138,16 +3137,13 @@ parameter (if this parameter is not set,
 is used), and then executed by the shell.
 .Pp
 .It Xo
-.Ic fc Fl s
+.Ic fc
+.Cm -e - \*(Ba Fl s
 .Op Fl g
 .Op Ar old Ns = Ns Ar new
 .Op Ar prefix
 .Xc
-Re-execute the most recent command beginning with
-.Ar prefix ,
-or the previous command if no
-.Ar prefix
-is specified,
+Re-execute the selected command (the previous command by default) after
 performing the optional substitution of
 .Ar old
 with
@@ -3158,14 +3154,13 @@ is specified, all occurrences of
 .Ar old
 are replaced with
 .Ar new .
-The editor is not invoked when the
+The meaning of
+.Cm -e -
+and
 .Fl s
-flag is used.
-The obsolescent equivalent
-.Dq Fl e No -
-is also accepted.
+is identical: re-execute the selected command without invoking an editor.
 This command is usually accessed with the predefined
-.Ic alias r='fc -s' .
+.Ic alias r='fc -e -' .
 .Pp
 .It Ic fg Op Ar job ...
 Resume the specified job(s) in the foreground.
@@ -5228,7 +5223,7 @@ List all the commands or files that match the current big-word.
 .It @ Ns Ar c
 Macro expansion.
 Execute the commands found in the alias
-.No _ Ns Ar c .
+.Ar c .
 .El
 .Pp
 Intra-line movement commands:

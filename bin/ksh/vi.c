@@ -1,4 +1,4 @@
-/*	$OpenBSD: vi.c,v 1.36 2015/10/19 14:42:16 mmcc Exp $	*/
+/*	$OpenBSD: vi.c,v 1.33 2015/09/18 07:28:24 nicm Exp $	*/
 
 /*
  *	vi command editing
@@ -9,12 +9,9 @@
 #include "config.h"
 #ifdef VI
 
-#include <sys/stat.h>		/* completion */
-
-#include <ctype.h>
-#include <string.h>
-
 #include "sh.h"
+#include <ctype.h>
+#include <sys/stat.h>		/* completion */
 #include "edit.h"
 
 #define CMDLEN		2048
@@ -1092,20 +1089,18 @@ vi_cmd(int argcnt, const char *cmd)
 
 		case '~': {
 			char	*p;
-			unsigned char c;
 			int	i;
 
 			if (es->linelen == 0)
 				return -1;
 			for (i = 0; i < argcnt; i++) {
 				p = &es->cbuf[es->cursor];
-				c = (unsigned char)*p;
-				if (islower(c)) {
+				if (islower((unsigned char)*p)) {
 					modified = 1; hnum = hlast;
-					*p = toupper(c);
-				} else if (isupper(c)) {
+					*p = toupper(*p);
+				} else if (isupper((unsigned char)*p)) {
 					modified = 1; hnum = hlast;
-					*p = tolower(c);
+					*p = tolower(*p);
 				}
 				if (es->cursor < es->linelen - 1)
 					es->cursor++;

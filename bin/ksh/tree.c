@@ -1,10 +1,8 @@
-/*	$OpenBSD: tree.c,v 1.26 2015/10/19 14:42:16 mmcc Exp $	*/
+/*	$OpenBSD: tree.c,v 1.24 2015/09/27 05:25:00 guenther Exp $	*/
 
 /*
  * command tree climbing
  */
-
-#include <string.h>
 
 #include "sh.h"
 
@@ -659,7 +657,8 @@ tfree(struct op *t, Area *ap)
 	if (t == NULL)
 		return;
 
-	afree(t->str, ap);
+	if (t->str != NULL)
+		afree(t->str, ap);
 
 	if (t->vars != NULL) {
 		for (w = t->vars; *w != NULL; w++)
@@ -689,9 +688,12 @@ iofree(struct ioword **iow, Area *ap)
 	struct ioword *p;
 
 	for (iop = iow; (p = *iop++) != NULL; ) {
-		afree(p->name, ap);
-		afree(p->delim, ap);
-		afree(p->heredoc, ap);
+		if (p->name != NULL)
+			afree(p->name, ap);
+		if (p->delim != NULL)
+			afree(p->delim, ap);
+		if (p->heredoc != NULL)
+			afree(p->heredoc, ap);
 		afree(p, ap);
 	}
 	afree(iow, ap);
