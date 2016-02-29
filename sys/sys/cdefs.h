@@ -169,6 +169,8 @@
 #  else
 #define __only_inline	__inline
 #  endif
+#elif defined(__clang__)
+#define __only_inline	__inline
 #elif defined(__GNUC__)
 #define __only_inline	extern __inline
 #else
