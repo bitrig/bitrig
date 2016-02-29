@@ -20,6 +20,6 @@
 
 #include_next <float.h>
 
-PROTO_NORMAL(__flt_rounds);
+//PROTO_NORMAL(__flt_rounds);
 
 #endif	/* _LIBC_FLOAT_H_ */
