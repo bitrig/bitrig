@@ -1,14 +1,13 @@
-/*	$OpenBSD: misc.c,v 1.50 2015/10/19 17:15:53 mmcc Exp $	*/
+/*	$OpenBSD: misc.c,v 1.46 2015/09/22 21:50:40 millert Exp $	*/
 
 /*
  * Miscellaneous functions
  */
 
-#include <ctype.h>
-#include <limits.h>
-#include <string.h>
-
 #include "sh.h"
+#include <ctype.h>
+#include <wctype.h>
+#include <sys/param.h>	/* for MAXPATHLEN and nitems() */
 #include "charclass.h"
 
 short ctypes [UCHAR_MAX+1];	/* type bits for unsigned char */
@@ -548,7 +547,7 @@ has_globbing(const char *xp, const char *xpe)
 			if (!in_bracket) {
 				saw_glob = 1;
 				in_bracket = 1;
-				if (ISMAGIC(p[1]) && p[2] == '!')
+				if (ISMAGIC(p[1]) && p[2] == NOT)
 					p += 2;
 				if (ISMAGIC(p[1]) && p[2] == ']')
 					p += 2;
@@ -740,7 +739,7 @@ cclass(const unsigned char *p, int sub)
 	int c, d, rv, not, found = 0;
 	const unsigned char *orig_p = p;
 
-	if ((not = (ISMAGIC(*p) && *++p == '!')))
+	if ((not = (ISMAGIC(*p) && *++p == NOT)))
 		p++;
 	do {
 		/* check for POSIX character class (e.g. [[:alpha:]]) */

@@ -1,16 +1,13 @@
-/*	$OpenBSD: c_sh.c,v 1.53 2015/10/21 15:20:37 mmcc Exp $	*/
+/*	$OpenBSD: c_sh.c,v 1.49 2015/09/18 07:28:24 nicm Exp $	*/
 
 /*
  * built-in Bourne commands
  */
 
-#include <sys/resource.h>
+#include "sh.h"
 #include <sys/stat.h>
 #include <sys/time.h>
-
-#include <string.h>
-
-#include "sh.h"
+#include <sys/resource.h>
 
 static void p_time(struct shf *, int, struct timeval *, int, char *, char *);
 
@@ -658,7 +655,7 @@ c_unset(char **wp)
 			}
 			unset(vp, strchr(id, '[') ? 1 : 0);
 		} else {		/* unset function */
-			define(id, NULL);
+			define(id, (struct op *) NULL);
 		}
 	return 0;
 }
@@ -820,7 +817,6 @@ c_exec(char **wp)
 	return 0;
 }
 
-#ifdef MKNOD
 static int
 c_mknod(char **wp)
 {
@@ -874,7 +870,6 @@ usage:
 	bi_errorf("usage: mknod [-m mode] name p");
 	return 1;
 }
-#endif /* MKNOD */
 
 static int
 c_suspend(char **wp)
@@ -934,9 +929,7 @@ const struct builtin shbuiltins [] = {
 	{"ulimit", c_ulimit},
 	{"+umask", c_umask},
 	{"*=unset", c_unset},
-#ifdef MKNOD
 	{"mknod", c_mknod},
-#endif
 	{"suspend", c_suspend},
 	{NULL, NULL}
 };

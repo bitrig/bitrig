@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.31 2015/10/22 02:29:20 mmcc Exp $
+#	$OpenBSD: Makefile,v 1.29 2013/12/02 20:41:01 millert Exp $
 
 PROG=	ksh
 SRCS=	alloc.c c_ksh.c c_sh.c c_test.c c_ulimit.c edit.c emacs.c eval.c \
@@ -6,7 +6,6 @@ SRCS=	alloc.c c_ksh.c c_sh.c c_test.c c_ulimit.c edit.c emacs.c eval.c \
 	misc.c path.c shf.c syn.c table.c trap.c tree.c tty.c var.c \
 	version.c vi.c
 
-# -DMKNOD - enable builtin mknod; conflicts with pledge(2)
 DEFS=	-Wall
 CFLAGS+=${DEFS} -I. -I${.CURDIR} -I${.CURDIR}/../../lib/libc/gen
 MAN=	ksh.1 sh.1

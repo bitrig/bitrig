@@ -1,4 +1,4 @@
-/*	$OpenBSD: c_test.c,v 1.22 2015/10/19 14:42:16 mmcc Exp $	*/
+/*	$OpenBSD: c_test.c,v 1.20 2015/09/18 07:28:24 nicm Exp $	*/
 
 /*
  * test(1); version 7-like  --  author Erik Baalbergen
@@ -9,11 +9,8 @@
  * modified by J.T. Conklin to add POSIX compatibility.
  */
 
-#include <sys/stat.h>
-
-#include <string.h>
-
 #include "sh.h"
+#include <sys/stat.h>
 #include "c_test.h"
 
 /* test(1) accepts the following grammar:

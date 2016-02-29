@@ -1,10 +1,8 @@
-/*	$OpenBSD: syn.c,v 1.36 2015/10/19 14:42:16 mmcc Exp $	*/
+/*	$OpenBSD: syn.c,v 1.34 2015/10/06 21:21:39 nicm Exp $	*/
 
 /*
  * shell parser (C version)
  */
-
-#include <string.h>
 
 #include "sh.h"
 #include "c_test.h"

@@ -1,16 +1,14 @@
-/*	$OpenBSD: main.c,v 1.72 2015/10/30 03:13:52 guenther Exp $	*/
+/*	$OpenBSD: main.c,v 1.60 2015/09/18 07:28:24 nicm Exp $	*/
 
 /*
  * startup, main loop, environments and error handling
  */
 
-#include <sys/stat.h>
-
-#include <paths.h>
-#include <pwd.h>
-#include <string.h>
+#define	EXTERN				/* define EXTERNs in sh.h */
 
 #include "sh.h"
+#include <sys/stat.h>
+#include <pwd.h>
 
 extern char **environ;
 
@@ -22,51 +20,6 @@ static void	reclaim(void);
 static void	remove_temps(struct temp *tp);
 static int	is_restricted(char *name);
 static void	init_username(void);
-
-const char *kshname;
-pid_t	kshpid;
-pid_t	procpid;
-uid_t	ksheuid;
-int	exstat;
-int	subst_exstat;
-const char *safe_prompt;
-
-Area	aperm;
-
-struct env	*e;
-
-char	shell_flags[FNFLAGS];
-
-char	null[] = "";
-
-int shl_stdout_ok;
-
-unsigned int	ksh_tmout;
-enum tmout_enum	ksh_tmout_state = TMOUT_EXECUTING;
-
-int	really_exit;
-
-int ifs0 = ' ';
-
-volatile sig_atomic_t	trap;
-volatile sig_atomic_t	intrsig;
-volatile sig_atomic_t	fatal_trap;
-
-Getopt	builtin_opt;
-Getopt	user_opt;
-
-struct coproc	coproc;
-sigset_t	sm_default, sm_sigchld;
-
-char	*builtin_argv0;
-int	 builtin_flag;
-
-char	*current_wd;
-int	 current_wd_size;
-
-#ifdef EDIT
-int	x_cols = 80;
-#endif /* EDIT */
 
 /*
  * shell initialization
@@ -97,7 +50,7 @@ static const char *initcoms [] = {
 	  "integer=typeset -i",
 	  "nohup=nohup ",
 	  "local=typeset",
-	  "r=fc -s",
+	  "r=fc -e -",
 	 /* Aliases that are builtin commands in at&t */
 	  "login=exec login",
 	  NULL,
@@ -148,12 +101,6 @@ main(int argc, char *argv[])
 	pid_t ppid;
 
 	kshname = argv[0];
-
-#ifndef MKNOD
-	if (pledge("stdio rpath wpath cpath fattr flock getpw proc exec tty",
-	    NULL) == -1)
-		perror("pledge");
-#endif
 
 	ainit(&aperm);		/* initialize permanent Area */
 

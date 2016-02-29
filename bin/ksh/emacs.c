@@ -1,4 +1,4 @@
-/*	$OpenBSD: emacs.c,v 1.60 2015/10/19 14:42:16 mmcc Exp $	*/
+/*	$OpenBSD: emacs.c,v 1.53 2015/09/18 07:28:24 nicm Exp $	*/
 
 /*
  *  Emacs-like command line editing and history
@@ -17,14 +17,13 @@
 #include "config.h"
 #ifdef EMACS
 
-#include <sys/queue.h>
+#include "sh.h"
+#include <sys/param.h>
 #include <sys/stat.h>
-
+#include <sys/queue.h>
 #include <ctype.h>
 #include <locale.h>
-#include <string.h>
-
-#include "sh.h"
+#include <stdarg.h>
 #include "edit.h"
 
 static	Area	aedit;
@@ -32,6 +31,9 @@ static	Area	aedit;
 
 #define	CTRL(x)		((x) == '?' ? 0x7F : (x) & 0x1F)	/* ASCII */
 #define	UNCTRL(x)	((x) == 0x7F ? '?' : (x) | 0x40)	/* ASCII */
+#define	META(x)		((x) & 0x7f)
+#define	ISMETA(x)	(Flag(FEMACSUSEMETA) && ((x) & 0x80))
+
 
 /* values returned by keyboard functions */
 #define	KSTD	0
@@ -401,8 +403,10 @@ x_ins_string(int c)
 	return x_insert(c);
 }
 
+static int x_do_ins(const char *cp, int len);
+
 static int
-x_do_ins(const char *cp, size_t len)
+x_do_ins(const char *cp, int len)
 {
 	if (xep+len >= xend) {
 		x_e_putc('\a');
@@ -1059,7 +1063,8 @@ static void
 x_push(int nchars)
 {
 	char	*cp = str_nsave(xcp, nchars, AEDIT);
-	afree(killstack[killsp], AEDIT);
+	if (killstack[killsp])
+		afree(killstack[killsp], AEDIT);
 	killstack[killsp] = cp;
 	killsp = (killsp + 1) % KILLSIZE;
 }
@@ -1196,7 +1201,7 @@ kb_decode(const char *s)
 
 	l[0] = '\0';
 	for (i = 0; i < strlen(s); i++) {
-		if (iscntrl((unsigned char)s[i])) {
+		if (iscntrl(s[i])) {
 			l[at++] = '^';
 			l[at++] = UNCTRL(s[i]);
 		} else

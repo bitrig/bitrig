@@ -1,4 +1,4 @@
-/*	$OpenBSD: alloc.c,v 1.13 2015/10/19 02:15:45 mmcc Exp $	*/
+/*	$OpenBSD: alloc.c,v 1.8 2008/07/21 17:30:08 millert Exp $	*/
 /*
  * Copyright (c) 2002 Marc Espie.
  *
@@ -27,8 +27,6 @@
 /*
  * area-based allocation built on malloc/free
  */
-
-#include <stdint.h>
 
 #include "sh.h"
 
@@ -64,11 +62,10 @@ alloc(size_t size, Area *ap)
 {
 	struct link *l;
 
-	/* ensure that we don't overflow by allocating space for link */
-	if (size > SIZE_MAX - sizeof(struct link))
+	if (SIZE_MAX - size < sizeof(struct link))
 		internal_errorf(1, "unable to allocate memory");
 
-	l = malloc(sizeof(struct link) + size);
+	l = calloc(1, sizeof(struct link) + size);
 	if (l == NULL)
 		internal_errorf(1, "unable to allocate memory");
 	l->next = ap->freelist;
@@ -78,26 +75,6 @@ alloc(size_t size, Area *ap)
 	ap->freelist = l;
 
 	return L2P(l);
-}
-
-/*
- * Copied from calloc().
- *
- * This is sqrt(SIZE_MAX+1), as s1*s2 <= SIZE_MAX
- * if both s1 < MUL_NO_OVERFLOW and s2 < MUL_NO_OVERFLOW
- */
-#define MUL_NO_OVERFLOW	(1UL << (sizeof(size_t) * 4))
-
-void *
-areallocarray(void *ptr, size_t nmemb, size_t size, Area *ap)
-{
-	/* condition logic cloned from calloc() */
-	if ((nmemb >= MUL_NO_OVERFLOW || size >= MUL_NO_OVERFLOW) &&
-	    nmemb > 0 && SIZE_MAX / nmemb < size) {
-		internal_errorf(1, "unable to allocate memory");
-	}
-
-	return aresize(ptr, nmemb * size, ap);
 }
 
 void *
@@ -116,10 +93,6 @@ aresize(void *ptr, size_t size, Area *ap)
 
 	if (ptr == NULL)
 		return alloc(size, ap);
-
-	/* ensure that we don't overflow by allocating space for link */
-	if (size > SIZE_MAX - sizeof(struct link))
-		internal_errorf(1, "unable to allocate memory");
 
 	l = P2L(ptr);
 	lprev = l->prev;

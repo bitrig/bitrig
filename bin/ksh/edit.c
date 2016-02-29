@@ -1,4 +1,4 @@
-/*	$OpenBSD: edit.c,v 1.49 2015/10/21 14:31:28 mmcc Exp $	*/
+/*	$OpenBSD: edit.c,v 1.45 2015/09/26 23:49:37 nicm Exp $	*/
 
 /*
  * Command line editing - common code
@@ -8,16 +8,15 @@
 #include "config.h"
 #ifdef EDIT
 
+#include "sh.h"
+#include "tty.h"
+#include "edit.h"
+#include <sys/param.h>
 #include <sys/ioctl.h>
-#include <sys/stat.h>
-
 #include <ctype.h>
 #include <libgen.h>
-#include <string.h>
-
-#include "sh.h"
-#include "edit.h"
-#include "tty.h"
+#include <sys/stat.h>
+#include <poll.h>
 
 X_chars edchars;
 
@@ -480,7 +479,7 @@ x_command_glob(int flags, const char *str, int slen, char ***wordsp)
 	if (flags & XCF_FULLPATH) {
 		/* Sort by basename, then path order */
 		struct path_order_info *info;
-		struct path_order_info *last_info = NULL;
+		struct path_order_info *last_info = 0;
 		char **words = (char **) XPptrv(w);
 		int path_order = 0;
 		int i;
@@ -685,7 +684,8 @@ x_free_words(int nwords, char **words)
 	int i;
 
 	for (i = 0; i < nwords; i++)
-		afree(words[i], ATEMP);
+		if (words[i])
+			afree(words[i], ATEMP);
 	afree(words, ATEMP);
 }
 

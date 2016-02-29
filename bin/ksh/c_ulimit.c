@@ -1,4 +1,4 @@
-/*	$OpenBSD: c_ulimit.c,v 1.22 2015/10/19 14:42:16 mmcc Exp $	*/
+/*	$OpenBSD: c_ulimit.c,v 1.20 2015/09/15 18:15:05 tedu Exp $	*/
 
 /*
 	ulimit -- handle "ulimit" builtin
@@ -18,11 +18,9 @@
 	that was originally under case SYSULIMIT in source file "xec.c".
 */
 
-#include <sys/resource.h>
-
-#include <string.h>
-
 #include "sh.h"
+#include <sys/param.h>
+#include <sys/resource.h>
 
 #define SOFT	0x1
 #define HARD	0x2

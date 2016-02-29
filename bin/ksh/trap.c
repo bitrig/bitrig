@@ -1,10 +1,8 @@
-/*	$OpenBSD: trap.c,v 1.27 2015/10/19 14:42:16 mmcc Exp $	*/
+/*	$OpenBSD: trap.c,v 1.25 2015/09/18 07:28:24 nicm Exp $	*/
 
 /*
  * signal handling
  */
-
-#include <string.h>
 
 #include "sh.h"
 
@@ -284,7 +282,8 @@ settrap(Trap *p, char *s)
 {
 	sig_t f;
 
-	afree(p->trap, APERM);
+	if (p->trap)
+		afree(p->trap, APERM);
 	p->trap = str_save(s, APERM); /* handles s == 0 */
 	p->flags |= TF_CHANGED;
 	f = !s ? SIG_DFL : s[0] ? trapsig : SIG_IGN;
