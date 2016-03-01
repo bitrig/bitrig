@@ -27,6 +27,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifndef nitems
+#define nitems(_a) (sizeof((_a)) / sizeof((_a)[0]))
+#endif
+
 #define is_runnable(p) \
 	((p)->p_stat == SRUN || (p)->p_stat == SIDL || (p)->p_stat == SONPROC)
 #define is_stopped(p) \
@@ -127,18 +131,4 @@ retry:
 error:
 	free(buf);
 	return (NULL);
-}
-
-char *
-get_proc_cwd(int fd)
-{
-	int		name[] = { CTL_KERN, KERN_PROC_CWD, 0 };
-	static char	path[MAXPATHLEN];
-	size_t		pathlen = sizeof path;
-
-	if ((name[2] = tcgetpgrp(fd)) == -1)
-		return (NULL);
-	if (sysctl(name, 3, path, &pathlen, NULL, 0) != 0)
-		return (NULL);
-	return (path);
 }

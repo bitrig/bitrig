@@ -17,7 +17,6 @@
  */
 
 #include <sys/types.h>
-#include <sys/param.h>
 
 #include <curses.h>
 #include <fnmatch.h>
