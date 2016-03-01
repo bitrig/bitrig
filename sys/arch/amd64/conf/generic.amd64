@@ -1,4 +1,4 @@
-#	$OpenBSD: GENERIC,v 1.335 2012/11/29 23:38:25 stsp Exp $
+#	$OpenBSD: GENERIC,v 1.399 2015/10/29 07:47:02 kettenis Exp $
 #
 # For further information on compiling OpenBSD kernels, see the config(8)
 # man page.
@@ -32,8 +32,9 @@ ioapic*	at mainbus?
 isa0	at mainbus0
 isa0	at pcib?
 isa0	at amdpcib?
+isa0	at tcpcib?
 pci*	at mainbus0
-pvbus*	at mainbus0
+pvbus0	at mainbus0
 
 acpi0		at bios0
 acpitimer*	at acpi?
@@ -63,6 +64,9 @@ ipmi0	at mainbus? disable	# IPMI
 
 vmt0	at pvbus?		# VMware Tools
 
+option		PCIVERBOSE
+option		USBVERBOSE
+
 pchb*	at pci?			# PCI-Host bridges
 aapic*	at pci?			# AMD 8131 IO apic
 ppb*	at pci?			# PCI-PCI bridges
@@ -70,6 +74,7 @@ pci*	at ppb?
 pci*	at pchb?
 pcib*	at pci?			# PCI-ISA bridge
 amdpcib* at pci?		# AMD 8111 LPC bridge
+tcpcib*	at pci?			# Intel Atom E600 LPC bridge
 kate*	at pci?			# AMD K8 temperature sensor
 km*	at pci?			# AMD K10 temperature sensor
 amas*	at pci? disable		# AMD memory configuration
@@ -98,10 +103,6 @@ uguru0	at isa? disable port 0xe0	# ABIT uGuru
 
 aps0	at isa? port 0x1600		# ThinkPad Active Protection System
 asmc0	at isa? port 0x300		# Apple SMC
-
-iapcu*	at pci?			# Intel Atom C2000 Platform Controller Unit
-gpio*	at iapcu?
-isa0	at iapcu?
 
 piixpm*	at pci?			# Intel PIIX PM
 iic*	at piixpm?
@@ -194,7 +195,7 @@ ucom*	at uslcom?
 uark*	at uhub?		# Arkmicro ARK3116 serial
 ucom*	at uark?
 moscom*	at uhub?		# MosChip MCS7703 serial
-ucom*	at moscom?
+ucom*	at moscom?		
 umcs*	at uhub?		# MosChip MCS78x0 serial
 ucom*	at umcs?
 uipaq*	at uhub?		# iPAQ serial adapter
@@ -258,10 +259,13 @@ rsu*	at uhub?		# Realtek RTL8188SU/RTL8191SU/RTL8192SU
 urtwn*	at uhub?		# Realtek RTL8188CU/RTL8192CU
 udcf*	at uhub?		# Gude Expert mouseCLOCK
 uthum*	at uhidev?		# TEMPerHUM sensor
-ugold* at uhidev?		# gold TEMPer sensor
+ugold*	at uhidev?		# gold TEMPer sensor
 utrh*	at uhidev?		# USBRH sensor
 utwitch* at uhidev?		# YUREX BBU sensor
 uow*	at uhub?		# Maxim/Dallas DS2490 1-Wire adapter
+uoakrh*	at uhidev?		# Toradex OAK temp and rel humidity
+uoaklux* at uhidev?		# Toradex OAK LUX
+uoakv*	at uhidev?		# Toradex OAK 10V sensor
 onewire* at uow?
 uvideo*	at uhub?		# USB Video
 video*	at uvideo?
@@ -273,8 +277,8 @@ com*	at cardbus?
 
 sdhc*	at pci?			# SD Host Controller
 sdmmc*	at sdhc?		# SD/MMC bus
-rtsx*   at pci?                 # Realtek SD Card Reader
-sdmmc*  at rtsx?                # SD/MMC bus
+rtsx*	at pci?			# Realtek SD Card Reader
+sdmmc*	at rtsx?		# SD/MMC bus
 
 isadma0	at isa?
 
@@ -293,15 +297,16 @@ wsdisplay0	at vga? console 1
 wskbd*		at pckbd? mux 1
 wsmouse*	at pms? mux 0
 
-intagp*		at vga?		# intel integrated graphics
 #mmuagp*	at pchb?	# amd64 mmu agp.
-
-agp*		at intagp?
 #agp*		at mmuagp?
 
 inteldrm*	at pci? 	# Intel i915, i945 DRM driver
+intagp*		at inteldrm?
+agp*		at intagp?
 drm0		at inteldrm? console 1
 drm*		at inteldrm?
+wsdisplay0	at inteldrm? console 1
+wsdisplay*	at inteldrm?
 radeondrm*	at pci? 	# ATI Radeon DRM driver
 drm0		at radeondrm? console 1
 drm*		at radeondrm?
@@ -317,6 +322,10 @@ com3	at isa? disable port 0x2e8 irq 9 # (conflicts with some video cards)
 
 com*	at pcmcia?			# PCMCIA modems/serial ports
 com*	at puc?
+
+# options CY_HW_RTS
+#cy*	at pci?				# PCI cyclom serial card
+#cz*	at pci?				# Cyclades-Z multi-port serial boards
 
 lpt0	at isa? port 0x378 irq 7	# standard PC parallel ports
 #lpt1	at isa? port 0x278
@@ -343,6 +352,7 @@ twe*	at pci?				# 3ware Escalade RAID controllers
 #aac*	at pci?				# Adaptec FSA RAID controllers
 ami*	at pci?				# AMI MegaRAID controllers
 mfi*	at pci?				# LSI MegaRAID SAS controllers
+mfii*	at pci?				# LSI MegaRAID SAS Fusion controllers
 #cac*	at pci?				# Compaq Smart ARRAY [234]* RAID controllers
 ciss*	at pci?				# Compaq Smart ARRAY [56]* RAID controllers
 iha*	at pci?				# Initio Ultra/UltraWide SCSI controllers
@@ -357,7 +367,7 @@ siop*	at pci?				# NCR 538XX SCSI controllers
 adw*	at pci?				# AdvanSys ULTRA WIDE SCSI
 pcscp*	at pci?				# AMD 53c974 PCscsi-PCI SCSI
 #trm*	at pci?				# Tekram DC-3x5U SCSI Controllers
-vmwpvs*	at pci?			# VMware ParaVirtual SCSI
+vmwpvs*	at pci?				# VMware ParaVirtual SCSI
 
 scsibus* at scsi?
 sd*	at scsibus?			# SCSI disk drives
@@ -424,6 +434,7 @@ em*	at pci?				# Intel Pro/1000 ethernet
 ixgb*	at pci?				# Intel Pro/10Gb ethernet
 ix*	at pci?				# Intel 82598EB 10Gb ethernet
 myx*	at pci?				# Myricom Myri-10G 10Gb ethernet
+oce*	at pci?				# Emulex OneConnect 10Gb ethernet
 txp*	at pci?				# 3com 3CR990
 #nge*	at pci?				# NS DP83820/DP83821 GigE
 bge*	at pci?				# Broadcom BCM57xx (aka Tigon3)
@@ -589,7 +600,6 @@ owctr*	at onewire?		# Counter device
 
 pseudo-device	pctr		1
 pseudo-device	nvram		1
-#pseudo-device	raid		4	# RAIDframe disk driver
 pseudo-device	hotplug		1	# devices hot plugging
 
 # mouse & keyboard multiplexor pseudo-devices
@@ -599,6 +609,6 @@ pseudo-device	wsmux		2
 virtio*		at pci?		# Virtio PCI device
 vioblk*		at virtio?	# Virtio block device
 vio*		at virtio?	# Virtio network device
-vioscsi*	at virtio?	# Virtio SCSI device
 viomb*		at virtio?	# Virtio memory ballooning device
 viornd*		at virtio?	# Virtio entropy device
+vioscsi*	at virtio?	# Virtio SCSI device
