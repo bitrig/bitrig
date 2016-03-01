@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.15 2006/07/02 12:34:15 sturm Exp $
+#	$OpenBSD: Makefile,v 1.16 2016/03/01 16:26:06 naddy Exp $
 
 PROG=	systrace
 CFLAGS+=-I. -I${.CURDIR} -I${.CURDIR}/../../sys

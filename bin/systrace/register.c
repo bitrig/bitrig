@@ -1,4 +1,4 @@
-/*	$OpenBSD: register.c,v 1.26 2015/06/24 03:38:51 guenther Exp $	*/
+/*	$OpenBSD: register.c,v 1.27 2016/03/01 16:26:06 naddy Exp $	*/
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.

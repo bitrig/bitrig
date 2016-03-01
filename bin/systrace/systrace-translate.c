@@ -1,4 +1,4 @@
-/*	$OpenBSD: systrace-translate.c,v 1.25 2015/01/16 00:19:12 deraadt Exp $	*/
+/*	$OpenBSD: systrace-translate.c,v 1.26 2016/03/01 16:26:06 naddy Exp $	*/
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -306,11 +306,9 @@ print_signame(char *buf, size_t buflen, struct intercept_translate *tl)
 	case SIGWINCH: 
 		name = "SIGWINCH"; 
 		break;
-#ifndef __linux__
 	case SIGINFO: 
 		name = "SIGINFO"; 
 		break;
-#endif /* !__linux__ */
 	case SIGUSR1: 
 		name = "SIGUSR1"; 
 		break;

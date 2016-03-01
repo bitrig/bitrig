@@ -1,4 +1,4 @@
-/*	$OpenBSD: openbsd-syscalls.c,v 1.46 2015/12/09 19:36:17 mmcc Exp $	*/
+/*	$OpenBSD: openbsd-syscalls.c,v 1.47 2016/03/01 16:26:06 naddy Exp $	*/
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -40,7 +40,6 @@
 #define SYSVMSG
 #define SYSVSHM
 #include <kern/syscalls.c>
-
 #undef KTRACE
 #undef PTRACE
 #undef NFSCLIENT
