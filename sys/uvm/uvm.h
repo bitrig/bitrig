@@ -74,9 +74,6 @@ struct uvm {
 	/* aio_done is locked by uvm.aiodoned_lock. */
 	TAILQ_HEAD(, buf) aio_done;		/* done async i/o reqs */
 
-	/* swap-related items */
-	simple_lock_data_t swap_data_lock;
-
 	/* kernel object: to support anonymous pageable kernel memory */
 	struct uvm_object *kernel_object;
 };
@@ -111,9 +108,9 @@ extern struct uvm uvm;
  * UVM_WAIT: wait... wrapper around the tsleep() function.
  */
 
-#define UVM_WAIT(event, intr, msg, timo)			\
-do {								\
-	tsleep(event, PVM|(intr ? PCATCH : 0), msg, timo);	\
+#define	UVM_WAIT(event, intr, msg, timo)				\
+do {									\
+	tsleep(event, PVM|(intr ? PCATCH : 0), msg, timo);		\
 } while (0)
 
 /*

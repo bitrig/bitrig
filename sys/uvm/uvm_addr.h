@@ -91,9 +91,11 @@ struct uvm_addr_state	*uaddr_lin_create(vaddr_t, vaddr_t);
 #endif
 struct uvm_addr_state	*uaddr_rnd_create(vaddr_t, vaddr_t);
 struct uvm_addr_state	*uaddr_hint_create(vaddr_t, vaddr_t, vsize_t);
+#ifndef SMALL_KERNEL
 struct uvm_addr_state	*uaddr_bestfit_create(vaddr_t, vaddr_t);
 struct uvm_addr_state	*uaddr_pivot_create(vaddr_t, vaddr_t);
 struct uvm_addr_state	*uaddr_stack_brk_create(vaddr_t, vaddr_t);
+#endif /* SMALL_KERNEL */
 int			 uvm_addr_fitspace(vaddr_t *, vaddr_t *,
 			    vaddr_t, vaddr_t, vsize_t, vaddr_t, vaddr_t,
 			    vsize_t, vsize_t);

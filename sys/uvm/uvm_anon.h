@@ -38,25 +38,14 @@
  */
 
 struct vm_anon {
-	struct vm_page	*an_page;	/* if in RAM [an_lock] */
-	int		 an_ref;	/* reference count [an_lock] */
+	struct vm_page *an_page;	/* if in RAM */
+	int an_ref;			/* reference count */
 
 	/*
-	 * Drum swap slot # (if != 0) [an_lock or not, if we hold an_page
-	 * PG_BUSY]
+	 * Drum swap slot # (if != 0) [if we hold an_page, PG_BUSY]
 	 */
-	int		 an_swslot;
-
-	struct mutex	an_lock;
+	int an_swslot;
 };
-
-#ifdef UVMLOCKDEBUG
-#      define UVM_ASSERT_ANONLOCKED(anon) MUTEX_ASSERT_LOCKED(&(anon)->an_lock)
-#      define UVM_ASSERT_ANONUNLOCKED(anon) MUTEX_ASSERT_UNLOCKED(&(anon)->an_lock)
-#else
-#      define UVM_ASSERT_ANONLOCKED(obj)
-#      define UVM_ASSERT_ANONUNLOCKED(obj)
-#endif /* UVMLOCKDEBUG */
 
 /*
  * for active vm_anon's the data can be in one of the following state:

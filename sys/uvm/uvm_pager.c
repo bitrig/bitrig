@@ -118,8 +118,7 @@ uvm_pseg_init(struct uvm_pseg *pseg)
 {
 	KASSERT(pseg->start == 0);
 	KASSERT(pseg->use == 0);
-	pseg->start = (vaddr_t)km_alloc(MAX_PAGER_SEGS * MAXBSIZE, &kv_any,
-	    &kp_none, &kd_trylock);
+	pseg->start = uvm_km_valloc_try(kernel_map, MAX_PAGER_SEGS * MAXBSIZE);
 }
 
 /*
@@ -217,8 +216,7 @@ uvm_pseg_release(vaddr_t segaddr)
 	mtx_leave(&uvm_pseg_lck);
 
 	if (va)
-		km_free((void *)va, MAX_PAGER_SEGS * MAXBSIZE,
-		    &kv_any, &kp_none);
+		uvm_km_free(kernel_map, va, MAX_PAGER_SEGS * MAXBSIZE);
 }
 
 /*
@@ -423,7 +421,7 @@ uvm_mk_pcluster(struct uvm_object *uobj, struct vm_page **pps, int *npages,
  *
  * => page queues must be locked by caller
  * => if page is not swap-backed, then "uobj" points to the object
- *	backing it.   this object should be locked by the caller.
+ *	backing it.
  * => if page is swap-backed, then "uobj" should be NULL.
  * => "pg" should be PG_BUSY (by caller), and !PG_CLEAN
  *    for swap-backed memory, "pg" can be NULL if there is no page
@@ -441,17 +439,10 @@ uvm_mk_pcluster(struct uvm_object *uobj, struct vm_page **pps, int *npages,
  * => return state:
  *	1. we return the VM_PAGER status code of the pageout
  *	2. we return with the page queues unlocked
- *	3. if (uobj != NULL) [!swap_backed] we return with
- *		uobj locked _only_ if PGO_PDFREECLUST is set 
- *		AND result != VM_PAGER_PEND.   in all other cases
- *		we return with uobj unlocked.   [this is a hack
- *		that allows the pagedaemon to save one lock/unlock
- *		pair in the !swap_backed case since we have to
- *		lock the uobj to drop the cluster anyway]
- *	4. on errors we always drop the cluster.   thus, if we return
+ *	3. on errors we always drop the cluster.   thus, if we return
  *		!PEND, !OK, then the caller only has to worry about
  *		un-busying the main page (not the cluster pages).
- *	5. on success, if !PGO_PDFREECLUST, we return the cluster
+ *	4. on success, if !PGO_PDFREECLUST, we return the cluster
  *		with all pages busy (caller must un-busy and check
  *		wanted/released flags).
  */
@@ -506,14 +497,10 @@ uvm_pager_put(struct uvm_object *uobj, struct vm_page *pg,
 	 */
 ReTry:
 	if (uobj) {
-		/* object is locked */
 		result = uobj->pgops->pgo_put(uobj, ppsp, *npages, flags);
-		/* object is now unlocked */
 	} else {
-		/* nothing locked */
 		/* XXX daddr_t -> int */
 		result = uvm_swap_put(swblk, ppsp, *npages, flags);
-		/* nothing locked */
 	}
 
 	/*
@@ -534,8 +521,6 @@ ReTry:
 			if (*npages > 1 || pg == NULL)
 				uvm_pager_dropcluster(uobj, pg, ppsp, npages,
 				    PGO_PDFREECLUST);
-			/* if (uobj): object still locked, as per
-			 * return-state item #3 */
 		}
 		return (result);
 	}
@@ -558,9 +543,7 @@ ReTry:
 			/* XXX daddr_t -> int */
 			int nswblk = (result == VM_PAGER_AGAIN) ? swblk : 0;
 			if (pg->pg_flags & PQ_ANON) {
-				mtx_enter(&pg->uanon->an_lock);
 				pg->uanon->an_swslot = nswblk;
-				mtx_leave(&pg->uanon->an_lock);
 			} else {
 				uao_set_swslot(pg->uobject,
 					       pg->offset >> PAGE_SHIFT,
@@ -602,7 +585,7 @@ ReTry:
 	 * was one).    give up!   the caller only has one page ("pg")
 	 * to worry about.
 	 */
-
+	
 	return(result);
 }
 
@@ -611,9 +594,7 @@ ReTry:
  * got an error, or, if PGO_PDFREECLUST we are un-busying the
  * cluster pages on behalf of the pagedaemon).
  *
- * => uobj, if non-null, is a non-swap-backed object that is 
- *	locked by the caller.   we return with this object still
- *	locked.
+ * => uobj, if non-null, is a non-swap-backed object
  * => page queues are not locked
  * => pg is our page of interest (the one we clustered around, can be null)
  * => ppsp/npages is our current cluster
@@ -638,17 +619,12 @@ uvm_pager_dropcluster(struct uvm_object *uobj, struct vm_page *pg,
 			continue;
 	
 		/*
-		 * if swap-backed, gain lock on object that owns page.  note
-		 * that PQ_ANON bit can't change as long as we are holding
+		 * Note that PQ_ANON bit can't change as long as we are holding
 		 * the PG_BUSY bit (so there is no need to lock the page
 		 * queues to test it).
-		 *
-		 * once we have the lock, dispose of the pointer to swap, if
-		 * requested
 		 */
 		if (!uobj) {
 			if (ppsp[lcv]->pg_flags & PQ_ANON) {
-				mtx_enter(&ppsp[lcv]->uanon->an_lock);
 				if (flags & PGO_REALLOCSWAP)
 					  /* zap swap block */
 					  ppsp[lcv]->uanon->an_swslot = 0;
@@ -661,7 +637,6 @@ uvm_pager_dropcluster(struct uvm_object *uobj, struct vm_page *pg,
 
 		/* did someone want the page while we had it busy-locked? */
 		if (ppsp[lcv]->pg_flags & PG_WANTED) {
-			/* still holding obj lock */
 			wakeup(ppsp[lcv]);
 		}
 
@@ -696,12 +671,6 @@ uvm_pager_dropcluster(struct uvm_object *uobj, struct vm_page *pg,
 			pmap_clear_modify(ppsp[lcv]);
 			atomic_setbits_int(&ppsp[lcv]->pg_flags, PG_CLEAN);
 		}
-
-		/* if anonymous cluster, unlock object and move on */
-		if (!uobj) {
-			if (ppsp[lcv]->pg_flags & PQ_ANON)
-				mtx_leave(&ppsp[lcv]->uanon->an_lock);
-		}
 	}
 }
 
@@ -720,7 +689,7 @@ uvm_aio_biodone(struct buf *bp)
 	/* reset b_iodone for when this is a single-buf i/o. */
 	bp->b_iodone = uvm_aio_aiodone;
 
-	mtx_enter(&uvm.aiodoned_lock);	/* locks uvm.aio_done */
+	mtx_enter(&uvm.aiodoned_lock);
 	TAILQ_INSERT_TAIL(&uvm.aio_done, bp, b_freelist);
 	wakeup(&uvm.aiodoned);
 	mtx_leave(&uvm.aiodoned_lock);
@@ -769,11 +738,6 @@ uvm_aio_aiodone(struct buf *bp)
 			}
 		}
 		KASSERT(swap || pg->uobject == uobj);
-		if (swap) {
-			if (pg->pg_flags & PQ_ANON) {
-				mtx_enter(&pg->uanon->an_lock);
-			}
-		}
 
 		/*
 		 * if this is a read and we got an error, mark the pages
@@ -781,8 +745,6 @@ uvm_aio_aiodone(struct buf *bp)
 		 */
 		if (!write && error) {
 			atomic_setbits_int(&pg->pg_flags, PG_RELEASED);
-			if (swap)
-				goto out;
 			continue;
 		}
 		KASSERT(!write || (pgs[i]->pg_flags & PG_FAKE) == 0);
@@ -798,28 +760,8 @@ uvm_aio_aiodone(struct buf *bp)
 			atomic_setbits_int(&pgs[i]->pg_flags, PG_CLEAN);
 			atomic_clearbits_int(&pgs[i]->pg_flags, PG_FAKE);
 		}
-		if (swap) {
-out:
-			/* since we may have many anons and several objects,
-			 * we unbusy the pages one at a time to keep locking
-			 * order.
-			 */
-			if (pg->uobject == NULL && pg->uanon->an_ref == 0 &&
-			    pg->pg_flags & PG_RELEASED) {
-				atomic_clearbits_int(&pg->pg_flags, PG_BUSY);
-				UVM_PAGE_OWN(pg, NULL);
-				uvm_anfree(pg->uanon);
-			} else {
-				uvm_page_unbusy(&pg, 1);
-				if (pg->pg_flags & PQ_ANON) {
-					mtx_leave(&pg->uanon->an_lock);
-				}
-			}
-		}
 	}
-	if (!swap || (!write && error)) {
-		uvm_page_unbusy(pgs, npages);
-	}
+	uvm_page_unbusy(pgs, npages);
 
 #ifdef UVM_SWAP_ENCRYPT
 freed:

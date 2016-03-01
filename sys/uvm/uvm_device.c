@@ -83,8 +83,7 @@ struct uvm_pagerops uvm_deviceops = {
  * get a VM object that is associated with a device.   allocate a new
  * one if needed.
  *
- * => caller must _not_ already be holding the lock on the uvm_object.
- * => in fact, nothing should be locked so that we can sleep here.
+ * => nothing should be locked so that we can sleep here.
  *
  * The last two arguments (off and size) are only used for access checking.
  */
@@ -209,12 +208,11 @@ udv_attach(dev_t device, vm_prot_t accessprot, voff_t off, vsize_t size)
  * add a reference to a VM object.   Note that the reference count must
  * already be one (the passed in reference) so there is no chance of the
  * udv being released or locked out here.
- *
- * => caller must call with object unlocked.
  */
 static void
 udv_reference(struct uvm_object *uobj)
 {
+
 	uobj->uo_refs++;
 }
 
@@ -222,8 +220,6 @@ udv_reference(struct uvm_object *uobj)
  * udv_detach
  *
  * remove a reference to a VM object.
- *
- * => caller must call with object unlocked and map locked.
  */
 static void
 udv_detach(struct uvm_object *uobj)
@@ -277,8 +273,6 @@ udv_flush(struct uvm_object *uobj, voff_t start, voff_t stop, int flags)
  * => rather than having a "get" function, we have a fault routine
  *	since we don't return vm_pages we need full control over the
  *	pmap_enter map in
- * => all the usual fault data structured are locked by the caller
- *	(i.e. maps(read), amap (if any), uobj)
  * => on return, we unlock all fault data structures
  * => flags: PGO_ALLPAGES: get all of the pages
  *	     PGO_LOCKED: fault data structures are locked
@@ -354,7 +348,7 @@ udv_fault(struct uvm_faultinfo *ufi, vaddr_t vaddr, vm_page_t *pps, int npages,
 			 * XXX case.
 			 */
 			uvmfault_unlockall(ufi, ufi->entry->aref.ar_amap,
-			    NULL, NULL);
+			    uobj, NULL);
 
 			/* sync what we have so far */
 			pmap_update(ufi->orig_map->pmap);      
@@ -363,7 +357,7 @@ udv_fault(struct uvm_faultinfo *ufi, vaddr_t vaddr, vm_page_t *pps, int npages,
 		}
 	}
 
-	uvmfault_unlockall(ufi, ufi->entry->aref.ar_amap, NULL, NULL);
+	uvmfault_unlockall(ufi, ufi->entry->aref.ar_amap, uobj, NULL);
 	pmap_update(ufi->orig_map->pmap);
 	return (retval);
 }

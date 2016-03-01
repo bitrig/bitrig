@@ -348,7 +348,6 @@ uvm_mapentry_addrcmp(struct vm_map_entry *e1, struct vm_map_entry *e2)
  * free memory not in the free-memory tree. Only free memory in the
  * tree will be considered during 'any address' allocations.
  */
-
 #ifdef notyet
 static __inline int
 uvm_mapentry_freecmp(struct vm_map_entry *e1, struct vm_map_entry *e2)
@@ -357,7 +356,6 @@ uvm_mapentry_freecmp(struct vm_map_entry *e1, struct vm_map_entry *e2)
 	return cmp ? cmp : uvm_mapentry_addrcmp(e1, e2);
 }
 #endif
-
 /*
  * Copy mapentry.
  */
@@ -493,9 +491,7 @@ uvm_mapent_addr_remove(struct vm_map *map, struct vm_map_entry *entry)
  */
 #define uvm_map_reference(_map)						\
 	do {								\
-		simple_lock(&map->ref_lock);				\
 		map->ref_count++;					\
-		simple_unlock(&map->ref_lock);				\
 	} while (0)
 
 /*
@@ -935,6 +931,186 @@ uvm_map_addr_augment(struct vm_map_entry *entry)
 }
 
 /*
+ * uvm_mapanon: establish a valid mapping in map for an anon
+ *
+ * => *addr and sz must be a multiple of PAGE_SIZE.
+ * => *addr is ignored, except if flags contains UVM_FLAG_FIXED.
+ * => map must be unlocked.
+ *
+ * => align: align vaddr, must be a power-of-2.
+ *    Align is only a hint and will be ignored if the alignment fails.
+ */
+int
+uvm_mapanon(struct vm_map *map, vaddr_t *addr, vsize_t sz,
+    vsize_t align, uvm_flag_t flags)
+{
+	struct vm_map_entry	*first, *last, *entry, *new;
+	struct uvm_map_deadq	 dead;
+	vm_prot_t		 prot;
+	vm_prot_t		 maxprot;
+	vm_inherit_t		 inherit;
+	int			 advice;
+	int			 error;
+	vaddr_t			 pmap_align, pmap_offset;
+	vaddr_t			 hint;
+
+	KASSERT((map->flags & VM_MAP_ISVMSPACE) == VM_MAP_ISVMSPACE);
+	KASSERT(map != kernel_map);
+	KASSERT((map->flags & UVM_FLAG_HOLE) == 0);
+
+	KASSERT((map->flags & VM_MAP_INTRSAFE) == 0);
+	splassert(IPL_NONE);
+
+	/*
+	 * We use pmap_align and pmap_offset as alignment and offset variables.
+	 *
+	 * Because the align parameter takes precedence over pmap prefer,
+	 * the pmap_align will need to be set to align, with pmap_offset = 0,
+	 * if pmap_prefer will not align.
+	 */
+	pmap_align = MAX(align, PAGE_SIZE);
+	pmap_offset = 0;
+
+	/* Decode parameters. */
+	prot = UVM_PROTECTION(flags);
+	maxprot = UVM_MAXPROTECTION(flags);
+	advice = UVM_ADVICE(flags);
+	inherit = UVM_INHERIT(flags);
+	error = 0;
+	hint = trunc_page(*addr);
+	TAILQ_INIT(&dead);
+	KASSERT((sz & (vaddr_t)PAGE_MASK) == 0);
+	KASSERT((align & (align - 1)) == 0);
+
+	/* Check protection. */
+	if ((prot & maxprot) != prot)
+		return EACCES;
+
+	/*
+	 * Before grabbing the lock, allocate a map entry for later
+	 * use to ensure we don't wait for memory while holding the
+	 * vm_map_lock.
+	 */
+	new = uvm_mapent_alloc(map, flags);
+	if (new == NULL)
+		return(ENOMEM);
+
+	if (flags & UVM_FLAG_TRYLOCK) {
+		if (vm_map_lock_try(map) == FALSE) {
+			error = EFAULT;
+			goto out;
+		}
+	} else
+		vm_map_lock(map);
+
+	first = last = NULL;
+	if (flags & UVM_FLAG_FIXED) {
+		/*
+		 * Fixed location.
+		 *
+		 * Note: we ignore align, pmap_prefer.
+		 * Fill in first, last and *addr.
+		 */
+		KASSERT((*addr & PAGE_MASK) == 0);
+
+		/* Check that the space is available. */
+		if (flags & UVM_FLAG_UNMAP)
+			uvm_unmap_remove(map, *addr, *addr + sz, &dead, FALSE, TRUE);
+		if (!uvm_map_isavail(map, NULL, &first, &last, *addr, sz)) {
+			error = ENOMEM;
+			goto unlock;
+		}
+	} else if (*addr != 0 && (*addr & PAGE_MASK) == 0 &&
+	    (align == 0 || (*addr & (align - 1)) == 0) &&
+	    uvm_map_isavail(map, NULL, &first, &last, *addr, sz)) {
+		/*
+		 * Address used as hint.
+		 *
+		 * Note: we enforce the alignment restriction,
+		 * but ignore pmap_prefer.
+		 */
+	} else if ((maxprot & PROT_EXEC) != 0 &&
+	    map->uaddr_exe != NULL) {
+		/* Run selection algorithm for executables. */
+		error = uvm_addr_invoke(map, map->uaddr_exe, &first, &last,
+		    addr, sz, pmap_align, pmap_offset, prot, hint);
+
+		if (error != 0)
+			goto unlock;
+	} else {
+		/* Update freelists from vmspace. */
+		uvm_map_vmspace_update(map, &dead, flags);
+
+		error = uvm_map_findspace(map, &first, &last, addr, sz,
+		    pmap_align, pmap_offset, prot, hint);
+
+		if (error != 0)
+			goto unlock;
+	}
+
+	/* If we only want a query, return now. */
+	if (flags & UVM_FLAG_QUERY) {
+		error = 0;
+		goto unlock;
+	}
+
+	/*
+	 * Create new entry.
+	 * first and last may be invalidated after this call.
+	 */
+	entry = uvm_map_mkentry(map, first, last, *addr, sz, flags, &dead,
+	    new);
+	if (entry == NULL) {
+		error = ENOMEM;
+		goto unlock;
+	}
+	new = NULL;
+	KDASSERT(entry->start == *addr && entry->end == *addr + sz);
+	entry->object.uvm_obj = NULL;
+	entry->offset = 0;
+	entry->protection = prot;
+	entry->max_protection = maxprot;
+	entry->inheritance = inherit;
+	entry->wired_count = 0;
+	entry->advice = advice;
+	if (flags & UVM_FLAG_NOFAULT)
+		entry->etype |= UVM_ET_NOFAULT;
+	if (flags & UVM_FLAG_COPYONW) {
+		entry->etype |= UVM_ET_COPYONWRITE;
+		if ((flags & UVM_FLAG_OVERLAY) == 0)
+			entry->etype |= UVM_ET_NEEDSCOPY;
+	}
+	if (flags & UVM_FLAG_OVERLAY) {
+		KERNEL_LOCK();
+		entry->aref.ar_pageoff = 0;
+		entry->aref.ar_amap = amap_alloc(sz,
+		    ptoa(flags & UVM_FLAG_AMAPPAD ? UVM_AMAP_CHUNK : 0),
+		    M_WAITOK);
+		KERNEL_UNLOCK();
+	}
+
+	/* Update map and process statistics. */
+	map->size += sz;
+	((struct vmspace *)map)->vm_dused += uvmspace_dused(map, *addr, *addr + sz);
+
+unlock:
+	vm_map_unlock(map);
+
+	/*
+	 * Remove dead entries.
+	 *
+	 * Dead entries may be the result of merging.
+	 * uvm_map_mkentry may also create dead entries, when it attempts to
+	 * destroy free-space entries.
+	 */
+	uvm_unmap_detach(&dead, 0);
+out:
+	if (new)
+		uvm_mapent_free(new);
+	return error;
+}
+
+/*
  * uvm_map: establish a valid mapping in map
  *
  * => *addr and sz must be a multiple of PAGE_SIZE.
@@ -1063,6 +1239,8 @@ uvm_map(struct vm_map *map, vaddr_t *addr, vsize_t sz,
 		}
 
 		/* Check that the space is available. */
+		if (flags & UVM_FLAG_UNMAP)
+			uvm_unmap_remove(map, *addr, *addr + sz, &dead, FALSE, TRUE);
 		if (!uvm_map_isavail(map, NULL, &first, &last, *addr, sz)) {
 			error = ENOMEM;
 			goto unlock;
@@ -1460,6 +1638,7 @@ uvm_map_mkentry(struct vm_map *map, struct vm_map_entry *first,
 	return entry;
 }
 
+
 /*
  * uvm_mapent_alloc: allocate a map entry
  */
@@ -1530,7 +1709,6 @@ out:
 void
 uvm_mapent_free(struct vm_map_entry *me)
 {
-
 	if (me->flags & UVM_MAP_STATIC) {
 		mtx_enter(&uvm_kmapent_mtx);
 		RB_LEFT(me, daddrs.addr_entry) = uvm.kentry_free;
@@ -1685,8 +1863,6 @@ uvm_unmap_kill_entry(struct vm_map *map, struct vm_map_entry *entry)
 		KASSERT(vm_map_pmap(map) == pmap_kernel());
 		uvm_km_pgremove_intrsafe(entry->start, entry->end);
 		pmap_kremove(entry->start, entry->end - entry->start);
-		pmap_update(pmap_kernel());
-
 	} else if (UVM_ET_ISOBJ(entry) &&
 	    UVM_OBJ_IS_KERN_OBJECT(entry->object.uvm_obj)) {
 		KASSERT(vm_map_pmap(map) == pmap_kernel());
@@ -1694,7 +1870,7 @@ uvm_unmap_kill_entry(struct vm_map *map, struct vm_map_entry *entry)
 		 * Note: kernel object mappings are currently used in
 		 * two ways:
 		 *  [1] "normal" mappings of pages in the kernel object
-		 *  [2] va-only allocations in which we
+		 *  [2] uvm_km_valloc'd allocations in which we
 		 *      pmap_enter in some non-kernel-object page
 		 *      (e.g. vmapbuf).
 		 *
@@ -1725,7 +1901,6 @@ uvm_unmap_kill_entry(struct vm_map *map, struct vm_map_entry *entry)
 		 * to vm_map_min(kernel_map).
 		 */
 		pmap_remove(pmap_kernel(), entry->start, entry->end);
-		pmap_update(pmap_kernel());
 		uvm_km_pgremove(entry->object.uvm_obj,
 		    entry->start - vm_map_min(kernel_map),
 		    entry->end - vm_map_min(kernel_map));
@@ -1739,7 +1914,6 @@ uvm_unmap_kill_entry(struct vm_map *map, struct vm_map_entry *entry)
 	} else {
 		/* remove mappings the standard way. */
 		pmap_remove(map->pmap, entry->start, entry->end);
-		pmap_update(map->pmap);
 	}
 }
 
@@ -2021,7 +2195,6 @@ uvm_map_pageable(struct vm_map *map, vaddr_t start, vaddr_t end,
 		return EINVAL; /* why? see second XXX below */
 
 	KASSERT(map->flags & VM_MAP_PAGEABLE);
-	KASSERT((map->flags & VM_MAP_INTRSAFE) == 0);
 	if ((lockflags & UVM_LK_ENTER) == 0)
 		vm_map_lock(map);
 
@@ -2134,20 +2307,19 @@ uvm_map_pageable_all(struct vm_map *map, int flags, vsize_t limit)
 	struct vm_map_entry *iter;
 
 	KASSERT(map->flags & VM_MAP_PAGEABLE);
-	KASSERT((map->flags & VM_MAP_INTRSAFE) == 0);
 	vm_map_lock(map);
 
 	if (flags == 0) {
 		uvm_map_pageable_pgon(map, RB_MIN(uvm_map_addr, &map->addr),
 		    NULL, map->min_offset, map->max_offset);
 
-		atomic_clearbits_int(&map->flags, VM_MAP_WIREFUTURE);
+		vm_map_modflags(map, 0, VM_MAP_WIREFUTURE);
 		vm_map_unlock(map);
 		return 0;
 	}
 
 	if (flags & MCL_FUTURE)
-		atomic_setbits_int(&map->flags, VM_MAP_WIREFUTURE);
+		vm_map_modflags(map, VM_MAP_WIREFUTURE, 0);
 	if (!(flags & MCL_CURRENT)) {
 		vm_map_unlock(map);
 		return 0;
@@ -2199,8 +2371,6 @@ uvm_map_setup(struct vm_map *map, vaddr_t min, vaddr_t max, int flags)
 	KASSERT((min & (vaddr_t)PAGE_MASK) == 0);
 	KASSERT((max & (vaddr_t)PAGE_MASK) == 0 ||
 	    (max & (vaddr_t)PAGE_MASK) == (vaddr_t)PAGE_MASK);
-	KASSERT((flags & (VM_MAP_INTRSAFE | VM_MAP_PAGEABLE)) !=
-	    (VM_MAP_INTRSAFE | VM_MAP_PAGEABLE));
 
 	/*
 	 * Update parameters.
@@ -2231,7 +2401,7 @@ uvm_map_setup(struct vm_map *map, vaddr_t min, vaddr_t max, int flags)
 	map->timestamp = 0;
 	rw_init(&map->lock, "vmmaplk");
 	mtx_init(&map->mtx, IPL_VM);
-	simple_lock_init(&map->ref_lock);
+	mtx_init(&map->flags_lock, IPL_VM);
 
 	/* Configure the allocators. */
 	if (flags & VM_MAP_ISVMSPACE)
@@ -2266,11 +2436,11 @@ void
 uvm_map_teardown(struct vm_map *map)
 {
 	struct uvm_map_deadq	 dead_entries;
-	int			 i;
 	struct vm_map_entry	*entry, *tmp;
 #ifdef VMMAP_DEBUG
 	size_t			 numq, numt;
 #endif
+	int			 i;
 
 	KERNEL_ASSERT_LOCKED();
 	KERNEL_UNLOCK();
@@ -3075,21 +3245,94 @@ uvmspace_share(struct process *pr)
 void
 uvmspace_exec(struct proc *p, vaddr_t start, vaddr_t end)
 {
-	int pageable = (p->p_vmspace->vm_map.flags & VM_MAP_PAGEABLE);
-	struct vmspace *old, *new;
+	struct process *pr = p->p_p;
+	struct vmspace *nvm, *ovm = pr->ps_vmspace;
+	struct vm_map *map = &ovm->vm_map;
+	struct uvm_map_deadq dead_entries;
 
-	/* Create new vmspace. */
-	new = uvmspace_alloc(start, end, (pageable ? TRUE : FALSE),
-	    TRUE);
-	old = p->p_vmspace;
+	KASSERT((start & (vaddr_t)PAGE_MASK) == 0);
+	KASSERT((end & (vaddr_t)PAGE_MASK) == 0 ||
+	    (end & (vaddr_t)PAGE_MASK) == (vaddr_t)PAGE_MASK);
 
 	pmap_unuse_final(p);   /* before stack addresses go away */
-	pmap_deactivate(p);
-	p->p_vmspace = p->p_p->ps_vmspace = new;
-	pmap_activate(p);
+	TAILQ_INIT(&dead_entries);
 
-	/* Throw away the old vmspace. */
-	uvmspace_free(old);
+	/* see if more than one process is using this vmspace...  */
+	if (ovm->vm_refcnt == 1) {
+		/*
+		 * If pr is the only process using its vmspace then
+		 * we can safely recycle that vmspace for the program
+		 * that is being exec'd.
+		 */
+
+#ifdef SYSVSHM
+		/*
+		 * SYSV SHM semantics require us to kill all segments on an exec
+		 */
+		if (ovm->vm_shm)
+			shmexit(ovm);
+#endif
+
+		/*
+		 * POSIX 1003.1b -- "lock future mappings" is revoked
+		 * when a process execs another program image.
+		 */
+		vm_map_lock(map);
+		vm_map_modflags(map, 0, VM_MAP_WIREFUTURE);
+
+		/*
+		 * now unmap the old program
+		 *
+		 * Instead of attempting to keep the map valid, we simply
+		 * nuke all entries and ask uvm_map_setup to reinitialize
+		 * the map to the new boundaries.
+		 *
+		 * uvm_unmap_remove will actually nuke all entries for us
+		 * (as in, not replace them with free-memory entries).
+		 */
+		uvm_unmap_remove(map, map->min_offset, map->max_offset,
+		    &dead_entries, TRUE, FALSE);
+
+		KDASSERT(RB_EMPTY(&map->addr));
+
+		/* Nuke statistics and boundaries. */
+		memset(&ovm->vm_startcopy, 0,
+		    (caddr_t) (ovm + 1) - (caddr_t) &ovm->vm_startcopy);
+
+
+		if (end & (vaddr_t)PAGE_MASK) {
+			end += 1;
+			if (end == 0) /* overflow */
+				end -= PAGE_SIZE;
+		}
+
+		/* Setup new boundaries and populate map with entries. */
+		map->min_offset = start;
+		map->max_offset = end;
+		uvm_map_setup_entries(map);
+		vm_map_unlock(map);
+
+		/* but keep MMU holes unavailable */
+		pmap_remove_holes(ovm);
+	} else {
+		/*
+		 * pr's vmspace is being shared, so we can't reuse
+		 * it for pr since it is still being used for others.
+		 * allocate a new vmspace for pr
+		 */
+		nvm = uvmspace_alloc(start, end,
+		    (map->flags & VM_MAP_PAGEABLE) ? TRUE : FALSE, TRUE);
+
+		/* install new vmspace and drop our ref to the old one. */
+		pmap_deactivate(p);
+		p->p_vmspace = pr->ps_vmspace = nvm;
+		pmap_activate(p);
+
+		uvmspace_free(ovm);
+	}
+
+	/* Release dead entries */
+	uvm_unmap_detach(&dead_entries, 0);
 }
 
 /*
@@ -3496,6 +3739,19 @@ uvm_map_hint(struct vmspace *vm, vm_prot_t prot, vaddr_t minaddr,
 	vaddr_t addr;
 	vaddr_t spacing;
 
+#ifdef __i386__
+	/*
+	 * If executable skip first two pages, otherwise start
+	 * after data + heap region.
+	 */
+	if ((prot & PROT_EXEC) != 0 &&
+	    (vaddr_t)vm->vm_daddr >= I386_MAX_EXE_ADDR) {
+		addr = (PAGE_SIZE*2) +
+		    (arc4random() & (I386_MAX_EXE_ADDR / 2 - 1));
+		return (round_page(addr));
+	}
+#endif
+
 #if defined (__LP64__)
 	spacing = (MIN((4UL * 1024 * 1024 * 1024), BRKSIZ) - 1);
 #else
@@ -3503,21 +3759,20 @@ uvm_map_hint(struct vmspace *vm, vm_prot_t prot, vaddr_t minaddr,
 #endif
 
 	addr = (vaddr_t)vm->vm_daddr;
-
 	/*
 	 * Start malloc/mmap after the brk.
 	 * If the random spacing area has been used up,
 	 * the brk area becomes fair game for mmap as well.
 	 */
-
 	if (vm->vm_dused < spacing >> PAGE_SHIFT)
 		addr += BRKSIZ;
+#if !defined(__vax__)
 	if (addr < maxaddr) {
 		while (spacing > maxaddr - addr)
 			spacing >>= 1;
 	}
 	addr += arc4random() & spacing;
-
+#endif
 	return (round_page(addr));
 }
 
@@ -3633,9 +3888,7 @@ uvm_map_deallocate(vm_map_t map)
 	int c;
 	struct uvm_map_deadq dead;
 
-	simple_lock(&map->ref_lock);
 	c = --map->ref_count;
-	simple_unlock(&map->ref_lock);
 	if (c > 0) {
 		return;
 	}
@@ -3985,11 +4238,8 @@ uvm_map_clean(struct vm_map *map, vaddr_t start, vaddr_t end, int flags)
 			if (anon == NULL)
 				continue;
 
-			mtx_enter(&anon->an_lock);
-
 			pg = anon->an_page;
 			if (pg == NULL) {
-				mtx_leave(&anon->an_lock);
 				continue;
 			}
 			KASSERT(pg->pg_flags & PQ_ANON);
@@ -4006,19 +4256,20 @@ uvm_map_clean(struct vm_map *map, vaddr_t start, vaddr_t end, int flags)
 			case PGO_DEACTIVATE:
 deactivate_it:
 				/* skip the page if it's wired */
-				if (pg->wire_count != 0) {
-					mtx_leave(&anon->an_lock);
+				if (pg->wire_count != 0)
 					break;
-				}
 
 				uvm_lock_pageq();
 
 				KASSERT(pg->uanon == anon);
 
+				/* zap all mappings for the page. */
+				pmap_page_protect(pg, PROT_NONE);
+
+				/* ...and deactivate the page. */
 				uvm_pagedeactivate(pg);
 
 				uvm_unlock_pageq();
-				mtx_leave(&anon->an_lock);
 				break;
 			case PGO_FREE:
 				/*
@@ -4030,17 +4281,13 @@ deactivate_it:
 
 				/* XXX skip the page if it's wired */
 				if (pg->wire_count != 0) {
-					mtx_leave(&anon->an_lock);
 					break;
 				}
 				amap_unadd(&entry->aref,
 				    cp_start - entry->start);
 				refs = --anon->an_ref;
-				if (refs == 0) {
+				if (refs == 0)
 					uvm_anfree(anon);
-				} else {
-					mtx_leave(&anon->an_lock);
-				}
 				break;
 			default:
 				panic("uvm_map_clean: weird flags");
@@ -4722,10 +4969,22 @@ vm_map_lock_try_ln(struct vm_map *map, char *file, int line)
 	if (map->flags & VM_MAP_INTRSAFE) {
 		rv = mtx_enter_try(&map->mtx);
 	} else {
+		mtx_enter(&map->flags_lock);
 		if (map->flags & VM_MAP_BUSY) {
+			mtx_leave(&map->flags_lock);
 			return (FALSE);
 		}
+		mtx_leave(&map->flags_lock);
 		rv = (rw_enter(&map->lock, RW_WRITE|RW_NOSLEEP) == 0);
+		/* check if the lock is busy and back out if we won the race */
+		if (rv) {
+			mtx_enter(&map->flags_lock);
+			if (map->flags & VM_MAP_BUSY) {
+				rw_exit(&map->lock);
+				rv = FALSE;
+			}
+			mtx_leave(&map->flags_lock);
+		}
 	}
 
 	if (rv) {
@@ -4741,19 +5000,28 @@ vm_map_lock_try_ln(struct vm_map *map, char *file, int line)
 void
 vm_map_lock_ln(struct vm_map *map, char *file, int line)
 {
-	if ((map->flags & VM_MAP_INTRSAFE) != 0) {
+	if ((map->flags & VM_MAP_INTRSAFE) == 0) {
+		do {
+			mtx_enter(&map->flags_lock);
+tryagain:
+			while (map->flags & VM_MAP_BUSY) {
+				map->flags |= VM_MAP_WANTLOCK;
+				msleep(&map->flags, &map->flags_lock,
+				    PVM, vmmapbsy, 0);
+			}
+			mtx_leave(&map->flags_lock);
+		} while (rw_enter(&map->lock, RW_WRITE|RW_SLEEPFAIL) != 0);
+		/* check if the lock is busy and back out if we won the race */
+		mtx_enter(&map->flags_lock);
+		if (map->flags & VM_MAP_BUSY) {
+			rw_exit(&map->lock);
+			goto tryagain;
+		}
+		mtx_leave(&map->flags_lock);
+	} else {
 		mtx_enter(&map->mtx);
-		goto out;
 	}
 
-	do {
-		while (map->flags & VM_MAP_BUSY) {
-			map->flags |= VM_MAP_WANTLOCK;
-			tsleep(&map->flags, PVM, (char *)vmmapbsy, 0);
-		}
-	} while (rw_enter(&map->lock, RW_WRITE | RW_SLEEPFAIL) != 0);
-
-out:
 	map->timestamp++;
 	LPRINTF(("map   lock: %p (at %s %d)\n", map, file, line));
 	uvm_tree_sanity(map, file, line);
@@ -4827,7 +5095,9 @@ void
 vm_map_busy_ln(struct vm_map *map, char *file, int line)
 {
 	KASSERT((map->flags & VM_MAP_INTRSAFE) == 0);
+	mtx_enter(&map->flags_lock);
 	map->flags |= VM_MAP_BUSY;
+	mtx_leave(&map->flags_lock);
 }
 
 void
@@ -4836,8 +5106,10 @@ vm_map_unbusy_ln(struct vm_map *map, char *file, int line)
 	int oflags;
 
 	KASSERT((map->flags & VM_MAP_INTRSAFE) == 0);
+	mtx_enter(&map->flags_lock);
 	oflags = map->flags;
 	map->flags &= ~(VM_MAP_BUSY|VM_MAP_WANTLOCK);
+	mtx_leave(&map->flags_lock);
 	if (oflags & VM_MAP_WANTLOCK)
 		wakeup(&map->flags);
 }
@@ -4909,7 +5181,40 @@ RB_GENERATE(uvm_map_addr, vm_map_entry, daddrs.addr_entry,
  * MD code: vmspace allocator setup.
  */
 
-#if defined(__LP64__)
+#ifdef __i386__
+void
+uvm_map_setup_md(struct vm_map *map)
+{
+	vaddr_t		min, max;
+
+	min = map->min_offset;
+	max = map->max_offset;
+
+	/*
+	 * Ensure the selectors will not try to manage page 0;
+	 * it's too special.
+	 */
+	if (min < VMMAP_MIN_ADDR)
+		min = VMMAP_MIN_ADDR;
+
+#if 0	/* Cool stuff, not yet */
+	/* Hinted allocations. */
+	map->uaddr_any[1] = uaddr_hint_create(MAX(min, VMMAP_MIN_ADDR), max,
+	    1024 * 1024 * 1024);
+
+	/* Executable code is special. */
+	map->uaddr_exe = uaddr_rnd_create(min, I386_MAX_EXE_ADDR);
+	/* Place normal allocations beyond executable mappings. */
+	map->uaddr_any[3] = uaddr_pivot_create(2 * I386_MAX_EXE_ADDR, max);
+#else	/* Crappy stuff, for now */
+	map->uaddr_any[0] = uaddr_rnd_create(min, max);
+#endif
+
+#ifndef SMALL_KERNEL
+	map->uaddr_brk_stack = uaddr_stack_brk_create(min, max);
+#endif /* !SMALL_KERNEL */
+}
+#elif __LP64__
 void
 uvm_map_setup_md(struct vm_map *map)
 {
@@ -4940,9 +5245,11 @@ uvm_map_setup_md(struct vm_map *map)
 	map->uaddr_any[0] = uaddr_rnd_create(min, max);
 #endif
 
+#ifndef SMALL_KERNEL
 	map->uaddr_brk_stack = uaddr_stack_brk_create(min, max);
+#endif /* !SMALL_KERNEL */
 }
-#else	/* !__LP64__ */
+#else	/* non-i386, 32 bit */
 void
 uvm_map_setup_md(struct vm_map *map)
 {
@@ -4968,6 +5275,8 @@ uvm_map_setup_md(struct vm_map *map)
 	map->uaddr_any[0] = uaddr_rnd_create(min, max);
 #endif
 
+#ifndef SMALL_KERNEL
 	map->uaddr_brk_stack = uaddr_stack_brk_create(min, max);
+#endif /* !SMALL_KERNEL */
 }
-#endif /* __LP64__ */
+#endif
