@@ -32,11 +32,6 @@
  *	@(#)ps.h	8.1 (Berkeley) 5/31/93
  */
 
-#include <sys/queue.h>
-#include <sys/resource.h>
-#include <sys/sysctl.h>
-
-
 #define	UNLIMITED	0	/* unlimited terminal width */
 enum type {
 	INT8, UINT8, INT16, UINT16, INT32, UINT32, INT64, UINT64
@@ -44,12 +39,11 @@ enum type {
 
 /* Variables. */
 typedef struct varent {
-	SIMPLEQ_ENTRY(varent) entries;
+	struct varent *next;
 	struct var *var;
 } VARENT;
 
-SIMPLEQ_HEAD(varent_list, varent);
-
+struct kinfo_proc;
 typedef struct var {
 	char	*name;		/* name(s) of variable */
 	char	*header;	/* default header */
@@ -61,7 +55,7 @@ typedef struct var {
 #define	NLIST	0x10		/* needs nlist info from kernel */
 	u_int	flag;
 				/* output routine */
-	void	(*oproc)(const struct kinfo_proc *, VARENT *);
+	void	(*oproc)(const struct kinfo_proc *, struct varent *);
 	short	width;		/* printing width */
 	char	parsed;		/* have we been parsed yet? (avoid dupes) */
 	/*
@@ -77,5 +71,11 @@ typedef struct var {
 	 * glue to link selected fields together
 	 */
 } VAR;
+
+#ifdef __LP64__
+#define	PTRWIDTH	16
+#else
+#define	PTRWIDTH	8
+#endif
 
 #include "extern.h"

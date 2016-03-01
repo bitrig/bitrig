@@ -30,7 +30,8 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/param.h>
+#include <sys/param.h>	/* MAXCOMLEN NODEV */
+#include <sys/types.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -45,37 +46,29 @@
 #include <kvm.h>
 #include <nlist.h>
 #include <paths.h>
-#include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdint.h>
 #include <limits.h>
 
 #include "ps.h"
 
 extern char *__progname;
 
-struct varent_list vhead = SIMPLEQ_HEAD_INITIALIZER(vhead);
+struct varent *vhead;
 
 int	eval;			/* exit value */
 int	sumrusage;		/* -S */
 int	termwidth;		/* width of screen (0 == infinity) */
 int	totwidth;		/* calculated width of requested variables */
 
-int	needcomm, needenv, needhier, neednlist, commandonly;
+int	needcomm, needenv, neednlist, commandonly;
 
 enum sort { DEFAULT, SORTMEM, SORTCPU } sortby = DEFAULT;
 
 static char	*kludge_oldps_options(char *);
-static void	 parse_list(char *, void **, size_t *, size_t,
-		    void (*)(char *, void *));
-static void	 parse_gid(char *, void *);
-static void	 parse_pid(char *, void *);
-static void	 parse_tty(char *, void *);
-static void	 parse_uid(char *, void *);
 static int	 pscomp(const void *, const void *);
 static void	 scanvars(void);
 static void	 usage(void);
@@ -98,13 +91,12 @@ main(int argc, char *argv[])
 	struct kinfo_proc *kp, **kinfo;
 	struct varent *vent;
 	struct winsize ws;
-	gid_t *gids;
-	pid_t *pids;
-	dev_t *ttys;
-	uid_t *uids;
-	size_t ngids, npids, nttys, nuids;
-	int all, ch, flag, i, j, k, fmt, lineno, nentries;
-	int prtheader, showthreads, wflag, kflag, what, xflg;
+	struct passwd *pwd;
+	dev_t ttydev;
+	pid_t pid;
+	uid_t uid;
+	int all, ch, flag, i, fmt, lineno, nentries;
+	int prtheader, showthreads, wflag, kflag, what, Uflag, xflg;
 	char *nlistf, *memf, *swapf, *cols, errbuf[_POSIX2_LINE_MAX];
 
 	if ((cols = getenv("COLUMNS")) != NULL && *cols != '\0') {
@@ -127,15 +119,13 @@ main(int argc, char *argv[])
 	if (argc > 1)
 		argv[1] = kludge_oldps_options(argv[1]);
 
-	all = fmt = prtheader = showthreads = wflag = kflag = xflg = 0;
-	gids = NULL;
-	pids = NULL;
-	ttys = NULL;
-	uids = NULL;
-	ngids = npids = nttys = nuids = 0;
+	all = fmt = prtheader = showthreads = wflag = kflag = Uflag = xflg = 0;
+	pid = -1;
+	uid = 0;
+	ttydev = NODEV;
 	memf = nlistf = swapf = NULL;
 	while ((ch = getopt(argc, argv,
-	    "AaCcdeG:gHhjkLlM:mN:O:o:p:rSTt:U:uvW:wx")) != -1)
+	    "AaCcegHhjkLlM:mN:O:o:p:rSTt:U:uvW:wx")) != -1)
 		switch (ch) {
 		case 'A':
 			all = 1;
@@ -149,17 +139,8 @@ main(int argc, char *argv[])
 		case 'c':
 			commandonly = 1;
 			break;
-		case 'd':
-			needhier = 1;
-			break;
 		case 'e':			/* XXX set ufmt */
 			needenv = 1;
-			break;
-		case 'G':
-			parse_list(optarg,
-			    (void **)&gids, &ngids, sizeof(*gids), parse_gid);
-			xflg = 1;
-			endgrent();
 			break;
 		case 'g':
 			break;			/* no-op */
@@ -206,8 +187,7 @@ main(int argc, char *argv[])
 			fmt = 1;
 			break;
 		case 'p':
-			parse_list(optarg,
-			    (void **)&pids, &npids, sizeof(*pids), parse_pid);
+			pid = atol(optarg);
 			xflg = 1;
 			break;
 		case 'r':
@@ -220,15 +200,31 @@ main(int argc, char *argv[])
 			if ((optarg = ttyname(STDIN_FILENO)) == NULL)
 				errx(1, "stdin: not a terminal");
 			/* FALLTHROUGH */
-		case 't':
-			parse_list(optarg,
-			    (void **)&ttys, &nttys, sizeof(*ttys), parse_tty);
+		case 't': {
+			struct stat sb;
+			char *ttypath, pathbuf[PATH_MAX];
+
+			if (strcmp(optarg, "co") == 0)
+				ttypath = _PATH_CONSOLE;
+			else if (*optarg != '/')
+				(void)snprintf(ttypath = pathbuf,
+				    sizeof(pathbuf), "%s%s", _PATH_TTY, optarg);
+			else
+				ttypath = optarg;
+			if (stat(ttypath, &sb) == -1)
+				err(1, "%s", ttypath);
+			if (!S_ISCHR(sb.st_mode))
+				errx(1, "%s: not a terminal", ttypath);
+			ttydev = sb.st_rdev;
 			break;
+		}
 		case 'U':
-			parse_list(optarg,
-			    (void **)&uids, &nuids, sizeof(*uids), parse_uid);
-			xflg = 1;
+			pwd = getpwnam(optarg);
+			if (pwd == NULL)
+				errx(1, "%s: no such user", optarg);
+			uid = pwd->pw_uid;
 			endpwent();
+			Uflag = xflg = 1;
 			break;
 		case 'u':
 			parsefmt(ufmt);
@@ -293,11 +289,9 @@ main(int argc, char *argv[])
 	}
 
 	/* XXX - should be cleaner */
-	if (!all && !ngids && !npids && !nttys && !nuids) {
-		if ((uids = calloc(1, sizeof(*uids))) == NULL)
-			err(1, NULL);
-		uids[0] = getuid();
-		nuids = 1;
+	if (!all && ttydev == NODEV && pid == -1 && !Uflag) {
+		uid = getuid();
+		Uflag = 1;
 	}
 
 	/*
@@ -312,22 +306,21 @@ main(int argc, char *argv[])
 	/*
 	 * get proc list
 	 */
-	what = kflag ? KERN_PROC_KTHREAD : KERN_PROC_ALL;
-	flag = 0;
-	if (!kflag && nuids + nttys + npids == 1) {
-		if (gids) {
-			what = KERN_PROC_RGID;
-			flag = gids[0];
-		} else if (pids) {
-			what = KERN_PROC_PID;
-			flag = pids[0];
-		} else if (ttys) {
-			what = KERN_PROC_TTY;
-			flag = ttys[0];
-		} else if (uids) {
-			what = KERN_PROC_RUID;
-			flag = uids[0];
-		}
+	if (Uflag) {
+		what = KERN_PROC_UID;
+		flag = uid;
+	} else if (ttydev != NODEV) {
+		what = KERN_PROC_TTY;
+		flag = ttydev;
+	} else if (pid != -1) {
+		what = KERN_PROC_PID;
+		flag = pid;
+	} else if (kflag) {
+		what = KERN_PROC_KTHREAD;
+		flag = 0;
+	} else {
+		what = KERN_PROC_ALL;
+		flag = 0;
 	}
 	if (showthreads)
 		what |= KERN_PROC_SHOW_THREADS;
@@ -339,66 +332,35 @@ main(int argc, char *argv[])
 	if (kp == NULL)
 		errx(1, "%s", kvm_geterr(kd));
 
-	if ((kinfo = reallocarray(NULL, nentries, sizeof(*kinfo))) == NULL)
-		err(1, NULL);
-
-	for (i = j = 0; i < nentries; i++) {
-		if (xflg == 0 && ((int)kp[i].p_tdev == NODEV ||
-		    (kp[i].p_psflags & PS_CONTROLT) == 0))
-			continue;
-		if (showthreads && kp[i].p_tid == -1)
-			continue;
-
-		if (all || (!ngids && !npids && !nttys && !nuids))
-			goto take;
-		for (k = 0; k < ngids; k++) {
-			if (gids[k] == kp[i].p_rgid)
-				goto take;
-		}
-		for (k = 0; k < npids; k++) {
-			if (pids[k] == kp[i].p_pid)
-				goto take;
-		}
-		for (k = 0; k < nttys; k++) {
-			if (ttys[k] == kp[i].p_tdev)
-				goto take;
-		}
-		for (k = 0; k < nuids; k++) {
-			if (uids[k] == kp[i].p_ruid)
-				goto take;
-		}
-		continue;
-
-take:
-		if ((kinfo[j] = calloc(1, sizeof(*kinfo))) == NULL)
-			err(1, NULL);
-		kinfo[j++] = &kp[i];
-	}
-	nentries = j;
-
-	free(gids);
-	free(pids);
-	free(ttys);
-	free(uids);
-
-	qsort(kinfo, nentries, sizeof(*kinfo), pscomp);
-	if (needhier)
-		hier_sort(kinfo, nentries);
-
 	/*
 	 * print header
 	 */
 	printheader();
 	if (nentries == 0)
 		exit(1);
-
+	/*
+	 * sort proc list, we convert from an array of structs to an array
+	 * of pointers to make the sort cheaper.
+	 */
+	if ((kinfo = reallocarray(NULL, nentries, sizeof(*kinfo))) == NULL)
+		err(1, "failed to allocate memory for proc pointers");
+	for (i = 0; i < nentries; i++)
+		kinfo[i] = &kp[i];
+	qsort(kinfo, nentries, sizeof(*kinfo), pscomp);
 	/*
 	 * for each proc, call each variable output function.
 	 */
 	for (i = lineno = 0; i < nentries; i++) {
-		SIMPLEQ_FOREACH(vent, &vhead, entries) {
+		if (showthreads == 0 && (kinfo[i]->p_flag & P_THREAD) != 0)
+			continue;
+		if (xflg == 0 && ((int)kinfo[i]->p_tdev == NODEV ||
+		    (kinfo[i]->p_psflags & PS_CONTROLT ) == 0))
+			continue;
+		if (showthreads && kinfo[i]->p_tid == -1)
+			continue;
+		for (vent = vhead; vent; vent = vent->next) {
 			(vent->var->oproc)(kinfo[i], vent);
-			if (SIMPLEQ_NEXT(vent, entries) != SIMPLEQ_END(&vhead))
+			if (vent->next != NULL)
 				(void)putchar(' ');
 		}
 		(void)putchar('\n');
@@ -418,7 +380,7 @@ scanvars(void)
 	VAR *v;
 	int i;
 
-	SIMPLEQ_FOREACH(vent, &vhead, entries) {
+	for (vent = vhead; vent; vent = vent->next) {
 		v = vent->var;
 		i = strlen(v->header);
 		if (v->width < i)
@@ -513,93 +475,12 @@ kludge_oldps_options(char *s)
 }
 
 static void
-parse_list(char *arg, void **a, size_t *nmemb, size_t size,
-    void (*parse)(char *, void *))
-{
-	char *elem;
-
-	while ((elem = strsep(&arg, " ,")) != NULL) {
-		if (SIZE_MAX / ++(*nmemb) < size)
-			errx(1, "too many elements in list");
-		*a = realloc(*a, *nmemb * size);
-		if (*a == NULL)
-			err(1, NULL);
-		parse(elem, (char *)*a + (*nmemb - 1) * size);
-	}
-}
-
-static void
-parse_gid(char *token, void *target)
-{
-	gid_t *gid = (gid_t *)target;
-	struct group *grp;
-	const char *errstr;
-
-	*gid = strtonum(token, 0, GID_MAX, &errstr);
-	if (errstr) {
-		grp = getgrnam(token);
-		if (grp == NULL)
-			errx(1, "%s: no such group", token);
-		*gid = grp->gr_gid;
-	}
-}
-
-static void
-parse_pid(char *token, void *target)
-{
-	pid_t *pid = (pid_t *)target;
-	const char *errstr;
-
-#define PID_MIN	(1 << (sizeof(pid_t) * 8 - 1))
-#define PID_MAX	(PID_MIN - 1)
-	*pid = strtonum(token, PID_MIN, PID_MAX, &errstr);
-	if (errstr)
-		errx(1, "pid is %s: %s", errstr, token);
-}
-
-static void
-parse_tty(char *token, void *target)
-{
-	dev_t *tty = (dev_t *)target;
-	struct stat sb;
-	char *ttypath, pathbuf[MAXPATHLEN];
-
-	if (strcmp(token, "co") == 0)
-		ttypath = _PATH_CONSOLE;
-	else if (*token != '/')
-		(void)snprintf(ttypath = pathbuf,
-		    sizeof(pathbuf), "%s%s", _PATH_TTY, token);
-	else
-		ttypath = token;
-	if (stat(ttypath, &sb) == -1)
-		err(1, "%s", ttypath);
-	if (!S_ISCHR(sb.st_mode))
-		errx(1, "%s: not a terminal", ttypath);
-	*tty = sb.st_rdev;
-}
-
-static void
-parse_uid(char *token, void *target)
-{
-	uid_t *uid = (uid_t *)target;
-	struct passwd *pwd;
-	const char *errstr;
-
-	*uid = strtonum(token, 0, UID_MAX, &errstr);
-	if (errstr) {
-		pwd = getpwnam(token);
-		if (pwd == NULL)
-			errx(1, "%s: no such user", token);
-		*uid = pwd->pw_uid;
-	}
-}
-
-static void
 usage(void)
 {
 	(void)fprintf(stderr,
-	    "usage: %s [-AacdeHhjkLlmrSTuvwx] [-G groups] [-M core] [-N system]\n"
-	    "%-*s[-O fmt] [-o fmt] [-p pids] [-t ttys] [-U users] [-W swap]\n",
-	    __progname, (int)strlen(__progname) + 8, "");
+	    "usage: %s [-AaceHhjkLlmrSTuvwx] [-M core] [-N system] [-O fmt] [-o fmt] [-p pid]\n",
+	    __progname);
+	(void)fprintf(stderr,
+	    "%-*s[-t tty] [-U username] [-W swap]\n", (int)strlen(__progname) + 8, "");
 	exit(1);
 }
