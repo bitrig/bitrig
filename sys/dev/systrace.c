@@ -1,4 +1,4 @@
-/*	$OpenBSD: systrace.c,v 1.77 2015/09/08 11:58:58 deraadt Exp $	*/
+/*	$OpenBSD: systrace.c,v 1.78 2016/03/01 16:43:08 naddy Exp $	*/
 /*
  * Copyright 2002 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -50,7 +50,8 @@
 #include <sys/exec.h>
 #include <uvm/uvm_extern.h>
 
-#include <machine/vmparam.h>
+#include <sys/exec.h>
+#include <uvm/uvm_extern.h>
 
 #include <dev/systrace.h>
 
@@ -1817,16 +1818,7 @@ systrace_msg_policyfree(struct fsystrace *fst, struct str_policy *strpol)
 	return (0);
 }
 
-/*
- * The following two functions are:
- *
- * Copyright (c) 1994 Christos Zoulas
- * Copyright (c) 1995 Frank van der Linden
- *
- * and can be distributed under the same licence as the rest of this file.
- */
-
-caddr_t
+caddr_t  
 stackgap_init(struct proc *p)
 {
 	struct process *pr = p->p_p;
@@ -1839,10 +1831,9 @@ stackgap_init(struct proc *p)
 			sigexit(p, SIGILL);
 	}
 
-	return (caddr_t)pr->ps_stackgap;
 }
 
-void *
+void *          
 stackgap_alloc(caddr_t *sgp, size_t sz)
 {
 	void *n = (void *) *sgp;
