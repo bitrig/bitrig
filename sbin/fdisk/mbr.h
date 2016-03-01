@@ -24,7 +24,7 @@ struct mbr {
 	off_t offset;
 	unsigned char code[DOSPARTOFF];
 	struct prt part[NDOSPART];
-	uint16_t signature;
+	u_int16_t signature;
 };
 
 extern struct mbr initial_mbr;
@@ -38,9 +38,6 @@ int MBR_read(int, off_t, struct dos_mbr *);
 int MBR_write(int, off_t, struct dos_mbr *);
 void MBR_pcopy(struct mbr *);
 void MBR_zapgpt(int, struct dos_mbr *, uint64_t);
-int MBR_verify(struct mbr *);
-void MBR_fillremaining(struct mbr *, int);
-void MBR_grow_part(struct mbr *, int);
 void MBR_init_GPT(struct mbr *);
 int MBR_protective_mbr(struct mbr *);
 

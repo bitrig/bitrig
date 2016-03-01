@@ -42,6 +42,7 @@ manual.c:	fdisk.cat8
 MAN=	fdisk.8
 
 .if ${MACHINE} == "amd64" || ${MACHINE} == "i386" || \
+    ${MACHINE} == "landisk" || ${MACHINE} == "loongson" || \
     ${MACHINE} == "macppc" || ${MACHINE} == "socppc"
 CFLAGS += -DHAS_MBR
 .endif

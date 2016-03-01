@@ -20,10 +20,10 @@
 #define _PART_H
 
 struct prt {
-	uint64_t bs;
-	uint64_t ns;
-	uint32_t shead, scyl, ssect;
-	uint32_t ehead, ecyl, esect;
+	u_int64_t bs;
+	u_int64_t ns;
+	u_int32_t shead, scyl, ssect;
+	u_int32_t ehead, ecyl, esect;
 	unsigned char flag;
 	unsigned char id;
 };

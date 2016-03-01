@@ -21,7 +21,6 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
 #include <err.h>
 #include <errno.h>
@@ -106,8 +105,8 @@ ask_cmd(char **cmd, char **args)
 	return (0);
 }
 
-uint32_t
-ask_num(const char *str, uint32_t dflt, uint32_t low, uint32_t high)
+int
+ask_num(const char *str, int dflt, int low, int high)
 {
 	char lbuf[100];
 	const char *errstr;
@@ -128,7 +127,7 @@ ask_num(const char *str, uint32_t dflt, uint32_t low, uint32_t high)
 			num = dflt;
 			errstr = NULL;
 		} else {
-			num = (uint32_t)strtonum(lbuf, low, high, &errstr);
+			num = (int)strtonum(lbuf, low, high, &errstr);
 			if (errstr)
 				printf("%s is %s: %s.\n", str, errstr, lbuf);
 		}
@@ -206,8 +205,8 @@ ask_yn(const char *str)
 /*
  * adapted from sbin/disklabel/editor.c
  */
-uint64_t
-getuint64(char *prompt, uint64_t oval, uint64_t maxval)
+u_int64_t
+getuint64(char *prompt, u_int64_t oval, u_int64_t maxval)
 {
 	const int secsize = unit_types[SECTORS].conversion;
 	char buf[BUFSIZ], *endptr, *p, operator = '\0';
@@ -319,21 +318,7 @@ getuint64(char *prompt, uint64_t oval, uint64_t maxval)
 		}
 	} while (1);
 
-	return ((uint64_t)d);
-}
-
-void
-BN_to_CHS(uint32_t lba, uint32_t *cyl, uint32_t *head, uint32_t *sect)
-{
-	*cyl = lba / (disk.sectors * disk.heads);
-	*head = (lba / disk.sectors) % disk.heads;
-	*sect = (lba % disk.sectors) + 1;
-}
-
-uint32_t
-CHS_to_BN(uint32_t cyl, uint32_t head, uint32_t sect)
-{
-	return ((cyl * disk.heads + head) * disk.sectors + sect - 1);
+	return((u_int64_t)d);
 }
 
 char *
@@ -363,11 +348,11 @@ ask_string(const char *prompt, const char *oval)
  *  in Hacker's Delight), the Hacker's Assistant, and any code submitted
  *  by readers. Submitters implicitly agree to this."
  */
-uint32_t
-crc32(const unsigned char *buf, const uint32_t size)
+u_int32_t
+crc32(const u_char *buf, const u_int32_t size)
 {
 	int j;
-	uint32_t i, byte, crc, mask;
+	u_int32_t i, byte, crc, mask;
 
 	crc = 0xFFFFFFFF;
 

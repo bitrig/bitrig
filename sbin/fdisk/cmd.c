@@ -25,7 +25,6 @@
 #include <stdio.h>
 #include <memory.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <signal.h>
 #include <unistd.h>
 #include <uuid.h>
@@ -208,8 +207,7 @@ int
 Xedit(char *args, struct mbr *mbr)
 {
 	const char *errstr;
-	int pn, ret, new;
-	uint32_t num;
+	int pn, num, ret;
 	struct prt *pp;
 
 	if (letoh64(gh.gh_sig) == GPTSIGNATURE)
@@ -222,8 +220,6 @@ Xedit(char *args, struct mbr *mbr)
 	}
 	pp = &mbr->part[pn];
 
-	new = (pp->id == DOSPTYP_UNUSED);
-
 	/* Edit partition type */
 	ret = Xsetpid(args, mbr);
 
@@ -233,10 +229,6 @@ Xedit(char *args, struct mbr *mbr)
 		printf("Partition %d is disabled.\n", pn);
 		return (ret);
 	}
-
-	/* Use remaining free space for new partitions */
-	if (new)
-		MBR_fillremaining(mbr, pn);
 
 	/* Change table entry */
 	if (ask_yn("Do you wish to edit in CHS mode?")) {
@@ -255,12 +247,6 @@ Xedit(char *args, struct mbr *mbr)
 		EDIT("BIOS Starting cylinder", pp->scyl,  0, maxcyl);
 		EDIT("BIOS Starting head",     pp->shead, 0, maxhead);
 		EDIT("BIOS Starting sector",   pp->ssect, 1, maxsect);
-
-		if (ret == CMD_DIRTY) {
-			pp->bs = CHS_to_BN(pp->scyl, pp->shead, pp->ssect);
-			MBR_grow_part(mbr, pn);
-		}
-
 		EDIT("BIOS Ending cylinder",   pp->ecyl,  0, maxcyl);
 		EDIT("BIOS Ending head",       pp->ehead, 0, maxhead);
 		EDIT("BIOS Ending sector",     pp->esect, 1, maxsect);
@@ -270,19 +256,10 @@ Xedit(char *args, struct mbr *mbr)
 		/* Fix up CHS values for LBA */
 		PRT_fix_CHS(pp);
 	} else {
-#define	EDIT_BN(p, v, n)				\
-	if ((num = getuint64(p, v, n)) != v)	\
-		ret = CMD_DIRTY;			\
-	v = num;
-		EDIT_BN("Partition offset", pp->bs, (uint64_t)disk.size);
-
-		if (ret == CMD_DIRTY)
-			MBR_grow_part(mbr, pn);
-
-		EDIT_BN("Partition size", pp->ns,
-		    (uint64_t)(disk.size - pp->bs));
-#undef EDIT_BN
-
+		pp->bs = getuint64("Partition offset", pp->bs,
+		    (u_int64_t)disk.size);
+		pp->ns = getuint64("Partition size", pp->ns,
+		    (u_int64_t)(disk.size - pp->bs));
 		/* Fix up CHS values */
 		PRT_fix_CHS(pp);
 	}
@@ -414,10 +391,16 @@ int
 Xwrite(char *args, struct mbr *mbr)
 {
 	struct dos_mbr dos_mbr;
-	int fd;
+	int fd, i, n;
 
-	if (MBR_verify(mbr))
-		return (CMD_CONT);
+	for (i = 0, n = 0; i < NDOSPART; i++)
+		if (mbr->part[i].id == 0xA6)
+			n++;
+	if (n >= 2) {
+		warnx("MBR contains more than one OpenBSD partition!");
+		if (!ask_yn("Write MBR anyway?"))
+			return (CMD_CONT);
+	}
 
 	fd = DISK_open(disk.name, O_RDWR);
 	MBR_make(mbr, &dos_mbr);

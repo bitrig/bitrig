@@ -174,7 +174,7 @@ PRT_parse(struct dos_partition *prt, off_t offset, off_t reloff,
     struct prt *partn)
 {
 	off_t off;
-	uint32_t t;
+	u_int32_t t;
 
 	partn->flag = prt->dp_flag;
 	partn->shead = prt->dp_shd;
@@ -196,9 +196,9 @@ PRT_parse(struct dos_partition *prt, off_t offset, off_t reloff,
 	partn->bs = letoh32(prt->dp_start) + off;
 	partn->ns = letoh32(prt->dp_size);
 #else
-	memcpy(&t, &prt->dp_start, sizeof(uint32_t));
+	memcpy(&t, &prt->dp_start, sizeof(u_int32_t));
 	partn->bs = letoh32(t) + off;
-	memcpy(&t, &prt->dp_size, sizeof(uint32_t));
+	memcpy(&t, &prt->dp_size, sizeof(u_int32_t));
 	partn->ns = letoh32(t);
 #endif
 
@@ -225,8 +225,8 @@ PRT_make(struct prt *partn, off_t offset, off_t reloff,
     struct dos_partition *prt)
 {
 	off_t off;
-	uint32_t ecsave, scsave;
-	uint64_t t;
+	u_int32_t ecsave, scsave;
+	u_int64_t t;
 
 	/* Save (and restore below) cylinder info we may fiddle with. */
 	scsave = partn->scyl;
@@ -261,9 +261,9 @@ PRT_make(struct prt *partn, off_t offset, off_t reloff,
 	prt->dp_typ = partn->id & 0xFF;
 
 	t = htole64(partn->bs - off);
-	memcpy(&prt->dp_start, &t, sizeof(uint32_t));
+	memcpy(&prt->dp_start, &t, sizeof(u_int32_t));
 	t = htole64(partn->ns);
-	memcpy(&prt->dp_size, &t, sizeof(uint32_t));
+	memcpy(&prt->dp_size, &t, sizeof(u_int32_t));
 
 	partn->scyl = scsave;
 	partn->ecyl = ecsave;
@@ -299,16 +299,12 @@ PRT_print(int num, struct prt *partn, char *units)
 	}
 }
 
-int
-PRT_overlap(struct prt *p1, struct prt *p2)
-{
-	return (p1->bs + p1->ns > p2->bs && p2->bs + p2->ns > p1->bs);
-}
-
 void
 PRT_fix_BN(struct prt *part, int pn)
 {
-	uint32_t start, end;
+	u_int32_t spt, tpc, spc;
+	u_int32_t start = 0;
+	u_int32_t end = 0;
 
 	/* Zero out entry if not used */
 	if (part->id == DOSPTYP_UNUSED) {
@@ -316,8 +312,18 @@ PRT_fix_BN(struct prt *part, int pn)
 		return;
 	}
 
-	start = CHS_to_BN(part->scyl, part->shead, part->ssect);
-	end = CHS_to_BN(part->ecyl, part->ehead, part->esect);
+	/* Disk geometry. */
+	spt = disk.sectors;
+	tpc = disk.heads;
+	spc = spt * tpc;
+
+	start += part->scyl * spc;
+	start += part->shead * spt;
+	start += part->ssect - 1;
+
+	end += part->ecyl * spc;
+	end += part->ehead * spt;
+	end += part->esect - 1;
 
 	/* XXX - Should handle this... */
 	if (start > end)
@@ -330,20 +336,42 @@ PRT_fix_BN(struct prt *part, int pn)
 void
 PRT_fix_CHS(struct prt *part)
 {
-	uint32_t start, end, size;
+	u_int32_t spt, tpc, spc;
+	u_int32_t start, end, size;
+	u_int32_t cyl, head, sect;
 
 	/* Zero out entry if not used */
-	if (part->id == DOSPTYP_UNUSED) {
+	if (part->id == DOSPTYP_UNUSED || part->ns == 0) {
 		memset(part, 0, sizeof(*part));
 		return;
 	}
+
+	/* Disk geometry. */
+	spt = disk.sectors;
+	tpc = disk.heads;
+	spc = spt * tpc;
 
 	start = part->bs;
 	size = part->ns;
 	end = (start + size) - 1;
 
-	BN_to_CHS(start, &part->scyl, &part->shead, &part->ssect);
-	BN_to_CHS(end, &part->ecyl, &part->ehead, &part->esect);
+	/* Figure out starting CHS values */
+	cyl = (start / spc); start -= (cyl * spc);
+	head = (start / spt); start -= (head * spt);
+	sect = (start + 1);
+
+	part->scyl = cyl;
+	part->shead = head;
+	part->ssect = sect;
+
+	/* Figure out ending CHS values */
+	cyl = (end / spc); end -= (cyl * spc);
+	head = (end / spt); end -= (head * spt);
+	sect = (end + 1);
+
+	part->ecyl = cyl;
+	part->ehead = head;
+	part->esect = sect;
 }
 
 char *
