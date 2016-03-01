@@ -1,4 +1,4 @@
-/*	$OpenBSD: keyword.c,v 1.41 2014/10/13 17:30:21 schwarze Exp $	*/
+/*	$OpenBSD: keyword.c,v 1.42 2015/01/16 06:39:32 deraadt Exp $	*/
 /*	$NetBSD: keyword.c,v 1.12.6.1 1996/05/30 21:25:13 cgd Exp $	*/
 
 /*-
@@ -30,7 +30,7 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/param.h>
+#include <sys/param.h>	/* MAXCOMLEN */
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/proc.h>
@@ -80,8 +80,6 @@ int	utime(), stime(), ixrss(), idrss(), isrss();
 #define	TID(n1, n2, fn, off) \
 	{ n1, n2, NULL, 0, fn, TIDLEN, 0, off, INT32, TIDFMT }
 
-#define PTRLEN	(sizeof(void *) * 2)
-
 #define	USERLEN	8
 #define	CWDLEN	40
 
@@ -101,7 +99,7 @@ VAR var[] = {
 	{"cpuid", "CPUID", NULL, 0, pvar, 8, 0, POFF(p_cpuid), UINT64, "lld"},
 	{"cputime", "", "time"},
 	{"cwd", "CWD", NULL, LJUST, curwd, CWDLEN},
-	{"dsiz", "DSIZ", NULL, 0, dsize, 6},
+	{"dsiz", "DSIZ", NULL, 0, dsize, 4},
 	{"emul", "EMUL", NULL, LJUST, emulname, KI_EMULNAMELEN - 1},
 	{"etime", "ELAPSED", "start"},
 	{"f", "F", NULL, 0, pvar, 7, 0, POFF(p_flag), INT32, "x"},
@@ -114,13 +112,13 @@ VAR var[] = {
 	{"jobc", "JOBC", NULL, 0, pvar, 4, 0, POFF(p_jobc), INT16, "d"},
 	{"ktrace", "KTRACE", NULL, 0, pvar, 8, 0, POFF(p_traceflag), INT32, "x"},
 	/* XXX */
-	{"ktracep", "KTRACEP", NULL, 0, pvar, PTRLEN, 0, POFF(p_tracep), UINT64, "llx"},
-	{"lim", "LIM", NULL, 0, maxrss, 7},
-	{"login", "LOGIN", NULL, LJUST, logname, MAXLOGNAME},
+	{"ktracep", "KTRACEP", NULL, 0, pvar, PTRWIDTH, 0, POFF(p_tracep), UINT64, "llx"},
+	{"lim", "LIM", NULL, 0, maxrss, 5},
+	{"login", "LOGIN", NULL, LJUST, logname, LOGIN_NAME_MAX},
 	{"logname", "", "login"},
 	{"lstart", "STARTED", NULL, LJUST|USER, lstarted, 28},
 	{"majflt", "MAJFLT", NULL, USER, pvar, 4, 0, POFF(p_uru_majflt), UINT64, "lld"},
-	{"maxrss", "MAXRSS", NULL, USER, pvar, 6, 0, POFF(p_uru_maxrss), UINT64, "lld"},
+	{"maxrss", "MAXRSS", NULL, USER, pvar, 4, 0, POFF(p_uru_maxrss), UINT64, "lld"},
 	{"minflt", "MINFLT", NULL, USER, pvar, 4, 0, POFF(p_uru_minflt), UINT64, "lld"},
 	{"msgrcv", "MSGRCV", NULL, USER, pvar, 4, 0, POFF(p_uru_msgrcv), UINT64, "lld"},
 	{"msgsnd", "MSGSND", NULL, USER, pvar, 4, 0, POFF(p_uru_msgsnd), UINT64, "lld"},
@@ -132,13 +130,13 @@ VAR var[] = {
 	{"nswap", "NSWAP", NULL, USER, pvar, 4, 0, POFF(p_uru_nswap), UINT64, "lld"},
 	{"nvcsw", "NVCSW", NULL, USER, pvar, 5, 0, POFF(p_uru_nvcsw), UINT64, "lld"},
 	/* XXX */
-	{"nwchan", "WCHAN", NULL, 0, pvar, PTRLEN, 0, POFF(p_wchan), UINT64, "llx"},
+	{"nwchan", "WCHAN", NULL, 0, pvar, PTRWIDTH, 0, POFF(p_wchan), UINT64, "llx"},
 	{"oublk", "OUBLK", NULL, USER, pvar, 4, 0, POFF(p_uru_oublock), UINT64, "lld"},
 	{"oublock", "", "oublk"},
 	/* XXX */
-	{"p_ru", "P_RU", NULL, 0, pvar, PTRLEN, 0, POFF(p_ru), UINT64, "llx"},
+	{"p_ru", "P_RU", NULL, 0, pvar, PTRWIDTH, 0, POFF(p_ru), UINT64, "llx"},
 	/* XXX */
-	{"paddr", "PADDR", NULL, 0, pvar, PTRLEN, 0, POFF(p_paddr), UINT64, "llx"},
+	{"paddr", "PADDR", NULL, 0, pvar, PTRWIDTH, 0, POFF(p_paddr), UINT64, "llx"},
 	{"pagein", "PAGEIN", NULL, USER, pagein, 6},
 	{"pcpu", "", "%cpu"},
 	{"pending", "", "sig"},
@@ -153,13 +151,13 @@ VAR var[] = {
 	/* XXX */
 	{"rgroup", "RGROUP", NULL, LJUST, rgname, USERLEN},
 	{"rlink", "RLINK", NULL, 0, pvar, 8, 0, POFF(p_back), UINT64, "llx"},
-	{"rss", "RSS", NULL, 0, p_rssize, 6},
+	{"rss", "RSS", NULL, 0, p_rssize, 5},
 	{"rssize", "", "rsz"},
-	{"rsz", "RSZ", NULL, 0, rssize, 6},
+	{"rsz", "RSZ", NULL, 0, rssize, 4},
 	{"rtable", "RTABLE", NULL, 0, pvar, 0, 0, POFF(p_rtableid), INT32, "d"},
 	UID("ruid", "RUID", pvar, POFF(p_ruid)),
 	{"ruser", "RUSER", NULL, LJUST, runame, USERLEN},
-	{"sess", "SESS", NULL, 0, pvar, PTRLEN, 0, POFF(p_sess), UINT64, "llx"},
+	{"sess", "SESS", NULL, 0, pvar, PTRWIDTH, 0, POFF(p_sess), UINT64, "llx"},
 	{"sig", "PENDING", NULL, 0, pvar, 8, 0, POFF(p_siglist), INT32, "x"},
 	{"sigcatch", "CAUGHT", NULL, 0, pvar, 8, 0, POFF(p_sigcatch), UINT32, "x"},
 	{"sigignore", "IGNORED",
@@ -167,16 +165,16 @@ VAR var[] = {
 	{"sigmask", "BLOCKED", NULL, 0, pvar, 8, 0, POFF(p_sigmask), UINT32, "x"},
 	{"sl", "SL", NULL, INF127, pvar, 3, 0, POFF(p_slptime), UINT32, "u"},
 	{"ssiz", "SSIZ", NULL, 0, ssize, 4},
-	{"start", "STARTED", NULL, LJUST|USER, started, 7},
+	{"start", "STARTED", NULL, LJUST|USER, started, 8},
 	{"stat", "", "state"},
 	{"state", "STAT", NULL, LJUST|NLIST, state, 5},
 	GID("svgid", "SVGID", pvar, POFF(p_svgid)),
 	UID("svuid", "SVUID", pvar, POFF(p_svuid)),
 	{"tdev", "TDEV", NULL, 0, tdev, 4},
 	TID("tid", "TID", pvar, POFF(p_tid)),
-	{"time", "TIME", NULL, USER, cputime, 10},
+	{"time", "TIME", NULL, USER, cputime, 9},
 	PID("tpgid", "TPGID", pvar, POFF(p_tpgid)),
-	{"tsess", "TSESS", NULL, 0, pvar, PTRLEN, 0, POFF(p_tsess), UINT64, "llx"},
+	{"tsess", "TSESS", NULL, 0, pvar, PTRWIDTH, 0, POFF(p_tsess), UINT64, "llx"},
 	{"tsiz", "TSIZ", NULL, 0, tsize, 4},
 	{"tt", "TT", NULL, LJUST, tname, 3},
 	{"tty", "TTY", NULL, LJUST, longtname, 8},
@@ -186,7 +184,7 @@ VAR var[] = {
 	{"user", "USER", NULL, LJUST, euname, USERLEN},
 	{"usrpri", "", "upr"},
 	{"vsize", "", "vsz"},
-	{"vsz", "VSZ", NULL, 0, vsize, 6},
+	{"vsz", "VSZ", NULL, 0, vsize, 5},
 	{"wchan", "WCHAN", NULL, LJUST, wchan, KI_WMESGLEN - 1},
 	{"xstat", "XSTAT", NULL, 0, pvar, 4, 0, POFF(p_xstat), UINT16, "x"},
 	{""},
@@ -216,6 +214,8 @@ showkey(void)
 void
 parsefmt(char *p)
 {
+	static struct varent *vtail;
+
 #define	FMTSEP	" \t,\n"
 	while (p && *p) {
 		char *cp;
@@ -232,10 +232,16 @@ parsefmt(char *p)
 		if ((vent = malloc(sizeof(struct varent))) == NULL)
 			err(1, NULL);
 		vent->var = v;
-		SIMPLEQ_INSERT_TAIL(&vhead, vent, entries);
+		vent->next = NULL;
+		if (vhead == NULL)
+			vhead = vtail = vent;
+		else {
+			vtail->next = vent;
+			vtail = vent;
+		}
 		needheader |= v->header[0] != '\0';
 	}
-	if (SIMPLEQ_EMPTY(&vhead))
+	if (!vhead)
 		errx(1, "no valid keywords");
 }
 
