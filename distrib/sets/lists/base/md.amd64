@@ -550,6 +550,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/md5.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/michael.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/podd.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/poly1305.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/rijndael.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/rmd160.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/sha1.ph
@@ -1623,6 +1624,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/pciio.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/pipe.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/pivot_root.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/sys/pledge.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/poll.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/pool.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/proc.ph
@@ -1826,4 +1828,3 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/radius.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/refcnt.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/sys/srp.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/sys/tame.ph

@@ -167,6 +167,7 @@
 ./usr/include/crypto/md5.h
 ./usr/include/crypto/michael.h
 ./usr/include/crypto/podd.h
+./usr/include/crypto/poly1305.h
 ./usr/include/crypto/rijndael.h
 ./usr/include/crypto/rmd160.h
 ./usr/include/crypto/sha1.h
@@ -1261,6 +1262,7 @@
 ./usr/include/sys/pciio.h
 ./usr/include/sys/pipe.h
 ./usr/include/sys/pivot_root.h
+./usr/include/sys/pledge.h
 ./usr/include/sys/poll.h
 ./usr/include/sys/pool.h
 ./usr/include/sys/proc.h
@@ -1301,7 +1303,6 @@
 ./usr/include/sys/syslimits.h
 ./usr/include/sys/syslog.h
 ./usr/include/sys/systm.h
-./usr/include/sys/tame.h
 ./usr/include/sys/task.h
 ./usr/include/sys/termios.h
 ./usr/include/sys/time.h
