@@ -43,6 +43,7 @@
 #include <sys/pool.h>
 #include <sys/queue.h>
 #include <sys/stdint.h>
+#include <sys/lock.h>
 #include <sys/rwlock.h>
 #include <sys/mutex.h>
 
