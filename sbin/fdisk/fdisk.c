@@ -74,7 +74,7 @@ main(int argc, char *argv[])
 	int ch, fd, error;
 	int i_flag = 0, e_flag = 0, f_flag = 0, u_flag = 0;
 	int c_arg = 0, h_arg = 0, s_arg = 0;
-	uint32_t l_arg = 0;
+	u_int32_t l_arg = 0;
 	char *query;
 #ifdef HAS_MBR
 	char *mbrfile = _PATH_MBR;
