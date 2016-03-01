@@ -83,6 +83,11 @@ struct tmuxproc;
 /* Attribute to make gcc check printf-like arguments. */
 #define printflike(a, b) __attribute__ ((format (printf, a, b)))
 
+/* Number of items in array. */
+#ifndef nitems
+#define nitems(_a) (sizeof((_a)) / sizeof((_a)[0]))
+#endif
+
 /* Bell option values. */
 #define BELL_NONE 0
 #define BELL_ANY 1
@@ -2183,7 +2188,6 @@ char		*utf8_trimcstr(const char *, u_int);
 
 /* procname.c */
 char   *get_proc_name(int, char *);
-char   *get_proc_cwd(int);
 
 /* log.c */
 void		 log_open(const char *);
