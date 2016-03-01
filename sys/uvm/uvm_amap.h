@@ -85,7 +85,7 @@ struct vm_anon	*amap_lookup(struct vm_aref *, vaddr_t);
 					/* lookup multiple anons */
 void		amap_lookups(struct vm_aref *, vaddr_t, struct vm_anon **, int);
 					/* add a reference to an amap */
-void		amap_ref(struct vm_amap *, int, vsize_t, int);
+void		amap_ref(struct vm_amap *, vaddr_t, vsize_t, int);
 					/* get number of references of amap */
 int		amap_refs(struct vm_amap *);
 					/* protect pages in a shared amap */
@@ -95,7 +95,7 @@ void		amap_splitref(struct vm_aref *, struct vm_aref *, vaddr_t);
 					/* remove an anon from an amap */
 void		amap_unadd(struct vm_aref *, vaddr_t);
 					/* drop reference to an amap */
-void		amap_unref(struct vm_amap *, int, vsize_t, int);
+void		amap_unref(struct vm_amap *, vaddr_t, vsize_t, int);
 					/* remove all anons from amap */
 void		amap_wipeout(struct vm_amap *);
 boolean_t	amap_swap_off(int, int);
@@ -215,7 +215,17 @@ struct vm_amap {
 #ifdef _KERNEL
 
 /*
- * lock/unlock/refs/flags macros
+ * macros
+ */
+
+/* AMAP_B2SLOT: convert byte offset to slot */
+#define AMAP_B2SLOT(S,B) {						\
+	KASSERT(((B) & (PAGE_SIZE - 1)) == 0);				\
+	(S) = (B) >> PAGE_SHIFT;					\
+}
+
+/*
+ * flags macros
  */
 
 #define amap_flags(AMAP)	((AMAP)->am_flags)

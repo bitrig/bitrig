@@ -1,4 +1,4 @@
-/*	$OpenBSD: uvm_map.h,v 1.54 2015/03/30 21:08:40 miod Exp $	*/
+/*	$OpenBSD: uvm_map.h,v 1.55 2015/09/09 23:33:37 kettenis Exp $	*/
 /*	$NetBSD: uvm_map.h,v 1.24 2001/02/18 21:19:08 chs Exp $	*/
 
 /*
@@ -80,6 +80,7 @@
 #ifndef _UVM_UVM_MAP_H_
 #define _UVM_UVM_MAP_H_
 
+#include <sys/mutex.h>
 #include <sys/rwlock.h>
 
 #ifdef _KERNEL
@@ -286,15 +287,15 @@ RB_PROTOTYPE(uvm_map_addr, vm_map_entry, daddrs.addr_entry,
  */
 struct vm_map {
 	struct pmap *		pmap;		/* Physical map */
-	struct rwlock		lock;		/* !intrsafe maps */
-	struct mutex		mtx;		/* intrsafe maps */
+	struct rwlock		lock;		/* Lock for map data */
+	struct mutex		mtx;
 
 	struct uvm_map_addr	addr;		/* Entry tree, by addr */
 
 	vsize_t			size;		/* virtual size */
 	int			ref_count;	/* Reference count */
-	simple_lock_data_t	ref_lock;	/* Lock for ref_count field */
 	int			flags;		/* flags */
+	struct mutex		flags_lock;	/* flags lock */
 	unsigned int		timestamp;	/* Version number */
 
 	vaddr_t			min_offset;	/* First address in map. */
@@ -350,7 +351,9 @@ struct vm_map {
 #ifdef _KERNEL
 #define	vm_map_modflags(map, set, clear)				\
 do {									\
+	mtx_enter(&(map)->flags_lock);					\
 	(map)->flags = ((map)->flags | (set)) & ~(clear);		\
+	mtx_leave(&(map)->flags_lock);					\
 } while (0)
 #endif /* _KERNEL */
 
@@ -433,8 +436,6 @@ int		uvm_map_fill_vmmap(struct vm_map *, struct kinfo_vmentry *,
  *
  *	vm_map_unbusy: clear busy status on a map.
  *
- * Note that "intrsafe" maps use only exclusive, spin locks.  We simply
- * use the sleep lock's interlock for this.
  */
 
 #ifdef _KERNEL

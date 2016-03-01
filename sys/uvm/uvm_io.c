@@ -80,7 +80,7 @@ uvm_io(vm_map_t map, struct uio *uio, int flags)
 		togo = togo - (endva - VM_MAXUSER_ADDRESS + 1);
 	pageoffset = baseva & PAGE_MASK;
 	baseva = trunc_page(baseva);
-	chunksz = szmin(round_page(togo + pageoffset), MAXBSIZE);
+	chunksz = min(round_page(togo + pageoffset), MAXBSIZE);
 	error = 0;
 
 	extractflags = 0;
@@ -109,7 +109,7 @@ uvm_io(vm_map_t map, struct uio *uio, int flags)
 		sz = chunksz - pageoffset;
 		if (sz > togo)
 			sz = togo;
-		error = uiomove((caddr_t) (kva + pageoffset), sz, uio);
+		error = uiomovei((caddr_t) (kva + pageoffset), sz, uio);
 		togo -= sz;
 		baseva += chunksz;
 
