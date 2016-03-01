@@ -215,10 +215,8 @@ uoakrh_detach(struct device *self, int flags)
 	wakeup(&sc->sc_sensortask);
 	sensordev_deinstall(&sc->sc_sensordev);
 
-	if (&sc->sc_sensordev != NULL) {
-		sensor_detach(&sc->sc_sensordev, &sc->sc_sensor.temp);
-		sensor_detach(&sc->sc_sensordev, &sc->sc_sensor.humi);
-	}
+	sensor_detach(&sc->sc_sensordev, &sc->sc_sensor.temp);
+	sensor_detach(&sc->sc_sensordev, &sc->sc_sensor.humi);
 
 	if (sc->sc_sensortask != NULL)
 		sensor_task_unregister(sc->sc_sensortask);
