@@ -1,4 +1,4 @@
-/*	$OpenBSD: cpufunc.c,v 1.27 2015/05/29 05:48:07 jsg Exp $	*/
+/*	$OpenBSD: cpufunc.c,v 1.28 2016/03/02 23:50:32 jsg Exp $	*/
 /*	$NetBSD: cpufunc.c,v 1.65 2003/11/05 12:53:15 scw Exp $	*/
 
 /*
@@ -272,7 +272,10 @@ set_cpufuncs()
 	    (cputype & CPU_ID_CORTEX_A8_MASK) == CPU_ID_CORTEX_A8 ||
 	    (cputype & CPU_ID_CORTEX_A9_MASK) == CPU_ID_CORTEX_A9 ||
 	    (cputype & CPU_ID_CORTEX_A15_MASK) == CPU_ID_CORTEX_A15 ||
-	    (cputype & CPU_ID_CORTEX_A17_MASK) == CPU_ID_CORTEX_A17) {
+	    (cputype & CPU_ID_CORTEX_A17_MASK) == CPU_ID_CORTEX_A17 ||
+	    (cputype & CPU_ID_CORTEX_A53_MASK) == CPU_ID_CORTEX_A53 ||
+	    (cputype & CPU_ID_CORTEX_A57_MASK) == CPU_ID_CORTEX_A57 ||
+	    (cputype & CPU_ID_CORTEX_A72_MASK) == CPU_ID_CORTEX_A72) {
 		cpufuncs = armv7_cpufuncs;
 		arm_get_cachetype_cp15v7();
 		pmap_pte_init_armv7();
