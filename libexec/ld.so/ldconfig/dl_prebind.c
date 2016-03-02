@@ -1,4 +1,5 @@
-/* $OpenBSD: dl_prebind.c,v 1.17 2015/01/16 16:18:07 deraadt Exp $ */
+/* $OpenBSD: dl_prebind.c,v 1.3 2015/01/16 16:18:07 deraadt Exp $ */
+
 /*
  * Copyright (c) 2006 Dale Rahn <drahn@dalerahn.com>
  *
@@ -20,6 +21,7 @@
 #include <sys/exec.h>
 #include <sys/sysctl.h>
 #include <nlist.h>
+#include <string.h>
 #include <link.h>
 #include <dlfcn.h>
 #include <unistd.h>
@@ -41,7 +43,7 @@ void prebind_dump_fixup(struct fixup *fixup, u_int32_t numfixups);
 void prebind_dump_libmap(u_int32_t *libmap, u_int32_t numlibs);
 struct prebind_footer *_dl_prebind_data_to_footer(void *data);
 
-char *_dl_prog_prebind_map;
+void *_dl_prog_prebind_map;
 struct prebind_footer *prog_footer;
 extern char *_dl_noprebind;
 extern char *_dl_prebind_validate;
@@ -133,8 +135,8 @@ prebind_load_fd(int fd, const char *name)
 	    MAP_FILE, fd, footer.prebind_base);
 	DL_DEB(("prebind_load_fd for lib %s\n", name));
 
-	nameidx = (void *)(_dl_prog_prebind_map + prog_footer->nameidx_idx);
-	nametab = (void *)(_dl_prog_prebind_map + prog_footer->nametab_idx);
+	nameidx = _dl_prog_prebind_map + prog_footer->nameidx_idx;
+	nametab = _dl_prog_prebind_map + prog_footer->nametab_idx;
 
 	/* libraries are loaded in random order, so we just have
 	 * to look thru the list to find ourselves
@@ -172,8 +174,9 @@ prebind_symcache(elf_object_t *object, int plt)
 	struct symcachetab *symcachetab;
 	struct prebind_footer *footer;
 	int i = 0, cur_obj = -1, idx;
-	char *prebind_map;
-	char *c;
+	void *prebind_map;
+	struct nameidx *nameidx;
+	char *nametab, *c;
 	struct fixup *fixup;
 	elf_object_t *obj;
 
@@ -198,10 +201,7 @@ prebind_symcache(elf_object_t *object, int plt)
 		if (i <= NUM_STATIC_OBJS) {
 			objarray = &objarray_static[0];
 		} else {
-			objarray = _dl_reallocarray(NULL, i,
-			    sizeof(elf_object_t *));
-			if (objarray == NULL)
-				_dl_exit(20);
+			objarray = _dl_malloc(sizeof(elf_object_t *) * i);
 		}
 
 		obj = _dl_objects;
@@ -220,26 +220,25 @@ prebind_symcache(elf_object_t *object, int plt)
 
 	footer = (void *)c;
 	prebind_map = (void *)object->prebind_data;
-
+	nameidx = prebind_map + footer->nameidx_idx;;
 	if (plt) {
-		symcachetab = (void *)(prebind_map + footer->pltsymcache_idx);
+		symcachetab = prebind_map + footer->pltsymcache_idx;
 		symcache_cnt = footer->pltsymcache_cnt;
 //		DL_DEB(("loading plt %d\n", symcache_cnt));
 	} else {
-		symcachetab = (void *)(prebind_map + footer->symcache_idx);
+		symcachetab = prebind_map + footer->symcache_idx;
 		symcache_cnt = footer->symcache_cnt;
 //		DL_DEB(("loading got %d\n", symcache_cnt));
 	}
+	nametab = prebind_map + footer->nametab_idx;
 
-	libmap = (void *)(_dl_prog_prebind_map + prog_footer->libmap_idx);
-	idxtolib = (void *)(_dl_prog_prebind_map + libmap[cur_obj]);
+	libmap = _dl_prog_prebind_map + prog_footer->libmap_idx;
+	idxtolib = _dl_prog_prebind_map + libmap[cur_obj];
 
 	for (i = 0; i < symcache_cnt; i++) {
 		struct elf_object *tobj;
 		const Elf_Sym *sym;
-#ifdef DEBUG2
 		const char *str;
-#endif
 
 		s = &(symcachetab[i]);
 		if (cur_obj == 0)
@@ -257,8 +256,8 @@ prebind_symcache(elf_object_t *object, int plt)
 #endif
 		tobj = objarray[idx];
 		sym = tobj->dyn.symtab + s->sym_idx;
-#ifdef DEBUG2
 		str = tobj->dyn.strtab + sym->st_name;
+#ifdef DEBUG2
 		DL_DEB(("symidx %d: obj %d %s sym %d %s flags %d %x\n",
 		    s->idx, s->obj_idx, tobj->load_name,
 		    s->sym_idx, str, SYM_SEARCH_ALL|SYM_WARNNOTFOUND|plt,
@@ -271,20 +270,15 @@ prebind_symcache(elf_object_t *object, int plt)
 	}
 
 	if (!plt) {
-		fixupidx = (void *)(_dl_prog_prebind_map +
-		    prog_footer->fixup_idx);
-		fixup = (void *)(_dl_prog_prebind_map +
-		    fixupidx[2*cur_obj]);
-		fixupcnt = (void *)(_dl_prog_prebind_map +
-		    prog_footer->fixupcnt_idx);
+		fixupidx = _dl_prog_prebind_map + prog_footer->fixup_idx;
+		fixup = _dl_prog_prebind_map + fixupidx[2*cur_obj];
+		fixupcnt = _dl_prog_prebind_map + prog_footer->fixupcnt_idx;
 
 		for (i = 0; i < fixupcnt[2*cur_obj]; i++) {
 			struct fixup *f;
 			struct elf_object *tobj;
 			const Elf_Sym *sym;
-#ifdef DEBUG2
 			const char *str;
-#endif
 
 			f = &(fixup[i]);
 #if 0
@@ -293,8 +287,8 @@ prebind_symcache(elf_object_t *object, int plt)
 #endif
 			tobj = objarray[f->obj_idx];
 			sym = tobj->dyn.symtab + f->sym_idx;
-#ifdef DEBUG2
 			str = tobj->dyn.strtab + sym->st_name;
+#ifdef DEBUG2
 			DL_DEB(("symidx %d: obj %d %s sym %d %s flags %d %x\n",
 			    f->sym, f->obj_idx, tobj->load_name,
 			    f->sym_idx, str, SYM_SEARCH_ALL|SYM_WARNNOTFOUND|plt,
@@ -307,12 +301,9 @@ prebind_symcache(elf_object_t *object, int plt)
 		}
 	} else {
 
-		fixupidx = (void *)(_dl_prog_prebind_map +
-		    prog_footer->fixup_idx);
-		fixup = (void *)(_dl_prog_prebind_map +
-		    fixupidx[2*cur_obj+1]);
-		fixupcnt = (void *)(_dl_prog_prebind_map +
-		    prog_footer->fixupcnt_idx);
+		fixupidx = _dl_prog_prebind_map + prog_footer->fixup_idx;
+		fixup = _dl_prog_prebind_map + fixupidx[2*cur_obj+1];
+		fixupcnt = _dl_prog_prebind_map + prog_footer->fixupcnt_idx;
 
 #if 0
 		DL_DEB(("prebind loading symbols fixup plt %s\n",
@@ -322,9 +313,7 @@ prebind_symcache(elf_object_t *object, int plt)
 			struct fixup *f;
 			struct elf_object *tobj;
 			const Elf_Sym *sym;
-#ifdef DEBUG2
 			const char *str;
-#endif
 
 			f = &(fixup[i]);
 #if 0
@@ -334,8 +323,8 @@ prebind_symcache(elf_object_t *object, int plt)
 #endif
 			tobj = objarray[f->obj_idx];
 			sym = tobj->dyn.symtab + f->sym_idx;
-#ifdef DEBUG2
 			str = tobj->dyn.strtab + sym->st_name;
+#ifdef DEBUG2
 			DL_DEB(("symidx %d: obj %d %s sym %d %s flags %d %x\n",
 			    f->sym, f->obj_idx, tobj->load_name,
 			    f->sym_idx, str, SYM_SEARCH_ALL|SYM_WARNNOTFOUND|plt,
@@ -394,10 +383,8 @@ _dl_prebind_pre_resolve()
 	int idx;
 
 	if (_dl_prog_prebind_map != NULL) {
-		nameidx = (void *)(_dl_prog_prebind_map +
-		    prog_footer->nameidx_idx);
-		nametab = (void *)(_dl_prog_prebind_map +
-		    prog_footer->nametab_idx);
+		nameidx = _dl_prog_prebind_map + prog_footer->nameidx_idx;
+		nametab = _dl_prog_prebind_map + prog_footer->nametab_idx;
 		for (idx = 1, object = _dl_objects->next; object != NULL;
 		    object = object->next, idx++) {
 			if (object->prebind_data == NULL) {
@@ -462,11 +449,7 @@ _dl_prebind_post_resolve()
 		}
 		buf[6] = '\0';
 
-		/*
-		 * _dl_printf lacks %lld support; therefore assume
-		 * relocation takes less than 2^31 seconds
-		 */
-		_dl_printf("relocation took %d.%s\n", (int)diff_tp.tv_sec, buf);
+		_dl_printf("relocation took %d.%s\n", diff_tp.tv_sec, buf);
 	}
 
 	for (object = _dl_objects; object != NULL; object = object->next)
@@ -489,6 +472,7 @@ prebind_validate(elf_object_t *req_obj, unsigned int symidx, int flags,
 	const Elf_Sym *sym, **this;
 	const elf_object_t *sobj;
 	const char *symn;
+	Elf_Addr ret;
 
 	/* Don't verify non-matching flags*/
 
@@ -498,7 +482,7 @@ prebind_validate(elf_object_t *req_obj, unsigned int symidx, int flags,
 	this = &sym;
 
 	//_dl_printf("checking %s\n", symn);
-	_dl_find_symbol(symn, this, flags, ref_sym, req_obj, &sobj);
+	ret = _dl_find_symbol(symn, this, flags, ref_sym, req_obj, &sobj);
 
 	if (_dl_symcache[symidx].sym != *this ||
 	    _dl_symcache[symidx].obj != sobj) {
@@ -615,7 +599,7 @@ dump_prelink(Elf_Addr base, u_long size)
 	dl_dump_footer(footer);
 
 	prebind_map = (void *)base;
-	nameidx = prebind_map + footer->nameidx_idx;
+	nameidx = prebind_map + footer->nameidx_idx;;
 	symcachetab = prebind_map + footer->symcache_idx;
 	fixupidx = prebind_map + footer->fixup_idx;
 	nametab = prebind_map + footer->nametab_idx;
