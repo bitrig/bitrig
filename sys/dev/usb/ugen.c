@@ -1,4 +1,4 @@
-/*	$OpenBSD: ugen.c,v 1.91 2015/10/19 14:05:01 mpi Exp $ */
+/*	$OpenBSD: ugen.c,v 1.92 2016/03/03 18:13:24 stefan Exp $ */
 /*	$NetBSD: ugen.c,v 1.63 2002/11/26 18:49:48 christos Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/ugen.c,v 1.26 1999/11/17 22:33:41 n_hibma Exp $	*/
 
@@ -469,7 +469,8 @@ int
 ugen_do_read(struct ugen_softc *sc, int endpt, struct uio *uio, int flag)
 {
 	struct ugen_endpoint *sce = &sc->sc_endpoints[endpt][IN];
-	u_int32_t n, tn;
+	u_int32_t tn;
+	size_t n;
 	char buf[UGEN_BBSIZE];
 	struct usbd_xfer *xfer;
 	usbd_status err;
@@ -524,12 +525,12 @@ ugen_do_read(struct ugen_softc *sc, int endpt, struct uio *uio, int flag)
 
 		/* Transfer as many chunks as possible. */
 		while (sce->q.c_cc > 0 && uio->uio_resid > 0 && !error) {
-			n = szmin(sce->q.c_cc, uio->uio_resid);
+			n = ulmin(sce->q.c_cc, uio->uio_resid);
 			if (n > sizeof(buffer))
 				n = sizeof(buffer);
 
 			/* Remove a small chunk from the input queue. */
-			q_to_b(&sce->q, buffer, (int)n);
+			q_to_b(&sce->q, buffer, n);
 			DPRINTFN(5, ("ugenread: got %zu chars\n", n));
 
 			/* Copy the data to the user process. */
@@ -547,8 +548,8 @@ ugen_do_read(struct ugen_softc *sc, int endpt, struct uio *uio, int flag)
 			flags |= USBD_SHORT_XFER_OK;
 		if (sce->timeout == 0)
 			flags |= USBD_CATCH;
-		while ((n = min(UGEN_BBSIZE, uio->uio_resid)) != 0) {
-			DPRINTFN(1, ("ugenread: start transfer %d bytes\n",n));
+		while ((n = ulmin(UGEN_BBSIZE, uio->uio_resid)) != 0) {
+			DPRINTFN(1, ("ugenread: start transfer %zu bytes\n",n));
 			usbd_setup_xfer(xfer, sce->pipeh, 0, buf, n,
 			    flags, sce->timeout, NULL);
 			err = usbd_transfer(xfer);
@@ -563,8 +564,8 @@ ugen_do_read(struct ugen_softc *sc, int endpt, struct uio *uio, int flag)
 				break;
 			}
 			usbd_get_xfer_status(xfer, NULL, NULL, &tn, NULL);
-			DPRINTFN(1, ("ugenread: got %d bytes\n", tn));
-			error = uiomovei(buf, tn, uio);
+			DPRINTFN(1, ("ugenread: got %u bytes\n", tn));
+			error = uiomove(buf, tn, uio);
 			if (error || tn < n)
 				break;
 		}
@@ -595,9 +596,9 @@ ugen_do_read(struct ugen_softc *sc, int endpt, struct uio *uio, int flag)
 
 		while (sce->cur != sce->fill && uio->uio_resid > 0 && !error) {
 			if(sce->fill > sce->cur)
-				n = szmin(sce->fill - sce->cur, uio->uio_resid);
+				n = ulmin(sce->fill - sce->cur, uio->uio_resid);
 			else
-				n = szmin(sce->limit - sce->cur, uio->uio_resid);
+				n = ulmin(sce->limit - sce->cur, uio->uio_resid);
 
 			DPRINTFN(5, ("ugenread: isoc got %zu chars\n", n));
 
@@ -672,11 +673,11 @@ ugen_do_write(struct ugen_softc *sc, int endpt, struct uio *uio, int flag)
 		xfer = usbd_alloc_xfer(sc->sc_udev);
 		if (xfer == 0)
 			return (EIO);
-		while ((n = min(UGEN_BBSIZE, uio->uio_resid)) != 0) {
-			error = uiomovei(buf, n, uio);
+		while ((n = ulmin(UGEN_BBSIZE, uio->uio_resid)) != 0) {
+			error = uiomove(buf, n, uio);
 			if (error)
 				break;
-			DPRINTFN(1, ("ugenwrite: transfer %d bytes\n", n));
+			DPRINTFN(1, ("ugenwrite: transfer %zu bytes\n", n));
 			usbd_setup_xfer(xfer, sce->pipeh, 0, buf, n,
 			    flags, sce->timeout, NULL);
 			err = usbd_transfer(xfer);
@@ -697,13 +698,13 @@ ugen_do_write(struct ugen_softc *sc, int endpt, struct uio *uio, int flag)
 		xfer = usbd_alloc_xfer(sc->sc_udev);
 		if (xfer == 0)
 			return (EIO);
-		while ((n = szmin(UGETW(sce->edesc->wMaxPacketSize),
+		while ((n = ulmin(UGETW(sce->edesc->wMaxPacketSize),
 		    uio->uio_resid)) != 0) {
 			error = uiomove(buf, n, uio);
 			if (error)
 				break;
 			DPRINTFN(1, ("ugenwrite: transfer %zu bytes\n", n));
-			usbd_setup_xfer(xfer, sce->pipeh, 0, buf, (u_int32_t)n,
+			usbd_setup_xfer(xfer, sce->pipeh, 0, buf, n,
 			    flags, sce->timeout, NULL);
 			err = usbd_transfer(xfer);
 			if (err) {
@@ -1101,7 +1102,7 @@ ugen_do_ioctl(struct ugen_softc *sc, int endpt, u_long cmd, caddr_t addr,
 		break;
 	case USB_GET_FULL_DESC:
 	{
-		int len;
+		u_int len;
 		struct iovec iov;
 		struct uio uio;
 		struct usb_full_desc *fd = (struct usb_full_desc *)addr;
@@ -1121,7 +1122,7 @@ ugen_do_ioctl(struct ugen_softc *sc, int endpt, u_long cmd, caddr_t addr,
 		uio.uio_segflg = UIO_USERSPACE;
 		uio.uio_rw = UIO_READ;
 		uio.uio_procp = p;
-		error = uiomovei((void *)cdesc, len, &uio);
+		error = uiomove((void *)cdesc, len, &uio);
 		free(cdesc, M_TEMP, 0);
 		return (error);
 	}
@@ -1138,7 +1139,7 @@ ugen_do_ioctl(struct ugen_softc *sc, int endpt, u_long cmd, caddr_t addr,
 	case USB_DO_REQUEST:
 	{
 		struct usb_ctl_request *ur = (void *)addr;
-		int len = UGETW(ur->ucr_request.wLength);
+		size_t len = UGETW(ur->ucr_request.wLength);
 		struct iovec iov;
 		struct uio uio;
 		void *ptr = 0;
@@ -1155,7 +1156,7 @@ ugen_do_ioctl(struct ugen_softc *sc, int endpt, u_long cmd, caddr_t addr,
 		     ur->ucr_request.bRequest == UR_SET_INTERFACE))
 			return (EINVAL);
 
-		if (len < 0 || len > 32767)
+		if (len > 32767)
 			return (EINVAL);
 		if (len != 0) {
 			iov.iov_base = (caddr_t)ur->ucr_data;
@@ -1171,7 +1172,7 @@ ugen_do_ioctl(struct ugen_softc *sc, int endpt, u_long cmd, caddr_t addr,
 			uio.uio_procp = p;
 			ptr = malloc(len, M_TEMP, M_WAITOK);
 			if (uio.uio_rw == UIO_WRITE) {
-				error = uiomovei(ptr, len, &uio);
+				error = uiomove(ptr, len, &uio);
 				if (error)
 					goto ret;
 			}
@@ -1188,7 +1189,7 @@ ugen_do_ioctl(struct ugen_softc *sc, int endpt, u_long cmd, caddr_t addr,
 			len = ur->ucr_actlen;
 		if (len != 0) {
 			if (uio.uio_rw == UIO_READ) {
-				error = uiomovei(ptr, len, &uio);
+				error = uiomove(ptr, len, &uio);
 				if (error)
 					goto ret;
 			}

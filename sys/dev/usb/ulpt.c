@@ -1,4 +1,4 @@
-/*	$OpenBSD: ulpt.c,v 1.52 2015/12/11 16:07:02 mpi Exp $ */
+/*	$OpenBSD: ulpt.c,v 1.53 2016/03/03 18:13:24 stefan Exp $ */
 /*	$NetBSD: ulpt.c,v 1.57 2003/01/05 10:19:42 scw Exp $	*/
 /*	$FreeBSD: src/sys/dev/usb/ulpt.c,v 1.24 1999/11/17 22:33:44 n_hibma Exp $	*/
 
@@ -611,13 +611,13 @@ ulpt_do_write(struct ulpt_softc *sc, struct uio *uio, int flags)
 		usbd_free_xfer(xfer);
 		return (ENOMEM);
 	}
-	while ((n = szmin(ULPT_BSIZE, uio->uio_resid)) != 0) {
+	while ((n = ulmin(ULPT_BSIZE, uio->uio_resid)) != 0) {
 		ulpt_statusmsg(ulpt_status(sc), sc);
 		error = uiomove(bufp, n, uio);
 		if (error)
 			break;
 		DPRINTFN(1, ("ulptwrite: transfer %zu bytes\n", n));
-		usbd_setup_xfer(xfer, sc->sc_out_pipe, 0, bufp, (u_int32_t)n,
+		usbd_setup_xfer(xfer, sc->sc_out_pipe, 0, bufp, n,
 		    USBD_NO_COPY | USBD_SYNCHRONOUS | USBD_CATCH, 0, NULL);
 		err = usbd_transfer(xfer);
 		if (err) {
