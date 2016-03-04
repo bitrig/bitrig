@@ -440,8 +440,6 @@ globtilde(const Char *pattern, Char *patbuf, size_t patbuf_len, glob_t *pglob)
 				return pattern;
 			else
 				h = pwd->pw_dir;
-			else
-				return (pattern);
 		}
 	} else {
 		/*
