@@ -176,7 +176,7 @@ sdhc_pci_attach(struct device *parent, struct device *self, void *aux)
 			break;
 		}
 
-		if (sdhc_host_found(&sc->sc, iot, ioh, size, usedma, caps) != 0)
+		if (sdhc_host_found(&sc->sc, iot, ioh, size) != 0)
 			printf("%s at 0x%x: can't initialize host\n",
 			    sc->sc.sc_dev.dv_xname, reg);
 
