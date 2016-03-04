@@ -1,4 +1,4 @@
-/*	$OpenBSD: xdr_mem.c,v 1.17 2015/11/01 03:45:29 guenther Exp $ */
+/*	$OpenBSD: xdr_mem.c,v 1.16 2015/09/13 15:36:56 guenther Exp $ */
 
 /*
  * Copyright (c) 2010, Oracle America, Inc.
@@ -99,6 +99,7 @@ xdrmem_create(XDR *xdrs, caddr_t addr, u_int size, enum xdr_op op)
 }
 DEF_WEAK(xdrmem_create);
 
+/*ARGSUSED*/
 static void
 xdrmem_destroy(XDR *xdrs)
 {
@@ -214,6 +215,7 @@ xdrmem_inline_aligned(XDR *xdrs, u_int len)
 	return (buf);
 }
 
+/* ARGSUSED */
 static int32_t *
 xdrmem_inline_unaligned(XDR *xdrs, u_int len)
 {
