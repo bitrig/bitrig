@@ -37,6 +37,10 @@
  * Definitions for IEEE 802.11 drivers.
  */
 
+#ifdef	SMALL_KERNEL
+#define IEEE80211_STA_ONLY	1
+#define IEEE80211_NO_HT		1	/* no HT yet */
+#endif
 
 #include <sys/timeout.h>
 
