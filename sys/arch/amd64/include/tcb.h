@@ -1,4 +1,5 @@
-/*	$OpenBSD: tcb.h,v 1.3 2015/11/10 06:06:35 guenther Exp $	*/
+/*	$OpenBSD: tcb.h,v 1.3 2015/05/18 19:59:27 guenther Exp $	*/
+
 /*
  * Copyright (c) 2011 Philip Guenther <guenther@openbsd.org>
  *
@@ -23,10 +24,8 @@
 void	*tcb_get(struct proc *_p);
 void	tcb_set(struct proc *_p, void *_newtcb);
 
-#define TCB_GET(p)		\
-	((void *)i386_get_threadbase(p, TSEG_GS))
-#define TCB_SET(p, addr)	\
-	i386_set_threadbase(p, (uint32_t)(addr), TSEG_GS)
+#define TCB_GET(p)		tcb_get(p)
+#define TCB_SET(p, addr)	tcb_set(p, addr)
 
 #else /* _KERNEL */
 
