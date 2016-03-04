@@ -52,12 +52,6 @@ __stack_smash_handler(const char func[], int damaged)
 	char buf[1024];
 	size_t len;
 
-	/* clang can't tell us the function */
-	if (func == NULL) {
-		message = "stack overflow detected; terminated";
-		func = "";
-	}
-
 	/* Immediately block all signal handlers from running code */
 	sigfillset(&mask);
 	sigdelset(&mask, SIGABRT);
@@ -69,8 +63,13 @@ __stack_smash_handler(const char func[], int damaged)
 
 	/* truncate progname in case it is too long */
 	buf[sizeof(buf) / 2] = '\0';
-	strlcat(buf, ": stack overflow in function ", sizeof buf);
-	strlcat(buf, func, sizeof buf);
+	/* clang can't tell us the function */
+	if (func == NULL) {
+		strlcat(buf, "stack overflow detected; terminated", sizeof buf);
+	} else {
+		strlcat(buf, ": stack overflow in function ", sizeof buf);
+		strlcat(buf, func, sizeof buf);
+	}
 
 	sendsyslog2(buf, strlen(buf), LOG_CONS);
 
