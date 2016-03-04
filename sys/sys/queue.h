@@ -555,6 +555,8 @@ struct {								\
 		swap_first->field.tqe_prev = &(head2)->tqh_first;	\
 	else								\
 		(head2)->tqh_last = &(head2)->tqh_first;		\
+} while (0)
+
 #define TAILQ_CONCAT(head1, head2, field) do {				\
 	if (!TAILQ_EMPTY(head2)) {					\
 		*(head1)->tqh_last = (head2)->tqh_first;		\
