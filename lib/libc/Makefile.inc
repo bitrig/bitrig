@@ -12,7 +12,8 @@ CFLAGS+=-I${LIBCSRCDIR}/include -I${LIBCSRCDIR}/hidden \
 	-Werror-implicit-function-declaration -include namespace.h
 
 .if ${COMPILER_VERSION:L} != "gcc3"
-CFLAGS+=-Werror=deprecated-declarations
+# bitrig's locale does use some deprecated stuff.
+#CFLAGS+=-Werror=deprecated-declarations
 .endif
 
 # Include link-time warnings about unsafe API uses (ie. strcpy)
