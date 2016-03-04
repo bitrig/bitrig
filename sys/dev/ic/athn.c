@@ -312,6 +312,7 @@ athn_attach(struct athn_softc *sc)
 		/* Set supported HT rates. */
 		for (i = 0; i < nrxstreams; i++)
 			ic->ic_sup_mcs[i] = 0xff;
+#ifdef OUTOFBOUNDSINOPENBSD 
 		/* Set the "Tx MCS Set Defined" bit. */
 		ic->ic_sup_mcs[12] |= 0x01;
 		if (ntxstreams != nrxstreams) {
@@ -319,6 +320,7 @@ athn_attach(struct athn_softc *sc)
 			ic->ic_sup_mcs[12] |= 0x02;
 			ic->ic_sup_mcs[12] |= (ntxstreams - 1) << 2;
 		}
+#endif
 	}
 #endif
 
@@ -913,6 +915,7 @@ athn_switch_chan(struct athn_softc *sc, struct ieee80211_channel *c,
 #endif
 		goto reset;
 
+#ifdef notyet
 	/* If band or bandwidth changes, we need to do a full reset. */
 	if (c->ic_flags != sc->curchan->ic_flags ||
 	    ((extc != NULL) ^ (sc->curchanext != NULL))) {
@@ -925,12 +928,15 @@ athn_switch_chan(struct athn_softc *sc, struct ieee80211_channel *c,
 
 	error = athn_set_chan(sc, c, extc);
 	if (error != 0) {
+#endif
  reset:		/* Error found, try a full reset. */
 		DPRINTFN(3, ("needs a full reset\n"));
 		error = athn_hw_reset(sc, c, extc, 0);
 		if (error != 0)	/* Hopeless case. */
 			return (error);
+#ifdef notyet
 	}
+#endif
 	athn_rx_start(sc);
 
 	/* Re-enable interrupts. */
@@ -2245,8 +2251,8 @@ athn_hw_reset(struct athn_softc *sc, struct ieee80211_channel *c,
 	if (AR_SREV_9380_10_OR_LATER(sc))
 		sc->imask |= AR_IMR_RXERR | AR_IMR_HP_RXOK;
 #ifndef IEEE80211_STA_ONLY
-	if (0 && ic->ic_opmode == IEEE80211_M_HOSTAP)
-		sc->imask |= AR_IMR_MIB;
+	//if (0 && ic->ic_opmode == IEEE80211_M_HOSTAP)
+	//	sc->imask |= AR_IMR_MIB;
 #endif
 	AR_WRITE(sc, AR_IMR, sc->imask);
 	AR_SETBITS(sc, AR_IMR_S2, AR_IMR_S2_GTT);
