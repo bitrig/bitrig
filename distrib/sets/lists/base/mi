@@ -15015,6 +15015,7 @@
 ./var/spool/ftp/hidden
 ./var/spool/lock
 ./var/spool/output
+./var/spool/output/lpd
 ./var/spool/smtpd
 ./var/spool/smtpd/corrupt
 ./var/spool/smtpd/incoming
