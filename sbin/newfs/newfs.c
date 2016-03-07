@@ -83,7 +83,7 @@ void	fatal(const char *fmt, ...)
 	    __attribute__((__format__ (printf, 1, 2)))
 	    __attribute__((__nonnull__ (1)));
 __dead void	usage(void);
-void	mkfs(struct partition *, char *, int, int, mode_t, uid_t, gid_t);
+void	mkfs(struct partition *, char *, int, int);
 void	getphysmem(void);
 void	rewritelabel(char *, int, struct disklabel *);
 u_short	dkcksum(struct disklabel *);
@@ -334,13 +334,11 @@ main(int argc, char *argv[])
 		fatal("%s: %s", special, strerror(errno));
 	if (fstat(fsi, &st) < 0)
 		fatal("%s: %s", special, strerror(errno));
-	if (!mfs) {
-		if (S_ISBLK(st.st_mode))
-			fatal("%s: block device", special);
-		if (!S_ISCHR(st.st_mode))
-			warnx("%s: not a character-special device",
-			    special);
-	}
+	if (S_ISBLK(st.st_mode))
+		fatal("%s: block device", special);
+	if (!S_ISCHR(st.st_mode))
+		warnx("%s: not a character-special device",
+		    special);
 	cp = strchr(argv[0], '\0') - 1;
 	if (cp == NULL ||
 	    ((*cp < 'a' || *cp > ('a' + maxpartitions - 1))
