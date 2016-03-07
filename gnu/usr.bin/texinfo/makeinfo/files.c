@@ -577,8 +577,10 @@ normalize_filename (char *fname)
   char *lastdot, *p;
 
 #ifdef _PC_NAME_MAX
-  maxlen = pathconf (fname, _PC_NAME_MAX);
-  if (maxlen < 1)
+  printf("======================== SKIPPING pathconf for now %s %d\n", fname, _PC_NAME_MAX);
+  //maxlen = pathconf (fname, _PC_NAME_MAX);
+  //printf("maxlen %d\n", maxlen);
+  //if (maxlen < 1)
 #endif
     maxlen = PATH_MAX;
 

@@ -516,8 +516,8 @@ main(int argc, char *argv[])
 		break;
 
 	case PATHCONF:
-		if (pledge("stdio rpath", NULL) == -1)
-			err(1, "pledge");
+		//if (pledge("stdio rpath", NULL) == -1)
+		//	err(1, "pledge");
 		errno = 0;
 		if ((val = pathconf(argv[1], cp->value)) == -1) {
 			if (errno != 0)
