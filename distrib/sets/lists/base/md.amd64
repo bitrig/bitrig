@@ -509,6 +509,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/trap.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/tss.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/vga_post.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/vmmvar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/amd64/vmparam.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/arpa
@@ -539,6 +540,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/cast.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/castsb.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/chacha_private.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/chachapoly.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/cmac.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/cryptodev.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/crypto/cryptosoft.ph
@@ -1224,6 +1226,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/glob.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/grp.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/histedit.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/icdb.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ieeefp.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/ifaddrs.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/imsg.ph

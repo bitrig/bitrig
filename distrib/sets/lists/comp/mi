@@ -156,6 +156,7 @@
 ./usr/include/crypto/cast.h
 ./usr/include/crypto/castsb.h
 ./usr/include/crypto/chacha_private.h
+./usr/include/crypto/chachapoly.h
 ./usr/include/crypto/cmac.h
 ./usr/include/crypto/cryptodev.h
 ./usr/include/crypto/cryptosoft.h
@@ -844,6 +845,7 @@
 ./usr/include/glob.h
 ./usr/include/grp.h
 ./usr/include/histedit.h
+./usr/include/icdb.h
 ./usr/include/ieeefp.h
 ./usr/include/ifaddrs.h
 ./usr/include/imsg.h
@@ -1602,7 +1604,6 @@
 ./usr/share/man/man4/amd64/autoconf.4
 ./usr/share/man/man4/amd64/bios.4
 ./usr/share/man/man4/amd64/cpu.4
-./usr/share/man/man4/amd64/iapcu.4
 ./usr/share/man/man4/amd64/intro.4
 ./usr/share/man/man4/amd64/ioapic.4
 ./usr/share/man/man4/amd64/kmem.4
@@ -1613,5 +1614,6 @@
 ./usr/share/man/man4/amd64/pctr.4
 ./usr/share/man/man4/amd64/skgpio.4
 ./usr/share/man/man4/amd64/tcpcib.4
+./usr/share/man/man4/amd64/vmm.4
 ./usr/share/man/man5/amd64
 ./usr/share/man/man5/amd64/boot.conf.5
