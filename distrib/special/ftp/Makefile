@@ -7,7 +7,7 @@ SRCS=	cmds.c cmdtab.c complete.c cookie.c domacro.c fetch.c ftp.c \
 	list.c main.c ruserpass.c small.c stringlist.c util.c
 .PATH:	${.CURDIR}/../../../usr.bin/ftp
 
-LDADD+=	-lutil -ltls -lssl -lcrypto
+LDADD+=	-lutil -ltls -lssl -lcrypto -ledit -lcurses
 DPADD+=	${LIBEDIT} ${LIBCURSES} ${LIBUTIL} ${LIBTLS} ${LIBSSL} ${LIBCRYPTO}
 
 .include <bsd.prog.mk>
