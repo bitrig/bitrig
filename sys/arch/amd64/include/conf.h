@@ -30,14 +30,14 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _MACHINE_CONF_H_
-#define _MACHINE_CONF_H_
-
 #include <sys/conf.h>
 
 #define	mmread	mmrw
 #define	mmwrite	mmrw
 cdev_decl(mm);
+
+bdev_decl(fd);
+cdev_decl(fd);
 
 cdev_decl(spkr);
 
