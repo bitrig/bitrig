@@ -247,7 +247,7 @@ release-sets:
 sha:
 	-cd ${RELEASEDIR}; \
 	    date -u "+Build date: %s - %+" > BUILDINFO; \
-	    cksum -a sha256 BUILDINFO INSTALL.`arch -ks` \
+	    cksum -a sha256 BUILDINFO \
 	    ${ALL_KERNELS} ${MDEXT} ${MISETS} | sort > SHA256
 
 release: sha
