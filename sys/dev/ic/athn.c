@@ -316,7 +316,6 @@ athn_attach(struct athn_softc *sc)
 			ic->ic_tx_mcs_set |= IEEE80211_TX_RX_MCS_NOT_EQUAL;
 			ic->ic_tx_mcs_set |= (ntxstreams - 1) << 2;
 		}
-#endif
 	}
 
 	/* Set supported rates. */
@@ -907,8 +906,7 @@ athn_switch_chan(struct athn_softc *sc, struct ieee80211_channel *c,
 	if (AR_SREV_9280(sc))
 #endif
 		goto reset;
-
-#ifdef notyet
+#if 0
 	/* If band or bandwidth changes, we need to do a full reset. */
 	if (c->ic_flags != sc->curchan->ic_flags ||
 	    ((extc != NULL) ^ (sc->curchanext != NULL))) {
@@ -921,15 +919,15 @@ athn_switch_chan(struct athn_softc *sc, struct ieee80211_channel *c,
 
 	error = athn_set_chan(sc, c, extc);
 	if (error != 0) {
+#else
+	{
 #endif
  reset:		/* Error found, try a full reset. */
 		DPRINTFN(3, ("needs a full reset\n"));
 		error = athn_hw_reset(sc, c, extc, 0);
 		if (error != 0)	/* Hopeless case. */
 			return (error);
-#ifdef notyet
 	}
-#endif
 	athn_rx_start(sc);
 
 	/* Re-enable interrupts. */
