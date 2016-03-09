@@ -194,7 +194,6 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	uint16_t version;
 	int error = 1;
 	int max_clock;
-#ifdef SDHC_DEBUG
 	u_int16_t version;
 
 	/* Allocate one more host structure. */
