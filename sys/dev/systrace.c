@@ -47,8 +47,6 @@
 #include <sys/namei.h>
 #include <sys/poll.h>
 #include <sys/ptrace.h>
-#include <sys/exec.h>
-#include <uvm/uvm_extern.h>
 
 #include <sys/exec.h>
 #include <uvm/uvm_extern.h>
@@ -68,9 +66,6 @@ int	systracef_poll(struct file *, int, struct proc *);
 int	systracef_kqfilter(struct file *, struct knote *);
 int	systracef_stat(struct file *, struct stat *, struct proc *);
 int	systracef_close(struct file *, struct proc *);
-
-caddr_t	 stackgap_init(struct proc *); 
-void	*stackgap_alloc(caddr_t *, size_t);
 
 struct str_policy {
 	TAILQ_ENTRY(str_policy) next;
@@ -1831,6 +1826,7 @@ stackgap_init(struct proc *p)
 			sigexit(p, SIGILL);
 	}
 
+        return (caddr_t)pr->ps_stackgap;
 }
 
 void *          

@@ -236,8 +236,7 @@ udf_vat_read(struct umount *ump, uint32_t *sector)
 {
 	struct buf *bp;
 	uint8_t *data;
-	size_t size;
-	int error;
+	int error, size;
 
 	size = 4;
 
