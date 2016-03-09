@@ -60,6 +60,7 @@ int	sdmmc_enable(struct sdmmc_softc *);
 void	sdmmc_disable(struct sdmmc_softc *);
 int	sdmmc_scan(struct sdmmc_softc *);
 int	sdmmc_init(struct sdmmc_softc *);
+int	sdmmc_set_bus_width(struct sdmmc_function *);
 #ifdef SDMMC_IOCTL
 int	sdmmc_ioctl(struct device *, u_long, caddr_t);
 #endif
@@ -96,30 +97,14 @@ sdmmc_attach(struct device *parent, struct device *self, void *aux)
 {
 	struct sdmmc_softc *sc = (struct sdmmc_softc *)self;
 	struct sdmmcbus_attach_args *saa = aux;
-	int error;
 
 	printf("\n");
 
 	sc->sct = saa->sct;
 	sc->sch = saa->sch;
-	sc->sc_dmat = saa->dmat;
 	sc->sc_flags = saa->flags;
 	sc->sc_caps = saa->caps;
 	sc->sc_max_xfer = saa->max_xfer;
-	sc->sc_clkmin = saa->clkmin;
-	sc->sc_clkmax = saa->clkmax;
-	sc->sc_busclk = sc->sc_clkmax;
-	sc->sc_buswidth = 1;
-
-	if (ISSET(sc->sc_caps, SMC_CAPS_DMA)) {
-		error = bus_dmamap_create(sc->sc_dmat, MAXPHYS, SDMMC_MAXNSEGS,
-		    MAXPHYS, 0, BUS_DMA_NOWAIT|BUS_DMA_ALLOCNOW, &sc->sc_dmap);
-		if (error) {
-			printf("%s: couldn't create dma map. (error=%d)\n",
-			    DEVNAME(sc), error);
-			return;
-		}
-	}
 
 	SIMPLEQ_INIT(&sc->sf_head);
 	TAILQ_INIT(&sc->sc_tskq);
@@ -153,12 +138,6 @@ sdmmc_detach(struct device *self, int flags)
 		wakeup(&sc->sc_tskq);
 		tsleep(sc, PWAIT, "mmcdie", 0);
 	}
-
-	if (ISSET(sc->sc_caps, SMC_CAPS_DMA)) {
-		bus_dmamap_unload(sc->sc_dmat, sc->sc_dmap);
-		bus_dmamap_destroy(sc->sc_dmat, sc->sc_dmap);
-	}
-
 	return 0;
 }
 
@@ -433,6 +412,11 @@ sdmmc_enable(struct sdmmc_softc *sc)
 	    (error = sdmmc_mem_enable(sc)) != 0)
 		goto err;
 
+	/* XXX respect host and card capabilities */
+	if (ISSET(sc->sc_flags, SMF_SD_MODE))
+		(void)sdmmc_chip_bus_clock(sc->sct, sc->sch,
+		    SDMMC_SDCLK_25MHZ);
+
  err:
 	if (error != 0)
 		sdmmc_disable(sc);
@@ -451,7 +435,6 @@ sdmmc_disable(struct sdmmc_softc *sc)
 	(void)sdmmc_select_card(sc, NULL);
 
 	/* Turn off bus power and clock. */
-	(void)sdmmc_chip_bus_width(sc->sct, sc->sch, 1);
 	(void)sdmmc_chip_bus_clock(sc->sct, sc->sch, SDMMC_SDCLK_OFF);
 	(void)sdmmc_chip_bus_power(sc->sct, sc->sch, 0);
 }
@@ -496,68 +479,12 @@ sdmmc_function_alloc(struct sdmmc_softc *sc)
 	sf->cis.manufacturer = SDMMC_VENDOR_INVALID;
 	sf->cis.product = SDMMC_PRODUCT_INVALID;
 	sf->cis.function = SDMMC_FUNCTION_INVALID;
-	sf->width = 1;
-
-	if (ISSET(sc->sc_flags, SMF_MEM_MODE) &&
-	    ISSET(sc->sc_caps, SMC_CAPS_DMA) &&
-	    !ISSET(sc->sc_caps, SMC_CAPS_MULTI_SEG_DMA)) {
-		bus_dma_segment_t ds;
-		int rseg, error;
-
-		error = bus_dmamap_create(sc->sc_dmat, MAXPHYS, 1,
-		    MAXPHYS, 0, BUS_DMA_WAITOK, &sf->bbuf_dmap);
-		if (error)
-			goto fail1;
-		error = bus_dmamem_alloc(sc->sc_dmat, MAXPHYS,
-		    PAGE_SIZE, 0, &ds, 1, &rseg, BUS_DMA_WAITOK);
-		if (error)
-			goto fail2;
-		error = bus_dmamem_map(sc->sc_dmat, &ds, 1, MAXPHYS,
-		    (caddr_t *)&sf->bbuf, BUS_DMA_WAITOK);
-		if (error)
-			goto fail3;
-		error = bus_dmamap_load(sc->sc_dmat, sf->bbuf_dmap,
-		    sf->bbuf, MAXPHYS, NULL,
-		    BUS_DMA_WAITOK|BUS_DMA_READ|BUS_DMA_WRITE);
-		if (error)
-			goto fail4;
-		error = bus_dmamap_create(sc->sc_dmat, MAXPHYS, 1,
-		    MAXPHYS, 0, BUS_DMA_WAITOK, &sf->sseg_dmap);
-		if (!error)
-			goto out;
-
-		bus_dmamap_unload(sc->sc_dmat, sf->bbuf_dmap);
-fail4:
-		bus_dmamem_unmap(sc->sc_dmat, sf->bbuf, MAXPHYS);
-fail3:
-		bus_dmamem_free(sc->sc_dmat, &ds, 1);
-fail2:
-		bus_dmamap_destroy(sc->sc_dmat, sf->bbuf_dmap);
-fail1:
-		free(sf, M_DEVBUF, 0);
-		sf = NULL;
-	}
-out:
-
 	return sf;
 }
 
 void
 sdmmc_function_free(struct sdmmc_function *sf)
 {
-	struct sdmmc_softc *sc = sf->sc;
-
-	if (ISSET(sc->sc_flags, SMF_MEM_MODE) &&
-	    ISSET(sc->sc_caps, SMC_CAPS_DMA) &&
-	    !ISSET(sc->sc_caps, SMC_CAPS_MULTI_SEG_DMA)) {
-		bus_dmamap_destroy(sc->sc_dmat, sf->sseg_dmap);
-		bus_dmamap_unload(sc->sc_dmat, sf->bbuf_dmap);
-		bus_dmamem_unmap(sc->sc_dmat, sf->bbuf, MAXPHYS);
-		bus_dmamem_free(sc->sc_dmat,
-		    sf->bbuf_dmap->dm_segs, sf->bbuf_dmap->dm_nsegs);
-		bus_dmamap_destroy(sc->sc_dmat, sf->bbuf_dmap);
-	}
-
 	free(sf, M_DEVBUF, 0);
 }
 
@@ -762,16 +689,15 @@ sdmmc_set_relative_addr(struct sdmmc_softc *sc,
  * Switch card and host to the maximum supported bus width.
  */
 int
-sdmmc_set_bus_width(struct sdmmc_function *sf, int width)
+sdmmc_set_bus_width(struct sdmmc_function *sf)
 {
 	struct sdmmc_softc *sc = sf->sc;
 	struct sdmmc_command cmd;
 	int error;
 
-	rw_assert_wrlock(&sc->sc_lock);
+	rw_enter_write(&sc->sc_lock);
 
-	if (!ISSET(sc->sc_flags, SMF_SD_MODE) ||
-	    ISSET(sc->sc_caps, SMC_CAPS_SPI_MODE)) {
+	if (!ISSET(sc->sc_flags, SMF_SD_MODE)) {
 		rw_exit(&sc->sc_lock);
 		return EOPNOTSUPP;
 	}
@@ -783,24 +709,10 @@ sdmmc_set_bus_width(struct sdmmc_function *sf, int width)
 
 	bzero(&cmd, sizeof cmd);
 	cmd.c_opcode = SD_APP_SET_BUS_WIDTH;
+	cmd.c_arg = SD_ARG_BUS_WIDTH_4;
 	cmd.c_flags = SCF_CMD_AC | SCF_RSP_R1;
-
-	switch (width) {
-	case 1:
-		cmd.c_arg = SD_ARG_BUS_WIDTH_1;
-		break;
-
-	case 4:
-		cmd.c_arg = SD_ARG_BUS_WIDTH_4;
-		break;
-
-	default:
-		return EINVAL;
-	}
-
 	error = sdmmc_app_command(sc, &cmd);
-	if (error == 0)
-		error = sdmmc_chip_bus_width(sc->sct, sc->sch, width);
+	rw_exit(&sc->sc_lock);
 	return error;
 }
 

@@ -36,19 +36,16 @@
 #define SDHC_COMMAND_TIMEOUT	hz
 #define SDHC_BUFFER_TIMEOUT	hz
 #define SDHC_TRANSFER_TIMEOUT	hz
-#define SDHC_DMA_TIMEOUT	hz
 
 struct sdhc_host {
 	struct sdhc_softc *sc;		/* host controller device */
 	struct device *sdmmc;		/* generic SD/MMC device */
 	bus_space_tag_t iot;		/* host register set tag */
 	bus_space_handle_t ioh;		/* host register set handle */
-	bus_dma_tag_t dmat;		/* host DMA tag */
 	u_int16_t version;		/* specification version */
 	u_int clkbase;			/* base clock frequency in KHz */
 	int maxblklen;			/* maximum block length */
 	int flags;			/* flags for this host */
-	int specver;			/* spec. version */
 	u_int32_t ocr;			/* OCR value from capabilities */
 	u_int8_t regs[14];		/* host controller state */
 	u_int16_t intr_status;		/* soft interrupt status */
@@ -57,75 +54,27 @@ struct sdhc_host {
 
 /* flag values */
 #define SHF_USE_DMA		0x0001
-#define SHF_MODE_DMAEN		0x0008 /* needs SDHC_DMA_ENABLE in mode */
 
-static uint8_t
-hread1(struct sdhc_host *hp, bus_size_t reg)
-{
-	if (!ISSET(hp->sc->sc_flags, SDHC_F_32BIT_ACCESS))
-		return bus_space_read_1(hp->iot, hp->ioh, reg);
-	return bus_space_read_4(hp->iot, hp->ioh, reg & -4) >> (8 * (reg & 3));
-}
-
-static uint16_t
-hread2(struct sdhc_host *hp, bus_size_t reg)
-{
-	if (!ISSET(hp->sc->sc_flags, SDHC_F_32BIT_ACCESS))
-		return bus_space_read_2(hp->iot, hp->ioh, reg);
-	return bus_space_read_4(hp->iot, hp->ioh, reg & -4) >> (8 * (reg & 2));
-}
-
-
-#define HREAD1(hp, reg)		hread1(hp, reg)
-#define HREAD2(hp, reg)		hread2(hp, reg)
+#define HREAD1(hp, reg)							\
+	(bus_space_read_1((hp)->iot, (hp)->ioh, (reg)))
+#define HREAD2(hp, reg)							\
+	(bus_space_read_2((hp)->iot, (hp)->ioh, (reg)))
 #define HREAD4(hp, reg)							\
 	(bus_space_read_4((hp)->iot, (hp)->ioh, (reg)))
-
-static void
-hwrite1(struct sdhc_host *hp, bus_size_t o, uint8_t val)
-{
-	if (!ISSET(hp->sc->sc_flags, SDHC_F_32BIT_ACCESS)) {
-		bus_space_write_1(hp->iot, hp->ioh, o, val);
-	} else {
-		const size_t shift = 8 * (o & 3);
-		o &= -4;
-		uint32_t tmp = bus_space_read_4(hp->iot, hp->ioh, o);
-		tmp = (val << shift) | (tmp & ~(0xff << shift));
-		bus_space_write_4(hp->iot, hp->ioh, o, tmp);
-	}
-}
-
-static void
-hwrite2(struct sdhc_host *hp, bus_size_t o, uint16_t val)
-{
-	if (!ISSET(hp->sc->sc_flags, SDHC_F_32BIT_ACCESS)) {
-		bus_space_write_2(hp->iot, hp->ioh, o, val);
-	} else {
-		const size_t shift = 8 * (o & 2);
-		o &= -4;
-		uint32_t tmp = bus_space_read_4(hp->iot, hp->ioh, o);
-		tmp = (val << shift) | (tmp & ~(0xffff << shift));
-		bus_space_write_4(hp->iot, hp->ioh, o, tmp);
-	}
-}
-
-#define HWRITE1(hp, reg, val)		hwrite1(hp, reg, val)
-#define HWRITE2(hp, reg, val)		hwrite2(hp, reg, val)
+#define HWRITE1(hp, reg, val)						\
+	bus_space_write_1((hp)->iot, (hp)->ioh, (reg), (val))
+#define HWRITE2(hp, reg, val)						\
+	bus_space_write_2((hp)->iot, (hp)->ioh, (reg), (val))
 #define HWRITE4(hp, reg, val)						\
 	bus_space_write_4((hp)->iot, (hp)->ioh, (reg), (val))
-
 #define HCLR1(hp, reg, bits)						\
 	HWRITE1((hp), (reg), HREAD1((hp), (reg)) & ~(bits))
 #define HCLR2(hp, reg, bits)						\
 	HWRITE2((hp), (reg), HREAD2((hp), (reg)) & ~(bits))
-#define HCLR4(hp, reg, bits)						\
-	HWRITE4((hp), (reg), HREAD4((hp), (reg)) & ~(bits))
 #define HSET1(hp, reg, bits)						\
 	HWRITE1((hp), (reg), HREAD1((hp), (reg)) | (bits))
 #define HSET2(hp, reg, bits)						\
 	HWRITE2((hp), (reg), HREAD2((hp), (reg)) | (bits))
-#define HSET4(hp, reg, bits)						\
-	HWRITE4((hp), (reg), HREAD4((hp), (reg)) | (bits))
 
 int	sdhc_host_reset(sdmmc_chipset_handle_t);
 u_int32_t sdhc_host_ocr(sdmmc_chipset_handle_t);
@@ -133,8 +82,6 @@ int	sdhc_host_maxblklen(sdmmc_chipset_handle_t);
 int	sdhc_card_detect(sdmmc_chipset_handle_t);
 int	sdhc_bus_power(sdmmc_chipset_handle_t, u_int32_t);
 int	sdhc_bus_clock(sdmmc_chipset_handle_t, int);
-int	sdhc_bus_width(sdmmc_chipset_handle_t, int);
-int	sdhc_bus_rod(sdmmc_chipset_handle_t, int);
 void	sdhc_card_intr_mask(sdmmc_chipset_handle_t, int);
 void	sdhc_card_intr_ack(sdmmc_chipset_handle_t);
 void	sdhc_exec_command(sdmmc_chipset_handle_t, struct sdmmc_command *);
@@ -143,8 +90,6 @@ int	sdhc_wait_state(struct sdhc_host *, u_int32_t, u_int32_t);
 int	sdhc_soft_reset(struct sdhc_host *, int);
 int	sdhc_wait_intr(struct sdhc_host *, int, int);
 void	sdhc_transfer_data(struct sdhc_host *, struct sdmmc_command *);
-int	sdhc_transfer_data_dma(struct sdhc_host *, struct sdmmc_command *);
-int	sdhc_transfer_data_pio(struct sdhc_host *, struct sdmmc_command *);
 void	sdhc_read_data(struct sdhc_host *, u_char *, int);
 void	sdhc_write_data(struct sdhc_host *, u_char *, int);
 
@@ -164,11 +109,9 @@ struct sdmmc_chip_functions sdhc_functions = {
 	sdhc_host_maxblklen,
 	/* card detection */
 	sdhc_card_detect,
-	/* bus power, clock frequency and width */
+	/* bus power and clock frequency */
 	sdhc_bus_power,
 	sdhc_bus_clock,
-	sdhc_bus_width,
-	sdhc_bus_rod,
 	/* command execution */
 	sdhc_exec_command,
 	/* card interrupt */
@@ -186,31 +129,16 @@ struct cfdriver sdhc_cd = {
  */
 int
 sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
-    bus_space_handle_t ioh, bus_size_t iosize)
+    bus_space_handle_t ioh, bus_size_t iosize, int usedma, u_int32_t caps)
 {
 	struct sdmmcbus_attach_args saa;
 	struct sdhc_host *hp;
-	uint32_t caps = 0;
-	uint16_t version;
 	int error = 1;
 	int max_clock;
+#ifdef SDHC_DEBUG
 	u_int16_t version;
 
-	/* Allocate one more host structure. */
-	sc->sc_nhosts++;
-	hp = malloc(sizeof(*hp), M_DEVBUF, M_WAITOK | M_ZERO);
-	sc->sc_host[sc->sc_nhosts - 1] = hp;
-
-	/* Fill in the new host structure. */
-	hp->sc = sc;
-	hp->iot = iot;
-	hp->ioh = ioh;
-	hp->dmat = sc->sc_dmat;
-
-	version = HREAD2(hp, SDHC_HOST_CTL_VERSION);
-	hp->specver = SDHC_SPEC_VERSION(version);
-
-#ifdef SDHC_DEBUG
+	version = bus_space_read_2(iot, ioh, SDHC_HOST_CTL_VERSION);
 	printf("%s: SD Host Specification/Vendor Version ",
 	    sc->sc_dev.dv_xname);
 	switch(SDHC_SPEC_VERSION(version)) {
@@ -242,24 +170,12 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	(void)sdhc_host_reset(hp);
 
 	/* Determine host capabilities. */
-	if (ISSET(sc->sc_flags, SDHC_F_HOSTCAPS))
-		caps = sc->sc_caps;
-	else
+	if (caps == 0)
 		caps = HREAD4(hp, SDHC_CAPABILITIES);
 
-	/*
-	 * Use DMA if the host system and the controller support it.
-	 * Suports integrated or external DMA egine, with or without
-	 * SDHC_DMA_ENABLE in the command.
-	 */
-	if (ISSET(sc->sc_flags, SDHC_F_FORCE_DMA) ||
-	    (ISSET(sc->sc_flags, SDHC_F_USE_DMA) &&
-	    ISSET(caps, SDHC_DMA_SUPPORT))) {
+	/* Use DMA if the host system and the controller support it. */
+	if (usedma && ISSET(caps, SDHC_DMA_SUPPORT))
 		SET(hp->flags, SHF_USE_DMA);
-		if (!ISSET(sc->sc_flags, SDHC_F_EXTERNAL_DMA) ||
-		    ISSET(sc->sc_flags, SDHC_F_EXTDMA_DMAEN))
-			SET(hp->flags, SHF_MODE_DMAEN);
-	}
 
 	/*
 	 * Determine the base clock frequency. (2.2.24)
@@ -290,7 +206,6 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	 * XXX Set the data timeout counter value according to
 	 * capabilities. (2.2.15)
 	 */
-	HWRITE1(hp, SDHC_TIMEOUT_CTL, SDHC_TIMEOUT_MAX);
 
 	/*
 	 * Determine SD bus voltage levels supported by the controller.
@@ -316,9 +231,6 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	case SDHC_MAX_BLK_LEN_2048:
 		hp->maxblklen = 2048;
 		break;
-	case SDHC_MAX_BLK_LEN_4096:
-		hp->maxblklen = 4096;
-		break;
 	default:
 		hp->maxblklen = 1;
 		break;
@@ -332,27 +244,6 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	saa.saa_busname = "sdmmc";
 	saa.sct = &sdhc_functions;
 	saa.sch = hp;
-	saa.dmat = hp->dmat;
-	saa.clkmax = hp->clkbase;
-	if (hp->sc->sc_clkmsk != 0)
-		saa.clkmin = hp->clkbase / (hp->sc->sc_clkmsk >>
-		    (ffs(hp->sc->sc_clkmsk) - 1));
-	else if (hp->specver >= SDHC_SPEC_VERS_300)
-		saa.clkmin = hp->clkbase / 0x3ff;
-	else
-		saa.clkmin = hp->clkbase / 256;
-	saa.caps = SMC_CAPS_4BIT_MODE|SMC_CAPS_AUTO_STOP;
-	if (ISSET(sc->sc_flags, SDHC_F_8BIT_MODE))
-		saa.caps |= SMC_CAPS_8BIT_MODE;
-	if (ISSET(caps, SDHC_HIGH_SPEED_SUPP))
-		saa.caps |= SMC_CAPS_SD_HIGHSPEED;
-	if (ISSET(hp->flags, SHF_USE_DMA)) {
-		saa.caps |= SMC_CAPS_DMA;
-		if (!ISSET(hp->sc->sc_flags, SDHC_F_ENHANCED))
-			saa.caps |= SMC_CAPS_MULTI_SEG_DMA;
-	}
-	if (ISSET(sc->sc_flags, SDHC_F_SINGLE_ONLY))
-		saa.caps |= SMC_CAPS_SINGLE_ONLY;
 
 	hp->sdmmc = config_found(&sc->sc_dev, &saa, NULL);
 	if (hp->sdmmc == NULL) {
@@ -383,20 +274,8 @@ sdhc_activate(struct device *self, int act)
 		/* Save the host controller state. */
 		for (n = 0; n < sc->sc_nhosts; n++) {
 			hp = sc->sc_host[n];
-			if (ISSET(sc->sc_flags, SDHC_F_32BIT_ACCESS)) {
-				for (i = 0; i < sizeof hp->regs; i += 4) {
-					uint32_t v = HREAD4(hp, i);
-					hp->regs[i + 0] = (v >> 0);
-					hp->regs[i + 1] = (v >> 8);
-					if (i + 3 < sizeof hp->regs) {
-						hp->regs[i + 2] = (v >> 16);
-						hp->regs[i + 3] = (v >> 24);
-					}
-				}
-			} else {
-				for (i = 0; i < sizeof hp->regs; i++)
-					hp->regs[i] = HREAD1(hp, i);
-			}
+			for (i = 0; i < sizeof hp->regs; i++)
+				hp->regs[i] = HREAD1(hp, i);
 		}
 		break;
 	case DVACT_RESUME:
@@ -404,24 +283,8 @@ sdhc_activate(struct device *self, int act)
 		for (n = 0; n < sc->sc_nhosts; n++) {
 			hp = sc->sc_host[n];
 			(void)sdhc_host_reset(hp);
-			if (ISSET(sc->sc_flags, SDHC_F_32BIT_ACCESS)) {
-				for (i = 0; i < sizeof hp->regs; i += 4) {
-					if (i + 3 < sizeof hp->regs) {
-						HWRITE4(hp, i,
-						    (hp->regs[i + 0] << 0)
-						    | (hp->regs[i + 1] << 8)
-						    | (hp->regs[i + 2] << 16)
-						    | (hp->regs[i + 3] << 24));
-					} else {
-						HWRITE4(hp, i,
-						    (hp->regs[i + 0] << 0)
-						    | (hp->regs[i + 1] << 8));
-					}
-				}
-			} else {
-				for (i = 0; i < sizeof hp->regs; i++)
-					HWRITE1(hp, i, hp->regs[i]);
-			}
+			for (i = 0; i < sizeof hp->regs; i++)
+				HWRITE1(hp, i, hp->regs[i]);
 		}
 		rv = config_activate_children(self, act);
 		break;
@@ -468,11 +331,7 @@ sdhc_host_reset(sdmmc_chipset_handle_t sch)
 	s = splsdmmc();
 
 	/* Disable all interrupts. */
-	if (ISSET(hp->sc->sc_flags, SDHC_F_32BIT_ACCESS)) {
-		HWRITE4(hp, SDHC_NINTR_SIGNAL_EN, 0);
-	} else {
-		HWRITE2(hp, SDHC_NINTR_SIGNAL_EN, 0);
-	}
+	HWRITE2(hp, SDHC_NINTR_SIGNAL_EN, 0);
 
 	/*
 	 * Reset the entire host controller and wait up to 100ms for
@@ -492,20 +351,10 @@ sdhc_host_reset(sdmmc_chipset_handle_t sch)
 	    SDHC_DMA_INTERRUPT | SDHC_BLOCK_GAP_EVENT |
 	    SDHC_TRANSFER_COMPLETE | SDHC_COMMAND_COMPLETE;
 
-	if (ISSET(hp->sc->sc_flags, SDHC_F_32BIT_ACCESS)) {
-		imask |= SDHC_EINTR_STATUS_MASK << 16;
-		HWRITE4(hp, SDHC_NINTR_STATUS_EN, imask);
-		imask ^=
-		    (SDHC_EINTR_STATUS_MASK ^ SDHC_EINTR_SIGNAL_MASK) << 16;
-		imask ^= SDHC_BUFFER_READ_READY ^ SDHC_BUFFER_WRITE_READY;
-		HWRITE4(hp, SDHC_NINTR_SIGNAL_EN, imask);
-	} else {
-		HWRITE2(hp, SDHC_NINTR_STATUS_EN, imask);
-		HWRITE2(hp, SDHC_EINTR_STATUS_EN, SDHC_EINTR_STATUS_MASK);
-		imask ^= SDHC_BUFFER_READ_READY ^ SDHC_BUFFER_WRITE_READY;
-		HWRITE2(hp, SDHC_NINTR_SIGNAL_EN, imask);
-		HWRITE2(hp, SDHC_EINTR_SIGNAL_EN, SDHC_EINTR_SIGNAL_MASK);
-	}
+	HWRITE2(hp, SDHC_NINTR_STATUS_EN, imask);
+	HWRITE2(hp, SDHC_EINTR_STATUS_EN, SDHC_EINTR_STATUS_MASK);
+	HWRITE2(hp, SDHC_NINTR_SIGNAL_EN, imask);
+	HWRITE2(hp, SDHC_EINTR_SIGNAL_EN, SDHC_EINTR_SIGNAL_MASK);
 
 	splx(s);
 	return 0;
@@ -532,10 +381,6 @@ int
 sdhc_card_detect(sdmmc_chipset_handle_t sch)
 {
 	struct sdhc_host *hp = sch;
-
-	if (hp->sc->sc_vendor_card_detect)
-		return (*hp->sc->sc_vendor_card_detect)(hp->sc);
-
 	return ISSET(HREAD4(hp, SDHC_PRESENT_STATE), SDHC_CARD_INSERTED) ?
 	    1 : 0;
 }
@@ -550,16 +395,13 @@ sdhc_bus_power(sdmmc_chipset_handle_t sch, u_int32_t ocr)
 	struct sdhc_host *hp = sch;
 	u_int8_t vdd;
 	int s;
-	const uint32_t pcmask =
-	    ~(SDHC_BUS_POWER | (SDHC_VOLTAGE_MASK << SDHC_VOLTAGE_SHIFT));
 
 	s = splsdmmc();
 
 	/*
 	 * Disable bus power before voltage change.
 	 */
-	if (!ISSET(hp->sc->sc_flags, SDHC_F_32BIT_ACCESS)
-	    && !ISSET(hp->sc->sc_flags, SDHC_F_NOPWR0))
+	if (!(hp->sc->sc_flags & SDHC_F_NOPWR0))
 		HWRITE1(hp, SDHC_POWER_CTL, 0);
 
 	/* If power is disabled, reset the host and return now. */
@@ -570,11 +412,11 @@ sdhc_bus_power(sdmmc_chipset_handle_t sch, u_int32_t ocr)
 	}
 
 	/*
-	 * Select the lowest voltage according to capabilities.
+	 * Select the maximum voltage according to capabilities.
 	 */
 	ocr &= hp->ocr;
-	if (ISSET(ocr, MMC_OCR_1_7V_1_8V|MMC_OCR_1_8V_1_9V))
-		vdd = SDHC_VOLTAGE_1_8V;
+	if (ISSET(ocr, MMC_OCR_3_2V_3_3V|MMC_OCR_3_3V_3_4V))
+		vdd = SDHC_VOLTAGE_3_3V;
 	else if (ISSET(ocr, MMC_OCR_2_9V_3_0V|MMC_OCR_3_0V_3_1V))
 		vdd = SDHC_VOLTAGE_3_0V;
 	else if (ISSET(ocr, MMC_OCR_1_65V_1_95V))
@@ -589,20 +431,9 @@ sdhc_bus_power(sdmmc_chipset_handle_t sch, u_int32_t ocr)
 	 * Enable bus power.  Wait at least 1 ms (or 74 clocks) plus
 	 * voltage ramp until power rises.
 	 */
-	if (ISSET(hp->sc->sc_flags, SDHC_F_SINGLE_POWER_WRITE)) {
-		HWRITE1(hp, SDHC_POWER_CTL, (vdd << SDHC_VOLTAGE_SHIFT) |
-		    SDHC_BUS_POWER);
-		sdmmc_delay(10000);
-	} else {
-		HWRITE1(hp, SDHC_POWER_CTL,
-		    HREAD1(hp, SDHC_POWER_CTL) & pcmask);
-		sdmmc_delay(1);
-		HWRITE1(hp, SDHC_POWER_CTL,
-		    (vdd << SDHC_VOLTAGE_SHIFT));
-		sdmmc_delay(1);
-		HSET1(hp, SDHC_POWER_CTL, SDHC_BUS_POWER);
-		sdmmc_delay(10000);
-	}
+	HWRITE1(hp, SDHC_POWER_CTL, (vdd << SDHC_VOLTAGE_SHIFT) |
+	    SDHC_BUS_POWER);
+	sdmmc_delay(10000);
 
 	/*
 	 * The host system may not power the bus due to battery low,
@@ -622,8 +453,8 @@ sdhc_bus_power(sdmmc_chipset_handle_t sch, u_int32_t ocr)
  * Return the smallest possible base clock frequency divisor value
  * for the CLOCK_CTL register to produce `freq' (KHz).
  */
-static bool
-sdhc_clock_divisor(struct sdhc_host *hp, u_int freq, u_int *divp)
+static int
+sdhc_clock_divisor(struct sdhc_host *hp, u_int freq)
 {
 	int max_div = 256;
 	int div;
@@ -635,7 +466,7 @@ sdhc_clock_divisor(struct sdhc_host *hp, u_int freq, u_int *divp)
 		if ((hp->clkbase / div) <= freq)
 			return (div / 2);
 	/* No divisor found. */
-	return false;
+	return -1;
 }
 
 /*
@@ -661,23 +492,17 @@ sdhc_bus_clock(sdmmc_chipset_handle_t sch, int freq)
 		printf("sdhc_sdclk_frequency_select: command in progress\n");
 #endif
 
-	if (hp->sc->sc_vendor_bus_clock) {
-		error = (*hp->sc->sc_vendor_bus_clock)(hp->sc, freq);
-		if (error != 0)
-			goto ret;
-	}
-
 	/*
 	 * Stop SD clock before changing the frequency.
 	 */
-	HCLR2(hp, SDHC_CLOCK_CTL, SDHC_SDCLK_ENABLE);
+	HWRITE2(hp, SDHC_CLOCK_CTL, 0);
 	if (freq == SDMMC_SDCLK_OFF)
 		goto ret;
 
 	/*
 	 * Set the minimum base clock frequency divisor.
 	 */
-	if (!sdhc_clock_divisor(hp, freq, &div)) {
+	if ((div = sdhc_clock_divisor(hp, freq)) < 0) {
 		/* Invalid base clock frequency or `freq' value. */
 		error = EINVAL;
 		goto ret;
@@ -707,64 +532,9 @@ sdhc_bus_clock(sdmmc_chipset_handle_t sch, int freq)
 	 */
 	HSET2(hp, SDHC_CLOCK_CTL, SDHC_SDCLK_ENABLE);
 
-	if (freq > 25000 &&
-	    !ISSET(hp->sc->sc_flags, SDHC_F_NO_HS_BIT))
-		HSET1(hp, SDHC_HOST_CTL, SDHC_HIGH_SPEED);
-	else
-		HCLR1(hp, SDHC_HOST_CTL, SDHC_HIGH_SPEED);
-
 ret:
 	splx(s);
 	return error;
-}
-
-int
-sdhc_bus_width(sdmmc_chipset_handle_t sch, int width)
-{
-	struct sdhc_host *hp = (struct sdhc_host *)sch;
-	int reg;
-
-	switch (width) {
-	case 1:
-	case 4:
-		break;
-
-	case 8:
-		if (ISSET(hp->sc->sc_flags, SDHC_F_8BIT_MODE))
-			break;
-		/* FALLTHROUGH */
-	default:
-		DPRINTF(0,("%s: unsupported bus width (%d)\n",
-		    DEVNAME(hp->sc), width));
-		return 1;
-	}
-
-	reg = HREAD1(hp, SDHC_HOST_CTL);
-	if (ISSET(hp->sc->sc_flags, SDHC_F_ENHANCED)) {
-		reg &= ~(SDHC_4BIT_MODE|SDHC_ESDHC_8BIT_MODE);
-		if (width == 4)
-			reg |= SDHC_4BIT_MODE;
-		else if (width == 8)
-			reg |= SDHC_ESDHC_8BIT_MODE;
-	} else {
-		reg &= ~SDHC_4BIT_MODE;
-		if (width == 4)
-			reg |= SDHC_4BIT_MODE;
-	}
-	HWRITE1(hp, SDHC_HOST_CTL, reg);
-
-	return 0;
-}
-
-int
-sdhc_bus_rod(sdmmc_chipset_handle_t sch, int on)
-{
-	struct sdhc_host *hp = (struct sdhc_host *)sch;
-
-	if (hp->sc->sc_vendor_rod)
-		return (*hp->sc->sc_vendor_rod)(hp->sc, on);
-
-	return 0;
 }
 
 void
@@ -839,21 +609,14 @@ sdhc_exec_command(sdmmc_chipset_handle_t sch, struct sdmmc_command *cmd)
 	 * driver (without padding).
 	 */
 	if (cmd->c_error == 0 && ISSET(cmd->c_flags, SCF_RSP_PRESENT)) {
-		cmd->c_resp[0] = HREAD4(hp, SDHC_RESPONSE + 0);
 		if (ISSET(cmd->c_flags, SCF_RSP_136)) {
-			cmd->c_resp[1] = HREAD4(hp, SDHC_RESPONSE + 4);
-			cmd->c_resp[2] = HREAD4(hp, SDHC_RESPONSE + 8);
-			cmd->c_resp[3] = HREAD4(hp, SDHC_RESPONSE + 12);
-			if (ISSET(hp->sc->sc_flags, SDHC_F_RSP136_CRC)) {
-				cmd->c_resp[0] = (cmd->c_resp[0] >> 8) |
-				    (cmd->c_resp[1] << 24);
-				cmd->c_resp[1] = (cmd->c_resp[1] >> 8) |
-				    (cmd->c_resp[2] << 24);
-				cmd->c_resp[2] = (cmd->c_resp[2] >> 8) |
-				    (cmd->c_resp[3] << 24);
-				cmd->c_resp[3] = (cmd->c_resp[3] >> 8);
-			}
-		}
+			u_char *p = (u_char *)cmd->c_resp;
+			int i;
+
+			for (i = 0; i < 15; i++)
+				*p++ = HREAD1(hp, SDHC_RESPONSE + i);
+		} else
+			cmd->c_resp[0] = HREAD4(hp, SDHC_RESPONSE);
 	}
 
 	/*
@@ -862,19 +625,9 @@ sdhc_exec_command(sdmmc_chipset_handle_t sch, struct sdmmc_command *cmd)
 	 */
 	if (cmd->c_error == 0 && cmd->c_data != NULL)
 		sdhc_transfer_data(hp, cmd);
-	else if (ISSET(cmd->c_flags, SCF_RSP_BSY)) {
-		if (!sdhc_wait_intr(hp, SDHC_TRANSFER_COMPLETE, hz * 10)) {
-			cmd->c_error = ETIMEDOUT;
-			SET(cmd->c_flags, SCF_ITSDONE);
-			return;
-		}
-	}
 
-	if (!ISSET(hp->sc->sc_flags, SDHC_F_ENHANCED)
-	    && !ISSET(hp->sc->sc_flags, SDHC_F_NO_LED_ON)) {
-		/* Turn off the LED. */
-		HCLR1(hp, SDHC_HOST_CTL, SDHC_LED_ON);
-	}
+	/* Turn off the LED. */
+	HCLR1(hp, SDHC_HOST_CTL, SDHC_LED_ON);
 
 	DPRINTF(1,("%s: cmd %u done (flags=%#x error=%d)\n",
 	    DEVNAME(hp->sc), cmd->c_opcode, cmd->c_flags, cmd->c_error));
@@ -920,18 +673,21 @@ sdhc_start_command(struct sdhc_host *hp, struct sdmmc_command *cmd)
 	}
 
 	/* Prepare transfer mode register value. (2.2.5) */
-	mode = SDHC_BLOCK_COUNT_ENABLE;
+	mode = 0;
 	if (ISSET(cmd->c_flags, SCF_CMD_READ))
 		mode |= SDHC_READ_MODE;
-	if (blkcount > 1) {
-		mode |= SDHC_MULTI_BLOCK_MODE;
-		/* XXX only for memory commands? */
-		mode |= SDHC_AUTO_CMD12_ENABLE;
+	if (blkcount > 0) {
+		mode |= SDHC_BLOCK_COUNT_ENABLE;
+		if (blkcount > 1) {
+			mode |= SDHC_MULTI_BLOCK_MODE;
+			/* XXX only for memory commands? */
+			mode |= SDHC_AUTO_CMD12_ENABLE;
+		}
 	}
-	if (cmd->c_dmamap != NULL && cmd->c_datalen > 0 &&
-	    ISSET(hp->flags, SHF_MODE_DMAEN)) {
+#ifdef notyet
+	if (ISSET(hp->flags, SHF_USE_DMA))
 		mode |= SDHC_DMA_ENABLE;
-	}
+#endif
 
 	/*
 	 * Prepare command register value. (2.2.6)
@@ -961,37 +717,24 @@ sdhc_start_command(struct sdhc_host *hp, struct sdmmc_command *cmd)
 
 	s = splsdmmc();
 
+	/* Alert the user not to remove the card. */
+	HSET1(hp, SDHC_HOST_CTL, SDHC_LED_ON);
+
+	/* XXX: Set DMA start address if SHF_USE_DMA is set. */
+
 	DPRINTF(1,("%s: cmd=%#x mode=%#x blksize=%d blkcount=%d\n",
 	    DEVNAME(hp->sc), command, mode, blksize, blkcount));
-
-	blksize |= (MAX(0, PAGE_SHIFT - 12) & SDHC_DMA_BOUNDARY_MASK) <<
-	    SDHC_DMA_BOUNDARY_SHIFT;	/* PAGE_SIZE DMA boundary */
-
-	if (!ISSET(hp->sc->sc_flags, SDHC_F_ENHANCED)) {
-		/* Alert the user not to remove the card. */
-		HSET1(hp, SDHC_HOST_CTL, SDHC_LED_ON);
-	}
-
-	/* Set DMA start address. */
-	if (ISSET(mode, SDHC_DMA_ENABLE) &&
-	    !ISSET(hp->sc->sc_flags, SDHC_F_EXTERNAL_DMA))
-		HWRITE4(hp, SDHC_DMA_ADDR, cmd->c_dmamap->dm_segs[0].ds_addr);
 
 	/*
 	 * Start a CPU data transfer.  Writing to the high order byte
 	 * of the SDHC_COMMAND register triggers the SD command. (1.5)
 	 */
-	if (ISSET(hp->sc->sc_flags, SDHC_F_32BIT_ACCESS)) {
-		HWRITE4(hp, SDHC_BLOCK_SIZE, blksize | (blkcount << 16));
-		HWRITE4(hp, SDHC_ARGUMENT, cmd->c_arg);
-		HWRITE4(hp, SDHC_TRANSFER_MODE, mode | (command << 16));
-	} else {
-		HWRITE2(hp, SDHC_BLOCK_SIZE, blksize);
+	HWRITE2(hp, SDHC_TRANSFER_MODE, mode);
+	HWRITE2(hp, SDHC_BLOCK_SIZE, blksize);
+	if (blkcount > 1)
 		HWRITE2(hp, SDHC_BLOCK_COUNT, blkcount);
-		HWRITE4(hp, SDHC_ARGUMENT, cmd->c_arg);
-		HWRITE2(hp, SDHC_TRANSFER_MODE, mode);
-		HWRITE2(hp, SDHC_COMMAND, command);
-	}
+	HWRITE4(hp, SDHC_ARGUMENT, cmd->c_arg);
+	HWRITE2(hp, SDHC_COMMAND, command);
 
 	splx(s);
 	return 0;
@@ -1000,11 +743,18 @@ sdhc_start_command(struct sdhc_host *hp, struct sdmmc_command *cmd)
 void
 sdhc_transfer_data(struct sdhc_host *hp, struct sdmmc_command *cmd)
 {
-	struct sdhc_softc *sc = hp->sc;
+	u_char *datap = cmd->c_data;
+	int i, datalen;
+	int mask;
 	int error;
 
+	mask = ISSET(cmd->c_flags, SCF_CMD_READ) ?
+	    SDHC_BUFFER_READ_ENABLE : SDHC_BUFFER_WRITE_ENABLE;
+	error = 0;
+	datalen = cmd->c_datalen;
+
 	DPRINTF(1,("%s: resp=%#x datalen=%d\n", DEVNAME(hp->sc),
-	    MMC_R1(cmd->c_resp), cmd->c_datalen));
+	    MMC_R1(cmd->c_resp), datalen));
 
 #ifdef SDHC_DEBUG
 	/* XXX I forgot why I wanted to know when this happens :-( */
@@ -1014,105 +764,15 @@ sdhc_transfer_data(struct sdhc_host *hp, struct sdmmc_command *cmd)
 		    DEVNAME(hp->sc), MMC_R1(cmd->c_resp) & 0xff00);
 #endif
 
-	if (cmd->c_dmamap != NULL) {
-		if (hp->sc->sc_vendor_transfer_data_dma != NULL) {
-			error = hp->sc->sc_vendor_transfer_data_dma(sc, cmd);
-			if (error == 0 && !sdhc_wait_intr(hp,
-			    SDHC_TRANSFER_COMPLETE, SDHC_TRANSFER_TIMEOUT)) {
-				error = ETIMEDOUT;
-			}
-		} else {
-			error = sdhc_transfer_data_dma(hp, cmd);
-		}
-	} else
-		error = sdhc_transfer_data_pio(hp, cmd);
-	if (error != 0)
-		cmd->c_error = error;
-	SET(cmd->c_flags, SCF_ITSDONE);
-
-	DPRINTF(1,("%s: data transfer done (error=%d)\n",
-	    DEVNAME(hp->sc), cmd->c_error));
-}
-
-int
-sdhc_transfer_data_dma(struct sdhc_host *hp, struct sdmmc_command *cmd)
-{
-	bus_dma_segment_t *dm_segs = cmd->c_dmamap->dm_segs;
-	bus_addr_t posaddr;
-	bus_addr_t segaddr;
-	bus_size_t seglen;
-	u_int seg = 0;
-	int error = 0;
-	int status;
-
-	KASSERT(HREAD2(hp, SDHC_NINTR_STATUS_EN) & SDHC_DMA_INTERRUPT);
-	KASSERT(HREAD2(hp, SDHC_NINTR_SIGNAL_EN) & SDHC_DMA_INTERRUPT);
-	KASSERT(HREAD2(hp, SDHC_NINTR_STATUS_EN) & SDHC_TRANSFER_COMPLETE);
-	KASSERT(HREAD2(hp, SDHC_NINTR_SIGNAL_EN) & SDHC_TRANSFER_COMPLETE);
-
-	for (;;) {
-		status = sdhc_wait_intr(hp,
-		    SDHC_DMA_INTERRUPT|SDHC_TRANSFER_COMPLETE,
-		    SDHC_DMA_TIMEOUT);
-
-		if (status & SDHC_TRANSFER_COMPLETE) {
-			break;
-		}
-		if (!status) {
+	while (datalen > 0) {
+		if (!sdhc_wait_intr(hp, SDHC_BUFFER_READ_READY|
+		    SDHC_BUFFER_WRITE_READY, SDHC_BUFFER_TIMEOUT)) {
 			error = ETIMEDOUT;
 			break;
 		}
-		if ((status & SDHC_DMA_INTERRUPT) == 0) {
-			continue;
-		}
 
-		/* DMA Interrupt (boundary crossing) */
-
-		segaddr = dm_segs[seg].ds_addr;
-		seglen = dm_segs[seg].ds_len;
-		posaddr = HREAD4(hp, SDHC_DMA_ADDR);
-
-		if ((seg == (cmd->c_dmamap->dm_nsegs-1)) && (posaddr == (segaddr + seglen))) {
-			continue;
-		}
-		if ((posaddr >= segaddr) && (posaddr < (segaddr + seglen)))
-			HWRITE4(hp, SDHC_DMA_ADDR, posaddr);
-		else if ((posaddr >= segaddr) && (posaddr == (segaddr + seglen)) && (seg + 1) < cmd->c_dmamap->dm_nsegs)
-			HWRITE4(hp, SDHC_DMA_ADDR, dm_segs[++seg].ds_addr);
-		KASSERT(seg < cmd->c_dmamap->dm_nsegs);
-	}
-
-	return error;
-}
-
-int
-sdhc_transfer_data_pio(struct sdhc_host *hp, struct sdmmc_command *cmd)
-{
-	u_char *datap = cmd->c_data;
-	int i, datalen, imask, pmask;
-	int error = 0;
-
-	datalen = cmd->c_datalen;
-	pmask = ISSET(cmd->c_flags, SCF_CMD_READ) ?
-	    SDHC_BUFFER_READ_ENABLE : SDHC_BUFFER_WRITE_ENABLE;
-	imask = ISSET(cmd->c_flags, SCF_CMD_READ) ?
-	    SDHC_BUFFER_READ_READY : SDHC_BUFFER_WRITE_READY;
-
-	while (datalen > 0) {
-		if (!ISSET(HREAD4(hp, SDHC_PRESENT_STATE), imask)) {
-			if (ISSET(hp->sc->sc_flags, SDHC_F_32BIT_ACCESS)) {
-				HSET4(hp, SDHC_NINTR_SIGNAL_EN, imask);
-			} else {
-				HSET2(hp, SDHC_NINTR_SIGNAL_EN, imask);
-			}
-			if (!sdhc_wait_intr(hp, imask, SDHC_BUFFER_TIMEOUT)) {
-				error = ETIMEDOUT;
-				break;
-			}
-
-			if ((error = sdhc_wait_state(hp, pmask, pmask)) != 0)
-				break;
-		}
+		if ((error = sdhc_wait_state(hp, mask, mask)) != 0)
+			break;
 
 		i = MIN(datalen, cmd->c_blklen);
 		if (ISSET(cmd->c_flags, SCF_CMD_READ))
@@ -1128,7 +788,12 @@ sdhc_transfer_data_pio(struct sdhc_host *hp, struct sdmmc_command *cmd)
 	    SDHC_TRANSFER_TIMEOUT))
 		error = ETIMEDOUT;
 
-	return error;
+	if (error != 0)
+		cmd->c_error = error;
+	SET(cmd->c_flags, SCF_ITSDONE);
+
+	DPRINTF(1,("%s: data transfer done (error=%d)\n",
+	    DEVNAME(hp->sc), cmd->c_error));
 }
 
 void
@@ -1176,37 +841,17 @@ sdhc_soft_reset(struct sdhc_host *hp, int mask)
 
 	DPRINTF(1,("%s: software reset reg=%#x\n", DEVNAME(hp->sc), mask));
 
-	/* Request the reset. */
 	HWRITE1(hp, SDHC_SOFTWARE_RESET, mask);
-
-	/*
-	 * If necessary, wait for the controller to set the bits to
-	 * acknowledge the reset.
-	 */
-	if (ISSET(hp->sc->sc_flags, SDHC_F_WAIT_RESET) &&
-	    ISSET(mask, (SDHC_RESET_DAT | SDHC_RESET_CMD))) {
-		for (timo = 10000; timo > 0; timo--) {
-			if (ISSET(HREAD1(hp, SDHC_SOFTWARE_RESET), mask))
-				break;
-			/* Short delay because I worry we may miss it...  */
-			sdmmc_delay(1);
-		}
-		if (timo == 0)
-			return ETIMEDOUT;
-	}
-
-	/*
-	 * Wait for the controller to clear the bits to indicate that
-	 * the reset has completed.
-	 */
 	for (timo = 10; timo > 0; timo--) {
 		if (!ISSET(HREAD1(hp, SDHC_SOFTWARE_RESET), mask))
 			break;
 		sdmmc_delay(10000);
+		HWRITE1(hp, SDHC_SOFTWARE_RESET, 0);
 	}
 	if (timo == 0) {
 		DPRINTF(1,("%s: timeout reg=%#x\n", DEVNAME(hp->sc),
 		    HREAD1(hp, SDHC_SOFTWARE_RESET)));
+		HWRITE1(hp, SDHC_SOFTWARE_RESET, 0);
 		return (ETIMEDOUT);
 	}
 
@@ -1237,9 +882,8 @@ sdhc_wait_intr(struct sdhc_host *hp, int mask, int timo)
 	    hp->intr_error_status));
 	
 	/* Command timeout has higher priority than command complete. */
-	if (ISSET(status, SDHC_ERROR_INTERRUPT) || hp->intr_error_status) {
+	if (ISSET(status, SDHC_ERROR_INTERRUPT)) {
 		hp->intr_error_status = 0;
-		hp->intr_status &= ~SDHC_ERROR_INTERRUPT;
 		(void)sdhc_soft_reset(hp, SDHC_RESET_DAT|SDHC_RESET_CMD);
 		status = 0;
 	}
@@ -1261,40 +905,20 @@ sdhc_intr(void *arg)
 	/* We got an interrupt, but we don't know from which slot. */
 	for (host = 0; host < sc->sc_nhosts; host++) {
 		struct sdhc_host *hp = sc->sc_host[host];
-		uint16_t status;
-		uint16_t error;
+		u_int16_t status;
 
 		if (hp == NULL)
 			continue;
 
-		if (ISSET(sc->sc_flags, SDHC_F_32BIT_ACCESS)) {
-			/* Find out which interrupts are pending. */
-			uint32_t xstatus = HREAD4(hp, SDHC_NINTR_STATUS);
-			status = xstatus;
-			error = xstatus >> 16;
-			if (error)
-				xstatus |= SDHC_ERROR_INTERRUPT;
-			else if (!ISSET(status, SDHC_NINTR_STATUS_MASK))
-				continue; /* no interrupt for us */
-			/* Acknowledge the interrupts we are about to handle. */
-			HWRITE4(hp, SDHC_NINTR_STATUS, xstatus);
-		} else {
-			/* Find out which interrupts are pending. */
-			error = 0;
-			status = HREAD2(hp, SDHC_NINTR_STATUS);
-			if (!ISSET(status, SDHC_NINTR_STATUS_MASK))
-				continue; /* no interrupt for us */
-			/* Acknowledge the interrupts we are about to handle. */
-			HWRITE2(hp, SDHC_NINTR_STATUS, status);
-			if (ISSET(status, SDHC_ERROR_INTERRUPT)) {
-				/* Acknowledge error interrupts. */
-				error = HREAD2(hp, SDHC_EINTR_STATUS);
-				HWRITE2(hp, SDHC_EINTR_STATUS, error);
-			}
-		}
+		/* Find out which interrupts are pending. */
+		status = HREAD2(hp, SDHC_NINTR_STATUS);
+		if (!ISSET(status, SDHC_NINTR_STATUS_MASK))
+			continue; /* no interrupt for us */
 
-		DPRINTF(2,("%s: interrupt status=%b error=%b\n", DEVNAME(hp->sc),
-		    status, SDHC_NINTR_STATUS_BITS, error, SDHC_EINTR_STATUS_BITS));
+		/* Acknowledge the interrupts we are about to handle. */
+		HWRITE2(hp, SDHC_NINTR_STATUS, status);
+		DPRINTF(2,("%s: interrupt status=%b\n", DEVNAME(hp->sc),
+		    status, SDHC_NINTR_STATUS_BITS));
 
 		/* Claim this interrupt. */
 		done = 1;
@@ -1302,11 +926,21 @@ sdhc_intr(void *arg)
 		/*
 		 * Service error interrupts.
 		 */
-		if (ISSET(error, SDHC_CMD_TIMEOUT_ERROR|
-		    SDHC_DATA_TIMEOUT_ERROR)) {
-			hp->intr_error_status |= error;
-			hp->intr_status |= status;
-			wakeup(&hp->intr_status);
+		if (ISSET(status, SDHC_ERROR_INTERRUPT)) {
+			u_int16_t error;
+
+			/* Acknowledge error interrupts. */
+			error = HREAD2(hp, SDHC_EINTR_STATUS);
+			HWRITE2(hp, SDHC_EINTR_STATUS, error);
+			DPRINTF(2,("%s: error interrupt, status=%b\n",
+			    DEVNAME(hp->sc), error, SDHC_EINTR_STATUS_BITS));
+
+			if (ISSET(error, SDHC_CMD_TIMEOUT_ERROR|
+			    SDHC_DATA_TIMEOUT_ERROR)) {
+				hp->intr_error_status |= error;
+				hp->intr_status |= status;
+				wakeup(&hp->intr_status);
+			}
 		}
 
 		/*
@@ -1321,7 +955,7 @@ sdhc_intr(void *arg)
 		 */
 		if (ISSET(status, SDHC_BUFFER_READ_READY|
 		    SDHC_BUFFER_WRITE_READY|SDHC_COMMAND_COMPLETE|
-		    SDHC_TRANSFER_COMPLETE|SDHC_DMA_INTERRUPT)) {
+		    SDHC_TRANSFER_COMPLETE)) {
 			hp->intr_status |= status;
 			wakeup(&hp->intr_status);
 		}

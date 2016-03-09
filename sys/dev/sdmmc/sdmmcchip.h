@@ -19,8 +19,6 @@
 #ifndef _SDMMC_CHIP_H_
 #define _SDMMC_CHIP_H_
 
-#include <machine/bus.h>
-
 struct sdmmc_command;
 
 typedef struct sdmmc_chip_functions *sdmmc_chipset_tag_t;
@@ -34,11 +32,9 @@ struct sdmmc_chip_functions {
 	int	(*host_maxblklen)(sdmmc_chipset_handle_t);
 	/* card detection */
 	int	(*card_detect)(sdmmc_chipset_handle_t);
-	/* bus power and clock frequency and ROD(OpenDrain/PushPull) */
+	/* bus power and clock frequency */
 	int	(*bus_power)(sdmmc_chipset_handle_t, u_int32_t);
 	int	(*bus_clock)(sdmmc_chipset_handle_t, int);
-	int	(*bus_width)(sdmmc_chipset_handle_t, int);
-	int	(*bus_rod)(sdmmc_chipset_handle_t, int);
 	/* command execution */
 	void	(*exec_command)(sdmmc_chipset_handle_t,
 		    struct sdmmc_command *);
@@ -63,10 +59,6 @@ struct sdmmc_chip_functions {
 	((tag)->bus_power((handle), (ocr)))
 #define sdmmc_chip_bus_clock(tag, handle, freq)				\
 	((tag)->bus_clock((handle), (freq)))
-#define sdmmc_chip_bus_width(tag, handle, width)			\
-	((tag)->bus_width((handle), (width)))
-#define sdmmc_chip_bus_rod(tag, handle, width)				\
-	((tag)->bus_rod((handle), (width)))
 /* command execution */
 #define sdmmc_chip_exec_command(tag, handle, cmdp)			\
 	((tag)->exec_command((handle), (cmdp)))
@@ -85,11 +77,8 @@ struct sdmmcbus_attach_args {
 	const char *saa_busname;
 	sdmmc_chipset_tag_t sct;
 	sdmmc_chipset_handle_t sch;
-	bus_dma_tag_t dmat;
 	int	flags;
 	int	caps;
-	u_int	clkmin;
-	u_int	clkmax;
 	long	max_xfer;
 };
 

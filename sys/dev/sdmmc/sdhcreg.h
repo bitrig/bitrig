@@ -31,8 +31,6 @@
 /* Host standard register set */
 #define SDHC_DMA_ADDR			0x00
 #define SDHC_BLOCK_SIZE			0x04
-#define  SDHC_DMA_BOUNDARY_SHIFT	12
-#define  SDHC_DMA_BOUNDARY_MASK		0x7
 #define SDHC_BLOCK_COUNT		0x06
 #define  SDHC_BLOCK_COUNT_MAX		512
 #define SDHC_ARGUMENT			0x08
@@ -82,9 +80,7 @@
 #define  SDHC_CMD_INHIBIT_CMD		(1<<0)
 #define  SDHC_CMD_INHIBIT_MASK		0x0003
 #define SDHC_HOST_CTL			0x28
-#define  SDHC_8BIT_MODE			(1<<5)
 #define  SDHC_HIGH_SPEED		(1<<2)
-#define  SDHC_ESDHC_8BIT_MODE		(1<<2)	/* eSDHC */
 #define  SDHC_4BIT_MODE			(1<<1)
 #define  SDHC_LED_ON			(1<<0)
 #define SDHC_POWER_CTL			0x29
@@ -150,7 +146,6 @@
 #define  SDHC_MAX_BLK_LEN_512		0
 #define  SDHC_MAX_BLK_LEN_1024		1
 #define  SDHC_MAX_BLK_LEN_2048		2
-#define  SDHC_MAX_BLK_LEN_4096		3
 #define  SDHC_MAX_BLK_LEN_SHIFT		16
 #define  SDHC_MAX_BLK_LEN_MASK		0x3
 #define  SDHC_BASE_FREQ_SHIFT		8
@@ -178,14 +173,7 @@
 	(SDHC_SDCLK_DIV(div) |						\
 	(((div) & SDHC_SDCLK_DIV_MASK_V3) >> SDHC_SDCLK_DIV_RSHIFT_V3))
 
-/* SDHC_SPEC_VERS */
-#define SDHC_SPEC_VERS_100		0x00
-#define SDHC_SPEC_VERS_200		0x01
-#define SDHC_SPEC_VERS_300		0x02
-
 /* SDHC_CAPABILITIES decoding */
-#define SDHC_BASE_V3_FREQ_KHZ(cap)					\
-	((((cap) >> SDHC_BASE_FREQ_SHIFT) & SDHC_BASE_V3_FREQ_MASK) * 1000)
 #define SDHC_BASE_FREQ_KHZ(cap)						\
 	((((cap) >> SDHC_BASE_FREQ_SHIFT) & SDHC_BASE_FREQ_MASK) * 1000)
 #define SDHC_BASE_FREQ_KHZ_V3(cap)					\
