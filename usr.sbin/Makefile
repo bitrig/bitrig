@@ -18,7 +18,7 @@ SUBDIR=	ac accton acpidump adduser apm apmd arp \
 	sa sasyncd sensorsd slowcgi smtpd \
 	snmpctl snmpd spamdb syslogc syslogd sysmerge tcpdrop tcpdump \
 	tftp-proxy tftpd tokenadm tokeninit traceroute trpt \
-	unbound usbdevs user vmd vmmctl vipw watchdogd wsconscfg \
+	unbound usbdevs user vmd vmctl vipw watchdogd wsconscfg \
 	wsfontload wsmoused zdump zic
 
 .if (${YP:L} == "yes")
