@@ -61,7 +61,6 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/param.h>
 #include <stdlib.h>
 
 #include "hack.h"
@@ -138,8 +137,8 @@ movemon(void)
 	}
 
 	warnlevel -= u.ulevel;
-	if(warnlevel >= nitems(warnings))
-		warnlevel = nitems(warnings)-1;
+	if(warnlevel >= SIZE(warnings))
+		warnlevel = SIZE(warnings)-1;
 	if(warnlevel >= 0)
 	if(warnlevel > lastwarnlev || moves > lastwarntime + 5){
 	    char *rr;

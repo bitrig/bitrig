@@ -71,7 +71,7 @@ hacktimeout(void)
 	struct prop *upp;
 
 	if(Stoned) stoned_dialogue();
-	for(upp = u.uprops; upp < u.uprops+nitems(u.uprops); upp++)
+	for(upp = u.uprops; upp < u.uprops+SIZE(u.uprops); upp++)
 	    if((upp->p_flgs & TIMEOUT) && !--upp->p_flgs) {
 		if(upp->p_tofn) (*upp->p_tofn)();
 		else switch(upp - u.uprops){
@@ -119,8 +119,8 @@ stoned_dialogue(void)
 {
 	long i = (Stoned & TIMEOUT);
 
-	if(i > 0 && i <= nitems(stoned_texts))
-		pline("%s", stoned_texts[nitems(stoned_texts) - i]);
+	if(i > 0 && i <= SIZE(stoned_texts))
+		pline("%s", stoned_texts[SIZE(stoned_texts) - i]);
 	if(i == 5)
 		Fast = 0;
 	if(i == 3)

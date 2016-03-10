@@ -90,7 +90,7 @@ char *hu_stat[] = {
 	"Starved "
 };
 
-#define	TTSZ	nitems(tintxts)
+#define	TTSZ	SIZE(tintxts)
 struct {
 	char *txt;
 	int nut;
