@@ -199,6 +199,7 @@ static const char *sbtn_pnp[] = {
 };
 
 int	mouse_has_softbtn;
+#endif /* SMALL_KERNEL */
 
 /* XXX move this into dsdt softc at some point */
 extern struct aml_node aml_root;
@@ -844,9 +845,11 @@ acpi_attach(struct device *parent, struct device *self, void *aux)
 	struct acpi_rsdp *rsdp;
 	struct acpi_q *entry;
 	struct acpi_dsdt *p_dsdt;
+#ifndef SMALL_KERNEL
 	int wakeup_dev_ct;
 	struct acpi_wakeq *wentry;
 	struct device *dev;
+#endif /* SMALL_KERNEL */
 	paddr_t facspa;
 	uint16_t pm1;
 	int s;
@@ -874,12 +877,14 @@ acpi_attach(struct device *parent, struct device *self, void *aux)
 #endif /* NACPIPWRRES > 0 */
 
 
+#ifndef SMALL_KERNEL
 	sc->sc_note = malloc(sizeof(struct klist), M_DEVBUF, M_NOWAIT | M_ZERO);
 	if (sc->sc_note == NULL) {
 		printf(", can't allocate memory\n");
 		acpi_unmap(&handle);
 		return;
 	}
+#endif /* SMALL_KERNEL */
 
 	if (acpi_loadtables(sc, rsdp)) {
 		printf(", can't load tables\n");
@@ -974,11 +979,14 @@ acpi_attach(struct device *parent, struct device *self, void *aux)
 	/* Perform post-parsing fixups */
 	aml_postparse();
 
+
+#ifndef SMALL_KERNEL
 	/* Find available sleeping states */
 	acpi_init_states(sc);
 
 	/* Find available sleep/resume related methods. */
 	acpi_init_pm(sc);
+#endif /* SMALL_KERNEL */
 
 	/* Initialize GPE handlers */
 	s = spltty();
@@ -1012,6 +1020,7 @@ acpi_attach(struct device *parent, struct device *self, void *aux)
 	}
 	printf("\n");
 
+#ifndef SMALL_KERNEL
 	/* Display wakeup devices and lowest S-state */
 	wakeup_dev_ct = 0;
 	printf("%s: wakeup devices", DEVNAME(sc));
@@ -1041,6 +1050,7 @@ acpi_attach(struct device *parent, struct device *self, void *aux)
 #endif
 		config_found(self, &aaa, acpi_print);
 	}
+#endif /* SMALL_KERNEL */
 
 	/*
 	 * Attach table-defined devices
@@ -1110,6 +1120,8 @@ acpi_attach(struct device *parent, struct device *self, void *aux)
 			SLIST_INSERT_HEAD(&sc->sc_bat, bat, aba_link);
 		}
 	}
+
+#endif /* SMALL_KERNEL */
 
 	/* Setup threads */
 	sc->sc_thread = malloc(sizeof(struct acpi_thread), M_DEVBUF, M_WAITOK);
@@ -1632,6 +1644,8 @@ acpi_dotask(struct acpi_softc *sc)
 	return (1);	
 }
 
+#ifndef SMALL_KERNEL
+
 int
 is_ata(struct aml_node *node)
 {
@@ -1760,6 +1774,8 @@ acpi_sleep_task(void *arg0, int sleepmode)
 		aml_notify(bat->aba_softc->sc_devnode,
 		    0x80);
 }
+
+#endif /* SMALL_KERNEL */
 
 void
 acpi_reset(void)
@@ -2177,6 +2193,8 @@ acpi_init_pm(struct acpi_softc *sc)
 	sc->sc_sst = aml_searchname(&aml_root, "_SI_._SST");
 }
 
+#ifndef SMALL_KERNEL
+
 void
 acpi_init_states(struct acpi_softc *sc)
 {
@@ -2313,6 +2331,7 @@ acpi_indicator(struct acpi_softc *sc, int led_state)
 		save_led_state = led_state;
 	}
 }
+
 
 int
 acpi_sleep_state(struct acpi_softc *sc, int state)
@@ -2505,6 +2524,8 @@ acpi_powerdown(void)
 
 	acpi_sleep_pm(sc, state);
 	panic("acpi S5 transition did not happen");
+	//while (1)
+	//	;
 }
 
 int
@@ -2534,6 +2555,8 @@ acpi_map_address(struct acpi_softc *sc, struct acpi_gas *gas, bus_addr_t base,
 	return 0;
 }
 
+#endif /* SMALL_KERNEL */
+
 void
 acpi_wakeup(void *arg)
 {
@@ -2542,6 +2565,7 @@ acpi_wakeup(void *arg)
 	sc->sc_threadwaiting = 0;
 	wakeup(sc);
 }
+
 
 void
 acpi_thread(void *arg)
@@ -2594,8 +2618,10 @@ acpi_thread(void *arg)
 		}
 		sc->sc_threadwaiting = 1;
 		splx(s);
-		if (aml_busy)
+		if (aml_busy) {
 			panic("thread woke up to find aml was busy");
+			//continue;
+		}
 
 		/* Run ACPI taskqueue */
 		while(acpi_dotask(acpi_softc))
@@ -2611,7 +2637,8 @@ acpi_create_thread(void *arg)
 {
 	struct acpi_softc *sc = arg;
 
-	if (kthread_create(acpi_thread, sc->sc_thread, NULL, DEVNAME(sc)) != 0)
+	if (kthread_create(acpi_thread, sc->sc_thread, NULL, DEVNAME(sc))
+	    != 0)
 		printf("%s: unable to create isr thread, GPEs disabled\n",
 		    DEVNAME(sc));
 }
@@ -3089,3 +3116,29 @@ acpikqfilter(dev_t dev, struct knote *kn)
 	return (0);
 }
 
+#else /* SMALL_KERNEL */
+
+int
+acpiopen(dev_t dev, int flag, int mode, struct proc *p)
+{
+	return (ENXIO);
+}
+
+int
+acpiclose(dev_t dev, int flag, int mode, struct proc *p)
+{
+	return (ENXIO);
+}
+
+int
+acpiioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
+{
+	return (ENXIO);
+}
+
+int
+acpikqfilter(dev_t dev, struct knote *kn)
+{
+	return (ENXIO);
+}
+#endif /* SMALL_KERNEL */
