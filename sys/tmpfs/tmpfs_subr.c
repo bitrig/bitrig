@@ -1301,7 +1301,7 @@ tmpfs_uiomove(tmpfs_node_t *node, struct uio *uio, vsize_t len)
 	if (pgoff + len < PAGE_SIZE) {
 		va = tmpfs_uio_lookup(node, pgnum);
 		if (va != (vaddr_t)NULL)
-			return uiomove((void *)va + pgoff, len, uio);
+			return uiomove((uint8_t *)va + pgoff, len, uio);
 	}
 
 	if (len >= TMPFS_UIO_MAXBYTES) {
