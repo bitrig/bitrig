@@ -3537,7 +3537,7 @@ sr_ioctl_createraid(struct sr_softc *sc, struct bioc_createraid *bc,
 		if (link == NULL)
 			goto unwind;
 
-		dev = sd->sd_scsibus_dev = link->device_softc;
+		dev = link->device_softc;
 		DNPRINTF(SR_D_IOCTL, "%s: sr device added: %s at target %d\n",
 		    DEVNAME(sc), dev->dv_xname, sd->sd_target);
 
@@ -3624,10 +3624,7 @@ sr_ioctl_deleteraid(struct sr_softc *sc, struct sr_discipline *sd,
 	}
 
 	sd->sd_deleted = 1;
-	if (bd->bd_flags & BIOC_SDDISASSEMBLE)
-		/* do not change flags during shutdown */;
-	else
-		sd->sd_meta->ssdi.ssd_vol_flags = BIOC_SCNOAUTOASSEMBLE;
+	sd->sd_meta->ssdi.ssd_vol_flags = BIOC_SCNOAUTOASSEMBLE;
 	sr_discipline_shutdown(sd, 1);
 
 	rv = 0;
