@@ -224,7 +224,6 @@ ffs_read(void *v)
 	daddr_t lbn, nextlbn;
 	off_t bytesinfile;
 	int size, xfersize, blkoffset;
-	mode_t mode;
 	int error;
 
 	vp = ap->a_vp;
