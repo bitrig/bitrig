@@ -65,6 +65,8 @@
 #include <sys/dkio.h>
 #include <sys/specdev.h>
 
+#include <crypto/blf.h>
+
 #include <dev/vndioctl.h>
 
 #ifdef VNDDEBUG
@@ -89,6 +91,7 @@ struct vnd_softc {
 	size_t		 sc_ntracks;		/* # of tracks per cylinder */
 	struct vnode	*sc_vp;			/* vnode */
 	struct ucred	*sc_cred;		/* credentials */
+	blf_ctx		*sc_keyctx;		/* key context */
 };
 
 /* sc_flags */
@@ -107,7 +110,37 @@ void	vndattach(int);
 void	vndclear(struct vnd_softc *);
 int	vndsetcred(struct vnd_softc *, struct ucred *);
 int	vndgetdisklabel(dev_t, struct vnd_softc *, struct disklabel *, int);
+void	vndencrypt(struct vnd_softc *, caddr_t, size_t, daddr_t, int);
+void	vndencryptbuf(struct vnd_softc *, struct buf *, int);
 size_t	vndbdevsize(struct vnode *, struct proc *);
+
+void
+vndencrypt(struct vnd_softc *sc, caddr_t addr, size_t size, daddr_t off,
+    int encrypt)
+{
+	int i, bsize;
+	u_char iv[8];
+
+	bsize = dbtob(1);
+	for (i = 0; i < size/bsize; i++) {
+		memset(iv, 0, sizeof(iv));
+		memcpy(iv, &off, sizeof(off));
+		blf_ecb_encrypt(sc->sc_keyctx, iv, sizeof(iv));
+		if (encrypt)
+			blf_cbc_encrypt(sc->sc_keyctx, iv, addr, bsize);
+		else
+			blf_cbc_decrypt(sc->sc_keyctx, iv, addr, bsize);
+
+		addr += bsize;
+		off++;
+	}
+}
+
+void
+vndencryptbuf(struct vnd_softc *sc, struct buf *bp, int encrypt)
+{
+	vndencrypt(sc, bp->b_data, bp->b_bcount, bp->b_blkno, encrypt);
+}
 
 void
 vndattach(int num)
@@ -159,7 +192,7 @@ vndopen(dev_t dev, int flags, int mode, struct proc *p)
 
 	if ((sc->sc_flags & VNF_INITED) &&
 	    (sc->sc_flags & VNF_HAVELABEL) == 0 &&
-	    (sc->sc_dk.dk_openmask & ~(1 << RAW_PART)) == 0) {
+	    sc->sc_dk.dk_openmask == 0) {
 		sc->sc_flags |= VNF_HAVELABEL;
 		vndgetdisklabel(dev, sc, sc->sc_dk.dk_label, 0);
 	}
@@ -262,20 +295,25 @@ vndstrategy(struct buf *bp)
 	 * To continue supporting this, round the block count up to a
 	 * multiple of d_secsize for bounds_check_with_label(), and
 	 * then restore afterwards.
+	 *
+	 * We only do this for non-encrypted vnd, because encryption
+	 * requires operating on blocks at a time.
 	 */
 	origbcount = bp->b_bcount;
-	u_int32_t secsize = sc->sc_dk.dk_label->d_secsize;
-	bp->b_bcount = ((origbcount + secsize - 1) & ~(secsize - 1));
+	if (sc->sc_keyctx == NULL) {
+		u_int32_t secsize = sc->sc_dk.dk_label->d_secsize;
+		bp->b_bcount = ((origbcount + secsize - 1) & ~(secsize - 1));
 #ifdef DIAGNOSTIC
-	if (bp->b_bcount != origbcount) {
-		struct proc *pr = curproc;
-		printf("%s: sloppy %s from proc %d (%s): "
-		    "blkno %lld bcount %ld\n", sc->sc_dev.dv_xname,
-		    (bp->b_flags & B_READ) ? "read" : "write",
-		    pr->p_pid, pr->p_comm, (long long)bp->b_blkno,
-		    origbcount);
-	}
+		if (bp->b_bcount != origbcount) {
+			struct proc *pr = curproc;
+			printf("%s: sloppy %s from proc %d (%s): "
+			    "blkno %lld bcount %ld\n", sc->sc_dev.dv_xname,
+			    (bp->b_flags & B_READ) ? "read" : "write",
+			    pr->p_pid, pr->p_comm, (long long)bp->b_blkno,
+			    origbcount);
+		}
 #endif
+	}
 
 	if (bounds_check_with_label(bp, sc->sc_dk.dk_label) == -1) {
 		bp->b_resid = bp->b_bcount = origbcount;
@@ -289,6 +327,9 @@ vndstrategy(struct buf *bp)
 	off = DL_GETPOFFSET(p) * sc->sc_dk.dk_label->d_secsize +
 	    (u_int64_t)bp->b_blkno * DEV_BSIZE;
 
+	if (sc->sc_keyctx && !(bp->b_flags & B_READ))
+		vndencryptbuf(sc, bp, 1);
+
 	/*
 	 * Use IO_NOLIMIT because upper layer has already checked I/O
 	 * for limits, so there is no need to do it again.
@@ -298,6 +339,10 @@ vndstrategy(struct buf *bp)
 	    sc->sc_cred, &bp->b_resid, curproc);
 	if (bp->b_error)
 		bp->b_flags |= B_ERROR;
+
+	/* Data in buffer cache needs to be in clear */
+	if (sc->sc_keyctx)
+		vndencryptbuf(sc, bp, 0);
 
 	goto done;
 
@@ -429,6 +474,27 @@ vndioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 			return (error);
 		}
 
+		if (vio->vnd_keylen > 0) {
+			char key[BLF_MAXUTILIZED];
+
+			if (vio->vnd_keylen > sizeof(key))
+				vio->vnd_keylen = sizeof(key);
+
+			if ((error = copyin(vio->vnd_key, key,
+			    vio->vnd_keylen)) != 0) {
+				(void) vn_close(nd.ni_vp, VNDRW(sc),
+				    p->p_ucred, p);
+				disk_unlock(&sc->sc_dk);
+				return (error);
+			}
+
+			sc->sc_keyctx = malloc(sizeof(*sc->sc_keyctx), M_DEVBUF,
+			    M_WAITOK);
+			blf_key(sc->sc_keyctx, key, vio->vnd_keylen);
+			explicit_bzero(key, vio->vnd_keylen);
+		} else
+			sc->sc_keyctx = NULL;
+
 		vio->vnd_size = sc->sc_size * sc->sc_secsize;
 		sc->sc_flags |= VNF_INITED;
 
@@ -466,6 +532,12 @@ vndioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 
 		vndclear(sc);
 		DNPRINTF(VDB_INIT, "vndioctl: CLRed\n");
+
+		/* Free crypto key */
+		if (sc->sc_keyctx) {
+			explicit_bzero(sc->sc_keyctx, sizeof(*sc->sc_keyctx));
+			free(sc->sc_keyctx, M_DEVBUF, sizeof(*sc->sc_keyctx));
+		}
 
 		/* Detach the disk. */
 		disk_detach(&sc->sc_dk);
@@ -506,7 +578,7 @@ vndioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 		lp = malloc(sizeof(*lp), M_TEMP, M_WAITOK);
 		vndgetdisklabel(dev, sc, lp, 0);
 		*(sc->sc_dk.dk_label) = *lp;
-		free(lp, M_TEMP, 0);
+		free(lp, M_TEMP, sizeof(*lp));
 		return (0);
 
 	case DIOCGPDINFO:

@@ -53,6 +53,8 @@ struct vnd_ioctl {
 	size_t	vnd_nsectors;	/* number of sectors in a track */
 	size_t	vnd_ntracks;	/* number of tracks per cylinder (i.e. heads) */
 	off_t	vnd_size;	/* (returned) size of disk */
+	u_char	*vnd_key;
+	int	vnd_keylen;
 };
 
 /*
