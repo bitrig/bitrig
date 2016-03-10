@@ -45,11 +45,8 @@
 #include <sys/device.h>
 #include <sys/malloc.h>
 #include <sys/pool.h>
+#include <sys/conf.h>
 #include <sys/fcntl.h>
-#include <sys/vnode.h>
-#include <sys/stdint.h>
-
-#include <machine/conf.h>
 
 #include <scsi/scsi_all.h>
 #include <scsi/scsi_changer.h>
@@ -97,10 +94,9 @@ struct ch_softc {
 /* Autoconfiguration glue */
 int	chmatch(struct device *, void *, void *);
 void	chattach(struct device *, struct device *, void *);
-int	chdetach(struct device *, int);
 
 struct cfattach ch_ca = {
-	sizeof(struct ch_softc), chmatch, chattach, chdetach
+	sizeof(struct ch_softc), chmatch, chattach
 };
 
 struct cfdriver ch_cd = {
@@ -168,18 +164,7 @@ chattach(struct device *parent, struct device *self, void *aux)
 	 * Store our our device's quirks.
 	 */
 	ch_get_quirks(sc, sa->sa_inqbuf);
-}
 
-int
-chdetach(struct device *self, int flags)
-{
-	int mn;
-
-	/* Nuke the vnodes for any open instances (calls close). */
-	mn = self->dv_unit;
-	vdevgone(CMAJ_CH, mn, mn, VCHR);
-
-	return (0);
 }
 
 int
@@ -641,9 +626,6 @@ ch_getelemstatus(struct ch_softc *sc, int first, int count, caddr_t data,
 	struct scsi_xfer *xs;
 	int error;
 
-	if (datalen > INT_MAX || datalen > UINT32_MAX)
-		return (EINVAL);
-
 	/*
 	 * Build SCSI command.
 	 */
@@ -652,7 +634,7 @@ ch_getelemstatus(struct ch_softc *sc, int first, int count, caddr_t data,
 		return (ENOMEM);
 	xs->cmdlen = sizeof(*cmd);
 	xs->data = data;
-	xs->datalen = (int)datalen;
+	xs->datalen = datalen;
 	xs->retries = CHRETRIES;
 	xs->timeout = 100000;
 
@@ -660,7 +642,7 @@ ch_getelemstatus(struct ch_softc *sc, int first, int count, caddr_t data,
 	cmd->opcode = READ_ELEMENT_STATUS;
 	_lto2b(first, cmd->sea);
 	_lto2b(count, cmd->count);
-	_lto3b((u_int32_t)datalen, cmd->len);
+	_lto3b(datalen, cmd->len);
 	if (voltag)
 		cmd->byte2 |= READ_ELEMENT_STATUS_VOLTAG;
 
