@@ -560,6 +560,7 @@ kern_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
 		return (sysctl_sysvshm(name + 1, namelen - 1, oldp, oldlenp,
 		    newp, newlen));
 #endif
+#ifndef SMALL_KERNEL
 	case KERN_INTRCNT:
 		return (sysctl_intrcnt(name + 1, namelen - 1, oldp, oldlenp));
 	case KERN_WATCHDOG:
@@ -571,9 +572,11 @@ kern_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp,
 		if (!error)
 			nmbclust_update();
 		return (error);
+#ifndef SMALL_KERNEL
 	case KERN_EVCOUNT:
 		return (evcount_sysctl(name + 1, namelen - 1, oldp, oldlenp,
 		    newp, newlen));
+#endif
 	case KERN_TIMECOUNTER:
 		return (sysctl_tc(name + 1, namelen - 1, oldp, oldlenp,
 		    newp, newlen));
@@ -2279,6 +2282,7 @@ sysctl_sysvipc(int *name, u_int namelen, void *where, size_t *sizep)
 }
 #endif /* SYSVMSG || SYSVSEM || SYSVSHM */
 
+#ifndef SMALL_KERNEL
 
 int
 sysctl_intrcnt(int *name, u_int namelen, void *oldp, size_t *oldlenp)
