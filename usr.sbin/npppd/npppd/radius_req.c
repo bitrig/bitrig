@@ -48,7 +48,7 @@
 #include <radius.h>
 
 #ifndef nitems
-#define nitems(_a)	(sizeof((_a)) / sizeof((_a)[0]))
+#define	nitems(_a)	(sizeof((_a)) / sizeof((_a)[0]))
 #endif
 
 struct overlapped {

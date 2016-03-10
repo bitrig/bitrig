@@ -51,10 +51,6 @@
 
 #include "npppd_auth_local.h"
 
-#ifndef nitems
-#define nitems(_a)	(sizeof((_a)) / sizeof((_a)[0]))
-#endif
-
 /**
  * Create a npppd_auth_base object.
  * @param auth_type	the authentication type.
@@ -538,11 +534,11 @@ npppd_auth_radius_reload(npppd_auth_base *base, struct authconf *auth)
 
 	/* load configs for authentication server */
 	rad = _this->rad_auth_setting;
-	for (i = 0; i < nitems(rad->server); i++)
+	for (i = 0; i < countof(rad->server); i++)
 		memset(&rad->server[i], 0, sizeof(rad->server[0]));
 	i = 0;
 	TAILQ_FOREACH(server, &auth->data.radius.auth.servers, entry) {
-		if (i >= nitems(rad->server))
+		if (i >= countof(rad->server))
 			break;
 		memcpy(&rad->server[i].peer, &server->address,
 		    server->address.ss_len);
@@ -559,11 +555,11 @@ npppd_auth_radius_reload(npppd_auth_base *base, struct authconf *auth)
 
 	/* load configs for accounting server */
 	rad = _this->rad_acct_setting;
-	for (i = 0; i < nitems(rad->server); i++)
+	for (i = 0; i < countof(rad->server); i++)
 		memset(&rad->server[i], 0, sizeof(rad->server[0]));
 	i = 0;
 	TAILQ_FOREACH(server, &auth->data.radius.acct.servers, entry) {
-		if (i >= nitems(rad->server))
+		if (i >= countof(rad->server))
 			break;
 		memcpy(&rad->server[i].peer, &server->address,
 		    server->address.ss_len);
@@ -578,7 +574,7 @@ npppd_auth_radius_reload(npppd_auth_base *base, struct authconf *auth)
 	}
 	nacct = i;
 
-	for (i = 0; i < nitems(_this->rad_auth_setting->server); i++) {
+	for (i = 0; i < countof(_this->rad_auth_setting->server); i++) {
 		if (_this->rad_auth_setting->server[i].enabled)
 			base->radius_ready = 1;
 	}

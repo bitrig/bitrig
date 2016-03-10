@@ -28,7 +28,6 @@
 /* $Id: l2tp_subr.c,v 1.4 2012/05/08 13:15:11 yasuoka Exp $ */
 /**@file L2TP related sub-routines */
 #include <sys/types.h>
-#include <sys/param.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -227,7 +226,7 @@ avp_attr_type_string(int attr_type)
 {
 	int i;
 
-	for (i = 0; i < (l2tp_avp_attribute_names); i++) {
+	for (i = 0; i < countof(l2tp_avp_attribute_names); i++) {
 		if (attr_type == l2tp_avp_attribute_names[i].label)
 			return l2tp_avp_attribute_names[i].name + 14;
 	}
@@ -239,7 +238,7 @@ l2tp_stopccn_rcode_string(int rcode)
 {
 	int i;
 
-	for (i = 0; i < (l2tp_stopccn_rcode_names); i++) {
+	for (i = 0; i < countof(l2tp_stopccn_rcode_names); i++) {
 		if (rcode == l2tp_stopccn_rcode_names[i].label)
 			return l2tp_stopccn_rcode_names[i].name + 20;
 	}
@@ -251,7 +250,7 @@ l2tp_cdn_rcode_string(int rcode)
 {
 	int i;
 
-	for (i = 0; i < (l2tp_cdn_rcode_names); i++) {
+	for (i = 0; i < countof(l2tp_cdn_rcode_names); i++) {
 		if (rcode == l2tp_cdn_rcode_names[i].label)
 			return l2tp_cdn_rcode_names[i].name + 15;
 	}
@@ -265,7 +264,7 @@ l2tp_ecode_string(int ecode)
 
 	if (ecode == 0)
 		return "none";
-	for (i = 0; i < (l2tp_ecode_names); i++) {
+	for (i = 0; i < countof(l2tp_ecode_names); i++) {
 		if (ecode == l2tp_ecode_names[i].label)
 			return l2tp_ecode_names[i].name + 11;
 	}
@@ -337,7 +336,7 @@ avp_mes_type_string(int mes_type)
 {
 	int i;
 
-	for (i = 0; i < (l2tp_mes_type_names); i++) {
+	for (i = 0; i < countof(l2tp_mes_type_names); i++) {
 		if (mes_type == l2tp_mes_type_names[i].label)
 			return l2tp_mes_type_names[i].name + 22;
 	}

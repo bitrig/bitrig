@@ -54,10 +54,6 @@
 
 #include "debugutil.h"
 
-#ifndef nitems
-#define nitems(_a)	(sizeof((_a)) / sizeof((_a)[0]))
-#endif
-
 #ifdef	LCP_DEBUG
 #define	LCP_DBG(x)	fsm_log x
 #define	LCP_ASSERT(x)	ASSERT(x)
@@ -318,7 +314,7 @@ lcp_add_auth(fsm *f, u_char **ucpp)
 	_this = &f->ppp->lcp;
 
 	for (i = 0; _this->auth_order[i] > 0 &&
-	    i < nitems(_this->auth_order); i++) {
+	    i < countof(_this->auth_order); i++) {
 		switch (_this->auth_order[i]) {
 		case PPP_AUTH_PAP:
 			if (psm_opt_is_rejected(_this, pap))

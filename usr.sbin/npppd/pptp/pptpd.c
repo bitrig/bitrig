@@ -33,7 +33,6 @@
  * $Id: pptpd.c,v 1.29 2015/12/17 07:56:01 tb Exp $
  */
 #include <sys/types.h>
-#include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/sysctl.h>
 #include <net/if.h>
@@ -69,6 +68,8 @@
 #include "pptp_local.h"
 #include "privsep.h"
 #include "accept.h"
+
+#define MINIMUM(a, b)	(((a) < (b)) ? (a) : (b))
 
 static int pptpd_seqno = 0;
 
@@ -118,7 +119,7 @@ pptpd_init(pptpd *_this)
 	slist_init(&_this->call_free_list);
 
 	/* randomize call id */
-	for (i = 0; i < nitems(call) ; i++)
+	for (i = 0; i < countof(call) ; i++)
 		call[i] = i + 1;
 	for (i = countof(call); i > 1; i--) {
 		m = arc4random_uniform(i);
@@ -127,7 +128,7 @@ pptpd_init(pptpd *_this)
 		call[i - 1] = call0;
 	}
 
-	for (i = 0; i < MIN(PPTP_MAX_CALL, nitems(call)); i++)
+	for (i = 0; i < MINIMUM(PPTP_MAX_CALL, countof(call)); i++)
 		slist_add(&_this->call_free_list, (void *)(uintptr_t)call[i]);
 	slist_add(&_this->call_free_list, (void *)PPTPD_SHUFFLE_MARK);
 

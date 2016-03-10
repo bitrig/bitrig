@@ -54,10 +54,6 @@
 
 #include "pathnames.h"
 
-#ifndef nitems
-#define nitems(_a)	(sizeof((_a)) / sizeof((_a)[0]))
-#endif
-
 #ifdef NPPPD_CONFIG_DEBUG
 #define NPPPD_CONFIG_DBG(x) 	log_printf x
 #define NPPPD_CONFIG_ASSERT(x) ASSERT(x)
@@ -164,9 +160,9 @@ npppd_pool_load(npppd *_this)
 	_this->rd = rd_new;
 
 	TAILQ_FOREACH(ipcp, &_this->conf.ipcpconfs, entry) {
-		if (n >= nitems(_this->pool)) {
+		if (n >= countof(_this->pool)) {
 			log_printf(LOG_WARNING, "number of the pool reached "
-			    "limit=%d",(int)nitems(_this->pool));
+			    "limit=%d",(int)countof(_this->pool));
 			break;
 		}
 		if (npppd_pool_init(&pool0[n], _this, ipcp->name) != 0) {
@@ -178,14 +174,14 @@ npppd_pool_load(npppd *_this)
 			goto fail;
 		n++;
 	}
-	for (; n < nitems(pool0); n++)
+	for (; n < countof(pool0); n++)
 		pool0[n].initialized = 0;
 
 	_this->rd = rd_curr;	/* backup */
 	if (npppd_set_radish(_this, rd_new) != 0)
 		goto fail;
 
-	for (i = 0; i < nitems(_this->pool); i++) {
+	for (i = 0; i < countof(_this->pool); i++) {
 		if (_this->pool[i].initialized != 0)
 			npppd_pool_uninit(&_this->pool[i]);
 		if (pool0[i].initialized == 0)
@@ -335,7 +331,7 @@ npppd_ifaces_load_config(npppd *_this)
 	struct iface *iface;
 	npppd_iface  *niface;
 
-	for (i = 0; i < nitems(_this->iface); i++) {
+	for (i = 0; i < countof(_this->iface); i++) {
 		if (_this->iface[i].initialized == 0)
 			continue;
 		TAILQ_FOREACH(iface, &_this->conf.ifaces, entry) {
@@ -350,7 +346,7 @@ npppd_ifaces_load_config(npppd *_this)
 	TAILQ_FOREACH(iface, &_this->conf.ifaces, entry) {
 		/* find the existing entry or first free entry */
 		niface = NULL;
-		for (i = 0; i < nitems(_this->iface); i++) {
+		for (i = 0; i < countof(_this->iface); i++) {
 			if (_this->iface[i].initialized == 0) {
 				if (niface == NULL)
 					niface = &_this->iface[i];
@@ -364,7 +360,7 @@ npppd_ifaces_load_config(npppd *_this)
 		if (niface == NULL) {
 			log_printf(LOG_WARNING,
 			    "number of the interface reached limit=%d",
-			    (int)nitems(_this->iface));
+			    (int)countof(_this->iface));
 			break;
 		}
 		if (niface->initialized == 0)

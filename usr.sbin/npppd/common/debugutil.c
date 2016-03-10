@@ -44,8 +44,8 @@ static int prio_idx_inititialized = 0;
 
 static void  set_prio_idx_init __P((void));
 
-#ifndef nitems
-#define nitems(_a)	(sizeof((_a)) / sizeof((_a)[0]))
+#ifndef countof
+#define countof(x)	(sizeof((x)) / sizeof((x)[0]))
 #endif
 #define VAL_NAME(x)	{ (x), #x}
 
@@ -80,9 +80,9 @@ set_prio_idx_init()
 
 	if (prio_idx_inititialized)
 		return;
-	for (i = 0; i < (int)nitems(prio_name); i++) {
-		ASSERT(prio_name[i].prio < nitems(prio_name_idx));
-		if (prio_name[i].prio >= (int)nitems(prio_name_idx))
+	for (i = 0; i < (int)countof(prio_name); i++) {
+		ASSERT(prio_name[i].prio < countof(prio_name_idx));
+		if (prio_name[i].prio >= (int)countof(prio_name_idx))
 		    continue;
 		prio_name_idx[prio_name[i].prio] = &prio_name[i].name[4];
 	}
@@ -204,7 +204,7 @@ copy_loop:
 	fmt[fmtoff] = '\0';
 
 	ASSERT(0 <= LOG_PRI(prio)
-	    && LOG_PRI(prio) < nitems(prio_name_idx)
+	    && LOG_PRI(prio) < countof(prio_name_idx)
 	    && prio_name_idx[LOG_PRI(prio)] != NULL);
 	ftell(debugfp);
 	fprintf(debugfp,
