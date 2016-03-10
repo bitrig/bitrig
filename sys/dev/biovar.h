@@ -252,65 +252,6 @@ struct bioc_installboot {
 	u_int32_t	bb_bootldr_size;
 };
 
-/*
- * vnd specific ioctls
- *
- * Before you can use a unit, it must be configured with BIOCVNDSET.
- * The configuration persists across opens and closes of the device;
- * an BIOCVNDCLR must be used to reset a configuration.  An attempt to
- * BIOCVNDSET an already active unit will return EBUSY.
- */
-
-#define BIOCVNDSET _IOWR('B', 42, struct bioc_vndset)	/* enable disk */
-struct bioc_vndset {
-	struct bio	bvs_bio;
-	char		*bvs_file;	/* pathname of file to mount */
-	size_t		bvs_secsize;	/* sector size in bytes */
-	size_t		bvs_nsectors;	/* number of sectors in a track */
-	size_t		bvs_ntracks;	/* number of tracks per cylinder */
-	off_t		bvs_size;	/* (returned) size of disk */
-};
-
-#define BIOCVNDCLR _IOW('B', 43, struct bioc_vndclr)	/* disable disk */
-struct bioc_vndclr {
-	struct bio	bvc_bio;
-};
-
-#define BIOCVNDGET _IOWR('B', 44, struct bioc_vndget)	/* get disk info */
-struct bioc_vndget {
-	struct bio	bvg_bio;
-#define VNDNLEN	90
-	char		bvg_file[VNDNLEN];	/* vnd file */
-	dev_t		bvg_dev;		/* vnd device */
-	ino_t		bvg_ino;		/* vnd inode */
-};
-
-#define BIOCPATROL _IOWR('B', 45, struct bioc_patrol)
-struct bioc_patrol {
-	struct bio	bp_bio;
-	int		bp_opcode;
-#define BIOC_SPSTOP		0x00	/* stop patrol */
-#define BIOC_SPSTART		0x01	/* start patrol */
-#define BIOC_GPSTATUS		0x02	/* get status */
-#define BIOC_SPDISABLE		0x03	/* disable patrol */
-#define BIOC_SPAUTO		0x04	/* enable patrol as auto */
-#define BIOC_SPMANUAL		0x05	/* enable patrol as manual */
-
-	int		bp_mode;
-#define	BIOC_SPMAUTO		0x00
-#define	BIOC_SPMMANUAL		0x01
-#define BIOC_SPMDISABLED	0x02
-	int		bp_status;	/* only used with get state */
-#define	BIOC_SPSSTOPPED		0x00
-#define	BIOC_SPSREADY		0x01
-#define BIOC_SPSACTIVE		0x02
-#define BIOC_SPSABORTED		0xff
-
-	int		bp_autoival;
-	int		bp_autonext;
-	int		bp_autonow;
-};
-
 /* kernel and userspace defines */
 #define BIOC_INQ		0x0001
 #define BIOC_DISK		0x0002

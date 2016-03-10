@@ -69,6 +69,7 @@ BEGIN {
 	print "#include <sys/mtio.h>"
 	print "#include <sys/pciio.h>"
 	print "#include <sys/radioio.h>"
+	print "#include <sys/scanio.h>"
 	print "#include <sys/scsiio.h>"
 	print "#include <sys/tty.h>"
 	print "#include <sys/syslog.h>"
@@ -91,7 +92,7 @@ BEGIN {
 	print ""
 }
 
-/^[ 	]*#[ 	]*define[ 	]+(ATAIO|AUDIO_|BIOC|CDIO|CHIO|DIOC|DRM|GPIO|TIO|FIO|MTIOC|LIOC|SIO|OSIO|SESIOC_|SIOC|PCIOC|PPPIOC|PPPOE|RIOC|RND|STRIOC|SCIOC|OSCIOC|TUN|USB|VIDIOC|WSKBD|WSMOUSE|WSDISPLAY|WSMUX|PTM)[A-Z_0-9]*[ 	]+(DRM)?_IO/ {
+/^[ 	]*#[ 	]*define[ 	]+(ATAIO|AUDIO_|BIOC|CDIO|CHIO|DIOC|DRM|GPIO|TIO|FIO|MTIOC|LIOC|SIO|OSIO|SESIOC_|SIOC|PCIOC|PPPIOC|PPPOE|RIOC|RND|STRIOC|SCIOC|OSCIOC|TUN|USB|VIDIOC|VNDIOC|WSKBD|WSMOUSE|WSDISPLAY|WSMUX|PTM)[A-Z_0-9]*[ 	]+(DRM)?_IO/ {
 
 	# find where the name starts
 	for (i = 1; i <= NF; i++)

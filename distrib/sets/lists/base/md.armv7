@@ -1200,6 +1200,7 @@
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/videomode/videomode.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/videovar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/vmtvar.ph
+./usr/libdata/perl5/site_perl/arm-bitrig/dev/vndioctl.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/vscsivar.ph
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/wscons
 ./usr/libdata/perl5/site_perl/arm-bitrig/dev/wscons/ascii.ph

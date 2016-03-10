@@ -27,7 +27,7 @@
 .\" ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd $Mdocdate: April 18 2015 $
+.Dd $Mdocdate: June 28 2014 $
 .Dt BIO 4
 .Os
 .Sh NAME
@@ -93,15 +93,6 @@ SCSI Accessed Fault-Tolerant Enclosure
 SCSI Enclosure Services
 .El
 .Pp
-The following device drivers register with
-.Nm
-for disk management:
-.Pp
-.Bl -tag -width vnd($)XX -offset indent -compact
-.It Xr vnd 4
-vnode disk driver
-.El
-.Pp
 The following ioctl calls apply to the
 .Nm
 device:
@@ -159,28 +150,6 @@ Dispatch a discipline specific ioctl.
 .It Dv BIOCINSTALLBOOT Fa "struct bioc_installboot *"
 Install a boot loader.
 .El
-.Pp
-The following ioctl calls apply to the
-.Nm
-device only when talking to a
-.Xr vnd 4
-device:
-.Bl -tag -width Ds
-.It Dv BIOCVNDSET Fa "struct bioc_vndset *"
-Associate a file with a
-.Xr vnd 4
-pseudo device.
-The size of the configured device is returned in
-.Va bvs_size .
-.It Dv BIOCVNDCLR Fa "struct bioc_vndclr *"
-Disassociate a
-.Xr vnd 4
-device.
-.It Dv BIOCVNDGET Fa "struct bioc_vndget *"
-Get the associated file name, device and inode number of a
-.Xr vnd 4
-device.
-.El
 .Sh FILES
 .Bl -tag -width /dev/bio -compact
 .It Pa /dev/bio
@@ -189,7 +158,6 @@ ioctl tunnel device
 .Sh SEE ALSO
 .Xr ioctl 2 ,
 .Xr softraid 4 ,
-.Xr vnd 4 ,
 .Xr bioctl 8
 .Sh HISTORY
 The

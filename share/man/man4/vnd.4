@@ -32,7 +32,7 @@
 .\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 .\" SUCH DAMAGE.
 .\"
-.Dd $Mdocdate: January 23 2015 $
+.Dd $Mdocdate: July 2 2014 $
 .Dt VND 4
 .Os
 .Sh NAME
@@ -74,9 +74,58 @@ See
 .Xr vnconfig 8
 for more information.
 .Sh IOCTL INTERFACE
-Disk management is performed via the
-.Xr bio 4
-ioctl tunnel device.
+The following
+.Xr ioctl 2
+calls are defined in
+.In dev/vndioctl.h :
+.Bl -tag -width Ds
+.It Dv VNDIOCSET Fa "struct vnd_ioctl *"
+Associate the file
+.Va vnd_file
+with a
+.Nm
+pseudo device.
+The size of the configured device is returned in
+.Va vnd_size .
+.Bd -literal -offset indent
+struct vnd_ioctl {
+	char	*vnd_file;
+	off_t	vnd_size;
+};
+.Ed
+.It Dv VNDIOCCLR Fa "struct vnd_ioctl *"
+Disassociate a
+.Nm
+device.
+.It Dv VNDIOCGET Fa "struct vnd_user *"
+Get the associated file name, device, inode number, and unit number of a
+.Nm
+device.
+If
+.Va vnu_unit
+is \-1, information on the
+.Nm
+device corresponding to the file descriptor passed to
+.Xr ioctl 2
+will be returned.
+Otherwise,
+.Va vnu_unit
+may contain the unit number of another
+.Nm
+device.
+This allows for opening just
+.Li vnd0
+and querying all available devices.
+.Bd -literal -offset indent
+struct vnd_user {
+	char	vnufile[VNDNLEN];
+	int	vnu_unit;
+	dev_t	vnu_dev;
+	ino_t	vnu_ino;
+};
+.Ed
+.El
+.Pp
 Additionally, some
 .Xr disklabel 8
 related
@@ -98,7 +147,6 @@ device special files
 .El
 .Sh SEE ALSO
 .Xr ioctl 2 ,
-.Xr bio 4 ,
 .Xr sd 4 ,
 .Xr disklabel 5 ,
 .Xr config 8 ,

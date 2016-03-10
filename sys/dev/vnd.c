@@ -45,8 +45,6 @@
  *
  */
 
-#include "bio.h"
-
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/namei.h>
@@ -67,9 +65,7 @@
 #include <sys/dkio.h>
 #include <sys/specdev.h>
 
-#if NBIO > 0
-#include <dev/biovar.h>
-#endif
+#include <dev/vndioctl.h>
 
 #ifdef VNDDEBUG
 int vnddebug = 0x00;
@@ -113,8 +109,6 @@ int	vndsetcred(struct vnd_softc *, struct ucred *);
 int	vndgetdisklabel(dev_t, struct vnd_softc *, struct disklabel *, int);
 size_t	vndbdevsize(struct vnode *, struct proc *);
 
-int	vnd_bio_ioctl(struct device *, u_long, caddr_t);
-
 void
 vndattach(int num)
 {
@@ -138,13 +132,6 @@ vndattach(int num)
 		    "vnd%d", i);
 		disk_construct(&sc->sc_dk);
 		device_ref(&sc->sc_dev);
-
-#if NBIO > 0
-		if (bio_register(&sc->sc_dev, vnd_bio_ioctl) != 0) {
-			printf("%s: unable to register ioctl with bio\n",
-			    sc->sc_dev.dv_xname);
-		}
-#endif
 	}
 	numvnd = num;
 }
@@ -172,7 +159,7 @@ vndopen(dev_t dev, int flags, int mode, struct proc *p)
 
 	if ((sc->sc_flags & VNF_INITED) &&
 	    (sc->sc_flags & VNF_HAVELABEL) == 0 &&
-	    sc->sc_dk.dk_openmask == 0) {
+	    (sc->sc_dk.dk_openmask & ~(1 << RAW_PART)) == 0) {
 		sc->sc_flags |= VNF_HAVELABEL;
 		vndgetdisklabel(dev, sc, sc->sc_dk.dk_label, 0);
 	}
@@ -362,7 +349,11 @@ vndioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 	int unit = DISKUNIT(dev);
 	struct disklabel *lp;
 	struct vnd_softc *sc;
-	int error;
+	struct vnd_ioctl *vio;
+	struct vnd_user *vnu;
+	struct vattr vattr;
+	struct nameidata nd;
+	int error, part, pmask;
 
 	DNPRINTF(VDB_FOLLOW, "vndioctl(%x, %lx, %p, %x, %p): unit %d\n",
 	    dev, cmd, addr, flag, p, unit);
@@ -374,15 +365,148 @@ vndioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 		return (ENXIO);
 
 	sc = &vnd_softc[unit];
-
+	vio = (struct vnd_ioctl *)addr;
 	switch (cmd) {
+
+	case VNDIOCSET:
+		if (sc->sc_flags & VNF_INITED)
+			return (EBUSY);
+
+		/* Geometry eventually has to fit into label fields */
+		if (vio->vnd_secsize > UINT_MAX ||
+		    vio->vnd_ntracks > UINT_MAX ||
+		    vio->vnd_nsectors > UINT_MAX)
+			return (EINVAL);
+
+		if ((error = disk_lock(&sc->sc_dk)) != 0)
+			return (error);
+
+		if ((error = copyinstr(vio->vnd_file, sc->sc_file,
+		    sizeof(sc->sc_file), NULL))) {
+			disk_unlock(&sc->sc_dk);
+			return (error);
+		}
+
+		/* Set geometry for device. */
+		sc->sc_secsize = vio->vnd_secsize;
+		sc->sc_ntracks = vio->vnd_ntracks;
+		sc->sc_nsectors = vio->vnd_nsectors;
+
+		/*
+		 * Open for read and write first. This lets vn_open() weed out
+		 * directories, sockets, etc. so we don't have to worry about
+		 * them.
+		 */
+		NDINIT(&nd, LOOKUP, FOLLOW, UIO_USERSPACE, vio->vnd_file, p);
+		sc->sc_flags &= ~VNF_READONLY;
+		error = vn_open(&nd, FREAD|FWRITE, 0);
+		if (error == EROFS) {
+			sc->sc_flags |= VNF_READONLY;
+			error = vn_open(&nd, FREAD, 0);
+		}
+		if (error) {
+			disk_unlock(&sc->sc_dk);
+			return (error);
+		}
+
+		if (nd.ni_vp->v_type == VBLK)
+			sc->sc_size = vndbdevsize(nd.ni_vp, p);
+		else {
+			error = VOP_GETATTR(nd.ni_vp, &vattr, p->p_ucred);
+			if (error) {
+				VOP_UNLOCK(nd.ni_vp, 0);
+				vn_close(nd.ni_vp, VNDRW(sc), p->p_ucred, p);
+				disk_unlock(&sc->sc_dk);
+				return (error);
+			}
+			sc->sc_size = vattr.va_size / sc->sc_secsize;
+		}
+		VOP_UNLOCK(nd.ni_vp, 0);
+		sc->sc_vp = nd.ni_vp;
+		if ((error = vndsetcred(sc, p->p_ucred)) != 0) {
+			(void) vn_close(nd.ni_vp, VNDRW(sc), p->p_ucred, p);
+			disk_unlock(&sc->sc_dk);
+			return (error);
+		}
+
+		vio->vnd_size = sc->sc_size * sc->sc_secsize;
+		sc->sc_flags |= VNF_INITED;
+
+		DNPRINTF(VDB_INIT, "vndioctl: SET vp %p size %llx\n",
+		    sc->sc_vp, (unsigned long long)sc->sc_size);
+
+		/* Attach the disk. */
+		sc->sc_dk.dk_name = sc->sc_dev.dv_xname;
+		disk_attach(&sc->sc_dev, &sc->sc_dk);
+
+		disk_unlock(&sc->sc_dk);
+
+		break;
+
+	case VNDIOCCLR:
+		if ((sc->sc_flags & VNF_INITED) == 0)
+			return (ENXIO);
+
+		if ((error = disk_lock(&sc->sc_dk)) != 0)
+			return (error);
+
+		/*
+		 * Don't unconfigure if any other partitions are open
+		 * or if both the character and block flavors of this
+		 * partition are open.
+		 */
+		part = DISKPART(dev);
+		pmask = (1 << part);
+		if ((sc->sc_dk.dk_openmask & ~pmask) ||
+		    ((sc->sc_dk.dk_bopenmask & pmask) &&
+		    (sc->sc_dk.dk_copenmask & pmask))) {
+			disk_unlock(&sc->sc_dk);
+			return (EBUSY);
+		}
+
+		vndclear(sc);
+		DNPRINTF(VDB_INIT, "vndioctl: CLRed\n");
+
+		/* Detach the disk. */
+		disk_detach(&sc->sc_dk);
+		disk_unlock(&sc->sc_dk);
+		break;
+
+	case VNDIOCGET:
+		vnu = (struct vnd_user *)addr;
+
+		if (vnu->vnu_unit == -1)
+			vnu->vnu_unit = unit;
+		if (vnu->vnu_unit >= numvnd)
+			return (ENXIO);
+		if (vnu->vnu_unit < 0)
+			return (EINVAL);
+
+		sc = &vnd_softc[vnu->vnu_unit];
+
+		if (sc->sc_flags & VNF_INITED) {
+			error = VOP_GETATTR(sc->sc_vp, &vattr, p->p_ucred);
+			if (error)
+				return (error);
+
+			strlcpy(vnu->vnu_file, sc->sc_file,
+			    sizeof(vnu->vnu_file));
+			vnu->vnu_dev = vattr.va_fsid;
+			vnu->vnu_ino = vattr.va_fileid;
+		} else {
+			vnu->vnu_dev = 0;
+			vnu->vnu_ino = 0;
+		}
+
+		break;
+
 	case DIOCRLDINFO:
 		if ((sc->sc_flags & VNF_HAVELABEL) == 0)
 			return (ENOTTY);
 		lp = malloc(sizeof(*lp), M_TEMP, M_WAITOK);
 		vndgetdisklabel(dev, sc, lp, 0);
 		*(sc->sc_dk.dk_label) = *lp;
-		free(lp, M_TEMP, sizeof(*lp));
+		free(lp, M_TEMP, 0);
 		return (0);
 
 	case DIOCGPDINFO:
@@ -430,158 +554,6 @@ vndioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 		return (ENOTTY);
 	}
 
-	return (0);
-}
-
-int
-vnd_bio_ioctl(struct device *dev, u_long cmd, caddr_t addr)
-{
-	int unit = dev->dv_unit;
-	struct vnd_softc *sc;
-	struct bioc_vndset *vset;
-	struct bioc_vndget *vget;
-	struct vattr vattr;
-	struct nameidata nd;
-	int error;
-
-	DNPRINTF(VDB_FOLLOW, "vnd_bio_ioctl(%x, %lx, %p): unit %d\n",
-	    dev, cmd, addr, unit);
-
-	error = suser(curproc, 0);
-	if (error)
-		return (error);
-
-	if (unit >= numvnd)
-		return (ENXIO);
-	sc = &vnd_softc[unit];
-
-	switch (cmd) {
-	case BIOCVNDSET:
-		vset = (struct bioc_vndset *)addr;
-
-		if (sc->sc_flags & VNF_INITED)
-			return (EBUSY);
-
-		/* Geometry eventually has to fit into label fields */
-		if (vset->bvs_secsize > UINT_MAX ||
-		    vset->bvs_ntracks > UINT_MAX ||
-		    vset->bvs_nsectors > UINT_MAX)
-			return (EINVAL);
-
-		if ((error = disk_lock(&sc->sc_dk)) != 0)
-			return (error);
-
-		if ((error = copyinstr(vset->bvs_file, sc->sc_file,
-		    sizeof(sc->sc_file), NULL))) {
-			disk_unlock(&sc->sc_dk);
-			return (error);
-		}
-
-		/* Set geometry for device. */
-		sc->sc_secsize = vset->bvs_secsize;
-		sc->sc_ntracks = vset->bvs_ntracks;
-		sc->sc_nsectors = vset->bvs_nsectors;
-
-		/*
-		 * Open for read and write first. This lets vn_open() weed out
-		 * directories, sockets, etc. so we don't have to worry about
-		 * them.
-		 */
-		NDINIT(&nd, LOOKUP, FOLLOW, UIO_USERSPACE, vset->bvs_file,
-		    curproc);
-		sc->sc_flags &= ~VNF_READONLY;
-		error = vn_open(&nd, FREAD|FWRITE, 0);
-		if (error == EROFS) {
-			sc->sc_flags |= VNF_READONLY;
-			error = vn_open(&nd, FREAD, 0);
-		}
-		if (error) {
-			disk_unlock(&sc->sc_dk);
-			return (error);
-		}
-
-		if (nd.ni_vp->v_type == VBLK)
-			sc->sc_size = vndbdevsize(nd.ni_vp, curproc);
-		else {
-			error = VOP_GETATTR(nd.ni_vp, &vattr, curproc->p_ucred);
-			if (error) {
-				VOP_UNLOCK(nd.ni_vp, 0);
-				vn_close(nd.ni_vp, VNDRW(sc), curproc->p_ucred,
-				    curproc);
-				disk_unlock(&sc->sc_dk);
-				return (error);
-			}
-			sc->sc_size = vattr.va_size / sc->sc_secsize;
-		}
-		VOP_UNLOCK(nd.ni_vp, 0);
-		sc->sc_vp = nd.ni_vp;
-		if ((error = vndsetcred(sc, curproc->p_ucred)) != 0) {
-			(void)vn_close(nd.ni_vp, VNDRW(sc), curproc->p_ucred,
-			    curproc);
-			disk_unlock(&sc->sc_dk);
-			return (error);
-		}
-
-		vset->bvs_size = sc->sc_size * sc->sc_secsize;
-		sc->sc_flags |= VNF_INITED;
-
-		DNPRINTF(VDB_INIT, "vndioctl: SET vp %p size %llx\n",
-		    sc->sc_vp, (unsigned long long)sc->sc_size);
-
-		/* Attach the disk. */
-		sc->sc_dk.dk_name = sc->sc_dev.dv_xname;
-		disk_attach(&sc->sc_dev, &sc->sc_dk);
-
-		disk_unlock(&sc->sc_dk);
-		break;
-
-	case BIOCVNDCLR:
-		if ((sc->sc_flags & VNF_INITED) == 0)
-			return (ENXIO);
-
-		if ((error = disk_lock(&sc->sc_dk)) != 0)
-			return (error);
-
-		/* Don't unconfigure if any partitions are open. */
-		if (sc->sc_dk.dk_openmask != 0) {
-			disk_unlock(&sc->sc_dk);
-			return (EBUSY);
-		}
-
-		vndclear(sc);
-		DNPRINTF(VDB_INIT, "vndioctl: CLRed\n");
-
-		/* Detach the disk. */
-		disk_gone(vndopen, unit);
-		disk_detach(&sc->sc_dk);
-
-		disk_unlock(&sc->sc_dk);
-		break;
-
-	case BIOCVNDGET:
-		vget = (struct bioc_vndget *)addr;
-
-		if (sc->sc_flags & VNF_INITED) {
-			error = VOP_GETATTR(sc->sc_vp, &vattr,
-			    curproc->p_ucred);
-			if (error)
-				return (error);
-
-			strlcpy(vget->bvg_file, sc->sc_file,
-			    sizeof(vget->bvg_file));
-			vget->bvg_dev = vattr.va_fsid;
-			vget->bvg_ino = vattr.va_fileid;
-		} else {
-			vget->bvg_dev = 0;
-			vget->bvg_ino = 0;
-		}
-		break;
-
-	default:
-		return (ENOTTY);
-	}
-
-	/* XXX: set bio_status? */
 	return (0);
 }
 

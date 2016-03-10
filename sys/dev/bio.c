@@ -98,10 +98,6 @@ bioioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 	case BIOCCREATERAID:
 	case BIOCDELETERAID:
 	case BIOCDISCIPLINE:
-	case BIOCVNDSET:
-	case BIOCVNDCLR:
-	case BIOCVNDGET:
-	case BIOCPATROL:
 		bio = (struct bio *)addr;
 		if (!bio_validate(bio->bio_cookie))
 			return (ENOENT);
