@@ -58,39 +58,4 @@ cdev_decl(lpt);
 cdev_decl(pci);
 cdev_decl(spkr);
 
-/*
- * These numbers have to be in sync with bdevsw/cdevsw.
- */
-
-#define BMAJ_SW		1
-#define BMAJ_ST		25
-
-#define CMAJ_MM		2
-#define CMAJ_PTS	4
-#define CMAJ_PTC	5
-#define CMAJ_LPT	9
-#define CMAJ_COM	12
-#define CMAJ_GPIO	13
-#define CMAJ_BPF	22
-#define CMAJ_ST		25
-#define CMAJ_CH		27
-#define CMAJ_UK		28
-#define CMAJ_TUN	33
-#define CMAJ_AUDIO	36
-#define CMAJ_VIDEO	38
-#define CMAJ_MIDI	57
-#define CMAJ_WSDISPLAY	60
-#define CMAJ_WSKBD	61
-#define CMAJ_WSMOUSE	62
-#define CMAJ_USB	64
-#define CMAJ_UHID	65
-#define CMAJ_ULPT	66
-#define CMAJ_UCOM	68
-#define CMAJ_UGEN	70
-#ifdef USER_PCICONF
-#define CMAJ_PCI	88
-#endif
-#define CMAJ_RADIO	97
-#define CMAJ_VSCSI	100
-
 #endif	/* _ARM_CONF_H__ */

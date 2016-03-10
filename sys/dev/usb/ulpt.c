@@ -41,12 +41,11 @@
 #include <sys/systm.h>
 #include <sys/device.h>
 #include <sys/uio.h>
+#include <sys/conf.h>
 #include <sys/vnode.h>
 #include <sys/syslog.h>
 #include <sys/types.h>
 #include <sys/malloc.h>
-
-#include <machine/conf.h>
 
 #include <dev/usb/usb.h>
 #include <dev/usb/usbdi.h>
@@ -355,7 +354,8 @@ int
 ulpt_detach(struct device *self, int flags)
 {
 	struct ulpt_softc *sc = (struct ulpt_softc *)self;
-	int s, mn;
+	int s;
+	int maj, mn;
 
 	DPRINTF(("ulpt_detach: sc=%p\n", sc));
 
@@ -372,10 +372,15 @@ ulpt_detach(struct device *self, int flags)
 	}
 	splx(s);
 
+	/* locate the major number */
+	for (maj = 0; maj < nchrdev; maj++)
+		if (cdevsw[maj].d_open == ulptopen)
+			break;
+
 	/* Nuke the vnodes for any open instances (calls close). */
 	mn = self->dv_unit;
-	vdevgone(CMAJ_ULPT, mn, mn, VCHR);
-	vdevgone(CMAJ_ULPT, mn | ULPT_NOPRIME , mn | ULPT_NOPRIME, VCHR);
+	vdevgone(maj, mn, mn, VCHR);
+	vdevgone(maj, mn | ULPT_NOPRIME , mn | ULPT_NOPRIME, VCHR);
 
 	return (0);
 }

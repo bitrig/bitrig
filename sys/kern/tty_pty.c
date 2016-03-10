@@ -51,13 +51,12 @@
 #include <sys/malloc.h>
 #include <sys/vnode.h>
 #include <sys/signalvar.h>
+#include <sys/conf.h>
 #include <sys/stat.h>
 #include <sys/sysctl.h>
 #include <sys/poll.h>
 #include <sys/pledge.h>
 #include <sys/rwlock.h>
-
-#include <machine/conf.h>
 
 #define BUFSIZ 100		/* Chunk size iomoved to/from user */
 
@@ -69,6 +68,8 @@
 /* XXX this needs to come from somewhere sane, and work with MAKEDEV */
 #define TTY_LETTERS "pqrstuvwxyzPQRST"
 #define TTY_SUFFIX "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+static int pts_major;
 
 struct	pt_softc {
 	struct	tty *pt_tty;
@@ -114,6 +115,7 @@ static gid_t tty_gid = TTY_GID;
 void	ptydevname(int, struct pt_softc *);
 dev_t	pty_getfree(void);
 
+void	ptmattach(int);
 int	ptmopen(dev_t, int, int, struct proc *);
 int	ptmclose(dev_t, int, int, struct proc *);
 int	ptmioctl(dev_t, u_long, caddr_t, int, struct proc *p);
@@ -214,6 +216,11 @@ ptyattach(int n)
 		n = NPTY_MIN;
 	pt_softc = ptyarralloc(n);
 	npty = n;
+
+	/*
+	 * If we have pty, we need ptm too.
+	 */
+	ptmattach(1);
 }
 
 int
@@ -785,7 +792,7 @@ ptyioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 			tp->t_lflag &= ~EXTPROC;
 		}
 		return(0);
-	} else if (major(dev) == CMAJ_PTC) {
+	} else if (cdevsw[major(dev)].d_open == ptcopen)
 		switch (cmd) {
 
 		case TIOCGPGRP:
@@ -849,7 +856,6 @@ ptyioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 			*(int *)data = tp->t_outq.c_cc;
 			return (0);
 		}
-	}
 	error = (*linesw[tp->t_line].l_ioctl)(tp, cmd, data, flag, p);
 	if (error < 0)
 		 error = ttioctl(tp, cmd, data, flag, p);
@@ -973,7 +979,7 @@ pty_getfree(void)
 			break;
 	}
 	rw_exit_read(&pt_softc_lock);
-	return (makedev(CMAJ_PTS, i));
+	return (makedev(pts_major, i));
 }
 
 /*
@@ -1023,6 +1029,22 @@ ptm_vn_open(struct nameidata *ndp)
 bad:
 	vput(vp);
 	return (error);
+}
+
+void
+ptmattach(int n)
+{
+	/* find the major and minor of the pty devices */
+	int i;
+
+	for (i = 0; i < nchrdev; i++)
+		if (cdevsw[i].d_open == ptsopen)
+			break;
+
+	if (i == nchrdev)
+		panic("ptmattach: Can't find pty slave in cdevsw");
+
+	pts_major = i;
 }
 
 int

@@ -29,10 +29,10 @@
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/kernel.h>
+#include <sys/conf.h>
 #include <sys/device.h>
 #include <sys/extent.h>
 
-#include <machine/conf.h>
 #include <machine/bus.h>
 
 #include <dev/cons.h>
@@ -84,7 +84,20 @@ cons_decl(ws);
 void
 wscnprobe(struct consdev *cp)
 {
-	cp->cn_dev = makedev(CMAJ_WSDISPLAY, 0);
+	int maj;
+
+	/* locate the major number */
+	for (maj = 0; maj < nchrdev; maj++) {
+		if (cdevsw[maj].d_open == wsdisplayopen)
+			break;
+	}
+
+	if (maj == nchrdev) {
+		/* we are not in cdevsw[], give up */
+		panic("wsdisplay is not in cdevsw[]");
+	}
+
+	cp->cn_dev = makedev(maj, 0);
 	cp->cn_pri = CN_MIDPRI;
 }
 

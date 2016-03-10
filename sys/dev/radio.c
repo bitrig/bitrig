@@ -36,8 +36,7 @@
 #include <sys/device.h>
 #include <sys/vnode.h>
 #include <sys/radioio.h>
-
-#include <machine/conf.h>
+#include <sys/conf.h>
 
 #include <dev/audio_if.h>
 #include <dev/radio_if.h>
@@ -175,11 +174,16 @@ int
 radiodetach(struct device *self, int flags)
 {
 	/*struct radio_softc *sc = (struct radio_softc *)self;*/
-	int mn;
+	int maj, mn;
+
+	/* locate the major number */
+	for (maj = 0; maj < nchrdev; maj++)
+		if (cdevsw[maj].d_open == radioopen)
+			break;
 
 	/* Nuke the vnodes for any open instances (calls close). */
 	mn = self->dv_unit;
-	vdevgone(CMAJ_RADIO, mn, mn, VCHR);
+	vdevgone(maj, mn, mn, VCHR);
 
 	return (0);
 }

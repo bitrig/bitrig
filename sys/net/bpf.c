@@ -46,6 +46,7 @@
 #include <sys/proc.h>
 #include <sys/signalvar.h>
 #include <sys/ioctl.h>
+#include <sys/conf.h>
 #include <sys/vnode.h>
 #include <sys/file.h>
 #include <sys/socket.h>
@@ -55,8 +56,6 @@
 #include <sys/rwlock.h>
 #include <sys/atomic.h>
 #include <sys/srp.h>
-
-#include <machine/conf.h>
 
 #include <net/if.h>
 #include <net/bpf.h>
@@ -197,7 +196,7 @@ bpf_movein(struct uio *uio, u_int linktype, struct mbuf **mp,
 
 	if (uio->uio_resid > MAXMCLBYTES)
 		return (EIO);
-	len = (u_int)uio->uio_resid;
+	len = uio->uio_resid;
 
 	MGETHDR(m, M_WAIT, MT_DATA);
 	m->m_pkthdr.ph_ifidx = 0;
@@ -447,7 +446,7 @@ bpfread(dev_t dev, struct uio *uio, int ioflag)
 		} else {
 			if ((d->bd_rdStart + d->bd_rtout) < ticks) {
 				error = tsleep((caddr_t)d, PRINET|PCATCH, "bpf",
-				    (int)d->bd_rtout);
+				    d->bd_rtout);
 			} else
 				error = EWOULDBLOCK;
 		}
@@ -810,8 +809,8 @@ bpfioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 		{
 			struct bpf_stat *bs = (struct bpf_stat *)addr;
 
-			bs->bs_recv = (u_int)d->bd_rcount;
-			bs->bs_drop = (u_int)d->bd_dcount;
+			bs->bs_recv = d->bd_rcount;
+			bs->bs_drop = d->bd_dcount;
 			break;
 		}
 
@@ -1195,7 +1194,7 @@ void
 bpf_mcopy(const void *src_arg, void *dst_arg, size_t len)
 {
 	const struct mbuf *m;
-	size_t count;
+	u_int count;
 	u_char *dst;
 
 	m = src_arg;
@@ -1203,7 +1202,7 @@ bpf_mcopy(const void *src_arg, void *dst_arg, size_t len)
 	while (len > 0) {
 		if (m == NULL)
 			panic("bpf_mcopy");
-		count = szmin(m->m_len, len);
+		count = min(m->m_len, len);
 		bcopy(mtod(m, caddr_t), (caddr_t)dst, count);
 		m = m->m_next;
 		dst += count;
@@ -1254,7 +1253,7 @@ _bpf_mtap(caddr_t arg, struct mbuf *m, u_int direction,
 			bf = srp_enter(&d->bd_rfilter);
 			if (bf != NULL)
 				fcode = bf->bf_insns;
-			slen = bpf_filter(fcode, (u_char *)m, (u_int)pktlen, 0);
+			slen = bpf_filter(fcode, (u_char *)m, pktlen, 0);
 			srp_leave(&d->bd_rfilter, bf);
 		}
 
@@ -1385,8 +1384,8 @@ bpf_catchpacket(struct bpf_d *d, u_char *pkt, size_t pktlen, size_t snaplen,
     void (*cpfn)(const void *, void *, size_t), struct timeval *tv)
 {
 	struct bpf_hdr *hp;
-	u_int totlen, curlen;
-	u_int hdrlen = d->bd_bif->bif_hdrlen;
+	int totlen, curlen;
+	int hdrlen = d->bd_bif->bif_hdrlen;
 
 	/*
 	 * Figure out how many bytes to move.  If the packet is
@@ -1394,7 +1393,7 @@ bpf_catchpacket(struct bpf_d *d, u_char *pkt, size_t pktlen, size_t snaplen,
 	 * much.  Otherwise, transfer the whole packet (unless
 	 * we hit the buffer size limit).
 	 */
-	totlen = hdrlen + (u_int)szmin(snaplen, pktlen);
+	totlen = hdrlen + min(snaplen, pktlen);
 	if (totlen > d->bd_bufsize)
 		totlen = d->bd_bufsize;
 
@@ -1425,16 +1424,14 @@ bpf_catchpacket(struct bpf_d *d, u_char *pkt, size_t pktlen, size_t snaplen,
 	 * Append the bpf header.
 	 */
 	hp = (struct bpf_hdr *)(d->bd_sbuf + curlen);
-	hp->bh_tstamp.tv_sec = (u_int32_t)tv->tv_sec;	/* XXX: 2106 */
-	hp->bh_tstamp.tv_usec = (u_int32_t)tv->tv_usec;
-	hp->bh_datalen = (u_int32_t)pktlen;
-	hp->bh_hdrlen = (u_int16_t)hdrlen;
-	hp->bh_caplen = (u_int32_t)(totlen - hdrlen);
-
+	hp->bh_tstamp.tv_sec = tv->tv_sec;
+	hp->bh_tstamp.tv_usec = tv->tv_usec;
+	hp->bh_datalen = pktlen;
+	hp->bh_hdrlen = hdrlen;
 	/*
 	 * Copy the packet data into the store buffer and update its length.
 	 */
-	(*cpfn)(pkt, (u_char *)hp + hdrlen, hp->bh_caplen);
+	(*cpfn)(pkt, (u_char *)hp + hdrlen, (hp->bh_caplen = totlen - hdrlen));
 	d->bd_slen = curlen + totlen;
 
 	if (d->bd_immediate) {
@@ -1528,6 +1525,7 @@ bpfdetach(struct ifnet *ifp)
 {
 	struct bpf_if *bp, *nbp, **pbp = &bpf_iflist;
 	struct bpf_d *bd;
+	int maj;
 
 	KERNEL_ASSERT_LOCKED();
 
@@ -1535,6 +1533,11 @@ bpfdetach(struct ifnet *ifp)
 		nbp= bp->bif_next;
 		if (bp->bif_ifp == ifp) {
 			*pbp = nbp;
+
+			/* Locate the major number. */
+			for (maj = 0; maj < nchrdev; maj++)
+				if (cdevsw[maj].d_open == bpfopen)
+					break;
 
 			while ((bd = SRPL_FIRST_LOCKED(&bp->bif_dlist))) {
 				struct bpf_d *d;
@@ -1545,7 +1548,7 @@ bpfdetach(struct ifnet *ifp)
 				 */
 				LIST_FOREACH(d, &bpf_d_list, bd_list)
 					if (d == bd) {
-						vdevgone(CMAJ_BPF, d->bd_unit,
+						vdevgone(maj, d->bd_unit,
 						    d->bd_unit, VCHR);
 						break;
 					}

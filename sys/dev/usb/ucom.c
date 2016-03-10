@@ -39,14 +39,13 @@
 #include <sys/kernel.h>
 #include <sys/rwlock.h>
 #include <sys/ioctl.h>
+#include <sys/conf.h>
 #include <sys/tty.h>
 #include <sys/file.h>
 #include <sys/selinfo.h>
 #include <sys/vnode.h>
 #include <sys/device.h>
 #include <sys/poll.h>
-
-#include <machine/conf.h>
 
 #include <dev/usb/usb.h>
 
@@ -211,7 +210,8 @@ ucom_detach(struct device *self, int flags)
 {
 	struct ucom_softc *sc = (struct ucom_softc *)self;
 	struct tty *tp = sc->sc_tty;
-	int mn, s;
+	int maj, mn;
+	int s;
 
 	DPRINTF(("ucom_detach: sc=%p flags=%d tp=%p, pipe=%d,%d\n",
 		 sc, flags, tp, sc->sc_bulkin_no, sc->sc_bulkout_no));
@@ -254,11 +254,16 @@ ucom_detach(struct device *self, int flags)
 	}
 	splx(s);
 
+	/* locate the major number */
+	for (maj = 0; maj < nchrdev; maj++)
+		if (cdevsw[maj].d_open == ucomopen)
+			break;
+
 	/* Nuke the vnodes for any open instances. */
 	mn = self->dv_unit;
-	DPRINTF(("ucom_detach: maj=%d mn=%d\n", CMAJ_UCOM, mn));
-	vdevgone(CMAJ_UCOM, mn, mn, VCHR);
-	vdevgone(CMAJ_UCOM, mn | UCOMCUA_MASK, mn | UCOMCUA_MASK, VCHR);
+	DPRINTF(("ucom_detach: maj=%d mn=%d\n", maj, mn));
+	vdevgone(maj, mn, mn, VCHR);
+	vdevgone(maj, mn | UCOMCUA_MASK, mn | UCOMCUA_MASK, VCHR);
 
 	/* Detach and free the tty. */
 	if (tp != NULL) {

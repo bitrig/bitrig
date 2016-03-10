@@ -23,6 +23,7 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
+#include <sys/conf.h>
 #include <sys/device.h>
 #include <sys/fcntl.h>
 #include <sys/ioctl.h>
@@ -30,8 +31,6 @@
 #include <sys/vnode.h>
 #include <sys/malloc.h>
 #include <sys/queue.h>
-
-#include <machine/conf.h>
 
 #include <dev/gpio/gpiovar.h>
 
@@ -109,11 +108,16 @@ gpio_attach(struct device *parent, struct device *self, void *aux)
 int
 gpio_detach(struct device *self, int flags)
 {
-	int mn;
+	int maj, mn;
+
+	/* Locate the major number */
+	for (maj = 0; maj < nchrdev; maj++)
+		if (cdevsw[maj].d_open == gpioopen)
+			break;
 
 	/* Nuke the vnodes for any open instances (calls close) */
 	mn = self->dv_unit;
-	vdevgone(CMAJ_GPIO, mn, mn, VCHR);
+	vdevgone(maj, mn, mn, VCHR);
 
 	return (0);
 }

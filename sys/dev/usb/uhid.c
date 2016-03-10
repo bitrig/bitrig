@@ -42,14 +42,13 @@
 #include <sys/signalvar.h>
 #include <sys/device.h>
 #include <sys/ioctl.h>
+#include <sys/conf.h>
 #include <sys/tty.h>
 #include <sys/file.h>
 #include <sys/selinfo.h>
 #include <sys/proc.h>
 #include <sys/vnode.h>
 #include <sys/poll.h>
-
-#include <machine/conf.h>
 
 #include <dev/usb/usb.h>
 #include <dev/usb/usbhid.h>
@@ -147,7 +146,8 @@ int
 uhid_detach(struct device *self, int flags)
 {
 	struct uhid_softc *sc = (struct uhid_softc *)self;
-	int s, mn;
+	int s;
+	int maj, mn;
 
 	DPRINTF(("uhid_detach: sc=%p flags=%d\n", sc, flags));
 
@@ -162,9 +162,14 @@ uhid_detach(struct device *self, int flags)
 		splx(s);
 	}
 
+	/* locate the major number */
+	for (maj = 0; maj < nchrdev; maj++)
+		if (cdevsw[maj].d_open == uhidopen)
+			break;
+
 	/* Nuke the vnodes for any open instances (calls close). */
 	mn = self->dv_unit;
-	vdevgone(CMAJ_UHID, mn, mn, VCHR);
+	vdevgone(maj, mn, mn, VCHR);
 
 	return (0);
 }
