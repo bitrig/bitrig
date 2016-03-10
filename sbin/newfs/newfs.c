@@ -334,13 +334,11 @@ main(int argc, char *argv[])
 		fatal("%s: %s", special, strerror(errno));
 	if (fstat(fsi, &st) < 0)
 		fatal("%s: %s", special, strerror(errno));
-	if (!mfs) {
-		if (S_ISBLK(st.st_mode))
-			fatal("%s: block device", special);
-		if (!S_ISCHR(st.st_mode))
-			warnx("%s: not a character-special device",
-			    special);
-	}
+	if (S_ISBLK(st.st_mode))
+		fatal("%s: block device", special);
+	if (!S_ISCHR(st.st_mode))
+		warnx("%s: not a character-special device",
+		    special);
 	if (*argv[0] == '\0')
 		fatal("empty partition name supplied");
 	cp = argv[0] + strlen(argv[0]) - 1;
@@ -349,10 +347,8 @@ main(int argc, char *argv[])
 		fatal("%s: can't figure out file system partition",
 		    argv[0]);
 	lp = getdisklabel(special, fsi);
-	if (!mfs) {
-		if (pledge("stdio disklabel tty", NULL) == -1)
-			err(1, "pledge");
-	}
+	if (pledge("stdio disklabel tty", NULL) == -1)
+		err(1, "pledge");
 	if (isdigit((unsigned char)*cp))
 		pp = &lp->d_partitions[0];
 	else
