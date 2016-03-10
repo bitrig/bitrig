@@ -34,6 +34,7 @@ struct sdmmc_csd {
 	int	capacity;	/* total number of sectors */
 	int	sector_size;	/* sector size in bytes */
 	int	read_bl_len;	/* block length for reads */
+	int	tran_speed;	/* transfer speed (kbit/s) */
 	/* ... */
 };
 
@@ -192,6 +193,9 @@ struct sdmmc_softc {
 	TAILQ_HEAD(, sdmmc_intr_handler) sc_intrq; /* interrupt handlers */
 	long sc_max_xfer;		/* maximum transfer size */
 
+	u_int sc_clkmin;                /* host min bus clock */
+	u_int sc_clkmax;                /* host max bus clock */
+	u_int sc_busclk;                /* host bus clock */
 	int sc_buswidth;		/* host bus width */
 };
 

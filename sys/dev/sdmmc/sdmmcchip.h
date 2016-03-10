@@ -85,6 +85,8 @@ struct sdmmcbus_attach_args {
 	sdmmc_chipset_handle_t sch;
 	int	flags;
 	int	caps;
+	u_int   clkmin;
+	u_int	clkmax;
 	long	max_xfer;
 };
 

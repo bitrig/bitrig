@@ -248,6 +248,11 @@ sdhc_host_found(struct sdhc_softc *sc, bus_space_tag_t iot,
 	saa.saa_busname = "sdmmc";
 	saa.sct = &sdhc_functions;
 	saa.sch = hp;
+	saa.clkmax = hp->clkbase;
+	if (hp->specver == SDHC_SPEC_VERS_300)
+		saa.clkmin = hp->clkbase / 0x3ff;
+	else
+		saa.clkmin = hp->clkbase / 256;
 	saa.caps = SMC_CAPS_4BIT_MODE|SMC_CAPS_AUTO_STOP;
 	if (ISSET(sc->sc_flags, SDHC_F_8BIT_MODE))
 		saa.caps |= SMC_CAPS_8BIT_MODE;

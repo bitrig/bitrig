@@ -137,7 +137,10 @@
 #define  MMC_CSD_MMCVER_2_0		2 /* MMC 2.0 - 2.2 */
 #define  MMC_CSD_MMCVER_3_1		3 /* MMC 3.1 - 3.3 */
 #define  MMC_CSD_MMCVER_4_0		4 /* MMC 4 */
-#define MMC_CSD_READ_BL_LEN(resp)	MMC_RSP_BITS((resp), 80, 4)
+#define MMC_CSD_TRAN_SPEED(resp)       MMC_RSP_BITS((resp), 96, 8)
+#define MMC_CSD_TRAN_SPEED_MANT(resp)  MMC_RSP_BITS((resp), 99, 4)
+#define MMC_CSD_TRAN_SPEED_EXP(resp)   MMC_RSP_BITS((resp), 96, 3)
+#define MMC_CSD_READ_BL_LEN(resp)		MMC_RSP_BITS((resp), 80, 4)
 #define MMC_CSD_C_SIZE(resp)		MMC_RSP_BITS((resp), 62, 12)
 #define MMC_CSD_CAPACITY(resp)		((MMC_CSD_C_SIZE((resp))+1) << \
 					 (MMC_CSD_C_SIZE_MULT((resp))+2))
@@ -183,6 +186,8 @@
 #define  SD_CSD_TAAC_1_5_MSEC		0x26
 #define SD_CSD_NSAC(resp)		MMC_RSP_BITS((resp), 104, 8)
 #define SD_CSD_SPEED(resp)		MMC_RSP_BITS((resp), 96, 8)
+#define SD_CSD_SPEED_MANT(resp)     MMC_RSP_BITS((resp), 99, 4)
+#define SD_CSD_SPEED_EXP(resp)      MMC_RSP_BITS((resp), 96, 3)
 #define  SD_CSD_SPEED_25_MHZ		0x32
 #define  SD_CSD_SPEED_50_MHZ		0x5a
 #define SD_CSD_CCC(resp)		MMC_RSP_BITS((resp), 84, 12)

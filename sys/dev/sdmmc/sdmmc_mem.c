@@ -243,7 +243,23 @@ int
 sdmmc_decode_csd(struct sdmmc_softc *sc, sdmmc_response resp,
     struct sdmmc_function *sf)
 {
+	/* TRAN_SPEED(2:0): transfer rate exponent */
+	static const int speed_exponent[8] = {
+		100 *    1,     /* 100 Kbits/s */
+		1 * 1000,     /*   1 Mbits/s */
+		10 * 1000,     /*  10 Mbits/s */
+		100 * 1000,     /* 100 Mbits/s */
+		0,
+		0,
+		0,
+		0,
+	};
+	/* TRAN_SPEED(6:3): time mantissa */
+	static const int speed_mantissa[16] = {
+		0, 10, 12, 13, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80,
+	};
 	struct sdmmc_csd *csd = &sf->csd;
+	int e, m;
 
 	if (ISSET(sc->sc_flags, SMF_SD_MODE)) {
 		/*
@@ -268,6 +284,9 @@ sdmmc_decode_csd(struct sdmmc_softc *sc, sdmmc_response resp,
 			break;
 		}
 
+		e = SD_CSD_SPEED_EXP(resp);
+		m = SD_CSD_SPEED_MANT(resp);
+		csd->tran_speed = speed_exponent[e] * speed_mantissa[m] / 10;
 	} else {
 		csd->csdver = MMC_CSD_CSDVER(resp);
 		if (csd->csdver == MMC_CSD_CSDVER_1_0 ||
@@ -281,6 +300,10 @@ sdmmc_decode_csd(struct sdmmc_softc *sc, sdmmc_response resp,
 			    DEVNAME(sc), csd->csdver);
 			return 1;
 		}
+
+		e = MMC_CSD_TRAN_SPEED_EXP(resp);
+		m = MMC_CSD_TRAN_SPEED_MANT(resp);
+		csd->tran_speed = speed_exponent[e] * speed_mantissa[m] / 10;
 	}
 	csd->sector_size = MIN(1 << csd->read_bl_len,
 	    sdmmc_chip_host_maxblklen(sc->sct, sc->sch));
@@ -429,10 +452,18 @@ sdmmc_mem_mmc_init(struct sdmmc_softc *sc, struct sdmmc_function *sf)
 {
 	int error = 0;
 	u_int8_t ext_csd[512];
-	int speed = 0;
 	int hs_timing = 0;
+	int bus_clock;
 	int width, value;
 	u_int32_t sectors = 0;
+
+	/* change bus clock */
+	bus_clock = min(sc->sc_busclk, sf->csd.tran_speed);
+	error = sdmmc_chip_bus_clock(sc->sct, sc->sch, bus_clock);
+	if (error != 0) {
+		printf("%s: can't change bus clock\n", DEVNAME(sc));
+		return error;
+	}
 
 	if (sf->csd.mmcver >= MMC_CSD_MMCVER_4_0) {
 		/* read EXT_CSD */
@@ -445,10 +476,10 @@ sdmmc_mem_mmc_init(struct sdmmc_softc *sc, struct sdmmc_function *sf)
 		}
 
 		if (ext_csd[EXT_CSD_CARD_TYPE] & EXT_CSD_CARD_TYPE_F_52M) {
-			speed = 52000;
+			sf->csd.tran_speed = 52000;     /* 52MHz */
 			hs_timing = 1;
 		} else if (ext_csd[EXT_CSD_CARD_TYPE] & EXT_CSD_CARD_TYPE_F_26M) {
-			speed = 26000;
+			sf->csd.tran_speed = 26000;     /* 26MHz */
 		} else {
 			printf("%s: unknown CARD_TYPE 0x%x\n", DEVNAME(sc),
 			    ext_csd[EXT_CSD_CARD_TYPE]);
@@ -467,11 +498,16 @@ sdmmc_mem_mmc_init(struct sdmmc_softc *sc, struct sdmmc_function *sf)
 			}
 		}
 
-		error =
-		    sdmmc_chip_bus_clock(sc->sct, sc->sch, speed);
-		if (error != 0) {
-			printf("%s: can't change bus clock\n", DEVNAME(sc));
-			return error;
+		if (sc->sc_busclk > sf->csd.tran_speed)
+			sc->sc_busclk = sf->csd.tran_speed;
+		if (sc->sc_busclk != bus_clock) {
+			error = sdmmc_chip_bus_clock(sc->sct, sc->sch,
+					sc->sc_busclk);
+			if (error != 0) {
+				printf("%s: can't change bus clock\n",
+						DEVNAME(sc));
+				return error;
+			}
 		}
 
 		if (hs_timing) {
@@ -524,6 +560,18 @@ sdmmc_mem_mmc_init(struct sdmmc_softc *sc, struct sdmmc_function *sf)
 			/* XXXX: need bus test? (using by CMD14 & CMD19) */
 		}
 		sf->width = width;
+	} else {
+		if (sc->sc_busclk > sf->csd.tran_speed)
+			sc->sc_busclk = sf->csd.tran_speed;
+		if (sc->sc_busclk != bus_clock) {
+			error = sdmmc_chip_bus_clock(sc->sct, sc->sch,
+					sc->sc_busclk);
+			if (error != 0) {
+				printf("%s: can't change bus clock\n",
+						DEVNAME(sc));
+				return error;
+			}
+		}
 	}
 
 	return error;
