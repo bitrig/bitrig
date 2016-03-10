@@ -1325,7 +1325,7 @@ tmpfs_uiomove(tmpfs_node_t *node, struct uio *uio, vsize_t len)
 		return error;
 	}
 
-	error = uiomove((void *)va + pgoff, sz, uio);
+	error = uiomove((uint8_t *)va + pgoff, sz, uio);
 	if (error == 0 && pgoff + sz < PAGE_SIZE)
 		tmpfs_uio_cache(node, pgnum, va);
 	else
