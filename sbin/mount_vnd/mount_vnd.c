@@ -45,9 +45,11 @@
 
 #include <dev/vndioctl.h>
 
+#include <blf.h>
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <readpassphrase.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -65,34 +67,47 @@ int verbose = 0;
 int run_mount_vnd = 0;
 
 __dead void	 usage(void);
-int		 config(char *, char *, int, struct disklabel *);
+int		 config(char *, char *, int, struct disklabel *, char *,
+		     size_t);
 int		 getinfo(const char *);
+char		*get_pkcs_key(char *, char *);
 
 int
 main(int argc, char **argv)
 {
-	int	 ch, rv, action, opt_c, opt_l, opt_u;
-	char	*mntopts;
+	int	 ch, rv, action, opt_c, opt_k, opt_K, opt_l, opt_u;
+	char	*key, *mntopts, *rounds, *saltopt;
+	size_t	 keylen = 0;
 	extern char *__progname;
 	struct disklabel *dp = NULL;
 
 	if (strcasecmp(__progname, "mount_vnd") == 0)
 		run_mount_vnd = 1;
 
-	opt_c = opt_l = opt_u = 0;
-	mntopts = NULL;
+	opt_c = opt_k = opt_K = opt_l = opt_u = 0;
+	key = mntopts = rounds = saltopt = NULL;
 	action = VND_CONFIG;
 
-	while ((ch = getopt(argc, argv, "clo:t:uv")) != -1) {
+	while ((ch = getopt(argc, argv, "ckK:lo:S:t:uv")) != -1) {
 		switch (ch) {
 		case 'c':
 			opt_c = 1;
+			break;
+		case 'k':
+			opt_k = 1;
+			break;
+		case 'K':
+			opt_K = 1;
+			rounds = optarg;
 			break;
 		case 'l':
 			opt_l = 1;
 			break;
 		case 'o':
 			mntopts = optarg;
+			break;
+		case 'S':
+			saltopt = optarg;
 			break;
 		case 't':
 			dp = getdiskbyname(optarg);
@@ -123,8 +138,26 @@ main(int argc, char **argv)
 	else
 		action = VND_CONFIG;	/* default behavior */
 
+	if (saltopt && (!opt_K))
+		errx(1, "-S only makes sense when used with -K");
+
 	if (action == VND_CONFIG && argc == 2) {
 		int ind_raw, ind_reg;
+
+		if (opt_k || opt_K) {
+			fprintf(stderr,
+			    "WARNING: Consider using softraid crypto.\n");
+		}
+		if (opt_k) {
+			if (opt_K)
+				errx(1, "-k and -K are mutually exclusive");
+			key = getpass("Encryption key: ");
+			if (key == NULL || (keylen = strlen(key)) == 0)
+				errx(1, "Need an encryption key");
+		} else if (opt_K) {
+			key = get_pkcs_key(rounds, saltopt);
+			keylen = BLF_MAXUTILIZED;
+		}
 
 		/* fix order of arguments. */
 		if (run_mount_vnd) {
@@ -134,9 +167,10 @@ main(int argc, char **argv)
 			ind_raw = 0;
 			ind_reg = 1;
 		}
-		rv = config(argv[ind_raw], argv[ind_reg], action, dp);
+		rv = config(argv[ind_raw], argv[ind_reg], action, dp, key,
+		    keylen);
 	} else if (action == VND_UNCONFIG && argc == 1)
-		rv = config(argv[0], NULL, action, NULL);
+		rv = config(argv[0], NULL, action, NULL, NULL, 0);
 	else if (action == VND_GET)
 		rv = getinfo(argc ? argv[0] : NULL);
 	else
@@ -259,19 +293,24 @@ query:
 }
 
 int
-config(char *dev, char *file, int action, struct disklabel *dp)
+config(char *dev, char *file, int action, struct disklabel *dp, char *key,
+    size_t keylen)
 {
 	struct vnd_ioctl vndio;
 	char *rdev;
 	int fd, rv = -1;
 
-	if ((fd = opendev(dev, O_RDONLY, OPENDEV_PART, &rdev)) < 0)
+	if ((fd = opendev(dev, O_RDONLY, OPENDEV_PART, &rdev)) < 0) {
 		err(4, "%s", rdev);
+		goto out;
+	}
 
 	vndio.vnd_file = file;
 	vndio.vnd_secsize = (dp && dp->d_secsize) ? dp->d_secsize : DEV_BSIZE;
 	vndio.vnd_nsectors = (dp && dp->d_nsectors) ? dp->d_nsectors : 100;
 	vndio.vnd_ntracks = (dp && dp->d_ntracks) ? dp->d_ntracks : 1;
+	vndio.vnd_key = (u_char *)key;
+	vndio.vnd_keylen = keylen;
 
 	/*
 	 * Clear (un-configure) the device
@@ -310,12 +349,13 @@ usage(void)
 
 	if (run_mount_vnd)
 		(void)fprintf(stderr,
-		    "usage: %s [-o options] [-t disktype] image vnd_dev\n",
-		    __progname);
+		    "usage: mount_vnd [-k] [-K rounds] [-o options] "
+		    "[-S saltfile] [-t disktype]\n"
+		    "\t\t image vnd_dev\n");
 	else
 		(void)fprintf(stderr,
-		    "usage: %s [-cluv] [-t disktype] vnd_dev image\n",
-		    __progname);
+		    "usage: %s [-ckluv] [-K rounds] [-S saltfile] "
+		    "[-t disktype] vnd_dev image\n", __progname);
 
 	exit(1);
 }

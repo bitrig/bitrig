@@ -59,14 +59,19 @@
 .Sh SYNOPSIS
 .Nm mount_vnd
 .Bk -words
+.Op Fl k
+.Op Fl K Ar rounds
 .Op Fl o Ar options
+.Op Fl S Ar saltfile
 .Op Fl t Ar disktype
 .Ar image
 .Ar vnd_dev
 .Ek
 .Nm vnconfig
 .Bk -words
-.Op Fl cluv
+.Op Fl ckluv
+.Op Fl K Ar rounds
+.Op Fl S Ar saltfile
 .Op Fl t Ar disktype
 .Ar vnd_dev
 .Ar image
@@ -133,6 +138,25 @@ If successful, references to
 will access the contents of
 .Ar image .
 This is the default operation.
+.It Fl K Ar rounds
+Associate an encryption key with the device.
+All data will be encrypted using the Blowfish cipher before it is
+written to the disk.
+The user is asked for both a passphrase and the name of a salt file.
+The salt file can also be specified on the command line using the
+.Fl S
+option.
+The passphrase and salt are combined according to PKCS #5 PBKDF2 for the
+specified number of
+rounds to generate the actual key used.
+.Ar rounds
+is a number between 1000 and
+.Dv INT_MAX .
+DO NOT LOSE THE SALT FILE.
+.It Fl k
+Associate an encryption key with the device.
+All data will be encrypted using the Blowfish cipher before it is
+written to the disk.
 .It Fl l
 .Nm vnconfig
 only.
@@ -154,6 +178,11 @@ At the moment,
 .Fl o
 is only here for compatibility reasons, but no use is made of supplied
 options.
+.It Fl S Ar saltfile
+When
+.Fl K
+is used, specify the
+.Pa saltfile .
 .It Fl t Ar disktype
 Specify a
 .Ar disktype
@@ -189,12 +218,41 @@ and mount the ISO 9660 file system contained in it:
 # mount -t cd9660 /dev/vnd0c /mnt
 .Ed
 .Pp
+Configure an encrypted image file as vnode disk vnd0 and mount the FFS
+file system contained in the
+.Sq a
+partition of the disklabel.
+The encryption key does not echo and must be entered every time
+the vnode disk is configured.
+.Bd -literal -offset indent
+# vnconfig -k vnd0 /tmp/cryptimg
+Encryption key:
+# mount /dev/vnd0a /mnt
+.Ed
+.Pp
 An equivalent
 .Xr fstab 5
 entry is:
 .Bd -literal -offset indent
-/tmp/diskimage /dev/vnd0c vnd    rw,noauto 0 0
-/dev/vnd0a     /mnt       cd9660 rw,noauto 0 0
+/tmp/cryptimg /dev/vnd0c vnd rw,noauto,-k       0 0
+/dev/vnd0a   /mnt        ffs rw,noauto          0 0
+.Ed
+.Pp
+Same as above, but now configure the vnode using PKCS #5 PBKDF2 and
+a salt file with 20000 rounds:
+.Bd -literal -offset indent
+# vnconfig -K 20000 vnd0 /tmp/cryptimg
+Encryption key:
+Salt file: /tmp/cryptsalt
+# mount /dev/vnd0a /mnt
+.Ed
+.Pp
+An equivalent
+.Xr fstab 5
+entry is:
+.Bd -literal -offset indent
+/tmp/cryptimg /dev/vnd0c vnd rw,noauto,-K=20000 0 0
+/dev/vnd0a   /mnt        ffs rw,noauto          0 0
 .Ed
 .Pp
 Unmount the file system and unconfigure the vnode device:
@@ -246,3 +304,8 @@ partition,
 so checking the file system image will fail.
 .Pp
 Swapping to vnd devices is no longer supported.
+.Pp
+The encryption used is obsolete.
+Consider using
+.Xr softraid 4
+instead.
