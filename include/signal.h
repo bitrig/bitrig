@@ -119,8 +119,6 @@ __only_inline int sigfillset(sigset_t *__set)
 	return (0);
 }
 
-#endif /* !_ANSI_LIBRARY */
-
 #if __BSD_VISIBLE || __XPG_VISIBLE >= 420
 int	killpg(pid_t, int);
 int	siginterrupt(int, int);
