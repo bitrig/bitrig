@@ -54,8 +54,8 @@
 #include <sys/vnode.h>
 #include <sys/signalvar.h>
 #include <sys/poll.h>
+#include <sys/conf.h>
 
-#include <machine/conf.h>
 
 #include <net/if.h>
 #include <net/if_types.h>
@@ -277,9 +277,6 @@ tun_clone_destroy(struct ifnet *ifp)
 		ether_ifdetach(ifp);
 
 	if_detach(ifp);
-
-	/* Nuke the vnodes for any open instances (calls close). */
-	vdevgone(CMAJ_TUN, tp->tun_unit, tp->tun_unit, VCHR);
 
 	free(tp, M_DEVBUF, 0);
 	return (0);
@@ -876,8 +873,8 @@ tun_dev_write(struct tun_softc *tp, struct uio *uio, int ioflag)
 	struct niqueue		*ifq;
 	u_int32_t		*th;
 	struct mbuf		*top, **mp, *m;
-	size_t			 mlen;
-	int			 error=0, tlen;
+	int			error = 0, tlen;
+	size_t			mlen;
 #if NBPFILTER > 0
 	int			 s;
 #endif
@@ -1062,7 +1059,7 @@ tunkqfilter(dev_t dev, struct knote *kn)
 {
 	struct tun_softc *tp;
 
-	if ((tp = tap_lookup(minor(dev))) == NULL)
+	if ((tp = tun_lookup(minor(dev))) == NULL)
 		return (ENXIO);
 	return (tun_dev_kqfilter(tp, kn));
 }
@@ -1072,7 +1069,7 @@ tapkqfilter(dev_t dev, struct knote *kn)
 {
 	struct tun_softc *tp;
 
-	if ((tp = tun_lookup(minor(dev))) == NULL)
+	if ((tp = tap_lookup(minor(dev))) == NULL)
 		return (ENXIO);
 	return (tun_dev_kqfilter(tp, kn));
 }
