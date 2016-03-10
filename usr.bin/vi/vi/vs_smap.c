@@ -9,20 +9,19 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
-#include <curses.h>
+#include <bitstring.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 
 #include "../common/common.h"
-#include "../cl/cl.h"
 #include "vi.h"
 
 static int	vs_deleteln(SCR *, int);
@@ -37,6 +36,8 @@ static int	vs_sm_up(SCR *, MARK *, recno_t, scroll_t, SMAP *);
 /*
  * vs_change --
  *	Make a change to the screen.
+ *
+ * PUBLIC: int vs_change(SCR *, recno_t, lnop_t);
  */
 int
 vs_change(SCR *sp, recno_t lno, lnop_t op)
@@ -126,7 +127,7 @@ vs_change(SCR *sp, recno_t lno, lnop_t op)
 	}
 
 	/* Save and restore the cursor for these routines. */
-	(void)cl_cursor(sp, &oldy, &oldx);
+	(void)sp->gp->scr_cursor(sp, &oldy, &oldx);
 
 	switch (op) {
 	case LINE_DELETE:
@@ -147,7 +148,7 @@ vs_change(SCR *sp, recno_t lno, lnop_t op)
 		abort();
 	}
 
-	(void)cl_move(sp, oldy, oldx);
+	(void)sp->gp->scr_move(sp, oldy, oldx);
 	return (0);
 }
 
@@ -162,6 +163,8 @@ vs_change(SCR *sp, recno_t lno, lnop_t op)
  * Unexported interface: if lno is OOBLNO, P_TOP means that the HMAP
  * slot is already filled in, P_BOTTOM means that the TMAP slot is
  * already filled in, and we just finish up the job.
+ *
+ * PUBLIC: int vs_sm_fill(SCR *, recno_t, pos_t);
  */
 int
 vs_sm_fill(SCR *sp, recno_t lno, pos_t pos)
@@ -307,7 +310,7 @@ vs_sm_delete(SCR *sp, recno_t lno)
 	HANDLE_WEIRDNESS(cnt_orig);
 
 	/* Delete that many lines from the screen. */
-	(void)cl_move(sp, p - HMAP, 0);
+	(void)sp->gp->scr_move(sp, p - HMAP, 0);
 	if (vs_deleteln(sp, cnt_orig))
 		return (1);
 
@@ -362,7 +365,7 @@ vs_sm_insert(SCR *sp, recno_t lno)
 		cnt_orig = cnt;
 
 	/* Push down that many lines. */
-	(void)cl_move(sp, p - HMAP, 0);
+	(void)sp->gp->scr_move(sp, p - HMAP, 0);
 	if (vs_insertln(sp, cnt_orig))
 		return (1);
 
@@ -435,7 +438,7 @@ vs_sm_reset(SCR *sp, recno_t lno)
 
 		/* If there are any following lines, push them down. */
 		if (cnt > 1) {
-			(void)cl_move(sp, p - HMAP, 0);
+			(void)sp->gp->scr_move(sp, p - HMAP, 0);
 			if (vs_insertln(sp, diff))
 				return (1);
 
@@ -457,7 +460,7 @@ vs_sm_reset(SCR *sp, recno_t lno)
 		diff = cnt_orig - cnt_new;
 
 		/* Delete that many lines from the screen. */
-		(void)cl_move(sp, p - HMAP, 0);
+		(void)sp->gp->scr_move(sp, p - HMAP, 0);
 		if (vs_deleteln(sp, diff))
 			return (1);
 
@@ -491,6 +494,8 @@ vs_sm_reset(SCR *sp, recno_t lno)
  * vs_sm_scroll
  *	Scroll the SMAP up/down count logical lines.  Different
  *	semantics based on the vi command, *sigh*.
+ *
+ * PUBLIC: int vs_sm_scroll(SCR *, MARK *, recno_t, scroll_t);
  */
 int
 vs_sm_scroll(SCR *sp, MARK *rp, recno_t count, scroll_t scmd)
@@ -722,6 +727,8 @@ vs_sm_up(SCR *sp, MARK *rp, recno_t count, scroll_t scmd, SMAP *smp)
 /*
  * vs_sm_1up --
  *	Scroll the SMAP up one.
+ *
+ * PUBLIC: int vs_sm_1up(SCR *);
  */
 int
 vs_sm_1up(SCR *sp)
@@ -730,7 +737,7 @@ vs_sm_1up(SCR *sp)
 	 * Delete the top line of the screen.  Shift the screen map
 	 * up and display a new line at the bottom of the screen.
 	 */
-	(void)cl_move(sp, 0, 0);
+	(void)sp->gp->scr_move(sp, 0, 0);
 	if (vs_deleteln(sp, 1))
 		return (1);
 
@@ -755,17 +762,19 @@ vs_sm_1up(SCR *sp)
 static int
 vs_deleteln(SCR *sp, int cnt)
 {
+	GS *gp;
 	size_t oldy, oldx;
 
+	gp = sp->gp;
 	if (IS_ONELINE(sp))
-		(void)clrtoeol();
+		(void)gp->scr_clrtoeol(sp);
 	else {
-		(void)cl_cursor(sp, &oldy, &oldx);
+		(void)gp->scr_cursor(sp, &oldy, &oldx);
 		while (cnt--) {
-			(void)cl_deleteln(sp);
-			(void)cl_move(sp, LASTLINE(sp), 0);
-			(void)insertln();
-			(void)cl_move(sp, oldy, oldx);
+			(void)gp->scr_deleteln(sp);
+			(void)gp->scr_move(sp, LASTLINE(sp), 0);
+			(void)gp->scr_insertln(sp);
+			(void)gp->scr_move(sp, oldy, oldx);
 		}
 	}
 	return (0);
@@ -929,11 +938,14 @@ vs_sm_down(SCR *sp, MARK *rp, recno_t count, scroll_t scmd, SMAP *smp)
 static int
 vs_sm_erase(SCR *sp)
 {
-	(void)cl_move(sp, LASTLINE(sp), 0);
-	(void)clrtoeol();
+	GS *gp;
+
+	gp = sp->gp;
+	(void)gp->scr_move(sp, LASTLINE(sp), 0);
+	(void)gp->scr_clrtoeol(sp);
 	for (; sp->t_rows > sp->t_minrows; --sp->t_rows, --TMAP) {
-		(void)cl_move(sp, TMAP - HMAP, 0);
-		(void)clrtoeol();
+		(void)gp->scr_move(sp, TMAP - HMAP, 0);
+		(void)gp->scr_clrtoeol(sp);
 	}
 	return (0);
 }
@@ -941,6 +953,8 @@ vs_sm_erase(SCR *sp)
 /*
  * vs_sm_1down --
  *	Scroll the SMAP down one.
+ *
+ * PUBLIC: int vs_sm_1down(SCR *);
  */
 int
 vs_sm_1down(SCR *sp)
@@ -949,7 +963,7 @@ vs_sm_1down(SCR *sp)
 	 * Insert a line at the top of the screen.  Shift the screen map
 	 * down and display a new line at the top of the screen.
 	 */
-	(void)cl_move(sp, 0, 0);
+	(void)sp->gp->scr_move(sp, 0, 0);
 	if (vs_insertln(sp, 1))
 		return (1);
 
@@ -974,18 +988,20 @@ vs_sm_1down(SCR *sp)
 static int
 vs_insertln(SCR *sp, int cnt)
 {
+	GS *gp;
 	size_t oldy, oldx;
 
+	gp = sp->gp;
 	if (IS_ONELINE(sp)) {
-		(void)cl_move(sp, LASTLINE(sp), 0);
-		(void)clrtoeol();
+		(void)gp->scr_move(sp, LASTLINE(sp), 0);
+		(void)gp->scr_clrtoeol(sp);
 	} else {
-		(void)cl_cursor(sp, &oldy, &oldx);
+		(void)gp->scr_cursor(sp, &oldy, &oldx);
 		while (cnt--) {
-			(void)cl_move(sp, LASTLINE(sp) - 1, 0);
-			(void)cl_deleteln(sp);
-			(void)cl_move(sp, oldy, oldx);
-			(void)insertln();
+			(void)gp->scr_move(sp, LASTLINE(sp) - 1, 0);
+			(void)gp->scr_deleteln(sp);
+			(void)gp->scr_move(sp, oldy, oldx);
+			(void)gp->scr_insertln(sp);
 		}
 	}
 	return (0);
@@ -994,6 +1010,8 @@ vs_insertln(SCR *sp, int cnt)
 /*
  * vs_sm_next --
  *	Fill in the next entry in the SMAP.
+ *
+ * PUBLIC: int vs_sm_next(SCR *, SMAP *, SMAP *);
  */
 int
 vs_sm_next(SCR *sp, SMAP *p, SMAP *t)
@@ -1020,6 +1038,8 @@ vs_sm_next(SCR *sp, SMAP *p, SMAP *t)
 /*
  * vs_sm_prev --
  *	Fill in the previous entry in the SMAP.
+ *
+ * PUBLIC: int vs_sm_prev(SCR *, SMAP *, SMAP *);
  */
 int
 vs_sm_prev(SCR *sp, SMAP *p, SMAP *t)
@@ -1043,6 +1063,8 @@ vs_sm_prev(SCR *sp, SMAP *p, SMAP *t)
 /*
  * vs_sm_cursor --
  *	Return the SMAP entry referenced by the cursor.
+ *
+ * PUBLIC: int vs_sm_cursor(SCR *, SMAP **);
  */
 int
 vs_sm_cursor(SCR *sp, SMAP **smpp)
@@ -1080,6 +1102,8 @@ vs_sm_cursor(SCR *sp, SMAP **smpp)
  *	Return the line/column of the top, middle or last line on the screen.
  *	(The vi H, M and L commands.)  Here because only the screen routines
  *	know what's really out there.
+ *
+ * PUBLIC: int vs_sm_position(SCR *, MARK *, u_long, pos_t);
  */
 int
 vs_sm_position(SCR *sp, MARK *rp, u_long cnt, pos_t pos)
@@ -1158,6 +1182,8 @@ eof:				msgq(sp, M_BERR,
  * vs_sm_nlines --
  *	Return the number of screen lines from an SMAP entry to the
  *	start of some file line, less than a maximum value.
+ *
+ * PUBLIC: recno_t vs_sm_nlines(SCR *, SMAP *, recno_t, size_t);
  */
 recno_t
 vs_sm_nlines(SCR *sp, SMAP *from_sp, recno_t to_lno, size_t max)

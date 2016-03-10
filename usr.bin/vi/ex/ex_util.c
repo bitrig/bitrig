@@ -9,25 +9,27 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/stat.h>
 
+#include <bitstring.h>
 #include <errno.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 #include <unistd.h>
 
 #include "../common/common.h"
-#include "../cl/cl.h"
 
 /*
  * ex_cinit --
  *	Create an EX command structure.
+ *
+ * PUBLIC: void ex_cinit(EXCMD *, int, int, recno_t, recno_t, int, ARGS **);
  */
 void
 ex_cinit(EXCMD *cmdp, int cmd_id, int naddr, recno_t lno1, recno_t lno2,
@@ -49,6 +51,8 @@ ex_cinit(EXCMD *cmdp, int cmd_id, int naddr, recno_t lno1, recno_t lno2,
 /*
  * ex_cadd --
  *	Add an argument to an EX command structure.
+ *
+ * PUBLIC: void ex_cadd(EXCMD *, ARGS *, char *, size_t);
  */
 void
 ex_cadd(EXCMD *cmdp, ARGS *ap, char *arg, size_t len)
@@ -62,6 +66,8 @@ ex_cadd(EXCMD *cmdp, ARGS *ap, char *arg, size_t len)
 /*
  * ex_getline --
  *	Return a line from the file.
+ *
+ * PUBLIC: int ex_getline(SCR *, FILE *, size_t *);
  */
 int
 ex_getline(SCR *sp, FILE *fp, size_t *lenp)
@@ -100,6 +106,8 @@ ex_getline(SCR *sp, FILE *fp, size_t *lenp)
 /*
  * ex_ncheck --
  *	Check for more files to edit.
+ *
+ * PUBLIC: int ex_ncheck(SCR *, int);
  */
 int
 ex_ncheck(SCR *sp, int force)
@@ -127,6 +135,8 @@ ex_ncheck(SCR *sp, int force)
 /*
  * ex_init --
  *	Init the screen for ex.
+ *
+ * PUBLIC: int ex_init(SCR *);
  */
 int
 ex_init(SCR *sp)
@@ -135,9 +145,9 @@ ex_init(SCR *sp)
 
 	gp = sp->gp;
 
-	if (cl_screen(sp, SC_EX))
+	if (gp->scr_screen(sp, SC_EX))
 		return (1);
-	(void)cl_attr(sp, SA_ALTERNATE, 0);
+	(void)gp->scr_attr(sp, SA_ALTERNATE, 0);
 
 	sp->rows = O_VAL(sp, O_LINES);
 	sp->cols = O_VAL(sp, O_COLUMNS);
@@ -150,6 +160,8 @@ ex_init(SCR *sp)
 /*
  * ex_emsg --
  *	Display a few common ex and vi error messages.
+ *
+ * PUBLIC: void ex_emsg(SCR *, char *, exm_t);
  */
 void
 ex_emsg(SCR *sp, char *p, exm_t which)

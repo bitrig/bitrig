@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <curses.h>
 #include <signal.h>
@@ -30,6 +33,8 @@
 /*
  * cl_addstr --
  *	Add len bytes from the string at the cursor, advancing the cursor.
+ *
+ * PUBLIC: int cl_addstr(SCR *, const char *, size_t);
  */
 int
 cl_addstr(SCR *sp, const char *str, size_t len)
@@ -60,6 +65,8 @@ cl_addstr(SCR *sp, const char *str, size_t len)
 /*
  * cl_attr --
  *	Toggle a screen attribute on/off.
+ *
+ * PUBLIC: int cl_attr(SCR *, scr_attr_t, int);
  */
 int
 cl_attr(SCR *sp, scr_attr_t attribute, int on)
@@ -105,7 +112,7 @@ cl_attr(SCR *sp, scr_attr_t attribute, int on)
 			if (clp->smcup == NULL)
 				(void)cl_getcap(sp, "smcup", &clp->smcup);
 			if (clp->smcup != NULL)
-				(void)tputs(clp->smcup, 1, putchar);
+				(void)tputs(clp->smcup, 1, cl_putchar);
 		}
 	} else
 		if (clp->ti_te != TE_SENT) {
@@ -113,7 +120,7 @@ cl_attr(SCR *sp, scr_attr_t attribute, int on)
 			if (clp->rmcup == NULL)
 				(void)cl_getcap(sp, "rmcup", &clp->rmcup);
 			if (clp->rmcup != NULL)
-				(void)tputs(clp->rmcup, 1, putchar);
+				(void)tputs(clp->rmcup, 1, cl_putchar);
 			(void)fflush(stdout);
 		}
 		(void)fflush(stdout);
@@ -123,9 +130,9 @@ cl_attr(SCR *sp, scr_attr_t attribute, int on)
 			if (clp->smso == NULL)
 				return (1);
 			if (on)
-				(void)tputs(clp->smso, 1, putchar);
+				(void)tputs(clp->smso, 1, cl_putchar);
 			else
-				(void)tputs(clp->rmso, 1, putchar);
+				(void)tputs(clp->rmso, 1, cl_putchar);
 			(void)fflush(stdout);
 		} else {
 			if (on)
@@ -143,6 +150,8 @@ cl_attr(SCR *sp, scr_attr_t attribute, int on)
 /*
  * cl_baud --
  *	Return the baud rate.
+ *
+ * PUBLIC: int cl_baud(SCR *, u_long *);
  */
 int
 cl_baud(SCR *sp, u_long *ratep)
@@ -182,12 +191,14 @@ cl_baud(SCR *sp, u_long *ratep)
 /*
  * cl_bell --
  *	Ring the bell/flash the screen.
+ *
+ * PUBLIC: int cl_bell(SCR *);
  */
 int
 cl_bell(SCR *sp)
 {
 	if (F_ISSET(sp, SC_EX | SC_SCR_EXWROTE))
-		(void)write(STDOUT_FILENO, "\a", 1);
+		(void)write(STDOUT_FILENO, "\07", 1);		/* \a */
 	else {
 		/*
 		 * If the screen has not been setup we cannot call
@@ -203,14 +214,28 @@ cl_bell(SCR *sp)
 			else
 				(void)beep();
 		} else if (!O_ISSET(sp, O_FLASH))
-			(void)write(STDOUT_FILENO, "\a", 1);
+			(void)write(STDOUT_FILENO, "\07", 1);
 	}
 	return (0);
 }
 
 /*
+ * cl_clrtoeol --
+ *	Clear from the current cursor to the end of the line.
+ *
+ * PUBLIC: int cl_clrtoeol(SCR *);
+ */
+int
+cl_clrtoeol(SCR *sp)
+{
+	return (clrtoeol() == ERR);
+}
+
+/*
  * cl_cursor --
  *	Return the current cursor position.
+ *
+ * PUBLIC: int cl_cursor(SCR *, size_t *, size_t *);
  */
 int
 cl_cursor(SCR *sp, size_t *yp, size_t *xp)
@@ -230,6 +255,8 @@ cl_cursor(SCR *sp, size_t *yp, size_t *xp)
 /*
  * cl_deleteln --
  *	Delete the current line, scrolling all lines below it.
+ *
+ * PUBLIC: int cl_deleteln(SCR *);
  */
 int
 cl_deleteln(SCR *sp)
@@ -271,6 +298,8 @@ cl_deleteln(SCR *sp)
  * cl_ex_adjust --
  *	Adjust the screen for ex.  This routine is purely for standalone
  *	ex programs.  All special purpose, all special case.
+ *
+ * PUBLIC: int cl_ex_adjust(SCR *, exadj_t);
  */
 int
 cl_ex_adjust(SCR *sp, exadj_t action)
@@ -283,10 +312,10 @@ cl_ex_adjust(SCR *sp, exadj_t action)
 	case EX_TERM_SCROLL:
 		/* Move the cursor up one line if that's possible. */
 		if (clp->cuu1 != NULL)
-			(void)tputs(clp->cuu1, 1, putchar);
+			(void)tputs(clp->cuu1, 1, cl_putchar);
 		else if (clp->cup != NULL)
 			(void)tputs(tgoto(clp->cup,
-			    0, LINES - 2), 1, putchar);
+			    0, LINES - 2), 1, cl_putchar);
 		else
 			return (0);
 		/* FALLTHROUGH */
@@ -294,7 +323,7 @@ cl_ex_adjust(SCR *sp, exadj_t action)
 		/* Clear the line. */
 		if (clp->el != NULL) {
 			(void)putchar('\r');
-			(void)tputs(clp->el, 1, putchar);
+			(void)tputs(clp->el, 1, cl_putchar);
 		} else {
 			/*
 			 * Historically, ex didn't erase the line, so, if the
@@ -322,8 +351,26 @@ cl_ex_adjust(SCR *sp, exadj_t action)
 }
 
 /*
+ * cl_insertln --
+ *	Push down the current line, discarding the bottom line.
+ *
+ * PUBLIC: int cl_insertln(SCR *);
+ */
+int
+cl_insertln(SCR *sp)
+{
+	/*
+	 * The current line is expected to be blank after this operation,
+	 * and the screen must support that semantic.
+	 */
+	return (insertln() == ERR);
+}
+
+/*
  * cl_keyval --
  *	Return the value for a special key.
+ *
+ * PUBLIC: int cl_keyval(SCR *, scr_keyval_t, CHAR_T *, int *);
  */
 int
 cl_keyval(SCR *sp, scr_keyval_t val, CHAR_T *chp, int *dnep)
@@ -358,6 +405,8 @@ cl_keyval(SCR *sp, scr_keyval_t val, CHAR_T *chp, int *dnep)
 /*
  * cl_move --
  *	Move the cursor.
+ *
+ * PUBLIC: int cl_move(SCR *, size_t, size_t);
  */
 int
 cl_move(SCR *sp, size_t lno, size_t cno)
@@ -374,6 +423,8 @@ cl_move(SCR *sp, size_t lno, size_t cno)
 /*
  * cl_refresh --
  *	Refresh the screen.
+ *
+ * PUBLIC: int cl_refresh(SCR *, int);
  */
 int
 cl_refresh(SCR *sp, int repaint)
@@ -405,16 +456,20 @@ cl_refresh(SCR *sp, int repaint)
 /*
  * cl_rename --
  *	Rename the file.
+ *
+ * PUBLIC: int cl_rename(SCR *, char *, int);
  */
 int
 cl_rename(SCR *sp, char *name, int on)
 {
+	GS *gp;
 	CL_PRIVATE *clp;
 	char *ttype;
 
+	gp = sp->gp;
 	clp = CLP(sp);
 
-	ttype = OG_STR(sp->gp, GO_TERM);
+	ttype = OG_STR(gp, GO_TERM);
 
 	/*
 	 * XXX
@@ -439,6 +494,8 @@ cl_rename(SCR *sp, char *name, int on)
 /*
  * cl_suspend --
  *	Suspend a screen.
+ *
+ * PUBLIC: int cl_suspend(SCR *, int *);
  */
 int
 cl_suspend(SCR *sp, int *allowedp)
@@ -552,6 +609,8 @@ cl_suspend(SCR *sp, int *allowedp)
 /*
  * cl_usage --
  *	Print out the curses usage messages.
+ * 
+ * PUBLIC: void cl_usage(void);
  */
 void
 cl_usage()

@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <curses.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -35,6 +38,8 @@ static int	cl_resize(SCR *, size_t, size_t);
 /*
  * cl_event --
  *	Return a single event.
+ *
+ * PUBLIC: int cl_event(SCR *, EVENT *, u_int32_t, int);
  */
 int
 cl_event(SCR *sp, EVENT *evp, u_int32_t flags, int ms)
@@ -123,10 +128,12 @@ cl_read(SCR *sp, u_int32_t flags, CHAR_T *bp, size_t blen, int *nrp,
 {
 	struct termios term1, term2;
 	CL_PRIVATE *clp;
+	GS *gp;
 	struct pollfd pfd[1];
 	input_t rval;
 	int nr, term_reset, timeout;
 
+	gp = sp->gp;
 	clp = CLP(sp);
 	term_reset = 0;
 
@@ -198,7 +205,7 @@ tty_retry:
 	 * It's ugly that we wait on scripting file descriptors here, but it's
 	 * the only way to keep from locking out scripting windows.
 	 */
-	if (F_ISSET(sp->gp, G_SCRWIN)) {
+	if (F_ISSET(gp, G_SCRWIN)) {
 		if (sscr_check_input(sp))
 			goto err;
 	}

@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,6 +24,8 @@
 /*
  * ex_undo -- u
  *	Undo the last change.
+ *
+ * PUBLIC: int ex_undo(SCR *, EXCMD *);
  */
 int
 ex_undo(SCR *sp, EXCMD *cmdp)

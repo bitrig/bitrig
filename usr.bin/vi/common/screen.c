@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -26,6 +29,8 @@
 /*
  * screen_init --
  *	Do the default initialization of an SCR structure.
+ *
+ * PUBLIC: int screen_init(GS *, SCR *, SCR **);
  */
 int
 screen_init(GS *gp, SCR *orig, SCR **spp)
@@ -116,6 +121,8 @@ err:	screen_end(sp);
  * screen_end --
  *	Release a screen, no matter what had (and had not) been
  *	initialized.
+ *
+ * PUBLIC: int screen_end(SCR *);
  */
 int
 screen_end(SCR *sp)
@@ -198,6 +205,8 @@ screen_end(SCR *sp)
 /*
  * screen_next --
  *	Return the next screen in the queue.
+ *
+ * PUBLIC: SCR *screen_next(SCR *);
  */
 SCR *
 screen_next(SCR *sp)

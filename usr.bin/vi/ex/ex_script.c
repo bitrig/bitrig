@@ -12,6 +12,8 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/queue.h>
@@ -19,12 +21,13 @@
 #include <sys/time.h>
 #include <sys/wait.h>
 
+#include <bitstring.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>		/* XXX: OSF/1 bug: include before <grp.h> */
 #include <grp.h>
 #include <limits.h>
 #include <poll.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <termios.h>
@@ -41,11 +44,14 @@ static int	sscr_getprompt(SCR *);
 static int	sscr_init(SCR *);
 static int	sscr_insert(SCR *);
 static int	sscr_matchprompt(SCR *, char *, size_t, size_t *);
+static int	sscr_pty(int *, int *, char *, size_t, struct termios *, void *);
 static int	sscr_setprompt(SCR *, char *, size_t);
 
 /*
  * ex_script -- : sc[ript][!] [file]
  *	Switch to script mode.
+ *
+ * PUBLIC: int ex_script(SCR *, EXCMD *);
  */
 int
 ex_script(SCR *sp, EXCMD *cmdp)
@@ -264,6 +270,8 @@ prompterr:	sscr_end(sp);
 /*
  * sscr_exec --
  *	Take a line and hand it off to the shell.
+ *
+ * PUBLIC: int sscr_exec(SCR *, recno_t);
  */
 int
 sscr_exec(SCR *sp, recno_t lno)
@@ -333,6 +341,8 @@ err1:			rval = 1;
 /*
  * sscr_check_input -
  *	Check for input from command input or scripting windows.
+ *
+ * PUBLIC: int sscr_check_input(SCR *sp);
  */
 int
 sscr_check_input(SCR *sp)
@@ -350,7 +360,11 @@ sscr_check_input(SCR *sp)
 	TAILQ_FOREACH(tsp, &gp->dq, q)
 		if (F_ISSET(sp, SC_SCRIPT))
 			nfds++;
-	CALLOC_RET(sp, pfd, nfds, sizeof(struct pollfd));
+	pfd = calloc(nfds, sizeof(struct pollfd));
+	if (pfd == NULL) {
+		msgq(sp, M_SYSERR, "malloc");
+		return (1);
+	}
 
 	/* Setup events bitmasks. */
 	pfd[0].fd = STDIN_FILENO;
@@ -397,6 +411,8 @@ done:
 /*
  * sscr_input --
  *	Read any waiting shell input.
+ *
+ * PUBLIC: int sscr_input(SCR *);
  */
 int
 sscr_input(SCR *sp)
@@ -415,7 +431,11 @@ sscr_input(SCR *sp)
 			nfds++;
 	if (nfds == 0)
 		return (0);
-	CALLOC_RET(sp, pfd, nfds, sizeof(struct pollfd));
+	pfd = calloc(nfds, sizeof(struct pollfd));
+	if (pfd == NULL) {
+		msgq(sp, M_SYSERR, "malloc");
+		return (1);
+	}
 
 	/* Setup events bitmasks. */
 	nfds = 0;
@@ -603,6 +623,8 @@ sscr_matchprompt(SCR *sp, char *lp, size_t line_len, size_t *lenp)
 /*
  * sscr_end --
  *	End the pipe to a shell.
+ *
+ * PUBLIC: int sscr_end(SCR *);
  */
 int
 sscr_end(SCR *sp)

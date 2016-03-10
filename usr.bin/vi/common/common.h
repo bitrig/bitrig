@@ -13,7 +13,6 @@
 
 #include <db.h>
 #include <regex.h>
-#include <bitstring.h>
 
 /*
  * Forward structure declarations.  Not pretty, but the include files
@@ -43,6 +42,15 @@ typedef enum { C_NOTSET, C_CARATSET, C_NOCHANGE, C_ZEROSET } carat_t;
 
 /* Busy message types. */
 typedef enum { BUSY_ON = 1, BUSY_OFF, BUSY_UPDATE } busy_t;
+
+/*
+ * Routines that return a confirmation return:
+ *
+ *	CONF_NO		User answered no.
+ *	CONF_QUIT	User answered quit, eof or an error.
+ *	CONF_YES	User answered yes.
+ */
+typedef enum { CONF_NO, CONF_QUIT, CONF_YES } conf_t;
 
 /* Directions. */
 typedef enum { NOTSET, FORWARD, BACKWARD } dir_t;

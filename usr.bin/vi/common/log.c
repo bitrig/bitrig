@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/stat.h>
 
+#include <bitstring.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
@@ -73,6 +76,8 @@ static void	log_trace(SCR *, char *, recno_t, u_char *);
 /*
  * log_init --
  *	Initialize the logging subsystem.
+ *
+ * PUBLIC: int log_init(SCR *, EXF *);
  */
 int
 log_init(SCR *sp, EXF *ep)
@@ -105,6 +110,8 @@ log_init(SCR *sp, EXF *ep)
 /*
  * log_end --
  *	Close the logging subsystem.
+ *
+ * PUBLIC: int log_end(SCR *, EXF *);
  */
 int
 log_end(SCR *sp, EXF *ep)
@@ -131,6 +138,8 @@ log_end(SCR *sp, EXF *ep)
 /*
  * log_cursor --
  *	Log the current cursor position, starting an event.
+ *
+ * PUBLIC: int log_cursor(SCR *);
  */
 int
 log_cursor(SCR *sp)
@@ -191,6 +200,8 @@ log_cursor1(SCR *sp, int type)
 /*
  * log_line --
  *	Log a line change.
+ *
+ * PUBLIC: int log_line(SCR *, recno_t, u_int);
  */
 int
 log_line(SCR *sp, recno_t lno, u_int action)
@@ -286,6 +297,8 @@ log_line(SCR *sp, recno_t lno, u_int action)
  *	aren't any operations that just put out a log record -- this
  *	would mean that undo operations would only reset marks, and not
  *	cause any other change.
+ *
+ * PUBLIC: int log_mark(SCR *, LMARK *);
  */
 int
 log_mark(SCR *sp, LMARK *lmp)
@@ -328,6 +341,8 @@ log_mark(SCR *sp, LMARK *lmp)
 /*
  * Log_backward --
  *	Roll the log backward one operation.
+ *
+ * PUBLIC: int log_backward(SCR *, MARK *);
  */
 int
 log_backward(SCR *sp, MARK *rp)
@@ -430,6 +445,8 @@ err:	F_CLR(ep, F_NOLOG);
  * unless a change was made.  If you do a change, move off the line,
  * then move back on and do a 'U', the line will be restored to the way
  * it was before the original change.
+ *
+ * PUBLIC: int log_setline(SCR *);
  */
 int
 log_setline(SCR *sp)
@@ -514,6 +531,8 @@ err:	F_CLR(ep, F_NOLOG);
 /*
  * Log_forward --
  *	Roll the log forward one operation.
+ *
+ * PUBLIC: int log_forward(SCR *, MARK *);
  */
 int
 log_forward(SCR *sp, MARK *rp)

@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 
@@ -23,6 +26,8 @@
  * v_delete -- [buffer][count]d[count]motion
  *	       [buffer][count]D
  *	Delete a range of text.
+ *
+ * PUBLIC: int v_delete(SCR *, VICMD *);
  */
 int
 v_delete(SCR *sp, VICMD *vp)

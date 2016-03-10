@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <curses.h>
 #include <err.h>
 #include <errno.h>
@@ -31,6 +34,7 @@
 GS *__global_list;				/* GLOBAL: List of screens. */
 sigset_t __sigblockset;				/* GLOBAL: Blocked signals. */
 
+static void	   cl_func_std(GS *);
 static CL_PRIVATE *cl_init(GS *);
 static GS	  *gs_init(void);
 static int	   setsig(int, struct sigaction *, void (*)(int));
@@ -187,6 +191,9 @@ tcfail:			err(1, "tcgetattr");
 		(void)close(fd);
 	}
 
+	/* Initialize the list of curses functions. */
+	cl_func_std(gp);
+
 	return (clp);
 }
 
@@ -249,6 +256,8 @@ h_winch(int signo)
 /*
  * sig_init --
  *	Initialize signals.
+ *
+ * PUBLIC: int sig_init(GS *, SCR *);
  */
 int
 sig_init(GS *gp, SCR *sp)
@@ -299,6 +308,7 @@ setsig(int signo, struct sigaction *oactp, void (*handler)(int))
 	 */
 	act.sa_handler = handler;
 	sigemptyset(&act.sa_mask);
+
 	act.sa_flags = 0;
 	return (sigaction(signo, &act, oactp));
 }

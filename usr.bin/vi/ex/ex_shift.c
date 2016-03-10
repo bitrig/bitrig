@@ -9,8 +9,11 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +26,9 @@ static int shift(SCR *, EXCMD *, enum which);
 
 /*
  * ex_shiftl -- :<[<...]
+ *
+ *
+ * PUBLIC: int ex_shiftl(SCR *, EXCMD *);
  */
 int
 ex_shiftl(SCR *sp, EXCMD *cmdp)
@@ -32,6 +38,8 @@ ex_shiftl(SCR *sp, EXCMD *cmdp)
 
 /*
  * ex_shiftr -- :>[>...]
+ *
+ * PUBLIC: int ex_shiftr(SCR *, EXCMD *);
  */
 int
 ex_shiftr(SCR *sp, EXCMD *cmdp)

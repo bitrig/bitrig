@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +25,8 @@
 /*
  * ex_copy -- :[line [,line]] co[py] line [flags]
  *	Copy selected lines.
+ *
+ * PUBLIC: int ex_copy(SCR *, EXCMD *);
  */
 int
 ex_copy(SCR *sp, EXCMD *cmdp)
@@ -73,6 +78,8 @@ err:	text_lfree(&cb.textq);
 /*
  * ex_move -- :[line [,line]] mo[ve] line
  *	Move selected lines.
+ *
+ * PUBLIC: int ex_move(SCR *, EXCMD *);
  */
 int
 ex_move(SCR *sp, EXCMD *cmdp)

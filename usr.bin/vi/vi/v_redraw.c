@@ -9,25 +9,27 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdio.h>
-#include <termios.h>
 
 #include "../common/common.h"
-#include "../cl/cl.h"
 #include "vi.h"
 
 /*
  * v_redraw -- ^L, ^R
  *	Redraw the screen.
+ *
+ * PUBLIC: int v_redraw(SCR *, VICMD *);
  */
 int
 v_redraw(SCR *sp, VICMD *vp)
 {
-	return (cl_refresh(sp, 1));
+	return (sp->gp->scr_refresh(sp, 1));
 }

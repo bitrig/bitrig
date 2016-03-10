@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
@@ -43,6 +46,8 @@
 /*
  * v_sentencef -- [count])
  *	Move forward count sentences.
+ *
+ * PUBLIC: int v_sentencef(SCR *, VICMD *);
  */
 int
 v_sentencef(SCR *sp, VICMD *vp)
@@ -180,6 +185,8 @@ okret:	vp->m_stop.lno = cs.cs_lno;
 /*
  * v_sentenceb -- [count](
  *	Move backward count sentences.
+ *
+ * PUBLIC: int v_sentenceb(SCR *, VICMD *);
  */
 int
 v_sentenceb(SCR *sp, VICMD *vp)

@@ -9,20 +9,20 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 #include <unistd.h>
 
 #include "../common/common.h"
-#include "../cl/cl.h"
 #include "vi.h"
 
 static int v_ecl(SCR *);
@@ -34,6 +34,8 @@ static int v_exec_ex(SCR *, VICMD *, EXCMD *);
 /*
  * v_again -- &
  *	Repeat the previous substitution.
+ *
+ * PUBLIC: int v_again(SCR *, VICMD *);
  */
 int
 v_again(SCR *sp, VICMD *vp)
@@ -50,17 +52,23 @@ v_again(SCR *sp, VICMD *vp)
 /*
  * v_exmode -- Q
  *	Switch the editor into EX mode.
+ *
+ * PUBLIC: int v_exmode(SCR *, VICMD *);
  */
 int
 v_exmode(SCR *sp, VICMD *vp)
 {
+	GS *gp;
+
+	gp = sp->gp;
+
 	/* Try and switch screens -- the screen may not permit it. */
-	if (cl_screen(sp, SC_EX)) {
+	if (gp->scr_screen(sp, SC_EX)) {
 		msgq(sp, M_ERR,
 		    "The Q command requires the ex terminal interface");
 		return (1);
 	}
-	(void)cl_attr(sp, SA_ALTERNATE, 0);
+	(void)gp->scr_attr(sp, SA_ALTERNATE, 0);
 
 	/* Save the current cursor position. */
 	sp->frp->lno = sp->lno;
@@ -80,6 +88,8 @@ v_exmode(SCR *sp, VICMD *vp)
 /*
  * v_join -- [count]J
  *	Join lines together.
+ *
+ * PUBLIC: int v_join(SCR *, VICMD *);
  */
 int
 v_join(SCR *sp, VICMD *vp)
@@ -107,6 +117,8 @@ v_join(SCR *sp, VICMD *vp)
 /*
  * v_shiftl -- [count]<motion
  *	Shift lines left.
+ *
+ * PUBLIC: int v_shiftl(SCR *, VICMD *);
  */
 int
 v_shiftl(SCR *sp, VICMD *vp)
@@ -122,6 +134,8 @@ v_shiftl(SCR *sp, VICMD *vp)
 /*
  * v_shiftr -- [count]>motion
  *	Shift lines right.
+ *
+ * PUBLIC: int v_shiftr(SCR *, VICMD *);
  */
 int
 v_shiftr(SCR *sp, VICMD *vp)
@@ -137,6 +151,8 @@ v_shiftr(SCR *sp, VICMD *vp)
 /*
  * v_suspend -- ^Z
  *	Suspend vi.
+ *
+ * PUBLIC: int v_suspend(SCR *, VICMD *);
  */
 int
 v_suspend(SCR *sp, VICMD *vp)
@@ -152,6 +168,8 @@ v_suspend(SCR *sp, VICMD *vp)
 /*
  * v_switch -- ^^
  *	Switch to the previous file.
+ *
+ * PUBLIC: int v_switch(SCR *, VICMD *);
  */
 int
 v_switch(SCR *sp, VICMD *vp)
@@ -187,6 +205,8 @@ v_switch(SCR *sp, VICMD *vp)
 /*
  * v_tagpush -- ^[
  *	Do a tag search on the cursor keyword.
+ *
+ * PUBLIC: int v_tagpush(SCR *, VICMD *);
  */
 int
 v_tagpush(SCR *sp, VICMD *vp)
@@ -202,6 +222,8 @@ v_tagpush(SCR *sp, VICMD *vp)
 /*
  * v_tagpop -- ^T
  *	Pop the tags stack.
+ *
+ * PUBLIC: int v_tagpop(SCR *, VICMD *);
  */
 int
 v_tagpop(SCR *sp, VICMD *vp)
@@ -215,6 +237,8 @@ v_tagpop(SCR *sp, VICMD *vp)
 /*
  * v_filter -- [count]!motion command(s)
  *	Run range through shell commands, replacing text.
+ *
+ * PUBLIC: int v_filter(SCR *, VICMD *);
  */
 int
 v_filter(SCR *sp, VICMD *vp)
@@ -289,6 +313,8 @@ v_filter(SCR *sp, VICMD *vp)
 /*
  * v_event_exec --
  *	Execute some command(s) based on an event.
+ *
+ * PUBLIC: int v_event_exec(SCR *, VICMD *);
  */
 int
 v_event_exec(SCR *sp, VICMD *vp)
@@ -324,12 +350,17 @@ v_exec_ex(SCR *sp, VICMD *vp, EXCMD *exp)
 /*
  * v_ex -- :
  *	Execute a colon command line.
+ *
+ * PUBLIC: int v_ex(SCR *, VICMD *);
  */
 int
 v_ex(SCR *sp, VICMD *vp)
 {
+	GS *gp;
 	TEXT *tp;
 	int do_cedit, do_resolution, ifcontinue;
+
+	gp = sp->gp;
 
 	/*
 	 * !!!
@@ -346,7 +377,7 @@ v_ex(SCR *sp, VICMD *vp)
 		 * There may already be an ex command waiting to run.  If
 		 * so, we continue with it.
 		 */
-		if (!EXCMD_RUNNING(sp->gp)) {
+		if (!EXCMD_RUNNING(gp)) {
 			/* Get a command. */
 			if (v_tcmd(sp, vp, ':',
 			    TXT_BS | TXT_CEDIT | TXT_FILEC | TXT_PROMPT))
@@ -534,6 +565,8 @@ v_ecl(SCR *sp)
 /*
  * v_ecl_exec --
  *	Execute a command from a colon command-line window.
+ *
+ * PUBLIC: int v_ecl_exec(SCR *);
  */
 int
 v_ecl_exec(SCR *sp)

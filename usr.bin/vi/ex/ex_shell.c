@@ -9,10 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
-#include <sys/param.h>
+#include "config.h"
+
 #include <sys/queue.h>
 #include <sys/wait.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
@@ -20,22 +22,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 #include <unistd.h>
 
 #include "../common/common.h"
-#include "../cl/cl.h"
+
+#define MINIMUM(a, b)	(((a) < (b)) ? (a) : (b))
 
 /*
  * ex_shell -- :sh[ell]
  *	Invoke the program named in the SHELL environment variable
  *	with the argument -i.
+ *
+ * PUBLIC: int ex_shell(SCR *, EXCMD *);
  */
 int
 ex_shell(SCR *sp, EXCMD *cmdp)
 {
 	int rval;
-	char buf[MAXPATHLEN];
+	char buf[PATH_MAX];
 
 	/* We'll need a shell. */
 	if (opts_empty(sp, O_SHELL, 0))
@@ -48,13 +52,13 @@ ex_shell(SCR *sp, EXCMD *cmdp)
 	(void)snprintf(buf, sizeof(buf), "%s -i", O_STR(sp, O_SHELL));
 
 	/* Restore the window name. */
-	(void)cl_rename(sp, NULL, 0);
+	(void)sp->gp->scr_rename(sp, NULL, 0);
 
 	/* If we're still in a vi screen, move out explicitly. */
 	rval = ex_exec_proc(sp, cmdp, buf, NULL, !F_ISSET(sp, SC_SCR_EXWROTE));
 
 	/* Set the window name. */
-	(void)cl_rename(sp, sp->frp->name, 1);
+	(void)sp->gp->scr_rename(sp, sp->frp->name, 1);
 
 	/*
 	 * !!!
@@ -69,6 +73,8 @@ ex_shell(SCR *sp, EXCMD *cmdp)
 /*
  * ex_exec_proc --
  *	Run a separate process.
+ *
+ * PUBLIC: int ex_exec_proc(SCR *, EXCMD *, char *, const char *, int);
  */
 int
 ex_exec_proc(SCR *sp, EXCMD *cmdp, char *cmd, const char *msg,
@@ -86,11 +92,11 @@ ex_exec_proc(SCR *sp, EXCMD *cmdp, char *cmd, const char *msg,
 
 	/* Enter ex mode. */
 	if (F_ISSET(sp, SC_VI)) {
-		if (cl_screen(sp, SC_EX)) {
+		if (gp->scr_screen(sp, SC_EX)) {
 			ex_emsg(sp, cmdp->cmd->name, EXM_NOCANON);
 			return (1);
 		}
-		(void)cl_attr(sp, SA_ALTERNATE, 0);
+		(void)gp->scr_attr(sp, SA_ALTERNATE, 0);
 		F_SET(sp, SC_SCR_EX | SC_SCR_EXWROTE);
 	}
 
@@ -131,6 +137,8 @@ ex_exec_proc(SCR *sp, EXCMD *cmdp, char *cmd, const char *msg,
  * system.  It has to be cast into something or the standard promotion
  * rules get you.  I'm using a long based on the belief that nobody is
  * going to make it unsigned and it's unlikely to be a quad.
+ *
+ * PUBLIC: int proc_wait(SCR *, pid_t, const char *, int, int);
  */
 int
 proc_wait(SCR *sp, pid_t pid, const char *cmd, int silent, int okpipe)
@@ -160,7 +168,7 @@ proc_wait(SCR *sp, pid_t pid, const char *cmd, int silent, int okpipe)
 		p = msg_print(sp, cmd, &nf);
 		len = strlen(p);
 		msgq(sp, M_ERR, "%.*s%s: received signal: %s%s",
-		    MIN(len, 20), p, len > 20 ? " ..." : "",
+		    MINIMUM(len, 20), p, len > 20 ? " ..." : "",
 		    strsignal(WTERMSIG(pstat)),
 		    WCOREDUMP(pstat) ? "; core dumped" : "");
 		if (nf)
@@ -182,7 +190,7 @@ proc_wait(SCR *sp, pid_t pid, const char *cmd, int silent, int okpipe)
 			p = msg_print(sp, cmd, &nf);
 			len = strlen(p);
 			msgq(sp, M_ERR, "%.*s%s: exited with status %d",
-			    MIN(len, 20), p, len > 20 ? " ..." : "",
+			    MINIMUM(len, 20), p, len > 20 ? " ..." : "",
 			    WEXITSTATUS(pstat));
 			if (nf)
 				FREE_SPACE(sp, p, 0);

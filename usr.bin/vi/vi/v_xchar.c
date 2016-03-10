@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 
@@ -22,6 +25,8 @@
 /*
  * v_xchar -- [buffer] [count]x
  *	Deletes the character(s) on which the cursor sits.
+ *
+ * PUBLIC: int v_xchar(SCR *, VICMD *);
  */
 int
 v_xchar(SCR *sp, VICMD *vp)
@@ -67,6 +72,8 @@ nodel:		msgq(sp, M_BERR, "No characters to delete");
  * v_Xchar -- [buffer] [count]X
  *	Deletes the character(s) immediately before the current cursor
  *	position.
+ *
+ * PUBLIC: int v_Xchar(SCR *, VICMD *);
  */
 int
 v_Xchar(SCR *sp, VICMD *vp)

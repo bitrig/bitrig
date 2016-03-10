@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,6 +27,8 @@
 /*
  * ex_bg --	:bg
  *	Hide the screen.
+ *
+ * PUBLIC: int ex_bg(SCR *, EXCMD *);
  */
 int
 ex_bg(SCR *sp, EXCMD *cmdp)
@@ -34,6 +39,8 @@ ex_bg(SCR *sp, EXCMD *cmdp)
 /*
  * ex_fg --	:fg [file]
  *	Show the screen.
+ *
+ * PUBLIC: int ex_fg(SCR *, EXCMD *);
  */
 int
 ex_fg(SCR *sp, EXCMD *cmdp)
@@ -56,6 +63,8 @@ ex_fg(SCR *sp, EXCMD *cmdp)
 /*
  * ex_resize --	:resize [+-]rows
  *	Change the screen size.
+ *
+ * PUBLIC: int ex_resize(SCR *, EXCMD *);
  */
 int
 ex_resize(SCR *sp, EXCMD *cmdp)
@@ -83,6 +92,8 @@ ex_resize(SCR *sp, EXCMD *cmdp)
 /*
  * ex_sdisplay --
  *	Display the list of screens.
+ *
+ * PUBLIC: int ex_sdisplay(SCR *);
  */
 int
 ex_sdisplay(SCR *sp)

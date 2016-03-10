@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
@@ -68,6 +71,8 @@ static int fword(SCR *, VICMD *, enum which);
 /*
  * v_wordW -- [count]W
  *	Move forward a bigword at a time.
+ *
+ * PUBLIC: int v_wordW(SCR *, VICMD *);
  */
 int
 v_wordW(SCR *sp, VICMD *vp)
@@ -78,6 +83,8 @@ v_wordW(SCR *sp, VICMD *vp)
 /*
  * v_wordw -- [count]w
  *	Move forward a word at a time.
+ *
+ * PUBLIC: int v_wordw(SCR *, VICMD *);
  */
 int
 v_wordw(SCR *sp, VICMD *vp)
@@ -224,6 +231,8 @@ ret:	if (!ISMOTION(vp) &&
 /*
  * v_wordE -- [count]E
  *	Move forward to the end of the bigword.
+ *
+ * PUBLIC: int v_wordE(SCR *, VICMD *);
  */
 int
 v_wordE(SCR *sp, VICMD *vp)
@@ -234,6 +243,8 @@ v_wordE(SCR *sp, VICMD *vp)
 /*
  * v_worde -- [count]e
  *	Move forward to the end of the word.
+ *
+ * PUBLIC: int v_worde(SCR *, VICMD *);
  */
 int
 v_worde(SCR *sp, VICMD *vp)
@@ -366,6 +377,8 @@ ret:	if (!ISMOTION(vp) &&
 /*
  * v_WordB -- [count]B
  *	Move backward a bigword at a time.
+ *
+ * PUBLIC: int v_wordB(SCR *, VICMD *);
  */
 int
 v_wordB(SCR *sp, VICMD *vp)
@@ -376,6 +389,8 @@ v_wordB(SCR *sp, VICMD *vp)
 /*
  * v_wordb -- [count]b
  *	Move backward a word at a time.
+ *
+ * PUBLIC: int v_wordb(SCR *, VICMD *);
  */
 int
 v_wordb(SCR *sp, VICMD *vp)

@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
@@ -23,6 +26,8 @@
 /*
  * v_zexit -- ZZ
  *	Save the file and exit.
+ *
+ * PUBLIC: int v_zexit(SCR *, VICMD *);
  */
 int
 v_zexit(SCR *sp, VICMD *vp)

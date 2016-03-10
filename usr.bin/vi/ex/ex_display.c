@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <limits.h>
 #include <stdio.h>

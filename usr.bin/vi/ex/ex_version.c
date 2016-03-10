@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 
@@ -21,6 +24,8 @@
 /*
  * ex_version -- :version
  *	Display the program version.
+ *
+ * PUBLIC: int ex_version(SCR *, EXCMD *);
  */
 int
 ex_version(SCR *sp, EXCMD *cmdp)

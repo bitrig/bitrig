@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <curses.h>
 #include <errno.h>
 #include <signal.h>
@@ -35,6 +38,8 @@ static int	cl_putenv(char *, char *, u_long);
 /*
  * cl_screen --
  *	Switch screen types.
+ *
+ * PUBLIC: int cl_screen(SCR *, u_int32_t);
  */
 int
 cl_screen(SCR *sp, u_int32_t flags)
@@ -104,7 +109,7 @@ cl_screen(SCR *sp, u_int32_t flags)
 		 */
 		if (F_ISSET(sp, SC_EX) && clp->cup != NULL)
 			tputs(tgoto(clp->cup,
-			    0, O_VAL(sp, O_LINES) - 1), 1, putchar);
+			    0, O_VAL(sp, O_LINES) - 1), 1, cl_putchar);
 	} else {
 		if (cl_vi_init(sp))
 			return (1);
@@ -117,6 +122,8 @@ cl_screen(SCR *sp, u_int32_t flags)
 /*
  * cl_quit --
  *	Shutdown the screens.
+ *
+ * PUBLIC: int cl_quit(GS *);
  */
 int
 cl_quit(GS *gp)
@@ -483,6 +490,8 @@ cl_ex_end(GS *gp)
 /*
  * cl_getcap --
  *	Retrieve termcap/terminfo strings.
+ *
+ * PUBLIC: int cl_getcap(SCR *, char *, char **);
  */
 int
 cl_getcap(SCR *sp, char *name, char **elementp)

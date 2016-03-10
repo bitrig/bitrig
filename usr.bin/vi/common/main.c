@@ -9,6 +9,8 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/stat.h>
@@ -20,15 +22,12 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <paths.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 #include <unistd.h>
 
 #include "common.h"
-#include "../cl/cl.h"
 #include "../vi/vi.h"
 
 #ifdef DEBUG
@@ -39,6 +38,8 @@ static int	 v_obsolete(char *[]);
 /*
  * editor --
  *	Main editor routine.
+ *
+ * PUBLIC: int editor(GS *, int, char *[]);
  */
 int
 editor(GS *gp, int argc, char *argv[])
@@ -214,7 +215,7 @@ editor(GS *gp, int argc, char *argv[])
 			break;
 		case '?':
 		default:
-			cl_usage();
+			(void)gp->scr_usage();
 			return (1);
 		}
 	argc -= optind;
@@ -354,12 +355,14 @@ editor(GS *gp, int argc, char *argv[])
 	 */
 	if (*argv != NULL) {
 		if (sp->frp != NULL) {
+			size_t l;
 			/* Cheat -- we know we have an extra argv slot. */
 			l = strlen(sp->frp->name) + 1;
 			if ((*--argv = malloc(l)) == NULL) {
 				warn(NULL);
 				goto err;
 			}
+			(void)strlcpy(*argv, sp->frp->name, l);
 		}
 		sp->argv = sp->cargv = argv;
 		F_SET(sp, SC_ARGNOFREE);
@@ -414,7 +417,7 @@ editor(GS *gp, int argc, char *argv[])
 			    (ev.e_event == E_CHARACTER &&
 			    (ev.e_value == K_CR || ev.e_value == K_NL)))
 				break;
-			(void)cl_bell(sp);
+			(void)gp->scr_bell(sp);
 		}
 	}
 
@@ -443,6 +446,8 @@ err:		rval = 1;
 /*
  * v_end --
  *	End the program, discarding screens and most of the global area.
+ *
+ * PUBLIC: void v_end(GS *);
  */
 void
 v_end(GS *gp)
@@ -489,7 +494,7 @@ v_end(GS *gp)
 
 	/* Ring the bell if scheduled. */
 	if (F_ISSET(gp, G_BELLSCHED))
-		(void)fprintf(stderr, "\a");
+		(void)fprintf(stderr, "\07");		/* \a */
 
 	/*
 	 * Flush any remaining messages.  If a message is here, it's almost
@@ -527,6 +532,9 @@ v_end(GS *gp)
 static int
 v_obsolete(char *argv[])
 {
+	size_t len;
+	char *p;
+
 	/*
 	 * Translate old style arguments into something getopt will like.
 	 * Make sure it's not text space memory, because ex modifies the
@@ -551,6 +559,9 @@ v_obsolete(char *argv[])
 				len = strlen(argv[0]);
 				if ((argv[0] = malloc(len + 2)) == NULL)
 					goto nomem;
+				argv[0][0] = '-';
+				argv[0][1] = 'c';
+				(void)strlcpy(argv[0] + 2, p + 1, len);
 			}
 		} else if (argv[0][0] == '-') {
 			if (argv[0][1] == '\0') {

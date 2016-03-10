@@ -9,23 +9,25 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <errno.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 
 #include "../common/common.h"
-#include "../cl/cl.h"
 
 /*
  * ex_file -- :f[ile] [name]
  *	Change the file's name and display the status line.
+ *
+ * PUBLIC: int ex_file(SCR *, EXCMD *);
  */
 int
 ex_file(SCR *sp, EXCMD *cmdp)
@@ -64,7 +66,7 @@ ex_file(SCR *sp, EXCMD *cmdp)
 		F_SET(frp, FR_NAMECHANGE);
 
 		/* Notify the screen. */
-		(void)cl_rename(sp, sp->frp->name, 1);
+		(void)sp->gp->scr_rename(sp, sp->frp->name, 1);
 		break;
 	default:
 		abort();

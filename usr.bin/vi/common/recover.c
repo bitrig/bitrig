@@ -9,11 +9,20 @@
  * See the LICENSE file for redistribution information.
  */
 
-#include <sys/param.h>
+#include "config.h"
+
 #include <sys/queue.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 
+/*
+ * We include <sys/file.h>, because the open #defines were found there
+ * on historical systems.  We also include <fcntl.h> because the open(2)
+ * #defines are found there on newer systems.
+ */
+#include <sys/file.h>
+
+#include <bitstring.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -27,7 +36,6 @@
 #include <unistd.h>
 
 #include "common.h"
-#include "../vi/vi.h"
 
 /*
  * Recovery code.
@@ -107,13 +115,15 @@ static int	 rcv_mktemp(SCR *, char *, char *, int);
 /*
  * rcv_tmp --
  *	Build a file name that will be used as the recovery file.
+ *
+ * PUBLIC: int rcv_tmp(SCR *, EXF *, char *);
  */
 int
 rcv_tmp(SCR *sp, EXF *ep, char *name)
 {
 	struct stat sb;
 	int fd;
-	char *dp, *p, path[MAXPATHLEN];
+	char *dp, *p, path[PATH_MAX];
 
 	/*
 	 * !!!
@@ -166,6 +176,8 @@ err:		msgq(sp, M_ERR,
 /*
  * rcv_init --
  *	Force the file to be snapshotted for recovery.
+ *
+ * PUBLIC: int rcv_init(SCR *);
  */
 int
 rcv_init(SCR *sp)
@@ -204,7 +216,7 @@ rcv_init(SCR *sp)
 			sp->gp->scr_busy(sp, NULL, BUSY_OFF);
 			goto err;
 		}
-		vs_busy(sp, NULL, BUSY_OFF);
+		sp->gp->scr_busy(sp, NULL, BUSY_OFF);
 	}
 
 	/* Turn off the owner execute bit. */
@@ -226,6 +238,8 @@ err:	msgq(sp, M_ERR,
  *		snapshotting the backup file and send email to the user
  *		sending email to the user if the file was modified
  *		ending the file session
+ *
+ * PUBLIC: int rcv_sync(SCR *, u_int);
  */
 int
 rcv_sync(SCR *sp, u_int flags)
@@ -283,7 +297,7 @@ rcv_sync(SCR *sp, u_int flags)
 			(void)close(fd);
 			rval = 1;
 		}
-		vs_busy(sp, NULL, BUSY_OFF);
+		sp->gp->scr_busy(sp, NULL, BUSY_OFF);
 	}
 	if (0) {
 err:		rval = 1;
@@ -310,9 +324,9 @@ rcv_mailfile(SCR *sp, int issync, char *cp_path)
 	time_t now;
 	uid_t uid;
 	int fd;
-	char *dp, *p, *t, buf[4096], mpath[MAXPATHLEN];
+	char *dp, *p, *t, buf[4096], mpath[PATH_MAX];
 	char *t1, *t2, *t3;
-	char host[MAXHOSTNAMELEN];
+	char host[HOST_NAME_MAX+1];
 
 	gp = sp->gp;
 	if ((pw = getpwuid(uid = getuid())) == NULL) {
@@ -447,6 +461,8 @@ err:	if (!issync)
  *
  * rcv_list --
  *	List the files that can be recovered by this user.
+ *
+ * PUBLIC: int rcv_list(SCR *);
  */
 int
 rcv_list(SCR *sp)
@@ -456,7 +472,7 @@ rcv_list(SCR *sp)
 	DIR *dirp;
 	FILE *fp;
 	int found;
-	char *p, *t, file[MAXPATHLEN], path[MAXPATHLEN];
+	char *p, *t, file[PATH_MAX], path[PATH_MAX];
 
 	/* Open the recovery directory for reading. */
 	if (opts_empty(sp, O_RECDIR, 0))
@@ -547,6 +563,8 @@ next:		(void)fclose(fp);
 /*
  * rcv_read --
  *	Start a recovered file as the file to edit.
+ *
+ * PUBLIC: int rcv_read(SCR *, FREF *);
  */
 int
 rcv_read(SCR *sp, FREF *frp)
@@ -558,7 +576,7 @@ rcv_read(SCR *sp, FREF *frp)
 	struct timespec rec_mtim;
 	int fd, found, locked, requested, sv_fd;
 	char *name, *p, *t, *rp, *recp, *pathp;
-	char file[MAXPATHLEN], path[MAXPATHLEN], recpath[MAXPATHLEN];
+	char file[PATH_MAX], path[PATH_MAX], recpath[PATH_MAX];
 
 	if (opts_empty(sp, O_RECDIR, 0))
 		return (1);
@@ -803,7 +821,7 @@ static void
 rcv_email(SCR *sp, char *fname)
 {
 	struct stat sb;
-	char buf[MAXPATHLEN * 2 + 20];
+	char buf[PATH_MAX * 2 + 20];
 
 	if (_PATH_SENDMAIL[0] != '/' || stat(_PATH_SENDMAIL, &sb))
 		msgq_str(sp, M_SYSERR,

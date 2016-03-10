@@ -9,25 +9,25 @@
  * See the LICENSE file for redistribution information.
  */
 
-#include <sys/param.h>
+#include "config.h"
+
 #include <sys/queue.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
-#include <curses.h>
 #include <errno.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 #include <unistd.h>
 
 #include "../common/common.h"
-#include "../cl/cl.h"
 #include "vi.h"
+
+#define MINIMUM(a, b)	(((a) < (b)) ? (a) : (b))
 
 static int	 txt_abbrev(SCR *, TEXT *, CHAR_T *, int, int *, int *);
 static void	 txt_ai_resolve(SCR *, TEXT *, int *);
@@ -183,8 +183,8 @@ txt_map_end(SCR *sp)
 		 */
 		if (IS_SMALL(sp)) {
 			for (cnt = sp->t_rows; cnt <= sp->t_maxrows; ++cnt) {
-				(void)cl_move(sp, cnt, 0);
-				(void)clrtoeol();
+				(void)sp->gp->scr_move(sp, cnt, 0);
+				(void)sp->gp->scr_clrtoeol(sp);
 			}
 			TMAP = HMAP + (sp->t_rows - 1);
 		} else
@@ -483,15 +483,8 @@ next:	if (v_event_get(sp, evp, 0, ec_flags))
 		    sp->rows ? 1 : sp->rows - vip->totalcount;
 		fc.e_tlno = sp->rows;
 		vip->linecount = vip->lcontinue = vip->totalcount = 0;
-
-		/*
-		 * Let's redraw with SC_TINPUT_INFO cleared, as we are restoring
-		 * the previously overlapped area, not the info line.
-		 */
-		F_CLR(sp, SC_TINPUT_INFO);
 		(void)vs_repaint(sp, &fc);
 		(void)vs_refresh(sp, 1);
-		F_SET(sp, SC_TINPUT_INFO);
 	}
 
 	/* Deal with all non-character events. */
@@ -1726,6 +1719,8 @@ txt_ai_resolve(SCR *sp, TEXT *tp, int *changedp)
  * v_txt_auto --
  *	Handle autoindent.  If aitp isn't NULL, use it, otherwise,
  *	retrieve the line.
+ *
+ * PUBLIC: int v_txt_auto(SCR *, recno_t, TEXT *, size_t, TEXT *);
  */
 int
 v_txt_auto(SCR *sp, recno_t lno, TEXT *aitp, size_t len, TEXT *tp)
@@ -2014,7 +2009,7 @@ retry:		for (len = 0,
 	switch (argc) {
 	case 0:				/* No matches. */
 		if (!trydir)
-			(void)cl_bell(sp);
+			(void)sp->gp->scr_bell(sp);
 		return (0);
 	case 1:				/* One match. */
 		/* If something changed, do the exchange. */
@@ -2031,7 +2026,7 @@ retry:		for (len = 0,
 
 		/* If nothing changed, period, ring the bell. */
 		if (!trydir)
-			(void)cl_bell(sp);
+			(void)sp->gp->scr_bell(sp);
 		return (0);
 	default:			/* Multiple matches. */
 		*redrawp = 1;
@@ -2597,7 +2592,7 @@ txt_isrch(SCR *sp, VICMD *vp, TEXT *tp, u_int8_t *is_flagsp)
 	if (lno != TMAP[0].lno) {
 		if (vs_line(sp, &TMAP[0], NULL, NULL))
 			return (1);
-		(void)cl_refresh(sp, 0);
+		(void)sp->gp->scr_refresh(sp, 0);
 	}
 	return (0);
 }
@@ -2832,7 +2827,7 @@ txt_Rresolve(SCR *sp, TEXTH *tiqh, TEXT *tp, const size_t orig_len)
 	 * okay, the user just extended the file.
 	 */
 	if (input_len < orig_len) {
-		retain = MIN(tp->owrite, orig_len - input_len);
+		retain = MINIMUM(tp->owrite, orig_len - input_len);
 		if (db_get(sp,
 		    TAILQ_FIRST(tiqh)->lno, DBG_FATAL | DBG_NOCACHE, &p, NULL))
 			return;

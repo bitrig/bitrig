@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
@@ -23,6 +26,8 @@
 /*
  * put --
  *	Put text buffer contents into the file.
+ *
+ * PUBLIC: int put(SCR *, CB *, CHAR_T *, MARK *, MARK *, int);
  */
 int
 put(SCR *sp, CB *cbp, CHAR_T *namep, MARK *cp, MARK *rp, int append)

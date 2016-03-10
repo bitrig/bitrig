@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 
@@ -20,6 +23,8 @@
 /*
  * ex_yank -- :[line [,line]] ya[nk] [buffer] [count]
  *	Yank the lines into a buffer.
+ *
+ * PUBLIC: int ex_yank(SCR *, EXCMD *);
  */
 int
 ex_yank(SCR *sp, EXCMD *cmdp)

@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 
@@ -21,6 +24,9 @@
  * ex_mark -- :mark char
  *	      :k char
  *	Mark lines.
+ *
+ *
+ * PUBLIC: int ex_mark(SCR *, EXCMD *);
  */
 int
 ex_mark(SCR *sp, EXCMD *cmdp)

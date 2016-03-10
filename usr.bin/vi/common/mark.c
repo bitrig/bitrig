@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -56,6 +59,8 @@ static LMARK *mark_find(SCR *, CHAR_T);
 /*
  * mark_init --
  *	Set up the marks.
+ *
+ * PUBLIC: int mark_init(SCR *, EXF *);
  */
 int
 mark_init(SCR *sp, EXF *ep)
@@ -73,6 +78,8 @@ mark_init(SCR *sp, EXF *ep)
 /*
  * mark_end --
  *	Free up the marks.
+ *
+ * PUBLIC: int mark_end(SCR *, EXF *);
  */
 int
 mark_end(SCR *sp, EXF *ep)
@@ -194,6 +201,8 @@ mark_find(SCR *sp, CHAR_T key)
 /*
  * mark_insdel --
  *	Update the marks based on an insertion or deletion.
+ *
+ * PUBLIC: int mark_insdel(SCR *, lnop_t, recno_t);
  */
 int
 mark_insdel(SCR *sp, lnop_t op, recno_t lno)

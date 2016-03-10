@@ -9,19 +9,19 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 
 #include "../common/common.h"
-#include "../cl/cl.h"
 
 /*
  * ex_map -- :map[!] [input] [replacement]
@@ -36,6 +36,8 @@
  *	mark at the start of the map, e.g. map X mx"xy ...), or if you
  *	put the map in a .exrc file, things would often work much better.
  *	No clue why.
+ *
+ * PUBLIC: int ex_map(SCR *, EXCMD *);
  */
 int
 ex_map(SCR *sp, EXCMD *cmdp)
@@ -74,7 +76,8 @@ ex_map(SCR *sp, EXCMD *cmdp)
 		    cmdp->argv[1]->bp, cmdp->argv[1]->len, stype,
 		    SEQ_FUNCMAP | SEQ_USERDEF))
 			return (1);
-		return (cl_fmap(sp, stype, input, cmdp->argv[0]->len,
+		return (sp->gp->scr_fmap == NULL ? 0 :
+		    sp->gp->scr_fmap(sp, stype, input, cmdp->argv[0]->len,
 		    cmdp->argv[1]->bp, cmdp->argv[1]->len));
 	}
 
@@ -96,6 +99,8 @@ nofunc:	if (stype == SEQ_COMMAND && input[1] == '\0')
 /*
  * ex_unmap -- (:unmap[!] key)
  *	Unmap a key.
+ *
+ * PUBLIC: int ex_unmap(SCR *, EXCMD *);
  */
 int
 ex_unmap(SCR *sp, EXCMD *cmdp)

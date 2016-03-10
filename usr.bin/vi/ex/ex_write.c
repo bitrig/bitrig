@@ -9,24 +9,23 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/stat.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 #include <unistd.h>
 
 #include "../common/common.h"
-#include "../cl/cl.h"
-#include "../vi/vi.h"
 
 enum which {WN, WQ, WRITE, XIT};
 static int exwr(SCR *, EXCMD *, enum which);
@@ -34,6 +33,8 @@ static int exwr(SCR *, EXCMD *, enum which);
 /*
  * ex_wn --	:wn[!] [>>] [file]
  *	Write to a file and switch to the next one.
+ *
+ * PUBLIC: int ex_wn(SCR *, EXCMD *);
  */
 int
 ex_wn(SCR *sp, EXCMD *cmdp)
@@ -52,6 +53,8 @@ ex_wn(SCR *sp, EXCMD *cmdp)
 /*
  * ex_wq --	:wq[!] [>>] [file]
  *	Write to a file and quit.
+ *
+ * PUBLIC: int ex_wq(SCR *, EXCMD *);
  */
 int
 ex_wq(SCR *sp, EXCMD *cmdp)
@@ -76,6 +79,8 @@ ex_wq(SCR *sp, EXCMD *cmdp)
  * ex_write --	:write[!] [>>] [file]
  *		:write [!] [cmd]
  *	Write to a file.
+ *
+ * PUBLIC: int ex_write(SCR *, EXCMD *);
  */
 int
 ex_write(SCR *sp, EXCMD *cmdp)
@@ -87,6 +92,8 @@ ex_write(SCR *sp, EXCMD *cmdp)
 /*
  * ex_xit -- :x[it]! [file]
  *	Write out any modifications and quit.
+ *
+ * PUBLIC: int ex_xit(SCR *, EXCMD *);
  */
 int
 ex_xit(SCR *sp, EXCMD *cmdp)
@@ -237,7 +244,7 @@ exwr(SCR *sp, EXCMD *cmdp, enum which cmd)
 			F_SET(sp->frp, FR_NAMECHANGE | FR_EXNAMED);
 
 			/* Notify the screen. */
-			(void)cl_rename(sp, sp->frp->name, 1);
+			(void)sp->gp->scr_rename(sp, sp->frp->name, 1);
 		} else
 			set_alt_name(sp, name);
 		break;
@@ -252,6 +259,9 @@ exwr(SCR *sp, EXCMD *cmdp, enum which cmd)
 /*
  * ex_writefp --
  *	Write a range of lines to a FILE *.
+ *
+ * PUBLIC: int ex_writefp(SCR *,
+ * PUBLIC:    char *, FILE *, MARK *, MARK *, u_long *, u_long *, int);
  */
 int
 ex_writefp(SCR *sp, char *name, FILE *fp, MARK *fm, MARK *tm, u_long *nlno,
@@ -299,7 +309,7 @@ ex_writefp(SCR *sp, char *name, FILE *fp, MARK *fm, MARK *tm, u_long *nlno,
 				if (INTERRUPTED(sp))
 					break;
 				if (!silent) {
-					vs_busy(sp, msg, msg == NULL ?
+					gp->scr_busy(sp, msg, msg == NULL ?
 					    BUSY_UPDATE : BUSY_ON);
 					msg = NULL;
 				}
@@ -340,7 +350,7 @@ err:		if (!F_ISSET(sp->ep, F_MULTILOCK))
 	}
 
 	if (!silent)
-		vs_busy(sp, NULL, BUSY_OFF);
+		gp->scr_busy(sp, NULL, BUSY_OFF);
 
 	/* Report the possibly partial transfer. */
 	if (nlno != NULL) {

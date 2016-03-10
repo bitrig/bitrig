@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 
@@ -19,6 +22,8 @@
 
 /*
  * ex_equal -- :address =
+ *
+ * PUBLIC: int ex_equal(SCR *, EXCMD *);
  */
 int
 ex_equal(SCR *sp, EXCMD *cmdp)

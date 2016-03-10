@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
@@ -38,6 +41,8 @@ static int ulcase(SCR *, recno_t, CHAR_T *, size_t, size_t, size_t);
  * In historic vi, the count was ignored.  It would have been better
  * if there had been an associated motion, but it's too late to make
  * that the default now.
+ *
+ * PUBLIC: int v_ulcase(SCR *, VICMD *);
  */
 int
 v_ulcase(SCR *sp, VICMD *vp)
@@ -94,6 +99,8 @@ v_ulcase(SCR *sp, VICMD *vp)
 /*
  * v_mulcase -- [count]~[count]motion
  *	Toggle upper & lower case letters over a range.
+ *
+ * PUBLIC: int v_mulcase(SCR *, VICMD *);
  */
 int
 v_mulcase(SCR *sp, VICMD *vp)

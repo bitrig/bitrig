@@ -9,9 +9,11 @@
  * See the LICENSE file for redistribution information.
  */
 
-#include <sys/param.h>
+#include "config.h"
+
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <errno.h>
 #include <limits.h>
 #include <pwd.h>
@@ -25,6 +27,8 @@
 /*
  * ex_cd -- :cd[!] [directory]
  *	Change directories.
+ *
+ * PUBLIC: int ex_cd(SCR *, EXCMD *);
  */
 int
 ex_cd(SCR *sp, EXCMD *cmdp)
@@ -33,7 +37,7 @@ ex_cd(SCR *sp, EXCMD *cmdp)
 	ARGS *ap;
 	CHAR_T savech;
 	char *dir, *p, *t;	/* XXX: END OF THE STACK, DON'T TRUST GETCWD. */
-	char buf[MAXPATHLEN * 2];
+	char buf[PATH_MAX * 2];
 
 	/*
 	 * !!!

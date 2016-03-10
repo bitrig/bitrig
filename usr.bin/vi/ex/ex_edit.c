@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -37,6 +40,8 @@ static int ex_N_edit(SCR *, EXCMD *, FREF *, int);
  * Historic vi didn't permit the '+' command form without specifying
  * a file name as well.  This seems unreasonable, so we support it
  * regardless.
+ *
+ * PUBLIC: int ex_edit(SCR *, EXCMD *);
  */
 int
 ex_edit(SCR *sp, EXCMD *cmdp)

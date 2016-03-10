@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -27,13 +30,18 @@ static SCR *vs_getbg(SCR *, char *);
 /*
  * vs_split --
  *	Create a new screen.
+ *
+ * PUBLIC: int vs_split(SCR *, SCR *, int);
  */
 int
 vs_split(SCR *sp, SCR *new, int ccl)
 {
+	GS *gp;
 	SMAP *smp;
 	size_t half;
 	int issmallscreen, splitup;
+
+	gp = sp->gp;
 
 	/* Check to see if it's possible. */
 	/* XXX: The IS_ONELINE fix will change this, too. */
@@ -98,7 +106,7 @@ vs_split(SCR *sp, SCR *new, int ccl)
 		sp->rows -= half;		/* Old. */
 		new->woff = sp->woff + sp->rows;
 						/* Link in after old. */
-		TAILQ_INSERT_AFTER(&sp->gp->dq, sp, new, q);
+		TAILQ_INSERT_AFTER(&gp->dq, sp, new, q);
 	}
 
 	/* Adjust maximum text count. */
@@ -181,6 +189,8 @@ vs_split(SCR *sp, SCR *new, int ccl)
  * vs_discard --
  *	Discard the screen, folding the real-estate into a related screen,
  *	if one exists, and return that screen.
+ *
+ * PUBLIC: int vs_discard(SCR *, SCR **);
  */
 int
 vs_discard(SCR *sp, SCR **spp)
@@ -267,6 +277,8 @@ vs_discard(SCR *sp, SCR **spp)
 /*
  * vs_fg --
  *	Background the current screen, and foreground a new one.
+ *
+ * PUBLIC: int vs_fg(SCR *, SCR **, CHAR_T *, int);
  */
 int
 vs_fg(SCR *sp, SCR **nspp, CHAR_T *name, int newscreen)
@@ -312,6 +324,8 @@ vs_fg(SCR *sp, SCR **nspp, CHAR_T *name, int newscreen)
 /*
  * vs_bg --
  *	Background the screen, and switch to the next one.
+ *
+ * PUBLIC: int vs_bg(SCR *);
  */
 int
 vs_bg(SCR *sp)
@@ -348,6 +362,8 @@ vs_bg(SCR *sp)
 /*
  * vs_swap --
  *	Swap the current screen with a backgrounded one.
+ *
+ * PUBLIC: int vs_swap(SCR *, SCR **, char *);
  */
 int
 vs_swap(SCR *sp, SCR **nspp, char *name)
@@ -436,12 +452,17 @@ vs_swap(SCR *sp, SCR **nspp, char *name)
 /*
  * vs_resize --
  *	Change the absolute size of the current screen.
+ *
+ * PUBLIC: int vs_resize(SCR *, long, adj_t);
  */
 int
 vs_resize(SCR *sp, long count, adj_t adj)
 {
+	GS *gp;
 	SCR *g, *s;
 	size_t g_off, s_off;
+
+	gp = sp->gp;
 
 	/*
 	 * Figure out which screens will grow, which will shrink, and

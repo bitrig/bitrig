@@ -12,12 +12,14 @@
  * See the LICENSE file for redistribution information.
  */
 
-#include <sys/param.h>
+#include "config.h"
+
 #include <sys/mman.h>
 #include <sys/queue.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -48,6 +50,8 @@ static int	 tagq_copy(SCR *, TAGQ *, TAGQ **);
 /*
  * ex_tag_first --
  *	The tag code can be entered from main, e.g., "vi -t tag".
+ *
+ * PUBLIC: int ex_tag_first(SCR *, char *);
  */
 int
 ex_tag_first(SCR *sp, char *tagarg)
@@ -80,6 +84,8 @@ ex_tag_first(SCR *sp, char *tagarg)
  *		  :tag[!] [string]
  *
  * Enter a new TAGQ context based on a ctag string.
+ *
+ * PUBLIC: int ex_tag_push(SCR *, EXCMD *);
  */
 int
 ex_tag_push(SCR *sp, EXCMD *cmdp)
@@ -213,6 +219,8 @@ alloc_err:
 /* 
  * ex_tag_next --
  *	Switch context to the next TAG.
+ *
+ * PUBLIC: int ex_tag_next(SCR *, EXCMD *);
  */
 int
 ex_tag_next(SCR *sp, EXCMD *cmdp)
@@ -242,6 +250,8 @@ ex_tag_next(SCR *sp, EXCMD *cmdp)
 /* 
  * ex_tag_prev --
  *	Switch context to the next TAG.
+ *
+ * PUBLIC: int ex_tag_prev(SCR *, EXCMD *);
  */
 int
 ex_tag_prev(SCR *sp, EXCMD *cmdp)
@@ -271,6 +281,8 @@ ex_tag_prev(SCR *sp, EXCMD *cmdp)
 /*
  * ex_tag_nswitch --
  *	Switch context to the specified TAG.
+ *
+ * PUBLIC: int ex_tag_nswitch(SCR *, TAG *, int);
  */
 int
 ex_tag_nswitch(SCR *sp, TAG *tp, int force)
@@ -303,6 +315,8 @@ ex_tag_nswitch(SCR *sp, TAG *tp, int force)
 /*
  * ex_tag_Nswitch --
  *	Switch context to the specified TAG in a new screen.
+ *
+ * PUBLIC: int ex_tag_Nswitch(SCR *, TAG *, int);
  */
 int
 ex_tag_Nswitch(SCR *sp, TAG *tp, int force)
@@ -355,6 +369,8 @@ ex_tag_Nswitch(SCR *sp, TAG *tp, int force)
  *		 :tagp[op][!] [number | file]
  *
  *	Pop to a previous TAGQ context.
+ *
+ * PUBLIC: int ex_tag_pop(SCR *, EXCMD *);
  */
 int
 ex_tag_pop(SCR *sp, EXCMD *cmdp)
@@ -433,6 +449,8 @@ filearg:	arglen = strlen(arg);
 /*
  * ex_tag_top -- :tagt[op][!]
  *	Clear the tag stack.
+ *
+ * PUBLIC: int ex_tag_top(SCR *, EXCMD *);
  */
 int
 ex_tag_top(SCR *sp, EXCMD *cmdp)
@@ -507,6 +525,8 @@ tag_pop(SCR *sp, TAGQ *dtqp, int force)
 /*
  * ex_tag_display --
  *	Display the list of tags.
+ *
+ * PUBLIC: int ex_tag_display(SCR *);
  */
 int
 ex_tag_display(SCR *sp)
@@ -587,6 +607,8 @@ ex_tag_display(SCR *sp)
 /*
  * ex_tag_copy --
  *	Copy a screen's tag structures.
+ *
+ * PUBLIC: int ex_tag_copy(SCR *, SCR *);
  */
 int
 ex_tag_copy(SCR *orig, SCR *sp)
@@ -723,6 +745,8 @@ tagf_free(SCR *sp, TAGF *tfp)
 /*
  * tagq_free --
  *	Free a TAGQ structure (and associated TAG structures).
+ *
+ * PUBLIC: int tagq_free(SCR *, TAGQ *);
  */
 int
 tagq_free(SCR *sp, TAGQ *tqp)
@@ -754,6 +778,8 @@ tagq_free(SCR *sp, TAGQ *tqp)
 /*
  * tag_msg
  *	A few common messages.
+ *
+ * PUBLIC: void tag_msg(SCR *, tagmsg_t, char *);
  */
 void
 tag_msg(SCR *sp, tagmsg_t msg, char *tag)
@@ -777,6 +803,8 @@ tag_msg(SCR *sp, tagmsg_t msg, char *tag)
 /*
  * ex_tagf_alloc --
  *	Create a new list of ctag files.
+ *
+ * PUBLIC: int ex_tagf_alloc(SCR *, char *);
  */
 int
 ex_tagf_alloc(SCR *sp, char *str)
@@ -817,6 +845,8 @@ ex_tagf_alloc(SCR *sp, char *str)
 /*
  * ex_tag_free --
  *	Free the ex tag information.
+ *
+ * PUBLIC: int ex_tag_free(SCR *);
  */
 int
 ex_tag_free(SCR *sp)
@@ -1089,7 +1119,7 @@ static void
 ctag_file(SCR *sp, TAGF *tfp, char *name, char **dirp, size_t *dlenp)
 {
 	struct stat sb;
-	char *p, buf[MAXPATHLEN];
+	char *p, buf[PATH_MAX];
 
 	/*
 	 * !!!

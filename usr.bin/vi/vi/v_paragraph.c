@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -55,6 +58,8 @@
  *
  * Paragraphs are empty lines after text, formfeed characters, or values
  * from the paragraph or section options.
+ *
+ * PUBLIC: int v_paragraphf(SCR *, VICMD *);
  */
 int
 v_paragraphf(SCR *sp, VICMD *vp)
@@ -191,6 +196,8 @@ eof:	if (vp->m_start.lno == lno || vp->m_start.lno == lno - 1) {
 /*
  * v_paragraphb -- [count]{
  *	Move backward count paragraphs.
+ *
+ * PUBLIC: int v_paragraphb(SCR *, VICMD *);
  */
 int
 v_paragraphb(SCR *sp, VICMD *vp)
@@ -296,6 +303,8 @@ found:	vp->m_stop.lno = lno;
 /*
  * v_buildps --
  *	Build the paragraph command search pattern.
+ *
+ * PUBLIC: int v_buildps(SCR *, char *, char *);
  */
 int
 v_buildps(SCR *sp, char *p_p, char *s_p)

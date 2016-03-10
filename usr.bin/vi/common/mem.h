@@ -14,7 +14,7 @@
 /* Increase the size of a malloc'd buffer.  Two versions, one that
  * returns, one that jumps to an error label.
  */
-#define	BINC_GOTO(sp, lp, llen, nlen) do {				\
+#define	BINC_GOTO(sp, lp, llen, nlen) {					\
 	void *L__bincp;							\
 	if ((nlen) > (llen)) {						\
 		if ((L__bincp = binc((sp), (lp), &(llen), (nlen)))	\
@@ -26,8 +26,8 @@
 		 */							\
 		(lp) = L__bincp;					\
 	}								\
-} while (0)
-#define	BINC_RET(sp, lp, llen, nlen) do {				\
+}
+#define	BINC_RET(sp, lp, llen, nlen) {					\
 	void *L__bincp;							\
 	if ((nlen) > (llen)) {						\
 		if ((L__bincp = binc((sp), (lp), &(llen), (nlen)))	\
@@ -39,14 +39,14 @@
 		 */							\
 		(lp) = L__bincp;					\
 	}								\
-} while (0)
+}
 
 /*
  * Get some temporary space, preferably from the global temporary buffer,
  * from a malloc'd buffer otherwise.  Two versions, one that returns, one
  * that jumps to an error label.
  */
-#define	GET_SPACE_GOTO(sp, bp, blen, nlen) do {				\
+#define	GET_SPACE_GOTO(sp, bp, blen, nlen) {				\
 	GS *L__gp = (sp) == NULL ? NULL : (sp)->gp;			\
 	if (L__gp == NULL || F_ISSET(L__gp, G_TMP_INUSE)) {		\
 		(bp) = NULL;						\
@@ -58,8 +58,8 @@
 		(blen) = L__gp->tmp_blen;				\
 		F_SET(L__gp, G_TMP_INUSE);				\
 	}								\
-} while (0)
-#define	GET_SPACE_RET(sp, bp, blen, nlen) do {				\
+}
+#define	GET_SPACE_RET(sp, bp, blen, nlen) {				\
 	GS *L__gp = (sp) == NULL ? NULL : (sp)->gp;			\
 	if (L__gp == NULL || F_ISSET(L__gp, G_TMP_INUSE)) {		\
 		(bp) = NULL;						\
@@ -71,13 +71,13 @@
 		(blen) = L__gp->tmp_blen;				\
 		F_SET(L__gp, G_TMP_INUSE);				\
 	}								\
-} while (0)
+}
 
 /*
  * Add space to a GET_SPACE returned buffer.  Two versions, one that
  * returns, one that jumps to an error label.
  */
-#define	ADD_SPACE_GOTO(sp, bp, blen, nlen) do {				\
+#define	ADD_SPACE_GOTO(sp, bp, blen, nlen) {				\
 	GS *L__gp = (sp) == NULL ? NULL : (sp)->gp;			\
 	if (L__gp == NULL || (bp) == L__gp->tmp_bp) {			\
 		F_CLR(L__gp, G_TMP_INUSE);				\
@@ -87,8 +87,8 @@
 		F_SET(L__gp, G_TMP_INUSE);				\
 	} else								\
 		BINC_GOTO((sp), (bp), (blen), (nlen));			\
-} while (0)
-#define	ADD_SPACE_RET(sp, bp, blen, nlen) do {				\
+}
+#define	ADD_SPACE_RET(sp, bp, blen, nlen) {				\
 	GS *L__gp = (sp) == NULL ? NULL : (sp)->gp;			\
 	if (L__gp == NULL || (bp) == L__gp->tmp_bp) {			\
 		F_CLR(L__gp, G_TMP_INUSE);				\
@@ -98,16 +98,16 @@
 		F_SET(L__gp, G_TMP_INUSE);				\
 	} else								\
 		BINC_RET((sp), (bp), (blen), (nlen));			\
-} while (0)
+}
 
 /* Free a GET_SPACE returned buffer. */
-#define	FREE_SPACE(sp, bp, blen) do {					\
+#define	FREE_SPACE(sp, bp, blen) {					\
 	GS *L__gp = (sp) == NULL ? NULL : (sp)->gp;			\
 	if (L__gp != NULL && (bp) == L__gp->tmp_bp)			\
 		F_CLR(L__gp, G_TMP_INUSE);				\
 	else								\
 		free(bp);						\
-} while (0)
+}
 
 /*
  * Malloc a buffer, casting the return pointer.  Various versions.
@@ -125,7 +125,7 @@
 		msgq((sp), M_SYSERR, NULL);				\
 		return (1);						\
 	}								\
-} while (0)
+}
 
 #define	MALLOC(sp, p, size) {						\
 	if (((p) = malloc(size)) == NULL)				\
@@ -140,14 +140,21 @@
 		msgq((sp), M_SYSERR, NULL);				\
 		return (1);						\
 	}								\
-} while (0)
+}
 
 #define	REALLOC(sp, p, size) {						\
 	if (((p) = (realloc((p), (size)))) == NULL)			\
 		msgq((sp), M_SYSERR, NULL);				\
-} while (0)
+}
 
 #define	REALLOCARRAY(sp, p, nelem, size) {				\
 	if (((p) = (reallocarray((p), (nelem), (size)))) == NULL)	\
 		msgq((sp), M_SYSERR, NULL);				\
-} while (0)
+}
+
+/*
+ * Versions of memmove(3) and memset(3) that use the size of the
+ * initial pointer to figure out how much memory to manipulate.
+ */
+#define	MEMMOVE(p, t, len)	memmove((p), (t), (len) * sizeof(*(p)))
+#define	MEMSET(p, value, len)	memset((p), (value), (len) * sizeof(*(p)))

@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 
@@ -21,6 +24,8 @@
  * ex_open -- :[line] o[pen] [/pattern/] [flags]
  *
  *	Switch to single line "open" mode.
+ *
+ * PUBLIC: int ex_open(SCR *, EXCMD *);
  */
 int
 ex_open(SCR *sp, EXCMD *cmdp)

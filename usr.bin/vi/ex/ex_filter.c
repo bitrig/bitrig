@@ -9,11 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
-#include <sys/param.h>
+#include "config.h"
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -31,6 +33,9 @@ static int filter_ldisplay(SCR *, FILE *);
  *	Run a range of lines through a filter utility and optionally
  *	replace the original text with the stdout/stderr output of
  *	the utility.
+ *
+ * PUBLIC: int ex_filter(SCR *, 
+ * PUBLIC:    EXCMD *, MARK *, MARK *, MARK *, char *, enum filtertype);
  */
 int
 ex_filter(SCR *sp, EXCMD *cmdp, MARK *fm, MARK *tm, MARK *rp, char *cmd,
@@ -40,7 +45,7 @@ ex_filter(SCR *sp, EXCMD *cmdp, MARK *fm, MARK *tm, MARK *rp, char *cmd,
 	pid_t parent_writer_pid, utility_pid;
 	recno_t nread;
 	int input[2], output[2], fd, rval;
-	char *name, tname[MAXPATHLEN];
+	char *name, tname[PATH_MAX];
 
 	rval = 0;
 

@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 
@@ -22,6 +25,8 @@
 /*
  * v_right -- [count]' ', [count]l
  *	Move right by columns.
+ *
+ * PUBLIC: int v_right(SCR *, VICMD *);
  */
 int
 v_right(SCR *sp, VICMD *vp)
@@ -70,6 +75,8 @@ eol:		v_eol(sp, NULL);
 /*
  * v_dollar -- [count]$
  *	Move to the last column.
+ *
+ * PUBLIC: int v_dollar(SCR *, VICMD *);
  */
 int
 v_dollar(SCR *sp, VICMD *vp)

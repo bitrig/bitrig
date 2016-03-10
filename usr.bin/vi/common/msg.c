@@ -9,11 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
-#include <sys/param.h>
+#include "config.h"
+
 #include <sys/queue.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -30,6 +32,8 @@
 /*
  * msgq --
  *	Display a message.
+ *
+ * PUBLIC: void msgq(SCR *, mtype_t, const char *, ...);
  */
 void
 msgq(SCR *sp, mtype_t mt, const char *fmt, ...)
@@ -170,7 +174,7 @@ nofmt:	mp += len;
 	if (sp != NULL)
 		(void)ex_fflush(sp);
 	if (gp != NULL)
-		vs_msg(sp, mt, bp, mlen);
+		gp->scr_msg(sp, mt, bp, mlen);
 	else
 		(void)fprintf(stderr, "%.*s", (int)mlen, bp);
 
@@ -183,6 +187,8 @@ alloc_err:
 /*
  * msgq_str --
  *	Display a message with an embedded string.
+ *
+ * PUBLIC: void msgq_str(SCR *, mtype_t, char *, char *);
  */
 void
 msgq_str(SCR *sp, mtype_t mtype, char *str, char *fmt)
@@ -220,6 +226,8 @@ msgq_str(SCR *sp, mtype_t mtype, char *str, char *fmt)
  *	def
  * the command 2d}, from the 'b' would report that two lines were deleted,
  * not one.
+ *
+ * PUBLIC: void mod_rpt(SCR *);
  */
 void
 mod_rpt(SCR *sp)
@@ -267,14 +275,15 @@ mod_rpt(SCR *sp)
 	 * I got complaints, so nvi conforms to System III/V historic practice
 	 * except that we report a yank of 1 line if report is set to 1.
 	 */
+#define	ARSIZE(a)	sizeof(a) / sizeof (*a)
 #define	MAXNUM		25
 	rptval = O_VAL(sp, O_REPORT);
-	for (cnt = 0, total = 0; cnt < nitems(action); ++cnt)
+	for (cnt = 0, total = 0; cnt < ARSIZE(action); ++cnt)
 		total += sp->rptlines[cnt];
 	if (total == 0)
 		return;
 	if (total <= rptval && sp->rptlines[L_YANKED] < rptval) {
-		for (cnt = 0; cnt < nitems(action); ++cnt)
+		for (cnt = 0; cnt < ARSIZE(action); ++cnt)
 			sp->rptlines[cnt] = 0;
 		return;
 	}
@@ -282,7 +291,7 @@ mod_rpt(SCR *sp)
 	/* Build and display the message. */
 	GET_SPACE_GOTO(sp, bp, blen, sizeof(action) * MAXNUM + 1);
 	for (p = bp, first = 1, tlen = 0,
-	    ap = action, cnt = 0; cnt < nitems(action); ++ap, ++cnt)
+	    ap = action, cnt = 0; cnt < ARSIZE(action); ++ap, ++cnt)
 		if (sp->rptlines[cnt] != 0) {
 			if (first)
 				first = 0;
@@ -313,18 +322,21 @@ mod_rpt(SCR *sp)
 	++tlen;
 
 	(void)ex_fflush(sp);
-	vs_msg(sp, M_INFO, bp, tlen);
+	sp->gp->scr_msg(sp, M_INFO, bp, tlen);
 
 	FREE_SPACE(sp, bp, blen);
 alloc_err:
 	return;
 
+#undef ARSIZE
 #undef MAXNUM
 }
 
 /*
  * msgq_status --
  *	Report on the file's status.
+ *
+ * PUBLIC: void msgq_status(SCR *, recno_t, u_int);
  */
 void
 msgq_status(SCR *sp, recno_t lno, u_int flags)
@@ -472,7 +484,7 @@ msgq_status(SCR *sp, recno_t lno, u_int flags)
 	/* Flush any waiting ex messages. */
 	(void)ex_fflush(sp);
 
-	vs_msg(sp, M_INFO, s, len);
+	sp->gp->scr_msg(sp, M_INFO, s, len);
 
 	FREE_SPACE(sp, bp, blen);
 alloc_err:
@@ -480,8 +492,10 @@ alloc_err:
 }
 
 /*
- * msg_cmsg --
+ * msg_cont --
  *	Return common continuation messages.
+ *
+ * PUBLIC: const char *msg_cmsg(SCR *, cmsg_t, size_t *);
  */
 const char *
 msg_cmsg(SCR *sp, cmsg_t which, size_t *lenp)
@@ -516,6 +530,8 @@ msg_cmsg(SCR *sp, cmsg_t which, size_t *lenp)
 /*
  * msg_print --
  *	Return a printable version of a string, in allocated memory.
+ *
+ * PUBLIC: char *msg_print(SCR *, const char *, int *);
  */
 char *
 msg_print(SCR *sp, const char *s, int *needfree)

@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <limits.h>
 #include <stdarg.h>
@@ -19,7 +22,6 @@
 #include <string.h>
 
 #include "../common/common.h"
-#include "../vi/vi.h"
 
 static int ex_prchars(SCR *, const char *, size_t *, size_t, u_int, int);
 
@@ -27,6 +29,8 @@ static int ex_prchars(SCR *, const char *, size_t *, size_t, u_int, int);
  * ex_list -- :[line [,line]] l[ist] [count] [flags]
  *
  *	Display the addressed lines such that the output is unambiguous.
+ *
+ * PUBLIC: int ex_list(SCR *, EXCMD *);
  */
 int
 ex_list(SCR *sp, EXCMD *cmdp)
@@ -43,6 +47,8 @@ ex_list(SCR *sp, EXCMD *cmdp)
  * ex_number -- :[line [,line]] nu[mber] [count] [flags]
  *
  *	Display the addressed lines with a leading line number.
+ *
+ * PUBLIC: int ex_number(SCR *, EXCMD *);
  */
 int
 ex_number(SCR *sp, EXCMD *cmdp)
@@ -59,6 +65,8 @@ ex_number(SCR *sp, EXCMD *cmdp)
  * ex_pr -- :[line [,line]] p[rint] [count] [flags]
  *
  *	Display the addressed lines.
+ *
+ * PUBLIC: int ex_pr(SCR *, EXCMD *);
  */
 int
 ex_pr(SCR *sp, EXCMD *cmdp)
@@ -73,6 +81,8 @@ ex_pr(SCR *sp, EXCMD *cmdp)
 /*
  * ex_print --
  *	Print the selected lines.
+ *
+ * PUBLIC: int ex_print(SCR *, EXCMD *, MARK *, MARK *, u_int32_t);
  */
 int
 ex_print(SCR *sp, EXCMD *cmdp, MARK *fp, MARK *tp, u_int32_t flags)
@@ -123,6 +133,8 @@ ex_print(SCR *sp, EXCMD *cmdp, MARK *fp, MARK *tp, u_int32_t flags)
 /*
  * ex_ldisplay --
  *	Display a line without any preceding number.
+ *
+ * PUBLIC: int ex_ldisplay(SCR *, const char *, size_t, size_t, u_int);
  */
 int
 ex_ldisplay(SCR *sp, const char *p, size_t len, size_t col, u_int flags)
@@ -142,6 +154,8 @@ ex_ldisplay(SCR *sp, const char *p, size_t len, size_t col, u_int flags)
 /*
  * ex_scprint --
  *	Display a line for the substitute with confirmation routine.
+ *
+ * PUBLIC: int ex_scprint(SCR *, MARK *, MARK *);
  */
 int
 ex_scprint(SCR *sp, MARK *fp, MARK *tp)
@@ -222,6 +236,8 @@ intr:	*colp = col;
 /*
  * ex_printf --
  *	Ex's version of printf.
+ *
+ * PUBLIC: int ex_printf(SCR *, const char *, ...);
  */
 int
 ex_printf(SCR *sp, const char *fmt, ...)
@@ -250,6 +266,8 @@ ex_printf(SCR *sp, const char *fmt, ...)
 /*
  * ex_puts --
  *	Ex's version of puts.
+ *
+ * PUBLIC: int ex_puts(SCR *, const char *);
  */
 int
 ex_puts(SCR *sp, const char *str)
@@ -274,6 +292,8 @@ ex_puts(SCR *sp, const char *str)
 /*
  * ex_fflush --
  *	Ex's version of fflush.
+ *
+ * PUBLIC: int ex_fflush(SCR *sp);
  */
 int
 ex_fflush(SCR *sp)
@@ -283,7 +303,7 @@ ex_fflush(SCR *sp)
 	exp = EXP(sp);
 
 	if (exp->obp_len != 0) {
-		vs_msg(sp, M_NONE, exp->obp, exp->obp_len);
+		sp->gp->scr_msg(sp, M_NONE, exp->obp, exp->obp_len);
 		exp->obp_len = 0;
 	}
 	return (0);

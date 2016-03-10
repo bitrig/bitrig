@@ -9,18 +9,18 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdio.h>
 #include <string.h>
-#include <termios.h>
 #include <unistd.h>
 
 #include "../common/common.h"
-#include "../cl/cl.h"
 
 enum which {APPEND, CHANGE, INSERT};
 
@@ -30,6 +30,8 @@ static int ex_aci(SCR *, EXCMD *, enum which);
  * ex_append -- :[line] a[ppend][!]
  *	Append one or more lines of new text after the specified line,
  *	or the current line if no address is specified.
+ *
+ * PUBLIC: int ex_append(SCR *, EXCMD *);
  */
 int
 ex_append(SCR *sp, EXCMD *cmdp)
@@ -40,6 +42,8 @@ ex_append(SCR *sp, EXCMD *cmdp)
 /*
  * ex_change -- :[line[,line]] c[hange][!] [count]
  *	Change one or more lines to the input text.
+ *
+ * PUBLIC: int ex_change(SCR *, EXCMD *);
  */
 int
 ex_change(SCR *sp, EXCMD *cmdp)
@@ -51,6 +55,8 @@ ex_change(SCR *sp, EXCMD *cmdp)
  * ex_insert -- :[line] i[nsert][!]
  *	Insert one or more lines of new text before the specified line,
  *	or the current line if no address is specified.
+ *
+ * PUBLIC: int ex_insert(SCR *, EXCMD *);
  */
 int
 ex_insert(SCR *sp, EXCMD *cmdp)
@@ -195,7 +201,7 @@ ex_aci(SCR *sp, EXCMD *cmdp, enum which cmd)
 	 * be possible.
 	 */
 	if (F_ISSET(sp, SC_VI)) {
-		if (cl_screen(sp, SC_EX)) {
+		if (gp->scr_screen(sp, SC_EX)) {
 			ex_emsg(sp, cmdp->cmd->name, EXM_NOCANON);
 			return (1);
 		}

@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
@@ -23,6 +26,8 @@
 /*
  * ex_join -- :[line [,line]] j[oin][!] [count] [flags]
  *	Join lines.
+ *
+ * PUBLIC: int ex_join(SCR *, EXCMD *);
  */
 int
 ex_join(SCR *sp, EXCMD *cmdp)

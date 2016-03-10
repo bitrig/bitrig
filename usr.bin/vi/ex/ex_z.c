@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +25,8 @@
 /*
  * ex_z -- :[line] z [^-.+=] [count] [flags]
  *	Adjust window.
+ *
+ * PUBLIC: int ex_z(SCR *, EXCMD *);
  */
 int
 ex_z(SCR *sp, EXCMD *cmdp)

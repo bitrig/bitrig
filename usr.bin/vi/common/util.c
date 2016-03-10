@@ -9,9 +9,11 @@
  * See the LICENSE file for redistribution information.
  */
 
-#include <sys/param.h>
+#include "config.h"
+
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
@@ -22,9 +24,13 @@
 
 #include "common.h"
 
+#define MAXIMUM(a, b)	(((a) > (b)) ? (a) : (b))
+
 /*
  * binc --
  *	Increase the size of a buffer.
+ *
+ * PUBLIC: void *binc(SCR *, void *, size_t *, size_t);
  */
 void *
 binc(SCR *sp, void *bp, size_t *bsizep, size_t min)
@@ -60,6 +66,8 @@ binc(SCR *sp, void *bp, size_t *bsizep, size_t min)
  *	Set the column number of the first non-blank character
  *	including or after the starting column.  On error, set
  *	the column to 0, it's safest.
+ *
+ * PUBLIC: int nonblank(SCR *, recno_t, size_t *);
  */
 int
 nonblank(SCR *sp, recno_t lno, size_t *cnop)
@@ -91,6 +99,8 @@ nonblank(SCR *sp, recno_t lno, size_t *cnop)
 /*
  * v_strdup --
  *	Strdup for wide character strings with an associated length.
+ *
+ * PUBLIC: CHAR_T *v_strdup(SCR *, const CHAR_T *, size_t);
  */
 CHAR_T *
 v_strdup(SCR *sp, const CHAR_T *str, size_t len)
@@ -108,6 +118,8 @@ v_strdup(SCR *sp, const CHAR_T *str, size_t len)
 /*
  * nget_uslong --
  *      Get an unsigned long, checking for overflow.
+ *
+ * PUBLIC: enum nresult nget_uslong(u_long *, const char *, char **, int);
  */
 enum nresult
 nget_uslong(u_long *valp, const char *p, char **endp, int base)
@@ -124,6 +136,8 @@ nget_uslong(u_long *valp, const char *p, char **endp, int base)
 /*
  * nget_slong --
  *      Convert a signed long, checking for overflow and underflow.
+ *
+ * PUBLIC: enum nresult nget_slong(long *, const char *, char **, int);
  */
 enum nresult
 nget_slong(long *valp, const char *p, char **endp, int base)
@@ -147,6 +161,8 @@ nget_slong(long *valp, const char *p, char **endp, int base)
 /*
  * TRACE --
  *	debugging trace routine.
+ *
+ * PUBLIC: void TRACE(SCR *, const char *, ...);
  */
 void
 TRACE(SCR *sp, const char *fmt, ...)

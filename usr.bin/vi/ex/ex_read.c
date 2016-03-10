@@ -9,22 +9,22 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 
 #include "../common/common.h"
-#include "../cl/cl.h"
 #include "../vi/vi.h"
 
 /*
@@ -34,6 +34,8 @@
  *
  * !!!
  * Historical vi wouldn't undo a filter read, for no apparent reason.
+ *
+ * PUBLIC: int ex_read(SCR *, EXCMD *);
  */
 int
 ex_read(SCR *sp, EXCMD *cmdp)
@@ -152,7 +154,7 @@ ex_read(SCR *sp, EXCMD *cmdp)
 		 * the screen on a normal read.
 		 */
 		if (F_ISSET(sp, SC_VI)) {
-			if (cl_screen(sp, SC_EX)) {
+			if (gp->scr_screen(sp, SC_EX)) {
 				ex_emsg(sp, cmdp->cmd->name, EXM_NOCANON_F);
 				return (1);
 			}
@@ -225,7 +227,7 @@ ex_read(SCR *sp, EXCMD *cmdp)
 				F_SET(sp->frp, FR_NAMECHANGE | FR_EXNAMED);
 
 				/* Notify the screen. */
-				(void)cl_rename(sp, sp->frp->name, 1);
+				(void)sp->gp->scr_rename(sp, sp->frp->name, 1);
 			} else
 				set_alt_name(sp, name);
 			break;
@@ -286,6 +288,8 @@ ex_read(SCR *sp, EXCMD *cmdp)
 /*
  * ex_readfp --
  *	Read lines into the file.
+ *
+ * PUBLIC: int ex_readfp(SCR *, char *, FILE *, MARK *, recno_t *, int);
  */
 int
 ex_readfp(SCR *sp, char *name, FILE *fp, MARK *fm, recno_t *nlinesp,
@@ -314,7 +318,7 @@ ex_readfp(SCR *sp, char *name, FILE *fp, MARK *fm, recno_t *nlinesp,
 			if (INTERRUPTED(sp))
 				break;
 			if (!silent) {
-				vs_busy(sp, p,
+				gp->scr_busy(sp, p,
 				    p == NULL ? BUSY_UPDATE : BUSY_ON);
 				p = NULL;
 			}
@@ -347,6 +351,6 @@ err:		msgq_str(sp, M_SYSERR, name, "%s");
 	}
 
 	if (!silent)
-		vs_busy(sp, NULL, BUSY_OFF);
+		gp->scr_busy(sp, NULL, BUSY_OFF);
 	return (rval);
 }

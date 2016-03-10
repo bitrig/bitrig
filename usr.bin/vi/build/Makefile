@@ -3,11 +3,18 @@
 
 PROG=	vi
 
+# Modern curses (ncurses)
 CFLAGS+=-I${.CURDIR} -I${.CURDIR}/../include
-#CFLAGS+=-DDEBUG
+LDADD+=-lcurses
+DPADD+= ${LIBCURSES}
 
-LDADD+=-lcurses -lutil
-DPADD+= ${LIBCURSES} ${LIBUTIL}
+LDADD+=-lutil
+DPADD+= ${LIBUTIL}
+
+# incorrect code in vs_msg()
+.if ${MACHINE_ARCH} == "sh"
+CFLAGS+= -fno-tree-dominator-opts
+.endif
 
 SRCS=	cl_funcs.c cl_main.c cl_read.c cl_screen.c cl_term.c \
 	cut.c delete.c ex.c ex_abbrev.c ex_append.c ex_args.c ex_argv.c \

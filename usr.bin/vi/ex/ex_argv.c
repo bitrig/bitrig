@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
@@ -33,6 +36,8 @@ static int argv_sexp(SCR *, char **, size_t *, size_t *);
 /*
  * argv_init --
  *	Build  a prototype arguments list.
+ *
+ * PUBLIC: int argv_init(SCR *, EXCMD *);
  */
 int
 argv_init(SCR *sp, EXCMD *excp)
@@ -51,6 +56,8 @@ argv_init(SCR *sp, EXCMD *excp)
 /*
  * argv_exp0 --
  *	Append a string to the argument list.
+ *
+ * PUBLIC: int argv_exp0(SCR *, EXCMD *, char *, size_t);
  */
 int
 argv_exp0(SCR *sp, EXCMD *excp, char *cmd, size_t cmdlen)
@@ -72,6 +79,8 @@ argv_exp0(SCR *sp, EXCMD *excp, char *cmd, size_t cmdlen)
  * argv_exp1 --
  *	Do file name expansion on a string, and append it to the
  *	argument list.
+ *
+ * PUBLIC: int argv_exp1(SCR *, EXCMD *, char *, size_t, int);
  */
 int
 argv_exp1(SCR *sp, EXCMD *excp, char *cmd, size_t cmdlen, int is_bang)
@@ -107,6 +116,8 @@ ret:	FREE_SPACE(sp, bp, blen);
  * argv_exp2 --
  *	Do file name and shell expansion on a string, and append it to
  *	the argument list.
+ *
+ * PUBLIC: int argv_exp2(SCR *, EXCMD *, char *, size_t);
  */
 int
 argv_exp2(SCR *sp, EXCMD *excp, char *cmd, size_t cmdlen)
@@ -213,6 +224,8 @@ err:	FREE_SPACE(sp, bp, blen);
  * argv_exp3 --
  *	Take a string and break it up into an argv, which is appended
  *	to the argument list.
+ *
+ * PUBLIC: int argv_exp3(SCR *, EXCMD *, char *, size_t);
  */
 int
 argv_exp3(SCR *sp, EXCMD *excp, char *cmd, size_t cmdlen)
@@ -437,6 +450,8 @@ mem:			msgq(sp, M_SYSERR, NULL);
 /*
  * argv_free --
  *	Free up argument structures.
+ *
+ * PUBLIC: int argv_free(SCR *);
  */
 int
 argv_free(SCR *sp)

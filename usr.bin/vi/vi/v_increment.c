@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
@@ -41,6 +44,8 @@ static void inc_err(SCR *, enum nresult);
 /*
  * v_increment -- [count]#[#+-]
  *	Increment/decrement a keyword number.
+ *
+ * PUBLIC: int v_increment(SCR *, VICMD *);
  */
 int
 v_increment(SCR *sp, VICMD *vp)

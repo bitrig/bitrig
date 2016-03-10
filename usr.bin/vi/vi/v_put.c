@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 
@@ -24,6 +27,8 @@ static void	inc_buf(SCR *, VICMD *);
 /*
  * v_Put -- [buffer]P
  *	Insert the contents of the buffer before the cursor.
+ *
+ * PUBLIC: int v_Put(SCR *, VICMD *);
  */
 int
 v_Put(SCR *sp, VICMD *vp)
@@ -53,6 +58,8 @@ v_Put(SCR *sp, VICMD *vp)
 /*
  * v_put -- [buffer]p
  *	Insert the contents of the buffer after the cursor.
+ *
+ * PUBLIC: int v_put(SCR *, VICMD *);
  */
 int
 v_put(SCR *sp, VICMD *vp)

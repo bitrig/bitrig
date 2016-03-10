@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -25,6 +28,8 @@
 /*
  * v_Undo -- U
  *	Undo changes to this line.
+ *
+ * PUBLIC: int v_Undo(SCR *, VICMD *);
  */
 int
 v_Undo(SCR *sp, VICMD *vp)
@@ -57,6 +62,8 @@ v_Undo(SCR *sp, VICMD *vp)
 /*
  * v_undo -- u
  *	Undo the last change.
+ *
+ * PUBLIC: int v_undo(SCR *, VICMD *);
  */
 int
 v_undo(SCR *sp, VICMD *vp)

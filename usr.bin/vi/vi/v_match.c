@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
@@ -24,6 +27,8 @@
 /*
  * v_match -- %
  *	Search to matching character.
+ *
+ * PUBLIC: int v_match(SCR *, VICMD *);
  */
 int
 v_match(SCR *sp, VICMD *vp)

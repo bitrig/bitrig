@@ -9,10 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
-#include <sys/param.h>
+#include "config.h"
+
 #include <sys/queue.h>
 #include <sys/stat.h>
 
+#include <bitstring.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -33,6 +35,8 @@ static int ex_run_file(SCR *, int, char *);
 /*
  * ex_screen_copy --
  *	Copy ex screen.
+ *
+ * PUBLIC: int ex_screen_copy(SCR *, SCR *);
  */
 int
 ex_screen_copy(SCR *orig, SCR *sp)
@@ -65,6 +69,8 @@ ex_screen_copy(SCR *orig, SCR *sp)
 /*
  * ex_screen_end --
  *	End a vi screen.
+ *
+ * PUBLIC: int ex_screen_end(SCR *);
  */
 int
 ex_screen_end(SCR *sp)
@@ -103,6 +109,8 @@ ex_screen_end(SCR *sp)
 /*
  * ex_optchange --
  *	Handle change of options for ex.
+ *
+ * PUBLIC: int ex_optchange(SCR *, int, char *, u_long *);
  */
 int
 ex_optchange(SCR *sp, int offset, char *str, u_long *valp)
@@ -118,12 +126,14 @@ ex_optchange(SCR *sp, int offset, char *str, u_long *valp)
  * ex_exrc --
  *	Read the EXINIT environment variable and the startup exrc files,
  *	and execute their commands.
+ *
+ * PUBLIC: int ex_exrc(SCR *);
  */
 int
 ex_exrc(SCR *sp)
 {
 	struct stat hsb, lsb;
-	char *p, path[MAXPATHLEN];
+	char *p, path[PATH_MAX];
 	int fd;
 
 	/*
@@ -250,6 +260,8 @@ ex_run_file(SCR *sp, int fd, char *name)
 /*
  * ex_run_str --
  *	Set up a string of ex commands to run.
+ *
+ * PUBLIC: int ex_run_str(SCR *, char *, char *, size_t, int, int);
  */
 int
 ex_run_str(SCR *sp, char *name, char *str, size_t len, int ex_flags,
@@ -330,7 +342,7 @@ exrc_isok(SCR *sp, struct stat *sbp, int *fdp, char *path, int rootown,
 	enum { ROOTOWN, OWN, WRITER } etype;
 	uid_t euid;
 	int nf1, nf2;
-	char *a, *b, buf[MAXPATHLEN];
+	char *a, *b, buf[PATH_MAX];
 
 	if ((*fdp = open(path, O_RDONLY, 0)) < 0) {
 		if (errno == ENOENT)

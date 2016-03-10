@@ -9,10 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
-#include <sys/param.h>
+#include "config.h"
+
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
@@ -23,6 +25,8 @@
 
 #include "../common/common.h"
 #include "../vi/vi.h"
+
+#define MAXIMUM(a, b)	(((a) > (b)) ? (a) : (b))
 
 #define	SUB_FIRST	0x01		/* The 'r' flag isn't reasonable. */
 #define	SUB_MUSTSETR	0x02		/* The 'r' flag is required. */
@@ -37,6 +41,8 @@ static int s(SCR *, EXCMD *, char *, regex_t *, u_int);
  *	[line [,line]] s[ubstitute] [[/;]pat[/;]/repl[/;] [cgr] [count] [#lp]]
  *
  *	Substitute on lines matching a pattern.
+ *
+ * PUBLIC: int ex_s(SCR *, EXCMD *);
  */
 int
 ex_s(SCR *sp, EXCMD *cmdp)
@@ -240,6 +246,8 @@ tilde:				++p;
  *	[line [,line]] & [cgr] [count] [#lp]]
  *
  *	Substitute using the last substitute RE and replacement pattern.
+ *
+ * PUBLIC: int ex_subagain(SCR *, EXCMD *);
  */
 int
 ex_subagain(SCR *sp, EXCMD *cmdp)
@@ -260,6 +268,8 @@ ex_subagain(SCR *sp, EXCMD *cmdp)
  *	[line [,line]] ~ [cgr] [count] [#lp]]
  *
  *	Substitute using the last RE and last substitute replacement pattern.
+ *
+ * PUBLIC: int ex_subtilde(SCR *, EXCMD *);
  */
 int
 ex_subtilde(SCR *sp, EXCMD *cmdp)
@@ -726,7 +736,7 @@ skip:		offset += match[0].rm_eo;
 				goto err;
 			if (db_get(sp, lno, DBG_FATAL, &s, &llen))
 				goto err;
-			ADD_SPACE_RET(sp, bp, blen, llen);
+			ADD_SPACE_RET(sp, bp, blen, llen)
 			memcpy(bp, s, llen);
 			s = bp;
 			len = llen - offset;
@@ -862,6 +872,9 @@ err:		rval = 1;
 /*
  * re_compile --
  *	Compile the RE.
+ *
+ * PUBLIC: int re_compile(SCR *,
+ * PUBLIC:     char *, size_t, char **, size_t *, regex_t *, u_int);
  */
 int
 re_compile(SCR *sp, char *ptrn, size_t plen, char **ptrnp, size_t *lenp,
@@ -1173,6 +1186,8 @@ re_tag_conv(SCR *sp, char **ptrnp, size_t *plenp, int *replacedp)
 /*
  * re_error --
  *	Report a regular expression error.
+ *
+ * PUBLIC: void re_error(SCR *, int, regex_t *);
  */
 void
 re_error(SCR *sp, int errcode, regex_t *preg)

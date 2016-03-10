@@ -9,22 +9,21 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 #include <unistd.h>
 
 #include "common.h"
-#include "../cl/cl.h"
-#include "../vi/vi.h"
 
 typedef enum { S_EMPTY, S_EOF, S_NOPREV, S_NOTFOUND, S_SOF, S_WRAP } smsg_t;
 
@@ -133,6 +132,8 @@ prev:			if (sp->re == NULL) {
 /*
  * f_search --
  *	Do a forward search.
+ *
+ * PUBLIC: int f_search(SCR *, MARK *, MARK *, char *, size_t, char **, u_int);
  */
 int
 f_search(SCR *sp, MARK *fm, MARK *rm, char *ptrn, size_t plen, char **eptrn,
@@ -235,7 +236,7 @@ f_search(SCR *sp, MARK *fm, MARK *rm, char *ptrn, size_t plen, char **eptrn,
 			if (LF_ISSET(SEARCH_MSG))
 				re_error(sp, eval, &sp->re_c);
 			else
-				(void)cl_bell(sp);
+				(void)sp->gp->scr_bell(sp);
 			break;
 		}
 
@@ -271,6 +272,8 @@ f_search(SCR *sp, MARK *fm, MARK *rm, char *ptrn, size_t plen, char **eptrn,
 /*
  * b_search --
  *	Do a backward search.
+ *
+ * PUBLIC: int b_search(SCR *, MARK *, MARK *, char *, size_t, char **, u_int);
  */
 int
 b_search(SCR *sp, MARK *fm, MARK *rm, char *ptrn, size_t plen, char **eptrn,
@@ -365,7 +368,7 @@ b_search(SCR *sp, MARK *fm, MARK *rm, char *ptrn, size_t plen, char **eptrn,
 			if (LF_ISSET(SEARCH_MSG))
 				re_error(sp, eval, &sp->re_c);
 			else
-				(void)cl_bell(sp);
+				(void)sp->gp->scr_bell(sp);
 			break;
 		}
 
@@ -401,7 +404,7 @@ b_search(SCR *sp, MARK *fm, MARK *rm, char *ptrn, size_t plen, char **eptrn,
 				if (LF_ISSET(SEARCH_MSG))
 					re_error(sp, eval, &sp->re_c);
 				else
-					(void)cl_bell(sp);
+					(void)sp->gp->scr_bell(sp);
 				goto err;
 			}
 			if (coff && match[0].rm_so >= coff)
@@ -459,6 +462,8 @@ search_msg(SCR *sp, smsg_t msg)
 /*
  * search_busy --
  *	Put up the busy searching message.
+ *
+ * PUBLIC: void search_busy(SCR *, busy_t);
  */
 void
 search_busy(SCR *sp, busy_t btype)

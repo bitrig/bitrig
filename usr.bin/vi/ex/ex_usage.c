@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
@@ -25,6 +28,8 @@
 /*
  * ex_help -- :help
  *	Display help message.
+ *
+ * PUBLIC: int ex_help(SCR *, EXCMD *);
  */
 int
 ex_help(SCR *sp, EXCMD *cmdp)
@@ -44,6 +49,8 @@ ex_help(SCR *sp, EXCMD *cmdp)
 /*
  * ex_usage -- :exusage [cmd]
  *	Display ex usage strings.
+ *
+ * PUBLIC: int ex_usage(SCR *, EXCMD *);
  */
 int
 ex_usage(SCR *sp, EXCMD *cmdp)
@@ -123,6 +130,8 @@ ex_usage(SCR *sp, EXCMD *cmdp)
 /*
  * ex_viusage -- :viusage [key]
  *	Display vi usage strings.
+ *
+ * PUBLIC: int ex_viusage(SCR *, EXCMD *);
  */
 int
 ex_viusage(SCR *sp, EXCMD *cmdp)

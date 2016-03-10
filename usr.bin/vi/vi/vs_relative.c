@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
@@ -23,6 +26,8 @@
 /*
  * vs_column --
  *	Return the logical column of the cursor in the line.
+ *
+ * PUBLIC: int vs_column(SCR *, size_t *);
  */
 int
 vs_column(SCR *sp, size_t *colp)
@@ -42,6 +47,8 @@ vs_column(SCR *sp, size_t *colp)
  *	Return the screens necessary to display the line, or if specified,
  *	the physical character column within the line, including space
  *	required for the O_NUMBER and O_LIST options.
+ *
+ * PUBLIC: size_t vs_screens(SCR *, recno_t, size_t *);
  */
 size_t
 vs_screens(SCR *sp, recno_t lno, size_t *cnop)
@@ -83,6 +90,8 @@ vs_screens(SCR *sp, recno_t lno, size_t *cnop)
  * vs_columns --
  *	Return the screen columns necessary to display the line, or,
  *	if specified, the physical character column within the line.
+ *
+ * PUBLIC: size_t vs_columns(SCR *, char *, recno_t, size_t *, size_t *);
  */
 size_t
 vs_columns(SCR *sp, char *lp, recno_t lno, size_t *cnop, size_t *diffp)
@@ -183,6 +192,8 @@ done:		if (diffp != NULL)		/* XXX */
  *	Return the physical column from the line that will display a
  *	character closest to the currently most attractive character
  *	position (which is stored as a screen column).
+ *
+ * PUBLIC: size_t vs_rcm(SCR *, recno_t, int);
  */
 size_t
 vs_rcm(SCR *sp, recno_t lno, int islast)
@@ -207,6 +218,8 @@ vs_rcm(SCR *sp, recno_t lno, int islast)
  * vs_colpos --
  *	Return the physical column from the line that will display a
  *	character closest to the specified screen column.
+ *
+ * PUBLIC: size_t vs_colpos(SCR *, recno_t, size_t);
  */
 size_t
 vs_colpos(SCR *sp, recno_t lno, size_t cno)

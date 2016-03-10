@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
@@ -34,6 +37,8 @@
  * but "r<literal><escape>" erased a single character.  To enter a literal
  * <literal> character, it required three <literal> characters after the
  * command.  This may not be right, but at least it's not insane.
+ *
+ * PUBLIC: int v_replace(SCR *, VICMD *);
  */
 int
 v_replace(SCR *sp, VICMD *vp)

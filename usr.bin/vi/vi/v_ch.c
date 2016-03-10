@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,6 +29,8 @@ static void noprev(SCR *);
 /*
  * v_chrepeat -- [count];
  *	Repeat the last F, f, T or t search.
+ *
+ * PUBLIC: int v_chrepeat(SCR *, VICMD *);
  */
 int
 v_chrepeat(SCR *sp, VICMD *vp)
@@ -53,6 +58,8 @@ v_chrepeat(SCR *sp, VICMD *vp)
 /*
  * v_chrrepeat -- [count],
  *	Repeat the last F, f, T or t search in the reverse direction.
+ *
+ * PUBLIC: int v_chrrepeat(SCR *, VICMD *);
  */
 int
 v_chrrepeat(SCR *sp, VICMD *vp)
@@ -90,6 +97,8 @@ v_chrrepeat(SCR *sp, VICMD *vp)
  * v_cht -- [count]tc
  *	Search forward in the line for the character before the next
  *	occurrence of the specified character.
+ *
+ * PUBLIC: int v_cht(SCR *, VICMD *);
  */
 int
 v_cht(SCR *sp, VICMD *vp)
@@ -119,6 +128,8 @@ v_cht(SCR *sp, VICMD *vp)
  * v_chf -- [count]fc
  *	Search forward in the line for the next occurrence of the
  *	specified character.
+ *
+ * PUBLIC: int v_chf(SCR *, VICMD *);
  */
 int
 v_chf(SCR *sp, VICMD *vp)
@@ -173,6 +184,8 @@ empty:		notfound(sp, key);
  * v_chT -- [count]Tc
  *	Search backward in the line for the character after the next
  *	occurrence of the specified character.
+ *
+ * PUBLIC: int v_chT(SCR *, VICMD *);
  */
 int
 v_chT(SCR *sp, VICMD *vp)
@@ -196,6 +209,8 @@ v_chT(SCR *sp, VICMD *vp)
  * v_chF -- [count]Fc
  *	Search backward in the line for the next occurrence of the
  *	specified character.
+ *
+ * PUBLIC: int v_chF(SCR *, VICMD *);
  */
 int
 v_chF(SCR *sp, VICMD *vp)

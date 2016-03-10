@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
@@ -29,6 +32,8 @@ static int ex_g_setup(SCR *, EXCMD *, enum which);
 /*
  * ex_global -- [line [,line]] g[lobal][!] /pattern/ [commands]
  *	Exec on lines matching a pattern.
+ *
+ * PUBLIC: int ex_global(SCR *, EXCMD *);
  */
 int
 ex_global(SCR *sp, EXCMD *cmdp)
@@ -40,6 +45,8 @@ ex_global(SCR *sp, EXCMD *cmdp)
 /*
  * ex_v -- [line [,line]] v /pattern/ [commands]
  *	Exec on lines not matching a pattern.
+ *
+ * PUBLIC: int ex_v(SCR *, EXCMD *);
  */
 int
 ex_v(SCR *sp, EXCMD *cmdp)
@@ -237,6 +244,8 @@ usage:		ex_emsg(sp, cmdp->cmd->usage, EXM_USAGE);
 /*
  * ex_g_insdel --
  *	Update the ranges based on an insertion or deletion.
+ *
+ * PUBLIC: int ex_g_insdel(SCR *, lnop_t, recno_t);
  */
 int
 ex_g_insdel(SCR *sp, lnop_t op, recno_t lno)

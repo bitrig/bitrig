@@ -9,24 +9,24 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
 #include <paths.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 #include <unistd.h>
 
 #include "common.h"
-#include "../cl/cl.h"
 #include "../vi/vi.h"
 #include "pathnames.h"
 
@@ -275,6 +275,8 @@ static OABBREV const abbrev[] = {
 /*
  * opts_init --
  *	Initialize some of the options.
+ *
+ * PUBLIC: int opts_init(SCR *, int *);
  */
 int
 opts_init(SCR *sp, int *oargs)
@@ -382,7 +384,7 @@ opts_init(SCR *sp, int *oargs)
 	 * Note, the windows option code will correct any too-large value
 	 * or when the O_LINES value is 1.
 	 */
-	if (cl_baud(sp, &v))
+	if (sp->gp->scr_baud(sp, &v))
 		return (1);
 	if (v <= 600)
 		v = 8;
@@ -436,6 +438,8 @@ err:	msgq(sp, M_ERR,
 /*
  * opts_set --
  *	Change the values of one or more options.
+ *
+ * PUBLIC: int opts_set(SCR *, ARGS *[], char *);
  */
 int
 opts_set(SCR *sp, ARGS *argv[], char *usage)
@@ -570,7 +574,7 @@ opts_set(SCR *sp, ARGS *argv[], char *usage)
 			    op->func(sp, spo, NULL, &turnoff)) ||
 			    ex_optchange(sp, offset, NULL, &turnoff) ||
 			    v_optchange(sp, offset, NULL, &turnoff) ||
-			    cl_optchange(sp, offset, NULL, &turnoff)) {
+			    sp->gp->scr_optchange(sp, offset, NULL, &turnoff)) {
 				rval = 1;
 				break;
 			}
@@ -665,7 +669,7 @@ badnum:				p = msg_print(sp, name, &nf);
 			    op->func(sp, spo, sep, &value)) ||
 			    ex_optchange(sp, offset, sep, &value) ||
 			    v_optchange(sp, offset, sep, &value) ||
-			    cl_optchange(sp, offset, sep, &value)) {
+			    sp->gp->scr_optchange(sp, offset, sep, &value)) {
 				rval = 1;
 				break;
 			}
@@ -712,7 +716,7 @@ badnum:				p = msg_print(sp, name, &nf);
 			    op->func(sp, spo, sep, NULL)) ||
 			    ex_optchange(sp, offset, sep, NULL) ||
 			    v_optchange(sp, offset, sep, NULL) ||
-			    cl_optchange(sp, offset, sep, NULL)) {
+			    sp->gp->scr_optchange(sp, offset, sep, NULL)) {
 				rval = 1;
 				break;
 			}
@@ -735,6 +739,8 @@ badnum:				p = msg_print(sp, name, &nf);
 /*
  * o_set --
  *	Set an option's value.
+ *
+ * PUBLIC: int o_set(SCR *, int, u_int, char *, u_long);
  */
 int
 o_set(SCR *sp, int opt, u_int flags, char *str, u_long val)
@@ -772,6 +778,8 @@ o_set(SCR *sp, int opt, u_int flags, char *str, u_long val)
 /*
  * opts_empty --
  *	Return 1 if the string option is invalid, 0 if it's OK.
+ *
+ * PUBLIC: int opts_empty(SCR *, int, int);
  */
 int
 opts_empty(SCR *sp, int off, int silent)
@@ -790,6 +798,8 @@ opts_empty(SCR *sp, int off, int silent)
 /*
  * opts_dump --
  *	List the current values of selected options.
+ *
+ * PUBLIC: void opts_dump(SCR *, enum optdisp);
  */
 void
 opts_dump(SCR *sp, enum optdisp type)
@@ -950,6 +960,8 @@ opts_print(SCR *sp, OPTLIST const *op)
 /*
  * opts_save --
  *	Write the current configuration to a file.
+ *
+ * PUBLIC: int opts_save(SCR *, FILE *);
  */
 int
 opts_save(SCR *sp, FILE *fp)
@@ -1003,6 +1015,8 @@ opts_save(SCR *sp, FILE *fp)
 /* 
  * opts_search --
  *	Search for an option.
+ *
+ * PUBLIC: OPTLIST const *opts_search(char *);
  */
 OPTLIST const *
 opts_search(char *name)
@@ -1046,6 +1060,8 @@ opts_search(char *name)
 /* 
  * opts_nomatch --
  *	Standard nomatch error message for options.
+ *
+ * PUBLIC: void opts_nomatch(SCR *, char *);
  */
 void
 opts_nomatch(SCR *sp, char *name)
@@ -1069,6 +1085,8 @@ opts_cmp(const void *a, const void *b)
 /*
  * opts_copy --
  *	Copy a screen's OPTION array.
+ *
+ * PUBLIC: int opts_copy(SCR *, SCR *);
  */
 int
 opts_copy(SCR *orig, SCR *sp)
@@ -1113,6 +1131,8 @@ nomem:			msgq(orig, M_SYSERR, NULL);
 /*
  * opts_free --
  *	Free all option strings
+ *
+ * PUBLIC: void opts_free(SCR *);
  */
 void
 opts_free(SCR *sp)

@@ -1,4 +1,4 @@
-/*	$OpenBSD: v_scroll.c,v 1.9 2014/11/12 04:28:41 bentley Exp $	*/
+/*	$OpenBSD: v_scroll.c,v 1.10 2015/01/16 06:40:14 deraadt Exp $	*/
 
 /*-
  * Copyright (c) 1992, 1993, 1994
@@ -9,16 +9,20 @@
  * See the LICENSE file for redistribution information.
  */
 
-#include <sys/param.h>
+#include "config.h"
+
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
 
 #include "../common/common.h"
 #include "vi.h"
+
+#define MINIMUM(a, b)	(((a) < (b)) ? (a) : (b))
 
 static void goto_adjust(VICMD *);
 
@@ -58,6 +62,8 @@ static void goto_adjust(VICMD *);
  * v_lgoto -- [count]G
  *	Go to first non-blank character of the line count, the last line
  *	of the file by default.
+ *
+ * PUBLIC: int v_lgoto(SCR *, VICMD *);
  */
 int
 v_lgoto(SCR *sp, VICMD *vp)
@@ -93,6 +99,8 @@ v_lgoto(SCR *sp, VICMD *vp)
  * v_home -- [count]H
  *	Move to the first non-blank character of the logical line
  *	count - 1 from the top of the screen, 0 by default.
+ *
+ * PUBLIC: int v_home(SCR *, VICMD *);
  */
 int
 v_home(SCR *sp, VICMD *vp)
@@ -108,6 +116,8 @@ v_home(SCR *sp, VICMD *vp)
  * v_middle -- M
  *	Move to the first non-blank character of the logical line
  *	in the middle of the screen.
+ *
+ * PUBLIC: int v_middle(SCR *, VICMD *);
  */
 int
 v_middle(SCR *sp, VICMD *vp)
@@ -127,6 +137,8 @@ v_middle(SCR *sp, VICMD *vp)
  * v_bottom -- [count]L
  *	Move to the first non-blank character of the logical line
  *	count - 1 from the bottom of the screen, 0 by default.
+ *
+ * PUBLIC: int v_bottom(SCR *, VICMD *);
  */
 int
 v_bottom(SCR *sp, VICMD *vp)
@@ -188,6 +200,8 @@ goto_adjust(VICMD *vp)
 /*
  * v_up -- [count]^P, [count]k, [count]-
  *	Move up by lines.
+ *
+ * PUBLIC: int v_up(SCR *, VICMD *);
  */
 int
 v_up(SCR *sp, VICMD *vp)
@@ -208,6 +222,8 @@ v_up(SCR *sp, VICMD *vp)
  * v_cr -- [count]^M
  *	In a script window, send the line to the shell.
  *	In a regular window, move down by lines.
+ *
+ * PUBLIC: int v_cr(SCR *, VICMD *);
  */
 int
 v_cr(SCR *sp, VICMD *vp)
@@ -227,6 +243,8 @@ v_cr(SCR *sp, VICMD *vp)
 /*
  * v_down -- [count]^J, [count]^N, [count]j, [count]^M, [count]+
  *	Move down by lines.
+ *
+ * PUBLIC: int v_down(SCR *, VICMD *);
  */
 int
 v_down(SCR *sp, VICMD *vp)
@@ -246,6 +264,8 @@ v_down(SCR *sp, VICMD *vp)
 /*
  * v_hpageup -- [count]^U
  *	Page up half screens.
+ *
+ * PUBLIC: int v_hpageup(SCR *, VICMD *);
  */
 int
 v_hpageup(SCR *sp, VICMD *vp)
@@ -268,6 +288,8 @@ v_hpageup(SCR *sp, VICMD *vp)
 /*
  * v_hpagedown -- [count]^D
  *	Page down half screens.
+ *
+ * PUBLIC: int v_hpagedown(SCR *, VICMD *);
  */
 int
 v_hpagedown(SCR *sp, VICMD *vp)
@@ -294,6 +316,8 @@ v_hpagedown(SCR *sp, VICMD *vp)
  * Historic vi did not move to the EOF if the screen couldn't move, i.e.
  * if EOF was already displayed on the screen.  This implementation does
  * move to EOF in that case, making ^F more like the historic ^D.
+ *
+ * PUBLIC: int v_pagedown(SCR *, VICMD *);
  */
 int
 v_pagedown(SCR *sp, VICMD *vp)
@@ -322,7 +346,7 @@ v_pagedown(SCR *sp, VICMD *vp)
 	 * least one line.
 	 */
 	offset = (F_ISSET(vp, VC_C1SET) ? vp->count : 1) * (IS_SPLIT(sp) ?
-	    MIN(sp->t_maxrows, O_VAL(sp, O_WINDOW)) : O_VAL(sp, O_WINDOW));
+	    MINIMUM(sp->t_maxrows, O_VAL(sp, O_WINDOW)) : O_VAL(sp, O_WINDOW));
 	offset = offset <= 2 ? 1 : offset - 2;
 	if (vs_sm_scroll(sp, &vp->m_stop, offset, CNTRL_F))
 		return (1);
@@ -338,6 +362,8 @@ v_pagedown(SCR *sp, VICMD *vp)
  * Historic vi did not move to the SOF if the screen couldn't move, i.e.
  * if SOF was already displayed on the screen.  This implementation does
  * move to SOF in that case, making ^B more like the historic ^U.
+ *
+ * PUBLIC: int v_pageup(SCR *, VICMD *);
  */
 int
 v_pageup(SCR *sp, VICMD *vp)
@@ -371,7 +397,7 @@ v_pageup(SCR *sp, VICMD *vp)
 	 * least one line.
 	 */
 	offset = (F_ISSET(vp, VC_C1SET) ? vp->count : 1) * (IS_SPLIT(sp) ?
-	    MIN(sp->t_maxrows, O_VAL(sp, O_WINDOW)) : O_VAL(sp, O_WINDOW));
+	    MINIMUM(sp->t_maxrows, O_VAL(sp, O_WINDOW)) : O_VAL(sp, O_WINDOW));
 	offset = offset <= 2 ? 1 : offset - 2;
 	if (vs_sm_scroll(sp, &vp->m_stop, offset, CNTRL_B))
 		return (1);
@@ -382,6 +408,8 @@ v_pageup(SCR *sp, VICMD *vp)
 /*
  * v_lineup -- [count]^Y
  *	Page up by lines.
+ *
+ * PUBLIC: int v_lineup(SCR *, VICMD *);
  */
 int
 v_lineup(SCR *sp, VICMD *vp)
@@ -400,6 +428,8 @@ v_lineup(SCR *sp, VICMD *vp)
 /*
  * v_linedown -- [count]^E
  *	Page down by lines.
+ *
+ * PUBLIC: int v_linedown(SCR *, VICMD *);
  */
 int
 v_linedown(SCR *sp, VICMD *vp)

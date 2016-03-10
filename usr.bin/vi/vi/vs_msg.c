@@ -9,22 +9,21 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
-#include <curses.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 #include <time.h>
 #include <unistd.h>
 
 #include "../common/common.h"
-#include "../cl/cl.h"
 #include "vi.h"
 
 typedef enum {
@@ -47,12 +46,18 @@ static void	vs_wait(SCR *, int *, sw_t);
  * vs_busy --
  *	Display, update or clear a busy message.
  *
- * This routine is the editor interface for vi busy messages.  It implements
- * a standard strategy of stealing lines from the bottom of the vi text screen.
+ * This routine is the default editor interface for vi busy messages.  It
+ * implements a standard strategy of stealing lines from the bottom of the
+ * vi text screen.  Screens using an alternate method of displaying busy
+ * messages, e.g. X11 clock icons, should set their scr_busy function to the
+ * correct function before calling the main editor routine.
+ *
+ * PUBLIC: void vs_busy(SCR *, const char *, busy_t);
  */
 void
 vs_busy(SCR *sp, const char *msg, busy_t btype)
 {
+	GS *gp;
 	VI_PRIVATE *vip;
 	static const char flagc[] = "|/-\\";
 	struct timespec ts, ts_diff;
@@ -62,6 +67,7 @@ vs_busy(SCR *sp, const char *msg, busy_t btype)
 	if (F_ISSET(sp, SC_EX | SC_SCR_EXWROTE))
 		return;
 
+	gp = sp->gp;
 	vip = VIP(sp);
 
 	/*
@@ -81,7 +87,7 @@ vs_busy(SCR *sp, const char *msg, busy_t btype)
 		(void)clock_gettime(CLOCK_MONOTONIC, &vip->busy_ts);
 
 		/* Save the current cursor. */
-		(void)cl_cursor(sp, &vip->busy_oldy, &vip->busy_oldx);
+		(void)gp->scr_cursor(sp, &vip->busy_oldy, &vip->busy_oldx);
 
 		/* Display the busy message. */
 		(void)gp->scr_move(sp, LASTLINE(sp), 0);
@@ -100,10 +106,10 @@ vs_busy(SCR *sp, const char *msg, busy_t btype)
 		 * Always return to the original position.
 		 */
 		if (vip->totalcount == 0 && vip->busy_ref == 0) {
-			(void)cl_move(sp, LASTLINE(sp), 0);
-			(void)clrtoeol();
+			(void)gp->scr_move(sp, LASTLINE(sp), 0);
+			(void)gp->scr_clrtoeol(sp);
 		}
-		(void)cl_move(sp, vip->busy_oldy, vip->busy_oldx);
+		(void)gp->scr_move(sp, vip->busy_oldy, vip->busy_oldx);
 		break;
 	case BUSY_UPDATE:
 		if (vip->totalcount != 0 || vip->busy_ref == 0)
@@ -126,33 +132,40 @@ vs_busy(SCR *sp, const char *msg, busy_t btype)
 		/* Display the update. */
 		if (vip->busy_ch == sizeof(flagc) - 1)
 			vip->busy_ch = 0;
-		(void)cl_move(sp, LASTLINE(sp), vip->busy_fx);
-		(void)cl_addstr(sp, flagc + vip->busy_ch++, 1);
-		(void)cl_move(sp, LASTLINE(sp), vip->busy_fx);
+		(void)gp->scr_move(sp, LASTLINE(sp), vip->busy_fx);
+		(void)gp->scr_addstr(sp, flagc + vip->busy_ch++, 1);
+		(void)gp->scr_move(sp, LASTLINE(sp), vip->busy_fx);
 		break;
 	}
-	(void)cl_refresh(sp, 0);
+	(void)gp->scr_refresh(sp, 0);
 }
 
 /* 
  * vs_home --
  *	Home the cursor to the bottom row, left-most column.
+ *
+ * PUBLIC: void vs_home(SCR *);
  */
 void
 vs_home(SCR *sp)
 {
-	(void)cl_move(sp, LASTLINE(sp), 0);
-	(void)cl_refresh(sp, 0);
+	(void)sp->gp->scr_move(sp, LASTLINE(sp), 0);
+	(void)sp->gp->scr_refresh(sp, 0);
 }
 
 /*
  * vs_update --
  *	Update a command.
+ *
+ * PUBLIC: void vs_update(SCR *, const char *, const char *);
  */
 void
 vs_update(SCR *sp, const char *m1, const char *m2)
 {
+	GS *gp;
 	size_t len, mlen, oldx, oldy;
+
+	gp = sp->gp;
 
 	/*
 	 * This routine displays a message on the bottom line of the screen,
@@ -172,11 +185,11 @@ vs_update(SCR *sp, const char *m1, const char *m2)
 	 * Save the cursor position, the substitute-with-confirmation code
 	 * will have already set it correctly.
 	 */
-	(void)cl_cursor(sp, &oldy, &oldx);
+	(void)gp->scr_cursor(sp, &oldy, &oldx);
 
 	/* Clear the bottom line. */
-	(void)cl_move(sp, LASTLINE(sp), 0);
-	(void)clrtoeol();
+	(void)gp->scr_move(sp, LASTLINE(sp), 0);
+	(void)gp->scr_clrtoeol(sp);
 
 	/*
 	 * XXX
@@ -186,18 +199,18 @@ vs_update(SCR *sp, const char *m1, const char *m2)
 		mlen = len = strlen(m1);
 		if (len > sp->cols - 2)
 			mlen = len = sp->cols - 2;
-		(void)cl_addstr(sp, m1, mlen);
+		(void)gp->scr_addstr(sp, m1, mlen);
 	} else
 		len = 0;
 	if (m2 != NULL) {
 		mlen = strlen(m2);
 		if (len + mlen > sp->cols - 2)
 			mlen = (sp->cols - 2) - len;
-		(void)cl_addstr(sp, m2, mlen);
+		(void)gp->scr_addstr(sp, m2, mlen);
 	}
 
-	(void)cl_move(sp, oldy, oldx);
-	(void)cl_refresh(sp, 0);
+	(void)gp->scr_move(sp, oldy, oldx);
+	(void)gp->scr_refresh(sp, 0);
 }
 
 /*
@@ -206,7 +219,11 @@ vs_update(SCR *sp, const char *m1, const char *m2)
  *
  * This routine is the default editor interface for all ex output, and all ex
  * and vi error/informational messages.  It implements the standard strategy
- * of stealing lines from the bottom of the vi text screen.
+ * of stealing lines from the bottom of the vi text screen.  Screens using an
+ * alternate method of displaying messages, e.g. dialog boxes, should set their
+ * scr_msg function to the correct function before calling the editor.
+ *
+ * PUBLIC: void vs_msg(SCR *, mtype_t, char *, size_t);
  */
 void
 vs_msg(SCR *sp, mtype_t mtype, char *line, size_t len)
@@ -228,7 +245,7 @@ vs_msg(SCR *sp, mtype_t mtype, char *line, size_t len)
 	if (F_ISSET(sp, SC_TINPUT_INFO) || F_ISSET(gp, G_BELLSCHED)) {
 		if (F_ISSET(sp, SC_SCR_VI)) {
 			F_CLR(gp, G_BELLSCHED);
-			(void)cl_bell(sp);
+			(void)gp->scr_bell(sp);
 		} else
 			F_SET(gp, G_BELLSCHED);
 	}
@@ -259,7 +276,7 @@ vs_msg(SCR *sp, mtype_t mtype, char *line, size_t len)
 	if (F_ISSET(sp, SC_EX | SC_SCR_EXWROTE)) {
 		if (!F_ISSET(sp, SC_SCR_EX)) {
 			if (F_ISSET(sp, SC_SCR_EXWROTE)) {
-				if (cl_screen(sp, SC_EX))
+				if (sp->gp->scr_screen(sp, SC_EX))
 					return;
 			} else
 				if (ex_init(sp))
@@ -267,16 +284,16 @@ vs_msg(SCR *sp, mtype_t mtype, char *line, size_t len)
 		}
 
 		if (mtype == M_ERR)
-			(void)cl_attr(sp, SA_INVERSE, 1);
+			(void)gp->scr_attr(sp, SA_INVERSE, 1);
 		(void)printf("%.*s", (int)len, line);
 		if (mtype == M_ERR)
-			(void)cl_attr(sp, SA_INVERSE, 0);
+			(void)gp->scr_attr(sp, SA_INVERSE, 0);
 		(void)fflush(stdout);
 
 		F_CLR(sp, SC_EX_WAIT_NO);
 
 		if (!F_ISSET(sp, SC_SCR_EX))
-			(void)cl_screen(sp, SC_VI);
+			(void)sp->gp->scr_screen(sp, SC_VI);
 		return;
 	}
 
@@ -287,7 +304,7 @@ vs_msg(SCR *sp, mtype_t mtype, char *line, size_t len)
 	}
 
 	/* Save the cursor position. */
-	(void)cl_cursor(sp, &oldy, &oldx);
+	(void)gp->scr_cursor(sp, &oldy, &oldx);
 
 	/* If it's an ex output message, just write it out. */
 	if (mtype == M_NONE) {
@@ -365,8 +382,8 @@ vs_msg(SCR *sp, mtype_t mtype, char *line, size_t len)
 			break;
 	}
 
-ret:	(void)cl_move(sp, oldy, oldx);
-	(void)cl_refresh(sp, 0);
+ret:	(void)gp->scr_move(sp, oldy, oldx);
+	(void)gp->scr_refresh(sp, 0);
 }
 
 /*
@@ -377,12 +394,14 @@ static void
 vs_output(SCR *sp, mtype_t mtype, const char *line, int llen)
 {
 	CHAR_T *kp;
+	GS *gp;
 	VI_PRIVATE *vip;
 	size_t chlen, notused;
 	int ch, len, tlen;
 	const char *p, *t;
 	char *cbp, *ecbp, cbuf[128];
 
+	gp = sp->gp;
 	vip = VIP(sp);
 	for (p = line; llen > 0;) {
 		/* Get the next physical line. */
@@ -407,9 +426,9 @@ vs_output(SCR *sp, mtype_t mtype, const char *line, int llen)
 		if (vip->lcontinue == 0) {
 			if (!IS_ONELINE(sp)) {
 				if (vip->totalcount == 1) {
-					(void)cl_move(sp,
+					(void)gp->scr_move(sp,
 					    LASTLINE(sp) - 1, 0);
-					(void)clrtoeol();
+					(void)gp->scr_clrtoeol(sp);
 					(void)vs_divider(sp);
 					F_SET(vip, VIP_DIVIDER);
 					++vip->totalcount;
@@ -425,23 +444,23 @@ vs_output(SCR *sp, mtype_t mtype, const char *line, int llen)
 			if (vip->totalcount != 0)
 				vs_scroll(sp, NULL, SCROLL_W_QUIT);
 
-			(void)cl_move(sp, LASTLINE(sp), 0);
+			(void)gp->scr_move(sp, LASTLINE(sp), 0);
 			++vip->totalcount;
 			++vip->linecount;
 
 			if (INTERRUPTED(sp))
 				break;
 		} else
-			(void)cl_move(sp, LASTLINE(sp), vip->lcontinue);
+			(void)gp->scr_move(sp, LASTLINE(sp), vip->lcontinue);
 
 		/* Error messages are in inverse video. */
 		if (mtype == M_ERR)
-			(void)cl_attr(sp, SA_INVERSE, 1);
+			(void)gp->scr_attr(sp, SA_INVERSE, 1);
 
 		/* Display the line, doing character translation. */
 #define	FLUSH {								\
 	*cbp = '\0';							\
-	(void)cl_addstr(sp, cbuf, cbp - cbuf);			\
+	(void)gp->scr_addstr(sp, cbuf, cbp - cbuf);			\
 	cbp = cbuf;							\
 }
 		ecbp = (cbp = cbuf) + sizeof(cbuf) - 1;
@@ -465,10 +484,10 @@ vs_output(SCR *sp, mtype_t mtype, const char *line, int llen)
 		if (cbp > cbuf)
 			FLUSH;
 		if (mtype == M_ERR)
-			(void)cl_attr(sp, SA_INVERSE, 0);
+			(void)gp->scr_attr(sp, SA_INVERSE, 0);
 
 		/* Clear the rest of the line. */
-		(void)clrtoeol();
+		(void)gp->scr_clrtoeol(sp);
 
 		/* If we loop, it's a new line. */
 		vip->lcontinue = 0;
@@ -484,7 +503,7 @@ vs_output(SCR *sp, mtype_t mtype, const char *line, int llen)
 
 	/* Set up next continuation line. */
 	if (p == NULL)
-		cl_cursor(sp, &notused, &vip->lcontinue);
+		gp->scr_cursor(sp, &notused, &vip->lcontinue);
 }
 
 /*
@@ -493,14 +512,18 @@ vs_output(SCR *sp, mtype_t mtype, const char *line, int llen)
  *
  * This routine is called when exiting a colon command to resolve any ex
  * output that may have occurred.
+ *
+ * PUBLIC: int vs_ex_resolve(SCR *, int *);
  */
 int
 vs_ex_resolve(SCR *sp, int *continuep)
 {
 	EVENT ev;
+	GS *gp;
 	VI_PRIVATE *vip;
 	sw_t wtype;
 
+	gp = sp->gp;
 	vip = VIP(sp);
 	*continuep = 0;
 
@@ -531,7 +554,7 @@ vs_ex_resolve(SCR *sp, int *continuep)
 	 * commands.  That seems right to me (well, at least not wrong).
 	 */
 	if (F_ISSET(sp, SC_SCR_EXWROTE)) {
-		if (cl_screen(sp, SC_VI))
+		if (sp->gp->scr_screen(sp, SC_VI))
 			return (1);
 	} else
 		if (!F_ISSET(sp, SC_EX_WAIT_YES) && vip->totalcount < 2) {
@@ -574,7 +597,7 @@ vs_ex_resolve(SCR *sp, int *continuep)
 		F_SET(sp, SC_SCR_REFORMAT);
 
 	/* Ex may have switched out of the alternate screen, return. */
-	(void)cl_attr(sp, SA_ALTERNATE, 1);
+	(void)gp->scr_attr(sp, SA_ALTERNATE, 1);
 
 	/*
 	 * Whew.  We're finally back home, after what feels like years.
@@ -613,6 +636,8 @@ vs_ex_resolve(SCR *sp, int *continuep)
 /*
  * vs_resolve --
  *	Deal with message output.
+ *
+ * PUBLIC: int vs_resolve(SCR *, SCR *, int);
  */
 int
 vs_resolve(SCR *sp, SCR *csp, int forcewait)
@@ -637,12 +662,12 @@ vs_resolve(SCR *sp, SCR *csp, int forcewait)
 		csp = sp;
 
 	/* Save the cursor position. */
-	(void)cl_cursor(csp, &oldy, &oldx);
+	(void)gp->scr_cursor(csp, &oldy, &oldx);
 
 	/* Ring the bell if it's scheduled. */
 	if (F_ISSET(gp, G_BELLSCHED)) {
 		F_CLR(gp, G_BELLSCHED);
-		(void)cl_bell(sp);
+		(void)gp->scr_bell(sp);
 	}
 
 	/* Display new file status line. */
@@ -664,7 +689,7 @@ vs_resolve(SCR *sp, SCR *csp, int forcewait)
 		if (!F_ISSET(sp, SC_SCR_VI) && vs_refresh(sp, 1))
 			return (1);
 		while ((mp = LIST_FIRST(&gp->msgq)) != NULL) {
-			vs_msg(sp, mp->mtype, mp->buf, mp->len);
+			gp->scr_msg(sp, mp->mtype, mp->buf, mp->len);
 			LIST_REMOVE(mp, q);
 			free(mp->buf);
 			free(mp);
@@ -712,7 +737,7 @@ vs_resolve(SCR *sp, SCR *csp, int forcewait)
 		(void)vs_repaint(sp, &ev);
 
 	/* Restore the cursor position. */
-	(void)cl_move(csp, oldy, oldx);
+	(void)gp->scr_move(csp, oldy, oldx);
 
 	return (0);
 }
@@ -724,8 +749,10 @@ vs_resolve(SCR *sp, SCR *csp, int forcewait)
 static void
 vs_scroll(SCR *sp, int *continuep, sw_t wtype)
 {
+	GS *gp;
 	VI_PRIVATE *vip;
 
+	gp = sp->gp;
 	vip = VIP(sp);
 	if (!IS_ONELINE(sp)) {
 		/*
@@ -733,14 +760,14 @@ vs_scroll(SCR *sp, int *continuep, sw_t wtype)
 		 * delete the line above the first line output so preserve the
 		 * maximum amount of the screen.
 		 */
-		(void)cl_move(sp, vip->totalcount < sp->rows ?
-		    LASTLINE(sp) - vip->totalcount : 0, 0);
-		(void)cl_deleteln(sp);
+		(void)gp->scr_move(sp, vip->totalcount <
+		    sp->rows ? LASTLINE(sp) - vip->totalcount : 0, 0);
+		(void)gp->scr_deleteln(sp);
 
 		/* If there are screens below us, push them back into place. */
 		if (TAILQ_NEXT(sp, q)) {
-			(void)cl_move(sp, LASTLINE(sp), 0);
-			(void)insertln();
+			(void)gp->scr_move(sp, LASTLINE(sp), 0);
+			(void)gp->scr_insertln(sp);
 		}
 	}
 	if (wtype == SCROLL_W_QUIT && vip->linecount < sp->t_maxrows)
@@ -764,7 +791,7 @@ vs_wait(SCR *sp, int *continuep, sw_t wtype)
 	gp = sp->gp;
 	vip = VIP(sp);
 
-	(void)cl_move(sp, LASTLINE(sp), 0);
+	(void)gp->scr_move(sp, LASTLINE(sp), 0);
 	if (IS_ONELINE(sp))
 		p = msg_cmsg(sp, CMSG_CONT_S, &len);
 	else
@@ -782,13 +809,13 @@ vs_wait(SCR *sp, int *continuep, sw_t wtype)
 			abort();
 			/* NOTREACHED */
 		}
-	(void)cl_addstr(sp, p, len);
+	(void)gp->scr_addstr(sp, p, len);
 
 	++vip->totalcount;
 	vip->linecount = 0;
 
-	(void)clrtoeol();
-	(void)cl_refresh(sp, 0);
+	(void)gp->scr_clrtoeol(sp);
+	(void)gp->scr_refresh(sp, 0);
 
 	/* Get a single character from the terminal. */
 	if (continuep != NULL)
@@ -803,7 +830,7 @@ vs_wait(SCR *sp, int *continuep, sw_t wtype)
 			F_SET(gp, G_INTERRUPTED);
 			break;
 		}
-		(void)cl_bell(sp);
+		(void)gp->scr_bell(sp);
 	}
 	switch (wtype) {
 	case SCROLL_W_QUIT:
@@ -826,14 +853,16 @@ vs_wait(SCR *sp, int *continuep, sw_t wtype)
 static void
 vs_divider(SCR *sp)
 {
+	GS *gp;
 	size_t len;
 
 #define	DIVIDESTR	"+=+=+=+=+=+=+=+"
 	len =
 	    sizeof(DIVIDESTR) - 1 > sp->cols ? sp->cols : sizeof(DIVIDESTR) - 1;
-	(void)cl_attr(sp, SA_INVERSE, 1);
-	(void)cl_addstr(sp, DIVIDESTR, len);
-	(void)cl_attr(sp, SA_INVERSE, 0);
+	gp = sp->gp;
+	(void)gp->scr_attr(sp, SA_INVERSE, 1);
+	(void)gp->scr_addstr(sp, DIVIDESTR, len);
+	(void)gp->scr_attr(sp, SA_INVERSE, 0);
 }
 
 /*

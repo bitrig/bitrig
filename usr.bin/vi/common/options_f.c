@@ -9,23 +9,26 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/stat.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 #include <unistd.h>
 
 #include "common.h"
-#include "../cl/cl.h"
 
+/*
+ * PUBLIC: int f_altwerase(SCR *, OPTION *, char *, u_long *);
+ */
 int
 f_altwerase(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
@@ -34,6 +37,9 @@ f_altwerase(SCR *sp, OPTION *op, char *str, u_long *valp)
 	return (0);
 }
 
+/*
+ * PUBLIC: int f_columns(SCR *, OPTION *, char *, u_long *);
+ */
 int
 f_columns(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
@@ -61,6 +67,9 @@ f_columns(SCR *sp, OPTION *op, char *str, u_long *valp)
 	return (0);
 }
 
+/*
+ * PUBLIC: int f_lines(SCR *, OPTION *, char *, u_long *);
+ */
 int
 f_lines(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
@@ -111,6 +120,9 @@ f_lines(SCR *sp, OPTION *op, char *str, u_long *valp)
 	return (0);
 }
 
+/*
+ * PUBLIC: int f_lisp(SCR *, OPTION *, char *, u_long *);
+ */
 int
 f_lisp(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
@@ -132,6 +144,9 @@ f_paragraph(SCR *sp, OPTION *op, char *str, u_long *valp)
 	return (0);
 }
 
+/*
+ * PUBLIC: int f_print(SCR *, OPTION *, char *, u_long *);
+ */
 int
 f_print(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
@@ -143,6 +158,9 @@ f_print(SCR *sp, OPTION *op, char *str, u_long *valp)
 	return (0);
 }
 
+/*
+ * PUBLIC: int f_readonly(SCR *, OPTION *, char *, u_long *);
+ */
 int
 f_readonly(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
@@ -157,6 +175,9 @@ f_readonly(SCR *sp, OPTION *op, char *str, u_long *valp)
 	return (0);
 }
 
+/*
+ * PUBLIC: int f_recompile(SCR *, OPTION *, char *, u_long *);
+ */
 int
 f_recompile(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
@@ -171,6 +192,9 @@ f_recompile(SCR *sp, OPTION *op, char *str, u_long *valp)
 	return (0);
 }
 
+/*
+ * PUBLIC: int f_reformat(SCR *, OPTION *, char *, u_long *);
+ */
 int
 f_reformat(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
@@ -178,6 +202,9 @@ f_reformat(SCR *sp, OPTION *op, char *str, u_long *valp)
 	return (0);
 }
 
+/*
+ * PUBLIC: int f_section(SCR *, OPTION *, char *, u_long *);
+ */
 int
 f_section(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
@@ -189,6 +216,9 @@ f_section(SCR *sp, OPTION *op, char *str, u_long *valp)
 	return (0);
 }
 
+/*
+ * PUBLIC: int f_ttywerase(SCR *, OPTION *, char *, u_long *);
+ */
 int
 f_ttywerase(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
@@ -197,13 +227,16 @@ f_ttywerase(SCR *sp, OPTION *op, char *str, u_long *valp)
 	return (0);
 }
 
+/*
+ * PUBLIC: int f_w300(SCR *, OPTION *, char *, u_long *);
+ */
 int
 f_w300(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	u_long v;
 
 	/* Historical behavior for w300 was < 1200. */
-	if (cl_baud(sp, &v))
+	if (sp->gp->scr_baud(sp, &v))
 		return (1);
 	if (v >= 1200)
 		return (0);
@@ -211,13 +244,16 @@ f_w300(SCR *sp, OPTION *op, char *str, u_long *valp)
 	return (f_window(sp, op, str, valp));
 }
 
+/*
+ * PUBLIC: int f_w1200(SCR *, OPTION *, char *, u_long *);
+ */
 int
 f_w1200(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	u_long v;
 
 	/* Historical behavior for w1200 was == 1200. */
-	if (cl_baud(sp, &v))
+	if (sp->gp->scr_baud(sp, &v))
 		return (1);
 	if (v < 1200 || v > 4800)
 		return (0);
@@ -225,13 +261,16 @@ f_w1200(SCR *sp, OPTION *op, char *str, u_long *valp)
 	return (f_window(sp, op, str, valp));
 }
 
+/*
+ * PUBLIC: int f_w9600(SCR *, OPTION *, char *, u_long *);
+ */
 int
 f_w9600(SCR *sp, OPTION *op, char *str, u_long *valp)
 {
 	u_long v;
 
 	/* Historical behavior for w9600 was > 1200. */
-	if (cl_baud(sp, &v))
+	if (sp->gp->scr_baud(sp, &v))
 		return (1);
 	if (v <= 4800)
 		return (0);
@@ -239,6 +278,9 @@ f_w9600(SCR *sp, OPTION *op, char *str, u_long *valp)
 	return (f_window(sp, op, str, valp));
 }
 
+/*
+ * PUBLIC: int f_window(SCR *, OPTION *, char *, u_long *);
+ */
 int
 f_window(SCR *sp, OPTION *op, char *str, u_long *valp)
 {

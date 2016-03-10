@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
@@ -22,6 +25,8 @@
 /*
  * ex_put -- [line] pu[t] [buffer]
  *	Append a cut buffer into the file.
+ *
+ * PUBLIC: int ex_put(SCR *, EXCMD *);
  */
 int
 ex_put(SCR *sp, EXCMD *cmdp)

@@ -9,19 +9,19 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 
 #include "../common/common.h"
-#include "../cl/cl.h"
 #include "../vi/vi.h"
 
 /*
@@ -297,7 +297,7 @@ notlast:			TAILQ_REMOVE(tiqh, tp, q);
 					continue;
 
 				carat_st = C_NOTSET;
-leftmargin:			(void)cl_ex_adjust(sp, EX_TERM_CE);
+leftmargin:			(void)gp->scr_ex_adjust(sp, EX_TERM_CE);
 				tp->ai = tp->len = 0;
 				break;
 			case C_NOTSET:			/* ^D */
@@ -312,7 +312,7 @@ leftmargin:			(void)cl_ex_adjust(sp, EX_TERM_CE);
 			}
 
 			/* Clear and redisplay the line. */
-			(void)cl_ex_adjust(sp, EX_TERM_CE);
+			(void)gp->scr_ex_adjust(sp, EX_TERM_CE);
 			txt_prompt(sp, tp, prompt, flags);
 			break;
 		default:

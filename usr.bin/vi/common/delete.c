@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -23,6 +26,8 @@
 /*
  * del --
  *	Delete a range of text.
+ *
+ * PUBLIC: int del(SCR *, MARK *, MARK *, int);
  */
 int
 del(SCR *sp, MARK *fm, MARK *tm, int lmode)

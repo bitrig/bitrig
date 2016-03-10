@@ -9,24 +9,25 @@
  * See the LICENSE file for redistribution information.
  */
 
-#include <sys/param.h>
+#include "config.h"
+
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
 #include <locale.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 #include <unistd.h>
 
 #include "common.h"
-#include "../cl/cl.h"
 #include "../vi/vi.h"
+
+#define MAXIMUM(a, b)	(((a) > (b)) ? (a) : (b))
 
 static int	v_event_append(SCR *, EVENT *);
 static int	v_event_grow(SCR *, int);
@@ -94,6 +95,8 @@ static int nkeylist =
 /*
  * v_key_init --
  *	Initialize the special key lookup table.
+ *
+ * PUBLIC: int v_key_init(SCR *);
  */
 int
 v_key_init(SCR *sp)
@@ -158,7 +161,7 @@ v_keyval(SCR *sp, int val, scr_keyval_t name)
 	int dne;
 
 	/* Get the key's value from the screen. */
-	if (cl_keyval(sp, name, &ch, &dne))
+	if (sp->gp->scr_keyval(sp, name, &ch, &dne))
 		return;
 	if (dne)
 		return;
@@ -181,6 +184,8 @@ v_keyval(SCR *sp, int val, scr_keyval_t name)
 /*
  * v_key_ilookup --
  *	Build the fast-lookup key display array.
+ *
+ * PUBLIC: void v_key_ilookup(SCR *);
  */
 void
 v_key_ilookup(SCR *sp)
@@ -312,6 +317,8 @@ v_key_val(SCR *sp, CHAR_T ch)
  * front of the buffer by various other functions in ex/vi.  Each key has
  * an associated flag value, which indicates if it has already been quoted,
  * and if it is the result of a mapping or an abbreviation.
+ *
+ * PUBLIC: int v_event_push(SCR *, EVENT *, CHAR_T *, size_t, u_int);
  */
 int
 v_event_push(SCR *sp, EVENT *p_evp, CHAR_T *p_s, size_t nitems, u_int flags)
@@ -336,11 +343,11 @@ v_event_push(SCR *sp, EVENT *p_evp, CHAR_T *p_s, size_t nitems, u_int flags)
 	 */
 #define	TERM_PUSH_SHIFT	30
 	total = gp->i_cnt + gp->i_next + nitems + TERM_PUSH_SHIFT;
-	if (total >= gp->i_nelem && v_event_grow(sp, MAX(total, 64)))
+	if (total >= gp->i_nelem && v_event_grow(sp, MAXIMUM(total, 64)))
 		return (1);
 	if (gp->i_cnt)
-		memmove(gp->i_event + TERM_PUSH_SHIFT + nitems,
-		    gp->i_event + gp->i_next, gp->i_cnt * sizeof(EVENT));
+		MEMMOVE(gp->i_event + TERM_PUSH_SHIFT + nitems,
+		    gp->i_event + gp->i_next, gp->i_cnt);
 	gp->i_next = TERM_PUSH_SHIFT;
 
 	/* Put the new items into the queue. */
@@ -375,7 +382,7 @@ v_event_append(SCR *sp, EVENT *argp)
 	gp = sp->gp;
 	if (gp->i_event == NULL ||
 	    nevents > gp->i_nelem - (gp->i_next + gp->i_cnt))
-		v_event_grow(sp, MAX(nevents, 64));
+		v_event_grow(sp, MAXIMUM(nevents, 64));
 	evp = gp->i_event + gp->i_next + gp->i_cnt;
 	gp->i_cnt += nevents;
 
@@ -484,6 +491,8 @@ v_event_append(SCR *sp, EVENT *argp)
  * knew when the macro started, and, in fact, this might be worth doing at some
  * point.  Given that this might make the log grow unacceptably (consider that
  * cursor keys are done with maps), for now we leave any changes made in place.
+ *
+ * PUBLIC: int v_event_get(SCR *, EVENT *, int, u_int32_t);
  */
 int
 v_event_get(SCR *sp, EVENT *argp, int timeout, u_int32_t flags)
@@ -519,7 +528,7 @@ retry:	istimeout = remap_cnt = 0;
 		 */
 		if (F_ISSET(gp, G_SCRWIN) && sscr_input(sp))
 			return (1);
-loop:		if (cl_event(sp, argp,
+loop:		if (gp->scr_event(sp, argp,
 		    LF_ISSET(EC_INTERRUPT | EC_QUOTED | EC_RAW), timeout))
 			return (1);
 		switch (argp->e_event) {
@@ -660,7 +669,7 @@ not_digit:	argp->e_c = CH_NOT_DIGIT;
 		 * get anywhere useful.
 		 */
 		if ((++remap_cnt == 1 || remap_cnt % 10 == 0) &&
-		    (cl_event(sp, &ev,
+		    (gp->scr_event(sp, &ev,
 		    EC_INTERRUPT, 0) || ev.e_event == E_INTERRUPT)) {
 			F_SET(sp->gp, G_INTERRUPTED);
 			argp->e_event = E_INTERRUPT;
@@ -714,6 +723,8 @@ v_sync(SCR *sp, int flags)
 /*
  * v_event_err --
  *	Unexpected event.
+ *
+ * PUBLIC: void v_event_err(SCR *, EVENT *);
  */
 void
 v_event_err(SCR *sp, EVENT *evp)
@@ -766,6 +777,8 @@ v_event_err(SCR *sp, EVENT *evp)
 /*
  * v_event_flush --
  *	Flush any flagged keys, returning if any keys were flushed.
+ *
+ * PUBLIC: int v_event_flush(SCR *, u_int);
  */
 int
 v_event_flush(SCR *sp, u_int flags)

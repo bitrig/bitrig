@@ -9,10 +9,13 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
@@ -29,6 +32,8 @@ static int v_search(SCR *, VICMD *, char *, size_t, u_int, dir_t);
 /*
  * v_srch -- [count]?RE[? offset]
  *	Ex address search backward.
+ *
+ * PUBLIC: int v_searchb(SCR *, VICMD *);
  */
 int
 v_searchb(SCR *sp, VICMD *vp)
@@ -39,6 +44,8 @@ v_searchb(SCR *sp, VICMD *vp)
 /*
  * v_searchf -- [count]/RE[/ offset]
  *	Ex address search forward.
+ *
+ * PUBLIC: int v_searchf(SCR *, VICMD *);
  */
 int
 v_searchf(SCR *sp, VICMD *vp)
@@ -266,6 +273,8 @@ err2:	vp->m_final.lno = s_lno;
 /*
  * v_searchN -- N
  *	Reverse last search.
+ *
+ * PUBLIC: int v_searchN(SCR *, VICMD *);
  */
 int
 v_searchN(SCR *sp, VICMD *vp)
@@ -289,6 +298,8 @@ v_searchN(SCR *sp, VICMD *vp)
 /*
  * v_searchn -- n
  *	Repeat last search.
+ *
+ * PUBLIC: int v_searchn(SCR *, VICMD *);
  */
 int
 v_searchn(SCR *sp, VICMD *vp)
@@ -299,6 +310,8 @@ v_searchn(SCR *sp, VICMD *vp)
 /*
  * v_searchw -- [count]^A
  *	Search for the word under the cursor.
+ *
+ * PUBLIC: int v_searchw(SCR *, VICMD *);
  */
 int
 v_searchw(SCR *sp, VICMD *vp)
@@ -383,6 +396,8 @@ v_search(SCR *sp, VICMD *vp, char *ptrn, size_t plen, u_int flags, dir_t dir)
  * placing the cursor on the 'A' and doing y?$ would so confuse it that 'h'
  * 'k' and put would no longer work correctly.  In any case, we try to do
  * the right thing, but it's not going to exactly match historic practice.
+ *
+ * PUBLIC: int v_correct(SCR *, VICMD *, int);
  */
 int
 v_correct(SCR *sp, VICMD *vp, int isdelta)

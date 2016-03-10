@@ -9,21 +9,21 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <sys/time.h>
 
+#include <bitstring.h>
 #include <ctype.h>
 #include <libgen.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 
 #include "../common/common.h"
-#include "../cl/cl.h"
 #include "vi.h"
 
 #define	UPDATE_CURSOR	0x01			/* Update the cursor. */
@@ -35,6 +35,8 @@ static int	vs_paint(SCR *, u_int);
 /*
  * v_repaint --
  *	Repaint selected lines from the screen.
+ *
+ * PUBLIC: int vs_repaint(SCR *, EVENT *);
  */
 int
 vs_repaint(SCR *sp, EVENT *evp)
@@ -53,6 +55,8 @@ vs_repaint(SCR *sp, EVENT *evp)
 /*
  * vs_refresh --
  *	Refresh all screens.
+ *
+ * PUBLIC: int vs_refresh(SCR *, int);
  */
 int
 vs_refresh(SCR *sp, int forcepaint)
@@ -130,7 +134,7 @@ vs_refresh(SCR *sp, int forcepaint)
 			vs_resolve(tsp, sp, 0);
 		}
 	if (need_refresh)
-		(void)cl_refresh(sp, 0);
+		(void)gp->scr_refresh(sp, 0);
 
 	/*
 	 * A side-effect of refreshing the screen is that it's now ready
@@ -153,6 +157,7 @@ vs_refresh(SCR *sp, int forcepaint)
 static int
 vs_paint(SCR *sp, u_int flags)
 {
+	GS *gp;
 	SMAP *smp, tmp;
 	VI_PRIVATE *vip;
 	recno_t lastline, lcnt;
@@ -166,6 +171,7 @@ vs_paint(SCR *sp, u_int flags)
 #define	OCNO	vip->ocno		/* Remembered file column. */
 #define	SCNO	vip->sc_col		/* Current screen column. */
 
+	gp = sp->gp;
 	vip = VIP(sp);
 	didpaint = leftright_warp = 0;
 
@@ -265,12 +271,12 @@ vs_paint(SCR *sp, u_int flags)
 						return (1);
 				}
 			else {
-small_fill:			(void)cl_move(sp, LASTLINE(sp), 0);
-				(void)clrtoeol();
+small_fill:			(void)gp->scr_move(sp, LASTLINE(sp), 0);
+				(void)gp->scr_clrtoeol(sp);
 				for (; sp->t_rows > sp->t_minrows;
 				    --sp->t_rows, --TMAP) {
-					(void)cl_move(sp, TMAP - HMAP, 0);
-					(void)clrtoeol();
+					(void)gp->scr_move(sp, TMAP - HMAP, 0);
+					(void)gp->scr_clrtoeol(sp);
 				}
 				if (vs_sm_fill(sp, LNO, P_FILL))
 					return (1);
@@ -566,7 +572,7 @@ adjust:	if (!O_ISSET(sp, O_LEFTRIGHT) &&
 	 *
 	 * We have the current column, retrieve the current row.
 	 */
-fast:	(void)cl_cursor(sp, &y, &notused);
+fast:	(void)gp->scr_cursor(sp, &y, &notused);
 	goto done_cursor;
 
 	/*
@@ -672,8 +678,8 @@ paint:	for (smp = HMAP; smp <= TMAP; ++smp)
 	 */
 	if (F_ISSET(sp, SC_SCR_REDRAW) && IS_SMALL(sp))
 		for (cnt = sp->t_rows; cnt <= sp->t_maxrows; ++cnt) {
-			(void)cl_move(sp, cnt, 0);
-			(void)clrtoeol();
+			(void)gp->scr_move(sp, cnt, 0);
+			(void)gp->scr_clrtoeol(sp);
 		}
 
 	didpaint = 1;
@@ -726,7 +732,7 @@ number:	if (O_ISSET(sp, O_NUMBER) &&
 		vs_modeline(sp);
 
 	if (LF_ISSET(UPDATE_CURSOR)) {
-		(void)cl_move(sp, y, SCNO);
+		(void)gp->scr_move(sp, y, SCNO);
 
 		/*
 		 * XXX
@@ -741,7 +747,7 @@ number:	if (O_ISSET(sp, O_NUMBER) &&
 	}
 
 	if (LF_ISSET(UPDATE_SCREEN))
-		(void)cl_refresh(sp, F_ISSET(vip, VIP_N_EX_PAINT));
+		(void)gp->scr_refresh(sp, F_ISSET(vip, VIP_N_EX_PAINT));
 
 	/* 12: Clear the flags that are handled by this routine. */
 	F_CLR(sp, SC_SCR_CENTER | SC_SCR_REDRAW | SC_SCR_REFORMAT | SC_SCR_TOP);
@@ -771,6 +777,7 @@ vs_modeline(SCR *sp)
 		"Insert",			/* SM_INSERT */
 		"Replace",			/* SM_REPLACE */
 	};
+	GS *gp;
 	size_t cols, curcol, curlen, endpoint, len, midpoint;
 	const char *t = NULL;
 	int ellipsis;
@@ -783,6 +790,8 @@ vs_modeline(SCR *sp)
 	 */
 	if (sp->frp == NULL)
 		return;
+
+	gp = sp->gp;
 
 	/*
 	 * We put down the file name, the ruler, the mode and the dirty flag.
@@ -797,7 +806,7 @@ vs_modeline(SCR *sp)
 	 *
 	 * Move to the last line on the screen.
 	 */
-	(void)cl_move(sp, LASTLINE(sp), 0);
+	(void)gp->scr_move(sp, LASTLINE(sp), 0);
 
 	/* If more than one screen in the display, show the file name. */
 	curlen = 0;
@@ -821,17 +830,18 @@ vs_modeline(SCR *sp)
 		}
 		if (ellipsis) {
 			while (ellipsis--)
-				(void)cl_addstr(sp,
+				(void)gp->scr_addstr(sp,
 				    KEY_NAME(sp, '.'), KEY_LEN(sp, '.'));
-			(void)cl_addstr(sp,
+			(void)gp->scr_addstr(sp,
 			    KEY_NAME(sp, ' '), KEY_LEN(sp, ' '));
 		}
 		for (; *p != '\0'; ++p)
-			(void)cl_addstr(sp, KEY_NAME(sp, *p), KEY_LEN(sp, *p));
+			(void)gp->scr_addstr(sp,
+			    KEY_NAME(sp, *p), KEY_LEN(sp, *p));
 	}
 
 	/* Clear the rest of the line. */
-	(void)clrtoeol();
+	(void)gp->scr_clrtoeol(sp);
 
 	/*
 	 * Display the ruler.  If we're not at the midpoint yet, move there.
@@ -852,13 +862,13 @@ vs_modeline(SCR *sp)
 
 		midpoint = (cols - ((len + 1) / 2)) / 2;
 		if (curlen < midpoint) {
-			(void)cl_move(sp, LASTLINE(sp), midpoint);
+			(void)gp->scr_move(sp, LASTLINE(sp), midpoint);
 			curlen += len;
 		} else if (curlen + 2 + len < cols) {
-			(void)cl_addstr(sp, "  ", 2);
+			(void)gp->scr_addstr(sp, "  ", 2);
 			curlen += 2 + len;
 		}
-		(void)cl_addstr(sp, buf, len);
+		(void)gp->scr_addstr(sp, buf, len);
 	}
 
 	/*
@@ -876,12 +886,12 @@ vs_modeline(SCR *sp)
 	}
 
 	if (endpoint > curlen + 2) {
-		(void)cl_move(sp, LASTLINE(sp), endpoint);
+		(void)gp->scr_move(sp, LASTLINE(sp), endpoint);
 		if (O_ISSET(sp, O_SHOWMODE)) {
 			if (F_ISSET(sp->ep, F_MODIFIED))
-				(void)cl_addstr(sp,
+				(void)gp->scr_addstr(sp,
 				    KEY_NAME(sp, '*'), KEY_LEN(sp, '*'));
-			(void)cl_addstr(sp, t, len);
+			(void)gp->scr_addstr(sp, t, len);
 		}
 	}
 }

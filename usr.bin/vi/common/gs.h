@@ -40,13 +40,13 @@ struct _fref {
 	u_int16_t flags;
 };
 
-/* Action arguments to cl_ex_adjust(). */
+/* Action arguments to scr_exadjust(). */
 typedef enum { EX_TERM_CE, EX_TERM_SCROLL } exadj_t;
 
-/* Screen attribute arguments to cl_attr(). */
+/* Screen attribute arguments to scr_attr(). */
 typedef enum { SA_ALTERNATE, SA_INVERSE } scr_attr_t;
 
-/* Key type arguments to cl_keyval(). */
+/* Key type arguments to scr_keyval(). */
 typedef enum { KEY_VEOF, KEY_VERASE, KEY_VKILL, KEY_VWERASE } scr_keyval_t;
 
 /*
@@ -142,4 +142,48 @@ struct _gs {
 #define	G_SRESTART	0x0080		/* Screen restarted. */
 #define	G_TMP_INUSE	0x0100		/* Temporary buffer in use. */
 	u_int32_t flags;
+
+	/* Screen interface functions. */
+					/* Add a string to the screen. */
+	int	(*scr_addstr)(SCR *, const char *, size_t);
+					/* Toggle a screen attribute. */
+	int	(*scr_attr)(SCR *, scr_attr_t, int);
+					/* Terminal baud rate. */
+	int	(*scr_baud)(SCR *, u_long *);
+					/* Beep/bell/flash the terminal. */
+	int	(*scr_bell)(SCR *);
+					/* Display a busy message. */
+	void	(*scr_busy)(SCR *, const char *, busy_t);
+					/* Clear to the end of the line. */
+	int	(*scr_clrtoeol)(SCR *);
+					/* Return the cursor location. */
+	int	(*scr_cursor)(SCR *, size_t *, size_t *);
+					/* Delete a line. */
+	int	(*scr_deleteln)(SCR *);
+					/* Get a keyboard event. */
+	int	(*scr_event)(SCR *, EVENT *, u_int32_t, int);
+					/* Ex: screen adjustment routine. */
+	int	(*scr_ex_adjust)(SCR *, exadj_t);
+	int	(*scr_fmap)		/* Set a function key. */
+(SCR *, seq_t, CHAR_T *, size_t, CHAR_T *, size_t);
+					/* Get terminal key value. */
+	int	(*scr_keyval)(SCR *, scr_keyval_t, CHAR_T *, int *);
+					/* Insert a line. */
+	int	(*scr_insertln)(SCR *);
+					/* Handle an option change. */
+	int	(*scr_optchange)(SCR *, int, char *, u_long *);
+					/* Move the cursor. */
+	int	(*scr_move)(SCR *, size_t, size_t);
+					/* Message or ex output. */
+	void	(*scr_msg)(SCR *, mtype_t, char *, size_t);
+					/* Refresh the screen. */
+	int	(*scr_refresh)(SCR *, int);
+					/* Rename the file. */
+	int	(*scr_rename)(SCR *, char *, int);
+					/* Set the screen type. */
+	int	(*scr_screen)(SCR *, u_int32_t);
+					/* Suspend the editor. */
+	int	(*scr_suspend)(SCR *, int *);
+					/* Print usage message. */
+	void	(*scr_usage)(void);
 };

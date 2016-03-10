@@ -9,9 +9,12 @@
  * See the LICENSE file for redistribution information.
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/queue.h>
 
+#include <bitstring.h>
 #include <limits.h>
 #include <stdio.h>
 
@@ -20,6 +23,8 @@
 /*
  * ex_quit -- :quit[!]
  *	Quit.
+ *
+ * PUBLIC: int ex_quit(SCR *, EXCMD *);
  */
 int
 ex_quit(SCR *sp, EXCMD *cmdp)

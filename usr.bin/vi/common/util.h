@@ -30,6 +30,9 @@
 /* Offset to next column of stop size, e.g. tab offsets. */
 #define	COL_OFF(c, stop)	((stop) - ((c) % (stop)))
 
+/* Busy message types. */
+typedef enum { B_NONE, B_OFF, B_READ, B_RECOVER, B_SEARCH, B_WRITE } bmsg_t;
+
 /*
  * Number handling defines and protoypes.
  *
