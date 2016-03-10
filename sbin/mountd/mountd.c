@@ -1924,15 +1924,7 @@ do_mount(struct exportlist *ep, struct grouplist *grp, int exflags,
     struct xucred *anoncrp, char *dirp, int dirplen)
 {
 	struct sockaddr_in sin, imask;
-<<<<<<< HEAD
-	union {
-		struct ufs_args ua;
-		struct iso_args ia;
-		struct msdosfs_args da;
-	} args;
-=======
 	struct export_args args;
->>>>>>> Add privilege separation and pledge().
 	char savedc = '\0';
 	u_int32_t **addrp;
 	char *cp = NULL;
