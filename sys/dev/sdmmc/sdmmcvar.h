@@ -133,7 +133,8 @@ struct sdmmc_cis {
 struct sdmmc_function {
 	/* common members */
 	struct sdmmc_softc *sc;		/* card slot softc */
-	u_int16_t rca;			/* relative card address */
+	u_int16_t rca;				/* relative card address */
+	int width;					/* bus witdh */
 	int flags;
 #define SFF_ERROR		0x0001	/* function is poo; ignore it */
 #define SFF_SDHC		0x0002	/* SD High Capacity card */
@@ -190,6 +191,8 @@ struct sdmmc_softc {
 	void *sc_scsibus;		/* SCSI bus emulation softc */
 	TAILQ_HEAD(, sdmmc_intr_handler) sc_intrq; /* interrupt handlers */
 	long sc_max_xfer;		/* maximum transfer size */
+
+	int sc_buswidth;		/* host bus width */
 };
 
 /*

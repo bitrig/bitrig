@@ -105,6 +105,7 @@ sdmmc_attach(struct device *parent, struct device *self, void *aux)
 	sc->sc_flags = saa->flags;
 	sc->sc_caps = saa->caps;
 	sc->sc_max_xfer = saa->max_xfer;
+	sc->sc_buswidth = 1;
 
 	SIMPLEQ_INIT(&sc->sf_head);
 	TAILQ_INIT(&sc->sc_tskq);
@@ -435,6 +436,7 @@ sdmmc_disable(struct sdmmc_softc *sc)
 	(void)sdmmc_select_card(sc, NULL);
 
 	/* Turn off bus power and clock. */
+	(void)sdmmc_chip_bus_width(sc->sct, sc->sch, 1);
 	(void)sdmmc_chip_bus_clock(sc->sct, sc->sch, SDMMC_SDCLK_OFF);
 	(void)sdmmc_chip_bus_power(sc->sct, sc->sch, 0);
 }
@@ -479,6 +481,7 @@ sdmmc_function_alloc(struct sdmmc_softc *sc)
 	sf->cis.manufacturer = SDMMC_VENDOR_INVALID;
 	sf->cis.product = SDMMC_PRODUCT_INVALID;
 	sf->cis.function = SDMMC_FUNCTION_INVALID;
+	sf->width = 1;
 	return sf;
 }
 

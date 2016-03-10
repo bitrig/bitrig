@@ -39,5 +39,7 @@ int	sdhc_intr(void *);
 
 /* flag values */
 #define SDHC_F_NOPWR0		(1 << 0)
+#define SDHC_F_ENHANCED     0x0020  /* Freescale ESDHC */
+#define SDHC_F_8BIT_MODE    0x0040  /* MMC 8bit mode is supported */
 
 #endif
