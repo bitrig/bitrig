@@ -17,11 +17,11 @@
 #include <regex.h>
 #include <err.h>
 
-struct val	*make_int(long);
+struct val	*make_int(int64_t);
 struct val	*make_str(char *);
 void		 free_value(struct val *);
-int		 is_integer(struct val *, long *);
-long		 to_integer(struct val *);
+int		 is_integer(struct val *, int64_t *);
+int		 to_integer(struct val *);
 void		 to_string(struct val *);
 int		 is_zero_or_null(struct val *);
 void		 nexttoken(int);
@@ -136,7 +136,7 @@ is_integer(struct val *vp, int64_t *r)
 
 
 /* coerce to vp to an integer */
-long
+int
 to_integer(struct val *vp)
 {
 	int64_t		r;
