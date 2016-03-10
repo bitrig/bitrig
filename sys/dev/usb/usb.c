@@ -48,15 +48,13 @@
 #include <sys/device.h>
 #include <sys/timeout.h>
 #include <sys/kthread.h>
+#include <sys/conf.h>
 #include <sys/fcntl.h>
 #include <sys/poll.h>
 #include <sys/selinfo.h>
 #include <sys/signalvar.h>
 #include <sys/time.h>
 #include <sys/rwlock.h>
-#include <sys/vnode.h>
-
-#include <machine/conf.h>
 
 #include <dev/usb/usb.h>
 #include <dev/usb/usbdi.h>
@@ -971,9 +969,6 @@ usb_detach(struct device *self, int flags)
 		softintr_disestablish(sc->sc_bus->soft);
 		sc->sc_bus->soft = NULL;
 	}
-
-	/* Nuke the vnodes for any open instances (calls close). */
-	vdevgone(CMAJ_USB, self->dv_unit, self->dv_unit, VCHR);
 
 	return (0);
 }
