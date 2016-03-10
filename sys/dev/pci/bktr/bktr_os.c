@@ -55,6 +55,7 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
+#include <sys/conf.h>
 #include <sys/uio.h>
 #include <sys/kernel.h>
 #include <sys/signalvar.h>
@@ -66,8 +67,6 @@
 #include <sys/radioio.h>
 #include <dev/radio_if.h>
 #endif
-
-#include <machine/conf.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -92,10 +91,6 @@ int bktr_debug = 1;
 
 #define IPL_VIDEO       IPL_BIO         /* XXX */
 
-#define VIDEO_DEV	0x00
-#define TUNER_DEV	0x01
-#define VBI_DEV		0x02
-
 static	int		bktr_intr(void *arg) { return common_bktr_intr(arg); }
 
 #define bktr_open       bktropen
@@ -114,10 +109,9 @@ paddr_t	bktr_mmap(dev_t, off_t, int);
 
 static int      bktr_probe(struct device *, void *, void *);
 static void     bktr_attach(struct device *, struct device *, void *);
-static int      bktr_detach(struct device *, int);
 
 struct cfattach bktr_ca = {
-        sizeof(struct bktr_softc), bktr_probe, bktr_attach, bktr_detach
+        sizeof(struct bktr_softc), bktr_probe, bktr_attach
 };
 
 struct cfdriver bktr_cd = {
@@ -259,20 +253,6 @@ bktr_attach(struct device *parent, struct device *self, void *aux)
 #endif
 }
 
-static int
-bktr_detach(struct device *self, int flags)
-{
-	int mn;
-
-	/* Nuke the vnodes for any open instances (calls close). */
-	mn = self->dv_unit;
-	vdevgone(CMAJ_BKTR, mn | (VIDEO_DEV << 4), mn | (VIDEO_DEV << 4), VCHR);
-	vdevgone(CMAJ_BKTR, mn | (TUNER_DEV << 4), mn | (TUNER_DEV << 4), VCHR);
-	vdevgone(CMAJ_BKTR, mn | (VBI_DEV   << 4), mn | (VBI_DEV   << 4), VCHR);
-
-	return (0);
-}
-
 
 /*
  * Special Memory Allocation
@@ -352,6 +332,10 @@ free_bktr_mem(bktr, dmap, kva)
 **---------------------------------------------------------
 */
 
+
+#define VIDEO_DEV	0x00
+#define TUNER_DEV	0x01
+#define VBI_DEV		0x02
 
 #define UNIT(x)         (minor((x) & 0x0f))
 #define FUNCTION(x)     (minor((x >> 4) & 0x0f))
