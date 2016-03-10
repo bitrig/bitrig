@@ -533,7 +533,9 @@ em_attach(struct device *parent, struct device *self, void *aux)
 
 	/* Initialize statistics */
 	em_clear_hw_cntrs(&sc->hw);
+#ifndef SMALL_KERNEL
 	em_update_stats_counters(sc);
+#endif
 	sc->hw.get_link_status = 1;
 	if (!defer)
 		em_update_link_status(sc);
@@ -1432,10 +1434,12 @@ em_local_timer(void *arg)
 
 	s = splnet();
 
+#ifndef SMALL_KERNEL
 	em_update_stats_counters(sc);
 #ifdef EM_DEBUG
 	if (ifp->if_flags & IFF_DEBUG && ifp->if_flags & IFF_RUNNING)
 		em_print_hw_stats(sc);
+#endif
 #endif
 	em_smartspeed(sc);
 
@@ -2816,8 +2820,10 @@ em_rxeof(struct em_softc *sc)
 			last_byte = *(mtod(m, caddr_t) + desc_len - 1);
 			if (TBI_ACCEPT(&sc->hw, status, desc->errors,
 			    pkt_len, last_byte)) {
+#ifndef SMALL_KERNEL
 				em_tbi_adjust_stats(&sc->hw, &sc->stats, 
 				    pkt_len, sc->hw.mac_addr);
+#endif
 				if (len > 0)
 					len--;
 			} else
@@ -3402,3 +3408,4 @@ em_print_hw_stats(struct em_softc *sc)
 		(long long)sc->stats.gptc);
 }
 #endif
+#endif /* !SMALL_KERNEL */
