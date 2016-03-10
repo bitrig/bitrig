@@ -434,7 +434,7 @@ udf_read(void *v)
 	struct unode *up = VTOU(vp);
 	struct buf *bp;
 	uint8_t *data;
-	off_t fsize;
+	off_t fsize, offset;
 	size_t size;
 	int error = 0;
 
