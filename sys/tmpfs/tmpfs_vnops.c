@@ -1039,8 +1039,8 @@ tmpfs_readlink(void *v)
 	KASSERT(vp->v_type == VLNK);
 	node = VP_TO_TMPFS_NODE(vp);
 	error = uiomove(node->tn_spec.tn_lnk.tn_link,
-	    MIN((size_t)node->tn_size, uio->uio_resid), uio);
-	tmpfs_update(node, TMPFS_NODE_ACCESSED);
+	    szmin((size_t)node->tn_size, uio->uio_resid), uio);
+	node->tn_status |= TMPFS_NODE_ACCESSED;
 
 	return error;
 }
