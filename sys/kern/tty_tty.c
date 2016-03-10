@@ -59,7 +59,7 @@ cttyopen(dev_t dev, int flag, int mode, struct proc *p)
 		return (ENXIO);
 	vn_lock(ttyvp, LK_EXCLUSIVE | LK_RETRY);
 	error = VOP_OPEN(ttyvp, flag, NOCRED);
-	VOP_UNLOCK(ttyvp, 0, p);
+	VOP_UNLOCK(ttyvp, 0);
 	return (error);
 }
 
