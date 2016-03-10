@@ -229,7 +229,6 @@ struct bioc_deleteraid {
 	struct bio	bd_bio;
 	u_int32_t	bd_flags;
 #define BIOC_SDCLEARMETA	0x01	/* clear metadata region */
-#define BIOC_SDDISASSEMBLE	0x02	/* don't alter flags on shutdown */
 	char		bd_dev[16];	/* device */
 };
 
@@ -250,6 +249,32 @@ struct bioc_installboot {
 	void		*bb_bootldr;
 	u_int32_t	bb_bootblk_size;
 	u_int32_t	bb_bootldr_size;
+};
+
+#define BIOCPATROL _IOWR('B', 42, struct bioc_patrol)
+struct bioc_patrol {
+	struct bio	bp_bio;
+	int		bp_opcode;
+#define BIOC_SPSTOP		0x00	/* stop patrol */
+#define BIOC_SPSTART		0x01	/* start patrol */
+#define BIOC_GPSTATUS		0x02	/* get status */
+#define BIOC_SPDISABLE		0x03	/* disable patrol */
+#define BIOC_SPAUTO		0x04	/* enable patrol as auto */
+#define BIOC_SPMANUAL		0x05	/* enable patrol as manual */
+
+	int		bp_mode;
+#define	BIOC_SPMAUTO		0x00
+#define	BIOC_SPMMANUAL		0x01
+#define BIOC_SPMDISABLED	0x02
+	int		bp_status;	/* only used with get state */
+#define	BIOC_SPSSTOPPED		0x00
+#define	BIOC_SPSREADY		0x01
+#define BIOC_SPSACTIVE		0x02
+#define BIOC_SPSABORTED		0xff
+
+	int		bp_autoival;
+	int		bp_autonext;
+	int		bp_autonow;
 };
 
 /* kernel and userspace defines */
