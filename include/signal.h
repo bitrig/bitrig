@@ -107,17 +107,10 @@ int	sigdelset(sigset_t *, int);
 int	sigismember(const sigset_t *, int);
 #endif /* !_ANSI_LIBRARY */
 
-__only_inline int sigemptyset(sigset_t *__set)
-{
-	*__set = 0;
-	return (0);
-}
+/* List definitions after function declarations, or Reiser cpp gets upset. */
+#define		sigemptyset(set)	(*(set) = 0, 0)
+#define		sigfillset(set)		(*(set) = ~(sigset_t)0, 0)
 
-__only_inline int sigfillset(sigset_t *__set)
-{
-	*__set = ~(sigset_t)0;
-	return (0);
-}
 
 #if __BSD_VISIBLE || __XPG_VISIBLE >= 420
 int	killpg(pid_t, int);
