@@ -1,4 +1,4 @@
-/*	$OpenBSD: regcomp.c,v 1.28 2015/12/28 22:08:18 mmcc Exp $ */
+/*	$OpenBSD: regcomp.c,v 1.24 2014/05/06 15:48:38 tedu Exp $ */
 /*-
  * Copyright (c) 1992, 1993, 1994 Henry Spencer.
  * Copyright (c) 1992, 1993, 1994
@@ -1139,16 +1139,25 @@ singleton(cset *cs)
 static void
 CHadd(struct parse *p, cset *cs, wint_t ch)
 {
-	size_t oldend = cs->smultis;
-	void *np;
-
-	cs->smultis += strlen(cp) + 1;
-	np = realloc(cs->multis, cs->smultis);
-	if (np == NULL) {
-		free(cs->multis);
-		cs->multis = NULL;
-		SETERROR(REG_ESPACE);
-		return;
+	wint_t nch, *newwides;
+	assert(ch >= 0);
+	if (ch < NC)
+		cs->bmp[ch >> 3] |= 1 << (ch & 7);
+	else {
+		newwides = realloc(cs->wides, (cs->nwides + 1) *
+		    sizeof(*cs->wides));
+		if (newwides == NULL) {
+			SETERROR(REG_ESPACE);
+			return;
+		}
+		cs->wides = newwides;
+		cs->wides[cs->nwides++] = ch;
+	}
+	if (cs->icase) {
+		if ((nch = towlower(ch)) < NC)
+			cs->bmp[nch >> 3] |= 1 << (nch & 7);
+		if ((nch = towupper(ch)) < NC)
+			cs->bmp[nch >> 3] |= 1 << (nch & 7);
 	}
 }
 

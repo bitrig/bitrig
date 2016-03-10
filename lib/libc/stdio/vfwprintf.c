@@ -936,7 +936,6 @@ fp_common:
 					goto error;
 				} else
 					cp = convbuf;
-				}
 			}
 			size = (prec >= 0) ? wcsnlen(cp, prec) : wcslen(cp);
 			sign = '\0';

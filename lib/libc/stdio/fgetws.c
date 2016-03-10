@@ -54,7 +54,7 @@ fgetws_l(wchar_t * __restrict ws, int n, FILE * __restrict fp, locale_t locale)
 
 	wsp = ws;
 	while (n-- > 1) {
-		if ((wc = __fgetwc_unlock(fp)) == WEOF &&
+		if ((wc = __fgetwc_unlock(fp, locale)) == WEOF &&
 		    ferror(fp) && errno == EILSEQ)
 			goto error;
 		if (wc == WEOF) {

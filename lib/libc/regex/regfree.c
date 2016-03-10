@@ -65,7 +65,6 @@ regfree(regex_t *preg)
 
 	free(g->strip);
 	free(g->sets);
-	free(g->setbits);
 	free(g->must);
 	free(g);
 }
