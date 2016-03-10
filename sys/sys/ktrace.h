@@ -201,7 +201,7 @@ __END_DECLS
 
 #else
 
-void ktrgenio(struct proc *, int, enum uio_rw, struct iovec *, ssize_t);
+void ktrgenio(struct proc *, int, enum uio_rw, struct iovec *, size_t);
 void ktrnamei(struct proc *, char *);
 void ktrpsig(struct proc *, int, sig_t, int, int, siginfo_t *);
 void ktrsyscall(struct proc *, register_t, size_t, register_t []);
