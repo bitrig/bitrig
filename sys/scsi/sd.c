@@ -2,7 +2,7 @@
 /*	$NetBSD: sd.c,v 1.111 1997/04/02 02:29:41 mycroft Exp $	*/
 
 /*-
- * Copyright (c) 1998, 2003, 2004 The NetBSD Foundation, Inc.
+ * Copyright (c) 1998 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -163,7 +163,7 @@ sdattach(struct device *parent, struct device *self, void *aux)
 	int sd_autoconf = scsi_autoconf | SCSI_SILENT |
 	    SCSI_IGNORE_ILLEGAL_REQUEST | SCSI_IGNORE_MEDIA_CHANGE;
 	struct dk_cache dkc;
-	int error, result;
+	int error, result, sortby = BUFQ_DEFAULT;
 
 	SC_DEBUG(sc_link, SDEV_DB2, ("sdattach:\n"));
 
@@ -227,6 +227,10 @@ sdattach(struct device *parent, struct device *self, void *aux)
 		    sc->sc_dev.dv_xname,
 		    dp->disksize / (1048576 / dp->secsize), dp->secsize,
 		    dp->disksize);
+		if (ISSET(sc->flags, SDF_THIN)) {
+			sortby = BUFQ_FIFO;
+			printf(", thin");
+		}
 		if (ISSET(sc_link->flags, SDEV_READONLY)) {
 			printf(", readonly");
 		}
@@ -247,7 +251,7 @@ sdattach(struct device *parent, struct device *self, void *aux)
 	 * Initialize disk structures.
 	 */
 	sc->sc_dk.dk_name = sc->sc_dev.dv_xname;
-	bufq_init(&sc->sc_bufq, BUFQ_FIFO);
+	bufq_init(&sc->sc_bufq, sortby);
 
 	/*
 	 * Enable write cache by default.
@@ -310,7 +314,7 @@ sddetach(struct device *self, int flags)
 
 	bufq_drain(&sc->sc_bufq);
 
-	disk_gone(&sc->sc_dk);
+	disk_gone(sdopen, self->dv_unit);
 
 	/* Detach disk. */
 	bufq_destroy(&sc->sc_bufq);
@@ -504,7 +508,8 @@ sdstrategy(struct buf *bp)
 {
 	struct scsi_link *sc_link;
 	struct sd_softc *sc;
-	int s, bqwait;
+	int s;
+	int bqwait;
 
 	sc = sdlookup(DISKUNIT(bp->b_dev));
 	if (sc == NULL) {
@@ -565,7 +570,7 @@ sd_cmd_rw6(struct scsi_xfer *xs, int read, u_int64_t secno, u_int nsecs)
 	struct scsi_rw *cmd = (struct scsi_rw *)xs->cmd;
 
 	cmd->opcode = read ? READ_COMMAND : WRITE_COMMAND;
-	_lto3b((u_int32_t)secno, cmd->addr);
+	_lto3b(secno, cmd->addr);
 	cmd->length = nsecs;
 
 	xs->cmdlen = sizeof(*cmd);
@@ -577,7 +582,7 @@ sd_cmd_rw10(struct scsi_xfer *xs, int read, u_int64_t secno, u_int nsecs)
 	struct scsi_rw_big *cmd = (struct scsi_rw_big *)xs->cmd;
 
 	cmd->opcode = read ? READ_BIG : WRITE_BIG;
-	_lto4b((u_int32_t)secno, cmd->addr);
+	_lto4b(secno, cmd->addr);
 	_lto2b(nsecs, cmd->length);
 
 	xs->cmdlen = sizeof(*cmd);
@@ -589,7 +594,7 @@ sd_cmd_rw12(struct scsi_xfer *xs, int read, u_int64_t secno, u_int nsecs)
 	struct scsi_rw_12 *cmd = (struct scsi_rw_12 *)xs->cmd;
 
 	cmd->opcode = read ? READ_12 : WRITE_12;
-	_lto4b((u_int32_t)secno, cmd->addr);
+	_lto4b(secno, cmd->addr);
 	_lto4b(nsecs, cmd->length);
 
 	xs->cmdlen = sizeof(*cmd);
@@ -627,7 +632,7 @@ sdstart(struct scsi_xfer *xs)
 	struct sd_softc *sc = link->device_softc;
 	struct buf *bp;
 	u_int64_t secno;
-	unsigned int nsecs;
+	int nsecs;
 	int read;
 	struct partition *p;
 
@@ -651,8 +656,7 @@ sdstart(struct scsi_xfer *xs)
 
 	p = &sc->sc_dk.dk_label->d_partitions[DISKPART(bp->b_dev)];
 	secno += DL_GETPOFFSET(p);
-	nsecs = (unsigned int)howmany(bp->b_bcount,
-	    sc->sc_dk.dk_label->d_secsize);
+	nsecs = howmany(bp->b_bcount, sc->sc_dk.dk_label->d_secsize);
 	read = bp->b_flags & B_READ;
 
 	/*
@@ -676,7 +680,7 @@ sdstart(struct scsi_xfer *xs)
 	xs->flags |= (read ? SCSI_DATA_IN : SCSI_DATA_OUT);
 	xs->timeout = 60000;
 	xs->data = bp->b_data;
-	xs->datalen = (int)bp->b_bcount;
+	xs->datalen = bp->b_bcount;
 
 	xs->done = sd_buf_done;
 	xs->cookie = bp;
@@ -958,7 +962,7 @@ sdioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 			if (sc->sc_link->flags & SDEV_SOFTRAID) {
 				error =
 				    (sc->sc_link->adapter->ioctl)(sc->sc_link,
-				    cmd, (caddr_t)&sc->sc_dev, flag);
+					cmd, (caddr_t)&sc->sc_dev, flag);
 			} else
 				error = sd_flush(sc, 0);
 		}
@@ -1094,10 +1098,10 @@ sdgetdisklabel(dev_t dev, struct sd_softc *sc, struct disklabel *lp,
 
 	bzero(lp, sizeof(struct disklabel));
 
-	lp->d_secsize = (u_int32_t)sc->params.secsize;
-	lp->d_ntracks = (u_int32_t)sc->params.heads;
-	lp->d_nsectors = (u_int32_t)sc->params.sectors;
-	lp->d_ncylinders = (u_int32_t)sc->params.cyls;
+	lp->d_secsize = sc->params.secsize;
+	lp->d_ntracks = sc->params.heads;
+	lp->d_nsectors = sc->params.sectors;
+	lp->d_ncylinders = sc->params.cyls;
 	lp->d_secpercyl = lp->d_ntracks * lp->d_nsectors;
 	if (lp->d_secpercyl == 0) {
 		lp->d_secpercyl = 100;
@@ -1311,7 +1315,10 @@ sddump(dev_t dev, daddr_t blkno, caddr_t va, size_t size)
 	blkno += sectoff;
 
 	while (totwrt > 0) {
-		nwrt = (u_int32_t)ulmin(totwrt, UINT32_MAX);
+		if (totwrt > UINT32_MAX)
+			nwrt = UINT32_MAX;
+		else
+			nwrt = totwrt;
 
 #ifndef	SD_DUMP_NOT_TRUSTED
 		xs = scsi_xs_get(sc->sc_link, SCSI_NOSLEEP);
@@ -1505,7 +1512,7 @@ sd_thin_pages(struct sd_softc *sc, int flags)
 	if (pg == NULL)
 		return (ENOMEM);
 
-	rv = scsi_inquire_vpd(sc->sc_link, pg, (u_int)(sizeof(*pg) + len),
+	rv = scsi_inquire_vpd(sc->sc_link, pg, sizeof(*pg) + len,
 	    SI_PG_SUPPORTED, flags);
 	if (rv != 0)
 		goto done;
@@ -1703,8 +1710,7 @@ sd_get_parms(struct sd_softc *sc, struct disk_parms *dp, int flags)
 			heads = rigid->nheads;
 			cyls = _3btol(rigid->ncyl);
 			if (heads * cyls > 0)
-				sectors = (u_int32_t)(dp->disksize /
-				    (heads * cyls));
+				sectors = dp->disksize / (heads * cyls);
 		} else {
 			err = scsi_do_mode_sense(sc_link,
 			    PAGE_FLEX_GEOMETRY, buf, (void **)&flex, NULL, NULL,
@@ -1794,7 +1800,7 @@ sd_flush(struct sd_softc *sc, int flags)
 	sc_link = sc->sc_link;
 
 	if (sc_link->quirks & SDEV_NOSYNCCACHE)
-		return;
+		return (0);
 
 	/*
 	 * Issue a SYNCHRONIZE CACHE. Address 0, length 0 means "all remaining
@@ -1805,7 +1811,7 @@ sd_flush(struct sd_softc *sc, int flags)
 	xs = scsi_xs_get(sc_link, flags);
 	if (xs == NULL) {
 		SC_DEBUG(sc_link, SDEV_DB1, ("cache sync failed to get xs\n"));
-		return;
+		return (EIO);
 	}
 
 	cmd = (struct scsi_synchronize_cache *)xs->cmd;
@@ -1815,10 +1821,7 @@ sd_flush(struct sd_softc *sc, int flags)
 	xs->timeout = 100000;
 	xs->flags |= SCSI_IGNORE_ILLEGAL_REQUEST;
 
-	if (scsi_xs_sync(xs) == 0)
-		sc->flags &= ~SDF_DIRTY;
-	else
-		SC_DEBUG(sc_link, SDEV_DB1, ("cache sync failed\n"));
+	error = scsi_xs_sync(xs);
 
 	scsi_xs_put(xs);
 

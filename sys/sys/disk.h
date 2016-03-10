@@ -142,7 +142,7 @@ void	disk_attach(struct device *, struct disk *);
 void	disk_detach(struct disk *);
 int	disk_openpart(struct disk *, int, int, int);
 void	disk_closepart(struct disk *, int, int);
-void	disk_gone(struct disk *);
+void	disk_gone(int (*)(dev_t, int, int, struct proc *), int);
 void	disk_busy(struct disk *);
 void	disk_unbusy(struct disk *, long, int);
 

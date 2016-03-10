@@ -170,7 +170,7 @@ tmpfsrd_detach(struct device *self, int flags)
 {
 	struct tmpfsrd_softc *sc = (struct tmpfsrd_softc *)self;
 
-	disk_gone(&sc->sc_dk);
+	disk_gone(tmpfsrdopen, self->dv_unit);
 	disk_detach(&sc->sc_dk);
 
 	task_del(systq, &sc->sc_terminatetask);

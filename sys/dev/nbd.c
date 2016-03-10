@@ -412,7 +412,7 @@ nbdioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 		sc->sc_socket = NULL;
 
 		/* Detach the disk. */
-		disk_gone(&sc->sc_dk);
+		disk_gone(nbdopen, unit);
 		disk_detach(&sc->sc_dk);
 
 		return (error);
@@ -430,7 +430,7 @@ nbdioctl(dev_t dev, u_long cmd, caddr_t addr, int flag, struct proc *p)
 			break;
 
 		/* Detach the disk. */
-		disk_gone(&sc->sc_dk);
+		disk_gone(nbdopen, unit);
 		disk_detach(&sc->sc_dk);
 		break;
 

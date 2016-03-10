@@ -552,7 +552,7 @@ vnd_bio_ioctl(struct device *dev, u_long cmd, caddr_t addr)
 		DNPRINTF(VDB_INIT, "vndioctl: CLRed\n");
 
 		/* Detach the disk. */
-		disk_gone(&sc->sc_dk);
+		disk_gone(vndopen, unit);
 		disk_detach(&sc->sc_dk);
 
 		disk_unlock(&sc->sc_dk);

@@ -385,7 +385,7 @@ wddetach(struct device *self, int flags)
 
 	bufq_drain(&sc->sc_bufq);
 
-	disk_gone(&sc->sc_dk);
+	disk_gone(wdopen, self->dv_unit);
 
 	/* Detach disk. */
 	bufq_destroy(&sc->sc_bufq);

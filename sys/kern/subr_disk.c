@@ -1196,18 +1196,19 @@ disk_closepart(struct disk *dk, int part, int fmt)
 }
 
 void
-disk_gone(struct disk *diskp)
+disk_gone(int (*open)(dev_t, int, int, struct proc *), int unit)
 {
 	int bmaj, cmaj, mn;
 
 	/* Locate the lowest minor number to be detached. */
-	mn = DISKMINOR(DISKUNIT(diskp->dk_devno), 0);
+	mn = DISKMINOR(unit, 0);
 
-	bmaj = major(diskp->dk_devno);
-	cmaj = major(blktochr(diskp->dk_devno));
-
-	vdevgone(bmaj, mn, mn + MAXPARTITIONS - 1, VBLK);
-	vdevgone(cmaj, mn, mn + MAXPARTITIONS - 1, VCHR);
+	for (bmaj = 0; bmaj < nblkdev; bmaj++)
+		if (bdevsw[bmaj].d_open == open)
+			vdevgone(bmaj, mn, mn + MAXPARTITIONS - 1, VBLK);
+	for (cmaj = 0; cmaj < nchrdev; cmaj++)
+		if (cdevsw[cmaj].d_open == open)
+			vdevgone(cmaj, mn, mn + MAXPARTITIONS - 1, VCHR);
 }
 
 /*
