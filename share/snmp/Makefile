@@ -8,6 +8,6 @@ FILES+= OPENBSD-RELAYD-MIB.txt
 all clean cleandir depend lint obj tags: _SUBDIRUSE
 
 realinstall:
-	${INSTALL} -c -m 0444 ${IFILES} ${DESTDIR}${BINDIR}/snmp/mibs
+	${INSTALL} -c -m 0444 ${FILES} ${DESTDIR}${BINDIR}/snmp/mibs
 
 .include <bsd.prog.mk>
