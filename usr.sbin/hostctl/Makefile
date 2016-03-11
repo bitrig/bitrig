@@ -11,6 +11,6 @@ NOPROG=		yes
 .endif
 
 MAN=		hostctl.8
-MANSUBDIR=	i386 amd64
+MANSUBDIR=	amd64
 
 .include <bsd.prog.mk>
