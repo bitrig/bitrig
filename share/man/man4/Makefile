@@ -80,7 +80,6 @@ MLINKS+=adv.4 adw.4
 MLINKS+=audio.4 mixer.4
 MLINKS+=cardbus.4 cbb.4
 MLINKS+=drm.4 inteldrm.4 drm.4 radeondrm.4
-MLINKS+=fd.4 stderr.4 fd.4 stdin.4 fd.4 stdout.4
 MLINKS+=isa.4 isadma.4
 MLINKS+=pcmcia.4 pcic.4
 MLINKS+=pty.4 ptm.4
