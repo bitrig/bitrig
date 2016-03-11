@@ -1,4 +1,4 @@
-#	$OpenBSD: GENERIC,v 1.399 2015/10/29 07:47:02 kettenis Exp $
+#	$OpenBSD: GENERIC,v 1.414 2016/01/20 01:26:00 jcs Exp $
 #
 # For further information on compiling OpenBSD kernels, see the config(8)
 # man page.
@@ -34,6 +34,7 @@ isa0	at pcib?
 isa0	at amdpcib?
 isa0	at tcpcib?
 pci*	at mainbus0
+#vmm0	at mainbus0
 pvbus0	at mainbus0
 
 acpi0		at bios0
@@ -121,6 +122,8 @@ nviic*	at pci?			# NVIDIA nForce2/3/4 SMBus controller
 iic*	at nviic?
 amdpm*	at pci?			# AMD-7xx/8111 and NForce SMBus controller
 iic*	at amdpm?
+dwiic*	at acpi?		# DesignWare Synopsys i2c controller
+iic*	at dwiic?
 
 itherm*	at pci?			# Intel 3400 Thermal Sensor
 adc*	at iic?			# Analog Devices AD7416/AD7417/7418
@@ -188,6 +191,7 @@ usb*	at ohci?
 uhub*	at usb?			# USB Hubs
 uhub*	at uhub?		# USB Hubs
 ualea*	at uhub?		# Araneus Alea II TRNG
+uonerng* at uhub?		# Moonbase Otago OneRNG
 umodem*	at uhub?		# USB Modems/Serial
 ucom*	at umodem?
 uvisor*	at uhub?		# Handspring Visor
@@ -318,12 +322,12 @@ agp*		at intagp?
 drm0		at inteldrm? console 1
 drm*		at inteldrm?
 wsdisplay0	at inteldrm? console 1
-wsdisplay*	at inteldrm?
+wsdisplay*	at inteldrm? mux -1
 radeondrm*	at pci? 	# ATI Radeon DRM driver
 drm0		at radeondrm? console 1
 drm*		at radeondrm?
 wsdisplay0	at radeondrm? console 1
-wsdisplay*	at radeondrm?
+wsdisplay*	at radeondrm? mux -1
 
 pcppi0		at isa?
 
@@ -603,7 +607,7 @@ hifn*	at pci?			# Hi/fn 7751 crypto card
 ubsec*	at pci?			# Bluesteel Networks 5xxx crypto card
 safe*	at pci?			# SafeNet SafeXcel 1141/1741
 
-xspd0  at pci?			# XenSource Platform Device
+xspd0	at pci?			# XenSource Platform Device
 
 # 1-Wire devices
 option ONEWIREVERBOSE
@@ -626,4 +630,4 @@ vio*		at virtio?	# Virtio network device
 viomb*		at virtio?	# Virtio memory ballooning device
 viornd*		at virtio?	# Virtio entropy device
 vioscsi*	at virtio?	# Virtio SCSI device
-#viocon*	at virtio?	# Virtio console device
+#viocon*		at virtio?	# Virtio console device
