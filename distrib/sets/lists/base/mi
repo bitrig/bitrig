@@ -86,6 +86,7 @@
 ./etc/examples/sensorsd.conf
 ./etc/examples/snmpd.conf
 ./etc/examples/sysctl.conf
+./etc/examples/vm.conf
 ./etc/examples/wsconsctl.conf
 ./etc/examples/ypldap.conf
 ./etc/firmware
@@ -245,6 +246,8 @@
 ./etc/signify/openbsd-60-base.pub
 ./etc/signify/openbsd-59-fw.pub
 ./etc/signify/openbsd-59-pkg.pub
+./etc/signify/openbsd-60-fw.pub
+./etc/signify/openbsd-60-pkg.pub
 ./etc/skel
 ./etc/skel/.ssh
 ./etc/ssh
@@ -649,7 +652,7 @@
 ./usr/lib/libc++.so.2.0
 ./usr/lib/libc++abi.so.2.0
 ./usr/lib/libc.so.84.2
-./usr/lib/libcrypto.so.36.1
+./usr/lib/libcrypto.so.37.0
 ./usr/lib/libcurses.so.15.0
 ./usr/lib/libedit.so.6.2
 ./usr/lib/libevent.so.5.0
@@ -674,12 +677,12 @@
 ./usr/lib/libradius_p.a
 ./usr/lib/librpcsvc.so.2.0
 ./usr/lib/libskey.so.7.0
-./usr/lib/libsndio.so.6.0
-./usr/lib/libsqlite3.so.31.0
-./usr/lib/libssl.so.37.1
+./usr/lib/libsndio.so.6.1
+./usr/lib/libsqlite3.so.32.0
+./usr/lib/libssl.so.38.0
 ./usr/lib/libtermcap.so.15.0
 ./usr/lib/libtermlib.so.15.0
-./usr/lib/libtls.so.9.1
+./usr/lib/libtls.so.10.0
 ./usr/lib/libusbhid.so.7.0
 ./usr/lib/libutil.so.13.1
 ./usr/lib/libz.so.5.0
@@ -2185,8 +2188,6 @@
 ./usr/libexec/rpc.rwalld
 ./usr/libexec/security
 ./usr/libexec/sftp-server
-./usr/libexec/smtpd
-./usr/libexec/smtpd/makemap
 ./usr/libexec/spamd
 ./usr/libexec/spamd-setup
 ./usr/libexec/spamlogd
@@ -2343,6 +2344,7 @@
 ./usr/sbin/groupmod
 ./usr/sbin/host
 ./usr/sbin/hostapd
+./usr/sbin/hostctl
 ./usr/sbin/hotplugd
 ./usr/sbin/httpd
 ./usr/sbin/identd
@@ -2465,8 +2467,8 @@
 ./usr/sbin/userinfo
 ./usr/sbin/usermod
 ./usr/sbin/vipw
+./usr/sbin/vmctl
 ./usr/sbin/vmd
-./usr/sbin/vmmctl
 ./usr/sbin/watchdogd
 ./usr/sbin/wsconscfg
 ./usr/sbin/ypbind
@@ -2483,6 +2485,13 @@
 ./usr/sbin/zdump
 ./usr/sbin/zic
 ./usr/share
+./usr/share/OPENBSD-BASE-MIB.txt
+./usr/share/OPENBSD-CARP-MIB.txt
+./usr/share/OPENBSD-MEM-MIB.txt
+./usr/share/OPENBSD-PF-MIB.txt
+./usr/share/OPENBSD-RELAYD-MIB.txt
+./usr/share/OPENBSD-SENSORS-MIB.txt
+./usr/share/OPENBSD-SNMPD-CONF.txt
 ./usr/share/calendar
 ./usr/share/calendar/calendar.all
 ./usr/share/calendar/calendar.birthday
@@ -2498,6 +2507,7 @@
 ./usr/share/calendar/calendar.holiday
 ./usr/share/calendar/calendar.judaic
 ./usr/share/calendar/calendar.music
+./usr/share/calendar/calendar.nz
 ./usr/share/calendar/calendar.pagan
 ./usr/share/calendar/calendar.russian
 ./usr/share/calendar/calendar.space
@@ -3326,7 +3336,6 @@
 ./usr/share/man/man1/skeyinfo.1
 ./usr/share/man/man1/skeyinit.1
 ./usr/share/man/man1/sleep.1
-./usr/share/man/man1/sndiod.1
 ./usr/share/man/man1/sort.1
 ./usr/share/man/man1/spell.1
 ./usr/share/man/man1/splain.1
@@ -8195,6 +8204,7 @@
 ./usr/share/man/man3p/OpenBSD::PackingList.3p
 ./usr/share/man/man3p/OpenBSD::PkgCfl.3p
 ./usr/share/man/man3p/OpenBSD::PkgSpec.3p
+./usr/share/man/man3p/OpenBSD::Pledge.3p
 ./usr/share/man/man3p/OpenBSD::RequiredBy.3p
 ./usr/share/man/man3p/OpenBSD::Search.3p
 ./usr/share/man/man3p/OpenBSD::State.3p
@@ -8591,6 +8601,8 @@
 ./usr/share/man/man4/com.4
 ./usr/share/man/man4/cua.4
 ./usr/share/man/man4/cue.4
+./usr/share/man/man4/cy.4
+./usr/share/man/man4/cz.4
 ./usr/share/man/man4/dc.4
 ./usr/share/man/man4/dcphy.4
 ./usr/share/man/man4/ddb.4
@@ -8599,6 +8611,8 @@
 ./usr/share/man/man4/divert.4
 ./usr/share/man/man4/dpt.4
 ./usr/share/man/man4/drm.4
+./usr/share/man/man4/dwctwo.4
+./usr/share/man/man4/dwiic.4
 ./usr/share/man/man4/eap.4
 ./usr/share/man/man4/ec.4
 ./usr/share/man/man4/eephy.4
@@ -8619,11 +8633,12 @@
 ./usr/share/man/man4/eso.4
 ./usr/share/man/man4/ess.4
 ./usr/share/man/man4/et.4
+./usr/share/man/man4/etherip.4
 ./usr/share/man/man4/etphy.4
 ./usr/share/man/man4/ex.4
 ./usr/share/man/man4/exphy.4
-./usr/share/man/man4/fd.4
 ./usr/share/man/man4/fins.4
+./usr/share/man/man4/fintek.4
 ./usr/share/man/man4/fms.4
 ./usr/share/man/man4/fuse.4
 ./usr/share/man/man4/fxp.4
@@ -8653,7 +8668,11 @@
 ./usr/share/man/man4/icsphy.4
 ./usr/share/man/man4/ifmedia.4
 ./usr/share/man/man4/iha.4
+./usr/share/man/man4/ihidev.4
 ./usr/share/man/man4/iic.4
+./usr/share/man/man4/ikbd.4
+./usr/share/man/man4/ims.4
+./usr/share/man/man4/imt.4
 ./usr/share/man/man4/inet.4
 ./usr/share/man/man4/inet6.4
 ./usr/share/man/man4/inphy.4
@@ -8758,6 +8777,7 @@
 ./usr/share/man/man4/pcfadc.4
 ./usr/share/man/man4/pcfiic.4
 ./usr/share/man/man4/pchb.4
+./usr/share/man/man4/pchtemp.4
 ./usr/share/man/man4/pci.4
 ./usr/share/man/man4/pcib.4
 ./usr/share/man/man4/pcic.4
@@ -8842,9 +8862,6 @@
 ./usr/share/man/man4/sppp.4
 ./usr/share/man/man4/sqphy.4
 ./usr/share/man/man4/st.4
-./usr/share/man/man4/stderr.4
-./usr/share/man/man4/stdin.4
-./usr/share/man/man4/stdout.4
 ./usr/share/man/man4/ste.4
 ./usr/share/man/man4/stge.4
 ./usr/share/man/man4/stp.4
@@ -8913,6 +8930,7 @@
 ./usr/share/man/man4/uoaklux.4
 ./usr/share/man/man4/uoakrh.4
 ./usr/share/man/man4/uoakv.4
+./usr/share/man/man4/uonerng.4
 ./usr/share/man/man4/uow.4
 ./usr/share/man/man4/upd.4
 ./usr/share/man/man4/upgt.4
@@ -8949,6 +8967,7 @@
 ./usr/share/man/man4/video.4
 ./usr/share/man/man4/vio.4
 ./usr/share/man/man4/vioblk.4
+./usr/share/man/man4/viocon.4
 ./usr/share/man/man4/viomb.4
 ./usr/share/man/man4/viornd.4
 ./usr/share/man/man4/vioscsi.4
@@ -8980,11 +8999,14 @@
 ./usr/share/man/man4/wsmouse.4
 ./usr/share/man/man4/wsmux.4
 ./usr/share/man/man4/xe.4
+./usr/share/man/man4/xen.4
 ./usr/share/man/man4/xf86.4
 ./usr/share/man/man4/xge.4
 ./usr/share/man/man4/xhci.4
 ./usr/share/man/man4/xl.4
 ./usr/share/man/man4/xmphy.4
+./usr/share/man/man4/xnf.4
+./usr/share/man/man4/xspd.4
 ./usr/share/man/man4/yds.4
 ./usr/share/man/man4/ym.4
 ./usr/share/man/man4/zero.4
@@ -9117,7 +9139,7 @@
 ./usr/share/man/man5/utf8.5
 ./usr/share/man/man5/utmp.5
 ./usr/share/man/man5/uuencode.5
-./usr/share/man/man5/vmm.conf.5
+./usr/share/man/man5/vm.conf.5
 ./usr/share/man/man5/wsconsctl.conf.5
 ./usr/share/man/man5/wtmp.5
 ./usr/share/man/man5/ypldap.conf.5
@@ -9172,6 +9194,7 @@
 ./usr/share/man/man8/amd64/boot_amd64.8
 ./usr/share/man/man8/amd64/cdboot.8
 ./usr/share/man/man8/amd64/gpioctl.8
+./usr/share/man/man8/amd64/hostctl.8
 ./usr/share/man/man8/amd64/memconfig.8
 ./usr/share/man/man8/amd64/pxeboot.8
 ./usr/share/man/man8/amd64/wsmoused.8
@@ -9402,6 +9425,7 @@
 ./usr/share/man/man8/slowcgi.8
 ./usr/share/man/man8/smtpctl.8
 ./usr/share/man/man8/smtpd.8
+./usr/share/man/man8/sndiod.8
 ./usr/share/man/man8/snkadm.8
 ./usr/share/man/man8/snkinit.8
 ./usr/share/man/man8/snmpctl.8
@@ -9447,8 +9471,8 @@
 ./usr/share/man/man8/userinfo.8
 ./usr/share/man/man8/usermod.8
 ./usr/share/man/man8/vipw.8
+./usr/share/man/man8/vmctl.8
 ./usr/share/man/man8/vmd.8
-./usr/share/man/man8/vmmctl.8
 ./usr/share/man/man8/vmstat.8
 ./usr/share/man/man8/vnconfig.8
 ./usr/share/man/man8/watchdogd.8
@@ -9471,6 +9495,7 @@
 ./usr/share/man/man8/zdump.8
 ./usr/share/man/man8/zic.8
 ./usr/share/man/man9
+./usr/share/man/man9/CTASSERT.9
 ./usr/share/man/man9/FREF.9
 ./usr/share/man/man9/FRELE.9
 ./usr/share/man/man9/KASSERT.9
@@ -9506,10 +9531,12 @@
 ./usr/share/man/man9/RWLOCK_INITIALIZER.9
 ./usr/share/man/man9/SRPL_EMPTY_LOCKED.9
 ./usr/share/man/man9/SRPL_ENTER.9
+./usr/share/man/man9/SRPL_ENTRY.9
 ./usr/share/man/man9/SRPL_FIRST_LOCKED.9
 ./usr/share/man/man9/SRPL_FOREACH.9
 ./usr/share/man/man9/SRPL_FOREACH_LOCKED.9
 ./usr/share/man/man9/SRPL_FOREACH_SAFE_LOCKED.9
+./usr/share/man/man9/SRPL_HEAD.9
 ./usr/share/man/man9/SRPL_INSERT_AFTER_LOCKED.9
 ./usr/share/man/man9/SRPL_INSERT_HEAD_LOCKED.9
 ./usr/share/man/man9/SRPL_LEAVE.9
@@ -9726,6 +9753,7 @@
 ./usr/share/man/man9/config_detach_children.9
 ./usr/share/man/man9/config_found.9
 ./usr/share/man/man9/config_found_sm.9
+./usr/share/man/man9/config_mountroot.9
 ./usr/share/man/man9/config_rootfound.9
 ./usr/share/man/man9/config_rootsearch.9
 ./usr/share/man/man9/config_search.9
@@ -9759,7 +9787,6 @@
 ./usr/share/man/man9/dma_alloc.9
 ./usr/share/man/man9/dma_free.9
 ./usr/share/man/man9/dohooks.9
-./usr/share/man/man9/domountroothooks.9
 ./usr/share/man/man9/dostartuphooks.9
 ./usr/share/man/man9/evcount.9
 ./usr/share/man/man9/evcount_attach.9
@@ -9868,12 +9895,15 @@
 ./usr/share/man/man9/ieee80211_setmode.9
 ./usr/share/man/man9/ieee80211_watchdog.9
 ./usr/share/man/man9/ieee80211_wep_crypt.9
+./usr/share/man/man9/if_get.9
+./usr/share/man/man9/if_put.9
 ./usr/share/man/man9/if_rxr_get.9
 ./usr/share/man/man9/if_rxr_info_ioctl.9
 ./usr/share/man/man9/if_rxr_init.9
 ./usr/share/man/man9/if_rxr_inuse.9
 ./usr/share/man/man9/if_rxr_ioctl.9
 ./usr/share/man/man9/if_rxr_put.9
+./usr/share/man/man9/ifq_barrier.9
 ./usr/share/man/man9/ifq_clr_oactive.9
 ./usr/share/man/man9/ifq_deq_begin.9
 ./usr/share/man/man9/ifq_deq_commit.9
@@ -9884,6 +9914,7 @@
 ./usr/share/man/man9/ifq_is_oactive.9
 ./usr/share/man/man9/ifq_len.9
 ./usr/share/man/man9/ifq_purge.9
+./usr/share/man/man9/ifq_restart.9
 ./usr/share/man/man9/ifq_set_oactive.9
 ./usr/share/man/man9/iic.9
 ./usr/share/man/man9/iic_acquire_bus.9
@@ -9985,8 +10016,6 @@
 ./usr/share/man/man9/ml_len.9
 ./usr/share/man/man9/ml_purge.9
 ./usr/share/man/man9/mono_time.9
-./usr/share/man/man9/mountroothook_disestablish.9
-./usr/share/man/man9/mountroothook_establish.9
 ./usr/share/man/man9/mq_dechain.9
 ./usr/share/man/man9/mq_delist.9
 ./usr/share/man/man9/mq_dequeue.9
@@ -10073,6 +10102,7 @@
 ./usr/share/man/man9/refcnt_rele.9
 ./usr/share/man/man9/refcnt_rele_wake.9
 ./usr/share/man/man9/refcnt_take.9
+./usr/share/man/man9/refcnt_take_n.9
 ./usr/share/man/man9/resettodr.9
 ./usr/share/man/man9/route.9
 ./usr/share/man/man9/rrw_enter.9
@@ -10358,8 +10388,6 @@
 ./usr/share/misc/operator
 ./usr/share/misc/scsi_modes
 ./usr/share/misc/termcap
-./usr/share/misc/termcap.db
-./usr/share/misc/terminfo.db
 ./usr/share/misc/units.lib
 ./usr/share/misc/usb_hid_usages
 ./usr/share/misc/zipcodes

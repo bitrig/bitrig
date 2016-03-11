@@ -259,6 +259,7 @@
 ./usr/libdata/perl5/amd64-bitrig/5.20.2/Opcode.pm
 ./usr/libdata/perl5/amd64-bitrig/5.20.2/OpenBSD
 ./usr/libdata/perl5/amd64-bitrig/5.20.2/OpenBSD/MkTemp.pm
+./usr/libdata/perl5/amd64-bitrig/5.20.2/OpenBSD/Pledge.pm
 ./usr/libdata/perl5/amd64-bitrig/5.20.2/POSIX.pm
 ./usr/libdata/perl5/amd64-bitrig/5.20.2/POSIX.pod
 ./usr/libdata/perl5/amd64-bitrig/5.20.2/PerlIO
@@ -375,6 +376,8 @@
 ./usr/libdata/perl5/amd64-bitrig/5.20.2/auto/OpenBSD
 ./usr/libdata/perl5/amd64-bitrig/5.20.2/auto/OpenBSD/MkTemp
 ./usr/libdata/perl5/amd64-bitrig/5.20.2/auto/OpenBSD/MkTemp/MkTemp.so
+./usr/libdata/perl5/amd64-bitrig/5.20.2/auto/OpenBSD/Pledge
+./usr/libdata/perl5/amd64-bitrig/5.20.2/auto/OpenBSD/Pledge/Pledge.so
 ./usr/libdata/perl5/amd64-bitrig/5.20.2/auto/POSIX
 ./usr/libdata/perl5/amd64-bitrig/5.20.2/auto/POSIX/POSIX.so
 ./usr/libdata/perl5/amd64-bitrig/5.20.2/auto/PerlIO
@@ -605,10 +608,17 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/cons.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/gpio
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/gpio/gpiovar.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/hid
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/hid/hid.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/hid/hidkbdsc.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/hid/hidkbdvar.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/hid/hidmsvar.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/hid/hidmtvar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/i2c
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/i2c/i2c_bitbang.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/i2c/i2c_io.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/i2c/i2cvar.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/i2c/ihidev.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/ic
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/ic/aac_tables.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/ic/aacreg.ph
@@ -754,6 +764,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/ic/qlavar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/ic/qlwreg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/ic/qlwvar.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/ic/r92creg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/ic/revar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/ic/rf3000reg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/ic/rt2560reg.ph
@@ -804,6 +815,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/ic/wdcvar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/ic/xlreg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/ic/z8530reg.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/ipmi.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/ipmivar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/isa
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/isa/ad1848var.ph
@@ -969,7 +981,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/if_nfevar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/if_ngereg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/if_ocereg.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/if_rtwnreg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/if_sereg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/if_sisreg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pci/if_skreg.ph
@@ -1085,10 +1096,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/dwc2/dwc2var.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/ehcireg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/ehcivar.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/hid.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/hidkbdsc.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/hidkbdvar.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/hidmsvar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/if_athn_usb.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/if_atureg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/if_auereg.ph
@@ -1113,7 +1120,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/if_upgtvar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/if_urlreg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/if_urndisreg.ph
-./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/if_urtwnreg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/if_urtwreg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/if_wi_usb.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/usb/if_zydreg.ph
@@ -1164,6 +1170,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/videomode/vesagtf.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/videomode/videomode.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/videovar.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/vndioctl.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/vscsivar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/wscons
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/wscons/ascii.ph
@@ -1253,7 +1260,6 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/locale.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/login_cap.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/machine
-./usr/libdata/perl5/site_perl/amd64-bitrig/malloc.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/math.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/md5.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/memory.ph
@@ -1282,6 +1288,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/if_bridge.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/if_dl.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/if_enc.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/net/if_etherip.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/if_gif.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/if_gre.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/if_llc.ph
@@ -1299,6 +1306,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/if_var.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/if_vlan_var.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/if_vxlan.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/net/ifq.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/netisr.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/pfkeyv2.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/pfvar.ph
@@ -1826,6 +1834,8 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pv
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pv/pvreg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pv/pvvar.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pv/xenreg.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/pv/xenvar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/art.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/net/rtable.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/radius.ph

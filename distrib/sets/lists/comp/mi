@@ -221,10 +221,17 @@
 ./usr/include/dev/cons.h
 ./usr/include/dev/gpio
 ./usr/include/dev/gpio/gpiovar.h
+./usr/include/dev/hid
+./usr/include/dev/hid/hid.h
+./usr/include/dev/hid/hidkbdsc.h
+./usr/include/dev/hid/hidkbdvar.h
+./usr/include/dev/hid/hidmsvar.h
+./usr/include/dev/hid/hidmtvar.h
 ./usr/include/dev/i2c
 ./usr/include/dev/i2c/i2c_bitbang.h
 ./usr/include/dev/i2c/i2c_io.h
 ./usr/include/dev/i2c/i2cvar.h
+./usr/include/dev/i2c/ihidev.h
 ./usr/include/dev/ic
 ./usr/include/dev/ic/aac_tables.h
 ./usr/include/dev/ic/aacreg.h
@@ -370,6 +377,7 @@
 ./usr/include/dev/ic/qlavar.h
 ./usr/include/dev/ic/qlwreg.h
 ./usr/include/dev/ic/qlwvar.h
+./usr/include/dev/ic/r92creg.h
 ./usr/include/dev/ic/revar.h
 ./usr/include/dev/ic/rf3000reg.h
 ./usr/include/dev/ic/rt2560reg.h
@@ -420,6 +428,7 @@
 ./usr/include/dev/ic/wdcvar.h
 ./usr/include/dev/ic/xlreg.h
 ./usr/include/dev/ic/z8530reg.h
+./usr/include/dev/ipmi.h
 ./usr/include/dev/ipmivar.h
 ./usr/include/dev/isa
 ./usr/include/dev/isa/ad1848var.h
@@ -585,7 +594,6 @@
 ./usr/include/dev/pci/if_nfevar.h
 ./usr/include/dev/pci/if_ngereg.h
 ./usr/include/dev/pci/if_ocereg.h
-./usr/include/dev/pci/if_rtwnreg.h
 ./usr/include/dev/pci/if_sereg.h
 ./usr/include/dev/pci/if_sisreg.h
 ./usr/include/dev/pci/if_skreg.h
@@ -676,6 +684,8 @@
 ./usr/include/dev/pv
 ./usr/include/dev/pv/pvreg.h
 ./usr/include/dev/pv/pvvar.h
+./usr/include/dev/pv/xenreg.h
+./usr/include/dev/pv/xenvar.h
 ./usr/include/dev/radio_if.h
 ./usr/include/dev/radiovar.h
 ./usr/include/dev/rasops
@@ -704,10 +714,6 @@
 ./usr/include/dev/usb/dwc2/dwc2var.h
 ./usr/include/dev/usb/ehcireg.h
 ./usr/include/dev/usb/ehcivar.h
-./usr/include/dev/usb/hid.h
-./usr/include/dev/usb/hidkbdsc.h
-./usr/include/dev/usb/hidkbdvar.h
-./usr/include/dev/usb/hidmsvar.h
 ./usr/include/dev/usb/if_athn_usb.h
 ./usr/include/dev/usb/if_atureg.h
 ./usr/include/dev/usb/if_auereg.h
@@ -732,7 +738,6 @@
 ./usr/include/dev/usb/if_upgtvar.h
 ./usr/include/dev/usb/if_urlreg.h
 ./usr/include/dev/usb/if_urndisreg.h
-./usr/include/dev/usb/if_urtwnreg.h
 ./usr/include/dev/usb/if_urtwreg.h
 ./usr/include/dev/usb/if_wi_usb.h
 ./usr/include/dev/usb/if_zydreg.h
@@ -783,6 +788,7 @@
 ./usr/include/dev/videomode/vesagtf.h
 ./usr/include/dev/videomode/videomode.h
 ./usr/include/dev/videovar.h
+./usr/include/dev/vndioctl.h
 ./usr/include/dev/vscsivar.h
 ./usr/include/dev/wscons
 ./usr/include/dev/wscons/ascii.h
@@ -872,7 +878,6 @@
 ./usr/include/locale.h
 ./usr/include/login_cap.h
 ./usr/include/machine
-./usr/include/malloc.h
 ./usr/include/math.h
 ./usr/include/md5.h
 ./usr/include/memory.h
@@ -902,6 +907,7 @@
 ./usr/include/net/if_bridge.h
 ./usr/include/net/if_dl.h
 ./usr/include/net/if_enc.h
+./usr/include/net/if_etherip.h
 ./usr/include/net/if_gif.h
 ./usr/include/net/if_gre.h
 ./usr/include/net/if_llc.h
@@ -919,6 +925,7 @@
 ./usr/include/net/if_var.h
 ./usr/include/net/if_vlan_var.h
 ./usr/include/net/if_vxlan.h
+./usr/include/net/ifq.h
 ./usr/include/net/netisr.h
 ./usr/include/net/pfkeyv2.h
 ./usr/include/net/pfvar.h
