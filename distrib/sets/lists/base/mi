@@ -2305,7 +2305,6 @@
 ./usr/local/share/skel
 ./usr/mdec
 ./usr/obj
-./usr/ports
 ./usr/sbin
 ./usr/sbin/ac
 ./usr/sbin/accton
@@ -10410,7 +10409,6 @@
 ./usr/share/mk/bsd.xconf.mk
 ./usr/share/mk/bsd.xorg.mk
 ./usr/share/mk/sys.mk
-./usr/share/nls
 ./usr/share/snmp
 ./usr/share/snmp/mibs
 ./usr/share/snmp/mibs/OPENBSD-BASE-MIB.txt
@@ -15005,7 +15003,6 @@
 ./usr/share/zoneinfo/zone.tab
 ./usr/share/zoneinfo/zone1970.tab
 ./usr/src
-./usr/xenocara
 ./usr/xobj
 ./var
 ./var/account

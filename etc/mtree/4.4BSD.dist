@@ -136,11 +136,8 @@ usr
     ..
 
     # ./usr/include
-    include		gname=bin uname=root mode=0755
-        arpa		gname=bin uname=root mode=0755
-        ..
-
-        g++		gname=bin uname=root mode=0755
+    include			gname=bin uname=root mode=0755
+        arpa			gname=bin uname=root mode=0755
         ..
 
         # ./usr/include/c++
@@ -153,24 +150,21 @@ usr
                 ..
             ..
         ..
-
-        openssl		gname=bin uname=root mode=0755
+        openssl			gname=bin uname=root mode=0755
         ..
-
-        protocols	gname=bin uname=root mode=0755
+        protocols		gname=bin uname=root mode=0755
         ..
-
-        rpc		gname=bin uname=root mode=0755
+        rpc			gname=bin uname=root mode=0755
         ..
-        rpcsvc		gname=bin uname=root mode=0755
+        rpcsvc			gname=bin uname=root mode=0755
         ..
     ..
 
     # ./usr/lib
     lib
-        clang		gname=bin uname=root mode=0755
-            3.6.0	gname=bin uname=root mode=0755
-                include		gname=bin uname=root mode=0755
+        clang			gname=bin uname=root mode=0755
+            3.6.0		gname=bin uname=root mode=0755
+                include			gname=bin uname=root mode=0755
                 	sanitizer		gname=bin uname=root mode=0755
                 	..
 		..
@@ -178,11 +172,11 @@ usr
         ..
 
         # ./usr/lib/debug
-        debug		gname=bin uname=root mode=0755
+        debug			gname=bin uname=root mode=0755
         ..
-        locate	gname=bin uname=root mode=0755
+        locate			gname=bin uname=root mode=0755
         ..
-        pkgconfig	gname=bin uname=root mode=0755
+        pkgconfig		gname=bin uname=root mode=0755
         ..
     ..
 
@@ -196,7 +190,7 @@ usr
 
     # ./usr/libexec
     libexec
-        auth		type=dir uname=root gname=auth mode=0750
+        auth			type=dir uname=root gname=auth mode=0750
         ..
         lpr
         ..
@@ -425,9 +419,7 @@ usr
     # ./usr/mdec
     mdec
     ..
-    obj		gname=wsrc mode=0775
-    ..
-    ports		gname=wsrc mode=0775
+    obj				gname=wsrc mode=0775
     ..
     sbin
     ..
@@ -836,6 +828,8 @@ usr
             # ./usr/share/man/man3
             man3
             ..
+
+            # ./usr/share/man/man3p
             man3p
             ..
 
@@ -875,11 +869,7 @@ usr
         # ./usr/share/misc
         misc
         ..
-
         mk
-        ..
-
-        nls
         ..
 
         # ./usr/share/snmp
@@ -893,38 +883,36 @@ usr
         ..
 
         # ./usr/share/zoneinfo
-        zoneinfo         gname=bin uname=root mode=0555
-            Australia        gname=bin uname=root mode=0555
+        zoneinfo		gname=bin uname=root mode=0555
+            Australia		gname=bin uname=root mode=0555
             ..
-            Brazil           gname=bin uname=root mode=0555
+            Brazil		gname=bin uname=root mode=0555
             ..
-            Canada           gname=bin uname=root mode=0555
+            Canada		gname=bin uname=root mode=0555
             ..
-            Chile            gname=bin uname=root mode=0555
+            Chile		gname=bin uname=root mode=0555
             ..
-            Mexico           gname=bin uname=root mode=0555
+            Mexico		gname=bin uname=root mode=0555
             ..
-            US               gname=bin uname=root mode=0555
+            US			gname=bin uname=root mode=0555
             ..
         ..
-    ..
+   ..
 
-    # ./usr/src
-    src		gname=wsrc mode=0775
-    ..
+   # ./usr/src
+   #src				gname=wsrc mode=0775
+   #..
 
-    xenocara	gname=wsrc mode=0775
-    ..
-
-    xobj		gname=wsrc mode=0775
-    ..
+   # ./usr/xobj
+   xobj				gname=wsrc mode=0775
+   ..
 ..
 
 # ./var
 var
     account
     ..
-    authpf		uname=root gname=authpf mode=0770
+    authpf			uname=root gname=authpf mode=0770
     ..
 
     # ./var/empty
@@ -932,24 +920,24 @@ var
     ..
 
     # ./var/backups
-    backups		mode=0700
+    backups			mode=0700
     ..
-    yp		mode=755
+    yp				mode=755
     ..
-    crash		mode=770
+    crash			mode=770
     ..
 
     # ./var/cron
-    cron		mode=0555
-        atjobs		gname=crontab mode=01770
+    cron			mode=0555
+        atjobs			gname=crontab mode=01770
         ..
-        tabs		gname=crontab mode=01730
+        tabs			gname=crontab mode=01730
         ..
     ..
 
     # ./var/db
     db
-        ldap		mode=0700
+        ldap			mode=0700
         ..
         ns
         ..
@@ -960,16 +948,16 @@ var
     ..
 
     # ./var/games
-    games            uname=root gname=games mode=0775
-        hackdir          uname=root gname=games mode=0775
-            save		 uname=root gname=games mode=0770
+    games			uname=root gname=games mode=0775
+        hackdir			uname=root gname=games mode=0775
+            save		uname=root gname=games mode=0770
             ..
         ..
 
         # ./var/games/save
-        save		uname=root gname=games mode=0775
+        save			uname=root gname=games mode=0775
         ..
-        phantasia        uname=root gname=games mode=0775
+        phantasia		uname=root gname=games mode=0775
         ..
     ..
 
@@ -985,14 +973,14 @@ var
 
     # ./var/nsd
     nsd
-        db		uname=root gname=_nsd mode=0775
+        db			uname=root gname=_nsd mode=0775
         ..
         etc			uname=root gname=_nsd mode=0750
         ..
 
         # ./var/nsd/run
-        run		uname=root gname=_nsd mode=0775
-            xfr		uname=root gname=_nsd mode=0770
+        run			uname=root gname=_nsd mode=0775
+            xfr			uname=root gname=_nsd mode=0770
             ..
         ..
 
@@ -1006,7 +994,7 @@ var
     ..
 
     # ./var/quotas
-    quotas            gname=operator mode=0750
+    quotas			gname=operator mode=0750
     ..
     run
     ..
@@ -1019,19 +1007,19 @@ var
     spool
 
         # ./var/spool/ftp
-        ftp		mode=0555
-            bin		mode=0511
+        ftp			mode=0555
+            bin			mode=0511
             ..
-            etc		mode=0511
+            etc			mode=0511
             ..
-            hidden           mode=0111
+            hidden		mode=0111
             ..
             #pub		mode=0555
             #..
         ..
 
         # ./var/spool/lock
-        lock		uname=uucp gname=dialer mode=1775
+        lock			uname=uucp gname=dialer mode=1775
         ..
         output
             lpd			gname=daemon mode=0775
@@ -1052,11 +1040,11 @@ var
             temporary		type=dir uname=_smtpq gname=wheel mode=0700
             ..
         ..
-        #sockets	mode=777
+        #sockets		mode=777
         #..
-        uucp		uname=uucp gname=daemon
+        uucp			uname=uucp gname=daemon
         ..
-        uucppublic	uname=uucp gname=daemon mode=0755
+        uucppublic		uname=uucp gname=daemon mode=0755
         ..
     ..
 
@@ -1064,29 +1052,29 @@ var
     unbound
         etc			uname=root gname=wheel mode=0755
         ..
-        db		uname=root gname=_unbound mode=0775
+        db			uname=root gname=_unbound mode=0775
         ..
     ..
 
     # ./var/www
-    www type=dir uname=root gname=daemon mode=755
-        cache type=dir uname=www gname=daemon mode=1700
+    www				type=dir uname=root gname=daemon mode=755
+        cache			type=dir uname=www gname=daemon mode=1700
         ..
         cgi-bin			type=dir uname=root gname=daemon mode=755
         ..
-        htdocs  type=dir uname=root gname=daemon mode=755
+        htdocs			type=dir uname=root gname=daemon mode=755
         ..
-        logs  type=dir uname=root gname=daemon mode=755
+        logs			type=dir uname=root gname=daemon mode=755
         ..
-        conf  type=dir uname=root gname=daemon mode=755
+        conf			type=dir uname=root gname=daemon mode=755
         ..
-        bin  type=dir uname=root gname=daemon mode=755
+        bin			type=dir uname=root gname=daemon mode=755
         ..
-        run  type=dir uname=root gname=daemon mode=755
+        run			type=dir uname=root gname=daemon mode=755
         ..
     ..
 
     # ./var/audit
-    audit type=dir uname=root gname=wheel mode=2770
+    audit			type=dir uname=root gname=wheel mode=2770
     ..
 ..
