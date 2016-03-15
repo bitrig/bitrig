@@ -281,10 +281,10 @@ disk_has() {
 
 	# Patterns for partition-table-types and partition-types.
 	local _p_gpt='Usable LBA:'
-	local _p_gpt_openbsd='^[ *]...: Bitrig '
+	local _p_gpt_openbsd='^[ *]...: OpenBSD '
 	local _p_gpt_efisys='^[ *]...: EFI Sys '
 	local _p_hfs='^Partition map '
-	local _p_hfs_openbsd=' Bitrig Bitrig '
+	local _p_hfs_openbsd=' OpenBSD OpenBSD '
 	local _p_mbr='Signature: 0xAA55'
 	local _p_mbr_openbsd='^..: A6 '
 	local _p_mbr_dos='^..: 06 '
@@ -2320,7 +2320,7 @@ shift $((OPTIND-1))
 #
 # The following functions must be provided:
 #	md_installboot()	  - install boot-blocks on disk
-#	md_prep_disklabel()	  - put an Bitrig disklabel on the disk
+#	md_prep_disklabel()	  - put an OpenBSD disklabel on the disk
 #	md_consoleinfo()	  - set CDEV, CTTY, CSPEED, CPROM
 #
 # The following variables can be provided if required:
