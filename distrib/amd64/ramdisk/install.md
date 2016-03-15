@@ -58,7 +58,7 @@ md_prep_fdisk() {
 
 		[[ $MDEFI == y ]] && _d=gpt
 
-		if disk_has $_disk mbr bitrig || disk_has $_disk gpt bitrig; then
+		if disk_has $_disk mbr openbsd || disk_has $_disk gpt openbsd; then
 			_q="$_q, (B)itrig area"
 			_d=Bitrig
 			fdisk $_disk
