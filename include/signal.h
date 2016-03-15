@@ -65,15 +65,9 @@ int	pthread_sigmask(int, const sigset_t *__restrict, sigset_t *__restrict);
 int	sigsuspend(const sigset_t *);
 
 #if !defined(_ANSI_LIBRARY)
-#ifdef __clang__
-# define ONLY_INLINE_STATIC static __only_inline 
-#else
-# define ONLY_INLINE_STATIC __only_inline 
-#endif
-
 extern int *__errno(void);
 
-ONLY_INLINE_STATIC int sigaddset(sigset_t *__set, int __signo)
+__only_inline int sigaddset(sigset_t *__set, int __signo)
 {
 	if (__signo <= 0 || __signo >= _NSIG) {
 		*__errno() = 22;		/* EINVAL */
@@ -83,7 +77,7 @@ ONLY_INLINE_STATIC int sigaddset(sigset_t *__set, int __signo)
 	return (0);
 }
 
-ONLY_INLINE_STATIC int sigdelset(sigset_t *__set, int __signo)
+__only_inline int sigdelset(sigset_t *__set, int __signo)
 {
 	if (__signo <= 0 || __signo >= _NSIG) {
 		*__errno() = 22;		/* EINVAL */
@@ -93,7 +87,7 @@ ONLY_INLINE_STATIC int sigdelset(sigset_t *__set, int __signo)
 	return (0);
 }
 
-ONLY_INLINE_STATIC int sigismember(const sigset_t *__set, int __signo)
+__only_inline int sigismember(const sigset_t *__set, int __signo)
 {
 	if (__signo <= 0 || __signo >= _NSIG) {
 		*__errno() = 22;		/* EINVAL */
