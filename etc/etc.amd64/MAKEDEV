@@ -535,7 +535,7 @@ local)
 all)
 	R ipmi0 ttyVI00 ttyVI10 ttyVI20 ttyVI30 ttyVI40 drm0 drm1
 	R drm2 drm3 nvram gpio0 gpio1 gpio2 bktr0 vnd0 vnd1 vnd2 vnd3
-	R sd0 sd1 sd2 sd3 sd4 sd5 sd6 sd7 sd8 sd9 cd0 cd1 rd0 tap0
+	R sd0 sd1 sd2 sd3 sd4 sd5 sd6 sd7 sd8 sd9 cd0 cd1 tap0
 	R tap1 tap2 tap3 tun0 tun1 tun2 tun3 bpf0 bpf1 bpf2 bpf3 bpf4
 	R bpf5 bpf6 bpf7 bpf8 bpf9 bio pty0
 	R diskmap vscsi0 ch0 audio0 audio1 audio2 pvbus0 vmm fuse pppx
