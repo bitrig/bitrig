@@ -67,7 +67,15 @@ int	sigsuspend(const sigset_t *);
 #if !defined(_ANSI_LIBRARY)
 extern int *__errno(void);
 
-__only_inline int sigaddset(sigset_t *__set, int __signo)
+#if defined(__clang__)
+/* clang can not link multiple files that include signal.h without static */
+#define __CLANG_STATIC static
+#else
+/* gcc does not like static __only_inline */
+#define __CLANG_STATIC
+#endif
+
+__CLANG_STATIC __only_inline int sigaddset(sigset_t *__set, int __signo)
 {
 	if (__signo <= 0 || __signo >= _NSIG) {
 		*__errno() = 22;		/* EINVAL */
@@ -77,7 +85,7 @@ __only_inline int sigaddset(sigset_t *__set, int __signo)
 	return (0);
 }
 
-__only_inline int sigdelset(sigset_t *__set, int __signo)
+__CLANG_STATIC __only_inline int sigdelset(sigset_t *__set, int __signo)
 {
 	if (__signo <= 0 || __signo >= _NSIG) {
 		*__errno() = 22;		/* EINVAL */
@@ -87,7 +95,7 @@ __only_inline int sigdelset(sigset_t *__set, int __signo)
 	return (0);
 }
 
-__only_inline int sigismember(const sigset_t *__set, int __signo)
+__CLANG_STATIC __only_inline int sigismember(const sigset_t *__set, int __signo)
 {
 	if (__signo <= 0 || __signo >= _NSIG) {
 		*__errno() = 22;		/* EINVAL */
