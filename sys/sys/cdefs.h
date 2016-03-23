@@ -160,7 +160,7 @@
  * Let's work around that bug by using gnu89 inline semantics for gcc.
  */
 #if defined(__clang__)
-#  define __only_inline extern __inline
+#  define __only_inline static __inline
 #else
 #  ifdef __GNUC__
 #    if __GNUC_PREREQ__(4, 2)
