@@ -35,7 +35,8 @@
 #include <sys/exec_elf.h>
 
 extern char *esym;				/* end of symbol table */
-#if defined(__sparc64__) || defined(__mips__)
+#if defined(__sparc64__) || defined(__mips__) || defined(__amd64__) || \
+	    defined(__i386__)
 extern char *ssym;				/* end of kernel */
 #else
 extern long end;				/* end of kernel */
@@ -56,7 +57,8 @@ void
 ksymsattach(int num)
 {
 
-#if defined(__sparc64__) || defined(__mips__)
+#if defined(__sparc64__) || defined(__mips__) || defined(__amd64__) || \
+	    defined(__i386__)
 	if (esym <= ssym) {
 		printf("/dev/ksyms: Symbol table not valid.\n");
 		return;
@@ -69,7 +71,8 @@ ksymsattach(int num)
 #endif
 
 	do {
-#if defined(__sparc64__) || defined(__mips__)
+#if defined(__sparc64__) || defined(__mips__) || defined(__amd64__) || \
+	    defined(__i386__)
 		caddr_t symtab = ssym;
 #else
 		caddr_t symtab = (caddr_t)&end;

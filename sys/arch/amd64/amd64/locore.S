@@ -199,6 +199,7 @@ _C_LABEL(cpuid_level):	.long	-1	# max. level accepted by 'cpuid'
 					#   instruction
 _C_LABEL(cpu_vendor):	.space	16	# vendor string returned by `cpuid'
 					#   instruction
+_C_LABEL(ssym):		.quad	0	# ptr to start of syms
 _C_LABEL(esym):		.quad	0	# ptr to end of syms
 _C_LABEL(atdevbase):	.quad	0	# location of start of iomem in virtual
 _C_LABEL(bootapiver):	.long	0	# /boot API version
@@ -785,6 +786,8 @@ longmode_hi:
 	addq	$KERNBASE,%rax		/* TABLESIZE + KERNBASE */
 	addq	%rsi,%rax
 	movq	%rax,_C_LABEL(atdevbase)(%rip)
+
+	movq	$__kernel_bss_end, _C_LABEL(ssym)(%rip)
 
 	/* Set up bootstrap stack. */
 	leaq	(PROC0_STK_OFF)(%rsi),%rax

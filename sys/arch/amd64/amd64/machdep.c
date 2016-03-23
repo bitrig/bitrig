@@ -176,7 +176,6 @@ vaddr_t	dumpmem_vaddr;
 psize_t	dumpmem_sz;
 
 
-char	*ssym = NULL;
 vaddr_t kern_end;
 
 vaddr_t	msgbuf_vaddr;
