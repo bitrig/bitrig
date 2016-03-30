@@ -10,6 +10,8 @@
 #define _LIBCPP_EXTERN_TEMPLATE(...)
 #define _LIBCPP_NO_EXCEPTIONS
 
+#include "__cxxabi_config.h"
+
 #include <vector>
 #include <algorithm>
 #include <string>
@@ -17,6 +19,13 @@
 #include <cstdlib>
 #include <cstring>
 #include <cctype>
+
+#ifdef _MSC_VER
+// snprintf is implemented in VS 2015
+#if _MSC_VER < 1900
+#define snprintf _snprintf_s
+#endif
+#endif
 
 namespace __cxxabiv1
 {
@@ -55,51 +64,51 @@ template <class C>
 void
 print_stack(const C& db)
 {
-    printf("---------\n");
-    printf("names:\n");
+    fprintf(stderr, "---------\n");
+    fprintf(stderr, "names:\n");
     for (auto& s : db.names)
-        printf("{%s#%s}\n", s.first.c_str(), s.second.c_str());
+        fprintf(stderr, "{%s#%s}\n", s.first.c_str(), s.second.c_str());
     int i = -1;
-    printf("subs:\n");
+    fprintf(stderr, "subs:\n");
     for (auto& v : db.subs)
     {
         if (i >= 0)
-            printf("S%i_ = {", i);
+            fprintf(stderr, "S%i_ = {", i);
         else
-            printf("S_  = {");
+            fprintf(stderr, "S_  = {");
         for (auto& s : v)
-            printf("{%s#%s}", s.first.c_str(), s.second.c_str());
-        printf("}\n");
+            fprintf(stderr, "{%s#%s}", s.first.c_str(), s.second.c_str());
+        fprintf(stderr, "}\n");
         ++i;
     }
-    printf("template_param:\n");
+    fprintf(stderr, "template_param:\n");
     for (auto& t : db.template_param)
     {
-        printf("--\n");
+        fprintf(stderr, "--\n");
         i = -1;
         for (auto& v : t)
         {
             if (i >= 0)
-                printf("T%i_ = {", i);
+                fprintf(stderr, "T%i_ = {", i);
             else
-                printf("T_  = {");
+                fprintf(stderr, "T_  = {");
             for (auto& s : v)
-                printf("{%s#%s}", s.first.c_str(), s.second.c_str());
-            printf("}\n");
+                fprintf(stderr, "{%s#%s}", s.first.c_str(), s.second.c_str());
+            fprintf(stderr, "}\n");
             ++i;
         }
     }
-    printf("---------\n\n");
+    fprintf(stderr, "---------\n\n");
 }
 
 template <class C>
 void
 print_state(const char* msg, const char* first, const char* last, const C& db)
 {
-    printf("%s: ", msg);
+    fprintf(stderr, "%s: ", msg);
     for (; first != last; ++first)
-        printf("%c", *first);
-    printf("\n");
+        fprintf(stderr, "%c", *first);
+    fprintf(stderr, "\n");
     print_stack(db);
 }
 
@@ -156,7 +165,10 @@ constexpr const char* float_data<double>::spec;
 template <>
 struct float_data<long double>
 {
-#if defined(__arm__)
+#if defined(__mips__) && defined(__mips_n64) || defined(__aarch64__) || \
+    defined(__wasm__)
+    static const size_t mangled_size = 32;
+#elif defined(__arm__) || defined(__mips__)
     static const size_t mangled_size = 16;
 #else
     static const size_t mangled_size = 20;  // May need to be adjusted to 16 or 24 on other platforms
@@ -195,7 +207,7 @@ parse_floating_number(const char* first, const char* last, C& db)
         }
         if (*t == 'E')
         {
-#if __LITTLE_ENDIAN__
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
             std::reverse(buf, e);
 #endif
             char num[float_data<Float>::max_demangled_size] = {0};
@@ -1575,10 +1587,9 @@ parse_function_type(const char* first, const char* last, C& db)
         const char* t = first+1;
         if (t != last)
         {
-            bool externC = false;
             if (*t == 'Y')
             {
-                externC = true;
+                /* extern "C" */
                 if (++t == last)
                     return first;
             }
@@ -1672,7 +1683,7 @@ parse_pointer_to_member_type(const char* first, const char* last, C& db)
                 auto func = std::move(db.names.back());
                 db.names.pop_back();
                 auto class_type = std::move(db.names.back());
-                if (func.second.front() == '(')
+                if (!func.second.empty() && func.second.front() == '(')
                 {
                     db.names.back().first = std::move(func.first) + "(" + class_type.move_full() + "::*";
                     db.names.back().second = ")" + std::move(func.second);
@@ -2019,7 +2030,8 @@ parse_type(const char* first, const char* last, C& db)
                                     db.names[k].first += " (";
                                     db.names[k].second.insert(0, ")");
                                 }
-                                else if (db.names[k].second.front() == '(')
+                                else if (!db.names[k].second.empty() &&
+                                          db.names[k].second.front() == '(')
                                 {
                                     db.names[k].first += "(";
                                     db.names[k].second.insert(0, ")");
@@ -2046,7 +2058,8 @@ parse_type(const char* first, const char* last, C& db)
                                     db.names[k].first += " (";
                                     db.names[k].second.insert(0, ")");
                                 }
-                                else if (db.names[k].second.front() == '(')
+                                else if (!db.names[k].second.empty() &&
+                                          db.names[k].second.front() == '(')
                                 {
                                     db.names[k].first += "(";
                                     db.names[k].second.insert(0, ")");
@@ -2080,7 +2093,8 @@ parse_type(const char* first, const char* last, C& db)
                                     db.names[k].first += " (";
                                     db.names[k].second.insert(0, ")");
                                 }
-                                else if (db.names[k].second.front() == '(')
+                                else if (!db.names[k].second.empty() &&
+                                          db.names[k].second.front() == '(')
                                 {
                                     db.names[k].first += "(";
                                     db.names[k].second.insert(0, ")");
@@ -4043,7 +4057,7 @@ parse_nested_name(const char* first, const char* last, C& db,
 
 // <discriminator> := _ <non-negative number>      # when number < 10
 //                 := __ <non-negative number> _   # when number >= 10
-//  extension      := decimal-digit+
+//  extension      := decimal-digit+               # at the end of string
 
 const char*
 parse_discriminator(const char* first, const char* last)
@@ -4072,7 +4086,8 @@ parse_discriminator(const char* first, const char* last)
             const char* t1 = first+1;
             for (; t1 != last && std::isdigit(*t1); ++t1)
                 ;
-            first = t1;
+            if (t1 == last)
+                first = last;
         }
     }
     return first;
@@ -4403,7 +4418,7 @@ parse_special_name(const char* first, const char* last, C& db)
                 {
                     if (db.names.empty())
                         return first;
-                    if (first[2] == 'v')
+                    if (first[1] == 'v')
                     {
                         db.names.back().first.insert(0, "virtual thunk to ");
                         first = t;
@@ -4711,7 +4726,7 @@ class arena
 
     std::size_t 
     align_up(std::size_t n) noexcept
-        {return n + (alignment-1) & ~(alignment-1);}
+        {return (n + (alignment-1)) & ~(alignment-1);}
 
     bool
     pointer_in_buffer(char* p) noexcept
@@ -4814,6 +4829,12 @@ class malloc_alloc
 {
 public:
     typedef T value_type;
+    typedef T& reference;
+    typedef const T& const_reference;
+    typedef T* pointer;
+    typedef const T* const_pointer;
+    typedef std::size_t size_type;
+    typedef std::ptrdiff_t difference_type;
 
     malloc_alloc() = default;
     template <class U> malloc_alloc(const malloc_alloc<U>&) noexcept {}
@@ -4825,6 +4846,17 @@ public:
     void deallocate(T* p, std::size_t) noexcept
     {
         std::free(p);
+    }
+
+    template <class U> struct rebind { using other = malloc_alloc<U>; };
+    template <class U, class... Args>
+    void construct(U* p, Args&&... args)
+    {
+        ::new ((void*)p) U(std::forward<Args>(args)...);
+    }
+    void destroy(T* p)
+    {
+        p->~T();
     }
 };
 
@@ -4893,11 +4925,8 @@ struct Db
 
 }  // unnamed namespace
 
-extern "C"
-__attribute__ ((__visibility__("default")))
-char*
-__cxa_demangle(const char* mangled_name, char* buf, size_t* n, int* status)
-{
+extern "C" _LIBCXXABI_FUNC_VIS char *
+__cxa_demangle(const char *mangled_name, char *buf, size_t *n, int *status) {
     if (mangled_name == nullptr || (buf != nullptr && n == nullptr))
     {
         if (status)

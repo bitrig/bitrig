@@ -19,6 +19,9 @@
 #include "lsan/lsan_common.h"
 #include "sanitizer_common/sanitizer_common.h"
 #include "sanitizer_common/sanitizer_flags.h"
+#include "sanitizer_common/sanitizer_flag_parser.h"
+#include "ubsan/ubsan_flags.h"
+#include "ubsan/ubsan_platform.h"
 
 namespace __asan {
 
@@ -45,14 +48,15 @@ void Flags::SetDefaults() {
 #undef ASAN_FLAG
 }
 
-void Flags::ParseFromString(const char *str) {
-#define ASAN_FLAG(Type, Name, DefaultValue, Description)                     \
-  ParseFlag(str, &Name, #Name, Description);
+static void RegisterAsanFlags(FlagParser *parser, Flags *f) {
+#define ASAN_FLAG(Type, Name, DefaultValue, Description) \
+  RegisterFlag(parser, #Name, Description, &f->Name);
 #include "asan_flags.inc"
 #undef ASAN_FLAG
 }
 
-void InitializeFlags(Flags *f) {
+void InitializeFlags() {
+  // Set the default values and prepare for parsing ASan and common flags.
   SetCommonFlagsDefaults();
   {
     CommonFlags cf;
@@ -61,44 +65,65 @@ void InitializeFlags(Flags *f) {
     cf.external_symbolizer_path = GetEnv("ASAN_SYMBOLIZER_PATH");
     cf.malloc_context_size = kDefaultMallocContextSize;
     cf.intercept_tls_get_addr = true;
+    cf.exitcode = 1;
     OverrideCommonFlags(cf);
   }
-
-  const int kDefaultQuarantineSizeMb = (ASAN_LOW_MEMORY) ? 1UL << 6 : 1UL << 8;
+  Flags *f = flags();
   f->SetDefaults();
 
-  // Override from compile definition.
-  const char *compile_def = MaybeUseAsanDefaultOptionsCompileDefinition();
-  ParseCommonFlagsFromString(compile_def);
-  f->ParseFromString(compile_def);
+  FlagParser asan_parser;
+  RegisterAsanFlags(&asan_parser, f);
+  RegisterCommonFlags(&asan_parser);
+
+  // Set the default values and prepare for parsing LSan and UBSan flags
+  // (which can also overwrite common flags).
+#if CAN_SANITIZE_LEAKS
+  __lsan::Flags *lf = __lsan::flags();
+  lf->SetDefaults();
+
+  FlagParser lsan_parser;
+  __lsan::RegisterLsanFlags(&lsan_parser, lf);
+  RegisterCommonFlags(&lsan_parser);
+#endif
+
+#if CAN_SANITIZE_UB
+  __ubsan::Flags *uf = __ubsan::flags();
+  uf->SetDefaults();
+
+  FlagParser ubsan_parser;
+  __ubsan::RegisterUbsanFlags(&ubsan_parser, uf);
+  RegisterCommonFlags(&ubsan_parser);
+#endif
+
+  // Override from ASan compile definition.
+  const char *asan_compile_def = MaybeUseAsanDefaultOptionsCompileDefinition();
+  asan_parser.ParseString(asan_compile_def);
 
   // Override from user-specified string.
-  const char *default_options = MaybeCallAsanDefaultOptions();
-  ParseCommonFlagsFromString(default_options);
-  f->ParseFromString(default_options);
-  VReport(1, "Using the defaults from __asan_default_options: %s\n",
-          MaybeCallAsanDefaultOptions());
+  const char *asan_default_options = MaybeCallAsanDefaultOptions();
+  asan_parser.ParseString(asan_default_options);
+#if CAN_SANITIZE_UB
+  const char *ubsan_default_options = __ubsan::MaybeCallUbsanDefaultOptions();
+  ubsan_parser.ParseString(ubsan_default_options);
+#endif
 
   // Override from command line.
-  if (const char *env = GetEnv("ASAN_OPTIONS")) {
-    ParseCommonFlagsFromString(env);
-    f->ParseFromString(env);
-    VReport(1, "Parsed ASAN_OPTIONS: %s\n", env);
-  }
+  asan_parser.ParseString(GetEnv("ASAN_OPTIONS"));
+#if CAN_SANITIZE_LEAKS
+  lsan_parser.ParseString(GetEnv("LSAN_OPTIONS"));
+#endif
+#if CAN_SANITIZE_UB
+  ubsan_parser.ParseString(GetEnv("UBSAN_OPTIONS"));
+#endif
 
-  // Let activation flags override current settings. On Android they come
-  // from a system property. On other platforms this is no-op.
-  if (!flags()->start_deactivated) {
-    char buf[100];
-    GetExtraActivationFlags(buf, sizeof(buf));
-    ParseCommonFlagsFromString(buf);
-    f->ParseFromString(buf);
-    if (buf[0] != '\0')
-      VReport(1, "Parsed activation flags: %s\n", buf);
-  }
+  SetVerbosity(common_flags()->verbosity);
+
+  // TODO(eugenis): dump all flags at verbosity>=2?
+  if (Verbosity()) ReportUnrecognizedFlags();
 
   if (common_flags()->help) {
-    PrintFlagDescriptions();
+    // TODO(samsonov): print all of the flags (ASan, LSan, common).
+    asan_parser.PrintFlagDescriptions();
   }
 
   // Flag validation:
@@ -129,8 +154,11 @@ void InitializeFlags(Flags *f) {
   }
   if (f->quarantine_size >= 0)
     f->quarantine_size_mb = f->quarantine_size >> 20;
-  if (f->quarantine_size_mb < 0)
+  if (f->quarantine_size_mb < 0) {
+    const int kDefaultQuarantineSizeMb =
+        (ASAN_LOW_MEMORY) ? 1UL << 6 : 1UL << 8;
     f->quarantine_size_mb = kDefaultQuarantineSizeMb;
+  }
 }
 
 }  // namespace __asan

@@ -4,6 +4,10 @@
 
 cmake_minimum_required(VERSION 2.8.8)
 
+if(POLICY CMP0042)
+  cmake_policy(SET CMP0042 NEW) # Set MACOSX_RPATH=YES by default
+endif()
+
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   project(libcxxabi)
 
@@ -60,9 +64,9 @@ if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   endif()
 
   set(PACKAGE_NAME libcxxabi)
-  set(PACKAGE_VERSION 3.6.0)
+  set(PACKAGE_VERSION 3.7.0svn)
   set(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
-  set(PACKAGE_BUGREPORT "llvmbugs@cs.uiuc.edu")
+  set(PACKAGE_BUGREPORT "llvm-bugs@lists.llvm.org")
 
   if(EXISTS ${LLVM_MAIN_SRC_DIR}/utils/lit/lit.py)
     set(LLVM_LIT ${LLVM_MAIN_SRC_DIR}/utils/lit/lit.py)
@@ -97,6 +101,7 @@ if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 
   set(LIBCXXABI_BUILT_STANDALONE 1)
 else()
+  set(LLVM_MAIN_SRC_DIR "${CMAKE_SOURCE_DIR}" CACHE PATH "Path to LLVM source tree")
   set(LLVM_LIT "${CMAKE_SOURCE_DIR}/utils/lit/lit.py")
   set(LIBCXXABI_LIBDIR_SUFFIX ${LLVM_LIBDIR_SUFFIX})
 endif()
@@ -111,6 +116,9 @@ option(LIBCXXABI_ENABLE_PEDANTIC "Compile with pedantic enabled." ON)
 option(LIBCXXABI_ENABLE_WERROR "Fail and stop if a warning is triggered." OFF)
 option(LIBCXXABI_USE_LLVM_UNWINDER "Build and use the LLVM unwinder." OFF)
 option(LIBCXXABI_ENABLE_THREADS "Build with threads enabled" ON)
+set(LIBCXXABI_GCC_TOOLCHAIN "" CACHE STRING "GCC toolchain for cross compiling.")
+set(LIBCXXABI_SYSROOT "" CACHE STRING "Sysroot for cross compiling.")
+set(LIBCXXABI_LIBCXX_LIBRARY_PATH "" CACHE STRING "The path to libc++ library.")
 
 # Default to building a shared library so that the default options still test
 # the libc++abi that is being built. There are two problems with testing a
@@ -119,18 +127,41 @@ option(LIBCXXABI_ENABLE_THREADS "Build with threads enabled" ON)
 # case of an in tree build, libc++ will prefer a dynamic libc++abi from the
 # system over a static libc++abi from the output directory.
 option(LIBCXXABI_ENABLE_SHARED "Build libc++abi as a shared library." ON)
+option(LIBCXXABI_ENABLE_STATIC "Build libc++abi as a static library." ON)
+
+if (NOT LIBCXXABI_ENABLE_SHARED AND NOT LIBCXXABI_ENABLE_STATIC)
+  message(FATAL_ERROR "libc++abi must be built as either a shared or static library.")
+endif()
 
 find_path(
   LIBCXXABI_LIBCXX_INCLUDES
   vector
   PATHS ${LIBCXXABI_LIBCXX_INCLUDES}
+        ${LIBCXXABI_LIBCXX_PATH}/include
         ${CMAKE_BINARY_DIR}/${LIBCXXABI_LIBCXX_INCLUDES}
         ${LLVM_MAIN_SRC_DIR}/projects/libcxx/include
         ${LLVM_INCLUDE_DIR}/c++/v1
   )
 
-set(LIBCXXABI_LIBCXX_INCLUDES "${LIBCXXABI_LIBCXX_INCLUDES}" CACHE STRING
+set(LIBCXXABI_LIBCXX_INCLUDES "${LIBCXXABI_LIBCXX_INCLUDES}" CACHE PATH
     "Specify path to libc++ includes." FORCE)
+
+find_path(
+  LIBCXXABI_LIBCXX_PATH
+  test/libcxx/__init__.py
+  PATHS ${LIBCXXABI_LIBCXX_PATH}
+        ${LIBCXXABI_LIBCXX_INCLUDES}/../
+        ${LLVM_MAIN_SRC_DIR}/projects/libcxx/
+  NO_DEFAULT_PATH
+  )
+
+if (LIBCXXABI_LIBCXX_PATH STREQUAL "LIBCXXABI_LIBCXX_PATH-NOTFOUND")
+  message(WARNING "LIBCXXABI_LIBCXX_PATH was not specified and couldn't be infered.")
+  set(LIBCXXABI_LIBCXX_PATH "")
+endif()
+
+set(LIBCXXABI_LIBCXX_PATH "${LIBCXXABI_LIBCXX_PATH}" CACHE PATH
+    "Specify path to libc++ source." FORCE)
 
 #===============================================================================
 # Configure System
@@ -196,6 +227,7 @@ append_if(LIBCXXABI_COMPILE_FLAGS LIBCXXABI_HAS_WSTRICT_OVERFLOW_FLAG -Wstrict-o
 append_if(LIBCXXABI_COMPILE_FLAGS LIBCXXABI_HAS_WUNUSED_PARAMETER_FLAG -Wunused-parameter)
 append_if(LIBCXXABI_COMPILE_FLAGS LIBCXXABI_HAS_WUNUSED_VARIABLE_FLAG -Wunused-variable)
 append_if(LIBCXXABI_COMPILE_FLAGS LIBCXXABI_HAS_WWRITE_STRINGS_FLAG -Wwrite-strings)
+append_if(LIBCXXABI_COMPILE_FLAGS LIBCXXABI_HAS_WUNDEF_FLAG -Wundef)
 
 if (LIBCXXABI_ENABLE_WERROR)
   append_if(LIBCXXABI_COMPILE_FLAGS LIBCXXABI_HAS_WERROR_FLAG -Werror)
@@ -249,10 +281,16 @@ if (MSVC)
 endif()
 
 # Define LIBCXXABI_USE_LLVM_UNWINDER for conditional compilation.
-if (LIBCXXABI_USE_LLVM_UNWINDER)
+if (LIBCXXABI_USE_LLVM_UNWINDER OR LLVM_NATIVE_ARCH MATCHES ARM)
   add_definitions(-DLIBCXXABI_USE_LLVM_UNWINDER=1)
 endif()
 
+append_if(LIBCXXABI_COMPILE_FLAGS LIBCXXABI_TARGET_TRIPLE
+          "-target ${LIBCXXABI_TARGET_TRIPLE}")
+append_if(LIBCXXABI_COMPILE_FLAGS LIBCXXABI_GCC_TOOLCHAIN
+         "-gcc-toolchain ${LIBCXXABI_GCC_TOOLCHAIN}")
+append_if(LIBCXXABI_COMPILE_FLAGS LIBCXXABI_SYSROOT
+          "--sysroot ${LIBCXXABI_SYSROOT}")
 string(REPLACE ";" " " LIBCXXABI_CXX_FLAGS "${LIBCXXABI_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LIBCXXABI_CXX_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${LIBCXXABI_C_FLAGS}")
@@ -261,15 +299,44 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${LIBCXXABI_C_FLAGS}")
 # Setup Source Code
 #===============================================================================
 
+set(LIBCXXABI_LIBUNWIND_INCLUDES "${LIBCXXABI_LIBUNWIND_INCLUDES}" CACHE PATH
+    "Specify path to libunwind includes." FORCE)
+set(LIBCXXABI_LIBUNWIND_PATH "${LIBCXXABI_LIBUNWIND_PATH}" CACHE PATH
+    "Specify path to libunwind source." FORCE)
+
 include_directories(include)
+if (LIBCXXABI_USE_LLVM_UNWINDER OR LLVM_NATIVE_ARCH MATCHES ARM)
+  find_path(
+    LIBCXXABI_LIBUNWIND_INCLUDES_INTERNAL
+    libunwind.h
+    PATHS ${LIBCXXABI_LIBUNWIND_INCLUDES}
+          ${LIBCXXABI_LIBUNWIND_PATH}/include
+          ${CMAKE_BINARY_DIR}/${LIBCXXABI_LIBUNWIND_INCLUDES}
+          ${LLVM_MAIN_SRC_DIR}/projects/libunwind/include
+    NO_DEFAULT_PATH
+  )
+
+  find_path(
+    LIBCXXABI_LIBUNWIND_SOURCES
+    libunwind_ext.h
+    PATHS ${LIBCXXABI_LIBUNWIND_PATH}/src/
+          ${LIBCXXABI_LIBUNWIND_INCLUDES}/../src/
+          ${LLVM_MAIN_SRC_DIR}/projects/libunwind/src/
+    NO_DEFAULT_PATH
+  )
+
+  if (LIBCXXABI_LIBUNWIND_SOURCES STREQUAL "LIBCXXABI_LIBUNWIND_SOURCES-NOTFOUND")
+    message(WARNING "LIBCXXABI_LIBCXX_PATH was not specified and couldn't be infered.")
+    set(LIBCXXABI_LIBUNWIND_SOURCES "")
+  endif()
+
+  include_directories("${LIBCXXABI_LIBUNWIND_INCLUDES_INTERNAL}")
+  include_directories("${LIBCXXABI_LIBUNWIND_SOURCES}")
+endif ()
 
 # Add source code. This also contains all of the logic for deciding linker flags
 # soname, etc...
 add_subdirectory(src)
-
-if (LIBCXXABI_USE_LLVM_UNWINDER)
-  add_subdirectory(src/Unwind)
-endif()
 
 if(NOT LIBCXXABI_ENABLE_SHARED)
   # TODO: Fix the libc++ cmake files so that libc++abi can be statically linked.

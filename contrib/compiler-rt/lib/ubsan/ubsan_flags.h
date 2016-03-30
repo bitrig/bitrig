@@ -15,6 +15,10 @@
 
 #include "sanitizer_common/sanitizer_internal_defs.h"
 
+namespace __sanitizer {
+class FlagParser;
+}
+
 namespace __ubsan {
 
 struct Flags {
@@ -23,14 +27,15 @@ struct Flags {
 #undef UBSAN_FLAG
 
   void SetDefaults();
-  void ParseFromString(const char *str);
 };
 
 extern Flags ubsan_flags;
 inline Flags *flags() { return &ubsan_flags; }
 
-void InitializeCommonFlags();
 void InitializeFlags();
+void RegisterUbsanFlags(FlagParser *parser, Flags *f);
+
+const char *MaybeCallUbsanDefaultOptions();
 
 }  // namespace __ubsan
 

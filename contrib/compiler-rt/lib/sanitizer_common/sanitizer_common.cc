@@ -16,10 +16,14 @@
 #include "sanitizer_flags.h"
 #include "sanitizer_libc.h"
 #include "sanitizer_placement_new.h"
+#include "sanitizer_stacktrace_printer.h"
+#include "sanitizer_symbolizer.h"
 
 namespace __sanitizer {
 
 const char *SanitizerToolName = "SanitizerTool";
+
+atomic_uint32_t current_verbosity;
 
 uptr GetPageSizeCached() {
   static uptr PageSize;
@@ -50,18 +54,23 @@ void ReportFile::ReopenIfNecessary() {
     if (fd_pid == pid)
       return;
     else
-      internal_close(fd);
+      CloseFile(fd);
   }
 
-  internal_snprintf(full_path, kMaxPathLength, "%s.%zu", path_prefix, pid);
-  uptr openrv = OpenFile(full_path, true);
-  if (internal_iserror(openrv)) {
+  const char *exe_name = GetProcessName();
+  if (common_flags()->log_exe_name && exe_name) {
+    internal_snprintf(full_path, kMaxPathLength, "%s.%s.%zu", path_prefix,
+                      exe_name, pid);
+  } else {
+    internal_snprintf(full_path, kMaxPathLength, "%s.%zu", path_prefix, pid);
+  }
+  fd = OpenFile(full_path, WrOnly);
+  if (fd == kInvalidFd) {
     const char *ErrorMsgPrefix = "ERROR: Can't open file: ";
-    internal_write(kStderrFd, ErrorMsgPrefix, internal_strlen(ErrorMsgPrefix));
-    internal_write(kStderrFd, full_path, internal_strlen(full_path));
+    WriteToFile(kStderrFd, ErrorMsgPrefix, internal_strlen(ErrorMsgPrefix));
+    WriteToFile(kStderrFd, full_path, internal_strlen(full_path));
     Die();
   }
-  fd = openrv;
   fd_pid = pid;
 }
 
@@ -78,7 +87,7 @@ void ReportFile::SetReportPath(const char *path) {
 
   SpinMutexLock l(mu);
   if (fd != kStdoutFd && fd != kStderrFd && fd != kInvalidFd)
-    internal_close(fd);
+    CloseFile(fd);
   fd = kInvalidFd;
   if (internal_strcmp(path, "stdout") == 0) {
     fd = kStdoutFd;
@@ -96,24 +105,47 @@ uptr stoptheworld_tracer_pid = 0;
 // writing to the same log file.
 uptr stoptheworld_tracer_ppid = 0;
 
-static DieCallbackType InternalDieCallback, UserDieCallback;
-void SetDieCallback(DieCallbackType callback) {
-  InternalDieCallback = callback;
-}
-void SetUserDieCallback(DieCallbackType callback) {
-  UserDieCallback = callback;
+static const int kMaxNumOfInternalDieCallbacks = 5;
+static DieCallbackType InternalDieCallbacks[kMaxNumOfInternalDieCallbacks];
+
+bool AddDieCallback(DieCallbackType callback) {
+  for (int i = 0; i < kMaxNumOfInternalDieCallbacks; i++) {
+    if (InternalDieCallbacks[i] == nullptr) {
+      InternalDieCallbacks[i] = callback;
+      return true;
+    }
+  }
+  return false;
 }
 
-DieCallbackType GetDieCallback() {
-  return InternalDieCallback;
+bool RemoveDieCallback(DieCallbackType callback) {
+  for (int i = 0; i < kMaxNumOfInternalDieCallbacks; i++) {
+    if (InternalDieCallbacks[i] == callback) {
+      internal_memmove(&InternalDieCallbacks[i], &InternalDieCallbacks[i + 1],
+                       sizeof(InternalDieCallbacks[0]) *
+                           (kMaxNumOfInternalDieCallbacks - i - 1));
+      InternalDieCallbacks[kMaxNumOfInternalDieCallbacks - 1] = nullptr;
+      return true;
+    }
+  }
+  return false;
+}
+
+static DieCallbackType UserDieCallback;
+void SetUserDieCallback(DieCallbackType callback) {
+  UserDieCallback = callback;
 }
 
 void NORETURN Die() {
   if (UserDieCallback)
     UserDieCallback();
-  if (InternalDieCallback)
-    InternalDieCallback();
-  internal__exit(1);
+  for (int i = kMaxNumOfInternalDieCallbacks - 1; i >= 0; i--) {
+    if (InternalDieCallbacks[i])
+      InternalDieCallbacks[i]();
+  }
+  if (common_flags()->abort_on_error)
+    Abort();
+  internal__exit(common_flags()->exitcode);
 }
 
 static CheckFailedCallbackType CheckFailedCallback;
@@ -131,37 +163,60 @@ void NORETURN CheckFailed(const char *file, int line, const char *cond,
   Die();
 }
 
-uptr ReadFileToBuffer(const char *file_name, char **buff,
-                      uptr *buff_size, uptr max_len) {
+void NORETURN ReportMmapFailureAndDie(uptr size, const char *mem_type,
+                                      const char *mmap_type, error_t err,
+                                      bool raw_report) {
+  static int recursion_count;
+  if (raw_report || recursion_count) {
+    // If raw report is requested or we went into recursion, just die.
+    // The Report() and CHECK calls below may call mmap recursively and fail.
+    RawWrite("ERROR: Failed to mmap\n");
+    Die();
+  }
+  recursion_count++;
+  Report("ERROR: %s failed to "
+         "%s 0x%zx (%zd) bytes of %s (error code: %d)\n",
+         SanitizerToolName, mmap_type, size, size, mem_type, err);
+#ifndef SANITIZER_GO
+  DumpProcessMap();
+#endif
+  UNREACHABLE("unable to mmap");
+}
+
+bool ReadFileToBuffer(const char *file_name, char **buff, uptr *buff_size,
+                      uptr *read_len, uptr max_len, error_t *errno_p) {
   uptr PageSize = GetPageSizeCached();
   uptr kMinFileLen = PageSize;
-  uptr read_len = 0;
-  *buff = 0;
+  *buff = nullptr;
   *buff_size = 0;
+  *read_len = 0;
   // The files we usually open are not seekable, so try different buffer sizes.
   for (uptr size = kMinFileLen; size <= max_len; size *= 2) {
-    uptr openrv = OpenFile(file_name, /*write*/ false);
-    if (internal_iserror(openrv)) return 0;
-    fd_t fd = openrv;
+    fd_t fd = OpenFile(file_name, RdOnly, errno_p);
+    if (fd == kInvalidFd) return false;
     UnmapOrDie(*buff, *buff_size);
     *buff = (char*)MmapOrDie(size, __func__);
     *buff_size = size;
+    *read_len = 0;
     // Read up to one page at a time.
-    read_len = 0;
     bool reached_eof = false;
-    while (read_len + PageSize <= size) {
-      uptr just_read = internal_read(fd, *buff + read_len, PageSize);
+    while (*read_len + PageSize <= size) {
+      uptr just_read;
+      if (!ReadFromFile(fd, *buff + *read_len, PageSize, &just_read, errno_p)) {
+        UnmapOrDie(*buff, *buff_size);
+        return false;
+      }
       if (just_read == 0) {
         reached_eof = true;
         break;
       }
-      read_len += just_read;
+      *read_len += just_read;
     }
-    internal_close(fd);
+    CloseFile(fd);
     if (reached_eof)  // We've read the whole file.
       break;
   }
-  return read_len;
+  return true;
 }
 
 typedef bool UptrComparisonFunction(const uptr &a, const uptr &b);
@@ -198,21 +253,28 @@ void *MmapAlignedOrDie(uptr size, uptr alignment, const char *mem_type) {
 
 const char *StripPathPrefix(const char *filepath,
                             const char *strip_path_prefix) {
-  if (filepath == 0) return 0;
-  if (strip_path_prefix == 0) return filepath;
-  const char *pos = internal_strstr(filepath, strip_path_prefix);
-  if (pos == 0) return filepath;
-  pos += internal_strlen(strip_path_prefix);
-  if (pos[0] == '.' && pos[1] == '/')
-    pos += 2;
-  return pos;
+  if (!filepath) return nullptr;
+  if (!strip_path_prefix) return filepath;
+  const char *res = filepath;
+  if (const char *pos = internal_strstr(filepath, strip_path_prefix))
+    res = pos + internal_strlen(strip_path_prefix);
+  if (res[0] == '.' && res[1] == '/')
+    res += 2;
+  return res;
 }
 
 const char *StripModuleName(const char *module) {
-  if (module == 0)
-    return 0;
-  if (const char *slash_pos = internal_strrchr(module, '/'))
+  if (!module)
+    return nullptr;
+  if (SANITIZER_WINDOWS) {
+    // On Windows, both slash and backslash are possible.
+    // Pick the one that goes last.
+    if (const char *bslash_pos = internal_strrchr(module, '\\'))
+      return StripModuleName(bslash_pos + 1);
+  }
+  if (const char *slash_pos = internal_strrchr(module, '/')) {
     return slash_pos + 1;
+  }
   return module;
 }
 
@@ -224,26 +286,61 @@ void ReportErrorSummary(const char *error_message) {
   __sanitizer_report_error_summary(buff.data());
 }
 
-void ReportErrorSummary(const char *error_type, const char *file,
-                        int line, const char *function) {
+#ifndef SANITIZER_GO
+void ReportErrorSummary(const char *error_type, const AddressInfo &info) {
   if (!common_flags()->print_summary)
     return;
   InternalScopedString buff(kMaxSummaryLength);
-  buff.append("%s %s:%d %s", error_type,
-              file ? StripPathPrefix(file, common_flags()->strip_path_prefix)
-                   : "??",
-              line, function ? function : "??");
+  buff.append("%s ", error_type);
+  RenderFrame(&buff, "%L %F", 0, info, common_flags()->symbolize_vs_style,
+              common_flags()->strip_path_prefix);
   ReportErrorSummary(buff.data());
 }
+#endif
 
-LoadedModule::LoadedModule(const char *module_name, uptr base_address) {
+// Removes the ANSI escape sequences from the input string (in-place).
+void RemoveANSIEscapeSequencesFromString(char *str) {
+  if (!str)
+    return;
+
+  // We are going to remove the escape sequences in place.
+  char *s = str;
+  char *z = str;
+  while (*s != '\0') {
+    CHECK_GE(s, z);
+    // Skip over ANSI escape sequences with pointer 's'.
+    if (*s == '\033' && *(s + 1) == '[') {
+      s = internal_strchrnul(s, 'm');
+      if (*s == '\0') {
+        break;
+      }
+      s++;
+      continue;
+    }
+    // 's' now points at a character we want to keep. Copy over the buffer
+    // content if the escape sequence has been perviously skipped andadvance
+    // both pointers.
+    if (s != z)
+      *z = *s;
+
+    // If we have not seen an escape sequence, just advance both pointers.
+    z++;
+    s++;
+  }
+
+  // Null terminate the string.
+  *z = '\0';
+}
+
+void LoadedModule::set(const char *module_name, uptr base_address) {
+  clear();
   full_name_ = internal_strdup(module_name);
   base_address_ = base_address;
-  ranges_.clear();
 }
 
 void LoadedModule::clear() {
   InternalFree(full_name_);
+  full_name_ = nullptr;
   while (!ranges_.empty()) {
     AddressRange *r = ranges_.front();
     ranges_.pop_front();
@@ -282,7 +379,116 @@ void DecreaseTotalMmap(uptr size) {
   atomic_fetch_sub(&g_total_mmaped, size, memory_order_relaxed);
 }
 
-}  // namespace __sanitizer
+bool TemplateMatch(const char *templ, const char *str) {
+  if ((!str) || str[0] == 0)
+    return false;
+  bool start = false;
+  if (templ && templ[0] == '^') {
+    start = true;
+    templ++;
+  }
+  bool asterisk = false;
+  while (templ && templ[0]) {
+    if (templ[0] == '*') {
+      templ++;
+      start = false;
+      asterisk = true;
+      continue;
+    }
+    if (templ[0] == '$')
+      return str[0] == 0 || asterisk;
+    if (str[0] == 0)
+      return false;
+    char *tpos = (char*)internal_strchr(templ, '*');
+    char *tpos1 = (char*)internal_strchr(templ, '$');
+    if ((!tpos) || (tpos1 && tpos1 < tpos))
+      tpos = tpos1;
+    if (tpos)
+      tpos[0] = 0;
+    const char *str0 = str;
+    const char *spos = internal_strstr(str, templ);
+    str = spos + internal_strlen(templ);
+    templ = tpos;
+    if (tpos)
+      tpos[0] = tpos == tpos1 ? '$' : '*';
+    if (!spos)
+      return false;
+    if (start && spos != str0)
+      return false;
+    start = false;
+    asterisk = false;
+  }
+  return true;
+}
+
+static const char kPathSeparator = SANITIZER_WINDOWS ? ';' : ':';
+
+char *FindPathToBinary(const char *name) {
+  const char *path = GetEnv("PATH");
+  if (!path)
+    return nullptr;
+  uptr name_len = internal_strlen(name);
+  InternalScopedBuffer<char> buffer(kMaxPathLength);
+  const char *beg = path;
+  while (true) {
+    const char *end = internal_strchrnul(beg, kPathSeparator);
+    uptr prefix_len = end - beg;
+    if (prefix_len + name_len + 2 <= kMaxPathLength) {
+      internal_memcpy(buffer.data(), beg, prefix_len);
+      buffer[prefix_len] = '/';
+      internal_memcpy(&buffer[prefix_len + 1], name, name_len);
+      buffer[prefix_len + 1 + name_len] = '\0';
+      if (FileExists(buffer.data()))
+        return internal_strdup(buffer.data());
+    }
+    if (*end == '\0') break;
+    beg = end + 1;
+  }
+  return nullptr;
+}
+
+static char binary_name_cache_str[kMaxPathLength];
+static char process_name_cache_str[kMaxPathLength];
+
+const char *GetProcessName() {
+  return process_name_cache_str;
+}
+
+static uptr ReadProcessName(/*out*/ char *buf, uptr buf_len) {
+  ReadLongProcessName(buf, buf_len);
+  char *s = const_cast<char *>(StripModuleName(buf));
+  uptr len = internal_strlen(s);
+  if (s != buf) {
+    internal_memmove(buf, s, len);
+    buf[len] = '\0';
+  }
+  return len;
+}
+
+void UpdateProcessName() {
+  ReadProcessName(process_name_cache_str, sizeof(process_name_cache_str));
+}
+
+// Call once to make sure that binary_name_cache_str is initialized
+void CacheBinaryName() {
+  if (binary_name_cache_str[0] != '\0')
+    return;
+  ReadBinaryName(binary_name_cache_str, sizeof(binary_name_cache_str));
+  ReadProcessName(process_name_cache_str, sizeof(process_name_cache_str));
+}
+
+uptr ReadBinaryNameCached(/*out*/char *buf, uptr buf_len) {
+  CacheBinaryName();
+  uptr name_len = internal_strlen(binary_name_cache_str);
+  name_len = (name_len < buf_len - 1) ? name_len : buf_len - 1;
+  if (buf_len == 0)
+    return 0;
+  internal_memcpy(buf, binary_name_cache_str, name_len);
+  buf[name_len] = '\0';
+  return name_len;
+}
+
+} // namespace __sanitizer
 
 using namespace __sanitizer;  // NOLINT
 
@@ -299,4 +505,4 @@ SANITIZER_INTERFACE_ATTRIBUTE
 void __sanitizer_set_death_callback(void (*callback)(void)) {
   SetUserDieCallback(callback);
 }
-}  // extern "C"
+} // extern "C"

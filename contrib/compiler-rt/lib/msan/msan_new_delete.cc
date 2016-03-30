@@ -19,13 +19,6 @@
 
 #include <stddef.h>
 
-namespace __msan {
-// This function is a no-op. We need it to make sure that object file
-// with our replacements will actually be loaded from static MSan
-// run-time library at link-time.
-void ReplaceOperatorsNewAndDelete() { }
-}
-
 using namespace __msan;  // NOLINT
 
 // Fake std::nothrow_t to avoid including <new>.
@@ -52,9 +45,9 @@ void *operator new[](size_t size, std::nothrow_t const&) { OPERATOR_NEW_BODY; }
   if (ptr) MsanDeallocate(&stack, ptr)
 
 INTERCEPTOR_ATTRIBUTE
-void operator delete(void *ptr) throw() { OPERATOR_DELETE_BODY; }
+void operator delete(void *ptr) NOEXCEPT { OPERATOR_DELETE_BODY; }
 INTERCEPTOR_ATTRIBUTE
-void operator delete[](void *ptr) throw() { OPERATOR_DELETE_BODY; }
+void operator delete[](void *ptr) NOEXCEPT { OPERATOR_DELETE_BODY; }
 INTERCEPTOR_ATTRIBUTE
 void operator delete(void *ptr, std::nothrow_t const&) { OPERATOR_DELETE_BODY; }
 INTERCEPTOR_ATTRIBUTE

@@ -11,7 +11,7 @@
 
 // class function<R(ArgTypes...)>
 
-// function(nullptr_t);
+// function(F);
 
 #include <functional>
 #include <cassert>
@@ -80,5 +80,15 @@ int main()
     assert(f);
     assert(globalMemCounter.checkOutstandingNewEq(0));
     assert(f.target<int (A::*)(int) const>() != 0);
+    }
+    {
+      std::function<void(int)> f(&g);
+      assert(f);
+      assert(f.target<int(*)(int)>() != 0);
+      f(1);
+    }
+    {
+        std::function <void()> f(static_cast<void (*)()>(0));
+        assert(!f);
     }
 }

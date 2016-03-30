@@ -9,13 +9,15 @@
 
 // NOTE: Older versions of clang have a bug where they fail to evalute
 // string_view::at as a constant expression.
-// XFAIL: apple-clang-6.0, clang-3.4, clang-3.3
+// XFAIL: clang-3.4, clang-3.3
+// XFAIL: libcpp-no-exceptions
 
 // <string_view>
 
 // constexpr const _CharT& at(size_type _pos) const;
 
 #include <experimental/string_view>
+#include <stdexcept>
 #include <cassert>
 
 template <typename CharT>

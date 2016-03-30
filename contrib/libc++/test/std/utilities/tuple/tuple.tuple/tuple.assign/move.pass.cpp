@@ -13,11 +13,13 @@
 
 // tuple& operator=(tuple&& u);
 
+// UNSUPPORTED: c++98, c++03
+
 #include <tuple>
 #include <utility>
 #include <cassert>
 
-#include "../MoveOnly.h"
+#include "MoveOnly.h"
 
 int main()
 {

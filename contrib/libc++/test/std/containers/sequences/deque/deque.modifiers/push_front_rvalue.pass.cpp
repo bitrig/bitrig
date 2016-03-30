@@ -14,7 +14,7 @@
 #include <deque>
 #include <cassert>
 
-#include "../../../MoveOnly.h"
+#include "MoveOnly.h"
 #include "min_allocator.h"
 
 #ifndef _LIBCPP_HAS_NO_RVALUE_REFERENCES
@@ -39,7 +39,7 @@ make(int size, int start = 0 )
     for (int i = 0; i < start; ++i)
         c.pop_front();
     return c;
-};
+}
 
 template <class C>
 void

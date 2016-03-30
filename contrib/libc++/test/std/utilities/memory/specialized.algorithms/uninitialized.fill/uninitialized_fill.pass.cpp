@@ -7,6 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+// XFAIL: libcpp-no-exceptions
 // <memory>
 
 // template <class ForwardIterator, class T>
@@ -20,19 +21,33 @@
 struct B
 {
     static int count_;
+    static int population_;
     int data_;
-    explicit B() : data_(1) {}
-    B(const B& b) {if (++count_ == 3) throw 1; data_ = b.data_;}
-    ~B() {data_ = 0;}
+    explicit B() : data_(1) { ++population_; }
+    B(const B& b) {if (++count_ == 3) throw 1; data_ = b.data_; ++population_; }
+    ~B() {data_ = 0; --population_; }
 };
 
 int B::count_ = 0;
+int B::population_ = 0;
+
+struct Nasty
+{
+    Nasty() : i_ ( counter_++ ) {}
+    Nasty * operator &() const { return NULL; }
+    int i_;
+    static int counter_; 
+};
+
+int Nasty::counter_ = 0;
 
 int main()
 {
+    {
     const int N = 5;
     char pool[sizeof(B)*N] = {0};
     B* bp = (B*)pool;
+    assert(B::population_ == 0);
     try
     {
         std::uninitialized_fill(bp, bp+N, B());
@@ -40,11 +55,22 @@ int main()
     }
     catch (...)
     {
-        for (int i = 0; i < N; ++i)
-            assert(bp[i].data_ == 0);
+        assert(B::population_ == 0);
     }
     B::count_ = 0;
     std::uninitialized_fill(bp, bp+2, B());
     for (int i = 0; i < 2; ++i)
         assert(bp[i].data_ == 1);
+    assert(B::population_ == 2);
+    }
+    {
+    const int N = 5;
+    char pool[N*sizeof(Nasty)] = {0};
+    Nasty* bp = (Nasty*)pool;
+
+    Nasty::counter_ = 23;
+    std::uninitialized_fill(bp, bp+N, Nasty());
+    for (int i = 0; i < N; ++i)
+        assert(bp[i].i_ == 23);
+    }
 }

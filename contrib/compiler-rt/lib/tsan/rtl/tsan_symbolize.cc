@@ -38,16 +38,10 @@ void ExitSymbolizer() {
 
 // May be overriden by JIT/JAVA/etc,
 // whatever produces PCs marked with kExternalPCBit.
-extern "C" bool __tsan_symbolize_external(uptr pc,
-                               char *func_buf, uptr func_siz,
-                               char *file_buf, uptr file_siz,
-                               int *line, int *col)
-                               SANITIZER_WEAK_ATTRIBUTE;
-
-bool __tsan_symbolize_external(uptr pc,
-                               char *func_buf, uptr func_siz,
-                               char *file_buf, uptr file_siz,
-                               int *line, int *col) {
+SANITIZER_WEAK_DEFAULT_IMPL
+bool __tsan_symbolize_external(uptr pc, char *func_buf, uptr func_siz,
+                               char *file_buf, uptr file_siz, int *line,
+                               int *col) {
   return false;
 }
 
@@ -77,7 +71,7 @@ ReportLocation *SymbolizeData(uptr addr) {
   if (!Symbolizer::GetOrInit()->SymbolizeData(addr, &info))
     return 0;
   ReportLocation *ent = ReportLocation::New(ReportLocationGlobal);
-  ent->global = info;
+  internal_memcpy(&ent->global, &info, sizeof(info));
   return ent;
 }
 

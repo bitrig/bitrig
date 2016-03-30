@@ -8,6 +8,7 @@
 //===----------------------------------------------------------------------===//
 //
 // UNSUPPORTED: libcpp-has-no-threads
+// UNSUPPORTED: c++03, c++98, c++11
 
 // <shared_mutex>
 
@@ -20,7 +21,7 @@
 #include <cstdlib>
 #include <cassert>
 
-#if _LIBCPP_STD_VER > 11
+#include "test_macros.h"
 
 std::shared_timed_mutex m;
 
@@ -29,6 +30,19 @@ typedef Clock::time_point time_point;
 typedef Clock::duration duration;
 typedef std::chrono::milliseconds ms;
 typedef std::chrono::nanoseconds ns;
+
+
+ms WaitTime = ms(250);
+
+// Thread sanitizer causes more overhead and will sometimes cause this test
+// to fail. To prevent this we give Thread sanitizer more time to complete the
+// test.
+#if !TEST_HAS_FEATURE(thread_sanitizer)
+ms Tolerance = ms(50);
+#else
+ms Tolerance = ms(100);
+#endif
+
 
 void f()
 {
@@ -40,15 +54,11 @@ void f()
     assert(d < ms(50));  // within 50ms
 }
 
-#endif  // _LIBCPP_STD_VER > 11
-
 int main()
 {
-#if _LIBCPP_STD_VER > 11
     m.lock();
     std::thread t(f);
     std::this_thread::sleep_for(ms(250));
     m.unlock();
     t.join();
-#endif  // _LIBCPP_STD_VER > 11
 }

@@ -4,6 +4,9 @@ clang_compiler_add_cxx_check()
 
 # FIXME: use SANITIZER_COMMON_SUPPORTED_ARCH here
 filter_available_targets(SANITIZER_UNITTEST_SUPPORTED_ARCH x86_64 i386 mips64 mips64el)
+if(APPLE)
+  darwin_filter_host_archs(SANITIZER_UNITTEST_SUPPORTED_ARCH SANITIZER_COMMON_SUPPORTED_ARCH)
+endif()
 
 set(SANITIZER_UNITTESTS
   sanitizer_allocator_test.cc
@@ -28,6 +31,7 @@ set(SANITIZER_UNITTESTS
   sanitizer_stacktrace_test.cc
   sanitizer_stoptheworld_test.cc
   sanitizer_suppressions_test.cc
+  sanitizer_symbolizer_test.cc
   sanitizer_test_main.cc
   sanitizer_thread_registry_test.cc)
 
@@ -50,23 +54,33 @@ set(SANITIZER_TEST_CFLAGS_COMMON
   -Werror=sign-compare
   -Wno-non-virtual-dtor)
 
+if(MSVC)
+  # Disable exceptions on Windows until they work reliably.
+  list(APPEND SANITIZER_TEST_CFLAGS_COMMON -fno-exceptions -DGTEST_HAS_SEH=0)
+endif()
+
 # -gline-tables-only must be enough for these tests, so use it if possible.
 if(COMPILER_RT_TEST_COMPILER_ID MATCHES "Clang")
-  list(APPEND ASAN_UNITTEST_COMMON_CFLAGS -gline-tables-only)
+  list(APPEND SANITIZER_TEST_CFLAGS_COMMON -gline-tables-only)
 else()
-  list(APPEND ASAN_UNITTEST_COMMON_CFLAGS -g)
+  list(APPEND SANITIZER_TEST_CFLAGS_COMMON -g)
 endif()
 
 if(NOT MSVC)
   list(APPEND SANITIZER_TEST_LINK_FLAGS_COMMON --driver-mode=g++)
 endif()
 
+if(ANDROID)
+  list(APPEND SANITIZER_TEST_LINK_FLAGS_COMMON -pie)
+endif()
+
 set(SANITIZER_TEST_LINK_LIBS)
-append_list_if(ANDROID log SANITIZER_TEST_LINK_LIBS)
+append_list_if(COMPILER_RT_HAS_LIBLOG log SANITIZER_TEST_LINK_LIBS)
 # NDK r10 requires -latomic almost always.
 append_list_if(ANDROID atomic SANITIZER_TEST_LINK_LIBS)
 
 append_list_if(COMPILER_RT_HAS_LIBDL -ldl SANITIZER_TEST_LINK_FLAGS_COMMON)
+append_list_if(COMPILER_RT_HAS_LIBRT -lrt SANITIZER_TEST_LINK_FLAGS_COMMON)
 append_list_if(COMPILER_RT_HAS_LIBPTHREAD -pthread SANITIZER_TEST_LINK_FLAGS_COMMON)
 # x86_64 FreeBSD 9.2 additionally requires libc++ to build the tests. Also,
 # 'libm' shall be specified explicitly to build i386 tests.
@@ -157,11 +171,13 @@ if(COMPILER_RT_CAN_EXECUTE_TESTS AND NOT ANDROID)
   # be sure that produced binaries would work.
   if(APPLE)
     add_sanitizer_common_lib("RTSanitizerCommon.test.osx"
-                             $<TARGET_OBJECTS:RTSanitizerCommon.osx>)
+                             $<TARGET_OBJECTS:RTSanitizerCommon.osx>
+                             $<TARGET_OBJECTS:RTSanitizerCommonLibc.osx>)
   else()
     if(CAN_TARGET_x86_64)
       add_sanitizer_common_lib("RTSanitizerCommon.test.nolibc.x86_64"
-                               $<TARGET_OBJECTS:RTSanitizerCommon.x86_64>)
+                               $<TARGET_OBJECTS:RTSanitizerCommon.x86_64>
+                               $<TARGET_OBJECTS:RTSanitizerCommonNoLibc.x86_64>)
     endif()
     foreach(arch ${SANITIZER_UNITTEST_SUPPORTED_ARCH})
       add_sanitizer_common_lib("RTSanitizerCommon.test.${arch}"

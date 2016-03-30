@@ -25,11 +25,6 @@
 
 using namespace llvm;
 
-#ifdef __Bitrig__
-std::string sys::getDefaultTargetTriple() {
-  return LLVM_DEFAULT_TARGET_TRIPLE;
-}
-#else // __Bitrig__
 static std::string getOSVersion() {
   struct utsname info;
 
@@ -40,30 +35,15 @@ static std::string getOSVersion() {
 }
 
 std::string sys::getDefaultTargetTriple() {
-  StringRef TargetTripleString(LLVM_DEFAULT_TARGET_TRIPLE);
-  std::pair<StringRef, StringRef> ArchSplit = TargetTripleString.split('-');
-
-  // Normalize the arch, since the target triple may not actually match the
-  // target.
-  std::string Arch = ArchSplit.first;
-
-  std::string Triple(Arch);
-  Triple += '-';
-  Triple += ArchSplit.second;
-
-  // Force i<N>86 to i386.
-  if (Triple[0] == 'i' && isdigit(Triple[1]) &&
-      Triple[2] == '8' && Triple[3] == '6')
-    Triple[1] = '3';
+  std::string TargetTripleString(LLVM_DEFAULT_TARGET_TRIPLE);
 
   // On darwin, we want to update the version to match that of the
   // target.
-  std::string::size_type DarwinDashIdx = Triple.find("-darwin");
+  std::string::size_type DarwinDashIdx = TargetTripleString.find("-darwin");
   if (DarwinDashIdx != std::string::npos) {
-    Triple.resize(DarwinDashIdx + strlen("-darwin"));
-    Triple += getOSVersion();
+    TargetTripleString.resize(DarwinDashIdx + strlen("-darwin"));
+    TargetTripleString += getOSVersion();
   }
 
-  return Triple::normalize(Triple);
+  return Triple::normalize(TargetTripleString);
 }
-#endif // __Bitrig__

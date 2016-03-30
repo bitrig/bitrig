@@ -7,12 +7,14 @@
 //
 //===----------------------------------------------------------------------===//
 
+// XFAIL: libcpp-no-exceptions
 // <deque>
 
 // void push_front(const value_type& x);
 
 #include <deque>
 #include <cassert>
+#include "test_allocator.h"
 
 // Flag that makes the copy constructor for CMyClass throw an exception
 static bool gCopyConstructorShouldThow = false;
@@ -66,6 +68,7 @@ bool operator==(const CMyClass &lhs, const CMyClass &rhs) { return lhs.equal(rhs
 int main()
 {
     CMyClass instance(42);
+    {
     std::deque<CMyClass> vec;
 
     vec.push_front(instance);
@@ -74,8 +77,26 @@ int main()
     gCopyConstructorShouldThow = true;
     try {
         vec.push_front(instance);
+        assert(false);
+    }
+    catch (...) {
+	    gCopyConstructorShouldThow = false;
+        assert(vec==vec2);
+    }
+	}
+	
+	{
+	typedef std::deque<CMyClass, test_allocator<CMyClass> > C;
+    C vec;
+    C vec2(vec);
+
+	C::allocator_type::throw_after = 1;
+    try {
+        vec.push_front(instance);
+        assert(false);
     }
     catch (...) {
         assert(vec==vec2);
+    }
     }
 }

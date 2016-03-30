@@ -22,8 +22,8 @@
 
   <div class="submenu">
     <label>Quick Links</label>
-    <a href="http://lists.cs.uiuc.edu/mailman/listinfo/cfe-dev">cfe-dev</a>
-    <a href="http://lists.cs.uiuc.edu/mailman/listinfo/cfe-commits">cfe-commits</a>
+    <a href="http://lists.llvm.org/mailman/listinfo/cfe-dev">cfe-dev</a>
+    <a href="http://lists.llvm.org/mailman/listinfo/cfe-commits">cfe-commits</a>
     <a href="http://llvm.org/bugs/">Bug Reports</a>
     <a href="http://llvm.org/svn/llvm-project/libcxx/trunk/">Browse SVN</a>
     <a href="http://llvm.org/viewvc/llvm-project/libcxx/trunk/">Browse ViewVC</a>
@@ -41,6 +41,16 @@
   <p>All of the code in libc++ is <a
      href="http://llvm.org/docs/DeveloperPolicy.html#license">dual licensed</a>
      under the MIT license and the UIUC License (a BSD-like license).</p>
+
+  <!--=====================================================================-->
+  <h2>New Documentation Coming Soon!</h2>
+  <!--=====================================================================-->
+
+  <p> Looking for documentation on how to use, build and test libc++? If so
+      checkout the new libc++ documentation.</p>
+
+  <p><a href="http://libcxx.llvm.org/docs/">
+      Click here for the new libc++ documentation.</a></p>
 
   <!--=====================================================================-->
   <h2 id="goals">Features and Goals</h2>
@@ -124,7 +134,7 @@
 
    <p>libc++ is a 100% complete C++11 implementation on Apple's OS X. </p>
    <p>LLVM and Clang can self host in C++ and C++11 mode with libc++ on Linux.</p>
-   <p>libc++ is also a 100% complete C++14 implementation. A list of new features and changes for 
+   <p>libc++ is also a 100% complete C++14 implementation. A list of new features and changes for
       C++14 can be found <a href="cxx1y_status.html">here</a>.</p>
    <p>A list of features and changes for the next C++ standard, known here as
       "C++1z" (probably to be C++17) can be found <a href="cxx1z_status.html">here</a>.</p>
@@ -137,7 +147,7 @@
    </p>
 
    <!--======================================================================-->
-   <h2 id="dir-structure">Build Bots</h2>
+   <h2 id="buildbots">Build Bots</h2>
    <!--======================================================================-->
    <p>The latest libc++ build results can be found at the following locations.</p>
    <ul>
@@ -184,26 +194,30 @@
 
   <p>In-tree build:</p>
   <ul>
+    <li><code>cd where-you-want-to-live</code></li>
     <li>Check out libcxx and <a href="http://libcxxabi.llvm.org/">libcxxabi</a>
       into llvm/projects</li>
-    <li><code>cd llvm</code></li>
+    <li><code>cd where-you-want-to-build</code></li>
     <li><code>mkdir build &amp;&amp; cd build</code></li>
-    <li><code>cmake .. # Linux may require -DCMAKE_C_COMPILER=clang
+    <li><code>cmake path/to/llvm # Linux may require -DCMAKE_C_COMPILER=clang
         -DCMAKE_CXX_COMPILER=clang++</code></li>
     <li><code>make cxx</code></li>
   </ul>
 
-  <p>Out-of-tree build:</p>
+  <p>Out-of-tree buildc:</p>
   <ul>
-    <li>Check out libcxx</li>
+    <li><code>cd where-you-want-to-live</code></li>
+    <li>Check out libcxx and llvm</li>
     <li>If not on a Mac, also check out
       <a href="http://libcxxabi.llvm.org/">libcxxabi</a></li>
-    <li><code>cd libcxx</code></li>
+    <li><code>cd where-you-want-to-build</code></li>
     <li><code>mkdir build &amp;&amp; cd build</code></li>
-    <li><code>cmake -DLIBCXX_CXX_ABI=libcxxabi
-        -DLIBCXX_LIBCXXABI_INCLUDE_PATHS=path/to/libcxxabi/include
-        -DLIT_EXECUTABLE=path/to/llvm/utils/lit/lit.py .. # Linux may require
-        -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++</code></li>
+    <li><code>cmake -DLLVM_PATH=path/to/llvm
+        -DLIBCXX_CXX_ABI=libcxxabi
+        -DLIBCXX_CXX_ABI_INCLUDE_PATHS=path/to/libcxxabi/include
+        -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+        path/to/libcxx
+    </code></li>
     <li><code>make</code></li>
   </ul>
 
@@ -239,21 +253,30 @@
 
   <p>
     Mac users, remember to be careful when replacing the system's libc++.
-    <strong>Your system will not be able to boot without a funcioning
+    <strong>Your system will not be able to boot without a functioning
     libc++.</strong>
   </p>
 
   <!--=====================================================================-->
-  <h3>Notes</h3>
+  <h3>Notes and Known Issues</h3>
   <!--=====================================================================-->
 
   <p>
-    Building libc++ with <code>-fno-rtti</code> is not supported.  However
-    linking against it with <code>-fno-rtti</code> is supported.
+    <ul>
+      <li>
+        Building libc++ with <code>-fno-rtti</code> is not supported. However
+        linking against it with <code>-fno-rtti</code> is supported.
+      </li>
+      <li>
+        On OS X v10.8 and older the CMake option
+        <code>-DLIBCXX_LIBCPPABI_VERSION=""</code> must be used during
+        configuration.
+      </li>
+    </ul>
   </p>
 
   <p>Send discussions to the
-    <a href="http://lists.cs.uiuc.edu/mailman/listinfo/cfe-dev">clang mailing list</a>.</p>
+    <a href="http://lists.llvm.org/mailman/listinfo/cfe-dev">clang mailing list</a>.</p>
 
   <!--=====================================================================-->
   <h2>Using libc++ in your programs</h2>
@@ -318,18 +341,18 @@
   <h2>Bug reports and patches</h2>
   <!--=====================================================================-->
 
-<p>
-If you think you've found a bug in libc++, please report it using 
-the <a href="http://llvm.org/bugs">LLVM Bugzilla</a>. If you're not sure, you
-can post a message to the <a href="http://lists.cs.uiuc.edu/mailman/listinfo/cfe-dev">cfe-dev</a> 
-mailing list or on IRC. Please include "libc++" in your subject.
-</p>
+  <p>
+  If you think you've found a bug in libc++, please report it using
+  the <a href="http://llvm.org/bugs">LLVM Bugzilla</a>. If you're not sure, you
+  can post a message to the <a href="http://lists.llvm.org/mailman/listinfo/cfe-dev">cfe-dev</a> 
+  mailing list or on IRC. Please include "libc++" in your subject.
+  </p>
 
-<p>
-If you want to contribute a patch to libc++, the best place for that is the
-<a href="http://lists.cs.uiuc.edu/mailman/listinfo/cfe-commits">cfe-commits</a> 
-mailing list. Please include "libc++" and "PATCH" in your subject.
-</p>
+  <p>
+  If you want to contribute a patch to libc++, the best place for that is
+  <a href="http://llvm.org/docs/Phabricator.html">Phabricator</a>. Please
+  include [libc++] in the subject and add cfe-commits as a subscriber.
+  </p>
 
   <!--=====================================================================-->
   <h2 id="libsupcxx">Build on Linux using CMake and libsupc++.</h2>
@@ -338,13 +361,13 @@ mailing list. Please include "libc++" and "PATCH" in your subject.
   <p>
      You will need libstdc++ in order to provide libsupc++.
   </p>
-  
+
   <p>
      Figure out where the libsupc++ headers are on your system. On Ubuntu this
      is <code>/usr/include/c++/&lt;version&gt;</code> and
      <code>/usr/include/c++/&lt;version&gt;/&lt;target-triple&gt;</code>
   </p>
-  
+
   <p>
      You can also figure this out by running
      <pre>
@@ -367,13 +390,13 @@ End of search list.
       Note the first two entries happen to be what we are looking for. This
       may not be correct on other platforms.
   </p>
-  
+
   <p>
      We can now run CMake:
      <ul>
        <li><code>CC=clang CXX=clang++ cmake -G "Unix Makefiles"
                 -DLIBCXX_CXX_ABI=libstdc++
-                -DLIBCXX_LIBSUPCXX_INCLUDE_PATHS="/usr/include/c++/4.7/;/usr/include/c++/4.7/x86_64-linux-gnu/"
+                -DLIBCXX_CXX_ABI_INCLUDE_PATHS="/usr/include/c++/4.7/;/usr/include/c++/4.7/x86_64-linux-gnu/"
                 -DCMAKE_BUILD_TYPE=Release
                 -DCMAKE_INSTALL_PREFIX=/usr
                 &lt;libc++-source-dir&gt;</code></li>
@@ -402,13 +425,13 @@ End of search list.
      on your build machine and your copy of the libcxxrt shared library must
      be placed where your linker will find it.
   </p>
- 
+
   <p>
      We can now run CMake:
      <ul>
        <li><code>CC=clang CXX=clang++ cmake -G "Unix Makefiles"
                 -DLIBCXX_CXX_ABI=libcxxrt
-                -DLIBCXX_LIBCXXRT_INCLUDE_PATHS="&lt;libcxxrt-source-dir&gt;/src"
+                -DLIBCXX_CXX_ABI_INCLUDE_PATHS="&lt;libcxxrt-source-dir&gt;/src"
                 -DCMAKE_BUILD_TYPE=Release
                 -DCMAKE_INSTALL_PREFIX=/usr
                 &lt;libc++-source-dir&gt;</code></li>
@@ -450,7 +473,7 @@ End of search list.
     <ul>
     <li><code>CC=clang CXX=clang++ cmake
               -DLIBCXX_CXX_ABI=libc++abi
-              -DLIBCXX_LIBCXXABI_INCLUDE_PATHS="/path/to/libcxxabi/include"
+              -DLIBCXX_CXX_ABI_INCLUDE_PATHS="/path/to/libcxxabi/include"
               -DLIBCXX_CXX_ABI_LIBRARY_PATH="/path/to/libcxxabi-build/lib"
               path/to/libcxx</code></li>
     <li><code>make</code></li>

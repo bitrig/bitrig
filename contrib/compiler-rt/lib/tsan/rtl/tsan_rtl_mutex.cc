@@ -36,12 +36,8 @@ struct Callback : DDCallback {
     DDCallback::lt = thr->dd_lt;
   }
 
-  virtual u32 Unwind() {
-    return CurrentStackId(thr, pc);
-  }
-  virtual int UniqueTid() {
-    return thr->unique_id;
-  }
+  u32 Unwind() override { return CurrentStackId(thr, pc); }
+  int UniqueTid() override { return thr->unique_id; }
 };
 
 void DDMutexInit(ThreadState *thr, uptr pc, SyncVar *s) {
@@ -476,7 +472,7 @@ void ReportDeadlock(ThreadState *thr, uptr pc, DDReport *r) {
   for (int i = 0; i < r->n; i++) {
     for (int j = 0; j < (flags()->second_deadlock_stack ? 2 : 1); j++) {
       u32 stk = r->loop[i].stk[j];
-      if (stk) {
+      if (stk && stk != 0xffffffff) {
         rep.AddStack(StackDepotGet(stk), true);
       } else {
         // Sometimes we fail to extract the stack trace (FIXME: investigate),

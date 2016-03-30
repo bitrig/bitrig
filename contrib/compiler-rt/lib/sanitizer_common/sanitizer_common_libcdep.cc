@@ -12,17 +12,22 @@
 //===----------------------------------------------------------------------===//
 
 #include "sanitizer_common.h"
+
 #include "sanitizer_flags.h"
 #include "sanitizer_stackdepot.h"
 #include "sanitizer_stacktrace.h"
 #include "sanitizer_symbolizer.h"
 
+#if SANITIZER_POSIX
+#include "sanitizer_posix.h"
+#endif
+
 namespace __sanitizer {
 
-bool ReportFile::PrintsToTty() {
+bool ReportFile::SupportsColors() {
   SpinMutexLock l(mu);
   ReopenIfNecessary();
-  return internal_isatty(fd) != 0;
+  return SupportsColoredOutput(fd);
 }
 
 bool ColorizeReports() {
@@ -33,7 +38,7 @@ bool ColorizeReports() {
 
   const char *flag = common_flags()->color;
   return internal_strcmp(flag, "always") == 0 ||
-         (internal_strcmp(flag, "auto") == 0 && report_file.PrintsToTty());
+         (internal_strcmp(flag, "auto") == 0 && report_file.SupportsColors());
 }
 
 static void (*sandboxing_callback)();
@@ -42,21 +47,19 @@ void SetSandboxingCallback(void (*f)()) {
 }
 
 void ReportErrorSummary(const char *error_type, StackTrace *stack) {
+#if !SANITIZER_GO
   if (!common_flags()->print_summary)
     return;
-#if !SANITIZER_GO
-  if (stack->size > 0 && Symbolizer::GetOrInit()->CanReturnFileLineInfo()) {
-    // Currently, we include the first stack frame into the report summary.
-    // Maybe sometimes we need to choose another frame (e.g. skip memcpy/etc).
-    uptr pc = StackTrace::GetPreviousInstructionPc(stack->trace[0]);
-    SymbolizedStack *frame = Symbolizer::GetOrInit()->SymbolizePC(pc);
-    const AddressInfo &ai = frame->info;
-    ReportErrorSummary(error_type, ai.file, ai.line, ai.function);
-    frame->ClearAll();
+  if (stack->size == 0) {
+    ReportErrorSummary(error_type);
+    return;
   }
-#else
-  AddressInfo ai;
-  ReportErrorSummary(error_type, ai.file, ai.line, ai.function);
+  // Currently, we include the first stack frame into the report summary.
+  // Maybe sometimes we need to choose another frame (e.g. skip memcpy/etc).
+  uptr pc = StackTrace::GetPreviousInstructionPc(stack->trace[0]);
+  SymbolizedStack *frame = Symbolizer::GetOrInit()->SymbolizePC(pc);
+  ReportErrorSummary(error_type, frame->info);
+  frame->ClearAll();
 #endif
 }
 
@@ -75,7 +78,7 @@ void BackgroundThread(void *arg) {
   while (true) {
     SleepForMillis(100);
     uptr current_rss_mb = GetRSS() >> 20;
-    if (common_flags()->verbosity) {
+    if (Verbosity()) {
       // If RSS has grown 10% since last time, print some information.
       if (prev_reported_rss * 11 / 10 < current_rss_mb) {
         Printf("%s: RSS: %zdMb\n", SanitizerToolName, current_rss_mb);
@@ -116,13 +119,33 @@ void BackgroundThread(void *arg) {
   }
 }
 
+void WriteToSyslog(const char *msg) {
+  InternalScopedString msg_copy(kErrorMessageBufferSize);
+  msg_copy.append("%s", msg);
+  char *p = msg_copy.data();
+  char *q;
+
+  // Print one line at a time.
+  // syslog, at least on Android, has an implicit message length limit.
+  do {
+    q = internal_strchr(p, '\n');
+    if (q)
+      *q = '\0';
+    WriteOneLineToSyslog(p);
+    if (q)
+      p = q + 1;
+  } while (q);
+}
+
 void MaybeStartBackgroudThread() {
-  if (!SANITIZER_LINUX) return;  // Need to implement/test on other platforms.
+#if SANITIZER_LINUX && \
+    !SANITIZER_GO  // Need to implement/test on other platforms.
   // Start the background thread if one of the rss limits is given.
   if (!common_flags()->hard_rss_limit_mb &&
       !common_flags()->soft_rss_limit_mb) return;
-  if (!real_pthread_create) return;  // Can't spawn the thread anyway.
+  if (!&real_pthread_create) return;  // Can't spawn the thread anyway.
   internal_start_thread(BackgroundThread, nullptr);
+#endif
 }
 
 }  // namespace __sanitizer

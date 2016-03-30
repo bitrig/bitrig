@@ -51,7 +51,7 @@ int main()
     test(S("12345678901234567890"), S("12345678901234567890"),
          S("12345678901234567890"));
     }
-#if __cplusplus >= 201103L
+#if TEST_STD_VER >= 11
     {
     typedef std::basic_string<char, std::char_traits<char>, min_allocator<char>> S;
     test(S(), S(), S());
@@ -74,6 +74,12 @@ int main()
     test(S("12345678901234567890"), S("1234567890"), S("1234567890"));
     test(S("12345678901234567890"), S("12345678901234567890"),
          S("12345678901234567890"));
+    }
+#endif
+#if __cplusplus > 201402L
+    {
+    typedef std::string S;
+    static_assert(noexcept(S().assign(S())), "");  // LWG#2063
     }
 #endif
 }

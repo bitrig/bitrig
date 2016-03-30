@@ -13,10 +13,12 @@
 
 // tuple(const tuple& u) = default;
 
+// UNSUPPORTED: c++98, c++03
+
 #include <tuple>
 #include <cassert>
 
-#include "../MoveOnly.h"
+#include "MoveOnly.h"
 
 int main()
 {

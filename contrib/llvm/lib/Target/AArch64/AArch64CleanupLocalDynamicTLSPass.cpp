@@ -62,10 +62,10 @@ struct LDTLSCleanup : public MachineFunctionPass {
     for (MachineBasicBlock::iterator I = BB->begin(), E = BB->end(); I != E;
          ++I) {
       switch (I->getOpcode()) {
-      case AArch64::TLSDESC_BLR:
+      case AArch64::TLSDESC_CALLSEQ:
         // Make sure it's a local dynamic access.
-        if (!I->getOperand(1).isSymbol() ||
-            strcmp(I->getOperand(1).getSymbolName(), "_TLS_MODULE_BASE_"))
+        if (!I->getOperand(0).isSymbol() ||
+            strcmp(I->getOperand(0).getSymbolName(), "_TLS_MODULE_BASE_"))
           break;
 
         if (TLSBaseAddrReg)
@@ -92,9 +92,7 @@ struct LDTLSCleanup : public MachineFunctionPass {
   MachineInstr *replaceTLSBaseAddrCall(MachineInstr *I,
                                        unsigned TLSBaseAddrReg) {
     MachineFunction *MF = I->getParent()->getParent();
-    const AArch64TargetMachine *TM =
-        static_cast<const AArch64TargetMachine *>(&MF->getTarget());
-    const AArch64InstrInfo *TII = TM->getSubtargetImpl()->getInstrInfo();
+    const TargetInstrInfo *TII = MF->getSubtarget().getInstrInfo();
 
     // Insert a Copy from TLSBaseAddrReg to x0, which is where the rest of the
     // code sequence assumes the address will be.
@@ -112,19 +110,17 @@ struct LDTLSCleanup : public MachineFunctionPass {
   // inserting a copy instruction after I. Returns the new instruction.
   MachineInstr *setRegister(MachineInstr *I, unsigned *TLSBaseAddrReg) {
     MachineFunction *MF = I->getParent()->getParent();
-    const AArch64TargetMachine *TM =
-        static_cast<const AArch64TargetMachine *>(&MF->getTarget());
-    const AArch64InstrInfo *TII = TM->getSubtargetImpl()->getInstrInfo();
+    const TargetInstrInfo *TII = MF->getSubtarget().getInstrInfo();
 
     // Create a virtual register for the TLS base address.
     MachineRegisterInfo &RegInfo = MF->getRegInfo();
     *TLSBaseAddrReg = RegInfo.createVirtualRegister(&AArch64::GPR64RegClass);
 
     // Insert a copy from X0 to TLSBaseAddrReg for later.
-    MachineInstr *Next = I->getNextNode();
-    MachineInstr *Copy = BuildMI(*I->getParent(), Next, I->getDebugLoc(),
-                                 TII->get(TargetOpcode::COPY),
-                                 *TLSBaseAddrReg).addReg(AArch64::X0);
+    MachineInstr *Copy =
+        BuildMI(*I->getParent(), ++I->getIterator(), I->getDebugLoc(),
+                TII->get(TargetOpcode::COPY), *TLSBaseAddrReg)
+            .addReg(AArch64::X0);
 
     return Copy;
   }

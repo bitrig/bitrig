@@ -18,7 +18,7 @@
 #include <map>
 #include <cassert>
 
-#include "../../../MoveOnly.h"
+#include "MoveOnly.h"
 #include "test_allocator.h"
 
 template <class T>
@@ -31,16 +31,17 @@ struct some_comp
 int main()
 {
 #if __has_feature(cxx_noexcept)
+    typedef std::pair<const MoveOnly, MoveOnly> V;
     {
         typedef std::multimap<MoveOnly, MoveOnly> C;
         static_assert(std::is_nothrow_move_constructible<C>::value, "");
     }
     {
-        typedef std::multimap<MoveOnly, MoveOnly, std::less<MoveOnly>, test_allocator<MoveOnly>> C;
+        typedef std::multimap<MoveOnly, MoveOnly, std::less<MoveOnly>, test_allocator<V>> C;
         static_assert(std::is_nothrow_move_constructible<C>::value, "");
     }
     {
-        typedef std::multimap<MoveOnly, MoveOnly, std::less<MoveOnly>, other_allocator<MoveOnly>> C;
+        typedef std::multimap<MoveOnly, MoveOnly, std::less<MoveOnly>, other_allocator<V>> C;
         static_assert(std::is_nothrow_move_constructible<C>::value, "");
     }
     {

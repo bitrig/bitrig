@@ -11,13 +11,20 @@
 
 // class istream_iterator
 
-// istream_iterator();
+// constexpr istream_iterator();
 
 #include <iterator>
 #include <cassert>
 
 int main()
 {
-    std::istream_iterator<int> i;
-    assert(i == std::istream_iterator<int>());
+    {
+    typedef std::istream_iterator<int> T;
+    T it;
+    assert(it == T());
+#if __cplusplus >= 201103L
+    constexpr T it2;
+#endif
+    }
+    
 }

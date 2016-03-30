@@ -7,13 +7,14 @@
 //
 //===----------------------------------------------------------------------===//
 
+// XFAIL: libcpp-no-exceptions
 // <memory>
 
 // shared_ptr
 
 // template<class Y, class D> shared_ptr(Y* p, D d);
 
-// UNSUPPORTED: asan, msan
+// UNSUPPORTED: sanitizer-new-delete
 
 #include <memory>
 #include <cassert>

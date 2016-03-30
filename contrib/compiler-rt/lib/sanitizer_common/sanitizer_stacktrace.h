@@ -17,11 +17,9 @@
 
 namespace __sanitizer {
 
-static const uptr kStackTraceMax = 256;
+static const u32 kStackTraceMax = 256;
 
-#if SANITIZER_LINUX && (defined(__aarch64__) || defined(__powerpc__) || \
-                        defined(__powerpc64__) || defined(__sparc__) || \
-                        defined(__mips__))
+#if SANITIZER_LINUX &&  (defined(__sparc__) || defined(__mips__))
 # define SANITIZER_CAN_FAST_UNWIND 0
 #elif SANITIZER_WINDOWS
 # define SANITIZER_CAN_FAST_UNWIND 0
@@ -31,7 +29,7 @@ static const uptr kStackTraceMax = 256;
 
 // Fast unwind is the only option on Mac for now; we will need to
 // revisit this macro when slow unwind works on Mac, see
-// https://code.google.com/p/address-sanitizer/issues/detail?id=137
+// https://github.com/google/sanitizers/issues/137
 #if SANITIZER_MAC
 # define SANITIZER_CAN_SLOW_UNWIND 0
 #else
@@ -40,10 +38,18 @@ static const uptr kStackTraceMax = 256;
 
 struct StackTrace {
   const uptr *trace;
-  uptr size;
+  u32 size;
+  u32 tag;
 
-  StackTrace() : trace(nullptr), size(0) {}
-  StackTrace(const uptr *trace, uptr size) : trace(trace), size(size) {}
+  static const int TAG_UNKNOWN = 0;
+  static const int TAG_ALLOC = 1;
+  static const int TAG_DEALLOC = 2;
+  static const int TAG_CUSTOM = 100; // Tool specific tags start here.
+
+  StackTrace() : trace(nullptr), size(0), tag(0) {}
+  StackTrace(const uptr *trace, u32 size) : trace(trace), size(size), tag(0) {}
+  StackTrace(const uptr *trace, u32 size, u32 tag)
+      : trace(trace), size(size), tag(tag) {}
 
   // Prints a symbolized stacktrace, followed by an empty line.
   void Print() const;
@@ -88,15 +94,15 @@ struct BufferedStackTrace : public StackTrace {
   BufferedStackTrace() : StackTrace(trace_buffer, 0), top_frame_bp(0) {}
 
   void Init(const uptr *pcs, uptr cnt, uptr extra_top_pc = 0);
-  void Unwind(uptr max_depth, uptr pc, uptr bp, void *context, uptr stack_top,
+  void Unwind(u32 max_depth, uptr pc, uptr bp, void *context, uptr stack_top,
               uptr stack_bottom, bool request_fast_unwind);
 
  private:
   void FastUnwindStack(uptr pc, uptr bp, uptr stack_top, uptr stack_bottom,
-                       uptr max_depth);
-  void SlowUnwindStack(uptr pc, uptr max_depth);
+                       u32 max_depth);
+  void SlowUnwindStack(uptr pc, u32 max_depth);
   void SlowUnwindStackWithContext(uptr pc, void *context,
-                                  uptr max_depth);
+                                  u32 max_depth);
   void PopStackFrames(uptr count);
   uptr LocatePcInTrace(uptr pc);
 

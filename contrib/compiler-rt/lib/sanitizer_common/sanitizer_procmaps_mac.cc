@@ -65,7 +65,7 @@ void MemoryMappingLayout::LoadFromCache() {
 }
 
 // Next and NextSegmentLoad were inspired by base/sysinfo.cc in
-// Google Perftools, http://code.google.com/p/google-perftools.
+// Google Perftools, https://github.com/gperftools/gperftools.
 
 // NextSegmentLoad scans the current image for the next segment load command
 // and returns the start and end addresses and file offset of the corresponding
@@ -171,13 +171,13 @@ uptr MemoryMappingLayout::DumpListOfModules(LoadedModule *modules,
       continue;
     if (filter && !filter(cur_name))
       continue;
-    LoadedModule *cur_module = 0;
+    LoadedModule *cur_module = nullptr;
     if (n_modules > 0 &&
         0 == internal_strcmp(cur_name, modules[n_modules - 1].full_name())) {
       cur_module = &modules[n_modules - 1];
     } else {
-      void *mem = &modules[n_modules];
-      cur_module = new(mem) LoadedModule(cur_name, cur_beg);
+      cur_module = &modules[n_modules];
+      cur_module->set(cur_name, cur_beg);
       n_modules++;
     }
     cur_module->addAddressRange(cur_beg, cur_end, prot & kProtectionExecute);

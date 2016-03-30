@@ -7,12 +7,13 @@
 //
 //===----------------------------------------------------------------------===//
 
+// XFAIL: libcpp-no-exceptions
 // <list>
 
 // template <InputIterator Iter>
 //   iterator insert(const_iterator position, Iter first, Iter last);
 
-// UNSUPPORTED: asan, msan
+// UNSUPPORTED: sanitizer-new-delete
 
 #if _LIBCPP_DEBUG >= 1
 #define _LIBCPP_ASSERT(x, m) ((x) ? (void)0 : std::exit(0))

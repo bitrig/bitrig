@@ -19,13 +19,19 @@
 #include "sanitizer_common/sanitizer_common.h"
 #include "sanitizer_common/sanitizer_internal_defs.h"
 #include "sanitizer_common/sanitizer_platform.h"
+#include "sanitizer_common/sanitizer_stoptheworld.h"
 #include "sanitizer_common/sanitizer_symbolizer.h"
 
-#if SANITIZER_LINUX && defined(__x86_64__) && (SANITIZER_WORDSIZE == 64)
+#if (SANITIZER_LINUX && !SANITIZER_ANDROID) && (SANITIZER_WORDSIZE == 64) \
+     && (defined(__x86_64__) ||  defined(__mips64) ||  defined(__aarch64__))
 #define CAN_SANITIZE_LEAKS 1
 #else
 #define CAN_SANITIZE_LEAKS 0
 #endif
+
+namespace __sanitizer {
+class FlagParser;
+}
 
 namespace __lsan {
 
@@ -43,7 +49,6 @@ struct Flags {
 #undef LSAN_FLAG
 
   void SetDefaults();
-  void ParseFromString(const char *str);
   uptr pointer_alignment() const {
     return use_unaligned ? 1 : sizeof(uptr);
   }
@@ -51,6 +56,7 @@ struct Flags {
 
 extern Flags lsan_flags;
 inline Flags *flags() { return &lsan_flags; }
+void RegisterLsanFlags(FlagParser *parser, Flags *f);
 
 struct Leak {
   u32 id;
@@ -94,6 +100,8 @@ typedef InternalMmapVector<uptr> Frontier;
 void InitializePlatformSpecificModules();
 void ProcessGlobalRegions(Frontier *frontier);
 void ProcessPlatformSpecificAllocations(Frontier *frontier);
+// Run stoptheworld while holding any platform-specific locks.
+void DoStopTheWorld(StopTheWorldCallback callback, void* argument);
 
 void ScanRangeForPointers(uptr begin, uptr end,
                           Frontier *frontier,
@@ -106,7 +114,7 @@ enum IgnoreObjectResult {
 };
 
 // Functions called from the parent tool.
-void InitCommonLsan(bool standalone);
+void InitCommonLsan();
 void DoLeakCheck();
 bool DisabledInThisThread();
 

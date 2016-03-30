@@ -54,8 +54,22 @@ namespace __tsan {
 
 #ifndef SANITIZER_GO
 struct MapUnmapCallback;
-typedef SizeClassAllocator64<kHeapMemBeg, kHeapMemEnd - kHeapMemBeg, 0,
+#if defined(__mips64) || defined(__aarch64__) || defined(__powerpc__)
+static const uptr kAllocatorSpace = 0;
+static const uptr kAllocatorSize = SANITIZER_MMAP_RANGE_SIZE;
+static const uptr kAllocatorRegionSizeLog = 20;
+static const uptr kAllocatorNumRegions =
+    kAllocatorSize >> kAllocatorRegionSizeLog;
+typedef TwoLevelByteMap<(kAllocatorNumRegions >> 12), 1 << 12,
+    MapUnmapCallback> ByteMap;
+typedef SizeClassAllocator32<kAllocatorSpace, kAllocatorSize, 0,
+    CompactSizeClassMap, kAllocatorRegionSizeLog, ByteMap,
+    MapUnmapCallback> PrimaryAllocator;
+#else
+typedef SizeClassAllocator64<Mapping::kHeapMemBeg,
+    Mapping::kHeapMemEnd - Mapping::kHeapMemBeg, 0,
     DefaultSizeClassMap, MapUnmapCallback> PrimaryAllocator;
+#endif
 typedef SizeClassAllocatorLocalCache<PrimaryAllocator> AllocatorCache;
 typedef LargeMmapAllocator<MapUnmapCallback> SecondaryAllocator;
 typedef CombinedAllocator<PrimaryAllocator, AllocatorCache,
@@ -300,7 +314,7 @@ class Shadow : public FastState {
   }
 };
 
-struct SignalContext;
+struct ThreadSignalContext;
 
 struct JmpBuf {
   uptr sp;
@@ -351,11 +365,14 @@ struct ThreadState {
   Vector<JmpBuf> jmp_bufs;
   int ignore_interceptors;
 #endif
+#if TSAN_COLLECT_STATS
   u64 stat[StatCnt];
+#endif
   const int tid;
   const int unique_id;
   bool in_symbolizer;
   bool in_ignored_lib;
+  bool is_inited;
   bool is_dead;
   bool is_freeing;
   bool is_vptr_access;
@@ -365,12 +382,14 @@ struct ThreadState {
   const uptr tls_size;
   ThreadContext *tctx;
 
+#if SANITIZER_DEBUG && !SANITIZER_GO
   InternalDeadlockDetector internal_deadlock_detector;
+#endif
   DDPhysicalThread *dd_pt;
   DDLogicalThread *dd_lt;
 
   atomic_uintptr_t in_signal_handler;
-  SignalContext *signal_ctx;
+  ThreadSignalContext *signal_ctx;
 
   DenseSlabAllocCache block_cache;
   DenseSlabAllocCache sync_cache;
@@ -392,12 +411,18 @@ struct ThreadState {
 };
 
 #ifndef SANITIZER_GO
+#if SANITIZER_MAC
+ThreadState *cur_thread();
+void cur_thread_finalize();
+#else
 __attribute__((tls_model("initial-exec")))
 extern THREADLOCAL char cur_thread_placeholder[];
 INLINE ThreadState *cur_thread() {
   return reinterpret_cast<ThreadState *>(&cur_thread_placeholder);
 }
-#endif
+INLINE void cur_thread_finalize() { }
+#endif  // SANITIZER_MAC
+#endif  // SANITIZER_GO
 
 class ThreadContext : public ThreadContextBase {
  public:
@@ -413,13 +438,13 @@ class ThreadContext : public ThreadContextBase {
   u64 epoch1;
 
   // Override superclass callbacks.
-  void OnDead();
-  void OnJoined(void *arg);
-  void OnFinished();
-  void OnStarted(void *arg);
-  void OnCreated(void *arg);
-  void OnReset();
-  void OnDetached(void *arg);
+  void OnDead() override;
+  void OnJoined(void *arg) override;
+  void OnFinished() override;
+  void OnStarted(void *arg) override;
+  void OnCreated(void *arg) override;
+  void OnReset() override;
+  void OnDetached(void *arg) override;
 };
 
 struct RacyStacks {
@@ -440,7 +465,7 @@ struct RacyAddress {
 
 struct FiredSuppression {
   ReportType type;
-  uptr pc;
+  uptr pc_or_addr;
   Suppression *supp;
 };
 
@@ -462,9 +487,11 @@ struct Context {
 
   ThreadRegistry *thread_registry;
 
+  Mutex racy_mtx;
   Vector<RacyStacks> racy_stacks;
   Vector<RacyAddress> racy_addresses;
   // Number of fired suppressions may be large enough.
+  Mutex fired_suppressions_mtx;
   InternalMmapVector<FiredSuppression> fired_suppressions;
   DDetector *dd;
 
@@ -539,19 +566,24 @@ void ObtainCurrentStack(ThreadState *thr, uptr toppc, StackTraceTy *stack) {
 }
 
 
+#if TSAN_COLLECT_STATS
 void StatAggregate(u64 *dst, u64 *src);
 void StatOutput(u64 *stat);
+#endif
+
 void ALWAYS_INLINE StatInc(ThreadState *thr, StatType typ, u64 n = 1) {
-  if (kCollectStats)
-    thr->stat[typ] += n;
+#if TSAN_COLLECT_STATS
+  thr->stat[typ] += n;
+#endif
 }
 void ALWAYS_INLINE StatSet(ThreadState *thr, StatType typ, u64 n) {
-  if (kCollectStats)
-    thr->stat[typ] = n;
+#if TSAN_COLLECT_STATS
+  thr->stat[typ] = n;
+#endif
 }
 
 void MapShadow(uptr addr, uptr size);
-void MapThreadTrace(uptr addr, uptr size);
+void MapThreadTrace(uptr addr, uptr size, const char *name);
 void DontNeedShadowFor(uptr addr, uptr size);
 void InitializeShadowMemory();
 void InitializeInterceptors();
@@ -564,8 +596,7 @@ void ForkChildAfter(ThreadState *thr, uptr pc);
 
 void ReportRace(ThreadState *thr);
 bool OutputReport(ThreadState *thr, const ScopedReport &srep);
-bool IsFiredSuppression(Context *ctx, const ScopedReport &srep,
-                        StackTrace trace);
+bool IsFiredSuppression(Context *ctx, ReportType type, StackTrace trace);
 bool IsExpectedReport(uptr addr, uptr size);
 void PrintMatchedBenignRaces();
 
@@ -685,7 +716,7 @@ void AcquireReleaseImpl(ThreadState *thr, uptr pc, SyncClock *c);
 // The trick is that the call preserves all registers and the compiler
 // does not treat it as a call.
 // If it does not work for you, use normal call.
-#if !SANITIZER_DEBUG
+#if !SANITIZER_DEBUG && defined(__x86_64__) && !SANITIZER_MAC
 // The caller may not create the stack frame for itself at all,
 // so we create a reserve stack frame for it (1024b must be enough).
 #define HACKY_CALL(f) \
@@ -728,6 +759,12 @@ void ALWAYS_INLINE TraceAddEvent(ThreadState *thr, FastState fs,
   Event ev = (u64)addr | ((u64)typ << 61);
   *evp = ev;
 }
+
+#ifndef SANITIZER_GO
+uptr ALWAYS_INLINE HeapEnd() {
+  return HeapMemEnd() + PrimaryAllocator::AdditionalSize();
+}
+#endif
 
 }  // namespace __tsan
 

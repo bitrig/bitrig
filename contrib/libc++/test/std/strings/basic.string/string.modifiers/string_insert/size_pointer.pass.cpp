@@ -7,6 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+// XFAIL: libcpp-no-exceptions
 // <string>
 
 // basic_string<charT,traits,Allocator>&
@@ -123,7 +124,7 @@ int main()
     test(S("abcdefghijklmnopqrst"), 21, "1234567890", S("can't happen"));
     test(S("abcdefghijklmnopqrst"), 21, "12345678901234567890", S("can't happen"));
     }
-#if __cplusplus >= 201103L
+#if TEST_STD_VER >= 11
     {
     typedef std::basic_string<char, std::char_traits<char>, min_allocator<char>> S;
     test(S(""), 0, "", S(""));

@@ -7,11 +7,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+// XFAIL: libcpp-no-exceptions
 // <memory>
 
 // template<class Y> explicit shared_ptr(auto_ptr<Y>&& r);
 
-// UNSUPPORTED: asan, msan
+// UNSUPPORTED: sanitizer-new-delete
 
 #include <memory>
 #include <new>

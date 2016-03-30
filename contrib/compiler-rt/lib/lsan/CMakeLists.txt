@@ -18,29 +18,24 @@ set(LSAN_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_custom_target(lsan)
 
-if(APPLE)
-  foreach(os ${SANITIZER_COMMON_SUPPORTED_DARWIN_OS})
-    add_compiler_rt_darwin_object_library(RTLSanCommon ${os}
-      ARCH ${LSAN_COMMON_SUPPORTED_ARCH}
-      SOURCES ${LSAN_COMMON_SOURCES}
-      CFLAGS ${LSAN_CFLAGS})
-  endforeach()
-else()
-  foreach(arch ${LSAN_COMMON_SUPPORTED_ARCH})
-    add_compiler_rt_object_library(RTLSanCommon ${arch}
-      SOURCES ${LSAN_COMMON_SOURCES}
-      CFLAGS ${LSAN_CFLAGS})
-  endforeach()
+add_compiler_rt_object_libraries(RTLSanCommon
+    OS ${SANITIZER_COMMON_SUPPORTED_OS}
+    ARCHS ${LSAN_COMMON_SUPPORTED_ARCH}
+    SOURCES ${LSAN_COMMON_SOURCES}
+    CFLAGS ${LSAN_CFLAGS})
 
+if(COMPILER_RT_HAS_LSAN)
   foreach(arch ${LSAN_SUPPORTED_ARCH})
-    add_compiler_rt_runtime(clang_rt.lsan-${arch} ${arch} STATIC
+    add_compiler_rt_runtime(clang_rt.lsan
+      STATIC
+      ARCHS ${arch}
       SOURCES ${LSAN_SOURCES}
               $<TARGET_OBJECTS:RTInterception.${arch}>
               $<TARGET_OBJECTS:RTSanitizerCommon.${arch}>
               $<TARGET_OBJECTS:RTSanitizerCommonLibc.${arch}>
               $<TARGET_OBJECTS:RTLSanCommon.${arch}>
-      CFLAGS ${LSAN_CFLAGS})
-    add_dependencies(lsan clang_rt.lsan-${arch})
+      CFLAGS ${LSAN_CFLAGS}
+      PARENT_TARGET lsan)
   endforeach()
 endif()
 

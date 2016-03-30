@@ -34,9 +34,12 @@
 // 
 // _LIBCXX_DYNAMIC_FALLBACK is currently off by default.
 
-#if _LIBCXX_DYNAMIC_FALLBACK
-#include "abort_message.h"
+
 #include <string.h>
+
+
+#ifdef _LIBCXX_DYNAMIC_FALLBACK
+#include "abort_message.h"
 #include <sys/syslog.h>
 #endif
 
@@ -57,31 +60,19 @@ namespace __cxxabiv1
 
 #pragma GCC visibility push(hidden)
 
-#if _LIBCXX_DYNAMIC_FALLBACK
-
 inline
 bool
 is_equal(const std::type_info* x, const std::type_info* y, bool use_strcmp)
 {
+#ifndef _WIN32
     if (!use_strcmp)
         return x == y;
     return strcmp(x->name(), y->name()) == 0;
-}
-
-#else  // !_LIBCXX_DYNAMIC_FALLBACK
-
-inline
-bool
-is_equal(const std::type_info* x, const std::type_info* y, bool)
-{
-#ifndef _WIN32
-    return x == y;
 #else
     return (x == y) || (strcmp(x->name(), y->name()) == 0);
-#endif    
+#endif
 }
 
-#endif  // _LIBCXX_DYNAMIC_FALLBACK
 
 // __shim_type_info
 
@@ -219,8 +210,10 @@ __enum_type_info::can_catch(const __shim_type_info* thrown_type,
     return is_equal(this, thrown_type, false);
 }
 
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-field-initializers"
+#endif
 
 // Handles bullets 1 and 2
 bool
@@ -246,7 +239,9 @@ __class_type_info::can_catch(const __shim_type_info* thrown_type,
     return false;
 }
 
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
 
 void
 __class_type_info::process_found_base_class(__dynamic_cast_info* info,
@@ -347,12 +342,23 @@ bool
 __pbase_type_info::can_catch(const __shim_type_info* thrown_type,
                              void*&) const
 {
-    return is_equal(this, thrown_type, false) ||
-           is_equal(thrown_type, &typeid(std::nullptr_t), false);
+    if (is_equal(thrown_type, &typeid(std::nullptr_t), false)) return true;
+    bool use_strcmp = this->__flags & (__incomplete_class_mask |
+                                       __incomplete_mask);
+    if (!use_strcmp) {
+        const __pbase_type_info* thrown_pbase = dynamic_cast<const __pbase_type_info*>(
+                thrown_type);
+        if (!thrown_pbase) return false;
+        use_strcmp = thrown_pbase->__flags & (__incomplete_class_mask |
+                                              __incomplete_mask);
+    }
+    return is_equal(this, thrown_type, use_strcmp);
 }
 
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-field-initializers"
+#endif
 
 // Handles bullets 1, 3 and 4
 // NOTE: It might not be safe to adjust the pointer if it is not not a pointer
@@ -381,8 +387,30 @@ __pointer_type_info::can_catch(const __shim_type_info* thrown_type,
     if (is_equal(__pointee, thrown_pointer_type->__pointee, false))
         return true;
     // bullet 3A
-    if (is_equal(__pointee, &typeid(void), false))
-        return true;
+    if (is_equal(__pointee, &typeid(void), false)) {
+        // pointers to functions cannot be converted to void*.
+        // pointers to member functions are not handled here.
+        const __function_type_info* thrown_function =
+            dynamic_cast<const __function_type_info*>(thrown_pointer_type->__pointee);
+        return (thrown_function == nullptr);
+    }
+    // Handle pointer to pointer
+    const __pointer_type_info* nested_pointer_type =
+        dynamic_cast<const __pointer_type_info*>(__pointee);
+    if (nested_pointer_type) {
+        if (~__flags & __const_mask) return false;
+        return nested_pointer_type->can_catch_nested(thrown_pointer_type->__pointee);
+    }
+
+    // Handle pointer to pointer to member
+    const __pointer_to_member_type_info* member_ptr_type =
+        dynamic_cast<const __pointer_to_member_type_info*>(__pointee);
+    if (member_ptr_type) {
+        if (~__flags & __const_mask) return false;
+        return member_ptr_type->can_catch_nested(thrown_pointer_type->__pointee);
+    }
+
+    // Handle pointer to class type
     const __class_type_info* catch_class_type =
         dynamic_cast<const __class_type_info*>(__pointee);
     if (catch_class_type == 0)
@@ -403,13 +431,92 @@ __pointer_type_info::can_catch(const __shim_type_info* thrown_type,
     return false;
 }
 
+bool __pointer_type_info::can_catch_nested(
+    const __shim_type_info* thrown_type) const
+{
+  const __pointer_type_info* thrown_pointer_type =
+        dynamic_cast<const __pointer_type_info*>(thrown_type);
+    if (thrown_pointer_type == 0)
+        return false;
+    // bullet 3B
+    if (thrown_pointer_type->__flags & ~__flags)
+        return false;
+    if (is_equal(__pointee, thrown_pointer_type->__pointee, false))
+        return true;
+    // If the pointed to types differ then the catch type must be const
+    // qualified.
+    if (~__flags & __const_mask)
+        return false;
+
+    // Handle pointer to pointer
+    const __pointer_type_info* nested_pointer_type =
+        dynamic_cast<const __pointer_type_info*>(__pointee);
+    if (nested_pointer_type) {
+        return nested_pointer_type->can_catch_nested(
+            thrown_pointer_type->__pointee);
+    }
+
+    // Handle pointer to pointer to member
+    const __pointer_to_member_type_info* member_ptr_type =
+        dynamic_cast<const __pointer_to_member_type_info*>(__pointee);
+    if (member_ptr_type) {
+        return member_ptr_type->can_catch_nested(thrown_pointer_type->__pointee);
+    }
+
+    return false;
+}
+
+bool __pointer_to_member_type_info::can_catch(
+    const __shim_type_info* thrown_type, void*& adjustedPtr) const {
+    // bullets 1 and 4
+    if (__pbase_type_info::can_catch(thrown_type, adjustedPtr))
+        return true;
+
+    const __pointer_to_member_type_info* thrown_pointer_type =
+        dynamic_cast<const __pointer_to_member_type_info*>(thrown_type);
+    if (thrown_pointer_type == 0)
+        return false;
+    if (thrown_pointer_type->__flags & ~__flags)
+        return false;
+    if (!is_equal(__pointee, thrown_pointer_type->__pointee, false))
+        return false;
+    if (is_equal(__context, thrown_pointer_type->__context, false))
+        return true;
+
+    // [except.handle] does not allow the pointer-to-member conversions mentioned
+    // in [mem.conv] to take place. For this reason we don't check Derived->Base
+    // for Derived->Base conversions.
+
+    return false;
+}
+
+bool __pointer_to_member_type_info::can_catch_nested(
+    const __shim_type_info* thrown_type) const
+{
+    const __pointer_to_member_type_info* thrown_member_ptr_type =
+        dynamic_cast<const __pointer_to_member_type_info*>(thrown_type);
+    if (thrown_member_ptr_type == 0)
+        return false;
+    if (~__flags & thrown_member_ptr_type->__flags)
+        return false;
+    if (!is_equal(__pointee, thrown_member_ptr_type->__pointee, false))
+        return false;
+    if (!is_equal(__context, thrown_member_ptr_type->__context, false))
+        return false;
+    return true;
+}
+
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
 
 #pragma GCC visibility pop
 #pragma GCC visibility push(default)
 
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-field-initializers"
+#endif
 
 // __dynamic_cast
 
@@ -496,7 +603,7 @@ __dynamic_cast(const void* static_ptr,
     // Currently clang always sets src2dst_offset to -1 (no hint).
 
     // Get (dynamic_ptr, dynamic_type) from static_ptr
-    void** vtable = *(void***)static_ptr;
+    void **vtable = *static_cast<void ** const *>(static_ptr);
     ptrdiff_t offset_to_derived = reinterpret_cast<ptrdiff_t>(vtable[-2]);
     const void* dynamic_ptr = static_cast<const char*>(static_ptr) + offset_to_derived;
     const __class_type_info* dynamic_type = static_cast<const __class_type_info*>(vtable[-1]);
@@ -515,7 +622,7 @@ __dynamic_cast(const void* static_ptr,
         info.number_of_dst_type = 1;
         // Do the  search
         dynamic_type->search_above_dst(&info, dynamic_ptr, dynamic_ptr, public_path, false);
-#if _LIBCXX_DYNAMIC_FALLBACK
+#ifdef _LIBCXX_DYNAMIC_FALLBACK
         // The following if should always be false because we should definitely
         //   find (static_ptr, static_type), either on a public or private path
         if (info.path_dst_ptr_to_static_ptr == unknown)
@@ -539,7 +646,7 @@ __dynamic_cast(const void* static_ptr,
     {
         // Not using giant short cut.  Do the search
         dynamic_type->search_below_dst(&info, dynamic_ptr, public_path, false);
- #if _LIBCXX_DYNAMIC_FALLBACK
+ #ifdef _LIBCXX_DYNAMIC_FALLBACK
         // The following if should always be false because we should definitely
         //   find (static_ptr, static_type), either on a public or private path
         if (info.path_dst_ptr_to_static_ptr == unknown &&
@@ -578,7 +685,9 @@ __dynamic_cast(const void* static_ptr,
     return const_cast<void*>(dst_ptr);
 }
 
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
 
 #pragma GCC visibility pop
 #pragma GCC visibility push(hidden)

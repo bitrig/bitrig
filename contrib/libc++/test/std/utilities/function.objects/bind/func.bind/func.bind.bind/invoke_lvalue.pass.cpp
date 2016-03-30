@@ -7,6 +7,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+// UNSUPPORTED: c++98, c++03
+
 // <functional>
 
 // template<CopyConstructible Fn, CopyConstructible... Types>
@@ -276,6 +278,7 @@ test3()
     const auto f = bind(&TFENode::foo, _1, 0UL);
     const TFENode n = TFENode{};
     bool b = f(n);
+    assert(b);
 }
 
 int main()

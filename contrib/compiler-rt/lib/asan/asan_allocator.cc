@@ -14,8 +14,8 @@
 // with ThreadSanitizer and MemorySanitizer.
 //
 //===----------------------------------------------------------------------===//
-#include "asan_allocator.h"
 
+#include "asan_allocator.h"
 #include "asan_mapping.h"
 #include "asan_poisoning.h"
 #include "asan_report.h"
@@ -223,7 +223,7 @@ void AllocatorOptions::CopyTo(Flags *f, CommonFlags *cf) {
 
 struct Allocator {
   static const uptr kMaxAllowedMallocSize =
-      FIRST_32_SECOND_64(3UL << 30, 64UL << 30);
+      FIRST_32_SECOND_64(3UL << 30, 1UL << 40);
   static const uptr kMaxThreadLocalQuarantine =
       FIRST_32_SECOND_64(1 << 18, 1 << 20);
 
@@ -354,7 +354,7 @@ struct Allocator {
     }
     CHECK(IsAligned(needed_size, min_alignment));
     if (size > kMaxAllowedMallocSize || needed_size > kMaxAllowedMallocSize) {
-      Report("WARNING: AddressSanitizer failed to allocate %p bytes\n",
+      Report("WARNING: AddressSanitizer failed to allocate 0x%zx bytes\n",
              (void*)size);
       return allocator.ReturnNullOrDie();
     }
@@ -437,11 +437,10 @@ struct Allocator {
     thread_stats.mallocs++;
     thread_stats.malloced += size;
     thread_stats.malloced_redzones += needed_size - size;
-    uptr class_id =
-        Min(kNumberOfSizeClasses, SizeClassMap::ClassID(needed_size));
-    thread_stats.malloced_by_size[class_id]++;
     if (needed_size > SizeClassMap::kMaxSize)
       thread_stats.malloc_large++;
+    else
+      thread_stats.malloced_by_size[SizeClassMap::ClassID(needed_size)]++;
 
     void *res = reinterpret_cast<void *>(user_beg);
     if (can_fill && fl.max_malloc_fill_size) {
@@ -542,7 +541,7 @@ struct Allocator {
       u8 chunk_state = m->chunk_state;
       if (chunk_state != CHUNK_ALLOCATED)
         ReportInvalidFree(old_ptr, chunk_state, stack);
-      CHECK_NE(REAL(memcpy), (void*)0);
+      CHECK_NE(REAL(memcpy), nullptr);
       uptr memcpy_size = Min(new_size, m->UsedSize());
       // If realloc() races with free(), we may start copying freed memory.
       // However, we will report racy double-free later anyway.
@@ -580,7 +579,7 @@ struct Allocator {
 
   // Assumes alloc_beg == allocator.GetBlockBegin(alloc_beg).
   AsanChunk *GetAsanChunk(void *alloc_beg) {
-    if (!alloc_beg) return 0;
+    if (!alloc_beg) return nullptr;
     if (!allocator.FromPrimary(alloc_beg)) {
       uptr *meta = reinterpret_cast<uptr *>(allocator.GetMetaData(alloc_beg));
       AsanChunk *m = reinterpret_cast<AsanChunk *>(meta[1]);
@@ -620,7 +619,7 @@ struct Allocator {
       // The address is in the chunk's left redzone, so maybe it is actually
       // a right buffer overflow from the other chunk to the left.
       // Search a bit to the left to see if there is another chunk.
-      AsanChunk *m2 = 0;
+      AsanChunk *m2 = nullptr;
       for (uptr l = 1; l < GetPageSizeCached(); l++) {
         m2 = GetAsanChunkByAddr(addr - l);
         if (m2 == m1) continue;  // Still the same chunk.
@@ -654,7 +653,7 @@ static AsanAllocator &get_allocator() {
 }
 
 bool AsanChunkView::IsValid() {
-  return chunk_ != 0 && chunk_->chunk_state != CHUNK_AVAILABLE;
+  return chunk_ && chunk_->chunk_state != CHUNK_AVAILABLE;
 }
 uptr AsanChunkView::Beg() { return chunk_->Beg(); }
 uptr AsanChunkView::End() { return Beg() + UsedSize(); }
@@ -724,11 +723,11 @@ void *asan_calloc(uptr nmemb, uptr size, BufferedStackTrace *stack) {
 }
 
 void *asan_realloc(void *p, uptr size, BufferedStackTrace *stack) {
-  if (p == 0)
+  if (!p)
     return instance.Allocate(size, 8, stack, FROM_MALLOC, true);
   if (size == 0) {
     instance.Deallocate(p, 0, stack, FROM_MALLOC);
-    return 0;
+    return nullptr;
   }
   return instance.Reallocate(p, size, stack);
 }
@@ -756,7 +755,7 @@ int asan_posix_memalign(void **memptr, uptr alignment, uptr size,
 }
 
 uptr asan_malloc_usable_size(void *ptr, uptr pc, uptr bp) {
-  if (ptr == 0) return 0;
+  if (!ptr) return 0;
   uptr usable_size = instance.AllocationSize(reinterpret_cast<uptr>(ptr));
   if (flags()->check_malloc_usable_size && (usable_size == 0)) {
     GET_STACK_TRACE_FATAL(pc, bp);
@@ -781,7 +780,7 @@ void AsanSoftRssLimitExceededCallback(bool exceeded) {
   instance.allocator.SetRssLimitIsExceeded(exceeded);
 }
 
-}  // namespace __asan
+} // namespace __asan
 
 // --- Implementation of LSan-specific functions --- {{{1
 namespace __lsan {
@@ -882,7 +881,7 @@ int __sanitizer_get_ownership(const void *p) {
 }
 
 uptr __sanitizer_get_allocated_size(const void *p) {
-  if (p == 0) return 0;
+  if (!p) return 0;
   uptr ptr = reinterpret_cast<uptr>(p);
   uptr allocated_size = instance.AllocationSize(ptr);
   // Die if p is not malloced or if it is already freed.
@@ -905,5 +904,5 @@ SANITIZER_INTERFACE_ATTRIBUTE SANITIZER_WEAK_ATTRIBUTE
 void __sanitizer_free_hook(void *ptr) {
   (void)ptr;
 }
-}  // extern "C"
+} // extern "C"
 #endif

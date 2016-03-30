@@ -7,9 +7,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+// XFAIL: libcpp-no-exceptions
 // test operator new[]
 // NOTE: asan and msan will not call the new handler.
-// UNSUPPORTED: asan, msan
+// UNSUPPORTED: sanitizer-new-delete
 
 
 #include <new>
@@ -38,7 +39,8 @@ int main()
     std::set_new_handler(new_handler);
     try
     {
-        void*volatile vp = operator new[] (std::numeric_limits<std::size_t>::max());
+        void* volatile vp = operator new[] (std::numeric_limits<std::size_t>::max());
+        ((void)vp);
         assert(false);
     }
     catch (std::bad_alloc&)

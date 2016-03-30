@@ -7,6 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+// XFAIL: libcpp-no-exceptions
 // <unordered_map>
 
 // template <class Key, class T, class Hash = hash<Key>, class Pred = equal_to<Key>,
@@ -20,7 +21,7 @@
 #include <string>
 #include <cassert>
 
-#include "../../../MoveOnly.h"
+#include "MoveOnly.h"
 #include "min_allocator.h"
 
 int main()

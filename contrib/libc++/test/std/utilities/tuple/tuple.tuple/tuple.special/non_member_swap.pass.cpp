@@ -14,10 +14,12 @@
 // template <class... Types>
 //   void swap(tuple<Types...>& x, tuple<Types...>& y);
 
+// UNSUPPORTED: c++98, c++03
+
 #include <tuple>
 #include <cassert>
 
-#include "../MoveOnly.h"
+#include "MoveOnly.h"
 
 int main()
 {

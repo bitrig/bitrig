@@ -7,10 +7,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+// XFAIL: libcpp-no-exceptions
 // test operator new
 
 // asan and msan will not call the new handler.
-// UNSUPPORTED: asan, msan
+// UNSUPPORTED: sanitizer-new-delete
 
 #include <new>
 #include <cstddef>
@@ -39,6 +40,7 @@ int main()
     try
     {
         void* vp = operator new (std::numeric_limits<std::size_t>::max());
+        ((void)vp);
         assert(false);
     }
     catch (std::bad_alloc&)

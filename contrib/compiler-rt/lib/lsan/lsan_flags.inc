@@ -24,8 +24,6 @@ LSAN_FLAG(
     "Aggregate two objects into one leak if this many stack frames match. If "
     "zero, the entire stack trace must match.")
 LSAN_FLAG(int, max_leaks, 0, "The number of leaks reported.")
-LSAN_FLAG(int, exitcode, 23,
-          "If nonzero kill the process with this exit code upon finding leaks.")
 
 // Flags controlling the root set of reachable memory.
 LSAN_FLAG(bool, use_globals, true,
@@ -42,3 +40,4 @@ LSAN_FLAG(bool, use_poisoned, false,
           "Consider pointers found in poisoned memory to be valid.")
 LSAN_FLAG(bool, log_pointers, false, "Debug logging")
 LSAN_FLAG(bool, log_threads, false, "Debug logging")
+LSAN_FLAG(const char *, suppressions, "", "Suppressions file name.")

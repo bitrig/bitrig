@@ -8,6 +8,7 @@
 //===----------------------------------------------------------------------===//
 //
 // UNSUPPORTED: libcpp-has-no-threads
+// UNSUPPORTED: c++03, c++98, c++11
 
 // <shared_mutex>
 
@@ -21,7 +22,7 @@
 #include <cstdlib>
 #include <cassert>
 
-#if _LIBCPP_STD_VER > 11
+#include "test_macros.h"
 
 std::shared_timed_mutex m;
 
@@ -30,6 +31,13 @@ typedef Clock::time_point time_point;
 typedef Clock::duration duration;
 typedef std::chrono::milliseconds ms;
 typedef std::chrono::nanoseconds ns;
+
+
+#if !defined(TEST_HAS_SANITIZERS)
+ms Tolerance = ms(200);
+#else
+ms Tolerance = ms(200 * 5);
+#endif
 
 void f()
 {
@@ -42,14 +50,11 @@ void f()
     time_point t1 = Clock::now();
     m.unlock_shared();
     ns d = t1 - t0 - ms(250);
-    assert(d < ms(200));  // within 200ms
+    assert(d < Tolerance);  // within tolerance
 }
-
-#endif  // _LIBCPP_STD_VER > 11
 
 int main()
 {
-#if _LIBCPP_STD_VER > 11
     m.lock();
     std::vector<std::thread> v;
     for (int i = 0; i < 5; ++i)
@@ -58,5 +63,4 @@ int main()
     m.unlock();
     for (auto& t : v)
         t.join();
-#endif  // _LIBCPP_STD_VER > 11
 }

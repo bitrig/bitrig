@@ -195,7 +195,7 @@ TEST(SanitizerCommon, SetEnvTest) {
   EXPECT_EQ(0, getenv(kEnvName));
 }
 
-#if defined(__x86_64__) || defined(__i386__)
+#if (defined(__x86_64__) || defined(__i386__)) && !SANITIZER_ANDROID
 void *thread_self_offset_test_func(void *arg) {
   bool result =
       *(uptr *)((char *)ThreadSelf() + ThreadSelfOffset()) == ThreadSelf();
@@ -254,6 +254,14 @@ TEST(SanitizerCommon, LibraryNameIs) {
       }
     }
 }
+
+#if defined(__mips64)
+// Effectively, this is a test for ThreadDescriptorSize() which is used to
+// compute ThreadSelf().
+TEST(SanitizerLinux, ThreadSelfTest) {
+  ASSERT_EQ(pthread_self(), ThreadSelf());
+}
+#endif
 
 }  // namespace __sanitizer
 

@@ -19,12 +19,14 @@
 #include "tsan_flags.h"
 
 // May be overriden by front-end.
-extern "C" void WEAK __sanitizer_malloc_hook(void *ptr, uptr size) {
+SANITIZER_WEAK_DEFAULT_IMPL
+void __sanitizer_malloc_hook(void *ptr, uptr size) {
   (void)ptr;
   (void)size;
 }
 
-extern "C" void WEAK __sanitizer_free_hook(void *ptr) {
+SANITIZER_WEAK_DEFAULT_IMPL
+void __sanitizer_free_hook(void *ptr) {
   (void)ptr;
 }
 
@@ -36,6 +38,23 @@ struct MapUnmapCallback {
     // We are about to unmap a chunk of user memory.
     // Mark the corresponding shadow memory as not needed.
     DontNeedShadowFor(p, size);
+    // Mark the corresponding meta shadow memory as not needed.
+    // Note the block does not contain any meta info at this point
+    // (this happens after free).
+    const uptr kMetaRatio = kMetaShadowCell / kMetaShadowSize;
+    const uptr kPageSize = GetPageSizeCached() * kMetaRatio;
+    // Block came from LargeMmapAllocator, so must be large.
+    // We rely on this in the calculations below.
+    CHECK_GE(size, 2 * kPageSize);
+    uptr diff = RoundUp(p, kPageSize) - p;
+    if (diff != 0) {
+      p += diff;
+      size -= diff;
+    }
+    diff = p + size - RoundDown(p + size, kPageSize);
+    if (diff != 0)
+      size -= diff;
+    FlushUnneededShadowMemory((uptr)MemToMeta(p), size / kMetaRatio);
   }
 };
 
@@ -63,17 +82,17 @@ void AllocatorPrintStats() {
 }
 
 static void SignalUnsafeCall(ThreadState *thr, uptr pc) {
-  if (atomic_load(&thr->in_signal_handler, memory_order_relaxed) == 0 ||
+  if (atomic_load_relaxed(&thr->in_signal_handler) == 0 ||
       !flags()->report_signal_unsafe)
     return;
   VarSizeStackTrace stack;
   ObtainCurrentStack(thr, pc, &stack);
+  if (IsFiredSuppression(ctx, ReportTypeSignalUnsafe, stack))
+    return;
   ThreadRegistryLock l(ctx->thread_registry);
   ScopedReport rep(ReportTypeSignalUnsafe);
-  if (!IsFiredSuppression(ctx, rep, stack)) {
-    rep.AddStack(stack, true);
-    OutputReport(thr, rep);
-  }
+  rep.AddStack(stack, true);
+  OutputReport(thr, rep);
 }
 
 void *user_alloc(ThreadState *thr, uptr pc, uptr sz, uptr align, bool signal) {

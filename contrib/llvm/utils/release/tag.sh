@@ -17,7 +17,7 @@ set -e
 release=""
 rc=""
 rebranch="no"
-projects="llvm cfe dragonegg test-suite compiler-rt libcxx libcxxabi clang-tools-extra polly lldb lld openmp"
+projects="llvm cfe test-suite compiler-rt libcxx libcxxabi clang-tools-extra polly lldb lld openmp libunwind"
 dryrun=""
 revision="HEAD"
 
@@ -117,7 +117,7 @@ tag_release=`echo $release | sed -e 's,\.,,g'`
 if [ "x$rc" = "x" ]; then
     tag_version
 else
-    if [ "x$revision" != "x" ]; then
+    if [ "$revision" != "HEAD" ]; then
         echo "error: cannot use -revision with -rc"
         echo
         usage

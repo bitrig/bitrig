@@ -18,6 +18,7 @@
 #include "llvm/Support/DataTypes.h"
 #include "llvm/Support/MathExtras.h"
 #include <string>
+#include <limits.h>
 
 namespace llvm {
 
@@ -45,6 +46,8 @@ namespace ISD {
     static const uint64_t SplitOffs      = 11;
     static const uint64_t InAlloca       = 1ULL<<12; ///< Passed with inalloca
     static const uint64_t InAllocaOffs   = 12;
+    static const uint64_t SplitEnd       = 1ULL<<13; ///< Last part of a split
+    static const uint64_t SplitEndOffs   = 13;
     static const uint64_t OrigAlign      = 0x1FULL<<27;
     static const uint64_t OrigAlignOffs  = 27;
     static const uint64_t ByValSize      = 0x3fffffffULL<<32; ///< Struct size
@@ -102,6 +105,9 @@ namespace ISD {
     bool isSplit()   const { return Flags & Split; }
     void setSplit()  { Flags |= One << SplitOffs; }
 
+    bool isSplitEnd()   const { return Flags & SplitEnd; }
+    void setSplitEnd()  { Flags |= One << SplitEndOffs; }
+
     unsigned getOrigAlign() const {
       return (unsigned)
         ((One << ((Flags & OrigAlign) >> OrigAlignOffs)) / 2);
@@ -134,6 +140,8 @@ namespace ISD {
 
     /// Index original Function's argument.
     unsigned OrigArgIndex;
+    /// Sentinel value for implicit machine-level input arguments.
+    static const unsigned NoArgIndex = UINT_MAX;
 
     /// Offset in bytes of current input value relative to the beginning of
     /// original argument. E.g. if argument was splitted into four 32 bit
@@ -146,6 +154,15 @@ namespace ISD {
       : Flags(flags), Used(used), OrigArgIndex(origIdx), PartOffset(partOffs) {
       VT = vt.getSimpleVT();
       ArgVT = argvt;
+    }
+
+    bool isOrigArg() const {
+      return OrigArgIndex != NoArgIndex;
+    }
+
+    unsigned getOrigArgIndex() const {
+      assert(OrigArgIndex != NoArgIndex && "Implicit machine-level argument");
+      return OrigArgIndex;
     }
   };
 

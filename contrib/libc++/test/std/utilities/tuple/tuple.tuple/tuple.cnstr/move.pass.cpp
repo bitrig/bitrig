@@ -13,11 +13,13 @@
 
 // tuple(tuple&& u);
 
+// UNSUPPORTED: c++98, c++03
+
 #include <tuple>
 #include <utility>
 #include <cassert>
 
-#include "../MoveOnly.h"
+#include "MoveOnly.h"
 
 struct ConstructsWithTupleLeaf
 {
@@ -37,6 +39,7 @@ int main()
         typedef std::tuple<> T;
         T t0;
         T t = std::move(t0);
+        ((void)t); // Prevent unused warning
     }
     {
         typedef std::tuple<MoveOnly> T;

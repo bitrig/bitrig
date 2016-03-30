@@ -37,8 +37,8 @@
 
   <div class="submenu">
     <label>Quick Links</label>
-    <a href="http://lists.cs.uiuc.edu/mailman/listinfo/cfe-dev">cfe-dev</a>
-    <a href="http://lists.cs.uiuc.edu/mailman/listinfo/cfe-commits">cfe-commits</a>
+    <a href="http://lists.llvm.org/mailman/listinfo/cfe-dev">cfe-dev</a>
+    <a href="http://lists.llvm.org/mailman/listinfo/cfe-commits">cfe-commits</a>
     <a href="http://llvm.org/bugs/">Bug Reports</a>
     <a href="http://llvm.org/svn/llvm-project/libcxx/trunk/">Browse SVN</a>
     <a href="http://llvm.org/viewvc/llvm-project/libcxx/trunk/">Browse ViewVC</a>
@@ -132,6 +132,26 @@ Note: This does not use the installed headers.
 </p>
 
 <p>
+<h3 class="lit-option">use_lit_shell=&lt;bool&gt;</h3>
+<blockquote class="lit-option-desc">
+Enable or disable the use of LIT's internal shell in ShTests. If the enviroment
+variable <code>LIT_USE_INTERNAL_SHELL</code> is present then that is used as the
+default value. Otherwise the default value is <code>True</code> on Windows and
+<code>False</code> on every other platform.
+</blockquote>
+</p>
+
+<p>
+<h3 class="lit-option">no_default_flags=&lt;bool&gt;</h3>
+<blockquote class="lit-option-desc">
+<b>Default: </b><code>False</code></br>
+Disable all default compile and link flags from being added. When this option is
+used only flags specified using the <code>compile_flags</code> and
+<code>link_flags</code> will be used.
+</blockquote>
+</p>
+
+<p>
 <h3 class="lit-option">compile_flags="&lt;list-of-args&gt;"</h3>
 <blockquote class="lit-option-desc">
 Specify additional compile flags as a space delimited string.
@@ -155,11 +175,30 @@ Change the standard version used when building the tests.
 </p>
 
 <p>
+<h3 class="lit-option">debug_level=&lt;level&gt;</h3>
+<blockquote class="lit-option-desc">
+<b>Values: </b><code>0, 1</code></br>
+Enable the use of debug mode. Level 0 enables assertions and level 1 enables
+assertions and debugging of iterator misuse.
+</blockquote>
+</p>
+
+<p>
 <h3 class="lit-option">use_sanitizer=&lt;sanitizer name&gt;</h3>
 <blockquote class="lit-option-desc">
 <b>Values: </b><code>Memory, MemoryWithOrigins, Address, Undefined</code></br>
 Run the tests using the given sanitizer. If <code>LLVM_USE_SANITIZER</code>
 was given when building libc++ then that sanitizer will be used by default.
+</blockquote>
+</p>
+
+<p>
+<h3 class="lit-option">color_diagnostics</h3>
+<blockquote class="lit-option-desc">
+Enable the use of colorized compile diagnostics. If the
+<code>color_diagnostics</code> option is specified or the enviroment variable
+<code>LIBCXX_COLOR_DIAGNOSTICS</code> is present then color diagnostics will be
+enabled.
 </blockquote>
 </p>
 

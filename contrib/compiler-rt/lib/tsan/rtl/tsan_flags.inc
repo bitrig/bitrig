@@ -45,7 +45,6 @@ TSAN_FLAG(
     "If set, all atomics are effectively sequentially consistent (seq_cst), "
     "regardless of what user actually specified.")
 TSAN_FLAG(bool, print_benign, false, "Print matched \"benign\" races at exit.")
-TSAN_FLAG(int, exitcode, 66, "Override exit status if something was reported.")
 TSAN_FLAG(bool, halt_on_error, false, "Exit after first reported error.")
 TSAN_FLAG(int, atexit_sleep_ms, 1000,
           "Sleep in main thread before exiting for that many ms "
@@ -63,7 +62,7 @@ TSAN_FLAG(bool, stop_on_start, false,
 TSAN_FLAG(bool, running_on_valgrind, false,
           "Controls whether RunningOnValgrind() returns true or false.")
 TSAN_FLAG(
-    int, history_size, kGoMode ? 1 : 2, // There are a lot of goroutines in Go.
+    int, history_size, kGoMode ? 1 : 3, // There are a lot of goroutines in Go.
     "Per-thread history size, controls how many previous memory accesses "
     "are remembered per thread.  Possible values are [0..7]. "
     "history_size=0 amounts to 32K memory accesses.  Each next value doubles "
@@ -76,3 +75,4 @@ TSAN_FLAG(int, io_sync, 1,
           "2 - global synchronization of all IO operations.")
 TSAN_FLAG(bool, die_after_fork, true,
           "Die after multi-threaded fork if the child creates new threads.")
+TSAN_FLAG(const char *, suppressions, "", "Suppressions file name.")

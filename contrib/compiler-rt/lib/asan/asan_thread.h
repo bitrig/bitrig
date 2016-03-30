@@ -11,6 +11,7 @@
 //
 // ASan-private header for asan_thread.cc.
 //===----------------------------------------------------------------------===//
+
 #ifndef ASAN_THREAD_H
 #define ASAN_THREAD_H
 
@@ -34,19 +35,16 @@ class AsanThread;
 class AsanThreadContext : public ThreadContextBase {
  public:
   explicit AsanThreadContext(int tid)
-      : ThreadContextBase(tid),
-        announced(false),
-        destructor_iterations(kPthreadDestructorIterations),
-        stack_id(0),
-        thread(0) {
-  }
+      : ThreadContextBase(tid), announced(false),
+        destructor_iterations(GetPthreadDestructorIterations()), stack_id(0),
+        thread(nullptr) {}
   bool announced;
   u8 destructor_iterations;
   u32 stack_id;
   AsanThread *thread;
 
-  void OnCreated(void *arg);
-  void OnFinished();
+  void OnCreated(void *arg) override;
+  void OnFinished() override;
 };
 
 // AsanThreadContext objects are never freed, so we need many of them.
@@ -87,8 +85,8 @@ class AsanThread {
   void DeleteFakeStack(int tid) {
     if (!fake_stack_) return;
     FakeStack *t = fake_stack_;
-    fake_stack_ = 0;
-    SetTLSFakeStack(0);
+    fake_stack_ = nullptr;
+    SetTLSFakeStack(nullptr);
     t->Destroy(tid);
   }
 
@@ -98,7 +96,7 @@ class AsanThread {
 
   FakeStack *fake_stack() {
     if (!__asan_option_detect_stack_use_after_return)
-      return 0;
+      return nullptr;
     if (!has_fake_stack())
       return AsyncSignalSafeLazyInitFakeStack();
     return fake_stack_;
@@ -182,6 +180,6 @@ AsanThread *FindThreadByStackAddress(uptr addr);
 
 // Used to handle fork().
 void EnsureMainThreadIDIsCorrect();
-}  // namespace __asan
+} // namespace __asan
 
-#endif  // ASAN_THREAD_H
+#endif // ASAN_THREAD_H

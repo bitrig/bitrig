@@ -17,7 +17,8 @@
 #include <vector>
 #include <cassert>
 
-#include "../../../MoveOnly.h"
+#include "test_macros.h"
+#include "MoveOnly.h"
 #include "test_allocator.h"
 
 template <class T>

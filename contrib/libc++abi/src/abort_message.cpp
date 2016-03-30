@@ -13,15 +13,20 @@
 #include "abort_message.h"
 
 #ifdef __BIONIC__
-#include <android/set_abort_message.h>
+#include <android/api-level.h>
+#if __ANDROID_API__ >= 21
 #include <syslog.h>
-#endif
+extern "C" void android_set_abort_message(const char* msg);
+#else
+#include <assert.h>
+#endif // __ANDROID_API__ >= 21
+#endif // __BIONIC__
 
 #pragma GCC visibility push(hidden)
 
-#if __APPLE__
+#ifdef __APPLE__
 #   if defined(__has_include) && __has_include(<CrashReporterClient.h>)
-#       define HAVE_CRASHREPORTERCLIENT_H 1
+#       define HAVE_CRASHREPORTERCLIENT_H
 #       include <CrashReporterClient.h>
 #   endif
 #endif
@@ -30,7 +35,7 @@ __attribute__((visibility("hidden"), noreturn))
 void abort_message(const char* format, ...)
 {
     // write message to stderr
-#if __APPLE__
+#ifdef __APPLE__
     fprintf(stderr, "libc++abi.dylib: ");
 #endif
     va_list list;
@@ -39,7 +44,7 @@ void abort_message(const char* format, ...)
     va_end(list);
     fprintf(stderr, "\n");
 
-#if __APPLE__ && HAVE_CRASHREPORTERCLIENT_H
+#if defined(__APPLE__) && defined(HAVE_CRASHREPORTERCLIENT_H)
     // record message in crash report
     char* buffer;
     va_list list2;
@@ -47,13 +52,14 @@ void abort_message(const char* format, ...)
     vasprintf(&buffer, format, list2);
     va_end(list2);
     CRSetCrashLogMessage(buffer);
-#elif __BIONIC__
+#elif defined(__BIONIC__)
     char* buffer;
     va_list list2;
     va_start(list2, format);
     vasprintf(&buffer, format, list2);
     va_end(list2);
 
+#if __ANDROID_API__ >= 21
     // Show error in tombstone.
     android_set_abort_message(buffer);
 
@@ -61,7 +67,13 @@ void abort_message(const char* format, ...)
     openlog("libc++abi", 0, 0);
     syslog(LOG_CRIT, "%s", buffer);
     closelog();
-#endif
+#else
+    // The good error reporting wasn't available in Android until L. Since we're
+    // about to abort anyway, just call __assert2, which will log _somewhere_
+    // (tombstone and/or logcat) in older releases.
+    __assert2(__FILE__, __LINE__, __func__, buffer);
+#endif // __ANDROID_API__ >= 21
+#endif // __BIONIC__
 
     abort();
 }

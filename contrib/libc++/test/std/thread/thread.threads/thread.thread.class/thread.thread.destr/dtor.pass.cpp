@@ -9,6 +9,7 @@
 //
 // UNSUPPORTED: libcpp-has-no-threads
 
+
 // <thread>
 
 // class thread
@@ -44,7 +45,7 @@ bool G::op_run = false;
 
 void f1()
 {
-    std::exit(0);
+    std::_Exit(0);
 }
 
 int main()
@@ -53,8 +54,11 @@ int main()
     {
         assert(G::n_alive == 0);
         assert(!G::op_run);
-        std::thread t((G()));
-        std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        G g;
+        {
+          std::thread t(g);
+          std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        }
     }
     assert(false);
 }

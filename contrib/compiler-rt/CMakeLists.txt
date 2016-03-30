@@ -9,7 +9,7 @@
 
 # Check if compiler-rt is built as a standalone project.
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-  project(CompilerRT C CXX)
+  project(CompilerRT C CXX ASM)
   set(COMPILER_RT_STANDALONE_BUILD TRUE)
 else()
   set(COMPILER_RT_STANDALONE_BUILD FALSE)
@@ -22,7 +22,7 @@ endif()
 if (NOT MSVC)
   cmake_minimum_required(VERSION 2.8.8)
 else()
-  # Version 2.8.12.1 is required to build with Visual Studion 2013.
+  # Version 2.8.12.1 is required to build with Visual Studio 2013.
   cmake_minimum_required(VERSION 2.8.12.1)
 endif()
 
@@ -43,6 +43,11 @@ endif()
 # Top level target used to build all compiler-rt libraries.
 add_custom_target(compiler-rt ALL)
 
+option(COMPILER_RT_BUILD_BUILTINS "Build builtins" ON)
+mark_as_advanced(COMPILER_RT_BUILD_BUILTINS)
+option(COMPILER_RT_BUILD_SANITIZERS "Build sanitizers" ON)
+mark_as_advanced(COMPILER_RT_BUILD_SANITIZERS)
+
 if (NOT COMPILER_RT_STANDALONE_BUILD)
   # Compute the Clang version from the LLVM version.
   # FIXME: We should be able to reuse CLANG_VERSION variable calculated
@@ -61,8 +66,10 @@ if (NOT COMPILER_RT_STANDALONE_BUILD)
   # Windows where we need to use clang-cl instead.
   if(NOT MSVC)
     set(COMPILER_RT_TEST_COMPILER ${LLVM_RUNTIME_OUTPUT_INTDIR}/clang)
+    set(COMPILER_RT_TEST_CXX_COMPILER ${LLVM_RUNTIME_OUTPUT_INTDIR}/clang++)
   else()
     set(COMPILER_RT_TEST_COMPILER ${LLVM_RUNTIME_OUTPUT_INTDIR}/clang.exe)
+    set(COMPILER_RT_TEST_CXX_COMPILER ${LLVM_RUNTIME_OUTPUT_INTDIR}/clang++.exe)
   endif()
 else()
   # Take output dir and install path from the user.
@@ -76,6 +83,7 @@ else()
   option(COMPILER_RT_ENABLE_WERROR "Fail and stop if warning is triggered" OFF)
   # Use a host compiler to compile/link tests.
   set(COMPILER_RT_TEST_COMPILER ${CMAKE_C_COMPILER} CACHE PATH "Compiler to use for testing")
+  set(COMPILER_RT_TEST_CXX_COMPILER ${CMAKE_CXX_COMPILER} CACHE PATH "C++ Compiler to use for testing")
 
   if (NOT LLVM_CONFIG_PATH)
     find_program(LLVM_CONFIG_PATH "llvm-config"
@@ -132,15 +140,27 @@ else()
   set(COMPILER_RT_TEST_COMPILER_ID GNU)
 endif()
 
-# Tests using XFAIL use the first value in COMPILER_RT_TEST_TARGET_TRIPLE
-set(COMPILER_RT_TEST_TARGET_TRIPLE ${TARGET_TRIPLE} CACHE STRING
-    "Default triple for cross-compiled executables")
-string(REPLACE "-" ";" TARGET_TRIPLE_LIST ${COMPILER_RT_TEST_TARGET_TRIPLE})
-list(GET TARGET_TRIPLE_LIST 0 COMPILER_RT_TEST_TARGET_ARCH)
-list(GET TARGET_TRIPLE_LIST 1 COMPILER_RT_TEST_TARGET_OS)
-list(GET TARGET_TRIPLE_LIST 2 COMPILER_RT_TEST_TARGET_ABI)
+set(COMPILER_RT_DEFAULT_TARGET_TRIPLE ${TARGET_TRIPLE} CACHE STRING
+    "Default triple for which compiler-rt runtimes will be built.")
+if(DEFINED COMPILER_RT_TEST_TARGET_TRIPLE)
+  # Backwards compatibility: this variable used to be called
+  # COMPILER_RT_TEST_TARGET_TRIPLE.
+  set(COMPILER_RT_DEFAULT_TARGET_TRIPLE ${COMPILER_RT_TEST_TARGET_TRIPLE})
+endif()
 
-if ("${COMPILER_RT_TEST_TARGET_ABI}" STREQUAL "androideabi")
+string(REPLACE "-" ";" TARGET_TRIPLE_LIST ${COMPILER_RT_DEFAULT_TARGET_TRIPLE})
+list(GET TARGET_TRIPLE_LIST 0 COMPILER_RT_DEFAULT_TARGET_ARCH)
+list(GET TARGET_TRIPLE_LIST 1 COMPILER_RT_DEFAULT_TARGET_OS)
+list(GET TARGET_TRIPLE_LIST 2 COMPILER_RT_DEFAULT_TARGET_ABI)
+# Determine if test target triple is specified explicitly, and doesn't match the
+# default.
+if(NOT COMPILER_RT_DEFAULT_TARGET_TRIPLE STREQUAL TARGET_TRIPLE)
+  set(COMPILER_RT_HAS_EXPLICIT_DEFAULT_TARGET_TRIPLE TRUE)
+else()
+  set(COMPILER_RT_HAS_EXPLICIT_DEFAULT_TARGET_TRIPLE FALSE)
+endif()
+
+if ("${COMPILER_RT_DEFAULT_TARGET_ABI}" STREQUAL "androideabi")
   set(ANDROID 1)
 endif()
 
@@ -160,36 +180,11 @@ include(CompilerRTUtils)
 
 set(COMPILER_RT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(COMPILER_RT_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
-# Setup custom SDK sysroots.
-set(COMPILER_RT_LINUX_SDK_SYSROOT ${COMPILER_RT_SOURCE_DIR}/SDKs/linux)
-
-# Detect whether the current target platform is 32-bit or 64-bit, and setup
-# the correct commandline flags needed to attempt to target 32-bit and 64-bit.
-if (NOT CMAKE_SIZEOF_VOID_P EQUAL 4 AND
-    NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-  message(FATAL_ERROR "Please use architecture with 4 or 8 byte pointers.")
-endif()
-if (NOT MSVC)
-  set(TARGET_64_BIT_CFLAGS "-m64")
-  set(TARGET_32_BIT_CFLAGS "-m32")
-else()
-  set(TARGET_64_BIT_CFLAGS "")
-  set(TARGET_32_BIT_CFLAGS "")
-endif()
-
-function(get_target_flags_for_arch arch out_var)
-  list(FIND COMPILER_RT_SUPPORTED_ARCH ${arch} ARCH_INDEX)
-  if(ARCH_INDEX EQUAL -1)
-    message(FATAL_ERROR "Unsupported architecture: ${arch}")
-  else()
-    set(${out_var} ${TARGET_${arch}_CFLAGS} PARENT_SCOPE)
-  endif()
-endfunction()
 
 # We support running instrumented tests when we're not cross compiling
 # and target a UNIX-like system or Windows.
 # We can run tests on Android even when we are cross-compiling.
-if(("${CMAKE_HOST_SYSTEM}" STREQUAL "${CMAKE_SYSTEM}" AND (UNIX OR MSVC)) OR ANDROID
+if(("${CMAKE_HOST_SYSTEM}" STREQUAL "${CMAKE_SYSTEM}" AND (UNIX OR WIN32)) OR ANDROID
    OR COMPILER_RT_EMULATOR)
   option(COMPILER_RT_CAN_EXECUTE_TESTS "Can we execute instrumented tests" ON)
 else()
@@ -197,6 +192,8 @@ else()
 endif()
 
 option(COMPILER_RT_DEBUG "Build runtimes with full debug info" OFF)
+option(COMPILER_RT_EXTERNALIZE_DEBUGINFO
+  "Generate dSYM files and strip executables and libraries (Darwin Only)" OFF)
 # COMPILER_RT_DEBUG_PYBOOL is used by lit.common.configured.in.
 pythonize_bool(COMPILER_RT_DEBUG)
 
@@ -232,22 +229,23 @@ append_list_if(COMPILER_RT_HAS_FNO_EXCEPTIONS_FLAG -fno-exceptions SANITIZER_COM
 append_list_if(COMPILER_RT_HAS_FOMIT_FRAME_POINTER_FLAG -fomit-frame-pointer SANITIZER_COMMON_CFLAGS)
 append_list_if(COMPILER_RT_HAS_FUNWIND_TABLES_FLAG -funwind-tables SANITIZER_COMMON_CFLAGS)
 append_list_if(COMPILER_RT_HAS_FNO_STACK_PROTECTOR_FLAG -fno-stack-protector SANITIZER_COMMON_CFLAGS)
+append_list_if(COMPILER_RT_HAS_FNO_SANITIZE_SAFE_STACK_FLAG -fno-sanitize=safe-stack SANITIZER_COMMON_CFLAGS)
 append_list_if(COMPILER_RT_HAS_FVISIBILITY_HIDDEN_FLAG -fvisibility=hidden SANITIZER_COMMON_CFLAGS)
+append_list_if(COMPILER_RT_HAS_FVISIBILITY_INLINES_HIDDEN_FLAG -fvisibility-inlines-hidden SANITIZER_COMMON_CFLAGS)
 append_list_if(COMPILER_RT_HAS_FNO_FUNCTION_SECTIONS_FLAG -fno-function-sections SANITIZER_COMMON_CFLAGS)
 append_list_if(COMPILER_RT_HAS_FNO_LTO_FLAG -fno-lto SANITIZER_COMMON_CFLAGS)
 
 if(MSVC)
-  # Replace the /MD[d] flags with /MT.
+  # Replace the /M[DT][d] flags with /MT, and strip any definitions of _DEBUG,
+  # which cause definition mismatches at link time.
   # FIXME: In fact, sanitizers should support both /MT and /MD, see PR20214.
   if(COMPILER_RT_HAS_MT_FLAG)
     foreach(flag_var
       CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
       CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-      if(${flag_var} MATCHES "/MD")
-        string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-      elseif(${flag_var} MATCHES "/MDd")
-        string(REGEX REPLACE "/MDd" "/MT" ${flag_var} "${${flag_var}}")
-      endif()
+      string(REGEX REPLACE "/M[DT]d" "/MT" ${flag_var} "${${flag_var}}")
+      string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+      string(REGEX REPLACE "/D_DEBUG" "" ${flag_var} "${${flag_var}}")
     endforeach()
   endif()
   append_list_if(COMPILER_RT_HAS_Oy_FLAG /Oy- SANITIZER_COMMON_CFLAGS)
@@ -263,12 +261,12 @@ if(NOT COMPILER_RT_DEBUG AND NOT MSVC)
 endif()
 
 # Determine if we should restrict stack frame sizes.
-# Stack frames on PowerPC and in debug biuld can be much larger than
+# Stack frames on PowerPC and Mips and in debug biuld can be much larger than
 # anticipated.
 # FIXME: Fix all sanitizers and add -Wframe-larger-than to
 # SANITIZER_COMMON_FLAGS
 if(COMPILER_RT_HAS_WFRAME_LARGER_THAN_FLAG AND NOT COMPILER_RT_DEBUG
-   AND NOT ${LLVM_NATIVE_ARCH} STREQUAL "PowerPC")
+   AND NOT ${COMPILER_RT_DEFAULT_TARGET_ARCH} MATCHES "powerpc|mips")
   set(SANITIZER_LIMIT_FRAME_SIZE TRUE)
 else()
   set(SANITIZER_LIMIT_FRAME_SIZE FALSE)
@@ -293,31 +291,15 @@ append_list_if(COMPILER_RT_HAS_WD4291_FLAG /wd4291 SANITIZER_COMMON_CFLAGS)
 append_list_if(COMPILER_RT_HAS_WD4391_FLAG /wd4391 SANITIZER_COMMON_CFLAGS)
 append_list_if(COMPILER_RT_HAS_WD4722_FLAG /wd4722 SANITIZER_COMMON_CFLAGS)
 append_list_if(COMPILER_RT_HAS_WD4800_FLAG /wd4800 SANITIZER_COMMON_CFLAGS)
-if(APPLE)
-  # Obtain the iOS Simulator SDK path from xcodebuild.
-  execute_process(
-    COMMAND xcodebuild -version -sdk iphonesimulator Path
-    OUTPUT_VARIABLE IOSSIM_SDK_DIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-  string(REGEX MATCH "-mmacosx-version-min="
-         MACOSX_VERSION_MIN_FLAG "${CMAKE_CXX_FLAGS}")
-  set(SANITIZER_COMMON_SUPPORTED_DARWIN_OS osx)
-  if (IOSSIM_SDK_DIR AND NOT MACOSX_VERSION_MIN_FLAG)
-    list(APPEND SANITIZER_COMMON_SUPPORTED_DARWIN_OS iossim)
-  endif()
 
-  set(SANITIZER_MIN_OSX_VERSION 10.7)
-  set(CMAKE_OSX_DEPLOYMENT_TARGET "") # We're setting the flag manually below.
-  set(DARWIN_osx_CFLAGS -mmacosx-version-min=${SANITIZER_MIN_OSX_VERSION})
-  set(DARWIN_iossim_CFLAGS
-    -mios-simulator-version-min=7.0 -isysroot ${IOSSIM_SDK_DIR})
-  set(DARWIN_osx_LINKFLAGS)
-  set(DARWIN_iossim_LINKFLAGS
-    -Wl,-ios_simulator_version_min,7.0.0
-    -mios-simulator-version-min=7.0
-    -isysroot ${IOSSIM_SDK_DIR})
+if(APPLE AND SANITIZER_MIN_OSX_VERSION VERSION_LESS "10.9")
+  # Mac OS X prior to 10.9 had problems with exporting symbols from
+  # libc++/libc++abi.
+  set(SANITIZER_CAN_USE_CXXABI FALSE)
+else()
+  set(SANITIZER_CAN_USE_CXXABI TRUE)
 endif()
+pythonize_bool(SANITIZER_CAN_USE_CXXABI)
 
 add_subdirectory(include)
 
@@ -328,9 +310,17 @@ else()
   set(COMPILER_RT_HAS_LIBCXX_SOURCES FALSE)
 endif()
 
+set(COMPILER_RT_LLD_PATH ${LLVM_MAIN_SRC_DIR}/tools/lld)
+if(EXISTS ${COMPILER_RT_LLD_PATH}/)
+  set(COMPILER_RT_HAS_LLD_SOURCES TRUE)
+else()
+  set(COMPILER_RT_HAS_LLD_SOURCES FALSE)
+endif()
+pythonize_bool(COMPILER_RT_HAS_LLD_SOURCES)
+
 add_subdirectory(lib)
 
 if(COMPILER_RT_INCLUDE_TESTS)
   add_subdirectory(unittests)
+  add_subdirectory(test)
 endif()
-add_subdirectory(test)

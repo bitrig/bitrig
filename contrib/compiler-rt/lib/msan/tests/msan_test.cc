@@ -21,6 +21,19 @@
 #include "sanitizer/allocator_interface.h"
 #include "sanitizer/msan_interface.h"
 
+#if defined(__FreeBSD__)
+# define _KERNEL  // To declare 'shminfo' structure.
+# include <sys/shm.h>
+# undef _KERNEL
+extern "C" {
+// <sys/shm.h> doesn't declare these functions in _KERNEL mode.
+void *shmat(int, const void *, int);
+int shmget(key_t, size_t, int);
+int shmctl(int, int, struct shmid_ds *);
+int shmdt(const void *);
+}
+#endif
+
 #include <inttypes.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -59,7 +72,21 @@
 # include <mntent.h>
 # include <netinet/ether.h>
 #else
+# include <signal.h>
 # include <netinet/in.h>
+# include <pthread_np.h>
+# include <sys/uio.h>
+# include <sys/mount.h>
+# include <sys/sysctl.h>
+# include <net/ethernet.h>
+# define f_namelen f_namemax  // FreeBSD names this statfs field so.
+# define cpu_set_t cpuset_t
+extern "C" {
+// FreeBSD's <ssp/string.h> defines mempcpy() to be a macro expanding into
+// a __builtin___mempcpy_chk() call, but since Msan RTL defines it as an
+// ordinary function, we can declare it here to complete the tests.
+void *mempcpy(void *dest, const void *src, size_t n);
+}
 #endif
 
 #if defined(__i386__) || defined(__x86_64__)
@@ -76,11 +103,20 @@
 // On FreeBSD procfs is not enabled by default.
 #if defined(__FreeBSD__)
 # define FILE_TO_READ "/bin/cat"
+# define DIR_TO_READ "/bin"
+# define SUBFILE_TO_READ "cat"
+# define SYMLINK_TO_READ "/usr/bin/tar"
+# define SUPERUSER_GROUP "wheel"
 #else
 # define FILE_TO_READ "/proc/self/stat"
+# define DIR_TO_READ "/proc/self"
+# define SUBFILE_TO_READ "stat"
+# define SYMLINK_TO_READ "/proc/self/exe"
+# define SUPERUSER_GROUP "root"
 #endif
 
-static const size_t kPageSize = 4096;
+const size_t kPageSize = 4096;
+const size_t kMaxPathLength = 4096;
 
 typedef unsigned char      U1;
 typedef unsigned short     U2;  // NOLINT
@@ -98,8 +134,11 @@ static bool TrackingOrigins() {
   __msan_set_origin(&x, sizeof(x), 0x1234);
   U4 origin = __msan_get_origin(&x);
   __msan_set_origin(&x, sizeof(x), 0);
-  return origin == 0x1234;
+  return __msan_origin_is_descendant_or_same(origin, 0x1234);
 }
+
+#define EXPECT_ORIGIN(expected, origin) \
+  EXPECT_TRUE(__msan_origin_is_descendant_or_same((origin), (expected)))
 
 #define EXPECT_UMR(action) \
     do {                        \
@@ -108,14 +147,13 @@ static bool TrackingOrigins() {
       __msan_set_expect_umr(0); \
     } while (0)
 
-#define EXPECT_UMR_O(action, origin) \
-    do {                                            \
-      __msan_set_expect_umr(1);                     \
-      action;                                       \
-      __msan_set_expect_umr(0);                     \
-      if (TrackingOrigins())                        \
-        EXPECT_EQ(origin, __msan_get_umr_origin()); \
-    } while (0)
+#define EXPECT_UMR_O(action, origin)                                       \
+  do {                                                                     \
+    __msan_set_expect_umr(1);                                              \
+    action;                                                                \
+    __msan_set_expect_umr(0);                                              \
+    if (TrackingOrigins()) EXPECT_ORIGIN(origin, __msan_get_umr_origin()); \
+  } while (0)
 
 #define EXPECT_POISONED(x) ExpectPoisoned(x)
 
@@ -130,15 +168,14 @@ void ExpectPoisoned(const T& t) {
 template<typename T>
 void ExpectPoisonedWithOrigin(const T& t, unsigned origin) {
   EXPECT_NE(-1, __msan_test_shadow((void*)&t, sizeof(t)));
-  if (TrackingOrigins())
-    EXPECT_EQ(origin, __msan_get_origin((void*)&t));
+  if (TrackingOrigins()) EXPECT_ORIGIN(origin, __msan_get_origin((void *)&t));
 }
 
-#define EXPECT_NOT_POISONED(x) ExpectNotPoisoned(x)
+#define EXPECT_NOT_POISONED(x) EXPECT_EQ(true, TestForNotPoisoned((x)))
 
 template<typename T>
-void ExpectNotPoisoned(const T& t) {
-  EXPECT_EQ(-1, __msan_test_shadow((void*)&t, sizeof(t)));
+bool TestForNotPoisoned(const T& t) {
+  return __msan_test_shadow((void*)&t, sizeof(t)) == -1;
 }
 
 static U8 poisoned_array[100];
@@ -505,9 +542,8 @@ static char *DynRetTestStr;
 
 TEST(MemorySanitizer, DynRet) {
   ReturnPoisoned<S8>();
-  EXPECT_NOT_POISONED(clearenv());
+  EXPECT_NOT_POISONED(atoi("0"));
 }
-
 
 TEST(MemorySanitizer, DynRet1) {
   ReturnPoisoned<S8>();
@@ -563,7 +599,7 @@ TEST(MemorySanitizer, strerror) {
 TEST(MemorySanitizer, strerror_r) {
   errno = 0;
   char buf[1000];
-  char *res = strerror_r(EINVAL, buf, sizeof(buf));
+  char *res = (char*) (size_t) strerror_r(EINVAL, buf, sizeof(buf));
   ASSERT_EQ(0, errno);
   if (!res) res = buf; // POSIX version success.
   EXPECT_NOT_POISONED(strlen(res));
@@ -618,7 +654,7 @@ TEST(MemorySanitizer, readv) {
   ASSERT_GT(fd, 0);
   int sz = readv(fd, iov, 2);
   ASSERT_GE(sz, 0);
-  ASSERT_LT(sz, 5 + 2000);
+  ASSERT_LE(sz, 5 + 2000);
   ASSERT_GT((size_t)sz, iov[0].iov_len);
   EXPECT_POISONED(buf[0]);
   EXPECT_NOT_POISONED(buf[1]);
@@ -642,7 +678,7 @@ TEST(MemorySanitizer, preadv) {
   ASSERT_GT(fd, 0);
   int sz = preadv(fd, iov, 2, 3);
   ASSERT_GE(sz, 0);
-  ASSERT_LT(sz, 5 + 2000);
+  ASSERT_LE(sz, 5 + 2000);
   ASSERT_GT((size_t)sz, iov[0].iov_len);
   EXPECT_POISONED(buf[0]);
   EXPECT_NOT_POISONED(buf[1]);
@@ -664,7 +700,7 @@ TEST(MemorySanitizer, DISABLED_ioctl) {
 
 TEST(MemorySanitizer, readlink) {
   char *x = new char[1000];
-  readlink("/proc/self/exe", x, 1000);
+  readlink(SYMLINK_TO_READ, x, 1000);
   EXPECT_NOT_POISONED(x[0]);
   delete [] x;
 }
@@ -680,9 +716,9 @@ TEST(MemorySanitizer, stat) {
 
 TEST(MemorySanitizer, fstatat) {
   struct stat* st = new struct stat;
-  int dirfd = open("/proc/self", O_RDONLY);
+  int dirfd = open(DIR_TO_READ, O_RDONLY);
   ASSERT_GT(dirfd, 0);
-  int res = fstatat(dirfd, "stat", st, 0);
+  int res = fstatat(dirfd, SUBFILE_TO_READ, st, 0);
   ASSERT_EQ(0, res);
   EXPECT_NOT_POISONED(st->st_dev);
   EXPECT_NOT_POISONED(st->st_mode);
@@ -774,6 +810,8 @@ TEST(MemorySanitizer, poll) {
   close(pipefd[1]);
 }
 
+// There is no ppoll() on FreeBSD.
+#if !defined (__FreeBSD__)
 TEST(MemorySanitizer, ppoll) {
   int* pipefd = new int[2];
   int res = pipe(pipefd);
@@ -798,6 +836,7 @@ TEST(MemorySanitizer, ppoll) {
   close(pipefd[0]);
   close(pipefd[1]);
 }
+#endif
 
 TEST(MemorySanitizer, poll_positive) {
   int* pipefd = new int[2];
@@ -862,8 +901,11 @@ TEST(MemorySanitizer, accept) {
   res = fcntl(connect_socket, F_SETFL, O_NONBLOCK);
   ASSERT_EQ(0, res);
   res = connect(connect_socket, (struct sockaddr *)&sai, sizeof(sai));
-  ASSERT_EQ(-1, res);
-  ASSERT_EQ(EINPROGRESS, errno);
+  // On FreeBSD this connection completes immediately.
+  if (res != 0) {
+    ASSERT_EQ(-1, res);
+    ASSERT_EQ(EINPROGRESS, errno);
+  }
 
   __msan_poison(&sai, sizeof(sai));
   int new_sock = accept(listen_socket, (struct sockaddr *)&sai, &sz);
@@ -1135,12 +1177,15 @@ TEST(MemorySanitizer, getcwd_gnu) {
   free(res);
 }
 
+// There's no get_current_dir_name() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, get_current_dir_name) {
   char* res = get_current_dir_name();
   ASSERT_TRUE(res != NULL);
   EXPECT_NOT_POISONED(res[0]);
   free(res);
 }
+#endif
 
 TEST(MemorySanitizer, shmctl) {
   int id = shmget(IPC_PRIVATE, 4096, 0644 | IPC_CREAT);
@@ -1151,6 +1196,8 @@ TEST(MemorySanitizer, shmctl) {
   ASSERT_GT(res, -1);
   EXPECT_NOT_POISONED(ds);
 
+  // FreeBSD does not support shmctl(IPC_INFO) and shmctl(SHM_INFO).
+#if !defined(__FreeBSD__)
   struct shminfo si;
   res = shmctl(id, IPC_INFO, (struct shmid_ds *)&si);
   ASSERT_GT(res, -1);
@@ -1160,6 +1207,7 @@ TEST(MemorySanitizer, shmctl) {
   res = shmctl(id, SHM_INFO, (struct shmid_ds *)&s_i);
   ASSERT_GT(res, -1);
   EXPECT_NOT_POISONED(s_i);
+#endif
 
   res = shmctl(id, IPC_RMID, 0);
   ASSERT_GT(res, -1);
@@ -1193,6 +1241,8 @@ TEST(MemorySanitizer, shmat) {
   ASSERT_GT(res, -1);
 }
 
+// There's no random_r() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, random_r) {
   int32_t x;
   char z[64];
@@ -1208,6 +1258,7 @@ TEST(MemorySanitizer, random_r) {
   ASSERT_EQ(0, res);
   EXPECT_NOT_POISONED(x);
 }
+#endif
 
 TEST(MemorySanitizer, confstr) {
   char buf[3];
@@ -1223,6 +1274,16 @@ TEST(MemorySanitizer, confstr) {
   EXPECT_NOT_POISONED(buf2[res - 1]);
   EXPECT_POISONED(buf2[res]);
   ASSERT_EQ(res, strlen(buf2) + 1);
+}
+
+TEST(MemorySanitizer, opendir) {
+  DIR *dir = opendir(".");
+  closedir(dir);
+
+  char name[10] = ".";
+  __msan_poison(name, sizeof(name));
+  EXPECT_UMR(dir = opendir(name));
+  closedir(dir);
 }
 
 TEST(MemorySanitizer, readdir) {
@@ -1261,6 +1322,8 @@ TEST(MemorySanitizer, realpath_null) {
   free(res);
 }
 
+// There's no canonicalize_file_name() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, canonicalize_file_name) {
   const char* relpath = ".";
   char* res = canonicalize_file_name(relpath);
@@ -1268,6 +1331,7 @@ TEST(MemorySanitizer, canonicalize_file_name) {
   EXPECT_NOT_POISONED(res[0]);
   free(res);
 }
+#endif
 
 extern char **environ;
 
@@ -1665,26 +1729,35 @@ TEST(MemorySanitizer, modfl) {
   EXPECT_NOT_POISONED(y);
 }
 
+// There's no sincos() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, sincos) {
   double s, c;
   sincos(0.2, &s, &c);
   EXPECT_NOT_POISONED(s);
   EXPECT_NOT_POISONED(c);
 }
+#endif
 
+// There's no sincosf() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, sincosf) {
   float s, c;
   sincosf(0.2, &s, &c);
   EXPECT_NOT_POISONED(s);
   EXPECT_NOT_POISONED(c);
 }
+#endif
 
+// There's no sincosl() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, sincosl) {
   long double s, c;
   sincosl(0.2, &s, &c);
   EXPECT_NOT_POISONED(s);
   EXPECT_NOT_POISONED(c);
 }
+#endif
 
 TEST(MemorySanitizer, remquo) {
   int quo;
@@ -1739,13 +1812,18 @@ TEST(MemorySanitizer, lgammaf_r) {
   EXPECT_NOT_POISONED(sgn);
 }
 
+// There's no lgammal_r() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, lgammal_r) {
   int sgn;
   long double res = lgammal_r(1.1, &sgn);
   ASSERT_NE(0.0, res);
   EXPECT_NOT_POISONED(sgn);
 }
+#endif
 
+// There's no drand48_r() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, drand48_r) {
   struct drand48_data buf;
   srand48_r(0, &buf);
@@ -1753,7 +1831,10 @@ TEST(MemorySanitizer, drand48_r) {
   drand48_r(&buf, &d);
   EXPECT_NOT_POISONED(d);
 }
+#endif
 
+// There's no lrand48_r() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, lrand48_r) {
   struct drand48_data buf;
   srand48_r(0, &buf);
@@ -1761,6 +1842,7 @@ TEST(MemorySanitizer, lrand48_r) {
   lrand48_r(&buf, &d);
   EXPECT_NOT_POISONED(d);
 }
+#endif
 
 TEST(MemorySanitizer, sprintf) {  // NOLINT
   char buff[10];
@@ -1801,7 +1883,7 @@ TEST(MemorySanitizer, swprintf) {
   ASSERT_EQ(buff[1], '2');
   ASSERT_EQ(buff[2], '3');
   ASSERT_EQ(buff[6], '7');
-  ASSERT_EQ(buff[7], 0);
+  ASSERT_EQ(buff[7], L'\0');
   EXPECT_POISONED(buff[8]);
 }
 
@@ -1868,6 +1950,16 @@ TEST(MemorySanitizer, wcsnrtombs) {
   EXPECT_EQ(buff[0], 'a');
   EXPECT_EQ(buff[1], 'b');
   EXPECT_POISONED(buff[2]);
+}
+
+TEST(MemorySanitizer, wcrtomb) {
+  wchar_t x = L'a';
+  char buff[10];
+  mbstate_t mbs;
+  memset(&mbs, 0, sizeof(mbs));
+  size_t res = wcrtomb(buff, x, &mbs);
+  EXPECT_EQ(res, (size_t)1);
+  EXPECT_EQ(buff[0], 'a');
 }
 
 TEST(MemorySanitizer, wmemset) {
@@ -2025,6 +2117,8 @@ TEST(MemorySanitizer, localtime_r) {
   EXPECT_NE(0U, strlen(time.tm_zone));
 }
 
+// There's no getmntent() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, getmntent) {
   FILE *fp = setmntent("/etc/fstab", "r");
   struct mntent *mnt = getmntent(fp);
@@ -2037,7 +2131,10 @@ TEST(MemorySanitizer, getmntent) {
   EXPECT_NOT_POISONED(mnt->mnt_passno);
   fclose(fp);
 }
+#endif
 
+// There's no getmntent_r() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, getmntent_r) {
   FILE *fp = setmntent("/etc/fstab", "r");
   struct mntent mntbuf;
@@ -2052,6 +2149,7 @@ TEST(MemorySanitizer, getmntent_r) {
   EXPECT_NOT_POISONED(mnt->mnt_passno);
   fclose(fp);
 }
+#endif
 
 TEST(MemorySanitizer, ether) {
   const char *asc = "11:22:33:44:55:66";
@@ -2091,6 +2189,8 @@ TEST(MemorySanitizer, mmap) {
   }
 }
 
+// There's no fcvt() on FreeBSD.
+#if !defined(__FreeBSD__)
 // FIXME: enable and add ecvt.
 // FIXME: check why msandr does nt handle fcvt.
 TEST(MemorySanitizer, fcvt) {
@@ -2106,7 +2206,10 @@ TEST(MemorySanitizer, fcvt) {
   EXPECT_NOT_POISONED(str[0]);
   ASSERT_NE(0U, strlen(str));
 }
+#endif
 
+// There's no fcvt_long() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, fcvt_long) {
   int a, b;
   break_optimization(&a);
@@ -2120,7 +2223,7 @@ TEST(MemorySanitizer, fcvt_long) {
   EXPECT_NOT_POISONED(str[0]);
   ASSERT_NE(0U, strlen(str));
 }
-
+#endif
 
 TEST(MemorySanitizer, memchr) {
   char x[10];
@@ -2722,9 +2825,20 @@ TEST(MemorySanitizer, getrusage) {
   EXPECT_NOT_POISONED(usage.ru_nivcsw);
 }
 
-#ifdef __GLIBC__
-extern char *program_invocation_name;
-#else  // __GLIBC__
+#if defined(__FreeBSD__)
+static void GetProgramPath(char *buf, size_t sz) {
+  int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
+  int res = sysctl(mib, 4, buf, &sz, NULL, 0);
+  ASSERT_EQ(0, res);
+}
+#elif defined(__GLIBC__)
+static void GetProgramPath(char *buf, size_t sz) {
+  extern char *program_invocation_name;
+  int res = snprintf(buf, sz, "%s", program_invocation_name);
+  ASSERT_GE(res, 0);
+  ASSERT_LT((size_t)res, sz);
+}
+#else
 # error "TODO: port this"
 #endif
 
@@ -2759,21 +2873,31 @@ static int dl_phdr_callback(struct dl_phdr_info *info, size_t size, void *data) 
 
 // Compute the path to our loadable DSO.  We assume it's in the same
 // directory.  Only use string routines that we intercept so far to do this.
-static int PathToLoadable(char *buf, size_t sz) {
-  const char *basename = "libmsan_loadable.x86_64.so";
-  char *argv0 = program_invocation_name;
-  char *last_slash = strrchr(argv0, '/');
-  assert(last_slash);
-  int res =
-      snprintf(buf, sz, "%.*s/%s", int(last_slash - argv0), argv0, basename);
-  assert(res >= 0);
-  return (size_t)res < sz ? 0 : res;
+static void GetPathToLoadable(char *buf, size_t sz) {
+  char program_path[kMaxPathLength];
+  GetProgramPath(program_path, sizeof(program_path));
+
+  const char *last_slash = strrchr(program_path, '/');
+  ASSERT_NE(nullptr, last_slash);
+  size_t dir_len = (size_t)(last_slash - program_path);
+#if defined(__x86_64__)
+  static const char basename[] = "libmsan_loadable.x86_64.so";
+#elif defined(__MIPSEB__) || defined(MIPSEB)
+  static const char basename[] = "libmsan_loadable.mips64.so";
+#elif defined(__mips64)
+  static const char basename[] = "libmsan_loadable.mips64el.so";
+#elif defined(__aarch64__)
+  static const char basename[] = "libmsan_loadable.aarch64.so";
+#endif
+  int res = snprintf(buf, sz, "%.*s/%s",
+                     (int)dir_len, program_path, basename);
+  ASSERT_GE(res, 0);
+  ASSERT_LT((size_t)res, sz);
 }
 
 TEST(MemorySanitizer, dl_iterate_phdr) {
-  char path[4096];
-  int res = PathToLoadable(path, sizeof(path));
-  ASSERT_EQ(0, res);
+  char path[kMaxPathLength];
+  GetPathToLoadable(path, sizeof(path));
 
   // Having at least one dlopen'ed library in the process makes this more
   // entertaining.
@@ -2783,15 +2907,13 @@ TEST(MemorySanitizer, dl_iterate_phdr) {
   int count = 0;
   int result = dl_iterate_phdr(dl_phdr_callback, &count);
   ASSERT_GT(count, 0);
-  
+
   dlclose(lib);
 }
 
-
 TEST(MemorySanitizer, dlopen) {
-  char path[4096];
-  int res = PathToLoadable(path, sizeof(path));
-  ASSERT_EQ(0, res);
+  char path[kMaxPathLength];
+  GetPathToLoadable(path, sizeof(path));
 
   // We need to clear shadow for globals when doing dlopen.  In order to test
   // this, we have to poison the shadow for the DSO before we load it.  In
@@ -2816,19 +2938,22 @@ TEST(MemorySanitizer, dlopen) {
 
 // Regression test for a crash in dlopen() interceptor.
 TEST(MemorySanitizer, dlopenFailed) {
-  const char *path = "/libmsan_loadable_does_not_exist.x86_64.so";
+  const char *path = "/libmsan_loadable_does_not_exist.so";
   void *lib = dlopen(path, RTLD_LAZY);
   ASSERT_TRUE(lib == NULL);
 }
 
 #endif // MSAN_TEST_DISABLE_DLOPEN
 
+// There's no sched_getaffinity() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, sched_getaffinity) {
   cpu_set_t mask;
   int res = sched_getaffinity(getpid(), sizeof(mask), &mask);
   ASSERT_EQ(0, res);
   EXPECT_NOT_POISONED(mask);
 }
+#endif
 
 TEST(MemorySanitizer, scanf) {
   const char *input = "42 hello";
@@ -2869,6 +2994,14 @@ static void *SmallStackThread_threadfn(void* data) {
   return 0;
 }
 
+#ifdef PTHREAD_STACK_MIN
+# define SMALLSTACKSIZE    PTHREAD_STACK_MIN
+# define SMALLPRESTACKSIZE PTHREAD_STACK_MIN
+#else
+# define SMALLSTACKSIZE    64 * 1024
+# define SMALLPRESTACKSIZE 16 * 1024
+#endif
+
 TEST(MemorySanitizer, SmallStackThread) {
   pthread_attr_t attr;
   pthread_t t;
@@ -2876,7 +3009,7 @@ TEST(MemorySanitizer, SmallStackThread) {
   int res;
   res = pthread_attr_init(&attr);
   ASSERT_EQ(0, res);
-  res = pthread_attr_setstacksize(&attr, 64 * 1024);
+  res = pthread_attr_setstacksize(&attr, SMALLSTACKSIZE);
   ASSERT_EQ(0, res);
   res = pthread_create(&t, &attr, SmallStackThread_threadfn, NULL);
   ASSERT_EQ(0, res);
@@ -2893,7 +3026,7 @@ TEST(MemorySanitizer, SmallPreAllocatedStackThread) {
   res = pthread_attr_init(&attr);
   ASSERT_EQ(0, res);
   void *stack;
-  const size_t kStackSize = 16 * 1024;
+  const size_t kStackSize = SMALLPRESTACKSIZE;
   res = posix_memalign(&stack, 4096, kStackSize);
   ASSERT_EQ(0, res);
   res = pthread_attr_setstack(&attr, stack, kStackSize);
@@ -3058,11 +3191,14 @@ TEST(MemorySanitizer, posix_memalign) {
   free(p);
 }
 
+// There's no memalign() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, memalign) {
   void *p = memalign(4096, 13);
   EXPECT_EQ(0U, (uintptr_t)p % kPageSize);
   free(p);
 }
+#endif
 
 TEST(MemorySanitizer, valloc) {
   void *a = valloc(100);
@@ -3070,6 +3206,8 @@ TEST(MemorySanitizer, valloc) {
   free(a);
 }
 
+// There's no pvalloc() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, pvalloc) {
   void *p = pvalloc(kPageSize + 100);
   EXPECT_EQ(0U, (uintptr_t)p % kPageSize);
@@ -3081,6 +3219,7 @@ TEST(MemorySanitizer, pvalloc) {
   EXPECT_EQ(kPageSize, __sanitizer_get_allocated_size(p));
   free(p);
 }
+#endif
 
 TEST(MemorySanitizer, inet_pton) {
   const char *s = "1:0:0:0:0:0:0:8";
@@ -3124,12 +3263,15 @@ TEST(MemorySanitizer, gethostname) {
   EXPECT_NOT_POISONED(strlen(buf));
 }
 
+// There's no sysinfo() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, sysinfo) {
   struct sysinfo info;
   int res = sysinfo(&info);
   ASSERT_EQ(0, res);
   EXPECT_NOT_POISONED(info);
 }
+#endif
 
 TEST(MemorySanitizer, getpwuid) {
   struct passwd *p = getpwuid(0); // root
@@ -3184,8 +3326,10 @@ TEST(MemorySanitizer, getgrnam_r) {
   struct group grp;
   struct group *grpres;
   char buf[10000];
-  int res = getgrnam_r("root", &grp, buf, sizeof(buf), &grpres);
+  int res = getgrnam_r(SUPERUSER_GROUP, &grp, buf, sizeof(buf), &grpres);
   ASSERT_EQ(0, res);
+  // Note that getgrnam_r() returns 0 if the matching group is not found.
+  ASSERT_NE(nullptr, grpres);
   EXPECT_NOT_POISONED(grp.gr_name);
   ASSERT_TRUE(grp.gr_name != NULL);
   EXPECT_NOT_POISONED(grp.gr_name[0]);
@@ -3217,6 +3361,8 @@ TEST(MemorySanitizer, getpwent_r) {
   EXPECT_NOT_POISONED(pwdres);
 }
 
+// There's no fgetpwent() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, fgetpwent) {
   FILE *fp = fopen("/etc/passwd", "r");
   struct passwd *p = fgetpwent(fp);
@@ -3227,6 +3373,7 @@ TEST(MemorySanitizer, fgetpwent) {
   EXPECT_NOT_POISONED(p->pw_uid);
   fclose(fp);
 }
+#endif
 
 TEST(MemorySanitizer, getgrent) {
   setgrent();
@@ -3238,6 +3385,8 @@ TEST(MemorySanitizer, getgrent) {
   EXPECT_NOT_POISONED(p->gr_gid);
 }
 
+// There's no fgetgrent() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, fgetgrent) {
   FILE *fp = fopen("/etc/group", "r");
   struct group *grp = fgetgrent(fp);
@@ -3252,6 +3401,7 @@ TEST(MemorySanitizer, fgetgrent) {
   }
   fclose(fp);
 }
+#endif
 
 TEST(MemorySanitizer, getgrent_r) {
   struct group grp;
@@ -3267,6 +3417,8 @@ TEST(MemorySanitizer, getgrent_r) {
   EXPECT_NOT_POISONED(grpres);
 }
 
+// There's no fgetgrent_r() on FreeBSD.
+#if !defined(__FreeBSD__)
 TEST(MemorySanitizer, fgetgrent_r) {
   FILE *fp = fopen("/etc/group", "r");
   struct group grp;
@@ -3282,6 +3434,7 @@ TEST(MemorySanitizer, fgetgrent_r) {
   EXPECT_NOT_POISONED(grpres);
   fclose(fp);
 }
+#endif
 
 TEST(MemorySanitizer, getgroups) {
   int n = getgroups(0, 0);
@@ -3409,7 +3562,7 @@ TEST(MemorySanitizer, VolatileBitfield) {
 }
 
 TEST(MemorySanitizer, UnalignedLoad) {
-  char x[32];
+  char x[32] __attribute__((aligned(8)));
   U4 origin = __LINE__;
   for (unsigned i = 0; i < sizeof(x) / 4; ++i)
     __msan_set_origin(x + 4 * i, 4, origin + i);
@@ -3443,7 +3596,7 @@ TEST(MemorySanitizer, UnalignedLoad) {
 }
 
 TEST(MemorySanitizer, UnalignedStore16) {
-  char x[5];
+  char x[5] __attribute__((aligned(4)));
   U2 y2 = 0;
   U4 origin = __LINE__;
   __msan_poison(&y2, 1);
@@ -3454,11 +3607,10 @@ TEST(MemorySanitizer, UnalignedStore16) {
   EXPECT_POISONED_O(x[1], origin);
   EXPECT_NOT_POISONED(x[2]);
   EXPECT_POISONED_O(x[3], origin);
-  EXPECT_POISONED_O(x[4], origin);
 }
 
 TEST(MemorySanitizer, UnalignedStore32) {
-  char x[8];
+  char x[8] __attribute__((aligned(4)));
   U4 y4 = 0;
   U4 origin = __LINE__;
   __msan_poison(&y4, 2);
@@ -3476,7 +3628,7 @@ TEST(MemorySanitizer, UnalignedStore32) {
 }
 
 TEST(MemorySanitizer, UnalignedStore64) {
-  char x[16];
+  char x[16] __attribute__((aligned(8)));
   U8 y8 = 0;
   U4 origin = __LINE__;
   __msan_poison(&y8, 3);
@@ -3499,7 +3651,7 @@ TEST(MemorySanitizer, UnalignedStore64) {
 }
 
 TEST(MemorySanitizer, UnalignedStore16_precise) {
-  char x[8];
+  char x[8] __attribute__((aligned(4)));
   U2 y = 0;
   U4 originx1 = __LINE__;
   U4 originx2 = __LINE__;
@@ -3522,7 +3674,7 @@ TEST(MemorySanitizer, UnalignedStore16_precise) {
 }
 
 TEST(MemorySanitizer, UnalignedStore16_precise2) {
-  char x[8];
+  char x[8] __attribute__((aligned(4)));
   U2 y = 0;
   U4 originx1 = __LINE__;
   U4 originx2 = __LINE__;
@@ -3545,7 +3697,7 @@ TEST(MemorySanitizer, UnalignedStore16_precise2) {
 }
 
 TEST(MemorySanitizer, UnalignedStore64_precise) {
-  char x[12];
+  char x[12] __attribute__((aligned(8)));
   U8 y = 0;
   U4 originx1 = __LINE__;
   U4 originx2 = __LINE__;
@@ -3577,7 +3729,7 @@ TEST(MemorySanitizer, UnalignedStore64_precise) {
 }
 
 TEST(MemorySanitizer, UnalignedStore64_precise2) {
-  char x[12];
+  char x[12] __attribute__((aligned(8)));
   U8 y = 0;
   U4 originx1 = __LINE__;
   U4 originx2 = __LINE__;
@@ -3607,7 +3759,7 @@ TEST(MemorySanitizer, UnalignedStore64_precise2) {
   EXPECT_POISONED_O(x[11], originx3);
 }
 
-#if defined(__clang__)
+#if (defined(__x86_64__) && defined(__clang__))
 namespace {
 typedef U1 V16x8 __attribute__((__vector_size__(16)));
 typedef U2 V8x16 __attribute__((__vector_size__(16)));
@@ -3771,15 +3923,15 @@ TEST(VectorMaddTest, mmx_pmadd_wd) {
 #endif  // defined(__clang__)
 
 TEST(MemorySanitizerOrigins, SetGet) {
-  EXPECT_EQ(TrackingOrigins(), __msan_get_track_origins());
+  EXPECT_EQ(TrackingOrigins(), !!__msan_get_track_origins());
   if (!TrackingOrigins()) return;
   int x;
   __msan_set_origin(&x, sizeof(x), 1234);
-  EXPECT_EQ(1234U, __msan_get_origin(&x));
+  EXPECT_ORIGIN(1234U, __msan_get_origin(&x));
   __msan_set_origin(&x, sizeof(x), 5678);
-  EXPECT_EQ(5678U, __msan_get_origin(&x));
+  EXPECT_ORIGIN(5678U, __msan_get_origin(&x));
   __msan_set_origin(&x, sizeof(x), 0);
-  EXPECT_EQ(0U, __msan_get_origin(&x));
+  EXPECT_ORIGIN(0U, __msan_get_origin(&x));
 }
 
 namespace {
@@ -3795,12 +3947,12 @@ TEST(MemorySanitizerOrigins, InitializedStoreDoesNotChangeOrigin) {
   S s;
   U4 origin = rand();  // NOLINT
   s.a = *GetPoisonedO<U2>(0, origin);
-  EXPECT_EQ(origin, __msan_get_origin(&s.a));
-  EXPECT_EQ(origin, __msan_get_origin(&s.b));
+  EXPECT_ORIGIN(origin, __msan_get_origin(&s.a));
+  EXPECT_ORIGIN(origin, __msan_get_origin(&s.b));
 
   s.b = 42;
-  EXPECT_EQ(origin, __msan_get_origin(&s.a));
-  EXPECT_EQ(origin, __msan_get_origin(&s.b));
+  EXPECT_ORIGIN(origin, __msan_get_origin(&s.a));
+  EXPECT_ORIGIN(origin, __msan_get_origin(&s.b));
 }
 }  // namespace
 
@@ -3816,7 +3968,8 @@ void BinaryOpOriginTest(BinaryOp op) {
   *z = op(*x, *y);
   U4 origin = __msan_get_origin(z);
   EXPECT_POISONED_O(*z, origin);
-  EXPECT_EQ(true, origin == ox || origin == oy);
+  EXPECT_EQ(true, __msan_origin_is_descendant_or_same(origin, ox) ||
+                      __msan_origin_is_descendant_or_same(origin, oy));
 
   // y is poisoned, x is not.
   *x = 10101;
@@ -3825,7 +3978,7 @@ void BinaryOpOriginTest(BinaryOp op) {
   __msan_set_origin(z, sizeof(*z), 0);
   *z = op(*x, *y);
   EXPECT_POISONED_O(*z, oy);
-  EXPECT_EQ(__msan_get_origin(z), oy);
+  EXPECT_ORIGIN(oy, __msan_get_origin(z));
 
   // x is poisoned, y is not.
   *x = *GetPoisonedO<T>(0, ox);
@@ -3834,7 +3987,7 @@ void BinaryOpOriginTest(BinaryOp op) {
   __msan_set_origin(z, sizeof(*z), 0);
   *z = op(*x, *y);
   EXPECT_POISONED_O(*z, ox);
-  EXPECT_EQ(__msan_get_origin(z), ox);
+  EXPECT_ORIGIN(ox, __msan_get_origin(z));
 }
 
 template<class T> INLINE T XOR(const T &a, const T&b) { return a ^ b; }
