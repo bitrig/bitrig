@@ -264,9 +264,6 @@ if [[ -n $user ]]; then
 	_home=/mnt$_home
 	mkdir -p $_home
 	(cd /mnt/etc/skel; cp -pR . $_home)
-	(umask 077 && sed "s,^To: root\$,To: ${username} <${user}>," \
-		/mnt/var/mail/root >/mnt/var/mail/$user )
-	chown -R 1000:1000 $_home /mnt/var/mail/$user
 	sed -i -e "s@^wheel:.:0:root\$@wheel:\*:0:root,${user}@" \
 		/mnt/etc/group 2>/dev/null
 
