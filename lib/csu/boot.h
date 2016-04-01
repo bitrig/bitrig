@@ -158,9 +158,6 @@ _dl_boot_bind(const long sp, long *dl_data, Elf_Dyn *dynamicp)
 				;
 			}
 		}
-	} else {
-		extern char *__tdata_end, *__tdata_start;
-		tlssize = &__tdata_end - &__tdata_start;
 	}
 
 
