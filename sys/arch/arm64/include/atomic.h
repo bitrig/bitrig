@@ -6,6 +6,13 @@
 #if defined(_KERNEL)
 #include <sys/stdatomic.h>
 
+#define __membar(_f) do { __asm __volatile(_f ::: "memory"); } while (0)
+
+/* virtio needs MP membars even on SP kernels */
+#define virtio_membar_producer()	__membar("")
+#define virtio_membar_consumer()	__membar("")
+#define virtio_membar_sync()		__membar("dmb sy") /* XXX dmb? */
+
 static inline void
 atomic_setbits_int(__volatile unsigned int *ptr, unsigned int val)
 {
