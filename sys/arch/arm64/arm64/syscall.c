@@ -14,8 +14,12 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 #include <sys/param.h>
-
+#include <sys/systm.h>
+#include <sys/proc.h>
+#include <sys/signalvar.h>
 #include <sys/user.h>
+#include <sys/vnode.h>
+#include <sys/signal.h>
 #include <sys/syscall.h>
 #include <sys/syscall_mi.h>
 #include <sys/systm.h>
