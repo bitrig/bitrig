@@ -70,6 +70,11 @@ include "dev/wscons/files.wscons"
 include "dev/rasops/files.rasops"
 include "dev/wsfont/files.wsfont"
 
+#
+# Machine-independent HID support
+#
+include	"dev/hid/files.hid"
+
 # Include USB stuff
 include "dev/usb/files.usb"
 
