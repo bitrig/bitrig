@@ -89,7 +89,7 @@ COPY	${DESTDIR}/etc/firmware/atu-rfmd2958smc-ext etc/firmware/atu-rfmd2958smc-ex
 COPY	${DESTDIR}/etc/firmware/atu-rfmd2958smc-int etc/firmware/atu-rfmd2958smc-int
 
 # this is the list from distrib/miniroot/makeconf.awk with -lz added.
-LIBS -lstubs -lutil -lcurses -ltls -lssl -lcrypto -ledit -lz -lm -lc
+LIBS -lstubs -lutil -lcurses -ltls -lssl -lcrypto -ledit -ltermcap -lz -lm -lc
 
 # copy the MAKEDEV script and make some devices
 COPY	${DESTDIR}/dev/MAKEDEV			dev/MAKEDEV
