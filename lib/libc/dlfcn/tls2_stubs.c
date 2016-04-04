@@ -311,11 +311,6 @@ __init_tcb(__unused void **envp)
 		}
 	}
 	if (phdr == 0 || phent != sizeof(Elf_Phdr) || phnum == 0) {
-		// try tls symbols
-		extern char *__tdata_start, *__tdata_end;
-		tls_init = (void*)&__tdata_start;
-		tls_init_size = (char*)&__tdata_end - (char*)&__tdata_start;
-		tls_static_space = round(tls_init_size, sizeof(long));
 	} else {
 		for (i = 0; (unsigned) i < phnum; i++) {
 			if (phdr[i].p_type == PT_TLS) {
