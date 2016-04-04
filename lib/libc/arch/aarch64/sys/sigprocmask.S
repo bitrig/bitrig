@@ -34,7 +34,7 @@
 
 #include "SYS.h"
 
-SYSENTRY(sigprocmask)
+SYSENTRY_HIDDEN(sigprocmask)
 	cbz	x1, 2f
 	ldr	w1, [x1]
 	b 2f
@@ -50,3 +50,4 @@ SYSENTRY(sigprocmask)
 1:
 	mov	x0, #0x00000000
 	ret
+SYSCALL_END_HIDDEN(sigprocmask)
