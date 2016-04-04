@@ -49,7 +49,7 @@
 #define	PAGE_SIZE	(1LL << PAGE_SHIFT)
 #define	PAGE_MASK	((vaddr_t)PAGE_SIZE - 1)
 
-//#define	KERNBASE	0xffffffff80000000	/* start of kernel virtual space */
+#define	KERNBASE	0xffffffff80000000	/* start of kernel virtual space */
 
 #ifdef _KERNEL
 
