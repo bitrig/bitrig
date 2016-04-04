@@ -71,9 +71,9 @@
 #define __END_HIDDEN(x)					\
 	END(_thread_sys_ ## x);				\
 	_HIDDEN_FALIAS(x, _thread_sys_ ## x);		\
-	/* arm64 cannot size hiddend syscalle END(_HIDDEN(x)) */
+	END(_HIDDEN(x))
 #define __END(x)					\
-	__END_HIDDEN(x); /* END(x) */
+	__END_HIDDEN(x); END(x)
 
 #define SYSTRAP(x) \
 	ldr	x8, =SYS_ ## x;		\

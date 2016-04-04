@@ -45,10 +45,10 @@
 	.align	0
 
 SYSENTRY(vfork)
-	mov	x2, lr
+	mov	x2, x30
 	SYSTRAP(vfork)
 	bcs	CERROR
 	sub	x1, x1, #1	/* r1 == 0xffffffff if parent, 0 if child */
 	and	x0, x0, x1	/* r0 == 0 if child, else unchanged */
-	mov	lr, x2
+	mov	x30, x2
 	ret

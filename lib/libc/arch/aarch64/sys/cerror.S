@@ -31,9 +31,9 @@
 WEAK_ALIAS(CERROR, _CERROR)
 
 _ENTRY(_CERROR)
-	stp	x0, lr, [sp,#-16]!
+	stp	x0, x30, [sp,#-16]!
 	bl	_C_LABEL(__errno)
-	ldp	x1, lr, [sp],#16
+	ldp	x1, x30, [sp],#16
 	str	x1, [x0]
 	movn	x0, #0
 	movn	x1, #0
