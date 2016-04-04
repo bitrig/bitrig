@@ -26,6 +26,8 @@ file	arch/arm64/arm64/vfp.c
 file	arch/arm64/arm64/exception.S
 file	arch/arm64/arm64/trap.c
 file	arch/arm64/arm64/ast.c
+file	arch/arm64/arm64/arm64_mutex.c
+
 
 file	arch/arm64/arm64/support.S
 file	arch/arm64/arm64/bus_dma.c
@@ -89,8 +91,8 @@ attach  agtimer at fdt with agtimer_fdt
 file    arch/arm64/dev/agtimer.c               agtimer
 
 
-file	netinet/in_cksum.c			inet
-file	netinet/in4_cksum.c			inet
+file	netinet/in_cksum.c
+file	netinet/in4_cksum.c
 
 include "dev/mii/files.mii"
 include "dev/pci/files.pci"
