@@ -149,7 +149,7 @@ DL_SYSCALL(sendsyslog)
 DL_SYSCALL2(getcwd,__getcwd)
 DL_SYSCALL(__set_tcb)
 DL_SYSCALL(__get_tcb)
-DL_SYSCALL2(sysctl,__sysctl)
+DL_SYSCALL(sysctl)
 
 DL_SYSCALL(getdents)
 
