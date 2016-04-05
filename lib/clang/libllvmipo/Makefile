@@ -25,8 +25,17 @@ SRCS=	ArgumentPromotion.cpp \
 	PassManagerBuilder.cpp \
 	PruneEH.cpp \
 	StripDeadPrototypes.cpp \
-	StripSymbols.cpp
+	StripSymbols.cpp \
+	CrossDSOCFI.cpp \
+	ElimAvailExtern.cpp \
+	ForceFunctionAttrs.cpp \
+	FunctionImport.cpp \
+	InferFunctionAttrs.cpp \
+	LowerBitSets.cpp \
+	SampleProfile.cpp
 
-TGHDRS=	Intrinsics
+
+TGHDRS=	Attributes \
+	Intrinsics
 
 .include "../clang.lib.mk"

@@ -74,15 +74,17 @@ CXXFLAGS+=	-std=c++11 -fno-exceptions -fno-rtti
 TBLGEN?=	tblgen
 CLANG_TBLGEN?=	clang-tblgen
 
-Intrinsics.inc.h: ${LLVM_SRCS}/include/llvm/IR/Intrinsics.td \
-		  ${LLVM_SRCS}/include/llvm/IR/IntrinsicsARM.td \
-		  ${LLVM_SRCS}/include/llvm/IR/IntrinsicsHexagon.td \
-		  ${LLVM_SRCS}/include/llvm/IR/IntrinsicsMips.td \
-		  ${LLVM_SRCS}/include/llvm/IR/IntrinsicsNVVM.td \
-		  ${LLVM_SRCS}/include/llvm/IR/IntrinsicsPowerPC.td \
-		  ${LLVM_SRCS}/include/llvm/IR/IntrinsicsR600.td \
-		  ${LLVM_SRCS}/include/llvm/IR/IntrinsicsX86.td \
-		  ${LLVM_SRCS}/include/llvm/IR/IntrinsicsXCore.td
+Attributes.inc.h: ${LLVM_SRCS}/include/llvm/IR/Attributes.td
+	${TBLGEN} -I ${LLVM_SRCS}/include \
+		-gen-attrs -o ${.TARGET} \
+		${LLVM_SRCS}/include/llvm/IR/Attributes.td
+
+AttributesCompatFunc.inc.h: ${LLVM_SRCS}/lib/IR/AttributesCompatFunc.td
+	${TBLGEN} -I ${LLVM_SRCS}/include \
+		-gen-attrs -o ${.TARGET} \
+		${LLVM_SRCS}/lib/IR/AttributesCompatFunc.td
+
+Intrinsics.inc.h: ${LLVM_SRCS}/include/llvm/IR/Intrinsics.td
 	${TBLGEN} -I ${LLVM_SRCS}/include \
 	    -gen-intrinsic -o ${.TARGET} \
 	    ${LLVM_SRCS}/include/llvm/IR/Intrinsics.td
@@ -227,10 +229,20 @@ Diagnostic${hdr}Kinds.inc.h: ${CLANG_SRCS}/include/clang/Basic/Diagnostic.td
 	    ${.ALLSRC}
 .endfor
 
+# XXX: Atrocious hack, need to clean this up later
+.if defined(LIB) && ${LIB} == "llvmlibdriver"
+Options.inc.h: ${LLVM_SRCS}/lib/LibDriver/Options.td
+	${TBLGEN} -I ${LLVM_SRCS}/include \
+	    -gen-opt-parser-defs \
+	    -o ${.TARGET} \
+		${LLVM_SRCS}/lib/LibDriver/Options.td
+.else
 Options.inc.h: ${CLANG_SRCS}/include/clang/Driver/Options.td
 	${TBLGEN} -I ${CLANG_SRCS}/include/clang/Driver \
 	    -gen-opt-parser-defs -I ${LLVM_SRCS}/include \
-	    -o ${.TARGET} ${.ALLSRC}
+	    -o ${.TARGET} \
+		${.ALLSRC}
+.endif
 
 Checkers.inc.h: ${CLANG_SRCS}/lib/StaticAnalyzer/Checkers/Checkers.td \
 	    ${CLANG_SRCS}/include/clang/StaticAnalyzer/Checkers/CheckerBase.td

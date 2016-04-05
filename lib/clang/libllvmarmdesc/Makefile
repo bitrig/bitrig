@@ -24,6 +24,7 @@ CFLAGS+= -I${LLVM_SRCS}/${SRCDIR}/..
 TGHDRS=	ARMGenInstrInfo \
 	ARMGenMCCodeEmitter \
 	ARMGenRegisterInfo \
-	ARMGenSubtargetInfo
+	ARMGenSubtargetInfo \
+	Attributes
 
 .include "../clang.lib.mk"

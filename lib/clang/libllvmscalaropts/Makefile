@@ -35,7 +35,6 @@ SRCS=	ADCE.cpp \
 	Reg2Mem.cpp \
 	SCCP.cpp \
 	SROA.cpp \
-	SampleProfile.cpp \
 	Scalar.cpp \
 	Scalarizer.cpp \
 	ScalarReplAggregates.cpp \
@@ -43,7 +42,19 @@ SRCS=	ADCE.cpp \
 	SimplifyCFGPass.cpp \
 	Sink.cpp \
 	StructurizeCFG.cpp \
-	TailRecursionElimination.cpp
+	TailRecursionElimination.cpp \
+	BDCE.cpp \
+	Float2Int.cpp \
+	InductiveRangeCheckElimination.cpp \
+	LoopDistribute.cpp \
+	LoopInterchange.cpp \
+	LoopLoadElimination.cpp \
+	LowerExpectIntrinsic.cpp \
+	NaryReassociate.cpp \
+	PlaceSafepoints.cpp \
+	RewriteStatepointsForGC.cpp \
+	SpeculativeExecution.cpp \
+	StraightLineStrengthReduce.cpp
 
 .if ${MK_CLANG_EXTRAS:L} != "no"
 SRCS+=	LoopInstSimplify.cpp \
@@ -52,6 +63,7 @@ SRCS+=	LoopInstSimplify.cpp \
 	Scalar.cpp
 .endif
 
-TGHDRS=	Intrinsics
+TGHDRS=	Attributes \
+	Intrinsics
 
 .include "../clang.lib.mk"

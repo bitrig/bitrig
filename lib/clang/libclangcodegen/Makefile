@@ -49,12 +49,14 @@ SRCS=	BackendUtil.cpp \
 	ItaniumCXXABI.cpp \
 	MicrosoftCXXABI.cpp \
 	ModuleBuilder.cpp \
+	ObjectFilePCHContainerOperations.cpp \
 	SanitizerMetadata.cpp \
 	TargetInfo.cpp
 
 TGHDRS=	AttrList \
 	AttrParsedAttrList \
 	AttrVisitor \
+	Attributes \
 	Attrs \
 	CommentCommandList \
 	CommentNodes \

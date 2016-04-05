@@ -11,6 +11,7 @@ SUBDIR+=bugpoint \
 	llvm-ar \
 	llvm-as \
 	llvm-bcanalyzer \
+	llvm-cxxdump \
 	llvm-diff \
 	llvm-dis \
 	llvm-extract \
@@ -18,17 +19,17 @@ SUBDIR+=bugpoint \
 	llvm-mc \
 	llvm-nm \
 	llvm-objdump \
+	llvm-pdbdump \
 	llvm-rtdyld \
-	macho-dump \
 	opt \
-	scan-build
+	#scan-build
 .endif
 
 HOSTARCH!=uname -p
 bootstrap:
 	(cd ../../lib/clang && ${MAKE} obj)
 	(cd ../../usr.bin/clang && ${MAKE} obj)
-	mkdir -p /usr/lib/clang/3.6.0/include/sanitizer
+	mkdir -p /usr/lib/clang/3.8.0/include/sanitizer
 	(cd ../../lib/clang/include && ${MAKE} includes)
 	(cd ../../lib/clang/libllvmtablegen && ${MAKE} depend )
 	(cd ../../lib/clang/libllvmtablegen && ${MAKE} all)

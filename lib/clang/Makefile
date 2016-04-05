@@ -38,7 +38,6 @@ SUBDIR=	libclanganalysis \
 	libllvmcore \
 	libllvminstcombine \
 	libllvminstrumentation \
-	libllvmipa \
 	libllvmipo \
 	libllvmirreader \
 	libllvmlinker \
@@ -77,6 +76,7 @@ SUBDIR=	libclanganalysis \
 	libllvmmipsinfo \
 	libllvmmipsinstprinter \
 	libllvmpowerpccodegen \
+	libllvmpowerpcasmparser \
 	libllvmpowerpcdisassembler \
 	libllvmpowerpcdesc \
 	libllvmpowerpcinfo \
@@ -90,7 +90,13 @@ SUBDIR=	libclanganalysis \
 	libllvmx86utils
 
 .if ${MK_CLANG_EXTRAS:L} != "no"
-SUBDIR+=libllvmdebuginfo \
+SUBDIR+=libllvmdebuginfodwarf \
+	libllvmdebuginfopdb \
+	libllvmlibdriver \
+	libllvmmirparser \
+	libllvmorcjit \
+	libllvmpasses \
+	libllvmsymbolize \
 	libllvmexecutionengine \
 	libllvminterpreter \
 	libllvmmcdisassembler \

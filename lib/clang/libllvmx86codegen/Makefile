@@ -22,9 +22,16 @@ SRCS=	X86AsmPrinter.cpp \
 	X86TargetMachine.cpp \
 	X86TargetObjectFile.cpp \
 	X86TargetTransformInfo.cpp \
-	X86VZeroUpper.cpp
+	X86VZeroUpper.cpp \
+	X86CallFrameOptimization.cpp \
+	X86ExpandPseudo.cpp \
+	X86OptimizeLEAs.cpp \
+	X86ShuffleDecodeConstantPool.cpp \
+	X86WinEHState.cpp
 
-TGHDRS=	Intrinsics \
+
+TGHDRS=	Attributes \
+	Intrinsics \
 	X86GenCallingConv \
 	X86GenDAGISel \
 	X86GenFastISel \

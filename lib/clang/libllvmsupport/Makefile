@@ -38,8 +38,6 @@ SRCS=	APFloat.cpp \
 	IntEqClasses.cpp \
 	IntervalMap.cpp \
 	IntrusiveRefCntPtr.cpp \
-	IsInf.cpp \
-	IsNAN.cpp \
 	LEB128.cpp \
 	LineIterator.cpp \
 	Locale.cpp \
@@ -94,7 +92,13 @@ SRCS=	APFloat.cpp \
 	regerror.c \
 	regexec.c \
 	regfree.c \
-	regstrlcpy.c
+	regstrlcpy.c \
+	COM.cpp \
+	JamCRC.cpp  \
+	StringSaver.cpp \
+	TargetParser.cpp \
+	ThreadPool.cpp
+
 
 .include "../clang.lib.mk"
 

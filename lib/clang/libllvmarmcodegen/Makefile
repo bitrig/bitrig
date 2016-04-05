@@ -31,11 +31,10 @@ SRCS=	A15SDOptimizer.cpp \
 	MLxExpansionPass.cpp \
 	Thumb1FrameLowering.cpp \
 	Thumb1InstrInfo.cpp \
-	Thumb1RegisterInfo.cpp \
 	Thumb2ITBlockPass.cpp \
 	Thumb2InstrInfo.cpp \
-	Thumb2RegisterInfo.cpp \
-	Thumb2SizeReduction.cpp
+	Thumb2SizeReduction.cpp \
+	ThumbRegisterInfo.cpp
 
 TGHDRS=	ARMGenAsmWriter \
 	ARMGenCallingConv \
@@ -47,6 +46,7 @@ TGHDRS=	ARMGenAsmWriter \
 	ARMGenMCPseudoLowering \
 	ARMGenRegisterInfo \
 	ARMGenSubtargetInfo \
+	Attributes \
 	Intrinsics
 
 .include "../clang.lib.mk"

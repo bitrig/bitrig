@@ -15,6 +15,6 @@ SRCS=	InstrProf.cpp \
 	SampleProfReader.cpp \
 	SampleProfWriter.cpp
 
-TGHDRS=
+TGHDRS= Attributes
 
 .include "../clang.lib.mk"

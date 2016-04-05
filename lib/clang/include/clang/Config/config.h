@@ -4,6 +4,9 @@
 /* Bug report URL. */
 #define BUG_REPORT_URL "http://llvm.org/bugs/"
 
+/* Default OpenMP runtime used by -fopenmp. */
+#define CLANG_DEFAULT_OPENMP_RUNTIME "libomp"
+
 /* Multilib suffix for libdir. */
 #define CLANG_LIBDIR_SUFFIX ""
 
@@ -23,7 +26,7 @@
 /* #undef CLANG_HAVE_LIBXML */
 
 /* The LLVM product name and version */
-#define BACKEND_PACKAGE_STRING "LLVM 3.6.0"
+#define BACKEND_PACKAGE_STRING "LLVM 3.8.0"
 
 /* Linker version detected at compile time. */
 /* #undef HOST_LINK_VERSION */

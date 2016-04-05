@@ -17,13 +17,24 @@ SRCS=	PPCAsmPrinter.cpp \
 	PPCMCInstLower.cpp \
 	PPCMachineFunctionInfo.cpp \
 	PPCRegisterInfo.cpp \
-	PPCSelectionDAGInfo.cpp \
 	PPCSubtarget.cpp \
 	PPCTargetMachine.cpp \
 	PPCTargetObjectFile.cpp \
-	PPCTargetTransformInfo.cpp
+	PPCTargetTransformInfo.cpp \
+	PPCBoolRetToInt.cpp \
+	PPCEarlyReturn.cpp \
+	PPCLoopDataPrefetch.cpp \
+	PPCLoopPreIncPrep.cpp \
+	PPCMIPeephole.cpp \
+	PPCTLSDynamicCall.cpp \
+	PPCTOCRegDeps.cpp \
+	PPCVSXCopy.cpp \
+	PPCVSXFMAMutate.cpp \
+	PPCVSXSwapRemoval.cpp
 
-TGHDRS=	Intrinsics \
+
+TGHDRS=	Attributes \
+	Intrinsics \
 	PPCGenCallingConv \
 	PPCGenCodeEmitter \
 	PPCGenDAGISel \

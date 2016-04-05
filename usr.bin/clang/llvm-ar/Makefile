@@ -7,37 +7,59 @@ PROG=llvm-ar
 SRCDIR=	tools/llvm-ar
 SRCS=	llvm-ar.cpp
 
-LIBDEPS=llvmaarch64asmparser \
+TGHDRS= Attributes \
+	Intrinsics
+
+LIBDEPS=llvmlibdriver \
+	llvmoption \
+	llvmaarch64disassembler \
+	llvmaarch64codegen \
+	llvmaarch64asmparser \
 	llvmaarch64desc \
 	llvmaarch64info \
 	llvmaarch64instprinter \
 	llvmaarch64utils \
+	llvmarmdisassembler \
+	llvmarmcodegen \
 	llvmarmasmparser \
 	llvmarmdesc \
 	llvmarminfo \
 	llvmarminstprinter \
+	llvmmipsdisassembler \
+	llvmmipscodegen \
 	llvmmipsasmparser \
 	llvmmipsdesc \
 	llvmmipsinfo \
 	llvmmipsinstprinter \
+	llvmpowerpcdisassembler \
+	llvmpowerpccodegen \
+	llvmpowerpcasmparser \
 	llvmpowerpcdesc \
 	llvmpowerpcinfo \
 	llvmpowerpcinstprinter \
+	llvmx86disassembler \
 	llvmx86asmparser \
 	llvmx86codegen \
-	llvmx86desc \
-	llvmx86info \
-	llvmx86instprinter \
-	llvmx86utils \
+	llvmselectiondag \
+	llvmasmprinter \
 	llvmcodegen \
-	llvmmcdisassembler \
-	llvmtransformutils \
-	llvmanalysis \
 	llvmtarget \
+	llvmscalaropts \
+	llvminstcombine \
+	llvminstrumentation \
+	llvmprofiledata \
+	llvmtransformutils \
+	llvmbitwriter \
+	llvmanalysis \
+	llvmx86desc \
 	llvmobject \
-	llvmmc \
 	llvmmcparser \
 	llvmbitreader \
+	llvmmcdisassembler \
+	llvmx86info \
+	llvmx86instprinter \
+	llvmmc \
+	llvmx86utils \
 	llvmcore \
 	llvmsupport
 

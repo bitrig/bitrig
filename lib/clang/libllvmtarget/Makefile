@@ -7,10 +7,13 @@ LIB=	llvmtarget
 SRCDIR=	lib/Target
 SRCS=	Target.cpp \
 	TargetIntrinsicInfo.cpp \
-	TargetLibraryInfo.cpp \
 	TargetLoweringObjectFile.cpp \
 	TargetMachine.cpp \
 	TargetMachineC.cpp \
+	TargetRecip.cpp \
 	TargetSubtargetInfo.cpp
+
+TGHDRS=	Attributes \
+	Intrinsics
 
 .include "../clang.lib.mk"

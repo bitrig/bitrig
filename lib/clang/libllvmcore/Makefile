@@ -37,7 +37,6 @@ SRCS=	AsmWriter.cpp \
 	MDBuilder.cpp \
 	Mangler.cpp \
 	Metadata.cpp \
-	MetadataTracking.cpp \
 	Module.cpp \
 	Pass.cpp \
 	PassManager.cpp \
@@ -46,13 +45,17 @@ SRCS=	AsmWriter.cpp \
 	Type.cpp \
 	TypeFinder.cpp \
 	Use.cpp \
-	UseListOrder.cpp \
 	User.cpp \
 	Value.cpp \
 	ValueSymbolTable.cpp \
 	ValueTypes.cpp \
-	Verifier.cpp
+	Verifier.cpp \
+	DebugInfoMetadata.cpp \
+	FunctionInfo.cpp \
+	Operator.cpp
 
-TGHDRS=	Intrinsics
+TGHDRS=	Attributes \
+	AttributesCompatFunc \
+	Intrinsics
 
 .include "../clang.lib.mk"

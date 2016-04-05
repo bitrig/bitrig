@@ -29,9 +29,11 @@ SRCS=	ASTConsumers.cpp \
 	LogDiagnosticPrinter.cpp \
 	ModuleDependencyCollector.cpp \
 	MultiplexConsumer.cpp \
+	PCHContainerOperations.cpp \
 	PrintPreprocessedOutput.cpp \
 	SerializedDiagnosticPrinter.cpp \
 	SerializedDiagnosticReader.cpp \
+	TestModuleFileExtension.cpp \
 	TextDiagnostic.cpp \
 	TextDiagnosticBuffer.cpp \
 	TextDiagnosticPrinter.cpp \
@@ -40,6 +42,7 @@ SRCS=	ASTConsumers.cpp \
 TGHDRS=	AttrList \
 	AttrParsedAttrList \
 	AttrVisitor \
+	Attributes \
 	Attrs \
 	CommentCommandList \
 	CommentNodes \

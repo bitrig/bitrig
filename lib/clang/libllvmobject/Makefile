@@ -19,6 +19,11 @@ SRCS=	Archive.cpp \
 	Object.cpp \
 	ObjectFile.cpp \
 	RecordStreamer.cpp \
-	SymbolicFile.cpp
+	SymbolicFile.cpp \
+	ArchiveWriter.cpp \
+	FunctionIndexObjectFile.cpp \
+	SymbolSize.cpp
+
+TGHDRS=	Attributes
 
 .include "../clang.lib.mk"

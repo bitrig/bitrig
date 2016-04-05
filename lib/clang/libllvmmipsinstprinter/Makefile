@@ -8,7 +8,8 @@ SRCDIR=	lib/Target/Mips/InstPrinter
 INCDIR=	lib/Target/Mips
 SRCS=	MipsInstPrinter.cpp
 
-TGHDRS=	MipsGenAsmWriter \
+TGHDRS=	Attributes \
+	MipsGenAsmWriter \
 	MipsGenInstrInfo \
 	MipsGenRegisterInfo \
 	MipsGenSubtargetInfo

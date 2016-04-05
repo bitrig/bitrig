@@ -25,7 +25,6 @@ SRCS=	AggressiveAntiDepBreaker.cpp \
 	ExecutionDepsFix.cpp \
 	ExpandISelPseudos.cpp \
 	ExpandPostRAPseudos.cpp \
-	ForwardControlFlowIntegrity.cpp \
 	GCMetadata.cpp \
 	GCMetadataPrinter.cpp \
 	GCStrategy.cpp \
@@ -34,7 +33,6 @@ SRCS=	AggressiveAntiDepBreaker.cpp \
 	InlineSpiller.cpp \
 	InterferenceCache.cpp \
 	IntrinsicLowering.cpp \
-	JumpInstrTables.cpp \
 	LLVMTargetMachine.cpp \
 	LatencyPriorityQueue.cpp \
 	LexicalScopes.cpp \
@@ -121,8 +119,24 @@ SRCS=	AggressiveAntiDepBreaker.cpp \
 	TargetSchedule.cpp \
 	TwoAddressInstructionPass.cpp \
 	UnreachableBlockElim.cpp \
-	VirtRegMap.cpp
+	VirtRegMap.cpp \
+	CoreCLRGC.cpp \
+	FaultMaps.cpp \
+	FuncletLayout.cpp \
+	GCRootLowering.cpp \
+	ImplicitNullChecks.cpp \
+	InterleavedAccessPass.cpp \
+	LiveDebugValues.cpp \
+	ParallelCG.cpp \
+	ShadowStackGCLowering.cpp \
+	ShrinkWrap.cpp \
+	WinEHPrepare.cpp \
+	MIRPrinter.cpp \
+	MIRPrinter.h \
+	MIRPrintingPass.cpp 
 
-TGHDRS=	Intrinsics
+
+TGHDRS=	Attributes \
+	Intrinsics
 
 .include "../clang.lib.mk"

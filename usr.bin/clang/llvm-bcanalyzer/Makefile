@@ -7,6 +7,9 @@ PROG=llvm-bcanalyzer
 SRCDIR=	tools/llvm-bcanalyzer
 SRCS=	llvm-bcanalyzer.cpp
 
+TGHDRS= Attributes \
+	Intrinsics
+
 LIBDEPS=llvmbitreader \
 	llvmcore \
 	llvmsupport

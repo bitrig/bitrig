@@ -7,7 +7,9 @@ PROG=llvm-dis
 SRCDIR=	tools/llvm-dis
 SRCS=	llvm-dis.cpp
 
-TGHDRS=	Intrinsics
+TGHDRS=	Attributes \
+	Intrinsics
+
 LIBDEPS=llvmanalysis \
 	llvmtarget \
 	llvmmc \

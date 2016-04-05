@@ -27,7 +27,8 @@ SRCS=	ASanStackFrameLayout.cpp \
 	LoopSimplify.cpp \
 	LoopUnroll.cpp \
 	LoopUnrollRuntime.cpp \
-	LowerExpectIntrinsic.cpp \
+	LoopUtils.cpp \
+	LoopVersioning.cpp \
 	LowerInvoke.cpp \
 	LowerSwitch.cpp \
 	Mem2Reg.cpp \
@@ -39,6 +40,7 @@ SRCS=	ASanStackFrameLayout.cpp \
 	SimplifyIndVar.cpp \
 	SimplifyInstructions.cpp \
 	SimplifyLibCalls.cpp \
+	SplitModule.cpp \
 	SymbolRewriter.cpp \
 	Utils.cpp \
 	UnifyFunctionExitNodes.cpp \
@@ -48,6 +50,7 @@ SRCS=	ASanStackFrameLayout.cpp \
 SRCS+=	Utils.cpp
 .endif
 
-TGHDRS=	Intrinsics
+TGHDRS=	Attributes \
+	Intrinsics
 
 .include "../clang.lib.mk"

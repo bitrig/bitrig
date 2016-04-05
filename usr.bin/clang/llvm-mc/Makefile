@@ -44,7 +44,6 @@ LIBDEPS=llvmaarch64disassembler \
 	llvmscalaropts \
 	llvminstcombine \
 	llvmtransformutils \
-	llvmipa \
 	llvmanalysis \
 	llvmx86desc \
 	llvmx86info \

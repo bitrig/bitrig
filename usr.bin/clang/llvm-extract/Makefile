@@ -7,6 +7,8 @@ PROG=llvm-extract
 SRCDIR=	tools/llvm-extract
 SRCS=	llvm-extract.cpp
 
+TGHDRS=	Attributes
+
 LIBDEPS=llvmirreader \
 	llvmasmparser \
 	llvmbitwriter \
@@ -17,7 +19,6 @@ LIBDEPS=llvmirreader \
 	llvmscalaropts \
 	llvminstcombine \
 	llvmtransformutils \
-	llvmipa \
 	llvmanalysis \
 	llvmtarget \
 	llvmmc \

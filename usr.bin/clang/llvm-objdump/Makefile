@@ -13,8 +13,7 @@ SRCS=	llvm-objdump.cpp \
 	ELFDump.cpp \
 	MachODump.cpp
 
-LIBDEPS=llvmmcdisassembler \
-	llvmdebuginfo \
+LIBDEPS=llvmdebuginfodwarf \
 	llvmaarch64disassembler \
 	llvmaarch64codegen \
 	llvmaarch64asmparser \
@@ -34,31 +33,35 @@ LIBDEPS=llvmmcdisassembler \
 	llvmmipsdesc \
 	llvmmipsinfo \
 	llvmmipsinstprinter \
+	llvmpowerpcdisassembler \
 	llvmpowerpccodegen \
+	llvmpowerpcasmparser \
 	llvmpowerpcdesc \
 	llvmpowerpcinfo \
 	llvmpowerpcinstprinter \
+	llvmx86disassembler \
 	llvmx86asmparser \
 	llvmx86codegen \
-	llvmx86desc \
-	llvmx86disassembler \
-	llvmx86info \
-	llvmx86instprinter \
-	llvmx86utils \
 	llvmselectiondag \
 	llvmasmprinter \
 	llvmcodegen \
-	llvmobjcarcopts \
+	llvmtarget \
 	llvmscalaropts \
 	llvminstcombine \
+	llvminstrumentation \
+	llvmprofiledata \
 	llvmtransformutils \
-	llvmipa \
+	llvmbitwriter \
 	llvmanalysis \
+	llvmx86desc \
 	llvmobject \
 	llvmmcparser \
 	llvmbitreader \
-	llvmtarget \
+	llvmmcdisassembler \
+	llvmx86info \
+	llvmx86instprinter \
 	llvmmc \
+	llvmx86utils \
 	llvmcore \
 	llvmsupport
 

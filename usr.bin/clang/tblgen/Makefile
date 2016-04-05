@@ -11,6 +11,7 @@ SRCDIR=	utils/TableGen
 SRCS=	AsmMatcherEmitter.cpp \
 	AsmWriterEmitter.cpp \
 	AsmWriterInst.cpp \
+	Attributes.cpp \
 	CTagsEmitter.cpp \
 	CallingConvEmitter.cpp \
 	CodeEmitterGen.cpp \

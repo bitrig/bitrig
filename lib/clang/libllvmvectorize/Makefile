@@ -10,6 +10,7 @@ SRCS=	BBVectorize.cpp \
 	SLPVectorizer.cpp \
 	Vectorize.cpp
 
-TGHDRS=	Intrinsics
+TGHDRS=	Attributes \
+	Intrinsics
 
 .include "../clang.lib.mk"

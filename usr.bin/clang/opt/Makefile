@@ -10,12 +10,14 @@ SRCS=	AnalysisWrappers.cpp \
 	GraphPrinters.cpp \
 	NewPMDriver.cpp \
 	PassPrinters.cpp \
-	Passes.cpp \
 	PrintSCC.cpp \
 	opt.cpp
 
-TGHDRS=	Intrinsics
-LIBDEPS=llvmaarch64disassembler \
+TGHDRS=	Attributes \
+	Intrinsics
+
+LIBDEPS=llvmpasses \
+	llvmaarch64disassembler \
 	llvmaarch64codegen \
 	llvmaarch64asmparser \
 	llvmaarch64desc \
@@ -34,7 +36,9 @@ LIBDEPS=llvmaarch64disassembler \
 	llvmmipsdesc \
 	llvmmipsinfo \
 	llvmmipsinstprinter \
+	llvmpowerpcdisassembler \
 	llvmpowerpccodegen \
+	llvmpowerpcasmparser \
 	llvmpowerpcdesc \
 	llvmpowerpcinfo \
 	llvmpowerpcinstprinter \
@@ -43,26 +47,26 @@ LIBDEPS=llvmaarch64disassembler \
 	llvmx86codegen \
 	llvmselectiondag \
 	llvmasmprinter \
-	llvmmcdisassembler \
-	llvmmcparser \
 	llvmcodegen \
+	llvmtarget \
 	llvmx86desc \
+	llvmmcdisassembler \
 	llvmx86info \
 	llvmx86instprinter \
 	llvmx86utils \
 	llvmipo \
 	llvmvectorize \
+	llvmlinker \
 	llvmobjcarcopts \
 	llvmscalaropts \
-	llvmprofiledata \
 	llvminstcombine \
 	llvminstrumentation \
-	llvmtransformutils \
-	llvmipa \
-	llvmanalysis \
-	llvmtarget \
-	llvmmc \
+	llvmprofiledata \
 	llvmobject \
+	llvmmcparser \
+	llvmtransformutils \
+	llvmmc \
+	llvmanalysis \
 	llvmirreader \
 	llvmasmparser \
 	llvmbitwriter \

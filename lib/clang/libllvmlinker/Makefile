@@ -5,6 +5,9 @@
 LIB=	llvmlinker
 
 SRCDIR=	lib/Linker
-SRCS=	LinkModules.cpp
+SRCS=	LinkModules.cpp \
+	IRMover.cpp
+
+TGHDRS=	Attributes
 
 .include "../clang.lib.mk"

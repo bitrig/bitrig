@@ -7,6 +7,8 @@ PROG=llvm-nm
 SRCDIR=	tools/llvm-nm
 SRCS=	llvm-nm.cpp
 
+TGHDRS= Attributes
+
 LIBDEPS=llvmaarch64asmparser \
 	llvmaarch64desc \
 	llvmaarch64info \

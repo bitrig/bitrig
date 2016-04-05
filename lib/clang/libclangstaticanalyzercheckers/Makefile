@@ -29,6 +29,7 @@ SRCS=	AllocationDiagnostics.cpp \
 	DereferenceChecker.cpp \
 	DirectIvarAssignment.cpp \
 	DivZeroChecker.cpp \
+	DynamicTypeChecker.cpp \
 	DynamicTypePropagation.cpp \
 	ExprInspectionChecker.cpp \
 	FixedAddressChecker.cpp \
@@ -36,6 +37,7 @@ SRCS=	AllocationDiagnostics.cpp \
 	IdenticalExprChecker.cpp \
 	IvarInvalidationChecker.cpp \
 	LLVMConventionsChecker.cpp \
+	LocalizationChecker.cpp \
 	MacOSKeychainAPIChecker.cpp \
 	MacOSXAPIChecker.cpp \
 	MallocChecker.cpp \
@@ -44,6 +46,7 @@ SRCS=	AllocationDiagnostics.cpp \
 	NSAutoreleasePoolChecker.cpp \
 	NSErrorChecker.cpp \
 	NonNullParamChecker.cpp \
+	NullabilityChecker.cpp \
 	NoReturnFunctionChecker.cpp \
 	ObjCAtSyncChecker.cpp \
 	ObjCContainersASTChecker.cpp \
@@ -51,6 +54,7 @@ SRCS=	AllocationDiagnostics.cpp \
 	ObjCMissingSuperCallChecker.cpp \
 	ObjCSelfInitChecker.cpp \
 	ObjCUnusedIVarsChecker.cpp \
+	PaddingChecker.cpp \
 	PointerArithChecker.cpp \
 	PointerSubChecker.cpp \
 	PthreadLockChecker.cpp \
@@ -71,6 +75,7 @@ SRCS=	AllocationDiagnostics.cpp \
 	UnixAPIChecker.cpp \
 	UnreachableCodeChecker.cpp \
 	VLASizeChecker.cpp \
+	VforkChecker.cpp \
 	VirtualCallChecker.cpp
 
 TGHDRS=	AttrList \

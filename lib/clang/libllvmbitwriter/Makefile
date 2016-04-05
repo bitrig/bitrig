@@ -10,4 +10,7 @@ SRCS=	BitWriter.cpp \
 	BitcodeWriterPass.cpp \
 	ValueEnumerator.cpp
 
+TGHDRS=	Attributes \
+	Intrinsics
+
 .include "../clang.lib.mk"

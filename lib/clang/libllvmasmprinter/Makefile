@@ -24,9 +24,13 @@ SRCS=	AddressPool.cpp \
 	EHStreamer.cpp \
 	ErlangGCPrinter.cpp \
 	OcamlGCPrinter.cpp \
-	Win64Exception.cpp \
-	WinCodeViewLineTables.cpp
+	WinCodeViewLineTables.cpp \
+	DebugLocStream.cpp \
+	DebugLocStream.h \
+	WinException.cpp \
+	WinException.h
 
-TGHDRS=	Intrinsics
+TGHDRS=	Attributes \
+	Intrinsics
 
 .include "../clang.lib.mk"

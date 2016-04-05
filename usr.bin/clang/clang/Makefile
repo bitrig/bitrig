@@ -31,7 +31,8 @@ MLINKS+= clang.1 cc.1 \
 	clang.1 CC.1
 .endif
 
-TGHDRS=	\
+TGHDRS=	Attributes \
+	Intrinsics \
 	DiagnosticCommonKinds \
 	DiagnosticDriverKinds \
 	DiagnosticFrontendKinds \
@@ -49,74 +50,71 @@ _clangarcmigrate= \
 .endif # !EARLY_BUILD && MK_CLANG_FULL
 
 LIBDEPS=clangfrontendtool \
-	clangrewritefrontend \
 	clangfrontend \
-	clangrewrite \
 	clangdriver \
 	clangserialization \
 	clangcodegen \
 	clangparse \
 	clangsema \
+	clangrewritefrontend \
+	clangrewrite \
 	${_clangstaticanalyzer} \
 	${_clangarcmigrate} \
 	clanganalysis \
 	clangedit \
 	clangast \
-	clangbasic \
 	clanglex \
-	llvmlinker \
-	llvmirreader \
+	clangbasic \
+	llvmoption \
+	llvmobjcarcopts \
 	llvmipo \
 	llvmvectorize \
-	llvminstrumentation \
-	llvmbitwriter \
-	llvmbitreader \
+	llvmlinker \
+	llvmirreader \
 	llvmasmparser \
-	llvmaarch64disassembler \
 	llvmaarch64codegen \
 	llvmaarch64asmparser \
 	llvmaarch64desc \
 	llvmaarch64info \
 	llvmaarch64instprinter \
 	llvmaarch64utils \
-	llvmarmdisassembler \
 	llvmarmcodegen \
 	llvmarmasmparser \
 	llvmarmdesc \
 	llvmarminfo \
 	llvmarminstprinter \
-	llvmmipsdisassembler \
 	llvmmipscodegen \
 	llvmmipsasmparser \
 	llvmmipsdesc \
 	llvmmipsinfo \
 	llvmmipsinstprinter \
 	llvmpowerpccodegen \
+	llvmpowerpcasmparser \
+	llvmpowerpcasmparser \
 	llvmpowerpcdesc \
 	llvmpowerpcinfo \
 	llvmpowerpcinstprinter \
-	llvmx86disassembler \
 	llvmx86asmparser \
 	llvmx86codegen \
 	llvmselectiondag \
 	llvmasmprinter \
-	llvmmcdisassembler \
-	llvmmcparser \
 	llvmcodegen \
-	llvmobjcarcopts \
-	llvmoption \
+	llvmtarget \
 	llvmscalaropts \
-	llvmprofiledata \
 	llvminstcombine \
+	llvminstrumentation \
+	llvmprofiledata \
 	llvmtransformutils \
-	llvmipa \
+	llvmbitwriter \
 	llvmanalysis \
 	llvmx86desc \
+	llvmobject \
+	llvmmcparser \
+	llvmbitreader \
+	llvmmcdisassembler \
 	llvmx86info \
-	llvmtarget \
 	llvmx86instprinter \
 	llvmmc \
-	llvmobject \
 	llvmx86utils \
 	llvmcore \
 	llvmsupport

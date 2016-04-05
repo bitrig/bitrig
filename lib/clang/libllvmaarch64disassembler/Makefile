@@ -16,5 +16,7 @@ TGHDRS= \
 	AArch64GenInstrInfo \
 	AArch64GenSubtargetInfo \
 	AArch64GenDisassemblerTables \
+	Attributes \
+	Intrinsics
 
 .include "../clang.lib.mk"

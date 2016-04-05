@@ -9,6 +9,7 @@ SRCS=	BitReader.cpp \
 	BitcodeReader.cpp \
 	BitstreamReader.cpp
 
-TGHDRS=	Intrinsics
+TGHDRS=	Attributes \
+	Intrinsics
 
 .include "../clang.lib.mk"

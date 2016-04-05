@@ -10,7 +10,8 @@ LDADD=	-lz
 SRCDIR=	tools/llvm-rtdyld
 SRCS=	llvm-rtdyld.cpp
 
-LIBDEPS=llvmdebuginfo \
+LIBDEPS=llvmdebuginfodwarf \
+	llvmmcjit \
 	llvmexecutionengine \
 	llvmruntimedyld \
 	llvmaarch64disassembler \
@@ -32,32 +33,35 @@ LIBDEPS=llvmdebuginfo \
 	llvmmipsdesc \
 	llvmmipsinfo \
 	llvmmipsinstprinter \
+	llvmpowerpcdisassembler \
 	llvmpowerpccodegen \
+	llvmpowerpcasmparser \
 	llvmpowerpcdesc \
 	llvmpowerpcinfo \
 	llvmpowerpcinstprinter \
+	llvmx86disassembler \
 	llvmx86asmparser \
 	llvmx86codegen \
-	llvmx86desc \
-	llvmx86disassembler \
-	llvmx86info \
-	llvmx86instprinter \
-	llvmx86utils \
 	llvmselectiondag \
 	llvmasmprinter \
 	llvmcodegen \
-	llvmmcdisassembler \
-	llvmobjcarcopts \
+	llvmtarget \
 	llvmscalaropts \
 	llvminstcombine \
+	llvminstrumentation \
+	llvmprofiledata \
 	llvmtransformutils \
-	llvmipa \
+	llvmbitwriter \
+	llvmanalysis \
+	llvmx86desc \
 	llvmobject \
 	llvmmcparser \
-	llvmanalysis \
 	llvmbitreader \
-	llvmtarget \
+	llvmmcdisassembler \
+	llvmx86info \
+	llvmx86instprinter \
 	llvmmc \
+	llvmx86utils \
 	llvmcore \
 	llvmsupport
 

@@ -23,5 +23,6 @@ TGHDRS= \
 	AArch64GenInstrInfo \
 	AArch64GenSubtargetInfo \
 	AArch64GenMCCodeEmitter \
+	Attributes
 
 .include "../clang.lib.mk"

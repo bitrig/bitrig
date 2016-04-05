@@ -12,10 +12,13 @@ SRCS=	AddressSanitizer.cpp \
 	MemorySanitizer.cpp \
 	InstrProfiling.cpp \
 	Instrumentation.cpp \
+	PGOInstrumentation.cpp \
+	SafeStack.cpp \
 	SanitizerCoverage.cpp \
 	ThreadSanitizer.cpp
 
 
-TGHDRS=	Intrinsics
+TGHDRS=	Attributes \
+	Intrinsics
 
 .include "../clang.lib.mk"

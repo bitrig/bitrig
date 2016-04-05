@@ -18,7 +18,6 @@ SRCS=	ConstantPools.cpp \
 	MCCodeGenInfo.cpp \
 	MCContext.cpp \
 	MCDwarf.cpp \
-	MCELF.cpp \
 	MCELFObjectTargetWriter.cpp \
 	MCELFStreamer.cpp \
 	MCExpr.cpp \
@@ -51,6 +50,10 @@ SRCS=	ConstantPools.cpp \
 	SubtargetFeature.cpp \
 	WinCOFFObjectWriter.cpp \
 	WinCOFFStreamer.cpp \
-	YAML.cpp
+	YAML.cpp \
+	MCFragment.cpp \
+	MCInstrDesc.cpp \
+	MCSchedule.cpp \
+	MCSymbolELF.cpp 
 
 .include "../clang.lib.mk"
