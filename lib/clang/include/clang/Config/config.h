@@ -17,7 +17,7 @@
 #define C_INCLUDE_DIRS ""
 
 /* Default <path> to all compiler invocations for --sysroot=<path>. */
-/* #undef DEFAULT_SYSROOT */
+#define DEFAULT_SYSROOT ""
 
 /* Directory where gcc is installed. */
 #define GCC_INSTALL_PREFIX ""

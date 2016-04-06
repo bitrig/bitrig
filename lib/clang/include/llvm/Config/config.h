@@ -33,9 +33,6 @@
 /* Define to 1 if you have the `bcopy' function. */
 #undef HAVE_BCOPY
 
-/* Define to 1 if you have the `ceilf' function. */
-#define HAVE_CEILF 1
-
 /* Define to 1 if you have the `closedir' function. */
 #define HAVE_CLOSEDIR 1
 
@@ -51,6 +48,9 @@
 /* Define to 1 if you have the declaration of `strerror_s', and to 0 if you
    don't. */
 #define HAVE_DECL_STRERROR_S 0
+
+/* Define to 1 if you have the DIA SDK installed, and to 0 if you don't. */
+/* #undef HAVE_DIA_SDK */
 
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
@@ -92,33 +92,6 @@
 /* Define to 1 if you have the <ffi.h> header file. */
 /* #undef HAVE_FFI_H */
 
-/* Set to 1 if the finite function is found in <ieeefp.h> */
-/* #undef HAVE_FINITE_IN_IEEEFP_H */
-
-/* Define to 1 if you have the `floorf' function. */
-#define HAVE_FLOORF 1
-
-/* Define to 1 if you have the `log' function. */
-#define HAVE_LOG 1
-
-/* Define to 1 if you have the `log2' function. */
-#define HAVE_LOG2 1
-
-/* Define to 1 if you have the `log10' function. */
-#define HAVE_LOG10 1
-
-/* Define to 1 if you have the `exp' function. */
-#define HAVE_EXP 1
-
-/* Define to 1 if you have the `exp2' function. */
-#define HAVE_EXP2 1
-
-/* Define to 1 if you have the `exp10' function. */
-/* #undef HAVE_EXP10 */
-
-/* Define to 1 if you have the `fmodf' function. */
-#define HAVE_FMODF 1
-
 /* Define to 1 if you have the `futimes' function. */
 #define HAVE_FUTIMES 1
 
@@ -149,26 +122,14 @@
 /* Define to 1 if you have the `isatty' function. */
 #define HAVE_ISATTY 1
 
-/* Set to 1 if the isinf function is found in <cmath> */
-/* #undef HAVE_ISINF_IN_CMATH */
-
-/* Set to 1 if the isinf function is found in <math.h> */
-#define HAVE_ISINF_IN_MATH_H 1
-
-/* Set to 1 if the isnan function is found in <cmath> */
-/* #undef HAVE_ISNAN_IN_CMATH */
-
-/* Set to 1 if the isnan function is found in <math.h> */
-#define HAVE_ISNAN_IN_MATH_H 1
-
 /* Define if you have the libdl library or equivalent. */
 /* #undef HAVE_LIBDL */
 
-/* Define to 1 if you have the `imagehlp' library (-limagehlp). */
-/* #undef HAVE_LIBIMAGEHLP */
-
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
+
+/* Define to 1 if you have the `ole32' library (-lole32). */
+#undef HAVE_LIBOLE32
 
 /* Define to 1 if you have the `psapi' library (-lpsapi). */
 /* #undef HAVE_LIBPSAPI */
@@ -219,6 +180,9 @@
 /* Define to 1 if you have the `malloc_zone_statistics' function. */
 /* #undef HAVE_MALLOC_ZONE_STATISTICS */
 
+/* Define to 1 if you have the `mallctl` function. */
+/* #undef HAVE_MALLCTL */
+
 /* Define to 1 if you have the `mkdtemp' function. */
 #define HAVE_MKDTEMP 1
 
@@ -241,17 +205,11 @@
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 /* #undef HAVE_NDIR_H */
 
-/* Define to 1 if you have the `nearbyintf' function. */
-#define HAVE_NEARBYINTF 1
-
 /* Define to 1 if you have the `opendir' function. */
 #define HAVE_OPENDIR 1
 
 /* Define to 1 if you have the `posix_spawn' function. */
 #define HAVE_POSIX_SPAWN 1
-
-/* Define to 1 if you have the `powf' function. */
-#define HAVE_POWF 1
 
 /* Define to 1 if you have the `pread' function. */
 #define HAVE_PREAD 1
@@ -282,15 +240,6 @@
 
 /* Define to 1 if you have the `realpath' function. */
 #define HAVE_REALPATH 1
-
-/* Define to 1 if you have the `rintf' function. */
-#undef HAVE_RINTF
-
-/* Define to 1 if you have the `round' function. */
-/* #undef HAVE_ROUND */
-
-/* Define to 1 if you have the `roundf' function. */
-#undef HAVE_ROUNDF
 
 /* Define to 1 if you have the `sbrk' function. */
 #define HAVE_SBRK 1
@@ -334,9 +283,6 @@
 /* Define to 1 if you have the `strerror_r' function. */
 #define HAVE_STRERROR_R 1
 
-/* Define to 1 if you have the `strtof' function. */
-/* #undef HAVE_STRTOF */
-
 /* Define to 1 if you have the `strtoll' function. */
 #define HAVE_STRTOLL 1
 
@@ -373,13 +319,10 @@
 #define HAVE_SYS_TIME_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#define HAVE_SYS_TYPES_H 1
+/* #undef HAVE_SYS_TYPES_H */
 
 /* Define to 1 if you have the <sys/uio.h> header file. */
 #define HAVE_SYS_UIO_H 1
-
-/* Define to 1 if you have <sys/wait.h> that is POSIX.1 compatible. */
-#define HAVE_SYS_WAIT_H 1
 
 /* Define if the setupterm() function is supported this platform. */
 #define HAVE_TERMINFO 1
@@ -423,6 +366,9 @@
 /* Have host's __chkstk */
 /* #undef HAVE___CHKSTK */
 
+/* Have host's __chkstk_ms */
+/* #undef HAVE___CHKSTK_MS */
+
 /* Have host's __cmpdi2 */
 /* #undef HAVE___CMPDI2 */
 
@@ -459,11 +405,107 @@
 /* Have host's ___chkstk */
 /* #undef HAVE____CHKSTK */
 
-/* Define if we link Polly to the tools */
-/* #undef LINK_POLLY_INTO_TOOLS */
+/* Have host's ___chkstk_ms */
+/* #undef HAVE____CHKSTK_MS */
+
+/* Linker version detected at compile time. */
+#undef HOST_LINK_VERSION
+
+/* Installation directory for binary executables */
+/* #undef LLVM_BINDIR */
+
+/* Time at which LLVM was configured */
+/* #undef LLVM_CONFIGTIME */
+
+/* Installation directory for data files */
+/* #undef LLVM_DATADIR */
+
+/* Target triple LLVM will generate code for by default
+ * Doesn't use `cmakedefine` because it is allowed to be empty.
+ */
+#define LLVM_DEFAULT_TARGET_TRIPLE "amd64-unknown-bitrig1.0"
+
+/* Installation directory for documentation */
+/* #undef LLVM_DOCSDIR */
+
+/* Define if LLVM is built with asserts and checks that change the layout of
+   client-visible data structures.  */
+/* #undef LLVM_ENABLE_ABI_BREAKING_CHECKS */
+
+/* Define if threads enabled */
+#define LLVM_ENABLE_THREADS 1
 
 /* Define if zlib compression is available */
 #define LLVM_ENABLE_ZLIB 1
+
+/* Installation directory for config files */
+/* #undef LLVM_ETCDIR */
+
+/* Has gcc/MSVC atomic intrinsics */
+#define LLVM_HAS_ATOMICS 1
+
+/* Host triple LLVM will be executed on */
+#define LLVM_HOST_TRIPLE "amd64-unknown-bitrig1.0"
+
+/* Installation directory for include files */
+/* #undef LLVM_INCLUDEDIR */
+
+/* Installation directory for .info files */
+/* #undef LLVM_INFODIR */
+
+/* Installation directory for man pages */
+/* #undef LLVM_MANDIR */
+
+/* LLVM architecture name for the native architecture, if available */
+#define LLVM_NATIVE_ARCH X86
+
+/* LLVM name for the native AsmParser init function, if available */
+#define LLVM_NATIVE_ASMPARSER LLVMInitializeX86AsmParser
+
+/* LLVM name for the native AsmPrinter init function, if available */
+#define LLVM_NATIVE_ASMPRINTER LLVMInitializeX86AsmPrinter
+
+/* LLVM name for the native Disassembler init function, if available */
+#define LLVM_NATIVE_DISASSEMBLER LLVMInitializeX86Disassembler
+
+/* LLVM name for the native Target init function, if available */
+#define LLVM_NATIVE_TARGET LLVMInitializeX86Target
+
+/* LLVM name for the native TargetInfo init function, if available */
+#define LLVM_NATIVE_TARGETINFO LLVMInitializeX86TargetInfo
+
+/* LLVM name for the native target MC init function, if available */
+#define LLVM_NATIVE_TARGETMC LLVMInitializeX86TargetMC
+
+/* Define if this is Unixish platform */
+#define LLVM_ON_UNIX 1
+
+/* Define if this is Win32ish platform */
+/* #undef LLVM_ON_WIN32 */
+
+/* Installation prefix directory */
+#define LLVM_PREFIX "/usr/local"
+
+/* Define if we have the Intel JIT API runtime support library */
+/* #undef LLVM_USE_INTEL_JITEVENTS */
+
+/* Define if we have the oprofile JIT-support library */
+/* #undef LLVM_USE_OPROFILE */
+
+/* Major version of the LLVM API */
+#define LLVM_VERSION_MAJOR 3
+
+/* Minor version of the LLVM API */
+#define LLVM_VERSION_MINOR 8
+
+/* Patch version of the LLVM API */
+#define LLVM_VERSION_PATCH 0
+
+/* LLVM version string */
+#define LLVM_VERSION_STRING "3.8.0"
+
+/* Define if we link Polly to the tools */
+/* #undef LINK_POLLY_INTO_TOOLS */
 
 /* Define if the OS needs help to load dependent libraries for dlopen(). */
 /* #undef LTDL_DLOPEN_DEPLIBS */
@@ -492,13 +534,13 @@
 #define PACKAGE_NAME "LLVM"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "LLVM 3.6.0"
+#define PACKAGE_STRING "LLVM 3.8.0"
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.6.0"
+#define PACKAGE_VERSION "3.8.0"
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #define RETSIGTYPE void
