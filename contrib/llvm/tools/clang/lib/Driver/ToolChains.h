@@ -693,6 +693,7 @@ public:
 
   bool IsMathErrnoDefault() const override { return false; }
   bool IsObjCNonFragileABIDefault() const override { return true; }
+  bool isPIEDefault() const override { return true; }
 
   CXXStdlibType GetCXXStdlibType(const llvm::opt::ArgList &Args) const override;
   void AddClangCXXStdlibIncludeArgs(
@@ -703,6 +704,8 @@ public:
   unsigned GetDefaultStackProtectorLevel(bool KernelOrKext) const override {
     return 1;
   }
+
+  unsigned GetDefaultDwarfVersion() const override { return 2; }
 
 protected:
   Tool *buildAssembler() const override;

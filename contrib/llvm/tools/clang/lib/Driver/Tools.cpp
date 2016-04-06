@@ -3320,6 +3320,34 @@ ParsePICArgs(const ToolChain &ToolChain, const llvm::Triple &Triple,
     }
   }
 
+  // Bitrig-specific defaults for PIE
+  if (ToolChain.getTriple().getOS() == llvm::Triple::Bitrig) {
+    switch (ToolChain.getArch()) {
+    case llvm::Triple::arm:
+    case llvm::Triple::armeb:
+    case llvm::Triple::thumb:
+    case llvm::Triple::thumbeb:
+    case llvm::Triple::aarch64:
+    case llvm::Triple::mips:
+    case llvm::Triple::mipsel:
+    case llvm::Triple::mips64:
+    case llvm::Triple::mips64el:
+    case llvm::Triple::sparc:
+    case llvm::Triple::x86:
+    case llvm::Triple::x86_64:
+      IsPICLevelTwo = false; // "-fpie"
+      break;
+
+    case llvm::Triple::ppc:
+    case llvm::Triple::sparcv9:
+      IsPICLevelTwo = true; // "-fPIE"
+      break;
+
+    default:
+      break;
+    }
+  }
+
   // The last argument relating to either PIC or PIE wins, and no
   // other argument is used. If the last argument is any flavor of the
   // '-fno-...' arguments, both PIC and PIE are disabled. Any PIE
@@ -7714,6 +7742,9 @@ void bitrig::Linker::ConstructJob(Compilation &C, const JobAction &JA,
     }
   }
 
+  if (Args.hasArg(options::OPT_nopie))
+    CmdArgs.push_back("-nopie");
+
   if (Output.isFilename()) {
     CmdArgs.push_back("-o");
     CmdArgs.push_back(Output.getFilename());
@@ -7726,6 +7757,9 @@ void bitrig::Linker::ConstructJob(Compilation &C, const JobAction &JA,
       if (Args.hasArg(options::OPT_pg))
         CmdArgs.push_back(
             Args.MakeArgString(getToolChain().GetFilePath("gcrt0.o")));
+      else if (Args.hasArg(options::OPT_static) && !Args.hasArg(options::OPT_nopie))
+        CmdArgs.push_back(
+            Args.MakeArgString(getToolChain().GetFilePath("rcrt0.o")));
       else
         CmdArgs.push_back(
             Args.MakeArgString(getToolChain().GetFilePath("crt0.o")));
