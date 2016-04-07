@@ -34,7 +34,7 @@
 #include <machine/setjmp.h>
 
 ENTRY(setjmp)
-	stp	x0, lr, [sp, #-16]!
+	stp	x0, x30, [sp, #-16]!
 
 	/* Store the signal mask */
 	add	x2, x0, #(_JB_SIGMASK * 8)	/* oset */
@@ -42,7 +42,7 @@ ENTRY(setjmp)
 	mov	x0, #1				/* SIG_BLOCK */
 	bl	sigprocmask
 
-	ldp	x0, lr, [sp], #16
+	ldp	x0, x30, [sp], #16
 
 	/* Store the magic value and stack pointer */
 	ldr	x8, .Lmagic
@@ -55,7 +55,7 @@ ENTRY(setjmp)
 	stp	x23, x24, [x0], #16
 	stp	x25, x26, [x0], #16
 	stp	x27, x28, [x0], #16
-	stp	x29, lr, [x0], #16
+	stp	x29, x30, [x0], #16
 
 	/* Store the vfp registers */
 	stp	d8, d9, [x0], #16
@@ -74,7 +74,7 @@ ENTRY(setjmp)
 
 ENTRY(longjmp)
 	stp	x0, x1, [sp, #-32]!
-	str	lr, [sp, #24]
+	str	x30, [sp, #24]
 
 	/* Restore the signal mask */
 	mov	x2, #0				/* oset */
@@ -82,7 +82,7 @@ ENTRY(longjmp)
 	mov	x0, #3				/* SIG_SETMASK */
 	bl	sigprocmask
 
-	ldr	lr, [sp, #24]
+	ldr	x30, [sp, #24]
 	ldp	x0, x1, [sp], #32
 
 	/* Check the magic value */
@@ -101,7 +101,7 @@ ENTRY(longjmp)
 	ldp	x23, x24, [x0], #16
 	ldp	x25, x26, [x0], #16
 	ldp	x27, x28, [x0], #16
-	ldp	x29, lr, [x0], #16
+	ldp	x29, x30, [x0], #16
 
 	/* Restore the vfp registers */
 	ldp	d8, d9, [x0], #16

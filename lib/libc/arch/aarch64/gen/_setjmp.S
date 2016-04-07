@@ -45,7 +45,7 @@ ENTRY(_setjmp)
 	stp	x23, x24, [x0], #16
 	stp	x25, x26, [x0], #16
 	stp	x27, x28, [x0], #16
-	stp	x29, lr, [x0], #16
+	stp	x29, x30, [x0], #16
 
 #ifndef _STANDALONE
 	/* Store the vfp registers */
@@ -80,7 +80,7 @@ ENTRY(_longjmp)
 	ldp	x23, x24, [x0], #16
 	ldp	x25, x26, [x0], #16
 	ldp	x27, x28, [x0], #16
-	ldp	x29, lr, [x0], #16
+	ldp	x29, x30, [x0], #16
 
 #ifndef _STANDALONE
 	/* Restore the vfp registers */
