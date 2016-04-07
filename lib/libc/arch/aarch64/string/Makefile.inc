@@ -8,3 +8,5 @@ SRCS+=	bcmp.c memchr.c \
 	strcat.c strcpy.c strcspn.c strlen.c \
 	strncat.c strncpy.c strpbrk.c strsep.c \
 	strspn.c strstr.c swab.c strlcpy.c strlcat.c
+
+CFLAGS_memset += -fno-builtin
