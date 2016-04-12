@@ -54,6 +54,7 @@ INCS=	__clang_cuda_runtime_wrapper.h \
 	smmintrin.h \
 	tbmintrin.h \
 	tmmintrin.h \
+	unwind.h \
 	vadefs.h \
 	vecintrin.h \
 	wmmintrin.h \
