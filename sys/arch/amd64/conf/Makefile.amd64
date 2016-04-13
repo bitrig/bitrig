@@ -50,7 +50,7 @@ LINKFLAGS=	-T ldscript -X --warn-common -nopie
 CWARNFLAGS=	-Wall -Wimplicit-function-declaration \
 		-Werror -Wpointer-arith -Wunreachable-code
 # these are to shutup clang vs gcc, should be ultimately fixed
-CWARNFLAGS+=	-Wno-pointer-sign
+CWARNFLAGS+=	-Wno-pointer-sign -Wno-error-shift-negative-value
 CMACHFLAGS=	-mcmodel=kernel -mno-red-zone -mno-mmx -mno-sse -msoft-float \
 		-mno-aes -mno-avx -mno-omit-leaf-frame-pointer
 CMACHFLAGS+=	-ffreestanding -fno-omit-frame-pointer \
