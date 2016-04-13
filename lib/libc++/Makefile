@@ -6,7 +6,8 @@ CXXINCLUDEDIR=	/usr/include/c++/v1
 
 LIB=		c++
 
-SRCS+=		algorithm.cpp\
+SRCS+=		any.cpp \
+		algorithm.cpp\
 		bind.cpp\
 		chrono.cpp\
 		condition_variable.cpp\
@@ -33,14 +34,14 @@ SRCS+=		algorithm.cpp\
 		valarray.cpp
 
 WARNS=		0
-CFLAGS+=	-nostdlib -DLIBCXXABI -I${CXXINCLUDEDIR}
+CFLAGS+=	-nostdlib -DLIBCXXABI -I${CXXINCLUDEDIR} -I${.CURDIR}/../../contrib/libc++/src/include
 CPPFLAGS+=	${CFLAGS}
 .if empty(CXXFLAGS:M-std=*)
 CXXFLAGS+=	-std=c++11
 .endif
 
 LDFLAGS+=	--verbose
-INCSGROUPS=	STD EXT
+INCSGROUPS=	STD EXT EXP LOCALE
 
 STD_HEADERS=	__bit_reference\
 		__config\
@@ -57,7 +58,6 @@ STD_HEADERS=	__bit_reference\
 		__std_stream\
 		__tree\
 		__tuple\
-		__tuple_03\
 		__undef_min_max\
 		algorithm\
 		array\
@@ -138,7 +138,20 @@ STD_HEADERS=	__bit_reference\
 		unordered_set\
 		utility\
 		valarray\
-		vector
+		vector \
+		__nullptr \
+		__undef___deallocate \
+		ctype.h \
+		errno.h \
+		float.h \
+		inttypes.h \
+		math.h \
+		setjmp.h \
+		stddef.h \
+		stdio.h \
+		stdlib.h \
+		wchar.h \
+		wctype.h
 
 .for hdr in ${STD_HEADERS}
 STD+=		${hdr} ${HDRDIR}/${hdr}
@@ -154,6 +167,27 @@ EXT+=		${hdr} ${HDRDIR}/ext/${hdr}
 .endfor
 EXTDIR=		${CXXINCLUDEDIR}/ext
 
+EXP_HEADERS=	__config \
+		algorithm \
+		any \
+		chrono \
+		functional \
+		ratio \
+		system_error \
+		tuple
+
+.for hdr in ${EXP_HEADERS}
+EXP+=		${hdr} ${HDRDIR}/experimental/${hdr}
+.endfor
+EXPDIR=		${CXXINCLUDEDIR}/experimental
+
+LOCALE_HEADERS=	xlocale.h
+
+.for hdr in ${LOCALE_HEADERS}
+LOCALE+=		${hdr} ${HDRDIR}/support/musl/${hdr}
+.endfor
+LOCALEDIR=		${CXXINCLUDEDIR}/support/musl
+
 includes:
 	@echo installing ${STD_HEADERS}
 .	for hdr src in ${STD}
@@ -163,6 +197,14 @@ includes:
 .	for hdr src in ${EXT}
 		cmp -s ${src} ${DESTDIR}/${EXTDIR}/${hdr} || \
 		${INSTALL} ${INSTALL_COPY} -m 444 ${src} ${DESTDIR}/${EXTDIR}/${hdr};
+.	endfor
+.	for hdr src in ${EXP}
+		cmp -s ${src} ${DESTDIR}/${EXPDIR}/${hdr} || \
+		${INSTALL} ${INSTALL_COPY} -m 444 ${src} ${DESTDIR}/${EXPDIR}/${hdr};
+.	endfor
+.	for hdr src in ${LOCALE}
+		cmp -s ${src} ${DESTDIR}/${LOCALEDIR}/${hdr} || \
+		${INSTALL} ${INSTALL_COPY} -m 444 ${src} ${DESTDIR}/${LOCALEDIR}/${hdr};
 .	endfor
 
 .include <bsd.lib.mk>
