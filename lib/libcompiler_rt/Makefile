@@ -34,8 +34,6 @@ SRCF=	absvdi2 \
 	clzti2 \
 	cmpdi2 \
 	cmpti2 \
-	comparedf2 \
-	comparesf2 \
 	ctzdi2 \
 	ctzsi2 \
 	ctzti2 \
@@ -44,10 +42,12 @@ SRCF=	absvdi2 \
 	divmoddi4 \
 	divmodsi4 \
 	divsc3 \
+	divtc3 \
 	divti3 \
 	divxc3 \
 	enable_execute_stack \
 	eprintf \
+	extendhfsf2 \
 	ffsdi2 \
 	ffsti2 \
 	fixdfdi \
@@ -67,18 +67,22 @@ SRCF=	absvdi2 \
 	fixxfti \
 	floatdidf \
 	floatdisf \
+	floatditf \
 	floatdixf \
+	floatsitf \
 	floattidf \
 	floattisf \
 	floattixf \
 	floatundidf \
 	floatundisf \
+	floatunditf \
 	floatundixf \
 	floatunsidf \
 	floatunsisf \
 	floatuntidf \
 	floatuntisf \
 	floatuntixf \
+	gcc_personality_v0 \
 	int_util \
 	lshrdi3 \
 	lshrti3 \
@@ -94,6 +98,7 @@ SRCF=	absvdi2 \
 	mulvdi3 \
 	mulvsi3 \
 	mulvti3 \
+	multc3 \
 	mulxc3 \
 	negdf2 \
 	negdi2 \
@@ -116,6 +121,8 @@ SRCF=	absvdi2 \
 	subvsi3 \
 	subvti3 \
 	trampoline_setup \
+	truncdfhf2 \
+	truncsfhf2 \
 	ucmpdi2 \
 	ucmpti2 \
 	udivdi3 \
@@ -142,6 +149,11 @@ SRCF+=	adddf3 \
 	subdf3 \
 	subsf3 \
 	truncdfsf2
+.endif
+
+.if ${MACHINE_CPU} != "arm"
+SRCF+=	comparedf2 \
+	comparesf2
 .endif
 
 .if ${MACHINE_CPU} != "mips" && \
@@ -180,7 +192,14 @@ SRCS+=	aeabi_div0.c \
 	aeabi_memmove.S \
 	aeabi_memset.S \
 	aeabi_uidivmod.S \
-	aeabi_uldivmod.S
+	aeabi_uldivmod.S \
+	bswapdi2.S \
+	bswapsi2.S \
+	switch16.S \
+	switch32.S \
+	switch8.S \
+	switchu8.S \
+	sync_synchronize.S
 .endif
 
 LINKS+=${LIBDIR}/libcompiler_rt.a ${LIBDIR}/libclang_rt.${MACHINE_CPU}.a
