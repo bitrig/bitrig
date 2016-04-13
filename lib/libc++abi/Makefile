@@ -1,8 +1,9 @@
 HDRDIR=		${.CURDIR}/../../contrib/libc++abi/include
+UHDRDIR=	${.CURDIR}/../../contrib/libunwind/include
 SRCDIR=		${.CURDIR}/../../contrib/libc++abi/src
 CXXINCLUDEDIR=	/usr/include/c++/v1
 
-.PATH: ${SRCDIR} ${SRCDIR}/Unwind
+.PATH: ${SRCDIR} ${.CURDIR}/../../contrib/libunwind/src
 
 LIB=		c++abi
 
@@ -40,19 +41,28 @@ CPPFLAGS+=	${CFLAGS}
 CXXFLAGS+=	-std=c++11
 .endif
 
-STD_HEADERS=	cxxabi.h\
-		libunwind.h\
-		unwind.h
+STD_HEADERS=	cxxabi.h \
+		__cxxabi_config.h
 
 .for hdr in ${STD_HEADERS}
 STD+=		${hdr} ${HDRDIR}/${hdr}
 .endfor
 STDDIR=		${CXXINCLUDEDIR}
 
+# Libunwind stuff
+STD_UHEADERS=	libunwind.h \
+		__libunwind_config.h \
+		unwind.h
+
+.for hdr in ${STD_UHEADERS}
+USTD+=		${hdr} ${UHDRDIR}/${hdr}
+.endfor
+USTDDIR=	${CXXINCLUDEDIR}
+
 MACHO_HEADERS=compact_unwind_encoding.h
 
 .for hdr in ${MACHO_HEADERS}
-MACHO+=		${hdr} ${HDRDIR}/mach-o/${hdr}
+MACHO+=		${hdr} ${UHDRDIR}/mach-o/${hdr}
 .endfor
 MACHODIR=	${CXXINCLUDEDIR}/mach-o
 
@@ -61,6 +71,10 @@ includes:
 .	for hdr src in ${STD}
 		cmp -s ${src} ${DESTDIR}/${STDDIR}/${hdr} || \
 		${INSTALL} ${INSTALL_COPY} -m 444 ${src} ${DESTDIR}/${STDDIR}/${hdr};
+.	endfor
+.	for hdr src in ${USTD}
+		cmp -s ${src} ${DESTDIR}/${USTDDIR}/${hdr} || \
+		${INSTALL} ${INSTALL_COPY} -m 444 ${src} ${DESTDIR}/${USTDDIR}/${hdr};
 .	endfor
 .	for hdr src in ${MACHO}
 		cmp -s ${src} ${DESTDIR}/${MACHODIR}/${hdr} || \
