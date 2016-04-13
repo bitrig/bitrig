@@ -1,10 +1,12 @@
 .include <bsd.own.mk>
 
-MAN=scan-build.1
+NOMAN=
 NOPROG=
-
-VPATH=${.CURDIR}/../../../contrib/llvm/tools/clang/tools/scan-build
 SRCDIR=${.CURDIR}/../../../contrib/llvm/tools/clang/tools/scan-build
+BINDIR=${SRCDIR}/bin
+LIBDIR=${SRCDIR}/libexec
+SHAREDIR=${SRCDIR}/share/scan-build
+.PATH: ${BINDIR} ${LIBDIR}
 BINDIR=/usr/bin
 
 DATDIR=/usr/share/llvm
@@ -42,7 +44,7 @@ realinstall:
 .endfor
 .for i in ${DATFILE}
 	${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m ${BINMODE} \
-		${SRCDIR}/${i} ${DESTDIR}${DATDIR}/$i
+		${SHAREDIR}/${i} ${DESTDIR}${DATDIR}/$i
 .endfor
 
 .include "bsd.prog.mk"

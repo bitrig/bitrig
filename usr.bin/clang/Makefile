@@ -22,7 +22,7 @@ SUBDIR+=bugpoint \
 	llvm-pdbdump \
 	llvm-rtdyld \
 	opt \
-	#scan-build
+	scan-build
 .endif
 
 HOSTARCH!=uname -p
