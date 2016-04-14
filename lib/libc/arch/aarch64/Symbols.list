@@ -8,7 +8,7 @@ __bswap32
 __divdf3
 __divsf3
 __divsi3
-__divtf3'
+__divtf3
 __end__
 __eqdf2
 __eqsf2
@@ -38,7 +38,7 @@ __lesf2
 __letf2
 __ltdf2
 __ltsf2
-__lttf2'
+__lttf2
 __mcount
 __modsi3
 __muldf3
