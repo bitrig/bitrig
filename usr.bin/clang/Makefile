@@ -47,8 +47,6 @@ bootstrap:
 .endif
 	(cd ../../lib/clang && ${MAKE} depend)
 	(cd ../../lib/clang && ${MAKE} all)
-	(cd ../../lib/clang && ${MAKE} depend)
-	(cd ../../lib/clang && ${MAKE} all)
 	(cd ../../usr.bin/clang && ${MAKE} depend)
 	(cd ../../usr.bin/clang && ${MAKE} all)
 

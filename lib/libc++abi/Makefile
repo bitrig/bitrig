@@ -15,7 +15,6 @@ SRCS+=		abort_message.cpp\
 		cxa_exception_storage.cpp\
 		cxa_guard.cpp\
 		cxa_handlers.cpp\
-		cxa_handlers.hpp\
 		cxa_new_delete.cpp\
 		cxa_personality.cpp\
 		cxa_thread_atexit.cpp\
