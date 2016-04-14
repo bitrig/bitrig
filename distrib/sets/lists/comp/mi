@@ -1,7 +1,9 @@
 ./usr/bin/CC
 ./usr/bin/bugpoint
 ./usr/bin/c++
+./usr/bin/c++-analyzer
 ./usr/bin/cc
+./usr/bin/ccc-analyzer
 ./usr/bin/clang
 ./usr/bin/clang++
 ./usr/bin/clang-cpp
@@ -22,6 +24,8 @@
 ./usr/bin/llvm-pdbdump
 ./usr/bin/llvm-rtdyld
 ./usr/bin/opt
+./usr/bin/scan-build
+./usr/bin/set-xcode-analyzer
 ./usr/bin/tblgen
 ./usr/include/_ctype.h
 ./usr/include/a.out.h
@@ -1608,6 +1612,8 @@
 ./usr/lib/libz_p.a
 ./usr/lib/rcrt0.o
 ./usr/share/llvm
+./usr/share/llvm/scanview.css
+./usr/share/llvm/sorttable.js
 ./usr/share/man/man1/CC.1
 ./usr/share/man/man1/amd64
 ./usr/share/man/man1/bugpoint.1
