@@ -69,6 +69,17 @@
 #define __DBL_MAX		1.7976931348623157E+308
 #define __DBL_MAX_10_EXP	308
 
+#ifdef __LDBL_MANT_DIG__
+#define __LDBL_MANT_DIG		__LDBL_MANT_DIG__
+#define __LDBL_EPSILON		__LDBL_EPSILON__
+#define __LDBL_DIG		__LDBL_DIG__
+#define __LDBL_MIN_EXP		__LDBL_MIN_EXP__
+#define __LDBL_MIN		__LDBL_MIN__
+#define __LDBL_MIN_10_EXP	__LDBL_MIN_10_EXP__
+#define __LDBL_MAX_EXP		__LDBL_MAX_EXP__
+#define __LDBL_MAX		__LDBL_MAX__
+#define __LDBL_MAX_10_EXP	__LDBL_MAX_10_EXP__
+#else
 #define __LDBL_MANT_DIG		DBL_MANT_DIG
 #define __LDBL_EPSILON		DBL_EPSILON
 #define __LDBL_DIG		DBL_DIG
@@ -78,6 +89,7 @@
 #define __LDBL_MAX_EXP		DBL_MAX_EXP
 #define __LDBL_MAX		DBL_MAX
 #define __LDBL_MAX_10_EXP	DBL_MAX_10_EXP
+#endif
 
 #define __DECIMAL_DIG		17
 
