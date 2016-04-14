@@ -34,7 +34,7 @@ SRCS+=		any.cpp \
 		valarray.cpp
 
 WARNS=		0
-CFLAGS+=	-nostdlib -DLIBCXXABI -I${CXXINCLUDEDIR} -I${.CURDIR}/../../contrib/libc++/src/include
+CFLAGS+=	-nostdlib -DLIBCXXABI -I${CXXINCLUDEDIR} -I${.CURDIR}/../../contrib/libc++/src/include -DLIBCXX_BUILDING_LIBCXXABI
 CPPFLAGS+=	${CFLAGS}
 .if empty(CXXFLAGS:M-std=*)
 CXXFLAGS+=	-std=c++11
