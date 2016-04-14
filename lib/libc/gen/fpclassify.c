@@ -69,26 +69,4 @@ DEF_STRONG(__fpclassifyf);
 #if	LDBL_MANT_DIG == DBL_MANT_DIG
 MAKE_CLONE(__fpclassifyl, __fpclassify);
 DEF_STRONG(__fpclassifyl);
-#else
-int
-__fpclassifyl(long double d)
-{
-	struct ieee_ext *p = (struct ieee_ext *)&d;
-
-	if (p->ext_exp == 0) {
-		if (p->ext_frach == 0 && p->ext_fracl == 0)
-			return FP_ZERO;
-		else
-			return FP_SUBNORMAL;
-	}
-
-	if (p->ext_exp == DBL_EXP_INFNAN) {
-		if (p->ext_frach == 0 && p->ext_fracl == 0)
-			return FP_INFINITE;
-		else
-			return FP_NAN;
-	}
-
-	return FP_NORMAL;
-}
 #endif	/* LDBL_MANT_DIG == DBL_MANT_DIG */
