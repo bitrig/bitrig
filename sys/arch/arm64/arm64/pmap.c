@@ -2184,7 +2184,7 @@ pmap_show_mapping(uint64_t va)
 	}
 
 	if (pm->have_4_level_pt) {
-		printf("  vp0 = %llx off\n",  pm->pm_vp.l0, VP_IDX0(va));
+		printf("  vp0 = %llx off %x\n",  pm->pm_vp.l0, VP_IDX0(va)*8);
 		vp1 = pm->pm_vp.l0->vp[VP_IDX0(va)];
 		if (vp1 == NULL) {
 			return;
@@ -2196,27 +2196,27 @@ pmap_show_mapping(uint64_t va)
 	__asm volatile ("mrs     %x0, ttbr0_el1" : "=r"(ttbr0));
 	__asm volatile ("mrs     %x0, tcr_el1" : "=r"(tcr));
 
-	printf("  vp1 = %llx ttbr0 %llx %llx %llx tcr %llx\n", vp1, ttbr0, pm->pm_pt0pa,
-	    curproc->p_addr->u_pcb.pcb_pagedir, tcr);
+	printf("  ttbr0 %llx %llx %llx tcr %llx\n", ttbr0, pm->pm_pt0pa);
+	printf("  vp1 = %llx \n", vp1, VP_IDX1(va) * 8);
 
 
 	vp2 = vp1->vp[VP_IDX1(va)];
-	printf("  vp2 = %llx lp2 = %llx\n", vp2, vp1->l1[VP_IDX1(va)], VP_IDX1(va));
+	printf("  vp2 = %llx lp2 = %llx idx1 off %x\n",
+		vp2, vp1->l1[VP_IDX1(va)], VP_IDX1(va)*8);
 	if (vp2 == NULL) {
 		return;
 	}
 
 	vp3 = vp2->vp[VP_IDX2(va)];
-	printf("  vp3 = %llx lp3 = %llx\n", vp3, vp2->l2[VP_IDX2(va)], VP_IDX2(va));
+	printf("  vp3 = %llx lp3 = %llx idx2 off %x\n",
+		vp3, vp2->l2[VP_IDX2(va)], VP_IDX2(va)*8);
 	if (vp3 == NULL) {
-		return ;
+		return;
 	}
 
 	pted = vp3->vp[VP_IDX3(va)];
-	if (pted == NULL) {
-		return;
-	}
-	printf("  pted = %llx lp3 = %llx\n", pted->pted_va, vp3->l3[VP_IDX3(va)]);
+	printf("  pted = %p lp3 = %llx idx3 off  %x\n",
+		pted, vp3->l3[VP_IDX3(va)], VP_IDX3(va)*8);
 
 	return;
 }
