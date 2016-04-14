@@ -202,6 +202,20 @@ SRCS+=	aeabi_div0.c \
 	sync_synchronize.S
 .endif
 
+.if ${MACHINE_CPU} == "aarch64"
+SRCS+=	addtf3.c \
+	comparetf2.c \
+	divtf3.c \
+	extenddftf2.c \
+	extendsftf2.c \
+	fixtfsi.c \
+	multf3.c \
+	subtf3.c \
+	trunctfdf2.c \
+	trunctfsf2.c
+
+.endif
+
 LINKS+=${LIBDIR}/libcompiler_rt.a ${LIBDIR}/libclang_rt.${MACHINE_CPU}.a
 .if ${MK_INSTALLLIB:L} != "no"
 SYMLINKS+=libcompiler_rt.a ${LIBDIR}/libgcc.a
