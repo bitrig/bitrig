@@ -1,7 +1,11 @@
 HDRDIR=		${.CURDIR}/../../contrib/libc++abi/include
 UHDRDIR=	${.CURDIR}/../../contrib/libunwind/include
 SRCDIR=		${.CURDIR}/../../contrib/libc++abi/src
+.if !empty(CROSSDIR)
+CXXINCLUDEDIR=	${CROSSDIR}/usr/include/c++/v1
+.else
 CXXINCLUDEDIR=	/usr/include/c++/v1
+.endif
 
 .PATH: ${SRCDIR} ${.CURDIR}/../../contrib/libunwind/src
 
