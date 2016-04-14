@@ -7,3 +7,4 @@ SRCS+=	setjmp.S _setjmp.S sigsetjmp.S __aeabi_read_tp.S
 SRCS+=	clz_tab.c
 SRCS+=  fpgetmask_vfp.c fpgetround_vfp.c fpgetsticky_vfp.c
 SRCS+=  fpsetmask_vfp.c fpsetround_vfp.c fpsetsticky_vfp.c
+SRCS+=  fpclassifyl.c
