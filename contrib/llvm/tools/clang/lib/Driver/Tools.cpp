@@ -7801,6 +7801,9 @@ void bitrig::Linker::ConstructJob(Compilation &C, const JobAction &JA,
 
     StringRef MyArch;
     switch (getToolChain().getArch()) {
+    case llvm::Triple::aarch64:
+      MyArch = "aarch64";
+      break;
     case llvm::Triple::arm:
       MyArch = "arm";
       break;
