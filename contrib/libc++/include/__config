@@ -27,6 +27,11 @@
 #define _GNUC_VER 0
 #endif
 
+/* XXX this can go away once ports have learned to pick up unistd.h themselves */
+#if !_WIN32
+#include <unistd.h>
+#endif
+
 #define _LIBCPP_VERSION 3800
 
 #ifndef _LIBCPP_ABI_VERSION
