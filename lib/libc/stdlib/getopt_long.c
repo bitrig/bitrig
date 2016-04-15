@@ -62,9 +62,11 @@ int	optreset;		/* reset getopt */
 char    *optarg;		/* argument associated with option */
 
 /* DEF_* only work on initialized (non-COMMON) variables */
+#if !defined __aarch64__
 DEF_WEAK(opterr);
 DEF_WEAK(optind);
 DEF_WEAK(optopt);
+#endif
 
 #define PRINT_ERROR	((opterr) && (*options != ':'))
 

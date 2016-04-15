@@ -20,9 +20,11 @@
 
 #include_next <getopt.h>
 
+#if !defined __aarch64__
 extern PROTO_NORMAL(opterr);
 extern PROTO_NORMAL(optind);
 extern PROTO_NORMAL(optopt);
+#endif
 
 #if 0
 /* alas, COMMON symbols alias differently */
