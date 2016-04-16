@@ -693,7 +693,9 @@ public:
 
   bool IsMathErrnoDefault() const override { return false; }
   bool IsObjCNonFragileABIDefault() const override { return true; }
-  bool isPIEDefault() const override { return true; }
+  bool isPIEDefault() const override {
+	  return getTriple().getArch() == llvm::Triple::x86_64;
+  }
 
   CXXStdlibType GetCXXStdlibType(const llvm::opt::ArgList &Args) const override;
   void AddClangCXXStdlibIncludeArgs(
