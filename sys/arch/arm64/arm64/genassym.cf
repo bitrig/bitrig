@@ -66,6 +66,10 @@ member PCB_PAGEDIR pcb_pagedir
 member PCB_TCB pcb_tcb
 
 struct trapframe
+member TF_X tf_x
+member TF_SP tf_sp
+member TF_ELR tf_elr
+define TF_SIZE sizeof(struct trapframe)
 
 define PCB_FPU PCB_FPU
 define SONPROC SONPROC
