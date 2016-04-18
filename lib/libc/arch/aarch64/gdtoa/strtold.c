@@ -1,4 +1,4 @@
-/*	$OpenBSD: strtold.c,v 1.1 2008/09/07 20:36:08 martynas Exp $	*/
+/*	$OpenBSD: strtold.c,v 1.1 2008/09/07 20:36:07 martynas Exp $	*/
 /*-
  * Copyright (c) 2003 David Schultz <das@FreeBSD.ORG>
  * All rights reserved.
@@ -28,23 +28,30 @@
 /*
  * Machine-dependent glue to integrate David Gay's gdtoa
  * package into libc for architectures where a long double
- * is the same as a double, such as the Alpha.
+ * is an IEEE extended precision number.
  */
 
-#include "gdtoaimp.h"
+#include <float.h>
 #include "locale/xlocale_private.h"
+
+#include "gdtoaimp.h"
 
 long double
 strtold(const char * __restrict s, char ** __restrict sp)
 {
-	return strtod(s, sp);
-	return strtod_l(s, sp, __get_locale());
+	long double result;
+
+	strtorx(s, sp, FLT_ROUNDS, &result);
+	return result;
 }
 DEF_STRONG(strtold);
 
 long double
 strtold_l(const char * __restrict s, char ** __restrict sp, locale_t loc)
 {
-	return strtod_l(s, sp, loc);
+	long double result;
+
+	strtorx_l(s, sp, FLT_ROUNDS, &result, loc);
+	return result;
 }
 DEF_STRONG(strtold_l);
