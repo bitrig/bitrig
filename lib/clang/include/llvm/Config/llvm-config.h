@@ -24,7 +24,7 @@
 /* #undef LLVM_DATADIR */
 
 /* Target triple LLVM will generate code for by default */
-#define LLVM_DEFAULT_TARGET_TRIPLE "amd64-unknown-bitrig1.0"
+/* #undef LLVM_DEFAULT_TARGET_TRIPLE */
 
 /* Installation directory for documentation */
 /* #undef LLVM_DOCSDIR */
@@ -43,7 +43,7 @@
 #define LLVM_HAS_ATOMICS 1
 
 /* Host triple LLVM will be executed on */
-#define LLVM_HOST_TRIPLE "amd64-unknown-bitrig1.0"
+/* #undef LLVM_HOST_TRIPLE */
 
 /* Installation directory for include files */
 /* #undef LLVM_INCLUDEDIR */
@@ -55,34 +55,60 @@
 /* #undef LLVM_MANDIR */
 
 /* LLVM architecture name for the native architecture, if available */
-#define LLVM_NATIVE_ARCH X86
+/* #undef LLVM_NATIVE_ARCH */
 
 /* LLVM name for the native AsmParser init function, if available */
-#define LLVM_NATIVE_ASMPARSER LLVMInitializeX86AsmParser
+/* #define LLVM_NATIVE_ASMPARSER LLVMInitializeX86AsmParser */
 
 /* LLVM name for the native AsmPrinter init function, if available */
-#define LLVM_NATIVE_ASMPRINTER LLVMInitializeX86AsmPrinter
+/* #define LLVM_NATIVE_ASMPRINTER LLVMInitializeX86AsmPrinter */
 
 /* LLVM name for the native Disassembler init function, if available */
-#define LLVM_NATIVE_DISASSEMBLER LLVMInitializeX86Disassembler
+/* #define LLVM_NATIVE_DISASSEMBLER LLVMInitializeX86Disassembler */
 
 /* LLVM name for the native Target init function, if available */
-#define LLVM_NATIVE_TARGET LLVMInitializeX86Target
+/* #define LLVM_NATIVE_TARGET LLVMInitializeX86Target */
 
 /* LLVM name for the native TargetInfo init function, if available */
-#define LLVM_NATIVE_TARGETINFO LLVMInitializeX86TargetInfo
+/* #define LLVM_NATIVE_TARGETINFO LLVMInitializeX86TargetInfo */
 
 /* LLVM name for the native target MC init function, if available */
-#define LLVM_NATIVE_TARGETMC LLVMInitializeX86TargetMC
+/* #define LLVM_NATIVE_TARGETMC LLVMInitializeX86TargetMC */
 
 /* Define if this is Unixish platform */
 #define LLVM_ON_UNIX 1
+
+/* Define NATIVE defines depending on ARCH */
+#if LLVM_NATIVE_ARCH == X86
+#define LLVM_NATIVE_ASMPARSER LLVMInitializeX86AsmParser
+#define LLVM_NATIVE_ASMPRINTER LLVMInitializeX86AsmPrinter
+#define LLVM_NATIVE_DISASSEMBLER LLVMInitializeX86Disassembler
+#define LLVM_NATIVE_TARGET LLVMInitializeX86Target
+#define LLVM_NATIVE_TARGETINFO LLVMInitializeX86TargetInfo
+#define LLVM_NATIVE_TARGETMC LLVMInitializeX86TargetMC
+#elif LLVM_NATIVE_ARCH == ARM
+#define LLVM_NATIVE_ASMPARSER LLVMInitializeARMAsmParser
+#define LLVM_NATIVE_ASMPRINTER LLVMInitializeARMAsmPrinter
+#define LLVM_NATIVE_DISASSEMBLER LLVMInitializeARMDisassembler
+#define LLVM_NATIVE_TARGET LLVMInitializeARMTarget
+#define LLVM_NATIVE_TARGETINFO LLVMInitializeARMTargetInfo
+#define LLVM_NATIVE_TARGETMC LLVMInitializeARMTargetMC
+#elif LLVM_NATIVE_ARCH == AARCH64
+#define LLVM_NATIVE_ASMPARSER LLVMInitializeAARCH64AsmParser
+#define LLVM_NATIVE_ASMPRINTER LLVMInitializeAARCH64AsmPrinter
+#define LLVM_NATIVE_DISASSEMBLER LLVMInitializeAARCH64Disassembler
+#define LLVM_NATIVE_TARGET LLVMInitializeAARCH64Target
+#define LLVM_NATIVE_TARGETINFO LLVMInitializeAARCH64TargetInfo
+#define LLVM_NATIVE_TARGETMC LLVMInitializeAARCH64TargetMC
+#else
+#error Unsupported Architecture
+#endif
 
 /* Define if this is Win32ish platform */
 /* #undef LLVM_ON_WIN32 */
 
 /* Installation prefix directory */
-#define LLVM_PREFIX "/usr/local"
+#define LLVM_PREFIX ""
 
 /* Define if we have the Intel JIT API runtime support library */
 /* #undef LLVM_USE_INTEL_JITEVENTS */
