@@ -52,6 +52,9 @@
 #define		ATTR_IDX(x)	((x) << 2)
 #define		ATTR_IDX_MASK	(7 << 2)
 
+#define		PTE_ATTR_DEV	0
+#define		PTE_ATTR_CI	1
+#define		PTE_ATTR_WB	2
 
 
 /* Level 0 table, 512GiB per entry */
@@ -87,77 +90,6 @@
 #define		Ln_ENTRIES		(1 << 9)
 #define		Ln_ADDR_MASK	(Ln_ENTRIES - 1)
 #define		Ln_TABLE_MASK	((1 << 12) - 1)
-
-/* Short-descriptor translation table Second level lg Page descriptor format */
-#define L2_S_XN		(1<<15)	/* eXecute Never */
-#define L2_S_B		(1<<2)	/* bufferable Section */
-#define L2_S_C		(1<<3)	/* cacheable Section */
-#define L2_S_S		(1<<10)	/* shareable Section */
-#define L2_S_nG		(1<<11)	/* notGlobal */
-#define L2_S_AP(ap)	((((ap) & 0x4) << 9) | (((ap) & 3) << 4))
-#define L2_S_AP0	(1<<4)
-#define L2_S_AP1	(1<<5)
-#define L2_S_AP2	(1<<9)
-#define L2_S_TEX(x)	(((x)&0x7)<<12)
-
-#define L2_S_MODE_DEV		(L2_S_TEX(0)|0|0)
-#define L2_S_MODE_PTE		(L2_S_TEX(0)|0|L2_S_B)
-#define L2_S_MODE_DISPLAY		(L2_S_TEX(0)|L2_S_C|0)
-#define L2_S_MODE_MEMORY		(L2_S_TEX(0)|L2_S_C|L2_S_B)
-
-/* Short-descriptor translation table Second level sm page descriptor format */
-#define L2_P_XN		(1<<0)	/* eXecute Never */
-#define L2_P 		(1<<1)	/* small page mapping */
-#define L2_P_B		(1<<2)	/* bufferable Section */
-#define L2_P_C		(1<<3)	/* cacheable Section */
-#define L2_P_S		(1<<10)	/* shareable Section */
-#define L2_P_nG		(1<<11)	/* notGlobal */
-#define L2_P_AP(ap)	((((ap) & 0x4) << 9) | (((ap) & 3) << 4))
-#define L2_P_AP0	(1<<4)
-#define L2_P_AP1	(1<<5)
-#define L2_P_AP2	(1<<9)
-#define L2_P_TEX(x)	(((x)&0x7)<<6)
-
-#define L2_MODE_DEV		(L2_P_TEX(0)|0|0)
-#define L2_MODE_PTE		(L2_P_TEX(0)|0|L2_S_B)
-#define L2_MODE_DISPLAY		(L2_P_TEX(0)|L2_S_C|0)
-#define L2_MODE_MEMORY		(L2_P_TEX(0)|L2_S_C|L2_S_B)
-
-/* This defaults to 
- *		INNER	OUTER
- * MODE dev	NC,	NC
- * MODE pte	NC,	WBna
- * MODE display	NC,	NC
- * MODE memory	WBna,	WBna
- * 
- * If the CPU supports WT,
- * DISPLAY should be outer WT (XXX inner WT?, but very small cache?)
- * and PTE inner WT
- * ALSO: all WB mappings here are WriteBack No Allocate, main memory
- * mappings likely should be configured as Write Allocate if supported.
- */
-#define NMRR_DEFAULT	0x00cc00c0
-#define PRRR_DEFAULT	0xf00a00a9
-
-/* 
- * NON-TEX Access permission bits
- */
-#define AP_PF		0x00	/* all accesses generate permission faul
-ts */
-#define AP_KR		0x05	/* kernel read */
-#define AP_KRW		0x01	/* kernel read/write */
-#define AP_KRWUR	0x02	/* kernel read/write usr read */
-#define AP_KRWURW	0x03	/* kernel read/write usr read/write */
-
-/*
- * Domain Types for the Domain Access Control Register.
- */
-#define	DOMAIN_FAULT	0x00		/* no access */
-#define	DOMAIN_CLIENT	0x01		/* client */
-#define	DOMAIN_RESERVED	0x02		/* reserved */
-#define	DOMAIN_MANAGER	0x03		/* manager */
-
-#define PMAP_DOMAIN_KERNEL	0	/* The kernel uses domain #0 */
 
 /* physical page mask */
 #define PTE_RPGN 0x3ffffff000ULL

@@ -467,7 +467,7 @@ _dmamem_map(bus_dma_tag_t t, bus_dma_segment_t *segs, int nsegs, size_t size,
 	pmap_flags = PMAP_WIRED | PMAP_CANFAIL;
 	cache = PMAP_CACHE_DEFAULT;
 	if (flags & (BUS_DMA_COHERENT | BUS_DMA_NOCACHE))
-		cache = PMAP_CACHE_CI;
+		cache = PMAP_CACHE_DEV;
 	for (curseg = 0; curseg < nsegs; curseg++) {
 		for (addr = segs[curseg].ds_addr;
 		    addr < (segs[curseg].ds_addr + segs[curseg].ds_len);
