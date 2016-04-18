@@ -29,7 +29,9 @@ CWARNFLAGS=	-Werror -Wall -Wstrict-prototypes \
 		-Wno-conditional-uninitialized
 #		-Wstack-larger-than-2047
 
-CMACHFLAGS=	-ffreestanding -mcpu=cortex-a57+nofp+nosimd
+CMACHFLAGS=	-ffreestanding -mcpu=cortex-a57+nofp+nosimd \
+		-fno-omit-frame-pointer -mno-omit-leaf-frame-pointer \
+		-ffixed-x18
 #CMACHFLAGS+=	-fno-builtin-printf -fno-builtin-snprintf \
 #		-fno-builtin-vsnprintf -fno-builtin-log \
 #		-fno-builtin-log2 -fno-builtin-malloc ${NOPIE_FLAGS}
