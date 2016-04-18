@@ -40,8 +40,6 @@ __mtx_init(struct mutex *mtx, int wantipl)
 	mtx->mtx_oldipl = IPL_NONE;
 }
 
-#ifdef MULTIPROCESSOR
-
 #ifdef MP_LOCKDEBUG
 #ifndef DDB
 #error "MP_LOCKDEBUG requires DDB"
@@ -98,34 +96,6 @@ mtx_enter_try(struct mutex *mtx)
 
 	return (0);
 }
-#else
-void
-mtx_enter(struct mutex *mtx)
-{
-	struct cpu_info *ci = curcpu();
-
-#ifdef DIAGNOSTIC
-	if (__predict_false(mtx->mtx_owner == ci))
-		panic("mtx %p: locking against myself", mtx);
-#endif
-
-	if (mtx->mtx_wantipl != IPL_NONE)
-		mtx->mtx_oldipl = splraise(mtx->mtx_wantipl);
-
-	mtx->mtx_owner = ci;
-
-#ifdef DIAGNOSTIC
-	ci->ci_mutex_level++;
-#endif
-}
-
-int
-mtx_enter_try(struct mutex *mtx)
-{
-	mtx_enter(mtx);
-	return (1);
-}
-#endif
 
 void
 mtx_leave(struct mutex *mtx)
