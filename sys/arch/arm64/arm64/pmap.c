@@ -1552,9 +1552,11 @@ pmap_init()
 	pool_setlowat(&pmap_pmap_pool, 2);
 	pool_init(&pmap_pted_pool, sizeof(struct pte_desc), 0, 0, 0, "pted",
 	    NULL);
+	pool_setipl(&pmap_pted_pool, IPL_VM);
 	pool_setlowat(&pmap_pted_pool, 20);
 	pool_init(&pmap_vp_pool, sizeof(struct pmapvp2), PAGE_SIZE, 0, 0, "vp",
 	    NULL);
+	pool_setipl(&pmap_vp_pool, IPL_VM);
 	//pool_setlowat(&pmap_vp_pool, 20);
 
 
