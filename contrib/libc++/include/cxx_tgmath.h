@@ -14,13 +14,13 @@
 /*
     tgmath.h synopsis
 
-#include <complex.h>
+#include <cxx_complex.h>
 #include <math.h>
 
 */
 
-#include <complex.h>
-#include <math.h>
+#include <cxx_complex.h>
+#include <cxx_math.h>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #pragma GCC system_header

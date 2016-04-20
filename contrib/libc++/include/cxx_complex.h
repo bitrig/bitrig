@@ -1,5 +1,5 @@
 // -*- C++ -*-
-//===--------------------------- complex.h --------------------------------===//
+//===--------------------------- cxx_complex.h ----------------------------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -30,7 +30,7 @@
 
 #else  // __cplusplus
 
-#include_next <complex.h>
+#include <complex.h>
 
 #endif  // __cplusplus
 
