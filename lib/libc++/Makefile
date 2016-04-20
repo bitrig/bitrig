@@ -77,7 +77,7 @@ STD_HEADERS=	__bit_reference\
 		cmath\
 		codecvt\
 		complex\
-		complex.h\
+		cxx_complex.h\
 		condition_variable\
 		csetjmp\
 		csignal\
@@ -128,7 +128,7 @@ STD_HEADERS=	__bit_reference\
 		string\
 		strstream\
 		system_error\
-		tgmath.h\
+		cxx_tgmath.h\
 		thread\
 		tuple\
 		type_traits\
@@ -141,17 +141,17 @@ STD_HEADERS=	__bit_reference\
 		vector \
 		__nullptr \
 		__undef___deallocate \
-		ctype.h \
-		errno.h \
-		float.h \
-		inttypes.h \
-		math.h \
-		setjmp.h \
-		stddef.h \
-		stdio.h \
-		stdlib.h \
-		wchar.h \
-		wctype.h
+		cxx_ctype.h \
+		cxx_errno.h \
+		cxx_float.h \
+		cxx_inttypes.h \
+		cxx_math.h \
+		cxx_setjmp.h \
+		cxx_stddef.h \
+		cxx_stdio.h \
+		cxx_stdlib.h \
+		cxx_wchar.h \
+		cxx_wctype.h
 
 .for hdr in ${STD_HEADERS}
 STD+=		${hdr} ${HDRDIR}/${hdr}
