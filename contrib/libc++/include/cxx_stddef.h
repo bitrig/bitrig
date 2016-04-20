@@ -15,7 +15,7 @@
 #pragma GCC system_header
 #endif
 
-#include <stddef.h>
+#include_next <stddef.h>
 
 #elif !defined(_LIBCPP_STDDEF_H)
 #define _LIBCPP_STDDEF_H
