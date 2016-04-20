@@ -30,6 +30,7 @@ INCS=	__clang_cuda_runtime_wrapper.h \
 	cuda_builtin_vars.h \
 	emmintrin.h \
 	f16cintrin.h \
+	float.h \
 	fma4intrin.h \
 	fmaintrin.h \
 	fxsrintrin.h \
@@ -37,6 +38,7 @@ INCS=	__clang_cuda_runtime_wrapper.h \
 	htmxlintrin.h \
 	ia32intrin.h \
 	immintrin.h \
+	limits.h \
 	lzcntintrin.h \
 	mm3dnow.h \
 	mm_malloc.h \
@@ -52,10 +54,18 @@ INCS=	__clang_cuda_runtime_wrapper.h \
 	s390intrin.h \
 	shaintrin.h \
 	smmintrin.h \
+	stdalign.h \
+	stdarg.h \
+	stdatomic.h \
+	stdbool.h \
+	stddef.h \
+	stdint.h \
+	stdnoreturn.h \
 	tbmintrin.h \
 	tmmintrin.h \
 	unwind.h \
 	vadefs.h \
+	varargs.h \
 	vecintrin.h \
 	wmmintrin.h \
 	x86intrin.h \
