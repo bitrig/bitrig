@@ -1,5 +1,5 @@
 // -*- C++ -*-
-//===--------------------------- stddef.h ---------------------------------===//
+//===--------------------------- cxx_stddef.h -----------------------------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -15,13 +15,13 @@
 #pragma GCC system_header
 #endif
 
-#include_next <stddef.h>
+#include <stddef.h>
 
 #elif !defined(_LIBCPP_STDDEF_H)
 #define _LIBCPP_STDDEF_H
 
 /*
-    stddef.h synopsis
+    cxx_stddef.h synopsis
 
 Macros:
 
