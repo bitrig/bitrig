@@ -1722,8 +1722,6 @@ pte_remove(struct pte_desc *pted, int remove_pted)
  */
 int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 {
-panic("%s called", __func__);
-#if 0 
 	struct pte_desc *pted;
 	struct vm_page *pg;
 	paddr_t pa;
@@ -1813,7 +1811,6 @@ panic("%s called", __func__);
 	}
 
 	/* didn't catch it, so probably broken */
-#endif
 	return 0;
 }
 

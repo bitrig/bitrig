@@ -134,7 +134,7 @@ data_abort(struct trapframe *frame, uint64_t esr, int lower, int exe)
 	vaddr_t va;
 	union sigval sv;
 	uint64_t far;
-	int error, sig;
+	int error = 0, sig;
 
 	pcb = curcpu()->ci_curpcb;
 	p = curcpu()->ci_curproc;
@@ -179,7 +179,9 @@ data_abort(struct trapframe *frame, uint64_t esr, int lower, int exe)
 		//PROC_UNLOCK(p);
 
 		/* Fault in the user page: */
-		error = uvm_fault(map, va, ftype, access_type);
+		if (!pmap_fault_fixup(map->pmap, va, access_type, 1)) {
+			error = uvm_fault(map, va, ftype, access_type);
+		}
 
 		//PROC_LOCK(p);
 		//--p->p_lock;
@@ -189,7 +191,9 @@ data_abort(struct trapframe *frame, uint64_t esr, int lower, int exe)
 		 * Don't have to worry about process locking or stacks in the
 		 * kernel.
 		 */
-		error = uvm_fault(map, va, ftype, access_type);
+		if (!pmap_fault_fixup(map->pmap, va, access_type, 0)) {
+			error = uvm_fault(map, va, ftype, access_type);
+		}
 	}
 
 	if (error != 0) {
