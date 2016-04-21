@@ -1025,7 +1025,7 @@ pmap_vp_destroy(pmap_t pm)
 		vp0->vp[i] = NULL;
 		pool_put(&pmap_vp_pool, vp1);
 	}
-	vp0->vp[i] = NULL;
+	pm->pm_vp.l0 = NULL;
 	pool_put(&pmap_vp_pool, vp0);
 }
 
