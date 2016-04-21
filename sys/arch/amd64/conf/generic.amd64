@@ -59,6 +59,7 @@ acpivout*	at acpivideo?
 acpipwrres*	at acpi?
 aibs*		at acpi?
 sdhc*		at acpi?
+acpidmar0	at acpi?
 
 mpbios0		at bios0
 

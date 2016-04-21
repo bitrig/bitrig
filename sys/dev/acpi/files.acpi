@@ -120,3 +120,8 @@ file	dev/acpi/sdhc_acpi.c		sdhc_acpi
 device	dwiic: i2cbus
 attach	dwiic at acpi
 file	dev/acpi/dwiic.c		dwiic
+
+# DMA Remapping Table
+device	acpidmar
+attach	acpidmar at acpi
+file	dev/acpi/acpidmar.c		acpidmar
