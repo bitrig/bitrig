@@ -1551,6 +1551,7 @@ void
 pmap_init()
 {
 	pool_init(&pmap_pmap_pool, sizeof(struct pmap), 0, 0, 0, "pmap", NULL);
+	pool_setipl(&pmap_pmap_pool, IPL_VM);
 	pool_setlowat(&pmap_pmap_pool, 2);
 	pool_init(&pmap_pted_pool, sizeof(struct pte_desc), 0, 0, 0, "pted",
 	    NULL);
