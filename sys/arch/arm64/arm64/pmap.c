@@ -1009,6 +1009,7 @@ pmap_vp_destroy(pmap_t pm)
 	// split the lower levels into a different function?
 	if (!pm->have_4_level_pt) {
 		pmap_vp_destroy_l2_l3(pm, pm->pm_vp.l1);
+		pool_put(&pmap_vp_pool, pm->pm_vp.l1);
 		pm->pm_vp.l1 = NULL;
 		return;
 	}
@@ -1024,6 +1025,7 @@ pmap_vp_destroy(pmap_t pm)
 		vp0->vp[i] = NULL;
 		pool_put(&pmap_vp_pool, vp1);
 	}
+	vp0->vp[i] = NULL;
 	pool_put(&pmap_vp_pool, vp0);
 }
 
