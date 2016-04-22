@@ -1481,6 +1481,7 @@
 ./usr/lib/clang/3.8.0/include/cuda_builtin_vars.h
 ./usr/lib/clang/3.8.0/include/emmintrin.h
 ./usr/lib/clang/3.8.0/include/f16cintrin.h
+./usr/lib/clang/3.8.0/include/float.h
 ./usr/lib/clang/3.8.0/include/fma4intrin.h
 ./usr/lib/clang/3.8.0/include/fmaintrin.h
 ./usr/lib/clang/3.8.0/include/fxsrintrin.h
@@ -1488,6 +1489,7 @@
 ./usr/lib/clang/3.8.0/include/htmxlintrin.h
 ./usr/lib/clang/3.8.0/include/ia32intrin.h
 ./usr/lib/clang/3.8.0/include/immintrin.h
+./usr/lib/clang/3.8.0/include/limits.h
 ./usr/lib/clang/3.8.0/include/lzcntintrin.h
 ./usr/lib/clang/3.8.0/include/mm3dnow.h
 ./usr/lib/clang/3.8.0/include/mm_malloc.h
@@ -1510,10 +1512,18 @@
 ./usr/lib/clang/3.8.0/include/sanitizer/msan_interface.h
 ./usr/lib/clang/3.8.0/include/shaintrin.h
 ./usr/lib/clang/3.8.0/include/smmintrin.h
+./usr/lib/clang/3.8.0/include/stdalign.h
+./usr/lib/clang/3.8.0/include/stdarg.h
+./usr/lib/clang/3.8.0/include/stdatomic.h
+./usr/lib/clang/3.8.0/include/stdbool.h
+./usr/lib/clang/3.8.0/include/stddef.h
+./usr/lib/clang/3.8.0/include/stdint.h
+./usr/lib/clang/3.8.0/include/stdnoreturn.h
 ./usr/lib/clang/3.8.0/include/tbmintrin.h
 ./usr/lib/clang/3.8.0/include/tmmintrin.h
 ./usr/lib/clang/3.8.0/include/unwind.h
 ./usr/lib/clang/3.8.0/include/vadefs.h
+./usr/lib/clang/3.8.0/include/varargs.h
 ./usr/lib/clang/3.8.0/include/vecintrin.h
 ./usr/lib/clang/3.8.0/include/wmmintrin.h
 ./usr/lib/clang/3.8.0/include/x86intrin.h

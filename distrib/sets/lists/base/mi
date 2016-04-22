@@ -2412,6 +2412,7 @@
 ./usr/sbin/rbootd
 ./usr/sbin/rcctl
 ./usr/sbin/rdate
+./usr/sbin/rdconfig
 ./usr/sbin/rebound
 ./usr/sbin/relayctl
 ./usr/sbin/relayd
@@ -9380,6 +9381,7 @@
 ./usr/share/man/man8/rc.subr.8
 ./usr/share/man/man8/rcctl.8
 ./usr/share/man/man8/rdate.8
+./usr/share/man/man8/rdconfig.8
 ./usr/share/man/man8/rdump.8
 ./usr/share/man/man8/reboot.8
 ./usr/share/man/man8/rebound.8
