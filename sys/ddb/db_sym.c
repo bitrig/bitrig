@@ -49,13 +49,15 @@ ddb_init(void)
 {
 	const char *name = "bsd";
 	extern char *esym;
-#if defined(__sparc64__) || defined(__mips__)
+#if defined(__sparc64__) || defined(__mips__) || defined(__amd64__) || \
+	    defined(__i386__)
 	extern char *ssym;
 #endif
 	char *xssym, *xesym;
 
 	xesym = esym;
-#if defined(__sparc64__) || defined(__mips__)
+#if defined(__sparc64__) || defined(__mips__) || defined(__amd64__) || \
+	    defined(__i386__)
 	xssym = ssym;
 #else
 	xssym = (char *)&end;
