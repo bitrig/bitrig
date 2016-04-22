@@ -150,10 +150,6 @@ data_abort(struct trapframe *frame, uint64_t esr, int lower, int exe)
 
 	far = READ_SPECIALREG(far_el1);
 
-	/* Re-enable interrupts if they were enabled previously */
-	if (__predict_true((frame->tf_spsr & I_bit) == 0))
-		enable_interrupts();
-
 	if (lower)
 		map = &p->p_vmspace->vm_map;
 	else {
