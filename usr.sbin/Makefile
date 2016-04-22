@@ -13,7 +13,7 @@ SUBDIR=	ac accton acpidump adduser apm apmd arp \
 	npppctl npppd nsd ntpd ospfctl ospfd ospf6d ospf6ctl \
 	pcidump pkg_add portmap pppd procmap pstat pwd_mkdb \
 	quot quotaon radiusctl radiusd rarpd rbootd \
-	rcctl rdate rebound relayctl relayd repquota ripctl ripd \
+	rcctl rdate rdconfig rebound relayctl relayd repquota ripctl ripd \
 	rmt route6d rpc.bootparamd rpc.lockd rpc.statd rtadvd \
 	sa sasyncd sensorsd slowcgi smtpd \
 	snmpctl snmpd spamdb syslogc syslogd sysmerge tcpdrop tcpdump \
