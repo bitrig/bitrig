@@ -74,7 +74,7 @@
  * Maximum size of the kernel malloc arena in PAGE_SIZE-sized
  * logical pages.
  */
-#define	NKMEMPAGES_MAX_DEFAULT	((64 * 1024 * 1024) >> PAGE_SHIFT)
+#define	NKMEMPAGES_MAX_DEFAULT	((128 * 1024 * 1024) >> PAGE_SHIFT)
 
 #define		STACKALIGNBYTES		(16 - 1)
 #define		STACKALIGN(p)		((u_long)(p) &~ STACKALIGNBYTES)
