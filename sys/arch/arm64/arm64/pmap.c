@@ -121,7 +121,7 @@ struct pte_desc {
 int pmap_vp_enter(pmap_t pm, vaddr_t va, struct pte_desc *pted, int flags);
 struct pte_desc *pmap_vp_remove(pmap_t pm, vaddr_t va);
 void pmap_vp_destroy(pmap_t pm);
-struct pte_desc *pmap_vp_lookup(pmap_t pm, vaddr_t va);
+struct pte_desc *pmap_vp_lookup(pmap_t pm, vaddr_t va, uint64_t **);
 
 /* PV routines */
 void pmap_enter_pv(struct pte_desc *pted, struct vm_page *);
@@ -266,7 +266,7 @@ const struct kmem_pa_mode kp_lN = {
  * Otherwise bad race conditions can appear.
  */
 struct pte_desc *
-pmap_vp_lookup(pmap_t pm, vaddr_t va)
+pmap_vp_lookup(pmap_t pm, vaddr_t va, uint64_t **pl3entry)
 {
 	struct pmapvp1 *vp1;
 	struct pmapvp2 *vp2;
@@ -293,6 +293,8 @@ pmap_vp_lookup(pmap_t pm, vaddr_t va)
 	}
 
 	pted = vp3->vp[VP_IDX3(va)];
+	if (pl3entry != NULL)
+		*pl3entry = &(vp3->l3[VP_IDX3(va)]);
 
 	return pted;
 }
@@ -487,12 +489,12 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	/* MP - Acquire lock for this pmap */
 
 	s = splvm();
-	pted = pmap_vp_lookup(pm, va);
+	pted = pmap_vp_lookup(pm, va, NULL);
 	if (pted && PTED_VALID(pted)) {
 		pmap_remove_pted(pm, pted);
 		/* we lost our pted if it was user */
 		if (pm != pmap_kernel())
-			pted = pmap_vp_lookup(pm, va);
+			pted = pmap_vp_lookup(pm, va, NULL);
 	}
 
 	pm->pm_stats.resident_count++;
@@ -597,8 +599,17 @@ pmap_remove(pmap_t pm, vaddr_t sva, vaddr_t eva)
 	vaddr_t va;
 
 	for (va = sva; va < eva; va += PAGE_SIZE) {
-		pted = pmap_vp_lookup(pm, va);
-		if (pted && PTED_VALID(pted))
+		pted = pmap_vp_lookup(pm, va, NULL);
+
+		if (pted == NULL)
+			continue;
+
+		if (pted->pted_va & PTED_VA_WIRED_M) {
+			pm->pm_stats.wired_count--;
+			pted->pted_va &= ~PTED_VA_WIRED_M;
+		}
+
+		if (PTED_VALID(pted))
 			pmap_remove_pted(pm, pted);
 	}
 }
@@ -613,6 +624,11 @@ pmap_remove_pted(pmap_t pm, struct pte_desc *pted)
 
 	s = splvm();
 	pm->pm_stats.resident_count--;
+
+	if (pted->pted_va & PTED_VA_WIRED_M) {
+		pm->pm_stats.wired_count--;
+		pted->pted_va &= ~PTED_VA_WIRED_M;
+	}
 
 	__asm __volatile("dsb sy");
 	//dcache_wbinv_poc(va & PTE_RPGN, pted->pted_pte & PTE_RPGN, PAGE_SIZE);
@@ -659,7 +675,7 @@ _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags, int cache)
 	/* MP - lock pmap. */
 	s = splvm();
 
-	pted = pmap_vp_lookup(pm, va);
+	pted = pmap_vp_lookup(pm, va, NULL);
 
 	/* Do not have pted for this, get one and put it in VP */
 	if (pted == NULL) {
@@ -721,7 +737,7 @@ pmap_kremove_pg(vaddr_t va)
 	//if (!cold) printf("%s: %x\n", __func__, va);
 
 	pm = pmap_kernel();
-	pted = pmap_vp_lookup(pm, va);
+	pted = pmap_vp_lookup(pm, va, NULL);
 	if (pted == NULL)
 		return;
 
@@ -746,6 +762,9 @@ pmap_kremove_pg(vaddr_t va)
 
 	if (PTED_MANAGED(pted))
 		pmap_remove_pv(pted);
+
+	if (pted->pted_va & PTED_VA_WIRED_M)
+		pm->pm_stats.wired_count--;
 
 	/* invalidate pted; */
 	pted->pted_pte = 0;
@@ -791,8 +810,10 @@ pmap_fill_pte(pmap_t pm, vaddr_t va, paddr_t pa, struct pte_desc *pted,
 
 	pted->pted_va |= prot & (PROT_READ|PROT_WRITE|PROT_EXEC);
 
-	if (flags & PMAP_WIRED)
+	if (flags & PMAP_WIRED) {
 		pted->pted_va |= PTED_VA_WIRED_M;
+		pm->pm_stats.wired_count++;
+	}
 
 	pted->pted_pte = pa & PTE_RPGN;
 	pted->pted_pte |= (flags & (PROT_READ|PROT_WRITE)) | (prot & PROT_EXEC);
@@ -1459,7 +1480,7 @@ pmap_extract(pmap_t pm, vaddr_t va, paddr_t *pa)
 {
 	struct pte_desc *pted;
 
-	pted = pmap_vp_lookup(pm, va);
+	pted = pmap_vp_lookup(pm, va, NULL);
 
 	if (pted == NULL)
 		return FALSE;
@@ -1480,7 +1501,7 @@ pmap_page_ro(pmap_t pm, vaddr_t va, vm_prot_t prot)
 	struct pte_desc *pted;
 
 	/* Every VA needs a pted, even unmanaged ones. */
-	pted = pmap_vp_lookup(pm, va);
+	pted = pmap_vp_lookup(pm, va, NULL);
 	if (!pted || !PTED_VALID(pted)) {
 		return;
 	}
@@ -1725,25 +1746,34 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 	struct pte_desc *pted;
 	struct vm_page *pg;
 	paddr_t pa;
+	// pl3 is pointer to the L3 entry to update for this mapping.
+	// will be valid if a pted exists.
+	uint64_t *pl3 = NULL;
 
 	//printf("fault pm %x va %x ftype %x user %x\n", pm, va, ftype, user);
 
 	/* Every VA needs a pted, even unmanaged ones. */
-	pted = pmap_vp_lookup(pm, va);
+	pted = pmap_vp_lookup(pm, va, &pl3);
 	if (!pted || !PTED_VALID(pted)) {
 		return 0;
 	}
 
-	/* There has to be a PA for the VA, go look. */
-	if (pmap_extract(pm, va, &pa) == FALSE) {
-		return 0;
-	}
+	/* There has to be a PA for the VA, get it. */
+	pa = (pted->pted_pte & PTE_RPGN);
 
 	/* If it's unmanaged, it must not fault. */
 	pg = PHYS_TO_VM_PAGE(pa);
 	if (pg == NULL) {
 		return 0;
 	}
+
+	/*
+	 * Check based on fault type for mod/ref emulation.
+	 * if L3 entry is zero, it is not a possible fixup
+	 */
+	if (*pl3 == 0)
+		return 0;
+
 
 	/*
 	 * Check the fault types to find out if we were doing
@@ -1763,8 +1793,9 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 		/* Thus, enable read and write. */
 		pted->pted_pte |= (pted->pted_va & (PROT_READ|PROT_WRITE));
 
-		/* Insert change. */
-		pte_insert(pted);
+		pted->pted_pte |= PROT_WRITE;
+		*pl3 &= ~ATTR_AP(2);
+		*pl3 |= ATTR_AF;
 
 		/* Flush tlb. */
 		ttlb_flush(pm, va & PTE_RPGN);
@@ -1781,9 +1812,12 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 
 		/* Thus, enable read and exec. */
 		pted->pted_pte |= (pted->pted_va & (PROT_READ|PROT_EXEC));
-
-		/* Insert change. */
-		pte_insert(pted);
+		if (pted->pted_pmap == pmap_kernel()) {
+			*pl3 &= ~ATTR_PXN;
+		} else {
+			*pl3 &= ~ATTR_UXN;
+		}
+		*pl3 |= ATTR_AF;
 
 		/* Flush tlb. */
 		ttlb_flush(pm, va & PTE_RPGN);
@@ -1800,9 +1834,7 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 
 		/* Thus, enable read. */
 		pted->pted_pte |= (pted->pted_va & PROT_READ);
-
-		/* Insert change. */
-		pte_insert(pted);
+		*pl3 |= ATTR_AF;
 
 		/* Flush tlb. */
 		ttlb_flush(pm, va & PTE_RPGN);
@@ -1885,31 +1917,46 @@ int pmap_is_modified(struct vm_page *pg)
 int pmap_clear_modify(struct vm_page *pg)
 {
 	struct pte_desc *pted;
+	uint64_t *pl3 = NULL;
 
 	//printf("%s\n", __func__);
 
 	pg->pg_flags &= ~PG_PMAP_MOD;
 
 	LIST_FOREACH(pted, &(pg->mdpage.pv_list), pted_pv_list) {
-		pte_remove(pted, 0);
+		if (pmap_vp_lookup(pted->pted_pmap, pted->pted_va & PTE_RPGN, &pl3) == NULL) 
+			panic("failed to look up pte\n");
+		*pl3  |= ATTR_AP(2);
 		pted->pted_pte &= ~PROT_WRITE;
-		pte_insert(pted);
+
+		ttlb_flush(pted->pted_pmap, pted->pted_va & PTE_RPGN);
 	}
 
 	return 0;
 }
 
+/*
+ * When this turns off read permissions it also disables write permissions
+ * so that mod is correctly tracked after clear_ref; FAULT_READ; FAULT_WRITE;
+ */
 int pmap_clear_reference(struct vm_page *pg)
 {
 	struct pte_desc *pted;
+	uint64_t *pl3 = NULL;
 
 	//printf("%s\n", __func__);
 
 	pg->pg_flags &= ~PG_PMAP_REF;
 
 	LIST_FOREACH(pted, &(pg->mdpage.pv_list), pted_pv_list) {
-		pte_remove(pted, 0);
+		if (pmap_vp_lookup(pted->pted_pmap, pted->pted_va & PTE_RPGN, &pl3) == NULL) 
+			panic("failed to look up pte\n");
 		pted->pted_pte &= ~PROT_MASK;
+		*pl3  |= ATTR_AP(2);	// turns of write as well !?!? 
+		*pl3  &= ~ATTR_AF;
+		pted->pted_pte &= ~PROT_WRITE|PROT_READ;
+
+		ttlb_flush(pted->pted_pmap, pted->pted_va & PTE_RPGN);
 	}
 
 	return 0;
@@ -1926,9 +1973,11 @@ void pmap_unwire(pmap_t pm, vaddr_t va)
 
 	//printf("%s\n", __func__);
 
-	pted = pmap_vp_lookup(pm, va);
-	if (pted != NULL)
+	pted = pmap_vp_lookup(pm, va, NULL);
+	if ((pted != NULL) && (pted->pted_va & PTED_VA_WIRED_M)) {
+		pm->pm_stats.wired_count--;
 		pted->pted_va &= ~PTED_VA_WIRED_M;
+	}
 }
 
 void pmap_remove_holes(struct vmspace *vm)
