@@ -1177,7 +1177,7 @@ systrace_io(struct str_process *strp, struct systrace_io *io)
 	uio.uio_segflg = UIO_USERSPACE;
 	uio.uio_procp = p;
 
-	error = process_domem(p, t, &uio, PT_WRITE_I);
+	error = process_domem(p, t, &uio);
 	io->strio_len -= uio.uio_resid;
  out:
 

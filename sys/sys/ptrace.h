@@ -116,7 +116,7 @@ int	process_write_fpregs(struct proc *p, struct fpreg *regs);
 #endif
 int	process_write_regs(struct proc *p, struct reg *regs);
 int	process_checkioperm(struct proc *, struct process *);
-int	process_domem(struct proc *, struct proc *, struct uio *, int);
+int	process_domem(struct proc *, struct proc *, struct uio *);
 
 #ifndef FIX_SSTEP
 #define FIX_SSTEP(p)

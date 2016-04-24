@@ -361,8 +361,7 @@ sys_ptrace(struct proc *p, void *v, register_t *retval)
 		uio.uio_segflg = UIO_SYSSPACE;
 		uio.uio_rw = write ? UIO_WRITE : UIO_READ;
 		uio.uio_procp = p;
-		error = process_domem(p, t, &uio, write ? PT_WRITE_I :
-				PT_READ_I);
+		error = process_domem(p, t, &uio);
 		if (write == 0)
 			*retval = temp;
 		return (error);
@@ -380,23 +379,14 @@ sys_ptrace(struct proc *p, void *v, register_t *retval)
 		uio.uio_procp = p;
 		switch (piod.piod_op) {
 		case PIOD_READ_I:
-			req = PT_READ_I;
-			uio.uio_rw = UIO_READ;
-			break;
 		case PIOD_READ_D:
-			req = PT_READ_D;
 			uio.uio_rw = UIO_READ;
 			break;
 		case PIOD_WRITE_I:
-			req = PT_WRITE_I;
-			uio.uio_rw = UIO_WRITE;
-			break;
 		case PIOD_WRITE_D:
-			req = PT_WRITE_D;
 			uio.uio_rw = UIO_WRITE;
 			break;
 		case PIOD_READ_AUXV:
-			req = PT_READ_D;
 			uio.uio_rw = UIO_READ;
 			temp = tr->ps_emul->e_arglen * sizeof(char *);
 			if (uio.uio_offset > temp)
@@ -411,7 +401,7 @@ sys_ptrace(struct proc *p, void *v, register_t *retval)
 		default:
 			return (EINVAL);
 		}
-		error = process_domem(p, t, &uio, req);
+		error = process_domem(p, t, &uio);
 		piod.piod_len -= uio.uio_resid;
 		(void) copyout(&piod, SCARG(uap, addr), sizeof(piod));
 		return (error);
@@ -697,7 +687,7 @@ process_checkioperm(struct proc *p, struct process *tr)
 }
 
 int
-process_domem(struct proc *curp, struct proc *p, struct uio *uio, int req)
+process_domem(struct proc *curp, struct proc *p, struct uio *uio)
 {
 	struct vmspace *vm;
 	int error;
@@ -720,11 +710,11 @@ process_domem(struct proc *curp, struct proc *p, struct uio *uio, int req)
 	vm->vm_refcnt++;
 
 	error = uvm_io(&vm->vm_map, uio,
-	    (req == PT_WRITE_I) ? UVM_IO_FIXPROT : 0);
+	    (uio->uio_rw == UIO_WRITE) ? UVM_IO_FIXPROT : 0);
 
 	uvmspace_free(vm);
 
-	if (error == 0 && req == PT_WRITE_I)
+	if (error == 0 && uio->uio_rw == UIO_WRITE)
 		pmap_proc_iflush(p, addr, len);
 
 	return (error);
