@@ -59,7 +59,7 @@ CMACHFLAGS+=	-ffreestanding -fno-omit-frame-pointer \
 CMACHFLAGS+=	-fno-stack-protector
 .endif
 
-COPTS?=		-O3
+COPTS?=		-O3 -fno-pie
 
 CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE} ${CFLAGS_$*}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${AFLAGS_$*} ${CMACHFLAGS}
