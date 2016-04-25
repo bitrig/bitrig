@@ -24,36 +24,12 @@ _archdir?=	$S/arch/${_arch}
 INCLUDES=	-nostdinc -I$S -I. -I$S/arch
 CPPFLAGS=	${INCLUDES} ${IDENT} ${PARAM} -D_KERNEL -MD -MP
 
-.if ${COMPILER_VERSION:L} == "gcc4"
 CWARNFLAGS=	-Wall -Wimplicit-function-declaration \
-		-Wno-main -Wno-uninitialized \
-		-Wno-attributes
-#		-Werror -Wframe-larger-than-2047
-
-CMACHFLAGS=	-mcmodel=kernel -mno-red-zone -mno-sse2 -mno-sse -mno-3dnow \
-		-mno-mmx -msoft-float -fno-omit-frame-pointer
-CMACHFLAGS+=	-fno-builtin-printf -fno-builtin-snprintf \
-		-fno-builtin-vsnprintf -fno-builtin-log \
-		-fno-builtin-log2 -fno-builtin-malloc -fno-builtin-free ${NOPIE_FLAGS}
-.if ${IDENT:M-DNO_PROPOLICE}
-CMACHFLAGS+=	-fno-stack-protector
-.endif
-
-COPTS?=		-O2
-
-CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE}
-AFLAGS=		-D_LOCORE -x assembler-with-cpp ${CWARNFLAGS} ${CMACHFLAGS}
-LINKFLAGS=	-T ldscript -X --warn-common -nopie
-
-.else
-
-CWARNFLAGS=	-Wall -Wimplicit-function-declaration \
-		-Werror -Wpointer-arith -Wunreachable-code
-# these are to shutup clang vs gcc, should be ultimately fixed
-CWARNFLAGS+=	-Wno-pointer-sign -Wno-error-shift-negative-value
+		-Werror -Wpointer-arith -Wunreachable-code \
+		-Wno-pointer-sign -Wno-error-shift-negative-value
 CMACHFLAGS=	-mcmodel=kernel -mno-red-zone -mno-mmx -mno-sse -msoft-float \
-		-mno-aes -mno-avx -mno-omit-leaf-frame-pointer
-CMACHFLAGS+=	-ffreestanding -fno-omit-frame-pointer \
+		-mno-aes -mno-avx -mno-omit-leaf-frame-pointer \
+		-ffreestanding -fno-omit-frame-pointer \
 		-fno-asynchronous-unwind-tables
 .if ${IDENT:M-DNO_PROPOLICE}
 CMACHFLAGS+=	-fno-stack-protector
@@ -65,17 +41,13 @@ CFLAGS=		${DEBUG} ${CWARNFLAGS} ${CMACHFLAGS} ${COPTS} ${PIPE} ${CFLAGS_$*}
 AFLAGS=		-D_LOCORE -x assembler-with-cpp ${AFLAGS_$*} ${CMACHFLAGS}
 LINKFLAGS=	-T ldscript -X --warn-common -z noexecstack -nopie
 
-.if ${COMPILER_VERSION:L} == "clang"
-CFLAGS_i915_drv		= -Wno-initializer-overrides
-CFLAGS_i915_gem		= -Wno-tautological-compare
+CFLAGS_i915_drv			= -Wno-initializer-overrides
+CFLAGS_i915_gem			= -Wno-tautological-compare
 CFLAGS_i915_gem_tiling		= -Wno-tautological-compare
-CFLAGS_i915_gem_execbuffer		= -Wno-tautological-compare
-CFLAGS_intel_display	= -Wno-tautological-compare
-CFLAGS_intel_i2c	= -Wno-tautological-constant-out-of-range-compare
-CFLAGS_intel_overlay	= -Wno-tautological-compare
-.endif
-
-.endif
+CFLAGS_i915_gem_execbuffer	= -Wno-tautological-compare
+CFLAGS_intel_display		= -Wno-tautological-compare
+CFLAGS_intel_i2c		= -Wno-tautological-constant-out-of-range-compare
+CFLAGS_intel_overlay		= -Wno-tautological-compare
 
 .if ${IDENT:M-DDDB_STRUCT}
 DB_STRUCTINFO=	db_structinfo.h
