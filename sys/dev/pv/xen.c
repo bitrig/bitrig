@@ -1,4 +1,4 @@
-/*	$OpenBSD: xen.c,v 1.55 2016/04/19 18:15:41 mikeb Exp $	*/
+/*	$OpenBSD: xen.c,v 1.56 2016/04/28 16:40:10 mikeb Exp $	*/
 
 /*
  * Copyright (c) 2015 Mike Belopuhov
