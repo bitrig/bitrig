@@ -31,6 +31,11 @@ ALLBSDRD=	${BSD_RD}
 ALLBSDRD+=	${BSD_RD}.${SOC}.umg
 .endfor
 
+.ifdef CROSSDIR
+HOSTARCH!= uname -m
+OBJARG=-O obj.${HOSTARCH}.arm64
+.endif
+
 .ifndef DESTDIR
 all ${IMAGE}:
 	@echo setenv DESTDIR before making a ramdisk!
@@ -72,7 +77,7 @@ ${IMAGE}:
 .PRECIOUS:	${IMAGE}
 
 ${CBIN}.mk ${CBIN}.cache ${CBIN}.c: ${CRUNCHCONF}
-	crunchgen -E -D ${.CURDIR}/../../.. -L ${DESTDIR}/usr/lib -O obj.amd64.arm64 ${.ALLSRC}
+	crunchgen -E -D ${.CURDIR}/../../.. -L ${DESTDIR}/usr/lib ${OBJARG} ${.ALLSRC}
 
 ${CBIN}: ${CBIN}.mk ${CBIN}.cache ${CBIN}.c
 	${MAKE} -f ${CBIN}.mk all
