@@ -1,4 +1,4 @@
-/*	$OpenBSD: if_spppsubr.c,v 1.149 2015/11/23 14:41:05 sthen Exp $	*/
+/*	$OpenBSD: if_spppsubr.c,v 1.151 2016/05/01 14:08:39 sthen Exp $	*/
 /*
  * Synchronous PPP link level subroutines.
  *
@@ -4094,7 +4094,7 @@ sppp_keepalive(void *dummy)
 		}
 		if (sp->pp_alivecnt < MAXALIVECNT)
 			++sp->pp_alivecnt;
-		else if (sp->pp_phase >= PHASE_AUTHENTICATE) {
+		if (sp->pp_phase >= PHASE_AUTHENTICATE) {
 			u_int32_t nmagic = htonl(sp->lcp.magic);
 			sp->lcp.echoid = ++sp->pp_seq;
 			sppp_cp_send (sp, PPP_LCP, ECHO_REQ,
