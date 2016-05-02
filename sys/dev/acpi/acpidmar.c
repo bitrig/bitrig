@@ -413,7 +413,7 @@ dmar_dumpseg(bus_dma_tag_t tag, int nseg, bus_dma_segment_t *segs,
 		return;
 	printf("%s: %s\n", lbl, dom_bdf(dom));
 	for (i = 0; i < nseg; i++) {
-		printf("  %.16llx %.8x\n", 
+		printf("  %.16llx %.8x\n",
 		    (uint64_t)segs[i].ds_addr,
 		    (uint32_t)segs[i].ds_len);
 	}
