@@ -49,8 +49,7 @@
 #include "intel_drv.h"
 
 #include <machine/pmap.h>
-
-extern void	dmar_ptmap(bus_dma_tag_t tag, bus_addr_t addr);
+#include <dev/acpi/acpidmar.h>
 
 static void i915_gem_object_flush_gtt_write_domain(struct drm_i915_gem_object *obj);
 static void i915_gem_object_flush_cpu_write_domain(struct drm_i915_gem_object *obj,
@@ -2224,8 +2223,10 @@ i915_gem_object_get_pages_gtt(struct drm_i915_gem_object *obj)
 
 	i = 0;
 	TAILQ_FOREACH(page, &plist, pageq) {
-		ptaddr = VM_PAGE_TO_PHYS(page);
-		dmar_ptmap(dev_priv->dmat, ptaddr);
+		if (acpidmar_sc) {
+			ptaddr = VM_PAGE_TO_PHYS(page);
+			dmar_ptmap(dev_priv->dmat, ptaddr);
+		}
 		st[i] = page;
 		i++;
 	}

@@ -95,6 +95,11 @@
 #include <machine/mpbiosvar.h>
 #endif
 
+#include "acpi.h"
+#if NACPI > 0
+#include <dev/acpi/acpidmar.h>
+#endif
+
 /*
  * Memory Mapped Configuration space access.
  *
@@ -146,15 +151,6 @@ struct bus_dma_tag pci_bus_dma_tag = {
 	_bus_dmamem_unmap,
 	_bus_dmamem_mmap,
 };
-
-extern void acpidmar_pci_hook(pci_chipset_tag_t, struct pci_attach_args *);
-
-int
-pci_probe_device_hook(pci_chipset_tag_t pc, struct pci_attach_args *pa)
-{
-	acpidmar_pci_hook(pc, pa);
-	return (0);
-}
 
 void
 pci_attach_hook(struct device *parent, struct device *self,
@@ -674,7 +670,16 @@ pci_init_extents(void)
 	}
 }
 
-#include "acpi.h"
+int
+pci_probe_device_hook(pci_chipset_tag_t pc, struct pci_attach_args *pa)
+{
+#if NACPI > 0
+	if (acpidmar_sc)
+		acpidmar_pci_hook(pc, pa);
+#endif
+	return (0);
+}
+
 #if NACPI > 0
 void acpi_pci_match(struct device *, struct pci_attach_args *);
 pcireg_t acpi_pci_min_powerstate(pci_chipset_tag_t, pcitag_t);

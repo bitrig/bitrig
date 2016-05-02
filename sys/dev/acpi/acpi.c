@@ -46,6 +46,7 @@
 #include <dev/acpi/amltypes.h>
 #include <dev/acpi/acpidev.h>
 #include <dev/acpi/dsdt.h>
+#include <dev/acpi/acpidmar.h>
 #include <dev/wscons/wsdisplayvar.h>
 
 #include <dev/pci/pcidevs.h>
@@ -147,8 +148,6 @@ int	wdcdetach(struct channel_softc *, int);
 int	is_ejectable_bay(struct aml_node *node);
 int	is_ata(struct aml_node *node);
 int	is_ejectable(struct aml_node *node);
-
-extern void	acpidmar_sw(int);
 
 struct idechnl {
 	struct acpi_softc *sc;
@@ -2236,7 +2235,8 @@ acpi_sleep_pm(struct acpi_softc *sc, int state)
 	    sc->sc_fadt->pm2_cnt_blk && sc->sc_fadt->pm2_cnt_len)
 		acpi_write_pmreg(sc, ACPIREG_PM2_CNT, 0, ACPI_PM2_ARB_DIS);
 
-	acpidmar_sw(DVACT_SUSPEND);
+	if (acpidmar_sc)
+		acpidmar_sw(DVACT_SUSPEND);
 
 	/* Write SLP_TYPx values */
 	rega = acpi_read_pmreg(sc, ACPIREG_PM1A_CNT, 0);
@@ -2273,7 +2273,8 @@ acpi_resume_pm(struct acpi_softc *sc, int fromstate)
 {
 	uint16_t rega, regb, en;
 
-	acpidmar_sw(DVACT_RESUME);
+	if (acpidmar_sc)
+		acpidmar_sw(DVACT_RESUME);
 
 	/* Write SLP_TYPx values */
 	rega = acpi_read_pmreg(sc, ACPIREG_PM1A_CNT, 0);
