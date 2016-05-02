@@ -267,6 +267,8 @@ if [[ -n $user ]]; then
 	sed -i -e "s@^wheel:.:0:root\$@wheel:\*:0:root,${user}@" \
 		/mnt/etc/group 2>/dev/null
 
+	chown -R 1000:1000 $_home
+
 	# During autoinstall, add public ssh key to authorized_keys.
 	[[ -n "$userkey" ]] &&
 		print -r -- "$userkey" >>$_home/.ssh/authorized_keys
