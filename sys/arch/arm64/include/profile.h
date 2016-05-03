@@ -30,11 +30,16 @@ __asm__ (".text;"						\
 	 ".globl " MCOUNT_ASM_NAME ";"				\
 	 ".type " MCOUNT_ASM_NAME ",@function;"			\
 	 MCOUNT_ASM_NAME ":;"					\
-	 "	stp	x0, x1, [sp, #-80]!;"			\
+	 "	stp	x0, x1, [sp, #-160]!;"			\
 	 "	stp	x2, x3, [sp, #16];"			\
 	 "	stp	x4, x5, [sp, #32];"			\
 	 "	stp	x6, x7, [sp, #48];"			\
-	 "	stp	x29, lr, [sp, #64];"			\
+	 "	stp	x8, x9, [sp, #64];"			\
+	 "	stp	x10,x11,[sp, #80];"			\
+	 "	stp	x12,x13,[sp, #96];"			\
+	 "	stp	x14,x15,[sp, #112];"			\
+	 "	stp	x16,x17,[sp, #128];"			\
+	 "	stp	x29,lr, [sp, #144];"			\
 	 /* load from pc at 8 off frame pointer */		\
 	 "	ldr	x0, [x29, #8];"				\
 	 "	mov	x1, lr;"				\
@@ -43,7 +48,13 @@ __asm__ (".text;"						\
 	 "	ldp	x2, x3, [sp, #16];"			\
 	 "	ldp	x4, x5, [sp, #32];"			\
 	 "	ldp	x6, x7, [sp, #48];"			\
-	 "	ldp	x0, x1, [sp], #80;"			\
+	 "	ldp	x8, x9, [sp, #64];"			\
+	 "	ldp	x10,x11,[sp, #80];"			\
+	 "	ldp	x12,x13,[sp, #96];"			\
+	 "	ldp	x14,x15,[sp, #112];"			\
+	 "	ldp	x16,x17,[sp, #128];"			\
+	 "	ldp	x29,lr, [sp, #144];"			\
+	 "	ldp	x0, x1, [sp], #160;"			\
 	 "	ret;");
 
 #ifdef _KERNEL
@@ -53,6 +64,4 @@ __asm__ ("mrs %x0,daif; msr daifset, #0x2": "=r"(s));
 #define	MCOUNT_EXIT						\
 __asm__ ("msr daif, %x0":: "r"(s));
 	
-extern void *_start;
-#define KERNBASE ((long) &_start)
 #endif // _KERNEL
