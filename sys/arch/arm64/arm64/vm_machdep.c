@@ -95,10 +95,7 @@ cpu_fork(struct proc *p1, struct proc *p2, void *stack, size_t stacksize,
 	sf = (struct switchframe *)tf - 1;
 	sf->sf_x19 = (uint64_t)func;
 	sf->sf_x20= (uint64_t)arg;
-	if (p2->p_pid == 1)
-		sf->sf_lr = (u_int64_t)&proc_trampoline;
-	else
-		sf->sf_lr = (u_int64_t)&child_trampoline;
+	sf->sf_lr = (u_int64_t)&proc_trampoline;
 	pcb->pcb_sp = (uint64_t)sf;
 }
 

@@ -98,18 +98,6 @@ ENTRY(proc_trampoline)
 	bl spllower
 	mov x0, x20
 	blr x19
-	b .
-	
-
-ENTRY(child_trampoline)
-#ifdef MULTIPROCESSOR
-	bl _C_LABEL(proc_trampoline_mp)
-#endif
-	// call it or just set the variable?
-	mov x0, IPL_NONE
-	bl spllower
-	mov x0, x20
-	blr x19
 	b syscall_return
 
 	
