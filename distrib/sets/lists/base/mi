@@ -652,7 +652,7 @@
 ./usr/lib/libc++.so.2.0
 ./usr/lib/libc++abi.so.2.0
 ./usr/lib/libc.so.84.2
-./usr/lib/libcrypto.so.37.0
+./usr/lib/libcrypto.so.38.0
 ./usr/lib/libcurses.so.15.0
 ./usr/lib/libedit.so.6.2
 ./usr/lib/libevent.so.5.0
@@ -679,10 +679,10 @@
 ./usr/lib/libskey.so.7.0
 ./usr/lib/libsndio.so.6.1
 ./usr/lib/libsqlite3.so.32.0
-./usr/lib/libssl.so.38.0
+./usr/lib/libssl.so.39.0
 ./usr/lib/libtermcap.so.15.0
 ./usr/lib/libtermlib.so.15.0
-./usr/lib/libtls.so.10.0
+./usr/lib/libtls.so.11.0
 ./usr/lib/libusbhid.so.7.0
 ./usr/lib/libutil.so.13.1
 ./usr/lib/libz.so.5.0
