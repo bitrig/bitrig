@@ -641,18 +641,18 @@ dmar_dmamap_sync(bus_dma_tag_t tag, bus_dmamap_t dmam, bus_addr_t offset,
     bus_size_t len, int ops)
 {
 	struct domain	*dom = tag->_cookie;
-	int		flag;
+	//int		flag;
 
-	flag = PTE_P;
+	//flag = PTE_P;
 	acpidmar_intr(dom->iommu);
-	if (ops == BUS_DMASYNC_PREREAD) {
-		/* make readable */
-		flag |= PTE_R;
-	}
-	if (ops == BUS_DMASYNC_PREWRITE) {
-		/* make writeable */
-		flag |= PTE_W;
-	}
+	//if (ops == BUS_DMASYNC_PREREAD) {
+	//	/* make readable */
+	//	flag |= PTE_R;
+	//}
+	//if (ops == BUS_DMASYNC_PREWRITE) {
+	//	/* make writeable */
+	//	flag |= PTE_W;
+	//}
 	dmar_dumpseg(tag, dmam->dm_nsegs, dmam->dm_segs, __FUNCTION__);
 	_bus_dmamap_sync(tag, dmam, offset, len, ops);
 }
