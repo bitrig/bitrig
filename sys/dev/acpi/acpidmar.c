@@ -51,6 +51,8 @@
 #include <dev/pci/pcidevs.h>
 #include <dev/pci/ppbreg.h>
 
+#include <ddb/db_var.h>
+
 #include "ioapic.h"
 
 #include "acpidmar.h"
@@ -229,6 +231,7 @@ struct cfdriver acpidmar_cd = {
 
 struct		acpidmar_softc *acpidmar_sc;
 int		acpidmar_intr(void *);
+int		_acpidmar_intr(void *);
 
 #define DID_UNITY 0x1
 
@@ -640,16 +643,17 @@ dmar_dmamap_sync(bus_dma_tag_t tag, bus_dmamap_t dmam, bus_addr_t offset,
 	struct domain	*dom = tag->_cookie;
 	int		flag;
 
-	flag = 0;
+	flag = PTE_P;
 	acpidmar_intr(dom->iommu);
 	if (ops == BUS_DMASYNC_PREREAD) {
 		/* make readable */
-		flag = PTE_P | PTE_R;
-	} else if (ops == BUS_DMASYNC_PREWRITE) {
-		/* make writeable */
-		flag = PTE_P | PTE_W;
+		flag |= PTE_R;
 	}
-	dmar_dumpseg(tag, dmam->dm_nsegs, dmam->dm_segs, __FUNCTION__);
+	if (ops == BUS_DMASYNC_PREWRITE) {
+		/* make writeable */
+		flag |= PTE_W;
+	}
+	//dmar_dumpseg(tag, dmam->dm_nsegs, dmam->dm_segs, __FUNCTION__);
 	_bus_dmamap_sync(tag, dmam, offset, len, ops);
 }
 
@@ -1094,7 +1098,7 @@ iommu_init(struct acpidmar_softc *sc, struct iommu_softc *iommu,
 	/* Clear Interrupt Masking */
 	iommu_writel(iommu, DMAR_FSTS_REG, FSTS_PFO | FSTS_PPF);
 
-	iommu->intr = acpidmar_intr_establish(iommu, IPL_BIO, acpidmar_intr,
+	iommu->intr = acpidmar_intr_establish(iommu, IPL_HIGH, _acpidmar_intr,
 	    iommu, "dmarintr");
 
 	/* Enable interrupts */
@@ -1474,6 +1478,10 @@ acpidmar_pci_hook(pci_chipset_tag_t pc, struct pci_attach_args *pa)
 	    PCI_SUBCLASS(reg) == PCI_SUBCLASS_DISPLAY_VGA) {
 		dom->flag = DOM_DEBUG | DOM_NOMAP;
 	}
+	//if (bus==3) {
+	//	dom->flag = DOM_DEBUG;
+	//	printf("acpidmar0: enable debug for %x:%x.%x\n", bus, dev, fun);
+	//}
 	if (PCI_CLASS(reg) == PCI_CLASS_BRIDGE &&
 	    PCI_SUBCLASS(reg) == PCI_SUBCLASS_BRIDGE_ISA) {
 		/* For ISA Bridges, map 0-16Mb as 1:1 */
@@ -1849,7 +1857,7 @@ acpidmar_intr_establish(void *ctx, int level, int (*func)(void *),
 	pic->pic_delroute = acpidmar_msi_delroute;
 	pic->pic_edge_stubs = ioapic_edge_stubs;
 #ifdef MULTIPROCESSOR
-	mtx_init(&pic->pic_mutex, IPL_HIGH);
+	mtx_init(&pic->pic_mutex, level);
 #endif
 
 	return intr_establish(-1, pic, 0, IST_PULSE, level, func, arg, what);
@@ -1858,11 +1866,25 @@ acpidmar_intr_establish(void *ctx, int level, int (*func)(void *),
 int
 acpidmar_intr(void *ctx)
 {
+	int	s, rv;
+
+	s = splhigh();
+	rv = _acpidmar_intr(ctx);
+	splx(s);
+
+	return (rv);
+}
+
+int
+_acpidmar_intr(void *ctx)
+{
 	struct iommu_softc		*iommu = ctx;
 	struct fault_entry		fe;
 	static struct fault_entry	ofe;
 	int				fro, nfr, fri, i;
 	uint32_t			sts;
+
+	splassert(IPL_HIGH);
 
 	if (!(iommu->gcmd & GCMD_TE)) {
 		return (1);
@@ -2030,4 +2052,5 @@ iommu_showfault(struct iommu_softc *iommu, int fri, struct fault_entry *fe)
 			printf("mem in e820.reserved\n");
 		}
 	}
+	Debugger();
 }
