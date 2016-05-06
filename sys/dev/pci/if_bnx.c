@@ -1,4 +1,4 @@
-/*	$OpenBSD: if_bnx.c,v 1.120 2015/12/11 16:07:01 mpi Exp $	*/
+/*	$OpenBSD: if_bnx.c,v 1.122 2016/05/05 23:01:28 jmatthew Exp $	*/
 
 /*-
  * Copyright (c) 2006 Broadcom Corporation
@@ -876,7 +876,6 @@ bnx_attachhook(struct device *self)
 	ifp->if_start = bnx_start;
 	ifp->if_watchdog = bnx_watchdog;
 	IFQ_SET_MAXLEN(&ifp->if_snd, USABLE_TX_BD - 1);
-	IFQ_SET_READY(&ifp->if_snd);
 	bcopy(sc->eaddr, sc->arpcom.ac_enaddr, ETHER_ADDR_LEN);
 	bcopy(sc->bnx_dev.dv_xname, ifp->if_xname, IFNAMSIZ);
 
@@ -2418,7 +2417,7 @@ bnx_dma_alloc(struct bnx_softc *sc)
 	 */
 	for (i = 0; i < TOTAL_TX_BD; i++) {
 		if (bus_dmamap_create(sc->bnx_dmatag,
-		    MCLBYTES * BNX_MAX_SEGMENTS, USABLE_TX_BD,
+		    MCLBYTES * BNX_MAX_SEGMENTS, BNX_MAX_SEGMENTS,
 		    MCLBYTES, 0, BUS_DMA_NOWAIT, &sc->tx_mbuf_map[i])) {
 			printf(": Could not create Tx mbuf %d DMA map!\n", 1);
 			rc = ENOMEM;
@@ -4893,7 +4892,8 @@ bnx_start(struct ifnet *ifp)
 	 */
 	used = 0;
 	while (1) {
-		if (sc->used_tx_bd + used + BNX_MAX_SEGMENTS >= sc->max_tx_bd) {
+		if (sc->used_tx_bd + used + BNX_MAX_SEGMENTS + 1 >=
+		    sc->max_tx_bd) {
 			DBPRINT(sc, BNX_INFO_SEND, "TX chain is closed for "
 			    "business! Total tx_bd used = %d\n",
 			    sc->used_tx_bd + used);

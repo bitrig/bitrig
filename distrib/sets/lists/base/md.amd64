@@ -602,6 +602,7 @@
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/acpi
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/acpi/acpidebug.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/acpi/acpidev.ph
+./usr/libdata/perl5/site_perl/amd64-bitrig/dev/acpi/acpidmar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/acpi/acpireg.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/acpi/acpivar.ph
 ./usr/libdata/perl5/site_perl/amd64-bitrig/dev/acpi/amltypes.ph

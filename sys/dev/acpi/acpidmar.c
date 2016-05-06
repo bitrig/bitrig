@@ -51,6 +51,8 @@
 #include <dev/pci/pcidevs.h>
 #include <dev/pci/ppbreg.h>
 
+#include <ddb/db_var.h>
+
 #include "ioapic.h"
 
 #include "acpidmar.h"
@@ -59,6 +61,7 @@
 
 int	intel_iommu_gfx_mapped = 0;
 int	force_cm = 1;
+int	acpidmar_ddb = 0;
 
 void showahci(void *);
 
@@ -426,7 +429,7 @@ domain_unload_map(struct domain *dom, bus_dmamap_t dmam)
 	bus_dma_segment_t	*seg;
 	paddr_t			base, end, idx;
 	psize_t			alen;
-	int			i, s;
+	int			i;
 
 	if (iommu_bad(dom->iommu)) {
 		printf("unload map no iommu\n");
@@ -446,9 +449,9 @@ domain_unload_map(struct domain *dom, bus_dmamap_t dmam)
 			    (uint64_t)base, (uint32_t)alen);
 		}
 
-		s = splhigh();
-		extent_free(dom->iovamap, base, alen, EX_NOWAIT);
-		splx(s);
+		if (extent_free(dom->iovamap, base, alen, EX_NOWAIT)) {
+			panic("domain_unload_map: extent_free");
+		}
 
 		/* Clear PTE */
 		for (idx = 0; idx < alen; idx += VTD_PAGE_SIZE)
@@ -465,7 +468,7 @@ domain_load_map(struct domain *dom, bus_dmamap_t map, int flags, const char *fn)
 	paddr_t			base, end, idx;
 	psize_t			alen;
 	u_long			res;
-	int			i, s;
+	int			i;
 
 	iommu = dom->iommu;
 	if (!iommu_enabled(iommu)) {
@@ -487,11 +490,11 @@ domain_load_map(struct domain *dom, bus_dmamap_t map, int flags, const char *fn)
 			goto nomap;
 		}
 
-		s = splhigh();
 		/* Allocate DMA Virtual Address */
-		extent_alloc(dom->iovamap, alen, VTD_PAGE_SIZE, 0,
-		    map->_dm_boundary, EX_NOWAIT, &res);
-		splx(s);
+		if (extent_alloc(dom->iovamap, alen, VTD_PAGE_SIZE, 0,
+		    map->_dm_boundary, EX_NOWAIT, &res)) {
+			panic("domain_load_map: extent_alloc");
+		}
 
 		if (debugme(dom)) {
 			printf("  %.16llx %x => %.16llx\n",
@@ -638,17 +641,18 @@ dmar_dmamap_sync(bus_dma_tag_t tag, bus_dmamap_t dmam, bus_addr_t offset,
     bus_size_t len, int ops)
 {
 	struct domain	*dom = tag->_cookie;
-	int		flag;
+	//int		flag;
 
-	flag = 0;
+	//flag = PTE_P;
 	acpidmar_intr(dom->iommu);
-	if (ops == BUS_DMASYNC_PREREAD) {
-		/* make readable */
-		flag = PTE_P | PTE_R;
-	} else if (ops == BUS_DMASYNC_PREWRITE) {
-		/* make writeable */
-		flag = PTE_P | PTE_W;
-	}
+	//if (ops == BUS_DMASYNC_PREREAD) {
+	//	/* make readable */
+	//	flag |= PTE_R;
+	//}
+	//if (ops == BUS_DMASYNC_PREWRITE) {
+	//	/* make writeable */
+	//	flag |= PTE_W;
+	//}
 	dmar_dumpseg(tag, dmam->dm_nsegs, dmam->dm_segs, __FUNCTION__);
 	_bus_dmamap_sync(tag, dmam, offset, len, ops);
 }
@@ -1094,8 +1098,8 @@ iommu_init(struct acpidmar_softc *sc, struct iommu_softc *iommu,
 	/* Clear Interrupt Masking */
 	iommu_writel(iommu, DMAR_FSTS_REG, FSTS_PFO | FSTS_PPF);
 
-	iommu->intr = acpidmar_intr_establish(iommu, IPL_BIO, acpidmar_intr,
-	    iommu, "dmarintr");
+	iommu->intr = acpidmar_intr_establish(iommu, IPL_HIGH,
+	    acpidmar_intr, iommu, "dmarintr");
 
 	/* Enable interrupts */
 	sts = iommu_readl(iommu, DMAR_FECTL_REG);
@@ -1474,6 +1478,10 @@ acpidmar_pci_hook(pci_chipset_tag_t pc, struct pci_attach_args *pa)
 	    PCI_SUBCLASS(reg) == PCI_SUBCLASS_DISPLAY_VGA) {
 		dom->flag = DOM_DEBUG | DOM_NOMAP;
 	}
+	//if (bus==3) {
+	//	dom->flag = DOM_DEBUG;
+	//	printf("acpidmar0: enable debug for %x:%x.%x\n", bus, dev, fun);
+	//}
 	if (PCI_CLASS(reg) == PCI_CLASS_BRIDGE &&
 	    PCI_SUBCLASS(reg) == PCI_SUBCLASS_BRIDGE_ISA) {
 		/* For ISA Bridges, map 0-16Mb as 1:1 */
@@ -1849,7 +1857,7 @@ acpidmar_intr_establish(void *ctx, int level, int (*func)(void *),
 	pic->pic_delroute = acpidmar_msi_delroute;
 	pic->pic_edge_stubs = ioapic_edge_stubs;
 #ifdef MULTIPROCESSOR
-	mtx_init(&pic->pic_mutex, IPL_HIGH);
+	mtx_init(&pic->pic_mutex, level);
 #endif
 
 	return intr_establish(-1, pic, 0, IST_PULSE, level, func, arg, what);
@@ -1863,6 +1871,8 @@ acpidmar_intr(void *ctx)
 	static struct fault_entry	ofe;
 	int				fro, nfr, fri, i;
 	uint32_t			sts;
+
+	//splassert(IPL_HIGH);
 
 	if (!(iommu->gcmd & GCMD_TE)) {
 		return (1);
@@ -2030,4 +2040,6 @@ iommu_showfault(struct iommu_softc *iommu, int fri, struct fault_entry *fe)
 			printf("mem in e820.reserved\n");
 		}
 	}
+	if (acpidmar_ddb)
+		Debugger();
 }
