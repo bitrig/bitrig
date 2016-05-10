@@ -671,7 +671,7 @@
 ./usr/lib/libpanelw.so.6.0
 ./usr/lib/libpcap.so.9.0
 ./usr/lib/libperl.so.17.1
-./usr/lib/libpthread.so.21.0
+./usr/lib/libpthread.so.22.0
 ./usr/lib/libradius.a
 ./usr/lib/libradius.so.1.0
 ./usr/lib/libradius_p.a
