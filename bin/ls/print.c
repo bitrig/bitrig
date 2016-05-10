@@ -1,4 +1,4 @@
-/*	$OpenBSD: print.c,v 1.35 2015/12/01 18:36:13 schwarze Exp $	*/
+/*	$OpenBSD: patch-print_c,v 1.14 2016/04/06 18:53:16 naddy Exp $	*/
 /*	$NetBSD: print.c,v 1.15 1996/12/11 03:25:39 thorpej Exp $	*/
 
 /*
@@ -48,6 +48,11 @@
 #include <unistd.h>
 #include <limits.h>
 #include <util.h>
+#ifdef COLORLS
+#include <ctype.h>
+#include <termcap.h>
+#include <signal.h>
+#endif
 
 #include "ls.h"
 #include "extern.h"
@@ -58,6 +63,10 @@ static void	printsize(size_t, off_t);
 static void	printtime(time_t);
 static int	printtype(FTSENT *);
 static int	compute_columns(DISPLAY *, int *);
+#ifdef COLORLS
+static void	endcolor(int);
+static int	colortype(mode_t);
+#endif
 
 #define	IS_NOPRINT(p)	((p)->fts_number == NO_PRINT)
 
@@ -65,6 +74,32 @@ static int	compute_columns(DISPLAY *, int *);
 
 #define	SECSPERDAY	(24 * 60 * 60)
 #define	SIXMONTHS	(SECSPERDAY * 365 / 2)
+
+#ifdef COLORLS
+/* Most of these are taken from <sys/stat.h> */
+typedef enum Colors {
+	C_DIR,		/* directory */
+	C_LNK,		/* symbolic link */
+	C_SOCK,		/* socket */
+	C_FIFO,		/* pipe */
+	C_EXEC,		/* executable */
+	C_BLK,		/* block special */
+	C_CHR,		/* character special */
+	C_SUID,		/* setuid executable */
+	C_SGID,		/* setgid executable */
+	C_WSDIR,	/* directory writable to others, with sticky bit */
+	C_WDIR,		/* directory writable to others, without sticky bit */
+	C_NUMCOLORS	/* just a place-holder */
+} Colors ;
+
+const char *defcolors = "exfxcxdxbxegedabagacad";
+
+/* colors for file types */
+static struct {
+	int num[2];
+	int bold;
+} colors[C_NUMCOLORS];
+#endif
 
 void
 printscol(DISPLAY *dp)
@@ -86,6 +121,9 @@ printlong(DISPLAY *dp)
 	FTSENT *p;
 	NAMES *np;
 	char buf[20];
+#ifdef COLORLS
+	int color_printed = 0;
+#endif
 
 	if (dp->list->fts_level != FTS_ROOTLEVEL && (f_longform || f_size))
 		(void)printf("total %llu\n", howmany(dp->btotal, blocksize));
@@ -122,7 +160,15 @@ printlong(DISPLAY *dp)
 			printtime(sp->st_ctime);
 		else
 			printtime(sp->st_mtime);
+#ifdef COLORLS
+		if (f_color)
+			color_printed = colortype(sp->st_mode);
+#endif
 		(void)mbsprint(p->fts_name, 1);
+#ifdef COLORLS
+		if (f_color && color_printed)
+			endcolor(0);
+#endif
 		if (f_type || (f_typedir && S_ISDIR(sp->st_mode)))
 			(void)printtype(p);
 		if (S_ISLNK(sp->st_mode))
@@ -222,6 +268,9 @@ printaname(FTSENT *p, u_long inodefield, u_long sizefield)
 {
 	struct stat *sp;
 	int chcnt;
+#ifdef COLORLS
+	int color_printed = 0;
+#endif
 
 	sp = p->fts_statp;
 	chcnt = 0;
@@ -231,7 +280,15 @@ printaname(FTSENT *p, u_long inodefield, u_long sizefield)
 	if (f_size)
 		chcnt += printf("%*qd ",
 		    (int)sizefield, howmany(sp->st_blocks, blocksize));
+#ifdef COLORLS
+	if (f_color)
+		color_printed = colortype(sp->st_mode);
+#endif
 	chcnt += mbsprint(p->fts_name, 1);
+#ifdef COLORLS
+	if (f_color && color_printed)
+		endcolor(0);
+#endif
 	if (f_type || (f_typedir && S_ISDIR(sp->st_mode)))
 		chcnt += printtype(p);
 	return (chcnt);
@@ -350,6 +407,151 @@ printtype(FTSENT *p)
 	}
 	return (0);
 }
+
+#ifdef COLORLS
+static int
+putch(int c)
+{
+	(void)putchar(c);
+	return 0;
+}
+
+static int
+writech(int c)
+{
+	char tmp = c;
+
+	(void)write(STDOUT_FILENO, &tmp, 1);
+	return 0;
+}
+
+static void
+printcolor(Colors c)
+{
+	char *ansiseq;
+
+	if (colors[c].bold)
+		tputs(enter_bold, 1, putch);
+
+	if (colors[c].num[0] != -1) {
+		ansiseq = tgoto(ansi_fgcol, 0, colors[c].num[0]);
+		if (ansiseq)
+			tputs(ansiseq, 1, putch);
+	}
+	if (colors[c].num[1] != -1) {
+		ansiseq = tgoto(ansi_bgcol, 0, colors[c].num[1]);
+		if (ansiseq)
+			tputs(ansiseq, 1, putch);
+	}
+}
+
+static void
+endcolor(int sig)
+{
+	tputs(ansi_coloff, 1, sig ? writech : putch);
+	tputs(attrs_off, 1, sig ? writech : putch);
+}
+
+static int
+colortype(mode_t mode)
+{
+	switch (mode & S_IFMT) {
+	case S_IFDIR:
+		if (mode & S_IWOTH)
+			if (mode & S_ISTXT)
+				printcolor(C_WSDIR);
+			else
+				printcolor(C_WDIR);
+		else
+			printcolor(C_DIR);
+		return (1);
+	case S_IFLNK:
+		printcolor(C_LNK);
+		return (1);
+	case S_IFSOCK:
+		printcolor(C_SOCK);
+		return (1);
+	case S_IFIFO:
+		printcolor(C_FIFO);
+		return (1);
+	case S_IFBLK:
+		printcolor(C_BLK);
+		return (1);
+	case S_IFCHR:
+		printcolor(C_CHR);
+		return (1);
+	default:;
+	}
+	if (mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
+		if (mode & S_ISUID)
+			printcolor(C_SUID);
+		else if (mode & S_ISGID)
+			printcolor(C_SGID);
+		else
+			printcolor(C_EXEC);
+		return (1);
+	}
+	return (0);
+}
+
+void
+parsecolors(const char *cs)
+{
+	int i;
+	int j;
+	size_t len;
+	char c[2];
+	short legacy_warn = 0;
+
+	if (cs == NULL)
+		cs = "";	/* LSCOLORS not set */
+	len = strlen(cs);
+	for (i = 0; i < (int)C_NUMCOLORS ; i++) {
+		colors[i].bold = 0;
+
+		if (len <= 2 * (size_t)i) {
+			c[0] = defcolors[2 * i];
+			c[1] = defcolors[2 * i + 1];
+		} else {
+			c[0] = cs[2 * i];
+			c[1] = cs[2 * i + 1];
+		}
+		for (j = 0; j < 2 ; j++) {
+			/* Legacy colours used 0-7 */
+			if (c[j] >= '0' && c[j] <= '7') {
+				colors[i].num[j] = c[j] - '0';
+				if (!legacy_warn) {
+					warnx("LSCOLORS should use "
+					    "characters a-h instead of 0-9 ("
+					    "see the manual page)");
+				}
+				legacy_warn = 1;
+			} else if (c[j] >= 'a' && c[j] <= 'h')
+				colors[i].num[j] = c[j] - 'a';
+			else if (c[j] >= 'A' && c[j] <= 'H') {
+				colors[i].num[j] = c[j] - 'A';
+				colors[i].bold = 1;
+			} else if (tolower((unsigned char)c[j]) == 'x')
+				colors[i].num[j] = -1;
+			else {
+				warnx("invalid character '%c' in LSCOLORS"
+				    " env var", c[j]);
+				colors[i].num[j] = -1;
+			}
+		}
+	}
+}
+
+void
+colorquit(int sig)
+{
+	endcolor(sig);
+
+	(void)signal(sig, SIG_DFL);
+	(void)kill(getpid(), sig);
+}
+
+#endif /* COLORLS */
 
 static void
 printlink(FTSENT *p)

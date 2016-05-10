@@ -51,6 +51,9 @@ extern int f_size;		/* list size in short listing */
 extern int f_statustime;	/* use time of last mode change */
 extern int f_type;		/* add type character for non-regular files */
 extern int f_typedir;		/* add type character for directories */
+#ifdef COLORLS
+extern int f_color;		/* add type in color for non-regular files */
+#endif
 
 typedef struct {
 	FTSENT *list;

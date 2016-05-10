@@ -64,7 +64,11 @@ void
 usage(void)
 {
 	(void)fprintf(stderr,
+#ifdef COLORLS
+	    "usage: %s [-1AaCcdFfGgHhikLlmnopqRrSsTtux] [file ...]\n",
+#else
 	    "usage: %s [-1AaCcdFfgHhikLlmnopqRrSsTtux] [file ...]\n",
+#endif
 	    __progname);
 	exit(1);
 }
