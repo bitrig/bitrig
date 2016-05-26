@@ -238,6 +238,9 @@ acpiprt_chooseirq(union acpi_resource *crs, void *arg)
 	default:
 		printf("unknown interrupt: %x\n", typ);
 	}
+	printf("acpiprt_chooseirq: int %d active lo %d polarity hi %d",
+	    irq->_int, irq->_he, irq->_ll);
+
 	return (0);
 }
 
@@ -337,10 +340,10 @@ acpiprt_prt_add(struct acpiprt_softc *sc, struct aml_value *v)
 		irq._he = 0;
 	}
 
-#ifdef ACPI_DEBUG
+//#ifdef ACPI_DEBUG
 	printf("%s: %s addr 0x%llx pin %d irq %d\n",
 	    DEVNAME(sc), aml_nodename(pp->node), addr, pin, irq._int);
-#endif
+//#endif
 
 #if NIOAPIC > 0
 	if (nioapics > 0) {
@@ -358,6 +361,25 @@ acpiprt_prt_add(struct acpiprt_softc *sc, struct aml_value *v)
 		map->ioapic = apic;
 		map->ioapic_pin = irq._int - apic->sc_apic_vecbase;
 		map->bus_pin = ((addr >> 14) & 0x7c) | (pin & 0x3);
+#if defined(__amd64__) || defined(__i386__)
+	/*
+	 * XXX: Certain BIOSes have buggy AML that specify an IRQ that is
+	 * edge-sensitive and active-lo.  However, edge-sensitive IRQs
+	 * should be active-hi.  Force IRQs with an ISA IRQ value to be
+	 * active-hi instead.
+	 */
+	//if (irq < 16 && trig == ACPI_EDGE_SENSITIVE && pol == ACPI_ACTIVE_LOW)
+	//	pol = ACPI_ACTIVE_HIGH;
+#endif
+		printf("acpiprt_prt_add: int %d active lo %d polarity hi %d",
+		    irq._int, irq._he, irq._ll);
+		if (irq._int < 16 && irq._he && irq._ll) {
+			printf(" --> buggy bios\n");
+			irq._ll = 0;
+		} else {
+			printf("\n");
+		}
+
 		if (irq._ll)
 			map->flags |= (MPS_INTPO_ACTLO << MPS_INTPO_SHIFT);
 		else
