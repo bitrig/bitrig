@@ -52,7 +52,6 @@
 #include <machine/pio.h>
 #include <machine/cpufunc.h>
 
-#include "acpi.h"
 #include "ioapic.h"
 #include "lapic.h"
 #include "xen.h"
@@ -63,11 +62,6 @@
 
 #if NLAPIC > 0
 #include <machine/i82489var.h>
-#endif
-
-#if NACPI > 0
-#include <dev/pci/pcivar.h>
-#include <dev/acpi/acpidmar.h>
 #endif
 
 struct pic softintr_pic = {
@@ -526,15 +520,9 @@ intr_handler(struct intrframe *frame, struct intrhand *ih)
 #ifdef MULTIPROCESSOR
 	int need_lock;
 
-	if (ih->ih_flags & IPL_MPSAFE) {
-#if NACPI > 0
-		// looks like acpidmar is not MPSAFE so hack around
-		// that for the time being
-		need_lock = acpidmar_sc != NULL;
-#else
+	if (ih->ih_flags & IPL_MPSAFE)
 		need_lock = 0;
-#endif
-	} else
+	else
 		need_lock = frame->if_ppl < IPL_SCHED;
 
 	if (need_lock)
