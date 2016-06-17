@@ -154,7 +154,7 @@ re_pci_attach(struct device *parent, struct device *self, void *aux)
 		return;
 	}
 	intrstr = pci_intr_string(pc, ih);
-	psc->sc_ih = pci_intr_establish(pc, ih, IPL_NET | IPL_MPSAFE, re_intr,
+	psc->sc_ih = pci_intr_establish(pc, ih, IPL_NET, re_intr,
 	    sc, sc->sc_dev.dv_xname);
 	if (psc->sc_ih == NULL) {
 		printf(": couldn't establish interrupt");
