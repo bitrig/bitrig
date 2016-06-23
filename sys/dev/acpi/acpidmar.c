@@ -429,7 +429,7 @@ domain_unload_map(struct domain *dom, bus_dmamap_t dmam)
 	bus_dma_segment_t	*seg;
 	paddr_t			base, end, idx;
 	psize_t			alen;
-	int			i;
+	int			i, s;
 
 	if (iommu_bad(dom->iommu)) {
 		printf("unload map no iommu\n");
@@ -449,9 +449,11 @@ domain_unload_map(struct domain *dom, bus_dmamap_t dmam)
 			    (uint64_t)base, (uint32_t)alen);
 		}
 
+		s = splhigh();
 		if (extent_free(dom->iovamap, base, alen, EX_NOWAIT)) {
 			panic("domain_unload_map: extent_free");
 		}
+		splx(s);
 
 		/* Clear PTE */
 		for (idx = 0; idx < alen; idx += VTD_PAGE_SIZE)
@@ -468,7 +470,7 @@ domain_load_map(struct domain *dom, bus_dmamap_t map, int flags, const char *fn)
 	paddr_t			base, end, idx;
 	psize_t			alen;
 	u_long			res;
-	int			i;
+	int			i, s;
 
 	iommu = dom->iommu;
 	if (!iommu_enabled(iommu)) {
@@ -491,10 +493,12 @@ domain_load_map(struct domain *dom, bus_dmamap_t map, int flags, const char *fn)
 		}
 
 		/* Allocate DMA Virtual Address */
+		s = splhigh();
 		if (extent_alloc(dom->iovamap, alen, VTD_PAGE_SIZE, 0,
 		    map->_dm_boundary, EX_NOWAIT, &res)) {
 			panic("domain_load_map: extent_alloc");
 		}
+		splx(s);
 
 		if (debugme(dom)) {
 			printf("  %.16llx %x => %.16llx\n",
