@@ -65,11 +65,6 @@
 #include <machine/i82489var.h>
 #endif
 
-#if NACPI > 0
-#include <dev/pci/pcivar.h>
-#include <dev/acpi/acpidmar.h>
-#endif
-
 struct pic softintr_pic = {
         {0, {NULL}, NULL, 0, "softintr_pic0", NULL, 0, 0},
         PIC_SOFT,
@@ -527,13 +522,7 @@ intr_handler(struct intrframe *frame, struct intrhand *ih)
 	int need_lock;
 
 	if (ih->ih_flags & IPL_MPSAFE) {
-#if NACPI > 0
-		// looks like acpidmar is not MPSAFE so hack around
-		// that for the time being
-		need_lock = acpidmar_sc != NULL;
-#else
 		need_lock = 0;
-#endif
 	} else
 		need_lock = frame->if_ppl < IPL_SCHED;
 
