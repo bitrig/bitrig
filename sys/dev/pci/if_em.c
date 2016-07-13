@@ -1685,8 +1685,8 @@ em_allocate_pci_resources(struct em_softc *sc)
 	sc->hw.back = &sc->osdep;
 
 	intrstr = pci_intr_string(pc, ih);
-	sc->sc_intrhand = pci_intr_establish(pc, ih, IPL_NET | IPL_MPSAFE,
-	    em_intr, sc, DEVNAME(sc));
+	sc->sc_intrhand = pci_intr_establish(pc, ih, IPL_NET, em_intr, sc,
+	    DEVNAME(sc));
 	if (sc->sc_intrhand == NULL) {
 		printf(": couldn't establish interrupt");
 		if (intrstr != NULL)
@@ -1868,7 +1868,6 @@ em_setup_interface(struct em_softc *sc)
 	strlcpy(ifp->if_xname, DEVNAME(sc), IFNAMSIZ);
 	ifp->if_softc = sc;
 	ifp->if_flags = IFF_BROADCAST | IFF_SIMPLEX | IFF_MULTICAST;
-	ifp->if_xflags = IFXF_MPSAFE;
 	ifp->if_ioctl = em_ioctl;
 	ifp->if_start = em_start;
 	ifp->if_watchdog = em_watchdog;
