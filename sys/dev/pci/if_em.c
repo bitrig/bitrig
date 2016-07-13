@@ -1523,7 +1523,6 @@ em_stop(void *arg, int softonly)
 		em_reset_hw(&sc->hw);
 
 	intr_barrier(sc->sc_intrhand);
-	ifq_barrier(&ifp->if_snd);
 
 	KASSERT((ifp->if_flags & IFF_RUNNING) == 0);
 
