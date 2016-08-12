@@ -3,8 +3,6 @@
 
 .include <bsd.own.mk>
 
-AINC+= -no-integrated-as
-
 #SRCS+=	__sigaction14_sigtramp.c __sigtramp1.S
 .include "${LIBCSRCDIR}/arch/aarch64/aeabi/Makefile.inc"
 
