@@ -24,8 +24,8 @@ options	TIMEZONE=0	# time zone to adjust RTC time by
 options	DST=0		# daylight saving time used by RTC
 #options	NFSCLIENT	# NFS 
 
-makeoptions	KERNEL_BASE_PHYS="0x00080000"
-makeoptions	KERNEL_BASE_VIRT="0xffffff8000080000"
+makeoptions	KERNEL_BASE_PHYS="0x00200000"
+makeoptions	KERNEL_BASE_VIRT="0xffffff8000200000"
 
 # estimated number of users
 maxusers	32
