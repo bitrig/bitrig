@@ -85,6 +85,18 @@ _start:
 	/* Create the page tables */
 	bl	create_pagetables
 
+
+	mrs	x0, CTR_EL0
+	mov	x1, #1
+	// bfxil	x0, x0, #24,#4
+	lsr	x0, x0, #24
+	and	x0, x0, 0xf
+	lsl	x1, x1, x0
+	ldr	x0, =dczva_line_size
+	// adjust virtual address to physical
+	sub	x0, x0, x29
+
+	str	x1, [x0]
 	/*
 	 * At this point:
 	 * x27 = TTBR0 table
@@ -575,6 +587,8 @@ abort:
 _C_LABEL(esym): .xword   _C_LABEL(end)
 	.global _C_LABEL(eramdisk)
 _C_LABEL(eramdisk):     .xword   0
+	.global _C_LABEL(dczva_line_size)
+_C_LABEL(dczva_line_size):     .xword   64
 
 	//.section .init_pagetable
 data_align_pad:
