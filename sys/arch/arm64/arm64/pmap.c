@@ -1837,7 +1837,7 @@ int pmap_fault_fixup(pmap_t pm, vaddr_t va, vm_prot_t ftype, int user)
 		*pl3 |= ATTR_AF;
 
 		/* Flush tlb. */
-		ttlb_flush(pm, va & PTE_RPGN);
+		ttlb_flush(pm, pted->pted_va & PTE_RPGN);
 
 		return 1;
 	}
