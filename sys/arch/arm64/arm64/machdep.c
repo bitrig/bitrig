@@ -729,6 +729,7 @@ initarm(struct arm64_bootparams *abp)
 
 		memstart = mem.addr;
 		memsize = mem.size;
+		memsize = 0x20000000;
 
 		node = fdt_find_node("/chosen");
 		if (node != NULL) {
