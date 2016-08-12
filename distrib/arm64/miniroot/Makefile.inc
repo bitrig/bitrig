@@ -19,7 +19,7 @@ VND_FSDEV?=	${VND_IDEV}
 VND_RFSDEV?=	${VND_RIDEV}
 PID!=		echo $$$$
 
-NBLKS=		36864
+NBLKS?=		36864
 
 FS?=		msdos
 PART_ID?=C
