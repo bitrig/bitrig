@@ -1920,6 +1920,10 @@ int pmap_clear_modify(struct vm_page *pg)
 	uint64_t *pl3 = NULL;
 
 	//printf("%s\n", __func__);
+	// XXX locks 
+	int s;
+
+	s = splvm();
 
 	pg->pg_flags &= ~PG_PMAP_MOD;
 
@@ -1931,6 +1935,7 @@ int pmap_clear_modify(struct vm_page *pg)
 
 		ttlb_flush(pted->pted_pmap, pted->pted_va & PTE_RPGN);
 	}
+	splx(s);
 
 	return 0;
 }
@@ -1946,6 +1951,11 @@ int pmap_clear_reference(struct vm_page *pg)
 
 	//printf("%s\n", __func__);
 
+	// XXX locks 
+	int s;
+
+	s = splvm();
+
 	pg->pg_flags &= ~PG_PMAP_REF;
 
 	LIST_FOREACH(pted, &(pg->mdpage.pv_list), pted_pv_list) {
@@ -1958,6 +1968,7 @@ int pmap_clear_reference(struct vm_page *pg)
 
 		ttlb_flush(pted->pted_pmap, pted->pted_va & PTE_RPGN);
 	}
+	splx(s);
 
 	return 0;
 }
