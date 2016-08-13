@@ -26,16 +26,11 @@
 
 #ifndef _MACHINE_MPLOCK_H_
 #define _MACHINE_MPLOCK_H_
-
-struct __mp_lock_cpu {
-	u_int			mplc_ticket;
-	u_int			mplc_depth;
-};
+#include <sys/stdatomic.h>
 
 struct __mp_lock {
-	struct __mp_lock_cpu	mpl_cpus[MAXCPUS];
-	atomic_int		mpl_ticket;
-	atomic_int		mpl_users;
+	volatile struct cpu_info *mpl_cpu;
+	volatile long           mpl_count;
 };
 
 #ifndef _LOCORE

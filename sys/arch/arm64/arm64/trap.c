@@ -67,60 +67,6 @@ void do_el0_sync(struct trapframe *);
 void do_el0_error(struct trapframe *);
 
 
-#if 0
-int
-cpu_fetch_syscall_args(struct thread *td, struct syscall_args *sa)
-{
-	struct proc *p;
-	register_t *ap;
-	int nap;
-
-	nap = 8;
-	p = td->td_proc;
-	ap = td->td_frame->tf_x;
-
-	sa->code = td->td_frame->tf_x[8];
-
-	if (sa->code == SYS_syscall || sa->code == SYS___syscall) {
-		sa->code = *ap++;
-		nap--;
-	}
-
-	if (p->p_sysent->sv_mask)
-		sa->code &= p->p_sysent->sv_mask;
-	if (sa->code >= p->p_sysent->sv_size)
-		sa->callp = &p->p_sysent->sv_table[0];
-	else
-		sa->callp = &p->p_sysent->sv_table[sa->code];
-
-	sa->narg = sa->callp->sy_narg;
-	memcpy(sa->args, ap, nap * sizeof(register_t));
-	if (sa->narg > nap)
-		panic("TODO: Could we have more then 8 args?");
-
-	td->td_retval[0] = 0;
-	td->td_retval[1] = 0;
-
-	return (0);
-}
-
-#include "../../kern/subr_syscall.c"
-
-static void
-svc_handler(struct trapframe *frame)
-{
-	struct syscall_args sa;
-	struct thread *td;
-	int error;
-
-	td = curthread;
-	td->td_frame = frame;
-
-	error = syscallenter(td, &sa);
-	syscallret(td, error, &sa);
-}
-#endif
-
 void dumpregs(struct trapframe*);
 
 static void
@@ -180,7 +126,9 @@ data_abort(struct trapframe *frame, uint64_t esr, int lower, int exe)
 
 		/* Fault in the user page: */
 		if (!pmap_fault_fixup(map->pmap, va, access_type, 1)) {
+			KERNEL_LOCK();
 			error = uvm_fault(map, va, ftype, access_type);
+			KERNEL_UNLOCK();
 		}
 
 		//PROC_LOCK(p);
@@ -192,7 +140,9 @@ data_abort(struct trapframe *frame, uint64_t esr, int lower, int exe)
 		 * kernel.
 		 */
 		if (!pmap_fault_fixup(map->pmap, va, access_type, 0)) {
+			KERNEL_LOCK();
 			error = uvm_fault(map, va, ftype, access_type);
+			KERNEL_UNLOCK();
 		}
 	}
 
@@ -205,7 +155,9 @@ data_abort(struct trapframe *frame, uint64_t esr, int lower, int exe)
 			sv.sival_ptr = (u_int64_t *)far;
 			dumpregs(frame);
 
+			KERNEL_LOCK();
 			trapsignal(p, sig, 0, SEGV_ACCERR, sv);
+			KERNEL_UNLOCK();
 		} else {
 			if (curcpu()->ci_idepth == 0 &&
 			    pcb->pcb_onfault != 0) {

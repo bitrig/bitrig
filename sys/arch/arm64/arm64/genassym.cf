@@ -54,6 +54,13 @@ member SF_SC sf_sc
 
 struct cpu_info
 member CI_CURPROC ci_curproc
+member CI_EL1_STKEND ci_el1_stkend
+member CI_EL2_STKEND ci_el2_stkend
+member CI_EL3_STKEND ci_el3_stkend
+member CI_KVO ci_kvo
+member CI_TTBR1 ci_ttbr1
+member CI_CI ci_ci
+
 
 struct proc
 member P_STAT p_stat

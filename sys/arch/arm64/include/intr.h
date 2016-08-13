@@ -53,15 +53,17 @@
 #define	IPL_VM		8	/* memory allocation */
 #define	IPL_AUDIO	9	/* audio device */
 #define	IPL_CLOCK	10	/* clock interrupt */
-#define	IPL_STATCLOCK	11	/* statistics clock interrupt */
-#define	IPL_SCHED	12	/* everything */
+#define	IPL_STATCLOCK	IPL_CLOCK
+#define	IPL_SCHED	IPL_CLOCK
 #define	IPL_HIGH	12	/* everything */
 #define	IPL_IPI		13	/* everything + IPI*/
 
 #define	NIPL		14
 
 /* Interrupt priority "flags". */
-#define	IPL_MPSAFE	0	/* no "mpsafe" interrupts */
+#define	IPL_IRQMASK	0x0f	/* priority only */
+#define	IPL_FLAGMASK	0xf00	/* flags only */
+#define	IPL_MPSAFE	0x100	/* no "mpsafe" interrupts */
 
 /* Interrupt sharing types. */
 #define	IST_NONE	0	/* none */
@@ -115,6 +117,7 @@ struct intrhand {
 	void *ih_arg;			/* arg for handler */
 	int ih_ipl;			/* IPL_* */
 	int ih_irq;			/* IRQ number */
+	int ih_flags;			/* flags: eg IPL_MPSAFE */
 	struct evcount	ih_count;	/* interrupt counter */
 	char *ih_name;			/* device name */
 };
@@ -122,6 +125,7 @@ struct intrhand {
 struct intrsource {
 	TAILQ_HEAD(, intrhand) is_list;	/* handler list */
 	int is_irq;			/* IRQ to mask while handling */
+	int is_route;			/* cpu route mask */
 };
 
 #define splraise(cpl)		(arm_intr_func.raise(cpl))

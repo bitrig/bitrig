@@ -82,14 +82,15 @@ dcache_wb_pou(vaddr_t va, vsize_t size)
 		__asm __volatile("dc CVAU,%0"::"r"(va+off));
 }
 
-#if 0
+#if 1
 /* Write back and invalidate D-cache to PoC */
-STATIC __inline void
-dcache_wbinv_poc(vaddr_t sva, paddr_t pa, vsize_t size)
+void
+dcache_wbinv_poc(vaddr_t sva, paddr_t pa, uint32_t size)
 {
+	uint32_t off;
 	// XXX needed?
 	for (off = 0; off <size; off += CACHE_LINE_SIZE)
-		__asm __volatile("dc CVAC,%0"::"r"(va+off));
+		__asm __volatile("dc CVAC,%0"::"r"(sva+off));
 }
 #endif
 
@@ -486,14 +487,21 @@ pmap_enter_pv(struct pte_desc *pted, struct vm_page *pg)
 		return;
 	}
 
+	mtx_enter(&pg->mdpage.pv_mtx);
 	LIST_INSERT_HEAD(&(pg->mdpage.pv_list), pted, pted_pv_list);
 	pted->pted_va |= PTED_VA_MANAGED_M;
+	mtx_leave(&pg->mdpage.pv_mtx);
 }
 
 void
 pmap_remove_pv(struct pte_desc *pted)
 {
+	struct vm_page *pg;
+	pg = PHYS_TO_VM_PAGE(pted->pted_pte & PTE_RPGN);
+
+	mtx_enter(&pg->mdpage.pv_mtx);
 	LIST_REMOVE(pted, pted_pv_list);
+	mtx_leave(&pg->mdpage.pv_mtx);
 }
 
 volatile int supportuserland;
@@ -513,6 +521,8 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	/* MP - Acquire lock for this pmap */
 
 	s = splvm();
+	mtx_enter(&pm->pm_mtx);
+
 	pted = pmap_vp_lookup(pm, va, NULL);
 	if (pted && PTED_VALID(pted)) {
 		pmap_remove_pted(pm, pted);
@@ -599,9 +609,7 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 			atomic_clearbits_int(&pg->pg_flags, PG_PMAP_EXE);
 	}
 
-	splx(s);
-
-#if 0
+#if 0 // XXX appears this is not needed, cull?
 	/* only instruction sync executable pages */
 	if (need_sync)
 		pmap_syncicache_user_virt(pm, va);
@@ -609,6 +617,8 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 
 	error = 0;
 out:
+	mtx_leave(&pm->pm_mtx);
+	splx(s);
 	/* MP - free pmap lock */
 	return error;
 }
@@ -666,10 +676,11 @@ pmap_remove_pted(pmap_t pm, struct pte_desc *pted)
 		pted->pted_va &= ~PTED_VA_EXEC_M;
 	}
 
-	pted->pted_pte = 0;
-
 	if (PTED_MANAGED(pted))
 		pmap_remove_pv(pted);
+
+	pted->pted_pte = 0;
+	pted->pted_va = 0;
 
 	if (pm != pmap_kernel())
 		pool_put(&pmap_pted_pool, pted);
@@ -764,14 +775,22 @@ pmap_kremove_pg(vaddr_t va)
 	//if (!cold) printf("%s: %x\n", __func__, va);
 
 	pm = pmap_kernel();
-	pted = pmap_vp_lookup(pm, va, NULL);
-	if (pted == NULL)
-		return;
-
-	if (!PTED_VALID(pted))
-		return; /* not mapped */
-
 	s = splvm();
+	mtx_enter(&pm->pm_mtx);
+
+	pted = pmap_vp_lookup(pm, va, NULL);
+	if (pted == NULL) {
+		mtx_leave(&pm->pm_mtx);
+		splx(s);
+		return;
+	}
+
+	if (!PTED_VALID(pted)) {
+		/* not mapped */
+		mtx_leave(&pm->pm_mtx);
+		splx(s);
+		return;
+	}
 
 	pm->pm_stats.resident_count--;
 
@@ -797,6 +816,7 @@ pmap_kremove_pg(vaddr_t va)
 	pted->pted_pte = 0;
 	pted->pted_va = 0;
 
+	mtx_leave(&pm->pm_mtx);
 	splx(s);
 }
 
@@ -935,6 +955,7 @@ pmap_pinit(pmap_t pm)
 
 	//pmap_allocate_asid(pm); // by default global (allocate asid later!?!)
 	pm->pm_asid = -1;
+	mtx_init(&pm->pm_mtx, IPL_VM);
 
 	pmap_extract(pmap_kernel(), l0va, (paddr_t *)&pm->pm_pt0pa);
 
@@ -1561,21 +1582,37 @@ pmap_page_protect(struct vm_page *pg, vm_prot_t prot)
 	/* need to lock for this pv */
 	s = splvm();
 
-	if (prot == PROT_NONE) {
-		while (!LIST_EMPTY(&(pg->mdpage.pv_list))) {
-			pted = LIST_FIRST(&(pg->mdpage.pv_list));
-			pmap_remove_pted(pted->pted_pmap, pted);
+	if (prot != PROT_NONE) {
+		LIST_FOREACH(pted, &(pg->mdpage.pv_list), pted_pv_list) {
+			pmap_page_ro(pted->pted_pmap, pted->pted_va, prot);
 		}
-		/* page is being reclaimed, sync icache next use */
-		atomic_clearbits_int(&pg->pg_flags, PG_PMAP_EXE);
 		splx(s);
 		return;
 	}
+	mtx_enter(&pg->mdpage.pv_mtx);
+	while (!LIST_EMPTY(&(pg->mdpage.pv_list))) {
+		pted = LIST_FIRST(&(pg->mdpage.pv_list));
+		pmap_t pm = pted->pted_pmap;
+		mtx_leave(&pg->mdpage.pv_mtx);
+		mtx_enter(&pm->pm_mtx);
+		if (pted != LIST_FIRST(&(pg->mdpage.pv_list))) {
+			// race lost, retry
+			mtx_leave(&pm->pm_mtx);
+			mtx_enter(&pg->mdpage.pv_mtx);
+			continue;
+		}
 
-	LIST_FOREACH(pted, &(pg->mdpage.pv_list), pted_pv_list) {
-		pmap_page_ro(pted->pted_pmap, pted->pted_va, prot);
+		pmap_remove_pted(pted->pted_pmap, pted);
+		mtx_leave(&pm->pm_mtx);
+		mtx_enter(&pg->mdpage.pv_mtx);
 	}
+
+	/* page is being reclaimed, sync icache next use - XXX cull? */
+	atomic_clearbits_int(&pg->pg_flags, PG_PMAP_EXE);
+
+	mtx_leave(&pg->mdpage.pv_mtx);
 	splx(s);
+	return;
 }
 
 
@@ -1956,6 +1993,7 @@ int pmap_clear_modify(struct vm_page *pg)
 	int s;
 
 	s = splvm();
+	mtx_enter(&pg->mdpage.pv_mtx);
 
 	pg->pg_flags &= ~PG_PMAP_MOD;
 
@@ -1967,6 +2005,7 @@ int pmap_clear_modify(struct vm_page *pg)
 
 		ttlb_flush(pted->pted_pmap, pted->pted_va & PTE_RPGN);
 	}
+	mtx_leave(&pg->mdpage.pv_mtx);
 	splx(s);
 
 	return 0;
@@ -1987,6 +2026,7 @@ int pmap_clear_reference(struct vm_page *pg)
 	int s;
 
 	s = splvm();
+	mtx_enter(&pg->mdpage.pv_mtx);
 
 	pg->pg_flags &= ~PG_PMAP_REF;
 
@@ -1994,12 +2034,13 @@ int pmap_clear_reference(struct vm_page *pg)
 		if (pmap_vp_lookup(pted->pted_pmap, pted->pted_va & PTE_RPGN, &pl3) == NULL) 
 			panic("failed to look up pte\n");
 		pted->pted_pte &= ~PROT_MASK;
-		*pl3  |= ATTR_AP(2);	// turns of write as well !?!? 
+		*pl3  |= ATTR_AP(2);	// turns off write as well !?!? 
 		*pl3  &= ~ATTR_AF;
 		pted->pted_pte &= ~PROT_WRITE|PROT_READ;
 
 		ttlb_flush(pted->pted_pmap, pted->pted_va & PTE_RPGN);
 	}
+	mtx_leave(&pg->mdpage.pv_mtx);
 	splx(s);
 
 	return 0;

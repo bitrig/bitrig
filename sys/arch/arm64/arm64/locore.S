@@ -1,4 +1,18 @@
 /*-
+ * Copyright (c) 2016 Dale Rahn <drahn@dalerahn.com>
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
  * Copyright (c) 2012-2014 Andrew Turner
  * All rights reserved.
  *
@@ -98,7 +112,9 @@ _start:
 	cbnz x2, 1f
 	mov x2, x0
 1:
-
+	ldr x24, =initstack_el2_end
+	ldr x25, =initstack_el3_end
+	mov x26, #1
 	/* Drop to EL1 */
 	bl	drop_to_el1
 
@@ -129,9 +145,10 @@ _start:
 	bl	create_pagetables
 
 
-	mrs	x0, DCZID_EL0
-	tbnz	x0, 4, 1f
+	mrs	x0, CTR_EL0
 	mov	x1, #1
+	// bfxil	x0, x0, #24,#4
+	lsr	x0, x0, #24
 	and	x0, x0, 0xf
 	lsl	x1, x1, x0
 	ldr	x0, =dczva_line_size
@@ -139,13 +156,11 @@ _start:
 	sub	x0, x0, x29
 
 	str	x1, [x0]
-1:
 	/*
 	 * At this point:
 	 * x27 = TTBR0 table
 	 * x26 = TTBR1 table
 	 */
-
 
 	/* Enable the mmu */
 	bl	start_mmu
@@ -228,8 +243,15 @@ virtdone:
 /*
  * If we are started in EL2, configure the required hypervisor
  * registers and drop to EL1.
+ *
+ * API: x0-x9 are scratch
+ *      x21, x22, x23 have content to not touch
+ *	x24 - EL2 stack (small, physical)
+ *	x25 - EL3 stack (small, physical)
+ *	x26 - 0 secondary processor,  1 boot processor
  */
 drop_to_el1:
+	msr	SPSel, #1
 	mrs	x1, CurrentEL
 	lsr	x1, x1, #2
 	cmp	x1, #0x2
@@ -612,6 +634,56 @@ switch_mmu_kernel:
 	isb
 	ret
 
+	
+	.globl cpu_hatch
+	.type cpu_hatch,%function
+cpu_hatch:
+	adr	x0, .Lcpu_hatch_ci
+
+	bl	get_virt_delta
+
+	ldr	x0, [x0]
+	sub	x0, x0, x29
+	ldr	x0, [x0]
+	ldr	x24, [x0, #CI_EL2_STKEND]
+	ldr	x25, [x0, #CI_EL3_STKEND]
+	mov	x26, #0
+
+	bl	drop_to_el1
+
+
+	adr	x27, .Lpagetable
+	ldr	x1, [x0, #CI_KVO]
+	ldr	x27, [x27] 
+	sub	x27, x27, x29 // VA -> PA
+	add	x27, x27, #PAGE_SIZE * 2 // at ttbr1
+	add	x27, x27, #PAGE_SIZE * 2 // at ttbr0
+	ldr	x26, [x0, CI_TTBR1]
+
+	bl	start_mmu
+	ldr	x0, [x0, #CI_CI ]
+	msr	tpidr_el1, x0
+	ldr	x1, [x0, #CI_EL1_STKEND ]
+	mov	sp, x1
+
+	adr	x1, .Lcpu_start
+	ldr	x1, [x1]
+	blr	x1
+	b	.
+
+	.globl hvc
+	.type hvc,%function
+hvc:
+	hvc #0
+	ret
+	
+	.align 3
+.Lcpu_start:
+	.xword cpu_start_secondary
+.Lcpu_hatch_ci:
+	.xword cpu_hatch_ci
+
+
 	.align 3
 mair:
 		/* Device            Normal, no cache     Normal, write-back */
@@ -641,6 +713,8 @@ _C_LABEL(esym): .xword   _C_LABEL(end)
 _C_LABEL(eramdisk):     .xword   0
 	.global _C_LABEL(dczva_line_size)
 _C_LABEL(dczva_line_size):     .xword   0
+	.global _C_LABEL(cpu_hatch_ci)
+_C_LABEL(cpu_hatch_ci):     .xword   0
 
 	//.section .init_pagetable
 data_align_pad:
@@ -674,6 +748,11 @@ init_pt_va:
 initstack:
 	.space	USPACE
 initstack_end:
+	// leave some space for an EL2/EL3 stack just in case.
+	.space 512
+initstack_el2_end:
+	.space 512
+initstack_el3_end:
 
 	.text
 ENTRY(sigcode)

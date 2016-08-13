@@ -70,6 +70,7 @@ struct agtimer_softc {
 	u_int32_t		sc_ticks_per_intr;
 	u_int32_t		sc_statvar;
 	u_int32_t		sc_statmin;
+	void 			*sc_ih[4];
 
 #ifdef AMPTIMER_DEBUG
 	struct evcount		sc_clk_count;
@@ -271,8 +272,8 @@ agtimer_attach(struct device *parent, struct device *self, void *args)
 	if (node) {
 		/* Setup secure, non-secure and virtual timer IRQs. */
 		for (int i = 0; i < 4; i++) {
-			arm_intr_establish_fdt_idx(node, i, IPL_CLOCK,
-			    agtimer_intr, NULL, "tick");
+			sc->sc_ih[i] = arm_intr_establish_fdt_idx(node, i,
+			    IPL_CLOCK | IPL_MPSAFE, agtimer_intr, NULL, "tick");
 		}
 	} else {
 #if 0
@@ -418,6 +419,7 @@ agtimer_cpu_initclocks()
 	next = agtimer_readcnt64(sc) + sc->sc_ticks_per_intr;
 	pc->pc_nexttickevent = pc->pc_nextstatevent = next;
 
+
 	reg = agtimer_get_ctrl(sc);
 	reg &= GTIMER_CNTP_CTL_IMASK;
 	reg |= GTIMER_CNTP_CTL_ENABLE;
@@ -486,10 +488,13 @@ agtimer_setstatclockrate(int newhz)
 void
 agtimer_startclock(void)
 {
+	struct cpu_info *ci = curcpu();
+
 	struct agtimer_softc	*sc = agtimer_cd.cd_devs[0];
 	struct agtimer_pcpu_softc *pc = &sc->sc_pstat[CPU_INFO_UNIT(curcpu())];
 	uint64_t nextevent;
 	uint32_t reg;
+	int i;
 
 	nextevent = agtimer_readcnt64(sc) + sc->sc_ticks_per_intr;
 	pc->pc_nexttickevent = pc->pc_nextstatevent = nextevent;
@@ -499,4 +504,8 @@ agtimer_startclock(void)
 	reg |= GTIMER_CNTP_CTL_ENABLE;
 	agtimer_set_tval(sc, sc->sc_ticks_per_intr);
 	agtimer_set_ctrl(sc, reg);
+
+	void ampintc_route_ih(void *vih, int enable, int cpu);
+	for (i = 0; i < 4; i++) 
+		ampintc_route_ih(sc->sc_ih[i], 1, ci->ci_mpidr);
 }

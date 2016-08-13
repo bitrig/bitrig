@@ -87,11 +87,13 @@ struct cpu_info {
 	struct pmap		*ci_curpm;
 	struct proc		*ci_fpuproc;
 	u_int32_t		 ci_cpuid;
-	u_int32_t		ci_randseed;
+	u_int32_t		 ci_cpuid_core;
+	u_int32_t		 ci_randseed;
 
 	struct pcb		*ci_curpcb;
 	struct pcb		*ci_idle_pcb;
 
+	uint64_t		ci_ttbr1;
 	u_int32_t		ci_ctrl; /* The CPU control register */
 
 	uint32_t		ci_cpl;
@@ -102,10 +104,29 @@ struct cpu_info {
 #endif
 	int			ci_want_resched;
 
+#ifdef MULTIPROCESSOR
+	struct srp_hazard	ci_srp_hazards[SRP_HAZARD_NUM];
+	volatile int		ci_flags;
+	int			ci_mpidr; 
+	uint64_t		ci_el1_stkend;
+	uint64_t		ci_el2_stkend;
+	uint64_t		ci_el3_stkend;
+	uint64_t		ci_kvo;
+	uint64_t		ci_ci;
+#endif
+
 #ifdef GPROF
 	struct gmonparam	*ci_gmon;
 #endif
 };
+
+#define CPUF_PRIMARY 		(1<<0)
+#define CPUF_AP	 		(1<<1)
+#define CPUF_IDENTIFY		(1<<2)
+#define CPUF_IDENTIFIED		(1<<3)
+#define CPUF_PRESENT		(1<<4)
+#define CPUF_GO			(1<<5)
+#define CPUF_RUNNING		(1<<6)
 
 static inline struct cpu_info *
 curcpu(void)
@@ -133,10 +154,10 @@ extern struct cpu_info *cpu_info_list;
 #define CPU_INFO_ITERATOR		int
 #define CPU_INFO_FOREACH(cii, ci)	for (cii = 0, ci = cpu_info_list; \
 					    ci != NULL; ci = ci->ci_next)
+void cpu_unidle(struct cpu_info *ci);
 
 #define CPU_INFO_UNIT(ci)	((ci)->ci_dev ? (ci)->ci_dev->dv_unit : 0)
 #define MAXCPUS	8
-#define cpu_unidle(ci)
 
 extern struct cpu_info *cpu_info[MAXCPUS];
 
@@ -247,6 +268,8 @@ disable_irq_daif_ret()
 #define restore_interrupts(old_daif)					\
 	restore_daif(old_daif)
 
+void	cpu_startclock(void);
+
 void	delay (unsigned);
 #define	DELAY(x)	delay(x)
 
@@ -254,9 +277,11 @@ void	delay (unsigned);
 
 #endif /* _KERNEL */
 
+#ifndef _LOCORE
 #ifdef MULTIPROCESSOR
 #include <sys/mplock.h>
 #endif /* MULTIPROCESSOR */
+#endif	/* !_LOCORE */
 
 #endif /* !_MACHINE_CPU_H_ */
 

@@ -169,7 +169,7 @@ void		 ampintc_eoi(uint32_t);
 void		 ampintc_set_priority(int, int);
 void		 ampintc_intr_enable(int);
 void		 ampintc_intr_disable(int);
-void		 ampintc_route(int, int , int);
+void		 ampintc_route(int, int, int);
 
 struct cfattach	ampintc_ca = {
 	sizeof (struct ampintc_softc), ampintc_match, ampintc_attach
@@ -303,6 +303,7 @@ ampintc_attach(struct device *parent, struct device *self, void *args)
 	    sizeof(*sc->sc_ampintc_handler), M_DEVBUF, M_ZERO | M_NOWAIT);
 	for (i = 0; i < nintr; i++) {
 		TAILQ_INIT(&sc->sc_ampintc_handler[i].is_list);
+		sc->sc_ampintc_handler[i].is_route = 0;
 	}
 
 	ampintc_setipl(IPL_HIGH);  /* XXX ??? */
@@ -418,11 +419,12 @@ ampintc_calc_mask(void)
 		if (min != IPL_NONE) {
 			ampintc_set_priority(irq, min);
 			ampintc_intr_enable(irq);
+			sc->sc_ampintc_handler[irq].is_route |= (1 << 0);
 			ampintc_route(irq, IRQ_ENABLE, 0);
 		} else {
 			ampintc_intr_disable(irq);
+			sc->sc_ampintc_handler[irq].is_route &= ~(1 << 0);
 			ampintc_route(irq, IRQ_DISABLE, 0);
-
 		}
 	}
 	ampintc_setipl(ci->ci_cpl);
@@ -491,6 +493,20 @@ ampintc_eoi(uint32_t eoi)
 }
 
 void
+ampintc_route_ih(void *vih, int enable, int cpu)
+{
+	struct intrhand		*ih = vih;
+	struct ampintc_softc	*sc = ampintc;
+	
+	bus_space_write_4(sc->sc_iot, sc->sc_p_ioh, ICPICR, 1);
+	bus_space_write_4(sc->sc_iot, sc->sc_d_ioh, ICD_ICRn(ih->ih_irq), 0);
+	ampintc_set_priority(ih->ih_irq, 
+	    sc->sc_ampintc_handler[ih->ih_irq].is_irq);
+	ampintc_intr_enable(ih->ih_irq);
+	ampintc_route(ih->ih_irq, enable, cpu);
+}
+
+void
 ampintc_route(int irq, int enable, int cpu)
 {
 	uint8_t  val;
@@ -541,6 +557,16 @@ ampintc_irq_handler(void *frame)
 	pri = sc->sc_ampintc_handler[irq].is_irq;
 	s = ampintc_splraise(pri);
 	TAILQ_FOREACH(ih, &sc->sc_ampintc_handler[irq].is_list, ih_list) {
+#ifdef MULTIPROCESSOR
+		int need_lock;
+
+		if (ih->ih_flags & IPL_MPSAFE)
+			need_lock = 0;
+		else
+			need_lock = s < IPL_SCHED;
+		if (need_lock)
+			KERNEL_LOCK();
+#endif
 		if (ih->ih_arg != 0)
 			arg = ih->ih_arg;
 		else
@@ -549,8 +575,14 @@ ampintc_irq_handler(void *frame)
 		if (ih->ih_fun(arg))
 			ih->ih_count.ec_count++;
 
+#ifdef MULTIPROCESSOR
+		if (need_lock)
+			KERNEL_UNLOCK();
+#endif
 	}
 	ampintc_eoi(iack_val);
+
+
 
 	ampintc_splx(s);
 }
@@ -609,7 +641,8 @@ ampintc_intr_establish(int irqno, int level, int (*func)(void *),
 		panic("intr_establish: can't malloc handler info");
 	ih->ih_fun = func;
 	ih->ih_arg = arg;
-	ih->ih_ipl = level;
+	ih->ih_ipl = level &  IPL_IRQMASK;
+	ih->ih_flags = level & IPL_FLAGMASK;
 	ih->ih_irq = irqno;
 	ih->ih_name = name;
 

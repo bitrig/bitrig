@@ -176,6 +176,8 @@ arm_do_pending_intr(int pcpl)
 		return;
 	}
 
+	KERNEL_LOCK();
+
 #define DO_SOFTINT(si, ipl) \
 	if ((ci->ci_ipending & arm_smask[pcpl]) &	\
 	    SI_TO_IRQBIT(si)) {						\
@@ -192,6 +194,8 @@ arm_do_pending_intr(int pcpl)
 		DO_SOFTINT(SIR_CLOCK, IPL_SOFTCLOCK);
 		DO_SOFTINT(SIR_SOFT, IPL_SOFT);
 	} while (ci->ci_ipending & arm_smask[pcpl]);
+
+	KERNEL_UNLOCK();
 
 	/* Don't use splx... we are here already! */
 	arm_intr_func.setipl(pcpl);
@@ -329,6 +333,15 @@ cpu_initclocks(void)
 		panic("initclocks function not initialized yet");
 
 	arm_clock_func.initclocks();
+}
+
+void
+cpu_startclock(void)
+{
+	if (arm_clock_func.mpstartclock == NULL)
+		panic("mpstartclock function not initialized yet");
+
+	arm_clock_func.mpstartclock();
 }
 
 void

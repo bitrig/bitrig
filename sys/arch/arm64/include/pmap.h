@@ -72,6 +72,7 @@ struct pmap {
 	int pm_asid;
 	int pm_active;
 	int pm_refs;				/* ref count */
+	struct mutex pm_mtx;
 	struct pmap_statistics  pm_stats;	/* pmap statistics */
 };
 
@@ -124,12 +125,14 @@ extern vaddr_t	pmap_curmaxkvaddr;
 #define __HAVE_VM_PAGE_MD
 struct vm_page_md {
 	LIST_HEAD(,pte_desc) pv_list;
+	struct mutex pv_mtx;
 	int pvh_attrs;				/* page attributes */
 };
 
-#define VM_MDPAGE_INIT(pg) do {			\
-        LIST_INIT(&((pg)->mdpage.pv_list));     \
-	(pg)->mdpage.pvh_attrs = 0;		\
+#define VM_MDPAGE_INIT(pg) do {				\
+	LIST_INIT(&((pg)->mdpage.pv_list));     	\
+	mtx_init(&(pg)->mdpage.pv_mtx, IPL_VM);         \
+	(pg)->mdpage.pvh_attrs = 0;			\
 } while (0)
 
 #endif /* _LOCORE */

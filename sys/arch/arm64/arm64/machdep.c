@@ -150,18 +150,23 @@ consinit()
 void
 cpu_idle_enter()
 {
+	asm ("msr daifset, #2");
 }
 
 void
 cpu_idle_cycle()
 {
-	restore_daif(0x0); // enable interrupts
 	__asm volatile("wfi");
+	// briefly allow interrupts
+	asm ("msr daifclr, #2");
+	asm ("isb");
+	asm ("msr daifset, #2");
 }
 
 void
 cpu_idle_leave()
 {
+	asm ("msr daifclr, #2");
 }
 
 
@@ -286,6 +291,8 @@ boot(int howto)
 		printf("rebooting...\n");
 		delay(500000);
 		//platform_watchdog_reset();
+		void hvc(int64_t, int64_t, int64_t);
+		hvc(0x84000009, 0, 0);
 		printf("reboot failed; spinning\n");
 		while(1);
 		/*NOTREACHED*/
@@ -326,7 +333,13 @@ boot(int howto)
 		if (howto & RB_POWERDOWN) {
 
 			printf("\nAttempting to power down...\n");
-			delay(500000);
+
+			void hvc(int64_t, int64_t, int64_t);
+
+ 			delay(500000);
+			hvc(0x84000008, 0, 0);
+			delay(5000);
+
 			//platform_powerdown();
 		}
 
@@ -338,6 +351,9 @@ boot(int howto)
 	printf("rebooting...\n");
 	delay(500000);
 	//platform_watchdog_reset();
+	void hvc(int64_t, int64_t, int64_t);
+	hvc(0x84000009, 0, 0);
+	delay(5000);
 	printf("reboot failed; spinning\n");
 	while(1);
 	/*NOTREACHED*/
@@ -694,6 +710,8 @@ void	collect_kernel_args(char *);
 void	process_kernel_args(void);
 extern  uint64_t eramdisk;
 
+volatile int gdb_wc, gdb_w;
+
 void
 initarm(struct arm64_bootparams *abp)
 {
@@ -708,11 +726,14 @@ initarm(struct arm64_bootparams *abp)
 	void *fdt;
 	uint32_t initrd = 0, initrdsize = 0; /* initrd information from fdt */
 	uint64_t kernel_end = eramdisk ? eramdisk : esym;
-#ifdef EARLY_CONS_ATTACH
 	int     (*map_func_save)(bus_space_tag_t, bus_addr_t, bus_size_t, int,
 	    bus_space_handle_t *);
-#endif
 
+#if 0
+	gdb_w = 1;
+	while(gdb_w)
+		;
+#endif
 	// NOTE that 1GB of ram is mapped in by default in
 	// the bootstrap memory config, so nothing is necessary
 	// until pmap_bootstrap_finalize is called??
@@ -757,6 +778,8 @@ initarm(struct arm64_bootparams *abp)
 				initrd = initrdsize = 0;
 		}
 	}
+
+
 #if 0
 	/* Load the physical memory ranges */
 	physmap_idx = 0;
@@ -781,11 +804,18 @@ initarm(struct arm64_bootparams *abp)
 
 	{
 	extern char bootargs[MAX_BOOT_STRING];
+
 	printf("memsize %llx %llx bootargs [%s]\n", memstart, memsize, bootargs);
 	}
 	process_kernel_args();
 
+	if (gdb_wc >= 0) {
+		gdb_w = 1;
+		while(gdb_w)
+			;
+	}
 
+	/////
 	// PCPU_SET(curthread, &thread0);
 
 	/* Do basic tuning, hz etc */
@@ -799,7 +829,7 @@ initarm(struct arm64_bootparams *abp)
 	void _start(void);
 	long kernbase = (long)&_start & ~0x00fff;
 
-	/* Bootstrap enough of pmap to enter the kernel proper */
+	/* Bootstrap enough of pmap  to enter the kernel proper */
 	vstart = pmap_bootstrap(kvo, abp->kern_l1pt,
 	    kernbase, kernel_end,
 	    memstart, memstart + memsize);
@@ -808,8 +838,14 @@ initarm(struct arm64_bootparams *abp)
 
 	//cninit();
 
-	// XXX correctly sized?
+	// XX correctly sized?
 	proc0paddr = (struct user *)abp->kern_stack;
+	//msgbufinit(msgbufp, msgbufsize);
+	//mutex_init();
+	//init_param2(physmem);
+
+	//dbg_monitor_init();
+	//kdb_init();
 
 	msgbufaddr = (caddr_t)vstart;
 	msgbufphys = pmap_steal_avail(round_page(MSGBUFSIZE), PAGE_SIZE, NULL);
@@ -867,7 +903,6 @@ initarm(struct arm64_bootparams *abp)
 int pmap_bootstrap_bs_map(bus_space_tag_t t, bus_addr_t bpa, bus_size_t size,
     int flags, bus_space_handle_t *bshp);
 
-#ifdef EARLY_CONS_ATTACH
 	map_func_save = arm64_bs_tag._space_map;
 	arm64_bs_tag._space_map = pmap_bootstrap_bs_map;
 
@@ -876,7 +911,8 @@ int pmap_bootstrap_bs_map(bus_space_tag_t t, bus_addr_t bpa, bus_size_t size,
 	fdt_platform_init_cons();
 
 	arm64_bs_tag._space_map = map_func_save;
-#endif
+
+
 
 	/* XXX */
 	pmap_avail_fixup();
@@ -956,6 +992,11 @@ process_kernel_args()
 		case 's':
 			fl |= RB_SINGLE;
 			break;
+// hack
+		case 'g':
+			gdb_wc = 0;
+			break;
+// hack
 		case '1':
 			comcnspeed = B115200;
 			break;
@@ -968,6 +1009,21 @@ process_kernel_args()
 		}
 		boothowto |= fl;
 	}
+}
+volatile int gdb_wc=-1;
+int gdb_c=0;
+void dbg(int index, long arg0, long arg1)
+{
+	if (gdb_wc > 0) {
+		gdb_wc--;
+	}
+	if (gdb_wc==-1) {
+		gdb_c++;
+	}
+	if (gdb_wc == 0)
+		gdb_w = 1;
+	while(gdb_w)
+		;
 }
 void prt(char *fmt, long arg0, long arg1, long arg2)
 {
@@ -1021,3 +1077,115 @@ dumpregs(struct trapframe *frame)
 	printf("pc: 0x%016llx\n", frame->tf_elr);
 	printf("spsr: 0x%016llx\n", frame->tf_spsr);
 }
+
+
+
+/// BELONGS in hvc_console.c
+
+int hvccngetc(dev_t dev);
+void hvccnputc(dev_t dev, int c);
+void hvccnpollc(dev_t dev, int on);
+int
+hvccngetc(dev_t dev)
+{
+	return 0;
+}
+
+#define DCC_STATUS_TX           (1 << 29)
+
+static int dcc_checkstatus()
+{
+	int __ret;
+	asm volatile("mrs %x0, MDCCSR_EL0"
+		: "=r" (__ret) : : "cc");
+	return __ret;
+}
+
+void
+hvccnputc(dev_t dev, int c)
+{
+	while (dcc_checkstatus() & DCC_STATUS_TX) {
+		__asm__ ("isb sy");
+	}
+
+	__asm__ ("msr dbgdtrtx_el0, %x0":: "r"(c));
+	__asm__ ("isb sy");
+}
+
+void
+hvccnpollc(dev_t dev, int on)
+{
+}
+
+#include <sys/tty.h>
+
+cdev_decl(hvc);
+
+struct cdevsw hvcdev =
+        cdev_tty_init(3/*XXX NUART */ ,hvc);          /* 12: serial port */
+
+
+int
+hvccnattach(bus_space_tag_t iot, bus_addr_t iobase, int rate, tcflag_t cflag)
+{
+	static struct consdev hvccons = {
+		NULL, NULL, hvccngetc, hvccnputc, hvccnpollc, NULL,
+		NODEV, CN_MIDPRI
+	};
+
+	cn_tab = &hvccons;
+	cn_tab->cn_dev = makedev(12 /* XXX */, 0);
+	cdevsw[12] = hvcdev;  /* KLUDGE */
+	return 0;
+}
+
+int
+hvcopen(dev_t dev, int flag, int mode, struct proc *p)
+{
+	return 0;
+}
+
+int
+hvcclose(dev_t dev, int flag, int mode, struct proc *p)
+{
+	return 0;
+}
+int
+hvcread(dev_t dev, struct uio *uio, int flag)
+{
+	return 0;
+}
+int
+hvcwrite(dev_t dev, struct uio *uio, int flag)
+{
+	return 0;
+}
+int
+hvcioctl( dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
+{
+	return 0;
+}
+int
+hvcstop(struct tty *tp, int flag)
+{
+        return 0;
+}
+
+struct tty *
+hvctty(dev_t dev)
+{
+	panic(" no real hvc console");
+#if  0
+	int unit;
+	struct pl011_softc *sc;
+	unit = DEVUNIT(dev);
+	if (unit >= pl011uart_cd.cd_ndevs)
+		return NULL;
+	sc = (struct pl011_softc *)pl011uart_cd.cd_devs[unit];
+	if (sc == NULL)
+		return NULL;
+	return sc->sc_tty;
+#endif
+	return NULL;
+}
+

@@ -1,5 +1,3 @@
-# $Bitrig$
 include		"arch/arm64/conf/generic.arm64"
 config		bsd	swap generic
-option MULTIPROCESSOR
 options	SYSCALL_DEBUG

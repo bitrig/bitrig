@@ -23,5 +23,12 @@ atomic_clearbits_int(__volatile unsigned int *ptr, unsigned int val)
 {
 	atomic_fetch_and_explicit((atomic_uint *)ptr, ~val, memory_order_seq_cst);
 }
+
+#define membar_enter()		__membar("dsb sy") 
+#define membar_exit()		__membar("dsb sy") 
+#define membar_producer()	__membar("dsb sy") 
+#define membar_consumer()	__membar("dsb sy") 
+#define membar_sync()		__membar("dsb sy") 
+
 #endif /* defined(_KERNEL) */
 #endif /* _MACHINE_ATOMIC_H_ */

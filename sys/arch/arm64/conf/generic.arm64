@@ -50,6 +50,8 @@ clkff*		at fdt?
 clkfr*		at fdt?
 qgcc*		at fdt?
 
+cpu*		at fdt?
+
 # NS16550 compatible serial ports
 com*		at fdt?
 
