@@ -826,16 +826,16 @@ initarm(struct arm64_bootparams *abp)
 	//dbg_monitor_init();
 	//kdb_init();
 
+	msgbufaddr = (caddr_t)vstart;
+	msgbufphys = pmap_steal_avail(round_page(MSGBUFSIZE), PAGE_SIZE, NULL);
+	vstart += round_page(MSGBUFSIZE);
+
 	zero_page = vstart;
 	vstart += PAGE_SIZE;
 	copy_src_page = vstart;
 	vstart += PAGE_SIZE;
 	copy_dst_page = vstart;
 	vstart += PAGE_SIZE;
-	msgbufaddr = (caddr_t)vstart;
-	vstart += round_page(MSGBUFSIZE);
-
-	msgbufphys = pmap_steal_avail(round_page(MSGBUFSIZE), PAGE_SIZE, NULL);
 
 	/*
 	 * Allocate pages for an FDT copy.
