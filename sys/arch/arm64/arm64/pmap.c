@@ -1163,7 +1163,9 @@ pmap_bootstrap(long kvo, paddr_t lpt1,  long kernelstart, long kernelend,
 	 * vm table, which we may need to preserve until later.
 	 *   pmap_remove_avail(kernelstart-kvo, kernelend-kvo);
 	 */
+	printf("removing %llx-%llx\n", ram_start, kernelstart+kvo); // preserve bootloader?
 	pmap_remove_avail(ram_start, kernelstart+kvo); // preserve bootloader?
+	printf("removing %llx-%llx\n", kernelstart+kvo, kernelend+kvo);
 	pmap_remove_avail(kernelstart+kvo, kernelend+kvo);
 
 
@@ -1184,7 +1186,7 @@ pmap_bootstrap(long kvo, paddr_t lpt1,  long kernelstart, long kernelend,
 	    i <= VP_IDX1(VM_MAX_KERNEL_ADDRESS);
 	    i++) {
 		mappings_allocated++;
-		pa = pmap_steal_avail(4*sizeof (struct pmapvp2), Lx_TABLE_ALIGN,
+		pa = pmap_steal_avail(sizeof (struct pmapvp2), Lx_TABLE_ALIGN,
 		    &va);
 		vp2 = (struct pmapvp2 *)pa; // indexed physically
 		vp1->vp[i] = va;
@@ -1202,7 +1204,7 @@ pmap_bootstrap(long kvo, paddr_t lpt1,  long kernelstart, long kernelend,
 		}
 		for (j = lb_idx2; j <= ub_idx2; j++) {
 			mappings_allocated++;
-			pa = pmap_steal_avail(4*sizeof (struct pmapvp3),
+			pa = pmap_steal_avail(sizeof (struct pmapvp3),
 			    Lx_TABLE_ALIGN, &va);
 			vp3 = (struct pmapvp3 *)pa; // indexed physically
 			vp2->vp[j] = va;
@@ -1648,15 +1650,18 @@ pte_insert(struct pte_desc *pted)
 	switch (pted->pted_va & PMAP_CACHE_BITS) {
 	case PMAP_CACHE_WB:
 		attr |= ATTR_IDX(PTE_ATTR_WB); // inner and outer writeback
+		attr |= ATTR_SH(SH_INNER);
 		break;
 	case PMAP_CACHE_WT: /* for the momemnt treating this as uncached */
 		attr |= ATTR_IDX(PTE_ATTR_CI); // inner and outer uncached
+		attr |= ATTR_SH(SH_INNER);
 		break;
 	case PMAP_CACHE_CI:
 		attr |= ATTR_IDX(PTE_ATTR_DEV); // treat as device !?!?!?!
 		break;
 	case PMAP_CACHE_PTE:
 		attr |= ATTR_IDX(PTE_ATTR_CI); // inner and outer uncached, XXX?
+		attr |= ATTR_SH(SH_INNER);
 		break;
 	default:
 		panic("pte_insert:invalid cache mode");
@@ -2183,8 +2188,8 @@ pmap_map_stolen(vaddr_t kernel_start)
 	int oldprot = 0;
 	printf("mapping self\n");
 	for (mp = pmap_allocated; mp->size; mp++) {
-		printf("start %08x end %08x\n", mp->start, mp->start + mp->size);
-		printf("exe range %08x, %08x\n", kernel_start,
+		printf("start %16llx end %16llx\n", mp->start, mp->start + mp->size);
+		printf("exe range %16llx %16llx\n", kernel_start,
 		    (uint64_t)&etext);
 		for (e = 0; e < mp->size; e += PAGE_SIZE) {
 			/* XXX - is this a kernel text mapping? */
@@ -2199,14 +2204,14 @@ pmap_map_stolen(vaddr_t kernel_start)
 				prot = PROT_READ|PROT_WRITE;
 			}
 			if (prot != oldprot) {
-				printf("mapping  v %08x p %08x prot %x\n", va,
+				printf("mapping  v %16llx p %16llx prot %x\n", va,
 				    pa, prot);
 				oldprot = prot;
 			}
 			pmap_kenter_cache(va, pa, prot, PMAP_CACHE_WB);
 		}
 	}
-	printf("last mapping  v %08x p %08x\n", va, pa);
+	printf("last mapping  v %16llx p %16llx\n", va, pa);
 	return va + PAGE_SIZE;
 	return 0;
 }

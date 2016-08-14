@@ -200,6 +200,17 @@
 #define	TCR_TG1_4K	(2 << TCR_TG1_SHIFT)
 #define	TCR_TG1_64K	(3 << TCR_TG1_SHIFT)
 
+#define TCR_SH0_SHIFT	12
+#define TCR_SH1_SHIFT	28
+#define TCR_SH0(x)	((x) << TCR_SH0_SHIFT)
+#define TCR_SH1(x)	((x) << TCR_SH1_SHIFT)
+#define TCR_ORGN1_SHIFT	26
+#define TCR_IRGN1_SHIFT	24
+#define TCR_ORGN0_SHIFT	10
+#define TCR_IRGN0_SHIFT	8
+#define TCR_ORGNx(x)	(((x) << TCR_ORGN1_SHIFT)|((x) << TCR_ORGN0_SHIFT))
+#define TCR_IRGNx(x)	(((x) << TCR_IRGN1_SHIFT)|((x) << TCR_IRGN0_SHIFT))
+#define TCR_SH1(x)	((x) << TCR_SH1_SHIFT)
 #define	TCR_T1SZ_SHIFT	16
 #define	TCR_T0SZ_SHIFT	0
 #define	TCR_TxSZ(x)	(((x) << TCR_T1SZ_SHIFT) | ((x) << TCR_T0SZ_SHIFT))

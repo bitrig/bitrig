@@ -57,6 +57,10 @@
 #define		PTE_ATTR_WB	2
 
 
+#define		SH_INNER	3
+#define		SH_OUTER	2
+#define		SH_NONE		0
+
 /* Level 0 table, 512GiB per entry */
 #define		L0_SHIFT	39
 #define		L0_INVAL	0x0 /* An invalid address */

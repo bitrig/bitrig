@@ -86,10 +86,9 @@ _start:
 	bl	create_pagetables
 
 
-	mrs	x0, CTR_EL0
+	mrs	x0, DCZID_EL0
+	tbnz	x0, 4, 1f
 	mov	x1, #1
-	// bfxil	x0, x0, #24,#4
-	lsr	x0, x0, #24
 	and	x0, x0, 0xf
 	lsl	x1, x1, x0
 	ldr	x0, =dczva_line_size
@@ -97,6 +96,7 @@ _start:
 	sub	x0, x0, x29
 
 	str	x1, [x0]
+1:
 	/*
 	 * At this point:
 	 * x27 = TTBR0 table
@@ -566,7 +566,8 @@ mair:
 		/* Device            Normal, no cache     Normal, write-back */
 	.quad	MAIR_ATTR(0x00, 0) | MAIR_ATTR(0x44, 1) | MAIR_ATTR(0xff, 2)
 tcr:
-	.quad (TCR_TxSZ(64 - VIRT_BITS) | TCR_ASID_16 | TCR_TG1_4K)
+	.quad (TCR_TxSZ(64 - VIRT_BITS) | TCR_ASID_16 | TCR_TG1_4K | \
+		TCR_SH0(3)|TCR_SH1(3)|TCR_ORGNx(1)|TCR_IRGNx(1))
 sctlr_set:
 	/* Bits to set */
 	.quad (SCTLR_UCI | SCTLR_nTWE | SCTLR_nTWI | SCTLR_UCT | SCTLR_DZE | \
@@ -588,7 +589,7 @@ _C_LABEL(esym): .xword   _C_LABEL(end)
 	.global _C_LABEL(eramdisk)
 _C_LABEL(eramdisk):     .xword   0
 	.global _C_LABEL(dczva_line_size)
-_C_LABEL(dczva_line_size):     .xword   64
+_C_LABEL(dczva_line_size):     .xword   0
 
 	//.section .init_pagetable
 data_align_pad:
