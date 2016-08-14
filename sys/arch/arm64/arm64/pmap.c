@@ -45,6 +45,30 @@ void pmap_setttb(struct proc *p, paddr_t pcb_pagedir, struct pcb *);
 void arm64_tlbi_asid(vaddr_t va, int asid);
 void pmap_free_asid(pmap_t pm);
 
+// using PHYS_TO_VM_PAGE does not do what is desired, so instead of
+// using that API, create our own which will store ranges of memory 
+// and default to caching those pages when mapped
+
+struct {
+	uint64_t start;
+	uint64_t end;
+} pmap_memregions[8];
+
+int pmap_memcount = 0;
+
+int
+pmap_pa_is_mem(uint64_t pa)
+{
+	int i;
+	// NOTE THIS REQUIRES TABLE TO BE SORTED
+	for (i = 0; i < pmap_memcount; i++) {
+		if (pa < pmap_memregions[i].start)
+			return 0;
+		if (pa < pmap_memregions[i].end)
+			return 1;
+	}
+	return 0;
+}
 
 /* Write back D-cache to PoU */
 void
@@ -520,11 +544,12 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 	}
 
 	/* Calculate PTE */
-	pg = PHYS_TO_VM_PAGE(pa);
-	if (pg != NULL) {
+	if (pmap_pa_is_mem(pa)) {
+		pg = PHYS_TO_VM_PAGE(pa);
 		/* max cacheable */
 		cache = PMAP_CACHE_WB; /* managed memory is cacheable */
 	} else {
+		pg = NULL;
 		cache = PMAP_CACHE_CI;
 	}
 
@@ -689,11 +714,13 @@ _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags, int cache)
 	pm->pm_stats.resident_count++;
 
 	if (cache == PMAP_CACHE_DEFAULT) {
-		if (PHYS_TO_VM_PAGE(pa) != NULL) {
+		if (pmap_pa_is_mem(pa)) {
 			/* MAXIMUM cacheability */
 			cache = PMAP_CACHE_WB; /* managed memory is cacheable */
-		} else
+		} else {
+			printf("entering page unmapped %llx %llx\n", va, pa);
 			cache = PMAP_CACHE_CI;
+		}
 	}
 
 	flags |= PMAP_WIRED; /* kernel mappings are always wired. */
@@ -2029,6 +2056,12 @@ pmap_setup_avail( uint64_t ram_start, uint64_t ram_end, uint64_t kvo)
 	pmap_avail_kvo = kvo;
 	pmap_avail[0].start = ram_start;
 	pmap_avail[0].size = ram_end-ram_start;
+
+
+	// XXX - support more than one region
+	pmap_memregions[0].start = ram_start;
+	pmap_memregions[0].end = ram_end;
+	pmap_memcount = 1;
 
 	/* XXX - multiple sections */
 	physmem = atop(pmap_avail[0].size);
