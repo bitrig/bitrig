@@ -148,7 +148,7 @@ virtdone:
 	sub	sp, sp, #(64 * 4)
 	mov	x0, sp
 
-	/* Degate the delda so it is VA -> PA */
+	/* Negate the delta so it is VA -> PA */
 	neg	x29, x29
 
 	str	x1,  [x0]	/* modulep */
@@ -398,7 +398,7 @@ create_pagetables:
 
 	/* Create the VA = PA map */
 	mov	x6, x27		/* The initial page table */
-	mov	x7, #NORMAL_UNCACHED /* Uncached as it's only needed early on */
+	mov	x7, #NORMAL_MEM // #NORMAL
 	mov	x9, x27
 	mov	x8, x9		/* VA start (== PA start) */
 	bl	build_section_pagetable
