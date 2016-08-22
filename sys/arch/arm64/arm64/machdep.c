@@ -871,6 +871,7 @@ initarm(struct arm64_bootparams *abp)
 	// export back to pmap
 	extern vaddr_t virtual_avail, virtual_end;
 	virtual_avail = vstart;
+	vend = VM_MAX_KERNEL_ADDRESS; // XXX
 	virtual_end = vend;
 	}
 
@@ -895,8 +896,6 @@ int pmap_bootstrap_bs_map(bus_space_tag_t t, bus_addr_t bpa, bus_size_t size,
 
 	/* XXX */
 	pmap_avail_fixup();
-	vend = VM_MAX_KERNEL_ADDRESS;
-
 
 	uvmexp.pagesize = PAGE_SIZE;
 	uvm_setpagesize();
