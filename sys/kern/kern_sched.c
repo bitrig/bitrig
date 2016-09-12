@@ -127,7 +127,9 @@ sched_idle(void *v)
 	struct cpu_info *ci = v;
 	int s;
 
-	KERNEL_UNLOCK();
+	//KERNEL_UNLOCK();
+	__mp_release_all(&kernel_lock); // XXX
+	KASSERT(_kernel_lock_held() == 0);
 
 	spc = &ci->ci_schedstate;
 
@@ -140,7 +142,9 @@ sched_idle(void *v)
 	p->p_stat = SSLEEP;
 	p->p_cpu = ci;
 	atomic_setbits_int(&p->p_flag, P_CPUPEG);
+	KASSERT(_kernel_lock_held() == 0);
 	mi_switch();
+	KASSERT(_kernel_lock_held() == 0);
 	cpuset_del(&sched_idle_cpus, ci);
 	SCHED_UNLOCK(s);
 
@@ -153,7 +157,9 @@ sched_idle(void *v)
 
 			SCHED_LOCK(s);
 			p->p_stat = SSLEEP;
+	KASSERT(_kernel_lock_held() == 0);
 			mi_switch();
+	KASSERT(_kernel_lock_held() == 0);
 			SCHED_UNLOCK(s);
 
 			while ((dead = LIST_FIRST(&spc->spc_deadproc))) {
@@ -177,6 +183,7 @@ sched_idle(void *v)
 				SCHED_UNLOCK(s);
 				wakeup(spc);
 			}
+			KASSERT(_kernel_lock_held() == 0);
 #endif
 			cpu_idle_cycle();
 		}
@@ -212,6 +219,8 @@ sched_exit(struct proc *p)
 
 	/* This process no longer needs to hold the kernel lock. */
 	KERNEL_UNLOCK();
+	__mp_release_all(&kernel_lock); // XXX
+	KASSERT(_kernel_lock_held() == 0);
 
 	SCHED_LOCK(s);
 	idle = spc->spc_idleproc;
