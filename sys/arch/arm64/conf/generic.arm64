@@ -22,6 +22,7 @@ include	"../../../conf/GENERIC"
 
 options	TIMEZONE=0	# time zone to adjust RTC time by
 options	DST=0		# daylight saving time used by RTC
+options HZ=100
 #options	NFSCLIENT	# NFS 
 
 makeoptions	KERNEL_BASE_PHYS="0x00200000"
