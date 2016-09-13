@@ -393,8 +393,8 @@ pmap_vp_enter(pmap_t pm, vaddr_t va, struct pte_desc *pted, int flags)
 			vp1 = pool_get(&pmap_vp_pool, vp_pool_flags);
 			if (vp1 == NULL) {
 				if ((flags & PMAP_CANFAIL) == 0)
-					return ENOMEM;
-				panic("unable to allocate L1");
+					panic("pmap_vp_enter: unable to allocate L1");
+				return ENOMEM;
 			}
 			pmap_set_l1(pm, va, vp1, 0);
 		}
@@ -407,8 +407,8 @@ pmap_vp_enter(pmap_t pm, vaddr_t va, struct pte_desc *pted, int flags)
 		vp2 = pool_get(&pmap_vp_pool, vp_pool_flags);
 		if (vp2 == NULL) {
 			if ((flags & PMAP_CANFAIL) == 0)
-				return ENOMEM;
-			panic("unable to allocate L2");
+				panic("pmap_vp_enter: unable to allocate L2");
+			return ENOMEM;
 		}
 		pmap_set_l2(pm, va, vp2, 0);
 	}
@@ -418,8 +418,8 @@ pmap_vp_enter(pmap_t pm, vaddr_t va, struct pte_desc *pted, int flags)
 		vp3 = pool_get(&pmap_vp_pool, vp_pool_flags);
 		if (vp3 == NULL) {
 			if ((flags & PMAP_CANFAIL) == 0)
-				return ENOMEM;
-			panic("unable to allocate L3");
+				panic("pmap_vp_enter: unable to allocate L3");
+			return ENOMEM;
 		}
 		pmap_set_l3(pm, va, vp3, 0);
 	}
@@ -538,18 +538,18 @@ pmap_enter(pmap_t pm, vaddr_t va, paddr_t pa, vm_prot_t prot, int flags)
 		pted = pool_get(&pmap_pted_pool, PR_NOWAIT | PR_ZERO);
 		if (pted == NULL) {
 			if ((flags & PMAP_CANFAIL) == 0) {
-				error = ENOMEM;
-				goto out;
+				panic("pmap_enter: failed to allocate pted");
 			}
-			panic("pmap_enter: failed to allocate pted");
+			error = ENOMEM;
+			goto out;
 		}
 		if (pmap_vp_enter(pm, va, pted, flags)) {
 			if ((flags & PMAP_CANFAIL) == 0) {
-				error = ENOMEM;
-				pool_put(&pmap_pted_pool, pted);
-				goto out;
+				panic("pmap_enter: failed to allocate L2/L3");
 			}
-			panic("pmap_enter: failed to allocate L2/L3");
+			error = ENOMEM;
+			pool_put(&pmap_pted_pool, pted);
+			goto out;
 		}
 	}
 
