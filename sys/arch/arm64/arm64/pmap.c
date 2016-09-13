@@ -380,12 +380,7 @@ pmap_vp_enter(pmap_t pm, vaddr_t va, struct pte_desc *pted, int flags)
 	struct pmapvp2 *vp2;
 	struct pmapvp3 *vp3;
 
-	int vp_pool_flags;
-	if (pm == pmap_kernel()) {
-		vp_pool_flags  = PR_NOWAIT;
-	} else {
-		vp_pool_flags  = PR_WAITOK |PR_ZERO;
-	}
+	int vp_pool_flags = PR_NOWAIT |PR_ZERO;
 
 	if (pm->have_4_level_pt) {
 		vp1 = pm->pm_vp.l0->vp[VP_IDX0(va)];
