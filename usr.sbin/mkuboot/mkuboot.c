@@ -30,6 +30,7 @@
 #include <sys/exec_elf.h>
 
 #define IH_OS_OPENBSD		1 /* OpenBSD */
+#define IH_OS_NETBSD		2 /* NetBSD */
 #define IH_OS_LINUX		5 /* Linux */
 
 #define IH_ARCH_ALPHA           1       /* Alpha        */
@@ -43,6 +44,7 @@
 #define IH_ARCH_SPARC           10      /* Sparc        */
 #define IH_ARCH_SPARC64         11      /* Sparc 64 Bit */
 #define IH_ARCH_M68K            12      /* M68K         */
+#define IH_ARCH_ARM64           22      /* AARCH64       */
 
 #define IH_TYPE_STANDALONE	1 /* Standalone */
 #define IH_TYPE_KERNEL		2 /* OS Kernel Image */
@@ -98,6 +100,7 @@ static const struct arch_map archmap[] = {
     { IH_ARCH_ALPHA,	"alpha" },
     { IH_ARCH_IA64,	"amd64" },
     { IH_ARCH_ARM,	"arm" },
+    { IH_ARCH_ARM64,	"arm64" },
     { IH_ARCH_I386,	"i386" },
     { IH_ARCH_M68K,	"m68k" },
     { IH_ARCH_MIPS,	"mips" },
@@ -129,6 +132,7 @@ struct os_map {
 static const struct os_map osmap[] = {
     { IH_OS_OPENBSD,	"OpenBSD" },
     { IH_OS_LINUX,	"Linux" },
+    { IH_OS_NETBSD,	"NetBSD" },
     { 0, NULL }
 };
 

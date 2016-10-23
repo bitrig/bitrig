@@ -34,6 +34,10 @@
 #error "unknown elf size"
 #endif
 
+#ifndef PT_STACK
+#define PT_STACK 0x6474e551
+#endif
+
 struct image_header;
 
 #define        roundup(x, y)   ((((x)+((y)-1))/(y))*(y))
@@ -168,6 +172,7 @@ ELFNAME(copy_elf)(int ifd, const char *iname, int ofd, const char *oname,
 		case PT_NOTE:
 		case PT_OPENBSD_RANDOMIZE:
 		case PT_BITRIG_TMPFS_RAMDISK:
+		case PT_STACK:
 #ifdef DEBUG
 			fprintf(stderr, "skipping segment type %#x\n",
 			    letoh32(phdr.p_type));
