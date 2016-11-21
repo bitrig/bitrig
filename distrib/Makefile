@@ -3,7 +3,7 @@
 SUBDIR=	special
 
 .if	make(obj)
-SUBDIR+=amd64 armv7
+SUBDIR+=amd64 armv7 arm64
 .elif exists(${MACHINE})
 SUBDIR+=${MACHINE}
 .endif
