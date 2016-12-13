@@ -242,10 +242,16 @@
 ./etc/signify/bitrig-11-base.pub
 ./etc/signify/bitrig-11-fw.pub
 ./etc/signify/bitrig-11-pkg.pub
+./etc/signify/bitrig-20-base.pub
+./etc/signify/bitrig-20-fw.pub
+./etc/signify/bitrig-20-pkg.pub
+./etc/signify/bitrig-21-base.pub
+./etc/signify/bitrig-21-fw.pub
+./etc/signify/bitrig-21-pkg.pub
 ./etc/signify/openbsd-59-base.pub
-./etc/signify/openbsd-60-base.pub
 ./etc/signify/openbsd-59-fw.pub
 ./etc/signify/openbsd-59-pkg.pub
+./etc/signify/openbsd-60-base.pub
 ./etc/signify/openbsd-60-fw.pub
 ./etc/signify/openbsd-60-pkg.pub
 ./etc/skel
@@ -2467,8 +2473,6 @@
 ./usr/sbin/userinfo
 ./usr/sbin/usermod
 ./usr/sbin/vipw
-./usr/sbin/vmctl
-./usr/sbin/vmd
 ./usr/sbin/watchdogd
 ./usr/sbin/wsconscfg
 ./usr/sbin/ypbind
