@@ -2,6 +2,7 @@
 
 .if ${MACHINE} == "amd64" || \
     ${MACHINE} == "i386" || \
+    ${MACHINE} == "arm64" || \
     ${MACHINE} == "armv7"
 
 PROG=	hotplugd
