@@ -361,6 +361,7 @@ fdt_attach_clocks(struct device *self, void *node)
 		panic("%s: can't extract clocks, but they exist", __func__);
 
 	for (idx = 0; idx < nclk; idx++) {
+		int phandle = clocks[idx];
 		void *clkc = fdt_find_node_by_phandle(clocks[idx]);
 		if (clkc == NULL) {
 			printf("%s: can't find clock controller\n",
@@ -385,7 +386,8 @@ fdt_attach_clocks(struct device *self, void *node)
 		}
 
 		if (fdt_found_node(self, clkc) == NULL) {
-			printf("%s: can't find clock driver\n", __func__);
+			printf("%s: can't find clock driver %x\n", __func__,
+			    phandle);
 			return -1;
 		}
 	}
