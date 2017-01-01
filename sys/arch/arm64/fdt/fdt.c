@@ -388,6 +388,21 @@ fdt_find_node(char *name)
 	return node;
 }
 
+char *
+fdt_find_alias(char *name)
+{
+	int len;
+	char *aliasval;
+	void *node = fdt_find_node("/aliases");
+
+	if (node == NULL)
+		return NULL;
+	len = fdt_node_property(node, name, &aliasval);
+	if (len > 0)
+		return aliasval;
+	return NULL;
+}
+
 void *
 fdt_parent_node_recurse(void *pnode, void *child)
 {

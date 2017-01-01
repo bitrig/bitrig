@@ -52,7 +52,7 @@ void
 fdt_platform_init_cons(void)
 {
 	void *node;
-	// char *stdout_path;
+	char *stdout_path;
 	struct fdt_memory mem;
 	uint32_t freq;
 
@@ -80,37 +80,25 @@ fdt_platform_init_cons(void)
 	    !fdt_get_memory_address(node, 0, &mem))
 		pl011cnattach(&arm64_bs_tag, mem.addr, comcnspeed, comcnmode);
 
-	if ((node = fdt_find_compatible("snps,dw-apb-uart")) != NULL &&
-	    !fdt_get_memory_address(node, 0, &mem))
-		comcnattach(&arm64_a4x_bs_tag, mem.addr, comcnspeed,
-		    freq, comcnmode);
-
-	if ((node = fdt_find_compatible("qcom,msm-uartdm-v1.4")) != NULL &&
-	    !fdt_get_memory_address(node, 0, &mem))
-		msmuartcnattach(&arm64_bs_tag, mem.addr, comcnspeed,
-		    comcnmode);
-
-if (node == 0) {
-asm("mrs x0, scr_el3");
-}
-
-	if ((((node = fdt_find_compatible("fsl,ns16550")) != NULL) ||
-	    ((node = fdt_find_compatible("fsl,16550-FIFO64")) != NULL)) &&
-	    !fdt_get_memory_address(node, 0, &mem))
-		comcnattach(&arm64_bs_tag, mem.addr, comcnspeed,
-		    150000000, comcnmode);
-#if 0
 	if ((node = fdt_find_node("/chosen")) == NULL ||
 	    !fdt_node_property(node, "stdout-path", &stdout_path))
 		return;
 
+	if (stdout_path != NULL && stdout_path[0] != '/') {
+		char *stdout_alias;
+		stdout_alias = fdt_find_alias(stdout_path);
+		if (stdout_alias != NULL)
+			stdout_path = stdout_alias;
+	}
+
 	if ((node = fdt_find_node(stdout_path)) == NULL)
 		return;
 
-	if (fdt_node_compatible("fsl,imx6q-uart", node) &&
-	    !fdt_get_memory_address(node, 0, &mem))
-		imxuartcnattach(&armv7_bs_tag, mem.addr, comcnspeed, comcnmode);
-#endif
+	if (fdt_node_compatible("qcom,msm-uartdm-v1.4", node) &&
+	    !fdt_get_memory_address(node, 0, &mem)) {
+		msmuartcnattach(&arm64_bs_tag, mem.addr, comcnspeed,
+		    comcnmode);
+	    }
 
 	comdefaultrate = comcnspeed;
 }
