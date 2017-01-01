@@ -72,6 +72,12 @@ include "dev/wscons/files.wscons"
 include "dev/rasops/files.rasops"
 include "dev/wsfont/files.wsfont"
 
+
+# Snapdragon (Dragonboard) support
+device	msmuart {}
+attach	msmuart at fdt
+file	arch/arm64/dev/msmuart.c msmuart
+
 #
 # Machine-independent HID support
 #

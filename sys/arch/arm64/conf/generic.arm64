@@ -52,4 +52,7 @@ clkfr*          at fdt?
 # NS16550 compatible serial ports
 com*            at fdt?
 
+# Snapdragon (Dragonboard)
+msmuart*	at fdt?
+
 include "../../../arch/arm64/conf/generic.virt"
