@@ -92,9 +92,13 @@ device	ampintc
 attach	ampintc at fdt with ampintc_fdt
 file	arch/arm64/dev/ampintc.c		ampintc
 
-device  agtimer
-attach  agtimer at fdt with agtimer_fdt
-file    arch/arm64/dev/agtimer.c               agtimer
+device	agtimer
+attach	agtimer at fdt with agtimer_fdt
+file	arch/arm64/dev/agtimer.c		agtimer
+
+device	qgcc
+attach	qgcc at fdt 
+file	arch/arm64/dev/qgcc.c			qgcc
 
 
 file	netinet/in_cksum.c
