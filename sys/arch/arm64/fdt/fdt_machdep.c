@@ -31,6 +31,7 @@
 
 #include <arm64/arm64/arm64var.h>
 #include <arm64/virt/pl011var.h>
+#include <arm64/dev/msmuartvar.h>
 //#include <armv7/imx/imxuartvar.h>
 //#include <armv7/sunxi/sxiuartvar.h>
 //#include <armv7/exynos/exdisplayvar.h>
@@ -83,6 +84,15 @@ fdt_platform_init_cons(void)
 	    !fdt_get_memory_address(node, 0, &mem))
 		comcnattach(&arm64_a4x_bs_tag, mem.addr, comcnspeed,
 		    freq, comcnmode);
+
+	if ((node = fdt_find_compatible("qcom,msm-uartdm-v1.4")) != NULL &&
+	    !fdt_get_memory_address(node, 0, &mem))
+		msmuartcnattach(&arm64_bs_tag, mem.addr, comcnspeed,
+		    comcnmode);
+
+if (node == 0) {
+asm("mrs x0, scr_el3");
+}
 
 	if ((((node = fdt_find_compatible("fsl,ns16550")) != NULL) ||
 	    ((node = fdt_find_compatible("fsl,16550-FIFO64")) != NULL)) &&
