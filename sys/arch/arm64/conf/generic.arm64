@@ -42,15 +42,15 @@ uk*		at scsibus?
 
 include "../../../arch/arm64/conf/generic.fdt"
 
-ampintc*   at fdt?
-agtimer*   at fdt?
+ampintc*		at fdt?
+agtimer*		at fdt?
 
 # Clocks
-clkff*          at fdt?
-clkfr*          at fdt?
+clkff*		at fdt?
+clkfr*		at fdt?
 
 # NS16550 compatible serial ports
-com*            at fdt?
+com*		at fdt?
 
 # Snapdragon (Dragonboard)
 msmuart*	at fdt?
