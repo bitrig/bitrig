@@ -53,9 +53,52 @@
 	.text
 	.globl _start
 _start:
+	b 1f
+	.word   0		// Dummy instruction slot
+	.xword	2*1024*1024	// Image load offset
+	.xword	8*1024*1024	// effective image size
+	.xword	0		// Flags: LE, 4K, align base
+	.xword	0		// res2
+	.xword	0		// res3
+	.xword	0		// res4
+	.word	0x644d5241	// Magic ARM\x64
+	.word	0
+1:
+
+
+	mov x3, #0
+	mov x4, #0
+	mov x5, #0
+	mov x6, #0
+	mov x7, #0
+	mov x8, #0
+	mov x9, #0
+	mov x10, #0
+	mov x11, #0
+	mov x12, #0
+	mov x13, #0
+	mov x14, #0
+	mov x15, #0
+	mov x16, #0
+	mov x17, #0
+//	mov x18, #0 -- Do not clobber this register, allows u-boot early debug
+	mov x19, #0
+	mov x20, #0
+	mov x24, #0
+	mov x25, #0
+	mov x26, #0
+	mov x27, #0
+	mov x28, #0
+	mov x29, #0
+
 	mov x21, x0
 	mov x22, x1
 	mov x23, x2
+
+	cbnz x2, 1f
+	mov x2, x0
+1:
+
 	/* Drop to EL1 */
 	bl	drop_to_el1
 
@@ -116,6 +159,7 @@ _start:
 .Linitstack_end:
 	.xword initstack_end
 virtdone:
+
 	/* Set up the stack */
 	adr	x25, .Linitstack_end
 	ldr	x25, [x25]
@@ -161,6 +205,7 @@ virtdone:
 
 	/* trace back starts here */
 	mov	fp, #0
+
 	/* Branch to C code */
 	bl	initarm
 	bl	_C_LABEL(main)
@@ -188,9 +233,9 @@ drop_to_el1:
 	mrs	x1, CurrentEL
 	lsr	x1, x1, #2
 	cmp	x1, #0x2
-	b.eq	1f
+	b.eq	2f
 	ret
-1:
+2:	//* init EL2
 	/* Configure the Hypervisor */
 	mov	x2, #(HCR_RW)
 	msr	hcr_el2, x2
@@ -242,7 +287,7 @@ drop_to_el1:
 
 	.align 3
 .Lsctlr_res1:
-	.quad SCTLR_RES1
+	.quad	SCTLR_RES1
 
 #define	VECT_EMPTY	\
 	.align 7;	\
@@ -528,7 +573,10 @@ start_mmu:
 	msr	mdscr_el1, xzr
 
 	/* Invalidate the TLB */
+	dsb ishst
 	tlbi	vmalle1is
+	dsb ish
+	isb
 
 	ldr	x2, mair
 	msr	mair_el1, x2
@@ -538,6 +586,7 @@ start_mmu:
 	mrs	x3, id_aa64mmfr0_el1
 	bfi	x2, x3, #32, #3
 	msr	tcr_el1, x2
+
 
 	/* Setup SCTLR */
 	ldr	x2, sctlr_set
@@ -553,13 +602,15 @@ start_mmu:
 switch_mmu_kernel:
 	dsb	sy
 	/* Invalidate the TLB */
+	dsb ishst
 	tlbi	vmalle1is
+	dsb ish
+	isb
 	/* Load ttbr1 (kernel) */
 	msr	ttbr1_el1, x0
+	dsb sy
 	isb
 	ret
-
-
 
 	.align 3
 mair:
