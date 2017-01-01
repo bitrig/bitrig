@@ -692,8 +692,6 @@ void	collect_kernel_args(char *);
 void	process_kernel_args(void);
 extern  uint64_t eramdisk;
 
-volatile int gdb_wc, gdb_w;
-
 void
 initarm(struct arm64_bootparams *abp)
 {
@@ -711,11 +709,6 @@ initarm(struct arm64_bootparams *abp)
 	int     (*map_func_save)(bus_space_tag_t, bus_addr_t, bus_size_t, int,
 	    bus_space_handle_t *);
 
-#if 0
-	gdb_w = 1;
-	while(gdb_w)
-		;
-#endif
 	// NOTE that 1GB of ram is mapped in by default in
 	// the bootstrap memory config, so nothing is necessary
 	// until pmap_bootstrap_finalize is called??
@@ -760,8 +753,6 @@ initarm(struct arm64_bootparams *abp)
 				initrd = initrdsize = 0;
 		}
 	}
-
-
 #if 0
 	/* Load the physical memory ranges */
 	physmap_idx = 0;
@@ -790,11 +781,6 @@ initarm(struct arm64_bootparams *abp)
 	}
 	process_kernel_args();
 
-	if (gdb_wc >= 0) {
-		gdb_w = 1;
-		while(gdb_w)
-			;
-	}
 
 	// PCPU_SET(curthread, &thread0);
 
@@ -892,8 +878,6 @@ int pmap_bootstrap_bs_map(bus_space_tag_t t, bus_addr_t bpa, bus_size_t size,
 
 	arm64_bs_tag._space_map = map_func_save;
 
-
-
 	/* XXX */
 	pmap_avail_fixup();
 
@@ -972,11 +956,6 @@ process_kernel_args()
 		case 's':
 			fl |= RB_SINGLE;
 			break;
-// hack
-		case 'g':
-			gdb_wc = 0;
-			break;
-// hack
 		case '1':
 			comcnspeed = B115200;
 			break;
@@ -989,21 +968,6 @@ process_kernel_args()
 		}
 		boothowto |= fl;
 	}
-}
-volatile int gdb_wc=-1;
-int gdb_c=0;
-void dbg(int index, long arg0, long arg1)
-{
-	if (gdb_wc > 0) {
-		gdb_wc--;
-	}
-	if (gdb_wc==-1) {
-		gdb_c++;
-	}
-	if (gdb_wc == 0)
-		gdb_w = 1;
-	while(gdb_w)
-		;
 }
 void prt(char *fmt, long arg0, long arg1, long arg2)
 {
