@@ -145,7 +145,16 @@ iobus_space_map(bus_space_tag_t t, bus_addr_t bpa, bus_size_t size,
 	startpa = trunc_page(bpa);
 	endpa = round_page(bpa + size);
 
-	va = (vaddr_t)km_alloc(endpa - startpa, &kv_any, &kp_none, &kd_nowait);
+	extern int arm64_km_alloc_ok;
+	if (arm64_km_alloc_ok == 0) {
+		extern vaddr_t virtual_avail, virtual_end;
+
+		va = virtual_avail;
+		virtual_avail = va + (endpa - startpa);
+	} else {
+		va = (vaddr_t)km_alloc(endpa - startpa, &kv_any, &kp_none,
+		    &kd_nowait);
+	}
 	if (! va)
 		return(ENOMEM);
 

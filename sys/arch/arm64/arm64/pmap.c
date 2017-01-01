@@ -2028,10 +2028,15 @@ void pmap_remove_holes(struct vmspace *vm)
 	/* NOOP */
 }
 
+// until KVM initializes itself, it is not possible to allocate kva 
+// so steal it from virtual_end
+int arm64_km_alloc_ok = 0;
+
 void pmap_virtual_space(vaddr_t *start, vaddr_t *end)
 {
 	*start = virtual_avail;
 	*end = virtual_end;
+	arm64_km_alloc_ok = 1;
 }
 
 vaddr_t  pmap_curmaxkvaddr;
