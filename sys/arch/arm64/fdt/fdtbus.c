@@ -249,14 +249,42 @@ struct ic_entry {
 static void
 fdt_attach_interrupt_controller(struct device *self)
 {
+	char *data;
+	int len, i, skip;
+
 	SLIST_HEAD(, ic_entry) ic_list = SLIST_HEAD_INITIALIZER(ic_list);
 	SLIST_HEAD(, ic_entry) ip_list = SLIST_HEAD_INITIALIZER(ip_list);
 	struct ic_entry *ie, *tmp;
 	void *node = NULL, *parent;
 
+	char *skip_interrupt_controller_list[] = {
+		"qcom,msm8916-pinctrl",
+		"qcom,spmi-pmic",
+		"qcom,spmi-pmic-arb",
+
+		NULL
+	};
+
 	/* Create a list of all interrupt controllers. */
 	while ((node = fdt_find_node_with_prop(fdt_next_node(node),
 	    "interrupt-controller")) != NULL) {
+
+		len = fdt_node_property(node, "compatible", &data);
+		if (len == 0) {
+			// if no compatible node, skip
+			continue;
+		}
+		skip = 0;
+		for (i = 0; skip_interrupt_controller_list[i] != NULL; i++) {
+			if (fdt_node_compatible(
+			    skip_interrupt_controller_list[i], node)) {
+				skip = 1;
+				break;
+			}
+		}
+		if (skip)
+			continue;
+
 		ie = malloc(sizeof(*ie), M_DEVBUF, M_NOWAIT|M_ZERO);
 		if (ie == NULL)
 			panic("%s: cannot allocate memory", __func__);

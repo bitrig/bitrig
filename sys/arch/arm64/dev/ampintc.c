@@ -188,6 +188,7 @@ static char *ampintc_compatibles[] = {
 	"arm,cortex-a7-gic",
 	"arm,cortex-a9-gic",
 	"arm,cortex-a15-gic",
+	"qcom,msm-qgic2",
 	NULL
 };
 
