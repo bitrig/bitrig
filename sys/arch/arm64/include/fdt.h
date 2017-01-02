@@ -83,6 +83,8 @@ void 	*fdt_find_node_with_prop(void *node, char *propname);
 void	*fdt_get_interrupt_controller(void *node);
 void	*fdt_find_node_by_phandle(int);
 
+#define fdt_for_each_child_of_node(p, n) \
+	for (n = fdt_child_node(node); n;  n = fdt_next_node(n))
 
 void *arm_intr_establish_fdt(void *node, int level, int (*func)(void *),
     void *cookie, char *name);
