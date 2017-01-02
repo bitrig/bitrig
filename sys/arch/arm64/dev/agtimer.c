@@ -157,9 +157,9 @@ static inline int
 agtimer_set_ctrl(struct agtimer_softc *sc, uint32_t val)
 {
 	if (sc->sc_physical)
-		__asm volatile("MSR CNTP_CTL_EL0, %x0" : "=r" (val));
+		__asm volatile("MSR CNTP_CTL_EL0, %x0" :: "r" (val));
 	else
-		__asm volatile("MSR CNTV_CTL_EL0, %x0" : "=r" (val));
+		__asm volatile("MSR CNTV_CTL_EL0, %x0" :: "r" (val));
 	isb();
 
 	return (0);
