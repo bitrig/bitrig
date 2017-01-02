@@ -96,6 +96,10 @@ device	agtimer
 attach	agtimer at fdt with agtimer_fdt
 file	arch/arm64/dev/agtimer.c		agtimer
 
+device	agmemtimer
+attach	agmemtimer at fdt with agmemtimer_fdt
+file	arch/arm64/dev/agmemtimer.c		agmemtimer
+
 device	qgcc
 attach	qgcc at fdt 
 file	arch/arm64/dev/qgcc.c			qgcc

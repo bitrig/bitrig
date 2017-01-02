@@ -44,6 +44,7 @@ include "../../../arch/arm64/conf/generic.fdt"
 
 ampintc*		at fdt?
 agtimer*		at fdt?
+agmemtimer*		at fdt?
 
 # Clocks
 clkff*		at fdt?
