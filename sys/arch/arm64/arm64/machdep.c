@@ -143,6 +143,8 @@ inittodr(time_t base)
 void
 consinit()
 {
+	void fdt_platform_init_cons(void);
+	fdt_platform_init_cons();
 }
 
 void
@@ -706,8 +708,10 @@ initarm(struct arm64_bootparams *abp)
 	void *fdt;
 	uint32_t initrd = 0, initrdsize = 0; /* initrd information from fdt */
 	uint64_t kernel_end = eramdisk ? eramdisk : esym;
+#ifdef EARLY_CONS_ATTACH
 	int     (*map_func_save)(bus_space_tag_t, bus_addr_t, bus_size_t, int,
 	    bus_space_handle_t *);
+#endif
 
 	// NOTE that 1GB of ram is mapped in by default in
 	// the bootstrap memory config, so nothing is necessary
@@ -795,7 +799,7 @@ initarm(struct arm64_bootparams *abp)
 	void _start(void);
 	long kernbase = (long)&_start & ~0x00fff;
 
-	/* Bootstrap enough of pmap  to enter the kernel proper */
+	/* Bootstrap enough of pmap to enter the kernel proper */
 	vstart = pmap_bootstrap(kvo, abp->kern_l1pt,
 	    kernbase, kernel_end,
 	    memstart, memstart + memsize);
@@ -804,14 +808,8 @@ initarm(struct arm64_bootparams *abp)
 
 	//cninit();
 
-	// XX correctly sized?
+	// XXX correctly sized?
 	proc0paddr = (struct user *)abp->kern_stack;
-	//msgbufinit(msgbufp, msgbufsize);
-	//mutex_init();
-	//init_param2(physmem);
-
-	//dbg_monitor_init();
-	//kdb_init();
 
 	msgbufaddr = (caddr_t)vstart;
 	msgbufphys = pmap_steal_avail(round_page(MSGBUFSIZE), PAGE_SIZE, NULL);
@@ -869,6 +867,7 @@ initarm(struct arm64_bootparams *abp)
 int pmap_bootstrap_bs_map(bus_space_tag_t t, bus_addr_t bpa, bus_size_t size,
     int flags, bus_space_handle_t *bshp);
 
+#ifdef EARLY_CONS_ATTACH
 	map_func_save = arm64_bs_tag._space_map;
 	arm64_bs_tag._space_map = pmap_bootstrap_bs_map;
 
@@ -877,6 +876,7 @@ int pmap_bootstrap_bs_map(bus_space_tag_t t, bus_addr_t bpa, bus_size_t size,
 	fdt_platform_init_cons();
 
 	arm64_bs_tag._space_map = map_func_save;
+#endif
 
 	/* XXX */
 	pmap_avail_fixup();
