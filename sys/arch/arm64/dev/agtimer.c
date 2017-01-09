@@ -220,6 +220,8 @@ agtimer_fdt_match(struct device *parent, void *cfdata, void *aux)
 	// XXX  arm64
 	if (fdt_node_compatible("arm,armv7-timer", ca->aa_node))
 		return (1);
+	if (fdt_node_compatible("arm,armv8-timer", ca->aa_node))
+		return (1);
 
 	return 0;
 }
