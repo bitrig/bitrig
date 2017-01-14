@@ -45,12 +45,17 @@
 
 /* DataMover UART registers and bits */
 #define DM_DMRX         0x34
-#define DM_NCHAR_TX       0x40	// Number of Chars for TX
+#define DM_NCHAR_TX	0x40	/* Number of Chars for TX */
+
+#define DM_RXFS		0x50
+#define		DM_RXFS_NBYTES(x) (((x) >> 7) & 0x7) // NOB in packing buffer
+#define		DM_RXFS_FIFO_LSB(x) ((x) & 0x7f) // words in FIFO
 
 #define DM_SR           0xA4
-#define         DM_SR_RX_EMPTY  (1 << 0)
-#define         DM_SR_TX_EMPTY  (1 << 3) /* TX underrun */
-#define         DM_SR_UART_OVERRUN  (1 << 3) /* RX overrun */
+#define         DM_SR_RX_RDY		(1 << 0)
+#define         DM_SR_RX_FULL		(1 << 1)
+#define         DM_SR_TX_EMPTY  	(1 << 3) /* TX underrun */
+#define         DM_SR_UART_OVERRUN	(1 << 3) /* RX overrun */
 
 #define DM_CR           0xA8
 #define		DM_CR_CMD_RX_EN			(1 << 0)
@@ -62,6 +67,7 @@
 #define		DM_CR_CMD_FORCE_STALE		(4 << 8)
 #define		DM_CR_CMD_ENABLE_STALE		(5 << 8)
 #define		DM_CR_CMD_DISABLE_STALE		(6 << 8)
+#define		DM_CR_CMD_CLEAR_STALE		(8 << 8)
 
 #define DM_IMR          0xb0
 #define DM_ISR          0xb4
@@ -253,7 +259,7 @@ msmuart_intr(void *arg)
 #endif
 
 	// if nothing in RX, return
-	if(!ISSET(bus_space_read_4(iot, ioh, DM_SR), DM_SR_RX_EMPTY))
+	if(ISSET(bus_space_read_4(iot, ioh, DM_SR), DM_SR_RX_RDY) == 0)
 		return 0;
 
 	p = sc->sc_ibufp;
@@ -823,17 +829,56 @@ msmuartcnattach(bus_space_tag_t iot, bus_addr_t iobase, int rate, tcflag_t cflag
 	return 0;
 }
 
+int msmuart_nchar_read;
+uint32_t msmuart_char_buf;
+int
+msm_read_char()
+{
+	bus_space_tag_t iot = msmuartconsiot;
+	bus_space_handle_t ioh = msmuartconsioh;
+	uint32_t sr, val;
+
+	if (msmuart_nchar_read != 0)
+		return msmuart_nchar_read;
+	
+	if (bus_space_read_4(iot, ioh, DM_SR) &
+	    DM_SR_UART_OVERRUN) {
+		bus_space_write_4(iot, ioh, DM_CR,
+		    DM_CR_CMD_RESET_ERR);
+	}
+
+	sr = bus_space_read_4(iot, ioh, DM_SR);
+
+	if (sr & DM_SR_RX_RDY) {
+		msmuart_char_buf = bus_space_read_4(iot, ioh, DM_RF);
+		msmuart_nchar_read = 4;
+	} else {
+		val = bus_space_read_4(iot, ioh, DM_RXFS);
+		if (DM_RXFS_NBYTES(val) == 0) {
+			return 0; // no bytes available
+		}
+		msmuart_nchar_read = DM_RXFS_NBYTES(val);
+
+		bus_space_write_4(iot, ioh, DM_CR, DM_CR_CMD_FORCE_STALE);
+		msmuart_char_buf = bus_space_read_4(iot, ioh, DM_RF);
+		bus_space_write_4(iot, ioh, DM_CR, DM_CR_CMD_CLEAR_STALE);
+		bus_space_write_4(iot, ioh, DM_DMRX, 0x7);
+	}
+	return msmuart_nchar_read;
+}
+
 int
 msmuartcngetc(dev_t dev)
 {
 	int c;
 	int s;
 	s = splhigh();
-	while(!ISSET(bus_space_read_4(msmuartconsiot, msmuartconsioh, DM_SR),
-	    DM_SR_RX_EMPTY))
+	while (msm_read_char() == 0)
 		;
-	// not correct, may be more than one char in buffer.
-	c = bus_space_read_4(msmuartconsiot, msmuartconsioh, DM_RF);
+
+	c = msmuart_char_buf & 0xff;
+	msmuart_char_buf >>= 8;
+	msmuart_nchar_read--;
 	splx(s);
 	return c;
 }
