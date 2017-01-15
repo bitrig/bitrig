@@ -39,6 +39,7 @@ cpu_configure(void)
 	(void)config_rootfound("mainbus", NULL);
 
 	cold = 0;
+	spl0();
 }
 
 void
