@@ -2399,7 +2399,11 @@ pmap_setttb(struct proc *p, paddr_t pagedir, struct pcb *pcb)
 		}
 		//printf("switching userland to %p %p asid %d new asid %d\n",
 		//    pm, pmap_kernel(), oasid, pm->pm_asid);
+
+		__asm volatile ("msr     ttbr0_el1, %x0" :: "r"(pagedir));
+		__asm volatile ("dsb sy");
+	} else {
+		// XXX what to do if switching to kernel pmap !?!?
 	}
 
-	__asm volatile ("msr     ttbr0_el1, %x0" :: "r"(pagedir));
 }
