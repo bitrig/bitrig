@@ -44,11 +44,24 @@
 #include <arm64/dev/msmuartvar.h>
 
 /* DataMover UART registers and bits */
+#define DM_MR1		0x00
+#define		DM_MR1_RX_RDY_CTL	(1<<7)
+	
+#define DM_MR2		0x04
+
+#define DM_IPR		0x18
+#define		DM_IPR_MSB_M	0x3ff80
+#define		DM_IPR_MSB_S	2
+#define		DM_IPR_CHARS	64
+
+#define DM_TFWR		0x1c
+#define DM_RFWR		0x20
+
 #define DM_DMRX         0x34
 #define DM_NCHAR_TX	0x40	/* Number of Chars for TX */
 
 #define DM_RXFS		0x50
-#define		DM_RXFS_NBYTES(x) (((x) >> 7) & 0x7) // NOB in packing buffer
+#define		DM_RXFS_NBYTES(x) ((((x) &0xffffc000) >> 7)| ((x) &0x7f))
 #define		DM_RXFS_FIFO_LSB(x) ((x) & 0x7f) // words in FIFO
 
 #define DM_SR           0xA4
@@ -63,25 +76,28 @@
 #define		DM_CR_CMD_TX_EN			(1 << 2)
 #define		DM_CR_CMD_TX_DIS		(1 << 3)
 #define		DM_CR_CMD_RESET_ERR		(3 << 4)
+#define		DM_CR_CMD_RESET_STALE_INT	(8 << 4)
+#define		DM_CR_CMD_CR_PROT_EN		(1 << 8)
 #define		DM_CR_CMD_RESET_TX_READY	(3 << 8)
 #define		DM_CR_CMD_FORCE_STALE		(4 << 8)
 #define		DM_CR_CMD_ENABLE_STALE		(5 << 8)
 #define		DM_CR_CMD_DISABLE_STALE		(6 << 8)
 #define		DM_CR_CMD_CLEAR_STALE		(8 << 8)
 
-#define DM_IMR          0xb0
-#define DM_ISR          0xb4
+#define DM_IMR		0xb0
+#define DM_ISR		0xb4
+#define DM_MISR		0xbc
 #define		DM_ISR_TX_ERROR			(1 << 8)
 #define		DM_ISR_TX_READY			(1 << 7)
-#define		DM_ISR_RXLEV			(1 << 7)
-#define		DM_ISR_RXSTALE			(1 << 7)
-
+#define		DM_ISR_RXSTALE			(1 << 3)
+#define		DM_ISR_RXLEV			(1 << 4)
+#define		DM_ISR_RXSTALE			(1 << 3)
+#define		DM_ISR_TX_LEV			(1 << 0)
+#define DM_RX_TOTAL_SNAP	0xbc
 #define DM_TF           0x100
 #define DM_RF           0x140
 
 #define MSMUART_SIZE	0x200
-
-#define DEVUNIT(x)      (minor(x) & 0x7f)
 
 
 #define DEVUNIT(x)      (minor(x) & 0x7f)
@@ -100,10 +116,9 @@ struct msmuart_softc {
 	int		sc_floods;
 	int		sc_errors;
 	int		sc_halt;
-	u_int16_t	sc_ucr1;
-	u_int16_t	sc_ucr2;
-	u_int16_t	sc_ucr3;
-	u_int16_t	sc_ucr4;
+
+	uint32_t	sc_imr;
+
 	u_int8_t	sc_hwflags;
 #define COM_HW_NOIEN    0x01
 #define COM_HW_FIFO     0x02
@@ -187,7 +202,10 @@ void
 msmuartattach(struct device *parent, struct device *self, void *args)
 {
 	struct arm64_attach_args *aa = args;
-	struct msmuart_softc *sc = (struct msmuart_softc *) self;
+	struct msmuart_softc	*sc = (struct msmuart_softc *) self;
+	bus_space_tag_t		iot;
+	bus_space_handle_t	ioh;
+
 	struct fdt_memory mem;
 
 	if (aa->aa_node == NULL)
@@ -199,12 +217,15 @@ msmuartattach(struct device *parent, struct device *self, void *args)
 	sc->sc_irq = arm_intr_establish_fdt(aa->aa_node, IPL_TTY, msmuart_intr,
 	    sc, sc->sc_dev.dv_xname);
 
-	sc->sc_iot = aa->aa_iot;
+	iot = sc->sc_iot = aa->aa_iot;
 	if (bus_space_map(sc->sc_iot, mem.addr, mem.size, 0, &sc->sc_ioh))
 		panic("msmuartattach: bus_space_map failed!");
+	ioh = sc->sc_ioh;
 
-	if (mem.addr == msmuartconsaddr)
+	if (mem.addr == msmuartconsaddr) {
 		printf(" console");
+		cn_tab->cn_dev = makedev(12 /* XXX */, self->dv_unit);
+	}
 
 	timeout_set(&sc->sc_diag_tmo, msmuart_diag, sc);
 	timeout_set(&sc->sc_dtr_tmo, msmuart_raisedtr, sc);
@@ -218,15 +239,10 @@ msmuartattach(struct device *parent, struct device *self, void *args)
 	// ?? enable rx/tx
 	// ?? set baud
 	// ?? clear existing events
-	// 
-	printf("time to implement msmuart fully");
-#if 0
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, UART_IMSC, (UART_IMSC_RXIM | UART_IMSC_TXIM));
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, UART_ICR, 0x7ff);
-	bus_space_write_4(sc->sc_iot, sc->sc_ioh, UART_LCR_H,
-	    bus_space_read_4(sc->sc_iot, sc->sc_ioh, UART_LCR_H) &
-	    ~UART_LCR_H_FEN);
-#endif
+	// XXX how much of that here, how much in _param ?
+
+	sc->sc_fifolen=64;
+	sc->sc_imr = 0;
 
 	printf("\n");
 }
@@ -237,52 +253,76 @@ msmuart_intr(void *arg)
 	struct msmuart_softc *sc = arg;
 	bus_space_tag_t iot = sc->sc_iot;
 	bus_space_handle_t ioh = sc->sc_ioh;
-	//struct tty *tp = sc->sc_tty;
+	struct tty *tp = sc->sc_tty;
 	//u_int16_t fr;
 	u_int16_t *p;
 	//u_int16_t c;
-
-	//bus_space_write_4(iot, ioh, UART_ICR, -1);
+	uint32_t isr, rf;
 
 	if (sc->sc_tty == NULL)
 		return(0);
 
-	// implement TX path
-#if 0
-	fr = bus_space_read_4(iot, ioh, UART_FR);
-	if (ISSET(fr, UART_FR_TXFE) && ISSET(tp->t_state, TS_BUSY)) {
+	isr = bus_space_read_4(sc->sc_iot, sc->sc_ioh, DM_ISR);
+//printf("%s: isr %x\n", __func__, isr);
+
+	if (ISSET(isr, DM_ISR_TX_LEV) && ISSET(tp->t_state, TS_BUSY)) {
 		CLR(tp->t_state, TS_BUSY | TS_FLUSH);
 		if (sc->sc_halt > 0)
 			wakeup(&tp->t_outq);
 		(*linesw[tp->t_line].l_start)(tp);
 	}
-#endif
 
 	// if nothing in RX, return
-	if(ISSET(bus_space_read_4(iot, ioh, DM_SR), DM_SR_RX_RDY) == 0)
+#if 0
+	if ((ISSET(bus_space_read_4(iot, ioh, DM_SR), DM_SR_RX_RDY) == 0) &&
+		DM_RXFS_NBYTES(bus_space_read_4(iot, ioh, DM_RXFS)) == 0)
 		return 0;
+#endif
 
 	p = sc->sc_ibufp;
 
-#if 0
-	while(ISSET(bus_space_read_4(iot, ioh, UART_FR), UART_FR_RXFF)) {
-		c = bus_space_read_1(iot, ioh, UART_DR);
-		if (p >= sc->sc_ibufend) {
-			sc->sc_floods++;
-			if (sc->sc_errors++ == 0)
-				timeout_add(&sc->sc_diag_tmo, 60 * hz);
-		} else {
-			*p++ = c;
-			if (p == sc->sc_ibufhigh && ISSET(tp->t_cflag, CRTSCTS)) {
-				/* XXX */
-				//CLR(sc->sc_ucr3, IMXUART_CR3_DSR);
-				//bus_space_write_4(iot, ioh, IMXUART_UCR3,
-				//    sc->sc_ucr3);
+
+	if ((isr & DM_ISR_RXLEV) || (isr & DM_ISR_RXSTALE)) {
+		int n;
+		if (isr & DM_ISR_RXSTALE) {
+			n = bus_space_read_4(iot, ioh, DM_RX_TOTAL_SNAP);
+	 	} else {
+			// read one watermark worth ?
+			n = bus_space_read_4(iot, ioh, DM_RXFS);
+			n = DM_RXFS_NBYTES(n);
+		}
+//		printf("bytes pending snap %d, n %d isr %x\n",
+//			bus_space_read_4(iot, ioh, DM_RX_TOTAL_SNAP), n, isr);
+
+		while (n > 0) {
+			rf = bus_space_read_4(iot, ioh, DM_RF);
+			if (p+3 >= sc->sc_ibufend) {
+				sc->sc_floods++;
+				if (sc->sc_errors++ == 0)
+					timeout_add(&sc->sc_diag_tmo, 60 * hz);
+			} else {
+				int i;
+				for (i = 0; i < 4 && n > 0; n--, i++) {
+//				printf("char [%c] %08x", rf & 0xff, rf);
+					*p++ = rf & 0xff;
+					rf >>= 8;
+				}
+
+				// off by 3 ?
+				if (p == sc->sc_ibufhigh && ISSET(tp->t_cflag, CRTSCTS)) {
+					/* XXX */
+					//CLR(sc->sc_ucr3, IMXUART_CR3_DSR);
+					//bus_space_write_4(iot, ioh, IMXUART_UCR3,
+					//    sc->sc_ucr3);
+				}
 			}
 		}
-		/* XXX - msr stuff ? */
+		bus_space_write_4(iot, ioh, DM_CR, DM_CR_CMD_CLEAR_STALE);
+		bus_space_write_4(iot, ioh, DM_DMRX, 0xffff);
+
+		bus_space_write_4(iot, ioh, DM_CR, DM_CR_CMD_RESET_STALE_INT);
+		bus_space_write_4(iot, ioh, DM_CR, DM_CR_CMD_ENABLE_STALE);
 	}
-#endif
 	sc->sc_ibufp = p;
 
 	softintr_schedule(sc->sc_si);
@@ -294,36 +334,46 @@ int
 msmuart_param(struct tty *tp, struct termios *t)
 {
 	struct msmuart_softc *sc = msmuart_cd.cd_devs[DEVUNIT(tp->t_dev)];
-	//bus_space_tag_t iot = sc->sc_iot;
-	//bus_space_handle_t ioh = sc->sc_ioh;
+	bus_space_tag_t iot = sc->sc_iot;
+	bus_space_handle_t ioh = sc->sc_ioh;
 	int ospeed = t->c_ospeed;
+	int mr1 =0, mr2 = 0;
 	int error;
 	tcflag_t oldcflag;
 
+//printf("%s\n", __func__);
 
 	if (t->c_ospeed < 0 || (t->c_ispeed && t->c_ispeed != t->c_ospeed))
 		return EINVAL;
 
 	switch (ISSET(t->c_cflag, CSIZE)) {
 	case CS5:
-		return EINVAL;
+		mr2 |= (0 << 4);
+		break;
 	case CS6:
-		return EINVAL;
+		mr2 |= (1 << 4);
+		break;
 	case CS7:
-		//CLR(sc->sc_ucr2, IMXUART_CR2_WS);
+		mr2 |= (2 << 4);
 		break;
 	case CS8:
-		//SET(sc->sc_ucr2, IMXUART_CR2_WS);
+		mr2 |= (3 << 4);
 		break;
 	}
-//	bus_space_write_4(iot, ioh, IMXUART_UCR2, sc->sc_ucr2);
-
-/*
+	// XXX stop bits == 1
+	int rfr = sc->sc_fifolen - 12;
+	mr1 = ((rfr & 0xffffc0) <<2) | (rfr & 0x3f) | DM_MR1_RX_RDY_CTL;
+	bus_space_write_4(iot, ioh, DM_MR1, mr1);
+	mr2 |= (1 << 2);
+	// XXX PARENB
 	if (ISSET(t->c_cflag, PARENB)) {
-		SET(sc->sc_ucr2, IMXUART_CR2_PREN);
-		bus_space_write_4(iot, ioh, IMXUART_UCR2, sc->sc_ucr2);
+		// this is even parity, correct?
+		mr2 |= (1 << 0); // 1: Even Parity
+	} else {
+		mr2 |= (0 << 0); // 0: NO parity
 	}
-*/
+	bus_space_write_4(iot, ioh, DM_MR2, mr2);
+
 	/* STOPB - XXX */
 	if (ospeed == 0) {
 		/* lower dtr */
@@ -343,11 +393,27 @@ msmuart_param(struct tty *tp, struct termios *t)
 		/* set speed */
 	}
 
-	/* setup fifo */
+	// XXX -  set baud
+
+	// stale timeout should change based on baud?,
+	bus_space_write_4(iot, ioh, DM_IPR,
+	    (DM_IPR_CHARS << DM_IPR_MSB_S) & DM_IPR_MSB_M );
+	bus_space_write_4(iot, ioh, DM_TFWR, 10);
+	bus_space_write_4(iot, ioh, DM_RFWR, 64/4);
+	bus_space_write_4(iot, ioh, DM_CR,
+	    DM_CR_CMD_RX_EN | DM_CR_CMD_TX_EN);
+
+	sc->sc_imr = DM_ISR_RXLEV | DM_ISR_RXSTALE;
+	bus_space_write_4(iot, ioh, DM_IMR, sc->sc_imr);
+
+	bus_space_write_4(iot, ioh, DM_CR, DM_CR_CMD_CR_PROT_EN);
+	bus_space_write_4(iot, ioh, DM_CR, DM_CR_CMD_CLEAR_STALE);
+	bus_space_write_4(iot, ioh, DM_DMRX, 0xffff);
+
+	bus_space_write_4(iot, ioh, DM_CR, DM_CR_CMD_ENABLE_STALE);
 
 	/* When not using CRTSCTS, RTS follows DTR. */
 	/* sc->sc_dtr = MCR_DTR; */
-
 
 	/* and copy to tty */
 	tp->t_ispeed = t->c_ispeed;
@@ -369,9 +435,12 @@ msmuart_param(struct tty *tp, struct termios *t)
 void
 msmuart_start(struct tty *tp)
 {
-	struct msmuart_softc *sc = msmuart_cd.cd_devs[DEVUNIT(tp->t_dev)];
+	int unit = DEVUNIT(tp->t_dev);
+	struct msmuart_softc *sc = msmuart_cd.cd_devs[unit];
 	bus_space_tag_t iot = sc->sc_iot;
 	bus_space_handle_t ioh = sc->sc_ioh;
+
+//printf("%s unit %d\n", __func__, unit);
 
 	int s;
 	s = spltty();
@@ -383,27 +452,63 @@ msmuart_start(struct tty *tp)
 			wakeup(&tp->t_outq);
 		}
 		if (tp->t_outq.c_cc == 0)
-			goto out;
+			goto stopped;
 		selwakeup(&tp->t_wsel);
 	}
 	SET(tp->t_state, TS_BUSY);
 
-	if (ISSET(sc->sc_hwflags, COM_HW_FIFO)) {
-		u_char buffer[64];	/* largest fifo */
-		int i, n;
-
-		n = q_to_b(&tp->t_outq, buffer,
-		    min(sc->sc_fifolen, sizeof buffer));
-		for (i = 0; i < n; i++) {
-#if 0
-			bus_space_write_4(iot, ioh, UART_DR, buffer[i]);
-#endif
-		}
-		bzero(buffer, n);
-	} else if (tp->t_outq.c_cc != 0) {
-		bus_space_write_4(iot, ioh, DM_NCHAR_TX, 1);
-		bus_space_write_4(iot, ioh, DM_TF, getc(&tp->t_outq));
+	if (!ISSET(sc->sc_imr, DM_ISR_TX_LEV)) {
+		sc->sc_imr |= DM_ISR_TX_LEV;
+		bus_space_write_4(iot, ioh, DM_IMR, sc->sc_imr);
 	}
+
+	uint32_t buffer[64/4];	/* largest fifo */
+	int i, n, padn;
+
+	// XXX check available buffer space 
+	n = q_to_b(&tp->t_outq, (char *)buffer,
+	    min(sc->sc_fifolen, sizeof buffer));
+
+	padn = n;
+	int mask = 0;
+	switch (n % 4) {
+	case 3:
+		mask |= 0xff0000;
+		// FALLTHRU
+	case 2:
+		mask |= 0xff00;
+		// FALLTHRU
+	case 1:
+		mask |= 0xff;
+		buffer[n/4] &= mask; // clear upper unused bytes
+		break;
+	case 0:
+		;
+	}
+
+
+//	printf("filling fifo with %d chars\n", n);
+
+	// WTF, it is not possible to write more data until the fifo is empty
+	while(!ISSET(bus_space_read_4(iot, ioh, DM_SR), DM_SR_TX_EMPTY))
+		;
+
+	bus_space_write_4(iot, ioh, DM_NCHAR_TX,
+	    n);
+
+	for (i = 0; i < n; i+=4) {
+		bus_space_write_4(iot, ioh, DM_TF, buffer[i/4]);
+	}
+
+	splx(s);
+	return;
+
+	// if  characters are still present in buffer, set TX level interrupt
+
+stopped:
+	CLR(tp->t_state, TS_BUSY);
+	sc->sc_imr &= ~DM_ISR_TX_LEV;
+	bus_space_write_4(iot, ioh, DM_IMR, sc->sc_imr);
 
 out:
 	splx(s);
@@ -519,6 +624,7 @@ msmuartopen(dev_t dev, int flag, int mode, struct proc *p)
 	int s;
 	int error = 0;
 
+//printf("%s: unit %d\n", __func__, unit);
 	if (unit >= msmuart_cd.cd_ndevs)
 		return ENXIO;
 	sc = msmuart_cd.cd_devs[unit];
@@ -713,6 +819,7 @@ msmuartioctl( dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 	struct tty *tp;
 	int error;
 
+//printf("%s\n", __func__);
 	sc = msmuart_sc(dev);
 	if (sc == NULL)
 		return (ENODEV);
@@ -862,7 +969,7 @@ msm_read_char()
 		bus_space_write_4(iot, ioh, DM_CR, DM_CR_CMD_FORCE_STALE);
 		msmuart_char_buf = bus_space_read_4(iot, ioh, DM_RF);
 		bus_space_write_4(iot, ioh, DM_CR, DM_CR_CMD_CLEAR_STALE);
-		bus_space_write_4(iot, ioh, DM_DMRX, 0x7);
+		bus_space_write_4(iot, ioh, DM_DMRX, 0x4);
 	}
 	return msmuart_nchar_read;
 }
