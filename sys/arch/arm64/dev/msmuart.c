@@ -241,7 +241,7 @@ msmuartattach(struct device *parent, struct device *self, void *args)
 	// ?? clear existing events
 	// XXX how much of that here, how much in _param ?
 
-	sc->sc_fifolen=64;
+	sc->sc_fifolen=UART_IBUFSIZE;
 	sc->sc_imr = 0;
 
 	printf("\n");
@@ -284,6 +284,7 @@ msmuart_intr(void *arg)
 
 	if ((isr & DM_ISR_RXLEV) || (isr & DM_ISR_RXSTALE)) {
 		int n;
+		int charsread = 0;
 		if (isr & DM_ISR_RXSTALE) {
 			n = bus_space_read_4(iot, ioh, DM_RX_TOTAL_SNAP);
 	 	} else {
@@ -295,20 +296,19 @@ msmuart_intr(void *arg)
 //			bus_space_read_4(iot, ioh, DM_RX_TOTAL_SNAP), n, isr);
 
 		while (n > 0) {
-			rf = bus_space_read_4(iot, ioh, DM_RF);
-			if (p+3 >= sc->sc_ibufend) {
+			if ((charsread++ & 0x3) == 0)
+				rf = bus_space_read_4(iot, ioh, DM_RF);
+			if (p >= sc->sc_ibufend) {
 				sc->sc_floods++;
 				if (sc->sc_errors++ == 0)
 					timeout_add(&sc->sc_diag_tmo, 60 * hz);
 			} else {
-				int i;
-				for (i = 0; i < 4 && n > 0; n--, i++) {
 //				printf("char [%c] %08x", rf & 0xff, rf);
-					*p++ = rf & 0xff;
-					rf >>= 8;
-				}
+				// rf is only read above every 4th char
+				*p++ = rf & 0xff;
+				rf >>= 8;
+				n--;
 
-				// off by 3 ?
 				if (p == sc->sc_ibufhigh && ISSET(tp->t_cflag, CRTSCTS)) {
 					/* XXX */
 					//CLR(sc->sc_ucr3, IMXUART_CR3_DSR);
@@ -318,7 +318,7 @@ msmuart_intr(void *arg)
 			}
 		}
 		bus_space_write_4(iot, ioh, DM_CR, DM_CR_CMD_CLEAR_STALE);
-		bus_space_write_4(iot, ioh, DM_DMRX, 0xffff);
+		bus_space_write_4(iot, ioh, DM_DMRX, UART_IBUFSIZE);
 
 		bus_space_write_4(iot, ioh, DM_CR, DM_CR_CMD_RESET_STALE_INT);
 		bus_space_write_4(iot, ioh, DM_CR, DM_CR_CMD_ENABLE_STALE);
@@ -399,7 +399,7 @@ msmuart_param(struct tty *tp, struct termios *t)
 	bus_space_write_4(iot, ioh, DM_IPR,
 	    (DM_IPR_CHARS << DM_IPR_MSB_S) & DM_IPR_MSB_M );
 	bus_space_write_4(iot, ioh, DM_TFWR, 10);
-	bus_space_write_4(iot, ioh, DM_RFWR, 64/4);
+	bus_space_write_4(iot, ioh, DM_RFWR, UART_IBUFSIZE/4);
 	bus_space_write_4(iot, ioh, DM_CR,
 	    DM_CR_CMD_RX_EN | DM_CR_CMD_TX_EN);
 
@@ -408,7 +408,7 @@ msmuart_param(struct tty *tp, struct termios *t)
 
 	bus_space_write_4(iot, ioh, DM_CR, DM_CR_CMD_CR_PROT_EN);
 	bus_space_write_4(iot, ioh, DM_CR, DM_CR_CMD_CLEAR_STALE);
-	bus_space_write_4(iot, ioh, DM_DMRX, 0xffff);
+	bus_space_write_4(iot, ioh, DM_DMRX, UART_IBUFSIZE);
 
 	bus_space_write_4(iot, ioh, DM_CR, DM_CR_CMD_ENABLE_STALE);
 
@@ -462,7 +462,7 @@ msmuart_start(struct tty *tp)
 		bus_space_write_4(iot, ioh, DM_IMR, sc->sc_imr);
 	}
 
-	uint32_t buffer[64/4];	/* largest fifo */
+	uint32_t buffer[UART_IBUFSIZE/4];	/* largest fifo */
 	int i, n, padn;
 
 	// XXX check available buffer space 
@@ -489,7 +489,7 @@ msmuart_start(struct tty *tp)
 
 //	printf("filling fifo with %d chars\n", n);
 
-	// WTF, it is not possible to write more data until the fifo is empty
+	// wait, it is not possible to write more data until the fifo is empty
 	while(!ISSET(bus_space_read_4(iot, ioh, DM_SR), DM_SR_TX_EMPTY))
 		;
 
