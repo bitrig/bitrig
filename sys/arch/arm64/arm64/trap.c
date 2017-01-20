@@ -213,7 +213,7 @@ data_abort(struct trapframe *frame, uint64_t esr, int lower, int exe)
 				frame->tf_elr = (register_t)pcb->pcb_onfault;
 				return;
 			}
-			panic("uvm_fault failed: %lx", frame->tf_elr);
+			panic("uvm_fault failed: %lx %lx", frame->tf_elr, frame->tf_lr);
 		}
 	}
 

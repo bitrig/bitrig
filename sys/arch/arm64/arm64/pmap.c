@@ -719,7 +719,7 @@ _pmap_kenter_pa(vaddr_t va, paddr_t pa, vm_prot_t prot, int flags, int cache)
 			cache = PMAP_CACHE_WB; /* managed memory is cacheable */
 		} else {
 			printf("entering page unmapped %llx %llx\n", va, pa);
-			cache = PMAP_CACHE_CI;
+			cache = PMAP_CACHE_DEV;
 		}
 	}
 
@@ -1683,8 +1683,12 @@ pte_insert(struct pte_desc *pted)
 		attr |= ATTR_IDX(PTE_ATTR_CI); // inner and outer uncached
 		attr |= ATTR_SH(SH_INNER);
 		break;
-	case PMAP_CACHE_CI:
+	case PMAP_CACHE_DEV:
 		attr |= ATTR_IDX(PTE_ATTR_DEV); // treat as device !?!?!?!
+		break;
+	case PMAP_CACHE_CI:
+		attr |= ATTR_IDX(PTE_ATTR_CI); // inner and outer uncached, XXX?
+		attr |= ATTR_SH(SH_INNER);
 		break;
 	case PMAP_CACHE_PTE:
 		attr |= ATTR_IDX(PTE_ATTR_CI); // inner and outer uncached, XXX?

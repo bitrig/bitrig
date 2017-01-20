@@ -35,6 +35,8 @@ file	arch/arm64/arm64/arm64_iobus.c
 
 file	arch/arm64/dev/arm64_bus_space.c
 
+file	dev/ofw/ofw_clock.c
+
 # XXX should this really reach over into arm? (copy files or move out of arm?)
 # clock infrastructure
 file    arch/arm/clock/clock.c
@@ -77,6 +79,10 @@ include "dev/wsfont/files.wsfont"
 device	msmuart {}
 attach	msmuart at fdt
 file	arch/arm64/dev/msmuart.c msmuart
+
+device	msmehci {}
+attach ehci at fdt with msmehci
+file	arch/arm64/dev/msmehci.c		msmehci
 
 #
 # Machine-independent HID support

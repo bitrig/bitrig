@@ -81,10 +81,11 @@ struct cfdriver ehci_cd = {
 	NULL, "ehci", DV_DULL
 };
 
+#define EHCI_DEBUG
 #ifdef EHCI_DEBUG
 #define DPRINTF(x)	do { if (ehcidebug) printf x; } while(0)
 #define DPRINTFN(n,x)	do { if (ehcidebug>(n)) printf x; } while (0)
-int ehcidebug = 0;
+int ehcidebug = 99;
 #define bitmask_snprintf(q,f,b,l) snprintf((b), (l), "%b", (q), (f))
 #else
 #define DPRINTF(x)
@@ -330,6 +331,12 @@ ehci_init(struct ehci_softc *sc)
 	err = ehci_reset(sc);
 	if (err)
 		return (err);
+	
+	if (sc->sc_init_after_reset != NULL) {
+		err = sc->sc_init_after_reset(sc);
+		if (err)
+			return (err);
+	}
 
 	if (ehcixfer == NULL) {
 		ehcixfer = malloc(sizeof(struct pool), M_DEVBUF, M_NOWAIT);
@@ -499,6 +506,7 @@ ehci_intr(void *v)
 {
 	struct ehci_softc *sc = v;
 
+printf("%s: %p\n", __func__, sc);
 	if (sc == NULL || sc->sc_bus.dying)
 		return (0);
 

@@ -55,5 +55,6 @@ com*		at fdt?
 
 # Snapdragon (Dragonboard)
 msmuart*	at fdt?
+ehci*		at fdt?
 
 include "../../../arch/arm64/conf/generic.virt"

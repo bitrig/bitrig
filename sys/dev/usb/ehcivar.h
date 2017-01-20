@@ -163,6 +163,8 @@ struct ehci_softc {
 	struct rwlock sc_doorbell_lock;
 
 	struct timeout sc_tmo_intrlist;
+
+	int (*sc_init_after_reset)(struct ehci_softc *);
 };
 
 #define EREAD1(sc, a) bus_space_read_1((sc)->iot, (sc)->ioh, (a))
