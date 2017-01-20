@@ -486,6 +486,7 @@ information.
 .It Dv KERN_USERMOUNT Ta "integer" Ta "yes"
 .It Dv KERN_VERSION Ta "string" Ta "no"
 .It Dv KERN_WATCHDOG Ta "node" Ta "not applicable"
+.It Dv KERN_HIDEPROC Ta "integer" Ta "yes"
 .El
 .Bl -tag -width "123456"
 .It Dv KERN_ARGMAX
@@ -1069,6 +1070,9 @@ variable.
 .It Dv KERN_WATCHDOG_PERIOD
 The period of the watchdog timer in seconds.
 Set to 0 to disable the watchdog timer.
+.It Dv KERN_HIDEPROC
+If set to 1, the kernel will only list processes belonging to the user
+making the call, except if the user is root.
 .El
 .El
 .Ss CTL_MACHDEP
