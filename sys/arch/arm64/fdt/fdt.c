@@ -1,4 +1,4 @@
-/*	$OpenBSD: fdt.c,v 1.12 2016/06/12 12:55:42 kettenis Exp $	*/
+/*	$OpenBSD: fdt.c,v 1.9 2016/05/16 21:12:17 kettenis Exp $	*/
 
 /*
  * Copyright (c) 2009 Dariusz Swiderski <sfires@sfires.net>
@@ -564,6 +564,34 @@ fdt_find_node_by_phandle_prop(void *node, char *prop)
 	return fdt_find_node_by_phandle(phandle);
 }
 
+void *
+fdt_find_phandle_recurse(void *node, uint32_t phandle)
+{
+	void *child;
+	char *data;
+	void *tmp;
+	int len;
+
+	len = fdt_node_property(node, "phandle", &data);
+	if (len < 0)
+		len = fdt_node_property(node, "linux,phandle", &data);
+
+	if (len == sizeof(uint32_t) && bemtoh32(data) == phandle)
+		return node;
+
+	for (child = fdt_child_node(node); child; child = fdt_next_node(child))
+		if ((tmp = fdt_find_phandle_recurse(child, phandle)))
+			return tmp;
+
+	return NULL;
+}
+
+void *
+fdt_find_phandle(uint32_t phandle)
+{
+	return fdt_find_phandle_recurse(fdt_next_node(0), phandle);
+}
+
 /*
  * Translate memory address depending on parent's range.
  */
@@ -918,6 +946,15 @@ OF_finddevice(char *name)
 }
 
 int
+OF_getnodebyphandle(uint32_t phandle)
+{
+	void *node;
+
+	node = fdt_find_phandle(phandle);
+	return node ? ((char *)node - (char *)tree.header) : 0;
+}
+
+int
 OF_getproplen(int handle, char *prop)
 {
 	void *node = (char *)tree.header + handle;
@@ -955,6 +992,25 @@ OF_getprop(int handle, char *prop, void *buf, int buflen)
 		memcpy(buf, data, min(len, buflen));
 	return len;
 }
+
+int
+OF_is_compatible(int handle, const char *name)
+{
+	void *node = (char *)tree.header + handle;
+	char *data;
+	int len;
+
+	len = fdt_node_property(node, "compatible", &data);
+	while (len > 0) {
+		if (strcmp(data, name) == 0)
+			return 1;
+		len -= strlen(data) + 1;
+		data += strlen(data) + 1;
+	}
+
+	return 0;
+}
+
 
 
 SLIST_HEAD(, ic_entry) ic_list = SLIST_HEAD_INITIALIZER(ic_list);
